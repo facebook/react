@@ -22,7 +22,7 @@ describe('forwardRef', () => {
   });
 
   it('should update refs when switching between children', () => {
-    function FunctionalComponent({forwardedRef, setRefOnDiv}) {
+    function FunctionComponent({forwardedRef, setRefOnDiv}) {
       return (
         <section>
           <div ref={setRefOnDiv ? forwardedRef : null}>First</div>
@@ -32,7 +32,7 @@ describe('forwardRef', () => {
     }
 
     const RefForwardingComponent = React.forwardRef((props, ref) => (
-      <FunctionalComponent {...props} forwardedRef={ref} />
+      <FunctionComponent {...props} forwardedRef={ref} />
     ));
 
     const ref = React.createRef();
@@ -73,7 +73,7 @@ describe('forwardRef', () => {
   });
 
   it('should support propTypes and defaultProps', () => {
-    function FunctionalComponent({forwardedRef, optional, required}) {
+    function FunctionComponent({forwardedRef, optional, required}) {
       return (
         <div ref={forwardedRef}>
           {optional}
@@ -86,7 +86,7 @@ describe('forwardRef', () => {
       props,
       ref,
     ) {
-      return <FunctionalComponent {...props} forwardedRef={ref} />;
+      return <FunctionComponent {...props} forwardedRef={ref} />;
     });
     RefForwardingComponent.propTypes = {
       optional: PropTypes.string,

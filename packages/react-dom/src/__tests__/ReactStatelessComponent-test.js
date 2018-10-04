@@ -98,7 +98,7 @@ describe('ReactStatelessComponent', () => {
     expect(el.textContent).toBe('mest');
   });
 
-  it('should warn for getDerivedStateFromProps on a functional component', () => {
+  it('should warn for getDerivedStateFromProps on a function component', () => {
     function StatelessComponentWithChildContext() {
       return null;
     }
@@ -110,12 +110,12 @@ describe('ReactStatelessComponent', () => {
       ReactDOM.render(<StatelessComponentWithChildContext />, container),
     ).toWarnDev(
       'StatelessComponentWithChildContext: Stateless ' +
-        'functional components do not support getDerivedStateFromProps.',
+        'function components do not support getDerivedStateFromProps.',
       {withoutStack: true},
     );
   });
 
-  it('should warn for childContextTypes on a functional component', () => {
+  it('should warn for childContextTypes on a function component', () => {
     function StatelessComponentWithChildContext(props) {
       return <div>{props.name}</div>;
     }
@@ -133,7 +133,7 @@ describe('ReactStatelessComponent', () => {
       ),
     ).toWarnDev(
       'StatelessComponentWithChildContext(...): childContextTypes cannot ' +
-        'be defined on a functional component.',
+        'be defined on a function component.',
       {withoutStack: true},
     );
   });
@@ -163,10 +163,10 @@ describe('ReactStatelessComponent', () => {
       __DEV__
         ? 'Stateless function components cannot have refs.'
         : // It happens because we don't save _owner in production for
-          // functional components.
+          // function components.
           'Element ref was specified as a string (me) but no owner was set. This could happen for one of' +
           ' the following reasons:\n' +
-          '1. You may be adding a ref to a functional component\n' +
+          '1. You may be adding a ref to a function component\n' +
           "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
           '3. You have multiple copies of React loaded\n' +
           'See https://fb.me/react-refs-must-have-owner for more information.',

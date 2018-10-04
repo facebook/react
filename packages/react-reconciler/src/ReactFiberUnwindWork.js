@@ -18,7 +18,7 @@ import getComponentName from 'shared/getComponentName';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {
   IndeterminateComponent,
-  FunctionalComponent,
+  FunctionComponent,
   ClassComponent,
   ClassComponentLazy,
   HostRoot,
@@ -260,9 +260,9 @@ function throwException(
             );
             sourceFiber.effectTag &= ~Incomplete;
             if (sourceFiber.tag === IndeterminateComponent) {
-              // Let's just assume it's a functional component. This fiber will
+              // Let's just assume it's a function component. This fiber will
               // be unmounted in the immediate next commit, anyway.
-              sourceFiber.tag = FunctionalComponent;
+              sourceFiber.tag = FunctionComponent;
             }
 
             if (
@@ -275,11 +275,11 @@ function throwException(
               sourceFiber.effectTag &= ~LifecycleEffectMask;
               if (sourceFiber.alternate === null) {
                 // We're about to mount a class component that doesn't have an
-                // instance. Turn this into a dummy functional component instead,
+                // instance. Turn this into a dummy function component instead,
                 // to prevent type errors. This is a bit weird but it's an edge
                 // case and we're about to synchronously delete this
                 // component, anyway.
-                sourceFiber.tag = FunctionalComponent;
+                sourceFiber.tag = FunctionComponent;
                 sourceFiber.type = NoopComponent;
               }
             }

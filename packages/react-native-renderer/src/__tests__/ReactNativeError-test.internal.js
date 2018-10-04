@@ -40,16 +40,16 @@ describe('ReactNativeError', () => {
 
     const ref = React.createRef();
 
-    function FunctionalComponent(props) {
+    function FunctionComponent(props) {
       return props.children;
     }
 
     class ClassComponent extends React.Component {
       render() {
         return (
-          <FunctionalComponent>
+          <FunctionComponent>
             <View foo="test" ref={ref} />
-          </FunctionalComponent>
+          </FunctionComponent>
         );
       }
     }
@@ -66,14 +66,14 @@ describe('ReactNativeError', () => {
       expect(componentStack).toBe(
         '\n' +
           '    in View (at **)\n' +
-          '    in FunctionalComponent (at **)\n' +
+          '    in FunctionComponent (at **)\n' +
           '    in ClassComponent (at **)',
       );
     } else {
       expect(componentStack).toBe(
         '\n' +
           '    in View\n' +
-          '    in FunctionalComponent\n' +
+          '    in FunctionComponent\n' +
           '    in ClassComponent',
       );
     }

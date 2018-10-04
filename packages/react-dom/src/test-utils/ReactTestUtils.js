@@ -12,8 +12,8 @@ import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import {
   ClassComponent,
   ClassComponentLazy,
-  FunctionalComponent,
-  FunctionalComponentLazy,
+  FunctionComponent,
+  FunctionComponentLazy,
   HostComponent,
   HostText,
 } from 'shared/ReactWorkTags';
@@ -93,8 +93,8 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
       node.tag === HostText ||
       node.tag === ClassComponent ||
       node.tag === ClassComponentLazy ||
-      node.tag === FunctionalComponent ||
-      node.tag === FunctionalComponentLazy
+      node.tag === FunctionComponent ||
+      node.tag === FunctionComponentLazy
     ) {
       const publicInst = node.stateNode;
       if (test(publicInst)) {
