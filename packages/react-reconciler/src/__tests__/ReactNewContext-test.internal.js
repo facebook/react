@@ -43,7 +43,7 @@ describe('ReactNewContext', () => {
   // a suite of tests for a given context consumer implementation.
   sharedContextTests('Context.Consumer', Context => Context.Consumer);
   sharedContextTests(
-    'Context.unstable_read inside functional component',
+    'Context.unstable_read inside function component',
     Context =>
       function Consumer(props) {
         const observedBits = props.unstable_observedBits;

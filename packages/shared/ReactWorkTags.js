@@ -28,11 +28,11 @@ export type WorkTag =
   | 17
   | 18;
 
-export const FunctionalComponent = 0;
-export const FunctionalComponentLazy = 1;
+export const FunctionComponent = 0;
+export const FunctionComponentLazy = 1;
 export const ClassComponent = 2;
 export const ClassComponentLazy = 3;
-export const IndeterminateComponent = 4; // Before we know whether it is functional or class
+export const IndeterminateComponent = 4; // Before we know whether it is function or class
 export const HostRoot = 5; // Root of a host tree. Could be nested inside another node.
 export const HostPortal = 6; // A subtree. Could be an entry point to a different renderer.
 export const HostComponent = 7;

@@ -38,7 +38,7 @@ describe('ReactIs', () => {
       }
     }
 
-    const StatelessComponent = () => React.createElement('div');
+    const FunctionComponent = () => React.createElement('div');
 
     const ForwardRefComponent = React.forwardRef((props, ref) =>
       React.createElement(Component, {forwardedRef: ref, ...props}),
@@ -48,7 +48,7 @@ describe('ReactIs', () => {
 
     expect(ReactIs.isValidElementType('div')).toEqual(true);
     expect(ReactIs.isValidElementType(Component)).toEqual(true);
-    expect(ReactIs.isValidElementType(StatelessComponent)).toEqual(true);
+    expect(ReactIs.isValidElementType(FunctionComponent)).toEqual(true);
     expect(ReactIs.isValidElementType(ForwardRefComponent)).toEqual(true);
     expect(ReactIs.isValidElementType(Context.Provider)).toEqual(true);
     expect(ReactIs.isValidElementType(Context.Consumer)).toEqual(true);

@@ -16,8 +16,8 @@ import {batchedUpdates} from 'events/ReactGenericBatching';
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
 import {
   Fragment,
-  FunctionalComponent,
-  FunctionalComponentLazy,
+  FunctionComponent,
+  FunctionComponentLazy,
   ClassComponent,
   ClassComponentLazy,
   HostComponent,
@@ -164,7 +164,7 @@ function toTree(node: ?Fiber) {
         rendered: childrenToTree(node.child),
       };
     }
-    case FunctionalComponent:
+    case FunctionComponent:
       return {
         nodeType: 'component',
         type: node.type,
@@ -172,7 +172,7 @@ function toTree(node: ?Fiber) {
         instance: null,
         rendered: childrenToTree(node.child),
       };
-    case FunctionalComponentLazy: {
+    case FunctionComponentLazy: {
       const thenable = node.type;
       const type = thenable._reactResult;
       return {
@@ -214,8 +214,8 @@ function toTree(node: ?Fiber) {
 }
 
 const validWrapperTypes = new Set([
-  FunctionalComponent,
-  FunctionalComponentLazy,
+  FunctionComponent,
+  FunctionComponentLazy,
   ClassComponent,
   ClassComponentLazy,
   HostComponent,

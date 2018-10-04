@@ -158,7 +158,7 @@ describe('ReactIncrementalSideEffects', () => {
       }
     }
 
-    function FunctionalComponent(props) {
+    function FunctionComponent(props) {
       return <span prop="Function" />;
     }
 
@@ -168,7 +168,7 @@ describe('ReactIncrementalSideEffects', () => {
           {props.useClass ? (
             <ClassComponent />
           ) : props.useFunction ? (
-            <FunctionalComponent />
+            <FunctionComponent />
           ) : props.useText ? (
             'Text'
           ) : null}
@@ -210,7 +210,7 @@ describe('ReactIncrementalSideEffects', () => {
       }
     }
 
-    function FunctionalComponent(props) {
+    function FunctionComponent(props) {
       return <span prop="Function" />;
     }
 
@@ -220,7 +220,7 @@ describe('ReactIncrementalSideEffects', () => {
           {props.useClass ? (
             <ClassComponent key="a" />
           ) : props.useFunction ? (
-            <FunctionalComponent key="a" />
+            <FunctionComponent key="a" />
           ) : null}
           Trail
         </div>
@@ -1126,7 +1126,7 @@ describe('ReactIncrementalSideEffects', () => {
       }
     }
 
-    function FunctionalComponent(props) {
+    function FunctionComponent(props) {
       return <span />;
     }
 
@@ -1134,7 +1134,7 @@ describe('ReactIncrementalSideEffects', () => {
       return props.show ? (
         <div>
           <ClassComponent ref={n => ops.push(n)} />
-          <FunctionalComponent ref={n => ops.push(n)} />
+          <FunctionComponent ref={n => ops.push(n)} />
           <div ref={n => ops.push(n)} />
         </div>
       ) : null;
@@ -1142,16 +1142,16 @@ describe('ReactIncrementalSideEffects', () => {
 
     ReactNoop.render(<Foo show={true} />);
     expect(ReactNoop.flush).toWarnDev(
-      'Warning: Stateless function components cannot be given refs. ' +
+      'Warning: Function components cannot be given refs. ' +
         'Attempts to access this ref will fail.\n\nCheck the render method ' +
         'of `Foo`.\n' +
-        '    in FunctionalComponent (at **)\n' +
+        '    in FunctionComponent (at **)\n' +
         '    in div (at **)\n' +
         '    in Foo (at **)',
     );
     expect(ops).toEqual([
       classInstance,
-      // no call for functional components
+      // no call for function components
       div(),
     ]);
 

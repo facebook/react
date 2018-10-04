@@ -10,8 +10,8 @@
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   IndeterminateComponent,
-  FunctionalComponent,
-  FunctionalComponentLazy,
+  FunctionComponent,
+  FunctionComponentLazy,
   ClassComponent,
   ClassComponentLazy,
   HostComponent,
@@ -29,8 +29,8 @@ type LifeCyclePhase = 'render' | 'getChildContext';
 function describeFiber(fiber: Fiber): string {
   switch (fiber.tag) {
     case IndeterminateComponent:
-    case FunctionalComponent:
-    case FunctionalComponentLazy:
+    case FunctionComponent:
+    case FunctionComponentLazy:
     case ClassComponent:
     case ClassComponentLazy:
     case HostComponent:

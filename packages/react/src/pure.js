@@ -17,7 +17,7 @@ export default function pure<Props>(
     if (typeof render !== 'function') {
       warningWithoutStack(
         false,
-        'pure: The first argument must be a functional component. Instead ' +
+        'pure: The first argument must be a function component. Instead ' +
           'received: %s',
         render === null ? 'null' : typeof render,
       );
@@ -26,7 +26,7 @@ export default function pure<Props>(
       if (prototype && prototype.isReactComponent) {
         warningWithoutStack(
           false,
-          'pure: The first argument must be a functional component. Classes ' +
+          'pure: The first argument must be a function component. Classes ' +
             'are not supported. Use React.PureComponent instead.',
         );
       }

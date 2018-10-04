@@ -21,7 +21,7 @@ import {
   REACT_PORTAL_TYPE,
 } from 'shared/ReactSymbols';
 import {
-  FunctionalComponent,
+  FunctionComponent,
   ClassComponent,
   ClassComponentLazy,
   HostText,
@@ -140,7 +140,7 @@ function coerceRef(
         invariant(
           ownerFiber.tag === ClassComponent ||
             ownerFiber.tag === ClassComponentLazy,
-          'Stateless function components cannot have refs.',
+          'Function components cannot have refs.',
         );
         inst = ownerFiber.stateNode;
       }
@@ -183,7 +183,7 @@ function coerceRef(
         element._owner,
         'Element ref was specified as a string (%s) but no owner was set. This could happen for one of' +
           ' the following reasons:\n' +
-          '1. You may be adding a ref to a functional component\n' +
+          '1. You may be adding a ref to a function component\n' +
           "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
           '3. You have multiple copies of React loaded\n' +
           'See https://fb.me/react-refs-must-have-owner for more information.',
@@ -1322,7 +1322,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         // Intentionally fall through to the next case, which handles both
         // functions and classes
         // eslint-disable-next-lined no-fallthrough
-        case FunctionalComponent: {
+        case FunctionComponent: {
           const Component = returnFiber.type;
           invariant(
             false,

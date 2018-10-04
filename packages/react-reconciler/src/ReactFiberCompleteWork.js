@@ -20,8 +20,8 @@ import type {
 
 import {
   IndeterminateComponent,
-  FunctionalComponent,
-  FunctionalComponentLazy,
+  FunctionComponent,
+  FunctionComponentLazy,
   ClassComponent,
   ClassComponentLazy,
   HostRoot,
@@ -353,8 +353,8 @@ function completeWork(
   const newProps = workInProgress.pendingProps;
 
   switch (workInProgress.tag) {
-    case FunctionalComponent:
-    case FunctionalComponentLazy:
+    case FunctionComponent:
+    case FunctionComponentLazy:
       break;
     case ClassComponent: {
       const Component = workInProgress.type;

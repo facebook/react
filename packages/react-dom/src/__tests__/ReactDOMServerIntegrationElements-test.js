@@ -623,8 +623,8 @@ describe('ReactDOMServerIntegration', () => {
       }
 
       itRenders('stateless components', async render => {
-        const StatelessComponent = () => <div>foo</div>;
-        checkFooDiv(await render(<StatelessComponent />));
+        const FunctionComponent = () => <div>foo</div>;
+        checkFooDiv(await render(<FunctionComponent />));
       });
 
       itRenders('ES6 class components', async render => {

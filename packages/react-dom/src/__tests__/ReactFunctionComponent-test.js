@@ -14,11 +14,11 @@ let React;
 let ReactDOM;
 let ReactTestUtils;
 
-function StatelessComponent(props) {
+function FunctionComponent(props) {
   return <div>{props.name}</div>;
 }
 
-describe('ReactStatelessComponent', () => {
+describe('ReactFunctionComponent', () => {
   beforeEach(() => {
     jest.resetModuleRegistry();
     PropTypes = require('prop-types');
@@ -29,7 +29,7 @@ describe('ReactStatelessComponent', () => {
 
   it('should render stateless component', () => {
     const el = document.createElement('div');
-    ReactDOM.render(<StatelessComponent name="A" />, el);
+    ReactDOM.render(<FunctionComponent name="A" />, el);
 
     expect(el.textContent).toBe('A');
   });
@@ -37,7 +37,7 @@ describe('ReactStatelessComponent', () => {
   it('should update stateless component', () => {
     class Parent extends React.Component {
       render() {
-        return <StatelessComponent {...this.props} />;
+        return <FunctionComponent {...this.props} />;
       }
     }
 
@@ -52,7 +52,7 @@ describe('ReactStatelessComponent', () => {
   it('should unmount stateless component', () => {
     const container = document.createElement('div');
 
-    ReactDOM.render(<StatelessComponent name="A" />, container);
+    ReactDOM.render(<FunctionComponent name="A" />, container);
     expect(container.textContent).toBe('A');
 
     ReactDOM.unmountComponentAtNode(container);
@@ -98,29 +98,29 @@ describe('ReactStatelessComponent', () => {
     expect(el.textContent).toBe('mest');
   });
 
-  it('should warn for getDerivedStateFromProps on a functional component', () => {
-    function StatelessComponentWithChildContext() {
+  it('should warn for getDerivedStateFromProps on a function component', () => {
+    function FunctionComponentWithChildContext() {
       return null;
     }
-    StatelessComponentWithChildContext.getDerivedStateFromProps = function() {};
+    FunctionComponentWithChildContext.getDerivedStateFromProps = function() {};
 
     const container = document.createElement('div');
 
     expect(() =>
-      ReactDOM.render(<StatelessComponentWithChildContext />, container),
+      ReactDOM.render(<FunctionComponentWithChildContext />, container),
     ).toWarnDev(
-      'StatelessComponentWithChildContext: Stateless ' +
-        'functional components do not support getDerivedStateFromProps.',
+      'FunctionComponentWithChildContext: Function ' +
+        'components do not support getDerivedStateFromProps.',
       {withoutStack: true},
     );
   });
 
-  it('should warn for childContextTypes on a functional component', () => {
-    function StatelessComponentWithChildContext(props) {
+  it('should warn for childContextTypes on a function component', () => {
+    function FunctionComponentWithChildContext(props) {
       return <div>{props.name}</div>;
     }
 
-    StatelessComponentWithChildContext.childContextTypes = {
+    FunctionComponentWithChildContext.childContextTypes = {
       foo: PropTypes.string,
     };
 
@@ -128,12 +128,12 @@ describe('ReactStatelessComponent', () => {
 
     expect(() =>
       ReactDOM.render(
-        <StatelessComponentWithChildContext name="A" />,
+        <FunctionComponentWithChildContext name="A" />,
         container,
       ),
     ).toWarnDev(
-      'StatelessComponentWithChildContext(...): childContextTypes cannot ' +
-        'be defined on a functional component.',
+      'FunctionComponentWithChildContext(...): childContextTypes cannot ' +
+        'be defined on a function component.',
       {withoutStack: true},
     );
   });
@@ -161,12 +161,12 @@ describe('ReactStatelessComponent', () => {
       ReactTestUtils.renderIntoDocument(<Child test="test" />);
     }).toThrowError(
       __DEV__
-        ? 'Stateless function components cannot have refs.'
+        ? 'Function components cannot have refs.'
         : // It happens because we don't save _owner in production for
-          // functional components.
+          // function components.
           'Element ref was specified as a string (me) but no owner was set. This could happen for one of' +
           ' the following reasons:\n' +
-          '1. You may be adding a ref to a functional component\n' +
+          '1. You may be adding a ref to a function component\n' +
           "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
           '3. You have multiple copies of React loaded\n' +
           'See https://fb.me/react-refs-must-have-owner for more information.',
@@ -182,7 +182,7 @@ describe('ReactStatelessComponent', () => {
       render() {
         return (
           <Indirection>
-            <StatelessComponent name="A" ref="stateless" />
+            <FunctionComponent name="A" ref="stateless" />
           </Indirection>
         );
       }
@@ -191,10 +191,10 @@ describe('ReactStatelessComponent', () => {
     expect(() =>
       ReactTestUtils.renderIntoDocument(<ParentUsingStringRef />),
     ).toWarnDev(
-      'Warning: Stateless function components cannot be given refs. ' +
+      'Warning: Function components cannot be given refs. ' +
         'Attempts to access this ref will fail.\n\nCheck the render method ' +
         'of `ParentUsingStringRef`.\n' +
-        '    in StatelessComponent (at **)\n' +
+        '    in FunctionComponent (at **)\n' +
         '    in div (at **)\n' +
         '    in Indirection (at **)\n' +
         '    in ParentUsingStringRef (at **)',
@@ -213,7 +213,7 @@ describe('ReactStatelessComponent', () => {
       render() {
         return (
           <Indirection>
-            <StatelessComponent
+            <FunctionComponent
               name="A"
               ref={arg => {
                 expect(arg).toBe(null);
@@ -227,10 +227,10 @@ describe('ReactStatelessComponent', () => {
     expect(() =>
       ReactTestUtils.renderIntoDocument(<ParentUsingFunctionRef />),
     ).toWarnDev(
-      'Warning: Stateless function components cannot be given refs. ' +
+      'Warning: Function components cannot be given refs. ' +
         'Attempts to access this ref will fail.\n\nCheck the render method ' +
         'of `ParentUsingFunctionRef`.\n' +
-        '    in StatelessComponent (at **)\n' +
+        '    in FunctionComponent (at **)\n' +
         '    in div (at **)\n' +
         '    in Indirection (at **)\n' +
         '    in ParentUsingFunctionRef (at **)',
@@ -244,7 +244,7 @@ describe('ReactStatelessComponent', () => {
     // When owner uses JSX, we can use exact line location to dedupe warnings
     class AnonymousParentUsingJSX extends React.Component {
       render() {
-        return <StatelessComponent name="A" ref={() => {}} />;
+        return <FunctionComponent name="A" ref={() => {}} />;
       }
     }
     Object.defineProperty(AnonymousParentUsingJSX, 'name', {value: undefined});
@@ -255,9 +255,7 @@ describe('ReactStatelessComponent', () => {
       instance1 = ReactTestUtils.renderIntoDocument(
         <AnonymousParentUsingJSX />,
       );
-    }).toWarnDev(
-      'Warning: Stateless function components cannot be given refs.',
-    );
+    }).toWarnDev('Warning: Function components cannot be given refs.');
     // Should be deduped (offending element is on the same line):
     instance1.forceUpdate();
     // Should also be deduped (offending element is on the same line):
@@ -266,7 +264,7 @@ describe('ReactStatelessComponent', () => {
     // When owner doesn't use JSX, and is anonymous, we warn once per internal instance.
     class AnonymousParentNotUsingJSX extends React.Component {
       render() {
-        return React.createElement(StatelessComponent, {
+        return React.createElement(FunctionComponent, {
           name: 'A',
           ref: () => {},
         });
@@ -281,20 +279,18 @@ describe('ReactStatelessComponent', () => {
       instance2 = ReactTestUtils.renderIntoDocument(
         <AnonymousParentNotUsingJSX />,
       );
-    }).toWarnDev(
-      'Warning: Stateless function components cannot be given refs.',
-    );
+    }).toWarnDev('Warning: Function components cannot be given refs.');
     // Should be deduped (same internal instance, no additional warnings)
     instance2.forceUpdate();
     // Could not be deduped (different internal instance):
     expect(() =>
       ReactTestUtils.renderIntoDocument(<AnonymousParentNotUsingJSX />),
-    ).toWarnDev('Warning: Stateless function components cannot be given refs.');
+    ).toWarnDev('Warning: Function components cannot be given refs.');
 
     // When owner doesn't use JSX, but is named, we warn once per owner name
     class NamedParentNotUsingJSX extends React.Component {
       render() {
-        return React.createElement(StatelessComponent, {
+        return React.createElement(FunctionComponent, {
           name: 'A',
           ref: () => {},
         });
@@ -303,9 +299,7 @@ describe('ReactStatelessComponent', () => {
     let instance3;
     expect(() => {
       instance3 = ReactTestUtils.renderIntoDocument(<NamedParentNotUsingJSX />);
-    }).toWarnDev(
-      'Warning: Stateless function components cannot be given refs.',
-    );
+    }).toWarnDev('Warning: Function components cannot be given refs.');
     // Should be deduped (same owner name, no additional warnings):
     instance3.forceUpdate();
     // Should also be deduped (same owner name, no additional warnings):
@@ -337,7 +331,7 @@ describe('ReactStatelessComponent', () => {
     }
 
     expect(() => ReactTestUtils.renderIntoDocument(<Parent />)).toWarnDev(
-      'Warning: Stateless function components cannot be given refs. ' +
+      'Warning: Function components cannot be given refs. ' +
         'Attempts to access this ref will fail.\n\nCheck the render method ' +
         'of `Parent`.\n' +
         '    in Child (at **)\n' +

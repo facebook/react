@@ -259,7 +259,7 @@ describe('ReactTestUtils', () => {
   });
 
   it('can scry with stateless components involved', () => {
-    const Stateless = () => (
+    const Function = () => (
       <div>
         <hr />
       </div>
@@ -269,7 +269,7 @@ describe('ReactTestUtils', () => {
       render() {
         return (
           <div>
-            <Stateless />
+            <Function />
             <hr />
           </div>
         );

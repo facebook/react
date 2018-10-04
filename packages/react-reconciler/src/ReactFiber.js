@@ -34,7 +34,7 @@ import {
   ContextConsumer,
   Profiler,
   PlaceholderComponent,
-  FunctionalComponentLazy,
+  FunctionComponentLazy,
   ClassComponentLazy,
   ForwardRefLazy,
   PureComponent,
@@ -302,7 +302,7 @@ export function resolveLazyComponentTag(
   if (typeof Component === 'function') {
     return shouldConstruct(Component)
       ? ClassComponentLazy
-      : FunctionalComponentLazy;
+      : FunctionComponentLazy;
   } else if (Component !== undefined && Component !== null) {
     const $$typeof = Component.$$typeof;
     if ($$typeof === REACT_FORWARD_REF_TYPE) {

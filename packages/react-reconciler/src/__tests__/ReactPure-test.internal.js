@@ -178,14 +178,14 @@ describe('pure', () => {
         }
       }
       expect(() => pure(SomeClass)).toWarnDev(
-        'pure: The first argument must be a functional component.',
+        'pure: The first argument must be a function component.',
         {withoutStack: true},
       );
     });
 
     it('warns if first argument is not a function', () => {
       expect(() => pure()).toWarnDev(
-        'pure: The first argument must be a functional component. Instead ' +
+        'pure: The first argument must be a function component. Instead ' +
           'received: undefined',
         {withoutStack: true},
       );
