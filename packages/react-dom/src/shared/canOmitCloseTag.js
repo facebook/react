@@ -13,24 +13,28 @@ import {isAutonomousCustomComponent} from './isCustomComponent';
  * Check if an HTML element's end tag can be omitted
  * w3.org/TR/html5/syntax.html#optional-tags
  *
- * @param {string} tagName HTML tag name that is being checked.
- * @param {?string} [nextSibling] HTML tag name of tagName's next sibling.
- * null if tagName doesn't have a next sibling.
- * @param {?string} [parent] HTML tag name of tagName's parent.
- * null if tagName doesn't have a parent.
+ * @param {string} tag HTML tag name that is being checked.
+ * @param {?string} [nextSibling] HTML tag name of tag's next sibling.
+ * undefined if tag doesn't have a next sibling.
+ * @param {?string} [parent] HTML tag name of tag's parent.
+ * undefined if tag doesn't have a parent.
  * @return {boolean} True if the end tag can be omitted.
  */
 function canOmitCloseTag(
-  tagName: string,
+  tag: string,
   nextSibling: ?string,
   parent: ?string,
 ): boolean {
-  switch (tagName) {
+  if (parent === undefined) {
+    return false;
+  }
+
+  switch (tag) {
     // An li element’s end tag may be omitted if the li element is
     // immediately followed by another li element or if there is no
     // more content in the parent element.
     case 'li':
-      return nextSibling === 'li' || nextSibling === null;
+      return nextSibling === 'li' || nextSibling === undefined;
 
     // A dt element’s end tag may be omitted if the dt element is
     // immediately followed by another dt element or a dd element.
@@ -42,7 +46,9 @@ function canOmitCloseTag(
     // or if there is no more content in the parent element.
     case 'dd':
       return (
-        nextSibling === 'dd' || nextSibling === 'dt' || nextSibling === null
+        nextSibling === 'dd' ||
+        nextSibling === 'dt' ||
+        nextSibling === undefined
       );
 
     // A p element’s end tag may be omitted if the p element is
@@ -83,7 +89,7 @@ function canOmitCloseTag(
         nextSibling === 'section' ||
         nextSibling === 'table' ||
         nextSibling === 'ul' ||
-        (nextSibling === null &&
+        (nextSibling === undefined &&
           typeof parent === 'string' &&
           !(
             parent === 'a' ||
@@ -102,7 +108,9 @@ function canOmitCloseTag(
     // no more content in the parent element.
     case 'rt':
       return (
-        nextSibling === 'rt' || nextSibling === 'rp' || nextSibling === null
+        nextSibling === 'rt' ||
+        nextSibling === 'rp' ||
+        nextSibling === undefined
       );
 
     // An rp element’s end tag may be omitted if the rp element is
@@ -110,14 +118,16 @@ function canOmitCloseTag(
     // no more content in the parent element.
     case 'rp':
       return (
-        nextSibling === 'rp' || nextSibling === 'rt' || nextSibling === null
+        nextSibling === 'rp' ||
+        nextSibling === 'rt' ||
+        nextSibling === undefined
       );
 
     // An optgroup element’s end tag may be omitted if the optgroup element is
     // immediately followed by another optgroup element, or if there is no more
     // content in the parent element.
     case 'optgroup':
-      return nextSibling === 'optgroup' || nextSibling === null;
+      return nextSibling === 'optgroup' || nextSibling === undefined;
 
     // An option element’s end tag may be omitted if the option element is
     // immediately followed by another option element, or if it is immediately
@@ -127,7 +137,7 @@ function canOmitCloseTag(
       return (
         nextSibling === 'option' ||
         nextSibling === 'optgroup' ||
-        nextSibling === null
+        nextSibling === undefined
       );
 
     // A colgroup element’s end tag may be omitted if the colgroup element is
@@ -156,33 +166,35 @@ function canOmitCloseTag(
       return (
         nextSibling === 'tbody' ||
         nextSibling === 'tfoot' ||
-        nextSibling === null
+        nextSibling === undefined
       );
 
     // A tfoot element’s end tag may be omitted if there is no more content
     // in the parent element.
     case 'tfoot':
-      return nextSibling === null;
+      return nextSibling === undefined;
 
     // A tr element’s end tag may be omitted if the tr element is
     // immediately followed by another tr element, or if there is
     // no more content in the parent element.
     case 'tr':
-      return nextSibling === 'tr' || nextSibling === null;
+      return nextSibling === 'tr' || nextSibling === undefined;
 
     // A td element’s end tag may be omitted if the td element is
     // immediately followed by a td or th element, or if there is
     // no more content in the parent element.
     case 'td':
       return (
-        nextSibling === 'td' || nextSibling === 'th' || nextSibling === null
+        nextSibling === 'td' ||
+        nextSibling === 'th' ||
+        nextSibling === undefined
       );
 
     // A th element’s end tag may be omitted if the th element is
     // immediately followed by a td or th element, or if there is
     // no more content in the parent element.
     case 'th':
-      return nextSibling === 'th' || nextSibling === null;
+      return nextSibling === 'th' || nextSibling === undefined;
 
     default:
       return false;

@@ -7,6 +7,7 @@
  * @emails react-core
  */
 
+import {REACT_TEXT_TYPE} from 'shared/ReactSymbols';
 import canOmitCloseTag from '../shared/canOmitCloseTag';
 import {isAutonomousCustomComponent} from '../shared/isCustomComponent';
 
@@ -121,125 +122,123 @@ const tags = [
   'var',
   'video',
   'wbr',
-  'custom-component',
-  null,
+  'custom-element',
+  undefined,
 ];
 
-const testCanOmitCloseTag = (tagName, nextSiblings) => {
-  tags.forEach(tag => {
-    expect(canOmitCloseTag(tagName, tag, null)).toBe(
-      !!nextSiblings.includes(tag),
-    );
+expect.extend({
+  toOmitCloseTag(tag, nextSibling, parent) {
+    const pass = canOmitCloseTag(tag, nextSibling, parent);
+    if (pass) {
+      return {
+        message: () =>
+          `expected ${tag} to have close tag with next sibling '${nextSibling}' and parent 'div'`,
+        pass: true,
+      };
+    } else {
+      return {
+        message: () =>
+          `expected ${tag} not to have close tag with next sibling '${nextSibling}' and parent 'div'`,
+        pass: false,
+      };
+    }
+  },
+});
+
+const itOmitsWithNextSiblings = (tag, matchingNextSiblings) => {
+  it(`correctly omits ${tag}`, () => {
+    [...tags, REACT_TEXT_TYPE].forEach(nextSibling => {
+      if (matchingNextSiblings.includes(nextSibling)) {
+        expect(tag).toOmitCloseTag(nextSibling, 'div');
+      } else {
+        expect(tag).not.toOmitCloseTag(nextSibling, 'div');
+      }
+    });
   });
 };
 
 describe('canOmitCloseTag', () => {
-  it('correctly omits li', () => {
-    testCanOmitCloseTag('li', ['li', null]);
-  });
+  itOmitsWithNextSiblings('li', ['li', undefined]);
 
-  it('correctly omits dt', () => {
-    testCanOmitCloseTag('dt', ['dt', 'dd']);
-  });
+  itOmitsWithNextSiblings('dt', ['dt', 'dd']);
 
-  it('correctly omits dd', () => {
-    testCanOmitCloseTag('dd', ['dd', 'dt', null]);
-  });
+  itOmitsWithNextSiblings('dd', ['dd', 'dt', undefined]);
 
-  it('correctly omits p', () => {
-    testCanOmitCloseTag('p', [
-      'address',
-      'article',
-      'aside',
-      'blockquote',
-      'details',
-      'div',
-      'dl',
-      'fieldset',
-      'figcaption',
-      'figure',
-      'footer',
-      'form',
-      'h1',
-      'h2',
-      'h3',
-      'h4',
-      'h5',
-      'h6',
-      'header',
-      'hr',
-      'main',
-      'nav',
-      'ol',
-      'p',
-      'pre',
-      'section',
-      'table',
-      'ul',
-    ]);
+  itOmitsWithNextSiblings('p', [
+    'address',
+    'article',
+    'aside',
+    'blockquote',
+    'details',
+    'div',
+    'dl',
+    'fieldset',
+    'figcaption',
+    'figure',
+    'footer',
+    'form',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'header',
+    'hr',
+    'main',
+    'nav',
+    'ol',
+    'p',
+    'pre',
+    'section',
+    'table',
+    'ul',
+    undefined,
+  ]);
 
-    tags.forEach(tag => {
-      const notAllowedParents = [
-        null,
-        'a',
-        'audio',
-        'del',
-        'ins',
-        'map',
-        'noscript',
-        'video',
-      ];
-      expect(canOmitCloseTag('p', null, tag)).toBe(
-        !(notAllowedParents.includes(tag) || isAutonomousCustomComponent(tag)),
-      );
+  it("doesn't omit 'p' closing tag with no next sibling", () => {
+    const notAllowedParents = [
+      undefined,
+      'a',
+      'audio',
+      'del',
+      'ins',
+      'map',
+      'noscript',
+      'video',
+      'custom-element',
+    ];
+
+    tags.forEach(parent => {
+      if (notAllowedParents.includes(parent)) {
+        expect('p').not.toOmitCloseTag(undefined, parent);
+      } else {
+        expect('p').toOmitCloseTag(undefined, parent);
+      }
     });
   });
 
-  it('correctly omits rt', () => {
-    testCanOmitCloseTag('rt', ['rt', 'rp', null]);
-  });
+  itOmitsWithNextSiblings('rt', ['rt', 'rp', undefined]);
 
-  it('correctly omits rp', () => {
-    testCanOmitCloseTag('rp', ['rp', 'rt', null]);
-  });
+  itOmitsWithNextSiblings('rp', ['rp', 'rt', undefined]);
 
-  it('correctly omits optgroup', () => {
-    testCanOmitCloseTag('optgroup', ['optgroup', null]);
-  });
+  itOmitsWithNextSiblings('optgroup', ['optgroup', undefined]);
 
-  it('correctly omits option', () => {
-    testCanOmitCloseTag('option', ['option', 'optgroup', null]);
-  });
+  itOmitsWithNextSiblings('option', ['option', 'optgroup', undefined]);
 
-  it('correctly omits colgroup', () => {
-    testCanOmitCloseTag('colgroup', []);
-  });
+  itOmitsWithNextSiblings('colgroup', []);
 
-  it('correctly omits caption', () => {
-    testCanOmitCloseTag('caption', []);
-  });
+  itOmitsWithNextSiblings('caption', []);
 
-  it('correctly omits thead', () => {
-    testCanOmitCloseTag('thead', ['tbody', 'tfoot']);
-  });
+  itOmitsWithNextSiblings('thead', ['tbody', 'tfoot']);
 
-  it('correctly omits tbody', () => {
-    testCanOmitCloseTag('tbody', ['tbody', 'tfoot', null]);
-  });
+  itOmitsWithNextSiblings('tbody', ['tbody', 'tfoot', undefined]);
 
-  it('correctly omits tfoot', () => {
-    testCanOmitCloseTag('tfoot', [null]);
-  });
+  itOmitsWithNextSiblings('tfoot', [undefined]);
 
-  it('correctly omits tr', () => {
-    testCanOmitCloseTag('tr', ['tr', null]);
-  });
+  itOmitsWithNextSiblings('tr', ['tr', undefined]);
 
-  it('correctly omits td', () => {
-    testCanOmitCloseTag('td', ['td', 'th', null]);
-  });
+  itOmitsWithNextSiblings('td', ['td', 'th', undefined]);
 
-  it('correctly omits th', () => {
-    testCanOmitCloseTag('th', ['th', null]);
-  });
+  itOmitsWithNextSiblings('th', ['th', undefined]);
 });
