@@ -360,7 +360,7 @@ export function appendChildToContainer(
   // event exists. So we wouldn't see it and dispatch it.
   // This is why we ensure that containers have inline onclick defined.
   // https://github.com/facebook/react/issues/11918
-  if (parentNode.onclick === null) {
+  if (!container._reactRootContainer && parentNode.onclick === null) {
     // TODO: This cast may not be sound for SVG, MathML or custom elements.
     trapClickOnNonInteractiveElement(((parentNode: any): HTMLElement));
   }
