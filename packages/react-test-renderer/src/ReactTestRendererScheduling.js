@@ -47,7 +47,9 @@ export function flushAll(): Array<mixed> {
       didTimeout: false,
     });
   }
-  return yieldedValues;
+  const values = yieldedValues;
+  yieldedValues = [];
+  return values;
 }
 
 export function flushNumberOfYields(count: number): Array<mixed> {
@@ -72,7 +74,9 @@ export function flushNumberOfYields(count: number): Array<mixed> {
       didTimeout: false,
     });
   }
-  return yieldedValues;
+  const values = yieldedValues;
+  yieldedValues = [];
+  return values;
 }
 
 export function yieldValue(value: mixed): void {

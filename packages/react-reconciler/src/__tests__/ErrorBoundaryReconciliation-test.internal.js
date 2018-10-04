@@ -1,5 +1,3 @@
-const jestDiff = require('jest-diff');
-
 describe('ErrorBoundaryReconciliation', () => {
   let BrokenRender;
   let DidCatchErrorBoundary;
@@ -48,22 +46,6 @@ describe('ErrorBoundaryReconciliation', () => {
     const InvalidType = undefined;
     BrokenRender = ({fail}) =>
       fail ? <InvalidType /> : <span prop="BrokenRender" />;
-
-    function toHaveRenderedChildren(renderer, children) {
-      let actual, expected;
-      try {
-        actual = renderer.toJSON();
-        expected = ReactTestRenderer.create(children).toJSON();
-        expect(actual).toEqual(expected);
-      } catch (error) {
-        return {
-          message: () => jestDiff(expected, actual),
-          pass: false,
-        };
-      }
-      return {pass: true};
-    }
-    expect.extend({toHaveRenderedChildren});
   });
 
   [true, false].forEach(isConcurrent => {
@@ -77,7 +59,7 @@ describe('ErrorBoundaryReconciliation', () => {
       if (isConcurrent) {
         renderer.unstable_flushAll();
       }
-      expect(renderer).toHaveRenderedChildren(<span prop="BrokenRender" />);
+      expect(renderer).toMatchRenderedOutput(<span prop="BrokenRender" />);
 
       expect(() => {
         renderer.update(
@@ -89,9 +71,8 @@ describe('ErrorBoundaryReconciliation', () => {
           renderer.unstable_flushAll();
         }
       }).toWarnDev(isConcurrent ? ['invalid', 'invalid'] : ['invalid']);
-      expect(renderer).toHaveRenderedChildren(
-        React.createElement(fallbackTagName, {prop: 'ErrorBoundary'}),
-      );
+      const Fallback = fallbackTagName;
+      expect(renderer).toMatchRenderedOutput(<Fallback prop="ErrorBoundary" />);
     }
 
     describe(isConcurrent ? 'concurrent' : 'sync', () => {
