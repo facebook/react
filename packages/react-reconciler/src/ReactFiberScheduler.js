@@ -1614,6 +1614,15 @@ function retrySuspendedRoot(
 }
 
 function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
+  recordScheduleUpdate();
+
+  if (__DEV__) {
+    if (fiber.tag === ClassComponent || fiber.tag === ClassComponentLazy) {
+      const instance = fiber.stateNode;
+      warnAboutInvalidUpdates(instance);
+    }
+  }
+
   // Update the source fiber's expiration time
   if (
     fiber.expirationTime === NoWork ||
@@ -1631,49 +1640,39 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
   }
   // Walk the parent path to the root and update the child expiration time.
   let node = fiber.return;
+  let root = null;
   if (node === null && fiber.tag === HostRoot) {
-    return fiber.stateNode;
-  }
-  while (node !== null) {
-    alternate = node.alternate;
-    if (
-      node.childExpirationTime === NoWork ||
-      node.childExpirationTime > expirationTime
-    ) {
-      node.childExpirationTime = expirationTime;
+    root = fiber.stateNode;
+  } else {
+    while (node !== null) {
+      alternate = node.alternate;
       if (
+        node.childExpirationTime === NoWork ||
+        node.childExpirationTime > expirationTime
+      ) {
+        node.childExpirationTime = expirationTime;
+        if (
+          alternate !== null &&
+          (alternate.childExpirationTime === NoWork ||
+            alternate.childExpirationTime > expirationTime)
+        ) {
+          alternate.childExpirationTime = expirationTime;
+        }
+      } else if (
         alternate !== null &&
         (alternate.childExpirationTime === NoWork ||
           alternate.childExpirationTime > expirationTime)
       ) {
         alternate.childExpirationTime = expirationTime;
       }
-    } else if (
-      alternate !== null &&
-      (alternate.childExpirationTime === NoWork ||
-        alternate.childExpirationTime > expirationTime)
-    ) {
-      alternate.childExpirationTime = expirationTime;
-    }
-    if (node.return === null && node.tag === HostRoot) {
-      return node.stateNode;
-    }
-    node = node.return;
-  }
-  return null;
-}
-
-function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
-  recordScheduleUpdate();
-
-  if (__DEV__) {
-    if (fiber.tag === ClassComponent || fiber.tag === ClassComponentLazy) {
-      const instance = fiber.stateNode;
-      warnAboutInvalidUpdates(instance);
+      if (node.return === null && node.tag === HostRoot) {
+        root = node.stateNode;
+        break;
+      }
+      node = node.return;
     }
   }
 
-  const root = scheduleWorkToRoot(fiber, expirationTime);
   if (root === null) {
     if (
       __DEV__ &&
@@ -1681,7 +1680,7 @@ function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
     ) {
       warnAboutUpdateOnUnmounted(fiber);
     }
-    return;
+    return null;
   }
 
   if (enableSchedulerTracing) {
@@ -1716,6 +1715,15 @@ function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
         subscriber.onWorkScheduled(interactions, threadID);
       }
     }
+  }
+
+  return root;
+}
+
+function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
+  const root = scheduleWorkToRoot(fiber, expirationTime);
+  if (root === null) {
+    return;
   }
 
   if (

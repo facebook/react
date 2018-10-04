@@ -14,6 +14,7 @@ import type {CapturedValue} from './ReactCapturedValue';
 import type {Update} from './ReactUpdateQueue';
 import type {Thenable} from './ReactFiberScheduler';
 
+import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import getComponentName from 'shared/getComponentName';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {
@@ -224,12 +225,15 @@ function throwException(
               : renderExpirationTime;
 
           // Attach a listener to the promise to "ping" the root and retry.
-          const onResolveOrReject = retrySuspendedRoot.bind(
+          let onResolveOrReject = retrySuspendedRoot.bind(
             null,
             root,
             workInProgress,
             pingTime,
           );
+          if (enableSchedulerTracing) {
+            onResolveOrReject = Schedule_tracing_wrap(onResolveOrReject);
+          }
           thenable.then(onResolveOrReject, onResolveOrReject);
 
           // If the boundary is outside of strict mode, we should *not* suspend
