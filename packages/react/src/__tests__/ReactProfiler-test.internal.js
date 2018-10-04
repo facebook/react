@@ -2555,7 +2555,9 @@ describe('Profiler', () => {
 
         expect(onRender).toHaveBeenCalledTimes(2); // Sync null commit, placeholder commit
         expect(onRender.mock.calls[0][6]).toMatchInteractions([
-          initialRenderInteraction,
+          highPriUpdateInteraction,
+        ]);
+        expect(onRender.mock.calls[1][6]).toMatchInteractions([
           highPriUpdateInteraction,
         ]);
         onRender.mockClear();
@@ -2567,9 +2569,12 @@ describe('Profiler', () => {
         await originalPromise;
         expect(renderer.toJSON()).toEqual(['loaded', 'updated']);
 
+        // TODO: Bug. This *should* just be one render tied to both interactions.
         expect(onRender).toHaveBeenCalledTimes(2);
         expect(onRender.mock.calls[0][6]).toMatchInteractions([
           initialRenderInteraction,
+        ]);
+        expect(onRender.mock.calls[1][6]).toMatchInteractions([
           highPriUpdateInteraction,
         ]);
 
