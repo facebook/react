@@ -369,9 +369,9 @@ export function appendChildToContainer(
   // This is why we ensure that non React root containers have inline onclick
   // defined.
   // https://github.com/facebook/react/issues/11918
-  const {_reactRootContainer} = container;
+  const reactRootContainer = container._reactRootContainer;
   if (
-    (_reactRootContainer === null || _reactRootContainer === undefined) &&
+    (reactRootContainer === null || reactRootContainer === undefined) &&
     parentNode.onclick === null
   ) {
     // TODO: This cast may not be sound for SVG, MathML or custom elements.
