@@ -45,11 +45,14 @@ import {
   Passive,
 } from 'shared/ReactSideEffectTags';
 import {
-  HostRoot,
   ClassComponent,
   HostComponent,
   ContextProvider,
+  ForwardRef,
+  FunctionComponent,
   HostPortal,
+  HostRoot,
+  PureComponent,
 } from 'shared/ReactWorkTags';
 import {
   enableSchedulerTracing,
@@ -197,19 +200,21 @@ if (__DEV__) {
   didWarnSetStateChildContext = false;
   const didWarnStateUpdateForUnmountedComponent = {};
 
-  warnAboutUpdateOnUnmounted = function(fiber: Fiber) {
+  warnAboutUpdateOnUnmounted = function(fiber: Fiber, isClass: boolean) {
     // We show the whole stack but dedupe on the top component's name because
     // the problematic code almost always lies inside that component.
-    const componentName = getComponentName(fiber.type) || 'ReactClass';
+    const componentName = getComponentName(fiber.type) || 'ReactComponent';
     if (didWarnStateUpdateForUnmountedComponent[componentName]) {
       return;
     }
     warningWithoutStack(
       false,
-      "Can't call setState (or forceUpdate) on an unmounted component. This " +
+      "Can't perform a React state update on an unmounted component. This " +
         'is a no-op, but it indicates a memory leak in your application. To ' +
-        'fix, cancel all subscriptions and asynchronous tasks in the ' +
-        'componentWillUnmount method.%s',
+        'fix, cancel all subscriptions and asynchronous tasks in %s.%s',
+      isClass
+        ? 'the componentWillUnmount method'
+        : 'a useEffect cleanup function',
       ReactCurrentFiber.getStackByFiberInDevAndProd(fiber),
     );
     didWarnStateUpdateForUnmountedComponent[componentName] = true;
@@ -1785,8 +1790,17 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
   }
 
   if (root === null) {
-    if (__DEV__ && fiber.tag === ClassComponent) {
-      warnAboutUpdateOnUnmounted(fiber);
+    if (__DEV__) {
+      switch (fiber.tag) {
+        case ClassComponent:
+          warnAboutUpdateOnUnmounted(fiber, true);
+          break;
+        case FunctionComponent:
+        case ForwardRef:
+        case PureComponent:
+          warnAboutUpdateOnUnmounted(fiber, false);
+          break;
+      }
     }
     return null;
   }
