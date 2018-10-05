@@ -76,14 +76,14 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders('stateless child with context', async render => {
-      function StatelessChildWithContext(props, context) {
+      function FunctionChildWithContext(props, context) {
         return <div>{context.text}</div>;
       }
-      StatelessChildWithContext.contextTypes = {text: PropTypes.string};
+      FunctionChildWithContext.contextTypes = {text: PropTypes.string};
 
       const e = await render(
         <PurpleContext>
-          <StatelessChildWithContext />
+          <FunctionChildWithContext />
         </PurpleContext>,
       );
       expect(e.textContent).toBe('purple');
@@ -106,14 +106,14 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders('stateless child without context', async render => {
-      function StatelessChildWithoutContext(props, context) {
+      function FunctionChildWithoutContext(props, context) {
         // this should render blank; context isn't passed to this component.
         return <div>{context.text}</div>;
       }
 
       const e = await render(
         <PurpleContext>
-          <StatelessChildWithoutContext />
+          <FunctionChildWithoutContext />
         </PurpleContext>,
       );
       expect(e.textContent).toBe('');
@@ -137,17 +137,17 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders('stateless child with wrong context', async render => {
-      function StatelessChildWithWrongContext(props, context) {
+      function FunctionChildWithWrongContext(props, context) {
         // this should render blank; context.text isn't passed to this component.
         return <div id="statelessWrongChild">{context.text}</div>;
       }
-      StatelessChildWithWrongContext.contextTypes = {
+      FunctionChildWithWrongContext.contextTypes = {
         foo: PropTypes.string,
       };
 
       const e = await render(
         <PurpleContext>
-          <StatelessChildWithWrongContext />
+          <FunctionChildWithWrongContext />
         </PurpleContext>,
       );
       expect(e.textContent).toBe('');

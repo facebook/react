@@ -9,7 +9,7 @@ exports[`Profiler works in profiling and non-profiling bundles enableSchedulerTr
     inside span
   </span>
   <span>
-    functional component
+    function component
   </span>
 </div>
 `;
@@ -21,7 +21,7 @@ exports[`Profiler works in profiling and non-profiling bundles enableSchedulerTr
 exports[`Profiler works in profiling and non-profiling bundles enableSchedulerTracing:disabled enableProfilerTimer:disabled should support nested Profilers 1`] = `
 Array [
   <div>
-    outer functional component
+    outer function component
   </div>,
   <block>
     inner class component
@@ -41,7 +41,7 @@ exports[`Profiler works in profiling and non-profiling bundles enableSchedulerTr
     inside span
   </span>
   <span>
-    functional component
+    function component
   </span>
 </div>
 `;
@@ -53,7 +53,7 @@ exports[`Profiler works in profiling and non-profiling bundles enableSchedulerTr
 exports[`Profiler works in profiling and non-profiling bundles enableSchedulerTracing:disabled enableProfilerTimer:enabled should support nested Profilers 1`] = `
 Array [
   <div>
-    outer functional component
+    outer function component
   </div>,
   <block>
     inner class component
@@ -73,7 +73,7 @@ exports[`Profiler works in profiling and non-profiling bundles enableSchedulerTr
     inside span
   </span>
   <span>
-    functional component
+    function component
   </span>
 </div>
 `;
@@ -85,7 +85,7 @@ exports[`Profiler works in profiling and non-profiling bundles enableSchedulerTr
 exports[`Profiler works in profiling and non-profiling bundles enableSchedulerTracing:enabled enableProfilerTimer:disabled should support nested Profilers 1`] = `
 Array [
   <div>
-    outer functional component
+    outer function component
   </div>,
   <block>
     inner class component
@@ -105,7 +105,7 @@ exports[`Profiler works in profiling and non-profiling bundles enableSchedulerTr
     inside span
   </span>
   <span>
-    functional component
+    function component
   </span>
 </div>
 `;
@@ -117,7 +117,7 @@ exports[`Profiler works in profiling and non-profiling bundles enableSchedulerTr
 exports[`Profiler works in profiling and non-profiling bundles enableSchedulerTracing:enabled enableProfilerTimer:enabled should support nested Profilers 1`] = `
 Array [
   <div>
-    outer functional component
+    outer function component
   </div>,
   <block>
     inner class component

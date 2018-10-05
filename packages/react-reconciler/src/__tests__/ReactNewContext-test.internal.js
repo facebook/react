@@ -43,7 +43,7 @@ describe('ReactNewContext', () => {
   // a suite of tests for a given context consumer implementation.
   sharedContextTests('Context.Consumer', Context => Context.Consumer);
   sharedContextTests(
-    'Context.unstable_read inside functional component',
+    'Context.unstable_read inside function component',
     Context =>
       function Consumer(props) {
         const observedBits = props.unstable_observedBits;
@@ -1144,7 +1144,13 @@ describe('ReactNewContext', () => {
           </App>
         </LegacyProvider>,
       );
-      expect(ReactNoop.flush()).toEqual(['LegacyProvider', 'App', 'Child']);
+      expect(() => {
+        expect(ReactNoop.flush()).toEqual(['LegacyProvider', 'App', 'Child']);
+      }).toWarnDev(
+        'Legacy context API has been detected within a strict-mode tree: \n\n' +
+          'Please update the following components: LegacyProvider',
+        {withoutStack: true},
+      );
       expect(ReactNoop.getChildren()).toEqual([span('Child')]);
 
       // Update App with same value (should bail out)

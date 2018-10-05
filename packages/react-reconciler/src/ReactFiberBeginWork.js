@@ -15,8 +15,8 @@ import checkPropTypes from 'prop-types/checkPropTypes';
 
 import {
   IndeterminateComponent,
-  FunctionalComponent,
-  FunctionalComponentLazy,
+  FunctionComponent,
+  FunctionComponentLazy,
   ClassComponent,
   ClassComponentLazy,
   HostRoot,
@@ -43,14 +43,12 @@ import {
   Update,
   Ref,
 } from 'shared/ReactSideEffectTags';
-import {captureWillSyncRenderPlaceholder} from './ReactFiberScheduler';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   enableSuspense,
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
   enableProfilerTimer,
-  enableSchedulerTracing,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
@@ -111,15 +109,15 @@ import {resolveLazyComponentTag} from './ReactFiber';
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
 let didWarnAboutBadClass;
-let didWarnAboutContextTypeOnFunctionalComponent;
-let didWarnAboutGetDerivedStateOnFunctionalComponent;
-let didWarnAboutStatelessRefs;
+let didWarnAboutContextTypeOnFunctionComponent;
+let didWarnAboutGetDerivedStateOnFunctionComponent;
+let didWarnAboutFunctionRefs;
 
 if (__DEV__) {
   didWarnAboutBadClass = {};
-  didWarnAboutContextTypeOnFunctionalComponent = {};
-  didWarnAboutGetDerivedStateOnFunctionalComponent = {};
-  didWarnAboutStatelessRefs = {};
+  didWarnAboutContextTypeOnFunctionComponent = {};
+  didWarnAboutGetDerivedStateOnFunctionComponent = {};
+  didWarnAboutFunctionRefs = {};
 }
 
 export function reconcileChildren(
@@ -258,7 +256,7 @@ function updatePureComponent(
     }
   }
 
-  // The rest is a fork of updateFunctionalComponent
+  // The rest is a fork of updateFunctionComponent
   let nextChildren;
   prepareToReadContext(workInProgress, renderExpirationTime);
   if (__DEV__) {
@@ -345,7 +343,7 @@ function markRef(current: Fiber | null, workInProgress: Fiber) {
   }
 }
 
-function updateFunctionalComponent(
+function updateFunctionComponent(
   current,
   workInProgress,
   Component,
@@ -730,8 +728,8 @@ function mountIndeterminateComponent(
     const resolvedProps = resolveDefaultProps(Component, props);
     let child;
     switch (resolvedTag) {
-      case FunctionalComponentLazy: {
-        child = updateFunctionalComponent(
+      case FunctionComponentLazy: {
+        child = updateFunctionComponent(
           current,
           workInProgress,
           Component,
@@ -869,13 +867,13 @@ function mountIndeterminateComponent(
       renderExpirationTime,
     );
   } else {
-    // Proceed under the assumption that this is a functional component
-    workInProgress.tag = FunctionalComponent;
+    // Proceed under the assumption that this is a function component
+    workInProgress.tag = FunctionComponent;
     if (__DEV__) {
       if (Component) {
         warningWithoutStack(
           !Component.childContextTypes,
-          '%s(...): childContextTypes cannot be defined on a functional component.',
+          '%s(...): childContextTypes cannot be defined on a function component.',
           Component.displayName || Component.name || 'Component',
         );
       }
@@ -891,11 +889,11 @@ function mountIndeterminateComponent(
         if (debugSource) {
           warningKey = debugSource.fileName + ':' + debugSource.lineNumber;
         }
-        if (!didWarnAboutStatelessRefs[warningKey]) {
-          didWarnAboutStatelessRefs[warningKey] = true;
+        if (!didWarnAboutFunctionRefs[warningKey]) {
+          didWarnAboutFunctionRefs[warningKey] = true;
           warning(
             false,
-            'Stateless function components cannot be given refs. ' +
+            'Function components cannot be given refs. ' +
               'Attempts to access this ref will fail.%s',
             info,
           );
@@ -905,15 +903,13 @@ function mountIndeterminateComponent(
       if (typeof Component.getDerivedStateFromProps === 'function') {
         const componentName = getComponentName(Component) || 'Unknown';
 
-        if (!didWarnAboutGetDerivedStateOnFunctionalComponent[componentName]) {
+        if (!didWarnAboutGetDerivedStateOnFunctionComponent[componentName]) {
           warningWithoutStack(
             false,
-            '%s: Stateless functional components do not support getDerivedStateFromProps.',
+            '%s: Function components do not support getDerivedStateFromProps.',
             componentName,
           );
-          didWarnAboutGetDerivedStateOnFunctionalComponent[
-            componentName
-          ] = true;
+          didWarnAboutGetDerivedStateOnFunctionComponent[componentName] = true;
         }
       }
 
@@ -923,13 +919,13 @@ function mountIndeterminateComponent(
       ) {
         const componentName = getComponentName(Component) || 'Unknown';
 
-        if (!didWarnAboutContextTypeOnFunctionalComponent[componentName]) {
+        if (!didWarnAboutContextTypeOnFunctionComponent[componentName]) {
           warningWithoutStack(
             false,
-            '%s: Stateless functional components do not support contextType.',
+            '%s: Function components do not support contextType.',
             componentName,
           );
-          didWarnAboutContextTypeOnFunctionalComponent[componentName] = true;
+          didWarnAboutContextTypeOnFunctionComponent[componentName] = true;
         }
       }
     }
@@ -954,13 +950,6 @@ function updatePlaceholderComponent(
 
     let nextDidTimeout;
     if (current !== null && workInProgress.updateQueue !== null) {
-      if (enableSchedulerTracing) {
-        // Handle special case of rendering a Placeholder for a sync, suspended tree.
-        // We flag this to properly trace and count interactions.
-        // Otherwise interaction pending count will be decremented too many times.
-        captureWillSyncRenderPlaceholder();
-      }
-
       // We're outside strict mode. Something inside this Placeholder boundary
       // suspended during the last commit. Switch to the placholder.
       workInProgress.updateQueue = null;
@@ -1297,10 +1286,10 @@ function beginWork(
         renderExpirationTime,
       );
     }
-    case FunctionalComponent: {
+    case FunctionComponent: {
       const Component = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
-      return updateFunctionalComponent(
+      return updateFunctionComponent(
         current,
         workInProgress,
         Component,
@@ -1308,11 +1297,11 @@ function beginWork(
         renderExpirationTime,
       );
     }
-    case FunctionalComponentLazy: {
+    case FunctionComponentLazy: {
       const thenable = workInProgress.type;
       const Component = getResultFromResolvedThenable(thenable);
       const unresolvedProps = workInProgress.pendingProps;
-      const child = updateFunctionalComponent(
+      const child = updateFunctionComponent(
         current,
         workInProgress,
         Component,

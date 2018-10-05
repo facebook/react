@@ -14,11 +14,12 @@ import type {CapturedValue} from './ReactCapturedValue';
 import type {Update} from './ReactUpdateQueue';
 import type {Thenable} from './ReactFiberScheduler';
 
+import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import getComponentName from 'shared/getComponentName';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {
   IndeterminateComponent,
-  FunctionalComponent,
+  FunctionComponent,
   ClassComponent,
   ClassComponentLazy,
   HostRoot,
@@ -59,7 +60,6 @@ import {
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
   retrySuspendedRoot,
-  captureWillSyncRenderPlaceholder,
 } from './ReactFiberScheduler';
 import {Sync} from './ReactFiberExpirationTime';
 
@@ -224,12 +224,15 @@ function throwException(
               : renderExpirationTime;
 
           // Attach a listener to the promise to "ping" the root and retry.
-          const onResolveOrReject = retrySuspendedRoot.bind(
+          let onResolveOrReject = retrySuspendedRoot.bind(
             null,
             root,
             workInProgress,
             pingTime,
           );
+          if (enableSchedulerTracing) {
+            onResolveOrReject = Schedule_tracing_wrap(onResolveOrReject);
+          }
           thenable.then(onResolveOrReject, onResolveOrReject);
 
           // If the boundary is outside of strict mode, we should *not* suspend
@@ -243,13 +246,6 @@ function throwException(
           if ((workInProgress.mode & StrictMode) === NoEffect) {
             workInProgress.effectTag |= UpdateEffect;
 
-            if (enableSchedulerTracing) {
-              // Handles the special case of unwinding a suspended sync render.
-              // We flag this to properly trace and count interactions.
-              // Otherwise interaction pending count will be decremented too many times.
-              captureWillSyncRenderPlaceholder();
-            }
-
             // Unmount the source fiber's children
             const nextChildren = null;
             reconcileChildren(
@@ -260,9 +256,9 @@ function throwException(
             );
             sourceFiber.effectTag &= ~Incomplete;
             if (sourceFiber.tag === IndeterminateComponent) {
-              // Let's just assume it's a functional component. This fiber will
+              // Let's just assume it's a function component. This fiber will
               // be unmounted in the immediate next commit, anyway.
-              sourceFiber.tag = FunctionalComponent;
+              sourceFiber.tag = FunctionComponent;
             }
 
             if (
@@ -275,11 +271,11 @@ function throwException(
               sourceFiber.effectTag &= ~LifecycleEffectMask;
               if (sourceFiber.alternate === null) {
                 // We're about to mount a class component that doesn't have an
-                // instance. Turn this into a dummy functional component instead,
+                // instance. Turn this into a dummy function component instead,
                 // to prevent type errors. This is a bit weird but it's an edge
                 // case and we're about to synchronously delete this
                 // component, anyway.
-                sourceFiber.tag = FunctionalComponent;
+                sourceFiber.tag = FunctionComponent;
                 sourceFiber.type = NoopComponent;
               }
             }

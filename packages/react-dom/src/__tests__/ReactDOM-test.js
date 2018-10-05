@@ -387,7 +387,7 @@ describe('ReactDOM', () => {
     }
   });
 
-  it('should not crash calling findDOMNode inside a functional component', () => {
+  it('should not crash calling findDOMNode inside a function component', () => {
     const container = document.createElement('div');
 
     class Component extends React.Component {
