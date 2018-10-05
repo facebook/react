@@ -12,7 +12,6 @@
 
 let React;
 let ReactDOMServer;
-let PropTypes;
 let REACT_TEXT_TYPE;
 let canOmitCloseTag;
 let omittedCloseTags;
@@ -119,7 +118,6 @@ describe('Omit optional close tags in ReactDOMServerRenderer', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    PropTypes = require('prop-types');
     ReactDOMServer = require('react-dom/server');
     REACT_TEXT_TYPE = require('shared/ReactSymbols').REACT_TEXT_TYPE;
     canOmitCloseTag = require('../shared/canOmitCloseTag').default;
@@ -281,8 +279,6 @@ describe('Omit optional close tags in ReactDOMServerRenderer', () => {
               : '';
           let secondChildOpen = '';
           let secondChildClose = '';
-          let firstChildAttributes = '';
-          let secondChildAttributes = '';
           let childAttributes =
             parentTag === undefined ? ' data-reactroot=""' : '';
 

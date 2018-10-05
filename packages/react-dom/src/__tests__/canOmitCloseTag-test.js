@@ -9,7 +9,6 @@
 
 import {REACT_TEXT_TYPE} from 'shared/ReactSymbols';
 import canOmitCloseTag from '../shared/canOmitCloseTag';
-import {isAutonomousCustomComponent} from '../shared/isCustomComponent';
 
 const tags = [
   'a',
