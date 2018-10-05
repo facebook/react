@@ -287,5 +287,12 @@
   "285": "The root failed to unmount after an error. This is likely a bug in React. Please file an issue.",
   "286": "%s(...): the first argument must be a React class instance. Instead received: %s.",
   "287": "It is not supported to run the profiling version of a renderer (for example, `react-dom/profiling`) without also replacing the `schedule/tracking` module with `schedule/tracking-profiling`. Your bundler might have a setting for aliasing both modules. Learn more at http://fb.me/react-profiling",
-  "288": "It is not supported to run the profiling version of a renderer (for example, `react-dom/profiling`) without also replacing the `schedule/tracing` module with `schedule/tracing-profiling`. Your bundler might have a setting for aliasing both modules. Learn more at http://fb.me/react-profiling"
+  "288": "It is not supported to run the profiling version of a renderer (for example, `react-dom/profiling`) without also replacing the `schedule/tracing` module with `schedule/tracing-profiling`. Your bundler might have a setting for aliasing both modules. Learn more at http://fb.me/react-profiling",
+  "289": "Hooks can only be called inside the body of a functional component.",
+  "290": "Rendered fewer hooks than expected. This may be caused by an accidental early return statement.",
+  "291": "Too many re-renders. React limits the number of renders to prevent an infinite loop.",
+  "292": "Function components cannot have refs.",
+  "293": "Element ref was specified as a string (%s) but no owner was set. This could happen for one of the following reasons:\n1. You may be adding a ref to a function component\n2. You may be adding a ref to a component that was not created inside a component's render method\n3. You have multiple copies of React loaded\nSee https://fb.me/react-refs-must-have-owner for more information.",
+  "294": "Log of yielded values is not empty. Call expect(ReactTestRenderer).toHaveYielded(...) first.",
+  "295": "The matcher `toHaveYielded` expects an instance of React Test Renderer.\n\nTry: expect(ReactTestRenderer).toHaveYielded(expectedYields)"
 }
