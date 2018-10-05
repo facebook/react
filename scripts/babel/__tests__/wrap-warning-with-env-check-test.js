@@ -10,8 +10,11 @@
 let babel = require('babel-core');
 let wrapWarningWithEnvCheck = require('../wrap-warning-with-env-check');
 
+const filename = "wrap-warning-with-env-check-test.js";
+
 function transform(input) {
   return babel.transform(input, {
+    filename,
     plugins: [wrapWarningWithEnvCheck],
   }).code;
 }
