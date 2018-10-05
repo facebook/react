@@ -6,7 +6,7 @@
  */
 'use strict';
 
-const babylon = require('babylon');
+const parser = require('@babel/parser');
 const fs = require('fs');
 const through = require('through2');
 const traverse = require('babel-traverse').default;
@@ -14,12 +14,8 @@ const gs = require('glob-stream');
 
 const evalToString = require('../shared/evalToString');
 
-const babylonOptions = {
+const parserOptions = {
   sourceType: 'module',
-  // As a parser, babylon has its own options and we can't directly
-  // import/require a babel preset. It should be kept **the same** as
-  // the `babel-plugin-syntax-*` ones specified in
-  // https://github.com/facebook/fbjs/blob/master/babel-preset/configure.js
   plugins: [
     'classProperties',
     'flow',
@@ -38,7 +34,7 @@ function transform(file, enc, cb) {
       return;
     }
 
-    const ast = babylon.parse(source, babylonOptions);
+    const ast = parser.parse(source, parserOptions);
     traverse(ast, {
       CallExpression: {
         exit: function(astPath) {
