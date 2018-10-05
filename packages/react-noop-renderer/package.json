@@ -13,7 +13,7 @@
     "react-reconciler": "*"
   },
   "peerDependencies": {
-    "react": "^16.0.0"
+    "react": "^16.0.0 || 16.6.0-alpha.400d197"
   },
   "files": [
     "LICENSE",
