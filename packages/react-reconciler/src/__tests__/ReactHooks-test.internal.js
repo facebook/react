@@ -309,6 +309,27 @@ describe('ReactHooks', () => {
 
       expect(updaters).toEqual([updaters[0], updaters[0], updaters[0]]);
     });
+
+    it('warns on set after unmount', () => {
+      let _updateCount;
+      function Counter(props, ref) {
+        const [, updateCount] = useState(0);
+        _updateCount = updateCount;
+        return null;
+      }
+
+      ReactNoop.render(<Counter />);
+      ReactNoop.flush();
+      ReactNoop.render(null);
+      ReactNoop.flush();
+      expect(() => _updateCount(1)).toWarnDev(
+        "Warning: Can't perform a React state update on an unmounted " +
+          'component. This is a no-op, but it indicates a memory leak in your ' +
+          'application. To fix, cancel all subscriptions and asynchronous ' +
+          'tasks in a useEffect cleanup function.\n' +
+          '    in Counter (at **)',
+      );
+    });
   });
 
   describe('updates during the render phase', () => {
