@@ -14,6 +14,8 @@ let React;
 let ReactDOMServer;
 let PropTypes;
 let REACT_TEXT_TYPE;
+let canOmitCloseTag;
+let omittedCloseTags;
 
 const minified = ([str]) => str.replace(/\n|\r| {2}/g, '');
 
@@ -120,6 +122,8 @@ describe('Omit optional close tags in ReactDOMServerRenderer', () => {
     PropTypes = require('prop-types');
     ReactDOMServer = require('react-dom/server');
     REACT_TEXT_TYPE = require('shared/ReactSymbols').REACT_TEXT_TYPE;
+    canOmitCloseTag = require('../shared/canOmitCloseTag').default;
+    omittedCloseTags = require('../shared/omittedCloseTags').default;
   });
 
   it('recreates w3c example w3.org/TR/html5/syntax.html#example-b26c8b39', () => {
@@ -206,8 +210,9 @@ describe('Omit optional close tags in ReactDOMServerRenderer', () => {
     `);
   });
 
-  it('correctly omits close tags', () => {
-    const parentTags = [...tags, undefined];
+  it('correctly omits close tags for parent agnostic elements', () => {
+    const parentTags = ['div', undefined];
+
     const childTags = [
       ...tags,
       'area',
@@ -229,6 +234,7 @@ describe('Omit optional close tags in ReactDOMServerRenderer', () => {
       'track',
       'wbr',
     ];
+
     const secondChildTags = [...childTags, undefined, REACT_TEXT_TYPE];
 
     parentTags.forEach(parentTag => {
@@ -251,8 +257,82 @@ describe('Omit optional close tags in ReactDOMServerRenderer', () => {
               ? children
               : React.createElement(parentTag, {}, children),
           );
+
+          const omitFirstCloseTag = canOmitCloseTag(
+            firstChildTag,
+            secondChildTag,
+            parentTag,
+          );
+
+          const omitSecondCloseTag = canOmitCloseTag(
+            secondChildTag,
+            undefined,
+            parentTag,
+          );
+
+          let parentOpen =
+            parentTag !== undefined ? `<${parentTag} data-reactroot=\"\">` : '';
+          let parentClose = parentTag !== undefined ? `</${parentTag}>` : '';
+          let firstChildOpen = '';
+          let firstChildClose =
+            !omitFirstCloseTag &&
+            !omittedCloseTags.hasOwnProperty(firstChildTag)
+              ? `</${firstChildTag}>`
+              : '';
+          let secondChildOpen = '';
+          let secondChildClose = '';
+          let firstChildAttributes = '';
+          let secondChildAttributes = '';
+          let childAttributes =
+            parentTag === undefined ? ' data-reactroot=""' : '';
+
+          firstChildOpen = omittedCloseTags.hasOwnProperty(firstChildTag)
+            ? `<${firstChildTag}${childAttributes}/>`
+            : `<${firstChildTag}${childAttributes}>`;
+
+          if (secondChildTag === REACT_TEXT_TYPE) {
+            secondChildOpen = 'text';
+          } else if (secondChildTag !== undefined) {
+            secondChildOpen = omittedCloseTags.hasOwnProperty(secondChildTag)
+              ? `<${secondChildTag}${childAttributes}/>`
+              : `<${secondChildTag}${childAttributes}>`;
+            if (
+              !omitSecondCloseTag &&
+              !omittedCloseTags.hasOwnProperty(secondChildTag)
+            ) {
+              secondChildClose = `</${secondChildTag}>`;
+            }
+          }
+
+          expect(response).toMatch(
+            parentOpen +
+              firstChildOpen +
+              firstChildClose +
+              secondChildOpen +
+              secondChildClose +
+              parentClose,
+          );
         });
       });
+    });
+  });
+
+  it('correctly omits p close tag with no next sibling depending on parent', () => {
+    tags.forEach(parentTag => {
+      const response = ReactDOMServer.renderToString(
+        React.createElement(parentTag, {}, React.createElement('p')),
+      );
+
+      const parentOpen = `<${parentTag} data-reactroot=\"\">`;
+      const parentClose = `</${parentTag}>`;
+      const childOpen = '<p>';
+      const childClose = canOmitCloseTag('p', undefined, parentTag)
+        ? ''
+        : '</p>';
+
+      expect(response).toMatch(
+        parentOpen + childOpen + childClose + parentClose,
+      );
     });
   });
 });
