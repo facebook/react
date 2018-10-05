@@ -2,6 +2,7 @@
 
 const {rollup} = require('rollup');
 const babel = require('rollup-plugin-babel');
+const babelParser = require('@babel/parser');
 const closure = require('./plugins/closure-plugin');
 const commonjs = require('rollup-plugin-commonjs');
 const prettier = require('rollup-plugin-prettier');
@@ -22,7 +23,7 @@ const stripUnusedImports = require('./plugins/strip-unused-imports');
 const extractErrorCodes = require('../error-codes/extract-errors');
 const Packaging = require('./packaging');
 const {asyncCopyTo, asyncRimRaf} = require('./utils');
-const codeFrame = require('babel-code-frame');
+const codeFrame = require('@babel/code-frame');
 const Wrappers = require('./wrappers');
 
 // Errors in promises should be fatal.
@@ -358,7 +359,14 @@ function getPlugins(
     // Note that this plugin must be called after closure applies DCE.
     isProduction && stripUnusedImports(pureExternalModules),
     // Add the whitespace back if necessary.
-    shouldStayReadable && prettier({parser: 'babylon'}),
+    shouldStayReadable &&
+      prettier({
+        parser(text) {
+          return babelParser.parse(text, {
+            sourceType: 'module',
+          });
+        },
+      }),
     // License and haste headers, top-level `if` blocks.
     {
       transformBundle(source) {
