@@ -163,7 +163,7 @@ const bundles = [
     babel: opts =>
       Object.assign({}, opts, {
         // Include JSX
-        presets: opts.presets.concat([require.resolve('babel-preset-react')]),
+        presets: opts.presets.concat([require.resolve('@babel/preset-react')]),
       }),
   },
 
@@ -288,7 +288,7 @@ const bundles = [
     babel: opts =>
       Object.assign({}, opts, {
         plugins: opts.plugins.concat([
-          require.resolve('babel-plugin-transform-regenerator'),
+          require.resolve('@babel/plugin-transform-regenerator'),
         ]),
       }),
   },
@@ -311,7 +311,7 @@ const bundles = [
     babel: opts =>
       Object.assign({}, opts, {
         plugins: opts.plugins.concat([
-          require.resolve('babel-plugin-transform-regenerator'),
+          require.resolve('@babel/plugin-transform-regenerator'),
         ]),
       }),
   },
