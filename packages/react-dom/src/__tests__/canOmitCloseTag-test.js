@@ -7,8 +7,9 @@
  * @emails react-core
  */
 
-import {REACT_TEXT_TYPE} from 'shared/ReactSymbols';
 import canOmitCloseTag from '../shared/canOmitCloseTag';
+
+const REACT_TEXT_TYPE = Symbol.for('react.text');
 
 const tags = [
   'a',

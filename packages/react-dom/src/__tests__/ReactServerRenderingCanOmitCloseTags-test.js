@@ -119,7 +119,7 @@ describe('Omit optional close tags in ReactDOMServerRenderer', () => {
     jest.resetModules();
     React = require('react');
     ReactDOMServer = require('react-dom/server');
-    REACT_TEXT_TYPE = require('shared/ReactSymbols').REACT_TEXT_TYPE;
+    REACT_TEXT_TYPE = Symbol.for('react.text');
     canOmitCloseTag = require('../shared/canOmitCloseTag').default;
     omittedCloseTags = require('../shared/omittedCloseTags').default;
   });
