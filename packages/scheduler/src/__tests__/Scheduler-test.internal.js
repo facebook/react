@@ -153,6 +153,53 @@ describe('Scheduler', () => {
     expect(flushWork(400)).toEqual(['D']);
   });
 
+  it('flushes work until framesize reached', () => {
+    scheduleWork(() => doWork('A1_100', 100));
+    scheduleWork(() => doWork('A2_200', 200));
+    scheduleWork(() => doWork('B1_100', 100));
+    scheduleWork(() => doWork('B2_200', 200));
+    scheduleWork(() => doWork('C1_300', 300));
+    scheduleWork(() => doWork('C2_300', 300));
+    scheduleWork(() => doWork('D_3000', 3000));
+    scheduleWork(() => doWork('E1_300', 300));
+    scheduleWork(() => doWork('E2_200', 200));
+    scheduleWork(() => doWork('F1_200', 200));
+    scheduleWork(() => doWork('F2_200', 200));
+    scheduleWork(() => doWork('F3_300', 300));
+    scheduleWork(() => doWork('F4_500', 500));
+    scheduleWork(() => doWork('F5_200', 200));
+    scheduleWork(() => doWork('F6_20', 20));
+
+    expect(Date.now()).toEqual(0);
+    // No time left after A1_100 and A2_200 are run
+    expect(flushWork(300)).toEqual(['A1_100', 'A2_200']);
+    expect(Date.now()).toEqual(300);
+    // B2_200 is started as there is still time left after B1_100
+    expect(flushWork(101)).toEqual(['B1_100', 'B2_200']);
+    expect(Date.now()).toEqual(600);
+    // C1_300 is started as there is even a little frame time
+    expect(flushWork(1)).toEqual(['C1_300']);
+    expect(Date.now()).toEqual(900);
+    // C2_300 is started even though there is no frame time
+    expect(flushWork(0)).toEqual(['C2_300']);
+    expect(Date.now()).toEqual(1200);
+    // D_3000 is very slow, but won't affect next flushes (if no timeouts happen)
+    expect(flushWork(100)).toEqual(['D_3000']);
+    expect(Date.now()).toEqual(4200);
+    expect(flushWork(400)).toEqual(['E1_300', 'E2_200']);
+    expect(Date.now()).toEqual(4700);
+    // Default timeout is 5000, so during F2_200, work will timeout and are done in reverse, including F2_200
+    expect(flushWork(1000)).toEqual([
+      'F1_200',
+      'F6_20',
+      'F5_200',
+      'F4_500',
+      'F3_300',
+      'F2_200',
+    ]);
+    expect(Date.now()).toEqual(6120);
+  });
+
   it('cancels work', () => {
     scheduleCallback(() => doWork('A', 100));
     const callbackHandleB = scheduleCallback(() => doWork('B', 200));
