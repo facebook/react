@@ -7,12 +7,14 @@
 
 'use strict';
 
+const addDefault = require('@babel/helper-module-imports').addDefault;
+
 module.exports = function autoImporter(babel) {
   function getAssignIdent(path, file, state) {
     if (state.id) {
       return state.id;
     }
-    state.id = file.addImport('object-assign', 'default', 'assign');
+    state.id = addDefault(path, 'object-assign', { nameHint: 'assign' });
     return state.id;
   }
 
