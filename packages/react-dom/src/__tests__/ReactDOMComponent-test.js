@@ -2678,7 +2678,10 @@ describe('ReactDOMComponent', () => {
       const portalContainer = document.createElement('div');
 
       function Component() {
-        return ReactDOM.createPortal(<div onClick={() => {}} />, portalContainer);
+        return ReactDOM.createPortal(
+          <div onClick={() => {}} />,
+          portalContainer,
+        );
       }
 
       ReactDOM.render(<Component />, container);
