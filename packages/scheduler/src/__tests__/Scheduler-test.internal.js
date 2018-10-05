@@ -33,6 +33,7 @@ describe('Scheduler', () => {
     let isFlushing = false;
     let timeoutID = -1;
     let endOfFrame = -1;
+    let hasMicrotask = false;
 
     let currentTime = 0;
 
@@ -54,6 +55,9 @@ describe('Scheduler', () => {
       } finally {
         isFlushing = false;
         endOfFrame = -1;
+        if (hasMicrotask) {
+          onTimeout();
+        }
       }
       const yields = yieldedValues;
       yieldedValues = [];
@@ -89,14 +93,13 @@ describe('Scheduler', () => {
         return;
       }
       if (isFlushing) {
-        // Jest fires timers synchronously when jest.advanceTimersByTime is
-        // called. Use setImmediate to prevent re-entrancy.
-        setImmediate(onTimeout);
+        hasMicrotask = true;
       } else {
         try {
           isFlushing = true;
           _flushWork(true);
         } finally {
+          hasMicrotask = false;
           isFlushing = false;
         }
       }
@@ -151,6 +154,55 @@ describe('Scheduler', () => {
     expect(flushWork(300)).toEqual(['A', 'B']);
     expect(flushWork(300)).toEqual(['C']);
     expect(flushWork(400)).toEqual(['D']);
+  });
+
+  it('flushes work until framesize reached', () => {
+    scheduleCallback(() => doWork('A1_100', 100));
+    scheduleCallback(() => doWork('A2_200', 200));
+    scheduleCallback(() => doWork('B1_100', 100));
+    scheduleCallback(() => doWork('B2_200', 200));
+    scheduleCallback(() => doWork('C1_300', 300));
+    scheduleCallback(() => doWork('C2_300', 300));
+    scheduleCallback(() => doWork('D_3000', 3000));
+    scheduleCallback(() => doWork('E1_300', 300));
+    scheduleCallback(() => doWork('E2_200', 200));
+    scheduleCallback(() => doWork('F1_200', 200));
+    scheduleCallback(() => doWork('F2_200', 200));
+    scheduleCallback(() => doWork('F3_300', 300));
+    scheduleCallback(() => doWork('F4_500', 500));
+    scheduleCallback(() => doWork('F5_200', 200));
+    scheduleCallback(() => doWork('F6_20', 20));
+
+    expect(Date.now()).toEqual(0);
+    // No time left after A1_100 and A2_200 are run
+    expect(flushWork(300)).toEqual(['A1_100', 'A2_200']);
+    expect(Date.now()).toEqual(300);
+    // B2_200 is started as there is still time left after B1_100
+    expect(flushWork(101)).toEqual(['B1_100', 'B2_200']);
+    expect(Date.now()).toEqual(600);
+    // C1_300 is started as there is even a little frame time
+    expect(flushWork(1)).toEqual(['C1_300']);
+    expect(Date.now()).toEqual(900);
+    // C2_300 is started even though there is no frame time
+    expect(flushWork(0)).toEqual(['C2_300']);
+    expect(Date.now()).toEqual(1200);
+    // D_3000 is very slow, but won't affect next flushes (if no
+    // timeouts happen)
+    expect(flushWork(100)).toEqual(['D_3000']);
+    expect(Date.now()).toEqual(4200);
+    expect(flushWork(400)).toEqual(['E1_300', 'E2_200']);
+    expect(Date.now()).toEqual(4700);
+    // Default timeout is 5000, so during F2_200, work will timeout and are done
+    // in reverse, including F2_200
+    expect(flushWork(1000)).toEqual([
+      'F1_200',
+      'F2_200',
+      'F3_300',
+      'F4_500',
+      'F5_200',
+      'F6_20',
+    ]);
+    expect(Date.now()).toEqual(6120);
   });
 
   it('cancels work', () => {
@@ -246,7 +298,7 @@ describe('Scheduler', () => {
   });
 
   it('continuation callbacks inherit the expiration of the previous callback', () => {
-    const tasks = [['A', 125], ['B', 125], ['C', 125], ['D', 125]];
+    const tasks = [['A', 125], ['B', 124], ['C', 100], ['D', 100]];
     const work = deadline => {
       while (tasks.length > 0) {
         doWork(...tasks.shift());
