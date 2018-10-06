@@ -341,32 +341,6 @@ describe('ReactJSXElementValidator', () => {
     );
   });
 
-  it('does not warn when using getDefaultProps with createReactClass', () => {
-    // Set NODE_ENV to 'production' to verify that dev specific flags
-    // are not necessary
-    const ORIGINAL_ENV = process.env;
-    process.env = {
-      ...ORIGINAL_ENV,
-      NODE_ENV: 'production',
-    };
-    const createReactClass = require('create-react-class');
-    const ValidGetDefaultPropsComponent = createReactClass({
-      getDefaultProps: function() {
-        return {
-          prop: 'foo',
-        };
-      },
-      render: function() {
-        return <span>{this.props.prop}</span>;
-      },
-    });
-
-    spyOnDevAndProd(console, 'error');
-    ReactTestUtils.renderIntoDocument(<ValidGetDefaultPropsComponent />);
-    expect(console.error).not.toHaveBeenCalled();
-    process.env = ORIGINAL_ENV;
-  });
-
   it('should warn if component declares PropTypes instead of propTypes', () => {
     class MisspelledPropTypesComponent extends React.Component {
       render() {
@@ -439,6 +413,41 @@ describe('ReactJSXElementValidator', () => {
       ),
     ).toWarnDev('Encountered two children with the same key, `a`.', {
       withoutStack: true,
+    });
+  });
+
+  describe('production build', () => {
+    let originalEnv;
+    beforeAll(() => {
+      // Set NODE_ENV to 'production' to verify that dev specific flags
+      // are not necessary
+      originalEnv = process.env;
+      process.env = {
+        ...originalEnv,
+        NODE_ENV: 'production',
+      };
+    });
+
+    afterAll(() => {
+      process.env = originalEnv;
+    });
+
+    it('does not warn when using getDefaultProps with createReactClass', () => {
+      const createReactClass = require('create-react-class');
+      const ValidGetDefaultPropsComponent = createReactClass({
+        getDefaultProps: function() {
+          return {
+            prop: 'foo',
+          };
+        },
+        render: function() {
+          return <span>{this.props.prop}</span>;
+        },
+      });
+
+      spyOnDevAndProd(console, 'error');
+      ReactTestUtils.renderIntoDocument(<ValidGetDefaultPropsComponent />);
+      expect(console.error).not.toHaveBeenCalled();
     });
   });
 });
