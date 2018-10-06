@@ -2427,7 +2427,7 @@ describe('ReactDOMComponent', () => {
       const container = document.createElement('div');
 
       ReactDOM.render(<img src={obj} />, container);
-      expect(container.firstChild.src).toBe('hello');
+      expect(container.firstChild.src).toMatch('hello');
 
       ReactDOM.render(<svg arabicForm={obj} />, container);
       expect(container.firstChild.getAttribute('arabic-form')).toBe('hello');
@@ -2461,7 +2461,7 @@ describe('ReactDOMComponent', () => {
       const child = Object.create(parent);
       const el = ReactTestUtils.renderIntoDocument(<img src={child} />);
 
-      expect(el.src).toBe('hello.jpg');
+      expect(el.src).toMatch('hello.jpg');
     });
 
     it('assigns ajaxify (an important internal FB attribute)', function() {

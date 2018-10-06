@@ -61,8 +61,8 @@
     "google-closure-compiler": "20180506.0.0",
     "gzip-size": "^3.0.0",
     "jasmine-check": "^1.0.0-rc.0",
-    "jest": "^23.1.0",
-    "jest-diff": "^23.0.1",
+    "jest": "^23.6.0",
+    "jest-diff": "^23.6.0",
     "minimatch": "^3.0.4",
     "minimist": "^1.2.0",
     "mkdirp": "^0.5.1",
@@ -94,6 +94,7 @@
   },
   "scripts": {
     "build": "npm run version-check && node ./scripts/rollup/build.js",
+    "babel": "babel packages/react-dom/src/__tests__/ReactCompositeComponent-test.js",
     "linc": "node ./scripts/tasks/linc.js",
     "lint": "node ./scripts/tasks/eslint.js",
     "lint-build": "node ./scripts/rollup/validate/index.js",
