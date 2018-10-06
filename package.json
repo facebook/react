@@ -9,7 +9,6 @@
     "@babel/code-frame": "^7.0.0",
     "@babel/core": "^7.0.0",
     "@babel/parser": "^7.1.2",
-    "@babel/plugin-external-helpers": "^7.0.0",
     "@babel/plugin-proposal-class-properties": "^7.0.0",
     "@babel/plugin-proposal-object-rest-spread": "^7.0.0",
     "@babel/plugin-transform-arrow-functions": "^7.0.0",
@@ -94,7 +93,6 @@
   },
   "scripts": {
     "build": "npm run version-check && node ./scripts/rollup/build.js",
-    "babel": "babel packages/react-dom/src/__tests__/ReactCompositeComponent-test.js",
     "linc": "node ./scripts/tasks/linc.js",
     "lint": "node ./scripts/tasks/eslint.js",
     "lint-build": "node ./scripts/rollup/validate/index.js",

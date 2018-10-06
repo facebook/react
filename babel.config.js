@@ -9,7 +9,7 @@ module.exports = {
     '@babel/transform-literals',
     '@babel/plugin-transform-arrow-functions',
     '@babel/transform-block-scoped-functions',
-    ['@babel/transform-classes', {loose: true}],
+    '@babel/plugin-transform-classes',
     '@babel/transform-object-super',
     '@babel/transform-shorthand-properties',
     '@babel/transform-computed-properties',
