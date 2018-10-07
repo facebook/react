@@ -17,7 +17,7 @@ module.exports = function(babel) {
   const SEEN_SYMBOL = Symbol('replace-invariant-error-codes.seen');
 
   // Generate a hygienic identifier
-  function getProdInvariantIdentifier(path, file, localState) {
+  function getProdInvariantIdentifier(path, localState) {
     if (!localState.prodInvariantIdentifier) {
       localState.prodInvariantIdentifier = addDefault(
         path,
@@ -37,7 +37,7 @@ module.exports = function(babel) {
 
     visitor: {
       CallExpression: {
-        exit(path, file) {
+        exit(path) {
           const node = path.node;
           // Ignore if it's already been processed
           if (node[SEEN_SYMBOL]) {
@@ -96,7 +96,6 @@ module.exports = function(babel) {
 
             const localInvariantId = getProdInvariantIdentifier(
               path,
-              file,
               this
             );
             const prodErrorId = errorMap[errorMsgLiteral];
