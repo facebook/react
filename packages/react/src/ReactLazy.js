@@ -3,20 +3,25 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
+type Resolve<T> = T => mixed;
+type Reject = mixed => mixed;
+
 type Thenable<T, R> = {
-  then(resolve: (T) => mixed, reject: (mixed) => mixed): R,
+  then(resolve: Resolve<T>, reject: Reject): R,
 };
 
 export function lazy<T, R>(ctor: () => Thenable<T, R>) {
   let thenable = null;
+
   return {
-    then(resolve, reject) {
+    then(resolve: Resolve<T>, reject: Reject): R {
       if (thenable === null) {
         // Lazily create thenable by wrapping in an extra thenable.
         thenable = ctor();
-        ctor = null;
       }
       return thenable.then(resolve, reject);
     },
