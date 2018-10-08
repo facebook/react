@@ -417,8 +417,6 @@ function createCloseTagMarkup(
   nextSibling: ?mixed, // Either a string or a symbol (REACT_TEXT_TYPE)
   parent: ?string,
 ): string {
-  // console.log('tag', tag, 'nextSibling', nextSibling, 'parent', parent);
-  // console.log('');
   return typeof tag === 'string' &&
     !omittedCloseTags.hasOwnProperty(tag) &&
     !canOmitCloseTag(tag, nextSibling, parent)
@@ -1295,9 +1293,7 @@ class ReactDOMServerRenderer {
 
     assertValidProps(tag, props);
 
-    let out = '';
-
-    out += createCloseTagMarkup(
+    let out = createCloseTagMarkup(
       this.previousSiblingTag,
       tag,
       this.parentTagStack[this.parentTagStack.length - 1],
