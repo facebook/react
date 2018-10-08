@@ -303,7 +303,7 @@ describe('ReactNewContext', () => {
         };
 
         ReactNoop.render(
-          <React.Fragment>
+          <>
             <BarContext.Provider value={{value: 'bar-updated'}}>
               <BarConsumer>
                 {({value}) => <Verify actual={value} expected="bar-updated" />}
@@ -324,7 +324,7 @@ describe('ReactNewContext', () => {
             <BarConsumer>
               {({value}) => <Verify actual={value} expected="bar-initial" />}
             </BarConsumer>
-          </React.Fragment>,
+          </>,
         );
         ReactNoop.flush();
       });
@@ -501,7 +501,7 @@ describe('ReactNewContext', () => {
 
         function App(props) {
           return (
-            <React.Fragment>
+            <>
               <Context.Provider value="Does not unwind">
                 <ErrorBoundary>
                   <Context.Provider value="Unwinds after BadRender throws">
@@ -510,7 +510,7 @@ describe('ReactNewContext', () => {
                 </ErrorBoundary>
                 <Consumer />
               </Context.Provider>
-            </React.Fragment>
+            </>
           );
         }
 
@@ -648,10 +648,10 @@ describe('ReactNewContext', () => {
               {value => {
                 ReactNoop.yield('Foo');
                 return (
-                  <React.Fragment>
+                  <>
                     <span prop={'Foo: ' + value.foo} />
                     {props.children && props.children()}
-                  </React.Fragment>
+                  </>
                 );
               }}
             </Consumer>
@@ -664,10 +664,10 @@ describe('ReactNewContext', () => {
               {value => {
                 ReactNoop.yield('Bar');
                 return (
-                  <React.Fragment>
+                  <>
                     <span prop={'Bar: ' + value.bar} />
                     {props.children && props.children()}
-                  </React.Fragment>
+                  </>
                 );
               }}
             </Consumer>
@@ -808,10 +808,10 @@ describe('ReactNewContext', () => {
           render() {
             ReactNoop.yield('PureIndirection');
             return (
-              <React.Fragment>
+              <>
                 <ChildWithInlineRenderCallback />
                 <ChildWithCachedRenderCallback />
-              </React.Fragment>
+              </>
             );
           }
         }
@@ -953,12 +953,12 @@ describe('ReactNewContext', () => {
         class StaticContent extends React.PureComponent {
           render() {
             return (
-              <React.Fragment>
-                <React.Fragment>
+              <>
+                <>
                   <span prop="static 1" />
                   <span prop="static 2" />
-                </React.Fragment>
-              </React.Fragment>
+                </>
+              </>
             );
           }
         }

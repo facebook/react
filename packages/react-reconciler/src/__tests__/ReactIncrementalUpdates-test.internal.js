@@ -418,10 +418,10 @@ describe('ReactIncrementalUpdates', () => {
       render() {
         foo = this;
         return (
-          <React.Fragment>
+          <>
             <span prop={this.state.value} />
             <Bar />
-          </React.Fragment>
+          </>
         );
       }
     }

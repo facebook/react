@@ -35,9 +35,9 @@ describe('ReactFragment', () => {
 
   it('should render a single child via noop renderer', () => {
     const element = (
-      <React.Fragment>
+      <>
         <span>foo</span>
-      </React.Fragment>
+      </>
     );
 
     ReactNoop.render(element);
@@ -57,9 +57,9 @@ describe('ReactFragment', () => {
 
   it('should render multiple children via noop renderer', () => {
     const element = (
-      <React.Fragment>
+      <>
         hello <span>world</span>
-      </React.Fragment>
+      </>
     );
 
     ReactNoop.render(element);
@@ -70,9 +70,9 @@ describe('ReactFragment', () => {
 
   it('should render an iterable via noop renderer', () => {
     const element = (
-      <React.Fragment>
+      <>
         {new Set([<span key="a">hi</span>, <span key="b">bye</span>])}
-      </React.Fragment>
+      </>
     );
 
     ReactNoop.render(element);
@@ -98,10 +98,10 @@ describe('ReactFragment', () => {
       return condition ? (
         <Stateful key="a" />
       ) : (
-        <React.Fragment>
+        <>
           <Stateful key="a" />
           <div key="b">World</div>
-        </React.Fragment>
+        </>
       );
     }
 
@@ -136,13 +136,13 @@ describe('ReactFragment', () => {
 
     function Foo({condition}) {
       return condition ? (
-        <React.Fragment>
+        <>
           <Stateful />
-        </React.Fragment>
+        </>
       ) : (
-        <React.Fragment>
+        <>
           <Stateful />
-        </React.Fragment>
+        </>
       );
     }
 
@@ -177,22 +177,22 @@ describe('ReactFragment', () => {
 
     function Foo({condition}) {
       return condition ? (
-        <React.Fragment>
-          <React.Fragment>
-            <React.Fragment>
+        <>
+          <>
+            <>
               <Stateful key="a" />
-            </React.Fragment>
-          </React.Fragment>
-        </React.Fragment>
+            </>
+          </>
+        </>
       ) : (
-        <React.Fragment>
-          <React.Fragment>
-            <React.Fragment>
+        <>
+          <>
+            <>
               <div />
               <Stateful key="a" />
-            </React.Fragment>
-          </React.Fragment>
-        </React.Fragment>
+            </>
+          </>
+        </>
       );
     }
 
@@ -227,15 +227,15 @@ describe('ReactFragment', () => {
 
     function Foo({condition}) {
       return condition ? (
-        <React.Fragment>
-          <React.Fragment>
+        <>
+          <>
             <Stateful key="a" />
-          </React.Fragment>
-        </React.Fragment>
+          </>
+        </>
       ) : (
-        <React.Fragment>
+        <>
           <Stateful key="a" />
-        </React.Fragment>
+        </>
       );
     }
 
@@ -272,11 +272,11 @@ describe('ReactFragment', () => {
       return condition ? (
         <Stateful key="a" />
       ) : (
-        <React.Fragment>
-          <React.Fragment>
+        <>
+          <>
             <Stateful key="a" />
-          </React.Fragment>
-        </React.Fragment>
+          </>
+        </>
       );
     }
 
@@ -313,12 +313,12 @@ describe('ReactFragment', () => {
       return condition ? (
         <Stateful key="a" />
       ) : (
-        <React.Fragment>
-          <React.Fragment>
+        <>
+          <>
             <Stateful key="a" />
-          </React.Fragment>
+          </>
           <div />
-        </React.Fragment>
+        </>
       );
     }
 
@@ -353,11 +353,11 @@ describe('ReactFragment', () => {
 
     function Foo({condition}) {
       return condition ? (
-        <React.Fragment>
+        <>
           <Stateful key="a" />
-        </React.Fragment>
+        </>
       ) : (
-        <React.Fragment>{[<Stateful key="a" />]}</React.Fragment>
+        <>{[<Stateful key="a" />]}</>
       );
     }
 
@@ -394,9 +394,9 @@ describe('ReactFragment', () => {
       return condition ? (
         [<Stateful key="a" />]
       ) : (
-        <React.Fragment>
+        <>
           <Stateful key="a" />
-        </React.Fragment>
+        </>
       );
     }
 
@@ -431,13 +431,13 @@ describe('ReactFragment', () => {
 
     function Foo({condition}) {
       return condition ? (
-        <React.Fragment>{[<Stateful key="a" />]}</React.Fragment>
+        <>{[<Stateful key="a" />]}</>
       ) : (
-        <React.Fragment>
-          <React.Fragment>
+        <>
+          <>
             <Stateful key="a" />
-          </React.Fragment>
-        </React.Fragment>
+          </>
+        </>
       );
     }
 
@@ -472,7 +472,7 @@ describe('ReactFragment', () => {
 
     function Foo({condition}) {
       return condition ? (
-        <React.Fragment>{[<Stateful key="a" />]}</React.Fragment>
+        <>{[<Stateful key="a" />]}</>
       ) : (
         [[<Stateful key="a" />]]
       );
@@ -509,11 +509,11 @@ describe('ReactFragment', () => {
 
     function Foo({condition}) {
       return condition ? (
-        <React.Fragment>
-          <React.Fragment>
+        <>
+          <>
             <Stateful key="a" />
-          </React.Fragment>
-        </React.Fragment>
+          </>
+        </>
       ) : (
         [[<Stateful key="a" />]]
       );
@@ -596,9 +596,9 @@ describe('ReactFragment', () => {
           <Stateful />
         </React.Fragment>
       ) : (
-        <React.Fragment>
+        <>
           <Stateful />
-        </React.Fragment>
+        </>
       );
     }
 
@@ -737,15 +737,15 @@ describe('ReactFragment', () => {
       return condition
         ? [
             <span />,
-            <React.Fragment>
+            <>
               <Stateful />
-            </React.Fragment>,
+            </>,
           ]
         : [
             <span />,
-            <React.Fragment>
+            <>
               <Stateful />
-            </React.Fragment>,
+            </>,
           ];
     }
 
