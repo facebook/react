@@ -9,7 +9,7 @@
 const parser = require('@babel/parser');
 const fs = require('fs');
 const path = require('path');
-const traverse = require('babel-traverse').default;
+const traverse = require('@babel/traverse').default;
 const evalToString = require('../shared/evalToString');
 const invertObject = require('./invertObject');
 
