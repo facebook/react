@@ -10,7 +10,7 @@
 const addDefault = require('@babel/helper-module-imports').addDefault;
 
 module.exports = function autoImporter(babel) {
-  function getAssignIdent(path, file, state) {
+  function getAssignIdent(path, state) {
     if (state.id) {
       return state.id;
     }
@@ -25,17 +25,17 @@ module.exports = function autoImporter(babel) {
     },
 
     visitor: {
-      CallExpression: function(path, file) {
+      CallExpression: function(path) {
         if (path.get('callee').matchesPattern('Object.assign')) {
           // generate identifier and require if it hasn't been already
-          const id = getAssignIdent(path, file, this);
+          const id = getAssignIdent(path, this);
           path.node.callee = id;
         }
       },
 
-      MemberExpression: function(path, file) {
+      MemberExpression: function(path) {
         if (path.matchesPattern('Object.assign')) {
-          const id = getAssignIdent(path, file, this);
+          const id = getAssignIdent(path, this);
           path.replaceWith(id);
         }
       },
