@@ -10,7 +10,7 @@
 let babel = require('babel-core');
 let devExpressionWithCodes = require('../replace-invariant-error-codes');
 
-const filename = "replace-invariant-error-codes-test.js";
+const filename = 'replace-invariant-error-codes-test.js';
 
 function transform(input) {
   return babel.transform(input, {
@@ -38,13 +38,13 @@ describe('error codes transform', () => {
 
   it('should replace simple invariant calls', () => {
     compare(
-      "import invariant from \"shared/invariant\";\n" +
-        "invariant(condition, \"Do not override existing functions.\");",
-      "import _prodInvariant from \"shared/reactProdInvariant\";\n" +
-        "import invariant from \"shared/invariant\";\n" +
+      'import invariant from "shared/invariant";\n' +
+        'invariant(condition, "Do not override existing functions.");',
+      'import _prodInvariant from "shared/reactProdInvariant";\n' +
+        'import invariant from "shared/invariant";\n' +
         '!condition ? ' +
         '__DEV__ ? ' +
-        "invariant(false, \"Do not override existing functions.\") : " +
+        'invariant(false, "Do not override existing functions.") : ' +
         `_prodInvariant(\"16\") : void 0;`
     );
   });
@@ -53,7 +53,7 @@ describe('error codes transform', () => {
     const expectedInvariantTransformResult =
       '!condition ? ' +
       '__DEV__ ? ' +
-      "invariant(false, \"Do not override existing functions.\") : " +
+      'invariant(false, "Do not override existing functions.") : ' +
       `_prodInvariant(\"16\") : void 0;`;
 
     compare(
@@ -71,7 +71,7 @@ ${expectedInvariantTransformResult}`
     compare(
       "import invariant from 'shared/invariant';\n" +
         "invariant(condition, 'Expected %s target to be an array; got %s', 'foo', 'bar');",
-      "import _prodInvariant from \"shared/reactProdInvariant\";\n" +
+      'import _prodInvariant from "shared/reactProdInvariant";\n' +
         "import invariant from 'shared/invariant';\n" +
         '!condition ? ' +
         '__DEV__ ? ' +
@@ -82,10 +82,10 @@ ${expectedInvariantTransformResult}`
 
   it('should support invariant calls with a concatenated template string and args', () => {
     compare(
-      "import invariant from \"shared/invariant\";\n" +
+      'import invariant from "shared/invariant";\n' +
         "invariant(condition, 'Expected a component class, ' + 'got %s.' + '%s', 'Foo', 'Bar');",
-      "import _prodInvariant from \"shared/reactProdInvariant\";\n" +
-        "import invariant from \"shared/invariant\";\n" +
+      'import _prodInvariant from "shared/reactProdInvariant";\n' +
+        'import invariant from "shared/invariant";\n' +
         '!condition ? ' +
         '__DEV__ ? ' +
         "invariant(false, \"Expected a component class, got %s.%s\", 'Foo', 'Bar') : " +
@@ -97,9 +97,9 @@ ${expectedInvariantTransformResult}`
     compare(
       "import invariant from 'shared/invariant';\n" +
         "invariant(condition, 'This is not a real error message.');",
-      "import _prodInvariant from \"shared/reactProdInvariant\";\n" +
+      'import _prodInvariant from "shared/reactProdInvariant";\n' +
         "import invariant from 'shared/invariant';\n" +
-        "!condition ? invariant(false, \"This is not a real error message.\") : void 0;"
+        '!condition ? invariant(false, "This is not a real error message.") : void 0;'
     );
   });
 });

@@ -22,7 +22,7 @@ module.exports = function(babel) {
       localState.prodInvariantIdentifier = addDefault(
         path,
         'shared/reactProdInvariant',
-        {nameHint: 'prodInvariant'},
+        {nameHint: 'prodInvariant'}
       );
     }
     return localState.prodInvariantIdentifier;
@@ -94,10 +94,7 @@ module.exports = function(babel) {
             );
             const errorMap = invertObject(existingErrorMap);
 
-            const localInvariantId = getProdInvariantIdentifier(
-              path,
-              this
-            );
+            const localInvariantId = getProdInvariantIdentifier(path, this);
             const prodErrorId = errorMap[errorMsgLiteral];
             let body = null;
 

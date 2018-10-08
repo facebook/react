@@ -14,7 +14,7 @@ module.exports = function autoImporter(babel) {
     if (state.id) {
       return state.id;
     }
-    state.id = addDefault(path, 'object-assign', { nameHint: 'assign' });
+    state.id = addDefault(path, 'object-assign', {nameHint: 'assign'});
     return state.id;
   }
 
