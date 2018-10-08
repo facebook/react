@@ -163,6 +163,7 @@ describe('forwardRef', () => {
   });
 
   it('should not warn if the render function provided does not use any parameter', () => {
+    // eslint-disable-next-line no-undef
     const arityOfZero = () => <div ref={arguments[1]} />;
     React.forwardRef(arityOfZero);
   });

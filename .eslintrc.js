@@ -37,7 +37,7 @@ module.exports = {
     'no-shadow': ERROR,
     'no-unused-expressions': ERROR,
     'no-unused-vars': [ERROR, {args: 'none'}],
-    'no-use-before-define': [ERROR, {functions: false, variables: false}],
+    'no-use-before-define': [ERROR, {functions: false, classes: false, variables: false}],
     'no-useless-concat': OFF,
     'quotes': [ERROR, 'single', {avoidEscape: true, allowTemplateLiterals: true }],
     'space-before-blocks': ERROR,
@@ -50,7 +50,7 @@ module.exports = {
     'react/jsx-no-undef': ERROR,
     // We don't care to do this
     'react/jsx-sort-prop-types': OFF,
-    'react/jsx-space-before-closing': ERROR,
+    'react/jsx-tag-spacing': [ERROR, {beforeSelfClosing: 'always'}],
     'react/jsx-uses-react': ERROR,
     'react/no-is-mounted': OFF,
     // This isn't useful in our test code

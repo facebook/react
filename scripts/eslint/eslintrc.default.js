@@ -18,7 +18,7 @@ const ERROR = 2;
 module.exports = Object.assign({}, eslintrc, {
   parser: 'espree',
   parserOptions: {
-    ecmaVersion: 2017,
+    ecmaVersion: 2018,
     sourceType: 'script',
     ecmaFeatures: {
       experimentalObjectRestSpread: true,
