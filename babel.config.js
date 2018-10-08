@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = {
   presets: ['@babel/react', '@babel/preset-flow'],
   ignore: ['third_party'],
