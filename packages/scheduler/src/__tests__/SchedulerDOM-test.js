@@ -50,8 +50,9 @@ describe('SchedulerDOM', () => {
   function runRAFCallbacks() {
     startOfLatestFrame += frameSize;
     currentTime = startOfLatestFrame;
-    rAFCallbacks.forEach(cb => cb());
+    const cbs = rAFCallbacks;
     rAFCallbacks = [];
+    cbs.forEach(cb => cb());
   }
   function advanceOneFrame(config: FrameTimeoutConfigType = {}) {
     runRAFCallbacks();
@@ -59,8 +60,8 @@ describe('SchedulerDOM', () => {
   }
 
   let frameSize = 33;
-  let startOfLatestFrame = Date.now();
-  let currentTime = Date.now();
+  let startOfLatestFrame = 0;
+  let currentTime = 0;
 
   beforeEach(() => {
     // TODO pull this into helper method, reduce repetition.
@@ -107,6 +108,25 @@ describe('SchedulerDOM', () => {
       // should not have timed out and should include a timeRemaining method
       expect(cb.mock.calls[0][0].didTimeout).toBe(false);
       expect(typeof cb.mock.calls[0][0].timeRemaining()).toBe('number');
+    });
+
+    it('inserts its rAF callback as early into the queue as possible', () => {
+      const {unstable_scheduleCallback: scheduleCallback} = Scheduler;
+      const log = [];
+      const useRAFCallback = () => {
+        log.push('userRAFCallback');
+      };
+      scheduleCallback(() => {
+        // Call rAF while idle work is being flushed.
+        requestAnimationFrame(useRAFCallback);
+      });
+      advanceOneFrame({timeLeftInFrame: 1});
+      // There should be two callbacks: the one scheduled by Scheduler at the
+      // beginning of the frame, and the one scheduled later during that frame.
+      expect(rAFCallbacks.length).toBe(2);
+      // The user callback should be the second callback.
+      rAFCallbacks[1]();
+      expect(log).toEqual(['userRAFCallback']);
     });
 
     describe('with multiple callbacks', () => {
