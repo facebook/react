@@ -48,7 +48,7 @@ describe('ReactNewContext', () => {
   // a suite of tests for a given context consumer implementation.
   sharedContextTests('Context.Consumer', Context => Context.Consumer);
   sharedContextTests(
-    'useContext inside functional component',
+    'useContext inside function component',
     Context =>
       function Consumer(props) {
         const observedBits = props.unstable_observedBits;
@@ -1342,7 +1342,7 @@ describe('ReactNewContext', () => {
       }
       ReactNoop.render(<Foo />);
       expect(ReactNoop.flush).toThrow(
-        'Hooks can only be called inside the body of a functional component.',
+        'Hooks can only be called inside the body of a function component.',
       );
     });
   });

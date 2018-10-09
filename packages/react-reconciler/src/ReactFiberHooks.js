@@ -121,7 +121,7 @@ const RE_RENDER_LIMIT = 25;
 function resolveCurrentlyRenderingFiber(): Fiber {
   invariant(
     currentlyRenderingFiber !== null,
-    'Hooks can only be called inside the body of a functional component.',
+    'Hooks can only be called inside the body of a function component.',
   );
   return currentlyRenderingFiber;
 }
@@ -154,7 +154,7 @@ export function finishHooks(
   children: any,
   refOrContext: any,
 ): any {
-  // This must be called after every functional component to prevent hooks from
+  // This must be called after every function component to prevent hooks from
   // being used in classes.
 
   while (didScheduleRenderPhaseUpdate) {
@@ -325,7 +325,7 @@ export function useContext<T>(
   context: ReactContext<T>,
   observedBits: void | number | boolean,
 ): T {
-  // Ensure we're in a functional component (class components support only the
+  // Ensure we're in a function component (class components support only the
   // .unstable_read() form)
   resolveCurrentlyRenderingFiber();
   return readContext(context, observedBits);

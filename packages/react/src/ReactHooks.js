@@ -16,7 +16,7 @@ function resolveDispatcher() {
   const dispatcher = ReactCurrentOwner.currentDispatcher;
   invariant(
     dispatcher !== null,
-    'Hooks can only be called inside the body of a functional component.',
+    'Hooks can only be called inside the body of a function component.',
   );
   return dispatcher;
 }

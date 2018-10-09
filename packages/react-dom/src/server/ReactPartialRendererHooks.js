@@ -50,7 +50,7 @@ const RE_RENDER_LIMIT = 25;
 function resolveCurrentlyRenderingComponent(): Object {
   invariant(
     currentlyRenderingComponent !== null,
-    'Hooks can only be called inside the body of a functional component.',
+    'Hooks can only be called inside the body of a function component.',
   );
   return currentlyRenderingComponent;
 }
@@ -105,7 +105,7 @@ export function finishHooks(
   children: any,
   refOrContext: any,
 ): any {
-  // This must be called after every functional component to prevent hooks from
+  // This must be called after every function component to prevent hooks from
   // being used in classes.
 
   while (didScheduleRenderPhaseUpdate) {
@@ -321,7 +321,7 @@ function dispatchAction<S, A>(
       lastRenderPhaseUpdate.next = update;
     }
   } else {
-    // This means an update has happened after the functional component has
+    // This means an update has happened after the function component has
     // returned. On the server this is a no-op. In React Fiber, the update
     // would be scheduled for a future render.
   }
