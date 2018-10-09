@@ -70,9 +70,7 @@ describe('ReactFragment', () => {
 
   it('should render an iterable via noop renderer', () => {
     const element = (
-      <>
-        {new Set([<span key="a">hi</span>, <span key="b">bye</span>])}
-      </>
+      <>{new Set([<span key="a">hi</span>, <span key="b">bye</span>])}</>
     );
 
     ReactNoop.render(element);
