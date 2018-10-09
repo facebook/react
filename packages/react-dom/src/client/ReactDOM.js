@@ -126,7 +126,7 @@ if (__DEV__) {
 
 ReactControlledComponent.setRestoreImplementation(restoreControlledState);
 
-type DOMContainer =
+export type DOMContainer =
   | (Element & {
       _reactRootContainer: ?Root,
     })
