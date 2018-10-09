@@ -176,17 +176,16 @@ function throwException(
     do {
       if (workInProgress.tag === SuspenseComponent) {
         const current = workInProgress.alternate;
-        if (
-          current !== null &&
-          current.memoizedState === true &&
-          current.stateNode !== null
-        ) {
+        if (current !== null && current.updateQueue !== null) {
           // Reached a placeholder that already timed out. Each timed out
           // placeholder acts as the root of a new suspense boundary.
 
           // Use the time at which the placeholder timed out as the start time
           // for the current render.
-          const timedOutAt = current.stateNode.timedOutAt;
+          const suspenseInfo: {|
+            timedOutAt: ExpirationTime,
+          |} = (current.updateQueue: any);
+          const timedOutAt = suspenseInfo.timedOutAt;
           startTimeMs = expirationTimeToMs(timedOutAt);
 
           // Do not search any further.

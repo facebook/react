@@ -65,7 +65,7 @@ import {
 } from './ReactChildFiber';
 import {processUpdateQueue} from './ReactUpdateQueue';
 import {NoWork, Never} from './ReactFiberExpirationTime';
-import {ConcurrentMode, StrictMode} from './ReactTypeOfMode';
+import {ConcurrentMode, StrictMode, NoContext} from './ReactTypeOfMode';
 import {
   shouldSetTextContent,
   shouldDeprioritizeSubtree,
@@ -951,24 +951,24 @@ function updateSuspenseComponent(
   const alreadyCaptured = (workInProgress.effectTag & DidCapture) === NoEffect;
 
   let nextDidTimeout;
-  if (current !== null && workInProgress.updateQueue !== null) {
-    // We're outside strict mode. Something inside this Placeholder boundary
-    // suspended during the last commit. Switch to the placholder.
-    workInProgress.updateQueue = null;
-    nextDidTimeout = true;
+  if ((workInProgress.mode & StrictMode) === NoContext) {
+    // We're outside strict mode.
+    if (workInProgress.updateQueue !== null) {
+      // Something inside this boundary suspended during the last commit. Switch
+      // to the placholder.
+      workInProgress.updateQueue = null;
+      nextDidTimeout = true;
+    } else {
+      nextDidTimeout = false;
+    }
   } else {
-    nextDidTimeout = !alreadyCaptured;
-  }
-
-  if ((workInProgress.mode & StrictMode) !== NoEffect) {
-    if (nextDidTimeout) {
+    if (alreadyCaptured) {
+      nextDidTimeout = false;
+    } else {
       // If the timed-out view commits, schedule an update effect to record
       // the committed time.
+      nextDidTimeout = true;
       workInProgress.effectTag |= Update;
-    } else {
-      // The state node points to the time at which placeholder timed out.
-      // We can clear it once we switch back to the normal children.
-      workInProgress.stateNode = null;
     }
   }
 

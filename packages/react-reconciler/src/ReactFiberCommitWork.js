@@ -39,7 +39,6 @@ import {
   clearCaughtError,
 } from 'shared/ReactErrorUtils';
 import {
-  NoEffect,
   ContentReset,
   Placement,
   Snapshot,
@@ -78,7 +77,7 @@ import {
   requestCurrentTime,
   scheduleWork,
 } from './ReactFiberScheduler';
-import {StrictMode} from './ReactTypeOfMode';
+import {NoContext, StrictMode} from './ReactTypeOfMode';
 
 const emptyObject = {};
 
@@ -352,19 +351,19 @@ function commitLifeCycles(
       return;
     }
     case SuspenseComponent: {
-      if ((finishedWork.mode & StrictMode) === NoEffect) {
-        // In loose mode, a placeholder times out by scheduling a synchronous
-        // update in the commit phase. Use `updateQueue` field to signal that
-        // the Timeout needs to switch to the placeholder. We don't need an
-        // entire queue. Any non-null value works.
+      if ((finishedWork.mode & StrictMode) === NoContext) {
+        // In loose mode, a suspense boundary times out by scheduling a
+        // synchronous update in the commit phase. Use `updateQueue` field to
+        // signal that the Timeout needs to switch to the placeholder. We don't
+        // need an entire queue. Any non-null value works.
         // $FlowFixMe - Intentionally using a value other than an UpdateQueue.
         finishedWork.updateQueue = emptyObject;
         scheduleWork(finishedWork, Sync);
       } else {
         // In strict mode, the Update effect is used to record the time at
-        // which the placeholder timed out.
-        const currentTime = requestCurrentTime();
-        finishedWork.stateNode = {timedOutAt: currentTime};
+        // which the children timed out.
+        // $FlowFixMe - Intentionally using a value other than an UpdateQueue.
+        finishedWork.updateQueue = {timedOutAt: requestCurrentTime()};
       }
       return;
     }
