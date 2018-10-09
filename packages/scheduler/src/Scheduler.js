@@ -534,13 +534,13 @@ if (typeof window !== 'undefined' && window._schedMock) {
     }
   }
 
-  var scheduledCallback = null;
-  var isIdleScheduled = false;
+  var scheduledHostCallback = null;
+  var isMessageEventScheduled = false;
   var timeoutTime = -1;
 
   var isAnimationFrameScheduled = false;
 
-  var isPerformingIdleWork = false;
+  var isFlushingHostCallback = false;
 
   var frameDeadline = 0;
   // We start out assuming that we run at 30fps but then the heuristic tracking
@@ -564,7 +564,12 @@ if (typeof window !== 'undefined' && window._schedMock) {
       return;
     }
 
-    isIdleScheduled = false;
+    isMessageEventScheduled = false;
+
+    var prevScheduledCallback = scheduledHostCallback;
+    var prevTimeoutTime = timeoutTime;
+    scheduledHostCallback = null;
+    timeoutTime = -1;
 
     var currentTime = getCurrentTime();
 
@@ -572,7 +577,7 @@ if (typeof window !== 'undefined' && window._schedMock) {
     if (frameDeadline - currentTime <= 0) {
       // There's no time left in this idle period. Check if the callback has
       // a timeout and whether it's been exceeded.
-      if (timeoutTime !== -1 && timeoutTime <= currentTime) {
+      if (prevTimeoutTime !== -1 && prevTimeoutTime <= currentTime) {
         // Exceeded the timeout. Invoke the callback even though there's no
         // time left.
         didTimeout = true;
@@ -584,19 +589,18 @@ if (typeof window !== 'undefined' && window._schedMock) {
           requestAnimationFrameWithTimeout(animationTick);
         }
         // Exit without invoking the callback.
+        scheduledHostCallback = prevScheduledCallback;
+        timeoutTime = prevTimeoutTime;
         return;
       }
     }
 
-    timeoutTime = -1;
-    var callback = scheduledCallback;
-    scheduledCallback = null;
-    if (callback !== null) {
-      isPerformingIdleWork = true;
+    if (prevScheduledCallback !== null) {
+      isFlushingHostCallback = true;
       try {
-        callback(didTimeout);
+        prevScheduledCallback(didTimeout);
       } finally {
-        isPerformingIdleWork = false;
+        isFlushingHostCallback = false;
       }
     }
   };
@@ -605,7 +609,22 @@ if (typeof window !== 'undefined' && window._schedMock) {
   window.addEventListener('message', idleTick, false);
 
   var animationTick = function(rafTime) {
-    isAnimationFrameScheduled = false;
+    if (scheduledHostCallback !== null) {
+      // Eagerly schedule the next animation callback at the beginning of the
+      // frame. If the scheduler queue is not empty at the end of the frame, it
+      // will continue flushing inside that callback. If the queue *is* empty,
+      // then it will exit immediately. Posting the callback at the start of the
+      // frame ensures it's fired within the earliest possible frame. If we
+      // waited until the end of the frame to post the callback, we risk the
+      // browser skipping a frame and not firing the callback until the frame
+      // after that.
+      requestAnimationFrameWithTimeout(animationTick);
+    } else {
+      // No pending work. Exit.
+      isAnimationFrameScheduled = false;
+      return;
+    }
+
     var nextFrameTime = rafTime - frameDeadline + activeFrameTime;
     if (
       nextFrameTime < activeFrameTime &&
@@ -629,16 +648,16 @@ if (typeof window !== 'undefined' && window._schedMock) {
       previousFrameTime = nextFrameTime;
     }
     frameDeadline = rafTime + activeFrameTime;
-    if (!isIdleScheduled) {
-      isIdleScheduled = true;
+    if (!isMessageEventScheduled) {
+      isMessageEventScheduled = true;
       window.postMessage(messageKey, '*');
     }
   };
 
   requestHostCallback = function(callback, absoluteTimeout) {
-    scheduledCallback = callback;
+    scheduledHostCallback = callback;
     timeoutTime = absoluteTimeout;
-    if (isPerformingIdleWork || absoluteTimeout < 0) {
+    if (isFlushingHostCallback || absoluteTimeout < 0) {
       // Don't wait for the next frame. Continue working ASAP, in a new event.
       window.postMessage(messageKey, '*');
     } else if (!isAnimationFrameScheduled) {
@@ -652,8 +671,8 @@ if (typeof window !== 'undefined' && window._schedMock) {
   };
 
   cancelHostCallback = function() {
-    scheduledCallback = null;
-    isIdleScheduled = false;
+    scheduledHostCallback = null;
+    isMessageEventScheduled = false;
     timeoutTime = -1;
   };
 }
