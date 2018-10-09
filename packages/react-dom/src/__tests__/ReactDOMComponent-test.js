@@ -2670,7 +2670,7 @@ describe('ReactDOMComponent', () => {
       }
 
       ReactDOM.render(<Component />, container);
-      expect(typeof elementRef.current.onclick === 'function').toBeTruthy();
+      expect(typeof elementRef.current.onclick).toBe('function');
     });
 
     it('adds onclick handler to a portal root', () => {
@@ -2685,7 +2685,7 @@ describe('ReactDOMComponent', () => {
       }
 
       ReactDOM.render(<Component />, container);
-      expect(typeof portalContainer.onclick === 'function').toBeTruthy();
+      expect(typeof portalContainer.onclick).toBe('function');
     });
 
     it('does not add onclick handler to the React root', () => {
@@ -2696,7 +2696,7 @@ describe('ReactDOMComponent', () => {
       }
 
       ReactDOM.render(<Component />, container);
-      expect(typeof container.onclick === 'function').toBeFalsy();
+      expect(typeof container.onclick).not.toBe('function');
     });
   });
 });

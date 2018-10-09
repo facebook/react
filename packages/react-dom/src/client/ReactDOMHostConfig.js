@@ -36,6 +36,8 @@ import {
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
 
+import type {DOMContainer} from './ReactDOM';
+
 export type Type = string;
 export type Props = {
   autoFocus?: boolean,
@@ -340,14 +342,6 @@ export function appendChild(
 ): void {
   parentInstance.appendChild(child);
 }
-
-type DOMContainer =
-  | (Element & {
-      _reactRootContainer: ?{},
-    })
-  | (Document & {
-      _reactRootContainer: ?{},
-    });
 
 export function appendChildToContainer(
   container: DOMContainer,
