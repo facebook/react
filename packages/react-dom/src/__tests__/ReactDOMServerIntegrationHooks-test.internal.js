@@ -145,7 +145,7 @@ describe('ReactDOMServerHooks', () => {
 
         return render(<Counter />);
       },
-      'Hooks can only be called inside the body of a functional component.',
+      'Hooks can only be called inside the body of a function component.',
     );
 
     itRenders('multiple times when an updater is called', async render => {

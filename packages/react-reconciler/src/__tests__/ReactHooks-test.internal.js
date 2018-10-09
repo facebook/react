@@ -121,7 +121,7 @@ describe('ReactHooks', () => {
     ReactNoop.render(<BadCounter />);
 
     expect(() => ReactNoop.flush()).toThrow(
-      'Hooks can only be called inside the body of a functional component.',
+      'Hooks can only be called inside the body of a function component.',
     );
 
     // Confirm that a subsequent hook works properly.
@@ -144,7 +144,7 @@ describe('ReactHooks', () => {
     }
     ReactNoop.render(<Counter />);
     expect(() => ReactNoop.flush()).toThrow(
-      'Hooks can only be called inside the body of a functional component.',
+      'Hooks can only be called inside the body of a function component.',
     );
 
     // Confirm that a subsequent hook works properly.
@@ -158,7 +158,7 @@ describe('ReactHooks', () => {
 
   it('throws when called outside the render phase', () => {
     expect(() => useState(0)).toThrow(
-      'Hooks can only be called inside the body of a functional component.',
+      'Hooks can only be called inside the body of a function component.',
     );
   });
 
