@@ -36,7 +36,6 @@
     "babel-core": "^7.0.0-bridge.0",
     "babel-eslint": "^10.0.0",
     "babel-jest": "^23.6.0",
-    "babel-plugin-syntax-trailing-function-commas": "^6.5.0",
     "chalk": "^2.4.1",
     "cli-table": "^0.3.1",
     "coffee-script": "^1.8.0",
