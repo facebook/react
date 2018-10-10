@@ -31,6 +31,7 @@ const babelOptions = {
     // For Node environment only. For builds, Rollup takes care of ESM.
     require.resolve('@babel/plugin-transform-modules-commonjs'),
 
+    pathToBabelPluginDevWithCode,
     pathToBabelPluginWrapWarning,
 
     // Keep stacks detailed in tests.
