@@ -36,7 +36,7 @@ import {
   Update as UpdateEffect,
   LifecycleEffectMask,
 } from 'shared/ReactSideEffectTags';
-import {enableSuspense, enableSchedulerTracing} from 'shared/ReactFeatureFlags';
+import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
 import {StrictMode, ConcurrentMode} from './ReactTypeOfMode';
 
 import {createCapturedValue} from './ReactCapturedValue';
@@ -158,7 +158,6 @@ function throwException(
   sourceFiber.firstEffect = sourceFiber.lastEffect = null;
 
   if (
-    enableSuspense &&
     value !== null &&
     typeof value === 'object' &&
     typeof value.then === 'function'

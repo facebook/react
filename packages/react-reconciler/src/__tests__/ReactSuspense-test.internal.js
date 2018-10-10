@@ -18,13 +18,12 @@ describe('ReactSuspense', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
-    ReactFeatureFlags.enableSuspense = true;
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     // JestReact = require('jest-react');
     ReactCache = require('react-cache');
 
-    Placeholder = React.Placeholder;
+    Placeholder = React.unstable_Placeholder;
 
     function invalidateCache() {
       cache = ReactCache.createCache(invalidateCache);

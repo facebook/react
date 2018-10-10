@@ -21,7 +21,6 @@ describe('pure', () => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
-    ReactFeatureFlags.enableSuspense = true;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
   });
@@ -50,7 +49,7 @@ describe('pure', () => {
   function sharedTests(label, pure) {
     describe(`${label}`, () => {
       it('bails out on props equality', async () => {
-        const {Placeholder} = React;
+        const {unstable_Placeholder: Placeholder} = React;
 
         function Counter({count}) {
           return <Text text={count} />;
@@ -88,7 +87,7 @@ describe('pure', () => {
     });
 
     it("does not bail out if there's a context change", async () => {
-      const {Placeholder} = React;
+      const {unstable_Placeholder: Placeholder} = React;
 
       const CountContext = React.createContext(0);
 
@@ -130,7 +129,7 @@ describe('pure', () => {
     });
 
     it('accepts custom comparison function', async () => {
-      const {Placeholder} = React;
+      const {unstable_Placeholder: Placeholder} = React;
 
       function Counter({count}) {
         return <Text text={count} />;
