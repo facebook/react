@@ -5,7 +5,6 @@ module.exports = {
   ignore: ['third_party'],
   plugins: [
     '@babel/proposal-class-properties',
-    'syntax-trailing-function-commas',
     ['@babel/proposal-object-rest-spread', {useBuiltIns: true}],
     '@babel/transform-template-literals',
     '@babel/transform-literals',
