@@ -16,12 +16,7 @@ const evalToString = require('../shared/evalToString');
 
 const parserOptions = {
   sourceType: 'module',
-  plugins: [
-    'classProperties',
-    'flow',
-    'jsx',
-    'objectRestSpread',
-  ],
+  plugins: ['classProperties', 'flow', 'jsx', 'objectRestSpread'],
 };
 
 const warnings = new Set();

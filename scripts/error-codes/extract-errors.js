@@ -15,12 +15,7 @@ const invertObject = require('./invertObject');
 
 const parserOptions = {
   sourceType: 'module',
-  plugins: [
-    'classProperties',
-    'flow',
-    'jsx',
-    'objectRestSpread',
-  ],
+  plugins: ['classProperties', 'flow', 'jsx', 'objectRestSpread'],
 };
 
 module.exports = function(opts) {
