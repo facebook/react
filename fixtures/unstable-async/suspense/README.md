@@ -14,19 +14,13 @@ No. The APIs being tested here are unstable and some of them have still not been
 
 Clone the React repository.
 
-First, open this file locally:
-
-* `packages/shared/ReactFeatureFlags.js` (make sure you didn't open a similarly named file!)
-
-Set [the `enableSuspense` flag](https://github.com/facebook/react/blob/d79238f1eeb6634ba7a3df23c3b2709b56cbb8b2/packages/shared/ReactFeatureFlags.js#L19) to `true` and save the file.
-
-**After you've done that,** follow these steps:
+Follow these steps:
 
 ```shell
 # 1: Build react from source
 cd /path/to/react
 yarn
-yarn build dom-client,core,react-cache,schedule --type=NODE
+yarn build dom-client,core,react-cache,scheduler --type=NODE
 
 # 2: Install fixture dependencies
 cd fixtures/unstable-async/suspense/
