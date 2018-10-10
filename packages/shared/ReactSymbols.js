@@ -38,8 +38,8 @@ export const REACT_CONCURRENT_MODE_TYPE = hasSymbol
 export const REACT_FORWARD_REF_TYPE = hasSymbol
   ? Symbol.for('react.forward_ref')
   : 0xead0;
-export const REACT_PLACEHOLDER_TYPE = hasSymbol
-  ? Symbol.for('react.placeholder')
+export const REACT_SUSPENSE_TYPE = hasSymbol
+  ? Symbol.for('react.suspense')
   : 0xead1;
 export const REACT_PURE_TYPE = hasSymbol ? Symbol.for('react.pure') : 0xead3;
 

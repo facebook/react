@@ -21,7 +21,6 @@ function initModules() {
   jest.resetModuleRegistry();
 
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.enableSuspense = true;
   ReactFeatureFlags.enableSuspenseServerRenderer = true;
 
   React = require('react');
@@ -39,7 +38,7 @@ const {resetModules, serverRender} = ReactDOMServerIntegrationUtils(
   initModules,
 );
 
-describe('ReactDOMServerPlaceholders', () => {
+describe('ReactDOMServerSuspense', () => {
   beforeEach(() => {
     resetModules();
   });
@@ -49,9 +48,9 @@ describe('ReactDOMServerPlaceholders', () => {
       throw new Promise(() => {});
     };
     const e = await serverRender(
-      <React.Placeholder fallback={<div />}>
+      <React.unstable_Suspense fallback={<div />}>
         <Suspended />
-      </React.Placeholder>,
+      </React.unstable_Suspense>,
     );
 
     expect(e.tagName).toBe('DIV');

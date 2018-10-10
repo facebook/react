@@ -33,7 +33,7 @@ import {
   REACT_FRAGMENT_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_CONCURRENT_MODE_TYPE,
-  REACT_PLACEHOLDER_TYPE,
+  REACT_SUSPENSE_TYPE,
   REACT_PORTAL_TYPE,
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
@@ -916,7 +916,7 @@ class ReactDOMServerRenderer {
           this.stack.push(frame);
           return '';
         }
-        case REACT_PLACEHOLDER_TYPE: {
+        case REACT_SUSPENSE_TYPE: {
           if (enableSuspenseServerRenderer) {
             const nextChildren = toArray(
               // Always use the fallback when synchronously rendering to string.

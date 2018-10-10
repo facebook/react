@@ -1,4 +1,4 @@
-import React, {Placeholder, PureComponent} from 'react';
+import React, {unstable_Suspense as Suspense, PureComponent} from 'react';
 import {unstable_scheduleCallback} from 'scheduler';
 import {
   unstable_trace as trace,
@@ -76,21 +76,21 @@ export default class App extends PureComponent {
           }}>
           Return to list
         </button>
-        <Placeholder delayMs={2000} fallback={<Spinner size="large" />}>
+        <Suspense maxDuration={2000} fallback={<Spinner size="large" />}>
           <UserPageLoader id={id} />
-        </Placeholder>
+        </Suspense>
       </div>
     );
   }
 
   renderList(loadingId) {
     return (
-      <Placeholder delayMs={1500} fallback={<Spinner size="large" />}>
+      <Suspense maxDuration={1500} fallback={<Spinner size="large" />}>
         <ContributorListPage
           loadingId={loadingId}
           onUserClick={this.handleUserClick}
         />
-      </Placeholder>
+      </Suspense>
     );
   }
 }

@@ -30,7 +30,7 @@ import {
   ContextProvider,
   ContextConsumer,
   Profiler,
-  PlaceholderComponent,
+  SuspenseComponent,
   PureComponent,
   PureComponentLazy,
 } from 'shared/ReactWorkTags';
@@ -45,7 +45,6 @@ import {
 } from 'shared/ReactSideEffectTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
-  enableSuspense,
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
   enableProfilerTimer,
@@ -935,77 +934,72 @@ function mountIndeterminateComponent(
   }
 }
 
-function updatePlaceholderComponent(
+function updateSuspenseComponent(
   current,
   workInProgress,
   renderExpirationTime,
 ) {
-  if (enableSuspense) {
-    const nextProps = workInProgress.pendingProps;
+  const nextProps = workInProgress.pendingProps;
 
-    // Check if we already attempted to render the normal state. If we did,
-    // and we timed out, render the placeholder state.
-    const alreadyCaptured =
-      (workInProgress.effectTag & DidCapture) === NoEffect;
+  // Check if we already attempted to render the normal state. If we did,
+  // and we timed out, render the placeholder state.
+  const alreadyCaptured = (workInProgress.effectTag & DidCapture) === NoEffect;
 
-    let nextDidTimeout;
-    if (current !== null && workInProgress.updateQueue !== null) {
-      // We're outside strict mode. Something inside this Placeholder boundary
-      // suspended during the last commit. Switch to the placholder.
-      workInProgress.updateQueue = null;
-      nextDidTimeout = true;
-    } else {
-      nextDidTimeout = !alreadyCaptured;
-    }
-
-    if ((workInProgress.mode & StrictMode) !== NoEffect) {
-      if (nextDidTimeout) {
-        // If the timed-out view commits, schedule an update effect to record
-        // the committed time.
-        workInProgress.effectTag |= Update;
-      } else {
-        // The state node points to the time at which placeholder timed out.
-        // We can clear it once we switch back to the normal children.
-        workInProgress.stateNode = null;
-      }
-    }
-
-    // If the `children` prop is a function, treat it like a render prop.
-    // TODO: This is temporary until we finalize a lower level API.
-    const children = nextProps.children;
-    let nextChildren;
-    if (typeof children === 'function') {
-      nextChildren = children(nextDidTimeout);
-    } else {
-      nextChildren = nextDidTimeout ? nextProps.fallback : children;
-    }
-
-    if (current !== null && nextDidTimeout !== workInProgress.memoizedState) {
-      // We're about to switch from the placeholder children to the normal
-      // children, or vice versa. These are two different conceptual sets that
-      // happen to be stored in the same set. Call this special function to
-      // force the new set not to match with the current set.
-      // TODO: The proper way to model this is by storing each set separately.
-      forceUnmountCurrentAndReconcile(
-        current,
-        workInProgress,
-        nextChildren,
-        renderExpirationTime,
-      );
-    } else {
-      reconcileChildren(
-        current,
-        workInProgress,
-        nextChildren,
-        renderExpirationTime,
-      );
-    }
-    workInProgress.memoizedProps = nextProps;
-    workInProgress.memoizedState = nextDidTimeout;
-    return workInProgress.child;
+  let nextDidTimeout;
+  if (current !== null && workInProgress.updateQueue !== null) {
+    // We're outside strict mode. Something inside this Placeholder boundary
+    // suspended during the last commit. Switch to the placholder.
+    workInProgress.updateQueue = null;
+    nextDidTimeout = true;
   } else {
-    return null;
+    nextDidTimeout = !alreadyCaptured;
   }
+
+  if ((workInProgress.mode & StrictMode) !== NoEffect) {
+    if (nextDidTimeout) {
+      // If the timed-out view commits, schedule an update effect to record
+      // the committed time.
+      workInProgress.effectTag |= Update;
+    } else {
+      // The state node points to the time at which placeholder timed out.
+      // We can clear it once we switch back to the normal children.
+      workInProgress.stateNode = null;
+    }
+  }
+
+  // If the `children` prop is a function, treat it like a render prop.
+  // TODO: This is temporary until we finalize a lower level API.
+  const children = nextProps.children;
+  let nextChildren;
+  if (typeof children === 'function') {
+    nextChildren = children(nextDidTimeout);
+  } else {
+    nextChildren = nextDidTimeout ? nextProps.fallback : children;
+  }
+
+  if (current !== null && nextDidTimeout !== workInProgress.memoizedState) {
+    // We're about to switch from the placeholder children to the normal
+    // children, or vice versa. These are two different conceptual sets that
+    // happen to be stored in the same set. Call this special function to
+    // force the new set not to match with the current set.
+    // TODO: The proper way to model this is by storing each set separately.
+    forceUnmountCurrentAndReconcile(
+      current,
+      workInProgress,
+      nextChildren,
+      renderExpirationTime,
+    );
+  } else {
+    reconcileChildren(
+      current,
+      workInProgress,
+      nextChildren,
+      renderExpirationTime,
+    );
+  }
+  workInProgress.memoizedProps = nextProps;
+  workInProgress.memoizedState = nextDidTimeout;
+  return workInProgress.child;
 }
 
 function updatePortalComponent(
@@ -1342,8 +1336,8 @@ function beginWork(
       return updateHostComponent(current, workInProgress, renderExpirationTime);
     case HostText:
       return updateHostText(current, workInProgress);
-    case PlaceholderComponent:
-      return updatePlaceholderComponent(
+    case SuspenseComponent:
+      return updateSuspenseComponent(
         current,
         workInProgress,
         renderExpirationTime,

@@ -34,7 +34,7 @@ import {
   Fragment,
   Mode,
   Profiler,
-  PlaceholderComponent,
+  SuspenseComponent,
   ForwardRefLazy,
   PureComponent,
   PureComponentLazy,
@@ -508,7 +508,7 @@ function completeWork(
     case ForwardRef:
     case ForwardRefLazy:
       break;
-    case PlaceholderComponent:
+    case SuspenseComponent:
       break;
     case Fragment:
       break;

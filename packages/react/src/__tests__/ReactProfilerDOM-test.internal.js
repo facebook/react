@@ -50,7 +50,6 @@ function loadModules() {
   ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
   ReactFeatureFlags.enableProfilerTimer = true;
   ReactFeatureFlags.enableSchedulerTracing = true;
-  ReactFeatureFlags.enableSuspense = true;
 
   React = require('react');
   SchedulerTracing = require('scheduler/tracing');
@@ -120,9 +119,11 @@ describe('ProfilerDOM', () => {
       const root = ReactDOM.unstable_createRoot(element);
       batch = root.createBatch();
       batch.render(
-        <React.Placeholder delayMS={100} fallback={<Text text="Loading..." />}>
+        <React.unstable_Suspense
+          maxDuration={100}
+          fallback={<Text text="Loading..." />}>
           <AsyncText text="Text" ms={200} />
-        </React.Placeholder>,
+        </React.unstable_Suspense>,
       );
       batch.then(
         SchedulerTracing.unstable_wrap(() => {

@@ -22,7 +22,6 @@ import type {CapturedValue, CapturedError} from './ReactCapturedValue';
 import {
   enableSchedulerTracing,
   enableProfilerTimer,
-  enableSuspense,
 } from 'shared/ReactFeatureFlags';
 import {
   ClassComponent,
@@ -32,7 +31,7 @@ import {
   HostText,
   HostPortal,
   Profiler,
-  PlaceholderComponent,
+  SuspenseComponent,
 } from 'shared/ReactWorkTags';
 import {
   invokeGuardedCallback,
@@ -352,22 +351,20 @@ function commitLifeCycles(
       }
       return;
     }
-    case PlaceholderComponent: {
-      if (enableSuspense) {
-        if ((finishedWork.mode & StrictMode) === NoEffect) {
-          // In loose mode, a placeholder times out by scheduling a synchronous
-          // update in the commit phase. Use `updateQueue` field to signal that
-          // the Timeout needs to switch to the placeholder. We don't need an
-          // entire queue. Any non-null value works.
-          // $FlowFixMe - Intentionally using a value other than an UpdateQueue.
-          finishedWork.updateQueue = emptyObject;
-          scheduleWork(finishedWork, Sync);
-        } else {
-          // In strict mode, the Update effect is used to record the time at
-          // which the placeholder timed out.
-          const currentTime = requestCurrentTime();
-          finishedWork.stateNode = {timedOutAt: currentTime};
-        }
+    case SuspenseComponent: {
+      if ((finishedWork.mode & StrictMode) === NoEffect) {
+        // In loose mode, a placeholder times out by scheduling a synchronous
+        // update in the commit phase. Use `updateQueue` field to signal that
+        // the Timeout needs to switch to the placeholder. We don't need an
+        // entire queue. Any non-null value works.
+        // $FlowFixMe - Intentionally using a value other than an UpdateQueue.
+        finishedWork.updateQueue = emptyObject;
+        scheduleWork(finishedWork, Sync);
+      } else {
+        // In strict mode, the Update effect is used to record the time at
+        // which the placeholder timed out.
+        const currentTime = requestCurrentTime();
+        finishedWork.stateNode = {timedOutAt: currentTime};
       }
       return;
     }
@@ -863,7 +860,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case Profiler: {
       return;
     }
-    case PlaceholderComponent: {
+    case SuspenseComponent: {
       return;
     }
     default: {
