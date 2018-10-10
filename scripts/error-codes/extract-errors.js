@@ -19,7 +19,6 @@ const parserOptions = {
     'classProperties',
     'flow',
     'jsx',
-    'trailingFunctionCommas',
     'objectRestSpread',
   ],
 };
