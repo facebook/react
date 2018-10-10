@@ -11,7 +11,7 @@ import {
   REACT_FRAGMENT_TYPE,
   REACT_PROFILER_TYPE,
   REACT_STRICT_MODE_TYPE,
-  REACT_PLACEHOLDER_TYPE,
+  REACT_SUSPENSE_TYPE,
 } from 'shared/ReactSymbols';
 
 import {Component, PureComponent} from './ReactBaseClasses';
@@ -55,7 +55,7 @@ const React = {
   Fragment: REACT_FRAGMENT_TYPE,
   StrictMode: REACT_STRICT_MODE_TYPE,
   unstable_ConcurrentMode: REACT_CONCURRENT_MODE_TYPE,
-  unstable_Placeholder: REACT_PLACEHOLDER_TYPE,
+  unstable_Suspense: REACT_SUSPENSE_TYPE,
   unstable_Profiler: REACT_PROFILER_TYPE,
 
   createElement: __DEV__ ? createElementWithValidation : createElement,

@@ -31,7 +31,7 @@ import {
   HostText,
   HostPortal,
   Profiler,
-  PlaceholderComponent,
+  SuspenseComponent,
 } from 'shared/ReactWorkTags';
 import {
   invokeGuardedCallback,
@@ -351,7 +351,7 @@ function commitLifeCycles(
       }
       return;
     }
-    case PlaceholderComponent: {
+    case SuspenseComponent: {
       if ((finishedWork.mode & StrictMode) === NoEffect) {
         // In loose mode, a placeholder times out by scheduling a synchronous
         // update in the commit phase. Use `updateQueue` field to signal that
@@ -860,7 +860,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case Profiler: {
       return;
     }
-    case PlaceholderComponent: {
+    case SuspenseComponent: {
       return;
     }
     default: {

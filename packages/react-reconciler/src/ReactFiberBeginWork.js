@@ -30,7 +30,7 @@ import {
   ContextProvider,
   ContextConsumer,
   Profiler,
-  PlaceholderComponent,
+  SuspenseComponent,
   PureComponent,
   PureComponentLazy,
 } from 'shared/ReactWorkTags';
@@ -934,7 +934,7 @@ function mountIndeterminateComponent(
   }
 }
 
-function updatePlaceholderComponent(
+function updateSuspenseComponent(
   current,
   workInProgress,
   renderExpirationTime,
@@ -1336,8 +1336,8 @@ function beginWork(
       return updateHostComponent(current, workInProgress, renderExpirationTime);
     case HostText:
       return updateHostText(current, workInProgress);
-    case PlaceholderComponent:
-      return updatePlaceholderComponent(
+    case SuspenseComponent:
+      return updateSuspenseComponent(
         current,
         workInProgress,
         renderExpirationTime,

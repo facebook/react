@@ -49,7 +49,7 @@ describe('pure', () => {
   function sharedTests(label, pure) {
     describe(`${label}`, () => {
       it('bails out on props equality', async () => {
-        const {unstable_Placeholder: Placeholder} = React;
+        const {unstable_Suspense: Suspense} = React;
 
         function Counter({count}) {
           return <Text text={count} />;
@@ -57,9 +57,9 @@ describe('pure', () => {
         Counter = pure(Counter);
 
         ReactNoop.render(
-          <Placeholder>
+          <Suspense>
             <Counter count={0} />
-          </Placeholder>,
+          </Suspense>,
         );
         expect(ReactNoop.flush()).toEqual([]);
         await Promise.resolve();
@@ -68,18 +68,18 @@ describe('pure', () => {
 
         // Should bail out because props have not changed
         ReactNoop.render(
-          <Placeholder>
+          <Suspense>
             <Counter count={0} />
-          </Placeholder>,
+          </Suspense>,
         );
         expect(ReactNoop.flush()).toEqual([]);
         expect(ReactNoop.getChildren()).toEqual([span(0)]);
 
         // Should update because count prop changed
         ReactNoop.render(
-          <Placeholder>
+          <Suspense>
             <Counter count={1} />
-          </Placeholder>,
+          </Suspense>,
         );
         expect(ReactNoop.flush()).toEqual([1]);
         expect(ReactNoop.getChildren()).toEqual([span(1)]);
@@ -87,7 +87,7 @@ describe('pure', () => {
     });
 
     it("does not bail out if there's a context change", async () => {
-      const {unstable_Placeholder: Placeholder} = React;
+      const {unstable_Suspense: Suspense} = React;
 
       const CountContext = React.createContext(0);
 
@@ -101,11 +101,11 @@ describe('pure', () => {
         state = {count: 0};
         render() {
           return (
-            <Placeholder>
+            <Suspense>
               <CountContext.Provider value={this.state.count}>
                 <Counter label="Count" />
               </CountContext.Provider>
-            </Placeholder>
+            </Suspense>
           );
         }
       }
@@ -129,7 +129,7 @@ describe('pure', () => {
     });
 
     it('accepts custom comparison function', async () => {
-      const {unstable_Placeholder: Placeholder} = React;
+      const {unstable_Suspense: Suspense} = React;
 
       function Counter({count}) {
         return <Text text={count} />;
@@ -142,9 +142,9 @@ describe('pure', () => {
       });
 
       ReactNoop.render(
-        <Placeholder>
+        <Suspense>
           <Counter count={0} />
-        </Placeholder>,
+        </Suspense>,
       );
       expect(ReactNoop.flush()).toEqual([]);
       await Promise.resolve();
@@ -153,18 +153,18 @@ describe('pure', () => {
 
       // Should bail out because props have not changed
       ReactNoop.render(
-        <Placeholder>
+        <Suspense>
           <Counter count={0} />
-        </Placeholder>,
+        </Suspense>,
       );
       expect(ReactNoop.flush()).toEqual(['Old count: 0, New count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span(0)]);
 
       // Should update because count prop changed
       ReactNoop.render(
-        <Placeholder>
+        <Suspense>
           <Counter count={1} />
-        </Placeholder>,
+        </Suspense>,
       );
       expect(ReactNoop.flush()).toEqual(['Old count: 0, New count: 1', 1]);
       expect(ReactNoop.getChildren()).toEqual([span(1)]);

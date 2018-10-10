@@ -119,9 +119,11 @@ describe('ProfilerDOM', () => {
       const root = ReactDOM.unstable_createRoot(element);
       batch = root.createBatch();
       batch.render(
-        <React.unstable_Placeholder delayMS={100} fallback={<Text text="Loading..." />}>
+        <React.unstable_Suspense
+          maxDuration={100}
+          fallback={<Text text="Loading..." />}>
           <AsyncText text="Text" ms={200} />
-        </React.unstable_Placeholder>,
+        </React.unstable_Suspense>,
       );
       batch.then(
         SchedulerTracing.unstable_wrap(() => {

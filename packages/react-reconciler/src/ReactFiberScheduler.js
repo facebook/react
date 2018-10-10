@@ -1574,7 +1574,7 @@ function retrySuspendedRoot(
 
     markPingedPriorityLevel(root, retryTime);
   } else {
-    // Placeholder already timed out. Compute a new expiration time
+    // Suspense already timed out. Compute a new expiration time
     const currentTime = requestCurrentTime();
     retryTime = computeExpirationForFiber(currentTime, fiber);
     markPendingPriorityLevel(root, retryTime);
@@ -1585,7 +1585,7 @@ function retrySuspendedRoot(
   // we should not trigger another update here. One case this happens is when
   // we are in sync mode and a single promise is thrown both on initial render
   // and on update; we attach two .then(retrySuspendedRoot) callbacks and each
-  // one performs Sync work, rerendering the Placeholder.
+  // one performs Sync work, rerendering the Suspense.
 
   if ((fiber.mode & ConcurrentMode) !== NoContext) {
     if (root === nextRoot && nextRenderExpirationTime === suspendedTime) {

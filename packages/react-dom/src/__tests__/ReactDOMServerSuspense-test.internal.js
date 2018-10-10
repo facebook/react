@@ -38,7 +38,7 @@ const {resetModules, serverRender} = ReactDOMServerIntegrationUtils(
   initModules,
 );
 
-describe('ReactDOMServerPlaceholders', () => {
+describe('ReactDOMServerSuspense', () => {
   beforeEach(() => {
     resetModules();
   });
@@ -48,9 +48,9 @@ describe('ReactDOMServerPlaceholders', () => {
       throw new Promise(() => {});
     };
     const e = await serverRender(
-      <React.unstable_Placeholder fallback={<div />}>
+      <React.unstable_Suspense fallback={<div />}>
         <Suspended />
-      </React.unstable_Placeholder>,
+      </React.unstable_Suspense>,
     );
 
     expect(e.tagName).toBe('DIV');

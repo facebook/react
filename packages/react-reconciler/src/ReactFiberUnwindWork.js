@@ -26,7 +26,7 @@ import {
   HostComponent,
   HostPortal,
   ContextProvider,
-  PlaceholderComponent,
+  SuspenseComponent,
 } from 'shared/ReactWorkTags';
 import {
   DidCapture,
@@ -174,7 +174,7 @@ function throwException(
     let earliestTimeoutMs = -1;
     let startTimeMs = -1;
     do {
-      if (workInProgress.tag === PlaceholderComponent) {
+      if (workInProgress.tag === SuspenseComponent) {
         const current = workInProgress.alternate;
         if (
           current !== null &&
@@ -192,7 +192,7 @@ function throwException(
           // Do not search any further.
           break;
         }
-        let timeoutPropMs = workInProgress.pendingProps.delayMs;
+        let timeoutPropMs = workInProgress.pendingProps.maxDuration;
         if (typeof timeoutPropMs === 'number') {
           if (timeoutPropMs <= 0) {
             earliestTimeoutMs = 0;
@@ -207,10 +207,10 @@ function throwException(
       workInProgress = workInProgress.return;
     } while (workInProgress !== null);
 
-    // Schedule the nearest Placeholder to re-render the timed out view.
+    // Schedule the nearest Suspense to re-render the timed out view.
     workInProgress = returnFiber;
     do {
-      if (workInProgress.tag === PlaceholderComponent) {
+      if (workInProgress.tag === SuspenseComponent) {
         const didTimeout = workInProgress.memoizedState;
         if (!didTimeout) {
           // Found the nearest boundary.
@@ -237,10 +237,10 @@ function throwException(
           // If the boundary is outside of strict mode, we should *not* suspend
           // the commit. Pretend as if the suspended component rendered null and
           // keep rendering. In the commit phase, we'll schedule a subsequent
-          // synchronous update to re-render the Placeholder.
+          // synchronous update to re-render the Suspense.
           //
           // Note: It doesn't matter whether the component that suspended was
-          // inside a strict mode tree. If the Placeholder is outside of it, we
+          // inside a strict mode tree. If the Suspense is outside of it, we
           // should *not* suspend the commit.
           if ((workInProgress.mode & StrictMode) === NoEffect) {
             workInProgress.effectTag |= UpdateEffect;
@@ -433,7 +433,7 @@ function unwindWork(
       popHostContext(workInProgress);
       return null;
     }
-    case PlaceholderComponent: {
+    case SuspenseComponent: {
       const effectTag = workInProgress.effectTag;
       if (effectTag & ShouldCapture) {
         workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
