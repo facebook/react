@@ -34,14 +34,14 @@ const run = async () => {
 
     await checkEnvironmentVariables(params);
     await validateVersion(params);
-    await checkUncommittedChanges(params);
-    await checkNpmPermissions(params);
-    await updateGit(params);
-    await checkCircleCiStatus(params);
+    // await checkUncommittedChanges(params);
+    // await checkNpmPermissions(params);
+    // await updateGit(params);
+    // await checkCircleCiStatus(params);
     await installYarnDependencies(params);
     await checkPackageDependencies(params);
     await updateYarnDependencies(params);
-    await runAutomatedTests(params);
+    // await runAutomatedTests(params);
     // Also update NPM dependencies for private packages (e.g. react-native-renderer)
     // Even though we don't publish these to NPM,
     // mismatching dependencies can cause `yarn install` to install duplicate packages.
