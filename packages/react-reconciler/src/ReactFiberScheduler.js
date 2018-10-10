@@ -599,12 +599,13 @@ function flushPassiveEffectsBeforeSchedulingUpdateOnFiber(fiber: Fiber) {
 }
 
 function flushPassiveEffects(root: FiberRoot) {
-  if (root === rootWithPendingPassiveEffects) {
+  if (
+    passiveEffectCallbackHandle !== null &&
+    root === rootWithPendingPassiveEffects
+  ) {
+    Schedule_cancelCallback(passiveEffectCallbackHandle);
+    passiveEffectCallbackHandle = null;
     rootWithPendingPassiveEffects = null;
-    if (passiveEffectCallbackHandle !== null) {
-      Schedule_cancelCallback(passiveEffectCallbackHandle);
-      passiveEffectCallbackHandle = null;
-    }
     if (firstPassiveEffect !== null) {
       commitPassiveEffects(root, firstPassiveEffect);
     }
