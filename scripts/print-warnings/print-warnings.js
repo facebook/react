@@ -20,6 +20,7 @@ const parserOptions = {
     'classProperties',
     'flow',
     'jsx',
+    'objectRestSpread',
   ],
 };
 
