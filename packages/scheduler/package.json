@@ -1,6 +1,6 @@
 {
   "name": "scheduler",
-  "version": "0.9.0",
+  "version": "0.10.0-alpha.8af6728",
   "description": "Cooperative scheduler for the browser environment.",
   "main": "index.js",
   "repository": "facebook/react",

@@ -1,7 +1,7 @@
 {
   "name": "react-cache",
   "description": "A basic cache for React applications",
-  "version": "2.0.0-alpha.0",
+  "version": "16.6.0-alpha.8af6728",
   "repository": "facebook/react",
   "files": [
     "LICENSE",
@@ -10,6 +10,6 @@
     "cjs/"
   ],
   "peerDependencies": {
-    "react": "^16.3.0-alpha.1"
+    "react": "^16.3.0-alpha.1 || 16.6.0-alpha.8af6728"
   }
 }
