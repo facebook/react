@@ -311,10 +311,10 @@ describe('ReactIncrementalErrorHandling', () => {
       ops.push('Parent');
       ReactNoop.yield('Parent');
       return (
-        <>
+        <React.Fragment>
           <BadRender />
           <Sibling />
-        </>
+        </React.Fragment>
       );
     }
 

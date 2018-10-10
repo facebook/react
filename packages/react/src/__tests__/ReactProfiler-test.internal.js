@@ -328,7 +328,7 @@ describe('Profiler', () => {
         advanceTimeBy(5); // 0 -> 5
 
         ReactTestRenderer.create(
-          <>
+          <React.Fragment>
             <React.unstable_Profiler id="parent" onRender={callback}>
               <AdvanceTime byAmount={10}>
                 <React.unstable_Profiler id="child" onRender={callback}>
@@ -336,7 +336,7 @@ describe('Profiler', () => {
                 </React.unstable_Profiler>
               </AdvanceTime>
             </React.unstable_Profiler>
-          </>,
+          </React.Fragment>,
         );
 
         expect(callback).toHaveBeenCalledTimes(2);
@@ -363,14 +363,14 @@ describe('Profiler', () => {
         advanceTimeBy(5); // 0 -> 5
 
         ReactTestRenderer.create(
-          <>
+          <React.Fragment>
             <React.unstable_Profiler id="first" onRender={callback}>
               <AdvanceTime byAmount={20} />
             </React.unstable_Profiler>
             <React.unstable_Profiler id="second" onRender={callback}>
               <AdvanceTime byAmount={5} />
             </React.unstable_Profiler>
-          </>,
+          </React.Fragment>,
         );
 
         expect(callback).toHaveBeenCalledTimes(2);
@@ -396,13 +396,13 @@ describe('Profiler', () => {
         advanceTimeBy(5); // 0 -> 5
 
         ReactTestRenderer.create(
-          <>
+          <React.Fragment>
             <AdvanceTime byAmount={20} />
             <React.unstable_Profiler id="test" onRender={callback}>
               <AdvanceTime byAmount={5} />
             </React.unstable_Profiler>
             <AdvanceTime byAmount={20} />
-          </>,
+          </React.Fragment>,
         );
 
         expect(callback).toHaveBeenCalledTimes(1);
@@ -1173,10 +1173,10 @@ describe('Profiler', () => {
       render() {
         const {duration, id} = this.props;
         return (
-          <>
+          <React.Fragment>
             <Child duration={duration} id={id} />
             <Child duration={duration} id={id} />
-          </>
+          </React.Fragment>
         );
       }
     }
@@ -1452,11 +1452,11 @@ describe('Profiler', () => {
         render() {
           instance = this;
           return (
-            <>
+            <React.Fragment>
               <Yield value="first" />
               {this.state.count}
               <Yield value="last" />
-            </>
+            </React.Fragment>
           );
         }
       }

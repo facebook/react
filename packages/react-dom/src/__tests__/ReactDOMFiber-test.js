@@ -180,9 +180,9 @@ describe('ReactDOMFiber', () => {
     const Div = () => <div />;
     const EmptyFragment = () => <React.Fragment />;
     const NonEmptyFragment = () => (
-      <>
+      <React.Fragment>
         <Div />
-      </>
+      </React.Fragment>
     );
 
     ReactDOM.render(<EmptyFragment />, container);

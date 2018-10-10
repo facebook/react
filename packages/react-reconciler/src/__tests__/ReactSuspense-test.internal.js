@@ -147,14 +147,14 @@ describe('ReactSuspense', () => {
   it('suspends siblings and later recovers each independently', () => {
     // Render two sibling Placeholder components
     const root = ReactTestRenderer.create(
-      <>
+      <React.Fragment>
         <Placeholder delayMs={1000} fallback={<Text text="Loading A..." />}>
           <AsyncText text="A" ms={5000} />
         </Placeholder>
         <Placeholder delayMs={3000} fallback={<Text text="Loading B..." />}>
           <AsyncText text="B" ms={6000} />
         </Placeholder>
-      </>,
+      </React.Fragment>,
       {
         unstable_isConcurrent: true,
       },
