@@ -385,7 +385,11 @@ function getStateFromUpdate<State>(
         // Partial state object
         partialState = payload;
       }
-      if (partialState === null || partialState === undefined) {
+      if (
+        partialState === prevState ||
+        partialState === null ||
+        partialState === undefined
+      ) {
         // Null and undefined are treated as no-ops.
         return prevState;
       }
