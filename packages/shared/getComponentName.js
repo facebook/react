@@ -16,6 +16,7 @@ import {
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_PORTAL_TYPE,
+  REACT_PURE_TYPE,
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_STRICT_MODE_TYPE,
@@ -63,13 +64,23 @@ function getComponentName(type: mixed): string | null {
         return 'Context.Consumer';
       case REACT_PROVIDER_TYPE:
         return 'Context.Provider';
-      case REACT_FORWARD_REF_TYPE:
+      case REACT_FORWARD_REF_TYPE: {
         const renderFn = (type.render: any);
         const functionName = renderFn.displayName || renderFn.name || '';
         return (
           (type: any).displayName ||
           (functionName !== '' ? `ForwardRef(${functionName})` : 'ForwardRef')
         );
+      }
+      case REACT_PURE_TYPE: {
+        const renderFn = (type.render: any);
+        return (
+          (type: any).displayName ||
+          renderFn.displayName ||
+          renderFn.name ||
+          'Pure'
+        );
+      }
     }
     if (typeof type.then === 'function') {
       const thenable: Thenable<mixed> = (type: any);

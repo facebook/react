@@ -555,6 +555,19 @@ describe('ReactDebugFiberPerf', () => {
     expect(getFlameChart()).toMatchSnapshot();
   });
 
+  it('supports pure', () => {
+    const PureFoo = React.pure(function Foo() {
+      return <div />;
+    });
+    ReactNoop.render(
+      <Parent>
+        <PureFoo />
+      </Parent>,
+    );
+    ReactNoop.flush();
+    expect(getFlameChart()).toMatchSnapshot();
+  });
+
   it('does not schedule an extra callback if setState is called during a synchronous commit phase', () => {
     class Component extends React.Component {
       state = {step: 1};
