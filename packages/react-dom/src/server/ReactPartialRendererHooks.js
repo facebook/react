@@ -138,10 +138,18 @@ export function finishHooks(
   return children;
 }
 
+function readContext<T>(
+  context: ReactContext<T>,
+  observedBits: void | number | boolean,
+): T {
+  return context._currentValue;
+}
+
 function useContext<T>(
   context: ReactContext<T>,
   observedBits: void | number | boolean,
 ): T {
+  resolveCurrentlyRenderingComponent();
   return context._currentValue;
 }
 
@@ -349,7 +357,7 @@ function inputsAreEqual(arr1, arr2) {
 function noop(): void {}
 
 export const Dispatcher = {
-  readContext: useContext,
+  readContext,
   useContext,
   useMemo,
   useReducer,
