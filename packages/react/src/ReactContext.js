@@ -72,38 +72,53 @@ export function createContext<T>(
     // A separate object, but proxies back to the original context object for
     // backwards compatibility. It has a different $$typeof, so we can properly
     // warn for the incorrect usage of Context as a Consumer.
-    context.Consumer = {
+    const consumer = {
       $$typeof: REACT_CONTEXT_TYPE,
       _context: context,
-      get _calculateChangedBits() {
-        return context._calculateChangedBits;
-      },
-      set _calculateChangedBits(_calculateChangedBits) {
-        context._calculateChangedBits = _calculateChangedBits;
-      },
-      get _currentValue() {
-        return context._currentValue;
-      },
-      set _currentValue(_currentValue) {
-        context._currentValue = _currentValue;
-      },
-      get _currentValue2() {
-        return context._currentValue2;
-      },
-      set _currentValue2(_currentValue2) {
-        context._currentValue2 = _currentValue2;
-      },
       Provider: context.Provider,
-      get Consumer() {
-        return context.Consumer;
-      },
-      get unstable_read() {
-        return context.unstable_read;
-      },
-      set unstable_read(unstable_read) {
-        context.unstable_read = unstable_read;
-      },
     };
+    // $FlowFixMe: Flow complains about not setting a value, which is intentional here
+    Object.defineProperties(consumer, {
+      _calculateChangedBits: {
+        get() {
+          return context._calculateChangedBits;
+        },
+        set(_calculateChangedBits) {
+          context._calculateChangedBits = _calculateChangedBits;
+        },
+      },
+      _currentValue: {
+        get() {
+          return context._currentValue;
+        },
+        set(_currentValue) {
+          context._currentValue = _currentValue;
+        },
+      },
+      _currentValue2: {
+        get() {
+          return context._currentValue2;
+        },
+        set(_currentValue2) {
+          context._currentValue2 = _currentValue2;
+        },
+      },
+      Consumer: {
+        get() {
+          return context.Consumer;
+        },
+      },
+      unstable_read: {
+        get() {
+          return context.unstable_read;
+        },
+        set(unstable_read) {
+          context.unstable_read = unstable_read;
+        },
+      },
+    });
+    // $FlowFixMe: Flow complains about missing properties because it doesn't understand defineProperty
+    context.Consumer = consumer;
   } else {
     context.Consumer = context;
   }
