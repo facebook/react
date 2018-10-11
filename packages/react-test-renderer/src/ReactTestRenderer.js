@@ -531,6 +531,7 @@ const ReactTestRendererFiber = {
 
   /* eslint-disable camelcase */
   unstable_batchedUpdates: batchedUpdates,
+  unstable_interactiveUpdates: TestRenderer.interactiveUpdates,
   /* eslint-enable camelcase */
 
   unstable_setNowImplementation: TestRendererScheduling.setNowImplementation,

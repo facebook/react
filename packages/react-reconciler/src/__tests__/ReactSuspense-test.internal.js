@@ -241,4 +241,63 @@ describe('ReactSuspense', () => {
     ]);
     expect(root).toMatchRenderedOutput('AsyncSibling');
   });
+
+  // This is a regression test for a Suspense bug.
+  it('specifying larger maxDuration is equivalent to omitting it', () => {
+    [100, 500, 1000, 2000, 5000, 10000, undefined].forEach(maxDuration => {
+      const Suspense = React.unstable_Suspense;
+
+      class UnexpectedFallback extends React.Component {
+        componentDidMount() {
+          throw new Error('Did not expect this fallback to be shown.');
+        }
+        render() {
+          return <Text text="Loading..." />;
+        }
+      }
+
+      let inst;
+      class App extends React.Component {
+        state = {
+          show: false,
+        };
+        render() {
+          inst = this;
+          return (
+            this.state.show && (
+              // The bug was triggered by the presence of maxDuration.
+              <Suspense
+                maxDuration={maxDuration}
+                fallback={<UnexpectedFallback />}>
+                <AsyncText text="A" ms={1} />
+              </Suspense>
+            )
+          );
+        }
+      }
+
+      const root = ReactTestRenderer.create(<App />, {
+        unstable_isConcurrent: true,
+      });
+      expect(root).toFlushWithoutYielding();
+      expect(root).toMatchRenderedOutput(null);
+      ReactTestRenderer.unstable_interactiveUpdates(() => {
+        inst.setState({
+          show: true,
+        });
+      });
+      expect(root).toMatchRenderedOutput(null);
+
+      // Suspend (but it hasn't expired yet so we don't show a spinner)
+      jest.advanceTimersByTime(10);
+      expect(root).toFlushAndYield(['Suspend! [A]', 'Loading...']);
+      expect(root).toMatchRenderedOutput(null);
+
+      // We should be ready to show actual output (no spinner)
+      jest.advanceTimersByTime(10);
+      expect(ReactTestRenderer).toHaveYielded(['Promise resolved [A]']);
+      expect(root).toFlushAndYield(['A']);
+      expect(root).toMatchRenderedOutput('A');
+    });
+  });
 });
