@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "16.5.2",
+  "version": "16.6.0-alpha.8af6728",
   "workspaces": [
     "packages/*"
   ],

@@ -44,6 +44,6 @@ export const ContextProvider = 12;
 export const ForwardRef = 13;
 export const ForwardRefLazy = 14;
 export const Profiler = 15;
-export const PlaceholderComponent = 16;
+export const SuspenseComponent = 16;
 export const PureComponent = 17;
 export const PureComponentLazy = 18;

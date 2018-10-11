@@ -11,9 +11,8 @@ import {
   REACT_FRAGMENT_TYPE,
   REACT_PROFILER_TYPE,
   REACT_STRICT_MODE_TYPE,
-  REACT_PLACEHOLDER_TYPE,
+  REACT_SUSPENSE_TYPE,
 } from 'shared/ReactSymbols';
-import {enableSuspense} from 'shared/ReactFeatureFlags';
 
 import {Component, PureComponent} from './ReactBaseClasses';
 import {createRef} from './ReactCreateRef';
@@ -50,11 +49,13 @@ const React = {
 
   createContext,
   forwardRef,
+  lazy,
   pure,
 
   Fragment: REACT_FRAGMENT_TYPE,
   StrictMode: REACT_STRICT_MODE_TYPE,
   unstable_ConcurrentMode: REACT_CONCURRENT_MODE_TYPE,
+  unstable_Suspense: REACT_SUSPENSE_TYPE,
   unstable_Profiler: REACT_PROFILER_TYPE,
 
   createElement: __DEV__ ? createElementWithValidation : createElement,
@@ -66,10 +67,5 @@ const React = {
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactSharedInternals,
 };
-
-if (enableSuspense) {
-  React.Placeholder = REACT_PLACEHOLDER_TYPE;
-  React.lazy = lazy;
-}
 
 export default React;

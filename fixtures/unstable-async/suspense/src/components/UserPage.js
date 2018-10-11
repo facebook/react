@@ -1,4 +1,4 @@
-import React, {Placeholder} from 'react';
+import React, {unstable_Suspense as Suspense} from 'react';
 import {createResource} from 'react-cache';
 import Spinner from './Spinner';
 import {cache} from '../cache';
@@ -14,9 +14,9 @@ export default function UserPage({id}) {
         alignItems: 'start',
       }}>
       <UserDetails id={id} />
-      <Placeholder delayMs={1000} fallback={<Spinner size="medium" />}>
+      <Suspense maxDuration={1000} fallback={<Spinner size="medium" />}>
         <Repositories id={id} />
-      </Placeholder>
+      </Suspense>
     </div>
   );
 }
@@ -118,7 +118,7 @@ function Img({src, alt, ...rest}) {
 
 function UserPicture({source}) {
   return (
-    <Placeholder delayMs={1500} fallback={<img src={source} alt="poster" />}>
+    <Suspense maxDuration={1500} fallback={<img src={source} alt="poster" />}>
       <Img
         src={source}
         alt="profile picture"
@@ -128,7 +128,7 @@ function UserPicture({source}) {
           borderRadius: '0.5rem',
         }}
       />
-    </Placeholder>
+    </Suspense>
   );
 }
 

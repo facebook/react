@@ -33,7 +33,7 @@ import {
   ContextProvider,
   ContextConsumer,
   Profiler,
-  PlaceholderComponent,
+  SuspenseComponent,
   FunctionComponentLazy,
   ClassComponentLazy,
   ForwardRefLazy,
@@ -58,7 +58,7 @@ import {
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_CONCURRENT_MODE_TYPE,
-  REACT_PLACEHOLDER_TYPE,
+  REACT_SUSPENSE_TYPE,
   REACT_PURE_TYPE,
 } from 'shared/ReactSymbols';
 
@@ -442,8 +442,8 @@ export function createFiberFromElement(
         break;
       case REACT_PROFILER_TYPE:
         return createFiberFromProfiler(pendingProps, mode, expirationTime, key);
-      case REACT_PLACEHOLDER_TYPE:
-        fiberTag = PlaceholderComponent;
+      case REACT_SUSPENSE_TYPE:
+        fiberTag = SuspenseComponent;
         break;
       default: {
         if (typeof type === 'object' && type !== null) {

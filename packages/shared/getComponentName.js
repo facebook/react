@@ -19,7 +19,7 @@ import {
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_STRICT_MODE_TYPE,
-  REACT_PLACEHOLDER_TYPE,
+  REACT_SUSPENSE_TYPE,
 } from 'shared/ReactSymbols';
 import {refineResolvedThenable} from 'shared/ReactLazyComponent';
 
@@ -54,8 +54,8 @@ function getComponentName(type: mixed): string | null {
       return `Profiler`;
     case REACT_STRICT_MODE_TYPE:
       return 'StrictMode';
-    case REACT_PLACEHOLDER_TYPE:
-      return 'Placeholder';
+    case REACT_SUSPENSE_TYPE:
+      return 'Suspense';
   }
   if (typeof type === 'object') {
     switch (type.$$typeof) {

@@ -2,7 +2,7 @@ let React;
 let ReactTestRenderer;
 let ReactFeatureFlags;
 let ReactCache;
-let Placeholder;
+let Suspense;
 
 // let JestReact;
 
@@ -18,13 +18,12 @@ describe('ReactSuspense', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
-    ReactFeatureFlags.enableSuspense = true;
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     // JestReact = require('jest-react');
     ReactCache = require('react-cache');
 
-    Placeholder = React.Placeholder;
+    Suspense = React.unstable_Suspense;
 
     function invalidateCache() {
       cache = ReactCache.createCache(invalidateCache);
@@ -107,12 +106,12 @@ describe('ReactSuspense', () => {
     function Foo() {
       ReactTestRenderer.unstable_yield('Foo');
       return (
-        <Placeholder>
+        <Suspense>
           <Bar>
             <AsyncText text="A" ms={100} />
             <Text text="B" />
           </Bar>
-        </Placeholder>
+        </Suspense>
       );
     }
 
@@ -145,15 +144,15 @@ describe('ReactSuspense', () => {
   });
 
   it('suspends siblings and later recovers each independently', () => {
-    // Render two sibling Placeholder components
+    // Render two sibling Suspense components
     const root = ReactTestRenderer.create(
       <React.Fragment>
-        <Placeholder delayMs={1000} fallback={<Text text="Loading A..." />}>
+        <Suspense maxDuration={1000} fallback={<Text text="Loading A..." />}>
           <AsyncText text="A" ms={5000} />
-        </Placeholder>
-        <Placeholder delayMs={3000} fallback={<Text text="Loading B..." />}>
+        </Suspense>
+        <Suspense maxDuration={3000} fallback={<Text text="Loading B..." />}>
           <AsyncText text="B" ms={6000} />
-        </Placeholder>
+        </Suspense>
       </React.Fragment>,
       {
         unstable_isConcurrent: true,
@@ -173,8 +172,8 @@ describe('ReactSuspense', () => {
     expect(root).toFlushWithoutYielding();
     expect(root).toMatchRenderedOutput('Loading A...Loading B...');
 
-    // Advance time by enough that the first Placeholder's promise resolves and
-    // switches back to the normal view. The second Placeholder should still
+    // Advance time by enough that the first Suspense's promise resolves and
+    // switches back to the normal view. The second Suspense should still
     // show the placeholder
     jest.advanceTimersByTime(1000);
     // TODO: Should we throw if you forget to call toHaveYielded?
@@ -182,7 +181,7 @@ describe('ReactSuspense', () => {
     expect(root).toFlushAndYield(['A']);
     expect(root).toMatchRenderedOutput('ALoading B...');
 
-    // Advance time by enough that the second Placeholder's promise resolves
+    // Advance time by enough that the second Suspense's promise resolves
     // and switches back to the normal view
     jest.advanceTimersByTime(1000);
     expect(ReactTestRenderer).toHaveYielded(['Promise resolved [B]']);
@@ -219,10 +218,10 @@ describe('ReactSuspense', () => {
     }
 
     const root = ReactTestRenderer.create(
-      <Placeholder delayMs={1000} fallback={<Text text="Loading..." />}>
+      <Suspense maxDuration={1000} fallback={<Text text="Loading..." />}>
         <Async />
         <Text text="Sibling" />
-      </Placeholder>,
+      </Suspense>,
       {
         unstable_isConcurrent: true,
       },
