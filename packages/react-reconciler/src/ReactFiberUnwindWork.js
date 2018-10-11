@@ -18,7 +18,6 @@ import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import getComponentName from 'shared/getComponentName';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {
-  IndeterminateComponent,
   FunctionComponent,
   ClassComponent,
   ClassComponentLazy,
@@ -226,6 +225,7 @@ function throwException(
             null,
             root,
             workInProgress,
+            sourceFiber,
             pingTime,
           );
           if (enableSchedulerTracing) {
@@ -253,11 +253,6 @@ function throwException(
               renderExpirationTime,
             );
             sourceFiber.effectTag &= ~Incomplete;
-            if (sourceFiber.tag === IndeterminateComponent) {
-              // Let's just assume it's a function component. This fiber will
-              // be unmounted in the immediate next commit, anyway.
-              sourceFiber.tag = FunctionComponent;
-            }
 
             if (
               sourceFiber.tag === ClassComponent ||

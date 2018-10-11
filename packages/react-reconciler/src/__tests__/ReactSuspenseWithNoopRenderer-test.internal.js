@@ -966,7 +966,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         'Loading (3)',
         'Promise resolved [Step: 1]',
         'Step: 1',
-        'Sibling',
       ]);
       expect(ReactNoop.getChildren()).toEqual([
         span('Step: 1'),
@@ -988,6 +987,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         'Loading (3)',
       ]);
       expect(ReactNoop.getChildren()).toEqual([
+        span('Sibling'),
         span('Loading (1)'),
         span('Loading (2)'),
         span('Loading (3)'),
@@ -996,13 +996,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       await advanceTimers(100);
       expect(ReactNoop.flush()).toEqual([
         'Promise resolved [Step: 2]',
-        // TODO: The state of the children is lost when switching back. Revisit
-        // this in the follow up PR.
-        'Step: 1',
-        'Sibling',
+        'Step: 2',
       ]);
       expect(ReactNoop.getChildren()).toEqual([
-        span('Step: 1'),
+        span('Step: 2'),
         span('Sibling'),
       ]);
     });
@@ -1203,9 +1200,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
           // The placeholder is rendered in a subsequent commit
           'Loading...',
           'Promise resolved [Async: 1]',
-          'Before',
           'Async: 1',
-          'After',
         ]);
         expect(ReactNoop.getChildren()).toEqual([
           span('Before'),
@@ -1245,6 +1240,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
           'Loading...',
         ]);
         expect(ReactNoop.getChildren()).toEqual([
+          span('Before'),
+          span('After'),
           span('Loading...'),
 
           span('Before'),
@@ -1257,16 +1254,12 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         await advanceTimers(100);
         expect(ReactNoop.clearYields()).toEqual([
           'Promise resolved [Async: 2]',
-          'Before',
-          'Async: 1',
-          'After',
+          'Async: 2',
         ]);
 
         expect(ReactNoop.getChildren()).toEqual([
           span('Before'),
-          // TODO: The state of the children is lost when switching back. Revisit
-          // this in the follow up PR.
-          span('Async: 1'),
+          span('Async: 2'),
           span('After'),
 
           span('Before'),
@@ -1332,18 +1325,15 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         // placeholder. This should be a mount, not an update.
         'Mount [Loading...]',
       ]);
-      expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('A'),
+        span('C'),
+
+        span('Loading...'),
+      ]);
 
       await advanceTimers(1000);
-      expect(ReactNoop.expire(1000)).toEqual([
-        'Promise resolved [B]',
-        'A',
-        'B',
-        'C',
-        'Mount [A]',
-        'Mount [B]',
-        'Mount [C]',
-      ]);
+      expect(ReactNoop.expire(1000)).toEqual(['Promise resolved [B]', 'B']);
 
       expect(ReactNoop.getChildren()).toEqual([
         span('A'),
@@ -1776,16 +1766,13 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
       // In a subsequent commit, render a placeholder
       'Loading...',
-
-      // A, B, and C are unmounted, but we skip calling B's componentWillUnmount
-      'Unmount [A]',
-      'Unmount [C]',
-
-      // Force delete all the existing children when switching to the
-      // placeholder. This should be a mount, not an update.
       'Mount [Loading...]',
     ]);
-    expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
+    expect(ReactNoop.getChildren()).toEqual([
+      span('A'),
+      span('C'),
+      span('Loading...'),
+    ]);
   });
 });
 

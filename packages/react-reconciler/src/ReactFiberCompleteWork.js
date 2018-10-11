@@ -353,6 +353,8 @@ function completeWork(
   const newProps = workInProgress.pendingProps;
 
   switch (workInProgress.tag) {
+    case IndeterminateComponent:
+      break;
     case FunctionComponent:
     case FunctionComponentLazy:
       break;
@@ -529,15 +531,6 @@ function completeWork(
     case PureComponent:
     case PureComponentLazy:
       break;
-    // Error cases
-    case IndeterminateComponent:
-      invariant(
-        false,
-        'An indeterminate component should have become determinate before ' +
-          'completing. This error is likely caused by a bug in React. Please ' +
-          'file an issue.',
-      );
-    // eslint-disable-next-line no-fallthrough
     default:
       invariant(
         false,

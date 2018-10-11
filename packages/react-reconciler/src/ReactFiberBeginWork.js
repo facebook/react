@@ -103,7 +103,11 @@ import {
 } from './ReactFiberClassComponent';
 import {readLazyComponentType} from './ReactFiberLazyComponent';
 import {getResultFromResolvedThenable} from 'shared/ReactLazyComponent';
-import {resolveLazyComponentTag} from './ReactFiber';
+import {
+  resolveLazyComponentTag,
+  createFiberFromFragment,
+  createWorkInProgress,
+} from './ReactFiber';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -701,19 +705,13 @@ function resolveDefaultProps(Component, baseProps) {
   return baseProps;
 }
 
-function mountIndeterminateComponent(
+function updateIndeterminateComponent(
   current,
   workInProgress,
   Component,
   updateExpirationTime,
   renderExpirationTime,
 ) {
-  invariant(
-    current === null,
-    'An indeterminate component should never have mounted. This error is ' +
-      'likely caused by a bug in React. Please file an issue.',
-  );
-
   const props = workInProgress.pendingProps;
   if (
     typeof Component === 'object' &&
@@ -944,6 +942,7 @@ function updateSuspenseComponent(
   workInProgress,
   renderExpirationTime,
 ) {
+  const mode = workInProgress.mode;
   const nextProps = workInProgress.pendingProps;
 
   // Check if we already attempted to render the normal state. If we did,
@@ -951,11 +950,11 @@ function updateSuspenseComponent(
   const alreadyCaptured = (workInProgress.effectTag & DidCapture) === NoEffect;
 
   let nextDidTimeout;
-  if ((workInProgress.mode & StrictMode) === NoContext) {
+  if ((mode & StrictMode) === NoContext) {
     // We're outside strict mode.
     if (workInProgress.updateQueue !== null) {
-      // Something inside this boundary suspended during the last commit. Switch
-      // to the placholder.
+      // Something inside this Placeholder boundary suspended during the last
+      // commit. Switch to the placholder.
       workInProgress.updateQueue = null;
       nextDidTimeout = true;
     } else {
@@ -973,7 +972,7 @@ function updateSuspenseComponent(
   }
 
   // If the `children` prop is a function, treat it like a render prop.
-  // TODO: This is temporary until we finalize a lower level API.
+  // TODO: Remove this, or put it behind a feature flag
   const children = nextProps.children;
   let nextChildren;
   if (typeof children === 'function') {
@@ -982,29 +981,169 @@ function updateSuspenseComponent(
     nextChildren = nextDidTimeout ? nextProps.fallback : children;
   }
 
-  if (current !== null && nextDidTimeout !== workInProgress.memoizedState) {
-    // We're about to switch from the placeholder children to the normal
-    // children, or vice versa. These are two different conceptual sets that
-    // happen to be stored in the same set. Call this special function to
-    // force the new set not to match with the current set.
-    // TODO: The proper way to model this is by storing each set separately.
-    forceUnmountCurrentAndReconcile(
-      current,
-      workInProgress,
-      nextChildren,
-      renderExpirationTime,
-    );
+  // This next part is a bit confusing. If the children timeout, we switch to
+  // showing the fallback children in place of the "primary" children.
+  // However, we don't want to delete the primary children because then their
+  // state will be lost (both the React state and the host state, e.g.
+  // uncontrolled form inputs). Instead we keep them mounted and hide them.
+  // Both the fallback children AND the primary children are rendered at the
+  // same time. Once the primary children are un-suspended, we can delete
+  // the fallback children — don't need to preserve their state.
+  //
+  // The two sets of children are siblings in the host environment, but
+  // semantically, for purposes of reconciliation, they are two separate sets.
+  // So we store them using two fragment fibers.
+  //
+  // However, we want to avoid allocating extra fibers for every placeholder.
+  // They're only necessary when the children time out, because that's the
+  // only time when both sets are mounted.
+  //
+  // So, the extra fragment fibers are only used if the children time out.
+  // Otherwise, we render the primary children directly. This requires some
+  // custom reconciliation logic to preserve the state of the primary
+  // children. It's essentially a very basic form of re-parenting.
+
+  // `child` points to the child fiber. In the normal case, this is the first
+  // fiber of the primary children set. In the timed-out case, it's a
+  // a fragment fiber containing the primary children.
+  let child;
+  // `next` points to the next fiber React should render. In the normal case,
+  // it's the same as `child`: the first fiber of the primary children set.
+  // In the timed-out case, it's a fragment fiber containing the *fallback*
+  // children -- we skip over the primary children entirely.
+  let next;
+  if (current === null) {
+    // This is the initial mount. This branch is pretty simple because there's
+    // no previous state that needs to be preserved.
+    if (nextDidTimeout) {
+      // Mount separate fragments for primary and fallback children.
+      const primaryChildFragment = createFiberFromFragment(
+        null,
+        mode,
+        NoWork,
+        null,
+      );
+      const fallbackChildFragment = createFiberFromFragment(
+        nextChildren,
+        mode,
+        renderExpirationTime,
+        null,
+      );
+      primaryChildFragment.sibling = fallbackChildFragment;
+      child = primaryChildFragment;
+      // Skip the primary children, and continue working on the
+      // fallback children.
+      next = fallbackChildFragment;
+      child.return = next.return = workInProgress;
+    } else {
+      // Mount the primary children without an intermediate fragment fiber.
+      child = next = mountChildFibers(
+        workInProgress,
+        null,
+        nextChildren,
+        renderExpirationTime,
+      );
+    }
   } else {
-    reconcileChildren(
-      current,
-      workInProgress,
-      nextChildren,
-      renderExpirationTime,
-    );
+    // This is an update. This branch is more complicated because we need to
+    // ensure the state of the primary children is preserved.
+    const prevDidTimeout = current.memoizedState === true;
+    if (prevDidTimeout) {
+      // The current tree already timed out. That means each child set is
+      // wrapped in a fragment fiber.
+      const currentPrimaryChildFragment: Fiber = (current.child: any);
+      const currentFallbackChildFragment: Fiber = (currentPrimaryChildFragment.sibling: any);
+      if (nextDidTimeout) {
+        // Still timed out. Reuse the current primary children by cloning
+        // its fragment. We're going to skip over these entirely.
+        const primaryChildFragment = createWorkInProgress(
+          currentFallbackChildFragment,
+          currentFallbackChildFragment.pendingProps,
+          NoWork,
+        );
+        primaryChildFragment.effectTag |= Placement;
+        // Clone the fallback child fragment, too. These we'll continue
+        // working on.
+        const fallbackChildFragment = (primaryChildFragment.sibling = createWorkInProgress(
+          currentFallbackChildFragment,
+          nextChildren,
+          currentFallbackChildFragment.expirationTime,
+        ));
+        fallbackChildFragment.effectTag |= Placement;
+        child = primaryChildFragment;
+        // Skip the primary children, and continue working on the
+        // fallback children.
+        next = fallbackChildFragment;
+        child.return = next.return = workInProgress;
+      } else {
+        // No longer suspended. Switch back to showing the primary children,
+        // and remove the intermediate fragment fiber.
+        const currentPrimaryChild = currentPrimaryChildFragment.child;
+        const currentFallbackChild = currentFallbackChildFragment.child;
+        const primaryChild = reconcileChildFibers(
+          workInProgress,
+          currentPrimaryChild,
+          nextChildren,
+          renderExpirationTime,
+        );
+        // Delete the fallback children.
+        reconcileChildFibers(
+          workInProgress,
+          currentFallbackChild,
+          null,
+          renderExpirationTime,
+        );
+        // Continue rendering the children, like we normally do.
+        child = next = primaryChild;
+      }
+    } else {
+      // The current tree has not already timed out. That means the primary
+      // children are not wrapped in a fragment fiber.
+      const currentPrimaryChild: Fiber = (current.child: any);
+      if (nextDidTimeout) {
+        // Timed out. Wrap the children in a fragment fiber to keep them
+        // separate from the fallback children.
+        const primaryChildFragment = createFiberFromFragment(
+          // It shouldn't matter what the pending props are because we aren't
+          // going to render this fragment.
+          null,
+          mode,
+          NoWork,
+          null,
+        );
+        primaryChildFragment.effectTag |= Placement;
+        primaryChildFragment.child = currentPrimaryChild;
+        currentPrimaryChild.return = primaryChildFragment;
+        // Create a fragment from the fallback children, too.
+        const fallbackChildFragment = (primaryChildFragment.sibling = createFiberFromFragment(
+          nextChildren,
+          mode,
+          renderExpirationTime,
+          null,
+        ));
+        fallbackChildFragment.effectTag |= Placement;
+        child = primaryChildFragment;
+        // Skip the primary children, and continue working on the
+        // fallback children.
+        next = fallbackChildFragment;
+        child.return = next.return = workInProgress;
+      } else {
+        // Still haven't timed out.  Continue rendering the children, like we
+        // normally do.
+        next = child = reconcileChildFibers(
+          workInProgress,
+          currentPrimaryChild,
+          nextChildren,
+          renderExpirationTime,
+        );
+      }
+    }
   }
+
   workInProgress.memoizedProps = nextProps;
   workInProgress.memoizedState = nextDidTimeout;
-  return workInProgress.child;
+  workInProgress.child = child;
+  return next;
 }
 
 function updatePortalComponent(
@@ -1290,6 +1429,23 @@ function beginWork(
             workInProgress.effectTag |= Update;
           }
           break;
+        case SuspenseComponent: {
+          const nextDidTimeout = workInProgress.memoizedState;
+          const child = bailoutOnAlreadyFinishedWork(
+            current,
+            workInProgress,
+            renderExpirationTime,
+          );
+          if (child !== null) {
+            if (nextDidTimeout) {
+              return child.sibling;
+            } else {
+              return child;
+            }
+          } else {
+            return null;
+          }
+        }
       }
       return bailoutOnAlreadyFinishedWork(
         current,
@@ -1305,7 +1461,7 @@ function beginWork(
   switch (workInProgress.tag) {
     case IndeterminateComponent: {
       const Component = workInProgress.type;
-      return mountIndeterminateComponent(
+      return updateIndeterminateComponent(
         current,
         workInProgress,
         Component,
