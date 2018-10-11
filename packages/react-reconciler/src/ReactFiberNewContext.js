@@ -21,7 +21,7 @@ export type ContextDependency<T> = {
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
-import maxSigned31BitInt from './maxSigned31BitInt';
+import maxSigned31BitInt from 'shared/maxSigned31BitInt';
 import {NoWork} from './ReactFiberExpirationTime';
 import {
   ContextProvider,
@@ -37,7 +37,7 @@ import {
   ForceUpdate,
 } from 'react-reconciler/src/ReactUpdateQueue';
 
-import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
+import MAX_SIGNED_31_BIT_INT from 'shared/maxSigned31BitInt';
 const valueCursor: StackCursor<mixed> = createCursor(null);
 
 let rendererSigil;
