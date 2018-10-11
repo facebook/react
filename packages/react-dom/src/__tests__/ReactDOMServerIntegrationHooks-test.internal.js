@@ -646,5 +646,21 @@ describe('ReactDOMServerHooks', () => {
         expect(domNode.lastChild.textContent).toEqual('Baz: 5');
       },
     );
+
+    itThrowsWhenRendering(
+      'if used inside a class component',
+      async render => {
+        const Context = React.createContext({}, () => {});
+        class Counter extends React.Component {
+          render() {
+            let [count] = useContext(Context);
+            return <Text text={count} />;
+          }
+        }
+
+        return render(<Counter />);
+      },
+      'Hooks can only be called inside the body of a function component.',
+    );
   });
 });
