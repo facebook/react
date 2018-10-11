@@ -60,7 +60,7 @@ import {
   isAlreadyFailedLegacyErrorBoundary,
   retrySuspendedRoot,
 } from './ReactFiberScheduler';
-import {Sync} from './ReactFiberExpirationTime';
+import {NoWork, Sync} from './ReactFiberExpirationTime';
 
 import invariant from 'shared/invariant';
 import maxSigned31BitInt from './maxSigned31BitInt';
@@ -175,20 +175,16 @@ function throwException(
     do {
       if (workInProgress.tag === SuspenseComponent) {
         const current = workInProgress.alternate;
-        if (current !== null && current.updateQueue !== null) {
-          // Reached a placeholder that already timed out. Each timed out
-          // placeholder acts as the root of a new suspense boundary.
-
-          // Use the time at which the placeholder timed out as the start time
-          // for the current render.
-          const suspenseInfo: {|
-            timedOutAt: ExpirationTime,
-          |} = (current.updateQueue: any);
-          const timedOutAt = suspenseInfo.timedOutAt;
-          startTimeMs = expirationTimeToMs(timedOutAt);
-
-          // Do not search any further.
-          break;
+        if (current !== null) {
+          const currentState = current.memoizedState;
+          if (currentState !== null && currentState.didTimeout) {
+            // Reached a boundary that already timed out. Do not search
+            // any further.
+            const timedOutAt = currentState.timedOutAt;
+            startTimeMs = expirationTimeToMs(timedOutAt);
+            // Do not search any further.
+            break;
+          }
         }
         let timeoutPropMs = workInProgress.pendingProps.maxDuration;
         if (typeof timeoutPropMs === 'number') {
@@ -209,7 +205,8 @@ function throwException(
     workInProgress = returnFiber;
     do {
       if (workInProgress.tag === SuspenseComponent) {
-        const didTimeout = workInProgress.memoizedState;
+        const state = workInProgress.memoizedState;
+        const didTimeout = state !== null && state.didTimeout;
         if (!didTimeout) {
           // Found the nearest boundary.
 
@@ -431,6 +428,32 @@ function unwindWork(
       const effectTag = workInProgress.effectTag;
       if (effectTag & ShouldCapture) {
         workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
+        // Captured a suspense effect. Set the boundary's `alreadyCaptured`
+        // state to true so we know to render the fallback.
+        const current = workInProgress.alternate;
+        const currentState = current !== null ? current.memoizedState : null;
+        let nextState = workInProgress.memoizedState;
+        if (currentState === null) {
+          // No existing state. Create a new object.
+          nextState = {
+            alreadyCaptured: true,
+            didTimeout: false,
+            timedOutAt: NoWork,
+          };
+        } else if (currentState === nextState) {
+          // There is an existing state but it's the same as the current tree's.
+          // Clone the object.
+          nextState = {
+            alreadyCaptured: true,
+            didTimeout: currentState.didTimeout,
+            timedOutAt: currentState.timedOutAt,
+          };
+        } else {
+          // Already have a clone, so it's safe to mutate.
+          nextState.alreadyCaptured = true;
+        }
+        workInProgress.memoizedState = nextState;
+        // Re-render the boundary.
         return workInProgress;
       }
       return null;

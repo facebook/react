@@ -11,6 +11,8 @@ import type {ReactProviderType, ReactContext} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {SuspenseState} from './ReactFiberSuspenseComponent';
+
 import checkPropTypes from 'prop-types/checkPropTypes';
 
 import {
@@ -65,7 +67,7 @@ import {
 } from './ReactChildFiber';
 import {processUpdateQueue} from './ReactUpdateQueue';
 import {NoWork, Never} from './ReactFiberExpirationTime';
-import {ConcurrentMode, StrictMode, NoContext} from './ReactTypeOfMode';
+import {ConcurrentMode, StrictMode} from './ReactTypeOfMode';
 import {
   shouldSetTextContent,
   shouldDeprioritizeSubtree,
@@ -945,28 +947,37 @@ function updateSuspenseComponent(
   const mode = workInProgress.mode;
   const nextProps = workInProgress.pendingProps;
 
-  // Check if we already attempted to render the normal state. If we did,
-  // and we timed out, render the placeholder state.
-  const alreadyCaptured = (workInProgress.effectTag & DidCapture) === NoEffect;
-
+  // We should attempt to render the primary children unless this boundary
+  // already suspended during this render (`alreadyCaptured` is true).
+  let nextState: SuspenseState | null = workInProgress.memoizedState;
   let nextDidTimeout;
-  if ((mode & StrictMode) === NoContext) {
-    // We're outside strict mode.
-    if (workInProgress.updateQueue !== null) {
-      // Something inside this Placeholder boundary suspended during the last
-      // commit. Switch to the placholder.
-      workInProgress.updateQueue = null;
-      nextDidTimeout = true;
-    } else {
-      nextDidTimeout = false;
-    }
+  if (nextState === null) {
+    // An empty suspense state means this boundary has not yet timed out.
+    nextDidTimeout = false;
   } else {
-    if (alreadyCaptured) {
+    if (!nextState.alreadyCaptured) {
+      // Since we haven't already suspended during this commit, clear the
+      // existing suspense state. We'll try rendering again.
       nextDidTimeout = false;
+      nextState = null;
     } else {
-      // If the timed-out view commits, schedule an update effect to record
-      // the committed time.
+      // Something in this boundary's subtree already suspended. Switch to
+      // rendering the fallback children. Set `alreadyCaptured` to true.
       nextDidTimeout = true;
+      if (current !== null && nextState === current.memoizedState) {
+        // Create a new suspense state to avoid mutating the current tree's.
+        nextState = {
+          alreadyCaptured: true,
+          didTimeout: true,
+          timedOutAt: nextState.timedOutAt,
+        };
+      } else {
+        // Already have a clone, so it's safe to mutate.
+        nextState.alreadyCaptured = true;
+        nextState.didTimeout = true;
+      }
+      // If this render commits, schedule an update effect to record the timed-
+      // out time.
       workInProgress.effectTag |= Update;
     }
   }
@@ -1047,7 +1058,8 @@ function updateSuspenseComponent(
   } else {
     // This is an update. This branch is more complicated because we need to
     // ensure the state of the primary children is preserved.
-    const prevDidTimeout = current.memoizedState === true;
+    const prevState = current.memoizedState;
+    const prevDidTimeout = prevState !== null && prevState.didTimeout;
     if (prevDidTimeout) {
       // The current tree already timed out. That means each child set is
       // wrapped in a fragment fiber.
@@ -1141,7 +1153,7 @@ function updateSuspenseComponent(
   }
 
   workInProgress.memoizedProps = nextProps;
-  workInProgress.memoizedState = nextDidTimeout;
+  workInProgress.memoizedState = nextState;
   workInProgress.child = child;
   return next;
 }
@@ -1430,13 +1442,14 @@ function beginWork(
           }
           break;
         case SuspenseComponent: {
-          const nextDidTimeout = workInProgress.memoizedState;
           const child = bailoutOnAlreadyFinishedWork(
             current,
             workInProgress,
             renderExpirationTime,
           );
           if (child !== null) {
+            const nextState = workInProgress.memoizedState;
+            const nextDidTimeout = nextState !== null && nextState.didTimeout;
             if (nextDidTimeout) {
               return child.sibling;
             } else {

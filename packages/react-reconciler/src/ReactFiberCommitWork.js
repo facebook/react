@@ -18,6 +18,7 @@ import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue, CapturedError} from './ReactCapturedValue';
+import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import {
   enableSchedulerTracing,
@@ -48,7 +49,7 @@ import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
-import {Sync} from './ReactFiberExpirationTime';
+import {NoWork, Sync} from './ReactFiberExpirationTime';
 import {onCommitUnmount} from './ReactFiberDevToolsHook';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
@@ -77,9 +78,6 @@ import {
   requestCurrentTime,
   scheduleWork,
 } from './ReactFiberScheduler';
-import {NoContext, StrictMode} from './ReactTypeOfMode';
-
-const emptyObject = {};
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -351,19 +349,26 @@ function commitLifeCycles(
       return;
     }
     case SuspenseComponent: {
-      if ((finishedWork.mode & StrictMode) === NoContext) {
-        // In loose mode, a suspense boundary times out by scheduling a
-        // synchronous update in the commit phase. Use `updateQueue` field to
-        // signal that the Timeout needs to switch to the placeholder. We don't
-        // need an entire queue. Any non-null value works.
-        // $FlowFixMe - Intentionally using a value other than an UpdateQueue.
-        finishedWork.updateQueue = emptyObject;
+      let newState: SuspenseState | null = finishedWork.memoizedState;
+      if (newState === null) {
+        // In non-strict mode, a suspense boundary times out by commiting
+        // twice: first, by committing the children in an inconsistent state,
+        // then hiding them and showing the fallback children in a subsequent
+        // commit.
+        newState = finishedWork.memoizedState = {
+          alreadyCaptured: true,
+          didTimeout: false,
+          timedOutAt: NoWork,
+        };
         scheduleWork(finishedWork, Sync);
       } else {
-        // In strict mode, the Update effect is used to record the time at
-        // which the children timed out.
-        // $FlowFixMe - Intentionally using a value other than an UpdateQueue.
-        finishedWork.updateQueue = {timedOutAt: requestCurrentTime()};
+        newState.alreadyCaptured = false;
+        if (newState.timedOutAt === NoWork) {
+          // If the children had not already timed out, record the time.
+          // This is used to compute the elapsed time during subsequent
+          // attempts to render the children.
+          newState.timedOutAt = requestCurrentTime();
+        }
       }
       return;
     }
