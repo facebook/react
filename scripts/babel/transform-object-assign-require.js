@@ -7,9 +7,12 @@
 
 'use strict';
 
+const declare = require('@babel/helper-plugin-utils').declare;
 const addDefault = require('@babel/helper-module-imports').addDefault;
 
-module.exports = function autoImporter(babel) {
+module.exports = declare(api => {
+  api.assertVersion(7);
+
   function getAssignIdent(path, state) {
     if (state.id) {
       return state.id;
@@ -41,4 +44,4 @@ module.exports = function autoImporter(babel) {
       },
     },
   };
-};
+});
