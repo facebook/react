@@ -52,7 +52,8 @@ import {
   FunctionComponent,
   HostPortal,
   HostRoot,
-  PureComponent,
+  MemoComponent,
+  SimpleMemoComponent,
 } from 'shared/ReactWorkTags';
 import {
   enableSchedulerTracing,
@@ -270,8 +271,8 @@ let nextEffect: Fiber | null = null;
 
 let isCommitting: boolean = false;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
-let firstPassiveEffect: Fiber | null = null;
 let passiveEffectCallbackHandle: * = null;
+let passiveEffectCallback: * = null;
 
 let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
 
@@ -521,6 +522,7 @@ function commitAllLifeCycles(
 function commitPassiveEffects(root: FiberRoot, firstEffect: Fiber): void {
   rootWithPendingPassiveEffects = null;
   passiveEffectCallbackHandle = null;
+  passiveEffectCallback = null;
 
   // Set this to true to prevent re-entrancy
   const previousIsRendering = isRendering;
@@ -600,15 +602,13 @@ function flushPassiveEffectsBeforeSchedulingUpdateOnFiber(fiber: Fiber) {
 
 function flushPassiveEffects(root: FiberRoot) {
   if (
-    passiveEffectCallbackHandle !== null &&
+    passiveEffectCallback !== null &&
     root === rootWithPendingPassiveEffects
   ) {
     Schedule_cancelCallback(passiveEffectCallbackHandle);
-    passiveEffectCallbackHandle = null;
-    rootWithPendingPassiveEffects = null;
-    if (firstPassiveEffect !== null) {
-      commitPassiveEffects(root, firstPassiveEffect);
-    }
+    // We call the scheduled callback instead of commitPassiveEffects directly
+    // to ensure tracing works correctly.
+    passiveEffectCallback();
   }
 }
 
@@ -807,26 +807,15 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
     // after the next paint. Schedule an callback to fire them in an async
     // event. To ensure serial execution, the callback will be flushed early if
     // we enter rootWithPendingPassiveEffects commit phase before then.
-    const resolvedFirstEffect = (firstPassiveEffect = firstEffect);
-
-    let passiveEffectCallback;
+    let callback = commitPassiveEffects.bind(null, root, firstEffect);
     if (enableSchedulerTracing) {
       // TODO: Avoid this extra callback by mutating the tracing ref directly,
       // like we do at the beginning of commitRoot. I've opted not to do that
       // here because that code is still in flux.
-      passiveEffectCallback = Schedule_tracing_wrap(() => {
-        commitPassiveEffects(root, resolvedFirstEffect);
-      });
-    } else {
-      passiveEffectCallback = commitPassiveEffects.bind(
-        null,
-        root,
-        resolvedFirstEffect,
-      );
+      callback = Schedule_tracing_wrap(callback);
     }
-    passiveEffectCallbackHandle = Schedule_scheduleCallback(
-      passiveEffectCallback,
-    );
+    passiveEffectCallbackHandle = Schedule_scheduleCallback(callback);
+    passiveEffectCallback = callback;
   }
 
   isCommitting = false;
@@ -1798,7 +1787,8 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
           break;
         case FunctionComponent:
         case ForwardRef:
-        case PureComponent:
+        case MemoComponent:
+        case SimpleMemoComponent:
           warnAboutUpdateOnUnmounted(fiber, false);
           break;
       }

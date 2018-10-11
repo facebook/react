@@ -15,6 +15,7 @@
 let React;
 let ReactFeatureFlags;
 let ReactNoop;
+let SchedulerTracing;
 let useState;
 let useReducer;
 let useEffect;
@@ -26,6 +27,7 @@ let useRef;
 let useAPI;
 let forwardRef;
 let flushPassiveEffects;
+let memo;
 
 describe('ReactHooks', () => {
   beforeEach(() => {
@@ -56,8 +58,10 @@ describe('ReactHooks', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.enableHooks = true;
+    ReactFeatureFlags.enableSchedulerTracing = true;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
+    SchedulerTracing = require('scheduler/tracing');
     useState = React.useState;
     useReducer = React.useReducer;
     useEffect = React.useEffect;
@@ -68,6 +72,7 @@ describe('ReactHooks', () => {
     useRef = React.useRef;
     useAPI = React.useAPI;
     forwardRef = React.forwardRef;
+    memo = React.memo;
   });
 
   function span(prop) {
@@ -329,6 +334,28 @@ describe('ReactHooks', () => {
           'tasks in a useEffect cleanup function.\n' +
           '    in Counter (at **)',
       );
+    });
+
+    it('works with memo', () => {
+      let _updateCount;
+      function Counter(props) {
+        const [count, updateCount] = useState(0);
+        _updateCount = updateCount;
+        return <Text text={'Count: ' + count} />;
+      }
+      Counter = memo(Counter);
+
+      ReactNoop.render(<Counter />);
+      expect(ReactNoop.flush()).toEqual(['Count: 0']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+
+      ReactNoop.render(<Counter />);
+      expect(ReactNoop.flush()).toEqual([]);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+
+      _updateCount(1);
+      expect(ReactNoop.flush()).toEqual(['Count: 1']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
     });
   });
 
@@ -797,6 +824,7 @@ describe('ReactHooks', () => {
         }, []);
         return <Text text={'Count: ' + count} />;
       }
+
       ReactNoop.render(<Counter count={0} />);
       expect(ReactNoop.flush()).toEqual(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
@@ -806,6 +834,56 @@ describe('ReactHooks', () => {
       _updateCount(2);
       expect(ReactNoop.flush()).toEqual(['Will set count to 1', 'Count: 2']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 2')]);
+    });
+
+    it('flushes serial effects before enqueueing work (with tracing)', () => {
+      const onInteractionScheduledWorkCompleted = jest.fn();
+      const onWorkCanceled = jest.fn();
+      SchedulerTracing.unstable_subscribe({
+        onInteractionScheduledWorkCompleted,
+        onInteractionTraced: jest.fn(),
+        onWorkCanceled,
+        onWorkScheduled: jest.fn(),
+        onWorkStarted: jest.fn(),
+        onWorkStopped: jest.fn(),
+      });
+
+      let _updateCount;
+      function Counter(props) {
+        const [count, updateCount] = useState(0);
+        _updateCount = updateCount;
+        useEffect(() => {
+          expect(SchedulerTracing.unstable_getCurrent()).toMatchInteractions([
+            tracingEvent,
+          ]);
+          ReactNoop.yield(`Will set count to 1`);
+          updateCount(1);
+        }, []);
+        return <Text text={'Count: ' + count} />;
+      }
+
+      const tracingEvent = {id: 0, name: 'hello', timestamp: 0};
+      SchedulerTracing.unstable_trace(
+        tracingEvent.name,
+        tracingEvent.timestamp,
+        () => {
+          ReactNoop.render(<Counter count={0} />);
+        },
+      );
+      expect(ReactNoop.flush()).toEqual(['Count: 0']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+
+      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(0);
+
+      // Enqueuing this update forces the passive effect to be flushed --
+      // updateCount(1) happens first, so 2 wins.
+      _updateCount(2);
+      expect(ReactNoop.flush()).toEqual(['Will set count to 1', 'Count: 2']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 2')]);
+
+      flushPassiveEffects();
+      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+      expect(onWorkCanceled).toHaveBeenCalledTimes(0);
     });
 
     it(

@@ -36,6 +36,8 @@ import {
   Profiler,
   SuspenseComponent,
   IncompleteClassComponent,
+  MemoComponent,
+  SimpleMemoComponent,
 } from 'shared/ReactWorkTags';
 import {
   invokeGuardedCallback,
@@ -216,7 +218,8 @@ function commitBeforeMutationLifeCycles(
 ): void {
   switch (finishedWork.tag) {
     case FunctionComponent:
-    case ForwardRef: {
+    case ForwardRef:
+    case SimpleMemoComponent: {
       commitHookEffectList(UnmountSnapshot, NoHookEffect, finishedWork);
       return;
     }
@@ -313,7 +316,8 @@ function commitLifeCycles(
 ): void {
   switch (finishedWork.tag) {
     case FunctionComponent:
-    case ForwardRef: {
+    case ForwardRef:
+    case SimpleMemoComponent: {
       commitHookEffectList(UnmountLayout, MountLayout, finishedWork);
       const newUpdateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
       if (newUpdateQueue !== null) {
@@ -588,7 +592,9 @@ function commitUnmount(current: Fiber): void {
 
   switch (current.tag) {
     case FunctionComponent:
-    case ForwardRef: {
+    case ForwardRef:
+    case MemoComponent:
+    case SimpleMemoComponent: {
       const updateQueue: FunctionComponentUpdateQueue | null = (current.updateQueue: any);
       if (updateQueue !== null) {
         const lastEffect = updateQueue.lastEffect;
@@ -981,7 +987,9 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
   if (!supportsMutation) {
     switch (finishedWork.tag) {
       case FunctionComponent:
-      case ForwardRef: {
+      case ForwardRef:
+      case MemoComponent:
+      case SimpleMemoComponent: {
         commitHookEffectList(UnmountMutation, MountMutation, finishedWork);
         return;
       }
@@ -993,7 +1001,9 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
 
   switch (finishedWork.tag) {
     case FunctionComponent:
-    case ForwardRef: {
+    case ForwardRef:
+    case MemoComponent:
+    case SimpleMemoComponent: {
       commitHookEffectList(UnmountMutation, MountMutation, finishedWork);
       return;
     }
