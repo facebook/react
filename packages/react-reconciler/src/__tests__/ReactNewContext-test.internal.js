@@ -1190,12 +1190,12 @@ describe('ReactNewContext', () => {
 
       function FooAndBar() {
         return (
-          <FooContext>
+          <FooContext.Consumer>
             {foo => {
               const bar = BarContext.unstable_read();
               return <Text text={`Foo: ${foo}, Bar: ${bar}`} />;
             }}
-          </FooContext>
+          </FooContext.Consumer>
         );
       }
 
@@ -1557,5 +1557,32 @@ Context fuzz tester error! Copy and paste the following line into the test suite
         }
       }
     });
+  });
+
+  it('should warn with an error message when using context as a consumer in DEV', () => {
+    const BarContext = React.createContext({value: 'bar-initial'});
+    const BarConsumer = BarContext;
+
+    function Component() {
+      return (
+        <React.Fragment>
+          <BarContext.Provider value={{value: 'bar-updated'}}>
+            <BarConsumer>
+              {({value}) => <div actual={value} expected="bar-updated" />}
+            </BarConsumer>
+          </BarContext.Provider>
+        </React.Fragment>
+      );
+    }
+
+    expect(() => {
+      ReactNoop.render(<Component />);
+      ReactNoop.flush();
+    }).toLowPriorityWarnDev(
+      'You are using the Context from React.createContext() as a consumer.' +
+        'The correct way is to use Context.Consumer as the consumer instead. ' +
+        'This usage is deprecated and will be removed in the next major version.',
+      {withoutStack: true},
+    );
   });
 });

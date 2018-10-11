@@ -67,7 +67,46 @@ export function createContext<T>(
     $$typeof: REACT_PROVIDER_TYPE,
     _context: context,
   };
-  context.Consumer = context;
+
+  if (__DEV__) {
+    // A separate object, but proxies back to the original context object for
+    // backwards compatibility. It has a different $$typeof, so we can properly
+    // warn for the incorrect usage of Context as a Consumer.
+    context.Consumer = {
+      $$typeof: REACT_CONTEXT_TYPE,
+      _context: context,
+      get _calculateChangedBits() {
+        return context._calculateChangedBits;
+      },
+      set _calculateChangedBits(_calculateChangedBits) {
+        context._calculateChangedBits = _calculateChangedBits;
+      },
+      get _currentValue() {
+        return context._currentValue;
+      },
+      set _currentValue(_currentValue) {
+        context._currentValue = _currentValue;
+      },
+      get _currentValue2() {
+        return context._currentValue2;
+      },
+      set _currentValue2(_currentValue2) {
+        context._currentValue2 = _currentValue2;
+      },
+      Provider: context.Provider,
+      get Consumer() {
+        return context.Consumer;
+      },
+      get unstable_read() {
+        return context.unstable_read;
+      },
+      set unstable_read(unstable_read) {
+        context.unstable_read = unstable_read;
+      },
+    };
+  } else {
+    context.Consumer = context;
+  }
   context.unstable_read = readContext.bind(null, context);
 
   if (__DEV__) {

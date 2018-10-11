@@ -8,6 +8,7 @@
  */
 
 import type {ReactProviderType, ReactContext} from 'shared/ReactTypes';
+import lowPriorityWarning from 'shared/lowPriorityWarning';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
@@ -1096,12 +1097,31 @@ function updateContextProvider(
   return workInProgress.child;
 }
 
+let hasWarnedAboutUsingContextAsConsumer = false;
+
 function updateContextConsumer(
   current: Fiber | null,
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ) {
-  const context: ReactContext<any> = workInProgress.type;
+  let context: ReactContext<any> = workInProgress.type;
+  if (__DEV__) {
+    if (workInProgress.type._context === undefined) {
+      if (!hasWarnedAboutUsingContextAsConsumer) {
+        hasWarnedAboutUsingContextAsConsumer = true;
+        lowPriorityWarning(
+          false,
+          'You are using the Context from React.createContext() as a consumer.' +
+            'The correct way is to use Context.Consumer as the consumer instead. ' +
+            'This usage is deprecated and will be removed in the next major version.',
+        );
+      }
+    } else {
+      // Context.Consumer is a separate object in DEV, where
+      // _context points back to the original context
+      context = workInProgress.type._context;
+    }
+  }
   const newProps = workInProgress.pendingProps;
   const render = newProps.children;
 
