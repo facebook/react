@@ -7,6 +7,7 @@
  */
 
 /* eslint-disable no-var */
+import maxSigned31BitInt from 'shared/maxSigned31BitInt'
 
 // TODO: Use symbols?
 var ImmediatePriority = 1;
@@ -14,10 +15,6 @@ var InteractivePriority = 2;
 var NormalPriority = 3;
 var WheneverPriority = 4;
 
-// Max 31 bit integer. The max integer size in V8 for 32-bit systems.
-// Math.pow(2, 30) - 1
-// 0b111111111111111111111111111111
-var maxSigned31BitInt = 1073741823;
 
 // Times out immediately
 var IMMEDIATE_PRIORITY_TIMEOUT = -1;
