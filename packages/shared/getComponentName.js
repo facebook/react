@@ -24,6 +24,15 @@ import {
 } from 'shared/ReactSymbols';
 import {refineResolvedThenable} from 'shared/ReactLazyComponent';
 
+function getWrappedName(type: mixed, wrapperName: string): string {
+  const renderFn = (type.render: any);
+  const functionName = renderFn.displayName || renderFn.name || '';
+  return (
+    (type: any).displayName ||
+    (functionName !== '' ? `${wrapperName}(${functionName})` : wrapperName)
+  );
+}
+
 function getComponentName(type: mixed): string | null {
   if (type == null) {
     // Host root, text node or just invalid type.
@@ -64,23 +73,10 @@ function getComponentName(type: mixed): string | null {
         return 'Context.Consumer';
       case REACT_PROVIDER_TYPE:
         return 'Context.Provider';
-      case REACT_FORWARD_REF_TYPE: {
-        const renderFn = (type.render: any);
-        const functionName = renderFn.displayName || renderFn.name || '';
-        return (
-          (type: any).displayName ||
-          (functionName !== '' ? `ForwardRef(${functionName})` : 'ForwardRef')
-        );
-      }
-      case REACT_PURE_TYPE: {
-        const renderFn = (type.render: any);
-        return (
-          (type: any).displayName ||
-          renderFn.displayName ||
-          renderFn.name ||
-          'Pure'
-        );
-      }
+      case REACT_FORWARD_REF_TYPE:
+        return getWrappedName(type, 'ForwardRef');
+      case REACT_PURE_TYPE:
+        return getWrappedName(type, 'Pure');
     }
     if (typeof type.then === 'function') {
       const thenable: Thenable<mixed> = (type: any);

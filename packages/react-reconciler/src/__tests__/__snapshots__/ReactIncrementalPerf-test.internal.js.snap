@@ -367,7 +367,7 @@ exports[`ReactDebugFiberPerf supports Suspense and lazy 1`] = `
 
 ⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Parent [mount]
-    ⛔ Suspense [mount] Warning: Rendering has been suspended
+    ⛔ Suspense [mount] Warning: Rendering was suspended
     ⚛ Suspense [mount]
       ⚛ Spinner [mount]
 "
@@ -378,7 +378,7 @@ exports[`ReactDebugFiberPerf supports Suspense and lazy 2`] = `
 
 ⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Parent [mount]
-    ⛔ Suspense [mount] Warning: Rendering has been suspended
+    ⛔ Suspense [mount] Warning: Rendering was suspended
     ⚛ Suspense [mount]
       ⚛ Spinner [mount]
 
@@ -415,7 +415,7 @@ exports[`ReactDebugFiberPerf supports pure 1`] = `
 
 ⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Parent [mount]
-    ⚛ Foo [mount]
+    ⚛ Pure(Foo) [mount]
 
 ⚛ (Committing Changes)
   ⚛ (Committing Snapshot Effects: 0 Total)

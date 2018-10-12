@@ -318,7 +318,7 @@ export function stopFailedWorkTimer(fiber: Fiber): void {
     fiber._debugIsCurrentlyTiming = false;
     const warning =
       fiber.tag === SuspenseComponent
-        ? 'Rendering has been suspended'
+        ? 'Rendering was suspended'
         : 'An error was thrown inside this error boundary';
     endFiberMark(fiber, null, warning);
   }
