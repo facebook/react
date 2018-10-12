@@ -79,7 +79,7 @@ export function createContext<T>(
     // A separate object, but proxies back to the original context object for
     // backwards compatibility. It has a different $$typeof, so we can properly
     // warn for the incorrect usage of Context as a Consumer.
-    const consumer = {
+    const Consumer = {
       $$typeof: REACT_CONTEXT_TYPE,
       _context: context,
       _calculateChangedBits: context._calculateChangedBits,
@@ -96,7 +96,7 @@ export function createContext<T>(
       },
     };
     // $FlowFixMe: Flow complains about not setting a value, which is intentional here
-    Object.defineProperties(consumer, {
+    Object.defineProperties(Consumer, {
       Provider: {
         get() {
           if (!hasWarnedAboutUsingConsumerProvider) {
@@ -144,7 +144,7 @@ export function createContext<T>(
       },
     });
     // $FlowFixMe: Flow complains about missing properties because it doesn't understand defineProperty
-    context.Consumer = consumer;
+    context.Consumer = Consumer;
   } else {
     context.Consumer = context;
   }
