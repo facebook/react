@@ -73,6 +73,7 @@ export function createContext<T>(
 
   let hasWarnedAboutUsingNestedContextConsumers = false;
   let hasWarnedAboutUsingConsumerUnstableRead = false;
+  let hasWarnedAboutUsingConsumerProvider = false;
 
   if (__DEV__) {
     // A separate object, but proxies back to the original context object for
@@ -82,7 +83,6 @@ export function createContext<T>(
       $$typeof: REACT_CONTEXT_TYPE,
       _context: context,
       _calculateChangedBits: context._calculateChangedBits,
-      Provider: context.Provider,
       unstable_read() {
         if (!hasWarnedAboutUsingConsumerUnstableRead) {
           hasWarnedAboutUsingConsumerUnstableRead = true;
@@ -97,6 +97,22 @@ export function createContext<T>(
     };
     // $FlowFixMe: Flow complains about not setting a value, which is intentional here
     Object.defineProperties(consumer, {
+      Provider: {
+        get() {
+          if (!hasWarnedAboutUsingConsumerProvider) {
+            hasWarnedAboutUsingConsumerProvider = true;
+            warning(
+              false,
+              'Rendering <Context.Consumer.Provider> is not supported and will be removed in ' +
+                'a future major release. Did you mean to render <Context.Provider> instead?',
+            );
+          }
+          return context.Provider;
+        },
+        set(_Provider) {
+          context.Provider = _Provider;
+        },
+      },
       _currentValue: {
         get() {
           return context._currentValue;

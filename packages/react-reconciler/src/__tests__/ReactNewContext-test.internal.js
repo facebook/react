@@ -1635,4 +1635,28 @@ Context fuzz tester error! Copy and paste the following line into the test suite
         'a future major release. Did you mean to render Context.unstable_read() instead?',
     );
   });
+
+  it('should warn with an error message when using Context.Consumer.Provider DEV', () => {
+    const BarContext = React.createContext({value: 'bar-initial'});
+
+    function Component() {
+      return (
+        <React.Fragment>
+          <BarContext.Consumer.Provider value={{value: 'bar-updated'}}>
+            <BarContext.Consumer>
+              {({value}) => <div actual={value} expected="bar-updated" />}
+            </BarContext.Consumer>
+          </BarContext.Consumer.Provider>
+        </React.Fragment>
+      );
+    }
+
+    expect(() => {
+      ReactNoop.render(<Component />);
+      ReactNoop.flush();
+    }).toWarnDev(
+      'Rendering <Context.Consumer.Provider> is not supported and will be removed in ' +
+      'a future major release. Did you mean to render <Context.Provider> instead?',
+    );
+  });  
 });
