@@ -24,11 +24,14 @@ import {
 } from 'shared/ReactSymbols';
 import {refineResolvedThenable} from 'shared/ReactLazyComponent';
 
-function getWrappedName(type: mixed, wrapperName: string): string {
-  const renderFn = (type.render: any);
-  const functionName = renderFn.displayName || renderFn.name || '';
+function getWrappedName(
+  outerType: mixed,
+  innerType: any,
+  wrapperName: string,
+): string {
+  const functionName = innerType.displayName || innerType.name || '';
   return (
-    (type: any).displayName ||
+    (outerType: any).displayName ||
     (functionName !== '' ? `${wrapperName}(${functionName})` : wrapperName)
   );
 }
@@ -74,9 +77,9 @@ function getComponentName(type: mixed): string | null {
       case REACT_PROVIDER_TYPE:
         return 'Context.Provider';
       case REACT_FORWARD_REF_TYPE:
-        return getWrappedName(type, 'ForwardRef');
+        return getWrappedName(type, type.render, 'ForwardRef');
       case REACT_PURE_TYPE:
-        return getWrappedName(type, 'Pure');
+        return getWrappedName(type, type.render, 'Pure');
     }
     if (typeof type.then === 'function') {
       const thenable: Thenable<mixed> = (type: any);
