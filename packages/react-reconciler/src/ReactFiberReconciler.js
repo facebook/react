@@ -61,6 +61,8 @@ import {
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import * as ReactCurrentFiber from './ReactCurrentFiber';
+import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
+import {StrictMode} from './ReactTypeOfMode';
 
 type OpaqueRoot = FiberRoot;
 
@@ -82,9 +84,11 @@ type DevToolsConfig = {|
 |};
 
 let didWarnAboutNestedUpdates;
+let didWarnAboutFindNodeInStrictMode;
 
 if (__DEV__) {
   didWarnAboutNestedUpdates = false;
+  didWarnAboutFindNodeInStrictMode = {};
 }
 
 function getContextForSubtree(
@@ -209,6 +213,67 @@ function findHostInstance(component: Object): PublicInstance | null {
   return hostFiber.stateNode;
 }
 
+function findHostInstanceWithWarning(
+  component: Object,
+  methodName: string,
+): PublicInstance | null {
+  if (__DEV__) {
+    const fiber = ReactInstanceMap.get(component);
+    if (fiber === undefined) {
+      if (typeof component.render === 'function') {
+        invariant(false, 'Unable to find node on an unmounted component.');
+      } else {
+        invariant(
+          false,
+          'Argument appears to not be a ReactComponent. Keys: %s',
+          Object.keys(component),
+        );
+      }
+    }
+    const hostFiber = findCurrentHostFiber(fiber);
+    if (hostFiber === null) {
+      return null;
+    }
+    if (hostFiber.mode & StrictMode) {
+      const componentName = getComponentName(fiber.type) || 'Component';
+      if (!didWarnAboutFindNodeInStrictMode[componentName]) {
+        didWarnAboutFindNodeInStrictMode[componentName] = true;
+        if (fiber.mode & StrictMode) {
+          warningWithoutStack(
+            false,
+            '%s is deprecated in StrictMode. ' +
+              '%s was passed an instance of %s which is inside StrictMode. ' +
+              'Instead, add a ref directly to the element you want to reference.' +
+              '\n%s' +
+              '\n\nLearn more about using refs safely here:' +
+              '\nhttps://fb.me/react-strict-mode-find-node',
+            methodName,
+            methodName,
+            componentName,
+            getStackByFiberInDevAndProd(hostFiber),
+          );
+        } else {
+          warningWithoutStack(
+            false,
+            '%s is deprecated in StrictMode. ' +
+              '%s was passed an instance of %s which renders StrictMode children. ' +
+              'Instead, add a ref directly to the element you want to reference.' +
+              '\n%s' +
+              '\n\nLearn more about using refs safely here:' +
+              '\nhttps://fb.me/react-strict-mode-find-node',
+            methodName,
+            methodName,
+            componentName,
+            getStackByFiberInDevAndProd(hostFiber),
+          );
+        }
+      }
+    }
+    return hostFiber.stateNode;
+  }
+  return findHostInstance(component);
+}
+
 export function createContainer(
   containerInfo: Container,
   isConcurrent: boolean,
@@ -265,6 +330,8 @@ export function getPublicRootInstance(
 }
 
 export {findHostInstance};
+
+export {findHostInstanceWithWarning};
 
 export function findHostInstanceWithNoPortals(
   fiber: Fiber,
