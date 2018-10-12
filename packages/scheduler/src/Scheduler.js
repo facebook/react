@@ -10,9 +10,9 @@
 
 // TODO: Use symbols?
 var ImmediatePriority = 1;
-var InteractivePriority = 2;
+var UserBlockingPriority = 2;
 var NormalPriority = 3;
-var WheneverPriority = 4;
+var IdlePriority = 4;
 
 // Max 31 bit integer. The max integer size in V8 for 32-bit systems.
 // Math.pow(2, 30) - 1
@@ -22,10 +22,10 @@ var maxSigned31BitInt = 1073741823;
 // Times out immediately
 var IMMEDIATE_PRIORITY_TIMEOUT = -1;
 // Eventually times out
-var INTERACTIVE_PRIORITY_TIMEOUT = 250;
+var USER_BLOCKING_PRIORITY = 250;
 var NORMAL_PRIORITY_TIMEOUT = 5000;
 // Never times out
-var WHENEVER_PRIORITY_TIMEOUT = maxSigned31BitInt;
+var IDLE_PRIORITY = maxSigned31BitInt;
 
 // Callbacks are stored as a circular, doubly linked list.
 var firstCallbackNode = null;
@@ -254,9 +254,9 @@ function flushWork(didTimeout) {
 function unstable_runWithPriority(priorityLevel, eventHandler) {
   switch (priorityLevel) {
     case ImmediatePriority:
-    case InteractivePriority:
+    case UserBlockingPriority:
     case NormalPriority:
-    case WheneverPriority:
+    case IdlePriority:
       break;
     default:
       priorityLevel = NormalPriority;
@@ -314,11 +314,11 @@ function unstable_scheduleCallback(callback, deprecated_options) {
       case ImmediatePriority:
         expirationTime = startTime + IMMEDIATE_PRIORITY_TIMEOUT;
         break;
-      case InteractivePriority:
-        expirationTime = startTime + INTERACTIVE_PRIORITY_TIMEOUT;
+      case UserBlockingPriority:
+        expirationTime = startTime + USER_BLOCKING_PRIORITY;
         break;
-      case WheneverPriority:
-        expirationTime = startTime + WHENEVER_PRIORITY_TIMEOUT;
+      case IdlePriority:
+        expirationTime = startTime + IDLE_PRIORITY;
         break;
       case NormalPriority:
       default:
@@ -679,9 +679,9 @@ if (typeof window !== 'undefined' && window._schedMock) {
 
 export {
   ImmediatePriority as unstable_ImmediatePriority,
-  InteractivePriority as unstable_InteractivePriority,
+  UserBlockingPriority as unstable_UserBlockingPriority,
   NormalPriority as unstable_NormalPriority,
-  WheneverPriority as unstable_WheneverPriority,
+  IdlePriority as unstable_IdlePriority,
   unstable_runWithPriority,
   unstable_scheduleCallback,
   unstable_cancelCallback,
