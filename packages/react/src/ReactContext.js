@@ -72,6 +72,7 @@ export function createContext<T>(
   context.unstable_read = readContext.bind(null, context);
 
   let hasWarnedAboutUsingNestedContextConsumers = false;
+  let hasWarnedAboutUsingConsumerUnstableRead = false;
 
   if (__DEV__) {
     // A separate object, but proxies back to the original context object for
@@ -82,7 +83,17 @@ export function createContext<T>(
       _context: context,
       _calculateChangedBits: context._calculateChangedBits,
       Provider: context.Provider,
-      unstable_read: context.unstable_read,
+      unstable_read() {
+        if (!hasWarnedAboutUsingConsumerUnstableRead) {
+          hasWarnedAboutUsingConsumerUnstableRead = true;
+          warning(
+            false,
+            'Calling Context.Consumer.unstable_read() is not supported and will be removed in ' +
+              'a future major release. Did you mean to render Context.unstable_read() instead?',
+          );
+        }
+        return context.unstable_read();
+      },
     };
     // $FlowFixMe: Flow complains about not setting a value, which is intentional here
     Object.defineProperties(consumer, {
