@@ -12,7 +12,7 @@
 let scheduleCallback;
 let runWithPriority;
 let ImmediatePriority;
-let InteractivePriority;
+let UserBlockingPriority;
 
 describe('SchedulerNoDOM', () => {
   // If Scheduler runs in a non-DOM environment, it falls back to a naive
@@ -27,7 +27,7 @@ describe('SchedulerNoDOM', () => {
     scheduleCallback = Scheduler.unstable_scheduleCallback;
     runWithPriority = Scheduler.unstable_runWithPriority;
     ImmediatePriority = Scheduler.unstable_ImmediatePriority;
-    InteractivePriority = Scheduler.unstable_InteractivePriority;
+    UserBlockingPriority = Scheduler.unstable_UserBlockingPriority;
   });
 
   it('runAllTimers flushes all scheduled callbacks', () => {
@@ -55,7 +55,7 @@ describe('SchedulerNoDOM', () => {
     scheduleCallback(() => {
       log.push('B');
     });
-    runWithPriority(InteractivePriority, () => {
+    runWithPriority(UserBlockingPriority, () => {
       scheduleCallback(() => {
         log.push('C');
       });
@@ -78,7 +78,7 @@ describe('SchedulerNoDOM', () => {
     scheduleCallback(() => {
       log.push('B');
     });
-    runWithPriority(InteractivePriority, () => {
+    runWithPriority(UserBlockingPriority, () => {
       scheduleCallback(() => {
         log.push('C');
       });
