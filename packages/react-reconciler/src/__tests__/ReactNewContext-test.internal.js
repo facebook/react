@@ -1656,7 +1656,7 @@ Context fuzz tester error! Copy and paste the following line into the test suite
       ReactNoop.flush();
     }).toWarnDev(
       'Rendering <Context.Consumer.Provider> is not supported and will be removed in ' +
-      'a future major release. Did you mean to render <Context.Provider> instead?',
+        'a future major release. Did you mean to render <Context.Provider> instead?',
     );
-  });  
+  });
 });
