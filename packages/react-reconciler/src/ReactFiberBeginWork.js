@@ -1107,7 +1107,7 @@ function updateContextConsumer(
   let context: ReactContext<any> = workInProgress.type;
   // The logic below for Context differs depending on PROD or DEV mode. In
   // DEV mode, we create a separate object for Context.Consumer that acts
-  // like a proxy to Context. This proxy object adds unecessary code in PROD
+  // like a proxy to Context. This proxy object adds unnecessary code in PROD
   // so we use the old behaviour (Context.Consumer references Context) to
   // reduce size and overhead. The separate object references context via
   // a property called "_context", which also gives us the ability to check
