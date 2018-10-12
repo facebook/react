@@ -13,6 +13,7 @@ import type {ReactContext} from 'shared/ReactTypes';
 
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
 
@@ -68,6 +69,8 @@ export function createContext<T>(
     _context: context,
   };
 
+  let hasWarnedAboutUsingNestedContextConsumers = false;
+
   if (__DEV__) {
     // A separate object, but proxies back to the original context object for
     // backwards compatibility. It has a different $$typeof, so we can properly
@@ -105,6 +108,14 @@ export function createContext<T>(
       },
       Consumer: {
         get() {
+          if (!hasWarnedAboutUsingNestedContextConsumers) {
+            hasWarnedAboutUsingNestedContextConsumers = true;
+            warning(
+              false,
+              'Rendering <Context.Consumer.Consumer> is not supported and will be removed in ' +
+                'a future major release. Did you mean to render <Context.Consumer> instead?',
+            );
+          }
           return context.Consumer;
         },
       },
