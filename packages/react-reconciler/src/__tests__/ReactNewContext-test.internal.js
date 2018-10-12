@@ -1190,12 +1190,12 @@ describe('ReactNewContext', () => {
 
       function FooAndBar() {
         return (
-          <FooContext>
+          <FooContext.Consumer>
             {foo => {
               const bar = BarContext.unstable_read();
               return <Text text={`Foo: ${foo}, Bar: ${bar}`} />;
             }}
-          </FooContext>
+          </FooContext.Consumer>
         );
       }
 
@@ -1557,5 +1557,106 @@ Context fuzz tester error! Copy and paste the following line into the test suite
         }
       }
     });
+  });
+
+  it('should warn with an error message when using context as a consumer in DEV', () => {
+    const BarContext = React.createContext({value: 'bar-initial'});
+    const BarConsumer = BarContext;
+
+    function Component() {
+      return (
+        <React.Fragment>
+          <BarContext.Provider value={{value: 'bar-updated'}}>
+            <BarConsumer>
+              {({value}) => <div actual={value} expected="bar-updated" />}
+            </BarConsumer>
+          </BarContext.Provider>
+        </React.Fragment>
+      );
+    }
+
+    expect(() => {
+      ReactNoop.render(<Component />);
+      ReactNoop.flush();
+    }).toWarnDev(
+      'Rendering <Context> directly is not supported and will be removed in ' +
+        'a future major release. Did you mean to render <Context.Consumer> instead?',
+    );
+  });
+
+  it('should warn with an error message when using nested context consumers in DEV', () => {
+    const BarContext = React.createContext({value: 'bar-initial'});
+    const BarConsumer = BarContext;
+
+    function Component() {
+      return (
+        <React.Fragment>
+          <BarContext.Provider value={{value: 'bar-updated'}}>
+            <BarConsumer.Consumer.Consumer>
+              {({value}) => <div actual={value} expected="bar-updated" />}
+            </BarConsumer.Consumer.Consumer>
+          </BarContext.Provider>
+        </React.Fragment>
+      );
+    }
+
+    expect(() => {
+      ReactNoop.render(<Component />);
+      ReactNoop.flush();
+    }).toWarnDev(
+      'Rendering <Context.Consumer.Consumer> is not supported and will be removed in ' +
+        'a future major release. Did you mean to render <Context.Consumer> instead?',
+    );
+  });
+
+  it('should warn with an error message when using Context.Consumer.unstable_read() DEV', () => {
+    const BarContext = React.createContext({value: 'bar-initial'});
+
+    function Child() {
+      let value = BarContext.Consumer.unstable_read();
+      return <div actual={value} expected="bar-updated" />;
+    }
+
+    function Component() {
+      return (
+        <React.Fragment>
+          <BarContext.Provider value={{value: 'bar-updated'}}>
+            <Child />
+          </BarContext.Provider>
+        </React.Fragment>
+      );
+    }
+
+    expect(() => {
+      ReactNoop.render(<Component />);
+      ReactNoop.flush();
+    }).toWarnDev(
+      'Calling Context.Consumer.unstable_read() is not supported and will be removed in ' +
+        'a future major release. Did you mean to render Context.unstable_read() instead?',
+    );
+  });
+
+  it('should warn with an error message when using Context.Consumer.Provider DEV', () => {
+    const BarContext = React.createContext({value: 'bar-initial'});
+
+    function Component() {
+      return (
+        <React.Fragment>
+          <BarContext.Consumer.Provider value={{value: 'bar-updated'}}>
+            <BarContext.Consumer>
+              {({value}) => <div actual={value} expected="bar-updated" />}
+            </BarContext.Consumer>
+          </BarContext.Consumer.Provider>
+        </React.Fragment>
+      );
+    }
+
+    expect(() => {
+      ReactNoop.render(<Component />);
+      ReactNoop.flush();
+    }).toWarnDev(
+      'Rendering <Context.Consumer.Provider> is not supported and will be removed in ' +
+        'a future major release. Did you mean to render <Context.Provider> instead?',
+    );
   });
 });
