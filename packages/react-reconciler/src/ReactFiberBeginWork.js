@@ -1112,7 +1112,7 @@ function updateContextConsumer(
   // a property called "_context", which also gives us the ability to check
   // in DEV mode if this property exists or not and warn if it does not.
   if (__DEV__) {
-    if (context._context === undefined) {
+    if ((context: any)._context === undefined) {
       if (!hasWarnedAboutUsingContextAsConsumer) {
         hasWarnedAboutUsingContextAsConsumer = true;
         warning(
@@ -1122,7 +1122,7 @@ function updateContextConsumer(
         );
       }
     } else {
-      context = context._context;
+      context = (context: any)._context;
     }
   }
   const newProps = workInProgress.pendingProps;
