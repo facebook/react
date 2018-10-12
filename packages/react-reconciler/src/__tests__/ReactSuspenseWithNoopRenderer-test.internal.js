@@ -51,12 +51,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   function div(...children) {
-    children = children.map(c => (typeof c === 'string' ? {text: c} : c));
-    return {type: 'div', children, prop: undefined};
+    children = children.map(
+      c => (typeof c === 'string' ? {text: c, hidden: false} : c),
+    );
+    return {type: 'div', children, prop: undefined, hidden: false};
   }
 
   function span(prop) {
-    return {type: 'span', children: [], prop};
+    return {type: 'span', children: [], prop, hidden: false};
   }
 
   function advanceTimers(ms) {
@@ -788,18 +790,27 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     ReactNoop.render(<App />);
     expect(ReactNoop.flush()).toEqual(['Suspend! [Async]', 'Loading...']);
-    expect(ReactNoop.getChildren()).toEqual([]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(null);
 
     ReactNoop.expire(2000);
     await advanceTimers(2000);
     expect(ReactNoop.flush()).toEqual([]);
-    expect(ReactNoop.getChildren()).toEqual([div(), span('Loading...')]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <React.Fragment>
+        <div hidden={true} />
+        <span prop="Loading..." />
+      </React.Fragment>,
+    );
 
     ReactNoop.expire(1000);
     await advanceTimers(1000);
 
     expect(ReactNoop.flush()).toEqual(['Promise resolved [Async]', 'Async']);
-    expect(ReactNoop.getChildren()).toEqual([div(span('Async'))]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <div>
+        <span prop="Async" />
+      </div>,
+    );
   });
 
   it('flushes all expired updates in a single batch', async () => {
