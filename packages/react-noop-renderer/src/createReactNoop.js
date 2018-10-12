@@ -522,6 +522,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       if (typeof component.id === 'number') {
         return component;
       }
+      if (__DEV__) {
+        return NoopRenderer.findHostInstanceWithWarning(
+          component,
+          'findInstance',
+        );
+      }
       return NoopRenderer.findHostInstance(component);
     },
 
