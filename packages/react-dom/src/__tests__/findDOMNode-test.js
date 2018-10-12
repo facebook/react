@@ -119,9 +119,8 @@ describe('findDOMNode', () => {
     let match;
     expect(() => (match = ReactDOM.findDOMNode(parent))).toWarnDev([
       'Warning: findDOMNode is deprecated in StrictMode. ' +
-        'findDOMNode was passed an instance of ContainsStrictModeChild which renders a StrictMode subtree. ' +
-        'The nearest child is in StrictMode. ' +
-        'Use an explicit ref directly on the element you want to get a handle on.' +
+        'findDOMNode was passed an instance of ContainsStrictModeChild which renders a StrictMode children. ' +
+        'Instead, add a ref directly to the element you want to reference.' +
         '\n' +
         '\n    in div (at **)' +
         '\n    in StrictMode (at **)' +
@@ -152,8 +151,8 @@ describe('findDOMNode', () => {
     let match;
     expect(() => (match = ReactDOM.findDOMNode(parent))).toWarnDev([
       'Warning: findDOMNode is deprecated in StrictMode. ' +
-        'findDOMNode was passed an instance of IsInStrictMode which is in a StrictMode subtree. ' +
-        'Use an explicit ref directly on the element you want to get a handle on.' +
+        'findDOMNode was passed an instance of IsInStrictMode which is inside StrictMode. ' +
+        'Instead, add a ref directly to the element you want to reference.' +
         '\n' +
         '\n    in IsInStrictMode (at **)' +
         '\n    in StrictMode (at **)' +

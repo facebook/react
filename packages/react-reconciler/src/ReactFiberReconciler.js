@@ -242,8 +242,8 @@ function findHostInstanceWithWarning(
           warningWithoutStack(
             false,
             '%s is deprecated in StrictMode. ' +
-              '%s was passed an instance of %s which is in a StrictMode subtree. ' +
-              'Use an explicit ref directly on the element you want to get a handle on.' +
+              '%s was passed an instance of %s which is inside StrictMode. ' +
+              'Instead, add a ref directly to the element you want to reference.' +
               '\n%s' +
               '\n\nLearn more about using refs safely here:' +
               '\nhttps://fb.me/react-strict-mode-find-node',
@@ -256,9 +256,8 @@ function findHostInstanceWithWarning(
           warningWithoutStack(
             false,
             '%s is deprecated in StrictMode. ' +
-              '%s was passed an instance of %s which renders a StrictMode subtree. ' +
-              'The nearest child is in StrictMode. ' +
-              'Use an explicit ref directly on the element you want to get a handle on.' +
+              '%s was passed an instance of %s which renders a StrictMode children. ' +
+              'Instead, add a ref directly to the element you want to reference.' +
               '\n%s' +
               '\n\nLearn more about using refs safely here:' +
               '\nhttps://fb.me/react-strict-mode-find-node',

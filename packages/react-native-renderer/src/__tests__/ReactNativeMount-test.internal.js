@@ -285,9 +285,8 @@ describe('ReactNative', () => {
     let match;
     expect(() => (match = ReactNative.findNodeHandle(parent))).toWarnDev([
       'Warning: findNodeHandle is deprecated in StrictMode. ' +
-        'findNodeHandle was passed an instance of ContainsStrictModeChild which renders a StrictMode subtree. ' +
-        'The nearest child is in StrictMode. ' +
-        'Use an explicit ref directly on the element you want to get a handle on.' +
+        'findNodeHandle was passed an instance of ContainsStrictModeChild which renders a StrictMode children. ' +
+        'Instead, add a ref directly to the element you want to reference.' +
         '\n' +
         '\n    in RCTView (at **)' +
         '\n    in StrictMode (at **)' +
@@ -324,8 +323,8 @@ describe('ReactNative', () => {
     let match;
     expect(() => (match = ReactNative.findNodeHandle(parent))).toWarnDev([
       'Warning: findNodeHandle is deprecated in StrictMode. ' +
-        'findNodeHandle was passed an instance of IsInStrictMode which is in a StrictMode subtree. ' +
-        'Use an explicit ref directly on the element you want to get a handle on.' +
+        'findNodeHandle was passed an instance of IsInStrictMode which is inside StrictMode. ' +
+        'Instead, add a ref directly to the element you want to reference.' +
         '\n' +
         '\n    in IsInStrictMode (at **)' +
         '\n    in StrictMode (at **)' +
