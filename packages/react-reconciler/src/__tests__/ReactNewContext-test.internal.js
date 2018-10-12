@@ -1578,11 +1578,9 @@ Context fuzz tester error! Copy and paste the following line into the test suite
     expect(() => {
       ReactNoop.render(<Component />);
       ReactNoop.flush();
-    }).toLowPriorityWarnDev(
-      'You are using the Context from React.createContext() as a consumer.' +
-        'The correct way is to use Context.Consumer as the consumer instead. ' +
-        'This usage is deprecated and will be removed in a future major release.',
-      {withoutStack: true},
+    }).toWarnDev(
+      'Rendering <Context> directly is not supported and will be removed in ' +
+      'a future major release. Did you mean to render <Context.Consumer> instead?',
     );
   });
 });
