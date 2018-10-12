@@ -935,6 +935,8 @@ class ReactDOMServerRenderer {
             }
             this.stack.push(frame);
             return '';
+          } else {
+            invariant(false, 'ReactDOMServer does not yet support Suspense.');
           }
         }
         // eslint-disable-next-line-no-fallthrough
@@ -1004,6 +1006,12 @@ class ReactDOMServerRenderer {
             return '';
           }
           default:
+            if (typeof elementType.then === 'function') {
+              invariant(
+                false,
+                'ReactDOMServer does not yet support lazy-loaded components.',
+              );
+            }
             break;
         }
       }

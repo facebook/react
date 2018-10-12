@@ -566,6 +566,29 @@ describe('ReactDOMServer', () => {
     expect(markup).toBe('<div></div>');
   });
 
+  it('throws for unsupported types on the server', () => {
+    expect(() => {
+      ReactDOMServer.renderToString(<React.unstable_Suspense />);
+    }).toThrow('ReactDOMServer does not yet support Suspense.');
+
+    expect(() => {
+      const LazyFoo = React.lazy(
+        () =>
+          new Promise(resolve =>
+            resolve(function Foo() {
+              return <div />;
+            }),
+          ),
+      );
+      ReactDOMServer.renderToString(<LazyFoo />);
+    }).toThrow('ReactDOMServer does not yet support lazy-loaded components.');
+
+    expect(() => {
+      const FooPromise = {then() {}};
+      ReactDOMServer.renderToString(<FooPromise />);
+    }).toThrow('ReactDOMServer does not yet support lazy-loaded components.');
+  });
+
   it('should throw (in dev) when children are mutated during render', () => {
     function Wrapper(props) {
       props.children[1] = <p key={1} />; // Mutation is illegal
