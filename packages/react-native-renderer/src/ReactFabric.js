@@ -29,6 +29,8 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 const findHostInstance = ReactFabricRenderer.findHostInstance;
+const findHostInstanceWithWarning =
+  ReactFabricRenderer.findHostInstanceWithWarning;
 
 function findNodeHandle(componentOrHandle: any): ?number {
   if (__DEV__) {
@@ -60,7 +62,16 @@ function findNodeHandle(componentOrHandle: any): ?number {
   if (componentOrHandle.canonical && componentOrHandle.canonical._nativeTag) {
     return componentOrHandle.canonical._nativeTag;
   }
-  const hostInstance = findHostInstance(componentOrHandle);
+  let hostInstance;
+  if (__DEV__) {
+    hostInstance = findHostInstanceWithWarning(
+      componentOrHandle,
+      'findNodeHandle',
+    );
+  } else {
+    hostInstance = findHostInstance(componentOrHandle);
+  }
+
   if (hostInstance == null) {
     return hostInstance;
   }

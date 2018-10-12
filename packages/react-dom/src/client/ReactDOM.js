@@ -614,7 +614,12 @@ const ReactDOM: Object = {
     if ((componentOrElement: any).nodeType === ELEMENT_NODE) {
       return (componentOrElement: any);
     }
-
+    if (__DEV__) {
+      return DOMRenderer.findHostInstanceWithWarning(
+        componentOrElement,
+        'findDOMNode',
+      );
+    }
     return DOMRenderer.findHostInstance(componentOrElement);
   },
 
