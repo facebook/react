@@ -250,7 +250,7 @@ function findHostInstanceWithWarning(
             methodName,
             methodName,
             componentName,
-            getStackByFiberInDevAndProd(fiber),
+            getStackByFiberInDevAndProd(hostFiber),
           );
         } else {
           warningWithoutStack(

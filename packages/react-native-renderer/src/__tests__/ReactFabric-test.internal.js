@@ -504,6 +504,7 @@ describe('ReactFabric', () => {
         'findNodeHandle was passed an instance of IsInStrictMode which is inside StrictMode. ' +
         'Instead, add a ref directly to the element you want to reference.' +
         '\n' +
+        '\n    in RCTView (at **)' +
         '\n    in IsInStrictMode (at **)' +
         '\n    in StrictMode (at **)' +
         '\n' +
