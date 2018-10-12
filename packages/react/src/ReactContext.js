@@ -69,6 +69,8 @@ export function createContext<T>(
     _context: context,
   };
 
+  context.unstable_read = readContext.bind(null, context);
+
   let hasWarnedAboutUsingNestedContextConsumers = false;
 
   if (__DEV__) {
@@ -119,7 +121,6 @@ export function createContext<T>(
   } else {
     context.Consumer = context;
   }
-  context.unstable_read = readContext.bind(null, context);
 
   if (__DEV__) {
     context._currentRenderer = null;
