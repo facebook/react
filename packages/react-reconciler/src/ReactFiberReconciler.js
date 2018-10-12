@@ -256,7 +256,7 @@ function findHostInstanceWithWarning(
           warningWithoutStack(
             false,
             '%s is deprecated in StrictMode. ' +
-              '%s was passed an instance of %s which renders a StrictMode children. ' +
+              '%s was passed an instance of %s which renders StrictMode children. ' +
               'Instead, add a ref directly to the element you want to reference.' +
               '\n%s' +
               '\n\nLearn more about using refs safely here:' +

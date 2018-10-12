@@ -463,7 +463,7 @@ describe('ReactFabric', () => {
     let match;
     expect(() => (match = ReactFabric.findNodeHandle(parent))).toWarnDev([
       'Warning: findNodeHandle is deprecated in StrictMode. ' +
-        'findNodeHandle was passed an instance of ContainsStrictModeChild which renders a StrictMode children. ' +
+        'findNodeHandle was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
         'Instead, add a ref directly to the element you want to reference.' +
         '\n' +
         '\n    in RCTView (at **)' +
