@@ -13,6 +13,7 @@ import type {ReactContext} from 'shared/ReactTypes';
 
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
 
@@ -67,8 +68,86 @@ export function createContext<T>(
     $$typeof: REACT_PROVIDER_TYPE,
     _context: context,
   };
-  context.Consumer = context;
+
   context.unstable_read = readContext.bind(null, context);
+
+  let hasWarnedAboutUsingNestedContextConsumers = false;
+  let hasWarnedAboutUsingConsumerUnstableRead = false;
+  let hasWarnedAboutUsingConsumerProvider = false;
+
+  if (__DEV__) {
+    // A separate object, but proxies back to the original context object for
+    // backwards compatibility. It has a different $$typeof, so we can properly
+    // warn for the incorrect usage of Context as a Consumer.
+    const Consumer = {
+      $$typeof: REACT_CONTEXT_TYPE,
+      _context: context,
+      _calculateChangedBits: context._calculateChangedBits,
+      unstable_read() {
+        if (!hasWarnedAboutUsingConsumerUnstableRead) {
+          hasWarnedAboutUsingConsumerUnstableRead = true;
+          warning(
+            false,
+            'Calling Context.Consumer.unstable_read() is not supported and will be removed in ' +
+              'a future major release. Did you mean to render Context.unstable_read() instead?',
+          );
+        }
+        return context.unstable_read();
+      },
+    };
+    // $FlowFixMe: Flow complains about not setting a value, which is intentional here
+    Object.defineProperties(Consumer, {
+      Provider: {
+        get() {
+          if (!hasWarnedAboutUsingConsumerProvider) {
+            hasWarnedAboutUsingConsumerProvider = true;
+            warning(
+              false,
+              'Rendering <Context.Consumer.Provider> is not supported and will be removed in ' +
+                'a future major release. Did you mean to render <Context.Provider> instead?',
+            );
+          }
+          return context.Provider;
+        },
+        set(_Provider) {
+          context.Provider = _Provider;
+        },
+      },
+      _currentValue: {
+        get() {
+          return context._currentValue;
+        },
+        set(_currentValue) {
+          context._currentValue = _currentValue;
+        },
+      },
+      _currentValue2: {
+        get() {
+          return context._currentValue2;
+        },
+        set(_currentValue2) {
+          context._currentValue2 = _currentValue2;
+        },
+      },
+      Consumer: {
+        get() {
+          if (!hasWarnedAboutUsingNestedContextConsumers) {
+            hasWarnedAboutUsingNestedContextConsumers = true;
+            warning(
+              false,
+              'Rendering <Context.Consumer.Consumer> is not supported and will be removed in ' +
+                'a future major release. Did you mean to render <Context.Consumer> instead?',
+            );
+          }
+          return context.Consumer;
+        },
+      },
+    });
+    // $FlowFixMe: Flow complains about missing properties because it doesn't understand defineProperty
+    context.Consumer = Consumer;
+  } else {
+    context.Consumer = context;
+  }
 
   if (__DEV__) {
     context._currentRenderer = null;
