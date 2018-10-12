@@ -11,7 +11,7 @@
 
 let runWithPriority;
 let ImmediatePriority;
-let InteractivePriority;
+let UserBlockingPriority;
 let NormalPriority;
 let scheduleCallback;
 let cancelCallback;
@@ -137,7 +137,7 @@ describe('Scheduler', () => {
     const Schedule = require('scheduler');
     runWithPriority = Schedule.unstable_runWithPriority;
     ImmediatePriority = Schedule.unstable_ImmediatePriority;
-    InteractivePriority = Schedule.unstable_InteractivePriority;
+    UserBlockingPriority = Schedule.unstable_UserBlockingPriority;
     NormalPriority = Schedule.unstable_NormalPriority;
     scheduleCallback = Schedule.unstable_scheduleCallback;
     cancelCallback = Schedule.unstable_cancelCallback;
@@ -226,7 +226,7 @@ describe('Scheduler', () => {
     // Yield before B is flushed
     expect(flushWork(100)).toEqual(['A']);
 
-    runWithPriority(InteractivePriority, () => {
+    runWithPriority(UserBlockingPriority, () => {
       scheduleCallback(() => doWork('C', 100));
       scheduleCallback(() => doWork('D', 100));
     });
@@ -237,11 +237,11 @@ describe('Scheduler', () => {
 
   it('expires work', () => {
     scheduleCallback(() => doWork('A', 100));
-    runWithPriority(InteractivePriority, () => {
+    runWithPriority(UserBlockingPriority, () => {
       scheduleCallback(() => doWork('B', 100));
     });
     scheduleCallback(() => doWork('C', 100));
-    runWithPriority(InteractivePriority, () => {
+    runWithPriority(UserBlockingPriority, () => {
       scheduleCallback(() => doWork('D', 100));
     });
 
@@ -314,7 +314,7 @@ describe('Scheduler', () => {
     };
 
     // Schedule a high priority callback
-    runWithPriority(InteractivePriority, () => scheduleCallback(work));
+    runWithPriority(UserBlockingPriority, () => scheduleCallback(work));
 
     // Flush until just before the expiration time
     expect(flushWork(249)).toEqual(['A', 'B', 'Yield!']);
@@ -325,7 +325,7 @@ describe('Scheduler', () => {
   });
 
   it('nested callbacks inherit the priority of the currently executing callback', () => {
-    runWithPriority(InteractivePriority, () => {
+    runWithPriority(UserBlockingPriority, () => {
       scheduleCallback(() => {
         doWork('Parent callback', 100);
         scheduleCallback(() => {
@@ -336,7 +336,7 @@ describe('Scheduler', () => {
 
     expect(flushWork(100)).toEqual(['Parent callback']);
 
-    // The nested callback has interactive priority, so it should
+    // The nested callback has user-blocking priority, so it should
     // expire quickly.
     advanceTime(250 + 100);
     expect(clearYieldedValues()).toEqual(['Nested callback']);
@@ -360,7 +360,7 @@ describe('Scheduler', () => {
     scheduleCallback(work);
     expect(flushWork(100)).toEqual(['A', 'Yield!']);
 
-    runWithPriority(InteractivePriority, () => {
+    runWithPriority(UserBlockingPriority, () => {
       scheduleCallback(() => doWork('High pri', 100));
     });
 
@@ -379,7 +379,7 @@ describe('Scheduler', () => {
           if (task[0] === 'B') {
             // Schedule high pri work from inside another callback
             yieldValue('Schedule high pri');
-            runWithPriority(InteractivePriority, () =>
+            runWithPriority(UserBlockingPriority, () =>
               scheduleCallback(() => doWork('High pri', 100)),
             );
           }
@@ -438,24 +438,24 @@ describe('Scheduler', () => {
       });
     });
     const wrappedInteractiveCallback = runWithPriority(
-      InteractivePriority,
+      UserBlockingPriority,
       () =>
         wrapCallback(() => {
           scheduleCallback(() => {
-            doWork('Interactive', 100);
+            doWork('User-blocking', 100);
           });
         }),
     );
 
     // This should schedule a normal callback
     wrappedCallback();
-    // This should schedule an interactive callback
+    // This should schedule an user-blocking callback
     wrappedInteractiveCallback();
 
     advanceTime(249);
     expect(clearYieldedValues()).toEqual([]);
     advanceTime(1);
-    expect(clearYieldedValues()).toEqual(['Interactive']);
+    expect(clearYieldedValues()).toEqual(['User-blocking']);
 
     advanceTime(10000);
     expect(clearYieldedValues()).toEqual(['Normal']);
@@ -468,26 +468,26 @@ describe('Scheduler', () => {
       });
     });
     const wrappedInteractiveCallback = runWithPriority(
-      InteractivePriority,
+      UserBlockingPriority,
       () =>
         wrapCallback(() => {
           scheduleCallback(() => {
-            doWork('Interactive', 100);
+            doWork('User-blocking', 100);
           });
         }),
     );
 
-    runWithPriority(InteractivePriority, () => {
+    runWithPriority(UserBlockingPriority, () => {
       // This should schedule a normal callback
       wrappedCallback();
-      // This should schedule an interactive callback
+      // This should schedule an user-blocking callback
       wrappedInteractiveCallback();
     });
 
     advanceTime(249);
     expect(clearYieldedValues()).toEqual([]);
     advanceTime(1);
-    expect(clearYieldedValues()).toEqual(['Interactive']);
+    expect(clearYieldedValues()).toEqual(['User-blocking']);
 
     advanceTime(10000);
     expect(clearYieldedValues()).toEqual(['Normal']);
@@ -536,7 +536,7 @@ describe('Scheduler', () => {
       yieldValue(getCurrentPriorityLevel());
       runWithPriority(NormalPriority, () => {
         yieldValue(getCurrentPriorityLevel());
-        runWithPriority(InteractivePriority, () => {
+        runWithPriority(UserBlockingPriority, () => {
           yieldValue(getCurrentPriorityLevel());
         });
       });
@@ -547,7 +547,7 @@ describe('Scheduler', () => {
       NormalPriority,
       ImmediatePriority,
       NormalPriority,
-      InteractivePriority,
+      UserBlockingPriority,
       ImmediatePriority,
     ]);
   });
