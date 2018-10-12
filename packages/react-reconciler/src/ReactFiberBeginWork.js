@@ -1118,7 +1118,7 @@ function updateContextConsumer(
         warning(
           false,
           'Rendering <Context> directly is not supported and will be removed in ' +
-          'a future major release. Did you mean to render <Context.Consumer> instead?',
+            'a future major release. Did you mean to render <Context.Consumer> instead?',
         );
       }
     } else {
