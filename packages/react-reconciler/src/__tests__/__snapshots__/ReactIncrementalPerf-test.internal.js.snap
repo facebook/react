@@ -362,6 +362,40 @@ exports[`ReactDebugFiberPerf skips parents during setState 1`] = `
 "
 `;
 
+exports[`ReactDebugFiberPerf supports Suspense and lazy 1`] = `
+"⚛ (Waiting for async callback... will force flush in 5250 ms)
+
+⚛ (React Tree Reconciliation: Completed Root)
+  ⚛ Parent [mount]
+    ⛔ Suspense [mount] Warning: Rendering was suspended
+    ⚛ Suspense [mount]
+      ⚛ Spinner [mount]
+"
+`;
+
+exports[`ReactDebugFiberPerf supports Suspense and lazy 2`] = `
+"⚛ (Waiting for async callback... will force flush in 5250 ms)
+
+⚛ (React Tree Reconciliation: Completed Root)
+  ⚛ Parent [mount]
+    ⛔ Suspense [mount] Warning: Rendering was suspended
+    ⚛ Suspense [mount]
+      ⚛ Spinner [mount]
+
+⚛ (Waiting for async callback... will force flush in 5250 ms)
+
+⚛ (React Tree Reconciliation: Completed Root)
+  ⚛ Parent [mount]
+    ⚛ Suspense [mount]
+      ⚛ Foo [mount]
+
+⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
+  ⚛ (Committing Host Effects: 1 Total)
+  ⚛ (Calling Lifecycle Methods: 0 Total)
+"
+`;
+
 exports[`ReactDebugFiberPerf supports portals 1`] = `
 "⚛ (Waiting for async callback... will force flush in 5250 ms)
 
@@ -372,6 +406,20 @@ exports[`ReactDebugFiberPerf supports portals 1`] = `
 ⚛ (Committing Changes)
   ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 2 Total)
+  ⚛ (Calling Lifecycle Methods: 0 Total)
+"
+`;
+
+exports[`ReactDebugFiberPerf supports pure 1`] = `
+"⚛ (Waiting for async callback... will force flush in 5250 ms)
+
+⚛ (React Tree Reconciliation: Completed Root)
+  ⚛ Parent [mount]
+    ⚛ Pure(Foo) [mount]
+
+⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
+  ⚛ (Committing Host Effects: 1 Total)
   ⚛ (Calling Lifecycle Methods: 0 Total)
 "
 `;

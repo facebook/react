@@ -555,6 +555,58 @@ describe('ReactDebugFiberPerf', () => {
     expect(getFlameChart()).toMatchSnapshot();
   });
 
+  it('supports pure', () => {
+    const PureFoo = React.pure(function Foo() {
+      return <div />;
+    });
+    ReactNoop.render(
+      <Parent>
+        <PureFoo />
+      </Parent>,
+    );
+    ReactNoop.flush();
+    expect(getFlameChart()).toMatchSnapshot();
+  });
+
+  it('supports Suspense and lazy', async () => {
+    function Spinner() {
+      return <span />;
+    }
+
+    let resolve;
+    const LazyFoo = React.lazy(
+      () =>
+        new Promise(r => {
+          resolve = r;
+        }),
+    );
+
+    ReactNoop.render(
+      <Parent>
+        <React.unstable_Suspense fallback={<Spinner />}>
+          <LazyFoo />
+        </React.unstable_Suspense>
+      </Parent>,
+    );
+    ReactNoop.flush();
+    expect(getFlameChart()).toMatchSnapshot();
+
+    resolve(function Foo() {
+      return <div />;
+    });
+    await LazyFoo;
+
+    ReactNoop.render(
+      <Parent>
+        <React.unstable_Suspense>
+          <LazyFoo />
+        </React.unstable_Suspense>
+      </Parent>,
+    );
+    ReactNoop.flush();
+    expect(getFlameChart()).toMatchSnapshot();
+  });
+
   it('does not schedule an extra callback if setState is called during a synchronous commit phase', () => {
     class Component extends React.Component {
       state = {step: 1};

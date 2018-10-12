@@ -56,7 +56,7 @@ import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import * as ReactCurrentFiber from './ReactCurrentFiber';
-import {cancelWorkTimer} from './ReactDebugFiberPerf';
+import {startWorkTimer, cancelWorkTimer} from './ReactDebugFiberPerf';
 
 import {
   mountChildFibers,
@@ -720,11 +720,15 @@ function mountIndeterminateComponent(
     Component !== null &&
     typeof Component.then === 'function'
   ) {
+    // We can't start a User Timing measurement with correct label yet.
+    // Cancel and resume right after we know the tag.
+    cancelWorkTimer(workInProgress);
     Component = readLazyComponentType(Component);
     const resolvedTag = (workInProgress.tag = resolveLazyComponentTag(
       workInProgress,
       Component,
     ));
+    startWorkTimer(workInProgress);
     const resolvedProps = resolveDefaultProps(Component, props);
     let child;
     switch (resolvedTag) {
