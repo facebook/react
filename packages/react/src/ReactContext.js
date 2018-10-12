@@ -78,18 +78,12 @@ export function createContext<T>(
     const consumer = {
       $$typeof: REACT_CONTEXT_TYPE,
       _context: context,
+      _calculateChangedBits: context._calculateChangedBits,
       Provider: context.Provider,
+      unstable_read: context.unstable_read,
     };
     // $FlowFixMe: Flow complains about not setting a value, which is intentional here
     Object.defineProperties(consumer, {
-      _calculateChangedBits: {
-        get() {
-          return context._calculateChangedBits;
-        },
-        set(_calculateChangedBits) {
-          context._calculateChangedBits = _calculateChangedBits;
-        },
-      },
       _currentValue: {
         get() {
           return context._currentValue;
@@ -117,14 +111,6 @@ export function createContext<T>(
             );
           }
           return context.Consumer;
-        },
-      },
-      unstable_read: {
-        get() {
-          return context.unstable_read;
-        },
-        set(unstable_read) {
-          context.unstable_read = unstable_read;
         },
       },
     });
