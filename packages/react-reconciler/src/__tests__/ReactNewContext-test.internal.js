@@ -1581,7 +1581,7 @@ Context fuzz tester error! Copy and paste the following line into the test suite
     }).toLowPriorityWarnDev(
       'You are using the Context from React.createContext() as a consumer.' +
         'The correct way is to use Context.Consumer as the consumer instead. ' +
-        'This usage is deprecated and will be removed in the next major version.',
+        'This usage is deprecated and will be removed in a future major release.',
       {withoutStack: true},
     );
   });

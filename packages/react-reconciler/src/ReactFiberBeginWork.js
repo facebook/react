@@ -1105,6 +1105,13 @@ function updateContextConsumer(
   renderExpirationTime: ExpirationTime,
 ) {
   let context: ReactContext<any> = workInProgress.type;
+  // The logic below for Context differs depending on PROD or DEV mode. In
+  // DEV mode, we create a separate object for Context.Consumer that acts
+  // like a proxy to Context. This proxy object adds unecessary code in PROD
+  // so we use the old behaviour (Context.Consumer references Context) to
+  // reduce size and overhead. The separate object references context via
+  // a property called "_context", which also gives us the ability to check
+  // in DEV mode if this property exists or not and warn if it does not.
   if (__DEV__) {
     if (workInProgress.type._context === undefined) {
       if (!hasWarnedAboutUsingContextAsConsumer) {
@@ -1113,12 +1120,10 @@ function updateContextConsumer(
           false,
           'You are using the Context from React.createContext() as a consumer.' +
             'The correct way is to use Context.Consumer as the consumer instead. ' +
-            'This usage is deprecated and will be removed in the next major version.',
+            'This usage is deprecated and will be removed in a future major release.',
         );
       }
     } else {
-      // Context.Consumer is a separate object in DEV, where
-      // _context points back to the original context
       context = workInProgress.type._context;
     }
   }
