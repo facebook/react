@@ -602,4 +602,66 @@ describe('ReactIncrementalUpdates', () => {
     expect(ReactNoop.getChildren('a')).toEqual([span('goodbye')]);
     expect(ReactNoop.getChildren('b')).toEqual([span('goodbye')]);
   });
+
+  fit('just gettin a feel for it', () => {
+    class Foo extends React.Component {
+      componentDidUpdate() {
+        ReactNoop.yield('Commit: ' + this.props.prop);
+      }
+      componentDidMount() {
+        ReactNoop.yield('Commit: ' + this.props.prop);
+      }
+      render() {
+        ReactNoop.yield('Render: ' + this.props.prop);
+        return <span prop={this.props.prop} />;
+      }
+    }
+
+    ReactNoop.render(
+      <React.Fragment>
+        <Foo prop="A1" />
+        <Foo prop="B1" />
+      </React.Fragment>,
+    );
+    expect(ReactNoop.flush()).toEqual([
+      'Render: A1',
+      'Render: B1',
+      'Commit: A1',
+      'Commit: B1',
+    ]);
+
+    ReactNoop.render(
+      <React.Fragment>
+        <Foo prop="A2" />
+        <Foo prop="B2" />
+      </React.Fragment>,
+    );
+    ReactNoop.flushThrough(['Render: A2']);
+
+    ReactNoop.advanceTime(6000);
+    jest.advanceTimersByTime(6000);
+
+    ReactNoop.render(
+      <React.Fragment>
+        <Foo prop="A3" />
+        <Foo prop="B3" />
+      </React.Fragment>,
+    );
+
+    ReactNoop.flushThrough(['Render: B2']);
+    expect(ReactNoop.flushExpired()).toEqual([
+      'Render: B2',
+      'Commit: A2',
+      'Commit: B2',
+    ]);
+
+    ReactNoop.advanceTime(6000);
+    jest.advanceTimersByTime(6000);
+    expect(ReactNoop.flushExpired()).toEqual([
+      'Render: A3',
+      'Render: B3',
+      'Commit: A3',
+      'Commit: B3',
+    ]);
+  });
 });
