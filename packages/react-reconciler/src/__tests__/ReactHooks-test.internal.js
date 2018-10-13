@@ -1270,6 +1270,29 @@ describe('ReactHooks', () => {
       ]);
       expect(ReactNoop.getChildren()).toEqual([]);
     });
+
+    it('works with memo', () => {
+      function Counter({count}) {
+        useLayoutEffect(() => {
+          ReactNoop.yield('Mount: ' + count);
+          return () => ReactNoop.yield('Unmount: ' + count);
+        });
+        return <Text text={'Count: ' + count} />;
+      }
+      Counter = memo(Counter);
+
+      ReactNoop.render(<Counter count={0} />);
+      expect(ReactNoop.flush()).toEqual(['Count: 0', 'Mount: 0']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+
+      ReactNoop.render(<Counter count={1} />);
+      expect(ReactNoop.flush()).toEqual(['Count: 1', 'Unmount: 0', 'Mount: 1']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+
+      ReactNoop.render(null);
+      expect(ReactNoop.flush()).toEqual(['Unmount: 1']);
+      expect(ReactNoop.getChildren()).toEqual([]);
+    });
   });
 
   describe('useMutationEffect and useLayoutEffect', () => {
