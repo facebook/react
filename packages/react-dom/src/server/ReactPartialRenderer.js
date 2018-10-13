@@ -182,6 +182,7 @@ const didWarnAboutDeprecatedWillMount = {};
 const didWarnAboutUndefinedDerivedState = {};
 const didWarnAboutUninitializedState = {};
 const didWarnAboutInvalidateContextType = {};
+const didWarnAboutFactoryComponents = {};
 const valuePropNames = ['value', 'defaultValue'];
 const newlineEatingTags = {
   listing: true,
@@ -589,6 +590,34 @@ function resolve(
     if (initialState === undefined) {
       inst.state = initialState = null;
     }
+
+    if (
+      typeof inst === 'object' &&
+      inst !== null &&
+      typeof inst.render === 'function' &&
+      inst.$$typeof === undefined &&
+      !Component.prototype.isReactComponent
+    ) {
+      // This "factory" type of components, defined via function and returning an object
+      // with render method, will be deprecated with React 17.x, therefore warn user about that
+      // Github issue: https://github.com/facebook/react/issues/13560
+      if (__DEV__) {
+        const componentName = getComponentName(Component) || 'Unknown';
+
+        if (!didWarnAboutFactoryComponents[componentName]) {
+          warningWithoutStack(
+            false,
+            'The <%s /> component appears to be defined as a factory function. ' +
+              'Those components will be deprecated with React 17.x. Please convert <%s /> into a functional ' +
+              'or class component. You can refer to https://github.com/facebook/react/issues/13560 for more info.',
+            componentName,
+            componentName,
+          );
+          didWarnAboutFactoryComponents[componentName] = true;
+        }
+      }
+    }
+
     if (
       typeof inst.UNSAFE_componentWillMount === 'function' ||
       typeof inst.componentWillMount === 'function'

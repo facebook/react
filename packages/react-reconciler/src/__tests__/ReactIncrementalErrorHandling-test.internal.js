@@ -1584,13 +1584,28 @@ describe('ReactIncrementalErrorHandling', () => {
       throw new Error('Oops!');
     };
 
+    const legacyContextAPIWarning =
+      'Warning: Legacy context API has been detected within a strict-mode tree: \n\n' +
+      'Please update the following components: Provider\n\n' +
+      'Learn more about this warning here:\n' +
+      'https://fb.me/react-strict-mode-warnings';
+
+    const factoryFunctionsWarning =
+      'Warning: The <Provider /> component appears to be defined as a factory function. ' +
+      'Those components will be deprecated with React 17.x. Please convert <Recurse /> ' +
+      'into a functional or class component. You can refer to https://github.com/facebook/react/issues/13560 ' +
+      'for more info';
+
+    const warnings = __DEV__
+      ? [legacyContextAPIWarning, factoryFunctionsWarning]
+      : legacyContextAPIWarning;
+
     ReactNoop.render(<Provider />);
-    expect(() => {
-      expect(() => ReactNoop.flush()).toThrow('Oops!');
-    }).toWarnDev(
-      'Legacy context API has been detected within a strict-mode tree: \n\n' +
-        'Please update the following components: Provider',
-      {withoutStack: true},
-    );
+    // TODO: any way to chain toWarnDev with toThrow to avoid try-catch here?
+    try {
+      expect(() => ReactNoop.flush()).toWarnDev(warnings, {withoutStack: 1});
+    } catch (e) {
+      expect(e.message).toBe('Oops!');
+    }
   });
 });

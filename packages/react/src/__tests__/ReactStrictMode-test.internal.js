@@ -889,20 +889,30 @@ describe('ReactStrictMode', () => {
         color: PropTypes.string,
       };
 
+      const legacyContextAPIWarning =
+        'Warning: Legacy context API has been detected within a strict-mode tree: ' +
+        '\n    in StrictMode (at **)' +
+        '\n    in div (at **)' +
+        '\n    in Root (at **)' +
+        '\n\nPlease update the following components: FactoryLegacyContextConsumer, ' +
+        'FunctionalLegacyContextConsumer, LegacyContextConsumer, LegacyContextProvider' +
+        '\n\nLearn more about this warning here:' +
+        '\nhttps://fb.me/react-strict-mode-warnings';
+
+      const factoryFunctionsWarning =
+        'Warning: The <FactoryLegacyContextConsumer /> component appears to be defined as a factory function. ' +
+        'Those components will be deprecated with React 17.x. Please convert <FactoryLegacyContextConsumer /> ' +
+        'into a functional or class component. You can refer to https://github.com/facebook/react/issues/13560 ' +
+        'for more info';
+
+      const warnings = __DEV__
+        ? [legacyContextAPIWarning, factoryFunctionsWarning]
+        : legacyContextAPIWarning;
       let rendered;
 
       expect(() => {
         rendered = ReactTestRenderer.create(<Root />);
-      }).toWarnDev(
-        'Warning: Legacy context API has been detected within a strict-mode tree: ' +
-          '\n    in StrictMode (at **)' +
-          '\n    in div (at **)' +
-          '\n    in Root (at **)' +
-          '\n\nPlease update the following components: FactoryLegacyContextConsumer, ' +
-          'FunctionalLegacyContextConsumer, LegacyContextConsumer, LegacyContextProvider' +
-          '\n\nLearn more about this warning here:' +
-          '\nhttps://fb.me/react-strict-mode-warnings',
-      );
+      }).toWarnDev(warnings, {withoutStack: 1});
 
       // Dedupe
       rendered = ReactTestRenderer.create(<Root />);

@@ -166,7 +166,17 @@ describe('factory components', () => {
       };
     }
 
-    const inst = ReactTestUtils.renderIntoDocument(<Comp />);
+    const warning =
+      'The <Comp /> component appears to be defined as a factory function. ' +
+      'Those components will be deprecated with React 17.x. Please convert <Comp /> into a functional ' +
+      'or class component. You can refer to https://github.com/facebook/react/issues/13560 for more info.';
+
+    let inst = null;
+
+    expect(() => {
+      inst = ReactTestUtils.renderIntoDocument(<Comp />);
+    }).toWarnDev(warning, {withoutStack: true});
+
     expect(inst.refs.elemRef.tagName).toBe('DIV');
   });
 });

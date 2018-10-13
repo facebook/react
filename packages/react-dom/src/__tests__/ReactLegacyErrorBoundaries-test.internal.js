@@ -741,13 +741,22 @@ describe('ReactLegacyErrorBoundaries', () => {
       foo: PropTypes.number,
     };
 
+    const warning =
+      'The <BrokenComponentWillMountWithContext /> component appears to be defined as a factory function. ' +
+      'Those components will be deprecated with React 17.x. Please convert <BrokenComponentWillMountWithContext /> ' +
+      'into a functional or class component. You can refer to https://github.com/facebook/react/issues/13560 for ' +
+      'more info.';
+
     const container = document.createElement('div');
-    ReactDOM.render(
-      <ErrorBoundary>
-        <BrokenComponentWillMountWithContext />
-      </ErrorBoundary>,
-      container,
-    );
+    expect(() =>
+      ReactDOM.render(
+        <ErrorBoundary>
+          <BrokenComponentWillMountWithContext />
+        </ErrorBoundary>,
+        container,
+      ),
+    ).toWarnDev(warning, {withoutStack: true});
+
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
   });
 

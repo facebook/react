@@ -644,7 +644,9 @@ describe('ReactDOMServerIntegration', () => {
             },
           };
         };
-        checkFooDiv(await render(<FactoryComponent />));
+        // Expected warning due to incoming deprecation of factory components in React 17.X
+        // Learn more here https://github.com/facebook/react/issues/13560
+        checkFooDiv(await render(<FactoryComponent />, 1));
       });
     });
 

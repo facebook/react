@@ -977,7 +977,14 @@ describe('ReactComponentLifeCycle', () => {
     };
 
     const div = document.createElement('div');
-    ReactDOM.render(<Parent ref={c => c && log.push('ref')} />, div);
+    const warning =
+      'The <Parent /> component appears to be defined as a factory function. ' +
+      'Those components will be deprecated with React 17.x. Please convert <Parent /> into a functional ' +
+      'or class component. You can refer to https://github.com/facebook/react/issues/13560 for more info.';
+
+    expect(() =>
+      ReactDOM.render(<Parent ref={c => c && log.push('ref')} />, div),
+    ).toWarnDev(warning, {withoutStack: true});
     ReactDOM.render(<Parent ref={c => c && log.push('ref')} />, div);
 
     expect(log).toEqual([

@@ -116,12 +116,14 @@ let didWarnAboutBadClass;
 let didWarnAboutContextTypeOnFunctionComponent;
 let didWarnAboutGetDerivedStateOnFunctionComponent;
 let didWarnAboutFunctionRefs;
+let didWarnAboutFactoryComponents;
 
 if (__DEV__) {
   didWarnAboutBadClass = {};
   didWarnAboutContextTypeOnFunctionComponent = {};
   didWarnAboutGetDerivedStateOnFunctionComponent = {};
   didWarnAboutFunctionRefs = {};
+  didWarnAboutFactoryComponents = {};
 }
 
 export function reconcileChildren(
@@ -902,6 +904,25 @@ function mountIndeterminateComponent(
     typeof value.render === 'function' &&
     value.$$typeof === undefined
   ) {
+    // This "factory" type of components, defined via function and returning an object
+    // with render method, will be deprecated with React 17.x, therefore warn user about that
+    // Github issue: https://github.com/facebook/react/issues/13560
+    if (__DEV__) {
+      const componentName = getComponentName(Component) || 'unknown';
+
+      if (!didWarnAboutFactoryComponents[componentName]) {
+        warningWithoutStack(
+          false,
+          'The <%s /> component appears to be defined as a factory function. ' +
+            'Those components will be deprecated with React 17.x. Please convert <%s /> into a functional ' +
+            'or class component. You can refer to https://github.com/facebook/react/issues/13560 for more info.',
+          componentName,
+          componentName,
+        );
+        didWarnAboutFactoryComponents[componentName] = true;
+      }
+    }
+
     // Proceed under the assumption that this is a class instance
     workInProgress.tag = ClassComponent;
 

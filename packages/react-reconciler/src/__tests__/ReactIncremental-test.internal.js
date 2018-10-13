@@ -2029,11 +2029,13 @@ describe('ReactIncremental', () => {
     }
 
     ReactNoop.render(<Recurse />);
+
     expect(ReactNoop.flush).toWarnDev(
       'Legacy context API has been detected within a strict-mode tree: \n\n' +
         'Please update the following components: Recurse',
       {withoutStack: true},
     );
+
     expect(ops).toEqual([
       'Recurse {}',
       'Recurse {"n":2}',
@@ -2065,12 +2067,25 @@ describe('ReactIncremental', () => {
       n: PropTypes.number,
     };
 
+    const legacyContextAPIWarning =
+      'Warning: Legacy context API has been detected within a strict-mode tree: \n\n' +
+      'Please update the following components: Recurse\n\n' +
+      'Learn more about this warning here:\n' +
+      'https://fb.me/react-strict-mode-warnings';
+
+    const factoryFunctionsWarning =
+      'Warning: The <Recurse /> component appears to be defined as a factory function. ' +
+      'Those components will be deprecated with React 17.x. Please convert <Recurse /> ' +
+      'into a functional or class component. You can refer to https://github.com/facebook/react/issues/13560 ' +
+      'for more info';
+
+    const warnings = __DEV__
+      ? [legacyContextAPIWarning, factoryFunctionsWarning]
+      : legacyContextAPIWarning;
+
     ReactNoop.render(<Recurse />);
-    expect(ReactNoop.flush).toWarnDev(
-      'Legacy context API has been detected within a strict-mode tree: \n\n' +
-        'Please update the following components: Recurse',
-      {withoutStack: true},
-    );
+    expect(() => ReactNoop.flush()).toWarnDev(warnings, {withoutStack: true});
+
     expect(ops).toEqual([
       'Recurse {}',
       'Recurse {"n":2}',

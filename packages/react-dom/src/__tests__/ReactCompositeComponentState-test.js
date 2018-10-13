@@ -474,7 +474,14 @@ describe('ReactCompositeComponent-state', () => {
     }
 
     const el = document.createElement('div');
-    ReactDOM.render(<Child />, el);
+    const warning =
+      'The <Child /> component appears to be defined as a factory function. ' +
+      'Those components will be deprecated with React 17.x. Please convert <Child /> into a functional ' +
+      'or class component. You can refer to https://github.com/facebook/react/issues/13560 for more info.';
+
+    expect(() => ReactDOM.render(<Child />, el)).toWarnDev(warning, {
+      withoutStack: true,
+    });
 
     expect(el.textContent).toBe('count:123');
   });
