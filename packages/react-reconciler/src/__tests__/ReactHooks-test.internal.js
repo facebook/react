@@ -717,6 +717,35 @@ describe('ReactHooks', () => {
       ]);
     });
 
+    it('flushes passive effects even if siblings schedule a new root', () => {
+      function PassiveEffect(props) {
+        useEffect(() => {
+          ReactNoop.yield('Passive effect');
+        }, []);
+        return <Text text="Passive" />;
+      }
+      function LayoutEffect(props) {
+        useLayoutEffect(() => {
+          ReactNoop.yield('Layout effect');
+          // Scheduling work shouldn't interfere with the queued passive effect
+          ReactNoop.renderToRootWithID(<Text text="New Root" />, 'root2');
+        });
+        return <Text text="Layout" />;
+      }
+      ReactNoop.render([<PassiveEffect key="p" />, <LayoutEffect key="l" />]);
+      expect(ReactNoop.flush()).toEqual([
+        'Passive',
+        'Layout',
+        'Layout effect',
+        'Passive effect',
+        'New Root',
+      ]);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('Passive'),
+        span('Layout'),
+      ]);
+    });
+
     it(
       'flushes effects serially by flushing old effects before flushing ' +
         "new ones, if they haven't already fired",

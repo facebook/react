@@ -32,7 +32,7 @@ import {
 import {
   scheduleWork,
   computeExpirationForFiber,
-  flushPassiveEffectsBeforeSchedulingUpdateOnFiber,
+  flushPassiveEffects,
   requestCurrentTime,
 } from './ReactFiberScheduler';
 
@@ -725,7 +725,7 @@ function dispatchAction<S, A>(
       callback: callback !== undefined ? callback : null,
       next: null,
     };
-    flushPassiveEffectsBeforeSchedulingUpdateOnFiber(fiber);
+    flushPassiveEffects();
     // Append the update to the end of the list.
     const last = queue.last;
     if (last === null) {

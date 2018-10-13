@@ -578,33 +578,8 @@ function markLegacyErrorBoundaryAsFailed(instance: mixed) {
   }
 }
 
-function flushPassiveEffectsBeforeSchedulingUpdateOnFiber(fiber: Fiber) {
-  if (rootWithPendingPassiveEffects !== null) {
-    // TODO: This is an unfortunate extra loop. We end up traversing to the root
-    // again in scheduleWorkToRoot. But we have to do this one first because it
-    // needs to happen before adding an update to the queue, and
-    // scheduleWorkToRoot may perform a synchronous re-render. Maybe we can
-    // solve this with batchedUpdates, or with the equivalent in the Scheduler
-    // package.
-    let node = fiber;
-    do {
-      switch (node.tag) {
-        case HostRoot: {
-          const root: FiberRoot = node.stateNode;
-          flushPassiveEffects(root);
-          return;
-        }
-      }
-      node = node.return;
-    } while (node !== null);
-  }
-}
-
-function flushPassiveEffects(root: FiberRoot) {
-  if (
-    passiveEffectCallback !== null &&
-    root === rootWithPendingPassiveEffects
-  ) {
+function flushPassiveEffects() {
+  if (passiveEffectCallback !== null) {
     Schedule_cancelCallback(passiveEffectCallbackHandle);
     // We call the scheduled callback instead of commitPassiveEffects directly
     // to ensure tracing works correctly.
@@ -1248,7 +1223,7 @@ function renderRoot(
       'by a bug in React. Please file an issue.',
   );
 
-  flushPassiveEffects(root);
+  flushPassiveEffects();
 
   isWorking = true;
   ReactCurrentOwner.currentDispatcher = Dispatcher;
@@ -2613,5 +2588,5 @@ export {
   interactiveUpdates,
   flushInteractiveUpdates,
   computeUniqueAsyncExpiration,
-  flushPassiveEffectsBeforeSchedulingUpdateOnFiber,
+  flushPassiveEffects,
 };
