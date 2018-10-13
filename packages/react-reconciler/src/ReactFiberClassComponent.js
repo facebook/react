@@ -51,7 +51,7 @@ import {
   requestCurrentTime,
   computeExpirationForFiber,
   scheduleWork,
-  flushPassiveEffectsBeforeSchedulingUpdateOnFiber,
+  flushPassiveEffects,
 } from './ReactFiberScheduler';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -200,7 +200,7 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    flushPassiveEffectsBeforeSchedulingUpdateOnFiber(fiber);
+    flushPassiveEffects();
     enqueueUpdate(fiber, update);
     scheduleWork(fiber, expirationTime);
   },
@@ -220,7 +220,7 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    flushPassiveEffectsBeforeSchedulingUpdateOnFiber(fiber);
+    flushPassiveEffects();
     enqueueUpdate(fiber, update);
     scheduleWork(fiber, expirationTime);
   },
@@ -239,7 +239,7 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    flushPassiveEffectsBeforeSchedulingUpdateOnFiber(fiber);
+    flushPassiveEffects();
     enqueueUpdate(fiber, update);
     scheduleWork(fiber, expirationTime);
   },

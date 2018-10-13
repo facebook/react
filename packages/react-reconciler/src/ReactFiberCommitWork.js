@@ -85,7 +85,7 @@ import {
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
-  flushPassiveEffectsBeforeSchedulingUpdateOnFiber,
+  flushPassiveEffects,
   requestCurrentTime,
   scheduleWork,
 } from './ReactFiberScheduler';
@@ -457,7 +457,7 @@ function commitLifeCycles(
           timedOutAt: NoWork,
         };
         finishedWork.memoizedState = newState;
-        flushPassiveEffectsBeforeSchedulingUpdateOnFiber(finishedWork);
+        flushPassiveEffects();
         scheduleWork(finishedWork, Sync);
         return;
       }

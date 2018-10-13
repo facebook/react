@@ -52,7 +52,7 @@ import {
   syncUpdates,
   interactiveUpdates,
   flushInteractiveUpdates,
-  flushPassiveEffectsBeforeSchedulingUpdateOnFiber,
+  flushPassiveEffects,
 } from './ReactFiberScheduler';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
@@ -147,7 +147,7 @@ function scheduleRootUpdate(
     update.callback = callback;
   }
 
-  flushPassiveEffectsBeforeSchedulingUpdateOnFiber(current);
+  flushPassiveEffects();
   enqueueUpdate(current, update);
   scheduleWork(current, expirationTime);
 
