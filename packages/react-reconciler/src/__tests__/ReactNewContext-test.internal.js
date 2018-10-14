@@ -1584,6 +1584,28 @@ Context fuzz tester error! Copy and paste the following line into the test suite
     );
   });
 
+  // False positive regression test.
+  it('should not warn when using Consumer from React < 16.6 with newer renderer', () => {
+    const BarContext = React.createContext({value: 'bar-initial'});
+    // React 16.5 and earlier didn't have a separate object.
+    BarContext.Consumer = BarContext;
+
+    function Component() {
+      return (
+        <React.Fragment>
+          <BarContext.Provider value={{value: 'bar-updated'}}>
+            <BarContext.Consumer>
+              {({value}) => <div actual={value} expected="bar-updated" />}
+            </BarContext.Consumer>
+          </BarContext.Provider>
+        </React.Fragment>
+      );
+    }
+
+    ReactNoop.render(<Component />);
+    ReactNoop.flush();
+  });
+
   it('should warn with an error message when using nested context consumers in DEV', () => {
     const BarContext = React.createContext({value: 'bar-initial'});
     const BarConsumer = BarContext;

@@ -1118,13 +1118,18 @@ function updateContextConsumer(
   // in DEV mode if this property exists or not and warn if it does not.
   if (__DEV__) {
     if ((context: any)._context === undefined) {
-      if (!hasWarnedAboutUsingContextAsConsumer) {
-        hasWarnedAboutUsingContextAsConsumer = true;
-        warning(
-          false,
-          'Rendering <Context> directly is not supported and will be removed in ' +
-            'a future major release. Did you mean to render <Context.Consumer> instead?',
-        );
+      // This may be because it's a Context (rather than a Consumer).
+      // Or it may be because it's older React where they're the same thing.
+      // We only want to warn if we're sure it's a new React.
+      if (context !== context.Consumer) {
+        if (!hasWarnedAboutUsingContextAsConsumer) {
+          hasWarnedAboutUsingContextAsConsumer = true;
+          warning(
+            false,
+            'Rendering <Context> directly is not supported and will be removed in ' +
+              'a future major release. Did you mean to render <Context.Consumer> instead?',
+          );
+        }
       }
     } else {
       context = (context: any)._context;
