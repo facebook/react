@@ -165,7 +165,7 @@ function flushFirstCallback() {
       } else if (nextAfterContinuation === firstCallbackNode) {
         // The new callback is the highest priority callback in the list.
         firstCallbackNode = continuationNode;
-        ensureHostCallbackIsScheduled(firstCallbackNode);
+        ensureHostCallbackIsScheduled();
       }
 
       var previous = nextAfterContinuation.previous;
@@ -197,7 +197,7 @@ function flushImmediateWork() {
       isExecutingCallback = false;
       if (firstCallbackNode !== null) {
         // There's still work remaining. Request another callback.
-        ensureHostCallbackIsScheduled(firstCallbackNode);
+        ensureHostCallbackIsScheduled();
       } else {
         isHostCallbackScheduled = false;
       }
@@ -242,7 +242,7 @@ function flushWork(didTimeout) {
     isExecutingCallback = false;
     if (firstCallbackNode !== null) {
       // There's still work remaining. Request another callback.
-      ensureHostCallbackIsScheduled(firstCallbackNode);
+      ensureHostCallbackIsScheduled();
     } else {
       isHostCallbackScheduled = false;
     }
@@ -340,7 +340,7 @@ function unstable_scheduleCallback(callback, deprecated_options) {
   if (firstCallbackNode === null) {
     // This is the first callback in the list.
     firstCallbackNode = newNode.next = newNode.previous = newNode;
-    ensureHostCallbackIsScheduled(firstCallbackNode);
+    ensureHostCallbackIsScheduled();
   } else {
     var next = null;
     var node = firstCallbackNode;
@@ -360,7 +360,7 @@ function unstable_scheduleCallback(callback, deprecated_options) {
     } else if (next === firstCallbackNode) {
       // The new callback has the earliest expiration in the entire list.
       firstCallbackNode = newNode;
-      ensureHostCallbackIsScheduled(firstCallbackNode);
+      ensureHostCallbackIsScheduled();
     }
 
     var previous = next.previous;
