@@ -39,6 +39,7 @@ import {
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_LAZY_TYPE,
+  REACT_PURE_TYPE,
 } from 'shared/ReactSymbols';
 
 import {
@@ -987,6 +988,34 @@ class ReactDOMServerRenderer {
             const nextChildren = toArray(
               elementType.render(element.props, element.ref),
             );
+            const frame: Frame = {
+              type: null,
+              domNamespace: parentNamespace,
+              children: nextChildren,
+              childIndex: 0,
+              context: context,
+              footer: '',
+            };
+            if (__DEV__) {
+              ((frame: any): FrameDev).debugElementStack = [];
+            }
+            this.stack.push(frame);
+            return '';
+          }
+          case REACT_PURE_TYPE: {
+            const element: ReactElement = ((nextChild: any): ReactElement);
+            let nextChildren;
+            if (
+              typeof elementType.render === 'object' && elementType.render !== null && elementType.render.$$typeof === REACT_FORWARD_REF_TYPE
+            ) {
+              nextChildren = toArray(
+                elementType.render.render(element.props, element.ref),
+              );
+            } else {
+              nextChildren = toArray(
+                elementType.render(element.props),
+              );
+            }
             const frame: Frame = {
               type: null,
               domNamespace: parentNamespace,
