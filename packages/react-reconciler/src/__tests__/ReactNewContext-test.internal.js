@@ -65,16 +65,13 @@ describe('ReactNewContext', () => {
       return render(contextValue);
     }),
   );
-  sharedContextTests(
-    'useContext inside memoized function component',
-    Context =>
-      React.memo(function Consumer(props) {
-        const observedBits = props.unstable_observedBits;
-        const contextValue = useContext(Context, observedBits);
-        const render = props.children;
-        return render(contextValue);
-      }),
-    true,
+  sharedContextTests('useContext inside memoized function component', Context =>
+    React.memo(function Consumer(props) {
+      const observedBits = props.unstable_observedBits;
+      const contextValue = useContext(Context, observedBits);
+      const render = props.children;
+      return render(contextValue);
+    }),
   );
   sharedContextTests(
     'readContext(Context) inside class component',
@@ -88,8 +85,20 @@ describe('ReactNewContext', () => {
         }
       },
   );
+  sharedContextTests(
+    'readContext(Context) inside pure class component',
+    Context =>
+      class Consumer extends React.PureComponent {
+        render() {
+          const observedBits = this.props.unstable_observedBits;
+          const contextValue = readContext(Context, observedBits);
+          const render = this.props.children;
+          return render(contextValue);
+        }
+      },
+  );
 
-  function sharedContextTests(label, getConsumer, isPure) {
+  function sharedContextTests(label, getConsumer) {
     describe(`reading context with ${label}`, () => {
       it('simple mount and update', () => {
         const Context = React.createContext(1);
@@ -874,49 +883,6 @@ describe('ReactNewContext', () => {
         expect(ReactNoop.getChildren()).toEqual([span(2), span(2)]);
       });
 
-      if (!isPure) {
-        // Context consumer bails out on propagating "deep" updates when `value` hasn't changed.
-        // However, it doesn't bail out from rendering if the component above it re-rendered anyway.
-        // If we bailed out on referential equality, it would be confusing that you
-        // can call this.setState(), but an autobound render callback "blocked" the update.
-        // https://github.com/facebook/react/pull/12470#issuecomment-376917711
-        it('consumer does not bail out if there were no bailouts above it', () => {
-          const Context = React.createContext(0);
-          const Consumer = getConsumer(Context);
-
-          class App extends React.Component {
-            state = {
-              text: 'hello',
-            };
-
-            renderConsumer = context => {
-              ReactNoop.yield('App#renderConsumer');
-              return <span prop={this.state.text} />;
-            };
-
-            render() {
-              ReactNoop.yield('App');
-              return (
-                <Context.Provider value={this.props.value}>
-                  <Consumer>{this.renderConsumer}</Consumer>
-                </Context.Provider>
-              );
-            }
-          }
-
-          // Initial mount
-          let inst;
-          ReactNoop.render(<App value={1} ref={ref => (inst = ref)} />);
-          expect(ReactNoop.flush()).toEqual(['App', 'App#renderConsumer']);
-          expect(ReactNoop.getChildren()).toEqual([span('hello')]);
-
-          // Update
-          inst.setState({text: 'goodbye'});
-          expect(ReactNoop.flush()).toEqual(['App', 'App#renderConsumer']);
-          expect(ReactNoop.getChildren()).toEqual([span('goodbye')]);
-        });
-      }
-
       // This is a regression case for https://github.com/facebook/react/issues/12389.
       it('does not run into an infinite loop', () => {
         const Context = React.createContext(null);
@@ -1260,6 +1226,96 @@ describe('ReactNewContext', () => {
       expect(ReactNoop.flush()).toEqual(['Foo: 2, Bar: 2']);
       expect(ReactNoop.getChildren()).toEqual([span('Foo: 2, Bar: 2')]);
     });
+
+    // Context consumer bails out on propagating "deep" updates when `value` hasn't changed.
+    // However, it doesn't bail out from rendering if the component above it re-rendered anyway.
+    // If we bailed out on referential equality, it would be confusing that you
+    // can call this.setState(), but an autobound render callback "blocked" the update.
+    // https://github.com/facebook/react/pull/12470#issuecomment-376917711
+    it('consumer does not bail out if there were no bailouts above it', () => {
+      const Context = React.createContext(0);
+      const Consumer = Context.Consumer;
+
+      class App extends React.Component {
+        state = {
+          text: 'hello',
+        };
+
+        renderConsumer = context => {
+          ReactNoop.yield('App#renderConsumer');
+          return <span prop={this.state.text} />;
+        };
+
+        render() {
+          ReactNoop.yield('App');
+          return (
+            <Context.Provider value={this.props.value}>
+              <Consumer>{this.renderConsumer}</Consumer>
+            </Context.Provider>
+          );
+        }
+      }
+
+      // Initial mount
+      let inst;
+      ReactNoop.render(<App value={1} ref={ref => (inst = ref)} />);
+      expect(ReactNoop.flush()).toEqual(['App', 'App#renderConsumer']);
+      expect(ReactNoop.getChildren()).toEqual([span('hello')]);
+
+      // Update
+      inst.setState({text: 'goodbye'});
+      expect(ReactNoop.flush()).toEqual(['App', 'App#renderConsumer']);
+      expect(ReactNoop.getChildren()).toEqual([span('goodbye')]);
+    });
+  });
+
+  describe('readContext', () => {
+    // Context consumer bails out on propagating "deep" updates when `value` hasn't changed.
+    // However, it doesn't bail out from rendering if the component above it re-rendered anyway.
+    // If we bailed out on referential equality, it would be confusing that you
+    // can call this.setState(), but an autobound render callback "blocked" the update.
+    // https://github.com/facebook/react/pull/12470#issuecomment-376917711
+    it('does not bail out if there were no bailouts above it', () => {
+      const Context = React.createContext(0);
+
+      class Consumer extends React.Component {
+        render() {
+          const contextValue = readContext(Context);
+          return this.props.children(contextValue);
+        }
+      }
+
+      class App extends React.Component {
+        state = {
+          text: 'hello',
+        };
+
+        renderConsumer = context => {
+          ReactNoop.yield('App#renderConsumer');
+          return <span prop={this.state.text} />;
+        };
+
+        render() {
+          ReactNoop.yield('App');
+          return (
+            <Context.Provider value={this.props.value}>
+              <Consumer>{this.renderConsumer}</Consumer>
+            </Context.Provider>
+          );
+        }
+      }
+
+      // Initial mount
+      let inst;
+      ReactNoop.render(<App value={1} ref={ref => (inst = ref)} />);
+      expect(ReactNoop.flush()).toEqual(['App', 'App#renderConsumer']);
+      expect(ReactNoop.getChildren()).toEqual([span('hello')]);
+
+      // Update
+      inst.setState({text: 'goodbye'});
+      expect(ReactNoop.flush()).toEqual(['App', 'App#renderConsumer']);
+      expect(ReactNoop.getChildren()).toEqual([span('goodbye')]);
+    });
   });
 
   describe('useContext', () => {
@@ -1365,6 +1421,77 @@ describe('ReactNewContext', () => {
       expect(ReactNoop.flush).toThrow(
         'Hooks can only be called inside the body of a function component.',
       );
+    });
+
+    it('warns when passed a consumer', () => {
+      const Context = React.createContext(0);
+      function Foo() {
+        return useContext(Context.Consumer);
+      }
+      ReactNoop.render(<Foo />);
+      expect(ReactNoop.flush).toWarnDev(
+        'Calling useContext(Context.Consumer) is not supported, may cause bugs, ' +
+          'and will be removed in a future major release. ' +
+          'Did you mean to call useContext(Context) instead?',
+      );
+    });
+
+    it('warns when passed a provider', () => {
+      const Context = React.createContext(0);
+      function Foo() {
+        useContext(Context.Provider);
+        return null;
+      }
+      ReactNoop.render(<Foo />);
+      expect(ReactNoop.flush).toWarnDev(
+        'Calling useContext(Context.Provider) is not supported. ' +
+          'Did you mean to call useContext(Context) instead?',
+      );
+    });
+
+    // Context consumer bails out on propagating "deep" updates when `value` hasn't changed.
+    // However, it doesn't bail out from rendering if the component above it re-rendered anyway.
+    // If we bailed out on referential equality, it would be confusing that you
+    // can call this.setState(), but an autobound render callback "blocked" the update.
+    // https://github.com/facebook/react/pull/12470#issuecomment-376917711
+    it('does not bail out if there were no bailouts above it', () => {
+      const Context = React.createContext(0);
+
+      function Consumer({children}) {
+        const contextValue = useContext(Context);
+        return children(contextValue);
+      }
+
+      class App extends React.Component {
+        state = {
+          text: 'hello',
+        };
+
+        renderConsumer = context => {
+          ReactNoop.yield('App#renderConsumer');
+          return <span prop={this.state.text} />;
+        };
+
+        render() {
+          ReactNoop.yield('App');
+          return (
+            <Context.Provider value={this.props.value}>
+              <Consumer>{this.renderConsumer}</Consumer>
+            </Context.Provider>
+          );
+        }
+      }
+
+      // Initial mount
+      let inst;
+      ReactNoop.render(<App value={1} ref={ref => (inst = ref)} />);
+      expect(ReactNoop.flush()).toEqual(['App', 'App#renderConsumer']);
+      expect(ReactNoop.getChildren()).toEqual([span('hello')]);
+
+      // Update
+      inst.setState({text: 'goodbye'});
+      expect(ReactNoop.flush()).toEqual(['App', 'App#renderConsumer']);
+      expect(ReactNoop.getChildren()).toEqual([span('goodbye')]);
     });
   });
 
