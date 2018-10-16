@@ -11,24 +11,8 @@ import {REACT_PROVIDER_TYPE, REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 
 import type {ReactContext} from 'shared/ReactTypes';
 
-import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import warning from 'shared/warning';
-
-import ReactCurrentOwner from './ReactCurrentOwner';
-
-export function readContext<T>(
-  context: ReactContext<T>,
-  observedBits: void | number | boolean,
-): T {
-  const dispatcher = ReactCurrentOwner.currentDispatcher;
-  invariant(
-    dispatcher !== null,
-    'Context.unstable_read(): Context can only be read while React is ' +
-      'rendering, e.g. inside the render method or getDerivedStateFromProps.',
-  );
-  return dispatcher.readContext(context, observedBits);
-}
 
 export function createContext<T>(
   defaultValue: T,
@@ -61,7 +45,6 @@ export function createContext<T>(
     // These are circular
     Provider: (null: any),
     Consumer: (null: any),
-    unstable_read: (null: any),
   };
 
   context.Provider = {
@@ -69,10 +52,7 @@ export function createContext<T>(
     _context: context,
   };
 
-  context.unstable_read = readContext.bind(null, context);
-
   let hasWarnedAboutUsingNestedContextConsumers = false;
-  let hasWarnedAboutUsingConsumerUnstableRead = false;
   let hasWarnedAboutUsingConsumerProvider = false;
 
   if (__DEV__) {
@@ -83,17 +63,6 @@ export function createContext<T>(
       $$typeof: REACT_CONTEXT_TYPE,
       _context: context,
       _calculateChangedBits: context._calculateChangedBits,
-      unstable_read() {
-        if (!hasWarnedAboutUsingConsumerUnstableRead) {
-          hasWarnedAboutUsingConsumerUnstableRead = true;
-          warning(
-            false,
-            'Calling Context.Consumer.unstable_read() is not supported and will be removed in ' +
-              'a future major release. Did you mean to render Context.unstable_read() instead?',
-          );
-        }
-        return context.unstable_read();
-      },
     };
     // $FlowFixMe: Flow complains about not setting a value, which is intentional here
     Object.defineProperties(Consumer, {

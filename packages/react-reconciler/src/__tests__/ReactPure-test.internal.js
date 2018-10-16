@@ -90,8 +90,15 @@ describe('pure', () => {
 
         const CountContext = React.createContext(0);
 
+        function readContext(Context) {
+          const dispatcher =
+            React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+              .ReactCurrentOwner.currentDispatcher;
+          return dispatcher.readContext(Context);
+        }
+
         function Counter(props) {
-          const count = CountContext.unstable_read();
+          const count = readContext(CountContext);
           return <Text text={`${props.label}: ${count}`} />;
         }
         Counter = pure(Counter);

@@ -39,26 +39,33 @@ describe('ReactNewContext', () => {
     return {type: 'span', children: [], prop};
   }
 
+  function readContext(Context, observedBits) {
+    const dispatcher =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner
+        .currentDispatcher;
+    return dispatcher.readContext(Context, observedBits);
+  }
+
   // We have several ways of reading from context. sharedContextTests runs
   // a suite of tests for a given context consumer implementation.
   sharedContextTests('Context.Consumer', Context => Context.Consumer);
   sharedContextTests(
-    'Context.unstable_read inside function component',
+    'readContext(Context) inside function component',
     Context =>
       function Consumer(props) {
         const observedBits = props.unstable_observedBits;
-        const contextValue = Context.unstable_read(observedBits);
+        const contextValue = readContext(Context, observedBits);
         const render = props.children;
         return render(contextValue);
       },
   );
   sharedContextTests(
-    'Context.unstable_read inside class component',
+    'readContext(Context) inside class component',
     Context =>
       class Consumer extends React.Component {
         render() {
           const observedBits = this.props.unstable_observedBits;
-          const contextValue = Context.unstable_read(observedBits);
+          const contextValue = readContext(Context, observedBits);
           const render = this.props.children;
           return render(contextValue);
         }
@@ -1192,7 +1199,7 @@ describe('ReactNewContext', () => {
         return (
           <FooContext.Consumer>
             {foo => {
-              const bar = BarContext.unstable_read();
+              const bar = readContext(BarContext);
               return <Text text={`Foo: ${foo}, Bar: ${bar}`} />;
             }}
           </FooContext.Consumer>
@@ -1236,7 +1243,7 @@ describe('ReactNewContext', () => {
     });
   });
 
-  describe('unstable_readContext', () => {
+  describe('readContext', () => {
     it('can use the same context multiple times in the same function', () => {
       const Context = React.createContext({foo: 0, bar: 0, baz: 0}, (a, b) => {
         let result = 0;
@@ -1262,13 +1269,13 @@ describe('ReactNewContext', () => {
       }
 
       function FooAndBar() {
-        const {foo} = Context.unstable_read(0b001);
-        const {bar} = Context.unstable_read(0b010);
+        const {foo} = readContext(Context, 0b001);
+        const {bar} = readContext(Context, 0b010);
         return <Text text={`Foo: ${foo}, Bar: ${bar}`} />;
       }
 
       function Baz() {
-        const {baz} = Context.unstable_read(0b100);
+        const {baz} = readContext(Context, 0b100);
         return <Text text={'Baz: ' + baz} />;
       }
 
@@ -1628,33 +1635,6 @@ Context fuzz tester error! Copy and paste the following line into the test suite
     }).toWarnDev(
       'Rendering <Context.Consumer.Consumer> is not supported and will be removed in ' +
         'a future major release. Did you mean to render <Context.Consumer> instead?',
-    );
-  });
-
-  it('should warn with an error message when using Context.Consumer.unstable_read() DEV', () => {
-    const BarContext = React.createContext({value: 'bar-initial'});
-
-    function Child() {
-      let value = BarContext.Consumer.unstable_read();
-      return <div actual={value} expected="bar-updated" />;
-    }
-
-    function Component() {
-      return (
-        <React.Fragment>
-          <BarContext.Provider value={{value: 'bar-updated'}}>
-            <Child />
-          </BarContext.Provider>
-        </React.Fragment>
-      );
-    }
-
-    expect(() => {
-      ReactNoop.render(<Component />);
-      ReactNoop.flush();
-    }).toWarnDev(
-      'Calling Context.Consumer.unstable_read() is not supported and will be removed in ' +
-        'a future major release. Did you mean to render Context.unstable_read() instead?',
     );
   });
 
