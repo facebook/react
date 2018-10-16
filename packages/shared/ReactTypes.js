@@ -54,7 +54,6 @@ export type ReactContext<T> = {
   $$typeof: Symbol | number,
   Consumer: ReactContext<T>,
   Provider: ReactProviderType<T>,
-  unstable_read: () => T,
 
   _calculateChangedBits: ((a: T, b: T) => number) | null,
 

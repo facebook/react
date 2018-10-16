@@ -556,7 +556,7 @@ describe('ReactContextValidator', () => {
     }
 
     expect(() => {
-      expect(() => ReactTestUtils.renderIntoDocument(<ComponentA />)).toThrow();
+      ReactTestUtils.renderIntoDocument(<ComponentA />);
     }).toWarnDev(
       'Warning: ComponentA defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
@@ -565,10 +565,10 @@ describe('ReactContextValidator', () => {
     );
 
     // Warnings should be deduped by component type
-    expect(() => ReactTestUtils.renderIntoDocument(<ComponentA />)).toThrow();
+    ReactTestUtils.renderIntoDocument(<ComponentA />);
 
     expect(() => {
-      expect(() => ReactTestUtils.renderIntoDocument(<ComponentB />)).toThrow();
+      ReactTestUtils.renderIntoDocument(<ComponentB />);
     }).toWarnDev(
       'Warning: ComponentB defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
