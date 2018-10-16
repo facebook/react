@@ -6,7 +6,6 @@ let Suspense;
 
 // let JestReact;
 
-let cache;
 let TextResource;
 let textResourceShouldFail;
 
@@ -25,10 +24,6 @@ describe('ReactSuspense', () => {
 
     Suspense = React.Suspense;
 
-    function invalidateCache() {
-      cache = ReactCache.createCache(invalidateCache);
-    }
-    invalidateCache();
     TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
       let listeners = null;
       let status = 'pending';
@@ -84,7 +79,7 @@ describe('ReactSuspense', () => {
   function AsyncText(props) {
     const text = props.text;
     try {
-      TextResource.read(cache, [props.text, props.ms]);
+      TextResource.read([props.text, props.ms]);
       ReactTestRenderer.unstable_yield(text);
       return text;
     } catch (promise) {
@@ -362,7 +357,7 @@ describe('ReactSuspense', () => {
           const text = `${this.props.text}:${this.state.step}`;
           const ms = this.props.ms;
           try {
-            TextResource.read(cache, [text, ms]);
+            TextResource.read([text, ms]);
             ReactTestRenderer.unstable_yield(text);
             return text;
           } catch (promise) {
@@ -501,7 +496,7 @@ describe('ReactSuspense', () => {
           const text = this.props.text;
           const ms = this.props.ms;
           try {
-            TextResource.read(cache, [text, ms]);
+            TextResource.read([text, ms]);
             ReactTestRenderer.unstable_yield(text);
             return text;
           } catch (promise) {

@@ -13,11 +13,16 @@
 let React;
 let ReactFeatureFlags;
 let ReactNoop;
+let ReactCache;
 let ReactTestRenderer;
 let advanceTimeBy;
 let SchedulerTracing;
 let mockNow;
 let AdvanceTime;
+let AsyncText;
+let Text;
+let TextResource;
+let resourcePromise;
 
 function loadModules({
   enableProfilerTimer = true,
@@ -40,6 +45,7 @@ function loadModules({
 
   React = require('react');
   SchedulerTracing = require('scheduler/tracing');
+  ReactCache = require('react-cache');
 
   if (useNoopRenderer) {
     ReactNoop = require('react-noop-renderer');
@@ -67,6 +73,46 @@ function loadModules({
       advanceTimeBy(this.props.byAmount);
       return this.props.children || null;
     }
+  };
+
+  resourcePromise = null;
+
+  function yieldForRenderer(value) {
+    if (ReactNoop) {
+      ReactNoop.yield(value);
+    } else {
+      ReactTestRenderer.unstable_yield(value);
+    }
+  }
+
+  TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
+    resourcePromise = new Promise((resolve, reject) =>
+      setTimeout(() => {
+        yieldForRenderer(`Promise resolved [${text}]`);
+        resolve(text);
+      }, ms),
+    );
+    return resourcePromise;
+  }, ([text, ms]) => text);
+
+  AsyncText = ({ms, text}) => {
+    try {
+      TextResource.read([text, ms]);
+      yieldForRenderer(`AsyncText [${text}]`);
+      return text;
+    } catch (promise) {
+      if (typeof promise.then === 'function') {
+        yieldForRenderer(`Suspend [${text}]`);
+      } else {
+        yieldForRenderer(`Error [${text}]`);
+      }
+      throw promise;
+    }
+  };
+
+  Text = ({text}) => {
+    yieldForRenderer(`Text [${text}]`);
+    return text;
   };
 }
 
@@ -2145,12 +2191,6 @@ describe('Profiler', () => {
     });
 
     describe('suspense', () => {
-      let AsyncText;
-      let Text;
-      let TextResource;
-      let cache;
-      let resourcePromise;
-
       function awaitableAdvanceTimers(ms) {
         jest.advanceTimersByTime(ms);
         // Wait until the end of the current tick
@@ -2158,54 +2198,6 @@ describe('Profiler', () => {
           setImmediate(resolve);
         });
       }
-
-      function yieldForRenderer(value) {
-        if (ReactNoop) {
-          ReactNoop.yield(value);
-        } else {
-          ReactTestRenderer.unstable_yield(value);
-        }
-      }
-
-      beforeEach(() => {
-        const ReactCache = require('react-cache');
-        function invalidateCache() {
-          cache = ReactCache.createCache(invalidateCache);
-        }
-        invalidateCache();
-
-        resourcePromise = null;
-
-        TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
-          resourcePromise = new Promise((resolve, reject) =>
-            setTimeout(() => {
-              yieldForRenderer(`Promise resolved [${text}]`);
-              resolve(text);
-            }, ms),
-          );
-          return resourcePromise;
-        }, ([text, ms]) => text);
-
-        AsyncText = ({ms, text}) => {
-          try {
-            TextResource.read(cache, [text, ms]);
-            yieldForRenderer(`AsyncText [${text}]`);
-            return text;
-          } catch (promise) {
-            if (typeof promise.then === 'function') {
-              yieldForRenderer(`Suspend [${text}]`);
-            } else {
-              yieldForRenderer(`Error [${text}]`);
-            }
-            throw promise;
-          }
-        };
-
-        Text = ({text}) => {
-          yieldForRenderer(`Text [${text}]`);
-          return text;
-        };
-      });
 
       it('traces both the temporary placeholder and the finished render for an interaction', async () => {
         loadModulesForTracing({useNoopRenderer: true});
@@ -2352,7 +2344,7 @@ describe('Profiler', () => {
 
           render() {
             const {ms, text} = this.props;
-            TextResource.read(cache, [text, ms]);
+            TextResource.read([text, ms]);
             return <span prop={text}>{this.state.hasMounted}</span>;
           }
         }
