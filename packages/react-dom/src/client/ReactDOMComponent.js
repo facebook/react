@@ -491,8 +491,8 @@ export function setInitialProperties(
     case 'img':
     case 'image':
     case 'link':
-      trapBubbledEvent(TOP_ERROR, domElement);
-      trapBubbledEvent(TOP_LOAD, domElement);
+      trapBubbledEvent(TOP_ERROR, domElement, true);
+      trapBubbledEvent(TOP_LOAD, domElement, true);
       props = rawProps;
       break;
     case 'form':

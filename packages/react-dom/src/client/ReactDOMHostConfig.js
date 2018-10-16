@@ -27,6 +27,7 @@ import * as ReactInputSelection from './ReactInputSelection';
 import setTextContent from './setTextContent';
 import {validateDOMNesting, updatedAncestorInfo} from './validateDOMNesting';
 import * as ReactBrowserEventEmitter from '../events/ReactBrowserEventEmitter';
+import {replayEarlyEvent} from '../events/ReactBrowserEventEmitter';
 import {getChildNamespace} from '../shared/DOMNamespaces';
 import {
   ELEMENT_NODE,
@@ -41,6 +42,11 @@ import type {DOMContainer} from './ReactDOM';
 export type Type = string;
 export type Props = {
   autoFocus?: boolean,
+  'xlink:href'?: string,
+  src?: string,
+  href?: string,
+  onLoad?: Function,
+  onError?: Function,
   children?: mixed,
   hidden?: boolean,
   suppressHydrationWarning?: boolean,
@@ -75,17 +81,6 @@ if (__DEV__) {
 
 let eventsEnabled: ?boolean = null;
 let selectionInformation: ?mixed = null;
-
-function shouldAutoFocusHostComponent(type: string, props: Props): boolean {
-  switch (type) {
-    case 'button':
-    case 'input':
-    case 'select':
-    case 'textarea':
-      return !!props.autoFocus;
-  }
-  return false;
-}
 
 export * from 'shared/HostConfigWithNoPersistence';
 
@@ -210,7 +205,35 @@ export function finalizeInitialChildren(
   hostContext: HostContext,
 ): boolean {
   setInitialProperties(domElement, type, props, rootContainerInstance);
-  return shouldAutoFocusHostComponent(type, props);
+  switch (type) {
+    case 'button':
+    case 'input':
+    case 'select':
+    case 'textarea':
+      // should auto focus
+      return !!props.autoFocus;
+    case 'img':
+      // if src is set, we might get a load/error event before commit
+      // we need to schedule an effect to replay the event.
+      return (
+        !!props.src &&
+        (typeof props.onLoad === 'function' ||
+          typeof props.onError === 'function')
+      );
+    case 'image':
+      return (
+        !!props['xlink:href'] &&
+        (typeof props.onLoad === 'function' ||
+          typeof props.onError === 'function')
+      );
+    case 'link':
+      return (
+        !!props.href &&
+        (typeof props.onLoad === 'function' ||
+          typeof props.onError === 'function')
+      );
+  }
+  return false;
 }
 
 export function prepareUpdate(
@@ -296,16 +319,27 @@ export function commitMount(
 ): void {
   // Despite the naming that might imply otherwise, this method only
   // fires if there is an `Update` effect scheduled during mounting.
-  // This happens if `finalizeInitialChildren` returns `true` (which it
-  // does to implement the `autoFocus` attribute on the client). But
-  // there are also other cases when this might happen (such as patching
-  // up text content during hydration mismatch). So we'll check this again.
-  if (shouldAutoFocusHostComponent(type, newProps)) {
-    ((domElement: any):
-      | HTMLButtonElement
-      | HTMLInputElement
-      | HTMLSelectElement
-      | HTMLTextAreaElement).focus();
+  // This happens if `finalizeInitialChildren` returns `true`.
+  switch (type) {
+    case 'button':
+    case 'input':
+    case 'select':
+    case 'textarea': {
+      if (newProps.autoFocus) {
+        ((domElement: any):
+          | HTMLButtonElement
+          | HTMLInputElement
+          | HTMLSelectElement
+          | HTMLTextAreaElement).focus();
+      }
+      break;
+    }
+    case 'img':
+    case 'image':
+    case 'link': {
+      replayEarlyEvent(domElement);
+      break;
+    }
   }
 }
 
