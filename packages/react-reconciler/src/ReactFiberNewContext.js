@@ -37,7 +37,6 @@ import {
   ForceUpdate,
 } from 'react-reconciler/src/ReactUpdateQueue';
 
-import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 const valueCursor: StackCursor<mixed> = createCursor(null);
 
 let rendererSigil;
@@ -124,11 +123,11 @@ export function calculateChangedBits<T>(
     const changedBits =
       typeof context._calculateChangedBits === 'function'
         ? context._calculateChangedBits(oldValue, newValue)
-        : MAX_SIGNED_31_BIT_INT;
+        : maxSigned31BitInt;
 
     if (__DEV__) {
       warning(
-        (changedBits & MAX_SIGNED_31_BIT_INT) === changedBits,
+        (changedBits & maxSigned31BitInt) === changedBits,
         'calculateChangedBits: Expected the return value to be a ' +
           '31-bit integer. Instead received: %s',
         changedBits,
