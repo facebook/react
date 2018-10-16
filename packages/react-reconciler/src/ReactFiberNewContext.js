@@ -302,7 +302,7 @@ export function readContext<T>(
     if (lastContextDependency === null) {
       invariant(
         currentlyRenderingFiber !== null,
-        'Context.unstable_read(): Context can only be read while React is ' +
+        'Context can only be read while React is ' +
           'rendering, e.g. inside the render method or getDerivedStateFromProps.',
       );
       // This is the first dependency in the list
