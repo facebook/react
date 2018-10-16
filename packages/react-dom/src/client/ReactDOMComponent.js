@@ -13,6 +13,7 @@ import {registrationNameModules} from 'events/EventPluginRegistry';
 import warning from 'shared/warning';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import {shorthandProperties} from '../shared/CSSProperty';
 
 import * as DOMPropertyOperations from './DOMPropertyOperations';
 import * as ReactDOMInput from './ReactDOMInput';
@@ -708,6 +709,26 @@ export function diffProperties(
           ) {
             if (!styleUpdates) {
               styleUpdates = {};
+            }
+            // Check shorthand properties collision
+            if (__DEV__) {
+              if (shorthandProperties.hasOwnProperty(styleName)) {
+                const propertyGroup = shorthandProperties[styleName];
+                const overriddenProperties = [];
+                for (let lastStyleName in lastProp) {
+                  if (propertyGroup.includes(lastStyleName)) {
+                    overriddenProperties.push(lastStyleName);
+                  }
+                }
+                if (overriddenProperties.length > 0) {
+                  warning(
+                    false,
+                    'Css shorthand properties collision: %s properties are being overridden. (%s)',
+                    styleName,
+                    overriddenProperties,
+                  );
+                }
+              }
             }
             styleUpdates[styleName] = nextProp[styleName];
           }

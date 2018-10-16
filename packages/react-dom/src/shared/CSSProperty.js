@@ -55,6 +55,18 @@ export const isUnitlessNumber = {
   strokeWidth: true,
 };
 
+export const shorthandProperties = {
+  background: [
+    'backgroundAttachment',
+    'backgroundClip',
+    'backgroundColor',
+    'backgroundImage',
+    'backgroundOrigin',
+    'backgroundPosition',
+    'backgroundRepeat',
+    'backgroundSize',
+  ],
+};
 /**
  * @param {string} prefix vendor-specific prefix, eg: Webkit
  * @param {string} key style name, eg: transitionDuration

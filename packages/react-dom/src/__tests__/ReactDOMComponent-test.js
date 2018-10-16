@@ -2698,5 +2698,34 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(<Component />, container);
       expect(typeof container.onclick).not.toBe('function');
     });
+
+    it('should warn about css shorthand properties collision', () => {
+      const container = document.createElement('div');
+      const oldStyle = {
+        background: 'url(http://example.org/image/a.jpg) no-repeat center',
+        backgroundSize: '150px',
+        backgroundColor: 'red',
+      };
+
+      ReactDOM.render(<div style={oldStyle} />, container);
+      const stubStyle = container.firstChild.style;
+
+      expect(stubStyle.background).toEqual(
+        'url(http://example.org/image/a.jpg) no-repeat center',
+      );
+      expect(stubStyle.backgroundSize).toEqual('150px');
+      expect(stubStyle.backgroundColor).toEqual('red');
+
+      const newStyle = {
+        background: 'url(http://example.org/image/b.jpg) no-repeat center',
+      };
+
+      expect(() =>
+        ReactDOM.render(<div style={newStyle} />, container),
+      ).toWarnDev(
+        'Warning: Css shorthand properties collision:' +
+          ' background properties are being overridden. (backgroundSize,backgroundColor)',
+      );
+    });
   });
 });
