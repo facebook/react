@@ -65,7 +65,7 @@ class Debugger extends PureComponent {
   }
 
   handleReset = () => {
-    trace('Clear cache', new Date(), () => {
+    trace('Clear cache', performance.now(), () => {
       cache.invalidate();
       this.setState(state => ({
         requests: {},
