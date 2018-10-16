@@ -9,10 +9,10 @@
 
 import {readContext} from './ReactFiberNewContext';
 import {
-  useAPI,
   useCallback,
   useContext,
   useEffect,
+  useImperativeMethods,
   useLayoutEffect,
   useMemo,
   useMutationEffect,
@@ -23,10 +23,10 @@ import {
 
 export const Dispatcher = {
   readContext,
-  useAPI,
   useCallback,
   useContext,
   useEffect,
+  useImperativeMethods,
   useLayoutEffect,
   useMemo,
   useMutationEffect,

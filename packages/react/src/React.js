@@ -29,10 +29,10 @@ import {lazy} from './ReactLazy';
 import forwardRef from './forwardRef';
 import memo from './memo';
 import {
-  useAPI,
   useCallback,
   useContext,
   useEffect,
+  useImperativeMethods,
   useLayoutEffect,
   useMemo,
   useMutationEffect,
@@ -89,10 +89,10 @@ if (enableStableConcurrentModeAPIs) {
 }
 
 if (enableHooks) {
-  React.useAPI = useAPI;
   React.useCallback = useCallback;
   React.useContext = useContext;
   React.useEffect = useEffect;
+  React.useImperativeMethods = useImperativeMethods;
   React.useLayoutEffect = useLayoutEffect;
   React.useMemo = useMemo;
   React.useMutationEffect = useMutationEffect;

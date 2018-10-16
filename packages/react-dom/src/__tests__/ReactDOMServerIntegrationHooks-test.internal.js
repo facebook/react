@@ -24,7 +24,7 @@ let useContext;
 let useCallback;
 let useMemo;
 let useRef;
-let useAPI;
+let useImperativeMethods;
 let useMutationEffect;
 let useLayoutEffect;
 let forwardRef;
@@ -49,7 +49,7 @@ function initModules() {
   useCallback = React.useCallback;
   useMemo = React.useMemo;
   useRef = React.useRef;
-  useAPI = React.useAPI;
+  useImperativeMethods = React.useImperativeMethods;
   useMutationEffect = React.useMutationEffect;
   useLayoutEffect = React.useLayoutEffect;
   forwardRef = React.forwardRef;
@@ -518,10 +518,10 @@ describe('ReactDOMServerHooks', () => {
     });
   });
 
-  describe('useAPI', () => {
+  describe('useImperativeMethods', () => {
     it('should not be invoked on the server', async () => {
       function Counter(props, ref) {
-        useAPI(ref, () => {
+        useImperativeMethods(ref, () => {
           throw new Error('should not be invoked');
         });
         return <Text text={props.label + ': ' + ref.current} />;

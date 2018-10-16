@@ -24,7 +24,7 @@ let useLayoutEffect;
 let useCallback;
 let useMemo;
 let useRef;
-let useAPI;
+let useImperativeMethods;
 let forwardRef;
 let flushPassiveEffects;
 let memo;
@@ -70,7 +70,7 @@ describe('ReactHooks', () => {
     useCallback = React.useCallback;
     useMemo = React.useMemo;
     useRef = React.useRef;
-    useAPI = React.useAPI;
+    useImperativeMethods = React.useImperativeMethods;
     forwardRef = React.forwardRef;
     memo = React.memo;
   });
@@ -87,7 +87,7 @@ describe('ReactHooks', () => {
   it('resumes after an interruption', () => {
     function Counter(props, ref) {
       const [count, updateCount] = useState(0);
-      useAPI(ref, () => ({updateCount}));
+      useImperativeMethods(ref, () => ({updateCount}));
       return <Text text={props.label + ': ' + count} />;
     }
     Counter = forwardRef(Counter);
@@ -171,7 +171,7 @@ describe('ReactHooks', () => {
     it('simple mount and update', () => {
       function Counter(props, ref) {
         const [count, updateCount] = useState(0);
-        useAPI(ref, () => ({updateCount}));
+        useImperativeMethods(ref, () => ({updateCount}));
         return <Text text={'Count: ' + count} />;
       }
       Counter = forwardRef(Counter);
@@ -195,7 +195,7 @@ describe('ReactHooks', () => {
           ReactNoop.yield('getInitialState');
           return props.initialState;
         });
-        useAPI(ref, () => ({updateCount}));
+        useImperativeMethods(ref, () => ({updateCount}));
         return <Text text={'Count: ' + count} />;
       }
       Counter = forwardRef(Counter);
@@ -213,7 +213,7 @@ describe('ReactHooks', () => {
       function Counter(props, ref) {
         const [count, updateCount] = useState(0);
         const [label, updateLabel] = useState('Count');
-        useAPI(ref, () => ({updateCount, updateLabel}));
+        useImperativeMethods(ref, () => ({updateCount, updateLabel}));
         return <Text text={label + ': ' + count} />;
       }
       Counter = forwardRef(Counter);
@@ -232,7 +232,7 @@ describe('ReactHooks', () => {
     it('callbacks', () => {
       function Counter(props, ref) {
         const [count, updateCount] = useState(0);
-        useAPI(ref, () => ({updateCount}));
+        useImperativeMethods(ref, () => ({updateCount}));
         return <Text text={'Count: ' + count} />;
       }
       Counter = forwardRef(Counter);
@@ -264,7 +264,7 @@ describe('ReactHooks', () => {
     it('does not fire callbacks more than once when rebasing', () => {
       function Counter(props, ref) {
         const [count, updateCount] = useState(0);
-        useAPI(ref, () => ({updateCount}));
+        useImperativeMethods(ref, () => ({updateCount}));
         return <Text text={'Count: ' + count} />;
       }
       Counter = forwardRef(Counter);
@@ -507,7 +507,7 @@ describe('ReactHooks', () => {
       function Counter({row: newRow}, ref) {
         let [reducer, setReducer] = useState(() => reducerA);
         let [count, dispatch] = useReducer(reducer, 0);
-        useAPI(ref, () => ({dispatch}));
+        useImperativeMethods(ref, () => ({dispatch}));
         if (count < 20) {
           dispatch('increment');
           // Swap reducers each time we increment
@@ -568,7 +568,7 @@ describe('ReactHooks', () => {
 
       function Counter(props, ref) {
         const [count, dispatch] = useReducer(reducer, 0);
-        useAPI(ref, () => ({dispatch}));
+        useImperativeMethods(ref, () => ({dispatch}));
         return <Text text={'Count: ' + count} />;
       }
       Counter = forwardRef(Counter);
@@ -609,7 +609,7 @@ describe('ReactHooks', () => {
 
       function Counter(props, ref) {
         const [count, dispatch] = useReducer(reducer, 0, initialAction);
-        useAPI(ref, () => ({dispatch}));
+        useImperativeMethods(ref, () => ({dispatch}));
         return <Text text={'Count: ' + count} />;
       }
       Counter = forwardRef(Counter);
@@ -910,7 +910,6 @@ describe('ReactHooks', () => {
       expect(ReactNoop.flush()).toEqual(['Will set count to 1', 'Count: 2']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 2')]);
 
-      flushPassiveEffects();
       expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
       expect(onWorkCanceled).toHaveBeenCalledTimes(0);
     });
@@ -1013,6 +1012,33 @@ describe('ReactHooks', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
       flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual(['Did create [0]']);
+
+      ReactNoop.render(null);
+      expect(ReactNoop.flush()).toEqual(['Did destroy [0]']);
+      expect(ReactNoop.getChildren()).toEqual([]);
+    });
+
+    it('unmounts on deletion after skipped effect', () => {
+      function Counter(props) {
+        useEffect(() => {
+          ReactNoop.yield(`Did create [${props.count}]`);
+          return () => {
+            ReactNoop.yield(`Did destroy [${props.count}]`);
+          };
+        }, []);
+        return <Text text={'Count: ' + props.count} />;
+      }
+      ReactNoop.render(<Counter count={0} />);
+      expect(ReactNoop.flush()).toEqual(['Count: 0']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual(['Did create [0]']);
+
+      ReactNoop.render(<Counter count={1} />);
+      expect(ReactNoop.flush()).toEqual(['Count: 1']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual(null);
 
       ReactNoop.render(null);
       expect(ReactNoop.flush()).toEqual(['Did destroy [0]']);

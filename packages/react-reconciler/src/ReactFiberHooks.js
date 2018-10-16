@@ -179,9 +179,7 @@ export function finishHooks(
 
   renderedWork.memoizedState = firstWorkInProgressHook;
   renderedWork.expirationTime = remainingExpirationTime;
-  if (componentUpdateQueue !== null) {
-    renderedWork.updateQueue = (componentUpdateQueue: any);
-  }
+  renderedWork.updateQueue = (componentUpdateQueue: any);
 
   const didRenderTooFewHooks =
     currentHook !== null && currentHook.next !== null;
@@ -576,26 +574,27 @@ function useEffectImpl(fiberEffectTag, hookEffectTag, create, inputs): void {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   workInProgressHook = createWorkInProgressHook();
 
-  let nextEffect;
   let nextInputs = inputs !== undefined && inputs !== null ? inputs : [create];
+  let destroy = null;
   if (currentHook !== null) {
     const prevEffect = currentHook.memoizedState;
-    const prevInputs = prevEffect.inputs;
-    nextEffect = pushEffect(
-      inputsAreEqual(nextInputs, prevInputs) ? NoHookEffect : hookEffectTag,
-      create,
-      prevEffect.destroy,
-      nextInputs,
-    );
-  } else {
-    nextEffect = pushEffect(hookEffectTag, create, null, nextInputs);
+    destroy = prevEffect.destroy;
+    if (inputsAreEqual(nextInputs, prevEffect.inputs)) {
+      pushEffect(NoHookEffect, create, destroy, nextInputs);
+      return;
+    }
   }
 
-  workInProgressHook.memoizedState = nextEffect;
   currentlyRenderingFiber.effectTag |= fiberEffectTag;
+  workInProgressHook.memoizedState = pushEffect(
+    hookEffectTag,
+    create,
+    destroy,
+    nextInputs,
+  );
 }
 
-export function useAPI<T>(
+export function useImperativeMethods<T>(
   ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
   create: () => T,
   inputs: Array<mixed> | void | null,
