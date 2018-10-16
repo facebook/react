@@ -365,8 +365,8 @@ export const Dispatcher = {
   useState,
   useMutationEffect,
   useLayoutEffect,
-  // useAPI is not run in the server environment
-  useAPI: noop,
+  // useImperativeMethods is not run in the server environment
+  useImperativeMethods: noop,
   // Callbacks are not run in the server environment.
   useCallback: noop,
   // Effects are not run in the server environment.
