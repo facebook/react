@@ -1787,6 +1787,21 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ]);
     expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
   });
+
+  it('warns in dev if fallback prop is missing', () => {
+    ReactNoop.render(
+      <Suspense>
+        <Text text="A" />
+        <AsyncText text="B" ms={1000} />
+      </Suspense>,
+    );
+    expect(() => {
+      expect(ReactNoop.flush()).toEqual(['A', 'Suspend! [B]']);
+      expect(ReactNoop.getChildren()).toEqual([]);
+    }).toLowPriorityWarnDev(
+      'Suspense component requires a fallback prop, but no fallback prop was set.',
+    );
+  });
 });
 
 // TODO:
