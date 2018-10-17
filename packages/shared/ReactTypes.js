@@ -55,6 +55,7 @@ export type ReactContext<T> = {
   Consumer: ReactContext<T>,
   Provider: ReactProviderType<T>,
 
+  _uid: Symbol | string,
   _calculateChangedBits: ((a: T, b: T) => number) | null,
 
   _currentValue: T,

@@ -692,9 +692,7 @@ class ReactDOMServerRenderer {
   previousWasTextNode: boolean;
   makeStaticMarkup: boolean;
 
-  contextIndex: number;
-  contextStack: Array<ReactContext<any>>;
-  contextValueStack: Array<any>;
+  contextValueStack: Array<Object>;
   contextProviderStack: ?Array<ReactProvider<any>>; // DEV-only
 
   constructor(children: mixed, makeStaticMarkup: boolean) {
@@ -720,9 +718,7 @@ class ReactDOMServerRenderer {
     this.makeStaticMarkup = makeStaticMarkup;
 
     // Context (new API)
-    this.contextIndex = -1;
-    this.contextStack = [];
-    this.contextValueStack = [];
+    this.contextValueStack = [emptyObject];
     if (__DEV__) {
       this.contextProviderStack = [];
     }
@@ -732,53 +728,30 @@ class ReactDOMServerRenderer {
    * Note: We use just two stacks regardless of how many context providers you have.
    * Providers are always popped in the reverse order to how they were pushed
    * so we always know on the way down which provider you'll encounter next on the way up.
-   * On the way down, we push the current provider, and its context value *before*
-   * we mutated it, onto the stacks. Therefore, on the way up, we always know which
-   * provider needs to be "restored" to which value.
-   * https://github.com/facebook/react/pull/12985#issuecomment-396301248
+   * On the way down, we push the current provider, and its context value onto
+   * the stacks, without mutating.
    */
 
   pushProvider<T>(provider: ReactProvider<T>): void {
-    const index = ++this.contextIndex;
     const context: ReactContext<any> = provider.type._context;
-    const previousValue = context._currentValue;
-
-    // Remember which value to restore this context to on our way up.
-    this.contextStack[index] = context;
-    this.contextValueStack[index] = previousValue;
+    const prevValues = this.contextValueStack[
+      this.contextValueStack.length - 1
+    ];
+    const nextValues = Object.assign({}, prevValues);
+    nextValues[context._uid] = provider.props.value;
+    this.contextValueStack.push(nextValues);
     if (__DEV__) {
       // Only used for push/pop mismatch warnings.
-      (this.contextProviderStack: any)[index] = provider;
+      (this.contextProviderStack: any).push(provider);
     }
-
-    // Mutate the current value.
-    context._currentValue = provider.props.value;
   }
 
   popProvider<T>(provider: ReactProvider<T>): void {
-    const index = this.contextIndex;
+    this.contextValueStack.pop();
     if (__DEV__) {
-      warningWithoutStack(
-        index > -1 && provider === (this.contextProviderStack: any)[index],
-        'Unexpected pop.',
-      );
+      const poppedProvider = (this.contextProviderStack: any).pop();
+      warningWithoutStack(provider === poppedProvider, 'Unexpected pop.');
     }
-
-    const context: ReactContext<any> = this.contextStack[index];
-    const previousValue = this.contextValueStack[index];
-
-    // "Hide" these null assignments from Flow by using `any`
-    // because conceptually they are deletions--as long as we
-    // promise to never access values beyond `this.contextIndex`.
-    this.contextStack[index] = (null: any);
-    this.contextValueStack[index] = (null: any);
-    if (__DEV__) {
-      (this.contextProviderStack: any)[index] = (null: any);
-    }
-    this.contextIndex--;
-
-    // Restore to the previous value we stored as we were walking down.
-    context._currentValue = previousValue;
   }
 
   read(bytes: number): string | null {
@@ -988,8 +961,14 @@ class ReactDOMServerRenderer {
           case REACT_CONTEXT_TYPE: {
             const consumer: ReactConsumer<any> = (nextChild: any);
             const nextProps: any = consumer.props;
-            const nextValue = consumer.type._currentValue;
-
+            const values = this.contextValueStack[
+              this.contextValueStack.length - 1
+            ];
+            // Use the value provided, or if not defined, fall back to the
+            // default value for this context.
+            const nextValue = values.hasOwnProperty(consumer.type._uid)
+              ? values[consumer.type._uid]
+              : consumer.type._currentValue;
             const nextChildren = toArray(nextProps.children(nextValue));
             const frame: Frame = {
               type: nextChild,
