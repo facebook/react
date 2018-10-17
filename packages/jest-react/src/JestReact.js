@@ -85,6 +85,7 @@ export function toFlushAndThrow(root, ...rest) {
 }
 
 export function toMatchRenderedOutput(root, expectedJSX) {
+  assertYieldsWereCleared(root);
   const actualJSON = root.toJSON();
 
   let actualJSX;

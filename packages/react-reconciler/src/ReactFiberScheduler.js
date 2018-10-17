@@ -1604,7 +1604,8 @@ function retrySuspendedRoot(
   scheduleWorkToRoot(boundaryFiber, retryTime);
   if ((boundaryFiber.mode & StrictMode) === NoContext) {
     // Outside of strict mode, we must schedule an update on the source fiber,
-    // too, since it already committed.
+    // too, since it already committed in an inconsistent state and therefore
+    // does not have any pending work.
     scheduleWorkToRoot(sourceFiber, retryTime);
   }
 

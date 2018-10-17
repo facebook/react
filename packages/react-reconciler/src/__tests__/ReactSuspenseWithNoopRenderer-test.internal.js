@@ -1374,6 +1374,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         constructor(props) {
           super(props);
           const text = props.text;
+          ReactNoop.yield('constructor');
           try {
             TextResource.read(cache, [props.text, props.ms]);
             this.state = {text};
@@ -1385,6 +1386,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
             }
             throw promise;
           }
+        }
+        componentDidMount() {
+          ReactNoop.yield('componentDidMount');
         }
         render() {
           ReactNoop.yield(this.state.text);
@@ -1398,7 +1402,21 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         </Suspense>,
       );
 
+      expect(ReactNoop.clearYields()).toEqual([
+        'constructor',
+        'Suspend! [Hi]',
+        'Loading...',
+      ]);
       expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
+
+      await advanceTimers(1000);
+      expect(ReactNoop.clearYields()).toEqual([
+        'Promise resolved [Hi]',
+        'constructor',
+        'Hi',
+        'componentDidMount',
+      ]);
+      expect(ReactNoop.getChildren()).toEqual([span('Hi')]);
     });
 
     it('does not infinite loop if fallback contains lifecycle method', async () => {

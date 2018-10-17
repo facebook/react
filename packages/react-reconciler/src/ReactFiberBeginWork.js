@@ -714,6 +714,20 @@ function updateIndeterminateComponent(
   updateExpirationTime,
   renderExpirationTime,
 ) {
+  if (current !== null) {
+    // An indeterminate component only mounts if it suspended inside a non-
+    // concurrent tree, in an inconsistent state. We want to tree it like
+    // a new mount, even though an empty version of it already committed.
+    // Disconnect the alternate pointers.
+    current.alternate = null;
+    workInProgress.alternate = null;
+    // Don't assign the `current` variable to null, though, since reconcileChildren uses the
+    // existence of current as a heuristic for whether to schedule placement
+    // effects on the children. This is super weird but reconcileChildren is
+    // deeply nested and it doesn't seem worth it to refactor for this edge
+    // case. (There are unit tests to prevent regressions.)
+  }
+
   const props = workInProgress.pendingProps;
   if (
     typeof Component === 'object' &&
@@ -743,11 +757,47 @@ function updateIndeterminateComponent(
         break;
       }
       case ClassComponentLazy: {
-        child = updateClassComponent(
+        // This is a fork of updateClassComponent
+        let hasContext;
+        if (isLegacyContextProvider(Component)) {
+          hasContext = true;
+          pushLegacyContextProvider(workInProgress);
+        } else {
+          hasContext = false;
+        }
+        prepareToReadContext(workInProgress, renderExpirationTime);
+
+        let shouldUpdate;
+        if (workInProgress.stateNode === null) {
+          // In the initial pass we might need to construct the instance.
+          constructClassInstance(
+            workInProgress,
+            Component,
+            props,
+            renderExpirationTime,
+          );
+          mountClassInstance(
+            workInProgress,
+            Component,
+            props,
+            renderExpirationTime,
+          );
+          shouldUpdate = true;
+        } else {
+          // In a resume, we'll already have an instance we can reuse.
+          shouldUpdate = resumeMountClassInstance(
+            workInProgress,
+            Component,
+            props,
+            renderExpirationTime,
+          );
+        }
+        child = finishClassComponent(
           current,
           workInProgress,
           Component,
-          resolvedProps,
+          shouldUpdate,
+          hasContext,
           renderExpirationTime,
         );
         break;
