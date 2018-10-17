@@ -249,5 +249,38 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.querySelector('#language2').textContent).toBe('sanskrit');
       expect(e.querySelector('#language3').textContent).toBe('french');
     });
+
+    it('does not pollute parallel node streams', () => {
+      const LoggedInUser = React.createContext();
+
+      const AppWithUser = user => (
+        <LoggedInUser.Provider value={user}>
+          <header>
+            <LoggedInUser.Consumer>{whoAmI => whoAmI}</LoggedInUser.Consumer>
+          </header>
+          <footer>
+            <LoggedInUser.Consumer>{whoAmI => whoAmI}</LoggedInUser.Consumer>
+          </footer>
+        </LoggedInUser.Provider>
+      );
+
+      const streamAmy = ReactDOMServer.renderToNodeStream(
+        AppWithUser('Amy'),
+      ).setEncoding('utf8');
+      const streamBob = ReactDOMServer.renderToNodeStream(
+        AppWithUser('Bob'),
+      ).setEncoding('utf8');
+
+      // Testing by filling the buffer using internal _read() with a small
+      // number of bytes to avoid a test case which needs to align to a
+      // highWaterMark boundary of 2^14 chars.
+      streamAmy._read(20);
+      streamBob._read(20);
+      streamAmy._read(20);
+      streamBob._read(20);
+
+      expect(streamAmy.read()).toBe('<header>Amy</header><footer>Amy</footer>');
+      expect(streamBob.read()).toBe('<header>Bob</header><footer>Bob</footer>');
+    });
   });
 });

@@ -14,6 +14,9 @@ import type {ReactContext} from 'shared/ReactTypes';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import warning from 'shared/warning';
 
+const hasSymbol = typeof Symbol === 'function';
+let nextContextID = 1;
+
 export function createContext<T>(
   defaultValue: T,
   calculateChangedBits: ?(a: T, b: T) => number,
@@ -34,6 +37,10 @@ export function createContext<T>(
 
   const context: ReactContext<T> = {
     $$typeof: REACT_CONTEXT_TYPE,
+    // A unique key to use when storing and retrieving values for this context
+    // instance. Uses an opaque Symbol when available, otherwise uses an
+    // incrementing numeric string.
+    _uid: hasSymbol ? Symbol() : '' + nextContextID++,
     _calculateChangedBits: calculateChangedBits,
     // As a workaround to support multiple concurrent renderers, we categorize
     // some renderers as primary and others as secondary. We only expect
@@ -62,6 +69,7 @@ export function createContext<T>(
     const Consumer = {
       $$typeof: REACT_CONTEXT_TYPE,
       _context: context,
+      _uid: context._uid,
       _calculateChangedBits: context._calculateChangedBits,
     };
     // $FlowFixMe: Flow complains about not setting a value, which is intentional here
