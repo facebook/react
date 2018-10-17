@@ -695,6 +695,7 @@ class ReactDOMServerRenderer {
   contextIndex: number;
   contextStack: Array<ReactContext<any>>;
   contextValueStack: Array<any>;
+  contextValueMap: Map<ReactContext<any>, any>;
   contextProviderStack: ?Array<ReactProvider<any>>; // DEV-only
 
   constructor(children: mixed, makeStaticMarkup: boolean) {
@@ -723,6 +724,7 @@ class ReactDOMServerRenderer {
     this.contextIndex = -1;
     this.contextStack = [];
     this.contextValueStack = [];
+    this.contextValueMap = new Map();
     if (__DEV__) {
       this.contextProviderStack = [];
     }
@@ -736,12 +738,21 @@ class ReactDOMServerRenderer {
    * we mutated it, onto the stacks. Therefore, on the way up, we always know which
    * provider needs to be "restored" to which value.
    * https://github.com/facebook/react/pull/12985#issuecomment-396301248
+   *
+   * A context's _currentValue is not directly mutated to avoid issues with
+   * concurrent renderers. Instead a local contextValueMap stores the current
+   * value for each context instance.
    */
 
   pushProvider<T>(provider: ReactProvider<T>): void {
     const index = ++this.contextIndex;
-    const context: ReactContext<any> = provider.type._context;
-    const previousValue = context._currentValue;
+    // NOTE: in __DEV__ the _context and Consumer references are different,
+    // while in production they are the same. For consistent Map keys, always
+    // use context.Consumer.
+    const context: ReactContext<any> = provider.type._context.Consumer;
+    const previousValue = this.contextValueMap.has(context)
+      ? this.contextValueMap.get(context)
+      : context._currentValue;
 
     // Remember which value to restore this context to on our way up.
     this.contextStack[index] = context;
@@ -752,7 +763,7 @@ class ReactDOMServerRenderer {
     }
 
     // Mutate the current value.
-    context._currentValue = provider.props.value;
+    this.contextValueMap.set(context, provider.props.value);
   }
 
   popProvider<T>(provider: ReactProvider<T>): void {
@@ -778,7 +789,7 @@ class ReactDOMServerRenderer {
     this.contextIndex--;
 
     // Restore to the previous value we stored as we were walking down.
-    context._currentValue = previousValue;
+    this.contextValueMap.set(context, previousValue);
   }
 
   read(bytes: number): string | null {
@@ -988,7 +999,9 @@ class ReactDOMServerRenderer {
           case REACT_CONTEXT_TYPE: {
             const consumer: ReactConsumer<any> = (nextChild: any);
             const nextProps: any = consumer.props;
-            const nextValue = consumer.type._currentValue;
+            const nextValue = this.contextValueMap.has(consumer.type)
+              ? this.contextValueMap.get(consumer.type)
+              : consumer.type._currentValue;
 
             const nextChildren = toArray(nextProps.children(nextValue));
             const frame: Frame = {
