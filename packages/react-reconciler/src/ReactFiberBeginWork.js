@@ -55,6 +55,7 @@ import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import lowPriorityWarning from 'shared/lowPriorityWarning';
 import * as ReactCurrentFiber from './ReactCurrentFiber';
 import {startWorkTimer, cancelWorkTimer} from './ReactDebugFiberPerf';
 
@@ -979,6 +980,12 @@ function updateSuspenseComponent(
   if (typeof children === 'function') {
     nextChildren = children(nextDidTimeout);
   } else {
+    if (typeof nextProps.fallback === 'undefined') {
+      lowPriorityWarning(
+        false,
+        'Suspense component requires a fallback prop, but no fallback prop was set.',
+      );
+    }
     nextChildren = nextDidTimeout ? nextProps.fallback : children;
   }
 
