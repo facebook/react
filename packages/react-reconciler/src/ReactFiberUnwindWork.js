@@ -205,9 +205,9 @@ function throwException(
     workInProgress = returnFiber;
     do {
       if (workInProgress.tag === SuspenseComponent) {
-        const state = workInProgress.memoizedState;
-        const didTimeout = state !== null && state.didTimeout;
-        if (!didTimeout) {
+        const fallback = workInProgress.memoizedProps.fallback;
+        const didTimeout = workInProgress.memoizedState;
+        if (!didTimeout && workInProgress.memoizedProps.fallback !== undefined) {
           // Found the nearest boundary.
 
           // If the boundary is not in concurrent mode, we should not suspend, and

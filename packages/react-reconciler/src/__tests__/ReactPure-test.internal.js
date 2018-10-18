@@ -57,11 +57,11 @@ describe('pure', () => {
         Counter = pure(Counter);
 
         ReactNoop.render(
-          <Suspense>
+          <Suspense fallback={<Text text="Loading..." />}>
             <Counter count={0} />
           </Suspense>,
         );
-        expect(ReactNoop.flush()).toEqual([]);
+        expect(ReactNoop.flush()).toEqual(['Loading...']);
         await Promise.resolve();
         expect(ReactNoop.flush()).toEqual([0]);
         expect(ReactNoop.getChildren()).toEqual([span(0)]);
@@ -107,7 +107,7 @@ describe('pure', () => {
           state = {count: 0};
           render() {
             return (
-              <Suspense>
+              <Suspense fallback={<Text text="Loading..." />}>
                 <CountContext.Provider value={this.state.count}>
                   <Counter label="Count" />
                 </CountContext.Provider>
@@ -118,7 +118,7 @@ describe('pure', () => {
 
         const parent = React.createRef(null);
         ReactNoop.render(<Parent ref={parent} />);
-        expect(ReactNoop.flush()).toEqual([]);
+        expect(ReactNoop.flush()).toEqual(['Loading...']);
         await Promise.resolve();
         expect(ReactNoop.flush()).toEqual(['Count: 0']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
@@ -148,11 +148,11 @@ describe('pure', () => {
         });
 
         ReactNoop.render(
-          <Suspense>
+          <Suspense fallback={<Text text="Loading..." />}>
             <Counter count={0} />
           </Suspense>,
         );
-        expect(ReactNoop.flush()).toEqual([]);
+        expect(ReactNoop.flush()).toEqual(['Loading...']);
         await Promise.resolve();
         expect(ReactNoop.flush()).toEqual([0]);
         expect(ReactNoop.getChildren()).toEqual([span(0)]);
@@ -204,7 +204,7 @@ describe('pure', () => {
         const divRef = React.createRef();
 
         ReactNoop.render(
-          <Suspense>
+          <Suspense fallback={<Text text="Loading..." />}>
             <Transparent ref={divRef} />
           </Suspense>,
         );
@@ -224,11 +224,11 @@ describe('pure', () => {
         const divRef2 = React.createRef();
 
         ReactNoop.render(
-          <Suspense>
+          <Suspense fallback={<Text text="Loading..." />}>
             <Transparent ref={divRef} />
           </Suspense>,
         );
-        expect(ReactNoop.flush()).toEqual([]);
+        expect(ReactNoop.flush()).toEqual(['Loading...']);
         await Promise.resolve();
         expect(ReactNoop.flush()).toEqual(['Text']);
         expect(divRef.current.type).toBe('div');

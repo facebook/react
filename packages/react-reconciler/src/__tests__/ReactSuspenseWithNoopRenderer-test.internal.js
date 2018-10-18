@@ -104,7 +104,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     function Foo() {
       ReactNoop.yield('Foo');
       return (
-        <Suspense>
+        <Suspense fallback={<Text text="Loading..." />}>
           <Bar>
             <AsyncText text="A" ms={100} />
             <Text text="B" />
@@ -121,6 +121,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       'Suspend! [A]',
       // But we keep rendering the siblings
       'B',
+      'Loading...',
     ]);
     expect(ReactNoop.getChildren()).toEqual([]);
 
@@ -193,7 +194,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
   it('continues rendering siblings after suspending', async () => {
     ReactNoop.render(
-      <Suspense>
+      <Suspense fallback={<Text text="Loading..." />}>
         <Text text="A" />
         <AsyncText text="B" />
         <Text text="C" />
@@ -201,7 +202,13 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       </Suspense>,
     );
     // B suspends. Continue rendering the remaining siblings.
-    expect(ReactNoop.flush()).toEqual(['A', 'Suspend! [B]', 'C', 'D']);
+    expect(ReactNoop.flush()).toEqual([
+      'A',
+      'Suspend! [B]',
+      'C',
+      'D',
+      'Loading...',
+    ]);
     // Did not commit yet.
     expect(ReactNoop.getChildren()).toEqual([]);
 
@@ -243,7 +250,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     const errorBoundary = React.createRef();
     function App() {
       return (
-        <Suspense>
+        <Suspense fallback={<Text text="Loading..." />}>
           <ErrorBoundary ref={errorBoundary}>
             <AsyncText text="Result" ms={1000} />
           </ErrorBoundary>
@@ -252,7 +259,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
 
     ReactNoop.render(<App />);
-    expect(ReactNoop.flush()).toEqual(['Suspend! [Result]']);
+    expect(ReactNoop.flush()).toEqual(['Suspend! [Result]', 'Loading...']);
     expect(ReactNoop.getChildren()).toEqual([]);
 
     textResourceShouldFail = true;
@@ -278,7 +285,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     errorBoundary.current.reset();
     cache.invalidate();
 
-    expect(ReactNoop.flush()).toEqual(['Suspend! [Result]']);
+    expect(ReactNoop.flush()).toEqual(['Suspend! [Result]', 'Loading...']);
     ReactNoop.expire(1000);
     await advanceTimers(1000);
     expect(ReactNoop.flush()).toEqual(['Promise resolved [Result]', 'Result']);
@@ -356,7 +363,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   it('can update at a higher priority while in a suspended state', async () => {
     function App(props) {
       return (
-        <Suspense>
+        <Suspense fallback={<Text text="Loading..." />}>
           <Text text={props.highPri} />
           <AsyncText text={props.lowPri} />
         </Suspense>
@@ -376,6 +383,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       'A',
       // Suspends
       'Suspend! [2]',
+      'Loading...',
     ]);
 
     // While we're still waiting for the low-pri update to complete, update the
@@ -395,7 +403,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   it('keeps working on lower priority work after being pinged', async () => {
     function App(props) {
       return (
-        <Suspense>
+        <Suspense fallback={<Text text="Loading..." />}>
           <AsyncText text="A" />
           {props.showB && <Text text="B" />}
         </Suspense>
@@ -403,13 +411,13 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
 
     ReactNoop.render(<App showB={false} />);
-    expect(ReactNoop.flush()).toEqual(['Suspend! [A]']);
+    expect(ReactNoop.flush()).toEqual(['Suspend! [A]', 'Loading...']);
     expect(ReactNoop.getChildren()).toEqual([]);
 
     // Advance React's virtual time by enough to fall into a new async bucket.
     ReactNoop.expire(1200);
     ReactNoop.render(<App showB={true} />);
-    expect(ReactNoop.flush()).toEqual(['Suspend! [A]', 'B']);
+    expect(ReactNoop.flush()).toEqual(['Suspend! [A]', 'B', 'Loading...']);
     expect(ReactNoop.getChildren()).toEqual([]);
 
     await advanceTimers(0);
@@ -676,13 +684,17 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
   it('a Suspense component correctly handles more than one suspended child', async () => {
     ReactNoop.render(
-      <Suspense maxDuration={0}>
+      <Suspense maxDuration={0} fallback={<Text text="Loading..." />}>
         <AsyncText text="A" ms={100} />
         <AsyncText text="B" ms={100} />
       </Suspense>,
     );
-    expect(ReactNoop.expire(10000)).toEqual(['Suspend! [A]', 'Suspend! [B]']);
-    expect(ReactNoop.getChildren()).toEqual([]);
+    expect(ReactNoop.expire(10000)).toEqual([
+      'Suspend! [A]',
+      'Suspend! [B]',
+      'Loading...',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
 
     await advanceTimers(100);
 
@@ -722,7 +734,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   it('starts working on an update even if its priority falls between two suspended levels', async () => {
     function App(props) {
       return (
-        <Suspense maxDuration={10000}>
+        <Suspense fallback={<Text text="Loading..." />} maxDuration={10000}>
           {props.text === 'C' ? (
             <Text text="C" />
           ) : (
@@ -735,7 +747,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Schedule an update
     ReactNoop.render(<App text="A" />);
     // The update should suspend.
-    expect(ReactNoop.flush()).toEqual(['Suspend! [A]']);
+    expect(ReactNoop.flush()).toEqual(['Suspend! [A]', 'Loading...']);
     expect(ReactNoop.getChildren()).toEqual([]);
 
     // Advance time until right before it expires. This number may need to
@@ -748,7 +760,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Schedule another low priority update.
     ReactNoop.render(<App text="B" />);
     // This update should also suspend.
-    expect(ReactNoop.flush()).toEqual(['Suspend! [B]']);
+    expect(ReactNoop.flush()).toEqual(['Suspend! [B]', 'Loading...']);
     expect(ReactNoop.getChildren()).toEqual([]);
 
     // Schedule a high priority update. Its expiration time will fall between
