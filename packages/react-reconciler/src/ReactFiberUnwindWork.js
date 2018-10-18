@@ -207,7 +207,7 @@ function throwException(
       if (workInProgress.tag === SuspenseComponent) {
         const fallback = workInProgress.memoizedProps.fallback;
         const didTimeout = workInProgress.memoizedState;
-        if (fallback !== undefined && !didTimeout) {
+        if (!didTimeout && workInProgress.memoizedProps.fallback !== undefined) {
           // Found the nearest boundary.
 
           // If the boundary is not in concurrent mode, we should not suspend, and
