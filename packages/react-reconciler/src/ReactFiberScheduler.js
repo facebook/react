@@ -110,12 +110,7 @@ import {
   computeAsyncExpiration,
   computeInteractiveExpiration,
 } from './ReactFiberExpirationTime';
-import {
-  ConcurrentMode,
-  ProfileMode,
-  NoContext,
-  StrictMode,
-} from './ReactTypeOfMode';
+import {ConcurrentMode, ProfileMode, NoContext} from './ReactTypeOfMode';
 import {enqueueUpdate, resetCurrentlyProcessingQueue} from './ReactUpdateQueue';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -1602,10 +1597,10 @@ function retrySuspendedRoot(
   }
 
   scheduleWorkToRoot(boundaryFiber, retryTime);
-  if ((boundaryFiber.mode & StrictMode) === NoContext) {
-    // Outside of strict mode, we must schedule an update on the source fiber,
-    // too, since it already committed in an inconsistent state and therefore
-    // does not have any pending work.
+  if ((boundaryFiber.mode & ConcurrentMode) === NoContext) {
+    // Outside of concurrent mode, we must schedule an update on the source
+    // fiber, too, since it already committed in an inconsistent state and
+    // therefore does not have any pending work.
     scheduleWorkToRoot(sourceFiber, retryTime);
   }
 
