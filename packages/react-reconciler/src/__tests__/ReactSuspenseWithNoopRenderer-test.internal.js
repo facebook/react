@@ -670,11 +670,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
   it('throws a helpful error when an update is suspends without a placeholder', () => {
     expect(() => {
-      ReactNoop.flushSync(() =>
-        ReactNoop.render(
-          <Suspense>{() => <AsyncText text="Async" />}</Suspense>,
-        ),
-      );
+      ReactNoop.flushSync(() => ReactNoop.render(<AsyncText text="Async" />));
     }).toThrow('An update was suspended, but no placeholder UI was provided.');
   });
 
@@ -772,47 +768,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('C')]);
   });
 
-  it('can hide a tree to unblock its surroundings', async () => {
-    function App() {
-      return (
-        <Suspense maxDuration={1000}>
-          {didTimeout => (
-            <Fragment>
-              <div hidden={didTimeout}>
-                <AsyncText text="Async" ms={3000} />
-              </div>
-              {didTimeout ? <Text text="Loading..." /> : null}
-            </Fragment>
-          )}
-        </Suspense>
-      );
-    }
-
-    ReactNoop.render(<App />);
-    expect(ReactNoop.flush()).toEqual(['Suspend! [Async]', 'Loading...']);
-    expect(ReactNoop.getChildrenAsJSX()).toEqual(null);
-
-    ReactNoop.expire(2000);
-    await advanceTimers(2000);
-    expect(ReactNoop.flush()).toEqual([]);
-    expect(ReactNoop.getChildrenAsJSX()).toEqual(
-      <React.Fragment>
-        <div hidden={true} />
-        <span prop="Loading..." />
-      </React.Fragment>,
-    );
-
-    ReactNoop.expire(1000);
-    await advanceTimers(1000);
-
-    expect(ReactNoop.flush()).toEqual(['Promise resolved [Async]', 'Async']);
-    expect(ReactNoop.getChildrenAsJSX()).toEqual(
-      <div>
-        <span prop="Async" />
-      </div>,
-    );
-  });
-
   it('flushes all expired updates in a single batch', async () => {
     class Foo extends React.Component {
       componentDidUpdate() {
@@ -869,16 +824,11 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
 
     function Delay({ms}) {
+      // Once ms has elapsed, render null. This allows the rest of the
+      // tree to resume rendering.
       return (
-        <Suspense maxDuration={ms}>
-          {didTimeout => {
-            if (didTimeout) {
-              // Once ms has elapsed, render null. This allows the rest of the
-              // tree to resume rendering.
-              return null;
-            }
-            return <Never />;
-          }}
+        <Suspense fallback={null} maxDuration={ms}>
+          <Never />
         </Suspense>
       );
     }
