@@ -708,20 +708,19 @@ function resolveDefaultProps(Component, baseProps) {
 }
 
 function mountIndeterminateComponent(
-  current,
+  _current,
   workInProgress,
   Component,
   updateExpirationTime,
   renderExpirationTime,
 ) {
-  if (current !== null) {
+  if (_current !== null) {
     // An indeterminate component only mounts if it suspended inside a non-
     // concurrent tree, in an inconsistent state. We want to tree it like
     // a new mount, even though an empty version of it already committed.
     // Disconnect the alternate pointers.
-    current.alternate = null;
+    _current.alternate = null;
     workInProgress.alternate = null;
-    current = null;
     // Since this is conceptually a new fiber, schedule a Placement effect
     workInProgress.effectTag |= Placement;
   }
@@ -746,7 +745,7 @@ function mountIndeterminateComponent(
     switch (resolvedTag) {
       case FunctionComponentLazy: {
         child = updateFunctionComponent(
-          current,
+          null,
           workInProgress,
           Component,
           resolvedProps,
@@ -756,7 +755,7 @@ function mountIndeterminateComponent(
       }
       case ClassComponentLazy: {
         child = updateClassComponent(
-          current,
+          null,
           workInProgress,
           Component,
           resolvedProps,
@@ -766,7 +765,7 @@ function mountIndeterminateComponent(
       }
       case ForwardRefLazy: {
         child = updateForwardRef(
-          current,
+          null,
           workInProgress,
           Component,
           resolvedProps,
@@ -776,7 +775,7 @@ function mountIndeterminateComponent(
       }
       case PureComponentLazy: {
         child = updatePureComponent(
-          current,
+          null,
           workInProgress,
           Component,
           resolvedProps,
@@ -875,7 +874,7 @@ function mountIndeterminateComponent(
     adoptClassInstance(workInProgress, value);
     mountClassInstance(workInProgress, Component, props, renderExpirationTime);
     return finishClassComponent(
-      current,
+      null,
       workInProgress,
       Component,
       true,
@@ -945,7 +944,7 @@ function mountIndeterminateComponent(
         }
       }
     }
-    reconcileChildren(current, workInProgress, value, renderExpirationTime);
+    reconcileChildren(null, workInProgress, value, renderExpirationTime);
     memoizeProps(workInProgress, props);
     return workInProgress.child;
   }
