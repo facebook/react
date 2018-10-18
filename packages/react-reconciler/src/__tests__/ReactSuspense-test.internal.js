@@ -241,4 +241,34 @@ describe('ReactSuspense', () => {
     ]);
     expect(root).toMatchRenderedOutput('AsyncSibling');
   });
+
+  it('mounts a lazy class component in non-concurrent mode', async () => {
+    class Class extends React.Component {
+      componentDidMount() {
+        ReactTestRenderer.unstable_yield('Did mount: ' + this.props.label);
+      }
+      componentDidUpdate() {
+        ReactTestRenderer.unstable_yield('Did update: ' + this.props.label);
+      }
+      render() {
+        return <Text text={this.props.label} />;
+      }
+    }
+
+    const LazyClass = React.lazy(() => Promise.resolve(Class));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyClass label="Hi" />
+      </Suspense>,
+    );
+
+    expect(ReactTestRenderer).toHaveYielded(['Loading...']);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    await LazyClass;
+
+    expect(ReactTestRenderer).toHaveYielded(['Hi', 'Did mount: Hi']);
+    expect(root).toMatchRenderedOutput('Hi');
+  });
 });

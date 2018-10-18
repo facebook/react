@@ -374,6 +374,33 @@ export function cloneInstance(
   };
 }
 
+export function cloneHiddenInstance(
+  instance: Instance,
+  type: string,
+  props: Props,
+  internalInstanceHandle: Object,
+): Instance {
+  throw new Error('Not yet implemented.');
+}
+
+export function cloneUnhiddenInstance(
+  instance: Instance,
+  type: string,
+  props: Props,
+  internalInstanceHandle: Object,
+): Instance {
+  throw new Error('Not yet implemented.');
+}
+
+export function createHiddenTextInstance(
+  text: string,
+  rootContainerInstance: Container,
+  hostContext: HostContext,
+  internalInstanceHandle: Object,
+): TextInstance {
+  throw new Error('Not yet implemented.');
+}
+
 export function createContainerChildSet(container: Container): ChildSet {
   return createChildNodeSet(container);
 }

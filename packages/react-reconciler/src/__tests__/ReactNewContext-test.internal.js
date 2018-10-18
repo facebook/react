@@ -25,18 +25,13 @@ describe('ReactNewContext', () => {
     gen = require('random-seed');
   });
 
-  // function div(...children) {
-  //   children = children.map(c => (typeof c === 'string' ? {text: c} : c));
-  //   return {type: 'div', children, prop: undefined};
-  // }
-
   function Text(props) {
     ReactNoop.yield(props.text);
     return <span prop={props.text} />;
   }
 
   function span(prop) {
-    return {type: 'span', children: [], prop};
+    return {type: 'span', children: [], prop, hidden: false};
   }
 
   function readContext(Context, observedBits) {

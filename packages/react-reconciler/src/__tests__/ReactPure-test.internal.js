@@ -26,7 +26,7 @@ describe('pure', () => {
   });
 
   function span(prop) {
-    return {type: 'span', children: [], prop};
+    return {type: 'span', children: [], prop, hidden: false};
   }
 
   function Text(props) {
