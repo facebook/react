@@ -420,9 +420,7 @@ export function hideInstance(instance: Instance): void {
   // TODO: Does this work for all element types? What about MathML? Should we
   // pass host context to this method?
   instance = ((instance: any): HTMLElement);
-  if (instance.style !== undefined && instance.style !== null) {
-    instance.style.display = 'none';
-  }
+  instance.style.display = 'none';
 }
 
 export function hideTextInstance(textInstance: TextInstance): void {
@@ -431,17 +429,15 @@ export function hideTextInstance(textInstance: TextInstance): void {
 
 export function unhideInstance(instance: Instance, props: Props): void {
   instance = ((instance: any): HTMLElement);
-  if (instance.style !== undefined && instance.style !== null) {
-    let display = null;
-    if (props[STYLE] !== undefined && props[STYLE] !== null) {
-      const styleProp = props[STYLE];
-      if (styleProp.hasOwnProperty('display')) {
-        display = styleProp.display;
-      }
-    }
-    // $FlowFixMe Setting a style property to null is the valid way to reset it.
-    instance.style.display = display;
-  }
+  const styleProp = props[STYLE];
+  const display =
+    styleProp !== undefined &&
+    styleProp !== null &&
+    styleProp.hasOwnProperty('display')
+      ? styleProp.display
+      : null;
+  // $FlowFixMe Setting a style property to null is the valid way to reset it.
+  instance.style.display = display;
 }
 
 export function unhideTextInstance(
