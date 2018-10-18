@@ -36,7 +36,7 @@ import {
   LifecycleEffectMask,
 } from 'shared/ReactSideEffectTags';
 import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
-import {StrictMode, ConcurrentMode} from './ReactTypeOfMode';
+import {ConcurrentMode} from './ReactTypeOfMode';
 
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -230,15 +230,15 @@ function throwException(
           }
           thenable.then(onResolveOrReject, onResolveOrReject);
 
-          // If the boundary is outside of strict mode, we should *not* suspend
-          // the commit. Pretend as if the suspended component rendered null and
-          // keep rendering. In the commit phase, we'll schedule a subsequent
-          // synchronous update to re-render the Suspense.
+          // If the boundary is outside of concurrent mode, we should *not*
+          // suspend the commit. Pretend as if the suspended component rendered
+          // null and keep rendering. In the commit phase, we'll schedule a
+          // subsequent synchronous update to re-render the Suspense.
           //
           // Note: It doesn't matter whether the component that suspended was
-          // inside a strict mode tree. If the Suspense is outside of it, we
+          // inside a concurrent mode tree. If the Suspense is outside of it, we
           // should *not* suspend the commit.
-          if ((workInProgress.mode & StrictMode) === NoEffect) {
+          if ((workInProgress.mode & ConcurrentMode) === NoEffect) {
             workInProgress.effectTag |= CallbackEffect;
 
             // Unmount the source fiber's children
@@ -274,8 +274,8 @@ function throwException(
             return;
           }
 
-          // Confirmed that the boundary is in a strict mode tree. Continue with
-          // the normal suspend path.
+          // Confirmed that the boundary is in a concurrent mode tree. Continue
+          // with the normal suspend path.
 
           let absoluteTimeoutMs;
           if (earliestTimeoutMs === -1) {
