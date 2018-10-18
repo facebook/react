@@ -106,7 +106,7 @@ describe('ReactSuspense', () => {
     function Foo() {
       ReactTestRenderer.unstable_yield('Foo');
       return (
-        <Suspense>
+        <Suspense fallback={<Text text="Loading..." />}>
           <Bar>
             <AsyncText text="A" ms={100} />
             <Text text="B" />
@@ -126,6 +126,7 @@ describe('ReactSuspense', () => {
       'Suspend! [A]',
       // But we keep rendering the siblings
       'B',
+      'Loading...',
     ]);
     expect(root).toMatchRenderedOutput(null);
 
@@ -270,5 +271,50 @@ describe('ReactSuspense', () => {
 
     expect(ReactTestRenderer).toHaveYielded(['Hi', 'Did mount: Hi']);
     expect(root).toMatchRenderedOutput('Hi');
+  });
+
+  it('only captures if `fallback` is defined', () => {
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <Suspense maxDuration={100}>
+          <AsyncText text="Hi" ms={5000} />
+        </Suspense>
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    expect(root).toFlushAndYield([
+      'Suspend! [Hi]',
+      // The outer fallback should be rendered, because the inner one does not
+      // have a `fallback` prop
+      'Loading...',
+    ]);
+    jest.advanceTimersByTime(1000);
+    expect(ReactTestRenderer).toHaveYielded([]);
+    expect(root).toFlushAndYield([]);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    jest.advanceTimersByTime(5000);
+    expect(ReactTestRenderer).toHaveYielded(['Promise resolved [Hi]']);
+    expect(root).toFlushAndYield(['Hi']);
+    expect(root).toMatchRenderedOutput('Hi');
+  });
+
+  it('throws if tree suspends and none of the Suspense ancestors have a fallback', () => {
+    const root = ReactTestRenderer.create(
+      <Suspense>
+        <AsyncText text="Hi" ms={1000} />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    expect(root).toFlushAndThrow(
+      'An update was suspended, but no placeholder UI was provided.',
+    );
+    expect(ReactTestRenderer).toHaveYielded(['Suspend! [Hi]', 'Suspend! [Hi]']);
   });
 });
