@@ -990,16 +990,6 @@ function updateSuspenseComponent(
     }
   }
 
-  // If the `children` prop is a function, treat it like a render prop.
-  // TODO: Remove this, or put it behind a feature flag
-  const children = nextProps.children;
-  let nextChildren;
-  if (typeof children === 'function') {
-    nextChildren = children(nextDidTimeout);
-  } else {
-    nextChildren = nextDidTimeout ? nextProps.fallback : children;
-  }
-
   // This next part is a bit confusing. If the children timeout, we switch to
   // showing the fallback children in place of the "primary" children.
   // However, we don't want to delete the primary children because then their
@@ -1036,6 +1026,7 @@ function updateSuspenseComponent(
     // no previous state that needs to be preserved.
     if (nextDidTimeout) {
       // Mount separate fragments for primary and fallback children.
+      const nextFallbackChildren = nextProps.fallback;
       const primaryChildFragment = createFiberFromFragment(
         null,
         mode,
@@ -1043,7 +1034,7 @@ function updateSuspenseComponent(
         null,
       );
       const fallbackChildFragment = createFiberFromFragment(
-        nextChildren,
+        nextFallbackChildren,
         mode,
         renderExpirationTime,
         null,
@@ -1056,10 +1047,11 @@ function updateSuspenseComponent(
       child.return = next.return = workInProgress;
     } else {
       // Mount the primary children without an intermediate fragment fiber.
+      const nextPrimaryChildren = nextProps.children;
       child = next = mountChildFibers(
         workInProgress,
         null,
-        nextChildren,
+        nextPrimaryChildren,
         renderExpirationTime,
       );
     }
@@ -1076,6 +1068,7 @@ function updateSuspenseComponent(
       if (nextDidTimeout) {
         // Still timed out. Reuse the current primary children by cloning
         // its fragment. We're going to skip over these entirely.
+        const nextFallbackChildren = nextProps.fallback;
         const primaryChildFragment = createWorkInProgress(
           currentFallbackChildFragment,
           currentFallbackChildFragment.pendingProps,
@@ -1086,7 +1079,7 @@ function updateSuspenseComponent(
         // working on.
         const fallbackChildFragment = (primaryChildFragment.sibling = createWorkInProgress(
           currentFallbackChildFragment,
-          nextChildren,
+          nextFallbackChildren,
           currentFallbackChildFragment.expirationTime,
         ));
         fallbackChildFragment.effectTag |= Placement;
@@ -1098,12 +1091,13 @@ function updateSuspenseComponent(
       } else {
         // No longer suspended. Switch back to showing the primary children,
         // and remove the intermediate fragment fiber.
+        const nextPrimaryChildren = nextProps.children;
         const currentPrimaryChild = currentPrimaryChildFragment.child;
         const currentFallbackChild = currentFallbackChildFragment.child;
         const primaryChild = reconcileChildFibers(
           workInProgress,
           currentPrimaryChild,
-          nextChildren,
+          nextPrimaryChildren,
           renderExpirationTime,
         );
         // Delete the fallback children.
@@ -1123,6 +1117,7 @@ function updateSuspenseComponent(
       if (nextDidTimeout) {
         // Timed out. Wrap the children in a fragment fiber to keep them
         // separate from the fallback children.
+        const nextFallbackChildren = nextProps.fallback;
         const primaryChildFragment = createFiberFromFragment(
           // It shouldn't matter what the pending props are because we aren't
           // going to render this fragment.
@@ -1136,7 +1131,7 @@ function updateSuspenseComponent(
         currentPrimaryChild.return = primaryChildFragment;
         // Create a fragment from the fallback children, too.
         const fallbackChildFragment = (primaryChildFragment.sibling = createFiberFromFragment(
-          nextChildren,
+          nextFallbackChildren,
           mode,
           renderExpirationTime,
           null,
@@ -1150,10 +1145,11 @@ function updateSuspenseComponent(
       } else {
         // Still haven't timed out.  Continue rendering the children, like we
         // normally do.
+        const nextPrimaryChildren = nextProps.children;
         next = child = reconcileChildFibers(
           workInProgress,
           currentPrimaryChild,
-          nextChildren,
+          nextPrimaryChildren,
           renderExpirationTime,
         );
       }
