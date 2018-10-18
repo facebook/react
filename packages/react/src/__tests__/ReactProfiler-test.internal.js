@@ -2252,7 +2252,7 @@ describe('Profiler', () => {
           'Monkey',
         ]);
         // The update hasn't expired yet, so we commit nothing.
-        expect(ReactNoop.getChildren()).toEqual([]);
+        expect(ReactNoop.getChildrenAsJSX()).toEqual(null);
         expect(onRender).not.toHaveBeenCalled();
 
         // Advance both React's virtual time and Jest's timers by enough to expire
@@ -2263,10 +2263,7 @@ describe('Profiler', () => {
         // the placeholder.
         expect(ReactNoop.flushExpired()).toEqual([]);
         // Should have committed the placeholder.
-        expect(ReactNoop.getChildren()).toEqual([
-          {text: 'Loading...'},
-          {text: 'Sync'},
-        ]);
+        expect(ReactNoop.getChildrenAsJSX()).toEqual('Loading...Sync');
         expect(onRender).toHaveBeenCalledTimes(1);
 
         let call = onRender.mock.calls[0];
@@ -2289,10 +2286,7 @@ describe('Profiler', () => {
           'Promise resolved [Async]',
           'AsyncText [Async]',
         ]);
-        expect(ReactNoop.getChildren()).toEqual([
-          {text: 'Async'},
-          {text: 'Sync'},
-        ]);
+        expect(ReactNoop.getChildrenAsJSX()).toEqual('AsyncSync');
         expect(onRender).toHaveBeenCalledTimes(3);
 
         call = onRender.mock.calls[2];

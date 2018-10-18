@@ -102,11 +102,17 @@ describe('forwardRef', () => {
       <RefForwardingComponent ref={ref} optional="foo" required="bar" />,
     );
     ReactNoop.flush();
-    expect(ref.current.children).toEqual([{text: 'foo'}, {text: 'bar'}]);
+    expect(ref.current.children).toEqual([
+      {text: 'foo', hidden: false},
+      {text: 'bar', hidden: false},
+    ]);
 
     ReactNoop.render(<RefForwardingComponent ref={ref} required="foo" />);
     ReactNoop.flush();
-    expect(ref.current.children).toEqual([{text: 'default'}, {text: 'foo'}]);
+    expect(ref.current.children).toEqual([
+      {text: 'default', hidden: false},
+      {text: 'foo', hidden: false},
+    ]);
 
     expect(() =>
       ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />),

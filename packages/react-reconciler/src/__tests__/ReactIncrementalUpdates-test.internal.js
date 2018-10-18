@@ -24,7 +24,7 @@ describe('ReactIncrementalUpdates', () => {
   });
 
   function span(prop) {
-    return {type: 'span', children: [], prop};
+    return {type: 'span', children: [], prop, hidden: false};
   }
 
   it('applies updates in order of priority', () => {

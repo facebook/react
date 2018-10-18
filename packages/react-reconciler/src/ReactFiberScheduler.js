@@ -110,7 +110,12 @@ import {
   computeAsyncExpiration,
   computeInteractiveExpiration,
 } from './ReactFiberExpirationTime';
-import {ConcurrentMode, ProfileMode, NoContext} from './ReactTypeOfMode';
+import {
+  ConcurrentMode,
+  ProfileMode,
+  NoContext,
+  StrictMode,
+} from './ReactTypeOfMode';
 import {enqueueUpdate, resetCurrentlyProcessingQueue} from './ReactUpdateQueue';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -1563,7 +1568,8 @@ function renderDidError() {
 
 function retrySuspendedRoot(
   root: FiberRoot,
-  fiber: Fiber,
+  boundaryFiber: Fiber,
+  sourceFiber: Fiber,
   suspendedTime: ExpirationTime,
 ) {
   let retryTime;
@@ -1576,18 +1582,18 @@ function retrySuspendedRoot(
   } else {
     // Suspense already timed out. Compute a new expiration time
     const currentTime = requestCurrentTime();
-    retryTime = computeExpirationForFiber(currentTime, fiber);
+    retryTime = computeExpirationForFiber(currentTime, boundaryFiber);
     markPendingPriorityLevel(root, retryTime);
   }
 
-  // TODO: If the placeholder fiber has already rendered the primary children
+  // TODO: If the suspense fiber has already rendered the primary children
   // without suspending (that is, all of the promises have already resolved),
   // we should not trigger another update here. One case this happens is when
   // we are in sync mode and a single promise is thrown both on initial render
   // and on update; we attach two .then(retrySuspendedRoot) callbacks and each
   // one performs Sync work, rerendering the Suspense.
 
-  if ((fiber.mode & ConcurrentMode) !== NoContext) {
+  if ((boundaryFiber.mode & ConcurrentMode) !== NoContext) {
     if (root === nextRoot && nextRenderExpirationTime === suspendedTime) {
       // Received a ping at the same priority level at which we're currently
       // rendering. Restart from the root.
@@ -1595,7 +1601,14 @@ function retrySuspendedRoot(
     }
   }
 
-  scheduleWorkToRoot(fiber, retryTime);
+  scheduleWorkToRoot(boundaryFiber, retryTime);
+  if ((boundaryFiber.mode & StrictMode) === NoContext) {
+    // Outside of strict mode, we must schedule an update on the source fiber,
+    // too, since it already committed in an inconsistent state and therefore
+    // does not have any pending work.
+    scheduleWorkToRoot(sourceFiber, retryTime);
+  }
+
   const rootExpirationTime = root.expirationTime;
   if (rootExpirationTime !== NoWork) {
     requestWork(root, rootExpirationTime);

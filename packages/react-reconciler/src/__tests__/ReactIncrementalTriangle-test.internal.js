@@ -24,7 +24,7 @@ describe('ReactIncrementalTriangle', () => {
   });
 
   function span(prop) {
-    return {type: 'span', children: [], prop};
+    return {type: 'span', children: [], prop, hidden: false};
   }
 
   const FLUSH = 'FLUSH';

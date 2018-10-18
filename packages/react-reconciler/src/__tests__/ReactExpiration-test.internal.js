@@ -23,7 +23,7 @@ describe('ReactExpiration', () => {
   });
 
   function span(prop) {
-    return {type: 'span', children: [], prop};
+    return {type: 'span', children: [], prop, hidden: false};
   }
 
   it('increases priority of updates as time progresses', () => {

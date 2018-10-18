@@ -85,6 +85,7 @@ export function toFlushAndThrow(root, ...rest) {
 }
 
 export function toMatchRenderedOutput(root, expectedJSX) {
+  assertYieldsWereCleared(root);
   const actualJSON = root.toJSON();
 
   let actualJSX;
@@ -151,7 +152,7 @@ function jsonChildrenToJSXChildren(jsonChildren) {
       let allJSXChildrenAreStrings = true;
       let jsxChildrenString = '';
       for (let i = 0; i < jsonChildren.length; i++) {
-        const jsxChild = jsonChildrenToJSXChildren(jsonChildren[i]);
+        const jsxChild = jsonChildToJSXChild(jsonChildren[i]);
         jsxChildren.push(jsxChild);
         if (allJSXChildrenAreStrings) {
           if (typeof jsxChild === 'string') {

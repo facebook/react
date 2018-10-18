@@ -24,16 +24,18 @@ describe('ReactIncrementalSideEffects', () => {
   });
 
   function div(...children) {
-    children = children.map(c => (typeof c === 'string' ? text(c) : c));
-    return {type: 'div', children, prop: undefined};
+    children = children.map(
+      c => (typeof c === 'string' ? {text: c, hidden: false} : c),
+    );
+    return {type: 'div', children, prop: undefined, hidden: false};
   }
 
   function span(prop) {
-    return {type: 'span', children: [], prop};
+    return {type: 'span', children: [], prop, hidden: false};
   }
 
   function text(t) {
-    return {text: t};
+    return {text: t, hidden: false};
   }
 
   it('can update child nodes of a host instance', () => {
@@ -417,16 +419,33 @@ describe('ReactIncrementalSideEffects', () => {
     ReactNoop.render(<Foo text="foo" />);
     ReactNoop.flush();
 
-    expect(ReactNoop.getChildren()).toEqual([div(div(span('foo')))]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <div>
+        <div hidden={true}>
+          <span prop="foo" />
+        </div>
+      </div>,
+    );
 
     ReactNoop.render(<Foo text="bar" />);
     ReactNoop.flushDeferredPri(20);
 
-    expect(ReactNoop.getChildren()).toEqual([div(div(span('foo')))]);
-
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <div>
+        <div hidden={true}>
+          <span prop="foo" />
+        </div>
+      </div>,
+    );
     ReactNoop.flush();
 
-    expect(ReactNoop.getChildren()).toEqual([div(div(span('bar')))]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <div>
+        <div hidden={true}>
+          <span prop="bar" />
+        </div>
+      </div>,
+    );
   });
 
   it('can reuse side-effects after being preempted', () => {
@@ -460,9 +479,14 @@ describe('ReactIncrementalSideEffects', () => {
     ReactNoop.render(<Foo text="foo" step={0} />);
     ReactNoop.flush();
 
-    expect(ReactNoop.getChildren()).toEqual([
-      div(div(span('Hi'), span('foo'))),
-    ]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <div hidden={true}>
+        <div>
+          <span prop="Hi" />
+          <span prop="foo" />
+        </div>
+      </div>,
+    );
 
     // Make a quick update which will schedule low priority work to
     // update the middle content.
@@ -470,9 +494,14 @@ describe('ReactIncrementalSideEffects', () => {
     ReactNoop.flushDeferredPri(30);
 
     // The tree remains unchanged.
-    expect(ReactNoop.getChildren()).toEqual([
-      div(div(span('Hi'), span('foo'))),
-    ]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <div hidden={true}>
+        <div>
+          <span prop="Hi" />
+          <span prop="foo" />
+        </div>
+      </div>,
+    );
 
     // The first Bar has already completed its update but we'll interrupt it to
     // render some higher priority work. The middle content will bailout so
@@ -484,9 +513,14 @@ describe('ReactIncrementalSideEffects', () => {
     // we should be able to reuse the reconciliation work that we already did
     // without restarting. The side-effects should still be replayed.
 
-    expect(ReactNoop.getChildren()).toEqual([
-      div(div(span('Hello'), span('World'))),
-    ]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <div hidden={true}>
+        <div>
+          <span prop="Hello" />
+          <span prop="World" />
+        </div>
+      </div>,
+    );
   });
 
   it('can reuse side-effects after being preempted, if shouldComponentUpdate is false', () => {
@@ -525,9 +559,14 @@ describe('ReactIncrementalSideEffects', () => {
     ReactNoop.render(<Foo text="foo" step={0} />);
     ReactNoop.flush();
 
-    expect(ReactNoop.getChildren()).toEqual([
-      div(div(span('Hi'), span('foo'))),
-    ]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <div hidden={true}>
+        <div>
+          <span prop="Hi" />
+          <span prop="foo" />
+        </div>
+      </div>,
+    );
 
     // Make a quick update which will schedule low priority work to
     // update the middle content.
@@ -535,9 +574,14 @@ describe('ReactIncrementalSideEffects', () => {
     ReactNoop.flushDeferredPri(35);
 
     // The tree remains unchanged.
-    expect(ReactNoop.getChildren()).toEqual([
-      div(div(span('Hi'), span('foo'))),
-    ]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <div hidden={true}>
+        <div>
+          <span prop="Hi" />
+          <span prop="foo" />
+        </div>
+      </div>,
+    );
 
     // The first Bar has already completed its update but we'll interrupt it to
     // render some higher priority work. The middle content will bailout so
@@ -549,9 +593,14 @@ describe('ReactIncrementalSideEffects', () => {
     // we should be able to reuse the reconciliation work that we already did
     // without restarting. The side-effects should still be replayed.
 
-    expect(ReactNoop.getChildren()).toEqual([
-      div(div(span('Hello'), span('World'))),
-    ]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <div hidden={true}>
+        <div>
+          <span prop="Hello" />
+          <span prop="World" />
+        </div>
+      </div>,
+    );
   });
 
   it('can update a completed tree before it has a chance to commit', () => {
@@ -597,7 +646,11 @@ describe('ReactIncrementalSideEffects', () => {
 
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([div(span(1))]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <div hidden={true}>
+        <span prop={1} />
+      </div>,
+    );
   });
 
   xit('can defer side-effects and resume them later on', () => {
@@ -855,9 +908,16 @@ describe('ReactIncrementalSideEffects', () => {
     }
     ReactNoop.render(<Foo tick={0} idx={0} />);
     ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([
-      div(span(0), div(span(0), span(0), span(0))),
-    ]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <div>
+        <span prop={0} />
+        <div hidden={true}>
+          <span prop={0} />
+          <span prop={0} />
+          <span prop={0} />
+        </div>
+      </div>,
+    );
 
     expect(ops).toEqual(['Foo', 'Bar', 'Bar', 'Bar']);
 
@@ -865,18 +925,17 @@ describe('ReactIncrementalSideEffects', () => {
 
     ReactNoop.render(<Foo tick={1} idx={1} />);
     ReactNoop.flushDeferredPri(70 + 5);
-    expect(ReactNoop.getChildren()).toEqual([
-      div(
-        // Updated.
-        span(1),
-        div(
-          // Still not updated.
-          span(0),
-          span(0),
-          span(0),
-        ),
-      ),
-    ]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <div>
+        {/* Updated */}
+        <span prop={1} />
+        <div hidden={true}>
+          <span prop={0} />
+          <span prop={0} />
+          <span prop={0} />
+        </div>
+      </div>,
+    );
 
     expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
     ops = [];
@@ -888,18 +947,18 @@ describe('ReactIncrementalSideEffects', () => {
     // TODO: The cycles it takes to do this could be lowered with further
     // optimizations.
     ReactNoop.flushDeferredPri(35);
-    expect(ReactNoop.getChildren()).toEqual([
-      div(
-        // Updated.
-        span(1),
-        div(
-          // Still not updated.
-          span(0),
-          span(0),
-          span(0),
-        ),
-      ),
-    ]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <div>
+        {/* Updated */}
+        <span prop={1} />
+        <div hidden={true}>
+          {/* Still not updated */}
+          <span prop={0} />
+          <span prop={0} />
+          <span prop={0} />
+        </div>
+      </div>,
+    );
 
     expect(ops).toEqual(['Bar']);
     ops = [];
@@ -907,17 +966,17 @@ describe('ReactIncrementalSideEffects', () => {
     // However, once we render fully, we will have enough time to finish it all
     // at once.
     ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([
-      div(
-        span(1),
-        div(
-          // Now we had enough time to finish the spans.
-          span('X'),
-          span(1),
-          span(1),
-        ),
-      ),
-    ]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <div>
+        <span prop={1} />
+        <div hidden={true}>
+          {/* Now we had enough time to finish the spans. */}
+          <span prop="X" />
+          <span prop={1} />
+          <span prop={1} />
+        </div>
+      </div>,
+    );
 
     expect(ops).toEqual(['Bar', 'Bar', 'Bar']);
   });
