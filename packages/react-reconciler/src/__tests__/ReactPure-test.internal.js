@@ -34,6 +34,10 @@ describe('pure', () => {
     return <span prop={props.text} />;
   }
 
+  async function fakeImport(result) {
+    return {default: result};
+  }
+
   // Tests should run against both the lazy and non-lazy versions of `pure`.
   // To make the tests work for both versions, we wrap the non-lazy version in
   // a lazy function component.
@@ -42,11 +46,11 @@ describe('pure', () => {
     function Indirection(props) {
       return <Pure {...props} />;
     }
-    return React.lazy(async () => Indirection);
+    return React.lazy(() => fakeImport(Indirection));
   });
   sharedTests('lazy', (...args) => {
     const Pure = React.pure(...args);
-    return React.lazy(async () => Pure);
+    return React.lazy(() => fakeImport(Pure));
   });
 
   function sharedTests(label, pure) {

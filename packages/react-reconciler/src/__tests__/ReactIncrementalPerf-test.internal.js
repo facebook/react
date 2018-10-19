@@ -573,6 +573,10 @@ describe('ReactDebugFiberPerf', () => {
       return <span />;
     }
 
+    async function fakeImport(result) {
+      return {default: result};
+    }
+
     let resolve;
     const LazyFoo = React.lazy(
       () =>
@@ -591,9 +595,11 @@ describe('ReactDebugFiberPerf', () => {
     ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();
 
-    resolve(function Foo() {
-      return <div />;
-    });
+    resolve(
+      fakeImport(function Foo() {
+        return <div />;
+      }),
+    );
     await LazyFoo;
 
     ReactNoop.render(

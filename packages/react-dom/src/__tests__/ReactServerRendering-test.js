@@ -571,14 +571,19 @@ describe('ReactDOMServer', () => {
       ReactDOMServer.renderToString(<React.unstable_Suspense />);
     }).toThrow('ReactDOMServer does not yet support Suspense.');
 
+    async function fakeImport(result) {
+      return {default: result};
+    }
+
     expect(() => {
-      const LazyFoo = React.lazy(
-        () =>
+      const LazyFoo = React.lazy(() =>
+        fakeImport(
           new Promise(resolve =>
             resolve(function Foo() {
               return <div />;
             }),
           ),
+        ),
       );
       ReactDOMServer.renderToString(<LazyFoo />);
     }).toThrow('ReactDOMServer does not yet support lazy-loaded components.');

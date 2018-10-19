@@ -444,14 +444,20 @@ describe('ReactDOMServerHydration', () => {
   });
 
   it('should be able to use lazy components after hydrating', async () => {
+    async function fakeImport(result) {
+      return {default: result};
+    }
+
     const Lazy = React.lazy(
       () =>
         new Promise(resolve => {
           setTimeout(
             () =>
-              resolve(function World() {
-                return 'world';
-              }),
+              resolve(
+                fakeImport(function World() {
+                  return 'world';
+                }),
+              ),
             1000,
           );
         }),

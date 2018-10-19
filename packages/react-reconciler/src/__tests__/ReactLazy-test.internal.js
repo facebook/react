@@ -21,8 +21,12 @@ describe('ReactLazy', () => {
     return props.text;
   }
 
+  async function fakeImport(result) {
+    return {default: result};
+  }
+
   it('suspends until module has loaded', async () => {
-    const LazyText = lazy(async () => Text);
+    const LazyText = lazy(() => fakeImport(Text));
 
     const root = ReactTestRenderer.create(
       <Suspense fallback={<Text text="Loading..." />}>
@@ -51,8 +55,10 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('Hi again');
   });
 
-  it('uses `default` property, if it exists', async () => {
-    const LazyText = lazy(async () => ({default: Text}));
+  it('does not support arbitrary promises, only module objects', async () => {
+    spyOnDev(console, 'error');
+
+    const LazyText = lazy(async () => Text);
 
     const root = ReactTestRenderer.create(
       <Suspense fallback={<Text text="Loading..." />}>
@@ -67,17 +73,13 @@ describe('ReactLazy', () => {
 
     await LazyText;
 
-    expect(root).toFlushAndYield(['Hi']);
-    expect(root).toMatchRenderedOutput('Hi');
-
-    // Should not suspend on update
-    root.update(
-      <Suspense fallback={<Text text="Loading..." />}>
-        <LazyText text="Hi again" />
-      </Suspense>,
-    );
-    expect(root).toFlushAndYield(['Hi again']);
-    expect(root).toMatchRenderedOutput('Hi again');
+    if (__DEV__) {
+      expect(console.error).toHaveBeenCalledTimes(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Expected the result of a dynamic import() call',
+      );
+    }
+    expect(root).toFlushAndThrow('Element type is invalid');
   });
 
   it('throws if promise rejects', async () => {
@@ -117,8 +119,8 @@ describe('ReactLazy', () => {
       }
     }
 
-    const LazyChildA = lazy(async () => Child);
-    const LazyChildB = lazy(async () => Child);
+    const LazyChildA = lazy(() => fakeImport(Child));
+    const LazyChildB = lazy(() => fakeImport(Child));
 
     function Parent({swap}) {
       return (
@@ -160,7 +162,7 @@ describe('ReactLazy', () => {
       return <Text {...props} />;
     }
     T.defaultProps = {text: 'Hi'};
-    const LazyText = lazy(async () => T);
+    const LazyText = lazy(() => fakeImport(T));
 
     const root = ReactTestRenderer.create(
       <Suspense fallback={<Text text="Loading..." />}>
@@ -200,7 +202,7 @@ describe('ReactLazy', () => {
       );
     }
     LazyImpl.defaultProps = {siblingText: 'Sibling'};
-    const Lazy = lazy(async () => LazyImpl);
+    const Lazy = lazy(() => fakeImport(LazyImpl));
 
     class Stateful extends React.Component {
       state = {text: 'A'};
@@ -239,7 +241,7 @@ describe('ReactLazy', () => {
     const LazyFoo = lazy(() => {
       ReactTestRenderer.unstable_yield('Started loading');
       const Foo = props => <div>{[<Text text="A" />, <Text text="B" />]}</div>;
-      return Promise.resolve(Foo);
+      return fakeImport(Foo);
     });
 
     const root = ReactTestRenderer.create(
@@ -263,13 +265,13 @@ describe('ReactLazy', () => {
   });
 
   it('supports class and forwardRef components', async () => {
-    const LazyClass = lazy(async () => {
+    const LazyClass = lazy(() => {
       class Foo extends React.Component {
         render() {
           return <Text text="Foo" />;
         }
       }
-      return Foo;
+      return fakeImport(Foo);
     });
 
     const LazyForwardRef = lazy(async () => {
@@ -278,10 +280,12 @@ describe('ReactLazy', () => {
           return <Text text="Bar" />;
         }
       }
-      return React.forwardRef((props, ref) => {
-        ReactTestRenderer.unstable_yield('forwardRef');
-        return <Bar ref={ref} />;
-      });
+      return fakeImport(
+        React.forwardRef((props, ref) => {
+          ReactTestRenderer.unstable_yield('forwardRef');
+          return <Bar ref={ref} />;
+        }),
+      );
     });
 
     const ref = React.createRef();
