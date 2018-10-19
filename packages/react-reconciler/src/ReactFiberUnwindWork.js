@@ -78,7 +78,7 @@ function NoopComponent() {
 function createRootErrorUpdate(
   fiber: Fiber,
   errorInfo: CapturedValue<mixed>,
-  expirationTime: ExpirationTime,
+  expirationTime: ExpirationTime
 ): Update<mixed> {
   const update = createUpdate(expirationTime);
   // Unmount the root by rendering null.
@@ -97,7 +97,7 @@ function createRootErrorUpdate(
 function createClassErrorUpdate(
   fiber: Fiber,
   errorInfo: CapturedValue<mixed>,
-  expirationTime: ExpirationTime,
+  expirationTime: ExpirationTime
 ): Update<mixed> {
   const update = createUpdate(expirationTime);
   update.tag = CaptureUpdate;
@@ -135,7 +135,7 @@ function createClassErrorUpdate(
             fiber.expirationTime === Sync,
             '%s: Error boundaries should implement getDerivedStateFromError(). ' +
               'In that method, return a state update to display an error message or fallback UI.',
-            getComponentName(fiber.type) || 'Unknown',
+            getComponentName(fiber.type) || 'Unknown'
           );
         }
       }
@@ -149,7 +149,7 @@ function throwException(
   returnFiber: Fiber,
   sourceFiber: Fiber,
   value: mixed,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTime
 ) {
   // The source fiber did not complete.
   sourceFiber.effectTag |= Incomplete;
@@ -205,9 +205,11 @@ function throwException(
     workInProgress = returnFiber;
     do {
       if (workInProgress.tag === SuspenseComponent) {
-        const fallback = workInProgress.memoizedProps.fallback;
         const didTimeout = workInProgress.memoizedState;
-        if (!didTimeout && workInProgress.memoizedProps.fallback !== undefined) {
+        if (
+          !didTimeout &&
+          workInProgress.memoizedProps.fallback !== undefined
+        ) {
           // Found the nearest boundary.
 
           // If the boundary is not in concurrent mode, we should not suspend, and
@@ -223,7 +225,7 @@ function throwException(
             root,
             workInProgress,
             sourceFiber,
-            pingTime,
+            pingTime
           );
           if (enableSchedulerTracing) {
             onResolveOrReject = Schedule_tracing_wrap(onResolveOrReject);
@@ -247,7 +249,7 @@ function throwException(
               sourceFiber.alternate,
               sourceFiber,
               nextChildren,
-              renderExpirationTime,
+              renderExpirationTime
             );
             sourceFiber.effectTag &= ~Incomplete;
 
@@ -296,10 +298,10 @@ function throwException(
               // Difference.
               const earliestExpirationTime = findEarliestOutstandingPriorityLevel(
                 root,
-                renderExpirationTime,
+                renderExpirationTime
               );
               const earliestExpirationTimeMs = expirationTimeToMs(
-                earliestExpirationTime,
+                earliestExpirationTime
               );
               startTimeMs = earliestExpirationTimeMs - LOW_PRIORITY_EXPIRATION;
             }
@@ -323,7 +325,7 @@ function throwException(
     } while (workInProgress !== null);
     // No boundary was found. Fallthrough to error mode.
     value = new Error(
-      'An update was suspended, but no placeholder UI was provided.',
+      'An update was suspended, but no placeholder UI was provided.'
     );
   }
 
@@ -342,7 +344,7 @@ function throwException(
         const update = createRootErrorUpdate(
           workInProgress,
           errorInfo,
-          renderExpirationTime,
+          renderExpirationTime
         );
         enqueueCapturedUpdate(workInProgress, update);
         return;
@@ -366,7 +368,7 @@ function throwException(
           const update = createClassErrorUpdate(
             workInProgress,
             errorInfo,
-            renderExpirationTime,
+            renderExpirationTime
           );
           enqueueCapturedUpdate(workInProgress, update);
           return;
@@ -381,7 +383,7 @@ function throwException(
 
 function unwindWork(
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTime
 ) {
   switch (workInProgress.tag) {
     case ClassComponent: {
@@ -415,7 +417,7 @@ function unwindWork(
       invariant(
         (effectTag & DidCapture) === NoEffect,
         'The root failed to unmount after an error. This is likely a bug in ' +
-          'React. Please file an issue.',
+          'React. Please file an issue.'
       );
       workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
       return workInProgress;
