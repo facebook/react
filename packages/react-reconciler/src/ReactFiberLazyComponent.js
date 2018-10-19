@@ -7,21 +7,27 @@
  * @flow
  */
 
-import type {LazyComponent} from 'shared/ReactLazyComponent';
+import type {LazyComponent, Thenable} from 'shared/ReactLazyComponent';
 
 import {Resolved, Rejected, Pending} from 'shared/ReactLazyComponent';
 import warning from 'shared/warning';
 
 export function readLazyComponentType<T>(lazyComponent: LazyComponent<T>): T {
   const status = lazyComponent._status;
+  const result = lazyComponent._result;
   switch (status) {
-    case Resolved:
-      const Component: T = lazyComponent._result;
+    case Resolved: {
+      const Component: T = result;
       return Component;
-    case Rejected:
-      throw lazyComponent._result;
-    case Pending:
-      throw lazyComponent;
+    }
+    case Rejected: {
+      const error: mixed = result;
+      throw error;
+    }
+    case Pending: {
+      const thenable: Thenable<T, mixed> = result;
+      throw thenable;
+    }
     default: {
       lazyComponent._status = Pending;
       const ctor = lazyComponent._ctor;
@@ -52,6 +58,7 @@ export function readLazyComponentType<T>(lazyComponent: LazyComponent<T>): T {
           }
         },
       );
+      lazyComponent._result = thenable;
       throw thenable;
     }
   }
