@@ -256,7 +256,11 @@ describe('ReactSuspense', () => {
       }
     }
 
-    const LazyClass = React.lazy(() => Promise.resolve(Class));
+    async function fakeImport(result) {
+      return {default: result};
+    }
+
+    const LazyClass = React.lazy(() => fakeImport(Class));
 
     const root = ReactTestRenderer.create(
       <Suspense fallback={<Text text="Loading..." />}>
