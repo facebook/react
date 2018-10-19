@@ -180,6 +180,7 @@ const didWarnAboutBadClass = {};
 const didWarnAboutDeprecatedWillMount = {};
 const didWarnAboutUndefinedDerivedState = {};
 const didWarnAboutUninitializedState = {};
+const didWarnAboutInvalidateContextType = {};
 const valuePropNames = ['value', 'defaultValue'];
 const newlineEatingTags = {
   listing: true,
@@ -357,13 +358,33 @@ function checkContextTypes(typeSpecs, values, location: string) {
 }
 
 function processContext(type, context) {
-  const maskedContext = maskContext(type, context);
-  if (__DEV__) {
-    if (type.contextTypes) {
-      checkContextTypes(type.contextTypes, maskedContext, 'context');
+  const contextType = type.contextType;
+  if (typeof contextType === 'object' && contextType !== null) {
+    if (__DEV__) {
+      if (contextType.$$typeof !== REACT_CONTEXT_TYPE) {
+        let name = getComponentName(type) || 'Component';
+        if (!didWarnAboutInvalidateContextType[name]) {
+          didWarnAboutInvalidateContextType[type] = true;
+          warningWithoutStack(
+            false,
+            '%s defines an invalid contextType. ' +
+              'contextType should point to the Context object returned by React.createContext(). ' +
+              'Did you accidentally pass the Context.Provider instead?',
+            name,
+          );
+        }
+      }
     }
+    return contextType._currentValue;
+  } else {
+    const maskedContext = maskContext(type, context);
+    if (__DEV__) {
+      if (type.contextTypes) {
+        checkContextTypes(type.contextTypes, maskedContext, 'context');
+      }
+    }
+    return maskedContext;
   }
-  return maskedContext;
 }
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;

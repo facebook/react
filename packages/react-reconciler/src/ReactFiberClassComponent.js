@@ -25,9 +25,11 @@ import shallowEqual from 'shared/shallowEqual';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {StrictMode} from './ReactTypeOfMode';
+
 import {
   enqueueUpdate,
   processUpdateQueue,
@@ -516,7 +518,7 @@ function constructClassInstance(
   if (typeof contextType === 'object' && contextType !== null) {
     if (__DEV__) {
       if (
-        contextType.Consumer === undefined &&
+        contextType.$$typeof !== REACT_CONTEXT_TYPE &&
         !didWarnAboutInvalidateContextType.has(ctor)
       ) {
         didWarnAboutInvalidateContextType.add(ctor);
