@@ -444,15 +444,18 @@ describe('ReactDOMServerHydration', () => {
   });
 
   it('should be able to use lazy components after hydrating', async () => {
-    const Lazy = new Promise(resolve => {
-      setTimeout(
-        () =>
-          resolve(function World() {
-            return 'world';
-          }),
-        1000,
-      );
-    });
+    const Lazy = React.lazy(
+      () =>
+        new Promise(resolve => {
+          setTimeout(
+            () =>
+              resolve(function World() {
+                return 'world';
+              }),
+            1000,
+          );
+        }),
+    );
     class HelloWorld extends React.Component {
       state = {isClient: false};
       componentDidMount() {
