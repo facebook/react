@@ -183,21 +183,49 @@ describe('pure', () => {
         expect(ReactNoop.getChildren()).toEqual([span(1)]);
       });
 
-      it('warns for class components', () => {
-        class SomeClass extends React.Component {
+      it('supports non-pure class components', async () => {
+        const {unstable_Suspense: Suspense} = React;
+
+        class CounterInner extends React.Component {
+          static defaultProps = {suffix: '!'};
           render() {
-            return null;
+            return <Text text={this.props.count + '' + this.props.suffix} />;
           }
         }
-        expect(() => pure(SomeClass)).toWarnDev(
-          'pure: The first argument must be a function component.',
-          {withoutStack: true},
+        const Counter = pure(CounterInner);
+
+        ReactNoop.render(
+          <Suspense fallback={<Text text="Loading..." />}>
+            <Counter count={0} />
+          </Suspense>,
         );
+        expect(ReactNoop.flush()).toEqual(['Loading...']);
+        await Promise.resolve();
+        expect(ReactNoop.flush()).toEqual(['0!']);
+        expect(ReactNoop.getChildren()).toEqual([span('0!')]);
+
+        // Should bail out because props have not changed
+        ReactNoop.render(
+          <Suspense>
+            <Counter count={0} />
+          </Suspense>,
+        );
+        expect(ReactNoop.flush()).toEqual([]);
+        expect(ReactNoop.getChildren()).toEqual([span('0!')]);
+
+        // Should update because count prop changed
+        ReactNoop.render(
+          <Suspense>
+            <Counter count={1} />
+          </Suspense>,
+        );
+        expect(ReactNoop.flush()).toEqual(['1!']);
+        expect(ReactNoop.getChildren()).toEqual([span('1!')]);
       });
 
-      it('warns if first argument is not a function', () => {
+      it('warns if first argument is undefined', () => {
         expect(() => pure()).toWarnDev(
-          'pure: The first argument must be a function component. Instead ' +
+          'pure: The first argument must be a component. Instead ' +
             'received: undefined',
           {withoutStack: true},
         );

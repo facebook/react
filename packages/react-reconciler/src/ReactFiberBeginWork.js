@@ -103,6 +103,7 @@ import {
 import {readLazyComponentType} from './ReactFiberLazyComponent';
 import {
   resolveLazyComponentTag,
+  createFiberFromTypeAndProps,
   createFiberFromFragment,
   createWorkInProgress,
 } from './ReactFiber';
@@ -235,19 +236,33 @@ function updatePureComponent(
   nextProps: any,
   updateExpirationTime,
   renderExpirationTime: ExpirationTime,
-) {
-  const render = Component.render;
-
+): null | Fiber {
+  if (current === null) {
+    let child = createFiberFromTypeAndProps(
+      Component.type,
+      null,
+      nextProps,
+      null,
+      workInProgress.mode,
+      renderExpirationTime,
+    );
+    child.ref = workInProgress.ref;
+    child.return = workInProgress;
+    workInProgress.child = child;
+    return child;
+  }
+  let currentChild = ((current.child: any): Fiber); // This is always exactly one child
   if (
-    current !== null &&
-    (updateExpirationTime === NoWork ||
-      updateExpirationTime > renderExpirationTime)
+    updateExpirationTime === NoWork ||
+    updateExpirationTime > renderExpirationTime
   ) {
-    const prevProps = current.memoizedProps;
+    // This will be the props with resolved defaultProps,
+    // unlike current.memoizedProps which will be the unresolved ones.
+    const prevProps = currentChild.memoizedProps;
     // Default to shallow comparison
     let compare = Component.compare;
     compare = compare !== null ? compare : shallowEqual;
-    if (compare(prevProps, nextProps)) {
+    if (compare(prevProps, nextProps) && current.ref === workInProgress.ref) {
       return bailoutOnAlreadyFinishedWork(
         current,
         workInProgress,
@@ -255,28 +270,15 @@ function updatePureComponent(
       );
     }
   }
-
-  // The rest is a fork of updateFunctionComponent
-  let nextChildren;
-  prepareToReadContext(workInProgress, renderExpirationTime);
-  if (__DEV__) {
-    ReactCurrentOwner.current = workInProgress;
-    ReactCurrentFiber.setCurrentPhase('render');
-    nextChildren = render(nextProps);
-    ReactCurrentFiber.setCurrentPhase(null);
-  } else {
-    nextChildren = render(nextProps);
-  }
-
-  // React DevTools reads this flag.
-  workInProgress.effectTag |= PerformedWork;
-  reconcileChildren(
-    current,
-    workInProgress,
-    nextChildren,
+  let newChild = createWorkInProgress(
+    currentChild,
+    nextProps,
     renderExpirationTime,
   );
-  return workInProgress.child;
+  newChild.ref = workInProgress.ref;
+  newChild.return = workInProgress;
+  workInProgress.child = newChild;
+  return newChild;
 }
 
 function updateFragment(
@@ -725,10 +727,7 @@ function mountLazyComponent(
   let Component = readLazyComponentType(elementType);
   // Store the unwrapped component in the type.
   workInProgress.type = Component;
-  const resolvedTag = (workInProgress.tag = resolveLazyComponentTag(
-    workInProgress,
-    Component,
-  ));
+  const resolvedTag = (workInProgress.tag = resolveLazyComponentTag(Component));
   startWorkTimer(workInProgress);
   const resolvedProps = resolveDefaultProps(Component, props);
   let child;
@@ -768,7 +767,7 @@ function mountLazyComponent(
         null,
         workInProgress,
         Component,
-        resolvedProps,
+        resolveDefaultProps(Component.type, resolvedProps), // The inner type can have defaults too
         updateExpirationTime,
         renderExpirationTime,
       );
@@ -1564,10 +1563,7 @@ function beginWork(
     case PureComponent: {
       const type = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
-      const resolvedProps =
-        workInProgress.elementType === type
-          ? unresolvedProps
-          : resolveDefaultProps(type, unresolvedProps);
+      const resolvedProps = resolveDefaultProps(type.type, unresolvedProps);
       return updatePureComponent(
         current,
         workInProgress,
