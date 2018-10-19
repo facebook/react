@@ -39,10 +39,10 @@ describe('pure', () => {
   // a lazy function component.
   sharedTests('normal', (...args) => {
     const Pure = React.pure(...args);
-    function Indirection(props, ref) {
-      return <Pure {...props} ref={ref} />;
+    function Indirection(props) {
+      return <Pure {...props} />;
     }
-    return Promise.resolve(React.forwardRef(Indirection));
+    return Promise.resolve(Indirection);
   });
   sharedTests('lazy', (...args) => Promise.resolve(React.pure(...args)));
 
@@ -194,65 +194,6 @@ describe('pure', () => {
             'received: undefined',
           {withoutStack: true},
         );
-      });
-
-      it('forwards ref', async () => {
-        const {unstable_Suspense: Suspense} = React;
-        const Transparent = pure((props, ref) => {
-          return <div ref={ref} />;
-        });
-        const divRef = React.createRef();
-
-        ReactNoop.render(
-          <Suspense fallback={<Text text="Loading..." />}>
-            <Transparent ref={divRef} />
-          </Suspense>,
-        );
-        ReactNoop.flush();
-        await Promise.resolve();
-        ReactNoop.flush();
-        expect(divRef.current.type).toBe('div');
-      });
-
-      it('updates if only ref changes', async () => {
-        const {unstable_Suspense: Suspense} = React;
-        const Transparent = pure((props, ref) => {
-          return [<Text key="text" text="Text" />, <div key="div" ref={ref} />];
-        });
-
-        const divRef = React.createRef();
-        const divRef2 = React.createRef();
-
-        ReactNoop.render(
-          <Suspense fallback={<Text text="Loading..." />}>
-            <Transparent ref={divRef} />
-          </Suspense>,
-        );
-        expect(ReactNoop.flush()).toEqual(['Loading...']);
-        await Promise.resolve();
-        expect(ReactNoop.flush()).toEqual(['Text']);
-        expect(divRef.current.type).toBe('div');
-        expect(divRef2.current).toBe(null);
-
-        // Should re-render (new ref)
-        ReactNoop.render(
-          <Suspense>
-            <Transparent ref={divRef2} />
-          </Suspense>,
-        );
-        expect(ReactNoop.flush()).toEqual(['Text']);
-        expect(divRef.current).toBe(null);
-        expect(divRef2.current.type).toBe('div');
-
-        // Should not re-render (same ref)
-        ReactNoop.render(
-          <Suspense>
-            <Transparent ref={divRef2} />
-          </Suspense>,
-        );
-        expect(ReactNoop.flush()).toEqual([]);
-        expect(divRef.current).toBe(null);
-        expect(divRef2.current.type).toBe('div');
       });
     });
   }
