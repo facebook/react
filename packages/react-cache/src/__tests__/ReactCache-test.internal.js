@@ -44,7 +44,6 @@ describe('ReactCache', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
-    ReactFeatureFlags.enableSuspense = true;
     React = require('react');
     Suspense = React.Suspense;
     ReactCache = require('react-cache');
