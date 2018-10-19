@@ -9,9 +9,15 @@ import {REACT_FORWARD_REF_TYPE} from 'shared/ReactSymbols';
 
 import warningWithoutStack from 'shared/warningWithoutStack';
 
+export type ForwardRef<Props> = {
+  $$typeof: Symbol,
+  render: (props: Props, ref: React$Ref<ElementType>) => React$Node,
+  compare: void | null | ((oldProps: Props, newProps: Props) => boolean),
+};
+
 export default function forwardRef<Props, ElementType: React$ElementType>(
   render: (props: Props, ref: React$Ref<ElementType>) => React$Node,
-) {
+): ForwardRef<Props> {
   if (__DEV__) {
     if (typeof render !== 'function') {
       warningWithoutStack(
@@ -42,5 +48,6 @@ export default function forwardRef<Props, ElementType: React$ElementType>(
   return {
     $$typeof: REACT_FORWARD_REF_TYPE,
     render,
+    compare: undefined,
   };
 }

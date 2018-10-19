@@ -196,6 +196,7 @@ function updateForwardRef(
   workInProgress: Fiber,
   type: any,
   nextProps: any,
+  updateExpirationTime: ExpirationTime,
   renderExpirationTime: ExpirationTime,
 ) {
   const render = type.render;
@@ -206,6 +207,23 @@ function updateForwardRef(
   } else if (workInProgress.memoizedProps === nextProps) {
     const currentRef = current !== null ? current.ref : null;
     if (ref === currentRef) {
+      return bailoutOnAlreadyFinishedWork(
+        current,
+        workInProgress,
+        renderExpirationTime,
+      );
+    }
+  } else if (
+    current !== null &&
+    type.compare !== undefined &&
+    (updateExpirationTime === NoWork ||
+      updateExpirationTime > renderExpirationTime)
+  ) {
+    const prevProps = current.memoizedProps;
+    // Default to shallow comparison
+    let compare = type.compare;
+    compare = compare !== null ? compare : shallowEqual;
+    if (compare(prevProps, nextProps) && current.ref === workInProgress.ref) {
       return bailoutOnAlreadyFinishedWork(
         current,
         workInProgress,
@@ -769,6 +787,7 @@ function mountIndeterminateComponent(
           workInProgress,
           Component,
           resolvedProps,
+          updateExpirationTime,
           renderExpirationTime,
         );
         break;
@@ -1561,6 +1580,7 @@ function beginWork(
         workInProgress,
         type,
         workInProgress.pendingProps,
+        updateExpirationTime,
         renderExpirationTime,
       );
     }
@@ -1573,6 +1593,7 @@ function beginWork(
         workInProgress,
         Component,
         resolveDefaultProps(Component, unresolvedProps),
+        updateExpirationTime,
         renderExpirationTime,
       );
       workInProgress.memoizedProps = unresolvedProps;

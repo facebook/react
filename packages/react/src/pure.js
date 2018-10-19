@@ -5,14 +5,37 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {REACT_PURE_TYPE} from 'shared/ReactSymbols';
+import type {ForwardRef} from './forwardRef';
+
+import {REACT_PURE_TYPE, REACT_FORWARD_REF_TYPE} from 'shared/ReactSymbols';
 
 import warningWithoutStack from 'shared/warningWithoutStack';
 
+function composeComparisonFunctions(inner, outer) {
+  return function(oldProps, newProps) {
+    // Either is allowed to block the update.
+    return outer(oldProps, newProps) || inner(oldProps, newProps);
+  };
+}
+
 export default function pure<Props>(
-  render: (props: Props) => React$Node,
+  render: (props: Props) => React$Node | ForwardRef,
   compare?: (oldProps: Props, newProps: Props) => boolean,
 ) {
+  if (
+    typeof render === 'object' &&
+    render.$$typeof === REACT_FORWARD_REF_TYPE
+  ) {
+    let forwardRef = (render: ForwardRef);
+    if (forwardRef.compare !== undefined && forwardRef.compare !== null) {
+      compare = composeComparisonFunctions(forwardRef.compare, compare);
+    }
+    return {
+      $$typeof: REACT_FORWARD_REF_TYPE,
+      render: forwardRef.render,
+      compare: compare === undefined ? null : compare,
+    };
+  }
   if (__DEV__) {
     if (typeof render !== 'function') {
       warningWithoutStack(
