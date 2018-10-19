@@ -13,14 +13,14 @@ export type Thenable<T, R> = {
 
 export type LazyComponent<T> = {
   $$typeof: Symbol | number,
-  _ctor: () => Thenable<T, mixed>,
+  _ctor: () => Thenable<{default: T}, mixed>,
   _status: 0 | 1 | 2,
   _result: any,
 };
 
-type ResolvedLazyComponentThenable<T> = {
+type ResolvedLazyComponent<T> = {
   $$typeof: Symbol | number,
-  _ctor: () => Thenable<T, mixed>,
+  _ctor: () => Thenable<{default: T}, mixed>,
   _status: 1,
   _result: any,
 };
@@ -30,13 +30,13 @@ export const Resolved = 1;
 export const Rejected = 2;
 
 export function getResultFromResolvedLazyComponent<T>(
-  lazyComponent: ResolvedLazyComponentThenable<T>,
+  lazyComponent: ResolvedLazyComponent<T>,
 ): T {
   return lazyComponent._result;
 }
 
 export function refineResolvedLazyComponent<T>(
   lazyComponent: LazyComponent<T>,
-): ResolvedLazyComponentThenable<T> | null {
+): ResolvedLazyComponent<T> | null {
   return lazyComponent._status === Resolved ? lazyComponent._result : null;
 }

@@ -10,6 +10,7 @@
 import type {LazyComponent} from 'shared/ReactLazyComponent';
 
 import {Resolved, Rejected, Pending} from 'shared/ReactLazyComponent';
+import warning from 'shared/warning';
 
 export function readLazyComponentType<T>(lazyComponent: LazyComponent<T>): T {
   const status = lazyComponent._status;
@@ -26,22 +27,22 @@ export function readLazyComponentType<T>(lazyComponent: LazyComponent<T>): T {
       const ctor = lazyComponent._ctor;
       const thenable = ctor();
       thenable.then(
-        resolvedValue => {
+        moduleObject => {
           if (lazyComponent._status === Pending) {
-            lazyComponent._status = Resolved;
-            if (typeof resolvedValue === 'object' && resolvedValue !== null) {
-              // If the `default` property is not empty, assume it's the result
-              // of an async import() and use that. Otherwise, use the
-              // resolved value itself.
-              const defaultExport = (resolvedValue: any).default;
-              resolvedValue =
-                defaultExport !== undefined && defaultExport !== null
-                  ? defaultExport
-                  : resolvedValue;
-            } else {
-              resolvedValue = resolvedValue;
+            const defaultExport = moduleObject.default;
+            if (__DEV__) {
+              if (defaultExport === undefined) {
+                warning(
+                  false,
+                  'lazy: Expected the result of a dynamic import() call. ' +
+                    'Instead received: %s\n\nYour code should look like: \n  ' +
+                    "const MyComponent = lazy(() => import('./MyComponent'))",
+                  moduleObject,
+                );
+              }
             }
-            lazyComponent._result = resolvedValue;
+            lazyComponent._status = Resolved;
+            lazyComponent._result = defaultExport;
           }
         },
         error => {
