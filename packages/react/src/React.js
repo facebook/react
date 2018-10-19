@@ -14,17 +14,17 @@ import {
   REACT_SUSPENSE_TYPE,
 } from 'shared/ReactSymbols';
 
-import {Component, PureComponent} from './ReactBaseClasses';
-import {createRef} from './ReactCreateRef';
-import {forEach, map, count, toArray, only} from './ReactChildren';
+import { Component, PureComponent } from './ReactBaseClasses';
+import { createRef } from './ReactCreateRef';
+import { forEach, map, count, toArray, only } from './ReactChildren';
 import {
   createElement,
   createFactory,
   cloneElement,
   isValidElement,
 } from './ReactElement';
-import {createContext} from './ReactContext';
-import {lazy} from './ReactLazy';
+import { createContext } from './ReactContext';
+import { lazy } from './ReactLazy';
 import forwardRef from './forwardRef';
 import pure from './pure';
 import {
