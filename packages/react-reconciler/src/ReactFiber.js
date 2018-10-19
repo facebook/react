@@ -60,6 +60,7 @@ import {
   REACT_CONCURRENT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_PURE_TYPE,
+  REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -461,12 +462,9 @@ export function createFiberFromElement(
             case REACT_PURE_TYPE:
               fiberTag = PureComponent;
               break getTag;
-            default: {
-              if (typeof type.then === 'function') {
-                fiberTag = IndeterminateComponent;
-                break getTag;
-              }
-            }
+            case REACT_LAZY_TYPE:
+              fiberTag = IndeterminateComponent;
+              break getTag;
           }
         }
         let info = '';

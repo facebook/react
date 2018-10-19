@@ -31,7 +31,7 @@ import {
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {getResultFromResolvedThenable} from 'shared/ReactLazyComponent';
+import {getResultFromResolvedLazyComponent} from 'shared/ReactLazyComponent';
 
 import {getPublicInstance} from './ReactFiberHostConfig';
 import {
@@ -107,7 +107,7 @@ function getContextForSubtree(
       return processChildContext(fiber, Component, parentContext);
     }
   } else if (fiber.tag === ClassComponentLazy) {
-    const Component = getResultFromResolvedThenable(fiber.type);
+    const Component = getResultFromResolvedLazyComponent(fiber.type);
     if (isLegacyContextProvider(Component)) {
       return processChildContext(fiber, Component, parentContext);
     }
