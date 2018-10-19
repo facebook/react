@@ -75,6 +75,7 @@ const toArray = ((React.Children.toArray: any): toArrayType);
 // Each stack is an array of frames which may contain nested stacks of elements.
 let currentDebugStacks = [];
 
+let ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 let ReactDebugCurrentFrame;
 let prevGetCurrentStackImpl = null;
 let getCurrentServerStackImpl = () => '';
@@ -84,6 +85,15 @@ let validatePropertiesInDevelopment = (type, props) => {};
 let pushCurrentDebugStack = (stack: Array<Frame>) => {};
 let pushElementToDebugStack = (element: ReactElement) => {};
 let popCurrentDebugStack = () => {};
+
+let Dispatcher = {
+  readContext<T>(
+    context: ReactContext<T>,
+    observedBits: void | number | boolean,
+  ): T {
+    return context._currentValue;
+  },
+};
 
 if (__DEV__) {
   ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
@@ -787,49 +797,54 @@ class ReactDOMServerRenderer {
       return null;
     }
 
-    let out = '';
-    while (out.length < bytes) {
-      if (this.stack.length === 0) {
-        this.exhausted = true;
-        break;
-      }
-      const frame: Frame = this.stack[this.stack.length - 1];
-      if (frame.childIndex >= frame.children.length) {
-        const footer = frame.footer;
-        out += footer;
-        if (footer !== '') {
-          this.previousWasTextNode = false;
+    ReactCurrentOwner.currentDispatcher = Dispatcher;
+    try {
+      let out = '';
+      while (out.length < bytes) {
+        if (this.stack.length === 0) {
+          this.exhausted = true;
+          break;
         }
-        this.stack.pop();
-        if (frame.type === 'select') {
-          this.currentSelectValue = null;
-        } else if (
-          frame.type != null &&
-          frame.type.type != null &&
-          frame.type.type.$$typeof === REACT_PROVIDER_TYPE
-        ) {
-          const provider: ReactProvider<any> = (frame.type: any);
-          this.popProvider(provider);
+        const frame: Frame = this.stack[this.stack.length - 1];
+        if (frame.childIndex >= frame.children.length) {
+          const footer = frame.footer;
+          out += footer;
+          if (footer !== '') {
+            this.previousWasTextNode = false;
+          }
+          this.stack.pop();
+          if (frame.type === 'select') {
+            this.currentSelectValue = null;
+          } else if (
+            frame.type != null &&
+            frame.type.type != null &&
+            frame.type.type.$$typeof === REACT_PROVIDER_TYPE
+          ) {
+            const provider: ReactProvider<any> = (frame.type: any);
+            this.popProvider(provider);
+          }
+          continue;
         }
-        continue;
-      }
-      const child = frame.children[frame.childIndex++];
-      if (__DEV__) {
-        pushCurrentDebugStack(this.stack);
-        // We're starting work on this frame, so reset its inner stack.
-        ((frame: any): FrameDev).debugElementStack.length = 0;
-        try {
-          // Be careful! Make sure this matches the PROD path below.
+        const child = frame.children[frame.childIndex++];
+        if (__DEV__) {
+          pushCurrentDebugStack(this.stack);
+          // We're starting work on this frame, so reset its inner stack.
+          ((frame: any): FrameDev).debugElementStack.length = 0;
+          try {
+            // Be careful! Make sure this matches the PROD path below.
+            out += this.render(child, frame.context, frame.domNamespace);
+          } finally {
+            popCurrentDebugStack();
+          }
+        } else {
+          // Be careful! Make sure this matches the DEV path above.
           out += this.render(child, frame.context, frame.domNamespace);
-        } finally {
-          popCurrentDebugStack();
         }
-      } else {
-        // Be careful! Make sure this matches the DEV path above.
-        out += this.render(child, frame.context, frame.domNamespace);
       }
+      return out;
+    } finally {
+      ReactCurrentOwner.currentDispatcher = null;
     }
-    return out;
   }
 
   render(
