@@ -21,6 +21,10 @@ describe('ReactLazy', () => {
     return props.text;
   }
 
+  function delay(ms) {
+    return new Promise(resolve => setTimeout(() => resolve(), ms));
+  }
+
   async function fakeImport(result) {
     return {default: result};
   }
@@ -40,7 +44,7 @@ describe('ReactLazy', () => {
     expect(root).toFlushAndYield(['Loading...']);
     expect(root).toMatchRenderedOutput(null);
 
-    await LazyText;
+    await Promise.resolve();
 
     expect(root).toFlushAndYield(['Hi']);
     expect(root).toMatchRenderedOutput('Hi');
@@ -53,6 +57,47 @@ describe('ReactLazy', () => {
     );
     expect(root).toFlushAndYield(['Hi again']);
     expect(root).toMatchRenderedOutput('Hi again');
+  });
+
+  it('multiple lazy components', async () => {
+    function Foo() {
+      return <Text text="Foo" />;
+    }
+
+    function Bar() {
+      return <Text text="Bar" />;
+    }
+
+    const promiseForFoo = delay(1000).then(() => fakeImport(Foo));
+    const promiseForBar = delay(2000).then(() => fakeImport(Bar));
+
+    const LazyFoo = lazy(() => promiseForFoo);
+    const LazyBar = lazy(() => promiseForBar);
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyFoo />
+        <LazyBar />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    expect(root).toFlushAndYield(['Loading...']);
+    expect(root).toMatchRenderedOutput(null);
+
+    jest.advanceTimersByTime(1000);
+    await promiseForFoo;
+
+    expect(root).toFlushAndYield(['Foo', 'Loading...']);
+    expect(root).toMatchRenderedOutput(null);
+
+    jest.advanceTimersByTime(1000);
+    await promiseForBar;
+
+    expect(root).toFlushAndYield(['Foo', 'Bar']);
+    expect(root).toMatchRenderedOutput('FooBar');
   });
 
   it('does not support arbitrary promises, only module objects', async () => {
@@ -71,7 +116,7 @@ describe('ReactLazy', () => {
     expect(root).toFlushAndYield(['Loading...']);
     expect(root).toMatchRenderedOutput(null);
 
-    await LazyText;
+    await Promise.resolve();
 
     if (__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(1);
@@ -100,7 +145,7 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput(null);
 
     try {
-      await LazyText;
+      await Promise.resolve();
     } catch (e) {}
 
     expect(root).toFlushAndThrow('Bad network');
@@ -176,7 +221,7 @@ describe('ReactLazy', () => {
     expect(root).toFlushAndYield(['Loading...']);
     expect(root).toMatchRenderedOutput(null);
 
-    await LazyText;
+    await Promise.resolve();
 
     expect(root).toFlushAndYield(['Hi']);
     expect(root).toMatchRenderedOutput('Hi');
@@ -226,7 +271,7 @@ describe('ReactLazy', () => {
     expect(root).toFlushAndYield(['Loading...']);
     expect(root).toMatchRenderedOutput(null);
 
-    await Lazy;
+    await Promise.resolve();
 
     expect(root).toFlushAndYield(['Lazy', 'Sibling', 'A']);
     expect(root).toMatchRenderedOutput('SiblingA');
@@ -256,7 +301,7 @@ describe('ReactLazy', () => {
     expect(root).toFlushAndYield(['Started loading', 'Loading...']);
     expect(root).toMatchRenderedOutput(null);
 
-    await LazyFoo;
+    await Promise.resolve();
 
     expect(() => {
       expect(root).toFlushAndYield(['A', 'B']);
@@ -303,8 +348,7 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput(null);
     expect(ref.current).toBe(null);
 
-    await LazyClass;
-    await LazyForwardRef;
+    await Promise.resolve();
 
     expect(root).toFlushAndYield(['Foo', 'forwardRef', 'Bar']);
     expect(root).toMatchRenderedOutput('FooBar');
