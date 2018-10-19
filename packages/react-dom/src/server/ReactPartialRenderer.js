@@ -38,6 +38,7 @@ import {
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
+  REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
 
 import {
@@ -1005,14 +1006,11 @@ class ReactDOMServerRenderer {
             this.stack.push(frame);
             return '';
           }
-          default:
-            if (typeof elementType.then === 'function') {
-              invariant(
-                false,
-                'ReactDOMServer does not yet support lazy-loaded components.',
-              );
-            }
-            break;
+          case REACT_LAZY_TYPE:
+            invariant(
+              false,
+              'ReactDOMServer does not yet support lazy-loaded components.',
+            );
         }
       }
 

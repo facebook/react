@@ -42,7 +42,7 @@ import {
 } from 'shared/ReactWorkTags';
 import {Placement, Ref, Update} from 'shared/ReactSideEffectTags';
 import invariant from 'shared/invariant';
-import {getResultFromResolvedThenable} from 'shared/ReactLazyComponent';
+import {getResultFromResolvedLazyComponent} from 'shared/ReactLazyComponent';
 
 import {
   createInstance,
@@ -552,7 +552,7 @@ function completeWork(
       break;
     }
     case ClassComponentLazy: {
-      const Component = getResultFromResolvedThenable(workInProgress.type);
+      const Component = getResultFromResolvedLazyComponent(workInProgress.type);
       if (isLegacyContextProvider(Component)) {
         popLegacyContext(workInProgress);
       }

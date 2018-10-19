@@ -582,11 +582,6 @@ describe('ReactDOMServer', () => {
       );
       ReactDOMServer.renderToString(<LazyFoo />);
     }).toThrow('ReactDOMServer does not yet support lazy-loaded components.');
-
-    expect(() => {
-      const FooPromise = {then() {}};
-      ReactDOMServer.renderToString(<FooPromise />);
-    }).toThrow('ReactDOMServer does not yet support lazy-loaded components.');
   });
 
   it('should throw (in dev) when children are mutated during render', () => {

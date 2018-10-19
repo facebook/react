@@ -42,9 +42,12 @@ describe('pure', () => {
     function Indirection(props) {
       return <Pure {...props} />;
     }
-    return Promise.resolve(Indirection);
+    return React.lazy(async () => Indirection);
   });
-  sharedTests('lazy', (...args) => Promise.resolve(React.pure(...args)));
+  sharedTests('lazy', (...args) => {
+    const Pure = React.pure(...args);
+    return React.lazy(async () => Pure);
+  });
 
   function sharedTests(label, pure) {
     describe(`${label}`, () => {

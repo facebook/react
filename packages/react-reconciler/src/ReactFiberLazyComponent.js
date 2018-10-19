@@ -7,26 +7,28 @@
  * @flow
  */
 
-import type {Thenable} from 'shared/ReactLazyComponent';
+import type {LazyComponent} from 'shared/ReactLazyComponent';
 
 import {Resolved, Rejected, Pending} from 'shared/ReactLazyComponent';
 
-export function readLazyComponentType<T>(thenable: Thenable<T>): T {
-  const status = thenable._reactStatus;
+export function readLazyComponentType<T>(lazyComponent: LazyComponent<T>): T {
+  const status = lazyComponent._status;
   switch (status) {
     case Resolved:
-      const Component: T = thenable._reactResult;
+      const Component: T = lazyComponent._result;
       return Component;
     case Rejected:
-      throw thenable._reactResult;
+      throw lazyComponent._result;
     case Pending:
-      throw thenable;
+      throw lazyComponent;
     default: {
-      thenable._reactStatus = Pending;
+      lazyComponent._status = Pending;
+      const ctor = lazyComponent._ctor;
+      const thenable = ctor();
       thenable.then(
         resolvedValue => {
-          if (thenable._reactStatus === Pending) {
-            thenable._reactStatus = Resolved;
+          if (lazyComponent._status === Pending) {
+            lazyComponent._status = Resolved;
             if (typeof resolvedValue === 'object' && resolvedValue !== null) {
               // If the `default` property is not empty, assume it's the result
               // of an async import() and use that. Otherwise, use the
@@ -39,13 +41,13 @@ export function readLazyComponentType<T>(thenable: Thenable<T>): T {
             } else {
               resolvedValue = resolvedValue;
             }
-            thenable._reactResult = resolvedValue;
+            lazyComponent._result = resolvedValue;
           }
         },
         error => {
-          if (thenable._reactStatus === Pending) {
-            thenable._reactStatus = Rejected;
-            thenable._reactResult = error;
+          if (lazyComponent._status === Pending) {
+            lazyComponent._status = Rejected;
+            lazyComponent._result = error;
           }
         },
       );

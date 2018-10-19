@@ -6,7 +6,6 @@ let ReactCache;
 let Suspense;
 let StrictMode;
 let ConcurrentMode;
-let lazy;
 
 let cache;
 let TextResource;
@@ -28,7 +27,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     Suspense = React.unstable_Suspense;
     StrictMode = React.StrictMode;
     ConcurrentMode = React.unstable_ConcurrentMode;
-    lazy = React.lazy;
 
     function invalidateCache() {
       cache = ReactCache.createCache(invalidateCache);
@@ -50,12 +48,12 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     textResourceShouldFail = false;
   });
 
-  function div(...children) {
-    children = children.map(
-      c => (typeof c === 'string' ? {text: c, hidden: false} : c),
-    );
-    return {type: 'div', children, prop: undefined, hidden: false};
-  }
+  // function div(...children) {
+  //   children = children.map(
+  //     c => (typeof c === 'string' ? {text: c, hidden: false} : c),
+  //   );
+  //   return {type: 'div', children, prop: undefined, hidden: false};
+  // }
 
   function span(prop) {
     return {type: 'span', children: [], prop, hidden: false};
@@ -1413,294 +1411,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
       await advanceTimers(100);
       expect(ReactNoop.getChildren()).toEqual([span('Hi')]);
-    });
-  });
-
-  describe('Promise as element type', () => {
-    it('accepts a promise as an element type', async () => {
-      const LazyText = Promise.resolve(Text);
-
-      ReactNoop.render(
-        <Suspense fallback={<Text text="Loading..." />}>
-          <LazyText text="Hi" />
-        </Suspense>,
-      );
-      expect(ReactNoop.flush()).toEqual(['Loading...']);
-      expect(ReactNoop.getChildren()).toEqual([]);
-
-      await LazyText;
-
-      expect(ReactNoop.flush()).toEqual(['Hi']);
-      expect(ReactNoop.getChildren()).toEqual([span('Hi')]);
-
-      // Should not suspend on update
-      ReactNoop.render(
-        <Suspense fallback={<Text text="Loading..." />}>
-          <LazyText text="Hi again" />
-        </Suspense>,
-      );
-      expect(ReactNoop.flush()).toEqual(['Hi again']);
-      expect(ReactNoop.getChildren()).toEqual([span('Hi again')]);
-    });
-
-    it('throws if promise rejects', async () => {
-      const LazyText = Promise.reject(new Error('Bad network'));
-
-      ReactNoop.render(
-        <Suspense fallback={<Text text="Loading..." />}>
-          <LazyText text="Hi" />
-        </Suspense>,
-      );
-      expect(ReactNoop.flush()).toEqual(['Loading...']);
-
-      await LazyText.catch(() => {});
-
-      expect(() => ReactNoop.flush()).toThrow('Bad network');
-    });
-
-    it('mount and reorder', async () => {
-      class Child extends React.Component {
-        componentDidMount() {
-          ReactNoop.yield('Did mount: ' + this.props.label);
-        }
-        componentDidUpdate() {
-          ReactNoop.yield('Did update: ' + this.props.label);
-        }
-        render() {
-          return <Text text={this.props.label} />;
-        }
-      }
-
-      const LazyChildA = Promise.resolve(Child);
-      const LazyChildB = Promise.resolve(Child);
-
-      function Parent({swap}) {
-        return (
-          <Suspense fallback={<Text text="Loading..." />}>
-            {swap
-              ? [
-                  <LazyChildB key="B" label="B" />,
-                  <LazyChildA key="A" label="A" />,
-                ]
-              : [
-                  <LazyChildA key="A" label="A" />,
-                  <LazyChildB key="B" label="B" />,
-                ]}
-          </Suspense>
-        );
-      }
-
-      ReactNoop.render(<Parent swap={false} />);
-      expect(ReactNoop.flush()).toEqual(['Loading...']);
-      expect(ReactNoop.getChildren()).toEqual([]);
-
-      await LazyChildA;
-      await LazyChildB;
-
-      expect(ReactNoop.flush()).toEqual([
-        'A',
-        'B',
-        'Did mount: A',
-        'Did mount: B',
-      ]);
-      expect(ReactNoop.getChildren()).toEqual([span('A'), span('B')]);
-
-      // Swap the position of A and B
-      ReactNoop.render(<Parent swap={true} />);
-      expect(ReactNoop.flush()).toEqual([
-        'B',
-        'A',
-        'Did update: B',
-        'Did update: A',
-      ]);
-      expect(ReactNoop.getChildren()).toEqual([span('B'), span('A')]);
-    });
-
-    it('uses `default` property, if it exists', async () => {
-      const LazyText = Promise.resolve({default: Text});
-
-      ReactNoop.render(
-        <Suspense fallback={<Text text="Loading..." />}>
-          <LazyText text="Hi" />
-        </Suspense>,
-      );
-      expect(ReactNoop.flush()).toEqual(['Loading...']);
-      expect(ReactNoop.getChildren()).toEqual([]);
-
-      await LazyText;
-
-      expect(ReactNoop.flush()).toEqual(['Hi']);
-      expect(ReactNoop.getChildren()).toEqual([span('Hi')]);
-
-      // Should not suspend on update
-      ReactNoop.render(
-        <Suspense fallback={<Text text="Loading..." />}>
-          <LazyText text="Hi again" />
-        </Suspense>,
-      );
-      expect(ReactNoop.flush()).toEqual(['Hi again']);
-      expect(ReactNoop.getChildren()).toEqual([span('Hi again')]);
-    });
-
-    it('resolves defaultProps, on mount and update', async () => {
-      function T(props) {
-        return <Text {...props} />;
-      }
-      T.defaultProps = {text: 'Hi'};
-      const LazyText = Promise.resolve(T);
-
-      ReactNoop.render(
-        <Suspense fallback={<Text text="Loading..." />}>
-          <LazyText />
-        </Suspense>,
-      );
-      expect(ReactNoop.flush()).toEqual(['Loading...']);
-      expect(ReactNoop.getChildren()).toEqual([]);
-
-      await LazyText;
-
-      expect(ReactNoop.flush()).toEqual(['Hi']);
-      expect(ReactNoop.getChildren()).toEqual([span('Hi')]);
-
-      T.defaultProps = {text: 'Hi again'};
-
-      ReactNoop.render(
-        <Suspense fallback={<Text text="Loading..." />}>
-          <LazyText text="Hi again" />
-        </Suspense>,
-      );
-      expect(ReactNoop.flush()).toEqual(['Hi again']);
-      expect(ReactNoop.getChildren()).toEqual([span('Hi again')]);
-    });
-
-    it('resolves defaultProps without breaking memoization', async () => {
-      function LazyImpl(props) {
-        ReactNoop.yield('Lazy');
-        return (
-          <Fragment>
-            <Text text={props.siblingText} />
-            {props.children}
-          </Fragment>
-        );
-      }
-      LazyImpl.defaultProps = {siblingText: 'Sibling'};
-      const Lazy = Promise.resolve(LazyImpl);
-
-      class Stateful extends React.Component {
-        state = {text: 'A'};
-        render() {
-          return <Text text={this.state.text} />;
-        }
-      }
-
-      const stateful = React.createRef(null);
-      ReactNoop.render(
-        <Suspense fallback={<Text text="Loading..." />}>
-          <Lazy>
-            <Stateful ref={stateful} />
-          </Lazy>
-        </Suspense>,
-      );
-      expect(ReactNoop.flush()).toEqual(['Loading...']);
-      expect(ReactNoop.getChildren()).toEqual([]);
-      await Lazy;
-      expect(ReactNoop.flush()).toEqual(['Lazy', 'Sibling', 'A']);
-      expect(ReactNoop.getChildren()).toEqual([span('Sibling'), span('A')]);
-
-      // Lazy should not re-render
-      stateful.current.setState({text: 'B'});
-      expect(ReactNoop.flush()).toEqual(['B']);
-      expect(ReactNoop.getChildren()).toEqual([span('Sibling'), span('B')]);
-    });
-
-    it('lazy-load using React.lazy', async () => {
-      const LazyText = lazy(() => {
-        ReactNoop.yield('Started loading');
-        return Promise.resolve(Text);
-      });
-
-      ReactNoop.render(
-        <Suspense fallback={<Text text="Loading..." />}>
-          <Text text="A" />
-          <Text text="B" />
-          <LazyText text="C" />
-        </Suspense>,
-      );
-      // Render first two siblings. The lazy component should not have
-      // started loading yet.
-      ReactNoop.flushThrough(['A', 'B']);
-
-      // Flush the rest.
-      expect(ReactNoop.flush()).toEqual(['Started loading', 'Loading...']);
-      expect(ReactNoop.getChildren()).toEqual([]);
-
-      await LazyText;
-
-      expect(ReactNoop.flush()).toEqual(['A', 'B', 'C']);
-      expect(ReactNoop.getChildren()).toEqual([
-        span('A'),
-        span('B'),
-        span('C'),
-      ]);
-    });
-
-    it('includes lazy-loaded component in warning stack', async () => {
-      const LazyFoo = lazy(() => {
-        ReactNoop.yield('Started loading');
-        const Foo = props => (
-          <div>{[<Text text="A" />, <Text text="B" />]}</div>
-        );
-        return Promise.resolve(Foo);
-      });
-
-      ReactNoop.render(
-        <Suspense fallback={<Text text="Loading..." />}>
-          <LazyFoo />
-        </Suspense>,
-      );
-      expect(ReactNoop.flush()).toEqual(['Started loading', 'Loading...']);
-      expect(ReactNoop.getChildren()).toEqual([]);
-
-      await LazyFoo;
-      expect(() => {
-        expect(ReactNoop.flush()).toEqual(['A', 'B']);
-      }).toWarnDev('    in Text (at **)\n' + '    in Foo (at **)');
-      expect(ReactNoop.getChildren()).toEqual([div(span('A'), span('B'))]);
-    });
-
-    it('supports class and forwardRef components', async () => {
-      const LazyClass = lazy(() => {
-        class Foo extends React.Component {
-          render() {
-            return <Text text="Foo" />;
-          }
-        }
-        return Promise.resolve(Foo);
-      });
-
-      const LazyForwardRef = lazy(() => {
-        const Bar = React.forwardRef((props, ref) => (
-          <Text text="Bar" hostRef={ref} />
-        ));
-        return Promise.resolve(Bar);
-      });
-
-      const ref = React.createRef();
-      ReactNoop.render(
-        <Suspense fallback={<Text text="Loading..." />}>
-          <LazyClass />
-          <LazyForwardRef ref={ref} />
-        </Suspense>,
-      );
-      expect(ReactNoop.flush()).toEqual(['Loading...']);
-      expect(ReactNoop.getChildren()).toEqual([]);
-      expect(ref.current).toBe(null);
-
-      await LazyClass;
-      await LazyForwardRef;
-      expect(ReactNoop.flush()).toEqual(['Foo', 'Bar']);
-      expect(ReactNoop.getChildren()).toEqual([span('Foo'), span('Bar')]);
-      expect(ref.current).not.toBe(null);
     });
   });
 
