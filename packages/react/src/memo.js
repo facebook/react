@@ -5,11 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {REACT_PURE_TYPE} from 'shared/ReactSymbols';
+import {REACT_MEMO_TYPE} from 'shared/ReactSymbols';
 
 import warningWithoutStack from 'shared/warningWithoutStack';
 
-export default function pure<Props>(
+export default function memo<Props>(
   render: (props: Props) => React$Node,
   compare?: (oldProps: Props, newProps: Props) => boolean,
 ) {
@@ -17,7 +17,7 @@ export default function pure<Props>(
     if (typeof render !== 'function') {
       warningWithoutStack(
         false,
-        'pure: The first argument must be a function component. Instead ' +
+        'memo: The first argument must be a function component. Instead ' +
           'received: %s',
         render === null ? 'null' : typeof render,
       );
@@ -26,14 +26,14 @@ export default function pure<Props>(
       if (prototype && prototype.isReactComponent) {
         warningWithoutStack(
           false,
-          'pure: The first argument must be a function component. Classes ' +
+          'memo: The first argument must be a function component. Classes ' +
             'are not supported. Use React.PureComponent instead.',
         );
       }
     }
   }
   return {
-    $$typeof: REACT_PURE_TYPE,
+    $$typeof: REACT_MEMO_TYPE,
     render,
     compare: compare === undefined ? null : compare,
   };

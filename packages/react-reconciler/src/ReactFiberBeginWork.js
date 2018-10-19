@@ -33,8 +33,8 @@ import {
   ContextConsumer,
   Profiler,
   SuspenseComponent,
-  PureComponent,
-  PureComponentLazy,
+  MemoComponent,
+  MemoComponentLazy,
 } from 'shared/ReactWorkTags';
 import {
   NoEffect,
@@ -234,7 +234,7 @@ function updateForwardRef(
   return workInProgress.child;
 }
 
-function updatePureComponent(
+function updateMemoComponent(
   current: Fiber | null,
   workInProgress: Fiber,
   Component: any,
@@ -773,8 +773,8 @@ function mountIndeterminateComponent(
         );
         break;
       }
-      case PureComponentLazy: {
-        child = updatePureComponent(
+      case MemoComponentLazy: {
+        child = updateMemoComponent(
           null,
           workInProgress,
           Component,
@@ -785,7 +785,7 @@ function mountIndeterminateComponent(
         break;
       }
       default: {
-        // This message intentionally doesn't metion ForwardRef or PureComponent
+        // This message intentionally doesn't metion ForwardRef or MemoComponent
         // because the fact that it's a separate type of work is an
         // implementation detail.
         invariant(
@@ -1596,9 +1596,9 @@ function beginWork(
         workInProgress,
         renderExpirationTime,
       );
-    case PureComponent: {
+    case MemoComponent: {
       const type = workInProgress.type;
-      return updatePureComponent(
+      return updateMemoComponent(
         current,
         workInProgress,
         type,
@@ -1607,11 +1607,11 @@ function beginWork(
         renderExpirationTime,
       );
     }
-    case PureComponentLazy: {
+    case MemoComponentLazy: {
       const thenable = workInProgress.type;
       const Component = getResultFromResolvedLazyComponent(thenable);
       const unresolvedProps = workInProgress.pendingProps;
-      const child = updatePureComponent(
+      const child = updateMemoComponent(
         current,
         workInProgress,
         Component,

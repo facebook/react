@@ -30,8 +30,8 @@ import {
   ForwardRef,
   Profiler,
   ForwardRefLazy,
-  PureComponent,
-  PureComponentLazy,
+  MemoComponent,
+  MemoComponentLazy,
 } from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 import ReactVersion from 'shared/ReactVersion';
@@ -217,8 +217,8 @@ function toTree(node: ?Fiber) {
     case Profiler:
     case ForwardRef:
     case ForwardRefLazy:
-    case PureComponent:
-    case PureComponentLazy:
+    case MemoComponent:
+    case MemoComponentLazy:
       return childrenToTree(node.child);
     default:
       invariant(
@@ -237,8 +237,8 @@ const validWrapperTypes = new Set([
   HostComponent,
   ForwardRef,
   ForwardRefLazy,
-  PureComponent,
-  PureComponentLazy,
+  MemoComponent,
+  MemoComponentLazy,
   // Normally skipped, but used when there's more than one root child.
   HostRoot,
 ]);

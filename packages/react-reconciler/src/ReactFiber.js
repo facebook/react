@@ -37,8 +37,8 @@ import {
   FunctionComponentLazy,
   ClassComponentLazy,
   ForwardRefLazy,
-  PureComponent,
-  PureComponentLazy,
+  MemoComponent,
+  MemoComponentLazy,
 } from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
@@ -59,7 +59,7 @@ import {
   REACT_CONTEXT_TYPE,
   REACT_CONCURRENT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
-  REACT_PURE_TYPE,
+  REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
 
@@ -309,8 +309,8 @@ export function resolveLazyComponentTag(
     if ($$typeof === REACT_FORWARD_REF_TYPE) {
       return ForwardRefLazy;
     }
-    if ($$typeof === REACT_PURE_TYPE) {
-      return PureComponentLazy;
+    if ($$typeof === REACT_MEMO_TYPE) {
+      return MemoComponentLazy;
     }
   }
   return IndeterminateComponent;
@@ -459,8 +459,8 @@ export function createFiberFromElement(
             case REACT_FORWARD_REF_TYPE:
               fiberTag = ForwardRef;
               break getTag;
-            case REACT_PURE_TYPE:
-              fiberTag = PureComponent;
+            case REACT_MEMO_TYPE:
+              fiberTag = MemoComponent;
               break getTag;
             case REACT_LAZY_TYPE:
               fiberTag = IndeterminateComponent;
