@@ -242,7 +242,6 @@ function updatePureComponent(
   renderExpirationTime: ExpirationTime,
 ) {
   const render = Component.render;
-  const ref = workInProgress.ref;
 
   if (
     current !== null &&
@@ -253,7 +252,7 @@ function updatePureComponent(
     // Default to shallow comparison
     let compare = Component.compare;
     compare = compare !== null ? compare : shallowEqual;
-    if (workInProgress.ref === current.ref && compare(prevProps, nextProps)) {
+    if (compare(prevProps, nextProps)) {
       return bailoutOnAlreadyFinishedWork(
         current,
         workInProgress,
@@ -268,10 +267,10 @@ function updatePureComponent(
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     ReactCurrentFiber.setCurrentPhase('render');
-    nextChildren = render(nextProps, ref);
+    nextChildren = render(nextProps);
     ReactCurrentFiber.setCurrentPhase(null);
   } else {
-    nextChildren = render(nextProps, ref);
+    nextChildren = render(nextProps);
   }
 
   // React DevTools reads this flag.
