@@ -1147,6 +1147,21 @@ describe('ReactShallowRenderer', () => {
     expect(result).toEqual(<div>foo:undefined</div>);
   });
 
+  it('should return entire context if not filtered by contextTypes', () => {
+    class SimpleComponent extends React.Component {
+      render() {
+        return <div>{`${this.context.foo}:${this.context.bar}`}</div>;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    let result = shallowRenderer.render(<SimpleComponent />, {
+      foo: 'foo',
+      bar: 'bar',
+    });
+    expect(result).toEqual(<div>foo:bar</div>);
+  });
+
   it('can fail context when shallowly rendering', () => {
     class SimpleComponent extends React.Component {
       static contextTypes = {

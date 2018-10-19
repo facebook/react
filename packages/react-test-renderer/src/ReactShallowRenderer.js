@@ -374,7 +374,7 @@ function shouldConstruct(Component) {
 
 function getMaskedContext(contextTypes, unmaskedContext) {
   if (!contextTypes) {
-    return emptyObject;
+    return unmaskedContext;
   }
   const context = {};
   for (let key in contextTypes) {
