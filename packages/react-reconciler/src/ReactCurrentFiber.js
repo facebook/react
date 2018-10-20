@@ -14,6 +14,7 @@ import {
   ClassComponent,
   HostComponent,
   Mode,
+  LazyComponent,
 } from 'shared/ReactWorkTags';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import getComponentName from 'shared/getComponentName';
@@ -27,6 +28,7 @@ type LifeCyclePhase = 'render' | 'getChildContext';
 function describeFiber(fiber: Fiber): string {
   switch (fiber.tag) {
     case IndeterminateComponent:
+    case LazyComponent:
     case FunctionComponent:
     case ClassComponent:
     case HostComponent:

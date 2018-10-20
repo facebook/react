@@ -36,6 +36,7 @@ import {
   SuspenseComponent,
   FunctionComponent,
   PureComponent,
+  LazyComponent,
 } from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
@@ -473,7 +474,7 @@ function createFiberFromElementWithoutDebugInfo(
               fiberTag = PureComponent;
               break getTag;
             case REACT_LAZY_TYPE:
-              fiberTag = IndeterminateComponent;
+              fiberTag = LazyComponent;
               resolvedType = null;
               break getTag;
           }

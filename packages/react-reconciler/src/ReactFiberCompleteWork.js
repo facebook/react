@@ -35,6 +35,7 @@ import {
   Profiler,
   SuspenseComponent,
   PureComponent,
+  LazyComponent,
 } from 'shared/ReactWorkTags';
 import {Placement, Ref, Update} from 'shared/ReactSideEffectTags';
 import invariant from 'shared/invariant';
@@ -535,6 +536,8 @@ function completeWork(
 
   switch (workInProgress.tag) {
     case IndeterminateComponent:
+      break;
+    case LazyComponent:
       break;
     case FunctionComponent:
       break;

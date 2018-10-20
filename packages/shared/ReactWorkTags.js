@@ -43,3 +43,4 @@ export const ForwardRef = 11;
 export const Profiler = 12;
 export const SuspenseComponent = 13;
 export const PureComponent = 14;
+export const LazyComponent = 15;
