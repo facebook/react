@@ -22,7 +22,6 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
 import maxSigned31BitInt from './maxSigned31BitInt';
-import {NoWork} from './ReactFiberExpirationTime';
 import {
   ContextProvider,
   ClassComponent,
