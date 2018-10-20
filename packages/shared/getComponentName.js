@@ -16,7 +16,7 @@ import {
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_PORTAL_TYPE,
-  REACT_PURE_TYPE,
+  REACT_MEMO_TYPE,
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_STRICT_MODE_TYPE,
@@ -79,7 +79,7 @@ function getComponentName(type: mixed): string | null {
         return 'Context.Provider';
       case REACT_FORWARD_REF_TYPE:
         return getWrappedName(type, type.render, 'ForwardRef');
-      case REACT_PURE_TYPE:
+      case REACT_MEMO_TYPE:
         return getComponentName(type.type);
       case REACT_LAZY_TYPE: {
         const thenable: LazyComponent<mixed> = (type: any);

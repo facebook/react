@@ -39,7 +39,7 @@ import {
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_LAZY_TYPE,
-  REACT_PURE_TYPE,
+  REACT_MEMO_TYPE,
 } from 'shared/ReactSymbols';
 
 import {
@@ -1002,7 +1002,7 @@ class ReactDOMServerRenderer {
             this.stack.push(frame);
             return '';
           }
-          case REACT_PURE_TYPE: {
+          case REACT_MEMO_TYPE: {
             const element: ReactElement = ((nextChild: any): ReactElement);
             let nextChildren = [
               React.createElement(
