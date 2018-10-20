@@ -708,7 +708,7 @@ function resolveDefaultProps(Component, baseProps) {
 function mountIndeterminateComponent(
   _current,
   workInProgress,
-  Component,
+  elementType,
   updateExpirationTime,
   renderExpirationTime,
 ) {
@@ -724,15 +724,18 @@ function mountIndeterminateComponent(
   }
 
   const props = workInProgress.pendingProps;
+  let Component;
+  // TODO: This will be storing the unwrapped value insteads.
+  workInProgress.type = elementType;
   if (
-    typeof Component === 'object' &&
-    Component !== null &&
-    Component.$$typeof === REACT_LAZY_TYPE
+    typeof elementType === 'object' &&
+    elementType !== null &&
+    elementType.$$typeof === REACT_LAZY_TYPE
   ) {
     // We can't start a User Timing measurement with correct label yet.
     // Cancel and resume right after we know the tag.
     cancelWorkTimer(workInProgress);
-    Component = readLazyComponentType(Component);
+    Component = readLazyComponentType(elementType);
     const resolvedTag = (workInProgress.tag = resolveLazyComponentTag(
       workInProgress,
       Component,
@@ -795,6 +798,8 @@ function mountIndeterminateComponent(
       }
     }
     return child;
+  } else {
+    Component = elementType;
   }
 
   const unmaskedContext = getUnmaskedContext(workInProgress, Component, false);
@@ -1457,11 +1462,11 @@ function beginWork(
 
   switch (workInProgress.tag) {
     case IndeterminateComponent: {
-      const Component = workInProgress.type;
+      const elementType = workInProgress.elementType;
       return mountIndeterminateComponent(
         current,
         workInProgress,
-        Component,
+        elementType,
         updateExpirationTime,
         renderExpirationTime,
       );

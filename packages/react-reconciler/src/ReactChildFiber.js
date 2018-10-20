@@ -379,7 +379,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     element: ReactElement,
     expirationTime: ExpirationTime,
   ): Fiber {
-    if (current !== null && current.type === element.type) {
+    if (current !== null && current.elementType === element.type) {
       // Move based on index
       const existing = useFiber(current, element.props, expirationTime);
       existing.ref = coerceRef(returnFiber, current, element);
@@ -1122,7 +1122,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         if (
           child.tag === Fragment
             ? element.type === REACT_FRAGMENT_TYPE
-            : child.type === element.type
+            : child.elementType === element.type
         ) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(
