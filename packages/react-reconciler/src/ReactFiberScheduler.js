@@ -1091,6 +1091,7 @@ function performUnitOfWork(workInProgress: Fiber): Fiber | null {
     }
 
     next = beginWork(current, workInProgress, nextRenderExpirationTime);
+    workInProgress.memoizedProps = workInProgress.pendingProps;
 
     if (workInProgress.mode & ProfileMode) {
       // Record the render duration assuming we didn't bailout (or error).
@@ -1098,6 +1099,7 @@ function performUnitOfWork(workInProgress: Fiber): Fiber | null {
     }
   } else {
     next = beginWork(current, workInProgress, nextRenderExpirationTime);
+    workInProgress.memoizedProps = workInProgress.pendingProps;
   }
 
   if (__DEV__) {

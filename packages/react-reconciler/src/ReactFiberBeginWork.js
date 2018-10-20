@@ -230,7 +230,6 @@ function updateForwardRef(
     nextChildren,
     renderExpirationTime,
   );
-  memoizeProps(workInProgress, nextProps);
   return workInProgress.child;
 }
 
@@ -282,7 +281,6 @@ function updatePureComponent(
     nextChildren,
     renderExpirationTime,
   );
-  memoizeProps(workInProgress, nextProps);
   return workInProgress.child;
 }
 
@@ -298,7 +296,6 @@ function updateFragment(
     nextChildren,
     renderExpirationTime,
   );
-  memoizeProps(workInProgress, nextChildren);
   return workInProgress.child;
 }
 
@@ -314,7 +311,6 @@ function updateMode(
     nextChildren,
     renderExpirationTime,
   );
-  memoizeProps(workInProgress, nextChildren);
   return workInProgress.child;
 }
 
@@ -334,7 +330,6 @@ function updateProfiler(
     nextChildren,
     renderExpirationTime,
   );
-  memoizeProps(workInProgress, nextProps);
   return workInProgress.child;
 }
 
@@ -378,7 +373,6 @@ function updateFunctionComponent(
     nextChildren,
     renderExpirationTime,
   );
-  memoizeProps(workInProgress, nextProps);
   return workInProgress.child;
 }
 
@@ -539,10 +533,9 @@ function finishClassComponent(
     );
   }
 
-  // Memoize props and state using the values we just used to render.
+  // Memoize state using the values we just used to render.
   // TODO: Restructure so we never read values from the instance.
-  memoizeState(workInProgress, instance.state);
-  memoizeProps(workInProgress, instance.props);
+  workInProgress.memoizedState = instance.state;
 
   // The context might have changed so we need to recalculate it.
   if (hasContext) {
@@ -676,7 +669,6 @@ function updateHostComponent(current, workInProgress, renderExpirationTime) {
   ) {
     // Schedule this fiber to re-render at offscreen priority. Then bailout.
     workInProgress.expirationTime = Never;
-    workInProgress.memoizedProps = nextProps;
     return null;
   }
 
@@ -686,7 +678,6 @@ function updateHostComponent(current, workInProgress, renderExpirationTime) {
     nextChildren,
     renderExpirationTime,
   );
-  memoizeProps(workInProgress, nextProps);
   return workInProgress.child;
 }
 
@@ -694,8 +685,6 @@ function updateHostText(current, workInProgress) {
   if (current === null) {
     tryToClaimNextHydratableInstance(workInProgress);
   }
-  const nextProps = workInProgress.pendingProps;
-  memoizeProps(workInProgress, nextProps);
   // Nothing to do here. This is terminal. We'll do the completion step
   // immediately after.
   return null;
@@ -805,7 +794,6 @@ function mountIndeterminateComponent(
         );
       }
     }
-    workInProgress.memoizedProps = props;
     return child;
   }
 
@@ -954,7 +942,6 @@ function mountIndeterminateComponent(
       }
     }
     reconcileChildren(null, workInProgress, value, renderExpirationTime);
-    memoizeProps(workInProgress, props);
     return workInProgress.child;
   }
 }
@@ -1165,7 +1152,6 @@ function updateSuspenseComponent(
     }
   }
 
-  workInProgress.memoizedProps = nextProps;
   workInProgress.memoizedState = nextState;
   workInProgress.child = child;
   return next;
@@ -1190,7 +1176,6 @@ function updatePortalComponent(
       nextChildren,
       renderExpirationTime,
     );
-    memoizeProps(workInProgress, nextChildren);
   } else {
     reconcileChildren(
       current,
@@ -1198,7 +1183,6 @@ function updatePortalComponent(
       nextChildren,
       renderExpirationTime,
     );
-    memoizeProps(workInProgress, nextChildren);
   }
   return workInProgress.child;
 }
@@ -1215,7 +1199,6 @@ function updateContextProvider(
   const oldProps = workInProgress.memoizedProps;
 
   const newValue = newProps.value;
-  workInProgress.memoizedProps = newProps;
 
   if (__DEV__) {
     const providerPropTypes = workInProgress.type.propTypes;
@@ -1327,7 +1310,6 @@ function updateContextConsumer(
   // React DevTools reads this flag.
   workInProgress.effectTag |= PerformedWork;
   reconcileChildren(current, workInProgress, newChildren, renderExpirationTime);
-  workInProgress.memoizedProps = newProps;
   return workInProgress.child;
 }
 
@@ -1383,17 +1365,6 @@ function bailoutOnAlreadyFinishedWork(
     cloneChildFibers(current, workInProgress);
     return workInProgress.child;
   }
-}
-
-// TODO: Delete memoizeProps/State and move to reconcile/bailout instead
-function memoizeProps(workInProgress: Fiber, nextProps: any) {
-  workInProgress.memoizedProps = nextProps;
-}
-
-function memoizeState(workInProgress: Fiber, nextState: any) {
-  workInProgress.memoizedState = nextState;
-  // Don't reset the updateQueue, in case there are pending updates. Resetting
-  // is handled by processUpdateQueue.
 }
 
 function beginWork(
@@ -1517,7 +1488,6 @@ function beginWork(
         resolveDefaultProps(Component, unresolvedProps),
         renderExpirationTime,
       );
-      workInProgress.memoizedProps = unresolvedProps;
       return child;
     }
     case ClassComponent: {
@@ -1542,7 +1512,6 @@ function beginWork(
         resolveDefaultProps(Component, unresolvedProps),
         renderExpirationTime,
       );
-      workInProgress.memoizedProps = unresolvedProps;
       return child;
     }
     case HostRoot:
@@ -1584,7 +1553,6 @@ function beginWork(
         resolveDefaultProps(Component, unresolvedProps),
         renderExpirationTime,
       );
-      workInProgress.memoizedProps = unresolvedProps;
       return child;
     }
     case Fragment:
@@ -1628,7 +1596,6 @@ function beginWork(
         updateExpirationTime,
         renderExpirationTime,
       );
-      workInProgress.memoizedProps = unresolvedProps;
       return child;
     }
     default:
