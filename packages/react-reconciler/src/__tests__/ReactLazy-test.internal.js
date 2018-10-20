@@ -319,7 +319,7 @@ describe('ReactLazy', () => {
       return fakeImport(Foo);
     });
 
-    const LazyForwardRef = lazy(async () => {
+    const LazyForwardRef = lazy(() => {
       class Bar extends React.Component {
         render() {
           return <Text text="Bar" />;

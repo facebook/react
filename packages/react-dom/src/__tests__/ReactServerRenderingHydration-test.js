@@ -444,20 +444,16 @@ describe('ReactDOMServerHydration', () => {
   });
 
   it('should be able to use lazy components after hydrating', async () => {
-    async function fakeImport(result) {
-      return {default: result};
-    }
-
     const Lazy = React.lazy(
       () =>
         new Promise(resolve => {
           setTimeout(
             () =>
-              resolve(
-                fakeImport(function World() {
+              resolve({
+                default: function World() {
                   return 'world';
-                }),
-              ),
+                },
+              }),
             1000,
           );
         }),
@@ -491,7 +487,7 @@ describe('ReactDOMServerHydration', () => {
     expect(element.textContent).toBe('Hello loading');
 
     jest.runAllTimers();
-    await Lazy;
+    await Promise.resolve();
     expect(element.textContent).toBe('Hello world');
   });
 });
