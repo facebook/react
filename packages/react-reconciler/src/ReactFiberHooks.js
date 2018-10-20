@@ -37,6 +37,8 @@ import {
 } from './ReactFiberScheduler';
 
 import invariant from 'shared/invariant';
+import warningWithoutStack from 'shared/warningWithoutStack';
+import {enableDispatchCallback_DEPRECATED} from 'shared/ReactFeatureFlags';
 
 type Update<S, A> = {
   expirationTime: ExpirationTime,
@@ -680,6 +682,20 @@ function dispatchAction<S, A>(
   action: A,
   callback: void | null | (S => mixed),
 ) {
+  if (enableDispatchCallback_DEPRECATED) {
+    if (__DEV__) {
+      if (typeof callback === 'function') {
+        warningWithoutStack(
+          false,
+          'Update callbacks (the second argument to dispatch/setState) are ' +
+            'deprecated. Try useEffect instead.',
+        );
+      }
+    }
+  } else {
+    callback = null;
+  }
+
   invariant(
     numberOfReRenders < RE_RENDER_LIMIT,
     'Too many re-renders. React limits the number of renders to prevent ' +
