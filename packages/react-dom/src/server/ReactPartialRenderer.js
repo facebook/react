@@ -1004,18 +1004,12 @@ class ReactDOMServerRenderer {
           }
           case REACT_PURE_TYPE: {
             const element: ReactElement = ((nextChild: any): ReactElement);
-            let nextChildren;
-            if (
-              typeof elementType.render === 'object' && elementType.render !== null && elementType.render.$$typeof === REACT_FORWARD_REF_TYPE
-            ) {
-              nextChildren = toArray(
-                elementType.render.render(element.props, element.ref),
-              );
-            } else {
-              nextChildren = toArray(
-                elementType.render(element.props),
-              );
-            }
+            let nextChildren = [
+              React.createElement(
+                elementType.type,
+                Object.assign({ref: element.ref}, element.props),
+              ),
+            ];
             const frame: Frame = {
               type: null,
               domNamespace: parentNamespace,
