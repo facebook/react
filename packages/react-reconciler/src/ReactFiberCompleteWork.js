@@ -34,8 +34,8 @@ import {
   Mode,
   Profiler,
   SuspenseComponent,
-  PureComponent,
-  SimplePureComponent,
+  MemoComponent,
+  SimpleMemoComponent,
   LazyComponent,
 } from 'shared/ReactWorkTags';
 import {Placement, Ref, Update} from 'shared/ReactSideEffectTags';
@@ -540,7 +540,7 @@ function completeWork(
       break;
     case LazyComponent:
       break;
-    case SimplePureComponent:
+    case SimpleMemoComponent:
     case FunctionComponent:
       break;
     case ClassComponent: {
@@ -715,7 +715,7 @@ function completeWork(
       break;
     case ContextConsumer:
       break;
-    case PureComponent:
+    case MemoComponent:
       break;
     default:
       invariant(

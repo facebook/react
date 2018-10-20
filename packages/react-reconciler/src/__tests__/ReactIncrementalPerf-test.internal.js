@@ -555,13 +555,13 @@ describe('ReactDebugFiberPerf', () => {
     expect(getFlameChart()).toMatchSnapshot();
   });
 
-  it('supports pure', () => {
-    const PureFoo = React.pure(function Foo() {
+  it('supports memo', () => {
+    const MemoFoo = React.memo(function Foo() {
       return <div />;
     });
     ReactNoop.render(
       <Parent>
-        <PureFoo />
+        <MemoFoo />
       </Parent>,
     );
     ReactNoop.flush();

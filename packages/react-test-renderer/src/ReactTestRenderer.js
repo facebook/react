@@ -27,8 +27,8 @@ import {
   Mode,
   ForwardRef,
   Profiler,
-  PureComponent,
-  SimplePureComponent,
+  MemoComponent,
+  SimpleMemoComponent,
 } from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 import ReactVersion from 'shared/ReactVersion';
@@ -167,7 +167,7 @@ function toTree(node: ?Fiber) {
         rendered: childrenToTree(node.child),
       };
     case FunctionComponent:
-    case SimplePureComponent:
+    case SimpleMemoComponent:
       return {
         nodeType: 'component',
         type: node.type,
@@ -192,7 +192,7 @@ function toTree(node: ?Fiber) {
     case Mode:
     case Profiler:
     case ForwardRef:
-    case PureComponent:
+    case MemoComponent:
       return childrenToTree(node.child);
     default:
       invariant(
@@ -208,7 +208,7 @@ const validWrapperTypes = new Set([
   ClassComponent,
   HostComponent,
   ForwardRef,
-  PureComponent,
+  MemoComponent,
   // Normally skipped, but used when there's more than one root child.
   HostRoot,
 ]);
