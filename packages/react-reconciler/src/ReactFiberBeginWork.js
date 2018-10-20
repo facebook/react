@@ -18,15 +18,12 @@ import checkPropTypes from 'prop-types/checkPropTypes';
 import {
   IndeterminateComponent,
   FunctionComponent,
-  FunctionComponentLazy,
   ClassComponent,
-  ClassComponentLazy,
   HostRoot,
   HostComponent,
   HostText,
   HostPortal,
   ForwardRef,
-  ForwardRefLazy,
   Fragment,
   Mode,
   ContextProvider,
@@ -34,7 +31,7 @@ import {
   Profiler,
   SuspenseComponent,
   PureComponent,
-  PureComponentLazy,
+  LazyComponent,
 } from 'shared/ReactWorkTags';
 import {
   NoEffect,
@@ -104,13 +101,11 @@ import {
   updateClassInstance,
 } from './ReactFiberClassComponent';
 import {readLazyComponentType} from './ReactFiberLazyComponent';
-import {getResultFromResolvedLazyComponent} from 'shared/ReactLazyComponent';
 import {
   resolveLazyComponentTag,
   createFiberFromFragment,
   createWorkInProgress,
 } from './ReactFiber';
-import {REACT_LAZY_TYPE} from 'shared/ReactSymbols';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -705,10 +700,10 @@ function resolveDefaultProps(Component, baseProps) {
   return baseProps;
 }
 
-function mountIndeterminateComponent(
+function mountLazyComponent(
   _current,
   workInProgress,
-  Component,
+  elementType,
   updateExpirationTime,
   renderExpirationTime,
 ) {
@@ -724,79 +719,94 @@ function mountIndeterminateComponent(
   }
 
   const props = workInProgress.pendingProps;
-  if (
-    typeof Component === 'object' &&
-    Component !== null &&
-    Component.$$typeof === REACT_LAZY_TYPE
-  ) {
-    // We can't start a User Timing measurement with correct label yet.
-    // Cancel and resume right after we know the tag.
-    cancelWorkTimer(workInProgress);
-    Component = readLazyComponentType(Component);
-    const resolvedTag = (workInProgress.tag = resolveLazyComponentTag(
-      workInProgress,
-      Component,
-    ));
-    startWorkTimer(workInProgress);
-    const resolvedProps = resolveDefaultProps(Component, props);
-    let child;
-    switch (resolvedTag) {
-      case FunctionComponentLazy: {
-        child = updateFunctionComponent(
-          null,
-          workInProgress,
-          Component,
-          resolvedProps,
-          renderExpirationTime,
-        );
-        break;
-      }
-      case ClassComponentLazy: {
-        child = updateClassComponent(
-          null,
-          workInProgress,
-          Component,
-          resolvedProps,
-          renderExpirationTime,
-        );
-        break;
-      }
-      case ForwardRefLazy: {
-        child = updateForwardRef(
-          null,
-          workInProgress,
-          Component,
-          resolvedProps,
-          renderExpirationTime,
-        );
-        break;
-      }
-      case PureComponentLazy: {
-        child = updatePureComponent(
-          null,
-          workInProgress,
-          Component,
-          resolvedProps,
-          updateExpirationTime,
-          renderExpirationTime,
-        );
-        break;
-      }
-      default: {
-        // This message intentionally doesn't metion ForwardRef or PureComponent
-        // because the fact that it's a separate type of work is an
-        // implementation detail.
-        invariant(
-          false,
-          'Element type is invalid. Received a promise that resolves to: %s. ' +
-            'Promise elements must resolve to a class or function.',
-          Component,
-        );
-      }
+  // We can't start a User Timing measurement with correct label yet.
+  // Cancel and resume right after we know the tag.
+  cancelWorkTimer(workInProgress);
+  let Component = readLazyComponentType(elementType);
+  // Store the unwrapped component in the type.
+  workInProgress.type = Component;
+  const resolvedTag = (workInProgress.tag = resolveLazyComponentTag(
+    workInProgress,
+    Component,
+  ));
+  startWorkTimer(workInProgress);
+  const resolvedProps = resolveDefaultProps(Component, props);
+  let child;
+  switch (resolvedTag) {
+    case FunctionComponent: {
+      child = updateFunctionComponent(
+        null,
+        workInProgress,
+        Component,
+        resolvedProps,
+        renderExpirationTime,
+      );
+      break;
     }
-    return child;
+    case ClassComponent: {
+      child = updateClassComponent(
+        null,
+        workInProgress,
+        Component,
+        resolvedProps,
+        renderExpirationTime,
+      );
+      break;
+    }
+    case ForwardRef: {
+      child = updateForwardRef(
+        null,
+        workInProgress,
+        Component,
+        resolvedProps,
+        renderExpirationTime,
+      );
+      break;
+    }
+    case PureComponent: {
+      child = updatePureComponent(
+        null,
+        workInProgress,
+        Component,
+        resolvedProps,
+        updateExpirationTime,
+        renderExpirationTime,
+      );
+      break;
+    }
+    default: {
+      // This message intentionally doesn't metion ForwardRef or PureComponent
+      // because the fact that it's a separate type of work is an
+      // implementation detail.
+      invariant(
+        false,
+        'Element type is invalid. Received a promise that resolves to: %s. ' +
+          'Promise elements must resolve to a class or function.',
+        Component,
+      );
+    }
+  }
+  return child;
+}
+
+function mountIndeterminateComponent(
+  _current,
+  workInProgress,
+  Component,
+  renderExpirationTime,
+) {
+  if (_current !== null) {
+    // An indeterminate component only mounts if it suspended inside a non-
+    // concurrent tree, in an inconsistent state. We want to tree it like
+    // a new mount, even though an empty version of it already committed.
+    // Disconnect the alternate pointers.
+    _current.alternate = null;
+    workInProgress.alternate = null;
+    // Since this is conceptually a new fiber, schedule a Placement effect
+    workInProgress.effectTag |= Placement;
   }
 
+  const props = workInProgress.pendingProps;
   const unmaskedContext = getUnmaskedContext(workInProgress, Component, false);
   const context = getMaskedContext(workInProgress, unmaskedContext);
 
@@ -1403,14 +1413,6 @@ function beginWork(
           }
           break;
         }
-        case ClassComponentLazy: {
-          const thenable = workInProgress.type;
-          const Component = getResultFromResolvedLazyComponent(thenable);
-          if (isLegacyContextProvider(Component)) {
-            pushLegacyContextProvider(workInProgress);
-          }
-          break;
-        }
         case HostPortal:
           pushHostContainer(
             workInProgress,
@@ -1460,11 +1462,20 @@ function beginWork(
 
   switch (workInProgress.tag) {
     case IndeterminateComponent: {
-      const Component = workInProgress.type;
+      const elementType = workInProgress.elementType;
       return mountIndeterminateComponent(
         current,
         workInProgress,
-        Component,
+        elementType,
+        renderExpirationTime,
+      );
+    }
+    case LazyComponent: {
+      const elementType = workInProgress.elementType;
+      return mountLazyComponent(
+        current,
+        workInProgress,
+        elementType,
         updateExpirationTime,
         renderExpirationTime,
       );
@@ -1472,50 +1483,32 @@ function beginWork(
     case FunctionComponent: {
       const Component = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
+      const resolvedProps =
+        workInProgress.elementType === Component
+          ? unresolvedProps
+          : resolveDefaultProps(Component, unresolvedProps);
       return updateFunctionComponent(
         current,
         workInProgress,
         Component,
-        unresolvedProps,
+        resolvedProps,
         renderExpirationTime,
       );
-    }
-    case FunctionComponentLazy: {
-      const thenable = workInProgress.type;
-      const Component = getResultFromResolvedLazyComponent(thenable);
-      const unresolvedProps = workInProgress.pendingProps;
-      const child = updateFunctionComponent(
-        current,
-        workInProgress,
-        Component,
-        resolveDefaultProps(Component, unresolvedProps),
-        renderExpirationTime,
-      );
-      return child;
     }
     case ClassComponent: {
       const Component = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
+      const resolvedProps =
+        workInProgress.elementType === Component
+          ? unresolvedProps
+          : resolveDefaultProps(Component, unresolvedProps);
       return updateClassComponent(
         current,
         workInProgress,
         Component,
-        unresolvedProps,
+        resolvedProps,
         renderExpirationTime,
       );
-    }
-    case ClassComponentLazy: {
-      const thenable = workInProgress.type;
-      const Component = getResultFromResolvedLazyComponent(thenable);
-      const unresolvedProps = workInProgress.pendingProps;
-      const child = updateClassComponent(
-        current,
-        workInProgress,
-        Component,
-        resolveDefaultProps(Component, unresolvedProps),
-        renderExpirationTime,
-      );
-      return child;
     }
     case HostRoot:
       return updateHostRoot(current, workInProgress, renderExpirationTime);
@@ -1537,26 +1530,18 @@ function beginWork(
       );
     case ForwardRef: {
       const type = workInProgress.type;
+      const unresolvedProps = workInProgress.pendingProps;
+      const resolvedProps =
+        workInProgress.elementType === type
+          ? unresolvedProps
+          : resolveDefaultProps(type, unresolvedProps);
       return updateForwardRef(
         current,
         workInProgress,
         type,
-        workInProgress.pendingProps,
+        resolvedProps,
         renderExpirationTime,
       );
-    }
-    case ForwardRefLazy: {
-      const thenable = workInProgress.type;
-      const Component = getResultFromResolvedLazyComponent(thenable);
-      const unresolvedProps = workInProgress.pendingProps;
-      const child = updateForwardRef(
-        current,
-        workInProgress,
-        Component,
-        resolveDefaultProps(Component, unresolvedProps),
-        renderExpirationTime,
-      );
-      return child;
     }
     case Fragment:
       return updateFragment(current, workInProgress, renderExpirationTime);
@@ -1578,28 +1563,19 @@ function beginWork(
       );
     case PureComponent: {
       const type = workInProgress.type;
+      const unresolvedProps = workInProgress.pendingProps;
+      const resolvedProps =
+        workInProgress.elementType === type
+          ? unresolvedProps
+          : resolveDefaultProps(type, unresolvedProps);
       return updatePureComponent(
         current,
         workInProgress,
         type,
-        workInProgress.pendingProps,
+        resolvedProps,
         updateExpirationTime,
         renderExpirationTime,
       );
-    }
-    case PureComponentLazy: {
-      const thenable = workInProgress.type;
-      const Component = getResultFromResolvedLazyComponent(thenable);
-      const unresolvedProps = workInProgress.pendingProps;
-      const child = updatePureComponent(
-        current,
-        workInProgress,
-        Component,
-        resolveDefaultProps(Component, unresolvedProps),
-        updateExpirationTime,
-        renderExpirationTime,
-      );
-      return child;
     }
     default:
       invariant(

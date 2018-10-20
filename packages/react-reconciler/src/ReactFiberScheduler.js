@@ -38,7 +38,6 @@ import {
 import {
   HostRoot,
   ClassComponent,
-  ClassComponentLazy,
   HostComponent,
   ContextProvider,
   HostPortal,
@@ -53,7 +52,6 @@ import {
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {getResultFromResolvedLazyComponent} from 'shared/ReactLazyComponent';
 
 import {
   scheduleTimeout,
@@ -311,15 +309,6 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
         break;
       case ClassComponent: {
         const Component = failedUnitOfWork.type;
-        if (isLegacyContextProvider(Component)) {
-          popLegacyContext(failedUnitOfWork);
-        }
-        break;
-      }
-      case ClassComponentLazy: {
-        const Component = getResultFromResolvedLazyComponent(
-          failedUnitOfWork.type,
-        );
         if (isLegacyContextProvider(Component)) {
           popLegacyContext(failedUnitOfWork);
         }
@@ -1438,7 +1427,6 @@ function dispatch(
   while (fiber !== null) {
     switch (fiber.tag) {
       case ClassComponent:
-      case ClassComponentLazy:
         const ctor = fiber.type;
         const instance = fiber.stateNode;
         if (
@@ -1612,10 +1600,7 @@ function retrySuspendedRoot(
     // therefore does not have any pending work.
     scheduleWorkToRoot(sourceFiber, retryTime);
     const sourceTag = sourceFiber.tag;
-    if (
-      (sourceTag === ClassComponent || sourceFiber === ClassComponentLazy) &&
-      sourceFiber.stateNode !== null
-    ) {
+    if (sourceTag === ClassComponent && sourceFiber.stateNode !== null) {
       // When we try rendering again, we should not reuse the current fiber,
       // since it's known to be in an inconsistent state. Use a force updte to
       // prevent a bail out.
@@ -1635,7 +1620,7 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
   recordScheduleUpdate();
 
   if (__DEV__) {
-    if (fiber.tag === ClassComponent || fiber.tag === ClassComponentLazy) {
+    if (fiber.tag === ClassComponent) {
       const instance = fiber.stateNode;
       warnAboutInvalidUpdates(instance);
     }
@@ -1692,10 +1677,7 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
   }
 
   if (root === null) {
-    if (
-      __DEV__ &&
-      (fiber.tag === ClassComponent || fiber.tag === ClassComponentLazy)
-    ) {
+    if (__DEV__ && fiber.tag === ClassComponent) {
       warnAboutUpdateOnUnmounted(fiber);
     }
     return null;

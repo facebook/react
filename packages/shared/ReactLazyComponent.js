@@ -29,12 +29,6 @@ export const Pending = 0;
 export const Resolved = 1;
 export const Rejected = 2;
 
-export function getResultFromResolvedLazyComponent<T>(
-  lazyComponent: ResolvedLazyComponent<T>,
-): T {
-  return lazyComponent._result;
-}
-
 export function refineResolvedLazyComponent<T>(
   lazyComponent: LazyComponent<T>,
 ): ResolvedLazyComponent<T> | null {

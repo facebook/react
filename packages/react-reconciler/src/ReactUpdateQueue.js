@@ -89,7 +89,7 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 import {NoWork} from './ReactFiberExpirationTime';
 import {Callback, ShouldCapture, DidCapture} from 'shared/ReactSideEffectTags';
-import {ClassComponent, ClassComponentLazy} from 'shared/ReactWorkTags';
+import {ClassComponent} from 'shared/ReactWorkTags';
 
 import {
   debugRenderPhaseSideEffects,
@@ -271,7 +271,7 @@ export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
 
   if (__DEV__) {
     if (
-      (fiber.tag === ClassComponent || fiber.tag === ClassComponentLazy) &&
+      fiber.tag === ClassComponent &&
       (currentlyProcessingQueue === queue1 ||
         (queue2 !== null && currentlyProcessingQueue === queue2)) &&
       !didWarnUpdateInsideUpdate

@@ -23,11 +23,7 @@ import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
 import maxSigned31BitInt from './maxSigned31BitInt';
 import {NoWork} from './ReactFiberExpirationTime';
-import {
-  ContextProvider,
-  ClassComponent,
-  ClassComponentLazy,
-} from 'shared/ReactWorkTags';
+import {ContextProvider, ClassComponent} from 'shared/ReactWorkTags';
 
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
@@ -163,10 +159,7 @@ export function propagateContextChange(
         ) {
           // Match! Schedule an update on this fiber.
 
-          if (
-            fiber.tag === ClassComponent ||
-            fiber.tag === ClassComponentLazy
-          ) {
+          if (fiber.tag === ClassComponent) {
             // Schedule a force update on the work-in-progress.
             const update = createUpdate(renderExpirationTime);
             update.tag = ForceUpdate;
