@@ -526,7 +526,7 @@ function finishClassComponent(
 
   // Memoize state using the values we just used to render.
   // TODO: Restructure so we never read values from the instance.
-  memoizeState(workInProgress, instance.state);
+  workInProgress.memoizedState = instance.state;
 
   // The context might have changed so we need to recalculate it.
   if (hasContext) {
@@ -1356,13 +1356,6 @@ function bailoutOnAlreadyFinishedWork(
     cloneChildFibers(current, workInProgress);
     return workInProgress.child;
   }
-}
-
-// TODO: Delete memoizeState and move to reconcile/bailout instead
-function memoizeState(workInProgress: Fiber, nextState: any) {
-  workInProgress.memoizedState = nextState;
-  // Don't reset the updateQueue, in case there are pending updates. Resetting
-  // is handled by processUpdateQueue.
 }
 
 function beginWork(
