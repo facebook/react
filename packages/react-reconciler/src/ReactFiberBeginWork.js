@@ -19,7 +19,6 @@ import {
   IndeterminateComponent,
   FunctionComponent,
   ClassComponent,
-  ClassComponentLazy,
   HostRoot,
   HostComponent,
   HostText,

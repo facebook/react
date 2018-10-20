@@ -23,7 +23,6 @@ import {
 import {
   FunctionComponent,
   ClassComponent,
-  ClassComponentLazy,
   HostText,
   HostPortal,
   Fragment,
@@ -138,8 +137,7 @@ function coerceRef(
       if (owner) {
         const ownerFiber = ((owner: any): Fiber);
         invariant(
-          ownerFiber.tag === ClassComponent ||
-            ownerFiber.tag === ClassComponentLazy,
+          ownerFiber.tag === ClassComponent,
           'Function components cannot have refs.',
         );
         inst = ownerFiber.stateNode;
@@ -1309,8 +1307,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       // component, throw an error. If Fiber return types are disabled,
       // we already threw above.
       switch (returnFiber.tag) {
-        case ClassComponent:
-        case ClassComponentLazy: {
+        case ClassComponent: {
           if (__DEV__) {
             const instance = returnFiber.stateNode;
             if (instance.render._isMockFunction) {

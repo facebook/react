@@ -11,9 +11,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   IndeterminateComponent,
   FunctionComponent,
-  FunctionComponentLazy,
   ClassComponent,
-  ClassComponentLazy,
   HostComponent,
   Mode,
 } from 'shared/ReactWorkTags';
@@ -30,9 +28,7 @@ function describeFiber(fiber: Fiber): string {
   switch (fiber.tag) {
     case IndeterminateComponent:
     case FunctionComponent:
-    case FunctionComponentLazy:
     case ClassComponent:
-    case ClassComponentLazy:
     case HostComponent:
     case Mode:
       const owner = fiber._debugOwner;
