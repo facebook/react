@@ -58,6 +58,7 @@ describe('ReactHooks', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.enableHooks = true;
+    ReactFeatureFlags.enableDispatchCallback_DEPRECATED = true;
     ReactFeatureFlags.enableSchedulerTracing = true;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
@@ -241,18 +242,39 @@ describe('ReactHooks', () => {
       ReactNoop.flush();
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
-      counter.current.updateCount(7, count => {
-        ReactNoop.yield(`Did update count`);
-      });
+      expect(() => {
+        counter.current.updateCount(7, count => {
+          ReactNoop.yield(`Did update count`);
+        });
+      }).toWarnDev(
+        'Warning: Update callbacks (the second argument to ' +
+          'dispatch/setState) are deprecated. Try useEffect instead.',
+        {withoutStack: true},
+      );
+
       expect(ReactNoop.flush()).toEqual(['Count: 7', 'Did update count']);
 
       // Update twice in the same batch
-      counter.current.updateCount(1, () => {
-        ReactNoop.yield(`Did update count (first callback)`);
-      });
-      counter.current.updateCount(2, () => {
-        ReactNoop.yield(`Did update count (second callback)`);
-      });
+      expect(() => {
+        counter.current.updateCount(1, () => {
+          ReactNoop.yield(`Did update count (first callback)`);
+        });
+      }).toWarnDev(
+        'Warning: Update callbacks (the second argument to ' +
+          'dispatch/setState) are deprecated. Try useEffect instead.',
+        {withoutStack: true},
+      );
+
+      expect(() => {
+        counter.current.updateCount(2, () => {
+          ReactNoop.yield(`Did update count (second callback)`);
+        });
+      }).toWarnDev(
+        'Warning: Update callbacks (the second argument to ' +
+          'dispatch/setState) are deprecated. Try useEffect instead.',
+        {withoutStack: true},
+      );
+
       expect(ReactNoop.flush()).toEqual([
         // Component only renders once
         'Count: 2',
@@ -273,14 +295,27 @@ describe('ReactHooks', () => {
       ReactNoop.flush();
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
-      counter.current.updateCount(1, count => {
-        ReactNoop.yield(`Did update count (low pri)`);
-      });
-      ReactNoop.flushSync(() => {
-        counter.current.updateCount(2, count => {
-          ReactNoop.yield(`Did update count (high pri)`);
+      expect(() => {
+        counter.current.updateCount(1, count => {
+          ReactNoop.yield(`Did update count (low pri)`);
         });
+      }).toWarnDev(
+        'Warning: Update callbacks (the second argument to ' +
+          'dispatch/setState) are deprecated. Try useEffect instead.',
+        {withoutStack: true},
+      );
+      ReactNoop.flushSync(() => {
+        expect(() => {
+          counter.current.updateCount(2, count => {
+            ReactNoop.yield(`Did update count (high pri)`);
+          });
+        }).toWarnDev(
+          'Warning: Update callbacks (the second argument to ' +
+            'dispatch/setState) are deprecated. Try useEffect instead.',
+          {withoutStack: true},
+        );
       });
+
       expect(ReactNoop.clearYields()).toEqual([
         'Count: 2',
         'Did update count (high pri)',

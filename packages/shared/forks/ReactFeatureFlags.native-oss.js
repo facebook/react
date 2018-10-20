@@ -15,6 +15,7 @@ import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.native-oss';
 export const debugRenderPhaseSideEffects = false;
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableHooks = false;
+export const enableDispatchCallback_DEPRECATED = false;
 export const enableUserTimingAPI = __DEV__;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const warnAboutDeprecatedLifecycles = false;
