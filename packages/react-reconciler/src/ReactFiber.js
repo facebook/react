@@ -299,10 +299,15 @@ function shouldConstruct(Component: Function) {
   return !!(prototype && prototype.isReactComponent);
 }
 
-export function resolveLazyComponentTag(
-  fiber: Fiber,
-  Component: Function,
-): WorkTag {
+export function isSimpleFunctionComponent(type: any) {
+  return (
+    typeof type === 'function' &&
+    !shouldConstruct(type) &&
+    type.defaultProps === undefined
+  );
+}
+
+export function resolveLazyComponentTag(Component: Function): WorkTag {
   if (typeof Component === 'function') {
     return shouldConstruct(Component) ? ClassComponent : FunctionComponent;
   } else if (Component !== undefined && Component !== null) {
@@ -406,20 +411,15 @@ export function createHostRootFiber(isConcurrent: boolean): Fiber {
   return createFiber(HostRoot, null, null, mode);
 }
 
-function createFiberFromElementWithoutDebugInfo(
-  element: ReactElement,
+export function createFiberFromTypeAndProps(
+  type: any, // React$ElementType
+  key: null | string,
+  pendingProps: any,
+  owner: null | Fiber,
   mode: TypeOfMode,
   expirationTime: ExpirationTime,
 ): Fiber {
-  let owner = null;
-  if (__DEV__) {
-    owner = element._owner;
-  }
-
   let fiber;
-  const type = element.type;
-  const key = element.key;
-  const pendingProps = element.props;
 
   let fiberTag = IndeterminateComponent;
   // The resolved type is set if we know what the final type will be. I.e. it's not lazy.
@@ -522,8 +522,18 @@ export function createFiberFromElement(
   mode: TypeOfMode,
   expirationTime: ExpirationTime,
 ): Fiber {
-  const fiber = createFiberFromElementWithoutDebugInfo(
-    element,
+  let owner = null;
+  if (__DEV__) {
+    owner = element._owner;
+  }
+  const type = element.type;
+  const key = element.key;
+  const pendingProps = element.props;
+  const fiber = createFiberFromTypeAndProps(
+    type,
+    key,
+    pendingProps,
+    owner,
     mode,
     expirationTime,
   );
