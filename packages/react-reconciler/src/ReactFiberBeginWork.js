@@ -1080,6 +1080,7 @@ function updateSuspenseComponent(
         ));
         fallbackChildFragment.effectTag |= Placement;
         child = primaryChildFragment;
+        primaryChildFragment.childExpirationTime = NoWork;
         // Skip the primary children, and continue working on the
         // fallback children.
         next = fallbackChildFragment;
@@ -1134,6 +1135,7 @@ function updateSuspenseComponent(
         ));
         fallbackChildFragment.effectTag |= Placement;
         child = primaryChildFragment;
+        primaryChildFragment.childExpirationTime = NoWork;
         // Skip the primary children, and continue working on the
         // fallback children.
         next = fallbackChildFragment;
@@ -1435,6 +1437,7 @@ function beginWork(
             const nextState = workInProgress.memoizedState;
             const nextDidTimeout = nextState !== null && nextState.didTimeout;
             if (nextDidTimeout) {
+              child.childExpirationTime = NoWork;
               return child.sibling;
             } else {
               return child;

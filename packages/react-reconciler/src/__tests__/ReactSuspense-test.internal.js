@@ -435,5 +435,53 @@ describe('ReactSuspense', () => {
       ]);
       expect(root).toMatchRenderedOutput('AB:2C');
     });
+
+    it('bails out on timed-out primary children even if they receive an update', () => {
+      let instance;
+      class Stateful extends React.Component {
+        state = {step: 1};
+        render() {
+          instance = this;
+          return <Text text="Stateful" />;
+        }
+      }
+
+      function App(props) {
+        return (
+          <Suspense fallback={<Text text="Loading..." />}>
+            <Stateful />
+            <AsyncText ms={1000} text={props.text} />
+          </Suspense>
+        );
+      }
+
+      const root = ReactTestRenderer.create(<App text="A" />);
+
+      expect(ReactTestRenderer).toHaveYielded([
+        'Stateful',
+        'Suspend! [A]',
+        'Loading...',
+      ]);
+
+      jest.advanceTimersByTime(1000);
+      expect(ReactTestRenderer).toHaveYielded(['Promise resolved [A]', 'A']);
+      expect(root).toMatchRenderedOutput('StatefulA');
+
+      root.update(<App text="B" />);
+      expect(ReactTestRenderer).toHaveYielded([
+        'Stateful',
+        'Suspend! [B]',
+        'Loading...',
+      ]);
+
+      instance.setState({step: 2});
+
+      jest.advanceTimersByTime(1000);
+      expect(ReactTestRenderer).toHaveYielded([
+        'Promise resolved [B]',
+        'Stateful',
+        'B',
+      ]);
+    });
   });
 });
