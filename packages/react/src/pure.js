@@ -7,34 +7,26 @@
 
 import {REACT_PURE_TYPE} from 'shared/ReactSymbols';
 
+import isValidElementType from 'shared/isValidElementType';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
 export default function pure<Props>(
-  render: (props: Props) => React$Node,
+  type: React$ElementType,
   compare?: (oldProps: Props, newProps: Props) => boolean,
 ) {
   if (__DEV__) {
-    if (typeof render !== 'function') {
+    if (!isValidElementType(type)) {
       warningWithoutStack(
         false,
-        'pure: The first argument must be a function component. Instead ' +
+        'pure: The first argument must be a component. Instead ' +
           'received: %s',
-        render === null ? 'null' : typeof render,
+        type === null ? 'null' : typeof type,
       );
-    } else {
-      const prototype = render.prototype;
-      if (prototype && prototype.isReactComponent) {
-        warningWithoutStack(
-          false,
-          'pure: The first argument must be a function component. Classes ' +
-            'are not supported. Use React.PureComponent instead.',
-        );
-      }
     }
   }
   return {
     $$typeof: REACT_PURE_TYPE,
-    render,
+    type,
     compare: compare === undefined ? null : compare,
   };
 }

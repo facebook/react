@@ -28,6 +28,7 @@ import {
   ForwardRef,
   Profiler,
   PureComponent,
+  SimplePureComponent,
 } from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 import ReactVersion from 'shared/ReactVersion';
@@ -166,6 +167,7 @@ function toTree(node: ?Fiber) {
         rendered: childrenToTree(node.child),
       };
     case FunctionComponent:
+    case SimplePureComponent:
       return {
         nodeType: 'component',
         type: node.type,

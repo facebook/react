@@ -226,4 +226,131 @@ describe('forwardRef', () => {
         '    in Foo (at **)',
     );
   });
+
+  it('should not bailout if forwardRef is not wrapped in pure', () => {
+    const Component = props => <div {...props} />;
+
+    let renderCount = 0;
+
+    const RefForwardingComponent = React.forwardRef((props, ref) => {
+      renderCount++;
+      return <Component {...props} forwardedRef={ref} />;
+    });
+
+    const ref = React.createRef();
+
+    ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />);
+    ReactNoop.flush();
+    expect(renderCount).toBe(1);
+
+    ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />);
+    ReactNoop.flush();
+    expect(renderCount).toBe(2);
+  });
+
+  it('should bailout if forwardRef is wrapped in pure', () => {
+    const Component = props => <div ref={props.forwardedRef} />;
+
+    let renderCount = 0;
+
+    const RefForwardingComponent = React.pure(
+      React.forwardRef((props, ref) => {
+        renderCount++;
+        return <Component {...props} forwardedRef={ref} />;
+      }),
+    );
+
+    const ref = React.createRef();
+
+    ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />);
+    ReactNoop.flush();
+    expect(renderCount).toBe(1);
+
+    expect(ref.current.type).toBe('div');
+
+    ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />);
+    ReactNoop.flush();
+    expect(renderCount).toBe(1);
+
+    const differentRef = React.createRef();
+
+    ReactNoop.render(
+      <RefForwardingComponent ref={differentRef} optional="foo" />,
+    );
+    ReactNoop.flush();
+    expect(renderCount).toBe(2);
+
+    expect(ref.current).toBe(null);
+    expect(differentRef.current.type).toBe('div');
+
+    ReactNoop.render(<RefForwardingComponent ref={ref} optional="bar" />);
+    ReactNoop.flush();
+    expect(renderCount).toBe(3);
+  });
+
+  it('should custom pure comparisons to compose', () => {
+    const Component = props => <div ref={props.forwardedRef} />;
+
+    let renderCount = 0;
+
+    const RefForwardingComponent = React.pure(
+      React.forwardRef((props, ref) => {
+        renderCount++;
+        return <Component {...props} forwardedRef={ref} />;
+      }),
+      (o, p) => o.a === p.a && o.b === p.b,
+    );
+
+    const ref = React.createRef();
+
+    ReactNoop.render(<RefForwardingComponent ref={ref} a="0" b="0" c="1" />);
+    ReactNoop.flush();
+    expect(renderCount).toBe(1);
+
+    expect(ref.current.type).toBe('div');
+
+    // Changing either a or b rerenders
+    ReactNoop.render(<RefForwardingComponent ref={ref} a="0" b="1" c="1" />);
+    ReactNoop.flush();
+    expect(renderCount).toBe(2);
+
+    // Changing c doesn't rerender
+    ReactNoop.render(<RefForwardingComponent ref={ref} a="0" b="1" c="2" />);
+    ReactNoop.flush();
+    expect(renderCount).toBe(2);
+
+    const ComposedPure = React.pure(
+      RefForwardingComponent,
+      (o, p) => o.a === p.a && o.c === p.c,
+    );
+
+    ReactNoop.render(<ComposedPure ref={ref} a="0" b="0" c="0" />);
+    ReactNoop.flush();
+    expect(renderCount).toBe(3);
+
+    // Changing just b no longer updates
+    ReactNoop.render(<ComposedPure ref={ref} a="0" b="1" c="0" />);
+    ReactNoop.flush();
+    expect(renderCount).toBe(3);
+
+    // Changing just a and c updates
+    ReactNoop.render(<ComposedPure ref={ref} a="2" b="2" c="2" />);
+    ReactNoop.flush();
+    expect(renderCount).toBe(4);
+
+    // Changing just c does not update
+    ReactNoop.render(<ComposedPure ref={ref} a="2" b="2" c="3" />);
+    ReactNoop.flush();
+    expect(renderCount).toBe(4);
+
+    // Changing ref still rerenders
+    const differentRef = React.createRef();
+
+    ReactNoop.render(<ComposedPure ref={differentRef} a="2" b="2" c="3" />);
+    ReactNoop.flush();
+    expect(renderCount).toBe(5);
+
+    expect(ref.current).toBe(null);
+    expect(differentRef.current.type).toBe('div');
+  });
 });
