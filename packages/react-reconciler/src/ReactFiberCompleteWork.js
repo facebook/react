@@ -35,6 +35,7 @@ import {
   Profiler,
   SuspenseComponent,
   PureComponent,
+  SimplePureComponent,
   LazyComponent,
 } from 'shared/ReactWorkTags';
 import {Placement, Ref, Update} from 'shared/ReactSideEffectTags';
@@ -539,6 +540,7 @@ function completeWork(
       break;
     case LazyComponent:
       break;
+    case SimplePureComponent:
     case FunctionComponent:
       break;
     case ClassComponent: {

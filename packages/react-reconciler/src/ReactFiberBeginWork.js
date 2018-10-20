@@ -31,6 +31,7 @@ import {
   Profiler,
   SuspenseComponent,
   PureComponent,
+  SimplePureComponent,
   LazyComponent,
 } from 'shared/ReactWorkTags';
 import {
@@ -106,6 +107,7 @@ import {
   createFiberFromTypeAndProps,
   createFiberFromFragment,
   createWorkInProgress,
+  isSimpleFunctionComponent,
 } from './ReactFiber';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -238,6 +240,22 @@ function updatePureComponent(
   renderExpirationTime: ExpirationTime,
 ): null | Fiber {
   if (current === null) {
+    let type = Component.type;
+    if (isSimpleFunctionComponent(type) && Component.compare === null) {
+      // If this is a plain function component without default props,
+      // and with only the default shallow comparison, we upgrade it
+      // to a SimplePureComponent to allow fast path updates.
+      workInProgress.tag = SimplePureComponent;
+      workInProgress.type = type;
+      return updateSimplePureComponent(
+        current,
+        workInProgress,
+        type,
+        nextProps,
+        updateExpirationTime,
+        renderExpirationTime,
+      );
+    }
     let child = createFiberFromTypeAndProps(
       Component.type,
       null,
@@ -279,6 +297,40 @@ function updatePureComponent(
   newChild.return = workInProgress;
   workInProgress.child = newChild;
   return newChild;
+}
+
+function updateSimplePureComponent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  Component: any,
+  nextProps: any,
+  updateExpirationTime,
+  renderExpirationTime: ExpirationTime,
+): null | Fiber {
+  if (
+    current !== null &&
+    (updateExpirationTime === NoWork ||
+      updateExpirationTime > renderExpirationTime)
+  ) {
+    const prevProps = current.memoizedProps;
+    if (
+      shallowEqual(prevProps, nextProps) &&
+      current.ref === workInProgress.ref
+    ) {
+      return bailoutOnAlreadyFinishedWork(
+        current,
+        workInProgress,
+        renderExpirationTime,
+      );
+    }
+  }
+  return updateFunctionComponent(
+    current,
+    workInProgress,
+    Component,
+    nextProps,
+    renderExpirationTime,
+  );
 }
 
 function updateFragment(
@@ -1569,6 +1621,16 @@ function beginWork(
         workInProgress,
         type,
         resolvedProps,
+        updateExpirationTime,
+        renderExpirationTime,
+      );
+    }
+    case SimplePureComponent: {
+      return updateSimplePureComponent(
+        current,
+        workInProgress,
+        workInProgress.type,
+        workInProgress.pendingProps,
         updateExpirationTime,
         renderExpirationTime,
       );
