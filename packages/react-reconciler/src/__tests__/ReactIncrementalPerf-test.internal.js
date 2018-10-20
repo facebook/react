@@ -573,7 +573,7 @@ describe('ReactDebugFiberPerf', () => {
       return <span />;
     }
 
-    async function fakeImport(result) {
+    function fakeImport(result) {
       return {default: result};
     }
 
@@ -600,7 +600,8 @@ describe('ReactDebugFiberPerf', () => {
         return <div />;
       }),
     );
-    await LazyFoo;
+
+    await Promise.resolve();
 
     ReactNoop.render(
       <Parent>
