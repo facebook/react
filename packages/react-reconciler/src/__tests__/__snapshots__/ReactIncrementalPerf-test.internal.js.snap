@@ -249,7 +249,7 @@ exports[`ReactDebugFiberPerf measures deprioritized work 1`] = `
   ⚛ (Committing Host Effects: 1 Total)
   ⚛ (Calling Lifecycle Methods: 0 Total)
 
-⚛ (Waiting for async callback... will force flush in 10737418210 ms)
+⚛ (Waiting for async callback... will force flush in 10737418200 ms)
 
 // Flush the child
 ⚛ (React Tree Reconciliation: Completed Root)
