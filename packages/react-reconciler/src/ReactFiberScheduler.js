@@ -53,7 +53,6 @@ import {
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {getResultFromResolvedLazyComponent} from 'shared/ReactLazyComponent';
 
 import {
   scheduleTimeout,
@@ -317,9 +316,7 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
         break;
       }
       case ClassComponentLazy: {
-        const Component = getResultFromResolvedLazyComponent(
-          failedUnitOfWork.type,
-        );
+        const Component = failedUnitOfWork.type;
         if (isLegacyContextProvider(Component)) {
           popLegacyContext(failedUnitOfWork);
         }

@@ -426,13 +426,11 @@ function createFiberFromElementWithoutDebugInfo(
   const pendingProps = element.props;
 
   let fiberTag = IndeterminateComponent;
-  // The resolved type is set if we know what the final type will be. I.e. it's not indeterminate.
+  // The resolved type is set if we know what the final type will be. I.e. it's not lazy.
   let resolvedType = type;
   if (typeof type === 'function') {
     if (shouldConstruct(type)) {
       fiberTag = ClassComponent;
-    } else {
-      resolvedType = null;
     }
   } else if (typeof type === 'string') {
     fiberTag = HostComponent;

@@ -104,7 +104,6 @@ import {
   updateClassInstance,
 } from './ReactFiberClassComponent';
 import {readLazyComponentType} from './ReactFiberLazyComponent';
-import {getResultFromResolvedLazyComponent} from 'shared/ReactLazyComponent';
 import {
   resolveLazyComponentTag,
   createFiberFromFragment,
@@ -725,8 +724,6 @@ function mountIndeterminateComponent(
 
   const props = workInProgress.pendingProps;
   let Component;
-  // TODO: This will be storing the unwrapped value insteads.
-  workInProgress.type = elementType;
   if (
     typeof elementType === 'object' &&
     elementType !== null &&
@@ -736,6 +733,8 @@ function mountIndeterminateComponent(
     // Cancel and resume right after we know the tag.
     cancelWorkTimer(workInProgress);
     Component = readLazyComponentType(elementType);
+    // Store the unwrapped component in the type.
+    workInProgress.type = Component;
     const resolvedTag = (workInProgress.tag = resolveLazyComponentTag(
       workInProgress,
       Component,
@@ -799,6 +798,7 @@ function mountIndeterminateComponent(
     }
     return child;
   } else {
+    workInProgress.type = elementType;
     Component = elementType;
   }
 
@@ -1407,8 +1407,7 @@ function beginWork(
           break;
         }
         case ClassComponentLazy: {
-          const thenable = workInProgress.type;
-          const Component = getResultFromResolvedLazyComponent(thenable);
+          const Component = workInProgress.type;
           if (isLegacyContextProvider(Component)) {
             pushLegacyContextProvider(workInProgress);
           }
@@ -1483,8 +1482,7 @@ function beginWork(
       );
     }
     case FunctionComponentLazy: {
-      const thenable = workInProgress.type;
-      const Component = getResultFromResolvedLazyComponent(thenable);
+      const Component = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
       const child = updateFunctionComponent(
         current,
@@ -1507,8 +1505,7 @@ function beginWork(
       );
     }
     case ClassComponentLazy: {
-      const thenable = workInProgress.type;
-      const Component = getResultFromResolvedLazyComponent(thenable);
+      const Component = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
       const child = updateClassComponent(
         current,
@@ -1548,8 +1545,7 @@ function beginWork(
       );
     }
     case ForwardRefLazy: {
-      const thenable = workInProgress.type;
-      const Component = getResultFromResolvedLazyComponent(thenable);
+      const Component = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
       const child = updateForwardRef(
         current,
@@ -1590,8 +1586,7 @@ function beginWork(
       );
     }
     case PureComponentLazy: {
-      const thenable = workInProgress.type;
-      const Component = getResultFromResolvedLazyComponent(thenable);
+      const Component = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
       const child = updatePureComponent(
         current,

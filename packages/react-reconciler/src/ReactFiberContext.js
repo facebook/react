@@ -20,7 +20,6 @@ import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import checkPropTypes from 'prop-types/checkPropTypes';
-import {getResultFromResolvedLazyComponent} from 'shared/ReactLazyComponent';
 
 import * as ReactCurrentFiber from './ReactCurrentFiber';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
@@ -298,7 +297,7 @@ function findCurrentUnmaskedContext(fiber: Fiber): Object {
         break;
       }
       case ClassComponentLazy: {
-        const Component = getResultFromResolvedLazyComponent(node.type);
+        const Component = node.type;
         if (isContextProvider(Component)) {
           return node.stateNode.__reactInternalMemoizedMergedChildContext;
         }

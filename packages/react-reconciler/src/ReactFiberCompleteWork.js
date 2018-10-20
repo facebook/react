@@ -42,7 +42,6 @@ import {
 } from 'shared/ReactWorkTags';
 import {Placement, Ref, Update} from 'shared/ReactSideEffectTags';
 import invariant from 'shared/invariant';
-import {getResultFromResolvedLazyComponent} from 'shared/ReactLazyComponent';
 
 import {
   createInstance,
@@ -552,7 +551,7 @@ function completeWork(
       break;
     }
     case ClassComponentLazy: {
-      const Component = getResultFromResolvedLazyComponent(workInProgress.type);
+      const Component = workInProgress.type;
       if (isLegacyContextProvider(Component)) {
         popLegacyContext(workInProgress);
       }
