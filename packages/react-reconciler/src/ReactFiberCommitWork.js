@@ -26,7 +26,6 @@ import {
 } from 'shared/ReactFeatureFlags';
 import {
   ClassComponent,
-  ClassComponentLazy,
   HostRoot,
   HostComponent,
   HostText,
@@ -185,8 +184,7 @@ function commitBeforeMutationLifeCycles(
   finishedWork: Fiber,
 ): void {
   switch (finishedWork.tag) {
-    case ClassComponent:
-    case ClassComponentLazy: {
+    case ClassComponent: {
       if (finishedWork.effectTag & Snapshot) {
         if (current !== null) {
           const prevProps = current.memoizedProps;
@@ -242,8 +240,7 @@ function commitLifeCycles(
   committedExpirationTime: ExpirationTime,
 ): void {
   switch (finishedWork.tag) {
-    case ClassComponent:
-    case ClassComponentLazy: {
+    case ClassComponent: {
       const instance = finishedWork.stateNode;
       if (finishedWork.effectTag & Update) {
         if (current === null) {
@@ -289,7 +286,6 @@ function commitLifeCycles(
               instance = getPublicInstance(finishedWork.child.stateNode);
               break;
             case ClassComponent:
-            case ClassComponentLazy:
               instance = finishedWork.child.stateNode;
               break;
           }
@@ -496,8 +492,7 @@ function commitUnmount(current: Fiber): void {
   onCommitUnmount(current);
 
   switch (current.tag) {
-    case ClassComponent:
-    case ClassComponentLazy: {
+    case ClassComponent: {
       safelyDetachRef(current);
       const instance = current.stateNode;
       if (typeof instance.componentWillUnmount === 'function') {
@@ -590,8 +585,7 @@ function commitContainer(finishedWork: Fiber) {
   }
 
   switch (finishedWork.tag) {
-    case ClassComponent:
-    case ClassComponentLazy: {
+    case ClassComponent: {
       return;
     }
     case HostComponent: {
@@ -876,8 +870,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
   }
 
   switch (finishedWork.tag) {
-    case ClassComponent:
-    case ClassComponentLazy: {
+    case ClassComponent: {
       return;
     }
     case HostComponent: {

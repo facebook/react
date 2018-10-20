@@ -17,9 +17,7 @@ import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
 import {
   Fragment,
   FunctionComponent,
-  FunctionComponentLazy,
   ClassComponent,
-  ClassComponentLazy,
   HostComponent,
   HostPortal,
   HostText,
@@ -29,9 +27,7 @@ import {
   Mode,
   ForwardRef,
   Profiler,
-  ForwardRefLazy,
   PureComponent,
-  PureComponentLazy,
 } from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 import ReactVersion from 'shared/ReactVersion';
@@ -169,17 +165,6 @@ function toTree(node: ?Fiber) {
         instance: node.stateNode,
         rendered: childrenToTree(node.child),
       };
-    case ClassComponentLazy: {
-      const thenable = node.type;
-      const type = thenable._reactResult;
-      return {
-        nodeType: 'component',
-        type,
-        props: {...node.memoizedProps},
-        instance: node.stateNode,
-        rendered: childrenToTree(node.child),
-      };
-    }
     case FunctionComponent:
       return {
         nodeType: 'component',
@@ -188,17 +173,6 @@ function toTree(node: ?Fiber) {
         instance: null,
         rendered: childrenToTree(node.child),
       };
-    case FunctionComponentLazy: {
-      const thenable = node.type;
-      const type = thenable._reactResult;
-      return {
-        nodeType: 'component',
-        type: type,
-        props: {...node.memoizedProps},
-        instance: node.stateNode,
-        rendered: childrenToTree(node.child),
-      };
-    }
     case HostComponent: {
       return {
         nodeType: 'host',
@@ -216,9 +190,7 @@ function toTree(node: ?Fiber) {
     case Mode:
     case Profiler:
     case ForwardRef:
-    case ForwardRefLazy:
     case PureComponent:
-    case PureComponentLazy:
       return childrenToTree(node.child);
     default:
       invariant(
@@ -231,14 +203,10 @@ function toTree(node: ?Fiber) {
 
 const validWrapperTypes = new Set([
   FunctionComponent,
-  FunctionComponentLazy,
   ClassComponent,
-  ClassComponentLazy,
   HostComponent,
   ForwardRef,
-  ForwardRefLazy,
   PureComponent,
-  PureComponentLazy,
   // Normally skipped, but used when there's more than one root child.
   HostRoot,
 ]);

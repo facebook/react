@@ -23,15 +23,10 @@ import {
   findCurrentHostFiberWithNoPortals,
 } from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
-import {
-  HostComponent,
-  ClassComponent,
-  ClassComponentLazy,
-} from 'shared/ReactWorkTags';
+import {HostComponent, ClassComponent} from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {getResultFromResolvedLazyComponent} from 'shared/ReactLazyComponent';
 
 import {getPublicInstance} from './ReactFiberHostConfig';
 import {
@@ -103,11 +98,6 @@ function getContextForSubtree(
 
   if (fiber.tag === ClassComponent) {
     const Component = fiber.type;
-    if (isLegacyContextProvider(Component)) {
-      return processChildContext(fiber, Component, parentContext);
-    }
-  } else if (fiber.tag === ClassComponentLazy) {
-    const Component = getResultFromResolvedLazyComponent(fiber.type);
     if (isLegacyContextProvider(Component)) {
       return processChildContext(fiber, Component, parentContext);
     }

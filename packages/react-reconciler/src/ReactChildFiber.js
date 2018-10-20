@@ -23,7 +23,6 @@ import {
 import {
   FunctionComponent,
   ClassComponent,
-  ClassComponentLazy,
   HostText,
   HostPortal,
   Fragment,
@@ -138,8 +137,7 @@ function coerceRef(
       if (owner) {
         const ownerFiber = ((owner: any): Fiber);
         invariant(
-          ownerFiber.tag === ClassComponent ||
-            ownerFiber.tag === ClassComponentLazy,
+          ownerFiber.tag === ClassComponent,
           'Function components cannot have refs.',
         );
         inst = ownerFiber.stateNode;
@@ -379,7 +377,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     element: ReactElement,
     expirationTime: ExpirationTime,
   ): Fiber {
-    if (current !== null && current.type === element.type) {
+    if (current !== null && current.elementType === element.type) {
       // Move based on index
       const existing = useFiber(current, element.props, expirationTime);
       existing.ref = coerceRef(returnFiber, current, element);
@@ -1122,7 +1120,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         if (
           child.tag === Fragment
             ? element.type === REACT_FRAGMENT_TYPE
-            : child.type === element.type
+            : child.elementType === element.type
         ) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(
@@ -1309,8 +1307,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       // component, throw an error. If Fiber return types are disabled,
       // we already threw above.
       switch (returnFiber.tag) {
-        case ClassComponent:
-        case ClassComponentLazy: {
+        case ClassComponent: {
           if (__DEV__) {
             const instance = returnFiber.stateNode;
             if (instance.render._isMockFunction) {

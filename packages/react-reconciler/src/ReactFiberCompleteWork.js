@@ -22,9 +22,7 @@ import type {SuspenseState} from './ReactFiberSuspenseComponent';
 import {
   IndeterminateComponent,
   FunctionComponent,
-  FunctionComponentLazy,
   ClassComponent,
-  ClassComponentLazy,
   HostRoot,
   HostComponent,
   HostText,
@@ -36,13 +34,11 @@ import {
   Mode,
   Profiler,
   SuspenseComponent,
-  ForwardRefLazy,
   PureComponent,
-  PureComponentLazy,
+  LazyComponent,
 } from 'shared/ReactWorkTags';
 import {Placement, Ref, Update} from 'shared/ReactSideEffectTags';
 import invariant from 'shared/invariant';
-import {getResultFromResolvedLazyComponent} from 'shared/ReactLazyComponent';
 
 import {
   createInstance,
@@ -541,18 +537,12 @@ function completeWork(
   switch (workInProgress.tag) {
     case IndeterminateComponent:
       break;
+    case LazyComponent:
+      break;
     case FunctionComponent:
-    case FunctionComponentLazy:
       break;
     case ClassComponent: {
       const Component = workInProgress.type;
-      if (isLegacyContextProvider(Component)) {
-        popLegacyContext(workInProgress);
-      }
-      break;
-    }
-    case ClassComponentLazy: {
-      const Component = getResultFromResolvedLazyComponent(workInProgress.type);
       if (isLegacyContextProvider(Component)) {
         popLegacyContext(workInProgress);
       }
@@ -694,8 +684,6 @@ function completeWork(
       break;
     }
     case ForwardRef:
-    case ForwardRefLazy:
-      break;
     case SuspenseComponent: {
       const nextState = workInProgress.memoizedState;
       const prevState = current !== null ? current.memoizedState : null;
@@ -725,7 +713,6 @@ function completeWork(
     case ContextConsumer:
       break;
     case PureComponent:
-    case PureComponentLazy:
       break;
     default:
       invariant(

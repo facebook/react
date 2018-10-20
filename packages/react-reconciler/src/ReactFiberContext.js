@@ -11,16 +11,11 @@ import type {Fiber} from './ReactFiber';
 import type {StackCursor} from './ReactFiberStack';
 
 import {isFiberMounted} from 'react-reconciler/reflection';
-import {
-  ClassComponent,
-  HostRoot,
-  ClassComponentLazy,
-} from 'shared/ReactWorkTags';
+import {ClassComponent, HostRoot} from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import checkPropTypes from 'prop-types/checkPropTypes';
-import {getResultFromResolvedLazyComponent} from 'shared/ReactLazyComponent';
 
 import * as ReactCurrentFiber from './ReactCurrentFiber';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
@@ -279,8 +274,7 @@ function findCurrentUnmaskedContext(fiber: Fiber): Object {
   // Currently this is only used with renderSubtreeIntoContainer; not sure if it
   // makes sense elsewhere
   invariant(
-    isFiberMounted(fiber) &&
-      (fiber.tag === ClassComponent || fiber.tag === ClassComponentLazy),
+    isFiberMounted(fiber) && fiber.tag === ClassComponent,
     'Expected subtree parent to be a mounted class component. ' +
       'This error is likely caused by a bug in React. Please file an issue.',
   );
@@ -292,13 +286,6 @@ function findCurrentUnmaskedContext(fiber: Fiber): Object {
         return node.stateNode.context;
       case ClassComponent: {
         const Component = node.type;
-        if (isContextProvider(Component)) {
-          return node.stateNode.__reactInternalMemoizedMergedChildContext;
-        }
-        break;
-      }
-      case ClassComponentLazy: {
-        const Component = getResultFromResolvedLazyComponent(node.type);
         if (isContextProvider(Component)) {
           return node.stateNode.__reactInternalMemoizedMergedChildContext;
         }
