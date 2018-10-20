@@ -437,10 +437,7 @@ export function processUpdateQueue<State>(
       }
       // Since this update will remain in the list, update the remaining
       // expiration time.
-      if (
-        newExpirationTime === NoWork ||
-        newExpirationTime > updateExpirationTime
-      ) {
+      if (newExpirationTime > updateExpirationTime) {
         newExpirationTime = updateExpirationTime;
       }
     } else {
@@ -490,10 +487,7 @@ export function processUpdateQueue<State>(
       }
       // Since this update will remain in the list, update the remaining
       // expiration time.
-      if (
-        newExpirationTime === NoWork ||
-        newExpirationTime > updateExpirationTime
-      ) {
+      if (newExpirationTime > updateExpirationTime) {
         newExpirationTime = updateExpirationTime;
       }
     } else {

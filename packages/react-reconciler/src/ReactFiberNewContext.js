@@ -177,17 +177,13 @@ export function propagateContextChange(
             enqueueUpdate(fiber, update);
           }
 
-          if (
-            fiber.expirationTime === NoWork ||
-            fiber.expirationTime > renderExpirationTime
-          ) {
+          if (fiber.expirationTime > renderExpirationTime) {
             fiber.expirationTime = renderExpirationTime;
           }
           let alternate = fiber.alternate;
           if (
             alternate !== null &&
-            (alternate.expirationTime === NoWork ||
-              alternate.expirationTime > renderExpirationTime)
+            alternate.expirationTime > renderExpirationTime
           ) {
             alternate.expirationTime = renderExpirationTime;
           }
@@ -196,22 +192,17 @@ export function propagateContextChange(
           let node = fiber.return;
           while (node !== null) {
             alternate = node.alternate;
-            if (
-              node.childExpirationTime === NoWork ||
-              node.childExpirationTime > renderExpirationTime
-            ) {
+            if (node.childExpirationTime > renderExpirationTime) {
               node.childExpirationTime = renderExpirationTime;
               if (
                 alternate !== null &&
-                (alternate.childExpirationTime === NoWork ||
-                  alternate.childExpirationTime > renderExpirationTime)
+                alternate.childExpirationTime > renderExpirationTime
               ) {
                 alternate.childExpirationTime = renderExpirationTime;
               }
             } else if (
               alternate !== null &&
-              (alternate.childExpirationTime === NoWork ||
-                alternate.childExpirationTime > renderExpirationTime)
+              alternate.childExpirationTime > renderExpirationTime
             ) {
               alternate.childExpirationTime = renderExpirationTime;
             } else {

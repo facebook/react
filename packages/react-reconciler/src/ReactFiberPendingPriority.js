@@ -225,18 +225,10 @@ export function findEarliestOutstandingPriorityLevel(
 
   const earliestPendingTime = root.earliestPendingTime;
   const earliestSuspendedTime = root.earliestSuspendedTime;
-  if (
-    earliestExpirationTime === NoWork ||
-    (earliestPendingTime !== NoWork &&
-      earliestPendingTime < earliestExpirationTime)
-  ) {
+  if (earliestPendingTime < earliestExpirationTime) {
     earliestExpirationTime = earliestPendingTime;
   }
-  if (
-    earliestExpirationTime === NoWork ||
-    (earliestSuspendedTime !== NoWork &&
-      earliestSuspendedTime < earliestExpirationTime)
-  ) {
+  if (earliestSuspendedTime < earliestExpirationTime) {
     earliestExpirationTime = earliestSuspendedTime;
   }
   return earliestExpirationTime;
@@ -278,11 +270,7 @@ function findNextExpirationTimeToWorkOn(completedExpirationTime, root) {
   }
 
   let expirationTime = nextExpirationTimeToWorkOn;
-  if (
-    expirationTime !== NoWork &&
-    earliestSuspendedTime !== NoWork &&
-    earliestSuspendedTime < expirationTime
-  ) {
+  if (expirationTime !== NoWork && earliestSuspendedTime < expirationTime) {
     // Expire using the earliest known expiration time.
     expirationTime = earliestSuspendedTime;
   }
