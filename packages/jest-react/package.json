@@ -16,7 +16,7 @@
   "homepage": "https://reactjs.org/",
   "peerDependencies": {
     "jest": "^23.0.1",
-    "react": "^16.0.0 || 16.6.0-alpha.8af6728",
+    "react": "^16.0.0 || 16.6.0-beta.0",
     "react-test-renderer": "^16.0.0"
   },
   "files": [

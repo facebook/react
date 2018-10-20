@@ -22,7 +22,7 @@
     "node": ">=0.10.0"
   },
   "peerDependencies": {
-    "react": "^16.0.0 || 16.6.0-alpha.8af6728"
+    "react": "^16.0.0 || 16.6.0-beta.0"
   },
   "dependencies": {
     "loose-envify": "^1.1.0",
