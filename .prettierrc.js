@@ -1,3 +1,5 @@
+'use strict';
+
 const {esNextPaths} = require('./scripts/shared/pathsByLanguageVersion');
 
 module.exports = {
