@@ -18,7 +18,6 @@ import checkPropTypes from 'prop-types/checkPropTypes';
 import {
   IndeterminateComponent,
   FunctionComponent,
-  FunctionComponentLazy,
   ClassComponent,
   ClassComponentLazy,
   HostRoot,
@@ -26,7 +25,6 @@ import {
   HostText,
   HostPortal,
   ForwardRef,
-  ForwardRefLazy,
   Fragment,
   Mode,
   ContextProvider,
@@ -34,7 +32,6 @@ import {
   Profiler,
   SuspenseComponent,
   PureComponent,
-  PureComponentLazy,
 } from 'shared/ReactWorkTags';
 import {
   NoEffect,
@@ -743,7 +740,7 @@ function mountIndeterminateComponent(
     const resolvedProps = resolveDefaultProps(Component, props);
     let child;
     switch (resolvedTag) {
-      case FunctionComponentLazy: {
+      case FunctionComponent: {
         child = updateFunctionComponent(
           null,
           workInProgress,
@@ -753,7 +750,7 @@ function mountIndeterminateComponent(
         );
         break;
       }
-      case ClassComponentLazy: {
+      case ClassComponent: {
         child = updateClassComponent(
           null,
           workInProgress,
@@ -763,7 +760,7 @@ function mountIndeterminateComponent(
         );
         break;
       }
-      case ForwardRefLazy: {
+      case ForwardRef: {
         child = updateForwardRef(
           null,
           workInProgress,
@@ -773,7 +770,7 @@ function mountIndeterminateComponent(
         );
         break;
       }
-      case PureComponentLazy: {
+      case PureComponent: {
         child = updatePureComponent(
           null,
           workInProgress,
@@ -1406,13 +1403,6 @@ function beginWork(
           }
           break;
         }
-        case ClassComponentLazy: {
-          const Component = workInProgress.type;
-          if (isLegacyContextProvider(Component)) {
-            pushLegacyContextProvider(workInProgress);
-          }
-          break;
-        }
         case HostPortal:
           pushHostContainer(
             workInProgress,
@@ -1473,48 +1463,32 @@ function beginWork(
     case FunctionComponent: {
       const Component = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
+      const resolvedProps =
+        workInProgress.elementType === Component
+          ? unresolvedProps
+          : resolveDefaultProps(Component, unresolvedProps);
       return updateFunctionComponent(
         current,
         workInProgress,
         Component,
-        unresolvedProps,
+        resolvedProps,
         renderExpirationTime,
       );
-    }
-    case FunctionComponentLazy: {
-      const Component = workInProgress.type;
-      const unresolvedProps = workInProgress.pendingProps;
-      const child = updateFunctionComponent(
-        current,
-        workInProgress,
-        Component,
-        resolveDefaultProps(Component, unresolvedProps),
-        renderExpirationTime,
-      );
-      return child;
     }
     case ClassComponent: {
       const Component = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
+      const resolvedProps =
+        workInProgress.elementType === Component
+          ? unresolvedProps
+          : resolveDefaultProps(Component, unresolvedProps);
       return updateClassComponent(
         current,
         workInProgress,
         Component,
-        unresolvedProps,
+        resolvedProps,
         renderExpirationTime,
       );
-    }
-    case ClassComponentLazy: {
-      const Component = workInProgress.type;
-      const unresolvedProps = workInProgress.pendingProps;
-      const child = updateClassComponent(
-        current,
-        workInProgress,
-        Component,
-        resolveDefaultProps(Component, unresolvedProps),
-        renderExpirationTime,
-      );
-      return child;
     }
     case HostRoot:
       return updateHostRoot(current, workInProgress, renderExpirationTime);
@@ -1536,25 +1510,18 @@ function beginWork(
       );
     case ForwardRef: {
       const type = workInProgress.type;
+      const unresolvedProps = workInProgress.pendingProps;
+      const resolvedProps =
+        workInProgress.elementType === type
+          ? unresolvedProps
+          : resolveDefaultProps(type, unresolvedProps);
       return updateForwardRef(
         current,
         workInProgress,
         type,
-        workInProgress.pendingProps,
+        resolvedProps,
         renderExpirationTime,
       );
-    }
-    case ForwardRefLazy: {
-      const Component = workInProgress.type;
-      const unresolvedProps = workInProgress.pendingProps;
-      const child = updateForwardRef(
-        current,
-        workInProgress,
-        Component,
-        resolveDefaultProps(Component, unresolvedProps),
-        renderExpirationTime,
-      );
-      return child;
     }
     case Fragment:
       return updateFragment(current, workInProgress, renderExpirationTime);
@@ -1576,27 +1543,19 @@ function beginWork(
       );
     case PureComponent: {
       const type = workInProgress.type;
+      const unresolvedProps = workInProgress.pendingProps;
+      const resolvedProps =
+        workInProgress.elementType === type
+          ? unresolvedProps
+          : resolveDefaultProps(type, unresolvedProps);
       return updatePureComponent(
         current,
         workInProgress,
         type,
-        workInProgress.pendingProps,
+        resolvedProps,
         updateExpirationTime,
         renderExpirationTime,
       );
-    }
-    case PureComponentLazy: {
-      const Component = workInProgress.type;
-      const unresolvedProps = workInProgress.pendingProps;
-      const child = updatePureComponent(
-        current,
-        workInProgress,
-        Component,
-        resolveDefaultProps(Component, unresolvedProps),
-        updateExpirationTime,
-        renderExpirationTime,
-      );
-      return child;
     }
     default:
       invariant(

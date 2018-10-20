@@ -229,7 +229,7 @@ describe('ReactLazy', () => {
     T.defaultProps = {text: 'Hi again'};
     root.update(
       <Suspense fallback={<Text text="Loading..." />}>
-        <LazyText text="Hi again" />
+        <LazyText />
       </Suspense>,
     );
     expect(root).toFlushAndYield(['Hi again']);

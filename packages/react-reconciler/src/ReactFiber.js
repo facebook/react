@@ -34,11 +34,8 @@ import {
   ContextConsumer,
   Profiler,
   SuspenseComponent,
-  FunctionComponentLazy,
-  ClassComponentLazy,
-  ForwardRefLazy,
+  FunctionComponent,
   PureComponent,
-  PureComponentLazy,
 } from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
@@ -306,16 +303,14 @@ export function resolveLazyComponentTag(
   Component: Function,
 ): WorkTag {
   if (typeof Component === 'function') {
-    return shouldConstruct(Component)
-      ? ClassComponentLazy
-      : FunctionComponentLazy;
+    return shouldConstruct(Component) ? ClassComponent : FunctionComponent;
   } else if (Component !== undefined && Component !== null) {
     const $$typeof = Component.$$typeof;
     if ($$typeof === REACT_FORWARD_REF_TYPE) {
-      return ForwardRefLazy;
+      return ForwardRef;
     }
     if ($$typeof === REACT_PURE_TYPE) {
-      return PureComponentLazy;
+      return PureComponent;
     }
   }
   return IndeterminateComponent;
