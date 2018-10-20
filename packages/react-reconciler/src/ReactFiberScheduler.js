@@ -111,7 +111,12 @@ import {
   computeInteractiveExpiration,
 } from './ReactFiberExpirationTime';
 import {ConcurrentMode, ProfileMode, NoContext} from './ReactTypeOfMode';
-import {enqueueUpdate, resetCurrentlyProcessingQueue} from './ReactUpdateQueue';
+import {
+  enqueueUpdate,
+  resetCurrentlyProcessingQueue,
+  ForceUpdate,
+  createUpdate,
+} from './ReactUpdateQueue';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
   isContextProvider as isLegacyContextProvider,
@@ -1604,6 +1609,18 @@ function retrySuspendedRoot(
     // fiber, too, since it already committed in an inconsistent state and
     // therefore does not have any pending work.
     scheduleWorkToRoot(sourceFiber, retryTime);
+    const sourceTag = sourceFiber.tag;
+    if (
+      (sourceTag === ClassComponent || sourceFiber === ClassComponentLazy) &&
+      sourceFiber.stateNode !== null
+    ) {
+      // When we try rendering again, we should not reuse the current fiber,
+      // since it's known to be in an inconsistent state. Use a force updte to
+      // prevent a bail out.
+      const update = createUpdate(retryTime);
+      update.tag = ForceUpdate;
+      enqueueUpdate(sourceFiber, update);
+    }
   }
 
   const rootExpirationTime = root.expirationTime;

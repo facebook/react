@@ -321,4 +321,119 @@ describe('ReactSuspense', () => {
     );
     expect(ReactTestRenderer).toHaveYielded(['Suspend! [Hi]', 'Suspend! [Hi]']);
   });
+
+  describe('outside concurrent mode', () => {
+    it('a mounted class component can suspend without losing state', () => {
+      class TextWithLifecycle extends React.Component {
+        componentDidMount() {
+          ReactTestRenderer.unstable_yield(`Mount [${this.props.text}]`);
+        }
+        componentDidUpdate() {
+          ReactTestRenderer.unstable_yield(`Update [${this.props.text}]`);
+        }
+        componentWillUnmount() {
+          ReactTestRenderer.unstable_yield(`Unmount [${this.props.text}]`);
+        }
+        render() {
+          return <Text {...this.props} />;
+        }
+      }
+
+      let instance;
+      class AsyncTextWithLifecycle extends React.Component {
+        state = {step: 1};
+        componentDidMount() {
+          ReactTestRenderer.unstable_yield(
+            `Mount [${this.props.text}:${this.state.step}]`,
+          );
+        }
+        componentDidUpdate() {
+          ReactTestRenderer.unstable_yield(
+            `Update [${this.props.text}:${this.state.step}]`,
+          );
+        }
+        componentWillUnmount() {
+          ReactTestRenderer.unstable_yield(
+            `Unmount [${this.props.text}:${this.state.step}]`,
+          );
+        }
+        render() {
+          instance = this;
+          const text = `${this.props.text}:${this.state.step}`;
+          const ms = this.props.ms;
+          try {
+            TextResource.read(cache, [text, ms]);
+            ReactTestRenderer.unstable_yield(text);
+            return text;
+          } catch (promise) {
+            if (typeof promise.then === 'function') {
+              ReactTestRenderer.unstable_yield(`Suspend! [${text}]`);
+            } else {
+              ReactTestRenderer.unstable_yield(`Error! [${text}]`);
+            }
+            throw promise;
+          }
+        }
+      }
+
+      function App() {
+        return (
+          <Suspense
+            maxDuration={1000}
+            fallback={<TextWithLifecycle text="Loading..." />}>
+            <TextWithLifecycle text="A" />
+            <AsyncTextWithLifecycle ms={100} text="B" ref={instance} />
+            <TextWithLifecycle text="C" />
+          </Suspense>
+        );
+      }
+
+      const root = ReactTestRenderer.create(<App />);
+
+      expect(ReactTestRenderer).toHaveYielded([
+        'A',
+        'Suspend! [B:1]',
+        'C',
+
+        'Mount [A]',
+        // B's lifecycle should not fire because it suspended
+        // 'Mount [B]',
+        'Mount [C]',
+
+        // In a subsequent commit, render a placeholder
+        'Loading...',
+        'Mount [Loading...]',
+      ]);
+      expect(root).toMatchRenderedOutput('Loading...');
+
+      jest.advanceTimersByTime(100);
+      expect(ReactTestRenderer).toHaveYielded([
+        'Promise resolved [B:1]',
+        'B:1',
+        'Unmount [Loading...]',
+        // Should be a mount, not an update
+        'Mount [B:1]',
+      ]);
+
+      expect(root).toMatchRenderedOutput('AB:1C');
+
+      instance.setState({step: 2});
+      expect(ReactTestRenderer).toHaveYielded([
+        'Suspend! [B:2]',
+        'Loading...',
+        'Mount [Loading...]',
+      ]);
+      expect(root).toMatchRenderedOutput('Loading...');
+
+      jest.advanceTimersByTime(100);
+
+      expect(ReactTestRenderer).toHaveYielded([
+        'Promise resolved [B:2]',
+        'B:2',
+        'Unmount [Loading...]',
+        'Update [B:2]',
+      ]);
+      expect(root).toMatchRenderedOutput('AB:2C');
+    });
+  });
 });
