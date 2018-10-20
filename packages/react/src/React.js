@@ -26,7 +26,7 @@ import {
 import {createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
 import forwardRef from './forwardRef';
-import pure from './pure';
+import memo from './memo';
 import {
   createElementWithValidation,
   createFactoryWithValidation,
@@ -50,7 +50,7 @@ const React = {
   createContext,
   forwardRef,
   lazy,
-  pure,
+  memo,
 
   Fragment: REACT_FRAGMENT_TYPE,
   StrictMode: REACT_STRICT_MODE_TYPE,

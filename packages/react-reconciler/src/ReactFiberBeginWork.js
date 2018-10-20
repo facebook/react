@@ -30,8 +30,8 @@ import {
   ContextConsumer,
   Profiler,
   SuspenseComponent,
-  PureComponent,
-  SimplePureComponent,
+  MemoComponent,
+  SimpleMemoComponent,
   LazyComponent,
 } from 'shared/ReactWorkTags';
 import {
@@ -231,7 +231,7 @@ function updateForwardRef(
   return workInProgress.child;
 }
 
-function updatePureComponent(
+function updateMemoComponent(
   current: Fiber | null,
   workInProgress: Fiber,
   Component: any,
@@ -244,10 +244,10 @@ function updatePureComponent(
     if (isSimpleFunctionComponent(type) && Component.compare === null) {
       // If this is a plain function component without default props,
       // and with only the default shallow comparison, we upgrade it
-      // to a SimplePureComponent to allow fast path updates.
-      workInProgress.tag = SimplePureComponent;
+      // to a SimpleMemoComponent to allow fast path updates.
+      workInProgress.tag = SimpleMemoComponent;
       workInProgress.type = type;
-      return updateSimplePureComponent(
+      return updateSimpleMemoComponent(
         current,
         workInProgress,
         type,
@@ -299,7 +299,7 @@ function updatePureComponent(
   return newChild;
 }
 
-function updateSimplePureComponent(
+function updateSimpleMemoComponent(
   current: Fiber | null,
   workInProgress: Fiber,
   Component: any,
@@ -814,8 +814,8 @@ function mountLazyComponent(
       );
       break;
     }
-    case PureComponent: {
-      child = updatePureComponent(
+    case MemoComponent: {
+      child = updateMemoComponent(
         null,
         workInProgress,
         Component,
@@ -826,7 +826,7 @@ function mountLazyComponent(
       break;
     }
     default: {
-      // This message intentionally doesn't metion ForwardRef or PureComponent
+      // This message intentionally doesn't metion ForwardRef or MemoComponent
       // because the fact that it's a separate type of work is an
       // implementation detail.
       invariant(
@@ -1612,11 +1612,11 @@ function beginWork(
         workInProgress,
         renderExpirationTime,
       );
-    case PureComponent: {
+    case MemoComponent: {
       const type = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
       const resolvedProps = resolveDefaultProps(type.type, unresolvedProps);
-      return updatePureComponent(
+      return updateMemoComponent(
         current,
         workInProgress,
         type,
@@ -1625,8 +1625,8 @@ function beginWork(
         renderExpirationTime,
       );
     }
-    case SimplePureComponent: {
-      return updateSimplePureComponent(
+    case SimpleMemoComponent: {
+      return updateSimpleMemoComponent(
         current,
         workInProgress,
         workInProgress.type,

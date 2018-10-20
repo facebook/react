@@ -15,7 +15,7 @@ let React;
 let ReactDOM;
 let ReactDOMServer;
 let forwardRef;
-let pure;
+let memo;
 let yieldedValues;
 let yieldValue;
 let clearYields;
@@ -27,7 +27,7 @@ function initModules() {
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
   forwardRef = React.forwardRef;
-  pure = React.pure;
+  memo = React.memo;
 
   yieldedValues = [];
   yieldValue = value => {
@@ -83,7 +83,7 @@ describe('ReactDOMServerIntegration', () => {
     expect(div.textContent).toBe('Test');
   });
 
-  describe('pure functional components', () => {
+  describe('memoized functional components', () => {
     beforeEach(() => {
       resetModules();
     });
@@ -98,39 +98,39 @@ describe('ReactDOMServerIntegration', () => {
     }
 
     itRenders('basic render', async render => {
-      const PureCounter = pure(Counter);
-      const domNode = await render(<PureCounter count={0} />);
+      const MemoCounter = memo(Counter);
+      const domNode = await render(<MemoCounter count={0} />);
       expect(domNode.textContent).toEqual('Count: 0');
     });
 
     itRenders('composition with forwardRef', async render => {
       const RefCounter = (props, ref) => <Counter count={ref.current} />;
-      const PureRefCounter = pure(forwardRef(RefCounter));
+      const MemoRefCounter = memo(forwardRef(RefCounter));
 
       const ref = React.createRef();
       ref.current = 0;
-      await render(<PureRefCounter ref={ref} />);
+      await render(<MemoRefCounter ref={ref} />);
 
       expect(clearYields()).toEqual(['Count: 0']);
     });
 
     itRenders('with comparator', async render => {
-      const PureCounter = pure(Counter, (oldProps, newProps) => false);
-      await render(<PureCounter count={0} />);
+      const MemoCounter = memo(Counter, (oldProps, newProps) => false);
+      await render(<MemoCounter count={0} />);
       expect(clearYields()).toEqual(['Count: 0']);
     });
 
     itRenders(
       'comparator functions are not invoked on the server',
       async render => {
-        const PureCounter = React.pure(Counter, (oldProps, newProps) => {
+        const MemoCounter = React.memo(Counter, (oldProps, newProps) => {
           yieldValue(
             `Old count: ${oldProps.count}, New count: ${newProps.count}`,
           );
           return oldProps.count === newProps.count;
         });
 
-        await render(<PureCounter count={0} />);
+        await render(<MemoCounter count={0} />);
         expect(clearYields()).toEqual(['Count: 0']);
       },
     );

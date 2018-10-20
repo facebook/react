@@ -35,7 +35,7 @@ import {
   Profiler,
   SuspenseComponent,
   FunctionComponent,
-  PureComponent,
+  MemoComponent,
   LazyComponent,
 } from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
@@ -57,7 +57,7 @@ import {
   REACT_CONTEXT_TYPE,
   REACT_CONCURRENT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
-  REACT_PURE_TYPE,
+  REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
 
@@ -315,8 +315,8 @@ export function resolveLazyComponentTag(Component: Function): WorkTag {
     if ($$typeof === REACT_FORWARD_REF_TYPE) {
       return ForwardRef;
     }
-    if ($$typeof === REACT_PURE_TYPE) {
-      return PureComponent;
+    if ($$typeof === REACT_MEMO_TYPE) {
+      return MemoComponent;
     }
   }
   return IndeterminateComponent;
@@ -470,8 +470,8 @@ export function createFiberFromTypeAndProps(
             case REACT_FORWARD_REF_TYPE:
               fiberTag = ForwardRef;
               break getTag;
-            case REACT_PURE_TYPE:
-              fiberTag = PureComponent;
+            case REACT_MEMO_TYPE:
+              fiberTag = MemoComponent;
               break getTag;
             case REACT_LAZY_TYPE:
               fiberTag = LazyComponent;

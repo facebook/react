@@ -227,7 +227,7 @@ describe('forwardRef', () => {
     );
   });
 
-  it('should not bailout if forwardRef is not wrapped in pure', () => {
+  it('should not bailout if forwardRef is not wrapped in memo', () => {
     const Component = props => <div {...props} />;
 
     let renderCount = 0;
@@ -248,12 +248,12 @@ describe('forwardRef', () => {
     expect(renderCount).toBe(2);
   });
 
-  it('should bailout if forwardRef is wrapped in pure', () => {
+  it('should bailout if forwardRef is wrapped in memo', () => {
     const Component = props => <div ref={props.forwardedRef} />;
 
     let renderCount = 0;
 
-    const RefForwardingComponent = React.pure(
+    const RefForwardingComponent = React.memo(
       React.forwardRef((props, ref) => {
         renderCount++;
         return <Component {...props} forwardedRef={ref} />;
@@ -288,12 +288,12 @@ describe('forwardRef', () => {
     expect(renderCount).toBe(3);
   });
 
-  it('should custom pure comparisons to compose', () => {
+  it('should custom memo comparisons to compose', () => {
     const Component = props => <div ref={props.forwardedRef} />;
 
     let renderCount = 0;
 
-    const RefForwardingComponent = React.pure(
+    const RefForwardingComponent = React.memo(
       React.forwardRef((props, ref) => {
         renderCount++;
         return <Component {...props} forwardedRef={ref} />;
@@ -319,34 +319,34 @@ describe('forwardRef', () => {
     ReactNoop.flush();
     expect(renderCount).toBe(2);
 
-    const ComposedPure = React.pure(
+    const ComposedMemo = React.memo(
       RefForwardingComponent,
       (o, p) => o.a === p.a && o.c === p.c,
     );
 
-    ReactNoop.render(<ComposedPure ref={ref} a="0" b="0" c="0" />);
+    ReactNoop.render(<ComposedMemo ref={ref} a="0" b="0" c="0" />);
     ReactNoop.flush();
     expect(renderCount).toBe(3);
 
     // Changing just b no longer updates
-    ReactNoop.render(<ComposedPure ref={ref} a="0" b="1" c="0" />);
+    ReactNoop.render(<ComposedMemo ref={ref} a="0" b="1" c="0" />);
     ReactNoop.flush();
     expect(renderCount).toBe(3);
 
     // Changing just a and c updates
-    ReactNoop.render(<ComposedPure ref={ref} a="2" b="2" c="2" />);
+    ReactNoop.render(<ComposedMemo ref={ref} a="2" b="2" c="2" />);
     ReactNoop.flush();
     expect(renderCount).toBe(4);
 
     // Changing just c does not update
-    ReactNoop.render(<ComposedPure ref={ref} a="2" b="2" c="3" />);
+    ReactNoop.render(<ComposedMemo ref={ref} a="2" b="2" c="3" />);
     ReactNoop.flush();
     expect(renderCount).toBe(4);
 
     // Changing ref still rerenders
     const differentRef = React.createRef();
 
-    ReactNoop.render(<ComposedPure ref={differentRef} a="2" b="2" c="3" />);
+    ReactNoop.render(<ComposedMemo ref={differentRef} a="2" b="2" c="3" />);
     ReactNoop.flush();
     expect(renderCount).toBe(5);
 

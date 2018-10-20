@@ -16,7 +16,7 @@ let React;
 let ReactFeatureFlags;
 let ReactNoop;
 
-describe('pure', () => {
+describe('memo', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
@@ -38,22 +38,22 @@ describe('pure', () => {
     return {default: result};
   }
 
-  // Tests should run against both the lazy and non-lazy versions of `pure`.
+  // Tests should run against both the lazy and non-lazy versions of `memo`.
   // To make the tests work for both versions, we wrap the non-lazy version in
   // a lazy function component.
   sharedTests('normal', (...args) => {
-    const Pure = React.pure(...args);
+    const Memo = React.memo(...args);
     function Indirection(props) {
-      return <Pure {...props} />;
+      return <Memo {...props} />;
     }
     return React.lazy(() => fakeImport(Indirection));
   });
   sharedTests('lazy', (...args) => {
-    const Pure = React.pure(...args);
-    return React.lazy(() => fakeImport(Pure));
+    const Memo = React.memo(...args);
+    return React.lazy(() => fakeImport(Memo));
   });
 
-  function sharedTests(label, pure) {
+  function sharedTests(label, memo) {
     describe(`${label}`, () => {
       it('bails out on props equality', async () => {
         const {unstable_Suspense: Suspense} = React;
@@ -61,7 +61,7 @@ describe('pure', () => {
         function Counter({count}) {
           return <Text text={count} />;
         }
-        Counter = pure(Counter);
+        Counter = memo(Counter);
 
         ReactNoop.render(
           <Suspense fallback={<Text text="Loading..." />}>
@@ -108,7 +108,7 @@ describe('pure', () => {
           const count = readContext(CountContext);
           return <Text text={`${props.label}: ${count}`} />;
         }
-        Counter = pure(Counter);
+        Counter = memo(Counter);
 
         class Parent extends React.Component {
           state = {count: 0};
@@ -147,7 +147,7 @@ describe('pure', () => {
         function Counter({count}) {
           return <Text text={count} />;
         }
-        Counter = pure(Counter, (oldProps, newProps) => {
+        Counter = memo(Counter, (oldProps, newProps) => {
           ReactNoop.yield(
             `Old count: ${oldProps.count}, New count: ${newProps.count}`,
           );
@@ -192,7 +192,7 @@ describe('pure', () => {
             return <Text text={this.props.count + '' + this.props.suffix} />;
           }
         }
-        const Counter = pure(CounterInner);
+        const Counter = memo(CounterInner);
 
         ReactNoop.render(
           <Suspense fallback={<Text text="Loading..." />}>
@@ -224,8 +224,8 @@ describe('pure', () => {
       });
 
       it('warns if first argument is undefined', () => {
-        expect(() => pure()).toWarnDev(
-          'pure: The first argument must be a component. Instead ' +
+        expect(() => memo()).toWarnDev(
+          'memo: The first argument must be a component. Instead ' +
             'received: undefined',
           {withoutStack: true},
         );
