@@ -1600,10 +1600,7 @@ function retrySuspendedRoot(
     // therefore does not have any pending work.
     scheduleWorkToRoot(sourceFiber, retryTime);
     const sourceTag = sourceFiber.tag;
-    if (
-      (sourceTag === ClassComponent || sourceFiber === ClassComponentLazy) &&
-      sourceFiber.stateNode !== null
-    ) {
+    if (sourceTag === ClassComponent && sourceFiber.stateNode !== null) {
       // When we try rendering again, we should not reuse the current fiber,
       // since it's known to be in an inconsistent state. Use a force updte to
       // prevent a bail out.
