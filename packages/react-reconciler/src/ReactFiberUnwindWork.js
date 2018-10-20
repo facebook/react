@@ -18,7 +18,6 @@ import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import getComponentName from 'shared/getComponentName';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {
-  FunctionComponent,
   ClassComponent,
   ClassComponentLazy,
   HostRoot,
@@ -70,10 +69,6 @@ import {
 } from './ReactFiberExpirationTime';
 import {findEarliestOutstandingPriorityLevel} from './ReactFiberPendingPriority';
 import {reconcileChildren} from './ReactFiberBeginWork';
-
-function NoopComponent() {
-  return null;
-}
 
 function createRootErrorUpdate(
   fiber: Fiber,
@@ -262,13 +257,9 @@ function throwException(
               // callbacks. Remove all lifecycle effect tags.
               sourceFiber.effectTag &= ~LifecycleEffectMask;
               if (sourceFiber.alternate === null) {
-                // We're about to mount a class component that doesn't have an
-                // instance. Turn this into a dummy function component instead,
-                // to prevent type errors. This is a bit weird but it's an edge
-                // case and we're about to synchronously delete this
-                // component, anyway.
-                sourceFiber.tag = FunctionComponent;
-                sourceFiber.type = NoopComponent;
+                // Set the instance back to null. We use this as a heuristic to
+                // detect that the fiber mounted in an inconsistent state.
+                sourceFiber.stateNode = null;
               }
             }
 
