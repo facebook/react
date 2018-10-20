@@ -684,6 +684,7 @@ function completeWork(
       break;
     }
     case ForwardRef:
+      break;
     case SuspenseComponent: {
       const nextState = workInProgress.memoizedState;
       const prevState = current !== null ? current.memoizedState : null;
