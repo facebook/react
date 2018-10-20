@@ -444,7 +444,7 @@ describe('ReactDOMServerHydration', () => {
   });
 
   it('should be able to use lazy components after hydrating', async () => {
-    async function fakeImport(result) {
+    function fakeImport(result) {
       return {default: result};
     }
 
