@@ -3,6 +3,8 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
 import invariant from 'shared/invariant';
@@ -35,11 +37,13 @@ function restoreStateOfTarget(target) {
   restoreImpl(internalInstance.stateNode, internalInstance.type, props);
 }
 
-export function setRestoreImplementation(impl) {
+export function setRestoreImplementation(
+  impl: (domElement: Element, tag: string, props: Object) => void,
+): void {
   restoreImpl = impl;
 }
 
-export function enqueueStateRestore(target) {
+export function enqueueStateRestore(target: EventTarget): void {
   if (restoreTarget) {
     if (restoreQueue) {
       restoreQueue.push(target);
