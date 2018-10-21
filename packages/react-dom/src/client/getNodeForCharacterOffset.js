@@ -3,6 +3,8 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
 import {TEXT_NODE} from '../shared/HTMLNodeType';
@@ -43,7 +45,7 @@ function getSiblingNode(node) {
  * @param {number} offset
  * @return {?object}
  */
-function getNodeForCharacterOffset(root, offset) {
+function getNodeForCharacterOffset(root: Element, offset: number): ?Object {
   let node = getLeafNode(root);
   let nodeStart = 0;
   let nodeEnd = 0;
