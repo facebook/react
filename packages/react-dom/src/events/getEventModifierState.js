@@ -21,9 +21,9 @@ const modifierKeyToProp = {
   Shift: 'shiftKey',
 };
 
-// IE8 does not implement getModifierState so we simply map it to the only
-// modifier keys exposed by the event itself, does not support Lock-keys.
-// Currently, all major browsers except Chrome seems to support Lock-keys.
+// Older browsers (Safari <= 10, iOS Safari <= 10.2) do not support
+// getModifierState. If getModifierState is not supported, we map it to a set of
+// modifier keys exposed by the event. In this case, Lock-keys are not supported.
 function modifierStateGetter(keyArg: string): boolean {
   const syntheticEvent = this;
   const nativeEvent = syntheticEvent.nativeEvent;
