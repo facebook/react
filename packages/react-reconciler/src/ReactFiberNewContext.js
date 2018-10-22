@@ -21,7 +21,7 @@ export type ContextDependency<T> = {
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
-import maxSigned31BitInt from './maxSigned31BitInt';
+import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 import {NoWork} from './ReactFiberExpirationTime';
 import {ContextProvider, ClassComponent} from 'shared/ReactWorkTags';
 
@@ -33,7 +33,6 @@ import {
   ForceUpdate,
 } from 'react-reconciler/src/ReactUpdateQueue';
 
-import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 const valueCursor: StackCursor<mixed> = createCursor(null);
 
 let rendererSigil;
@@ -277,11 +276,11 @@ export function readContext<T>(
     let resolvedObservedBits; // Avoid deopting on observable arguments or heterogeneous types.
     if (
       typeof observedBits !== 'number' ||
-      observedBits === maxSigned31BitInt
+      observedBits === MAX_SIGNED_31_BIT_INT
     ) {
       // Observe all updates.
       lastContextWithAllBitsObserved = ((context: any): ReactContext<mixed>);
-      resolvedObservedBits = maxSigned31BitInt;
+      resolvedObservedBits = MAX_SIGNED_31_BIT_INT;
     } else {
       resolvedObservedBits = observedBits;
     }
