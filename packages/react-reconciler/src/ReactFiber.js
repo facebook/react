@@ -34,11 +34,9 @@ import {
   ContextConsumer,
   Profiler,
   SuspenseComponent,
-  FunctionComponentLazy,
-  ClassComponentLazy,
-  ForwardRefLazy,
-  PureComponent,
-  PureComponentLazy,
+  FunctionComponent,
+  MemoComponent,
+  LazyComponent,
 } from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
@@ -59,7 +57,8 @@ import {
   REACT_CONTEXT_TYPE,
   REACT_CONCURRENT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
-  REACT_PURE_TYPE,
+  REACT_MEMO_TYPE,
+  REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -100,7 +99,11 @@ export type Fiber = {|
   // Unique identifier of this child.
   key: null | string,
 
-  // The function/class/module associated with this fiber.
+  // The value of element.type which is used to preserve the identity during
+  // reconciliation of this child.
+  elementType: any,
+
+  // The resolved function/class/ associated with this fiber.
   type: any,
 
   // The local state associated with this fiber.
@@ -218,6 +221,7 @@ function FiberNode(
   // Instance
   this.tag = tag;
   this.key = key;
+  this.elementType = null;
   this.type = null;
   this.stateNode = null;
 
@@ -295,21 +299,24 @@ function shouldConstruct(Component: Function) {
   return !!(prototype && prototype.isReactComponent);
 }
 
-export function resolveLazyComponentTag(
-  fiber: Fiber,
-  Component: Function,
-): WorkTag {
+export function isSimpleFunctionComponent(type: any) {
+  return (
+    typeof type === 'function' &&
+    !shouldConstruct(type) &&
+    type.defaultProps === undefined
+  );
+}
+
+export function resolveLazyComponentTag(Component: Function): WorkTag {
   if (typeof Component === 'function') {
-    return shouldConstruct(Component)
-      ? ClassComponentLazy
-      : FunctionComponentLazy;
+    return shouldConstruct(Component) ? ClassComponent : FunctionComponent;
   } else if (Component !== undefined && Component !== null) {
     const $$typeof = Component.$$typeof;
     if ($$typeof === REACT_FORWARD_REF_TYPE) {
-      return ForwardRefLazy;
+      return ForwardRef;
     }
-    if ($$typeof === REACT_PURE_TYPE) {
-      return PureComponentLazy;
+    if ($$typeof === REACT_MEMO_TYPE) {
+      return MemoComponent;
     }
   }
   return IndeterminateComponent;
@@ -334,6 +341,7 @@ export function createWorkInProgress(
       current.key,
       current.mode,
     );
+    workInProgress.elementType = current.elementType;
     workInProgress.type = current.type;
     workInProgress.stateNode = current.stateNode;
 
@@ -403,24 +411,23 @@ export function createHostRootFiber(isConcurrent: boolean): Fiber {
   return createFiber(HostRoot, null, null, mode);
 }
 
-export function createFiberFromElement(
-  element: ReactElement,
+export function createFiberFromTypeAndProps(
+  type: any, // React$ElementType
+  key: null | string,
+  pendingProps: any,
+  owner: null | Fiber,
   mode: TypeOfMode,
   expirationTime: ExpirationTime,
 ): Fiber {
-  let owner = null;
-  if (__DEV__) {
-    owner = element._owner;
-  }
-
   let fiber;
-  const type = element.type;
-  const key = element.key;
-  const pendingProps = element.props;
 
-  let fiberTag;
+  let fiberTag = IndeterminateComponent;
+  // The resolved type is set if we know what the final type will be. I.e. it's not lazy.
+  let resolvedType = type;
   if (typeof type === 'function') {
-    fiberTag = shouldConstruct(type) ? ClassComponent : IndeterminateComponent;
+    if (shouldConstruct(type)) {
+      fiberTag = ClassComponent;
+    }
   } else if (typeof type === 'string') {
     fiberTag = HostComponent;
   } else {
@@ -433,18 +440,23 @@ export function createFiberFromElement(
           key,
         );
       case REACT_CONCURRENT_MODE_TYPE:
-        fiberTag = Mode;
-        mode |= ConcurrentMode | StrictMode;
-        break;
+        return createFiberFromMode(
+          pendingProps,
+          mode | ConcurrentMode | StrictMode,
+          expirationTime,
+          key,
+        );
       case REACT_STRICT_MODE_TYPE:
-        fiberTag = Mode;
-        mode |= StrictMode;
-        break;
+        return createFiberFromMode(
+          pendingProps,
+          mode | StrictMode,
+          expirationTime,
+          key,
+        );
       case REACT_PROFILER_TYPE:
         return createFiberFromProfiler(pendingProps, mode, expirationTime, key);
       case REACT_SUSPENSE_TYPE:
-        fiberTag = SuspenseComponent;
-        break;
+        return createFiberFromSuspense(pendingProps, mode, expirationTime, key);
       default: {
         if (typeof type === 'object' && type !== null) {
           switch (type.$$typeof) {
@@ -458,15 +470,13 @@ export function createFiberFromElement(
             case REACT_FORWARD_REF_TYPE:
               fiberTag = ForwardRef;
               break getTag;
-            case REACT_PURE_TYPE:
-              fiberTag = PureComponent;
+            case REACT_MEMO_TYPE:
+              fiberTag = MemoComponent;
               break getTag;
-            default: {
-              if (typeof type.then === 'function') {
-                fiberTag = IndeterminateComponent;
-                break getTag;
-              }
-            }
+            case REACT_LAZY_TYPE:
+              fiberTag = LazyComponent;
+              resolvedType = null;
+              break getTag;
           }
         }
         let info = '';
@@ -500,14 +510,37 @@ export function createFiberFromElement(
   }
 
   fiber = createFiber(fiberTag, pendingProps, key, mode);
-  fiber.type = type;
+  fiber.elementType = type;
+  fiber.type = resolvedType;
   fiber.expirationTime = expirationTime;
 
+  return fiber;
+}
+
+export function createFiberFromElement(
+  element: ReactElement,
+  mode: TypeOfMode,
+  expirationTime: ExpirationTime,
+): Fiber {
+  let owner = null;
+  if (__DEV__) {
+    owner = element._owner;
+  }
+  const type = element.type;
+  const key = element.key;
+  const pendingProps = element.props;
+  const fiber = createFiberFromTypeAndProps(
+    type,
+    key,
+    pendingProps,
+    owner,
+    mode,
+    expirationTime,
+  );
   if (__DEV__) {
     fiber._debugSource = element._source;
     fiber._debugOwner = element._owner;
   }
-
   return fiber;
 }
 
@@ -522,7 +555,7 @@ export function createFiberFromFragment(
   return fiber;
 }
 
-export function createFiberFromProfiler(
+function createFiberFromProfiler(
   pendingProps: any,
   mode: TypeOfMode,
   expirationTime: ExpirationTime,
@@ -541,9 +574,48 @@ export function createFiberFromProfiler(
   }
 
   const fiber = createFiber(Profiler, pendingProps, key, mode | ProfileMode);
+  // TODO: The Profiler fiber shouldn't have a type. It has a tag.
+  fiber.elementType = REACT_PROFILER_TYPE;
   fiber.type = REACT_PROFILER_TYPE;
   fiber.expirationTime = expirationTime;
 
+  return fiber;
+}
+
+function createFiberFromMode(
+  pendingProps: any,
+  mode: TypeOfMode,
+  expirationTime: ExpirationTime,
+  key: null | string,
+): Fiber {
+  const fiber = createFiber(Mode, pendingProps, key, mode);
+
+  // TODO: The Mode fiber shouldn't have a type. It has a tag.
+  const type =
+    (mode & ConcurrentMode) === NoContext
+      ? REACT_STRICT_MODE_TYPE
+      : REACT_CONCURRENT_MODE_TYPE;
+  fiber.elementType = type;
+  fiber.type = type;
+
+  fiber.expirationTime = expirationTime;
+  return fiber;
+}
+
+export function createFiberFromSuspense(
+  pendingProps: any,
+  mode: TypeOfMode,
+  expirationTime: ExpirationTime,
+  key: null | string,
+) {
+  const fiber = createFiber(SuspenseComponent, pendingProps, key, mode);
+
+  // TODO: The SuspenseComponent fiber shouldn't have a type. It has a tag.
+  const type = REACT_SUSPENSE_TYPE;
+  fiber.elementType = type;
+  fiber.type = type;
+
+  fiber.expirationTime = expirationTime;
   return fiber;
 }
 
@@ -559,6 +631,8 @@ export function createFiberFromText(
 
 export function createFiberFromHostInstanceForDeletion(): Fiber {
   const fiber = createFiber(HostComponent, null, null, NoContext);
+  // TODO: These should not need a type.
+  fiber.elementType = 'DELETED';
   fiber.type = 'DELETED';
   return fiber;
 }
@@ -598,6 +672,7 @@ export function assignFiberPropertiesInDEV(
 
   target.tag = source.tag;
   target.key = source.key;
+  target.elementType = source.elementType;
   target.type = source.type;
   target.stateNode = source.stateNode;
   target.return = source.return;

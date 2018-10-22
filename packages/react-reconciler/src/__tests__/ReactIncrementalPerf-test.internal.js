@@ -555,13 +555,13 @@ describe('ReactDebugFiberPerf', () => {
     expect(getFlameChart()).toMatchSnapshot();
   });
 
-  it('supports pure', () => {
-    const PureFoo = React.pure(function Foo() {
+  it('supports memo', () => {
+    const MemoFoo = React.memo(function Foo() {
       return <div />;
     });
     ReactNoop.render(
       <Parent>
-        <PureFoo />
+        <MemoFoo />
       </Parent>,
     );
     ReactNoop.flush();
@@ -571,6 +571,10 @@ describe('ReactDebugFiberPerf', () => {
   it('supports Suspense and lazy', async () => {
     function Spinner() {
       return <span />;
+    }
+
+    function fakeImport(result) {
+      return {default: result};
     }
 
     let resolve;
@@ -591,10 +595,13 @@ describe('ReactDebugFiberPerf', () => {
     ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();
 
-    resolve(function Foo() {
-      return <div />;
-    });
-    await LazyFoo;
+    resolve(
+      fakeImport(function Foo() {
+        return <div />;
+      }),
+    );
+
+    await Promise.resolve();
 
     ReactNoop.render(
       <Parent>

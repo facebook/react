@@ -20,13 +20,16 @@ import {
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {isMounted} from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {StrictMode} from './ReactTypeOfMode';
+
 import {
   enqueueUpdate,
   processUpdateQueue,
@@ -49,6 +52,13 @@ import {
   computeExpirationForFiber,
   scheduleWork,
 } from './ReactFiberScheduler';
+
+const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+
+function readContext(contextType: any): any {
+  const dispatcher = ReactCurrentOwner.currentDispatcher;
+  return dispatcher.readContext(contextType);
+}
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
@@ -508,7 +518,7 @@ function constructClassInstance(
   if (typeof contextType === 'object' && contextType !== null) {
     if (__DEV__) {
       if (
-        typeof contextType.unstable_read !== 'function' &&
+        contextType.$$typeof !== REACT_CONTEXT_TYPE &&
         !didWarnAboutInvalidateContextType.has(ctor)
       ) {
         didWarnAboutInvalidateContextType.add(ctor);
@@ -522,7 +532,7 @@ function constructClassInstance(
       }
     }
 
-    context = (contextType: any).unstable_read();
+    context = readContext((contextType: any));
   } else {
     unmaskedContext = getUnmaskedContext(workInProgress, ctor, true);
     const contextTypes = ctor.contextTypes;
@@ -725,7 +735,7 @@ function mountClassInstance(
 
   const contextType = ctor.contextType;
   if (typeof contextType === 'object' && contextType !== null) {
-    instance.context = (contextType: any).unstable_read();
+    instance.context = readContext(contextType);
   } else {
     const unmaskedContext = getUnmaskedContext(workInProgress, ctor, true);
     instance.context = getMaskedContext(workInProgress, unmaskedContext);
@@ -833,7 +843,7 @@ function resumeMountClassInstance(
   const contextType = ctor.contextType;
   let nextContext;
   if (typeof contextType === 'object' && contextType !== null) {
-    nextContext = (contextType: any).unstable_read();
+    nextContext = readContext(contextType);
   } else {
     const nextLegacyUnmaskedContext = getUnmaskedContext(
       workInProgress,
@@ -979,7 +989,7 @@ function updateClassInstance(
   const contextType = ctor.contextType;
   let nextContext;
   if (typeof contextType === 'object' && contextType !== null) {
-    nextContext = (contextType: any).unstable_read();
+    nextContext = readContext(contextType);
   } else {
     const nextUnmaskedContext = getUnmaskedContext(workInProgress, ctor, true);
     nextContext = getMaskedContext(workInProgress, nextUnmaskedContext);

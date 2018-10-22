@@ -17,9 +17,7 @@ import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
 import {
   Fragment,
   FunctionComponent,
-  FunctionComponentLazy,
   ClassComponent,
-  ClassComponentLazy,
   HostComponent,
   HostPortal,
   HostText,
@@ -29,9 +27,8 @@ import {
   Mode,
   ForwardRef,
   Profiler,
-  ForwardRefLazy,
-  PureComponent,
-  PureComponentLazy,
+  MemoComponent,
+  SimpleMemoComponent,
 } from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 import ReactVersion from 'shared/ReactVersion';
@@ -66,11 +63,17 @@ const defaultTestOptions = {
   },
 };
 
-function toJSON(inst: Instance | TextInstance): ReactTestRendererNode {
+function toJSON(inst: Instance | TextInstance): ReactTestRendererNode | null {
+  if (inst.isHidden) {
+    // Omit timed out children from output entirely. This seems like the least
+    // surprising behavior. We could perhaps add a separate API that includes
+    // them, if it turns out people need it.
+    return null;
+  }
   switch (inst.tag) {
     case 'TEXT':
       return inst.text;
-    case 'INSTANCE':
+    case 'INSTANCE': {
       /* eslint-disable no-unused-vars */
       // We don't include the `children` prop in JSON.
       // Instead, we will include the actual rendered children.
@@ -78,7 +81,16 @@ function toJSON(inst: Instance | TextInstance): ReactTestRendererNode {
       /* eslint-enable */
       let renderedChildren = null;
       if (inst.children && inst.children.length) {
-        renderedChildren = inst.children.map(toJSON);
+        for (let i = 0; i < inst.children.length; i++) {
+          const renderedChild = toJSON(inst.children[i]);
+          if (renderedChild !== null) {
+            if (renderedChildren === null) {
+              renderedChildren = [renderedChild];
+            } else {
+              renderedChildren.push(renderedChild);
+            }
+          }
+        }
       }
       const json: ReactTestRendererJSON = {
         type: inst.type,
@@ -89,6 +101,7 @@ function toJSON(inst: Instance | TextInstance): ReactTestRendererNode {
         value: Symbol.for('react.test.json'),
       });
       return json;
+    }
     default:
       throw new Error(`Unexpected node type in toJSON: ${inst.tag}`);
   }
@@ -153,18 +166,8 @@ function toTree(node: ?Fiber) {
         instance: node.stateNode,
         rendered: childrenToTree(node.child),
       };
-    case ClassComponentLazy: {
-      const thenable = node.type;
-      const type = thenable._reactResult;
-      return {
-        nodeType: 'component',
-        type,
-        props: {...node.memoizedProps},
-        instance: node.stateNode,
-        rendered: childrenToTree(node.child),
-      };
-    }
     case FunctionComponent:
+    case SimpleMemoComponent:
       return {
         nodeType: 'component',
         type: node.type,
@@ -172,17 +175,6 @@ function toTree(node: ?Fiber) {
         instance: null,
         rendered: childrenToTree(node.child),
       };
-    case FunctionComponentLazy: {
-      const thenable = node.type;
-      const type = thenable._reactResult;
-      return {
-        nodeType: 'component',
-        type: type,
-        props: {...node.memoizedProps},
-        instance: node.stateNode,
-        rendered: childrenToTree(node.child),
-      };
-    }
     case HostComponent: {
       return {
         nodeType: 'host',
@@ -200,9 +192,7 @@ function toTree(node: ?Fiber) {
     case Mode:
     case Profiler:
     case ForwardRef:
-    case ForwardRefLazy:
-    case PureComponent:
-    case PureComponentLazy:
+    case MemoComponent:
       return childrenToTree(node.child);
     default:
       invariant(
@@ -215,14 +205,10 @@ function toTree(node: ?Fiber) {
 
 const validWrapperTypes = new Set([
   FunctionComponent,
-  FunctionComponentLazy,
   ClassComponent,
-  ClassComponentLazy,
   HostComponent,
   ForwardRef,
-  ForwardRefLazy,
-  PureComponent,
-  PureComponentLazy,
+  MemoComponent,
   // Normally skipped, but used when there's more than one root child.
   HostRoot,
 ]);
@@ -460,7 +446,21 @@ const ReactTestRendererFiber = {
         if (container.children.length === 1) {
           return toJSON(container.children[0]);
         }
-        return container.children.map(toJSON);
+
+        let renderedChildren = null;
+        if (container.children && container.children.length) {
+          for (let i = 0; i < container.children.length; i++) {
+            const renderedChild = toJSON(container.children[i]);
+            if (renderedChild !== null) {
+              if (renderedChildren === null) {
+                renderedChildren = [renderedChild];
+              } else {
+                renderedChildren.push(renderedChild);
+              }
+            }
+          }
+        }
+        return renderedChildren;
       },
       toTree() {
         if (root == null || root.current == null) {

@@ -38,7 +38,6 @@ import {
 import {
   HostRoot,
   ClassComponent,
-  ClassComponentLazy,
   HostComponent,
   ContextProvider,
   HostPortal,
@@ -53,7 +52,6 @@ import {
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {getResultFromResolvedThenable} from 'shared/ReactLazyComponent';
 
 import {
   scheduleTimeout,
@@ -111,7 +109,12 @@ import {
   computeInteractiveExpiration,
 } from './ReactFiberExpirationTime';
 import {ConcurrentMode, ProfileMode, NoContext} from './ReactTypeOfMode';
-import {enqueueUpdate, resetCurrentlyProcessingQueue} from './ReactUpdateQueue';
+import {
+  enqueueUpdate,
+  resetCurrentlyProcessingQueue,
+  ForceUpdate,
+  createUpdate,
+} from './ReactUpdateQueue';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
   isContextProvider as isLegacyContextProvider,
@@ -306,13 +309,6 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
         break;
       case ClassComponent: {
         const Component = failedUnitOfWork.type;
-        if (isLegacyContextProvider(Component)) {
-          popLegacyContext(failedUnitOfWork);
-        }
-        break;
-      }
-      case ClassComponentLazy: {
-        const Component = getResultFromResolvedThenable(failedUnitOfWork.type);
         if (isLegacyContextProvider(Component)) {
           popLegacyContext(failedUnitOfWork);
         }
@@ -1084,6 +1080,7 @@ function performUnitOfWork(workInProgress: Fiber): Fiber | null {
     }
 
     next = beginWork(current, workInProgress, nextRenderExpirationTime);
+    workInProgress.memoizedProps = workInProgress.pendingProps;
 
     if (workInProgress.mode & ProfileMode) {
       // Record the render duration assuming we didn't bailout (or error).
@@ -1091,6 +1088,7 @@ function performUnitOfWork(workInProgress: Fiber): Fiber | null {
     }
   } else {
     next = beginWork(current, workInProgress, nextRenderExpirationTime);
+    workInProgress.memoizedProps = workInProgress.pendingProps;
   }
 
   if (__DEV__) {
@@ -1429,7 +1427,6 @@ function dispatch(
   while (fiber !== null) {
     switch (fiber.tag) {
       case ClassComponent:
-      case ClassComponentLazy:
         const ctor = fiber.type;
         const instance = fiber.stateNode;
         if (
@@ -1563,7 +1560,8 @@ function renderDidError() {
 
 function retrySuspendedRoot(
   root: FiberRoot,
-  fiber: Fiber,
+  boundaryFiber: Fiber,
+  sourceFiber: Fiber,
   suspendedTime: ExpirationTime,
 ) {
   let retryTime;
@@ -1576,18 +1574,18 @@ function retrySuspendedRoot(
   } else {
     // Suspense already timed out. Compute a new expiration time
     const currentTime = requestCurrentTime();
-    retryTime = computeExpirationForFiber(currentTime, fiber);
+    retryTime = computeExpirationForFiber(currentTime, boundaryFiber);
     markPendingPriorityLevel(root, retryTime);
   }
 
-  // TODO: If the placeholder fiber has already rendered the primary children
+  // TODO: If the suspense fiber has already rendered the primary children
   // without suspending (that is, all of the promises have already resolved),
   // we should not trigger another update here. One case this happens is when
   // we are in sync mode and a single promise is thrown both on initial render
   // and on update; we attach two .then(retrySuspendedRoot) callbacks and each
   // one performs Sync work, rerendering the Suspense.
 
-  if ((fiber.mode & ConcurrentMode) !== NoContext) {
+  if ((boundaryFiber.mode & ConcurrentMode) !== NoContext) {
     if (root === nextRoot && nextRenderExpirationTime === suspendedTime) {
       // Received a ping at the same priority level at which we're currently
       // rendering. Restart from the root.
@@ -1595,7 +1593,23 @@ function retrySuspendedRoot(
     }
   }
 
-  scheduleWorkToRoot(fiber, retryTime);
+  scheduleWorkToRoot(boundaryFiber, retryTime);
+  if ((boundaryFiber.mode & ConcurrentMode) === NoContext) {
+    // Outside of concurrent mode, we must schedule an update on the source
+    // fiber, too, since it already committed in an inconsistent state and
+    // therefore does not have any pending work.
+    scheduleWorkToRoot(sourceFiber, retryTime);
+    const sourceTag = sourceFiber.tag;
+    if (sourceTag === ClassComponent && sourceFiber.stateNode !== null) {
+      // When we try rendering again, we should not reuse the current fiber,
+      // since it's known to be in an inconsistent state. Use a force updte to
+      // prevent a bail out.
+      const update = createUpdate(retryTime);
+      update.tag = ForceUpdate;
+      enqueueUpdate(sourceFiber, update);
+    }
+  }
+
   const rootExpirationTime = root.expirationTime;
   if (rootExpirationTime !== NoWork) {
     requestWork(root, rootExpirationTime);
@@ -1606,7 +1620,7 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
   recordScheduleUpdate();
 
   if (__DEV__) {
-    if (fiber.tag === ClassComponent || fiber.tag === ClassComponentLazy) {
+    if (fiber.tag === ClassComponent) {
       const instance = fiber.stateNode;
       warnAboutInvalidUpdates(instance);
     }
@@ -1663,10 +1677,7 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
   }
 
   if (root === null) {
-    if (
-      __DEV__ &&
-      (fiber.tag === ClassComponent || fiber.tag === ClassComponentLazy)
-    ) {
+    if (__DEV__ && fiber.tag === ClassComponent) {
       warnAboutUpdateOnUnmounted(fiber);
     }
     return null;

@@ -24,7 +24,7 @@ describe('ReactIncrementalScheduling', () => {
   });
 
   function span(prop) {
-    return {type: 'span', children: [], prop};
+    return {type: 'span', children: [], prop, hidden: false};
   }
 
   it('schedules and flushes deferred work', () => {

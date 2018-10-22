@@ -16,7 +16,7 @@ let React;
 let ReactFeatureFlags;
 let ReactNoop;
 
-describe('pure', () => {
+describe('memo', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
@@ -26,7 +26,7 @@ describe('pure', () => {
   });
 
   function span(prop) {
-    return {type: 'span', children: [], prop};
+    return {type: 'span', children: [], prop, hidden: false};
   }
 
   function Text(props) {
@@ -34,19 +34,26 @@ describe('pure', () => {
     return <span prop={props.text} />;
   }
 
-  // Tests should run against both the lazy and non-lazy versions of `pure`.
+  async function fakeImport(result) {
+    return {default: result};
+  }
+
+  // Tests should run against both the lazy and non-lazy versions of `memo`.
   // To make the tests work for both versions, we wrap the non-lazy version in
   // a lazy function component.
   sharedTests('normal', (...args) => {
-    const Pure = React.pure(...args);
-    function Indirection(props, ref) {
-      return <Pure {...props} ref={ref} />;
+    const Memo = React.memo(...args);
+    function Indirection(props) {
+      return <Memo {...props} />;
     }
-    return Promise.resolve(React.forwardRef(Indirection));
+    return React.lazy(() => fakeImport(Indirection));
   });
-  sharedTests('lazy', (...args) => Promise.resolve(React.pure(...args)));
+  sharedTests('lazy', (...args) => {
+    const Memo = React.memo(...args);
+    return React.lazy(() => fakeImport(Memo));
+  });
 
-  function sharedTests(label, pure) {
+  function sharedTests(label, memo) {
     describe(`${label}`, () => {
       it('bails out on props equality', async () => {
         const {unstable_Suspense: Suspense} = React;
@@ -54,14 +61,14 @@ describe('pure', () => {
         function Counter({count}) {
           return <Text text={count} />;
         }
-        Counter = pure(Counter);
+        Counter = memo(Counter);
 
         ReactNoop.render(
-          <Suspense>
+          <Suspense fallback={<Text text="Loading..." />}>
             <Counter count={0} />
           </Suspense>,
         );
-        expect(ReactNoop.flush()).toEqual([]);
+        expect(ReactNoop.flush()).toEqual(['Loading...']);
         await Promise.resolve();
         expect(ReactNoop.flush()).toEqual([0]);
         expect(ReactNoop.getChildren()).toEqual([span(0)]);
@@ -90,17 +97,24 @@ describe('pure', () => {
 
         const CountContext = React.createContext(0);
 
+        function readContext(Context) {
+          const dispatcher =
+            React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+              .ReactCurrentOwner.currentDispatcher;
+          return dispatcher.readContext(Context);
+        }
+
         function Counter(props) {
-          const count = CountContext.unstable_read();
+          const count = readContext(CountContext);
           return <Text text={`${props.label}: ${count}`} />;
         }
-        Counter = pure(Counter);
+        Counter = memo(Counter);
 
         class Parent extends React.Component {
           state = {count: 0};
           render() {
             return (
-              <Suspense>
+              <Suspense fallback={<Text text="Loading..." />}>
                 <CountContext.Provider value={this.state.count}>
                   <Counter label="Count" />
                 </CountContext.Provider>
@@ -111,7 +125,7 @@ describe('pure', () => {
 
         const parent = React.createRef(null);
         ReactNoop.render(<Parent ref={parent} />);
-        expect(ReactNoop.flush()).toEqual([]);
+        expect(ReactNoop.flush()).toEqual(['Loading...']);
         await Promise.resolve();
         expect(ReactNoop.flush()).toEqual(['Count: 0']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
@@ -133,7 +147,7 @@ describe('pure', () => {
         function Counter({count}) {
           return <Text text={count} />;
         }
-        Counter = pure(Counter, (oldProps, newProps) => {
+        Counter = memo(Counter, (oldProps, newProps) => {
           ReactNoop.yield(
             `Old count: ${oldProps.count}, New count: ${newProps.count}`,
           );
@@ -141,11 +155,11 @@ describe('pure', () => {
         });
 
         ReactNoop.render(
-          <Suspense>
+          <Suspense fallback={<Text text="Loading..." />}>
             <Counter count={0} />
           </Suspense>,
         );
-        expect(ReactNoop.flush()).toEqual([]);
+        expect(ReactNoop.flush()).toEqual(['Loading...']);
         await Promise.resolve();
         expect(ReactNoop.flush()).toEqual([0]);
         expect(ReactNoop.getChildren()).toEqual([span(0)]);
@@ -169,83 +183,52 @@ describe('pure', () => {
         expect(ReactNoop.getChildren()).toEqual([span(1)]);
       });
 
-      it('warns for class components', () => {
-        class SomeClass extends React.Component {
+      it('supports non-pure class components', async () => {
+        const {unstable_Suspense: Suspense} = React;
+
+        class CounterInner extends React.Component {
+          static defaultProps = {suffix: '!'};
           render() {
-            return null;
+            return <Text text={this.props.count + '' + this.props.suffix} />;
           }
         }
-        expect(() => pure(SomeClass)).toWarnDev(
-          'pure: The first argument must be a function component.',
-          {withoutStack: true},
+        const Counter = memo(CounterInner);
+
+        ReactNoop.render(
+          <Suspense fallback={<Text text="Loading..." />}>
+            <Counter count={0} />
+          </Suspense>,
         );
+        expect(ReactNoop.flush()).toEqual(['Loading...']);
+        await Promise.resolve();
+        expect(ReactNoop.flush()).toEqual(['0!']);
+        expect(ReactNoop.getChildren()).toEqual([span('0!')]);
+
+        // Should bail out because props have not changed
+        ReactNoop.render(
+          <Suspense>
+            <Counter count={0} />
+          </Suspense>,
+        );
+        expect(ReactNoop.flush()).toEqual([]);
+        expect(ReactNoop.getChildren()).toEqual([span('0!')]);
+
+        // Should update because count prop changed
+        ReactNoop.render(
+          <Suspense>
+            <Counter count={1} />
+          </Suspense>,
+        );
+        expect(ReactNoop.flush()).toEqual(['1!']);
+        expect(ReactNoop.getChildren()).toEqual([span('1!')]);
       });
 
-      it('warns if first argument is not a function', () => {
-        expect(() => pure()).toWarnDev(
-          'pure: The first argument must be a function component. Instead ' +
+      it('warns if first argument is undefined', () => {
+        expect(() => memo()).toWarnDev(
+          'memo: The first argument must be a component. Instead ' +
             'received: undefined',
           {withoutStack: true},
         );
-      });
-
-      it('forwards ref', async () => {
-        const {unstable_Suspense: Suspense} = React;
-        const Transparent = pure((props, ref) => {
-          return <div ref={ref} />;
-        });
-        const divRef = React.createRef();
-
-        ReactNoop.render(
-          <Suspense>
-            <Transparent ref={divRef} />
-          </Suspense>,
-        );
-        ReactNoop.flush();
-        await Promise.resolve();
-        ReactNoop.flush();
-        expect(divRef.current.type).toBe('div');
-      });
-
-      it('updates if only ref changes', async () => {
-        const {unstable_Suspense: Suspense} = React;
-        const Transparent = pure((props, ref) => {
-          return [<Text key="text" text="Text" />, <div key="div" ref={ref} />];
-        });
-
-        const divRef = React.createRef();
-        const divRef2 = React.createRef();
-
-        ReactNoop.render(
-          <Suspense>
-            <Transparent ref={divRef} />
-          </Suspense>,
-        );
-        expect(ReactNoop.flush()).toEqual([]);
-        await Promise.resolve();
-        expect(ReactNoop.flush()).toEqual(['Text']);
-        expect(divRef.current.type).toBe('div');
-        expect(divRef2.current).toBe(null);
-
-        // Should re-render (new ref)
-        ReactNoop.render(
-          <Suspense>
-            <Transparent ref={divRef2} />
-          </Suspense>,
-        );
-        expect(ReactNoop.flush()).toEqual(['Text']);
-        expect(divRef.current).toBe(null);
-        expect(divRef2.current.type).toBe('div');
-
-        // Should not re-render (same ref)
-        ReactNoop.render(
-          <Suspense>
-            <Transparent ref={divRef2} />
-          </Suspense>,
-        );
-        expect(ReactNoop.flush()).toEqual([]);
-        expect(divRef.current).toBe(null);
-        expect(divRef2.current.type).toBe('div');
       });
     });
   }

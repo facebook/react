@@ -410,12 +410,12 @@ exports[`ReactDebugFiberPerf supports portals 1`] = `
 "
 `;
 
-exports[`ReactDebugFiberPerf supports pure 1`] = `
+exports[`ReactDebugFiberPerf supports memo 1`] = `
 "⚛ (Waiting for async callback... will force flush in 5250 ms)
 
 ⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Parent [mount]
-    ⚛ Pure(Foo) [mount]
+    ⚛ Foo [mount]
 
 ⚛ (Committing Changes)
   ⚛ (Committing Snapshot Effects: 0 Total)

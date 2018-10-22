@@ -5,23 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-type Thenable<T, R> = {
-  then(resolve: (T) => mixed, reject: (mixed) => mixed): R,
-};
+import type {LazyComponent, Thenable} from 'shared/ReactLazyComponent';
 
-export function lazy<T, R>(ctor: () => Thenable<T, R>) {
-  let thenable = null;
+import {REACT_LAZY_TYPE} from 'shared/ReactSymbols';
+
+export function lazy<T, R>(ctor: () => Thenable<T, R>): LazyComponent<T> {
   return {
-    then(resolve, reject) {
-      if (thenable === null) {
-        // Lazily create thenable by wrapping in an extra thenable.
-        thenable = ctor();
-        ctor = null;
-      }
-      return thenable.then(resolve, reject);
-    },
+    $$typeof: REACT_LAZY_TYPE,
+    _ctor: ctor,
     // React uses these fields to store the result.
-    _reactStatus: -1,
-    _reactResult: null,
+    _status: -1,
+    _result: null,
   };
 }

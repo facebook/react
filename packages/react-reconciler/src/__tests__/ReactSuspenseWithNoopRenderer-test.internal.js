@@ -6,7 +6,6 @@ let ReactCache;
 let Suspense;
 let StrictMode;
 let ConcurrentMode;
-let lazy;
 
 let cache;
 let TextResource;
@@ -28,7 +27,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     Suspense = React.unstable_Suspense;
     StrictMode = React.StrictMode;
     ConcurrentMode = React.unstable_ConcurrentMode;
-    lazy = React.lazy;
 
     function invalidateCache() {
       cache = ReactCache.createCache(invalidateCache);
@@ -50,13 +48,15 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     textResourceShouldFail = false;
   });
 
-  function div(...children) {
-    children = children.map(c => (typeof c === 'string' ? {text: c} : c));
-    return {type: 'div', children, prop: undefined};
-  }
+  // function div(...children) {
+  //   children = children.map(
+  //     c => (typeof c === 'string' ? {text: c, hidden: false} : c),
+  //   );
+  //   return {type: 'div', children, prop: undefined, hidden: false};
+  // }
 
   function span(prop) {
-    return {type: 'span', children: [], prop};
+    return {type: 'span', children: [], prop, hidden: false};
   }
 
   function advanceTimers(ms) {
@@ -102,7 +102,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     function Foo() {
       ReactNoop.yield('Foo');
       return (
-        <Suspense>
+        <Suspense fallback={<Text text="Loading..." />}>
           <Bar>
             <AsyncText text="A" ms={100} />
             <Text text="B" />
@@ -119,6 +119,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       'Suspend! [A]',
       // But we keep rendering the siblings
       'B',
+      'Loading...',
     ]);
     expect(ReactNoop.getChildren()).toEqual([]);
 
@@ -191,7 +192,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
   it('continues rendering siblings after suspending', async () => {
     ReactNoop.render(
-      <Suspense>
+      <Suspense fallback={<Text text="Loading..." />}>
         <Text text="A" />
         <AsyncText text="B" />
         <Text text="C" />
@@ -199,7 +200,13 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       </Suspense>,
     );
     // B suspends. Continue rendering the remaining siblings.
-    expect(ReactNoop.flush()).toEqual(['A', 'Suspend! [B]', 'C', 'D']);
+    expect(ReactNoop.flush()).toEqual([
+      'A',
+      'Suspend! [B]',
+      'C',
+      'D',
+      'Loading...',
+    ]);
     // Did not commit yet.
     expect(ReactNoop.getChildren()).toEqual([]);
 
@@ -241,7 +248,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     const errorBoundary = React.createRef();
     function App() {
       return (
-        <Suspense>
+        <Suspense fallback={<Text text="Loading..." />}>
           <ErrorBoundary ref={errorBoundary}>
             <AsyncText text="Result" ms={1000} />
           </ErrorBoundary>
@@ -250,7 +257,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
 
     ReactNoop.render(<App />);
-    expect(ReactNoop.flush()).toEqual(['Suspend! [Result]']);
+    expect(ReactNoop.flush()).toEqual(['Suspend! [Result]', 'Loading...']);
     expect(ReactNoop.getChildren()).toEqual([]);
 
     textResourceShouldFail = true;
@@ -276,7 +283,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     errorBoundary.current.reset();
     cache.invalidate();
 
-    expect(ReactNoop.flush()).toEqual(['Suspend! [Result]']);
+    expect(ReactNoop.flush()).toEqual(['Suspend! [Result]', 'Loading...']);
     ReactNoop.expire(1000);
     await advanceTimers(1000);
     expect(ReactNoop.flush()).toEqual(['Promise resolved [Result]', 'Result']);
@@ -354,7 +361,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   it('can update at a higher priority while in a suspended state', async () => {
     function App(props) {
       return (
-        <Suspense>
+        <Suspense fallback={<Text text="Loading..." />}>
           <Text text={props.highPri} />
           <AsyncText text={props.lowPri} />
         </Suspense>
@@ -374,6 +381,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       'A',
       // Suspends
       'Suspend! [2]',
+      'Loading...',
     ]);
 
     // While we're still waiting for the low-pri update to complete, update the
@@ -393,7 +401,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   it('keeps working on lower priority work after being pinged', async () => {
     function App(props) {
       return (
-        <Suspense>
+        <Suspense fallback={<Text text="Loading..." />}>
           <AsyncText text="A" />
           {props.showB && <Text text="B" />}
         </Suspense>
@@ -401,13 +409,13 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
 
     ReactNoop.render(<App showB={false} />);
-    expect(ReactNoop.flush()).toEqual(['Suspend! [A]']);
+    expect(ReactNoop.flush()).toEqual(['Suspend! [A]', 'Loading...']);
     expect(ReactNoop.getChildren()).toEqual([]);
 
     // Advance React's virtual time by enough to fall into a new async bucket.
     ReactNoop.expire(1200);
     ReactNoop.render(<App showB={true} />);
-    expect(ReactNoop.flush()).toEqual(['Suspend! [A]', 'B']);
+    expect(ReactNoop.flush()).toEqual(['Suspend! [A]', 'B', 'Loading...']);
     expect(ReactNoop.getChildren()).toEqual([]);
 
     await advanceTimers(0);
@@ -668,23 +676,23 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
   it('throws a helpful error when an update is suspends without a placeholder', () => {
     expect(() => {
-      ReactNoop.flushSync(() =>
-        ReactNoop.render(
-          <Suspense>{() => <AsyncText text="Async" />}</Suspense>,
-        ),
-      );
+      ReactNoop.flushSync(() => ReactNoop.render(<AsyncText text="Async" />));
     }).toThrow('An update was suspended, but no placeholder UI was provided.');
   });
 
   it('a Suspense component correctly handles more than one suspended child', async () => {
     ReactNoop.render(
-      <Suspense maxDuration={0}>
+      <Suspense maxDuration={0} fallback={<Text text="Loading..." />}>
         <AsyncText text="A" ms={100} />
         <AsyncText text="B" ms={100} />
       </Suspense>,
     );
-    expect(ReactNoop.expire(10000)).toEqual(['Suspend! [A]', 'Suspend! [B]']);
-    expect(ReactNoop.getChildren()).toEqual([]);
+    expect(ReactNoop.expire(10000)).toEqual([
+      'Suspend! [A]',
+      'Suspend! [B]',
+      'Loading...',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
 
     await advanceTimers(100);
 
@@ -724,7 +732,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   it('starts working on an update even if its priority falls between two suspended levels', async () => {
     function App(props) {
       return (
-        <Suspense maxDuration={10000}>
+        <Suspense fallback={<Text text="Loading..." />} maxDuration={10000}>
           {props.text === 'C' ? (
             <Text text="C" />
           ) : (
@@ -737,7 +745,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Schedule an update
     ReactNoop.render(<App text="A" />);
     // The update should suspend.
-    expect(ReactNoop.flush()).toEqual(['Suspend! [A]']);
+    expect(ReactNoop.flush()).toEqual(['Suspend! [A]', 'Loading...']);
     expect(ReactNoop.getChildren()).toEqual([]);
 
     // Advance time until right before it expires. This number may need to
@@ -750,7 +758,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Schedule another low priority update.
     ReactNoop.render(<App text="B" />);
     // This update should also suspend.
-    expect(ReactNoop.flush()).toEqual(['Suspend! [B]']);
+    expect(ReactNoop.flush()).toEqual(['Suspend! [B]', 'Loading...']);
     expect(ReactNoop.getChildren()).toEqual([]);
 
     // Schedule a high priority update. Its expiration time will fall between
@@ -768,38 +776,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       'Promise resolved [B]',
     ]);
     expect(ReactNoop.getChildren()).toEqual([span('C')]);
-  });
-
-  it('can hide a tree to unblock its surroundings', async () => {
-    function App() {
-      return (
-        <Suspense maxDuration={1000}>
-          {didTimeout => (
-            <Fragment>
-              <div hidden={didTimeout}>
-                <AsyncText text="Async" ms={3000} />
-              </div>
-              {didTimeout ? <Text text="Loading..." /> : null}
-            </Fragment>
-          )}
-        </Suspense>
-      );
-    }
-
-    ReactNoop.render(<App />);
-    expect(ReactNoop.flush()).toEqual(['Suspend! [Async]', 'Loading...']);
-    expect(ReactNoop.getChildren()).toEqual([]);
-
-    ReactNoop.expire(2000);
-    await advanceTimers(2000);
-    expect(ReactNoop.flush()).toEqual([]);
-    expect(ReactNoop.getChildren()).toEqual([div(), span('Loading...')]);
-
-    ReactNoop.expire(1000);
-    await advanceTimers(1000);
-
-    expect(ReactNoop.flush()).toEqual(['Promise resolved [Async]', 'Async']);
-    expect(ReactNoop.getChildren()).toEqual([div(span('Async'))]);
   });
 
   it('flushes all expired updates in a single batch', async () => {
@@ -858,16 +834,11 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
 
     function Delay({ms}) {
+      // Once ms has elapsed, render null. This allows the rest of the
+      // tree to resume rendering.
       return (
-        <Suspense maxDuration={ms}>
-          {didTimeout => {
-            if (didTimeout) {
-              // Once ms has elapsed, render null. This allows the rest of the
-              // tree to resume rendering.
-              return null;
-            }
-            return <Never />;
-          }}
+        <Suspense fallback={null} maxDuration={ms}>
+          <Never />
         </Suspense>
       );
     }
@@ -966,12 +937,13 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         'Loading (3)',
         'Promise resolved [Step: 1]',
         'Step: 1',
-        'Sibling',
       ]);
-      expect(ReactNoop.getChildren()).toEqual([
-        span('Step: 1'),
-        span('Sibling'),
-      ]);
+      expect(ReactNoop.getChildrenAsJSX()).toEqual(
+        <React.Fragment>
+          <span prop="Step: 1" />
+          <span prop="Sibling" />
+        </React.Fragment>,
+      );
 
       // Update. This starts out asynchronously.
       text.current.setState({step: 2}, () =>
@@ -987,163 +959,31 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         'Loading (2)',
         'Loading (3)',
       ]);
-      expect(ReactNoop.getChildren()).toEqual([
-        span('Loading (1)'),
-        span('Loading (2)'),
-        span('Loading (3)'),
-      ]);
+      expect(ReactNoop.getChildrenAsJSX()).toEqual(
+        <React.Fragment>
+          <span hidden={true} prop="Sibling" />
+          <span prop="Loading (1)" />
+          <span prop="Loading (2)" />
+          <span prop="Loading (3)" />
+        </React.Fragment>,
+      );
 
       await advanceTimers(100);
       expect(ReactNoop.flush()).toEqual([
         'Promise resolved [Step: 2]',
-        // TODO: The state of the children is lost when switching back. Revisit
-        // this in the follow up PR.
-        'Step: 1',
-        'Sibling',
+        'Step: 2',
       ]);
-      expect(ReactNoop.getChildren()).toEqual([
-        span('Step: 1'),
-        span('Sibling'),
-      ]);
+      expect(ReactNoop.getChildrenAsJSX()).toEqual(
+        <React.Fragment>
+          <span prop="Step: 2" />
+          <span prop="Sibling" />
+        </React.Fragment>,
+      );
     });
 
     it(
       'continues rendering asynchronously even if a promise is captured by ' +
-        'a sync boundary (strict)',
-      async () => {
-        class UpdatingText extends React.Component {
-          state = {text: this.props.initialText};
-          render() {
-            return this.props.children(this.state.text);
-          }
-        }
-
-        const text1 = React.createRef(null);
-        const text2 = React.createRef(null);
-        function App() {
-          return (
-            <StrictMode>
-              <Suspense
-                maxDuration={1000}
-                fallback={<Text text="Loading..." />}>
-                <ConcurrentMode>
-                  <UpdatingText ref={text1} initialText="Async: 1">
-                    {text => (
-                      <Fragment>
-                        <Text text="Before" />
-                        <AsyncText text={text} />
-                        <Text text="After" />
-                      </Fragment>
-                    )}
-                  </UpdatingText>
-                </ConcurrentMode>
-              </Suspense>
-              <ConcurrentMode>
-                <UpdatingText ref={text2} initialText="Sync: 1">
-                  {text => (
-                    <Fragment>
-                      <Text text="Before" />
-                      <Text text={text} />
-                      <Text text="After" />
-                    </Fragment>
-                  )}
-                </UpdatingText>
-              </ConcurrentMode>
-            </StrictMode>
-          );
-        }
-
-        // Initial mount
-        ReactNoop.renderLegacySyncRoot(<App />, () =>
-          ReactNoop.yield('Did mount'),
-        );
-        await advanceTimers(100);
-        expect(ReactNoop.clearYields()).toEqual([
-          'Before',
-          'Suspend! [Async: 1]',
-          'After',
-          'Loading...',
-          'Before',
-          'Sync: 1',
-          'After',
-          'Did mount',
-          'Promise resolved [Async: 1]',
-          'Before',
-          'Async: 1',
-          'After',
-        ]);
-        expect(ReactNoop.getChildren()).toEqual([
-          span('Before'),
-          span('Async: 1'),
-          span('After'),
-
-          span('Before'),
-          span('Sync: 1'),
-          span('After'),
-        ]);
-
-        // Update. This starts out asynchronously.
-        text1.current.setState({text: 'Async: 2'}, () =>
-          ReactNoop.yield('Update 1 did commit'),
-        );
-        text2.current.setState({text: 'Sync: 2'}, () =>
-          ReactNoop.yield('Update 2 did commit'),
-        );
-
-        // Start rendering asynchronously
-        ReactNoop.flushThrough([
-          'Before',
-          // This child suspends
-          'Suspend! [Async: 2]',
-          // But we can still render the rest of the async tree asynchronously
-          'After',
-        ]);
-
-        // Suspend during an async render.
-        expect(ReactNoop.flushNextYield()).toEqual(['Loading...']);
-        expect(ReactNoop.flush()).toEqual(['Before', 'Sync: 2', 'After']);
-        // Commit was suspended.
-        expect(ReactNoop.getChildren()).toEqual([
-          span('Before'),
-          span('Async: 1'),
-          span('After'),
-
-          span('Before'),
-          span('Sync: 1'),
-          span('After'),
-        ]);
-
-        // When the placeholder is pinged, the boundary re-
-        // renders asynchronously.
-        ReactNoop.expire(100);
-        await advanceTimers(100);
-        expect(ReactNoop.flush()).toEqual([
-          'Promise resolved [Async: 2]',
-          'Before',
-          'Async: 2',
-          'After',
-          'Before',
-          'Sync: 2',
-          'After',
-          'Update 1 did commit',
-          'Update 2 did commit',
-        ]);
-
-        expect(ReactNoop.getChildren()).toEqual([
-          span('Before'),
-          span('Async: 2'),
-          span('After'),
-
-          span('Before'),
-          span('Sync: 2'),
-          span('After'),
-        ]);
-      },
-    );
-
-    it(
-      'continues rendering asynchronously even if a promise is captured by ' +
-        'a sync boundary (loose)',
+        'a sync boundary (default mode)',
       async () => {
         class UpdatingText extends React.Component {
           state = {text: this.props.initialText};
@@ -1203,19 +1043,19 @@ describe('ReactSuspenseWithNoopRenderer', () => {
           // The placeholder is rendered in a subsequent commit
           'Loading...',
           'Promise resolved [Async: 1]',
-          'Before',
           'Async: 1',
-          'After',
         ]);
-        expect(ReactNoop.getChildren()).toEqual([
-          span('Before'),
-          span('Async: 1'),
-          span('After'),
+        expect(ReactNoop.getChildrenAsJSX()).toEqual(
+          <React.Fragment>
+            <span prop="Before" />
+            <span prop="Async: 1" />
+            <span prop="After" />
 
-          span('Before'),
-          span('Sync: 1'),
-          span('After'),
-        ]);
+            <span prop="Before" />
+            <span prop="Sync: 1" />
+            <span prop="After" />
+          </React.Fragment>,
+        );
 
         // Update. This starts out asynchronously.
         text1.current.setState({text: 'Async: 2'}, () =>
@@ -1244,35 +1084,174 @@ describe('ReactSuspenseWithNoopRenderer', () => {
           // Switch to the placeholder in a subsequent commit
           'Loading...',
         ]);
-        expect(ReactNoop.getChildren()).toEqual([
-          span('Loading...'),
+        expect(ReactNoop.getChildrenAsJSX()).toEqual(
+          <React.Fragment>
+            <span hidden={true} prop="Before" />
+            <span hidden={true} prop="After" />
+            <span prop="Loading..." />
 
-          span('Before'),
-          span('Sync: 2'),
-          span('After'),
-        ]);
+            <span prop="Before" />
+            <span prop="Sync: 2" />
+            <span prop="After" />
+          </React.Fragment>,
+        );
 
         // When the placeholder is pinged, the boundary must be re-rendered
         // synchronously.
         await advanceTimers(100);
         expect(ReactNoop.clearYields()).toEqual([
           'Promise resolved [Async: 2]',
+          'Async: 2',
+        ]);
+
+        expect(ReactNoop.getChildrenAsJSX()).toEqual(
+          <React.Fragment>
+            <span prop="Before" />
+            <span prop="Async: 2" />
+            <span prop="After" />
+
+            <span prop="Before" />
+            <span prop="Sync: 2" />
+            <span prop="After" />
+          </React.Fragment>,
+        );
+      },
+    );
+
+    it(
+      'continues rendering asynchronously even if a promise is captured by ' +
+        'a sync boundary (strict, non-concurrent)',
+      async () => {
+        class UpdatingText extends React.Component {
+          state = {text: this.props.initialText};
+          render() {
+            return this.props.children(this.state.text);
+          }
+        }
+
+        const text1 = React.createRef(null);
+        const text2 = React.createRef(null);
+        function App() {
+          return (
+            <StrictMode>
+              <Suspense
+                maxDuration={1000}
+                fallback={<Text text="Loading..." />}>
+                <ConcurrentMode>
+                  <UpdatingText ref={text1} initialText="Async: 1">
+                    {text => (
+                      <Fragment>
+                        <Text text="Before" />
+                        <AsyncText text={text} />
+                        <Text text="After" />
+                      </Fragment>
+                    )}
+                  </UpdatingText>
+                </ConcurrentMode>
+              </Suspense>
+              <ConcurrentMode>
+                <UpdatingText ref={text2} initialText="Sync: 1">
+                  {text => (
+                    <Fragment>
+                      <Text text="Before" />
+                      <Text text={text} />
+                      <Text text="After" />
+                    </Fragment>
+                  )}
+                </UpdatingText>
+              </ConcurrentMode>
+            </StrictMode>
+          );
+        }
+
+        // Initial mount
+        ReactNoop.renderLegacySyncRoot(<App />, () =>
+          ReactNoop.yield('Did mount'),
+        );
+        await advanceTimers(100);
+        expect(ReactNoop.clearYields()).toEqual([
           'Before',
-          'Async: 1',
+          'Suspend! [Async: 1]',
           'After',
+          'Before',
+          'Sync: 1',
+          'After',
+          'Did mount',
+          // The placeholder is rendered in a subsequent commit
+          'Loading...',
+          'Promise resolved [Async: 1]',
+          'Async: 1',
+        ]);
+        expect(ReactNoop.getChildrenAsJSX()).toEqual(
+          <React.Fragment>
+            <span prop="Before" />
+            <span prop="Async: 1" />
+            <span prop="After" />
+
+            <span prop="Before" />
+            <span prop="Sync: 1" />
+            <span prop="After" />
+          </React.Fragment>,
+        );
+
+        // Update. This starts out asynchronously.
+        text1.current.setState({text: 'Async: 2'}, () =>
+          ReactNoop.yield('Update 1 did commit'),
+        );
+        text2.current.setState({text: 'Sync: 2'}, () =>
+          ReactNoop.yield('Update 2 did commit'),
+        );
+
+        // Start rendering asynchronously
+        ReactNoop.flushThrough(['Before']);
+
+        // Now render the next child, which suspends
+        expect(ReactNoop.flushNextYield()).toEqual([
+          // This child suspends
+          'Suspend! [Async: 2]',
+        ]);
+        expect(ReactNoop.flush()).toEqual([
+          'After',
+          'Before',
+          'Sync: 2',
+          'After',
+          'Update 1 did commit',
+          'Update 2 did commit',
+
+          // Switch to the placeholder in a subsequent commit
+          'Loading...',
+        ]);
+        expect(ReactNoop.getChildrenAsJSX()).toEqual(
+          <React.Fragment>
+            <span hidden={true} prop="Before" />
+            <span hidden={true} prop="After" />
+            <span prop="Loading..." />
+
+            <span prop="Before" />
+            <span prop="Sync: 2" />
+            <span prop="After" />
+          </React.Fragment>,
+        );
+
+        // When the placeholder is pinged, the boundary must be re-rendered
+        // synchronously.
+        await advanceTimers(100);
+        expect(ReactNoop.clearYields()).toEqual([
+          'Promise resolved [Async: 2]',
+          'Async: 2',
         ]);
 
-        expect(ReactNoop.getChildren()).toEqual([
-          span('Before'),
-          // TODO: The state of the children is lost when switching back. Revisit
-          // this in the follow up PR.
-          span('Async: 1'),
-          span('After'),
+        expect(ReactNoop.getChildrenAsJSX()).toEqual(
+          <React.Fragment>
+            <span prop="Before" />
+            <span prop="Async: 2" />
+            <span prop="After" />
 
-          span('Before'),
-          span('Sync: 2'),
-          span('After'),
-        ]);
+            <span prop="Before" />
+            <span prop="Sync: 2" />
+            <span prop="After" />
+          </React.Fragment>,
+        );
       },
     );
 
@@ -1332,24 +1311,25 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         // placeholder. This should be a mount, not an update.
         'Mount [Loading...]',
       ]);
-      expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
+      expect(ReactNoop.getChildrenAsJSX()).toEqual(
+        <React.Fragment>
+          <span hidden={true} prop="A" />
+          <span hidden={true} prop="C" />
+
+          <span prop="Loading..." />
+        </React.Fragment>,
+      );
 
       await advanceTimers(1000);
-      expect(ReactNoop.expire(1000)).toEqual([
-        'Promise resolved [B]',
-        'A',
-        'B',
-        'C',
-        'Mount [A]',
-        'Mount [B]',
-        'Mount [C]',
-      ]);
+      expect(ReactNoop.expire(1000)).toEqual(['Promise resolved [B]', 'B']);
 
-      expect(ReactNoop.getChildren()).toEqual([
-        span('A'),
-        span('B'),
-        span('C'),
-      ]);
+      expect(ReactNoop.getChildrenAsJSX()).toEqual(
+        <React.Fragment>
+          <span prop="A" />
+          <span prop="B" />
+          <span prop="C" />
+        </React.Fragment>,
+      );
     });
 
     it('suspends inside constructor', async () => {
@@ -1357,6 +1337,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         constructor(props) {
           super(props);
           const text = props.text;
+          ReactNoop.yield('constructor');
           try {
             TextResource.read(cache, [props.text, props.ms]);
             this.state = {text};
@@ -1368,6 +1349,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
             }
             throw promise;
           }
+        }
+        componentDidMount() {
+          ReactNoop.yield('componentDidMount');
         }
         render() {
           ReactNoop.yield(this.state.text);
@@ -1381,7 +1365,21 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         </Suspense>,
       );
 
+      expect(ReactNoop.clearYields()).toEqual([
+        'constructor',
+        'Suspend! [Hi]',
+        'Loading...',
+      ]);
       expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
+
+      await advanceTimers(1000);
+      expect(ReactNoop.clearYields()).toEqual([
+        'Promise resolved [Hi]',
+        'constructor',
+        'Hi',
+        'componentDidMount',
+      ]);
+      expect(ReactNoop.getChildren()).toEqual([span('Hi')]);
     });
 
     it('does not infinite loop if fallback contains lifecycle method', async () => {
@@ -1413,294 +1411,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
       await advanceTimers(100);
       expect(ReactNoop.getChildren()).toEqual([span('Hi')]);
-    });
-  });
-
-  describe('Promise as element type', () => {
-    it('accepts a promise as an element type', async () => {
-      const LazyText = Promise.resolve(Text);
-
-      ReactNoop.render(
-        <Suspense fallback={<Text text="Loading..." />}>
-          <LazyText text="Hi" />
-        </Suspense>,
-      );
-      expect(ReactNoop.flush()).toEqual(['Loading...']);
-      expect(ReactNoop.getChildren()).toEqual([]);
-
-      await LazyText;
-
-      expect(ReactNoop.flush()).toEqual(['Hi']);
-      expect(ReactNoop.getChildren()).toEqual([span('Hi')]);
-
-      // Should not suspend on update
-      ReactNoop.render(
-        <Suspense fallback={<Text text="Loading..." />}>
-          <LazyText text="Hi again" />
-        </Suspense>,
-      );
-      expect(ReactNoop.flush()).toEqual(['Hi again']);
-      expect(ReactNoop.getChildren()).toEqual([span('Hi again')]);
-    });
-
-    it('throws if promise rejects', async () => {
-      const LazyText = Promise.reject(new Error('Bad network'));
-
-      ReactNoop.render(
-        <Suspense fallback={<Text text="Loading..." />}>
-          <LazyText text="Hi" />
-        </Suspense>,
-      );
-      expect(ReactNoop.flush()).toEqual(['Loading...']);
-
-      await LazyText.catch(() => {});
-
-      expect(() => ReactNoop.flush()).toThrow('Bad network');
-    });
-
-    it('mount and reorder', async () => {
-      class Child extends React.Component {
-        componentDidMount() {
-          ReactNoop.yield('Did mount: ' + this.props.label);
-        }
-        componentDidUpdate() {
-          ReactNoop.yield('Did update: ' + this.props.label);
-        }
-        render() {
-          return <Text text={this.props.label} />;
-        }
-      }
-
-      const LazyChildA = Promise.resolve(Child);
-      const LazyChildB = Promise.resolve(Child);
-
-      function Parent({swap}) {
-        return (
-          <Suspense fallback={<Text text="Loading..." />}>
-            {swap
-              ? [
-                  <LazyChildB key="B" label="B" />,
-                  <LazyChildA key="A" label="A" />,
-                ]
-              : [
-                  <LazyChildA key="A" label="A" />,
-                  <LazyChildB key="B" label="B" />,
-                ]}
-          </Suspense>
-        );
-      }
-
-      ReactNoop.render(<Parent swap={false} />);
-      expect(ReactNoop.flush()).toEqual(['Loading...']);
-      expect(ReactNoop.getChildren()).toEqual([]);
-
-      await LazyChildA;
-      await LazyChildB;
-
-      expect(ReactNoop.flush()).toEqual([
-        'A',
-        'B',
-        'Did mount: A',
-        'Did mount: B',
-      ]);
-      expect(ReactNoop.getChildren()).toEqual([span('A'), span('B')]);
-
-      // Swap the position of A and B
-      ReactNoop.render(<Parent swap={true} />);
-      expect(ReactNoop.flush()).toEqual([
-        'B',
-        'A',
-        'Did update: B',
-        'Did update: A',
-      ]);
-      expect(ReactNoop.getChildren()).toEqual([span('B'), span('A')]);
-    });
-
-    it('uses `default` property, if it exists', async () => {
-      const LazyText = Promise.resolve({default: Text});
-
-      ReactNoop.render(
-        <Suspense fallback={<Text text="Loading..." />}>
-          <LazyText text="Hi" />
-        </Suspense>,
-      );
-      expect(ReactNoop.flush()).toEqual(['Loading...']);
-      expect(ReactNoop.getChildren()).toEqual([]);
-
-      await LazyText;
-
-      expect(ReactNoop.flush()).toEqual(['Hi']);
-      expect(ReactNoop.getChildren()).toEqual([span('Hi')]);
-
-      // Should not suspend on update
-      ReactNoop.render(
-        <Suspense fallback={<Text text="Loading..." />}>
-          <LazyText text="Hi again" />
-        </Suspense>,
-      );
-      expect(ReactNoop.flush()).toEqual(['Hi again']);
-      expect(ReactNoop.getChildren()).toEqual([span('Hi again')]);
-    });
-
-    it('resolves defaultProps, on mount and update', async () => {
-      function T(props) {
-        return <Text {...props} />;
-      }
-      T.defaultProps = {text: 'Hi'};
-      const LazyText = Promise.resolve(T);
-
-      ReactNoop.render(
-        <Suspense fallback={<Text text="Loading..." />}>
-          <LazyText />
-        </Suspense>,
-      );
-      expect(ReactNoop.flush()).toEqual(['Loading...']);
-      expect(ReactNoop.getChildren()).toEqual([]);
-
-      await LazyText;
-
-      expect(ReactNoop.flush()).toEqual(['Hi']);
-      expect(ReactNoop.getChildren()).toEqual([span('Hi')]);
-
-      T.defaultProps = {text: 'Hi again'};
-
-      ReactNoop.render(
-        <Suspense fallback={<Text text="Loading..." />}>
-          <LazyText text="Hi again" />
-        </Suspense>,
-      );
-      expect(ReactNoop.flush()).toEqual(['Hi again']);
-      expect(ReactNoop.getChildren()).toEqual([span('Hi again')]);
-    });
-
-    it('resolves defaultProps without breaking memoization', async () => {
-      function LazyImpl(props) {
-        ReactNoop.yield('Lazy');
-        return (
-          <Fragment>
-            <Text text={props.siblingText} />
-            {props.children}
-          </Fragment>
-        );
-      }
-      LazyImpl.defaultProps = {siblingText: 'Sibling'};
-      const Lazy = Promise.resolve(LazyImpl);
-
-      class Stateful extends React.Component {
-        state = {text: 'A'};
-        render() {
-          return <Text text={this.state.text} />;
-        }
-      }
-
-      const stateful = React.createRef(null);
-      ReactNoop.render(
-        <Suspense fallback={<Text text="Loading..." />}>
-          <Lazy>
-            <Stateful ref={stateful} />
-          </Lazy>
-        </Suspense>,
-      );
-      expect(ReactNoop.flush()).toEqual(['Loading...']);
-      expect(ReactNoop.getChildren()).toEqual([]);
-      await Lazy;
-      expect(ReactNoop.flush()).toEqual(['Lazy', 'Sibling', 'A']);
-      expect(ReactNoop.getChildren()).toEqual([span('Sibling'), span('A')]);
-
-      // Lazy should not re-render
-      stateful.current.setState({text: 'B'});
-      expect(ReactNoop.flush()).toEqual(['B']);
-      expect(ReactNoop.getChildren()).toEqual([span('Sibling'), span('B')]);
-    });
-
-    it('lazy-load using React.lazy', async () => {
-      const LazyText = lazy(() => {
-        ReactNoop.yield('Started loading');
-        return Promise.resolve(Text);
-      });
-
-      ReactNoop.render(
-        <Suspense fallback={<Text text="Loading..." />}>
-          <Text text="A" />
-          <Text text="B" />
-          <LazyText text="C" />
-        </Suspense>,
-      );
-      // Render first two siblings. The lazy component should not have
-      // started loading yet.
-      ReactNoop.flushThrough(['A', 'B']);
-
-      // Flush the rest.
-      expect(ReactNoop.flush()).toEqual(['Started loading', 'Loading...']);
-      expect(ReactNoop.getChildren()).toEqual([]);
-
-      await LazyText;
-
-      expect(ReactNoop.flush()).toEqual(['A', 'B', 'C']);
-      expect(ReactNoop.getChildren()).toEqual([
-        span('A'),
-        span('B'),
-        span('C'),
-      ]);
-    });
-
-    it('includes lazy-loaded component in warning stack', async () => {
-      const LazyFoo = lazy(() => {
-        ReactNoop.yield('Started loading');
-        const Foo = props => (
-          <div>{[<Text text="A" />, <Text text="B" />]}</div>
-        );
-        return Promise.resolve(Foo);
-      });
-
-      ReactNoop.render(
-        <Suspense fallback={<Text text="Loading..." />}>
-          <LazyFoo />
-        </Suspense>,
-      );
-      expect(ReactNoop.flush()).toEqual(['Started loading', 'Loading...']);
-      expect(ReactNoop.getChildren()).toEqual([]);
-
-      await LazyFoo;
-      expect(() => {
-        expect(ReactNoop.flush()).toEqual(['A', 'B']);
-      }).toWarnDev('    in Text (at **)\n' + '    in Foo (at **)');
-      expect(ReactNoop.getChildren()).toEqual([div(span('A'), span('B'))]);
-    });
-
-    it('supports class and forwardRef components', async () => {
-      const LazyClass = lazy(() => {
-        class Foo extends React.Component {
-          render() {
-            return <Text text="Foo" />;
-          }
-        }
-        return Promise.resolve(Foo);
-      });
-
-      const LazyForwardRef = lazy(() => {
-        const Bar = React.forwardRef((props, ref) => (
-          <Text text="Bar" hostRef={ref} />
-        ));
-        return Promise.resolve(Bar);
-      });
-
-      const ref = React.createRef();
-      ReactNoop.render(
-        <Suspense fallback={<Text text="Loading..." />}>
-          <LazyClass />
-          <LazyForwardRef ref={ref} />
-        </Suspense>,
-      );
-      expect(ReactNoop.flush()).toEqual(['Loading...']);
-      expect(ReactNoop.getChildren()).toEqual([]);
-      expect(ref.current).toBe(null);
-
-      await LazyClass;
-      await LazyForwardRef;
-      expect(ReactNoop.flush()).toEqual(['Foo', 'Bar']);
-      expect(ReactNoop.getChildren()).toEqual([span('Foo'), span('Bar')]);
-      expect(ref.current).not.toBe(null);
     });
   });
 
@@ -1776,16 +1486,15 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
       // In a subsequent commit, render a placeholder
       'Loading...',
-
-      // A, B, and C are unmounted, but we skip calling B's componentWillUnmount
-      'Unmount [A]',
-      'Unmount [C]',
-
-      // Force delete all the existing children when switching to the
-      // placeholder. This should be a mount, not an update.
       'Mount [Loading...]',
     ]);
-    expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <React.Fragment>
+        <span hidden={true} prop="A" />
+        <span hidden={true} prop="C" />
+        <span prop="Loading..." />
+      </React.Fragment>,
+    );
   });
 });
 

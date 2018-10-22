@@ -18,10 +18,7 @@ import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import getComponentName from 'shared/getComponentName';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {
-  IndeterminateComponent,
-  FunctionComponent,
   ClassComponent,
-  ClassComponentLazy,
   HostRoot,
   HostComponent,
   HostPortal,
@@ -33,11 +30,11 @@ import {
   Incomplete,
   NoEffect,
   ShouldCapture,
-  Update as UpdateEffect,
+  Callback as CallbackEffect,
   LifecycleEffectMask,
 } from 'shared/ReactSideEffectTags';
 import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
-import {StrictMode, ConcurrentMode} from './ReactTypeOfMode';
+import {ConcurrentMode} from './ReactTypeOfMode';
 
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -61,7 +58,7 @@ import {
   isAlreadyFailedLegacyErrorBoundary,
   retrySuspendedRoot,
 } from './ReactFiberScheduler';
-import {Sync} from './ReactFiberExpirationTime';
+import {NoWork, Sync} from './ReactFiberExpirationTime';
 
 import invariant from 'shared/invariant';
 import maxSigned31BitInt from './maxSigned31BitInt';
@@ -71,10 +68,6 @@ import {
 } from './ReactFiberExpirationTime';
 import {findEarliestOutstandingPriorityLevel} from './ReactFiberPendingPriority';
 import {reconcileChildren} from './ReactFiberBeginWork';
-
-function NoopComponent() {
-  return null;
-}
 
 function createRootErrorUpdate(
   fiber: Fiber,
@@ -176,21 +169,16 @@ function throwException(
     do {
       if (workInProgress.tag === SuspenseComponent) {
         const current = workInProgress.alternate;
-        if (
-          current !== null &&
-          current.memoizedState === true &&
-          current.stateNode !== null
-        ) {
-          // Reached a placeholder that already timed out. Each timed out
-          // placeholder acts as the root of a new suspense boundary.
-
-          // Use the time at which the placeholder timed out as the start time
-          // for the current render.
-          const timedOutAt = current.stateNode.timedOutAt;
-          startTimeMs = expirationTimeToMs(timedOutAt);
-
-          // Do not search any further.
-          break;
+        if (current !== null) {
+          const currentState = current.memoizedState;
+          if (currentState !== null && currentState.didTimeout) {
+            // Reached a boundary that already timed out. Do not search
+            // any further.
+            const timedOutAt = currentState.timedOutAt;
+            startTimeMs = expirationTimeToMs(timedOutAt);
+            // Do not search any further.
+            break;
+          }
         }
         let timeoutPropMs = workInProgress.pendingProps.maxDuration;
         if (typeof timeoutPropMs === 'number') {
@@ -212,7 +200,10 @@ function throwException(
     do {
       if (workInProgress.tag === SuspenseComponent) {
         const didTimeout = workInProgress.memoizedState;
-        if (!didTimeout) {
+        if (
+          !didTimeout &&
+          workInProgress.memoizedProps.fallback !== undefined
+        ) {
           // Found the nearest boundary.
 
           // If the boundary is not in concurrent mode, we should not suspend, and
@@ -227,6 +218,7 @@ function throwException(
             null,
             root,
             workInProgress,
+            sourceFiber,
             pingTime,
           );
           if (enableSchedulerTracing) {
@@ -234,16 +226,16 @@ function throwException(
           }
           thenable.then(onResolveOrReject, onResolveOrReject);
 
-          // If the boundary is outside of strict mode, we should *not* suspend
-          // the commit. Pretend as if the suspended component rendered null and
-          // keep rendering. In the commit phase, we'll schedule a subsequent
-          // synchronous update to re-render the Suspense.
+          // If the boundary is outside of concurrent mode, we should *not*
+          // suspend the commit. Pretend as if the suspended component rendered
+          // null and keep rendering. In the commit phase, we'll schedule a
+          // subsequent synchronous update to re-render the Suspense.
           //
           // Note: It doesn't matter whether the component that suspended was
-          // inside a strict mode tree. If the Suspense is outside of it, we
+          // inside a concurrent mode tree. If the Suspense is outside of it, we
           // should *not* suspend the commit.
-          if ((workInProgress.mode & StrictMode) === NoEffect) {
-            workInProgress.effectTag |= UpdateEffect;
+          if ((workInProgress.mode & ConcurrentMode) === NoEffect) {
+            workInProgress.effectTag |= CallbackEffect;
 
             // Unmount the source fiber's children
             const nextChildren = null;
@@ -254,28 +246,16 @@ function throwException(
               renderExpirationTime,
             );
             sourceFiber.effectTag &= ~Incomplete;
-            if (sourceFiber.tag === IndeterminateComponent) {
-              // Let's just assume it's a function component. This fiber will
-              // be unmounted in the immediate next commit, anyway.
-              sourceFiber.tag = FunctionComponent;
-            }
 
-            if (
-              sourceFiber.tag === ClassComponent ||
-              sourceFiber.tag === ClassComponentLazy
-            ) {
+            if (sourceFiber.tag === ClassComponent) {
               // We're going to commit this fiber even though it didn't
               // complete. But we shouldn't call any lifecycle methods or
               // callbacks. Remove all lifecycle effect tags.
               sourceFiber.effectTag &= ~LifecycleEffectMask;
               if (sourceFiber.alternate === null) {
-                // We're about to mount a class component that doesn't have an
-                // instance. Turn this into a dummy function component instead,
-                // to prevent type errors. This is a bit weird but it's an edge
-                // case and we're about to synchronously delete this
-                // component, anyway.
-                sourceFiber.tag = FunctionComponent;
-                sourceFiber.type = NoopComponent;
+                // Set the instance back to null. We use this as a heuristic to
+                // detect that the fiber mounted in an inconsistent state.
+                sourceFiber.stateNode = null;
               }
             }
 
@@ -283,8 +263,8 @@ function throwException(
             return;
           }
 
-          // Confirmed that the boundary is in a strict mode tree. Continue with
-          // the normal suspend path.
+          // Confirmed that the boundary is in a concurrent mode tree. Continue
+          // with the normal suspend path.
 
           let absoluteTimeoutMs;
           if (earliestTimeoutMs === -1) {
@@ -357,7 +337,6 @@ function throwException(
         return;
       }
       case ClassComponent:
-      case ClassComponentLazy:
         // Capture and retry
         const errorInfo = value;
         const ctor = workInProgress.type;
@@ -405,18 +384,6 @@ function unwindWork(
       }
       return null;
     }
-    case ClassComponentLazy: {
-      const Component = workInProgress.type._reactResult;
-      if (isLegacyContextProvider(Component)) {
-        popLegacyContext(workInProgress);
-      }
-      const effectTag = workInProgress.effectTag;
-      if (effectTag & ShouldCapture) {
-        workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
-        return workInProgress;
-      }
-      return null;
-    }
     case HostRoot: {
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
@@ -437,6 +404,32 @@ function unwindWork(
       const effectTag = workInProgress.effectTag;
       if (effectTag & ShouldCapture) {
         workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
+        // Captured a suspense effect. Set the boundary's `alreadyCaptured`
+        // state to true so we know to render the fallback.
+        const current = workInProgress.alternate;
+        const currentState = current !== null ? current.memoizedState : null;
+        let nextState = workInProgress.memoizedState;
+        if (currentState === null) {
+          // No existing state. Create a new object.
+          nextState = {
+            alreadyCaptured: true,
+            didTimeout: false,
+            timedOutAt: NoWork,
+          };
+        } else if (currentState === nextState) {
+          // There is an existing state but it's the same as the current tree's.
+          // Clone the object.
+          nextState = {
+            alreadyCaptured: true,
+            didTimeout: currentState.didTimeout,
+            timedOutAt: currentState.timedOutAt,
+          };
+        } else {
+          // Already have a clone, so it's safe to mutate.
+          nextState.alreadyCaptured = true;
+        }
+        workInProgress.memoizedState = nextState;
+        // Re-render the boundary.
         return workInProgress;
       }
       return null;
@@ -456,14 +449,6 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
   switch (interruptedWork.tag) {
     case ClassComponent: {
       const childContextTypes = interruptedWork.type.childContextTypes;
-      if (childContextTypes !== null && childContextTypes !== undefined) {
-        popLegacyContext(interruptedWork);
-      }
-      break;
-    }
-    case ClassComponentLazy: {
-      const childContextTypes =
-        interruptedWork.type._reactResult.childContextTypes;
       if (childContextTypes !== null && childContextTypes !== undefined) {
         popLegacyContext(interruptedWork);
       }
