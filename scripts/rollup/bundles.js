@@ -410,6 +410,21 @@ const bundles = [
     externals: ['jest-diff'],
   },
 
+  /******* ESLint Plugin for Hooks (proposal) *******/
+  {
+    label: 'eslint-plugin-react-hooks',
+    // TODO: it's awkward to create a bundle for this
+    // but if we don't, the package won't get copied.
+    // We also can't create just DEV bundle because
+    // it contains a NODE_ENV check inside.
+    // We should probably tweak our build process
+    // to allow "raw" packages that don't get bundled.
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'eslint-plugin-react-hooks',
+    externals: [],
+  },
+
   {
     label: 'scheduler-tracing',
     bundleTypes: [
