@@ -11,7 +11,7 @@ describe('ReactLazy', () => {
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     React = require('react');
-    Suspense = React.unstable_Suspense;
+    Suspense = React.Suspense;
     lazy = React.lazy;
     ReactTestRenderer = require('react-test-renderer');
   });

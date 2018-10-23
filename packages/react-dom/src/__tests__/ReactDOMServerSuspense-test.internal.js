@@ -48,9 +48,9 @@ describe('ReactDOMServerSuspense', () => {
       throw new Promise(() => {});
     };
     const e = await serverRender(
-      <React.unstable_Suspense fallback={<div />}>
+      <React.Suspense fallback={<div />}>
         <Suspended />
-      </React.unstable_Suspense>,
+      </React.Suspense>,
     );
 
     expect(e.tagName).toBe('DIV');

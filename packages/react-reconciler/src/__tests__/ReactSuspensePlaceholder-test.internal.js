@@ -37,7 +37,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
       // JestReact = require('jest-react');
       ReactCache = require('react-cache');
 
-      Suspense = React.unstable_Suspense;
+      Suspense = React.Suspense;
 
       function invalidateCache() {
         cache = ReactCache.createCache(invalidateCache);

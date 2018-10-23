@@ -470,9 +470,9 @@ describe('ReactDOMServerHydration', () => {
           <div>
             Hello{' '}
             {this.state.isClient && (
-              <React.unstable_Suspense fallback="loading">
+              <React.Suspense fallback="loading">
                 <Lazy />
-              </React.unstable_Suspense>
+              </React.Suspense>
             )}
           </div>
         );

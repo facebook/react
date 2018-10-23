@@ -56,7 +56,7 @@ describe('memo', () => {
   function sharedTests(label, memo) {
     describe(`${label}`, () => {
       it('bails out on props equality', async () => {
-        const {unstable_Suspense: Suspense} = React;
+        const {Suspense} = React;
 
         function Counter({count}) {
           return <Text text={count} />;
@@ -93,7 +93,7 @@ describe('memo', () => {
       });
 
       it("does not bail out if there's a context change", async () => {
-        const {unstable_Suspense: Suspense} = React;
+        const {Suspense} = React;
 
         const CountContext = React.createContext(0);
 
@@ -142,7 +142,7 @@ describe('memo', () => {
       });
 
       it('accepts custom comparison function', async () => {
-        const {unstable_Suspense: Suspense} = React;
+        const {Suspense} = React;
 
         function Counter({count}) {
           return <Text text={count} />;
@@ -184,7 +184,7 @@ describe('memo', () => {
       });
 
       it('supports non-pure class components', async () => {
-        const {unstable_Suspense: Suspense} = React;
+        const {Suspense} = React;
 
         class CounterInner extends React.Component {
           static defaultProps = {suffix: '!'};

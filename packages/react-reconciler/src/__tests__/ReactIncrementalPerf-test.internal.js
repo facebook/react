@@ -587,9 +587,9 @@ describe('ReactDebugFiberPerf', () => {
 
     ReactNoop.render(
       <Parent>
-        <React.unstable_Suspense fallback={<Spinner />}>
+        <React.Suspense fallback={<Spinner />}>
           <LazyFoo />
-        </React.unstable_Suspense>
+        </React.Suspense>
       </Parent>,
     );
     ReactNoop.flush();
@@ -605,9 +605,9 @@ describe('ReactDebugFiberPerf', () => {
 
     ReactNoop.render(
       <Parent>
-        <React.unstable_Suspense>
+        <React.Suspense>
           <LazyFoo />
-        </React.unstable_Suspense>
+        </React.Suspense>
       </Parent>,
     );
     ReactNoop.flush();

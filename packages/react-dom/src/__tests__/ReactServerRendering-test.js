@@ -610,7 +610,7 @@ describe('ReactDOMServer', () => {
 
   it('throws for unsupported types on the server', () => {
     expect(() => {
-      ReactDOMServer.renderToString(<React.unstable_Suspense />);
+      ReactDOMServer.renderToString(<React.Suspense />);
     }).toThrow('ReactDOMServer does not yet support Suspense.');
 
     async function fakeImport(result) {
