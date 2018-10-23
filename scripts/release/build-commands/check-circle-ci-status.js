@@ -50,7 +50,9 @@ module.exports = async params => {
   }
 
   if (params.skipCI) {
-    logUpdate(chalk.red`Are you sure you want to skip CI? (y for yes, n for no)`);
+    logUpdate(
+      chalk.red`Are you sure you want to skip CI? (y for yes, n for no)`
+    );
     const confirm = await prompt('');
     logUpdate.done();
     if (confirm === 'y') {
