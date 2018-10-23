@@ -43,7 +43,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
         cache = ReactCache.createCache(invalidateCache);
       }
       invalidateCache();
-      TextResource = ReactCache.createResource(([text, ms = 0]) => {
+      TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
         let listeners = null;
         let status = 'pending';
         let value = null;

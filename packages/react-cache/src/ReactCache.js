@@ -323,7 +323,7 @@ if (__DEV__) {
       '%s: Invalid key type. Expected a string, number, symbol, or boolean, ' +
         'but instead received: %s' +
         '\n\nTo use non-primitive values as keys, you must pass a hash ' +
-        'function as the second argument to createResource().',
+        'function as the second argument to unstable_createResource().',
       methodName,
       key,
     );
@@ -341,20 +341,20 @@ type Resource<K, V> = {|
 // were a more elegant way to do this in the function definition itself.
 
 // Primitive keys do not request a hash function.
-declare function createResource<V, K: primitive, H: primitive>(
+declare function unstable_createResource<V, K: primitive, H: primitive>(
   loadResource: (K) => Promise<V>,
   hash?: (K) => H,
 ): Resource<K, V>;
 
 // Non-primitive keys *do* require a hash function.
 // eslint-disable-next-line no-redeclare
-declare function createResource<V, K: mixed, H: primitive>(
+declare function unstable_createResource<V, K: mixed, H: primitive>(
   loadResource: (K) => Promise<V>,
   hash: (K) => H,
 ): Resource<K, V>;
 
 // eslint-disable-next-line no-redeclare
-export function createResource<V, K, H: primitive>(
+export function unstable_createResource<V, K, H: primitive>(
   loadResource: K => Promise<V>,
   hash: K => H,
 ): Resource<K, V> {
