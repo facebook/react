@@ -248,15 +248,16 @@ function throwException(
           );
           sourceFiber.effectTag &= ~Incomplete;
 
+          // We're going to commit this fiber even though it didn't complete.
+          // But we shouldn't call any lifecycle methods or callbacks. Remove
+          // all lifecycle effect tags.
+          sourceFiber.effectTag &= ~LifecycleEffectMask;
+
           if (sourceFiber.tag === ClassComponent) {
-            // We're going to commit this fiber even though it didn't complete.
-            // But we shouldn't call any lifecycle methods or callbacks. Remove
-            // all lifecycle effect tags.
-            sourceFiber.effectTag &= ~LifecycleEffectMask;
             const current = sourceFiber.alternate;
             if (current === null) {
               // This is a new mount. Change the tag so it's not mistaken for a
-              // completed component. For example, we should not call
+              // completed class component. For example, we should not call
               // componentWillUnmount if it is deleted.
               sourceFiber.tag = IncompleteClassComponent;
             }

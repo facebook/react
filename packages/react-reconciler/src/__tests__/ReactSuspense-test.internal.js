@@ -17,6 +17,7 @@ describe('ReactSuspense', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
+    ReactFeatureFlags.enableHooks = true;
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     // JestReact = require('jest-react');
@@ -524,6 +525,51 @@ describe('ReactSuspense', () => {
       // Should not fire componentWillUnmount
       expect(ReactTestRenderer).toHaveYielded(['B']);
       expect(root).toMatchRenderedOutput('B');
+    });
+
+    it('suspends in a component that also contains useEffect', () => {
+      const {useLayoutEffect} = React;
+
+      function AsyncTextWithEffect(props) {
+        const text = props.text;
+
+        useLayoutEffect(
+          () => {
+            ReactTestRenderer.unstable_yield('Did commit: ' + text);
+          },
+          [text],
+        );
+
+        try {
+          TextResource.read([props.text, props.ms]);
+          ReactTestRenderer.unstable_yield(text);
+          return text;
+        } catch (promise) {
+          if (typeof promise.then === 'function') {
+            ReactTestRenderer.unstable_yield(`Suspend! [${text}]`);
+          } else {
+            ReactTestRenderer.unstable_yield(`Error! [${text}]`);
+          }
+          throw promise;
+        }
+      }
+
+      function App({text}) {
+        return (
+          <Suspense fallback={<Text text="Loading..." />}>
+            <AsyncTextWithEffect text={text} ms={100} />
+          </Suspense>
+        );
+      }
+
+      ReactTestRenderer.create(<App text="A" />);
+      expect(ReactTestRenderer).toHaveYielded(['Suspend! [A]', 'Loading...']);
+      jest.advanceTimersByTime(500);
+      expect(ReactTestRenderer).toHaveYielded([
+        'Promise resolved [A]',
+        'A',
+        'Did commit: A',
+      ]);
     });
 
     it('retries when an update is scheduled on a timed out tree', () => {
