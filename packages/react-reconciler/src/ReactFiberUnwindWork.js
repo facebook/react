@@ -25,6 +25,7 @@ import {
   HostPortal,
   ContextProvider,
   SuspenseComponent,
+  IncompleteClassComponent,
 } from 'shared/ReactWorkTags';
 import {
   DidCapture,
@@ -252,10 +253,12 @@ function throwException(
             // But we shouldn't call any lifecycle methods or callbacks. Remove
             // all lifecycle effect tags.
             sourceFiber.effectTag &= ~LifecycleEffectMask;
-            if (sourceFiber.alternate === null) {
-              // Set the instance back to null. We use this as a heuristic to
-              // detect that the fiber mounted in an inconsistent state.
-              sourceFiber.stateNode = null;
+            const current = sourceFiber.alternate;
+            if (current === null) {
+              // This is a new mount. Change the tag so it's not mistaken for a
+              // completed component. For example, we should not call
+              // componentWillUnmount if it is deleted.
+              sourceFiber.tag = IncompleteClassComponent;
             }
           }
 

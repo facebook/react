@@ -45,3 +45,4 @@ export const SuspenseComponent = 13;
 export const MemoComponent = 14;
 export const SimpleMemoComponent = 15;
 export const LazyComponent = 16;
+export const IncompleteClassComponent = 17;
