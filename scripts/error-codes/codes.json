@@ -291,5 +291,10 @@
   "289": "Function components cannot have refs.",
   "290": "Element ref was specified as a string (%s) but no owner was set. This could happen for one of the following reasons:\n1. You may be adding a ref to a function component\n2. You may be adding a ref to a component that was not created inside a component's render method\n3. You have multiple copies of React loaded\nSee https://fb.me/react-refs-must-have-owner for more information.",
   "291": "Log of yielded values is not empty. Call expect(ReactTestRenderer).toHaveYielded(...) first.",
-  "292": "The matcher `toHaveYielded` expects an instance of React Test Renderer.\n\nTry: expect(ReactTestRenderer).toHaveYielded(expectedYields)"
+  "292": "The matcher `toHaveYielded` expects an instance of React Test Renderer.\n\nTry: expect(ReactTestRenderer).toHaveYielded(expectedYields)",
+  "293": "Context can only be read while React is rendering, e.g. inside the render method or getDerivedStateFromProps.",
+  "294": "ReactDOMServer does not yet support Suspense.",
+  "295": "ReactDOMServer does not yet support lazy-loaded components.",
+  "296": "Log of yielded values is not empty. Call expect(ReactTestRenderer).unstable_toHaveYielded(...) first.",
+  "297": "The matcher `unstable_toHaveYielded` expects an instance of React Test Renderer.\n\nTry: expect(ReactTestRenderer).unstable_toHaveYielded(expectedYields)"
 }
