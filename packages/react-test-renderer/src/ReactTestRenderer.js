@@ -29,7 +29,7 @@ import {
   Profiler,
   MemoComponent,
   SimpleMemoComponent,
-  IncompleteComponent,
+  IncompleteClassComponent,
 } from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 import ReactVersion from 'shared/ReactVersion';
@@ -194,7 +194,7 @@ function toTree(node: ?Fiber) {
     case Profiler:
     case ForwardRef:
     case MemoComponent:
-    case IncompleteComponent:
+    case IncompleteClassComponent:
       return childrenToTree(node.child);
     default:
       invariant(

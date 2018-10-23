@@ -25,7 +25,7 @@ import {
   HostPortal,
   ContextProvider,
   SuspenseComponent,
-  IncompleteComponent,
+  IncompleteClassComponent,
 } from 'shared/ReactWorkTags';
 import {
   DidCapture,
@@ -258,7 +258,7 @@ function throwException(
               // This is a new mount. Change the tag so it's not mistaken for a
               // completed component. For example, we should not call
               // componentWillUnmount if it is deleted.
-              sourceFiber.tag = IncompleteComponent;
+              sourceFiber.tag = IncompleteClassComponent;
             }
           }
 

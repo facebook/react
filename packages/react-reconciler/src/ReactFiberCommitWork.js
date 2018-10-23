@@ -32,7 +32,7 @@ import {
   HostPortal,
   Profiler,
   SuspenseComponent,
-  IncompleteComponent,
+  IncompleteClassComponent,
 } from 'shared/ReactWorkTags';
 import {
   invokeGuardedCallback,
@@ -222,7 +222,7 @@ function commitBeforeMutationLifeCycles(
     case HostComponent:
     case HostText:
     case HostPortal:
-    case IncompleteComponent:
+    case IncompleteClassComponent:
       // Nothing to do for these component types
       return;
     default: {
@@ -394,7 +394,7 @@ function commitLifeCycles(
       }
       return;
     }
-    case IncompleteComponent:
+    case IncompleteClassComponent:
       break;
     default: {
       invariant(
@@ -934,7 +934,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case SuspenseComponent: {
       return;
     }
-    case IncompleteComponent: {
+    case IncompleteClassComponent: {
       return;
     }
     default: {

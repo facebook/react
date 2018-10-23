@@ -33,7 +33,7 @@ import {
   MemoComponent,
   SimpleMemoComponent,
   LazyComponent,
-  IncompleteComponent,
+  IncompleteClassComponent,
 } from 'shared/ReactWorkTags';
 import {
   NoEffect,
@@ -841,9 +841,11 @@ function mountLazyComponent(
   return child;
 }
 
-function mountIncompleteComponent(
+function mountIncompleteClassComponent(
   _current,
   workInProgress,
+  Component,
+  nextProps,
   renderExpirationTime,
 ) {
   if (_current !== null) {
@@ -859,12 +861,6 @@ function mountIncompleteComponent(
 
   // Promote the fiber to a class and try rendering again.
   workInProgress.tag = ClassComponent;
-  const Component = workInProgress.type;
-  const unresolvedProps = workInProgress.pendingProps;
-  const resolvedProps =
-    workInProgress.elementType === Component
-      ? unresolvedProps
-      : resolveDefaultProps(Component, unresolvedProps);
 
   // The rest of this function is a fork of `updateClassComponent`
 
@@ -883,13 +879,13 @@ function mountIncompleteComponent(
   constructClassInstance(
     workInProgress,
     Component,
-    resolvedProps,
+    nextProps,
     renderExpirationTime,
   );
   mountClassInstance(
     workInProgress,
     Component,
-    resolvedProps,
+    nextProps,
     renderExpirationTime,
   );
 
@@ -1717,10 +1713,18 @@ function beginWork(
         renderExpirationTime,
       );
     }
-    case IncompleteComponent: {
-      return mountIncompleteComponent(
+    case IncompleteClassComponent: {
+      const Component = workInProgress.type;
+      const unresolvedProps = workInProgress.pendingProps;
+      const resolvedProps =
+        workInProgress.elementType === Component
+          ? unresolvedProps
+          : resolveDefaultProps(Component, unresolvedProps);
+      return mountIncompleteClassComponent(
         current,
         workInProgress,
+        Component,
+        resolvedProps,
         renderExpirationTime,
       );
     }
