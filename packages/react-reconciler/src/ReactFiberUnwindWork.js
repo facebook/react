@@ -13,6 +13,7 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue} from './ReactCapturedValue';
 import type {Update} from './ReactUpdateQueue';
 import type {Thenable} from './ReactFiberScheduler';
+import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import getComponentName from 'shared/getComponentName';
@@ -35,6 +36,7 @@ import {
 } from 'shared/ReactSideEffectTags';
 import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
 import {ConcurrentMode} from './ReactTypeOfMode';
+import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent';
 
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -170,7 +172,7 @@ function throwException(
       if (workInProgress.tag === SuspenseComponent) {
         const current = workInProgress.alternate;
         if (current !== null) {
-          const currentState = current.memoizedState;
+          const currentState: SuspenseState | null = current.memoizedState;
           if (currentState !== null && currentState.didTimeout) {
             // Reached a boundary that already timed out. Do not search
             // any further.
@@ -198,116 +200,113 @@ function throwException(
     // Schedule the nearest Suspense to re-render the timed out view.
     workInProgress = returnFiber;
     do {
-      if (workInProgress.tag === SuspenseComponent) {
-        const didTimeout = workInProgress.memoizedState;
-        if (
-          !didTimeout &&
-          workInProgress.memoizedProps.fallback !== undefined
-        ) {
-          // Found the nearest boundary.
+      if (
+        workInProgress.tag === SuspenseComponent &&
+        shouldCaptureSuspense(workInProgress.alternate, workInProgress)
+      ) {
+        // Found the nearest boundary.
 
-          // If the boundary is not in concurrent mode, we should not suspend, and
-          // likewise, when the promise resolves, we should ping synchronously.
-          const pingTime =
-            (workInProgress.mode & ConcurrentMode) === NoEffect
-              ? Sync
-              : renderExpirationTime;
+        // If the boundary is not in concurrent mode, we should not suspend, and
+        // likewise, when the promise resolves, we should ping synchronously.
+        const pingTime =
+          (workInProgress.mode & ConcurrentMode) === NoEffect
+            ? Sync
+            : renderExpirationTime;
 
-          // Attach a listener to the promise to "ping" the root and retry.
-          let onResolveOrReject = retrySuspendedRoot.bind(
-            null,
-            root,
-            workInProgress,
+        // Attach a listener to the promise to "ping" the root and retry.
+        let onResolveOrReject = retrySuspendedRoot.bind(
+          null,
+          root,
+          workInProgress,
+          sourceFiber,
+          pingTime,
+        );
+        if (enableSchedulerTracing) {
+          onResolveOrReject = Schedule_tracing_wrap(onResolveOrReject);
+        }
+        thenable.then(onResolveOrReject, onResolveOrReject);
+
+        // If the boundary is outside of concurrent mode, we should *not*
+        // suspend the commit. Pretend as if the suspended component rendered
+        // null and keep rendering. In the commit phase, we'll schedule a
+        // subsequent synchronous update to re-render the Suspense.
+        //
+        // Note: It doesn't matter whether the component that suspended was
+        // inside a concurrent mode tree. If the Suspense is outside of it, we
+        // should *not* suspend the commit.
+        if ((workInProgress.mode & ConcurrentMode) === NoEffect) {
+          workInProgress.effectTag |= CallbackEffect;
+
+          // Unmount the source fiber's children
+          const nextChildren = null;
+          reconcileChildren(
+            sourceFiber.alternate,
             sourceFiber,
-            pingTime,
+            nextChildren,
+            renderExpirationTime,
           );
-          if (enableSchedulerTracing) {
-            onResolveOrReject = Schedule_tracing_wrap(onResolveOrReject);
-          }
-          thenable.then(onResolveOrReject, onResolveOrReject);
+          sourceFiber.effectTag &= ~Incomplete;
 
-          // If the boundary is outside of concurrent mode, we should *not*
-          // suspend the commit. Pretend as if the suspended component rendered
-          // null and keep rendering. In the commit phase, we'll schedule a
-          // subsequent synchronous update to re-render the Suspense.
-          //
-          // Note: It doesn't matter whether the component that suspended was
-          // inside a concurrent mode tree. If the Suspense is outside of it, we
-          // should *not* suspend the commit.
-          if ((workInProgress.mode & ConcurrentMode) === NoEffect) {
-            workInProgress.effectTag |= CallbackEffect;
-
-            // Unmount the source fiber's children
-            const nextChildren = null;
-            reconcileChildren(
-              sourceFiber.alternate,
-              sourceFiber,
-              nextChildren,
-              renderExpirationTime,
-            );
-            sourceFiber.effectTag &= ~Incomplete;
-
-            if (sourceFiber.tag === ClassComponent) {
-              // We're going to commit this fiber even though it didn't
-              // complete. But we shouldn't call any lifecycle methods or
-              // callbacks. Remove all lifecycle effect tags.
-              sourceFiber.effectTag &= ~LifecycleEffectMask;
-              if (sourceFiber.alternate === null) {
-                // Set the instance back to null. We use this as a heuristic to
-                // detect that the fiber mounted in an inconsistent state.
-                sourceFiber.stateNode = null;
-              }
+          if (sourceFiber.tag === ClassComponent) {
+            // We're going to commit this fiber even though it didn't complete.
+            // But we shouldn't call any lifecycle methods or callbacks. Remove
+            // all lifecycle effect tags.
+            sourceFiber.effectTag &= ~LifecycleEffectMask;
+            if (sourceFiber.alternate === null) {
+              // Set the instance back to null. We use this as a heuristic to
+              // detect that the fiber mounted in an inconsistent state.
+              sourceFiber.stateNode = null;
             }
-
-            // Exit without suspending.
-            return;
           }
 
-          // Confirmed that the boundary is in a concurrent mode tree. Continue
-          // with the normal suspend path.
-
-          let absoluteTimeoutMs;
-          if (earliestTimeoutMs === -1) {
-            // If no explicit threshold is given, default to an abitrarily large
-            // value. The actual size doesn't matter because the threshold for the
-            // whole tree will be clamped to the expiration time.
-            absoluteTimeoutMs = maxSigned31BitInt;
-          } else {
-            if (startTimeMs === -1) {
-              // This suspend happened outside of any already timed-out
-              // placeholders. We don't know exactly when the update was scheduled,
-              // but we can infer an approximate start time from the expiration
-              // time. First, find the earliest uncommitted expiration time in the
-              // tree, including work that is suspended. Then subtract the offset
-              // used to compute an async update's expiration time. This will cause
-              // high priority (interactive) work to expire earlier than necessary,
-              // but we can account for this by adjusting for the Just Noticeable
-              // Difference.
-              const earliestExpirationTime = findEarliestOutstandingPriorityLevel(
-                root,
-                renderExpirationTime,
-              );
-              const earliestExpirationTimeMs = expirationTimeToMs(
-                earliestExpirationTime,
-              );
-              startTimeMs = earliestExpirationTimeMs - LOW_PRIORITY_EXPIRATION;
-            }
-            absoluteTimeoutMs = startTimeMs + earliestTimeoutMs;
-          }
-
-          // Mark the earliest timeout in the suspended fiber's ancestor path.
-          // After completing the root, we'll take the largest of all the
-          // suspended fiber's timeouts and use it to compute a timeout for the
-          // whole tree.
-          renderDidSuspend(root, absoluteTimeoutMs, renderExpirationTime);
-
-          workInProgress.effectTag |= ShouldCapture;
-          workInProgress.expirationTime = renderExpirationTime;
+          // Exit without suspending.
           return;
         }
-        // This boundary already captured during this render. Continue to the
-        // next boundary.
+
+        // Confirmed that the boundary is in a concurrent mode tree. Continue
+        // with the normal suspend path.
+
+        let absoluteTimeoutMs;
+        if (earliestTimeoutMs === -1) {
+          // If no explicit threshold is given, default to an abitrarily large
+          // value. The actual size doesn't matter because the threshold for the
+          // whole tree will be clamped to the expiration time.
+          absoluteTimeoutMs = maxSigned31BitInt;
+        } else {
+          if (startTimeMs === -1) {
+            // This suspend happened outside of any already timed-out
+            // placeholders. We don't know exactly when the update was
+            // scheduled, but we can infer an approximate start time from the
+            // expiration time. First, find the earliest uncommitted expiration
+            // time in the tree, including work that is suspended. Then subtract
+            // the offset used to compute an async update's expiration time.
+            // This will cause high priority (interactive) work to expire
+            // earlier than necessary, but we can account for this by adjusting
+            // for the Just Noticeable Difference.
+            const earliestExpirationTime = findEarliestOutstandingPriorityLevel(
+              root,
+              renderExpirationTime,
+            );
+            const earliestExpirationTimeMs = expirationTimeToMs(
+              earliestExpirationTime,
+            );
+            startTimeMs = earliestExpirationTimeMs - LOW_PRIORITY_EXPIRATION;
+          }
+          absoluteTimeoutMs = startTimeMs + earliestTimeoutMs;
+        }
+
+        // Mark the earliest timeout in the suspended fiber's ancestor path.
+        // After completing the root, we'll take the largest of all the
+        // suspended fiber's timeouts and use it to compute a timeout for the
+        // whole tree.
+        renderDidSuspend(root, absoluteTimeoutMs, renderExpirationTime);
+
+        workInProgress.effectTag |= ShouldCapture;
+        workInProgress.expirationTime = renderExpirationTime;
+        return;
       }
+      // This boundary already captured during this render. Continue to the next
+      // boundary.
       workInProgress = workInProgress.return;
     } while (workInProgress !== null);
     // No boundary was found. Fallthrough to error mode.
@@ -407,9 +406,10 @@ function unwindWork(
         // Captured a suspense effect. Set the boundary's `alreadyCaptured`
         // state to true so we know to render the fallback.
         const current = workInProgress.alternate;
-        const currentState = current !== null ? current.memoizedState : null;
-        let nextState = workInProgress.memoizedState;
-        if (currentState === null) {
+        const currentState: SuspenseState | null =
+          current !== null ? current.memoizedState : null;
+        let nextState: SuspenseState | null = workInProgress.memoizedState;
+        if (nextState === null) {
           // No existing state. Create a new object.
           nextState = {
             alreadyCaptured: true,
@@ -421,8 +421,8 @@ function unwindWork(
           // Clone the object.
           nextState = {
             alreadyCaptured: true,
-            didTimeout: currentState.didTimeout,
-            timedOutAt: currentState.timedOutAt,
+            didTimeout: nextState.didTimeout,
+            timedOutAt: nextState.timedOutAt,
           };
         } else {
           // Already have a clone, so it's safe to mutate.

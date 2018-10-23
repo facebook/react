@@ -35,19 +35,17 @@ function assertYieldsWereCleared(root) {
 }
 
 export function toFlushAndYield(root, expectedYields) {
+  assertYieldsWereCleared(root);
+  const actualYields = root.unstable_flushAll();
   return captureAssertion(() => {
-    assertYieldsWereCleared(root);
-    const actualYields = root.unstable_flushAll();
     expect(actualYields).toEqual(expectedYields);
   });
 }
 
 export function toFlushAndYieldThrough(root, expectedYields) {
+  assertYieldsWereCleared(root);
+  const actualYields = root.unstable_flushNumberOfYields(expectedYields.length);
   return captureAssertion(() => {
-    assertYieldsWereCleared(root);
-    const actualYields = root.unstable_flushNumberOfYields(
-      expectedYields.length,
-    );
     expect(actualYields).toEqual(expectedYields);
   });
 }
@@ -76,8 +74,8 @@ export function toHaveYielded(ReactTestRenderer, expectedYields) {
 }
 
 export function toFlushAndThrow(root, ...rest) {
+  assertYieldsWereCleared(root);
   return captureAssertion(() => {
-    assertYieldsWereCleared(root);
     expect(() => {
       root.unstable_flushAll();
     }).toThrow(...rest);

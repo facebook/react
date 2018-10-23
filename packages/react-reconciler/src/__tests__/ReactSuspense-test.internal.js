@@ -442,7 +442,7 @@ describe('ReactSuspense', () => {
         state = {step: 1};
         render() {
           instance = this;
-          return <Text text="Stateful" />;
+          return <Text text={`Stateful: ${this.state.step}`} />;
         }
       }
 
@@ -458,30 +458,87 @@ describe('ReactSuspense', () => {
       const root = ReactTestRenderer.create(<App text="A" />);
 
       expect(ReactTestRenderer).toHaveYielded([
-        'Stateful',
+        'Stateful: 1',
         'Suspend! [A]',
         'Loading...',
       ]);
 
       jest.advanceTimersByTime(1000);
       expect(ReactTestRenderer).toHaveYielded(['Promise resolved [A]', 'A']);
-      expect(root).toMatchRenderedOutput('StatefulA');
+      expect(root).toMatchRenderedOutput('Stateful: 1A');
 
       root.update(<App text="B" />);
       expect(ReactTestRenderer).toHaveYielded([
-        'Stateful',
+        'Stateful: 1',
         'Suspend! [B]',
         'Loading...',
       ]);
+      expect(root).toMatchRenderedOutput('Loading...');
 
       instance.setState({step: 2});
+      expect(ReactTestRenderer).toHaveYielded([
+        'Stateful: 2',
+        'Suspend! [B]',
+        'Loading...',
+      ]);
+      expect(root).toMatchRenderedOutput('Loading...');
 
       jest.advanceTimersByTime(1000);
       expect(ReactTestRenderer).toHaveYielded([
         'Promise resolved [B]',
-        'Stateful',
+        'B',
         'B',
       ]);
+      expect(root).toMatchRenderedOutput('Stateful: 2B');
+    });
+
+    it('retries when an update is scheduled on a timed out tree', () => {
+      let instance;
+      class Stateful extends React.Component {
+        state = {step: 1};
+        render() {
+          instance = this;
+          return <AsyncText ms={1000} text={`Step: ${this.state.step}`} />;
+        }
+      }
+
+      function App(props) {
+        return (
+          <Suspense maxDuration={10} fallback={<Text text="Loading..." />}>
+            <Stateful />
+          </Suspense>
+        );
+      }
+
+      const root = ReactTestRenderer.create(<App />, {
+        unstable_isConcurrent: true,
+      });
+
+      // Initial render
+      expect(root).toFlushAndYield(['Suspend! [Step: 1]', 'Loading...']);
+      jest.advanceTimersByTime(1000);
+      expect(ReactTestRenderer).toHaveYielded(['Promise resolved [Step: 1]']);
+      expect(root).toFlushAndYield(['Step: 1']);
+      expect(root).toMatchRenderedOutput('Step: 1');
+
+      // Update that suspends
+      instance.setState({step: 2});
+      expect(root).toFlushAndYield(['Suspend! [Step: 2]', 'Loading...']);
+      jest.advanceTimersByTime(500);
+      expect(root).toMatchRenderedOutput('Loading...');
+
+      // Update while still suspended
+      instance.setState({step: 3});
+      expect(root).toFlushAndYield(['Suspend! [Step: 3]']);
+      expect(root).toMatchRenderedOutput('Loading...');
+
+      jest.advanceTimersByTime(1000);
+      expect(ReactTestRenderer).toHaveYielded([
+        'Promise resolved [Step: 2]',
+        'Promise resolved [Step: 3]',
+      ]);
+      expect(root).toFlushAndYield(['Step: 3']);
+      expect(root).toMatchRenderedOutput('Step: 3');
     });
   });
 });
