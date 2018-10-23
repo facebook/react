@@ -277,7 +277,7 @@ export function postMountWrapper(
         }
       } else {
         // When syncing the value attribute, the value property should use
-        // the the wrapperState._initialValue property. This uses:
+        // the wrapperState._initialValue property. This uses:
         //
         //   1. The value React property when present
         //   2. The defaultValue React property when present
@@ -330,7 +330,7 @@ export function postMountWrapper(
       node.defaultChecked = !!props.defaultChecked;
     }
   } else {
-    // When syncing the checked attribute, both the the checked property and
+    // When syncing the checked attribute, both the checked property and
     // attribute are assigned at the same time using defaultChecked. This uses:
     //
     //   1. The checked React property when present
