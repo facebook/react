@@ -1018,20 +1018,16 @@ function updateSuspenseComponent(
   // We should attempt to render the primary children unless this boundary
   // already suspended during this render (`alreadyCaptured` is true).
   let nextState: SuspenseState | null = workInProgress.memoizedState;
-  let nextDidTimeout;
   if (nextState === null) {
     // An empty suspense state means this boundary has not yet timed out.
-    nextDidTimeout = false;
   } else {
     if (!nextState.alreadyCaptured) {
       // Since we haven't already suspended during this commit, clear the
       // existing suspense state. We'll try rendering again.
-      nextDidTimeout = false;
       nextState = null;
     } else {
       // Something in this boundary's subtree already suspended. Switch to
       // rendering the fallback children. Set `alreadyCaptured` to true.
-      nextDidTimeout = true;
       if (current !== null && nextState === current.memoizedState) {
         // Create a new suspense state to avoid mutating the current tree's.
         nextState = {
@@ -1046,6 +1042,7 @@ function updateSuspenseComponent(
       }
     }
   }
+  const nextDidTimeout = nextState !== null && nextState.didTimeout;
 
   // This next part is a bit confusing. If the children timeout, we switch to
   // showing the fallback children in place of the "primary" children.
@@ -1127,8 +1124,8 @@ function updateSuspenseComponent(
         // its fragment. We're going to skip over these entirely.
         const nextFallbackChildren = nextProps.fallback;
         const primaryChildFragment = createWorkInProgress(
-          currentFallbackChildFragment,
-          currentFallbackChildFragment.pendingProps,
+          currentPrimaryChildFragment,
+          currentPrimaryChildFragment.pendingProps,
           NoWork,
         );
         primaryChildFragment.effectTag |= Placement;
@@ -1481,23 +1478,45 @@ function beginWork(
           }
           break;
         case SuspenseComponent: {
-          const child = bailoutOnAlreadyFinishedWork(
-            current,
-            workInProgress,
-            renderExpirationTime,
-          );
-          if (child !== null) {
-            const nextState = workInProgress.memoizedState;
-            const nextDidTimeout = nextState !== null && nextState.didTimeout;
-            if (nextDidTimeout) {
-              child.childExpirationTime = NoWork;
-              return child.sibling;
+          const state: SuspenseState | null = workInProgress.memoizedState;
+          const didTimeout = state !== null && state.didTimeout;
+          if (didTimeout) {
+            // If this boundary is currently timed out, we need to decide
+            // whether to retry the primary children, or to skip over it and
+            // go straight to the fallback. Check the priority of the primary
+            // child fragment.
+            const primaryChildFragment: Fiber = (workInProgress.child: any);
+            const primaryChildExpirationTime =
+              primaryChildFragment.childExpirationTime;
+            if (
+              primaryChildExpirationTime !== NoWork &&
+              primaryChildExpirationTime <= renderExpirationTime
+            ) {
+              // The primary children have pending work. Use the normal path
+              // to attempt to render the primary children again.
+              return updateSuspenseComponent(
+                current,
+                workInProgress,
+                renderExpirationTime,
+              );
             } else {
-              return child;
+              // The primary children do not have pending work with sufficient
+              // priority. Bailout.
+              const child = bailoutOnAlreadyFinishedWork(
+                current,
+                workInProgress,
+                renderExpirationTime,
+              );
+              if (child !== null) {
+                // The fallback children have pending work. Skip over the
+                // primary children and work on the fallback.
+                return child.sibling;
+              } else {
+                return null;
+              }
             }
-          } else {
-            return null;
           }
+          break;
         }
       }
       return bailoutOnAlreadyFinishedWork(
