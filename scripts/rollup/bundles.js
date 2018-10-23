@@ -377,7 +377,7 @@ const bundles = [
     moduleType: ISOMORPHIC,
     entry: 'react-cache',
     global: 'ReactCache',
-    externals: ['react'],
+    externals: ['react', 'scheduler'],
   },
 
   /******* createComponentWithSubscriptions (experimental) *******/

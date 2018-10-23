@@ -21,8 +21,6 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
   let ReactFeatureFlags;
   let ReactCache;
   let Suspense;
-
-  let cache;
   let TextResource;
   let textResourceShouldFail;
 
@@ -34,15 +32,10 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
       ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
       React = require('react');
       ReactTestRenderer = require('react-test-renderer');
-      // JestReact = require('jest-react');
       ReactCache = require('react-cache');
 
       Suspense = React.Suspense;
 
-      function invalidateCache() {
-        cache = ReactCache.createCache(invalidateCache);
-      }
-      invalidateCache();
       TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
         let listeners = null;
         let status = 'pending';
@@ -98,7 +91,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
     function AsyncText(props) {
       const text = props.text;
       try {
-        TextResource.read(cache, [props.text, props.ms]);
+        TextResource.read([props.text, props.ms]);
         ReactTestRenderer.unstable_yield(text);
         return text;
       } catch (promise) {

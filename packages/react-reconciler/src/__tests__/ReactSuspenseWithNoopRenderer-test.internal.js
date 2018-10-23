@@ -7,7 +7,6 @@ let Suspense;
 let StrictMode;
 let ConcurrentMode;
 
-let cache;
 let TextResource;
 let textResourceShouldFail;
 
@@ -28,10 +27,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     StrictMode = React.StrictMode;
     ConcurrentMode = React.unstable_ConcurrentMode;
 
-    function invalidateCache() {
-      cache = ReactCache.createCache(invalidateCache);
-    }
-    invalidateCache();
     TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
       return new Promise((resolve, reject) =>
         setTimeout(() => {
@@ -80,7 +75,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   function AsyncText(props) {
     const text = props.text;
     try {
-      TextResource.read(cache, [props.text, props.ms]);
+      TextResource.read([props.text, props.ms]);
       ReactNoop.yield(text);
       return <span prop={text} />;
     } catch (promise) {
@@ -278,16 +273,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([
       span('Caught error: Failed to load: Result'),
     ]);
-
-    // Reset the error boundary and cache, and try again.
-    errorBoundary.current.reset();
-    cache.invalidate();
-
-    expect(ReactNoop.flush()).toEqual(['Suspend! [Result]', 'Loading...']);
-    ReactNoop.expire(1000);
-    await advanceTimers(1000);
-    expect(ReactNoop.flush()).toEqual(['Promise resolved [Result]', 'Result']);
-    expect(ReactNoop.getChildren()).toEqual([span('Result')]);
   });
 
   it('retries on error after falling back to a placeholder', async () => {
@@ -346,16 +331,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([
       span('Caught error: Failed to load: Result'),
     ]);
-
-    // Reset the error boundary and cache, and try again.
-    errorBoundary.current.reset();
-    cache.invalidate();
-
-    expect(ReactNoop.flush()).toEqual(['Suspend! [Result]', 'Loading...']);
-    ReactNoop.expire(3000);
-    await advanceTimers(3000);
-    expect(ReactNoop.flush()).toEqual(['Promise resolved [Result]', 'Result']);
-    expect(ReactNoop.getChildren()).toEqual([span('Result')]);
   });
 
   it('can update at a higher priority while in a suspended state', async () => {
@@ -1339,7 +1314,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
           const text = props.text;
           ReactNoop.yield('constructor');
           try {
-            TextResource.read(cache, [props.text, props.ms]);
+            TextResource.read([props.text, props.ms]);
             this.state = {text};
           } catch (promise) {
             if (typeof promise.then === 'function') {
@@ -1444,7 +1419,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         const text = this.props.text;
         const ms = this.props.ms;
         try {
-          TextResource.read(cache, [text, ms]);
+          TextResource.read([text, ms]);
           ReactNoop.yield(text);
           return <span prop={text} />;
         } catch (promise) {
