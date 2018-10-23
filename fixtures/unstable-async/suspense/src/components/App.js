@@ -1,4 +1,4 @@
-import React, {lazy, unstable_Suspense as Suspense, PureComponent} from 'react';
+import React, {lazy, Suspense, PureComponent} from 'react';
 import {unstable_scheduleCallback} from 'scheduler';
 import {
   unstable_trace as trace,
