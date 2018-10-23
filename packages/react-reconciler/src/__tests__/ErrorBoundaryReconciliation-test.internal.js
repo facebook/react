@@ -59,7 +59,9 @@ describe('ErrorBoundaryReconciliation', () => {
       if (isConcurrent) {
         renderer.unstable_flushAll();
       }
-      expect(renderer).toMatchRenderedOutput(<span prop="BrokenRender" />);
+      expect(renderer).unstable_toMatchRenderedOutput(
+        <span prop="BrokenRender" />,
+      );
 
       expect(() => {
         renderer.update(
@@ -72,7 +74,9 @@ describe('ErrorBoundaryReconciliation', () => {
         }
       }).toWarnDev(isConcurrent ? ['invalid', 'invalid'] : ['invalid']);
       const Fallback = fallbackTagName;
-      expect(renderer).toMatchRenderedOutput(<Fallback prop="ErrorBoundary" />);
+      expect(renderer).unstable_toMatchRenderedOutput(
+        <Fallback prop="ErrorBoundary" />,
+      );
     }
 
     describe(isConcurrent ? 'concurrent' : 'sync', () => {

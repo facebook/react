@@ -50,12 +50,12 @@ expect.extend({
   ...require('../matchers/interactionTracing'),
   ...require('../matchers/toWarnDev'),
 
-  toFlushWithoutYielding: JestReact.toFlushWithoutYielding,
-  toFlushAndYield: JestReact.toFlushAndYield,
-  toFlushAndYieldThrough: JestReact.toFlushAndYieldThrough,
-  toHaveYielded: JestReact.toHaveYielded,
-  toFlushAndThrow: JestReact.toFlushAndThrow,
-  toMatchRenderedOutput: JestReact.toMatchRenderedOutput,
+  unstable_toFlushWithoutYielding: JestReact.unstable_toFlushWithoutYielding,
+  unstable_toFlushAndYield: JestReact.unstable_toFlushAndYield,
+  unstable_toFlushAndYieldThrough: JestReact.unstable_toFlushAndYieldThrough,
+  unstable_toHaveYielded: JestReact.unstable_toHaveYielded,
+  unstable_toFlushAndThrow: JestReact.unstable_toFlushAndThrow,
+  unstable_toMatchRenderedOutput: JestReact.unstable_toMatchRenderedOutput,
 });
 
 beforeEach(() => (numExpectations = 0));

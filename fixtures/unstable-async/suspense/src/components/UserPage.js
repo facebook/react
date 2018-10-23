@@ -1,5 +1,5 @@
 import React, {Suspense} from 'react';
-import {createResource} from 'react-cache';
+import {unstable_createResource} from 'react-cache';
 import Spinner from './Spinner';
 import {cache} from '../cache';
 import {fetchUserProfileJSON, fetchUserRepositoriesListJSON} from '../api';
@@ -21,7 +21,7 @@ export default function UserPage({id}) {
   );
 }
 
-const UserDetailsResource = createResource(fetchUserProfileJSON);
+const UserDetailsResource = unstable_createResource(fetchUserProfileJSON);
 
 function UserDetails({id}) {
   const user = UserDetailsResource.read(cache, id);
@@ -103,7 +103,7 @@ const Email = ({email}) => (
   </div>
 );
 
-const ImageResource = createResource(
+const ImageResource = unstable_createResource(
   src =>
     new Promise(resolve => {
       const img = new Image();
@@ -132,7 +132,9 @@ function UserPicture({source}) {
   );
 }
 
-const UserRepositoriesResource = createResource(fetchUserRepositoriesListJSON);
+const UserRepositoriesResource = unstable_createResource(
+  fetchUserRepositoriesListJSON
+);
 
 function Repositories({id}) {
   const repos = UserRepositoriesResource.read(cache, id);

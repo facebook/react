@@ -18,12 +18,12 @@ describe('ReactCache', () => {
   });
 
   it('throws a promise if the requested value is not in the cache', async () => {
-    const {createCache, createResource} = ReactCache;
+    const {createCache, unstable_createResource} = ReactCache;
 
     function loadUpperCase(text) {
       return Promise.resolve(text.toUpperCase());
     }
-    const UpperCase = createResource(loadUpperCase);
+    const UpperCase = unstable_createResource(loadUpperCase);
     const cache = createCache();
 
     let suspender;
@@ -39,7 +39,7 @@ describe('ReactCache', () => {
   });
 
   it('throws an error on the subsequent read if the promise is rejected', async () => {
-    const {createCache, createResource} = ReactCache;
+    const {createCache, unstable_createResource} = ReactCache;
 
     let shouldFail = true;
     function loadUpperCase(text) {
@@ -52,7 +52,7 @@ describe('ReactCache', () => {
         return Promise.resolve(text.toUpperCase());
       }
     }
-    const UpperCase = createResource(loadUpperCase);
+    const UpperCase = unstable_createResource(loadUpperCase);
     const cache = createCache();
 
     let suspender;
@@ -83,12 +83,12 @@ describe('ReactCache', () => {
   });
 
   it('can preload data ahead of time', async () => {
-    const {createCache, createResource} = ReactCache;
+    const {createCache, unstable_createResource} = ReactCache;
 
     function loadUpperCase(text) {
       return Promise.resolve(text.toUpperCase());
     }
-    const UpperCase = createResource(loadUpperCase);
+    const UpperCase = unstable_createResource(loadUpperCase);
     const cache = createCache();
 
     UpperCase.preload(cache, 'hello');
@@ -99,12 +99,12 @@ describe('ReactCache', () => {
   });
 
   it('does not throw if preloaded promise rejects', async () => {
-    const {createCache, createResource} = ReactCache;
+    const {createCache, unstable_createResource} = ReactCache;
 
     function loadUpperCase(text) {
       return Promise.reject(new Error('uh oh'));
     }
-    const UpperCase = createResource(loadUpperCase);
+    const UpperCase = unstable_createResource(loadUpperCase);
     const cache = createCache();
 
     UpperCase.preload(cache, 'hello');
@@ -115,7 +115,7 @@ describe('ReactCache', () => {
   });
 
   it('accepts custom hash function', async () => {
-    const {createCache, createResource} = ReactCache;
+    const {createCache, unstable_createResource} = ReactCache;
 
     function loadSum([a, b]) {
       return Promise.resolve(a + b);
@@ -123,7 +123,7 @@ describe('ReactCache', () => {
     function hash([a, b]) {
       return `${a + b}`;
     }
-    const Sum = createResource(loadSum, hash);
+    const Sum = unstable_createResource(loadSum, hash);
     const cache = createCache();
 
     Sum.preload(cache, [5, 5]);
@@ -166,7 +166,7 @@ describe('ReactCache', () => {
   });
 
   it('warns if non-primitive key is passed to a resource without a hash function', () => {
-    const {createCache, createResource} = ReactCache;
+    const {createCache, unstable_createResource} = ReactCache;
 
     spyOnDev(console, 'error');
 
@@ -174,7 +174,7 @@ describe('ReactCache', () => {
       return Promise.resolve(a + b);
     }
 
-    const Sum = createResource(loadSum);
+    const Sum = unstable_createResource(loadSum);
     const cache = createCache();
 
     function fn() {
@@ -187,7 +187,7 @@ describe('ReactCache', () => {
           'preload: Invalid key type. Expected a string, number, symbol, or ' +
             'boolean, but instead received: 5,5\n\n' +
             'To use non-primitive values as keys, you must pass a hash ' +
-            'function as the second argument to createResource().',
+            'function as the second argument to unstable_createResource().',
         ],
         {withoutStack: true},
       );
@@ -197,12 +197,12 @@ describe('ReactCache', () => {
   });
 
   it('stays within maximum capacity by evicting the least recently used record', async () => {
-    const {createCache, createResource} = ReactCache;
+    const {createCache, unstable_createResource} = ReactCache;
 
     function loadIntegerString(int) {
       return Promise.resolve(int + '');
     }
-    const IntegerStringResource = createResource(loadIntegerString);
+    const IntegerStringResource = unstable_createResource(loadIntegerString);
     const cache = createCache();
 
     // TODO: This is hard-coded to a maximum size of 500. Make this configurable
