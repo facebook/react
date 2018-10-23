@@ -319,6 +319,75 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Result');
   });
 
+  it('if a thenable resolves multiple times, does not update the first cached value', () => {
+    let resolveThenable;
+    const BadTextResource = createResource(([text, ms = 0]) => {
+      let listeners = null;
+      let value = null;
+      return {
+        then(resolve, reject) {
+          if (value !== null) {
+            resolve(value);
+          } else {
+            if (listeners === null) {
+              listeners = [resolve];
+              resolveThenable = v => {
+                listeners.forEach(listener => listener(v));
+              };
+            } else {
+              listeners.push(resolve);
+            }
+          }
+        },
+      };
+    }, ([text, ms]) => text);
+
+    function BadAsyncText(props) {
+      const text = props.text;
+      try {
+        const actualText = BadTextResource.read([props.text, props.ms]);
+        ReactTestRenderer.unstable_yield(actualText);
+        return actualText;
+      } catch (promise) {
+        if (typeof promise.then === 'function') {
+          ReactTestRenderer.unstable_yield(`Suspend! [${text}]`);
+        } else {
+          ReactTestRenderer.unstable_yield(`Error! [${text}]`);
+        }
+        throw promise;
+      }
+    }
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadAsyncText text="Hi" />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    expect(root).toFlushAndYield(['Suspend! [Hi]', 'Loading...']);
+
+    resolveThenable('Hi');
+    // This thenable improperly resolves twice. We should not update the
+    // cached value.
+    resolveThenable('Hi muahahaha I am different');
+
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadAsyncText text="Hi" />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    expect(ReactTestRenderer).toHaveYielded([]);
+    expect(root).toFlushAndYield(['Hi']);
+    expect(root).toMatchRenderedOutput('Hi');
+  });
+
   it('throws if read is called outside render', () => {
     expect(() => TextResource.read(['A', 1000])).toThrow(
       "read and preload may only be called from within a component's render",
