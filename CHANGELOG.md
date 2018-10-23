@@ -7,6 +7,42 @@
 
 </details>
 
+
+## 16.6.0 (October 23, 2018)
+
+### React
+
+* Add `React.memo()` as an alternative to `PureComponent` for functions. ([@acdlite](https://github.com/acdlite) in [#13748](https://github.com/facebook/react/pull/13748))
+* Add `React.lazy()` for code splitting components. ([@acdlite](https://github.com/acdlite) in [#13885](https://github.com/facebook/react/pull/13885))
+* `React.StrictMode` now warns about legacy context API. ([@bvaughn](https://github.com/bvaughn) in [#13760](https://github.com/facebook/react/pull/13760))
+* `React.StrictMode` now warns about `findDOMNode`. ([@sebmarkbage](https://github.com/sebmarkbage) in [#13841](https://github.com/facebook/react/pull/13841))
+* Rename `unstable_AsyncMode` to `unstable_ConcurrentMode`. ([@trueadm](https://github.com/trueadm) in [#13732](https://github.com/facebook/react/pull/13732))
+* Rename `unstable_Placeholder` to `Suspense`, and `delayMs` to `maxDuration`. ([@gaearon](https://github.com/gaearon) in [#13799](https://github.com/facebook/react/pull/13799) and [@sebmarkbage](https://github.com/sebmarkbage) in [#13922](https://github.com/facebook/react/pull/13922))
+
+### React DOM
+
+* Add `contextType` as a more ergonomic way to subscribe to context from a class. ([@bvaughn](https://github.com/bvaughn) in [#13728](https://github.com/facebook/react/pull/13728))
+* Add `getDerivedStateFromError` lifecycle method for catching errors in a future asynchronous server-side renderer. ([@bvaughn](https://github.com/bvaughn) in [#13746](https://github.com/facebook/react/pull/13746))
+* Warn when `<Context>` is used instead of `<Context.Consumer>`. ([@trueadm](https://github.com/trueadm) in [#13829](https://github.com/facebook/react/pull/13829))
+* Fix gray overlay on iOS Safari. ([@philipp-spiess](https://github.com/philipp-spiess) in [#13778](https://github.com/facebook/react/pull/13778))
+* Fix a bug caused by overwriting `window.event` in development. ([@sergei-startsev](https://github.com/sergei-startsev) in [#13697](https://github.com/facebook/react/pull/13697))
+
+### React DOM Server
+
+* Add support for `React.memo()`. ([@alexmckenley](https://github.com/alexmckenley) in [#13855](https://github.com/facebook/react/pull/13855))
+* Add support for `contextType`. ([@sebmarkbage](https://github.com/sebmarkbage) in [#13889](https://github.com/facebook/react/pull/13889))
+
+### Scheduler (Experimental)
+
+* Rename the package to `scheduler`. ([@gaearon](https://github.com/gaearon) in [#13683](https://github.com/facebook/react/pull/13683))
+* Support priority levels, continuations, and wrapped callbacks. ([@acdlite](https://github.com/acdlite) in [#13720](https://github.com/facebook/react/pull/13720) and [#13842](https://github.com/facebook/react/pull/13842))
+* Improve the fallback mechanism in non-DOM environments. ([@acdlite](https://github.com/acdlite) in [#13740](https://github.com/facebook/react/pull/13740))
+* Schedule `requestAnimationFrame` earlier. ([@acdlite](https://github.com/acdlite) in [#13785](https://github.com/facebook/react/pull/13785))
+* Fix the DOM detection to be more thorough. ([@trueadm](https://github.com/trueadm) in [#13731](https://github.com/facebook/react/pull/13731))
+* Fix bugs with interaction tracing. ([@bvaughn](https://github.com/bvaughn) in [#13590](https://github.com/facebook/react/pull/13590))
+* Add the `envify` transform to the package. ([@mridgway](https://github.com/mridgway) in [#13766](https://github.com/facebook/react/pull/13766))
+
+
 ## 16.5.2 (September 18, 2018)
 
 ### React DOM
