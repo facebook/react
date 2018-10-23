@@ -46,8 +46,7 @@ const paramDefinitions = [
   {
     name: 'skipCI',
     type: Boolean,
-    description:
-      'Skip Circle CI status check (requires confirmation)',
+    description: 'Skip Circle CI status check (requires confirmation)',
   },
 ];
 
