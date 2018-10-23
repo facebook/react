@@ -495,7 +495,10 @@ function commitUnmount(current: Fiber): void {
     case ClassComponent: {
       safelyDetachRef(current);
       const instance = current.stateNode;
-      if (typeof instance.componentWillUnmount === 'function') {
+      if (
+        instance !== null &&
+        typeof instance.componentWillUnmount === 'function'
+      ) {
         safelyCallComponentWillUnmount(current, instance);
       }
       return;
