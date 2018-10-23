@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "react-cache",
   "description": "A basic cache for React applications",
   "version": "16.6.0-beta.0",
