@@ -33,6 +33,7 @@ import {
   MemoComponent,
   SimpleMemoComponent,
   LazyComponent,
+  IncompleteComponent,
 } from 'shared/ReactWorkTags';
 import {
   NoEffect,
@@ -762,7 +763,7 @@ function mountLazyComponent(
   renderExpirationTime,
 ) {
   if (_current !== null) {
-    // An indeterminate component only mounts if it suspended inside a non-
+    // An lazy component only mounts if it suspended inside a non-
     // concurrent tree, in an inconsistent state. We want to tree it like
     // a new mount, even though an empty version of it already committed.
     // Disconnect the alternate pointers.
@@ -838,6 +839,68 @@ function mountLazyComponent(
     }
   }
   return child;
+}
+
+function mountIncompleteComponent(
+  _current,
+  workInProgress,
+  renderExpirationTime,
+) {
+  if (_current !== null) {
+    // An incomplete component only mounts if it suspended inside a non-
+    // concurrent tree, in an inconsistent state. We want to tree it like
+    // a new mount, even though an empty version of it already committed.
+    // Disconnect the alternate pointers.
+    _current.alternate = null;
+    workInProgress.alternate = null;
+    // Since this is conceptually a new fiber, schedule a Placement effect
+    workInProgress.effectTag |= Placement;
+  }
+
+  // Promote the fiber to a class and try rendering again.
+  workInProgress.tag = ClassComponent;
+  const Component = workInProgress.type;
+  const unresolvedProps = workInProgress.pendingProps;
+  const resolvedProps =
+    workInProgress.elementType === Component
+      ? unresolvedProps
+      : resolveDefaultProps(Component, unresolvedProps);
+
+  // The rest of this function is a fork of `updateClassComponent`
+
+  // Push context providers early to prevent context stack mismatches.
+  // During mounting we don't know the child context yet as the instance doesn't exist.
+  // We will invalidate the child context in finishClassComponent() right after rendering.
+  let hasContext;
+  if (isLegacyContextProvider(Component)) {
+    hasContext = true;
+    pushLegacyContextProvider(workInProgress);
+  } else {
+    hasContext = false;
+  }
+  prepareToReadContext(workInProgress, renderExpirationTime);
+
+  constructClassInstance(
+    workInProgress,
+    Component,
+    resolvedProps,
+    renderExpirationTime,
+  );
+  mountClassInstance(
+    workInProgress,
+    Component,
+    resolvedProps,
+    renderExpirationTime,
+  );
+
+  return finishClassComponent(
+    null,
+    workInProgress,
+    Component,
+    true,
+    hasContext,
+    renderExpirationTime,
+  );
 }
 
 function mountIndeterminateComponent(
@@ -1651,6 +1714,13 @@ function beginWork(
         workInProgress.type,
         workInProgress.pendingProps,
         updateExpirationTime,
+        renderExpirationTime,
+      );
+    }
+    case IncompleteComponent: {
+      return mountIncompleteComponent(
+        current,
+        workInProgress,
         renderExpirationTime,
       );
     }

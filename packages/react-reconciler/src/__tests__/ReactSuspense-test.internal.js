@@ -492,6 +492,45 @@ describe('ReactSuspense', () => {
       expect(root).toMatchRenderedOutput('Stateful: 2B');
     });
 
+    it('suspends in a class that has componentWillUnmount and is then deleted', () => {
+      class AsyncTextWithUnmount extends React.Component {
+        componentWillUnmount() {
+          ReactTestRenderer.unstable_yield('will unmount');
+        }
+        render() {
+          const text = this.props.text;
+          const ms = this.props.ms;
+          try {
+            TextResource.read(cache, [text, ms]);
+            ReactTestRenderer.unstable_yield(text);
+            return text;
+          } catch (promise) {
+            if (typeof promise.then === 'function') {
+              ReactTestRenderer.unstable_yield(`Suspend! [${text}]`);
+            } else {
+              ReactTestRenderer.unstable_yield(`Error! [${text}]`);
+            }
+            throw promise;
+          }
+        }
+      }
+
+      function App({text}) {
+        return (
+          <Suspense fallback={<Text text="Loading..." />}>
+            <AsyncTextWithUnmount text={text} ms={100} />
+          </Suspense>
+        );
+      }
+
+      const root = ReactTestRenderer.create(<App text="A" />);
+      expect(ReactTestRenderer).toHaveYielded(['Suspend! [A]', 'Loading...']);
+      root.update(<Text text="B" />);
+      // Should not fire componentWillUnmount
+      expect(ReactTestRenderer).toHaveYielded(['B']);
+      expect(root).toMatchRenderedOutput('B');
+    });
+
     it('retries when an update is scheduled on a timed out tree', () => {
       let instance;
       class Stateful extends React.Component {
