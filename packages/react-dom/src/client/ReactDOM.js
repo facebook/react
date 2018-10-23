@@ -34,6 +34,7 @@ import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import {enableStableConcurrentModeAPIs} from 'shared/ReactFeatureFlags';
 
 import * as ReactDOMComponentTree from './ReactDOMComponentTree';
 import {restoreControlledState} from './ReactDOMComponent';
@@ -770,17 +771,20 @@ type RootOptions = {
   hydrate?: boolean,
 };
 
-ReactDOM.unstable_createRoot = function createRoot(
-  container: DOMContainer,
-  options?: RootOptions,
-): ReactRoot {
+function createRoot(container: DOMContainer, options?: RootOptions): ReactRoot {
   invariant(
     isValidContainer(container),
     'unstable_createRoot(...): Target container is not a DOM element.',
   );
   const hydrate = options != null && options.hydrate === true;
   return new ReactRoot(container, true, hydrate);
-};
+}
+
+if (enableStableConcurrentModeAPIs) {
+  ReactDOM.createRoot = createRoot;
+} else {
+  ReactDOM.unstable_createRoot = createRoot;
+}
 
 const foundDevTools = DOMRenderer.injectIntoDevTools({
   findFiberByHostInstance: ReactDOMComponentTree.getClosestInstanceFromNode,
