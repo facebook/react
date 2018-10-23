@@ -21,6 +21,6 @@ module.exports = async params => {
     update(params),
     `Updating checkout ${chalk.yellow.bold(
       params.cwd
-    )} on branch ${chalk.yellow.bold(params.branch)}}`
+    )} on branch ${chalk.yellow.bold(params.branch)}`
   );
 };
