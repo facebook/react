@@ -2228,9 +2228,9 @@ describe('Profiler', () => {
         SchedulerTracing.unstable_trace(interaction.name, mockNow(), () => {
           ReactNoop.render(
             <React.unstable_Profiler id="test-profiler" onRender={onRender}>
-              <React.unstable_Suspense fallback={<Text text="Loading..." />}>
+              <React.Suspense fallback={<Text text="Loading..." />}>
                 <AsyncText text="Async" ms={20000} />
-              </React.unstable_Suspense>
+              </React.Suspense>
               <Text text="Sync" />
               <Monkey ref={monkey} />
             </React.unstable_Profiler>,
@@ -2316,11 +2316,11 @@ describe('Profiler', () => {
           () => {
             ReactTestRenderer.create(
               <React.unstable_Profiler id="app" onRender={onRender}>
-                <React.unstable_Suspense
+                <React.Suspense
                   maxDuration={1000}
                   fallback={<Text text="loading" />}>
                   <AsyncText text="loaded" ms={2000} />
-                </React.unstable_Suspense>
+                </React.Suspense>
               </React.unstable_Profiler>,
             );
           },
@@ -2370,11 +2370,11 @@ describe('Profiler', () => {
           () => {
             ReactTestRenderer.create(
               <React.unstable_Profiler id="app" onRender={onRender}>
-                <React.unstable_Suspense
+                <React.Suspense
                   maxDuration={1000}
                   fallback={<Text text="loading" />}>
                   <AsyncComponentWithCascadingWork text="loaded" ms={2000} />
-                </React.unstable_Suspense>
+                </React.Suspense>
               </React.unstable_Profiler>,
             );
           },
@@ -2410,11 +2410,11 @@ describe('Profiler', () => {
           () => {
             renderer = ReactTestRenderer.create(
               <React.unstable_Profiler id="app" onRender={onRender}>
-                <React.unstable_Suspense
+                <React.Suspense
                   maxDuration={1000}
                   fallback={<Text text="loading" />}>
                   <AsyncText text="loaded" ms={2000} />
-                </React.unstable_Suspense>
+                </React.Suspense>
               </React.unstable_Profiler>,
               {
                 unstable_isConcurrent: true,
@@ -2458,11 +2458,11 @@ describe('Profiler', () => {
           () => {
             renderer = ReactTestRenderer.create(
               <React.unstable_Profiler id="app" onRender={onRender}>
-                <React.unstable_Suspense
+                <React.Suspense
                   maxDuration={2000}
                   fallback={<Text text="loading" />}>
                   <AsyncText text="loaded" ms={1000} />
-                </React.unstable_Suspense>
+                </React.Suspense>
               </React.unstable_Profiler>,
               {unstable_isConcurrent: true},
             );
@@ -2497,11 +2497,11 @@ describe('Profiler', () => {
           () => {
             renderer = ReactTestRenderer.create(
               <React.unstable_Profiler id="app" onRender={onRender}>
-                <React.unstable_Suspense
+                <React.Suspense
                   maxDuration={2000}
                   fallback={<Text text="loading" />}>
                   <AsyncText text="loaded" ms={1000} />
-                </React.unstable_Suspense>
+                </React.Suspense>
                 <Text text="initial" />
               </React.unstable_Profiler>,
             );
@@ -2531,11 +2531,11 @@ describe('Profiler', () => {
             () => {
               renderer.update(
                 <React.unstable_Profiler id="app" onRender={onRender}>
-                  <React.unstable_Suspense
+                  <React.Suspense
                     maxDuration={2000}
                     fallback={<Text text="loading" />}>
                     <AsyncText text="loaded" ms={1000} />
-                  </React.unstable_Suspense>
+                  </React.Suspense>
                   <Text text="updated" />
                 </React.unstable_Profiler>,
               );
@@ -2593,11 +2593,11 @@ describe('Profiler', () => {
           () => {
             renderer = ReactTestRenderer.create(
               <React.unstable_Profiler id="app" onRender={onRender}>
-                <React.unstable_Suspense
+                <React.Suspense
                   maxDuration={2000}
                   fallback={<Text text="loading" />}>
                   <AsyncText text="loaded" ms={1000} />
-                </React.unstable_Suspense>
+                </React.Suspense>
                 <Text text="initial" />
               </React.unstable_Profiler>,
               {unstable_isConcurrent: true},
@@ -2631,11 +2631,11 @@ describe('Profiler', () => {
             () => {
               renderer.update(
                 <React.unstable_Profiler id="app" onRender={onRender}>
-                  <React.unstable_Suspense
+                  <React.Suspense
                     maxDuration={2000}
                     fallback={<Text text="loading" />}>
                     <AsyncText text="loaded" ms={1000} />
-                  </React.unstable_Suspense>
+                  </React.Suspense>
                   <Text text="updated" />
                 </React.unstable_Profiler>,
               );

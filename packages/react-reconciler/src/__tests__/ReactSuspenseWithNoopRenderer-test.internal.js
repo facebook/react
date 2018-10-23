@@ -24,7 +24,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     Fragment = React.Fragment;
     ReactNoop = require('react-noop-renderer');
     ReactCache = require('react-cache');
-    Suspense = React.unstable_Suspense;
+    Suspense = React.Suspense;
     StrictMode = React.StrictMode;
     ConcurrentMode = React.unstable_ConcurrentMode;
 

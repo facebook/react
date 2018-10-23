@@ -5,7 +5,7 @@ import TestCase from '../../TestCase';
 const React = window.React;
 const ReactDOM = window.ReactDOM;
 
-const Suspense = React.unstable_Suspense;
+const Suspense = React.Suspense;
 
 let cache = new Set();
 

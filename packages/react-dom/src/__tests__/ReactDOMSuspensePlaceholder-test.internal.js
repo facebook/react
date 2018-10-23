@@ -23,11 +23,10 @@ describe('ReactDOMSuspensePlaceholder', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableSuspense = true;
     React = require('react');
     ReactDOM = require('react-dom');
     ReactCache = require('react-cache');
-    Suspense = React.unstable_Suspense;
+    Suspense = React.Suspense;
     container = document.createElement('div');
 
     function invalidateCache() {
