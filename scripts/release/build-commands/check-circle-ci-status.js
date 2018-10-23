@@ -4,6 +4,8 @@
 
 const chalk = require('chalk');
 const http = require('request-promise-json');
+const logUpdate = require('log-update');
+const prompt = require('prompt-promise');
 const {execRead, logPromise} = require('../utils');
 
 // https://circleci.com/docs/api/v1-reference/#projects
@@ -46,5 +48,21 @@ module.exports = async params => {
   if (params.local) {
     return;
   }
+
+  if (params.skipCI) {
+    logUpdate(chalk.red`Are you sure you want to skip CI? (y for yes, n for no)`);
+    const confirm = await prompt('');
+    logUpdate.done();
+    if (confirm === 'y') {
+      return;
+    } else {
+      throw Error(
+        chalk`
+        Cancelling release.
+      `
+      );
+    }
+  }
+
   return logPromise(check(params), 'Checking CircleCI status');
 };

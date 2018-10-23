@@ -43,6 +43,12 @@ const paramDefinitions = [
       'The npm dist tag; defaults to [bold]{latest} for a stable' +
       'release, [bold]{next} for unstable',
   },
+  {
+    name: 'skipCI',
+    type: Boolean,
+    description:
+      'Skip Circle CI status check (requires confirmation)',
+  },
 ];
 
 module.exports = {
