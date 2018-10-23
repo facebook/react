@@ -32,7 +32,7 @@ describe('ReactTestRendererAsync', () => {
     expect(renderer.toJSON()).toEqual(null);
 
     // Flush initial mount.
-    expect(renderer).unstable_toFlushWithoutYielding();
+    expect(renderer).toFlushWithoutYielding();
     expect(renderer.toJSON()).toEqual('Hi');
 
     // Update
@@ -40,7 +40,7 @@ describe('ReactTestRendererAsync', () => {
     // Not yet updated.
     expect(renderer.toJSON()).toEqual('Hi');
     // Flush update.
-    expect(renderer).unstable_toFlushWithoutYielding();
+    expect(renderer).toFlushWithoutYielding();
     expect(renderer.toJSON()).toEqual('Bye');
   });
 
@@ -62,11 +62,11 @@ describe('ReactTestRendererAsync', () => {
       unstable_isConcurrent: true,
     });
 
-    expect(renderer).unstable_toFlushAndYield(['A:1', 'B:1', 'C:1']);
+    expect(renderer).toFlushAndYield(['A:1', 'B:1', 'C:1']);
     expect(renderer.toJSON()).toEqual(['A:1', 'B:1', 'C:1']);
 
     renderer.update(<Parent step={2} />);
-    expect(renderer).unstable_toFlushAndYield(['A:2', 'B:2', 'C:2']);
+    expect(renderer).toFlushAndYield(['A:2', 'B:2', 'C:2']);
     expect(renderer.toJSON()).toEqual(['A:2', 'B:2', 'C:2']);
   });
 
@@ -89,12 +89,12 @@ describe('ReactTestRendererAsync', () => {
     });
 
     // Flush the first two siblings
-    expect(renderer).unstable_toFlushAndYieldThrough(['A:1', 'B:1']);
+    expect(renderer).toFlushAndYieldThrough(['A:1', 'B:1']);
     // Did not commit yet.
     expect(renderer.toJSON()).toEqual(null);
 
     // Flush the remaining work
-    expect(renderer).unstable_toFlushAndYield(['C:1']);
+    expect(renderer).toFlushAndYield(['C:1']);
     expect(renderer.toJSON()).toEqual(['A:1', 'B:1', 'C:1']);
   });
 
@@ -126,7 +126,7 @@ describe('ReactTestRendererAsync', () => {
     });
 
     // Flush the some of the changes, but don't commit
-    expect(renderer).unstable_toFlushAndYieldThrough(['A:1']);
+    expect(renderer).toFlushAndYieldThrough(['A:1']);
     expect(renderer.toJSON()).toEqual(null);
 
     // Interrupt with higher priority properties
@@ -139,7 +139,7 @@ describe('ReactTestRendererAsync', () => {
   });
 
   describe('Jest matchers', () => {
-    it('unstable_toFlushAndYieldThrough', () => {
+    it('toFlushAndYieldThrough', () => {
       const Yield = ({id}) => {
         ReactTestRenderer.unstable_yield(id);
         return id;
@@ -157,11 +157,11 @@ describe('ReactTestRendererAsync', () => {
       );
 
       expect(() =>
-        expect(renderer).unstable_toFlushAndYieldThrough(['foo', 'baz']),
+        expect(renderer).toFlushAndYieldThrough(['foo', 'baz']),
       ).toThrow('Expected value to equal:');
     });
 
-    it('unstable_toFlushAndYield', () => {
+    it('toFlushAndYield', () => {
       const Yield = ({id}) => {
         ReactTestRenderer.unstable_yield(id);
         return id;
@@ -178,9 +178,9 @@ describe('ReactTestRendererAsync', () => {
         },
       );
 
-      expect(() =>
-        expect(renderer).unstable_toFlushWithoutYielding(),
-      ).toThrowError('Expected value to equal:');
+      expect(() => expect(renderer).toFlushWithoutYielding()).toThrowError(
+        'Expected value to equal:',
+      );
 
       renderer.update(
         <div>
@@ -190,12 +190,12 @@ describe('ReactTestRendererAsync', () => {
         </div>,
       );
 
-      expect(() =>
-        expect(renderer).unstable_toFlushAndYield(['foo', 'baz']),
-      ).toThrow('Expected value to equal:');
+      expect(() => expect(renderer).toFlushAndYield(['foo', 'baz'])).toThrow(
+        'Expected value to equal:',
+      );
     });
 
-    it('unstable_toFlushAndThrow', () => {
+    it('toFlushAndThrow', () => {
       const Yield = ({id}) => {
         ReactTestRenderer.unstable_yield(id);
         return id;
@@ -221,8 +221,8 @@ describe('ReactTestRendererAsync', () => {
         unstable_isConcurrent: true,
       });
 
-      expect(renderer).unstable_toFlushAndThrow('Oh no!');
-      expect(ReactTestRenderer).unstable_toHaveYielded([
+      expect(renderer).toFlushAndThrow('Oh no!');
+      expect(ReactTestRenderer).toHaveYielded([
         'A',
         'B',
         'C',
@@ -235,8 +235,8 @@ describe('ReactTestRendererAsync', () => {
 
       renderer.update(<App />);
 
-      expect(renderer).unstable_toFlushAndThrow('Oh no!');
-      expect(ReactTestRenderer).unstable_toHaveYielded([
+      expect(renderer).toFlushAndThrow('Oh no!');
+      expect(ReactTestRenderer).toHaveYielded([
         'A',
         'B',
         'C',
@@ -248,11 +248,11 @@ describe('ReactTestRendererAsync', () => {
       ]);
 
       renderer.update(<App />);
-      expect(renderer).unstable_toFlushAndThrow('Oh no!');
+      expect(renderer).toFlushAndThrow('Oh no!');
     });
   });
 
-  it('unstable_toHaveYielded', () => {
+  it('toHaveYielded', () => {
     const Yield = ({id}) => {
       ReactTestRenderer.unstable_yield(id);
       return id;
@@ -269,9 +269,9 @@ describe('ReactTestRendererAsync', () => {
     }
 
     ReactTestRenderer.create(<App />);
-    expect(() =>
-      expect(ReactTestRenderer).unstable_toHaveYielded(['A', 'B']),
-    ).toThrow('Expected value to equal:');
+    expect(() => expect(ReactTestRenderer).toHaveYielded(['A', 'B'])).toThrow(
+      'Expected value to equal:',
+    );
   });
 
   it('flush methods throw if log is not empty', () => {
@@ -279,7 +279,7 @@ describe('ReactTestRendererAsync', () => {
       unstable_isConcurrent: true,
     });
     ReactTestRenderer.unstable_yield('Something');
-    expect(() => expect(renderer).unstable_toFlushWithoutYielding()).toThrow(
+    expect(() => expect(renderer).toFlushWithoutYielding()).toThrow(
       'Log of yielded values is not empty.',
     );
   });

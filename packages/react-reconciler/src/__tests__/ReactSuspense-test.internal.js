@@ -119,7 +119,7 @@ describe('ReactSuspense', () => {
       unstable_isConcurrent: true,
     });
 
-    expect(root).unstable_toFlushAndYield([
+    expect(root).toFlushAndYield([
       'Foo',
       'Bar',
       // A suspends
@@ -128,20 +128,20 @@ describe('ReactSuspense', () => {
       'B',
       'Loading...',
     ]);
-    expect(root).unstable_toMatchRenderedOutput(null);
+    expect(root).toMatchRenderedOutput(null);
 
     // Flush some of the time
     jest.advanceTimersByTime(50);
     // Still nothing...
-    expect(root).unstable_toFlushWithoutYielding();
-    expect(root).unstable_toMatchRenderedOutput(null);
+    expect(root).toFlushWithoutYielding();
+    expect(root).toMatchRenderedOutput(null);
 
     // Flush the promise completely
     jest.advanceTimersByTime(50);
     // Renders successfully
-    expect(ReactTestRenderer).unstable_toHaveYielded(['Promise resolved [A]']);
-    expect(root).unstable_toFlushAndYield(['Foo', 'Bar', 'A', 'B']);
-    expect(root).unstable_toMatchRenderedOutput('AB');
+    expect(ReactTestRenderer).toHaveYielded(['Promise resolved [A]']);
+    expect(root).toFlushAndYield(['Foo', 'Bar', 'A', 'B']);
+    expect(root).toMatchRenderedOutput('AB');
   });
 
   it('suspends siblings and later recovers each independently', () => {
@@ -160,34 +160,34 @@ describe('ReactSuspense', () => {
       },
     );
 
-    expect(root).unstable_toFlushAndYield([
+    expect(root).toFlushAndYield([
       'Suspend! [A]',
       'Loading A...',
       'Suspend! [B]',
       'Loading B...',
     ]);
-    expect(root).unstable_toMatchRenderedOutput(null);
+    expect(root).toMatchRenderedOutput(null);
 
     // Advance time by enough to timeout both components and commit their placeholders
     jest.advanceTimersByTime(4000);
-    expect(root).unstable_toFlushWithoutYielding();
-    expect(root).unstable_toMatchRenderedOutput('Loading A...Loading B...');
+    expect(root).toFlushWithoutYielding();
+    expect(root).toMatchRenderedOutput('Loading A...Loading B...');
 
     // Advance time by enough that the first Suspense's promise resolves and
     // switches back to the normal view. The second Suspense should still
     // show the placeholder
     jest.advanceTimersByTime(1000);
-    // TODO: Should we throw if you forget to call unstable_toHaveYielded?
-    expect(ReactTestRenderer).unstable_toHaveYielded(['Promise resolved [A]']);
-    expect(root).unstable_toFlushAndYield(['A']);
-    expect(root).unstable_toMatchRenderedOutput('ALoading B...');
+    // TODO: Should we throw if you forget to call toHaveYielded?
+    expect(ReactTestRenderer).toHaveYielded(['Promise resolved [A]']);
+    expect(root).toFlushAndYield(['A']);
+    expect(root).toMatchRenderedOutput('ALoading B...');
 
     // Advance time by enough that the second Suspense's promise resolves
     // and switches back to the normal view
     jest.advanceTimersByTime(1000);
-    expect(ReactTestRenderer).unstable_toHaveYielded(['Promise resolved [B]']);
-    expect(root).unstable_toFlushAndYield(['B']);
-    expect(root).unstable_toMatchRenderedOutput('AB');
+    expect(ReactTestRenderer).toHaveYielded(['Promise resolved [B]']);
+    expect(root).toFlushAndYield(['B']);
+    expect(root).toMatchRenderedOutput('AB');
   });
 
   it('interrupts current render if promise resolves before current render phase', () => {
@@ -228,19 +228,19 @@ describe('ReactSuspense', () => {
       },
     );
 
-    expect(root).unstable_toFlushAndYieldThrough(['Suspend!']);
+    expect(root).toFlushAndYieldThrough(['Suspend!']);
 
     // The promise resolves before the current render phase has completed
     resolveThenable();
-    expect(ReactTestRenderer).unstable_toHaveYielded([]);
+    expect(ReactTestRenderer).toHaveYielded([]);
 
     // Start over from the root, instead of continuing.
-    expect(root).unstable_toFlushAndYield([
+    expect(root).toFlushAndYield([
       // Async renders again *before* Sibling
       'Async',
       'Sibling',
     ]);
-    expect(root).unstable_toMatchRenderedOutput('AsyncSibling');
+    expect(root).toMatchRenderedOutput('AsyncSibling');
   });
 
   it('mounts a lazy class component in non-concurrent mode', async () => {
@@ -268,13 +268,13 @@ describe('ReactSuspense', () => {
       </Suspense>,
     );
 
-    expect(ReactTestRenderer).unstable_toHaveYielded(['Loading...']);
-    expect(root).unstable_toMatchRenderedOutput('Loading...');
+    expect(ReactTestRenderer).toHaveYielded(['Loading...']);
+    expect(root).toMatchRenderedOutput('Loading...');
 
     await LazyClass;
 
-    expect(ReactTestRenderer).unstable_toHaveYielded(['Hi', 'Did mount: Hi']);
-    expect(root).unstable_toMatchRenderedOutput('Hi');
+    expect(ReactTestRenderer).toHaveYielded(['Hi', 'Did mount: Hi']);
+    expect(root).toMatchRenderedOutput('Hi');
   });
 
   it('only captures if `fallback` is defined', () => {
@@ -289,21 +289,21 @@ describe('ReactSuspense', () => {
       },
     );
 
-    expect(root).unstable_toFlushAndYield([
+    expect(root).toFlushAndYield([
       'Suspend! [Hi]',
       // The outer fallback should be rendered, because the inner one does not
       // have a `fallback` prop
       'Loading...',
     ]);
     jest.advanceTimersByTime(1000);
-    expect(ReactTestRenderer).unstable_toHaveYielded([]);
-    expect(root).unstable_toFlushAndYield([]);
-    expect(root).unstable_toMatchRenderedOutput('Loading...');
+    expect(ReactTestRenderer).toHaveYielded([]);
+    expect(root).toFlushAndYield([]);
+    expect(root).toMatchRenderedOutput('Loading...');
 
     jest.advanceTimersByTime(5000);
-    expect(ReactTestRenderer).unstable_toHaveYielded(['Promise resolved [Hi]']);
-    expect(root).unstable_toFlushAndYield(['Hi']);
-    expect(root).unstable_toMatchRenderedOutput('Hi');
+    expect(ReactTestRenderer).toHaveYielded(['Promise resolved [Hi]']);
+    expect(root).toFlushAndYield(['Hi']);
+    expect(root).toMatchRenderedOutput('Hi');
   });
 
   it('throws if tree suspends and none of the Suspense ancestors have a fallback', () => {
@@ -316,13 +316,10 @@ describe('ReactSuspense', () => {
       },
     );
 
-    expect(root).unstable_toFlushAndThrow(
+    expect(root).toFlushAndThrow(
       'An update was suspended, but no placeholder UI was provided.',
     );
-    expect(ReactTestRenderer).unstable_toHaveYielded([
-      'Suspend! [Hi]',
-      'Suspend! [Hi]',
-    ]);
+    expect(ReactTestRenderer).toHaveYielded(['Suspend! [Hi]', 'Suspend! [Hi]']);
   });
 
   describe('outside concurrent mode', () => {
@@ -393,7 +390,7 @@ describe('ReactSuspense', () => {
 
       const root = ReactTestRenderer.create(<App />);
 
-      expect(ReactTestRenderer).unstable_toHaveYielded([
+      expect(ReactTestRenderer).toHaveYielded([
         'A',
         'Suspend! [B:1]',
         'C',
@@ -407,10 +404,10 @@ describe('ReactSuspense', () => {
         'Loading...',
         'Mount [Loading...]',
       ]);
-      expect(root).unstable_toMatchRenderedOutput('Loading...');
+      expect(root).toMatchRenderedOutput('Loading...');
 
       jest.advanceTimersByTime(100);
-      expect(ReactTestRenderer).unstable_toHaveYielded([
+      expect(ReactTestRenderer).toHaveYielded([
         'Promise resolved [B:1]',
         'B:1',
         'Unmount [Loading...]',
@@ -418,25 +415,25 @@ describe('ReactSuspense', () => {
         'Mount [B:1]',
       ]);
 
-      expect(root).unstable_toMatchRenderedOutput('AB:1C');
+      expect(root).toMatchRenderedOutput('AB:1C');
 
       instance.setState({step: 2});
-      expect(ReactTestRenderer).unstable_toHaveYielded([
+      expect(ReactTestRenderer).toHaveYielded([
         'Suspend! [B:2]',
         'Loading...',
         'Mount [Loading...]',
       ]);
-      expect(root).unstable_toMatchRenderedOutput('Loading...');
+      expect(root).toMatchRenderedOutput('Loading...');
 
       jest.advanceTimersByTime(100);
 
-      expect(ReactTestRenderer).unstable_toHaveYielded([
+      expect(ReactTestRenderer).toHaveYielded([
         'Promise resolved [B:2]',
         'B:2',
         'Unmount [Loading...]',
         'Update [B:2]',
       ]);
-      expect(root).unstable_toMatchRenderedOutput('AB:2C');
+      expect(root).toMatchRenderedOutput('AB:2C');
     });
 
     it('bails out on timed-out primary children even if they receive an update', () => {
@@ -460,42 +457,39 @@ describe('ReactSuspense', () => {
 
       const root = ReactTestRenderer.create(<App text="A" />);
 
-      expect(ReactTestRenderer).unstable_toHaveYielded([
+      expect(ReactTestRenderer).toHaveYielded([
         'Stateful: 1',
         'Suspend! [A]',
         'Loading...',
       ]);
 
       jest.advanceTimersByTime(1000);
-      expect(ReactTestRenderer).unstable_toHaveYielded([
-        'Promise resolved [A]',
-        'A',
-      ]);
-      expect(root).unstable_toMatchRenderedOutput('Stateful: 1A');
+      expect(ReactTestRenderer).toHaveYielded(['Promise resolved [A]', 'A']);
+      expect(root).toMatchRenderedOutput('Stateful: 1A');
 
       root.update(<App text="B" />);
-      expect(ReactTestRenderer).unstable_toHaveYielded([
+      expect(ReactTestRenderer).toHaveYielded([
         'Stateful: 1',
         'Suspend! [B]',
         'Loading...',
       ]);
-      expect(root).unstable_toMatchRenderedOutput('Loading...');
+      expect(root).toMatchRenderedOutput('Loading...');
 
       instance.setState({step: 2});
-      expect(ReactTestRenderer).unstable_toHaveYielded([
+      expect(ReactTestRenderer).toHaveYielded([
         'Stateful: 2',
         'Suspend! [B]',
         'Loading...',
       ]);
-      expect(root).unstable_toMatchRenderedOutput('Loading...');
+      expect(root).toMatchRenderedOutput('Loading...');
 
       jest.advanceTimersByTime(1000);
-      expect(ReactTestRenderer).unstable_toHaveYielded([
+      expect(ReactTestRenderer).toHaveYielded([
         'Promise resolved [B]',
         'B',
         'B',
       ]);
-      expect(root).unstable_toMatchRenderedOutput('Stateful: 2B');
+      expect(root).toMatchRenderedOutput('Stateful: 2B');
     });
 
     it('suspends in a class that has componentWillUnmount and is then deleted', () => {
@@ -530,14 +524,11 @@ describe('ReactSuspense', () => {
       }
 
       const root = ReactTestRenderer.create(<App text="A" />);
-      expect(ReactTestRenderer).unstable_toHaveYielded([
-        'Suspend! [A]',
-        'Loading...',
-      ]);
+      expect(ReactTestRenderer).toHaveYielded(['Suspend! [A]', 'Loading...']);
       root.update(<Text text="B" />);
       // Should not fire componentWillUnmount
-      expect(ReactTestRenderer).unstable_toHaveYielded(['B']);
-      expect(root).unstable_toMatchRenderedOutput('B');
+      expect(ReactTestRenderer).toHaveYielded(['B']);
+      expect(root).toMatchRenderedOutput('B');
     });
 
     it('retries when an update is scheduled on a timed out tree', () => {
@@ -563,38 +554,30 @@ describe('ReactSuspense', () => {
       });
 
       // Initial render
-      expect(root).unstable_toFlushAndYield([
-        'Suspend! [Step: 1]',
-        'Loading...',
-      ]);
+      expect(root).toFlushAndYield(['Suspend! [Step: 1]', 'Loading...']);
       jest.advanceTimersByTime(1000);
-      expect(ReactTestRenderer).unstable_toHaveYielded([
-        'Promise resolved [Step: 1]',
-      ]);
-      expect(root).unstable_toFlushAndYield(['Step: 1']);
-      expect(root).unstable_toMatchRenderedOutput('Step: 1');
+      expect(ReactTestRenderer).toHaveYielded(['Promise resolved [Step: 1]']);
+      expect(root).toFlushAndYield(['Step: 1']);
+      expect(root).toMatchRenderedOutput('Step: 1');
 
       // Update that suspends
       instance.setState({step: 2});
-      expect(root).unstable_toFlushAndYield([
-        'Suspend! [Step: 2]',
-        'Loading...',
-      ]);
+      expect(root).toFlushAndYield(['Suspend! [Step: 2]', 'Loading...']);
       jest.advanceTimersByTime(500);
-      expect(root).unstable_toMatchRenderedOutput('Loading...');
+      expect(root).toMatchRenderedOutput('Loading...');
 
       // Update while still suspended
       instance.setState({step: 3});
-      expect(root).unstable_toFlushAndYield(['Suspend! [Step: 3]']);
-      expect(root).unstable_toMatchRenderedOutput('Loading...');
+      expect(root).toFlushAndYield(['Suspend! [Step: 3]']);
+      expect(root).toMatchRenderedOutput('Loading...');
 
       jest.advanceTimersByTime(1000);
-      expect(ReactTestRenderer).unstable_toHaveYielded([
+      expect(ReactTestRenderer).toHaveYielded([
         'Promise resolved [Step: 2]',
         'Promise resolved [Step: 3]',
       ]);
-      expect(root).unstable_toFlushAndYield(['Step: 3']);
-      expect(root).unstable_toMatchRenderedOutput('Step: 3');
+      expect(root).toFlushAndYield(['Step: 3']);
+      expect(root).toMatchRenderedOutput('Step: 3');
     });
   });
 });

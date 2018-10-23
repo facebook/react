@@ -139,22 +139,15 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
         unstable_isConcurrent: true,
       });
 
-      expect(root).unstable_toFlushAndYield([
-        'A',
-        'Suspend! [B]',
-        'C',
-        'Loading...',
-      ]);
-      expect(root).unstable_toMatchRenderedOutput(null);
+      expect(root).toFlushAndYield(['A', 'Suspend! [B]', 'C', 'Loading...']);
+      expect(root).toMatchRenderedOutput(null);
 
       jest.advanceTimersByTime(1000);
-      expect(ReactTestRenderer).unstable_toHaveYielded([
-        'Promise resolved [B]',
-      ]);
+      expect(ReactTestRenderer).toHaveYielded(['Promise resolved [B]']);
 
-      expect(root).unstable_toFlushAndYield(['A', 'B', 'C']);
+      expect(root).toFlushAndYield(['A', 'B', 'C']);
 
-      expect(root).unstable_toMatchRenderedOutput(
+      expect(root).toMatchRenderedOutput(
         <React.Fragment>
           <span hidden={true}>A</span>
           <span>B</span>
@@ -164,27 +157,21 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
 
       // Update
       root.update(<App middleText="B2" />);
-      expect(root).unstable_toFlushAndYield([
-        'Suspend! [B2]',
-        'C',
-        'Loading...',
-      ]);
+      expect(root).toFlushAndYield(['Suspend! [B2]', 'C', 'Loading...']);
 
       // Time out the update
       jest.advanceTimersByTime(750);
-      expect(root).unstable_toFlushAndYield([]);
-      expect(root).unstable_toMatchRenderedOutput('Loading...');
+      expect(root).toFlushAndYield([]);
+      expect(root).toMatchRenderedOutput('Loading...');
 
       // Resolve the promise
       jest.advanceTimersByTime(1000);
-      expect(ReactTestRenderer).unstable_toHaveYielded([
-        'Promise resolved [B2]',
-      ]);
-      expect(root).unstable_toFlushAndYield(['B2', 'C']);
+      expect(ReactTestRenderer).toHaveYielded(['Promise resolved [B2]']);
+      expect(root).toFlushAndYield(['B2', 'C']);
 
       // Render the final update. A should still be hidden, because it was
       // given a `hidden` prop.
-      expect(root).unstable_toMatchRenderedOutput(
+      expect(root).toMatchRenderedOutput(
         <React.Fragment>
           <span hidden={true}>A</span>
           <span>B2</span>
@@ -209,45 +196,31 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
         unstable_isConcurrent: true,
       });
 
-      expect(root).unstable_toFlushAndYield([
-        'A',
-        'Suspend! [B]',
-        'C',
-        'Loading...',
-      ]);
+      expect(root).toFlushAndYield(['A', 'Suspend! [B]', 'C', 'Loading...']);
 
-      expect(root).unstable_toMatchRenderedOutput(null);
+      expect(root).toMatchRenderedOutput(null);
 
       jest.advanceTimersByTime(1000);
-      expect(ReactTestRenderer).unstable_toHaveYielded([
-        'Promise resolved [B]',
-      ]);
-      expect(root).unstable_toFlushAndYield(['A', 'B', 'C']);
-      expect(root).unstable_toMatchRenderedOutput('ABC');
+      expect(ReactTestRenderer).toHaveYielded(['Promise resolved [B]']);
+      expect(root).toFlushAndYield(['A', 'B', 'C']);
+      expect(root).toMatchRenderedOutput('ABC');
 
       // Update
       root.update(<App middleText="B2" />);
-      expect(root).unstable_toFlushAndYield([
-        'A',
-        'Suspend! [B2]',
-        'C',
-        'Loading...',
-      ]);
+      expect(root).toFlushAndYield(['A', 'Suspend! [B2]', 'C', 'Loading...']);
       // Time out the update
       jest.advanceTimersByTime(750);
-      expect(root).unstable_toFlushAndYield([]);
-      expect(root).unstable_toMatchRenderedOutput('Loading...');
+      expect(root).toFlushAndYield([]);
+      expect(root).toMatchRenderedOutput('Loading...');
 
       // Resolve the promise
       jest.advanceTimersByTime(1000);
-      expect(ReactTestRenderer).unstable_toHaveYielded([
-        'Promise resolved [B2]',
-      ]);
-      expect(root).unstable_toFlushAndYield(['A', 'B2', 'C']);
+      expect(ReactTestRenderer).toHaveYielded(['Promise resolved [B2]']);
+      expect(root).toFlushAndYield(['A', 'B2', 'C']);
 
       // Render the final update. A should still be hidden, because it was
       // given a `hidden` prop.
-      expect(root).unstable_toMatchRenderedOutput('AB2C');
+      expect(root).toMatchRenderedOutput('AB2C');
     });
   });
 }

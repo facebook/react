@@ -41,13 +41,13 @@ describe('ReactLazy', () => {
       },
     );
 
-    expect(root).unstable_toFlushAndYield(['Loading...']);
-    expect(root).unstable_toMatchRenderedOutput(null);
+    expect(root).toFlushAndYield(['Loading...']);
+    expect(root).toMatchRenderedOutput(null);
 
     await Promise.resolve();
 
-    expect(root).unstable_toFlushAndYield(['Hi']);
-    expect(root).unstable_toMatchRenderedOutput('Hi');
+    expect(root).toFlushAndYield(['Hi']);
+    expect(root).toMatchRenderedOutput('Hi');
 
     // Should not suspend on update
     root.update(
@@ -55,8 +55,8 @@ describe('ReactLazy', () => {
         <LazyText text="Hi again" />
       </Suspense>,
     );
-    expect(root).unstable_toFlushAndYield(['Hi again']);
-    expect(root).unstable_toMatchRenderedOutput('Hi again');
+    expect(root).toFlushAndYield(['Hi again']);
+    expect(root).toMatchRenderedOutput('Hi again');
   });
 
   it('multiple lazy components', async () => {
@@ -84,20 +84,20 @@ describe('ReactLazy', () => {
       },
     );
 
-    expect(root).unstable_toFlushAndYield(['Loading...']);
-    expect(root).unstable_toMatchRenderedOutput(null);
+    expect(root).toFlushAndYield(['Loading...']);
+    expect(root).toMatchRenderedOutput(null);
 
     jest.advanceTimersByTime(1000);
     await promiseForFoo;
 
-    expect(root).unstable_toFlushAndYield(['Foo', 'Loading...']);
-    expect(root).unstable_toMatchRenderedOutput(null);
+    expect(root).toFlushAndYield(['Foo', 'Loading...']);
+    expect(root).toMatchRenderedOutput(null);
 
     jest.advanceTimersByTime(1000);
     await promiseForBar;
 
-    expect(root).unstable_toFlushAndYield(['Foo', 'Bar']);
-    expect(root).unstable_toMatchRenderedOutput('FooBar');
+    expect(root).toFlushAndYield(['Foo', 'Bar']);
+    expect(root).toMatchRenderedOutput('FooBar');
   });
 
   it('does not support arbitrary promises, only module objects', async () => {
@@ -113,8 +113,8 @@ describe('ReactLazy', () => {
         unstable_isConcurrent: true,
       },
     );
-    expect(root).unstable_toFlushAndYield(['Loading...']);
-    expect(root).unstable_toMatchRenderedOutput(null);
+    expect(root).toFlushAndYield(['Loading...']);
+    expect(root).toMatchRenderedOutput(null);
 
     await Promise.resolve();
 
@@ -124,7 +124,7 @@ describe('ReactLazy', () => {
         'Expected the result of a dynamic import() call',
       );
     }
-    expect(root).unstable_toFlushAndThrow('Element type is invalid');
+    expect(root).toFlushAndThrow('Element type is invalid');
   });
 
   it('throws if promise rejects', async () => {
@@ -141,14 +141,14 @@ describe('ReactLazy', () => {
       },
     );
 
-    expect(root).unstable_toFlushAndYield(['Loading...']);
-    expect(root).unstable_toMatchRenderedOutput(null);
+    expect(root).toFlushAndYield(['Loading...']);
+    expect(root).toMatchRenderedOutput(null);
 
     try {
       await Promise.resolve();
     } catch (e) {}
 
-    expect(root).unstable_toFlushAndThrow('Bad network');
+    expect(root).toFlushAndThrow('Bad network');
   });
 
   it('mount and reorder', async () => {
@@ -187,29 +187,19 @@ describe('ReactLazy', () => {
       unstable_isConcurrent: true,
     });
 
-    expect(root).unstable_toFlushAndYield(['Loading...']);
-    expect(root).unstable_toMatchRenderedOutput(null);
+    expect(root).toFlushAndYield(['Loading...']);
+    expect(root).toMatchRenderedOutput(null);
 
     await LazyChildA;
     await LazyChildB;
 
-    expect(root).unstable_toFlushAndYield([
-      'A',
-      'B',
-      'Did mount: A',
-      'Did mount: B',
-    ]);
-    expect(root).unstable_toMatchRenderedOutput('AB');
+    expect(root).toFlushAndYield(['A', 'B', 'Did mount: A', 'Did mount: B']);
+    expect(root).toMatchRenderedOutput('AB');
 
     // Swap the position of A and B
     root.update(<Parent swap={true} />);
-    expect(root).unstable_toFlushAndYield([
-      'B',
-      'A',
-      'Did update: B',
-      'Did update: A',
-    ]);
-    expect(root).unstable_toMatchRenderedOutput('BA');
+    expect(root).toFlushAndYield(['B', 'A', 'Did update: B', 'Did update: A']);
+    expect(root).toMatchRenderedOutput('BA');
   });
 
   it('resolves defaultProps, on mount and update', async () => {
@@ -228,13 +218,13 @@ describe('ReactLazy', () => {
       },
     );
 
-    expect(root).unstable_toFlushAndYield(['Loading...']);
-    expect(root).unstable_toMatchRenderedOutput(null);
+    expect(root).toFlushAndYield(['Loading...']);
+    expect(root).toMatchRenderedOutput(null);
 
     await Promise.resolve();
 
-    expect(root).unstable_toFlushAndYield(['Hi']);
-    expect(root).unstable_toMatchRenderedOutput('Hi');
+    expect(root).toFlushAndYield(['Hi']);
+    expect(root).toMatchRenderedOutput('Hi');
 
     T.defaultProps = {text: 'Hi again'};
     root.update(
@@ -242,8 +232,8 @@ describe('ReactLazy', () => {
         <LazyText />
       </Suspense>,
     );
-    expect(root).unstable_toFlushAndYield(['Hi again']);
-    expect(root).unstable_toMatchRenderedOutput('Hi again');
+    expect(root).toFlushAndYield(['Hi again']);
+    expect(root).toMatchRenderedOutput('Hi again');
   });
 
   it('resolves defaultProps without breaking memoization', async () => {
@@ -278,18 +268,18 @@ describe('ReactLazy', () => {
         unstable_isConcurrent: true,
       },
     );
-    expect(root).unstable_toFlushAndYield(['Loading...']);
-    expect(root).unstable_toMatchRenderedOutput(null);
+    expect(root).toFlushAndYield(['Loading...']);
+    expect(root).toMatchRenderedOutput(null);
 
     await Promise.resolve();
 
-    expect(root).unstable_toFlushAndYield(['Lazy', 'Sibling', 'A']);
-    expect(root).unstable_toMatchRenderedOutput('SiblingA');
+    expect(root).toFlushAndYield(['Lazy', 'Sibling', 'A']);
+    expect(root).toMatchRenderedOutput('SiblingA');
 
     // Lazy should not re-render
     stateful.current.setState({text: 'B'});
-    expect(root).unstable_toFlushAndYield(['B']);
-    expect(root).unstable_toMatchRenderedOutput('SiblingB');
+    expect(root).toFlushAndYield(['B']);
+    expect(root).toMatchRenderedOutput('SiblingB');
   });
 
   it('includes lazy-loaded component in warning stack', async () => {
@@ -308,15 +298,15 @@ describe('ReactLazy', () => {
       },
     );
 
-    expect(root).unstable_toFlushAndYield(['Started loading', 'Loading...']);
-    expect(root).unstable_toMatchRenderedOutput(null);
+    expect(root).toFlushAndYield(['Started loading', 'Loading...']);
+    expect(root).toMatchRenderedOutput(null);
 
     await Promise.resolve();
 
     expect(() => {
-      expect(root).unstable_toFlushAndYield(['A', 'B']);
+      expect(root).toFlushAndYield(['A', 'B']);
     }).toWarnDev('    in Text (at **)\n' + '    in Foo (at **)');
-    expect(root).unstable_toMatchRenderedOutput(<div>AB</div>);
+    expect(root).toMatchRenderedOutput(<div>AB</div>);
   });
 
   it('supports class and forwardRef components', async () => {
@@ -354,14 +344,14 @@ describe('ReactLazy', () => {
       },
     );
 
-    expect(root).unstable_toFlushAndYield(['Loading...']);
-    expect(root).unstable_toMatchRenderedOutput(null);
+    expect(root).toFlushAndYield(['Loading...']);
+    expect(root).toMatchRenderedOutput(null);
     expect(ref.current).toBe(null);
 
     await Promise.resolve();
 
-    expect(root).unstable_toFlushAndYield(['Foo', 'forwardRef', 'Bar']);
-    expect(root).unstable_toMatchRenderedOutput('FooBar');
+    expect(root).toFlushAndYield(['Foo', 'forwardRef', 'Bar']);
+    expect(root).toMatchRenderedOutput('FooBar');
     expect(ref.current).not.toBe(null);
   });
 });
