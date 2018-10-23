@@ -48,7 +48,7 @@
         <div id="test-2"></div>
     </li>
     <li>
-      <p>Schedules callbacks in correct order when they use scheduleWork to schedule themselves</p>
+      <p>Schedules callbacks in correct order when they use scheduleCallback to schedule themselves</p>
       <button onClick="runTestThree()">Run Test 3</button>
       <div><b>Expected:</b></div>
       <div id="test-3-expected">
@@ -225,7 +225,7 @@ function runTestOne() {
   const cb1 = (x) => {
     updateTestResult(1, 'cb1 called with argument of ' + JSON.stringify(x));
   }
-  scheduleWork(cb1);
+  scheduleCallback(cb1);
   updateTestResult(1, 'scheduled Cb1');
   logWhenFramesStart(1, () => {
     displayTestResult(1);
@@ -243,9 +243,9 @@ function runTestTwo() {
   const cbB = (x) => {
     updateTestResult(2, 'cbB called with argument of ' + JSON.stringify(x));
   }
-  scheduleWork(cbA);
+  scheduleCallback(cbA);
   updateTestResult(2, 'scheduled CbA');
-  scheduleWork(cbB);
+  scheduleCallback(cbB);
   updateTestResult(2, 'scheduled CbB');
   logWhenFramesStart(2, () => {
     displayTestResult(2);
@@ -255,12 +255,12 @@ function runTestTwo() {
 
 function runTestThree() {
   // Test 3
-  // Schedules callbacks in correct order when they use scheduleWork to schedule themselves
+  // Schedules callbacks in correct order when they use scheduleCallback to schedule themselves
   clearTestResult(3);
   let callbackAIterations = 0;
   const cbA = (x) => {
     if (callbackAIterations < 1) {
-      scheduleWork(cbA);
+      scheduleCallback(cbA);
       updateTestResult(3, 'scheduled CbA again');
     }
     updateTestResult(3, 'cbA' + callbackAIterations + ' called with argument of ' + JSON.stringify(x));
@@ -269,9 +269,9 @@ function runTestThree() {
   const cbB = (x) => {
     updateTestResult(3, 'cbB called with argument of ' + JSON.stringify(x));
   }
-  scheduleWork(cbA);
+  scheduleCallback(cbA);
   updateTestResult(3, 'scheduled CbA');
-  scheduleWork(cbB);
+  scheduleCallback(cbB);
   updateTestResult(3, 'scheduled CbB');
   logWhenFramesStart(3, () => {
     displayTestResult(3);
@@ -305,13 +305,13 @@ function runTestFour() {
   const cbD = (x) => {
     updateTestResult(4, 'cbD called with argument of ' + JSON.stringify(x));
   }
-  scheduleWork(cbA); // won't time out
+  scheduleCallback(cbA); // won't time out
   updateTestResult(4, 'scheduled cbA');
-  scheduleWork(cbB, {timeout: 100}); // times out later
+  scheduleCallback(cbB, {timeout: 100}); // times out later
   updateTestResult(4, 'scheduled cbB');
-  scheduleWork(cbC, {timeout: 1}); // will time out fast
+  scheduleCallback(cbC, {timeout: 1}); // will time out fast
   updateTestResult(4, 'scheduled cbC');
-  scheduleWork(cbD); // won't time out
+  scheduleCallback(cbD); // won't time out
   updateTestResult(4, 'scheduled cbD');
 
   // should have run in order of C, A, B, D
@@ -390,15 +390,15 @@ function runTestFive() {
         });
       });
     });
-    scheduleWork(cbA);
+    scheduleCallback(cbA);
     console.log('scheduled cbA');
-    scheduleWork(cbB); // will throw error
+    scheduleCallback(cbB); // will throw error
     console.log('scheduled cbB');
-    scheduleWork(cbC);
+    scheduleCallback(cbC);
     console.log('scheduled cbC');
-    scheduleWork(cbD); // will throw error
+    scheduleCallback(cbD); // will throw error
     console.log('scheduled cbD');
-    scheduleWork(cbE);
+    scheduleCallback(cbE);
     console.log('scheduled cbE');
   };
 }
@@ -468,15 +468,15 @@ function runTestSix() {
         });
       });
     });
-    scheduleWork(cbA);
+    scheduleCallback(cbA);
     console.log('scheduled cbA');
-    scheduleWork(cbB); // will throw error
+    scheduleCallback(cbB); // will throw error
     console.log('scheduled cbB');
-    scheduleWork(cbC, {timeout: 1});
+    scheduleCallback(cbC, {timeout: 1});
     console.log('scheduled cbC');
-    scheduleWork(cbD, {timeout: 1}); // will throw error
+    scheduleCallback(cbD, {timeout: 1}); // will throw error
     console.log('scheduled cbD');
-    scheduleWork(cbE, {timeout: 1});
+    scheduleCallback(cbE, {timeout: 1});
     console.log('scheduled cbE');
   };
 }
@@ -492,9 +492,9 @@ function runTestSeven() {
     counter++;
     counterNode.innerHTML = counter;
     waitForTimeToPass(100);
-    scheduleWork(incrementCounterAndScheduleNextCallback);
+    scheduleCallback(incrementCounterAndScheduleNextCallback);
   }
-  scheduleWork(incrementCounterAndScheduleNextCallback);
+  scheduleCallback(incrementCounterAndScheduleNextCallback);
 }
     </script type="text/babel">
   </body>
