@@ -2176,7 +2176,7 @@ describe('Profiler', () => {
 
         resourcePromise = null;
 
-        TextResource = ReactCache.createResource(([text, ms = 0]) => {
+        TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
           resourcePromise = new Promise((resolve, reject) =>
             setTimeout(() => {
               yieldForRenderer(`Promise resolved [${text}]`);

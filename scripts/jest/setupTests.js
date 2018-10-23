@@ -48,12 +48,12 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     ...require('./matchers/interactionTracing'),
     ...require('./matchers/toWarnDev'),
 
-    toFlushWithoutYielding: JestReact.toFlushWithoutYielding,
-    toFlushAndYield: JestReact.toFlushAndYield,
-    toFlushAndYieldThrough: JestReact.toFlushAndYieldThrough,
-    toHaveYielded: JestReact.toHaveYielded,
-    toFlushAndThrow: JestReact.toFlushAndThrow,
-    toMatchRenderedOutput: JestReact.toMatchRenderedOutput,
+    toFlushWithoutYielding: JestReact.unstable_toFlushWithoutYielding,
+    toFlushAndYield: JestReact.unstable_toFlushAndYield,
+    toFlushAndYieldThrough: JestReact.unstable_toFlushAndYieldThrough,
+    toHaveYielded: JestReact.unstable_toHaveYielded,
+    toFlushAndThrow: JestReact.unstable_toFlushAndThrow,
+    toMatchRenderedOutput: JestReact.unstable_toMatchRenderedOutput,
   });
 
   // We have a Babel transform that inserts guards against infinite loops.

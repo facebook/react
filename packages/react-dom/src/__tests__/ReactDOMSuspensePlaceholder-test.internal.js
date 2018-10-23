@@ -31,7 +31,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
       cache = ReactCache.createCache(invalidateCache);
     }
     invalidateCache();
-    TextResource = ReactCache.createResource(([text, ms = 0]) => {
+    TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
       return new Promise((resolve, reject) =>
         setTimeout(() => {
           resolve(text);
