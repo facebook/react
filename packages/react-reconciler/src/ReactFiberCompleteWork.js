@@ -37,6 +37,7 @@ import {
   MemoComponent,
   SimpleMemoComponent,
   LazyComponent,
+  IncompleteClassComponent,
 } from 'shared/ReactWorkTags';
 import {Placement, Ref, Update} from 'shared/ReactSideEffectTags';
 import invariant from 'shared/invariant';
@@ -717,6 +718,15 @@ function completeWork(
       break;
     case MemoComponent:
       break;
+    case IncompleteClassComponent: {
+      // Same as class component case. I put it down here so that the tags are
+      // sequential to ensure this switch is compiled to a jump table.
+      const Component = workInProgress.type;
+      if (isLegacyContextProvider(Component)) {
+        popLegacyContext(workInProgress);
+      }
+      break;
+    }
     default:
       invariant(
         false,

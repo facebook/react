@@ -32,6 +32,7 @@ import {
   HostPortal,
   Profiler,
   SuspenseComponent,
+  IncompleteClassComponent,
 } from 'shared/ReactWorkTags';
 import {
   invokeGuardedCallback,
@@ -221,6 +222,7 @@ function commitBeforeMutationLifeCycles(
     case HostComponent:
     case HostText:
     case HostPortal:
+    case IncompleteClassComponent:
       // Nothing to do for these component types
       return;
     default: {
@@ -392,6 +394,8 @@ function commitLifeCycles(
       }
       return;
     }
+    case IncompleteClassComponent:
+      break;
     default: {
       invariant(
         false,
@@ -495,7 +499,13 @@ function commitUnmount(current: Fiber): void {
     case ClassComponent: {
       safelyDetachRef(current);
       const instance = current.stateNode;
-      if (typeof instance.componentWillUnmount === 'function') {
+      if (
+        // Typically, a component that mounted will have an instance. However,
+        // outside of concurrent mode, a suspended component may commit without
+        // an instance, so we need to check whether it exists.
+        instance !== null &&
+        typeof instance.componentWillUnmount === 'function'
+      ) {
         safelyCallComponentWillUnmount(current, instance);
       }
       return;
@@ -922,6 +932,9 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       return;
     }
     case SuspenseComponent: {
+      return;
+    }
+    case IncompleteClassComponent: {
       return;
     }
     default: {
