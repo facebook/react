@@ -41,7 +41,7 @@ module.exports = function(initModules) {
     if (console.error.calls && console.error.calls.reset) {
       console.error.calls.reset();
     } else {
-      // TODO: Rewrite tests that use this helper to enumerate expeceted errors.
+      // TODO: Rewrite tests that use this helper to enumerate expected errors.
       // This will enable the helper to use the .toWarnDev() matcher instead of spying.
       spyOnDev(console, 'error');
     }
