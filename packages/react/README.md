@@ -9,5 +9,5 @@ The `react` package contains only the functionality necessary to define React co
 ## Example Usage
 
 ```js
-var React = require('react');
+const React = require('react');
 ```
