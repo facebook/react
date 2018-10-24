@@ -13,8 +13,8 @@ npm install react react-dom
 ### In the browser
 
 ```js
-var React = require('react');
-var ReactDOM = require('react-dom');
+const React = require('react');
+const ReactDOM = require('react-dom');
 
 class MyComponent extends React.Component {
   render() {
@@ -28,8 +28,8 @@ ReactDOM.render(<MyComponent />, node);
 ### On the server
 
 ```js
-var React = require('react');
-var ReactDOMServer = require('react-dom/server');
+const React = require('react');
+const ReactDOMServer = require('react-dom/server');
 
 class MyComponent extends React.Component {
   render() {
