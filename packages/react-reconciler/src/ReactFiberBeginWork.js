@@ -782,7 +782,10 @@ function mountLazyComponent(
   workInProgress.type = Component;
   const resolvedTag = (workInProgress.tag = resolveLazyComponentTag(Component));
   startWorkTimer(workInProgress);
-  const resolvedProps = resolveDefaultProps(Component, props);
+  const resolvedProps = (workInProgress.pendingProps = resolveDefaultProps(
+    Component,
+    props,
+  ));
   let child;
   switch (resolvedTag) {
     case FunctionComponent: {

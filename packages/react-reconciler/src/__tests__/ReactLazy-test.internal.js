@@ -282,6 +282,110 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('SiblingB');
   });
 
+  it('sets defaultProps for all lifecycles', async () => {
+    const log = [];
+    class C extends React.Component {
+      static defaultProps = {text: 'A'};
+      // Added to allow gDSFP
+      state = {};
+
+      static getDerivedStateFromProps(props) {
+        ReactTestRenderer.unstable_yield(
+          `getDerivedStateFromProps: ${props.text}`,
+        );
+        return null;
+      }
+
+      constructor(props) {
+        super(props);
+        ReactTestRenderer.unstable_yield(`constructor: ${this.props.text}`);
+      }
+
+      componentDidMount() {
+        ReactTestRenderer.unstable_yield(
+          `componentDidMount: ${this.props.text}`,
+        );
+      }
+
+      componentDidUpdate() {
+        ReactTestRenderer.unstable_yield(
+          `componentDidUpdate: ${this.props.text}`,
+        );
+      }
+
+      componentWillUnmount() {
+        ReactTestRenderer.unstable_yield(
+          `componentWillUnmount: ${this.props.text}`,
+        );
+      }
+
+      shouldComponentUpdate(nextProps) {
+        ReactTestRenderer.unstable_yield(
+          `shouldComponentUpdate (this.props): ${this.props.text}`,
+        );
+        ReactTestRenderer.unstable_yield(
+          `shouldComponentUpdate (nextProps): ${nextProps.text}`,
+        );
+        return true;
+      }
+
+      getSnapshotBeforeUpdate(prevProps) {
+        console.log(this.props);
+        ReactTestRenderer.unstable_yield(
+          `getSnapshotBeforeUpdate (this.props): ${this.props.text}`,
+        );
+        ReactTestRenderer.unstable_yield(
+          `getSnapshotBeforeUpdate (prevProps): ${prevProps.text}`,
+        );
+        return null;
+      }
+
+      render() {
+        return <Text text={this.props.text + this.props.num} />;
+      }
+    }
+
+    const LazyClass = lazy(() => fakeImport(C));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyClass num={1} />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    expect(root).toFlushAndYield(['Loading...']);
+    expect(root).toMatchRenderedOutput(null);
+
+    await Promise.resolve();
+
+    expect(root).toFlushAndYield([
+      'constructor: A',
+      'getDerivedStateFromProps: A',
+      'A1', // render
+      'componentDidMount: A',
+    ]);
+
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyClass num={2} />
+      </Suspense>,
+    );
+
+    expect(root).toFlushAndYield([
+      'getDerivedStateFromProps: A',
+      'shouldComponentUpdate (this.props): A',
+      'shouldComponentUpdate (nextProps): A',
+      'A2', // render
+      'getSnapshotBeforeUpdate (this.props): undefined',
+      'getSnapshotBeforeUpdate (prevProps): A',
+      'componentDidUpdate: A',
+    ]);
+    expect(root).toMatchRenderedOutput('A2');
+  });
+
   it('includes lazy-loaded component in warning stack', async () => {
     const LazyFoo = lazy(() => {
       ReactTestRenderer.unstable_yield('Started loading');
