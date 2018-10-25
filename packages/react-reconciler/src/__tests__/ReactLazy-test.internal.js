@@ -379,7 +379,7 @@ describe('ReactLazy', () => {
       'shouldComponentUpdate (this.props): A',
       'shouldComponentUpdate (nextProps): A',
       'A2', // render
-      'getSnapshotBeforeUpdate (this.props): undefined',
+      'getSnapshotBeforeUpdate (this.props): A',
       'getSnapshotBeforeUpdate (prevProps): A',
       'componentDidUpdate: A',
     ]);
