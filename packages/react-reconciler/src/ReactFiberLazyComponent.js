@@ -42,7 +42,7 @@ export function readLazyComponentType<T>(lazyComponent: LazyComponent<T>): T {
                   false,
                   'lazy: Expected the result of a dynamic import() call. ' +
                     'Instead received: %s\n\nYour code should look like: \n  ' +
-                    "const MyComponent = lazy(() => import('./MyComponent'))",
+                    'const MyComponent = lazy(() => import(\'./MyComponent\'))',
                   moduleObject,
                 );
               }
