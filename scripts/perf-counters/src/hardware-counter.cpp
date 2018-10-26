@@ -392,7 +392,7 @@ bool HardwareCounter::addPerfEvent(const char* event) {
 
 bool HardwareCounter::eventExists(const char *event) {
   // hopefully m_counters set is small, so a linear scan does not hurt
-  for(unsigned i = 0; i < m_counters.size(); i++) {
+  for (unsigned i = 0; i < m_counters.size(); i++) {
     if (!strcmp(event, m_counters[i]->m_desc.c_str())) {
       return true;
     }
