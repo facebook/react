@@ -503,7 +503,7 @@ describe('Profiler', () => {
         });
 
         // Only call profile updates for paths that have re-rendered
-        // Since "inner" is beneath a pure compoent, it isn't called
+        // Since "inner" is beneath a pure component, it isn't called
         expect(callback).toHaveBeenCalledTimes(2);
         expect(callback.mock.calls[0][0]).toBe('middle');
         expect(callback.mock.calls[1][0]).toBe('outer');
@@ -667,7 +667,7 @@ describe('Profiler', () => {
           // Simulate time moving forward while frame is paused.
           advanceTimeBy(50); // 10 -> 60
 
-          // Flush the remaninig work,
+          // Flush the remaining work,
           // Which should take an additional 10ms of simulated time.
           expect(renderer).toFlushAndYield(['Yield:10', 'Yield:17']);
           expect(callback).toHaveBeenCalledTimes(2);

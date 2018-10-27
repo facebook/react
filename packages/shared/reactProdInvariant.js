@@ -23,7 +23,7 @@ function reactProdInvariant(code: string): void {
   for (let argIdx = 0; argIdx < argCount; argIdx++) {
     url += '&args[]=' + encodeURIComponent(arguments[argIdx + 1]);
   }
-  // Rename it so that our build transform doesn't atttempt
+  // Rename it so that our build transform doesn't attempt
   // to replace this invariant() call with reactProdInvariant().
   const i = invariant;
   i(

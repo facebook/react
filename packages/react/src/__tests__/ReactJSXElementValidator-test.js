@@ -323,7 +323,7 @@ describe('ReactJSXElementValidator', () => {
     );
   });
 
-  it('should warn if getDefaultProps is specificed on the class', () => {
+  it('should warn if getDefaultProps is specified on the class', () => {
     class GetDefaultPropsComponent extends React.Component {
       render() {
         return <span>{this.props.prop}</span>;
