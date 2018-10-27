@@ -661,7 +661,7 @@ describe('ChangeEventPlugin', () => {
                 type="text"
                 value={controlledValue}
                 onChange={() => {
-                  // Does nothing. Parent handler is reponsible for updating.
+                  // Does nothing. Parent handler is responsible for updating.
                 }}
               />
             </div>
