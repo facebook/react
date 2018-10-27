@@ -18,6 +18,12 @@ let ReactCache;
 function initEnvForAsyncTesting() {
   // Boilerplate copied from ReactDOMRoot-test
   // TODO pull this into helper method, reduce repetition.
+  // TODO remove `requestAnimationFrame` when upgrading to Jest 24 with Lolex
+  global.requestAnimationFrame = function(cb) {
+    return setTimeout(() => {
+      cb(Date.now());
+    });
+  };
   const originalAddEventListener = global.addEventListener;
   let postMessageCallback;
   global.addEventListener = function(eventName, callback, useCapture) {
