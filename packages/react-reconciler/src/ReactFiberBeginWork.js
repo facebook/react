@@ -95,8 +95,8 @@ import {
   tryToClaimNextHydratableInstance,
 } from './ReactFiberHydrationContext';
 import {
-  applyDerivedStateFromProps,
   adoptClassInstance,
+  applyDerivedStateFromProps,
   constructClassInstance,
   mountClassInstance,
   resumeMountClassInstance,
