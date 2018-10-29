@@ -37,6 +37,7 @@ import {
 } from './ReactFiberScheduler';
 
 import invariant from 'shared/invariant';
+import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {enableDispatchCallback_DEPRECATED} from 'shared/ReactFeatureFlags';
 
@@ -760,8 +761,19 @@ function dispatchAction<S, A>(
 }
 
 function inputsAreEqual(arr1, arr2) {
-  // Don't bother comparing lengths because these arrays are always
+  // Don't bother comparing lengths in prod because these arrays should be
   // passed inline.
+  if (__DEV__) {
+    warning(
+      arr1.length === arr2.length,
+      'Detected a variable number of hook dependencies. The length of the ' +
+        'dependencies array should be constant between renders.\n\n' +
+        'Previous: %s\n' +
+        'Incoming: %s',
+      arr1.join(', '),
+      arr2.join(', '),
+    );
+  }
   for (let i = 0; i < arr1.length; i++) {
     // Inlined Object.is polyfill.
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is
