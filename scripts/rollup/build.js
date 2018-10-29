@@ -61,6 +61,7 @@ const requestedBundleNames = (argv._[0] || '')
   .map(type => type.toLowerCase());
 const forcePrettyOutput = argv.pretty;
 const syncFBSourcePath = argv['sync-fbsource'];
+const syncOpenSourcePath = argv['sync-opensource'];
 const syncWWWPath = argv['sync-www'];
 const shouldExtractErrors = argv['extract-errors'];
 const errorCodeOpts = {
@@ -614,6 +615,8 @@ async function buildEverything() {
     await Sync.syncReactNative(syncFBSourcePath);
   } else if (syncWWWPath) {
     await Sync.syncReactDom('build/facebook-www', syncWWWPath);
+  } else if (syncOpenSourcePath) {
+    await Sync.syncReactNativeOSS(syncOpenSourcePath);
   }
 
   console.log(Stats.printResults());

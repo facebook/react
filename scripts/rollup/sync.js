@@ -8,6 +8,7 @@ const DEFAULT_FB_SOURCE_PATH = '~/fbsource/';
 const DEFAULT_WWW_PATH = '~/www/';
 const RELATIVE_RN_OSS_PATH = 'xplat/js/react-native-github/Libraries/Renderer/';
 const RELATIVE_WWW_PATH = 'html/shared/react/';
+const RELATIVE_RN_PATH = 'Libraries/Renderer/';
 
 async function doSync(buildPath, destPath) {
   console.log(`${chalk.bgYellow.black(' SYNCING ')} React to ${destPath}`);
@@ -51,7 +52,16 @@ async function syncReactNative(fbSourcePath) {
   );
 }
 
+async function syncReactNativeOSS(openSourcePath) {
+  await syncReactNativeHelper(
+    'build/react-native',
+    openSourcePath,
+    RELATIVE_RN_PATH
+  );
+}
+
 module.exports = {
   syncReactDom,
   syncReactNative,
+  syncReactNativeOSS,
 };
