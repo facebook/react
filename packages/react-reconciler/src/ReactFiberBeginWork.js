@@ -97,7 +97,6 @@ import {
 import {
   applyDerivedStateFromProps,
   adoptClassInstance,
-  applyDerivedStateFromProps,
   constructClassInstance,
   mountClassInstance,
   resumeMountClassInstance,
