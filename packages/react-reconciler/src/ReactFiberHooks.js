@@ -75,7 +75,7 @@ export type FunctionComponentUpdateQueue = {
   lastEffect: Effect | null,
 };
 
-type BasicStateAction<S> = S | (S => S);
+type BasicStateAction<S> = (S => S) | S;
 
 type MaybeCallback<S> = void | null | (S => mixed);
 
@@ -332,7 +332,7 @@ export function useContext<T>(
 }
 
 export function useState<S>(
-  initialState: S | (() => S),
+  initialState: (() => S) | S,
 ): [S, Dispatch<S, BasicStateAction<S>>] {
   return useReducer(
     basicStateReducer,

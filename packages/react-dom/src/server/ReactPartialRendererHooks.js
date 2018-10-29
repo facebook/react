@@ -11,7 +11,7 @@ import type {ReactContext} from 'shared/ReactTypes';
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 
-type BasicStateAction<S> = S | (S => S);
+type BasicStateAction<S> = (S => S) | S;
 type MaybeCallback<S> = void | null | (S => mixed);
 type Dispatch<S, A> = (A, MaybeCallback<S>) => void;
 
@@ -158,7 +158,7 @@ function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S {
 }
 
 export function useState<S>(
-  initialState: S | (() => S),
+  initialState: (() => S) | S,
 ): [S, Dispatch<S, BasicStateAction<S>>] {
   return useReducer(
     basicStateReducer,
