@@ -51,7 +51,7 @@ export function useContext<T>(
   return dispatcher.useContext(Context, observedBits);
 }
 
-export function useState<S>(initialState: S | (() => S)) {
+export function useState<S>(initialState: (() => S) | S) {
   const dispatcher = resolveDispatcher();
   return dispatcher.useState(initialState);
 }
