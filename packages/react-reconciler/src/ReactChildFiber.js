@@ -21,9 +21,8 @@ import {
   REACT_PORTAL_TYPE,
 } from 'shared/ReactSymbols';
 import {
-  FunctionalComponent,
+  FunctionComponent,
   ClassComponent,
-  ClassComponentLazy,
   HostText,
   HostPortal,
   Fragment,
@@ -138,9 +137,8 @@ function coerceRef(
       if (owner) {
         const ownerFiber = ((owner: any): Fiber);
         invariant(
-          ownerFiber.tag === ClassComponent ||
-            ownerFiber.tag === ClassComponentLazy,
-          'Stateless function components cannot have refs.',
+          ownerFiber.tag === ClassComponent,
+          'Function components cannot have refs.',
         );
         inst = ownerFiber.stateNode;
       }
@@ -183,7 +181,7 @@ function coerceRef(
         element._owner,
         'Element ref was specified as a string (%s) but no owner was set. This could happen for one of' +
           ' the following reasons:\n' +
-          '1. You may be adding a ref to a functional component\n' +
+          '1. You may be adding a ref to a function component\n' +
           "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
           '3. You have multiple copies of React loaded\n' +
           'See https://fb.me/react-refs-must-have-owner for more information.',
@@ -379,7 +377,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     element: ReactElement,
     expirationTime: ExpirationTime,
   ): Fiber {
-    if (current !== null && current.type === element.type) {
+    if (current !== null && current.elementType === element.type) {
       // Move based on index
       const existing = useFiber(current, element.props, expirationTime);
       existing.ref = coerceRef(returnFiber, current, element);
@@ -1122,7 +1120,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         if (
           child.tag === Fragment
             ? element.type === REACT_FRAGMENT_TYPE
-            : child.type === element.type
+            : child.elementType === element.type
         ) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(
@@ -1309,8 +1307,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       // component, throw an error. If Fiber return types are disabled,
       // we already threw above.
       switch (returnFiber.tag) {
-        case ClassComponent:
-        case ClassComponentLazy: {
+        case ClassComponent: {
           if (__DEV__) {
             const instance = returnFiber.stateNode;
             if (instance.render._isMockFunction) {
@@ -1322,7 +1319,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         // Intentionally fall through to the next case, which handles both
         // functions and classes
         // eslint-disable-next-lined no-fallthrough
-        case FunctionalComponent: {
+        case FunctionComponent: {
           const Component = returnFiber.type;
           invariant(
             false,

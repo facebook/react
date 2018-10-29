@@ -50,7 +50,6 @@ import UIManager from 'UIManager';
 // This means that they never overlap.
 let nextReactTag = 2;
 
-/* eslint-disable no-use-before-define */
 type Node = Object;
 export type Type = string;
 export type Props = Object;
@@ -72,7 +71,6 @@ export type UpdatePayload = Object;
 
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
-/* eslint-enable no-use-before-define */
 
 // TODO: Remove this conditional once all changes have propagated.
 if (registerEventHandler) {
@@ -374,6 +372,33 @@ export function cloneInstance(
     node: clone,
     canonical: instance.canonical,
   };
+}
+
+export function cloneHiddenInstance(
+  instance: Instance,
+  type: string,
+  props: Props,
+  internalInstanceHandle: Object,
+): Instance {
+  throw new Error('Not yet implemented.');
+}
+
+export function cloneUnhiddenInstance(
+  instance: Instance,
+  type: string,
+  props: Props,
+  internalInstanceHandle: Object,
+): Instance {
+  throw new Error('Not yet implemented.');
+}
+
+export function createHiddenTextInstance(
+  text: string,
+  rootContainerInstance: Container,
+  hostContext: HostContext,
+  internalInstanceHandle: Object,
+): TextInstance {
+  throw new Error('Not yet implemented.');
 }
 
 export function createContainerChildSet(container: Container): ChildSet {

@@ -38,7 +38,6 @@ import {
 import {
   HostRoot,
   ClassComponent,
-  ClassComponentLazy,
   HostComponent,
   ContextProvider,
   HostPortal,
@@ -49,13 +48,10 @@ import {
   enableUserTimingAPI,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   warnAboutDeprecatedLifecycles,
-  warnAboutLegacyContextAPI,
-  enableSuspense,
 } from 'shared/ReactFeatureFlags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {getResultFromResolvedThenable} from 'shared/ReactLazyComponent';
 
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import * as ReactCurrentFiber from './ReactCurrentFiber';
@@ -109,8 +105,13 @@ import {
   computeAsyncExpiration,
   computeInteractiveExpiration,
 } from './ReactFiberExpirationTime';
-import {AsyncMode, ProfileMode} from './ReactTypeOfMode';
-import {enqueueUpdate, resetCurrentlyProcessingQueue} from './ReactUpdateQueue';
+import {ConcurrentMode, ProfileMode, NoContext} from './ReactTypeOfMode';
+import {
+  enqueueUpdate,
+  resetCurrentlyProcessingQueue,
+  ForceUpdate,
+  createUpdate,
+} from './ReactUpdateQueue';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
   isContextProvider as isLegacyContextProvider,
@@ -255,10 +256,6 @@ let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
 // Used for performance tracking.
 let interruptedBy: Fiber | null = null;
 
-// Do not decrement interaction counts in the event of suspense timeouts.
-// This would lead to prematurely calling the interaction-complete hook.
-let suspenseDidTimeout: boolean = false;
-
 let stashedWorkInProgressProperties;
 let replayUnitOfWork;
 let isReplayingFailedUnitOfWork;
@@ -309,13 +306,6 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
         break;
       case ClassComponent: {
         const Component = failedUnitOfWork.type;
-        if (isLegacyContextProvider(Component)) {
-          popLegacyContext(failedUnitOfWork);
-        }
-        break;
-      }
-      case ClassComponentLazy: {
-        const Component = getResultFromResolvedThenable(failedUnitOfWork.type);
         if (isLegacyContextProvider(Component)) {
           popLegacyContext(failedUnitOfWork);
         }
@@ -475,13 +465,10 @@ function commitAllLifeCycles(
 ) {
   if (__DEV__) {
     ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings();
+    ReactStrictModeWarnings.flushLegacyContextWarning();
 
     if (warnAboutDeprecatedLifecycles) {
       ReactStrictModeWarnings.flushPendingDeprecationWarnings();
-    }
-
-    if (warnAboutLegacyContextAPI) {
-      ReactStrictModeWarnings.flushLegacyContextWarning();
     }
   }
   while (nextEffect !== null) {
@@ -563,31 +550,11 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
   markCommittedPriorityLevels(root, earliestRemainingTimeBeforeCommit);
 
   let prevInteractions: Set<Interaction> = (null: any);
-  let committedInteractions: Array<Interaction> = enableSchedulerTracing
-    ? []
-    : (null: any);
   if (enableSchedulerTracing) {
     // Restore any pending interactions at this point,
     // So that cascading work triggered during the render phase will be accounted for.
     prevInteractions = __interactionsRef.current;
     __interactionsRef.current = root.memoizedInteractions;
-
-    // We are potentially finished with the current batch of interactions.
-    // So we should clear them out of the pending interaction map.
-    // We do this at the start of commit in case cascading work is scheduled by commit phase lifecycles.
-    // In that event, interaction data may be added back into the pending map for a future commit.
-    // We also store the interactions we are about to commit so that we can notify subscribers after we're done.
-    // These are stored as an Array rather than a Set,
-    // Because the same interaction may be pending for multiple expiration times,
-    // In which case it's important that we decrement the count the right number of times after finishing.
-    root.pendingInteractionMap.forEach(
-      (scheduledInteractions, scheduledExpirationTime) => {
-        if (scheduledExpirationTime <= committedExpirationTime) {
-          committedInteractions.push(...Array.from(scheduledInteractions));
-          root.pendingInteractionMap.delete(scheduledExpirationTime);
-        }
-      },
-    );
   }
 
   // Reset this to null before calling lifecycles
@@ -786,28 +753,40 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
         unhandledError = error;
       }
     } finally {
-      // Don't update interaction counts if we're frozen due to suspense.
-      // In this case, we can skip the completed-work check entirely.
-      if (!suspenseDidTimeout) {
-        // Now that we're done, check the completed batch of interactions.
-        // If no more work is outstanding for a given interaction,
-        // We need to notify the subscribers that it's finished.
-        committedInteractions.forEach(interaction => {
-          interaction.__count--;
-          if (subscriber !== null && interaction.__count === 0) {
-            try {
-              subscriber.onInteractionScheduledWorkCompleted(interaction);
-            } catch (error) {
-              // It's not safe for commitRoot() to throw.
-              // Store the error for now and we'll re-throw in finishRendering().
-              if (!hasUnhandledError) {
-                hasUnhandledError = true;
-                unhandledError = error;
+      // Clear completed interactions from the pending Map.
+      // Unless the render was suspended or cascading work was scheduled,
+      // In which case– leave pending interactions until the subsequent render.
+      const pendingInteractionMap = root.pendingInteractionMap;
+      pendingInteractionMap.forEach(
+        (scheduledInteractions, scheduledExpirationTime) => {
+          // Only decrement the pending interaction count if we're done.
+          // If there's still work at the current priority,
+          // That indicates that we are waiting for suspense data.
+          if (
+            earliestRemainingTimeAfterCommit === NoWork ||
+            scheduledExpirationTime < earliestRemainingTimeAfterCommit
+          ) {
+            pendingInteractionMap.delete(scheduledExpirationTime);
+
+            scheduledInteractions.forEach(interaction => {
+              interaction.__count--;
+
+              if (subscriber !== null && interaction.__count === 0) {
+                try {
+                  subscriber.onInteractionScheduledWorkCompleted(interaction);
+                } catch (error) {
+                  // It's not safe for commitRoot() to throw.
+                  // Store the error for now and we'll re-throw in finishRendering().
+                  if (!hasUnhandledError) {
+                    hasUnhandledError = true;
+                    unhandledError = error;
+                  }
+                }
               }
-            }
+            });
           }
-        });
-      }
+        },
+      );
     }
   }
 }
@@ -935,21 +914,10 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
           nextRenderExpirationTime,
         );
       }
-      let next = nextUnitOfWork;
       stopWorkTimer(workInProgress);
       resetChildExpirationTime(workInProgress, nextRenderExpirationTime);
       if (__DEV__) {
         ReactCurrentFiber.resetCurrentFiber();
-      }
-
-      if (next !== null) {
-        stopWorkTimer(workInProgress);
-        if (__DEV__ && ReactFiberInstrumentation.debugTool) {
-          ReactFiberInstrumentation.debugTool.onCompleteWork(workInProgress);
-        }
-        // If completing this work spawned new work, do that next. We'll come
-        // back here again.
-        return next;
       }
 
       if (
@@ -1109,6 +1077,7 @@ function performUnitOfWork(workInProgress: Fiber): Fiber | null {
     }
 
     next = beginWork(current, workInProgress, nextRenderExpirationTime);
+    workInProgress.memoizedProps = workInProgress.pendingProps;
 
     if (workInProgress.mode & ProfileMode) {
       // Record the render duration assuming we didn't bailout (or error).
@@ -1116,6 +1085,7 @@ function performUnitOfWork(workInProgress: Fiber): Fiber | null {
     }
   } else {
     next = beginWork(current, workInProgress, nextRenderExpirationTime);
+    workInProgress.memoizedProps = workInProgress.pendingProps;
   }
 
   if (__DEV__) {
@@ -1170,14 +1140,6 @@ function renderRoot(
   ReactCurrentOwner.currentDispatcher = Dispatcher;
 
   const expirationTime = root.nextExpirationTimeToWorkOn;
-
-  let prevInteractions: Set<Interaction> = (null: any);
-  if (enableSchedulerTracing) {
-    // We're about to start new traced work.
-    // Restore pending interactions so cascading work triggered during the render phase will be accounted for.
-    prevInteractions = __interactionsRef.current;
-    __interactionsRef.current = root.memoizedInteractions;
-  }
 
   // Check if we're starting from a fresh stack, or if we're resuming from
   // previously yielded work.
@@ -1239,6 +1201,14 @@ function renderRoot(
         }
       }
     }
+  }
+
+  let prevInteractions: Set<Interaction> = (null: any);
+  if (enableSchedulerTracing) {
+    // We're about to start new traced work.
+    // Restore pending interactions so cascading work triggered during the render phase will be accounted for.
+    prevInteractions = __interactionsRef.current;
+    __interactionsRef.current = root.memoizedInteractions;
   }
 
   let didFatal = false;
@@ -1398,7 +1368,7 @@ function renderRoot(
     }
   }
 
-  if (enableSuspense && !isExpired && nextLatestAbsoluteTimeoutMs !== -1) {
+  if (!isExpired && nextLatestAbsoluteTimeoutMs !== -1) {
     // The tree was suspended.
     const suspendedExpirationTime = expirationTime;
     markSuspendedPriorityLevel(root, suspendedExpirationTime);
@@ -1454,11 +1424,10 @@ function dispatch(
   while (fiber !== null) {
     switch (fiber.tag) {
       case ClassComponent:
-      case ClassComponentLazy:
         const ctor = fiber.type;
         const instance = fiber.stateNode;
         if (
-          typeof ctor.getDerivedStateFromCatch === 'function' ||
+          typeof ctor.getDerivedStateFromError === 'function' ||
           (typeof instance.componentDidCatch === 'function' &&
             !isAlreadyFailedLegacyErrorBoundary(instance))
         ) {
@@ -1539,7 +1508,7 @@ function computeExpirationForFiber(currentTime: ExpirationTime, fiber: Fiber) {
   } else {
     // No explicit expiration context was set, and we're not currently
     // performing work. Calculate a new expiration time.
-    if (fiber.mode & AsyncMode) {
+    if (fiber.mode & ConcurrentMode) {
       if (isBatchingInteractiveUpdates) {
         // This is an interactive update
         expirationTime = computeInteractiveExpiration(currentTime);
@@ -1588,43 +1557,72 @@ function renderDidError() {
 
 function retrySuspendedRoot(
   root: FiberRoot,
-  fiber: Fiber,
+  boundaryFiber: Fiber,
+  sourceFiber: Fiber,
   suspendedTime: ExpirationTime,
 ) {
-  if (enableSuspense) {
-    let retryTime;
+  let retryTime;
 
-    if (isPriorityLevelSuspended(root, suspendedTime)) {
-      // Ping at the original level
-      retryTime = suspendedTime;
-      markPingedPriorityLevel(root, retryTime);
-    } else {
-      // Placeholder already timed out. Compute a new expiration time
-      const currentTime = requestCurrentTime();
-      retryTime = computeExpirationForFiber(currentTime, fiber);
-      markPendingPriorityLevel(root, retryTime);
-    }
+  if (isPriorityLevelSuspended(root, suspendedTime)) {
+    // Ping at the original level
+    retryTime = suspendedTime;
 
-    scheduleWorkToRoot(fiber, retryTime);
-    const rootExpirationTime = root.expirationTime;
-    if (rootExpirationTime !== NoWork) {
-      if (enableSchedulerTracing) {
-        // Restore previous interactions so that new work is associated with them.
-        let prevInteractions = __interactionsRef.current;
-        __interactionsRef.current = root.memoizedInteractions;
-        // Because suspense timeouts do not decrement the interaction count,
-        // Continued suspense work should also not increment the count.
-        storeInteractionsForExpirationTime(root, rootExpirationTime, false);
-        requestWork(root, rootExpirationTime);
-        __interactionsRef.current = prevInteractions;
-      } else {
-        requestWork(root, rootExpirationTime);
-      }
+    markPingedPriorityLevel(root, retryTime);
+  } else {
+    // Suspense already timed out. Compute a new expiration time
+    const currentTime = requestCurrentTime();
+    retryTime = computeExpirationForFiber(currentTime, boundaryFiber);
+    markPendingPriorityLevel(root, retryTime);
+  }
+
+  // TODO: If the suspense fiber has already rendered the primary children
+  // without suspending (that is, all of the promises have already resolved),
+  // we should not trigger another update here. One case this happens is when
+  // we are in sync mode and a single promise is thrown both on initial render
+  // and on update; we attach two .then(retrySuspendedRoot) callbacks and each
+  // one performs Sync work, rerendering the Suspense.
+
+  if ((boundaryFiber.mode & ConcurrentMode) !== NoContext) {
+    if (root === nextRoot && nextRenderExpirationTime === suspendedTime) {
+      // Received a ping at the same priority level at which we're currently
+      // rendering. Restart from the root.
+      nextRoot = null;
     }
+  }
+
+  scheduleWorkToRoot(boundaryFiber, retryTime);
+  if ((boundaryFiber.mode & ConcurrentMode) === NoContext) {
+    // Outside of concurrent mode, we must schedule an update on the source
+    // fiber, too, since it already committed in an inconsistent state and
+    // therefore does not have any pending work.
+    scheduleWorkToRoot(sourceFiber, retryTime);
+    const sourceTag = sourceFiber.tag;
+    if (sourceTag === ClassComponent && sourceFiber.stateNode !== null) {
+      // When we try rendering again, we should not reuse the current fiber,
+      // since it's known to be in an inconsistent state. Use a force updte to
+      // prevent a bail out.
+      const update = createUpdate(retryTime);
+      update.tag = ForceUpdate;
+      enqueueUpdate(sourceFiber, update);
+    }
+  }
+
+  const rootExpirationTime = root.expirationTime;
+  if (rootExpirationTime !== NoWork) {
+    requestWork(root, rootExpirationTime);
   }
 }
 
 function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
+  recordScheduleUpdate();
+
+  if (__DEV__) {
+    if (fiber.tag === ClassComponent) {
+      const instance = fiber.stateNode;
+      warnAboutInvalidUpdates(instance);
+    }
+  }
+
   // Update the source fiber's expiration time
   if (
     fiber.expirationTime === NoWork ||
@@ -1642,104 +1640,87 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
   }
   // Walk the parent path to the root and update the child expiration time.
   let node = fiber.return;
+  let root = null;
   if (node === null && fiber.tag === HostRoot) {
-    return fiber.stateNode;
-  }
-  while (node !== null) {
-    alternate = node.alternate;
-    if (
-      node.childExpirationTime === NoWork ||
-      node.childExpirationTime > expirationTime
-    ) {
-      node.childExpirationTime = expirationTime;
+    root = fiber.stateNode;
+  } else {
+    while (node !== null) {
+      alternate = node.alternate;
       if (
+        node.childExpirationTime === NoWork ||
+        node.childExpirationTime > expirationTime
+      ) {
+        node.childExpirationTime = expirationTime;
+        if (
+          alternate !== null &&
+          (alternate.childExpirationTime === NoWork ||
+            alternate.childExpirationTime > expirationTime)
+        ) {
+          alternate.childExpirationTime = expirationTime;
+        }
+      } else if (
         alternate !== null &&
         (alternate.childExpirationTime === NoWork ||
           alternate.childExpirationTime > expirationTime)
       ) {
         alternate.childExpirationTime = expirationTime;
       }
-    } else if (
-      alternate !== null &&
-      (alternate.childExpirationTime === NoWork ||
-        alternate.childExpirationTime > expirationTime)
-    ) {
-      alternate.childExpirationTime = expirationTime;
+      if (node.return === null && node.tag === HostRoot) {
+        root = node.stateNode;
+        break;
+      }
+      node = node.return;
     }
-    if (node.return === null && node.tag === HostRoot) {
-      return node.stateNode;
-    }
-    node = node.return;
-  }
-  return null;
-}
-
-function storeInteractionsForExpirationTime(
-  root: FiberRoot,
-  expirationTime: ExpirationTime,
-  updateInteractionCounts: boolean,
-): void {
-  if (!enableSchedulerTracing) {
-    return;
   }
 
-  const interactions = __interactionsRef.current;
-  if (interactions.size > 0) {
-    const pendingInteractions = root.pendingInteractionMap.get(expirationTime);
-    if (pendingInteractions != null) {
-      interactions.forEach(interaction => {
-        if (updateInteractionCounts && !pendingInteractions.has(interaction)) {
-          // Update the pending async work count for previously unscheduled interaction.
-          interaction.__count++;
-        }
+  if (root === null) {
+    if (__DEV__ && fiber.tag === ClassComponent) {
+      warnAboutUpdateOnUnmounted(fiber);
+    }
+    return null;
+  }
 
-        pendingInteractions.add(interaction);
-      });
-    } else {
-      root.pendingInteractionMap.set(expirationTime, new Set(interactions));
+  if (enableSchedulerTracing) {
+    const interactions = __interactionsRef.current;
+    if (interactions.size > 0) {
+      const pendingInteractionMap = root.pendingInteractionMap;
+      const pendingInteractions = pendingInteractionMap.get(expirationTime);
+      if (pendingInteractions != null) {
+        interactions.forEach(interaction => {
+          if (!pendingInteractions.has(interaction)) {
+            // Update the pending async work count for previously unscheduled interaction.
+            interaction.__count++;
+          }
 
-      // Update the pending async work count for the current interactions.
-      if (updateInteractionCounts) {
+          pendingInteractions.add(interaction);
+        });
+      } else {
+        pendingInteractionMap.set(expirationTime, new Set(interactions));
+
+        // Update the pending async work count for the current interactions.
         interactions.forEach(interaction => {
           interaction.__count++;
         });
       }
-    }
 
-    const subscriber = __subscriberRef.current;
-    if (subscriber !== null) {
-      const threadID = computeThreadID(
-        expirationTime,
-        root.interactionThreadID,
-      );
-      subscriber.onWorkScheduled(interactions, threadID);
+      const subscriber = __subscriberRef.current;
+      if (subscriber !== null) {
+        const threadID = computeThreadID(
+          expirationTime,
+          root.interactionThreadID,
+        );
+        subscriber.onWorkScheduled(interactions, threadID);
+      }
     }
   }
+
+  return root;
 }
 
 function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
-  recordScheduleUpdate();
-
-  if (__DEV__) {
-    if (fiber.tag === ClassComponent || fiber.tag === ClassComponentLazy) {
-      const instance = fiber.stateNode;
-      warnAboutInvalidUpdates(instance);
-    }
-  }
-
   const root = scheduleWorkToRoot(fiber, expirationTime);
   if (root === null) {
-    if (
-      __DEV__ &&
-      (fiber.tag === ClassComponent || fiber.tag === ClassComponentLazy)
-    ) {
-      warnAboutUpdateOnUnmounted(fiber);
-    }
     return;
-  }
-
-  if (enableSchedulerTracing) {
-    storeInteractionsForExpirationTime(root, expirationTime, true);
   }
 
   if (
@@ -1901,7 +1882,7 @@ function onSuspend(
   msUntilTimeout: number,
 ): void {
   root.expirationTime = rootExpirationTime;
-  if (enableSuspense && msUntilTimeout === 0 && !shouldYield()) {
+  if (msUntilTimeout === 0 && !shouldYield()) {
     // Don't wait an additional tick. Commit the tree immediately.
     root.pendingCommitExpirationTime = suspendedExpirationTime;
     root.finishedWork = finishedWork;
@@ -1919,26 +1900,15 @@ function onYield(root) {
 }
 
 function onTimeout(root, finishedWork, suspendedExpirationTime) {
-  if (enableSuspense) {
-    // The root timed out. Commit it.
-    root.pendingCommitExpirationTime = suspendedExpirationTime;
-    root.finishedWork = finishedWork;
-    // Read the current time before entering the commit phase. We can be
-    // certain this won't cause tearing related to batching of event updates
-    // because we're at the top of a timer event.
-    recomputeCurrentRendererTime();
-    currentSchedulerTime = currentRendererTime;
-
-    if (enableSchedulerTracing) {
-      // Don't update pending interaction counts for suspense timeouts,
-      // Because we know we still need to do more work in this case.
-      suspenseDidTimeout = true;
-      flushRoot(root, suspendedExpirationTime);
-      suspenseDidTimeout = false;
-    } else {
-      flushRoot(root, suspendedExpirationTime);
-    }
-  }
+  // The root timed out. Commit it.
+  root.pendingCommitExpirationTime = suspendedExpirationTime;
+  root.finishedWork = finishedWork;
+  // Read the current time before entering the commit phase. We can be
+  // certain this won't cause tearing related to batching of event updates
+  // because we're at the top of a timer event.
+  recomputeCurrentRendererTime();
+  currentSchedulerTime = currentRendererTime;
+  flushRoot(root, suspendedExpirationTime);
 }
 
 function onCommit(root, expirationTime) {
@@ -2280,7 +2250,7 @@ function performWorkOnRoot(
       // If this root previously suspended, clear its existing timeout, since
       // we're about to try rendering again.
       const timeoutHandle = root.timeoutHandle;
-      if (enableSuspense && timeoutHandle !== noTimeout) {
+      if (timeoutHandle !== noTimeout) {
         root.timeoutHandle = noTimeout;
         // $FlowFixMe Complains noTimeout is not a TimeoutID, despite the check above
         cancelTimeout(timeoutHandle);
@@ -2304,7 +2274,7 @@ function performWorkOnRoot(
       // If this root previously suspended, clear its existing timeout, since
       // we're about to try rendering again.
       const timeoutHandle = root.timeoutHandle;
-      if (enableSuspense && timeoutHandle !== noTimeout) {
+      if (timeoutHandle !== noTimeout) {
         root.timeoutHandle = noTimeout;
         // $FlowFixMe Complains noTimeout is not a TimeoutID, despite the check above
         cancelTimeout(timeoutHandle);

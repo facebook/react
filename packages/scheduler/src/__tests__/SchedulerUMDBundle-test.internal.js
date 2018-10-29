@@ -17,7 +17,8 @@ describe('Scheduling UMD bundle', () => {
   });
 
   function filterPrivateKeys(name) {
-    return !name.startsWith('_');
+    // TODO: Figure out how to forward priority levels.
+    return !name.startsWith('_') && !name.endsWith('Priority');
   }
 
   function validateForwardedAPIs(api, forwardedAPIs) {

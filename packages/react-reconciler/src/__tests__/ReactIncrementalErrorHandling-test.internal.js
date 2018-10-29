@@ -19,7 +19,6 @@ describe('ReactIncrementalErrorHandling', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableGetDerivedStateFromCatch = true;
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     PropTypes = require('prop-types');
@@ -29,11 +28,11 @@ describe('ReactIncrementalErrorHandling', () => {
 
   function div(...children) {
     children = children.map(c => (typeof c === 'string' ? {text: c} : c));
-    return {type: 'div', children, prop: undefined};
+    return {type: 'div', children, prop: undefined, hidden: false};
   }
 
   function span(prop) {
-    return {type: 'span', children: [], prop};
+    return {type: 'span', children: [], prop, hidden: false};
   }
 
   function normalizeCodeLocInfo(str) {
@@ -41,6 +40,99 @@ describe('ReactIncrementalErrorHandling', () => {
   }
 
   it('recovers from errors asynchronously', () => {
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromError(error) {
+        ReactNoop.yield('getDerivedStateFromError');
+        return {error};
+      }
+      render() {
+        if (this.state.error) {
+          ReactNoop.yield('ErrorBoundary (catch)');
+          return <ErrorMessage error={this.state.error} />;
+        }
+        ReactNoop.yield('ErrorBoundary (try)');
+        return this.props.children;
+      }
+    }
+
+    function ErrorMessage(props) {
+      ReactNoop.yield('ErrorMessage');
+      return <span prop={`Caught an error: ${props.error.message}`} />;
+    }
+
+    function Indirection(props) {
+      ReactNoop.yield('Indirection');
+      return props.children || null;
+    }
+
+    function BadRender() {
+      ReactNoop.yield('throw');
+      throw new Error('oops!');
+    }
+
+    ReactNoop.render(
+      <ErrorBoundary>
+        <Indirection>
+          <Indirection>
+            <Indirection>
+              <BadRender />
+              <Indirection />
+              <Indirection />
+            </Indirection>
+          </Indirection>
+        </Indirection>
+      </ErrorBoundary>,
+    );
+
+    // Start rendering asynchronously
+    ReactNoop.flushThrough([
+      'ErrorBoundary (try)',
+      'Indirection',
+      'Indirection',
+      'Indirection',
+      // An error is thrown. React keeps rendering asynchronously.
+      'throw',
+    ]);
+
+    // Still rendering async...
+    ReactNoop.flushThrough(['Indirection']);
+
+    ReactNoop.flushThrough([
+      'Indirection',
+
+      // Call getDerivedStateFromError and re-render the error boundary, this
+      // time rendering an error message.
+      'getDerivedStateFromError',
+      'ErrorBoundary (catch)',
+      'ErrorMessage',
+    ]);
+
+    // Since the error was thrown during an async render, React won't commit
+    // the result yet.
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    // Instead, it will try rendering one more time, synchronously, in case that
+    // happens to fix the error.
+    expect(ReactNoop.flushNextYield()).toEqual([
+      'ErrorBoundary (try)',
+      'Indirection',
+      'Indirection',
+      'Indirection',
+
+      // The error was thrown again. This time, React will actually commit
+      // the result.
+      'throw',
+      'Indirection',
+      'Indirection',
+      'getDerivedStateFromError',
+      'ErrorBoundary (catch)',
+      'ErrorMessage',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Caught an error: oops!')]);
+  });
+
+  it('recovers from errors asynchronously (legacy, no getDerivedStateFromError)', () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
       componentDidCatch(error) {
@@ -86,7 +178,7 @@ describe('ReactIncrementalErrorHandling', () => {
       </ErrorBoundary>,
     );
 
-    // Start rendering asynchronsouly
+    // Start rendering asynchronously
     ReactNoop.flushThrough([
       'ErrorBoundary (try)',
       'Indirection',
@@ -184,7 +276,7 @@ describe('ReactIncrementalErrorHandling', () => {
     // Schedule a low priority update to hide the child
     parent.current.setState({hideChild: true});
 
-    // Before the low priority update is flushed, synchronsouly trigger an
+    // Before the low priority update is flushed, synchronously trigger an
     // error in the child.
     ReactNoop.flushSync(() => {
       ReactNoop.render(<Parent ref={parent} childIsBroken={true} />);
@@ -1000,7 +1092,11 @@ describe('ReactIncrementalErrorHandling', () => {
         <Connector />
       </Provider>,
     );
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'Please update the following components: Connector, Provider',
+      {withoutStack: true},
+    );
 
     // If the context stack does not unwind, span will get 'abcde'
     expect(ReactNoop.getChildren()).toEqual([span('a')]);
@@ -1442,10 +1538,10 @@ describe('ReactIncrementalErrorHandling', () => {
     ]);
   });
 
-  it('does not provide component stack to the error boundary with getDerivedStateFromCatch', () => {
+  it('does not provide component stack to the error boundary with getDerivedStateFromError', () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
-      static getDerivedStateFromCatch(error, errorInfo) {
+      static getDerivedStateFromError(error, errorInfo) {
         expect(errorInfo).toBeUndefined();
         return {error};
       }
@@ -1489,6 +1585,12 @@ describe('ReactIncrementalErrorHandling', () => {
     };
 
     ReactNoop.render(<Provider />);
-    expect(() => ReactNoop.flush()).toThrow('Oops!');
+    expect(() => {
+      expect(() => ReactNoop.flush()).toThrow('Oops!');
+    }).toWarnDev(
+      'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'Please update the following components: Provider',
+      {withoutStack: true},
+    );
   });
 });

@@ -8,7 +8,7 @@ This utility should be used for subscriptions to a single value that are typical
 
 Other cases have **better long-term solutions**:
 * Redux/Flux stores should use the [context API](https://reactjs.org/docs/context.html) instead.
-* I/O subscriptions (e.g. notifications) that update infrequently should use [`simple-cache-provider`](https://github.com/facebook/react/blob/master/packages/simple-cache-provider/README.md) instead.
+* I/O subscriptions (e.g. notifications) that update infrequently should use [`react-cache`](https://github.com/facebook/react/blob/master/packages/react-cache/README.md) instead.
 * Complex libraries like Relay/Apollo should manage subscriptions manually with the same techniques which this library uses under the hood (as referenced [here](https://gist.github.com/bvaughn/d569177d70b50b58bff69c3c4a5353f3)) in a way that is most optimized for their library usage.
 
 ## Limitations in async mode
@@ -19,7 +19,7 @@ However, [it achieves correctness by sometimes de-opting to synchronous mode](ht
 
 The effect of de-opting to sync mode is that the main thread may periodically be blocked (in the case of CPU-bound work), and placeholders may appear earlier than desired (in the case of IO-bound work).
 
-For **full compatibility** with asynchronous rendering, including both **time-slicing** and **React Suspense**, the suggested longer term solution is to move to one of the patterns described in the previous section.
+For **full compatibility** with asynchronous rendering, including both **time-slicing** and **React Suspense**, the suggested longer-term solution is to move to one of the patterns described in the previous section.
 
 ## What types of subscriptions can this support?
 

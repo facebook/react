@@ -186,14 +186,14 @@ describe('ReactDebugFiberPerf', () => {
     expect(getFlameChart()).toMatchSnapshot();
   });
 
-  it('does not include AsyncMode, StrictMode, or Profiler components in measurements', () => {
+  it('does not include ConcurrentMode, StrictMode, or Profiler components in measurements', () => {
     ReactNoop.render(
       <React.unstable_Profiler id="test" onRender={jest.fn()}>
         <React.StrictMode>
           <Parent>
-            <React.unstable_AsyncMode>
+            <React.unstable_ConcurrentMode>
               <Child />
-            </React.unstable_AsyncMode>
+            </React.unstable_ConcurrentMode>
           </Parent>
         </React.StrictMode>
       </React.unstable_Profiler>,
@@ -357,12 +357,16 @@ describe('ReactDebugFiberPerf', () => {
     ReactNoop.render(<AllLifecycles />);
     addComment('Mount');
     expect(ReactNoop.flush).toWarnDev(
-      'componentWillMount: Please update the following components ' +
-        'to use componentDidMount instead: AllLifecycles' +
-        '\n\ncomponentWillReceiveProps: Please update the following components ' +
-        'to use static getDerivedStateFromProps instead: AllLifecycles' +
-        '\n\ncomponentWillUpdate: Please update the following components ' +
-        'to use componentDidUpdate instead: AllLifecycles',
+      [
+        'componentWillMount: Please update the following components ' +
+          'to use componentDidMount instead: AllLifecycles' +
+          '\n\ncomponentWillReceiveProps: Please update the following components ' +
+          'to use static getDerivedStateFromProps instead: AllLifecycles' +
+          '\n\ncomponentWillUpdate: Please update the following components ' +
+          'to use componentDidUpdate instead: AllLifecycles',
+        'Legacy context API has been detected within a strict-mode tree: \n\n' +
+          'Please update the following components: AllLifecycles',
+      ],
       {withoutStack: true},
     );
     ReactNoop.render(<AllLifecycles />);
@@ -545,6 +549,65 @@ describe('ReactDebugFiberPerf', () => {
     ReactNoop.render(
       <Parent>
         {ReactNoop.createPortal(<Child />, portalContainer, null)}
+      </Parent>,
+    );
+    ReactNoop.flush();
+    expect(getFlameChart()).toMatchSnapshot();
+  });
+
+  it('supports memo', () => {
+    const MemoFoo = React.memo(function Foo() {
+      return <div />;
+    });
+    ReactNoop.render(
+      <Parent>
+        <MemoFoo />
+      </Parent>,
+    );
+    ReactNoop.flush();
+    expect(getFlameChart()).toMatchSnapshot();
+  });
+
+  it('supports Suspense and lazy', async () => {
+    function Spinner() {
+      return <span />;
+    }
+
+    function fakeImport(result) {
+      return {default: result};
+    }
+
+    let resolve;
+    const LazyFoo = React.lazy(
+      () =>
+        new Promise(r => {
+          resolve = r;
+        }),
+    );
+
+    ReactNoop.render(
+      <Parent>
+        <React.Suspense fallback={<Spinner />}>
+          <LazyFoo />
+        </React.Suspense>
+      </Parent>,
+    );
+    ReactNoop.flush();
+    expect(getFlameChart()).toMatchSnapshot();
+
+    resolve(
+      fakeImport(function Foo() {
+        return <div />;
+      }),
+    );
+
+    await Promise.resolve();
+
+    ReactNoop.render(
+      <Parent>
+        <React.Suspense>
+          <LazyFoo />
+        </React.Suspense>
       </Parent>,
     );
     ReactNoop.flush();

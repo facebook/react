@@ -10,7 +10,6 @@
 import warning from 'shared/warning';
 import * as TestRendererScheduling from './ReactTestRendererScheduling';
 
-/* eslint-disable no-use-before-define */
 export type Type = string;
 export type Props = Object;
 export type Container = {|
@@ -21,12 +20,14 @@ export type Container = {|
 export type Instance = {|
   type: string,
   props: Object,
+  isHidden: boolean,
   children: Array<Instance | TextInstance>,
   rootContainerInstance: Container,
   tag: 'INSTANCE',
 |};
 export type TextInstance = {|
   text: string,
+  isHidden: boolean,
   tag: 'TEXT',
 |};
 export type HydratableInstance = Instance | TextInstance;
@@ -36,7 +37,6 @@ export type UpdatePayload = Object;
 export type ChildSet = void; // Unused
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
-/* eslint-enable no-use-before-define */
 
 export * from 'shared/HostConfigWithNoPersistence';
 export * from 'shared/HostConfigWithNoHydration';
@@ -134,6 +134,7 @@ export function createInstance(
   return {
     type,
     props,
+    isHidden: false,
     children: [],
     rootContainerInstance,
     tag: 'INSTANCE',
@@ -188,6 +189,7 @@ export function createTextInstance(
 ): TextInstance {
   return {
     text,
+    isHidden: false,
     tag: 'TEXT',
   };
 }
@@ -247,3 +249,22 @@ export function resetTextContent(testElement: Instance): void {
 export const appendChildToContainer = appendChild;
 export const insertInContainerBefore = insertBefore;
 export const removeChildFromContainer = removeChild;
+
+export function hideInstance(instance: Instance): void {
+  instance.isHidden = true;
+}
+
+export function hideTextInstance(textInstance: TextInstance): void {
+  textInstance.isHidden = true;
+}
+
+export function unhideInstance(instance: Instance, props: Props): void {
+  instance.isHidden = false;
+}
+
+export function unhideTextInstance(
+  textInstance: TextInstance,
+  text: string,
+): void {
+  textInstance.isHidden = false;
+}

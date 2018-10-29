@@ -34,6 +34,7 @@ import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import {enableStableConcurrentModeAPIs} from 'shared/ReactFeatureFlags';
 
 import * as ReactDOMComponentTree from './ReactDOMComponentTree';
 import {restoreControlledState} from './ReactDOMComponent';
@@ -126,8 +127,7 @@ if (__DEV__) {
 
 ReactControlledComponent.setRestoreImplementation(restoreControlledState);
 
-/* eslint-disable no-use-before-define */
-type DOMContainer =
+export type DOMContainer =
   | (Element & {
       _reactRootContainer: ?Root,
     })
@@ -163,7 +163,6 @@ type Root = {
 
   _internalRoot: FiberRoot,
 };
-/* eslint-enable no-use-before-define */
 
 function ReactBatch(root: ReactRoot) {
   const expirationTime = DOMRenderer.computeUniqueAsyncExpiration();
@@ -332,8 +331,12 @@ ReactWork.prototype._onCommit = function(): void {
   }
 };
 
-function ReactRoot(container: Container, isAsync: boolean, hydrate: boolean) {
-  const root = DOMRenderer.createContainer(container, isAsync, hydrate);
+function ReactRoot(
+  container: Container,
+  isConcurrent: boolean,
+  hydrate: boolean,
+) {
+  const root = DOMRenderer.createContainer(container, isConcurrent, hydrate);
   this._internalRoot = root;
 }
 ReactRoot.prototype.render = function(
@@ -499,8 +502,8 @@ function legacyCreateRootFromDOMContainer(
     }
   }
   // Legacy roots are not async by default.
-  const isAsync = false;
-  return new ReactRoot(container, isAsync, shouldHydrate);
+  const isConcurrent = false;
+  return new ReactRoot(container, isConcurrent, shouldHydrate);
 }
 
 function legacyRenderSubtreeIntoContainer(
@@ -612,7 +615,12 @@ const ReactDOM: Object = {
     if ((componentOrElement: any).nodeType === ELEMENT_NODE) {
       return (componentOrElement: any);
     }
-
+    if (__DEV__) {
+      return DOMRenderer.findHostInstanceWithWarning(
+        componentOrElement,
+        'findDOMNode',
+      );
+    }
     return DOMRenderer.findHostInstance(componentOrElement);
   },
 
@@ -763,17 +771,20 @@ type RootOptions = {
   hydrate?: boolean,
 };
 
-ReactDOM.unstable_createRoot = function createRoot(
-  container: DOMContainer,
-  options?: RootOptions,
-): ReactRoot {
+function createRoot(container: DOMContainer, options?: RootOptions): ReactRoot {
   invariant(
     isValidContainer(container),
     'unstable_createRoot(...): Target container is not a DOM element.',
   );
   const hydrate = options != null && options.hydrate === true;
   return new ReactRoot(container, true, hydrate);
-};
+}
+
+if (enableStableConcurrentModeAPIs) {
+  ReactDOM.createRoot = createRoot;
+} else {
+  ReactDOM.unstable_createRoot = createRoot;
+}
 
 const foundDevTools = DOMRenderer.injectIntoDevTools({
   findFiberByHostInstance: ReactDOMComponentTree.getClosestInstanceFromNode,

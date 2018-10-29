@@ -129,15 +129,15 @@ describe 'ReactCoffeeScriptClass', ->
     ).toWarnDev 'Foo: getDerivedStateFromProps() is defined as an instance method and will be ignored. Instead, declare it as a static method.', {withoutStack: true}
     undefined
 
-  it 'warns if getDerivedStateFromCatch is not static', ->
+  it 'warns if getDerivedStateFromError is not static', ->
     class Foo extends React.Component
       render: ->
         div()
-      getDerivedStateFromCatch: ->
+      getDerivedStateFromError: ->
         {}
     expect(->
       ReactDOM.render(React.createElement(Foo, foo: 'foo'), container)
-    ).toWarnDev 'Foo: getDerivedStateFromCatch() is defined as an instance method and will be ignored. Instead, declare it as a static method.', {withoutStack: true}
+    ).toWarnDev 'Foo: getDerivedStateFromError() is defined as an instance method and will be ignored. Instead, declare it as a static method.', {withoutStack: true}
     undefined
 
   it 'warns if getSnapshotBeforeUpdate is static', ->
@@ -392,6 +392,7 @@ describe 'ReactCoffeeScriptClass', ->
     class Foo extends React.Component
       constructor: ->
         @contextTypes = {}
+        @contextType = {}
         @propTypes = {}
 
       getInitialState: ->
@@ -413,6 +414,7 @@ describe 'ReactCoffeeScriptClass', ->
       'getDefaultProps was defined on Foo, a plain JavaScript class.',
       'propTypes was defined as an instance property on Foo.',
       'contextTypes was defined as an instance property on Foo.',
+      'contextType was defined as an instance property on Foo.',
     ], {withoutStack: true})
     expect(getInitialStateWasCalled).toBe false
     expect(getDefaultPropsWasCalled).toBe false

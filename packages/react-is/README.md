@@ -9,7 +9,7 @@ This package allows you to test arbitrary values and see if they're a particular
 yarn add react-is
 
 # NPM
-npm install react-is --save
+npm install react-is
 ```
 
 ## Usage
@@ -44,14 +44,14 @@ ReactIs.isValidElementType(React.createFactory("div")); // true
 
 ### Determining an Element's Type
 
-#### AsyncMode
+#### ConcurrentMode
 
 ```js
 import React from "react";
 import * as ReactIs from 'react-is';
 
-ReactIs.isAsyncMode(<React.unstable_AsyncMode />); // true
-ReactIs.typeOf(<React.unstable_AsyncMode />) === ReactIs.AsyncMode; // true
+ReactIs.isConcurrentMode(<React.unstable_ConcurrentMode />); // true
+ReactIs.typeOf(<React.unstable_ConcurrentMode />) === ReactIs.ConcurrentMode; // true
 ```
 
 #### Context

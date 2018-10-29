@@ -16,10 +16,8 @@ import {batchedUpdates} from 'events/ReactGenericBatching';
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
 import {
   Fragment,
-  FunctionalComponent,
-  FunctionalComponentLazy,
+  FunctionComponent,
   ClassComponent,
-  ClassComponentLazy,
   HostComponent,
   HostPortal,
   HostText,
@@ -29,7 +27,9 @@ import {
   Mode,
   ForwardRef,
   Profiler,
-  ForwardRefLazy,
+  MemoComponent,
+  SimpleMemoComponent,
+  IncompleteClassComponent,
 } from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 import ReactVersion from 'shared/ReactVersion';
@@ -37,10 +37,9 @@ import ReactVersion from 'shared/ReactVersion';
 import * as ReactTestHostConfig from './ReactTestHostConfig';
 import * as TestRendererScheduling from './ReactTestRendererScheduling';
 
-/* eslint-disable no-use-before-define */
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
-  unstable_isAsync: boolean,
+  unstable_isConcurrent: boolean,
 };
 
 type ReactTestRendererJSON = {|
@@ -58,7 +57,6 @@ type FindOptions = $Shape<{
 }>;
 
 export type Predicate = (node: ReactTestInstance) => ?boolean;
-/* eslint-enable no-use-before-define */
 
 const defaultTestOptions = {
   createNodeMock: function() {
@@ -66,11 +64,17 @@ const defaultTestOptions = {
   },
 };
 
-function toJSON(inst: Instance | TextInstance): ReactTestRendererNode {
+function toJSON(inst: Instance | TextInstance): ReactTestRendererNode | null {
+  if (inst.isHidden) {
+    // Omit timed out children from output entirely. This seems like the least
+    // surprising behavior. We could perhaps add a separate API that includes
+    // them, if it turns out people need it.
+    return null;
+  }
   switch (inst.tag) {
     case 'TEXT':
       return inst.text;
-    case 'INSTANCE':
+    case 'INSTANCE': {
       /* eslint-disable no-unused-vars */
       // We don't include the `children` prop in JSON.
       // Instead, we will include the actual rendered children.
@@ -78,7 +82,16 @@ function toJSON(inst: Instance | TextInstance): ReactTestRendererNode {
       /* eslint-enable */
       let renderedChildren = null;
       if (inst.children && inst.children.length) {
-        renderedChildren = inst.children.map(toJSON);
+        for (let i = 0; i < inst.children.length; i++) {
+          const renderedChild = toJSON(inst.children[i]);
+          if (renderedChild !== null) {
+            if (renderedChildren === null) {
+              renderedChildren = [renderedChild];
+            } else {
+              renderedChildren.push(renderedChild);
+            }
+          }
+        }
       }
       const json: ReactTestRendererJSON = {
         type: inst.type,
@@ -89,6 +102,7 @@ function toJSON(inst: Instance | TextInstance): ReactTestRendererNode {
         value: Symbol.for('react.test.json'),
       });
       return json;
+    }
     default:
       throw new Error(`Unexpected node type in toJSON: ${inst.tag}`);
   }
@@ -153,18 +167,8 @@ function toTree(node: ?Fiber) {
         instance: node.stateNode,
         rendered: childrenToTree(node.child),
       };
-    case ClassComponentLazy: {
-      const thenable = node.type;
-      const type = thenable._reactResult;
-      return {
-        nodeType: 'component',
-        type,
-        props: {...node.memoizedProps},
-        instance: node.stateNode,
-        rendered: childrenToTree(node.child),
-      };
-    }
-    case FunctionalComponent:
+    case FunctionComponent:
+    case SimpleMemoComponent:
       return {
         nodeType: 'component',
         type: node.type,
@@ -172,17 +176,6 @@ function toTree(node: ?Fiber) {
         instance: null,
         rendered: childrenToTree(node.child),
       };
-    case FunctionalComponentLazy: {
-      const thenable = node.type;
-      const type = thenable._reactResult;
-      return {
-        nodeType: 'component',
-        type: type,
-        props: {...node.memoizedProps},
-        instance: node.stateNode,
-        rendered: childrenToTree(node.child),
-      };
-    }
     case HostComponent: {
       return {
         nodeType: 'host',
@@ -200,7 +193,8 @@ function toTree(node: ?Fiber) {
     case Mode:
     case Profiler:
     case ForwardRef:
-    case ForwardRefLazy:
+    case MemoComponent:
+    case IncompleteClassComponent:
       return childrenToTree(node.child);
     default:
       invariant(
@@ -212,13 +206,11 @@ function toTree(node: ?Fiber) {
 }
 
 const validWrapperTypes = new Set([
-  FunctionalComponent,
-  FunctionalComponentLazy,
+  FunctionComponent,
   ClassComponent,
-  ClassComponentLazy,
   HostComponent,
   ForwardRef,
-  ForwardRefLazy,
+  MemoComponent,
   // Normally skipped, but used when there's more than one root child.
   HostRoot,
 ]);
@@ -421,13 +413,13 @@ function propsMatch(props: Object, filter: Object): boolean {
 const ReactTestRendererFiber = {
   create(element: React$Element<any>, options: TestRendererOptions) {
     let createNodeMock = defaultTestOptions.createNodeMock;
-    let isAsync = false;
+    let isConcurrent = false;
     if (typeof options === 'object' && options !== null) {
       if (typeof options.createNodeMock === 'function') {
         createNodeMock = options.createNodeMock;
       }
-      if (options.unstable_isAsync === true) {
-        isAsync = true;
+      if (options.unstable_isConcurrent === true) {
+        isConcurrent = true;
       }
     }
     let container = {
@@ -437,7 +429,7 @@ const ReactTestRendererFiber = {
     };
     let root: FiberRoot | null = TestRenderer.createContainer(
       container,
-      isAsync,
+      isConcurrent,
       false,
     );
     invariant(root != null, 'something went wrong');
@@ -456,7 +448,21 @@ const ReactTestRendererFiber = {
         if (container.children.length === 1) {
           return toJSON(container.children[0]);
         }
-        return container.children.map(toJSON);
+
+        let renderedChildren = null;
+        if (container.children && container.children.length) {
+          for (let i = 0; i < container.children.length; i++) {
+            const renderedChild = toJSON(container.children[i]);
+            if (renderedChild !== null) {
+              if (renderedChildren === null) {
+                renderedChildren = [renderedChild];
+              } else {
+                renderedChildren.push(renderedChild);
+              }
+            }
+          }
+        }
+        return renderedChildren;
       },
       toTree() {
         if (root == null || root.current == null) {

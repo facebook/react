@@ -15,15 +15,13 @@ import typeof * as FabricFeatureFlagsType from './ReactFeatureFlags.native-fabri
 export const debugRenderPhaseSideEffects = false;
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableUserTimingAPI = __DEV__;
-export const enableGetDerivedStateFromCatch = false;
-export const enableSuspense = false;
 export const warnAboutDeprecatedLifecycles = false;
-export const warnAboutLegacyContextAPI = __DEV__;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const enableProfilerTimer = __PROFILE__;
 export const enableSchedulerTracing = __PROFILE__;
 export const enableSuspenseServerRenderer = false;
 export const disableInputAttributeSyncing = false;
+export const enableStableConcurrentModeAPIs = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

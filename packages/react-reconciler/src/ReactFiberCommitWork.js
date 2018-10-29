@@ -18,21 +18,21 @@ import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue, CapturedError} from './ReactCapturedValue';
+import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import {
   enableSchedulerTracing,
   enableProfilerTimer,
-  enableSuspense,
 } from 'shared/ReactFeatureFlags';
 import {
   ClassComponent,
-  ClassComponentLazy,
   HostRoot,
   HostComponent,
   HostText,
   HostPortal,
   Profiler,
-  PlaceholderComponent,
+  SuspenseComponent,
+  IncompleteClassComponent,
 } from 'shared/ReactWorkTags';
 import {
   invokeGuardedCallback,
@@ -40,17 +40,17 @@ import {
   clearCaughtError,
 } from 'shared/ReactErrorUtils';
 import {
-  NoEffect,
   ContentReset,
   Placement,
   Snapshot,
   Update,
+  Callback,
 } from 'shared/ReactSideEffectTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
-import {Sync} from './ReactFiberExpirationTime';
+import {NoWork, Sync} from './ReactFiberExpirationTime';
 import {onCommitUnmount} from './ReactFiberDevToolsHook';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
@@ -73,15 +73,16 @@ import {
   removeChildFromContainer,
   replaceContainerChildren,
   createContainerChildSet,
+  hideInstance,
+  hideTextInstance,
+  unhideInstance,
+  unhideTextInstance,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
   requestCurrentTime,
   scheduleWork,
 } from './ReactFiberScheduler';
-import {StrictMode} from './ReactTypeOfMode';
-
-const emptyObject = {};
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -184,8 +185,7 @@ function commitBeforeMutationLifeCycles(
   finishedWork: Fiber,
 ): void {
   switch (finishedWork.tag) {
-    case ClassComponent:
-    case ClassComponentLazy: {
+    case ClassComponent: {
       if (finishedWork.effectTag & Snapshot) {
         if (current !== null) {
           const prevProps = current.memoizedProps;
@@ -222,6 +222,7 @@ function commitBeforeMutationLifeCycles(
     case HostComponent:
     case HostText:
     case HostPortal:
+    case IncompleteClassComponent:
       // Nothing to do for these component types
       return;
     default: {
@@ -241,8 +242,7 @@ function commitLifeCycles(
   committedExpirationTime: ExpirationTime,
 ): void {
   switch (finishedWork.tag) {
-    case ClassComponent:
-    case ClassComponentLazy: {
+    case ClassComponent: {
       const instance = finishedWork.stateNode;
       if (finishedWork.effectTag & Update) {
         if (current === null) {
@@ -288,7 +288,6 @@ function commitLifeCycles(
               instance = getPublicInstance(finishedWork.child.stateNode);
               break;
             case ClassComponent:
-            case ClassComponentLazy:
               instance = finishedWork.child.stateNode;
               break;
           }
@@ -352,31 +351,97 @@ function commitLifeCycles(
       }
       return;
     }
-    case PlaceholderComponent: {
-      if (enableSuspense) {
-        if ((finishedWork.mode & StrictMode) === NoEffect) {
-          // In loose mode, a placeholder times out by scheduling a synchronous
-          // update in the commit phase. Use `updateQueue` field to signal that
-          // the Timeout needs to switch to the placeholder. We don't need an
-          // entire queue. Any non-null value works.
-          // $FlowFixMe - Intentionally using a value other than an UpdateQueue.
-          finishedWork.updateQueue = emptyObject;
-          scheduleWork(finishedWork, Sync);
-        } else {
-          // In strict mode, the Update effect is used to record the time at
-          // which the placeholder timed out.
-          const currentTime = requestCurrentTime();
-          finishedWork.stateNode = {timedOutAt: currentTime};
+    case SuspenseComponent: {
+      if (finishedWork.effectTag & Callback) {
+        // In non-strict mode, a suspense boundary times out by commiting
+        // twice: first, by committing the children in an inconsistent state,
+        // then hiding them and showing the fallback children in a subsequent
+        // commit.
+        const newState: SuspenseState = {
+          alreadyCaptured: true,
+          didTimeout: false,
+          timedOutAt: NoWork,
+        };
+        finishedWork.memoizedState = newState;
+        scheduleWork(finishedWork, Sync);
+        return;
+      }
+      let oldState: SuspenseState | null =
+        current !== null ? current.memoizedState : null;
+      let newState: SuspenseState | null = finishedWork.memoizedState;
+      let oldDidTimeout = oldState !== null ? oldState.didTimeout : false;
+
+      let newDidTimeout;
+      let primaryChildParent = finishedWork;
+      if (newState === null) {
+        newDidTimeout = false;
+      } else {
+        newDidTimeout = newState.didTimeout;
+        if (newDidTimeout) {
+          primaryChildParent = finishedWork.child;
+          newState.alreadyCaptured = false;
+          if (newState.timedOutAt === NoWork) {
+            // If the children had not already timed out, record the time.
+            // This is used to compute the elapsed time during subsequent
+            // attempts to render the children.
+            newState.timedOutAt = requestCurrentTime();
+          }
         }
+      }
+
+      if (newDidTimeout !== oldDidTimeout && primaryChildParent !== null) {
+        hideOrUnhideAllChildren(primaryChildParent, newDidTimeout);
       }
       return;
     }
+    case IncompleteClassComponent:
+      break;
     default: {
       invariant(
         false,
         'This unit of work tag should not have side-effects. This error is ' +
           'likely caused by a bug in React. Please file an issue.',
       );
+    }
+  }
+}
+
+function hideOrUnhideAllChildren(finishedWork, isHidden) {
+  if (supportsMutation) {
+    // We only have the top Fiber that was inserted but we need recurse down its
+    // children to find all the terminal nodes.
+    let node: Fiber = finishedWork;
+    while (true) {
+      if (node.tag === HostComponent) {
+        const instance = node.stateNode;
+        if (isHidden) {
+          hideInstance(instance);
+        } else {
+          unhideInstance(node.stateNode, node.memoizedProps);
+        }
+      } else if (node.tag === HostText) {
+        const instance = node.stateNode;
+        if (isHidden) {
+          hideTextInstance(instance);
+        } else {
+          unhideTextInstance(instance, node.memoizedProps);
+        }
+      } else if (node.child !== null) {
+        node.child.return = node;
+        node = node.child;
+        continue;
+      }
+      if (node === finishedWork) {
+        return;
+      }
+      while (node.sibling === null) {
+        if (node.return === null || node.return === finishedWork) {
+          return;
+        }
+        node = node.return;
+      }
+      node.sibling.return = node.return;
+      node = node.sibling;
     }
   }
 }
@@ -431,8 +496,7 @@ function commitUnmount(current: Fiber): void {
   onCommitUnmount(current);
 
   switch (current.tag) {
-    case ClassComponent:
-    case ClassComponentLazy: {
+    case ClassComponent: {
       safelyDetachRef(current);
       const instance = current.stateNode;
       if (typeof instance.componentWillUnmount === 'function') {
@@ -525,8 +589,7 @@ function commitContainer(finishedWork: Fiber) {
   }
 
   switch (finishedWork.tag) {
-    case ClassComponent:
-    case ClassComponentLazy: {
+    case ClassComponent: {
       return;
     }
     case HostComponent: {
@@ -811,8 +874,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
   }
 
   switch (finishedWork.tag) {
-    case ClassComponent:
-    case ClassComponentLazy: {
+    case ClassComponent: {
       return;
     }
     case HostComponent: {
@@ -863,7 +925,10 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case Profiler: {
       return;
     }
-    case PlaceholderComponent: {
+    case SuspenseComponent: {
+      return;
+    }
+    case IncompleteClassComponent: {
       return;
     }
     default: {

@@ -1,20 +1,13 @@
-import React, {Placeholder, PureComponent} from 'react';
-import {unstable_scheduleWork} from 'scheduler';
+import React, {lazy, Suspense, PureComponent} from 'react';
+import {unstable_scheduleCallback} from 'scheduler';
 import {
   unstable_trace as trace,
   unstable_wrap as wrap,
 } from 'scheduler/tracing';
-import {createResource} from 'simple-cache-provider';
-import {cache} from '../cache';
 import Spinner from './Spinner';
 import ContributorListPage from './ContributorListPage';
 
-const UserPageResource = createResource(() => import('./UserPage'));
-
-function UserPageLoader(props) {
-  const UserPage = UserPageResource.read(cache).default;
-  return <UserPage {...props} />;
-}
+const UserPage = lazy(() => import('./UserPage'));
 
 export default class App extends PureComponent {
   state = {
@@ -38,7 +31,7 @@ export default class App extends PureComponent {
           currentId: id,
         })
       );
-      unstable_scheduleWork(
+      unstable_scheduleCallback(
         wrap(() =>
           trace(`View ${id} (low-pri)`, performance.now(), () =>
             this.setState({
@@ -76,21 +69,21 @@ export default class App extends PureComponent {
           }}>
           Return to list
         </button>
-        <Placeholder delayMs={2000} fallback={<Spinner size="large" />}>
-          <UserPageLoader id={id} />
-        </Placeholder>
+        <Suspense maxDuration={2000} fallback={<Spinner size="large" />}>
+          <UserPage id={id} />
+        </Suspense>
       </div>
     );
   }
 
   renderList(loadingId) {
     return (
-      <Placeholder delayMs={1500} fallback={<Spinner size="large" />}>
+      <Suspense maxDuration={1500} fallback={<Spinner size="large" />}>
         <ContributorListPage
           loadingId={loadingId}
           onUserClick={this.handleUserClick}
         />
-      </Placeholder>
+      </Suspense>
     );
   }
 }

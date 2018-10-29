@@ -11,23 +11,8 @@ import {REACT_PROVIDER_TYPE, REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 
 import type {ReactContext} from 'shared/ReactTypes';
 
-import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
-
-import ReactCurrentOwner from './ReactCurrentOwner';
-
-export function readContext<T>(
-  context: ReactContext<T>,
-  observedBits: void | number | boolean,
-): T {
-  const dispatcher = ReactCurrentOwner.currentDispatcher;
-  invariant(
-    dispatcher !== null,
-    'Context.unstable_read(): Context can only be read while React is ' +
-      'rendering, e.g. inside the render method or getDerivedStateFromProps.',
-  );
-  return dispatcher.readContext(context, observedBits);
-}
+import warning from 'shared/warning';
 
 export function createContext<T>(
   defaultValue: T,
@@ -60,15 +45,78 @@ export function createContext<T>(
     // These are circular
     Provider: (null: any),
     Consumer: (null: any),
-    unstable_read: (null: any),
   };
 
   context.Provider = {
     $$typeof: REACT_PROVIDER_TYPE,
     _context: context,
   };
-  context.Consumer = context;
-  context.unstable_read = readContext.bind(null, context);
+
+  let hasWarnedAboutUsingNestedContextConsumers = false;
+  let hasWarnedAboutUsingConsumerProvider = false;
+
+  if (__DEV__) {
+    // A separate object, but proxies back to the original context object for
+    // backwards compatibility. It has a different $$typeof, so we can properly
+    // warn for the incorrect usage of Context as a Consumer.
+    const Consumer = {
+      $$typeof: REACT_CONTEXT_TYPE,
+      _context: context,
+      _calculateChangedBits: context._calculateChangedBits,
+    };
+    // $FlowFixMe: Flow complains about not setting a value, which is intentional here
+    Object.defineProperties(Consumer, {
+      Provider: {
+        get() {
+          if (!hasWarnedAboutUsingConsumerProvider) {
+            hasWarnedAboutUsingConsumerProvider = true;
+            warning(
+              false,
+              'Rendering <Context.Consumer.Provider> is not supported and will be removed in ' +
+                'a future major release. Did you mean to render <Context.Provider> instead?',
+            );
+          }
+          return context.Provider;
+        },
+        set(_Provider) {
+          context.Provider = _Provider;
+        },
+      },
+      _currentValue: {
+        get() {
+          return context._currentValue;
+        },
+        set(_currentValue) {
+          context._currentValue = _currentValue;
+        },
+      },
+      _currentValue2: {
+        get() {
+          return context._currentValue2;
+        },
+        set(_currentValue2) {
+          context._currentValue2 = _currentValue2;
+        },
+      },
+      Consumer: {
+        get() {
+          if (!hasWarnedAboutUsingNestedContextConsumers) {
+            hasWarnedAboutUsingNestedContextConsumers = true;
+            warning(
+              false,
+              'Rendering <Context.Consumer.Consumer> is not supported and will be removed in ' +
+                'a future major release. Did you mean to render <Context.Consumer> instead?',
+            );
+          }
+          return context.Consumer;
+        },
+      },
+    });
+    // $FlowFixMe: Flow complains about missing properties because it doesn't understand defineProperty
+    context.Consumer = Consumer;
+  } else {
+    context.Consumer = context;
+  }
 
   if (__DEV__) {
     context._currentRenderer = null;

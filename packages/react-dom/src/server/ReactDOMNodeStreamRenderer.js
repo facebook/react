@@ -29,7 +29,7 @@ class ReactMarkupReadableStream extends Readable {
 /**
  * Render a ReactElement to its initial HTML. This should only be used on the
  * server.
- * See https://reactjs.org/docs/react-dom-stream.html#rendertonodestream
+ * See https://reactjs.org/docs/react-dom-server.html#rendertonodestream
  */
 export function renderToNodeStream(element) {
   return new ReactMarkupReadableStream(element, false);
@@ -38,7 +38,7 @@ export function renderToNodeStream(element) {
 /**
  * Similar to renderToNodeStream, except this doesn't create extra DOM attributes
  * such as data-react-id that React uses internally.
- * See https://reactjs.org/docs/react-dom-stream.html#rendertostaticnodestream
+ * See https://reactjs.org/docs/react-dom-server.html#rendertostaticnodestream
  */
 export function renderToStaticNodeStream(element) {
   return new ReactMarkupReadableStream(element, true);

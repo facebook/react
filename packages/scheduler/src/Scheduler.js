@@ -8,14 +8,34 @@
 
 /* eslint-disable no-var */
 
-// TODO: Currently there's only a single priority level, Deferred. Will add
-// additional priorities.
-var DEFERRED_TIMEOUT = 5000;
+// TODO: Use symbols?
+var ImmediatePriority = 1;
+var UserBlockingPriority = 2;
+var NormalPriority = 3;
+var IdlePriority = 4;
+
+// Max 31 bit integer. The max integer size in V8 for 32-bit systems.
+// Math.pow(2, 30) - 1
+// 0b111111111111111111111111111111
+var maxSigned31BitInt = 1073741823;
+
+// Times out immediately
+var IMMEDIATE_PRIORITY_TIMEOUT = -1;
+// Eventually times out
+var USER_BLOCKING_PRIORITY = 250;
+var NORMAL_PRIORITY_TIMEOUT = 5000;
+// Never times out
+var IDLE_PRIORITY = maxSigned31BitInt;
 
 // Callbacks are stored as a circular, doubly linked list.
 var firstCallbackNode = null;
 
-var isPerformingWork = false;
+var currentPriorityLevel = NormalPriority;
+var currentEventStartTime = -1;
+var currentExpirationTime = -1;
+
+// This is set when a callback is being executed, to prevent re-entrancy.
+var isExecutingCallback = false;
 
 var isHostCallbackScheduled = false;
 
@@ -25,6 +45,14 @@ var hasNativePerformanceNow =
 var timeRemaining;
 if (hasNativePerformanceNow) {
   timeRemaining = function() {
+    if (
+      firstCallbackNode !== null &&
+      firstCallbackNode.expirationTime < currentExpirationTime
+    ) {
+      // A higher priority callback was scheduled. Yield so we can switch to
+      // working on that.
+      return 0;
+    }
     // We assume that if we have a performance timer that the rAF callback
     // gets a performance timer value. Not sure if this is always true.
     var remaining = getFrameDeadline() - performance.now();
@@ -33,6 +61,12 @@ if (hasNativePerformanceNow) {
 } else {
   timeRemaining = function() {
     // Fallback to Date.now()
+    if (
+      firstCallbackNode !== null &&
+      firstCallbackNode.expirationTime < currentExpirationTime
+    ) {
+      return 0;
+    }
     var remaining = getFrameDeadline() - Date.now();
     return remaining > 0 ? remaining : 0;
   };
@@ -44,22 +78,22 @@ var deadlineObject = {
 };
 
 function ensureHostCallbackIsScheduled() {
-  if (isPerformingWork) {
+  if (isExecutingCallback) {
     // Don't schedule work yet; wait until the next time we yield.
     return;
   }
-  // Schedule the host callback using the earliest timeout in the list.
-  var timesOutAt = firstCallbackNode.timesOutAt;
+  // Schedule the host callback using the earliest expiration in the list.
+  var expirationTime = firstCallbackNode.expirationTime;
   if (!isHostCallbackScheduled) {
     isHostCallbackScheduled = true;
   } else {
     // Cancel the existing host callback.
-    cancelCallback();
+    cancelHostCallback();
   }
-  requestCallback(flushWork, timesOutAt);
+  requestHostCallback(flushWork, expirationTime);
 }
 
-function flushFirstCallback(node) {
+function flushFirstCallback() {
   var flushedNode = firstCallbackNode;
 
   // Remove the node from the list before calling the callback. That way the
@@ -70,35 +104,124 @@ function flushFirstCallback(node) {
     firstCallbackNode = null;
     next = null;
   } else {
-    var previous = firstCallbackNode.previous;
-    firstCallbackNode = previous.next = next;
-    next.previous = previous;
+    var lastCallbackNode = firstCallbackNode.previous;
+    firstCallbackNode = lastCallbackNode.next = next;
+    next.previous = lastCallbackNode;
   }
 
   flushedNode.next = flushedNode.previous = null;
 
   // Now it's safe to call the callback.
   var callback = flushedNode.callback;
-  callback(deadlineObject);
+  var expirationTime = flushedNode.expirationTime;
+  var priorityLevel = flushedNode.priorityLevel;
+  var previousPriorityLevel = currentPriorityLevel;
+  var previousExpirationTime = currentExpirationTime;
+  currentPriorityLevel = priorityLevel;
+  currentExpirationTime = expirationTime;
+  var continuationCallback;
+  try {
+    continuationCallback = callback(deadlineObject);
+  } finally {
+    currentPriorityLevel = previousPriorityLevel;
+    currentExpirationTime = previousExpirationTime;
+  }
+
+  // A callback may return a continuation. The continuation should be scheduled
+  // with the same priority and expiration as the just-finished callback.
+  if (typeof continuationCallback === 'function') {
+    var continuationNode: CallbackNode = {
+      callback: continuationCallback,
+      priorityLevel,
+      expirationTime,
+      next: null,
+      previous: null,
+    };
+
+    // Insert the new callback into the list, sorted by its expiration. This is
+    // almost the same as the code in `scheduleCallback`, except the callback
+    // is inserted into the list *before* callbacks of equal expiration instead
+    // of after.
+    if (firstCallbackNode === null) {
+      // This is the first callback in the list.
+      firstCallbackNode = continuationNode.next = continuationNode.previous = continuationNode;
+    } else {
+      var nextAfterContinuation = null;
+      var node = firstCallbackNode;
+      do {
+        if (node.expirationTime >= expirationTime) {
+          // This callback expires at or after the continuation. We will insert
+          // the continuation *before* this callback.
+          nextAfterContinuation = node;
+          break;
+        }
+        node = node.next;
+      } while (node !== firstCallbackNode);
+
+      if (nextAfterContinuation === null) {
+        // No equal or lower priority callback was found, which means the new
+        // callback is the lowest priority callback in the list.
+        nextAfterContinuation = firstCallbackNode;
+      } else if (nextAfterContinuation === firstCallbackNode) {
+        // The new callback is the highest priority callback in the list.
+        firstCallbackNode = continuationNode;
+        ensureHostCallbackIsScheduled();
+      }
+
+      var previous = nextAfterContinuation.previous;
+      previous.next = nextAfterContinuation.previous = continuationNode;
+      continuationNode.next = nextAfterContinuation;
+      continuationNode.previous = previous;
+    }
+  }
+}
+
+function flushImmediateWork() {
+  if (
+    // Confirm we've exited the outer most event handler
+    currentEventStartTime === -1 &&
+    firstCallbackNode !== null &&
+    firstCallbackNode.priorityLevel === ImmediatePriority
+  ) {
+    isExecutingCallback = true;
+    deadlineObject.didTimeout = true;
+    try {
+      do {
+        flushFirstCallback();
+      } while (
+        // Keep flushing until there are no more immediate callbacks
+        firstCallbackNode !== null &&
+        firstCallbackNode.priorityLevel === ImmediatePriority
+      );
+    } finally {
+      isExecutingCallback = false;
+      if (firstCallbackNode !== null) {
+        // There's still work remaining. Request another callback.
+        ensureHostCallbackIsScheduled();
+      } else {
+        isHostCallbackScheduled = false;
+      }
+    }
+  }
 }
 
 function flushWork(didTimeout) {
-  isPerformingWork = true;
+  isExecutingCallback = true;
   deadlineObject.didTimeout = didTimeout;
   try {
     if (didTimeout) {
-      // Flush all the timed out callbacks without yielding.
+      // Flush all the expired callbacks without yielding.
       while (firstCallbackNode !== null) {
         // Read the current time. Flush all the callbacks that expire at or
         // earlier than that time. Then read the current time again and repeat.
         // This optimizes for as few performance.now calls as possible.
         var currentTime = getCurrentTime();
-        if (firstCallbackNode.timesOutAt <= currentTime) {
+        if (firstCallbackNode.expirationTime <= currentTime) {
           do {
             flushFirstCallback();
           } while (
             firstCallbackNode !== null &&
-            firstCallbackNode.timesOutAt <= currentTime
+            firstCallbackNode.expirationTime <= currentTime
           );
           continue;
         }
@@ -116,51 +239,114 @@ function flushWork(didTimeout) {
       }
     }
   } finally {
-    isPerformingWork = false;
+    isExecutingCallback = false;
     if (firstCallbackNode !== null) {
       // There's still work remaining. Request another callback.
-      ensureHostCallbackIsScheduled(firstCallbackNode);
+      ensureHostCallbackIsScheduled();
     } else {
       isHostCallbackScheduled = false;
     }
+    // Before exiting, flush all the immediate work that was scheduled.
+    flushImmediateWork();
   }
 }
 
-function unstable_scheduleWork(callback, options) {
-  var currentTime = getCurrentTime();
+function unstable_runWithPriority(priorityLevel, eventHandler) {
+  switch (priorityLevel) {
+    case ImmediatePriority:
+    case UserBlockingPriority:
+    case NormalPriority:
+    case IdlePriority:
+      break;
+    default:
+      priorityLevel = NormalPriority;
+  }
 
-  var timesOutAt;
+  var previousPriorityLevel = currentPriorityLevel;
+  var previousEventStartTime = currentEventStartTime;
+  currentPriorityLevel = priorityLevel;
+  currentEventStartTime = getCurrentTime();
+
+  try {
+    return eventHandler();
+  } finally {
+    currentPriorityLevel = previousPriorityLevel;
+    currentEventStartTime = previousEventStartTime;
+
+    // Before exiting, flush all the immediate work that was scheduled.
+    flushImmediateWork();
+  }
+}
+
+function unstable_wrapCallback(callback) {
+  var parentPriorityLevel = currentPriorityLevel;
+  return function() {
+    // This is a fork of runWithPriority, inlined for performance.
+    var previousPriorityLevel = currentPriorityLevel;
+    var previousEventStartTime = currentEventStartTime;
+    currentPriorityLevel = parentPriorityLevel;
+    currentEventStartTime = getCurrentTime();
+
+    try {
+      return callback.apply(this, arguments);
+    } finally {
+      currentPriorityLevel = previousPriorityLevel;
+      currentEventStartTime = previousEventStartTime;
+      flushImmediateWork();
+    }
+  };
+}
+
+function unstable_scheduleCallback(callback, deprecated_options) {
+  var startTime =
+    currentEventStartTime !== -1 ? currentEventStartTime : getCurrentTime();
+
+  var expirationTime;
   if (
-    options !== undefined &&
-    options !== null &&
-    options.timeout !== null &&
-    options.timeout !== undefined
+    typeof deprecated_options === 'object' &&
+    deprecated_options !== null &&
+    typeof deprecated_options.timeout === 'number'
   ) {
-    // Check for an explicit timeout
-    timesOutAt = currentTime + options.timeout;
+    // FIXME: Remove this branch once we lift expiration times out of React.
+    expirationTime = startTime + deprecated_options.timeout;
   } else {
-    // Compute an absolute timeout using the default constant.
-    timesOutAt = currentTime + DEFERRED_TIMEOUT;
+    switch (currentPriorityLevel) {
+      case ImmediatePriority:
+        expirationTime = startTime + IMMEDIATE_PRIORITY_TIMEOUT;
+        break;
+      case UserBlockingPriority:
+        expirationTime = startTime + USER_BLOCKING_PRIORITY;
+        break;
+      case IdlePriority:
+        expirationTime = startTime + IDLE_PRIORITY;
+        break;
+      case NormalPriority:
+      default:
+        expirationTime = startTime + NORMAL_PRIORITY_TIMEOUT;
+    }
   }
 
   var newNode = {
     callback,
-    timesOutAt,
+    priorityLevel: currentPriorityLevel,
+    expirationTime,
     next: null,
     previous: null,
   };
 
-  // Insert the new callback into the list, sorted by its timeout.
+  // Insert the new callback into the list, ordered first by expiration, then
+  // by insertion. So the new callback is inserted any other callback with
+  // equal expiration.
   if (firstCallbackNode === null) {
     // This is the first callback in the list.
     firstCallbackNode = newNode.next = newNode.previous = newNode;
-    ensureHostCallbackIsScheduled(firstCallbackNode);
+    ensureHostCallbackIsScheduled();
   } else {
     var next = null;
     var node = firstCallbackNode;
     do {
-      if (node.timesOutAt > timesOutAt) {
-        // The new callback times out before this one.
+      if (node.expirationTime > expirationTime) {
+        // The new callback expires before this one.
         next = node;
         break;
       }
@@ -168,13 +354,13 @@ function unstable_scheduleWork(callback, options) {
     } while (node !== firstCallbackNode);
 
     if (next === null) {
-      // No callback with a later timeout was found, which means the new
-      // callback has the latest timeout in the list.
+      // No callback with a later expiration was found, which means the new
+      // callback has the latest expiration in the list.
       next = firstCallbackNode;
     } else if (next === firstCallbackNode) {
-      // The new callback has the earliest timeout in the entire list.
+      // The new callback has the earliest expiration in the entire list.
       firstCallbackNode = newNode;
-      ensureHostCallbackIsScheduled(firstCallbackNode);
+      ensureHostCallbackIsScheduled();
     }
 
     var previous = next.previous;
@@ -186,7 +372,7 @@ function unstable_scheduleWork(callback, options) {
   return newNode;
 }
 
-function unstable_cancelScheduledWork(callbackNode) {
+function unstable_cancelCallback(callbackNode) {
   var next = callbackNode.next;
   if (next === null) {
     // Already cancelled.
@@ -207,6 +393,10 @@ function unstable_cancelScheduledWork(callbackNode) {
   }
 
   callbackNode.next = callbackNode.previous = null;
+}
+
+function unstable_getCurrentPriorityLevel() {
+  return currentPriorityLevel;
 }
 
 // The remaining code is essentially a polyfill for requestIdleCallback. It
@@ -274,31 +464,60 @@ if (hasNativePerformanceNow) {
   };
 }
 
-var requestCallback;
-var cancelCallback;
+var requestHostCallback;
+var cancelHostCallback;
 var getFrameDeadline;
 
-if (typeof window === 'undefined') {
-  // If this accidentally gets imported in a non-browser environment, fallback
-  // to a naive implementation.
-  var timeoutID = -1;
-  requestCallback = function(callback, absoluteTimeout) {
-    timeoutID = setTimeout(callback, 0, true);
-  };
-  cancelCallback = function() {
-    clearTimeout(timeoutID);
-  };
-  getFrameDeadline = function() {
-    return 0;
-  };
-} else if (window._schedMock) {
+if (typeof window !== 'undefined' && window._schedMock) {
   // Dynamic injection, only for testing purposes.
   var impl = window._schedMock;
-  requestCallback = impl[0];
-  cancelCallback = impl[1];
+  requestHostCallback = impl[0];
+  cancelHostCallback = impl[1];
   getFrameDeadline = impl[2];
+} else if (
+  // If Scheduler runs in a non-DOM environment, it falls back to a naive
+  // implementation using setTimeout.
+  typeof window === 'undefined' ||
+  // "addEventListener" might not be available on the window object
+  // if this is a mocked "window" object. So we need to validate that too.
+  typeof window.addEventListener !== 'function'
+) {
+  var _callback = null;
+  var _currentTime = -1;
+  var _flushCallback = function(didTimeout, ms) {
+    if (_callback !== null) {
+      var cb = _callback;
+      _callback = null;
+      try {
+        _currentTime = ms;
+        cb(didTimeout);
+      } finally {
+        _currentTime = -1;
+      }
+    }
+  };
+  requestHostCallback = function(cb, ms) {
+    if (_currentTime !== -1) {
+      // Protect against re-entrancy.
+      setTimeout(requestHostCallback, 0, cb, ms);
+    } else {
+      _callback = cb;
+      setTimeout(_flushCallback, ms, true, ms);
+      setTimeout(_flushCallback, maxSigned31BitInt, false, maxSigned31BitInt);
+    }
+  };
+  cancelHostCallback = function() {
+    _callback = null;
+  };
+  getFrameDeadline = function() {
+    return Infinity;
+  };
+  getCurrentTime = function() {
+    return _currentTime === -1 ? 0 : _currentTime;
+  };
 } else {
   if (typeof console !== 'undefined') {
+    // TODO: Remove fb.me link
     if (typeof localRequestAnimationFrame !== 'function') {
       console.error(
         "This browser doesn't support requestAnimationFrame. " +
@@ -315,13 +534,13 @@ if (typeof window === 'undefined') {
     }
   }
 
-  var scheduledCallback = null;
-  var isIdleScheduled = false;
+  var scheduledHostCallback = null;
+  var isMessageEventScheduled = false;
   var timeoutTime = -1;
 
   var isAnimationFrameScheduled = false;
 
-  var isPerformingIdleWork = false;
+  var isFlushingHostCallback = false;
 
   var frameDeadline = 0;
   // We start out assuming that we run at 30fps but then the heuristic tracking
@@ -345,7 +564,12 @@ if (typeof window === 'undefined') {
       return;
     }
 
-    isIdleScheduled = false;
+    isMessageEventScheduled = false;
+
+    var prevScheduledCallback = scheduledHostCallback;
+    var prevTimeoutTime = timeoutTime;
+    scheduledHostCallback = null;
+    timeoutTime = -1;
 
     var currentTime = getCurrentTime();
 
@@ -353,7 +577,7 @@ if (typeof window === 'undefined') {
     if (frameDeadline - currentTime <= 0) {
       // There's no time left in this idle period. Check if the callback has
       // a timeout and whether it's been exceeded.
-      if (timeoutTime !== -1 && timeoutTime <= currentTime) {
+      if (prevTimeoutTime !== -1 && prevTimeoutTime <= currentTime) {
         // Exceeded the timeout. Invoke the callback even though there's no
         // time left.
         didTimeout = true;
@@ -365,19 +589,18 @@ if (typeof window === 'undefined') {
           requestAnimationFrameWithTimeout(animationTick);
         }
         // Exit without invoking the callback.
+        scheduledHostCallback = prevScheduledCallback;
+        timeoutTime = prevTimeoutTime;
         return;
       }
     }
 
-    timeoutTime = -1;
-    var callback = scheduledCallback;
-    scheduledCallback = null;
-    if (callback !== null) {
-      isPerformingIdleWork = true;
+    if (prevScheduledCallback !== null) {
+      isFlushingHostCallback = true;
       try {
-        callback(didTimeout);
+        prevScheduledCallback(didTimeout);
       } finally {
-        isPerformingIdleWork = false;
+        isFlushingHostCallback = false;
       }
     }
   };
@@ -386,7 +609,22 @@ if (typeof window === 'undefined') {
   window.addEventListener('message', idleTick, false);
 
   var animationTick = function(rafTime) {
-    isAnimationFrameScheduled = false;
+    if (scheduledHostCallback !== null) {
+      // Eagerly schedule the next animation callback at the beginning of the
+      // frame. If the scheduler queue is not empty at the end of the frame, it
+      // will continue flushing inside that callback. If the queue *is* empty,
+      // then it will exit immediately. Posting the callback at the start of the
+      // frame ensures it's fired within the earliest possible frame. If we
+      // waited until the end of the frame to post the callback, we risk the
+      // browser skipping a frame and not firing the callback until the frame
+      // after that.
+      requestAnimationFrameWithTimeout(animationTick);
+    } else {
+      // No pending work. Exit.
+      isAnimationFrameScheduled = false;
+      return;
+    }
+
     var nextFrameTime = rafTime - frameDeadline + activeFrameTime;
     if (
       nextFrameTime < activeFrameTime &&
@@ -410,17 +648,16 @@ if (typeof window === 'undefined') {
       previousFrameTime = nextFrameTime;
     }
     frameDeadline = rafTime + activeFrameTime;
-    if (!isIdleScheduled) {
-      isIdleScheduled = true;
+    if (!isMessageEventScheduled) {
+      isMessageEventScheduled = true;
       window.postMessage(messageKey, '*');
     }
   };
 
-  requestCallback = function(callback, absoluteTimeout) {
-    scheduledCallback = callback;
+  requestHostCallback = function(callback, absoluteTimeout) {
+    scheduledHostCallback = callback;
     timeoutTime = absoluteTimeout;
-    if (isPerformingIdleWork) {
-      // If we're already performing idle work, an error must have been thrown.
+    if (isFlushingHostCallback || absoluteTimeout < 0) {
       // Don't wait for the next frame. Continue working ASAP, in a new event.
       window.postMessage(messageKey, '*');
     } else if (!isAnimationFrameScheduled) {
@@ -433,15 +670,22 @@ if (typeof window === 'undefined') {
     }
   };
 
-  cancelCallback = function() {
-    scheduledCallback = null;
-    isIdleScheduled = false;
+  cancelHostCallback = function() {
+    scheduledHostCallback = null;
+    isMessageEventScheduled = false;
     timeoutTime = -1;
   };
 }
 
 export {
-  unstable_scheduleWork,
-  unstable_cancelScheduledWork,
+  ImmediatePriority as unstable_ImmediatePriority,
+  UserBlockingPriority as unstable_UserBlockingPriority,
+  NormalPriority as unstable_NormalPriority,
+  IdlePriority as unstable_IdlePriority,
+  unstable_runWithPriority,
+  unstable_scheduleCallback,
+  unstable_cancelCallback,
+  unstable_wrapCallback,
+  unstable_getCurrentPriorityLevel,
   getCurrentTime as unstable_now,
 };

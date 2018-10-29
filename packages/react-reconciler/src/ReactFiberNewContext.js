@@ -21,13 +21,9 @@ export type ContextDependency<T> = {
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
-import maxSigned31BitInt from './maxSigned31BitInt';
+import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 import {NoWork} from './ReactFiberExpirationTime';
-import {
-  ContextProvider,
-  ClassComponent,
-  ClassComponentLazy,
-} from 'shared/ReactWorkTags';
+import {ContextProvider, ClassComponent} from 'shared/ReactWorkTags';
 
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
@@ -37,7 +33,6 @@ import {
   ForceUpdate,
 } from 'react-reconciler/src/ReactUpdateQueue';
 
-import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 const valueCursor: StackCursor<mixed> = createCursor(null);
 
 let rendererSigil;
@@ -163,10 +158,7 @@ export function propagateContextChange(
         ) {
           // Match! Schedule an update on this fiber.
 
-          if (
-            fiber.tag === ClassComponent ||
-            fiber.tag === ClassComponentLazy
-          ) {
+          if (fiber.tag === ClassComponent) {
             // Schedule a force update on the work-in-progress.
             const update = createUpdate(renderExpirationTime);
             update.tag = ForceUpdate;
@@ -284,11 +276,11 @@ export function readContext<T>(
     let resolvedObservedBits; // Avoid deopting on observable arguments or heterogeneous types.
     if (
       typeof observedBits !== 'number' ||
-      observedBits === maxSigned31BitInt
+      observedBits === MAX_SIGNED_31_BIT_INT
     ) {
       // Observe all updates.
       lastContextWithAllBitsObserved = ((context: any): ReactContext<mixed>);
-      resolvedObservedBits = maxSigned31BitInt;
+      resolvedObservedBits = MAX_SIGNED_31_BIT_INT;
     } else {
       resolvedObservedBits = observedBits;
     }
@@ -302,7 +294,7 @@ export function readContext<T>(
     if (lastContextDependency === null) {
       invariant(
         currentlyRenderingFiber !== null,
-        'Context.unstable_read(): Context can only be read while React is ' +
+        'Context can only be read while React is ' +
           'rendering, e.g. inside the render method or getDerivedStateFromProps.',
       );
       // This is the first dependency in the list

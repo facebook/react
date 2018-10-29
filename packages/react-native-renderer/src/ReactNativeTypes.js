@@ -36,8 +36,8 @@ export type MeasureLayoutOnSuccessCallback = (
 type AttributeType =
   | true
   | $ReadOnly<{|
-      diff: ?<T>(arg1: T, arg2: T) => boolean,
-      process: ?(arg1: any) => any,
+      diff?: <T>(arg1: T, arg2: T) => boolean,
+      process?: (arg1: any) => any,
     |}>;
 
 export type AttributeConfiguration<

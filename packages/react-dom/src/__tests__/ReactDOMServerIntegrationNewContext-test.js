@@ -75,13 +75,13 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders('stateless child with context', async render => {
-      function StatelessChildWithContext(props) {
+      function FunctionChildWithContext(props) {
         return <Consumer>{text => text}</Consumer>;
       }
 
       const e = await render(
         <PurpleContext>
-          <StatelessChildWithContext />
+          <FunctionChildWithContext />
         </PurpleContext>,
       );
       expect(e.textContent).toBe('purple');
@@ -103,7 +103,7 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders('stateless child with wrong context', async render => {
-      function StatelessChildWithWrongContext(props) {
+      function FunctionChildWithWrongContext(props) {
         return (
           <div id="statelessWrongChild">
             <Consumer>{text => text}</Consumer>
@@ -111,7 +111,7 @@ describe('ReactDOMServerIntegration', () => {
         );
       }
 
-      const e = await render(<StatelessChildWithWrongContext />);
+      const e = await render(<FunctionChildWithWrongContext />);
       expect(e.textContent).toBe('none');
     });
 

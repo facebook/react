@@ -13,6 +13,7 @@
 let React;
 let ReactDOMServer;
 let PropTypes;
+let ReactCurrentOwner;
 
 function normalizeCodeLocInfo(str) {
   return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
@@ -24,6 +25,9 @@ describe('ReactDOMServer', () => {
     React = require('react');
     PropTypes = require('prop-types');
     ReactDOMServer = require('react-dom/server');
+    ReactCurrentOwner =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .ReactCurrentOwner;
   });
 
   describe('renderToString', () => {
@@ -431,6 +435,44 @@ describe('ReactDOMServer', () => {
       expect(results).toEqual([2, 1, 3, 1]);
     });
 
+    it('renders with dispatcher.readContext mechanism', () => {
+      const Context = React.createContext(0);
+
+      function readContext(context) {
+        return ReactCurrentOwner.currentDispatcher.readContext(context);
+      }
+
+      function Consumer(props) {
+        return 'Result: ' + readContext(Context);
+      }
+
+      const Indirection = React.Fragment;
+
+      function App(props) {
+        return (
+          <Context.Provider value={props.value}>
+            <Context.Provider value={2}>
+              <Consumer />
+            </Context.Provider>
+            <Indirection>
+              <Indirection>
+                <Consumer />
+                <Context.Provider value={3}>
+                  <Consumer />
+                </Context.Provider>
+              </Indirection>
+            </Indirection>
+            <Consumer />
+          </Context.Provider>
+        );
+      }
+
+      const markup = ReactDOMServer.renderToString(<App value={1} />);
+      // Extract the numbers rendered by the consumers
+      const results = markup.match(/\d+/g).map(Number);
+      expect(results).toEqual([2, 1, 3, 1]);
+    });
+
     it('renders context API, reentrancy', () => {
       const Context = React.createContext(0);
 
@@ -564,6 +606,29 @@ describe('ReactDOMServer', () => {
     );
     const markup = ReactDOMServer.renderToStaticMarkup(<Baz />);
     expect(markup).toBe('<div></div>');
+  });
+
+  it('throws for unsupported types on the server', () => {
+    expect(() => {
+      ReactDOMServer.renderToString(<React.Suspense />);
+    }).toThrow('ReactDOMServer does not yet support Suspense.');
+
+    async function fakeImport(result) {
+      return {default: result};
+    }
+
+    expect(() => {
+      const LazyFoo = React.lazy(() =>
+        fakeImport(
+          new Promise(resolve =>
+            resolve(function Foo() {
+              return <div />;
+            }),
+          ),
+        ),
+      );
+      ReactDOMServer.renderToString(<LazyFoo />);
+    }).toThrow('ReactDOMServer does not yet support lazy-loaded components.');
   });
 
   it('should throw (in dev) when children are mutated during render', () => {

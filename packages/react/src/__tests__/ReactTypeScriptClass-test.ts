@@ -239,6 +239,7 @@ let getInitialStateWasCalled = false;
 let getDefaultPropsWasCalled = false;
 class ClassicProperties extends React.Component {
   contextTypes = {};
+  contextType = {};
   propTypes = {};
   getDefaultProps() {
     getDefaultPropsWasCalled = true;
@@ -396,9 +397,9 @@ describe('ReactTypeScriptClass', function() {
     );
   });
 
-  it('warns if getDerivedStateFromCatch is not static', function() {
+  it('warns if getDerivedStateFromError is not static', function() {
     class Foo extends React.Component {
-      getDerivedStateFromCatch() {
+      getDerivedStateFromError() {
         return {};
       }
       render() {
@@ -408,7 +409,7 @@ describe('ReactTypeScriptClass', function() {
     expect(function() {
       ReactDOM.render(React.createElement(Foo, {foo: 'foo'}), container);
     }).toWarnDev(
-      'Foo: getDerivedStateFromCatch() is defined as an instance method ' +
+      'Foo: getDerivedStateFromError() is defined as an instance method ' +
         'and will be ignored. Instead, declare it as a static method.',
         {withoutStack: true}
     );
@@ -594,6 +595,7 @@ describe('ReactTypeScriptClass', function() {
           'a plain JavaScript class.',
         'propTypes was defined as an instance property on ClassicProperties.',
         'contextTypes was defined as an instance property on ClassicProperties.',
+        'contextType was defined as an instance property on ClassicProperties.',
       ], {withoutStack: true});
       expect(getInitialStateWasCalled).toBe(false);
       expect(getDefaultPropsWasCalled).toBe(false);

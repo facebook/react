@@ -11,6 +11,7 @@
 'use strict';
 
 let React;
+let StrictMode;
 let ReactNative;
 let createReactNativeComponentClass;
 let UIManager;
@@ -20,6 +21,7 @@ describe('ReactNative', () => {
     jest.resetModules();
 
     React = require('react');
+    StrictMode = React.StrictMode;
     ReactNative = require('react-native-renderer');
     UIManager = require('UIManager');
     createReactNativeComponentClass = require('ReactNativeViewConfigRegistry')
@@ -257,5 +259,80 @@ describe('ReactNative', () => {
       </Text>,
       11,
     );
+  });
+
+  it('findNodeHandle should warn if used to find a host component inside StrictMode', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    let parent = undefined;
+    let child = undefined;
+
+    class ContainsStrictModeChild extends React.Component {
+      render() {
+        return (
+          <StrictMode>
+            <View ref={n => (child = n)} />
+          </StrictMode>
+        );
+      }
+    }
+
+    ReactNative.render(<ContainsStrictModeChild ref={n => (parent = n)} />, 11);
+
+    let match;
+    expect(() => (match = ReactNative.findNodeHandle(parent))).toWarnDev([
+      'Warning: findNodeHandle is deprecated in StrictMode. ' +
+        'findNodeHandle was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
+        'Instead, add a ref directly to the element you want to reference.' +
+        '\n' +
+        '\n    in RCTView (at **)' +
+        '\n    in StrictMode (at **)' +
+        '\n    in ContainsStrictModeChild (at **)' +
+        '\n' +
+        '\nLearn more about using refs safely here:' +
+        '\nhttps://fb.me/react-strict-mode-find-node',
+    ]);
+    expect(match).toBe(child._nativeTag);
+  });
+
+  it('findNodeHandle should warn if passed a component that is inside StrictMode', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    let parent = undefined;
+    let child = undefined;
+
+    class IsInStrictMode extends React.Component {
+      render() {
+        return <View ref={n => (child = n)} />;
+      }
+    }
+
+    ReactNative.render(
+      <StrictMode>
+        <IsInStrictMode ref={n => (parent = n)} />
+      </StrictMode>,
+      11,
+    );
+
+    let match;
+    expect(() => (match = ReactNative.findNodeHandle(parent))).toWarnDev([
+      'Warning: findNodeHandle is deprecated in StrictMode. ' +
+        'findNodeHandle was passed an instance of IsInStrictMode which is inside StrictMode. ' +
+        'Instead, add a ref directly to the element you want to reference.' +
+        '\n' +
+        '\n    in RCTView (at **)' +
+        '\n    in IsInStrictMode (at **)' +
+        '\n    in StrictMode (at **)' +
+        '\n' +
+        '\nLearn more about using refs safely here:' +
+        '\nhttps://fb.me/react-strict-mode-find-node',
+    ]);
+    expect(match).toBe(child._nativeTag);
   });
 });
