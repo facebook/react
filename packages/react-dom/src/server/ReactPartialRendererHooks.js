@@ -7,6 +7,7 @@
  * @flow
  */
 import type {ReactContext} from 'shared/ReactTypes';
+import areHookInputsEqual from 'shared/areHookInputsEqual';
 
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
@@ -236,7 +237,7 @@ function useMemo<T>(
   ) {
     const prevState = workInProgressHook.memoizedState;
     const prevInputs = prevState[1];
-    if (inputsAreEqual(nextInputs, prevInputs)) {
+    if (areHookInputsEqual(nextInputs, prevInputs)) {
       return prevState[0];
     }
   }
@@ -329,25 +330,6 @@ function dispatchAction<A>(
     // returned. On the server this is a no-op. In React Fiber, the update
     // would be scheduled for a future render.
   }
-}
-
-function inputsAreEqual(arr1, arr2) {
-  // Don't bother comparing lengths because these arrays are always
-  // passed inline.
-  for (let i = 0; i < arr1.length; i++) {
-    // Inlined Object.is polyfill.
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is
-    const val1 = arr1[i];
-    const val2 = arr2[i];
-    if (
-      (val1 === val2 && (val1 !== 0 || 1 / val1 === 1 / (val2: any))) ||
-      (val1 !== val1 && val2 !== val2) // eslint-disable-line no-self-compare
-    ) {
-      continue;
-    }
-    return false;
-  }
-  return true;
 }
 
 function noop(): void {}
