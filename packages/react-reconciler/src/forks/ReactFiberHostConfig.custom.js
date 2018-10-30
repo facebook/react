@@ -52,6 +52,7 @@ export const shouldDeprioritizeSubtree =
 export const createTextInstance = $$$hostConfig.createTextInstance;
 export const scheduleDeferredCallback = $$$hostConfig.scheduleDeferredCallback;
 export const cancelDeferredCallback = $$$hostConfig.cancelDeferredCallback;
+export const shouldYield = $$$hostConfig.shouldYield;
 export const scheduleTimeout = $$$hostConfig.setTimeout;
 export const cancelTimeout = $$$hostConfig.clearTimeout;
 export const noTimeout = $$$hostConfig.noTimeout;

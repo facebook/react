@@ -7,8 +7,6 @@
  * @flow
  */
 
-import type {Deadline} from 'react-reconciler/src/ReactFiberScheduler';
-
 const hasNativePerformanceNow =
   typeof performance === 'object' && typeof performance.now === 'function';
 
@@ -16,15 +14,8 @@ const now = hasNativePerformanceNow
   ? () => performance.now()
   : () => Date.now();
 
-type Callback = (deadline: Deadline) => void;
-
-let scheduledCallback: Callback | null = null;
+let scheduledCallback: (() => mixed) | null = null;
 let frameDeadline: number = 0;
-
-const frameDeadlineObject: Deadline = {
-  timeRemaining: () => frameDeadline - now(),
-  didTimeout: false,
-};
 
 function setTimeoutCallback() {
   // TODO (bvaughn) Hard-coded 5ms unblocks initial async testing.
@@ -36,7 +27,7 @@ function setTimeoutCallback() {
   const callback = scheduledCallback;
   scheduledCallback = null;
   if (callback !== null) {
-    callback(frameDeadlineObject);
+    callback();
   }
 }
 
@@ -44,7 +35,7 @@ function setTimeoutCallback() {
 // This implementation is only intended for short-term use anyway.
 // We also don't implement cancel functionality b'c Fiber doesn't currently need it.
 function scheduleDeferredCallback(
-  callback: Callback,
+  callback: () => mixed,
   options?: {timeout: number},
 ): number {
   // We assume only one callback is scheduled at a time b'c that's how Fiber works.
@@ -58,4 +49,8 @@ function cancelDeferredCallback(callbackID: number) {
   clearTimeout((callbackID: any)); // Timeouts are always numbers on RN
 }
 
-export {now, scheduleDeferredCallback, cancelDeferredCallback};
+function shouldYield() {
+  return frameDeadline <= now();
+}
+
+export {now, scheduleDeferredCallback, cancelDeferredCallback, shouldYield};

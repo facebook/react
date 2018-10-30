@@ -15,6 +15,12 @@ const {
   unstable_cancelCallback,
   unstable_now,
   unstable_scheduleCallback,
+  unstable_shouldYield,
 } = ReactInternals.Scheduler;
 
-export {unstable_cancelCallback, unstable_now, unstable_scheduleCallback};
+export {
+  unstable_cancelCallback,
+  unstable_now,
+  unstable_scheduleCallback,
+  unstable_shouldYield,
+};

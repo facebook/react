@@ -336,6 +336,7 @@ export const scheduleDeferredCallback =
   ReactNativeFrameScheduling.scheduleDeferredCallback;
 export const cancelDeferredCallback =
   ReactNativeFrameScheduling.cancelDeferredCallback;
+export const shouldYield = ReactNativeFrameScheduling.shouldYield;
 
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;

@@ -17,6 +17,7 @@ let scheduleCallback;
 let cancelCallback;
 let wrapCallback;
 let getCurrentPriorityLevel;
+let shouldYield;
 let flushWork;
 let advanceTime;
 let doWork;
@@ -119,8 +120,8 @@ describe('Scheduler', () => {
       _flushWork = null;
       clearTimeout(timeoutID);
     }
-    function getTimeRemaining() {
-      return endOfFrame;
+    function shouldYieldToHost() {
+      return endOfFrame <= currentTime;
     }
 
     // Override host implementation
@@ -131,7 +132,7 @@ describe('Scheduler', () => {
     window._schedMock = [
       requestHostCallback,
       cancelHostCallback,
-      getTimeRemaining,
+      shouldYieldToHost,
     ];
 
     const Schedule = require('scheduler');
@@ -143,6 +144,7 @@ describe('Scheduler', () => {
     cancelCallback = Schedule.unstable_cancelCallback;
     wrapCallback = Schedule.unstable_wrapCallback;
     getCurrentPriorityLevel = Schedule.unstable_getCurrentPriorityLevel;
+    shouldYield = Schedule.unstable_shouldYield;
   });
 
   it('flushes work incrementally', () => {
@@ -273,14 +275,10 @@ describe('Scheduler', () => {
     scheduleCallback(() => doWork('B', 100));
 
     const tasks = [['C1', 100], ['C2', 100], ['C3', 100]];
-    const C = deadline => {
+    const C = () => {
       while (tasks.length > 0) {
         doWork(...tasks.shift());
-        if (
-          tasks.length > 0 &&
-          !deadline.didTimeout &&
-          deadline.timeRemaining() <= 0
-        ) {
+        if (shouldYield()) {
           yieldValue('Yield!');
           return C;
         }
@@ -299,14 +297,10 @@ describe('Scheduler', () => {
 
   it('continuation callbacks inherit the expiration of the previous callback', () => {
     const tasks = [['A', 125], ['B', 124], ['C', 100], ['D', 100]];
-    const work = deadline => {
+    const work = () => {
       while (tasks.length > 0) {
         doWork(...tasks.shift());
-        if (
-          tasks.length > 0 &&
-          !deadline.didTimeout &&
-          deadline.timeRemaining() <= 0
-        ) {
+        if (shouldYield()) {
           yieldValue('Yield!');
           return work;
         }
@@ -344,14 +338,10 @@ describe('Scheduler', () => {
 
   it('continuations are interrupted by higher priority work', () => {
     const tasks = [['A', 100], ['B', 100], ['C', 100], ['D', 100]];
-    const work = deadline => {
+    const work = () => {
       while (tasks.length > 0) {
         doWork(...tasks.shift());
-        if (
-          tasks.length > 0 &&
-          !deadline.didTimeout &&
-          deadline.timeRemaining() <= 0
-        ) {
+        if (tasks.length > 0 && shouldYield()) {
           yieldValue('Yield!');
           return work;
         }
@@ -372,7 +362,7 @@ describe('Scheduler', () => {
       'inside an executing callback',
     () => {
       const tasks = [['A', 100], ['B', 100], ['C', 100], ['D', 100]];
-      const work = deadline => {
+      const work = () => {
         while (tasks.length > 0) {
           const task = tasks.shift();
           doWork(...task);
@@ -383,11 +373,7 @@ describe('Scheduler', () => {
               scheduleCallback(() => doWork('High pri', 100)),
             );
           }
-          if (
-            tasks.length > 0 &&
-            !deadline.didTimeout &&
-            deadline.timeRemaining() <= 0
-          ) {
+          if (tasks.length > 0 && shouldYield()) {
             yieldValue('Yield!');
             return work;
           }
