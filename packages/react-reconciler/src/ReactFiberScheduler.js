@@ -2125,12 +2125,12 @@ function performWork(minExpirationTime: ExpirationTime, isYieldy: boolean) {
       nextFlushedExpirationTime !== NoWork &&
       (minExpirationTime === NoWork ||
         minExpirationTime >= nextFlushedExpirationTime) &&
-      (!didYield || currentRendererTime >= nextFlushedExpirationTime)
+      !(didYield && currentRendererTime < nextFlushedExpirationTime)
     ) {
       performWorkOnRoot(
         nextFlushedRoot,
         nextFlushedExpirationTime,
-        !(currentRendererTime >= nextFlushedExpirationTime),
+        currentRendererTime < nextFlushedExpirationTime,
       );
       findHighestPriorityRoot();
       recomputeCurrentRendererTime();

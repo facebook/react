@@ -37,7 +37,7 @@ export function shouldYield() {
     expectedNumberOfYields !== -1 &&
     yieldedValues.length >= expectedNumberOfYields
   ) {
-    // We at least as many values as expected. Stop rendering.
+    // We yielded at least as many values as expected. Stop rendering.
     didStop = true;
     return true;
   }
