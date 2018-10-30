@@ -249,5 +249,104 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.querySelector('#language2').textContent).toBe('sanskrit');
       expect(e.querySelector('#language3').textContent).toBe('french');
     });
+
+    itRenders(
+      'should warn with an error message when using Context as consumer in DEV',
+      async render => {
+        const Theme = React.createContext('dark');
+        const Language = React.createContext('french');
+
+        const App = () => (
+          <div>
+            <Theme.Provider value="light">
+              <Language.Provider value="english">
+                <Theme.Provider value="dark">
+                  <Theme>{theme => <div id="theme1">{theme}</div>}</Theme>
+                </Theme.Provider>
+              </Language.Provider>
+            </Theme.Provider>
+          </div>
+        );
+        // We expect 1 error.
+        await render(<App />, 1);
+      },
+    );
+
+    // False positive regression test.
+    itRenders(
+      'should not warn when using Consumer from React < 16.6 with newer renderer',
+      async render => {
+        const Theme = React.createContext('dark');
+        const Language = React.createContext('french');
+        // React 16.5 and earlier didn't have a separate object.
+        Theme.Consumer = Theme;
+
+        const App = () => (
+          <div>
+            <Theme.Provider value="light">
+              <Language.Provider value="english">
+                <Theme.Provider value="dark">
+                  <Theme>{theme => <div id="theme1">{theme}</div>}</Theme>
+                </Theme.Provider>
+              </Language.Provider>
+            </Theme.Provider>
+          </div>
+        );
+        // We expect 0 errors.
+        await render(<App />, 0);
+      },
+    );
+
+    itRenders(
+      'should warn with an error message when using nested context consumers in DEV',
+      async render => {
+        const App = () => {
+          const Theme = React.createContext('dark');
+          const Language = React.createContext('french');
+
+          return (
+            <div>
+              <Theme.Provider value="light">
+                <Language.Provider value="english">
+                  <Theme.Provider value="dark">
+                    <Theme.Consumer.Consumer>
+                      {theme => <div id="theme1">{theme}</div>}
+                    </Theme.Consumer.Consumer>
+                  </Theme.Provider>
+                </Language.Provider>
+              </Theme.Provider>
+            </div>
+          );
+        };
+        // We expect 1 error.
+        await render(<App />, 1);
+      },
+    );
+
+    itRenders(
+      'should warn with an error message when using Context.Consumer.Provider DEV',
+      async render => {
+        const App = () => {
+          const Theme = React.createContext('dark');
+          const Language = React.createContext('french');
+
+          return (
+            <div>
+              <Theme.Provider value="light">
+                <Language.Provider value="english">
+                  <Theme.Consumer.Provider value="dark">
+                    <Theme.Consumer>
+                      {theme => <div id="theme1">{theme}</div>}
+                    </Theme.Consumer>
+                  </Theme.Consumer.Provider>
+                </Language.Provider>
+              </Theme.Provider>
+            </div>
+          );
+        };
+        // We expect 1 error.
+        await render(<App />, 1);
+      },
+    );
   });
 });
