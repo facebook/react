@@ -89,16 +89,23 @@ if (enableStableConcurrentModeAPIs) {
 }
 
 if (enableHooks) {
-  React.useCallback = useCallback;
-  React.useContext = useContext;
-  React.useEffect = useEffect;
-  React.useImperativeMethods = useImperativeMethods;
-  React.useLayoutEffect = useLayoutEffect;
-  React.useMemo = useMemo;
-  React.useMutationEffect = useMutationEffect;
-  React.useReducer = useReducer;
-  React.useRef = useRef;
-  React.useState = useState;
+  var listHooksMethods = [
+    useCallback,
+    useContext,
+    useEffect,
+    useImperativeMethods,
+    useLayoutEffect,
+    useMemo,
+    useMutationEffect,
+    useReducer,
+    useRef,
+    useState,
+  ];
+  for (var i=0, hooks; hooks=listHooksMethods[i]; i++) {
+    if(typeof hooks === 'function') {
+      React[hooks.name] = hooks;
+    }
+  }
 }
 
 export default React;
