@@ -30,6 +30,7 @@ var IDLE_PRIORITY = maxSigned31BitInt;
 // Callbacks are stored as a circular, doubly linked list.
 var firstCallbackNode = null;
 
+var currentDidTimeout = false;
 var currentPriorityLevel = NormalPriority;
 var currentEventStartTime = -1;
 var currentExpirationTime = -1;
@@ -41,41 +42,6 @@ var isHostCallbackScheduled = false;
 
 var hasNativePerformanceNow =
   typeof performance === 'object' && typeof performance.now === 'function';
-
-var timeRemaining;
-if (hasNativePerformanceNow) {
-  timeRemaining = function() {
-    if (
-      firstCallbackNode !== null &&
-      firstCallbackNode.expirationTime < currentExpirationTime
-    ) {
-      // A higher priority callback was scheduled. Yield so we can switch to
-      // working on that.
-      return 0;
-    }
-    // We assume that if we have a performance timer that the rAF callback
-    // gets a performance timer value. Not sure if this is always true.
-    var remaining = getFrameDeadline() - performance.now();
-    return remaining > 0 ? remaining : 0;
-  };
-} else {
-  timeRemaining = function() {
-    // Fallback to Date.now()
-    if (
-      firstCallbackNode !== null &&
-      firstCallbackNode.expirationTime < currentExpirationTime
-    ) {
-      return 0;
-    }
-    var remaining = getFrameDeadline() - Date.now();
-    return remaining > 0 ? remaining : 0;
-  };
-}
-
-var deadlineObject = {
-  timeRemaining,
-  didTimeout: false,
-};
 
 function ensureHostCallbackIsScheduled() {
   if (isExecutingCallback) {
@@ -121,7 +87,7 @@ function flushFirstCallback() {
   currentExpirationTime = expirationTime;
   var continuationCallback;
   try {
-    continuationCallback = callback(deadlineObject);
+    continuationCallback = callback();
   } finally {
     currentPriorityLevel = previousPriorityLevel;
     currentExpirationTime = previousExpirationTime;
@@ -184,7 +150,6 @@ function flushImmediateWork() {
     firstCallbackNode.priorityLevel === ImmediatePriority
   ) {
     isExecutingCallback = true;
-    deadlineObject.didTimeout = true;
     try {
       do {
         flushFirstCallback();
@@ -207,7 +172,8 @@ function flushImmediateWork() {
 
 function flushWork(didTimeout) {
   isExecutingCallback = true;
-  deadlineObject.didTimeout = didTimeout;
+  const previousDidTimeout = currentDidTimeout;
+  currentDidTimeout = didTimeout;
   try {
     if (didTimeout) {
       // Flush all the expired callbacks without yielding.
@@ -232,14 +198,12 @@ function flushWork(didTimeout) {
       if (firstCallbackNode !== null) {
         do {
           flushFirstCallback();
-        } while (
-          firstCallbackNode !== null &&
-          getFrameDeadline() - getCurrentTime() > 0
-        );
+        } while (firstCallbackNode !== null && !shouldYieldToHost());
       }
     }
   } finally {
     isExecutingCallback = false;
+    currentDidTimeout = previousDidTimeout;
     if (firstCallbackNode !== null) {
       // There's still work remaining. Request another callback.
       ensureHostCallbackIsScheduled();
@@ -399,6 +363,15 @@ function unstable_getCurrentPriorityLevel() {
   return currentPriorityLevel;
 }
 
+function unstable_shouldYield() {
+  return (
+    !currentDidTimeout &&
+    ((firstCallbackNode !== null &&
+      firstCallbackNode.expirationTime < currentExpirationTime) ||
+      shouldYieldToHost())
+  );
+}
+
 // The remaining code is essentially a polyfill for requestIdleCallback. It
 // works by scheduling a requestAnimationFrame, storing the time for the start
 // of the frame, then scheduling a postMessage which gets scheduled after paint.
@@ -466,14 +439,14 @@ if (hasNativePerformanceNow) {
 
 var requestHostCallback;
 var cancelHostCallback;
-var getFrameDeadline;
+var shouldYieldToHost;
 
 if (typeof window !== 'undefined' && window._schedMock) {
   // Dynamic injection, only for testing purposes.
   var impl = window._schedMock;
   requestHostCallback = impl[0];
   cancelHostCallback = impl[1];
-  getFrameDeadline = impl[2];
+  shouldYieldToHost = impl[2];
 } else if (
   // If Scheduler runs in a non-DOM environment, it falls back to a naive
   // implementation using setTimeout.
@@ -509,8 +482,8 @@ if (typeof window !== 'undefined' && window._schedMock) {
   cancelHostCallback = function() {
     _callback = null;
   };
-  getFrameDeadline = function() {
-    return Infinity;
+  shouldYieldToHost = function() {
+    return false;
   };
   getCurrentTime = function() {
     return _currentTime === -1 ? 0 : _currentTime;
@@ -549,8 +522,8 @@ if (typeof window !== 'undefined' && window._schedMock) {
   var previousFrameTime = 33;
   var activeFrameTime = 33;
 
-  getFrameDeadline = function() {
-    return frameDeadline;
+  shouldYieldToHost = function() {
+    return frameDeadline <= getCurrentTime();
   };
 
   // We use the postMessage trick to defer idle work until after the repaint.
@@ -687,5 +660,6 @@ export {
   unstable_cancelCallback,
   unstable_wrapCallback,
   unstable_getCurrentPriorityLevel,
+  unstable_shouldYield,
   getCurrentTime as unstable_now,
 };
