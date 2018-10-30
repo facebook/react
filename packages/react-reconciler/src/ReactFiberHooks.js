@@ -414,10 +414,7 @@ export function useReducer<S, A>(
             newBaseState = newState;
           }
           // Update the remaining priority in the queue.
-          if (
-            remainingExpirationTime === NoWork ||
-            updateExpirationTime > remainingExpirationTime
-          ) {
+          if (updateExpirationTime > remainingExpirationTime) {
             remainingExpirationTime = updateExpirationTime;
           }
         } else {
