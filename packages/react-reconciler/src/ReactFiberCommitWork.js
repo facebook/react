@@ -319,21 +319,6 @@ function commitLifeCycles(
     case ForwardRef:
     case SimpleMemoComponent: {
       commitHookEffectList(UnmountLayout, MountLayout, finishedWork);
-      const newUpdateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
-      if (newUpdateQueue !== null) {
-        const callbackList = newUpdateQueue.callbackList;
-        if (callbackList !== null) {
-          newUpdateQueue.callbackList = null;
-          for (let i = 0; i < callbackList.length; i++) {
-            const update = callbackList[i];
-            // Assume this is non-null, since otherwise it would not be part
-            // of the callback list.
-            const callback: () => mixed = (update.callback: any);
-            update.callback = null;
-            callback();
-          }
-        }
-      }
       break;
     }
     case ClassComponent: {

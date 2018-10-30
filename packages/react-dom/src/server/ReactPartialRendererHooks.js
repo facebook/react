@@ -12,22 +12,21 @@ import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 
 type BasicStateAction<S> = (S => S) | S;
-type MaybeCallback<S> = void | null | (S => mixed);
-type Dispatch<S, A> = (A, MaybeCallback<S>) => void;
+type Dispatch<A> = A => void;
 
-type Update<S, A> = {
+type Update<A> = {
   action: A,
-  next: Update<S, A> | null,
+  next: Update<A> | null,
 };
 
-type UpdateQueue<S, A> = {
-  last: Update<S, A> | null,
+type UpdateQueue<A> = {
+  last: Update<A> | null,
   dispatch: any,
 };
 
 type Hook = {
   memoizedState: any,
-  queue: UpdateQueue<any, any> | null,
+  queue: UpdateQueue<any> | null,
   next: Hook | null,
 };
 
@@ -39,10 +38,7 @@ let isReRender: boolean = false;
 // Whether an update was scheduled during the currently executing render pass.
 let didScheduleRenderPhaseUpdate: boolean = false;
 // Lazily created map of render-phase updates
-let renderPhaseUpdates: Map<
-  UpdateQueue<any, any>,
-  Update<any, any>,
-> | null = null;
+let renderPhaseUpdates: Map<UpdateQueue<any>, Update<any>> | null = null;
 // Counter to prevent infinite loops.
 let numberOfReRenders: number = 0;
 const RE_RENDER_LIMIT = 25;
@@ -159,7 +155,7 @@ function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S {
 
 export function useState<S>(
   initialState: (() => S) | S,
-): [S, Dispatch<S, BasicStateAction<S>>] {
+): [S, Dispatch<BasicStateAction<S>>] {
   return useReducer(
     basicStateReducer,
     // useReducer has a special case to support lazy useState initializers
@@ -171,14 +167,14 @@ export function useReducer<S, A>(
   reducer: (S, A) => S,
   initialState: S,
   initialAction: A | void | null,
-): [S, Dispatch<S, A>] {
+): [S, Dispatch<A>] {
   currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
   workInProgressHook = createWorkInProgressHook();
   if (isReRender) {
     // This is a re-render. Apply the new render phase updates to the previous
     // current hook.
-    const queue: UpdateQueue<S, A> = (workInProgressHook.queue: any);
-    const dispatch: Dispatch<S, A> = (queue.dispatch: any);
+    const queue: UpdateQueue<A> = (workInProgressHook.queue: any);
+    const dispatch: Dispatch<A> = (queue.dispatch: any);
     if (renderPhaseUpdates !== null) {
       // Render phase updates are stored in a map of queue -> linked list
       const firstRenderPhaseUpdate = renderPhaseUpdates.get(queue);
@@ -211,11 +207,11 @@ export function useReducer<S, A>(
       initialState = reducer(initialState, initialAction);
     }
     workInProgressHook.memoizedState = initialState;
-    const queue: UpdateQueue<S, A> = (workInProgressHook.queue = {
+    const queue: UpdateQueue<A> = (workInProgressHook.queue = {
       last: null,
       dispatch: null,
     });
-    const dispatch: Dispatch<S, A> = (queue.dispatch = (dispatchAction.bind(
+    const dispatch: Dispatch<A> = (queue.dispatch = (dispatchAction.bind(
       null,
       currentlyRenderingComponent,
       queue,
@@ -294,9 +290,9 @@ export function useLayoutEffect(
   );
 }
 
-function dispatchAction<S, A>(
+function dispatchAction<A>(
   componentIdentity: Object,
-  queue: UpdateQueue<S, A>,
+  queue: UpdateQueue<A>,
   action: A,
 ) {
   invariant(
@@ -310,7 +306,7 @@ function dispatchAction<S, A>(
     // queue -> linked list of updates. After this render pass, we'll restart
     // and apply the stashed updates on top of the work-in-progress hook.
     didScheduleRenderPhaseUpdate = true;
-    const update: Update<S, A> = {
+    const update: Update<A> = {
       action,
       next: null,
     };

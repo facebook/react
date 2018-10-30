@@ -18,7 +18,6 @@ export const {
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   warnAboutDeprecatedLifecycles,
   disableInputAttributeSyncing,
-  enableDispatchCallback_DEPRECATED,
 } = require('ReactFeatureFlags');
 
 // The rest of the flags are static for better dead code elimination.

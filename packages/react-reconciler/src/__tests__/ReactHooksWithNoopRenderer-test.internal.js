@@ -61,7 +61,6 @@ describe('ReactHooksWithNoopRenderer', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.enableHooks = true;
-    ReactFeatureFlags.enableDispatchCallback_DEPRECATED = true;
     ReactFeatureFlags.enableSchedulerTracing = true;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
@@ -231,104 +230,6 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       counter.current.updateLabel('Total');
       expect(ReactNoop.flush()).toEqual(['Total: 7']);
-    });
-
-    it('callbacks', () => {
-      function Counter(props, ref) {
-        const [count, updateCount] = useState(0);
-        useImperativeMethods(ref, () => ({updateCount}));
-        return <Text text={'Count: ' + count} />;
-      }
-      Counter = forwardRef(Counter);
-      const counter = React.createRef(null);
-      ReactNoop.render(<Counter ref={counter} />);
-      ReactNoop.flush();
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-
-      expect(() => {
-        counter.current.updateCount(7, count => {
-          ReactNoop.yield(`Did update count`);
-        });
-      }).toWarnDev(
-        'Warning: Update callbacks (the second argument to ' +
-          'dispatch/setState) are deprecated. Try useEffect instead.',
-        {withoutStack: true},
-      );
-
-      expect(ReactNoop.flush()).toEqual(['Count: 7', 'Did update count']);
-
-      // Update twice in the same batch
-      expect(() => {
-        counter.current.updateCount(1, () => {
-          ReactNoop.yield(`Did update count (first callback)`);
-        });
-      }).toWarnDev(
-        'Warning: Update callbacks (the second argument to ' +
-          'dispatch/setState) are deprecated. Try useEffect instead.',
-        {withoutStack: true},
-      );
-
-      expect(() => {
-        counter.current.updateCount(2, () => {
-          ReactNoop.yield(`Did update count (second callback)`);
-        });
-      }).toWarnDev(
-        'Warning: Update callbacks (the second argument to ' +
-          'dispatch/setState) are deprecated. Try useEffect instead.',
-        {withoutStack: true},
-      );
-
-      expect(ReactNoop.flush()).toEqual([
-        // Component only renders once
-        'Count: 2',
-        'Did update count (first callback)',
-        'Did update count (second callback)',
-      ]);
-    });
-
-    it('does not fire callbacks more than once when rebasing', () => {
-      function Counter(props, ref) {
-        const [count, updateCount] = useState(0);
-        useImperativeMethods(ref, () => ({updateCount}));
-        return <Text text={'Count: ' + count} />;
-      }
-      Counter = forwardRef(Counter);
-      const counter = React.createRef(null);
-      ReactNoop.render(<Counter ref={counter} />);
-      ReactNoop.flush();
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-
-      expect(() => {
-        counter.current.updateCount(1, count => {
-          ReactNoop.yield(`Did update count (low pri)`);
-        });
-      }).toWarnDev(
-        'Warning: Update callbacks (the second argument to ' +
-          'dispatch/setState) are deprecated. Try useEffect instead.',
-        {withoutStack: true},
-      );
-      ReactNoop.flushSync(() => {
-        expect(() => {
-          counter.current.updateCount(2, count => {
-            ReactNoop.yield(`Did update count (high pri)`);
-          });
-        }).toWarnDev(
-          'Warning: Update callbacks (the second argument to ' +
-            'dispatch/setState) are deprecated. Try useEffect instead.',
-          {withoutStack: true},
-        );
-      });
-
-      expect(ReactNoop.clearYields()).toEqual([
-        'Count: 2',
-        'Did update count (high pri)',
-      ]);
-      // The high-pri update is processed again when we render at low priority,
-      // but its callback should not fire again.
-      expect(ReactNoop.flush()).toEqual([
-        'Count: 2',
-        'Did update count (low pri)',
-      ]);
     });
 
     it('returns the same updater function every time', () => {
