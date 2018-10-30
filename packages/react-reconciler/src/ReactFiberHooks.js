@@ -404,7 +404,7 @@ export function useReducer<S, A>(
       let didSkip = false;
       do {
         const updateExpirationTime = update.expirationTime;
-        if (updateExpirationTime > renderExpirationTime) {
+        if (updateExpirationTime < renderExpirationTime) {
           // Priority is insufficient. Skip this update. If this is the first
           // skipped update, the previous update/state is the new base
           // update/state.
@@ -414,10 +414,7 @@ export function useReducer<S, A>(
             newBaseState = newState;
           }
           // Update the remaining priority in the queue.
-          if (
-            remainingExpirationTime === NoWork ||
-            updateExpirationTime < remainingExpirationTime
-          ) {
+          if (updateExpirationTime > remainingExpirationTime) {
             remainingExpirationTime = updateExpirationTime;
           }
         } else {

@@ -265,10 +265,7 @@ function updateMemoComponent(
     return child;
   }
   let currentChild = ((current.child: any): Fiber); // This is always exactly one child
-  if (
-    updateExpirationTime === NoWork ||
-    updateExpirationTime > renderExpirationTime
-  ) {
+  if (updateExpirationTime < renderExpirationTime) {
     // This will be the props with resolved defaultProps,
     // unlike current.memoizedProps which will be the unresolved ones.
     const prevProps = currentChild.memoizedProps;
@@ -302,11 +299,7 @@ function updateSimpleMemoComponent(
   updateExpirationTime,
   renderExpirationTime: ExpirationTime,
 ): null | Fiber {
-  if (
-    current !== null &&
-    (updateExpirationTime === NoWork ||
-      updateExpirationTime > renderExpirationTime)
-  ) {
+  if (current !== null && updateExpirationTime < renderExpirationTime) {
     const prevProps = current.memoizedProps;
     if (
       shallowEqual(prevProps, nextProps) &&
@@ -1471,10 +1464,7 @@ function bailoutOnAlreadyFinishedWork(
 
   // Check if the children have any pending work.
   const childExpirationTime = workInProgress.childExpirationTime;
-  if (
-    childExpirationTime === NoWork ||
-    childExpirationTime > renderExpirationTime
-  ) {
+  if (childExpirationTime < renderExpirationTime) {
     // The children don't have any work either. We can skip them.
     // TODO: Once we add back resuming, we should check if the children are
     // a work-in-progress set. If so, we need to transfer their effects.
@@ -1500,8 +1490,7 @@ function beginWork(
     if (
       oldProps === newProps &&
       !hasLegacyContextChanged() &&
-      (updateExpirationTime === NoWork ||
-        updateExpirationTime > renderExpirationTime)
+      updateExpirationTime < renderExpirationTime
     ) {
       // This fiber does not have any pending work. Bailout without entering
       // the begin phase. There's still some bookkeeping we that needs to be done
@@ -1550,7 +1539,7 @@ function beginWork(
               primaryChildFragment.childExpirationTime;
             if (
               primaryChildExpirationTime !== NoWork &&
-              primaryChildExpirationTime <= renderExpirationTime
+              primaryChildExpirationTime >= renderExpirationTime
             ) {
               // The primary children have pending work. Use the normal path
               // to attempt to render the primary children again.

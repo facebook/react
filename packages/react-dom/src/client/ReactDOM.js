@@ -400,7 +400,7 @@ ReactRoot.prototype.createBatch = function(): Batch {
     let insertBefore = firstBatch;
     while (
       insertBefore !== null &&
-      insertBefore._expirationTime <= expirationTime
+      insertBefore._expirationTime >= expirationTime
     ) {
       insertAfter = insertBefore;
       insertBefore = insertBefore._next;
