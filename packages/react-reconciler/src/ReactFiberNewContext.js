@@ -171,7 +171,7 @@ export function propagateContextChange(
 
           if (
             fiber.expirationTime === NoWork ||
-            fiber.expirationTime > renderExpirationTime
+            fiber.expirationTime < renderExpirationTime
           ) {
             fiber.expirationTime = renderExpirationTime;
           }
@@ -179,7 +179,7 @@ export function propagateContextChange(
           if (
             alternate !== null &&
             (alternate.expirationTime === NoWork ||
-              alternate.expirationTime > renderExpirationTime)
+              alternate.expirationTime < renderExpirationTime)
           ) {
             alternate.expirationTime = renderExpirationTime;
           }
@@ -190,20 +190,20 @@ export function propagateContextChange(
             alternate = node.alternate;
             if (
               node.childExpirationTime === NoWork ||
-              node.childExpirationTime > renderExpirationTime
+              node.childExpirationTime < renderExpirationTime
             ) {
               node.childExpirationTime = renderExpirationTime;
               if (
                 alternate !== null &&
                 (alternate.childExpirationTime === NoWork ||
-                  alternate.childExpirationTime > renderExpirationTime)
+                  alternate.childExpirationTime < renderExpirationTime)
               ) {
                 alternate.childExpirationTime = renderExpirationTime;
               }
             } else if (
               alternate !== null &&
               (alternate.childExpirationTime === NoWork ||
-                alternate.childExpirationTime > renderExpirationTime)
+                alternate.childExpirationTime < renderExpirationTime)
             ) {
               alternate.childExpirationTime = renderExpirationTime;
             } else {

@@ -425,7 +425,7 @@ export function processUpdateQueue<State>(
   let resultState = newBaseState;
   while (update !== null) {
     const updateExpirationTime = update.expirationTime;
-    if (updateExpirationTime > renderExpirationTime) {
+    if (updateExpirationTime < renderExpirationTime) {
       // This update does not have sufficient priority. Skip it.
       if (newFirstUpdate === null) {
         // This is the first skipped update. It will be the first update in
@@ -439,7 +439,7 @@ export function processUpdateQueue<State>(
       // expiration time.
       if (
         newExpirationTime === NoWork ||
-        newExpirationTime > updateExpirationTime
+        newExpirationTime < updateExpirationTime
       ) {
         newExpirationTime = updateExpirationTime;
       }
@@ -476,7 +476,7 @@ export function processUpdateQueue<State>(
   update = queue.firstCapturedUpdate;
   while (update !== null) {
     const updateExpirationTime = update.expirationTime;
-    if (updateExpirationTime > renderExpirationTime) {
+    if (updateExpirationTime < renderExpirationTime) {
       // This update does not have sufficient priority. Skip it.
       if (newFirstCapturedUpdate === null) {
         // This is the first skipped captured update. It will be the first
@@ -492,7 +492,7 @@ export function processUpdateQueue<State>(
       // expiration time.
       if (
         newExpirationTime === NoWork ||
-        newExpirationTime > updateExpirationTime
+        newExpirationTime < updateExpirationTime
       ) {
         newExpirationTime = updateExpirationTime;
       }

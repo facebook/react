@@ -267,7 +267,7 @@ function updateMemoComponent(
   let currentChild = ((current.child: any): Fiber); // This is always exactly one child
   if (
     updateExpirationTime === NoWork ||
-    updateExpirationTime > renderExpirationTime
+    updateExpirationTime < renderExpirationTime
   ) {
     // This will be the props with resolved defaultProps,
     // unlike current.memoizedProps which will be the unresolved ones.
@@ -305,7 +305,7 @@ function updateSimpleMemoComponent(
   if (
     current !== null &&
     (updateExpirationTime === NoWork ||
-      updateExpirationTime > renderExpirationTime)
+      updateExpirationTime < renderExpirationTime)
   ) {
     const prevProps = current.memoizedProps;
     if (
@@ -1473,7 +1473,7 @@ function bailoutOnAlreadyFinishedWork(
   const childExpirationTime = workInProgress.childExpirationTime;
   if (
     childExpirationTime === NoWork ||
-    childExpirationTime > renderExpirationTime
+    childExpirationTime < renderExpirationTime
   ) {
     // The children don't have any work either. We can skip them.
     // TODO: Once we add back resuming, we should check if the children are
@@ -1501,7 +1501,7 @@ function beginWork(
       oldProps === newProps &&
       !hasLegacyContextChanged() &&
       (updateExpirationTime === NoWork ||
-        updateExpirationTime > renderExpirationTime)
+        updateExpirationTime < renderExpirationTime)
     ) {
       // This fiber does not have any pending work. Bailout without entering
       // the begin phase. There's still some bookkeeping we that needs to be done
@@ -1550,7 +1550,7 @@ function beginWork(
               primaryChildFragment.childExpirationTime;
             if (
               primaryChildExpirationTime !== NoWork &&
-              primaryChildExpirationTime <= renderExpirationTime
+              primaryChildExpirationTime >= renderExpirationTime
             ) {
               // The primary children have pending work. Use the normal path
               // to attempt to render the primary children again.

@@ -607,7 +607,7 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
   const earliestRemainingTimeBeforeCommit =
     updateExpirationTimeBeforeCommit === NoWork ||
     (childExpirationTimeBeforeCommit !== NoWork &&
-      childExpirationTimeBeforeCommit < updateExpirationTimeBeforeCommit)
+      childExpirationTimeBeforeCommit > updateExpirationTimeBeforeCommit)
       ? childExpirationTimeBeforeCommit
       : updateExpirationTimeBeforeCommit;
   markCommittedPriorityLevels(root, earliestRemainingTimeBeforeCommit);
@@ -800,7 +800,7 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
   const earliestRemainingTimeAfterCommit =
     updateExpirationTimeAfterCommit === NoWork ||
     (childExpirationTimeAfterCommit !== NoWork &&
-      childExpirationTimeAfterCommit < updateExpirationTimeAfterCommit)
+      childExpirationTimeAfterCommit > updateExpirationTimeAfterCommit)
       ? childExpirationTimeAfterCommit
       : updateExpirationTimeAfterCommit;
   if (earliestRemainingTimeAfterCommit === NoWork) {
@@ -843,7 +843,7 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
           // That indicates that we are waiting for suspense data.
           if (
             earliestRemainingTimeAfterCommit === NoWork ||
-            scheduledExpirationTime < earliestRemainingTimeAfterCommit
+            scheduledExpirationTime > earliestRemainingTimeAfterCommit
           ) {
             pendingInteractionMap.delete(scheduledExpirationTime);
 
@@ -907,14 +907,14 @@ function resetChildExpirationTime(
       if (
         newChildExpirationTime === NoWork ||
         (childUpdateExpirationTime !== NoWork &&
-          childUpdateExpirationTime < newChildExpirationTime)
+          childUpdateExpirationTime > newChildExpirationTime)
       ) {
         newChildExpirationTime = childUpdateExpirationTime;
       }
       if (
         newChildExpirationTime === NoWork ||
         (childChildExpirationTime !== NoWork &&
-          childChildExpirationTime < newChildExpirationTime)
+          childChildExpirationTime > newChildExpirationTime)
       ) {
         newChildExpirationTime = childChildExpirationTime;
       }
@@ -934,14 +934,14 @@ function resetChildExpirationTime(
       if (
         newChildExpirationTime === NoWork ||
         (childUpdateExpirationTime !== NoWork &&
-          childUpdateExpirationTime < newChildExpirationTime)
+          childUpdateExpirationTime > newChildExpirationTime)
       ) {
         newChildExpirationTime = childUpdateExpirationTime;
       }
       if (
         newChildExpirationTime === NoWork ||
         (childChildExpirationTime !== NoWork &&
-          childChildExpirationTime < newChildExpirationTime)
+          childChildExpirationTime > newChildExpirationTime)
       ) {
         newChildExpirationTime = childChildExpirationTime;
       }
@@ -1244,7 +1244,7 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
       const interactions: Set<Interaction> = new Set();
       root.pendingInteractionMap.forEach(
         (scheduledInteractions, scheduledExpirationTime) => {
-          if (scheduledExpirationTime <= expirationTime) {
+          if (scheduledExpirationTime >= expirationTime) {
             scheduledInteractions.forEach(interaction =>
               interactions.add(interaction),
             );
@@ -1602,7 +1602,7 @@ function computeExpirationForFiber(currentTime: ExpirationTime, fiber: Fiber) {
     // all interactive updates when needed.
     if (
       lowestPriorityPendingInteractiveExpirationTime === NoWork ||
-      expirationTime > lowestPriorityPendingInteractiveExpirationTime
+      expirationTime < lowestPriorityPendingInteractiveExpirationTime
     ) {
       lowestPriorityPendingInteractiveExpirationTime = expirationTime;
     }
@@ -1699,7 +1699,7 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
   // Update the source fiber's expiration time
   if (
     fiber.expirationTime === NoWork ||
-    fiber.expirationTime > expirationTime
+    fiber.expirationTime < expirationTime
   ) {
     fiber.expirationTime = expirationTime;
   }
@@ -1707,7 +1707,7 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
   if (
     alternate !== null &&
     (alternate.expirationTime === NoWork ||
-      alternate.expirationTime > expirationTime)
+      alternate.expirationTime < expirationTime)
   ) {
     alternate.expirationTime = expirationTime;
   }
@@ -1721,20 +1721,20 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
       alternate = node.alternate;
       if (
         node.childExpirationTime === NoWork ||
-        node.childExpirationTime > expirationTime
+        node.childExpirationTime < expirationTime
       ) {
         node.childExpirationTime = expirationTime;
         if (
           alternate !== null &&
           (alternate.childExpirationTime === NoWork ||
-            alternate.childExpirationTime > expirationTime)
+            alternate.childExpirationTime < expirationTime)
         ) {
           alternate.childExpirationTime = expirationTime;
         }
       } else if (
         alternate !== null &&
         (alternate.childExpirationTime === NoWork ||
-          alternate.childExpirationTime > expirationTime)
+          alternate.childExpirationTime < expirationTime)
       ) {
         alternate.childExpirationTime = expirationTime;
       }
@@ -1809,7 +1809,7 @@ function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
   if (
     !isWorking &&
     nextRenderExpirationTime !== NoWork &&
-    expirationTime < nextRenderExpirationTime
+    expirationTime > nextRenderExpirationTime
   ) {
     // This is an interruption. (Used for performance tracking.)
     interruptedBy = fiber;
@@ -1914,7 +1914,7 @@ function scheduleCallbackWithExpirationTime(
 ) {
   if (callbackExpirationTime !== NoWork) {
     // A callback is already scheduled. Check its expiration time (timeout).
-    if (expirationTime > callbackExpirationTime) {
+    if (expirationTime < callbackExpirationTime) {
       // Existing callback has sufficient timeout. Exit.
       return;
     } else {
@@ -2088,7 +2088,7 @@ function addRootToSchedule(root: FiberRoot, expirationTime: ExpirationTime) {
     const remainingExpirationTime = root.expirationTime;
     if (
       remainingExpirationTime === NoWork ||
-      expirationTime < remainingExpirationTime
+      expirationTime > remainingExpirationTime
     ) {
       // Update the priority.
       root.expirationTime = expirationTime;
@@ -2140,7 +2140,7 @@ function findHighestPriorityRoot() {
       } else {
         if (
           highestPriorityWork === NoWork ||
-          remainingExpirationTime < highestPriorityWork
+          remainingExpirationTime > highestPriorityWork
         ) {
           // Update the priority, if it's higher
           highestPriorityWork = remainingExpirationTime;
@@ -2217,7 +2217,7 @@ function performWork(minExpirationTime: ExpirationTime, isYieldy: boolean) {
     currentSchedulerTime = currentRendererTime;
 
     if (enableUserTimingAPI) {
-      const didExpire = nextFlushedExpirationTime < currentRendererTime;
+      const didExpire = nextFlushedExpirationTime > currentRendererTime;
       const timeout = expirationTimeToMs(nextFlushedExpirationTime);
       stopRequestCallbackTimer(didExpire, timeout);
     }
@@ -2226,13 +2226,13 @@ function performWork(minExpirationTime: ExpirationTime, isYieldy: boolean) {
       nextFlushedRoot !== null &&
       nextFlushedExpirationTime !== NoWork &&
       (minExpirationTime === NoWork ||
-        minExpirationTime >= nextFlushedExpirationTime) &&
-      !(didYield && currentRendererTime < nextFlushedExpirationTime)
+        minExpirationTime <= nextFlushedExpirationTime) &&
+      !(didYield && currentRendererTime > nextFlushedExpirationTime)
     ) {
       performWorkOnRoot(
         nextFlushedRoot,
         nextFlushedExpirationTime,
-        currentRendererTime < nextFlushedExpirationTime,
+        currentRendererTime > nextFlushedExpirationTime,
       );
       findHighestPriorityRoot();
       recomputeCurrentRendererTime();
@@ -2243,7 +2243,7 @@ function performWork(minExpirationTime: ExpirationTime, isYieldy: boolean) {
       nextFlushedRoot !== null &&
       nextFlushedExpirationTime !== NoWork &&
       (minExpirationTime === NoWork ||
-        minExpirationTime >= nextFlushedExpirationTime)
+        minExpirationTime <= nextFlushedExpirationTime)
     ) {
       performWorkOnRoot(nextFlushedRoot, nextFlushedExpirationTime, false);
       findHighestPriorityRoot();
@@ -2398,7 +2398,7 @@ function completeRoot(
 ): void {
   // Check if there's a batch that matches this expiration time.
   const firstBatch = root.firstBatch;
-  if (firstBatch !== null && firstBatch._expirationTime <= expirationTime) {
+  if (firstBatch !== null && firstBatch._expirationTime >= expirationTime) {
     if (completedBatches === null) {
       completedBatches = [firstBatch];
     } else {
