@@ -105,9 +105,6 @@ describe('SchedulerDOM', () => {
       scheduleCallback(cb);
       advanceOneFrame({timeLeftInFrame: 15});
       expect(cb).toHaveBeenCalledTimes(1);
-      // should not have timed out and should include a timeRemaining method
-      expect(cb.mock.calls[0][0].didTimeout).toBe(false);
-      expect(typeof cb.mock.calls[0][0].timeRemaining()).toBe('number');
     });
 
     it('inserts its rAF callback as early into the queue as possible', () => {
@@ -144,16 +141,6 @@ describe('SchedulerDOM', () => {
         // after a delay, calls as many callbacks as it has time for
         advanceOneFrame({timeLeftInFrame: 15});
         expect(callbackLog).toEqual(['A', 'B']);
-        // callbackA should not have timed out and should include a timeRemaining method
-        expect(callbackA.mock.calls[0][0].didTimeout).toBe(false);
-        expect(typeof callbackA.mock.calls[0][0].timeRemaining()).toBe(
-          'number',
-        );
-        // callbackA should not have timed out and should include a timeRemaining method
-        expect(callbackB.mock.calls[0][0].didTimeout).toBe(false);
-        expect(typeof callbackB.mock.calls[0][0].timeRemaining()).toBe(
-          'number',
-        );
       });
 
       it("accepts callbacks betweeen animationFrame and postMessage and doesn't stall", () => {

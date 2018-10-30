@@ -319,7 +319,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           scheduledCallbackTimeout === -1 ||
           scheduledCallbackTimeout > newTimeout
         ) {
-          scheduledCallbackTimeout = newTimeout;
+          scheduledCallbackTimeout = elapsedTimeInMs + newTimeout;
         }
       }
       return 0;
@@ -332,6 +332,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       scheduledCallback = null;
       scheduledCallbackTimeout = -1;
     },
+
+    shouldYield,
 
     scheduleTimeout: setTimeout,
     cancelTimeout: clearTimeout,
@@ -512,35 +514,44 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   let yieldedValues = null;
 
+  let didYield;
   let unitsRemaining;
 
-  function* flushUnitsOfWork(n: number): Generator<Array<mixed>, void, void> {
-    let didStop = false;
-    while (!didStop && scheduledCallback !== null) {
-      let cb = scheduledCallback;
-      scheduledCallback = null;
-      unitsRemaining = n;
-      cb({
-        timeRemaining() {
-          if (yieldedValues !== null) {
-            return 0;
-          }
-          if (unitsRemaining-- > 0) {
-            return 999;
-          }
-          didStop = true;
-          return 0;
-        },
-        didTimeout:
-          scheduledCallbackTimeout !== -1 &&
-          elapsedTimeInMs > scheduledCallbackTimeout,
-      });
-
-      if (yieldedValues !== null) {
-        const values = yieldedValues;
-        yieldedValues = null;
-        yield values;
+  function shouldYield() {
+    if (
+      scheduledCallbackTimeout === -1 ||
+      elapsedTimeInMs > scheduledCallbackTimeout
+    ) {
+      return false;
+    } else {
+      if (didYield || yieldedValues !== null) {
+        return true;
       }
+      if (unitsRemaining-- > 0) {
+        return false;
+      }
+      didYield = true;
+      return true;
+    }
+  }
+
+  function* flushUnitsOfWork(n: number): Generator<Array<mixed>, void, void> {
+    unitsRemaining = n + 1;
+    didYield = false;
+    try {
+      while (!didYield && scheduledCallback !== null) {
+        let cb = scheduledCallback;
+        scheduledCallback = null;
+        cb();
+        if (yieldedValues !== null) {
+          const values = yieldedValues;
+          yieldedValues = null;
+          yield values;
+        }
+      }
+    } finally {
+      unitsRemaining = -1;
+      didYield = false;
     }
   }
 

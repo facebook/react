@@ -202,6 +202,7 @@ export const scheduleDeferredCallback =
   TestRendererScheduling.scheduleDeferredCallback;
 export const cancelDeferredCallback =
   TestRendererScheduling.cancelDeferredCallback;
+export const shouldYield = TestRendererScheduling.shouldYield;
 
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
