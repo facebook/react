@@ -1055,7 +1055,7 @@ class ReactDOMServerRenderer {
             return '';
           }
           case REACT_CONTEXT_TYPE: {
-            let reactContext: ReactContext<any> = nextChild.type;
+            let reactContext: ReactContext<any> = (nextChild: any).type;
             // The logic below for Context differs depending on PROD or DEV mode. In
             // DEV mode, we create a separate object for Context.Consumer that acts
             // like a proxy to Context. This proxy object adds unnecessary code in PROD
@@ -1082,7 +1082,7 @@ class ReactDOMServerRenderer {
                 reactContext = (reactContext: any)._context;
               }
             }
-            const nextProps: any = nextChild.props;
+            const nextProps: any = (nextChild: any).props;
             const nextValue = reactContext._currentValue;
 
             const nextChildren = toArray(nextProps.children(nextValue));
