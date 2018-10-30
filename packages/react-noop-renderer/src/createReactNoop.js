@@ -956,9 +956,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       rootID: string = DEFAULT_ROOT_ID,
     ) {
       const root: any = roots.get(rootID);
+      const expiration = NoopRenderer.computeUniqueAsyncExpiration();
       const batch = {
         _defer: true,
-        _expirationTime: 1,
+        _expirationTime: expiration,
         _onComplete: () => {
           root.firstBatch = null;
         },
@@ -969,7 +970,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       expect(actual).toEqual(expectedFlush);
       return (expectedCommit: Array<mixed>) => {
         batch._defer = false;
-        NoopRenderer.flushRoot(root, 1);
+        NoopRenderer.flushRoot(root, expiration);
         expect(yieldedValues).toEqual(expectedCommit);
       };
     },

@@ -22,7 +22,6 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
-import {NoWork} from './ReactFiberExpirationTime';
 import {ContextProvider, ClassComponent} from 'shared/ReactWorkTags';
 
 import invariant from 'shared/invariant';
@@ -169,17 +168,13 @@ export function propagateContextChange(
             enqueueUpdate(fiber, update);
           }
 
-          if (
-            fiber.expirationTime === NoWork ||
-            fiber.expirationTime > renderExpirationTime
-          ) {
+          if (fiber.expirationTime < renderExpirationTime) {
             fiber.expirationTime = renderExpirationTime;
           }
           let alternate = fiber.alternate;
           if (
             alternate !== null &&
-            (alternate.expirationTime === NoWork ||
-              alternate.expirationTime > renderExpirationTime)
+            alternate.expirationTime < renderExpirationTime
           ) {
             alternate.expirationTime = renderExpirationTime;
           }
@@ -188,22 +183,17 @@ export function propagateContextChange(
           let node = fiber.return;
           while (node !== null) {
             alternate = node.alternate;
-            if (
-              node.childExpirationTime === NoWork ||
-              node.childExpirationTime > renderExpirationTime
-            ) {
+            if (node.childExpirationTime < renderExpirationTime) {
               node.childExpirationTime = renderExpirationTime;
               if (
                 alternate !== null &&
-                (alternate.childExpirationTime === NoWork ||
-                  alternate.childExpirationTime > renderExpirationTime)
+                alternate.childExpirationTime < renderExpirationTime
               ) {
                 alternate.childExpirationTime = renderExpirationTime;
               }
             } else if (
               alternate !== null &&
-              (alternate.childExpirationTime === NoWork ||
-                alternate.childExpirationTime > renderExpirationTime)
+              alternate.childExpirationTime < renderExpirationTime
             ) {
               alternate.childExpirationTime = renderExpirationTime;
             } else {
