@@ -8,7 +8,8 @@
     "LICENSE",
     "README.md",
     "index.js",
-    "cjs/"
+    "cjs/",
+    "umd/"
   ],
   "peerDependencies": {
     "react": "^16.3.0-alpha.1"
