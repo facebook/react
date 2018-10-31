@@ -168,7 +168,12 @@ export default {
         if (!pureScopes.has(reference.resolved.scope)) continue;
         // Narrow the scope of a dependency if it is, say, a member expression.
         // Then normalize the narrowed dependency.
-        const dependencyNode = getDependency(reference.identifier);
+
+        const referenceNode = fastFindReferenceWithParent(
+          node,
+          reference.identifier,
+        );
+        const dependencyNode = getDependency(referenceNode);
         const dependency = normalizeDependencyNode(dependencyNode);
         // Add the dependency to a map so we can make sure it is referenced
         // again in our dependencies array.
@@ -312,11 +317,72 @@ function getDependency(node) {
 function normalizeDependencyNode(node) {
   if (node.type === 'Identifier') {
     return node.name;
-  } else if (node.type === 'MemberExpression' && !node.parent.computed) {
+  } else if (node.type === 'MemberExpression' && !node.computed) {
     const object = normalizeDependencyNode(node.object);
     const property = normalizeDependencyNode(node.property);
     return `${object}.${property}`;
   } else {
     throw new Error(`Unexpected node type: ${node.type}`);
   }
+}
+
+/**
+ * ESLint won't assign node.parent to references from context.getScope()
+ *
+ * So instead we search for the node from an ancestor assigning node.parent
+ * as we go. This mutates the AST.
+ *
+ * This traversal is:
+ * - optimized by only searching nodes with a range surrounding our target node
+ * - agnostic to AST node types, it looks for `{ type: string, ... }`
+ */
+function fastFindReferenceWithParent(start, target) {
+  let queue = [start];
+  let item = null;
+
+  while (queue.length) {
+    item = queue.shift();
+
+    if (isSameIdentifier(item, target)) return item;
+    if (!isAncestorNodeOf(item, target)) continue;
+
+    for (let [key, value] of Object.entries(item)) {
+      if (key === 'parent') continue;
+      if (isNodeLike(value)) {
+        value.parent = item;
+        queue.push(value);
+      } else if (Array.isArray(value)) {
+        value.forEach(val => {
+          if (isNodeLike(val)) {
+            val.parent = item;
+            queue.push(val);
+          }
+        });
+      }
+    }
+  }
+
+  return null;
+}
+
+function isNodeLike(val) {
+  return (
+    typeof val === 'object' &&
+    val !== null &&
+    !Array.isArray(val) &&
+    typeof val.type === 'string'
+  );
+}
+
+function isSameIdentifier(a, b) {
+  return (
+    a.type === 'Identifier' &&
+    a.name === b.name &&
+    a.range[0] === b.range[0] &&
+    a.range[1] === b.range[1]
+  );
+}
+
+function isAncestorNodeOf(a, b) {
+  return a.range[0] <= b.range[0] && a.range[1] >= b.range[1];
 }
