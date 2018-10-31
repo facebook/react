@@ -123,7 +123,9 @@ export default {
      */
     function visitFunctionExpression(node) {
       // We only want to lint nodes which are reactive hook callbacks.
-      if (!isReactiveHookCallback(node, options)) return;
+      if (!isReactiveHookCallback(node, options)) {
+        return;
+      }
 
       // Get the reactive hook node.
       const reactiveHook = node.parent.callee;
@@ -132,7 +134,9 @@ export default {
       // second argument then the reactive callback will re-run on every render.
       // So no need to check for dependency inclusion.
       const declaredDependenciesNode = node.parent.arguments[1];
-      if (!declaredDependenciesNode) return;
+      if (!declaredDependenciesNode) {
+        return;
+      }
 
       // Get the current scope.
       const scope = context.getScope();
@@ -150,13 +154,17 @@ export default {
         let currentScope = scope.upper;
         while (currentScope) {
           pureScopes.add(currentScope);
-          if (currentScope.type === 'function') break;
+          if (currentScope.type === 'function') {
+            break;
+          }
           currentScope = currentScope.upper;
         }
         // If there is no parent function scope then there are no pure scopes.
         // The ones we've collected so far are incorrect. So don't continue with
         // the lint.
-        if (!currentScope) return;
+        if (!currentScope) {
+          return;
+        }
       }
 
       // Get dependencies from all our resolved references in pure scopes.
@@ -164,8 +172,12 @@ export default {
       for (const reference of scope.references) {
         // If this reference is not resolved or it is not declared in a pure
         // scope then we don't care about this reference.
-        if (!reference.resolved) continue;
-        if (!pureScopes.has(reference.resolved.scope)) continue;
+        if (!reference.resolved) {
+          continue;
+        }
+        if (!pureScopes.has(reference.resolved.scope)) {
+          continue;
+        }
         // Narrow the scope of a dependency if it is, say, a member expression.
         // Then normalize the narrowed dependency.
 
@@ -178,7 +190,9 @@ export default {
         // Add the dependency to a map so we can make sure it is referenced
         // again in our dependencies array.
         let nodes = dependencies.get(dependency);
-        if (!nodes) dependencies.set(dependency, (nodes = []));
+        if (!nodes) {
+          dependencies.set(dependency, (nodes = []));
+        }
         nodes.push(dependencyNode);
       }
 
@@ -198,7 +212,9 @@ export default {
       } else {
         for (const declaredDependencyNode of declaredDependenciesNode.elements) {
           // Skip elided elements.
-          if (declaredDependencyNode === null) continue;
+          if (declaredDependencyNode === null) {
+            continue;
+          }
           // If we see a spread element then add a special warning.
           if (declaredDependencyNode.type === 'SpreadElement') {
             context.report(
@@ -343,11 +359,18 @@ function fastFindReferenceWithParent(start, target) {
   while (queue.length) {
     item = queue.shift();
 
-    if (isSameIdentifier(item, target)) return item;
-    if (!isAncestorNodeOf(item, target)) continue;
+    if (isSameIdentifier(item, target)) {
+      return item;
+    }
+
+    if (!isAncestorNodeOf(item, target)) {
+      continue;
+    }
 
     for (let [key, value] of Object.entries(item)) {
-      if (key === 'parent') continue;
+      if (key === 'parent') {
+        continue;
+      }
       if (isNodeLike(value)) {
         value.parent = item;
         queue.push(value);
