@@ -860,7 +860,7 @@ class App extends React.Component {
         });
         break;
       default:
-        throw new Error('Switch statement should be exhuastive');
+        throw new Error('Switch statement should be exhaustive');
     }
 
     // Sort
@@ -887,7 +887,7 @@ class App extends React.Component {
         });
       }
       default:
-        throw new Error('Switch statement should be exhuastive');
+        throw new Error('Switch statement should be exhaustive');
     }
   }
 
