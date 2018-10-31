@@ -10,6 +10,7 @@
 'use strict';
 
 import {
+  REACT_ASYNC_MODE_TYPE,
   REACT_CONCURRENT_MODE_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_ELEMENT_TYPE,
@@ -32,6 +33,7 @@ export function typeOf(object: any) {
         const type = object.type;
 
         switch (type) {
+          case REACT_ASYNC_MODE_TYPE:
           case REACT_CONCURRENT_MODE_TYPE:
           case REACT_FRAGMENT_TYPE:
           case REACT_PROFILER_TYPE:
@@ -57,8 +59,8 @@ export function typeOf(object: any) {
   return undefined;
 }
 
-// AsyncMode alias is deprecated along with isAsyncMode
-export const AsyncMode = REACT_CONCURRENT_MODE_TYPE;
+// AsyncMode is deprecated along with isAsyncMode
+export const AsyncMode = REACT_ASYNC_MODE_TYPE;
 export const ConcurrentMode = REACT_CONCURRENT_MODE_TYPE;
 export const ContextConsumer = REACT_CONTEXT_TYPE;
 export const ContextProvider = REACT_PROVIDER_TYPE;
@@ -86,7 +88,7 @@ export function isAsyncMode(object: any) {
       );
     }
   }
-  return isConcurrentMode(object);
+  return isConcurrentMode(object) || typeOf(object) === REACT_ASYNC_MODE_TYPE;
 }
 export function isConcurrentMode(object: any) {
   return typeOf(object) === REACT_CONCURRENT_MODE_TYPE;
