@@ -111,7 +111,7 @@ describe('ReactDOMServerHooks', () => {
       expect(domNode.textContent).toEqual('Count: 0');
     });
 
-    it('does not trigger a re-renders when updater is invoked outside current render function', async () => {
+    it('does not trigger re-renders when updater is invoked outside current render function', async () => {
       function UpdateCount({setCount, count, children}) {
         if (count < 3) {
           setCount(c => c + 1);
@@ -252,6 +252,32 @@ describe('ReactDOMServerHooks', () => {
         ]);
         expect(domNode.tagName).toEqual('SPAN');
         expect(domNode.textContent).toEqual('3');
+      },
+    );
+
+    it('does not trigger re-renders when dispatch is invoked outside current render function', async () => {
+        function UpdateCount({dispatch, count, children}) {
+          if (count < 3) {
+            dispatch('increment');
+          }
+          return <span>{children}</span>;
+        }
+        function reducer(state, action) {
+          return action === 'increment' ? state + 1 : state;
+        }
+        function Counter() {
+          let [count, dispatch] = useReducer(reducer, 0);
+          return (
+            <div>
+              <UpdateCount dispatch={dispatch} count={count}>
+                Count: {count}
+              </UpdateCount>
+            </div>
+          );
+        }
+
+        const domNode = await serverRender(<Counter />);
+        expect(domNode.textContent).toEqual('Count: 0');
       },
     );
 
