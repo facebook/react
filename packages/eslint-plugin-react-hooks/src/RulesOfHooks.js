@@ -139,7 +139,9 @@ export default {
 
           // Compute `paths` and cache it. Guarding against cycles.
           cache.set(segment.id, null);
-          if (segment.prevSegments.length === 0) {
+          if (codePath.thrownSegments.includes(segment)) {
+            paths = 0;
+          } else if (segment.prevSegments.length === 0) {
             paths = 1;
           } else {
             paths = 0;
@@ -199,7 +201,9 @@ export default {
 
           // Compute `paths` and cache it. Guarding against cycles.
           cache.set(segment.id, null);
-          if (segment.nextSegments.length === 0) {
+          if (codePath.thrownSegments.includes(segment)) {
+            paths = 0;
+          } else if (segment.nextSegments.length === 0) {
             paths = 1;
           } else {
             paths = 0;
