@@ -33,6 +33,9 @@ var IDLE_PRIORITY = maxSigned31BitInt;
 var firstCallbackNode = null;
 
 var currentDidTimeout = false;
+// Pausing the scheduler is useful for debugging.
+var isSchedulerPaused = false;
+
 var currentPriorityLevel = NormalPriority;
 var currentEventStartTime = -1;
 var currentExpirationTime = -1;
@@ -173,13 +176,17 @@ function flushImmediateWork() {
 }
 
 function flushWork(didTimeout) {
+  // Exit right away if we're currently paused
+  if (isSchedulerPaused) {
+    return;
+  }
   isExecutingCallback = true;
   const previousDidTimeout = currentDidTimeout;
   currentDidTimeout = didTimeout;
   try {
     if (didTimeout) {
       // Flush all the expired callbacks without yielding.
-      while (firstCallbackNode !== null) {
+      while (firstCallbackNode !== null && !isSchedulerPaused) {
         // Read the current time. Flush all the callbacks that expire at or
         // earlier than that time. Then read the current time again and repeat.
         // This optimizes for as few performance.now calls as possible.
@@ -189,7 +196,8 @@ function flushWork(didTimeout) {
             flushFirstCallback();
           } while (
             firstCallbackNode !== null &&
-            firstCallbackNode.expirationTime <= currentTime
+            firstCallbackNode.expirationTime <= currentTime &&
+            !isSchedulerPaused
           );
           continue;
         }
@@ -199,6 +207,9 @@ function flushWork(didTimeout) {
       // Keep flushing callbacks until we run out of time in the frame.
       if (firstCallbackNode !== null) {
         do {
+          if (isSchedulerPaused) {
+            break;
+          }
           flushFirstCallback();
         } while (firstCallbackNode !== null && !shouldYieldToHost());
       }
@@ -340,6 +351,31 @@ function unstable_scheduleCallback(callback, deprecated_options) {
   }
 
   return newNode;
+}
+
+function unstable_pauseExecution() {
+  isSchedulerPaused = true;
+}
+
+function unstable_continueExecution() {
+  isSchedulerPaused = false;
+  if (firstCallbackNode !== null) {
+    ensureHostCallbackIsScheduled();
+  }
+}
+
+function unstable_dumpQueue() {
+  var node = firstCallbackNode;
+  var callbacks = [];
+
+  if (node !== null) {
+    do {
+      callbacks.push(node);
+      node = node.next;
+    } while (node !== firstCallbackNode);
+  }
+
+  return callbacks;
 }
 
 function unstable_cancelCallback(callbackNode) {
@@ -659,5 +695,8 @@ export {
   unstable_wrapCallback,
   unstable_getCurrentPriorityLevel,
   unstable_shouldYield,
+  unstable_continueExecution,
+  unstable_pauseExecution,
+  unstable_dumpQueue,
   getCurrentTime as unstable_now,
 };
