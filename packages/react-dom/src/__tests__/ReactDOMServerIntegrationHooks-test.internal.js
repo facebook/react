@@ -256,30 +256,29 @@ describe('ReactDOMServerHooks', () => {
     );
 
     it('does not trigger re-renders when dispatch is invoked outside current render function', async () => {
-        function UpdateCount({dispatch, count, children}) {
-          if (count < 3) {
-            dispatch('increment');
-          }
-          return <span>{children}</span>;
+      function UpdateCount({dispatch, count, children}) {
+        if (count < 3) {
+          dispatch('increment');
         }
-        function reducer(state, action) {
-          return action === 'increment' ? state + 1 : state;
-        }
-        function Counter() {
-          let [count, dispatch] = useReducer(reducer, 0);
-          return (
-            <div>
-              <UpdateCount dispatch={dispatch} count={count}>
-                Count: {count}
-              </UpdateCount>
-            </div>
-          );
-        }
+        return <span>{children}</span>;
+      }
+      function reducer(state, action) {
+        return action === 'increment' ? state + 1 : state;
+      }
+      function Counter() {
+        let [count, dispatch] = useReducer(reducer, 0);
+        return (
+          <div>
+            <UpdateCount dispatch={dispatch} count={count}>
+              Count: {count}
+            </UpdateCount>
+          </div>
+        );
+      }
 
-        const domNode = await serverRender(<Counter />);
-        expect(domNode.textContent).toEqual('Count: 0');
-      },
-    );
+      const domNode = await serverRender(<Counter />);
+      expect(domNode.textContent).toEqual('Count: 0');
+    });
 
     itRenders(
       'using reducer passed at time of render, not time of dispatch',
