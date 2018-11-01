@@ -30,6 +30,7 @@
     "server.js",
     "server.browser.js",
     "server.node.js",
+    "fizz.js",
     "test-utils.js",
     "unstable-fire.js",
     "unstable-native-dependencies.js",

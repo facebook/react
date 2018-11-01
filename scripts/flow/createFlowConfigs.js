@@ -18,7 +18,7 @@ const configTemplate = fs
   .readFileSync(__dirname + '/config/flowconfig')
   .toString();
 
-function writeConfig(renderer) {
+function writeConfig(renderer, isFizzSupported) {
   const folder = __dirname + '/' + renderer;
   mkdirp.sync(folder);
 
@@ -27,6 +27,10 @@ function writeConfig(renderer) {
     `
 module.name_mapper='react-reconciler/inline.${renderer}$$' -> 'react-reconciler/inline-typed'
 module.name_mapper='ReactFiberHostConfig$$' -> 'forks/ReactFiberHostConfig.${renderer}'
+module.name_mapper='react-stream/inline.${renderer}$$' -> 'react-stream/inline-typed'
+module.name_mapper='ReactFizzHostConfig$$' -> 'forks/ReactFizzHostConfig.${
+      isFizzSupported ? renderer : 'custom'
+    }'
     `.trim(),
   );
 
@@ -61,6 +65,6 @@ ${disclaimer}
 // so that we can run those checks in parallel if we want.
 inlinedHostConfigs.forEach(rendererInfo => {
   if (rendererInfo.isFlowTyped) {
-    writeConfig(rendererInfo.shortName);
+    writeConfig(rendererInfo.shortName, rendererInfo.isFizzSupported);
   }
 });

@@ -158,6 +158,15 @@ const bundles = [
     externals: ['react', 'stream'],
   },
 
+  /******* React DOM Fizz Server *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    moduleType: RENDERER,
+    entry: 'react-dom/fizz',
+    global: 'ReactDOMFizzServer',
+    externals: ['react'],
+  },
+
   /******* React ART *******/
   {
     bundleTypes: [
@@ -320,6 +329,28 @@ const bundles = [
       }),
   },
 
+  /******* React Noop Server Renderer (used for tests) *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-noop-renderer/server',
+    global: 'ReactNoopRendererServer',
+    externals: ['react', 'expect'],
+    // React Noop uses generators. However GCC currently
+    // breaks when we attempt to use them in the output.
+    // So we precompile them with regenerator, and include
+    // it as a runtime dependency of React Noop. In practice
+    // this isn't an issue because React Noop is only used
+    // in our tests. We wouldn't want to do this for any
+    // public package though.
+    babel: opts =>
+      Object.assign({}, opts, {
+        plugins: opts.plugins.concat([
+          require.resolve('babel-plugin-transform-regenerator'),
+        ]),
+      }),
+  },
+
   /******* React Reconciler *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -335,6 +366,15 @@ const bundles = [
     moduleType: RECONCILER,
     entry: 'react-reconciler/persistent',
     global: 'ReactPersistentReconciler',
+    externals: ['react'],
+  },
+
+  /******* React Stream *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RECONCILER,
+    entry: 'react-stream',
+    global: 'ReactStream',
     externals: ['react'],
   },
 
