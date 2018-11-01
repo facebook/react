@@ -66,7 +66,12 @@ import {
 } from './ReactChildFiber';
 import {processUpdateQueue} from './ReactUpdateQueue';
 import {NoWork, Never} from './ReactFiberExpirationTime';
-import {ConcurrentMode, StrictMode, NoContext} from './ReactTypeOfMode';
+import {
+  ConcurrentMode,
+  NoContext,
+  ProfileMode,
+  StrictMode,
+} from './ReactTypeOfMode';
 import {
   shouldSetTextContent,
   shouldDeprioritizeSubtree,
@@ -743,7 +748,7 @@ function mountLazyComponent(
 ) {
   if (_current !== null) {
     // An lazy component only mounts if it suspended inside a non-
-    // concurrent tree, in an inconsistent state. We want to tree it like
+    // concurrent tree, in an inconsistent state. We want to treat it like
     // a new mount, even though an empty version of it already committed.
     // Disconnect the alternate pointers.
     _current.alternate = null;
@@ -829,7 +834,7 @@ function mountIncompleteClassComponent(
 ) {
   if (_current !== null) {
     // An incomplete component only mounts if it suspended inside a non-
-    // concurrent tree, in an inconsistent state. We want to tree it like
+    // concurrent tree, in an inconsistent state. We want to treat it like
     // a new mount, even though an empty version of it already committed.
     // Disconnect the alternate pointers.
     _current.alternate = null;
@@ -886,7 +891,7 @@ function mountIndeterminateComponent(
 ) {
   if (_current !== null) {
     // An indeterminate component only mounts if it suspended inside a non-
-    // concurrent tree, in an inconsistent state. We want to tree it like
+    // concurrent tree, in an inconsistent state. We want to treat it like
     // a new mount, even though an empty version of it already committed.
     // Disconnect the alternate pointers.
     _current.alternate = null;
@@ -1239,6 +1244,15 @@ function updateSuspenseComponent(
           NoWork,
           null,
         );
+
+        if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
+          // Fiber treeBaseDuration must be at least as large as the sum of children treeBaseDurations.
+          // Otherwise the profiler's onRender metrics will be off,
+          // and the DevTools Profiler flamegraph will visually break as well.
+          primaryChildFragment.treeBaseDuration =
+            currentPrimaryChild.treeBaseDuration;
+        }
+
         primaryChildFragment.effectTag |= Placement;
         primaryChildFragment.child = currentPrimaryChild;
         currentPrimaryChild.return = primaryChildFragment;

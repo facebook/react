@@ -16,6 +16,9 @@ runPlaceholderTests('ReactSuspensePlaceholder (persistence)', () =>
 );
 
 function runPlaceholderTests(suiteLabel, loadReactNoop) {
+  let advanceTimeBy;
+  let mockNow;
+  let Profiler;
   let React;
   let ReactTestRenderer;
   let ReactFeatureFlags;
@@ -27,13 +30,24 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
   describe(suiteLabel, () => {
     beforeEach(() => {
       jest.resetModules();
+
+      let currentTime = 0;
+      mockNow = jest.fn().mockImplementation(() => currentTime);
+      global.Date.now = mockNow;
+      advanceTimeBy = amount => {
+        currentTime += amount;
+      };
+
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
       ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+      ReactFeatureFlags.enableProfilerTimer = true;
       ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
       React = require('react');
       ReactTestRenderer = require('react-test-renderer');
+      ReactTestRenderer.unstable_setNowImplementation(mockNow);
       ReactCache = require('react-cache');
 
+      Profiler = React.unstable_Profiler;
       Suspense = React.Suspense;
 
       TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
@@ -214,6 +228,46 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
       // Render the final update. A should still be hidden, because it was
       // given a `hidden` prop.
       expect(root).toMatchRenderedOutput('AB2C');
+    });
+
+    it('properly accounts for profiler base times when showing the fallback UI', () => {
+      const onRender = jest.fn();
+
+      const Fallback = () => {
+        advanceTimeBy(3);
+        return 'Loading...';
+      };
+
+      const Suspending = () => {
+        advanceTimeBy(2);
+        return <AsyncText ms={1000} text="Loaded" />;
+      };
+
+      function App() {
+        return (
+          <Profiler id="root" onRender={onRender}>
+            <Suspense maxDuration={500} fallback={<Fallback />}>
+              <Suspending />
+            </Suspense>
+          </Profiler>
+        );
+      }
+
+      // Initial mount
+      const root = ReactTestRenderer.create(<App />);
+      expect(root.toJSON()).toEqual('Loading...');
+      expect(onRender).toHaveBeenCalledTimes(2);
+      expect(onRender.mock.calls[0][3]).toBe(2);
+
+      // The fallback commit treeBaseTime should include both the
+      // 2ms spent in Suspending and the 3ms spent in Fallback.
+      expect(onRender.mock.calls[1][3]).toBe(5);
+
+      jest.advanceTimersByTime(1000);
+
+      expect(root.toJSON()).toEqual('Loaded');
+      expect(onRender).toHaveBeenCalledTimes(3);
+      expect(onRender.mock.calls[2][3]).toBe(2);
     });
   });
 }
