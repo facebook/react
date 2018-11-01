@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {Fiber} from './ReactFiber';
 
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';

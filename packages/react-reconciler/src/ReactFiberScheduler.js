@@ -78,6 +78,9 @@ import {
   noTimeout,
   prepareForCommit,
   resetAfterCommit,
+  scheduleTimeout,
+  cancelTimeout,
+  noTimeout,
 } from './ReactFiberHostConfig';
 import {
   markPendingPriorityLevel,

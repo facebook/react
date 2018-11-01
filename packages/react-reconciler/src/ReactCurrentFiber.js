@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {Fiber} from './ReactFiber';
+
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   IndeterminateComponent,
@@ -20,8 +22,6 @@ import describeComponentFrame from 'shared/describeComponentFrame';
 import getComponentName from 'shared/getComponentName';
 
 const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
-
-import type {Fiber} from './ReactFiber';
 
 type LifeCyclePhase = 'render' | 'getChildContext';
 

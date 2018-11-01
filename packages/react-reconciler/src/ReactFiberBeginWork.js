@@ -8,7 +8,7 @@
  */
 
 import type {ReactProviderType, ReactContext} from 'shared/ReactTypes';
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
