@@ -353,4 +353,21 @@ describe('forwardRef', () => {
     expect(ref.current).toBe(null);
     expect(differentRef.current.type).toBe('div');
   });
+
+  it('warns on forwardRef(memo(...))', () => {
+    expect(() => {
+      React.forwardRef(
+        React.memo((props, ref) => {
+          return null;
+        }),
+      );
+    }).toWarnDev(
+      [
+        'Warning: forwardRef requires a render function but received a `memo` ' +
+          'component. Instead of forwardRef(memo(...)), use ' +
+          'memo(forwardRef(...)).',
+      ],
+      {withoutStack: true},
+    );
+  });
 });
