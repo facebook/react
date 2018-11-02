@@ -7,6 +7,6 @@
  * @flow
  */
 
-'use strict';
-
-module.exports = require('./fizz.node');
+export function formatChunk(): Uint8Array {
+  return new Uint8Array(0);
+}

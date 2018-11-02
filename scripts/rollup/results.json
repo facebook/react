@@ -942,8 +942,8 @@
       "filename": "react-dom-fizz.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-dom",
-      "size": 1182,
-      "gzip": 600
+      "size": 988,
+      "gzip": 530
     },
     {
       "filename": "react-dom-fizz.production.min.js",
@@ -956,43 +956,43 @@
       "filename": "ReactDOMFizzServer-dev.js",
       "bundleType": "FB_WWW_DEV",
       "packageName": "react-dom",
-      "size": 1168,
-      "gzip": 587
+      "size": 972,
+      "gzip": 517
     },
     {
       "filename": "ReactDOMFizzServer-prod.js",
       "bundleType": "FB_WWW_PROD",
       "packageName": "react-dom",
-      "size": 547,
-      "gzip": 302
+      "size": 587,
+      "gzip": 307
     },
     {
       "filename": "react-noop-renderer-server.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-noop-renderer",
-      "size": 1254,
-      "gzip": 657
+      "size": 1326,
+      "gzip": 693
     },
     {
       "filename": "react-noop-renderer-server.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-noop-renderer",
-      "size": 457,
-      "gzip": 326
+      "size": 498,
+      "gzip": 344
     },
     {
       "filename": "react-stream.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-stream",
-      "size": 2365,
-      "gzip": 1114
+      "size": 3135,
+      "gzip": 1176
     },
     {
       "filename": "react-stream.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-stream",
-      "size": 608,
-      "gzip": 361
+      "size": 652,
+      "gzip": 391
     }
   ]
 }

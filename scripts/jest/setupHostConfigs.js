@@ -18,9 +18,11 @@ jest.mock('react-reconciler/persistent', () => {
   };
 });
 const shimFizzHostConfigPath = 'react-stream/src/ReactFizzHostConfig';
+const shimFizzFormatConfigPath = 'react-stream/src/ReactFizzFormatConfig';
 jest.mock('react-stream', () => {
-  return config => {
+  return (config, configFormat) => {
     jest.mock(shimFizzHostConfigPath, () => config);
+    jest.mock(shimFizzFormatConfigPath, () => configFormat);
     return require.requireActual('react-stream');
   };
 });
@@ -72,6 +74,14 @@ inlinedHostConfigs.forEach(rendererInfo => {
         hasImportedShimmedConfig = true;
         return require.requireActual(
           `react-stream/src/forks/ReactFizzHostConfig.${
+            rendererInfo.shortName
+          }.js`
+        );
+      });
+      jest.mock(shimFizzFormatConfigPath, () => {
+        hasImportedShimmedConfig = true;
+        return require.requireActual(
+          `react-stream/src/forks/ReactFizzFormatConfig.${
             rendererInfo.shortName
           }.js`
         );

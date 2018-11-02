@@ -16,13 +16,18 @@
 
 import ReactFizzRenderer from 'react-stream';
 
-const ReactNoopServer = ReactFizzRenderer({
-  ping() {},
-  write() {},
-});
+const ReactNoopServer = ReactFizzRenderer(
+  {
+    scheduleWork(callback) {},
+    writeBuffer(request, buffer) {},
+  },
+  {
+    formatChunk() {},
+  },
+);
 
 function render(children: React$Element<any>) {
-  ReactNoopServer.readBuffer(ReactNoopServer.createRequest({}));
+  ReactNoopServer.flushChunk(ReactNoopServer.createRequest({}));
 }
 
 export default {

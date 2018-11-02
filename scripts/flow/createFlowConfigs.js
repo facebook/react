@@ -22,15 +22,15 @@ function writeConfig(renderer, isFizzSupported) {
   const folder = __dirname + '/' + renderer;
   mkdirp.sync(folder);
 
+  const fizzRenderer = isFizzSupported ? renderer : 'custom';
   const config = configTemplate.replace(
     '%REACT_RENDERER_FLOW_OPTIONS%',
     `
 module.name_mapper='react-reconciler/inline.${renderer}$$' -> 'react-reconciler/inline-typed'
 module.name_mapper='ReactFiberHostConfig$$' -> 'forks/ReactFiberHostConfig.${renderer}'
 module.name_mapper='react-stream/inline.${renderer}$$' -> 'react-stream/inline-typed'
-module.name_mapper='ReactFizzHostConfig$$' -> 'forks/ReactFizzHostConfig.${
-      isFizzSupported ? renderer : 'custom'
-    }'
+module.name_mapper='ReactFizzHostConfig$$' -> 'forks/ReactFizzHostConfig.${fizzRenderer}'
+module.name_mapper='ReactFizzFormatConfig$$' -> 'forks/ReactFizzFormatConfig.${fizzRenderer}'
     `.trim(),
   );
 

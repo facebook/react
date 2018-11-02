@@ -8,7 +8,8 @@
  */
 
 import type {RequestInfo} from './ReactFizzHostConfig';
-import {ping, write} from './ReactFizzHostConfig';
+import {scheduleWork, writeBuffer} from './ReactFizzHostConfig';
+import {formatChunk} from './ReactFizzFormatConfig';
 
 type OpaqueRequest = {requestInfo: RequestInfo};
 
@@ -16,7 +17,10 @@ export function createRequest(requestInfo: RequestInfo): OpaqueRequest {
   return {requestInfo};
 }
 
-export function readBuffer(request: OpaqueRequest): void {
-  ping(request.requestInfo);
-  write(request.requestInfo);
+function performWork(request: OpaqueRequest): void {
+  writeBuffer(request.requestInfo, formatChunk());
+}
+
+export function flushChunk(request: OpaqueRequest): void {
+  scheduleWork(() => performWork(request));
 }

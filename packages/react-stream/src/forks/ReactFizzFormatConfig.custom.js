@@ -26,5 +26,4 @@
 declare var $$$hostConfig: any;
 export opaque type RequestInfo = mixed; // eslint-disable-line no-undef
 
-export const scheduleWork = $$$hostConfig.scheduleWork;
-export const writeBuffer = $$$hostConfig.writeBuffer;
+export const formatChunk = $$$hostConfig.formatChunk;

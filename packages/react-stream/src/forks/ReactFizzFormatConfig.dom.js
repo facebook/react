@@ -7,6 +7,4 @@
  * @flow
  */
 
-'use strict';
-
-module.exports = require('./fizz.node');
+export * from 'react-dom/src/server/ReactDOMFizzServerFormatConfig';

@@ -9,6 +9,6 @@
 
 export type RequestInfo = {};
 
-export function ping(request: RequestInfo) {}
+export function scheduleWork(callback: () => void) {}
 
-export function write(request: RequestInfo) {}
+export function writeBuffer(request: RequestInfo, buffer: Uint8Array) {}

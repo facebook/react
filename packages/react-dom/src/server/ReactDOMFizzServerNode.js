@@ -7,10 +7,10 @@
  * @flow
  */
 
-import {createRequest, readBuffer} from 'react-stream/inline.dom';
+import {createRequest, flushChunk} from 'react-stream/inline.dom';
 
 function render() {
-  readBuffer(createRequest({}));
+  flushChunk(createRequest({}));
 }
 export default {
   render,
