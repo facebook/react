@@ -44,6 +44,7 @@
     "create-react-class": "^15.6.3",
     "cross-env": "^5.1.1",
     "danger": "^3.0.4",
+    "error-stack-parser": "^2.0.2",
     "eslint": "^4.1.0",
     "eslint-config-fbjs": "^1.1.1",
     "eslint-plugin-babel": "^3.3.0",
