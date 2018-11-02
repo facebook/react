@@ -102,10 +102,10 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
       return props.text;
     }
 
-    function AsyncText(props) {
-      const text = props.text;
+    function AsyncText({fakeRenderDuration = 0, ms, text}) {
+      advanceTimeBy(fakeRenderDuration);
       try {
-        TextResource.read([props.text, props.ms]);
+        TextResource.read([text, ms]);
         ReactTestRenderer.unstable_yield(text);
         return text;
       } catch (promise) {
@@ -230,17 +230,18 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
       expect(root).toMatchRenderedOutput('AB2C');
     });
 
-    it('properly accounts for profiler base times when showing the fallback UI', () => {
+    it('properly accounts for base durations when a suspended times out', () => {
+      // Order of parameters: id, phase, actualDuration, treeBaseDuration
       const onRender = jest.fn();
 
       const Fallback = () => {
-        advanceTimeBy(3);
+        advanceTimeBy(5);
         return 'Loading...';
       };
 
       const Suspending = () => {
         advanceTimeBy(2);
-        return <AsyncText ms={1000} text="Loaded" />;
+        return <AsyncText ms={1000} text="Loaded" fakeRenderDuration={1} />;
       };
 
       function App() {
@@ -257,17 +258,28 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
       const root = ReactTestRenderer.create(<App />);
       expect(root.toJSON()).toEqual('Loading...');
       expect(onRender).toHaveBeenCalledTimes(2);
-      expect(onRender.mock.calls[0][3]).toBe(2);
 
-      // The fallback commit treeBaseTime should include both the
-      // 2ms spent in Suspending and the 3ms spent in Fallback.
-      expect(onRender.mock.calls[1][3]).toBe(5);
+      // Initial mount should be 3ms–
+      // 2ms from Suspending, and 1ms from the AsyncText it renders.
+      expect(onRender.mock.calls[0][2]).toBe(3);
+      expect(onRender.mock.calls[0][3]).toBe(3);
+
+      // When the fallback UI is displayed, and the origina UI hidden,
+      // the baseDuration should only include the 5ms spent rendering Fallback,
+      // but the treeBaseDuration should include that and the 3ms spent in Suspending.
+      expect(onRender.mock.calls[1][2]).toBe(5);
+      expect(onRender.mock.calls[1][3]).toBe(8);
 
       jest.advanceTimersByTime(1000);
 
       expect(root.toJSON()).toEqual('Loaded');
       expect(onRender).toHaveBeenCalledTimes(3);
-      expect(onRender.mock.calls[2][3]).toBe(2);
+
+      // When the suspending data is resolved and our final UI is rendered,
+      // the baseDuration should only include the 1ms re-rendering AsyncText,
+      // but the treeBaseDuration should include that and the 2ms spent rendering Suspending.
+      expect(onRender.mock.calls[2][2]).toBe(1);
+      expect(onRender.mock.calls[2][3]).toBe(3);
     });
   });
 }

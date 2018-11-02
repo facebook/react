@@ -1314,6 +1314,12 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
         didFatal = true;
         onUncaughtError(thrownValue);
       } else {
+        if (enableProfilerTimer && nextUnitOfWork.mode & ProfileMode) {
+          // Record the time spent rendering before an error was thrown.
+          // This avoids inaccurate Profiler durations in the case of a suspended render.
+          stopProfilerTimerIfRunningAndRecordDelta(nextUnitOfWork, true);
+        }
+
         if (__DEV__) {
           // Reset global debug state
           // We assume this is defined in DEV
