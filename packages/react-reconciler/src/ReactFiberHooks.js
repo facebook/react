@@ -36,7 +36,7 @@ import {
 } from './ReactFiberScheduler';
 
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
+import areHookInputsEqual from 'shared/areHookInputsEqual';
 
 type Update<A> = {
   expirationTime: ExpirationTime,
@@ -545,7 +545,7 @@ function useEffectImpl(fiberEffectTag, hookEffectTag, create, inputs): void {
   if (currentHook !== null) {
     const prevEffect = currentHook.memoizedState;
     destroy = prevEffect.destroy;
-    if (inputsAreEqual(nextInputs, prevEffect.inputs)) {
+    if (areHookInputsEqual(nextInputs, prevEffect.inputs)) {
       pushEffect(NoHookEffect, create, destroy, nextInputs);
       return;
     }
@@ -609,7 +609,7 @@ export function useCallback<T>(
   const prevState = workInProgressHook.memoizedState;
   if (prevState !== null) {
     const prevInputs = prevState[1];
-    if (inputsAreEqual(nextInputs, prevInputs)) {
+    if (areHookInputsEqual(nextInputs, prevInputs)) {
       return prevState[0];
     }
   }
@@ -630,7 +630,7 @@ export function useMemo<T>(
   const prevState = workInProgressHook.memoizedState;
   if (prevState !== null) {
     const prevInputs = prevState[1];
-    if (inputsAreEqual(nextInputs, prevInputs)) {
+    if (areHookInputsEqual(nextInputs, prevInputs)) {
       return prevState[0];
     }
   }
@@ -700,34 +700,4 @@ function dispatchAction<A>(fiber: Fiber, queue: UpdateQueue<A>, action: A) {
     queue.last = update;
     scheduleWork(fiber, expirationTime);
   }
-}
-
-function inputsAreEqual(arr1, arr2) {
-  // Don't bother comparing lengths in prod because these arrays should be
-  // passed inline.
-  if (__DEV__) {
-    warning(
-      arr1.length === arr2.length,
-      'Detected a variable number of hook dependencies. The length of the ' +
-        'dependencies array should be constant between renders.\n\n' +
-        'Previous: %s\n' +
-        'Incoming: %s',
-      arr1.join(', '),
-      arr2.join(', '),
-    );
-  }
-  for (let i = 0; i < arr1.length; i++) {
-    // Inlined Object.is polyfill.
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is
-    const val1 = arr1[i];
-    const val2 = arr2[i];
-    if (
-      (val1 === val2 && (val1 !== 0 || 1 / val1 === 1 / (val2: any))) ||
-      (val1 !== val1 && val2 !== val2) // eslint-disable-line no-self-compare
-    ) {
-      continue;
-    }
-    return false;
-  }
-  return true;
 }
