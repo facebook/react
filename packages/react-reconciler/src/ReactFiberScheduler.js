@@ -1318,6 +1318,16 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
           // Record the time spent rendering before an error was thrown.
           // This avoids inaccurate Profiler durations in the case of a suspended render.
           stopProfilerTimerIfRunningAndRecordDelta(nextUnitOfWork, true);
+
+          // HACK Also propagate actualDuration for the time spent in the fiber that errored.
+          // This avoids inaccurate Profiler durations in the case of a suspended render.
+          // This happens automatically for sync renders, because of resetChildExpirationTime.
+          if (nextUnitOfWork.mode & ConcurrentMode) {
+            const returnFiber = nextUnitOfWork.return;
+            if (returnFiber !== null) {
+              returnFiber.actualDuration += nextUnitOfWork.actualDuration;
+            }
+          }
         }
 
         if (__DEV__) {
