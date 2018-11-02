@@ -62,9 +62,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
     jest.advanceTimersByTime(ms);
     // Wait until the end of the current tick
-    return new Promise(resolve => {
-      setImmediate(resolve);
-    });
+    // We cannot use a timer since we're faking them
+    return Promise.resolve().then(() => {});
   }
 
   function Text(props) {
