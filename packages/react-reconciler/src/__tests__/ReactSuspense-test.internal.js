@@ -312,8 +312,19 @@ describe('ReactSuspense', () => {
       },
     );
 
-    expect(root).toFlushAndThrow(
-      'An update was suspended, but no placeholder UI was provided.',
+    let err;
+    try {
+      root.unstable_flushAll();
+    } catch (e) {
+      err = e;
+    }
+    expect(err.message.replace(/at .+?:\d+/g, 'at **')).toBe(
+      'AsyncText suspended while rendering, but no fallback UI was specified.\n' +
+        '\n' +
+        'Add a <Suspense fallback=...> component higher in the tree to provide ' +
+        'a loading indicator or placeholder to display.\n' +
+        (__DEV__ ? '    in AsyncText (at **)\n' : '    in AsyncText\n') +
+        (__DEV__ ? '    in Suspense (at **)' : '    in Suspense'),
     );
     expect(ReactTestRenderer).toHaveYielded(['Suspend! [Hi]', 'Suspend! [Hi]']);
   });
