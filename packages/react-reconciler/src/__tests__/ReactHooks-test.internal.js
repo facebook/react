@@ -51,4 +51,32 @@ describe('ReactHooks', () => {
     ]);
     expect(ReactTestRenderer).toHaveYielded(['Did commit: A, B']);
   });
+
+  it('warns for bad useEffect return values', () => {
+    const {useLayoutEffect} = React;
+    function App(props) {
+      useLayoutEffect(() => {
+        return props.return;
+      });
+      return null;
+    }
+    let root;
+
+    expect(() => {
+      root = ReactTestRenderer.create(<App return={17} />);
+    }).toWarnDev([
+      'Warning: useEffect function must return a cleanup function or ' +
+        'nothing.\n' +
+        '    in App (at **)',
+    ]);
+
+    expect(() => {
+      root.update(<App return={Promise.resolve()} />);
+    }).toWarnDev([
+      'Warning: useEffect function must return a cleanup function or ' +
+        'nothing. Promises and useEffect(async () => ...) are not supported, ' +
+        'but you can call an async function inside an effect.\n' +
+        '    in App (at **)',
+    ]);
+  });
 });

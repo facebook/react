@@ -295,8 +295,26 @@ function commitHookEffectList(
       if ((effect.tag & mountTag) !== NoHookEffect) {
         // Mount
         const create = effect.create;
-        const destroy = create();
-        effect.destroy = typeof destroy === 'function' ? destroy : null;
+        let destroy = create();
+        if (typeof destroy !== 'function') {
+          if (__DEV__) {
+            if (destroy !== null && destroy !== undefined) {
+              warningWithoutStack(
+                false,
+                'useEffect function must return a cleanup function or ' +
+                  'nothing.%s%s',
+                typeof destroy.then === 'function'
+                  ? ' Promises and useEffect(async () => ...) are not ' +
+                    'supported, but you can call an async function inside an ' +
+                    'effect.'
+                  : '',
+                getStackByFiberInDevAndProd(finishedWork),
+              );
+            }
+          }
+          destroy = null;
+        }
+        effect.destroy = destroy;
       }
       effect = effect.next;
     } while (effect !== firstEffect);
