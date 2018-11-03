@@ -88,6 +88,25 @@ function defineRefPropWarningGetter(props, displayName) {
   });
 }
 
+function setProps(config, props) {
+  for (let propName in config) {
+    if (
+      hasOwnProperty.call(config, propName) &&
+      !RESERVED_PROPS.hasOwnProperty(propName)
+    ) {
+      props[propName] = config[propName];
+    }
+  }
+}
+
+function setDefaultProps(defaultProps, props) {
+  for (let propName in defaultProps) {
+    if (props[propName] === undefined) {
+      props[propName] = defaultProps[propName];
+    }
+  }
+}
+
 /**
  * Factory method to create a new React element. This no longer adheres to
  * the class pattern, so do not use new to call it. Also, no instanceof check
@@ -169,8 +188,6 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
  * See https://reactjs.org/docs/react-api.html#createelement
  */
 export function createElement(type, config, children) {
-  let propName;
-
   // Reserved names are extracted
   const props = {};
 
@@ -190,14 +207,7 @@ export function createElement(type, config, children) {
     self = config.__self === undefined ? null : config.__self;
     source = config.__source === undefined ? null : config.__source;
     // Remaining properties are added to a new props object
-    for (propName in config) {
-      if (
-        hasOwnProperty.call(config, propName) &&
-        !RESERVED_PROPS.hasOwnProperty(propName)
-      ) {
-        props[propName] = config[propName];
-      }
-    }
+    setProps(config, props);
   }
 
   // Children can be more than one argument, and those are transferred onto
@@ -220,12 +230,7 @@ export function createElement(type, config, children) {
 
   // Resolve default props
   if (type && type.defaultProps) {
-    const defaultProps = type.defaultProps;
-    for (propName in defaultProps) {
-      if (props[propName] === undefined) {
-        props[propName] = defaultProps[propName];
-      }
-    }
+    setDefaultProps(type.defaultProps, props);
   }
   if (__DEV__) {
     if (key || ref) {
@@ -292,8 +297,6 @@ export function cloneElement(element, config, children) {
     element,
   );
 
-  let propName;
-
   // Original props are copied
   const props = Object.assign({}, element.props);
 
@@ -321,23 +324,7 @@ export function cloneElement(element, config, children) {
     }
 
     // Remaining properties override existing props
-    let defaultProps;
-    if (element.type && element.type.defaultProps) {
-      defaultProps = element.type.defaultProps;
-    }
-    for (propName in config) {
-      if (
-        hasOwnProperty.call(config, propName) &&
-        !RESERVED_PROPS.hasOwnProperty(propName)
-      ) {
-        if (config[propName] === undefined && defaultProps !== undefined) {
-          // Resolve default props
-          props[propName] = defaultProps[propName];
-        } else {
-          props[propName] = config[propName];
-        }
-      }
-    }
+    setProps(config, props);
   }
 
   // Children can be more than one argument, and those are transferred onto
@@ -351,6 +338,11 @@ export function cloneElement(element, config, children) {
       childArray[i] = arguments[i + 2];
     }
     props.children = childArray;
+  }
+
+  // Resolve default props
+  if (element.type && element.type.defaultProps) {
+    setDefaultProps(element.type.defaultProps, props);
   }
 
   return ReactElement(element.type, key, ref, self, source, owner, props);
