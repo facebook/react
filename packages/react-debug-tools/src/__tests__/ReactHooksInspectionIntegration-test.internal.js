@@ -142,4 +142,26 @@ describe('ReactHooksInspectionIntergration', () => {
       {name: 'Callback', value: updateStates, subHooks: []},
     ]);
   });
+
+  it('should inspect the value of the current provider in useContext', () => {
+    let MyContext = React.createContext('default');
+    function Foo(props) {
+      let value = React.useContext(MyContext);
+      return <div>{value}</div>;
+    }
+    let renderer = ReactTestRenderer.create(
+      <MyContext.Provider value="contextual">
+        <Foo prop="prop" />
+      </MyContext.Provider>,
+    );
+    let childFiber = renderer.root.findByType(Foo)._currentFiber();
+    let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    expect(tree).toEqual([
+      {
+        name: 'Context',
+        value: 'contextual',
+        subHooks: [],
+      },
+    ]);
+  });
 });

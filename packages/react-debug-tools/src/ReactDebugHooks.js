@@ -7,13 +7,17 @@
  * @flow
  */
 
-import type {ReactContext} from 'shared/ReactTypes';
+import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {Hook} from 'react-reconciler/src/ReactFiberHooks';
 
 import ErrorStackParser from 'error-stack-parser';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {FunctionComponent, SimpleMemoComponent} from 'shared/ReactWorkTags';
+import {
+  FunctionComponent,
+  SimpleMemoComponent,
+  ContextProvider,
+} from 'shared/ReactWorkTags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -429,6 +433,27 @@ export function inspectHooks<Props>(
   return buildTree(rootStack, readHookLog);
 }
 
+function setupContexts(contextMap: Map<ReactContext<any>, any>, fiber: Fiber) {
+  let current = fiber;
+  while (current) {
+    if (current.tag === ContextProvider) {
+      const providerType: ReactProviderType<any> = current.type;
+      const context: ReactContext<any> = providerType._context;
+      if (!contextMap.has(context)) {
+        // Store the current value that we're going to restore later.
+        contextMap.set(context, context._currentValue);
+        // Set the inner most provider value on the context.
+        context._currentValue = current.memoizedProps.value;
+      }
+    }
+    current = current.return;
+  }
+}
+
+function restoreContexts(contextMap: Map<ReactContext<any>, any>) {
+  contextMap.forEach((value, context) => (context._currentValue = value));
+}
+
 export function inspectHooksOfFiber(fiber: Fiber) {
   if (fiber.tag !== FunctionComponent && fiber.tag !== SimpleMemoComponent) {
     throw new Error(
@@ -442,9 +467,12 @@ export function inspectHooksOfFiber(fiber: Fiber) {
   // Set up the current hook so that we can step through and read the
   // current state from them.
   currentHook = (fiber.memoizedState: Hook);
+  let contextMap = new Map();
   try {
+    setupContexts(contextMap, fiber);
     return inspectHooks(type, props);
   } finally {
     currentHook = null;
+    restoreContexts(contextMap);
   }
 }

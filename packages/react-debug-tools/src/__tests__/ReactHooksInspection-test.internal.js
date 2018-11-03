@@ -200,4 +200,20 @@ describe('ReactHooksInspection', () => {
       },
     ]);
   });
+
+  it('should inspect the default value using the useContext hook', () => {
+    let MyContext = React.createContext('default');
+    function Foo(props) {
+      let value = React.useContext(MyContext);
+      return <div>{value}</div>;
+    }
+    let tree = ReactDebugTools.inspectHooks(Foo, {});
+    expect(tree).toEqual([
+      {
+        name: 'Context',
+        value: 'default',
+        subHooks: [],
+      },
+    ]);
+  });
 });
