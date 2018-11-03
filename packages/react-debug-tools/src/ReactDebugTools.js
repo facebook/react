@@ -7,6 +7,6 @@
  * @flow
  */
 
-import {inspectHooks} from './ReactDebugHooks';
+import {inspectHooks, inspectHooksOfFiber} from './ReactDebugHooks';
 
-export {inspectHooks};
+export {inspectHooks, inspectHooksOfFiber};

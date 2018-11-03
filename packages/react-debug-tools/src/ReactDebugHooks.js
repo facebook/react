@@ -8,9 +8,12 @@
  */
 
 import type {ReactContext} from 'shared/ReactTypes';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {Hook} from 'react-reconciler/src/ReactFiberHooks';
 
 import ErrorStackParser from 'error-stack-parser';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
+import {FunctionComponent, SimpleMemoComponent} from 'shared/ReactWorkTags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -63,6 +66,15 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
   return primitiveStackCache;
 }
 
+let currentHook: null | Hook = null;
+function nextHook(): null | Hook {
+  let hook = currentHook;
+  if (hook !== null) {
+    currentHook = hook.next;
+  }
+  return hook;
+}
+
 function readContext<T>(
   context: ReactContext<T>,
   observedBits: void | number | boolean,
@@ -86,8 +98,13 @@ function useContext<T>(
 function useState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {
+  let hook = nextHook();
   let state: S =
-    typeof initialState === 'function' ? initialState() : initialState;
+    hook !== null
+      ? hook.memoizedState
+      : typeof initialState === 'function'
+        ? initialState()
+        : initialState;
   hookLog.push({primitive: 'State', stackError: new Error(), value: state});
   return [state, (action: BasicStateAction<S>) => {}];
 }
@@ -97,27 +114,32 @@ function useReducer<S, A>(
   initialState: S,
   initialAction: A | void | null,
 ): [S, Dispatch<A>] {
+  let hook = nextHook();
+  let state = hook !== null ? hook.memoizedState : initialState;
   hookLog.push({
     primitive: 'Reducer',
     stackError: new Error(),
-    value: initialState,
+    value: state,
   });
-  return [initialState, (action: A) => {}];
+  return [state, (action: A) => {}];
 }
 
 function useRef<T>(initialValue: T): {current: T} {
+  let hook = nextHook();
+  let ref = hook !== null ? hook.memoizedState : {current: initialValue};
   hookLog.push({
     primitive: 'Ref',
     stackError: new Error(),
-    value: initialValue,
+    value: ref.current,
   });
-  return {current: initialValue};
+  return ref;
 }
 
 function useMutationEffect(
   create: () => mixed,
   inputs: Array<mixed> | void | null,
 ): void {
+  nextHook();
   hookLog.push({
     primitive: 'MutationEffect',
     stackError: new Error(),
@@ -129,6 +151,7 @@ function useLayoutEffect(
   create: () => mixed,
   inputs: Array<mixed> | void | null,
 ): void {
+  nextHook();
   hookLog.push({
     primitive: 'LayoutEffect',
     stackError: new Error(),
@@ -140,6 +163,7 @@ function useEffect(
   create: () => mixed,
   inputs: Array<mixed> | void | null,
 ): void {
+  nextHook();
   hookLog.push({primitive: 'Effect', stackError: new Error(), value: create});
 }
 
@@ -148,18 +172,28 @@ function useImperativeMethods<T>(
   create: () => T,
   inputs: Array<mixed> | void | null,
 ): void {
+  nextHook();
+  // We don't actually store the instance anywhere if there is no ref callback
+  // and if there is a ref callback it might not store it but if it does we
+  // have no way of knowing where. So let's only enable introspection of the
+  // ref itself if it is using the object form.
+  let instance = undefined;
+  if (ref !== null && typeof ref === 'object') {
+    instance = ref.current;
+  }
   hookLog.push({
     primitive: 'ImperativeMethods',
     stackError: new Error(),
-    value: create(),
+    value: instance,
   });
 }
 
 function useCallback<T>(callback: T, inputs: Array<mixed> | void | null): T {
+  let hook = nextHook();
   hookLog.push({
     primitive: 'Callback',
     stackError: new Error(),
-    value: callback,
+    value: hook !== null ? hook.memoizedState[0] : callback,
   });
   return callback;
 }
@@ -168,7 +202,8 @@ function useMemo<T>(
   nextCreate: () => T,
   inputs: Array<mixed> | void | null,
 ): T {
-  let value = nextCreate();
+  let hook = nextHook();
+  let value = hook !== null ? hook.memoizedState[0] : nextCreate();
   hookLog.push({primitive: 'Memo', stackError: new Error(), value});
   return value;
 }
@@ -392,4 +427,24 @@ export function inspectHooks<Props>(
 
   let rootStack = ErrorStackParser.parse(ancestorStackError);
   return buildTree(rootStack, readHookLog);
+}
+
+export function inspectHooksOfFiber(fiber: Fiber) {
+  if (fiber.tag !== FunctionComponent && fiber.tag !== SimpleMemoComponent) {
+    throw new Error(
+      'Unknown Fiber. Needs to be a function component to inspect hooks.',
+    );
+  }
+  // Warm up the cache so that it doesn't consume the currentHook.
+  getPrimitiveStackCache();
+  let type = fiber.type;
+  let props = fiber.memoizedProps;
+  // Set up the current hook so that we can step through and read the
+  // current state from them.
+  currentHook = (fiber.memoizedState: Hook);
+  try {
+    return inspectHooks(type, props);
+  } finally {
+    currentHook = null;
+  }
 }
