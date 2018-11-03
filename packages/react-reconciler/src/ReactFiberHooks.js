@@ -326,8 +326,9 @@ export function useState<S>(
 ): [S, Dispatch<BasicStateAction<S>>] {
   return useReducer(
     basicStateReducer,
-    // useReducer has a special case to support lazy useState initializers
-    (initialState: any),
+    // If initialState is a lazy initializer, we call it with undefined.
+    (undefined: any),
+    initialState,
   );
 }
 
@@ -441,12 +442,7 @@ export function useReducer<S, A>(
   }
 
   // There's no existing queue, so this is the initial render.
-  if (reducer === basicStateReducer) {
-    // Special case for `useState`.
-    if (typeof initialState === 'function') {
-      initialState = initialState();
-    }
-  } else if (initialAction !== undefined && initialAction !== null) {
+  if (initialAction !== undefined && initialAction !== null) {
     initialState = reducer(initialState, initialAction);
   }
   workInProgressHook.memoizedState = workInProgressHook.baseState = initialState;
