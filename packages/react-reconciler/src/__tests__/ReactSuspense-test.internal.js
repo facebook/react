@@ -631,5 +631,64 @@ describe('ReactSuspense', () => {
       expect(root).toFlushAndYield(['Step: 3']);
       expect(root).toMatchRenderedOutput('Step: 3');
     });
+
+    it('does not remount the fallback while suspended children resolve in sync mode', () => {
+      let mounts = 0;
+      class ShouldMountOnce extends React.Component {
+        componentDidMount() {
+          mounts++;
+        }
+        render() {
+          return <Text text="Loading..." />;
+        }
+      }
+
+      function App(props) {
+        return (
+          <Suspense maxDuration={10} fallback={<ShouldMountOnce />}>
+            <AsyncText ms={1000} text="Child 1" />
+            <AsyncText ms={2000} text="Child 2" />
+            <AsyncText ms={3000} text="Child 3" />
+          </Suspense>
+        );
+      }
+
+      const root = ReactTestRenderer.create(<App />);
+
+      // Initial render
+      expect(ReactTestRenderer).toHaveYielded([
+        'Suspend! [Child 1]',
+        'Suspend! [Child 2]',
+        'Suspend! [Child 3]',
+        'Loading...',
+      ]);
+      expect(root).toFlushAndYield([]);
+      jest.advanceTimersByTime(1000);
+      expect(ReactTestRenderer).toHaveYielded([
+        'Promise resolved [Child 1]',
+        'Child 1',
+        'Suspend! [Child 2]',
+        'Suspend! [Child 3]',
+      ]);
+      jest.advanceTimersByTime(1000);
+      expect(ReactTestRenderer).toHaveYielded([
+        'Promise resolved [Child 2]',
+        'Child 2',
+        'Suspend! [Child 3]',
+        // TODO: This suspends twice because there were two pings, once for each
+        // time Child 2 suspended. This is only an issue in sync mode because
+        // pings aren't batched.
+        'Suspend! [Child 3]',
+      ]);
+      jest.advanceTimersByTime(1000);
+      expect(ReactTestRenderer).toHaveYielded([
+        'Promise resolved [Child 3]',
+        'Child 3',
+      ]);
+      expect(root).toMatchRenderedOutput(
+        ['Child 1', 'Child 2', 'Child 3'].join(''),
+      );
+      expect(mounts).toBe(1);
+    });
   });
 });
