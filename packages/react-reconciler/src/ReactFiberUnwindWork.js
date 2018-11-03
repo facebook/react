@@ -32,7 +32,6 @@ import {
   Incomplete,
   NoEffect,
   ShouldCapture,
-  Callback as CallbackEffect,
   LifecycleEffectMask,
 } from 'shared/ReactSideEffectTags';
 import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
@@ -66,7 +65,6 @@ import {
 import invariant from 'shared/invariant';
 import maxSigned31BitInt from './maxSigned31BitInt';
 import {
-  NoWork,
   Sync,
   expirationTimeToMs,
   LOW_PRIORITY_EXPIRATION,
@@ -176,7 +174,7 @@ function throwException(
         const current = workInProgress.alternate;
         if (current !== null) {
           const currentState: SuspenseState | null = current.memoizedState;
-          if (currentState !== null && currentState.didTimeout) {
+          if (currentState !== null) {
             // Reached a boundary that already timed out. Do not search
             // any further.
             const timedOutAt = currentState.timedOutAt;
@@ -238,7 +236,7 @@ function throwException(
         // inside a concurrent mode tree. If the Suspense is outside of it, we
         // should *not* suspend the commit.
         if ((workInProgress.mode & ConcurrentMode) === NoEffect) {
-          workInProgress.effectTag |= CallbackEffect;
+          workInProgress.effectTag |= DidCapture;
 
           // Unmount the source fiber's children
           const nextChildren = null;
@@ -264,6 +262,10 @@ function throwException(
               sourceFiber.tag = IncompleteClassComponent;
             }
           }
+
+          // The source fiber did not complete. Mark it with the current
+          // render priority to indicate that it still has pending work.
+          sourceFiber.expirationTime = renderExpirationTime;
 
           // Exit without suspending.
           return;
@@ -415,33 +417,7 @@ function unwindWork(
       const effectTag = workInProgress.effectTag;
       if (effectTag & ShouldCapture) {
         workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
-        // Captured a suspense effect. Set the boundary's `alreadyCaptured`
-        // state to true so we know to render the fallback.
-        const current = workInProgress.alternate;
-        const currentState: SuspenseState | null =
-          current !== null ? current.memoizedState : null;
-        let nextState: SuspenseState | null = workInProgress.memoizedState;
-        if (nextState === null) {
-          // No existing state. Create a new object.
-          nextState = {
-            alreadyCaptured: true,
-            didTimeout: false,
-            timedOutAt: NoWork,
-          };
-        } else if (currentState === nextState) {
-          // There is an existing state but it's the same as the current tree's.
-          // Clone the object.
-          nextState = {
-            alreadyCaptured: true,
-            didTimeout: nextState.didTimeout,
-            timedOutAt: nextState.timedOutAt,
-          };
-        } else {
-          // Already have a clone, so it's safe to mutate.
-          nextState.alreadyCaptured = true;
-        }
-        workInProgress.memoizedState = nextState;
-        // Re-render the boundary.
+        // Captured a suspense effect. Re-render the boundary.
         return workInProgress;
       }
       return null;

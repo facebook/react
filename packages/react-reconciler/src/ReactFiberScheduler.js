@@ -981,6 +981,12 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
         ReactCurrentFiber.resetCurrentFiber();
       }
 
+      if (nextUnitOfWork !== null) {
+        // Completing this fiber spawned new work. Work on that next.
+        nextUnitOfWork.firstEffect = nextUnitOfWork.lastEffect = null;
+        return nextUnitOfWork;
+      }
+
       if (
         returnFiber !== null &&
         // Do not append effects to parents if a sibling failed to complete

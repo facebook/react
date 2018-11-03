@@ -401,14 +401,12 @@ describe('ReactSuspense', () => {
         'A',
         'Suspend! [B:1]',
         'C',
+        'Loading...',
 
         'Mount [A]',
         // B's lifecycle should not fire because it suspended
         // 'Mount [B]',
         'Mount [C]',
-
-        // In a subsequent commit, render a placeholder
-        'Loading...',
         'Mount [Loading...]',
       ]);
       expect(root).toMatchRenderedOutput('Loading...');
@@ -483,10 +481,73 @@ describe('ReactSuspense', () => {
       expect(root).toMatchRenderedOutput('Loading...');
 
       instance.setState({step: 2});
+      expect(ReactTestRenderer).toHaveYielded(['Stateful: 2', 'Suspend! [B]']);
+      expect(root).toMatchRenderedOutput('Loading...');
+
+      jest.advanceTimersByTime(1000);
       expect(ReactTestRenderer).toHaveYielded([
-        'Stateful: 2',
+        'Promise resolved [B]',
+        'B',
+        'B',
+      ]);
+      expect(root).toMatchRenderedOutput('Stateful: 2B');
+    });
+
+    it('when updating a timed-out tree, always retries the suspended component', () => {
+      let instance;
+      class Stateful extends React.Component {
+        state = {step: 1};
+        render() {
+          instance = this;
+          return <Text text={`Stateful: ${this.state.step}`} />;
+        }
+      }
+
+      const Indirection = React.Fragment;
+
+      function App(props) {
+        return (
+          <Suspense fallback={<Text text="Loading..." />}>
+            <Stateful />
+            <Indirection>
+              <Indirection>
+                <Indirection>
+                  <AsyncText ms={1000} text={props.text} />
+                </Indirection>
+              </Indirection>
+            </Indirection>
+          </Suspense>
+        );
+      }
+
+      const root = ReactTestRenderer.create(<App text="A" />);
+
+      expect(ReactTestRenderer).toHaveYielded([
+        'Stateful: 1',
+        'Suspend! [A]',
+        'Loading...',
+      ]);
+
+      jest.advanceTimersByTime(1000);
+      expect(ReactTestRenderer).toHaveYielded(['Promise resolved [A]', 'A']);
+      expect(root).toMatchRenderedOutput('Stateful: 1A');
+
+      root.update(<App text="B" />);
+      expect(ReactTestRenderer).toHaveYielded([
+        'Stateful: 1',
         'Suspend! [B]',
         'Loading...',
+      ]);
+      expect(root).toMatchRenderedOutput('Loading...');
+
+      instance.setState({step: 2});
+      expect(ReactTestRenderer).toHaveYielded([
+        'Stateful: 2',
+
+        // The suspended component should suspend again. If it doesn't, the
+        // likely mistake is that the suspended fiber wasn't marked with
+        // pending work, so it was improperly treated as complete.
+        'Suspend! [B]',
       ]);
       expect(root).toMatchRenderedOutput('Loading...');
 

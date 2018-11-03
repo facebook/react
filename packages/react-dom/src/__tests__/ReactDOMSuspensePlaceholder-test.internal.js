@@ -9,6 +9,7 @@
 
 'use strict';
 
+let ReactFeatureFlags;
 let React;
 let ReactDOM;
 let Suspense;
@@ -20,6 +21,8 @@ describe('ReactDOMSuspensePlaceholder', () => {
 
   beforeEach(() => {
     jest.resetModules();
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.enableHooks = true;
     React = require('react');
     ReactDOM = require('react-dom');
     ReactCache = require('react-cache');
@@ -108,4 +111,50 @@ describe('ReactDOMSuspensePlaceholder', () => {
 
     expect(container.textContent).toEqual('ABC');
   });
+
+  it(
+    'outside concurrent mode, re-hides children if their display is updated ' +
+      'but the boundary is still showing the fallback',
+    async () => {
+      const {useState} = React;
+
+      let setIsVisible;
+      function Sibling({children}) {
+        const [isVisible, _setIsVisible] = useState(false);
+        setIsVisible = _setIsVisible;
+        return (
+          <span style={{display: isVisible ? 'inline' : 'none'}}>
+            {children}
+          </span>
+        );
+      }
+
+      function App() {
+        return (
+          <Suspense maxDuration={500} fallback={<Text text="Loading..." />}>
+            <Sibling>Sibling</Sibling>
+            <span>
+              <AsyncText ms={1000} text="Async" />
+            </span>
+          </Suspense>
+        );
+      }
+
+      ReactDOM.render(<App />, container);
+      expect(container.innerHTML).toEqual(
+        '<span style="display: none;">Sibling</span><span style="display: none;"></span>Loading...',
+      );
+
+      setIsVisible(true);
+      expect(container.innerHTML).toEqual(
+        '<span style="display: none;">Sibling</span><span style="display: none;"></span>Loading...',
+      );
+
+      await advanceTimers(1000);
+
+      expect(container.innerHTML).toEqual(
+        '<span style="display: inline;">Sibling</span><span style="">Async</span>',
+      );
+    },
+  );
 });
