@@ -914,15 +914,15 @@
       "filename": "react-debug-tools.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-debug-tools",
-      "size": 1667,
-      "gzip": 918
+      "size": 11447,
+      "gzip": 3518
     },
     {
       "filename": "react-debug-tools.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-debug-tools",
-      "size": 413,
-      "gzip": 305
+      "size": 3339,
+      "gzip": 1356
     },
     {
       "filename": "eslint-plugin-react-hooks.development.js",
