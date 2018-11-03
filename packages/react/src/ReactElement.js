@@ -337,6 +337,11 @@ export function cloneElement(element, config, children) {
     for (let i = 0; i < childrenLength; i++) {
       childArray[i] = arguments[i + 2];
     }
+    if (__DEV__) {
+      if (Object.freeze) {
+        Object.freeze(childArray);
+      }
+    }
     props.children = childArray;
   }
 
