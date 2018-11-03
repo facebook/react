@@ -2036,4 +2036,25 @@ describe('ReactDOMInput', () => {
       expect(node.hasAttribute('value')).toBe(false);
     });
   });
+
+  it('removes the checked attribute when switching types on a controlled input', function() {
+    ReactDOM.render(
+      <input type="checkbox" checked={true} readOnly={true} />,
+      container,
+    );
+    ReactDOM.render(<input type="text" value="" readOnly={true} />, container);
+    const node = container.firstChild;
+
+    expect(node.hasAttribute('checked')).toBe(false);
+    expect(node.defaultChecked).toBe(false);
+  });
+
+  it('removes the checked attribute when switching types on an uncontrolled input', function() {
+    ReactDOM.render(<input type="checkbox" defaultChecked={true} />, container);
+    ReactDOM.render(<input type="text" />, container);
+    const node = container.firstChild;
+
+    expect(node.hasAttribute('checked')).toBe(false);
+    expect(node.defaultChecked).toBe(false);
+  });
 });

@@ -227,8 +227,12 @@ export function updateWrapper(element: Element, props: Object) {
   } else {
     // When syncing the checked attribute, it only changes when it needs
     // to be removed, such as transitioning from a checkbox into a text input
-    if (props.checked == null && props.defaultChecked != null) {
-      node.defaultChecked = !!props.defaultChecked;
+    if (props.checked == null) {
+      if (props.defaultChecked == null) {
+        node.removeAttribute('checked');
+      } else {
+        node.defaultChecked = !!props.defaultChecked;
+      }
     }
   }
 }
