@@ -690,5 +690,33 @@ describe('ReactSuspense', () => {
       );
       expect(mounts).toBe(1);
     });
+
+    it('does not get stuck with fallback in concurrent mode for a large delay', () => {
+      function App(props) {
+        return (
+          <Suspense maxDuration={10} fallback={<Text text="Loading..." />}>
+            <AsyncText ms={1000} text="Child 1" />
+            <AsyncText ms={7000} text="Child 2" />
+          </Suspense>
+        );
+      }
+
+      const root = ReactTestRenderer.create(<App />, {
+        unstable_isConcurrent: true,
+      });
+
+      expect(root).toFlushAndYield([
+        'Suspend! [Child 1]',
+        'Suspend! [Child 2]',
+        'Loading...',
+      ]);
+      jest.advanceTimersByTime(1000);
+      expect(ReactTestRenderer).toHaveYielded(['Promise resolved [Child 1]']);
+      expect(root).toFlushAndYield(['Child 1', 'Suspend! [Child 2]']);
+      jest.advanceTimersByTime(6000);
+      expect(ReactTestRenderer).toHaveYielded(['Promise resolved [Child 2]']);
+      expect(root).toFlushAndYield(['Child 1', 'Child 2']);
+      expect(root).toMatchRenderedOutput(['Child 1', 'Child 2'].join(''));
+    });
   });
 });
