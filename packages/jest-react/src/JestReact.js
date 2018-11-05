@@ -30,7 +30,7 @@ function assertYieldsWereCleared(root) {
   invariant(
     actualYields.length === 0,
     'Log of yielded values is not empty. ' +
-      'Call expect(ReactTestRenderer).unstable_toHaveYielded(...) first.',
+      'Call expect(ReactTestRenderer).toHaveYielded(...) first.',
   );
 }
 
