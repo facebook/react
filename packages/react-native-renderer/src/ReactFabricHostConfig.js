@@ -385,7 +385,16 @@ export function cloneHiddenInstance(
   props: Props,
   internalInstanceHandle: Object,
 ): Instance {
-  throw new Error('Not yet implemented.');
+  const viewConfig = instance.canonical.viewConfig;
+  const node = instance.node;
+  const updatePayload = ReactNativeAttributePayload.create(
+    {style: {display: 'none'}},
+    viewConfig.validAttributes,
+  );
+  return {
+    node: cloneNodeWithNewProps(node, updatePayload),
+    canonical: instance.canonical,
+  };
 }
 
 export function cloneUnhiddenInstance(
@@ -394,7 +403,17 @@ export function cloneUnhiddenInstance(
   props: Props,
   internalInstanceHandle: Object,
 ): Instance {
-  throw new Error('Not yet implemented.');
+  const viewConfig = instance.canonical.viewConfig;
+  const node = instance.node;
+  const updatePayload = ReactNativeAttributePayload.diff(
+    {...props, style: [props.style, {display: 'none'}]},
+    props,
+    viewConfig.validAttributes,
+  );
+  return {
+    node: cloneNodeWithNewProps(node, updatePayload),
+    canonical: instance.canonical,
+  };
 }
 
 export function createHiddenTextInstance(
