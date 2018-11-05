@@ -1246,11 +1246,14 @@ function updateSuspenseComponent(
         );
 
         if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
-          // Fiber treeBaseDuration must be at least as large as the sum of children treeBaseDurations.
-          // Otherwise the profiler's onRender metrics will be off,
-          // and the DevTools Profiler flamegraph will visually break as well.
-          primaryChildFragment.treeBaseDuration =
-            currentPrimaryChild.treeBaseDuration;
+          // treeBaseDuration is the sum of all the child tree base durations.
+          let treeBaseDuration = 0;
+          let hiddenChild = currentPrimaryChild;
+          while (hiddenChild !== null) {
+            treeBaseDuration += hiddenChild.treeBaseDuration;
+            hiddenChild = hiddenChild.sibling;
+          }
+          primaryChildFragment.treeBaseDuration = treeBaseDuration;
         }
 
         primaryChildFragment.effectTag |= Placement;
