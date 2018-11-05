@@ -32,6 +32,9 @@ export const REACT_PROVIDER_TYPE = hasSymbol
 export const REACT_CONTEXT_TYPE = hasSymbol
   ? Symbol.for('react.context')
   : 0xeace;
+export const REACT_ASYNC_MODE_TYPE = hasSymbol
+  ? Symbol.for('react.async_mode')
+  : 0xeacf;
 export const REACT_CONCURRENT_MODE_TYPE = hasSymbol
   ? Symbol.for('react.concurrent_mode')
   : 0xeacf;

@@ -62,9 +62,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
     jest.advanceTimersByTime(ms);
     // Wait until the end of the current tick
-    return new Promise(resolve => {
-      setImmediate(resolve);
-    });
+    // We cannot use a timer since we're faking them
+    return Promise.resolve().then(() => {});
   }
 
   function Text(props) {
@@ -652,7 +651,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   it('throws a helpful error when an update is suspends without a placeholder', () => {
     expect(() => {
       ReactNoop.flushSync(() => ReactNoop.render(<AsyncText text="Async" />));
-    }).toThrow('An update was suspended, but no placeholder UI was provided.');
+    }).toThrow(
+      'AsyncText suspended while rendering, but no fallback UI was specified.',
+    );
   });
 
   it('a Suspense component correctly handles more than one suspended child', async () => {

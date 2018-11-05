@@ -2194,9 +2194,8 @@ describe('Profiler', () => {
       function awaitableAdvanceTimers(ms) {
         jest.advanceTimersByTime(ms);
         // Wait until the end of the current tick
-        return new Promise(resolve => {
-          setImmediate(resolve);
-        });
+        // We cannot use a timer since we're faking them
+        return Promise.resolve().then(() => {});
       }
 
       it('traces both the temporary placeholder and the finished render for an interaction', async () => {

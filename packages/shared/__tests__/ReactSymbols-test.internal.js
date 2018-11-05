@@ -31,7 +31,12 @@ describe('ReactSymbols', () => {
     const originalSymbolFor = global.Symbol.for;
     global.Symbol.for = null;
     try {
-      expectToBeUnique(Object.entries(require('shared/ReactSymbols')));
+      const entries = Object.entries(require('shared/ReactSymbols')).filter(
+        // REACT_ASYNC_MODE_TYPE and REACT_CONCURRENT_MODE_TYPE have the same numeric value
+        // for legacy backwards compatibility
+        ([key]) => key !== 'REACT_ASYNC_MODE_TYPE',
+      );
+      expectToBeUnique(entries);
     } finally {
       global.Symbol.for = originalSymbolFor;
     }

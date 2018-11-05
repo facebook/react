@@ -46,6 +46,7 @@ import {
   CaptureUpdate,
 } from './ReactUpdateQueue';
 import {logError} from './ReactFiberCommitWork';
+import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
 import {popHostContainer, popHostContext} from './ReactFiberHostContext';
 import {
   isContextProvider as isLegacyContextProvider,
@@ -61,11 +62,12 @@ import {
   isAlreadyFailedLegacyErrorBoundary,
   retrySuspendedRoot,
 } from './ReactFiberScheduler';
-import {NoWork, Sync} from './ReactFiberExpirationTime';
 
 import invariant from 'shared/invariant';
 import maxSigned31BitInt from './maxSigned31BitInt';
 import {
+  NoWork,
+  Sync,
   expirationTimeToMs,
   LOW_PRIORITY_EXPIRATION,
 } from './ReactFiberExpirationTime';
@@ -314,8 +316,14 @@ function throwException(
       workInProgress = workInProgress.return;
     } while (workInProgress !== null);
     // No boundary was found. Fallthrough to error mode.
+    // TODO: Use invariant so the message is stripped in prod?
     value = new Error(
-      'An update was suspended, but no placeholder UI was provided.',
+      (getComponentName(sourceFiber.type) || 'A React component') +
+        ' suspended while rendering, but no fallback UI was specified.\n' +
+        '\n' +
+        'Add a <Suspense fallback=...> component higher in the tree to ' +
+        'provide a loading indicator or placeholder to display.' +
+        getStackByFiberInDevAndProd(sourceFiber),
     );
   }
 

@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {Fiber} from './ReactFiber';
+
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   IndeterminateComponent,
@@ -15,13 +17,12 @@ import {
   HostComponent,
   Mode,
   LazyComponent,
+  SuspenseComponent,
 } from 'shared/ReactWorkTags';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import getComponentName from 'shared/getComponentName';
 
 const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
-
-import type {Fiber} from './ReactFiber';
 
 type LifeCyclePhase = 'render' | 'getChildContext';
 
@@ -33,6 +34,7 @@ function describeFiber(fiber: Fiber): string {
     case ClassComponent:
     case HostComponent:
     case Mode:
+    case SuspenseComponent:
       const owner = fiber._debugOwner;
       const source = fiber._debugSource;
       const name = getComponentName(fiber.type);

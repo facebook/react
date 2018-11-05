@@ -17,7 +17,6 @@ import {readContext} from './ReactFiberNewContext';
 import {
   Snapshot as SnapshotEffect,
   Update as UpdateEffect,
-  Callback as CallbackEffect,
   Passive as PassiveEffect,
 } from 'shared/ReactSideEffectTags';
 import {
@@ -37,19 +36,16 @@ import {
 } from './ReactFiberScheduler';
 
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
-import warningWithoutStack from 'shared/warningWithoutStack';
-import {enableDispatchCallback_DEPRECATED} from 'shared/ReactFeatureFlags';
+import areHookInputsEqual from 'shared/areHookInputsEqual';
 
-type Update<S, A> = {
+type Update<A> = {
   expirationTime: ExpirationTime,
   action: A,
-  callback: null | (S => mixed),
-  next: Update<S, A> | null,
+  next: Update<A> | null,
 };
 
-type UpdateQueue<S, A> = {
-  last: Update<S, A> | null,
+type UpdateQueue<A> = {
+  last: Update<A> | null,
   dispatch: any,
 };
 
@@ -57,8 +53,8 @@ type Hook = {
   memoizedState: any,
 
   baseState: any,
-  baseUpdate: Update<any, any> | null,
-  queue: UpdateQueue<any, any> | null,
+  baseUpdate: Update<any> | null,
+  queue: UpdateQueue<any> | null,
 
   next: Hook | null,
 };
@@ -72,15 +68,12 @@ type Effect = {
 };
 
 export type FunctionComponentUpdateQueue = {
-  callbackList: Array<Update<any, any>> | null,
   lastEffect: Effect | null,
 };
 
 type BasicStateAction<S> = (S => S) | S;
 
-type MaybeCallback<S> = void | null | (S => mixed);
-
-type Dispatch<S, A> = (A, MaybeCallback<S>) => void;
+type Dispatch<A> = A => void;
 
 // These are set right before calling the component.
 let renderExpirationTime: ExpirationTime = NoWork;
@@ -113,10 +106,7 @@ let isReRender: boolean = false;
 // Whether an update was scheduled during the currently executing render pass.
 let didScheduleRenderPhaseUpdate: boolean = false;
 // Lazily created map of render-phase updates
-let renderPhaseUpdates: Map<
-  UpdateQueue<any, any>,
-  Update<any, any>,
-> | null = null;
+let renderPhaseUpdates: Map<UpdateQueue<any>, Update<any>> | null = null;
 // Counter to prevent infinite loops.
 let numberOfReRenders: number = 0;
 const RE_RENDER_LIMIT = 25;
@@ -313,7 +303,6 @@ function createWorkInProgressHook(): Hook {
 
 function createFunctionComponentUpdateQueue(): FunctionComponentUpdateQueue {
   return {
-    callbackList: null,
     lastEffect: null,
   };
 }
@@ -334,7 +323,7 @@ export function useContext<T>(
 
 export function useState<S>(
   initialState: (() => S) | S,
-): [S, Dispatch<S, BasicStateAction<S>>] {
+): [S, Dispatch<BasicStateAction<S>>] {
   return useReducer(
     basicStateReducer,
     // useReducer has a special case to support lazy useState initializers
@@ -346,16 +335,16 @@ export function useReducer<S, A>(
   reducer: (S, A) => S,
   initialState: S,
   initialAction: A | void | null,
-): [S, Dispatch<S, A>] {
+): [S, Dispatch<A>] {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   workInProgressHook = createWorkInProgressHook();
-  let queue: UpdateQueue<S, A> | null = (workInProgressHook.queue: any);
+  let queue: UpdateQueue<A> | null = (workInProgressHook.queue: any);
   if (queue !== null) {
     // Already have a queue, so this is an update.
     if (isReRender) {
       // This is a re-render. Apply the new render phase updates to the previous
       // work-in-progress hook.
-      const dispatch: Dispatch<S, A> = (queue.dispatch: any);
+      const dispatch: Dispatch<A> = (queue.dispatch: any);
       if (renderPhaseUpdates !== null) {
         // Render phase updates are stored in a map of queue -> linked list
         const firstRenderPhaseUpdate = renderPhaseUpdates.get(queue);
@@ -369,10 +358,6 @@ export function useReducer<S, A>(
             // render's.
             const action = update.action;
             newState = reducer(newState, action);
-            const callback = update.callback;
-            if (callback !== null) {
-              pushCallback(currentlyRenderingFiber, update);
-            }
             update = update.next;
           } while (update !== null);
 
@@ -419,7 +404,7 @@ export function useReducer<S, A>(
       let didSkip = false;
       do {
         const updateExpirationTime = update.expirationTime;
-        if (updateExpirationTime > renderExpirationTime) {
+        if (updateExpirationTime < renderExpirationTime) {
           // Priority is insufficient. Skip this update. If this is the first
           // skipped update, the previous update/state is the new base
           // update/state.
@@ -429,20 +414,13 @@ export function useReducer<S, A>(
             newBaseState = newState;
           }
           // Update the remaining priority in the queue.
-          if (
-            remainingExpirationTime === NoWork ||
-            updateExpirationTime < remainingExpirationTime
-          ) {
+          if (updateExpirationTime > remainingExpirationTime) {
             remainingExpirationTime = updateExpirationTime;
           }
         } else {
           // Process this update.
           const action = update.action;
           newState = reducer(newState, action);
-          const callback = update.callback;
-          if (callback !== null) {
-            pushCallback(currentlyRenderingFiber, update);
-          }
         }
         prevUpdate = update;
         update = update.next;
@@ -458,7 +436,7 @@ export function useReducer<S, A>(
       workInProgressHook.baseState = newBaseState;
     }
 
-    const dispatch: Dispatch<S, A> = (queue.dispatch: any);
+    const dispatch: Dispatch<A> = (queue.dispatch: any);
     return [workInProgressHook.memoizedState, dispatch];
   }
 
@@ -476,27 +454,12 @@ export function useReducer<S, A>(
     last: null,
     dispatch: null,
   };
-  const dispatch: Dispatch<S, A> = (queue.dispatch = (dispatchAction.bind(
+  const dispatch: Dispatch<A> = (queue.dispatch = (dispatchAction.bind(
     null,
     currentlyRenderingFiber,
     queue,
   ): any));
   return [workInProgressHook.memoizedState, dispatch];
-}
-
-function pushCallback(workInProgress: Fiber, update: Update<any, any>): void {
-  if (componentUpdateQueue === null) {
-    componentUpdateQueue = createFunctionComponentUpdateQueue();
-    componentUpdateQueue.callbackList = [update];
-  } else {
-    const callbackList = componentUpdateQueue.callbackList;
-    if (callbackList === null) {
-      componentUpdateQueue.callbackList = [update];
-    } else {
-      callbackList.push(update);
-    }
-  }
-  workInProgress.effectTag |= CallbackEffect;
 }
 
 function pushEffect(tag, create, destroy, inputs) {
@@ -582,7 +545,7 @@ function useEffectImpl(fiberEffectTag, hookEffectTag, create, inputs): void {
   if (currentHook !== null) {
     const prevEffect = currentHook.memoizedState;
     destroy = prevEffect.destroy;
-    if (inputsAreEqual(nextInputs, prevEffect.inputs)) {
+    if (areHookInputsEqual(nextInputs, prevEffect.inputs)) {
       pushEffect(NoHookEffect, create, destroy, nextInputs);
       return;
     }
@@ -646,7 +609,7 @@ export function useCallback<T>(
   const prevState = workInProgressHook.memoizedState;
   if (prevState !== null) {
     const prevInputs = prevState[1];
-    if (inputsAreEqual(nextInputs, prevInputs)) {
+    if (areHookInputsEqual(nextInputs, prevInputs)) {
       return prevState[0];
     }
   }
@@ -667,7 +630,7 @@ export function useMemo<T>(
   const prevState = workInProgressHook.memoizedState;
   if (prevState !== null) {
     const prevInputs = prevState[1];
-    if (inputsAreEqual(nextInputs, prevInputs)) {
+    if (areHookInputsEqual(nextInputs, prevInputs)) {
       return prevState[0];
     }
   }
@@ -677,26 +640,7 @@ export function useMemo<T>(
   return nextValue;
 }
 
-function dispatchAction<S, A>(
-  fiber: Fiber,
-  queue: UpdateQueue<S, A>,
-  action: A,
-  callback: void | null | (S => mixed),
-) {
-  if (enableDispatchCallback_DEPRECATED) {
-    if (__DEV__) {
-      if (typeof callback === 'function') {
-        warningWithoutStack(
-          false,
-          'Update callbacks (the second argument to dispatch/setState) are ' +
-            'deprecated. Try useEffect instead.',
-        );
-      }
-    }
-  } else {
-    callback = null;
-  }
-
+function dispatchAction<A>(fiber: Fiber, queue: UpdateQueue<A>, action: A) {
   invariant(
     numberOfReRenders < RE_RENDER_LIMIT,
     'Too many re-renders. React limits the number of renders to prevent ' +
@@ -712,10 +656,9 @@ function dispatchAction<S, A>(
     // queue -> linked list of updates. After this render pass, we'll restart
     // and apply the stashed updates on top of the work-in-progress hook.
     didScheduleRenderPhaseUpdate = true;
-    const update: Update<S, A> = {
+    const update: Update<A> = {
       expirationTime: renderExpirationTime,
       action,
-      callback: callback !== undefined ? callback : null,
       next: null,
     };
     if (renderPhaseUpdates === null) {
@@ -735,10 +678,9 @@ function dispatchAction<S, A>(
   } else {
     const currentTime = requestCurrentTime();
     const expirationTime = computeExpirationForFiber(currentTime, fiber);
-    const update: Update<S, A> = {
+    const update: Update<A> = {
       expirationTime,
       action,
-      callback: callback !== undefined ? callback : null,
       next: null,
     };
     flushPassiveEffects();
@@ -758,34 +700,4 @@ function dispatchAction<S, A>(
     queue.last = update;
     scheduleWork(fiber, expirationTime);
   }
-}
-
-function inputsAreEqual(arr1, arr2) {
-  // Don't bother comparing lengths in prod because these arrays should be
-  // passed inline.
-  if (__DEV__) {
-    warning(
-      arr1.length === arr2.length,
-      'Detected a variable number of hook dependencies. The length of the ' +
-        'dependencies array should be constant between renders.\n\n' +
-        'Previous: %s\n' +
-        'Incoming: %s',
-      arr1.join(', '),
-      arr2.join(', '),
-    );
-  }
-  for (let i = 0; i < arr1.length; i++) {
-    // Inlined Object.is polyfill.
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is
-    const val1 = arr1[i];
-    const val2 = arr2[i];
-    if (
-      (val1 === val2 && (val1 !== 0 || 1 / val1 === 1 / (val2: any))) ||
-      (val1 !== val1 && val2 !== val2) // eslint-disable-line no-self-compare
-    ) {
-      continue;
-    }
-    return false;
-  }
-  return true;
 }

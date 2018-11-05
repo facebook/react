@@ -18,10 +18,7 @@ let ReactCache;
 function initEnvForAsyncTesting() {
   // Boilerplate copied from ReactDOMRoot-test
   // TODO pull this into helper method, reduce repetition.
-  const originalDateNow = Date.now;
-  global.Date.now = function() {
-    return originalDateNow();
-  };
+  // TODO remove `requestAnimationFrame` when upgrading to Jest 24 with Lolex
   global.requestAnimationFrame = function(cb) {
     return setTimeout(() => {
       cb(Date.now());
@@ -140,7 +137,7 @@ describe('ProfilerDOM', () => {
 
               // Evaluate in an unwrapped callback,
               // Because trace/wrap won't decrement the count within the wrapped callback.
-              setImmediate(() => {
+              Promise.resolve().then(() => {
                 expect(onInteractionTraced).toHaveBeenCalledTimes(1);
                 expect(
                   onInteractionScheduledWorkCompleted,

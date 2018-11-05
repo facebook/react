@@ -68,6 +68,7 @@ export type NoTimeout = -1;
 export {
   unstable_now as now,
   unstable_scheduleCallback as scheduleDeferredCallback,
+  unstable_shouldYield as shouldYield,
   unstable_cancelCallback as cancelDeferredCallback,
 } from 'scheduler';
 

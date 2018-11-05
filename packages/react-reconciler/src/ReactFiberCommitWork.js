@@ -295,8 +295,26 @@ function commitHookEffectList(
       if ((effect.tag & mountTag) !== NoHookEffect) {
         // Mount
         const create = effect.create;
-        const destroy = create();
-        effect.destroy = typeof destroy === 'function' ? destroy : null;
+        let destroy = create();
+        if (typeof destroy !== 'function') {
+          if (__DEV__) {
+            if (destroy !== null && destroy !== undefined) {
+              warningWithoutStack(
+                false,
+                'useEffect function must return a cleanup function or ' +
+                  'nothing.%s%s',
+                typeof destroy.then === 'function'
+                  ? ' Promises and useEffect(async () => ...) are not ' +
+                    'supported, but you can call an async function inside an ' +
+                    'effect.'
+                  : '',
+                getStackByFiberInDevAndProd(finishedWork),
+              );
+            }
+          }
+          destroy = null;
+        }
+        effect.destroy = destroy;
       }
       effect = effect.next;
     } while (effect !== firstEffect);
@@ -319,21 +337,6 @@ function commitLifeCycles(
     case ForwardRef:
     case SimpleMemoComponent: {
       commitHookEffectList(UnmountLayout, MountLayout, finishedWork);
-      const newUpdateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
-      if (newUpdateQueue !== null) {
-        const callbackList = newUpdateQueue.callbackList;
-        if (callbackList !== null) {
-          newUpdateQueue.callbackList = null;
-          for (let i = 0; i < callbackList.length; i++) {
-            const update = callbackList[i];
-            // Assume this is non-null, since otherwise it would not be part
-            // of the callback list.
-            const callback: () => mixed = (update.callback: any);
-            update.callback = null;
-            callback();
-          }
-        }
-      }
       break;
     }
     case ClassComponent: {
