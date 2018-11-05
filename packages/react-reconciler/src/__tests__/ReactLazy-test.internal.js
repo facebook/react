@@ -282,11 +282,10 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('SiblingB');
   });
 
-  it('sets defaultProps for all lifecycles', async () => {
+  it('sets defaultProps for modern lifecycles', async () => {
     const log = [];
     class C extends React.Component {
       static defaultProps = {text: 'A'};
-      // Added to allow gDSFP
       state = {};
 
       static getDerivedStateFromProps(props) {
@@ -307,9 +306,9 @@ describe('ReactLazy', () => {
         );
       }
 
-      componentDidUpdate() {
+      componentDidUpdate(prevProps) {
         ReactTestRenderer.unstable_yield(
-          `componentDidUpdate: ${this.props.text}`,
+          `componentDidUpdate: ${prevProps.text} -> ${this.props.text}`,
         );
       }
 
@@ -321,10 +320,7 @@ describe('ReactLazy', () => {
 
       shouldComponentUpdate(nextProps) {
         ReactTestRenderer.unstable_yield(
-          `shouldComponentUpdate (this.props): ${this.props.text}`,
-        );
-        ReactTestRenderer.unstable_yield(
-          `shouldComponentUpdate (nextProps): ${nextProps.text}`,
+          `shouldComponentUpdate: ${this.props.text} -> ${nextProps.text}`,
         );
         return true;
       }
@@ -332,10 +328,7 @@ describe('ReactLazy', () => {
       getSnapshotBeforeUpdate(prevProps) {
         console.log(this.props);
         ReactTestRenderer.unstable_yield(
-          `getSnapshotBeforeUpdate (this.props): ${this.props.text}`,
-        );
-        ReactTestRenderer.unstable_yield(
-          `getSnapshotBeforeUpdate (prevProps): ${prevProps.text}`,
+          `getSnapshotBeforeUpdate: ${prevProps.text} -> ${this.props.text}`,
         );
         return null;
       }
@@ -364,7 +357,7 @@ describe('ReactLazy', () => {
     expect(root).toFlushAndYield([
       'constructor: A',
       'getDerivedStateFromProps: A',
-      'A1', // render
+      'A1',
       'componentDidMount: A',
     ]);
 
@@ -376,12 +369,10 @@ describe('ReactLazy', () => {
 
     expect(root).toFlushAndYield([
       'getDerivedStateFromProps: A',
-      'shouldComponentUpdate (this.props): A',
-      'shouldComponentUpdate (nextProps): A',
-      'A2', // render
-      'getSnapshotBeforeUpdate (this.props): A',
-      'getSnapshotBeforeUpdate (prevProps): A',
-      'componentDidUpdate: A',
+      'shouldComponentUpdate: A -> A',
+      'A2',
+      'getSnapshotBeforeUpdate: A -> A',
+      'componentDidUpdate: A -> A',
     ]);
     expect(root).toMatchRenderedOutput('A2');
   });
