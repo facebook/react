@@ -377,6 +377,68 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('A2');
   });
 
+  it('sets defaultProps for legacy lifecycles', async () => {
+    const log = [];
+    class C extends React.Component {
+      static defaultProps = {text: 'A'};
+      state = {};
+
+      UNSAFE_componentWillMount() {
+        ReactTestRenderer.unstable_yield(
+          `UNSAFE_componentWillMount: ${this.props.text}`,
+        );
+      }
+
+      UNSAFE_componentWillUpdate(nextProps) {
+        ReactTestRenderer.unstable_yield(
+          `UNSAFE_componentWillUpdate: ${this.props.text} -> ${nextProps.text}`,
+        );
+      }
+
+      UNSAFE_componentWillReceiveProps(nextProps) {
+        ReactTestRenderer.unstable_yield(
+          `UNSAFE_componentWillReceiveProps: ${this.props.text} -> ${
+            nextProps.text
+          }`,
+        );
+      }
+
+      render() {
+        return <Text text={this.props.text + this.props.num} />;
+      }
+    }
+
+    const LazyClass = lazy(() => fakeImport(C));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyClass num={1} />
+      </Suspense>,
+    );
+
+    expect(ReactTestRenderer).toHaveYielded(['Loading...']);
+    expect(root).toFlushAndYield([]);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    await Promise.resolve();
+
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyClass num={2} />
+      </Suspense>,
+    );
+
+    expect(ReactTestRenderer).toHaveYielded([
+      'UNSAFE_componentWillMount: A',
+      'A1',
+      'UNSAFE_componentWillReceiveProps: A -> A',
+      'UNSAFE_componentWillUpdate: A -> A',
+      'A2',
+    ]);
+    expect(root).toFlushAndYield([]);
+    expect(root).toMatchRenderedOutput('A2');
+  });
+
   it('includes lazy-loaded component in warning stack', async () => {
     const LazyFoo = lazy(() => {
       ReactTestRenderer.unstable_yield('Started loading');
