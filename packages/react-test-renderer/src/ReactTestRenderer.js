@@ -211,6 +211,7 @@ const validWrapperTypes = new Set([
   HostComponent,
   ForwardRef,
   MemoComponent,
+  SimpleMemoComponent,
   // Normally skipped, but used when there's more than one root child.
   HostRoot,
 ]);
