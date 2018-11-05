@@ -350,3 +350,6 @@ export const Dispatcher = {
   // Effects are not run in the server environment.
   useEffect: noop,
 };
+export const DispatcherWithoutHooks = {
+  readContext,
+};
