@@ -22,6 +22,7 @@ import type {SuspenseState} from './ReactFiberSuspenseComponent';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
 
 import {
+  enableHooks,
   enableSchedulerTracing,
   enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
@@ -278,6 +279,9 @@ function commitHookEffectList(
   mountTag: number,
   finishedWork: Fiber,
 ) {
+  if (!enableHooks) {
+    return;
+  }
   const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
   let lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
   if (lastEffect !== null) {

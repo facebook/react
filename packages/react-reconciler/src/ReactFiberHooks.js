@@ -13,6 +13,7 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {HookEffectTag} from './ReactHookEffectTags';
 
 import {NoWork} from './ReactFiberExpirationTime';
+import {enableHooks} from 'shared/ReactFeatureFlags';
 import {readContext} from './ReactFiberNewContext';
 import {
   Snapshot as SnapshotEffect,
@@ -124,6 +125,9 @@ export function prepareToUseHooks(
   workInProgress: Fiber,
   nextRenderExpirationTime: ExpirationTime,
 ): void {
+  if (!enableHooks) {
+    return;
+  }
   renderExpirationTime = nextRenderExpirationTime;
   currentlyRenderingFiber = workInProgress;
   firstCurrentHook = current !== null ? current.memoizedState : null;
@@ -147,6 +151,10 @@ export function finishHooks(
   children: any,
   refOrContext: any,
 ): any {
+  if (!enableHooks) {
+    return children;
+  }
+
   // This must be called after every function component to prevent hooks from
   // being used in classes.
 
@@ -206,6 +214,10 @@ export function finishHooks(
 }
 
 export function resetHooks(): void {
+  if (!enableHooks) {
+    return;
+  }
+
   // This is called instead of `finishHooks` if the component throws. It's also
   // called inside mountIndeterminateComponent if we determine the component
   // is a module-style component.
