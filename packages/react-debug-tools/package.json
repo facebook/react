@@ -1,0 +1,28 @@
+{
+  "name": "react-debug-tools",
+  "description": "React package for debugging React trees.",
+  "version": "0.16.0",
+  "keywords": [
+    "react"
+  ],
+  "homepage": "https://reactjs.org/",
+  "bugs": "https://github.com/facebook/react/issues",
+  "license": "MIT",
+  "files": [
+    "LICENSE",
+    "README.md",
+    "index.js",
+    "cjs/"
+  ],
+  "main": "index.js",
+  "repository": "facebook/react",
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "peerDependencies": {
+    "react": "^16.0.0"
+  },
+  "dependencies": {
+    "error-stack-parser": "^2.0.2"
+  }
+}
