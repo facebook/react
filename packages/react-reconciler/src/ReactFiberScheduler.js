@@ -947,6 +947,9 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
     const siblingFiber = workInProgress.sibling;
 
     if ((workInProgress.effectTag & Incomplete) === NoEffect) {
+      // Prepare this field so we can find an error boundary in case completing throws.
+      nextUnitOfWork = workInProgress;
+
       // This fiber completed.
       if (enableProfilerTimer) {
         if (workInProgress.mode & ProfileMode) {
