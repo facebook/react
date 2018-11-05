@@ -254,7 +254,6 @@ let isWorking: boolean = false;
 // The next work in progress fiber that we're currently working on.
 let nextUnitOfWork: Fiber | null = null;
 let nextRoot: FiberRoot | null = null;
-let nextCompletingUnitOfWork: Fiber | null = null;
 // The time at which we're currently rendering work.
 let nextRenderExpirationTime: ExpirationTime = NoWork;
 let nextLatestAbsoluteTimeoutMs: number = -1;
@@ -264,6 +263,7 @@ let nextRenderDidError: boolean = false;
 let nextEffect: Fiber | null = null;
 
 let isCommitting: boolean = false;
+let isCompleting: boolean = false;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
 let passiveEffectCallbackHandle: * = null;
 let passiveEffectCallback: * = null;
@@ -949,31 +949,36 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
 
     if ((workInProgress.effectTag & Incomplete) === NoEffect) {
       // This fiber completed.
-      nextCompletingUnitOfWork = workInProgress;
       if (enableProfilerTimer) {
         if (workInProgress.mode & ProfileMode) {
           startProfilerTimer(workInProgress);
         }
 
+        // Remember we're completing this unit so we can find a boundary if it fails.
+        isCompleting = true;
+        nextUnitOfWork = workInProgress;
         nextUnitOfWork = completeWork(
           current,
           workInProgress,
           nextRenderExpirationTime,
         );
+        isCompleting = false;
 
         if (workInProgress.mode & ProfileMode) {
           // Update render duration assuming we didn't error.
           stopProfilerTimerIfRunningAndRecordDelta(workInProgress, false);
         }
       } else {
+        // Remember we're completing this unit so we can find a boundary if it fails.
+        isCompleting = true;
+        nextUnitOfWork = workInProgress;
         nextUnitOfWork = completeWork(
           current,
           workInProgress,
           nextRenderExpirationTime,
         );
+        isCompleting = false;
       }
-      nextCompletingUnitOfWork = null;
-
       stopWorkTimer(workInProgress);
       resetChildExpirationTime(workInProgress, nextRenderExpirationTime);
       if (__DEV__) {
@@ -1281,7 +1286,9 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
       resetContextDependences();
       resetHooks();
 
-      if (nextUnitOfWork === null && nextCompletingUnitOfWork === null) {
+      const wasCompleting = isCompleting;
+      isCompleting = false;
+      if (nextUnitOfWork === null) {
         // This is a fatal error.
         didFatal = true;
         onUncaughtError(thrownValue);
@@ -1292,33 +1299,24 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
           (resetCurrentlyProcessingQueue: any)();
         }
 
-        let sourceFiber: Fiber;
-        if (nextUnitOfWork !== null) {
+        if (!wasCompleting) {
           const failedUnitOfWork: Fiber = nextUnitOfWork;
           if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
             replayUnitOfWork(failedUnitOfWork, thrownValue, isYieldy);
           }
-
-          // TODO: we already know this isn't true in some cases.
-          // At least this shows a nicer error message until we figure out the cause.
-          // https://github.com/facebook/react/issues/12449#issuecomment-386727431
-          invariant(
-            nextUnitOfWork !== null,
-            'Failed to replay rendering after an error. This ' +
-              'is likely caused by a bug in React. Please file an issue ' +
-              'with a reproducing case to help us find it.',
-          );
-          sourceFiber = nextUnitOfWork;
-        } else {
-          invariant(
-            nextCompletingUnitOfWork !== null,
-            'Expected to be completing a unit of work. This ' +
-              'is likely caused by a bug in React. Please file an issue ' +
-              'with a reproducing case to help us find it.',
-          );
-          sourceFiber = nextCompletingUnitOfWork;
         }
 
+        // TODO: we already know this isn't true in some cases.
+        // At least this shows a nicer error message until we figure out the cause.
+        // https://github.com/facebook/react/issues/12449#issuecomment-386727431
+        invariant(
+          nextUnitOfWork !== null,
+          'Failed to replay rendering after an error. This ' +
+            'is likely caused by a bug in React. Please file an issue ' +
+            'with a reproducing case to help us find it.',
+        );
+
+        const sourceFiber: Fiber = nextUnitOfWork;
         let returnFiber = sourceFiber.return;
         if (returnFiber === null) {
           // This is the root. The root could capture its own errors. However,
