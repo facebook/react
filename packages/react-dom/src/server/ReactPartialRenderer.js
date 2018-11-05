@@ -10,7 +10,6 @@
 import type {ReactElement} from 'shared/ReactElementType';
 import type {
   ReactProvider,
-  ReactConsumer,
   ReactContext,
 } from 'shared/ReactTypes';
 
