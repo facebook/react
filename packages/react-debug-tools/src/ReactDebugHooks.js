@@ -299,7 +299,7 @@ function isReactWrapper(functionName, primitiveName) {
     return false;
   }
   return (
-    functionName.indexOf(expectedPrimitiveName) ===
+    functionName.lastIndexOf(expectedPrimitiveName) ===
     functionName.length - expectedPrimitiveName.length
   );
 }
@@ -350,7 +350,7 @@ function parseTrimmedStack(rootStack, hook) {
 }
 
 function parseCustomHookName(functionName: string): string {
-  let startIndex = functionName.indexOf('.');
+  let startIndex = functionName.lastIndexOf('.');
   if (startIndex === -1) {
     startIndex = 0;
   }
