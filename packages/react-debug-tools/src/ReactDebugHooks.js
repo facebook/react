@@ -481,6 +481,21 @@ function inspectHooksOfForwardRef<Props, Ref>(
   return buildTree(rootStack, readHookLog);
 }
 
+function resolveDefaultProps(Component, baseProps) {
+  if (Component && Component.defaultProps) {
+    // Resolve default props. Taken from ReactElement
+    const props = Object.assign({}, baseProps);
+    const defaultProps = Component.defaultProps;
+    for (let propName in defaultProps) {
+      if (props[propName] === undefined) {
+        props[propName] = defaultProps[propName];
+      }
+    }
+    return props;
+  }
+  return baseProps;
+}
+
 export function inspectHooksOfFiber(fiber: Fiber) {
   if (
     fiber.tag !== FunctionComponent &&
@@ -495,6 +510,9 @@ export function inspectHooksOfFiber(fiber: Fiber) {
   getPrimitiveStackCache();
   let type = fiber.type;
   let props = fiber.memoizedProps;
+  if (type !== fiber.elementType) {
+    props = resolveDefaultProps(type, props);
+  }
   // Set up the current hook so that we can step through and read the
   // current state from them.
   currentHook = (fiber.memoizedState: Hook);

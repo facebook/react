@@ -214,4 +214,34 @@ describe('ReactHooksInspectionIntergration', () => {
       },
     ]);
   });
+
+  it('should support defaultProps and lazy', async () => {
+    let Suspense = React.Suspense;
+
+    function Foo(props) {
+      let [value] = React.useState(props.defaultValue.substr(0, 3));
+      return <div>{value}</div>;
+    }
+    Foo.defaultProps = {
+      defaultValue: 'default',
+    };
+
+    async function fakeImport(result) {
+      return {default: result};
+    }
+
+    let LazyFoo = React.lazy(() => fakeImport(Foo));
+
+    let renderer = ReactTestRenderer.create(
+      <Suspense fallback="Loading...">
+        <LazyFoo />
+      </Suspense>,
+    );
+
+    await LazyFoo;
+
+    let childFiber = renderer.root._currentFiber();
+    let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    expect(tree).toEqual([{name: 'State', value: 'def', subHooks: []}]);
+  });
 });
