@@ -17,6 +17,7 @@ import {
   FunctionComponent,
   SimpleMemoComponent,
   ContextProvider,
+  ForwardRef,
 } from 'shared/ReactWorkTags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -294,6 +295,9 @@ function findCommonAncestorIndex(rootStack, hookStack) {
 }
 
 function isReactWrapper(functionName, primitiveName) {
+  if (!functionName) {
+    return false;
+  }
   let expectedPrimitiveName = 'use' + primitiveName;
   if (functionName.length < expectedPrimitiveName.length) {
     return false;
@@ -349,7 +353,10 @@ function parseTrimmedStack(rootStack, hook) {
   return hookStack.slice(primitiveIndex, rootIndex - 1);
 }
 
-function parseCustomHookName(functionName: string): string {
+function parseCustomHookName(functionName: void | string): string {
+  if (!functionName) {
+    return '';
+  }
   let startIndex = functionName.lastIndexOf('.');
   if (startIndex === -1) {
     startIndex = 0;
@@ -428,7 +435,6 @@ export function inspectHooks<Props>(
     hookLog = [];
     ReactCurrentOwner.currentDispatcher = previousDispatcher;
   }
-
   let rootStack = ErrorStackParser.parse(ancestorStackError);
   return buildTree(rootStack, readHookLog);
 }
@@ -454,8 +460,33 @@ function restoreContexts(contextMap: Map<ReactContext<any>, any>) {
   contextMap.forEach((value, context) => (context._currentValue = value));
 }
 
+function inspectHooksOfForwardRef<Props, Ref>(
+  renderFunction: (Props, Ref) => React$Node,
+  props: Props,
+  ref: Ref,
+): HooksTree {
+  let previousDispatcher = ReactCurrentOwner.currentDispatcher;
+  let readHookLog;
+  ReactCurrentOwner.currentDispatcher = Dispatcher;
+  let ancestorStackError;
+  try {
+    ancestorStackError = new Error();
+    renderFunction(props, ref);
+  } finally {
+    readHookLog = hookLog;
+    hookLog = [];
+    ReactCurrentOwner.currentDispatcher = previousDispatcher;
+  }
+  let rootStack = ErrorStackParser.parse(ancestorStackError);
+  return buildTree(rootStack, readHookLog);
+}
+
 export function inspectHooksOfFiber(fiber: Fiber) {
-  if (fiber.tag !== FunctionComponent && fiber.tag !== SimpleMemoComponent) {
+  if (
+    fiber.tag !== FunctionComponent &&
+    fiber.tag !== SimpleMemoComponent &&
+    fiber.tag !== ForwardRef
+  ) {
     throw new Error(
       'Unknown Fiber. Needs to be a function component to inspect hooks.',
     );
@@ -470,6 +501,9 @@ export function inspectHooksOfFiber(fiber: Fiber) {
   let contextMap = new Map();
   try {
     setupContexts(contextMap, fiber);
+    if (fiber.tag === ForwardRef) {
+      return inspectHooksOfForwardRef(type.render, props, fiber.ref);
+    }
     return inspectHooks(type, props);
   } finally {
     currentHook = null;

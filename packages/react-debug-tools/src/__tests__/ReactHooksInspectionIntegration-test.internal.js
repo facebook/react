@@ -164,4 +164,20 @@ describe('ReactHooksInspectionIntergration', () => {
       },
     ]);
   });
+
+  it('should inspect forwardRef', () => {
+    let obj = function() {};
+    let Foo = React.forwardRef(function(props, ref) {
+      React.useImperativeMethods(ref, () => obj);
+      return <div />;
+    });
+    let ref = React.createRef();
+    let renderer = ReactTestRenderer.create(<Foo ref={ref} />);
+
+    let childFiber = renderer.root.findByType(Foo)._currentFiber();
+    let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    expect(tree).toEqual([
+      {name: 'ImperativeMethods', value: obj, subHooks: []},
+    ]);
+  });
 });
