@@ -449,30 +449,8 @@ function commitLifeCycles(
       }
       return;
     }
-    case SuspenseComponent: {
-      let newState: SuspenseState | null = finishedWork.memoizedState;
-
-      let newDidTimeout;
-      let primaryChildParent = finishedWork;
-      if (newState === null) {
-        newDidTimeout = false;
-      } else {
-        newDidTimeout = true;
-        primaryChildParent = finishedWork.child;
-        if (newState.timedOutAt === NoWork) {
-          // If the children had not already timed out, record the time.
-          // This is used to compute the elapsed time during subsequent
-          // attempts to render the children.
-          newState.timedOutAt = requestCurrentTime();
-        }
-      }
-
-      if (primaryChildParent !== null) {
-        hideOrUnhideAllChildren(primaryChildParent, newDidTimeout);
-      }
-
-      return;
-    }
+    case SuspenseComponent:
+      break;
     case IncompleteClassComponent:
       break;
     default: {
@@ -1043,6 +1021,26 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       return;
     }
     case SuspenseComponent: {
+      let newState: SuspenseState | null = finishedWork.memoizedState;
+
+      let newDidTimeout;
+      let primaryChildParent = finishedWork;
+      if (newState === null) {
+        newDidTimeout = false;
+      } else {
+        newDidTimeout = true;
+        primaryChildParent = finishedWork.child;
+        if (newState.timedOutAt === NoWork) {
+          // If the children had not already timed out, record the time.
+          // This is used to compute the elapsed time during subsequent
+          // attempts to render the children.
+          newState.timedOutAt = requestCurrentTime();
+        }
+      }
+
+      if (primaryChildParent !== null) {
+        hideOrUnhideAllChildren(primaryChildParent, newDidTimeout);
+      }
       return;
     }
     case IncompleteClassComponent: {

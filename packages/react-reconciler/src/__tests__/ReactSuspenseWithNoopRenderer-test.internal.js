@@ -17,6 +17,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.enableHooks = true;
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     React = require('react');
@@ -1377,6 +1378,45 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
       await advanceTimers(100);
       expect(ReactNoop.getChildren()).toEqual([span('Hi')]);
+    });
+
+    it('toggles visibility during the mutation phase', async () => {
+      const {useRef, useLayoutEffect} = React;
+
+      function Parent() {
+        const child = useRef(null);
+
+        useLayoutEffect(() => {
+          ReactNoop.yield('Child is hidden: ' + child.current.hidden);
+        });
+
+        return (
+          <span ref={child} hidden={false}>
+            <AsyncText ms={1000} text="Hi" />
+          </span>
+        );
+      }
+
+      function App(props) {
+        return (
+          <Suspense fallback={<Text text="Loading..." />}>
+            <Parent />
+          </Suspense>
+        );
+      }
+
+      ReactNoop.renderLegacySyncRoot(<App middleText="B" />);
+
+      expect(ReactNoop.clearYields()).toEqual([
+        'Suspend! [Hi]',
+        'Loading...',
+        // The child should have already been hidden
+        'Child is hidden: true',
+      ]);
+
+      await advanceTimers(1000);
+
+      expect(ReactNoop.clearYields()).toEqual(['Promise resolved [Hi]', 'Hi']);
     });
   });
 
