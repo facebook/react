@@ -363,6 +363,16 @@ const bundles = [
     externals: [],
   },
 
+  /******* React Debug Tools *******/
+  {
+    label: 'react-debug-tools',
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react-debug-tools',
+    global: 'ReactDebugTools',
+    externals: [],
+  },
+
   /******* React Cache (experimental) *******/
   {
     label: 'react-cache',
