@@ -454,7 +454,16 @@ export function resetTextContent(instance: Instance): void {
 }
 
 export function hideInstance(instance: Instance): void {
-  throw new Error('Not yet implemented.');
+  const viewConfig = instance.viewConfig;
+  const updatePayload = ReactNativeAttributePayload.create(
+    {style: {display: 'none'}},
+    viewConfig.validAttributes,
+  );
+  UIManager.updateView(
+    instance._nativeTag,
+    viewConfig.uiViewClassName,
+    updatePayload,
+  );
 }
 
 export function hideTextInstance(textInstance: TextInstance): void {
@@ -462,7 +471,17 @@ export function hideTextInstance(textInstance: TextInstance): void {
 }
 
 export function unhideInstance(instance: Instance, props: Props): void {
-  throw new Error('Not yet implemented.');
+  const viewConfig = instance.viewConfig;
+  const updatePayload = ReactNativeAttributePayload.diff(
+    {...props, style: [props.style, {display: 'none'}]},
+    props,
+    viewConfig.validAttributes,
+  );
+  UIManager.updateView(
+    instance._nativeTag,
+    viewConfig.uiViewClassName,
+    updatePayload,
+  );
 }
 
 export function unhideTextInstance(
