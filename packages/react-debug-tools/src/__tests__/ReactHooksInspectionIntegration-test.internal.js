@@ -180,4 +180,38 @@ describe('ReactHooksInspectionIntergration', () => {
       {name: 'ImperativeMethods', value: obj, subHooks: []},
     ]);
   });
+
+  it('should inspect memo', () => {
+    function InnerFoo(props) {
+      let [value] = React.useState('hello');
+      return <div>{value}</div>;
+    }
+    let Foo = React.memo(InnerFoo);
+    let renderer = ReactTestRenderer.create(<Foo />);
+    // TODO: Test renderer findByType is broken for memo. Have to search for the inner.
+    let childFiber = renderer.root.findByType(InnerFoo)._currentFiber();
+    let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    expect(tree).toEqual([{name: 'State', value: 'hello', subHooks: []}]);
+  });
+
+  it('should inspect custom hooks', () => {
+    function useCustom() {
+      let [value] = React.useState('hello');
+      return value;
+    }
+    function Foo(props) {
+      let value = useCustom();
+      return <div>{value}</div>;
+    }
+    let renderer = ReactTestRenderer.create(<Foo />);
+    let childFiber = renderer.root.findByType(Foo)._currentFiber();
+    let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    expect(tree).toEqual([
+      {
+        name: 'Custom',
+        value: undefined,
+        subHooks: [{name: 'State', value: 'hello', subHooks: []}],
+      },
+    ]);
+  });
 });
