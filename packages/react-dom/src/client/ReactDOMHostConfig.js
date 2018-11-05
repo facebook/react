@@ -284,8 +284,13 @@ export function createTextInstance(
 }
 
 export const isPrimaryRenderer = true;
-export const scheduleTimeout = setTimeout;
-export const cancelTimeout = clearTimeout;
+// This initialization code may run even on server environments
+// if a component just imports ReactDOM (e.g. for findDOMNode).
+// Some environments might not have setTimeout or clearTimeout.
+export const scheduleTimeout =
+  typeof setTimeout === 'function' ? setTimeout : (undefined: any);
+export const cancelTimeout =
+  typeof clearTimeout === 'function' ? clearTimeout : (undefined: any);
 export const noTimeout = -1;
 
 // -------------------
