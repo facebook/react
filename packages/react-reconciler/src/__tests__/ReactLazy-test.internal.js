@@ -283,7 +283,6 @@ describe('ReactLazy', () => {
   });
 
   it('sets defaultProps for modern lifecycles', async () => {
-    const log = [];
     class C extends React.Component {
       static defaultProps = {text: 'A'};
       state = {};
@@ -326,7 +325,6 @@ describe('ReactLazy', () => {
       }
 
       getSnapshotBeforeUpdate(prevProps) {
-        console.log(this.props);
         ReactTestRenderer.unstable_yield(
           `getSnapshotBeforeUpdate: ${prevProps.text} -> ${this.props.text}`,
         );
@@ -378,7 +376,6 @@ describe('ReactLazy', () => {
   });
 
   it('sets defaultProps for legacy lifecycles', async () => {
-    const log = [];
     class C extends React.Component {
       static defaultProps = {text: 'A'};
       state = {};
