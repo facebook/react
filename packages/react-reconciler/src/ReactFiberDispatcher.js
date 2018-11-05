@@ -34,3 +34,6 @@ export const Dispatcher = {
   useRef,
   useState,
 };
+export const DispatcherWithoutHooks = {
+  readContext,
+};

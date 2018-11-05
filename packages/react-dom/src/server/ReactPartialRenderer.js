@@ -25,6 +25,7 @@ import describeComponentFrame from 'shared/describeComponentFrame';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   warnAboutDeprecatedLifecycles,
+  enableHooks,
   enableSuspenseServerRenderer,
 } from 'shared/ReactFeatureFlags';
 
@@ -52,6 +53,7 @@ import {
   prepareToUseHooks,
   finishHooks,
   Dispatcher,
+  DispatcherWithoutHooks,
 } from './ReactPartialRendererHooks';
 import {
   Namespaces,
@@ -819,7 +821,11 @@ class ReactDOMServerRenderer {
       return null;
     }
 
-    ReactCurrentOwner.currentDispatcher = Dispatcher;
+    if (enableHooks) {
+      ReactCurrentOwner.currentDispatcher = Dispatcher;
+    } else {
+      ReactCurrentOwner.currentDispatcher = DispatcherWithoutHooks;
+    }
     try {
       let out = '';
       while (out.length < bytes) {
