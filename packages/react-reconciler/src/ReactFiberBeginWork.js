@@ -103,7 +103,10 @@ import {
   resumeMountClassInstance,
   updateClassInstance,
 } from './ReactFiberClassComponent';
-import {readLazyComponentType} from './ReactFiberLazyComponent';
+import {
+  readLazyComponentType,
+  resolveDefaultProps,
+} from './ReactFiberLazyComponent';
 import {
   resolveLazyComponentTag,
   createFiberFromTypeAndProps,
@@ -727,21 +730,6 @@ function updateHostText(current, workInProgress) {
   // Nothing to do here. This is terminal. We'll do the completion step
   // immediately after.
   return null;
-}
-
-function resolveDefaultProps(Component, baseProps) {
-  if (Component && Component.defaultProps) {
-    // Resolve default props. Taken from ReactElement
-    const props = Object.assign({}, baseProps);
-    const defaultProps = Component.defaultProps;
-    for (let propName in defaultProps) {
-      if (props[propName] === undefined) {
-        props[propName] = defaultProps[propName];
-      }
-    }
-    return props;
-  }
-  return baseProps;
 }
 
 function mountLazyComponent(

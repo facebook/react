@@ -60,6 +60,7 @@ import {onCommitUnmount} from './ReactFiberDevToolsHook';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
 import {logCapturedError} from './ReactFiberErrorLogger';
+import {resolveDefaultProps} from './ReactFiberLazyComponent';
 import {getCommitTime} from './ReactProfilerTimer';
 import {commitUpdateQueue} from './ReactUpdateQueue';
 import {
@@ -345,15 +346,24 @@ function commitLifeCycles(
       if (finishedWork.effectTag & Update) {
         if (current === null) {
           startPhaseTimer(finishedWork, 'componentDidMount');
-          instance.props = finishedWork.memoizedProps;
+          instance.props = resolveDefaultProps(
+            finishedWork.type,
+            finishedWork.memoizedProps,
+          );
           instance.state = finishedWork.memoizedState;
           instance.componentDidMount();
           stopPhaseTimer();
         } else {
-          const prevProps = current.memoizedProps;
+          const prevProps = resolveDefaultProps(
+            finishedWork.type,
+            current.memoizedProps,
+          );
           const prevState = current.memoizedState;
           startPhaseTimer(finishedWork, 'componentDidUpdate');
-          instance.props = finishedWork.memoizedProps;
+          instance.props = resolveDefaultProps(
+            finishedWork.type,
+            finishedWork.memoizedProps,
+          );
           instance.state = finishedWork.memoizedState;
           instance.componentDidUpdate(
             prevProps,
