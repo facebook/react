@@ -229,10 +229,13 @@ function commitBeforeMutationLifeCycles(
           const prevState = current.memoizedState;
           startPhaseTimer(finishedWork, 'getSnapshotBeforeUpdate');
           const instance = finishedWork.stateNode;
-          instance.props = finishedWork.memoizedProps;
+          instance.props = resolveDefaultProps(
+            finishedWork.type,
+            finishedWork.memoizedProps,
+          );
           instance.state = finishedWork.memoizedState;
           const snapshot = instance.getSnapshotBeforeUpdate(
-            prevProps,
+            resolveDefaultProps(finishedWork.type, prevProps),
             prevState,
           );
           if (__DEV__) {
