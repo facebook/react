@@ -819,6 +819,7 @@ class ReactDOMServerRenderer {
       return null;
     }
 
+    const prevDispatcher = ReactCurrentOwner.currentDispatcher;
     ReactCurrentOwner.currentDispatcher = Dispatcher;
     try {
       let out = '';
@@ -865,7 +866,7 @@ class ReactDOMServerRenderer {
       }
       return out;
     } finally {
-      ReactCurrentOwner.currentDispatcher = null;
+      ReactCurrentOwner.currentDispatcher = prevDispatcher;
     }
   }
 
