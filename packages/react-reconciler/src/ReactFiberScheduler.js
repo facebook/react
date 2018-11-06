@@ -1299,9 +1299,9 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
           (resetCurrentlyProcessingQueue: any)();
         }
 
-        if (!wasCompleting) {
-          const failedUnitOfWork: Fiber = nextUnitOfWork;
-          if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
+        if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
+          if (!wasCompleting) {
+            const failedUnitOfWork: Fiber = nextUnitOfWork;
             replayUnitOfWork(failedUnitOfWork, thrownValue, isYieldy);
           }
         }
