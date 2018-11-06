@@ -263,7 +263,6 @@ let nextRenderDidError: boolean = false;
 let nextEffect: Fiber | null = null;
 
 let isCommitting: boolean = false;
-let isCompleting: boolean = false;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
 let passiveEffectCallbackHandle: * = null;
 let passiveEffectCallback: * = null;
@@ -275,11 +274,13 @@ let interruptedBy: Fiber | null = null;
 
 let stashedWorkInProgressProperties;
 let replayUnitOfWork;
+let mayReplayFailedUnitOfWork;
 let isReplayingFailedUnitOfWork;
 let originalReplayError;
 let rethrowOriginalError;
 if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
   stashedWorkInProgressProperties = null;
+  mayReplayFailedUnitOfWork = true;
   isReplayingFailedUnitOfWork = false;
   originalReplayError = null;
   replayUnitOfWork = (
@@ -948,36 +949,38 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
     const siblingFiber = workInProgress.sibling;
 
     if ((workInProgress.effectTag & Incomplete) === NoEffect) {
+      if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
+        // Don't replay if it fails during completion phase.
+        mayReplayFailedUnitOfWork = false;
+      }
       // This fiber completed.
       if (enableProfilerTimer) {
         if (workInProgress.mode & ProfileMode) {
           startProfilerTimer(workInProgress);
         }
-
         // Remember we're completing this unit so we can find a boundary if it fails.
-        isCompleting = true;
         nextUnitOfWork = workInProgress;
         nextUnitOfWork = completeWork(
           current,
           workInProgress,
           nextRenderExpirationTime,
         );
-        isCompleting = false;
-
         if (workInProgress.mode & ProfileMode) {
           // Update render duration assuming we didn't error.
           stopProfilerTimerIfRunningAndRecordDelta(workInProgress, false);
         }
       } else {
         // Remember we're completing this unit so we can find a boundary if it fails.
-        isCompleting = true;
         nextUnitOfWork = workInProgress;
         nextUnitOfWork = completeWork(
           current,
           workInProgress,
           nextRenderExpirationTime,
         );
-        isCompleting = false;
+      }
+      if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
+        // We're out of completion phase so replaying is fine now.
+        mayReplayFailedUnitOfWork = true;
       }
       stopWorkTimer(workInProgress);
       resetChildExpirationTime(workInProgress, nextRenderExpirationTime);
@@ -1286,8 +1289,11 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
       resetContextDependences();
       resetHooks();
 
-      const wasCompleting = isCompleting;
-      isCompleting = false;
+      // Reset in case completion throws.
+      // This is only used in DEV and when replaying is on.
+      const mayReplay = mayReplayFailedUnitOfWork;
+      mayReplayFailedUnitOfWork = true;
+
       if (nextUnitOfWork === null) {
         // This is a fatal error.
         didFatal = true;
@@ -1300,7 +1306,7 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
         }
 
         if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
-          if (!wasCompleting) {
+          if (mayReplay) {
             const failedUnitOfWork: Fiber = nextUnitOfWork;
             replayUnitOfWork(failedUnitOfWork, thrownValue, isYieldy);
           }
