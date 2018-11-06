@@ -1289,8 +1289,11 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
 
       // Reset in case completion throws.
       // This is only used in DEV and when replaying is on.
-      const mayReplay = mayReplayFailedUnitOfWork;
-      mayReplayFailedUnitOfWork = true;
+      let mayReplay;
+      if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
+        mayReplay = mayReplayFailedUnitOfWork;
+        mayReplayFailedUnitOfWork = true;
+      }
 
       if (nextUnitOfWork === null) {
         // This is a fatal error.
