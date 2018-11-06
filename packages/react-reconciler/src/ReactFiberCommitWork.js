@@ -143,9 +143,8 @@ export function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
 
 const callComponentWillUnmountWithTimer = function(current, instance) {
   startPhaseTimer(current, 'componentWillUnmount');
-  // We could update instance props and state here,
-  // but instead we rely on them being set during last render.
-  // TODO: revisit this when we implement resuming.
+  instance.props = current.memoizedProps;
+  instance.state = current.memoizedState;
   instance.componentWillUnmount();
   stopPhaseTimer();
 };
