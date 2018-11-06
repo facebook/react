@@ -2149,4 +2149,19 @@ describe('ReactErrorBoundaries', () => {
     expect(componentDidCatchError).toBe(thrownError);
     expect(getDerivedStateFromErrorError).toBe(thrownError);
   });
+
+  it('should catch errors from invariants in completion phase', () => {
+    const container = document.createElement('div');
+    ReactDOM.render(
+      <ErrorBoundary>
+        <input>
+          <div />
+        </input>
+      </ErrorBoundary>,
+      container,
+    );
+    expect(container.textContent).toContain(
+      'Caught an error: input is a void element tag',
+    );
+  });
 });
