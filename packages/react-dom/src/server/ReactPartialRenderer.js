@@ -8,10 +8,7 @@
  */
 
 import type {ReactElement} from 'shared/ReactElementType';
-import type {
-  ReactProvider,
-  ReactContext,
-} from 'shared/ReactTypes';
+import type {ReactProvider, ReactContext} from 'shared/ReactTypes';
 
 import React from 'react';
 import invariant from 'shared/invariant';
