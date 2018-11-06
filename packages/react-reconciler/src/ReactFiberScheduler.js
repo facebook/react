@@ -954,12 +954,12 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
         mayReplayFailedUnitOfWork = false;
       }
       // This fiber completed.
+      // Remember we're completing this unit so we can find a boundary if it fails.
+      nextUnitOfWork = workInProgress;
       if (enableProfilerTimer) {
         if (workInProgress.mode & ProfileMode) {
           startProfilerTimer(workInProgress);
         }
-        // Remember we're completing this unit so we can find a boundary if it fails.
-        nextUnitOfWork = workInProgress;
         nextUnitOfWork = completeWork(
           current,
           workInProgress,
@@ -970,8 +970,6 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
           stopProfilerTimerIfRunningAndRecordDelta(workInProgress, false);
         }
       } else {
-        // Remember we're completing this unit so we can find a boundary if it fails.
-        nextUnitOfWork = workInProgress;
         nextUnitOfWork = completeWork(
           current,
           workInProgress,
