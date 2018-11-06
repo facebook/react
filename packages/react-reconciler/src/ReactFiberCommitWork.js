@@ -143,8 +143,9 @@ export function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
 
 const callComponentWillUnmountWithTimer = function(current, instance) {
   startPhaseTimer(current, 'componentWillUnmount');
-  instance.props = current.memoizedProps;
-  instance.state = current.memoizedState;
+  // We could update instance props and state here,
+  // but instead we rely on them being set during last render.
+  // TODO: revisit this when we implement resuming.
   instance.componentWillUnmount();
   stopPhaseTimer();
 };
@@ -229,14 +230,9 @@ function commitBeforeMutationLifeCycles(
           const prevState = current.memoizedState;
           startPhaseTimer(finishedWork, 'getSnapshotBeforeUpdate');
           const instance = finishedWork.stateNode;
-          instance.props =
-            finishedWork.elementType === finishedWork.type
-              ? finishedWork.memoizedProps
-              : resolveDefaultProps(
-                  finishedWork.type,
-                  finishedWork.memoizedProps,
-                );
-          instance.state = finishedWork.memoizedState;
+          // We could update instance props and state here,
+          // but instead we rely on them being set during last render.
+          // TODO: revisit this when we implement resuming.
           const snapshot = instance.getSnapshotBeforeUpdate(
             finishedWork.elementType === finishedWork.type
               ? prevProps
@@ -354,14 +350,9 @@ function commitLifeCycles(
       if (finishedWork.effectTag & Update) {
         if (current === null) {
           startPhaseTimer(finishedWork, 'componentDidMount');
-          instance.props =
-            finishedWork.elementType === finishedWork.type
-              ? finishedWork.memoizedProps
-              : resolveDefaultProps(
-                  finishedWork.type,
-                  finishedWork.memoizedProps,
-                );
-          instance.state = finishedWork.memoizedState;
+          // We could update instance props and state here,
+          // but instead we rely on them being set during last render.
+          // TODO: revisit this when we implement resuming.
           instance.componentDidMount();
           stopPhaseTimer();
         } else {
@@ -371,14 +362,9 @@ function commitLifeCycles(
               : resolveDefaultProps(finishedWork.type, current.memoizedProps);
           const prevState = current.memoizedState;
           startPhaseTimer(finishedWork, 'componentDidUpdate');
-          instance.props =
-            finishedWork.elementType === finishedWork.type
-              ? finishedWork.memoizedProps
-              : resolveDefaultProps(
-                  finishedWork.type,
-                  finishedWork.memoizedProps,
-                );
-          instance.state = finishedWork.memoizedState;
+          // We could update instance props and state here,
+          // but instead we rely on them being set during last render.
+          // TODO: revisit this when we implement resuming.
           instance.componentDidUpdate(
             prevProps,
             prevState,
@@ -389,8 +375,9 @@ function commitLifeCycles(
       }
       const updateQueue = finishedWork.updateQueue;
       if (updateQueue !== null) {
-        instance.props = finishedWork.memoizedProps;
-        instance.state = finishedWork.memoizedState;
+        // We could update instance props and state here,
+        // but instead we rely on them being set during last render.
+        // TODO: revisit this when we implement resuming.
         commitUpdateQueue(
           finishedWork,
           updateQueue,
