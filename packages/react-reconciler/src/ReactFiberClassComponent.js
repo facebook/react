@@ -988,7 +988,10 @@ function updateClassInstance(
   const instance = workInProgress.stateNode;
 
   const oldProps = workInProgress.memoizedProps;
-  instance.props = resolveDefaultProps(workInProgress.type, oldProps);
+  instance.props =
+    workInProgress.type === workInProgress.elementType
+      ? oldProps
+      : resolveDefaultProps(workInProgress.type, oldProps);
 
   const oldContext = instance.context;
   const contextType = ctor.contextType;

@@ -229,13 +229,18 @@ function commitBeforeMutationLifeCycles(
           const prevState = current.memoizedState;
           startPhaseTimer(finishedWork, 'getSnapshotBeforeUpdate');
           const instance = finishedWork.stateNode;
-          instance.props = resolveDefaultProps(
-            finishedWork.type,
-            finishedWork.memoizedProps,
-          );
+          instance.props =
+            finishedWork.elementType === finishedWork.type
+              ? finishedWork.memoizedProps
+              : resolveDefaultProps(
+                  finishedWork.type,
+                  finishedWork.memoizedProps,
+                );
           instance.state = finishedWork.memoizedState;
           const snapshot = instance.getSnapshotBeforeUpdate(
-            resolveDefaultProps(finishedWork.type, prevProps),
+            finishedWork.elementType === finishedWork.type
+              ? prevProps
+              : resolveDefaultProps(finishedWork.type, prevProps),
             prevState,
           );
           if (__DEV__) {
@@ -349,24 +354,30 @@ function commitLifeCycles(
       if (finishedWork.effectTag & Update) {
         if (current === null) {
           startPhaseTimer(finishedWork, 'componentDidMount');
-          instance.props = resolveDefaultProps(
-            finishedWork.type,
-            finishedWork.memoizedProps,
-          );
+          instance.props =
+            finishedWork.elementType === finishedWork.type
+              ? finishedWork.memoizedProps
+              : resolveDefaultProps(
+                  finishedWork.type,
+                  finishedWork.memoizedProps,
+                );
           instance.state = finishedWork.memoizedState;
           instance.componentDidMount();
           stopPhaseTimer();
         } else {
-          const prevProps = resolveDefaultProps(
-            finishedWork.type,
-            current.memoizedProps,
-          );
+          const prevProps =
+            finishedWork.elementType === finishedWork.type
+              ? current.memoizedProps
+              : resolveDefaultProps(finishedWork.type, current.memoizedProps);
           const prevState = current.memoizedState;
           startPhaseTimer(finishedWork, 'componentDidUpdate');
-          instance.props = resolveDefaultProps(
-            finishedWork.type,
-            finishedWork.memoizedProps,
-          );
+          instance.props =
+            finishedWork.elementType === finishedWork.type
+              ? finishedWork.memoizedProps
+              : resolveDefaultProps(
+                  finishedWork.type,
+                  finishedWork.memoizedProps,
+                );
           instance.state = finishedWork.memoizedState;
           instance.componentDidUpdate(
             prevProps,
