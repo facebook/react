@@ -364,7 +364,6 @@ describe('ReactLazy', () => {
         <LazyClass num={2} />
       </Suspense>,
     );
-
     expect(root).toFlushAndYield([
       'getDerivedStateFromProps: A',
       'shouldComponentUpdate: A -> A',
@@ -373,6 +372,20 @@ describe('ReactLazy', () => {
       'componentDidUpdate: A -> A',
     ]);
     expect(root).toMatchRenderedOutput('A2');
+
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyClass num={3} />
+      </Suspense>,
+    );
+    expect(root).toFlushAndYield([
+      'getDerivedStateFromProps: A',
+      'shouldComponentUpdate: A -> A',
+      'A3',
+      'getSnapshotBeforeUpdate: A -> A',
+      'componentDidUpdate: A -> A',
+    ]);
+    expect(root).toMatchRenderedOutput('A3');
   });
 
   it('sets defaultProps for legacy lifecycles', async () => {
@@ -424,7 +437,6 @@ describe('ReactLazy', () => {
         <LazyClass num={2} />
       </Suspense>,
     );
-
     expect(ReactTestRenderer).toHaveYielded([
       'UNSAFE_componentWillMount: A',
       'A1',
@@ -434,6 +446,19 @@ describe('ReactLazy', () => {
     ]);
     expect(root).toFlushAndYield([]);
     expect(root).toMatchRenderedOutput('A2');
+
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyClass num={3} />
+      </Suspense>,
+    );
+    expect(ReactTestRenderer).toHaveYielded([
+      'UNSAFE_componentWillReceiveProps: A -> A',
+      'UNSAFE_componentWillUpdate: A -> A',
+      'A3',
+    ]);
+    expect(root).toFlushAndYield([]);
+    expect(root).toMatchRenderedOutput('A3');
   });
 
   it('includes lazy-loaded component in warning stack', async () => {
