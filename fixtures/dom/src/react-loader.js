@@ -86,8 +86,16 @@ export function reactPaths() {
   }
 
   const needsReactDOM = version === 'local' || parseFloat(version, 10) > 0.13;
+  const needsReactDOMServer =
+    version === 'local' || parseFloat(version, 10) > 0.13;
 
-  return {reactPath, reactDOMPath, reactDOMServerPath, needsReactDOM};
+  return {
+    reactPath,
+    reactDOMPath,
+    reactDOMServerPath,
+    needsReactDOM,
+    needsReactDOMServer,
+  };
 }
 
 export default function loadReact() {

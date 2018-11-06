@@ -109,12 +109,14 @@
 
   loadScript(getQueryParam('reactPath'))
     .then(function() {
-      return getBooleanQueryParam('needsReactDOM')
-        ? loadScript(getQueryParam('reactDOMPath'))
-        : null;
+      if (getBooleanQueryParam('needsReactDOM')) {
+        return loadScript(getQueryParam('reactDOMPath'));
+      }
     })
     .then(function() {
-      return loadScript(getQueryParam('reactDOMServerPath'));
+      if (getBooleanQueryParam('needsReactDOMServer')) {
+        return loadScript(getQueryParam('reactDOMServerPath'));
+      }
     })
     .then(function() {
       if (failed) {
