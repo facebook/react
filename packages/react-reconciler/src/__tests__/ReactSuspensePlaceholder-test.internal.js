@@ -272,30 +272,24 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
       it('properly accounts for base durations when a suspended times out in a sync tree', () => {
         const root = ReactTestRenderer.create(<App />);
         expect(root.toJSON()).toEqual(['Loading...']);
-        expect(onRender).toHaveBeenCalledTimes(2);
+        expect(onRender).toHaveBeenCalledTimes(1);
 
-        // Initial mount should be 8ms–
-        // 2ms from Suspending, 1ms from the AsyncText it renders,
-        // And 5ms from NonSuspending.
-        expect(onRender.mock.calls[0][2]).toBe(8);
-        expect(onRender.mock.calls[0][3]).toBe(8);
-
-        // When the fallback UI is displayed, and the original UI is hidden,
-        // the baseDuration should only include the 10ms spent rendering Fallback,
-        // but the treeBaseDuration should include that and the 8ms spent in the hidden tree.
-        expect(onRender.mock.calls[1][2]).toBe(10);
-        expect(onRender.mock.calls[1][3]).toBe(18);
+        // Initial mount only shows the "Loading..." Fallback.
+        // The treeBaseDuration then should be 10ms spent rendering Fallback,
+        // but the actualDuration should also include the 8ms spent rendering the hidden tree.
+        expect(onRender.mock.calls[0][2]).toBe(18);
+        expect(onRender.mock.calls[0][3]).toBe(10);
 
         jest.advanceTimersByTime(1000);
 
         expect(root.toJSON()).toEqual(['Loaded', 'NonSuspending']);
-        expect(onRender).toHaveBeenCalledTimes(3);
+        expect(onRender).toHaveBeenCalledTimes(2);
 
         // When the suspending data is resolved and our final UI is rendered,
         // the baseDuration should only include the 1ms re-rendering AsyncText,
         // but the treeBaseDuration should include the full 8ms spent in the tree.
-        expect(onRender.mock.calls[2][2]).toBe(1);
-        expect(onRender.mock.calls[2][3]).toBe(8);
+        expect(onRender.mock.calls[1][2]).toBe(1);
+        expect(onRender.mock.calls[1][3]).toBe(8);
       });
 
       it('properly accounts for base durations when a suspended times out in a concurrent tree', () => {
