@@ -35,6 +35,7 @@ import {
   DOCUMENT_NODE,
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
+import dangerousStyleValue from '../shared/dangerousStyleValue';
 
 import type {DOMContainer} from './ReactDOM';
 
@@ -442,8 +443,7 @@ export function unhideInstance(instance: Instance, props: Props): void {
     styleProp.hasOwnProperty('display')
       ? styleProp.display
       : null;
-  // $FlowFixMe Setting a style property to null is the valid way to reset it.
-  instance.style.display = display;
+  instance.style.display = dangerousStyleValue('display', display);
 }
 
 export function unhideTextInstance(
