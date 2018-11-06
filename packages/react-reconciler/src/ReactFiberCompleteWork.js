@@ -39,7 +39,13 @@ import {
   LazyComponent,
   IncompleteClassComponent,
 } from 'shared/ReactWorkTags';
-import {Placement, Ref, Update} from 'shared/ReactSideEffectTags';
+import {
+  Placement,
+  Ref,
+  Update,
+  NoEffect,
+  DidCapture,
+} from 'shared/ReactSideEffectTags';
 import invariant from 'shared/invariant';
 
 import {
@@ -75,6 +81,7 @@ import {
   prepareToHydrateHostTextInstance,
   popHydrationState,
 } from './ReactFiberHydrationContext';
+import {ConcurrentMode, NoContext} from './ReactTypeOfMode';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -247,8 +254,8 @@ if (supportsMutation) {
         if (current !== null) {
           const oldState: SuspenseState = current.memoizedState;
           const newState: SuspenseState = node.memoizedState;
-          const oldIsHidden = oldState !== null && oldState.didTimeout;
-          const newIsHidden = newState !== null && newState.didTimeout;
+          const oldIsHidden = oldState !== null;
+          const newIsHidden = newState !== null;
           if (oldIsHidden !== newIsHidden) {
             // The placeholder either just timed out or switched back to the normal
             // children after having previously timed out. Toggle the visibility of
@@ -350,8 +357,8 @@ if (supportsMutation) {
         if (current !== null) {
           const oldState: SuspenseState = current.memoizedState;
           const newState: SuspenseState = node.memoizedState;
-          const oldIsHidden = oldState !== null && oldState.didTimeout;
-          const newIsHidden = newState !== null && newState.didTimeout;
+          const oldIsHidden = oldState !== null;
+          const newIsHidden = newState !== null;
           if (oldIsHidden !== newIsHidden) {
             // The placeholder either just timed out or switched back to the normal
             // children after having previously timed out. Toggle the visibility of
@@ -690,12 +697,27 @@ function completeWork(
       break;
     case SuspenseComponent: {
       const nextState = workInProgress.memoizedState;
-      const prevState = current !== null ? current.memoizedState : null;
-      const nextDidTimeout = nextState !== null && nextState.didTimeout;
-      const prevDidTimeout = prevState !== null && prevState.didTimeout;
-      if (nextDidTimeout !== prevDidTimeout) {
-        // If this render commits, and it switches between the normal state
-        // and the timed-out state, schedule an effect.
+      if ((workInProgress.effectTag & DidCapture) !== NoEffect) {
+        // Something suspended. Re-render with the fallback children.
+        workInProgress.expirationTime = renderExpirationTime;
+        workInProgress.firstEffect = workInProgress.lastEffect = null;
+        return workInProgress;
+      }
+
+      const nextDidTimeout = nextState !== null;
+      const prevDidTimeout = current !== null && current.memoizedState !== null;
+      // The children either timed out after previously being visible, or
+      // were restored after previously being hidden. Schedule an effect
+      // to update their visiblity.
+      if (
+        //
+        nextDidTimeout !== prevDidTimeout ||
+        // Outside concurrent mode, the primary children commit in an
+        // inconsistent state, even if they are hidden. So if they are hidden,
+        // we need to schedule an effect to re-hide them, just in case.
+        ((workInProgress.effectTag & ConcurrentMode) === NoContext &&
+          nextDidTimeout)
+      ) {
         workInProgress.effectTag |= Update;
       }
       break;
