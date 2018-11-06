@@ -12,7 +12,7 @@ import type {LazyComponent, Thenable} from 'shared/ReactLazyComponent';
 import {Resolved, Rejected, Pending} from 'shared/ReactLazyComponent';
 import warning from 'shared/warning';
 
-export function resolveDefaultProps(Component, baseProps) {
+export function resolveDefaultProps(Component: any, baseProps: Object): Object {
   if (Component && Component.defaultProps) {
     // Resolve default props. Taken from ReactElement
     const props = Object.assign({}, baseProps);
