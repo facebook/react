@@ -821,6 +821,7 @@ class ReactDOMServerRenderer {
       return null;
     }
 
+    const prevDispatcher = ReactCurrentOwner.currentDispatcher;
     if (enableHooks) {
       ReactCurrentOwner.currentDispatcher = Dispatcher;
     } else {
@@ -871,7 +872,7 @@ class ReactDOMServerRenderer {
       }
       return out;
     } finally {
-      ReactCurrentOwner.currentDispatcher = null;
+      ReactCurrentOwner.currentDispatcher = prevDispatcher;
     }
   }
 
