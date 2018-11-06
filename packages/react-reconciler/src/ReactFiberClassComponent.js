@@ -28,6 +28,7 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
+import {resolveDefaultProps} from './ReactFiberLazyComponent';
 import {StrictMode} from './ReactTypeOfMode';
 
 import {
@@ -987,7 +988,10 @@ function updateClassInstance(
   const instance = workInProgress.stateNode;
 
   const oldProps = workInProgress.memoizedProps;
-  instance.props = oldProps;
+  instance.props =
+    workInProgress.type === workInProgress.elementType
+      ? oldProps
+      : resolveDefaultProps(workInProgress.type, oldProps);
 
   const oldContext = instance.context;
   const contextType = ctor.contextType;

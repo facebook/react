@@ -282,6 +282,185 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('SiblingB');
   });
 
+  it('sets defaultProps for modern lifecycles', async () => {
+    class C extends React.Component {
+      static defaultProps = {text: 'A'};
+      state = {};
+
+      static getDerivedStateFromProps(props) {
+        ReactTestRenderer.unstable_yield(
+          `getDerivedStateFromProps: ${props.text}`,
+        );
+        return null;
+      }
+
+      constructor(props) {
+        super(props);
+        ReactTestRenderer.unstable_yield(`constructor: ${this.props.text}`);
+      }
+
+      componentDidMount() {
+        ReactTestRenderer.unstable_yield(
+          `componentDidMount: ${this.props.text}`,
+        );
+      }
+
+      componentDidUpdate(prevProps) {
+        ReactTestRenderer.unstable_yield(
+          `componentDidUpdate: ${prevProps.text} -> ${this.props.text}`,
+        );
+      }
+
+      componentWillUnmount() {
+        ReactTestRenderer.unstable_yield(
+          `componentWillUnmount: ${this.props.text}`,
+        );
+      }
+
+      shouldComponentUpdate(nextProps) {
+        ReactTestRenderer.unstable_yield(
+          `shouldComponentUpdate: ${this.props.text} -> ${nextProps.text}`,
+        );
+        return true;
+      }
+
+      getSnapshotBeforeUpdate(prevProps) {
+        ReactTestRenderer.unstable_yield(
+          `getSnapshotBeforeUpdate: ${prevProps.text} -> ${this.props.text}`,
+        );
+        return null;
+      }
+
+      render() {
+        return <Text text={this.props.text + this.props.num} />;
+      }
+    }
+
+    const LazyClass = lazy(() => fakeImport(C));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyClass num={1} />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    expect(root).toFlushAndYield(['Loading...']);
+    expect(root).toMatchRenderedOutput(null);
+
+    await Promise.resolve();
+
+    expect(root).toFlushAndYield([
+      'constructor: A',
+      'getDerivedStateFromProps: A',
+      'A1',
+      'componentDidMount: A',
+    ]);
+
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyClass num={2} />
+      </Suspense>,
+    );
+    expect(root).toFlushAndYield([
+      'getDerivedStateFromProps: A',
+      'shouldComponentUpdate: A -> A',
+      'A2',
+      'getSnapshotBeforeUpdate: A -> A',
+      'componentDidUpdate: A -> A',
+    ]);
+    expect(root).toMatchRenderedOutput('A2');
+
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyClass num={3} />
+      </Suspense>,
+    );
+    expect(root).toFlushAndYield([
+      'getDerivedStateFromProps: A',
+      'shouldComponentUpdate: A -> A',
+      'A3',
+      'getSnapshotBeforeUpdate: A -> A',
+      'componentDidUpdate: A -> A',
+    ]);
+    expect(root).toMatchRenderedOutput('A3');
+  });
+
+  it('sets defaultProps for legacy lifecycles', async () => {
+    class C extends React.Component {
+      static defaultProps = {text: 'A'};
+      state = {};
+
+      UNSAFE_componentWillMount() {
+        ReactTestRenderer.unstable_yield(
+          `UNSAFE_componentWillMount: ${this.props.text}`,
+        );
+      }
+
+      UNSAFE_componentWillUpdate(nextProps) {
+        ReactTestRenderer.unstable_yield(
+          `UNSAFE_componentWillUpdate: ${this.props.text} -> ${nextProps.text}`,
+        );
+      }
+
+      UNSAFE_componentWillReceiveProps(nextProps) {
+        ReactTestRenderer.unstable_yield(
+          `UNSAFE_componentWillReceiveProps: ${this.props.text} -> ${
+            nextProps.text
+          }`,
+        );
+      }
+
+      render() {
+        return <Text text={this.props.text + this.props.num} />;
+      }
+    }
+
+    const LazyClass = lazy(() => fakeImport(C));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyClass num={1} />
+      </Suspense>,
+    );
+
+    expect(ReactTestRenderer).toHaveYielded(['Loading...']);
+    expect(root).toFlushAndYield([]);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    await Promise.resolve();
+
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyClass num={2} />
+      </Suspense>,
+    );
+    expect(ReactTestRenderer).toHaveYielded([
+      'UNSAFE_componentWillMount: A',
+      'A1',
+      'UNSAFE_componentWillReceiveProps: A -> A',
+      'UNSAFE_componentWillUpdate: A -> A',
+      'A2',
+    ]);
+    expect(root).toFlushAndYield([]);
+    expect(root).toMatchRenderedOutput('A2');
+
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyClass num={3} />
+      </Suspense>,
+    );
+    expect(ReactTestRenderer).toHaveYielded([
+      'UNSAFE_componentWillReceiveProps: A -> A',
+      'UNSAFE_componentWillUpdate: A -> A',
+      'A3',
+    ]);
+    expect(root).toFlushAndYield([]);
+    expect(root).toMatchRenderedOutput('A3');
+  });
+
   it('includes lazy-loaded component in warning stack', async () => {
     const LazyFoo = lazy(() => {
       ReactTestRenderer.unstable_yield('Started loading');
