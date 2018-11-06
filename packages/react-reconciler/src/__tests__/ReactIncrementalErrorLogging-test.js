@@ -186,7 +186,6 @@ describe('ReactIncrementalErrorLogging', () => {
         'render: 0',
         __DEV__ && 'render: 0', // replay
         'render: 1',
-        __DEV__ && 'render: 1', // replay
         'componentWillUnmount: 0',
       ].filter(Boolean),
     );

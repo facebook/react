@@ -275,19 +275,17 @@ let interruptedBy: Fiber | null = null;
 
 let stashedWorkInProgressProperties;
 let replayUnitOfWork;
-let mayReplayFailedUnitOfWork;
 let isReplayingFailedUnitOfWork;
 let originalReplayError;
 let rethrowOriginalError;
 if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
   stashedWorkInProgressProperties = null;
-  mayReplayFailedUnitOfWork = true;
   isReplayingFailedUnitOfWork = false;
   originalReplayError = null;
   replayUnitOfWork = (
     failedUnitOfWork: Fiber,
     thrownValue: mixed,
-    isYieldy: boolean,
+    current, workInProgress, renderExpirationTime
   ) => {
     if (
       thrownValue !== null &&
@@ -340,7 +338,7 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
     // Replay the begin phase.
     isReplayingFailedUnitOfWork = true;
     originalReplayError = thrownValue;
-    invokeGuardedCallback(null, workLoop, null, isYieldy);
+    invokeGuardedCallback(null, beginWork, current, workInProgress, renderExpirationTime);
     isReplayingFailedUnitOfWork = false;
     originalReplayError = null;
     if (hasCaughtError()) {
@@ -954,10 +952,6 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
     const siblingFiber = workInProgress.sibling;
 
     if ((workInProgress.effectTag & Incomplete) === NoEffect) {
-      if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
-        // Don't replay if it fails during completion phase.
-        mayReplayFailedUnitOfWork = false;
-      }
       // This fiber completed.
       // Remember we're completing this unit so we can find a boundary if it fails.
       nextUnitOfWork = workInProgress;
@@ -980,10 +974,6 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
           workInProgress,
           nextRenderExpirationTime,
         );
-      }
-      if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
-        // We're out of completion phase so replaying is fine now.
-        mayReplayFailedUnitOfWork = true;
       }
       stopWorkTimer(workInProgress);
       resetChildExpirationTime(workInProgress, nextRenderExpirationTime);
@@ -1127,7 +1117,7 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
   return null;
 }
 
-function performUnitOfWork(workInProgress: Fiber): Fiber | null {
+function performUnitOfWork(workInProgress: Fiber, isYieldy: boolean): Fiber | null {
   // The current, flushed, state of this fiber is the alternate.
   // Ideally nothing should rely on this, but relying on it here
   // means that we don't need an additional field on the work in
@@ -1153,7 +1143,11 @@ function performUnitOfWork(workInProgress: Fiber): Fiber | null {
       startProfilerTimer(workInProgress);
     }
 
-    next = beginWork(current, workInProgress, nextRenderExpirationTime);
+    if (__DEV__) {
+      next = beginWorkInDEV(current, workInProgress, nextRenderExpirationTime, isYieldy);
+    } else {
+      next = beginWork(current, workInProgress, nextRenderExpirationTime);
+    }
     workInProgress.memoizedProps = workInProgress.pendingProps;
 
     if (workInProgress.mode & ProfileMode) {
@@ -1161,7 +1155,11 @@ function performUnitOfWork(workInProgress: Fiber): Fiber | null {
       stopProfilerTimerIfRunningAndRecordDelta(workInProgress, true);
     }
   } else {
-    next = beginWork(current, workInProgress, nextRenderExpirationTime);
+    if (__DEV__) {
+      next = beginWorkInDEV(current, workInProgress, nextRenderExpirationTime, isYieldy);
+    } else {
+      next = beginWork(current, workInProgress, nextRenderExpirationTime);
+    }
     workInProgress.memoizedProps = workInProgress.pendingProps;
   }
 
@@ -1193,13 +1191,40 @@ function workLoop(isYieldy) {
   if (!isYieldy) {
     // Flush work without yielding
     while (nextUnitOfWork !== null) {
-      nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+      nextUnitOfWork = performUnitOfWork(nextUnitOfWork, isYieldy);
     }
   } else {
     // Flush asynchronous work until there's a higher priority event
     while (nextUnitOfWork !== null && !shouldYieldToRenderer()) {
-      nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+      nextUnitOfWork = performUnitOfWork(nextUnitOfWork, isYieldy);
     }
+  }
+}
+
+function beginWorkInDEV(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderExpirationTime: ExpirationTime,
+  isYieldy: boolean,
+): Fiber | null {
+  try {
+    return beginWork(current, workInProgress, renderExpirationTime);
+  } catch (thrownValue) {
+    resetContextDependences();
+    resetHooks();
+    if (nextUnitOfWork === null) {
+      throw thrownValue;
+    }
+    if (__DEV__) {
+      // Reset global debug state
+      // We assume this is defined in DEV
+      (resetCurrentlyProcessingQueue: any)();
+    }
+    if (replayFailedUnitOfWorkWithInvokeGuardedCallback) {
+      const failedUnitOfWork: Fiber = nextUnitOfWork;
+      replayUnitOfWork(failedUnitOfWork, thrownValue, current, workInProgress, renderExpirationTime);
+    }
+    throw thrownValue;
   }
 }
 
@@ -1302,42 +1327,11 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
       resetContextDependences();
       resetHooks();
 
-      // Reset in case completion throws.
-      // This is only used in DEV and when replaying is on.
-      let mayReplay;
-      if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
-        mayReplay = mayReplayFailedUnitOfWork;
-        mayReplayFailedUnitOfWork = true;
-      }
-
       if (nextUnitOfWork === null) {
         // This is a fatal error.
         didFatal = true;
         onUncaughtError(thrownValue);
       } else {
-        if (__DEV__) {
-          // Reset global debug state
-          // We assume this is defined in DEV
-          (resetCurrentlyProcessingQueue: any)();
-        }
-
-        if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
-          if (mayReplay) {
-            const failedUnitOfWork: Fiber = nextUnitOfWork;
-            replayUnitOfWork(failedUnitOfWork, thrownValue, isYieldy);
-          }
-        }
-
-        // TODO: we already know this isn't true in some cases.
-        // At least this shows a nicer error message until we figure out the cause.
-        // https://github.com/facebook/react/issues/12449#issuecomment-386727431
-        invariant(
-          nextUnitOfWork !== null,
-          'Failed to replay rendering after an error. This ' +
-            'is likely caused by a bug in React. Please file an issue ' +
-            'with a reproducing case to help us find it.',
-        );
-
         const sourceFiber: Fiber = nextUnitOfWork;
         let returnFiber = sourceFiber.return;
         if (returnFiber === null) {
