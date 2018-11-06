@@ -401,14 +401,12 @@ describe('ReactSuspense', () => {
         'A',
         'Suspend! [B:1]',
         'C',
+        'Loading...',
 
         'Mount [A]',
         // B's lifecycle should not fire because it suspended
         // 'Mount [B]',
         'Mount [C]',
-
-        // In a subsequent commit, render a placeholder
-        'Loading...',
         'Mount [Loading...]',
       ]);
       expect(root).toMatchRenderedOutput('Loading...');
@@ -483,10 +481,73 @@ describe('ReactSuspense', () => {
       expect(root).toMatchRenderedOutput('Loading...');
 
       instance.setState({step: 2});
+      expect(ReactTestRenderer).toHaveYielded(['Stateful: 2', 'Suspend! [B]']);
+      expect(root).toMatchRenderedOutput('Loading...');
+
+      jest.advanceTimersByTime(1000);
       expect(ReactTestRenderer).toHaveYielded([
-        'Stateful: 2',
+        'Promise resolved [B]',
+        'B',
+        'B',
+      ]);
+      expect(root).toMatchRenderedOutput('Stateful: 2B');
+    });
+
+    it('when updating a timed-out tree, always retries the suspended component', () => {
+      let instance;
+      class Stateful extends React.Component {
+        state = {step: 1};
+        render() {
+          instance = this;
+          return <Text text={`Stateful: ${this.state.step}`} />;
+        }
+      }
+
+      const Indirection = React.Fragment;
+
+      function App(props) {
+        return (
+          <Suspense fallback={<Text text="Loading..." />}>
+            <Stateful />
+            <Indirection>
+              <Indirection>
+                <Indirection>
+                  <AsyncText ms={1000} text={props.text} />
+                </Indirection>
+              </Indirection>
+            </Indirection>
+          </Suspense>
+        );
+      }
+
+      const root = ReactTestRenderer.create(<App text="A" />);
+
+      expect(ReactTestRenderer).toHaveYielded([
+        'Stateful: 1',
+        'Suspend! [A]',
+        'Loading...',
+      ]);
+
+      jest.advanceTimersByTime(1000);
+      expect(ReactTestRenderer).toHaveYielded(['Promise resolved [A]', 'A']);
+      expect(root).toMatchRenderedOutput('Stateful: 1A');
+
+      root.update(<App text="B" />);
+      expect(ReactTestRenderer).toHaveYielded([
+        'Stateful: 1',
         'Suspend! [B]',
         'Loading...',
+      ]);
+      expect(root).toMatchRenderedOutput('Loading...');
+
+      instance.setState({step: 2});
+      expect(ReactTestRenderer).toHaveYielded([
+        'Stateful: 2',
+
+        // The suspended component should suspend again. If it doesn't, the
+        // likely mistake is that the suspended fiber wasn't marked with
+        // pending work, so it was improperly treated as complete.
+        'Suspend! [B]',
       ]);
       expect(root).toMatchRenderedOutput('Loading...');
 
@@ -630,6 +691,93 @@ describe('ReactSuspense', () => {
       ]);
       expect(root).toFlushAndYield(['Step: 3']);
       expect(root).toMatchRenderedOutput('Step: 3');
+    });
+
+    it('does not remount the fallback while suspended children resolve in sync mode', () => {
+      let mounts = 0;
+      class ShouldMountOnce extends React.Component {
+        componentDidMount() {
+          mounts++;
+        }
+        render() {
+          return <Text text="Loading..." />;
+        }
+      }
+
+      function App(props) {
+        return (
+          <Suspense maxDuration={10} fallback={<ShouldMountOnce />}>
+            <AsyncText ms={1000} text="Child 1" />
+            <AsyncText ms={2000} text="Child 2" />
+            <AsyncText ms={3000} text="Child 3" />
+          </Suspense>
+        );
+      }
+
+      const root = ReactTestRenderer.create(<App />);
+
+      // Initial render
+      expect(ReactTestRenderer).toHaveYielded([
+        'Suspend! [Child 1]',
+        'Suspend! [Child 2]',
+        'Suspend! [Child 3]',
+        'Loading...',
+      ]);
+      expect(root).toFlushAndYield([]);
+      jest.advanceTimersByTime(1000);
+      expect(ReactTestRenderer).toHaveYielded([
+        'Promise resolved [Child 1]',
+        'Child 1',
+        'Suspend! [Child 2]',
+        'Suspend! [Child 3]',
+      ]);
+      jest.advanceTimersByTime(1000);
+      expect(ReactTestRenderer).toHaveYielded([
+        'Promise resolved [Child 2]',
+        'Child 2',
+        'Suspend! [Child 3]',
+        // TODO: This suspends twice because there were two pings, once for each
+        // time Child 2 suspended. This is only an issue in sync mode because
+        // pings aren't batched.
+        'Suspend! [Child 3]',
+      ]);
+      jest.advanceTimersByTime(1000);
+      expect(ReactTestRenderer).toHaveYielded([
+        'Promise resolved [Child 3]',
+        'Child 3',
+      ]);
+      expect(root).toMatchRenderedOutput(
+        ['Child 1', 'Child 2', 'Child 3'].join(''),
+      );
+      expect(mounts).toBe(1);
+    });
+
+    it('does not get stuck with fallback in concurrent mode for a large delay', () => {
+      function App(props) {
+        return (
+          <Suspense maxDuration={10} fallback={<Text text="Loading..." />}>
+            <AsyncText ms={1000} text="Child 1" />
+            <AsyncText ms={7000} text="Child 2" />
+          </Suspense>
+        );
+      }
+
+      const root = ReactTestRenderer.create(<App />, {
+        unstable_isConcurrent: true,
+      });
+
+      expect(root).toFlushAndYield([
+        'Suspend! [Child 1]',
+        'Suspend! [Child 2]',
+        'Loading...',
+      ]);
+      jest.advanceTimersByTime(1000);
+      expect(ReactTestRenderer).toHaveYielded(['Promise resolved [Child 1]']);
+      expect(root).toFlushAndYield(['Child 1', 'Suspend! [Child 2]']);
+      jest.advanceTimersByTime(6000);
+      expect(ReactTestRenderer).toHaveYielded(['Promise resolved [Child 2]']);
+      expect(root).toFlushAndYield(['Child 1', 'Child 2']);
+      expect(root).toMatchRenderedOutput(['Child 1', 'Child 2'].join(''));
     });
   });
 });

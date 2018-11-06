@@ -17,6 +17,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.enableHooks = true;
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     React = require('react');
@@ -929,11 +930,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       // Suspend during an async render.
       expect(ReactNoop.flushNextYield()).toEqual(['Suspend! [Step: 2]']);
       expect(ReactNoop.flush()).toEqual([
-        'Update did commit',
-        // Switch to the placeholder in a subsequent commit
         'Loading (1)',
         'Loading (2)',
         'Loading (3)',
+        'Update did commit',
       ]);
       expect(ReactNoop.getChildrenAsJSX()).toEqual(
         <React.Fragment>
@@ -1012,12 +1012,11 @@ describe('ReactSuspenseWithNoopRenderer', () => {
           'Before',
           'Suspend! [Async: 1]',
           'After',
+          'Loading...',
           'Before',
           'Sync: 1',
           'After',
           'Did mount',
-          // The placeholder is rendered in a subsequent commit
-          'Loading...',
           'Promise resolved [Async: 1]',
           'Async: 1',
         ]);
@@ -1051,14 +1050,12 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         ]);
         expect(ReactNoop.flush()).toEqual([
           'After',
+          'Loading...',
           'Before',
           'Sync: 2',
           'After',
           'Update 1 did commit',
           'Update 2 did commit',
-
-          // Switch to the placeholder in a subsequent commit
-          'Loading...',
         ]);
         expect(ReactNoop.getChildrenAsJSX()).toEqual(
           <React.Fragment>
@@ -1149,12 +1146,11 @@ describe('ReactSuspenseWithNoopRenderer', () => {
           'Before',
           'Suspend! [Async: 1]',
           'After',
+          'Loading...',
           'Before',
           'Sync: 1',
           'After',
           'Did mount',
-          // The placeholder is rendered in a subsequent commit
-          'Loading...',
           'Promise resolved [Async: 1]',
           'Async: 1',
         ]);
@@ -1188,14 +1184,12 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         ]);
         expect(ReactNoop.flush()).toEqual([
           'After',
+          'Loading...',
           'Before',
           'Sync: 2',
           'After',
           'Update 1 did commit',
           'Update 2 did commit',
-
-          // Switch to the placeholder in a subsequent commit
-          'Loading...',
         ]);
         expect(ReactNoop.getChildrenAsJSX()).toEqual(
           <React.Fragment>
@@ -1276,16 +1270,13 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         'Suspend! [B]',
         'C',
 
+        'Loading...',
         'Mount [A]',
         'Mount [B]',
         'Mount [C]',
-        'Commit root',
-
-        // In a subsequent commit, render a placeholder
-        'Loading...',
-        // Force delete all the existing children when switching to the
-        // placeholder. This should be a mount, not an update.
+        // This should be a mount, not an update.
         'Mount [Loading...]',
+        'Commit root',
       ]);
       expect(ReactNoop.getChildrenAsJSX()).toEqual(
         <React.Fragment>
@@ -1388,6 +1379,45 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       await advanceTimers(100);
       expect(ReactNoop.getChildren()).toEqual([span('Hi')]);
     });
+
+    it('toggles visibility during the mutation phase', async () => {
+      const {useRef, useLayoutEffect} = React;
+
+      function Parent() {
+        const child = useRef(null);
+
+        useLayoutEffect(() => {
+          ReactNoop.yield('Child is hidden: ' + child.current.hidden);
+        });
+
+        return (
+          <span ref={child} hidden={false}>
+            <AsyncText ms={1000} text="Hi" />
+          </span>
+        );
+      }
+
+      function App(props) {
+        return (
+          <Suspense fallback={<Text text="Loading..." />}>
+            <Parent />
+          </Suspense>
+        );
+      }
+
+      ReactNoop.renderLegacySyncRoot(<App middleText="B" />);
+
+      expect(ReactNoop.clearYields()).toEqual([
+        'Suspend! [Hi]',
+        'Loading...',
+        // The child should have already been hidden
+        'Child is hidden: true',
+      ]);
+
+      await advanceTimers(1000);
+
+      expect(ReactNoop.clearYields()).toEqual(['Promise resolved [Hi]', 'Hi']);
+    });
   });
 
   it('does not call lifecycles of a suspended component', async () => {
@@ -1453,16 +1483,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       'A',
       'Suspend! [B]',
       'C',
+      'Loading...',
 
       'Mount [A]',
       // B's lifecycle should not fire because it suspended
       // 'Mount [B]',
       'Mount [C]',
-      'Commit root',
-
-      // In a subsequent commit, render a placeholder
-      'Loading...',
       'Mount [Loading...]',
+      'Commit root',
     ]);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(
       <React.Fragment>

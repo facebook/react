@@ -66,7 +66,7 @@ import {
 } from './ReactChildFiber';
 import {processUpdateQueue} from './ReactUpdateQueue';
 import {NoWork, Never} from './ReactFiberExpirationTime';
-import {ConcurrentMode, StrictMode} from './ReactTypeOfMode';
+import {ConcurrentMode, StrictMode, NoContext} from './ReactTypeOfMode';
 import {
   shouldSetTextContent,
   shouldDeprioritizeSubtree,
@@ -1071,31 +1071,21 @@ function updateSuspenseComponent(
   // We should attempt to render the primary children unless this boundary
   // already suspended during this render (`alreadyCaptured` is true).
   let nextState: SuspenseState | null = workInProgress.memoizedState;
-  if (nextState === null) {
-    // An empty suspense state means this boundary has not yet timed out.
+
+  let nextDidTimeout;
+  if ((workInProgress.effectTag & DidCapture) === NoEffect) {
+    // This is the first attempt.
+    nextState = null;
+    nextDidTimeout = false;
   } else {
-    if (!nextState.alreadyCaptured) {
-      // Since we haven't already suspended during this commit, clear the
-      // existing suspense state. We'll try rendering again.
-      nextState = null;
-    } else {
-      // Something in this boundary's subtree already suspended. Switch to
-      // rendering the fallback children. Set `alreadyCaptured` to true.
-      if (current !== null && nextState === current.memoizedState) {
-        // Create a new suspense state to avoid mutating the current tree's.
-        nextState = {
-          alreadyCaptured: true,
-          didTimeout: true,
-          timedOutAt: nextState.timedOutAt,
-        };
-      } else {
-        // Already have a clone, so it's safe to mutate.
-        nextState.alreadyCaptured = true;
-        nextState.didTimeout = true;
-      }
-    }
+    // Something in this boundary's subtree already suspended. Switch to
+    // rendering the fallback children.
+    nextState = {
+      timedOutAt: nextState !== null ? nextState.timedOutAt : NoWork,
+    };
+    nextDidTimeout = true;
+    workInProgress.effectTag &= ~DidCapture;
   }
-  const nextDidTimeout = nextState !== null && nextState.didTimeout;
 
   // This next part is a bit confusing. If the children timeout, we switch to
   // showing the fallback children in place of the "primary" children.
@@ -1140,6 +1130,22 @@ function updateSuspenseComponent(
         NoWork,
         null,
       );
+
+      if ((workInProgress.mode & ConcurrentMode) === NoContext) {
+        // Outside of concurrent mode, we commit the effects from the
+        // partially completed, timed-out tree, too.
+        const progressedState: SuspenseState = workInProgress.memoizedState;
+        const progressedPrimaryChild: Fiber | null =
+          progressedState !== null
+            ? (workInProgress.child: any).child
+            : (workInProgress.child: any);
+        reuseProgressedPrimaryChild(
+          workInProgress,
+          primaryChildFragment,
+          progressedPrimaryChild,
+        );
+      }
+
       const fallbackChildFragment = createFiberFromFragment(
         nextFallbackChildren,
         mode,
@@ -1166,7 +1172,7 @@ function updateSuspenseComponent(
     // This is an update. This branch is more complicated because we need to
     // ensure the state of the primary children is preserved.
     const prevState = current.memoizedState;
-    const prevDidTimeout = prevState !== null && prevState.didTimeout;
+    const prevDidTimeout = prevState !== null;
     if (prevDidTimeout) {
       // The current tree already timed out. That means each child set is
       // wrapped in a fragment fiber.
@@ -1182,6 +1188,24 @@ function updateSuspenseComponent(
           NoWork,
         );
         primaryChildFragment.effectTag |= Placement;
+
+        if ((workInProgress.mode & ConcurrentMode) === NoContext) {
+          // Outside of concurrent mode, we commit the effects from the
+          // partially completed, timed-out tree, too.
+          const progressedState: SuspenseState = workInProgress.memoizedState;
+          const progressedPrimaryChild: Fiber | null =
+            progressedState !== null
+              ? (workInProgress.child: any).child
+              : (workInProgress.child: any);
+          if (progressedPrimaryChild !== currentPrimaryChildFragment.child) {
+            reuseProgressedPrimaryChild(
+              workInProgress,
+              primaryChildFragment,
+              progressedPrimaryChild,
+            );
+          }
+        }
+
         // Clone the fallback child fragment, too. These we'll continue
         // working on.
         const fallbackChildFragment = (primaryChildFragment.sibling = createWorkInProgress(
@@ -1237,6 +1261,22 @@ function updateSuspenseComponent(
         primaryChildFragment.effectTag |= Placement;
         primaryChildFragment.child = currentPrimaryChild;
         currentPrimaryChild.return = primaryChildFragment;
+
+        if ((workInProgress.mode & ConcurrentMode) === NoContext) {
+          // Outside of concurrent mode, we commit the effects from the
+          // partially completed, timed-out tree, too.
+          const progressedState: SuspenseState = workInProgress.memoizedState;
+          const progressedPrimaryChild: Fiber | null =
+            progressedState !== null
+              ? (workInProgress.child: any).child
+              : (workInProgress.child: any);
+          reuseProgressedPrimaryChild(
+            workInProgress,
+            primaryChildFragment,
+            progressedPrimaryChild,
+          );
+        }
+
         // Create a fragment from the fallback children, too.
         const fallbackChildFragment = (primaryChildFragment.sibling = createFiberFromFragment(
           nextFallbackChildren,
@@ -1268,6 +1308,49 @@ function updateSuspenseComponent(
   workInProgress.memoizedState = nextState;
   workInProgress.child = child;
   return next;
+}
+
+function reuseProgressedPrimaryChild(
+  workInProgress: Fiber,
+  primaryChildFragment: Fiber,
+  progressedChild: Fiber | null,
+) {
+  // This function is only called outside concurrent mode. Usually, if a work-
+  // in-progress primary tree suspends, we throw it out and revert back to
+  // current. Outside concurrent mode, though, we commit the suspended work-in-
+  // progress, even though it didn't complete. This function reuses the children
+  // and transfers the effects.
+  let child = (primaryChildFragment.child = progressedChild);
+  while (child !== null) {
+    // Ensure that the first and last effect of the parent corresponds
+    // to the children's first and last effect.
+    if (primaryChildFragment.firstEffect === null) {
+      primaryChildFragment.firstEffect = child.firstEffect;
+    }
+    if (child.lastEffect !== null) {
+      if (primaryChildFragment.lastEffect !== null) {
+        primaryChildFragment.lastEffect.nextEffect = child.firstEffect;
+      }
+      primaryChildFragment.lastEffect = child.lastEffect;
+    }
+
+    // Append all the effects of the subtree and this fiber onto the effect
+    // list of the parent. The completion order of the children affects the
+    // side-effect order.
+    if (child.effectTag > PerformedWork) {
+      if (primaryChildFragment.lastEffect !== null) {
+        primaryChildFragment.lastEffect.nextEffect = child;
+      } else {
+        primaryChildFragment.firstEffect = child;
+      }
+      primaryChildFragment.lastEffect = child;
+    }
+    child.return = primaryChildFragment;
+    child = child.sibling;
+  }
+
+  workInProgress.firstEffect = primaryChildFragment.firstEffect;
+  workInProgress.lastEffect = primaryChildFragment.lastEffect;
 }
 
 function updatePortalComponent(
@@ -1426,25 +1509,6 @@ function updateContextConsumer(
   return workInProgress.child;
 }
 
-/*
-  function reuseChildrenEffects(returnFiber : Fiber, firstChild : Fiber) {
-    let child = firstChild;
-    do {
-      // Ensure that the first and last effect of the parent corresponds
-      // to the children's first and last effect.
-      if (!returnFiber.firstEffect) {
-        returnFiber.firstEffect = child.firstEffect;
-      }
-      if (child.lastEffect) {
-        if (returnFiber.lastEffect) {
-          returnFiber.lastEffect.nextEffect = child.firstEffect;
-        }
-        returnFiber.lastEffect = child.lastEffect;
-      }
-    } while (child = child.sibling);
-  }
-  */
-
 function bailoutOnAlreadyFinishedWork(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -1528,7 +1592,7 @@ function beginWork(
           break;
         case SuspenseComponent: {
           const state: SuspenseState | null = workInProgress.memoizedState;
-          const didTimeout = state !== null && state.didTimeout;
+          const didTimeout = state !== null;
           if (didTimeout) {
             // If this boundary is currently timed out, we need to decide
             // whether to retry the primary children, or to skip over it and

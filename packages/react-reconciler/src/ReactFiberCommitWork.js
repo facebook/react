@@ -50,13 +50,12 @@ import {
   Placement,
   Snapshot,
   Update,
-  Callback,
 } from 'shared/ReactSideEffectTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
-import {NoWork, Sync} from './ReactFiberExpirationTime';
+import {NoWork} from './ReactFiberExpirationTime';
 import {onCommitUnmount} from './ReactFiberDevToolsHook';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
@@ -86,9 +85,7 @@ import {
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
-  flushPassiveEffects,
   requestCurrentTime,
-  scheduleWork,
 } from './ReactFiberScheduler';
 import {
   NoEffect as NoHookEffect,
@@ -452,50 +449,8 @@ function commitLifeCycles(
       }
       return;
     }
-    case SuspenseComponent: {
-      if (finishedWork.effectTag & Callback) {
-        // In non-strict mode, a suspense boundary times out by commiting
-        // twice: first, by committing the children in an inconsistent state,
-        // then hiding them and showing the fallback children in a subsequent
-        // commit.
-        const newState: SuspenseState = {
-          alreadyCaptured: true,
-          didTimeout: false,
-          timedOutAt: NoWork,
-        };
-        finishedWork.memoizedState = newState;
-        flushPassiveEffects();
-        scheduleWork(finishedWork, Sync);
-        return;
-      }
-      let oldState: SuspenseState | null =
-        current !== null ? current.memoizedState : null;
-      let newState: SuspenseState | null = finishedWork.memoizedState;
-      let oldDidTimeout = oldState !== null ? oldState.didTimeout : false;
-
-      let newDidTimeout;
-      let primaryChildParent = finishedWork;
-      if (newState === null) {
-        newDidTimeout = false;
-      } else {
-        newDidTimeout = newState.didTimeout;
-        if (newDidTimeout) {
-          primaryChildParent = finishedWork.child;
-          newState.alreadyCaptured = false;
-          if (newState.timedOutAt === NoWork) {
-            // If the children had not already timed out, record the time.
-            // This is used to compute the elapsed time during subsequent
-            // attempts to render the children.
-            newState.timedOutAt = requestCurrentTime();
-          }
-        }
-      }
-
-      if (newDidTimeout !== oldDidTimeout && primaryChildParent !== null) {
-        hideOrUnhideAllChildren(primaryChildParent, newDidTimeout);
-      }
-      return;
-    }
+    case SuspenseComponent:
+      break;
     case IncompleteClassComponent:
       break;
     default: {
@@ -1066,6 +1021,26 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       return;
     }
     case SuspenseComponent: {
+      let newState: SuspenseState | null = finishedWork.memoizedState;
+
+      let newDidTimeout;
+      let primaryChildParent = finishedWork;
+      if (newState === null) {
+        newDidTimeout = false;
+      } else {
+        newDidTimeout = true;
+        primaryChildParent = finishedWork.child;
+        if (newState.timedOutAt === NoWork) {
+          // If the children had not already timed out, record the time.
+          // This is used to compute the elapsed time during subsequent
+          // attempts to render the children.
+          newState.timedOutAt = requestCurrentTime();
+        }
+      }
+
+      if (primaryChildParent !== null) {
+        hideOrUnhideAllChildren(primaryChildParent, newDidTimeout);
+      }
       return;
     }
     case IncompleteClassComponent: {
