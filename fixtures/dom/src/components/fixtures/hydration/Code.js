@@ -75,6 +75,10 @@ export class CodeError extends React.Component {
     if (supportsDetails) {
       const [summary, ...body] = error.message.split(/\n+/g);
 
+      if (body.length >= 0) {
+        return <div className={className}>{summary}</div>;
+      }
+
       return (
         <details className={className}>
           <summary>{summary}</summary>
