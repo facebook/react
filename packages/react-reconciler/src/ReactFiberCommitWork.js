@@ -54,6 +54,7 @@ import {
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 
 import {NoWork} from './ReactFiberExpirationTime';
 import {onCommitUnmount} from './ReactFiberDevToolsHook';
@@ -232,6 +233,22 @@ function commitBeforeMutationLifeCycles(
           // We could update instance props and state here,
           // but instead we rely on them being set during last render.
           // TODO: revisit this when we implement resuming.
+          if (__DEV__) {
+            if (finishedWork.type === finishedWork.elementType) {
+              warning(
+                instance.props === finishedWork.memoizedProps,
+                'Expected instance props to match memoized props before ' +
+                  'getSnapshotBeforeUpdate. This is likely due to a bug in React. ' +
+                  'Please file an issue.',
+              );
+              warning(
+                instance.state === finishedWork.memoizedState,
+                'Expected instance state to match memoized state before ' +
+                  'getSnapshotBeforeUpdate. This is likely due to a bug in React. ' +
+                  'Please file an issue.',
+              );
+            }
+          }
           const snapshot = instance.getSnapshotBeforeUpdate(
             finishedWork.elementType === finishedWork.type
               ? prevProps
@@ -352,6 +369,22 @@ function commitLifeCycles(
           // We could update instance props and state here,
           // but instead we rely on them being set during last render.
           // TODO: revisit this when we implement resuming.
+          if (__DEV__) {
+            if (finishedWork.type === finishedWork.elementType) {
+              warning(
+                instance.props === finishedWork.memoizedProps,
+                'Expected instance props to match memoized props before ' +
+                  'componentDidMount. This is likely due to a bug in React. ' +
+                  'Please file an issue.',
+              );
+              warning(
+                instance.state === finishedWork.memoizedState,
+                'Expected instance state to match memoized state before ' +
+                  'componentDidMount. This is likely due to a bug in React. ' +
+                  'Please file an issue.',
+              );
+            }
+          }
           instance.componentDidMount();
           stopPhaseTimer();
         } else {
@@ -364,6 +397,22 @@ function commitLifeCycles(
           // We could update instance props and state here,
           // but instead we rely on them being set during last render.
           // TODO: revisit this when we implement resuming.
+          if (__DEV__) {
+            if (finishedWork.type === finishedWork.elementType) {
+              warning(
+                instance.props === finishedWork.memoizedProps,
+                'Expected instance props to match memoized props before ' +
+                  'componentDidUpdate. This is likely due to a bug in React. ' +
+                  'Please file an issue.',
+              );
+              warning(
+                instance.state === finishedWork.memoizedState,
+                'Expected instance state to match memoized state before ' +
+                  'componentDidUpdate. This is likely due to a bug in React. ' +
+                  'Please file an issue.',
+              );
+            }
+          }
           instance.componentDidUpdate(
             prevProps,
             prevState,
@@ -374,6 +423,22 @@ function commitLifeCycles(
       }
       const updateQueue = finishedWork.updateQueue;
       if (updateQueue !== null) {
+        if (__DEV__) {
+          if (finishedWork.type === finishedWork.elementType) {
+            warning(
+              instance.props === finishedWork.memoizedProps,
+              'Expected instance props to match memoized props before ' +
+                'processing the update queue. This is likely due to a bug in React. ' +
+                'Please file an issue.',
+            );
+            warning(
+              instance.state === finishedWork.memoizedState,
+              'Expected instance state to match memoized state before ' +
+                'processing the update queue. This is likely due to a bug in React. ' +
+                'Please file an issue.',
+            );
+          }
+        }
         // We could update instance props and state here,
         // but instead we rely on them being set during last render.
         // TODO: revisit this when we implement resuming.
