@@ -11,10 +11,12 @@ const {execRead, execUnlessDry, logPromise} = require('../utils');
 const push = async ({cwd, dry, otp, packages, version, tag}) => {
   const errors = [];
   const isPrerelease = semver.prerelease(version);
+
+  let resolvedTag = tag;
   if (tag === undefined) {
     // No tag was provided. Default to `latest` for stable releases and `next`
     // for prereleases
-    tag = isPrerelease ? 'next' : 'latest';
+    resolvedTag = isPrerelease ? 'next' : 'latest';
   } else if (tag === 'latest' && isPrerelease) {
     throw new Error('The tag `latest` can only be used for stable versions.');
   }
@@ -26,7 +28,7 @@ const push = async ({cwd, dry, otp, packages, version, tag}) => {
   const publishProject = async project => {
     try {
       const path = join(cwd, 'build', 'node_modules', project);
-      await execUnlessDry(`npm publish --tag ${tag} ${twoFactorAuth}`, {
+      await execUnlessDry(`npm publish --tag ${resolvedTag} ${twoFactorAuth}`, {
         cwd: path,
         dry,
       });
@@ -49,7 +51,7 @@ const push = async ({cwd, dry, otp, packages, version, tag}) => {
         const status = JSON.parse(
           await execRead(`npm info ${project} dist-tags --json`)
         );
-        const remoteVersion = status[tag];
+        const remoteVersion = status[resolvedTag];
 
         // Compare remote version to package.json version,
         // To better handle the case of pre-release versions.
@@ -62,7 +64,9 @@ const push = async ({cwd, dry, otp, packages, version, tag}) => {
 
         // If we've just published a stable release,
         // Update the @next tag to also point to it (so @next doesn't lag behind).
-        if (!isPrerelease) {
+        // Skip this step if we have a manually specified tag.
+        // This is an escape hatch for us to interleave alpha and stable releases.
+        if (tag === undefined && !isPrerelease) {
           await execUnlessDry(
             `npm dist-tag add ${project}@${packageVersion} next ${twoFactorAuth}`,
             {cwd: path, dry}
