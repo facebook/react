@@ -7,11 +7,21 @@
  * @flow
  */
 
-import {createRequest, flushChunk} from 'react-stream/inline.dom';
+import type {ReactNodeList} from 'shared/ReactTypes';
+import type {Writable} from 'stream';
 
-function render() {
-  flushChunk(createRequest({}));
+import {createRequest, startWork, startFlowing} from 'react-stream/inline.dom';
+
+function createDrainHandler(destination, request) {
+  return () => startFlowing(request, 0);
 }
+
+function pipeToNodeWritable(children: ReactNodeList, destination: Writable) {
+  let request = createRequest(children, destination);
+  destination.on('drain', createDrainHandler(destination, request));
+  startWork(request);
+}
+
 export default {
-  render,
+  pipeToNodeWritable,
 };

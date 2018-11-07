@@ -7,20 +7,75 @@
  * @flow
  */
 
-import type {RequestInfo} from './ReactFizzHostConfig';
-import {scheduleWork, writeBuffer} from './ReactFizzHostConfig';
+import type {Destination} from './ReactFizzHostConfig';
+import type {ReactNodeList} from 'shared/ReactTypes';
+
+import {
+  scheduleWork,
+  beginWriting,
+  writeChunk,
+  completeWriting,
+  flushBuffered,
+} from './ReactFizzHostConfig';
 import {formatChunk} from './ReactFizzFormatConfig';
+import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
-type OpaqueRequest = {requestInfo: RequestInfo};
+type OpaqueRequest = {
+  destination: Destination,
+  children: ReactNodeList,
+  completedChunks: Array<Uint8Array>,
+  flowing: boolean,
+};
 
-export function createRequest(requestInfo: RequestInfo): OpaqueRequest {
-  return {requestInfo};
+export function createRequest(
+  children: ReactNodeList,
+  destination: Destination,
+): OpaqueRequest {
+  return {destination, children, completedChunks: [], flowing: false};
 }
 
 function performWork(request: OpaqueRequest): void {
-  writeBuffer(request.requestInfo, formatChunk());
+  let element = (request.children: any);
+  if (element.$$typeof !== REACT_ELEMENT_TYPE) {
+    return;
+  }
+  let type = element.type;
+  let props = element.props;
+  if (typeof type !== 'string') {
+    return;
+  }
+  request.completedChunks.push(formatChunk(type, props));
+  if (request.flowing) {
+    flushCompletedChunks(request);
+  }
+
+  flushBuffered(request.destination);
 }
 
-export function flushChunk(request: OpaqueRequest): void {
+function flushCompletedChunks(request: OpaqueRequest) {
+  let destination = request.destination;
+  let chunks = request.completedChunks;
+
+  beginWriting(destination);
+  try {
+    for (let i = 0; i < chunks.length; i++) {
+      let chunk = chunks[i];
+      writeChunk(destination, chunk);
+    }
+  } finally {
+    completeWriting(destination);
+  }
+}
+
+export function startWork(request: OpaqueRequest): void {
+  request.flowing = true;
   scheduleWork(() => performWork(request));
+}
+
+export function startFlowing(
+  request: OpaqueRequest,
+  desiredBytes: number,
+): void {
+  request.flowing = false;
+  flushCompletedChunks(request);
 }

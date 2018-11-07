@@ -24,7 +24,11 @@
 // really an argument to a top-level wrapping function.
 
 declare var $$$hostConfig: any;
-export opaque type RequestInfo = mixed; // eslint-disable-line no-undef
+export opaque type Destination = mixed; // eslint-disable-line no-undef
 
 export const scheduleWork = $$$hostConfig.scheduleWork;
-export const writeBuffer = $$$hostConfig.writeBuffer;
+export const beginWriting = $$$hostConfig.beginWriting;
+export const writeChunk = $$$hostConfig.writeChunk;
+export const completeWriting = $$$hostConfig.completeWriting;
+export const flushBuffered = $$$hostConfig.flushBuffered;
+export const convertStringToBuffer = $$$hostConfig.convertStringToBuffer;

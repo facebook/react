@@ -10,6 +10,7 @@
 
 'use strict';
 
+let Stream;
 let React;
 let ReactDOMFizzServer;
 
@@ -18,9 +19,21 @@ describe('ReactDOMFizzServer', () => {
     jest.resetModules();
     React = require('react');
     ReactDOMFizzServer = require('react-dom/fizz');
+    Stream = require('stream');
   });
 
-  it('should call render', () => {
-    ReactDOMFizzServer.render(<div>hello world</div>);
+  function getTestWritable() {
+    let writable = new Stream.PassThrough();
+    writable.setEncoding('utf8');
+    writable.result = '';
+    writable.on('data', chunk => (writable.result += chunk));
+    return writable;
+  }
+
+  it('should call pipeToNodeWritable', () => {
+    let writable = getTestWritable();
+    ReactDOMFizzServer.pipeToNodeWritable(<div>hello world</div>, writable);
+    jest.runAllTimers();
+    expect(writable.result).toBe('<div>hello world</div>');
   });
 });
