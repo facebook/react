@@ -13,6 +13,7 @@ import {
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
 } from 'shared/ReactSymbols';
+import {enableHooks} from 'shared/ReactFeatureFlags';
 
 import {Component, PureComponent} from './ReactBaseClasses';
 import {createRef} from './ReactCreateRef';
@@ -27,6 +28,18 @@ import {createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
 import forwardRef from './forwardRef';
 import memo from './memo';
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useImperativeMethods,
+  useLayoutEffect,
+  useMemo,
+  useMutationEffect,
+  useReducer,
+  useRef,
+  useState,
+} from './ReactHooks';
 import {
   createElementWithValidation,
   createFactoryWithValidation,
@@ -73,6 +86,19 @@ if (enableStableConcurrentModeAPIs) {
 } else {
   React.unstable_ConcurrentMode = REACT_CONCURRENT_MODE_TYPE;
   React.unstable_Profiler = REACT_PROFILER_TYPE;
+}
+
+if (enableHooks) {
+  React.useCallback = useCallback;
+  React.useContext = useContext;
+  React.useEffect = useEffect;
+  React.useImperativeMethods = useImperativeMethods;
+  React.useLayoutEffect = useLayoutEffect;
+  React.useMemo = useMemo;
+  React.useMutationEffect = useMutationEffect;
+  React.useReducer = useReducer;
+  React.useRef = useRef;
+  React.useState = useState;
 }
 
 export default React;

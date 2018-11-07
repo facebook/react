@@ -400,7 +400,7 @@ ReactRoot.prototype.createBatch = function(): Batch {
     let insertBefore = firstBatch;
     while (
       insertBefore !== null &&
-      insertBefore._expirationTime <= expirationTime
+      insertBefore._expirationTime >= expirationTime
     ) {
       insertAfter = insertBefore;
       insertBefore = insertBefore._next;
@@ -772,9 +772,13 @@ type RootOptions = {
 };
 
 function createRoot(container: DOMContainer, options?: RootOptions): ReactRoot {
+  const functionName = enableStableConcurrentModeAPIs
+    ? 'createRoot'
+    : 'unstable_createRoot';
   invariant(
     isValidContainer(container),
-    'unstable_createRoot(...): Target container is not a DOM element.',
+    '%s(...): Target container is not a DOM element.',
+    functionName,
   );
   const hydrate = options != null && options.hydrate === true;
   return new ReactRoot(container, true, hydrate);

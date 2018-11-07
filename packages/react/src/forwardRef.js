@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {REACT_FORWARD_REF_TYPE} from 'shared/ReactSymbols';
+import {REACT_FORWARD_REF_TYPE, REACT_MEMO_TYPE} from 'shared/ReactSymbols';
 
 import warningWithoutStack from 'shared/warningWithoutStack';
 
@@ -13,7 +13,14 @@ export default function forwardRef<Props, ElementType: React$ElementType>(
   render: (props: Props, ref: React$Ref<ElementType>) => React$Node,
 ) {
   if (__DEV__) {
-    if (typeof render !== 'function') {
+    if (render != null && render.$$typeof === REACT_MEMO_TYPE) {
+      warningWithoutStack(
+        false,
+        'forwardRef requires a render function but received a `memo` ' +
+          'component. Instead of forwardRef(memo(...)), use ' +
+          'memo(forwardRef(...)).',
+      );
+    } else if (typeof render !== 'function') {
       warningWithoutStack(
         false,
         'forwardRef requires a render function but was given %s.',

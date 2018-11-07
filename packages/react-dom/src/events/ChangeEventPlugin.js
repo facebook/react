@@ -100,7 +100,7 @@ function manualDispatchChangeEvent(nativeEvent) {
 }
 
 function runEventInBatch(event) {
-  EventPluginHub.runEventsInBatch(event, false);
+  EventPluginHub.runEventsInBatch(event);
 }
 
 function getInstIfValueChanged(targetInst) {

@@ -69,7 +69,7 @@ describe('ReactIs', () => {
     expect(ReactIs.isValidElementType({type: 'div', props: {}})).toEqual(false);
   });
 
-  it('should identify async mode', () => {
+  it('should identify concurrent mode', () => {
     expect(ReactIs.typeOf(<React.unstable_ConcurrentMode />)).toBe(
       ReactIs.ConcurrentMode,
     );

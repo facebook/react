@@ -332,6 +332,7 @@ export const scheduleDeferredCallback =
   ReactNativeFrameScheduling.scheduleDeferredCallback;
 export const cancelDeferredCallback =
   ReactNativeFrameScheduling.cancelDeferredCallback;
+export const shouldYield = ReactNativeFrameScheduling.shouldYield;
 
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
@@ -380,7 +381,16 @@ export function cloneHiddenInstance(
   props: Props,
   internalInstanceHandle: Object,
 ): Instance {
-  throw new Error('Not yet implemented.');
+  const viewConfig = instance.canonical.viewConfig;
+  const node = instance.node;
+  const updatePayload = ReactNativeAttributePayload.create(
+    {style: {display: 'none'}},
+    viewConfig.validAttributes,
+  );
+  return {
+    node: cloneNodeWithNewProps(node, updatePayload),
+    canonical: instance.canonical,
+  };
 }
 
 export function cloneUnhiddenInstance(
@@ -389,7 +399,17 @@ export function cloneUnhiddenInstance(
   props: Props,
   internalInstanceHandle: Object,
 ): Instance {
-  throw new Error('Not yet implemented.');
+  const viewConfig = instance.canonical.viewConfig;
+  const node = instance.node;
+  const updatePayload = ReactNativeAttributePayload.diff(
+    {...props, style: [props.style, {display: 'none'}]},
+    props,
+    viewConfig.validAttributes,
+  );
+  return {
+    node: cloneNodeWithNewProps(node, updatePayload),
+    canonical: instance.canonical,
+  };
 }
 
 export function createHiddenTextInstance(

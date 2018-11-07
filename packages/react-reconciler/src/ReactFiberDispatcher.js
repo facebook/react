@@ -8,7 +8,32 @@
  */
 
 import {readContext} from './ReactFiberNewContext';
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useImperativeMethods,
+  useLayoutEffect,
+  useMemo,
+  useMutationEffect,
+  useReducer,
+  useRef,
+  useState,
+} from './ReactFiberHooks';
 
 export const Dispatcher = {
+  readContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useImperativeMethods,
+  useLayoutEffect,
+  useMemo,
+  useMutationEffect,
+  useReducer,
+  useRef,
+  useState,
+};
+export const DispatcherWithoutHooks = {
   readContext,
 };

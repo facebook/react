@@ -296,5 +296,9 @@
   "294": "ReactDOMServer does not yet support Suspense.",
   "295": "ReactDOMServer does not yet support lazy-loaded components.",
   "296": "Log of yielded values is not empty. Call expect(ReactTestRenderer).unstable_toHaveYielded(...) first.",
-  "297": "The matcher `unstable_toHaveYielded` expects an instance of React Test Renderer.\n\nTry: expect(ReactTestRenderer).unstable_toHaveYielded(expectedYields)"
+  "297": "The matcher `unstable_toHaveYielded` expects an instance of React Test Renderer.\n\nTry: expect(ReactTestRenderer).unstable_toHaveYielded(expectedYields)",
+  "298": "Hooks can only be called inside the body of a function component.",
+  "299": "%s(...): Target container is not a DOM element.",
+  "300": "Rendered fewer hooks than expected. This may be caused by an accidental early return statement.",
+  "301": "Too many re-renders. React limits the number of renders to prevent an infinite loop."
 }

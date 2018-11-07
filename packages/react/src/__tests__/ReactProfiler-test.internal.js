@@ -2194,9 +2194,8 @@ describe('Profiler', () => {
       function awaitableAdvanceTimers(ms) {
         jest.advanceTimersByTime(ms);
         // Wait until the end of the current tick
-        return new Promise(resolve => {
-          setImmediate(resolve);
-        });
+        // We cannot use a timer since we're faking them
+        return Promise.resolve().then(() => {});
       }
 
       it('traces both the temporary placeholder and the finished render for an interaction', async () => {
@@ -2502,7 +2501,7 @@ describe('Profiler', () => {
         expect(renderer.toJSON()).toEqual(['loading', 'initial']);
 
         expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-        expect(onRender).toHaveBeenCalledTimes(2); // Sync null commit, placeholder commit
+        expect(onRender).toHaveBeenCalledTimes(1);
         expect(onRender.mock.calls[0][6]).toMatchInteractions([
           initialRenderInteraction,
         ]);
@@ -2536,11 +2535,8 @@ describe('Profiler', () => {
         });
         expect(renderer.toJSON()).toEqual(['loading', 'updated']);
 
-        expect(onRender).toHaveBeenCalledTimes(2); // Sync null commit, placeholder commit
+        expect(onRender).toHaveBeenCalledTimes(1);
         expect(onRender.mock.calls[0][6]).toMatchInteractions([
-          highPriUpdateInteraction,
-        ]);
-        expect(onRender.mock.calls[1][6]).toMatchInteractions([
           highPriUpdateInteraction,
         ]);
         onRender.mockClear();

@@ -7,15 +7,16 @@
  * @flow
  */
 
-import type {Deadline} from 'react-reconciler/src/ReactFiberScheduler';
-
 // Current virtual time
 export let nowImplementation = () => 0;
-export let scheduledCallback: ((deadline: Deadline) => mixed) | null = null;
+export let scheduledCallback: (() => mixed) | null = null;
 export let yieldedValues: Array<mixed> = [];
 
+let didStop: boolean = false;
+let expectedNumberOfYields: number = -1;
+
 export function scheduleDeferredCallback(
-  callback: (deadline: Deadline) => mixed,
+  callback: () => mixed,
   options?: {timeout: number},
 ): number {
   scheduledCallback = callback;
@@ -31,21 +32,25 @@ export function setNowImplementation(implementation: () => number): void {
   nowImplementation = implementation;
 }
 
+export function shouldYield() {
+  if (
+    expectedNumberOfYields !== -1 &&
+    yieldedValues.length >= expectedNumberOfYields
+  ) {
+    // We yielded at least as many values as expected. Stop rendering.
+    didStop = true;
+    return true;
+  }
+  // Keep rendering.
+  return false;
+}
+
 export function flushAll(): Array<mixed> {
   yieldedValues = [];
   while (scheduledCallback !== null) {
     const cb = scheduledCallback;
     scheduledCallback = null;
-    cb({
-      timeRemaining() {
-        // Keep rendering until there's no more work
-        return 999;
-      },
-      // React's scheduler has its own way of keeping track of expired
-      // work and doesn't read this, so don't bother setting it to the
-      // correct value.
-      didTimeout: false,
-    });
+    cb();
   }
   const values = yieldedValues;
   yieldedValues = [];
@@ -53,30 +58,21 @@ export function flushAll(): Array<mixed> {
 }
 
 export function flushNumberOfYields(count: number): Array<mixed> {
-  let didStop = false;
+  expectedNumberOfYields = count;
+  didStop = false;
   yieldedValues = [];
-  while (scheduledCallback !== null && !didStop) {
-    const cb = scheduledCallback;
-    scheduledCallback = null;
-    cb({
-      timeRemaining() {
-        if (yieldedValues.length >= count) {
-          // We at least as many values as expected. Stop rendering.
-          didStop = true;
-          return 0;
-        }
-        // Keep rendering.
-        return 999;
-      },
-      // React's scheduler has its own way of keeping track of expired
-      // work and doesn't read this, so don't bother setting it to the
-      // correct value.
-      didTimeout: false,
-    });
+  try {
+    while (scheduledCallback !== null && !didStop) {
+      const cb = scheduledCallback;
+      scheduledCallback = null;
+      cb();
+    }
+    return yieldedValues;
+  } finally {
+    expectedNumberOfYields = -1;
+    didStop = false;
+    yieldedValues = [];
   }
-  const values = yieldedValues;
-  yieldedValues = [];
-  return values;
 }
 
 export function yieldValue(value: mixed): void {
