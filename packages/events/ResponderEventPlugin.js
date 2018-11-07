@@ -40,7 +40,7 @@ import {
 let responderInst = null;
 
 /**
- * Count of current touches. A textInput should become responder iff the
+ * Count of current touches. A textInput should become responder if the
  * selection changes while there is a touch on the screen.
  */
 let trackedTouchCount = 0;
