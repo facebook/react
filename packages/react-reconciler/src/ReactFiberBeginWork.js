@@ -66,7 +66,12 @@ import {
 } from './ReactChildFiber';
 import {processUpdateQueue} from './ReactUpdateQueue';
 import {NoWork, Never} from './ReactFiberExpirationTime';
-import {ConcurrentMode, StrictMode, NoContext} from './ReactTypeOfMode';
+import {
+  ConcurrentMode,
+  NoContext,
+  ProfileMode,
+  StrictMode,
+} from './ReactTypeOfMode';
 import {
   shouldSetTextContent,
   shouldDeprioritizeSubtree,
@@ -743,7 +748,7 @@ function mountLazyComponent(
 ) {
   if (_current !== null) {
     // An lazy component only mounts if it suspended inside a non-
-    // concurrent tree, in an inconsistent state. We want to tree it like
+    // concurrent tree, in an inconsistent state. We want to treat it like
     // a new mount, even though an empty version of it already committed.
     // Disconnect the alternate pointers.
     _current.alternate = null;
@@ -829,7 +834,7 @@ function mountIncompleteClassComponent(
 ) {
   if (_current !== null) {
     // An incomplete component only mounts if it suspended inside a non-
-    // concurrent tree, in an inconsistent state. We want to tree it like
+    // concurrent tree, in an inconsistent state. We want to treat it like
     // a new mount, even though an empty version of it already committed.
     // Disconnect the alternate pointers.
     _current.alternate = null;
@@ -886,7 +891,7 @@ function mountIndeterminateComponent(
 ) {
   if (_current !== null) {
     // An indeterminate component only mounts if it suspended inside a non-
-    // concurrent tree, in an inconsistent state. We want to tree it like
+    // concurrent tree, in an inconsistent state. We want to treat it like
     // a new mount, even though an empty version of it already committed.
     // Disconnect the alternate pointers.
     _current.alternate = null;
@@ -1188,6 +1193,19 @@ function updateSuspenseComponent(
           }
         }
 
+        // Because primaryChildFragment is a new fiber that we're inserting as the
+        // parent of a new tree, we need to set its treeBaseDuration.
+        if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
+          // treeBaseDuration is the sum of all the child tree base durations.
+          let treeBaseDuration = 0;
+          let hiddenChild = primaryChildFragment.child;
+          while (hiddenChild !== null) {
+            treeBaseDuration += hiddenChild.treeBaseDuration;
+            hiddenChild = hiddenChild.sibling;
+          }
+          primaryChildFragment.treeBaseDuration = treeBaseDuration;
+        }
+
         // Clone the fallback child fragment, too. These we'll continue
         // working on.
         const fallbackChildFragment = (primaryChildFragment.sibling = createWorkInProgress(
@@ -1239,6 +1257,7 @@ function updateSuspenseComponent(
           NoWork,
           null,
         );
+
         primaryChildFragment.effectTag |= Placement;
         primaryChildFragment.child = currentPrimaryChild;
         currentPrimaryChild.return = primaryChildFragment;
@@ -1252,6 +1271,19 @@ function updateSuspenseComponent(
               ? (workInProgress.child: any).child
               : (workInProgress.child: any);
           primaryChildFragment.child = progressedPrimaryChild;
+        }
+
+        // Because primaryChildFragment is a new fiber that we're inserting as the
+        // parent of a new tree, we need to set its treeBaseDuration.
+        if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
+          // treeBaseDuration is the sum of all the child tree base durations.
+          let treeBaseDuration = 0;
+          let hiddenChild = primaryChildFragment.child;
+          while (hiddenChild !== null) {
+            treeBaseDuration += hiddenChild.treeBaseDuration;
+            hiddenChild = hiddenChild.sibling;
+          }
+          primaryChildFragment.treeBaseDuration = treeBaseDuration;
         }
 
         // Create a fragment from the fallback children, too.
