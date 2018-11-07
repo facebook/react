@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "eslint-plugin-react-hooks",
   "description": "ESLint rules for React Hooks",
   "version": "0.0.0",
