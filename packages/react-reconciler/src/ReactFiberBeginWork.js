@@ -1127,11 +1127,7 @@ function updateSuspenseComponent(
           progressedState !== null
             ? (workInProgress.child: any).child
             : (workInProgress.child: any);
-        reuseProgressedPrimaryChild(
-          workInProgress,
-          primaryChildFragment,
-          progressedPrimaryChild,
-        );
+        primaryChildFragment.child = progressedPrimaryChild;
       }
 
       const fallbackChildFragment = createFiberFromFragment(
@@ -1186,11 +1182,7 @@ function updateSuspenseComponent(
               ? (workInProgress.child: any).child
               : (workInProgress.child: any);
           if (progressedPrimaryChild !== currentPrimaryChildFragment.child) {
-            reuseProgressedPrimaryChild(
-              workInProgress,
-              primaryChildFragment,
-              progressedPrimaryChild,
-            );
+            primaryChildFragment.child = progressedPrimaryChild;
           }
         }
 
@@ -1213,20 +1205,19 @@ function updateSuspenseComponent(
         // and remove the intermediate fragment fiber.
         const nextPrimaryChildren = nextProps.children;
         const currentPrimaryChild = currentPrimaryChildFragment.child;
-        const currentFallbackChild = currentFallbackChildFragment.child;
         const primaryChild = reconcileChildFibers(
           workInProgress,
           currentPrimaryChild,
           nextPrimaryChildren,
           renderExpirationTime,
         );
-        // Delete the fallback children.
-        reconcileChildFibers(
-          workInProgress,
-          currentFallbackChild,
-          null,
-          renderExpirationTime,
-        );
+
+        // If this render doesn't suspend, we need to delete the fallback
+        // children. Wait until the complete phase, after we've confirmed the
+        // fallback is no longer needed.
+        // TODO: Would it be better to store the fallback fragment on
+        // the stateNode?
+
         // Continue rendering the children, like we normally do.
         child = next = primaryChild;
       }
@@ -1258,11 +1249,7 @@ function updateSuspenseComponent(
             progressedState !== null
               ? (workInProgress.child: any).child
               : (workInProgress.child: any);
-          reuseProgressedPrimaryChild(
-            workInProgress,
-            primaryChildFragment,
-            progressedPrimaryChild,
-          );
+          primaryChildFragment.child = progressedPrimaryChild;
         }
 
         // Create a fragment from the fallback children, too.
@@ -1296,49 +1283,6 @@ function updateSuspenseComponent(
   workInProgress.memoizedState = nextState;
   workInProgress.child = child;
   return next;
-}
-
-function reuseProgressedPrimaryChild(
-  workInProgress: Fiber,
-  primaryChildFragment: Fiber,
-  progressedChild: Fiber | null,
-) {
-  // This function is only called outside concurrent mode. Usually, if a work-
-  // in-progress primary tree suspends, we throw it out and revert back to
-  // current. Outside concurrent mode, though, we commit the suspended work-in-
-  // progress, even though it didn't complete. This function reuses the children
-  // and transfers the effects.
-  let child = (primaryChildFragment.child = progressedChild);
-  while (child !== null) {
-    // Ensure that the first and last effect of the parent corresponds
-    // to the children's first and last effect.
-    if (primaryChildFragment.firstEffect === null) {
-      primaryChildFragment.firstEffect = child.firstEffect;
-    }
-    if (child.lastEffect !== null) {
-      if (primaryChildFragment.lastEffect !== null) {
-        primaryChildFragment.lastEffect.nextEffect = child.firstEffect;
-      }
-      primaryChildFragment.lastEffect = child.lastEffect;
-    }
-
-    // Append all the effects of the subtree and this fiber onto the effect
-    // list of the parent. The completion order of the children affects the
-    // side-effect order.
-    if (child.effectTag > PerformedWork) {
-      if (primaryChildFragment.lastEffect !== null) {
-        primaryChildFragment.lastEffect.nextEffect = child;
-      } else {
-        primaryChildFragment.firstEffect = child;
-      }
-      primaryChildFragment.lastEffect = child;
-    }
-    child.return = primaryChildFragment;
-    child = child.sibling;
-  }
-
-  workInProgress.firstEffect = primaryChildFragment.firstEffect;
-  workInProgress.lastEffect = primaryChildFragment.lastEffect;
 }
 
 function updatePortalComponent(
