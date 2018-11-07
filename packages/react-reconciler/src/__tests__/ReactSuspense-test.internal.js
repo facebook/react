@@ -779,5 +779,64 @@ describe('ReactSuspense', () => {
       expect(root).toFlushAndYield(['Child 1', 'Child 2']);
       expect(root).toMatchRenderedOutput(['Child 1', 'Child 2'].join(''));
     });
+
+    it('reuses effects, including deletions, from the suspended tree', () => {
+      const {useState} = React;
+
+      let setTab;
+      function App() {
+        const [tab, _setTab] = useState(0);
+        setTab = _setTab;
+
+        return (
+          <Suspense fallback={<Text text="Loading..." />}>
+            <AsyncText key={tab} text={'Tab: ' + tab} ms={1000} />
+            <Text key={tab + 'sibling'} text=" + sibling" />
+          </Suspense>
+        );
+      }
+
+      const root = ReactTestRenderer.create(<App />);
+      expect(ReactTestRenderer).toHaveYielded([
+        'Suspend! [Tab: 0]',
+        ' + sibling',
+        'Loading...',
+      ]);
+      expect(root).toMatchRenderedOutput('Loading...');
+      jest.advanceTimersByTime(1000);
+      expect(ReactTestRenderer).toHaveYielded([
+        'Promise resolved [Tab: 0]',
+        'Tab: 0',
+      ]);
+      expect(root).toMatchRenderedOutput('Tab: 0 + sibling');
+
+      setTab(1);
+      expect(ReactTestRenderer).toHaveYielded([
+        'Suspend! [Tab: 1]',
+        ' + sibling',
+        'Loading...',
+      ]);
+      expect(root).toMatchRenderedOutput('Loading...');
+      jest.advanceTimersByTime(1000);
+      expect(ReactTestRenderer).toHaveYielded([
+        'Promise resolved [Tab: 1]',
+        'Tab: 1',
+      ]);
+      expect(root).toMatchRenderedOutput('Tab: 1 + sibling');
+
+      setTab(2);
+      expect(ReactTestRenderer).toHaveYielded([
+        'Suspend! [Tab: 2]',
+        ' + sibling',
+        'Loading...',
+      ]);
+      expect(root).toMatchRenderedOutput('Loading...');
+      jest.advanceTimersByTime(1000);
+      expect(ReactTestRenderer).toHaveYielded([
+        'Promise resolved [Tab: 2]',
+        'Tab: 2',
+      ]);
+      expect(root).toMatchRenderedOutput('Tab: 2 + sibling');
+    });
   });
 });

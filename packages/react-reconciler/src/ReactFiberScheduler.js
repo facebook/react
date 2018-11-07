@@ -993,7 +993,6 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
 
       if (nextUnitOfWork !== null) {
         // Completing this fiber spawned new work. Work on that next.
-        nextUnitOfWork.firstEffect = nextUnitOfWork.lastEffect = null;
         return nextUnitOfWork;
       }
 

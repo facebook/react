@@ -82,6 +82,7 @@ import {
   popHydrationState,
 } from './ReactFiberHydrationContext';
 import {ConcurrentMode, NoContext} from './ReactTypeOfMode';
+import {reconcileChildFibers} from './ReactChildFiber';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -700,12 +701,29 @@ function completeWork(
       if ((workInProgress.effectTag & DidCapture) !== NoEffect) {
         // Something suspended. Re-render with the fallback children.
         workInProgress.expirationTime = renderExpirationTime;
-        workInProgress.firstEffect = workInProgress.lastEffect = null;
+        // Do not reset the effect list.
         return workInProgress;
       }
 
       const nextDidTimeout = nextState !== null;
       const prevDidTimeout = current !== null && current.memoizedState !== null;
+
+      if (current !== null && !nextDidTimeout && prevDidTimeout) {
+        // We just switched from the fallback to the normal children. Delete
+        // the fallback.
+        // TODO: Would it be better to store the fallback fragment on
+        // the stateNode during the begin phase?
+        const currentFallbackChild: Fiber | null = (current.child: any).sibling;
+        if (currentFallbackChild !== null) {
+          reconcileChildFibers(
+            workInProgress,
+            currentFallbackChild,
+            null,
+            renderExpirationTime,
+          );
+        }
+      }
+
       // The children either timed out after previously being visible, or
       // were restored after previously being hidden. Schedule an effect
       // to update their visiblity.
