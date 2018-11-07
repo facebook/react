@@ -283,6 +283,8 @@ function updateMemoComponent(
       );
     }
   }
+  // React DevTools reads this flag.
+  workInProgress.effectTag |= PerformedWork;
   let newChild = createWorkInProgress(
     currentChild,
     nextProps,
