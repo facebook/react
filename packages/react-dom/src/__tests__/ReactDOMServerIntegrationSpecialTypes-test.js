@@ -83,7 +83,7 @@ describe('ReactDOMServerIntegration', () => {
     expect(div.textContent).toBe('Test');
   });
 
-  describe('memoized functional components', () => {
+  describe('memoized function components', () => {
     beforeEach(() => {
       resetModules();
     });

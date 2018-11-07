@@ -282,12 +282,12 @@ export default {
         // Gets the function name for our code path. If the function name is
         // `undefined` then we know either that we have an anonymous function
         // expression or our code path is not in a function. In both cases we
-        // will want to error since neither are React functional components or
+        // will want to error since neither are React function components or
         // hook functions.
         const codePathFunctionName = getFunctionName(codePathNode);
 
         // This is a valid code path for React hooks if we are direcly in a React
-        // functional component or we are in a hook function.
+        // function component or we are in a hook function.
         const isSomewhereInsideComponentOrHook = isInsideComponentOrHook(
           codePathNode,
         );

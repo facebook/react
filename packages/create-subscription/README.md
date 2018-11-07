@@ -81,7 +81,7 @@ import React from "react";
 import { createSubscription } from "create-subscription";
 
 // Start with a simple component.
-// In this case, it's a functional component, but it could have been a class.
+// In this case, it's a function component, but it could have been a class.
 function FollowerComponent({ followersCount }) {
   return <div>You have {followersCount} followers!</div>;
 }
@@ -164,7 +164,7 @@ function LoadingComponent({ loadingStatus }) {
   }
 }
 
-// Wrap the functional component with a subscriber HOC.
+// Wrap the function component with a subscriber HOC.
 // This HOC will manage subscriptions and pass values to the decorated component.
 // It will add and remove subscriptions in an async-safe way when props change.
 const PromiseSubscription = createSubscription({
