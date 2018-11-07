@@ -1,4 +1,5 @@
 {
+  "private": true,
   "name": "react-debug-tools",
   "description": "React package for debugging React trees.",
   "version": "0.16.0",
