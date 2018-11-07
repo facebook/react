@@ -4,7 +4,9 @@
     Changes that have landed in master but are not yet released.
     Click to see more.
   </summary>
+</details>
 
+## 16.6.1 (November 6, 2018)
 
 ### React DOM
 
@@ -16,8 +18,6 @@
 ### Scheduler (Experimental)
 
 * Switch from deadline object to `shouldYield` API. ([@acdlite](https://github.com/acdlite) in [#14025](https://github.com/facebook/react/pull/14025))
-
-</details>
 
 
 ## 16.6.0 (October 23, 2018)
