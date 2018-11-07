@@ -283,7 +283,8 @@ export function postMountWrapper(
         //   2. The defaultValue React property when present
         //   3. An empty string
         if (initialValue !== node.value) {
-          node.value = initialValue;
+          node.setAttribute('value', initialValue);
+          // node.value = initialValue;
         }
       }
     }
