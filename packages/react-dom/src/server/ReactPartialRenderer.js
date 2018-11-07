@@ -8,11 +8,7 @@
  */
 
 import type {ReactElement} from 'shared/ReactElementType';
-import type {
-  ReactProvider,
-  ReactConsumer,
-  ReactContext,
-} from 'shared/ReactTypes';
+import type {ReactProvider, ReactContext} from 'shared/ReactTypes';
 
 import React from 'react';
 import invariant from 'shared/invariant';
@@ -93,6 +89,7 @@ let validatePropertiesInDevelopment = (type, props) => {};
 let pushCurrentDebugStack = (stack: Array<Frame>) => {};
 let pushElementToDebugStack = (element: ReactElement) => {};
 let popCurrentDebugStack = () => {};
+let hasWarnedAboutUsingContextAsConsumer = false;
 
 if (__DEV__) {
   ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
@@ -1061,9 +1058,35 @@ class ReactDOMServerRenderer {
             return '';
           }
           case REACT_CONTEXT_TYPE: {
-            const consumer: ReactConsumer<any> = (nextChild: any);
-            const nextProps: any = consumer.props;
-            const nextValue = consumer.type._currentValue;
+            let reactContext = (nextChild: any).type;
+            // The logic below for Context differs depending on PROD or DEV mode. In
+            // DEV mode, we create a separate object for Context.Consumer that acts
+            // like a proxy to Context. This proxy object adds unnecessary code in PROD
+            // so we use the old behaviour (Context.Consumer references Context) to
+            // reduce size and overhead. The separate object references context via
+            // a property called "_context", which also gives us the ability to check
+            // in DEV mode if this property exists or not and warn if it does not.
+            if (__DEV__) {
+              if ((reactContext: any)._context === undefined) {
+                // This may be because it's a Context (rather than a Consumer).
+                // Or it may be because it's older React where they're the same thing.
+                // We only want to warn if we're sure it's a new React.
+                if (reactContext !== reactContext.Consumer) {
+                  if (!hasWarnedAboutUsingContextAsConsumer) {
+                    hasWarnedAboutUsingContextAsConsumer = true;
+                    warning(
+                      false,
+                      'Rendering <Context> directly is not supported and will be removed in ' +
+                        'a future major release. Did you mean to render <Context.Consumer> instead?',
+                    );
+                  }
+                }
+              } else {
+                reactContext = (reactContext: any)._context;
+              }
+            }
+            const nextProps: any = (nextChild: any).props;
+            const nextValue = reactContext._currentValue;
 
             const nextChildren = toArray(nextProps.children(nextValue));
             const frame: Frame = {
