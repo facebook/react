@@ -27,6 +27,7 @@ const ReactNoopServer = ReactFizzStreamer({
     destination.push(JSON.parse(Buffer.from((buffer: any)).toString('utf8')));
   },
   completeWriting(destination: Destination): void {},
+  close(destination: Destination): void {},
   flushBuffered(destination: Destination): void {},
   convertStringToBuffer(content: string): Uint8Array {
     return Buffer.from(content, 'utf8');

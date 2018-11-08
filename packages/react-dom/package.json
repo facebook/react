@@ -33,13 +33,15 @@
     "test-utils.js",
     "unstable-fire.js",
     "unstable-fizz.js",
+    "unstable-fizz.browser.js",
     "unstable-fizz.node.js",
     "unstable-native-dependencies.js",
     "cjs/",
     "umd/"
   ],
   "browser": {
-    "./server.js": "./server.browser.js"
+    "./server.js": "./server.browser.js",
+    "./unstable-fizz.js": "./unstable-fizz.browser.js"
   },
   "browserify": {
     "transform": [

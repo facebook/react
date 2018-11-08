@@ -160,9 +160,16 @@ const bundles = [
 
   /******* React DOM Fizz Server *******/
   {
+    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    moduleType: RENDERER,
+    entry: 'react-dom/unstable-fizz.browser',
+    global: 'ReactDOMFizzServer',
+    externals: ['react'],
+  },
+  {
     bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
     moduleType: RENDERER,
-    entry: 'react-dom/unstable-fizz',
+    entry: 'react-dom/unstable-fizz.node',
     global: 'ReactDOMFizzServer',
     externals: ['react'],
   },

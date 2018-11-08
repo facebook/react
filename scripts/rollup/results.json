@@ -942,57 +942,85 @@
       "filename": "ReactDOMFizzServer-dev.js",
       "bundleType": "FB_WWW_DEV",
       "packageName": "react-dom",
-      "size": 3660,
-      "gzip": 1408
+      "size": 3772,
+      "gzip": 1432
     },
     {
       "filename": "ReactDOMFizzServer-prod.js",
       "bundleType": "FB_WWW_PROD",
       "packageName": "react-dom",
-      "size": 2092,
-      "gzip": 844
+      "size": 2211,
+      "gzip": 874
     },
     {
       "filename": "react-noop-renderer-server.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-noop-renderer",
-      "size": 1825,
-      "gzip": 864
+      "size": 1861,
+      "gzip": 869
     },
     {
       "filename": "react-noop-renderer-server.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-noop-renderer",
-      "size": 785,
-      "gzip": 477
+      "size": 804,
+      "gzip": 482
     },
     {
       "filename": "react-stream.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-stream",
-      "size": 4508,
-      "gzip": 1650
+      "size": 4633,
+      "gzip": 1683
     },
     {
       "filename": "react-stream.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-stream",
-      "size": 1161,
-      "gzip": 631
+      "size": 1224,
+      "gzip": 655
     },
     {
-      "filename": "react-dom-unstable-fizz.development.js",
+      "filename": "react-dom-unstable-fizz.browser.development.js",
+      "bundleType": "UMD_DEV",
+      "packageName": "react-dom",
+      "size": 3704,
+      "gzip": 1463
+    },
+    {
+      "filename": "react-dom-unstable-fizz.browser.production.min.js",
+      "bundleType": "UMD_PROD",
+      "packageName": "react-dom",
+      "size": 1227,
+      "gzip": 697
+    },
+    {
+      "filename": "react-dom-unstable-fizz.browser.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-dom",
-      "size": 3663,
-      "gzip": 1417
+      "size": 3528,
+      "gzip": 1416
     },
     {
-      "filename": "react-dom-unstable-fizz.production.min.js",
+      "filename": "react-dom-unstable-fizz.browser.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-dom",
-      "size": 1073,
-      "gzip": 636
+      "size": 1063,
+      "gzip": 628
+    },
+    {
+      "filename": "react-dom-unstable-fizz.node.development.js",
+      "bundleType": "NODE_DEV",
+      "packageName": "react-dom",
+      "size": 3780,
+      "gzip": 1443
+    },
+    {
+      "filename": "react-dom-unstable-fizz.node.production.min.js",
+      "bundleType": "NODE_PROD",
+      "packageName": "react-dom",
+      "size": 1122,
+      "gzip": 659
     }
   ]
 }

@@ -39,6 +39,10 @@ export function completeWriting(destination: Destination) {
   destination.uncork();
 }
 
+export function close(destination: Destination) {
+  destination.end();
+}
+
 export function convertStringToBuffer(content: string): Uint8Array {
   return Buffer.from(content, 'utf8');
 }

@@ -16,7 +16,10 @@ function createDrainHandler(destination, request) {
   return () => startFlowing(request, 0);
 }
 
-function pipeToNodeWritable(children: ReactNodeList, destination: Writable) {
+function pipeToNodeWritable(
+  children: ReactNodeList,
+  destination: Writable,
+): void {
   let request = createRequest(children, destination);
   destination.on('drain', createDrainHandler(destination, request));
   startWork(request);

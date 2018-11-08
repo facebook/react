@@ -16,6 +16,7 @@ import {
   writeChunk,
   completeWriting,
   flushBuffered,
+  close,
 } from './ReactFizzHostConfig';
 import {formatChunk} from './ReactFizzFormatConfig';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
@@ -36,7 +37,8 @@ export function createRequest(
 
 function performWork(request: OpaqueRequest): void {
   let element = (request.children: any);
-  if (element.$$typeof !== REACT_ELEMENT_TYPE) {
+  request.children = null;
+  if (element && element.$$typeof !== REACT_ELEMENT_TYPE) {
     return;
   }
   let type = element.type;
@@ -55,6 +57,7 @@ function performWork(request: OpaqueRequest): void {
 function flushCompletedChunks(request: OpaqueRequest) {
   let destination = request.destination;
   let chunks = request.completedChunks;
+  request.completedChunks = [];
 
   beginWriting(destination);
   try {
@@ -65,6 +68,7 @@ function flushCompletedChunks(request: OpaqueRequest) {
   } finally {
     completeWriting(destination);
   }
+  close(destination);
 }
 
 export function startWork(request: OpaqueRequest): void {
