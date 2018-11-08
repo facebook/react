@@ -61,6 +61,7 @@ module.exports = {
     // We apply these settings to files that should run on Node.
     // They can't use JSX or ES6 modules, and must be in strict mode.
     // They can, however, use other ES6 features.
+    // (Note these rules are overridden later for source files.)
     'no-var': ERROR,
     strict: ERROR,
 

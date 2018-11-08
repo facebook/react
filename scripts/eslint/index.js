@@ -64,14 +64,10 @@ function runESLint({onlyChanged}) {
   if (typeof onlyChanged !== 'boolean') {
     throw new Error('Pass options.onlyChanged as a boolean.');
   }
-  let errorCount = 0;
-  let warningCount = 0;
-  let output = '';
-  [runESLintOnFilesWithOptions(allPaths, onlyChanged)].forEach(result => {
-    errorCount += result.errorCount;
-    warningCount += result.warningCount;
-    output += result.output;
-  });
+  const {errorCount, warningCount, output} = runESLintOnFilesWithOptions(
+    allPaths,
+    onlyChanged
+  );
   console.log(output);
   return errorCount === 0 && warningCount === 0;
 }
