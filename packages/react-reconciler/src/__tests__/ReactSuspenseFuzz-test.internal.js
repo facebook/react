@@ -3,15 +3,16 @@ let Suspense;
 let ReactTestRenderer;
 let ReactFeatureFlags;
 
-// const prettyFormatPkg = require('pretty-format');
-// function prettyFormat(thing) {
-//   prettyFormatPkg(thing, {
-//     plugins: [
-//       prettyFormatPkg.plugins.ReactElement,
-//       prettyFormatPkg.plugins.ReactTestComponent,
-//     ],
-//   });
-// }
+const prettyFormatPkg = require('pretty-format');
+
+function prettyFormat(thing) {
+  return prettyFormatPkg(thing, {
+    plugins: [
+      prettyFormatPkg.plugins.ReactElement,
+      prettyFormatPkg.plugins.ReactTestComponent,
+    ],
+  });
+}
 
 describe('ReactSuspenseFuzz', () => {
   beforeEach(() => {
@@ -322,7 +323,17 @@ describe('ReactSuspenseFuzz', () => {
 
     for (let i = 0; i < NUMBER_OF_TEST_CASES; i++) {
       const randomTestCase = generateTestCase(ELEMENTS_PER_CASE);
-      testResolvedOutput(randomTestCase);
+      try {
+        testResolvedOutput(randomTestCase);
+      } catch (e) {
+        console.log(`
+Failed fuzzy test case:
+
+${prettyFormat(randomTestCase)}
+`);
+
+        throw e;
+      }
     }
   });
 });
