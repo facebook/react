@@ -317,6 +317,8 @@ function commitHookEffectList(
       if ((effect.tag & mountTag) !== NoHookEffect) {
         // Mount
         const create = ((effect.create: any): () => mixed);
+        // Null out the `create` field, avoiding possible memory leaks
+        // due to retaining the function's closure context.
         effect.create = null;
         let destroy = create();
         if (typeof destroy !== 'function') {
