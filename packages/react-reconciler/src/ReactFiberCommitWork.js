@@ -316,7 +316,8 @@ function commitHookEffectList(
       }
       if ((effect.tag & mountTag) !== NoHookEffect) {
         // Mount
-        const create = effect.create;
+        const create = ((effect.create: any): () => mixed);
+        effect.create = null;
         let destroy = create();
         if (typeof destroy !== 'function') {
           if (__DEV__) {

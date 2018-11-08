@@ -62,7 +62,7 @@ export type Hook = {
 
 type Effect = {
   tag: HookEffectTag,
-  create: () => mixed,
+  create: null | (() => mixed),
   destroy: (() => mixed) | null,
   inputs: Array<mixed>,
   next: Effect,
@@ -552,7 +552,20 @@ function useEffectImpl(fiberEffectTag, hookEffectTag, create, inputs): void {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   workInProgressHook = createWorkInProgressHook();
 
-  let nextInputs = inputs !== undefined && inputs !== null ? inputs : [create];
+  let nextInputs;
+  if (inputs !== undefined && inputs !== null) {
+    nextInputs = inputs;
+  } else {
+    // Rather than storing the create function in the nextInputs, which might
+    // cause memory issues due to shared context of the retained closure. We
+    // can instead add field called "__key" and assign a symbol to the field.
+    // We then store this symbol and use it as a key instead of the function.
+    // Note: This will require the ES2015 Symbol polyfill.
+    if (create.__key === undefined) {
+      create.__key = Symbol();
+    }
+    nextInputs = [create.__key];
+  }
   let destroy = null;
   if (currentHook !== null) {
     const prevEffect = currentHook.memoizedState;
