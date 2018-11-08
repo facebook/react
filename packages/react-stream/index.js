@@ -19,8 +19,8 @@
 
 'use strict';
 
-const ReactFizzRenderer = require('./src/ReactFizzRenderer');
+const ReactFizzStreamer = require('./src/ReactFizzStreamer');
 
 // TODO: decide on the top-level export form.
 // This is hacky but makes it work with both Rollup and Jest.
-module.exports = ReactFizzRenderer.default || ReactFizzRenderer;
+module.exports = ReactFizzStreamer.default || ReactFizzStreamer;

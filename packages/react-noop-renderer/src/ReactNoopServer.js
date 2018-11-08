@@ -14,11 +14,11 @@
  * environment.
  */
 
-import ReactFizzRenderer from 'react-stream';
+import ReactFizzStreamer from 'react-stream';
 
 type Destination = Array<string>;
 
-const ReactNoopServer = ReactFizzRenderer({
+const ReactNoopServer = ReactFizzStreamer({
   scheduleWork(callback: () => void) {
     callback();
   },
