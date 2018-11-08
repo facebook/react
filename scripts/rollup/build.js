@@ -410,12 +410,6 @@ function getPlugins(
   ].filter(Boolean);
 }
 
-const isIndexName = /\/index(.js)?$/;
-
-function endsWith(str, suffix) {
-  return str.substr(str.length - suffix.length) === suffix;
-}
-
 function shouldSkipBundle(bundle, bundleType) {
   const shouldSkipBundleType = bundle.bundleTypes.indexOf(bundleType) === -1;
   if (shouldSkipBundleType) {
@@ -436,9 +430,7 @@ function shouldSkipBundle(bundle, bundleType) {
       // `react-dom` but not `react-dom/server`. Everything else is fuzzy
       // search.
       requestedName =>
-        isIndexName.test(requestedName)
-          ? !endsWith(bundle.entry, requestedName.replace(isIndexName, ''))
-          : bundle.entry.indexOf(requestedName) === -1
+        (bundle.entry + '/index.js').indexOf(requestedName) === -1
     );
     if (isAskingForDifferentNames) {
       return true;
