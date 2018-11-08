@@ -278,7 +278,28 @@ describe('ReactSuspenseFuzz', () => {
               {value: randomInteger(0, 5000), weight: 1},
             ]);
 
-            return React.createElement(Suspense, {maxDuration}, ...children);
+            const fallbackType = pickRandomWeighted([
+              {value: 'none', weight: 1},
+              {value: 'normal', weight: 1},
+              {value: 'nested suspense', weight: 1},
+            ]);
+
+            let fallback;
+            if (fallbackType === 'normal') {
+              fallback = 'Loading...';
+            } else if (fallbackType === 'nested suspense') {
+              fallback = React.createElement(
+                React.Fragment,
+                null,
+                ...createRandomChildren(3),
+              );
+            }
+
+            return React.createElement(
+              Suspense,
+              {maxDuration, fallback},
+              ...children,
+            );
           }
           case 'return':
           default:
@@ -312,6 +333,28 @@ describe('ReactSuspenseFuzz', () => {
           updates={[{beginAfter: 100, suspendFor: 200}]}
         />
       </Container>,
+    );
+  });
+
+  it('hard-coded cases', () => {
+    const {Text, testResolvedOutput} = createFuzzer();
+
+    testResolvedOutput(
+      <React.Fragment>
+        <Text
+          initialDelay={20}
+          text="A"
+          updates={[{beginAfter: 10, suspendFor: 20}]}
+        />
+        <Suspense fallback="Loading... (B)">
+          <Text
+            initialDelay={10}
+            text="B"
+            updates={[{beginAfter: 30, suspendFor: 50}]}
+          />
+          <Text text="C" />
+        </Suspense>
+      </React.Fragment>,
     );
   });
 
