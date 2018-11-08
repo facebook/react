@@ -18,7 +18,7 @@ describe('ReactDOMFizzServer', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactDOMFizzServer = require('react-dom/fizz');
+    ReactDOMFizzServer = require('react-dom/unstable-fizz');
     Stream = require('stream');
   });
 

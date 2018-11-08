@@ -9,7 +9,7 @@
 module.exports = [
   {
     shortName: 'dom',
-    entryPoints: ['react-dom', 'react-dom/fizz'],
+    entryPoints: ['react-dom', 'react-dom/unstable-fizz'],
     isFlowTyped: true,
     isFizzSupported: true,
   },

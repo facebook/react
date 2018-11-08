@@ -9,4 +9,4 @@
 
 'use strict';
 
-module.exports = require('./fizz.node');
+module.exports = require('./unstable-fizz.node');

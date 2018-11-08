@@ -162,7 +162,7 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
     moduleType: RENDERER,
-    entry: 'react-dom/fizz',
+    entry: 'react-dom/unstable-fizz',
     global: 'ReactDOMFizzServer',
     externals: ['react'],
   },
