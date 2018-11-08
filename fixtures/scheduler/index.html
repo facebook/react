@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html style="width: 100%; height: 100%;">
+
+<head>
+  <meta charset="utf-8">
+  <title>Scheduler Test Page</title>
+  <style>
+    .correct {
+      border: solid green 2px;
+    }
+    .incorrect {
+      border: dashed red 2px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Scheduler Fixture</h1>
+  <p>
+    This fixture is for manual testing purposes, and the patterns used in
+    implementing it should not be used as a model. This is mainly for anyone
+    working on making changes to the `schedule` module.
+  </p>
+  <h2>Tests:</h2>
+  <ol>
+    <li>
+      <button onClick="runTestOne()">Run Test 1</button>
+      <p>Calls the callback within the frame when not blocked:</p>
+      <div><b>Expected:</b></div>
+      <div id="test-1-expected">
+      </div>
+      <div> -------------------------------------------------</div>
+      <div> If you see the same above and below it's correct.
+        <div> -------------------------------------------------</div>
+        <div><b>Actual:</b></div>
+        <div id="test-1"></div>
+    </li>
+    <li>
+      <p>Accepts multiple callbacks and calls within frame when not blocked</p>
+      <button onClick="runTestTwo()">Run Test 2</button>
+      <div><b>Expected:</b></div>
+      <div id="test-2-expected">
+      </div>
+      <div> -------------------------------------------------</div>
+      <div> If you see the same above and below it's correct.
+        <div> -------------------------------------------------</div>
+        <div><b>Actual:</b></div>
+        <div id="test-2"></div>
+    </li>
+    <li>
+      <p>Schedules callbacks in correct order when they use scheduleCallback to schedule themselves</p>
+      <button onClick="runTestThree()">Run Test 3</button>
+      <div><b>Expected:</b></div>
+      <div id="test-3-expected">
+      </div>
+      <div> -------------------------------------------------</div>
+      <div> If you see the same above and below it's correct.
+        <div> -------------------------------------------------</div>
+        <div><b>Actual:</b></div>
+        <div id="test-3"></div>
+    </li>
+    <li>
+      <p>Calls timed out callbacks and then any more pending callbacks, defers others if time runs out</p>
+      <button onClick="runTestFour()">Run Test 4</button>
+      <div><b>Expected:</b></div>
+      <div id="test-4-expected">
+      </div>
+      <div> -------------------------------------------------</div>
+      <div> If you see the same above and below it's correct.
+        <div> -------------------------------------------------</div>
+        <div><b>Actual:</b></div>
+        <div id="test-4"></div>
+    </li>
+    <li>
+      <p>When some callbacks throw errors, still calls them all within the same frame</p>
+      <p><b>IMPORTANT:</b> Open the console when you run this! Inspect the logs there!</p>
+      <button onClick="runTestFive()">Run Test 5</button>
+    </li>
+    <li>
+      <p>When some callbacks throw errors <b> and some also time out</b>, still calls them all within the same frame</p>
+      <p><b>IMPORTANT:</b> Open the console when you run this! Inspect the logs there!</p>
+      <button onClick="runTestSix()">Run Test 6</button>
+    </li>
+    <li>
+      <p>Continues calling callbacks even when user switches away from this tab</p>
+      <button onClick="runTestSeven()">Run Test 7</button>
+      <div><b>Click the button above, observe the counter, then switch to
+          another tab and switch back:</b></div>
+      <div id="test-7">
+      </div>
+      <div> If the counter advanced while you were away from this tab, it's correct.</div>
+    </li>
+  </ol>
+  <script src="../../build/dist/react.development.js"></script>
+  <script src="../../build/node_modules/scheduler/umd/scheduler.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.js"></script>
+  <script type="text/babel">
+const {
+  unstable_scheduleCallback: scheduleCallback,
+  unstable_cancelCallback: cancelCallback,
+  unstable_now: now
+} = Scheduler;
+function displayTestResult(testNumber) {
+  const expectationNode = document.getElementById('test-' + testNumber + '-expected');
+  const resultNode = document.getElementById('test-' + testNumber);
+  resultNode.innerHTML = latestResults[testNumber - 1].join('<br />');
+  expectationNode.innerHTML = expectedResults[testNumber - 1].join('<br />');
+}
+function clearTestResult(testNumber) {
+  const resultNode = document.getElementById('test-' + testNumber);
+  resultNode.innerHTML = '';
+  latestResults[testNumber - 1] = [];
+}
+function updateTestResult(testNumber, textToAddToResult) {
+  latestResults[testNumber - 1].push(textToAddToResult);
+};
+function checkTestResult(testNumber) {
+
+  let correct = true;
+  const expected = expectedResults[testNumber - 1]; // zero indexing
+  const result = latestResults[testNumber - 1]; // zero indexing
+  if (expected.length !== result.length) {
+    correct = false;
+  } else {
+    for (let i = 0, len = expected.length; i < len; i++) {
+      if (expected[i] !== result[i]) {
+        correct = false;
+        break;
+      }
+    }
+  }
+  const currentClass = correct ? 'correct' : 'incorrect';
+  const previousClass = correct ? 'incorrect' : 'correct';
+  document.getElementById('test-' + testNumber).classList.remove(previousClass);
+  document.getElementById('test-' + testNumber).classList.add(currentClass);
+}
+function logWhenFramesStart(testNumber, cb) {
+  requestAnimationFrame(() => {
+    updateTestResult(testNumber, 'frame 1 started');
+    requestAnimationFrame(() => {
+      updateTestResult(testNumber, 'frame 2 started');
+      requestAnimationFrame(() => {
+        updateTestResult(testNumber, 'frame 3 started... we stop counting now.');
+        cb();
+      });
+    });
+  });
+}
+// push in results when we run the test
+const latestResults = [
+  // test 1
+  [
+  ],
+  // test 2
+  [
+  ],
+  // test 3
+  [
+  ],
+  // test 4
+  [
+  ],
+  // test 5
+  [
+  ],
+];
+
+const expectedResults = [
+  // test 1
+  [
+    'scheduled Cb1',
+    'frame 1 started',
+    'cb1 called with argument of {"didTimeout":false}',
+    'frame 2 started',
+    'frame 3 started... we stop counting now.',
+  ],
+  // test 2
+  [
+    'scheduled CbA',
+    'scheduled CbB',
+    'frame 1 started',
+    'cbA called with argument of {"didTimeout":false}',
+    'cbB called with argument of {"didTimeout":false}',
+    'frame 2 started',
+    'frame 3 started... we stop counting now.',
+  ],
+  // test 3
+  [
+    'scheduled CbA',
+    'scheduled CbB',
+    'frame 1 started',
+    'scheduled CbA again',
+    'cbA0 called with argument of {"didTimeout":false}',
+    'cbB called with argument of {"didTimeout":false}',
+    'cbA1 called with argument of {"didTimeout":false}',
+    'frame 2 started',
+    'frame 3 started... we stop counting now.',
+  ],
+  // test 4
+  [
+    'scheduled cbA',
+    'scheduled cbB',
+    'scheduled cbC',
+    'scheduled cbD',
+    'frame 1 started',
+    'cbC called with argument of {"didTimeout":true}',
+    'cbA called with argument of {"didTimeout":false}',
+    'cbA running and taking some time',
+    'frame 2 started',
+    'cbB called with argument of {"didTimeout":false}',
+    'cbD called with argument of {"didTimeout":false}',
+    'frame 3 started... we stop counting now.',
+  ],
+  // test 5
+  [
+    // ... TODO
+  ],
+];
+function runTestOne() {
+  // Test 1
+  // Calls the callback with the frame when not blocked
+  clearTestResult(1);
+  const test1Log = [];
+  const cb1Arguments = [];
+  const cb1 = (x) => {
+    updateTestResult(1, 'cb1 called with argument of ' + JSON.stringify(x));
+  }
+  scheduleCallback(cb1);
+  updateTestResult(1, 'scheduled Cb1');
+  logWhenFramesStart(1, () => {
+    displayTestResult(1);
+    checkTestResult(1);
+  });
+};
+
+function runTestTwo() {
+  // Test 2
+  // accepts multiple callbacks and calls within frame when not blocked
+  clearTestResult(2);
+  const cbA = (x) => {
+    updateTestResult(2, 'cbA called with argument of ' + JSON.stringify(x));
+  }
+  const cbB = (x) => {
+    updateTestResult(2, 'cbB called with argument of ' + JSON.stringify(x));
+  }
+  scheduleCallback(cbA);
+  updateTestResult(2, 'scheduled CbA');
+  scheduleCallback(cbB);
+  updateTestResult(2, 'scheduled CbB');
+  logWhenFramesStart(2, () => {
+    displayTestResult(2);
+    checkTestResult(2);
+  });
+}
+
+function runTestThree() {
+  // Test 3
+  // Schedules callbacks in correct order when they use scheduleCallback to schedule themselves
+  clearTestResult(3);
+  let callbackAIterations = 0;
+  const cbA = (x) => {
+    if (callbackAIterations < 1) {
+      scheduleCallback(cbA);
+      updateTestResult(3, 'scheduled CbA again');
+    }
+    updateTestResult(3, 'cbA' + callbackAIterations + ' called with argument of ' + JSON.stringify(x));
+    callbackAIterations++;
+  }
+  const cbB = (x) => {
+    updateTestResult(3, 'cbB called with argument of ' + JSON.stringify(x));
+  }
+  scheduleCallback(cbA);
+  updateTestResult(3, 'scheduled CbA');
+  scheduleCallback(cbB);
+  updateTestResult(3, 'scheduled CbB');
+  logWhenFramesStart(3, () => {
+    displayTestResult(3);
+    checkTestResult(3);
+  });
+}
+
+function waitForTimeToPass(timeInMs) {
+  const startTime = Date.now();
+  const endTime = startTime + timeInMs;
+  while (Date.now() < endTime) {
+    // wait...
+  }
+}
+
+function runTestFour() {
+  // Test 4
+  // Calls timed out callbacks and then any more pending callbacks, defers others if time runs out
+  clearTestResult(4);
+  const cbA = (x) => {
+    updateTestResult(4, 'cbA called with argument of ' + JSON.stringify(x));
+    updateTestResult(4, 'cbA running and taking some time');
+    waitForTimeToPass(35);
+  }
+  const cbB = (x) => {
+    updateTestResult(4, 'cbB called with argument of ' + JSON.stringify(x));
+  }
+  const cbC = (x) => {
+    updateTestResult(4, 'cbC called with argument of ' + JSON.stringify(x));
+  }
+  const cbD = (x) => {
+    updateTestResult(4, 'cbD called with argument of ' + JSON.stringify(x));
+  }
+  scheduleCallback(cbA); // won't time out
+  updateTestResult(4, 'scheduled cbA');
+  scheduleCallback(cbB, {timeout: 100}); // times out later
+  updateTestResult(4, 'scheduled cbB');
+  scheduleCallback(cbC, {timeout: 1}); // will time out fast
+  updateTestResult(4, 'scheduled cbC');
+  scheduleCallback(cbD); // won't time out
+  updateTestResult(4, 'scheduled cbD');
+
+  // should have run in order of C, A, B, D
+
+  logWhenFramesStart(4, () => {
+    displayTestResult(4);
+    checkTestResult(4);
+  });
+
+}
+
+// Error handling
+
+function runTestFive() {
+  // Test 5
+  // When some callbacks throw errors, still calls them all within the same frame
+  const cbA = (x) => {
+    console.log('cbA called with argument of ' + JSON.stringify(x));
+  }
+  const cbB = (x) => {
+    console.log('cbB called with argument of ' + JSON.stringify(x));
+    console.log('cbB is about to throw an error!');
+    throw new Error('error B');
+  }
+  const cbC = (x) => {
+    console.log('cbC called with argument of ' + JSON.stringify(x));
+  }
+  const cbD = (x) => {
+    console.log('cbD called with argument of ' + JSON.stringify(x));
+    console.log('cbD is about to throw an error!');
+    throw new Error('error D');
+  }
+  const cbE = (x) => {
+    console.log('cbE called with argument of ' + JSON.stringify(x));
+    console.log('This was the last callback! ------------------');
+  }
+
+  console.log('We are aiming to roughly emulate the way ' +
+  '`requestAnimationFrame` handles errors from callbacks.');
+
+  console.log('about to run the simulation of what it should look like...:');
+
+  requestAnimationFrame(() => {
+    console.log('frame 1 started');
+    requestAnimationFrame(() => {
+      console.log('frame 2 started');
+      requestAnimationFrame(() => {
+        console.log('frame 3 started... we stop counting now.');
+        console.log('about to wait a moment and start this again but ' +
+        'with the scheduler instead of requestAnimationFrame');
+        setTimeout(runSchedulerCode, 1000);
+      });
+    });
+  });
+  requestAnimationFrame(cbA);
+  console.log('scheduled cbA');
+  requestAnimationFrame(cbB); // will throw error
+  console.log('scheduled cbB');
+  requestAnimationFrame(cbC);
+  console.log('scheduled cbC');
+  requestAnimationFrame(cbD); // will throw error
+  console.log('scheduled cbD');
+  requestAnimationFrame(cbE);
+  console.log('scheduled cbE');
+
+
+  function runSchedulerCode() {
+    console.log('-------------------------------------------------------------');
+    console.log('now lets see what it looks like using the scheduler...:');
+    requestAnimationFrame(() => {
+      console.log('frame 1 started');
+      requestAnimationFrame(() => {
+        console.log('frame 2 started');
+        requestAnimationFrame(() => {
+          console.log('frame 3 started... we stop counting now.');
+        });
+      });
+    });
+    scheduleCallback(cbA);
+    console.log('scheduled cbA');
+    scheduleCallback(cbB); // will throw error
+    console.log('scheduled cbB');
+    scheduleCallback(cbC);
+    console.log('scheduled cbC');
+    scheduleCallback(cbD); // will throw error
+    console.log('scheduled cbD');
+    scheduleCallback(cbE);
+    console.log('scheduled cbE');
+  };
+}
+
+function runTestSix() {
+  // Test 6
+  // When some callbacks throw errors, still calls them all within the same frame
+  const cbA = (x) => {
+    console.log('cbA called with argument of ' + JSON.stringify(x));
+    console.log('cbA is about to throw an error!');
+    throw new Error('error A');
+  }
+  const cbB = (x) => {
+    console.log('cbB called with argument of ' + JSON.stringify(x));
+  }
+  const cbC = (x) => {
+    console.log('cbC called with argument of ' + JSON.stringify(x));
+  }
+  const cbD = (x) => {
+    console.log('cbD called with argument of ' + JSON.stringify(x));
+    console.log('cbD is about to throw an error!');
+    throw new Error('error D');
+  }
+  const cbE = (x) => {
+    console.log('cbE called with argument of ' + JSON.stringify(x));
+    console.log('This was the last callback! ------------------');
+  }
+
+  console.log('We are aiming to roughly emulate the way ' +
+  '`requestAnimationFrame` handles errors from callbacks.');
+
+  console.log('about to run the simulation of what it should look like...:');
+
+  requestAnimationFrame(() => {
+    console.log('frame 1 started');
+    requestAnimationFrame(() => {
+      console.log('frame 2 started');
+      requestAnimationFrame(() => {
+        console.log('frame 3 started... we stop counting now.');
+        console.log('about to wait a moment and start this again but ' +
+        'with the scheduler instead of requestAnimationFrame');
+        setTimeout(runSchedulerCode, 1000);
+      });
+    });
+  });
+  requestAnimationFrame(cbC);
+  console.log('scheduled cbC first; simulating timing out');
+  requestAnimationFrame(cbD); // will throw error
+  console.log('scheduled cbD first; simulating timing out');
+  requestAnimationFrame(cbE);
+  console.log('scheduled cbE first; simulating timing out');
+  requestAnimationFrame(cbA);
+  console.log('scheduled cbA'); // will throw error
+  requestAnimationFrame(cbB);
+  console.log('scheduled cbB');
+
+
+  function runSchedulerCode() {
+    console.log('-------------------------------------------------------------');
+    console.log('now lets see what it looks like using the scheduler...:');
+    requestAnimationFrame(() => {
+      console.log('frame 1 started');
+      requestAnimationFrame(() => {
+        console.log('frame 2 started');
+        requestAnimationFrame(() => {
+          console.log('frame 3 started... we stop counting now.');
+        });
+      });
+    });
+    scheduleCallback(cbA);
+    console.log('scheduled cbA');
+    scheduleCallback(cbB); // will throw error
+    console.log('scheduled cbB');
+    scheduleCallback(cbC, {timeout: 1});
+    console.log('scheduled cbC');
+    scheduleCallback(cbD, {timeout: 1}); // will throw error
+    console.log('scheduled cbD');
+    scheduleCallback(cbE, {timeout: 1});
+    console.log('scheduled cbE');
+  };
+}
+
+function runTestSeven() {
+  // Test 7
+  // Calls callbacks, continues calling them even when this tab is in the
+  // background
+  clearTestResult(7);
+  let counter = -1;
+  function incrementCounterAndScheduleNextCallback() {
+    const counterNode = document.getElementById('test-7');
+    counter++;
+    counterNode.innerHTML = counter;
+    waitForTimeToPass(100);
+    scheduleCallback(incrementCounterAndScheduleNextCallback);
+  }
+  scheduleCallback(incrementCounterAndScheduleNextCallback);
+}
+    </script type="text/babel">
+  </body>
+</html>

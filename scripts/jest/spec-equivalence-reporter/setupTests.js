@@ -1,0 +1,71 @@
+/*!
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+'use strict';
+
+const expect = global.expect;
+
+let numExpectations = 0;
+
+global.expect = function() {
+  numExpectations += 1;
+  return expect.apply(this, arguments);
+};
+
+const spyOn = global.spyOn;
+
+// Spying on console methods in production builds can mask errors.
+// This is why we added an explicit spyOnDev() helper.
+// It's too easy to accidentally use the more familiar spyOn() helper though,
+// So we disable it entirely.
+// Spying on both dev and prod will require using both spyOnDev() and spyOnProd().
+global.spyOn = function() {
+  throw new Error(
+    'Do not use spyOn(). ' +
+      'It can accidentally hide unexpected errors in production builds. ' +
+      'Use spyOnDev(), spyOnProd(), or spyOnDevAndProd() instead.'
+  );
+};
+
+global.spyOnDev = function(...args) {
+  if (__DEV__) {
+    return spyOn(...args);
+  }
+};
+
+global.spyOnDevAndProd = spyOn;
+
+global.spyOnProd = function(...args) {
+  if (!__DEV__) {
+    return spyOn(...args);
+  }
+};
+
+const JestReact = require('jest-react');
+expect.extend({
+  ...require('../matchers/interactionTracing'),
+  ...require('../matchers/toWarnDev'),
+
+  toFlushWithoutYielding: JestReact.unstable_toFlushWithoutYielding,
+  toFlushAndYield: JestReact.unstable_toFlushAndYield,
+  toFlushAndYieldThrough: JestReact.unstable_toFlushAndYieldThrough,
+  toHaveYielded: JestReact.unstable_toHaveYielded,
+  toFlushAndThrow: JestReact.unstable_toFlushAndThrow,
+  toMatchRenderedOutput: JestReact.unstable_toMatchRenderedOutput,
+});
+
+beforeEach(() => (numExpectations = 0));
+
+jasmine.currentEnv_.addReporter({
+  specDone: spec => {
+    console.log(
+      `EQUIVALENCE: ${spec.description}, ` +
+        `status: ${spec.status}, ` +
+        `numExpectations: ${numExpectations}`
+    );
+  },
+});

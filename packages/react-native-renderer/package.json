@@ -1,0 +1,14 @@
+{
+  "name": "react-native-renderer",
+  "version": "16.0.0",
+  "private": true,
+  "repository": "facebook/react",
+  "dependencies": {
+    "object-assign": "^4.1.1",
+    "prop-types": "^15.6.2",
+    "scheduler": "^0.11.0"
+  },
+  "peerDependencies": {
+    "react": "^16.0.0"
+  }
+}
