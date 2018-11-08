@@ -18,27 +18,23 @@ import ReactFizzRenderer from 'react-stream';
 
 type Destination = Array<string>;
 
-const ReactNoopServer = ReactFizzRenderer(
-  {
-    scheduleWork(callback: () => void) {
-      callback();
-    },
-    beginWriting(destination: Destination): void {},
-    writeChunk(destination: Destination, buffer: Uint8Array): void {
-      destination.push(JSON.parse(Buffer.from((buffer: any)).toString('utf8')));
-    },
-    completeWriting(destination: Destination): void {},
-    flushBuffered(destination: Destination): void {},
-    convertStringToBuffer(content: string): Uint8Array {
-      return Buffer.from(content, 'utf8');
-    },
+const ReactNoopServer = ReactFizzRenderer({
+  scheduleWork(callback: () => void) {
+    callback();
   },
-  {
-    formatChunk(type: string, props: Object): Uint8Array {
-      return Buffer.from(JSON.stringify({type, props}), 'utf8');
-    },
+  beginWriting(destination: Destination): void {},
+  writeChunk(destination: Destination, buffer: Uint8Array): void {
+    destination.push(JSON.parse(Buffer.from((buffer: any)).toString('utf8')));
   },
-);
+  completeWriting(destination: Destination): void {},
+  flushBuffered(destination: Destination): void {},
+  convertStringToBuffer(content: string): Uint8Array {
+    return Buffer.from(content, 'utf8');
+  },
+  formatChunk(type: string, props: Object): Uint8Array {
+    return Buffer.from(JSON.stringify({type, props}), 'utf8');
+  },
+});
 
 function render(children: React$Element<any>): Destination {
   let destination: Destination = [];

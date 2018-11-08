@@ -20,9 +20,9 @@ jest.mock('react-reconciler/persistent', () => {
 const shimFizzHostConfigPath = 'react-stream/src/ReactFizzHostConfig';
 const shimFizzFormatConfigPath = 'react-stream/src/ReactFizzFormatConfig';
 jest.mock('react-stream', () => {
-  return (config, configFormat) => {
+  return config => {
     jest.mock(shimFizzHostConfigPath, () => config);
-    jest.mock(shimFizzFormatConfigPath, () => configFormat);
+    jest.mock(shimFizzFormatConfigPath, () => config);
     return require.requireActual('react-stream');
   };
 });
