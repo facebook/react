@@ -410,6 +410,12 @@ function getPlugins(
   ].filter(Boolean);
 }
 
+const isIndexName = /\/index(.js)?$/;
+
+function endsWith(str, suffix) {
+  return str.substr(str.length - suffix.length) === suffix;
+}
+
 function shouldSkipBundle(bundle, bundleType) {
   const shouldSkipBundleType = bundle.bundleTypes.indexOf(bundleType) === -1;
   if (shouldSkipBundleType) {
@@ -425,7 +431,14 @@ function shouldSkipBundle(bundle, bundleType) {
   }
   if (requestedBundleNames.length > 0) {
     const isAskingForDifferentNames = requestedBundleNames.every(
-      requestedName => bundle.label.indexOf(requestedName) === -1
+      // If the name ends with `something/index` we only match if the
+      // entry ends in something. Such as `react-dom/index` only matches
+      // `react-dom` but not `react-dom/server`. Everything else is fuzzy
+      // search.
+      requestedName =>
+        isIndexName.test(requestedName)
+          ? !endsWith(bundle.entry, requestedName.replace(isIndexName, ''))
+          : bundle.entry.indexOf(requestedName) === -1
     );
     if (isAskingForDifferentNames) {
       return true;
