@@ -70,7 +70,6 @@ import {
   LOW_PRIORITY_EXPIRATION,
 } from './ReactFiberExpirationTime';
 import {findEarliestOutstandingPriorityLevel} from './ReactFiberPendingPriority';
-import {reconcileChildren} from './ReactFiberBeginWork';
 
 function createRootErrorUpdate(
   fiber: Fiber,
@@ -238,20 +237,10 @@ function throwException(
         if ((workInProgress.mode & ConcurrentMode) === NoEffect) {
           workInProgress.effectTag |= DidCapture;
 
-          // Unmount the source fiber's children
-          const nextChildren = null;
-          reconcileChildren(
-            sourceFiber.alternate,
-            sourceFiber,
-            nextChildren,
-            renderExpirationTime,
-          );
-          sourceFiber.effectTag &= ~Incomplete;
-
           // We're going to commit this fiber even though it didn't complete.
           // But we shouldn't call any lifecycle methods or callbacks. Remove
           // all lifecycle effect tags.
-          sourceFiber.effectTag &= ~LifecycleEffectMask;
+          sourceFiber.effectTag &= ~(LifecycleEffectMask | Incomplete);
 
           if (sourceFiber.tag === ClassComponent) {
             const current = sourceFiber.alternate;
