@@ -308,7 +308,7 @@ describe('ReactDOM', () => {
       ReactDOM.render(
         <div>
           <h1>Auto-focus Test</h1>
-          <input defaultValue="foo" autoFocus={true} />
+          <input autoFocus={true} />
           <p>The above input should be focused after mount.</p>
         </div>,
         container,
@@ -316,7 +316,6 @@ describe('ReactDOM', () => {
 
       expect(inputFocusedAfterMount).toBe(true);
       expect(focusedElement.tagName).toBe('INPUT');
-      expect(focusedElement.selectionStart).toBe(0);
     } finally {
       HTMLElement.prototype.focus = originalFocus;
     }
