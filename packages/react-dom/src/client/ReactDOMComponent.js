@@ -766,6 +766,12 @@ export function diffProperties(
     }
   }
   if (styleUpdates) {
+    if (__DEV__) {
+      CSSPropertyOperations.validateShorthandPropertyCollisionInDev(
+        styleUpdates,
+        nextProps[STYLE],
+      );
+    }
     (updatePayload = updatePayload || []).push(STYLE, styleUpdates);
   }
   return updatePayload;

@@ -5,9 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import {
+  overlappingShorthandsInDev,
+  longhandToShorthandInDev,
+  shorthandToLonghandInDev,
+} from './CSSShorthandProperty';
+
 import dangerousStyleValue from './dangerousStyleValue';
 import hyphenateStyleName from './hyphenateStyleName';
 import warnValidStyle from './warnValidStyle';
+import warning from 'shared/warning';
 
 /**
  * Operations for dealing with CSS properties.
@@ -75,6 +82,95 @@ export function setValueForStyles(node, styles) {
       style.setProperty(styleName, styleValue);
     } else {
       style[styleName] = styleValue;
+    }
+  }
+}
+
+function isValueEmpty(value) {
+  return value == null || typeof value === 'boolean' || value === '';
+}
+
+/**
+ * When mixing shorthand and longhand property names, we warn during updates if
+ * we expect an incorrect result to occur. In particular, we warn for:
+ *
+ * Updating a shorthand property (longhand gets overwritten):
+ *   {font: 'foo', fontVariant: 'bar'} -> {font: 'baz', fontVariant: 'bar'}
+ *   becomes .style.font = 'baz'
+ * Removing a shorthand property (longhand gets lost too):
+ *   {font: 'foo', fontVariant: 'bar'} -> {fontVariant: 'bar'}
+ *   becomes .style.font = ''
+ * Removing a longhand property (should revert to shorthand; doesn't):
+ *   {font: 'foo', fontVariant: 'bar'} -> {font: 'foo'}
+ *   becomes .style.fontVariant = ''
+ */
+export function validateShorthandPropertyCollisionInDev(
+  styleUpdates,
+  nextStyles,
+) {
+  if (!nextStyles) {
+    return;
+  }
+
+  for (const key in styleUpdates) {
+    const isEmpty = isValueEmpty(styleUpdates[key]);
+    if (isEmpty) {
+      // Property removal; check if we're removing a longhand property
+      const shorthands = longhandToShorthandInDev[key];
+      if (shorthands) {
+        const conflicting = shorthands.filter(
+          s => !isValueEmpty(nextStyles[s]),
+        );
+        if (conflicting.length) {
+          warning(
+            false,
+            'Removing a style property during rerender (%s) when a ' +
+              'conflicting property is set (%s) can lead to styling bugs. To ' +
+              "avoid this, don't mix shorthand and non-shorthand properties " +
+              'for the same value; instead, replace the shorthand with ' +
+              'separate values.',
+            key,
+            conflicting.join(', '),
+          );
+        }
+      }
+    }
+
+    // Updating or removing a property; check if it's a shorthand property
+    const longhands = shorthandToLonghandInDev[key];
+    const overlapping = overlappingShorthandsInDev[key];
+    // eslint-disable-next-line no-var
+    var conflicting = new Set();
+    if (longhands) {
+      longhands.forEach(l => {
+        if (isValueEmpty(styleUpdates[l]) && !isValueEmpty(nextStyles[l])) {
+          // ex: key = 'font', l = 'fontStyle'
+          conflicting.add(l);
+        }
+      });
+    }
+    if (overlapping) {
+      overlapping.forEach(l => {
+        if (isValueEmpty(styleUpdates[l]) && !isValueEmpty(nextStyles[l])) {
+          // ex: key = 'borderLeft', l = 'borderStyle'
+          conflicting.add(l);
+        }
+      });
+    }
+    if (conflicting.size) {
+      warning(
+        false,
+        '%s a style property during rerender (%s) when a ' +
+          'conflicting property is set (%s) can lead to styling bugs. To ' +
+          "avoid this, don't mix shorthand and non-shorthand properties " +
+          'for the same value; instead, replace the shorthand with ' +
+          'separate values.',
+        isEmpty ? 'Removing' : 'Updating',
+        key,
+        Array.from(conflicting)
+          .sort()
+          .join(', '),
+      );
     }
   }
 }
