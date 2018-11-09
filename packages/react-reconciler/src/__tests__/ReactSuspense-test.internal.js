@@ -838,5 +838,53 @@ describe('ReactSuspense', () => {
       ]);
       expect(root).toMatchRenderedOutput('Tab: 2 + sibling');
     });
+
+    it('does not warn if an mounted component is pinged', () => {
+      const {useState} = React;
+
+      const root = ReactTestRenderer.create(null);
+
+      let setStep;
+      function UpdatingText({text, ms}) {
+        const [step, _setStep] = useState(0);
+        setStep = _setStep;
+        const fullText = `${text}:${step}`;
+        try {
+          TextResource.read([fullText, ms]);
+          ReactTestRenderer.unstable_yield(fullText);
+          return fullText;
+        } catch (promise) {
+          if (typeof promise.then === 'function') {
+            ReactTestRenderer.unstable_yield(`Suspend! [${fullText}]`);
+          } else {
+            ReactTestRenderer.unstable_yield(`Error! [${fullText}]`);
+          }
+          throw promise;
+        }
+      }
+
+      root.update(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <UpdatingText text="A" ms={1000} />
+        </Suspense>,
+      );
+
+      expect(ReactTestRenderer).toHaveYielded(['Suspend! [A:0]', 'Loading...']);
+      jest.advanceTimersByTime(1000);
+      expect(ReactTestRenderer).toHaveYielded([
+        'Promise resolved [A:0]',
+        'A:0',
+      ]);
+      expect(root).toMatchRenderedOutput('A:0');
+
+      setStep(1);
+      expect(ReactTestRenderer).toHaveYielded(['Suspend! [A:1]', 'Loading...']);
+      expect(root).toMatchRenderedOutput('Loading...');
+
+      root.update(null);
+      expect(root).toFlushWithoutYielding();
+
+      jest.advanceTimersByTime(1000);
+    });
   });
 });
