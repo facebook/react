@@ -5,7 +5,9 @@ const filesize = require('filesize');
 const chalk = require('chalk');
 const join = require('path').join;
 const fs = require('fs');
-const prevBuildResults = require('./results.json');
+const prevBuildResults = fs.existsSync(__dirname + '/results.json')
+  ? require('./results.json')
+  : {bundleSizes: []};
 
 const currentBuildResults = {
   // Mutated inside build.js during a build run.

@@ -15,7 +15,7 @@ import invariant from 'shared/invariant';
 function shim(...args: any) {
   invariant(
     false,
-    'The current renderer does not support hyration. ' +
+    'The current renderer does not support hydration. ' +
       'This error is likely caused by a bug in React. ' +
       'Please file an issue.',
   );
