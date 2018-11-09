@@ -707,6 +707,7 @@ type Frame = {
   type: mixed,
   domNamespace: string,
   children: FlatReactChildren,
+  fallbackFrame?: Frame,
   childIndex: number,
   context: Object,
   footer: string,
@@ -723,6 +724,7 @@ class ReactDOMServerRenderer {
   currentSelectValue: any;
   previousWasTextNode: boolean;
   makeStaticMarkup: boolean;
+  suspenseDepth: number;
 
   contextIndex: number;
   contextStack: Array<ReactContext<any>>;
@@ -750,6 +752,7 @@ class ReactDOMServerRenderer {
     this.currentSelectValue = null;
     this.previousWasTextNode = false;
     this.makeStaticMarkup = makeStaticMarkup;
+    this.suspenseDepth = 0;
 
     // Context (new API)
     this.contextIndex = -1;
@@ -825,16 +828,18 @@ class ReactDOMServerRenderer {
       ReactCurrentOwner.currentDispatcher = DispatcherWithoutHooks;
     }
     try {
-      let out = '';
-      while (out.length < bytes) {
+      // Markup generated within <Suspense> ends up buffered until we know
+      // nothing in that boundary suspended
+      let out = [''];
+      let suspended = false;
+      while (out[0].length < bytes) {
         if (this.stack.length === 0) {
           this.exhausted = true;
           break;
         }
         const frame: Frame = this.stack[this.stack.length - 1];
-        if (frame.childIndex >= frame.children.length) {
+        if (suspended || frame.childIndex >= frame.children.length) {
           const footer = frame.footer;
-          out += footer;
           if (footer !== '') {
             this.previousWasTextNode = false;
           }
@@ -848,26 +853,57 @@ class ReactDOMServerRenderer {
           ) {
             const provider: ReactProvider<any> = (frame.type: any);
             this.popProvider(provider);
+          } else if (frame.type === REACT_SUSPENSE_TYPE) {
+            this.suspenseDepth--;
+            const buffered = out.pop();
+
+            if (suspended) {
+              suspended = false;
+              // If rendering was suspended at this boundary, render the fallbackFrame
+              const fallbackFrame = frame.fallbackFrame;
+              invariant(
+                fallbackFrame,
+                'suspense fallback not found, something is broken',
+              );
+              this.stack.push(fallbackFrame);
+              // Skip flushing output since we're switching to the fallback
+              continue;
+            } else {
+              out[this.suspenseDepth] += buffered;
+            }
           }
+
+          // Flush output
+          out[this.suspenseDepth] += footer;
           continue;
         }
         const child = frame.children[frame.childIndex++];
+
+        let outBuffer = '';
         if (__DEV__) {
           pushCurrentDebugStack(this.stack);
           // We're starting work on this frame, so reset its inner stack.
           ((frame: any): FrameDev).debugElementStack.length = 0;
-          try {
-            // Be careful! Make sure this matches the PROD path below.
-            out += this.render(child, frame.context, frame.domNamespace);
-          } finally {
+        }
+        try {
+          outBuffer += this.render(child, frame.context, frame.domNamespace);
+        } catch (err) {
+          if (enableSuspenseServerRenderer && typeof err.then === 'function') {
+            suspended = true;
+          } else {
+            throw err;
+          }
+        } finally {
+          if (__DEV__) {
             popCurrentDebugStack();
           }
-        } else {
-          // Be careful! Make sure this matches the DEV path above.
-          out += this.render(child, frame.context, frame.domNamespace);
         }
+        if (out.length <= this.suspenseDepth) {
+          out.push('');
+        }
+        out[this.suspenseDepth] += outBuffer;
       }
-      return out;
+      return out[0];
     } finally {
       ReactCurrentOwner.currentDispatcher = prevDispatcher;
     }
@@ -960,12 +996,24 @@ class ReactDOMServerRenderer {
         }
         case REACT_SUSPENSE_TYPE: {
           if (enableSuspenseServerRenderer) {
-            const nextChildren = toArray(
-              // Always use the fallback when synchronously rendering to string.
+            const fallbackChildren = toArray(
               ((nextChild: any): ReactElement).props.fallback,
             );
-            const frame: Frame = {
+            const nextChildren = toArray(
+              ((nextChild: any): ReactElement).props.children,
+            );
+            const fallbackFrame: Frame = {
               type: null,
+              domNamespace: parentNamespace,
+              children: fallbackChildren,
+              childIndex: 0,
+              context: context,
+              footer: '',
+              out: '',
+            };
+            const frame: Frame = {
+              fallbackFrame,
+              type: REACT_SUSPENSE_TYPE,
               domNamespace: parentNamespace,
               children: nextChildren,
               childIndex: 0,
@@ -974,8 +1022,10 @@ class ReactDOMServerRenderer {
             };
             if (__DEV__) {
               ((frame: any): FrameDev).debugElementStack = [];
+              ((fallbackFrame: any): FrameDev).debugElementStack = [];
             }
             this.stack.push(frame);
+            this.suspenseDepth++;
             return '';
           } else {
             invariant(false, 'ReactDOMServer does not yet support Suspense.');
