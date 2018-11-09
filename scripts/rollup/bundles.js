@@ -404,7 +404,7 @@ const bundles = [
     // it contains a NODE_ENV check inside.
     // We should probably tweak our build process
     // to allow "raw" packages that don't get bundled.
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV],
     moduleType: ISOMORPHIC,
     entry: 'eslint-plugin-react-hooks',
     externals: [],
