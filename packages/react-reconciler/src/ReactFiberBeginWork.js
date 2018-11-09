@@ -1244,7 +1244,7 @@ function updateSuspenseComponent(
     } else {
       // The current tree has not already timed out. That means the primary
       // children are not wrapped in a fragment fiber.
-      const currentPrimaryChild: Fiber = (current.child: any);
+      const currentPrimaryChild = current.child;
       if (nextDidTimeout) {
         // Timed out. Wrap the children in a fragment fiber to keep them
         // separate from the fallback children.
@@ -1260,7 +1260,6 @@ function updateSuspenseComponent(
 
         primaryChildFragment.effectTag |= Placement;
         primaryChildFragment.child = currentPrimaryChild;
-        currentPrimaryChild.return = primaryChildFragment;
 
         if ((workInProgress.mode & ConcurrentMode) === NoContext) {
           // Outside of concurrent mode, we commit the effects from the
