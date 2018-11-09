@@ -711,7 +711,6 @@ type Frame = {
   childIndex: number,
   context: Object,
   footer: string,
-  out: string,
 };
 
 type FrameDev = Frame & {
@@ -744,7 +743,6 @@ class ReactDOMServerRenderer {
       childIndex: 0,
       context: emptyObject,
       footer: '',
-      out: '',
     };
     if (__DEV__) {
       ((topFrame: any): FrameDev).debugElementStack = [];
@@ -830,9 +828,11 @@ class ReactDOMServerRenderer {
       ReactCurrentOwner.currentDispatcher = DispatcherWithoutHooks;
     }
     try {
-      let out = '';
+      // Markup generated within <Suspense> ends up buffered until we know
+      // nothing in that boundary suspended
+      let out = [''];
       let suspended = false;
-      while (out.length < bytes) {
+      while (out[0].length < bytes) {
         if (this.stack.length === 0) {
           this.exhausted = true;
           break;
@@ -858,6 +858,7 @@ class ReactDOMServerRenderer {
             frame.type.type === REACT_SUSPENSE_TYPE
           ) {
             this.suspenseDepth--;
+            const buffered = out.pop();
 
             if (suspended === true) {
               suspended = false;
@@ -865,18 +866,13 @@ class ReactDOMServerRenderer {
               this.stack.push(frame.fallbackFrame);
               // Skip flushing output since we're switching to the fallback
               continue;
+            } else {
+              out[this.suspenseDepth] += buffered;
             }
           }
 
           // Flush output
-          if (this.suspenseDepth === 0) {
-            out += frame.out + footer;
-          } else {
-            // Append output to the previous frame if we're still within a suspense boundary
-            const prevFrame = this.stack[this.stack.length - 1];
-            prevFrame.out += frame.out + footer;
-          }
-
+          out[this.suspenseDepth] += footer;
           continue;
         }
         const child = frame.children[frame.childIndex++];
@@ -886,43 +882,27 @@ class ReactDOMServerRenderer {
           pushCurrentDebugStack(this.stack);
           // We're starting work on this frame, so reset its inner stack.
           ((frame: any): FrameDev).debugElementStack.length = 0;
-          try {
-            // Be careful! Make sure this matches the PROD path below.
-            outBuffer += this.render(child, frame.context, frame.domNamespace);
-          } catch (err) {
-            if (
-              enableSuspenseServerRenderer &&
-              typeof err.then === 'function'
-            ) {
-              suspended = true;
-            } else {
-              throw err;
-            }
-          } finally {
+        }
+        try {
+          // Be careful! Make sure this matches the PROD path below.
+          outBuffer += this.render(child, frame.context, frame.domNamespace);
+        } catch (err) {
+          if (enableSuspenseServerRenderer && typeof err.then === 'function') {
+            suspended = true;
+          } else {
+            throw err;
+          }
+        } finally {
+          if (__DEV__) {
             popCurrentDebugStack();
           }
-        } else {
-          // Be careful! Make sure this matches the DEV path above.
-          try {
-            outBuffer += this.render(child, frame.context, frame.domNamespace);
-          } catch (err) {
-            if (
-              enableSuspenseServerRenderer &&
-              typeof err.then === 'function'
-            ) {
-              suspended = true;
-            } else {
-              throw err;
-            }
-          }
         }
-        if (this.suspenseDepth === 0) {
-          out += outBuffer;
-        } else {
-          frame.out += outBuffer;
+        if (out.length <= this.suspenseDepth) {
+          out.push('');
         }
+        out[this.suspenseDepth] += outBuffer;
       }
-      return out;
+      return out[0];
     } finally {
       ReactCurrentOwner.currentDispatcher = prevDispatcher;
     }
@@ -976,7 +956,6 @@ class ReactDOMServerRenderer {
           childIndex: 0,
           context: context,
           footer: '',
-          out: '',
         };
         if (__DEV__) {
           ((frame: any): FrameDev).debugElementStack = [];
@@ -1007,7 +986,6 @@ class ReactDOMServerRenderer {
             childIndex: 0,
             context: context,
             footer: '',
-            out: '',
           };
           if (__DEV__) {
             ((frame: any): FrameDev).debugElementStack = [];
@@ -1035,12 +1013,10 @@ class ReactDOMServerRenderer {
                 childIndex: 0,
                 context: context,
                 footer: '',
-                out: '',
               },
               childIndex: 0,
               context: context,
               footer: '',
-              out: '',
             };
             if (__DEV__) {
               ((frame: any): FrameDev).debugElementStack = [];
@@ -1079,7 +1055,6 @@ class ReactDOMServerRenderer {
               childIndex: 0,
               context: context,
               footer: '',
-              out: '',
             };
             if (__DEV__) {
               ((frame: any): FrameDev).debugElementStack = [];
@@ -1102,7 +1077,6 @@ class ReactDOMServerRenderer {
               childIndex: 0,
               context: context,
               footer: '',
-              out: '',
             };
             if (__DEV__) {
               ((frame: any): FrameDev).debugElementStack = [];
@@ -1121,7 +1095,6 @@ class ReactDOMServerRenderer {
               childIndex: 0,
               context: context,
               footer: '',
-              out: '',
             };
             if (__DEV__) {
               ((frame: any): FrameDev).debugElementStack = [];
@@ -1171,7 +1144,6 @@ class ReactDOMServerRenderer {
               childIndex: 0,
               context: context,
               footer: '',
-              out: '',
             };
             if (__DEV__) {
               ((frame: any): FrameDev).debugElementStack = [];
@@ -1492,7 +1464,6 @@ class ReactDOMServerRenderer {
       childIndex: 0,
       context: context,
       footer: footer,
-      out: '',
     };
     if (__DEV__) {
       ((frame: any): FrameDev).debugElementStack = [];
