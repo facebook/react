@@ -12,6 +12,7 @@ module.exports = {
     Proxy: true,
     Symbol: true,
     WeakMap: true,
+    Uint16Array: true,
     // Vendor specific
     MSApp: true,
     __REACT_DEVTOOLS_GLOBAL_HOOK__: true,
