@@ -42,6 +42,9 @@ export function createContext<T>(
     // Secondary renderers store their context values on separate fields.
     _currentValue: defaultValue,
     _currentValue2: defaultValue,
+    // Used to track how many concurrent renderers this context currently
+    // supports within in a single renderer. Such as parallel server rendering.
+    _threadCount: 0,
     // These are circular
     Provider: (null: any),
     Consumer: (null: any),
@@ -96,6 +99,14 @@ export function createContext<T>(
         },
         set(_currentValue2) {
           context._currentValue2 = _currentValue2;
+        },
+      },
+      _threadCount: {
+        get() {
+          return context._threadCount;
+        },
+        set(_threadCount) {
+          context._threadCount = _threadCount;
         },
       },
       Consumer: {
