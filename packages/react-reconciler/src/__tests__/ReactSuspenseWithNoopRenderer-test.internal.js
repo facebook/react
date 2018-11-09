@@ -937,6 +937,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       ]);
       expect(ReactNoop.getChildrenAsJSX()).toEqual(
         <React.Fragment>
+          <span hidden={true} prop="Step: 1" />
           <span hidden={true} prop="Sibling" />
           <span prop="Loading (1)" />
           <span prop="Loading (2)" />
@@ -1060,6 +1061,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         expect(ReactNoop.getChildrenAsJSX()).toEqual(
           <React.Fragment>
             <span hidden={true} prop="Before" />
+            <span hidden={true} prop="Async: 1" />
             <span hidden={true} prop="After" />
             <span prop="Loading..." />
 
@@ -1194,6 +1196,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         expect(ReactNoop.getChildrenAsJSX()).toEqual(
           <React.Fragment>
             <span hidden={true} prop="Before" />
+            <span hidden={true} prop="Async: 1" />
             <span hidden={true} prop="After" />
             <span prop="Loading..." />
 
