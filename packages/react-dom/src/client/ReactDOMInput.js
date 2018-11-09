@@ -283,8 +283,11 @@ export function postMountWrapper(
         //   2. The defaultValue React property when present
         //   3. An empty string
         if (initialValue !== node.value) {
-          node.setAttribute('value', initialValue);
-          // node.value = initialValue;
+          if (props.autoFocus) {
+            node.setAttribute('value', initialValue);
+          } else {
+            node.value = initialValue;
+          }
         }
       }
     }
