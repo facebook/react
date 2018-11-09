@@ -407,7 +407,7 @@ const bundles = [
     bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV],
     moduleType: ISOMORPHIC,
     entry: 'eslint-plugin-react-hooks',
-    global: 'ESlintPluginReactHooks',
+    global: 'ESLintPluginReactHooks',
     externals: [],
   },
 
