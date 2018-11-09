@@ -14,8 +14,12 @@ import ReactPartialRenderer from './ReactPartialRenderer';
  */
 export function renderToString(element) {
   const renderer = new ReactPartialRenderer(element, false);
-  const markup = renderer.read(Infinity);
-  return markup;
+  try {
+    const markup = renderer.read(Infinity);
+    return markup;
+  } finally {
+    renderer.destroy();
+  }
 }
 
 /**
@@ -25,6 +29,10 @@ export function renderToString(element) {
  */
 export function renderToStaticMarkup(element) {
   const renderer = new ReactPartialRenderer(element, true);
-  const markup = renderer.read(Infinity);
-  return markup;
+  try {
+    const markup = renderer.read(Infinity);
+    return markup;
+  } finally {
+    renderer.destroy();
+  }
 }

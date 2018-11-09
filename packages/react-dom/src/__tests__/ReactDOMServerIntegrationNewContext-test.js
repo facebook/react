@@ -381,5 +381,63 @@ describe('ReactDOMServerIntegration', () => {
       expect(streamAmy.read()).toBe('<header>Amy</header><footer>Amy</footer>');
       expect(streamBob.read()).toBe('<header>Bob</header><footer>Bob</footer>');
     });
+
+    it('does not pollute parallel node streams when many are used', () => {
+      const CurrentIndex = React.createContext();
+
+      const NthRender = index => (
+        <CurrentIndex.Provider value={index}>
+          <header>
+            <CurrentIndex.Consumer>{idx => idx}</CurrentIndex.Consumer>
+          </header>
+          <footer>
+            <CurrentIndex.Consumer>{idx => idx}</CurrentIndex.Consumer>
+          </footer>
+        </CurrentIndex.Provider>
+      );
+
+      let streams = [];
+
+      // Test with more than 32 streams to test that growing the thread count
+      // works properly.
+      let streamCount = 34;
+
+      for (let i = 0; i < streamCount; i++) {
+        streams[i] = ReactDOMServer.renderToNodeStream(
+          NthRender(i % 2 === 0 ? 'Expected to be recreated' : i),
+        ).setEncoding('utf8');
+      }
+
+      // Testing by filling the buffer using internal _read() with a small
+      // number of bytes to avoid a test case which needs to align to a
+      // highWaterMark boundary of 2^14 chars.
+      for (let i = 0; i < streamCount; i++) {
+        streams[i]._read(20);
+      }
+
+      // Early destroy every other stream
+      for (let i = 0; i < streamCount; i += 2) {
+        streams[i].destroy();
+      }
+
+      // Recreate those same streams.
+      for (let i = 0; i < streamCount; i += 2) {
+        streams[i] = ReactDOMServer.renderToNodeStream(
+          NthRender(i),
+        ).setEncoding('utf8');
+      }
+
+      // Read a bit from all streams again.
+      for (let i = 0; i < streamCount; i++) {
+        streams[i]._read(20);
+      }
+
+      // Assert that all stream rendered the expected output.
+      for (let i = 0; i < streamCount; i++) {
+        expect(streams[i].read()).toBe(
+          '<header>' + i + '</header><footer>' + i + '</footer>',
+        );
+      }
+    });
   });
 });
