@@ -180,11 +180,11 @@ let warnAboutInvalidUpdates;
 
 if (enableSchedulerTracing) {
   // Provide explicit error message when production+profiling bundle of e.g. react-dom
-  // is used with production (non-profiling) bundle of schedule/tracing
+  // is used with production (non-profiling) bundle of scheduler/tracing
   invariant(
     __interactionsRef != null && __interactionsRef.current != null,
     'It is not supported to run the profiling version of a renderer (for example, `react-dom/profiling`) ' +
-      'without also replacing the `schedule/tracing` module with `schedule/tracing-profiling`. ' +
+      'without also replacing the `scheduler/tracing` module with `scheduler/tracing-profiling`. ' +
       'Your bundler might have a setting for aliasing both modules. ' +
       'Learn more at http://fb.me/react-profiling',
   );
