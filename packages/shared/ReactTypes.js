@@ -59,6 +59,7 @@ export type ReactContext<T> = {
 
   _currentValue: T,
   _currentValue2: T,
+  _threadCount: number,
 
   // DEV only
   _currentRenderer?: Object | null,

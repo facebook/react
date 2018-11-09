@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {ThreadID} from './ReactThreadIDAllocator';
 import type {ReactElement} from 'shared/ReactElementType';
 import type {ReactProvider, ReactContext} from 'shared/ReactTypes';
 
@@ -16,7 +17,6 @@ import getComponentName from 'shared/getComponentName';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import checkPropTypes from 'prop-types/checkPropTypes';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -40,6 +40,12 @@ import {
 } from 'shared/ReactSymbols';
 
 import {
+  emptyObject,
+  processContext,
+  validateContextBounds,
+} from './ReactPartialRendererContext';
+import {allocThreadID, freeThreadID} from './ReactThreadIDAllocator';
+import {
   createMarkupForCustomAttribute,
   createMarkupForProperty,
   createMarkupForRoot,
@@ -50,6 +56,8 @@ import {
   finishHooks,
   Dispatcher,
   DispatcherWithoutHooks,
+  currentThreadID,
+  setCurrentThreadID,
 } from './ReactPartialRendererHooks';
 import {
   Namespaces,
@@ -176,7 +184,6 @@ const didWarnAboutBadClass = {};
 const didWarnAboutDeprecatedWillMount = {};
 const didWarnAboutUndefinedDerivedState = {};
 const didWarnAboutUninitializedState = {};
-const didWarnAboutInvalidateContextType = {};
 const valuePropNames = ['value', 'defaultValue'];
 const newlineEatingTags = {
   listing: true,
@@ -324,65 +331,6 @@ function flattenOptionChildren(children: mixed): ?string {
   return content;
 }
 
-const emptyObject = {};
-if (__DEV__) {
-  Object.freeze(emptyObject);
-}
-
-function maskContext(type, context) {
-  const contextTypes = type.contextTypes;
-  if (!contextTypes) {
-    return emptyObject;
-  }
-  const maskedContext = {};
-  for (const contextName in contextTypes) {
-    maskedContext[contextName] = context[contextName];
-  }
-  return maskedContext;
-}
-
-function checkContextTypes(typeSpecs, values, location: string) {
-  if (__DEV__) {
-    checkPropTypes(
-      typeSpecs,
-      values,
-      location,
-      'Component',
-      getCurrentServerStackImpl,
-    );
-  }
-}
-
-function processContext(type, context) {
-  const contextType = type.contextType;
-  if (typeof contextType === 'object' && contextType !== null) {
-    if (__DEV__) {
-      if (contextType.$$typeof !== REACT_CONTEXT_TYPE) {
-        let name = getComponentName(type) || 'Component';
-        if (!didWarnAboutInvalidateContextType[name]) {
-          didWarnAboutInvalidateContextType[type] = true;
-          warningWithoutStack(
-            false,
-            '%s defines an invalid contextType. ' +
-              'contextType should point to the Context object returned by React.createContext(). ' +
-              'Did you accidentally pass the Context.Provider instead?',
-            name,
-          );
-        }
-      }
-    }
-    return contextType._currentValue;
-  } else {
-    const maskedContext = maskContext(type, context);
-    if (__DEV__) {
-      if (type.contextTypes) {
-        checkContextTypes(type.contextTypes, maskedContext, 'context');
-      }
-    }
-    return maskedContext;
-  }
-}
-
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 const STYLE = 'style';
 const RESERVED_PROPS = {
@@ -453,6 +401,7 @@ function validateRenderResult(child, type) {
 function resolve(
   child: mixed,
   context: Object,
+  threadID: ThreadID,
 ): {|
   child: mixed,
   context: Object,
@@ -472,7 +421,7 @@ function resolve(
 
   // Extra closure so queue and replace can be captured properly
   function processChild(element, Component) {
-    let publicContext = processContext(Component, context);
+    let publicContext = processContext(Component, context, threadID);
 
     let queue = [];
     let replace = false;
@@ -718,6 +667,7 @@ type FrameDev = Frame & {
 };
 
 class ReactDOMServerRenderer {
+  threadID: ThreadID;
   stack: Array<Frame>;
   exhausted: boolean;
   // TODO: type this more strictly:
@@ -747,6 +697,7 @@ class ReactDOMServerRenderer {
     if (__DEV__) {
       ((topFrame: any): FrameDev).debugElementStack = [];
     }
+    this.threadID = allocThreadID();
     this.stack = [topFrame];
     this.exhausted = false;
     this.currentSelectValue = null;
@@ -763,6 +714,13 @@ class ReactDOMServerRenderer {
     }
   }
 
+  destroy() {
+    if (!this.exhausted) {
+      this.exhausted = true;
+      freeThreadID(this.threadID);
+    }
+  }
+
   /**
    * Note: We use just two stacks regardless of how many context providers you have.
    * Providers are always popped in the reverse order to how they were pushed
@@ -776,7 +734,9 @@ class ReactDOMServerRenderer {
   pushProvider<T>(provider: ReactProvider<T>): void {
     const index = ++this.contextIndex;
     const context: ReactContext<any> = provider.type._context;
-    const previousValue = context._currentValue;
+    const threadID = this.threadID;
+    validateContextBounds(context, threadID);
+    const previousValue = context[threadID];
 
     // Remember which value to restore this context to on our way up.
     this.contextStack[index] = context;
@@ -787,7 +747,7 @@ class ReactDOMServerRenderer {
     }
 
     // Mutate the current value.
-    context._currentValue = provider.props.value;
+    context[threadID] = provider.props.value;
   }
 
   popProvider<T>(provider: ReactProvider<T>): void {
@@ -813,7 +773,9 @@ class ReactDOMServerRenderer {
     this.contextIndex--;
 
     // Restore to the previous value we stored as we were walking down.
-    context._currentValue = previousValue;
+    // We've already verified that this context has been expanded to accommodate
+    // this thread id, so we don't need to do it again.
+    context[this.threadID] = previousValue;
   }
 
   read(bytes: number): string | null {
@@ -821,6 +783,8 @@ class ReactDOMServerRenderer {
       return null;
     }
 
+    const prevThreadID = currentThreadID;
+    setCurrentThreadID(this.threadID);
     const prevDispatcher = ReactCurrentOwner.currentDispatcher;
     if (enableHooks) {
       ReactCurrentOwner.currentDispatcher = Dispatcher;
@@ -835,6 +799,7 @@ class ReactDOMServerRenderer {
       while (out[0].length < bytes) {
         if (this.stack.length === 0) {
           this.exhausted = true;
+          freeThreadID(this.threadID);
           break;
         }
         const frame: Frame = this.stack[this.stack.length - 1];
@@ -906,6 +871,7 @@ class ReactDOMServerRenderer {
       return out[0];
     } finally {
       ReactCurrentOwner.currentDispatcher = prevDispatcher;
+      setCurrentThreadID(prevThreadID);
     }
   }
 
@@ -929,7 +895,7 @@ class ReactDOMServerRenderer {
       return escapeTextForBrowser(text);
     } else {
       let nextChild;
-      ({child: nextChild, context} = resolve(child, context));
+      ({child: nextChild, context} = resolve(child, context, this.threadID));
       if (nextChild === null || nextChild === false) {
         return '';
       } else if (!React.isValidElement(nextChild)) {
@@ -1136,7 +1102,9 @@ class ReactDOMServerRenderer {
               }
             }
             const nextProps: any = (nextChild: any).props;
-            const nextValue = reactContext._currentValue;
+            const threadID = this.threadID;
+            validateContextBounds(reactContext, threadID);
+            const nextValue = reactContext[threadID];
 
             const nextChildren = toArray(nextProps.children(nextValue));
             const frame: Frame = {

@@ -6,8 +6,12 @@
  *
  * @flow
  */
+
+import type {ThreadID} from './ReactThreadIDAllocator';
 import type {ReactContext} from 'shared/ReactTypes';
 import areHookInputsEqual from 'shared/areHookInputsEqual';
+
+import {validateContextBounds} from './ReactPartialRendererContext';
 
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
@@ -139,7 +143,9 @@ function readContext<T>(
   context: ReactContext<T>,
   observedBits: void | number | boolean,
 ): T {
-  return context._currentValue;
+  let threadID = currentThreadID;
+  validateContextBounds(context, threadID);
+  return context[threadID];
 }
 
 function useContext<T>(
@@ -147,7 +153,9 @@ function useContext<T>(
   observedBits: void | number | boolean,
 ): T {
   resolveCurrentlyRenderingComponent();
-  return context._currentValue;
+  let threadID = currentThreadID;
+  validateContextBounds(context, threadID);
+  return context[threadID];
 }
 
 function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S {
@@ -333,6 +341,12 @@ function dispatchAction<A>(
 }
 
 function noop(): void {}
+
+export let currentThreadID: ThreadID = 0;
+
+export function setCurrentThreadID(threadID: ThreadID) {
+  currentThreadID = threadID;
+}
 
 export const Dispatcher = {
   readContext,
