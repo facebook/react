@@ -1242,7 +1242,7 @@ function updateSuspenseComponent(
     } else {
       // The current tree has not already timed out. That means the primary
       // children are not wrapped in a fragment fiber.
-      const currentPrimaryChild: Fiber = (current.child: any);
+      const currentPrimaryChild = current.child;
       if (nextDidTimeout) {
         // Timed out. Wrap the children in a fragment fiber to keep them
         // separate from the fallback children.
@@ -1256,7 +1256,6 @@ function updateSuspenseComponent(
           null,
         );
         primaryChildFragment.child = currentPrimaryChild;
-        currentPrimaryChild.return = primaryChildFragment;
 
         // Even though we're creating a new fiber, there are no new children,
         // because we're reusing an already mounted tree. So we don't need to

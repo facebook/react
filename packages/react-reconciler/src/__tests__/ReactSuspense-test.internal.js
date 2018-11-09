@@ -883,7 +883,44 @@ describe('ReactSuspense', () => {
 
       root.update(null);
       expect(root).toFlushWithoutYielding();
+      jest.advanceTimersByTime(1000);
+    });
 
+    it('#14162', () => {
+      const {lazy} = React;
+
+      function Hello() {
+        return <span>hello</span>;
+      }
+
+      async function fetchComponent() {
+        return new Promise(r => {
+          // simulating a delayed import() call
+          setTimeout(r, 1000, {default: Hello});
+        });
+      }
+
+      const LazyHello = lazy(fetchComponent);
+
+      class App extends React.Component {
+        state = {render: false};
+
+        componentDidMount() {
+          setTimeout(() => this.setState({render: true}));
+        }
+
+        render() {
+          return (
+            <Suspense fallback={<span>loading...</span>}>
+              {this.state.render && <LazyHello />}
+            </Suspense>
+          );
+        }
+      }
+
+      const root = ReactTestRenderer.create(null);
+
+      root.update(<App name="world" />);
       jest.advanceTimersByTime(1000);
     });
   });
