@@ -8,6 +8,9 @@ set -e
 # the merge base by Dangerfile instead. See https://github.com/facebook/react/pull/12606.
 if [ -z "$CI_PULL_REQUEST" ]; then
   curl -o scripts/rollup/results.json http://react.zpao.com/builds/master/latest/results.json
+else
+  # If build fails, cause danger to fail/abort too
+  rm scripts/rollup/results.json
 fi
 
 yarn build --extract-errors
