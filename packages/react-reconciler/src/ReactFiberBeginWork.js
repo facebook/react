@@ -250,6 +250,9 @@ function updateMemoComponent(
       // to a SimpleMemoComponent to allow fast path updates.
       workInProgress.tag = SimpleMemoComponent;
       workInProgress.type = type;
+      if (__DEV__) {
+        validateFunctionComponentInDev(workInProgress, type);
+      }
       return updateSimpleMemoComponent(
         current,
         workInProgress,
@@ -990,68 +993,72 @@ function mountIndeterminateComponent(
     // Proceed under the assumption that this is a function component
     workInProgress.tag = FunctionComponent;
     value = finishHooks(Component, props, value, context);
-    if (__DEV__) {
-      if (Component) {
-        warningWithoutStack(
-          !Component.childContextTypes,
-          '%s(...): childContextTypes cannot be defined on a function component.',
-          Component.displayName || Component.name || 'Component',
-        );
-      }
-      if (workInProgress.ref !== null) {
-        let info = '';
-        const ownerName = ReactCurrentFiber.getCurrentFiberOwnerNameInDevOrNull();
-        if (ownerName) {
-          info += '\n\nCheck the render method of `' + ownerName + '`.';
-        }
-
-        let warningKey = ownerName || workInProgress._debugID || '';
-        const debugSource = workInProgress._debugSource;
-        if (debugSource) {
-          warningKey = debugSource.fileName + ':' + debugSource.lineNumber;
-        }
-        if (!didWarnAboutFunctionRefs[warningKey]) {
-          didWarnAboutFunctionRefs[warningKey] = true;
-          warning(
-            false,
-            'Function components cannot be given refs. ' +
-              'Attempts to access this ref will fail.%s',
-            info,
-          );
-        }
-      }
-
-      if (typeof Component.getDerivedStateFromProps === 'function') {
-        const componentName = getComponentName(Component) || 'Unknown';
-
-        if (!didWarnAboutGetDerivedStateOnFunctionComponent[componentName]) {
-          warningWithoutStack(
-            false,
-            '%s: Function components do not support getDerivedStateFromProps.',
-            componentName,
-          );
-          didWarnAboutGetDerivedStateOnFunctionComponent[componentName] = true;
-        }
-      }
-
-      if (
-        typeof Component.contextType === 'object' &&
-        Component.contextType !== null
-      ) {
-        const componentName = getComponentName(Component) || 'Unknown';
-
-        if (!didWarnAboutContextTypeOnFunctionComponent[componentName]) {
-          warningWithoutStack(
-            false,
-            '%s: Function components do not support contextType.',
-            componentName,
-          );
-          didWarnAboutContextTypeOnFunctionComponent[componentName] = true;
-        }
-      }
-    }
     reconcileChildren(null, workInProgress, value, renderExpirationTime);
+    if (__DEV__) {
+      validateFunctionComponentInDev(workInProgress, Component);
+    }
     return workInProgress.child;
+  }
+}
+
+function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
+  if (Component) {
+    warningWithoutStack(
+      !Component.childContextTypes,
+      '%s(...): childContextTypes cannot be defined on a function component.',
+      Component.displayName || Component.name || 'Component',
+    );
+  }
+  if (workInProgress.ref !== null) {
+    let info = '';
+    const ownerName = ReactCurrentFiber.getCurrentFiberOwnerNameInDevOrNull();
+    if (ownerName) {
+      info += '\n\nCheck the render method of `' + ownerName + '`.';
+    }
+
+    let warningKey = ownerName || workInProgress._debugID || '';
+    const debugSource = workInProgress._debugSource;
+    if (debugSource) {
+      warningKey = debugSource.fileName + ':' + debugSource.lineNumber;
+    }
+    if (!didWarnAboutFunctionRefs[warningKey]) {
+      didWarnAboutFunctionRefs[warningKey] = true;
+      warning(
+        false,
+        'Function components cannot be given refs. ' +
+          'Attempts to access this ref will fail.%s',
+        info,
+      );
+    }
+  }
+
+  if (typeof Component.getDerivedStateFromProps === 'function') {
+    const componentName = getComponentName(Component) || 'Unknown';
+
+    if (!didWarnAboutGetDerivedStateOnFunctionComponent[componentName]) {
+      warningWithoutStack(
+        false,
+        '%s: Function components do not support getDerivedStateFromProps.',
+        componentName,
+      );
+      didWarnAboutGetDerivedStateOnFunctionComponent[componentName] = true;
+    }
+  }
+
+  if (
+    typeof Component.contextType === 'object' &&
+    Component.contextType !== null
+  ) {
+    const componentName = getComponentName(Component) || 'Unknown';
+
+    if (!didWarnAboutContextTypeOnFunctionComponent[componentName]) {
+      warningWithoutStack(
+        false,
+        '%s: Function components do not support contextType.',
+        componentName,
+      );
+      didWarnAboutContextTypeOnFunctionComponent[componentName] = true;
+    }
   }
 }
 

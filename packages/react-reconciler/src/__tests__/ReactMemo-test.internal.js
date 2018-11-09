@@ -15,6 +15,7 @@
 let React;
 let ReactFeatureFlags;
 let ReactNoop;
+let Suspense;
 
 describe('memo', () => {
   beforeEach(() => {
@@ -23,6 +24,7 @@ describe('memo', () => {
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
+    ({Suspense} = React);
   });
 
   function span(prop) {
@@ -37,6 +39,42 @@ describe('memo', () => {
   async function fakeImport(result) {
     return {default: result};
   }
+
+  it('warns when giving a ref (simple)', async () => {
+    // This test lives outside sharedTests because the wrappers don't forward
+    // refs properly, and they end up affecting the current owner which is used
+    // by the warning (making the messages not line up).
+    function App() {
+      return null;
+    }
+    App = React.memo(App);
+    function Outer() {
+      return <App ref={() => {}} />;
+    }
+    ReactNoop.render(<Outer />);
+    expect(ReactNoop.flush).toWarnDev([
+      'Warning: Function components cannot be given refs. Attempts to access ' +
+        'this ref will fail.',
+    ]);
+  });
+
+  it('warns when giving a ref (complex)', async () => {
+    // defaultProps means this won't use SimpleMemoComponent (as of this writing)
+    // SimpleMemoComponent is unobservable tho, so we can't check :)
+    function App() {
+      return null;
+    }
+    App.defaultProps = {};
+    App = React.memo(App);
+    function Outer() {
+      return <App ref={() => {}} />;
+    }
+    ReactNoop.render(<Outer />);
+    expect(ReactNoop.flush).toWarnDev([
+      'Warning: Function components cannot be given refs. Attempts to access ' +
+        'this ref will fail.',
+    ]);
+  });
 
   // Tests should run against both the lazy and non-lazy versions of `memo`.
   // To make the tests work for both versions, we wrap the non-lazy version in
@@ -56,8 +94,6 @@ describe('memo', () => {
   function sharedTests(label, memo) {
     describe(`${label}`, () => {
       it('bails out on props equality', async () => {
-        const {Suspense} = React;
-
         function Counter({count}) {
           return <Text text={count} />;
         }
@@ -93,8 +129,6 @@ describe('memo', () => {
       });
 
       it("does not bail out if there's a context change", async () => {
-        const {Suspense} = React;
-
         const CountContext = React.createContext(0);
 
         function readContext(Context) {
@@ -142,8 +176,6 @@ describe('memo', () => {
       });
 
       it('accepts custom comparison function', async () => {
-        const {Suspense} = React;
-
         function Counter({count}) {
           return <Text text={count} />;
         }
@@ -184,8 +216,6 @@ describe('memo', () => {
       });
 
       it('supports non-pure class components', async () => {
-        const {Suspense} = React;
-
         class CounterInner extends React.Component {
           static defaultProps = {suffix: '!'};
           render() {
