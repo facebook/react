@@ -1178,7 +1178,6 @@ function updateSuspenseComponent(
           currentPrimaryChildFragment.pendingProps,
           NoWork,
         );
-        primaryChildFragment.effectTag |= Placement;
 
         if ((workInProgress.mode & ConcurrentMode) === NoContext) {
           // Outside of concurrent mode, we commit the effects from the
@@ -1213,7 +1212,6 @@ function updateSuspenseComponent(
           nextFallbackChildren,
           currentFallbackChildFragment.expirationTime,
         ));
-        fallbackChildFragment.effectTag |= Placement;
         child = primaryChildFragment;
         primaryChildFragment.childExpirationTime = NoWork;
         // Skip the primary children, and continue working on the
@@ -1257,10 +1255,13 @@ function updateSuspenseComponent(
           NoWork,
           null,
         );
-
-        primaryChildFragment.effectTag |= Placement;
         primaryChildFragment.child = currentPrimaryChild;
         currentPrimaryChild.return = primaryChildFragment;
+
+        // Even though we're creating a new fiber, there are no new children,
+        // because we're reusing an already mounted tree. So we don't need to
+        // schedule a placement.
+        // primaryChildFragment.effectTag |= Placement;
 
         if ((workInProgress.mode & ConcurrentMode) === NoContext) {
           // Outside of concurrent mode, we commit the effects from the

@@ -45,6 +45,7 @@ import {
   Update,
   NoEffect,
   DidCapture,
+  Deletion,
 } from 'shared/ReactSideEffectTags';
 import invariant from 'shared/invariant';
 
@@ -82,7 +83,6 @@ import {
   popHydrationState,
 } from './ReactFiberHydrationContext';
 import {ConcurrentMode, NoContext} from './ReactTypeOfMode';
-import {reconcileChildFibers} from './ReactChildFiber';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -715,12 +715,16 @@ function completeWork(
         // the stateNode during the begin phase?
         const currentFallbackChild: Fiber | null = (current.child: any).sibling;
         if (currentFallbackChild !== null) {
-          reconcileChildFibers(
-            workInProgress,
-            currentFallbackChild,
-            null,
-            renderExpirationTime,
-          );
+          // Deletions go at the beginning of the return fiber's effect list
+          const first = workInProgress.firstEffect;
+          if (first !== null) {
+            workInProgress.firstEffect = currentFallbackChild;
+            currentFallbackChild.nextEffect = first;
+          } else {
+            workInProgress.firstEffect = workInProgress.lastEffect = currentFallbackChild;
+            currentFallbackChild.nextEffect = null;
+          }
+          currentFallbackChild.effectTag = Deletion;
         }
       }
 
