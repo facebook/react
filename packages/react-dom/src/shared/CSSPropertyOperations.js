@@ -5,11 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  overlappingShorthandsInDev,
-  longhandToShorthandInDev,
-  shorthandToLonghandInDev,
-} from './CSSShorthandProperty';
+import {shorthandToLonghand} from './CSSShorthandProperty';
 
 import dangerousStyleValue from './dangerousStyleValue';
 import hyphenateStyleName from './hyphenateStyleName';
@@ -91,6 +87,25 @@ function isValueEmpty(value) {
 }
 
 /**
+ * Given {color: 'red', overflow: 'hidden'} returns {
+ *   color: 'color',
+ *   overflowX: 'overflow',
+ *   overflowY: 'overflow',
+ * }. This can be read as "the overflowY property was set by the overflow
+ * shorthand". That is, the values are the property that each was derived from.
+ */
+function expandShorthandMap(styles) {
+  const expanded = {};
+  for (const key in styles) {
+    const longhands = shorthandToLonghand[key] || [key];
+    for (let i = 0; i < longhands.length; i++) {
+      expanded[longhands[i]] = key;
+    }
+  }
+  return expanded;
+}
+
+/**
  * When mixing shorthand and longhand property names, we warn during updates if
  * we expect an incorrect result to occur. In particular, we warn for:
  *
@@ -112,52 +127,18 @@ export function validateShorthandPropertyCollisionInDev(
     return;
   }
 
-  for (const key in styleUpdates) {
-    const isEmpty = isValueEmpty(styleUpdates[key]);
-    if (isEmpty) {
-      // Property removal; check if we're removing a longhand property
-      const shorthands = longhandToShorthandInDev[key];
-      if (shorthands) {
-        const conflicting = shorthands.filter(
-          s => !isValueEmpty(nextStyles[s]),
-        );
-        if (conflicting.length) {
-          warning(
-            false,
-            'Removing a style property during rerender (%s) when a ' +
-              'conflicting property is set (%s) can lead to styling bugs. To ' +
-              "avoid this, don't mix shorthand and non-shorthand properties " +
-              'for the same value; instead, replace the shorthand with ' +
-              'separate values.',
-            key,
-            conflicting.join(', '),
-          );
-        }
+  const expandedUpdates = expandShorthandMap(styleUpdates);
+  const expandedStyles = expandShorthandMap(nextStyles);
+  const warnedAbout = {};
+  for (const key in expandedUpdates) {
+    const originalKey = expandedUpdates[key];
+    const correctOriginalKey = expandedStyles[key];
+    if (correctOriginalKey && originalKey !== correctOriginalKey) {
+      const warningKey = originalKey + ',' + correctOriginalKey;
+      if (warnedAbout[warningKey]) {
+        continue;
       }
-    }
-
-    // Updating or removing a property; check if it's a shorthand property
-    const longhands = shorthandToLonghandInDev[key];
-    const overlapping = overlappingShorthandsInDev[key];
-    // eslint-disable-next-line no-var
-    var conflicting = new Set();
-    if (longhands) {
-      longhands.forEach(l => {
-        if (isValueEmpty(styleUpdates[l]) && !isValueEmpty(nextStyles[l])) {
-          // ex: key = 'font', l = 'fontStyle'
-          conflicting.add(l);
-        }
-      });
-    }
-    if (overlapping) {
-      overlapping.forEach(l => {
-        if (isValueEmpty(styleUpdates[l]) && !isValueEmpty(nextStyles[l])) {
-          // ex: key = 'borderLeft', l = 'borderStyle'
-          conflicting.add(l);
-        }
-      });
-    }
-    if (conflicting.size) {
+      warnedAbout[warningKey] = true;
       warning(
         false,
         '%s a style property during rerender (%s) when a ' +
@@ -165,11 +146,9 @@ export function validateShorthandPropertyCollisionInDev(
           "avoid this, don't mix shorthand and non-shorthand properties " +
           'for the same value; instead, replace the shorthand with ' +
           'separate values.',
-        isEmpty ? 'Removing' : 'Updating',
-        key,
-        Array.from(conflicting)
-          .sort()
-          .join(', '),
+        isValueEmpty(styleUpdates[originalKey]) ? 'Removing' : 'Updating',
+        originalKey,
+        correctOriginalKey,
       );
     }
   }
