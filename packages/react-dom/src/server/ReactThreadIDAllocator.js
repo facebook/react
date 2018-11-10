@@ -29,8 +29,8 @@ function growThreadCountAndReturnNextAvailable() {
     newSize <= 0x10000,
     'Maximum number of concurrent React renderers exceeded. ' +
       'This can happen if you are not properly destroying the Readable provided by React. ' +
-      'Ensure that you call .destroy() on it if you no longer want to read from it.' +
-      ', and did not read to the end. If you use .pipe() this should be automatic.',
+      'Ensure that you call .destroy() on it if you no longer want to read from it, ' +
+      'and did not read to the end. If you use .pipe() this should be automatic.',
   );
   let newArray = new Uint16Array(newSize);
   newArray.set(oldArray);
