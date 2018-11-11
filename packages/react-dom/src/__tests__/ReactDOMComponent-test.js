@@ -1327,8 +1327,7 @@ describe('ReactDOMComponent', () => {
           'The tag <foo> is unrecognized in this browser',
         );
         ReactTestUtils.renderIntoDocument(<foo />);
-        
-        ReactTestUtils.renderIntoDocument(<time />);
+
         // Corner case. Make sure out deduplication logic doesn't break with weird tag.
         expect(() =>
           ReactTestUtils.renderIntoDocument(<hasOwnProperty />),

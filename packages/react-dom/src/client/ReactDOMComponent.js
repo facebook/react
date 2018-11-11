@@ -75,7 +75,6 @@ let normalizeHTML;
 
 if (__DEV__) {
   warnedUnknownTags = {
-    time: true,
     // There are working polyfills for <dialog>. Let people use it.
     dialog: true,
     // Electron ships a custom <webview> tag to display external web content in
