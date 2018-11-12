@@ -1,0 +1,20 @@
+{
+  "name": "react-release-script",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {},
+  "dependencies": {
+    "chalk": "^2.4.1",
+    "command-line-args": "^5.0.2",
+    "execa": "^1.0.0",
+    "folder-hash": "^2.1.2",
+    "inquirer": "^6.2.0",
+    "ora": "^3.0.0",
+    "replace-in-file": "^3.4.2",
+    "rimraf": "^2.6.2",
+    "semver": "^5.6.0",
+    "tar": "^4.4.8",
+    "tempy": "^0.2.1",
+    "treeify": "^1.1.0"
+  }
+}
