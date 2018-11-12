@@ -268,6 +268,7 @@ describe('ReactContextValidator', () => {
     expect(() => ReactTestUtils.renderIntoDocument(<Component />)).toWarnDev(
       'Warning: Failed prop type: The prop `value` is marked as required in ' +
         '`Context.Provider`, but its value is `undefined`.\n' +
+        '    in Context.Provider (at **)\n' +
         '    in Component (at **)',
     );
   });

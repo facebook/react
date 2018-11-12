@@ -1,3 +1,4 @@
+let PropTypes;
 let React;
 let ReactTestRenderer;
 let ReactFeatureFlags;
@@ -10,6 +11,7 @@ describe('ReactLazy', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
+    PropTypes = require('prop-types');
     React = require('react');
     Suspense = React.Suspense;
     lazy = React.lazy;
@@ -532,5 +534,41 @@ describe('ReactLazy', () => {
     expect(root).toFlushAndYield(['Foo', 'forwardRef', 'Bar']);
     expect(root).toMatchRenderedOutput('FooBar');
     expect(ref.current).not.toBe(null);
+  });
+
+  it('supports propTypes validation', async () => {
+    function Fn(props) {
+      return props.inner + props.outer;
+    }
+    Fn.propTypes = {inner: PropTypes.number.isRequired};
+    const Lazy = React.lazy(() => fakeImport(Fn));
+    Lazy.propTypes = {outer: PropTypes.number.isRequired};
+    let root;
+
+    expect(() => {
+      root = ReactTestRenderer.create(
+        <React.Suspense fallback="Loading">
+          <Lazy inner="2" outer="3" />
+        </React.Suspense>,
+      );
+    }).toWarnDev(
+      'Failed prop type: Invalid prop `outer` of type `string` supplied to `Lazy`, expected `number`.\n' +
+        '    in Lazy (at **)',
+    );
+    await Promise.resolve();
+    expect(root.toJSON()).toEqual('23');
+    expect(() => {
+      root.update(
+        <React.Suspense fallback="Loading">
+          <Lazy inner="2" outer="3" />
+        </React.Suspense>,
+      );
+    }).toWarnDev([
+      'Failed prop type: Invalid prop `inner` of type `string` supplied to `Fn`, expected `number`.\n' +
+        '    in Fn (at **)',
+      'Failed prop type: Invalid prop `outer` of type `string` supplied to `Fn`, expected `number`.\n' +
+        '    in Fn (at **)',
+    ]);
+    expect(root.toJSON()).toEqual('23');
   });
 });

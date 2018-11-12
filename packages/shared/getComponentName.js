@@ -86,6 +86,8 @@ function getComponentName(type: mixed): string | null {
         const resolvedThenable = refineResolvedLazyComponent(thenable);
         if (resolvedThenable) {
           return getComponentName(resolvedThenable);
+        } else {
+          return 'Lazy';
         }
       }
     }

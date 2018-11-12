@@ -15,11 +15,13 @@
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import isValidElementType from 'shared/isValidElementType';
 import getComponentName from 'shared/getComponentName';
+import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
 import {
   getIteratorFn,
-  REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_ELEMENT_TYPE,
+  REACT_LAZY_TYPE,
+  REACT_MEMO_TYPE,
 } from 'shared/ReactSymbols';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import warning from 'shared/warning';
@@ -177,6 +179,34 @@ function validateChildKeys(node, parentType) {
   }
 }
 
+function getPropTypes(type) {
+  const typeOfType = typeof type;
+  if (typeOfType === 'string') {
+    // Host component
+    return null;
+  } else if (typeOfType === 'function') {
+    // Functions/classes
+    return type.propTypes;
+  } else if (type !== null && typeOfType === 'object') {
+    // Special types
+    let innerType = null;
+    switch (type.$$typeof) {
+      case REACT_MEMO_TYPE:
+        innerType = type.type;
+        break;
+      case REACT_LAZY_TYPE: {
+        // Note: may not actually be ready yet
+        // but we still might have propTypes on the outer one.
+        innerType = refineResolvedLazyComponent(type);
+        break;
+      }
+    }
+    const innerPropTypes = getPropTypes(innerType);
+    return {...innerPropTypes, ...type.propTypes};
+  }
+  return null;
+}
+
 /**
  * Given an element, validate that its props follow the propTypes definition,
  * provided by the type.
@@ -185,20 +215,12 @@ function validateChildKeys(node, parentType) {
  */
 function validatePropTypes(element) {
   const type = element.type;
-  const name = getComponentName(type);
-  let propTypes;
-  if (typeof type === 'function') {
-    // Class or function component
-    propTypes = type.propTypes;
-  } else if (
-    typeof type === 'object' &&
-    type !== null &&
-    type.$$typeof === REACT_FORWARD_REF_TYPE
-  ) {
-    propTypes = type.propTypes;
-  } else {
+  if (type === null || type === undefined) {
+    // Invalid type. Ignore.
     return;
   }
+  const name = getComponentName(type);
+  const propTypes = getPropTypes(type);
   if (propTypes) {
     setCurrentlyValidatingElement(element);
     checkPropTypes(

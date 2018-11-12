@@ -12,6 +12,7 @@
 
 'use strict';
 
+let PropTypes;
 let React;
 let ReactFeatureFlags;
 let ReactNoop;
@@ -20,6 +21,7 @@ let Suspense;
 describe('memo', () => {
   beforeEach(() => {
     jest.resetModules();
+    PropTypes = require('prop-types');
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     React = require('react');
@@ -73,6 +75,23 @@ describe('memo', () => {
     expect(ReactNoop.flush).toWarnDev([
       'Warning: Function components cannot be given refs. Attempts to access ' +
         'this ref will fail.',
+    ]);
+  });
+
+  it('validates propTypes declared on the inner component', () => {
+    function FnInner(props) {
+      return props.inner + props.outer;
+    }
+    FnInner.propTypes = {inner: PropTypes.number.isRequired};
+    const Fn = React.memo(FnInner);
+    Fn.propTypes = {outer: PropTypes.number.isRequired};
+    expect(() => {
+      ReactNoop.render(<Fn inner="2" outer="3" />);
+    }).toWarnDev([
+      'Invalid prop `outer` of type `string` supplied to `FnInner`, expected `number`.\n' +
+        '    in FnInner (at **)',
+      'Invalid prop `inner` of type `string` supplied to `FnInner`, expected `number`.\n' +
+        '    in FnInner (at **)',
     ]);
   });
 
