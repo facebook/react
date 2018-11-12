@@ -185,21 +185,16 @@ function validateChildKeys(node, parentType) {
  */
 function validatePropTypes(element) {
   const type = element.type;
-  let name, propTypes;
+  const name = getComponentName(type);
+  let propTypes;
   if (typeof type === 'function') {
     // Class or function component
-    name = type.displayName || type.name;
     propTypes = type.propTypes;
   } else if (
     typeof type === 'object' &&
     type !== null &&
     type.$$typeof === REACT_FORWARD_REF_TYPE
   ) {
-    // ForwardRef
-    const functionName = type.render.displayName || type.render.name || '';
-    name =
-      type.displayName ||
-      (functionName !== '' ? `ForwardRef(${functionName})` : 'ForwardRef');
     propTypes = type.propTypes;
   } else {
     return;
