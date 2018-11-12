@@ -20,7 +20,7 @@ Follow these steps:
 # 1: Build react from source
 cd /path/to/react
 yarn
-yarn build dom-client,core,react-cache,scheduler --type=NODE
+yarn build react-dom/index,react/index,react-cache,scheduler --type=NODE
 
 # 2: Install fixture dependencies
 cd fixtures/unstable-async/suspense/
