@@ -103,18 +103,15 @@ function traverseAllChildrenImpl(
   traverseContext,
 ) {
   const type = typeof children;
-
+  let invokeCallback = false;
+    
   if (type === 'undefined' || type === 'boolean') {
     // All of the above are perceived as null.
     children = null;
+    invokeCallback = true;
   }
 
-  let invokeCallback = false;
-
-  if (children === null) {
-    invokeCallback = true;
-  } else {
-    switch (type) {
+  switch (type) {
       case 'string':
       case 'number':
         invokeCallback = true;
@@ -125,8 +122,7 @@ function traverseAllChildrenImpl(
           case REACT_PORTAL_TYPE:
             invokeCallback = true;
         }
-    }
-  }
+   }
 
   if (invokeCallback) {
     callback(
