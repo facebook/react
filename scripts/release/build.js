@@ -6,14 +6,12 @@ const {exec} = require('child_process');
 
 // Follows the steps outlined in github.com/facebook/react/issues/10620
 const run = async () => {
-  const chalk = require('chalk');
-  const logUpdate = require('log-update');
-  const {getPublicPackages, getPackages} = require('./utils');
+  const {getPublicPackages, getPackages, handleError} = require('./utils');
 
   const addGitTag = require('./build-commands/add-git-tag');
   const buildArtifacts = require('./build-commands/build-artifacts');
   const checkCircleCiStatus = require('./build-commands/check-circle-ci-status');
-  const checkEnvironmentVariables = require('./build-commands/check-environment-variables');
+  const checkEnvironmentVariables = require('./shared-commands/check-environment-variables');
   const checkNpmPermissions = require('./build-commands/check-npm-permissions');
   const checkPackageDependencies = require('./build-commands/check-package-dependencies');
   const checkUncommittedChanges = require('./build-commands/check-uncommitted-changes');
@@ -55,18 +53,7 @@ const run = async () => {
     await addGitTag(params);
     await printPostBuildSummary(params);
   } catch (error) {
-    logUpdate.clear();
-
-    const message = error.message.trim().replace(/\n +/g, '\n');
-    const stack = error.stack.replace(error.message, '');
-
-    console.log(
-      `${chalk.bgRed.white(' ERROR ')} ${chalk.red(message)}\n\n${chalk.gray(
-        stack
-      )}`
-    );
-
-    process.exit(1);
+    handleError(error);
   }
 };
 

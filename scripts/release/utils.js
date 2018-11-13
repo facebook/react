@@ -67,6 +67,21 @@ const getUnexecutedCommands = () => {
   }
 };
 
+const handleError = error => {
+  logUpdate.clear();
+
+  const message = error.message.trim().replace(/\n +/g, '\n');
+  const stack = error.stack.replace(error.message, '');
+
+  console.log(
+    `${chalk.bgRed.white(' ERROR ')} ${chalk.red(message)}\n\n${chalk.gray(
+      stack
+    )}`
+  );
+
+  process.exit(1);
+};
+
 const logPromise = async (promise, text, isLongRunningTask = false) => {
   const {frames, interval} = dots;
 
@@ -119,6 +134,7 @@ module.exports = {
   getPackages,
   getPublicPackages,
   getUnexecutedCommands,
+  handleError,
   logPromise,
   runYarnTask,
 };
