@@ -451,6 +451,30 @@ describe('SyntheticKeyboardEvent', () => {
         });
       });
     });
+
+    describe('code', () => {
+      it('should throw (in dev) when KeyboardEvent.code is undefined', () => {
+        const node = ReactDOM.render(
+          <input
+            onKeyDown={e => {
+              return e.code;
+            }}
+          />,
+          container,
+        );
+        let evt = new KeyboardEvent('keydown', {
+          code: undefined,
+          bubbles: true,
+          cancelable: true,
+        });
+
+        if (__DEV__ && evt.code === undefined) {
+          expect(() => node.dispatchEvent(evt)).toThrowError();
+        } else {
+          node.dispatchEvent(evt);
+        }
+      });
+    });
   });
 
   describe('EventInterface', () => {

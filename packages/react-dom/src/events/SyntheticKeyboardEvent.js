@@ -8,6 +8,7 @@
 import SyntheticUIEvent from './SyntheticUIEvent';
 import getEventCharCode from './getEventCharCode';
 import getEventKey from './getEventKey';
+import getEventCode from './getEventCode';
 import getEventModifierState from './getEventModifierState';
 
 /**
@@ -16,7 +17,7 @@ import getEventModifierState from './getEventModifierState';
  */
 const SyntheticKeyboardEvent = SyntheticUIEvent.extend({
   key: getEventKey,
-  code: null,
+  code: getEventCode,
   location: null,
   ctrlKey: null,
   shiftKey: null,
