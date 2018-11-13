@@ -728,9 +728,11 @@ function detachFiber(current: Fiber) {
   // itself will be GC:ed when the parent updates the next time.
   current.return = null;
   current.child = null;
+  current.memoizedState = null;
   if (current.alternate) {
     current.alternate.child = null;
     current.alternate.return = null;
+    current.alternate.memoizedState = null;
   }
 }
 
