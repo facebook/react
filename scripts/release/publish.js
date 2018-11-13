@@ -2,9 +2,7 @@
 
 'use strict';
 
-const chalk = require('chalk');
-const logUpdate = require('log-update');
-const {getPublicPackages} = require('./utils');
+const {getPublicPackages, handleError} = require('./utils');
 
 const checkBuildStatus = require('./publish-commands/check-build-status');
 const commitChangelog = require('./publish-commands/commit-changelog');
@@ -27,18 +25,7 @@ const run = async () => {
     await publishToNpm(params);
     await printPostPublishSummary(params);
   } catch (error) {
-    logUpdate.clear();
-
-    const message = error.message.trim().replace(/\n +/g, '\n');
-    const stack = error.stack.replace(error.message, '');
-
-    console.log(
-      `${chalk.bgRed.white(' ERROR ')} ${chalk.red(message)}\n\n${chalk.gray(
-        stack
-      )}`
-    );
-
-    process.exit(1);
+    handleError(error);
   }
 };
 
