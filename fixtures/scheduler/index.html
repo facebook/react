@@ -114,7 +114,7 @@ const {
   unstable_scheduleCallback: scheduleCallback,
   unstable_cancelCallback: cancelCallback,
   unstable_now: now,
-  unstable_dumpQueue: dumpQueue,
+  unstable_getFirstCallbackNode: getFirstCallbackNode,
   unstable_pauseExecution: pauseExecution,
   unstable_continueExecution: continueExecution,
 } = Scheduler;
@@ -530,12 +530,25 @@ function runTestEight() {
   // Pauses execution, dumps the queue, and continues execution
   clearTestResult(8);
 
+  function countNodesInStack(firstCallbackNode) {
+    var node = firstCallbackNode;
+    var count = 0;
+    if (node !== null) {
+      do {
+        count = count + 1;
+        node = node.next;
+      } while (node !== firstCallbackNode);
+    }
+    return count;
+  }
+
   scheduleCallback(() => {
+
     // size should be 0
-    updateTestResult(8, `Queue size: ${dumpQueue().length}.`);
+    updateTestResult(8, `Queue size: ${countNodesInStack(getFirstCallbackNode())}.`);
     updateTestResult(8, 'Pausing... press continue to resume.');
     pauseExecution();
-    
+
     scheduleCallback(function () {
       updateTestResult(8, 'Finishing...');
       displayTestResult(8);
@@ -547,7 +560,7 @@ function runTestEight() {
     })
 
     // new size should be 2 now
-    updateTestResult(8, `Queue size: ${dumpQueue().length}.`);
+    updateTestResult(8, `Queue size: ${countNodesInStack(getFirstCallbackNode())}.`);
     displayTestResult(8);
   });
 }

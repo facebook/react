@@ -68,8 +68,8 @@
     );
   }
 
-  function unstable_dumpQueue() {
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_dumpQueue.apply(
+  function unstable_getFirstCallbackNode() {
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_getFirstCallbackNode.apply(
       this,
       arguments
     );
@@ -99,6 +99,6 @@
     unstable_getCurrentPriorityLevel: unstable_getCurrentPriorityLevel,
     unstable_continueExecution: unstable_continueExecution,
     unstable_pauseExecution: unstable_pauseExecution,
-    unstable_dumpQueue: unstable_dumpQueue,
+    unstable_getFirstCallbackNode: unstable_getFirstCallbackNode,
   });
 });

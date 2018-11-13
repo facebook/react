@@ -364,18 +364,8 @@ function unstable_continueExecution() {
   }
 }
 
-function unstable_dumpQueue() {
-  var node = firstCallbackNode;
-  var callbacks = [];
-
-  if (node !== null) {
-    do {
-      callbacks.push(node);
-      node = node.next;
-    } while (node !== firstCallbackNode);
-  }
-
-  return callbacks;
+function unstable_getFirstCallbackNode() {
+  return firstCallbackNode;
 }
 
 function unstable_cancelCallback(callbackNode) {
@@ -697,6 +687,6 @@ export {
   unstable_shouldYield,
   unstable_continueExecution,
   unstable_pauseExecution,
-  unstable_dumpQueue,
+  unstable_getFirstCallbackNode,
   getCurrentTime as unstable_now,
 };
