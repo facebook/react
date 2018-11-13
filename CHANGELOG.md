@@ -6,6 +6,24 @@
   </summary>
 </details>
 
+## 16.6.3 (November 12, 2018)
+
+### React DOM
+
+* Fix bugs in `Suspense` and `lazy`. ([@acdlite](https://github.com/acdlite) in [#14133](https://github.com/facebook/react/pull/14133), [#14157](https://github.com/facebook/react/pull/14157), and [#14164](https://github.com/facebook/react/pull/14164))
+* Fix highlighting of `React.memo` updates in React DevTools. ([@bvaughn](https://github.com/bvaughn) in [#14141](https://github.com/facebook/react/pull/14141))
+* Fix interaction of Suspense with the React Profiler. ([@bvaughn](https://github.com/bvaughn) in [#14065](https://github.com/facebook/react/pull/14065))
+* Fix a false positive warning when using Suspense. ([@acdlite](https://github.com/acdlite) in [#14158](https://github.com/facebook/react/pull/14158))
+
+### React DOM Server
+
+* Fix incorrect sharing of context state between `renderToNodeStream()` calls. ([@sebmarkbage](https://github.com/sebmarkbage) in [#14182](https://github.com/facebook/react/pull/14182))
+* Add a warning about incorrect usage of the context API. ([@trueadm](https://github.com/trueadm) in [#14033](https://github.com/facebook/react/pull/14033))
+
+## 16.6.2 (November 12, 2018)
+
+This release was published in a broken state and should be skipped.
+
 ## 16.6.1 (November 6, 2018)
 
 ### React DOM
