@@ -6,6 +6,8 @@
   "dependencies": {
     "chalk": "^2.4.1",
     "command-line-args": "^5.0.2",
+    "command-line-usage": "^5.0.5",
+    "download": "^7.1.0",
     "execa": "^1.0.0",
     "folder-hash": "^2.1.2",
     "inquirer": "^6.2.0",

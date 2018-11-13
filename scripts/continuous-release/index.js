@@ -2,12 +2,15 @@
 
 /*eslint-disable no-for-of-loops/no-for-of-loops */
 
+// TODO: Fail if find-replace returns nothing
+
 'use strict';
 
 const fs = require('fs');
 const chalk = require('chalk');
 const execa = require('execa');
 const commandLineArgs = require('command-line-args');
+const commandLineUsage = require('command-line-usage');
 const inquirer = require('inquirer');
 const path = require('path');
 const tempy = require('tempy');
@@ -18,6 +21,8 @@ const replaceInFile = require('replace-in-file');
 const tar = require('tar');
 const treeify = require('treeify');
 const readPackageJSONFromNPMTarball = require('./readPackageJSONFromNPMTarball');
+const download = require('download');
+const semver = require('semver');
 
 const PLACEHOLDER_VERSION_STR = '0.0.0-placeholder-version-do-not-ship';
 
@@ -140,6 +145,81 @@ async function step(msg, task, getSuccessMsg, getErrorMsg) {
     process.stdout.write = originalOutWrite;
     process.stderr.write = originalErrWrite;
   }
+}
+
+async function replaceReactVersion(packagesDir, from, to) {
+  const options = {
+    files: packagesDir + '/**',
+    from,
+    to,
+  };
+  await replaceInFile(options);
+}
+
+async function hashPackagesDirectory(packagesDir) {
+  const options = {
+    encoding: 'hex',
+    files: {exclude: ['.DS_Store']},
+  };
+  return await hashElement(packagesDir, options);
+}
+
+async function finalizePackageJSONs(
+  packageJSONs,
+  buildInfos,
+  versions,
+  packagesDir
+) {
+  for (const [, packageJSON] of packageJSONs) {
+    const packageName = packageJSON.name;
+    packageJSON.version = versions.get(packageName);
+    packageJSON.buildInfo = buildInfos.get(packageName);
+    for (const typeOfDependency of typesOfDependencies) {
+      const dependencies = packageJSON[typeOfDependency];
+      if (dependencies !== undefined) {
+        for (const dep in dependencies) {
+          if (packageJSONs.has(dep)) {
+            // Prepend a caret
+            // TODO: Pick a better heuristic
+            dependencies[dep] = '^' + versions.get(dep);
+          }
+        }
+      }
+    }
+    const newPackageJSONPath = path.resolve(
+      packagesDir,
+      packageJSON.name,
+      'package.json'
+    );
+    await writeFile(newPackageJSONPath, JSON.stringify(packageJSON, null, 2));
+  }
+}
+
+async function packForNPM(packagesDir, packageNames) {
+  for (const packageName of packageNames) {
+    try {
+      await execa.stdout(
+        'npm',
+        ['pack', path.resolve(packagesDir, packageName)],
+        {cwd: packagesDir}
+      );
+      await rimraf(path.resolve(packagesDir, packageName));
+    } catch (error) {
+      throw new GracefulError(error.message);
+    }
+  }
+}
+async function writeBuildArtifact(buildID, buildDir) {
+  const buildTarFilename = `react-build-${buildID}.tgz`;
+  await tar.c(
+    {
+      gzip: true,
+      file: path.resolve(process.cwd(), buildTarFilename),
+      cwd: path.resolve(buildDir),
+    },
+    ['packages']
+  );
+  return buildTarFilename;
 }
 
 async function buildLocal(ref, repo, all) {
@@ -325,12 +405,14 @@ async function buildLocal(ref, repo, all) {
     process.exit(0);
   }
 
-  await step('Temporarily update version with placeholder', async () => {
-    const pathToVersionFileInSource = path.resolve(
-      sourceDir,
-      'packages/shared/ReactVersion.js'
-    );
-    const newContents = `
+  await step(
+    'Temporarily replace ReactVersion.js with placeholder',
+    async () => {
+      const pathToVersionFileInSource = path.resolve(
+        sourceDir,
+        'packages/shared/ReactVersion.js'
+      );
+      const newContents = `
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -343,12 +425,13 @@ async function buildLocal(ref, repo, all) {
 // TODO: this is special because it gets imported during build.
 module.exports = '${PLACEHOLDER_VERSION_STR}';
 `;
-    try {
-      await writeFile(pathToVersionFileInSource, newContents);
-    } catch (error) {
-      throw new GracefulError('Failed to update ReactVersion.js');
+      try {
+        await writeFile(pathToVersionFileInSource, newContents);
+      } catch (error) {
+        throw new GracefulError('Failed to update ReactVersion.js');
+      }
     }
-  });
+  );
 
   await step('Install yarn dependencies', async spinner => {
     try {
@@ -372,7 +455,7 @@ Starting build script...
           [
             './scripts/rollup/build.js',
             packageNames.map(n => n + '/').join(','),
-            '--type=node',
+            '--extract-errors',
           ],
           {
             cwd: sourceDir,
@@ -388,109 +471,241 @@ Starting build script...
 
   console.log('\n');
 
-  const packageJSONs = new Map();
-  await step('Extract build artifacts', async () => {
-    for (const packageName of packageNames) {
-      const packageJSONPath = path.resolve(
-        artifactsPath,
-        packageName,
-        './package.json'
-      );
-      const packageJSON = require(packageJSONPath);
-      packageJSONs.set(packageJSON.name, packageJSON);
-      await rimraf(packageJSONPath);
-      const oldPath = path.resolve(artifactsPath, packageName);
-      const newPath = path.resolve(packagesDir, packageName);
-      await execa('mkdir', ['-p', newPath]);
-      await rename(oldPath, newPath);
-    }
-  });
-
-  let hashedPackages;
-  const buildID = await step('Calculate checksums', async () => {
-    const options = {
-      encoding: 'hex',
-      files: {exclude: ['.DS_Store']},
-    };
-    hashedPackages = await hashElement(packagesDir, options);
-    const buildChecksum = hashedPackages.hash.slice(0, 7);
-    let id = `${commitSha}-${buildChecksum}`;
-    if (isPartialBuild) {
-      id += '-PARTIAL';
-    }
-    return id;
-  });
-
-  const version = '0.0.0-' + buildID;
-
-  await step('Update ReactVersion to ' + version, async () => {
-    const options = {
-      files: packagesDir + '/**',
-      from: PLACEHOLDER_VERSION_STR,
-      to: version,
-    };
-    await replaceInFile(options);
-  });
-
-  await step('Create final package.jsons', async () => {
-    for (const hashedPackage of hashedPackages.children) {
-      const packageName = hashedPackage.name;
-      const packageJSON = packageJSONs.get(packageName);
-      packageJSON.version = version;
-      packageJSON.buildInfo = {
-        buildID: buildID,
-        checksum: hashedPackage.hash,
-        unstable: true,
-        partial: isPartialBuild,
-      };
-      for (const typeOfDependency of typesOfDependencies) {
-        const dependencies = packageJSON[typeOfDependency];
-        if (dependencies !== undefined) {
-          for (const dep in dependencies) {
-            if (packageJSONs.has(dep)) {
-              dependencies[dep] = version;
-            }
-          }
-        }
-      }
-      const newPackageJSONPath = path.resolve(
-        packagesDir,
-        packageName,
-        'package.json'
-      );
-      await writeFile(newPackageJSONPath, JSON.stringify(packageJSON, null, 2));
-    }
-  });
-
-  await step('Pack for npm', async () => {
-    for (const packageName of packageNames) {
-      try {
-        await execa.stdout(
-          'npm',
-          ['pack', path.resolve(packagesDir, packageName)],
-          {cwd: packagesDir}
-        );
-        await rimraf(path.resolve(packagesDir, packageName));
-      } catch (error) {
-        throw new GracefulError('Failed to pack ' + packageName);
-      }
-    }
-  });
-
-  const buildTarFilename = `react-build-${buildID}.tgz`;
-  await step('Output build', async () => {
-    await tar.c(
-      {
-        gzip: true,
-        file: path.resolve(process.cwd(), buildTarFilename),
-        cwd: path.resolve(buildDir),
-      },
-      ['packages']
+  const packageJSONs = await step('Extract build artifacts', async () => {
+    return await getPackageJSONsFromBuildArtifacts(
+      packageNames,
+      packagesDir,
+      artifactsPath
     );
   });
 
+  const hashedPackages = await step('Calculate checksums', async () => {
+    return await hashPackagesDirectory(packagesDir);
+  });
+
+  const buildChecksum = hashedPackages.hash.slice(0, 7);
+  const buildID = `${commitSha}-${buildChecksum}`;
+
+  const buildInfos = new Map();
+  const versions = new Map();
+  for (const hashedPackage of hashedPackages.children) {
+    const packageName = hashedPackage.name;
+    const checksum = hashedPackage.hash;
+    buildInfos.set(packageName, {
+      buildID,
+      checksum,
+      unstable: true,
+      partial: isPartialBuild,
+      packages: packageNames,
+    });
+    const version = `0.0.0-${buildID}-${checksum.slice(0, 7)}`;
+    versions.set(packageName, version);
+  }
+
+  let reactVersion = versions.get('react');
+  if (reactVersion === undefined) {
+    const answers = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'reactVersion',
+        message:
+          `Since 'react' is not part of this build, you must specify ` +
+          'a ReactVersion: ',
+        validate(v) {
+          if (!semver.valid(v)) {
+            return new Error(v + 'is not a valid version.');
+          }
+          return true;
+        },
+      },
+    ]);
+    reactVersion = answers.reactVersion;
+  }
+
+  await step('Update ReactVersion to ' + reactVersion, async () => {
+    await replaceReactVersion(
+      packagesDir,
+      PLACEHOLDER_VERSION_STR,
+      reactVersion
+    );
+  });
+
+  await step('Create final package.jsons', async () => {
+    return await finalizePackageJSONs(
+      packageJSONs,
+      buildInfos,
+      versions,
+      packagesDir
+    );
+  });
+
+  await step('Pack for npm', async () => {
+    return await packForNPM(packagesDir, packageNames);
+  });
+
+  const buildTarFilename = await step('Output build', async () => {
+    return await writeBuildArtifact(buildID, buildDir);
+  });
+
   console.log(chalk`
-Created {green {inverse  ${buildTarFilename} }}`);
+  Created {green {inverse ${buildTarFilename} }}`);
+}
+
+async function promote(unresolvedBaseReactVersion) {
+  if (unresolvedBaseReactVersion === undefined) {
+    throw new GracefulError('Must provide a React version.');
+  }
+
+  let baseReactVersion;
+  let buildInfo;
+  await step('Retrieve build info', async () => {
+    baseReactVersion = await execa.stdout('npm', [
+      'view',
+      'react@' + unresolvedBaseReactVersion,
+      'version',
+    ]);
+
+    if (baseReactVersion === '') {
+      throw new GracefulError(
+        'No matches for react@' + unresolvedBaseReactVersion
+      );
+    }
+
+    const buildInfoStr = await execa.stdout('npm', [
+      'view',
+      'react@' + baseReactVersion,
+      'buildInfo',
+      '--json',
+    ]);
+    buildInfo = JSON.parse(buildInfoStr);
+
+    if (buildInfo.unstable !== true) {
+      throw new GracefulError(
+        `Cannot promote a past release (react@${baseReactVersion}), only a canary build.`
+      );
+    }
+  });
+
+  const packageNames = buildInfo.packages;
+
+  const versions = new Map();
+  for (const packageName of packageNames) {
+    const currentLatestVersion = await execa.stdout('npm', [
+      'view',
+      `${packageName}@latest`,
+      'version',
+    ]);
+    const {packageVersion} = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'packageVersion',
+        // TODO: Better heuristic for default value
+        default: semver.inc(currentLatestVersion, 'patch'),
+        message: chalk`Version for {blue ${packageName}}`,
+        suffix: chalk` (latest is ${currentLatestVersion})`,
+        validate(v) {
+          if (!semver.valid(v)) {
+            return new Error(v + 'is not a valid version.');
+          }
+          return true;
+        },
+      },
+    ]);
+    versions.set(packageName, packageVersion);
+  }
+
+  const buildDir = tempy.directory();
+  const packagesDir = path.resolve(buildDir, 'packages');
+  await execa('mkdir', ['-p', packagesDir]);
+
+  await step(
+    `Fetch and extract build artifacts for ${buildInfo.buildID}`,
+    async () => {
+      await Promise.all(
+        packageNames.map(async packageName => {
+          const tempOutputDir = tempy.directory();
+
+          const tarballURL = await execa.stdout('npm', [
+            'view',
+            `${packageName}@${baseReactVersion}`,
+            'dist.tarball',
+          ]);
+
+          const tarballFilename = 'tarball.tgz';
+          await download(tarballURL, tempOutputDir, {
+            filename: tarballFilename,
+          });
+
+          await tar.x({
+            file: path.resolve(tempOutputDir, tarballFilename),
+            cwd: tempOutputDir,
+          });
+
+          const oldPath = path.resolve(tempOutputDir, 'package');
+          const newPath = path.resolve(packagesDir, packageName);
+          await execa('mkdir', ['-p', newPath]);
+          await rename(oldPath, newPath);
+          await rimraf(tempOutputDir);
+        })
+      );
+    }
+  );
+
+  const packageJSONs = await getPackageJSONsFromBuildArtifacts(
+    packageNames,
+    packagesDir,
+    packagesDir
+  );
+
+  if (versions.has('react')) {
+    await step('Update ReactVerison.js', async () => {
+      await replaceReactVersion(
+        packagesDir,
+        baseReactVersion,
+        versions.get('react')
+      );
+    });
+  }
+
+  const buildInfos = new Map();
+  await Promise.all(
+    packageNames.map(async packageName => {
+      const buildInfoStr = await execa.stdout('npm', [
+        'view',
+        'react@' + baseReactVersion,
+        'buildInfo',
+        '--json',
+      ]);
+      const buildInfoForPackage = JSON.parse(buildInfoStr);
+      // TODO: We should recompute the checksum, since the versions have
+      // changed. There are other redundancies in place, though, so nbd.
+      buildInfoForPackage.unstable = false;
+      buildInfoForPackage.partial = false;
+      buildInfos.set(packageName, buildInfoForPackage);
+    })
+  );
+
+  await step('Create final package.jsons', async () => {
+    return await finalizePackageJSONs(
+      packageJSONs,
+      buildInfos,
+      versions,
+      packagesDir
+    );
+  });
+
+  await step('Pack for npm', async () => {
+    return await packForNPM(packagesDir, packageNames);
+  });
+
+  const buildID = buildInfo.buildID;
+
+  const buildTarFilename = await step('Output build', async () => {
+    return await writeBuildArtifact(buildID, buildDir);
+  });
+
+  console.log(chalk`
+  Created {green {inverse ${buildTarFilename} }}`);
 }
 
 async function extractBuild(pathToBuildTar) {
@@ -534,6 +749,29 @@ async function getPackageJSONsFromBuild(packagesDir) {
   return packageJSONs;
 }
 
+async function getPackageJSONsFromBuildArtifacts(
+  packageNames,
+  packagesDir,
+  artifactsPath
+) {
+  const packageJSONs = new Map();
+  for (const packageName of packageNames) {
+    const packageJSONPath = path.resolve(
+      artifactsPath,
+      packageName,
+      './package.json'
+    );
+    const packageJSON = require(packageJSONPath);
+    packageJSONs.set(packageJSON.name, packageJSON);
+    await rimraf(packageJSONPath);
+    const oldPath = path.resolve(artifactsPath, packageName);
+    const newPath = path.resolve(packagesDir, packageName);
+    await execa('mkdir', ['-p', newPath]);
+    await rename(oldPath, newPath);
+  }
+  return packageJSONs;
+}
+
 async function show(buildTar, showAll) {
   const pathToBuildTar = path.resolve(buildTar);
   const {packagesDir} = await extractBuild(pathToBuildTar);
@@ -567,7 +805,7 @@ async function show(buildTar, showAll) {
           const dependencyJSON = packageJSONsByNameOnly.get(dep);
           if (dependencyJSON !== undefined) {
             reactDeps = reactDeps === null ? {} : reactDeps;
-            reactDeps[dep] = dependencyJSON.version;
+            reactDeps[dep] = dependencies[dep];
           }
         }
         if (reactDeps !== null) {
@@ -581,7 +819,7 @@ async function show(buildTar, showAll) {
   process.stdout.write(treeify.asTree(output, true));
 }
 
-async function push(buildTar, tag) {
+async function push(buildTar) {
   const pathToBuildTar = path.resolve(buildTar);
   const {packagesDir} = await extractBuild(pathToBuildTar);
   const packageJSONs = await getPackageJSONsFromBuild(packagesDir);
@@ -617,16 +855,6 @@ Please contact a React team member.`);
     }
   });
 
-  const {otp} = await inquirer.prompt([
-    {type: 'input', name: 'otp', message: 'npm one-time password (otp)'},
-  ]);
-
-  if (tag === undefined) {
-    tag = 'unstable';
-  } else {
-    throw new Error('TODO: customize tag');
-  }
-
   const alreadyPublished = new Set();
 
   await step('Check for already installed versions', async () => {
@@ -654,11 +882,17 @@ Please contact a React team member.`);
     }
   });
 
+  return;
+
   console.log(`
 
 Ok, here we go.
 
 `);
+
+  const {otp} = await inquirer.prompt([
+    {type: 'input', name: 'otp', message: 'npm one-time password (otp)'},
+  ]);
 
   let packageJSONsThatFailedToPublish = new Set();
   for (const [npmTarFile, packageJSON] of packageJSONs) {
@@ -736,6 +970,65 @@ const argv = mainOptions._unknown || [];
 
 async function main() {
   switch (mainOptions.command) {
+    case undefined:
+    case 'help': {
+      const sections = [
+        {
+          header: 'react-release',
+          content:
+            'A tool optimized for frequent, unstable releases of React. ',
+        },
+        {
+          header: 'Available Commands',
+          content: [
+            {
+              name: '{blue build} [ref=HEAD]',
+              summary:
+                'Create a canary build of React. Outputs a build artifact that be passed to {bold show} or {bold push}.',
+            },
+            {
+              name: '{blue show }<path-to-build-artifact>',
+              summary: 'Print information about a build artifact.',
+            },
+            {
+              name: '{blue push }<path-to-build-artifact>',
+              summary: 'Publish a build to npm.',
+            },
+          ],
+        },
+        {
+          header: 'Examples',
+          content: [
+            {
+              desc: '- Build using HEAD from inside a React repo',
+              example: '{dim $} {magenta react-release} {blue build}',
+            },
+            {
+              desc: '- Build using specific ref',
+              example: '{dim $} {magenta react-release} {blue build} a8988e7',
+            },
+            {
+              desc: '- Build from outside React repo',
+              example:
+                '{dim $} {magenta react-release} {blue build} a8988e7 --repo ~/path/to/react',
+            },
+            {
+              desc: '- Show info about a React build.',
+              example:
+                '{dim $} {magenta react-release} {blue show} react-build-a8988e4-1d1a717.tgz',
+            },
+            {
+              desc: '- Push a build to npm.',
+              example:
+                '{dim $} {magenta react-release} {blue push} react-build-a8988e4-1d1a717.tgz',
+            },
+          ],
+        },
+      ];
+      const usage = commandLineUsage(sections);
+      console.log(usage);
+      break;
+    }
     case 'build': {
       const definitions = [
         {
@@ -751,6 +1044,21 @@ async function main() {
       await buildLocal(options.from, options.repo, options.all);
       break;
     }
+    case 'promote': {
+      const definitions = [
+        {
+          name: 'from',
+          type: String,
+          defaultOption: true,
+        },
+        {name: 'repo', type: String, defaultValue: './'},
+        {name: 'all', type: Boolean},
+        {name: 'ci', type: Boolean},
+      ];
+      const options = commandLineArgs(definitions, {argv});
+      await promote(options.from);
+      break;
+    }
     case 'show': {
       const definitions = [
         {name: 'buildTar', type: String, defaultOption: true},
@@ -763,10 +1071,15 @@ async function main() {
     case 'push': {
       const definitions = [
         {name: 'buildTar', type: String, defaultOption: true},
-        {name: 'tag', type: String},
       ];
       const options = commandLineArgs(definitions, {argv});
       await push(options.buildTar);
+      break;
+    }
+    default: {
+      throw new GracefulError(
+        'Unknown command. Run without arguments for usage instructions.'
+      );
     }
   }
 }
