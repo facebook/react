@@ -14,7 +14,6 @@
 * Fix highlighting of `React.memo` updates in React DevTools. ([@bvaughn](https://github.com/bvaughn) in [#14141](https://github.com/facebook/react/pull/14141))
 * Fix interaction of Suspense with the React Profiler. ([@bvaughn](https://github.com/bvaughn) in [#14065](https://github.com/facebook/react/pull/14065))
 * Fix a false positive warning when using Suspense. ([@acdlite](https://github.com/acdlite) in [#14158](https://github.com/facebook/react/pull/14158))
-* Add a warning about passing `ref` to a memoized function component. ([@sophiebits](https://github.com/sophiebits) in [#14178](https://github.com/facebook/react/pull/14178))
 
 ### React DOM Server
 
