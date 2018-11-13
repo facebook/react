@@ -111,7 +111,8 @@ function traverseAllChildrenImpl(
     invokeCallback = true;
   }
 
-  switch (type) {
+  if (children != null) {
+    switch (type) {
       case 'string':
       case 'number':
         invokeCallback = true;
@@ -122,7 +123,8 @@ function traverseAllChildrenImpl(
           case REACT_PORTAL_TYPE:
             invokeCallback = true;
         }
-   }
+     }
+  }
 
   if (invokeCallback) {
     callback(
