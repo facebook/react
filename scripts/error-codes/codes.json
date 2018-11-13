@@ -300,5 +300,9 @@
   "298": "Hooks can only be called inside the body of a function component.",
   "299": "%s(...): Target container is not a DOM element.",
   "300": "Rendered fewer hooks than expected. This may be caused by an accidental early return statement.",
-  "301": "Too many re-renders. React limits the number of renders to prevent an infinite loop."
+  "301": "Too many re-renders. React limits the number of renders to prevent an infinite loop.",
+  "302": "It is not supported to run the profiling version of a renderer (for example, `react-dom/profiling`) without also replacing the `scheduler/tracing` module with `scheduler/tracing-profiling`. Your bundler might have a setting for aliasing both modules. Learn more at http://fb.me/react-profiling",
+  "303": "suspense fallback not found, something is broken",
+  "304": "Maximum number of concurrent React renderers exceeded. This can happen if you are not properly destroying the Readable provided by React. Ensure that you call .destroy() on it if you no longer want to read from it, and did not read to the end. If you use .pipe() this should be automatic.",
+  "305": "The current renderer does not support hydration. This error is likely caused by a bug in React. Please file an issue."
 }
