@@ -12,6 +12,6 @@
     "umd/"
   ],
   "peerDependencies": {
-    "react": "^16.3.0-alpha.1"
+    "react": "^16.3.0-alpha.1 || 16.7.0-alpha.1"
   }
 }

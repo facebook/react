@@ -6,9 +6,9 @@
   "dependencies": {
     "object-assign": "^4.1.1",
     "prop-types": "^15.6.2",
-    "scheduler": "^0.11.0"
+    "scheduler": "^0.12.0-alpha.1"
   },
   "peerDependencies": {
-    "react": "^16.0.0"
+    "react": "^16.0.0 || 16.7.0-alpha.1"
   }
 }
