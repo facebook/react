@@ -42,4 +42,4 @@ jobs:
             - node_modules
 
       - store_artifacts:
-          path: ./build/node_modules.tar.gz
+          path: ./node_modules.tgz
