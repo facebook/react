@@ -28,6 +28,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
     ReactCache = require('react-cache');
     Suspense = React.Suspense;
     container = document.createElement('div');
+    document.body.appendChild(container);
 
     TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
       return new Promise((resolve, reject) =>
@@ -36,6 +37,10 @@ describe('ReactDOMSuspensePlaceholder', () => {
         }, ms),
       );
     }, ([text, ms]) => text);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
   });
 
   function advanceTimers(ms) {
@@ -157,4 +162,64 @@ describe('ReactDOMSuspensePlaceholder', () => {
       );
     },
   );
+
+  // Regression test for https://github.com/facebook/react/issues/14188
+  it('can call findDOMNode() in a suspended component commit phase', async () => {
+    const log = [];
+    const Lazy = React.lazy(
+      () =>
+        new Promise(resolve =>
+          resolve({
+            default() {
+              return 'lazy';
+            },
+          }),
+        ),
+    );
+
+    class Child extends React.Component {
+      componentDidMount() {
+        log.push('cDM ' + this.props.id);
+        ReactDOM.findDOMNode(this);
+      }
+      componentDidUpdate() {
+        log.push('cDU ' + this.props.id);
+        ReactDOM.findDOMNode(this);
+      }
+      render() {
+        return 'child';
+      }
+    }
+
+    const buttonRef = React.createRef();
+    class App extends React.Component {
+      state = {
+        suspend: false,
+      };
+      handleClick = () => {
+        this.setState({suspend: true});
+      };
+      render() {
+        return (
+          <React.Suspense fallback="Loading">
+            <Child id="first" />
+            <button ref={buttonRef} onClick={this.handleClick}>
+              Suspend
+            </button>
+            <Child id="second" />
+            {this.state.suspend && <Lazy />}
+          </React.Suspense>
+        );
+      }
+    }
+
+    ReactDOM.render(<App />, container);
+
+    expect(log).toEqual(['cDM first', 'cDM second']);
+    log.length = 0;
+
+    buttonRef.current.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+    await Lazy;
+    expect(log).toEqual(['cDU first', 'cDU second']);
+  });
 });
