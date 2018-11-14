@@ -18,7 +18,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "prestart": "cp ../../build/dist/react.development.js ../../build/dist/react-dom.development.js ../../build/dist/react-dom-server.browser.development.js public/",
+    "prestart": "cp ../../build/dist/react.development.js ../../build/dist/react-dom.development.js ../../build/dist/react.production.min.js ../../build/dist/react-dom.production.min.js ../../build/dist/react-dom-server.browser.development.js ../../build/dist/react-dom-server.browser.production.min.js public/",
     "build": "react-scripts build && cp build/index.html build/200.html",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"

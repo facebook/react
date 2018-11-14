@@ -7,8 +7,9 @@ class Header extends React.Component {
     super(props, context);
     const query = parse(window.location.search);
     const version = query.version || 'local';
+    const production = query.production || false;
     const versions = [version];
-    this.state = {version, versions};
+    this.state = {version, versions, production};
   }
   componentWillMount() {
     getVersionTags().then(tags => {
@@ -22,6 +23,14 @@ class Header extends React.Component {
     query.version = event.target.value;
     if (query.version === 'local') {
       delete query.version;
+    }
+    window.location.search = stringify(query);
+  }
+  handleProductionChange(event) {
+    const query = parse(window.location.search);
+    query.production = event.target.checked;
+    if (!query.production) {
+      delete query.production;
     }
     window.location.search = stringify(query);
   }
@@ -43,6 +52,16 @@ class Header extends React.Component {
           </span>
 
           <div className="header-controls">
+            <input
+              id="react_production"
+              className="header__checkbox"
+              type="checkbox"
+              checked={this.state.production}
+              onChange={this.handleProductionChange}
+            />
+            <label htmlFor="react_production" className="header__label">
+              Production
+            </label>
             <label htmlFor="example">
               <span className="sr-only">Select an example</span>
               <select
