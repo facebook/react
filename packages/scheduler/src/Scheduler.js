@@ -457,9 +457,8 @@ if (typeof window !== 'undefined' && window._schedMock) {
   // If Scheduler runs in a non-DOM environment, it falls back to a naive
   // implementation using setTimeout.
   typeof window === 'undefined' ||
-  // "addEventListener" might not be available on the window object
-  // if this is a mocked "window" object. So we need to validate that too.
-  typeof window.addEventListener !== 'function'
+  // Check if MessageChannel is supported, too.
+  typeof MessageChannel !== 'function'
 ) {
   var _callback = null;
   var _currentTime = -1;
@@ -533,17 +532,9 @@ if (typeof window !== 'undefined' && window._schedMock) {
   };
 
   // We use the postMessage trick to defer idle work until after the repaint.
-  var port = null;
-  var messageKey =
-    '__reactIdleCallback$' +
-    Math.random()
-      .toString(36)
-      .slice(2);
-  var idleTick = function(event) {
-    if (event.source !== port || event.data !== messageKey) {
-      return;
-    }
-
+  var channel = new MessageChannel();
+  var port = channel.port2;
+  channel.port1.onmessage = function(event) {
     isMessageEventScheduled = false;
 
     var prevScheduledCallback = scheduledHostCallback;
@@ -627,7 +618,7 @@ if (typeof window !== 'undefined' && window._schedMock) {
     frameDeadline = rafTime + activeFrameTime;
     if (!isMessageEventScheduled) {
       isMessageEventScheduled = true;
-      port.postMessage(messageKey, '*');
+      port.postMessage('*');
     }
   };
 
@@ -636,7 +627,7 @@ if (typeof window !== 'undefined' && window._schedMock) {
     timeoutTime = absoluteTimeout;
     if (isFlushingHostCallback || absoluteTimeout < 0) {
       // Don't wait for the next frame. Continue working ASAP, in a new event.
-      port.postMessage(messageKey, '*');
+      port.postMessage('*');
     } else if (!isAnimationFrameScheduled) {
       // If rAF didn't already schedule one, we need to schedule a frame.
       // TODO: If this rAF doesn't materialize because the browser throttles, we
@@ -646,19 +637,6 @@ if (typeof window !== 'undefined' && window._schedMock) {
       requestAnimationFrameWithTimeout(animationTick);
     }
   };
-
-  if (typeof MessageChannel === 'function') {
-    // Use a MessageChannel, if support exists
-    var channel = new MessageChannel();
-    channel.port1.onmessage = idleTick;
-    port = channel.port2;
-  } else {
-    // Otherwise post a message to the window. This isn't ideal because message
-    // handlers will fire on every frame until the queue is empty, including
-    // some browser extensions.
-    window.addEventListener('message', idleTick, false);
-    port = window;
-  }
 
   cancelHostCallback = function() {
     scheduledHostCallback = null;

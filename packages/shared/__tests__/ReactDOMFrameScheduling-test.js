@@ -12,8 +12,15 @@
 describe('ReactDOMFrameScheduling', () => {
   it('warns when requestAnimationFrame is not polyfilled in the browser', () => {
     const previousRAF = global.requestAnimationFrame;
+    const previousMessageChannel = global.MessageChannel;
     try {
-      global.requestAnimationFrame = undefined;
+      delete global.requestAnimationFrame;
+      global.MessageChannel = function MessageChannel() {
+        return {
+          port1: {},
+          port2: {},
+        };
+      };
       jest.resetModules();
       spyOnDevAndProd(console, 'error');
       require('react-dom');
@@ -22,6 +29,7 @@ describe('ReactDOMFrameScheduling', () => {
         "This browser doesn't support requestAnimationFrame.",
       );
     } finally {
+      global.MessageChannel = previousMessageChannel;
       global.requestAnimationFrame = previousRAF;
     }
   });

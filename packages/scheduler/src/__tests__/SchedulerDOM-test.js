@@ -83,7 +83,7 @@ describe('SchedulerDOM', () => {
       this.port1 = port1;
       this.port2 = port2;
     };
-    postMessageCallback = event => port1.onmessage(event);
+    postMessageCallback = () => port1.onmessage();
     global.Date.now = function() {
       return currentTime;
     };
