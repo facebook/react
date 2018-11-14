@@ -450,22 +450,6 @@ describe('ReactDOM', () => {
     }
   });
 
-  it('warns when requestAnimationFrame is not polyfilled', () => {
-    const previousRAF = global.requestAnimationFrame;
-    try {
-      delete global.requestAnimationFrame;
-      jest.resetModules();
-      spyOnDevAndProd(console, 'error');
-      require('react-dom');
-      expect(console.error.calls.count()).toEqual(1);
-      expect(console.error.calls.argsFor(0)[0]).toMatch(
-        "This browser doesn't support requestAnimationFrame.",
-      );
-    } finally {
-      global.requestAnimationFrame = previousRAF;
-    }
-  });
-
   it('reports stacks with re-entrant renderToString() calls on the client', () => {
     function Child2(props) {
       return <span ariaTypo3="no">{props.children}</span>;
