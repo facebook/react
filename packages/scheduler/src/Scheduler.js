@@ -533,13 +533,14 @@ if (typeof window !== 'undefined' && window._schedMock) {
   };
 
   // We use the postMessage trick to defer idle work until after the repaint.
+  var port = null;
   var messageKey =
     '__reactIdleCallback$' +
     Math.random()
       .toString(36)
       .slice(2);
   var idleTick = function(event) {
-    if (event.source !== window || event.data !== messageKey) {
+    if (event.source !== port || event.data !== messageKey) {
       return;
     }
 
@@ -583,9 +584,6 @@ if (typeof window !== 'undefined' && window._schedMock) {
       }
     }
   };
-  // Assumes that we have addEventListener in this environment. Might need
-  // something better for old IE.
-  window.addEventListener('message', idleTick, false);
 
   var animationTick = function(rafTime) {
     if (scheduledHostCallback !== null) {
@@ -629,7 +627,7 @@ if (typeof window !== 'undefined' && window._schedMock) {
     frameDeadline = rafTime + activeFrameTime;
     if (!isMessageEventScheduled) {
       isMessageEventScheduled = true;
-      window.postMessage(messageKey, '*');
+      port.postMessage(messageKey, '*');
     }
   };
 
@@ -638,7 +636,7 @@ if (typeof window !== 'undefined' && window._schedMock) {
     timeoutTime = absoluteTimeout;
     if (isFlushingHostCallback || absoluteTimeout < 0) {
       // Don't wait for the next frame. Continue working ASAP, in a new event.
-      window.postMessage(messageKey, '*');
+      port.postMessage(messageKey, '*');
     } else if (!isAnimationFrameScheduled) {
       // If rAF didn't already schedule one, we need to schedule a frame.
       // TODO: If this rAF doesn't materialize because the browser throttles, we
@@ -648,6 +646,19 @@ if (typeof window !== 'undefined' && window._schedMock) {
       requestAnimationFrameWithTimeout(animationTick);
     }
   };
+
+  if (typeof MessageChannel === 'function') {
+    // Use a MessageChannel, if support exists
+    var channel = new MessageChannel();
+    channel.port1.onmessage = idleTick;
+    port = channel.port2;
+  } else {
+    // Otherwise post a message to the window. This isn't ideal because message
+    // handlers will fire on every frame until the queue is empty, including
+    // some browser extensions.
+    window.addEventListener('message', idleTick, false);
+    port = window;
+  }
 
   cancelHostCallback = function() {
     scheduledHostCallback = null;
