@@ -58,8 +58,8 @@ class Header extends React.Component {
               checked={this.state.production}
               onChange={this.handleProductionChange}
             />
-            <label htmlFor="react_production">
-              <span className="header__label">Production</span>
+            <label htmlFor="react_production" className="header__label">
+              Production
             </label>
             <label htmlFor="example">
               <span className="sr-only">Select an example</span>
