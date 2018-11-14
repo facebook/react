@@ -447,6 +447,26 @@ var requestHostCallback;
 var cancelHostCallback;
 var shouldYieldToHost;
 
+// Scheduler uses a message event to schedule a callback that fires after paint.
+// This happens on every frame until the queue is empty. An unfortunate
+// consequence is that every other message event handler also gets called on
+// every frame; even if they exit immediately, this adds up to significant per-
+// frame overhead. Until there's a better way to insert work after paint, a
+// workaround is to monkey-patch `addEventListener` so there's only a single
+// listener that wraps all the other ones. When a message event is fired, we
+// check if the event is Scheduler event. If it is, we call Scheduler, and
+// skip the other event handlers entirely.
+//
+// This is a bit hacky, though, and probably doesn't belong in this package.
+// It can be implemented in a wrapper, though, if we expose both the message
+// key used by Scheduler message events and the Scheduler message listener.
+var messageKey =
+  '__reactIdleCallback$' +
+  Math.random()
+    .toString(36)
+    .slice(2);
+var onMessage;
+
 if (typeof window !== 'undefined' && window._schedMock) {
   // Dynamic injection, only for testing purposes.
   var impl = window._schedMock;
@@ -533,12 +553,7 @@ if (typeof window !== 'undefined' && window._schedMock) {
   };
 
   // We use the postMessage trick to defer idle work until after the repaint.
-  var messageKey =
-    '__reactIdleCallback$' +
-    Math.random()
-      .toString(36)
-      .slice(2);
-  var idleTick = function(event) {
+  onMessage = function(event) {
     if (event.source !== window || event.data !== messageKey) {
       return;
     }
@@ -585,7 +600,7 @@ if (typeof window !== 'undefined' && window._schedMock) {
   };
   // Assumes that we have addEventListener in this environment. Might need
   // something better for old IE.
-  window.addEventListener('message', idleTick, false);
+  window.addEventListener('message', onMessage, false);
 
   var animationTick = function(rafTime) {
     if (scheduledHostCallback !== null) {
@@ -669,4 +684,6 @@ export {
   unstable_getCurrentPriorityLevel,
   unstable_shouldYield,
   getCurrentTime as unstable_now,
+  onMessage as __onMessage,
+  messageKey as __messageKey,
 };
