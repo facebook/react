@@ -54,6 +54,7 @@ class Header extends React.Component {
           <div className="header-controls">
             <input
               id="react_production"
+              className="header__checkbox"
               type="checkbox"
               checked={this.state.production}
               onChange={this.handleProductionChange}
