@@ -129,10 +129,10 @@ ReactControlledComponent.setRestoreImplementation(restoreControlledState);
 
 export type DOMContainer =
   | (Element & {
-      _reactRootContainer: ?Root,
+      _reactRootContainer: Root | null,
     })
   | (Document & {
-      _reactRootContainer: ?Root,
+      _reactRootContainer: Root | null,
     });
 
 type Batch = FiberRootBatch & {
@@ -523,9 +523,7 @@ function legacyRenderSubtreeIntoContainer(
     topLevelUpdateWarnings(container);
   }
 
-  // TODO: Without `any` type, Flow says "Property cannot be accessed on any
-  // member of intersection type." Whyyyyyy.
-  let root: Root = (container._reactRootContainer: any);
+  let root: Root | null = container._reactRootContainer;
   if (!root) {
     // Initial mount
     root = container._reactRootContainer = legacyCreateRootFromDOMContainer(
@@ -535,27 +533,34 @@ function legacyRenderSubtreeIntoContainer(
     if (typeof callback === 'function') {
       const originalCallback = callback;
       callback = function() {
-        const instance = DOMRenderer.getPublicRootInstance(root._internalRoot);
+        // Without (root: any) cast, Flow says
+        // "Cannot cast root to Root because null [1] is incompatible with Root [2]."
+        // Bcause Flow doesn't understand that ensured Root type at Initial mount with above function scope,
+        const instance = DOMRenderer.getPublicRootInstance(
+          ((root: any): Root)._internalRoot,
+        );
         originalCallback.call(instance);
       };
     }
     // Initial mount should not be batched.
     DOMRenderer.unbatchedUpdates(() => {
       if (parentComponent != null) {
-        root.legacy_renderSubtreeIntoContainer(
+        ((root: any): Root).legacy_renderSubtreeIntoContainer(
           parentComponent,
           children,
           callback,
         );
       } else {
-        root.render(children, callback);
+        ((root: any): Root).render(children, callback);
       }
     });
   } else {
     if (typeof callback === 'function') {
       const originalCallback = callback;
       callback = function() {
-        const instance = DOMRenderer.getPublicRootInstance(root._internalRoot);
+        const instance = DOMRenderer.getPublicRootInstance(
+          ((root: any): Root)._internalRoot,
+        );
         originalCallback.call(instance);
       };
     }
