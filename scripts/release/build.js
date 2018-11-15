@@ -9,7 +9,7 @@ const run = async () => {
   const {getPublicPackages, getPackages, handleError} = require('./utils');
 
   const addGitTag = require('./build-commands/add-git-tag');
-  const buildArtifacts = require('./build-commands/build-artifacts');
+  const buildArtifacts = require('./create-release-commands/build-artifacts');
   const checkCircleCiStatus = require('./build-commands/check-circle-ci-status');
   const checkEnvironmentVariables = require('./shared-commands/check-environment-variables');
   const checkNpmPermissions = require('./build-commands/check-npm-permissions');
