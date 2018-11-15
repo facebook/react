@@ -12,6 +12,8 @@ import hyphenateStyleName from './hyphenateStyleName';
 import warnValidStyle from './warnValidStyle';
 import warning from 'shared/warning';
 
+import {warnAboutShorthandPropertyCollision} from 'shared/ReactFeatureFlags';
+
 /**
  * Operations for dealing with CSS properties.
  */
@@ -123,6 +125,10 @@ export function validateShorthandPropertyCollisionInDev(
   styleUpdates,
   nextStyles,
 ) {
+  if (!warnAboutShorthandPropertyCollision) {
+    return;
+  }
+
   if (!nextStyles) {
     return;
   }
