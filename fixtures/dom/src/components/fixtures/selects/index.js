@@ -202,6 +202,22 @@ class SelectFixture extends React.Component {
             </select>
           </div>
         </TestCase>
+
+        <TestCase
+          title="A select with the size attribute should not set first option as selected"
+          relatedIssues="14239">
+          <TestCase.ExpectedResult>
+            First option should not be set
+          </TestCase.ExpectedResult>
+
+          <div className="test-fixture">
+            <select size="3">
+              <option>0</option>
+              <option>1</option>
+              <option>2</option>
+            </select>
+          </div>
+        </TestCase>
       </FixtureSet>
     );
   }
