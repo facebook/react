@@ -5,12 +5,11 @@
 const chalk = require('chalk');
 const {join, relative} = require('path');
 
-module.exports = ({cwd, build, path}) => {
+module.exports = ({cwd}) => {
   const publishPath = relative(
     process.env.PWD,
     join(__dirname, '../publish.js')
   );
-  const command = `${publishPath}` + (path ? ` -p ${path}` : '');
 
   const packagingFixturesPath = join(cwd, 'fixtures/packaging');
   const standaloneFixturePath = join(
@@ -20,10 +19,11 @@ module.exports = ({cwd, build, path}) => {
 
   console.log(
     chalk`
-    {green.bold A potential canary has been prepared!}
-    Next there are a couple of manual steps:
+    {green.bold A potential release has been prepared!}
 
-    {bold.underline Smoke test the packages}
+    You can review the contents of this release in {yellow.bold ./build/node_modules/}
+
+    {bold.underline Before publishing, please smoke test the packages}
 
     1. Open {yellow.bold ${standaloneFixturePath}} in the browser.
     2. It should say {italic "Hello world!"}
@@ -33,8 +33,8 @@ module.exports = ({cwd, build, path}) => {
     6. Open {blue.bold http://localhost:9000/fixtures/packaging}
     7. Verify every iframe shows {italic "Hello world!"}
 
-    After completing the above steps, you can publish this canary by running:
-    {yellow.bold ${command}}
+    After completing the above steps, you can publish this release by running:
+    {yellow.bold ${publishPath}}
   `.replace(/\n +/g, '\n')
   );
 };

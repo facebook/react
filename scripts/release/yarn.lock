@@ -204,6 +204,11 @@ delayed-stream@~1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/delayed-stream/-/delayed-stream-1.0.0.tgz#df3ae199acadfb7d440aaae0b29e2272b24ec619"
 
+diff@^1.2.1:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/diff/-/diff-1.4.0.tgz#7f28d2eb9ee7b15a97efd89ce63dcfdaa3ccbabf"
+  integrity sha1-fyjS657nsVqX79ic5j3P2qPMur8=
+
 ecc-jsbn@~0.1.1:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/ecc-jsbn/-/ecc-jsbn-0.1.1.tgz#0fc73a9ed5f0d53c38193398523ef7e543777505"
@@ -450,6 +455,13 @@ onetime@^2.0.0:
 performance-now@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/performance-now/-/performance-now-2.1.0.tgz#6309f4e0e5fa913ec1c69307ae364b4b377c9e7b"
+
+print-diff@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/print-diff/-/print-diff-0.1.1.tgz#e32e59d89f753208629ff74d9a7430df4f3cc899"
+  integrity sha512-dp36GezMEivgKH/zcLB4eBhJmQM3ewAa1UAqEPXMzU69NQ5wCP8puVBZlDFyt1WEtR5k2UC+3ahg+T5BfmRVGw==
+  dependencies:
+    diff "^1.2.1"
 
 promise-polyfill@^6.0.1:
   version "6.0.2"

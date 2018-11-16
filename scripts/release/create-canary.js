@@ -16,7 +16,7 @@ const addBuildInfoJSON = require('./create-build-commands/add-build-info-json');
 const buildArtifacts = require('./create-build-commands/build-artifacts');
 const copyRepoToTempDirectory = require('./create-build-commands/copy-repo-to-temp-directory');
 const npmPackAndUnpack = require('./create-build-commands/npm-pack-and-unpack');
-const printCanarySummary = require('./shared-commands/print-canary-summary');
+const printPrereleaseSummary = require('./shared-commands/print-prerelease-summary');
 const updateVersionNumbers = require('./create-build-commands/update-version-numbers');
 
 const run = async () => {
@@ -31,7 +31,7 @@ const run = async () => {
     await addBuildInfoJSON(params);
     await buildArtifacts(params);
     await npmPackAndUnpack(params);
-    await printCanarySummary(params);
+    await printPrereleaseSummary(params);
   } catch (error) {
     handleError(error);
   }
