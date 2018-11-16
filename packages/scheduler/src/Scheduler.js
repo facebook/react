@@ -618,7 +618,7 @@ if (typeof window !== 'undefined' && window._schedMock) {
     frameDeadline = rafTime + activeFrameTime;
     if (!isMessageEventScheduled) {
       isMessageEventScheduled = true;
-      port.postMessage('*');
+      port.postMessage(undefined);
     }
   };
 
@@ -627,7 +627,7 @@ if (typeof window !== 'undefined' && window._schedMock) {
     timeoutTime = absoluteTimeout;
     if (isFlushingHostCallback || absoluteTimeout < 0) {
       // Don't wait for the next frame. Continue working ASAP, in a new event.
-      port.postMessage('*');
+      port.postMessage(undefined);
     } else if (!isAnimationFrameScheduled) {
       // If rAF didn't already schedule one, we need to schedule a frame.
       // TODO: If this rAF doesn't materialize because the browser throttles, we
