@@ -729,10 +729,18 @@ function detachFiber(current: Fiber) {
   current.return = null;
   current.child = null;
   current.memoizedState = null;
+  current.updateQueue = null;
+  current.firstEffect = null;
+  current.lastEffect = null;
+  current.nextEffect = null;
   if (current.alternate) {
-    current.alternate.child = null;
     current.alternate.return = null;
+    current.alternate.child = null;
     current.alternate.memoizedState = null;
+    current.alternate.updateQueue = null;
+    current.alternate.firstEffect = null;
+    current.alternate.lastEffect = null;
+    current.alternate.nextEffect = null;
   }
 }
 
