@@ -58,5 +58,5 @@ Upon completion, this script provides instructions for tagging the Git commit th
 #### Example usage
 To publish a release to NPM as both `next` and `latest`:
 ```sh
-scripts/release/publish.js --tags=next,latest --otp=<otp>
+scripts/release/publish.js --tags next latest
 ```

@@ -6,18 +6,19 @@ const {tmpdir} = require('os');
 const {join} = require('path');
 const {getBuildInfo, handleError} = require('./utils');
 
-// This local build script exists for special case, manual builds.
+// This script is an escape hatch!
+// It exists for special case manual builds.
 // The typical suggesgted release process is to create a canary from a CI artifact.
 // This build script is optimized for speed and simplicity.
 // It doesn't run all of the tests that the CI environment runs.
 // You're expected to run those manually before publishing a release.
 
-const addBuildInfoJSON = require('./create-build-commands/add-build-info-json');
-const buildArtifacts = require('./create-build-commands/build-artifacts');
-const copyRepoToTempDirectory = require('./create-build-commands/copy-repo-to-temp-directory');
-const npmPackAndUnpack = require('./create-build-commands/npm-pack-and-unpack');
+const addBuildInfoJSON = require('./create-canary-commands/add-build-info-json');
+const buildArtifacts = require('./create-canary-commands/build-artifacts');
+const copyRepoToTempDirectory = require('./create-canary-commands/copy-repo-to-temp-directory');
+const npmPackAndUnpack = require('./create-canary-commands/npm-pack-and-unpack');
 const printPrereleaseSummary = require('./shared-commands/print-prerelease-summary');
-const updateVersionNumbers = require('./create-build-commands/update-version-numbers');
+const updateVersionNumbers = require('./create-canary-commands/update-version-numbers');
 
 const run = async () => {
   try {

@@ -15,14 +15,6 @@ const paramDefinitions = [
       'Circle CI build identifier (e.g. https://circleci.com/gh/facebook/react/<build>)',
     defaultValue: false,
   },
-  {
-    name: 'path',
-    type: String,
-    alias: 'p',
-    description:
-      'Location of React repository to release; defaults to [bold]{cwd}',
-    defaultValue: '.',
-  },
 ];
 
 module.exports = () => {
@@ -58,8 +50,5 @@ module.exports = () => {
     process.exit(1);
   }
 
-  return {
-    ...params,
-    cwd: params.path, // For script convenience
-  };
+  return params;
 };

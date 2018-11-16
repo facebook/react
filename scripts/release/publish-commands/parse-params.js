@@ -6,12 +6,20 @@ const chalk = require('chalk');
 const commandLineArgs = require('command-line-args');
 const commandLineUsage = require('command-line-usage');
 const figlet = require('figlet');
-const {paramDefinitions} = require('../config');
+
+const paramDefinitions = [
+  {
+    name: 'tags',
+    type: String,
+    multiple: true,
+    description: 'NPM tags to point to the new release.',
+  },
+];
 
 module.exports = () => {
   const params = commandLineArgs(paramDefinitions);
 
-  if (!params.version) {
+  if (!params.tags) {
     const usage = commandLineUsage([
       {
         content: chalk
@@ -20,7 +28,8 @@ module.exports = () => {
         raw: true,
       },
       {
-        content: 'Automated pre-release build script.',
+        content:
+          'Publishes the current contents of "build/node_modules" to NPM.',
       },
       {
         header: 'Options',
@@ -30,18 +39,8 @@ module.exports = () => {
         header: 'Examples',
         content: [
           {
-            desc: '1. A concise example.',
-            example: '$ ./build.js [bold]{-v} [underline]{16.0.0}',
-          },
-          {
-            desc: '2. Dry run build a release candidate (no git commits).',
-            example:
-              '$ ./build.js [bold]{--dry} [bold]{-v} [underline]{16.0.0-rc.0}',
-          },
-          {
-            desc: '3. Release from another checkout.',
-            example:
-              '$ ./build.js [bold]{--version}=[underline]{16.0.0} [bold]{--path}=/path/to/react/repo',
+            desc: 'Example:',
+            example: '$ scripts/release/publish.js --tags next latest',
           },
         ],
       },
@@ -50,8 +49,5 @@ module.exports = () => {
     process.exit(1);
   }
 
-  return {
-    ...params,
-    cwd: params.path, // For script convenience
-  };
+  return params;
 };
