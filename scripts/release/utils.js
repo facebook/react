@@ -8,6 +8,16 @@ const {readdirSync, readFileSync, statSync, writeFileSync} = require('fs');
 const {readJson, writeJson} = require('fs-extra');
 const logUpdate = require('log-update');
 const {join} = require('path');
+const prompt = require('prompt-promise');
+
+const confirm = async message => {
+  const confirmation = await prompt(chalk`\n${message} {yellow (y/N)} `);
+  prompt.done();
+  if (confirmation !== 'y' && confirmation !== 'Y') {
+    console.log(chalk.red('Release cancelled.'));
+    process.exit(0);
+  }
+};
 
 const execRead = async (command, options) => {
   const {stdout} = await exec(command, options);
@@ -213,6 +223,7 @@ const updateVersionsForCanary = async (cwd, version) => {
 };
 
 module.exports = {
+  confirm,
   execRead,
   execUnlessDry,
   getBuildInfo,

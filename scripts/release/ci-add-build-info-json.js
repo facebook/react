@@ -2,6 +2,10 @@
 
 'use strict';
 
+// This script is run by Circle CI (see ../scripts/circleci).
+// It is not meant to be run as part of the local build or publish process.
+// It exists to share code between the Node release scripts and CI bash scripts.
+
 const {exec} = require('child_process');
 const {existsSync} = require('fs');
 const {join} = require('path');
