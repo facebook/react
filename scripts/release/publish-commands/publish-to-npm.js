@@ -32,10 +32,9 @@ const run = async ({cwd, dry, packages, tags}, otp) => {
         await exec(`npm publish --tag=${tags[0]} --otp=${otp}`, {
           cwd: packagePath,
         });
-      } else {
-        console.log(chalk.gray(`  cd ${packagePath}`));
-        console.log(chalk.gray(`  npm publish --tag=${tags[0]} --otp=${otp}`));
       }
+      console.log(chalk.gray(`  cd ${packagePath}`));
+      console.log(chalk.gray(`  npm publish --tag=${tags[0]} --otp=${otp}`));
 
       for (let j = 1; j < tags.length; j++) {
         if (!dry) {
@@ -45,15 +44,14 @@ const run = async ({cwd, dry, packages, tags}, otp) => {
             } --otp=${otp}`,
             {cwd: packagePath}
           );
-        } else {
-          console.log(
-            chalk.gray(
-              `  npm dist-tag add ${packageName}@${version} ${
-                tags[j]
-              } --otp=${otp}`
-            )
-          );
         }
+        console.log(
+          chalk.gray(
+            `  npm dist-tag add ${packageName}@${version} ${
+              tags[j]
+            } --otp=${otp}`
+          )
+        );
       }
     }
   }
