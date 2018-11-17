@@ -7,7 +7,7 @@ const {writeJson} = require('fs-extra');
 const {join} = require('path');
 const {getPackages, logPromise} = require('../utils');
 
-const run = async ({branch, checksum, commit, tempDirectory}) => {
+const run = async ({branch, checksum, commit, reactVersion, tempDirectory}) => {
   const packages = getPackages(join(tempDirectory, 'packages'));
   const packagesDir = join(tempDirectory, 'packages');
 
@@ -16,6 +16,7 @@ const run = async ({branch, checksum, commit, tempDirectory}) => {
     checksum,
     commit,
     environment: 'local',
+    reactVersion,
   };
 
   for (let i = 0; i < packages.length; i++) {

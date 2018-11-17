@@ -3,28 +3,23 @@
 'use strict';
 
 const chalk = require('chalk');
+const clear = require('clear');
 const {readFileSync, writeFileSync} = require('fs');
 const {readJson, writeJson} = require('fs-extra');
-const {join} = require('path');
-const printDiff = require('print-diff');
-const {confirm, execRead} = require('../utils');
+const {join, relative} = require('path');
+const {confirm, execRead, printDiff} = require('../utils');
 
 const run = async ({cwd, packages, version}, versionsMap) => {
   const nodeModulesPath = join(cwd, 'build/node_modules');
 
   // Cache all package JSONs for easy lookup below.
   const sourcePackageJSONs = new Map();
-  const targetPackageJSONs = new Map();
   for (let i = 0; i < packages.length; i++) {
     const packageName = packages[i];
     const sourcePackageJSON = await readJson(
       join(cwd, 'packages', packageName, 'package.json')
     );
     sourcePackageJSONs.set(packageName, sourcePackageJSON);
-    const targetPackageJSON = await readJson(
-      join(nodeModulesPath, packageName, 'package.json')
-    );
-    targetPackageJSONs.set(packageName, targetPackageJSON);
   }
 
   const updateDependencies = async (targetPackageJSON, key) => {
@@ -50,7 +45,7 @@ const run = async ({cwd, packages, version}, versionsMap) => {
           // If the source dependency's version and the constraint match,
           // we will need to update the constraint to point at the dependency's new release version,
           // (e.g. scheduler@^0.11.0 becomes scheduler@^0.12.0 when we release scheduler 0.12.0).
-          // Othewise we leave the constraint alone (e.g. react@^16.0.0 doesn't change between releases).
+          // Otherwise we leave the constraint alone (e.g. react@^16.0.0 doesn't change between releases).
           // Note that in both cases, we must update the target package JSON,
           // since canary releases are all locked to the canary version (e.g. 0.0.0-ddaf2b07c).
           if (
@@ -74,7 +69,7 @@ const run = async ({cwd, packages, version}, versionsMap) => {
   // Update all package JSON versions and their dependencies/peerDependencies.
   // This must be done in a way that respects semver constraints (e.g. 16.7.0, ^16.7.0, ^16.0.0).
   // To do this, we use the dependencies defined in the source package JSONs,
-  // because the canary dependencies have already been falttened to an exact match (e.g. 0.0.0-ddaf2b07c).
+  // because the canary dependencies have already been flattened to an exact match (e.g. 0.0.0-ddaf2b07c).
   for (let i = 0; i < packages.length; i++) {
     const packageName = packages[i];
     const packageJSONPath = join(nodeModulesPath, packageName, 'package.json');
@@ -86,6 +81,8 @@ const run = async ({cwd, packages, version}, versionsMap) => {
 
     await writeJson(packageJSONPath, packageJSON, {spaces: 2});
   }
+
+  clear();
 
   // Print the map of versions and their dependencies for confirmation.
   const printDependencies = (maybeDependency, label) => {
@@ -115,6 +112,20 @@ const run = async ({cwd, packages, version}, versionsMap) => {
   }
   await confirm('Do the versions above look correct?');
 
+  clear();
+
+  // A separate "React version" is used for the embedded renderer version to support DevTools,
+  // since it needs to distinguish between different version ranges of React.
+  // We need to replace it as well as the canary version number.
+  const buildInfoPath = join(nodeModulesPath, 'react', 'build-info.json');
+  const {reactVersion} = await readJson(buildInfoPath);
+
+  // We print the diff to the console for review,
+  // but it can be large so let's also write it to disk.
+  const diffPath = join(cwd, 'build', 'temp.diff');
+  let diff = '';
+  let numFilesModified = 0;
+
   // Find-and-replace hard coded version (in built JS) for renderers.
   for (let i = 0; i < packages.length; i++) {
     const packageName = packages[i];
@@ -126,18 +137,30 @@ const run = async ({cwd, packages, version}, versionsMap) => {
     );
     files = files.split('\n');
     files.forEach(path => {
+      const newStableVersion = versionsMap.get(packageName);
       const beforeContents = readFileSync(path, 'utf8', {cwd});
-      const afterContents = beforeContents.replace(
-        new RegExp(version, 'g'),
-        versionsMap.get(packageName)
-      );
+      let afterContents = beforeContents;
+      // Replace all canary version numbers (e.g. header @license).
+      while (afterContents.indexOf(version) >= 0) {
+        afterContents = afterContents.replace(version, newStableVersion);
+      }
+      // Replace inline renderer version numbers (e.g. shared/ReactVersion).
+      while (afterContents.indexOf(reactVersion) >= 0) {
+        afterContents = afterContents.replace(reactVersion, newStableVersion);
+      }
       if (beforeContents !== afterContents) {
-        printDiff(beforeContents, afterContents);
+        numFilesModified++;
+        diff += printDiff(path, beforeContents, afterContents);
         writeFileSync(path, afterContents, {cwd});
       }
     });
   }
-  await confirm('Do the replacements above look correct?');
+  writeFileSync(diffPath, diff, {cwd});
+  console.log(chalk.green(`\n${numFilesModified} files have been updated.`));
+  console.log(
+    chalk`A full diff is availbale at {yellow ${relative(cwd, diffPath)}}.`
+  );
+  await confirm('Do changes changes look correct?');
 };
 
 // Run this directly because logPromise would interfere with printing package dependencies.

@@ -16,7 +16,7 @@ const run = async () => {
 
   const cwd = join(__dirname, '..', '..');
 
-  const {checksum, commit, branch} = await getBuildInfo();
+  const {branch, checksum, commit, reactVersion} = await getBuildInfo();
 
   const packages = getPackages(join(cwd, 'packages'));
   const packagesDir = join(cwd, 'packages');
@@ -26,6 +26,7 @@ const run = async () => {
     checksum,
     commit,
     environment: 'ci',
+    reactVersion,
   };
 
   for (let i = 0; i < packages.length; i++) {

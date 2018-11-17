@@ -14,9 +14,9 @@ const run = async () => {
 
   const cwd = join(__dirname, '..', '..');
 
-  const {version} = await getBuildInfo();
+  const {reactVersion, version} = await getBuildInfo();
 
-  await updateVersionsForCanary(cwd, version);
+  await updateVersionsForCanary(cwd, reactVersion, version);
 };
 
 // Install (or update) release script dependencies before proceeding.

@@ -2,7 +2,8 @@
 
 const chalk = require('chalk');
 const {dots} = require('cli-spinners');
-const {exec, spawn} = require('child-process-promise');
+const {exec} = require('child-process-promise');
+const {createPatch} = require('diff');
 const {hashElement} = require('folder-hash');
 const {readdirSync, readFileSync, statSync, writeFileSync} = require('fs');
 const {readJson, writeJson} = require('fs-extra');
@@ -11,10 +12,12 @@ const {join} = require('path');
 const prompt = require('prompt-promise');
 
 const confirm = async message => {
-  const confirmation = await prompt(chalk`\n${message} {yellow (y/N)} `);
+  const confirmation = await prompt(
+    chalk`\n{red.bold ${message}} (y/{underline N}) `
+  );
   prompt.done();
   if (confirmation !== 'y' && confirmation !== 'Y') {
-    console.log(chalk.red('Release cancelled.'));
+    console.log(chalk.red('\nRelease cancelled.'));
     process.exit(0);
   }
 };
@@ -23,16 +26,6 @@ const execRead = async (command, options) => {
   const {stdout} = await exec(command, options);
 
   return stdout.trim();
-};
-
-const unexecutedCommands = [];
-
-const execUnlessDry = async (command, {cwd, dry}) => {
-  if (dry) {
-    unexecutedCommands.push(`${command} # {cwd: ${cwd}}`);
-  } else {
-    await exec(command, {cwd});
-  }
 };
 
 const getBuildInfo = async () => {
@@ -45,7 +38,14 @@ const getBuildInfo = async () => {
   const checksum = await getChecksumForCurrentRevision(cwd);
   const version = `0.0.0-${commit}`;
 
-  return {branch, checksum, commit, version};
+  // React version is stored explicitly, separately for DevTools support.
+  // See updateVersionsForCanary() below for more info.
+  const packageJSON = await readJson(
+    join(cwd, 'packages', 'react', 'package.json')
+  );
+  const reactVersion = `${packageJSON.version}-canary-${commit}`;
+
+  return {branch, checksum, commit, reactVersion, version};
 };
 
 const getChecksumForCurrentRevision = async cwd => {
@@ -88,17 +88,6 @@ const getPublicPackages = () => {
 
     return false;
   });
-};
-
-const getUnexecutedCommands = () => {
-  if (unexecutedCommands.length > 0) {
-    return chalk`
-      The following commands were not executed because of the {bold --dry} flag:
-      {gray ${unexecutedCommands.join('\n')}}
-    `;
-  } else {
-    return '';
-  }
 };
 
 const handleError = error => {
@@ -148,43 +137,57 @@ const logPromise = async (promise, text, isLongRunningTask = false) => {
   }
 };
 
-const runYarnTask = async (cwd, task, errorMessage) => {
-  try {
-    await exec(`yarn ${task}`, {cwd});
-  } catch (error) {
-    throw Error(
-      chalk`
-      ${errorMessage}
-
-      {white ${error.stdout}}
-    `
-    );
-  }
+const printDiff = (path, beforeContents, afterContents) => {
+  const patch = createPatch(path, beforeContents, afterContents);
+  const coloredLines = patch
+    .split('\n')
+    .slice(2) // Trim index file
+    .map((line, index) => {
+      if (index <= 1) {
+        return chalk.gray(line);
+      }
+      switch (line[0]) {
+        case '+':
+          return chalk.green(line);
+        case '-':
+          return chalk.red(line);
+        case ' ':
+          return line;
+        case '@':
+          return null;
+        case '\\':
+          return null;
+      }
+    })
+    .filter(line => line);
+  console.log(coloredLines.join('\n'));
+  return patch;
 };
 
-const spawnCommand = (command, options) =>
-  spawn(command, {
-    cwd: join(__dirname, '..', '..'),
-    encoding: 'utf-8',
-    env: process.env,
-    shell: true,
-    stdio: [process.stdin, process.stdout, process.stderr],
-    ...options,
-  });
-
-const updateVersionsForCanary = async (cwd, version) => {
+// This method is used by both local Node release scripts and Circle CI bash scripts.
+// It updates version numbers in package JSONs (both the version field and dependencies),
+// As well as the embedded renderer version in "packages/shared/ReactVersion".
+// Canaries version numbers use the format of 0.0.0-<sha> to be easily recognized (e.g. 0.0.0-57239eac8).
+// A separate "React version" is used for the embedded renderer version to support DevTools,
+// since it needs to distinguish between different version ranges of React.
+// It is based on the version of React in the local package.json (e.g. 16.6.1-canary-57239eac8).
+// Both numbers will be replaced if the canary is promoted to a stable release.
+const updateVersionsForCanary = async (cwd, reactVersion, version) => {
   const packages = getPackages(join(cwd, 'packages'));
   const packagesDir = join(cwd, 'packages');
 
   // Update the shared React version source file.
   // This is bundled into built renderers.
   // The promote script will replace this with a final version later.
-  const reactVersionPath = join(cwd, 'packages/shared/ReactVersion.js');
-  const reactVersion = readFileSync(reactVersionPath, 'utf8').replace(
+  const sourceReactVersionPath = join(cwd, 'packages/shared/ReactVersion.js');
+  const sourceReactVersion = readFileSync(
+    sourceReactVersionPath,
+    'utf8'
+  ).replace(
     /module\.exports = '[^']+';/,
-    `module.exports = '${version}';`
+    `module.exports = '${reactVersion}';`
   );
-  writeFileSync(reactVersionPath, reactVersion);
+  writeFileSync(sourceReactVersionPath, sourceReactVersion);
 
   // Update the root package.json.
   // This is required to pass a later version check script.
@@ -225,15 +228,12 @@ const updateVersionsForCanary = async (cwd, version) => {
 module.exports = {
   confirm,
   execRead,
-  execUnlessDry,
   getBuildInfo,
   getChecksumForCurrentRevision,
   getPackages,
   getPublicPackages,
-  getUnexecutedCommands,
   handleError,
   logPromise,
-  runYarnTask,
-  spawnCommand,
+  printDiff,
   updateVersionsForCanary,
 };

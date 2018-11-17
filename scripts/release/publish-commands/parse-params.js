@@ -9,6 +9,12 @@ const figlet = require('figlet');
 
 const paramDefinitions = [
   {
+    name: 'dry',
+    type: Boolean,
+    description: 'Dry run command without actually publishing to NPM.',
+    defaultValue: false,
+  },
+  {
     name: 'tags',
     type: String,
     multiple: true,
@@ -19,7 +25,7 @@ const paramDefinitions = [
 module.exports = () => {
   const params = commandLineArgs(paramDefinitions);
 
-  if (!params.tags) {
+  if (!params.tags || params.tags.length === 0) {
     const usage = commandLineUsage([
       {
         content: chalk
@@ -29,7 +35,7 @@ module.exports = () => {
       },
       {
         content:
-          'Publishes the current contents of "build/node_modules" to NPM.',
+          'Publishes the current contents of "build/node_modules" to NPM.}',
       },
       {
         header: 'Options',
@@ -39,7 +45,11 @@ module.exports = () => {
         header: 'Examples',
         content: [
           {
-            desc: 'Example:',
+            desc: 'Dry run test:',
+            example: '$ scripts/release/publish.js --dry --tags next',
+          },
+          {
+            desc: 'Publish a new stable:',
             example: '$ scripts/release/publish.js --tags next latest',
           },
         ],

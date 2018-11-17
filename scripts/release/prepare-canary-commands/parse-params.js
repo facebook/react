@@ -13,7 +13,6 @@ const paramDefinitions = [
     type: Number,
     description:
       'Circle CI build identifier (e.g. https://circleci.com/gh/facebook/react/<build>)',
-    defaultValue: false,
   },
 ];
 

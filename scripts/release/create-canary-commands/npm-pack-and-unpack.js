@@ -27,7 +27,7 @@ const run = async ({cwd, dry, tempDirectory}) => {
     `cp -r ${tempDirectory}/build/node_modules/*.tgz ${cwd}/build/node_modules/`
   );
 
-  // Unpack packages and parepare to publish.
+  // Unpack packages and prepare to publish.
   const compressedPackages = readdirSync('build/node_modules/');
   for (let i = 0; i < compressedPackages.length; i++) {
     await exec(

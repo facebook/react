@@ -5,7 +5,13 @@
 const {join} = require('path');
 const {getPublicPackages, handleError} = require('./utils');
 
+const checkNPMPermissions = require('./publish-commands/check-npm-permissions');
+const confirmVersionAndTags = require('./publish-commands/confirm-version-and-tags');
 const parseParams = require('./publish-commands/parse-params');
+const printFollowUpInstructions = require('./publish-commands/print-follow-up-instructions');
+const promptForOTP = require('./publish-commands/prompt-for-otp');
+const publishToNPM = require('./publish-commands/publish-to-npm');
+const validateTags = require('./publish-commands/validate-tags');
 
 const run = async () => {
   try {
@@ -13,17 +19,12 @@ const run = async () => {
     params.cwd = join(__dirname, '..', '..');
     params.packages = await getPublicPackages();
 
-    console.log(params);
-
-    // TODO Require inputs: a list of NPM tags (e.g. --tags=latest, --tags=latest,next).
-    // TODO Print versions of the local, prepared packages and confirm the tag release.
-    // TODO Check NPM permissions to ensure that the current user can publish all public packages.
-    // TODO Publish each package to NPM with the specified version number and tag.
-    //      J.I.T. prompt (or re-prompt) for OTP token if publishing fails.
-    // TODO Print command for tagging the Git commit the release was originally created from (using build-info.json).
-    // TODO Print command for creating a changelog.
-    // TODO Support basic "resume" by checking each package to see if it has already been published
-    //      before publishing it (and skipping it if so).
+    await validateTags(params);
+    await confirmVersionAndTags(params);
+    await checkNPMPermissions(params);
+    const otp = await promptForOTP(params);
+    await publishToNPM(params, otp);
+    await printFollowUpInstructions(params);
   } catch (error) {
     handleError(error);
   }
