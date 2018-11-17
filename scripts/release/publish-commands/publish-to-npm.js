@@ -18,10 +18,10 @@ const run = async ({cwd, dry, packages, tags}, otp) => {
     // If so we might be resuming from a previous run.
     // We could infer this by comparing the build-info.json,
     // But for now the easiest way is just to ask if this is expected.
-    const info = await execRead(`npm view react@${version}`);
+    const info = await execRead(`npm view ${packageName}@${version}`);
     if (info) {
       console.log(
-        chalk`{green react}@{yellow ${version}} has already been published.`
+        chalk`{green ${packageName}}@{yellow ${version}} has already been published.`
       );
       await confirm(chalk`Is this expected?`);
     } else {
