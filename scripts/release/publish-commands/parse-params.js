@@ -2,10 +2,8 @@
 
 'use strict';
 
-const chalk = require('chalk');
 const commandLineArgs = require('command-line-args');
 const commandLineUsage = require('command-line-usage');
-const figlet = require('figlet');
 
 const paramDefinitions = [
   {
@@ -27,12 +25,6 @@ module.exports = () => {
 
   if (!params.tags || params.tags.length === 0) {
     const usage = commandLineUsage([
-      {
-        content: chalk
-          .hex('#61dafb')
-          .bold(figlet.textSync('react', {font: 'Graffiti'})),
-        raw: true,
-      },
       {
         content:
           'Publishes the current contents of "build/node_modules" to NPM.}',

@@ -2,12 +2,12 @@
 
 'use strict';
 
-const chalk = require('chalk');
 const clear = require('clear');
 const {readFileSync, writeFileSync} = require('fs');
 const {readJson, writeJson} = require('fs-extra');
 const {join, relative} = require('path');
 const {confirm, execRead, printDiff} = require('../utils');
+const theme = require('../theme');
 
 const run = async ({cwd, packages, version}, versionsMap) => {
   const nodeModulesPath = join(cwd, 'build/node_modules');
@@ -90,9 +90,9 @@ const run = async ({cwd, packages, version}, versionsMap) => {
       for (let dependencyName in maybeDependency) {
         if (packages.includes(dependencyName)) {
           console.log(
-            chalk`• {green ${dependencyName}} @ {yellow ${
+            theme`• {package ${dependencyName}} {version ${
               maybeDependency[dependencyName]
-            }} (${label})`
+            }} {dimmed ${label}}`
           );
         }
       }
@@ -103,8 +103,8 @@ const run = async ({cwd, packages, version}, versionsMap) => {
     const packageJSONPath = join(nodeModulesPath, packageName, 'package.json');
     const packageJSON = await readJson(packageJSONPath);
     console.log(
-      chalk`\n{green ${packageName}} @ {yellow ${chalk.yellow(
-        versionsMap.get(packageName)
+      theme`\n{package ${packageName}} {version ${versionsMap.get(
+        packageName
       )}}`
     );
     printDependencies(packageJSON.dependencies, 'dependency');
@@ -156,9 +156,9 @@ const run = async ({cwd, packages, version}, versionsMap) => {
     });
   }
   writeFileSync(diffPath, diff, {cwd});
-  console.log(chalk.green(`\n${numFilesModified} files have been updated.`));
+  console.log(theme.header(`\n${numFilesModified} files have been updated.`));
   console.log(
-    chalk`A full diff is availbale at {yellow ${relative(cwd, diffPath)}}.`
+    theme`A full diff is availbale at {path ${relative(cwd, diffPath)}}.`
   );
   await confirm('Do changes changes look correct?');
 };

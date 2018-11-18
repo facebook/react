@@ -2,12 +2,12 @@
 
 'use strict';
 
-const chalk = require('chalk');
 const http = require('request-promise-json');
 const {exec} = require('child-process-promise');
 const {readdirSync} = require('fs');
 const {readJsonSync} = require('fs-extra');
 const {logPromise} = require('../utils');
+const theme = require('../theme');
 
 const run = async ({build, cwd}) => {
   // https://circleci.com/docs/2.0/artifacts/#downloading-all-artifacts-for-a-build-on-circleci
@@ -53,8 +53,6 @@ const run = async ({build, cwd}) => {
 module.exports = async ({build, cwd}) => {
   return logPromise(
     run({build, cwd}),
-    `Downloading artifacts from Circle CI for build ${chalk.yellow.bold(
-      `${build}`
-    )}`
+    theme`Downloading artifacts from Circle CI for build {build ${build}}`
   );
 };

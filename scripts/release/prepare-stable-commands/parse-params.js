@@ -2,10 +2,8 @@
 
 'use strict';
 
-const chalk = require('chalk');
 const commandLineArgs = require('command-line-args');
 const commandLineUsage = require('command-line-usage');
-const figlet = require('figlet');
 
 const paramDefinitions = [
   {
@@ -20,12 +18,6 @@ module.exports = () => {
 
   if (!params.version) {
     const usage = commandLineUsage([
-      {
-        content: chalk
-          .hex('#61dafb')
-          .bold(figlet.textSync('react', {font: 'Graffiti'})),
-        raw: true,
-      },
       {
         content: 'Prepare a published canary release to be promoted to stable.',
       },

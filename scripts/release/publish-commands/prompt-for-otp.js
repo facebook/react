@@ -2,8 +2,8 @@
 
 'use strict';
 
-const chalk = require('chalk');
 const prompt = require('prompt-promise');
+const theme = require('../theme');
 
 const run = async () => {
   while (true) {
@@ -13,7 +13,8 @@ const run = async () => {
     if (otp) {
       return otp;
     } else {
-      console.log(chalk`\n{red.bold Two-factor auth is required to publish.}`);
+      console.log();
+      console.log(theme.error`Two-factor auth is required to publish.`);
       // (Ask again.)
     }
   }

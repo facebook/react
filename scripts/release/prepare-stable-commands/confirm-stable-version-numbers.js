@@ -2,9 +2,9 @@
 
 'use strict';
 
-const chalk = require('chalk');
 const prompt = require('prompt-promise');
 const semver = require('semver');
+const theme = require('../theme');
 
 const run = async (params, versionsMap) => {
   const groupedVersionsMap = new Map();
@@ -25,13 +25,13 @@ const run = async (params, versionsMap) => {
   const entries = [...groupedVersionsMap.entries()];
   for (let i = 0; i < entries.length; i++) {
     const [bestGuessVersion, packages] = entries[i];
-    const packageNames = chalk.green(packages.join(', '));
+    const packageNames = packages.map(name => theme.package(name)).join(', ');
     const defaultVersion = bestGuessVersion
-      ? chalk.yellow(` (default ${bestGuessVersion})`)
+      ? theme.version(` (default ${bestGuessVersion})`)
       : '';
     const version =
       (await prompt(
-        chalk`{green ✓} Version for ${packageNames}${defaultVersion}: `
+        theme`{spinnerSuccess ✓} Version for ${packageNames}${defaultVersion}: `
       )) || bestGuessVersion;
     prompt.done();
 
@@ -43,7 +43,9 @@ const run = async (params, versionsMap) => {
         versionsMap.set(packageName, version);
       });
     } catch (error) {
-      console.log(chalk`{red ✘ Version {white ${version}} is invalid.}`);
+      console.log(
+        theme`{spinnerError ✘} Version {version ${version}} is invalid.`
+      );
 
       // Prompt again
       i--;

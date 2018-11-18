@@ -2,26 +2,29 @@
 
 'use strict';
 
-const chalk = require('chalk');
+const theme = require('../theme');
 
 module.exports = () => {
   if (!process.env.CIRCLE_CI_API_TOKEN) {
-    throw Error(
-      chalk`
-      {red Missing CircleCI API token}
+    console.error(
+      theme`
+      {error Missing CircleCI API token}
 
-      {white The CircleCI API is used to download build artifacts.}
-      {white This API requires a token which must be exposed via a {yellow.bold CIRCLE_CI_API_TOKEN} environment var.}
-      {white In order to run this script you will need to create your own API token.}
-      {white Instructions can be found at:}
+      The CircleCI API is used to download build artifacts.
+      This API requires a token which must be exposed via a {underline CIRCLE_CI_API_TOKEN} environment var.
+      In order to run this script you will need to create your own API token.
+      Instructions can be found at:
 
-      {blue.bold https://circleci.com/docs/api/v1-reference/#getting-started}
+      {link https://circleci.com/docs/api/v1-reference/#getting-started}
 
-      {white To make this token available to the release script, add it to your {yellow.bold .bash_profile} like so:}
+      To make this token available to the release script, add it to your {path .bash_profile} like so:
 
-      {gray # React release script}
-      {white export CIRCLE_CI_API_TOKEN=<your-token-here>}
+      {dimmed # React release script}
+      export CIRCLE_CI_API_TOKEN=<your-token-here>
     `
+        .replace(/\n +/g, '\n')
+        .trim()
     );
+    process.exit(1);
   }
 };

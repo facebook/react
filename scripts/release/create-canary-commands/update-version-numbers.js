@@ -2,12 +2,12 @@
 
 'use strict';
 
-const chalk = require('chalk');
 const {logPromise, updateVersionsForCanary} = require('../utils');
+const theme = require('../theme');
 
 module.exports = async ({reactVersion, tempDirectory, version}) => {
   return logPromise(
     updateVersionsForCanary(tempDirectory, reactVersion, version),
-    `Updating version numbers (${chalk.yellow.bold(version)})`
+    theme`Updating version numbers ({version ${version}})`
   );
 };

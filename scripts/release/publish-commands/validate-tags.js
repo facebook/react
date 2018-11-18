@@ -2,9 +2,9 @@
 
 'use strict';
 
-const chalk = require('chalk');
 const {readJson} = require('fs-extra');
 const {join} = require('path');
+const theme = require('../theme');
 
 const run = async ({cwd, packages, tags}) => {
   // Prevent a canary release from ever being published as @latest
@@ -19,7 +19,7 @@ const run = async ({cwd, packages, tags}) => {
   if (version.indexOf('0.0.0') === 0) {
     if (tags.includes('latest')) {
       console.log(
-        chalk`{red.bold Canary release {white (${version})} cannot be tagged as {yellow latest}.}`
+        theme`{error Canary release} {version ${version}} {error cannot be tagged as} {tag latest}`
       );
       process.exit(1);
     }

@@ -2,10 +2,10 @@
 
 'use strict';
 
-const chalk = require('chalk');
 const {exec} = require('child-process-promise');
 const {join} = require('path');
 const {logPromise} = require('../utils');
+const theme = require('../theme');
 
 const run = async ({cwd, packages, version}) => {
   // Cleanup from previous builds
@@ -24,6 +24,6 @@ const run = async ({cwd, packages, version}) => {
 module.exports = async params => {
   return logPromise(
     run(params),
-    `Checking out canary from NPM ${chalk.yellow(params.version)}`
+    theme`Checking out canary from NPM {version ${params.version}}`
   );
 };

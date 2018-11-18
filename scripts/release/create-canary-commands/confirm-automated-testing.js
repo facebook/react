@@ -2,15 +2,15 @@
 
 'use strict';
 
-const chalk = require('chalk');
 const clear = require('clear');
 const {confirm} = require('../utils');
+const theme = require('../theme');
 
 const run = async () => {
   clear();
 
   console.log(
-    chalk.red(
+    theme.caution(
       'This script does not run any automated tests.' +
         'You should run them manually before creating a canary release.'
     )

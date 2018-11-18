@@ -5,11 +5,11 @@
 // IMPORTANT:
 // Changes below should be mirrored in ../ci-add-build-info-json.js
 
-const chalk = require('chalk');
 const {existsSync} = require('fs');
 const {writeJson, readJson} = require('fs-extra');
 const {join} = require('path');
 const {getPublicPackages, logPromise} = require('../utils');
+const theme = require('../theme');
 
 const run = async ({branch, checksum, commit, reactVersion, tempDirectory}) => {
   const packages = getPublicPackages(join(tempDirectory, 'packages'));
@@ -30,8 +30,8 @@ const run = async ({branch, checksum, commit, reactVersion, tempDirectory}) => {
 
     // Verify all public packages include "build-info.json" in the files array.
     if (!packageJSON.files.includes('build-info.json')) {
-      console.log(
-        chalk`{red.bold ${packageName} must include "build-info.json" in files array.}`
+      console.error(
+        theme`{error ${packageName} must include "build-info.json" in files array.}`
       );
       process.exit(1);
     }

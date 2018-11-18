@@ -2,22 +2,22 @@
 
 'use strict';
 
-const chalk = require('chalk');
 const clear = require('clear');
 const {readJson} = require('fs-extra');
 const {join} = require('path');
 const {confirm} = require('../utils');
+const theme = require('../theme');
 
 const run = async ({cwd, packages, tags}) => {
   clear();
 
   if (tags.length === 1) {
     console.log(
-      chalk`{green ✓} You are about the publish the following packages under the tag {yellow ${tags}}`
+      theme`{spinnerSuccess ✓} You are about the publish the following packages under the tag {tag ${tags}}`
     );
   } else {
     console.log(
-      chalk`{green ✓} You are about the publish the following packages under the tags {yellow ${tags.join(
+      theme`{spinnerSuccess ✓} You are about the publish the following packages under the tags {tag ${tags.join(
         ', '
       )}}`
     );
@@ -34,9 +34,7 @@ const run = async ({cwd, packages, tags}) => {
     );
     const packageJSON = await readJson(packageJSONPath);
     console.log(
-      chalk`• {green ${packageName}} @ {yellow ${chalk.yellow(
-        packageJSON.version
-      )}}`
+      theme`• {package ${packageName}} {version ${packageJSON.version}}`
     );
   }
 

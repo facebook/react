@@ -2,8 +2,8 @@
 
 'use strict';
 
-const chalk = require('chalk');
 const {execRead, logPromise} = require('../utils');
+const theme = require('../theme');
 
 const run = async ({cwd, packages, version}) => {
   const currentUser = await execRead('npm whoami');
@@ -22,18 +22,22 @@ const run = async ({cwd, packages, version}) => {
 
   await logPromise(
     Promise.all(packages.map(checkProject)),
-    `Checking ${chalk.yellow.bold(currentUser)}'s NPM permissions`
+    theme`Checking NPM permissions for {underline ${currentUser}}.`
   );
 
   if (failedProjects.length) {
-    throw Error(
-      chalk`
-      Insufficient NPM permissions
-      {white NPM user {yellow.bold ${currentUser}} is not an owner for:}
-      {red ${failedProjects.join(', ')}}
-      {white Please contact a React team member to be added to the above project(s).}
+    console.error(
+      theme`
+      {error Insufficient NPM permissions}
+      \nNPM user {underline ${currentUser}} is not an owner for: ${failedProjects
+        .map(name => theme.package(name))
+        .join(', ')}
+      \nPlease contact a React team member to be added to the above project(s).
       `
+        .replace(/\n +/g, '\n')
+        .trim()
     );
+    process.exit(1);
   }
 };
 

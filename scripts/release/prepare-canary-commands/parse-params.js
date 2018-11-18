@@ -2,10 +2,8 @@
 
 'use strict';
 
-const chalk = require('chalk');
 const commandLineArgs = require('command-line-args');
 const commandLineUsage = require('command-line-usage');
-const figlet = require('figlet');
 
 const paramDefinitions = [
   {
@@ -21,12 +19,6 @@ module.exports = () => {
 
   if (!params.build) {
     const usage = commandLineUsage([
-      {
-        content: chalk
-          .hex('#61dafb')
-          .bold(figlet.textSync('react', {font: 'Graffiti'})),
-        raw: true,
-      },
       {
         content:
           'Prepare a Circle CI build to be published to NPM as a canary.',

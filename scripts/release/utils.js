@@ -1,6 +1,5 @@
 'use strict';
 
-const chalk = require('chalk');
 const {dots} = require('cli-spinners');
 const {exec} = require('child-process-promise');
 const {createPatch} = require('diff');
@@ -10,14 +9,13 @@ const {readJson, writeJson} = require('fs-extra');
 const logUpdate = require('log-update');
 const {join} = require('path');
 const prompt = require('prompt-promise');
+const theme = require('./theme');
 
 const confirm = async message => {
-  const confirmation = await prompt(
-    chalk`\n{red.bold ${message}} (y/{underline N}) `
-  );
+  const confirmation = await prompt(theme`\n{caution ${message}} (y/N) `);
   prompt.done();
   if (confirmation !== 'y' && confirmation !== 'Y') {
-    console.log(chalk.red('\nRelease cancelled.'));
+    console.log(theme`\n{caution Release cancelled.}`);
     process.exit(0);
   }
 };
@@ -79,11 +77,7 @@ const handleError = error => {
   const message = error.message.trim().replace(/\n +/g, '\n');
   const stack = error.stack.replace(error.message, '');
 
-  console.log(
-    `${chalk.bgRed.white(' ERROR ')} ${chalk.red(message)}\n\n${chalk.gray(
-      stack
-    )}`
-  );
+  console.log(theme`{error ${message}}\n\n{path ${stack}}`);
 
   process.exit(1);
 };
@@ -100,7 +94,9 @@ const logPromise = async (promise, text, isLongRunningTask = false) => {
   const id = setInterval(() => {
     index = ++index % frames.length;
     logUpdate(
-      `${chalk.yellow(frames[index])} ${text} ${chalk.gray(inProgressMessage)}`
+      theme`{spinnerInProgress ${
+        frames[index]
+      }} ${text} {dimmed ${inProgressMessage}}`
     );
   }, interval);
 
@@ -109,7 +105,7 @@ const logPromise = async (promise, text, isLongRunningTask = false) => {
 
     clearInterval(id);
 
-    logUpdate(`${chalk.green('✓')} ${text}`);
+    logUpdate(theme`{spinnerSuccess ✓} ${text}`);
     logUpdate.done();
 
     return returnValue;
@@ -127,13 +123,13 @@ const printDiff = (path, beforeContents, afterContents) => {
     .slice(2) // Trim index file
     .map((line, index) => {
       if (index <= 1) {
-        return chalk.gray(line);
+        return theme.diffHeader(line);
       }
       switch (line[0]) {
         case '+':
-          return chalk.green(line);
+          return theme.diffAdded(line);
         case '-':
-          return chalk.red(line);
+          return theme.diffRemoved(line);
         case ' ':
           return line;
         case '@':
@@ -217,5 +213,6 @@ module.exports = {
   handleError,
   logPromise,
   printDiff,
+  theme,
   updateVersionsForCanary,
 };

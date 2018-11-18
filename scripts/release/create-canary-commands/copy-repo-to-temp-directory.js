@@ -2,11 +2,11 @@
 
 'use strict';
 
-const chalk = require('chalk');
 const {exec} = require('child-process-promise');
 const {join} = require('path');
 const {tmpdir} = require('os');
 const {logPromise} = require('../utils');
+const theme = require('../theme');
 
 const run = async ({commit, cwd, tempDirectory}) => {
   const directory = `react-${commit}`;
@@ -27,8 +27,8 @@ const run = async ({commit, cwd, tempDirectory}) => {
 module.exports = async params => {
   return logPromise(
     run(params),
-    `Copying React repo to temporary directory (${chalk.gray(
+    theme`Copying React repo to temporary directory ({path ${
       params.tempDirectory
-    )})`
+    }})`
   );
 };

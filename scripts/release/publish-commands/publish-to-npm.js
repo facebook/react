@@ -2,11 +2,11 @@
 
 'use strict';
 
-const chalk = require('chalk');
 const {exec} = require('child-process-promise');
 const {readJsonSync} = require('fs-extra');
 const {join} = require('path');
 const {confirm, execRead} = require('../utils');
+const theme = require('../theme');
 
 const run = async ({cwd, dry, packages, tags}, otp) => {
   for (let i = 0; i < packages.length; i++) {
@@ -21,11 +21,13 @@ const run = async ({cwd, dry, packages, tags}, otp) => {
     const info = await execRead(`npm view ${packageName}@${version}`);
     if (info) {
       console.log(
-        chalk`{green ${packageName}}@{yellow ${version}} has already been published.`
+        theme`{package ${packageName}} {version ${version}} has already been published.`
       );
-      await confirm(chalk`Is this expected?`);
+      await confirm('Is this expected?');
     } else {
-      console.log(chalk`{green ✓} Publishing {green ${packageName}}`);
+      console.log(
+        theme`{spinnerSuccess ✓} Publishing {package ${packageName}}`
+      );
 
       // Publish the package and tag it.
       if (!dry) {
@@ -33,8 +35,8 @@ const run = async ({cwd, dry, packages, tags}, otp) => {
           cwd: packagePath,
         });
       }
-      console.log(chalk.gray(`  cd ${packagePath}`));
-      console.log(chalk.gray(`  npm publish --tag=${tags[0]} --otp=${otp}`));
+      console.log(theme.command(`  cd ${packagePath}`));
+      console.log(theme.command(`  npm publish --tag=${tags[0]} --otp=${otp}`));
 
       for (let j = 1; j < tags.length; j++) {
         if (!dry) {
@@ -46,7 +48,7 @@ const run = async ({cwd, dry, packages, tags}, otp) => {
           );
         }
         console.log(
-          chalk.gray(
+          theme.command(
             `  npm dist-tag add ${packageName}@${version} ${
               tags[j]
             } --otp=${otp}`
