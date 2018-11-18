@@ -24,14 +24,14 @@ describe('escapeTextForBrowser', () => {
     expect(response).toMatch('<span data-reactroot="">&amp;</span>');
   });
 
-  it('double quote is escaped when passed as text content', () => {
+  it('double quote is not escaped when passed as text content', () => {
     const response = ReactDOMServer.renderToString(<span>{'"'}</span>);
-    expect(response).toMatch('<span data-reactroot="">&quot;</span>');
+    expect(response).toMatch('<span data-reactroot="">"</span>');
   });
 
-  it('single quote is escaped when passed as text content', () => {
+  it('single quote is not escaped when passed as text content', () => {
     const response = ReactDOMServer.renderToString(<span>{"'"}</span>);
-    expect(response).toMatch('<span data-reactroot="">&#x27;</span>');
+    expect(response).toMatch(`<span data-reactroot="">'</span>`);
   });
 
   it('greater than entity is escaped when passed as text content', () => {
@@ -59,8 +59,7 @@ describe('escapeTextForBrowser', () => {
       <span>{'<script type=\'\' src=""></script>'}</span>,
     );
     expect(response).toMatch(
-      '<span data-reactroot="">&lt;script type=&#x27;&#x27; ' +
-        'src=&quot;&quot;&gt;&lt;/script&gt;</span>',
+      `<span data-reactroot=\"\">&lt;script type='' src=\"\"&gt;&lt;/script&gt;</span>`,
     );
   });
 });

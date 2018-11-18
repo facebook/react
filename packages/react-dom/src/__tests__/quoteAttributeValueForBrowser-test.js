@@ -29,19 +29,19 @@ describe('quoteAttributeValueForBrowser', () => {
     expect(response).toMatch('<img data-attr="&quot;" data-reactroot=""/>');
   });
 
-  it('single quote is escaped inside attributes', () => {
+  it('single quote is not escaped inside attributes', () => {
     const response = ReactDOMServer.renderToString(<img data-attr="'" />);
-    expect(response).toMatch('<img data-attr="&#x27;" data-reactroot=""/>');
+    expect(response).toMatch(`<img data-attr="'" data-reactroot=""/>`);
   });
 
-  it('greater than entity is escaped inside attributes', () => {
+  it('greater than entity is not escaped inside attributes', () => {
     const response = ReactDOMServer.renderToString(<img data-attr=">" />);
-    expect(response).toMatch('<img data-attr="&gt;" data-reactroot=""/>');
+    expect(response).toMatch('<img data-attr=">" data-reactroot=""/>');
   });
 
-  it('lower than entity is escaped inside attributes', () => {
+  it('lower than entity is not escaped inside attributes', () => {
     const response = ReactDOMServer.renderToString(<img data-attr="<" />);
-    expect(response).toMatch('<img data-attr="&lt;" data-reactroot=""/>');
+    expect(response).toMatch('<img data-attr="<" data-reactroot=""/>');
   });
 
   it('number is escaped to string inside attributes', () => {
@@ -67,9 +67,7 @@ describe('quoteAttributeValueForBrowser', () => {
       <img data-attr={'<script type=\'\' src=""></script>'} />,
     );
     expect(response).toMatch(
-      '<img data-attr="&lt;script type=&#x27;&#x27; ' +
-        'src=&quot;&quot;&gt;&lt;/script&gt;" ' +
-        'data-reactroot=""/>',
+      `<img data-attr=\"<script type='' src=&quot;&quot;></script>\" data-reactroot=\"\"/>`,
     );
   });
 });

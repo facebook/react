@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import escapeTextForBrowser from './escapeTextForBrowser';
+import {escapeAttributeValue} from './escapeTextForBrowser';
 
 /**
  * Escapes attribute value to prevent scripting attacks.
@@ -14,7 +14,7 @@ import escapeTextForBrowser from './escapeTextForBrowser';
  * @return {string} An escaped string.
  */
 function quoteAttributeValueForBrowser(value) {
-  return '"' + escapeTextForBrowser(value) + '"';
+  return '"' + escapeAttributeValue(value) + '"';
 }
 
 export default quoteAttributeValueForBrowser;

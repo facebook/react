@@ -50,7 +50,7 @@ import {
   createMarkupForProperty,
   createMarkupForRoot,
 } from './DOMMarkupOperations';
-import escapeTextForBrowser from './escapeTextForBrowser';
+import {escapeText} from './escapeTextForBrowser';
 import {
   prepareToUseHooks,
   finishHooks,
@@ -280,7 +280,7 @@ function getNonChildrenInnerMarkup(props) {
   } else {
     const content = props.children;
     if (typeof content === 'string' || typeof content === 'number') {
-      return escapeTextForBrowser(content);
+      return escapeText(content);
     }
   }
   return null;
@@ -886,13 +886,13 @@ class ReactDOMServerRenderer {
         return '';
       }
       if (this.makeStaticMarkup) {
-        return escapeTextForBrowser(text);
+        return escapeText(text);
       }
       if (this.previousWasTextNode) {
-        return '<!-- -->' + escapeTextForBrowser(text);
+        return '<!-- -->' + escapeText(text);
       }
       this.previousWasTextNode = true;
-      return escapeTextForBrowser(text);
+      return escapeText(text);
     } else {
       let nextChild;
       ({child: nextChild, context} = resolve(child, context, this.threadID));

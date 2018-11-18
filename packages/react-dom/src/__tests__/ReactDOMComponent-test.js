@@ -1599,9 +1599,7 @@ describe('ReactDOMComponent', () => {
           ),
         ),
       ).toBe(
-        '<div title="&#x27;&quot;&lt;&gt;&amp;" style="text-align:&#x27;&quot;&lt;&gt;&amp;">' +
-          '&#x27;&quot;&lt;&gt;&amp;' +
-          '</div>',
+        `<div title=\"'&quot;<>&amp;\" style=\"text-align:'&quot;<>&amp;\">'\"&lt;&gt;&amp;</div>`,
       );
     });
   });

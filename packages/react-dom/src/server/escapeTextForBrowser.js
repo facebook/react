@@ -30,82 +30,81 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-// code copied and modified from escape-html
-/**
- * Module variables.
- * @private
- */
-
-const matchHtmlRegExp = /["'&<>]/;
-
-/**
- * Escapes special characters and HTML entities in a given html string.
- *
- * @param  {string} string HTML string to escape for later insertion
- * @return {string}
- * @public
- */
-
-function escapeHtml(string) {
-  const str = '' + string;
-  const match = matchHtmlRegExp.exec(str);
-
-  if (!match) {
-    return str;
-  }
-
-  let escape;
-  let html = '';
-  let index;
-  let lastIndex = 0;
-
-  for (index = match.index; index < str.length; index++) {
-    switch (str.charCodeAt(index)) {
-      case 34: // "
-        escape = '&quot;';
-        break;
-      case 38: // &
-        escape = '&amp;';
-        break;
-      case 39: // '
-        escape = '&#x27;'; // modified from escape-html; used to be '&#39'
-        break;
-      case 60: // <
-        escape = '&lt;';
-        break;
-      case 62: // >
-        escape = '&gt;';
-        break;
-      default:
-        continue;
+// double quotes and single quotes are allowed in text nodes
+export function escapeText(text: string | number): string {
+  if (typeof text === 'string') {
+    if (
+      text.indexOf('&') === -1 &&
+      text.indexOf('<') === -1 &&
+      text.indexOf('>') === -1
+    ) {
+      return text;
     }
 
-    if (lastIndex !== index) {
-      html += str.substring(lastIndex, index);
+    let result = text;
+    let start = 0;
+    let i = 0;
+    for (; i < text.length; ++i) {
+      let escape;
+      switch (text.charCodeAt(i)) {
+        case 38: // &
+          escape = '&amp;';
+          break;
+        case 60: // <
+          escape = '&lt;';
+          break;
+        case 62: // >
+          escape = '&gt;';
+          break;
+        default:
+          continue;
+      }
+      if (i > start) {
+        escape = text.slice(start, i) + escape;
+      }
+      result = start > 0 ? result + escape : escape;
+      start = i + 1;
+    }
+    if (i !== start) {
+      return result + text.slice(start, i);
+    }
+    return result;
+  }
+  return text.toString();
+}
+
+// <, > and single quotes are allowed in attribute values
+export function escapeAttributeValue(text: string | number): string {
+  if (typeof text === 'string') {
+    if (text.indexOf('"') === -1 && text.indexOf('&') === -1) {
+      return text;
     }
 
-    lastIndex = index + 1;
-    html += escape;
+    let result = text;
+    let start = 0;
+    let i = 0;
+    for (; i < text.length; ++i) {
+      let escape;
+      switch (text.charCodeAt(i)) {
+        case 34: // "
+          escape = '&quot;';
+          break;
+        case 38: // &
+          escape = '&amp;';
+          break;
+        default:
+          continue;
+      }
+      if (i > start) {
+        escape = text.slice(start, i) + escape;
+      }
+      result = start > 0 ? result + escape : escape;
+      start = i + 1;
+    }
+    if (i !== start) {
+      return result + text.slice(start, i);
+    }
+    return result;
   }
-
-  return lastIndex !== index ? html + str.substring(lastIndex, index) : html;
+  return text.toString();
 }
-// end code copied and modified from escape-html
-
-/**
- * Escapes text to prevent scripting attacks.
- *
- * @param {*} text Text value to escape.
- * @return {string} An escaped string.
- */
-function escapeTextForBrowser(text) {
-  if (typeof text === 'boolean' || typeof text === 'number') {
-    // this shortcircuit helps perf for types that we know will never have
-    // special characters, especially given that this function is used often
-    // for numeric dom ids.
-    return '' + text;
-  }
-  return escapeHtml(text);
-}
-
-export default escapeTextForBrowser;
