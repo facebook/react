@@ -30,6 +30,10 @@ function ReactComponent(props, context, updater) {
 
 ReactComponent.prototype.isReactComponent = {};
 
+if (__DEV__) {
+  ReactComponent.prototype.isInDEVMode = true;
+}
+
 /**
  * Sets a subset of the state. Always use this to mutate
  * state. You should treat `this.state` as immutable.

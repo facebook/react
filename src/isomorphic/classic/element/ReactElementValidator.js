@@ -187,7 +187,8 @@ function validatePropTypes(element) {
   }
   if (typeof componentClass.getDefaultProps === 'function') {
     warning(
-      componentClass.getDefaultProps.isReactClassApproved,
+      componentClass.getDefaultProps.isReactClassApproved ||
+        Object.getPrototypeOf(componentClass.prototype).isInDEVMode !== true,
       'getDefaultProps is only used on classic React.createClass ' +
         'definitions. Use a static property named `defaultProps` instead.',
     );
