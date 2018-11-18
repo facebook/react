@@ -6,19 +6,22 @@
 // It is not meant to be run as part of the local build or publish process.
 // It exists to share code between the Node release scripts and CI bash scripts.
 
+// IMPORTANT:
+// Changes below should be mirrored in ./create-canary-commands/add-build-info-json.js
+
 const {exec} = require('child_process');
 const {existsSync} = require('fs');
 const {join} = require('path');
 
 const run = async () => {
-  const {writeJson} = require('fs-extra');
-  const {getBuildInfo, getPackages} = require('./utils');
+  const {writeJson, readJson} = require('fs-extra');
+  const {getBuildInfo, getPublicPackages} = require('./utils');
 
   const cwd = join(__dirname, '..', '..');
 
   const {branch, checksum, commit, reactVersion} = await getBuildInfo();
 
-  const packages = getPackages(join(cwd, 'packages'));
+  const packages = getPublicPackages(join(cwd, 'packages'));
   const packagesDir = join(cwd, 'packages');
 
   const buildInfoJSON = {
@@ -32,8 +35,17 @@ const run = async () => {
   for (let i = 0; i < packages.length; i++) {
     const packageName = packages[i];
     const packagePath = join(packagesDir, packageName);
+    const packageJSON = await readJson(join(packagePath, 'package.json'));
 
-    // Add build info JSON to package
+    // Verify all public packages include "build-info.json" in the files array.
+    if (!packageJSON.files.includes('build-info.json')) {
+      console.error(
+        `${packageName} must include "build-info.json" in files array.`
+      );
+      process.exit(1);
+    }
+
+    // Add build info JSON to package.
     if (existsSync(join(packagePath, 'npm'))) {
       const buildInfoJSONPath = join(packagePath, 'npm', 'build-info.json');
       await writeJson(buildInfoJSONPath, buildInfoJSON, {spaces: 2});

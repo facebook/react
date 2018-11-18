@@ -57,23 +57,6 @@ const getChecksumForCurrentRevision = async cwd => {
   return hashedPackages.hash.slice(0, 7);
 };
 
-const getPackages = (
-  packagesRoot = join(__dirname, '..', '..', 'packages')
-) => {
-  return readdirSync(packagesRoot).filter(dir => {
-    const packagePath = join(packagesRoot, dir, 'package.json');
-
-    if (dir.charAt(0) !== '.' && statSync(packagePath).isFile()) {
-      const packageJSON = JSON.parse(readFileSync(packagePath));
-
-      // Skip packages like "shared" and "events" that shouldn't be updated.
-      return packageJSON.version !== '0.0.0';
-    }
-
-    return false;
-  });
-};
-
 const getPublicPackages = () => {
   const packagesRoot = join(__dirname, '..', '..', 'packages');
 
@@ -173,7 +156,7 @@ const printDiff = (path, beforeContents, afterContents) => {
 // It is based on the version of React in the local package.json (e.g. 16.6.1-canary-57239eac8).
 // Both numbers will be replaced if the canary is promoted to a stable release.
 const updateVersionsForCanary = async (cwd, reactVersion, version) => {
-  const packages = getPackages(join(cwd, 'packages'));
+  const packages = getPublicPackages(join(cwd, 'packages'));
   const packagesDir = join(cwd, 'packages');
 
   // Update the shared React version source file.
@@ -230,7 +213,6 @@ module.exports = {
   execRead,
   getBuildInfo,
   getChecksumForCurrentRevision,
-  getPackages,
   getPublicPackages,
   handleError,
   logPromise,
