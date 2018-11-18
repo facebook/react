@@ -48,7 +48,9 @@ import {
 import ReactSharedInternals from './ReactSharedInternals';
 import {enableStableConcurrentModeAPIs} from 'shared/ReactFeatureFlags';
 
-const React = {
+// Please make sure that no properties are added to this object after its
+// creation. This ensures the object keeps the same shape for performance reasons.
+export default {
   Children: {
     map,
     forEach,
@@ -78,27 +80,27 @@ const React = {
   version: ReactVersion,
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactSharedInternals,
+
+  ConcurrentMode: enableStableConcurrentModeAPIs
+    ? REACT_CONCURRENT_MODE_TYPE
+    : null,
+  Profiler: enableStableConcurrentModeAPIs ? REACT_PROFILER_TYPE : null,
+
+  unstable_ConcurrentMode: !enableStableConcurrentModeAPIs
+    ? REACT_CONCURRENT_MODE_TYPE
+    : null,
+  unstable_Profiler: !enableStableConcurrentModeAPIs
+    ? REACT_PROFILER_TYPE
+    : null,
+
+  useCallback: enableHooks ? useCallback : null,
+  useContext: enableHooks ? useContext : null,
+  useEffect: enableHooks ? useEffect : null,
+  useImperativeMethods: enableHooks ? useImperativeMethods : null,
+  useLayoutEffect: enableHooks ? useLayoutEffect : null,
+  useMemo: enableHooks ? useMemo : null,
+  useMutationEffect: enableHooks ? useMutationEffect : null,
+  useReducer: enableHooks ? useReducer : null,
+  useRef: enableHooks ? useRef : null,
+  useState: enableHooks ? useState : null,
 };
-
-if (enableStableConcurrentModeAPIs) {
-  React.ConcurrentMode = REACT_CONCURRENT_MODE_TYPE;
-  React.Profiler = REACT_PROFILER_TYPE;
-} else {
-  React.unstable_ConcurrentMode = REACT_CONCURRENT_MODE_TYPE;
-  React.unstable_Profiler = REACT_PROFILER_TYPE;
-}
-
-if (enableHooks) {
-  React.useCallback = useCallback;
-  React.useContext = useContext;
-  React.useEffect = useEffect;
-  React.useImperativeMethods = useImperativeMethods;
-  React.useLayoutEffect = useLayoutEffect;
-  React.useMemo = useMemo;
-  React.useMutationEffect = useMutationEffect;
-  React.useReducer = useReducer;
-  React.useRef = useRef;
-  React.useState = useState;
-}
-
-export default React;
