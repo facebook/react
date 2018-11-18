@@ -39,6 +39,7 @@ import {enableStableConcurrentModeAPIs} from 'shared/ReactFeatureFlags';
 import * as ReactDOMComponentTree from './ReactDOMComponentTree';
 import {restoreControlledState} from './ReactDOMComponent';
 import * as ReactDOMEventListener from '../events/ReactDOMEventListener';
+import possibleStandardNames from '../shared/possibleStandardNames';
 import {
   ELEMENT_NODE,
   COMMENT_NODE,
@@ -747,6 +748,8 @@ const ReactDOM: Object = {
   flushSync: DOMRenderer.flushSync,
 
   unstable_flushControlled: DOMRenderer.flushControlled,
+
+  attributeMapping: possibleStandardNames,
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // Keep in sync with ReactDOMUnstableNativeDependencies.js
