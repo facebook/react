@@ -516,6 +516,19 @@ describe('ReactDOMServerHooks', () => {
       expect(domNode.tagName).toEqual('SPAN');
       expect(domNode.textContent).toEqual('Count: 0');
     });
+
+    itRenders('should support render time callbacks', async render => {
+      function Counter(props) {
+        const renderCount = useCallback(increment => {
+          return 'Count: ' + (props.count + increment);
+        });
+        return <Text text={renderCount(3)} />;
+      }
+      const domNode = await render(<Counter count={2} />);
+      expect(clearYields()).toEqual(['Count: 5']);
+      expect(domNode.tagName).toEqual('SPAN');
+      expect(domNode.textContent).toEqual('Count: 5');
+    });
   });
 
   describe('useImperativeMethods', () => {
