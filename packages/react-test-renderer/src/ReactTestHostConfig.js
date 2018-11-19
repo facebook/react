@@ -8,7 +8,12 @@
  */
 
 import warning from 'shared/warning';
-import * as TestRendererScheduling from './ReactTestRendererScheduling';
+import {
+  nowImplementation as TestRendererSchedulingNowImplementation,
+  scheduleDeferredCallback as TestRendererSchedulingScheduleDeferredCallback,
+  cancelDeferredCallback as TestRendererSchedulingCancelDeferredCallback,
+  shouldYield as TestRendererSchedulingShouldYield,
+} from './ReactTestRendererScheduling';
 
 export type Type = string;
 export type Props = Object;
@@ -197,12 +202,10 @@ export function createTextInstance(
 export const isPrimaryRenderer = false;
 // This approach enables `now` to be mocked by tests,
 // Even after the reconciler has initialized and read host config values.
-export const now = () => TestRendererScheduling.nowImplementation();
-export const scheduleDeferredCallback =
-  TestRendererScheduling.scheduleDeferredCallback;
-export const cancelDeferredCallback =
-  TestRendererScheduling.cancelDeferredCallback;
-export const shouldYield = TestRendererScheduling.shouldYield;
+export const now = () => TestRendererSchedulingNowImplementation();
+export const scheduleDeferredCallback = TestRendererSchedulingScheduleDeferredCallback;
+export const cancelDeferredCallback = TestRendererSchedulingCancelDeferredCallback;
+export const shouldYield = TestRendererSchedulingShouldYield;
 
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;

@@ -56,7 +56,11 @@ import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import * as ReactCurrentFiber from './ReactCurrentFiber';
+import {
+  setCurrentPhase,
+  getCurrentFiberOwnerNameInDevOrNull,
+  getCurrentFiberStackInDev,
+} from './ReactCurrentFiber';
 import {startWorkTimer, cancelWorkTimer} from './ReactDebugFiberPerf';
 
 import {
@@ -215,9 +219,9 @@ function updateForwardRef(
   prepareToUseHooks(current, workInProgress, renderExpirationTime);
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
-    ReactCurrentFiber.setCurrentPhase('render');
+    setCurrentPhase('render');
     nextChildren = render(nextProps, ref);
-    ReactCurrentFiber.setCurrentPhase(null);
+    setCurrentPhase(null);
   } else {
     nextChildren = render(nextProps, ref);
   }
@@ -409,9 +413,9 @@ function updateFunctionComponent(
   prepareToUseHooks(current, workInProgress, renderExpirationTime);
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
-    ReactCurrentFiber.setCurrentPhase('render');
+    setCurrentPhase('render');
     nextChildren = Component(nextProps, context);
-    ReactCurrentFiber.setCurrentPhase(null);
+    setCurrentPhase(null);
   } else {
     nextChildren = Component(nextProps, context);
   }
@@ -548,7 +552,7 @@ function finishClassComponent(
     }
   } else {
     if (__DEV__) {
-      ReactCurrentFiber.setCurrentPhase('render');
+      setCurrentPhase('render');
       nextChildren = instance.render();
       if (
         debugRenderPhaseSideEffects ||
@@ -557,7 +561,7 @@ function finishClassComponent(
       ) {
         instance.render();
       }
-      ReactCurrentFiber.setCurrentPhase(null);
+      setCurrentPhase(null);
     } else {
       nextChildren = instance.render();
     }
@@ -1011,7 +1015,7 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
   }
   if (workInProgress.ref !== null) {
     let info = '';
-    const ownerName = ReactCurrentFiber.getCurrentFiberOwnerNameInDevOrNull();
+    const ownerName = getCurrentFiberOwnerNameInDevOrNull();
     if (ownerName) {
       info += '\n\nCheck the render method of `' + ownerName + '`.';
     }
@@ -1378,7 +1382,7 @@ function updateContextProvider(
         newProps,
         'prop',
         'Context.Provider',
-        ReactCurrentFiber.getCurrentFiberStackInDev,
+        getCurrentFiberStackInDev,
       );
     }
   }
@@ -1469,9 +1473,9 @@ function updateContextConsumer(
   let newChildren;
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
-    ReactCurrentFiber.setCurrentPhase('render');
+    setCurrentPhase('render');
     newChildren = render(newValue);
-    ReactCurrentFiber.setCurrentPhase(null);
+    setCurrentPhase(null);
   } else {
     newChildren = render(newValue);
   }

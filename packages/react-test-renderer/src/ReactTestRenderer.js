@@ -11,7 +11,13 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 import type {Instance, TextInstance} from './ReactTestHostConfig';
 
-import * as TestRenderer from 'react-reconciler/inline.test';
+import {
+  getPublicRootInstance,
+  createContainer,
+  updateContainer,
+  flushSync,
+  injectIntoDevTools,
+} from 'react-reconciler/inline.test';
 import {batchedUpdates} from 'events/ReactGenericBatching';
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
 import {
@@ -34,8 +40,14 @@ import {
 import invariant from 'shared/invariant';
 import ReactVersion from 'shared/ReactVersion';
 
-import * as ReactTestHostConfig from './ReactTestHostConfig';
-import * as TestRendererScheduling from './ReactTestRendererScheduling';
+import {getPublicInstance} from './ReactTestHostConfig';
+import {
+  flushAll,
+  flushNumberOfYields,
+  clearYields,
+  setNowImplementation,
+  yieldValue,
+} from './ReactTestRendererScheduling';
 
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
@@ -277,7 +289,7 @@ class ReactTestInstance {
 
   get instance() {
     if (this._fiber.tag === HostComponent) {
-      return ReactTestHostConfig.getPublicInstance(this._fiber.stateNode);
+      return getPublicInstance(this._fiber.stateNode);
     } else {
       return this._fiber.stateNode;
     }
@@ -428,13 +440,13 @@ const ReactTestRendererFiber = {
       createNodeMock,
       tag: 'CONTAINER',
     };
-    let root: FiberRoot | null = TestRenderer.createContainer(
+    let root: FiberRoot | null = createContainer(
       container,
       isConcurrent,
       false,
     );
     invariant(root != null, 'something went wrong');
-    TestRenderer.updateContainer(element, root, null, null);
+    updateContainer(element, root, null, null);
 
     const entry = {
       root: undefined, // makes flow happy
@@ -475,13 +487,13 @@ const ReactTestRendererFiber = {
         if (root == null || root.current == null) {
           return;
         }
-        TestRenderer.updateContainer(newElement, root, null, null);
+        updateContainer(newElement, root, null, null);
       },
       unmount() {
         if (root == null || root.current == null) {
           return;
         }
-        TestRenderer.updateContainer(null, root, null, null);
+        updateContainer(null, root, null, null);
         container = null;
         root = null;
       },
@@ -489,16 +501,16 @@ const ReactTestRendererFiber = {
         if (root == null || root.current == null) {
           return null;
         }
-        return TestRenderer.getPublicRootInstance(root);
+        return getPublicRootInstance(root);
       },
 
-      unstable_flushAll: TestRendererScheduling.flushAll,
+      unstable_flushAll: flushAll,
       unstable_flushSync<T>(fn: () => T): T {
-        TestRendererScheduling.clearYields();
-        return TestRenderer.flushSync(fn);
+        clearYields();
+        return flushSync(fn);
       },
-      unstable_flushNumberOfYields: TestRendererScheduling.flushNumberOfYields,
-      unstable_clearYields: TestRendererScheduling.clearYields,
+      unstable_flushNumberOfYields: flushNumberOfYields,
+      unstable_clearYields: clearYields,
     };
 
     Object.defineProperty(
@@ -529,14 +541,14 @@ const ReactTestRendererFiber = {
     return entry;
   },
 
-  unstable_yield: TestRendererScheduling.yieldValue,
-  unstable_clearYields: TestRendererScheduling.clearYields,
+  unstable_yield: yieldValue,
+  unstable_clearYields: clearYields,
 
   /* eslint-disable camelcase */
   unstable_batchedUpdates: batchedUpdates,
   /* eslint-enable camelcase */
 
-  unstable_setNowImplementation: TestRendererScheduling.setNowImplementation,
+  unstable_setNowImplementation: setNowImplementation,
 };
 
 const fiberToWrapper = new WeakMap();
@@ -553,7 +565,7 @@ function wrapFiber(fiber: Fiber): ReactTestInstance {
 }
 
 // Enable ReactTestRenderer to be used to test DevTools integration.
-TestRenderer.injectIntoDevTools({
+injectIntoDevTools({
   findFiberByHostInstance: (() => {
     throw new Error('TestRenderer does not support findFiberByHostInstance()');
   }: any),
