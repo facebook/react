@@ -25,6 +25,7 @@ import {
   isEnabled,
   trapBubbledEvent,
   trapCapturedEvent,
+  replayEarlyEvent,
 } from './ReactDOMEventListener';
 import isEventSupported from './isEventSupported';
 
@@ -187,4 +188,10 @@ export function isListeningToAllDependencies(
   return true;
 }
 
-export {setEnabled, isEnabled, trapBubbledEvent, trapCapturedEvent};
+export {
+  setEnabled,
+  isEnabled,
+  trapBubbledEvent,
+  replayEarlyEvent,
+  trapCapturedEvent,
+};

@@ -137,13 +137,16 @@ export function isEnabled() {
 export function trapBubbledEvent(
   topLevelType: DOMTopLevelEventType,
   element: Document | Element,
+  expectEarlyEvents: boolean = false,
 ) {
   if (!element) {
     return null;
   }
   const dispatch = isInteractiveTopLevelEventType(topLevelType)
     ? dispatchInteractiveEvent
-    : dispatchEvent;
+    : expectEarlyEvents
+      ? dispatchAndStoreEvent
+      : dispatchEvent;
 
   addEventBubbleListener(
     element,
@@ -183,6 +186,21 @@ export function trapCapturedEvent(
 
 function dispatchInteractiveEvent(topLevelType, nativeEvent) {
   interactiveUpdates(dispatchEvent, topLevelType, nativeEvent);
+}
+
+function dispatchAndStoreEvent(
+  topLevelType: DOMTopLevelEventType,
+  nativeEvent: AnyNativeEvent,
+) {
+  (nativeEvent.target: any)._pendingEvent = nativeEvent;
+  dispatchEvent(topLevelType, nativeEvent);
+}
+
+export function replayEarlyEvent(element: Document | Element) {
+  let pendingEvent: Event = (element: any)._pendingEvent;
+  if (pendingEvent) {
+    element.dispatchEvent(pendingEvent);
+  }
 }
 
 export function dispatchEvent(
