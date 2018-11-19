@@ -17,7 +17,7 @@ import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import checkPropTypes from 'prop-types/checkPropTypes';
 
-import * as ReactCurrentFiber from './ReactCurrentFiber';
+import {setCurrentPhase, getCurrentFiberStackInDev} from './ReactCurrentFiber';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {createCursor, push, pop} from './ReactFiberStack';
 
@@ -99,7 +99,7 @@ function getMaskedContext(
       context,
       'context',
       name,
-      ReactCurrentFiber.getCurrentFiberStackInDev,
+      getCurrentFiberStackInDev,
     );
   }
 
@@ -177,13 +177,13 @@ function processChildContext(
 
   let childContext;
   if (__DEV__) {
-    ReactCurrentFiber.setCurrentPhase('getChildContext');
+    setCurrentPhase('getChildContext');
   }
   startPhaseTimer(fiber, 'getChildContext');
   childContext = instance.getChildContext();
   stopPhaseTimer();
   if (__DEV__) {
-    ReactCurrentFiber.setCurrentPhase(null);
+    setCurrentPhase(null);
   }
   for (let contextKey in childContext) {
     invariant(
@@ -205,7 +205,7 @@ function processChildContext(
       // context from the parent component instance. The stack will be missing
       // because it's outside of the reconciliation, and so the pointer has not
       // been set. This is rare and doesn't matter. We'll also remove that API.
-      ReactCurrentFiber.getCurrentFiberStackInDev,
+      getCurrentFiberStackInDev,
     );
   }
 

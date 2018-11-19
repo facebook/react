@@ -12,11 +12,11 @@ import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCur
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 
-import * as DOMPropertyOperations from './DOMPropertyOperations';
+import {setValueForProperty} from './DOMPropertyOperations';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
 import {getToStringValue, toString} from './ToStringValue';
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
-import * as inputValueTracking from './inputValueTracking';
+import {updateValueIfChanged} from './inputValueTracking';
 import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
 
 import type {ToStringValue} from './ToStringValue';
@@ -129,7 +129,7 @@ export function updateChecked(element: Element, props: Object) {
   const node = ((element: any): InputWithWrapperState);
   const checked = props.checked;
   if (checked != null) {
-    DOMPropertyOperations.setValueForProperty(node, 'checked', checked, false);
+    setValueForProperty(node, 'checked', checked, false);
   }
 }
 
@@ -389,7 +389,7 @@ function updateNamedCousins(rootNode, props) {
 
       // We need update the tracked value on the named cousin since the value
       // was changed but the input saw no event or value set
-      inputValueTracking.updateValueIfChanged(otherNode);
+      updateValueIfChanged(otherNode);
 
       // If this is a controlled radio button group, forcing the input that
       // was previously checked to update will cause it to be come re-checked
