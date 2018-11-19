@@ -22,7 +22,11 @@ import {
   TOP_TEXT_INPUT,
   TOP_PASTE,
 } from './DOMTopLevelEventTypes';
-import * as FallbackCompositionState from './FallbackCompositionState';
+import {
+  getData as FallbackCompositionStateGetData,
+  initialize as FallbackCompositionStateInitialize,
+  reset as FallbackCompositionStateReset,
+} from './FallbackCompositionState';
 import SyntheticCompositionEvent from './SyntheticCompositionEvent';
 import SyntheticInputEvent from './SyntheticInputEvent';
 
@@ -246,10 +250,10 @@ function extractCompositionEvent(
     // The current composition is stored statically and must not be
     // overwritten while composition continues.
     if (!isComposing && eventType === eventTypes.compositionStart) {
-      isComposing = FallbackCompositionState.initialize(nativeEventTarget);
+      isComposing = FallbackCompositionStateInitialize(nativeEventTarget);
     } else if (eventType === eventTypes.compositionEnd) {
       if (isComposing) {
-        fallbackData = FallbackCompositionState.getData();
+        fallbackData = FallbackCompositionStateGetData();
       }
     }
   }
@@ -346,8 +350,8 @@ function getFallbackBeforeInputChars(topLevelType: TopLevelType, nativeEvent) {
       (!canUseCompositionEvent &&
         isFallbackCompositionEnd(topLevelType, nativeEvent))
     ) {
-      const chars = FallbackCompositionState.getData();
-      FallbackCompositionState.reset();
+      const chars = FallbackCompositionStateGetData();
+      FallbackCompositionStateReset();
       isComposing = false;
       return chars;
     }

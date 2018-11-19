@@ -12,7 +12,7 @@ import type {Fiber} from './ReactFiber';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
-import * as ReactInstanceMap from 'shared/ReactInstanceMap';
+import {get as getInstance} from 'shared/ReactInstanceMap';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
 import {
@@ -82,7 +82,7 @@ export function isMounted(component: React$Component<any, any>): boolean {
     }
   }
 
-  const fiber: ?Fiber = ReactInstanceMap.get(component);
+  const fiber: ?Fiber = getInstance(component);
   if (!fiber) {
     return false;
   }

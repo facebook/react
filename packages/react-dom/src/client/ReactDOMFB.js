@@ -7,22 +7,30 @@
  * @flow
  */
 
-import * as ReactFiberTreeReflection from 'react-reconciler/reflection';
-import * as ReactInstanceMap from 'shared/ReactInstanceMap';
+import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
+import {get as getInstance} from 'shared/ReactInstanceMap';
 import {addUserTimingListener} from 'shared/ReactFeatureFlags';
 
 import ReactDOM from './ReactDOM';
-import * as ReactBrowserEventEmitter from '../events/ReactBrowserEventEmitter';
-import * as ReactDOMComponentTree from './ReactDOMComponentTree';
+import {isEnabled} from '../events/ReactBrowserEventEmitter';
+import {getClosestInstanceFromNode} from './ReactDOMComponentTree';
 
 Object.assign(
   (ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: any),
   {
     // These are real internal dependencies that are trickier to remove:
-    ReactBrowserEventEmitter,
-    ReactFiberTreeReflection,
-    ReactDOMComponentTree,
-    ReactInstanceMap,
+    ReactBrowserEventEmitter: {
+      isEnabled,
+    },
+    ReactFiberTreeReflection: {
+      findCurrentFiberUsingSlowPath,
+    },
+    ReactDOMComponentTree: {
+      getClosestInstanceFromNode,
+    },
+    ReactInstanceMap: {
+      get: getInstance,
+    },
     // Perf experiment
     addUserTimingListener,
   },
