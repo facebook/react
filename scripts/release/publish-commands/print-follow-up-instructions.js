@@ -9,7 +9,7 @@ const theme = require('../theme');
 const run = async ({cwd, packages, tags}) => {
   // All packages are built from a single source revision,
   // so it is safe to read the commit number from any one of them.
-  const {commit} = readJsonSync(
+  const {commit, environment} = readJsonSync(
     `${cwd}/build/node_modules/react/build-info.json`
   );
 
@@ -48,6 +48,26 @@ const run = async ({cwd, packages, tags}) => {
     commit
   );
   console.log(theme.command`  git push origin --tags`);
+
+  if (tags.includes('latest')) {
+    console.log();
+    console.log(
+      theme`{header Don't forget to commit the generated }{path scripts/error-codes/codes.json}`
+    );
+    if (environment === 'ci') {
+      console.log(
+        `This file has been updated locally. Please review it before committing.`
+      );
+    } else {
+      console.log(
+        `The release that was just published was created locally. ` +
+          `Because of this, you will need to update error codes manually with the following commands:`
+      );
+      console.log(theme`  {command git checkout} {version ${commit}}`);
+      console.log(theme`  {command yarn build -- --extract-errors}`);
+    }
+  }
+
   console.log();
   console.log(
     theme`{header Don't forget to update and commit the }{path CHANGELOG}`

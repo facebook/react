@@ -158,9 +158,9 @@ const run = async ({cwd, packages, version}, versionsMap) => {
   writeFileSync(diffPath, diff, {cwd});
   console.log(theme.header(`\n${numFilesModified} files have been updated.`));
   console.log(
-    theme`A full diff is availbale at {path ${relative(cwd, diffPath)}}.`
+    theme`A full diff is available at {path ${relative(cwd, diffPath)}}.`
   );
-  await confirm('Do changes changes look correct?');
+  await confirm('Do the changes above look correct?');
 };
 
 // Run this directly because logPromise would interfere with printing package dependencies.
