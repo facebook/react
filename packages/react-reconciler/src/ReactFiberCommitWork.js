@@ -726,20 +726,11 @@ function detachFiber(current: Fiber) {
   // get GC:ed but we don't know which for sure which parent is the current
   // one so we'll settle for GC:ing the subtree of this child. This child
   // itself will be GC:ed when the parent updates the next time.
-  // We do not null out the 'nextEffect' field as it causes tests to fail.
   current.return = null;
   current.child = null;
-  current.memoizedState = null;
-  current.updateQueue = null;
-  current.firstEffect = null;
-  current.lastEffect = null;
   if (current.alternate) {
-    current.alternate.return = null;
     current.alternate.child = null;
-    current.alternate.memoizedState = null;
-    current.alternate.updateQueue = null;
-    current.alternate.firstEffect = null;
-    current.alternate.lastEffect = null;
+    current.alternate.return = null;
   }
 }
 
