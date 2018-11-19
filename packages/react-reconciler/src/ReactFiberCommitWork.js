@@ -732,8 +732,8 @@ function detachFiber(current: Fiber) {
   current.updateQueue = null;
   const alternate = current.alternate;
   if (alternate !== null) {
-    alternate.child = null;
     alternate.return = null;
+    alternate.child = null;
     alternate.memoizedState = null;
     alternate.updateQueue = null;
   }
