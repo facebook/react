@@ -36,6 +36,10 @@ const getBuildInfo = async () => {
   const checksum = await getChecksumForCurrentRevision(cwd);
   const version = `0.0.0-${commit}`;
 
+  // Only available for Circle CI builds.
+  // https://circleci.com/docs/2.0/env-vars/
+  const buildNumber = process.env.CIRCLE_BUILD_NUM;
+
   // React version is stored explicitly, separately for DevTools support.
   // See updateVersionsForCanary() below for more info.
   const packageJSON = await readJson(
@@ -43,7 +47,7 @@ const getBuildInfo = async () => {
   );
   const reactVersion = `${packageJSON.version}-canary-${commit}`;
 
-  return {branch, checksum, commit, reactVersion, version};
+  return {branch, buildNumber, checksum, commit, reactVersion, version};
 };
 
 const getChecksumForCurrentRevision = async cwd => {

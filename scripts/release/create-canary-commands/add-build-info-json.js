@@ -17,6 +17,7 @@ const run = async ({branch, checksum, commit, reactVersion, tempDirectory}) => {
 
   const buildInfoJSON = {
     branch,
+    buildNumber: null,
     checksum,
     commit,
     environment: 'local',
