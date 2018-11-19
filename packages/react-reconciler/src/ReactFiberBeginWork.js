@@ -126,12 +126,14 @@ let didWarnAboutBadClass;
 let didWarnAboutContextTypeOnFunctionComponent;
 let didWarnAboutGetDerivedStateOnFunctionComponent;
 let didWarnAboutFunctionRefs;
+let didWarnAboutReassigningProps;
 
 if (__DEV__) {
   didWarnAboutBadClass = {};
   didWarnAboutContextTypeOnFunctionComponent = {};
   didWarnAboutGetDerivedStateOnFunctionComponent = {};
   didWarnAboutFunctionRefs = {};
+  didWarnAboutReassigningProps = false;
 }
 
 export function reconcileChildren(
@@ -491,7 +493,7 @@ function updateClassComponent(
       renderExpirationTime,
     );
   }
-  return finishClassComponent(
+  const nextUnitOfWork = finishClassComponent(
     current,
     workInProgress,
     Component,
@@ -499,6 +501,17 @@ function updateClassComponent(
     hasContext,
     renderExpirationTime,
   );
+  if (__DEV__) {
+    let inst = workInProgress.stateNode;
+    if (inst.props !== nextProps) {
+      warning(
+        didWarnAboutReassigningProps,
+        'Reassigning `this.props` is not supported and will lead to bugs.',
+      );
+      didWarnAboutReassigningProps = true;
+    }
+  }
+  return nextUnitOfWork;
 }
 
 function finishClassComponent(
