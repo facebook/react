@@ -4,7 +4,7 @@ The release process consists of several phases, each one represented by one of t
 
 A typical release goes like this:
 1. When a commit is pushed to the React repo, [Circle CI](https://circleci.com/gh/facebook/react/) will build all release bundles and run unit tests against both the source code and the built bundles.
-2. Next the release is published as a canary using the [`prepare-canary`](#prepare-canary) and [`publish`](#publish) scripts. (Currently this process is manual but will be automated in the future using [GitHub "actions"](https://github.com/features/actions).)
+2. Next the release is published as a canary using the [`prepare-canary`](#prepare-canary) and [`publish`](#publish) scripts. (Currently this process is manual but might be automated in the future using [GitHub "actions"](https://github.com/features/actions).)
 3. Finally, a canary releases can be promoted to stable using the [`prepare-stable`](#prepare-stable) and [`publish`](#publish) scripts. (This process is always manual.)
 
 One or more release scripts are used for each of the above phases. Learn more about these scripts below:
@@ -17,6 +17,8 @@ One or more release scripts are used for each of the above phases. Learn more ab
 Creates a canary build from the current (local) Git revision.
 
 **This script is an escape hatch.** It allows a canary release to be created without pushing a commit to be verified by Circle CI. **It does not run any automated unit tests.** Testing is solely the responsibility of the release engineer.
+
+Note that this script git-archives the React repo (at the current revision) to a temporary directory before building, so **uncommitted changes are not included in the build**.
 
 #### Example usage
 To create a canary from the current branch and revision:
