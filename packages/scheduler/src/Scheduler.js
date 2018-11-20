@@ -98,7 +98,7 @@ function flushFirstCallback() {
   // A callback may return a continuation. The continuation should be scheduled
   // with the same priority and expiration as the just-finished callback.
   if (typeof continuationCallback === 'function') {
-    var continuationNode: CallbackNode = {
+    var continuationNode = {
       callback: continuationCallback,
       priorityLevel,
       expirationTime,

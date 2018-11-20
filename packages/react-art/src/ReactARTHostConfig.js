@@ -421,6 +421,6 @@ export function unhideInstance(instance, props) {
   }
 }
 
-export function unhideTextInstance(textInstance, text): void {
+export function unhideTextInstance(textInstance, text) {
   // Noop
 }

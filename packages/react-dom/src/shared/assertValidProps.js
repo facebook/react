@@ -3,6 +3,8 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
 import invariant from 'shared/invariant';
@@ -31,7 +33,7 @@ function assertValidProps(tag: string, props: ?Object) {
       '%s is a void element tag and must neither have `children` nor ' +
         'use `dangerouslySetInnerHTML`.%s',
       tag,
-      __DEV__ ? ReactDebugCurrentFrame.getStackAddendum() : '',
+      __DEV__ && ReactDebugCurrentFrame ? ReactDebugCurrentFrame.getStackAddendum() : '',
     );
   }
   if (props.dangerouslySetInnerHTML != null) {
@@ -63,7 +65,7 @@ function assertValidProps(tag: string, props: ?Object) {
     'The `style` prop expects a mapping from style properties to values, ' +
       "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
       'using JSX.%s',
-    __DEV__ ? ReactDebugCurrentFrame.getStackAddendum() : '',
+    __DEV__ && ReactDebugCurrentFrame ? ReactDebugCurrentFrame.getStackAddendum() : '',
   );
 }
 
