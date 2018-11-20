@@ -1758,7 +1758,8 @@ describe('ReactCompositeComponent', () => {
       ReactDOM.render(<Bad />, container);
     }).toWarnDev(
       [
-        'Reassigning `this.props` is not supported and will lead to bugs.',
+        'It looks like Bad is reassigning its own `this.props` while rendering. ' +
+          'This is not supported and can lead to confusing bugs.',
         'Expected Bad props to match memoized props before componentDidMount. ' +
           'This might either be because of a bug in React, or because a component ' +
           'reassigns its own `this.props`. Please file an issue.',

@@ -506,7 +506,9 @@ function updateClassComponent(
     if (inst.props !== nextProps) {
       warning(
         didWarnAboutReassigningProps,
-        'Reassigning `this.props` is not supported and will lead to bugs.',
+        'It looks like %s is reassigning its own `this.props` while rendering. ' +
+          'This is not supported and can lead to confusing bugs.',
+        getComponentName(workInProgress.type) || 'a component',
       );
       didWarnAboutReassigningProps = true;
     }
