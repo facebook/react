@@ -14,7 +14,7 @@ export type Thenable<T, R> = {
 export type LazyComponent<T> = {
   $$typeof: Symbol | number,
   _ctor: () => Thenable<{default: T}, mixed>,
-  _status: 0 | 1 | 2,
+  _status: -1 | 0 | 1 | 2, // TODO: what status is -1?
   _result: any,
 };
 
