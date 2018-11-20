@@ -99,6 +99,7 @@ import {
   UnmountPassive,
   MountPassive,
 } from './ReactHookEffectTags';
+import {didWarnAboutReassigningProps} from './ReactFiberBeginWork';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -234,7 +235,10 @@ function commitBeforeMutationLifeCycles(
           // but instead we rely on them being set during last render.
           // TODO: revisit this when we implement resuming.
           if (__DEV__) {
-            if (finishedWork.type === finishedWork.elementType) {
+            if (
+              finishedWork.type === finishedWork.elementType &&
+              !didWarnAboutReassigningProps
+            ) {
               warning(
                 instance.props === finishedWork.memoizedProps,
                 'Expected %s props to match memoized props before ' +
@@ -376,7 +380,10 @@ function commitLifeCycles(
           // but instead we rely on them being set during last render.
           // TODO: revisit this when we implement resuming.
           if (__DEV__) {
-            if (finishedWork.type === finishedWork.elementType) {
+            if (
+              finishedWork.type === finishedWork.elementType &&
+              !didWarnAboutReassigningProps
+            ) {
               warning(
                 instance.props === finishedWork.memoizedProps,
                 'Expected %s props to match memoized props before ' +
@@ -410,7 +417,10 @@ function commitLifeCycles(
           // but instead we rely on them being set during last render.
           // TODO: revisit this when we implement resuming.
           if (__DEV__) {
-            if (finishedWork.type === finishedWork.elementType) {
+            if (
+              finishedWork.type === finishedWork.elementType &&
+              !didWarnAboutReassigningProps
+            ) {
               warning(
                 instance.props === finishedWork.memoizedProps,
                 'Expected %s props to match memoized props before ' +
@@ -442,7 +452,10 @@ function commitLifeCycles(
       const updateQueue = finishedWork.updateQueue;
       if (updateQueue !== null) {
         if (__DEV__) {
-          if (finishedWork.type === finishedWork.elementType) {
+          if (
+            finishedWork.type === finishedWork.elementType &&
+            !didWarnAboutReassigningProps
+          ) {
             warning(
               instance.props === finishedWork.memoizedProps,
               'Expected %s props to match memoized props before ' +

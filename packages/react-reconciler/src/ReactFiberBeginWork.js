@@ -126,7 +126,7 @@ let didWarnAboutBadClass;
 let didWarnAboutContextTypeOnFunctionComponent;
 let didWarnAboutGetDerivedStateOnFunctionComponent;
 let didWarnAboutFunctionRefs;
-let didWarnAboutReassigningProps;
+export let didWarnAboutReassigningProps;
 
 if (__DEV__) {
   didWarnAboutBadClass = {};
