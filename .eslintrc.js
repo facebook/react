@@ -19,6 +19,7 @@ module.exports = {
     'no-for-of-loops',
     'react',
     'react-internal',
+    'flowtype',
   ],
 
   parser: 'espree',
@@ -89,6 +90,7 @@ module.exports = {
     'react-internal/no-primitive-constructors': ERROR,
     'react-internal/no-to-warn-dev-within-to-throw': ERROR,
     'react-internal/warning-and-invariant-args': ERROR,
+    'flowtype/no-types-missing-file-annotation': ERROR,
   },
 
   overrides: [
