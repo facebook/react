@@ -341,6 +341,9 @@ function dispatchAction<A>(
 }
 
 function noop(): void {}
+function identity(fn: Function): Function {
+  return fn;
+}
 
 export let currentThreadID: ThreadID = 0;
 
@@ -357,10 +360,10 @@ export const Dispatcher = {
   useState,
   useMutationEffect,
   useLayoutEffect,
+  // Callbacks are passed as they are in the server environment.
+  useCallback: identity,
   // useImperativeMethods is not run in the server environment
   useImperativeMethods: noop,
-  // Callbacks are not run in the server environment.
-  useCallback: noop,
   // Effects are not run in the server environment.
   useEffect: noop,
 };
