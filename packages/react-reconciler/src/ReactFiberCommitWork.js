@@ -99,6 +99,7 @@ import {
   UnmountPassive,
   MountPassive,
 } from './ReactHookEffectTags';
+import {didWarnAboutReassigningProps} from './ReactFiberBeginWork';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -234,18 +235,27 @@ function commitBeforeMutationLifeCycles(
           // but instead we rely on them being set during last render.
           // TODO: revisit this when we implement resuming.
           if (__DEV__) {
-            if (finishedWork.type === finishedWork.elementType) {
+            if (
+              finishedWork.type === finishedWork.elementType &&
+              !didWarnAboutReassigningProps
+            ) {
               warning(
                 instance.props === finishedWork.memoizedProps,
-                'Expected instance props to match memoized props before ' +
-                  'getSnapshotBeforeUpdate. This is likely due to a bug in React. ' +
+                'Expected %s props to match memoized props before ' +
+                  'getSnapshotBeforeUpdate. ' +
+                  'This might either be because of a bug in React, or because ' +
+                  'a component reassigns its own `this.props`. ' +
                   'Please file an issue.',
+                getComponentName(finishedWork.type) || 'instance',
               );
               warning(
                 instance.state === finishedWork.memoizedState,
-                'Expected instance state to match memoized state before ' +
-                  'getSnapshotBeforeUpdate. This is likely due to a bug in React. ' +
+                'Expected %s state to match memoized state before ' +
+                  'getSnapshotBeforeUpdate. ' +
+                  'This might either be because of a bug in React, or because ' +
+                  'a component reassigns its own `this.props`. ' +
                   'Please file an issue.',
+                getComponentName(finishedWork.type) || 'instance',
               );
             }
           }
@@ -370,18 +380,27 @@ function commitLifeCycles(
           // but instead we rely on them being set during last render.
           // TODO: revisit this when we implement resuming.
           if (__DEV__) {
-            if (finishedWork.type === finishedWork.elementType) {
+            if (
+              finishedWork.type === finishedWork.elementType &&
+              !didWarnAboutReassigningProps
+            ) {
               warning(
                 instance.props === finishedWork.memoizedProps,
-                'Expected instance props to match memoized props before ' +
-                  'componentDidMount. This is likely due to a bug in React. ' +
+                'Expected %s props to match memoized props before ' +
+                  'componentDidMount. ' +
+                  'This might either be because of a bug in React, or because ' +
+                  'a component reassigns its own `this.props`. ' +
                   'Please file an issue.',
+                getComponentName(finishedWork.type) || 'instance',
               );
               warning(
                 instance.state === finishedWork.memoizedState,
-                'Expected instance state to match memoized state before ' +
-                  'componentDidMount. This is likely due to a bug in React. ' +
+                'Expected %s state to match memoized state before ' +
+                  'componentDidMount. ' +
+                  'This might either be because of a bug in React, or because ' +
+                  'a component reassigns its own `this.props`. ' +
                   'Please file an issue.',
+                getComponentName(finishedWork.type) || 'instance',
               );
             }
           }
@@ -398,18 +417,27 @@ function commitLifeCycles(
           // but instead we rely on them being set during last render.
           // TODO: revisit this when we implement resuming.
           if (__DEV__) {
-            if (finishedWork.type === finishedWork.elementType) {
+            if (
+              finishedWork.type === finishedWork.elementType &&
+              !didWarnAboutReassigningProps
+            ) {
               warning(
                 instance.props === finishedWork.memoizedProps,
-                'Expected instance props to match memoized props before ' +
-                  'componentDidUpdate. This is likely due to a bug in React. ' +
+                'Expected %s props to match memoized props before ' +
+                  'componentDidUpdate. ' +
+                  'This might either be because of a bug in React, or because ' +
+                  'a component reassigns its own `this.props`. ' +
                   'Please file an issue.',
+                getComponentName(finishedWork.type) || 'instance',
               );
               warning(
                 instance.state === finishedWork.memoizedState,
-                'Expected instance state to match memoized state before ' +
-                  'componentDidUpdate. This is likely due to a bug in React. ' +
+                'Expected %s state to match memoized state before ' +
+                  'componentDidUpdate. ' +
+                  'This might either be because of a bug in React, or because ' +
+                  'a component reassigns its own `this.props`. ' +
                   'Please file an issue.',
+                getComponentName(finishedWork.type) || 'instance',
               );
             }
           }
@@ -424,18 +452,27 @@ function commitLifeCycles(
       const updateQueue = finishedWork.updateQueue;
       if (updateQueue !== null) {
         if (__DEV__) {
-          if (finishedWork.type === finishedWork.elementType) {
+          if (
+            finishedWork.type === finishedWork.elementType &&
+            !didWarnAboutReassigningProps
+          ) {
             warning(
               instance.props === finishedWork.memoizedProps,
-              'Expected instance props to match memoized props before ' +
-                'processing the update queue. This is likely due to a bug in React. ' +
+              'Expected %s props to match memoized props before ' +
+                'processing the update queue. ' +
+                'This might either be because of a bug in React, or because ' +
+                'a component reassigns its own `this.props`. ' +
                 'Please file an issue.',
+              getComponentName(finishedWork.type) || 'instance',
             );
             warning(
               instance.state === finishedWork.memoizedState,
-              'Expected instance state to match memoized state before ' +
-                'processing the update queue. This is likely due to a bug in React. ' +
+              'Expected %s state to match memoized state before ' +
+                'processing the update queue. ' +
+                'This might either be because of a bug in React, or because ' +
+                'a component reassigns its own `this.props`. ' +
                 'Please file an issue.',
+              getComponentName(finishedWork.type) || 'instance',
             );
           }
         }
