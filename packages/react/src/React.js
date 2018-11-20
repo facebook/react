@@ -50,57 +50,107 @@ import {enableStableConcurrentModeAPIs} from 'shared/ReactFeatureFlags';
 
 // Please make sure that no properties are added to this object after its
 // creation. This ensures the object keeps the same shape for performance reasons.
-export default {
-  Children: {
-    map,
-    forEach,
-    count,
-    toArray,
-    only,
-  },
+let React;
+// We should remove the need for two objects if hooks are enabled by default.
+if (enableHooks) {
+  React = {
+    Children: {
+      map,
+      forEach,
+      count,
+      toArray,
+      only,
+    },
 
-  createRef,
-  Component,
-  PureComponent,
+    createRef,
+    Component,
+    PureComponent,
 
-  createContext,
-  forwardRef,
-  lazy,
-  memo,
+    createContext,
+    forwardRef,
+    lazy,
+    memo,
 
-  Fragment: REACT_FRAGMENT_TYPE,
-  StrictMode: REACT_STRICT_MODE_TYPE,
-  Suspense: REACT_SUSPENSE_TYPE,
+    Fragment: REACT_FRAGMENT_TYPE,
+    StrictMode: REACT_STRICT_MODE_TYPE,
+    Suspense: REACT_SUSPENSE_TYPE,
 
-  createElement: __DEV__ ? createElementWithValidation : createElement,
-  cloneElement: __DEV__ ? cloneElementWithValidation : cloneElement,
-  createFactory: __DEV__ ? createFactoryWithValidation : createFactory,
-  isValidElement: isValidElement,
+    createElement: __DEV__ ? createElementWithValidation : createElement,
+    cloneElement: __DEV__ ? cloneElementWithValidation : cloneElement,
+    createFactory: __DEV__ ? createFactoryWithValidation : createFactory,
+    isValidElement: isValidElement,
 
-  version: ReactVersion,
+    version: ReactVersion,
 
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactSharedInternals,
+    __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactSharedInternals,
 
-  ConcurrentMode: enableStableConcurrentModeAPIs
-    ? REACT_CONCURRENT_MODE_TYPE
-    : null,
-  Profiler: enableStableConcurrentModeAPIs ? REACT_PROFILER_TYPE : null,
+    ConcurrentMode: enableStableConcurrentModeAPIs
+      ? REACT_CONCURRENT_MODE_TYPE
+      : null,
+    Profiler: enableStableConcurrentModeAPIs ? REACT_PROFILER_TYPE : null,
 
-  unstable_ConcurrentMode: !enableStableConcurrentModeAPIs
-    ? REACT_CONCURRENT_MODE_TYPE
-    : null,
-  unstable_Profiler: !enableStableConcurrentModeAPIs
-    ? REACT_PROFILER_TYPE
-    : null,
+    unstable_ConcurrentMode: !enableStableConcurrentModeAPIs
+      ? REACT_CONCURRENT_MODE_TYPE
+      : null,
+    unstable_Profiler: !enableStableConcurrentModeAPIs
+      ? REACT_PROFILER_TYPE
+      : null,
 
-  useCallback: enableHooks ? useCallback : null,
-  useContext: enableHooks ? useContext : null,
-  useEffect: enableHooks ? useEffect : null,
-  useImperativeMethods: enableHooks ? useImperativeMethods : null,
-  useLayoutEffect: enableHooks ? useLayoutEffect : null,
-  useMemo: enableHooks ? useMemo : null,
-  useMutationEffect: enableHooks ? useMutationEffect : null,
-  useReducer: enableHooks ? useReducer : null,
-  useRef: enableHooks ? useRef : null,
-  useState: enableHooks ? useState : null,
-};
+    useCallback,
+    useContext,
+    useEffect,
+    useImperativeMethods,
+    useLayoutEffect,
+    useMemo,
+    useMutationEffect,
+    useReducer,
+    useRef,
+    useState,
+  };
+} else {
+  React = {
+    Children: {
+      map,
+      forEach,
+      count,
+      toArray,
+      only,
+    },
+
+    createRef,
+    Component,
+    PureComponent,
+
+    createContext,
+    forwardRef,
+    lazy,
+    memo,
+
+    Fragment: REACT_FRAGMENT_TYPE,
+    StrictMode: REACT_STRICT_MODE_TYPE,
+    Suspense: REACT_SUSPENSE_TYPE,
+
+    createElement: __DEV__ ? createElementWithValidation : createElement,
+    cloneElement: __DEV__ ? cloneElementWithValidation : cloneElement,
+    createFactory: __DEV__ ? createFactoryWithValidation : createFactory,
+    isValidElement: isValidElement,
+
+    version: ReactVersion,
+
+    __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactSharedInternals,
+
+    ConcurrentMode: enableStableConcurrentModeAPIs
+      ? REACT_CONCURRENT_MODE_TYPE
+      : null,
+    Profiler: enableStableConcurrentModeAPIs ? REACT_PROFILER_TYPE : null,
+
+    unstable_ConcurrentMode: !enableStableConcurrentModeAPIs
+      ? REACT_CONCURRENT_MODE_TYPE
+      : null,
+    unstable_Profiler: !enableStableConcurrentModeAPIs
+      ? REACT_PROFILER_TYPE
+      : null,
+  };
+}
+
+export default React;
