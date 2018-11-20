@@ -11,7 +11,9 @@ import type {LazyComponent, Thenable} from 'shared/ReactLazyComponent';
 
 import {REACT_LAZY_TYPE} from 'shared/ReactSymbols';
 
-export function lazy<T>(ctor: () => Thenable<{ default: T }, mixed>): LazyComponent<T> {
+export function lazy<T>(
+  ctor: () => Thenable<{default: T}, mixed>,
+): LazyComponent<T> {
   return {
     $$typeof: REACT_LAZY_TYPE,
     _ctor: ctor,
