@@ -12,6 +12,7 @@ const parseParams = require('./publish-commands/parse-params');
 const printFollowUpInstructions = require('./publish-commands/print-follow-up-instructions');
 const promptForOTP = require('./publish-commands/prompt-for-otp');
 const publishToNPM = require('./publish-commands/publish-to-npm');
+const updateStableVersionNumbers = require('./publish-commands/update-stable-version-numbers');
 const validateTags = require('./publish-commands/validate-tags');
 
 const run = async () => {
@@ -26,6 +27,7 @@ const run = async () => {
     const otp = await promptForOTP(params);
     await publishToNPM(params, otp);
     await downloadErrorCodesFromCI(params);
+    await updateStableVersionNumbers(params);
     await printFollowUpInstructions(params);
   } catch (error) {
     handleError(error);
