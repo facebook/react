@@ -15,14 +15,11 @@
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import isValidElementType from 'shared/isValidElementType';
 import getComponentName from 'shared/getComponentName';
-import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
 import {
   getIteratorFn,
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_ELEMENT_TYPE,
-  REACT_LAZY_TYPE,
-  REACT_MEMO_TYPE,
 } from 'shared/ReactSymbols';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import warning from 'shared/warning';
@@ -35,11 +32,9 @@ import ReactDebugCurrentFrame, {
 } from './ReactDebugCurrentFrame';
 
 let propTypesMisspellWarningShown;
-let didWarnAboutDuplicatePropTypes;
 
 if (__DEV__) {
   propTypesMisspellWarningShown = false;
-  didWarnAboutDuplicatePropTypes = {};
 }
 
 function getDeclarationErrorAddendum() {
@@ -182,42 +177,6 @@ function validateChildKeys(node, parentType) {
   }
 }
 
-function getPropTypes(type) {
-  if (typeof type === 'function') {
-    // Class or function component
-    return type.propTypes;
-  }
-  if (typeof type === 'object') {
-    switch (type.$$typeof) {
-      case REACT_FORWARD_REF_TYPE:
-        return type.propTypes;
-      case REACT_MEMO_TYPE:
-        const outerPropTypes = type.propTypes;
-        const innerPropTypes = type.type.propTypes;
-        if (outerPropTypes && innerPropTypes) {
-          const componentName = getComponentName(type);
-          if (!didWarnAboutDuplicatePropTypes[componentName]) {
-            didWarnAboutDuplicatePropTypes[componentName] = true;
-            warning(
-              false,
-              'React.memo(%s): `propTypes` are defined both on the `React.memo()` result and on the ' +
-                'inner `%s` component. Remove either one of these `propTypes` definitions.',
-              componentName,
-              componentName,
-            );
-          }
-        }
-        return outerPropTypes || innerPropTypes;
-      case REACT_LAZY_TYPE:
-        const resolvedType = refineResolvedLazyComponent(type);
-        if (resolvedType !== null) {
-          return getPropTypes(resolvedType);
-        }
-    }
-  }
-  return null;
-}
-
 /**
  * Given an element, validate that its props follow the propTypes definition,
  * provided by the type.
@@ -226,11 +185,25 @@ function getPropTypes(type) {
  */
 function validatePropTypes(element) {
   const type = element.type;
-  if (typeof type === 'string' || type === null || type === undefined) {
-    return null;
+  let name, propTypes;
+  if (typeof type === 'function') {
+    // Class or function component
+    name = type.displayName || type.name;
+    propTypes = type.propTypes;
+  } else if (
+    typeof type === 'object' &&
+    type !== null &&
+    type.$$typeof === REACT_FORWARD_REF_TYPE
+  ) {
+    // ForwardRef
+    const functionName = type.render.displayName || type.render.name || '';
+    name =
+      type.displayName ||
+      (functionName !== '' ? `ForwardRef(${functionName})` : 'ForwardRef');
+    propTypes = type.propTypes;
+  } else {
+    return;
   }
-  const name = getComponentName(type);
-  const propTypes = getPropTypes(type);
   if (propTypes) {
     setCurrentlyValidatingElement(element);
     checkPropTypes(

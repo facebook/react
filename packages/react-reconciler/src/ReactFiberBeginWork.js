@@ -141,6 +141,31 @@ if (__DEV__) {
   didWarnAboutReassigningProps = false;
 }
 
+function checkMemoPropTypesInDEV(outerType, outerProps, innerType, innerProps) {
+  if (__DEV__) {
+    const outerPropTypes = outerType.propTypes;
+    if (outerPropTypes) {
+      checkPropTypes(
+        outerPropTypes,
+        outerProps,
+        'prop',
+        getComponentName(outerType),
+        getCurrentFiberStackInDev,
+      );
+    }
+    const innerPropTypes = innerType.propTypes;
+    if (innerPropTypes) {
+      checkPropTypes(
+        innerPropTypes,
+        innerProps,
+        'prop',
+        getComponentName(innerType),
+        getCurrentFiberStackInDev,
+      );
+    }
+  }
+}
+
 export function reconcileChildren(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -823,11 +848,24 @@ function mountLazyComponent(
       break;
     }
     case MemoComponent: {
+      // The inner type can have defaults too
+      const resolvedInnerProps = resolveDefaultProps(
+        Component.type,
+        resolvedProps,
+      );
+      if (__DEV__) {
+        checkMemoPropTypesInDEV(
+          Component,
+          resolvedProps,
+          Component.type,
+          resolvedInnerProps,
+        );
+      }
       child = updateMemoComponent(
         null,
         workInProgress,
         Component,
-        resolveDefaultProps(Component.type, resolvedProps), // The inner type can have defaults too
+        resolvedInnerProps,
         updateExpirationTime,
         renderExpirationTime,
       );
@@ -1752,6 +1790,14 @@ function beginWork(
       const type = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
       const resolvedProps = resolveDefaultProps(type.type, unresolvedProps);
+      if (__DEV__) {
+        checkMemoPropTypesInDEV(
+          type,
+          unresolvedProps,
+          type.type,
+          resolvedProps,
+        );
+      }
       return updateMemoComponent(
         current,
         workInProgress,
@@ -1762,11 +1808,16 @@ function beginWork(
       );
     }
     case SimpleMemoComponent: {
+      const type = workInProgress.type;
+      const pendingProps = workInProgress.pendingProps;
+      if (__DEV__) {
+        checkMemoPropTypesInDEV(type, pendingProps, type, pendingProps);
+      }
       return updateSimpleMemoComponent(
         current,
         workInProgress,
-        workInProgress.type,
-        workInProgress.pendingProps,
+        type,
+        pendingProps,
         updateExpirationTime,
         renderExpirationTime,
       );

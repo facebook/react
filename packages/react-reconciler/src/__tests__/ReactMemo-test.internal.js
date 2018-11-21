@@ -269,11 +269,12 @@ describe('memo', () => {
         }
         FnInner.propTypes = {inner: PropTypes.number.isRequired};
         const Fn = React.memo(FnInner);
+        ReactNoop.render(<Fn inner="2" outer="3" />);
         expect(() => {
-          ReactNoop.render(<Fn inner="2" outer="3" />);
+          ReactNoop.flush();
         }).toWarnDev(
-          'Invalid prop `inner` of type `string` supplied to `FnInner`, expected `number`.\n' +
-            '    in FnInner (at **)',
+          'Invalid prop `inner` of type `string` supplied to `FnInner`, expected `number`.',
+          {withoutStack: true}, // TODO: figure out why stack is missing
         );
       });
 
@@ -283,36 +284,46 @@ describe('memo', () => {
         }
         const Fn = React.memo(FnInner);
         Fn.propTypes = {outer: PropTypes.number.isRequired};
+        ReactNoop.render(<Fn inner="2" outer="3" />);
         expect(() => {
-          ReactNoop.render(<Fn inner="2" outer="3" />);
+          ReactNoop.flush();
         }).toWarnDev(
-          'Invalid prop `outer` of type `string` supplied to `FnInner`, expected `number`.\n' +
-            '    in FnInner (at **)',
+          'Invalid prop `outer` of type `string` supplied to `FnInner`, expected `number`.',
+          {withoutStack: true}, // TODO: figure out why stack is missing
         );
       });
 
-      it('warns about propTypes declared on both the outer and the inner component', () => {
-        function FnInner(props) {
-          return props.inner + props.outer;
+      it('validates nested propTypes declarations', () => {
+        function Inner(props) {
+          return props.inner + props.middle + props.outer;
         }
-        FnInner.propTypes = {inner: PropTypes.number.isRequired};
-        const Fn = React.memo(FnInner);
-        Fn.propTypes = {outer: PropTypes.number.isRequired};
+        Inner.propTypes = {inner: PropTypes.number.isRequired};
+        Inner.defaultProps = {inner: 0};
+        const Middle = React.memo(Inner);
+        Middle.propTypes = {middle: PropTypes.number.isRequired};
+        Middle.defaultProps = {middle: 0};
+        const Outer = React.memo(Middle);
+        Outer.propTypes = {outer: PropTypes.number.isRequired};
+        Outer.defaultProps = {outer: 0};
+
+        // No warning expected because defaultProps satisfy both.
+        ReactNoop.render(<Outer />);
+        ReactNoop.flush();
+
+        ReactNoop.render(<Outer inner="2" middle="3" outer="4" />);
         expect(() => {
-          ReactNoop.render(<Fn inner="2" outer="3" />);
+          ReactNoop.flush();
         }).toWarnDev(
           [
-            'React.memo(FnInner): `propTypes` are defined both on the `React.memo()` result ' +
-              'and on the inner `FnInner` component. Remove either one of these `propTypes` definitions.',
-            'Invalid prop `outer` of type `string` supplied to `FnInner`, expected `number`.\n' +
-              '    in FnInner (at **)',
-            // Outer propTypes shadow the inner ones and aren't validated in this case.
+            'Invalid prop `outer` of type `string` supplied to `Inner`, expected `number`.',
+            'Invalid prop `middle` of type `string` supplied to `Inner`, expected `number`.',
+            'Invalid prop `inner` of type `string` supplied to `Inner`, expected `number`.',
           ],
-          {withoutStack: 1},
+          {
+            // TODO: figure out why stack is missing.
+            withoutStack: true,
+          },
         );
-
-        // Deduplication
-        ReactNoop.render(<Fn inner="2" outer="3" />);
       });
     });
   }
