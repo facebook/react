@@ -1,3 +1,4 @@
+let PropTypes;
 let React;
 let ReactTestRenderer;
 let ReactFeatureFlags;
@@ -10,6 +11,7 @@ describe('ReactLazy', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
+    PropTypes = require('prop-types');
     React = require('react');
     Suspense = React.Suspense;
     lazy = React.lazy;
@@ -520,6 +522,52 @@ describe('ReactLazy', () => {
         'is defined, or create a wrapping component around it.',
       {withoutStack: true},
     );
+  });
+
+  it('only respects propTypes on the inner component', async () => {
+    function Add(props) {
+      ReactTestRenderer.unstable_yield(props.inner + props.outer);
+      return props.inner + props.outer;
+    }
+    Add.propTypes = {
+      inner: PropTypes.number.isRequired,
+    };
+    const LazyAdd = lazy(() => fakeImport(Add));
+    expect(() => {
+      LazyAdd.propTypes = {
+        outer: PropTypes.number.isRequired,
+      };
+    }).toWarnDev(
+      'React.lazy(...): It is not supported to assign `propTypes` to ' +
+        'a lazy component import. Either specify them where the component ' +
+        'is defined, or create a wrapping component around it.',
+      {withoutStack: true},
+    );
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner="2" outer="2" />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    expect(root).toFlushAndYield(['Loading...']);
+    expect(root).toMatchRenderedOutput(null);
+
+    await Promise.resolve();
+    expect(() => {
+      root.update(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <LazyAdd inner="2" outer="2" />
+        </Suspense>,
+      );
+    }).toWarnDev(
+      'Failed prop type: Invalid prop `inner` of type `string` supplied to `Add`, expected `number`.',
+    );
+    expect(root).toFlushAndYield(['22']);
+    expect(root).toMatchRenderedOutput('22');
   });
 
   it('includes lazy-loaded component in warning stack', async () => {
