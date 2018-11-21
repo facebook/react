@@ -512,6 +512,35 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('Friends Bye');
   });
 
+  it('throws with a useful error when wrapping invalid type with lazy()', async () => {
+    const BadLazy = lazy(() => fakeImport(42));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    expect(root).toFlushAndYield(['Loading...']);
+    expect(root).toMatchRenderedOutput(null);
+
+    await Promise.resolve();
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    expect(() => {
+      root.unstable_flushAll();
+    }).toThrow(
+      'Element type is invalid. Received a promise that resolves to: 42. ' +
+        'Lazy element type must resolve to a class or function.',
+    );
+  });
+
   it('throws with a useful error when wrapping lazy() multiple times', async () => {
     const Lazy1 = lazy(() => fakeImport(Text));
     const Lazy2 = lazy(() => fakeImport(Lazy1));
@@ -538,7 +567,10 @@ describe('ReactLazy', () => {
       root.unstable_flushAll();
     }).toThrow(
       'Element type is invalid. Received a promise that resolves to: [object Object]. ' +
-        'Lazy element type must resolve to a class or function.',
+        'Lazy element type must resolve to a class or function.' +
+        (__DEV__
+          ? ' Did you wrap a component in React.lazy() more than once?'
+          : ''),
     );
   });
 
