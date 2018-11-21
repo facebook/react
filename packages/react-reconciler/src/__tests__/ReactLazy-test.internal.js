@@ -510,7 +510,7 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('Friends Bye');
   });
 
-  it('warns about defining propTypes on the outer wrapper', async () => {
+  it('warns about defining propTypes on the outer wrapper', () => {
     const LazyText = lazy(() => fakeImport(Text));
     expect(() => {
       LazyText.propTypes = {hello: () => {}};
