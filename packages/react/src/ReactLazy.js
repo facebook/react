@@ -22,6 +22,7 @@ export function lazy<T, R>(ctor: () => Thenable<T, R>): LazyComponent<T> {
   if (__DEV__) {
     // In production, this would just set it on the object.
     let defaultProps;
+    let propTypes;
     Object.defineProperties(lazyType, {
       defaultProps: {
         get() {
@@ -35,6 +36,20 @@ export function lazy<T, R>(ctor: () => Thenable<T, R>): LazyComponent<T> {
               'is defined, or create a wrapping component around it.',
           );
           defaultProps = newDefaultProps;
+        },
+      },
+      propTypes: {
+        get() {
+          return propTypes;
+        },
+        set(newPropTypes) {
+          warning(
+            false,
+            'React.lazy(...): It is not supported to assign `propTypes` to ' +
+              'a lazy component import. Either specify them where the component ' +
+              'is defined, or create a wrapping component around it.',
+          );
+          propTypes = newPropTypes;
         },
       },
     });
