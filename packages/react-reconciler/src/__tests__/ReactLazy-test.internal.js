@@ -512,6 +512,36 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('Friends Bye');
   });
 
+  it('throws with a useful error when wrapping lazy() multiple times', async () => {
+    const Lazy1 = lazy(() => fakeImport(Text));
+    const Lazy2 = lazy(() => fakeImport(Lazy1));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <Lazy2 text="Hello" />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    expect(root).toFlushAndYield(['Loading...']);
+    expect(root).toMatchRenderedOutput(null);
+
+    await Promise.resolve();
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <Lazy2 text="Hello" />
+      </Suspense>,
+    );
+    expect(() => {
+      root.unstable_flushAll();
+    }).toThrow(
+      'Element type is invalid. Received a promise that resolves to: [object Object]. ' +
+        'Promise elements must resolve to a class or function.',
+    );
+  });
+
   it('warns about defining propTypes on the outer wrapper', () => {
     const LazyText = lazy(() => fakeImport(Text));
     expect(() => {
