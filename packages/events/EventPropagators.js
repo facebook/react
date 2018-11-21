@@ -3,8 +3,15 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {
+  ReactSyntheticEvent,
+  DispatchConfig,
+} from './ReactSyntheticEventType';
 import {
   getParentInstance,
   traverseTwoPhase,
@@ -106,24 +113,33 @@ function accumulateDispatches(inst, ignoredDirection, event) {
  * `dispatchMarker`.
  * @param {SyntheticEvent} event
  */
-function accumulateDirectDispatchesSingle(event) {
+function accumulateDirectDispatchesSingle(event: ReactSyntheticEvent) {
   if (event && event.dispatchConfig.registrationName) {
     accumulateDispatches(event._targetInst, null, event);
   }
 }
 
-export function accumulateTwoPhaseDispatches(events) {
+export function accumulateTwoPhaseDispatches(
+  events: Array<ReactSyntheticEvent>,
+) {
   forEachAccumulated(events, accumulateTwoPhaseDispatchesSingle);
 }
 
-export function accumulateTwoPhaseDispatchesSkipTarget(events) {
+export function accumulateTwoPhaseDispatchesSkipTarget(
+  events: Array<ReactSyntheticEvent>,
+) {
   forEachAccumulated(events, accumulateTwoPhaseDispatchesSingleSkipTarget);
 }
 
-export function accumulateEnterLeaveDispatches(leave, enter, from, to) {
+export function accumulateEnterLeaveDispatches(
+  leave: DispatchConfig,
+  enter: DispatchConfig,
+  from: Fiber,
+  to: Fiber,
+) {
   traverseEnterLeave(from, to, accumulateDispatches, leave, enter);
 }
 
-export function accumulateDirectDispatches(events) {
+export function accumulateDirectDispatches(events: Array<ReactSyntheticEvent>) {
   forEachAccumulated(events, accumulateDirectDispatchesSingle);
 }

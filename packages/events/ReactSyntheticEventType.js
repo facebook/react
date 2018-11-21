@@ -30,4 +30,7 @@ export type ReactSyntheticEvent = {
     nativeEventTarget: EventTarget,
   ) => ReactSyntheticEvent,
   isPersistent: () => boolean,
+  _targetInst: Fiber,
+  _dispatchListeners: ReactSyntheticEvent | Array<ReactSyntheticEvent>,
+  _dispatchInstances: Fiber | Array<Fiber>,
 } & SyntheticEvent<>;
