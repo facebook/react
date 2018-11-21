@@ -570,6 +570,42 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('22');
   });
 
+  it('respects propTypes on lazy forwardRef component', async () => {
+    const T = React.forwardRef(function T(props, ref) {
+      ReactTestRenderer.unstable_yield(props.text);
+      return props.text;
+    });
+    T.propTypes = {
+      text: PropTypes.string.isRequired,
+    };
+    const LazyText = lazy(() => fakeImport(T));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyText text={42} />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+    expect(root).toFlushAndYield(['Loading...']);
+    expect(root).toMatchRenderedOutput(null);
+
+    await Promise.resolve();
+    expect(() => {
+      root.update(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <LazyText text={42} />
+        </Suspense>,
+      );
+    }).toWarnDev(
+      'Failed prop type: Invalid prop `text` of type `number` ' +
+        'supplied to `ForwardRef(T)`, expected `string`.',
+    );
+    expect(root).toFlushAndYield([42]);
+    expect(root).toMatchRenderedOutput('42');
+  });
+
   it('includes lazy-loaded component in warning stack', async () => {
     const LazyFoo = lazy(() => {
       ReactTestRenderer.unstable_yield('Started loading');
