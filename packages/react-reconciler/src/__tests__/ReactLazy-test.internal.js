@@ -468,7 +468,14 @@ describe('ReactLazy', () => {
     }
     T.defaultProps = {inner: 'Hi'};
     const LazyText = lazy(() => fakeImport(T));
-    LazyText.defaultProps = {outer: 'Bye'};
+    expect(() => {
+      LazyText.defaultProps = {outer: 'Bye'};
+    }).toWarnDev(
+      'React.lazy(...): It is not supported to assign `defaultProps` to ' +
+        'a lazy component import. Either specify them where the component ' +
+        'is defined, or create a wrapping component around it.',
+      {withoutStack: true},
+    );
 
     const root = ReactTestRenderer.create(
       <Suspense fallback={<Text text="Loading..." />}>

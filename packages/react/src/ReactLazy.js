@@ -8,13 +8,37 @@
 import type {LazyComponent, Thenable} from 'shared/ReactLazyComponent';
 
 import {REACT_LAZY_TYPE} from 'shared/ReactSymbols';
+import warning from 'shared/warning';
 
 export function lazy<T, R>(ctor: () => Thenable<T, R>): LazyComponent<T> {
-  return {
+  let lazyType = {
     $$typeof: REACT_LAZY_TYPE,
     _ctor: ctor,
     // React uses these fields to store the result.
     _status: -1,
     _result: null,
   };
+
+  if (__DEV__) {
+    // In production, this would just set it on the object.
+    let defaultProps;
+    Object.defineProperties(lazyType, {
+      defaultProps: {
+        get() {
+          return defaultProps;
+        },
+        set(newDefaultProps) {
+          warning(
+            false,
+            'React.lazy(...): It is not supported to assign `defaultProps` to ' +
+              'a lazy component import. Either specify them where the component ' +
+              'is defined, or create a wrapping component around it.',
+          );
+          defaultProps = newDefaultProps;
+        },
+      },
+    });
+  }
+
+  return lazyType;
 }
