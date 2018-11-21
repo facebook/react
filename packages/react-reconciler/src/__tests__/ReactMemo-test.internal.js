@@ -12,6 +12,7 @@
 
 'use strict';
 
+let PropTypes;
 let React;
 let ReactFeatureFlags;
 let ReactNoop;
@@ -22,6 +23,7 @@ describe('memo', () => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+    PropTypes = require('prop-types');
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     ({Suspense} = React);
@@ -320,6 +322,58 @@ describe('memo', () => {
             'received: null',
           {withoutStack: true},
         );
+      });
+
+      it('validates propTypes declared on the inner component', () => {
+        function FnInner(props) {
+          return props.inner + props.outer;
+        }
+        FnInner.propTypes = {inner: PropTypes.number.isRequired};
+        const Fn = React.memo(FnInner);
+        expect(() => {
+          ReactNoop.render(<Fn inner="2" outer="3" />);
+        }).toWarnDev(
+          'Invalid prop `inner` of type `string` supplied to `FnInner`, expected `number`.\n' +
+            '    in FnInner (at **)',
+        );
+      });
+
+      it('validates propTypes declared on the outer component', () => {
+        function FnInner(props) {
+          return props.inner + props.outer;
+        }
+        const Fn = React.memo(FnInner);
+        Fn.propTypes = {outer: PropTypes.number.isRequired};
+        expect(() => {
+          ReactNoop.render(<Fn inner="2" outer="3" />);
+        }).toWarnDev(
+          'Invalid prop `outer` of type `string` supplied to `FnInner`, expected `number`.\n' +
+            '    in FnInner (at **)',
+        );
+      });
+
+      it('warns about propTypes declared on both the outer and the inner component', () => {
+        function FnInner(props) {
+          return props.inner + props.outer;
+        }
+        FnInner.propTypes = {inner: PropTypes.number.isRequired};
+        const Fn = React.memo(FnInner);
+        Fn.propTypes = {outer: PropTypes.number.isRequired};
+        expect(() => {
+          ReactNoop.render(<Fn inner="2" outer="3" />);
+        }).toWarnDev(
+          [
+            'React.memo(FnInner): `propTypes` are defined both on the `React.memo()` result ' +
+              'and on the inner `FnInner` component. Remove either one of these `propTypes` definitions.',
+            'Invalid prop `outer` of type `string` supplied to `FnInner`, expected `number`.\n' +
+              '    in FnInner (at **)',
+            // Outer propTypes shadow the inner ones and aren't validated in this case.
+          ],
+          {withoutStack: 1},
+        );
+
+        // Deduplication
+        ReactNoop.render(<Fn inner="2" outer="3" />);
       });
     });
   }

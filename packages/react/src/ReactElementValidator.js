@@ -22,6 +22,7 @@ import {
   REACT_FRAGMENT_TYPE,
   REACT_ELEMENT_TYPE,
   REACT_LAZY_TYPE,
+  REACT_MEMO_TYPE,
 } from 'shared/ReactSymbols';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import warning from 'shared/warning';
@@ -34,9 +35,11 @@ import ReactDebugCurrentFrame, {
 } from './ReactDebugCurrentFrame';
 
 let propTypesMisspellWarningShown;
+let didWarnAboutDuplicatePropTypes;
 
 if (__DEV__) {
   propTypesMisspellWarningShown = false;
+  didWarnAboutDuplicatePropTypes = {};
 }
 
 function getDeclarationErrorAddendum() {
@@ -188,6 +191,23 @@ function getPropTypes(type) {
     switch (type.$$typeof) {
       case REACT_FORWARD_REF_TYPE:
         return type.propTypes;
+      case REACT_MEMO_TYPE:
+        const outerPropTypes = type.propTypes;
+        const innerPropTypes = type.type.propTypes;
+        if (outerPropTypes && innerPropTypes) {
+          const componentName = getComponentName(type);
+          if (!didWarnAboutDuplicatePropTypes[componentName]) {
+            didWarnAboutDuplicatePropTypes[componentName] = true;
+            warning(
+              false,
+              'React.memo(%s): `propTypes` are defined both on the `React.memo()` result and on the ' +
+                'inner `%s` component. Remove either one of these `propTypes` definitions.',
+              componentName,
+              componentName,
+            );
+          }
+        }
+        return outerPropTypes || innerPropTypes;
       case REACT_LAZY_TYPE:
         const resolvedType = refineResolvedLazyComponent(type);
         if (resolvedType !== null) {
