@@ -538,7 +538,7 @@ describe('ReactLazy', () => {
       root.unstable_flushAll();
     }).toThrow(
       'Element type is invalid. Received a promise that resolves to: [object Object]. ' +
-        'Promise elements must resolve to a class or function.',
+        'Lazy element type must resolve to a class or function.',
     );
   });
 

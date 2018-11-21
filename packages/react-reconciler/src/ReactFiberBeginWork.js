@@ -844,7 +844,7 @@ function mountLazyComponent(
       invariant(
         false,
         'Element type is invalid. Received a promise that resolves to: %s. ' +
-          'Promise elements must resolve to a class or function.',
+          'Lazy element type must resolve to a class or function.',
         Component,
       );
     }
