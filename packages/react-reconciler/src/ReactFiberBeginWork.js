@@ -54,6 +54,7 @@ import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
+import {REACT_LAZY_TYPE} from 'shared/ReactSymbols';
 import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {
@@ -838,14 +839,25 @@ function mountLazyComponent(
       break;
     }
     default: {
+      let hint = '';
+      if (__DEV__) {
+        if (
+          Component !== null &&
+          typeof Component === 'object' &&
+          Component.$$typeof === REACT_LAZY_TYPE
+        ) {
+          hint = ' Did you wrap a component in React.lazy() more than once?';
+        }
+      }
       // This message intentionally doesn't mention ForwardRef or MemoComponent
       // because the fact that it's a separate type of work is an
       // implementation detail.
       invariant(
         false,
         'Element type is invalid. Received a promise that resolves to: %s. ' +
-          'Lazy element type must resolve to a class or function.',
+          'Lazy element type must resolve to a class or function.%s',
         Component,
+        hint,
       );
     }
   }
