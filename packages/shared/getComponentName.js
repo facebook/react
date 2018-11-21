@@ -80,6 +80,9 @@ function getComponentName(type: mixed): string | null {
       case REACT_FORWARD_REF_TYPE:
         return getWrappedName(type, type.render, 'ForwardRef');
       case REACT_MEMO_TYPE:
+        if (type.displayName) {
+          return type.displayName;
+        }
         return getComponentName(type.type);
       case REACT_LAZY_TYPE: {
         const thenable: LazyComponent<mixed> = (type: any);
