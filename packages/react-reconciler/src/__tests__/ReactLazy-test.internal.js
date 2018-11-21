@@ -461,6 +461,48 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('A3');
   });
 
+  it('resolves defaultProps on the outer wrapper but warns', async () => {
+    function T(props) {
+      ReactTestRenderer.unstable_yield(props.inner + ' ' + props.outer);
+      return props.inner + ' ' + props.outer;
+    }
+    T.defaultProps = {inner: 'Hi'};
+    const LazyText = lazy(() => fakeImport(T));
+    LazyText.defaultProps = {outer: 'Bye'};
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyText />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    expect(root).toFlushAndYield(['Loading...']);
+    expect(root).toMatchRenderedOutput(null);
+
+    await Promise.resolve();
+    expect(root).toFlushAndYield(['Hi Bye']);
+    expect(root).toMatchRenderedOutput('Hi Bye');
+
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyText outer="World" />
+      </Suspense>,
+    );
+    expect(root).toFlushAndYield(['Hi World']);
+    expect(root).toMatchRenderedOutput('Hi World');
+
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyText inner="Friends" />
+      </Suspense>,
+    );
+    expect(root).toFlushAndYield(['Friends Bye']);
+    expect(root).toMatchRenderedOutput('Friends Bye');
+  });
+
   it('includes lazy-loaded component in warning stack', async () => {
     const LazyFoo = lazy(() => {
       ReactTestRenderer.unstable_yield('Started loading');
