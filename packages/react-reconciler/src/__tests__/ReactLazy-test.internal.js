@@ -510,6 +510,18 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('Friends Bye');
   });
 
+  it('warns about defining propTypes on the outer wrapper', async () => {
+    const LazyText = lazy(() => fakeImport(Text));
+    expect(() => {
+      LazyText.propTypes = {hello: () => {}};
+    }).toWarnDev(
+      'React.lazy(...): It is not supported to assign `propTypes` to ' +
+        'a lazy component import. Either specify them where the component ' +
+        'is defined, or create a wrapping component around it.',
+      {withoutStack: true},
+    );
+  });
+
   it('includes lazy-loaded component in warning stack', async () => {
     const LazyFoo = lazy(() => {
       ReactTestRenderer.unstable_yield('Started loading');
