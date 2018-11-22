@@ -250,7 +250,12 @@ function updateMemoComponent(
 ): null | Fiber {
   if (current === null) {
     let type = Component.type;
-    if (isSimpleFunctionComponent(type) && Component.compare === null) {
+    if (
+      isSimpleFunctionComponent(type) &&
+      Component.compare === null &&
+      // SimpleMemoComponent codepath doesn't resolve outer props either.
+      Component.defaultProps === undefined
+    ) {
       // If this is a plain function component without default props,
       // and with only the default shallow comparison, we upgrade it
       // to a SimpleMemoComponent to allow fast path updates.
@@ -1739,7 +1744,9 @@ function beginWork(
     case MemoComponent: {
       const type = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
-      const resolvedProps = resolveDefaultProps(type.type, unresolvedProps);
+      // Resolve outer props first, then resolve inner props.
+      let resolvedProps = resolveDefaultProps(type, unresolvedProps);
+      resolvedProps = resolveDefaultProps(type.type, resolvedProps);
       return updateMemoComponent(
         current,
         workInProgress,

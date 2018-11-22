@@ -533,4 +533,132 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('FooBar');
     expect(ref.current).not.toBe(null);
   });
+
+  // Regression test for #14310
+  it('supports defaultProps defined on the memo() return value', async () => {
+    const Add = React.memo(props => {
+      return props.inner + props.outer;
+    });
+    Add.defaultProps = {
+      inner: 2,
+    };
+    const LazyAdd = lazy(() => fakeImport(Add));
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd outer={2} />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+    expect(root).toFlushAndYield(['Loading...']);
+    expect(root).toMatchRenderedOutput(null);
+
+    // Mount
+    await Promise.resolve();
+    root.unstable_flushAll();
+    expect(root).toMatchRenderedOutput('4');
+
+    // Update (shallowly equal)
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd outer={2} />
+      </Suspense>,
+    );
+    root.unstable_flushAll();
+    expect(root).toMatchRenderedOutput('4');
+
+    // Update
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd outer={3} />
+      </Suspense>,
+    );
+    root.unstable_flushAll();
+    expect(root).toMatchRenderedOutput('5');
+
+    // Update (shallowly equal)
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd outer={3} />
+      </Suspense>,
+    );
+    root.unstable_flushAll();
+    expect(root).toMatchRenderedOutput('5');
+
+    // Update (explicit props)
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd outer={1} inner={1} />
+      </Suspense>,
+    );
+    root.unstable_flushAll();
+    expect(root).toMatchRenderedOutput('2');
+
+    // Update (explicit props, shallowly equal)
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd outer={1} inner={1} />
+      </Suspense>,
+    );
+    root.unstable_flushAll();
+    expect(root).toMatchRenderedOutput('2');
+
+    // Update
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd outer={1} />
+      </Suspense>,
+    );
+    root.unstable_flushAll();
+    expect(root).toMatchRenderedOutput('3');
+  });
+
+  it('merges defaultProps in the correct order', async () => {
+    let Add = React.memo(props => {
+      return props.inner + props.outer;
+    });
+    Add.defaultProps = {
+      inner: 100,
+    };
+    Add = React.memo(Add);
+    Add.defaultProps = {
+      inner: 2,
+      outer: 0,
+    };
+    const LazyAdd = lazy(() => fakeImport(Add));
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd outer={2} />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+    expect(root).toFlushAndYield(['Loading...']);
+    expect(root).toMatchRenderedOutput(null);
+
+    // Mount
+    await Promise.resolve();
+    root.unstable_flushAll();
+    expect(root).toMatchRenderedOutput('4');
+
+    // Update
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd outer={3} />
+      </Suspense>,
+    );
+    root.unstable_flushAll();
+    expect(root).toMatchRenderedOutput('5');
+
+    // Update
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd />
+      </Suspense>,
+    );
+    root.unstable_flushAll();
+    expect(root).toMatchRenderedOutput('2');
+  });
 });
