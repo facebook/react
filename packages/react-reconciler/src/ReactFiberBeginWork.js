@@ -296,6 +296,8 @@ function updateMemoComponent(
       const type = Component.type;
       const innerPropTypes = type.propTypes;
       if (innerPropTypes) {
+        // Inner memo component props aren't currently validated in createElement.
+        // We could move it there, but we'd still need this for lazy code path.
         checkPropTypes(
           innerPropTypes,
           nextProps, // Resolved props
@@ -322,6 +324,8 @@ function updateMemoComponent(
     const type = Component.type;
     const innerPropTypes = type.propTypes;
     if (innerPropTypes) {
+      // Inner memo component props aren't currently validated in createElement.
+      // We could move it there, but we'd still need this for lazy code path.
       checkPropTypes(
         innerPropTypes,
         nextProps, // Resolved props
@@ -370,8 +374,13 @@ function updateSimpleMemoComponent(
 ): null | Fiber {
   if (__DEV__) {
     if (workInProgress.type !== workInProgress.elementType) {
+      // Lazy component props can't be validated in createElement
+      // because they're only guaranteed to be resolved here.
       let Component = workInProgress.elementType;
       if (Component.$$typeof === REACT_LAZY_TYPE) {
+        // We warn when you define propTypes on lazy()
+        // so let's just skip over it to find memo() outer wrapper.
+        // Inner props for memo are validated later.
         Component = refineResolvedLazyComponent(Component);
       }
       const outerPropTypes = Component && Component.propTypes;
@@ -400,6 +409,8 @@ function updateSimpleMemoComponent(
     }
   }
   if (__DEV__) {
+    // Inner memo component props aren't currently validated in createElement.
+    // We could move it there, but we'd still need this for lazy code path.
     const innerPropTypes = Component.propTypes;
     if (innerPropTypes) {
       checkPropTypes(
