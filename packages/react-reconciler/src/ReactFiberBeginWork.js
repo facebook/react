@@ -293,7 +293,6 @@ function updateMemoComponent(
       );
     }
     if (__DEV__) {
-      const type = Component.type;
       const innerPropTypes = type.propTypes;
       if (innerPropTypes) {
         // Inner memo component props aren't currently validated in createElement.
@@ -376,20 +375,20 @@ function updateSimpleMemoComponent(
     if (workInProgress.type !== workInProgress.elementType) {
       // Lazy component props can't be validated in createElement
       // because they're only guaranteed to be resolved here.
-      let Component = workInProgress.elementType;
-      if (Component.$$typeof === REACT_LAZY_TYPE) {
+      let outerMemoType = workInProgress.elementType;
+      if (outerMemoType.$$typeof === REACT_LAZY_TYPE) {
         // We warn when you define propTypes on lazy()
         // so let's just skip over it to find memo() outer wrapper.
         // Inner props for memo are validated later.
-        Component = refineResolvedLazyComponent(Component);
+        outerMemoType = refineResolvedLazyComponent(outerMemoType);
       }
-      const outerPropTypes = Component && Component.propTypes;
+      const outerPropTypes = outerMemoType && (outerMemoType: any).propTypes;
       if (outerPropTypes) {
         checkPropTypes(
           outerPropTypes,
           nextProps, // Resolved (we know there's no defaultProps)
           'prop',
-          getComponentName(Component),
+          getComponentName(outerMemoType),
           getCurrentFiberStackInDev,
         );
       }
