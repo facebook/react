@@ -32,7 +32,7 @@ class VectorWidget extends React.Component {
   /**
    * When the component is mounted into the document - this is similar to a
    * constructor, but invoked when the instance is actually mounted into the
-   * document. Here's, we'll just set up an animation loop that invokes our
+   * document. Here, we'll just set up an animation loop that invokes our
    * method. Binding of `this.onTick` is not needed because all React methods
    * are automatically bound before being mounted.
    */
