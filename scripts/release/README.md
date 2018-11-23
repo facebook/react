@@ -57,6 +57,8 @@ This script publishes each public package to NPM and updates the specified tag(s
 
 Upon completion, this script provides instructions for tagging the Git commit that the package was created from and updating the release CHANGELOG.
 
+**Specify a `--dry` flag when running this script if you want to skip the NPM-publish step.** In this event, the script will print the NPM commands but it will not actually run them.
+
 #### Example usage
 To publish a release to NPM as both `next` and `latest`:
 ```sh
