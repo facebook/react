@@ -6,6 +6,7 @@ const http = require('request-promise-json');
 const {exec} = require('child-process-promise');
 const {readdirSync} = require('fs');
 const {readJsonSync} = require('fs-extra');
+const {join} = require('path');
 const {logPromise} = require('../utils');
 const theme = require('../theme');
 
@@ -20,34 +21,36 @@ const run = async ({build, cwd}) => {
   ).url;
 
   // Download and extract artifact
-  await exec(`rm -rf ${cwd}/build/node_modules*`);
-  await exec(`curl ${nodeModulesURL} --output ${cwd}/build/node_modules.tgz`);
-  await exec(`mkdir ${cwd}/build/node_modules`);
-  await exec(
-    `tar zxvf ${cwd}/build/node_modules.tgz -C ${cwd}/build/node_modules/`
-  );
+  await exec(`rm -rf ./build/node_modules*`, {cwd});
+  await exec(`curl ${nodeModulesURL} --output ./build/node_modules.tgz`, {cwd});
+  await exec(`mkdir ./build/node_modules`, {cwd});
+  await exec(`tar zxvf ./build/node_modules.tgz -C ./build/node_modules/`, {
+    cwd,
+  });
 
   // Unpack packages and prepare to publish
-  const compressedPackages = readdirSync('build/node_modules/');
+  const compressedPackages = readdirSync(join(cwd, 'build/node_modules/'));
   for (let i = 0; i < compressedPackages.length; i++) {
     await exec(
-      `tar zxvf ${cwd}/build/node_modules/${
+      `tar zxvf ./build/node_modules/${
         compressedPackages[i]
-      } -C ${cwd}/build/node_modules/`
+      } -C ./build/node_modules/`,
+      {cwd}
     );
     const packageJSON = readJsonSync(
-      `${cwd}/build/node_modules/package/package.json`
+      join(cwd, `/build/node_modules/package/package.json`)
     );
     await exec(
-      `mv ${cwd}/build/node_modules/package ${cwd}/build/node_modules/${
+      `mv ./build/node_modules/package ./build/node_modules/${
         packageJSON.name
-      }`
+      }`,
+      {cwd}
     );
   }
 
   // Cleanup
-  await exec(`rm ${cwd}/build/node_modules.tgz`);
-  await exec(`rm ${cwd}/build/node_modules/*.tgz`);
+  await exec(`rm ./build/node_modules.tgz`, {cwd});
+  await exec(`rm ./build/node_modules/*.tgz`, {cwd});
 };
 
 module.exports = async ({build, cwd}) => {
