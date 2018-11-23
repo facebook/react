@@ -4,8 +4,9 @@ module.exports = {
   out: 'output.js',
   optimize: 'none',
   paths: {
-    react: '../../../../build/dist/react.production.min',
-    'react-dom': '../../../../build/dist/react-dom.production.min',
+    react: '../../../../build/node_modules/react/umd/react.production.min',
+    'react-dom':
+      '../../../../build/node_modules/react-dom/umd/react-dom.production.min',
     schedule: '../../../../build/dist/schedule.development',
   },
 };

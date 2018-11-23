@@ -19,6 +19,7 @@
   "files": [
     "LICENSE",
     "README.md",
+    "build-info.json",
     "index.js",
     "tracing.js",
     "tracing-profiling.js",

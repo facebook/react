@@ -7,10 +7,12 @@
   "dependencies": {
     "chalk": "^2.1.0",
     "child-process-promise": "^2.2.1",
+    "clear": "^0.1.0",
     "cli-spinners": "^1.1.0",
     "command-line-args": "^4.0.7",
     "command-line-usage": "^4.0.1",
-    "figlet": "^1.2.0",
+    "diff": "^3.5.0",
+    "folder-hash": "^2.1.2",
     "fs-extra": "^4.0.2",
     "log-update": "^2.1.0",
     "prompt-promise": "^1.0.3",

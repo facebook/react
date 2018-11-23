@@ -43,3 +43,6 @@ jobs:
 
       - store_artifacts:
           path: ./node_modules.tgz
+
+      - store_artifacts:
+          path: ./scripts/error-codes/codes.json
