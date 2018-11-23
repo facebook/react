@@ -7,6 +7,13 @@ const commandLineUsage = require('command-line-usage');
 
 const paramDefinitions = [
   {
+    name: 'local',
+    type: Boolean,
+    description:
+      'Skip NPM and use the build already present in "build/node_modules".',
+    defaultValue: false,
+  },
+  {
     name: 'version',
     type: String,
     description: 'Version of published canary release (e.g. 0.0.0-ddaf2b07c)',
