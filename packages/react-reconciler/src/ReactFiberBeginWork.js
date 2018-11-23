@@ -386,12 +386,13 @@ function updateSimpleMemoComponent(
       if (outerPropTypes) {
         checkPropTypes(
           outerPropTypes,
-          nextProps, // Resolved (we know there's no defaultProps)
+          nextProps, // Resolved (SimpleMemoComponent has no defaultProps)
           'prop',
           getComponentName(outerMemoType),
           getCurrentFiberStackInDev,
         );
       }
+      // Inner propTypes will be validated in the function component path.
     }
   }
   if (current !== null && updateExpirationTime < renderExpirationTime) {
@@ -404,20 +405,6 @@ function updateSimpleMemoComponent(
         current,
         workInProgress,
         renderExpirationTime,
-      );
-    }
-  }
-  if (__DEV__) {
-    // Inner memo component props aren't currently validated in createElement.
-    // We could move it there, but we'd still need this for lazy code path.
-    const innerPropTypes = Component.propTypes;
-    if (innerPropTypes) {
-      checkPropTypes(
-        innerPropTypes,
-        nextProps, // Resolved props
-        'prop',
-        getComponentName(Component),
-        getCurrentFiberStackInDev,
       );
     }
   }
