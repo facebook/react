@@ -964,8 +964,7 @@ function mountLazyComponent(
         null,
         workInProgress,
         Component,
-        // The inner type can have defaults too
-        resolveDefaultProps(Component.type, resolvedProps),
+        resolveDefaultProps(Component.type, resolvedProps), // The inner type can have defaults too,
         updateExpirationTime,
         renderExpirationTime,
       );
@@ -1916,13 +1915,11 @@ function beginWork(
       );
     }
     case SimpleMemoComponent: {
-      const type = workInProgress.type;
-      const pendingProps = workInProgress.pendingProps;
       return updateSimpleMemoComponent(
         current,
         workInProgress,
-        type,
-        pendingProps,
+        workInProgress.type,
+        workInProgress.pendingProps,
         updateExpirationTime,
         renderExpirationTime,
       );
