@@ -158,7 +158,8 @@ const run = async ({cwd, packages, version}, versionsMap) => {
       }
       if (beforeContents !== afterContents) {
         numFilesModified++;
-        diff += printDiff(path, beforeContents, afterContents);
+        // Using a relative path for diff helps with the snapshot test
+        diff += printDiff(relative(cwd, path), beforeContents, afterContents);
         writeFileSync(path, afterContents, {cwd});
       }
     });
