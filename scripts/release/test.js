@@ -61,15 +61,13 @@ const run = async () => {
     await promise;
 
     const beforeContents = readFileSync(
-      'scripts/release/test.snapshot',
-      'utf-8',
-      {cwd}
+      join(cwd, 'scripts/release/test.snapshot'),
+      'utf-8'
     );
-    await exec('cp build/temp.diff scripts/release/test.snapshot');
+    await exec('cp build/temp.diff scripts/release/test.snapshot', {cwd});
     const afterContents = readFileSync(
-      'scripts/release/test.snapshot',
-      'utf-8',
-      {cwd}
+      join(cwd, 'scripts/release/test.snapshot'),
+      'utf-8'
     );
 
     if (beforeContents === afterContents) {
