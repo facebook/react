@@ -27,7 +27,7 @@ module.exports = () => {
     const usage = commandLineUsage([
       {
         content:
-          'Publishes the current contents of "build/node_modules" to NPM.}',
+          'Publishes the current contents of "build/node_modules" to NPM.',
       },
       {
         header: 'Options',

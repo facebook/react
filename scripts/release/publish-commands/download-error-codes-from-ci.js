@@ -42,7 +42,7 @@ const run = async ({cwd, tags}) => {
     );
 
     // Download and stage changers
-    await exec(`curl ${url} --output ${cwd}/scripts/error-codes/codes.json`);
+    await exec(`curl ${url} --output ./scripts/error-codes/codes.json`, {cwd});
   }
 };
 

@@ -25,15 +25,38 @@ const run = async ({cwd, packages, tags}) => {
   );
 
   if (tags.includes('latest')) {
+    console.log();
     console.log(
-      theme.header`\nLocal versions may require updating after a stable release. Please verify the following files:`
+      theme.header`Please review and commit all local, staged changes.`
     );
+
+    console.log();
+    console.log('Version numbers have been updated in the following files:');
     for (let i = 0; i < packages.length; i++) {
       const packageName = packages[i];
       console.log(theme.path`• packages/%s/package.json`, packageName);
     }
     console.log(theme.path`• packages/shared/ReactVersion.js`);
+
+    console.log();
+    if (environment === 'ci') {
+      console.log('Auto-generated error codes have been updated as well:');
+      console.log(theme.path`• scripts/error-codes/codes.json`);
+    } else {
+      console.log(
+        theme`{caution The release that was just published was created locally.} ` +
+          theme`Because of this, you will need to update the generated ` +
+          theme`{path scripts/error-codes/codes.json} file manually:`
+      );
+      console.log(theme`  {command git checkout} {version ${commit}}`);
+      console.log(theme`  {command yarn build -- --extract-errors}`);
+    }
   }
+
+  console.log();
+  console.log(
+    theme`{header Don't forget to update and commit the }{path CHANGELOG}`
+  );
 
   // Prompt the release engineer to tag the commit and update the CHANGELOG.
   // (The script could automatically do this, but this seems safer.)
@@ -49,31 +72,8 @@ const run = async ({cwd, packages, tags}) => {
   );
   console.log(theme.command`  git push origin --tags`);
 
-  if (tags.includes('latest')) {
-    console.log();
-    console.log(
-      theme`{header Don't forget to commit the generated }{path scripts/error-codes/codes.json}`
-    );
-    if (environment === 'ci') {
-      console.log(
-        `This file has been updated locally. Please review it before committing.`
-      );
-    } else {
-      console.log(
-        `The release that was just published was created locally. ` +
-          `Because of this, you will need to update error codes manually with the following commands:`
-      );
-      console.log(theme`  {command git checkout} {version ${commit}}`);
-      console.log(theme`  {command yarn build -- --extract-errors}`);
-    }
-  }
-
   console.log();
-  console.log(
-    theme`{header Don't forget to update and commit the }{path CHANGELOG}`
-  );
-  console.log();
-  console.log(theme.header`Then fill in the release on GitHub:`);
+  console.log(theme.header`Lastly, please fill in the release on GitHub:`);
   console.log(
     theme.link`https://github.com/facebook/react/releases/tag/v%s`,
     version

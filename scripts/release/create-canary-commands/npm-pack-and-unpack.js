@@ -10,7 +10,7 @@ const {logPromise} = require('../utils');
 
 const run = async ({cwd, dry, tempDirectory}) => {
   // Cleanup from previous build.
-  await exec(`rm -rf ${cwd}/build`);
+  await exec(`rm -rf ./build`, {cwd});
 
   // NPM pack all built packages.
   // We do this to ensure that the package.json files array is correct.
@@ -21,32 +21,35 @@ const run = async ({cwd, dry, tempDirectory}) => {
     });
   }
 
-  await exec('mkdir build');
-  await exec('mkdir build/node_modules');
+  await exec('mkdir build', {cwd});
+  await exec('mkdir build/node_modules', {cwd});
   await exec(
-    `cp -r ${tempDirectory}/build/node_modules/*.tgz ${cwd}/build/node_modules/`
+    `cp -r ${tempDirectory}/build/node_modules/*.tgz ./build/node_modules/`,
+    {cwd}
   );
 
   // Unpack packages and prepare to publish.
-  const compressedPackages = readdirSync('build/node_modules/');
+  const compressedPackages = readdirSync(join(cwd, 'build/node_modules/'));
   for (let i = 0; i < compressedPackages.length; i++) {
     await exec(
-      `tar -zxvf ${cwd}/build/node_modules/${
+      `tar -zxvf ./build/node_modules/${
         compressedPackages[i]
-      } -C ${cwd}/build/node_modules/`
+      } -C ./build/node_modules/`,
+      {cwd}
     );
     const packageJSON = readJsonSync(
-      `${cwd}/build/node_modules/package/package.json`
+      join(cwd, `./build/node_modules/package/package.json`)
     );
     await exec(
-      `mv ${cwd}/build/node_modules/package ${cwd}/build/node_modules/${
+      `mv ./build/node_modules/package ./build/node_modules/${
         packageJSON.name
-      }`
+      }`,
+      {cwd}
     );
   }
 
   // Cleanup.
-  await exec(`rm ${cwd}/build/node_modules/*.tgz`);
+  await exec(`rm ./build/node_modules/*.tgz`, {cwd});
 };
 
 module.exports = async params => {
