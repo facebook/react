@@ -23,10 +23,13 @@ import {
   warnForInsertedHydratedElement,
   warnForInsertedHydratedText,
 } from './ReactDOMComponent';
-import * as ReactInputSelection from './ReactInputSelection';
+import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
 import {validateDOMNesting, updatedAncestorInfo} from './validateDOMNesting';
-import * as ReactBrowserEventEmitter from '../events/ReactBrowserEventEmitter';
+import {
+  isEnabled as ReactBrowserEventEmitterIsEnabled,
+  setEnabled as ReactBrowserEventEmitterSetEnabled,
+} from '../events/ReactBrowserEventEmitter';
 import {getChildNamespace} from '../shared/DOMNamespaces';
 import {
   ELEMENT_NODE,
@@ -152,15 +155,15 @@ export function getPublicInstance(instance: Instance): * {
 }
 
 export function prepareForCommit(containerInfo: Container): void {
-  eventsEnabled = ReactBrowserEventEmitter.isEnabled();
-  selectionInformation = ReactInputSelection.getSelectionInformation();
-  ReactBrowserEventEmitter.setEnabled(false);
+  eventsEnabled = ReactBrowserEventEmitterIsEnabled();
+  selectionInformation = getSelectionInformation();
+  ReactBrowserEventEmitterSetEnabled(false);
 }
 
 export function resetAfterCommit(containerInfo: Container): void {
-  ReactInputSelection.restoreSelection(selectionInformation);
+  restoreSelection(selectionInformation);
   selectionInformation = null;
-  ReactBrowserEventEmitter.setEnabled(eventsEnabled);
+  ReactBrowserEventEmitterSetEnabled(eventsEnabled);
   eventsEnabled = null;
 }
 

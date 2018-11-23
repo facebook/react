@@ -56,7 +56,11 @@ import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import * as ReactCurrentFiber from './ReactCurrentFiber';
+import {
+  setCurrentPhase,
+  getCurrentFiberOwnerNameInDevOrNull,
+  getCurrentFiberStackInDev,
+} from './ReactCurrentFiber';
 import {startWorkTimer, cancelWorkTimer} from './ReactDebugFiberPerf';
 
 import {
@@ -126,12 +130,14 @@ let didWarnAboutBadClass;
 let didWarnAboutContextTypeOnFunctionComponent;
 let didWarnAboutGetDerivedStateOnFunctionComponent;
 let didWarnAboutFunctionRefs;
+export let didWarnAboutReassigningProps;
 
 if (__DEV__) {
   didWarnAboutBadClass = {};
   didWarnAboutContextTypeOnFunctionComponent = {};
   didWarnAboutGetDerivedStateOnFunctionComponent = {};
   didWarnAboutFunctionRefs = {};
+  didWarnAboutReassigningProps = false;
 }
 
 export function reconcileChildren(
@@ -215,9 +221,9 @@ function updateForwardRef(
   prepareToUseHooks(current, workInProgress, renderExpirationTime);
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
-    ReactCurrentFiber.setCurrentPhase('render');
+    setCurrentPhase('render');
     nextChildren = render(nextProps, ref);
-    ReactCurrentFiber.setCurrentPhase(null);
+    setCurrentPhase(null);
   } else {
     nextChildren = render(nextProps, ref);
   }
@@ -244,7 +250,12 @@ function updateMemoComponent(
 ): null | Fiber {
   if (current === null) {
     let type = Component.type;
-    if (isSimpleFunctionComponent(type) && Component.compare === null) {
+    if (
+      isSimpleFunctionComponent(type) &&
+      Component.compare === null &&
+      // SimpleMemoComponent codepath doesn't resolve outer props either.
+      Component.defaultProps === undefined
+    ) {
       // If this is a plain function component without default props,
       // and with only the default shallow comparison, we upgrade it
       // to a SimpleMemoComponent to allow fast path updates.
@@ -409,9 +420,9 @@ function updateFunctionComponent(
   prepareToUseHooks(current, workInProgress, renderExpirationTime);
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
-    ReactCurrentFiber.setCurrentPhase('render');
+    setCurrentPhase('render');
     nextChildren = Component(nextProps, context);
-    ReactCurrentFiber.setCurrentPhase(null);
+    setCurrentPhase(null);
   } else {
     nextChildren = Component(nextProps, context);
   }
@@ -491,7 +502,7 @@ function updateClassComponent(
       renderExpirationTime,
     );
   }
-  return finishClassComponent(
+  const nextUnitOfWork = finishClassComponent(
     current,
     workInProgress,
     Component,
@@ -499,6 +510,19 @@ function updateClassComponent(
     hasContext,
     renderExpirationTime,
   );
+  if (__DEV__) {
+    let inst = workInProgress.stateNode;
+    if (inst.props !== nextProps) {
+      warning(
+        didWarnAboutReassigningProps,
+        'It looks like %s is reassigning its own `this.props` while rendering. ' +
+          'This is not supported and can lead to confusing bugs.',
+        getComponentName(workInProgress.type) || 'a component',
+      );
+      didWarnAboutReassigningProps = true;
+    }
+  }
+  return nextUnitOfWork;
 }
 
 function finishClassComponent(
@@ -548,7 +572,7 @@ function finishClassComponent(
     }
   } else {
     if (__DEV__) {
-      ReactCurrentFiber.setCurrentPhase('render');
+      setCurrentPhase('render');
       nextChildren = instance.render();
       if (
         debugRenderPhaseSideEffects ||
@@ -557,7 +581,7 @@ function finishClassComponent(
       ) {
         instance.render();
       }
-      ReactCurrentFiber.setCurrentPhase(null);
+      setCurrentPhase(null);
     } else {
       nextChildren = instance.render();
     }
@@ -1011,7 +1035,7 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
   }
   if (workInProgress.ref !== null) {
     let info = '';
-    const ownerName = ReactCurrentFiber.getCurrentFiberOwnerNameInDevOrNull();
+    const ownerName = getCurrentFiberOwnerNameInDevOrNull();
     if (ownerName) {
       info += '\n\nCheck the render method of `' + ownerName + '`.';
     }
@@ -1378,7 +1402,7 @@ function updateContextProvider(
         newProps,
         'prop',
         'Context.Provider',
-        ReactCurrentFiber.getCurrentFiberStackInDev,
+        getCurrentFiberStackInDev,
       );
     }
   }
@@ -1469,9 +1493,9 @@ function updateContextConsumer(
   let newChildren;
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
-    ReactCurrentFiber.setCurrentPhase('render');
+    setCurrentPhase('render');
     newChildren = render(newValue);
-    ReactCurrentFiber.setCurrentPhase(null);
+    setCurrentPhase(null);
   } else {
     newChildren = render(newValue);
   }
@@ -1720,7 +1744,9 @@ function beginWork(
     case MemoComponent: {
       const type = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
-      const resolvedProps = resolveDefaultProps(type.type, unresolvedProps);
+      // Resolve outer props first, then resolve inner props.
+      let resolvedProps = resolveDefaultProps(type, unresolvedProps);
+      resolvedProps = resolveDefaultProps(type.type, resolvedProps);
       return updateMemoComponent(
         current,
         workInProgress,

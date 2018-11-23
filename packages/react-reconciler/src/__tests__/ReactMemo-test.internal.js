@@ -253,6 +253,59 @@ describe('memo', () => {
         expect(ReactNoop.getChildren()).toEqual([span('1!')]);
       });
 
+      it('supports defaultProps defined on the memo() return value', async () => {
+        function Counter({a, b, c, d, e}) {
+          return <Text text={a + b + c + d + e} />;
+        }
+        Counter.defaultProps = {
+          a: 1,
+        };
+        // Note! We intentionally use React.memo() rather than the injected memo().
+        // This tests a synchronous chain of React.memo() without lazy() in the middle.
+        Counter = React.memo(Counter);
+        Counter.defaultProps = {
+          b: 2,
+        };
+        Counter = React.memo(Counter);
+        Counter = React.memo(Counter); // Layer without defaultProps
+        Counter.defaultProps = {
+          c: 3,
+        };
+        Counter = React.memo(Counter);
+        Counter.defaultProps = {
+          d: 4,
+        };
+        // The final layer uses memo() from test fixture (which might be lazy).
+        Counter = memo(Counter);
+        ReactNoop.render(
+          <Suspense fallback={<Text text="Loading..." />}>
+            <Counter e={5} />
+          </Suspense>,
+        );
+        expect(ReactNoop.flush()).toEqual(['Loading...']);
+        await Promise.resolve();
+        expect(ReactNoop.flush()).toEqual([15]);
+        expect(ReactNoop.getChildren()).toEqual([span(15)]);
+
+        // Should bail out because props have not changed
+        ReactNoop.render(
+          <Suspense>
+            <Counter e={5} />
+          </Suspense>,
+        );
+        expect(ReactNoop.flush()).toEqual([]);
+        expect(ReactNoop.getChildren()).toEqual([span(15)]);
+
+        // Should update because count prop changed
+        ReactNoop.render(
+          <Suspense>
+            <Counter e={10} />
+          </Suspense>,
+        );
+        expect(ReactNoop.flush()).toEqual([20]);
+        expect(ReactNoop.getChildren()).toEqual([span(20)]);
+      });
+
       it('warns if first argument is undefined', () => {
         expect(() => memo()).toWarnDev(
           'memo: The first argument must be a component. Instead ' +

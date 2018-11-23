@@ -1743,6 +1743,25 @@ describe('ReactCompositeComponent', () => {
     );
   });
 
+  it('should warn about reassigning this.props while rendering', () => {
+    class Bad extends React.Component {
+      componentDidMount() {}
+      componentDidUpdate() {}
+      render() {
+        this.props = {...this.props};
+        return null;
+      }
+    }
+
+    const container = document.createElement('div');
+    expect(() => {
+      ReactDOM.render(<Bad />, container);
+    }).toWarnDev(
+      'It looks like Bad is reassigning its own `this.props` while rendering. ' +
+        'This is not supported and can lead to confusing bugs.',
+    );
+  });
+
   it('should return error if render is not defined', () => {
     class RenderTestUndefinedRender extends React.Component {}
 

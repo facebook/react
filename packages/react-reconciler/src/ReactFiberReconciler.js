@@ -22,7 +22,7 @@ import {
   findCurrentHostFiber,
   findCurrentHostFiberWithNoPortals,
 } from 'react-reconciler/reflection';
-import * as ReactInstanceMap from 'shared/ReactInstanceMap';
+import {get as getInstance} from 'shared/ReactInstanceMap';
 import {HostComponent, ClassComponent} from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
@@ -36,7 +36,7 @@ import {
   isContextProvider as isLegacyContextProvider,
 } from './ReactFiberContext';
 import {createFiberRoot} from './ReactFiberRoot';
-import * as ReactFiberDevToolsHook from './ReactFiberDevToolsHook';
+import {injectInternals} from './ReactFiberDevToolsHook';
 import {
   computeUniqueAsyncExpiration,
   requestCurrentTime,
@@ -56,8 +56,11 @@ import {
 } from './ReactFiberScheduler';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
-import * as ReactCurrentFiber from './ReactCurrentFiber';
-import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
+import {
+  getStackByFiberInDevAndProd,
+  phase as ReactCurrentFiberPhase,
+  current as ReactCurrentFiberCurrent,
+} from './ReactCurrentFiber';
 import {StrictMode} from './ReactTypeOfMode';
 
 type OpaqueRoot = FiberRoot;
@@ -94,7 +97,7 @@ function getContextForSubtree(
     return emptyContextObject;
   }
 
-  const fiber = ReactInstanceMap.get(parentComponent);
+  const fiber = getInstance(parentComponent);
   const parentContext = findCurrentUnmaskedContext(fiber);
 
   if (fiber.tag === ClassComponent) {
@@ -115,8 +118,8 @@ function scheduleRootUpdate(
 ) {
   if (__DEV__) {
     if (
-      ReactCurrentFiber.phase === 'render' &&
-      ReactCurrentFiber.current !== null &&
+      ReactCurrentFiberPhase === 'render' &&
+      ReactCurrentFiberCurrent !== null &&
       !didWarnAboutNestedUpdates
     ) {
       didWarnAboutNestedUpdates = true;
@@ -126,7 +129,7 @@ function scheduleRootUpdate(
           'triggering nested component updates from render is not allowed. ' +
           'If necessary, trigger nested updates in componentDidUpdate.\n\n' +
           'Check the render method of %s.',
-        getComponentName(ReactCurrentFiber.current.type) || 'Unknown',
+        getComponentName(ReactCurrentFiberCurrent.type) || 'Unknown',
       );
     }
   }
@@ -187,7 +190,7 @@ export function updateContainerAtExpirationTime(
 }
 
 function findHostInstance(component: Object): PublicInstance | null {
-  const fiber = ReactInstanceMap.get(component);
+  const fiber = getInstance(component);
   if (fiber === undefined) {
     if (typeof component.render === 'function') {
       invariant(false, 'Unable to find node on an unmounted component.');
@@ -211,7 +214,7 @@ function findHostInstanceWithWarning(
   methodName: string,
 ): PublicInstance | null {
   if (__DEV__) {
-    const fiber = ReactInstanceMap.get(component);
+    const fiber = getInstance(component);
     if (fiber === undefined) {
       if (typeof component.render === 'function') {
         invariant(false, 'Unable to find node on an unmounted component.');
@@ -338,7 +341,7 @@ export function findHostInstanceWithNoPortals(
 
 export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
   const {findFiberByHostInstance} = devToolsConfig;
-  return ReactFiberDevToolsHook.injectInternals({
+  return injectInternals({
     ...devToolsConfig,
     findHostInstanceByFiber(fiber: Fiber): Instance | TextInstance | null {
       const hostFiber = findCurrentHostFiber(fiber);
