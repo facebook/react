@@ -951,7 +951,7 @@ function mountLazyComponent(
         null,
         workInProgress,
         Component,
-        resolveDefaultProps(Component.type, resolvedProps), // The inner type can have defaults too,
+        resolveDefaultProps(Component.type, resolvedProps), // The inner type can have defaults too
         updateExpirationTime,
         renderExpirationTime,
       );

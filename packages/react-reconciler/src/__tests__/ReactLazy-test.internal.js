@@ -632,6 +632,8 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('0');
   }
 
+  // Note: all "with defaultProps" tests below also verify defaultProps works as expected.
+  // If we ever delete or move propTypes-related tests, make sure not to delete these.
   it('respects propTypes on function component with defaultProps', async () => {
     function Add(props) {
       expect(props.innerWithDefault).toBe(42);
@@ -765,6 +767,54 @@ describe('ReactLazy', () => {
       inner: PropTypes.number.isRequired,
     };
     await verifyInnerPropTypesAreChecked(React.memo(Add));
+  });
+
+  it('uses outer resolved props for validating propTypes on memo', async () => {
+    let T = props => {
+      return <Text text={props.text} />;
+    };
+    T.defaultProps = {
+      text: 'Inner default text',
+    };
+    T = React.memo(T);
+    T.propTypes = {
+      // Should not be satisfied by the *inner* defaultProps.
+      text: PropTypes.string.isRequired,
+    };
+    const LazyText = lazy(() => fakeImport(T));
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyText />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    expect(root).toFlushAndYield(['Loading...']);
+    expect(root).toMatchRenderedOutput(null);
+
+    // Mount
+    await Promise.resolve();
+    expect(() => {
+      root.unstable_flushAll();
+    }).toWarnDev(
+      'The prop `text` is marked as required in `T`, but its value is `undefined`',
+    );
+    expect(root).toMatchRenderedOutput('Inner default text');
+
+    // Update
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyText text={null} />
+      </Suspense>,
+    );
+    expect(() => {
+      root.unstable_flushAll();
+    }).toWarnDev(
+      'The prop `text` is marked as required in `T`, but its value is `null`',
+    );
+    expect(root).toMatchRenderedOutput(null);
   });
 
   it('includes lazy-loaded component in warning stack', async () => {
