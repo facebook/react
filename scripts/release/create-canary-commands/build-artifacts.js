@@ -21,5 +21,5 @@ const run = async ({cwd, dry, tempDirectory}) => {
 };
 
 module.exports = async params => {
-  return logPromise(run(params), 'Building artifacts', true);
+  return logPromise(run(params), 'Building artifacts', 420000);
 };
