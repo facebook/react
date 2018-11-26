@@ -594,6 +594,22 @@ describe('ReactShallowRenderer', () => {
     expect(result).toEqual(<div />);
   });
 
+  it('can shallowly render components with contextType', () => {
+    const SimpleContext = React.createContext('hello world');
+
+    class SimpleComponent extends React.Component {
+      static contextType = SimpleContext;
+
+      render() {
+        return <div>{this.context}</div>;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<SimpleComponent />, 'Foo bar');
+    expect(result).toEqual(<div>Foo bar</div>);
+  });
+
   it('passes expected params to legacy component lifecycle methods', () => {
     const componentDidUpdateParams = [];
     const componentWillReceivePropsParams = [];

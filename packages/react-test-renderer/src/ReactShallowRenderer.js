@@ -143,7 +143,12 @@ class ReactShallowRenderer {
 
     this._rendering = true;
     this._element = element;
-    this._context = getMaskedContext(element.type.contextTypes, context);
+
+    if (element.type.contextType) {
+      this._context = context;
+    } else {
+      this._context = getMaskedContext(element.type.contextTypes, context);
+    }
 
     if (this._instance) {
       this._updateClassComponent(element, this._context);
