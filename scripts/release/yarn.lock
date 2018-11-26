@@ -502,10 +502,10 @@ performance-now@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/performance-now/-/performance-now-2.1.0.tgz#6309f4e0e5fa913ec1c69307ae364b4b377c9e7b"
 
-progress-estimator@^0.1.1:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/progress-estimator/-/progress-estimator-0.1.1.tgz#7be93392953f4ebf00ab1d217d50aff6a8ff5c22"
-  integrity sha512-OIUUGnzDbhAjxP1NXo6EhLbWyJEFtkJiexxRQSY68CYMCzO9mEi2JDnTt896xMmin8H8HB2W0dIf/SMRTj+02A==
+progress-estimator@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/progress-estimator/-/progress-estimator-0.2.1.tgz#deae08447fd858a0bf6a1067c4fbac1b4dad3cb0"
+  integrity sha512-KTwtucRIgJufTIf+eXjJzP8aLKs1PxuLtz/4SsGzTtvTA19+eG9uTG5XrpjK2o2mC9H63HLKg/TQsvdCN5JbEQ==
   dependencies:
     chalk "^2.4.1"
     cli-spinners "^1.3.1"

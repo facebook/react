@@ -7,12 +7,12 @@ const {readdirSync, readFileSync, statSync, writeFileSync} = require('fs');
 const {readJson, writeJson} = require('fs-extra');
 const logUpdate = require('log-update');
 const {join} = require('path');
-const {logProgress, configure} = require('progress-estimator');
+const createLogger = require('progress-estimator');
 const prompt = require('prompt-promise');
 const theme = require('./theme');
 
 // https://www.npmjs.com/package/progress-estimator#configuration
-configure({
+const logger = createLogger({
   storagePath: join(__dirname, '.progress-estimator'),
 });
 
@@ -91,8 +91,8 @@ const handleError = error => {
   process.exit(1);
 };
 
-const logPromise = async (promise, text, estimatedDuration) =>
-  logProgress(promise, text, estimatedDuration);
+const logPromise = async (promise, text, estimate) =>
+  logger(promise, text, {estimate});
 
 const printDiff = (path, beforeContents, afterContents) => {
   const patch = createPatch(path, beforeContents, afterContents);
