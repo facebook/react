@@ -1,6 +1,5 @@
 'use strict';
 
-const {dots} = require('cli-spinners');
 const {exec} = require('child-process-promise');
 const {createPatch} = require('diff');
 const {hashElement} = require('folder-hash');
@@ -8,8 +7,14 @@ const {readdirSync, readFileSync, statSync, writeFileSync} = require('fs');
 const {readJson, writeJson} = require('fs-extra');
 const logUpdate = require('log-update');
 const {join} = require('path');
+const createLogger = require('progress-estimator');
 const prompt = require('prompt-promise');
 const theme = require('./theme');
+
+// https://www.npmjs.com/package/progress-estimator#configuration
+const logger = createLogger({
+  storagePath: join(__dirname, '.progress-estimator'),
+});
 
 const confirm = async message => {
   const confirmation = await prompt(theme`\n{caution ${message}} (y/N) `);
@@ -86,39 +91,8 @@ const handleError = error => {
   process.exit(1);
 };
 
-const logPromise = async (promise, text, isLongRunningTask = false) => {
-  const {frames, interval} = dots;
-
-  let index = 0;
-
-  const inProgressMessage = `- this may take a few ${
-    isLongRunningTask ? 'minutes' : 'seconds'
-  }`;
-
-  const id = setInterval(() => {
-    index = ++index % frames.length;
-    logUpdate(
-      theme`{spinnerInProgress ${
-        frames[index]
-      }} ${text} {dimmed ${inProgressMessage}}`
-    );
-  }, interval);
-
-  try {
-    const returnValue = await promise;
-
-    clearInterval(id);
-
-    logUpdate(theme`{spinnerSuccess ✓} ${text}`);
-    logUpdate.done();
-
-    return returnValue;
-  } catch (error) {
-    logUpdate.clear();
-
-    throw error;
-  }
-};
+const logPromise = async (promise, text, estimate) =>
+  logger(promise, text, {estimate});
 
 const printDiff = (path, beforeContents, afterContents) => {
   const patch = createPatch(path, beforeContents, afterContents);
