@@ -8,6 +8,8 @@
 
 /* eslint-disable no-var */
 
+import {enableSchedulerDebugging} from 'shared/ReactFeatureFlags';
+
 // TODO: Use symbols?
 var ImmediatePriority = 1;
 var UserBlockingPriority = 2;
@@ -177,16 +179,22 @@ function flushImmediateWork() {
 
 function flushWork(didTimeout) {
   // Exit right away if we're currently paused
-  if (isSchedulerPaused) {
+
+  if (enableSchedulerDebugging && isSchedulerPaused) {
     return;
   }
+
   isExecutingCallback = true;
   const previousDidTimeout = currentDidTimeout;
   currentDidTimeout = didTimeout;
   try {
     if (didTimeout) {
       // Flush all the expired callbacks without yielding.
-      while (firstCallbackNode !== null && !isSchedulerPaused) {
+      while (
+        firstCallbackNode !== null &&
+        !(enableSchedulerDebugging && isSchedulerPaused)
+      ) {
+        // TODO Wrap i nfeature flag
         // Read the current time. Flush all the callbacks that expire at or
         // earlier than that time. Then read the current time again and repeat.
         // This optimizes for as few performance.now calls as possible.
@@ -197,7 +205,7 @@ function flushWork(didTimeout) {
           } while (
             firstCallbackNode !== null &&
             firstCallbackNode.expirationTime <= currentTime &&
-            !isSchedulerPaused
+            !(enableSchedulerDebugging && isSchedulerPaused)
           );
           continue;
         }
@@ -207,7 +215,7 @@ function flushWork(didTimeout) {
       // Keep flushing callbacks until we run out of time in the frame.
       if (firstCallbackNode !== null) {
         do {
-          if (isSchedulerPaused) {
+          if (enableSchedulerDebugging && isSchedulerPaused) {
             break;
           }
           flushFirstCallback();
