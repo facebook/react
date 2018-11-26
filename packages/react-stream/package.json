@@ -1,7 +1,7 @@
 {
   "name": "react-stream",
   "description": "React package for creating custom streaming server renderers.",
-  "version": "0.16.0",
+  "version": "0.1.0",
   "private": true,
   "keywords": [
     "react"
