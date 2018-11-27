@@ -35,7 +35,6 @@ import {
   useImperativeMethods,
   useLayoutEffect,
   useMemo,
-  useMutationEffect,
   useReducer,
   useRef,
   useState,
@@ -102,7 +101,6 @@ if (enableHooks) {
   React.useImperativeMethods = useImperativeMethods;
   React.useLayoutEffect = useLayoutEffect;
   React.useMemo = useMemo;
-  React.useMutationEffect = useMutationEffect;
   React.useReducer = useReducer;
   React.useRef = useRef;
   React.useState = useState;

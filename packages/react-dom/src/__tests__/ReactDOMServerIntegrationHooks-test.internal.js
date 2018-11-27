@@ -25,7 +25,6 @@ let useCallback;
 let useMemo;
 let useRef;
 let useImperativeMethods;
-let useMutationEffect;
 let useLayoutEffect;
 let forwardRef;
 let yieldedValues;
@@ -50,7 +49,6 @@ function initModules() {
   useMemo = React.useMemo;
   useRef = React.useRef;
   useImperativeMethods = React.useImperativeMethods;
-  useMutationEffect = React.useMutationEffect;
   useLayoutEffect = React.useLayoutEffect;
   forwardRef = React.forwardRef;
 
@@ -545,22 +543,6 @@ describe('ReactDOMServerHooks', () => {
       const domNode = await serverRender(
         <Counter label="Count" ref={counter} />,
       );
-      expect(clearYields()).toEqual(['Count: 0']);
-      expect(domNode.tagName).toEqual('SPAN');
-      expect(domNode.textContent).toEqual('Count: 0');
-    });
-  });
-
-  describe('useMutationEffect', () => {
-    it('should warn when invoked during render', async () => {
-      function Counter() {
-        useMutationEffect(() => {
-          throw new Error('should not be invoked');
-        });
-
-        return <Text text="Count: 0" />;
-      }
-      const domNode = await serverRender(<Counter />, 1);
       expect(clearYields()).toEqual(['Count: 0']);
       expect(domNode.tagName).toEqual('SPAN');
       expect(domNode.textContent).toEqual('Count: 0');
