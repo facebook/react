@@ -1087,6 +1087,8 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       case ForwardRef:
       case MemoComponent:
       case SimpleMemoComponent: {
+        // Note: We currently never use MountMutation, but useLayout uses
+        // UnmountMutation.
         commitHookEffectList(UnmountMutation, MountMutation, finishedWork);
         return;
       }
@@ -1101,6 +1103,8 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case ForwardRef:
     case MemoComponent:
     case SimpleMemoComponent: {
+      // Note: We currently never use MountMutation, but useLayout uses
+      // UnmountMutation.
       commitHookEffectList(UnmountMutation, MountMutation, finishedWork);
       return;
     }
