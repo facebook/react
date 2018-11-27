@@ -306,10 +306,18 @@ describe('memo', () => {
         expect(ReactNoop.getChildren()).toEqual([span(20)]);
       });
 
-      it('warns if first argument is undefined', () => {
+      it('warns if the first argument is undefined', () => {
         expect(() => memo()).toWarnDev(
           'memo: The first argument must be a component. Instead ' +
             'received: undefined',
+          {withoutStack: true},
+        );
+      });
+
+      it('warns if the first argument is null', () => {
+        expect(() => memo(null)).toWarnDev(
+          'memo: The first argument must be a component. Instead ' +
+            'received: null',
           {withoutStack: true},
         );
       });
