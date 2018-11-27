@@ -15,6 +15,7 @@
     "folder-hash": "^2.1.2",
     "fs-extra": "^4.0.2",
     "log-update": "^2.1.0",
+    "progress-estimator": "^0.2.1",
     "prompt-promise": "^1.0.3",
     "request-promise-json": "^1.0.4",
     "semver": "^5.4.1"
