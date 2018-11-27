@@ -337,7 +337,7 @@ function commitHookEffectList(
                   'nothing.%s%s',
                 typeof destroy.then === 'function'
                   ? '\n\nIt looks like you wrote useEffect(async () => ...) or returned a Promise. ' +
-                    'Instead, you may write an async function separately, ' +
+                    'Instead, you may write an async function separately ' +
                     'and then call it from inside the effect:\n\n' +
                     'async function fetchComment(commentId) {\n' +
                     '  // You can await here\n' +
