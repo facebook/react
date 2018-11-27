@@ -16,15 +16,12 @@ import {NoWork} from './ReactFiberExpirationTime';
 import {enableHooks} from 'shared/ReactFeatureFlags';
 import {readContext} from './ReactFiberNewContext';
 import {
-  Snapshot as SnapshotEffect,
   Update as UpdateEffect,
   Passive as PassiveEffect,
 } from 'shared/ReactSideEffectTags';
 import {
   NoEffect as NoHookEffect,
-  UnmountSnapshot,
   UnmountMutation,
-  MountMutation,
   MountLayout,
   UnmountPassive,
   MountPassive,
@@ -517,18 +514,6 @@ export function useRef<T>(initialValue: T): {current: T} {
   return ref;
 }
 
-export function useMutationEffect(
-  create: () => mixed,
-  inputs: Array<mixed> | void | null,
-): void {
-  useEffectImpl(
-    SnapshotEffect | UpdateEffect,
-    UnmountSnapshot | MountMutation,
-    create,
-    inputs,
-  );
-}
-
 export function useLayoutEffect(
   create: () => mixed,
   inputs: Array<mixed> | void | null,
@@ -586,26 +571,21 @@ export function useImperativeMethods<T>(
   // TODO: I've implemented this on top of useEffect because it's almost the
   // same thing, and it would require an equal amount of code. It doesn't seem
   // like a common enough use case to justify the additional size.
-  useEffectImpl(
-    UpdateEffect,
-    UnmountMutation | MountLayout,
-    () => {
-      if (typeof ref === 'function') {
-        const refCallback = ref;
-        const inst = create();
-        refCallback(inst);
-        return () => refCallback(null);
-      } else if (ref !== null && ref !== undefined) {
-        const refObject = ref;
-        const inst = create();
-        refObject.current = inst;
-        return () => {
-          refObject.current = null;
-        };
-      }
-    },
-    nextInputs,
-  );
+  useLayoutEffect(() => {
+    if (typeof ref === 'function') {
+      const refCallback = ref;
+      const inst = create();
+      refCallback(inst);
+      return () => refCallback(null);
+    } else if (ref !== null && ref !== undefined) {
+      const refObject = ref;
+      const inst = create();
+      refObject.current = inst;
+      return () => {
+        refObject.current = null;
+      };
+    }
+  }, nextInputs);
 }
 
 export function useCallback<T>(
