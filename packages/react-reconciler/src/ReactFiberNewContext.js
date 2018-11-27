@@ -26,6 +26,7 @@ import {ContextProvider, ClassComponent} from 'shared/ReactWorkTags';
 
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
+import is from 'shared/objectIs';
 import {
   createUpdate,
   enqueueUpdate,
@@ -104,14 +105,7 @@ export function calculateChangedBits<T>(
   newValue: T,
   oldValue: T,
 ) {
-  // Use Object.is to compare the new context value to the old value. Inlined
-  // Object.is polyfill.
-  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is
-  if (
-    (oldValue === newValue &&
-      (oldValue !== 0 || 1 / oldValue === 1 / (newValue: any))) ||
-    (oldValue !== oldValue && newValue !== newValue) // eslint-disable-line no-self-compare
-  ) {
+  if (is(oldValue, newValue)) {
     // No change
     return 0;
   } else {
