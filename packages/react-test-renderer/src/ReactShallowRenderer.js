@@ -144,11 +144,7 @@ class ReactShallowRenderer {
     this._rendering = true;
     this._element = element;
 
-    if (element.type.contextType) {
-      this._context = context;
-    } else {
-      this._context = getMaskedContext(element.type.contextTypes, context);
-    }
+    this._context = getContext(element, context);
 
     if (this._instance) {
       this._updateClassComponent(element, this._context);
@@ -377,6 +373,14 @@ function shouldConstruct(Component) {
   return !!(Component.prototype && Component.prototype.isReactComponent);
 }
 
+function getContextTypeContext(contextType, context) {
+  if (context !== undefined && context !== emptyObject) {
+    return context;
+  }
+
+  return contextType._currentValue;
+}
+
 function getMaskedContext(contextTypes, unmaskedContext) {
   if (!contextTypes) {
     return emptyObject;
@@ -386,6 +390,14 @@ function getMaskedContext(contextTypes, unmaskedContext) {
     context[key] = unmaskedContext[key];
   }
   return context;
+}
+
+function getContext(element, contextOption) {
+  if (element.type.contextType) {
+    return getContextTypeContext(element.type.contextType, contextOption);
+  }
+
+  return getMaskedContext(element.type.contextTypes, contextOption);
 }
 
 export default ReactShallowRenderer;
