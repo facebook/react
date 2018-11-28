@@ -619,12 +619,12 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('22');
 
     // Update
-    root.update(
-      <Suspense fallback={<Text text="Loading..." />}>
-        <LazyAdd inner={false} outer={false} />
-      </Suspense>,
-    );
     expect(() => {
+      root.update(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <LazyAdd inner={false} outer={false} />
+        </Suspense>,
+      );
       root.unstable_flushAll();
     }).toWarnDev(
       'Invalid prop `inner` of type `boolean` supplied to `Add`, expected `number`.',
@@ -804,12 +804,12 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('Inner default text');
 
     // Update
-    root.update(
-      <Suspense fallback={<Text text="Loading..." />}>
-        <LazyText text={null} />
-      </Suspense>,
-    );
     expect(() => {
+      root.update(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <LazyText text={null} />
+        </Suspense>,
+      );
       root.unstable_flushAll();
     }).toWarnDev(
       'The prop `text` is marked as required in `T`, but its value is `null`',

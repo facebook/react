@@ -332,16 +332,16 @@ describe('memo', () => {
         const Fn = React.memo(FnInner);
 
         // Mount
-        ReactNoop.render(<Fn inner="2" />);
         expect(() => {
+          ReactNoop.render(<Fn inner="2" />);
           ReactNoop.flush();
         }).toWarnDev(
           'Invalid prop `inner` of type `string` supplied to `FnInner`, expected `number`.',
         );
 
         // Update
-        ReactNoop.render(<Fn inner={false} />);
         expect(() => {
+          ReactNoop.render(<Fn inner={false} />);
           ReactNoop.flush();
         }).toWarnDev(
           'Invalid prop `inner` of type `boolean` supplied to `FnInner`, expected `number`.',
@@ -358,20 +358,20 @@ describe('memo', () => {
         // Mount
         expect(() => {
           ReactNoop.render(<Fn outer="3" />);
+          ReactNoop.flush();
         }).toWarnDev(
           // Outer props are checked in createElement
           'Invalid prop `outer` of type `string` supplied to `FnInner`, expected `number`.',
         );
-        ReactNoop.flush();
 
         // Update
         expect(() => {
           ReactNoop.render(<Fn outer={false} />);
+          ReactNoop.flush();
         }).toWarnDev(
           // Outer props are checked in createElement
           'Invalid prop `outer` of type `boolean` supplied to `FnInner`, expected `number`.',
         );
-        ReactNoop.flush();
       });
 
       it('validates nested propTypes declarations', () => {
@@ -394,14 +394,9 @@ describe('memo', () => {
         // Mount
         expect(() => {
           ReactNoop.render(<Outer inner="2" middle="3" outer="4" />);
-        }).toWarnDev(
-          // Outer props are checked in createElement
-          'Invalid prop `outer` of type `string` supplied to `Inner`, expected `number`.',
-        );
-        expect(() => {
           ReactNoop.flush();
         }).toWarnDev([
-          // There are no actual elements created for these, so they're checked in reconciler.
+          'Invalid prop `outer` of type `string` supplied to `Inner`, expected `number`.',
           'Invalid prop `middle` of type `string` supplied to `Inner`, expected `number`.',
           'Invalid prop `inner` of type `string` supplied to `Inner`, expected `number`.',
         ]);
@@ -411,14 +406,9 @@ describe('memo', () => {
           ReactNoop.render(
             <Outer inner={false} middle={false} outer={false} />,
           );
-        }).toWarnDev(
-          // Outer props are checked in createElement
-          'Invalid prop `outer` of type `boolean` supplied to `Inner`, expected `number`.',
-        );
-        expect(() => {
           ReactNoop.flush();
         }).toWarnDev([
-          // There are no actual elements created for these, so they're checked in reconciler.
+          'Invalid prop `outer` of type `boolean` supplied to `Inner`, expected `number`.',
           'Invalid prop `middle` of type `boolean` supplied to `Inner`, expected `number`.',
           'Invalid prop `inner` of type `boolean` supplied to `Inner`, expected `number`.',
         ]);
