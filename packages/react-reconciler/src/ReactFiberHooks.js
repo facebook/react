@@ -104,8 +104,6 @@ let componentUpdateQueue: FunctionComponentUpdateQueue | null = null;
 
 // Whether the work-in-progress hook is a re-rendered hook
 let isReRender: boolean = false;
-// Whether an update was scheduled during the currently executing render pass.
-let didScheduleRenderPhaseUpdate: boolean = false;
 // Lazily created map of render-phase updates
 let renderPhaseUpdates: Map<UpdateQueue<any>, Update<any>> | null = null;
 // Counter to prevent infinite loops.
@@ -140,7 +138,6 @@ export function prepareToUseHooks(
   // componentUpdateQueue = null;
 
   // isReRender = false;
-  // didScheduleRenderPhaseUpdate = false;
   // renderPhaseUpdates = null;
   // numberOfReRenders = 0;
 }
@@ -158,12 +155,11 @@ export function finishHooks(
   // This must be called after every function component to prevent hooks from
   // being used in classes.
 
-  while (didScheduleRenderPhaseUpdate) {
+  while (renderPhaseUpdates !== null && renderPhaseUpdates.size > 0) {
     // Updates were scheduled during the render phase. They are stored in
     // the `renderPhaseUpdates` map. Call the component again, reusing the
     // work-in-progress hooks and applying the additional updates on top. Keep
     // restarting until no more updates are scheduled.
-    didScheduleRenderPhaseUpdate = false;
     numberOfReRenders += 1;
 
     // Start over from the beginning of the list
@@ -200,7 +196,6 @@ export function finishHooks(
   // isReRender = false;
 
   // These were reset above
-  // didScheduleRenderPhaseUpdate = false;
   // renderPhaseUpdates = null;
   // numberOfReRenders = 0;
 
@@ -235,7 +230,6 @@ export function resetHooks(): void {
   // Always set during createWorkInProgress
   // isReRender = false;
 
-  didScheduleRenderPhaseUpdate = false;
   renderPhaseUpdates = null;
   numberOfReRenders = 0;
 }
@@ -353,101 +347,93 @@ export function useReducer<S, A>(
   let queue: UpdateQueue<A> | null = (workInProgressHook.queue: any);
   if (queue !== null) {
     // Already have a queue, so this is an update.
-    if (isReRender) {
-      // This is a re-render. Apply the new render phase updates to the previous
-      // work-in-progress hook.
-      const dispatch: Dispatch<A> = (queue.dispatch: any);
-      if (renderPhaseUpdates !== null) {
-        // Render phase updates are stored in a map of queue -> linked list
-        const firstRenderPhaseUpdate = renderPhaseUpdates.get(queue);
-        if (firstRenderPhaseUpdate !== undefined) {
-          renderPhaseUpdates.delete(queue);
-          let newState = workInProgressHook.memoizedState;
-          let update = firstRenderPhaseUpdate;
-          do {
-            // Process this render phase update. We don't have to check the
-            // priority because it will always be the same as the current
-            // render's.
+    if (!isReRender) {
+      // The last update in the entire queue
+      const last = queue.last;
+      // The last update that is part of the base state.
+      const baseUpdate = workInProgressHook.baseUpdate;
+
+      // Find the first unprocessed update.
+      let first;
+      if (baseUpdate !== null) {
+        if (last !== null) {
+          // For the first update, the queue is a circular linked list where
+          // `queue.last.next = queue.first`. Once the first update commits, and
+          // the `baseUpdate` is no longer empty, we can unravel the list.
+          last.next = null;
+        }
+        first = baseUpdate.next;
+      } else {
+        first = last !== null ? last.next : null;
+      }
+      if (first !== null) {
+        let newState = workInProgressHook.baseState;
+        let newBaseState = null;
+        let newBaseUpdate = null;
+        let prevUpdate = baseUpdate;
+        let update = first;
+        let didSkip = false;
+        do {
+          const updateExpirationTime = update.expirationTime;
+          if (updateExpirationTime < renderExpirationTime) {
+            // Priority is insufficient. Skip this update. If this is the first
+            // skipped update, the previous update/state is the new base
+            // update/state.
+            if (!didSkip) {
+              didSkip = true;
+              newBaseUpdate = prevUpdate;
+              newBaseState = newState;
+            }
+            // Update the remaining priority in the queue.
+            if (updateExpirationTime > remainingExpirationTime) {
+              remainingExpirationTime = updateExpirationTime;
+            }
+          } else {
+            // Process this update.
             const action = update.action;
             newState = reducer(newState, action);
-            update = update.next;
-          } while (update !== null);
-
-          workInProgressHook.memoizedState = newState;
-
-          // Don't persist the state accumlated from the render phase updates to
-          // the base state unless the queue is empty.
-          // TODO: Not sure if this is the desired semantics, but it's what we
-          // do for gDSFP. I can't remember why.
-          if (workInProgressHook.baseUpdate === queue.last) {
-            workInProgressHook.baseState = newState;
           }
+          prevUpdate = update;
+          update = update.next;
+        } while (update !== null && update !== first);
 
-          return [newState, dispatch];
+        if (!didSkip) {
+          newBaseUpdate = prevUpdate;
+          newBaseState = newState;
         }
-      }
-      return [workInProgressHook.memoizedState, dispatch];
-    }
 
-    // The last update in the entire queue
-    const last = queue.last;
-    // The last update that is part of the base state.
-    const baseUpdate = workInProgressHook.baseUpdate;
-
-    // Find the first unprocessed update.
-    let first;
-    if (baseUpdate !== null) {
-      if (last !== null) {
-        // For the first update, the queue is a circular linked list where
-        // `queue.last.next = queue.first`. Once the first update commits, and
-        // the `baseUpdate` is no longer empty, we can unravel the list.
-        last.next = null;
+        workInProgressHook.memoizedState = newState;
+        workInProgressHook.baseUpdate = newBaseUpdate;
+        workInProgressHook.baseState = newBaseState;
       }
-      first = baseUpdate.next;
-    } else {
-      first = last !== null ? last.next : null;
     }
-    if (first !== null) {
-      let newState = workInProgressHook.baseState;
-      let newBaseState = null;
-      let newBaseUpdate = null;
-      let prevUpdate = baseUpdate;
-      let update = first;
-      let didSkip = false;
-      do {
-        const updateExpirationTime = update.expirationTime;
-        if (updateExpirationTime < renderExpirationTime) {
-          // Priority is insufficient. Skip this update. If this is the first
-          // skipped update, the previous update/state is the new base
-          // update/state.
-          if (!didSkip) {
-            didSkip = true;
-            newBaseUpdate = prevUpdate;
-            newBaseState = newState;
-          }
-          // Update the remaining priority in the queue.
-          if (updateExpirationTime > remainingExpirationTime) {
-            remainingExpirationTime = updateExpirationTime;
-          }
-        } else {
-          // Process this update.
+    if (renderPhaseUpdates !== null) {
+      // Render phase updates are stored in a map of queue -> linked list
+      const firstRenderPhaseUpdate = renderPhaseUpdates.get(queue);
+      if (firstRenderPhaseUpdate !== undefined) {
+        renderPhaseUpdates.delete(queue);
+        let newState = workInProgressHook.memoizedState;
+        let update = firstRenderPhaseUpdate;
+        do {
+          // Process this render phase update. We don't have to check the
+          // priority because it will always be the same as the current
+          // render's.
           const action = update.action;
           newState = reducer(newState, action);
+          update = update.next;
+        } while (update !== null);
+
+        workInProgressHook.memoizedState = newState;
+
+        // Don't persist the state accumlated from the render phase updates to
+        // the base state unless the queue is empty.
+        // TODO: Not sure if this is the desired semantics, but it's what we
+        // do for gDSFP. I can't remember why.
+        if (workInProgressHook.baseUpdate === queue.last) {
+          workInProgressHook.baseState = newState;
         }
-        prevUpdate = update;
-        update = update.next;
-      } while (update !== null && update !== first);
-
-      if (!didSkip) {
-        newBaseUpdate = prevUpdate;
-        newBaseState = newState;
       }
-
-      workInProgressHook.memoizedState = newState;
-      workInProgressHook.baseUpdate = newBaseUpdate;
-      workInProgressHook.baseState = newBaseState;
     }
-
     const dispatch: Dispatch<A> = (queue.dispatch: any);
     return [workInProgressHook.memoizedState, dispatch];
   }
@@ -667,7 +653,6 @@ function dispatchAction<A>(fiber: Fiber, queue: UpdateQueue<A>, action: A) {
     // This is a render phase update. Stash it in a lazily-created map of
     // queue -> linked list of updates. After this render pass, we'll restart
     // and apply the stashed updates on top of the work-in-progress hook.
-    didScheduleRenderPhaseUpdate = true;
     const update: Update<A> = {
       expirationTime: renderExpirationTime,
       action,

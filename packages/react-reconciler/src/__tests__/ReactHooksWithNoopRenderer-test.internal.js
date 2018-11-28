@@ -487,6 +487,29 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
       expect(ReactNoop.getChildren()).toEqual([span(22)]);
     });
+
+    it("doesn't rerender is dispatch is called before hook", () => {
+      let rendersCount = 0;
+
+      function Counter() {
+        const setCountRef = useRef(null);
+        if (setCountRef.current) {
+          setCountRef.current(value => value + 1);
+        }
+        const [count, setCount] = useState(1);
+        setCountRef.current = setCount;
+        rendersCount += 1;
+        return <Text text={`${count} ${rendersCount}`} />;
+      }
+
+      ReactNoop.render(<Counter />);
+      ReactNoop.flush();
+      expect(ReactNoop.getChildren()).toEqual([span('1 1')]);
+
+      ReactNoop.render(<Counter />);
+      ReactNoop.flush();
+      expect(ReactNoop.getChildren()).toEqual([span('2 2')]);
+    });
   });
 
   describe('useReducer', () => {
