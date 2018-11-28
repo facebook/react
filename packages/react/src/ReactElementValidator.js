@@ -15,10 +15,12 @@
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import isValidElementType from 'shared/isValidElementType';
 import getComponentName from 'shared/getComponentName';
+import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
 import {
   getIteratorFn,
   REACT_FORWARD_REF_TYPE,
   REACT_MEMO_TYPE,
+  REACT_LAZY_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_ELEMENT_TYPE,
 } from 'shared/ReactSymbols';
@@ -178,6 +180,61 @@ function validateChildKeys(node, parentType) {
   }
 }
 
+function validatePropTypesRecursively(type, props) {
+  if (type === null || type === undefined || typeof type === 'string') {
+    return;
+  }
+  let propTypes;
+  let innerType;
+  if (typeof type === 'function') {
+    propTypes = type.propTypes;
+  } else if (typeof type === 'object') {
+    switch (type.$$typeof) {
+      case REACT_FORWARD_REF_TYPE: {
+        propTypes = type.propTypes;
+        break;
+      }
+      case REACT_LAZY_TYPE: {
+        propTypes = type.propTypes;
+        innerType = refineResolvedLazyComponent(type);
+        break;
+      }
+      case REACT_MEMO_TYPE: {
+        propTypes = type.propTypes;
+        innerType = type.type;
+        break;
+      }
+    }
+  }
+  // Common case.
+  if (propTypes) {
+    const name = getComponentName(type);
+    checkPropTypes(
+      propTypes,
+      props,
+      'prop',
+      name,
+      ReactDebugCurrentFrame.getStackAddendum,
+    );
+  }
+  // A type may have an inner type (e.g. React.memo or React.lazy).
+  // That's what the recursive case is for.
+  if (innerType) {
+    // Inner type may have its own defaultProps
+    let innerProps = props;
+    if (innerType && innerType.defaultProps) {
+      innerProps = {...props};
+      const innerDefaultProps = innerType.defaultProps;
+      for (const propName in innerDefaultProps) {
+        if (innerProps[propName] === undefined) {
+          innerProps[propName] = innerDefaultProps[propName];
+        }
+      }
+    }
+    validatePropTypesRecursively(innerType, innerProps);
+  }
+}
+
 /**
  * Given an element, validate that its props follow the propTypes definition,
  * provided by the type.
@@ -189,45 +246,27 @@ function validatePropTypes(element) {
   if (type === null || type === undefined || typeof type === 'string') {
     return;
   }
-  const name = getComponentName(type);
-  let propTypes;
+
+  setCurrentlyValidatingElement(element);
+  validatePropTypesRecursively(type, element.props);
+  setCurrentlyValidatingElement(null);
+
   if (typeof type === 'function') {
-    propTypes = type.propTypes;
-  } else if (
-    typeof type === 'object' &&
-    (type.$$typeof === REACT_FORWARD_REF_TYPE ||
-      // Note: Memo only checks outer props here.
-      // Inner props are checked in the reconciler.
-      type.$$typeof === REACT_MEMO_TYPE)
-  ) {
-    propTypes = type.propTypes;
-  } else {
-    return;
-  }
-  if (propTypes) {
-    setCurrentlyValidatingElement(element);
-    checkPropTypes(
-      propTypes,
-      element.props,
-      'prop',
-      name,
-      ReactDebugCurrentFrame.getStackAddendum,
-    );
-    setCurrentlyValidatingElement(null);
-  } else if (type.PropTypes !== undefined && !propTypesMisspellWarningShown) {
-    propTypesMisspellWarningShown = true;
-    warningWithoutStack(
-      false,
-      'Component %s declared `PropTypes` instead of `propTypes`. Did you misspell the property assignment?',
-      name || 'Unknown',
-    );
-  }
-  if (typeof type.getDefaultProps === 'function') {
-    warningWithoutStack(
-      type.getDefaultProps.isReactClassApproved,
-      'getDefaultProps is only used on classic React.createClass ' +
-        'definitions. Use a static property named `defaultProps` instead.',
-    );
+    if (type.PropTypes !== undefined && !propTypesMisspellWarningShown) {
+      propTypesMisspellWarningShown = true;
+      warningWithoutStack(
+        false,
+        'Component %s declared `PropTypes` instead of `propTypes`. Did you misspell the property assignment?',
+        getComponentName(type) || 'Unknown',
+      );
+    }
+    if (typeof type.getDefaultProps === 'function') {
+      warningWithoutStack(
+        type.getDefaultProps.isReactClassApproved,
+        'getDefaultProps is only used on classic React.createClass ' +
+          'definitions. Use a static property named `defaultProps` instead.',
+      );
+    }
   }
 }
 
