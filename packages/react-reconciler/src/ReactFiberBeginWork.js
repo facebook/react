@@ -13,7 +13,6 @@ import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
-import React from 'react';
 import checkPropTypes from 'prop-types/checkPropTypes';
 
 import {
@@ -51,11 +50,11 @@ import {
   debugRenderPhaseSideEffectsForStrictMode,
   enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
-import isValidElementType from 'shared/isValidElementType';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
+import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
 import {REACT_LAZY_TYPE} from 'shared/ReactSymbols';
 import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
@@ -215,6 +214,23 @@ function updateForwardRef(
   nextProps: any,
   renderExpirationTime: ExpirationTime,
 ) {
+  if (__DEV__) {
+    if (workInProgress.type !== workInProgress.elementType) {
+      // Lazy component props can't be validated in createElement
+      // because they're only guaranteed to be resolved here.
+      const innerPropTypes = Component.propTypes;
+      if (innerPropTypes) {
+        checkPropTypes(
+          innerPropTypes,
+          nextProps, // Resolved props
+          'prop',
+          getComponentName(Component),
+          getCurrentFiberStackInDev,
+        );
+      }
+    }
+  }
+
   const render = Component.render;
   const ref = workInProgress.ref;
 
@@ -276,6 +292,20 @@ function updateMemoComponent(
         renderExpirationTime,
       );
     }
+    if (__DEV__) {
+      const innerPropTypes = type.propTypes;
+      if (innerPropTypes) {
+        // Inner memo component props aren't currently validated in createElement.
+        // We could move it there, but we'd still need this for lazy code path.
+        checkPropTypes(
+          innerPropTypes,
+          nextProps, // Resolved props
+          'prop',
+          getComponentName(type),
+          getCurrentFiberStackInDev,
+        );
+      }
+    }
     let child = createFiberFromTypeAndProps(
       Component.type,
       null,
@@ -288,6 +318,21 @@ function updateMemoComponent(
     child.return = workInProgress;
     workInProgress.child = child;
     return child;
+  }
+  if (__DEV__) {
+    const type = Component.type;
+    const innerPropTypes = type.propTypes;
+    if (innerPropTypes) {
+      // Inner memo component props aren't currently validated in createElement.
+      // We could move it there, but we'd still need this for lazy code path.
+      checkPropTypes(
+        innerPropTypes,
+        nextProps, // Resolved props
+        'prop',
+        getComponentName(type),
+        getCurrentFiberStackInDev,
+      );
+    }
   }
   let currentChild = ((current.child: any): Fiber); // This is always exactly one child
   if (updateExpirationTime < renderExpirationTime) {
@@ -326,6 +371,30 @@ function updateSimpleMemoComponent(
   updateExpirationTime,
   renderExpirationTime: ExpirationTime,
 ): null | Fiber {
+  if (__DEV__) {
+    if (workInProgress.type !== workInProgress.elementType) {
+      // Lazy component props can't be validated in createElement
+      // because they're only guaranteed to be resolved here.
+      let outerMemoType = workInProgress.elementType;
+      if (outerMemoType.$$typeof === REACT_LAZY_TYPE) {
+        // We warn when you define propTypes on lazy()
+        // so let's just skip over it to find memo() outer wrapper.
+        // Inner props for memo are validated later.
+        outerMemoType = refineResolvedLazyComponent(outerMemoType);
+      }
+      const outerPropTypes = outerMemoType && (outerMemoType: any).propTypes;
+      if (outerPropTypes) {
+        checkPropTypes(
+          outerPropTypes,
+          nextProps, // Resolved (SimpleMemoComponent has no defaultProps)
+          'prop',
+          getComponentName(outerMemoType),
+          getCurrentFiberStackInDev,
+        );
+      }
+      // Inner propTypes will be validated in the function component path.
+    }
+  }
   if (current !== null && updateExpirationTime < renderExpirationTime) {
     const prevProps = current.memoizedProps;
     if (
@@ -415,6 +484,23 @@ function updateFunctionComponent(
   nextProps: any,
   renderExpirationTime,
 ) {
+  if (__DEV__) {
+    if (workInProgress.type !== workInProgress.elementType) {
+      // Lazy component props can't be validated in createElement
+      // because they're only guaranteed to be resolved here.
+      const innerPropTypes = Component.propTypes;
+      if (innerPropTypes) {
+        checkPropTypes(
+          innerPropTypes,
+          nextProps, // Resolved props
+          'prop',
+          getComponentName(Component),
+          getCurrentFiberStackInDev,
+        );
+      }
+    }
+  }
+
   const unmaskedContext = getUnmaskedContext(workInProgress, Component, true);
   const context = getMaskedContext(workInProgress, unmaskedContext);
 
@@ -449,6 +535,23 @@ function updateClassComponent(
   nextProps,
   renderExpirationTime: ExpirationTime,
 ) {
+  if (__DEV__) {
+    if (workInProgress.type !== workInProgress.elementType) {
+      // Lazy component props can't be validated in createElement
+      // because they're only guaranteed to be resolved here.
+      const innerPropTypes = Component.propTypes;
+      if (innerPropTypes) {
+        checkPropTypes(
+          innerPropTypes,
+          nextProps, // Resolved props
+          'prop',
+          getComponentName(Component),
+          getCurrentFiberStackInDev,
+        );
+      }
+    }
+  }
+
   // Push context providers early to prevent context stack mismatches.
   // During mounting we don't know the child context yet as the instance doesn't exist.
   // We will invalidate the child context in finishClassComponent() right after rendering.
@@ -798,15 +901,6 @@ function mountLazyComponent(
   startWorkTimer(workInProgress);
   const resolvedProps = resolveDefaultProps(Component, props);
   let child;
-
-  if (__DEV__) {
-    // Trigger propTypes validation for the resolved type now that
-    // createElement() can look deeper and find propTypes and defaultProps.
-    if (isValidElementType(Component)) {
-      React.createElement(Component, resolvedProps);
-    }
-  }
-
   switch (resolvedTag) {
     case FunctionComponent: {
       child = updateFunctionComponent(
@@ -839,6 +933,20 @@ function mountLazyComponent(
       break;
     }
     case MemoComponent: {
+      if (__DEV__) {
+        if (workInProgress.type !== workInProgress.elementType) {
+          const outerPropTypes = Component.propTypes;
+          if (outerPropTypes) {
+            checkPropTypes(
+              outerPropTypes,
+              resolvedProps, // Resolved for outer only
+              'prop',
+              getComponentName(Component),
+              getCurrentFiberStackInDev,
+            );
+          }
+        }
+      }
       child = updateMemoComponent(
         null,
         workInProgress,
@@ -1769,6 +1877,20 @@ function beginWork(
       const unresolvedProps = workInProgress.pendingProps;
       // Resolve outer props first, then resolve inner props.
       let resolvedProps = resolveDefaultProps(type, unresolvedProps);
+      if (__DEV__) {
+        if (workInProgress.type !== workInProgress.elementType) {
+          const outerPropTypes = type.propTypes;
+          if (outerPropTypes) {
+            checkPropTypes(
+              outerPropTypes,
+              resolvedProps, // Resolved for outer only
+              'prop',
+              getComponentName(type),
+              getCurrentFiberStackInDev,
+            );
+          }
+        }
+      }
       resolvedProps = resolveDefaultProps(type.type, resolvedProps);
       return updateMemoComponent(
         current,
