@@ -716,11 +716,11 @@ describe('ReactLazy', () => {
   });
 
   it('respects propTypes on outer memo component with defaultProps', async () => {
-    const Add = React.memo(props => {
+    let Add = props => {
       expect(props.innerWithDefault).toBe(42);
       return props.inner + props.outer;
-    });
-    Add.displayName = 'Add';
+    };
+    Add = React.memo(Add);
     Add.propTypes = {
       inner: PropTypes.number.isRequired,
       innerWithDefault: PropTypes.number.isRequired,
@@ -732,10 +732,10 @@ describe('ReactLazy', () => {
   });
 
   it('respects propTypes on outer memo component without defaultProps', async () => {
-    const Add = React.memo(props => {
+    let Add = props => {
       return props.inner + props.outer;
-    });
-    Add.displayName = 'Add';
+    };
+    Add = React.memo(Add);
     Add.propTypes = {
       inner: PropTypes.number.isRequired,
     };

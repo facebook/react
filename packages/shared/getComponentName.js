@@ -79,13 +79,8 @@ function getComponentName(type: mixed): string | null {
         return 'Context.Provider';
       case REACT_FORWARD_REF_TYPE:
         return getWrappedName(type, type.render, 'ForwardRef');
-      case REACT_MEMO_TYPE: {
-        const displayName = type.displayName;
-        if (typeof displayName === 'string') {
-          return displayName;
-        }
+      case REACT_MEMO_TYPE:
         return getComponentName(type.type);
-      }
       case REACT_LAZY_TYPE: {
         const thenable: LazyComponent<mixed> = (type: any);
         const resolvedThenable = refineResolvedLazyComponent(thenable);
