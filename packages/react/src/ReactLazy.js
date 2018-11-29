@@ -25,6 +25,7 @@ export function lazy<T, R>(ctor: () => Thenable<T, R>): LazyComponent<T> {
     let propTypes;
     Object.defineProperties(lazyType, {
       defaultProps: {
+        configurable: true,
         get() {
           return defaultProps;
         },
@@ -36,9 +37,14 @@ export function lazy<T, R>(ctor: () => Thenable<T, R>): LazyComponent<T> {
               'is defined, or create a wrapping component around it.',
           );
           defaultProps = newDefaultProps;
+          // Match production behavior more closely:
+          Object.defineProperty(lazyType, 'defaultProps', {
+            enumerable: true,
+          });
         },
       },
       propTypes: {
+        configurable: true,
         get() {
           return propTypes;
         },
@@ -50,6 +56,10 @@ export function lazy<T, R>(ctor: () => Thenable<T, R>): LazyComponent<T> {
               'is defined, or create a wrapping component around it.',
           );
           propTypes = newPropTypes;
+          // Match production behavior more closely:
+          Object.defineProperty(lazyType, 'propTypes', {
+            enumerable: true,
+          });
         },
       },
     });
