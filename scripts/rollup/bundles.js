@@ -91,7 +91,26 @@ const bundles = [
     externals: ['react'],
   },
 
-  //******* Test Utils *******/
+  /******* React Fire *******/
+  {
+    bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
+      UMD_PROFILING,
+      NODE_DEV,
+      NODE_PROD,
+      NODE_PROFILING,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      FB_WWW_PROFILING,
+    ],
+    moduleType: RENDERER,
+    entry: 'react-dom/unstable-fire',
+    global: 'ReactFire',
+    externals: ['react'],
+  },
+
+  /******* Test Utils *******/
   {
     moduleType: RENDERER_UTILS,
     bundleTypes: [FB_WWW_DEV, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],

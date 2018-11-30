@@ -31,6 +31,7 @@
     "server.browser.js",
     "server.node.js",
     "test-utils.js",
+    "unstable-fire.js",
     "unstable-native-dependencies.js",
     "cjs/",
     "umd/"
