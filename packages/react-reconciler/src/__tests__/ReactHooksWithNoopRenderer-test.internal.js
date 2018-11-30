@@ -565,6 +565,43 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.flush();
       expect(ReactNoop.getChildren()).toEqual([span('Count: 8')]);
     });
+
+    it('handles dispatches with mixed priorities', () => {
+      const INCREMENT = 'INCREMENT';
+
+      function reducer(state, action) {
+        return action === INCREMENT ? state + 1 : state;
+      }
+
+      function Counter(props, ref) {
+        const [count, dispatch] = useReducer(reducer, 0);
+        useImperativeMethods(ref, () => ({dispatch}));
+        return <Text text={'Count: ' + count} />;
+      }
+
+      Counter = forwardRef(Counter);
+      const counter = React.createRef(null);
+      ReactNoop.render(<Counter ref={counter} />);
+
+      // initial Render should be 'Count: 0'
+      ReactNoop.flush();
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+
+      // dispatch some low prio increments
+      counter.current.dispatch(INCREMENT);
+      counter.current.dispatch(INCREMENT);
+      counter.current.dispatch(INCREMENT);
+
+      // dispatch and apply a high prio increment
+      ReactNoop.flushSync(() => {
+        counter.current.dispatch(INCREMENT);
+      });
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+
+      // apply all increments
+      ReactNoop.flush();
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 4')]);
+    });
   });
 
   describe('useEffect', () => {
