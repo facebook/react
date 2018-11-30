@@ -253,7 +253,7 @@ function cloneHook(hook: Hook): Hook {
   return {
     memoizedState: hook.memoizedState,
 
-    baseState: hook.memoizedState,
+    baseState: hook.baseState,
     queue: hook.queue,
     baseUpdate: hook.baseUpdate,
 
