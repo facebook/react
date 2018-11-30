@@ -447,16 +447,16 @@ var requestHostCallback;
 var cancelHostCallback;
 var shouldYieldToHost;
 
-if (typeof window !== 'undefined' && window._schedMock) {
+var globalValue = null;
+if (typeof window !== 'undefined') {
+  globalValue = window;
+} else if (typeof global !== 'undefined') {
+  globalValue = global;
+}
+
+if (globalValue && globalValue._schedMock) {
   // Dynamic injection, only for testing purposes.
-  var windowImpl = window._schedMock;
-  requestHostCallback = windowImpl[0];
-  cancelHostCallback = windowImpl[1];
-  shouldYieldToHost = windowImpl[2];
-  getCurrentTime = windowImpl[3];
-} else if (typeof global !== 'undefined' && global._schedMock) {
-  // Dynamic injection, only for testing purposes.
-  var globalImpl = global._schedMock;
+  var globalImpl = globalValue._schedMock;
   requestHostCallback = globalImpl[0];
   cancelHostCallback = globalImpl[1];
   shouldYieldToHost = globalImpl[2];
