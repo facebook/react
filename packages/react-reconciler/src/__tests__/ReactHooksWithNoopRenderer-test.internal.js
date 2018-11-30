@@ -566,6 +566,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Count: 8')]);
     });
 
+    // Regression test for https://github.com/facebook/react/issues/14360
     it('handles dispatches with mixed priorities', () => {
       const INCREMENT = 'INCREMENT';
 
@@ -583,22 +584,17 @@ describe('ReactHooksWithNoopRenderer', () => {
       const counter = React.createRef(null);
       ReactNoop.render(<Counter ref={counter} />);
 
-      // initial Render should be 'Count: 0'
       ReactNoop.flush();
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
-      // dispatch some low prio increments
       counter.current.dispatch(INCREMENT);
       counter.current.dispatch(INCREMENT);
       counter.current.dispatch(INCREMENT);
-
-      // dispatch and apply a high prio increment
       ReactNoop.flushSync(() => {
         counter.current.dispatch(INCREMENT);
       });
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
 
-      // apply all increments
       ReactNoop.flush();
       expect(ReactNoop.getChildren()).toEqual([span('Count: 4')]);
     });
