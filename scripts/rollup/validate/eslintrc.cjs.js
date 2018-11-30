@@ -18,6 +18,8 @@ module.exports = {
     __REACT_DEVTOOLS_GLOBAL_HOOK__: true,
     // CommonJS / Node
     process: true,
+    setImmediate: true,
+    Buffer: true,
   },
   parserOptions: {
     ecmaVersion: 5,

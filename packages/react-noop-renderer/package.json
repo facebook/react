@@ -10,7 +10,8 @@
     "object-assign": "^4.1.1",
     "prop-types": "^15.6.2",
     "regenerator-runtime": "^0.11.0",
-    "react-reconciler": "*"
+    "react-reconciler": "*",
+    "react-stream": "*"
   },
   "peerDependencies": {
     "react": "^16.0.0"
@@ -21,6 +22,7 @@
     "build-info.json",
     "index.js",
     "persistent.js",
+    "server.js",
     "cjs/"
   ]
 }
