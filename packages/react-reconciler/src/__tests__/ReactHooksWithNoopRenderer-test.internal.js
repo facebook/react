@@ -565,6 +565,39 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.flush();
       expect(ReactNoop.getChildren()).toEqual([span('Count: 8')]);
     });
+
+    // Regression test for https://github.com/facebook/react/issues/14360
+    it('handles dispatches with mixed priorities', () => {
+      const INCREMENT = 'INCREMENT';
+
+      function reducer(state, action) {
+        return action === INCREMENT ? state + 1 : state;
+      }
+
+      function Counter(props, ref) {
+        const [count, dispatch] = useReducer(reducer, 0);
+        useImperativeMethods(ref, () => ({dispatch}));
+        return <Text text={'Count: ' + count} />;
+      }
+
+      Counter = forwardRef(Counter);
+      const counter = React.createRef(null);
+      ReactNoop.render(<Counter ref={counter} />);
+
+      ReactNoop.flush();
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+
+      counter.current.dispatch(INCREMENT);
+      counter.current.dispatch(INCREMENT);
+      counter.current.dispatch(INCREMENT);
+      ReactNoop.flushSync(() => {
+        counter.current.dispatch(INCREMENT);
+      });
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+
+      ReactNoop.flush();
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 4')]);
+    });
   });
 
   describe('useEffect', () => {
