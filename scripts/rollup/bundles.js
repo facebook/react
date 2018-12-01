@@ -462,6 +462,15 @@ const bundles = [
     externals: ['jest-diff'],
   },
 
+  /******* Jest Scheduler (experimental) *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'jest-mock-scheduler',
+    global: 'JestMockScheduler',
+    externals: ['jest-diff'],
+  },
+
   /******* ESLint Plugin for Hooks (proposal) *******/
   {
     // TODO: it's awkward to create a bundle for this
