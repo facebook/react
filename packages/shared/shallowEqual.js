@@ -9,8 +9,6 @@
 
 import is from './objectIs';
 
-/*eslint-disable no-self-compare */
-
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 /**
