@@ -22,6 +22,10 @@ describe('ReactDOMFrameScheduling', () => {
         };
       };
       jest.resetModules();
+
+      const JestMockScheduler = require('jest-mock-scheduler');
+      JestMockScheduler.mockRestore();
+
       spyOnDevAndProd(console, 'error');
       require('react-dom');
       expect(console.error.calls.count()).toEqual(1);

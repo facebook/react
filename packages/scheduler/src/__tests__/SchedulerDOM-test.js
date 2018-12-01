@@ -88,6 +88,10 @@ describe('SchedulerDOM', () => {
       return currentTime;
     };
     jest.resetModules();
+
+    const JestMockScheduler = require('jest-mock-scheduler');
+    JestMockScheduler.mockRestore();
+
     Scheduler = require('scheduler');
   });
 
