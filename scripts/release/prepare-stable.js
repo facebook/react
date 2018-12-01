@@ -10,6 +10,8 @@ const confirmStableVersionNumbers = require('./prepare-stable-commands/confirm-s
 const guessStableVersionNumbers = require('./prepare-stable-commands/guess-stable-version-numbers');
 const parseParams = require('./prepare-stable-commands/parse-params');
 const printPrereleaseSummary = require('./shared-commands/print-prerelease-summary');
+const testPackagingFixture = require('./shared-commands/test-packaging-fixture');
+const testSchedulerFixture = require('./shared-commands/test-scheduler-fixture');
 const updateStableVersionNumbers = require('./prepare-stable-commands/update-stable-version-numbers');
 
 const run = async () => {
@@ -27,6 +29,12 @@ const run = async () => {
     await guessStableVersionNumbers(params, versionsMap);
     await confirmStableVersionNumbers(params, versionsMap);
     await updateStableVersionNumbers(params, versionsMap);
+
+    if (!params.skipTests) {
+      await testPackagingFixture(params);
+      await testSchedulerFixture(params);
+    }
+
     await printPrereleaseSummary(params);
   } catch (error) {
     handleError(error);

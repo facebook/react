@@ -11,6 +11,12 @@ const paramDefinitions = [
     description:
       'Circle CI build identifier (e.g. https://circleci.com/gh/facebook/react/<build>)',
   },
+  {
+    name: 'skipTests',
+    type: Boolean,
+    description: 'Skip automated fixture tests.',
+    defaultValue: false,
+  },
 ];
 
 module.exports = () => {

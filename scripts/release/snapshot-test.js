@@ -64,7 +64,9 @@ const run = async () => {
       join(cwd, 'scripts/release/snapshot-test.snapshot'),
       'utf-8'
     );
-    await exec('cp build/temp.diff scripts/release/snapshot-test.snapshot', {cwd});
+    await exec('cp build/temp.diff scripts/release/snapshot-test.snapshot', {
+      cwd,
+    });
     const afterContents = readFileSync(
       join(cwd, 'scripts/release/snapshot-test.snapshot'),
       'utf-8'
@@ -73,7 +75,11 @@ const run = async () => {
     if (beforeContents === afterContents) {
       console.log(theme.header`Snapshot test passed.`);
     } else {
-      printDiff('scripts/release/snapshot-test.snapshot', beforeContents, afterContents);
+      printDiff(
+        'scripts/release/snapshot-test.snapshot',
+        beforeContents,
+        afterContents
+      );
       console.log();
       console.error(theme.error('Snapshot test failed!'));
       console.log();
