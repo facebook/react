@@ -1,5 +1,6 @@
 {
   "name": "jest-mock-scheduler",
+  "private": true,
   "version": "0.1.0",
   "description": "Jest matchers and utilities for testing the scheduler package.",
   "main": "index.js",
