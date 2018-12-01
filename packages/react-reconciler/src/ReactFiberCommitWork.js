@@ -336,9 +336,17 @@ function commitHookEffectList(
                 'useEffect function must return a cleanup function or ' +
                   'nothing.%s%s',
                 typeof destroy.then === 'function'
-                  ? ' Promises and useEffect(async () => ...) are not ' +
-                    'supported, but you can call an async function inside an ' +
-                    'effect.'
+                  ? '\n\nIt looks like you wrote useEffect(async () => ...) or returned a Promise. ' +
+                    'Instead, you may write an async function separately ' +
+                    'and then call it from inside the effect:\n\n' +
+                    'async function fetchComment(commentId) {\n' +
+                    '  // You can await here\n' +
+                    '}\n\n' +
+                    'useEffect(() => {\n' +
+                    '  fetchComment(commentId);\n' +
+                    '}, [commentId]);\n\n' +
+                    'In the future, React will provide a more idiomatic solution for data fetching ' +
+                    "that doesn't involve writing effects manually."
                   : '',
                 getStackByFiberInDevAndProd(finishedWork),
               );
@@ -1079,6 +1087,8 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       case ForwardRef:
       case MemoComponent:
       case SimpleMemoComponent: {
+        // Note: We currently never use MountMutation, but useLayout uses
+        // UnmountMutation.
         commitHookEffectList(UnmountMutation, MountMutation, finishedWork);
         return;
       }
@@ -1093,6 +1103,8 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case ForwardRef:
     case MemoComponent:
     case SimpleMemoComponent: {
+      // Note: We currently never use MountMutation, but useLayout uses
+      // UnmountMutation.
       commitHookEffectList(UnmountMutation, MountMutation, finishedWork);
       return;
     }

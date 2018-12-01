@@ -52,7 +52,6 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       Dispatcher.useState(null);
       Dispatcher.useReducer((s, a) => s, null);
       Dispatcher.useRef(null);
-      Dispatcher.useMutationEffect(() => {});
       Dispatcher.useLayoutEffect(() => {});
       Dispatcher.useEffect(() => {});
       Dispatcher.useImperativeMethods(undefined, () => null);
@@ -140,18 +139,6 @@ function useRef<T>(initialValue: T): {current: T} {
   return ref;
 }
 
-function useMutationEffect(
-  create: () => mixed,
-  inputs: Array<mixed> | void | null,
-): void {
-  nextHook();
-  hookLog.push({
-    primitive: 'MutationEffect',
-    stackError: new Error(),
-    value: create,
-  });
-}
-
 function useLayoutEffect(
   create: () => mixed,
   inputs: Array<mixed> | void | null,
@@ -221,7 +208,6 @@ const Dispatcher = {
   useImperativeMethods,
   useLayoutEffect,
   useMemo,
-  useMutationEffect,
   useReducer,
   useRef,
   useState,

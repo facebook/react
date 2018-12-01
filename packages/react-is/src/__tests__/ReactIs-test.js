@@ -144,6 +144,14 @@ describe('ReactIs', () => {
     expect(ReactIs.isPortal(div)).toBe(false);
   });
 
+  it('should identify memo', () => {
+    const Component = () => React.createElement('div');
+    const memoized = React.memo(Component);
+    expect(ReactIs.typeOf(memoized)).toBe(ReactIs.Memo);
+    expect(ReactIs.isMemo(memoized)).toBe(true);
+    expect(ReactIs.isMemo(Component)).toBe(false);
+  });
+
   it('should identify strict mode', () => {
     expect(ReactIs.typeOf(<React.StrictMode />)).toBe(ReactIs.StrictMode);
     expect(ReactIs.isStrictMode(<React.StrictMode />)).toBe(true);

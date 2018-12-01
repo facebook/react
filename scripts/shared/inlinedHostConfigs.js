@@ -9,32 +9,53 @@
 module.exports = [
   {
     shortName: 'dom',
-    entryPoints: ['react-dom'],
+    entryPoints: ['react-dom', 'react-dom/unstable-fizz.node'],
+    isFlowTyped: true,
+    isFizzSupported: true,
+  },
+  {
+    shortName: 'dom-browser',
+    entryPoints: ['react-dom/unstable-fizz.browser'],
+    isFlowTyped: true,
+    isFizzSupported: true,
+  },
+  {
+    shortName: 'fire',
+    entryPoints: ['react-dom/unstable-fire'],
     isFlowTyped: true,
   },
   {
     shortName: 'art',
     entryPoints: ['react-art'],
     isFlowTyped: false, // TODO: type it.
+    isFizzSupported: false,
   },
   {
     shortName: 'native',
     entryPoints: ['react-native-renderer'],
     isFlowTyped: true,
+    isFizzSupported: false,
   },
   {
     shortName: 'fabric',
     entryPoints: ['react-native-renderer/fabric'],
     isFlowTyped: true,
+    isFizzSupported: false,
   },
   {
     shortName: 'test',
     entryPoints: ['react-test-renderer'],
     isFlowTyped: true,
+    isFizzSupported: false,
   },
   {
     shortName: 'custom',
-    entryPoints: ['react-reconciler', 'react-reconciler/persistent'],
+    entryPoints: [
+      'react-reconciler',
+      'react-reconciler/persistent',
+      'react-stream',
+    ],
     isFlowTyped: true,
+    isFizzSupported: true,
   },
 ];

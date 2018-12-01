@@ -75,10 +75,8 @@ describe('ReactHooks', () => {
     expect(() => {
       root.update(<App return={Promise.resolve()} />);
     }).toWarnDev([
-      'Warning: useEffect function must return a cleanup function or ' +
-        'nothing. Promises and useEffect(async () => ...) are not supported, ' +
-        'but you can call an async function inside an effect.\n' +
-        '    in App (at **)',
+      'Warning: useEffect function must return a cleanup function or nothing.\n\n' +
+        'It looks like you wrote useEffect(async () => ...) or returned a Promise.',
     ]);
   });
 

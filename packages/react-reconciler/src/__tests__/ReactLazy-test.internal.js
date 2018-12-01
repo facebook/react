@@ -1,3 +1,4 @@
+let PropTypes;
 let React;
 let ReactTestRenderer;
 let ReactFeatureFlags;
@@ -10,6 +11,7 @@ describe('ReactLazy', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
+    PropTypes = require('prop-types');
     React = require('react');
     Suspense = React.Suspense;
     lazy = React.lazy;
@@ -459,6 +461,360 @@ describe('ReactLazy', () => {
     ]);
     expect(root).toFlushAndYield([]);
     expect(root).toMatchRenderedOutput('A3');
+  });
+
+  it('resolves defaultProps on the outer wrapper but warns', async () => {
+    function T(props) {
+      ReactTestRenderer.unstable_yield(props.inner + ' ' + props.outer);
+      return props.inner + ' ' + props.outer;
+    }
+    T.defaultProps = {inner: 'Hi'};
+    const LazyText = lazy(() => fakeImport(T));
+    expect(() => {
+      LazyText.defaultProps = {outer: 'Bye'};
+    }).toWarnDev(
+      'React.lazy(...): It is not supported to assign `defaultProps` to ' +
+        'a lazy component import. Either specify them where the component ' +
+        'is defined, or create a wrapping component around it.',
+      {withoutStack: true},
+    );
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyText />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    expect(root).toFlushAndYield(['Loading...']);
+    expect(root).toMatchRenderedOutput(null);
+
+    await Promise.resolve();
+    expect(root).toFlushAndYield(['Hi Bye']);
+    expect(root).toMatchRenderedOutput('Hi Bye');
+
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyText outer="World" />
+      </Suspense>,
+    );
+    expect(root).toFlushAndYield(['Hi World']);
+    expect(root).toMatchRenderedOutput('Hi World');
+
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyText inner="Friends" />
+      </Suspense>,
+    );
+    expect(root).toFlushAndYield(['Friends Bye']);
+    expect(root).toMatchRenderedOutput('Friends Bye');
+  });
+
+  it('throws with a useful error when wrapping invalid type with lazy()', async () => {
+    const BadLazy = lazy(() => fakeImport(42));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    expect(root).toFlushAndYield(['Loading...']);
+    expect(root).toMatchRenderedOutput(null);
+
+    await Promise.resolve();
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    expect(() => {
+      root.unstable_flushAll();
+    }).toThrow(
+      'Element type is invalid. Received a promise that resolves to: 42. ' +
+        'Lazy element type must resolve to a class or function.',
+    );
+  });
+
+  it('throws with a useful error when wrapping lazy() multiple times', async () => {
+    const Lazy1 = lazy(() => fakeImport(Text));
+    const Lazy2 = lazy(() => fakeImport(Lazy1));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <Lazy2 text="Hello" />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    expect(root).toFlushAndYield(['Loading...']);
+    expect(root).toMatchRenderedOutput(null);
+
+    await Promise.resolve();
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <Lazy2 text="Hello" />
+      </Suspense>,
+    );
+    expect(() => {
+      root.unstable_flushAll();
+    }).toThrow(
+      'Element type is invalid. Received a promise that resolves to: [object Object]. ' +
+        'Lazy element type must resolve to a class or function.' +
+        (__DEV__
+          ? ' Did you wrap a component in React.lazy() more than once?'
+          : ''),
+    );
+  });
+
+  it('warns about defining propTypes on the outer wrapper', () => {
+    const LazyText = lazy(() => fakeImport(Text));
+    expect(() => {
+      LazyText.propTypes = {hello: () => {}};
+    }).toWarnDev(
+      'React.lazy(...): It is not supported to assign `propTypes` to ' +
+        'a lazy component import. Either specify them where the component ' +
+        'is defined, or create a wrapping component around it.',
+      {withoutStack: true},
+    );
+  });
+
+  async function verifyInnerPropTypesAreChecked(Add) {
+    const LazyAdd = lazy(() => fakeImport(Add));
+    expect(() => {
+      LazyAdd.propTypes = {};
+    }).toWarnDev(
+      'React.lazy(...): It is not supported to assign `propTypes` to ' +
+        'a lazy component import. Either specify them where the component ' +
+        'is defined, or create a wrapping component around it.',
+      {withoutStack: true},
+    );
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyAdd inner="2" outer="2" />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    expect(root).toFlushAndYield(['Loading...']);
+    expect(root).toMatchRenderedOutput(null);
+
+    // Mount
+    await Promise.resolve();
+    expect(() => {
+      root.unstable_flushAll();
+    }).toWarnDev(
+      'Invalid prop `inner` of type `string` supplied to `Add`, expected `number`.',
+    );
+    expect(root).toMatchRenderedOutput('22');
+
+    // Update
+    expect(() => {
+      root.update(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <LazyAdd inner={false} outer={false} />
+        </Suspense>,
+      );
+      root.unstable_flushAll();
+    }).toWarnDev(
+      'Invalid prop `inner` of type `boolean` supplied to `Add`, expected `number`.',
+    );
+    expect(root).toMatchRenderedOutput('0');
+  }
+
+  // Note: all "with defaultProps" tests below also verify defaultProps works as expected.
+  // If we ever delete or move propTypes-related tests, make sure not to delete these.
+  it('respects propTypes on function component with defaultProps', async () => {
+    function Add(props) {
+      expect(props.innerWithDefault).toBe(42);
+      return props.inner + props.outer;
+    }
+    Add.propTypes = {
+      inner: PropTypes.number.isRequired,
+      innerWithDefault: PropTypes.number.isRequired,
+    };
+    Add.defaultProps = {
+      innerWithDefault: 42,
+    };
+    await verifyInnerPropTypesAreChecked(Add);
+  });
+
+  it('respects propTypes on function component without defaultProps', async () => {
+    function Add(props) {
+      return props.inner + props.outer;
+    }
+    Add.propTypes = {
+      inner: PropTypes.number.isRequired,
+    };
+    await verifyInnerPropTypesAreChecked(Add);
+  });
+
+  it('respects propTypes on class component with defaultProps', async () => {
+    class Add extends React.Component {
+      render() {
+        expect(this.props.innerWithDefault).toBe(42);
+        return this.props.inner + this.props.outer;
+      }
+    }
+    Add.propTypes = {
+      inner: PropTypes.number.isRequired,
+      innerWithDefault: PropTypes.number.isRequired,
+    };
+    Add.defaultProps = {
+      innerWithDefault: 42,
+    };
+    await verifyInnerPropTypesAreChecked(Add);
+  });
+
+  it('respects propTypes on class component without defaultProps', async () => {
+    class Add extends React.Component {
+      render() {
+        return this.props.inner + this.props.outer;
+      }
+    }
+    Add.propTypes = {
+      inner: PropTypes.number.isRequired,
+    };
+    await verifyInnerPropTypesAreChecked(Add);
+  });
+
+  it('respects propTypes on forwardRef component with defaultProps', async () => {
+    const Add = React.forwardRef((props, ref) => {
+      expect(props.innerWithDefault).toBe(42);
+      return props.inner + props.outer;
+    });
+    Add.displayName = 'Add';
+    Add.propTypes = {
+      inner: PropTypes.number.isRequired,
+      innerWithDefault: PropTypes.number.isRequired,
+    };
+    Add.defaultProps = {
+      innerWithDefault: 42,
+    };
+    await verifyInnerPropTypesAreChecked(Add);
+  });
+
+  it('respects propTypes on forwardRef component without defaultProps', async () => {
+    const Add = React.forwardRef((props, ref) => {
+      return props.inner + props.outer;
+    });
+    Add.displayName = 'Add';
+    Add.propTypes = {
+      inner: PropTypes.number.isRequired,
+    };
+    await verifyInnerPropTypesAreChecked(Add);
+  });
+
+  it('respects propTypes on outer memo component with defaultProps', async () => {
+    let Add = props => {
+      expect(props.innerWithDefault).toBe(42);
+      return props.inner + props.outer;
+    };
+    Add = React.memo(Add);
+    Add.propTypes = {
+      inner: PropTypes.number.isRequired,
+      innerWithDefault: PropTypes.number.isRequired,
+    };
+    Add.defaultProps = {
+      innerWithDefault: 42,
+    };
+    await verifyInnerPropTypesAreChecked(Add);
+  });
+
+  it('respects propTypes on outer memo component without defaultProps', async () => {
+    let Add = props => {
+      return props.inner + props.outer;
+    };
+    Add = React.memo(Add);
+    Add.propTypes = {
+      inner: PropTypes.number.isRequired,
+    };
+    await verifyInnerPropTypesAreChecked(Add);
+  });
+
+  it('respects propTypes on inner memo component with defaultProps', async () => {
+    const Add = props => {
+      expect(props.innerWithDefault).toBe(42);
+      return props.inner + props.outer;
+    };
+    Add.displayName = 'Add';
+    Add.propTypes = {
+      inner: PropTypes.number.isRequired,
+      innerWithDefault: PropTypes.number.isRequired,
+    };
+    Add.defaultProps = {
+      innerWithDefault: 42,
+    };
+    await verifyInnerPropTypesAreChecked(React.memo(Add));
+  });
+
+  it('respects propTypes on inner memo component without defaultProps', async () => {
+    const Add = props => {
+      return props.inner + props.outer;
+    };
+    Add.displayName = 'Add';
+    Add.propTypes = {
+      inner: PropTypes.number.isRequired,
+    };
+    await verifyInnerPropTypesAreChecked(React.memo(Add));
+  });
+
+  it('uses outer resolved props for validating propTypes on memo', async () => {
+    let T = props => {
+      return <Text text={props.text} />;
+    };
+    T.defaultProps = {
+      text: 'Inner default text',
+    };
+    T = React.memo(T);
+    T.propTypes = {
+      // Should not be satisfied by the *inner* defaultProps.
+      text: PropTypes.string.isRequired,
+    };
+    const LazyText = lazy(() => fakeImport(T));
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyText />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    expect(root).toFlushAndYield(['Loading...']);
+    expect(root).toMatchRenderedOutput(null);
+
+    // Mount
+    await Promise.resolve();
+    expect(() => {
+      root.unstable_flushAll();
+    }).toWarnDev(
+      'The prop `text` is marked as required in `T`, but its value is `undefined`',
+    );
+    expect(root).toMatchRenderedOutput('Inner default text');
+
+    // Update
+    expect(() => {
+      root.update(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <LazyText text={null} />
+        </Suspense>,
+      );
+      root.unstable_flushAll();
+    }).toWarnDev(
+      'The prop `text` is marked as required in `T`, but its value is `null`',
+    );
+    expect(root).toMatchRenderedOutput(null);
   });
 
   it('includes lazy-loaded component in warning stack', async () => {
