@@ -170,6 +170,8 @@ const run = async ({cwd, packages, version}, versionsMap) => {
     theme`A full diff is available at {path ${relative(cwd, diffPath)}}.`
   );
   await confirm('Do the changes above look correct?');
+
+  clear();
 };
 
 // Run this directly because logPromise would interfere with printing package dependencies.
