@@ -3,12 +3,15 @@
 'use strict';
 
 const {exec} = require('child-process-promise');
+const clear = require('clear');
 const {readJsonSync} = require('fs-extra');
 const {join} = require('path');
 const {confirm, execRead} = require('../utils');
 const theme = require('../theme');
 
 const run = async ({cwd, dry, packages, tags}, otp) => {
+  clear();
+
   for (let i = 0; i < packages.length; i++) {
     const packageName = packages[i];
     const packagePath = join(cwd, 'build/node_modules', packageName);
