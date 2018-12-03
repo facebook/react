@@ -254,6 +254,23 @@ function FiberNode(
   this.alternate = null;
 
   if (enableProfilerTimer) {
+    // Note: The following is done to avoid a v8 deopt.
+    //
+    // It is important to initialize the fields below with doubles.
+    // Otherwise Fibers will deopt and end up having separate shapes when
+    // doubles are later assigned to fields that initially contained smis.
+    // This is a bug in v8 having something to do with Object.preventExtension().
+    //
+    // Learn more about this deopt here:
+    // https://github.com/facebook/react/issues/14365
+    // https://bugs.chromium.org/p/v8/issues/detail?id=8538
+    this.actualDuration = Number.NaN;
+    this.actualStartTime = Number.NaN;
+    this.selfBaseDuration = Number.NaN;
+    this.treeBaseDuration = Number.NaN;
+
+    // It's okay to replace the initial doubles with smis after initialization.
+    // This simplifies other profiler code and doesn't trigger the deopt.
     this.actualDuration = 0;
     this.actualStartTime = -1;
     this.selfBaseDuration = 0;
