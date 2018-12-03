@@ -20,65 +20,69 @@ const run = async ({cwd, packages, tags}) => {
 
   clear();
 
-  console.log(
-    theme.caution`The release has been published but you're not done yet!`
-  );
-
-  if (tags.includes('latest')) {
-    console.log();
+  if (tags.length === 1 && tags[0] === 'canary') {
+    console.log(theme.header`A canary release has been pulbished!`);
+  } else {
     console.log(
-      theme.header`Please review and commit all local, staged changes.`
+      theme.caution`The release has been published but you're not done yet!`
     );
 
-    console.log();
-    console.log('Version numbers have been updated in the following files:');
-    for (let i = 0; i < packages.length; i++) {
-      const packageName = packages[i];
-      console.log(theme.path`• packages/%s/package.json`, packageName);
-    }
-    console.log(theme.path`• packages/shared/ReactVersion.js`);
-
-    console.log();
-    if (environment === 'ci') {
-      console.log('Auto-generated error codes have been updated as well:');
-      console.log(theme.path`• scripts/error-codes/codes.json`);
-    } else {
+    if (tags.includes('latest')) {
+      console.log();
       console.log(
-        theme`{caution The release that was just published was created locally.} ` +
-          theme`Because of this, you will need to update the generated ` +
-          theme`{path scripts/error-codes/codes.json} file manually:`
+        theme.header`Please review and commit all local, staged changes.`
       );
-      console.log(theme`  {command git checkout} {version ${commit}}`);
-      console.log(theme`  {command yarn build -- --extract-errors}`);
+
+      console.log();
+      console.log('Version numbers have been updated in the following files:');
+      for (let i = 0; i < packages.length; i++) {
+        const packageName = packages[i];
+        console.log(theme.path`• packages/%s/package.json`, packageName);
+      }
+      console.log(theme.path`• packages/shared/ReactVersion.js`);
+
+      console.log();
+      if (environment === 'ci') {
+        console.log('Auto-generated error codes have been updated as well:');
+        console.log(theme.path`• scripts/error-codes/codes.json`);
+      } else {
+        console.log(
+          theme`{caution The release that was just published was created locally.} ` +
+            theme`Because of this, you will need to update the generated ` +
+            theme`{path scripts/error-codes/codes.json} file manually:`
+        );
+        console.log(theme`  {command git checkout} {version ${commit}}`);
+        console.log(theme`  {command yarn build -- --extract-errors}`);
+      }
     }
+
+    console.log();
+    console.log(
+      theme`{header Don't forget to update and commit the }{path CHANGELOG}`
+    );
+
+    // Prompt the release engineer to tag the commit and update the CHANGELOG.
+    // (The script could automatically do this, but this seems safer.)
+    console.log();
+    console.log(
+      theme.header`Tag the source for this release in Git with the following command:`
+    );
+    console.log(
+      theme`  {command git tag -a v}{version %s} {command -m "v%s"} {version %s}`,
+      version,
+      version,
+      commit
+    );
+    console.log(theme.command`  git push origin --tags`);
+
+    console.log();
+    console.log(theme.header`Lastly, please fill in the release on GitHub:`);
+    console.log(
+      theme.link`https://github.com/facebook/react/releases/tag/v%s`,
+      version
+    );
+    console.log();
   }
-
-  console.log();
-  console.log(
-    theme`{header Don't forget to update and commit the }{path CHANGELOG}`
-  );
-
-  // Prompt the release engineer to tag the commit and update the CHANGELOG.
-  // (The script could automatically do this, but this seems safer.)
-  console.log();
-  console.log(
-    theme.header`Tag the source for this release in Git with the following command:`
-  );
-  console.log(
-    theme`  {command git tag -a v}{version %s} {command -m "v%s"} {version %s}`,
-    version,
-    version,
-    commit
-  );
-  console.log(theme.command`  git push origin --tags`);
-
-  console.log();
-  console.log(theme.header`Lastly, please fill in the release on GitHub:`);
-  console.log(
-    theme.link`https://github.com/facebook/react/releases/tag/v%s`,
-    version
-  );
-  console.log();
 };
 
 module.exports = run;
