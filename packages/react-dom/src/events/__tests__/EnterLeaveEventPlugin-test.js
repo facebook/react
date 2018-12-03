@@ -45,7 +45,9 @@ describe('EnterLeaveEventPlugin', () => {
       <div
         onMouseLeave={e => {
           e.persist();
-          leaveEvents.push(e);
+          // We do this for React Fire because the properties
+          // are dynamic getters and can change after creation
+          leaveEvents.push({target: e.target, relatedTarget: e.relatedTarget});
         }}
       />,
       iframeDocument.body.getElementsByTagName('div')[0],

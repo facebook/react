@@ -1021,6 +1021,13 @@
       "packageName": "react-dom",
       "size": 1122,
       "gzip": 659
+    },
+    {
+      "filename": "react-dom-unstable-fire.production.min.js",
+      "bundleType": "UMD_PROD",
+      "packageName": "react-dom",
+      "size": 87116,
+      "gzip": 28423
     }
   ]
 }

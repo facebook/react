@@ -12,6 +12,7 @@
 let React;
 let ReactDOM;
 
+// Fire has a polyfill for this plugin
 describe('BeforeInputEventPlugin', () => {
   let container;
 

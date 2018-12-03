@@ -20,11 +20,12 @@ import invariant from 'shared/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 import * as DOMTopLevelEventTypes from '../events/DOMTopLevelEventTypes';
+import {enableReactDOMFire} from 'shared/ReactFeatureFlags';
 
 const {findDOMNode} = ReactDOM;
 // Keep in sync with ReactDOMUnstableNativeDependencies.js
 // and ReactDOM.js:
-const [
+let [
   getInstanceFromNode,
   /* eslint-disable no-unused-vars */
   getNodeFromInstance,
@@ -39,6 +40,96 @@ const [
   dispatchEvent,
   runEventsInBatch,
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
+
+// React Fire no longer exposts the dispatch configs
+if (enableReactDOMFire && eventNameDispatchConfigs === null) {
+  eventNameDispatchConfigs = {
+    abort: {},
+    animationEnd: {},
+    animationIteration: {},
+    animationStart: {},
+    auxClick: {},
+    beforeInput: {},
+    blur: {},
+    canPlay: {},
+    canPlayThrough: {},
+    cancel: {},
+    change: {},
+    click: {},
+    close: {},
+    compositionEnd: {},
+    compositionStart: {},
+    compositionUpdate: {},
+    contextMenu: {},
+    copy: {},
+    cut: {},
+    doubleClick: {},
+    drag: {},
+    dragEnd: {},
+    dragEnter: {},
+    dragExit: {},
+    dragLeave: {},
+    dragOver: {},
+    dragStart: {},
+    drop: {},
+    durationChange: {},
+    emptied: {},
+    encrypted: {},
+    ended: {},
+    error: {},
+    focus: {},
+    gotPointerCapture: {},
+    input: {},
+    invalid: {},
+    keyDown: {},
+    keyPress: {},
+    keyUp: {},
+    load: {},
+    loadStart: {},
+    loadedData: {},
+    loadedMetadata: {},
+    lostPointerCapture: {},
+    mouseDown: {},
+    mouseEnter: {},
+    mouseLeave: {},
+    mouseMove: {},
+    mouseOut: {},
+    mouseOver: {},
+    mouseUp: {},
+    paste: {},
+    pause: {},
+    play: {},
+    playing: {},
+    pointerCancel: {},
+    pointerDown: {},
+    pointerEnter: {},
+    pointerLeave: {},
+    pointerMove: {},
+    pointerOut: {},
+    pointerOver: {},
+    pointerUp: {},
+    progress: {},
+    rateChange: {},
+    reset: {},
+    scroll: {},
+    seeked: {},
+    seeking: {},
+    select: {},
+    stalled: {},
+    submit: {},
+    suspend: {},
+    timeUpdate: {},
+    toggle: {},
+    touchCancel: {},
+    touchEnd: {},
+    touchMove: {},
+    touchStart: {},
+    transitionEnd: {},
+    volumeChange: {},
+    waiting: {},
+    wheel: {},
+  };
+}
 
 function Event(suffix) {}
 
@@ -57,7 +148,11 @@ let hasWarnedAboutDeprecatedMockComponent = false;
  */
 function simulateNativeEventOnNode(topLevelType, node, fakeNativeEvent) {
   fakeNativeEvent.target = node;
-  dispatchEvent(topLevelType, fakeNativeEvent);
+  if (enableReactDOMFire) {
+    dispatchEvent(topLevelType, document, fakeNativeEvent);
+  } else {
+    dispatchEvent(topLevelType, fakeNativeEvent);
+  }
 }
 
 /**
@@ -404,40 +499,51 @@ function makeSimulator(eventType) {
         'a component instance. Pass the DOM node you wish to simulate the event on instead.',
     );
 
-    const dispatchConfig = eventNameDispatchConfigs[eventType];
+    if (enableReactDOMFire) {
+      const fakeNativeEvent = new Event();
+      fakeNativeEvent.target = domNode;
+      const eventName = (fakeNativeEvent.type = eventType.toLowerCase());
+      fakeNativeEvent.simulated = true;
 
-    const fakeNativeEvent = new Event();
-    fakeNativeEvent.target = domNode;
-    fakeNativeEvent.type = eventType.toLowerCase();
+      Object.assign(fakeNativeEvent, eventData);
 
-    // We don't use SyntheticEvent.getPooled in order to not have to worry about
-    // properly destroying any properties assigned from `eventData` upon release
-    const targetInst = getInstanceFromNode(domNode);
-    const event = new SyntheticEvent(
-      dispatchConfig,
-      targetInst,
-      fakeNativeEvent,
-      domNode,
-    );
-
-    // Since we aren't using pooling, always persist the event. This will make
-    // sure it's marked and won't warn when setting additional properties.
-    event.persist();
-    Object.assign(event, eventData);
-
-    if (dispatchConfig.phasedRegistrationNames) {
-      accumulateTwoPhaseDispatches(event);
+      dispatchEvent(eventName, document, fakeNativeEvent);
     } else {
-      accumulateDirectDispatches(event);
-    }
+      const dispatchConfig = eventNameDispatchConfigs[eventType];
 
-    ReactDOM.unstable_batchedUpdates(function() {
-      // Normally extractEvent enqueues a state restore, but we'll just always
-      // do that since we we're by-passing it here.
-      enqueueStateRestore(domNode);
-      runEventsInBatch(event);
-    });
-    restoreStateIfNeeded();
+      const fakeNativeEvent = new Event();
+      fakeNativeEvent.target = domNode;
+      fakeNativeEvent.type = eventType.toLowerCase();
+
+      // We don't use SyntheticEvent.getPooled in order to not have to worry about
+      // properly destroying any properties assigned from `eventData` upon release
+      const targetInst = getInstanceFromNode(domNode);
+      const event = new SyntheticEvent(
+        dispatchConfig,
+        targetInst,
+        fakeNativeEvent,
+        domNode,
+      );
+
+      // Since we aren't using pooling, always persist the event. This will make
+      // sure it's marked and won't warn when setting additional properties.
+      event.persist();
+      Object.assign(event, eventData);
+
+      if (dispatchConfig.phasedRegistrationNames) {
+        accumulateTwoPhaseDispatches(event);
+      } else {
+        accumulateDirectDispatches(event);
+      }
+
+      ReactDOM.unstable_batchedUpdates(function() {
+        // Normally extractEvent enqueues a state restore, but we'll just always
+        // do that since we we're by-passing it here.
+        enqueueStateRestore(domNode);
+        runEventsInBatch(event);
+      });
+      restoreStateIfNeeded();
+    }
   };
 }
 

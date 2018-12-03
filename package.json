@@ -88,7 +88,7 @@
     "@mattiasbuelens/web-streams-polyfill": "0.1.0"
   },
   "devEngines": {
-    "node": "8.x || 9.x || 10.x"
+    "node": "8.x || 9.x || 10.x || 11.x"
   },
   "jest": {
     "testRegex": "/scripts/jest/dont-run-jest-directly\\.js$"
@@ -104,6 +104,7 @@
     "test-fire": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.source-fire.js",
     "test-prod": "cross-env NODE_ENV=production jest --config ./scripts/jest/config.source.js",
     "test-fire-prod": "cross-env NODE_ENV=production jest --config ./scripts/jest/config.source-fire.js",
+    "debug-test-fire-prod": "cross-env NODE_ENV=production node --inspect-brk node_modules/.bin/jest --config ./scripts/jest/config.source-fire.js --runInBand",
     "test-prod-build": "yarn test-build-prod",
     "test-build": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.build.js",
     "test-build-prod": "cross-env NODE_ENV=production jest --config ./scripts/jest/config.build.js",

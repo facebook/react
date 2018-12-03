@@ -770,7 +770,6 @@ const ReactDOM: Object = {
 
   flushSync: flushSync,
 
-  unstable_createRoot: createRoot,
   unstable_flushControlled: flushControlled,
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
@@ -811,7 +810,8 @@ function createRoot(container: DOMContainer, options?: RootOptions): ReactRoot {
 
 if (enableStableConcurrentModeAPIs) {
   ReactDOM.createRoot = createRoot;
-  ReactDOM.unstable_createRoot = undefined;
+} else {
+  ReactDOM.unstable_createRoot = createRoot;
 }
 
 const foundDevTools = injectIntoDevTools({

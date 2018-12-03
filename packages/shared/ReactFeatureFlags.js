@@ -49,3 +49,5 @@ export const disableInputAttributeSyncing = false;
 export const enableStableConcurrentModeAPIs = false;
 
 export const warnAboutShorthandPropertyCollision = false;
+
+export const enableReactDOMFire = false;
