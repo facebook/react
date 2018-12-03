@@ -65,7 +65,7 @@
 
     <script>
       if (window.location.search.includes('puppeteer=true')) {
-        // Colocated calls to performance.now() often yield differen values in Puppeteer.
+        // Colocated calls to performance.now() often yield different values in Puppeteer.
         // This causes the Scheduler API test to fail.
         // For the purposes of our automated release scripts,
         // Coerce tests to use Date.now() instead to reduce the chances of a false positive.
