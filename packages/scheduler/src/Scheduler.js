@@ -473,9 +473,11 @@ if (globalValue && globalValue._schedMock) {
   var _callback = null;
   var _flushCallback = function(didTimeout) {
     if (_callback !== null) {
-      var cb = _callback;
-      _callback = null;
-      cb(didTimeout);
+      try {
+        _callback(didTimeout);
+      } finally {
+        _callback = null;
+      }
     }
   };
   requestHostCallback = function(cb, ms) {
