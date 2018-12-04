@@ -126,6 +126,15 @@ textarea {
   width: 100%;
 }
 
+.header__checkbox {
+  vertical-align: middle;
+}
+
+.header__label {
+  font-size: 12px;
+  color: #ccc;
+}
+
 .sr-only {
   clip: rect(0, 0, 0, 0);
   height: 0;

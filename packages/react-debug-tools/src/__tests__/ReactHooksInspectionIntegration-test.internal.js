@@ -79,7 +79,6 @@ describe('ReactHooksInspectionIntergration', () => {
       let [state2, dispatch] = React.useReducer((s, a) => a.value, 'b');
       let ref = React.useRef('c');
 
-      React.useMutationEffect(effect);
       React.useLayoutEffect(effect);
       React.useEffect(effect);
 
@@ -117,7 +116,6 @@ describe('ReactHooksInspectionIntergration', () => {
       {name: 'State', value: 'a', subHooks: []},
       {name: 'Reducer', value: 'b', subHooks: []},
       {name: 'Ref', value: 'c', subHooks: []},
-      {name: 'MutationEffect', value: effect, subHooks: []},
       {name: 'LayoutEffect', value: effect, subHooks: []},
       {name: 'Effect', value: effect, subHooks: []},
       {name: 'ImperativeMethods', value: outsideRef.current, subHooks: []},
@@ -134,7 +132,6 @@ describe('ReactHooksInspectionIntergration', () => {
       {name: 'State', value: 'A', subHooks: []},
       {name: 'Reducer', value: 'B', subHooks: []},
       {name: 'Ref', value: 'C', subHooks: []},
-      {name: 'MutationEffect', value: effect, subHooks: []},
       {name: 'LayoutEffect', value: effect, subHooks: []},
       {name: 'Effect', value: effect, subHooks: []},
       {name: 'ImperativeMethods', value: outsideRef.current, subHooks: []},

@@ -25,7 +25,6 @@ let useCallback;
 let useMemo;
 let useRef;
 let useImperativeMethods;
-let useMutationEffect;
 let useLayoutEffect;
 let forwardRef;
 let yieldedValues;
@@ -50,7 +49,6 @@ function initModules() {
   useMemo = React.useMemo;
   useRef = React.useRef;
   useImperativeMethods = React.useImperativeMethods;
-  useMutationEffect = React.useMutationEffect;
   useLayoutEffect = React.useLayoutEffect;
   forwardRef = React.forwardRef;
 
@@ -516,6 +514,19 @@ describe('ReactDOMServerHooks', () => {
       expect(domNode.tagName).toEqual('SPAN');
       expect(domNode.textContent).toEqual('Count: 0');
     });
+
+    itRenders('should support render time callbacks', async render => {
+      function Counter(props) {
+        const renderCount = useCallback(increment => {
+          return 'Count: ' + (props.count + increment);
+        });
+        return <Text text={renderCount(3)} />;
+      }
+      const domNode = await render(<Counter count={2} />);
+      expect(clearYields()).toEqual(['Count: 5']);
+      expect(domNode.tagName).toEqual('SPAN');
+      expect(domNode.textContent).toEqual('Count: 5');
+    });
   });
 
   describe('useImperativeMethods', () => {
@@ -532,22 +543,6 @@ describe('ReactDOMServerHooks', () => {
       const domNode = await serverRender(
         <Counter label="Count" ref={counter} />,
       );
-      expect(clearYields()).toEqual(['Count: 0']);
-      expect(domNode.tagName).toEqual('SPAN');
-      expect(domNode.textContent).toEqual('Count: 0');
-    });
-  });
-
-  describe('useMutationEffect', () => {
-    it('should warn when invoked during render', async () => {
-      function Counter() {
-        useMutationEffect(() => {
-          throw new Error('should not be invoked');
-        });
-
-        return <Text text="Count: 0" />;
-      }
-      const domNode = await serverRender(<Counter />, 1);
       expect(clearYields()).toEqual(['Count: 0']);
       expect(domNode.tagName).toEqual('SPAN');
       expect(domNode.textContent).toEqual('Count: 0');

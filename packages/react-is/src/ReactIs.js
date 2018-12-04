@@ -16,6 +16,7 @@ import {
   REACT_ELEMENT_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
+  REACT_MEMO_TYPE,
   REACT_PORTAL_TYPE,
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
@@ -27,7 +28,6 @@ import lowPriorityWarning from 'shared/lowPriorityWarning';
 export function typeOf(object: any) {
   if (typeof object === 'object' && object !== null) {
     const $$typeof = object.$$typeof;
-
     switch ($$typeof) {
       case REACT_ELEMENT_TYPE:
         const type = object.type;
@@ -51,6 +51,7 @@ export function typeOf(object: any) {
                 return $$typeof;
             }
         }
+      case REACT_MEMO_TYPE:
       case REACT_PORTAL_TYPE:
         return $$typeof;
     }
@@ -69,6 +70,7 @@ export const ForwardRef = REACT_FORWARD_REF_TYPE;
 export const Fragment = REACT_FRAGMENT_TYPE;
 export const Profiler = REACT_PROFILER_TYPE;
 export const Portal = REACT_PORTAL_TYPE;
+export const Memo = REACT_MEMO_TYPE;
 export const StrictMode = REACT_STRICT_MODE_TYPE;
 
 export {isValidElementType};
@@ -114,6 +116,9 @@ export function isFragment(object: any) {
 }
 export function isProfiler(object: any) {
   return typeOf(object) === REACT_PROFILER_TYPE;
+}
+export function isMemo(object: any) {
+  return typeOf(object) === REACT_MEMO_TYPE;
 }
 export function isPortal(object: any) {
   return typeOf(object) === REACT_PORTAL_TYPE;

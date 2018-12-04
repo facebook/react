@@ -12,18 +12,31 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 
 import './ReactNativeInjection';
 
-import * as ReactNativeFiberRenderer from 'react-reconciler/inline.native';
+import {
+  findHostInstance,
+  findHostInstanceWithWarning,
+  batchedUpdates as batchedUpdatesImpl,
+  interactiveUpdates,
+  flushInteractiveUpdates,
+  createContainer,
+  updateContainer,
+  injectIntoDevTools,
+  getPublicRootInstance,
+} from 'react-reconciler/inline.native';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {getStackByFiberInDevAndProd} from 'react-reconciler/src/ReactCurrentFiber';
-import * as ReactPortal from 'shared/ReactPortal';
-import * as ReactGenericBatching from 'events/ReactGenericBatching';
+import {createPortal} from 'shared/ReactPortal';
+import {
+  setBatchingImplementation,
+  batchedUpdates,
+} from 'events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';
 // Module provided by RN:
 import UIManager from 'UIManager';
 
 import NativeMethodsMixin from './NativeMethodsMixin';
 import ReactNativeComponent from './ReactNativeComponent';
-import * as ReactNativeComponentTree from './ReactNativeComponentTree';
+import {getClosestInstanceFromNode} from './ReactNativeComponentTree';
 import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -31,9 +44,6 @@ import getComponentName from 'shared/getComponentName';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-const findHostInstance = ReactNativeFiberRenderer.findHostInstance;
-const findHostInstanceWithWarning =
-  ReactNativeFiberRenderer.findHostInstanceWithWarning;
 
 function findNodeHandle(componentOrHandle: any): ?number {
   if (__DEV__) {
@@ -85,14 +95,14 @@ function findNodeHandle(componentOrHandle: any): ?number {
   return hostInstance._nativeTag;
 }
 
-ReactGenericBatching.setBatchingImplementation(
-  ReactNativeFiberRenderer.batchedUpdates,
-  ReactNativeFiberRenderer.interactiveUpdates,
-  ReactNativeFiberRenderer.flushInteractiveUpdates,
+setBatchingImplementation(
+  batchedUpdatesImpl,
+  interactiveUpdates,
+  flushInteractiveUpdates,
 );
 
 function computeComponentStackForErrorReporting(reactTag: number): string {
-  let fiber = ReactNativeComponentTree.getClosestInstanceFromNode(reactTag);
+  let fiber = getClosestInstanceFromNode(reactTag);
   if (!fiber) {
     return '';
   }
@@ -112,23 +122,19 @@ const ReactNativeRenderer: ReactNativeType = {
     if (!root) {
       // TODO (bvaughn): If we decide to keep the wrapper component,
       // We could create a wrapper for containerTag as well to reduce special casing.
-      root = ReactNativeFiberRenderer.createContainer(
-        containerTag,
-        false,
-        false,
-      );
+      root = createContainer(containerTag, false, false);
       roots.set(containerTag, root);
     }
-    ReactNativeFiberRenderer.updateContainer(element, root, null, callback);
+    updateContainer(element, root, null, callback);
 
-    return ReactNativeFiberRenderer.getPublicRootInstance(root);
+    return getPublicRootInstance(root);
   },
 
   unmountComponentAtNode(containerTag: number) {
     const root = roots.get(containerTag);
     if (root) {
       // TODO: Is it safe to reset this now or should I wait since this unmount could be deferred?
-      ReactNativeFiberRenderer.updateContainer(null, root, null, () => {
+      updateContainer(null, root, null, () => {
         roots.delete(containerTag);
       });
     }
@@ -146,10 +152,10 @@ const ReactNativeRenderer: ReactNativeType = {
     containerTag: number,
     key: ?string = null,
   ) {
-    return ReactPortal.createPortal(children, containerTag, null, key);
+    return createPortal(children, containerTag, null, key);
   },
 
-  unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
+  unstable_batchedUpdates: batchedUpdates,
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // Used as a mixin in many createClass-based components
@@ -158,8 +164,8 @@ const ReactNativeRenderer: ReactNativeType = {
   },
 };
 
-ReactNativeFiberRenderer.injectIntoDevTools({
-  findFiberByHostInstance: ReactNativeComponentTree.getClosestInstanceFromNode,
+injectIntoDevTools({
+  findFiberByHostInstance: getClosestInstanceFromNode,
   getInspectorDataForViewTag: getInspectorDataForViewTag,
   bundleType: __DEV__ ? 1 : 0,
   version: ReactVersion,

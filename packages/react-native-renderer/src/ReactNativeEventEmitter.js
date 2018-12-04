@@ -87,7 +87,7 @@ const removeTouchesAtIndices = function(
  * @param {TopLevelType} topLevelType Top level type of event.
  * @param {?object} nativeEventParam Object passed from native.
  */
-export function _receiveRootNodeIDEvent(
+function _receiveRootNodeIDEvent(
   rootNodeID: number,
   topLevelType: TopLevelType,
   nativeEventParam: ?AnyNativeEvent,

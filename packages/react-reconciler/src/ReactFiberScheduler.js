@@ -68,7 +68,12 @@ import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
-import * as ReactCurrentFiber from './ReactCurrentFiber';
+import {
+  getStackByFiberInDevAndProd,
+  phase as ReactCurrentFiberPhase,
+  resetCurrentFiber,
+  setCurrentFiber,
+} from './ReactCurrentFiber';
 import {
   now,
   scheduleDeferredCallback,
@@ -210,13 +215,13 @@ if (__DEV__) {
       isClass
         ? 'the componentWillUnmount method'
         : 'a useEffect cleanup function',
-      ReactCurrentFiber.getStackByFiberInDevAndProd(fiber),
+      getStackByFiberInDevAndProd(fiber),
     );
     didWarnStateUpdateForUnmountedComponent[componentName] = true;
   };
 
   warnAboutInvalidUpdates = function(instance: React$Component<any>) {
-    switch (ReactCurrentFiber.phase) {
+    switch (ReactCurrentFiberPhase) {
       case 'getChildContext':
         if (didWarnSetStateChildContext) {
           return;
@@ -392,7 +397,7 @@ function resetStack() {
 function commitAllHostEffects() {
   while (nextEffect !== null) {
     if (__DEV__) {
-      ReactCurrentFiber.setCurrentFiber(nextEffect);
+      setCurrentFiber(nextEffect);
     }
     recordEffect();
 
@@ -451,14 +456,14 @@ function commitAllHostEffects() {
   }
 
   if (__DEV__) {
-    ReactCurrentFiber.resetCurrentFiber();
+    resetCurrentFiber();
   }
 }
 
 function commitBeforeMutationLifecycles() {
   while (nextEffect !== null) {
     if (__DEV__) {
-      ReactCurrentFiber.setCurrentFiber(nextEffect);
+      setCurrentFiber(nextEffect);
     }
 
     const effectTag = nextEffect.effectTag;
@@ -472,7 +477,7 @@ function commitBeforeMutationLifecycles() {
   }
 
   if (__DEV__) {
-    ReactCurrentFiber.resetCurrentFiber();
+    resetCurrentFiber();
   }
 }
 
@@ -947,7 +952,7 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
     // progress.
     const current = workInProgress.alternate;
     if (__DEV__) {
-      ReactCurrentFiber.setCurrentFiber(workInProgress);
+      setCurrentFiber(workInProgress);
     }
 
     const returnFiber = workInProgress.return;
@@ -988,7 +993,7 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
       stopWorkTimer(workInProgress);
       resetChildExpirationTime(workInProgress, nextRenderExpirationTime);
       if (__DEV__) {
-        ReactCurrentFiber.resetCurrentFiber();
+        resetCurrentFiber();
       }
 
       if (nextUnitOfWork !== null) {
@@ -1076,7 +1081,7 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
       }
 
       if (__DEV__) {
-        ReactCurrentFiber.resetCurrentFiber();
+        resetCurrentFiber();
       }
 
       if (next !== null) {
@@ -1132,7 +1137,7 @@ function performUnitOfWork(workInProgress: Fiber): Fiber | null {
   // See if beginning this work spawns more work.
   startWorkTimer(workInProgress);
   if (__DEV__) {
-    ReactCurrentFiber.setCurrentFiber(workInProgress);
+    setCurrentFiber(workInProgress);
   }
 
   if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
@@ -1161,7 +1166,7 @@ function performUnitOfWork(workInProgress: Fiber): Fiber | null {
   }
 
   if (__DEV__) {
-    ReactCurrentFiber.resetCurrentFiber();
+    resetCurrentFiber();
     if (isReplayingFailedUnitOfWork) {
       // Currently replaying a failed unit of work. This should be unreachable,
       // because the render phase is meant to be idempotent, and it should

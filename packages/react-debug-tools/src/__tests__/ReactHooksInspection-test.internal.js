@@ -129,7 +129,7 @@ describe('ReactHooksInspection', () => {
       return result;
     }
     function useBaz(value) {
-      React.useMutationEffect(effect);
+      React.useLayoutEffect(effect);
       let result = useCustom(value);
       return result;
     }
@@ -176,7 +176,7 @@ describe('ReactHooksInspection', () => {
         value: undefined,
         subHooks: [
           {
-            name: 'MutationEffect',
+            name: 'LayoutEffect',
             value: effect,
             subHooks: [],
           },

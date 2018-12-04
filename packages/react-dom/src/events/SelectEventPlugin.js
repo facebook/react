@@ -25,7 +25,7 @@ import {
 import {isListeningToAllDependencies} from './ReactBrowserEventEmitter';
 import getActiveElement from '../client/getActiveElement';
 import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
-import * as ReactInputSelection from '../client/ReactInputSelection';
+import {hasSelectionCapabilities} from '../client/ReactInputSelection';
 import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
 
 const skipSelectionChangeEvent =
@@ -66,10 +66,7 @@ let mouseDown = false;
  * @return {object}
  */
 function getSelection(node) {
-  if (
-    'selectionStart' in node &&
-    ReactInputSelection.hasSelectionCapabilities(node)
-  ) {
+  if ('selectionStart' in node && hasSelectionCapabilities(node)) {
     return {
       start: node.selectionStart,
       end: node.selectionEnd,

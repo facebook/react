@@ -271,20 +271,6 @@ function useRef<T>(initialValue: T): {current: T} {
   }
 }
 
-function useMutationEffect(
-  create: () => mixed,
-  inputs: Array<mixed> | void | null,
-) {
-  warning(
-    false,
-    'useMutationEffect does nothing on the server, because its effect cannot ' +
-      "be encoded into the server renderer's output format. This will lead " +
-      'to a mismatch between the initial, non-hydrated UI and the intended ' +
-      'UI. To avoid this, useMutationEffect should only be used in ' +
-      'components that render exclusively on the client.',
-  );
-}
-
 export function useLayoutEffect(
   create: () => mixed,
   inputs: Array<mixed> | void | null,
@@ -341,6 +327,9 @@ function dispatchAction<A>(
 }
 
 function noop(): void {}
+function identity(fn: Function): Function {
+  return fn;
+}
 
 export let currentThreadID: ThreadID = 0;
 
@@ -355,12 +344,11 @@ export const Dispatcher = {
   useReducer,
   useRef,
   useState,
-  useMutationEffect,
   useLayoutEffect,
+  // Callbacks are passed as they are in the server environment.
+  useCallback: identity,
   // useImperativeMethods is not run in the server environment
   useImperativeMethods: noop,
-  // Callbacks are not run in the server environment.
-  useCallback: noop,
   // Effects are not run in the server environment.
   useEffect: noop,
 };

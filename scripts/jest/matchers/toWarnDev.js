@@ -130,7 +130,7 @@ const createMatcherFor = consoleMethod =>
       };
 
       // TODO Decide whether we need to support nested toWarn* expectations.
-      // If we don't need id, add a check here to see if this is already our spy,
+      // If we don't need it, add a check here to see if this is already our spy,
       // And throw an error.
       const originalMethod = console[consoleMethod];
 

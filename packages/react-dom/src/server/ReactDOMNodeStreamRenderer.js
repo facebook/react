@@ -18,8 +18,9 @@ class ReactMarkupReadableStream extends Readable {
     this.partialRenderer = new ReactPartialRenderer(element, makeStaticMarkup);
   }
 
-  _destroy() {
+  _destroy(err, callback) {
     this.partialRenderer.destroy();
+    callback(err);
   }
 
   _read(size) {

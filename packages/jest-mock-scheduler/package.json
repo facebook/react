@@ -1,0 +1,28 @@
+{
+  "name": "jest-mock-scheduler",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Jest matchers and utilities for testing the scheduler package.",
+  "main": "index.js",
+  "repository": "facebook/react",
+  "keywords": [
+    "jest",
+    "scheduler"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "homepage": "https://reactjs.org/",
+  "peerDependencies": {
+    "jest": "^23.0.1",
+    "scheduler": "^0.11.0"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "build-info.json",
+    "index.js",
+    "cjs/"
+  ]
+}

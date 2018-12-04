@@ -23,6 +23,7 @@ export const enableSchedulerTracing = false;
 export const enableSuspenseServerRenderer = false;
 export const disableInputAttributeSyncing = false;
 export const enableStableConcurrentModeAPIs = false;
+export const warnAboutShorthandPropertyCollision = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

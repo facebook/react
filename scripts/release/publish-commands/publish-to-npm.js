@@ -2,94 +2,64 @@
 
 'use strict';
 
-const chalk = require('chalk');
-const {readJson} = require('fs-extra');
+const {exec} = require('child-process-promise');
+const clear = require('clear');
+const {readJsonSync} = require('fs-extra');
 const {join} = require('path');
-const semver = require('semver');
-const {execRead, execUnlessDry, logPromise} = require('../utils');
+const {confirm, execRead} = require('../utils');
+const theme = require('../theme');
 
-const push = async ({cwd, dry, otp, packages, version, tag}) => {
-  const errors = [];
-  const isPrerelease = semver.prerelease(version);
+const run = async ({cwd, dry, packages, tags}, otp) => {
+  clear();
 
-  let resolvedTag = tag;
-  if (tag === undefined) {
-    // No tag was provided. Default to `latest` for stable releases and `next`
-    // for prereleases
-    resolvedTag = isPrerelease ? 'next' : 'latest';
-  } else if (tag === 'latest' && isPrerelease) {
-    throw new Error('The tag `latest` can only be used for stable versions.');
-  }
+  for (let i = 0; i < packages.length; i++) {
+    const packageName = packages[i];
+    const packagePath = join(cwd, 'build/node_modules', packageName);
+    const {version} = readJsonSync(join(packagePath, 'package.json'));
 
-  // Pass two factor auth code if provided:
-  // https://docs.npmjs.com/getting-started/using-two-factor-authentication
-  const twoFactorAuth = otp != null ? `--otp ${otp}` : '';
-
-  const publishProject = async project => {
-    try {
-      const path = join(cwd, 'build', 'node_modules', project);
-      await execUnlessDry(`npm publish --tag ${resolvedTag} ${twoFactorAuth}`, {
-        cwd: path,
-        dry,
-      });
-
-      const packagePath = join(
-        cwd,
-        'build',
-        'node_modules',
-        project,
-        'package.json'
+    // Check if this package version has already been published.
+    // If so we might be resuming from a previous run.
+    // We could infer this by comparing the build-info.json,
+    // But for now the easiest way is just to ask if this is expected.
+    const info = await execRead(`npm view ${packageName}@${version}`);
+    if (info) {
+      console.log(
+        theme`{package ${packageName}} {version ${version}} has already been published.`
       );
-      const packageJSON = await readJson(packagePath);
-      const packageVersion = packageJSON.version;
+      await confirm('Is this expected?');
+    } else {
+      console.log(
+        theme`{spinnerSuccess ✓} Publishing {package ${packageName}}`
+      );
 
+      // Publish the package and tag it.
       if (!dry) {
-        // Wait a couple of seconds before querying NPM for status;
-        // Anecdotally, querying too soon can result in a false negative.
-        await new Promise(resolve => setTimeout(resolve, 5000));
-
-        const status = JSON.parse(
-          await execRead(`npm info ${project} dist-tags --json`)
-        );
-        const remoteVersion = status[resolvedTag];
-
-        // Compare remote version to package.json version,
-        // To better handle the case of pre-release versions.
-        if (remoteVersion !== packageVersion) {
-          throw Error(
-            chalk`Published version {yellow.bold ${packageVersion}} for ` +
-              chalk`{bold ${project}} but NPM shows {yellow.bold ${remoteVersion}}`
-          );
-        }
-
-        // If we've just published a stable release,
-        // Update the @next tag to also point to it (so @next doesn't lag behind).
-        // Skip this step if we have a manually specified tag.
-        // This is an escape hatch for us to interleave alpha and stable releases.
-        if (tag === undefined && !isPrerelease) {
-          await execUnlessDry(
-            `npm dist-tag add ${project}@${packageVersion} next ${twoFactorAuth}`,
-            {cwd: path, dry}
-          );
-        }
+        await exec(`npm publish --tag=${tags[0]} --otp=${otp}`, {
+          cwd: packagePath,
+        });
       }
-    } catch (error) {
-      errors.push(error.stack);
+      console.log(theme.command(`  cd ${packagePath}`));
+      console.log(theme.command(`  npm publish --tag=${tags[0]} --otp=${otp}`));
+
+      for (let j = 1; j < tags.length; j++) {
+        if (!dry) {
+          await exec(
+            `npm dist-tag add ${packageName}@${version} ${
+              tags[j]
+            } --otp=${otp}`,
+            {cwd: packagePath}
+          );
+        }
+        console.log(
+          theme.command(
+            `  npm dist-tag add ${packageName}@${version} ${
+              tags[j]
+            } --otp=${otp}`
+          )
+        );
+      }
     }
-  };
-
-  await Promise.all(packages.map(publishProject));
-
-  if (errors.length > 0) {
-    throw Error(
-      chalk`
-      Failure publishing to NPM
-
-      {white ${errors.join('\n\n')}}`
-    );
   }
 };
 
-module.exports = async params => {
-  return logPromise(push(params), 'Publishing packages to NPM');
-};
+module.exports = run;

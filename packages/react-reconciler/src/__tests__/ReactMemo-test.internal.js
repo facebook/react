@@ -12,6 +12,7 @@
 
 'use strict';
 
+let PropTypes;
 let React;
 let ReactFeatureFlags;
 let ReactNoop;
@@ -22,6 +23,7 @@ describe('memo', () => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+    PropTypes = require('prop-types');
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     ({Suspense} = React);
@@ -253,12 +255,163 @@ describe('memo', () => {
         expect(ReactNoop.getChildren()).toEqual([span('1!')]);
       });
 
-      it('warns if first argument is undefined', () => {
+      it('supports defaultProps defined on the memo() return value', async () => {
+        function Counter({a, b, c, d, e}) {
+          return <Text text={a + b + c + d + e} />;
+        }
+        Counter.defaultProps = {
+          a: 1,
+        };
+        // Note! We intentionally use React.memo() rather than the injected memo().
+        // This tests a synchronous chain of React.memo() without lazy() in the middle.
+        Counter = React.memo(Counter);
+        Counter.defaultProps = {
+          b: 2,
+        };
+        Counter = React.memo(Counter);
+        Counter = React.memo(Counter); // Layer without defaultProps
+        Counter.defaultProps = {
+          c: 3,
+        };
+        Counter = React.memo(Counter);
+        Counter.defaultProps = {
+          d: 4,
+        };
+        // The final layer uses memo() from test fixture (which might be lazy).
+        Counter = memo(Counter);
+        ReactNoop.render(
+          <Suspense fallback={<Text text="Loading..." />}>
+            <Counter e={5} />
+          </Suspense>,
+        );
+        expect(ReactNoop.flush()).toEqual(['Loading...']);
+        await Promise.resolve();
+        expect(ReactNoop.flush()).toEqual([15]);
+        expect(ReactNoop.getChildren()).toEqual([span(15)]);
+
+        // Should bail out because props have not changed
+        ReactNoop.render(
+          <Suspense>
+            <Counter e={5} />
+          </Suspense>,
+        );
+        expect(ReactNoop.flush()).toEqual([]);
+        expect(ReactNoop.getChildren()).toEqual([span(15)]);
+
+        // Should update because count prop changed
+        ReactNoop.render(
+          <Suspense>
+            <Counter e={10} />
+          </Suspense>,
+        );
+        expect(ReactNoop.flush()).toEqual([20]);
+        expect(ReactNoop.getChildren()).toEqual([span(20)]);
+      });
+
+      it('warns if the first argument is undefined', () => {
         expect(() => memo()).toWarnDev(
           'memo: The first argument must be a component. Instead ' +
             'received: undefined',
           {withoutStack: true},
         );
+      });
+
+      it('warns if the first argument is null', () => {
+        expect(() => memo(null)).toWarnDev(
+          'memo: The first argument must be a component. Instead ' +
+            'received: null',
+          {withoutStack: true},
+        );
+      });
+
+      it('validates propTypes declared on the inner component', () => {
+        function FnInner(props) {
+          return props.inner;
+        }
+        FnInner.propTypes = {inner: PropTypes.number.isRequired};
+        const Fn = React.memo(FnInner);
+
+        // Mount
+        expect(() => {
+          ReactNoop.render(<Fn inner="2" />);
+          ReactNoop.flush();
+        }).toWarnDev(
+          'Invalid prop `inner` of type `string` supplied to `FnInner`, expected `number`.',
+        );
+
+        // Update
+        expect(() => {
+          ReactNoop.render(<Fn inner={false} />);
+          ReactNoop.flush();
+        }).toWarnDev(
+          'Invalid prop `inner` of type `boolean` supplied to `FnInner`, expected `number`.',
+        );
+      });
+
+      it('validates propTypes declared on the outer component', () => {
+        function FnInner(props) {
+          return props.outer;
+        }
+        const Fn = React.memo(FnInner);
+        Fn.propTypes = {outer: PropTypes.number.isRequired};
+
+        // Mount
+        expect(() => {
+          ReactNoop.render(<Fn outer="3" />);
+          ReactNoop.flush();
+        }).toWarnDev(
+          // Outer props are checked in createElement
+          'Invalid prop `outer` of type `string` supplied to `FnInner`, expected `number`.',
+        );
+
+        // Update
+        expect(() => {
+          ReactNoop.render(<Fn outer={false} />);
+          ReactNoop.flush();
+        }).toWarnDev(
+          // Outer props are checked in createElement
+          'Invalid prop `outer` of type `boolean` supplied to `FnInner`, expected `number`.',
+        );
+      });
+
+      it('validates nested propTypes declarations', () => {
+        function Inner(props) {
+          return props.inner + props.middle + props.outer;
+        }
+        Inner.propTypes = {inner: PropTypes.number.isRequired};
+        Inner.defaultProps = {inner: 0};
+        const Middle = React.memo(Inner);
+        Middle.propTypes = {middle: PropTypes.number.isRequired};
+        Middle.defaultProps = {middle: 0};
+        const Outer = React.memo(Middle);
+        Outer.propTypes = {outer: PropTypes.number.isRequired};
+        Outer.defaultProps = {outer: 0};
+
+        // No warning expected because defaultProps satisfy both.
+        ReactNoop.render(<Outer />);
+        ReactNoop.flush();
+
+        // Mount
+        expect(() => {
+          ReactNoop.render(<Outer inner="2" middle="3" outer="4" />);
+          ReactNoop.flush();
+        }).toWarnDev([
+          'Invalid prop `outer` of type `string` supplied to `Inner`, expected `number`.',
+          'Invalid prop `middle` of type `string` supplied to `Inner`, expected `number`.',
+          'Invalid prop `inner` of type `string` supplied to `Inner`, expected `number`.',
+        ]);
+
+        // Update
+        expect(() => {
+          ReactNoop.render(
+            <Outer inner={false} middle={false} outer={false} />,
+          );
+          ReactNoop.flush();
+        }).toWarnDev([
+          'Invalid prop `outer` of type `boolean` supplied to `Inner`, expected `number`.',
+          'Invalid prop `middle` of type `boolean` supplied to `Inner`, expected `number`.',
+          'Invalid prop `inner` of type `boolean` supplied to `Inner`, expected `number`.',
+        ]);
       });
     });
   }

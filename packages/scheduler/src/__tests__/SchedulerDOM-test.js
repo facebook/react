@@ -64,37 +64,34 @@ describe('SchedulerDOM', () => {
   let currentTime = 0;
 
   beforeEach(() => {
-    // TODO pull this into helper method, reduce repetition.
-    // mock the browser APIs which are used in schedule:
-    // - requestAnimationFrame should pass the DOMHighResTimeStamp argument
-    // - calling 'window.postMessage' should actually fire postmessage handlers
-    // - Date.now should return the correct thing
-    // - test with native performance.now()
     delete global.performance;
     global.requestAnimationFrame = function(cb) {
       return rAFCallbacks.push(() => {
         cb(startOfLatestFrame);
       });
     };
-    const originalAddEventListener = global.addEventListener;
-    postMessageCallback = null;
     postMessageEvents = [];
     postMessageErrors = [];
-    global.addEventListener = function(eventName, callback, useCapture) {
-      if (eventName === 'message') {
-        postMessageCallback = callback;
-      } else {
-        originalAddEventListener(eventName, callback, useCapture);
-      }
+    const port1 = {};
+    const port2 = {
+      postMessage(messageKey) {
+        const postMessageEvent = {source: port2, data: messageKey};
+        postMessageEvents.push(postMessageEvent);
+      },
     };
-    global.postMessage = function(messageKey, targetOrigin) {
-      const postMessageEvent = {source: window, data: messageKey};
-      postMessageEvents.push(postMessageEvent);
+    global.MessageChannel = function MessageChannel() {
+      this.port1 = port1;
+      this.port2 = port2;
     };
+    postMessageCallback = () => port1.onmessage();
     global.Date.now = function() {
       return currentTime;
     };
     jest.resetModules();
+
+    const JestMockScheduler = require('jest-mock-scheduler');
+    JestMockScheduler.mockRestore();
+
     Scheduler = require('scheduler');
   });
 
