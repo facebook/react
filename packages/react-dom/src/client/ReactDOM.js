@@ -588,7 +588,9 @@ function legacyRenderSubtreeIntoContainer(
     if (typeof callback === 'function') {
       const originalCallback = callback;
       callback = function() {
-        const instance = getPublicRootInstance(((root: any): Root)._internalRoot);
+        const instance = getPublicRootInstance(
+          ((root: any): Root)._internalRoot,
+        );
         originalCallback.call(instance);
       };
     }
