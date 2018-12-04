@@ -267,7 +267,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
       describe('when suspending during mount', () => {
         it('properly accounts for base durations when a suspended times out in a sync tree', () => {
           const root = ReactTestRenderer.create(<App shouldSuspend={true} />);
-          expect(root.toJSON()).toEqual(['Loading...']);
+          expect(root.toJSON()).toEqual('Loading...');
           expect(onRender).toHaveBeenCalledTimes(1);
 
           // Initial mount only shows the "Loading..." Fallback.
@@ -343,7 +343,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
           expect(onRender.mock.calls[0][3]).toBe(5);
 
           root.update(<App shouldSuspend={true} textRenderDuration={5} />);
-          expect(root.toJSON()).toEqual(['Loading...']);
+          expect(root.toJSON()).toEqual('Loading...');
           expect(onRender).toHaveBeenCalledTimes(2);
 
           // The suspense update should only show the "Loading..." Fallback.
@@ -355,7 +355,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
           root.update(
             <App shouldSuspend={true} text="New" textRenderDuration={6} />,
           );
-          expect(root.toJSON()).toEqual(['Loading...']);
+          expect(root.toJSON()).toEqual('Loading...');
           expect(onRender).toHaveBeenCalledTimes(3);
 
           // If we force another update while still timed out,
