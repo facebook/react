@@ -4,7 +4,6 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @flow
  */
 
 import {isCustomComponent} from './ReactFireUtils';
@@ -26,6 +25,7 @@ import warning from 'shared/warning';
 // TODO: We can remove this if we add invariantWithStack()
 // or add stack by default to invariants where possible.
 import ReactSharedInternals from 'shared/ReactSharedInternals';
+import {warnAboutShorthandPropertyCollision} from 'shared/ReactFeatureFlags';
 
 const warnedProperties = {};
 const rARIA = new RegExp('^(aria)-[' + ATTRIBUTE_NAME_CHAR + ']*$');
@@ -35,7 +35,6 @@ const EVENT_NAME_REGEX = /^on./;
 const INVALID_EVENT_NAME_REGEX = /^on[^A-Z]/;
 
 let didWarnValueNull = false;
-let warnAboutShorthandPropertyCollision = false;
 let validateUnknownProperty = () => {};
 
 function validateProperty(tagName, name) {
@@ -134,7 +133,7 @@ function warnInvalidARIAProps(type, props) {
   }
 }
 
-export function validateARIAProperties(type, props) {
+export function validateARIAProperties(type: string, props: Object) {
   if (isCustomComponent(type, props)) {
     return;
   }
@@ -189,7 +188,23 @@ validateUnknownProperty = function(tagName, name, value) {
     // If no event plugins have been injected, we are in a server environment.
     // So we can't tell if the event name is correct for sure, but we can filter
     // out known bad ones like `onclick`. We can't suggest a specific replacement though.
+    if (name.toLowerCase() === 'ondblclick') {
+      warning(
+        false,
+        'Invalid event handler property `%s`. Did you mean `onDoubleClick`?',
+        name,
+      );
+      return true;
+    }
     if (INVALID_EVENT_NAME_REGEX.test(name)) {
+      if (name.toLowerCase() === 'onclick') {
+        warning(
+          false,
+          'Invalid event handler property `%s`. Did you mean `onClick`?',
+          name,
+        );
+        return true;
+      }
       warning(
         false,
         'Invalid event handler property `%s`. ' +

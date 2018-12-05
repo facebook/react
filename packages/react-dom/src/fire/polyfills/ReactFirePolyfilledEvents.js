@@ -20,6 +20,7 @@ import {
   onPointerEnterLeaveHeuristics,
 } from './ReactFireEnterLeave';
 import {getDomNodeEventsMap, listenTo} from '../ReactFireEvents';
+import type {ProxyContext} from '../ReactFireEvents';
 
 export const polyfilledEvents = {
   onChange: onChangeHeuristics,
@@ -40,22 +41,32 @@ export const polyfilledEvents = {
   onPointerLeave: onPointerEnterLeaveHeuristics,
 };
 
-export function listenToPolyfilledEvent(rootContainerElement, propName) {
+export function listenToPolyfilledEvent(
+  rootContainerElement: Element | Document,
+  propName: string,
+) {
   const [dependencies, polyfilledEventHandler] = polyfilledEvents[propName];
   const dependenciesLength = dependencies.length;
   const domNodeEventsMap = getDomNodeEventsMap(rootContainerElement);
   for (let i = 0; i < dependenciesLength; i++) {
     const dependency = dependencies[i];
-    listenTo(dependency, rootContainerElement, propName);
-    const {polyfills} = domNodeEventsMap.get(dependency);
-    const polyfilledName = `${propName}-polyfill`;
-    if (!polyfills.has(polyfilledName)) {
-      polyfills.set(polyfilledName, polyfilledEventHandler);
+    listenTo(dependency, rootContainerElement);
+    const eventData = domNodeEventsMap.get(dependency);
+    if (eventData !== undefined) {
+      const {polyfills} = eventData;
+      const polyfilledName = `${propName}-polyfill`;
+      if (!polyfills.has(polyfilledName)) {
+        polyfills.set(polyfilledName, polyfilledEventHandler);
+      }
     }
   }
 }
 
-export function dispatchPolyfills(containerDomNode, eventTarget, proxyContext) {
+export function dispatchPolyfills(
+  containerDomNode: Element | Document,
+  eventTarget: Node | Element | Document | void | null,
+  proxyContext: ProxyContext,
+) {
   const {event, eventName} = proxyContext;
   const domNodeEventsMap = getDomNodeEventsMap(containerDomNode);
   const eventData = domNodeEventsMap.get(eventName);

@@ -10,25 +10,34 @@
 import {HostComponent, HostText} from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 
-const domNodeInstanceFibers = new WeakMap();
-const domNodeInstanceFiberProps = new WeakMap();
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
-export function setFiberByDomNodeInstance(domNodeInstance, fiberHandle) {
+const domNodeInstanceFibers: WeakMap<Node, Fiber> = new WeakMap();
+const domNodeInstanceFiberProps: WeakMap<Node, Object> = new WeakMap();
+
+export function setFiberByDomNodeInstance(
+  domNodeInstance: Node,
+  fiberHandle: Fiber,
+): void {
   domNodeInstanceFibers.set(domNodeInstance, fiberHandle);
 }
 
-export function getFiberFromDomNodeInstance(domNodeInstance) {
+export function getFiberFromDomNodeInstance(
+  domNodeInstance: Node,
+): Fiber | void {
   return domNodeInstanceFibers.get(domNodeInstance);
 }
 
 export function setFiberPropsByDomNodeInstance(
-  domNodeInstance,
-  fiberPropsHandle,
-) {
+  domNodeInstance: Node,
+  fiberPropsHandle: Object,
+): void {
   domNodeInstanceFiberProps.set(domNodeInstance, fiberPropsHandle);
 }
 
-export function getFiberPropsFromDomNodeInstance(domNodeInstance) {
+export function getFiberPropsFromDomNodeInstance(
+  domNodeInstance: Node,
+): Fiber | void {
   return domNodeInstanceFiberProps.get(domNodeInstance);
 }
 
@@ -36,7 +45,7 @@ export function getFiberPropsFromDomNodeInstance(domNodeInstance) {
  * Given a DOM node, return the ReactDOMComponent or ReactDOMTextComponent
  * instance, or null if the node was not rendered by this React.
  */
-export function getFiberFromDomNode(domNode) {
+export function getFiberFromDomNode(domNode: Node): Fiber | null {
   const inst = getFiberFromDomNodeInstance(domNode);
   if (inst) {
     if (inst.tag === HostComponent || inst.tag === HostText) {
@@ -52,9 +61,14 @@ export function getFiberFromDomNode(domNode) {
  * Given a DOM node, return the closest ReactDOMComponent or
  * ReactDOMTextComponent instance ancestor.
  */
-export function getClosestFiberFromDOMNode(domNode) {
+export function getClosestFiberFromDOMNode(
+  domNode: void | null | Node,
+): Fiber | null {
+  if (domNode == null) {
+    return null;
+  }
   if (domNodeInstanceFibers.has(domNode)) {
-    return domNodeInstanceFibers.get(domNode);
+    return domNodeInstanceFibers.get(domNode) || null;
   }
 
   while (!domNodeInstanceFibers.has(domNode)) {
@@ -68,7 +82,10 @@ export function getClosestFiberFromDOMNode(domNode) {
   }
 
   let inst = domNodeInstanceFibers.get(domNode);
-  if (inst.tag === HostComponent || inst.tag === HostText) {
+  if (
+    inst !== undefined &&
+    (inst.tag === HostComponent || inst.tag === HostText)
+  ) {
     // In Fiber, this will always be the deepest root.
     return inst;
   }
@@ -80,7 +97,7 @@ export function getClosestFiberFromDOMNode(domNode) {
  * Given a ReactDOMComponent or ReactDOMTextComponent, return the corresponding
  * DOM node.
  */
-export function getDOMNodeFromFiber(fiber) {
+export function getDOMNodeFromFiber(fiber: Fiber): Node | null {
   if (fiber.tag === HostComponent || fiber.tag === HostText) {
     // In Fiber this, is just the state node right now. We assume it will be
     // a host component or host text.

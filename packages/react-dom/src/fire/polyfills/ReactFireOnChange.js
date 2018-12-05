@@ -25,17 +25,18 @@ import {
 /**
  * SECTION: handle `change` event
  */
-function shouldUseChangeEvent(elem) {
+function shouldUseChangeEvent(elem: Node) {
   const nodeName = elem.nodeName && elem.nodeName.toLowerCase();
   return (
-    nodeName === 'select' || (nodeName === 'input' && elem.type === 'file')
+    nodeName === 'select' ||
+    (nodeName === 'input' && ((elem: any): HTMLInputElement).type === 'file')
   );
 }
 
 /**
  * SECTION: handle `click` event
  */
-function shouldUseClickEvent(elem) {
+function shouldUseClickEvent(elem: Node) {
   // Use the `click` event to detect changes to checkbox and radio inputs.
   // This approach works across all browsers, whereas `change` does not fire
   // until `blur` in IE8.
@@ -43,20 +44,28 @@ function shouldUseClickEvent(elem) {
   return (
     nodeName &&
     nodeName.toLowerCase() === 'input' &&
-    (elem.type === 'checkbox' || elem.type === 'radio')
+    (((elem: any): HTMLInputElement).type === 'checkbox' ||
+      ((elem: any): HTMLInputElement).type === 'radio')
   );
 }
 
-function polyfilledEventListener(eventName, event, eventTarget) {
+function polyfilledEventListener(
+  eventName: string,
+  event: Event,
+  eventTarget: Node,
+) {
   let shouldFireUserEvent = false;
 
-  if (!updateValueIfChanged(eventTarget) && event.simulated === undefined) {
+  if (
+    !updateValueIfChanged(((eventTarget: any): HTMLInputElement)) &&
+    (event: any).simulated === undefined
+  ) {
     return null;
   }
 
   if (shouldUseChangeEvent(eventTarget)) {
     shouldFireUserEvent = eventName === CHANGE;
-  } else if (isTextInputElement(eventTarget)) {
+  } else if (isTextInputElement(((eventTarget: any): HTMLInputElement))) {
     shouldFireUserEvent = eventName === INPUT || eventName === CHANGE;
   } else if (shouldUseClickEvent(eventTarget)) {
     shouldFireUserEvent = eventName === CLICK;

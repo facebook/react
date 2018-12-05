@@ -11,10 +11,14 @@ import {injectIntoDevTools} from 'react-reconciler/inline.fire';
 import {getClosestFiberFromDOMNode} from './ReactFireInternal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import ReactVersion from 'shared/ReactVersion';
+import type {Instance, TextInstance} from './ReactFireHostConfig';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 export function setupDevTools() {
   const foundDevTools = injectIntoDevTools({
-    findFiberByHostInstance: getClosestFiberFromDOMNode,
+    findFiberByHostInstance: ((getClosestFiberFromDOMNode: any): (
+      instance: Instance | TextInstance,
+    ) => Fiber),
     bundleType: __DEV__ ? 1 : 0,
     version: ReactVersion,
     rendererPackageName: 'react-dom',

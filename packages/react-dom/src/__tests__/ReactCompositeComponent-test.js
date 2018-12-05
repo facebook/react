@@ -17,6 +17,7 @@ let ReactDOMServer;
 let ReactCurrentOwner;
 let ReactTestUtils;
 let PropTypes;
+let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 describe('ReactCompositeComponent', () => {
   const hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -155,16 +156,19 @@ describe('ReactCompositeComponent', () => {
     }
 
     const markup = ReactDOMServer.renderToString(<Parent />);
+    let container;
 
-    // Old API based on heuristic
-    let container = document.createElement('div');
-    container.innerHTML = markup;
-    expect(() => ReactDOM.render(<Parent />, container)).toLowPriorityWarnDev(
-      'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
-        'will stop working in React v17. Replace the ReactDOM.render() call ' +
-        'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
-      {withoutStack: true},
-    );
+    if (!ReactFeatureFlags.enableReactDOMFire) {
+      // Old API based on heuristic
+      container = document.createElement('div');
+      container.innerHTML = markup;
+      expect(() => ReactDOM.render(<Parent />, container)).toLowPriorityWarnDev(
+        'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
+          'will stop working in React v17. Replace the ReactDOM.render() call ' +
+          'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
+        {withoutStack: true},
+      );
+    }
 
     // New explicit API
     container = document.createElement('div');

@@ -8,6 +8,7 @@
  */
 
 import {roots} from './ReactFireRoots';
+import type {DOMContainer} from './ReactFire';
 import {
   createHostComponent,
   diffHostComponentProperties,
@@ -48,7 +49,7 @@ import {
   warnForInsertedHydratedElement,
   warnForInsertedHydratedText,
   warnForUnmatchedText,
-} from './ReactFireHydration';
+} from './ReactFireComponentProperties';
 import {updatedAncestorInfo, validateDOMNesting} from './ReactFireDevOnly';
 
 export {
@@ -60,6 +61,33 @@ export {
 
 let eventsEnabled: ?boolean = null;
 let selectionInformation: ?mixed = null;
+
+export type Type = string;
+export type Props = {
+  autoFocus?: boolean,
+  children?: mixed,
+  hidden?: boolean,
+  suppressHydrationWarning?: boolean,
+  dangerouslySetInnerHTML?: mixed,
+  style?: {
+    display?: string,
+  },
+};
+export type Container = Element | Document;
+export type Instance = Element;
+export type TextInstance = Text;
+export type HydratableInstance = Element | Text;
+export type PublicInstance = Element | Text;
+export type HostContextDev = {
+  namespace: string,
+  ancestorInfo: mixed,
+};
+export type HostContextProd = string;
+export type HostContext = HostContextDev | HostContextProd;
+export type UpdatePayload = Array<mixed>;
+export type ChildSet = void; // Unused
+export type TimeoutHandle = TimeoutID;
+export type NoTimeout = -1;
 
 export * from 'shared/HostConfigWithNoPersistence';
 
@@ -135,7 +163,7 @@ export function prepareForCommit(containerInfo: Container): void {
 }
 
 export function resetAfterCommit(containerInfo: Container): void {
-  restoreSelection(selectionInformation);
+  restoreSelection((selectionInformation: any));
   selectionInformation = null;
   setEventsEnabled(eventsEnabled);
   eventsEnabled = null;

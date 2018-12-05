@@ -24,7 +24,10 @@ import {
 } from './ReactFireDevOnly';
 import {ensureListeningTo, setEventProp} from './ReactFireEvents';
 import {setValueForStyles} from './ReactFireStyling';
-import {assertValidProps} from './ReactFireValidation';
+import {
+  assertValidProps,
+  validateShorthandPropertyCollisionInDev,
+} from './ReactFireValidation';
 import {
   getPropertyInfo,
   shouldIgnoreAttribute,
@@ -33,7 +36,7 @@ import {
   BOOLEAN,
   OVERLOADED_BOOLEAN,
 } from '../shared/DOMProperty';
-import type {PropertyInfo} from '../../shared/DOMProperty';
+import type {PropertyInfo} from '../shared/DOMProperty';
 
 import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
@@ -225,11 +228,13 @@ export function setDOMElementProperties(
         setInnerHTML(domNode, htmlValue);
       }
     } else if (isPropAnEvent(propName) && !isCustomComponentTag) {
-      if (__DEV__ && typeof propValue !== 'function') {
-        warnForInvalidEventListener(propName, propValue);
+      if (propValue != null) {
+        if (__DEV__ && typeof propValue !== 'function') {
+          warnForInvalidEventListener(propName, propValue);
+        }
+        ensureListeningTo(rootContainerElement, propName);
+        setEventProp(propName, propValue, domNode);
       }
-      ensureListeningTo(rootContainerElement, propName);
-      setEventProp(propName, propValue, domNode);
     } else {
       setValueForProperty(domNode, propName, propValue, isCustomComponentTag);
     }
@@ -255,7 +260,7 @@ export function updateDOMElementProperties(
       const lastChildren = lastRawProps.children;
       if (
         typeof lastChildren !== 'string' ||
-        domNode.firstChild === null ||
+        domNode.firstChild == null ||
         propValue === ''
       ) {
         domNode.textContent = propValue;
@@ -268,6 +273,153 @@ export function updateDOMElementProperties(
       setValueForProperty(domNode, propName, propValue, isCustomComponentTag);
     }
   }
+}
+
+export function diffDOMElementProperties(
+  domNode: Element,
+  type: string,
+  updatePayload: null | Array<any>,
+  lastProps: Object,
+  nextProps: Object,
+  rootContainerElement: Element | Document,
+): null | Array<any> {
+  assertValidProps(type, nextProps);
+
+  let propName;
+  let styleName;
+  let styleUpdates = null;
+  for (propName in lastProps) {
+    if (
+      nextProps.hasOwnProperty(propName) ||
+      !lastProps.hasOwnProperty(propName) ||
+      lastProps[propName] == null
+    ) {
+      continue;
+    }
+    if (propName === STYLE) {
+      const lastStyle = lastProps[propName];
+      for (styleName in lastStyle) {
+        if (lastStyle.hasOwnProperty(styleName)) {
+          if (!styleUpdates) {
+            styleUpdates = {};
+          }
+          styleUpdates[styleName] = '';
+        }
+      }
+    } else if (
+      propName === DANGEROUSLY_SET_INNER_HTML ||
+      propName === CHILDREN
+    ) {
+      // Noop. This is handled by the clear text mechanism.
+    } else if (
+      propName === SUPPRESS_CONTENT_EDITABLE_WARNING ||
+      propName === SUPPRESS_HYDRATION_WARNING
+    ) {
+      // Noop
+    } else if (propName === AUTOFOCUS) {
+      // Noop. It doesn't work on updates anyway.
+    } else {
+      // For all other deleted properties we add it to the queue. We use
+      // the whitelist in the commit phase instead.
+      (updatePayload = updatePayload || []).push(propName, null);
+    }
+  }
+  for (propName in nextProps) {
+    const nextProp = nextProps[propName];
+    const lastProp = lastProps != null ? lastProps[propName] : undefined;
+    if (
+      !nextProps.hasOwnProperty(propName) ||
+      nextProp === lastProp ||
+      (nextProp == null && lastProp == null)
+    ) {
+      continue;
+    }
+    if (propName === STYLE) {
+      if (__DEV__) {
+        if (nextProp) {
+          // Freeze the next style object so that we can assume it won't be
+          // mutated. We have already warned for this in the past.
+          Object.freeze(nextProp);
+        }
+      }
+      if (lastProp) {
+        // Unset styles on `lastProp` but not on `nextProp`.
+        for (styleName in lastProp) {
+          if (
+            lastProp.hasOwnProperty(styleName) &&
+            (!nextProp || !nextProp.hasOwnProperty(styleName))
+          ) {
+            if (!styleUpdates) {
+              styleUpdates = {};
+            }
+            styleUpdates[styleName] = '';
+          }
+        }
+        // Update styles that changed since `lastProp`.
+        for (styleName in nextProp) {
+          if (
+            nextProp.hasOwnProperty(styleName) &&
+            lastProp[styleName] !== nextProp[styleName]
+          ) {
+            if (!styleUpdates) {
+              styleUpdates = {};
+            }
+            styleUpdates[styleName] = nextProp[styleName];
+          }
+        }
+      } else {
+        // Relies on `updateStylesByID` not mutating `styleUpdates`.
+        if (!styleUpdates) {
+          if (!updatePayload) {
+            updatePayload = [];
+          }
+          updatePayload.push(propName, styleUpdates);
+        }
+        styleUpdates = nextProp;
+      }
+    } else if (propName === DANGEROUSLY_SET_INNER_HTML) {
+      const nextHtml = nextProp ? nextProp[HTML] : undefined;
+      const lastHtml = lastProp ? lastProp[HTML] : undefined;
+      if (nextHtml != null) {
+        if (lastHtml !== nextHtml) {
+          (updatePayload = updatePayload || []).push(propName, '' + nextHtml);
+        }
+      } else {
+        // TODO: It might be too late to clear this if we have children
+        // inserted already.
+      }
+    } else if (propName === CHILDREN) {
+      if (
+        lastProp !== nextProp &&
+        (typeof nextProp === 'string' || typeof nextProp === 'number')
+      ) {
+        (updatePayload = updatePayload || []).push(propName, '' + nextProp);
+      }
+    } else if (
+      propName === SUPPRESS_CONTENT_EDITABLE_WARNING ||
+      propName === SUPPRESS_HYDRATION_WARNING
+    ) {
+      // Noop
+    } else {
+      if (nextProp != null && isPropAnEvent(propName)) {
+        if (__DEV__ && typeof nextProp !== 'function') {
+          warnForInvalidEventListener(propName, nextProp);
+        }
+        ensureListeningTo(rootContainerElement, propName);
+      }
+      // For any other property we always add it to the queue and then we
+      // filter it out using the whitelist during the commit.
+      (updatePayload = updatePayload || []).push(propName, nextProp);
+    }
+  }
+  if (styleUpdates) {
+    if (__DEV__) {
+      validateShorthandPropertyCollisionInDev(styleUpdates, nextProps[STYLE]);
+    }
+    (updatePayload = updatePayload || []).push(STYLE, styleUpdates);
+  }
+
+  return updatePayload;
 }
 
 export function diffHydratedDOMElementProperties(
@@ -458,10 +610,15 @@ export function diffHydratedDOMElementProperties(
 function getPossibleStandardName(propName: string): string | null {
   if (__DEV__) {
     const lowerCasedName = propName.toLowerCase();
-    if (!possibleStandardNames.hasOwnProperty(lowerCasedName)) {
+    if (
+      possibleStandardNames &&
+      !possibleStandardNames.hasOwnProperty(lowerCasedName)
+    ) {
       return null;
     }
-    return possibleStandardNames[lowerCasedName] || null;
+    return (
+      (possibleStandardNames && possibleStandardNames[lowerCasedName]) || null
+    );
   }
   return null;
 }
@@ -615,4 +772,134 @@ export function getValueForAttribute(
     }
     return value;
   }
+}
+
+if (__DEV__) {
+  // HTML parsing normalizes CR and CRLF to LF.
+  // It also can turn \u0000 into \uFFFD inside attributes.
+  // https://www.w3.org/TR/html5/single-page.html#preprocessing-the-input-stream
+  // If we have a mismatch, it might be caused by that.
+  // We will still patch up in this case but not fire the warning.
+  const NORMALIZE_NEWLINES_REGEX = /\r\n?/g;
+  const NORMALIZE_NULL_AND_REPLACEMENT_REGEX = /\u0000|\uFFFD/g;
+
+  normalizeMarkupForTextOrAttribute = function(markup: mixed): string {
+    const markupString =
+      typeof markup === 'string' ? markup : '' + (markup: any);
+    return markupString
+      .replace(NORMALIZE_NEWLINES_REGEX, '\n')
+      .replace(NORMALIZE_NULL_AND_REPLACEMENT_REGEX, '');
+  };
+
+  warnForTextDifference = function(
+    serverText: string,
+    clientText: string | number,
+  ) {
+    if (didWarnInvalidHydration) {
+      return;
+    }
+    const normalizedClientText = normalizeMarkupForTextOrAttribute(clientText);
+    const normalizedServerText = normalizeMarkupForTextOrAttribute(serverText);
+    if (normalizedServerText === normalizedClientText) {
+      return;
+    }
+    didWarnInvalidHydration = true;
+    warningWithoutStack(
+      false,
+      'Text content did not match. Server: "%s" Client: "%s"',
+      normalizedServerText,
+      normalizedClientText,
+    );
+  };
+}
+
+export function warnForUnmatchedText(textNode: Text, text: string) {
+  if (__DEV__) {
+    warnForTextDifference(textNode.nodeValue, text);
+  }
+}
+
+export function warnForInsertedHydratedText(
+  parentNode: Element | Document,
+  text: string,
+) {
+  if (__DEV__) {
+    if (text === '') {
+      // We expect to insert empty text nodes since they're not represented in
+      // the HTML.
+      // TODO: Remove this special case if we can just avoid inserting empty
+      // text nodes.
+      return;
+    }
+    if (didWarnInvalidHydration) {
+      return;
+    }
+    didWarnInvalidHydration = true;
+    warningWithoutStack(
+      false,
+      'Expected server HTML to contain a matching text node for "%s" in <%s>.',
+      text,
+      parentNode.nodeName.toLowerCase(),
+    );
+  }
+}
+
+export function warnForInsertedHydratedElement(
+  parentNode: Element | Document,
+  tag: string,
+  props: Object,
+) {
+  if (__DEV__) {
+    if (didWarnInvalidHydration) {
+      return;
+    }
+    didWarnInvalidHydration = true;
+    warningWithoutStack(
+      false,
+      'Expected server HTML to contain a matching <%s> in <%s>.',
+      tag,
+      parentNode.nodeName.toLowerCase(),
+    );
+  }
+}
+
+export function warnForDeletedHydratableElement(
+  parentNode: Element | Document,
+  child: Element,
+) {
+  if (__DEV__) {
+    if (didWarnInvalidHydration) {
+      return;
+    }
+    didWarnInvalidHydration = true;
+    warningWithoutStack(
+      false,
+      'Did not expect server HTML to contain a <%s> in <%s>.',
+      child.nodeName.toLowerCase(),
+      parentNode.nodeName.toLowerCase(),
+    );
+  }
+}
+
+export function warnForDeletedHydratableText(
+  parentNode: Element | Document,
+  child: Text,
+) {
+  if (__DEV__) {
+    if (didWarnInvalidHydration) {
+      return;
+    }
+    didWarnInvalidHydration = true;
+    warningWithoutStack(
+      false,
+      'Did not expect server HTML to contain the text node "%s" in <%s>.',
+      child.nodeValue,
+      parentNode.nodeName.toLowerCase(),
+    );
+  }
+}
+
+export function diffHydratedText(textNode: Text, text: string): boolean {
+  const isDifferent = textNode.nodeValue !== text;
+  return isDifferent;
 }

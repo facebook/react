@@ -28,7 +28,7 @@ export const STYLE = 'style';
 export const HTML = '__html';
 export const ROOT_ATTRIBUTE_NAME = 'data-reactroot';
 
-export const interactiveEventNames = new Set([
+export const interactiveEventNames: Set<string> = new Set([
   'blur',
   'cancel',
   'click',
@@ -68,7 +68,7 @@ export const interactiveEventNames = new Set([
 /**
  * CSS properties which accept numbers but are not in units of "px".
  */
-export const isUnitlessNumber = new Set([
+export const isUnitlessNumber: Set<string> = new Set([
   'animationIterationCount',
   'borderImageOutset',
   'borderImageSlice',
@@ -142,7 +142,7 @@ Array.from(isUnitlessNumber).forEach(function(prop) {
 /**
  * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-input-element.html#input-type-attr-summary
  */
-export const supportedInputTypes = new Set([
+export const supportedInputTypes: Set<string> = new Set([
   'color',
   'date',
   'datetime',

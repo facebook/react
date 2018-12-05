@@ -19,7 +19,7 @@ let restoreImpl = null;
 let restoreTarget = null;
 let restoreQueue = null;
 
-function restoreStateOfTarget(target) {
+function restoreStateOfTarget(target: Node) {
   // We perform this translation at the end of the event loop so that we
   // always receive the correct fiber here
   const internalInstance = getFiberFromDomNodeInstance(target);
@@ -33,7 +33,11 @@ function restoreStateOfTarget(target) {
       'events. This error is likely caused by a bug in React. Please file an issue.',
   );
   const props = getFiberPropsFromDomNodeInstance(internalInstance.stateNode);
-  restoreImpl(internalInstance.stateNode, internalInstance.type, props);
+  restoreImpl(
+    internalInstance.stateNode,
+    internalInstance.type,
+    ((props: any): Object),
+  );
 }
 
 export function setRestoreImplementation(
@@ -67,10 +71,10 @@ export function restoreStateIfNeeded() {
   restoreTarget = null;
   restoreQueue = null;
 
-  restoreStateOfTarget(target);
+  restoreStateOfTarget(((target: any): Node));
   if (queuedTargets) {
     for (let i = 0; i < queuedTargets.length; i++) {
-      restoreStateOfTarget(queuedTargets[i]);
+      restoreStateOfTarget(((queuedTargets[i]: any): Node));
     }
   }
 }

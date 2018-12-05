@@ -14,12 +14,36 @@ import {
   updateContainerAtExpirationTime,
   flushRoot,
 } from 'react-reconciler/inline.fire';
+import type {
+  FiberRoot,
+  Batch as FiberRootBatch,
+} from 'react-reconciler/src/ReactFiberRoot';
+
 import warningWithoutStack from 'shared/warningWithoutStack';
 import invariant from 'shared/invariant';
+import type {ReactNodeList} from 'shared/ReactTypes';
 
-export const roots = new WeakMap();
+export const roots: WeakMap<Element | Document, Root> = new WeakMap();
 
 let warnOnInvalidCallback;
+
+type Container = Element | Document;
+
+type Batch = FiberRootBatch & {
+  render(children: ReactNodeList): Work,
+  then(onComplete: () => mixed): void,
+  commit(): void,
+
+  // The ReactRoot constructor is hoisted but the prototype methods are not. If
+  // we move ReactRoot to be above ReactBatch, the inverse error occurs.
+  // $FlowFixMe Hoisting issue.
+  _root: Root,
+  _hasChildren: boolean,
+  _children: ReactNodeList,
+
+  _callbacks: Array<() => mixed> | null,
+  _didComplete: boolean,
+};
 
 if (__DEV__) {
   warnOnInvalidCallback = function(callback: mixed, callerName: string) {
@@ -32,6 +56,26 @@ if (__DEV__) {
     );
   };
 }
+
+export type Root = {
+  render(children: ReactNodeList, callback: ?() => mixed): Work,
+  unmount(callback: ?() => mixed): Work,
+  legacy_renderSubtreeIntoContainer(
+    parentComponent: ?React$Component<any, any>,
+    children: ReactNodeList,
+    callback: ?() => mixed,
+  ): Work,
+  createBatch(): Batch,
+
+  _internalRoot: FiberRoot,
+};
+
+export type Work = {
+  then(onCommit: () => mixed): void,
+  _onCommit: () => void,
+  _callbacks: Array<() => mixed> | null,
+  _didCommit: boolean,
+};
 
 export function ReactRoot(
   container: Container,
@@ -55,7 +99,7 @@ ReactRoot.prototype.render = function(
     work.then(callback);
   }
   updateContainer(children, root, null, work._onCommit);
-  return work;
+  return ((work: any): Work);
 };
 ReactRoot.prototype.unmount = function(callback: ?() => mixed): Work {
   const root = this._internalRoot;
@@ -68,7 +112,7 @@ ReactRoot.prototype.unmount = function(callback: ?() => mixed): Work {
     work.then(callback);
   }
   updateContainer(null, root, null, work._onCommit);
-  return work;
+  return ((work: any): Work);
 };
 ReactRoot.prototype.legacy_renderSubtreeIntoContainer = function(
   parentComponent: ?React$Component<any, any>,
@@ -85,7 +129,7 @@ ReactRoot.prototype.legacy_renderSubtreeIntoContainer = function(
     work.then(callback);
   }
   updateContainer(children, root, parentComponent, work._onCommit);
-  return work;
+  return ((work: any): Work);
 };
 ReactRoot.prototype.createBatch = function(): Batch {
   const batch = new ReactBatch(this);
@@ -113,7 +157,7 @@ ReactRoot.prototype.createBatch = function(): Batch {
     }
   }
 
-  return batch;
+  return ((batch: any): Batch);
 };
 
 function ReactWork() {

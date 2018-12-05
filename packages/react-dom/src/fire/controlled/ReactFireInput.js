@@ -14,6 +14,7 @@ import {getFiberPropsFromDomNodeInstance} from '../ReactFireInternal';
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 import {controlledValuePropTypes} from './ReactFirePropTypes';
 import {getToStringValue, toString} from '../ReactFireUtils';
+import type {ToStringValue} from '../ReactFireUtils';
 import {updateValueIfChanged} from './ReactFireValueTracking';
 import {setValueForProperty} from '../ReactFireComponentProperties';
 

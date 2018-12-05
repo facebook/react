@@ -10,6 +10,8 @@
 import {
   addEventBubbleListener,
   addEventCaptureListener,
+} from '../events/EventListener';
+import {
   getEventTarget,
   isEventSupported,
   normalizeEventName,
@@ -39,13 +41,37 @@ import {
   FOCUS,
   SCROLL,
 } from './ReactFireEventTypes';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import {isFiberMounted} from 'react-reconciler/reflection';
 import {
   getEventTargetAncestorFibers,
   traverseTwoPhase,
 } from './ReactFireEventTraversal';
 
-const topLevelDomNodeEvents = new WeakMap();
+export type ProxyContext = {
+  ancestors: Array<Fiber>,
+  containerDomNode: Element | Document,
+  currentTarget: Element | null | Node,
+  defaultPrevented: false,
+  event: Event,
+  eventName: string,
+  eventTarget: Node | Document | Document | void | null,
+  fiber: null | Fiber,
+  isClickEvent: boolean,
+};
+
+export type EventData = {
+  handler: null | ((e: Event) => void),
+  polyfills: Map<any, any>,
+};
+
+const topLevelDomNodeEvents: WeakMap<
+  Document | Element | Node,
+  Map<string, EventData>,
+> = new WeakMap();
+
+const returnsFalse = () => false;
+export const returnsTrue = () => true;
 
 // TODO: can we stop exporting these?
 export let eventsEnabled = true;
@@ -58,14 +84,21 @@ export function isEventsEnabled() {
   return eventsEnabled;
 }
 
-export function getDomNodeEventsMap(domNode) {
+export function getDomNodeEventsMap(domNode: Document | Element | Node) {
   let domNodeEventsMap = topLevelDomNodeEvents.get(domNode);
 
   if (domNodeEventsMap === undefined) {
-    domNodeEventsMap = new Map();
+    domNodeEventsMap = new Map<string, EventData>();
     topLevelDomNodeEvents.set(domNode, domNodeEventsMap);
   }
   return domNodeEventsMap;
+}
+
+function createEventData(): EventData {
+  return {
+    handler: null,
+    polyfills: new Map(),
+  };
 }
 
 export function listenTo(eventName: string, domNode: Element | Document) {
@@ -73,10 +106,6 @@ export function listenTo(eventName: string, domNode: Element | Document) {
   let eventWrapper = domNodeEventsMap.get(eventName);
 
   if (eventWrapper === undefined) {
-    const eventData = {
-      handler: null,
-      polyfills: new Map(),
-    };
     switch (eventName) {
       case SCROLL:
         trapCapturedEvent(SCROLL, domNode);
@@ -85,7 +114,9 @@ export function listenTo(eventName: string, domNode: Element | Document) {
       case BLUR:
         trapCapturedEvent(FOCUS, domNode);
         trapCapturedEvent(BLUR, domNode);
-        break;
+        domNodeEventsMap.set('focus', createEventData());
+        domNodeEventsMap.set('blur', createEventData());
+        return;
       case CANCEL:
       case CLOSE:
         if (isEventSupported(eventName)) {
@@ -109,11 +140,15 @@ export function listenTo(eventName: string, domNode: Element | Document) {
         }
         break;
     }
-    domNodeEventsMap.set(eventName, eventData);
+    domNodeEventsMap.set(eventName, createEventData());
   }
 }
 
-export function setEventProp(propName, eventPropValue, domNode) {
+export function setEventProp(
+  propName: string,
+  eventPropValue: any,
+  domNode: Document | Element,
+) {
   const isPolyfilledEvent = polyfilledEvents.hasOwnProperty(propName);
   let eventName;
   if (isPolyfilledEvent) {
@@ -134,14 +169,10 @@ export function setEventProp(propName, eventPropValue, domNode) {
     }
   } else {
     if (eventData === undefined) {
-      eventData = {
-        handler: eventPropValue,
-        polyfills: new Map(),
-      };
+      eventData = createEventData();
       domNodeEventsMap.set(eventName, eventData);
-    } else {
-      eventData.handler = eventPropValue;
     }
+    eventData.handler = eventPropValue;
   }
 }
 
@@ -162,11 +193,17 @@ function trapEvent(
   }
 }
 
-export function trapCapturedEvent(eventName, containerDomNode) {
+export function trapCapturedEvent(
+  eventName: string,
+  containerDomNode: Document | Element,
+) {
   trapEvent(eventName, containerDomNode, false);
 }
 
-export function trapBubbledEvent(eventName, containerDomNode) {
+export function trapBubbledEvent(
+  eventName: string,
+  containerDomNode: Document | Element,
+) {
   trapEvent(eventName, containerDomNode, true);
 }
 
@@ -190,17 +227,21 @@ export function ensureListeningTo(
   }
 }
 
-function proxyInteractiveListener(eventName, containerDomNode, event) {
+function proxyInteractiveListener(
+  eventName: string,
+  containerDomNode: Document | Element,
+  event: Event,
+) {
   interactiveUpdates(proxyListener, eventName, containerDomNode, event);
 }
 
 function createProxyContext(
-  containerDomNode,
-  event,
-  eventName,
-  eventTarget,
-  ancestors,
-) {
+  containerDomNode: Document | Element,
+  event: Event,
+  eventName: string,
+  eventTarget: Element | Node | Document | null | void,
+  ancestors: Array<Fiber>,
+): ProxyContext {
   return {
     ancestors,
     containerDomNode,
@@ -210,11 +251,11 @@ function createProxyContext(
     eventName,
     eventTarget,
     fiber: null,
-    isClickEvent: eventName === CLICK || name === DOUBLE_CLICK,
+    isClickEvent: eventName === CLICK || eventName === DOUBLE_CLICK,
   };
 }
 
-function dispatchEvent(proxyContext) {
+function dispatchEvent(proxyContext: ProxyContext) {
   const {ancestors, containerDomNode, eventName, eventTarget} = proxyContext;
   if (ancestors.length === 0) {
     if (eventName === 'mouseout') {
@@ -235,7 +276,15 @@ function dispatchEvent(proxyContext) {
   }
 }
 
-export function proxyListener(eventName, containerDomNode, event) {
+export function startEventPropagation(proxtContent: ProxyContext) {
+  (proxtContent.event: any).isPropagationStopped = returnsFalse;
+}
+
+export function proxyListener(
+  eventName: string,
+  containerDomNode: Element | Document,
+  event: Event,
+) {
   if (!eventsEnabled) {
     return;
   }
@@ -266,38 +315,40 @@ export function proxyListener(eventName, containerDomNode, event) {
   batchedUpdates(dispatchEvent, proxyContext);
 }
 
-function stopPropagation() {
-  this.cancelBubble = true;
-  if (!this.immediatePropagationStopped) {
-    this.stopImmediatePropagation();
-  }
-}
-
-function monkeyPatchNativeEvent(event, proxyContext) {
-  event.stopPropagation = stopPropagation;
+function monkeyPatchNativeEvent(event: Event, proxyContext: ProxyContext) {
+  const nativeStopPropagation = event.stopPropagation;
+  (event: any).stopPropagation = () => {
+    (event: any).isPropagationStopped = returnsTrue;
+    nativeStopPropagation.call(event);
+  };
+  const nativePreventDefault = event.preventDefault;
+  (event: any).preventDefault = () => {
+    (event: any).isDefaultPrevented = returnsTrue;
+    nativePreventDefault.call(event);
+  };
+  // $FlowFixMe: Flow complains we do not have value, we don't need it
   Object.defineProperty(event, 'currentTarget', {
     configurable: true,
     get() {
       return proxyContext.currentTarget;
     },
   });
-  event.isDefaultPrevented = () => {
+  (event: any).isDefaultPrevented = () => {
     return event.defaultPrevented || false;
   };
-  event.isPropagationStopped = () => {
-    return event.cancelBubble;
-  };
-  event.persist = noop;
+  (event: any).isDefaultPrevented = returnsFalse;
+  (event: any).persist = noop;
+  (event: any).nativeEvent = event;
   if (patchBrokenFirefoxClick(proxyContext, event)) {
     return;
   }
 }
 
-function patchBrokenFirefoxClick(proxyContext, event) {
+function patchBrokenFirefoxClick(proxyContext: ProxyContext, event: Event) {
   if (
     proxyContext.isClickEvent &&
-    event.button !== undefined &&
-    event.button !== 0
+    (event: any).button !== undefined &&
+    (event: any).button !== 0
   ) {
     // Firefox incorrectly triggers click event for mid/right mouse buttons.
     // This bug has been active for 12 years.
@@ -309,7 +360,7 @@ function patchBrokenFirefoxClick(proxyContext, event) {
 
 function noop() {}
 
-export function trapClickOnNonInteractiveElement(domNode) {
+export function trapClickOnNonInteractiveElement(domNode: HTMLElement) {
   // Mobile Safari does not fire properly bubble click events on
   // non-interactive elements, which means delegated click listeners do not
   // fire. The workaround for this bug involves attaching an empty click

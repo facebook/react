@@ -7,12 +7,11 @@
  * @flow
  */
 
-/* globals MSApp */
-
 import warning from 'shared/warning';
 import {HostComponent} from 'shared/ReactWorkTags';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import {supportedInputTypes} from './ReactFireDOMConfig';
+import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 
 import {
   COMMENT_NODE,
@@ -138,12 +137,18 @@ export function createElement(
   return domElement;
 }
 
-export function isStringOrNumber(value) {
+export function isStringOrNumber(value: any): boolean {
   return typeof value === 'string' || typeof value === 'number';
 }
 
-export function isPropAnEvent(propName) {
-  return propName.length > 2 && propName[0] === 'o' && propName[1] === 'n';
+export function isPropAnEvent(propName: string): boolean {
+  return (
+    propName.length > 2 &&
+    propName[0] === 'o' &&
+    propName[1] === 'n' &&
+    propName[2] !== '-' &&
+    propName[2] === propName[2].toUpperCase()
+  );
 }
 
 export function isCustomComponent(tagName: string, props: Object) {
@@ -182,7 +187,7 @@ export function getNamespace(type: string): string {
 
 export function shouldAutoFocusHostComponent(
   type: string,
-  props: Props,
+  props: Object,
 ): boolean {
   switch (type) {
     case 'button':
@@ -194,7 +199,7 @@ export function shouldAutoFocusHostComponent(
   return false;
 }
 
-export function normalizeEventName(name) {
+export function normalizeEventName(name: string): string {
   if (name.endsWith('Capture')) {
     return normalizeEventName(name.slice(0, name.length - 7));
   }
@@ -204,12 +209,14 @@ export function normalizeEventName(name) {
   return name.substr(2).toLowerCase();
 }
 
+declare var MSApp: Object;
+
 /**
  * Create a function which has 'unsafe' privileges (required by windows8 apps)
  */
-const createMicrosoftUnsafeLocalFunction = function(func) {
+const createMicrosoftUnsafeLocalFunction = function(func: any) {
   if (typeof MSApp !== 'undefined' && MSApp.execUnsafeLocalFunction) {
-    return function(arg0, arg1, arg2, arg3) {
+    return function(arg0: any, arg1: any, arg2: any, arg3: any) {
       MSApp.execUnsafeLocalFunction(function() {
         return func(arg0, arg1, arg2, arg3);
       });
@@ -281,7 +288,7 @@ export function getToStringValue(value: mixed): ToStringValue {
  * @return {boolean} True if the DOM is a valid DOM node.
  * @internal
  */
-export function isValidContainer(node) {
+export function isValidContainer(node: void | Node) {
   return !!(
     node &&
     (node.nodeType === ELEMENT_NODE ||
@@ -299,22 +306,28 @@ export function isValidContainer(node) {
  * @param {object} nativeEvent Native browser event.
  * @return {DOMEventTarget} Target node.
  */
-export function getEventTarget(nativeEvent) {
+export function getEventTarget(
+  nativeEvent: Event,
+): void | null | Element | Node | Document {
   // Fallback to nativeEvent.srcElement for IE9
   // https://github.com/facebook/react/issues/12506
   let target = nativeEvent.target || nativeEvent.srcElement || window;
 
   // Normalize SVG <use> element events #4963
-  if (target.correspondingUseElement) {
-    target = target.correspondingUseElement;
+  if ((target: any).correspondingUseElement) {
+    target = (target: any).correspondingUseElement;
   }
 
   // Safari may fire events on text nodes (Node.TEXT_NODE is 3).
   // @see http://www.quirksmode.org/js/events_properties.html
-  return target.nodeType === TEXT_NODE ? target.parentNode : target;
+  return target.nodeType === TEXT_NODE
+    ? ((target: any): Node).parentNode
+    : ((target: any): Element | Document);
 }
 
-export function getActiveElement(doc: ?Document): ?Element {
+export function getActiveElement(
+  doc: void | null | Document,
+): null | void | Element {
   doc = doc || (typeof document !== 'undefined' ? document : undefined);
   if (typeof doc === 'undefined') {
     return null;
@@ -330,7 +343,10 @@ function isTextNode(node) {
   return node && node.nodeType === TEXT_NODE;
 }
 
-export function containsNode(outerNode, innerNode) {
+export function containsNode(
+  outerNode: null | void | Node | Element,
+  innerNode: null | void | Node | Element,
+) {
   if (!outerNode || !innerNode) {
     return false;
   } else if (outerNode === innerNode) {
@@ -348,7 +364,7 @@ export function containsNode(outerNode, innerNode) {
   }
 }
 
-export function isInDocument(node) {
+export function isInDocument(node: Node): boolean {
   return (
     node &&
     node.ownerDocument &&
@@ -356,7 +372,7 @@ export function isInDocument(node) {
   );
 }
 
-export function getActiveElementDeep() {
+export function getActiveElementDeep(): Element | null | void {
   let win = window;
   let element = getActiveElement();
   while (element instanceof win.HTMLIFrameElement) {
@@ -372,13 +388,13 @@ export function getActiveElementDeep() {
   return element;
 }
 
-function getPublicInstance(instance: Instance): * {
+function getPublicInstance(instance: any) {
   return instance;
 }
 
 export function getPublicRootInstance(
-  container: OpaqueRoot,
-): React$Component<any, any> | PublicInstance | null {
+  container: FiberRoot,
+): React$Component<any, any> | Object | null {
   const containerFiber = container.current;
   if (!containerFiber.child) {
     return null;
@@ -429,7 +445,7 @@ export function createTextNode(
  * @internal
  * @license Modernizr 3.0.0pre (Custom Build) | MIT
  */
-export function isEventSupported(eventNameSuffix) {
+export function isEventSupported(eventNameSuffix: string): boolean {
   if (!canUseDOM) {
     return false;
   }
@@ -440,26 +456,10 @@ export function isEventSupported(eventNameSuffix) {
   if (!isSupported) {
     const element = document.createElement('div');
     element.setAttribute(eventName, 'return;');
-    isSupported = typeof element[eventName] === 'function';
+    isSupported = typeof (element: any)[eventName] === 'function';
   }
 
   return isSupported;
-}
-
-export function addEventBubbleListener(
-  domNode: Document | Element,
-  eventName: string,
-  listener: Function,
-): void {
-  domNode.addEventListener(eventName, listener, false);
-}
-
-export function addEventCaptureListener(
-  domNode: Document | Element,
-  eventName: string,
-  listener: Function,
-): void {
-  domNode.addEventListener(eventName, listener, true);
 }
 
 export function isTextInputElement(elem: ?HTMLElement): boolean {

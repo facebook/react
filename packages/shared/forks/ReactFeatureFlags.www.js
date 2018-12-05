@@ -37,6 +37,8 @@ export const enableSchedulerTracing = __PROFILE__;
 
 export const enableStableConcurrentModeAPIs = false;
 
+export const enableReactDOMFire = true;
+
 let refCount = 0;
 export function addUserTimingListener() {
   if (__DEV__) {

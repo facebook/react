@@ -14,6 +14,7 @@ describe('ReactDOMComponent', () => {
   let ReactTestUtils;
   let ReactDOM;
   let ReactDOMServer;
+  let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
   function normalizeCodeLocInfo(str) {
     return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
@@ -184,53 +185,62 @@ describe('ReactDOMComponent', () => {
       expect(() =>
         ReactDOM.render(<div onUnknown="alert(&quot;hack&quot;)" />, container),
       ).toWarnDev(
-        'Warning: Unknown event handler property `onUnknown`. It will be ignored.\n    in div (at **)',
+        ReactFeatureFlags.enableReactDOMFire
+          ? 'Warning: Expected `onUnknown` listener to be a function, instead got a value of `string` type.\n    in div (at **)'
+          : 'Warning: Unknown event handler property `onUnknown`. It will be ignored.\n    in div (at **)',
       );
       expect(container.firstChild.hasAttribute('onUnknown')).toBe(false);
       expect(container.firstChild.onUnknown).toBe(undefined);
       expect(() =>
         ReactDOM.render(<div onunknown="alert(&quot;hack&quot;)" />, container),
       ).toWarnDev(
-        'Warning: Unknown event handler property `onunknown`. It will be ignored.\n    in div (at **)',
+        ReactFeatureFlags.enableReactDOMFire
+          ? 'Warning: Invalid event handler property `onunknown`. React events use the camelCase naming convention, for example `onClick`.'
+          : 'Warning: Unknown event handler property `onunknown`. It will be ignored.\n    in div (at **)',
       );
       expect(container.firstChild.hasAttribute('onunknown')).toBe(false);
       expect(container.firstChild.onunknown).toBe(undefined);
+
       expect(() =>
         ReactDOM.render(
           <div on-unknown="alert(&quot;hack&quot;)" />,
           container,
         ),
       ).toWarnDev(
-        'Warning: Unknown event handler property `on-unknown`. It will be ignored.\n    in div (at **)',
+        ReactFeatureFlags.enableReactDOMFire
+          ? 'Warning: Invalid event handler property `on-unknown`. React events use the camelCase naming convention, for example `onClick`.'
+          : 'Warning: Unknown event handler property `on-unknown`. It will be ignored.\n    in div (at **)',
       );
       expect(container.firstChild.hasAttribute('on-unknown')).toBe(false);
       expect(container.firstChild['on-unknown']).toBe(undefined);
     });
 
-    it('should warn for unknown function event handlers', () => {
-      const container = document.createElement('div');
-      expect(() =>
-        ReactDOM.render(<div onUnknown={function() {}} />, container),
-      ).toWarnDev(
-        'Warning: Unknown event handler property `onUnknown`. It will be ignored.\n    in div (at **)',
-      );
-      expect(container.firstChild.hasAttribute('onUnknown')).toBe(false);
-      expect(container.firstChild.onUnknown).toBe(undefined);
-      expect(() =>
-        ReactDOM.render(<div onunknown={function() {}} />, container),
-      ).toWarnDev(
-        'Warning: Unknown event handler property `onunknown`. It will be ignored.\n    in div (at **)',
-      );
-      expect(container.firstChild.hasAttribute('onunknown')).toBe(false);
-      expect(container.firstChild.onunknown).toBe(undefined);
-      expect(() =>
-        ReactDOM.render(<div on-unknown={function() {}} />, container),
-      ).toWarnDev(
-        'Warning: Unknown event handler property `on-unknown`. It will be ignored.\n    in div (at **)',
-      );
-      expect(container.firstChild.hasAttribute('on-unknown')).toBe(false);
-      expect(container.firstChild['on-unknown']).toBe(undefined);
-    });
+    if (!ReactFeatureFlags.enableReactDOMFire) {
+      it('should warn for unknown function event handlers', () => {
+        const container = document.createElement('div');
+        expect(() =>
+          ReactDOM.render(<div onUnknown={function() {}} />, container),
+        ).toWarnDev(
+          'Warning: Unknown event handler property `onUnknown`. It will be ignored.\n    in div (at **)',
+        );
+        expect(container.firstChild.hasAttribute('onUnknown')).toBe(false);
+        expect(container.firstChild.onUnknown).toBe(undefined);
+        expect(() =>
+          ReactDOM.render(<div onunknown={function() {}} />, container),
+        ).toWarnDev(
+          'Warning: Unknown event handler property `onunknown`. It will be ignored.\n    in div (at **)',
+        );
+        expect(container.firstChild.hasAttribute('onunknown')).toBe(false);
+        expect(container.firstChild.onunknown).toBe(undefined);
+        expect(() =>
+          ReactDOM.render(<div on-unknown={function() {}} />, container),
+        ).toWarnDev(
+          'Warning: Unknown event handler property `on-unknown`. It will be ignored.\n    in div (at **)',
+        );
+        expect(container.firstChild.hasAttribute('on-unknown')).toBe(false);
+        expect(container.firstChild['on-unknown']).toBe(undefined);
+      });
+    }
 
     it('should warn for badly cased React attributes', () => {
       const container = document.createElement('div');
@@ -1900,12 +1910,20 @@ describe('ReactDOMComponent', () => {
         ReactTestUtils.renderIntoDocument(
           React.createElement('input', {type: 'text', oninput: '1'}),
         );
-      }).toWarnDev('onInput');
+      }).toWarnDev(
+        ReactFeatureFlags.enableReactDOMFire
+          ? 'Warning: Invalid event handler property `oninput`. React events use the camelCase naming convention, for example `onClick`.\n    in input'
+          : 'onInput',
+      );
       expect(() => {
         ReactTestUtils.renderIntoDocument(
           React.createElement('input', {type: 'text', onKeydown: '1'}),
         );
-      }).toWarnDev('onKeyDown');
+      }).toWarnDev(
+        ReactFeatureFlags.enableReactDOMFire
+          ? 'Warning: Expected `onKeydown` listener to be a function, instead got a value of `string` type.\n    in input'
+          : 'onKeyDown',
+      );
     });
 
     it('should warn about class', () => {

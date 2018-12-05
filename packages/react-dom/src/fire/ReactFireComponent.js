@@ -7,20 +7,7 @@
  * @flow
  */
 
-import {
-  createElement,
-  isCustomComponent,
-  isPropAnEvent,
-} from './ReactFireUtils';
-import {
-  AUTOFOCUS,
-  CHILDREN,
-  DANGEROUSLY_SET_INNER_HTML,
-  HTML,
-  STYLE,
-  SUPPRESS_CONTENT_EDITABLE_WARNING,
-  SUPPRESS_HYDRATION_WARNING,
-} from './ReactFireDOMConfig';
+import {createElement, isCustomComponent} from './ReactFireUtils';
 import {mediaEventTypes} from './ReactFireEventTypes';
 import {
   applyHostComponentInputMountWrapper,
@@ -43,7 +30,7 @@ import {
 import {
   applyHostComponentTextareaMountWrapper,
   updateWrapper as applyHostComponentTextareaUpdateWrapper,
-  getHostTextareaSelectProps,
+  getHostComponentTextareaProps,
   initHostComponentTextareaWrapperState,
 } from './controlled/ReactFireTextarea';
 import {
@@ -53,51 +40,34 @@ import {
 } from './ReactFireEvents';
 import {track} from './controlled/ReactFireValueTracking';
 import {
-  assertValidProps,
   validateARIAProperties,
   validateInputProperties,
-  validateShorthandPropertyCollisionInDev,
   validateUnknownProperties,
 } from './ReactFireValidation';
 import {
+  diffDOMElementProperties,
   diffHydratedDOMElementProperties,
   setDOMElementProperties,
   updateDOMElementProperties,
 } from './ReactFireComponentProperties';
+
+import type {
+  HostContext,
+  HostContextDev,
+  HostContextProd,
+} from './ReactFireHostConfig';
 
 import warning from 'shared/warning';
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 
 let didWarnShadyDOM = false;
 let validatePropertiesInDevelopment;
-let warnForInvalidEventListener;
 
 if (__DEV__) {
   validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
     validateUnknownProperties(type, props);
-  };
-
-  warnForInvalidEventListener = function(registrationName, listener) {
-    if (listener === false) {
-      warning(
-        false,
-        'Expected `%s` listener to be a function, instead got `false`.\n\n' +
-          'If you used to conditionally omit it with %s={condition && value}, ' +
-          'pass %s={condition ? value : undefined} instead.',
-        registrationName,
-        registrationName,
-        registrationName,
-      );
-    } else {
-      warning(
-        false,
-        'Expected `%s` listener to be a function, instead got a value of `%s` type.',
-        registrationName,
-        typeof listener,
-      );
-    }
   };
 }
 
@@ -124,7 +94,7 @@ function typeIsTextarea(
   rootContainerElement: Element | Document,
 ) {
   initHostComponentTextareaWrapperState(domNode, props);
-  props = getHostTextareaSelectProps(domNode, props);
+  props = getHostComponentTextareaProps(domNode, props);
   trapBubbledEvent('invalid', domNode);
   // For controlled components we always need to ensure we're listening
   // to onChange. Even if there is no listener.
@@ -236,7 +206,7 @@ export function createHostComponent(
   hostContext: HostContext,
 ) {
   const parentNamespace = __DEV__
-    ? hostContext.namespace
+    ? ((hostContext: any): HostContextDev).namespace
     : ((hostContext: any): HostContextProd);
   const domElement = createElement(
     type,
@@ -249,7 +219,7 @@ export function createHostComponent(
 
 export function setHostComponentInitialProps(
   type: string,
-  rawProps: object,
+  rawProps: Object,
   domNode: Element,
   rootContainerElement: Element | Document,
   hostContext: HostContext,
@@ -352,8 +322,8 @@ export function diffHostComponentProperties(
       updatePayload = [];
       break;
     case 'textarea':
-      lastProps = getHostTextareaSelectProps(domNode, lastRawProps);
-      nextProps = getHostTextareaSelectProps(domNode, nextRawProps);
+      lastProps = getHostComponentTextareaProps(domNode, lastRawProps);
+      nextProps = getHostComponentTextareaProps(domNode, nextRawProps);
       updatePayload = [];
       break;
     default:
@@ -369,143 +339,14 @@ export function diffHostComponentProperties(
       break;
   }
 
-  assertValidProps(type, nextProps);
-
-  let propName;
-  let styleName;
-  let styleUpdates = null;
-  for (propName in lastProps) {
-    if (
-      nextProps.hasOwnProperty(propName) ||
-      !lastProps.hasOwnProperty(propName) ||
-      lastProps[propName] == null
-    ) {
-      continue;
-    }
-    if (propName === STYLE) {
-      const lastStyle = lastProps[propName];
-      for (styleName in lastStyle) {
-        if (lastStyle.hasOwnProperty(styleName)) {
-          if (!styleUpdates) {
-            styleUpdates = {};
-          }
-          styleUpdates[styleName] = '';
-        }
-      }
-    } else if (
-      propName === DANGEROUSLY_SET_INNER_HTML ||
-      propName === CHILDREN
-    ) {
-      // Noop. This is handled by the clear text mechanism.
-    } else if (
-      propName === SUPPRESS_CONTENT_EDITABLE_WARNING ||
-      propName === SUPPRESS_HYDRATION_WARNING
-    ) {
-      // Noop
-    } else if (propName === AUTOFOCUS) {
-      // Noop. It doesn't work on updates anyway.
-    } else {
-      // For all other deleted properties we add it to the queue. We use
-      // the whitelist in the commit phase instead.
-      (updatePayload = updatePayload || []).push(propName, null);
-    }
-  }
-  for (propName in nextProps) {
-    const nextProp = nextProps[propName];
-    const lastProp = lastProps != null ? lastProps[propName] : undefined;
-    if (
-      !nextProps.hasOwnProperty(propName) ||
-      nextProp === lastProp ||
-      (nextProp == null && lastProp == null)
-    ) {
-      continue;
-    }
-    if (propName === STYLE) {
-      if (__DEV__) {
-        if (nextProp) {
-          // Freeze the next style object so that we can assume it won't be
-          // mutated. We have already warned for this in the past.
-          Object.freeze(nextProp);
-        }
-      }
-      if (lastProp) {
-        // Unset styles on `lastProp` but not on `nextProp`.
-        for (styleName in lastProp) {
-          if (
-            lastProp.hasOwnProperty(styleName) &&
-            (!nextProp || !nextProp.hasOwnProperty(styleName))
-          ) {
-            if (!styleUpdates) {
-              styleUpdates = {};
-            }
-            styleUpdates[styleName] = '';
-          }
-        }
-        // Update styles that changed since `lastProp`.
-        for (styleName in nextProp) {
-          if (
-            nextProp.hasOwnProperty(styleName) &&
-            lastProp[styleName] !== nextProp[styleName]
-          ) {
-            if (!styleUpdates) {
-              styleUpdates = {};
-            }
-            styleUpdates[styleName] = nextProp[styleName];
-          }
-        }
-      } else {
-        // Relies on `updateStylesByID` not mutating `styleUpdates`.
-        if (!styleUpdates) {
-          if (!updatePayload) {
-            updatePayload = [];
-          }
-          updatePayload.push(propName, styleUpdates);
-        }
-        styleUpdates = nextProp;
-      }
-    } else if (propName === DANGEROUSLY_SET_INNER_HTML) {
-      const nextHtml = nextProp ? nextProp[HTML] : undefined;
-      const lastHtml = lastProp ? lastProp[HTML] : undefined;
-      if (nextHtml != null) {
-        if (lastHtml !== nextHtml) {
-          (updatePayload = updatePayload || []).push(propName, '' + nextHtml);
-        }
-      } else {
-        // TODO: It might be too late to clear this if we have children
-        // inserted already.
-      }
-    } else if (propName === CHILDREN) {
-      if (
-        lastProp !== nextProp &&
-        (typeof nextProp === 'string' || typeof nextProp === 'number')
-      ) {
-        (updatePayload = updatePayload || []).push(propName, '' + nextProp);
-      }
-    } else if (
-      propName === SUPPRESS_CONTENT_EDITABLE_WARNING ||
-      propName === SUPPRESS_HYDRATION_WARNING
-    ) {
-      // Noop
-    } else {
-      if (nextProp != null && isPropAnEvent(propName)) {
-        if (__DEV__ && typeof nextProp !== 'function') {
-          warnForInvalidEventListener(propName, nextProp);
-        }
-        ensureListeningTo(rootContainerElement, propName);
-      }
-      // For any other property we always add it to the queue and then we
-      // filter it out using the whitelist during the commit.
-      (updatePayload = updatePayload || []).push(propName, nextProp);
-    }
-  }
-  if (styleUpdates) {
-    if (__DEV__) {
-      validateShorthandPropertyCollisionInDev(styleUpdates, nextProps[STYLE]);
-    }
-    (updatePayload = updatePayload || []).push(STYLE, styleUpdates);
-  }
-
-  return updatePayload;
+  return diffDOMElementProperties(
+    domNode,
+    type,
+    updatePayload,
+    lastProps,
+    nextProps,
+    rootContainerElement,
+  );
 }
 
 export function updateHostComponentProperties(
@@ -565,10 +406,9 @@ export function diffHydratedHostComponentProperties(
   parentNamespace: string,
   rootContainerElement: Element | Document,
 ): null | Array<mixed> {
-  let isCustomComponentTag;
+  const isCustomComponentTag = isCustomComponent(type, rawProps);
 
   if (__DEV__) {
-    isCustomComponentTag = isCustomComponent(type, rawProps);
     validatePropertiesInDevelopment(type, rawProps);
     if (isCustomComponentTag && !didWarnShadyDOM && (domNode: any).shadyRoot) {
       warning(

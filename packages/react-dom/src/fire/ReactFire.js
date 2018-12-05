@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {roots, ReactRoot} from './ReactFireRoots';
+import {roots, ReactRoot, type Root} from './ReactFireRoots';
 import {
   enqueueStateRestore,
   restoreStateIfNeeded,
@@ -16,6 +16,7 @@ import {
 import {setBatchingImplementation} from './ReactFireBatching';
 import {
   batchedUpdates,
+  findHostInstanceWithNoPortals,
   findHostInstance,
   findHostInstanceWithWarning,
   flushControlled,
@@ -29,6 +30,7 @@ import {restoreHostComponentTextareaControlledState} from './controlled/ReactFir
 import {restoreHostComponentSelectControlledState} from './controlled/ReactFireSelect';
 import {setupDevTools} from './ReactFireDevTools';
 import {
+  COMMENT_NODE,
   DOCUMENT_NODE,
   ELEMENT_NODE,
   ROOT_ATTRIBUTE_NAME,
@@ -40,6 +42,7 @@ import {
 } from './ReactFireInternal';
 import {proxyListener} from './ReactFireEvents';
 
+import type {ReactNodeList} from 'shared/ReactTypes';
 import invariant from 'shared/invariant';
 import {createPortal as createPortalImpl} from 'shared/ReactPortal';
 import getComponentName from 'shared/getComponentName';
@@ -47,8 +50,84 @@ import {enableStableConcurrentModeAPIs} from 'shared/ReactFeatureFlags';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {HostComponent, HostText} from 'shared/ReactWorkTags';
+import {has as hasInstance} from 'shared/ReactInstanceMap';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+
+type RootOptions = {
+  hydrate?: boolean,
+};
+
+export type DOMContainer =
+  | (Element & {
+      _reactRootContainer: ?Root,
+    })
+  | (Document & {
+      _reactRootContainer: ?Root,
+    });
+
+let topLevelUpdateWarnings;
+
+if (__DEV__) {
+  if (
+    typeof Map !== 'function' ||
+    // $FlowIssue Flow incorrectly thinks Map has no prototype
+    Map.prototype == null ||
+    typeof Map.prototype.forEach !== 'function' ||
+    typeof Set !== 'function' ||
+    // $FlowIssue Flow incorrectly thinks Set has no prototype
+    Set.prototype == null ||
+    typeof Set.prototype.clear !== 'function' ||
+    typeof Set.prototype.forEach !== 'function'
+  ) {
+    warningWithoutStack(
+      false,
+      'React depends on Map and Set built-in types. Make sure that you load a ' +
+        'polyfill in older browsers. https://fb.me/react-polyfills',
+    );
+  }
+
+  topLevelUpdateWarnings = (container: DOMContainer) => {
+    if (roots.has(container) && container.nodeType !== COMMENT_NODE) {
+      const root = roots.get(container);
+      const hostInstance =
+        root !== undefined &&
+        findHostInstanceWithNoPortals(root._internalRoot.current);
+      if (hostInstance) {
+        warningWithoutStack(
+          hostInstance.parentNode === container,
+          'render(...): It looks like the React-rendered content of this ' +
+            'container was removed without using React. This is not ' +
+            'supported and will cause errors. Instead, call ' +
+            'ReactDOM.unmountComponentAtNode to empty a container.',
+        );
+      }
+    }
+
+    const isRootRenderedBySomeReact = roots.has(container);
+    const rootEl = getReactRootElementInContainer(container);
+    const hasNonRootReactChild = !!(rootEl && getFiberFromDomNode(rootEl));
+
+    warningWithoutStack(
+      !hasNonRootReactChild || isRootRenderedBySomeReact,
+      'render(...): Replacing React-rendered children with a new root ' +
+        'component. If you intended to update the children of this node, ' +
+        'you should instead have the existing children update their state ' +
+        'and render the new components instead of calling ReactDOM.render.',
+    );
+
+    warningWithoutStack(
+      container.nodeType !== ELEMENT_NODE ||
+        !((container: any): Element).tagName ||
+        ((container: any): Element).tagName.toUpperCase() !== 'BODY',
+      'render(): Rendering components directly into document.body is ' +
+        'discouraged, since its children are often manipulated by third-party ' +
+        'scripts and browser extensions. This may lead to subtle ' +
+        'reconciliation issues. Try rendering into a container element created ' +
+        'for your app.',
+    );
+  };
+}
 
 setRestoreImplementation((domNode: Element, tag: string, props: Object) => {
   switch (tag) {
@@ -125,7 +204,7 @@ function findDOMNode(componentOrElement: Element | ?React$Component<any, any>) {
   return findHostInstance(componentOrElement);
 }
 
-function cleanRootDOMContainer(container) {
+function cleanRootDOMContainer(container: DOMContainer) {
   let warned = false;
   let rootSibling;
   while ((rootSibling = container.lastChild)) {
@@ -148,44 +227,89 @@ function cleanRootDOMContainer(container) {
   }
 }
 
-function legacyRenderRoot(children, domContainer, callback, shouldHydrate) {
+function legacyRenderSubtreeIntoContainer(
+  parentComponent: ?React$Component<any, any>,
+  children: ReactNodeList,
+  domContainer: DOMContainer,
+  shouldHydrate: boolean,
+  callback: ?Function,
+) {
   let root = roots.get(domContainer);
+
+  invariant(
+    isValidContainer(domContainer),
+    'unmountComponentAtNode(...): Target container is not a DOM element.',
+  );
+
+  if (__DEV__) {
+    (domContainer: any)._reactRootDev = true;
+    topLevelUpdateWarnings(domContainer);
+  }
+
   if (root === undefined) {
-    invariant(
-      isValidContainer(domContainer),
-      'unmountComponentAtNode(...): Target container is not a DOM element.',
-    );
+    // Initial mount
     if (!shouldHydrate) {
       cleanRootDOMContainer(domContainer);
     }
     root = new ReactRoot(domContainer, false, shouldHydrate);
-    roots.set(domContainer, root);
+    roots.set(domContainer, ((root: any): Root));
     if (typeof callback === 'function') {
       const originalCallback = callback;
       callback = function() {
-        const instance = getPublicRootInstance(root._internalRoot);
+        const instance = getPublicRootInstance(
+          ((root: any): Root)._internalRoot,
+        );
         originalCallback.call(instance);
       };
     }
     // Initial mount should not be batched.
     unbatchedUpdates(() => {
-      root.render(children, callback);
+      if (parentComponent != null) {
+        ((root: any): Root).legacy_renderSubtreeIntoContainer(
+          parentComponent,
+          children,
+          callback,
+        );
+      } else {
+        ((root: any): Root).render(children, callback);
+      }
     });
   } else {
     if (typeof callback === 'function') {
       const originalCallback = callback;
       callback = function() {
-        const instance = getPublicRootInstance(root._internalRoot);
+        const instance = getPublicRootInstance(
+          ((root: any): Root)._internalRoot,
+        );
         originalCallback.call(instance);
       };
     }
-    root.render(children, callback);
+    // Update
+    if (parentComponent != null) {
+      ((root: any): Root).legacy_renderSubtreeIntoContainer(
+        parentComponent,
+        children,
+        callback,
+      );
+    } else {
+      ((root: any): Root).render(children, callback);
+    }
   }
-  return getPublicRootInstance(root._internalRoot);
+  return getPublicRootInstance(((root: any): Root)._internalRoot);
 }
 
-function render(children, domContainer, callback) {
-  return legacyRenderRoot(children, domContainer, callback, false);
+function render(
+  children: ReactNodeList,
+  domContainer: DOMContainer,
+  callback: ?Function,
+) {
+  return legacyRenderSubtreeIntoContainer(
+    null,
+    children,
+    domContainer,
+    false,
+    callback,
+  );
 }
 
 function getReactRootElementInContainer(container: any) {
@@ -200,27 +324,26 @@ function getReactRootElementInContainer(container: any) {
   }
 }
 
-function unmountComponentAtNode(domContainer) {
+function unmountComponentAtNode(domContainer: DOMContainer) {
   invariant(
     isValidContainer(domContainer),
     'unmountComponentAtNode(...): Target container is not a DOM element.',
   );
   if (roots.has(domContainer)) {
-    if (__DEV__) {
-      const rootEl = getReactRootElementInContainer(domContainer);
-      const renderedByDifferentReact = rootEl && !getFiberFromDomNode(rootEl);
-      warningWithoutStack(
-        !renderedByDifferentReact,
-        "unmountComponentAtNode(): The node you're attempting to unmount " +
-          'was rendered by another copy of React.',
-      );
-    }
     unbatchedUpdates(() => {
-      render(null, domContainer, () => {
+      legacyRenderSubtreeIntoContainer(null, null, domContainer, false, () => {
         roots.delete(domContainer);
       });
     });
     return true;
+  } else {
+    if (__DEV__ && (domContainer: any)._reactRootDev === true) {
+      warningWithoutStack(
+        false,
+        "unmountComponentAtNode(): The node you're attempting to unmount " +
+          'was rendered by another copy of React.',
+      );
+    }
   }
   if (__DEV__) {
     const rootEl = getReactRootElementInContainer(domContainer);
@@ -230,7 +353,7 @@ function unmountComponentAtNode(domContainer) {
     const isContainerReactRoot =
       domContainer.nodeType === ELEMENT_NODE &&
       isValidContainer(domContainer.parentNode) &&
-      !!domContainer.parentNode._reactRootContainer;
+      roots.has(domContainer.parentNode);
 
     warningWithoutStack(
       !hasNonRootReactChild,
@@ -251,14 +374,20 @@ function hydrate(
   container: DOMContainer,
   callback: ?Function,
 ) {
-  return legacyRenderRoot(element, container, callback, true);
+  return legacyRenderSubtreeIntoContainer(
+    null,
+    element,
+    container,
+    true,
+    callback,
+  );
 }
 
 /**
  * Given a ReactDOMComponent or ReactDOMTextComponent, return the corresponding
  * DOM node.
  */
-function getDomNodeFromFiber(inst) {
+function getDomNodeFromFiber(inst: Object) {
   if (inst.tag === HostComponent || inst.tag === HostText) {
     // In Fiber this, is just the state node right now. We assume it will be
     // a host component or host text.
@@ -270,9 +399,29 @@ function getDomNodeFromFiber(inst) {
   invariant(false, 'getNodeFromInstance: Invalid argument.');
 }
 
+// Ideally we should aim to remove this from React Fire
+function unstable_renderSubtreeIntoContainer(
+  parentComponent: React$Component<any, any>,
+  element: React$Element<any>,
+  containerNode: DOMContainer,
+  callback: ?Function,
+) {
+  invariant(
+    parentComponent != null && hasInstance(parentComponent),
+    'parentComponent must be a valid React Component',
+  );
+  return legacyRenderSubtreeIntoContainer(
+    parentComponent,
+    element,
+    containerNode,
+    false,
+    callback,
+  );
+}
+
 const noOp = () => {};
 
-const ReactDOM = {
+const ReactDOM: Object = {
   createPortal,
   findDOMNode,
   flushSync,
@@ -283,6 +432,7 @@ const ReactDOM = {
   unstable_batchedUpdates: batchedUpdates,
   unstable_flushControlled: flushControlled,
   unstable_interactiveUpdates: interactiveUpdates,
+  unstable_renderSubtreeIntoContainer,
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // Keep in sync with ReactDOMUnstableNativeDependencies.js
     // and ReactTestUtils.js. This is an array for better minification.

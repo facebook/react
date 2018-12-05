@@ -10,13 +10,15 @@
 import {ELEMENT_NODE, TEXT_NODE} from './ReactFireDOMConfig';
 import {getActiveElementDeep, isInDocument} from './ReactFireUtils';
 
+type OffsetType = {start: number, end: number};
+
 /**
  * Given any node return the first leaf node without children.
  *
  * @param {DOMElement|DOMTextNode} node
  * @return {DOMElement|DOMTextNode}
  */
-function getLeafNode(node) {
+function getLeafNode(node: void | Element | Node) {
   while (node && node.firstChild) {
     node = node.firstChild;
   }
@@ -30,12 +32,12 @@ function getLeafNode(node) {
  * @param {DOMElement|DOMTextNode} node
  * @return {?DOMElement|DOMTextNode}
  */
-function getSiblingNode(node) {
+function getSiblingNode(node: void | Element | Node) {
   while (node) {
     if (node.nextSibling) {
       return node.nextSibling;
     }
-    node = node.parentNode;
+    node = (node: any).parentNode;
   }
 }
 
@@ -46,7 +48,10 @@ function getSiblingNode(node) {
  * @param {number} offset
  * @return {?object}
  */
-function getNodeForCharacterOffset(root: Element, offset: number): ?Object {
+function getNodeForCharacterOffset(
+  root: Node | Element,
+  offset: number,
+): ?Object {
   let node = getLeafNode(root);
   let nodeStart = 0;
   let nodeEnd = 0;
@@ -73,7 +78,7 @@ function getNodeForCharacterOffset(root: Element, offset: number): ?Object {
  * @param {DOMElement} outerNode
  * @return {?object}
  */
-export function getOffsets(outerNode) {
+export function getOffsets(outerNode: Element) {
   const {ownerDocument} = outerNode;
   const win = (ownerDocument && ownerDocument.defaultView) || window;
   const selection = win.getSelection && win.getSelection();
@@ -119,11 +124,11 @@ export function getOffsets(outerNode) {
  * Exported only for testing.
  */
 export function getModernOffsetsFromPoints(
-  outerNode,
-  anchorNode,
-  anchorOffset,
-  focusNode,
-  focusOffset,
+  outerNode: Node,
+  anchorNode: Node,
+  anchorOffset: number,
+  focusNode: Node,
+  focusOffset: number,
 ) {
   let length = 0;
   let start = -1;
@@ -139,22 +144,22 @@ export function getModernOffsetsFromPoints(
     while (true) {
       if (
         node === anchorNode &&
-        (anchorOffset === 0 || node.nodeType === TEXT_NODE)
+        (anchorOffset === 0 || ((node: any): Node).nodeType === TEXT_NODE)
       ) {
         start = length + anchorOffset;
       }
       if (
         node === focusNode &&
-        (focusOffset === 0 || node.nodeType === TEXT_NODE)
+        (focusOffset === 0 || ((node: any): Node).nodeType === TEXT_NODE)
       ) {
         end = length + focusOffset;
       }
 
-      if (node.nodeType === TEXT_NODE) {
-        length += node.nodeValue.length;
+      if (((node: any): Node).nodeType === TEXT_NODE) {
+        length += ((node: any): Node).nodeValue.length;
       }
 
-      if ((next = node.firstChild) === null) {
+      if ((next = ((node: any): Node).firstChild) === null) {
         break;
       }
       // Moving from `node` to its first child `next`.
@@ -176,11 +181,11 @@ export function getModernOffsetsFromPoints(
       if (parentNode === focusNode && ++indexWithinFocus === focusOffset) {
         end = length;
       }
-      if ((next = node.nextSibling) !== null) {
+      if ((next = ((node: any): Node).nextSibling) !== null) {
         break;
       }
       node = parentNode;
-      parentNode = node.parentNode;
+      parentNode = ((node: any): Node).parentNode;
     }
 
     // Moving from `node` to its next sibling `next`.
@@ -211,7 +216,7 @@ export function getModernOffsetsFromPoints(
  * @param {DOMElement|DOMTextNode} node
  * @param {object} offsets
  */
-export function setOffsets(node, offsets) {
+export function setOffsets(node: Node | Element, offsets: Object) {
   const doc = node.ownerDocument || document;
   const win = (doc && doc.defaultView) || window;
 
@@ -274,9 +279,10 @@ export function setOffsets(node, offsets) {
  * from https://html.spec.whatwg.org/#do-not-apply, looking at `selectionStart`
  * and `selectionEnd` rows.
  */
-export function hasSelectionCapabilities(elem) {
+export function hasSelectionCapabilities(elem: void | Object) {
   const nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
   return (
+    elem &&
     nodeName &&
     ((nodeName === 'input' &&
       (elem.type === 'text' ||
@@ -293,8 +299,8 @@ export function getSelectionInformation() {
   const focusedElem = getActiveElementDeep();
   return {
     focusedElem: focusedElem,
-    selectionRange: hasSelectionCapabilities(focusedElem)
-      ? getSelection(focusedElem)
+    selectionRange: hasSelectionCapabilities(((focusedElem: any): Object))
+      ? getSelection(((focusedElem: any): Object))
       : null,
   };
 }
@@ -304,7 +310,10 @@ export function getSelectionInformation() {
  * restore it. This is useful when performing operations that could remove dom
  * nodes and place them back in, resulting in focus being lost.
  */
-export function restoreSelection(priorSelectionInformation) {
+export function restoreSelection(priorSelectionInformation: {
+  focusedElem: Element,
+  selectionRange: null | OffsetType,
+}) {
   const curFocusedElem = getActiveElementDeep();
   const priorFocusedElem = priorSelectionInformation.focusedElem;
   const priorSelectionRange = priorSelectionInformation.selectionRange;
@@ -323,20 +332,22 @@ export function restoreSelection(priorSelectionInformation) {
       if (ancestor.nodeType === ELEMENT_NODE) {
         ancestors.push({
           element: ancestor,
-          left: ancestor.scrollLeft,
-          top: ancestor.scrollTop,
+          left: ((ancestor: any): Element).scrollLeft,
+          top: ((ancestor: any): Element).scrollTop,
         });
       }
     }
 
-    if (typeof priorFocusedElem.focus === 'function') {
-      priorFocusedElem.focus();
+    if (
+      typeof ((priorFocusedElem: any): HTMLInputElement).focus === 'function'
+    ) {
+      ((priorFocusedElem: any): HTMLInputElement).focus();
     }
 
     for (let i = 0; i < ancestors.length; i++) {
       const info = ancestors[i];
-      info.element.scrollLeft = info.left;
-      info.element.scrollTop = info.top;
+      ((info.element: any): Element).scrollLeft = info.left;
+      ((info.element: any): Element).scrollTop = info.top;
     }
   }
 }
@@ -347,7 +358,7 @@ export function restoreSelection(priorSelectionInformation) {
  * -@input: Look up selection bounds of this input
  * -@return {start: selectionStart, end: selectionEnd}
  */
-export function getSelection(input) {
+export function getSelection(input: Object) {
   let selection;
 
   if ('selectionStart' in input) {
@@ -370,7 +381,7 @@ export function getSelection(input) {
  * -@input     Set selection bounds of this input or textarea
  * -@offsets   Object of same form that is returned from get*
  */
-export function setSelection(input, offsets) {
+export function setSelection(input: Object, offsets: Object) {
   let {start, end} = offsets;
   if (end === undefined) {
     end = start;

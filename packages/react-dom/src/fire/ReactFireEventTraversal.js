@@ -11,22 +11,32 @@ import {
   getClosestFiberFromDOMNode,
   getDOMNodeFromFiber,
 } from './ReactFireInternal';
-import {getDomNodeEventsMap} from './ReactFireEvents';
+import {
+  getDomNodeEventsMap,
+  startEventPropagation,
+  returnsTrue,
+} from './ReactFireEvents';
+import type {EventData, ProxyContext} from './ReactFireEvents';
 
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import {HostComponent, HostRoot} from 'shared/ReactWorkTags';
 import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
 
-function getParent(fiber) {
+function getParent(fiber: Fiber | null): Fiber | null {
+  let currentFiber = fiber;
+  if (!currentFiber) {
+    return null;
+  }
   do {
-    fiber = fiber.return;
+    currentFiber = currentFiber.return;
     // TODO: If this is a HostRoot we might want to bail out.
     // That is depending on if we want nested subtrees (layers) to bubble
     // events to their parent. We could also go through parentNode on the
     // host node but that wouldn't work for React Native and doesn't let us
     // do the portal feature.
-  } while (fiber && fiber.tag !== HostComponent);
-  if (fiber) {
-    return fiber;
+  } while (currentFiber && currentFiber.tag !== HostComponent);
+  if (currentFiber) {
+    return currentFiber;
   }
   return null;
 }
@@ -36,26 +46,26 @@ function getParent(fiber) {
  * passed-in instance (for use when entire React trees are nested within each
  * other). If React trees are not nested, returns null.
  */
-function findRootContainerNode(inst) {
+function findRootContainerNode(fiber: Fiber): Element | Node | null {
   // TODO: It may be a good idea to cache this to prevent unnecessary DOM
   // traversal, but caching is difficult to do correctly without using a
   // mutation observer to listen for all DOM changes.
-  while (inst.return) {
-    inst = inst.return;
+  while (fiber.return) {
+    fiber = fiber.return;
   }
-  if (inst.tag !== HostRoot) {
+  if (fiber.tag !== HostRoot) {
     // This can happen if we're in a detached tree.
     return null;
   }
-  return inst.stateNode.containerInfo;
+  return fiber.stateNode.containerInfo;
 }
 
 function triggerEventHandler(
-  domNode,
-  domNodeEventsMap,
-  eventName,
-  proxyContext,
-  event,
+  domNode: Element | Node,
+  domNodeEventsMap: Map<string, EventData>,
+  eventName: string,
+  proxyContext: ProxyContext,
+  event: Event,
 ) {
   const eventListener = domNodeEventsMap.get(eventName);
   if (eventListener === undefined || eventListener.handler === null) {
@@ -70,13 +80,20 @@ function triggerEventHandler(
   );
 }
 
-function dispatchEventHandler(fiber, capturePhase, proxyContext) {
+function dispatchEventHandler(
+  fiber: Fiber,
+  capturePhase: boolean,
+  proxyContext: ProxyContext,
+) {
   const domNode = getDOMNodeFromFiber(fiber);
+  if (domNode == null) {
+    return;
+  }
   // Html Nodes can be nested fe: span inside button in that scenario
   // browser does not handle disabled attribute on parent,
   // because the event listener is on document.body
   // Don't process clicks on disabled elements
-  if (proxyContext.isClickEvent && domNode.disabled) {
+  if (proxyContext.isClickEvent && (domNode: any).disabled) {
     return;
   }
   const domNodeEventsMap = getDomNodeEventsMap(domNode);
@@ -88,12 +105,14 @@ function dispatchEventHandler(fiber, capturePhase, proxyContext) {
     proxyContext,
     event,
   );
-  if (event.cancelBubble) {
+  if ((event: any).isPropagationStopped === returnsTrue) {
     return true;
   }
 }
 
-export function getEventTargetAncestorFibers(targetFiber) {
+export function getEventTargetAncestorFibers(
+  targetFiber: null | Fiber,
+): Array<Fiber> {
   const ancestors = [];
   // Loop through the hierarchy, in case there's any nested components.
   // It's important that we build the array of ancestors before calling any
@@ -114,7 +133,7 @@ export function getEventTargetAncestorFibers(targetFiber) {
   return ancestors;
 }
 
-export function traverseTwoPhase(proxyContext) {
+export function traverseTwoPhase(proxyContext: ProxyContext) {
   let {fiber} = proxyContext;
   let i;
   let stopped;
@@ -123,6 +142,7 @@ export function traverseTwoPhase(proxyContext) {
     path.push(fiber);
     fiber = getParent(fiber);
   }
+  startEventPropagation(proxyContext);
 
   for (i = path.length; i-- > 0; ) {
     stopped = dispatchEventHandler(path[i], true, proxyContext);
@@ -142,7 +162,12 @@ export function traverseTwoPhase(proxyContext) {
  * Return the lowest common ancestor of A and B, or null if they are in
  * different trees.
  */
-export function getLowestCommonAncestor(instA, instB) {
+export function getLowestCommonAncestor(
+  instA: Fiber,
+  instB: Fiber,
+): null | Fiber {
+  let currentInstA = instA;
+  let currentInstB = instB;
   let depthA = 0;
   for (let tempA = instA; tempA; tempA = getParent(tempA)) {
     depthA++;
@@ -154,24 +179,27 @@ export function getLowestCommonAncestor(instA, instB) {
 
   // If A is deeper, crawl up.
   while (depthA - depthB > 0) {
-    instA = getParent(instA);
+    currentInstA = getParent(currentInstA);
     depthA--;
   }
 
   // If B is deeper, crawl up.
   while (depthB - depthA > 0) {
-    instB = getParent(instB);
+    currentInstB = getParent(currentInstB);
     depthB--;
   }
 
   // Walk in lockstep until we find a match.
   let depth = depthA;
   while (depth--) {
-    if (instA === instB || instA === instB.alternate) {
-      return instA;
+    if (
+      currentInstA === currentInstB ||
+      (currentInstB !== null && currentInstA === currentInstB.alternate)
+    ) {
+      return currentInstA;
     }
-    instA = getParent(instA);
-    instB = getParent(instB);
+    currentInstA = getParent(currentInstA);
+    currentInstB = getParent(currentInstB);
   }
   return null;
 }
@@ -184,43 +212,49 @@ export function getLowestCommonAncestor(instA, instB) {
  * "entered" or "left" that element.
  */
 export function traverseEnterLeave(
-  from,
-  to,
-  mutateEventForFromPath,
-  mutateEventForToPath,
-  proxyContext,
-) {
-  const common = from && to ? getLowestCommonAncestor(from, to) : null;
+  from: Fiber,
+  to: Fiber,
+  mutateEventForFromPath: () => void,
+  mutateEventForToPath: () => void,
+  proxyContext: ProxyContext,
+): void {
+  let currentFrom = from;
+  let currentTo = to;
+  const common =
+    currentFrom && currentTo
+      ? getLowestCommonAncestor(currentFrom, currentTo)
+      : null;
   const pathFrom = [];
   while (true) {
-    if (!from) {
+    if (!currentFrom) {
       break;
     }
-    if (from === common) {
+    if (currentFrom === common) {
       break;
     }
-    const alternate = from.alternate;
+    const alternate = currentFrom.alternate;
     if (alternate !== null && alternate === common) {
       break;
     }
-    pathFrom.push(from);
-    from = getParent(from);
+    pathFrom.push(currentFrom);
+    currentFrom = getParent(currentFrom);
   }
   const pathTo = [];
   while (true) {
-    if (!to) {
+    if (!currentTo) {
       break;
     }
-    if (to === common) {
+    if (currentTo === common) {
       break;
     }
-    const alternate = to.alternate;
+    const alternate = currentTo.alternate;
     if (alternate !== null && alternate === common) {
       break;
     }
-    pathTo.push(to);
-    to = getParent(to);
+    pathTo.push(currentTo);
+    currentTo = getParent(currentTo);
   }
+  startEventPropagation(proxyContext);
   mutateEventForFromPath();
   proxyContext.eventName = `onMouseLeave-polyfill`;
   for (let i = 0; i < pathFrom.length; i++) {

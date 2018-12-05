@@ -13,10 +13,17 @@ import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCur
 
 import {controlledValuePropTypes} from './ReactFirePropTypes';
 import {getToStringValue, toString} from '../ReactFireUtils';
+import type {ToStringValue} from '../ReactFireUtils';
 
 let didWarnValDefaultVal = false;
 
-export function getHostTextareaSelectProps(element: Element, props: Object) {
+type TextAreaWithWrapperState = HTMLTextAreaElement & {
+  _wrapperState: {
+    initialValue: ToStringValue,
+  },
+};
+
+export function getHostComponentTextareaProps(element: Element, props: Object) {
   const node = ((element: any): TextAreaWithWrapperState);
   invariant(
     props.dangerouslySetInnerHTML == null,
