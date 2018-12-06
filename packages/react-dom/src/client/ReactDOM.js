@@ -773,6 +773,9 @@ const ReactDOM: Object = {
   unstable_createRoot: createRoot,
   unstable_flushControlled: flushControlled,
 
+  // Let's fail the build intentionally!
+  thisNewEntryShouldChangeTheResultSizeSlightly;@'1'
+
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // Keep in sync with ReactDOMUnstableNativeDependencies.js
     // and ReactTestUtils.js. This is an array for better minification.
