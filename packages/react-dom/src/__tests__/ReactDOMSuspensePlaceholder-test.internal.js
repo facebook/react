@@ -262,8 +262,8 @@ describe('ReactDOMSuspensePlaceholder', () => {
     }
 
     ReactDOM.render(<App />, container);
-    // expect(log).toEqual([]);
+    expect(log).toEqual(['cDM']);
     ReactDOM.render(<App />, container);
-    // expect(log).toEqual(['cDM']);
+    expect(log).toEqual(['cDM', 'cDU']);
   });
 });

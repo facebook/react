@@ -117,16 +117,17 @@ export function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
   let b = alternate;
   while (true) {
     let parentA = a.return;
-    let parentB = parentA ? parentA.alternate : null;
-    if (!parentA || !parentB) {
+    if (!parentA) {
       // We're at the root.
       break;
     }
 
-    // If both copies of the parent fiber point to the same child, we can
-    // assume that the child is current. This happens when we bailout on low
-    // priority: the bailed out fiber's child reuses the current child.
-    if (parentA.child === parentB.child) {
+    // If both copies of the parent fiber point to the same child (or if there
+    // is only a single parent fiber), we can assume that the child is current.
+    // This happens when we bailout on low priority: the bailed out fiber's
+    // child reuses the current child.
+    let parentB = parentA.alternate;
+    if (parentB === null || parentA.child === parentB.child) {
       let child = parentA.child;
       while (child) {
         if (child === a) {
