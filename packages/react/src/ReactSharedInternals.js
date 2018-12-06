@@ -12,6 +12,9 @@ import {
   unstable_now,
   unstable_scheduleCallback,
   unstable_runWithPriority,
+  unstable_getFirstCallbackNode,
+  unstable_pauseExecution,
+  unstable_continueExecution,
   unstable_wrapCallback,
   unstable_getCurrentPriorityLevel,
 } from 'scheduler';
@@ -49,6 +52,9 @@ if (__UMD__) {
       unstable_scheduleCallback,
       unstable_runWithPriority,
       unstable_wrapCallback,
+      unstable_getFirstCallbackNode,
+      unstable_pauseExecution,
+      unstable_continueExecution,
       unstable_getCurrentPriorityLevel,
     },
     SchedulerTracing: {
