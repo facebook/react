@@ -213,7 +213,7 @@ function updateForwardRef(
   Component: any,
   nextProps: any,
   renderExpirationTime: ExpirationTime,
-) {
+): Fiber | null {
   if (__DEV__) {
     if (workInProgress.type !== workInProgress.elementType) {
       // Lazy component props can't be validated in createElement
@@ -264,9 +264,9 @@ function updateMemoComponent(
   workInProgress: Fiber,
   Component: any,
   nextProps: any,
-  updateExpirationTime,
+  updateExpirationTime: ExpirationTime,
   renderExpirationTime: ExpirationTime,
-): null | Fiber {
+): Fiber | null {
   if (current === null) {
     let type = Component.type;
     if (
@@ -368,9 +368,9 @@ function updateSimpleMemoComponent(
   workInProgress: Fiber,
   Component: any,
   nextProps: any,
-  updateExpirationTime,
+  updateExpirationTime: ExpirationTime,
   renderExpirationTime: ExpirationTime,
-): null | Fiber {
+): Fiber | null {
   if (__DEV__) {
     if (workInProgress.type !== workInProgress.elementType) {
       // Lazy component props can't be validated in createElement
@@ -421,7 +421,7 @@ function updateFragment(
   current: Fiber | null,
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
-) {
+): Fiber | null {
   const nextChildren = workInProgress.pendingProps;
   reconcileChildren(
     current,
@@ -436,7 +436,7 @@ function updateMode(
   current: Fiber | null,
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
-) {
+): Fiber | null {
   const nextChildren = workInProgress.pendingProps.children;
   reconcileChildren(
     current,
@@ -451,7 +451,7 @@ function updateProfiler(
   current: Fiber | null,
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
-) {
+): Fiber | null {
   if (enableProfilerTimer) {
     workInProgress.effectTag |= Update;
   }
@@ -478,11 +478,11 @@ function markRef(current: Fiber | null, workInProgress: Fiber) {
 }
 
 function updateFunctionComponent(
-  current,
-  workInProgress,
-  Component,
+  current: Fiber | null,
+  workInProgress: Fiber,
+  Component: any,
   nextProps: any,
-  renderExpirationTime,
+  renderExpirationTime: ExpirationTime,
 ) {
   if (__DEV__) {
     if (workInProgress.type !== workInProgress.elementType) {
@@ -532,7 +532,7 @@ function updateClassComponent(
   current: Fiber | null,
   workInProgress: Fiber,
   Component: any,
-  nextProps,
+  nextProps: any,
   renderExpirationTime: ExpirationTime,
 ) {
   if (__DEV__) {
@@ -638,7 +638,7 @@ function finishClassComponent(
   shouldUpdate: boolean,
   hasContext: boolean,
   renderExpirationTime: ExpirationTime,
-) {
+): Fiber | null {
   // Refs should update even if shouldComponentUpdate returns false
   markRef(current, workInProgress);
 
@@ -727,7 +727,7 @@ function finishClassComponent(
   return workInProgress.child;
 }
 
-function pushHostRootContext(workInProgress) {
+function pushHostRootContext(workInProgress: Fiber) {
   const root = (workInProgress.stateNode: FiberRoot);
   if (root.pendingContext) {
     pushTopLevelContextObject(
@@ -742,7 +742,11 @@ function pushHostRootContext(workInProgress) {
   pushHostContainer(workInProgress, root.containerInfo);
 }
 
-function updateHostRoot(current, workInProgress, renderExpirationTime) {
+function updateHostRoot(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderExpirationTime: ExpirationTime,
+): Fiber | null {
   pushHostRootContext(workInProgress);
   const updateQueue = workInProgress.updateQueue;
   invariant(
@@ -815,7 +819,11 @@ function updateHostRoot(current, workInProgress, renderExpirationTime) {
   return workInProgress.child;
 }
 
-function updateHostComponent(current, workInProgress, renderExpirationTime) {
+function updateHostComponent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderExpirationTime: ExpirationTime,
+): Fiber | null {
   pushHostContext(workInProgress);
 
   if (current === null) {
@@ -863,7 +871,10 @@ function updateHostComponent(current, workInProgress, renderExpirationTime) {
   return workInProgress.child;
 }
 
-function updateHostText(current, workInProgress) {
+function updateHostText(
+  current: Fiber | null,
+  workInProgress: Fiber,
+): Fiber | null {
   if (current === null) {
     tryToClaimNextHydratableInstance(workInProgress);
   }
@@ -873,12 +884,12 @@ function updateHostText(current, workInProgress) {
 }
 
 function mountLazyComponent(
-  _current,
-  workInProgress,
-  elementType,
-  updateExpirationTime,
-  renderExpirationTime,
-) {
+  _current: Fiber | null,
+  workInProgress: Fiber,
+  elementType: any,
+  updateExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTime,
+): Fiber | null {
   if (_current !== null) {
     // An lazy component only mounts if it suspended inside a non-
     // concurrent tree, in an inconsistent state. We want to treat it like
@@ -984,12 +995,12 @@ function mountLazyComponent(
 }
 
 function mountIncompleteClassComponent(
-  _current,
-  workInProgress,
-  Component,
-  nextProps,
-  renderExpirationTime,
-) {
+  _current: Fiber | null,
+  workInProgress: Fiber,
+  Component: any,
+  nextProps: any,
+  renderExpirationTime: ExpirationTime,
+): Fiber | null {
   if (_current !== null) {
     // An incomplete component only mounts if it suspended inside a non-
     // concurrent tree, in an inconsistent state. We want to treat it like
@@ -1042,11 +1053,11 @@ function mountIncompleteClassComponent(
 }
 
 function mountIndeterminateComponent(
-  _current,
-  workInProgress,
-  Component,
-  renderExpirationTime,
-) {
+  _current: Fiber | null,
+  workInProgress: Fiber,
+  Component: any,
+  renderExpirationTime: ExpirationTime,
+): Fiber | null {
   if (_current !== null) {
     // An indeterminate component only mounts if it suspended inside a non-
     // concurrent tree, in an inconsistent state. We want to treat it like
@@ -1218,10 +1229,10 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
 }
 
 function updateSuspenseComponent(
-  current,
-  workInProgress,
-  renderExpirationTime,
-) {
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderExpirationTime: ExpirationTime,
+): Fiber | null {
   const mode = workInProgress.mode;
   const nextProps = workInProgress.pendingProps;
 
@@ -1485,7 +1496,7 @@ function updatePortalComponent(
   current: Fiber | null,
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
-) {
+): Fiber | null {
   pushHostContainer(workInProgress, workInProgress.stateNode.containerInfo);
   const nextChildren = workInProgress.pendingProps;
   if (current === null) {
@@ -1515,7 +1526,7 @@ function updateContextProvider(
   current: Fiber | null,
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
-) {
+): Fiber | null {
   const providerType: ReactProviderType<any> = workInProgress.type;
   const context: ReactContext<any> = providerType._context;
 
@@ -1578,7 +1589,7 @@ function updateContextConsumer(
   current: Fiber | null,
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
-) {
+): Fiber | null {
   let context: ReactContext<any> = workInProgress.type;
   // The logic below for Context differs depending on PROD or DEV mode. In
   // DEV mode, we create a separate object for Context.Consumer that acts
