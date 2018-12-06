@@ -68,6 +68,27 @@
     );
   }
 
+  function unstable_getFirstCallbackNode() {
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_getFirstCallbackNode.apply(
+      this,
+      arguments
+    );
+  }
+
+  function unstable_pauseExecution() {
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_pauseExecution.apply(
+      this,
+      arguments
+    );
+  }
+
+  function unstable_continueExecution() {
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_continueExecution.apply(
+      this,
+      arguments
+    );
+  }
+
   return Object.freeze({
     unstable_now: unstable_now,
     unstable_scheduleCallback: unstable_scheduleCallback,
@@ -76,5 +97,8 @@
     unstable_runWithPriority: unstable_runWithPriority,
     unstable_wrapCallback: unstable_wrapCallback,
     unstable_getCurrentPriorityLevel: unstable_getCurrentPriorityLevel,
+    unstable_continueExecution: unstable_continueExecution,
+    unstable_pauseExecution: unstable_pauseExecution,
+    unstable_getFirstCallbackNode: unstable_getFirstCallbackNode,
   });
 });
