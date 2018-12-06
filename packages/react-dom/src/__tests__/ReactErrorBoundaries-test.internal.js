@@ -28,6 +28,8 @@ describe('ReactErrorBoundaries', () => {
   let BrokenComponentWillMountErrorBoundary;
   let BrokenComponentDidMountErrorBoundary;
   let BrokenRender;
+  let BrokenUseEffect;
+  let BrokenUseLayoutEffect;
   let ErrorBoundary;
   let ErrorMessage;
   let NoopErrorBoundary;
@@ -35,9 +37,11 @@ describe('ReactErrorBoundaries', () => {
   let Normal;
 
   beforeEach(() => {
+    jest.useFakeTimers();
     jest.resetModules();
     PropTypes = require('prop-types');
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.enableHooks = true;
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     ReactDOM = require('react-dom');
     React = require('react');
@@ -384,6 +388,28 @@ describe('ReactErrorBoundaries', () => {
       componentWillUnmount() {
         log.push('BrokenRender componentWillUnmount');
       }
+    };
+
+    BrokenUseEffect = props => {
+      log.push('BrokenUseEffect render');
+
+      React.useEffect(() => {
+        log.push('BrokenUseEffect useEffect [!]');
+        throw new Error('Hello');
+      });
+
+      return props.children;
+    };
+
+    BrokenUseLayoutEffect = props => {
+      log.push('BrokenUseLayoutEffect render');
+
+      React.useLayoutEffect(() => {
+        log.push('BrokenUseLayoutEffect useLayoutEffect [!]');
+        throw new Error('Hello');
+      });
+
+      return props.children;
     };
 
     NoopErrorBoundary = class extends React.Component {
@@ -1793,6 +1819,67 @@ describe('ReactErrorBoundaries', () => {
     log.length = 0;
     ReactDOM.unmountComponentAtNode(container);
     expect(log).toEqual(['ErrorBoundary componentWillUnmount']);
+  });
+
+  it('catches errors in useEffect', () => {
+    const container = document.createElement('div');
+    ReactDOM.render(
+      <ErrorBoundary>
+        <BrokenUseEffect>Initial value</BrokenUseEffect>
+      </ErrorBoundary>,
+      container,
+    );
+    expect(log).toEqual([
+      'ErrorBoundary constructor',
+      'ErrorBoundary componentWillMount',
+      'ErrorBoundary render success',
+      'BrokenUseEffect render',
+      'ErrorBoundary componentDidMount',
+    ]);
+
+    expect(container.firstChild.textContent).toBe('Initial value');
+    log.length = 0;
+
+    jest.runAllTimers();
+
+    // Flush passive effects and handle the error
+    expect(log).toEqual([
+      'BrokenUseEffect useEffect [!]',
+      // Handle the error
+      'ErrorBoundary static getDerivedStateFromError',
+      'ErrorBoundary componentWillUpdate',
+      'ErrorBoundary render error',
+      'ErrorBoundary componentDidUpdate',
+    ]);
+
+    expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
+  });
+
+  it('catches errors in useLayoutEffect', () => {
+    const container = document.createElement('div');
+    ReactDOM.render(
+      <ErrorBoundary>
+        <BrokenUseLayoutEffect>Initial value</BrokenUseLayoutEffect>
+      </ErrorBoundary>,
+      container,
+    );
+    expect(log).toEqual([
+      'ErrorBoundary constructor',
+      'ErrorBoundary componentWillMount',
+      'ErrorBoundary render success',
+      'BrokenUseLayoutEffect render',
+      'BrokenUseLayoutEffect useLayoutEffect [!]',
+      // Fiber proceeds with the hooks
+      'ErrorBoundary componentDidMount',
+      // The error propagates to the higher boundary
+      'ErrorBoundary static getDerivedStateFromError',
+      // Fiber retries from the root
+      'ErrorBoundary componentWillUpdate',
+      'ErrorBoundary render error',
+      'ErrorBoundary componentDidUpdate',
+    ]);
+
+    expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
   });
 
   it('propagates errors inside boundary during componentDidMount', () => {
