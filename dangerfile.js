@@ -35,10 +35,7 @@ const {exec} = require('child_process');
 if (!existsSync('./scripts/rollup/results.json')) {
   // This indicates the build failed previously.
   // In that case, there's nothing for the Dangerfile to do.
-  // Exit earlier to avoid a potentially confusing "no such file" error.
-  markdown(
-    'No results JSON file was found. This indicates a previous build failure.'
-  );
+  // Exit early to avoid leaving a redundant (and potentially confusing) PR comment.
   process.exit(0);
 }
 
