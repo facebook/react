@@ -4,7 +4,7 @@
 
 const http = require('request-promise-json');
 const {exec} = require('child-process-promise');
-const {readdirSync} = require('fs');
+const {existsSync, readdirSync} = require('fs');
 const {readJsonSync} = require('fs-extra');
 const {join} = require('path');
 const {logPromise} = require('../utils');
@@ -19,6 +19,10 @@ const run = async ({build, cwd}) => {
   const nodeModulesURL = metadata.find(
     entry => entry.path === 'home/circleci/project/node_modules.tgz'
   ).url;
+
+  if (!existsSync(join(cwd, 'build'))) {
+    await exec(`mkdir ./build`, {cwd});
+  }
 
   // Download and extract artifact
   await exec(`rm -rf ./build/node_modules*`, {cwd});
