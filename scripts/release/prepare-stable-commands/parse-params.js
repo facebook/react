@@ -14,6 +14,12 @@ const paramDefinitions = [
     defaultValue: false,
   },
   {
+    name: 'skipTests',
+    type: Boolean,
+    description: 'Skip automated fixture tests.',
+    defaultValue: false,
+  },
+  {
     name: 'version',
     type: String,
     description: 'Version of published canary release (e.g. 0.0.0-ddaf2b07c)',

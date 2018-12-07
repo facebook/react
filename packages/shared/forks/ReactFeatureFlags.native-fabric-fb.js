@@ -15,7 +15,7 @@ import typeof * as FabricFeatureFlagsType from './ReactFeatureFlags.native-fabri
 export const debugRenderPhaseSideEffects = false;
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableUserTimingAPI = __DEV__;
-export const enableHooks = false;
+export const enableHooks = true;
 export const warnAboutDeprecatedLifecycles = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const enableProfilerTimer = __PROFILE__;
@@ -24,6 +24,7 @@ export const enableSuspenseServerRenderer = false;
 export const disableInputAttributeSyncing = false;
 export const enableStableConcurrentModeAPIs = false;
 export const warnAboutShorthandPropertyCollision = false;
+export const enableSchedulerDebugging = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

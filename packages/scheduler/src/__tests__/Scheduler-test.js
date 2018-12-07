@@ -30,6 +30,9 @@ describe('Scheduler', () => {
     jest.useFakeTimers();
     jest.resetModules();
 
+    const JestMockScheduler = require('jest-mock-scheduler');
+    JestMockScheduler.mockRestore();
+
     let _flushWork = null;
     let isFlushing = false;
     let timeoutID = -1;
@@ -123,16 +126,21 @@ describe('Scheduler', () => {
     function shouldYieldToHost() {
       return endOfFrame <= currentTime;
     }
+    function getCurrentTime() {
+      return currentTime;
+    }
 
     // Override host implementation
     delete global.performance;
     global.Date.now = () => {
       return currentTime;
     };
+
     window._schedMock = [
       requestHostCallback,
       cancelHostCallback,
       shouldYieldToHost,
+      getCurrentTime,
     ];
 
     const Schedule = require('scheduler');

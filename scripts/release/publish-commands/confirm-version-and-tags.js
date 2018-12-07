@@ -39,6 +39,8 @@ const run = async ({cwd, packages, tags}) => {
   }
 
   await confirm('Do you want to proceed?');
+
+  clear();
 };
 
 // Run this directly because it's fast,

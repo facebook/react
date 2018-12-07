@@ -459,7 +459,16 @@ const bundles = [
     moduleType: ISOMORPHIC,
     entry: 'jest-react',
     global: 'JestReact',
-    externals: ['jest-diff'],
+    externals: [],
+  },
+
+  /******* Jest Scheduler (experimental) *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'jest-mock-scheduler',
+    global: 'JestMockScheduler',
+    externals: [],
   },
 
   /******* ESLint Plugin for Hooks (proposal) *******/

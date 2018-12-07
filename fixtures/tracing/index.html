@@ -46,7 +46,7 @@
     </p>
     <h3>
       Tests
-      <button onClick="runAllTests()">Run all tests</button>
+      <button id="run-test-button" onClick="runAllTests()">Run all tests</button>
     </h3>
     <ol>
       <li id="checkSchedulerAPI" data-value="...">
@@ -62,6 +62,17 @@
         <strong>Test end-to-end integration</strong>
       </li>
     </ol>
+
+    <script>
+      if (window.location.search.includes('puppeteer=true')) {
+        // Colocated calls to performance.now() often yield different values in Puppeteer.
+        // This causes the Scheduler API test to fail.
+        // For the purposes of our automated release scripts,
+        // Coerce tests to use Date.now() instead to reduce the chances of a false positive.
+        window.performance = {now: Date.now};
+      }
+    </script>
+
     <!-- Load the tracing API before react to test that it's lazily evaluated -->
     <script src="../../build/node_modules/scheduler/umd/scheduler.development.js"></script>
     <script src="../../build/node_modules/scheduler/umd/scheduler-tracing.development.js"></script>

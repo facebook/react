@@ -61,19 +61,25 @@ const run = async () => {
     await promise;
 
     const beforeContents = readFileSync(
-      join(cwd, 'scripts/release/test.snapshot'),
+      join(cwd, 'scripts/release/snapshot-test.snapshot'),
       'utf-8'
     );
-    await exec('cp build/temp.diff scripts/release/test.snapshot', {cwd});
+    await exec('cp build/temp.diff scripts/release/snapshot-test.snapshot', {
+      cwd,
+    });
     const afterContents = readFileSync(
-      join(cwd, 'scripts/release/test.snapshot'),
+      join(cwd, 'scripts/release/snapshot-test.snapshot'),
       'utf-8'
     );
 
     if (beforeContents === afterContents) {
       console.log(theme.header`Snapshot test passed.`);
     } else {
-      printDiff('scripts/release/test.snapshot', beforeContents, afterContents);
+      printDiff(
+        'scripts/release/snapshot-test.snapshot',
+        beforeContents,
+        afterContents
+      );
       console.log();
       console.error(theme.error('Snapshot test failed!'));
       console.log();
@@ -81,7 +87,7 @@ const run = async () => {
         'If this failure was expected, please update the contents of the snapshot file:'
       );
       console.log(
-        theme`  {command git add} {path scripts/release/test.snapshot}`
+        theme`  {command git add} {path scripts/release/snapshot-test.snapshot}`
       );
       console.log(
         theme`  {command git commit -m "Updating release script snapshot file."}`
