@@ -15,7 +15,7 @@ import type {Interaction} from 'scheduler/src/Tracing';
 import {noTimeout} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber';
 import {NoWork} from './ReactFiberExpirationTime';
-import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
+import {enableProfiling} from 'shared/ReactFeatureFlags';
 import {unstable_getThreadID} from 'scheduler/tracing';
 
 // TODO: This should be lifted into the renderer.
@@ -82,7 +82,7 @@ type BaseFiberRootProperties = {|
 // The following attributes are only used by interaction tracing builds.
 // They enable interactions to be associated with their async work,
 // And expose interaction metadata to the React DevTools Profiler plugin.
-// Note that these attributes are only defined when the enableSchedulerTracing flag is enabled.
+// Note that these attributes are only defined when the enableProfiling flag is enabled.
 type ProfilingOnlyFiberRootProperties = {|
   interactionThreadID: number,
   memoizedInteractions: Set<Interaction>,
@@ -91,9 +91,9 @@ type ProfilingOnlyFiberRootProperties = {|
 
 // Exported FiberRoot type includes all properties,
 // To avoid requiring potentially error-prone :any casts throughout the project.
-// Profiling properties are only safe to access in profiling builds (when enableSchedulerTracing is true).
+// Profiling properties are only safe to access in profiling builds (when enableProfiling is true).
 // The types are defined separately within this file to ensure they stay in sync.
-// (We don't have to use an inline :any cast when enableSchedulerTracing is disabled.)
+// (We don't have to use an inline :any cast when enableProfiling is disabled.)
 export type FiberRoot = {
   ...BaseFiberRootProperties,
   ...ProfilingOnlyFiberRootProperties,
@@ -104,12 +104,12 @@ export function createFiberRoot(
   isConcurrent: boolean,
   hydrate: boolean,
 ): FiberRoot {
-  // Cyclic construction. This cheats the type system right now because
-  // stateNode is any.
+  // Cyclic construction.
+  // This cheats the type system right now because stateNode is any.
   const uninitializedFiber = createHostRootFiber(isConcurrent);
 
   let root;
-  if (enableSchedulerTracing) {
+  if (enableProfiling) {
     root = ({
       current: uninitializedFiber,
       containerInfo: containerInfo,

@@ -33,14 +33,14 @@ describe('TracingSubscriptions', () => {
   const secondEvent = {id: 1, name: 'second', timestamp: 0};
   const threadID = 123;
 
-  function loadModules({enableSchedulerTracing, autoSubscribe = true}) {
+  function loadModules({enableProfiling, autoSubscribe = true}) {
     jest.resetModules();
     jest.useFakeTimers();
 
     currentTime = 0;
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableSchedulerTracing = enableSchedulerTracing;
+    ReactFeatureFlags.enableProfiling = enableProfiling;
 
     SchedulerTracing = require('scheduler/tracing');
 
@@ -107,10 +107,10 @@ describe('TracingSubscriptions', () => {
   }
 
   describe('enabled', () => {
-    beforeEach(() => loadModules({enableSchedulerTracing: true}));
+    beforeEach(() => loadModules({enableProfiling: true}));
 
     it('should lazily subscribe to tracing and unsubscribe again if there are no external subscribers', () => {
-      loadModules({enableSchedulerTracing: true, autoSubscribe: false});
+      loadModules({enableProfiling: true, autoSubscribe: false});
 
       expect(SchedulerTracing.__subscriberRef.current).toBe(null);
       SchedulerTracing.unstable_subscribe(firstSubscriber);
@@ -614,7 +614,7 @@ describe('TracingSubscriptions', () => {
   });
 
   describe('disabled', () => {
-    beforeEach(() => loadModules({enableSchedulerTracing: false}));
+    beforeEach(() => loadModules({enableProfiling: false}));
 
     // TODO
   });

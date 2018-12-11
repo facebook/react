@@ -48,7 +48,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
-  enableProfilerTimer,
+  enableProfiling,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
@@ -452,7 +452,7 @@ function updateProfiler(
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ) {
-  if (enableProfilerTimer) {
+  if (enableProfiling) {
     workInProgress.effectTag |= Update;
   }
   const nextProps = workInProgress.pendingProps;
@@ -673,7 +673,7 @@ function finishClassComponent(
     // TODO: Warn in a future release.
     nextChildren = null;
 
-    if (enableProfilerTimer) {
+    if (enableProfiling) {
       stopProfilerTimerIfRunning(workInProgress);
     }
   } else {
@@ -1356,7 +1356,7 @@ function updateSuspenseComponent(
 
         // Because primaryChildFragment is a new fiber that we're inserting as the
         // parent of a new tree, we need to set its treeBaseDuration.
-        if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
+        if (enableProfiling && workInProgress.mode & ProfileMode) {
           // treeBaseDuration is the sum of all the child tree base durations.
           let treeBaseDuration = 0;
           let hiddenChild = primaryChildFragment.child;
@@ -1437,7 +1437,7 @@ function updateSuspenseComponent(
 
         // Because primaryChildFragment is a new fiber that we're inserting as the
         // parent of a new tree, we need to set its treeBaseDuration.
-        if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
+        if (enableProfiling && workInProgress.mode & ProfileMode) {
           // treeBaseDuration is the sum of all the child tree base durations.
           let treeBaseDuration = 0;
           let hiddenChild = primaryChildFragment.child;
@@ -1649,7 +1649,7 @@ function bailoutOnAlreadyFinishedWork(
     workInProgress.firstContextDependency = current.firstContextDependency;
   }
 
-  if (enableProfilerTimer) {
+  if (enableProfiling) {
     // Don't update "base" render times for bailouts.
     stopProfilerTimerIfRunning(workInProgress);
   }
@@ -1714,7 +1714,7 @@ function beginWork(
           break;
         }
         case Profiler:
-          if (enableProfilerTimer) {
+          if (enableProfiling) {
             workInProgress.effectTag |= Update;
           }
           break;

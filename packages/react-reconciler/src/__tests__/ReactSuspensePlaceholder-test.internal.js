@@ -40,7 +40,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
 
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
       ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
-      ReactFeatureFlags.enableProfilerTimer = true;
+      ReactFeatureFlags.enableProfiling = true;
       ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
       React = require('react');
       ReactTestRenderer = require('react-test-renderer');

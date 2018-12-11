@@ -9,16 +9,16 @@
 
 import type {Interaction, Subscriber} from './Tracing';
 
-import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
+import {enableProfiling} from 'shared/ReactFeatureFlags';
 import {__subscriberRef} from './Tracing';
 
 let subscribers: Set<Subscriber> = (null: any);
-if (enableSchedulerTracing) {
+if (enableProfiling) {
   subscribers = new Set();
 }
 
 export function unstable_subscribe(subscriber: Subscriber): void {
-  if (enableSchedulerTracing) {
+  if (enableProfiling) {
     subscribers.add(subscriber);
 
     if (subscribers.size === 1) {
@@ -35,7 +35,7 @@ export function unstable_subscribe(subscriber: Subscriber): void {
 }
 
 export function unstable_unsubscribe(subscriber: Subscriber): void {
-  if (enableSchedulerTracing) {
+  if (enableProfiling) {
     subscribers.delete(subscriber);
 
     if (subscribers.size === 0) {

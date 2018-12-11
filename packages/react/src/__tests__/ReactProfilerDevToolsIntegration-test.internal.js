@@ -37,8 +37,7 @@ describe('ReactProfiler DevTools integration', () => {
     global.Date.now = mockNow;
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableProfilerTimer = true;
-    ReactFeatureFlags.enableSchedulerTracing = true;
+    ReactFeatureFlags.enableProfiling = true;
     SchedulerTracing = require('scheduler/tracing');
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');

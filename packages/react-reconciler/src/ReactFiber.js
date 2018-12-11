@@ -18,7 +18,7 @@ import type {ContextDependency} from './ReactFiberNewContext';
 
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
+import {enableProfiling} from 'shared/ReactFeatureFlags';
 import {NoEffect} from 'shared/ReactSideEffectTags';
 import {
   IndeterminateComponent,
@@ -178,22 +178,22 @@ export type Fiber = {|
   // Time spent rendering this Fiber and its descendants for the current update.
   // This tells us how well the tree makes use of sCU for memoization.
   // It is reset to 0 each time we render and only updated when we don't bailout.
-  // This field is only set when the enableProfilerTimer flag is enabled.
+  // This field is only set when the enableProfiling flag is enabled.
   actualDuration?: number,
 
   // If the Fiber is currently active in the "render" phase,
   // This marks the time at which the work began.
-  // This field is only set when the enableProfilerTimer flag is enabled.
+  // This field is only set when the enableProfiling flag is enabled.
   actualStartTime?: number,
 
   // Duration of the most recent render time for this Fiber.
   // This value is not updated when we bailout for memoization purposes.
-  // This field is only set when the enableProfilerTimer flag is enabled.
+  // This field is only set when the enableProfiling flag is enabled.
   selfBaseDuration?: number,
 
   // Sum of base times for all descedents of this Fiber.
   // This value bubbles up during the "complete" phase.
-  // This field is only set when the enableProfilerTimer flag is enabled.
+  // This field is only set when the enableProfiling flag is enabled.
   treeBaseDuration?: number,
 
   // Conceptual aliases
@@ -253,7 +253,7 @@ function FiberNode(
 
   this.alternate = null;
 
-  if (enableProfilerTimer) {
+  if (enableProfiling) {
     // Note: The following is done to avoid a v8 performance cliff.
     //
     // Initializing the fields below to smis and later updating them with
@@ -386,7 +386,7 @@ export function createWorkInProgress(
     workInProgress.firstEffect = null;
     workInProgress.lastEffect = null;
 
-    if (enableProfilerTimer) {
+    if (enableProfiling) {
       // We intentionally reset, rather than copy, actualDuration & actualStartTime.
       // This prevents time from endlessly accumulating in new commits.
       // This has the downside of resetting values for different priority renders,
@@ -410,7 +410,7 @@ export function createWorkInProgress(
   workInProgress.index = current.index;
   workInProgress.ref = current.ref;
 
-  if (enableProfilerTimer) {
+  if (enableProfiling) {
     workInProgress.selfBaseDuration = current.selfBaseDuration;
     workInProgress.treeBaseDuration = current.treeBaseDuration;
   }
@@ -421,7 +421,7 @@ export function createWorkInProgress(
 export function createHostRootFiber(isConcurrent: boolean): Fiber {
   let mode = isConcurrent ? ConcurrentMode | StrictMode : NoContext;
 
-  if (enableProfilerTimer && isDevToolsPresent) {
+  if (enableProfiling && isDevToolsPresent) {
     // Always collect profile timings when DevTools are present.
     // This enables DevTools to start capturing timing at any point–
     // Without some nodes in the tree having empty base times.
@@ -713,7 +713,7 @@ export function assignFiberPropertiesInDEV(
   target.expirationTime = source.expirationTime;
   target.childExpirationTime = source.childExpirationTime;
   target.alternate = source.alternate;
-  if (enableProfilerTimer) {
+  if (enableProfiling) {
     target.actualDuration = source.actualDuration;
     target.actualStartTime = source.actualStartTime;
     target.selfBaseDuration = source.selfBaseDuration;

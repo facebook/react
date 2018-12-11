@@ -34,7 +34,7 @@ import {
   ShouldCapture,
   LifecycleEffectMask,
 } from 'shared/ReactSideEffectTags';
-import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
+import {enableProfiling} from 'shared/ReactFeatureFlags';
 import {ConcurrentMode} from './ReactTypeOfMode';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent';
 
@@ -221,7 +221,7 @@ function throwException(
           sourceFiber,
           pingTime,
         );
-        if (enableSchedulerTracing) {
+        if (enableProfiling) {
           onResolveOrReject = Schedule_tracing_wrap(onResolveOrReject);
         }
         thenable.then(onResolveOrReject, onResolveOrReject);

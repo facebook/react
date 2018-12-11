@@ -15,11 +15,11 @@ describe('ReactTracing', () => {
     jest.resetModules();
 
     const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableSchedulerTracing = false;
+    ReactFeatureFlags.enableProfiling = false;
 
     require('scheduler/tracing');
 
-    ReactFeatureFlags.enableSchedulerTracing = true;
+    ReactFeatureFlags.enableProfiling = true;
 
     expect(() => require('react-dom')).toThrow(
       'Learn more at http://fb.me/react-profiling',

@@ -27,10 +27,8 @@ export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const warnAboutDeprecatedLifecycles = false;
 
 // Gather advanced timing metrics for Profiler subtrees.
-export const enableProfilerTimer = __PROFILE__;
-
 // Trace which interactions trigger each commit.
-export const enableSchedulerTracing = __PROFILE__;
+export const enableProfiling = __PROFILE__;
 
 // Only used in www builds.
 export const enableSuspenseServerRenderer = false; // TODO: __DEV__? Here it might just be false.

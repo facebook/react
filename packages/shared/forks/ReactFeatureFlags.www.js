@@ -32,8 +32,7 @@ export const enableHooks = true;
 // as long as there is more than a single listener.
 export let enableUserTimingAPI = __DEV__;
 
-export const enableProfilerTimer = __PROFILE__;
-export const enableSchedulerTracing = __PROFILE__;
+export const enableProfiling = __PROFILE__;
 export const enableSchedulerDebugging = __DEV__; // TODO or just true
 
 export const enableStableConcurrentModeAPIs = false;

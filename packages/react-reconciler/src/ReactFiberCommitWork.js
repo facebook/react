@@ -21,11 +21,7 @@ import type {CapturedValue, CapturedError} from './ReactCapturedValue';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
 
-import {
-  enableHooks,
-  enableSchedulerTracing,
-  enableProfilerTimer,
-} from 'shared/ReactFeatureFlags';
+import {enableHooks, enableProfiling} from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
   ForwardRef,
@@ -543,29 +539,18 @@ function commitLifeCycles(
       return;
     }
     case Profiler: {
-      if (enableProfilerTimer) {
+      if (enableProfiling) {
         const onRender = finishedWork.memoizedProps.onRender;
 
-        if (enableSchedulerTracing) {
-          onRender(
-            finishedWork.memoizedProps.id,
-            current === null ? 'mount' : 'update',
-            finishedWork.actualDuration,
-            finishedWork.treeBaseDuration,
-            finishedWork.actualStartTime,
-            getCommitTime(),
-            finishedRoot.memoizedInteractions,
-          );
-        } else {
-          onRender(
-            finishedWork.memoizedProps.id,
-            current === null ? 'mount' : 'update',
-            finishedWork.actualDuration,
-            finishedWork.treeBaseDuration,
-            finishedWork.actualStartTime,
-            getCommitTime(),
-          );
-        }
+        onRender(
+          finishedWork.memoizedProps.id,
+          current === null ? 'mount' : 'update',
+          finishedWork.actualDuration,
+          finishedWork.treeBaseDuration,
+          finishedWork.actualStartTime,
+          getCommitTime(),
+          finishedRoot.memoizedInteractions,
+        );
       }
       return;
     }

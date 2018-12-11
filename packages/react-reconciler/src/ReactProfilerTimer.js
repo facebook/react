@@ -9,7 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 
-import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
+import {enableProfiling} from 'shared/ReactFeatureFlags';
 
 import {now} from './ReactFiberHostConfig';
 
@@ -29,14 +29,14 @@ function getCommitTime(): number {
 }
 
 function recordCommitTime(): void {
-  if (!enableProfilerTimer) {
+  if (!enableProfiling) {
     return;
   }
   commitTime = now();
 }
 
 function startProfilerTimer(fiber: Fiber): void {
-  if (!enableProfilerTimer) {
+  if (!enableProfiling) {
     return;
   }
 
@@ -48,7 +48,7 @@ function startProfilerTimer(fiber: Fiber): void {
 }
 
 function stopProfilerTimerIfRunning(fiber: Fiber): void {
-  if (!enableProfilerTimer) {
+  if (!enableProfiling) {
     return;
   }
   profilerStartTime = -1;
@@ -58,7 +58,7 @@ function stopProfilerTimerIfRunningAndRecordDelta(
   fiber: Fiber,
   overrideBaseTime: boolean,
 ): void {
-  if (!enableProfilerTimer) {
+  if (!enableProfiling) {
     return;
   }
 

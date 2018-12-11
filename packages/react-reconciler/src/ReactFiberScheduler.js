@@ -57,8 +57,7 @@ import {
 } from 'shared/ReactWorkTags';
 import {
   enableHooks,
-  enableSchedulerTracing,
-  enableProfilerTimer,
+  enableProfiling,
   enableUserTimingAPI,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   warnAboutDeprecatedLifecycles,
@@ -183,7 +182,7 @@ let didWarnSetStateChildContext;
 let warnAboutUpdateOnUnmounted;
 let warnAboutInvalidUpdates;
 
-if (enableSchedulerTracing) {
+if (enableProfiling) {
   // Provide explicit error message when production+profiling bundle of e.g. react-dom
   // is used with production (non-profiling) bundle of scheduler/tracing
   invariant(
@@ -619,7 +618,7 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
   markCommittedPriorityLevels(root, earliestRemainingTimeBeforeCommit);
 
   let prevInteractions: Set<Interaction> = (null: any);
-  if (enableSchedulerTracing) {
+  if (enableProfiling) {
     // Restore any pending interactions at this point,
     // So that cascading work triggered during the render phase will be accounted for.
     prevInteractions = __interactionsRef.current;
@@ -683,7 +682,7 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
   }
   stopCommitSnapshotEffectsTimer();
 
-  if (enableProfilerTimer) {
+  if (enableProfiling) {
     // Mark the current commit time to be shared by all Profilers in this batch.
     // This enables them to be grouped later.
     recordCommitTime();
@@ -786,7 +785,7 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
     // event. To ensure serial execution, the callback will be flushed early if
     // we enter rootWithPendingPassiveEffects commit phase before then.
     let callback = commitPassiveEffects.bind(null, root, firstEffect);
-    if (enableSchedulerTracing) {
+    if (enableProfiling) {
       // TODO: Avoid this extra callback by mutating the tracing ref directly,
       // like we do at the beginning of commitRoot. I've opted not to do that
       // here because that code is still in flux.
@@ -818,7 +817,7 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
   }
   onCommit(root, earliestRemainingTimeAfterCommit);
 
-  if (enableSchedulerTracing) {
+  if (enableProfiling) {
     __interactionsRef.current = prevInteractions;
 
     let subscriber;
@@ -888,7 +887,7 @@ function resetChildExpirationTime(
   let newChildExpirationTime = NoWork;
 
   // Bubble up the earliest expiration time.
-  if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
+  if (enableProfiling && workInProgress.mode & ProfileMode) {
     // We're in profiling mode.
     // Let's use this same traversal to update the render durations.
     let actualDuration = workInProgress.actualDuration;
@@ -966,7 +965,7 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
       // This fiber completed.
       // Remember we're completing this unit so we can find a boundary if it fails.
       nextUnitOfWork = workInProgress;
-      if (enableProfilerTimer) {
+      if (enableProfiling) {
         if (workInProgress.mode & ProfileMode) {
           startProfilerTimer(workInProgress);
         }
@@ -1054,7 +1053,7 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
         return null;
       }
     } else {
-      if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
+      if (enableProfiling && workInProgress.mode & ProfileMode) {
         // Record the render duration for the fiber that errored.
         stopProfilerTimerIfRunningAndRecordDelta(workInProgress, false);
 
@@ -1148,7 +1147,7 @@ function performUnitOfWork(workInProgress: Fiber): Fiber | null {
   }
 
   let next;
-  if (enableProfilerTimer) {
+  if (enableProfiling) {
     if (workInProgress.mode & ProfileMode) {
       startProfilerTimer(workInProgress);
     }
@@ -1239,7 +1238,7 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
     );
     root.pendingCommitExpirationTime = NoWork;
 
-    if (enableSchedulerTracing) {
+    if (enableProfiling) {
       // Determine which interactions this batch of work currently includes,
       // So that we can accurately attribute time spent working on it,
       // And so that cascading work triggered during the render phase will be associated with it.
@@ -1284,7 +1283,7 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
   }
 
   let prevInteractions: Set<Interaction> = (null: any);
-  if (enableSchedulerTracing) {
+  if (enableProfiling) {
     // We're about to start new traced work.
     // Restore pending interactions so cascading work triggered during the render phase will be accounted for.
     prevInteractions = __interactionsRef.current;
@@ -1315,7 +1314,7 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
         didFatal = true;
         onUncaughtError(thrownValue);
       } else {
-        if (enableProfilerTimer && nextUnitOfWork.mode & ProfileMode) {
+        if (enableProfiling && nextUnitOfWork.mode & ProfileMode) {
           // Record the time spent rendering before an error was thrown.
           // This avoids inaccurate Profiler durations in the case of a suspended render.
           stopProfilerTimerIfRunningAndRecordDelta(nextUnitOfWork, true);
@@ -1371,7 +1370,7 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
     break;
   } while (true);
 
-  if (enableSchedulerTracing) {
+  if (enableProfiling) {
     // Traced work is done for now; restore the previous interactions.
     __interactionsRef.current = prevInteractions;
   }
@@ -1752,7 +1751,7 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
     }
   }
 
-  if (enableSchedulerTracing) {
+  if (enableProfiling) {
     if (root !== null) {
       const interactions = __interactionsRef.current;
       if (interactions.size > 0) {

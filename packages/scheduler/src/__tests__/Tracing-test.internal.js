@@ -15,7 +15,7 @@ describe('Tracing', () => {
   let advanceTimeBy;
   let currentTime;
 
-  function loadModules({enableSchedulerTracing}) {
+  function loadModules({enableProfiling}) {
     jest.resetModules();
     jest.useFakeTimers();
 
@@ -27,13 +27,13 @@ describe('Tracing', () => {
     };
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableSchedulerTracing = enableSchedulerTracing;
+    ReactFeatureFlags.enableProfiling = enableProfiling;
 
     SchedulerTracing = require('scheduler/tracing');
   }
 
-  describe('enableSchedulerTracing enabled', () => {
-    beforeEach(() => loadModules({enableSchedulerTracing: true}));
+  describe('enableProfiling enabled', () => {
+    beforeEach(() => loadModules({enableProfiling: true}));
 
     it('should return the value of a traced function', () => {
       expect(
@@ -323,8 +323,8 @@ describe('Tracing', () => {
     });
   });
 
-  describe('enableSchedulerTracing disabled', () => {
-    beforeEach(() => loadModules({enableSchedulerTracing: false}));
+  describe('enableProfiling disabled', () => {
+    beforeEach(() => loadModules({enableProfiling: false}));
 
     it('should return the value of a traced function', () => {
       expect(

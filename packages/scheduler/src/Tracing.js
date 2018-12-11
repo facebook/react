@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
+import {enableProfiling} from 'shared/ReactFeatureFlags';
 
 export type Interaction = {|
   __count: number,
@@ -70,7 +70,7 @@ let interactionsRef: InteractionsRef = (null: any);
 // Listener(s) to notify when interactions begin and end.
 let subscriberRef: SubscriberRef = (null: any);
 
-if (enableSchedulerTracing) {
+if (enableProfiling) {
   interactionsRef = {
     current: new Set(),
   };
@@ -82,7 +82,7 @@ if (enableSchedulerTracing) {
 export {interactionsRef as __interactionsRef, subscriberRef as __subscriberRef};
 
 export function unstable_clear(callback: Function): any {
-  if (!enableSchedulerTracing) {
+  if (!enableProfiling) {
     return callback();
   }
 
@@ -97,7 +97,7 @@ export function unstable_clear(callback: Function): any {
 }
 
 export function unstable_getCurrent(): Set<Interaction> | null {
-  if (!enableSchedulerTracing) {
+  if (!enableProfiling) {
     return null;
   } else {
     return interactionsRef.current;
@@ -114,7 +114,7 @@ export function unstable_trace(
   callback: Function,
   threadID: number = DEFAULT_THREAD_ID,
 ): any {
-  if (!enableSchedulerTracing) {
+  if (!enableProfiling) {
     return callback();
   }
 
@@ -176,7 +176,7 @@ export function unstable_wrap(
   callback: Function,
   threadID: number = DEFAULT_THREAD_ID,
 ): Function {
-  if (!enableSchedulerTracing) {
+  if (!enableProfiling) {
     return callback;
   }
 
