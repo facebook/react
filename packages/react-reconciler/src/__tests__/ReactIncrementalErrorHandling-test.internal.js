@@ -333,6 +333,78 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ops).toEqual(['Parent', 'BadRender', 'Sibling']);
   });
 
+  it('calls getDerivedStateFromError before retrying rendering', () => {
+    let oops = new Error('oops');
+    let ops = [];
+    function BadRender({firstTime}) {
+      ops.push('BadRender');
+      ReactNoop.yield('BadRender');
+      if (firstTime) {
+        throw oops;
+      } else {
+        return null;
+      }
+    }
+
+    function Sibling() {
+      ops.push('Sibling');
+      ReactNoop.yield('Sibling');
+      return <span prop="Sibling" />;
+    }
+
+    class Parent extends React.Component {
+      state = {firstTime: true};
+      render() {
+        ops.push('Parent');
+        ReactNoop.yield('Parent');
+        return (
+          <React.Fragment>
+            <BadRender firstTime={this.state.firstTime} />
+            <Sibling />
+          </React.Fragment>
+        );
+      }
+      static getDerivedStateFromError(error) {
+        ops.push('DeriveFromError', error);
+        return {firstTime: false};
+      }
+    }
+
+    ReactNoop.render(<Parent />);
+
+    // Render the bad component asynchronously
+    ReactNoop.flushThrough(['Parent', 'BadRender']);
+
+    // Finish the rest of the async work
+    ReactNoop.flushThrough(['Sibling']);
+    expect(ops).toEqual(['Parent', 'BadRender', 'Sibling']);
+
+    // Rendering two more units of work should be enough to trigger the
+    // synchronous retry.
+    ops = [];
+
+    // TODO: Why does flushUnitsOfWork(2) not cause everything to be finished?
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'DeriveFromError',
+      oops,
+      'Parent',
+      'BadRender',
+      'Sibling',
+
+      // TODO: Need to uncomment these to make the test pass. But why do they
+      // happen?
+      // 'Parent',
+      // 'BadRender',
+      // 'Sibling',
+      // 'DeriveFromError',
+      // oops,
+      // 'Parent',
+      // 'BadRender',
+      // 'Sibling',
+    ]);
+  });
+
   // TODO: This is currently unobservable, but will be once we lift renderRoot
   // and commitRoot into the renderer.
   // it("does not retry synchronously if there's an update between complete and commit");
