@@ -43,6 +43,7 @@ describe('ReactIs', () => {
       React.createElement(Component, {forwardedRef: ref, ...props}),
     );
     const LazyComponent = React.lazy(() => Component);
+    const MemoComponent = React.memo(Component);
     const Context = React.createContext(false);
 
     expect(ReactIs.isValidElementType('div')).toEqual(true);
@@ -50,6 +51,7 @@ describe('ReactIs', () => {
     expect(ReactIs.isValidElementType(FunctionComponent)).toEqual(true);
     expect(ReactIs.isValidElementType(ForwardRefComponent)).toEqual(true);
     expect(ReactIs.isValidElementType(LazyComponent)).toEqual(true);
+    expect(ReactIs.isValidElementType(MemoComponent)).toEqual(true);
     expect(ReactIs.isValidElementType(Context.Provider)).toEqual(true);
     expect(ReactIs.isValidElementType(Context.Consumer)).toEqual(true);
     expect(ReactIs.isValidElementType(React.createFactory('div'))).toEqual(
