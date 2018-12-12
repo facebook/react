@@ -298,7 +298,6 @@ function getPlugins(
   bundleType,
   globalName,
   moduleType,
-  modulesToStub,
   pureExternalModules
 ) {
   const findAndRecordErrorCodes = extractErrorCodes(errorCodeOpts);
@@ -501,7 +500,6 @@ async function createBundle(bundle, bundleType) {
       bundleType,
       bundle.global,
       bundle.moduleType,
-      bundle.modulesToStub,
       pureExternalModules
     ),
     // We can't use getters in www.
