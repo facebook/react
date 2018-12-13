@@ -25,9 +25,7 @@ export default function areHookInputsEqual(arr1: any[], arr2: any[]) {
     );
   }
   for (let i = 0; i < arr1.length; i++) {
-    const val1 = arr1[i];
-    const val2 = arr2[i];
-    if (is(val1, val2)) {
+    if (is(arr1[i], arr2[i])) {
       continue;
     }
     return false;
