@@ -18,6 +18,10 @@ const run = async ({cwd, local, packages, version}) => {
     return;
   }
 
+  if (!existsSync(join(cwd, 'build'))) {
+    await exec(`mkdir ./build`, {cwd});
+  }
+
   // Cleanup from previous builds
   await exec(`rm -rf ./build/node_modules*`, {cwd});
   await exec(`mkdir ./build/node_modules`, {cwd});

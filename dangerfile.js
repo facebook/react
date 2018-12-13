@@ -17,7 +17,7 @@
 //
 // You'll need a GitHub token, you can re-use this one:
 //
-//  e622517d9f1136ea8900 07c6373666312cdfaa69
+//  0a7d5c3cad9a6dbec2d9 9a5222cf49062a4c1ef7
 //
 // (Just remove the space)
 //
@@ -29,8 +29,15 @@ const {markdown, danger} = require('danger');
 const fetch = require('node-fetch');
 
 const {generateResultsArray} = require('./scripts/rollup/stats');
-const {readFileSync} = require('fs');
+const {existsSync, readFileSync} = require('fs');
 const {exec} = require('child_process');
+
+if (!existsSync('./scripts/rollup/results.json')) {
+  // This indicates the build failed previously.
+  // In that case, there's nothing for the Dangerfile to do.
+  // Exit early to avoid leaving a redundant (and potentially confusing) PR comment.
+  process.exit(0);
+}
 
 const currentBuildResults = JSON.parse(
   readFileSync('./scripts/rollup/results.json')
