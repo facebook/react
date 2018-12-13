@@ -366,22 +366,14 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
 
           jest.advanceTimersByTime(1000);
 
-          // TODO Change expected onRender count to 4.
-          // At the moment, every time we suspended while rendering will cause a commit.
-          // This will probably change in the future, but that's why there are two new ones.
           expect(root.toJSON()).toEqual(['Loaded', 'New']);
-          expect(onRender).toHaveBeenCalledTimes(5);
+          expect(onRender).toHaveBeenCalledTimes(4);
 
           // When the suspending data is resolved and our final UI is rendered,
           // the baseDuration should only include the 1ms re-rendering AsyncText,
           // but the treeBaseDuration should include the full 9ms spent in the tree.
           expect(onRender.mock.calls[3][2]).toBe(1);
           expect(onRender.mock.calls[3][3]).toBe(9);
-
-          // TODO Remove these assertions once this commit is gone.
-          // For now, there was no actual work done during this commit; see above comment.
-          expect(onRender.mock.calls[4][2]).toBe(0);
-          expect(onRender.mock.calls[4][3]).toBe(9);
         });
 
         it('properly accounts for base durations when a suspended times out in a concurrent tree', () => {

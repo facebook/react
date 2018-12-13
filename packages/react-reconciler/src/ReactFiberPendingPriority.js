@@ -62,6 +62,10 @@ export function markCommittedPriorityLevels(
     return;
   }
 
+  if (earliestRemainingTime < root.latestPingedTime) {
+    root.latestPingedTime = NoWork;
+  }
+
   // Let's see if the previous latest known pending level was just flushed.
   const latestPendingTime = root.latestPendingTime;
   if (latestPendingTime !== NoWork) {
@@ -209,10 +213,8 @@ export function markPingedPriorityLevel(
 }
 
 function clearPing(root, completedTime) {
-  // TODO: Track whether the root was pinged during the render phase. If so,
-  // we need to make sure we don't lose track of it.
   const latestPingedTime = root.latestPingedTime;
-  if (latestPingedTime !== NoWork && latestPingedTime >= completedTime) {
+  if (latestPingedTime >= completedTime) {
     root.latestPingedTime = NoWork;
   }
 }
