@@ -186,7 +186,8 @@ describe('ReactDOMComponent', () => {
         ReactDOM.render(<div onUnknown="alert(&quot;hack&quot;)" />, container),
       ).toWarnDev(
         ReactFeatureFlags.enableReactDOMFire
-          ? 'Warning: Expected `onUnknown` listener to be a function, instead got a value of `string` type.\n    in div (at **)'
+          ? 'Warning: Expected `onUnknown` listener to be a function, instead got a value' +
+            ' of `string` type.\n    in div (at **)'
           : 'Warning: Unknown event handler property `onUnknown`. It will be ignored.\n    in div (at **)',
       );
       expect(container.firstChild.hasAttribute('onUnknown')).toBe(false);
@@ -195,7 +196,8 @@ describe('ReactDOMComponent', () => {
         ReactDOM.render(<div onunknown="alert(&quot;hack&quot;)" />, container),
       ).toWarnDev(
         ReactFeatureFlags.enableReactDOMFire
-          ? 'Warning: Invalid event handler property `onunknown`. React events use the camelCase naming convention, for example `onClick`.'
+          ? 'Warning: Invalid event handler property `onunknown`.' +
+            'React events use the camelCase naming convention, for example `onClick`.'
           : 'Warning: Unknown event handler property `onunknown`. It will be ignored.\n    in div (at **)',
       );
       expect(container.firstChild.hasAttribute('onunknown')).toBe(false);
@@ -208,7 +210,8 @@ describe('ReactDOMComponent', () => {
         ),
       ).toWarnDev(
         ReactFeatureFlags.enableReactDOMFire
-          ? 'Warning: Invalid event handler property `on-unknown`. React events use the camelCase naming convention, for example `onClick`.'
+          ? 'Warning: Invalid event handler property `on-unknown`.' +
+            'React events use the camelCase naming convention, for example `onClick`.'
           : 'Warning: Unknown event handler property `on-unknown`. It will be ignored.\n    in div (at **)',
       );
       expect(container.firstChild.hasAttribute('on-unknown')).toBe(false);
@@ -1912,7 +1915,8 @@ describe('ReactDOMComponent', () => {
         );
       }).toWarnDev(
         ReactFeatureFlags.enableReactDOMFire
-          ? 'Warning: Invalid event handler property `oninput`. React events use the camelCase naming convention, for example `onClick`.\n    in input'
+          ? 'Warning: Invalid event handler property `oninput`. React events use the camelCase naming convention, ' +
+            'for example `onClick`.\n    in input'
           : 'onInput',
       );
       expect(() => {
@@ -1921,7 +1925,8 @@ describe('ReactDOMComponent', () => {
         );
       }).toWarnDev(
         ReactFeatureFlags.enableReactDOMFire
-          ? 'Warning: Expected `onKeydown` listener to be a function, instead got a value of `string` type.\n    in input'
+          ? 'Warning: Expected `onKeydown` listener to be a function, instead got a value of `string` type.' +
+            '\n    in input'
           : 'onKeyDown',
       );
     });
