@@ -8,9 +8,9 @@
  * @jest-environment node
  */
 
-runPlaceholderTests('ReactSuspensePlaceholder (mutation)', () =>
-  require('react-noop-renderer'),
-);
+// runPlaceholderTests('ReactSuspensePlaceholder (mutation)', () =>
+//   require('react-noop-renderer'),
+// );
 runPlaceholderTests('ReactSuspensePlaceholder (persistence)', () =>
   require('react-noop-renderer/persistent'),
 );

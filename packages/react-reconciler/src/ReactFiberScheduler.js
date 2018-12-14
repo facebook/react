@@ -169,8 +169,6 @@ import {Dispatcher, DispatcherWithoutHooks} from './ReactFiberDispatcher';
 
 export type Thenable = {
   then(resolve: () => mixed, reject?: () => mixed): mixed,
-  _reactPingCache: Map<FiberRoot, Set<ExpirationTime>> | void,
-  _reactRetryCache: Set<Fiber> | void,
 };
 
 const {ReactCurrentOwner} = ReactSharedInternals;
@@ -1643,9 +1641,21 @@ function renderDidError() {
   nextRenderDidError = true;
 }
 
-function pingSuspendedRoot(root: FiberRoot, pingTime: ExpirationTime) {
+function pingSuspendedRoot(
+  root: FiberRoot,
+  thenable: Thenable,
+  pingTime: ExpirationTime,
+) {
   // A promise that previously suspended React from committing has resolved.
   // If React is still suspended, try again at the previous level (pingTime).
+
+  const pingCache = root.pingCache;
+  if (pingCache !== null) {
+    // The thenable resolved, so we no longer need to memoize, because it will
+    // never be thrown again.
+    pingCache.delete(thenable);
+  }
+
   if (nextRoot !== null && nextRenderExpirationTime === pingTime) {
     // Received a ping at the same priority level at which we're currently
     // rendering. Restart from the root.
@@ -1663,11 +1673,20 @@ function pingSuspendedRoot(root: FiberRoot, pingTime: ExpirationTime) {
   }
 }
 
-function retryTimedOutBoundary(boundaryFiber: Fiber) {
+function retryTimedOutBoundary(boundaryFiber: Fiber, thenable: Thenable) {
   // The boundary fiber (a Suspense component) previously timed out and was
   // rendered in its fallback state. One of the promises that suspended it has
   // resolved, which means at least part of the tree was likely unblocked. Try
   // rendering again, at a new expiration time.
+
+  const retryCache: WeakSet<Thenable> | Set<Thenable> | null =
+    boundaryFiber.stateNode;
+  if (retryCache !== null) {
+    // The thenable resolved, so we no longer need to memoize, because it will
+    // never be thrown again.
+    retryCache.delete(thenable);
+  }
+
   const currentTime = requestCurrentTime();
   const retryTime = computeExpirationForFiber(currentTime, boundaryFiber);
   const root = scheduleWorkToRoot(boundaryFiber, retryTime);

@@ -109,6 +109,8 @@ if (__DEV__) {
   didWarnAboutUndefinedSnapshotBeforeUpdate = new Set();
 }
 
+const PossiblyWeakSet = typeof WeakSet === 'function' ? WeakSet : Set;
+
 export function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
   const source = errorInfo.source;
   let stack = errorInfo.stack;
@@ -1190,28 +1192,20 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       const thenables: Set<Thenable> | null = (finishedWork.updateQueue: any);
       if (thenables !== null) {
         finishedWork.updateQueue = null;
-        let retry = retryTimedOutBoundary.bind(null, finishedWork);
-
-        if (enableSchedulerTracing) {
-          retry = Schedule_tracing_wrap(retry);
+        let retryCache = finishedWork.stateNode;
+        if (retryCache === null) {
+          retryCache = finishedWork.stateNode = new PossiblyWeakSet();
         }
-
         thenables.forEach(thenable => {
           // Memoize using the boundary fiber to prevent redundant listeners.
-          let retryCache: Set<Fiber> | void = thenable._reactRetryCache;
-          if (retryCache === undefined) {
-            retryCache = thenable._reactRetryCache = new Set();
-          } else if (
-            // Check both the fiber and its alternate. Only a single listener
-            // is needed per fiber pair.
-            retryCache.has(finishedWork) ||
-            retryCache.has((finishedWork.alternate: any))
-          ) {
-            // Already attached a retry listener to this promise.
-            return;
+          let retry = retryTimedOutBoundary.bind(null, finishedWork, thenable);
+          if (enableSchedulerTracing) {
+            retry = Schedule_tracing_wrap(retry);
           }
-          retryCache.add(finishedWork);
-          thenable.then(retry, retry);
+          if (!retryCache.has(thenable)) {
+            retryCache.add(thenable);
+            thenable.then(retry, retry);
+          }
         });
       }
 

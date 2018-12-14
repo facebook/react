@@ -73,6 +73,8 @@ import {
 } from './ReactFiberExpirationTime';
 import {findEarliestOutstandingPriorityLevel} from './ReactFiberPendingPriority';
 
+const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
+
 function createRootErrorUpdate(
   fiber: Fiber,
   errorInfo: CapturedValue<mixed>,
@@ -264,24 +266,28 @@ function throwException(
         // Attach a listener to the promise to "ping" the root and retry. But
         // only if one does not already exist for the current render expiration
         // time (which acts like a "thread ID" here).
-        let pingCache: Map<FiberRoot, Set<ExpirationTime>> | void =
-          thenable._reactPingCache;
+        let pingCache = root.pingCache;
         let threadIDs;
-        if (pingCache === undefined) {
-          pingCache = thenable._reactPingCache = new Map();
+        if (pingCache === null) {
+          pingCache = root.pingCache = new PossiblyWeakMap();
           threadIDs = new Set();
-          pingCache.set(root, threadIDs);
+          pingCache.set(thenable, threadIDs);
         } else {
-          threadIDs = pingCache.get(root);
+          threadIDs = pingCache.get(thenable);
           if (threadIDs === undefined) {
             threadIDs = new Set();
-            pingCache.set(root, threadIDs);
+            pingCache.set(thenable, threadIDs);
           }
         }
         if (!threadIDs.has(renderExpirationTime)) {
           // Memoize using the thread ID to prevent redundant listeners.
           threadIDs.add(renderExpirationTime);
-          let ping = pingSuspendedRoot.bind(null, root, renderExpirationTime);
+          let ping = pingSuspendedRoot.bind(
+            null,
+            root,
+            thenable,
+            renderExpirationTime,
+          );
           if (enableSchedulerTracing) {
             ping = Schedule_tracing_wrap(ping);
           }
