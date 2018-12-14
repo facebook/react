@@ -125,13 +125,8 @@ import {
   computeAsyncExpiration,
   computeInteractiveExpiration,
 } from './ReactFiberExpirationTime';
-import {ConcurrentMode, ProfileMode, NoContext} from './ReactTypeOfMode';
-import {
-  enqueueUpdate,
-  resetCurrentlyProcessingQueue,
-  ForceUpdate,
-  createUpdate,
-} from './ReactUpdateQueue';
+import {ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
+import {enqueueUpdate, resetCurrentlyProcessingQueue} from './ReactUpdateQueue';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
   isContextProvider as isLegacyContextProvider,
@@ -1646,61 +1641,61 @@ function renderDidError() {
   nextRenderDidError = true;
 }
 
-function retrySuspendedRoot(
+function pingSuspendedRoot(
   root: FiberRoot,
-  boundaryFiber: Fiber,
-  sourceFiber: Fiber,
-  suspendedTime: ExpirationTime,
+  thenable: Thenable,
+  pingTime: ExpirationTime,
 ) {
-  let retryTime;
+  // A promise that previously suspended React from committing has resolved.
+  // If React is still suspended, try again at the previous level (pingTime).
 
-  if (isPriorityLevelSuspended(root, suspendedTime)) {
-    // Ping at the original level
-    retryTime = suspendedTime;
+  const pingCache = root.pingCache;
+  if (pingCache !== null) {
+    // The thenable resolved, so we no longer need to memoize, because it will
+    // never be thrown again.
+    pingCache.delete(thenable);
+  }
 
-    markPingedPriorityLevel(root, retryTime);
+  if (nextRoot !== null && nextRenderExpirationTime === pingTime) {
+    // Received a ping at the same priority level at which we're currently
+    // rendering. Restart from the root.
+    nextRoot = null;
   } else {
-    // Suspense already timed out. Compute a new expiration time
-    const currentTime = requestCurrentTime();
-    retryTime = computeExpirationForFiber(currentTime, boundaryFiber);
+    // Confirm that the root is still suspended at this level. Otherwise exit.
+    if (isPriorityLevelSuspended(root, pingTime)) {
+      // Ping at the original level
+      markPingedPriorityLevel(root, pingTime);
+      const rootExpirationTime = root.expirationTime;
+      if (rootExpirationTime !== NoWork) {
+        requestWork(root, rootExpirationTime);
+      }
+    }
+  }
+}
+
+function retryTimedOutBoundary(boundaryFiber: Fiber, thenable: Thenable) {
+  // The boundary fiber (a Suspense component) previously timed out and was
+  // rendered in its fallback state. One of the promises that suspended it has
+  // resolved, which means at least part of the tree was likely unblocked. Try
+  // rendering again, at a new expiration time.
+
+  const retryCache: WeakSet<Thenable> | Set<Thenable> | null =
+    boundaryFiber.stateNode;
+  if (retryCache !== null) {
+    // The thenable resolved, so we no longer need to memoize, because it will
+    // never be thrown again.
+    retryCache.delete(thenable);
+  }
+
+  const currentTime = requestCurrentTime();
+  const retryTime = computeExpirationForFiber(currentTime, boundaryFiber);
+  const root = scheduleWorkToRoot(boundaryFiber, retryTime);
+  if (root !== null) {
     markPendingPriorityLevel(root, retryTime);
-  }
-
-  // TODO: If the suspense fiber has already rendered the primary children
-  // without suspending (that is, all of the promises have already resolved),
-  // we should not trigger another update here. One case this happens is when
-  // we are in sync mode and a single promise is thrown both on initial render
-  // and on update; we attach two .then(retrySuspendedRoot) callbacks and each
-  // one performs Sync work, rerendering the Suspense.
-
-  if ((boundaryFiber.mode & ConcurrentMode) !== NoContext) {
-    if (root === nextRoot && nextRenderExpirationTime === suspendedTime) {
-      // Received a ping at the same priority level at which we're currently
-      // rendering. Restart from the root.
-      nextRoot = null;
+    const rootExpirationTime = root.expirationTime;
+    if (rootExpirationTime !== NoWork) {
+      requestWork(root, rootExpirationTime);
     }
-  }
-
-  scheduleWorkToRoot(boundaryFiber, retryTime);
-  if ((boundaryFiber.mode & ConcurrentMode) === NoContext) {
-    // Outside of concurrent mode, we must schedule an update on the source
-    // fiber, too, since it already committed in an inconsistent state and
-    // therefore does not have any pending work.
-    scheduleWorkToRoot(sourceFiber, retryTime);
-    const sourceTag = sourceFiber.tag;
-    if (sourceTag === ClassComponent && sourceFiber.stateNode !== null) {
-      // When we try rendering again, we should not reuse the current fiber,
-      // since it's known to be in an inconsistent state. Use a force updte to
-      // prevent a bail out.
-      const update = createUpdate(retryTime);
-      update.tag = ForceUpdate;
-      enqueueUpdate(sourceFiber, update);
-    }
-  }
-
-  const rootExpirationTime = root.expirationTime;
-  if (rootExpirationTime !== NoWork) {
-    requestWork(root, rootExpirationTime);
   }
 }
 
@@ -2550,7 +2545,8 @@ export {
   onUncaughtError,
   renderDidSuspend,
   renderDidError,
-  retrySuspendedRoot,
+  pingSuspendedRoot,
+  retryTimedOutBoundary,
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
   scheduleWork,

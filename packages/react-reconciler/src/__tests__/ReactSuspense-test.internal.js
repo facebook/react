@@ -485,11 +485,7 @@ describe('ReactSuspense', () => {
       expect(root).toMatchRenderedOutput('Loading...');
 
       jest.advanceTimersByTime(1000);
-      expect(ReactTestRenderer).toHaveYielded([
-        'Promise resolved [B]',
-        'B',
-        'B',
-      ]);
+      expect(ReactTestRenderer).toHaveYielded(['Promise resolved [B]', 'B']);
       expect(root).toMatchRenderedOutput('Stateful: 2B');
     });
 
@@ -552,11 +548,7 @@ describe('ReactSuspense', () => {
       expect(root).toMatchRenderedOutput('Loading...');
 
       jest.advanceTimersByTime(1000);
-      expect(ReactTestRenderer).toHaveYielded([
-        'Promise resolved [B]',
-        'B',
-        'B',
-      ]);
+      expect(ReactTestRenderer).toHaveYielded(['Promise resolved [B]', 'B']);
       expect(root).toMatchRenderedOutput('Stateful: 2B');
     });
 
@@ -736,10 +728,6 @@ describe('ReactSuspense', () => {
         'Promise resolved [Child 2]',
         'Child 2',
         'Suspend! [Child 3]',
-        // TODO: This suspends twice because there were two pings, once for each
-        // time Child 2 suspended. This is only an issue in sync mode because
-        // pings aren't batched.
-        'Suspend! [Child 3]',
       ]);
       jest.advanceTimersByTime(1000);
       expect(ReactTestRenderer).toHaveYielded([
@@ -884,6 +872,61 @@ describe('ReactSuspense', () => {
       root.update(null);
       expect(root).toFlushWithoutYielding();
       jest.advanceTimersByTime(1000);
+    });
+
+    it('memoizes promise listeners per thread ID to prevent redundant renders', () => {
+      function App() {
+        return (
+          <Suspense fallback={<Text text="Loading..." />}>
+            <AsyncText text="A" ms={1000} />
+            <AsyncText text="B" ms={2000} />
+            <AsyncText text="C" ms={3000} />
+          </Suspense>
+        );
+      }
+
+      const root = ReactTestRenderer.create(null);
+
+      root.update(<App />);
+
+      expect(ReactTestRenderer).toHaveYielded([
+        'Suspend! [A]',
+        'Suspend! [B]',
+        'Suspend! [C]',
+        'Loading...',
+      ]);
+
+      // Resolve A
+      jest.advanceTimersByTime(1000);
+
+      expect(ReactTestRenderer).toHaveYielded([
+        'Promise resolved [A]',
+        'A',
+        // The promises for B and C have now been thrown twice
+        'Suspend! [B]',
+        'Suspend! [C]',
+      ]);
+
+      // Resolve B
+      jest.advanceTimersByTime(1000);
+
+      expect(ReactTestRenderer).toHaveYielded([
+        'Promise resolved [B]',
+        // Even though the promise for B was thrown twice, we should only
+        // re-render once.
+        'B',
+        // The promise for C has now been thrown three times
+        'Suspend! [C]',
+      ]);
+
+      // Resolve C
+      jest.advanceTimersByTime(1000);
+      expect(ReactTestRenderer).toHaveYielded([
+        'Promise resolved [C]',
+        // Even though the promise for C was thrown three times, we should only
+        // re-render once.
+        'C',
+      ]);
     });
 
     it('#14162', () => {
