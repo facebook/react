@@ -88,7 +88,7 @@ export function getDomNodeEventsMap(domNode: Document | Element | Node) {
   let domNodeEventsMap = topLevelDomNodeEvents.get(domNode);
 
   if (domNodeEventsMap === undefined) {
-    domNodeEventsMap = new Map<string, EventData>();
+    domNodeEventsMap = (new Map(): Map<string, EventData>);
     topLevelDomNodeEvents.set(domNode, domNodeEventsMap);
   }
   return domNodeEventsMap;

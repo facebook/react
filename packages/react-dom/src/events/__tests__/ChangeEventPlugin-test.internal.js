@@ -11,7 +11,7 @@
 
 const React = require('react');
 let ReactDOM = require('react-dom');
-const ReactFeatureFlags = require('shared/ReactFeatureFlags');
+let ReactFeatureFlags;
 
 const setUntrackedChecked = Object.getOwnPropertyDescriptor(
   HTMLInputElement.prototype,
@@ -28,11 +28,11 @@ const setUntrackedTextareaValue = Object.getOwnPropertyDescriptor(
   'value',
 ).set;
 
-// Fire has a polyfill for this plugin
 describe('ChangeEventPlugin', () => {
   let container;
 
   beforeEach(() => {
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     // TODO pull this into helper method, reduce repetition.
     // mock the browser APIs which are used in schedule:
     // - requestAnimationFrame should pass the DOMHighResTimeStamp argument
@@ -481,11 +481,9 @@ describe('ChangeEventPlugin', () => {
   describe('async mode', () => {
     beforeEach(() => {
       jest.resetModules();
+      ReactFeatureFlags = require('shared/ReactFeatureFlags');
       ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
-      if (!ReactFeatureFlags.enableReactDOMFire) {
-        // This breaks with the mocked ReactDOMFire
-        ReactDOM = require('react-dom');
-      }
+      ReactDOM = require('react-dom');
     });
     it('text input', () => {
       const root = ReactDOM.unstable_createRoot(container);

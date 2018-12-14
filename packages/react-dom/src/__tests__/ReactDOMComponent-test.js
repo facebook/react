@@ -196,7 +196,7 @@ describe('ReactDOMComponent', () => {
         ReactDOM.render(<div onunknown="alert(&quot;hack&quot;)" />, container),
       ).toWarnDev(
         ReactFeatureFlags.enableReactDOMFire
-          ? 'Warning: Invalid event handler property `onunknown`.' +
+          ? 'Warning: Invalid event handler property `onunknown`. ' +
             'React events use the camelCase naming convention, for example `onClick`.'
           : 'Warning: Unknown event handler property `onunknown`. It will be ignored.\n    in div (at **)',
       );
@@ -210,7 +210,7 @@ describe('ReactDOMComponent', () => {
         ),
       ).toWarnDev(
         ReactFeatureFlags.enableReactDOMFire
-          ? 'Warning: Invalid event handler property `on-unknown`.' +
+          ? 'Warning: Invalid event handler property `on-unknown`. ' +
             'React events use the camelCase naming convention, for example `onClick`.'
           : 'Warning: Unknown event handler property `on-unknown`. It will be ignored.\n    in div (at **)',
       );
