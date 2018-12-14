@@ -8,6 +8,9 @@
  * @jest-environment node
  */
 
+// TODO: This does nothing since it was migrated from noop renderer to test
+// renderer! Switch back to noop renderer, or add persistent mode to test
+// renderer, or merge the two renderers into one somehow.
 // runPlaceholderTests('ReactSuspensePlaceholder (mutation)', () =>
 //   require('react-noop-renderer'),
 // );
