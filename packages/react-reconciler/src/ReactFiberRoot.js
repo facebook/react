@@ -10,6 +10,7 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
+import type {Thenable} from './ReactFiberScheduler';
 import type {Interaction} from 'scheduler/src/Tracing';
 
 import {noTimeout} from './ReactFiberHostConfig';
@@ -50,6 +51,11 @@ type BaseFiberRootProperties = {|
   // The latest priority level that was pinged by a resolved promise and can
   // be retried.
   latestPingedTime: ExpirationTime,
+
+  pingCache:
+    | WeakMap<Thenable, Set<ExpirationTime>>
+    | Map<Thenable, Set<ExpirationTime>>
+    | null,
 
   // If an error is thrown, and there are no more updates in the queue, we try
   // rendering from the root one more time, synchronously, before handling
@@ -121,6 +127,8 @@ export function createFiberRoot(
       latestSuspendedTime: NoWork,
       latestPingedTime: NoWork,
 
+      pingCache: null,
+
       didError: false,
 
       pendingCommitExpirationTime: NoWork,
@@ -143,6 +151,8 @@ export function createFiberRoot(
       current: uninitializedFiber,
       containerInfo: containerInfo,
       pendingChildren: null,
+
+      pingCache: null,
 
       earliestPendingTime: NoWork,
       latestPendingTime: NoWork,
