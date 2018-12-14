@@ -9,38 +9,30 @@
 
 import type {Interaction, Subscriber} from './Tracing';
 
-import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
 import {__subscriberRef} from './Tracing';
 
-let subscribers: Set<Subscriber> = (null: any);
-if (enableSchedulerTracing) {
-  subscribers = new Set();
-}
+let subscribers: Set<Subscriber> = new Set();
 
 export function unstable_subscribe(subscriber: Subscriber): void {
-  if (enableSchedulerTracing) {
-    subscribers.add(subscriber);
+  subscribers.add(subscriber);
 
-    if (subscribers.size === 1) {
-      __subscriberRef.current = {
-        onInteractionScheduledWorkCompleted,
-        onInteractionTraced,
-        onWorkCanceled,
-        onWorkScheduled,
-        onWorkStarted,
-        onWorkStopped,
-      };
-    }
+  if (subscribers.size === 1) {
+    __subscriberRef.current = {
+      onInteractionScheduledWorkCompleted,
+      onInteractionTraced,
+      onWorkCanceled,
+      onWorkScheduled,
+      onWorkStarted,
+      onWorkStopped,
+    };
   }
 }
 
 export function unstable_unsubscribe(subscriber: Subscriber): void {
-  if (enableSchedulerTracing) {
-    subscribers.delete(subscriber);
+  subscribers.delete(subscriber);
 
-    if (subscribers.size === 0) {
-      __subscriberRef.current = null;
-    }
+  if (subscribers.size === 0) {
+    __subscriberRef.current = null;
   }
 }
 

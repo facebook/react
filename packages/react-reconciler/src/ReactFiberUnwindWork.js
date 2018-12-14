@@ -34,7 +34,6 @@ import {
   ShouldCapture,
   LifecycleEffectMask,
 } from 'shared/ReactSideEffectTags';
-import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
 import {ConcurrentMode} from './ReactTypeOfMode';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent';
 
@@ -288,9 +287,7 @@ function throwException(
             thenable,
             renderExpirationTime,
           );
-          if (enableSchedulerTracing) {
-            ping = Schedule_tracing_wrap(ping);
-          }
+          ping = Schedule_tracing_wrap(ping);
           thenable.then(ping, ping);
         }
 

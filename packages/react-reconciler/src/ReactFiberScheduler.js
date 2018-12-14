@@ -57,7 +57,6 @@ import {
 } from 'shared/ReactWorkTags';
 import {
   enableHooks,
-  enableSchedulerTracing,
   enableProfilerTimer,
   enableUserTimingAPI,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
@@ -178,17 +177,15 @@ let didWarnSetStateChildContext;
 let warnAboutUpdateOnUnmounted;
 let warnAboutInvalidUpdates;
 
-if (enableSchedulerTracing) {
-  // Provide explicit error message when production+profiling bundle of e.g. react-dom
-  // is used with production (non-profiling) bundle of scheduler/tracing
-  invariant(
-    __interactionsRef != null && __interactionsRef.current != null,
-    'It is not supported to run the profiling version of a renderer (for example, `react-dom/profiling`) ' +
-      'without also replacing the `scheduler/tracing` module with `scheduler/tracing-profiling`. ' +
-      'Your bundler might have a setting for aliasing both modules. ' +
-      'Learn more at http://fb.me/react-profiling',
-  );
-}
+// Provide explicit error message when production+profiling bundle of e.g. react-dom
+// is used with production (non-profiling) bundle of scheduler/tracing
+invariant(
+  __interactionsRef != null && __interactionsRef.current != null,
+  'It is not supported to run the profiling version of a renderer (for example, `react-dom/profiling`) ' +
+    'without also replacing the `scheduler/tracing` module with `scheduler/tracing-profiling`. ' +
+    'Your bundler might have a setting for aliasing both modules. ' +
+    'Learn more at http://fb.me/react-profiling',
+);
 
 if (__DEV__) {
   didWarnAboutStateTransition = false;
@@ -613,13 +610,10 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
       : updateExpirationTimeBeforeCommit;
   markCommittedPriorityLevels(root, earliestRemainingTimeBeforeCommit);
 
-  let prevInteractions: Set<Interaction> = (null: any);
-  if (enableSchedulerTracing) {
-    // Restore any pending interactions at this point,
-    // So that cascading work triggered during the render phase will be accounted for.
-    prevInteractions = __interactionsRef.current;
-    __interactionsRef.current = root.memoizedInteractions;
-  }
+  // Restore any pending interactions at this point,
+  // So that cascading work triggered during the render phase will be accounted for.
+  let prevInteractions: Set<Interaction> = __interactionsRef.current;
+  __interactionsRef.current = root.memoizedInteractions;
 
   // Reset this to null before calling lifecycles
   ReactCurrentOwner.current = null;
@@ -780,13 +774,12 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
     // after the next paint. Schedule an callback to fire them in an async
     // event. To ensure serial execution, the callback will be flushed early if
     // we enter rootWithPendingPassiveEffects commit phase before then.
-    let callback = commitPassiveEffects.bind(null, root, firstEffect);
-    if (enableSchedulerTracing) {
-      // TODO: Avoid this extra callback by mutating the tracing ref directly,
-      // like we do at the beginning of commitRoot. I've opted not to do that
-      // here because that code is still in flux.
-      callback = Schedule_tracing_wrap(callback);
-    }
+    // TODO: Avoid this extra callback by mutating the tracing ref directly,
+    // like we do at the beginning of commitRoot. I've opted not to do that
+    // here because that code is still in flux.
+    let callback = Schedule_tracing_wrap(
+      commitPassiveEffects.bind(null, root, firstEffect),
+    );
     passiveEffectCallbackHandle = Schedule_scheduleCallback(callback);
     passiveEffectCallback = callback;
   }
@@ -813,60 +806,58 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
   }
   onCommit(root, earliestRemainingTimeAfterCommit);
 
-  if (enableSchedulerTracing) {
-    __interactionsRef.current = prevInteractions;
+  __interactionsRef.current = prevInteractions;
 
-    let subscriber;
+  let subscriber;
 
-    try {
-      subscriber = __subscriberRef.current;
-      if (subscriber !== null && root.memoizedInteractions.size > 0) {
-        const threadID = computeThreadID(
-          committedExpirationTime,
-          root.interactionThreadID,
-        );
-        subscriber.onWorkStopped(root.memoizedInteractions, threadID);
-      }
-    } catch (error) {
-      // It's not safe for commitRoot() to throw.
-      // Store the error for now and we'll re-throw in finishRendering().
-      if (!hasUnhandledError) {
-        hasUnhandledError = true;
-        unhandledError = error;
-      }
-    } finally {
-      // Clear completed interactions from the pending Map.
-      // Unless the render was suspended or cascading work was scheduled,
-      // In which case– leave pending interactions until the subsequent render.
-      const pendingInteractionMap = root.pendingInteractionMap;
-      pendingInteractionMap.forEach(
-        (scheduledInteractions, scheduledExpirationTime) => {
-          // Only decrement the pending interaction count if we're done.
-          // If there's still work at the current priority,
-          // That indicates that we are waiting for suspense data.
-          if (scheduledExpirationTime > earliestRemainingTimeAfterCommit) {
-            pendingInteractionMap.delete(scheduledExpirationTime);
+  try {
+    subscriber = __subscriberRef.current;
+    if (subscriber !== null && root.memoizedInteractions.size > 0) {
+      const threadID = computeThreadID(
+        committedExpirationTime,
+        root.interactionThreadID,
+      );
+      subscriber.onWorkStopped(root.memoizedInteractions, threadID);
+    }
+  } catch (error) {
+    // It's not safe for commitRoot() to throw.
+    // Store the error for now and we'll re-throw in finishRendering().
+    if (!hasUnhandledError) {
+      hasUnhandledError = true;
+      unhandledError = error;
+    }
+  } finally {
+    // Clear completed interactions from the pending Map.
+    // Unless the render was suspended or cascading work was scheduled,
+    // In which case– leave pending interactions until the subsequent render.
+    const pendingInteractionMap = root.pendingInteractionMap;
+    pendingInteractionMap.forEach(
+      (scheduledInteractions, scheduledExpirationTime) => {
+        // Only decrement the pending interaction count if we're done.
+        // If there's still work at the current priority,
+        // That indicates that we are waiting for suspense data.
+        if (scheduledExpirationTime > earliestRemainingTimeAfterCommit) {
+          pendingInteractionMap.delete(scheduledExpirationTime);
 
-            scheduledInteractions.forEach(interaction => {
-              interaction.__count--;
+          scheduledInteractions.forEach(interaction => {
+            interaction.__count--;
 
-              if (subscriber !== null && interaction.__count === 0) {
-                try {
-                  subscriber.onInteractionScheduledWorkCompleted(interaction);
-                } catch (error) {
-                  // It's not safe for commitRoot() to throw.
-                  // Store the error for now and we'll re-throw in finishRendering().
-                  if (!hasUnhandledError) {
-                    hasUnhandledError = true;
-                    unhandledError = error;
-                  }
+            if (subscriber !== null && interaction.__count === 0) {
+              try {
+                subscriber.onInteractionScheduledWorkCompleted(interaction);
+              } catch (error) {
+                // It's not safe for commitRoot() to throw.
+                // Store the error for now and we'll re-throw in finishRendering().
+                if (!hasUnhandledError) {
+                  hasUnhandledError = true;
+                  unhandledError = error;
                 }
               }
-            });
-          }
-        },
-      );
-    }
+            }
+          });
+        }
+      },
+    );
   }
 }
 
@@ -1234,57 +1225,52 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
     );
     root.pendingCommitExpirationTime = NoWork;
 
-    if (enableSchedulerTracing) {
-      // Determine which interactions this batch of work currently includes,
-      // So that we can accurately attribute time spent working on it,
-      // And so that cascading work triggered during the render phase will be associated with it.
-      const interactions: Set<Interaction> = new Set();
-      root.pendingInteractionMap.forEach(
-        (scheduledInteractions, scheduledExpirationTime) => {
-          if (scheduledExpirationTime >= expirationTime) {
-            scheduledInteractions.forEach(interaction =>
-              interactions.add(interaction),
-            );
-          }
-        },
-      );
-
-      // Store the current set of interactions on the FiberRoot for a few reasons:
-      // We can re-use it in hot functions like renderRoot() without having to recalculate it.
-      // We will also use it in commitWork() to pass to any Profiler onRender() hooks.
-      // This also provides DevTools with a way to access it when the onCommitRoot() hook is called.
-      root.memoizedInteractions = interactions;
-
-      if (interactions.size > 0) {
-        const subscriber = __subscriberRef.current;
-        if (subscriber !== null) {
-          const threadID = computeThreadID(
-            expirationTime,
-            root.interactionThreadID,
+    // Determine which interactions this batch of work currently includes,
+    // So that we can accurately attribute time spent working on it,
+    // And so that cascading work triggered during the render phase will be associated with it.
+    const interactions: Set<Interaction> = new Set();
+    root.pendingInteractionMap.forEach(
+      (scheduledInteractions, scheduledExpirationTime) => {
+        if (scheduledExpirationTime >= expirationTime) {
+          scheduledInteractions.forEach(interaction =>
+            interactions.add(interaction),
           );
-          try {
-            subscriber.onWorkStarted(interactions, threadID);
-          } catch (error) {
-            // Work thrown by an interaction tracing subscriber should be rethrown,
-            // But only once it's safe (to avoid leaveing the scheduler in an invalid state).
-            // Store the error for now and we'll re-throw in finishRendering().
-            if (!hasUnhandledError) {
-              hasUnhandledError = true;
-              unhandledError = error;
-            }
+        }
+      },
+    );
+
+    // Store the current set of interactions on the FiberRoot for a few reasons:
+    // We can re-use it in hot functions like renderRoot() without having to recalculate it.
+    // We will also use it in commitWork() to pass to any Profiler onRender() hooks.
+    // This also provides DevTools with a way to access it when the onCommitRoot() hook is called.
+    root.memoizedInteractions = interactions;
+
+    if (interactions.size > 0) {
+      const subscriber = __subscriberRef.current;
+      if (subscriber !== null) {
+        const threadID = computeThreadID(
+          expirationTime,
+          root.interactionThreadID,
+        );
+        try {
+          subscriber.onWorkStarted(interactions, threadID);
+        } catch (error) {
+          // Work thrown by an interaction tracing subscriber should be rethrown,
+          // But only once it's safe (to avoid leaveing the scheduler in an invalid state).
+          // Store the error for now and we'll re-throw in finishRendering().
+          if (!hasUnhandledError) {
+            hasUnhandledError = true;
+            unhandledError = error;
           }
         }
       }
     }
   }
 
-  let prevInteractions: Set<Interaction> = (null: any);
-  if (enableSchedulerTracing) {
-    // We're about to start new traced work.
-    // Restore pending interactions so cascading work triggered during the render phase will be accounted for.
-    prevInteractions = __interactionsRef.current;
-    __interactionsRef.current = root.memoizedInteractions;
-  }
+  // We're about to start new traced work.
+  // Restore pending interactions so cascading work triggered during the render phase will be accounted for.
+  let prevInteractions: Set<Interaction> = __interactionsRef.current;
+  __interactionsRef.current = root.memoizedInteractions;
 
   let didFatal = false;
 
@@ -1366,10 +1352,8 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
     break;
   } while (true);
 
-  if (enableSchedulerTracing) {
-    // Traced work is done for now; restore the previous interactions.
-    __interactionsRef.current = prevInteractions;
-  }
+  // Traced work is done for now; restore the previous interactions.
+  __interactionsRef.current = prevInteractions;
 
   // We're done performing work. Time to clean up.
   isWorking = false;
@@ -1747,41 +1731,40 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
     }
   }
 
-  if (enableSchedulerTracing) {
-    if (root !== null) {
-      const interactions = __interactionsRef.current;
-      if (interactions.size > 0) {
-        const pendingInteractionMap = root.pendingInteractionMap;
-        const pendingInteractions = pendingInteractionMap.get(expirationTime);
-        if (pendingInteractions != null) {
-          interactions.forEach(interaction => {
-            if (!pendingInteractions.has(interaction)) {
-              // Update the pending async work count for previously unscheduled interaction.
-              interaction.__count++;
-            }
-
-            pendingInteractions.add(interaction);
-          });
-        } else {
-          pendingInteractionMap.set(expirationTime, new Set(interactions));
-
-          // Update the pending async work count for the current interactions.
-          interactions.forEach(interaction => {
+  if (root !== null) {
+    const interactions = __interactionsRef.current;
+    if (interactions.size > 0) {
+      const pendingInteractionMap = root.pendingInteractionMap;
+      const pendingInteractions = pendingInteractionMap.get(expirationTime);
+      if (pendingInteractions != null) {
+        interactions.forEach(interaction => {
+          if (!pendingInteractions.has(interaction)) {
+            // Update the pending async work count for previously unscheduled interaction.
             interaction.__count++;
-          });
-        }
+          }
 
-        const subscriber = __subscriberRef.current;
-        if (subscriber !== null) {
-          const threadID = computeThreadID(
-            expirationTime,
-            root.interactionThreadID,
-          );
-          subscriber.onWorkScheduled(interactions, threadID);
-        }
+          pendingInteractions.add(interaction);
+        });
+      } else {
+        pendingInteractionMap.set(expirationTime, new Set(interactions));
+
+        // Update the pending async work count for the current interactions.
+        interactions.forEach(interaction => {
+          interaction.__count++;
+        });
+      }
+
+      const subscriber = __subscriberRef.current;
+      if (subscriber !== null) {
+        const threadID = computeThreadID(
+          expirationTime,
+          root.interactionThreadID,
+        );
+        subscriber.onWorkScheduled(interactions, threadID);
       }
     }
   }
+
   return root;
 }
 

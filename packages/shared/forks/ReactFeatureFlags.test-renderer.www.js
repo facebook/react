@@ -19,7 +19,6 @@ export const enableHooks = true;
 export const warnAboutDeprecatedLifecycles = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = false;
-export const enableSchedulerTracing = false;
 export const enableSuspenseServerRenderer = false;
 export const enableStableConcurrentModeAPIs = false;
 export const enableSchedulerDebugging = false;

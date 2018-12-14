@@ -7,8 +7,6 @@
  * @flow
  */
 
-import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
-
 export type Interaction = {|
   __count: number,
   id: number,
@@ -65,27 +63,18 @@ let threadIDCounter: number = 0;
 // Interactions "stack"–
 // Meaning that newly traced interactions are appended to the previously active set.
 // When an interaction goes out of scope, the previous set (if any) is restored.
-let interactionsRef: InteractionsRef = (null: any);
+let interactionsRef: InteractionsRef = {
+  current: new Set(),
+};
 
 // Listener(s) to notify when interactions begin and end.
-let subscriberRef: SubscriberRef = (null: any);
-
-if (enableSchedulerTracing) {
-  interactionsRef = {
-    current: new Set(),
-  };
-  subscriberRef = {
-    current: null,
-  };
-}
+let subscriberRef: SubscriberRef = {
+  current: null,
+};
 
 export {interactionsRef as __interactionsRef, subscriberRef as __subscriberRef};
 
 export function unstable_clear(callback: Function): any {
-  if (!enableSchedulerTracing) {
-    return callback();
-  }
-
   const prevInteractions = interactionsRef.current;
   interactionsRef.current = new Set();
 
@@ -97,11 +86,7 @@ export function unstable_clear(callback: Function): any {
 }
 
 export function unstable_getCurrent(): Set<Interaction> | null {
-  if (!enableSchedulerTracing) {
-    return null;
-  } else {
-    return interactionsRef.current;
-  }
+  return interactionsRef.current;
 }
 
 export function unstable_getThreadID(): number {
@@ -114,10 +99,6 @@ export function unstable_trace(
   callback: Function,
   threadID: number = DEFAULT_THREAD_ID,
 ): any {
-  if (!enableSchedulerTracing) {
-    return callback();
-  }
-
   const interaction: Interaction = {
     __count: 1,
     id: interactionIDCounter++,
@@ -176,10 +157,6 @@ export function unstable_wrap(
   callback: Function,
   threadID: number = DEFAULT_THREAD_ID,
 ): Function {
-  if (!enableSchedulerTracing) {
-    return callback;
-  }
-
   const wrappedInteractions = interactionsRef.current;
 
   let subscriber = subscriberRef.current;

@@ -23,11 +23,7 @@ import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
 import type {Thenable} from './ReactFiberScheduler';
 
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
-import {
-  enableHooks,
-  enableSchedulerTracing,
-  enableProfilerTimer,
-} from 'shared/ReactFeatureFlags';
+import {enableHooks, enableProfilerTimer} from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
   ForwardRef,
@@ -551,26 +547,15 @@ function commitLifeCycles(
       if (enableProfilerTimer) {
         const onRender = finishedWork.memoizedProps.onRender;
 
-        if (enableSchedulerTracing) {
-          onRender(
-            finishedWork.memoizedProps.id,
-            current === null ? 'mount' : 'update',
-            finishedWork.actualDuration,
-            finishedWork.treeBaseDuration,
-            finishedWork.actualStartTime,
-            getCommitTime(),
-            finishedRoot.memoizedInteractions,
-          );
-        } else {
-          onRender(
-            finishedWork.memoizedProps.id,
-            current === null ? 'mount' : 'update',
-            finishedWork.actualDuration,
-            finishedWork.treeBaseDuration,
-            finishedWork.actualStartTime,
-            getCommitTime(),
-          );
-        }
+        onRender(
+          finishedWork.memoizedProps.id,
+          current === null ? 'mount' : 'update',
+          finishedWork.actualDuration,
+          finishedWork.treeBaseDuration,
+          finishedWork.actualStartTime,
+          getCommitTime(),
+          finishedRoot.memoizedInteractions,
+        );
       }
       return;
     }
@@ -1198,10 +1183,9 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
         }
         thenables.forEach(thenable => {
           // Memoize using the boundary fiber to prevent redundant listeners.
-          let retry = retryTimedOutBoundary.bind(null, finishedWork, thenable);
-          if (enableSchedulerTracing) {
-            retry = Schedule_tracing_wrap(retry);
-          }
+          let retry = Schedule_tracing_wrap(
+            retryTimedOutBoundary.bind(null, finishedWork, thenable),
+          );
           if (!retryCache.has(thenable)) {
             retryCache.add(thenable);
             thenable.then(retry, retry);
