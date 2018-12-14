@@ -39,17 +39,19 @@ describe('ReactIs', () => {
     }
 
     const FunctionComponent = () => React.createElement('div');
-
     const ForwardRefComponent = React.forwardRef((props, ref) =>
       React.createElement(Component, {forwardedRef: ref, ...props}),
     );
-
+    const LazyComponent = React.lazy(() => Component);
+    const MemoComponent = React.memo(Component);
     const Context = React.createContext(false);
 
     expect(ReactIs.isValidElementType('div')).toEqual(true);
     expect(ReactIs.isValidElementType(Component)).toEqual(true);
     expect(ReactIs.isValidElementType(FunctionComponent)).toEqual(true);
     expect(ReactIs.isValidElementType(ForwardRefComponent)).toEqual(true);
+    expect(ReactIs.isValidElementType(LazyComponent)).toEqual(true);
+    expect(ReactIs.isValidElementType(MemoComponent)).toEqual(true);
     expect(ReactIs.isValidElementType(Context.Provider)).toEqual(true);
     expect(ReactIs.isValidElementType(Context.Consumer)).toEqual(true);
     expect(ReactIs.isValidElementType(React.createFactory('div'))).toEqual(
@@ -60,6 +62,7 @@ describe('ReactIs', () => {
       true,
     );
     expect(ReactIs.isValidElementType(React.StrictMode)).toEqual(true);
+    expect(ReactIs.isValidElementType(React.Suspense)).toEqual(true);
 
     expect(ReactIs.isValidElementType(true)).toEqual(false);
     expect(ReactIs.isValidElementType(123)).toEqual(false);
@@ -116,6 +119,7 @@ describe('ReactIs', () => {
     expect(ReactIs.isElement(<React.Fragment />)).toBe(true);
     expect(ReactIs.isElement(<React.unstable_ConcurrentMode />)).toBe(true);
     expect(ReactIs.isElement(<React.StrictMode />)).toBe(true);
+    expect(ReactIs.isElement(<React.Suspense />)).toBe(true);
   });
 
   it('should identify ref forwarding component', () => {
@@ -152,12 +156,28 @@ describe('ReactIs', () => {
     expect(ReactIs.isMemo(Component)).toBe(false);
   });
 
+  it('should identify lazy', () => {
+    const Component = () => React.createElement('div');
+    const lazyComponent = React.lazy(() => Component);
+    expect(ReactIs.typeOf(lazyComponent)).toBe(ReactIs.Lazy);
+    expect(ReactIs.isLazy(lazyComponent)).toBe(true);
+    expect(ReactIs.isLazy(Component)).toBe(false);
+  });
+
   it('should identify strict mode', () => {
     expect(ReactIs.typeOf(<React.StrictMode />)).toBe(ReactIs.StrictMode);
     expect(ReactIs.isStrictMode(<React.StrictMode />)).toBe(true);
     expect(ReactIs.isStrictMode({type: ReactIs.StrictMode})).toBe(false);
     expect(ReactIs.isStrictMode(<React.unstable_ConcurrentMode />)).toBe(false);
     expect(ReactIs.isStrictMode(<div />)).toBe(false);
+  });
+
+  it('should identify suspense', () => {
+    expect(ReactIs.typeOf(<React.Suspense />)).toBe(ReactIs.Suspense);
+    expect(ReactIs.isSuspense(<React.Suspense />)).toBe(true);
+    expect(ReactIs.isSuspense({type: ReactIs.Suspense})).toBe(false);
+    expect(ReactIs.isSuspense('React.Suspense')).toBe(false);
+    expect(ReactIs.isSuspense(<div />)).toBe(false);
   });
 
   it('should identify profile root', () => {

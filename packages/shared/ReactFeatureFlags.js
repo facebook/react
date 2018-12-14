@@ -33,7 +33,10 @@ export const enableProfilerTimer = __PROFILE__;
 export const enableSchedulerTracing = __PROFILE__;
 
 // Only used in www builds.
-export const enableSuspenseServerRenderer = false;
+export const enableSuspenseServerRenderer = false; // TODO: __DEV__? Here it might just be false.
+
+// Only used in www builds.
+export const enableSchedulerDebugging = __DEV__;
 
 // Only used in www builds.
 export function addUserTimingListener() {

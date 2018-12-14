@@ -62,6 +62,7 @@ import {
   current as ReactCurrentFiberCurrent,
 } from './ReactCurrentFiber';
 import {StrictMode} from './ReactTypeOfMode';
+import {Sync} from './ReactFiberExpirationTime';
 
 type OpaqueRoot = FiberRoot;
 
@@ -339,10 +340,49 @@ export function findHostInstanceWithNoPortals(
   return hostFiber.stateNode;
 }
 
+let overrideProps = null;
+
+if (__DEV__) {
+  const copyWithSetImpl = (
+    obj: Object | Array<any>,
+    path: Array<string | number>,
+    idx: number,
+    value: any,
+  ) => {
+    if (idx >= path.length) {
+      return value;
+    }
+    const key = path[idx];
+    const updated = Array.isArray(obj) ? obj.slice() : {...obj};
+    // $FlowFixMe number or string is fine here
+    updated[key] = copyWithSetImpl(obj[key], path, idx + 1, value);
+    return updated;
+  };
+
+  const copyWithSet = (
+    obj: Object | Array<any>,
+    path: Array<string | number>,
+    value: any,
+  ): Object | Array<any> => {
+    return copyWithSetImpl(obj, path, 0, value);
+  };
+
+  // Support DevTools props for function components, forwardRef, memo, host components, etc.
+  overrideProps = (fiber: Fiber, path: Array<string | number>, value: any) => {
+    flushPassiveEffects();
+    fiber.pendingProps = copyWithSet(fiber.memoizedProps, path, value);
+    if (fiber.alternate) {
+      fiber.alternate.pendingProps = fiber.pendingProps;
+    }
+    scheduleWork(fiber, Sync);
+  };
+}
+
 export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
   const {findFiberByHostInstance} = devToolsConfig;
   return injectInternals({
     ...devToolsConfig,
+    overrideProps,
     findHostInstanceByFiber(fiber: Fiber): Instance | TextInstance | null {
       const hostFiber = findCurrentHostFiber(fiber);
       if (hostFiber === null) {

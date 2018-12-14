@@ -8,6 +8,8 @@
 
 /* eslint-disable no-var */
 
+import {enableSchedulerDebugging} from 'shared/ReactFeatureFlags';
+
 // TODO: Use symbols?
 var ImmediatePriority = 1;
 var UserBlockingPriority = 2;
@@ -33,6 +35,9 @@ var IDLE_PRIORITY = maxSigned31BitInt;
 var firstCallbackNode = null;
 
 var currentDidTimeout = false;
+// Pausing the scheduler is useful for debugging.
+var isSchedulerPaused = false;
+
 var currentPriorityLevel = NormalPriority;
 var currentEventStartTime = -1;
 var currentExpirationTime = -1;
@@ -173,13 +178,23 @@ function flushImmediateWork() {
 }
 
 function flushWork(didTimeout) {
+  // Exit right away if we're currently paused
+
+  if (enableSchedulerDebugging && isSchedulerPaused) {
+    return;
+  }
+
   isExecutingCallback = true;
   const previousDidTimeout = currentDidTimeout;
   currentDidTimeout = didTimeout;
   try {
     if (didTimeout) {
       // Flush all the expired callbacks without yielding.
-      while (firstCallbackNode !== null) {
+      while (
+        firstCallbackNode !== null &&
+        !(enableSchedulerDebugging && isSchedulerPaused)
+      ) {
+        // TODO Wrap i nfeature flag
         // Read the current time. Flush all the callbacks that expire at or
         // earlier than that time. Then read the current time again and repeat.
         // This optimizes for as few performance.now calls as possible.
@@ -189,7 +204,8 @@ function flushWork(didTimeout) {
             flushFirstCallback();
           } while (
             firstCallbackNode !== null &&
-            firstCallbackNode.expirationTime <= currentTime
+            firstCallbackNode.expirationTime <= currentTime &&
+            !(enableSchedulerDebugging && isSchedulerPaused)
           );
           continue;
         }
@@ -199,6 +215,9 @@ function flushWork(didTimeout) {
       // Keep flushing callbacks until we run out of time in the frame.
       if (firstCallbackNode !== null) {
         do {
+          if (enableSchedulerDebugging && isSchedulerPaused) {
+            break;
+          }
           flushFirstCallback();
         } while (firstCallbackNode !== null && !shouldYieldToHost());
       }
@@ -340,6 +359,21 @@ function unstable_scheduleCallback(callback, deprecated_options) {
   }
 
   return newNode;
+}
+
+function unstable_pauseExecution() {
+  isSchedulerPaused = true;
+}
+
+function unstable_continueExecution() {
+  isSchedulerPaused = false;
+  if (firstCallbackNode !== null) {
+    ensureHostCallbackIsScheduled();
+  }
+}
+
+function unstable_getFirstCallbackNode() {
+  return firstCallbackNode;
 }
 
 function unstable_cancelCallback(callbackNode) {
@@ -659,5 +693,8 @@ export {
   unstable_wrapCallback,
   unstable_getCurrentPriorityLevel,
   unstable_shouldYield,
+  unstable_continueExecution,
+  unstable_pauseExecution,
+  unstable_getFirstCallbackNode,
   getCurrentTime as unstable_now,
 };

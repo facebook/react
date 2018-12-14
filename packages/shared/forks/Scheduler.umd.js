@@ -16,6 +16,9 @@ const {
   unstable_now,
   unstable_scheduleCallback,
   unstable_shouldYield,
+  unstable_getFirstCallbackNode,
+  unstable_continueExecution,
+  unstable_pauseExecution,
 } = ReactInternals.Scheduler;
 
 export {
@@ -23,4 +26,7 @@ export {
   unstable_now,
   unstable_scheduleCallback,
   unstable_shouldYield,
+  unstable_getFirstCallbackNode,
+  unstable_continueExecution,
+  unstable_pauseExecution,
 };
