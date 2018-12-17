@@ -27,7 +27,7 @@ if (__DEV__) {
   };
 }
 
-export default function invariant(condition, format, a, b, c, d, e, f) {
+export default function invariant(condition, format, ...args) {
   validateFormat(format);
 
   if (!condition) {
@@ -38,7 +38,6 @@ export default function invariant(condition, format, a, b, c, d, e, f) {
           'for the full error message and additional helpful warnings.',
       );
     } else {
-      const args = [a, b, c, d, e, f];
       let argIndex = 0;
       error = new Error(
         format.replace(/%s/g, function() {
