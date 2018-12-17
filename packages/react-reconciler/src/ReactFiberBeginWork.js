@@ -1474,6 +1474,7 @@ function updateSuspenseComponent(
         );
       }
     }
+    workInProgress.stateNode = current.stateNode;
   }
 
   workInProgress.memoizedState = nextState;

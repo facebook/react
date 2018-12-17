@@ -88,11 +88,11 @@ const forks = Object.freeze({
           case RN_FB_DEV:
           case RN_FB_PROD:
           case RN_FB_PROFILING:
-            return 'shared/forks/ReactFeatureFlags.native-fabric-fb.js';
+            return 'shared/forks/ReactFeatureFlags.native-fb.js';
           case RN_OSS_DEV:
           case RN_OSS_PROD:
           case RN_OSS_PROFILING:
-            return 'shared/forks/ReactFeatureFlags.native-fabric-oss.js';
+            return 'shared/forks/ReactFeatureFlags.native-oss.js';
           default:
             throw Error(
               `Unexpected entry (${entry}) and bundleType (${bundleType})`

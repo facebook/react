@@ -2548,22 +2548,15 @@ describe('Profiler', () => {
         await originalPromise;
         expect(renderer.toJSON()).toEqual(['loaded', 'updated']);
 
-        // TODO: Bug. This *should* just be one render tied to both interactions.
-        expect(onRender).toHaveBeenCalledTimes(2);
+        expect(onRender).toHaveBeenCalledTimes(1);
         expect(onRender.mock.calls[0][6]).toMatchInteractions([
           initialRenderInteraction,
         ]);
-        expect(onRender.mock.calls[1][6]).toMatchInteractions([
-          highPriUpdateInteraction,
-        ]);
 
-        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
+        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
         expect(
           onInteractionScheduledWorkCompleted.mock.calls[0][0],
         ).toMatchInteraction(initialRenderInteraction);
-        expect(
-          onInteractionScheduledWorkCompleted.mock.calls[1][0],
-        ).toMatchInteraction(highPriUpdateInteraction);
       });
 
       it('handles high-pri renderers between suspended and resolved (async) trees', async () => {
