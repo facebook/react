@@ -88,7 +88,7 @@
     "@mattiasbuelens/web-streams-polyfill": "0.1.0"
   },
   "devEngines": {
-    "node": "8.x || 9.x || 10.x"
+    "node": "8.x || 9.x || 10.x || 11.x"
   },
   "jest": {
     "testRegex": "/scripts/jest/dont-run-jest-directly\\.js$"
