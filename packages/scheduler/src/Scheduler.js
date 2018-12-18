@@ -8,7 +8,7 @@
 
 /* eslint-disable no-var */
 
-import {enableSchedulerDebugging} from 'shared/ReactFeatureFlags';
+import {enableSchedulerDebugging} from './SchedulerFeatureFlags';
 
 // TODO: Use symbols?
 var ImmediatePriority = 1;
