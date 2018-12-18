@@ -36,7 +36,7 @@ export const enableSchedulerTracing = __PROFILE__;
 export const enableSuspenseServerRenderer = false; // TODO: __DEV__? Here it might just be false.
 
 // Only used in www builds.
-export const enableSchedulerDebugging = __DEV__;
+export const enableSchedulerDebugging = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {
