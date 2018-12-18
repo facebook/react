@@ -157,6 +157,18 @@ const forks = Object.freeze({
     }
   },
 
+  'scheduler/src/SchedulerFeatureFlags': (bundleType, entry, dependencies) => {
+    if (
+      entry === 'scheduler' &&
+      (bundleType === FB_WWW_DEV ||
+        bundleType === FB_WWW_PROD ||
+        bundleType === FB_WWW_PROFILING)
+    ) {
+      return 'scheduler/forks/SchedulerFeatureFlags.www.js';
+    }
+    return 'scheduler/src/SchedulerFeatureFlags';
+  },
+
   // This logic is forked on www to fork the formatting function.
   'shared/invariant': (bundleType, entry) => {
     switch (bundleType) {
