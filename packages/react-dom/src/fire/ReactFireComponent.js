@@ -50,12 +50,19 @@ import {
   setDOMElementProperties,
   updateDOMElementProperties,
 } from './ReactFireComponentProperties';
-
 import type {
   HostContext,
   HostContextDev,
   HostContextProd,
 } from './ReactFireHostConfig';
+import {
+  ERROR,
+  INVALID,
+  LOAD,
+  RESET,
+  SUBMIT,
+  TOGGLE,
+} from './ReactFireEventTypes';
 
 import warning from 'shared/warning';
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
@@ -67,7 +74,7 @@ if (__DEV__) {
   validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
-    validateUnknownProperties(type, props);
+    validateUnknownProperties(type, props, /* canUseEventSystem */ true);
   };
 }
 
@@ -132,7 +139,7 @@ function typeIsInput(
 ) {
   initHostComponentInputWrapperState(domNode, props);
   props = getHostComponentInputProps(domNode, props);
-  trapBubbledEvent('invalid', domNode);
+  trapBubbledEvent(INVALID, domNode);
   // For controlled components we always need to ensure we're listening
   // to onChange. Even if there is no listener.
   ensureListeningTo(rootContainerElement, 'onChange');
@@ -144,7 +151,7 @@ function typeIsDetails(
   domNode: Element,
   rootContainerElement: Element | Document,
 ) {
-  trapBubbledEvent('toggle', domNode);
+  trapBubbledEvent(TOGGLE, domNode);
   return props;
 }
 
@@ -153,8 +160,8 @@ function typeIsForm(
   domNode: Element,
   rootContainerElement: Element | Document,
 ) {
-  trapBubbledEvent('reset', domNode);
-  trapBubbledEvent('submit', domNode);
+  trapBubbledEvent(RESET, domNode);
+  trapBubbledEvent(SUBMIT, domNode);
   return props;
 }
 
@@ -163,8 +170,8 @@ function typeIsImageOrLink(
   domNode: Element,
   rootContainerElement: Element | Document,
 ) {
-  trapBubbledEvent('error', domNode);
-  trapBubbledEvent('load', domNode);
+  trapBubbledEvent(ERROR, domNode);
+  trapBubbledEvent(LOAD, domNode);
   return props;
 }
 
@@ -173,7 +180,7 @@ function typeIsIframeOrObject(
   domNode: Element,
   rootContainerElement: Element | Document,
 ) {
-  trapBubbledEvent('load', domNode);
+  trapBubbledEvent(LOAD, domNode);
   return props;
 }
 
@@ -183,9 +190,10 @@ function typeIsVideoOrAudio(
   rootContainerElement: Element | Document,
 ) {
   // Create listener for each media event
-  for (let i = 0; i < mediaEventTypes.length; i++) {
+  const mediaEventTypesArr = Array.from(mediaEventTypes);
+  for (let i = 0; i < mediaEventTypesArr.length; i++) {
     // TODO should this be bubbled still? I think it should be captured instead...
-    trapBubbledEvent(mediaEventTypes[i], domNode);
+    trapBubbledEvent(mediaEventTypesArr[i], domNode);
   }
   return props;
 }
@@ -195,7 +203,7 @@ function typeIsSource(
   domNode: Element,
   rootContainerElement: Element | Document,
 ) {
-  trapBubbledEvent('error', domNode);
+  trapBubbledEvent(ERROR, domNode);
   return props;
 }
 

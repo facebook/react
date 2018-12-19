@@ -6,8 +6,17 @@
  *
  */
 
-import {isCustomComponent} from './ReactFireUtils';
+import {
+  isCustomComponent,
+  isPropAnEvent,
+  normalizeEventName,
+} from './ReactFireUtils';
 import {BOOLEAN, RESERVED} from '../shared/DOMProperty';
+import {
+  interactiveEvents,
+  mediaEventTypes,
+  nonInteractiveEvents,
+} from './ReactFireEventTypes';
 import {
   ATTRIBUTE_NAME_CHAR,
   possibleStandardNames,
@@ -167,7 +176,7 @@ export function validateInputProperties(type, props) {
   }
 }
 
-validateUnknownProperty = function(tagName, name, value) {
+validateUnknownProperty = function(tagName, name, value, canUseEventSystem) {
   if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
     return true;
   }
@@ -184,10 +193,18 @@ validateUnknownProperty = function(tagName, name, value) {
     return true;
   }
 
-  if (EVENT_NAME_REGEX.test(name)) {
+  if (canUseEventSystem) {
     // If no event plugins have been injected, we are in a server environment.
     // So we can't tell if the event name is correct for sure, but we can filter
     // out known bad ones like `onclick`. We can't suggest a specific replacement though.
+    if (name.toLowerCase() === 'onclick' && name !== 'onClick') {
+      warning(
+        false,
+        'Invalid event handler property `%s`. Did you mean `onClick`?',
+        name,
+      );
+      return true;
+    }
     if (name.toLowerCase() === 'ondblclick') {
       warning(
         false,
@@ -196,8 +213,39 @@ validateUnknownProperty = function(tagName, name, value) {
       );
       return true;
     }
+    const eventName = normalizeEventName(name);
+
+    if (mediaEventTypes.has(eventName)) {
+      return true;
+    }
+    if (isPropAnEvent(name)) {
+      return true;
+    }
+    if (
+      nonInteractiveEvents.has(eventName) ||
+      interactiveEvents.has(eventName)
+    ) {
+      warning(
+        false,
+        'Invalid event handler property `%s`. ' +
+          'React events use the camelCase naming convention, for example `onClick`.',
+        name,
+      );
+      warnedProperties[name] = true;
+      return true;
+    }
+    if (EVENT_NAME_REGEX.test(name)) {
+      warning(
+        false,
+        'Unknown event handler property `%s`. It will be ignored.',
+        name,
+      );
+      warnedProperties[name] = true;
+      return true;
+    }
+  } else if (EVENT_NAME_REGEX.test(name)) {
     if (INVALID_EVENT_NAME_REGEX.test(name)) {
-      if (name.toLowerCase() === 'onclick') {
+      if (name.toLowerCase() === 'onclick' && name !== 'onClick') {
         warning(
           false,
           'Invalid event handler property `%s`. Did you mean `onClick`?',
@@ -414,11 +462,11 @@ const warnUnknownProperties = function(type, props, canUseEventSystem) {
   }
 };
 
-export function validateUnknownProperties(type, props) {
+export function validateUnknownProperties(type, props, canUseEventSystem) {
   if (isCustomComponent(type, props)) {
     return;
   }
-  warnUnknownProperties(type, props);
+  warnUnknownProperties(type, props, canUseEventSystem);
 }
 
 const HTML = '__html';

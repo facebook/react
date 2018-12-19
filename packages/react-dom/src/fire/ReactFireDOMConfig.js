@@ -28,43 +28,6 @@ export const STYLE = 'style';
 export const HTML = '__html';
 export const ROOT_ATTRIBUTE_NAME = 'data-reactroot';
 
-export const interactiveEventNames: Set<string> = new Set([
-  'blur',
-  'cancel',
-  'click',
-  'close',
-  'contextmenu',
-  'copy',
-  'cut',
-  'auxclick',
-  'dblclick',
-  'dragend',
-  'dragstart',
-  'drop',
-  'focus',
-  'input',
-  'invalid',
-  'keydown',
-  'keypress',
-  'keyup',
-  'mousedown',
-  'mouseup',
-  'paste',
-  'pause',
-  'play',
-  'pointercancel',
-  'pointerdown',
-  'pointerup',
-  'pointerchange',
-  'reset',
-  'seeked',
-  'submit',
-  'touchcancel',
-  'touchend',
-  'touchstart',
-  'volumechange',
-]);
-
 /**
  * CSS properties which accept numbers but are not in units of "px".
  */

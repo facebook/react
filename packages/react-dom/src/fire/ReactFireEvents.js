@@ -12,16 +12,17 @@ import {
   addEventCaptureListener,
 } from '../events/EventListener';
 import {
+  getEventCharCode,
   getEventTarget,
   isEventSupported,
   normalizeEventName,
 } from './ReactFireUtils';
+import {DOCUMENT_FRAGMENT_NODE, DOCUMENT_NODE} from './ReactFireDOMConfig';
 import {
-  DOCUMENT_FRAGMENT_NODE,
-  DOCUMENT_NODE,
-  interactiveEventNames,
-} from './ReactFireDOMConfig';
-import {mediaEventTypes} from './ReactFireEventTypes';
+  mediaEventTypes,
+  interactiveEvents,
+  nonInteractiveEvents,
+} from './ReactFireEventTypes';
 import {batchedUpdates, interactiveUpdates} from './ReactFireBatching';
 import {
   getClosestFiberFromDOMNode,
@@ -37,9 +38,14 @@ import {
   CANCEL,
   CLICK,
   CLOSE,
-  DOUBLE_CLICK,
+  ERROR,
   FOCUS,
+  INVALID,
+  KEY_PRESS,
+  LOAD,
+  RESET,
   SCROLL,
+  SUBMIT,
 } from './ReactFireEventTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import {isFiberMounted} from 'react-reconciler/reflection';
@@ -57,7 +63,6 @@ export type ProxyContext = {
   eventName: string,
   eventTarget: Node | Document | Document | void | null,
   fiber: null | Fiber,
-  isClickEvent: boolean,
 };
 
 export type EventData = {
@@ -114,8 +119,8 @@ export function listenTo(eventName: string, domNode: Element | Document) {
       case BLUR:
         trapCapturedEvent(FOCUS, domNode);
         trapCapturedEvent(BLUR, domNode);
-        domNodeEventsMap.set('focus', createEventData());
-        domNodeEventsMap.set('blur', createEventData());
+        domNodeEventsMap.set(FOCUS, createEventData());
+        domNodeEventsMap.set(BLUR, createEventData());
         return;
       case CANCEL:
       case CLOSE:
@@ -123,18 +128,18 @@ export function listenTo(eventName: string, domNode: Element | Document) {
           trapCapturedEvent(eventName, domNode);
         }
         break;
-      case 'invalid':
-      case 'submit':
-      case 'reset':
-      case 'load':
-      case 'error':
+      case INVALID:
+      case SUBMIT:
+      case RESET:
+      case LOAD:
+      case ERROR:
         // We listen to them on the target DOM elements.
         // Some of them bubble so we don't want them to fire twice.
         break;
       default:
         // By default, listen on the top level to all non-media events.
         // Media events don't bubble so adding the listener wouldn't do anything.
-        const isMediaEvent = mediaEventTypes.indexOf(eventName) !== -1;
+        const isMediaEvent = mediaEventTypes.has(eventName);
         if (!isMediaEvent) {
           trapBubbledEvent(eventName, domNode);
         }
@@ -181,7 +186,7 @@ function trapEvent(
   containerDomNode: Document | Element,
   bubbles: boolean,
 ) {
-  const listener = interactiveEventNames.has(eventName)
+  const listener = interactiveEvents.has(eventName)
     ? proxyInteractiveListener
     : proxyListener;
   const boundListener = listener.bind(null, eventName, containerDomNode);
@@ -251,8 +256,29 @@ function createProxyContext(
     eventName,
     eventTarget,
     fiber: null,
-    isClickEvent: eventName === CLICK || eventName === DOUBLE_CLICK,
   };
+}
+
+function dispatchSimpleEvent(eventName, proxyContext) {
+  if (
+    !nonInteractiveEvents.has(eventName) &&
+    !interactiveEvents.has(eventName)
+  ) {
+    return null;
+  }
+  const event = proxyContext.event;
+  if (eventName === KEY_PRESS) {
+    if (getEventCharCode(event) === 0) {
+      return null;
+    }
+  } else if (eventName === CLICK) {
+    // Firefox creates a click event on right mouse clicks. This removes the
+    // unwanted click events.
+    if ((event: any).button === 2) {
+      return null;
+    }
+  }
+  traverseTwoPhase(proxyContext);
 }
 
 function dispatchEvent(proxyContext: ProxyContext) {
@@ -267,8 +293,7 @@ function dispatchEvent(proxyContext: ProxyContext) {
     const ancestor = ancestors[x];
     const targetDomNode = getDOMNodeFromFiber(ancestor);
     proxyContext.fiber = ancestor;
-    // Dispatch run all non-polyfilled events first using two phase traversal
-    traverseTwoPhase(proxyContext);
+    dispatchSimpleEvent(eventName, proxyContext);
     // Then dispatch all polyfilled events (onChange, onBeforeInput etc).
     // Each polyfilled event has as its own event handler that provides the
     // dispatch mechanism to use.
@@ -339,23 +364,6 @@ function monkeyPatchNativeEvent(event: Event, proxyContext: ProxyContext) {
   (event: any).isDefaultPrevented = returnsFalse;
   (event: any).persist = noop;
   (event: any).nativeEvent = event;
-  if (patchBrokenFirefoxClick(proxyContext, event)) {
-    return;
-  }
-}
-
-function patchBrokenFirefoxClick(proxyContext: ProxyContext, event: Event) {
-  if (
-    proxyContext.isClickEvent &&
-    (event: any).button !== undefined &&
-    (event: any).button !== 0
-  ) {
-    // Firefox incorrectly triggers click event for mid/right mouse buttons.
-    // This bug has been active for 12 years.
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=184051
-    event.stopPropagation();
-    return true;
-  }
 }
 
 function noop() {}

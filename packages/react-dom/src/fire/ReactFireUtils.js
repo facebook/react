@@ -11,7 +11,8 @@ import warning from 'shared/warning';
 import {HostComponent} from 'shared/ReactWorkTags';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import {supportedInputTypes} from './ReactFireDOMConfig';
-import {ignoreEvents} from './ReactFireEventTypes';
+import {interactiveEvents, nonInteractiveEvents} from './ReactFireEventTypes';
+import {polyfilledEvents} from './polyfills/ReactFirePolyfilledEvents';
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 
 import {
@@ -143,16 +144,15 @@ export function isStringOrNumber(value: any): boolean {
 }
 
 export function isPropAnEvent(propName: string): boolean {
-  if (ignoreEvents.has(propName)) {
+  if (propName.length > 3 && propName[2].toLowerCase() === propName[2]) {
     return false;
   }
-  return (
-    propName.length > 2 &&
-    propName[0] === 'o' &&
-    propName[1] === 'n' &&
-    propName[2] !== '-' &&
-    propName[2] === propName[2].toUpperCase()
-  );
+  const eventName = normalizeEventName(propName);
+
+  if (nonInteractiveEvents.has(eventName) || interactiveEvents.has(eventName)) {
+    return true;
+  }
+  return polyfilledEvents.hasOwnProperty(propName);
 }
 
 export function isCustomComponent(tagName: string, props: Object) {
@@ -207,8 +207,14 @@ export function normalizeEventName(name: string): string {
   if (name.endsWith('Capture')) {
     return normalizeEventName(name.slice(0, name.length - 7));
   }
-  if (name === 'doubleClick') {
+  if (name === 'onDoubleClick') {
     return 'dblclick';
+  }
+  if (name === 'onContextMenu') {
+    return 'contextMenu';
+  }
+  if (name === 'onTextInput') {
+    return 'textInput';
   }
   return name.substr(2).toLowerCase();
 }
@@ -478,4 +484,42 @@ export function isTextInputElement(elem: ?HTMLElement): boolean {
   }
 
   return false;
+}
+
+/**
+ * `charCode` represents the actual "character code" and is safe to use with
+ * `String.fromCharCode`. As such, only keys that correspond to printable
+ * characters produce a valid `charCode`, the only exception to this is Enter.
+ * The Tab-key is considered non-printable and does not have a `charCode`,
+ * presumably because it does not produce a tab-character in browsers.
+ */
+export function getEventCharCode(event: Event): number {
+  let charCode;
+  const keyCode = (event: any).keyCode;
+
+  if ('charCode' in event) {
+    charCode = (event: any).charCode;
+
+    // FF does not set `charCode` for the Enter-key, check against `keyCode`.
+    if (charCode === 0 && keyCode === 13) {
+      charCode = 13;
+    }
+  } else {
+    // IE8 does not implement `charCode`, but `keyCode` has the correct value.
+    charCode = keyCode;
+  }
+
+  // IE and Edge (on Windows) and Chrome / Safari (on Windows and Linux)
+  // report Enter as charCode 10 when ctrl is pressed.
+  if (charCode === 10) {
+    charCode = 13;
+  }
+
+  // Some non-printable keys are reported in `charCode`/`keyCode`, discard them.
+  // Must not discard the (non-)printable Enter-key.
+  if (charCode >= 32 || charCode === 13) {
+    return charCode;
+  }
+
+  return 0;
 }

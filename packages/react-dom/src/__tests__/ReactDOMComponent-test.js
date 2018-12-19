@@ -185,20 +185,14 @@ describe('ReactDOMComponent', () => {
       expect(() =>
         ReactDOM.render(<div onUnknown="alert(&quot;hack&quot;)" />, container),
       ).toWarnDev(
-        ReactFeatureFlags.enableReactDOMFire
-          ? 'Warning: Expected `onUnknown` listener to be a function, instead got a value' +
-            ' of `string` type.\n    in div (at **)'
-          : 'Warning: Unknown event handler property `onUnknown`. It will be ignored.\n    in div (at **)',
+        'Warning: Unknown event handler property `onUnknown`. It will be ignored.\n    in div (at **)',
       );
       expect(container.firstChild.hasAttribute('onUnknown')).toBe(false);
       expect(container.firstChild.onUnknown).toBe(undefined);
       expect(() =>
         ReactDOM.render(<div onunknown="alert(&quot;hack&quot;)" />, container),
       ).toWarnDev(
-        ReactFeatureFlags.enableReactDOMFire
-          ? 'Warning: Invalid event handler property `onunknown`. ' +
-            'React events use the camelCase naming convention, for example `onClick`.'
-          : 'Warning: Unknown event handler property `onunknown`. It will be ignored.\n    in div (at **)',
+        'Warning: Unknown event handler property `onunknown`. It will be ignored.\n    in div (at **)',
       );
       expect(container.firstChild.hasAttribute('onunknown')).toBe(false);
       expect(container.firstChild.onunknown).toBe(undefined);
@@ -209,10 +203,7 @@ describe('ReactDOMComponent', () => {
           container,
         ),
       ).toWarnDev(
-        ReactFeatureFlags.enableReactDOMFire
-          ? 'Warning: Invalid event handler property `on-unknown`. ' +
-            'React events use the camelCase naming convention, for example `onClick`.'
-          : 'Warning: Unknown event handler property `on-unknown`. It will be ignored.\n    in div (at **)',
+        'Warning: Unknown event handler property `on-unknown`. It will be ignored.\n    in div (at **)',
       );
       expect(container.firstChild.hasAttribute('on-unknown')).toBe(false);
       expect(container.firstChild['on-unknown']).toBe(undefined);

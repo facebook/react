@@ -16,6 +16,7 @@ import {
   startEventPropagation,
   returnsTrue,
 } from './ReactFireEvents';
+import {CLICK, DOUBLE_CLICK} from './ReactFireEventTypes';
 import type {EventData, ProxyContext} from './ReactFireEvents';
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
@@ -93,7 +94,11 @@ function dispatchEventHandler(
   // browser does not handle disabled attribute on parent,
   // because the event listener is on document.body
   // Don't process clicks on disabled elements
-  if (proxyContext.isClickEvent && (domNode: any).disabled) {
+  if (
+    (proxyContext.eventName === CLICK ||
+      proxyContext.eventName === DOUBLE_CLICK) &&
+    (domNode: any).disabled
+  ) {
     return;
   }
   const domNodeEventsMap = getDomNodeEventsMap(domNode);
