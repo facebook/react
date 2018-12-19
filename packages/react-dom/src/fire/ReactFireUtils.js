@@ -11,6 +11,7 @@ import warning from 'shared/warning';
 import {HostComponent} from 'shared/ReactWorkTags';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import {supportedInputTypes} from './ReactFireDOMConfig';
+import {ignoreEvents} from './ReactFireEventTypes';
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 
 import {
@@ -142,6 +143,9 @@ export function isStringOrNumber(value: any): boolean {
 }
 
 export function isPropAnEvent(propName: string): boolean {
+  if (ignoreEvents.has(propName)) {
+    return false;
+  }
   return (
     propName.length > 2 &&
     propName[0] === 'o' &&

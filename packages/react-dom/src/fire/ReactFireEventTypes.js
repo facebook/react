@@ -38,6 +38,9 @@ export const POINTER_OVER = 'pointerover';
 export const POINTER_LEAVE = 'pointerleave';
 export const POINTER_ENTER = 'pointerenter';
 
+// ReactDOM previously did not listen to this event
+export const ignoreEvents: Set<string> = new Set(['onResize']);
+
 export const mediaEventTypes = [
   'abort',
   'canplay',

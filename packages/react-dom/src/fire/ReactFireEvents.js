@@ -74,7 +74,7 @@ const returnsFalse = () => false;
 export const returnsTrue = () => true;
 
 // TODO: can we stop exporting these?
-export let eventsEnabled = true;
+let eventsEnabled = true;
 
 export function setEventsEnabled(enabled: ?boolean) {
   eventsEnabled = !!enabled;
