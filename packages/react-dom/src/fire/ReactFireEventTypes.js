@@ -201,4 +201,4 @@ export const mediaEventTypes: Set<string> = new Set([
   WAITING,
 ]);
 
-export const mediaEventTypesArr = Array.from(mediaEventTypes);
+export const mediaEventTypesArr: Array<string> = Array.from(mediaEventTypes);
