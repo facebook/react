@@ -11,10 +11,7 @@ import {
   getClosestFiberFromDOMNode,
   getDOMNodeFromFiber,
 } from './ReactFireInternal';
-import {
-  getDomNodeEventsMap,
-  startEventPropagation,
-} from './ReactFireEvents';
+import {getDomNodeEventsMap, startEventPropagation} from './ReactFireEvents';
 import {CLICK, DOUBLE_CLICK} from './ReactFireEventTypes';
 import type {EventData, ProxyContext} from './ReactFireEvents';
 

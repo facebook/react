@@ -174,7 +174,7 @@ export const nonInteractiveEvents: Set<string> = new Set([
   WHEEL,
 ]);
 
-export const mediaEventTypesArr = [
+export const mediaEventTypesArr: Array<string> = [
   ABORT,
   CAN_PLAY,
   CAN_PLAY_THROUGH,
