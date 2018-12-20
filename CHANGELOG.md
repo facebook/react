@@ -6,6 +6,23 @@
   </summary>
 </details>
 
+## 16.7.0 (December 19, 2018)
+
+### React DOM
+
+* Fix performance of `React.lazy` for large numbers of lazily-loaded components. ([@acdlite](http://github.com/acdlite) in [#14429](https://github.com/facebook/react/pull/14429))
+* Clear fields on unmount to avoid memory leaks. ([@trueadm](http://github.com/trueadm) in [#14276](https://github.com/facebook/react/pull/14276))
+* Fix bug with SSR and context when mixing `react-dom/server@16.6` and `react@<16.6`. ([@gaearon](http://github.com/gaearon) in [#14291](https://github.com/facebook/react/pull/14291))
+* Fix a performance regression in profiling mode. ([@bvaughn](http://github.com/bvaughn) in [#14383](https://github.com/facebook/react/pull/14383))
+
+### Scheduler (Experimental)
+
+* Post to MessageChannel instead of window. ([@acdlite](http://github.com/acdlite) in [#14234](https://github.com/facebook/react/pull/14234))
+* Reduce serialization overhead. ([@developit](http://github.com/developit) in [#14249](https://github.com/facebook/react/pull/14249))
+* Fix fallback to `setTimeout` in testing environments. ([@bvaughn](http://github.com/bvaughn) in [#14358](https://github.com/facebook/react/pull/14358))
+* Add methods for debugging. ([@mrkev](http://github.com/mrkev) in [#14053](https://github.com/facebook/react/pull/14053))
+
+
 ## 16.6.3 (November 12, 2018)
 
 ### React DOM
@@ -125,7 +142,7 @@ This release was published in a broken state and should be skipped.
 * Fix incorrect data in `compositionend` event when typing Korean on IE11 ([@crux153](https://github.com/crux153) in [#12563](https://github.com/facebook/react/issues/12563))
 * Fix a crash when using dynamic `children` in the `<option>` tag ([@Slowyn](https://github.com/Slowyn) in [#13261](https://github.com/facebook/react/issues/13261), [@gaearon](https://github.com/gaearon) in [#13465](https://github.com/facebook/react/pull/13465))
 * Fix the `checked` attribute not getting initially set on the `input` ([@dilidili](https://github.com/dilidili) in [#13114](https://github.com/facebook/react/issues/13114))
-* Fix hydration of `dangerouslySetInnerHTML` when `__html` is not a string ([@gaearon](https://github.com/gaearon) in [#13353](https://github.com/facebook/react/issues/13353)) 
+* Fix hydration of `dangerouslySetInnerHTML` when `__html` is not a string ([@gaearon](https://github.com/gaearon) in [#13353](https://github.com/facebook/react/issues/13353))
 * Fix a warning about missing controlled `onChange` to fire on falsy values too ([@nicolevy](https://github.com/nicolevy) in [#12628](https://github.com/facebook/react/issues/12628))
 * Fix `submit` and `reset` buttons getting an empty label ([@ellsclytn](https://github.com/ellsclytn) in [#12780](https://github.com/facebook/react/issues/12780))
 * Fix the `onSelect` event not being triggered after drag and drop ([@gaearon](https://github.com/gaearon) in [#13422](https://github.com/facebook/react/issues/13422))
@@ -316,7 +333,7 @@ This release was published in a broken state and should be skipped.
 * Deduplicate warning messages about invalid callback. ([@yenshih](https://github.com/yenshih) in [#11833](https://github.com/facebook/react/pull/11833))
 * Deprecate `ReactDOM.unstable_createPortal()` in favor of `ReactDOM.createPortal()`. ([@prometheansacrifice](https://github.com/prometheansacrifice) in [#11747](https://github.com/facebook/react/pull/11747))
 * Don't emit User Timing entries for context types. ([@abhaynikam](https://github.com/abhaynikam) in [#12250](https://github.com/facebook/react/pull/12250))
-* Improve the error message when context consumer child isn't a function. ([@raunofreiberg](https://github.com/raunofreiberg) in [#12267](https://github.com/facebook/react/pull/12267)) 
+* Improve the error message when context consumer child isn't a function. ([@raunofreiberg](https://github.com/raunofreiberg) in [#12267](https://github.com/facebook/react/pull/12267))
 * Improve the error message when adding a ref to a functional component. ([@skiritsis](https://github.com/skiritsis) in [#11782](https://github.com/facebook/react/pull/11782))
 
 ### React DOM Server
