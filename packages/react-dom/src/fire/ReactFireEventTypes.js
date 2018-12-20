@@ -174,7 +174,7 @@ export const nonInteractiveEvents: Set<string> = new Set([
   WHEEL,
 ]);
 
-export const mediaEventTypes: Set<string> = new Set([
+export const mediaEventTypesArr = [
   ABORT,
   CAN_PLAY,
   CAN_PLAY_THROUGH,
@@ -199,6 +199,6 @@ export const mediaEventTypes: Set<string> = new Set([
   TIME_UPDATE,
   VOLUME_CHANGE,
   WAITING,
-]);
+];
 
-export const mediaEventTypesArr = Array.from(mediaEventTypes);
+export const mediaEventTypes: Set<string> = new Set(mediaEventTypesArr);
