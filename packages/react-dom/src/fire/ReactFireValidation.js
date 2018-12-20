@@ -12,11 +12,7 @@ import {
   normalizeEventName,
 } from './ReactFireUtils';
 import {BOOLEAN, RESERVED} from '../shared/DOMProperty';
-import {
-  interactiveEvents,
-  mediaEventTypes,
-  nonInteractiveEvents,
-} from './ReactFireEventTypes';
+import {interactiveEvents, nonInteractiveEvents} from './ReactFireEventTypes';
 import {
   ATTRIBUTE_NAME_CHAR,
   possibleStandardNames,
@@ -215,9 +211,6 @@ validateUnknownProperty = function(tagName, name, value, canUseEventSystem) {
     }
     const eventName = normalizeEventName(name);
 
-    if (mediaEventTypes.has(eventName)) {
-      return true;
-    }
     if (isPropAnEvent(name)) {
       return true;
     }

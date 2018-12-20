@@ -262,7 +262,8 @@ function createProxyContext(
 function dispatchSimpleEvent(eventName, proxyContext) {
   if (
     !nonInteractiveEvents.has(eventName) &&
-    !interactiveEvents.has(eventName)
+    !interactiveEvents.has(eventName) &&
+    !mediaEventTypes.has(eventName)
   ) {
     return null;
   }

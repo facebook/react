@@ -11,7 +11,11 @@ import warning from 'shared/warning';
 import {HostComponent} from 'shared/ReactWorkTags';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import {supportedInputTypes} from './ReactFireDOMConfig';
-import {interactiveEvents, nonInteractiveEvents} from './ReactFireEventTypes';
+import {
+  interactiveEvents,
+  mediaEventTypes,
+  nonInteractiveEvents,
+} from './ReactFireEventTypes';
 import {polyfilledEvents} from './polyfills/ReactFirePolyfilledEvents';
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 
@@ -144,12 +148,21 @@ export function isStringOrNumber(value: any): boolean {
 }
 
 export function isPropAnEvent(propName: string): boolean {
-  if (propName.length > 3 && propName[2].toLowerCase() === propName[2]) {
+  if (
+    propName.length < 3 ||
+    propName[0] !== 'o' ||
+    propName[1] !== 'n' ||
+    propName[2].toLowerCase() === propName[2]
+  ) {
     return false;
   }
   const eventName = normalizeEventName(propName);
 
-  if (nonInteractiveEvents.has(eventName) || interactiveEvents.has(eventName)) {
+  if (
+    nonInteractiveEvents.has(eventName) ||
+    interactiveEvents.has(eventName) ||
+    mediaEventTypes.has(eventName)
+  ) {
     return true;
   }
   return polyfilledEvents.hasOwnProperty(propName);
