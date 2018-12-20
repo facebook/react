@@ -200,3 +200,5 @@ export const mediaEventTypes: Set<string> = new Set([
   VOLUME_CHANGE,
   WAITING,
 ]);
+
+export const mediaEventTypesArr = Array.from(mediaEventTypes);

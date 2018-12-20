@@ -8,7 +8,7 @@
  */
 
 import {createElement, isCustomComponent} from './ReactFireUtils';
-import {mediaEventTypes} from './ReactFireEventTypes';
+import {mediaEventTypesArr} from './ReactFireEventTypes';
 import {
   applyHostComponentInputMountWrapper,
   updateWrapper as applyHostComponentInputUpdateWrapper,
@@ -190,9 +190,9 @@ function typeIsVideoOrAudio(
   rootContainerElement: Element | Document,
 ) {
   // Create listener for each media event
-  const mediaEventTypesArr = Array.from(mediaEventTypes);
   for (let i = 0; i < mediaEventTypesArr.length; i++) {
     // TODO should this be bubbled still? I think it should be captured instead...
+    console.log(mediaEventTypesArr[i]);
     trapBubbledEvent(mediaEventTypesArr[i], domNode);
   }
   return props;

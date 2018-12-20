@@ -14,7 +14,6 @@ import {
 import {
   getDomNodeEventsMap,
   startEventPropagation,
-  returnsTrue,
 } from './ReactFireEvents';
 import {CLICK, DOUBLE_CLICK} from './ReactFireEventTypes';
 import type {EventData, ProxyContext} from './ReactFireEvents';
@@ -110,7 +109,7 @@ function dispatchEventHandler(
     proxyContext,
     event,
   );
-  if ((event: any).isPropagationStopped === returnsTrue) {
+  if ((event: any).isPropagationStopped()) {
     return true;
   }
 }
