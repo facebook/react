@@ -192,7 +192,6 @@ function typeIsVideoOrAudio(
   // Create listener for each media event
   for (let i = 0; i < mediaEventTypesArr.length; i++) {
     // TODO should this be bubbled still? I think it should be captured instead...
-    console.log(mediaEventTypesArr[i]);
     trapBubbledEvent(mediaEventTypesArr[i], domNode);
   }
   return props;
