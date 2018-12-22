@@ -1,5 +1,6 @@
 {
   "private": true,
+  "name": "react",
   "version": "16.6.1",
   "workspaces": [
     "packages/*"
