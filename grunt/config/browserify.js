@@ -72,7 +72,7 @@ function simpleBannerify(src) {
 // be smart and looks for top-level requires (even when aliasing to a bundle),
 // but since we didn't have those, we couldn't require 'react' from 'react-dom'.
 // But we are already shimming in some modules that look for a global React
-// variable. So we replace the UMD wrapper that browserify creates with out own,
+// variable. So we replace the UMD wrapper that browserify creates with our own,
 // in 2 steps.
 // 1. We swap out the browserify UMD with a plain function call. This ensures
 // that the internal wrapper doesn't interact with the external state. By the
