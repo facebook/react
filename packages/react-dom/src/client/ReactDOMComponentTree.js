@@ -23,18 +23,28 @@ export function precacheFiberNode(hostInst, node) {
  * ReactDOMTextComponent instance ancestor.
  */
 export function getClosestInstanceFromNode(node) {
-  if (node[internalInstanceKey]) {
-    return node[internalInstanceKey];
-  }
-
-  while (!node[internalInstanceKey]) {
-    if (node.parentNode) {
-      node = node.parentNode;
-    } else {
-      // Top of the tree. This node must not be part of a React tree (or is
-      // unmounted, potentially).
-      return null;
+  // In Firefox, anchorNode and focusNode can be "anonymous divs", e.g. the
+  // up/down buttons on an <input type="number">. Anonymous divs do not seem to
+  // expose properties, triggering a "Permission denied error" if any of its
+  // properties are accessed. The only seemingly possible way to avoid erroring
+  // is to access a property that typically works for non-anonymous divs and
+  // catch any error that may otherwise arise. See
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=208427
+  try {
+    if (node[internalInstanceKey]) {
+      return node[internalInstanceKey];
     }
+    while (!node[internalInstanceKey]) {
+      if (node.parentNode) {
+        node = node.parentNode;
+      } else {
+        // Top of the tree. This node must not be part of a React tree (or is
+        // unmounted, potentially).
+        return null;
+      }
+    }
+  } catch (e) {
+    return null;
   }
 
   let inst = node[internalInstanceKey];
