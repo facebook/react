@@ -10,10 +10,10 @@
 // UpdateQueue is a linked list of prioritized updates.
 //
 // Like fibers, update queues come in pairs: a current queue, which represents
-// the visible state of the screen, and a work-in-progress queue, which is
-// can be mutated and processed asynchronously before it is committed — a form
-// of double buffering. If a work-in-progress render is discarded before
-// finishing, we create a new work-in-progress by cloning the current queue.
+// the visible state of the screen, and a work-in-progress queue, which can be
+// mutated and processed asynchronously before it is committed — a form of
+// double buffering. If a work-in-progress render is discarded before finishing,
+// we create a new work-in-progress by cloning the current queue.
 //
 // Both queues share a persistent, singly-linked list structure. To schedule an
 // update, we append it to the end of both queues. Each queue maintains a
