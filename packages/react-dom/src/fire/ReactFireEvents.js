@@ -354,7 +354,7 @@ function monkeyPathNativeKeyboardEvent(eventName: string, event: Event) {
       if (originalKey) {
         // Normalize inconsistent values reported by browsers due to
         // implementations of a working draft specification.
-    
+
         // FireFox implements `key` but returns `MozPrintableKey` for all
         // printable characters (normalized to `Unidentified`), ignore it.
         const key = normalizeKey[originalKey] || originalKey;
