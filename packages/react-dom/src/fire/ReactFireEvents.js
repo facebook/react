@@ -22,6 +22,8 @@ import {
   mediaEventTypes,
   interactiveEvents,
   nonInteractiveEvents,
+  KEY_DOWN,
+  KEY_UP,
 } from './ReactFireEventTypes';
 import {batchedUpdates, interactiveUpdates} from './ReactFireBatching';
 import {
@@ -46,6 +48,8 @@ import {
   RESET,
   SCROLL,
   SUBMIT,
+  normalizeKey,
+  translateToKey,
 } from './ReactFireEventTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import {isFiberMounted} from 'react-reconciler/reflection';
@@ -337,11 +341,50 @@ export function proxyListener(
     ancestors,
   );
 
-  monkeyPatchNativeEvent(event, proxyContext);
+  monkeyPatchNativeEvent(eventName, event, proxyContext);
   batchedUpdates(dispatchEvent, proxyContext);
 }
 
-function monkeyPatchNativeEvent(event: Event, proxyContext: ProxyContext) {
+function monkeyPathNativeKeyboardEvent(eventName: string, event: Event) {
+  const originalKey = (event: any).key;
+  // $FlowFixMe: Flow complains we do not have value, we don't need it
+  Object.defineProperty(event, 'key', {
+    configurable: true,
+    get() {
+      if (originalKey) {
+        // Normalize inconsistent values reported by browsers due to
+        // implementations of a working draft specification.
+    
+        // FireFox implements `key` but returns `MozPrintableKey` for all
+        // printable characters (normalized to `Unidentified`), ignore it.
+        const key = normalizeKey[originalKey] || originalKey;
+        if (key !== 'Unidentified') {
+          return key;
+        }
+      }
+      // Browser does not implement `key`, polyfill as much of it as we can.
+      if (eventName === KEY_PRESS) {
+        const charCode = getEventCharCode(event);
+
+        // The enter-key is technically both printable and non-printable and can
+        // thus be captured by `keypress`, no other non-printable key should.
+        return charCode === 13 ? 'Enter' : String.fromCharCode(charCode);
+      }
+      if (eventName === KEY_DOWN || eventName === KEY_UP) {
+        // While user keyboard layout determines the actual meaning of each
+        // `keyCode` value, almost all function keys have a universal value.
+        return translateToKey[(event: any).keyCode] || 'Unidentified';
+      }
+      return '';
+    },
+  });
+}
+
+function monkeyPatchNativeEvent(
+  eventName: string,
+  event: Event,
+  proxyContext: ProxyContext,
+) {
   const nativeStopPropagation = event.stopPropagation;
   (event: any).stopPropagation = () => {
     (event: any).isPropagationStopped = returnsTrue;
@@ -365,6 +408,13 @@ function monkeyPatchNativeEvent(event: Event, proxyContext: ProxyContext) {
   (event: any).isDefaultPrevented = returnsFalse;
   (event: any).persist = noop;
   (event: any).nativeEvent = event;
+  if (
+    eventName === KEY_PRESS ||
+    eventName === KEY_DOWN ||
+    eventName === KEY_UP
+  ) {
+    monkeyPathNativeKeyboardEvent(eventName, event);
+  }
 }
 
 function noop() {}
