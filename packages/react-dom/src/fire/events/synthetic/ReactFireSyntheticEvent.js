@@ -131,10 +131,11 @@ Object.assign(SyntheticEvent.prototype, {
    * `PooledClass` looks for `destructor` on each instance it releases.
    */
   destructor: function() {
+    let nativeEvent = this.nativeEvent;
     const Interface = this.constructor.Interface;
     for (const propName in Interface) {
       if (__DEV__) {
-        if (!this.nativeEvent._testUtils) {
+        if (!nativeEvent._testUtils) {
           Object.defineProperty(
             this,
             propName,
@@ -147,8 +148,9 @@ Object.assign(SyntheticEvent.prototype, {
     }
     this.isDefaultPrevented = returnsFalse;
     this.isPropagationStopped = returnsFalse;
+    this.nativeEvent = null;
     if (__DEV__) {
-      if (!this.nativeEvent._testUtils) {
+      if (!nativeEvent._testUtils) {
         Object.defineProperty(
           this,
           'nativeEvent',
@@ -182,7 +184,6 @@ Object.assign(SyntheticEvent.prototype, {
         );
       }
     }
-    this.nativeEvent = null;
   },
 });
 
