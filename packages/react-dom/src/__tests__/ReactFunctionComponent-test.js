@@ -354,7 +354,7 @@ describe('ReactFunctionComponent', () => {
     }
 
     expect(() => ReactTestUtils.renderIntoDocument(<Child />)).toWarnDev(
-      'Each child in an array or iterator should have a unique "key" prop.\n\n' +
+      'Each child in a list should have a unique "key" prop.\n\n' +
         'Check the render method of `Child`.',
     );
   });
