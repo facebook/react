@@ -21,7 +21,12 @@ import {getPooledSyntheticEvent} from '../synthetic/ReactFireSyntheticEvent';
 import {SyntheticPointerEvent} from '../synthetic/ReactFireSyntheticPointerEvent';
 import {SyntheticMouseEvent} from '../synthetic/ReactFireSyntheticMouseEvent';
 
-function polyfilledEventListener(eventName, nativeEvent, eventTarget, proxyContext) {
+function polyfilledEventListener(
+  eventName,
+  nativeEvent,
+  eventTarget,
+  proxyContext,
+): void {
   const isOverEvent = eventName === MOUSE_OVER || eventName === POINTER_OVER;
   const isOutEvent = eventName === MOUSE_OUT || eventName === POINTER_OUT;
 
@@ -62,7 +67,7 @@ function polyfilledEventListener(eventName, nativeEvent, eventTarget, proxyConte
 
   if (from === to) {
     // Nothing pertains to our managed components.
-    return null;
+    return;
   }
 
   let eventInterface, eventTypePrefix;
@@ -70,10 +75,7 @@ function polyfilledEventListener(eventName, nativeEvent, eventTarget, proxyConte
   if (eventName === MOUSE_OUT || eventName === MOUSE_OVER) {
     eventInterface = SyntheticMouseEvent;
     eventTypePrefix = 'mouse';
-  } else if (
-    eventName === POINTER_OUT ||
-    eventName === POINTER_OVER
-  ) {
+  } else if (eventName === POINTER_OUT || eventName === POINTER_OVER) {
     eventInterface = SyntheticPointerEvent;
     eventTypePrefix = 'pointer';
   }

@@ -72,4 +72,3 @@ export const SyntheticMouseEvent = extendSyntheticEvent(SyntheticUIEvent, {
     return event.type === 'mousemove' ? event.screenY - screenY : 0;
   },
 });
-

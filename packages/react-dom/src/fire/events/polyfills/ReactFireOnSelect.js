@@ -21,7 +21,10 @@ import {getActiveElement, isTextInputElement} from '../../ReactFireUtils';
 import {DOCUMENT_NODE} from '../../ReactFireDOMConfig';
 import {hasSelectionCapabilities} from '../../ReactFireSelection';
 import {traverseTwoPhase} from '../ReactFireEventTraversal';
-import {getPooledSyntheticEvent, SyntheticEvent} from '../synthetic/ReactFireSyntheticEvent';
+import {
+  getPooledSyntheticEvent,
+  SyntheticEvent,
+} from '../synthetic/ReactFireSyntheticEvent';
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import shallowEqual from 'shared/shallowEqual';
@@ -107,7 +110,12 @@ function constructSelectEvent(nativeEvent, eventTarget, proxyContext) {
   }
 }
 
-function polyfilledEventListener(eventName, nativeEvent, eventTarget, proxyContext) {
+function polyfilledEventListener(
+  eventName,
+  nativeEvent,
+  eventTarget,
+  proxyContext,
+): void {
   switch (eventName) {
     // Track the input node that has focus.
     case FOCUS:

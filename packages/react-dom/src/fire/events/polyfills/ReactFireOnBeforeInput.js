@@ -433,7 +433,7 @@ function polyfilledEventListener(
   nativeEvent,
   eventTarget,
   proxyContext,
-) {
+): void {
   const composition = extractCompositionEvent(
     eventName,
     nativeEvent,
@@ -459,7 +459,6 @@ function polyfilledEventListener(
   if (inputToUse !== null) {
     traverseTwoPhase(inputToUse, proxyContext);
   }
-  return inputToUse;
 }
 
 const onCompositionUpdateDependencies = [

@@ -82,12 +82,7 @@ export function dispatchPolyfills(
       }
       processedPolyfills.add(polyfilledEventHandler);
       proxyContext.eventName = polyfilledEventName;
-      polyfilledEventHandler(
-        eventName,
-        nativeEvent,
-        eventTarget,
-        proxyContext,
-      );
+      polyfilledEventHandler(eventName, nativeEvent, eventTarget, proxyContext);
     }
   }
 }

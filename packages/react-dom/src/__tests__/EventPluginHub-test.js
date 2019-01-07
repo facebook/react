@@ -9,36 +9,43 @@
 
 'use strict';
 
+let ReactFeatureFlags = require('shared/ReactFeatureFlags');
+
 jest.mock('../events/isEventSupported');
 
-describe('EventPluginHub', () => {
-  let React;
-  let ReactTestUtils;
+// Much of this logic was removed with Fire
+if (ReactFeatureFlags.enableReactDOMFire) {
+  it('Empty test', () => {});
+} else {
+  describe('EventPluginHub', () => {
+    let React;
+    let ReactTestUtils;
 
-  beforeEach(() => {
-    jest.resetModules();
-    React = require('react');
-    ReactTestUtils = require('react-dom/test-utils');
-  });
+    beforeEach(() => {
+      jest.resetModules();
+      React = require('react');
+      ReactTestUtils = require('react-dom/test-utils');
+    });
 
-  it('should prevent non-function listeners, at dispatch', () => {
-    let node;
-    expect(() => {
-      node = ReactTestUtils.renderIntoDocument(
-        <div onClick="not a function" />,
+    it('should prevent non-function listeners, at dispatch', () => {
+      let node;
+      expect(() => {
+        node = ReactTestUtils.renderIntoDocument(
+          <div onClick="not a function" />,
+        );
+      }).toWarnDev(
+        'Expected `onClick` listener to be a function, instead got a value of `string` type.',
       );
-    }).toWarnDev(
-      'Expected `onClick` listener to be a function, instead got a value of `string` type.',
-    );
-    expect(() => ReactTestUtils.SimulateNative.click(node)).toThrowError(
-      'Expected `onClick` listener to be a function, instead got a value of `string` type.',
-    );
-  });
+      expect(() => ReactTestUtils.SimulateNative.click(node)).toThrowError(
+        'Expected `onClick` listener to be a function, instead got a value of `string` type.',
+      );
+    });
 
-  it('should not prevent null listeners, at dispatch', () => {
-    const node = ReactTestUtils.renderIntoDocument(<div onClick={null} />);
-    expect(function() {
-      ReactTestUtils.SimulateNative.click(node);
-    }).not.toThrow();
+    it('should not prevent null listeners, at dispatch', () => {
+      const node = ReactTestUtils.renderIntoDocument(<div onClick={null} />);
+      expect(function() {
+        ReactTestUtils.SimulateNative.click(node);
+      }).not.toThrow();
+    });
   });
-});
+}

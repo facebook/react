@@ -12,7 +12,10 @@ import {enqueueStateRestore} from '../../controlled/ReactFireControlledState';
 import {isTextInputElement} from '../../ReactFireUtils';
 import {traverseTwoPhase} from '../ReactFireEventTraversal';
 import type {ProxyContext} from '../ReactFireEvents';
-import {getPooledSyntheticEvent, SyntheticEvent} from '../synthetic/ReactFireSyntheticEvent';
+import {
+  getPooledSyntheticEvent,
+  SyntheticEvent,
+} from '../synthetic/ReactFireSyntheticEvent';
 import {
   BLUR,
   CHANGE,
@@ -62,7 +65,7 @@ function polyfilledEventListener(
     !updateValueIfChanged(((eventTarget: any): HTMLInputElement)) &&
     (nativeEvent: any).simulated === undefined
   ) {
-    return null;
+    return;
   }
 
   if (shouldUseChangeEvent(eventTarget)) {
@@ -73,7 +76,7 @@ function polyfilledEventListener(
     shouldFireUserEvent = eventName === CLICK;
   }
   if (!shouldFireUserEvent) {
-    return null;
+    return;
   }
   enqueueStateRestore(eventTarget);
   const syntheticEvent = getPooledSyntheticEvent(

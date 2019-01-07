@@ -8,6 +8,7 @@
  */
 
 import {traverseTwoPhase} from './ReactFireEventTraversal';
+import type {ProxyContext} from './ReactFireEvents';
 import {
   BLUR,
   CLICK,
@@ -90,7 +91,10 @@ import {
   nonInteractiveEvents,
 } from './ReactFireEventTypes';
 import {getEventCharCode} from '../ReactFireUtils';
-import {getPooledSyntheticEvent, SyntheticEvent} from './synthetic/ReactFireSyntheticEvent';
+import {
+  getPooledSyntheticEvent,
+  SyntheticEvent,
+} from './synthetic/ReactFireSyntheticEvent';
 import {SyntheticKeyboardEvent} from './synthetic/ReactFireSyntheticKeyboardEvent';
 import {SyntheticUIEvent} from './synthetic/ReactFireSyntheticUIEvent';
 import {SyntheticFocusEvent} from './synthetic/ReactFireSyntheticFocusEvent';
@@ -143,7 +147,11 @@ if (__DEV__) {
   ];
 }
 
-export function dispatchSimpleEvent(eventName, nativeEvent, proxyContext) {
+export function dispatchSimpleEvent(
+  eventName: string,
+  nativeEvent: Event,
+  proxyContext: ProxyContext,
+) {
   if (
     !nonInteractiveEvents.has(eventName) &&
     !interactiveEvents.has(eventName) &&
@@ -172,7 +180,7 @@ export function dispatchSimpleEvent(eventName, nativeEvent, proxyContext) {
     case CLICK:
       // Firefox creates a click event on right mouse clicks. This removes the
       // unwanted click events.
-      if (nativeEvent.button === 2) {
+      if ((nativeEvent: any).button === 2) {
         return null;
       }
     /* falls through */

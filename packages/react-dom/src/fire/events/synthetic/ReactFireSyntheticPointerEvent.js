@@ -24,4 +24,3 @@ export const SyntheticPointerEvent = extendSyntheticEvent(SyntheticMouseEvent, {
   pointerType: null,
   isPrimary: null,
 });
-

@@ -49,10 +49,10 @@ export type ProxyContext = {
   ancestors: Array<Fiber>,
   containerDomNode: Element | Document,
   defaultPrevented: false,
-  event: Event,
   eventName: string,
   eventTarget: Node | Document | Document | void | null,
   fiber: null | Fiber,
+  nativeEvent: Event,
 };
 
 export type EventData = {
@@ -246,7 +246,13 @@ function createProxyContext(
 }
 
 function dispatchEvent(proxyContext: ProxyContext) {
-  const {ancestors, containerDomNode, eventName, eventTarget, nativeEvent} = proxyContext;
+  const {
+    ancestors,
+    containerDomNode,
+    eventName,
+    eventTarget,
+    nativeEvent,
+  } = proxyContext;
   if (ancestors.length === 0) {
     if (eventName === 'mouseout') {
       dispatchPolyfills(
