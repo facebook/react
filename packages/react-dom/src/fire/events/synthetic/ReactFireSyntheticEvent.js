@@ -131,17 +131,14 @@ Object.assign(SyntheticEvent.prototype, {
    * `PooledClass` looks for `destructor` on each instance it releases.
    */
   destructor: function() {
-    let nativeEvent = this.nativeEvent;
     const Interface = this.constructor.Interface;
     for (const propName in Interface) {
       if (__DEV__) {
-        if (!nativeEvent._testUtils) {
-          Object.defineProperty(
-            this,
-            propName,
-            getPooledWarningPropertyDefinition(propName, Interface[propName]),
-          );
-        }
+        Object.defineProperty(
+          this,
+          propName,
+          getPooledWarningPropertyDefinition(propName, Interface[propName]),
+        );
       } else {
         this[propName] = null;
       }
@@ -150,39 +147,34 @@ Object.assign(SyntheticEvent.prototype, {
     this.isPropagationStopped = returnsFalse;
     this.nativeEvent = null;
     if (__DEV__) {
-      if (!nativeEvent._testUtils) {
-        Object.defineProperty(
-          this,
-          'nativeEvent',
-          getPooledWarningPropertyDefinition('nativeEvent', null),
-        );
-        Object.defineProperty(
-          this,
-          'isDefaultPrevented',
-          getPooledWarningPropertyDefinition(
-            'isDefaultPrevented',
-            returnsFalse,
-          ),
-        );
-        Object.defineProperty(
-          this,
+      Object.defineProperty(
+        this,
+        'nativeEvent',
+        getPooledWarningPropertyDefinition('nativeEvent', null),
+      );
+      Object.defineProperty(
+        this,
+        'isDefaultPrevented',
+        getPooledWarningPropertyDefinition('isDefaultPrevented', returnsFalse),
+      );
+      Object.defineProperty(
+        this,
+        'isPropagationStopped',
+        getPooledWarningPropertyDefinition(
           'isPropagationStopped',
-          getPooledWarningPropertyDefinition(
-            'isPropagationStopped',
-            returnsFalse,
-          ),
-        );
-        Object.defineProperty(
-          this,
-          'preventDefault',
-          getPooledWarningPropertyDefinition('preventDefault', () => {}),
-        );
-        Object.defineProperty(
-          this,
-          'stopPropagation',
-          getPooledWarningPropertyDefinition('stopPropagation', () => {}),
-        );
-      }
+          returnsFalse,
+        ),
+      );
+      Object.defineProperty(
+        this,
+        'preventDefault',
+        getPooledWarningPropertyDefinition('preventDefault', () => {}),
+      );
+      Object.defineProperty(
+        this,
+        'stopPropagation',
+        getPooledWarningPropertyDefinition('stopPropagation', () => {}),
+      );
     }
   },
 });

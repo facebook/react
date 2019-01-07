@@ -276,7 +276,10 @@ export function traverseEnterLeave(
 }
 
 function releaseSyntheticEvent(syntheticEvent: SyntheticEvent) {
-  if (!syntheticEvent.isPersistent()) {
+  if (
+    !syntheticEvent.isPersistent() &&
+    !syntheticEvent.nativeEvent._testUtils
+  ) {
     syntheticEvent.constructor.release(syntheticEvent);
   }
 }
