@@ -17,10 +17,11 @@ import {
   MOUSE_UP,
   SELECTION_CHANGE,
 } from '../ReactFireEventTypes';
-import {getActiveElement, isTextInputElement} from '../ReactFireUtils';
-import {DOCUMENT_NODE} from '../ReactFireDOMConfig';
-import {hasSelectionCapabilities} from '../ReactFireSelection';
+import {getActiveElement, isTextInputElement} from '../../ReactFireUtils';
+import {DOCUMENT_NODE} from '../../ReactFireDOMConfig';
+import {hasSelectionCapabilities} from '../../ReactFireSelection';
 import {traverseTwoPhase} from '../ReactFireEventTraversal';
+import {getPooledSyntheticEvent, SyntheticEvent} from '../synthetic/ReactFireSyntheticEvent';
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import shallowEqual from 'shared/shallowEqual';
@@ -74,7 +75,7 @@ function getSelection(node) {
   }
 }
 
-function constructSelectEvent(event, eventTarget) {
+function constructSelectEvent(nativeEvent, eventTarget, proxyContext) {
   // Ensure we have the right element, and that the user is not dragging a
   // selection (this matches native `select` event behavior). In HTML5, select
   // fires only on input and textarea thus if there's no focused element we
@@ -94,19 +95,19 @@ function constructSelectEvent(event, eventTarget) {
   if (!lastSelection || !shallowEqual(lastSelection, currentSelection)) {
     lastSelection = currentSelection;
 
-    Object.defineProperty(event, 'type', {
-      value: 'select',
-    });
-    Object.defineProperty(event, 'target', {
-      value: activeElement,
-    });
-    return traverseTwoPhase;
-  }
+    const syntheticEvent = getPooledSyntheticEvent(
+      SyntheticEvent,
+      nativeEvent,
+      proxyContext,
+    );
 
-  return null;
+    syntheticEvent.type = 'select';
+    syntheticEvent.target = activeElement;
+    traverseTwoPhase(syntheticEvent, proxyContext);
+  }
 }
 
-function polyfilledEventListener(eventName, event, eventTarget) {
+function polyfilledEventListener(eventName, nativeEvent, eventTarget, proxyContext) {
   switch (eventName) {
     // Track the input node that has focus.
     case FOCUS:
@@ -131,7 +132,8 @@ function polyfilledEventListener(eventName, event, eventTarget) {
     case MOUSE_UP:
     case DRAG_END:
       mouseDown = false;
-      return constructSelectEvent(event, eventTarget);
+      constructSelectEvent(nativeEvent, eventTarget, proxyContext);
+      break;
     // Chrome and IE fire non-standard event when selection is changed (and
     // sometimes when it hasn't). IE's event fires out of order with respect
     // to key and input events on deletion, so we discard it.
@@ -148,9 +150,8 @@ function polyfilledEventListener(eventName, event, eventTarget) {
     // falls through
     case KEY_DOWN:
     case KEY_UP:
-      return constructSelectEvent(event, eventTarget);
+      constructSelectEvent(nativeEvent, eventTarget, proxyContext);
   }
-  return null;
 }
 
 const dependencies = [

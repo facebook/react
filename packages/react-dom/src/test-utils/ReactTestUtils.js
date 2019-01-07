@@ -504,6 +504,7 @@ function makeSimulator(eventType) {
       fakeNativeEvent.target = domNode;
       const eventName = (fakeNativeEvent.type = eventType.toLowerCase());
       fakeNativeEvent.simulated = true;
+      fakeNativeEvent._testUtils = true;
 
       Object.assign(fakeNativeEvent, eventData);
 

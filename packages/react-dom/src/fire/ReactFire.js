@@ -40,7 +40,7 @@ import {
   getFiberFromDomNode,
   getFiberPropsFromDomNodeInstance,
 } from './ReactFireInternal';
-import {proxyListener} from './ReactFireEvents';
+import {proxyListener} from './events/ReactFireEvents';
 
 import type {ReactNodeList} from 'shared/ReactTypes';
 import invariant from 'shared/invariant';
@@ -50,6 +50,7 @@ import {enableStableConcurrentModeAPIs} from 'shared/ReactFeatureFlags';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {HostComponent, HostText} from 'shared/ReactWorkTags';
+import lowPriorityWarning from 'shared/lowPriorityWarning';
 import {has as hasInstance} from 'shared/ReactInstanceMap';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -67,6 +68,8 @@ export type DOMContainer =
     });
 
 let topLevelUpdateWarnings;
+let warnedAboutHydrateAPI = false;
+let didWarnAboutUnstableCreatePortal = false;
 
 if (__DEV__) {
   if (
@@ -227,11 +230,20 @@ function cleanRootDOMContainer(container: DOMContainer) {
   }
 }
 
+function shouldHydrateDueToLegacyHeuristic(container) {
+  const rootElement = getReactRootElementInContainer(container);
+  return !!(
+    rootElement &&
+    rootElement.nodeType === ELEMENT_NODE &&
+    rootElement.hasAttribute(ROOT_ATTRIBUTE_NAME)
+  );
+}
+
 function legacyRenderSubtreeIntoContainer(
   parentComponent: ?React$Component<any, any>,
   children: ReactNodeList,
   domContainer: DOMContainer,
-  shouldHydrate: boolean,
+  forceHydrate: boolean,
   callback: ?Function,
 ) {
   let root = roots.get(domContainer);
@@ -247,9 +259,22 @@ function legacyRenderSubtreeIntoContainer(
   }
 
   if (root === undefined) {
+    const shouldHydrate =
+      forceHydrate || shouldHydrateDueToLegacyHeuristic(domContainer);
     // Initial mount
     if (!shouldHydrate) {
       cleanRootDOMContainer(domContainer);
+    }
+    if (__DEV__) {
+      if (shouldHydrate && !forceHydrate && !warnedAboutHydrateAPI) {
+        warnedAboutHydrateAPI = true;
+        lowPriorityWarning(
+          false,
+          'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
+            'will stop working in React v17. Replace the ReactDOM.render() call ' +
+            'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
+        );
+      }
     }
     root = new ReactRoot(domContainer, false, shouldHydrate);
     roots.set(domContainer, ((root: any): Root));
@@ -428,6 +453,21 @@ const ReactDOM: Object = {
   hydrate,
   render,
   unmountComponentAtNode,
+  // Temporary alias since we already shipped React 16 RC with it.
+  // TODO: remove in React 17.
+  unstable_createPortal(...args) {
+    if (!didWarnAboutUnstableCreatePortal) {
+      didWarnAboutUnstableCreatePortal = true;
+      lowPriorityWarning(
+        false,
+        'The ReactDOM.unstable_createPortal() alias has been deprecated, ' +
+          'and will be removed in React 17+. Update your code to use ' +
+          'ReactDOM.createPortal() instead. It has the exact same API, ' +
+          'but without the "unstable_" prefix.',
+      );
+    }
+    return createPortal(...args);
+  },
   unstable_createRoot: undefined,
   unstable_batchedUpdates: batchedUpdates,
   unstable_flushControlled: flushControlled,

@@ -12,7 +12,7 @@ import {
   normalizeEventName,
 } from './ReactFireUtils';
 import {BOOLEAN, RESERVED} from '../shared/DOMProperty';
-import {interactiveEvents, nonInteractiveEvents} from './ReactFireEventTypes';
+import {interactiveEvents, nonInteractiveEvents} from './events/ReactFireEventTypes';
 import {
   ATTRIBUTE_NAME_CHAR,
   possibleStandardNames,

@@ -1021,6 +1021,34 @@
       "packageName": "react-dom",
       "size": 1122,
       "gzip": 659
+    },
+    {
+      "filename": "ReactFire-dev.js",
+      "bundleType": "FB_WWW_DEV",
+      "packageName": "react-dom",
+      "size": 707132,
+      "gzip": 157158
+    },
+    {
+      "filename": "ReactFire-prod.js",
+      "bundleType": "FB_WWW_PROD",
+      "packageName": "react-dom",
+      "size": 297786,
+      "gzip": 54734
+    },
+    {
+      "filename": "ReactFire-profiling.js",
+      "bundleType": "FB_WWW_PROFILING",
+      "packageName": "react-dom",
+      "size": 305188,
+      "gzip": 56122
+    },
+    {
+      "filename": "react-dom-unstable-fire.production.min.js",
+      "bundleType": "UMD_PROD",
+      "packageName": "react-dom",
+      "size": 94384,
+      "gzip": 30910
     }
   ]
 }

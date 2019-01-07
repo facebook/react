@@ -14,7 +14,6 @@ let React;
 let ReactDOM;
 let ReactDOMServer;
 let ReactTestUtils;
-const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 function getTestDocument(markup) {
   const doc = document.implementation.createHTMLDocument('');
@@ -472,9 +471,7 @@ describe('ReactTestUtils', () => {
       ReactTestUtils.Simulate.keyDown(node);
 
       expect(event.type).toBe('keydown');
-      if (!ReactFeatureFlags.enableReactDOMFire) {
-        expect(event.nativeEvent.type).toBe('keydown');
-      }
+      expect(event.nativeEvent.type).toBe('keydown');
     });
 
     it('should work with renderIntoDocument', () => {

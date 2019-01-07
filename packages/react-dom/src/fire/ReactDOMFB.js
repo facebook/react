@@ -12,7 +12,7 @@ import {get as getInstance} from 'shared/ReactInstanceMap';
 import {addUserTimingListener} from 'shared/ReactFeatureFlags';
 
 import ReactDOM from './ReactFire';
-import {isEventsEnabled} from './ReactFireEvents';
+import {isEventsEnabled} from './events/ReactFireEvents';
 import {getClosestFiberFromDOMNode} from './ReactFireInternal';
 
 Object.assign(

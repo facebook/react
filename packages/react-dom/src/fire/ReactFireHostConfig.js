@@ -39,7 +39,7 @@ import {
   setEventsEnabled,
   isEventsEnabled,
   trapClickOnNonInteractiveElement,
-} from './ReactFireEvents';
+} from './events/ReactFireEvents';
 import {getSelectionInformation, restoreSelection} from './ReactFireSelection';
 import {dangerousStyleValue} from './ReactFireStyling';
 import {

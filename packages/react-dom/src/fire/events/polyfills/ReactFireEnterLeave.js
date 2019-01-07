@@ -15,14 +15,17 @@ import {
 import {
   getClosestFiberFromDOMNode,
   getDOMNodeFromFiber,
-} from '../ReactFireInternal';
+} from '../../ReactFireInternal';
 import {traverseEnterLeave} from '../ReactFireEventTraversal';
+import {getPooledSyntheticEvent} from '../synthetic/ReactFireSyntheticEvent';
+import {SyntheticPointerEvent} from '../synthetic/ReactFireSyntheticPointerEvent';
+import {SyntheticMouseEvent} from '../synthetic/ReactFireSyntheticMouseEvent';
 
-function polyfilledEventListener(eventName, event, eventTarget) {
+function polyfilledEventListener(eventName, nativeEvent, eventTarget, proxyContext) {
   const isOverEvent = eventName === MOUSE_OVER || eventName === POINTER_OVER;
   const isOutEvent = eventName === MOUSE_OUT || eventName === POINTER_OUT;
 
-  if (isOverEvent && (event.relatedTarget || event.fromElement)) {
+  if (isOverEvent && (nativeEvent.relatedTarget || nativeEvent.fromElement)) {
     return null;
   }
 
@@ -49,7 +52,7 @@ function polyfilledEventListener(eventName, event, eventTarget) {
   let to;
   if (isOutEvent) {
     from = getClosestFiberFromDOMNode(eventTarget);
-    const related = event.relatedTarget || event.toElement;
+    const related = nativeEvent.relatedTarget || nativeEvent.toElement;
     to = related ? getClosestFiberFromDOMNode(related) : null;
   } else {
     // Moving to a node from outside the window.
@@ -62,47 +65,41 @@ function polyfilledEventListener(eventName, event, eventTarget) {
     return null;
   }
 
-  const fromNode = from == null ? win : getDOMNodeFromFiber(from);
-  const toNode = to == null ? win : getDOMNodeFromFiber(to);
-  let eventTypePrefix;
+  let eventInterface, eventTypePrefix;
 
   if (eventName === MOUSE_OUT || eventName === MOUSE_OVER) {
+    eventInterface = SyntheticMouseEvent;
     eventTypePrefix = 'mouse';
-  } else if (eventName === POINTER_OUT || eventName === POINTER_OVER) {
+  } else if (
+    eventName === POINTER_OUT ||
+    eventName === POINTER_OVER
+  ) {
+    eventInterface = SyntheticPointerEvent;
     eventTypePrefix = 'pointer';
   }
-  let type;
-  let targetNode;
-  let relatedTarget;
 
-  Object.defineProperty(event, 'type', {
-    configurable: true,
-    get: () => type,
-  });
-  Object.defineProperty(event, 'target', {
-    configurable: true,
-    get: () => targetNode,
-  });
-  Object.defineProperty(event, 'relatedTarget', {
-    configurable: true,
-    get: () => relatedTarget,
-  });
+  const fromNode = from == null ? win : getDOMNodeFromFiber(from);
+  const toNode = to == null ? win : getDOMNodeFromFiber(to);
 
-  return traverseEnterLeave.bind(
-    null,
-    from,
-    to,
-    () => {
-      type = eventTypePrefix + 'leave';
-      targetNode = fromNode;
-      relatedTarget = toNode;
-    },
-    () => {
-      type = eventTypePrefix + 'enter';
-      targetNode = toNode;
-      relatedTarget = fromNode;
-    },
+  const leave = getPooledSyntheticEvent(
+    eventInterface,
+    nativeEvent,
+    proxyContext,
   );
+  leave.type = eventTypePrefix + 'leave';
+  leave.target = fromNode;
+  leave.relatedTarget = toNode;
+
+  const enter = getPooledSyntheticEvent(
+    eventInterface,
+    nativeEvent,
+    proxyContext,
+  );
+  enter.type = eventTypePrefix + 'enter';
+  enter.target = toNode;
+  enter.relatedTarget = fromNode;
+
+  traverseEnterLeave(leave, enter, from, to, proxyContext);
 }
 
 const mouseEnterLeave = [MOUSE_OUT, MOUSE_OVER];

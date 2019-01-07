@@ -7,18 +7,15 @@
  * @flow
  */
 
-import warning from 'shared/warning';
-import {HostComponent} from 'shared/ReactWorkTags';
-import {canUseDOM} from 'shared/ExecutionEnvironment';
 import {supportedInputTypes} from './ReactFireDOMConfig';
 import {
   interactiveEvents,
   mediaEventTypes,
+  normalizeKey,
   nonInteractiveEvents,
-} from './ReactFireEventTypes';
-import {polyfilledEvents} from './polyfills/ReactFirePolyfilledEvents';
-import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
-
+  translateToKey,
+} from './events/ReactFireEventTypes';
+import {polyfilledEvents} from './events/ReactFirePolyfilledEvents';
 import {
   COMMENT_NODE,
   DOCUMENT_FRAGMENT_NODE,
@@ -29,6 +26,12 @@ import {
   SVG_NAMESPACE,
   TEXT_NODE,
 } from './ReactFireDOMConfig';
+
+import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
+import warning from 'shared/warning';
+import {HostComponent} from 'shared/ReactWorkTags';
+import {canUseDOM} from 'shared/ExecutionEnvironment';
+import type {AnyNativeEvent} from 'events/PluginModuleType';
 
 let warnedUnknownTags;
 
@@ -535,4 +538,68 @@ export function getEventCharCode(event: Event): number {
   }
 
   return 0;
+}
+
+/**
+ * Translation from modifier key to the associated property in the event.
+ * @see http://www.w3.org/TR/DOM-Level-3-Events/#keys-Modifiers
+ */
+
+const modifierKeyToProp = {
+  Alt: 'altKey',
+  Control: 'ctrlKey',
+  Meta: 'metaKey',
+  Shift: 'shiftKey',
+};
+
+// Older browsers (Safari <= 10, iOS Safari <= 10.2) do not support
+// getModifierState. If getModifierState is not supported, we map it to a set of
+// modifier keys exposed by the event. In this case, Lock-keys are not supported.
+function modifierStateGetter(keyArg: string): boolean {
+  const syntheticEvent = this;
+  const nativeEvent = syntheticEvent.nativeEvent;
+  if (nativeEvent.getModifierState) {
+    return nativeEvent.getModifierState(keyArg);
+  }
+  const keyProp = modifierKeyToProp[keyArg];
+  return keyProp ? !!nativeEvent[keyProp] : false;
+}
+
+export function getEventModifierState(
+  nativeEvent: AnyNativeEvent,
+): (keyArg: string) => boolean {
+  return modifierStateGetter;
+}
+
+/**
+ * @param {object} nativeEvent Native browser event.
+ * @return {string} Normalized `key` property.
+ */
+export function getEventKey(nativeEvent: KeyboardEvent): string {
+  if (nativeEvent.key) {
+    // Normalize inconsistent values reported by browsers due to
+    // implementations of a working draft specification.
+
+    // FireFox implements `key` but returns `MozPrintableKey` for all
+    // printable characters (normalized to `Unidentified`), ignore it.
+    const key = normalizeKey[nativeEvent.key] || nativeEvent.key;
+    if (key !== 'Unidentified') {
+      return key;
+    }
+  }
+
+  // Browser does not implement `key`, polyfill as much of it as we can.
+  if (nativeEvent.type === 'keypress') {
+    const charCode = getEventCharCode(nativeEvent);
+
+    // The enter-key is technically both printable and non-printable and can
+    // thus be captured by `keypress`, no other non-printable key should.
+    return charCode === 13 ? 'Enter' : String.fromCharCode(charCode);
+  }
+  if (nativeEvent.type === 'keydown' || nativeEvent.type === 'keyup') {
+    // While user keyboard layout determines the actual meaning of each
+    // `keyCode` value, almost all function keys have a universal value.
+    return translateToKey[nativeEvent.keyCode] || 'Unidentified';
+  }
+  return '';
 }

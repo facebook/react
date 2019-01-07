@@ -8,7 +8,7 @@
  */
 
 import {createElement, isCustomComponent} from './ReactFireUtils';
-import {mediaEventTypesArr} from './ReactFireEventTypes';
+import {mediaEventTypesArr} from './events/ReactFireEventTypes';
 import {
   applyHostComponentInputMountWrapper,
   updateWrapper as applyHostComponentInputUpdateWrapper,
@@ -37,7 +37,7 @@ import {
   ensureListeningTo,
   trapBubbledEvent,
   trapClickOnNonInteractiveElement,
-} from './ReactFireEvents';
+} from './events/ReactFireEvents';
 import {track} from './controlled/ReactFireValueTracking';
 import {
   validateARIAProperties,
@@ -62,7 +62,7 @@ import {
   RESET,
   SUBMIT,
   TOGGLE,
-} from './ReactFireEventTypes';
+} from './events/ReactFireEventTypes';
 
 import warning from 'shared/warning';
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';

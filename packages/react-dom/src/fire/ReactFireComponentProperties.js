@@ -22,7 +22,7 @@ import {
   createDangerousStringForStyles,
   possibleStandardNames,
 } from './ReactFireDevOnly';
-import {ensureListeningTo, setEventProp} from './ReactFireEvents';
+import {ensureListeningTo, setEventProp} from './events/ReactFireEvents';
 import {setValueForStyles} from './ReactFireStyling';
 import {
   assertValidProps,

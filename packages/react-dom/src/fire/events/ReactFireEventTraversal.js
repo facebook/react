@@ -10,10 +10,11 @@
 import {
   getClosestFiberFromDOMNode,
   getDOMNodeFromFiber,
-} from './ReactFireInternal';
-import {getDomNodeEventsMap, startEventPropagation} from './ReactFireEvents';
+} from '../ReactFireInternal';
+import {getDomNodeEventsMap} from './ReactFireEvents';
 import {CLICK, DOUBLE_CLICK} from './ReactFireEventTypes';
 import type {EventData, ProxyContext} from './ReactFireEvents';
+import {SyntheticEvent} from './synthetic/ReactFireSyntheticEvent';
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import {HostComponent, HostRoot} from 'shared/ReactWorkTags';
@@ -58,26 +59,26 @@ function findRootContainerNode(fiber: Fiber): Element | Node | null {
 }
 
 function triggerEventHandler(
+  syntheticEvent: SyntheticEvent,
   domNode: Element | Node,
   domNodeEventsMap: Map<string, EventData>,
   eventName: string,
-  proxyContext: ProxyContext,
-  event: Event,
 ) {
   const eventListener = domNodeEventsMap.get(eventName);
   if (eventListener === undefined || eventListener.handler === null) {
     return;
   }
-  proxyContext.currentTarget = domNode;
+  syntheticEvent.currentTarget = domNode;
   invokeGuardedCallbackAndCatchFirstError(
     eventName,
     eventListener.handler,
     undefined,
-    event,
+    syntheticEvent,
   );
 }
 
 function dispatchEventHandler(
+  syntheticEvent: SyntheticEvent,
   fiber: Fiber,
   capturePhase: boolean,
   proxyContext: ProxyContext,
@@ -98,15 +99,14 @@ function dispatchEventHandler(
     return;
   }
   const domNodeEventsMap = getDomNodeEventsMap(domNode);
-  const {event, eventName} = proxyContext;
+  const {eventName} = proxyContext;
   triggerEventHandler(
+    syntheticEvent,
     domNode,
     domNodeEventsMap,
     capturePhase ? `${eventName}-capture` : eventName,
-    proxyContext,
-    event,
   );
-  if ((event: any).isPropagationStopped()) {
+  if (syntheticEvent.isPropagationStopped()) {
     return true;
   }
 }
@@ -134,7 +134,10 @@ export function getEventTargetAncestorFibers(
   return ancestors;
 }
 
-export function traverseTwoPhase(proxyContext: ProxyContext) {
+export function traverseTwoPhase(
+  syntheticEvent: SyntheticEvent,
+  proxyContext: ProxyContext,
+) {
   let {fiber} = proxyContext;
   let i;
   let stopped;
@@ -143,20 +146,25 @@ export function traverseTwoPhase(proxyContext: ProxyContext) {
     path.push(fiber);
     fiber = getParent(fiber);
   }
-  startEventPropagation(proxyContext);
 
   for (i = path.length; i-- > 0; ) {
-    stopped = dispatchEventHandler(path[i], true, proxyContext);
+    stopped = dispatchEventHandler(syntheticEvent, path[i], true, proxyContext);
     if (stopped) {
       return;
     }
   }
   for (i = 0; i < path.length; i++) {
-    stopped = dispatchEventHandler(path[i], false, proxyContext);
+    stopped = dispatchEventHandler(
+      syntheticEvent,
+      path[i],
+      false,
+      proxyContext,
+    );
     if (stopped) {
       return;
     }
   }
+  releaseSyntheticEvent(syntheticEvent);
 }
 
 /**
@@ -213,10 +221,10 @@ export function getLowestCommonAncestor(
  * "entered" or "left" that element.
  */
 export function traverseEnterLeave(
+  fromSyntheticEvent: SyntheticEvent,
+  toSyntheticEvent: SyntheticEvent,
   from: Fiber,
   to: Fiber,
-  mutateEventForFromPath: () => void,
-  mutateEventForToPath: () => void,
   proxyContext: ProxyContext,
 ): void {
   let currentFrom = from;
@@ -255,15 +263,20 @@ export function traverseEnterLeave(
     pathTo.push(currentTo);
     currentTo = getParent(currentTo);
   }
-  startEventPropagation(proxyContext);
-  mutateEventForFromPath();
   proxyContext.eventName = `onMouseLeave-polyfill`;
   for (let i = 0; i < pathFrom.length; i++) {
-    dispatchEventHandler(pathFrom[i], false, proxyContext);
+    dispatchEventHandler(fromSyntheticEvent, pathFrom[i], false, proxyContext);
   }
-  mutateEventForToPath();
   proxyContext.eventName = `onMouseEnter-polyfill`;
   for (let i = pathTo.length; i-- > 0; ) {
-    dispatchEventHandler(pathTo[i], false, proxyContext);
+    dispatchEventHandler(toSyntheticEvent, pathTo[i], false, proxyContext);
+  }
+  releaseSyntheticEvent(fromSyntheticEvent);
+  releaseSyntheticEvent(toSyntheticEvent);
+}
+
+function releaseSyntheticEvent(syntheticEvent: SyntheticEvent) {
+  if (!syntheticEvent.isPersistent()) {
+    syntheticEvent.constructor.release(syntheticEvent);
   }
 }

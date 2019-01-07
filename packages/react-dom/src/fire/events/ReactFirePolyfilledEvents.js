@@ -7,20 +7,20 @@
  * @flow
  */
 
-import {onChangeHeuristics} from './ReactFireOnChange';
+import {onChangeHeuristics} from './polyfills/ReactFireOnChange';
 import {
   onBeforeInputHeuristics,
   onCompositionEndHeuristics,
   onCompositionStartHeuristics,
   onCompositionUpdateHeuristics,
-} from './ReactFireOnBeforeInput';
-import {onSelectInputHeuristics} from './ReactFireOnSelect';
+} from './polyfills/ReactFireOnBeforeInput';
+import {onSelectInputHeuristics} from './polyfills/ReactFireOnSelect';
 import {
   onMouseEnterLeaveHeuristics,
   onPointerEnterLeaveHeuristics,
-} from './ReactFireEnterLeave';
-import {getDomNodeEventsMap, listenTo} from '../ReactFireEvents';
-import type {ProxyContext} from '../ReactFireEvents';
+} from './polyfills/ReactFireEnterLeave';
+import {getDomNodeEventsMap, listenTo} from './ReactFireEvents';
+import type {ProxyContext} from './ReactFireEvents';
 
 export const polyfilledEvents = {
   onChange: onChangeHeuristics,
@@ -63,11 +63,12 @@ export function listenToPolyfilledEvent(
 }
 
 export function dispatchPolyfills(
+  nativeEvent: Event,
+  eventName: string,
   containerDomNode: Element | Document,
   eventTarget: Node | Element | Document | void | null,
   proxyContext: ProxyContext,
 ) {
-  const {event, eventName} = proxyContext;
   const domNodeEventsMap = getDomNodeEventsMap(containerDomNode);
   const eventData = domNodeEventsMap.get(eventName);
   const processedPolyfills = new Set();
@@ -80,16 +81,13 @@ export function dispatchPolyfills(
         continue;
       }
       processedPolyfills.add(polyfilledEventHandler);
-      const dispatchMechanism = polyfilledEventHandler(
-        eventName,
-        event,
-        eventTarget,
-      );
-      if (dispatchMechanism === null) {
-        continue;
-      }
       proxyContext.eventName = polyfilledEventName;
-      dispatchMechanism(proxyContext);
+      polyfilledEventHandler(
+        eventName,
+        nativeEvent,
+        eventTarget,
+        proxyContext,
+      );
     }
   }
 }

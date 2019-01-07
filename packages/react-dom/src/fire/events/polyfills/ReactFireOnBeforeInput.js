@@ -19,6 +19,9 @@ import {
   PASTE,
 } from '../ReactFireEventTypes';
 import {traverseTwoPhase} from '../ReactFireEventTraversal';
+import {SyntheticInputEvent} from '../synthetic/ReactFireSyntheticInputEvent';
+import {getPooledSyntheticEvent} from '../synthetic/ReactFireSyntheticEvent';
+import {SyntheticCompositionEvent} from '../synthetic/ReactFireSyntheticCompositionEvent';
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 
@@ -314,17 +317,22 @@ function getCompositionEventType(eventName) {
   }
 }
 
-function extractCompositionEvent(eventName, event, eventTarget) {
+function extractCompositionEvent(
+  eventName,
+  nativeEvent,
+  eventTarget,
+  proxyContext,
+) {
   let eventType;
   let fallbackData;
 
   if (canUseCompositionEvent) {
     eventType = getCompositionEventType(eventName);
   } else if (!isComposing) {
-    if (isFallbackCompositionStart(eventName, event)) {
+    if (isFallbackCompositionStart(eventName, nativeEvent)) {
       eventType = COMPOSITION_START;
     }
-  } else if (isFallbackCompositionEnd(eventName, event)) {
+  } else if (isFallbackCompositionEnd(eventName, nativeEvent)) {
     eventType = COMPOSITION_END;
   }
 
@@ -332,7 +340,7 @@ function extractCompositionEvent(eventName, event, eventTarget) {
     return null;
   }
 
-  if (useFallbackCompositionData && !isUsingKoreanIME(event)) {
+  if (useFallbackCompositionData && !isUsingKoreanIME(nativeEvent)) {
     // The current composition is stored statically and must not be
     // overwritten while composition continues.
     if (!isComposing && eventType === COMPOSITION_START) {
@@ -344,46 +352,45 @@ function extractCompositionEvent(eventName, event, eventTarget) {
     }
   }
 
+  const syntheticEvent = getPooledSyntheticEvent(
+    SyntheticCompositionEvent,
+    nativeEvent,
+    proxyContext,
+  );
+
   if (fallbackData) {
     // Inject data generated from fallback path into the synthetic event.
     // This matches the property of native CompositionEventInterface.
-    Object.defineProperty(event, 'data', {
-      value: fallbackData,
-    });
+    syntheticEvent.data = fallbackData;
   } else {
-    const customData = getDataFromCustomEvent(event);
+    const customData = getDataFromCustomEvent(nativeEvent);
     if (customData !== null) {
-      Object.defineProperty(event, 'data', {
-        value: customData,
-      });
+      syntheticEvent.data = customData;
     }
   }
-
-  return processContext => {
-    if (processContext.eventName === `onBeforeInput-polyfill`) {
-      if (eventName === COMPOSITION_END) {
-        processContext.eventName = `onCompositionEnd-polyfill`;
-      } else if (eventName === COMPOSITION_UPDATE) {
-        processContext.eventName = `onCompositionUpdate-polyfill`;
-      } else if (eventName === COMPOSITION_START) {
-        processContext.eventName = `onCompositionStart-polyfill`;
-      }
+  if (proxyContext.eventName === `onBeforeInput-polyfill`) {
+    if (eventName === COMPOSITION_END) {
+      proxyContext.eventName = `onCompositionEnd-polyfill`;
+    } else if (eventName === COMPOSITION_UPDATE) {
+      proxyContext.eventName = `onCompositionUpdate-polyfill`;
+    } else if (eventName === COMPOSITION_START) {
+      proxyContext.eventName = `onCompositionStart-polyfill`;
     }
-    return traverseTwoPhase(processContext);
-  };
+  }
+  return syntheticEvent;
 }
 
 /**
  * Extract a SyntheticInputEvent for `beforeInput`, based on either native
  * `textInput` or fallback behavior.
  */
-function extractBeforeInputEvent(eventName, event) {
+function extractBeforeInputEvent(eventName, nativeEvent, proxyContext): void {
   let chars;
 
   if (canUseTextInputEvent) {
-    chars = getNativeBeforeInputChars(eventName, event);
+    chars = getNativeBeforeInputChars(eventName, nativeEvent);
   } else {
-    chars = getFallbackBeforeInputChars(eventName, event);
+    chars = getFallbackBeforeInputChars(eventName, nativeEvent);
   }
 
   // If no characters are being inserted, no BeforeInput event should
@@ -392,14 +399,15 @@ function extractBeforeInputEvent(eventName, event) {
     return null;
   }
 
-  Object.defineProperty(event, 'data', {
-    value: chars,
-  });
+  const syntheticEvent = getPooledSyntheticEvent(
+    SyntheticInputEvent,
+    nativeEvent,
+    proxyContext,
+  );
+  syntheticEvent.data = chars;
 
-  return processContext => {
-    processContext.eventName = `onBeforeInput-polyfill`;
-    return traverseTwoPhase(processContext);
-  };
+  proxyContext.eventName = `onBeforeInput-polyfill`;
+  return syntheticEvent;
 }
 
 /**
@@ -420,17 +428,38 @@ function extractBeforeInputEvent(eventName, event) {
  * allowing us to share composition fallback code for both `beforeInput` and
  * `composition` event types.
  */
-function polyfilledEventListener(eventName, event, eventTarget) {
-  const composition = extractCompositionEvent(eventName, event, eventTarget);
-  const beforeInput = extractBeforeInputEvent(eventName, event);
+function polyfilledEventListener(
+  eventName,
+  nativeEvent,
+  eventTarget,
+  proxyContext,
+) {
+  const composition = extractCompositionEvent(
+    eventName,
+    nativeEvent,
+    eventTarget,
+    proxyContext,
+  );
+  const beforeInput = extractBeforeInputEvent(
+    eventName,
+    nativeEvent,
+    proxyContext,
+  );
+  let inputToUse = null;
 
   if (composition === null) {
-    return beforeInput;
+    inputToUse = beforeInput;
   }
   if (beforeInput === null) {
-    return composition;
+    inputToUse = composition;
   }
-  return beforeInput;
+  if (inputToUse === null) {
+    inputToUse = beforeInput;
+  }
+  if (inputToUse !== null) {
+    traverseTwoPhase(inputToUse, proxyContext);
+  }
+  return inputToUse;
 }
 
 const onCompositionUpdateDependencies = [

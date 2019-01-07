@@ -10,58 +10,44 @@
 import {
   addEventBubbleListener,
   addEventCaptureListener,
-} from '../events/EventListener';
+} from '../../events/EventListener';
 import {
-  getEventCharCode,
   getEventTarget,
   isEventSupported,
   normalizeEventName,
-} from './ReactFireUtils';
-import {DOCUMENT_FRAGMENT_NODE, DOCUMENT_NODE} from './ReactFireDOMConfig';
-import {
-  mediaEventTypes,
-  interactiveEvents,
-  nonInteractiveEvents,
-  KEY_DOWN,
-  KEY_UP,
-} from './ReactFireEventTypes';
-import {batchedUpdates, interactiveUpdates} from './ReactFireBatching';
+} from '../ReactFireUtils';
+import {DOCUMENT_FRAGMENT_NODE, DOCUMENT_NODE} from '../ReactFireDOMConfig';
+import {mediaEventTypes, interactiveEvents} from './ReactFireEventTypes';
+import {batchedUpdates, interactiveUpdates} from '../ReactFireBatching';
 import {
   getClosestFiberFromDOMNode,
   getDOMNodeFromFiber,
-} from './ReactFireInternal';
+} from '../ReactFireInternal';
 import {
   dispatchPolyfills,
   listenToPolyfilledEvent,
   polyfilledEvents,
-} from './polyfills/ReactFirePolyfilledEvents';
+} from './ReactFirePolyfilledEvents';
 import {
   BLUR,
   CANCEL,
-  CLICK,
   CLOSE,
   ERROR,
   FOCUS,
   INVALID,
-  KEY_PRESS,
   LOAD,
   RESET,
   SCROLL,
   SUBMIT,
-  normalizeKey,
-  translateToKey,
 } from './ReactFireEventTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import {isFiberMounted} from 'react-reconciler/reflection';
-import {
-  getEventTargetAncestorFibers,
-  traverseTwoPhase,
-} from './ReactFireEventTraversal';
+import {getEventTargetAncestorFibers} from './ReactFireEventTraversal';
+import {dispatchSimpleEvent} from './ReactFireSimpleEvents';
 
 export type ProxyContext = {
   ancestors: Array<Fiber>,
   containerDomNode: Element | Document,
-  currentTarget: Element | null | Node,
   defaultPrevented: false,
   event: Event,
   eventName: string,
@@ -78,9 +64,6 @@ const topLevelDomNodeEvents: WeakMap<
   Document | Element | Node,
   Map<string, EventData>,
 > = new WeakMap();
-
-const returnsFalse = () => false;
-export const returnsTrue = () => true;
 
 // TODO: can we stop exporting these?
 let eventsEnabled = true;
@@ -246,7 +229,7 @@ function proxyInteractiveListener(
 
 function createProxyContext(
   containerDomNode: Document | Element,
-  event: Event,
+  nativeEvent: Event,
   eventName: string,
   eventTarget: Element | Node | Document | null | void,
   ancestors: Array<Fiber>,
@@ -254,43 +237,25 @@ function createProxyContext(
   return {
     ancestors,
     containerDomNode,
-    currentTarget: null,
     defaultPrevented: false,
-    event,
     eventName,
     eventTarget,
     fiber: null,
+    nativeEvent,
   };
 }
 
-function dispatchSimpleEvent(eventName, proxyContext) {
-  if (
-    !nonInteractiveEvents.has(eventName) &&
-    !interactiveEvents.has(eventName) &&
-    !mediaEventTypes.has(eventName)
-  ) {
-    return null;
-  }
-  const event = proxyContext.event;
-  if (eventName === KEY_PRESS) {
-    if (getEventCharCode(event) === 0) {
-      return null;
-    }
-  } else if (eventName === CLICK) {
-    // Firefox creates a click event on right mouse clicks. This removes the
-    // unwanted click events.
-    if ((event: any).button === 2) {
-      return null;
-    }
-  }
-  traverseTwoPhase(proxyContext);
-}
-
 function dispatchEvent(proxyContext: ProxyContext) {
-  const {ancestors, containerDomNode, eventName, eventTarget} = proxyContext;
+  const {ancestors, containerDomNode, eventName, eventTarget, nativeEvent} = proxyContext;
   if (ancestors.length === 0) {
     if (eventName === 'mouseout') {
-      dispatchPolyfills(containerDomNode, eventTarget, proxyContext);
+      dispatchPolyfills(
+        nativeEvent,
+        eventName,
+        containerDomNode,
+        eventTarget,
+        proxyContext,
+      );
     }
     return;
   }
@@ -298,27 +263,29 @@ function dispatchEvent(proxyContext: ProxyContext) {
     const ancestor = ancestors[x];
     const targetDomNode = getDOMNodeFromFiber(ancestor);
     proxyContext.fiber = ancestor;
-    dispatchSimpleEvent(eventName, proxyContext);
+    dispatchSimpleEvent(eventName, nativeEvent, proxyContext);
     // Then dispatch all polyfilled events (onChange, onBeforeInput etc).
     // Each polyfilled event has as its own event handler that provides the
     // dispatch mechanism to use.
-    dispatchPolyfills(containerDomNode, targetDomNode, proxyContext);
+    dispatchPolyfills(
+      nativeEvent,
+      eventName,
+      containerDomNode,
+      targetDomNode,
+      proxyContext,
+    );
   }
-}
-
-export function startEventPropagation(proxtContent: ProxyContext) {
-  (proxtContent.event: any).isPropagationStopped = returnsFalse;
 }
 
 export function proxyListener(
   eventName: string,
   containerDomNode: Element | Document,
-  event: Event,
+  nativeEvent: Event,
 ) {
   if (!eventsEnabled) {
     return;
   }
-  const eventTarget = getEventTarget(event);
+  const eventTarget = getEventTarget(nativeEvent);
   let targetFiber = getClosestFiberFromDOMNode(eventTarget);
 
   if (
@@ -335,86 +302,13 @@ export function proxyListener(
   const ancestors = getEventTargetAncestorFibers(targetFiber);
   const proxyContext = createProxyContext(
     containerDomNode,
-    event,
+    nativeEvent,
     eventName,
     eventTarget,
     ancestors,
   );
 
-  monkeyPatchNativeEvent(eventName, event, proxyContext);
   batchedUpdates(dispatchEvent, proxyContext);
-}
-
-function monkeyPathNativeKeyboardEvent(eventName: string, event: Event) {
-  const originalKey = (event: any).key;
-  // $FlowFixMe: Flow complains we do not have value, we don't need it
-  Object.defineProperty(event, 'key', {
-    configurable: true,
-    get() {
-      if (originalKey) {
-        // Normalize inconsistent values reported by browsers due to
-        // implementations of a working draft specification.
-
-        // FireFox implements `key` but returns `MozPrintableKey` for all
-        // printable characters (normalized to `Unidentified`), ignore it.
-        const key = normalizeKey[originalKey] || originalKey;
-        if (key !== 'Unidentified') {
-          return key;
-        }
-      }
-      // Browser does not implement `key`, polyfill as much of it as we can.
-      if (eventName === KEY_PRESS) {
-        const charCode = getEventCharCode(event);
-
-        // The enter-key is technically both printable and non-printable and can
-        // thus be captured by `keypress`, no other non-printable key should.
-        return charCode === 13 ? 'Enter' : String.fromCharCode(charCode);
-      }
-      if (eventName === KEY_DOWN || eventName === KEY_UP) {
-        // While user keyboard layout determines the actual meaning of each
-        // `keyCode` value, almost all function keys have a universal value.
-        return translateToKey[(event: any).keyCode] || 'Unidentified';
-      }
-      return '';
-    },
-  });
-}
-
-function monkeyPatchNativeEvent(
-  eventName: string,
-  event: Event,
-  proxyContext: ProxyContext,
-) {
-  const nativeStopPropagation = event.stopPropagation;
-  (event: any).stopPropagation = () => {
-    (event: any).isPropagationStopped = returnsTrue;
-    nativeStopPropagation.call(event);
-  };
-  const nativePreventDefault = event.preventDefault;
-  (event: any).preventDefault = () => {
-    (event: any).isDefaultPrevented = returnsTrue;
-    nativePreventDefault.call(event);
-  };
-  // $FlowFixMe: Flow complains we do not have value, we don't need it
-  Object.defineProperty(event, 'currentTarget', {
-    configurable: true,
-    get() {
-      return proxyContext.currentTarget;
-    },
-  });
-  (event: any).isDefaultPrevented = () => {
-    return event.defaultPrevented || false;
-  };
-  (event: any).isDefaultPrevented = returnsFalse;
-  (event: any).persist = noop;
-  (event: any).nativeEvent = event;
-  if (
-    eventName === KEY_PRESS ||
-    eventName === KEY_DOWN ||
-    eventName === KEY_UP
-  ) {
-    monkeyPathNativeKeyboardEvent(eventName, event);
-  }
 }
 
 function noop() {}

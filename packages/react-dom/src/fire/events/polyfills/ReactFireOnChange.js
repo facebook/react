@@ -7,11 +7,12 @@
  * @flow
  */
 
-import {updateValueIfChanged} from '../controlled/ReactFireValueTracking';
-import {enqueueStateRestore} from '../controlled/ReactFireControlledState';
-import {isTextInputElement} from '../ReactFireUtils';
+import {updateValueIfChanged} from '../../controlled/ReactFireValueTracking';
+import {enqueueStateRestore} from '../../controlled/ReactFireControlledState';
+import {isTextInputElement} from '../../ReactFireUtils';
 import {traverseTwoPhase} from '../ReactFireEventTraversal';
-
+import type {ProxyContext} from '../ReactFireEvents';
+import {getPooledSyntheticEvent, SyntheticEvent} from '../synthetic/ReactFireSyntheticEvent';
 import {
   BLUR,
   CHANGE,
@@ -51,14 +52,15 @@ function shouldUseClickEvent(elem: Node) {
 
 function polyfilledEventListener(
   eventName: string,
-  event: Event,
+  nativeEvent: Event,
   eventTarget: Node,
-) {
+  proxyContext: ProxyContext,
+): void {
   let shouldFireUserEvent = false;
 
   if (
     !updateValueIfChanged(((eventTarget: any): HTMLInputElement)) &&
-    (event: any).simulated === undefined
+    (nativeEvent: any).simulated === undefined
   ) {
     return null;
   }
@@ -74,10 +76,13 @@ function polyfilledEventListener(
     return null;
   }
   enqueueStateRestore(eventTarget);
-  Object.defineProperty(event, 'type', {
-    value: CHANGE,
-  });
-  return traverseTwoPhase;
+  const syntheticEvent = getPooledSyntheticEvent(
+    SyntheticEvent,
+    nativeEvent,
+    proxyContext,
+  );
+  syntheticEvent.type = 'change';
+  traverseTwoPhase(syntheticEvent, proxyContext);
 }
 
 const dependencies = [INPUT, CHANGE, BLUR, FOCUS, CLICK, KEY_DOWN, KEY_UP];

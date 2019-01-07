@@ -12,7 +12,6 @@
 const React = require('react');
 const ReactDOM = require('react-dom');
 const PropTypes = require('prop-types');
-const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 describe('ReactDOMFiber', () => {
   let container;
@@ -248,32 +247,30 @@ describe('ReactDOMFiber', () => {
   });
 
   // TODO: remove in React 17
-  if (!ReactFeatureFlags.enableReactDOMFire) {
-    it('should support unstable_createPortal alias', () => {
-      const portalContainer = document.createElement('div');
+  it('should support unstable_createPortal alias', () => {
+    const portalContainer = document.createElement('div');
 
-      expect(() =>
-        ReactDOM.render(
-          <div>
-            {ReactDOM.unstable_createPortal(<div>portal</div>, portalContainer)}
-          </div>,
-          container,
-        ),
-      ).toLowPriorityWarnDev(
-        'The ReactDOM.unstable_createPortal() alias has been deprecated, ' +
-          'and will be removed in React 17+. Update your code to use ' +
-          'ReactDOM.createPortal() instead. It has the exact same API, ' +
-          'but without the "unstable_" prefix.',
-        {withoutStack: true},
-      );
-      expect(portalContainer.innerHTML).toBe('<div>portal</div>');
-      expect(container.innerHTML).toBe('<div></div>');
+    expect(() =>
+      ReactDOM.render(
+        <div>
+          {ReactDOM.unstable_createPortal(<div>portal</div>, portalContainer)}
+        </div>,
+        container,
+      ),
+    ).toLowPriorityWarnDev(
+      'The ReactDOM.unstable_createPortal() alias has been deprecated, ' +
+        'and will be removed in React 17+. Update your code to use ' +
+        'ReactDOM.createPortal() instead. It has the exact same API, ' +
+        'but without the "unstable_" prefix.',
+      {withoutStack: true},
+    );
+    expect(portalContainer.innerHTML).toBe('<div>portal</div>');
+    expect(container.innerHTML).toBe('<div></div>');
 
-      ReactDOM.unmountComponentAtNode(container);
-      expect(portalContainer.innerHTML).toBe('');
-      expect(container.innerHTML).toBe('');
-    });
-  }
+    ReactDOM.unmountComponentAtNode(container);
+    expect(portalContainer.innerHTML).toBe('');
+    expect(container.innerHTML).toBe('');
+  });
 
   it('should render many portals', () => {
     const portalContainer1 = document.createElement('div');
