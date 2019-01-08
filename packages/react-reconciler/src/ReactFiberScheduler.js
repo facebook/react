@@ -171,7 +171,7 @@ export type Thenable = {
   then(resolve: () => mixed, reject?: () => mixed): mixed,
 };
 
-const {ReactCurrentOwner} = ReactSharedInternals;
+const {ReactCurrentDispatcher, ReactCurrentOwner} = ReactSharedInternals;
 
 let didWarnAboutStateTransition;
 let didWarnSetStateChildContext;
@@ -1209,9 +1209,9 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
 
   isWorking = true;
   if (enableHooks) {
-    ReactCurrentOwner.currentDispatcher = Dispatcher;
+    ReactCurrentDispatcher.current = Dispatcher;
   } else {
-    ReactCurrentOwner.currentDispatcher = DispatcherWithoutHooks;
+    ReactCurrentDispatcher.current = DispatcherWithoutHooks;
   }
 
   const expirationTime = root.nextExpirationTimeToWorkOn;
@@ -1373,7 +1373,7 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
 
   // We're done performing work. Time to clean up.
   isWorking = false;
-  ReactCurrentOwner.currentDispatcher = null;
+  ReactCurrentDispatcher.current = null;
   resetContextDependences();
   resetHooks();
 

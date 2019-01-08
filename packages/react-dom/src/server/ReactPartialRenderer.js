@@ -87,7 +87,7 @@ const toArray = ((React.Children.toArray: any): toArrayType);
 // Each stack is an array of frames which may contain nested stacks of elements.
 let currentDebugStacks = [];
 
-let ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+let ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 let ReactDebugCurrentFrame;
 let prevGetCurrentStackImpl = null;
 let getCurrentServerStackImpl = () => '';
@@ -785,11 +785,11 @@ class ReactDOMServerRenderer {
 
     const prevThreadID = currentThreadID;
     setCurrentThreadID(this.threadID);
-    const prevDispatcher = ReactCurrentOwner.currentDispatcher;
+    const prevDispatcher = ReactCurrentDispatcher.current;
     if (enableHooks) {
-      ReactCurrentOwner.currentDispatcher = Dispatcher;
+      ReactCurrentDispatcher.current = Dispatcher;
     } else {
-      ReactCurrentOwner.currentDispatcher = DispatcherWithoutHooks;
+      ReactCurrentDispatcher.current = DispatcherWithoutHooks;
     }
     try {
       // Markup generated within <Suspense> ends up buffered until we know
@@ -870,7 +870,7 @@ class ReactDOMServerRenderer {
       }
       return out[0];
     } finally {
-      ReactCurrentOwner.currentDispatcher = prevDispatcher;
+      ReactCurrentDispatcher.current = prevDispatcher;
       setCurrentThreadID(prevThreadID);
     }
   }

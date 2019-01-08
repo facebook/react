@@ -13,7 +13,7 @@
 let React;
 let ReactDOMServer;
 let PropTypes;
-let ReactCurrentOwner;
+let ReactCurrentDispatcher;
 
 function normalizeCodeLocInfo(str) {
   return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
@@ -25,9 +25,9 @@ describe('ReactDOMServer', () => {
     React = require('react');
     PropTypes = require('prop-types');
     ReactDOMServer = require('react-dom/server');
-    ReactCurrentOwner =
+    ReactCurrentDispatcher =
       React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-        .ReactCurrentOwner;
+        .ReactCurrentDispatcher;
   });
 
   describe('renderToString', () => {
@@ -439,7 +439,7 @@ describe('ReactDOMServer', () => {
       const Context = React.createContext(0);
 
       function readContext(context) {
-        return ReactCurrentOwner.currentDispatcher.readContext(context);
+        return ReactCurrentDispatcher.current.readContext(context);
       }
 
       function Consumer(props) {
