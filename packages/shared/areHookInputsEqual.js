@@ -8,6 +8,7 @@
  */
 
 import warning from 'shared/warning';
+import is from './objectIs';
 
 export default function areHookInputsEqual(arr1: any[], arr2: any[]) {
   // Don't bother comparing lengths in prod because these arrays should be
@@ -24,14 +25,7 @@ export default function areHookInputsEqual(arr1: any[], arr2: any[]) {
     );
   }
   for (let i = 0; i < arr1.length; i++) {
-    // Inlined Object.is polyfill.
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is
-    const val1 = arr1[i];
-    const val2 = arr2[i];
-    if (
-      (val1 === val2 && (val1 !== 0 || 1 / val1 === 1 / (val2: any))) ||
-      (val1 !== val1 && val2 !== val2) // eslint-disable-line no-self-compare
-    ) {
+    if (is(arr1[i], arr2[i])) {
       continue;
     }
     return false;
