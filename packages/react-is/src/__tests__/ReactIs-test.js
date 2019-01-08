@@ -150,17 +150,17 @@ describe('ReactIs', () => {
 
   it('should identify memo', () => {
     const Component = () => React.createElement('div');
-    const memoized = React.memo(Component);
-    expect(ReactIs.typeOf(memoized)).toBe(ReactIs.Memo);
-    expect(ReactIs.isMemo(memoized)).toBe(true);
+    const Memoized = React.memo(Component);
+    expect(ReactIs.typeOf(<Memoized />)).toBe(ReactIs.Memo);
+    expect(ReactIs.isMemo(<Memoized />)).toBe(true);
     expect(ReactIs.isMemo(Component)).toBe(false);
   });
 
   it('should identify lazy', () => {
     const Component = () => React.createElement('div');
-    const lazyComponent = React.lazy(() => Component);
-    expect(ReactIs.typeOf(lazyComponent)).toBe(ReactIs.Lazy);
-    expect(ReactIs.isLazy(lazyComponent)).toBe(true);
+    const LazyComponent = React.lazy(() => Component);
+    expect(ReactIs.typeOf(<LazyComponent />)).toBe(ReactIs.Lazy);
+    expect(ReactIs.isLazy(<LazyComponent />)).toBe(true);
     expect(ReactIs.isLazy(Component)).toBe(false);
   });
 
