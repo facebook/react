@@ -11,10 +11,10 @@ import type {ReactContext} from 'shared/ReactTypes';
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 
-import ReactCurrentOwner from './ReactCurrentOwner';
+import ReactCurrentDispatcher from './ReactCurrentDispatcher';
 
 function resolveDispatcher() {
-  const dispatcher = ReactCurrentOwner.currentDispatcher;
+  const dispatcher = ReactCurrentDispatcher.current;
   invariant(
     dispatcher !== null,
     'Hooks can only be called inside the body of a function component.',
