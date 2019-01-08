@@ -39,8 +39,8 @@ describe('ReactNewContext', () => {
 
   function readContext(Context, observedBits) {
     const dispatcher =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner
-        .currentDispatcher;
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .ReactCurrentDispatcher.current;
     return dispatcher.readContext(Context, observedBits);
   }
 

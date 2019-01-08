@@ -20,7 +20,7 @@ import {
   ForwardRef,
 } from 'shared/ReactWorkTags';
 
-const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 
 // Used to track hooks called during a render
 
@@ -409,9 +409,9 @@ export function inspectHooks<Props>(
   renderFunction: Props => React$Node,
   props: Props,
 ): HooksTree {
-  let previousDispatcher = ReactCurrentOwner.currentDispatcher;
+  let previousDispatcher = ReactCurrentDispatcher.current;
   let readHookLog;
-  ReactCurrentOwner.currentDispatcher = Dispatcher;
+  ReactCurrentDispatcher.current = Dispatcher;
   let ancestorStackError;
   try {
     ancestorStackError = new Error();
@@ -419,7 +419,7 @@ export function inspectHooks<Props>(
   } finally {
     readHookLog = hookLog;
     hookLog = [];
-    ReactCurrentOwner.currentDispatcher = previousDispatcher;
+    ReactCurrentDispatcher.current = previousDispatcher;
   }
   let rootStack = ErrorStackParser.parse(ancestorStackError);
   return buildTree(rootStack, readHookLog);
@@ -451,9 +451,9 @@ function inspectHooksOfForwardRef<Props, Ref>(
   props: Props,
   ref: Ref,
 ): HooksTree {
-  let previousDispatcher = ReactCurrentOwner.currentDispatcher;
+  let previousDispatcher = ReactCurrentDispatcher.current;
   let readHookLog;
-  ReactCurrentOwner.currentDispatcher = Dispatcher;
+  ReactCurrentDispatcher.current = Dispatcher;
   let ancestorStackError;
   try {
     ancestorStackError = new Error();
@@ -461,7 +461,7 @@ function inspectHooksOfForwardRef<Props, Ref>(
   } finally {
     readHookLog = hookLog;
     hookLog = [];
-    ReactCurrentOwner.currentDispatcher = previousDispatcher;
+    ReactCurrentDispatcher.current = previousDispatcher;
   }
   let rootStack = ErrorStackParser.parse(ancestorStackError);
   return buildTree(rootStack, readHookLog);
