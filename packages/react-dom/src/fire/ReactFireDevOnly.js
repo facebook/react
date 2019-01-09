@@ -6,11 +6,25 @@
  *
  */
 
-import {dangerousStyleValue} from './ReactFireStyling';
+import {dangerousStyleValue} from './host-components/ReactFireHostComponentStyling';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {getCurrentFiberStackInDev} from 'react-reconciler/src/ReactCurrentFiber';
+import {
+  validateARIAProperties,
+  validateInputProperties,
+  validateUnknownProperties,
+} from './ReactFireValidation';
+import {HTML_NAMESPACE} from './ReactFireDOMConfig';
+import {
+  isAttributeNameSafe,
+  shouldRemoveAttribute,
+  BOOLEAN,
+  OVERLOADED_BOOLEAN,
+} from '../shared/DOMProperty';
 
+import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import {canUseDOM} from 'shared/ExecutionEnvironment';
 
 const uppercasePattern = /([A-Z])/g;
 const msPattern = /^ms-/;
@@ -39,30 +53,30 @@ const hyphenateStyleName = function(name: string): string {
   }
 };
 
-export const createDangerousStringForStyles = function(styles) {
-  if (__DEV__) {
-    let serialized = '';
-    let delimiter = '';
-    for (const styleName in styles) {
-      if (!styles.hasOwnProperty(styleName)) {
-        continue;
-      }
-      const styleValue = styles[styleName];
-      if (styleValue != null) {
-        const isCustomProperty = styleName.indexOf('--') === 0;
-        serialized += delimiter + hyphenateStyleName(styleName) + ':';
-        serialized += dangerousStyleValue(
-          styleName,
-          styleValue,
-          isCustomProperty,
-        );
+export const createDangerousStringForStyles = __DEV__
+  ? function(styles) {
+      let serialized = '';
+      let delimiter = '';
+      for (const styleName in styles) {
+        if (!styles.hasOwnProperty(styleName)) {
+          continue;
+        }
+        const styleValue = styles[styleName];
+        if (styleValue != null) {
+          const isCustomProperty = styleName.indexOf('--') === 0;
+          serialized += delimiter + hyphenateStyleName(styleName) + ':';
+          serialized += dangerousStyleValue(
+            styleName,
+            styleValue,
+            isCustomProperty,
+          );
 
-        delimiter = ';';
+          delimiter = ';';
+        }
       }
+      return serialized || null;
     }
-    return serialized || null;
-  }
-};
+  : void 0;
 
 export const shorthandToLonghand = __DEV__
   ? {
@@ -1159,137 +1173,475 @@ if (__DEV__) {
   };
 }
 
-export const updatedAncestorInfo = function(oldInfo, tag) {
-  if (__DEV__) {
-    let ancestorInfo = {...(oldInfo || emptyAncestorInfo)};
-    let info = {tag};
+export const updatedAncestorInfo = __DEV__
+  ? function(oldInfo, tag) {
+      let ancestorInfo = {...(oldInfo || emptyAncestorInfo)};
+      let info = {tag};
 
-    if (inScopeTags.indexOf(tag) !== -1) {
-      ancestorInfo.aTagInScope = null;
-      ancestorInfo.buttonTagInScope = null;
-      ancestorInfo.nobrTagInScope = null;
-    }
-    if (buttonScopeTags.indexOf(tag) !== -1) {
-      ancestorInfo.pTagInButtonScope = null;
-    }
+      if (inScopeTags.indexOf(tag) !== -1) {
+        ancestorInfo.aTagInScope = null;
+        ancestorInfo.buttonTagInScope = null;
+        ancestorInfo.nobrTagInScope = null;
+      }
+      if (buttonScopeTags.indexOf(tag) !== -1) {
+        ancestorInfo.pTagInButtonScope = null;
+      }
 
-    // See rules for 'li', 'dd', 'dt' start tags in
-    // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody
-    if (
-      specialTags.indexOf(tag) !== -1 &&
-      tag !== 'address' &&
-      tag !== 'div' &&
-      tag !== 'p'
-    ) {
-      ancestorInfo.listItemTagAutoclosing = null;
-      ancestorInfo.dlItemTagAutoclosing = null;
-    }
+      // See rules for 'li', 'dd', 'dt' start tags in
+      // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody
+      if (
+        specialTags.indexOf(tag) !== -1 &&
+        tag !== 'address' &&
+        tag !== 'div' &&
+        tag !== 'p'
+      ) {
+        ancestorInfo.listItemTagAutoclosing = null;
+        ancestorInfo.dlItemTagAutoclosing = null;
+      }
 
-    ancestorInfo.current = info;
+      ancestorInfo.current = info;
 
-    if (tag === 'form') {
-      ancestorInfo.formTag = info;
-    }
-    if (tag === 'a') {
-      ancestorInfo.aTagInScope = info;
-    }
-    if (tag === 'button') {
-      ancestorInfo.buttonTagInScope = info;
-    }
-    if (tag === 'nobr') {
-      ancestorInfo.nobrTagInScope = info;
-    }
-    if (tag === 'p') {
-      ancestorInfo.pTagInButtonScope = info;
-    }
-    if (tag === 'li') {
-      ancestorInfo.listItemTagAutoclosing = info;
-    }
-    if (tag === 'dd' || tag === 'dt') {
-      ancestorInfo.dlItemTagAutoclosing = info;
-    }
+      if (tag === 'form') {
+        ancestorInfo.formTag = info;
+      }
+      if (tag === 'a') {
+        ancestorInfo.aTagInScope = info;
+      }
+      if (tag === 'button') {
+        ancestorInfo.buttonTagInScope = info;
+      }
+      if (tag === 'nobr') {
+        ancestorInfo.nobrTagInScope = info;
+      }
+      if (tag === 'p') {
+        ancestorInfo.pTagInButtonScope = info;
+      }
+      if (tag === 'li') {
+        ancestorInfo.listItemTagAutoclosing = info;
+      }
+      if (tag === 'dd' || tag === 'dt') {
+        ancestorInfo.dlItemTagAutoclosing = info;
+      }
 
-    return ancestorInfo;
-  }
-};
+      return ancestorInfo;
+    }
+  : void 0;
 
 const didWarn = {};
 
-export const validateDOMNesting = function(childTag, childText, ancestorInfo) {
-  if (__DEV__) {
-    ancestorInfo = ancestorInfo || emptyAncestorInfo;
-    const parentInfo = ancestorInfo.current;
-    const parentTag = parentInfo && parentInfo.tag;
+export const validateDOMNesting = __DEV__
+  ? function(childTag, childText, ancestorInfo) {
+      ancestorInfo = ancestorInfo || emptyAncestorInfo;
+      const parentInfo = ancestorInfo.current;
+      const parentTag = parentInfo && parentInfo.tag;
 
-    if (childText != null) {
-      warningWithoutStack(
-        childTag == null,
-        'validateDOMNesting: when childText is passed, childTag should be null',
-      );
-      childTag = '#text';
-    }
+      if (childText != null) {
+        warningWithoutStack(
+          childTag == null,
+          'validateDOMNesting: when childText is passed, childTag should be null',
+        );
+        childTag = '#text';
+      }
 
-    const invalidParent = isTagValidWithParent(childTag, parentTag)
-      ? null
-      : parentInfo;
-    const invalidAncestor = invalidParent
-      ? null
-      : findInvalidAncestorForTag(childTag, ancestorInfo);
-    const invalidParentOrAncestor = invalidParent || invalidAncestor;
-    if (!invalidParentOrAncestor) {
-      return;
-    }
+      const invalidParent = isTagValidWithParent(childTag, parentTag)
+        ? null
+        : parentInfo;
+      const invalidAncestor = invalidParent
+        ? null
+        : findInvalidAncestorForTag(childTag, ancestorInfo);
+      const invalidParentOrAncestor = invalidParent || invalidAncestor;
+      if (!invalidParentOrAncestor) {
+        return;
+      }
 
-    const ancestorTag = invalidParentOrAncestor.tag;
-    const addendum = getCurrentFiberStackInDev();
+      const ancestorTag = invalidParentOrAncestor.tag;
+      const addendum = getCurrentFiberStackInDev();
 
-    const warnKey =
-      !!invalidParent + '|' + childTag + '|' + ancestorTag + '|' + addendum;
-    if (didWarn[warnKey]) {
-      return;
-    }
-    didWarn[warnKey] = true;
+      const warnKey =
+        !!invalidParent + '|' + childTag + '|' + ancestorTag + '|' + addendum;
+      if (didWarn[warnKey]) {
+        return;
+      }
+      didWarn[warnKey] = true;
 
-    let tagDisplayName = childTag;
-    let whitespaceInfo = '';
-    if (childTag === '#text') {
-      if (/\S/.test(childText)) {
-        tagDisplayName = 'Text nodes';
+      let tagDisplayName = childTag;
+      let whitespaceInfo = '';
+      if (childTag === '#text') {
+        if (/\S/.test(childText)) {
+          tagDisplayName = 'Text nodes';
+        } else {
+          tagDisplayName = 'Whitespace text nodes';
+          whitespaceInfo =
+            " Make sure you don't have any extra whitespace between tags on " +
+            'each line of your source code.';
+        }
       } else {
-        tagDisplayName = 'Whitespace text nodes';
-        whitespaceInfo =
-          " Make sure you don't have any extra whitespace between tags on " +
-          'each line of your source code.';
+        tagDisplayName = '<' + childTag + '>';
       }
-    } else {
-      tagDisplayName = '<' + childTag + '>';
-    }
 
-    if (invalidParent) {
-      let info = '';
-      if (ancestorTag === 'table' && childTag === 'tr') {
-        info +=
-          ' Add a <tbody> to your code to match the DOM tree generated by ' +
-          'the browser.';
+      if (invalidParent) {
+        let info = '';
+        if (ancestorTag === 'table' && childTag === 'tr') {
+          info +=
+            ' Add a <tbody> to your code to match the DOM tree generated by ' +
+            'the browser.';
+        }
+        warningWithoutStack(
+          false,
+          'validateDOMNesting(...): %s cannot appear as a child of <%s>.%s%s%s',
+          tagDisplayName,
+          ancestorTag,
+          whitespaceInfo,
+          info,
+          addendum,
+        );
+      } else {
+        warningWithoutStack(
+          false,
+          'validateDOMNesting(...): %s cannot appear as a descendant of ' +
+            '<%s>.%s',
+          tagDisplayName,
+          ancestorTag,
+          addendum,
+        );
       }
-      warningWithoutStack(
-        false,
-        'validateDOMNesting(...): %s cannot appear as a child of <%s>.%s%s%s',
-        tagDisplayName,
-        ancestorTag,
-        whitespaceInfo,
-        info,
-        addendum,
+    }
+  : void 0;
+
+export const validatePropertiesInDevelopment = __DEV__
+  ? function(type, props) {
+      validateARIAProperties(type, props);
+      validateInputProperties(type, props);
+      validateUnknownProperties(type, props, /* canUseEventSystem */ true);
+    }
+  : void 0;
+
+export const warnForInvalidEventListener = __DEV__
+  ? function(registrationName, listener) {
+      if (listener === false) {
+        warning(
+          false,
+          'Expected `%s` listener to be a function, instead got `false`.\n\n' +
+            'If you used to conditionally omit it with %s={condition && value}, ' +
+            'pass %s={condition ? value : undefined} instead.',
+          registrationName,
+          registrationName,
+          registrationName,
+        );
+      } else {
+        warning(
+          false,
+          'Expected `%s` listener to be a function, instead got a value of `%s` type.',
+          registrationName,
+          typeof listener,
+        );
+      }
+    }
+  : void 0;
+
+export const warnedUnknownTags = __DEV__
+  ? {
+      // Chrome is the only major browser not shipping <time>. But as of July
+      // 2017 it intends to ship it due to widespread usage. We intentionally
+      // *don't* warn for <time> even if it's unrecognized by Chrome because
+      // it soon will be, and many apps have been using it anyway.
+      time: true,
+      // There are working polyfills for <dialog>. Let people use it.
+      dialog: true,
+      // Electron ships a custom <webview> tag to display external web content in
+      // an isolated frame and process.
+      // This tag is not present in non Electron environments such as JSDom which
+      // is often used for testing purposes.
+      // @see https://electronjs.org/docs/api/webview-tag
+      webview: true,
+    }
+  : void 0;
+
+export let didWarnShadyDOM = false;
+
+export const setDidWarnShadyDOM = __DEV__
+  ? () => {
+      didWarnShadyDOM = true;
+    }
+  : void 0;
+
+/**
+ * Get the value for a attribute on a node. Only used in DEV for SSR validation.
+ * The third argument is used as a hint of what the expected value is. Some
+ * attributes have multiple equivalent values.
+ */
+export const getValueForAttribute = __DEV__
+  ? (node: Element, name: string, expected: mixed): mixed => {
+      if (!isAttributeNameSafe(name)) {
+        return;
+      }
+      if (!node.hasAttribute(name)) {
+        return expected === undefined ? undefined : null;
+      }
+      const value = node.getAttribute(name);
+      if (value === '' + (expected: any)) {
+        return expected;
+      }
+      return value;
+    }
+  : void 0;
+
+export let didWarnInvalidHydration = false;
+
+export const warnForExtraAttributes = __DEV__
+  ? function(attributeNames: Set<string>) {
+      if (didWarnInvalidHydration) {
+        return;
+      }
+      didWarnInvalidHydration = true;
+      const names = [];
+      attributeNames.forEach(function(name) {
+        names.push(name);
+      });
+      warningWithoutStack(false, 'Extra attributes from the server: %s', names);
+    }
+  : void 0;
+
+// HTML parsing normalizes CR and CRLF to LF.
+// It also can turn \u0000 into \uFFFD inside attributes.
+// https://www.w3.org/TR/html5/single-page.html#preprocessing-the-input-stream
+// If we have a mismatch, it might be caused by that.
+// We will still patch up in this case but not fire the warning.
+const NORMALIZE_NEWLINES_REGEX = /\r\n?/g;
+const NORMALIZE_NULL_AND_REPLACEMENT_REGEX = /\u0000|\uFFFD/g;
+
+export const normalizeMarkupForTextOrAttribute = __DEV__
+  ? function(markup: mixed): string {
+      const markupString =
+        typeof markup === 'string' ? markup : '' + (markup: any);
+      return markupString
+        .replace(NORMALIZE_NEWLINES_REGEX, '\n')
+        .replace(NORMALIZE_NULL_AND_REPLACEMENT_REGEX, '');
+    }
+  : void 0;
+
+export const warnForPropDifference = __DEV__
+  ? function(propName: string, serverValue: mixed, clientValue: mixed) {
+      if (didWarnInvalidHydration) {
+        return;
+      }
+      const normalizedClientValue = normalizeMarkupForTextOrAttribute(
+        clientValue,
       );
-    } else {
+      const normalizedServerValue = normalizeMarkupForTextOrAttribute(
+        serverValue,
+      );
+      if (normalizedServerValue === normalizedClientValue) {
+        return;
+      }
+      didWarnInvalidHydration = true;
       warningWithoutStack(
         false,
-        'validateDOMNesting(...): %s cannot appear as a descendant of ' +
-          '<%s>.%s',
-        tagDisplayName,
-        ancestorTag,
-        addendum,
+        'Prop `%s` did not match. Server: %s Client: %s',
+        propName,
+        JSON.stringify(normalizedServerValue),
+        JSON.stringify(normalizedClientValue),
       );
     }
-  }
-};
+  : void 0;
+
+/**
+ * Get the value for a property on a node. Only used in DEV for SSR validation.
+ * The "expected" argument is used as a hint of what the expected value is.
+ * Some properties have multiple equivalent values.
+ */
+export const getValueForProperty = __DEV__
+  ? function(
+      node: Element,
+      name: string,
+      expected: mixed,
+      propertyInfo: PropertyInfo,
+    ): mixed {
+      if (__DEV__) {
+        if (propertyInfo.mustUseProperty) {
+          const {propertyName} = propertyInfo;
+          return (node: any)[propertyName];
+        } else {
+          const attributeName = propertyInfo.attributeName;
+
+          let stringValue = null;
+
+          if (propertyInfo.type === OVERLOADED_BOOLEAN) {
+            if (node.hasAttribute(attributeName)) {
+              const value = node.getAttribute(attributeName);
+              if (value === '') {
+                return true;
+              }
+              if (shouldRemoveAttribute(name, expected, propertyInfo, false)) {
+                return value;
+              }
+              if (value === '' + (expected: any)) {
+                return expected;
+              }
+              return value;
+            }
+          } else if (node.hasAttribute(attributeName)) {
+            if (shouldRemoveAttribute(name, expected, propertyInfo, false)) {
+              // We had an attribute but shouldn't have had one, so read it
+              // for the error message.
+              return node.getAttribute(attributeName);
+            }
+            if (propertyInfo.type === BOOLEAN) {
+              // If this was a boolean, it doesn't matter what the value is
+              // the fact that we have it is the same as the expected.
+              return expected;
+            }
+            // Even if this property uses a namespace we use getAttribute
+            // because we assume its namespaced name is the same as our config.
+            // To use getAttributeNS we need the local name which we don't have
+            // in our config atm.
+            stringValue = node.getAttribute(attributeName);
+          }
+
+          if (shouldRemoveAttribute(name, expected, propertyInfo, false)) {
+            return stringValue === null ? expected : stringValue;
+          } else if (stringValue === '' + (expected: any)) {
+            return expected;
+          } else {
+            return stringValue;
+          }
+        }
+      }
+    }
+  : void 0;
+
+export let suppressHydrationWarning = false;
+
+export const setSuppressHydrationWarning = __DEV__
+  ? val => {
+      suppressHydrationWarning = val;
+    }
+  : void 0;
+
+export const warnForTextDifference = __DEV__
+  ? function(serverText: string, clientText: string | number) {
+      if (didWarnInvalidHydration) {
+        return;
+      }
+      const normalizedClientText = normalizeMarkupForTextOrAttribute(
+        clientText,
+      );
+      const normalizedServerText = normalizeMarkupForTextOrAttribute(
+        serverText,
+      );
+      if (normalizedServerText === normalizedClientText) {
+        return;
+      }
+      didWarnInvalidHydration = true;
+      warningWithoutStack(
+        false,
+        'Text content did not match. Server: "%s" Client: "%s"',
+        normalizedServerText,
+        normalizedClientText,
+      );
+    }
+  : void 0;
+
+export const normalizeHTML = __DEV__
+  ? function(parent: Element, html: string) {
+      // We could have created a separate document here to avoid
+      // re-initializing custom elements if they exist. But this breaks
+      // how <noscript> is being handled. So we use the same document.
+      // See the discussion in https://github.com/facebook/react/pull/11157.
+      const testElement =
+        parent.namespaceURI === HTML_NAMESPACE
+          ? parent.ownerDocument.createElement(parent.tagName)
+          : parent.ownerDocument.createElementNS(
+              (parent.namespaceURI: any),
+              parent.tagName,
+            );
+      testElement.innerHTML = html;
+      return testElement.innerHTML;
+    }
+  : void 0;
+
+export const canDiffStyleForHydrationWarning = __DEV__
+  ? canUseDOM && !document.documentMode
+  : void 0;
+
+export const getPossibleStandardName = __DEV__
+  ? (propName: string): string | null => {
+      const lowerCasedName = propName.toLowerCase();
+      if (
+        possibleStandardNames &&
+        !possibleStandardNames.hasOwnProperty(lowerCasedName)
+      ) {
+        return null;
+      }
+      return (
+        (possibleStandardNames && possibleStandardNames[lowerCasedName]) || null
+      );
+    }
+  : void 0;
+
+export const warnForInsertedHydratedText = __DEV__
+  ? function(parentNode: Element | Document, text: string) {
+      if (text === '') {
+        // We expect to insert empty text nodes since they're not represented in
+        // the HTML.
+        // TODO: Remove this special case if we can just avoid inserting empty
+        // text nodes.
+        return;
+      }
+      if (didWarnInvalidHydration) {
+        return;
+      }
+      didWarnInvalidHydration = true;
+      warningWithoutStack(
+        false,
+        'Expected server HTML to contain a matching text node for "%s" in <%s>.',
+        text,
+        parentNode.nodeName.toLowerCase(),
+      );
+    }
+  : void 0;
+
+export const warnForDeletedHydratableText = __DEV__
+  ? function(parentNode: Element | Document, child: Text) {
+      if (didWarnInvalidHydration) {
+        return;
+      }
+      didWarnInvalidHydration = true;
+      warningWithoutStack(
+        false,
+        'Did not expect server HTML to contain the text node "%s" in <%s>.',
+        child.nodeValue,
+        parentNode.nodeName.toLowerCase(),
+      );
+    }
+  : void 0;
+
+export const warnForInsertedHydratedElement = __DEV__
+  ? function(parentNode: Element | Document, tag: string, props: Object) {
+      if (didWarnInvalidHydration) {
+        return;
+      }
+      didWarnInvalidHydration = true;
+      warningWithoutStack(
+        false,
+        'Expected server HTML to contain a matching <%s> in <%s>.',
+        tag,
+        parentNode.nodeName.toLowerCase(),
+      );
+    }
+  : void 0;
+
+export const warnForDeletedHydratableElement = __DEV__
+  ? function(parentNode: Element | Document, child: Element) {
+      if (didWarnInvalidHydration) {
+        return;
+      }
+      didWarnInvalidHydration = true;
+      warningWithoutStack(
+        false,
+        'Did not expect server HTML to contain a <%s> in <%s>.',
+        child.nodeName.toLowerCase(),
+        parentNode.nodeName.toLowerCase(),
+      );
+    }
+  : void 0;

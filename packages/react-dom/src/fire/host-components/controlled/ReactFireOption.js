@@ -9,7 +9,7 @@
 
 import React from 'react';
 import warning from 'shared/warning';
-import {getToStringValue, toString} from '../ReactFireUtils';
+import {getToStringValue, toString} from '../../ReactFireUtils';
 
 let didWarnSelectedSetOnOption = false;
 let didWarnInvalidChild = false;

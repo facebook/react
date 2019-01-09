@@ -7,7 +7,7 @@
  */
 
 import warning from 'shared/warning';
-import {isUnitlessNumber} from './ReactFireDOMConfig';
+import {isUnitlessNumber} from '../ReactFireDOMConfig';
 
 let warnValidStyle = () => {};
 

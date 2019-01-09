@@ -10,10 +10,14 @@
 import {
   getClosestFiberFromDOMNode,
   getDOMNodeFromFiber,
-} from '../ReactFireInternal';
-import {getDomNodeEventsMap} from './ReactFireEvents';
+  getFiberPropsFromDomNodeInstance,
+} from '../ReactFireMaps';
 import {CLICK, DOUBLE_CLICK} from './ReactFireEventTypes';
-import type {EventData, ProxyContext} from './ReactFireEvents';
+import type {ProxyContext} from './ReactFireEvents';
+import {
+  capturedEventNameToPropNameMap,
+  eventNameToPropNameMap,
+} from './ReactFireEvents';
 import {SyntheticEvent} from './synthetic/ReactFireSyntheticEvent';
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
@@ -58,20 +62,55 @@ function findRootContainerNode(fiber: Fiber): Element | Node | null {
   return fiber.stateNode.containerInfo;
 }
 
+function getEventListenerFromDOMNode(
+  domNode: Element | Node,
+  eventName: string,
+  capturePhase: boolean,
+) {
+  const props = getFiberPropsFromDomNodeInstance(domNode);
+  if (props === undefined) {
+    return;
+  }
+  let propName;
+
+  if (capturePhase) {
+    const captureEvent = eventName + 'Capture';
+    if (props.hasOwnProperty(captureEvent)) {
+      propName = captureEvent;
+    } else {
+      propName = capturedEventNameToPropNameMap.get(eventName);
+    }
+  } else {
+    if (props.hasOwnProperty(eventName)) {
+      propName = eventName;
+    } else {
+      propName = eventNameToPropNameMap.get(eventName);
+    }
+  }
+  if (propName !== undefined) {
+    return props[propName];
+  }
+}
+
 function triggerEventHandler(
+  fiber: Fiber,
   syntheticEvent: SyntheticEvent,
   domNode: Element | Node,
-  domNodeEventsMap: Map<string, EventData>,
   eventName: string,
+  capturePhase: boolean,
 ) {
-  const eventListener = domNodeEventsMap.get(eventName);
-  if (eventListener === undefined || eventListener.handler === null) {
+  const eventListener = getEventListenerFromDOMNode(
+    domNode,
+    eventName,
+    capturePhase,
+  );
+  if (eventListener === undefined) {
     return;
   }
   syntheticEvent.currentTarget = domNode;
   invokeGuardedCallbackAndCatchFirstError(
     eventName,
-    eventListener.handler,
+    eventListener,
     undefined,
     syntheticEvent,
   );
@@ -98,14 +137,8 @@ function dispatchEventHandler(
   ) {
     return;
   }
-  const domNodeEventsMap = getDomNodeEventsMap(domNode);
   const {eventName} = proxyContext;
-  triggerEventHandler(
-    syntheticEvent,
-    domNode,
-    domNodeEventsMap,
-    capturePhase ? `${eventName}-capture` : eventName,
-  );
+  triggerEventHandler(fiber, syntheticEvent, domNode, eventName, capturePhase);
   if (syntheticEvent.isPropagationStopped()) {
     return true;
   }
@@ -263,11 +296,11 @@ export function traverseEnterLeave(
     pathTo.push(currentTo);
     currentTo = getParent(currentTo);
   }
-  proxyContext.eventName = `onMouseLeave-polyfill`;
+  proxyContext.eventName = `onMouseLeave`;
   for (let i = 0; i < pathFrom.length; i++) {
     dispatchEventHandler(fromSyntheticEvent, pathFrom[i], false, proxyContext);
   }
-  proxyContext.eventName = `onMouseEnter-polyfill`;
+  proxyContext.eventName = `onMouseEnter`;
   for (let i = pathTo.length; i-- > 0; ) {
     dispatchEventHandler(toSyntheticEvent, pathTo[i], false, proxyContext);
   }

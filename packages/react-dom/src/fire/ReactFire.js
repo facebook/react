@@ -12,7 +12,7 @@ import {
   enqueueStateRestore,
   restoreStateIfNeeded,
   setRestoreImplementation,
-} from './controlled/ReactFireControlledState';
+} from './host-components/controlled/ReactFireControlledState';
 import {setBatchingImplementation} from './ReactFireBatching';
 import {
   batchedUpdates,
@@ -25,9 +25,9 @@ import {
   interactiveUpdates,
   unbatchedUpdates,
 } from 'react-reconciler/inline.fire';
-import {restoreHostComponentInputControlledState} from './controlled/ReactFireInput';
-import {restoreHostComponentTextareaControlledState} from './controlled/ReactFireTextarea';
-import {restoreHostComponentSelectControlledState} from './controlled/ReactFireSelect';
+import {restoreHostComponentInputControlledState} from './host-components/controlled/ReactFireInput';
+import {restoreHostComponentTextareaControlledState} from './host-components/controlled/ReactFireTextarea';
+import {restoreHostComponentSelectControlledState} from './host-components/controlled/ReactFireSelect';
 import {setupDevTools} from './ReactFireDevTools';
 import {
   COMMENT_NODE,
@@ -39,7 +39,7 @@ import {getPublicRootInstance, isValidContainer} from './ReactFireUtils';
 import {
   getFiberFromDomNode,
   getFiberPropsFromDomNodeInstance,
-} from './ReactFireInternal';
+} from './ReactFireMaps';
 import {proxyListener} from './events/ReactFireEvents';
 
 import type {ReactNodeList} from 'shared/ReactTypes';

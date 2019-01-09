@@ -106,6 +106,7 @@ function constructSelectEvent(nativeEvent, eventTarget, proxyContext) {
 
     syntheticEvent.type = 'select';
     syntheticEvent.target = activeElement;
+    proxyContext.eventName = 'onSelect';
     traverseTwoPhase(syntheticEvent, proxyContext);
   }
 }

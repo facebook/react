@@ -12,8 +12,8 @@ import warning from 'shared/warning';
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 
 import {controlledValuePropTypes} from './ReactFirePropTypes';
-import {getToStringValue, toString} from '../ReactFireUtils';
-import type {ToStringValue} from '../ReactFireUtils';
+import {getToStringValue, toString} from '../../ReactFireUtils';
+import type {ToStringValue} from '../../ReactFireUtils';
 
 let didWarnValDefaultVal = false;
 

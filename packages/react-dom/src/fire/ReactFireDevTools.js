@@ -8,7 +8,7 @@
  */
 
 import {injectIntoDevTools} from 'react-reconciler/inline.fire';
-import {getClosestFiberFromDOMNode} from './ReactFireInternal';
+import {getClosestFiberFromDOMNode} from './ReactFireMaps';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import ReactVersion from 'shared/ReactVersion';
 import type {Instance, TextInstance} from './ReactFireHostConfig';

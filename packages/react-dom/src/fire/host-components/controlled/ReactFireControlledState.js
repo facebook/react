@@ -11,7 +11,7 @@ import invariant from 'shared/invariant';
 import {
   getFiberFromDomNodeInstance,
   getFiberPropsFromDomNodeInstance,
-} from '../ReactFireInternal';
+} from '../../ReactFireMaps';
 
 // Use to restore controlled state after a change event has fired.
 

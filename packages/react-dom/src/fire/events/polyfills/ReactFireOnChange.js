@@ -7,8 +7,8 @@
  * @flow
  */
 
-import {updateValueIfChanged} from '../../controlled/ReactFireValueTracking';
-import {enqueueStateRestore} from '../../controlled/ReactFireControlledState';
+import {updateValueIfChanged} from '../../host-components/controlled/ReactFireValueTracking';
+import {enqueueStateRestore} from '../../host-components/controlled/ReactFireControlledState';
 import {isTextInputElement} from '../../ReactFireUtils';
 import {traverseTwoPhase} from '../ReactFireEventTraversal';
 import type {ProxyContext} from '../ReactFireEvents';
@@ -85,6 +85,7 @@ function polyfilledEventListener(
     proxyContext,
   );
   syntheticEvent.type = 'change';
+  proxyContext.eventName = 'onChange';
   traverseTwoPhase(syntheticEvent, proxyContext);
 }
 

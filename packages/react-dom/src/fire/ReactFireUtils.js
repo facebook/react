@@ -15,6 +15,10 @@ import {
   nonInteractiveEvents,
   translateToKey,
 } from './events/ReactFireEventTypes';
+import {
+  capturedEventNameToPropNameMap,
+  eventNameToPropNameMap,
+} from './events/ReactFireEvents';
 import {polyfilledEvents} from './events/ReactFirePolyfilledEvents';
 import {
   COMMENT_NODE,
@@ -28,30 +32,9 @@ import {
 } from './ReactFireDOMConfig';
 
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
-import warning from 'shared/warning';
 import {HostComponent} from 'shared/ReactWorkTags';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import type {AnyNativeEvent} from 'events/PluginModuleType';
-
-let warnedUnknownTags;
-
-if (__DEV__) {
-  warnedUnknownTags = {
-    // Chrome is the only major browser not shipping <time>. But as of July
-    // 2017 it intends to ship it due to widespread usage. We intentionally
-    // *don't* warn for <time> even if it's unrecognized by Chrome because
-    // it soon will be, and many apps have been using it anyway.
-    time: true,
-    // There are working polyfills for <dialog>. Let people use it.
-    dialog: true,
-    // Electron ships a custom <webview> tag to display external web content in
-    // an isolated frame and process.
-    // This tag is not present in non Electron environments such as JSDom which
-    // is often used for testing purposes.
-    // @see https://electronjs.org/docs/api/webview-tag
-    webview: true,
-  };
-}
 
 export function getOwnerDocumentFromRootContainer(
   rootContainerElement: Element | Document,
@@ -59,91 +42,6 @@ export function getOwnerDocumentFromRootContainer(
   return rootContainerElement.nodeType === DOCUMENT_NODE
     ? (rootContainerElement: any)
     : rootContainerElement.ownerDocument;
-}
-
-export function createElement(
-  type: string,
-  props: Object,
-  rootContainerElement: Element | Document,
-  parentNamespace: string,
-): Element {
-  let isCustomComponentTag;
-
-  // We create tags in the namespace of their parent container, except HTML
-  // tags get no namespace.
-  const ownerDocument: Document = getOwnerDocumentFromRootContainer(
-    rootContainerElement,
-  );
-  let domElement: Element;
-  let namespaceURI = parentNamespace;
-  if (namespaceURI === HTML_NAMESPACE) {
-    namespaceURI = getNamespace(type);
-  }
-  if (namespaceURI === HTML_NAMESPACE) {
-    if (__DEV__) {
-      isCustomComponentTag = isCustomComponent(type, props);
-      // Should this check be gated by parent namespace? Not sure we want to
-      // allow <SVG> or <mATH>.
-      warning(
-        isCustomComponentTag || type === type.toLowerCase(),
-        '<%s /> is using incorrect casing. ' +
-          'Use PascalCase for React components, ' +
-          'or lowercase for HTML elements.',
-        type,
-      );
-    }
-
-    if (type === 'script') {
-      // Create the script via .innerHTML so its "parser-inserted" flag is
-      // set to true and it does not execute
-      const div = ownerDocument.createElement('div');
-      div.innerHTML = '<script><' + '/script>'; // eslint-disable-line
-      // This is guaranteed to yield a script element.
-      const firstChild = ((div.firstChild: any): HTMLScriptElement);
-      domElement = div.removeChild(firstChild);
-    } else if (typeof props.is === 'string') {
-      // $FlowIssue `createElement` should be updated for Web Components
-      domElement = ownerDocument.createElement(type, {is: props.is});
-    } else {
-      // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
-      // See discussion in https://github.com/facebook/react/pull/6896
-      // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
-      domElement = ownerDocument.createElement(type);
-      // Normally attributes are assigned in `setInitialDOMProperties`, however the `multiple`
-      // attribute on `select`s needs to be added before `option`s are inserted. This prevents
-      // a bug where the `select` does not scroll to the correct option because singular
-      // `select` elements automatically pick the first item.
-      // See https://github.com/facebook/react/issues/13222
-      if (type === 'select' && props.multiple) {
-        const node = ((domElement: any): HTMLSelectElement);
-        node.multiple = true;
-      }
-    }
-  } else {
-    domElement = ownerDocument.createElementNS(namespaceURI, type);
-  }
-
-  if (__DEV__) {
-    if (namespaceURI === HTML_NAMESPACE) {
-      if (
-        !isCustomComponentTag &&
-        Object.prototype.toString.call(domElement) ===
-          '[object HTMLUnknownElement]' &&
-        !Object.prototype.hasOwnProperty.call(warnedUnknownTags, type)
-      ) {
-        warnedUnknownTags[type] = true;
-        warning(
-          false,
-          'The tag <%s> is unrecognized in this browser. ' +
-            'If you meant to render a React component, start its name with ' +
-            'an uppercase letter.',
-          type,
-        );
-      }
-    }
-  }
-
-  return domElement;
 }
 
 export function isStringOrNumber(value: any): boolean {
@@ -161,6 +59,16 @@ export function isPropAnEvent(propName: string): boolean {
   }
   const eventName = normalizeEventName(propName);
 
+  if (
+    !capturedEventNameToPropNameMap.has(propName) &&
+    !eventNameToPropNameMap.has(propName)
+  ) {
+    if (propName.indexOf('Capture') !== -1) {
+      capturedEventNameToPropNameMap.set(eventName, propName);
+    } else {
+      eventNameToPropNameMap.set(eventName, propName);
+    }
+  }
   if (
     nonInteractiveEvents.has(eventName) ||
     interactiveEvents.has(eventName) ||
@@ -234,49 +142,6 @@ export function normalizeEventName(name: string): string {
   }
   return name.substr(2).toLowerCase();
 }
-
-declare var MSApp: Object;
-
-/**
- * Create a function which has 'unsafe' privileges (required by windows8 apps)
- */
-const createMicrosoftUnsafeLocalFunction = function(func: any) {
-  if (typeof MSApp !== 'undefined' && MSApp.execUnsafeLocalFunction) {
-    return function(arg0: any, arg1: any, arg2: any, arg3: any) {
-      MSApp.execUnsafeLocalFunction(function() {
-        return func(arg0, arg1, arg2, arg3);
-      });
-    };
-  } else {
-    return func;
-  }
-};
-
-// SVG temp container for IE lacking innerHTML
-let reusableSVGContainer;
-
-export const setInnerHTML = createMicrosoftUnsafeLocalFunction(
-  (node: Element, html: string) => {
-    // IE does not have innerHTML for SVG nodes, so instead we inject the
-    // new markup in a temp node and then move the child nodes across into
-    // the target node
-
-    if (node.namespaceURI === SVG_NAMESPACE && !('innerHTML' in node)) {
-      reusableSVGContainer =
-        reusableSVGContainer || document.createElement('div');
-      reusableSVGContainer.innerHTML = '<svg>' + html + '</svg>';
-      const svgNode = reusableSVGContainer.firstChild;
-      while (node.firstChild) {
-        node.removeChild(node.firstChild);
-      }
-      while (svgNode.firstChild) {
-        node.appendChild(svgNode.firstChild);
-      }
-    } else {
-      node.innerHTML = html;
-    }
-  },
-);
 
 export opaque type ToStringValue =
   | boolean

@@ -15,7 +15,7 @@ import {
 import {
   getClosestFiberFromDOMNode,
   getDOMNodeFromFiber,
-} from '../../ReactFireInternal';
+} from '../../ReactFireMaps';
 import {traverseEnterLeave} from '../ReactFireEventTraversal';
 import {getPooledSyntheticEvent} from '../synthetic/ReactFireSyntheticEvent';
 import {SyntheticPointerEvent} from '../synthetic/ReactFireSyntheticPointerEvent';

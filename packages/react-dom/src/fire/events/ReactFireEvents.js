@@ -22,7 +22,7 @@ import {batchedUpdates, interactiveUpdates} from '../ReactFireBatching';
 import {
   getClosestFiberFromDOMNode,
   getDOMNodeFromFiber,
-} from '../ReactFireInternal';
+} from '../ReactFireMaps';
 import {
   dispatchPolyfills,
   listenToPolyfilledEvent,
@@ -55,18 +55,16 @@ export type ProxyContext = {
   nativeEvent: Event,
 };
 
-export type EventData = {
-  handler: null | ((e: Event) => void),
-  polyfills: Map<any, any>,
-};
-
-const topLevelDomNodeEvents: WeakMap<
+const activeEventListenersForDOMNode: WeakMap<
   Document | Element | Node,
-  Map<string, EventData>,
+  Set<string>,
 > = new WeakMap();
 
 // TODO: can we stop exporting these?
 let eventsEnabled = true;
+
+export const eventNameToPropNameMap: Map<string, string> = new Map();
+export const capturedEventNameToPropNameMap: Map<string, string> = new Map();
 
 export function setEventsEnabled(enabled: ?boolean) {
   eventsEnabled = !!enabled;
@@ -76,28 +74,15 @@ export function isEventsEnabled() {
   return eventsEnabled;
 }
 
-export function getDomNodeEventsMap(domNode: Document | Element | Node) {
-  let domNodeEventsMap = topLevelDomNodeEvents.get(domNode);
-
-  if (domNodeEventsMap === undefined) {
-    domNodeEventsMap = (new Map(): Map<string, EventData>);
-    topLevelDomNodeEvents.set(domNode, domNodeEventsMap);
-  }
-  return domNodeEventsMap;
-}
-
-function createEventData(): EventData {
-  return {
-    handler: null,
-    polyfills: new Map(),
-  };
-}
-
 export function listenTo(eventName: string, domNode: Element | Document) {
-  let domNodeEventsMap = getDomNodeEventsMap(domNode);
-  let eventWrapper = domNodeEventsMap.get(eventName);
+  let activeEventListeners = activeEventListenersForDOMNode.get(domNode);
+  if (activeEventListeners === undefined) {
+    activeEventListeners = new Set();
+    activeEventListenersForDOMNode.set(domNode, activeEventListeners);
+  }
 
-  if (eventWrapper === undefined) {
+  // Ensure we don't listen to the same event more than once
+  if (!activeEventListeners.has(eventName)) {
     switch (eventName) {
       case SCROLL:
         trapCapturedEvent(SCROLL, domNode);
@@ -106,8 +91,8 @@ export function listenTo(eventName: string, domNode: Element | Document) {
       case BLUR:
         trapCapturedEvent(FOCUS, domNode);
         trapCapturedEvent(BLUR, domNode);
-        domNodeEventsMap.set(FOCUS, createEventData());
-        domNodeEventsMap.set(BLUR, createEventData());
+        activeEventListeners.add(FOCUS);
+        activeEventListeners.add(BLUR);
         return;
       case CANCEL:
       case CLOSE:
@@ -132,39 +117,7 @@ export function listenTo(eventName: string, domNode: Element | Document) {
         }
         break;
     }
-    domNodeEventsMap.set(eventName, createEventData());
-  }
-}
-
-export function setEventProp(
-  propName: string,
-  eventPropValue: any,
-  domNode: Document | Element,
-) {
-  const isPolyfilledEvent = polyfilledEvents.hasOwnProperty(propName);
-  let eventName;
-  if (isPolyfilledEvent) {
-    eventName = `${propName}-polyfill`;
-  } else {
-    eventName = normalizeEventName(propName);
-    const isCaptureEvent = propName.endsWith('Capture');
-    if (isCaptureEvent) {
-      eventName = `${eventName}-capture`;
-    }
-  }
-  const domNodeEventsMap = getDomNodeEventsMap(domNode);
-  let eventData = domNodeEventsMap.get(eventName);
-
-  if (eventPropValue === null || eventPropValue === undefined) {
-    if (eventData !== undefined) {
-      eventData.handler = null;
-    }
-  } else {
-    if (eventData === undefined) {
-      eventData = createEventData();
-      domNodeEventsMap.set(eventName, eventData);
-    }
-    eventData.handler = eventPropValue;
+    activeEventListeners.add(eventName);
   }
 }
 

@@ -9,7 +9,7 @@
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
-import {getToStringValue, toString} from '../ReactFireUtils';
+import {getToStringValue, toString} from '../../ReactFireUtils';
 import {controlledValuePropTypes} from './ReactFirePropTypes';
 import warning from 'shared/warning';
 

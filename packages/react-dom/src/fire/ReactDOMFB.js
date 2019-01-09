@@ -13,7 +13,7 @@ import {addUserTimingListener} from 'shared/ReactFeatureFlags';
 
 import ReactDOM from './ReactFire';
 import {isEventsEnabled} from './events/ReactFireEvents';
-import {getClosestFiberFromDOMNode} from './ReactFireInternal';
+import {getClosestFiberFromDOMNode} from './ReactFireMaps';
 
 Object.assign(
   (ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: any),

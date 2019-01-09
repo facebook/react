@@ -368,14 +368,12 @@ function extractCompositionEvent(
       syntheticEvent.data = customData;
     }
   }
-  if (proxyContext.eventName === `onBeforeInput-polyfill`) {
-    if (eventName === COMPOSITION_END) {
-      proxyContext.eventName = `onCompositionEnd-polyfill`;
-    } else if (eventName === COMPOSITION_UPDATE) {
-      proxyContext.eventName = `onCompositionUpdate-polyfill`;
-    } else if (eventName === COMPOSITION_START) {
-      proxyContext.eventName = `onCompositionStart-polyfill`;
-    }
+  if (eventName === COMPOSITION_END) {
+    proxyContext.eventName = `onCompositionEnd`;
+  } else if (eventName === COMPOSITION_UPDATE) {
+    proxyContext.eventName = `onCompositionUpdate`;
+  } else if (eventName === COMPOSITION_START) {
+    proxyContext.eventName = `onCompositionStart`;
   }
   return syntheticEvent;
 }
@@ -406,7 +404,7 @@ function extractBeforeInputEvent(eventName, nativeEvent, proxyContext): void {
   );
   syntheticEvent.data = chars;
 
-  proxyContext.eventName = `onBeforeInput-polyfill`;
+  proxyContext.eventName = 'onBeforeInput';
   return syntheticEvent;
 }
 

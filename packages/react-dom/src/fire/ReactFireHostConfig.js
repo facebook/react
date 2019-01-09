@@ -11,11 +11,13 @@ import {roots} from './ReactFireRoots';
 import type {DOMContainer} from './ReactFire';
 import {
   createHostComponent,
+  setHostComponentInitialProps,
+} from './host-components/ReactFireHostComponentCreation';
+import {
   diffHostComponentProperties,
   diffHydratedHostComponentProperties,
-  setHostComponentInitialProps,
-  updateHostComponentProperties,
-} from './ReactFireComponent';
+} from './host-components/ReactFireHostComponentDiffing';
+import {updateHostComponentProperties} from './host-components/ReactFireHostComponentUpdating';
 import {
   createTextNode,
   getChildNamespace,
@@ -25,7 +27,7 @@ import {
 import {
   setFiberByDomNodeInstance,
   setFiberPropsByDomNodeInstance,
-} from './ReactFireInternal';
+} from './ReactFireMaps';
 import {
   COMMENT_NODE,
   DOCUMENT_NODE,
@@ -41,16 +43,16 @@ import {
   trapClickOnNonInteractiveElement,
 } from './events/ReactFireEvents';
 import {getSelectionInformation, restoreSelection} from './ReactFireSelection';
-import {dangerousStyleValue} from './ReactFireStyling';
+import {dangerousStyleValue} from './host-components/ReactFireHostComponentStyling';
 import {
-  diffHydratedText,
+  updatedAncestorInfo,
+  validateDOMNesting,
   warnForDeletedHydratableElement,
   warnForDeletedHydratableText,
   warnForInsertedHydratedElement,
   warnForInsertedHydratedText,
-  warnForUnmatchedText,
-} from './ReactFireComponentProperties';
-import {updatedAncestorInfo, validateDOMNesting} from './ReactFireDevOnly';
+  warnForTextDifference,
+} from './ReactFireDevOnly';
 
 export {
   unstable_now as now,
@@ -548,7 +550,8 @@ export function hydrateTextInstance(
   fiber: Object,
 ): boolean {
   setFiberByDomNodeInstance(textInstance, fiber);
-  return diffHydratedText(textInstance, text);
+  const isDifferent = textInstance.nodeValue !== text;
+  return isDifferent;
 }
 
 export function didNotMatchHydratedContainerTextInstance(
@@ -640,5 +643,11 @@ export function didNotFindHydratableTextInstance(
 ) {
   if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
     warnForInsertedHydratedText(parentInstance, text);
+  }
+}
+
+function warnForUnmatchedText(textNode: Text, text: string) {
+  if (__DEV__) {
+    warnForTextDifference(textNode.nodeValue, text);
   }
 }

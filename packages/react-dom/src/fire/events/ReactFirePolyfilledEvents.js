@@ -19,7 +19,7 @@ import {
   onMouseEnterLeaveHeuristics,
   onPointerEnterLeaveHeuristics,
 } from './polyfills/ReactFireEnterLeave';
-import {getDomNodeEventsMap, listenTo} from './ReactFireEvents';
+import {listenTo} from './ReactFireEvents';
 import type {ProxyContext} from './ReactFireEvents';
 
 export const polyfilledEvents = {
@@ -41,24 +41,23 @@ export const polyfilledEvents = {
   onPointerLeave: onPointerEnterLeaveHeuristics,
 };
 
+const polyfilledEventHandlersMap = new Map();
+
 export function listenToPolyfilledEvent(
   rootContainerElement: Element | Document,
   propName: string,
 ) {
   const [dependencies, polyfilledEventHandler] = polyfilledEvents[propName];
   const dependenciesLength = dependencies.length;
-  const domNodeEventsMap = getDomNodeEventsMap(rootContainerElement);
   for (let i = 0; i < dependenciesLength; i++) {
     const dependency = dependencies[i];
     listenTo(dependency, rootContainerElement);
-    const eventData = domNodeEventsMap.get(dependency);
-    if (eventData !== undefined) {
-      const {polyfills} = eventData;
-      const polyfilledName = `${propName}-polyfill`;
-      if (!polyfills.has(polyfilledName)) {
-        polyfills.set(polyfilledName, polyfilledEventHandler);
-      }
+    let polyfilledEventHandlers = polyfilledEventHandlersMap.get(dependency);
+    if (polyfilledEventHandlers === undefined) {
+      polyfilledEventHandlers = new Set();
+      polyfilledEventHandlersMap.set(dependency, polyfilledEventHandlers);
     }
+    polyfilledEventHandlers.add(polyfilledEventHandler);
   }
 }
 
@@ -69,19 +68,12 @@ export function dispatchPolyfills(
   eventTarget: Node | Element | Document | void | null,
   proxyContext: ProxyContext,
 ) {
-  const domNodeEventsMap = getDomNodeEventsMap(containerDomNode);
-  const eventData = domNodeEventsMap.get(eventName);
-  const processedPolyfills = new Set();
+  const polyfilledEventHandlers = polyfilledEventHandlersMap.get(eventName);
+  if (polyfilledEventHandlers !== undefined) {
+    const polyfilledEventHandlersArr = Array.from(polyfilledEventHandlers);
 
-  if (eventData !== undefined) {
-    const polyfills = Array.from(eventData.polyfills.entries());
-    for (let i = 0; i < polyfills.length; i++) {
-      const [polyfilledEventName, polyfilledEventHandler] = polyfills[i];
-      if (processedPolyfills.has(polyfilledEventHandler)) {
-        continue;
-      }
-      processedPolyfills.add(polyfilledEventHandler);
-      proxyContext.eventName = polyfilledEventName;
+    for (let i = 0; i < polyfilledEventHandlersArr.length; i++) {
+      const polyfilledEventHandler = polyfilledEventHandlersArr[i];
       polyfilledEventHandler(eventName, nativeEvent, eventTarget, proxyContext);
     }
   }
