@@ -50,7 +50,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
       ReactTestRenderer.unstable_setNowImplementation(mockNow);
       ReactCache = require('react-cache');
 
-      Profiler = React.unstable_Profiler;
+      Profiler = React.Profiler;
       Suspense = React.Suspense;
 
       TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {

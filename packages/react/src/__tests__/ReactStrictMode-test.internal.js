@@ -313,9 +313,9 @@ describe('ReactStrictMode', () => {
         UNSAFE_componentWillReceiveProps() {}
         render() {
           return (
-            <React.unstable_ConcurrentMode>
+            <React.ConcurrentMode>
               <AsyncRoot />
-            </React.unstable_ConcurrentMode>
+            </React.ConcurrentMode>
           );
         }
       }
@@ -381,9 +381,9 @@ describe('ReactStrictMode', () => {
         UNSAFE_componentWillReceiveProps() {}
         render() {
           return (
-            <React.unstable_ConcurrentMode>
+            <React.ConcurrentMode>
               <AsyncRoot />
-            </React.unstable_ConcurrentMode>
+            </React.ConcurrentMode>
           );
         }
       }
@@ -449,22 +449,22 @@ describe('ReactStrictMode', () => {
       class AsyncRootOne extends React.Component {
         render() {
           return (
-            <React.unstable_ConcurrentMode>
+            <React.ConcurrentMode>
               <Foo>
                 <Bar />
               </Foo>
-            </React.unstable_ConcurrentMode>
+            </React.ConcurrentMode>
           );
         }
       }
       class AsyncRootTwo extends React.Component {
         render() {
           return (
-            <React.unstable_ConcurrentMode>
+            <React.ConcurrentMode>
               <Foo>
                 <Baz />
               </Foo>
-            </React.unstable_ConcurrentMode>
+            </React.ConcurrentMode>
           );
         }
       }
@@ -517,9 +517,9 @@ describe('ReactStrictMode', () => {
       class AsyncRoot extends React.Component {
         render() {
           return (
-            <React.unstable_ConcurrentMode>
+            <React.ConcurrentMode>
               {this.props.foo ? <Foo /> : <Bar />}
-            </React.unstable_ConcurrentMode>
+            </React.ConcurrentMode>
           );
         }
       }

@@ -26,7 +26,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ReactCache = require('react-cache');
     Suspense = React.Suspense;
     StrictMode = React.StrictMode;
-    ConcurrentMode = React.unstable_ConcurrentMode;
+    ConcurrentMode = React.ConcurrentMode;
 
     TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
       return new Promise((resolve, reject) =>
