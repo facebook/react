@@ -15,14 +15,14 @@ import typeof * as PersistentFeatureFlagsType from './ReactFeatureFlags.persiste
 export const debugRenderPhaseSideEffects = false;
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableUserTimingAPI = __DEV__;
-export const enableHooks = false;
+export const enableHooks = true;
 export const warnAboutDeprecatedLifecycles = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const enableProfilerTimer = __PROFILE__;
 export const enableSchedulerTracing = __PROFILE__;
 export const enableSuspenseServerRenderer = false;
 export const disableInputAttributeSyncing = false;
-export const enableStableConcurrentModeAPIs = false;
+export const enableStableConcurrentModeAPIs = true;
 export const warnAboutShorthandPropertyCollision = false;
 export const enableSchedulerDebugging = false;
 
