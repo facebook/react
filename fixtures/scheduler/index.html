@@ -117,6 +117,7 @@ const {
   unstable_getFirstCallbackNode: getFirstCallbackNode,
   unstable_pauseExecution: pauseExecution,
   unstable_continueExecution: continueExecution,
+  unstable_shouldYield: shouldYield,
 } = Scheduler;
 function displayTestResult(testNumber) {
   const expectationNode = document.getElementById('test-' + testNumber + '-expected');
@@ -188,7 +189,7 @@ const expectedResults = [
   [
     'scheduled Cb1',
     'frame 1 started',
-    'cb1 called with argument of {"didTimeout":false}',
+    'cb1 called, shouldYield is false',
     'frame 2 started',
     'frame 3 started... we stop counting now.',
   ],
@@ -197,8 +198,8 @@ const expectedResults = [
     'scheduled CbA',
     'scheduled CbB',
     'frame 1 started',
-    'cbA called with argument of {"didTimeout":false}',
-    'cbB called with argument of {"didTimeout":false}',
+    'cbA called, shouldYield is false',
+    'cbB called, shouldYield is false',
     'frame 2 started',
     'frame 3 started... we stop counting now.',
   ],
@@ -208,9 +209,9 @@ const expectedResults = [
     'scheduled CbB',
     'frame 1 started',
     'scheduled CbA again',
-    'cbA0 called with argument of {"didTimeout":false}',
-    'cbB called with argument of {"didTimeout":false}',
-    'cbA1 called with argument of {"didTimeout":false}',
+    'cbA0 called, shouldYield is false',
+    'cbB called, shouldYield is false',
+    'cbA1 called, shouldYield is false',
     'frame 2 started',
     'frame 3 started... we stop counting now.',
   ],
@@ -221,12 +222,12 @@ const expectedResults = [
     'scheduled cbC',
     'scheduled cbD',
     'frame 1 started',
-    'cbC called with argument of {"didTimeout":true}',
-    'cbA called with argument of {"didTimeout":false}',
+    'cbC called, shouldYield is true',
+    'cbA called, shouldYield is false',
     'cbA running and taking some time',
     'frame 2 started',
-    'cbB called with argument of {"didTimeout":false}',
-    'cbD called with argument of {"didTimeout":false}',
+    'cbB called, shouldYield is false',
+    'cbD called, shouldYield is false',
     'frame 3 started... we stop counting now.',
   ],
   // test 5
@@ -250,8 +251,8 @@ function runTestOne() {
   clearTestResult(1);
   const test1Log = [];
   const cb1Arguments = [];
-  const cb1 = (x) => {
-    updateTestResult(1, 'cb1 called with argument of ' + JSON.stringify(x));
+  const cb1 = () => {
+    updateTestResult(1, 'cb1 called, shouldYield is ' + shouldYield());
   }
   scheduleCallback(cb1);
   updateTestResult(1, 'scheduled Cb1');
@@ -265,11 +266,11 @@ function runTestTwo() {
   // Test 2
   // accepts multiple callbacks and calls within frame when not blocked
   clearTestResult(2);
-  const cbA = (x) => {
-    updateTestResult(2, 'cbA called with argument of ' + JSON.stringify(x));
+  const cbA = () => {
+    updateTestResult(2, 'cbA called, shouldYield is ' + shouldYield());
   }
-  const cbB = (x) => {
-    updateTestResult(2, 'cbB called with argument of ' + JSON.stringify(x));
+  const cbB = () => {
+    updateTestResult(2, 'cbB called, shouldYield is ' + shouldYield());
   }
   scheduleCallback(cbA);
   updateTestResult(2, 'scheduled CbA');
@@ -286,16 +287,16 @@ function runTestThree() {
   // Schedules callbacks in correct order when they use scheduleCallback to schedule themselves
   clearTestResult(3);
   let callbackAIterations = 0;
-  const cbA = (x) => {
+  const cbA = () => {
     if (callbackAIterations < 1) {
       scheduleCallback(cbA);
       updateTestResult(3, 'scheduled CbA again');
     }
-    updateTestResult(3, 'cbA' + callbackAIterations + ' called with argument of ' + JSON.stringify(x));
+    updateTestResult(3, 'cbA' + callbackAIterations + ' called, shouldYield is ' + shouldYield());
     callbackAIterations++;
   }
-  const cbB = (x) => {
-    updateTestResult(3, 'cbB called with argument of ' + JSON.stringify(x));
+  const cbB = () => {
+    updateTestResult(3, 'cbB called, shouldYield is ' + shouldYield());
   }
   scheduleCallback(cbA);
   updateTestResult(3, 'scheduled CbA');
@@ -319,19 +320,19 @@ function runTestFour() {
   // Test 4
   // Calls timed out callbacks and then any more pending callbacks, defers others if time runs out
   clearTestResult(4);
-  const cbA = (x) => {
-    updateTestResult(4, 'cbA called with argument of ' + JSON.stringify(x));
+  const cbA = () => {
+    updateTestResult(4, 'cbA called, shouldYield is ' + shouldYield());
     updateTestResult(4, 'cbA running and taking some time');
     waitForTimeToPass(35);
   }
-  const cbB = (x) => {
-    updateTestResult(4, 'cbB called with argument of ' + JSON.stringify(x));
+  const cbB = () => {
+    updateTestResult(4, 'cbB called, shouldYield is ' + shouldYield());
   }
-  const cbC = (x) => {
-    updateTestResult(4, 'cbC called with argument of ' + JSON.stringify(x));
+  const cbC = () => {
+    updateTestResult(4, 'cbC called, shouldYield is ' + shouldYield());
   }
-  const cbD = (x) => {
-    updateTestResult(4, 'cbD called with argument of ' + JSON.stringify(x));
+  const cbD = () => {
+    updateTestResult(4, 'cbD called, shouldYield is ' + shouldYield());
   }
   scheduleCallback(cbA); // won't time out
   updateTestResult(4, 'scheduled cbA');
@@ -356,24 +357,24 @@ function runTestFour() {
 function runTestFive() {
   // Test 5
   // When some callbacks throw errors, still calls them all within the same frame
-  const cbA = (x) => {
-    console.log('cbA called with argument of ' + JSON.stringify(x));
+  const cbA = () => {
+    console.log('cbA called, shouldYield is ' + shouldYield());
   }
-  const cbB = (x) => {
-    console.log('cbB called with argument of ' + JSON.stringify(x));
+  const cbB = () => {
+    console.log('cbB called, shouldYield is ' + shouldYield());
     console.log('cbB is about to throw an error!');
     throw new Error('error B');
   }
-  const cbC = (x) => {
-    console.log('cbC called with argument of ' + JSON.stringify(x));
+  const cbC = () => {
+    console.log('cbC called, shouldYield is ' + shouldYield());
   }
-  const cbD = (x) => {
-    console.log('cbD called with argument of ' + JSON.stringify(x));
+  const cbD = () => {
+    console.log('cbD called, shouldYield is ' + shouldYield());
     console.log('cbD is about to throw an error!');
     throw new Error('error D');
   }
-  const cbE = (x) => {
-    console.log('cbE called with argument of ' + JSON.stringify(x));
+  const cbE = () => {
+    console.log('cbE called, shouldYield is ' + shouldYield());
     console.log('This was the last callback! ------------------');
   }
 
@@ -434,24 +435,24 @@ function runTestFive() {
 function runTestSix() {
   // Test 6
   // When some callbacks throw errors, still calls them all within the same frame
-  const cbA = (x) => {
-    console.log('cbA called with argument of ' + JSON.stringify(x));
+  const cbA = () => {
+    console.log('cbA called, shouldYield is ' + shouldYield());
     console.log('cbA is about to throw an error!');
     throw new Error('error A');
   }
-  const cbB = (x) => {
-    console.log('cbB called with argument of ' + JSON.stringify(x));
+  const cbB = () => {
+    console.log('cbB called, shouldYield is ' + shouldYield());
   }
-  const cbC = (x) => {
-    console.log('cbC called with argument of ' + JSON.stringify(x));
+  const cbC = () => {
+    console.log('cbC called, shouldYield is ' + shouldYield());
   }
-  const cbD = (x) => {
-    console.log('cbD called with argument of ' + JSON.stringify(x));
+  const cbD = () => {
+    console.log('cbD called, shouldYield is ' + shouldYield());
     console.log('cbD is about to throw an error!');
     throw new Error('error D');
   }
-  const cbE = (x) => {
-    console.log('cbE called with argument of ' + JSON.stringify(x));
+  const cbE = () => {
+    console.log('cbE called, shouldYield is ' + shouldYield());
     console.log('This was the last callback! ------------------');
   }
 
