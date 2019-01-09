@@ -13,6 +13,7 @@
 let React;
 let ReactTestRenderer;
 let ReactDebugTools;
+let currentDispatcher;
 
 describe('ReactHooksInspectionIntergration', () => {
   beforeEach(() => {
@@ -23,6 +24,10 @@ describe('ReactHooksInspectionIntergration', () => {
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     ReactDebugTools = require('react-debug-tools');
+
+    currentDispatcher =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .ReactCurrentDispatcher;
   });
 
   it('should inspect the current state of useState hooks', () => {
@@ -39,7 +44,10 @@ describe('ReactHooksInspectionIntergration', () => {
     let renderer = ReactTestRenderer.create(<Foo prop="prop" />);
 
     let childFiber = renderer.root.findByType(Foo)._currentFiber();
-    let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    let tree = ReactDebugTools.inspectHooksOfFiber(
+      currentDispatcher,
+      childFiber,
+    );
     expect(tree).toEqual([
       {name: 'State', value: 'hello', subHooks: []},
       {name: 'State', value: 'world', subHooks: []},
@@ -53,7 +61,7 @@ describe('ReactHooksInspectionIntergration', () => {
     setStateA('Hi');
 
     childFiber = renderer.root.findByType(Foo)._currentFiber();
-    tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    tree = ReactDebugTools.inspectHooksOfFiber(currentDispatcher, childFiber);
 
     expect(tree).toEqual([
       {name: 'State', value: 'Hi', subHooks: []},
@@ -63,7 +71,7 @@ describe('ReactHooksInspectionIntergration', () => {
     setStateB('world!');
 
     childFiber = renderer.root.findByType(Foo)._currentFiber();
-    tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    tree = ReactDebugTools.inspectHooksOfFiber(currentDispatcher, childFiber);
 
     expect(tree).toEqual([
       {name: 'State', value: 'Hi', subHooks: []},
@@ -111,7 +119,10 @@ describe('ReactHooksInspectionIntergration', () => {
 
     let {onClick: updateStates} = renderer.root.findByType('div').props;
 
-    let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    let tree = ReactDebugTools.inspectHooksOfFiber(
+      currentDispatcher,
+      childFiber,
+    );
     expect(tree).toEqual([
       {name: 'State', value: 'a', subHooks: []},
       {name: 'Reducer', value: 'b', subHooks: []},
@@ -126,7 +137,7 @@ describe('ReactHooksInspectionIntergration', () => {
     updateStates();
 
     childFiber = renderer.root.findByType(Foo)._currentFiber();
-    tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    tree = ReactDebugTools.inspectHooksOfFiber(currentDispatcher, childFiber);
 
     expect(tree).toEqual([
       {name: 'State', value: 'A', subHooks: []},
@@ -152,7 +163,10 @@ describe('ReactHooksInspectionIntergration', () => {
       </MyContext.Provider>,
     );
     let childFiber = renderer.root.findByType(Foo)._currentFiber();
-    let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    let tree = ReactDebugTools.inspectHooksOfFiber(
+      currentDispatcher,
+      childFiber,
+    );
     expect(tree).toEqual([
       {
         name: 'Context',
@@ -172,7 +186,10 @@ describe('ReactHooksInspectionIntergration', () => {
     let renderer = ReactTestRenderer.create(<Foo ref={ref} />);
 
     let childFiber = renderer.root.findByType(Foo)._currentFiber();
-    let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    let tree = ReactDebugTools.inspectHooksOfFiber(
+      currentDispatcher,
+      childFiber,
+    );
     expect(tree).toEqual([
       {name: 'ImperativeHandle', value: obj, subHooks: []},
     ]);
@@ -187,7 +204,10 @@ describe('ReactHooksInspectionIntergration', () => {
     let renderer = ReactTestRenderer.create(<Foo />);
     // TODO: Test renderer findByType is broken for memo. Have to search for the inner.
     let childFiber = renderer.root.findByType(InnerFoo)._currentFiber();
-    let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    let tree = ReactDebugTools.inspectHooksOfFiber(
+      currentDispatcher,
+      childFiber,
+    );
     expect(tree).toEqual([{name: 'State', value: 'hello', subHooks: []}]);
   });
 
@@ -202,7 +222,10 @@ describe('ReactHooksInspectionIntergration', () => {
     }
     let renderer = ReactTestRenderer.create(<Foo />);
     let childFiber = renderer.root.findByType(Foo)._currentFiber();
-    let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    let tree = ReactDebugTools.inspectHooksOfFiber(
+      currentDispatcher,
+      childFiber,
+    );
     expect(tree).toEqual([
       {
         name: 'Custom',
@@ -238,7 +261,10 @@ describe('ReactHooksInspectionIntergration', () => {
     await LazyFoo;
 
     let childFiber = renderer.root._currentFiber();
-    let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    let tree = ReactDebugTools.inspectHooksOfFiber(
+      currentDispatcher,
+      childFiber,
+    );
     expect(tree).toEqual([{name: 'State', value: 'def', subHooks: []}]);
   });
 });

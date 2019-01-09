@@ -12,6 +12,7 @@
 
 let React;
 let ReactDebugTools;
+let currentDispatcher;
 
 describe('ReactHooksInspection', () => {
   beforeEach(() => {
@@ -21,6 +22,10 @@ describe('ReactHooksInspection', () => {
     ReactFeatureFlags.enableHooks = true;
     React = require('react');
     ReactDebugTools = require('react-debug-tools');
+
+    currentDispatcher =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .ReactCurrentDispatcher;
   });
 
   it('should inspect a simple useState hook', () => {
@@ -28,7 +33,7 @@ describe('ReactHooksInspection', () => {
       let [state] = React.useState('hello world');
       return <div>{state}</div>;
     }
-    let tree = ReactDebugTools.inspectHooks(Foo, {});
+    let tree = ReactDebugTools.inspectHooks(currentDispatcher, Foo, {});
     expect(tree).toEqual([
       {
         name: 'State',
@@ -47,7 +52,7 @@ describe('ReactHooksInspection', () => {
       let value = useCustom('hello world');
       return <div>{value}</div>;
     }
-    let tree = ReactDebugTools.inspectHooks(Foo, {});
+    let tree = ReactDebugTools.inspectHooks(currentDispatcher, Foo, {});
     expect(tree).toEqual([
       {
         name: 'Custom',
@@ -79,7 +84,7 @@ describe('ReactHooksInspection', () => {
         </div>
       );
     }
-    let tree = ReactDebugTools.inspectHooks(Foo, {});
+    let tree = ReactDebugTools.inspectHooks(currentDispatcher, Foo, {});
     expect(tree).toEqual([
       {
         name: 'Custom',
@@ -142,7 +147,7 @@ describe('ReactHooksInspection', () => {
         </div>
       );
     }
-    let tree = ReactDebugTools.inspectHooks(Foo, {});
+    let tree = ReactDebugTools.inspectHooks(currentDispatcher, Foo, {});
     expect(tree).toEqual([
       {
         name: 'Bar',
@@ -207,7 +212,7 @@ describe('ReactHooksInspection', () => {
       let value = React.useContext(MyContext);
       return <div>{value}</div>;
     }
-    let tree = ReactDebugTools.inspectHooks(Foo, {});
+    let tree = ReactDebugTools.inspectHooks(currentDispatcher, Foo, {});
     expect(tree).toEqual([
       {
         name: 'Context',
