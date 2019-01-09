@@ -58,9 +58,7 @@ describe('ReactIs', () => {
       true,
     );
     expect(ReactIs.isValidElementType(React.Fragment)).toEqual(true);
-    expect(ReactIs.isValidElementType(React.unstable_ConcurrentMode)).toEqual(
-      true,
-    );
+    expect(ReactIs.isValidElementType(React.ConcurrentMode)).toEqual(true);
     expect(ReactIs.isValidElementType(React.StrictMode)).toEqual(true);
     expect(ReactIs.isValidElementType(React.Suspense)).toEqual(true);
 
@@ -73,12 +71,10 @@ describe('ReactIs', () => {
   });
 
   it('should identify concurrent mode', () => {
-    expect(ReactIs.typeOf(<React.unstable_ConcurrentMode />)).toBe(
+    expect(ReactIs.typeOf(<React.ConcurrentMode />)).toBe(
       ReactIs.ConcurrentMode,
     );
-    expect(ReactIs.isConcurrentMode(<React.unstable_ConcurrentMode />)).toBe(
-      true,
-    );
+    expect(ReactIs.isConcurrentMode(<React.ConcurrentMode />)).toBe(true);
     expect(ReactIs.isConcurrentMode({type: ReactIs.ConcurrentMode})).toBe(
       false,
     );
@@ -117,7 +113,7 @@ describe('ReactIs', () => {
     expect(ReactIs.isElement(<Context.Provider />)).toBe(true);
     expect(ReactIs.isElement(<Context.Consumer />)).toBe(true);
     expect(ReactIs.isElement(<React.Fragment />)).toBe(true);
-    expect(ReactIs.isElement(<React.unstable_ConcurrentMode />)).toBe(true);
+    expect(ReactIs.isElement(<React.ConcurrentMode />)).toBe(true);
     expect(ReactIs.isElement(<React.StrictMode />)).toBe(true);
     expect(ReactIs.isElement(<React.Suspense />)).toBe(true);
   });
@@ -127,7 +123,7 @@ describe('ReactIs', () => {
     expect(ReactIs.typeOf(<RefForwardingComponent />)).toBe(ReactIs.ForwardRef);
     expect(ReactIs.isForwardRef(<RefForwardingComponent />)).toBe(true);
     expect(ReactIs.isForwardRef({type: ReactIs.StrictMode})).toBe(false);
-    expect(ReactIs.isForwardRef(<React.unstable_ConcurrentMode />)).toBe(false);
+    expect(ReactIs.isForwardRef(<React.ConcurrentMode />)).toBe(false);
     expect(ReactIs.isForwardRef(<div />)).toBe(false);
   });
 
@@ -168,7 +164,7 @@ describe('ReactIs', () => {
     expect(ReactIs.typeOf(<React.StrictMode />)).toBe(ReactIs.StrictMode);
     expect(ReactIs.isStrictMode(<React.StrictMode />)).toBe(true);
     expect(ReactIs.isStrictMode({type: ReactIs.StrictMode})).toBe(false);
-    expect(ReactIs.isStrictMode(<React.unstable_ConcurrentMode />)).toBe(false);
+    expect(ReactIs.isStrictMode(<React.ConcurrentMode />)).toBe(false);
     expect(ReactIs.isStrictMode(<div />)).toBe(false);
   });
 
@@ -182,15 +178,13 @@ describe('ReactIs', () => {
 
   it('should identify profile root', () => {
     expect(
-      ReactIs.typeOf(<React.unstable_Profiler id="foo" onRender={jest.fn()} />),
+      ReactIs.typeOf(<React.Profiler id="foo" onRender={jest.fn()} />),
     ).toBe(ReactIs.Profiler);
     expect(
-      ReactIs.isProfiler(
-        <React.unstable_Profiler id="foo" onRender={jest.fn()} />,
-      ),
+      ReactIs.isProfiler(<React.Profiler id="foo" onRender={jest.fn()} />),
     ).toBe(true);
-    expect(ReactIs.isProfiler({type: ReactIs.unstable_Profiler})).toBe(false);
-    expect(ReactIs.isProfiler(<React.unstable_ConcurrentMode />)).toBe(false);
+    expect(ReactIs.isProfiler({type: ReactIs.Profiler})).toBe(false);
+    expect(ReactIs.isProfiler(<React.ConcurrentMode />)).toBe(false);
     expect(ReactIs.isProfiler(<div />)).toBe(false);
   });
 });

@@ -262,7 +262,7 @@ describe('SimpleEventPlugin', function() {
 
     it('flushes pending interactive work before extracting event handler', () => {
       container = document.createElement('div');
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
       document.body.appendChild(container);
 
       let ops = [];
@@ -342,7 +342,7 @@ describe('SimpleEventPlugin', function() {
 
     it('end result of many interactive updates is deterministic', () => {
       container = document.createElement('div');
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
       document.body.appendChild(container);
 
       let button;
@@ -426,9 +426,9 @@ describe('SimpleEventPlugin', function() {
                 // Intentionally not using the updater form here
                 () => this.setState({highPriCount: this.state.highPriCount + 1})
               }>
-              <React.unstable_ConcurrentMode>
+              <React.ConcurrentMode>
                 <Button highPriCount={this.state.highPriCount} />
-              </React.unstable_ConcurrentMode>
+              </React.ConcurrentMode>
             </div>
           );
         }

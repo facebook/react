@@ -68,13 +68,13 @@ describe('ReactProfiler DevTools integration', () => {
     const App = ({multiplier}) => {
       advanceTimeBy(2);
       return (
-        <React.unstable_Profiler id="Profiler" onRender={onRender}>
+        <React.Profiler id="Profiler" onRender={onRender}>
           <AdvanceTime byAmount={3 * multiplier} shouldComponentUpdate={true} />
           <AdvanceTime
             byAmount={7 * multiplier}
             shouldComponentUpdate={false}
           />
-        </React.unstable_Profiler>
+        </React.Profiler>
       );
     };
 

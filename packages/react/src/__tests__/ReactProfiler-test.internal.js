@@ -146,7 +146,7 @@ describe('Profiler', () => {
             it('should warn if required params are missing', () => {
               expect(() => {
                 expect(() => {
-                  ReactTestRenderer.create(<React.unstable_Profiler />);
+                  ReactTestRenderer.create(<React.Profiler />);
                 }).toThrow('onRender is not a function');
               }).toWarnDev(
                 'Profiler must specify an "id" string and "onRender" function as props',
@@ -159,7 +159,7 @@ describe('Profiler', () => {
             // As root
             expect(
               ReactTestRenderer.create(
-                <React.unstable_Profiler id="label" onRender={jest.fn()} />,
+                <React.Profiler id="label" onRender={jest.fn()} />,
               ).toJSON(),
             ).toMatchSnapshot();
 
@@ -167,7 +167,7 @@ describe('Profiler', () => {
             expect(
               ReactTestRenderer.create(
                 <div>
-                  <React.unstable_Profiler id="label" onRender={jest.fn()} />
+                  <React.Profiler id="label" onRender={jest.fn()} />
                 </div>,
               ).toJSON(),
             ).toMatchSnapshot();
@@ -178,10 +178,10 @@ describe('Profiler', () => {
             const renderer = ReactTestRenderer.create(
               <div>
                 <span>outside span</span>
-                <React.unstable_Profiler id="label" onRender={jest.fn()}>
+                <React.Profiler id="label" onRender={jest.fn()}>
                   <span>inside span</span>
                   <FunctionComponent label="function component" />
-                </React.unstable_Profiler>
+                </React.Profiler>
               </div>,
             );
             expect(renderer.toJSON()).toMatchSnapshot();
@@ -195,13 +195,13 @@ describe('Profiler', () => {
               }
             }
             const renderer = ReactTestRenderer.create(
-              <React.unstable_Profiler id="outer" onRender={jest.fn()}>
+              <React.Profiler id="outer" onRender={jest.fn()}>
                 <FunctionComponent label="outer function component" />
-                <React.unstable_Profiler id="inner" onRender={jest.fn()}>
+                <React.Profiler id="inner" onRender={jest.fn()}>
                   <ClassComponent label="inner class component" />
                   <span>inner span</span>
-                </React.unstable_Profiler>
-              </React.unstable_Profiler>,
+                </React.Profiler>
+              </React.Profiler>,
             );
             expect(renderer.toJSON()).toMatchSnapshot();
           });
@@ -240,11 +240,11 @@ describe('Profiler', () => {
         expect(() =>
           ReactTestRenderer.create(
             <ClassComponent>
-              <React.unstable_Profiler id="do-not-throw" onRender={callback}>
-                <React.unstable_Profiler id="throw" onRender={callback}>
+              <React.Profiler id="do-not-throw" onRender={callback}>
+                <React.Profiler id="throw" onRender={callback}>
                   <div />
-                </React.unstable_Profiler>
-              </React.unstable_Profiler>
+                </React.Profiler>
+              </React.Profiler>
             </ClassComponent>,
           ),
         ).toThrow('expected');
@@ -261,10 +261,10 @@ describe('Profiler', () => {
         };
 
         const renderer = ReactTestRenderer.create(
-          <React.unstable_Profiler id="test" onRender={callback}>
+          <React.Profiler id="test" onRender={callback}>
             <Yield value="first" />
             <Yield value="last" />
-          </React.unstable_Profiler>,
+          </React.Profiler>,
           {
             unstable_isConcurrent: true,
           },
@@ -301,9 +301,9 @@ describe('Profiler', () => {
         advanceTimeBy(5); // 0 -> 5
 
         const renderer = ReactTestRenderer.create(
-          <React.unstable_Profiler id="test" onRender={callback}>
+          <React.Profiler id="test" onRender={callback}>
             <AdvanceTime />
-          </React.unstable_Profiler>,
+          </React.Profiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(1);
@@ -324,9 +324,9 @@ describe('Profiler', () => {
         advanceTimeBy(20); // 15 -> 35
 
         renderer.update(
-          <React.unstable_Profiler id="test" onRender={callback}>
+          <React.Profiler id="test" onRender={callback}>
             <AdvanceTime />
-          </React.unstable_Profiler>,
+          </React.Profiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(1);
@@ -347,9 +347,9 @@ describe('Profiler', () => {
         advanceTimeBy(20); // 45 -> 65
 
         renderer.update(
-          <React.unstable_Profiler id="test" onRender={callback}>
+          <React.Profiler id="test" onRender={callback}>
             <AdvanceTime byAmount={4} />
-          </React.unstable_Profiler>,
+          </React.Profiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(1);
@@ -373,13 +373,13 @@ describe('Profiler', () => {
 
         ReactTestRenderer.create(
           <React.Fragment>
-            <React.unstable_Profiler id="parent" onRender={callback}>
+            <React.Profiler id="parent" onRender={callback}>
               <AdvanceTime byAmount={10}>
-                <React.unstable_Profiler id="child" onRender={callback}>
+                <React.Profiler id="child" onRender={callback}>
                   <AdvanceTime byAmount={20} />
-                </React.unstable_Profiler>
+                </React.Profiler>
               </AdvanceTime>
-            </React.unstable_Profiler>
+            </React.Profiler>
           </React.Fragment>,
         );
 
@@ -408,12 +408,12 @@ describe('Profiler', () => {
 
         ReactTestRenderer.create(
           <React.Fragment>
-            <React.unstable_Profiler id="first" onRender={callback}>
+            <React.Profiler id="first" onRender={callback}>
               <AdvanceTime byAmount={20} />
-            </React.unstable_Profiler>
-            <React.unstable_Profiler id="second" onRender={callback}>
+            </React.Profiler>
+            <React.Profiler id="second" onRender={callback}>
               <AdvanceTime byAmount={5} />
-            </React.unstable_Profiler>
+            </React.Profiler>
           </React.Fragment>,
         );
 
@@ -442,9 +442,9 @@ describe('Profiler', () => {
         ReactTestRenderer.create(
           <React.Fragment>
             <AdvanceTime byAmount={20} />
-            <React.unstable_Profiler id="test" onRender={callback}>
+            <React.Profiler id="test" onRender={callback}>
               <AdvanceTime byAmount={5} />
-            </React.unstable_Profiler>
+            </React.Profiler>
             <AdvanceTime byAmount={20} />
           </React.Fragment>,
         );
@@ -478,17 +478,17 @@ describe('Profiler', () => {
         }
 
         const renderer = ReactTestRenderer.create(
-          <React.unstable_Profiler id="outer" onRender={callback}>
+          <React.Profiler id="outer" onRender={callback}>
             <Updater>
-              <React.unstable_Profiler id="middle" onRender={callback}>
+              <React.Profiler id="middle" onRender={callback}>
                 <Pure>
-                  <React.unstable_Profiler id="inner" onRender={callback}>
+                  <React.Profiler id="inner" onRender={callback}>
                     <div />
-                  </React.unstable_Profiler>
+                  </React.Profiler>
                 </Pure>
-              </React.unstable_Profiler>
+              </React.Profiler>
             </Updater>
-          </React.unstable_Profiler>,
+          </React.Profiler>,
         );
 
         // All profile callbacks are called for initial render
@@ -515,11 +515,11 @@ describe('Profiler', () => {
         advanceTimeBy(5); // 0 -> 5
 
         const renderer = ReactTestRenderer.create(
-          <React.unstable_Profiler id="test" onRender={callback}>
+          <React.Profiler id="test" onRender={callback}>
             <AdvanceTime byAmount={10}>
               <AdvanceTime byAmount={13} shouldComponentUpdate={false} />
             </AdvanceTime>
-          </React.unstable_Profiler>,
+          </React.Profiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(1);
@@ -527,11 +527,11 @@ describe('Profiler', () => {
         advanceTimeBy(30); // 28 -> 58
 
         renderer.update(
-          <React.unstable_Profiler id="test" onRender={callback}>
+          <React.Profiler id="test" onRender={callback}>
             <AdvanceTime byAmount={4}>
               <AdvanceTime byAmount={7} shouldComponentUpdate={false} />
             </AdvanceTime>
-          </React.unstable_Profiler>,
+          </React.Profiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(2);
@@ -573,17 +573,17 @@ describe('Profiler', () => {
         advanceTimeBy(5); // 0 -> 5
 
         const renderer = ReactTestRenderer.create(
-          <React.unstable_Profiler id="test" onRender={callback}>
+          <React.Profiler id="test" onRender={callback}>
             <WithLifecycles />
-          </React.unstable_Profiler>,
+          </React.Profiler>,
         );
 
         advanceTimeBy(15); // 13 -> 28
 
         renderer.update(
-          <React.unstable_Profiler id="test" onRender={callback}>
+          <React.Profiler id="test" onRender={callback}>
             <WithLifecycles />
-          </React.unstable_Profiler>,
+          </React.Profiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(2);
@@ -617,10 +617,10 @@ describe('Profiler', () => {
 
           // Render partially, but run out of time before completing.
           const renderer = ReactTestRenderer.create(
-            <React.unstable_Profiler id="test" onRender={callback}>
+            <React.Profiler id="test" onRender={callback}>
               <Yield renderTime={2} />
               <Yield renderTime={3} />
-            </React.unstable_Profiler>,
+            </React.Profiler>,
             {unstable_isConcurrent: true},
           );
           expect(renderer).toFlushAndYieldThrough(['Yield:2']);
@@ -652,13 +652,13 @@ describe('Profiler', () => {
           // Render partially, but don't finish.
           // This partial render should take 5ms of simulated time.
           const renderer = ReactTestRenderer.create(
-            <React.unstable_Profiler id="outer" onRender={callback}>
+            <React.Profiler id="outer" onRender={callback}>
               <Yield renderTime={5} />
               <Yield renderTime={10} />
-              <React.unstable_Profiler id="inner" onRender={callback}>
+              <React.Profiler id="inner" onRender={callback}>
                 <Yield renderTime={17} />
-              </React.unstable_Profiler>
-            </React.unstable_Profiler>,
+              </React.Profiler>
+            </React.Profiler>,
             {unstable_isConcurrent: true},
           );
           expect(renderer).toFlushAndYieldThrough(['Yield:5']);
@@ -702,10 +702,10 @@ describe('Profiler', () => {
           // Render a partially update, but don't finish.
           // This partial render should take 10ms of simulated time.
           const renderer = ReactTestRenderer.create(
-            <React.unstable_Profiler id="test" onRender={callback}>
+            <React.Profiler id="test" onRender={callback}>
               <Yield renderTime={10} />
               <Yield renderTime={20} />
-            </React.unstable_Profiler>,
+            </React.Profiler>,
             {unstable_isConcurrent: true},
           );
           expect(renderer).toFlushAndYieldThrough(['Yield:10']);
@@ -718,9 +718,9 @@ describe('Profiler', () => {
           // The interrupted work simulates an additional 5ms of time.
           renderer.unstable_flushSync(() => {
             renderer.update(
-              <React.unstable_Profiler id="test" onRender={callback}>
+              <React.Profiler id="test" onRender={callback}>
                 <Yield renderTime={5} />
-              </React.unstable_Profiler>,
+              </React.Profiler>,
             );
           });
           expect(ReactTestRenderer).toHaveYielded(['Yield:5']);
@@ -753,10 +753,10 @@ describe('Profiler', () => {
           advanceTimeBy(5); // 0 -> 5
 
           const renderer = ReactTestRenderer.create(
-            <React.unstable_Profiler id="test" onRender={callback}>
+            <React.Profiler id="test" onRender={callback}>
               <Yield renderTime={6} />
               <Yield renderTime={15} />
-            </React.unstable_Profiler>,
+            </React.Profiler>,
             {unstable_isConcurrent: true},
           );
 
@@ -777,11 +777,11 @@ describe('Profiler', () => {
           // Render a partially update, but don't finish.
           // This partial render should take 3ms of simulated time.
           renderer.update(
-            <React.unstable_Profiler id="test" onRender={callback}>
+            <React.Profiler id="test" onRender={callback}>
               <Yield renderTime={3} />
               <Yield renderTime={5} />
               <Yield renderTime={9} />
-            </React.unstable_Profiler>,
+            </React.Profiler>,
           );
           expect(renderer).toFlushAndYieldThrough(['Yield:3']);
           expect(callback).toHaveBeenCalledTimes(0);
@@ -800,9 +800,9 @@ describe('Profiler', () => {
           // The interrupted work simulates an additional 11ms of time.
           renderer.unstable_flushSync(() => {
             renderer.update(
-              <React.unstable_Profiler id="test" onRender={callback}>
+              <React.Profiler id="test" onRender={callback}>
                 <Yield renderTime={11} />
-              </React.unstable_Profiler>,
+              </React.Profiler>,
             );
           });
           expect(ReactTestRenderer).toHaveYielded(['Yield:11']);
@@ -859,10 +859,10 @@ describe('Profiler', () => {
           advanceTimeBy(5); // 0 -> 5
 
           const renderer = ReactTestRenderer.create(
-            <React.unstable_Profiler id="test" onRender={callback}>
+            <React.Profiler id="test" onRender={callback}>
               <FirstComponent />
               <SecondComponent />
-            </React.unstable_Profiler>,
+            </React.Profiler>,
             {unstable_isConcurrent: true},
           );
 
@@ -975,12 +975,12 @@ describe('Profiler', () => {
                 advanceTimeBy(5); // 0 -> 5
 
                 ReactTestRenderer.create(
-                  <React.unstable_Profiler id="test" onRender={callback}>
+                  <React.Profiler id="test" onRender={callback}>
                     <ErrorBoundary>
                       <AdvanceTime byAmount={9} />
                       <ThrowsError />
                     </ErrorBoundary>
-                  </React.unstable_Profiler>,
+                  </React.Profiler>,
                 );
 
                 expect(callback).toHaveBeenCalledTimes(2);
@@ -1054,12 +1054,12 @@ describe('Profiler', () => {
                 advanceTimeBy(5); // 0 -> 5
 
                 ReactTestRenderer.create(
-                  <React.unstable_Profiler id="test" onRender={callback}>
+                  <React.Profiler id="test" onRender={callback}>
                     <ErrorBoundary>
                       <AdvanceTime byAmount={5} />
                       <ThrowsError />
                     </ErrorBoundary>
-                  </React.unstable_Profiler>,
+                  </React.Profiler>,
                 );
 
                 expect(callback).toHaveBeenCalledTimes(1);
@@ -1097,29 +1097,29 @@ describe('Profiler', () => {
                 // Simulate a renderer error during the "complete" phase.
                 // This mimics behavior like React Native's View/Text nesting validation.
                 ReactNoop.render(
-                  <React.unstable_Profiler id="profiler" onRender={jest.fn()}>
+                  <React.Profiler id="profiler" onRender={jest.fn()}>
                     <errorInCompletePhase>hi</errorInCompletePhase>
-                  </React.unstable_Profiler>,
+                  </React.Profiler>,
                 );
                 expect(ReactNoop.flush).toThrow('Error in host config.');
 
                 // A similar case we've seen caused by an invariant in ReactDOM.
                 // It didn't reproduce without a host component inside.
                 ReactNoop.render(
-                  <React.unstable_Profiler id="profiler" onRender={jest.fn()}>
+                  <React.Profiler id="profiler" onRender={jest.fn()}>
                     <errorInCompletePhase>
                       <span>hi</span>
                     </errorInCompletePhase>
-                  </React.unstable_Profiler>,
+                  </React.Profiler>,
                 );
                 expect(ReactNoop.flush).toThrow('Error in host config.');
 
                 // So long as the profiler timer's fiber stack is reset correctly,
                 // Subsequent renders should not error.
                 ReactNoop.render(
-                  <React.unstable_Profiler id="profiler" onRender={jest.fn()}>
+                  <React.Profiler id="profiler" onRender={jest.fn()}>
                     <span>hi</span>
-                  </React.unstable_Profiler>,
+                  </React.Profiler>,
                 );
                 ReactNoop.flush();
               });
@@ -1134,9 +1134,9 @@ describe('Profiler', () => {
         advanceTimeBy(5); // 0 -> 5
 
         const renderer = ReactTestRenderer.create(
-          <React.unstable_Profiler id="one" onRender={callback}>
+          <React.Profiler id="one" onRender={callback}>
             <AdvanceTime byAmount={2} />
-          </React.unstable_Profiler>,
+          </React.Profiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(1);
@@ -1144,9 +1144,9 @@ describe('Profiler', () => {
         advanceTimeBy(20); // 7 -> 27
 
         renderer.update(
-          <React.unstable_Profiler id="two" onRender={callback}>
+          <React.Profiler id="two" onRender={callback}>
             <AdvanceTime byAmount={1} />
-          </React.unstable_Profiler>,
+          </React.Profiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(2);
@@ -1189,9 +1189,9 @@ describe('Profiler', () => {
         }
 
         ReactTestRenderer.create(
-          <React.unstable_Profiler id="test" onRender={callback}>
+          <React.Profiler id="test" onRender={callback}>
             <ClassComponent />
-          </React.unstable_Profiler>,
+          </React.Profiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(1);
@@ -1519,9 +1519,9 @@ describe('Profiler', () => {
         mockNow(),
         () => {
           renderer = ReactTestRenderer.create(
-            <React.unstable_Profiler id="test-profiler" onRender={onRender}>
+            <React.Profiler id="test-profiler" onRender={onRender}>
               <Example />
-            </React.unstable_Profiler>,
+            </React.Profiler>,
             {
               unstable_isConcurrent: true,
             },
@@ -1684,9 +1684,9 @@ describe('Profiler', () => {
       };
       SchedulerTracing.unstable_trace(interactionTwo.name, mockNow(), () => {
         renderer.update(
-          <React.unstable_Profiler id="test-profiler" onRender={onRender}>
+          <React.Profiler id="test-profiler" onRender={onRender}>
             <Example />
-          </React.unstable_Profiler>,
+          </React.Profiler>,
         );
       });
 
@@ -1760,10 +1760,10 @@ describe('Profiler', () => {
       advanceTimeBy(5);
 
       const renderer = ReactTestRenderer.create(
-        <React.unstable_Profiler id="test" onRender={onRender}>
+        <React.Profiler id="test" onRender={onRender}>
           <FirstComponent />
           <SecondComponent />
-        </React.unstable_Profiler>,
+        </React.Profiler>,
         {unstable_isConcurrent: true},
       );
 
@@ -1935,9 +1935,9 @@ describe('Profiler', () => {
       let renderer;
       SchedulerTracing.unstable_trace(interactionOne.name, mockNow(), () => {
         renderer = ReactTestRenderer.create(
-          <React.unstable_Profiler id="test" onRender={onRender}>
+          <React.Profiler id="test" onRender={onRender}>
             <Example />
-          </React.unstable_Profiler>,
+          </React.Profiler>,
           {unstable_isConcurrent: true},
         );
       });
@@ -2133,9 +2133,9 @@ describe('Profiler', () => {
         render() {
           parentInstance = this;
           return (
-            <React.unstable_Profiler id="test-profiler" onRender={onRender}>
+            <React.Profiler id="test-profiler" onRender={onRender}>
               <Child count={this.state.count} />
-            </React.unstable_Profiler>
+            </React.Profiler>
           );
         }
       }
@@ -2218,13 +2218,13 @@ describe('Profiler', () => {
         const onRender = jest.fn();
         SchedulerTracing.unstable_trace(interaction.name, mockNow(), () => {
           ReactNoop.render(
-            <React.unstable_Profiler id="test-profiler" onRender={onRender}>
+            <React.Profiler id="test-profiler" onRender={onRender}>
               <React.Suspense fallback={<Text text="Loading..." />}>
                 <AsyncText text="Async" ms={20000} />
               </React.Suspense>
               <Text text="Sync" />
               <Monkey ref={monkey} />
-            </React.unstable_Profiler>,
+            </React.Profiler>,
           );
         });
 
@@ -2306,13 +2306,13 @@ describe('Profiler', () => {
           interaction.timestamp,
           () => {
             ReactTestRenderer.create(
-              <React.unstable_Profiler id="app" onRender={onRender}>
+              <React.Profiler id="app" onRender={onRender}>
                 <React.Suspense
                   maxDuration={1000}
                   fallback={<Text text="loading" />}>
                   <AsyncText text="loaded" ms={2000} />
                 </React.Suspense>
-              </React.unstable_Profiler>,
+              </React.Profiler>,
             );
           },
         );
@@ -2360,13 +2360,13 @@ describe('Profiler', () => {
           interaction.timestamp,
           () => {
             ReactTestRenderer.create(
-              <React.unstable_Profiler id="app" onRender={onRender}>
+              <React.Profiler id="app" onRender={onRender}>
                 <React.Suspense
                   maxDuration={1000}
                   fallback={<Text text="loading" />}>
                   <AsyncComponentWithCascadingWork text="loaded" ms={2000} />
                 </React.Suspense>
-              </React.unstable_Profiler>,
+              </React.Profiler>,
             );
           },
         );
@@ -2400,13 +2400,13 @@ describe('Profiler', () => {
           interaction.timestamp,
           () => {
             renderer = ReactTestRenderer.create(
-              <React.unstable_Profiler id="app" onRender={onRender}>
+              <React.Profiler id="app" onRender={onRender}>
                 <React.Suspense
                   maxDuration={1000}
                   fallback={<Text text="loading" />}>
                   <AsyncText text="loaded" ms={2000} />
                 </React.Suspense>
-              </React.unstable_Profiler>,
+              </React.Profiler>,
               {
                 unstable_isConcurrent: true,
               },
@@ -2448,13 +2448,13 @@ describe('Profiler', () => {
           interaction.timestamp,
           () => {
             renderer = ReactTestRenderer.create(
-              <React.unstable_Profiler id="app" onRender={onRender}>
+              <React.Profiler id="app" onRender={onRender}>
                 <React.Suspense
                   maxDuration={2000}
                   fallback={<Text text="loading" />}>
                   <AsyncText text="loaded" ms={1000} />
                 </React.Suspense>
-              </React.unstable_Profiler>,
+              </React.Profiler>,
               {unstable_isConcurrent: true},
             );
           },
@@ -2487,14 +2487,14 @@ describe('Profiler', () => {
           initialRenderInteraction.timestamp,
           () => {
             renderer = ReactTestRenderer.create(
-              <React.unstable_Profiler id="app" onRender={onRender}>
+              <React.Profiler id="app" onRender={onRender}>
                 <React.Suspense
                   maxDuration={2000}
                   fallback={<Text text="loading" />}>
                   <AsyncText text="loaded" ms={1000} />
                 </React.Suspense>
                 <Text text="initial" />
-              </React.unstable_Profiler>,
+              </React.Profiler>,
             );
           },
         );
@@ -2521,14 +2521,14 @@ describe('Profiler', () => {
             highPriUpdateInteraction.timestamp,
             () => {
               renderer.update(
-                <React.unstable_Profiler id="app" onRender={onRender}>
+                <React.Profiler id="app" onRender={onRender}>
                   <React.Suspense
                     maxDuration={2000}
                     fallback={<Text text="loading" />}>
                     <AsyncText text="loaded" ms={1000} />
                   </React.Suspense>
                   <Text text="updated" />
-                </React.unstable_Profiler>,
+                </React.Profiler>,
               );
             },
           );
@@ -2573,14 +2573,14 @@ describe('Profiler', () => {
           initialRenderInteraction.timestamp,
           () => {
             renderer = ReactTestRenderer.create(
-              <React.unstable_Profiler id="app" onRender={onRender}>
+              <React.Profiler id="app" onRender={onRender}>
                 <React.Suspense
                   maxDuration={2000}
                   fallback={<Text text="loading" />}>
                   <AsyncText text="loaded" ms={1000} />
                 </React.Suspense>
                 <Text text="initial" />
-              </React.unstable_Profiler>,
+              </React.Profiler>,
               {unstable_isConcurrent: true},
             );
           },
@@ -2611,14 +2611,14 @@ describe('Profiler', () => {
             highPriUpdateInteraction.timestamp,
             () => {
               renderer.update(
-                <React.unstable_Profiler id="app" onRender={onRender}>
+                <React.Profiler id="app" onRender={onRender}>
                   <React.Suspense
                     maxDuration={2000}
                     fallback={<Text text="loading" />}>
                     <AsyncText text="loaded" ms={1000} />
                   </React.Suspense>
                   <Text text="updated" />
-                </React.unstable_Profiler>,
+                </React.Profiler>,
               );
             },
           );

@@ -110,7 +110,7 @@ describe('ProfilerDOM', () => {
       interaction = Array.from(interactions)[0];
 
       element = document.createElement('div');
-      const root = ReactDOM.unstable_createRoot(element);
+      const root = ReactDOM.createRoot(element);
       batch = root.createBatch();
       batch.render(
         <React.Suspense maxDuration={100} fallback={<Text text="Loading..." />}>

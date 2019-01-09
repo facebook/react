@@ -14,7 +14,7 @@ let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 let ReactDOM;
 
-const ConcurrentMode = React.unstable_ConcurrentMode;
+const ConcurrentMode = React.ConcurrentMode;
 
 const setUntrackedInputValue = Object.getOwnPropertyDescriptor(
   HTMLInputElement.prototype,
@@ -163,7 +163,7 @@ describe('ReactDOMFiberAsync', () => {
     });
 
     it('createRoot makes the entire tree async', () => {
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
       root.render(<div>Hi</div>);
       expect(container.textContent).toEqual('');
       jest.runAllTimers();
@@ -185,7 +185,7 @@ describe('ReactDOMFiberAsync', () => {
         }
       }
 
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
       root.render(<Component />);
       expect(container.textContent).toEqual('');
       jest.runAllTimers();
