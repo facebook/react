@@ -9,7 +9,7 @@
 
 export const enableUserTimingAPI = __DEV__;
 
-export const enableHooks = false;
+export const enableHooks = true;
 // Helps identify side effects in begin-phase lifecycle hooks and setState reducers:
 export const debugRenderPhaseSideEffects = false;
 
@@ -49,6 +49,6 @@ export const disableInputAttributeSyncing = false;
 
 // These APIs will no longer be "unstable" in the upcoming 16.7 release,
 // Control this behavior with a flag to support 16.6 minor releases in the meanwhile.
-export const enableStableConcurrentModeAPIs = false;
+export const enableStableConcurrentModeAPIs = true;
 
 export const warnAboutShorthandPropertyCollision = false;
