@@ -90,7 +90,7 @@ import {
   prepareToReadContext,
   calculateChangedBits,
 } from './ReactFiberNewContext';
-import {prepareToUseHooks, finishHooks, resetHooks} from './ReactFiberHooks';
+import {resetHooks, renderWithHooks} from './ReactFiberHooks';
 import {stopProfilerTimerIfRunning} from './ReactProfilerTimer';
 import {
   getMaskedContext,
@@ -237,19 +237,37 @@ function updateForwardRef(
   // The rest is a fork of updateFunctionComponent
   let nextChildren;
   prepareToReadContext(workInProgress, renderExpirationTime);
-  prepareToUseHooks(current, workInProgress, renderExpirationTime);
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     setCurrentPhase('render');
-    nextChildren = render(nextProps, ref);
+    nextChildren = renderWithHooks(
+      current,
+      workInProgress,
+      render,
+      nextProps,
+      ref,
+      renderExpirationTime,
+    );
     setCurrentPhase(null);
   } else {
-    nextChildren = render(nextProps, ref);
+    nextChildren = renderWithHooks(
+      current,
+      workInProgress,
+      render,
+      nextProps,
+      ref,
+      renderExpirationTime,
+    );
   }
-  nextChildren = finishHooks(render, nextProps, nextChildren, ref);
 
-  // React DevTools reads this flag.
-  workInProgress.effectTag |= PerformedWork;
+  if ((workInProgress.effectTag & PerformedWork) === NoEffect) {
+    return bailoutOnAlreadyFinishedWork(
+      current,
+      workInProgress,
+      renderExpirationTime,
+    );
+  }
+
   reconcileChildren(
     current,
     workInProgress,
@@ -350,8 +368,6 @@ function updateMemoComponent(
       );
     }
   }
-  // React DevTools reads this flag.
-  workInProgress.effectTag |= PerformedWork;
   let newChild = createWorkInProgress(
     currentChild,
     nextProps,
@@ -506,19 +522,37 @@ function updateFunctionComponent(
 
   let nextChildren;
   prepareToReadContext(workInProgress, renderExpirationTime);
-  prepareToUseHooks(current, workInProgress, renderExpirationTime);
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     setCurrentPhase('render');
-    nextChildren = Component(nextProps, context);
+    nextChildren = renderWithHooks(
+      current,
+      workInProgress,
+      Component,
+      nextProps,
+      context,
+      renderExpirationTime,
+    );
     setCurrentPhase(null);
   } else {
-    nextChildren = Component(nextProps, context);
+    nextChildren = renderWithHooks(
+      current,
+      workInProgress,
+      Component,
+      nextProps,
+      context,
+      renderExpirationTime,
+    );
   }
-  nextChildren = finishHooks(Component, nextProps, nextChildren, context);
 
-  // React DevTools reads this flag.
-  workInProgress.effectTag |= PerformedWork;
+  if ((workInProgress.effectTag & PerformedWork) === NoEffect) {
+    return bailoutOnAlreadyFinishedWork(
+      current,
+      workInProgress,
+      renderExpirationTime,
+    );
+  }
+
   reconcileChildren(
     current,
     workInProgress,
@@ -1063,7 +1097,6 @@ function mountIndeterminateComponent(
   const context = getMaskedContext(workInProgress, unmaskedContext);
 
   prepareToReadContext(workInProgress, renderExpirationTime);
-  prepareToUseHooks(null, workInProgress, renderExpirationTime);
 
   let value;
 
@@ -1091,12 +1124,24 @@ function mountIndeterminateComponent(
     }
 
     ReactCurrentOwner.current = workInProgress;
-    value = Component(props, context);
+    value = renderWithHooks(
+      null,
+      workInProgress,
+      Component,
+      props,
+      context,
+      renderExpirationTime,
+    );
   } else {
-    value = Component(props, context);
+    value = renderWithHooks(
+      null,
+      workInProgress,
+      Component,
+      props,
+      context,
+      renderExpirationTime,
+    );
   }
-  // React DevTools reads this flag.
-  workInProgress.effectTag |= PerformedWork;
 
   if (
     typeof value === 'object' &&
@@ -1147,7 +1192,6 @@ function mountIndeterminateComponent(
   } else {
     // Proceed under the assumption that this is a function component
     workInProgress.tag = FunctionComponent;
-    value = finishHooks(Component, props, value, context);
     reconcileChildren(null, workInProgress, value, renderExpirationTime);
     if (__DEV__) {
       validateFunctionComponentInDev(workInProgress, Component);
@@ -1647,8 +1691,10 @@ function bailoutOnAlreadyFinishedWork(
 
   if (current !== null) {
     // Reuse previous context list
-    workInProgress.firstContextDependency = current.firstContextDependency;
+    workInProgress.contextDependencies = current.contextDependencies;
   }
+
+  workInProgress.effectTag &= ~PerformedWork;
 
   if (enableProfilerTimer) {
     // Don't update "base" render times for bailouts.
@@ -1680,11 +1726,12 @@ function beginWork(
   if (current !== null) {
     const oldProps = current.memoizedProps;
     const newProps = workInProgress.pendingProps;
-    if (
-      oldProps === newProps &&
-      !hasLegacyContextChanged() &&
-      updateExpirationTime < renderExpirationTime
-    ) {
+
+    if (oldProps !== newProps || hasLegacyContextChanged()) {
+      // If props or context changed, mark the fiber as having performed work.
+      // This may be unset if the props are determined to be equal later (memo).
+      workInProgress.effectTag |= PerformedWork;
+    } else if (updateExpirationTime < renderExpirationTime) {
       // This fiber does not have any pending work. Bailout without entering
       // the begin phase. There's still some bookkeeping we that needs to be done
       // in this optimized path, mostly pushing stuff onto the stack.
@@ -1767,6 +1814,9 @@ function beginWork(
         renderExpirationTime,
       );
     }
+  } else {
+    // No bailouts on initial mount.
+    workInProgress.effectTag |= PerformedWork;
   }
 
   // Before entering the begin phase, clear the expiration time.
