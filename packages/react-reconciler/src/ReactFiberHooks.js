@@ -588,10 +588,13 @@ export function useImperativeHandle<T>(
   }, nextInputs);
 }
 
-export function useDebugValue(valueLabel: string): void {
+export function useDebugValue(
+  value: any,
+  formatterFn: ?(value: any) => any,
+): void {
   // This hook is normally a no-op.
   // The react-debug-hooks package injects its own implementation
-  // so that e.g. DevTools can display customhook values.
+  // so that e.g. DevTools can display custom hook values.
 }
 
 export function useCallback<T>(

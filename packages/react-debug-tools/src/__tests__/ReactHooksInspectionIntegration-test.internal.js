@@ -223,7 +223,7 @@ describe('ReactHooksInspectionIntergration', () => {
         let [value] = React.useState(label);
         return value;
       }
-      function Example(props) {
+      function Example() {
         useLabeledValue('a');
         React.useState('b');
         useAnonymous('c');
@@ -266,7 +266,7 @@ describe('ReactHooksInspectionIntergration', () => {
         React.useDebugValue('outer');
         useInner();
       }
-      function Example(props) {
+      function Example() {
         useOuter();
         return null;
       }
@@ -299,7 +299,7 @@ describe('ReactHooksInspectionIntergration', () => {
         React.useDebugValue(`single ${value}`);
         React.useState(0);
       }
-      function Example(props) {
+      function Example() {
         useSingleLabelCustom('one');
         useMultiLabelCustom();
         useSingleLabelCustom('two');
@@ -323,6 +323,38 @@ describe('ReactHooksInspectionIntergration', () => {
           name: 'SingleLabelCustom',
           value: __DEV__ ? 'single two' : undefined,
           subHooks: [{name: 'State', value: 0, subHooks: []}],
+        },
+      ]);
+    });
+
+    it('should ignore useDebugValue() made outside of a custom hook', () => {
+      function Example() {
+        React.useDebugValue('this is invalid');
+        return null;
+      }
+      let renderer = ReactTestRenderer.create(<Example />);
+      let childFiber = renderer.root.findByType(Example)._currentFiber();
+      let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+      expect(tree).toHaveLength(0);
+    });
+
+    it('should support an optional formatter function param', () => {
+      function useCustom() {
+        React.useDebugValue({bar: 123}, object => `bar:${object.bar}`);
+        React.useState(0);
+      }
+      function Example() {
+        useCustom();
+        return null;
+      }
+      let renderer = ReactTestRenderer.create(<Example />);
+      let childFiber = renderer.root.findByType(Example)._currentFiber();
+      let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+      expect(tree).toEqual([
+        {
+          name: 'Custom',
+          value: __DEV__ ? 'bar:123' : undefined,
+          subHooks: [{name: 'State', subHooks: [], value: 0}],
         },
       ]);
     });
