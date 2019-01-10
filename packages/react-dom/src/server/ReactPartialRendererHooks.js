@@ -347,8 +347,8 @@ export const Dispatcher = {
   useLayoutEffect,
   // Callbacks are passed as they are in the server environment.
   useCallback: identity,
-  // useImperativeMethods is not run in the server environment
-  useImperativeMethods: noop,
+  // useImperativeHandle is not run in the server environment
+  useImperativeHandle: noop,
   // Effects are not run in the server environment.
   useEffect: noop,
 };

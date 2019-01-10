@@ -557,7 +557,7 @@ function useEffectImpl(fiberEffectTag, hookEffectTag, create, inputs): void {
   );
 }
 
-export function useImperativeMethods<T>(
+export function useImperativeHandle<T>(
   ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
   create: () => T,
   inputs: Array<mixed> | void | null,

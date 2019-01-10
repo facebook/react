@@ -32,7 +32,7 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useImperativeMethods,
+  useImperativeHandle,
   useLayoutEffect,
   useMemo,
   useReducer,
@@ -98,7 +98,7 @@ if (enableHooks) {
   React.useCallback = useCallback;
   React.useContext = useContext;
   React.useEffect = useEffect;
-  React.useImperativeMethods = useImperativeMethods;
+  React.useImperativeHandle = useImperativeHandle;
   React.useLayoutEffect = useLayoutEffect;
   React.useMemo = useMemo;
   React.useReducer = useReducer;
