@@ -111,7 +111,9 @@ export function useImperativeHandle<T>(
   return dispatcher.useImperativeHandle(ref, create, inputs);
 }
 
-export function useDebugValueLabel(valueLabel: string) {
-  const dispatcher = resolveDispatcher();
-  return dispatcher.useDebugValueLabel(valueLabel);
+export function useDebugValue(valueLabel: string) {
+  if (__DEV__) {
+    const dispatcher = resolveDispatcher();
+    return dispatcher.useDebugValue(valueLabel);
+  }
 }

@@ -33,7 +33,7 @@ import {
   useContext,
   useEffect,
   useImperativeHandle,
-  useDebugValueLabel,
+  useDebugValue,
   useLayoutEffect,
   useMemo,
   useReducer,
@@ -99,12 +99,8 @@ if (enableHooks) {
   React.useCallback = useCallback;
   React.useContext = useContext;
   React.useEffect = useEffect;
-<<<<<<< HEAD
   React.useImperativeHandle = useImperativeHandle;
-=======
-  React.useImperativeMethods = useImperativeMethods;
-  React.useDebugValueLabel = useDebugValueLabel;
->>>>>>> Support custom values for custom hooks
+  React.useDebugValue = useDebugValue;
   React.useLayoutEffect = useLayoutEffect;
   React.useMemo = useMemo;
   React.useReducer = useReducer;

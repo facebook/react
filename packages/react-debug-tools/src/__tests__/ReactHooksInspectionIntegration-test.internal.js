@@ -212,11 +212,11 @@ describe('ReactHooksInspectionIntergration', () => {
     ]);
   });
 
-  describe('useDebugValueLabel', () => {
+  describe('useDebugValue', () => {
     it('should support inspectable values for multiple custom hooks', () => {
       function useLabeledValue(label) {
         let [value] = React.useState(label);
-        React.useDebugValueLabel(`custom label ${label}`);
+        React.useDebugValue(`custom label ${label}`);
         return value;
       }
       function useAnonymous(label) {
@@ -232,14 +232,11 @@ describe('ReactHooksInspectionIntergration', () => {
       }
       let renderer = ReactTestRenderer.create(<Example />);
       let childFiber = renderer.root.findByType(Example)._currentFiber();
-      let tree = ReactDebugTools.inspectHooksOfFiber(
-        currentDispatcher,
-        childFiber,
-      );
+      let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
       expect(tree).toEqual([
         {
           name: 'LabeledValue',
-          value: 'custom label a',
+          value: __DEV__ ? 'custom label a' : undefined,
           subHooks: [{name: 'State', value: 'a', subHooks: []}],
         },
         {
@@ -254,7 +251,7 @@ describe('ReactHooksInspectionIntergration', () => {
         },
         {
           name: 'LabeledValue',
-          value: 'custom label d',
+          value: __DEV__ ? 'custom label d' : undefined,
           subHooks: [{name: 'State', value: 'd', subHooks: []}],
         },
       ]);
@@ -262,10 +259,11 @@ describe('ReactHooksInspectionIntergration', () => {
 
     it('should support inspectable values for nested custom hooks', () => {
       function useInner() {
-        React.useDebugValueLabel('inner');
+        React.useDebugValue('inner');
+        React.useState(0);
       }
       function useOuter() {
-        React.useDebugValueLabel('outer');
+        React.useDebugValue('outer');
         useInner();
       }
       function Example(props) {
@@ -274,27 +272,32 @@ describe('ReactHooksInspectionIntergration', () => {
       }
       let renderer = ReactTestRenderer.create(<Example />);
       let childFiber = renderer.root.findByType(Example)._currentFiber();
-      let tree = ReactDebugTools.inspectHooksOfFiber(
-        currentDispatcher,
-        childFiber,
-      );
+      let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
       expect(tree).toEqual([
         {
           name: 'Outer',
-          value: 'outer',
-          subHooks: [{name: 'Inner', value: 'inner', subHooks: []}],
+          value: __DEV__ ? 'outer' : undefined,
+          subHooks: [
+            {
+              name: 'Inner',
+              value: __DEV__ ? 'inner' : undefined,
+              subHooks: [{name: 'State', value: 0, subHooks: []}],
+            },
+          ],
         },
       ]);
     });
 
     it('should support multiple inspectable values per custom hooks', () => {
       function useMultiLabelCustom() {
-        React.useDebugValueLabel('one');
-        React.useDebugValueLabel('two');
-        React.useDebugValueLabel('three');
+        React.useDebugValue('one');
+        React.useDebugValue('two');
+        React.useDebugValue('three');
+        React.useState(0);
       }
       function useSingleLabelCustom(value) {
-        React.useDebugValueLabel(`single ${value}`);
+        React.useDebugValue(`single ${value}`);
+        React.useState(0);
       }
       function Example(props) {
         useSingleLabelCustom('one');
@@ -304,25 +307,22 @@ describe('ReactHooksInspectionIntergration', () => {
       }
       let renderer = ReactTestRenderer.create(<Example />);
       let childFiber = renderer.root.findByType(Example)._currentFiber();
-      let tree = ReactDebugTools.inspectHooksOfFiber(
-        currentDispatcher,
-        childFiber,
-      );
+      let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
       expect(tree).toEqual([
         {
           name: 'SingleLabelCustom',
-          value: 'single one',
-          subHooks: [],
+          value: __DEV__ ? 'single one' : undefined,
+          subHooks: [{name: 'State', value: 0, subHooks: []}],
         },
         {
           name: 'MultiLabelCustom',
-          value: ['one', 'two', 'three'],
-          subHooks: [],
+          value: __DEV__ ? ['one', 'two', 'three'] : undefined,
+          subHooks: [{name: 'State', value: 0, subHooks: []}],
         },
         {
           name: 'SingleLabelCustom',
-          value: 'single two',
-          subHooks: [],
+          value: __DEV__ ? 'single two' : undefined,
+          subHooks: [{name: 'State', value: 0, subHooks: []}],
         },
       ]);
     });
