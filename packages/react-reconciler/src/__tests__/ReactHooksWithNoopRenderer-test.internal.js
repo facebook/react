@@ -23,7 +23,7 @@ let useLayoutEffect;
 let useCallback;
 let useMemo;
 let useRef;
-let useImperativeMethods;
+let useImperativeHandle;
 let forwardRef;
 let flushPassiveEffects;
 let memo;
@@ -71,7 +71,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     useCallback = React.useCallback;
     useMemo = React.useMemo;
     useRef = React.useRef;
-    useImperativeMethods = React.useImperativeMethods;
+    useImperativeHandle = React.useImperativeHandle;
     forwardRef = React.forwardRef;
     memo = React.memo;
   });
@@ -88,7 +88,7 @@ describe('ReactHooksWithNoopRenderer', () => {
   it('resumes after an interruption', () => {
     function Counter(props, ref) {
       const [count, updateCount] = useState(0);
-      useImperativeMethods(ref, () => ({updateCount}));
+      useImperativeHandle(ref, () => ({updateCount}));
       return <Text text={props.label + ': ' + count} />;
     }
     Counter = forwardRef(Counter);
@@ -172,7 +172,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     it('simple mount and update', () => {
       function Counter(props, ref) {
         const [count, updateCount] = useState(0);
-        useImperativeMethods(ref, () => ({updateCount}));
+        useImperativeHandle(ref, () => ({updateCount}));
         return <Text text={'Count: ' + count} />;
       }
       Counter = forwardRef(Counter);
@@ -196,7 +196,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           ReactNoop.yield('getInitialState');
           return props.initialState;
         });
-        useImperativeMethods(ref, () => ({updateCount}));
+        useImperativeHandle(ref, () => ({updateCount}));
         return <Text text={'Count: ' + count} />;
       }
       Counter = forwardRef(Counter);
@@ -214,7 +214,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       function Counter(props, ref) {
         const [count, updateCount] = useState(0);
         const [label, updateLabel] = useState('Count');
-        useImperativeMethods(ref, () => ({updateCount, updateLabel}));
+        useImperativeHandle(ref, () => ({updateCount, updateLabel}));
         return <Text text={label + ': ' + count} />;
       }
       Counter = forwardRef(Counter);
@@ -444,7 +444,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       function Counter({row: newRow}, ref) {
         let [reducer, setReducer] = useState(() => reducerA);
         let [count, dispatch] = useReducer(reducer, 0);
-        useImperativeMethods(ref, () => ({dispatch}));
+        useImperativeHandle(ref, () => ({dispatch}));
         if (count < 20) {
           dispatch('increment');
           // Swap reducers each time we increment
@@ -505,7 +505,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       function Counter(props, ref) {
         const [count, dispatch] = useReducer(reducer, 0);
-        useImperativeMethods(ref, () => ({dispatch}));
+        useImperativeHandle(ref, () => ({dispatch}));
         return <Text text={'Count: ' + count} />;
       }
       Counter = forwardRef(Counter);
@@ -546,7 +546,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       function Counter(props, ref) {
         const [count, dispatch] = useReducer(reducer, 0, initialAction);
-        useImperativeMethods(ref, () => ({dispatch}));
+        useImperativeHandle(ref, () => ({dispatch}));
         return <Text text={'Count: ' + count} />;
       }
       Counter = forwardRef(Counter);
@@ -576,7 +576,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       function Counter(props, ref) {
         const [count, dispatch] = useReducer(reducer, 0);
-        useImperativeMethods(ref, () => ({dispatch}));
+        useImperativeHandle(ref, () => ({dispatch}));
         return <Text text={'Count: ' + count} />;
       }
 
