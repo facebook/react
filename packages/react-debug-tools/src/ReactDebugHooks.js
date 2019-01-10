@@ -20,7 +20,7 @@ import {
   ForwardRef,
 } from 'shared/ReactWorkTags';
 
-const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+type CurrentDispatcherRef = typeof ReactSharedInternals.ReactCurrentDispatcher;
 
 // Used to track hooks called during a render
 
@@ -408,10 +408,17 @@ function buildTree(rootStack, readHookLog): HooksTree {
 export function inspectHooks<Props>(
   renderFunction: Props => React$Node,
   props: Props,
+  currentDispatcher: ?CurrentDispatcherRef,
 ): HooksTree {
-  let previousDispatcher = ReactCurrentDispatcher.current;
+  // DevTools will pass the current renderer's injected dispatcher.
+  // Other apps might compile debug hooks as part of their app though.
+  if (currentDispatcher == null) {
+    currentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+  }
+
+  let previousDispatcher = currentDispatcher.current;
   let readHookLog;
-  ReactCurrentDispatcher.current = Dispatcher;
+  currentDispatcher.current = Dispatcher;
   let ancestorStackError;
   try {
     ancestorStackError = new Error();
@@ -419,7 +426,7 @@ export function inspectHooks<Props>(
   } finally {
     readHookLog = hookLog;
     hookLog = [];
-    ReactCurrentDispatcher.current = previousDispatcher;
+    currentDispatcher.current = previousDispatcher;
   }
   let rootStack = ErrorStackParser.parse(ancestorStackError);
   return buildTree(rootStack, readHookLog);
@@ -450,10 +457,11 @@ function inspectHooksOfForwardRef<Props, Ref>(
   renderFunction: (Props, Ref) => React$Node,
   props: Props,
   ref: Ref,
+  currentDispatcher: CurrentDispatcherRef,
 ): HooksTree {
-  let previousDispatcher = ReactCurrentDispatcher.current;
+  let previousDispatcher = currentDispatcher.current;
   let readHookLog;
-  ReactCurrentDispatcher.current = Dispatcher;
+  currentDispatcher.current = Dispatcher;
   let ancestorStackError;
   try {
     ancestorStackError = new Error();
@@ -461,7 +469,7 @@ function inspectHooksOfForwardRef<Props, Ref>(
   } finally {
     readHookLog = hookLog;
     hookLog = [];
-    ReactCurrentDispatcher.current = previousDispatcher;
+    currentDispatcher.current = previousDispatcher;
   }
   let rootStack = ErrorStackParser.parse(ancestorStackError);
   return buildTree(rootStack, readHookLog);
@@ -482,7 +490,16 @@ function resolveDefaultProps(Component, baseProps) {
   return baseProps;
 }
 
-export function inspectHooksOfFiber(fiber: Fiber) {
+export function inspectHooksOfFiber(
+  fiber: Fiber,
+  currentDispatcher: ?CurrentDispatcherRef,
+) {
+  // DevTools will pass the current renderer's injected dispatcher.
+  // Other apps might compile debug hooks as part of their app though.
+  if (currentDispatcher == null) {
+    currentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+  }
+
   if (
     fiber.tag !== FunctionComponent &&
     fiber.tag !== SimpleMemoComponent &&
@@ -506,9 +523,14 @@ export function inspectHooksOfFiber(fiber: Fiber) {
   try {
     setupContexts(contextMap, fiber);
     if (fiber.tag === ForwardRef) {
-      return inspectHooksOfForwardRef(type.render, props, fiber.ref);
+      return inspectHooksOfForwardRef(
+        type.render,
+        props,
+        fiber.ref,
+        currentDispatcher,
+      );
     }
-    return inspectHooks(type, props);
+    return inspectHooks(type, props, currentDispatcher);
   } finally {
     currentHook = null;
     restoreContexts(contextMap);
