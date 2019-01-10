@@ -82,7 +82,7 @@ describe('ReactHooksInspectionIntergration', () => {
       React.useLayoutEffect(effect);
       React.useEffect(effect);
 
-      React.useImperativeMethods(
+      React.useImperativeHandle(
         outsideRef,
         () => {
           // Return a function so that jest treats them as non-equal.
@@ -118,7 +118,7 @@ describe('ReactHooksInspectionIntergration', () => {
       {name: 'Ref', value: 'c', subHooks: []},
       {name: 'LayoutEffect', value: effect, subHooks: []},
       {name: 'Effect', value: effect, subHooks: []},
-      {name: 'ImperativeMethods', value: outsideRef.current, subHooks: []},
+      {name: 'ImperativeHandle', value: outsideRef.current, subHooks: []},
       {name: 'Memo', value: 'ab', subHooks: []},
       {name: 'Callback', value: updateStates, subHooks: []},
     ]);
@@ -134,7 +134,7 @@ describe('ReactHooksInspectionIntergration', () => {
       {name: 'Ref', value: 'C', subHooks: []},
       {name: 'LayoutEffect', value: effect, subHooks: []},
       {name: 'Effect', value: effect, subHooks: []},
-      {name: 'ImperativeMethods', value: outsideRef.current, subHooks: []},
+      {name: 'ImperativeHandle', value: outsideRef.current, subHooks: []},
       {name: 'Memo', value: 'Ab', subHooks: []},
       {name: 'Callback', value: updateStates, subHooks: []},
     ]);
@@ -165,7 +165,7 @@ describe('ReactHooksInspectionIntergration', () => {
   it('should inspect forwardRef', () => {
     let obj = function() {};
     let Foo = React.forwardRef(function(props, ref) {
-      React.useImperativeMethods(ref, () => obj);
+      React.useImperativeHandle(ref, () => obj);
       return <div />;
     });
     let ref = React.createRef();
@@ -174,7 +174,7 @@ describe('ReactHooksInspectionIntergration', () => {
     let childFiber = renderer.root.findByType(Foo)._currentFiber();
     let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
     expect(tree).toEqual([
-      {name: 'ImperativeMethods', value: obj, subHooks: []},
+      {name: 'ImperativeHandle', value: obj, subHooks: []},
     ]);
   });
 

@@ -102,11 +102,11 @@ export function useMemo(
   return dispatcher.useMemo(create, inputs);
 }
 
-export function useImperativeMethods<T>(
+export function useImperativeHandle<T>(
   ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
   create: () => T,
   inputs: Array<mixed> | void | null,
 ): void {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useImperativeMethods(ref, create, inputs);
+  return dispatcher.useImperativeHandle(ref, create, inputs);
 }

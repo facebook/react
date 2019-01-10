@@ -54,7 +54,7 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       Dispatcher.useRef(null);
       Dispatcher.useLayoutEffect(() => {});
       Dispatcher.useEffect(() => {});
-      Dispatcher.useImperativeMethods(undefined, () => null);
+      Dispatcher.useImperativeHandle(undefined, () => null);
       Dispatcher.useCallback(() => {});
       Dispatcher.useMemo(() => null);
     } finally {
@@ -159,7 +159,7 @@ function useEffect(
   hookLog.push({primitive: 'Effect', stackError: new Error(), value: create});
 }
 
-function useImperativeMethods<T>(
+function useImperativeHandle<T>(
   ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
   create: () => T,
   inputs: Array<mixed> | void | null,
@@ -174,7 +174,7 @@ function useImperativeMethods<T>(
     instance = ref.current;
   }
   hookLog.push({
-    primitive: 'ImperativeMethods',
+    primitive: 'ImperativeHandle',
     stackError: new Error(),
     value: instance,
   });
@@ -205,7 +205,7 @@ const Dispatcher = {
   useCallback,
   useContext,
   useEffect,
-  useImperativeMethods,
+  useImperativeHandle,
   useLayoutEffect,
   useMemo,
   useReducer,
