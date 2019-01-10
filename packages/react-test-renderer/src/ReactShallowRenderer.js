@@ -13,6 +13,13 @@ import getComponentName from 'shared/getComponentName';
 import shallowEqual from 'shared/shallowEqual';
 import invariant from 'shared/invariant';
 import checkPropTypes from 'prop-types/checkPropTypes';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
+import {enableHooks} from 'shared/ReactFeatureFlags';
+import areHookInputsEqual from 'shared/areHookInputsEqual';
+
+const {ReactCurrentDispatcher} = ReactSharedInternals;
+
+const RE_RENDER_LIMIT = 25;
 
 const emptyObject = {};
 if (__DEV__) {
@@ -85,6 +92,18 @@ class Updater {
   }
 }
 
+function createHook(): Hook {
+  return {
+    memoizedState: null,
+    queue: null,
+    next: null,
+  };
+}
+
+function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S {
+  return typeof action === 'function' ? action(state) : action;
+}
+
 class ReactShallowRenderer {
   static createRenderer = function() {
     return new ReactShallowRenderer();
@@ -99,6 +118,259 @@ class ReactShallowRenderer {
     this._rendering = false;
     this._forcedUpdate = false;
     this._updater = new Updater(this);
+    if (enableHooks) {
+      this._dispatcher = ReactCurrentDispatcher.current = this._createDispatcher();
+      this._workInProgressHook = null;
+      this._firstWorkInProgressHook = null;
+      this._isReRender = false;
+      this._didScheduleRenderPhaseUpdate = false;
+      this._renderPhaseUpdates = null;
+      this._currentlyRenderingComponent = null;
+      this._numberOfReRenders = 0;
+    }
+  }
+
+  _validateCurrentlyRenderingComponent() {
+    invariant(
+      this._currentlyRenderingComponent !== null,
+      'Hooks can only be called inside the body of a function component.',
+    );
+  }
+
+  _createDispatcher() {
+    const useReducer = <S, A>(
+      reducer: (S, A) => S,
+      initialState: S,
+      initialAction: A | void | null,
+    ): [S, Dispatch<A>] => {
+      this._validateCurrentlyRenderingComponent();
+      this._createWorkInProgressHook();
+      if (this._isReRender) {
+        // This is a re-render. Apply the new render phase updates to the previous
+        // current hook.
+        const queue: UpdateQueue<A> = (this._workInProgressHook.queue: any);
+        const dispatch: Dispatch<A> = (queue.dispatch: any);
+        if (this._renderPhaseUpdates !== null) {
+          // Render phase updates are stored in a map of queue -> linked list
+          const firstRenderPhaseUpdate = this._renderPhaseUpdates.get(queue);
+          if (firstRenderPhaseUpdate !== undefined) {
+            this._renderPhaseUpdates.delete(queue);
+            let newState = this._workInProgressHook.memoizedState;
+            let update = firstRenderPhaseUpdate;
+            do {
+              // Process this render phase update. We don't have to check the
+              // priority because it will always be the same as the current
+              // render's.
+              const action = update.action;
+              newState = reducer(newState, action);
+              update = update.next;
+            } while (update !== null);
+
+            this._workInProgressHook.memoizedState = newState;
+
+            return [newState, dispatch];
+          }
+        }
+        return [this._workInProgressHook.memoizedState, dispatch];
+      } else {
+        if (reducer === basicStateReducer) {
+          // Special case for `useState`.
+          if (typeof initialState === 'function') {
+            initialState = initialState();
+          }
+        } else if (initialAction !== undefined && initialAction !== null) {
+          initialState = reducer(initialState, initialAction);
+        }
+        this._workInProgressHook.memoizedState = initialState;
+        const queue: UpdateQueue<A> = (this._workInProgressHook.queue = {
+          last: null,
+          dispatch: null,
+        });
+        const dispatch: Dispatch<
+          A,
+        > = (queue.dispatch = (this._dispatchAction.bind(
+          this,
+          this._currentlyRenderingComponent,
+          queue,
+        ): any));
+        return [this._workInProgressHook.memoizedState, dispatch];
+      }
+    };
+
+    const useState = <S>(
+      initialState: (() => S) | S,
+    ): [S, Dispatch<BasicStateAction<S>>] => {
+      return useReducer(
+        basicStateReducer,
+        // useReducer has a special case to support lazy useState initializers
+        (initialState: any),
+      );
+    };
+
+    const useMemo = <T>(
+      nextCreate: () => T,
+      inputs: Array<mixed> | void | null,
+    ): T => {
+      this._validateCurrentlyRenderingComponent();
+      this._createWorkInProgressHook();
+
+      const nextInputs =
+        inputs !== undefined && inputs !== null ? inputs : [nextCreate];
+
+      if (
+        this._workInProgressHook !== null &&
+        this._workInProgressHook.memoizedState !== null
+      ) {
+        const prevState = this._workInProgressHook.memoizedState;
+        const prevInputs = prevState[1];
+        if (areHookInputsEqual(nextInputs, prevInputs)) {
+          return prevState[0];
+        }
+      }
+
+      const nextValue = nextCreate();
+      this._workInProgressHook.memoizedState = [nextValue, nextInputs];
+      return nextValue;
+    };
+
+    const useRef = <T>(initialValue: T): {current: T} => {
+      this._validateCurrentlyRenderingComponent();
+      this._createWorkInProgressHook();
+      const previousRef = this._workInProgressHook.memoizedState;
+      if (previousRef === null) {
+        const ref = {current: initialValue};
+        if (__DEV__) {
+          Object.seal(ref);
+        }
+        this._workInProgressHook.memoizedState = ref;
+        return ref;
+      } else {
+        return previousRef;
+      }
+    };
+
+    const readContext = <T>(
+      context: ReactContext<T>,
+      observedBits: void | number | boolean,
+    ): T => {
+      return context._currentValue;
+    };
+
+    const noOp = () => {
+      this._validateCurrentlyRenderingComponent();
+    };
+
+    const identity = (fn: Function): Function => {
+      return fn;
+    };
+
+    return {
+      readContext,
+      useCallback: identity,
+      useContext: context => {
+        this._validateCurrentlyRenderingComponent();
+        return readContext(context);
+      },
+      useEffect: noOp,
+      useImperativeMethods: noOp,
+      useLayoutEffect: noOp,
+      useMemo,
+      useReducer,
+      useRef,
+      useState,
+    };
+  }
+
+  _dispatchAction<A>(
+    componentIdentity: Object,
+    queue: UpdateQueue<A>,
+    action: A,
+  ) {
+    invariant(
+      this._numberOfReRenders < RE_RENDER_LIMIT,
+      'Too many re-renders. React limits the number of renders to prevent ' +
+        'an infinite loop.',
+    );
+
+    if (componentIdentity === this._currentlyRenderingComponent) {
+      // This is a render phase update. Stash it in a lazily-created map of
+      // queue -> linked list of updates. After this render pass, we'll restart
+      // and apply the stashed updates on top of the work-in-progress hook.
+      this._didScheduleRenderPhaseUpdate = true;
+      const update: Update<A> = {
+        action,
+        next: null,
+      };
+      if (this._renderPhaseUpdates === null) {
+        this._renderPhaseUpdates = new Map();
+      }
+      const firstRenderPhaseUpdate = this._renderPhaseUpdates.get(queue);
+      if (firstRenderPhaseUpdate === undefined) {
+        this._renderPhaseUpdates.set(queue, update);
+      } else {
+        // Append the update to the end of the list.
+        let lastRenderPhaseUpdate = firstRenderPhaseUpdate;
+        while (lastRenderPhaseUpdate.next !== null) {
+          lastRenderPhaseUpdate = lastRenderPhaseUpdate.next;
+        }
+        lastRenderPhaseUpdate.next = update;
+      }
+    } else {
+      // This means an update has happened after the function component has
+      // returned. On the server this is a no-op. In React Fiber, the update
+      // would be scheduled for a future render.
+    }
+  }
+
+  _createWorkInProgressHook(): Hook {
+    if (this._workInProgressHook === null) {
+      // This is the first hook in the list
+      if (this._firstWorkInProgressHook === null) {
+        this._isReRender = false;
+        this._firstWorkInProgressHook = this._workInProgressHook = createHook();
+      } else {
+        // There's already a work-in-progress. Reuse it.
+        this._isReRender = true;
+        this._workInProgressHook = this._firstWorkInProgressHook;
+      }
+    } else {
+      if (this._workInProgressHook.next === null) {
+        this._isReRender = false;
+        // Append to the end of the list
+        this._workInProgressHook = this._workInProgressHook.next = createHook();
+      } else {
+        // There's already a work-in-progress. Reuse it.
+        this._isReRender = true;
+        this._workInProgressHook = this._workInProgressHook.next;
+      }
+    }
+    return this._workInProgressHook;
+  }
+
+  _prepareToUseHooks(componentIdentity) {
+    this._currentlyRenderingComponent = componentIdentity;
+  }
+
+  _finishHooks(element, context) {
+    this._hooksEnabled = false;
+    if (this._didScheduleRenderPhaseUpdate) {
+      // Updates were scheduled during the render phase. They are stored in
+      // the `renderPhaseUpdates` map. Call the component again, reusing the
+      // work-in-progress hooks and applying the additional updates on top. Keep
+      // restarting until no more updates are scheduled.
+      this._didScheduleRenderPhaseUpdate = false;
+      this._numberOfReRenders += 1;
+
+      // Start over from the beginning of the list
+      this._workInProgressHook = null;
+      this._rendering = false;
+      this.render(element, context);
+    } else {
+      this._currentlyRenderingComponent = null;
+      this._workInProgressHook = null;
+      this._renderPhaseUpdates = null;
+      this._numberOfReRenders = 0;
+    }
   }
 
   getMountedInstance() {
@@ -175,11 +447,17 @@ class ReactShallowRenderer {
 
         this._mountClassComponent(element, this._context);
       } else {
+        if (enableHooks) {
+          this._prepareToUseHooks(element.type);
+        }
         this._rendered = element.type.call(
           undefined,
           element.props,
           this._context,
         );
+        if (enableHooks) {
+          this._finishHooks(element, context);
+        }
       }
     }
 
@@ -196,6 +474,7 @@ class ReactShallowRenderer {
       }
     }
 
+    this._firstWorkInProgressHook = null;
     this._context = null;
     this._element = null;
     this._newState = null;
