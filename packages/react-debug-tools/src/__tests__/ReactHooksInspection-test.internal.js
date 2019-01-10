@@ -41,6 +41,7 @@ describe('ReactHooksInspection', () => {
   it('should inspect a simple custom hook', () => {
     function useCustom(value) {
       let [state] = React.useState(value);
+      React.useDebugValueLabel('custom hook label');
       return state;
     }
     function Foo(props) {
@@ -51,7 +52,7 @@ describe('ReactHooksInspection', () => {
     expect(tree).toEqual([
       {
         name: 'Custom',
-        value: undefined,
+        value: 'custom hook label',
         subHooks: [
           {
             name: 'State',

@@ -55,6 +55,7 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       Dispatcher.useLayoutEffect(() => {});
       Dispatcher.useEffect(() => {});
       Dispatcher.useImperativeHandle(undefined, () => null);
+      Dispatcher.useDebugValueLabel(null);
       Dispatcher.useCallback(() => {});
       Dispatcher.useMemo(() => null);
     } finally {
@@ -180,6 +181,14 @@ function useImperativeHandle<T>(
   });
 }
 
+function useDebugValueLabel(valueLabel: any) {
+  hookLog.push({
+    primitive: 'DebugValueLabel',
+    stackError: new Error(),
+    value: valueLabel,
+  });
+}
+
 function useCallback<T>(callback: T, inputs: Array<mixed> | void | null): T {
   let hook = nextHook();
   hookLog.push({
@@ -205,7 +214,12 @@ const Dispatcher = {
   useCallback,
   useContext,
   useEffect,
+<<<<<<< HEAD
   useImperativeHandle,
+=======
+  useImperativeMethods,
+  useDebugValueLabel,
+>>>>>>> Support custom values for custom hooks
   useLayoutEffect,
   useMemo,
   useReducer,
@@ -388,7 +402,7 @@ function buildTree(rootStack, readHookLog): HooksTree {
         let children = [];
         levelChildren.push({
           name: parseCustomHookName(stack[j - 1].functionName),
-          value: undefined, // TODO: Support custom inspectable values.
+          value: undefined,
           subHooks: children,
         });
         stackOfChildren.push(levelChildren);
@@ -402,7 +416,29 @@ function buildTree(rootStack, readHookLog): HooksTree {
       subHooks: [],
     });
   }
+
+  // Associate custom hook values (useInpect() hook entries) with the correct hooks
+  rootChildren.forEach(hooksNode => rollupDebugValueLabels(hooksNode));
+
   return rootChildren;
+}
+
+function rollupDebugValueLabels(hooksNode: HooksNode): void {
+  let useInpectHooksNodes: Array<HooksNode> = [];
+  hooksNode.subHooks = hooksNode.subHooks.filter(subHooksNode => {
+    if (subHooksNode.name === 'DebugValueLabel') {
+      useInpectHooksNodes.push(subHooksNode);
+      return false;
+    } else {
+      rollupDebugValueLabels(subHooksNode);
+      return true;
+    }
+  });
+  if (useInpectHooksNodes.length === 1) {
+    hooksNode.value = useInpectHooksNodes[0].value;
+  } else if (useInpectHooksNodes.length > 1) {
+    hooksNode.value = useInpectHooksNodes.map(({value}) => value);
+  }
 }
 
 export function inspectHooks<Props>(

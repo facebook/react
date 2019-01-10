@@ -110,3 +110,8 @@ export function useImperativeHandle<T>(
   const dispatcher = resolveDispatcher();
   return dispatcher.useImperativeHandle(ref, create, inputs);
 }
+
+export function useDebugValueLabel(valueLabel: string) {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useDebugValueLabel(valueLabel);
+}
