@@ -72,7 +72,7 @@ if (__DEV__) {
   ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings = () => {
     ((pendingUnsafeLifecycleWarnings: any): FiberToLifecycleMap).forEach(
       (lifecycleWarningsMap, strictRoot) => {
-        const lifecyclesWarningMesages = [];
+        const lifecyclesWarningMessages = [];
 
         Object.keys(lifecycleWarningsMap).forEach(lifecycle => {
           const lifecycleWarnings = lifecycleWarningsMap[lifecycle];
@@ -87,14 +87,14 @@ if (__DEV__) {
             const suggestion = LIFECYCLE_SUGGESTIONS[lifecycle];
             const sortedComponentNames = setToSortedString(componentNames);
 
-            lifecyclesWarningMesages.push(
+            lifecyclesWarningMessages.push(
               `${formatted}: Please update the following components to use ` +
                 `${suggestion} instead: ${sortedComponentNames}`,
             );
           }
         });
 
-        if (lifecyclesWarningMesages.length > 0) {
+        if (lifecyclesWarningMessages.length > 0) {
           const strictRootComponentStack = getStackByFiberInDevAndProd(
             strictRoot,
           );
@@ -106,7 +106,7 @@ if (__DEV__) {
               '\n\nLearn more about this warning here:' +
               '\nhttps://fb.me/react-strict-mode-warnings',
             strictRootComponentStack,
-            lifecyclesWarningMesages.join('\n\n'),
+            lifecyclesWarningMessages.join('\n\n'),
           );
         }
       },
