@@ -24,6 +24,7 @@ const eslintTester = new ESLintTester();
 eslintTester.run('react-hooks', ReactHooksESLintRule, {
   valid: [
     `
+      // TODO: we don't care about hooks outside of components.
       const local = 42;
       useEffect(() => {
         console.log(local);
@@ -54,6 +55,7 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
       }
     `,
     `
+      // TODO: we don't care about hooks outside of components.
       const local1 = 42;
       {
         const local2 = 42;
@@ -124,6 +126,23 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
       }
     `,
     `
+      // Regression test
+      function MyComponent({ foo }) {
+        useEffect(() => {
+          console.log(foo.length);
+        }, [foo]);
+      }
+    `,
+    `
+      // Regression test
+      function MyComponent({ history }) {
+        useEffect(() => {
+          return history.listen();
+        }, [history]);
+      }
+    `,
+    `
+      // TODO: we might want to forbid dot-access in deps.
       function MyComponent(props) {
         useEffect(() => {
           console.log(props.foo);
@@ -131,6 +150,7 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
       }
     `,
     `
+      // TODO: we might want to forbid dot-access in deps.
       function MyComponent(props) {
         useEffect(() => {
           console.log(props.foo);
@@ -139,6 +159,7 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
       }
     `,
     `
+      // TODO: we might want to forbid dot-access in deps.
       function MyComponent(props) {
         const local = 42;
         useEffect(() => {
@@ -160,6 +181,7 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
     },
     {
       code: `
+        // TODO: we might want to forbid dot-access in deps.
         function MyComponent(props) {
           useCustomEffect(() => {
             console.log(props.foo);
@@ -176,6 +198,49 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
           const local = 42;
           useEffect(() => {
             console.log(local);
+          }, []);
+        }
+      `,
+      errors: [missingError('local')],
+    },
+    {
+      code: `
+        // Regression test
+        function MyComponent() {
+          const local = 42;
+          useEffect(() => {
+            if (true) {
+              console.log(local);
+            }
+          }, []);
+        }
+      `,
+      errors: [missingError('local')],
+    },
+    {
+      code: `
+        // Regression test
+        function MyComponent() {
+          const local = 42;
+          useEffect(() => {
+            try {
+              console.log(local);
+            } finally {}
+          }, []);
+        }
+      `,
+      errors: [missingError('local')],
+    },
+    {
+      code: `
+        // Regression test
+        function MyComponent() {
+          const local = 42;
+          useEffect(() => {
+            function inner() {
+              console.log(local);
+            }
+            inner();
           }, []);
         }
       `,
@@ -347,6 +412,7 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
     },
     {
       code: `
+        // TODO: need to think more about this case.
         function MyComponent() {
           const local = {id: 42};
           useEffect(() => {
