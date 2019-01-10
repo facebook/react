@@ -16,7 +16,6 @@
  * - `useCallback()`
  * - `useMemo()`
  *
- * TODO: handle all useEffect() variants.
  * TODO: implement autofix.
  *
  * Also supports `React` namespacing. e.g. `React.useEffect()`.
@@ -36,6 +35,7 @@ function isReactiveHook(node, options) {
   } else if (
     node.type === 'Identifier' &&
     (node.name === 'useEffect' ||
+      node.name === 'useLayoutEffect' ||
       node.name === 'useCallback' ||
       node.name === 'useMemo')
   ) {
