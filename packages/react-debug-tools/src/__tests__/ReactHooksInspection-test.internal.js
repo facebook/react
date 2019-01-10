@@ -216,4 +216,37 @@ describe('ReactHooksInspection', () => {
       },
     ]);
   });
+
+  it('should support an injected dispatcher', () => {
+    function Foo(props) {
+      let [state] = React.useState('hello world');
+      return <div>{state}</div>;
+    }
+
+    let initial = {};
+    let current = initial;
+    let getterCalls = 0;
+    let setterCalls = [];
+    let FakeDispatcherRef = {
+      get current() {
+        getterCalls++;
+        return current;
+      },
+      set current(value) {
+        setterCalls.push(value);
+        current = value;
+      },
+    };
+
+    expect(() => {
+      ReactDebugTools.inspectHooks(Foo, {}, FakeDispatcherRef);
+    }).toThrow(
+      'Hooks can only be called inside the body of a function component.',
+    );
+
+    expect(getterCalls).toBe(1);
+    expect(setterCalls).toHaveLength(2);
+    expect(setterCalls[0]).not.toBe(initial);
+    expect(setterCalls[1]).toBe(initial);
+  });
 });
