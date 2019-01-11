@@ -135,6 +135,15 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
     `,
     `
       // Regression test
+      function MyComponent({ foo }) {
+        useEffect(() => {
+          console.log(foo.length);
+          console.log(foo.slice(0));
+        }, [foo]);
+      }
+    `,
+    `
+      // Regression test
       function MyComponent({ history }) {
         useEffect(() => {
           return history.listen();
@@ -169,6 +178,19 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
         }, [props.foo, props.bar, local]);
       }
     `,
+    {
+      code: `
+        // TODO: we might want to warn "props.foo"
+        // is extraneous because we already have "props".
+        function MyComponent(props) {
+          const local = 42;
+          useEffect(() => {
+            console.log(props.foo);
+            console.log(props.bar);
+          }, [props, props.foo]);
+        }
+      `,
+    },
     {
       code: `
         function MyComponent(props) {
@@ -491,6 +513,19 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
         missingError('props.bar'),
         missingError('local'),
       ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
+          const local = 42;
+          useEffect(() => {
+            console.log(props.foo);
+            console.log(props.bar);
+            console.log(local);
+          }, [props]);
+        }
+      `,
+      errors: [missingError('local')],
     },
     {
       code: `
