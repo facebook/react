@@ -275,12 +275,30 @@ export default {
       // Loop through all our dependencies to make sure they have been declared.
       // If the dependency has not been declared we need to report some errors.
       for (const [dependency, dependencyNodes] of dependencies) {
-        if (declaredDependencies.has(dependency)) {
-          // Yay! Our dependency has been declared. Delete it from
-          // `declaredDependencies` since we will report all remaining unused
-          // declared dependencies.
-          declaredDependencies.delete(dependency);
-        } else {
+        let isDeclared = false;
+
+        // If we can't find `foo.bar.baz`, search for `foo.bar`, then for `foo`.
+        let candidate = dependency;
+        while (candidate) {
+          if (declaredDependencies.has(candidate)) {
+            // Yay! Our dependency has been declared. Delete it from
+            // `declaredDependencies` since we will report all remaining unused
+            // declared dependencies.
+            isDeclared = true;
+            declaredDependencies.delete(candidate);
+            break;
+          }
+          const lastDotAccessIndex = candidate.lastIndexOf('.');
+          if (lastDotAccessIndex === -1) {
+            break;
+          }
+          // If we didn't find `foo.bar.baz`, try `foo.bar`. Then try `foo`.
+          candidate = candidate.substring(0, lastDotAccessIndex);
+          // This is not super solid but works for simple cases we support.
+          // Alternatively we could stringify later and use nodes directly.
+        }
+
+        if (!isDeclared) {
           // Oh no! Our dependency was not declared. So report an error for all
           // of the nodes which we expected to see an error from.
           for (const dependencyNode of dependencyNodes) {
