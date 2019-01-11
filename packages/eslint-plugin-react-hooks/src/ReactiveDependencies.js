@@ -169,31 +169,38 @@ export default {
 
       // Get dependencies from all our resolved references in pure scopes.
       const dependencies = new Map();
-      for (const reference of scope.references) {
-        // If this reference is not resolved or it is not declared in a pure
-        // scope then we don't care about this reference.
-        if (!reference.resolved) {
-          continue;
-        }
-        if (!pureScopes.has(reference.resolved.scope)) {
-          continue;
-        }
-        // Narrow the scope of a dependency if it is, say, a member expression.
-        // Then normalize the narrowed dependency.
+      gatherDependenciesRecursively(scope);
 
-        const referenceNode = fastFindReferenceWithParent(
-          node,
-          reference.identifier,
-        );
-        const dependencyNode = getDependency(referenceNode);
-        const dependency = normalizeDependencyNode(dependencyNode);
-        // Add the dependency to a map so we can make sure it is referenced
-        // again in our dependencies array.
-        let nodes = dependencies.get(dependency);
-        if (!nodes) {
-          dependencies.set(dependency, (nodes = []));
+      function gatherDependenciesRecursively(currentScope) {
+        for (const reference of currentScope.references) {
+          // If this reference is not resolved or it is not declared in a pure
+          // scope then we don't care about this reference.
+          if (!reference.resolved) {
+            continue;
+          }
+          if (!pureScopes.has(reference.resolved.scope)) {
+            continue;
+          }
+          // Narrow the scope of a dependency if it is, say, a member expression.
+          // Then normalize the narrowed dependency.
+
+          const referenceNode = fastFindReferenceWithParent(
+            node,
+            reference.identifier,
+          );
+          const dependencyNode = getDependency(referenceNode);
+          const dependency = normalizeDependencyNode(dependencyNode);
+          // Add the dependency to a map so we can make sure it is referenced
+          // again in our dependencies array.
+          let nodes = dependencies.get(dependency);
+          if (!nodes) {
+            dependencies.set(dependency, (nodes = []));
+          }
+          nodes.push(dependencyNode);
         }
-        nodes.push(dependencyNode);
+        for (const childScope of currentScope.childScopes) {
+          gatherDependenciesRecursively(childScope);
+        }
       }
 
       // Get all of the declared dependencies and put them in a set. We will
