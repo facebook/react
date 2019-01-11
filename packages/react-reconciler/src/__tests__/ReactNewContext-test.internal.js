@@ -1423,27 +1423,26 @@ describe('ReactNewContext', () => {
       );
     });
 
-    it('warns when passed a consumer', () => {
+    it('throws when passed a consumer', () => {
       const Context = React.createContext(0);
       function Foo() {
         return useContext(Context.Consumer);
       }
       ReactNoop.render(<Foo />);
-      expect(ReactNoop.flush).toWarnDev(
-        'Calling useContext(Context.Consumer) is not supported, may cause bugs, ' +
-          'and will be removed in a future major release. ' +
+      expect(ReactNoop.flush).toThrow(
+        'Calling useContext(Context.Consumer) is not supported. ' +
           'Did you mean to call useContext(Context) instead?',
       );
     });
 
-    it('warns when passed a provider', () => {
+    it('throws when passed a provider', () => {
       const Context = React.createContext(0);
       function Foo() {
         useContext(Context.Provider);
         return null;
       }
       ReactNoop.render(<Foo />);
-      expect(ReactNoop.flush).toWarnDev(
+      expect(ReactNoop.flush).toThrow(
         'Calling useContext(Context.Provider) is not supported. ' +
           'Did you mean to call useContext(Context) instead?',
       );

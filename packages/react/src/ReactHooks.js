@@ -22,6 +22,7 @@ function resolveDispatcher() {
   return dispatcher;
 }
 
+
 export function useContext<T>(
   Context: ReactContext<T>,
   observedBits: number | boolean | void,
@@ -33,23 +34,22 @@ export function useContext<T>(
       const realContext = (Context: any)._context;
       // Don't deduplicate because this legitimately causes bugs
       // and nobody should be using this in existing code.
-      if (realContext.Consumer === Context) {
-        warning(
-          false,
-          'Calling useContext(Context.Consumer) is not supported, may cause bugs, and will be ' +
-            'removed in a future major release. Did you mean to call useContext(Context) instead?',
-        );
-      } else if (realContext.Provider === Context) {
-        warning(
-          false,
-          'Calling useContext(Context.Provider) is not supported. ' +
-            'Did you mean to call useContext(Context) instead?',
-        );
-      }
+      invariant(
+        realContext.Consumer !== Context,
+        'Calling useContext(Context.Consumer) is not supported. ' +
+          'Did you mean to call useContext(Context) instead?',
+      );
+
+      invariant(
+        realContext.Provider !== Context,
+        'Calling useContext(Context.Provider) is not supported. ' +
+          'Did you mean to call useContext(Context) instead?',
+      );
     }
   }
   return dispatcher.useContext(Context, observedBits);
 }
+
 
 export function useState<S>(initialState: (() => S) | S) {
   const dispatcher = resolveDispatcher();
