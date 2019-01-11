@@ -414,16 +414,17 @@ function buildTree(rootStack, readHookLog): HooksTree {
   }
 
   // Associate custom hook values (useDebugValue() hook entries) with the correct hooks.
-  rollupDebugValues(rootChildren, null);
+  processDebugValues(rootChildren, null);
 
   return rootChildren;
 }
 
-// Custom hooks support user-configurable labels (via the useDebugValue() hook).
-// That hook adds the user-provided values to the hooks tree.
-// This method removes those values (so they don't appear in DevTools),
-// and bubbles them up to the "value" attribute of their parent custom hook.
-function rollupDebugValues(
+// Custom hooks support user-configurable labels (via the special useDebugValue() hook).
+// That hook adds user-provided values to the hooks tree,
+// but these values aren't intended to appear alongside of the other hooks.
+// Instead they should be attributed to their parent custom hook.
+// This method walks the tree and assigns debug values to their custom hook owners.
+function processDebugValues(
   hooksTree: HooksTree,
   parentHooksNode: HooksNode | null,
 ): void {
@@ -436,12 +437,12 @@ function rollupDebugValues(
       i--;
       debugValueHooksNodes.push(hooksNode);
     } else {
-      rollupDebugValues(hooksNode.subHooks, hooksNode);
+      processDebugValues(hooksNode.subHooks, hooksNode);
     }
   }
 
-  // Bubble debug value labels to their parent custom hook.
-  // If there is no parent hook, just ignore them.
+  // Bubble debug value labels to their custom hook owner.
+  // If there is no parent hook, just ignore them for now.
   // (We may warn about this in the future.)
   if (parentHooksNode !== null) {
     if (debugValueHooksNodes.length === 1) {
