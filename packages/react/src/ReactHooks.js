@@ -22,7 +22,6 @@ function resolveDispatcher() {
   return dispatcher;
 }
 
-
 export function useContext<T>(
   Context: ReactContext<T>,
   observedBits: number | boolean | void,
@@ -49,7 +48,6 @@ export function useContext<T>(
   }
   return dispatcher.useContext(Context, observedBits);
 }
-
 
 export function useState<S>(initialState: (() => S) | S) {
   const dispatcher = resolveDispatcher();
