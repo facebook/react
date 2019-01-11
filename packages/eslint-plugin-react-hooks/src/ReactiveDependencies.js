@@ -272,6 +272,8 @@ export default {
         }
       }
 
+      let usedDependencies = new Set();
+
       // Loop through all our dependencies to make sure they have been declared.
       // If the dependency has not been declared we need to report some errors.
       for (const [dependency, dependencyNodes] of dependencies) {
@@ -281,11 +283,10 @@ export default {
         let candidate = dependency;
         while (candidate) {
           if (declaredDependencies.has(candidate)) {
-            // Yay! Our dependency has been declared. Delete it from
-            // `declaredDependencies` since we will report all remaining unused
-            // declared dependencies.
+            // Yay! Our dependency has been declared.
+            // Record this so we don't report is unused.
             isDeclared = true;
-            declaredDependencies.delete(candidate);
+            usedDependencies.add(candidate);
             break;
           }
           const lastDotAccessIndex = candidate.lastIndexOf('.');
@@ -316,11 +317,15 @@ export default {
 
       // Loop through all the unused declared dependencies and report a warning
       // so the programmer removes the unused dependency from their list.
-      for (const declaredDependencyNode of declaredDependencies.values()) {
+      for (const [dependency, dependencyNode] of declaredDependencies) {
+        if (usedDependencies.has(dependency)) {
+          continue;
+        }
+
         context.report(
-          declaredDependencyNode,
+          dependencyNode,
           `React Hook ${context.getSource(reactiveHook)} has an extra ` +
-            `dependency "${context.getSource(declaredDependencyNode)}" which ` +
+            `dependency "${context.getSource(dependencyNode)}" which ` +
             'is not used in its callback. Removing this dependency may mean ' +
             'the hook needs to execute fewer times.',
         );
