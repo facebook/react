@@ -19,6 +19,13 @@ function resolveDispatcher() {
     dispatcher !== null,
     'Hooks can only be called inside the body of a function component.',
   );
+  if (__DEV__) {
+    warning(
+      typeof dispatcher.useState === 'function',
+      "It looks like you're using an older version of your renderer, " +
+        "make sure you've updated both react and react-<renderer> in your package.json",
+    );
+  }
   return dispatcher;
 }
 
