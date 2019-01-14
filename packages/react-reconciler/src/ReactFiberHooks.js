@@ -287,15 +287,12 @@ function cloneHook(hook: Hook): Hook {
   };
 
   if (__DEV__) {
+    if (!currentHook || currentHook._debugType !== hook._debugType) {
+      warning(false, 'Bad hook order!');
+    }
     nextHook._debugType = hook._debugType;
   }
   return nextHook;
-}
-
-function compareHookTypes(prevHookType, nextHookType) {
-  if (prevHookType !== nextHookType) {
-    warning(false, 'Bad hook order!');
-  }
 }
 
 function createWorkInProgressHook(hookType: HookType): Hook {
@@ -308,10 +305,7 @@ function createWorkInProgressHook(hookType: HookType): Hook {
         // This is a newly mounted hook
         workInProgressHook = createHook(hookType);
       } else {
-        // Clone the current hook.
-        if (__DEV__) {
-          compareHookTypes(currentHook._debugType, hookType);
-        }
+        // Clone the current hook.        
         workInProgressHook = cloneHook(currentHook);
       }
       firstWorkInProgressHook = workInProgressHook;
@@ -335,9 +329,6 @@ function createWorkInProgressHook(hookType: HookType): Hook {
           hook = createHook(hookType);
         } else {
           // Clone the current hook.
-          if (__DEV__) {
-            compareHookTypes(currentHook._debugType, hookType);
-          }
           hook = cloneHook(currentHook);
         }
       }
