@@ -884,7 +884,7 @@ function updateHostComponent(current, workInProgress, renderExpirationTime) {
     shouldDeprioritizeSubtree(type, nextProps)
   ) {
     // Schedule this fiber to re-render at offscreen priority. Then bailout.
-    workInProgress.expirationTime = Never;
+    workInProgress.expirationTime = workInProgress.childExpirationTime = Never;
     return null;
   }
 
