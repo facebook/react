@@ -112,10 +112,9 @@ describe('ReactHooks', () => {
         return null;
       }
     }
-    let root = ReactTestRenderer.create(<App flip={false}/>);
+    let root = ReactTestRenderer.create(<App flip={false} />);
     expect(() => {
       root.update(<App flip={true} />);
-    }).toWarnDev(['Warning: Bad hook order\n' +
-      '    in App (at **)']);
+    }).toWarnDev(['Warning: Bad hook order\n' + '    in App (at **)']);
   });
 });
