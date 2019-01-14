@@ -92,4 +92,28 @@ describe('ReactHooks', () => {
     const root = ReactTestRenderer.create(<App />);
     expect(root.toJSON()).toMatchSnapshot();
   });
+
+  it("throws when calling hooks inside .memo's compare function", () => {
+    const {useState} = React; 
+    function App() {
+      return null;
+    }
+    App = React.memo(App, () => {
+      useState(0);
+      return false;
+    });
+    expect(() => ReactTestRenderer.create(<App />)).toThrow();
+  });
+
+  it("throws when calling hooks inside useMemo", () => {
+    const {useMemo, useState} = React;
+    function App() {
+      const value = useMemo(() => {
+        useState(0)
+        return 123
+      });
+      return null;
+    }    
+    expect(() => ReactTestRenderer.create(<App />)).toThrow();
+  });
 });
