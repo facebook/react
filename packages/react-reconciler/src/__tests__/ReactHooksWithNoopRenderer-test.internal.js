@@ -1634,7 +1634,11 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
 
       ReactNoop.render(<App loadC={true} />);
-      expect(ReactNoop.flush()).toEqual(['A: 2, B: 3, C: 0']);
+      expect(() => {
+        expect(ReactNoop.flush()).toEqual(['A: 2, B: 3, C: 0']);
+      }).toWarnDev([
+        'App: Rendered more hooks than during the previous render',
+      ]);
       expect(ReactNoop.getChildren()).toEqual([span('A: 2, B: 3, C: 0')]);
 
       updateC(4);
@@ -1708,7 +1712,11 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.clearYields()).toEqual(['Mount A']);
 
       ReactNoop.render(<App showMore={true} />);
-      expect(ReactNoop.flush()).toEqual([]);
+      expect(() => {
+        expect(ReactNoop.flush()).toEqual([]);
+      }).toWarnDev([
+        'App: Rendered more hooks than during the previous render',
+      ]);
       flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual(['Mount B']);
 
