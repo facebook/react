@@ -218,6 +218,19 @@ const forks = Object.freeze({
     }
   },
 
+  // Similarly, we preserve an inline require to ReactCurrentDispatcher.
+  // See the explanation in FB version of ReactCurrentDispatcher in www:
+  'react/src/ReactCurrentDispatcher': (bundleType, entry) => {
+    switch (bundleType) {
+      case FB_WWW_DEV:
+      case FB_WWW_PROD:
+      case FB_WWW_PROFILING:
+        return 'react/src/forks/ReactCurrentDispatcher.www.js';
+      default:
+        return null;
+    }
+  },
+
   // Different wrapping/reporting for caught errors.
   'shared/invokeGuardedCallbackImpl': (bundleType, entry) => {
     switch (bundleType) {
