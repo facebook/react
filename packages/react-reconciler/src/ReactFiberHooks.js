@@ -48,15 +48,7 @@ type UpdateQueue<A> = {
   dispatch: any,
 };
 
-type HookType =
-  | 0 //'state'
-  | 1 // 'reducer'
-  | 2 // 'context'
-  | 3 // 'ref'
-  | 4 // 'effect'
-  | 5 // 'callback'
-  | 6 // 'memo'
-  | 7; // 'imperative-handle'
+type HookType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 const StateHook = 0;
 const ReducerHook = 1;
@@ -305,7 +297,7 @@ function createWorkInProgressHook(hookType: HookType): Hook {
         // This is a newly mounted hook
         workInProgressHook = createHook(hookType);
       } else {
-        // Clone the current hook.        
+        // Clone the current hook.
         workInProgressHook = cloneHook(currentHook);
       }
       firstWorkInProgressHook = workInProgressHook;
