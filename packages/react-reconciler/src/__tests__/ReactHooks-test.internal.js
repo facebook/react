@@ -92,4 +92,30 @@ describe('ReactHooks', () => {
     const root = ReactTestRenderer.create(<App />);
     expect(root.toJSON()).toMatchSnapshot();
   });
+
+  it('warns on using a different hooks on subsequent renders', () => {
+    const {useState, useReducer} = React;
+    function App(props) {
+      if (props.flip) {
+        const [count, setCount] = useState(0);
+        const [state, dispatch] = useReducer(
+          (state, action) => action.payload,
+          0,
+        );
+        return null;
+      } else {
+        const [state, dispatch] = useReducer(
+          (state, action) => action.payload,
+          0,
+        );
+        const [count, setCount] = useState(0);
+        return null;
+      }
+    }
+    let root = ReactTestRenderer.create(<App flip={false}/>);
+    expect(() => {
+      root.update(<App flip={true} />);
+    }).toWarnDev(['Warning: Bad hook order\n' +
+      '    in App (at **)']);
+  });
 });

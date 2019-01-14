@@ -34,6 +34,7 @@ import {
 } from './ReactFiberScheduler';
 
 import invariant from 'shared/invariant';
+import warning from 'shared/warning';
 import areHookInputsEqual from 'shared/areHookInputsEqual';
 
 type Update<A> = {
@@ -47,7 +48,18 @@ type UpdateQueue<A> = {
   dispatch: any,
 };
 
+type HookType =
+  | 'state'
+  | 'reducer'
+  | 'context'
+  | 'ref'
+  | 'effect'
+  | 'callback'
+  | 'memo'
+  | 'imperative-handle';
+
 export type Hook = {
+  hookType: HookType,
   memoizedState: any,
 
   baseState: any,
@@ -237,8 +249,9 @@ export function resetHooks(): void {
   numberOfReRenders = 0;
 }
 
-function createHook(): Hook {
+function createHook(hookType: HookType): Hook {
   return {
+    hookType,
     memoizedState: null,
 
     baseState: null,
@@ -249,8 +262,13 @@ function createHook(): Hook {
   };
 }
 
-function cloneHook(hook: Hook): Hook {
+function cloneHook(hook: Hook, hookType: HookType): Hook {
+  if (__DEV__ && hookType !== hook.hookType) {
+    warning(false, 'Bad hook order');
+  }
+
   return {
+    hookType: hook.hookType,
     memoizedState: hook.memoizedState,
 
     baseState: hook.baseState,
@@ -261,7 +279,7 @@ function cloneHook(hook: Hook): Hook {
   };
 }
 
-function createWorkInProgressHook(): Hook {
+function createWorkInProgressHook(hookType: HookType): Hook {
   if (workInProgressHook === null) {
     // This is the first hook in the list
     if (firstWorkInProgressHook === null) {
@@ -269,10 +287,10 @@ function createWorkInProgressHook(): Hook {
       currentHook = firstCurrentHook;
       if (currentHook === null) {
         // This is a newly mounted hook
-        workInProgressHook = createHook();
+        workInProgressHook = createHook(hookType);
       } else {
         // Clone the current hook.
-        workInProgressHook = cloneHook(currentHook);
+        workInProgressHook = cloneHook(currentHook, hookType);
       }
       firstWorkInProgressHook = workInProgressHook;
     } else {
@@ -287,15 +305,15 @@ function createWorkInProgressHook(): Hook {
       let hook;
       if (currentHook === null) {
         // This is a newly mounted hook
-        hook = createHook();
+        hook = createHook(hookType);
       } else {
         currentHook = currentHook.next;
         if (currentHook === null) {
           // This is a newly mounted hook
-          hook = createHook();
+          hook = createHook(hookType);
         } else {
           // Clone the current hook.
-          hook = cloneHook(currentHook);
+          hook = cloneHook(currentHook, hookType);
         }
       }
       // Append to the end of the list
@@ -346,7 +364,9 @@ export function useReducer<S, A>(
   initialAction: A | void | null,
 ): [S, Dispatch<A>] {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
-  workInProgressHook = createWorkInProgressHook();
+  workInProgressHook = createWorkInProgressHook(
+    reducer === basicStateReducer ? 'state' : 'reducer',
+  );
   let queue: UpdateQueue<A> | null = (workInProgressHook.queue: any);
   if (queue !== null) {
     // Already have a queue, so this is an update.
@@ -499,7 +519,7 @@ function pushEffect(tag, create, destroy, inputs) {
 
 export function useRef<T>(initialValue: T): {current: T} {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
-  workInProgressHook = createWorkInProgressHook();
+  workInProgressHook = createWorkInProgressHook('ref');
   let ref;
 
   if (workInProgressHook.memoizedState === null) {
@@ -535,7 +555,7 @@ export function useEffect(
 
 function useEffectImpl(fiberEffectTag, hookEffectTag, create, inputs): void {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
-  workInProgressHook = createWorkInProgressHook();
+  workInProgressHook = createWorkInProgressHook('effect');
 
   let nextInputs = inputs !== undefined && inputs !== null ? inputs : [create];
   let destroy = null;
@@ -593,7 +613,7 @@ export function useCallback<T>(
   inputs: Array<mixed> | void | null,
 ): T {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
-  workInProgressHook = createWorkInProgressHook();
+  workInProgressHook = createWorkInProgressHook('callback');
 
   const nextInputs =
     inputs !== undefined && inputs !== null ? inputs : [callback];
@@ -614,7 +634,7 @@ export function useMemo<T>(
   inputs: Array<mixed> | void | null,
 ): T {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
-  workInProgressHook = createWorkInProgressHook();
+  workInProgressHook = createWorkInProgressHook('memo');
 
   const nextInputs =
     inputs !== undefined && inputs !== null ? inputs : [nextCreate];
