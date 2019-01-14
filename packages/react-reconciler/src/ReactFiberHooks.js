@@ -49,17 +49,27 @@ type UpdateQueue<A> = {
 };
 
 type HookType =
-  | 'state'
-  | 'reducer'
-  | 'context'
-  | 'ref'
-  | 'effect'
-  | 'callback'
-  | 'memo'
-  | 'imperative-handle';
+  | 0 //'state'
+  | 1 // 'reducer'
+  | 2 // 'context'
+  | 3 // 'ref'
+  | 4 // 'effect'
+  | 5 // 'callback'
+  | 6 // 'memo'
+  | 7; // 'imperative-handle'
+
+const StateHook = 0;
+const ReducerHook = 1;
+const ContextHook = 2;
+const RefHook = 3;
+const EffectHook = 4;
+const CallbackHook = 5;
+const MemoHook = 6;
+const ImperativeHandleHook = 7;
 
 export type Hook = {
-  hookType: HookType,
+  _debugType?: HookType,
+
   memoizedState: any,
 
   baseState: any,
@@ -250,8 +260,7 @@ export function resetHooks(): void {
 }
 
 function createHook(hookType: HookType): Hook {
-  return {
-    hookType,
+  let hook: Hook = {
     memoizedState: null,
 
     baseState: null,
@@ -260,15 +269,14 @@ function createHook(hookType: HookType): Hook {
 
     next: null,
   };
+  if (__DEV__) {
+    hook._debugType = hookType;
+  }
+  return hook;
 }
 
-function cloneHook(hook: Hook, hookType: HookType): Hook {
-  if (__DEV__ && hookType !== hook.hookType) {
-    warning(false, 'Bad hook order');
-  }
-
-  return {
-    hookType: hook.hookType,
+function cloneHook(hook: Hook): Hook {
+  let nextHook: Hook = {
     memoizedState: hook.memoizedState,
 
     baseState: hook.baseState,
@@ -277,6 +285,17 @@ function cloneHook(hook: Hook, hookType: HookType): Hook {
 
     next: null,
   };
+
+  if (__DEV__) {
+    nextHook._debugType = hook._debugType;
+  }
+  return nextHook;
+}
+
+function compareHookTypes(prevHookType, nextHookType) {
+  if (prevHookType !== nextHookType) {
+    warning(false, 'Bad hook order!');
+  }
 }
 
 function createWorkInProgressHook(hookType: HookType): Hook {
@@ -290,7 +309,10 @@ function createWorkInProgressHook(hookType: HookType): Hook {
         workInProgressHook = createHook(hookType);
       } else {
         // Clone the current hook.
-        workInProgressHook = cloneHook(currentHook, hookType);
+        if (__DEV__) {
+          compareHookTypes(currentHook._debugType, hookType);
+        }
+        workInProgressHook = cloneHook(currentHook);
       }
       firstWorkInProgressHook = workInProgressHook;
     } else {
@@ -313,7 +335,10 @@ function createWorkInProgressHook(hookType: HookType): Hook {
           hook = createHook(hookType);
         } else {
           // Clone the current hook.
-          hook = cloneHook(currentHook, hookType);
+          if (__DEV__) {
+            compareHookTypes(currentHook._debugType, hookType);
+          }
+          hook = cloneHook(currentHook);
         }
       }
       // Append to the end of the list
@@ -365,7 +390,7 @@ export function useReducer<S, A>(
 ): [S, Dispatch<A>] {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   workInProgressHook = createWorkInProgressHook(
-    reducer === basicStateReducer ? 'state' : 'reducer',
+    reducer === basicStateReducer ? StateHook : ReducerHook,
   );
   let queue: UpdateQueue<A> | null = (workInProgressHook.queue: any);
   if (queue !== null) {
@@ -519,7 +544,7 @@ function pushEffect(tag, create, destroy, inputs) {
 
 export function useRef<T>(initialValue: T): {current: T} {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
-  workInProgressHook = createWorkInProgressHook('ref');
+  workInProgressHook = createWorkInProgressHook(RefHook);
   let ref;
 
   if (workInProgressHook.memoizedState === null) {
@@ -555,7 +580,7 @@ export function useEffect(
 
 function useEffectImpl(fiberEffectTag, hookEffectTag, create, inputs): void {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
-  workInProgressHook = createWorkInProgressHook('effect');
+  workInProgressHook = createWorkInProgressHook(EffectHook);
 
   let nextInputs = inputs !== undefined && inputs !== null ? inputs : [create];
   let destroy = null;
@@ -613,7 +638,7 @@ export function useCallback<T>(
   inputs: Array<mixed> | void | null,
 ): T {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
-  workInProgressHook = createWorkInProgressHook('callback');
+  workInProgressHook = createWorkInProgressHook(CallbackHook);
 
   const nextInputs =
     inputs !== undefined && inputs !== null ? inputs : [callback];
@@ -634,7 +659,7 @@ export function useMemo<T>(
   inputs: Array<mixed> | void | null,
 ): T {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
-  workInProgressHook = createWorkInProgressHook('memo');
+  workInProgressHook = createWorkInProgressHook(MemoHook);
 
   const nextInputs =
     inputs !== undefined && inputs !== null ? inputs : [nextCreate];

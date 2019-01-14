@@ -93,7 +93,7 @@ describe('ReactHooks', () => {
     expect(root.toJSON()).toMatchSnapshot();
   });
 
-  it('warns on using a different hooks on subsequent renders', () => {
+  it('warns on using differently ordered hooks on subsequent renders', () => {
     const {useState, useReducer} = React;
     function App(props) {
       if (props.flip) {
@@ -115,6 +115,6 @@ describe('ReactHooks', () => {
     let root = ReactTestRenderer.create(<App flip={false} />);
     expect(() => {
       root.update(<App flip={true} />);
-    }).toWarnDev(['Warning: Bad hook order\n' + '    in App (at **)']);
+    }).toWarnDev(['Warning: Bad hook order!\n    in App (at **)']);
   });
 });
