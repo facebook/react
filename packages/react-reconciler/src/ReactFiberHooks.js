@@ -378,6 +378,7 @@ export function useReducer<S, A>(
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   currentHookType = reducer === basicStateReducer ? StateHook : ReducerHook;
   workInProgressHook = createWorkInProgressHook();
+  currentHookType = null;
   let queue: UpdateQueue<A> | null = (workInProgressHook.queue: any);
   if (queue !== null) {
     // Already have a queue, so this is an update.
@@ -532,6 +533,7 @@ export function useRef<T>(initialValue: T): {current: T} {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   currentHookType = RefHook;
   workInProgressHook = createWorkInProgressHook();
+  currentHookType = null;
   let ref;
 
   if (workInProgressHook.memoizedState === null) {
@@ -570,6 +572,7 @@ function useEffectImpl(fiberEffectTag, hookEffectTag, create, inputs): void {
   currentHookType =
     fiberEffectTag === UpdateEffect ? EffectHook : LayoutEffectHook;
   workInProgressHook = createWorkInProgressHook();
+  currentHookType = null;
 
   let nextInputs = inputs !== undefined && inputs !== null ? inputs : [create];
   let destroy = null;
@@ -629,7 +632,7 @@ export function useCallback<T>(
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   currentHookType = CallbackHook;
   workInProgressHook = createWorkInProgressHook();
-
+  currentHookType = null;
   const nextInputs =
     inputs !== undefined && inputs !== null ? inputs : [callback];
 
@@ -651,6 +654,7 @@ export function useMemo<T>(
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   currentHookType = MemoHook;
   workInProgressHook = createWorkInProgressHook();
+  currentHookType = null;
 
   const nextInputs =
     inputs !== undefined && inputs !== null ? inputs : [nextCreate];
