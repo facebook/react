@@ -55,6 +55,7 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       Dispatcher.useLayoutEffect(() => {});
       Dispatcher.useEffect(() => {});
       Dispatcher.useImperativeHandle(undefined, () => null);
+      Dispatcher.useDebugValue(null);
       Dispatcher.useCallback(() => {});
       Dispatcher.useMemo(() => null);
     } finally {
@@ -180,6 +181,14 @@ function useImperativeHandle<T>(
   });
 }
 
+function useDebugValue(value: any, formatterFn: ?(value: any) => any) {
+  hookLog.push({
+    primitive: 'DebugValue',
+    stackError: new Error(),
+    value: typeof formatterFn === 'function' ? formatterFn(value) : value,
+  });
+}
+
 function useCallback<T>(callback: T, inputs: Array<mixed> | void | null): T {
   let hook = nextHook();
   hookLog.push({
@@ -206,6 +215,7 @@ const Dispatcher = {
   useContext,
   useEffect,
   useImperativeHandle,
+  useDebugValue,
   useLayoutEffect,
   useMemo,
   useReducer,
@@ -388,7 +398,7 @@ function buildTree(rootStack, readHookLog): HooksTree {
         let children = [];
         levelChildren.push({
           name: parseCustomHookName(stack[j - 1].functionName),
-          value: undefined, // TODO: Support custom inspectable values.
+          value: undefined,
           subHooks: children,
         });
         stackOfChildren.push(levelChildren);
@@ -402,7 +412,45 @@ function buildTree(rootStack, readHookLog): HooksTree {
       subHooks: [],
     });
   }
+
+  // Associate custom hook values (useDebugValue() hook entries) with the correct hooks.
+  processDebugValues(rootChildren, null);
+
   return rootChildren;
+}
+
+// Custom hooks support user-configurable labels (via the special useDebugValue() hook).
+// That hook adds user-provided values to the hooks tree,
+// but these values aren't intended to appear alongside of the other hooks.
+// Instead they should be attributed to their parent custom hook.
+// This method walks the tree and assigns debug values to their custom hook owners.
+function processDebugValues(
+  hooksTree: HooksTree,
+  parentHooksNode: HooksNode | null,
+): void {
+  let debugValueHooksNodes: Array<HooksNode> = [];
+
+  for (let i = 0; i < hooksTree.length; i++) {
+    const hooksNode = hooksTree[i];
+    if (hooksNode.name === 'DebugValue' && hooksNode.subHooks.length === 0) {
+      hooksTree.splice(i, 1);
+      i--;
+      debugValueHooksNodes.push(hooksNode);
+    } else {
+      processDebugValues(hooksNode.subHooks, hooksNode);
+    }
+  }
+
+  // Bubble debug value labels to their custom hook owner.
+  // If there is no parent hook, just ignore them for now.
+  // (We may warn about this in the future.)
+  if (parentHooksNode !== null) {
+    if (debugValueHooksNodes.length === 1) {
+      parentHooksNode.value = debugValueHooksNodes[0].value;
+    } else if (debugValueHooksNodes.length > 1) {
+      parentHooksNode.value = debugValueHooksNodes.map(({value}) => value);
+    }
+  }
 }
 
 export function inspectHooks<Props>(
