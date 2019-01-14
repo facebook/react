@@ -48,16 +48,17 @@ type UpdateQueue<A> = {
   dispatch: any,
 };
 
-type HookType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+type HookType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 const StateHook = 0;
 const ReducerHook = 1;
 const ContextHook = 2;
 const RefHook = 3;
 const EffectHook = 4;
-const CallbackHook = 5;
-const MemoHook = 6;
-const ImperativeHandleHook = 7;
+const LayoutEffectHook = 5;
+const CallbackHook = 6;
+const MemoHook = 7;
+const ImperativeHandleHook = 8;
 
 export type Hook = {
   _debugType?: HookType,
@@ -563,7 +564,7 @@ export function useEffect(
 
 function useEffectImpl(fiberEffectTag, hookEffectTag, create, inputs): void {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
-  workInProgressHook = createWorkInProgressHook(EffectHook);
+  workInProgressHook = createWorkInProgressHook(fiberEffectTag === UpdateEffect ? EffectHook : LayoutEffectHook);
 
   let nextInputs = inputs !== undefined && inputs !== null ? inputs : [create];
   let destroy = null;
