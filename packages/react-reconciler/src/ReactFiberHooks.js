@@ -564,7 +564,9 @@ export function useEffect(
 
 function useEffectImpl(fiberEffectTag, hookEffectTag, create, inputs): void {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
-  workInProgressHook = createWorkInProgressHook(fiberEffectTag === UpdateEffect ? EffectHook : LayoutEffectHook);
+  workInProgressHook = createWorkInProgressHook(
+    fiberEffectTag === UpdateEffect ? EffectHook : LayoutEffectHook,
+  );
 
   let nextInputs = inputs !== undefined && inputs !== null ? inputs : [create];
   let destroy = null;
