@@ -60,6 +60,8 @@ const CallbackHook = 6;
 const MemoHook = 7;
 const ImperativeHandleHook = 8;
 
+let currentHookType: HookType | null = null;
+
 export type Hook = {
   _debugType?: HookType,
 
@@ -252,7 +254,7 @@ export function resetHooks(): void {
   numberOfReRenders = 0;
 }
 
-function createHook(hookType: HookType): Hook {
+function createHook(): Hook {
   let hook: Hook = {
     memoizedState: null,
 
@@ -263,7 +265,8 @@ function createHook(hookType: HookType): Hook {
     next: null,
   };
   if (__DEV__) {
-    hook._debugType = hookType;
+    invariant(currentHookType !== null, 'Forgot to set currentHookType');
+    hook._debugType = currentHookType;
   }
   return hook;
 }
@@ -288,7 +291,7 @@ function cloneHook(hook: Hook): Hook {
   return nextHook;
 }
 
-function createWorkInProgressHook(hookType: HookType): Hook {
+function createWorkInProgressHook(): Hook {
   if (workInProgressHook === null) {
     // This is the first hook in the list
     if (firstWorkInProgressHook === null) {
@@ -296,7 +299,7 @@ function createWorkInProgressHook(hookType: HookType): Hook {
       currentHook = firstCurrentHook;
       if (currentHook === null) {
         // This is a newly mounted hook
-        workInProgressHook = createHook(hookType);
+        workInProgressHook = createHook();
       } else {
         // Clone the current hook.
         workInProgressHook = cloneHook(currentHook);
@@ -314,12 +317,12 @@ function createWorkInProgressHook(hookType: HookType): Hook {
       let hook;
       if (currentHook === null) {
         // This is a newly mounted hook
-        hook = createHook(hookType);
+        hook = createHook();
       } else {
         currentHook = currentHook.next;
         if (currentHook === null) {
           // This is a newly mounted hook
-          hook = createHook(hookType);
+          hook = createHook();
         } else {
           // Clone the current hook.
           hook = cloneHook(currentHook);
@@ -373,9 +376,8 @@ export function useReducer<S, A>(
   initialAction: A | void | null,
 ): [S, Dispatch<A>] {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
-  workInProgressHook = createWorkInProgressHook(
-    reducer === basicStateReducer ? StateHook : ReducerHook,
-  );
+  currentHookType = reducer === basicStateReducer ? StateHook : ReducerHook;
+  workInProgressHook = createWorkInProgressHook();
   let queue: UpdateQueue<A> | null = (workInProgressHook.queue: any);
   if (queue !== null) {
     // Already have a queue, so this is an update.
@@ -528,7 +530,8 @@ function pushEffect(tag, create, destroy, inputs) {
 
 export function useRef<T>(initialValue: T): {current: T} {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
-  workInProgressHook = createWorkInProgressHook(RefHook);
+  currentHookType = RefHook;
+  workInProgressHook = createWorkInProgressHook();
   let ref;
 
   if (workInProgressHook.memoizedState === null) {
@@ -564,9 +567,9 @@ export function useEffect(
 
 function useEffectImpl(fiberEffectTag, hookEffectTag, create, inputs): void {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
-  workInProgressHook = createWorkInProgressHook(
-    fiberEffectTag === UpdateEffect ? EffectHook : LayoutEffectHook,
-  );
+  currentHookType =
+    fiberEffectTag === UpdateEffect ? EffectHook : LayoutEffectHook;
+  workInProgressHook = createWorkInProgressHook();
 
   let nextInputs = inputs !== undefined && inputs !== null ? inputs : [create];
   let destroy = null;
@@ -624,7 +627,8 @@ export function useCallback<T>(
   inputs: Array<mixed> | void | null,
 ): T {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
-  workInProgressHook = createWorkInProgressHook(CallbackHook);
+  currentHookType = CallbackHook;
+  workInProgressHook = createWorkInProgressHook();
 
   const nextInputs =
     inputs !== undefined && inputs !== null ? inputs : [callback];
@@ -645,7 +649,8 @@ export function useMemo<T>(
   inputs: Array<mixed> | void | null,
 ): T {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
-  workInProgressHook = createWorkInProgressHook(MemoHook);
+  currentHookType = MemoHook;
+  workInProgressHook = createWorkInProgressHook();
 
   const nextInputs =
     inputs !== undefined && inputs !== null ? inputs : [nextCreate];
