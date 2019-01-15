@@ -26,6 +26,7 @@ let useMemo;
 let useRef;
 let useImperativeHandle;
 let useLayoutEffect;
+let useDebugValue;
 let forwardRef;
 let yieldedValues;
 let yieldValue;
@@ -48,6 +49,7 @@ function initModules() {
   useCallback = React.useCallback;
   useMemo = React.useMemo;
   useRef = React.useRef;
+  useDebugValue = React.useDebugValue;
   useImperativeHandle = React.useImperativeHandle;
   useLayoutEffect = React.useLayoutEffect;
   forwardRef = React.forwardRef;
@@ -657,5 +659,17 @@ describe('ReactDOMServerHooks', () => {
       },
       'Hooks can only be called inside the body of a function component.',
     );
+  });
+
+  describe('useDebugValue', () => {
+    itRenders('is a noop', async render => {
+      function Counter(props) {
+        const debugValue = useDebugValue(123);
+        return <Text text={typeof debugValue} />;
+      }
+
+      const domNode = await render(<Counter />);
+      expect(domNode.textContent).toEqual('undefined');
+    });
   });
 });
