@@ -449,10 +449,40 @@ describe('ReactHooks', () => {
     }).toWarnDev([
       'Warning: Detected a variable number of hook dependencies. The length ' +
         'of the dependencies array should be constant between renders.\n\n' +
-        'Previous: A, B\n' +
-        'Incoming: A',
+        'Previous: [A, B]\n' +
+        'Incoming: [A]',
     ]);
     expect(ReactTestRenderer).toHaveYielded(['Did commit: A, B']);
+  });
+
+  it('warns if switching from dependencies to no dependencies', () => {
+    spyOnDev(console, 'error');
+
+    const {useMemo} = React;
+    function App({text, hasDeps}) {
+      const resolvedText = useMemo(() => {
+        ReactTestRenderer.unstable_yield('Compute');
+        return text.toUpperCase();
+      }, hasDeps ? null : [text]);
+      return resolvedText;
+    }
+
+    const root = ReactTestRenderer.create(null);
+    root.update(<App text="Hello" hasDeps={true} />);
+    expect(ReactTestRenderer).toHaveYielded(['Compute']);
+    expect(root).toMatchRenderedOutput('HELLO');
+
+    expect(() => {
+      // This prints a warning message then throws a null access error
+      root.update(<App text="Hello" hasDeps={false} />);
+    }).toThrow('null');
+
+    if (__DEV__) {
+      expect(console.error).toHaveBeenCalledTimes(3);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Detected a variable number of hook dependencies.',
+      );
+    }
   });
 
   it('warns for bad useEffect return values', () => {

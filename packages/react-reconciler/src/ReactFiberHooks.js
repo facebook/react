@@ -68,7 +68,7 @@ type Effect = {
   tag: HookEffectTag,
   create: () => mixed,
   destroy: (() => mixed) | null,
-  inputs: Array<mixed>,
+  deps: Array<mixed> | null,
   next: Effect,
 };
 
@@ -500,12 +500,12 @@ export function useReducer<S, A>(
   return [workInProgressHook.memoizedState, dispatch];
 }
 
-function pushEffect(tag, create, destroy, inputs) {
+function pushEffect(tag, create, destroy, deps) {
   const effect: Effect = {
     tag,
     create,
     destroy,
-    inputs,
+    deps,
     // Circular
     next: (null: any),
   };
@@ -545,34 +545,36 @@ export function useRef<T>(initialValue: T): {current: T} {
 
 export function useLayoutEffect(
   create: () => mixed,
-  inputs: Array<mixed> | void | null,
+  deps: Array<mixed> | void | null,
 ): void {
-  useEffectImpl(UpdateEffect, UnmountMutation | MountLayout, create, inputs);
+  useEffectImpl(UpdateEffect, UnmountMutation | MountLayout, create, deps);
 }
 
 export function useEffect(
   create: () => mixed,
-  inputs: Array<mixed> | void | null,
+  deps: Array<mixed> | void | null,
 ): void {
   useEffectImpl(
     UpdateEffect | PassiveEffect,
     UnmountPassive | MountPassive,
     create,
-    inputs,
+    deps,
   );
 }
 
-function useEffectImpl(fiberEffectTag, hookEffectTag, create, inputs): void {
+function useEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   workInProgressHook = createWorkInProgressHook();
 
-  let nextInputs = inputs !== undefined && inputs !== null ? inputs : [create];
+  const nextDeps = deps === undefined ? null : deps;
   let destroy = null;
   if (currentHook !== null) {
     const prevEffect = currentHook.memoizedState;
     destroy = prevEffect.destroy;
-    if (areHookInputsEqual(nextInputs, prevEffect.inputs)) {
-      pushEffect(NoHookEffect, create, destroy, nextInputs);
+    // Assume these are defined. If they're not, areHookInputsEqual will warn.
+    const prevDeps: Array<mixed> = (prevEffect.deps: any);
+    if (nextDeps !== null && areHookInputsEqual(nextDeps, prevDeps)) {
+      pushEffect(NoHookEffect, create, destroy, nextDeps);
       return;
     }
   }
@@ -582,20 +584,18 @@ function useEffectImpl(fiberEffectTag, hookEffectTag, create, inputs): void {
     hookEffectTag,
     create,
     destroy,
-    nextInputs,
+    nextDeps,
   );
 }
 
 export function useImperativeHandle<T>(
   ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
   create: () => T,
-  inputs: Array<mixed> | void | null,
+  deps: Array<mixed> | void | null,
 ): void {
-  // TODO: If inputs are provided, should we skip comparing the ref itself?
-  const nextInputs =
-    inputs !== null && inputs !== undefined
-      ? inputs.concat([ref])
-      : [ref, create];
+  // TODO: If deps are provided, should we skip comparing the ref itself?
+  const nextDeps =
+    deps !== null && deps !== undefined ? deps.concat([ref]) : [ref];
 
   // TODO: I've implemented this on top of useEffect because it's almost the
   // same thing, and it would require an equal amount of code. It doesn't seem
@@ -614,7 +614,7 @@ export function useImperativeHandle<T>(
         refObject.current = null;
       };
     }
-  }, nextInputs);
+  }, nextDeps);
 }
 
 export function useDebugValue(
@@ -631,45 +631,45 @@ export function useDebugValue(
 
 export function useCallback<T>(
   callback: T,
-  inputs: Array<mixed> | void | null,
+  deps: Array<mixed> | void | null,
 ): T {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   workInProgressHook = createWorkInProgressHook();
 
-  const nextInputs =
-    inputs !== undefined && inputs !== null ? inputs : [callback];
+  const nextDeps = deps === undefined ? null : deps;
 
   const prevState = workInProgressHook.memoizedState;
   if (prevState !== null) {
-    const prevInputs = prevState[1];
-    if (areHookInputsEqual(nextInputs, prevInputs)) {
+    // Assume these are defined. If they're not, areHookInputsEqual will warn.
+    const prevDeps: Array<mixed> = prevState[1];
+    if (nextDeps !== null && areHookInputsEqual(nextDeps, prevDeps)) {
       return prevState[0];
     }
   }
-  workInProgressHook.memoizedState = [callback, nextInputs];
+  workInProgressHook.memoizedState = [callback, nextDeps];
   return callback;
 }
 
 export function useMemo<T>(
   nextCreate: () => T,
-  inputs: Array<mixed> | void | null,
+  deps: Array<mixed> | void | null,
 ): T {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   workInProgressHook = createWorkInProgressHook();
 
-  const nextInputs =
-    inputs !== undefined && inputs !== null ? inputs : [nextCreate];
+  const nextDeps = deps === undefined ? null : deps;
 
   const prevState = workInProgressHook.memoizedState;
   if (prevState !== null) {
-    const prevInputs = prevState[1];
-    if (areHookInputsEqual(nextInputs, prevInputs)) {
+    // Assume these are defined. If they're not, areHookInputsEqual will warn.
+    const prevDeps = prevState[1];
+    if (nextDeps !== null && areHookInputsEqual(nextDeps, prevDeps)) {
       return prevState[0];
     }
   }
 
   const nextValue = nextCreate();
-  workInProgressHook.memoizedState = [nextValue, nextInputs];
+  workInProgressHook.memoizedState = [nextValue, nextDeps];
   return nextValue;
 }
 
