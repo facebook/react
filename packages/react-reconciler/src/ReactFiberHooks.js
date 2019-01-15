@@ -641,20 +641,6 @@ export function useMemo<T>(
   return nextValue;
 }
 
-// Single source of truth that keeps various hooks APIs in-sync.
-export type DispatcherHooks = {
-  useCallback: typeof useCallback,
-  useContext: typeof useContext,
-  useEffect: typeof useEffect,
-  useDebugValue: typeof useDebugValue,
-  useImperativeHandle: typeof useImperativeHandle,
-  useLayoutEffect: typeof useLayoutEffect,
-  useMemo: typeof useMemo,
-  useReducer: typeof useReducer,
-  useRef: typeof useRef,
-  useState: typeof useState,
-};
-
 function dispatchAction<A>(fiber: Fiber, queue: UpdateQueue<A>, action: A) {
   invariant(
     numberOfReRenders < RE_RENDER_LIMIT,

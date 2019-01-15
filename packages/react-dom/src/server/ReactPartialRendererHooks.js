@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {DispatcherHooks} from 'react-reconciler/src/ReactFiberHooks';
+import typeof {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactFiberDispatcher';
 import type {ThreadID} from './ReactThreadIDAllocator';
 import type {ReactContext} from 'shared/ReactTypes';
 import areHookInputsEqual from 'shared/areHookInputsEqual';
@@ -343,7 +343,7 @@ export function setCurrentThreadID(threadID: ThreadID) {
   currentThreadID = threadID;
 }
 
-export const Dispatcher: DispatcherHooks = {
+export const Dispatcher: DispatcherType = {
   readContext,
   useContext,
   useMemo,
