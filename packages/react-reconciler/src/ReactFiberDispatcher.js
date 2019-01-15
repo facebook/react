@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {DispatcherHooks} from './ReactFiberHooks';
+
 import {readContext} from './ReactFiberNewContext';
 import {
   useCallback,
@@ -21,7 +23,7 @@ import {
   useState,
 } from './ReactFiberHooks';
 
-export const Dispatcher = {
+export const Dispatcher: DispatcherHooks = {
   readContext,
   useCallback,
   useContext,
