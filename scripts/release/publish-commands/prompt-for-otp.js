@@ -13,7 +13,6 @@ const run = async () => {
     if (otp) {
       return otp;
     } else {
-      console.log();
       console.log(theme.error`Two-factor auth is required to publish.`);
       // (Ask again.)
     }
