@@ -31,6 +31,23 @@ describe('ReactHooks', () => {
     ReactDOMServer = require('react-dom/server');
   });
 
+  if (__DEV__) {
+    // useDebugValue is a DEV-only hook
+    it('useDebugValue throws when used in a class component', () => {
+      class Example extends React.Component {
+        render() {
+          React.useDebugValue('abc');
+          return null;
+        }
+      }
+      expect(() => {
+        ReactTestRenderer.create(<Example />);
+      }).toThrow(
+        'Hooks can only be called inside the body of a function component.',
+      );
+    });
+  }
+
   it('warns about variable number of dependencies', () => {
     const {useLayoutEffect} = React;
     function App(props) {
