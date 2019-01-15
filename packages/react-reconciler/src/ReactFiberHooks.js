@@ -36,7 +36,7 @@ import {
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 import getComponentName from 'shared/getComponentName';
-import areHookInputsEqual from 'shared/areHookInputsEqual';
+import is from 'shared/objectIs';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
 
 type Update<S, A> = {
@@ -117,12 +117,57 @@ let renderPhaseUpdates: Map<
 let numberOfReRenders: number = -1;
 const RE_RENDER_LIMIT = 25;
 
+// In DEV, this is the name of the currently executing primitive hook
+let currentHookNameInDev: ?string;
+
 function resolveCurrentlyRenderingFiber(): Fiber {
   invariant(
     currentlyRenderingFiber !== null,
     'Hooks can only be called inside the body of a function component.',
   );
   return currentlyRenderingFiber;
+}
+
+function areHookInputsEqual(
+  nextDeps: Array<mixed>,
+  prevDeps: Array<mixed> | null,
+) {
+  if (prevDeps === null) {
+    if (__DEV__) {
+      warning(
+        false,
+        '%s received a final argument during this render, but not during ' +
+          'the previous render. Even though the final argument is optional, ' +
+          'its type cannot change between renders.',
+        currentHookNameInDev,
+      );
+    }
+    return false;
+  }
+
+  if (__DEV__) {
+    // Don't bother comparing lengths in prod because these arrays should be
+    // passed inline.
+    if (nextDeps.length !== prevDeps.length) {
+      warning(
+        false,
+        'The final argument passed to %s changed size between renders. The ' +
+          'order and size of this array must remain constant.\n\n' +
+          'Previous: %s\n' +
+          'Incoming: %s',
+        currentHookNameInDev,
+        `[${nextDeps.join(', ')}]`,
+        `[${prevDeps.join(', ')}]`,
+      );
+    }
+  }
+  for (let i = 0; i < nextDeps.length; i++) {
+    if (is(nextDeps[i], prevDeps[i])) {
+      continue;
+    }
+    return false;
+  }
+  return true;
 }
 
 export function renderWithHooks(
@@ -202,6 +247,10 @@ export function renderWithHooks(
   remainingExpirationTime = NoWork;
   componentUpdateQueue = null;
 
+  if (__DEV__) {
+    currentHookNameInDev = undefined;
+  }
+
   // These were reset above
   // didScheduleRenderPhaseUpdate = false;
   // renderPhaseUpdates = null;
@@ -246,6 +295,10 @@ export function resetHooks(): void {
 
   remainingExpirationTime = NoWork;
   componentUpdateQueue = null;
+
+  if (__DEV__) {
+    currentHookNameInDev = undefined;
+  }
 
   didScheduleRenderPhaseUpdate = false;
   renderPhaseUpdates = null;
@@ -335,6 +388,9 @@ export function useContext<T>(
   context: ReactContext<T>,
   observedBits: void | number | boolean,
 ): T {
+  if (__DEV__) {
+    currentHookNameInDev = 'useContext';
+  }
   // Ensure we're in a function component (class components support only the
   // .unstable_read() form)
   resolveCurrentlyRenderingFiber();
@@ -344,6 +400,9 @@ export function useContext<T>(
 export function useState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {
+  if (__DEV__) {
+    currentHookNameInDev = 'useState';
+  }
   return useReducer(
     basicStateReducer,
     // useReducer has a special case to support lazy useState initializers
@@ -356,6 +415,11 @@ export function useReducer<S, A>(
   initialState: S,
   initialAction: A | void | null,
 ): [S, Dispatch<A>] {
+  if (__DEV__) {
+    if (reducer !== basicStateReducer) {
+      currentHookNameInDev = 'useReducer';
+    }
+  }
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   workInProgressHook = createWorkInProgressHook();
   let queue: UpdateQueue<S, A> | null = (workInProgressHook.queue: any);
@@ -547,6 +611,9 @@ export function useLayoutEffect(
   create: () => mixed,
   deps: Array<mixed> | void | null,
 ): void {
+  if (__DEV__) {
+    currentHookNameInDev = 'useLayoutEffect';
+  }
   useEffectImpl(UpdateEffect, UnmountMutation | MountLayout, create, deps);
 }
 
@@ -554,6 +621,9 @@ export function useEffect(
   create: () => mixed,
   deps: Array<mixed> | void | null,
 ): void {
+  if (__DEV__) {
+    currentHookNameInDev = 'useEffect';
+  }
   useEffectImpl(
     UpdateEffect | PassiveEffect,
     UnmountPassive | MountPassive,
@@ -571,11 +641,12 @@ function useEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
   if (currentHook !== null) {
     const prevEffect = currentHook.memoizedState;
     destroy = prevEffect.destroy;
-    // Assume these are defined. If they're not, areHookInputsEqual will warn.
-    const prevDeps: Array<mixed> = (prevEffect.deps: any);
-    if (nextDeps !== null && areHookInputsEqual(nextDeps, prevDeps)) {
-      pushEffect(NoHookEffect, create, destroy, nextDeps);
-      return;
+    if (nextDeps !== null) {
+      const prevDeps = prevEffect.deps;
+      if (areHookInputsEqual(nextDeps, prevDeps)) {
+        pushEffect(NoHookEffect, create, destroy, nextDeps);
+        return;
+      }
     }
   }
 
@@ -593,6 +664,9 @@ export function useImperativeHandle<T>(
   create: () => T,
   deps: Array<mixed> | void | null,
 ): void {
+  if (__DEV__) {
+    currentHookNameInDev = 'useImperativeHandle';
+  }
   // TODO: If deps are provided, should we skip comparing the ref itself?
   const nextDeps =
     deps !== null && deps !== undefined ? deps.concat([ref]) : [ref];
@@ -621,6 +695,10 @@ export function useDebugValue(
   value: any,
   formatterFn: ?(value: any) => any,
 ): void {
+  if (__DEV__) {
+    currentHookNameInDev = 'useDebugValue';
+  }
+
   // This will trigger a warning if the hook is used in a non-Function component.
   resolveCurrentlyRenderingFiber();
 
@@ -633,6 +711,9 @@ export function useCallback<T>(
   callback: T,
   deps: Array<mixed> | void | null,
 ): T {
+  if (__DEV__) {
+    currentHookNameInDev = 'useCallback';
+  }
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   workInProgressHook = createWorkInProgressHook();
 
@@ -640,10 +721,11 @@ export function useCallback<T>(
 
   const prevState = workInProgressHook.memoizedState;
   if (prevState !== null) {
-    // Assume these are defined. If they're not, areHookInputsEqual will warn.
-    const prevDeps: Array<mixed> = prevState[1];
-    if (nextDeps !== null && areHookInputsEqual(nextDeps, prevDeps)) {
-      return prevState[0];
+    if (nextDeps !== null) {
+      const prevDeps: Array<mixed> | null = prevState[1];
+      if (areHookInputsEqual(nextDeps, prevDeps)) {
+        return prevState[0];
+      }
     }
   }
   workInProgressHook.memoizedState = [callback, nextDeps];
@@ -654,6 +736,9 @@ export function useMemo<T>(
   nextCreate: () => T,
   deps: Array<mixed> | void | null,
 ): T {
+  if (__DEV__) {
+    currentHookNameInDev = 'useMemo';
+  }
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   workInProgressHook = createWorkInProgressHook();
 
@@ -662,9 +747,11 @@ export function useMemo<T>(
   const prevState = workInProgressHook.memoizedState;
   if (prevState !== null) {
     // Assume these are defined. If they're not, areHookInputsEqual will warn.
-    const prevDeps = prevState[1];
-    if (nextDeps !== null && areHookInputsEqual(nextDeps, prevDeps)) {
-      return prevState[0];
+    if (nextDeps !== null) {
+      const prevDeps: Array<mixed> | null = prevState[1];
+      if (areHookInputsEqual(nextDeps, prevDeps)) {
+        return prevState[0];
+      }
     }
   }
 
