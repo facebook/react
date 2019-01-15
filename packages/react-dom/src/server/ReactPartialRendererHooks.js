@@ -351,6 +351,8 @@ export const Dispatcher = {
   useImperativeHandle: noop,
   // Effects are not run in the server environment.
   useEffect: noop,
+  // Debugging effect
+  useDebugValue: noop,
 };
 export const DispatcherWithoutHooks = {
   readContext,
