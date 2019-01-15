@@ -214,8 +214,9 @@ function throwException(
         // attach another listener to flip the boundary back to its normal state.
         const thenables: Set<Thenable> = (workInProgress.updateQueue: any);
         if (thenables === null) {
-          workInProgress.updateQueue = (new Set(): any);
-          workInProgress.updateQueue.add(thenable);
+          const updateQueue = (new Set(): any);
+          updateQueue.add(thenable);
+          workInProgress.updateQueue = updateQueue;
         } else {
           thenables.add(thenable);
         }
