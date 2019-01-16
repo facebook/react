@@ -108,15 +108,19 @@ let renderPhaseUpdates: Map<UpdateQueue<any>, Update<any>> | null = null;
 // Counter to prevent infinite loops.
 let numberOfReRenders: number = 0;
 const RE_RENDER_LIMIT = 25;
-
-let isMemoCreatingNextValue = false 
+// Whether we've 'paused' running hooks 
+let areHooksPaused = false 
 
 function resolveCurrentlyRenderingFiber(): Fiber {
   invariant(
-    currentlyRenderingFiber !== null && isMemoCreatingNextValue === false ,
+    currentlyRenderingFiber !== null && areHooksPaused === false,
     'Hooks can only be called inside the body of a function component.',
   );
   return currentlyRenderingFiber;
+}
+
+export function pauseHooks(pause:boolean){
+  areHooksPaused = pause
 }
 
 export function prepareToUseHooks(
@@ -129,6 +133,7 @@ export function prepareToUseHooks(
   }
   renderExpirationTime = nextRenderExpirationTime;
   currentlyRenderingFiber = workInProgress;
+  pauseHooks(false)
   firstCurrentHook = current !== null ? current.memoizedState : null;
 
   // The following should have already been reset
@@ -628,9 +633,9 @@ export function useMemo<T>(
       return prevState[0];
     }
   }
-  isMemoCreatingNextValue = true
+  pauseHooks(true)
   const nextValue = nextCreate();
-  isMemoCreatingNextValue = false 
+  pauseHooks(false)
   workInProgressHook.memoizedState = [nextValue, nextInputs];
   return nextValue;
 }
