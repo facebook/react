@@ -90,12 +90,7 @@ import {
   prepareToReadContext,
   calculateChangedBits,
 } from './ReactFiberNewContext';
-import {
-  prepareToUseHooks,
-  pauseHooks,
-  finishHooks,
-  resetHooks,
-} from './ReactFiberHooks';
+import {prepareToUseHooks, finishHooks, resetHooks} from './ReactFiberHooks';
 import {stopProfilerTimerIfRunning} from './ReactProfilerTimer';
 import {
   getMaskedContext,
@@ -347,16 +342,13 @@ function updateMemoComponent(
     // Default to shallow comparison
     let compare = Component.compare;
     compare = compare !== null ? compare : shallowEqual;
-    pauseHooks(true);
     if (compare(prevProps, nextProps) && current.ref === workInProgress.ref) {
-      pauseHooks(false);
       return bailoutOnAlreadyFinishedWork(
         current,
         workInProgress,
         renderExpirationTime,
       );
     }
-    pauseHooks(false);
   }
   // React DevTools reads this flag.
   workInProgress.effectTag |= PerformedWork;

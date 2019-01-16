@@ -107,25 +107,42 @@ describe('ReactHooks', () => {
     const root = ReactTestRenderer.create(<MemoApp />);
     // trying to render again should trigger comparison and throw
     expect(() => root.update(<MemoApp />)).toThrow();
-    // the next round, it does a fresh mount, so should render 
+    // the next round, it does a fresh mount, so should render
     expect(() => root.update(<MemoApp />)).not.toThrow();
     // and then again, fail
-    expect(() => root.update(<MemoApp />)).toThrow();    
+    expect(() => root.update(<MemoApp />)).toThrow();
   });
 
   it('throws when calling hooks inside useMemo', () => {
     const {useMemo, useState} = React;
     function App() {
-      const value = useMemo(() => {
+      useMemo(() => {
         useState(0);
         return 123;
       });
       return null;
     }
     expect(() => ReactTestRenderer.create(<App />)).toThrow();
-  });  
+  });
+  
+  it('cannot useContext inside useMemo', () => {
+    const {useMemo, useContext} = React;
+    const Ctx = React.createContext();
+    function App() {
+      useMemo(() => {
+        useContext(Ctx);
+        return 123;
+      });
+      return null;
+    }
 
-  // todo - 
-  // it can't read from context inside useMemo / .memo
+    expect(() => ReactTestRenderer.create(
+      <Ctx.Provider>
+        <App />
+      </Ctx.Provider>,
+    )).toThrow();
+  });
+
+  // todo -
   // ^ the above tests, but for the server renderer
 });

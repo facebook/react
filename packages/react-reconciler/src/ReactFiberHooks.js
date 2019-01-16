@@ -108,19 +108,12 @@ let renderPhaseUpdates: Map<UpdateQueue<any>, Update<any>> | null = null;
 // Counter to prevent infinite loops.
 let numberOfReRenders: number = 0;
 const RE_RENDER_LIMIT = 25;
-// Whether we've 'paused' running hooks 
-let areHooksPaused = false 
-
 function resolveCurrentlyRenderingFiber(): Fiber {
   invariant(
-    currentlyRenderingFiber !== null && areHooksPaused === false,
+    currentlyRenderingFiber !== null,
     'Hooks can only be called inside the body of a function component.',
   );
   return currentlyRenderingFiber;
-}
-
-export function pauseHooks(pause:boolean){
-  areHooksPaused = pause
 }
 
 export function prepareToUseHooks(
@@ -133,7 +126,6 @@ export function prepareToUseHooks(
   }
   renderExpirationTime = nextRenderExpirationTime;
   currentlyRenderingFiber = workInProgress;
-  pauseHooks(false)
   firstCurrentHook = current !== null ? current.memoizedState : null;
 
   // The following should have already been reset
@@ -616,11 +608,14 @@ export function useCallback<T>(
   return callback;
 }
 
+// a variable to store current component while we compare memo values
+let cachedCurrentlyRenderingFiber = null;
+
 export function useMemo<T>(
   nextCreate: () => T,
   inputs: Array<mixed> | void | null,
 ): T {
-  currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
+  cachedCurrentlyRenderingFiber = currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   workInProgressHook = createWorkInProgressHook();
 
   const nextInputs =
@@ -633,9 +628,14 @@ export function useMemo<T>(
       return prevState[0];
     }
   }
-  pauseHooks(true)
+  
+  // null the reference to the component
+  currentlyRenderingFiber = null;
+  // now, it'll throw if you try to call a hook inside nextCreate
   const nextValue = nextCreate();
-  pauseHooks(false)
+  // restore the current fiber
+  currentlyRenderingFiber = cachedCurrentlyRenderingFiber;
+
   workInProgressHook.memoizedState = [nextValue, nextInputs];
   return nextValue;
 }

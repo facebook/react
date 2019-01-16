@@ -229,11 +229,14 @@ export function useReducer<S, A>(
   }
 }
 
+// a variable to store current component while we compare memo values
+let cachedCurrentlyRenderingComponent = null;
+
 function useMemo<T>(
   nextCreate: () => T,
   inputs: Array<mixed> | void | null,
 ): T {
-  currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
+  cachedCurrentlyRenderingComponent = currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
   workInProgressHook = createWorkInProgressHook();
 
   const nextInputs =
@@ -250,7 +253,13 @@ function useMemo<T>(
     }
   }
 
+  // null the reference to the component
+  currentlyRenderingComponent = null;
+  // now, it'll throw if you try to call a hook inside nextCreate
   const nextValue = nextCreate();
+  // restore the current component
+  currentlyRenderingComponent = cachedCurrentlyRenderingComponent;
+
   workInProgressHook.memoizedState = [nextValue, nextInputs];
   return nextValue;
 }
