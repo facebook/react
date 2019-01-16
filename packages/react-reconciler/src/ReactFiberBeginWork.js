@@ -90,7 +90,7 @@ import {
   prepareToReadContext,
   calculateChangedBits,
 } from './ReactFiberNewContext';
-import {resetHooks, renderWithHooks} from './ReactFiberHooks';
+import {resetHooks, renderWithHooks, bailoutHooks} from './ReactFiberHooks';
 import {stopProfilerTimerIfRunning} from './ReactProfilerTimer';
 import {
   getMaskedContext,
@@ -127,6 +127,8 @@ import {
 } from './ReactFiber';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+
+let didReceiveUpdate: boolean = false;
 
 let didWarnAboutBadClass;
 let didWarnAboutContextTypeOnFunctionComponent;
@@ -260,7 +262,8 @@ function updateForwardRef(
     );
   }
 
-  if ((workInProgress.effectTag & PerformedWork) === NoEffect) {
+  if (current !== null && !didReceiveUpdate) {
+    bailoutHooks(current, workInProgress, renderExpirationTime);
     return bailoutOnAlreadyFinishedWork(
       current,
       workInProgress,
@@ -268,6 +271,8 @@ function updateForwardRef(
     );
   }
 
+  // React DevTools reads this flag.
+  workInProgress.effectTag |= PerformedWork;
   reconcileChildren(
     current,
     workInProgress,
@@ -368,6 +373,8 @@ function updateMemoComponent(
       );
     }
   }
+  // React DevTools reads this flag.
+  workInProgress.effectTag |= PerformedWork;
   let newChild = createWorkInProgress(
     currentChild,
     nextProps,
@@ -411,17 +418,20 @@ function updateSimpleMemoComponent(
       // Inner propTypes will be validated in the function component path.
     }
   }
-  if (current !== null && updateExpirationTime < renderExpirationTime) {
+  if (current !== null) {
     const prevProps = current.memoizedProps;
     if (
       shallowEqual(prevProps, nextProps) &&
       current.ref === workInProgress.ref
     ) {
-      return bailoutOnAlreadyFinishedWork(
-        current,
-        workInProgress,
-        renderExpirationTime,
-      );
+      didReceiveUpdate = false;
+      if (updateExpirationTime < renderExpirationTime) {
+        return bailoutOnAlreadyFinishedWork(
+          current,
+          workInProgress,
+          renderExpirationTime,
+        );
+      }
     }
   }
   return updateFunctionComponent(
@@ -545,7 +555,8 @@ function updateFunctionComponent(
     );
   }
 
-  if ((workInProgress.effectTag & PerformedWork) === NoEffect) {
+  if (current !== null && !didReceiveUpdate) {
+    bailoutHooks(current, workInProgress, renderExpirationTime);
     return bailoutOnAlreadyFinishedWork(
       current,
       workInProgress,
@@ -553,6 +564,8 @@ function updateFunctionComponent(
     );
   }
 
+  // React DevTools reads this flag.
+  workInProgress.effectTag |= PerformedWork;
   reconcileChildren(
     current,
     workInProgress,
@@ -1142,6 +1155,8 @@ function mountIndeterminateComponent(
       renderExpirationTime,
     );
   }
+  // React DevTools reads this flag.
+  workInProgress.effectTag |= PerformedWork;
 
   if (
     typeof value === 'object' &&
@@ -1682,6 +1697,10 @@ function updateContextConsumer(
   return workInProgress.child;
 }
 
+export function markWorkInProgressReceivedUpdate() {
+  didReceiveUpdate = true;
+}
+
 function bailoutOnAlreadyFinishedWork(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -1693,8 +1712,6 @@ function bailoutOnAlreadyFinishedWork(
     // Reuse previous context list
     workInProgress.contextDependencies = current.contextDependencies;
   }
-
-  workInProgress.effectTag &= ~PerformedWork;
 
   if (enableProfilerTimer) {
     // Don't update "base" render times for bailouts.
@@ -1730,8 +1747,9 @@ function beginWork(
     if (oldProps !== newProps || hasLegacyContextChanged()) {
       // If props or context changed, mark the fiber as having performed work.
       // This may be unset if the props are determined to be equal later (memo).
-      workInProgress.effectTag |= PerformedWork;
+      didReceiveUpdate = true;
     } else if (updateExpirationTime < renderExpirationTime) {
+      didReceiveUpdate = false;
       // This fiber does not have any pending work. Bailout without entering
       // the begin phase. There's still some bookkeeping we that needs to be done
       // in this optimized path, mostly pushing stuff onto the stack.
@@ -1815,8 +1833,7 @@ function beginWork(
       );
     }
   } else {
-    // No bailouts on initial mount.
-    workInProgress.effectTag |= PerformedWork;
+    didReceiveUpdate = false;
   }
 
   // Before entering the begin phase, clear the expiration time.

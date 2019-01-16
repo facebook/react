@@ -38,7 +38,7 @@ import {
   ForceUpdate,
 } from 'react-reconciler/src/ReactUpdateQueue';
 import {NoWork} from './ReactFiberExpirationTime';
-import {PerformedWork} from 'shared/ReactSideEffectTags';
+import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
 
 const valueCursor: StackCursor<mixed> = createCursor(null);
 
@@ -268,7 +268,7 @@ export function prepareToReadContext(
     currentDependencies.expirationTime >= renderExpirationTime
   ) {
     // Context list has a pending update. Mark that this fiber performed work.
-    workInProgress.effectTag |= PerformedWork;
+    markWorkInProgressReceivedUpdate();
   }
 
   // Reset the work-in-progress list

@@ -18,8 +18,6 @@ import {readContext} from './ReactFiberNewContext';
 import {
   Update as UpdateEffect,
   Passive as PassiveEffect,
-  PerformedWork,
-  NoEffect,
 } from 'shared/ReactSideEffectTags';
 import {
   NoEffect as NoHookEffect,
@@ -37,6 +35,7 @@ import {
 
 import invariant from 'shared/invariant';
 import areHookInputsEqual from 'shared/areHookInputsEqual';
+import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
 
 type Update<S, A> = {
   expirationTime: ExpirationTime,
@@ -171,18 +170,6 @@ export function renderWithHooks(
 
   const renderedWork: Fiber = (currentlyRenderingFiber: any);
 
-  if (
-    current !== null &&
-    (renderedWork.effectTag & PerformedWork) === NoEffect
-  ) {
-    // If nothing updated, clear the effects. We're going to bail out.
-    componentUpdateQueue = (current.updateQueue: any);
-    renderedWork.effectTag &= ~(PassiveEffect | UpdateEffect);
-    if (current.expirationTime <= renderExpirationTime) {
-      current.expirationTime = NoWork;
-    }
-  }
-
   renderedWork.memoizedState = firstWorkInProgressHook;
   renderedWork.expirationTime = remainingExpirationTime;
   renderedWork.updateQueue = componentUpdateQueue;
@@ -216,6 +203,18 @@ export function renderWithHooks(
   );
 
   return children;
+}
+
+export function bailoutHooks(
+  current: Fiber,
+  workInProgress: Fiber,
+  expirationTime: ExpirationTime,
+) {
+  workInProgress.updateQueue = current.updateQueue;
+  workInProgress.effectTag &= ~(PassiveEffect | UpdateEffect);
+  if (current.expirationTime <= expirationTime) {
+    current.expirationTime = NoWork;
+  }
 }
 
 export function resetHooks(): void {
@@ -462,7 +461,7 @@ export function useReducer<S, A>(
       // Mark that the fiber performed work, but only if the new state is
       // different from the current state.
       if (newState !== (currentHook: any).memoizedState) {
-        currentlyRenderingFiber.effectTag |= PerformedWork;
+        markWorkInProgressReceivedUpdate();
       }
 
       queue.eagerReducer = reducer;
@@ -489,7 +488,6 @@ export function useReducer<S, A>(
     eagerReducer: reducer,
     eagerState: initialState,
   };
-  currentlyRenderingFiber.effectTag |= PerformedWork;
   const dispatch: Dispatch<A> = (queue.dispatch = (dispatchAction.bind(
     null,
     currentlyRenderingFiber,
