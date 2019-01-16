@@ -102,9 +102,7 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('FooBar');
   });
 
-  it('does not support arbitrary promises, only module objects', async () => {
-    spyOnDev(console, 'error');
-
+  it('supports named imports', async () => {
     const LazyText = lazy(async () => Text);
 
     const root = ReactTestRenderer.create(
@@ -115,18 +113,14 @@ describe('ReactLazy', () => {
         unstable_isConcurrent: true,
       },
     );
+
     expect(root).toFlushAndYield(['Loading...']);
     expect(root).toMatchRenderedOutput(null);
 
     await Promise.resolve();
 
-    if (__DEV__) {
-      expect(console.error).toHaveBeenCalledTimes(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Expected the result of a dynamic import() call',
-      );
-    }
-    expect(root).toFlushAndThrow('Element type is invalid');
+    expect(root).toFlushAndYield(['Hi']);
+    expect(root).toMatchRenderedOutput('Hi');
   });
 
   it('throws if promise rejects', async () => {
