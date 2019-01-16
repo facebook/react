@@ -109,9 +109,11 @@ let renderPhaseUpdates: Map<UpdateQueue<any>, Update<any>> | null = null;
 let numberOfReRenders: number = 0;
 const RE_RENDER_LIMIT = 25;
 
+let isMemoCreatingNextValue = false 
+
 function resolveCurrentlyRenderingFiber(): Fiber {
   invariant(
-    currentlyRenderingFiber !== null,
+    currentlyRenderingFiber !== null && isMemoCreatingNextValue === false ,
     'Hooks can only be called inside the body of a function component.',
   );
   return currentlyRenderingFiber;
@@ -626,8 +628,9 @@ export function useMemo<T>(
       return prevState[0];
     }
   }
-
+  isMemoCreatingNextValue = true
   const nextValue = nextCreate();
+  isMemoCreatingNextValue = false 
   workInProgressHook.memoizedState = [nextValue, nextInputs];
   return nextValue;
 }
