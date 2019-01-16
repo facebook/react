@@ -7,6 +7,7 @@
  * @flow
  */
 
+import typeof {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactFiberDispatcher';
 import type {ThreadID} from './ReactThreadIDAllocator';
 import type {ReactContext} from 'shared/ReactTypes';
 import areHookInputsEqual from 'shared/areHookInputsEqual';
@@ -326,10 +327,15 @@ function dispatchAction<A>(
   }
 }
 
-function noop(): void {}
-function identity(fn: Function): Function {
-  return fn;
+export function useCallback<T>(
+  callback: T,
+  inputs: Array<mixed> | void | null,
+): T {
+  // Callbacks are passed as they are in the server environment.
+  return callback;
 }
+
+function noop(): void {}
 
 export let currentThreadID: ThreadID = 0;
 
@@ -337,7 +343,7 @@ export function setCurrentThreadID(threadID: ThreadID) {
   currentThreadID = threadID;
 }
 
-export const Dispatcher = {
+export const Dispatcher: DispatcherType = {
   readContext,
   useContext,
   useMemo,
@@ -345,8 +351,7 @@ export const Dispatcher = {
   useRef,
   useState,
   useLayoutEffect,
-  // Callbacks are passed as they are in the server environment.
-  useCallback: identity,
+  useCallback,
   // useImperativeHandle is not run in the server environment
   useImperativeHandle: noop,
   // Effects are not run in the server environment.
