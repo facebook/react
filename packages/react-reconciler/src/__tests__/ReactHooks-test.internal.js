@@ -447,12 +447,36 @@ describe('ReactHooks', () => {
     expect(() => {
       root.update(<App dependencies={['A', 'B']} />);
     }).toWarnDev([
-      'Warning: Detected a variable number of hook dependencies. The length ' +
-        'of the dependencies array should be constant between renders.\n\n' +
-        'Previous: A, B\n' +
-        'Incoming: A',
+      'Warning: The final argument passed to useLayoutEffect changed size ' +
+        'between renders. The order and size of this array must remain ' +
+        'constant.\n\n' +
+        'Previous: [A, B]\n' +
+        'Incoming: [A]\n',
     ]);
-    expect(ReactTestRenderer).toHaveYielded(['Did commit: A, B']);
+  });
+
+  it('warns if switching from dependencies to no dependencies', () => {
+    const {useMemo} = React;
+    function App({text, hasDeps}) {
+      const resolvedText = useMemo(() => {
+        ReactTestRenderer.unstable_yield('Compute');
+        return text.toUpperCase();
+      }, hasDeps ? null : [text]);
+      return resolvedText;
+    }
+
+    const root = ReactTestRenderer.create(null);
+    root.update(<App text="Hello" hasDeps={true} />);
+    expect(ReactTestRenderer).toHaveYielded(['Compute']);
+    expect(root).toMatchRenderedOutput('HELLO');
+
+    expect(() => {
+      root.update(<App text="Hello" hasDeps={false} />);
+    }).toWarnDev([
+      'Warning: useMemo received a final argument during this render, but ' +
+        'not during the previous render. Even though the final argument is ' +
+        'optional, its type cannot change between renders.',
+    ]);
   });
 
   it('warns for bad useEffect return values', () => {

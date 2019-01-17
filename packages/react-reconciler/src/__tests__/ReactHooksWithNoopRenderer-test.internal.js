@@ -1015,11 +1015,11 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([]);
     });
 
-    it('skips effect if constructor has not changed', () => {
+    it('always fires effects if no dependencies are provided', () => {
       function effect() {
-        ReactNoop.yield(`Did mount`);
+        ReactNoop.yield(`Did create`);
         return () => {
-          ReactNoop.yield(`Did unmount`);
+          ReactNoop.yield(`Did destroy`);
         };
       }
       function Counter(props) {
@@ -1030,15 +1030,16 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.flush()).toEqual(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
       flushPassiveEffects();
-      expect(ReactNoop.clearYields()).toEqual(['Did mount']);
+      expect(ReactNoop.clearYields()).toEqual(['Did create']);
 
       ReactNoop.render(<Counter count={1} />);
-      // No effect, because constructor was hoisted outside render
       expect(ReactNoop.flush()).toEqual(['Count: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual(['Did destroy', 'Did create']);
 
       ReactNoop.render(null);
-      expect(ReactNoop.flush()).toEqual(['Did unmount']);
+      expect(ReactNoop.flush()).toEqual(['Did destroy']);
       expect(ReactNoop.getChildren()).toEqual([]);
     });
 
@@ -1456,7 +1457,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('GOODBYE')]);
     });
 
-    it('compares function if no inputs are provided', () => {
+    it('always re-computes if no inputs are provided', () => {
       function LazyCompute(props) {
         const computed = useMemo(props.compute);
         return <Text text={computed} />;
@@ -1476,10 +1477,10 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.flush()).toEqual(['compute A', 'A']);
 
       ReactNoop.render(<LazyCompute compute={computeA} />);
-      expect(ReactNoop.flush()).toEqual(['A']);
+      expect(ReactNoop.flush()).toEqual(['compute A', 'A']);
 
       ReactNoop.render(<LazyCompute compute={computeA} />);
-      expect(ReactNoop.flush()).toEqual(['A']);
+      expect(ReactNoop.flush()).toEqual(['compute A', 'A']);
 
       ReactNoop.render(<LazyCompute compute={computeB} />);
       expect(ReactNoop.flush()).toEqual(['compute B', 'B']);
