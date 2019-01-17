@@ -255,19 +255,28 @@ export function resetHooks(): void {
 }
 
 function createHook(): Hook {
-  let hook: Hook = {
-    memoizedState: null,
+  let hook: Hook = __DEV__
+    ? {
+        _debugType: currentHookType,
 
-    baseState: null,
-    queue: null,
-    baseUpdate: null,
+        memoizedState: null,
 
-    next: null,
-  };
-  if (__DEV__) {
-    invariant(currentHookType !== null, 'Forgot to set currentHookType');
-    hook._debugType = currentHookType;
-  }
+        baseState: null,
+        queue: null,
+        baseUpdate: null,
+
+        next: null,
+      }
+    : {
+        memoizedState: null,
+
+        baseState: null,
+        queue: null,
+        baseUpdate: null,
+
+        next: null,
+      };
+
   return hook;
 }
 
@@ -283,7 +292,7 @@ function cloneHook(hook: Hook): Hook {
   };
 
   if (__DEV__) {
-    if (!currentHook || currentHook._debugType !== hook._debugType) {
+    if (currentHookType !== hook._debugType) {
       warning(false, 'Bad hook order!');
     }
     nextHook._debugType = hook._debugType;
