@@ -545,12 +545,6 @@ function legacyRenderSubtreeIntoContainer(
   forceHydrate: boolean,
   callback: ?Function,
 ) {
-  // TODO: Ensure all entry points contain this check
-  invariant(
-    isValidContainer(container),
-    'Target container is not a DOM element.',
-  );
-
   if (__DEV__) {
     topLevelUpdateWarnings(container);
   }
@@ -654,6 +648,10 @@ const ReactDOM: Object = {
   },
 
   hydrate(element: React$Node, container: DOMContainer, callback: ?Function) {
+    invariant(
+      isValidContainer(container),
+      'Target container is not a DOM element.',
+    );
     if (__DEV__) {
       warningWithoutStack(
         !container._reactIsNewStyleRootDEV,
@@ -663,7 +661,6 @@ const ReactDOM: Object = {
         enableStableConcurrentModeAPIs ? 'createRoot' : 'unstable_createRoot',
       );
     }
-
     // TODO: throw or warn if we couldn't hydrate?
     return legacyRenderSubtreeIntoContainer(
       null,
@@ -679,6 +676,10 @@ const ReactDOM: Object = {
     container: DOMContainer,
     callback: ?Function,
   ) {
+    invariant(
+      isValidContainer(container),
+      'Target container is not a DOM element.',
+    );
     if (__DEV__) {
       warningWithoutStack(
         !container._reactIsNewStyleRootDEV,
@@ -688,7 +689,6 @@ const ReactDOM: Object = {
         enableStableConcurrentModeAPIs ? 'createRoot' : 'unstable_createRoot',
       );
     }
-
     return legacyRenderSubtreeIntoContainer(
       null,
       element,
@@ -704,6 +704,10 @@ const ReactDOM: Object = {
     containerNode: DOMContainer,
     callback: ?Function,
   ) {
+    invariant(
+      isValidContainer(containerNode),
+      'Target container is not a DOM element.',
+    );
     invariant(
       parentComponent != null && hasInstance(parentComponent),
       'parentComponent must be a valid React Component',
