@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import {isForwardRef} from 'react-is';
+import {isForwardRef, isSuspense} from 'react-is';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import getComponentName from 'shared/getComponentName';
 import shallowEqual from 'shared/shallowEqual';
@@ -499,7 +499,9 @@ class ReactShallowRenderer {
       element.type,
     );
     invariant(
-      isForwardRef(element) || typeof element.type === 'function',
+      isSuspense(element) ||
+        isForwardRef(element) ||
+        typeof element.type === 'function',
       'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
         'components, but the provided element type was `%s`.',
       Array.isArray(element.type)
@@ -520,7 +522,9 @@ class ReactShallowRenderer {
     if (this._instance) {
       this._updateClassComponent(element, this._context);
     } else {
-      if (isForwardRef(element)) {
+      if (isSuspense(element)) {
+        this._rendered = element.props.children;
+      } else if (isForwardRef(element)) {
         this._rendered = element.type.render(element.props, element.ref);
       } else if (shouldConstruct(element.type)) {
         this._instance = new element.type(

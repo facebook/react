@@ -13,6 +13,7 @@
 let createRenderer;
 let PropTypes;
 let React;
+let ReactIs;
 
 describe('ReactShallowRenderer', () => {
   beforeEach(() => {
@@ -21,6 +22,7 @@ describe('ReactShallowRenderer', () => {
     createRenderer = require('react-test-renderer/shallow').createRenderer;
     PropTypes = require('prop-types');
     React = require('react');
+    ReactIs = require('react-is');
   });
 
   it('should call all of the legacy lifecycle hooks', () => {
@@ -254,6 +256,31 @@ describe('ReactShallowRenderer', () => {
         <span className="child2" />
       </div>,
     );
+  });
+
+  it('should handle Suspense', () => {
+    const fallback = <div>fallback</div>;
+    const shallowRenderer = createRenderer();
+    const targetText = 'test';
+    const result = shallowRenderer.render(
+      <React.Suspense fallback={fallback}>
+        <div>{targetText}</div>
+      </React.Suspense>,
+    );
+    expect(result.type).toBe('div');
+    expect(result.props.children).toBe(targetText);
+  });
+
+  it('should shallow render lazy component in children and not to handle fallback', () => {
+    const fallback = <div>fallback</div>;
+    const LazyComponent = React.lazy(() => Promise.resolve({default: null}));
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(
+      <React.Suspense fallback={fallback}>
+        <LazyComponent />
+      </React.Suspense>,
+    );
+    expect(ReactIs.isLazy(result.type)).toBe(true);
   });
 
   it('should enable shouldComponentUpdate to prevent a re-render', () => {
