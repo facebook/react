@@ -365,6 +365,11 @@ export function useContext<T>(
 ): T {
   // Ensure we're in a function component (class components support only the
   // .unstable_read() form)
+  if(__DEV__){
+    currentHookType = ContextHook
+    createWorkInProgressHook()
+    currentHookType = null
+  }
   resolveCurrentlyRenderingFiber();
   return readContext(context, observedBits);
 }
@@ -579,7 +584,8 @@ export function useEffect(
 function useEffectImpl(fiberEffectTag, hookEffectTag, create, inputs): void {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   currentHookType =
-    fiberEffectTag === UpdateEffect ? EffectHook : LayoutEffectHook;
+    currentHookType || // it could be an ImperativeHandleHook
+    (fiberEffectTag === UpdateEffect ? EffectHook : LayoutEffectHook);
   workInProgressHook = createWorkInProgressHook();
   currentHookType = null;
 
@@ -614,6 +620,7 @@ export function useImperativeHandle<T>(
       ? inputs.concat([ref])
       : [ref, create];
 
+  currentHookType = ImperativeHandleHook
   // TODO: I've implemented this on top of useEffect because it's almost the
   // same thing, and it would require an equal amount of code. It doesn't seem
   // like a common enough use case to justify the additional size.
