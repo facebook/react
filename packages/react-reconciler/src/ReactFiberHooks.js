@@ -454,6 +454,7 @@ export function useReducer<S, A>(
     const dispatch: Dispatch<A> = (queue.dispatch: any);
     return [workInProgressHook.memoizedState, dispatch];
   }
+
   currentlyRenderingFiber = null;
   // There's no existing queue, so this is the initial render.
   if (reducer === basicStateReducer) {
@@ -633,6 +634,7 @@ export function useMemo<T>(
       return prevState[0];
     }
   }
+  
   // Temporarily clear to forbid calling Hooks.
   currentlyRenderingFiber = null;
   const nextValue = nextCreate();
