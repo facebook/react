@@ -160,9 +160,11 @@ setRestoreImplementation(restoreControlledState);
 export type DOMContainer =
   | (Element & {
       _reactRootContainer: ?Root,
+      _reactIsNewStyleRootDEV: ?boolean,
     })
   | (Document & {
       _reactRootContainer: ?Root,
+      _reactIsNewStyleRootDEV: ?boolean,
     });
 
 type Batch = FiberRootBatch & {
@@ -362,7 +364,7 @@ ReactWork.prototype._onCommit = function(): void {
 };
 
 function ReactRoot(
-  container: Container,
+  container: DOMContainer,
   isConcurrent: boolean,
   hydrate: boolean,
 ) {
@@ -652,6 +654,16 @@ const ReactDOM: Object = {
   },
 
   hydrate(element: React$Node, container: DOMContainer, callback: ?Function) {
+    if (__DEV__) {
+      warningWithoutStack(
+        !container._reactIsNewStyleRootDEV,
+        'You are calling ReactDOM.hydrate() on a container that was previously ' +
+          'managed by ReactDOM.%s(). This is not supported. ' +
+          'Did you mean to call root.render(element, {hydrate: true})?',
+        enableStableConcurrentModeAPIs ? 'createRoot' : 'unstable_createRoot',
+      );
+    }
+
     // TODO: throw or warn if we couldn't hydrate?
     return legacyRenderSubtreeIntoContainer(
       null,
@@ -667,6 +679,16 @@ const ReactDOM: Object = {
     container: DOMContainer,
     callback: ?Function,
   ) {
+    if (__DEV__) {
+      warningWithoutStack(
+        !container._reactIsNewStyleRootDEV,
+        'You are calling ReactDOM.render() on a container that was previously ' +
+          'managed by ReactDOM.%s(). This is not supported. ' +
+          'Did you mean to call root.render(element)?',
+        enableStableConcurrentModeAPIs ? 'createRoot' : 'unstable_createRoot',
+      );
+    }
+
     return legacyRenderSubtreeIntoContainer(
       null,
       element,
@@ -700,6 +722,15 @@ const ReactDOM: Object = {
       isValidContainer(container),
       'unmountComponentAtNode(...): Target container is not a DOM element.',
     );
+
+    if (__DEV__) {
+      warningWithoutStack(
+        !container._reactIsNewStyleRootDEV,
+        'You are calling ReactDOM.unmountComponentAtNode() on a container that was previously ' +
+          'managed by ReactDOM.%s(). This is not supported. Did you mean to call root.unmount()?',
+        enableStableConcurrentModeAPIs ? 'createRoot' : 'unstable_createRoot',
+      );
+    }
 
     if (container._reactRootContainer) {
       if (__DEV__) {
@@ -805,6 +836,15 @@ function createRoot(container: DOMContainer, options?: RootOptions): ReactRoot {
     '%s(...): Target container is not a DOM element.',
     functionName,
   );
+  if (__DEV__) {
+    warningWithoutStack(
+      !container._reactRootContainer,
+      'You are calling ReactDOM.%s() on a container that was previously ' +
+        'managed by ReactDOM.render(). This is not supported.',
+      enableStableConcurrentModeAPIs ? 'createRoot' : 'unstable_createRoot',
+    );
+    container._reactIsNewStyleRootDEV = true;
+  }
   const hydrate = options != null && options.hydrate === true;
   return new ReactRoot(container, true, hydrate);
 }
