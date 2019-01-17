@@ -117,6 +117,72 @@ describe('ReactHooks', () => {
     expect(root).toFlushAndYield(['Parent: 1, 2']);
   });
 
+  it('bails out in render phase if all the state is the same and props bail out with memo', () => {
+    const {useState, memo} = React;
+
+    function Child({text}) {
+      ReactTestRenderer.unstable_yield('Child: ' + text);
+      return text;
+    }
+
+    let setCounter1;
+    let setCounter2;
+    function Parent({theme}) {
+      const [counter1, _setCounter1] = useState(0);
+      setCounter1 = _setCounter1;
+      const [counter2, _setCounter2] = useState(0);
+      setCounter2 = _setCounter2;
+
+      const text = `${counter1}, ${counter2} (${theme})`;
+      ReactTestRenderer.unstable_yield(`Parent: ${text}`);
+      return <Child text={text} />;
+    }
+
+    Parent = memo(Parent);
+
+    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
+    root.update(<Parent theme="light" />);
+    expect(root).toFlushAndYield([
+      'Parent: 0, 0 (light)',
+      'Child: 0, 0 (light)',
+    ]);
+    expect(root).toMatchRenderedOutput('0, 0 (light)');
+
+    // Normal update
+    setCounter1(1);
+    setCounter2(1);
+    expect(root).toFlushAndYield([
+      'Parent: 1, 1 (light)',
+      'Child: 1, 1 (light)',
+    ]);
+
+    // Update that bails out.
+    setCounter1(1);
+    expect(root).toFlushAndYield(['Parent: 1, 1 (light)']);
+
+    // This time, one of the state updates but the other one doesn't. So we
+    // can't bail out.
+    setCounter1(1);
+    setCounter2(2);
+    expect(root).toFlushAndYield([
+      'Parent: 1, 2 (light)',
+      'Child: 1, 2 (light)',
+    ]);
+
+    // Updates bail out, but component still renders because props
+    // have changed
+    setCounter1(1);
+    setCounter2(2);
+    root.update(<Parent theme="dark" />);
+    expect(root).toFlushAndYield(['Parent: 1, 2 (dark)', 'Child: 1, 2 (dark)']);
+
+    // Both props and state bail out
+    setCounter1(1);
+    setCounter2(2);
+    root.update(<Parent theme="dark" />);
+    expect(root).toFlushAndYield(['Parent: 1, 2 (dark)']);
+  });
+
   it('never bails out if context has changed', () => {
     const {useState, useLayoutEffect, useContext} = React;
 
