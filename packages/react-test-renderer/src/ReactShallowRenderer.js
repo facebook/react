@@ -298,13 +298,12 @@ class ReactShallowRenderer {
 
     const useMemo = <T>(
       nextCreate: () => T,
-      inputs: Array<mixed> | void | null,
+      deps: Array<mixed> | void | null,
     ): T => {
       this._validateCurrentlyRenderingComponent();
       this._createWorkInProgressHook();
 
-      const nextDeps =
-        inputs !== undefined && inputs !== null ? inputs : [nextCreate];
+      const nextDeps = deps !== undefined && deps !== null ? deps : null;
 
       if (
         this._workInProgressHook !== null &&
@@ -312,8 +311,10 @@ class ReactShallowRenderer {
       ) {
         const prevState = this._workInProgressHook.memoizedState;
         const prevDeps = prevState[1];
-        if (areHookInputsEqual(nextDeps, prevDeps)) {
-          return prevState[0];
+        if (nextDeps !== null) {
+          if (areHookInputsEqual(nextDeps, prevDeps)) {
+            return prevState[0];
+          }
         }
       }
 
