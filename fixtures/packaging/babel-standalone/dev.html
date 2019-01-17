@@ -1,17 +1,12 @@
 <html>
   <body>
-    <script src="http://unpkg.com/react@next/umd/react.development.js"></script>
-    <script src="http://unpkg.com/react-dom@next/umd/react-dom.development.js"></script>
+    <script src="../../../build/node_modules/react/umd/react.development.js"></script>
+    <script src="../../../build/node_modules/react-dom/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.js"></script>
     <div id="container"></div>
     <script type="text/babel">
-      function Foo(props) {
-        const [foo, setFoo] = React.useState(42)
-          return <h1>Hello {props.name}!</h1>
-      }
-
       ReactDOM.render(
-        <Foo name="Dan" />,
+        <h1>Hello World!</h1>,
         document.getElementById('container')
       );
     </script>
