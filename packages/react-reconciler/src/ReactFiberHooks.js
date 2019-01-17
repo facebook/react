@@ -634,7 +634,7 @@ export function useMemo<T>(
       return prevState[0];
     }
   }
-  
+
   // Temporarily clear to forbid calling Hooks.
   currentlyRenderingFiber = null;
   const nextValue = nextCreate();

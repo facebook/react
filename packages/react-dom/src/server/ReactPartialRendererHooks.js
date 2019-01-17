@@ -254,7 +254,7 @@ function useMemo<T>(
       return prevState[0];
     }
   }
-  
+
   // Temporarily clear to forbid calling Hooks.
   currentlyRenderingComponent = null;
   const nextValue = nextCreate();
