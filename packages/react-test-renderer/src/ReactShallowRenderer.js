@@ -298,12 +298,13 @@ class ReactShallowRenderer {
 
     const useMemo = <T>(
       nextCreate: () => T,
-      deps: Array<mixed> | void | null,
+      inputs: Array<mixed> | void | null,
     ): T => {
       this._validateCurrentlyRenderingComponent();
       this._createWorkInProgressHook();
 
-      const nextDeps = deps === undefined ? null : deps;
+      const nextDeps =
+        inputs !== undefined && inputs !== null ? inputs : [nextCreate];
 
       if (
         this._workInProgressHook !== null &&
