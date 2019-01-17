@@ -655,7 +655,7 @@ const ReactDOM: Object = {
       warningWithoutStack(
         !container._reactHasBeenPassedToCreateRootDEV,
         'You are calling ReactDOM.hydrate() on a container that was previously ' +
-          'managed by ReactDOM.%s(). This is not supported. ' +
+          'passed to ReactDOM.%s(). This is not supported. ' +
           'Did you mean to call root.render(element, {hydrate: true})?',
         enableStableConcurrentModeAPIs ? 'createRoot' : 'unstable_createRoot',
       );
@@ -683,7 +683,7 @@ const ReactDOM: Object = {
       warningWithoutStack(
         !container._reactHasBeenPassedToCreateRootDEV,
         'You are calling ReactDOM.render() on a container that was previously ' +
-          'managed by ReactDOM.%s(). This is not supported. ' +
+          'passed to ReactDOM.%s(). This is not supported. ' +
           'Did you mean to call root.render(element)?',
         enableStableConcurrentModeAPIs ? 'createRoot' : 'unstable_createRoot',
       );
@@ -730,7 +730,7 @@ const ReactDOM: Object = {
       warningWithoutStack(
         !container._reactHasBeenPassedToCreateRootDEV,
         'You are calling ReactDOM.unmountComponentAtNode() on a container that was previously ' +
-          'managed by ReactDOM.%s(). This is not supported. Did you mean to call root.unmount()?',
+          'passed to ReactDOM.%s(). This is not supported. Did you mean to call root.unmount()?',
         enableStableConcurrentModeAPIs ? 'createRoot' : 'unstable_createRoot',
       );
     }
@@ -843,7 +843,7 @@ function createRoot(container: DOMContainer, options?: RootOptions): ReactRoot {
     warningWithoutStack(
       !container._reactRootContainer,
       'You are calling ReactDOM.%s() on a container that was previously ' +
-        'managed by ReactDOM.render(). This is not supported.',
+        'passed to ReactDOM.render(). This is not supported.',
       enableStableConcurrentModeAPIs ? 'createRoot' : 'unstable_createRoot',
     );
     container._reactHasBeenPassedToCreateRootDEV = true;
