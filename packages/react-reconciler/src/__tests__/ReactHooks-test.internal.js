@@ -17,6 +17,9 @@ let ReactFeatureFlags;
 let ReactTestRenderer;
 let ReactDOMServer;
 
+const OutsideHookScopeError =
+  'Hooks can only be called inside the body of a function component';
+
 // Additional tests can be found in ReactHooksWithNoopRenderer. Plan is to
 // gradually migrate those to this file.
 describe('ReactHooks', () => {
@@ -106,11 +109,11 @@ describe('ReactHooks', () => {
 
     const root = ReactTestRenderer.create(<MemoApp />);
     // trying to render again should trigger comparison and throw
-    expect(() => root.update(<MemoApp />)).toThrow();
+    expect(() => root.update(<MemoApp />)).toThrow(OutsideHookScopeError);
     // the next round, it does a fresh mount, so should render
-    expect(() => root.update(<MemoApp />)).not.toThrow();
+    expect(() => root.update(<MemoApp />)).not.toThrow(OutsideHookScopeError);
     // and then again, fail
-    expect(() => root.update(<MemoApp />)).toThrow();
+    expect(() => root.update(<MemoApp />)).toThrow(OutsideHookScopeError);
   });
 
   it('throws when calling hooks inside useMemo', () => {
@@ -122,27 +125,43 @@ describe('ReactHooks', () => {
       });
       return null;
     }
-    expect(() => ReactTestRenderer.create(<App />)).toThrow();
-  });
-  
-  it('cannot useContext inside useMemo', () => {
-    const {useMemo, useContext} = React;
-    const Ctx = React.createContext();
-    function App() {
-      useMemo(() => {
-        useContext(Ctx);
-        return 123;
-      });
-      return null;
+
+    function Simple() {
+      useState(0);
+      return 123;
     }
-
-    expect(() => ReactTestRenderer.create(
-      <Ctx.Provider>
-        <App />
-      </Ctx.Provider>,
-    )).toThrow();
+    let root = ReactTestRenderer.create(null);
+    expect(() => root.update(<App />)).toThrow(OutsideHookScopeError);
+    // we want to assure that no hook machinery has broken,
+    // so we listen for all errors on the next line
+    expect(() => root.update(<Simple />)).not.toThrow();
   });
 
-  // todo -
-  // ^ the above tests, but for the server renderer
+  it('throws when calling hooks inside useReducer', () => {
+    const {useReducer, useRef} = React;
+    function App() {
+      const [value, dispatch] = useReducer((state, action) => {
+        useRef(0);
+        return state;
+      }, 0);
+      dispatch('foo');
+      return value;
+    }
+    expect(() => ReactTestRenderer.create(<App />)).toThrow(
+      OutsideHookScopeError,
+    );
+  });
+
+  it("throws when calling hooks inside useState's initialize function", () => {
+    const {useState, useRef} = React;
+    function App() {
+      useState(() => {
+        useRef(0);
+        return 0;
+      });
+    }
+    expect(() => ReactTestRenderer.create(<App />)).toThrow(
+      OutsideHookScopeError,
+    );
+  });
 });
