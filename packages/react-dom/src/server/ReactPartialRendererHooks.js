@@ -177,7 +177,7 @@ export function useReducer<S, A>(
   initialState: S,
   initialAction: A | void | null,
 ): [S, Dispatch<A>] {
-  let cachedCurrentlyRenderingComponent = (currentlyRenderingComponent = resolveCurrentlyRenderingComponent());
+  let component = (currentlyRenderingComponent = resolveCurrentlyRenderingComponent());
   workInProgressHook = createWorkInProgressHook();
   if (isReRender) {
     // This is a re-render. Apply the new render phase updates to the previous
@@ -196,12 +196,10 @@ export function useReducer<S, A>(
           // priority because it will always be the same as the current
           // render's.
           const action = update.action;
-
+          // Temporarily; clear to forbid calling Hooks.
           currentlyRenderingComponent = null;
-          // now, it'll throw if you try to call a hook inside the reducer
           newState = reducer(newState, action);
-          // restore the current component
-          currentlyRenderingComponent = cachedCurrentlyRenderingComponent;
+          currentlyRenderingComponent = component;
           update = update.next;
         } while (update !== null);
 
@@ -221,7 +219,7 @@ export function useReducer<S, A>(
     } else if (initialAction !== undefined && initialAction !== null) {
       initialState = reducer(initialState, initialAction);
     }
-    currentlyRenderingComponent = cachedCurrentlyRenderingComponent;
+    currentlyRenderingComponent = component;
     workInProgressHook.memoizedState = initialState;
     const queue: UpdateQueue<A> = (workInProgressHook.queue = {
       last: null,
@@ -240,7 +238,7 @@ function useMemo<T>(
   nextCreate: () => T,
   inputs: Array<mixed> | void | null,
 ): T {
-  let cachedCurrentlyRenderingComponent = (currentlyRenderingComponent = resolveCurrentlyRenderingComponent());
+  let component = (currentlyRenderingComponent = resolveCurrentlyRenderingComponent());
   workInProgressHook = createWorkInProgressHook();
 
   const nextInputs =
@@ -256,13 +254,10 @@ function useMemo<T>(
       return prevState[0];
     }
   }
-
+  // Temporarily clear to forbid calling Hooks.
   currentlyRenderingComponent = null;
-  // now, it'll throw if you try to call a hook inside nextCreate()
   const nextValue = nextCreate();
-  // restore the current component
-  currentlyRenderingComponent = cachedCurrentlyRenderingComponent;
-
+  currentlyRenderingComponent = component;
   workInProgressHook.memoizedState = [nextValue, nextInputs];
   return nextValue;
 }

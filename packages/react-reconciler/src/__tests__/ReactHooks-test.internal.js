@@ -17,9 +17,6 @@ let ReactFeatureFlags;
 let ReactTestRenderer;
 let ReactDOMServer;
 
-const OutsideHookScopeError =
-  'Hooks can only be called inside the body of a function component';
-
 // Additional tests can be found in ReactHooksWithNoopRenderer. Plan is to
 // gradually migrate those to this file.
 describe('ReactHooks', () => {
@@ -109,11 +106,17 @@ describe('ReactHooks', () => {
 
     const root = ReactTestRenderer.create(<MemoApp />);
     // trying to render again should trigger comparison and throw
-    expect(() => root.update(<MemoApp />)).toThrow(OutsideHookScopeError);
+    expect(() => root.update(<MemoApp />)).toThrow(
+      'Hooks can only be called inside the body of a function component',
+    );
     // the next round, it does a fresh mount, so should render
-    expect(() => root.update(<MemoApp />)).not.toThrow(OutsideHookScopeError);
+    expect(() => root.update(<MemoApp />)).not.toThrow(
+      'Hooks can only be called inside the body of a function component',
+    );
     // and then again, fail
-    expect(() => root.update(<MemoApp />)).toThrow(OutsideHookScopeError);
+    expect(() => root.update(<MemoApp />)).toThrow(
+      'Hooks can only be called inside the body of a function component',
+    );
   });
 
   it('throws when calling hooks inside useMemo', () => {
@@ -121,20 +124,24 @@ describe('ReactHooks', () => {
     function App() {
       useMemo(() => {
         useState(0);
-        return 123;
+        return 1;
       });
       return null;
     }
 
     function Simple() {
-      useState(0);
-      return 123;
+      const [value] = useState(123);
+      return value;
     }
     let root = ReactTestRenderer.create(null);
-    expect(() => root.update(<App />)).toThrow(OutsideHookScopeError);
-    // we want to assure that no hook machinery has broken,
-    // so we listen for all errors on the next line
-    expect(() => root.update(<Simple />)).not.toThrow();
+    expect(() => root.update(<App />)).toThrow(
+      'Hooks can only be called inside the body of a function component',
+    );
+
+    // we want to assure that no hook machinery has broken
+    // so we render a fresh component with a hook just to be sure
+    root.update(<Simple />);
+    expect(root.toJSON()).toEqual('123');
   });
 
   it('throws when calling hooks inside useReducer', () => {
@@ -148,7 +155,7 @@ describe('ReactHooks', () => {
       return value;
     }
     expect(() => ReactTestRenderer.create(<App />)).toThrow(
-      OutsideHookScopeError,
+      'Hooks can only be called inside the body of a function component',
     );
   });
 
@@ -161,7 +168,7 @@ describe('ReactHooks', () => {
       });
     }
     expect(() => ReactTestRenderer.create(<App />)).toThrow(
-      OutsideHookScopeError,
+      'Hooks can only be called inside the body of a function component',
     );
   });
 });

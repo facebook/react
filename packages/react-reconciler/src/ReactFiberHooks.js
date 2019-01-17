@@ -108,6 +108,7 @@ let renderPhaseUpdates: Map<UpdateQueue<any>, Update<any>> | null = null;
 // Counter to prevent infinite loops.
 let numberOfReRenders: number = 0;
 const RE_RENDER_LIMIT = 25;
+
 function resolveCurrentlyRenderingFiber(): Fiber {
   invariant(
     currentlyRenderingFiber !== null,
@@ -344,7 +345,7 @@ export function useReducer<S, A>(
   initialState: S,
   initialAction: A | void | null,
 ): [S, Dispatch<A>] {
-  let cachedCurrentlyRenderingFiber = (currentlyRenderingFiber = resolveCurrentlyRenderingFiber());
+  let fiber = (currentlyRenderingFiber = resolveCurrentlyRenderingFiber());
   workInProgressHook = createWorkInProgressHook();
   let queue: UpdateQueue<A> | null = (workInProgressHook.queue: any);
   if (queue !== null) {
@@ -365,12 +366,11 @@ export function useReducer<S, A>(
             // priority because it will always be the same as the current
             // render's.
             const action = update.action;
+            // Temporarily clear to forbid calling nested Hooks.
             currentlyRenderingFiber = null;
-
             // now, it'll throw if you try to call a hook inside the reducer
             newState = reducer(newState, action);
-            // restore the current component
-            currentlyRenderingFiber = cachedCurrentlyRenderingFiber;
+            currentlyRenderingFiber = fiber;
             update = update.next;
           } while (update !== null);
 
@@ -435,7 +435,7 @@ export function useReducer<S, A>(
           const action = update.action;
           currentlyRenderingFiber = null;
           newState = reducer(newState, action);
-          currentlyRenderingFiber = cachedCurrentlyRenderingFiber;
+          currentlyRenderingFiber = fiber;
         }
         prevUpdate = update;
         update = update.next;
@@ -464,7 +464,7 @@ export function useReducer<S, A>(
   } else if (initialAction !== undefined && initialAction !== null) {
     initialState = reducer(initialState, initialAction);
   }
-  currentlyRenderingFiber = cachedCurrentlyRenderingFiber;
+  currentlyRenderingFiber = fiber;
   workInProgressHook.memoizedState = workInProgressHook.baseState = initialState;
   queue = workInProgressHook.queue = {
     last: null,
@@ -620,7 +620,7 @@ export function useMemo<T>(
   nextCreate: () => T,
   inputs: Array<mixed> | void | null,
 ): T {
-  let cachedCurrentlyRenderingFiber = (currentlyRenderingFiber = resolveCurrentlyRenderingFiber());
+  let fiber = (currentlyRenderingFiber = resolveCurrentlyRenderingFiber());
   workInProgressHook = createWorkInProgressHook();
 
   const nextInputs =
@@ -633,13 +633,10 @@ export function useMemo<T>(
       return prevState[0];
     }
   }
-
+  // Temporarily clear to forbid calling Hooks.
   currentlyRenderingFiber = null;
-  // now, it'll throw if you try to call a hook inside nextCreate
   const nextValue = nextCreate();
-  // restore the current fiber
-  currentlyRenderingFiber = cachedCurrentlyRenderingFiber;
-
+  currentlyRenderingFiber = fiber;
   workInProgressHook.memoizedState = [nextValue, nextInputs];
   return nextValue;
 }
