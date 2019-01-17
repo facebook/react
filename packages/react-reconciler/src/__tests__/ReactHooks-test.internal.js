@@ -453,7 +453,6 @@ describe('ReactHooks', () => {
         'Previous: [A, B]\n' +
         'Incoming: [A]\n',
     ]);
-    expect(ReactTestRenderer).toHaveYielded(['Did commit: A, B']);
   });
 
   it('warns if switching from dependencies to no dependencies', () => {
