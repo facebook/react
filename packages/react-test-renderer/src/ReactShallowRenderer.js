@@ -157,7 +157,10 @@ class ReactShallowRenderer {
           this._updater,
         );
 
-        this._updateStateFromStaticLifecycle(element.props);
+        const updated = this._updateNewStateFromStaticLifecycle(element.props);
+        if (updated) {
+          this._instance.state = this._newState;
+        }
 
         if (element.type.hasOwnProperty('contextTypes')) {
           currentlyValidatingElement = element;
@@ -263,7 +266,7 @@ class ReactShallowRenderer {
         }
       }
     }
-    this._updateStateFromStaticLifecycle(props);
+    this._updateNewStateFromStaticLifecycle(props);
 
     // Read state after cWRP in case it calls setState
     const state = this._newState || oldState;
@@ -310,7 +313,7 @@ class ReactShallowRenderer {
     // because DOM refs are not available.
   }
 
-  _updateStateFromStaticLifecycle(props) {
+  _updateNewStateFromStaticLifecycle(props) {
     const {type} = this._element;
 
     if (typeof type.getDerivedStateFromProps === 'function') {
@@ -323,9 +326,11 @@ class ReactShallowRenderer {
 
       if (partialState != null) {
         const newState = Object.assign({}, oldState, partialState);
-        this._instance.state = this._newState = newState;
+        this._newState = newState;
+        return true;
       }
     }
+    return false;
   }
 }
 
