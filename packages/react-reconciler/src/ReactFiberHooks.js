@@ -36,7 +36,7 @@ import {
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 import getComponentName from 'shared/getComponentName';
-import areHookInputsEqual from 'shared/areHookInputsEqual';
+import is from 'shared/objectIs';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
 
 type Update<S, A> = {
@@ -68,7 +68,7 @@ type Effect = {
   tag: HookEffectTag,
   create: () => mixed,
   destroy: (() => mixed) | null,
-  inputs: Array<mixed>,
+  deps: Array<mixed> | null,
   next: Effect,
 };
 
@@ -117,12 +117,57 @@ let renderPhaseUpdates: Map<
 let numberOfReRenders: number = -1;
 const RE_RENDER_LIMIT = 25;
 
+// In DEV, this is the name of the currently executing primitive hook
+let currentHookNameInDev: ?string;
+
 function resolveCurrentlyRenderingFiber(): Fiber {
   invariant(
     currentlyRenderingFiber !== null,
     'Hooks can only be called inside the body of a function component.',
   );
   return currentlyRenderingFiber;
+}
+
+function areHookInputsEqual(
+  nextDeps: Array<mixed>,
+  prevDeps: Array<mixed> | null,
+) {
+  if (prevDeps === null) {
+    if (__DEV__) {
+      warning(
+        false,
+        '%s received a final argument during this render, but not during ' +
+          'the previous render. Even though the final argument is optional, ' +
+          'its type cannot change between renders.',
+        currentHookNameInDev,
+      );
+    }
+    return false;
+  }
+
+  if (__DEV__) {
+    // Don't bother comparing lengths in prod because these arrays should be
+    // passed inline.
+    if (nextDeps.length !== prevDeps.length) {
+      warning(
+        false,
+        'The final argument passed to %s changed size between renders. The ' +
+          'order and size of this array must remain constant.\n\n' +
+          'Previous: %s\n' +
+          'Incoming: %s',
+        currentHookNameInDev,
+        `[${nextDeps.join(', ')}]`,
+        `[${prevDeps.join(', ')}]`,
+      );
+    }
+  }
+  for (let i = 0; i < prevDeps.length && i < nextDeps.length; i++) {
+    if (is(nextDeps[i], prevDeps[i])) {
+      continue;
+    }
+    return false;
+  }
+  return true;
 }
 
 export function renderWithHooks(
@@ -202,6 +247,10 @@ export function renderWithHooks(
   remainingExpirationTime = NoWork;
   componentUpdateQueue = null;
 
+  if (__DEV__) {
+    currentHookNameInDev = undefined;
+  }
+
   // These were reset above
   // didScheduleRenderPhaseUpdate = false;
   // renderPhaseUpdates = null;
@@ -246,6 +295,10 @@ export function resetHooks(): void {
 
   remainingExpirationTime = NoWork;
   componentUpdateQueue = null;
+
+  if (__DEV__) {
+    currentHookNameInDev = undefined;
+  }
 
   didScheduleRenderPhaseUpdate = false;
   renderPhaseUpdates = null;
@@ -335,6 +388,9 @@ export function useContext<T>(
   context: ReactContext<T>,
   observedBits: void | number | boolean,
 ): T {
+  if (__DEV__) {
+    currentHookNameInDev = 'useContext';
+  }
   // Ensure we're in a function component (class components support only the
   // .unstable_read() form)
   resolveCurrentlyRenderingFiber();
@@ -344,6 +400,9 @@ export function useContext<T>(
 export function useState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {
+  if (__DEV__) {
+    currentHookNameInDev = 'useState';
+  }
   return useReducer(
     basicStateReducer,
     // useReducer has a special case to support lazy useState initializers
@@ -356,6 +415,11 @@ export function useReducer<S, A>(
   initialState: S,
   initialAction: A | void | null,
 ): [S, Dispatch<A>] {
+  if (__DEV__) {
+    if (reducer !== basicStateReducer) {
+      currentHookNameInDev = 'useReducer';
+    }
+  }
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   workInProgressHook = createWorkInProgressHook();
   let queue: UpdateQueue<S, A> | null = (workInProgressHook.queue: any);
@@ -500,12 +564,12 @@ export function useReducer<S, A>(
   return [workInProgressHook.memoizedState, dispatch];
 }
 
-function pushEffect(tag, create, destroy, inputs) {
+function pushEffect(tag, create, destroy, deps) {
   const effect: Effect = {
     tag,
     create,
     destroy,
-    inputs,
+    deps,
     // Circular
     next: (null: any),
   };
@@ -545,35 +609,44 @@ export function useRef<T>(initialValue: T): {current: T} {
 
 export function useLayoutEffect(
   create: () => mixed,
-  inputs: Array<mixed> | void | null,
+  deps: Array<mixed> | void | null,
 ): void {
-  useEffectImpl(UpdateEffect, UnmountMutation | MountLayout, create, inputs);
+  if (__DEV__) {
+    currentHookNameInDev = 'useLayoutEffect';
+  }
+  useEffectImpl(UpdateEffect, UnmountMutation | MountLayout, create, deps);
 }
 
 export function useEffect(
   create: () => mixed,
-  inputs: Array<mixed> | void | null,
+  deps: Array<mixed> | void | null,
 ): void {
+  if (__DEV__) {
+    currentHookNameInDev = 'useEffect';
+  }
   useEffectImpl(
     UpdateEffect | PassiveEffect,
     UnmountPassive | MountPassive,
     create,
-    inputs,
+    deps,
   );
 }
 
-function useEffectImpl(fiberEffectTag, hookEffectTag, create, inputs): void {
+function useEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   workInProgressHook = createWorkInProgressHook();
 
-  let nextInputs = inputs !== undefined && inputs !== null ? inputs : [create];
+  const nextDeps = deps === undefined ? null : deps;
   let destroy = null;
   if (currentHook !== null) {
     const prevEffect = currentHook.memoizedState;
     destroy = prevEffect.destroy;
-    if (areHookInputsEqual(nextInputs, prevEffect.inputs)) {
-      pushEffect(NoHookEffect, create, destroy, nextInputs);
-      return;
+    if (nextDeps !== null) {
+      const prevDeps = prevEffect.deps;
+      if (areHookInputsEqual(nextDeps, prevDeps)) {
+        pushEffect(NoHookEffect, create, destroy, nextDeps);
+        return;
+      }
     }
   }
 
@@ -582,20 +655,21 @@ function useEffectImpl(fiberEffectTag, hookEffectTag, create, inputs): void {
     hookEffectTag,
     create,
     destroy,
-    nextInputs,
+    nextDeps,
   );
 }
 
 export function useImperativeHandle<T>(
   ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
   create: () => T,
-  inputs: Array<mixed> | void | null,
+  deps: Array<mixed> | void | null,
 ): void {
-  // TODO: If inputs are provided, should we skip comparing the ref itself?
-  const nextInputs =
-    inputs !== null && inputs !== undefined
-      ? inputs.concat([ref])
-      : [ref, create];
+  if (__DEV__) {
+    currentHookNameInDev = 'useImperativeHandle';
+  }
+  // TODO: If deps are provided, should we skip comparing the ref itself?
+  const nextDeps =
+    deps !== null && deps !== undefined ? deps.concat([ref]) : [ref];
 
   // TODO: I've implemented this on top of useEffect because it's almost the
   // same thing, and it would require an equal amount of code. It doesn't seem
@@ -614,13 +688,17 @@ export function useImperativeHandle<T>(
         refObject.current = null;
       };
     }
-  }, nextInputs);
+  }, nextDeps);
 }
 
 export function useDebugValue(
   value: any,
   formatterFn: ?(value: any) => any,
 ): void {
+  if (__DEV__) {
+    currentHookNameInDev = 'useDebugValue';
+  }
+
   // This will trigger a warning if the hook is used in a non-Function component.
   resolveCurrentlyRenderingFiber();
 
@@ -631,45 +709,54 @@ export function useDebugValue(
 
 export function useCallback<T>(
   callback: T,
-  inputs: Array<mixed> | void | null,
+  deps: Array<mixed> | void | null,
 ): T {
+  if (__DEV__) {
+    currentHookNameInDev = 'useCallback';
+  }
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   workInProgressHook = createWorkInProgressHook();
 
-  const nextInputs =
-    inputs !== undefined && inputs !== null ? inputs : [callback];
+  const nextDeps = deps === undefined ? null : deps;
 
   const prevState = workInProgressHook.memoizedState;
   if (prevState !== null) {
-    const prevInputs = prevState[1];
-    if (areHookInputsEqual(nextInputs, prevInputs)) {
-      return prevState[0];
+    if (nextDeps !== null) {
+      const prevDeps: Array<mixed> | null = prevState[1];
+      if (areHookInputsEqual(nextDeps, prevDeps)) {
+        return prevState[0];
+      }
     }
   }
-  workInProgressHook.memoizedState = [callback, nextInputs];
+  workInProgressHook.memoizedState = [callback, nextDeps];
   return callback;
 }
 
 export function useMemo<T>(
   nextCreate: () => T,
-  inputs: Array<mixed> | void | null,
+  deps: Array<mixed> | void | null,
 ): T {
+  if (__DEV__) {
+    currentHookNameInDev = 'useMemo';
+  }
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   workInProgressHook = createWorkInProgressHook();
 
-  const nextInputs =
-    inputs !== undefined && inputs !== null ? inputs : [nextCreate];
+  const nextDeps = deps === undefined ? null : deps;
 
   const prevState = workInProgressHook.memoizedState;
   if (prevState !== null) {
-    const prevInputs = prevState[1];
-    if (areHookInputsEqual(nextInputs, prevInputs)) {
-      return prevState[0];
+    // Assume these are defined. If they're not, areHookInputsEqual will warn.
+    if (nextDeps !== null) {
+      const prevDeps: Array<mixed> | null = prevState[1];
+      if (areHookInputsEqual(nextDeps, prevDeps)) {
+        return prevState[0];
+      }
     }
   }
 
   const nextValue = nextCreate();
-  workInProgressHook.memoizedState = [nextValue, nextInputs];
+  workInProgressHook.memoizedState = [nextValue, nextDeps];
   return nextValue;
 }
 

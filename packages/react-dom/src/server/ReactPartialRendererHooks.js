@@ -10,12 +10,12 @@
 import typeof {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactFiberDispatcher';
 import type {ThreadID} from './ReactThreadIDAllocator';
 import type {ReactContext} from 'shared/ReactTypes';
-import areHookInputsEqual from 'shared/areHookInputsEqual';
 
 import {validateContextBounds} from './ReactPartialRendererContext';
 
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
+import is from 'shared/objectIs';
 
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
@@ -49,12 +49,57 @@ let renderPhaseUpdates: Map<UpdateQueue<any>, Update<any>> | null = null;
 let numberOfReRenders: number = 0;
 const RE_RENDER_LIMIT = 25;
 
+// In DEV, this is the name of the currently executing primitive hook
+let currentHookNameInDev: ?string;
+
 function resolveCurrentlyRenderingComponent(): Object {
   invariant(
     currentlyRenderingComponent !== null,
     'Hooks can only be called inside the body of a function component.',
   );
   return currentlyRenderingComponent;
+}
+
+function areHookInputsEqual(
+  nextDeps: Array<mixed>,
+  prevDeps: Array<mixed> | null,
+) {
+  if (prevDeps === null) {
+    if (__DEV__) {
+      warning(
+        false,
+        '%s received a final argument during this render, but not during ' +
+          'the previous render. Even though the final argument is optional, ' +
+          'its type cannot change between renders.',
+        currentHookNameInDev,
+      );
+    }
+    return false;
+  }
+
+  if (__DEV__) {
+    // Don't bother comparing lengths in prod because these arrays should be
+    // passed inline.
+    if (nextDeps.length !== prevDeps.length) {
+      warning(
+        false,
+        'The final argument passed to %s changed size between renders. The ' +
+          'order and size of this array must remain constant.\n\n' +
+          'Previous: %s\n' +
+          'Incoming: %s',
+        currentHookNameInDev,
+        `[${nextDeps.join(', ')}]`,
+        `[${prevDeps.join(', ')}]`,
+      );
+    }
+  }
+  for (let i = 0; i < prevDeps.length && i < nextDeps.length; i++) {
+    if (is(nextDeps[i], prevDeps[i])) {
+      continue;
+    }
+    return false;
+  }
+  return true;
 }
 
 function createHook(): Hook {
@@ -153,6 +198,9 @@ function useContext<T>(
   context: ReactContext<T>,
   observedBits: void | number | boolean,
 ): T {
+  if (__DEV__) {
+    currentHookNameInDev = 'useContext';
+  }
   resolveCurrentlyRenderingComponent();
   let threadID = currentThreadID;
   validateContextBounds(context, threadID);
@@ -166,6 +214,9 @@ function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S {
 export function useState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {
+  if (__DEV__) {
+    currentHookNameInDev = 'useState';
+  }
   return useReducer(
     basicStateReducer,
     // useReducer has a special case to support lazy useState initializers
@@ -178,6 +229,11 @@ export function useReducer<S, A>(
   initialState: S,
   initialAction: A | void | null,
 ): [S, Dispatch<A>] {
+  if (__DEV__) {
+    if (reducer !== basicStateReducer) {
+      currentHookNameInDev = 'useReducer';
+    }
+  }
   currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
   workInProgressHook = createWorkInProgressHook();
   if (isReRender) {
@@ -276,6 +332,9 @@ export function useLayoutEffect(
   create: () => mixed,
   inputs: Array<mixed> | void | null,
 ) {
+  if (__DEV__) {
+    currentHookNameInDev = 'useLayoutEffect';
+  }
   warning(
     false,
     'useLayoutEffect does nothing on the server, because its effect cannot ' +
