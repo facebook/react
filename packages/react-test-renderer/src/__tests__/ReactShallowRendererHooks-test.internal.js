@@ -270,4 +270,51 @@ describe('ReactShallowRenderer with hooks', () => {
       </div>,
     );
   });
+
+  it('should not leak state when component type changes', () => {
+    function SomeComponent({defaultName}) {
+      const [name] = React.useState(defaultName);
+
+      return (
+        <div>
+          <p>
+            Your name is: <span>{name}</span>
+          </p>
+        </div>
+      );
+    }
+
+    function SomeOtherComponent({defaultName}) {
+      const [name] = React.useState(defaultName);
+
+      return (
+        <div>
+          <p>
+            Your name is: <span>{name}</span>
+          </p>
+        </div>
+      );
+    }
+
+    const shallowRenderer = createRenderer();
+    let result = shallowRenderer.render(
+      <SomeComponent defaultName={'Dominic'} />,
+    );
+    expect(result).toEqual(
+      <div>
+        <p>
+          Your name is: <span>Dominic</span>
+        </p>
+      </div>,
+    );
+
+    result = shallowRenderer.render(<SomeOtherComponent defaultName={'Dan'} />);
+    expect(result).toEqual(
+      <div>
+        <p>
+          Your name is: <span>Dan</span>
+        </p>
+      </div>,
+    );
+  });
 });
