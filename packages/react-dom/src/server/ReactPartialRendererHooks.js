@@ -253,7 +253,7 @@ export function useReducer<S, A>(
           // priority because it will always be the same as the current
           // render's.
           const action = update.action;
-          // Temporarily; clear to forbid calling Hooks.
+          // Temporarily clear to forbid calling Hooks.
           currentlyRenderingComponent = null;
           newState = reducer(newState, action);
           currentlyRenderingComponent = component;
