@@ -41,6 +41,7 @@ describe('ReactHooksInspection', () => {
   it('should inspect a simple custom hook', () => {
     function useCustom(value) {
       let [state] = React.useState(value);
+      React.useDebugValue('custom hook label');
       return state;
     }
     function Foo(props) {
@@ -51,7 +52,7 @@ describe('ReactHooksInspection', () => {
     expect(tree).toEqual([
       {
         name: 'Custom',
-        value: undefined,
+        value: __DEV__ ? 'custom hook label' : undefined,
         subHooks: [
           {
             name: 'State',
@@ -215,5 +216,68 @@ describe('ReactHooksInspection', () => {
         subHooks: [],
       },
     ]);
+  });
+
+  it('should support an injected dispatcher', () => {
+    function Foo(props) {
+      let [state] = React.useState('hello world');
+      return <div>{state}</div>;
+    }
+
+    let initial = {};
+    let current = initial;
+    let getterCalls = 0;
+    let setterCalls = [];
+    let FakeDispatcherRef = {
+      get current() {
+        getterCalls++;
+        return current;
+      },
+      set current(value) {
+        setterCalls.push(value);
+        current = value;
+      },
+    };
+
+    expect(() => {
+      ReactDebugTools.inspectHooks(Foo, {}, FakeDispatcherRef);
+    }).toThrow(
+      'Hooks can only be called inside the body of a function component.',
+    );
+
+    expect(getterCalls).toBe(1);
+    expect(setterCalls).toHaveLength(2);
+    expect(setterCalls[0]).not.toBe(initial);
+    expect(setterCalls[1]).toBe(initial);
+  });
+
+  describe('useDebugValue', () => {
+    it('should be ignored when called outside of a custom hook', () => {
+      function Foo(props) {
+        React.useDebugValue('this is invalid');
+        return null;
+      }
+      let tree = ReactDebugTools.inspectHooks(Foo, {});
+      expect(tree).toHaveLength(0);
+    });
+
+    it('should support an optional formatter function param', () => {
+      function useCustom() {
+        React.useDebugValue({bar: 123}, object => `bar:${object.bar}`);
+        React.useState(0);
+      }
+      function Foo(props) {
+        useCustom();
+        return null;
+      }
+      let tree = ReactDebugTools.inspectHooks(Foo, {});
+      expect(tree).toEqual([
+        {
+          name: 'Custom',
+          value: __DEV__ ? 'bar:123' : undefined,
+          subHooks: [{name: 'State', subHooks: [], value: 0}],
+        },
+      ]);
+    });
   });
 });

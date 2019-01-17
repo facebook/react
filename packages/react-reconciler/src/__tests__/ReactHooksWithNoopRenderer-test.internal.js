@@ -23,7 +23,7 @@ let useLayoutEffect;
 let useCallback;
 let useMemo;
 let useRef;
-let useImperativeMethods;
+let useImperativeHandle;
 let forwardRef;
 let flushPassiveEffects;
 let memo;
@@ -71,7 +71,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     useCallback = React.useCallback;
     useMemo = React.useMemo;
     useRef = React.useRef;
-    useImperativeMethods = React.useImperativeMethods;
+    useImperativeHandle = React.useImperativeHandle;
     forwardRef = React.forwardRef;
     memo = React.memo;
   });
@@ -88,7 +88,7 @@ describe('ReactHooksWithNoopRenderer', () => {
   it('resumes after an interruption', () => {
     function Counter(props, ref) {
       const [count, updateCount] = useState(0);
-      useImperativeMethods(ref, () => ({updateCount}));
+      useImperativeHandle(ref, () => ({updateCount}));
       return <Text text={props.label + ': ' + count} />;
     }
     Counter = forwardRef(Counter);
@@ -172,7 +172,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     it('simple mount and update', () => {
       function Counter(props, ref) {
         const [count, updateCount] = useState(0);
-        useImperativeMethods(ref, () => ({updateCount}));
+        useImperativeHandle(ref, () => ({updateCount}));
         return <Text text={'Count: ' + count} />;
       }
       Counter = forwardRef(Counter);
@@ -196,7 +196,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           ReactNoop.yield('getInitialState');
           return props.initialState;
         });
-        useImperativeMethods(ref, () => ({updateCount}));
+        useImperativeHandle(ref, () => ({updateCount}));
         return <Text text={'Count: ' + count} />;
       }
       Counter = forwardRef(Counter);
@@ -214,7 +214,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       function Counter(props, ref) {
         const [count, updateCount] = useState(0);
         const [label, updateLabel] = useState('Count');
-        useImperativeMethods(ref, () => ({updateCount, updateLabel}));
+        useImperativeHandle(ref, () => ({updateCount, updateLabel}));
         return <Text text={label + ': ' + count} />;
       }
       Counter = forwardRef(Counter);
@@ -444,7 +444,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       function Counter({row: newRow}, ref) {
         let [reducer, setReducer] = useState(() => reducerA);
         let [count, dispatch] = useReducer(reducer, 0);
-        useImperativeMethods(ref, () => ({dispatch}));
+        useImperativeHandle(ref, () => ({dispatch}));
         if (count < 20) {
           dispatch('increment');
           // Swap reducers each time we increment
@@ -505,7 +505,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       function Counter(props, ref) {
         const [count, dispatch] = useReducer(reducer, 0);
-        useImperativeMethods(ref, () => ({dispatch}));
+        useImperativeHandle(ref, () => ({dispatch}));
         return <Text text={'Count: ' + count} />;
       }
       Counter = forwardRef(Counter);
@@ -546,7 +546,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       function Counter(props, ref) {
         const [count, dispatch] = useReducer(reducer, 0, initialAction);
-        useImperativeMethods(ref, () => ({dispatch}));
+        useImperativeHandle(ref, () => ({dispatch}));
         return <Text text={'Count: ' + count} />;
       }
       Counter = forwardRef(Counter);
@@ -576,7 +576,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       function Counter(props, ref) {
         const [count, dispatch] = useReducer(reducer, 0);
-        useImperativeMethods(ref, () => ({dispatch}));
+        useImperativeHandle(ref, () => ({dispatch}));
         return <Text text={'Count: ' + count} />;
       }
 
@@ -1015,11 +1015,11 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([]);
     });
 
-    it('skips effect if constructor has not changed', () => {
+    it('always fires effects if no dependencies are provided', () => {
       function effect() {
-        ReactNoop.yield(`Did mount`);
+        ReactNoop.yield(`Did create`);
         return () => {
-          ReactNoop.yield(`Did unmount`);
+          ReactNoop.yield(`Did destroy`);
         };
       }
       function Counter(props) {
@@ -1030,15 +1030,16 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.flush()).toEqual(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
       flushPassiveEffects();
-      expect(ReactNoop.clearYields()).toEqual(['Did mount']);
+      expect(ReactNoop.clearYields()).toEqual(['Did create']);
 
       ReactNoop.render(<Counter count={1} />);
-      // No effect, because constructor was hoisted outside render
       expect(ReactNoop.flush()).toEqual(['Count: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual(['Did destroy', 'Did create']);
 
       ReactNoop.render(null);
-      expect(ReactNoop.flush()).toEqual(['Did unmount']);
+      expect(ReactNoop.flush()).toEqual(['Did destroy']);
       expect(ReactNoop.getChildren()).toEqual([]);
     });
 
@@ -1456,7 +1457,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('GOODBYE')]);
     });
 
-    it('compares function if no inputs are provided', () => {
+    it('always re-computes if no inputs are provided', () => {
       function LazyCompute(props) {
         const computed = useMemo(props.compute);
         return <Text text={computed} />;
@@ -1476,10 +1477,10 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.flush()).toEqual(['compute A', 'A']);
 
       ReactNoop.render(<LazyCompute compute={computeA} />);
-      expect(ReactNoop.flush()).toEqual(['A']);
+      expect(ReactNoop.flush()).toEqual(['compute A', 'A']);
 
       ReactNoop.render(<LazyCompute compute={computeA} />);
-      expect(ReactNoop.flush()).toEqual(['A']);
+      expect(ReactNoop.flush()).toEqual(['compute A', 'A']);
 
       ReactNoop.render(<LazyCompute compute={computeB} />);
       expect(ReactNoop.flush()).toEqual(['compute B', 'B']);
@@ -1634,7 +1635,11 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
 
       ReactNoop.render(<App loadC={true} />);
-      expect(ReactNoop.flush()).toEqual(['A: 2, B: 3, C: 0']);
+      expect(() => {
+        expect(ReactNoop.flush()).toEqual(['A: 2, B: 3, C: 0']);
+      }).toWarnDev([
+        'App: Rendered more hooks than during the previous render',
+      ]);
       expect(ReactNoop.getChildren()).toEqual([span('A: 2, B: 3, C: 0')]);
 
       updateC(4);
@@ -1708,7 +1713,11 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.clearYields()).toEqual(['Mount A']);
 
       ReactNoop.render(<App showMore={true} />);
-      expect(ReactNoop.flush()).toEqual([]);
+      expect(() => {
+        expect(ReactNoop.flush()).toEqual([]);
+      }).toWarnDev([
+        'App: Rendered more hooks than during the previous render',
+      ]);
       flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual(['Mount B']);
 

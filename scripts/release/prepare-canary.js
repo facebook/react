@@ -11,7 +11,7 @@ const getLatestMasterBuildNumber = require('./prepare-canary-commands/get-latest
 const parseParams = require('./prepare-canary-commands/parse-params');
 const printPrereleaseSummary = require('./shared-commands/print-prerelease-summary');
 const testPackagingFixture = require('./shared-commands/test-packaging-fixture');
-const testSchedulerFixture = require('./shared-commands/test-scheduler-fixture');
+const testTracingFixture = require('./shared-commands/test-tracing-fixture');
 
 const run = async () => {
   try {
@@ -28,7 +28,7 @@ const run = async () => {
 
     if (!params.skipTests) {
       await testPackagingFixture(params);
-      await testSchedulerFixture(params);
+      await testTracingFixture(params);
     }
 
     await printPrereleaseSummary(params);

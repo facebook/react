@@ -11,7 +11,7 @@ const guessStableVersionNumbers = require('./prepare-stable-commands/guess-stabl
 const parseParams = require('./prepare-stable-commands/parse-params');
 const printPrereleaseSummary = require('./shared-commands/print-prerelease-summary');
 const testPackagingFixture = require('./shared-commands/test-packaging-fixture');
-const testSchedulerFixture = require('./shared-commands/test-scheduler-fixture');
+const testTracingFixture = require('./shared-commands/test-tracing-fixture');
 const updateStableVersionNumbers = require('./prepare-stable-commands/update-stable-version-numbers');
 
 const run = async () => {
@@ -32,7 +32,7 @@ const run = async () => {
 
     if (!params.skipTests) {
       await testPackagingFixture(params);
-      await testSchedulerFixture(params);
+      await testTracingFixture(params);
     }
 
     await printPrereleaseSummary(params);

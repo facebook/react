@@ -883,6 +883,37 @@ describe('ReactNewContext', () => {
         expect(ReactNoop.getChildren()).toEqual([span(2), span(2)]);
       });
 
+      it("context consumer doesn't bail out inside hidden subtree", () => {
+        const Context = React.createContext('dark');
+        const Consumer = getConsumer(Context);
+
+        function App({theme}) {
+          return (
+            <Context.Provider value={theme}>
+              <div hidden={true}>
+                <Consumer>{value => <Text text={value} />}</Consumer>
+              </div>
+            </Context.Provider>
+          );
+        }
+
+        ReactNoop.render(<App theme="dark" />);
+        expect(ReactNoop.flush()).toEqual(['dark']);
+        expect(ReactNoop.getChildrenAsJSX()).toEqual(
+          <div hidden={true}>
+            <span prop="dark" />
+          </div>,
+        );
+
+        ReactNoop.render(<App theme="light" />);
+        expect(ReactNoop.flush()).toEqual(['light']);
+        expect(ReactNoop.getChildrenAsJSX()).toEqual(
+          <div hidden={true}>
+            <span prop="light" />
+          </div>,
+        );
+      });
+
       // This is a regression case for https://github.com/facebook/react/issues/12389.
       it('does not run into an infinite loop', () => {
         const Context = React.createContext(null);

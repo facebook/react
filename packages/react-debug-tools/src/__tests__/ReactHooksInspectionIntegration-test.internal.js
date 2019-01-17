@@ -82,7 +82,7 @@ describe('ReactHooksInspectionIntergration', () => {
       React.useLayoutEffect(effect);
       React.useEffect(effect);
 
-      React.useImperativeMethods(
+      React.useImperativeHandle(
         outsideRef,
         () => {
           // Return a function so that jest treats them as non-equal.
@@ -118,7 +118,7 @@ describe('ReactHooksInspectionIntergration', () => {
       {name: 'Ref', value: 'c', subHooks: []},
       {name: 'LayoutEffect', value: effect, subHooks: []},
       {name: 'Effect', value: effect, subHooks: []},
-      {name: 'ImperativeMethods', value: outsideRef.current, subHooks: []},
+      {name: 'ImperativeHandle', value: outsideRef.current, subHooks: []},
       {name: 'Memo', value: 'ab', subHooks: []},
       {name: 'Callback', value: updateStates, subHooks: []},
     ]);
@@ -134,7 +134,7 @@ describe('ReactHooksInspectionIntergration', () => {
       {name: 'Ref', value: 'C', subHooks: []},
       {name: 'LayoutEffect', value: effect, subHooks: []},
       {name: 'Effect', value: effect, subHooks: []},
-      {name: 'ImperativeMethods', value: outsideRef.current, subHooks: []},
+      {name: 'ImperativeHandle', value: outsideRef.current, subHooks: []},
       {name: 'Memo', value: 'Ab', subHooks: []},
       {name: 'Callback', value: updateStates, subHooks: []},
     ]);
@@ -165,7 +165,7 @@ describe('ReactHooksInspectionIntergration', () => {
   it('should inspect forwardRef', () => {
     let obj = function() {};
     let Foo = React.forwardRef(function(props, ref) {
-      React.useImperativeMethods(ref, () => obj);
+      React.useImperativeHandle(ref, () => obj);
       return <div />;
     });
     let ref = React.createRef();
@@ -174,7 +174,7 @@ describe('ReactHooksInspectionIntergration', () => {
     let childFiber = renderer.root.findByType(Foo)._currentFiber();
     let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
     expect(tree).toEqual([
-      {name: 'ImperativeMethods', value: obj, subHooks: []},
+      {name: 'ImperativeHandle', value: obj, subHooks: []},
     ]);
   });
 
@@ -212,6 +212,154 @@ describe('ReactHooksInspectionIntergration', () => {
     ]);
   });
 
+  describe('useDebugValue', () => {
+    it('should support inspectable values for multiple custom hooks', () => {
+      function useLabeledValue(label) {
+        let [value] = React.useState(label);
+        React.useDebugValue(`custom label ${label}`);
+        return value;
+      }
+      function useAnonymous(label) {
+        let [value] = React.useState(label);
+        return value;
+      }
+      function Example() {
+        useLabeledValue('a');
+        React.useState('b');
+        useAnonymous('c');
+        useLabeledValue('d');
+        return null;
+      }
+      let renderer = ReactTestRenderer.create(<Example />);
+      let childFiber = renderer.root.findByType(Example)._currentFiber();
+      let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+      expect(tree).toEqual([
+        {
+          name: 'LabeledValue',
+          value: __DEV__ ? 'custom label a' : undefined,
+          subHooks: [{name: 'State', value: 'a', subHooks: []}],
+        },
+        {
+          name: 'State',
+          value: 'b',
+          subHooks: [],
+        },
+        {
+          name: 'Anonymous',
+          value: undefined,
+          subHooks: [{name: 'State', value: 'c', subHooks: []}],
+        },
+        {
+          name: 'LabeledValue',
+          value: __DEV__ ? 'custom label d' : undefined,
+          subHooks: [{name: 'State', value: 'd', subHooks: []}],
+        },
+      ]);
+    });
+
+    it('should support inspectable values for nested custom hooks', () => {
+      function useInner() {
+        React.useDebugValue('inner');
+        React.useState(0);
+      }
+      function useOuter() {
+        React.useDebugValue('outer');
+        useInner();
+      }
+      function Example() {
+        useOuter();
+        return null;
+      }
+      let renderer = ReactTestRenderer.create(<Example />);
+      let childFiber = renderer.root.findByType(Example)._currentFiber();
+      let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+      expect(tree).toEqual([
+        {
+          name: 'Outer',
+          value: __DEV__ ? 'outer' : undefined,
+          subHooks: [
+            {
+              name: 'Inner',
+              value: __DEV__ ? 'inner' : undefined,
+              subHooks: [{name: 'State', value: 0, subHooks: []}],
+            },
+          ],
+        },
+      ]);
+    });
+
+    it('should support multiple inspectable values per custom hooks', () => {
+      function useMultiLabelCustom() {
+        React.useDebugValue('one');
+        React.useDebugValue('two');
+        React.useDebugValue('three');
+        React.useState(0);
+      }
+      function useSingleLabelCustom(value) {
+        React.useDebugValue(`single ${value}`);
+        React.useState(0);
+      }
+      function Example() {
+        useSingleLabelCustom('one');
+        useMultiLabelCustom();
+        useSingleLabelCustom('two');
+        return null;
+      }
+      let renderer = ReactTestRenderer.create(<Example />);
+      let childFiber = renderer.root.findByType(Example)._currentFiber();
+      let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+      expect(tree).toEqual([
+        {
+          name: 'SingleLabelCustom',
+          value: __DEV__ ? 'single one' : undefined,
+          subHooks: [{name: 'State', value: 0, subHooks: []}],
+        },
+        {
+          name: 'MultiLabelCustom',
+          value: __DEV__ ? ['one', 'two', 'three'] : undefined,
+          subHooks: [{name: 'State', value: 0, subHooks: []}],
+        },
+        {
+          name: 'SingleLabelCustom',
+          value: __DEV__ ? 'single two' : undefined,
+          subHooks: [{name: 'State', value: 0, subHooks: []}],
+        },
+      ]);
+    });
+
+    it('should ignore useDebugValue() made outside of a custom hook', () => {
+      function Example() {
+        React.useDebugValue('this is invalid');
+        return null;
+      }
+      let renderer = ReactTestRenderer.create(<Example />);
+      let childFiber = renderer.root.findByType(Example)._currentFiber();
+      let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+      expect(tree).toHaveLength(0);
+    });
+
+    it('should support an optional formatter function param', () => {
+      function useCustom() {
+        React.useDebugValue({bar: 123}, object => `bar:${object.bar}`);
+        React.useState(0);
+      }
+      function Example() {
+        useCustom();
+        return null;
+      }
+      let renderer = ReactTestRenderer.create(<Example />);
+      let childFiber = renderer.root.findByType(Example)._currentFiber();
+      let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+      expect(tree).toEqual([
+        {
+          name: 'Custom',
+          value: __DEV__ ? 'bar:123' : undefined,
+          subHooks: [{name: 'State', subHooks: [], value: 0}],
+        },
+      ]);
+    });
+  });
+
   it('should support defaultProps and lazy', async () => {
     let Suspense = React.Suspense;
 
@@ -240,5 +388,40 @@ describe('ReactHooksInspectionIntergration', () => {
     let childFiber = renderer.root._currentFiber();
     let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
     expect(tree).toEqual([{name: 'State', value: 'def', subHooks: []}]);
+  });
+
+  it('should support an injected dispatcher', () => {
+    function Foo(props) {
+      let [state] = React.useState('hello world');
+      return <div>{state}</div>;
+    }
+
+    let initial = {};
+    let current = initial;
+    let getterCalls = 0;
+    let setterCalls = [];
+    let FakeDispatcherRef = {
+      get current() {
+        getterCalls++;
+        return current;
+      },
+      set current(value) {
+        setterCalls.push(value);
+        current = value;
+      },
+    };
+
+    let renderer = ReactTestRenderer.create(<Foo />);
+    let childFiber = renderer.root._currentFiber();
+    expect(() => {
+      ReactDebugTools.inspectHooksOfFiber(childFiber, FakeDispatcherRef);
+    }).toThrow(
+      'Hooks can only be called inside the body of a function component.',
+    );
+
+    expect(getterCalls).toBe(1);
+    expect(setterCalls).toHaveLength(2);
+    expect(setterCalls[0]).not.toBe(initial);
+    expect(setterCalls[1]).toBe(initial);
   });
 });
