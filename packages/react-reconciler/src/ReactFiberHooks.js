@@ -34,6 +34,8 @@ import {
 } from './ReactFiberScheduler';
 
 import invariant from 'shared/invariant';
+import warning from 'shared/warning';
+import getComponentName from 'shared/getComponentName';
 import areHookInputsEqual from 'shared/areHookInputsEqual';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
 
@@ -104,8 +106,6 @@ let componentUpdateQueue: FunctionComponentUpdateQueue | null = null;
 // map of queue -> render-phase updates, which are discarded once the component
 // completes without re-rendering.
 
-// Whether the work-in-progress hook is a re-rendered hook
-let isReRender: boolean = false;
 // Whether an update was scheduled during the currently executing render pass.
 let didScheduleRenderPhaseUpdate: boolean = false;
 // Lazily created map of render-phase updates
@@ -147,7 +147,6 @@ export function renderWithHooks(
   // remainingExpirationTime = NoWork;
   // componentUpdateQueue = null;
 
-  // isReRender = false;
   // didScheduleRenderPhaseUpdate = false;
   // renderPhaseUpdates = null;
   // numberOfReRenders = -1;
@@ -163,6 +162,21 @@ export function renderWithHooks(
     componentUpdateQueue = null;
 
     children = Component(props, refOrContext);
+
+    if (__DEV__) {
+      if (
+        current !== null &&
+        workInProgressHook !== null &&
+        currentHook === null
+      ) {
+        warning(
+          false,
+          '%s: Rendered more hooks than during the previous render. This is ' +
+            'not currently supported and may lead to unexpected behavior.',
+          getComponentName(Component),
+        );
+      }
+    }
   } while (didScheduleRenderPhaseUpdate);
 
   renderPhaseUpdates = null;
@@ -187,9 +201,6 @@ export function renderWithHooks(
 
   remainingExpirationTime = NoWork;
   componentUpdateQueue = null;
-
-  // Always set during createWorkInProgress
-  // isReRender = false;
 
   // These were reset above
   // didScheduleRenderPhaseUpdate = false;
@@ -236,9 +247,6 @@ export function resetHooks(): void {
   remainingExpirationTime = NoWork;
   componentUpdateQueue = null;
 
-  // Always set during createWorkInProgress
-  // isReRender = false;
-
   didScheduleRenderPhaseUpdate = false;
   renderPhaseUpdates = null;
   numberOfReRenders = -1;
@@ -272,7 +280,6 @@ function createWorkInProgressHook(): Hook {
   if (workInProgressHook === null) {
     // This is the first hook in the list
     if (firstWorkInProgressHook === null) {
-      isReRender = false;
       currentHook = firstCurrentHook;
       if (currentHook === null) {
         // This is a newly mounted hook
@@ -284,13 +291,11 @@ function createWorkInProgressHook(): Hook {
       firstWorkInProgressHook = workInProgressHook;
     } else {
       // There's already a work-in-progress. Reuse it.
-      isReRender = true;
       currentHook = firstCurrentHook;
       workInProgressHook = firstWorkInProgressHook;
     }
   } else {
     if (workInProgressHook.next === null) {
-      isReRender = false;
       let hook;
       if (currentHook === null) {
         // This is a newly mounted hook
@@ -309,7 +314,6 @@ function createWorkInProgressHook(): Hook {
       workInProgressHook = workInProgressHook.next = hook;
     } else {
       // There's already a work-in-progress. Reuse it.
-      isReRender = true;
       workInProgressHook = workInProgressHook.next;
       currentHook = currentHook !== null ? currentHook.next : null;
     }
@@ -357,7 +361,7 @@ export function useReducer<S, A>(
   let queue: UpdateQueue<S, A> | null = (workInProgressHook.queue: any);
   if (queue !== null) {
     // Already have a queue, so this is an update.
-    if (isReRender) {
+    if (numberOfReRenders > 0) {
       // This is a re-render. Apply the new render phase updates to the previous
       // work-in-progress hook.
       const dispatch: Dispatch<A> = (queue.dispatch: any);
