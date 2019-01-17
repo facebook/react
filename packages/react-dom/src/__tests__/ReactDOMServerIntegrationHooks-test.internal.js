@@ -452,7 +452,6 @@ describe('ReactDOMServerHooks', () => {
     itThrowsWhenRendering(
       'a hook inside useState',
       async render => {
-        const {useState, useRef} = React;
         function App() {
           useState(() => {
             useRef(0);
