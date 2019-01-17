@@ -212,6 +212,154 @@ describe('ReactHooksInspectionIntergration', () => {
     ]);
   });
 
+  describe('useDebugValue', () => {
+    it('should support inspectable values for multiple custom hooks', () => {
+      function useLabeledValue(label) {
+        let [value] = React.useState(label);
+        React.useDebugValue(`custom label ${label}`);
+        return value;
+      }
+      function useAnonymous(label) {
+        let [value] = React.useState(label);
+        return value;
+      }
+      function Example() {
+        useLabeledValue('a');
+        React.useState('b');
+        useAnonymous('c');
+        useLabeledValue('d');
+        return null;
+      }
+      let renderer = ReactTestRenderer.create(<Example />);
+      let childFiber = renderer.root.findByType(Example)._currentFiber();
+      let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+      expect(tree).toEqual([
+        {
+          name: 'LabeledValue',
+          value: __DEV__ ? 'custom label a' : undefined,
+          subHooks: [{name: 'State', value: 'a', subHooks: []}],
+        },
+        {
+          name: 'State',
+          value: 'b',
+          subHooks: [],
+        },
+        {
+          name: 'Anonymous',
+          value: undefined,
+          subHooks: [{name: 'State', value: 'c', subHooks: []}],
+        },
+        {
+          name: 'LabeledValue',
+          value: __DEV__ ? 'custom label d' : undefined,
+          subHooks: [{name: 'State', value: 'd', subHooks: []}],
+        },
+      ]);
+    });
+
+    it('should support inspectable values for nested custom hooks', () => {
+      function useInner() {
+        React.useDebugValue('inner');
+        React.useState(0);
+      }
+      function useOuter() {
+        React.useDebugValue('outer');
+        useInner();
+      }
+      function Example() {
+        useOuter();
+        return null;
+      }
+      let renderer = ReactTestRenderer.create(<Example />);
+      let childFiber = renderer.root.findByType(Example)._currentFiber();
+      let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+      expect(tree).toEqual([
+        {
+          name: 'Outer',
+          value: __DEV__ ? 'outer' : undefined,
+          subHooks: [
+            {
+              name: 'Inner',
+              value: __DEV__ ? 'inner' : undefined,
+              subHooks: [{name: 'State', value: 0, subHooks: []}],
+            },
+          ],
+        },
+      ]);
+    });
+
+    it('should support multiple inspectable values per custom hooks', () => {
+      function useMultiLabelCustom() {
+        React.useDebugValue('one');
+        React.useDebugValue('two');
+        React.useDebugValue('three');
+        React.useState(0);
+      }
+      function useSingleLabelCustom(value) {
+        React.useDebugValue(`single ${value}`);
+        React.useState(0);
+      }
+      function Example() {
+        useSingleLabelCustom('one');
+        useMultiLabelCustom();
+        useSingleLabelCustom('two');
+        return null;
+      }
+      let renderer = ReactTestRenderer.create(<Example />);
+      let childFiber = renderer.root.findByType(Example)._currentFiber();
+      let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+      expect(tree).toEqual([
+        {
+          name: 'SingleLabelCustom',
+          value: __DEV__ ? 'single one' : undefined,
+          subHooks: [{name: 'State', value: 0, subHooks: []}],
+        },
+        {
+          name: 'MultiLabelCustom',
+          value: __DEV__ ? ['one', 'two', 'three'] : undefined,
+          subHooks: [{name: 'State', value: 0, subHooks: []}],
+        },
+        {
+          name: 'SingleLabelCustom',
+          value: __DEV__ ? 'single two' : undefined,
+          subHooks: [{name: 'State', value: 0, subHooks: []}],
+        },
+      ]);
+    });
+
+    it('should ignore useDebugValue() made outside of a custom hook', () => {
+      function Example() {
+        React.useDebugValue('this is invalid');
+        return null;
+      }
+      let renderer = ReactTestRenderer.create(<Example />);
+      let childFiber = renderer.root.findByType(Example)._currentFiber();
+      let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+      expect(tree).toHaveLength(0);
+    });
+
+    it('should support an optional formatter function param', () => {
+      function useCustom() {
+        React.useDebugValue({bar: 123}, object => `bar:${object.bar}`);
+        React.useState(0);
+      }
+      function Example() {
+        useCustom();
+        return null;
+      }
+      let renderer = ReactTestRenderer.create(<Example />);
+      let childFiber = renderer.root.findByType(Example)._currentFiber();
+      let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+      expect(tree).toEqual([
+        {
+          name: 'Custom',
+          value: __DEV__ ? 'bar:123' : undefined,
+          subHooks: [{name: 'State', subHooks: [], value: 0}],
+        },
+      ]);
+    });
+  });
+
   it('should support defaultProps and lazy', async () => {
     let Suspense = React.Suspense;
 
