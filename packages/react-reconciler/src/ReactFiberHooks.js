@@ -337,6 +337,7 @@ export function resetHooks(): void {
 function createHook(): Hook {
   let hook: Hook = __DEV__
     ? {
+        // $FlowFixMe
         _debugType: currentHookType,
         memoizedState: null,
 

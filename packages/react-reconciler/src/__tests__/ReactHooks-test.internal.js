@@ -521,21 +521,17 @@ describe('ReactHooks', () => {
   it('warns on using differently ordered hooks on subsequent renders', () => {
     const {useState, useReducer} = React;
     function App(props) {
+      /* eslint-disable no-unused-vars */
       if (props.flip) {
         const [count, setCount] = useState(0);
-        const [state, dispatch] = useReducer(
-          (state, action) => action.payload,
-          0,
-        );
+        const [state, dispatch] = useReducer((s, a) => a, 0);
         return null;
       } else {
-        const [state, dispatch] = useReducer(
-          (state, action) => action.payload,
-          0,
-        );
+        const [state, dispatch] = useReducer((s, a) => a, 0);
         const [count, setCount] = useState(0);
         return null;
       }
+      /* eslint-enable no-unused-vars */
     }
     let root = ReactTestRenderer.create(<App flip={false} />);
     expect(() => {
