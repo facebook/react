@@ -530,15 +530,17 @@ class ReactShallowRenderer {
         );
 
         if (typeof element.type.getDerivedStateFromProps === 'function') {
-          const oldState = this._instance.state;
           const partialState = element.type.getDerivedStateFromProps.call(
             null,
             element.props,
-            oldState,
+            this._instance.state,
           );
           if (partialState != null) {
-            const newState = Object.assign({}, oldState, partialState);
-            this._instance.state = newState;
+            this._instance.state = Object.assign(
+              {},
+              this._instance.state,
+              partialState,
+            );
           }
         }
 
