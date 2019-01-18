@@ -374,13 +374,14 @@ export default {
           for (const hook of reactHooks) {
             // Report an error if a hook may be called more then once.
             if (cycled) {
-              context.report(
-                hook,
-                `React Hook "${context.getSource(hook)}" may be executed ` +
+              context.report({
+                node: hook,
+                message:
+                  `React Hook "${context.getSource(hook)}" may be executed ` +
                   'more than once. Possibly because it is called in a loop. ' +
                   'React Hooks must be called in the exact same order in ' +
                   'every component render.',
-              );
+              });
             }
 
             // If this is not a valid code path for React hooks then we need to
@@ -394,16 +395,15 @@ export default {
               //
               // Special case when we think there might be an early return.
               if (!cycled && pathsFromStartToEnd !== allPathsFromStartToEnd) {
-                context.report(
-                  hook,
+                const message =
                   `React Hook "${context.getSource(hook)}" is called ` +
-                    'conditionally. React Hooks must be called in the exact ' +
-                    'same order in every component render.' +
-                    (possiblyHasEarlyReturn
-                      ? ' Did you accidentally call a React Hook after an' +
-                        ' early return?'
-                      : ''),
-                );
+                  'conditionally. React Hooks must be called in the exact ' +
+                  'same order in every component render.' +
+                  (possiblyHasEarlyReturn
+                    ? ' Did you accidentally call a React Hook after an' +
+                      ' early return?'
+                    : '');
+                context.report({node: hook, message});
               }
             } else if (
               codePathNode.parent &&
@@ -418,13 +418,12 @@ export default {
               // call in a class, if it works, is unambigously *not* a hook.
             } else if (codePathFunctionName) {
               // Custom message if we found an invalid function name.
-              context.report(
-                hook,
+              const message =
                 `React Hook "${context.getSource(hook)}" is called in ` +
-                  `function "${context.getSource(codePathFunctionName)}" ` +
-                  'which is neither a React function component or a custom ' +
-                  'React Hook function.',
-              );
+                `function "${context.getSource(codePathFunctionName)}" ` +
+                'which is neither a React function component or a custom ' +
+                'React Hook function.';
+              context.report({node: hook, message});
             } else if (codePathNode.type === 'Program') {
               // For now, ignore if it's in top level scope.
               // We could warn here but there are false positives related
@@ -436,12 +435,11 @@ export default {
               // enough in the common case that the incorrect message in
               // uncommon cases doesn't matter.
               if (isSomewhereInsideComponentOrHook) {
-                context.report(
-                  hook,
+                const message =
                   `React Hook "${context.getSource(hook)}" cannot be called ` +
-                    'inside a callback. React Hooks must be called in a ' +
-                    'React function component or a custom React Hook function.',
-                );
+                  'inside a callback. React Hooks must be called in a ' +
+                  'React function component or a custom React Hook function.';
+                context.report({node: hook, message});
               }
             }
           }
