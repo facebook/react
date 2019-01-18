@@ -431,10 +431,10 @@ export function useContext<T>(
   }
   // Ensure we're in a function component (class components support only the
   // .unstable_read() form)
-  if(__DEV__){
-    currentHookType = ContextHook
-    createWorkInProgressHook()
-    currentHookType = null
+  if (__DEV__) {
+    currentHookType = ContextHook;
+    createWorkInProgressHook();
+    currentHookType = null;
   }
   resolveCurrentlyRenderingFiber();
   return readContext(context, observedBits);
@@ -722,7 +722,7 @@ export function useImperativeHandle<T>(
   const nextDeps =
     deps !== null && deps !== undefined ? deps.concat([ref]) : [ref];
 
-  currentHookType = ImperativeHandleHook
+  currentHookType = ImperativeHandleHook;
   // TODO: I've implemented this on top of useEffect because it's almost the
   // same thing, and it would require an equal amount of code. It doesn't seem
   // like a common enough use case to justify the additional size.
@@ -770,7 +770,9 @@ export function useCallback<T>(
   currentHookType = CallbackHook;
   workInProgressHook = createWorkInProgressHook();
   currentHookType = null;
+
   const nextDeps = deps === undefined ? null : deps;
+
   const prevState = workInProgressHook.memoizedState;
   if (prevState !== null) {
     if (nextDeps !== null) {
