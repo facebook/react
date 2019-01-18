@@ -278,7 +278,7 @@ export function useLayoutEffect(
   warning(
     false,
     'useLayoutEffect does nothing on the server, because its effect cannot ' +
-      "be encoded into the server renderer's output format. This will lead" +
+      "be encoded into the server renderer's output format. This will lead " +
       'to a mismatch between the initial, non-hydrated UI, and the intended ' +
       'UI. If possible, replace useLayoutEffect with useEffect which ' +
       "doesn't block the first paint. However, if this effect must run " +
