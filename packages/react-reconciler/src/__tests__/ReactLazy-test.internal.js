@@ -78,7 +78,7 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('Hi');
   });
 
-  it('can handle synchronous thenable rejection', async () => {
+  it('can reject synchronously without suspending', async () => {
     const LazyText = lazy(() => ({
       then(resolve, reject) {
         reject(new Error('oh no'));
@@ -104,8 +104,7 @@ describe('ReactLazy', () => {
         </Suspense>
       </ErrorBoundary>,
     );
-    // TODO: ideally we could make it skip this commit.
-    expect(ReactTestRenderer).toHaveYielded(['Loading...']);
+    expect(ReactTestRenderer).toHaveYielded([]);
     expect(root).toMatchRenderedOutput('Error: oh no');
   });
 
