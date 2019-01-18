@@ -80,7 +80,7 @@ if (__DEV__) {
     child._store.validated = true;
 
     const currentComponentErrorInfo =
-      'Each child in an array or iterator should have a unique ' +
+      'Each child in a list should have a unique ' +
       '"key" prop. See https://fb.me/react-warning-keys for ' +
       'more information.' +
       getCurrentFiberStackInDev();
@@ -91,7 +91,7 @@ if (__DEV__) {
 
     warning(
       false,
-      'Each child in an array or iterator should have a unique ' +
+      'Each child in a list should have a unique ' +
         '"key" prop. See https://fb.me/react-warning-keys for ' +
         'more information.',
     );

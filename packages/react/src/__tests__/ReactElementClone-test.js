@@ -259,9 +259,7 @@ describe('ReactElementClone', () => {
   it('warns for keys for arrays of elements in rest args', () => {
     expect(() =>
       React.cloneElement(<div />, null, [<div />, <div />]),
-    ).toWarnDev(
-      'Each child in an array or iterator should have a unique "key" prop.',
-    );
+    ).toWarnDev('Each child in a list should have a unique "key" prop.');
   });
 
   it('does not warns for arrays of elements with keys', () => {

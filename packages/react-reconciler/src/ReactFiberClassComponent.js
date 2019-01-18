@@ -55,10 +55,10 @@ import {
   flushPassiveEffects,
 } from './ReactFiberScheduler';
 
-const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 
 function readContext(contextType: any): any {
-  const dispatcher = ReactCurrentOwner.currentDispatcher;
+  const dispatcher = ReactCurrentDispatcher.current;
   return dispatcher.readContext(contextType);
 }
 

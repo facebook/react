@@ -90,7 +90,7 @@ import {
   prepareToReadContext,
   calculateChangedBits,
 } from './ReactFiberNewContext';
-import {prepareToUseHooks, finishHooks, resetHooks} from './ReactFiberHooks';
+import {resetHooks, renderWithHooks, bailoutHooks} from './ReactFiberHooks';
 import {stopProfilerTimerIfRunning} from './ReactProfilerTimer';
 import {
   getMaskedContext,
@@ -127,6 +127,8 @@ import {
 } from './ReactFiber';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+
+let didReceiveUpdate: boolean = false;
 
 let didWarnAboutBadClass;
 let didWarnAboutContextTypeOnFunctionComponent;
@@ -237,16 +239,37 @@ function updateForwardRef(
   // The rest is a fork of updateFunctionComponent
   let nextChildren;
   prepareToReadContext(workInProgress, renderExpirationTime);
-  prepareToUseHooks(current, workInProgress, renderExpirationTime);
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     setCurrentPhase('render');
-    nextChildren = render(nextProps, ref);
+    nextChildren = renderWithHooks(
+      current,
+      workInProgress,
+      render,
+      nextProps,
+      ref,
+      renderExpirationTime,
+    );
     setCurrentPhase(null);
   } else {
-    nextChildren = render(nextProps, ref);
+    nextChildren = renderWithHooks(
+      current,
+      workInProgress,
+      render,
+      nextProps,
+      ref,
+      renderExpirationTime,
+    );
   }
-  nextChildren = finishHooks(render, nextProps, nextChildren, ref);
+
+  if (current !== null && !didReceiveUpdate) {
+    bailoutHooks(current, workInProgress, renderExpirationTime);
+    return bailoutOnAlreadyFinishedWork(
+      current,
+      workInProgress,
+      renderExpirationTime,
+    );
+  }
 
   // React DevTools reads this flag.
   workInProgress.effectTag |= PerformedWork;
@@ -395,17 +418,20 @@ function updateSimpleMemoComponent(
       // Inner propTypes will be validated in the function component path.
     }
   }
-  if (current !== null && updateExpirationTime < renderExpirationTime) {
+  if (current !== null) {
     const prevProps = current.memoizedProps;
     if (
       shallowEqual(prevProps, nextProps) &&
       current.ref === workInProgress.ref
     ) {
-      return bailoutOnAlreadyFinishedWork(
-        current,
-        workInProgress,
-        renderExpirationTime,
-      );
+      didReceiveUpdate = false;
+      if (updateExpirationTime < renderExpirationTime) {
+        return bailoutOnAlreadyFinishedWork(
+          current,
+          workInProgress,
+          renderExpirationTime,
+        );
+      }
     }
   }
   return updateFunctionComponent(
@@ -506,16 +532,37 @@ function updateFunctionComponent(
 
   let nextChildren;
   prepareToReadContext(workInProgress, renderExpirationTime);
-  prepareToUseHooks(current, workInProgress, renderExpirationTime);
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     setCurrentPhase('render');
-    nextChildren = Component(nextProps, context);
+    nextChildren = renderWithHooks(
+      current,
+      workInProgress,
+      Component,
+      nextProps,
+      context,
+      renderExpirationTime,
+    );
     setCurrentPhase(null);
   } else {
-    nextChildren = Component(nextProps, context);
+    nextChildren = renderWithHooks(
+      current,
+      workInProgress,
+      Component,
+      nextProps,
+      context,
+      renderExpirationTime,
+    );
   }
-  nextChildren = finishHooks(Component, nextProps, nextChildren, context);
+
+  if (current !== null && !didReceiveUpdate) {
+    bailoutHooks(current, workInProgress, renderExpirationTime);
+    return bailoutOnAlreadyFinishedWork(
+      current,
+      workInProgress,
+      renderExpirationTime,
+    );
+  }
 
   // React DevTools reads this flag.
   workInProgress.effectTag |= PerformedWork;
@@ -850,7 +897,7 @@ function updateHostComponent(current, workInProgress, renderExpirationTime) {
     shouldDeprioritizeSubtree(type, nextProps)
   ) {
     // Schedule this fiber to re-render at offscreen priority. Then bailout.
-    workInProgress.expirationTime = Never;
+    workInProgress.expirationTime = workInProgress.childExpirationTime = Never;
     return null;
   }
 
@@ -1063,7 +1110,6 @@ function mountIndeterminateComponent(
   const context = getMaskedContext(workInProgress, unmaskedContext);
 
   prepareToReadContext(workInProgress, renderExpirationTime);
-  prepareToUseHooks(null, workInProgress, renderExpirationTime);
 
   let value;
 
@@ -1091,9 +1137,23 @@ function mountIndeterminateComponent(
     }
 
     ReactCurrentOwner.current = workInProgress;
-    value = Component(props, context);
+    value = renderWithHooks(
+      null,
+      workInProgress,
+      Component,
+      props,
+      context,
+      renderExpirationTime,
+    );
   } else {
-    value = Component(props, context);
+    value = renderWithHooks(
+      null,
+      workInProgress,
+      Component,
+      props,
+      context,
+      renderExpirationTime,
+    );
   }
   // React DevTools reads this flag.
   workInProgress.effectTag |= PerformedWork;
@@ -1147,7 +1207,6 @@ function mountIndeterminateComponent(
   } else {
     // Proceed under the assumption that this is a function component
     workInProgress.tag = FunctionComponent;
-    value = finishHooks(Component, props, value, context);
     reconcileChildren(null, workInProgress, value, renderExpirationTime);
     if (__DEV__) {
       validateFunctionComponentInDev(workInProgress, Component);
@@ -1638,6 +1697,10 @@ function updateContextConsumer(
   return workInProgress.child;
 }
 
+export function markWorkInProgressReceivedUpdate() {
+  didReceiveUpdate = true;
+}
+
 function bailoutOnAlreadyFinishedWork(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -1647,7 +1710,7 @@ function bailoutOnAlreadyFinishedWork(
 
   if (current !== null) {
     // Reuse previous context list
-    workInProgress.firstContextDependency = current.firstContextDependency;
+    workInProgress.contextDependencies = current.contextDependencies;
   }
 
   if (enableProfilerTimer) {
@@ -1680,11 +1743,13 @@ function beginWork(
   if (current !== null) {
     const oldProps = current.memoizedProps;
     const newProps = workInProgress.pendingProps;
-    if (
-      oldProps === newProps &&
-      !hasLegacyContextChanged() &&
-      updateExpirationTime < renderExpirationTime
-    ) {
+
+    if (oldProps !== newProps || hasLegacyContextChanged()) {
+      // If props or context changed, mark the fiber as having performed work.
+      // This may be unset if the props are determined to be equal later (memo).
+      didReceiveUpdate = true;
+    } else if (updateExpirationTime < renderExpirationTime) {
+      didReceiveUpdate = false;
       // This fiber does not have any pending work. Bailout without entering
       // the begin phase. There's still some bookkeeping we that needs to be done
       // in this optimized path, mostly pushing stuff onto the stack.
@@ -1767,6 +1832,8 @@ function beginWork(
         renderExpirationTime,
       );
     }
+  } else {
+    didReceiveUpdate = false;
   }
 
   // Before entering the begin phase, clear the expiration time.

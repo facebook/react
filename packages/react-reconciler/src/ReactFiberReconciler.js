@@ -27,6 +27,7 @@ import {HostComponent, ClassComponent} from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import {getPublicInstance} from './ReactFiberHostConfig';
 import {
@@ -380,9 +381,12 @@ if (__DEV__) {
 
 export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
   const {findFiberByHostInstance} = devToolsConfig;
+  const {ReactCurrentDispatcher} = ReactSharedInternals;
+
   return injectInternals({
     ...devToolsConfig,
     overrideProps,
+    currentDispatcherRef: ReactCurrentDispatcher,
     findHostInstanceByFiber(fiber: Fiber): Instance | TextInstance | null {
       const hostFiber = findCurrentHostFiber(fiber);
       if (hostFiber === null) {

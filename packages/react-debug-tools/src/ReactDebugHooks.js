@@ -10,6 +10,7 @@
 import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {Hook} from 'react-reconciler/src/ReactFiberHooks';
+import typeof {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactFiberDispatcher';
 
 import ErrorStackParser from 'error-stack-parser';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -20,7 +21,7 @@ import {
   ForwardRef,
 } from 'shared/ReactWorkTags';
 
-const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+type CurrentDispatcherRef = typeof ReactSharedInternals.ReactCurrentDispatcher;
 
 // Used to track hooks called during a render
 
@@ -54,7 +55,8 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       Dispatcher.useRef(null);
       Dispatcher.useLayoutEffect(() => {});
       Dispatcher.useEffect(() => {});
-      Dispatcher.useImperativeMethods(undefined, () => null);
+      Dispatcher.useImperativeHandle(undefined, () => null);
+      Dispatcher.useDebugValue(null);
       Dispatcher.useCallback(() => {});
       Dispatcher.useMemo(() => null);
     } finally {
@@ -159,7 +161,7 @@ function useEffect(
   hookLog.push({primitive: 'Effect', stackError: new Error(), value: create});
 }
 
-function useImperativeMethods<T>(
+function useImperativeHandle<T>(
   ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
   create: () => T,
   inputs: Array<mixed> | void | null,
@@ -174,9 +176,17 @@ function useImperativeMethods<T>(
     instance = ref.current;
   }
   hookLog.push({
-    primitive: 'ImperativeMethods',
+    primitive: 'ImperativeHandle',
     stackError: new Error(),
     value: instance,
+  });
+}
+
+function useDebugValue(value: any, formatterFn: ?(value: any) => any) {
+  hookLog.push({
+    primitive: 'DebugValue',
+    stackError: new Error(),
+    value: typeof formatterFn === 'function' ? formatterFn(value) : value,
   });
 }
 
@@ -200,12 +210,13 @@ function useMemo<T>(
   return value;
 }
 
-const Dispatcher = {
+const Dispatcher: DispatcherType = {
   readContext,
   useCallback,
   useContext,
   useEffect,
-  useImperativeMethods,
+  useImperativeHandle,
+  useDebugValue,
   useLayoutEffect,
   useMemo,
   useReducer,
@@ -388,7 +399,7 @@ function buildTree(rootStack, readHookLog): HooksTree {
         let children = [];
         levelChildren.push({
           name: parseCustomHookName(stack[j - 1].functionName),
-          value: undefined, // TODO: Support custom inspectable values.
+          value: undefined,
           subHooks: children,
         });
         stackOfChildren.push(levelChildren);
@@ -402,16 +413,61 @@ function buildTree(rootStack, readHookLog): HooksTree {
       subHooks: [],
     });
   }
+
+  // Associate custom hook values (useDebugValue() hook entries) with the correct hooks.
+  processDebugValues(rootChildren, null);
+
   return rootChildren;
+}
+
+// Custom hooks support user-configurable labels (via the special useDebugValue() hook).
+// That hook adds user-provided values to the hooks tree,
+// but these values aren't intended to appear alongside of the other hooks.
+// Instead they should be attributed to their parent custom hook.
+// This method walks the tree and assigns debug values to their custom hook owners.
+function processDebugValues(
+  hooksTree: HooksTree,
+  parentHooksNode: HooksNode | null,
+): void {
+  let debugValueHooksNodes: Array<HooksNode> = [];
+
+  for (let i = 0; i < hooksTree.length; i++) {
+    const hooksNode = hooksTree[i];
+    if (hooksNode.name === 'DebugValue' && hooksNode.subHooks.length === 0) {
+      hooksTree.splice(i, 1);
+      i--;
+      debugValueHooksNodes.push(hooksNode);
+    } else {
+      processDebugValues(hooksNode.subHooks, hooksNode);
+    }
+  }
+
+  // Bubble debug value labels to their custom hook owner.
+  // If there is no parent hook, just ignore them for now.
+  // (We may warn about this in the future.)
+  if (parentHooksNode !== null) {
+    if (debugValueHooksNodes.length === 1) {
+      parentHooksNode.value = debugValueHooksNodes[0].value;
+    } else if (debugValueHooksNodes.length > 1) {
+      parentHooksNode.value = debugValueHooksNodes.map(({value}) => value);
+    }
+  }
 }
 
 export function inspectHooks<Props>(
   renderFunction: Props => React$Node,
   props: Props,
+  currentDispatcher: ?CurrentDispatcherRef,
 ): HooksTree {
-  let previousDispatcher = ReactCurrentOwner.currentDispatcher;
+  // DevTools will pass the current renderer's injected dispatcher.
+  // Other apps might compile debug hooks as part of their app though.
+  if (currentDispatcher == null) {
+    currentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+  }
+
+  let previousDispatcher = currentDispatcher.current;
   let readHookLog;
-  ReactCurrentOwner.currentDispatcher = Dispatcher;
+  currentDispatcher.current = Dispatcher;
   let ancestorStackError;
   try {
     ancestorStackError = new Error();
@@ -419,7 +475,7 @@ export function inspectHooks<Props>(
   } finally {
     readHookLog = hookLog;
     hookLog = [];
-    ReactCurrentOwner.currentDispatcher = previousDispatcher;
+    currentDispatcher.current = previousDispatcher;
   }
   let rootStack = ErrorStackParser.parse(ancestorStackError);
   return buildTree(rootStack, readHookLog);
@@ -450,10 +506,11 @@ function inspectHooksOfForwardRef<Props, Ref>(
   renderFunction: (Props, Ref) => React$Node,
   props: Props,
   ref: Ref,
+  currentDispatcher: CurrentDispatcherRef,
 ): HooksTree {
-  let previousDispatcher = ReactCurrentOwner.currentDispatcher;
+  let previousDispatcher = currentDispatcher.current;
   let readHookLog;
-  ReactCurrentOwner.currentDispatcher = Dispatcher;
+  currentDispatcher.current = Dispatcher;
   let ancestorStackError;
   try {
     ancestorStackError = new Error();
@@ -461,7 +518,7 @@ function inspectHooksOfForwardRef<Props, Ref>(
   } finally {
     readHookLog = hookLog;
     hookLog = [];
-    ReactCurrentOwner.currentDispatcher = previousDispatcher;
+    currentDispatcher.current = previousDispatcher;
   }
   let rootStack = ErrorStackParser.parse(ancestorStackError);
   return buildTree(rootStack, readHookLog);
@@ -482,7 +539,16 @@ function resolveDefaultProps(Component, baseProps) {
   return baseProps;
 }
 
-export function inspectHooksOfFiber(fiber: Fiber) {
+export function inspectHooksOfFiber(
+  fiber: Fiber,
+  currentDispatcher: ?CurrentDispatcherRef,
+) {
+  // DevTools will pass the current renderer's injected dispatcher.
+  // Other apps might compile debug hooks as part of their app though.
+  if (currentDispatcher == null) {
+    currentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+  }
+
   if (
     fiber.tag !== FunctionComponent &&
     fiber.tag !== SimpleMemoComponent &&
@@ -506,9 +572,14 @@ export function inspectHooksOfFiber(fiber: Fiber) {
   try {
     setupContexts(contextMap, fiber);
     if (fiber.tag === ForwardRef) {
-      return inspectHooksOfForwardRef(type.render, props, fiber.ref);
+      return inspectHooksOfForwardRef(
+        type.render,
+        props,
+        fiber.ref,
+        currentDispatcher,
+      );
     }
-    return inspectHooks(type, props);
+    return inspectHooks(type, props, currentDispatcher);
   } finally {
     currentHook = null;
     restoreContexts(contextMap);

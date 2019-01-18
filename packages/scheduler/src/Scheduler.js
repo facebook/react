@@ -194,7 +194,7 @@ function flushWork(didTimeout) {
         firstCallbackNode !== null &&
         !(enableSchedulerDebugging && isSchedulerPaused)
       ) {
-        // TODO Wrap i nfeature flag
+        // TODO Wrap in feature flag
         // Read the current time. Flush all the callbacks that expire at or
         // earlier than that time. Then read the current time again and repeat.
         // This optimizes for as few performance.now calls as possible.

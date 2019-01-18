@@ -29,10 +29,12 @@ import {
   unstable_unsubscribe,
   unstable_wrap,
 } from 'scheduler/tracing';
+import ReactCurrentDispatcher from './ReactCurrentDispatcher';
 import ReactCurrentOwner from './ReactCurrentOwner';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 
 const ReactSharedInternals = {
+  ReactCurrentDispatcher,
   ReactCurrentOwner,
   // Used by renderers to avoid bundling object-assign twice in UMD bundles:
   assign,

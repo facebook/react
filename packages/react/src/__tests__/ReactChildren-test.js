@@ -320,7 +320,7 @@ describe('ReactChildren', () => {
 
     let instance;
     expect(() => (instance = <div>{threeDivIterable}</div>)).toWarnDev(
-      'Warning: Each child in an array or iterator should have a unique "key" prop.',
+      'Warning: Each child in a list should have a unique "key" prop.',
     );
 
     function assertCalls() {
@@ -905,7 +905,7 @@ describe('ReactChildren', () => {
         ReactTestUtils.renderIntoDocument(<ComponentReturningArray />),
       ).toWarnDev(
         'Warning: ' +
-          'Each child in an array or iterator should have a unique "key" prop.' +
+          'Each child in a list should have a unique "key" prop.' +
           ' See https://fb.me/react-warning-keys for more information.' +
           '\n    in ComponentReturningArray (at **)',
       );
@@ -926,7 +926,7 @@ describe('ReactChildren', () => {
         ReactTestUtils.renderIntoDocument([<div />, <div />]),
       ).toWarnDev(
         'Warning: ' +
-          'Each child in an array or iterator should have a unique "key" prop.' +
+          'Each child in a list should have a unique "key" prop.' +
           ' See https://fb.me/react-warning-keys for more information.',
         {withoutStack: true}, // There's nothing on the stack
       );

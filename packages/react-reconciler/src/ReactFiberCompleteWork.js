@@ -82,7 +82,6 @@ import {
   prepareToHydrateHostTextInstance,
   popHydrationState,
 } from './ReactFiberHydrationContext';
-import {ConcurrentMode, NoContext} from './ReactTypeOfMode';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -728,18 +727,10 @@ function completeWork(
         }
       }
 
-      // The children either timed out after previously being visible, or
-      // were restored after previously being hidden. Schedule an effect
-      // to update their visiblity.
-      if (
-        //
-        nextDidTimeout !== prevDidTimeout ||
-        // Outside concurrent mode, the primary children commit in an
-        // inconsistent state, even if they are hidden. So if they are hidden,
-        // we need to schedule an effect to re-hide them, just in case.
-        ((workInProgress.effectTag & ConcurrentMode) === NoContext &&
-          nextDidTimeout)
-      ) {
+      if (nextDidTimeout || prevDidTimeout) {
+        // If the children are hidden, or if they were previous hidden, schedule
+        // an effect to toggle their visibility. This is also used to attach a
+        // retry listener to the promise.
         workInProgress.effectTag |= Update;
       }
       break;

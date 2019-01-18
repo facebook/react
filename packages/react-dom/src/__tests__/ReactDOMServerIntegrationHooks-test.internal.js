@@ -24,8 +24,9 @@ let useContext;
 let useCallback;
 let useMemo;
 let useRef;
-let useImperativeMethods;
+let useImperativeHandle;
 let useLayoutEffect;
+let useDebugValue;
 let forwardRef;
 let yieldedValues;
 let yieldValue;
@@ -48,7 +49,8 @@ function initModules() {
   useCallback = React.useCallback;
   useMemo = React.useMemo;
   useRef = React.useRef;
-  useImperativeMethods = React.useImperativeMethods;
+  useDebugValue = React.useDebugValue;
+  useImperativeHandle = React.useImperativeHandle;
   useLayoutEffect = React.useLayoutEffect;
   forwardRef = React.forwardRef;
 
@@ -417,6 +419,51 @@ describe('ReactDOMServerHooks', () => {
         expect(domNode.textContent).toEqual('HELLO, WORLD.');
       },
     );
+
+    itThrowsWhenRendering(
+      'a hook inside useMemo',
+      async render => {
+        function App() {
+          useMemo(() => {
+            useState();
+            return 0;
+          });
+          return null;
+        }
+        return render(<App />);
+      },
+      'Hooks can only be called inside the body of a function component.',
+    );
+
+    itThrowsWhenRendering(
+      'a hook inside useReducer',
+      async render => {
+        function App() {
+          const [value, dispatch] = useReducer((state, action) => {
+            useRef(0);
+            return state;
+          }, 0);
+          dispatch('foo');
+          return value;
+        }
+        return render(<App />);
+      },
+      'Hooks can only be called inside the body of a function component.',
+    );
+
+    itThrowsWhenRendering(
+      'a hook inside useState',
+      async render => {
+        function App() {
+          useState(() => {
+            useRef(0);
+            return 0;
+          });
+        }
+        return render(<App />);
+      },
+      'Hooks can only be called inside the body of a function component.',
+    );
   });
 
   describe('useRef', () => {
@@ -529,10 +576,10 @@ describe('ReactDOMServerHooks', () => {
     });
   });
 
-  describe('useImperativeMethods', () => {
+  describe('useImperativeHandle', () => {
     it('should not be invoked on the server', async () => {
       function Counter(props, ref) {
-        useImperativeMethods(ref, () => {
+        useImperativeHandle(ref, () => {
           throw new Error('should not be invoked');
         });
         return <Text text={props.label + ': ' + ref.current} />;
@@ -657,5 +704,17 @@ describe('ReactDOMServerHooks', () => {
       },
       'Hooks can only be called inside the body of a function component.',
     );
+  });
+
+  describe('useDebugValue', () => {
+    itRenders('is a noop', async render => {
+      function Counter(props) {
+        const debugValue = useDebugValue(123);
+        return <Text text={typeof debugValue} />;
+      }
+
+      const domNode = await render(<Counter />);
+      expect(domNode.textContent).toEqual('undefined');
+    });
   });
 });
