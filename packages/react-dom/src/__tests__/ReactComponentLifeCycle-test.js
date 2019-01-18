@@ -1201,6 +1201,40 @@ describe('ReactComponentLifeCycle', () => {
     expect(log).toEqual([]);
   });
 
+  it('should pass previous state to shouldComponentUpdate even with getDerivedStateFromProps', () => {
+    const divRef = React.createRef();
+    class SimpleComponent extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          value: props.value,
+        };
+      }
+
+      static getDerivedStateFromProps(nextProps, prevState) {
+        if (nextProps.value === prevState.value) {
+          return null;
+        }
+        return {value: nextProps.value};
+      }
+
+      shouldComponentUpdate(nextProps, nextState) {
+        return nextState.value !== this.state.value;
+      }
+
+      render() {
+        return <div ref={divRef}>value: {this.state.value}</div>;
+      }
+    }
+
+    const div = document.createElement('div');
+
+    ReactDOM.render(<SimpleComponent value="initial" />, div);
+    expect(divRef.current.textContent).toBe('value: initial');
+    ReactDOM.render(<SimpleComponent value="updated" />, div);
+    expect(divRef.current.textContent).toBe('value: updated');
+  });
+
   it('should call getSnapshotBeforeUpdate before mutations are committed', () => {
     const log = [];
 

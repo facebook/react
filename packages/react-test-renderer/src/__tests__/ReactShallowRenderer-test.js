@@ -942,6 +942,42 @@ describe('ReactShallowRenderer', () => {
     expect(result).toEqual(<div>value:1</div>);
   });
 
+  it('should pass previous state to shouldComponentUpdate even with getDerivedStateFromProps', () => {
+    class SimpleComponent extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          value: props.value,
+        };
+      }
+
+      static getDerivedStateFromProps(nextProps, prevState) {
+        if (nextProps.value === prevState.value) {
+          return null;
+        }
+        return {value: nextProps.value};
+      }
+
+      shouldComponentUpdate(nextProps, nextState) {
+        return nextState.value !== this.state.value;
+      }
+
+      render() {
+        return <div>{`value:${this.state.value}`}</div>;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    const initialResult = shallowRenderer.render(
+      <SimpleComponent value="initial" />,
+    );
+    expect(initialResult).toEqual(<div>value:initial</div>);
+    const updatedResult = shallowRenderer.render(
+      <SimpleComponent value="updated" />,
+    );
+    expect(updatedResult).toEqual(<div>value:updated</div>);
+  });
+
   it('can setState with an updater function', () => {
     let instance;
 
