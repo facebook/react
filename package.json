@@ -61,7 +61,7 @@
     "google-closure-compiler": "20180506.0.0",
     "gzip-size": "^3.0.0",
     "jasmine-check": "^1.0.0-rc.0",
-    "jest": "^23.1.0",
+    "jest": "^24.0.0-alpha.12",
     "jest-diff": "^23.0.1",
     "minimatch": "^3.0.4",
     "minimist": "^1.2.0",

@@ -158,7 +158,7 @@ describe('ReactTestRendererAsync', () => {
 
       expect(() =>
         expect(renderer).toFlushAndYieldThrough(['foo', 'baz']),
-      ).toThrow('Expected value to equal:');
+      ).toThrow('Difference:');
     });
 
     it('toFlushAndYield', () => {
@@ -178,8 +178,8 @@ describe('ReactTestRendererAsync', () => {
         },
       );
 
-      expect(() => expect(renderer).toFlushWithoutYielding()).toThrowError(
-        'Expected value to equal:',
+      expect(() => expect(renderer).toFlushWithoutYielding()).toThrow(
+        'Difference:',
       );
 
       renderer.update(
@@ -191,7 +191,7 @@ describe('ReactTestRendererAsync', () => {
       );
 
       expect(() => expect(renderer).toFlushAndYield(['foo', 'baz'])).toThrow(
-        'Expected value to equal:',
+        'Difference:',
       );
     });
 
@@ -270,7 +270,7 @@ describe('ReactTestRendererAsync', () => {
 
     ReactTestRenderer.create(<App />);
     expect(() => expect(ReactTestRenderer).toHaveYielded(['A', 'B'])).toThrow(
-      'Expected value to equal:',
+      'Difference:',
     );
   });
 
