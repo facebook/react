@@ -513,10 +513,11 @@ export function useReducer<S, A>(
             // current reducer, we can use the eagerly computed state.
             newState = ((update.eagerState: any): S);
           } else {
+            currentlyRenderingFiber = null;
             const action = update.action;
             newState = reducer(newState, action);
+            currentlyRenderingFiber = fiber;
           }
-          currentlyRenderingFiber = fiber;
         }
         prevUpdate = update;
         update = update.next;
