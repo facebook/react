@@ -73,7 +73,10 @@ export function readLazyComponentType<T>(lazyComponent: LazyComponent<T>): T {
           }
         },
       );
-      lazyComponent._result = thenable;
+      // Don't race with a sync thenable
+      if (lazyComponent._status === Pending) {
+        lazyComponent._result = thenable;
+      }
       throw thenable;
     }
   }
