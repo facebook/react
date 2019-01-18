@@ -33,6 +33,7 @@ import {
   useContext,
   useEffect,
   useImperativeHandle,
+  useDebugValue,
   useLayoutEffect,
   useMemo,
   useReducer,
@@ -99,6 +100,7 @@ if (enableHooks) {
   React.useContext = useContext;
   React.useEffect = useEffect;
   React.useImperativeHandle = useImperativeHandle;
+  React.useDebugValue = useDebugValue;
   React.useLayoutEffect = useLayoutEffect;
   React.useMemo = useMemo;
   React.useReducer = useReducer;

@@ -43,7 +43,7 @@ const validate = async ({cwd}) => {
 const run = async ({cwd}) => {
   const errorMessage = await logPromise(
     validate({cwd}),
-    'Verifying "scheduler" fixture'
+    'Verifying "scheduler/tracing" fixture'
   );
   if (errorMessage) {
     console.error(theme.error(errorMessage));
