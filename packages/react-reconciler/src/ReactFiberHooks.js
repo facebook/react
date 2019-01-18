@@ -65,6 +65,20 @@ const LayoutEffectHook = 5;
 const CallbackHook = 6;
 const MemoHook = 7;
 const ImperativeHandleHook = 8;
+const DebugValueHook = 9;
+
+const HookDevNames = [
+  'useState',
+  'useReducer',
+  'useContext',
+  'useRef',
+  'useEffect',
+  'useLayoutEffect',
+  'useCallback',
+  'useMemo',
+  'useImperativeHandle',
+  'useDebugValue',
+];
 
 let currentHookType: HookType | null = null;
 
@@ -358,7 +372,17 @@ function cloneHook(hook: Hook): Hook {
 
   if (__DEV__) {
     if (currentHookType !== hook._debugType) {
-      warning(false, 'Bad hook order!');
+      warning(
+        false,
+        'React just detected that you called %s in a position previously called by %s. ' +
+          'This breaks the rules of hooks, and will cause bugs and errors. To fix this ' +
+          'make sure your component is returning the same hooks in the same order on every render. ' +
+          'Learn more about the rules of hooks here: https://reactjs.org/docs/hooks-rules.html', // todo - short url
+        // $FlowFixMe
+        HookDevNames[currentHookType],
+        // $FlowFixMe
+        HookDevNames[hook._debugType],
+      );
     }
     nextHook._debugType = hook._debugType;
   }
@@ -425,7 +449,7 @@ export function useContext<T>(
   observedBits: void | number | boolean,
 ): T {
   if (__DEV__) {
-    currentHookNameInDev = 'useContext';
+    currentHookNameInDev = HookDevNames[ContextHook];
     currentHookType = ContextHook;
     createWorkInProgressHook();
     currentHookType = null;
@@ -440,7 +464,7 @@ export function useState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {
   if (__DEV__) {
-    currentHookNameInDev = 'useState';
+    currentHookNameInDev = HookDevNames[StateHook];
   }
   return useReducer(
     basicStateReducer,
@@ -456,7 +480,7 @@ export function useReducer<S, A>(
 ): [S, Dispatch<A>] {
   if (__DEV__) {
     if (reducer !== basicStateReducer) {
-      currentHookNameInDev = 'useReducer';
+      currentHookNameInDev = HookDevNames[ReducerHook];
     }
   }
   currentHookType = reducer === basicStateReducer ? StateHook : ReducerHook;
@@ -655,7 +679,7 @@ export function useLayoutEffect(
   deps: Array<mixed> | void | null,
 ): void {
   if (__DEV__) {
-    currentHookNameInDev = 'useLayoutEffect';
+    currentHookNameInDev = HookDevNames[LayoutEffectHook];
   }
   useEffectImpl(UpdateEffect, UnmountMutation | MountLayout, create, deps);
 }
@@ -665,7 +689,7 @@ export function useEffect(
   deps: Array<mixed> | void | null,
 ): void {
   if (__DEV__) {
-    currentHookNameInDev = 'useEffect';
+    currentHookNameInDev = HookDevNames[EffectHook];
   }
   useEffectImpl(
     UpdateEffect | PassiveEffect,
@@ -677,7 +701,7 @@ export function useEffect(
 
 function useEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
-  if (currentHookType !== ImperativeHandleHook) {    
+  if (currentHookType !== ImperativeHandleHook) {
     currentHookType =
       fiberEffectTag === UpdateEffect ? EffectHook : LayoutEffectHook;
   }
@@ -713,7 +737,7 @@ export function useImperativeHandle<T>(
   deps: Array<mixed> | void | null,
 ): void {
   if (__DEV__) {
-    currentHookNameInDev = 'useImperativeHandle';
+    currentHookNameInDev = HookDevNames[ImperativeHandleHook];
   }
   currentHookType = ImperativeHandleHook;
   // TODO: If deps are provided, should we skip comparing the ref itself?
@@ -745,7 +769,7 @@ export function useDebugValue(
   formatterFn: ?(value: any) => any,
 ): void {
   if (__DEV__) {
-    currentHookNameInDev = 'useDebugValue';
+    currentHookNameInDev = HookDevNames[DebugValueHook];
   }
 
   // This will trigger a warning if the hook is used in a non-Function component.
@@ -761,7 +785,7 @@ export function useCallback<T>(
   deps: Array<mixed> | void | null,
 ): T {
   if (__DEV__) {
-    currentHookNameInDev = 'useCallback';
+    currentHookNameInDev = HookDevNames[CallbackHook];
   }
   currentHookType = CallbackHook;
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
@@ -788,7 +812,7 @@ export function useMemo<T>(
   deps: Array<mixed> | void | null,
 ): T {
   if (__DEV__) {
-    currentHookNameInDev = 'useMemo';
+    currentHookNameInDev = HookDevNames[MemoHook];
   }
   currentHookType = MemoHook;
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();

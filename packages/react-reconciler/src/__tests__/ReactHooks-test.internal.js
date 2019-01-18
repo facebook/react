@@ -540,6 +540,11 @@ describe('ReactHooks', () => {
     let root = ReactTestRenderer.create(<App flip={false} />);
     expect(() => {
       root.update(<App flip={true} />);
-    }).toWarnDev(['Warning: Bad hook order!\n    in App (at **)']);
+    }).toWarnDev('Warning: React just detected that you called useState ' + 
+    'in a position previously called by useReducer. This breaks ' + 
+    'the rules of hooks, and will cause bugs and errors. To fix this ' + 
+    'make sure your component is returning the same hooks in the same ' + 
+    'order on every render. Learn more about the rules of hooks here: ' + 
+    'https://reactjs.org/docs/hooks-rules.html');
   });
 });
