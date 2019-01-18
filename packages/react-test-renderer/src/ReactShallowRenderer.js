@@ -303,7 +303,7 @@ class ReactShallowRenderer {
       this._validateCurrentlyRenderingComponent();
       this._createWorkInProgressHook();
 
-      const nextDeps = deps !== undefined && deps !== null ? deps : null;
+      const nextDeps = deps !== undefined ? deps : null;
 
       if (
         this._workInProgressHook !== null &&
