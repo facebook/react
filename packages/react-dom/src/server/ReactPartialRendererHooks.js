@@ -234,7 +234,7 @@ export function useReducer<S, A>(
       currentHookNameInDev = 'useReducer';
     }
   }
-  currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
+  let component = (currentlyRenderingComponent = resolveCurrentlyRenderingComponent());
   workInProgressHook = createWorkInProgressHook();
   if (isReRender) {
     // This is a re-render. Apply the new render phase updates to the previous
@@ -253,7 +253,10 @@ export function useReducer<S, A>(
           // priority because it will always be the same as the current
           // render's.
           const action = update.action;
+          // Temporarily clear to forbid calling Hooks.
+          currentlyRenderingComponent = null;
           newState = reducer(newState, action);
+          currentlyRenderingComponent = component;
           update = update.next;
         } while (update !== null);
 
@@ -264,6 +267,7 @@ export function useReducer<S, A>(
     }
     return [workInProgressHook.memoizedState, dispatch];
   } else {
+    currentlyRenderingComponent = null;
     if (reducer === basicStateReducer) {
       // Special case for `useState`.
       if (typeof initialState === 'function') {
@@ -272,6 +276,7 @@ export function useReducer<S, A>(
     } else if (initialAction !== undefined && initialAction !== null) {
       initialState = reducer(initialState, initialAction);
     }
+    currentlyRenderingComponent = component;
     workInProgressHook.memoizedState = initialState;
     const queue: UpdateQueue<A> = (workInProgressHook.queue = {
       last: null,
@@ -287,7 +292,7 @@ export function useReducer<S, A>(
 }
 
 function useMemo<T>(nextCreate: () => T, deps: Array<mixed> | void | null): T {
-  currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
+  let component = (currentlyRenderingComponent = resolveCurrentlyRenderingComponent());
   workInProgressHook = createWorkInProgressHook();
 
   const nextDeps = deps === undefined ? null : deps;
@@ -304,7 +309,10 @@ function useMemo<T>(nextCreate: () => T, deps: Array<mixed> | void | null): T {
     }
   }
 
+  // Temporarily clear to forbid calling Hooks.
+  currentlyRenderingComponent = null;
   const nextValue = nextCreate();
+  currentlyRenderingComponent = component;
   workInProgressHook.memoizedState = [nextValue, nextDeps];
   return nextValue;
 }
