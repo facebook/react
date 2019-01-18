@@ -441,9 +441,8 @@ export function useReducer<S, A>(
             // priority because it will always be the same as the current
             // render's.
             const action = update.action;
-            // Temporarily clear to forbid calling nested Hooks.
+            // Temporarily clear to forbid calling Hooks in a reducer.
             currentlyRenderingFiber = null;
-            // now, it'll throw if you try to call a hook inside the reducer
             newState = reducer(newState, action);
             currentlyRenderingFiber = fiber;
             update = update.next;
