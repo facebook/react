@@ -291,24 +291,21 @@ export function useReducer<S, A>(
   }
 }
 
-function useMemo<T>(
-  nextCreate: () => T,
-  inputs: Array<mixed> | void | null,
-): T {
+function useMemo<T>(nextCreate: () => T, deps: Array<mixed> | void | null): T {
   let component = (currentlyRenderingComponent = resolveCurrentlyRenderingComponent());
   workInProgressHook = createWorkInProgressHook();
 
-  const nextInputs =
-    inputs !== undefined && inputs !== null ? inputs : [nextCreate];
+  const nextDeps = deps === undefined ? null : deps;
 
-  if (
-    workInProgressHook !== null &&
-    workInProgressHook.memoizedState !== null
-  ) {
+  if (workInProgressHook !== null) {
     const prevState = workInProgressHook.memoizedState;
-    const prevInputs = prevState[1];
-    if (areHookInputsEqual(nextInputs, prevInputs)) {
-      return prevState[0];
+    if (prevState !== null) {
+      if (nextDeps !== null) {
+        const prevDeps = prevState[1];
+        if (areHookInputsEqual(nextDeps, prevDeps)) {
+          return prevState[0];
+        }
+      }
     }
   }
 
@@ -316,7 +313,7 @@ function useMemo<T>(
   currentlyRenderingComponent = null;
   const nextValue = nextCreate();
   currentlyRenderingComponent = component;
-  workInProgressHook.memoizedState = [nextValue, nextInputs];
+  workInProgressHook.memoizedState = [nextValue, nextDeps];
   return nextValue;
 }
 
@@ -338,7 +335,7 @@ function useRef<T>(initialValue: T): {current: T} {
 
 export function useLayoutEffect(
   create: () => mixed,
-  inputs: Array<mixed> | void | null,
+  deps: Array<mixed> | void | null,
 ) {
   if (__DEV__) {
     currentHookNameInDev = 'useLayoutEffect';
@@ -396,7 +393,7 @@ function dispatchAction<A>(
 
 export function useCallback<T>(
   callback: T,
-  inputs: Array<mixed> | void | null,
+  deps: Array<mixed> | void | null,
 ): T {
   // Callbacks are passed as they are in the server environment.
   return callback;
