@@ -512,8 +512,9 @@ export function useReducer<S, A>(
             // current reducer, we can use the eagerly computed state.
             newState = ((update.eagerState: any): S);
           } else {
-            currentlyRenderingFiber = null;
             const action = update.action;
+            // Temporarily clear to forbid calling Hooks in a reducer.
+            currentlyRenderingFiber = null;
             newState = reducer(newState, action);
             currentlyRenderingFiber = fiber;
           }
@@ -544,7 +545,7 @@ export function useReducer<S, A>(
     const dispatch: Dispatch<A> = (queue.dispatch: any);
     return [workInProgressHook.memoizedState, dispatch];
   }
-
+  // Temporarily clear to forbid calling Hooks in a reducer.
   currentlyRenderingFiber = null;
   // There's no existing queue, so this is the initial render.
   if (reducer === basicStateReducer) {
