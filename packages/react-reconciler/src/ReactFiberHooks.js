@@ -485,7 +485,7 @@ export function useReducer<S, A>(
     }
   }
   currentHookType = reducer === basicStateReducer ? StateHook : ReducerHook;
-  currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
+  let fiber = (currentlyRenderingFiber = resolveCurrentlyRenderingFiber());
   workInProgressHook = createWorkInProgressHook();
   currentHookType = null;
   let queue: UpdateQueue<S, A> | null = (workInProgressHook.queue: any);
@@ -507,7 +507,10 @@ export function useReducer<S, A>(
             // priority because it will always be the same as the current
             // render's.
             const action = update.action;
+            // Temporarily clear to forbid calling Hooks in a reducer.
+            currentlyRenderingFiber = null;
             newState = reducer(newState, action);
+            currentlyRenderingFiber = fiber;
             update = update.next;
           } while (update !== null);
 
@@ -576,7 +579,10 @@ export function useReducer<S, A>(
             newState = ((update.eagerState: any): S);
           } else {
             const action = update.action;
+            // Temporarily clear to forbid calling Hooks in a reducer.
+            currentlyRenderingFiber = null;
             newState = reducer(newState, action);
+            currentlyRenderingFiber = fiber;
           }
         }
         prevUpdate = update;
@@ -605,7 +611,8 @@ export function useReducer<S, A>(
     const dispatch: Dispatch<A> = (queue.dispatch: any);
     return [workInProgressHook.memoizedState, dispatch];
   }
-
+  // Temporarily clear to forbid calling Hooks in a reducer.
+  currentlyRenderingFiber = null;
   // There's no existing queue, so this is the initial render.
   if (reducer === basicStateReducer) {
     // Special case for `useState`.
@@ -615,6 +622,7 @@ export function useReducer<S, A>(
   } else if (initialAction !== undefined && initialAction !== null) {
     initialState = reducer(initialState, initialAction);
   }
+  currentlyRenderingFiber = fiber;
   workInProgressHook.memoizedState = workInProgressHook.baseState = initialState;
   queue = workInProgressHook.queue = {
     last: null,
@@ -816,7 +824,7 @@ export function useMemo<T>(
     currentHookNameInDev = HookDevNames[MemoHook];
   }
   currentHookType = MemoHook;
-  currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
+  let fiber = (currentlyRenderingFiber = resolveCurrentlyRenderingFiber());
   workInProgressHook = createWorkInProgressHook();
   currentHookType = null;
 
@@ -833,7 +841,10 @@ export function useMemo<T>(
     }
   }
 
+  // Temporarily clear to forbid calling Hooks.
+  currentlyRenderingFiber = null;
   const nextValue = nextCreate();
+  currentlyRenderingFiber = fiber;
   workInProgressHook.memoizedState = [nextValue, nextDeps];
   return nextValue;
 }

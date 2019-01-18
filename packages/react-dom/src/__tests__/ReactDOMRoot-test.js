@@ -374,4 +374,104 @@ describe('ReactDOMRoot', () => {
       'unstable_createRoot(...): Target container is not a DOM element.',
     );
   });
+
+  it('warns when rendering with legacy API into createRoot() container', () => {
+    const root = ReactDOM.unstable_createRoot(container);
+    root.render(<div>Hi</div>);
+    jest.runAllTimers();
+    expect(container.textContent).toEqual('Hi');
+    expect(() => {
+      ReactDOM.render(<div>Bye</div>, container);
+    }).toWarnDev(
+      [
+        // We care about this warning:
+        'You are calling ReactDOM.render() on a container that was previously ' +
+          'passed to ReactDOM.unstable_createRoot(). This is not supported. ' +
+          'Did you mean to call root.render(element)?',
+        // This is more of a symptom but restructuring the code to avoid it isn't worth it:
+        'Replacing React-rendered children with a new root component.',
+      ],
+      {withoutStack: true},
+    );
+    jest.runAllTimers();
+    // This works now but we could disallow it:
+    expect(container.textContent).toEqual('Bye');
+  });
+
+  it('warns when hydrating with legacy API into createRoot() container', () => {
+    const root = ReactDOM.unstable_createRoot(container);
+    root.render(<div>Hi</div>);
+    jest.runAllTimers();
+    expect(container.textContent).toEqual('Hi');
+    expect(() => {
+      ReactDOM.hydrate(<div>Hi</div>, container);
+    }).toWarnDev(
+      [
+        // We care about this warning:
+        'You are calling ReactDOM.hydrate() on a container that was previously ' +
+          'passed to ReactDOM.unstable_createRoot(). This is not supported. ' +
+          'Did you mean to call root.render(element, {hydrate: true})?',
+        // This is more of a symptom but restructuring the code to avoid it isn't worth it:
+        'Replacing React-rendered children with a new root component.',
+      ],
+      {withoutStack: true},
+    );
+  });
+
+  it('warns when unmounting with legacy API (no previous content)', () => {
+    const root = ReactDOM.unstable_createRoot(container);
+    root.render(<div>Hi</div>);
+    jest.runAllTimers();
+    expect(container.textContent).toEqual('Hi');
+    let unmounted = false;
+    expect(() => {
+      unmounted = ReactDOM.unmountComponentAtNode(container);
+    }).toWarnDev(
+      [
+        // We care about this warning:
+        'You are calling ReactDOM.unmountComponentAtNode() on a container that was previously ' +
+          'passed to ReactDOM.unstable_createRoot(). This is not supported. Did you mean to call root.unmount()?',
+        // This is more of a symptom but restructuring the code to avoid it isn't worth it:
+        "The node you're attempting to unmount was rendered by React and is not a top-level container.",
+      ],
+      {withoutStack: true},
+    );
+    expect(unmounted).toBe(false);
+    jest.runAllTimers();
+    expect(container.textContent).toEqual('Hi');
+    root.unmount();
+    jest.runAllTimers();
+    expect(container.textContent).toEqual('');
+  });
+
+  it('warns when unmounting with legacy API (has previous content)', () => {
+    // Currently createRoot().render() doesn't clear this.
+    container.appendChild(document.createElement('div'));
+    // The rest is the same as test above.
+    const root = ReactDOM.unstable_createRoot(container);
+    root.render(<div>Hi</div>);
+    jest.runAllTimers();
+    expect(container.textContent).toEqual('Hi');
+    let unmounted = false;
+    expect(() => {
+      unmounted = ReactDOM.unmountComponentAtNode(container);
+    }).toWarnDev('Did you mean to call root.unmount()?', {withoutStack: true});
+    expect(unmounted).toBe(false);
+    jest.runAllTimers();
+    expect(container.textContent).toEqual('Hi');
+    root.unmount();
+    jest.runAllTimers();
+    expect(container.textContent).toEqual('');
+  });
+
+  it('warns when passing legacy container to createRoot()', () => {
+    ReactDOM.render(<div>Hi</div>, container);
+    expect(() => {
+      ReactDOM.unstable_createRoot(container);
+    }).toWarnDev(
+      'You are calling ReactDOM.unstable_createRoot() on a container that was previously ' +
+        'passed to ReactDOM.render(). This is not supported.',
+      {withoutStack: true},
+    );
+  });
 });

@@ -234,7 +234,7 @@ export function useReducer<S, A>(
       currentHookNameInDev = 'useReducer';
     }
   }
-  currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
+  let component = (currentlyRenderingComponent = resolveCurrentlyRenderingComponent());
   workInProgressHook = createWorkInProgressHook();
   if (isReRender) {
     // This is a re-render. Apply the new render phase updates to the previous
@@ -253,7 +253,10 @@ export function useReducer<S, A>(
           // priority because it will always be the same as the current
           // render's.
           const action = update.action;
+          // Temporarily clear to forbid calling Hooks.
+          currentlyRenderingComponent = null;
           newState = reducer(newState, action);
+          currentlyRenderingComponent = component;
           update = update.next;
         } while (update !== null);
 
@@ -264,6 +267,7 @@ export function useReducer<S, A>(
     }
     return [workInProgressHook.memoizedState, dispatch];
   } else {
+    currentlyRenderingComponent = null;
     if (reducer === basicStateReducer) {
       // Special case for `useState`.
       if (typeof initialState === 'function') {
@@ -272,6 +276,7 @@ export function useReducer<S, A>(
     } else if (initialAction !== undefined && initialAction !== null) {
       initialState = reducer(initialState, initialAction);
     }
+    currentlyRenderingComponent = component;
     workInProgressHook.memoizedState = initialState;
     const queue: UpdateQueue<A> = (workInProgressHook.queue = {
       last: null,
@@ -286,29 +291,29 @@ export function useReducer<S, A>(
   }
 }
 
-function useMemo<T>(
-  nextCreate: () => T,
-  inputs: Array<mixed> | void | null,
-): T {
-  currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
+function useMemo<T>(nextCreate: () => T, deps: Array<mixed> | void | null): T {
+  let component = (currentlyRenderingComponent = resolveCurrentlyRenderingComponent());
   workInProgressHook = createWorkInProgressHook();
 
-  const nextInputs =
-    inputs !== undefined && inputs !== null ? inputs : [nextCreate];
+  const nextDeps = deps === undefined ? null : deps;
 
-  if (
-    workInProgressHook !== null &&
-    workInProgressHook.memoizedState !== null
-  ) {
+  if (workInProgressHook !== null) {
     const prevState = workInProgressHook.memoizedState;
-    const prevInputs = prevState[1];
-    if (areHookInputsEqual(nextInputs, prevInputs)) {
-      return prevState[0];
+    if (prevState !== null) {
+      if (nextDeps !== null) {
+        const prevDeps = prevState[1];
+        if (areHookInputsEqual(nextDeps, prevDeps)) {
+          return prevState[0];
+        }
+      }
     }
   }
 
+  // Temporarily clear to forbid calling Hooks.
+  currentlyRenderingComponent = null;
   const nextValue = nextCreate();
-  workInProgressHook.memoizedState = [nextValue, nextInputs];
+  currentlyRenderingComponent = component;
+  workInProgressHook.memoizedState = [nextValue, nextDeps];
   return nextValue;
 }
 
@@ -330,7 +335,7 @@ function useRef<T>(initialValue: T): {current: T} {
 
 export function useLayoutEffect(
   create: () => mixed,
-  inputs: Array<mixed> | void | null,
+  deps: Array<mixed> | void | null,
 ) {
   if (__DEV__) {
     currentHookNameInDev = 'useLayoutEffect';
@@ -388,7 +393,7 @@ function dispatchAction<A>(
 
 export function useCallback<T>(
   callback: T,
-  inputs: Array<mixed> | void | null,
+  deps: Array<mixed> | void | null,
 ): T {
   // Callbacks are passed as they are in the server environment.
   return callback;

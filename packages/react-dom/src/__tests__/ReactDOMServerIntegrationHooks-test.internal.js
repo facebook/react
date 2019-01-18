@@ -419,6 +419,51 @@ describe('ReactDOMServerHooks', () => {
         expect(domNode.textContent).toEqual('HELLO, WORLD.');
       },
     );
+
+    itThrowsWhenRendering(
+      'a hook inside useMemo',
+      async render => {
+        function App() {
+          useMemo(() => {
+            useState();
+            return 0;
+          });
+          return null;
+        }
+        return render(<App />);
+      },
+      'Hooks can only be called inside the body of a function component.',
+    );
+
+    itThrowsWhenRendering(
+      'a hook inside useReducer',
+      async render => {
+        function App() {
+          const [value, dispatch] = useReducer((state, action) => {
+            useRef(0);
+            return state;
+          }, 0);
+          dispatch('foo');
+          return value;
+        }
+        return render(<App />);
+      },
+      'Hooks can only be called inside the body of a function component.',
+    );
+
+    itThrowsWhenRendering(
+      'a hook inside useState',
+      async render => {
+        function App() {
+          useState(() => {
+            useRef(0);
+            return 0;
+          });
+        }
+        return render(<App />);
+      },
+      'Hooks can only be called inside the body of a function component.',
+    );
   });
 
   describe('useRef', () => {
