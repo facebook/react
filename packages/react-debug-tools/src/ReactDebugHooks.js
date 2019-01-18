@@ -10,6 +10,7 @@
 import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {Hook} from 'react-reconciler/src/ReactFiberHooks';
+import typeof {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactFiberDispatcher';
 
 import ErrorStackParser from 'error-stack-parser';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -209,7 +210,7 @@ function useMemo<T>(
   return value;
 }
 
-const Dispatcher = {
+const Dispatcher: DispatcherType = {
   readContext,
   useCallback,
   useContext,

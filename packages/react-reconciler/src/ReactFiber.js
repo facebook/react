@@ -14,7 +14,7 @@ import type {TypeOfMode} from './ReactTypeOfMode';
 import type {SideEffectTag} from 'shared/ReactSideEffectTags';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {UpdateQueue} from './ReactUpdateQueue';
-import type {ContextDependency} from './ReactFiberNewContext';
+import type {ContextDependencyList} from './ReactFiberNewContext';
 
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
@@ -141,7 +141,7 @@ export type Fiber = {|
   memoizedState: any,
 
   // A linked-list of contexts that this fiber depends on
-  firstContextDependency: ContextDependency<mixed> | null,
+  contextDependencies: ContextDependencyList | null,
 
   // Bitfield that describes properties about the fiber and its subtree. E.g.
   // the ConcurrentMode flag indicates whether the subtree should be async-by-
@@ -237,7 +237,7 @@ function FiberNode(
   this.memoizedProps = null;
   this.updateQueue = null;
   this.memoizedState = null;
-  this.firstContextDependency = null;
+  this.contextDependencies = null;
 
   this.mode = mode;
 
@@ -403,7 +403,7 @@ export function createWorkInProgress(
   workInProgress.memoizedProps = current.memoizedProps;
   workInProgress.memoizedState = current.memoizedState;
   workInProgress.updateQueue = current.updateQueue;
-  workInProgress.firstContextDependency = current.firstContextDependency;
+  workInProgress.contextDependencies = current.contextDependencies;
 
   // These will be overridden during the parent's reconciliation
   workInProgress.sibling = current.sibling;
@@ -704,7 +704,7 @@ export function assignFiberPropertiesInDEV(
   target.memoizedProps = source.memoizedProps;
   target.updateQueue = source.updateQueue;
   target.memoizedState = source.memoizedState;
-  target.firstContextDependency = source.firstContextDependency;
+  target.contextDependencies = source.contextDependencies;
   target.mode = source.mode;
   target.effectTag = source.effectTag;
   target.nextEffect = source.nextEffect;
