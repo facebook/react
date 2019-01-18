@@ -615,36 +615,27 @@ describe('ReactHooks', () => {
     expect(() => {
       root.update(<App flip={true} />);
     }).toWarnDev([
-      'Warning: React just detected that you changed the order of hooks called across separate renders.\n' +
-        'Previously, your component called the following hooks:\n' +
-        '- useState\n' +
-        '- useReducer\n' +
-        'But more recently, your component called the following:\n' +
-        '- useReducer\n' +
-        '- useState\n' +
-        'This will lead to bugs and errors if not fixed. For more information, ' +
-        'read the rules of hooks: https://fb.me/rules-of-hooks',
+      'Warning: React has detected a change in the order of hooks called.\n' +
+        'On the first render, the following hooks were called:\n' +
+        '  * useState\n' +
+        '  * useReducer\n\n' +
+        'On the most recent render, the following hooks were called:\n' +
+        '  * useReducer\n' +
+        '  * useState\n',
     ]);
 
+    // then a render that shouldn't warn
     root.update(<App flip={false} />);
 
     expect(() => {
       root.update(<App flip={true} />);
     }).toWarnDev([
-      'Warning: React just detected that you changed the order of hooks called across separate renders.\n' +
-        'Previously, your component called the following hooks:\n' +
-        '- useState\n' +
-        '- useReducer\n' +
-        'But more recently, your component called the following:\n' +
-        '- useReducer\n' +
-        '- useState\n' +
-        'This will lead to bugs and errors if not fixed. For more information, ' +
-        'read the rules of hooks: https://fb.me/rules-of-hooks',
+      'Warning: React has detected a change in the order of hooks called',
     ]);
   });
 
   it('detects a bad hook order even if the component throws', () => {
-    const {useState, useReducer, useContext} = React;
+    const {useState, useReducer} = React;
 
     function App(props) {
       /* eslint-disable no-unused-vars */
@@ -661,28 +652,12 @@ describe('ReactHooks', () => {
     }
     let root = ReactTestRenderer.create(<App flip={false} />);
     expect(() => {
-      expect(() => root.update(<App flip={true} />)).toThrow();
+      expect(() => root.update(<App flip={true} />)).toThrow('custom error');
     }).toWarnDev(
+    // TODO - this should log just once 
       [
-        'Warning: React just detected that you changed the order of hooks called across separate renders.\n' +
-          'Previously, your component called the following hooks:\n' +
-          '- useState\n' +
-          '- useReducer\n' +
-          'But more recently, your component called the following:\n' +
-          '- useReducer\n' +
-          '- useState\n' +
-          'This will lead to bugs and errors if not fixed. For more information, ' +
-          'read the rules of hooks: https://fb.me/rules-of-hooks\n' +
-          '    in App (at **)',
-        'Warning: React just detected that you changed the order of hooks called across separate renders.\n' +
-          'Previously, your component called the following hooks:\n' +
-          '- useState\n' +
-          '- useReducer\n' +
-          'But more recently, your component called the following:\n' +
-          '- useReducer\n' +
-          '- useState\n' +
-          'This will lead to bugs and errors if not fixed. For more information, ' +
-          'read the rules of hooks: https://fb.me/rules-of-hooks',
+        'Warning: React has detected a change in the order of hooks called',
+        'Warning: React has detected a change in the order of hooks called',
       ],
       {withoutStack: 1},
     );

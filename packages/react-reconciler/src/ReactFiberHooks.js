@@ -82,6 +82,7 @@ const HookDevNames = [
 
 let currentHookType: HookType | null = null;
 let currentHookMatches = [];
+let currentHookMismatch = null;
 
 export type Hook = {
   _debugType?: HookType,
@@ -201,35 +202,34 @@ function areHookInputsEqual(
 }
 
 function verifyHookCallOrder() {
-  let mismatched = false;
-  for (let i = 0; i < currentHookMatches.length; i++) {
-    if (currentHookMatches[i][0] !== currentHookMatches[i][1]) {
-      mismatched = true;
-      break;
-    }
-  }
-  if (mismatched) {
+  if (currentHookMismatch) {
     const previousOrder = currentHookMatches
       .map(
         // $FlowFixMe - we're certain that prev is a number
-        ([prev, next]) => '- ' + HookDevNames[prev],
+        ([prev, next]) => '  * ' + HookDevNames[prev],
       )
       .join('\n');
     const nextOrder = currentHookMatches
       .map(
         // $FlowFixMe - we're certain that next is a number
-        ([prev, next]) => '- ' + HookDevNames[next],
+        ([prev, next]) => '  * ' + HookDevNames[next],
       )
       .join('\n');
+
+    const trace = currentHookMismatch;
+
     warning(
       false,
-      'React just detected that you changed the order of hooks called across separate renders.\n' +
-        'Previously, your component called the following hooks:\n%s\n' +
-        'But more recently, your component called the following:\n%s\n' +
+      'React has detected a change in the order of hooks called.\n' +
+        'On the first render, the following hooks were called:\n%s\n\n' +
+        'On the most recent render, the following hooks were called:\n%s\n\n' +
         'This will lead to bugs and errors if not fixed. ' +
-        'For more information, read the rules of hooks: https://fb.me/rules-of-hooks',
+        'For more information, read the rules of hooks: https://fb.me/rules-of-hooks\n\n' +
+        '%s\n' +
+        'This error occured:\n',
       previousOrder,
       nextOrder,
+      trace,
     );
   }
 }
@@ -287,6 +287,7 @@ export function renderWithHooks(
       }
       verifyHookCallOrder();
       currentHookMatches = [];
+      currentHookMismatch = null;
     }
   } while (didScheduleRenderPhaseUpdate);
 
@@ -365,10 +366,10 @@ export function resetHooks(): void {
   if (__DEV__) {
     currentHookNameInDev = undefined;
     verifyHookCallOrder();
+    currentHookMatches = [];
+    currentHookMismatch = null;
   }
   currentHookType = null;
-  currentHookMatches = [];
-
   didScheduleRenderPhaseUpdate = false;
   renderPhaseUpdates = null;
   numberOfReRenders = -1;
@@ -414,6 +415,16 @@ function cloneHook(hook: Hook): Hook {
   if (__DEV__) {
     // anything faster than this?
     currentHookMatches.push([currentHookType, hook._debugType]);
+    if (currentHookType !== hook._debugType) {
+      currentHookMismatch =
+        currentHookMismatch ||
+        new Error('tracer').stack
+          // the first few lines are always 'react' code.
+          // todo - maybe show a nice tree of hooks?
+          .split('\n')
+          .slice(3, 10)
+          .join('\n');
+    }
     nextHook._debugType = hook._debugType;
   }
   return nextHook;
