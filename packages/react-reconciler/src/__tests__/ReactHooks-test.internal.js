@@ -183,6 +183,70 @@ describe('ReactHooks', () => {
     expect(root).toFlushAndYield(['Parent: 1, 2 (dark)']);
   });
 
+  it('warns about setState second argument', () => {
+    const {useState} = React;
+
+    let setCounter;
+    function Counter() {
+      const [counter, _setCounter] = useState(0);
+      setCounter = _setCounter;
+
+      ReactTestRenderer.unstable_yield(`Count: ${counter}`);
+      return counter;
+    }
+
+    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
+    root.update(<Counter />);
+    expect(root).toFlushAndYield(['Count: 0']);
+    expect(root).toMatchRenderedOutput('0');
+
+    expect(() => {
+      setCounter(1, () => {
+        throw new Error('Expected to ignore the callback.');
+      });
+    }).toWarnDev(
+      'State updates from the useState() and useReducer() Hooks ' +
+        "don't support the second callback argument. " +
+        'To execute a side effect after rendering, ' +
+        'declare it in the component body with useEffect().',
+      {withoutStack: true},
+    );
+    expect(root).toFlushAndYield(['Count: 1']);
+    expect(root).toMatchRenderedOutput('1');
+  });
+
+  it('warns about dispatch second argument', () => {
+    const {useReducer} = React;
+
+    let dispatch;
+    function Counter() {
+      const [counter, _dispatch] = useReducer((s, a) => a, 0);
+      dispatch = _dispatch;
+
+      ReactTestRenderer.unstable_yield(`Count: ${counter}`);
+      return counter;
+    }
+
+    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
+    root.update(<Counter />);
+    expect(root).toFlushAndYield(['Count: 0']);
+    expect(root).toMatchRenderedOutput('0');
+
+    expect(() => {
+      dispatch(1, () => {
+        throw new Error('Expected to ignore the callback.');
+      });
+    }).toWarnDev(
+      'State updates from the useState() and useReducer() Hooks ' +
+        "don't support the second callback argument. " +
+        'To execute a side effect after rendering, ' +
+        'declare it in the component body with useEffect().',
+      {withoutStack: true},
+    );
+    expect(root).toFlushAndYield(['Count: 1']);
+    expect(root).toMatchRenderedOutput('1');
+  });
+
   it('never bails out if context has changed', () => {
     const {useState, useLayoutEffect, useContext} = React;
 

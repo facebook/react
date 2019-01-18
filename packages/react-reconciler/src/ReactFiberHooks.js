@@ -782,6 +782,15 @@ function dispatchAction<S, A>(
       'an infinite loop.',
   );
 
+  if (__DEV__) {
+    warning(
+      arguments.length <= 3,
+      "State updates from the useState() and useReducer() Hooks don't support the " +
+        'second callback argument. To execute a side effect after ' +
+        'rendering, declare it in the component body with useEffect().',
+    );
+  }
+
   const alternate = fiber.alternate;
   if (
     fiber === currentlyRenderingFiber ||
