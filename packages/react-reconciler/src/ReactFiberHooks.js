@@ -70,7 +70,6 @@ let currentHookType: HookType | null = null;
 
 export type Hook = {
   _debugType?: HookType,
-
   memoizedState: any,
 
   baseState: any,
@@ -325,7 +324,6 @@ function createHook(): Hook {
   let hook: Hook = __DEV__
     ? {
         _debugType: currentHookType,
-
         memoizedState: null,
 
         baseState: null,
