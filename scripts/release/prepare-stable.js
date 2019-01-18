@@ -10,7 +10,6 @@ const confirmStableVersionNumbers = require('./prepare-stable-commands/confirm-s
 const guessStableVersionNumbers = require('./prepare-stable-commands/guess-stable-version-numbers');
 const parseParams = require('./prepare-stable-commands/parse-params');
 const printPrereleaseSummary = require('./shared-commands/print-prerelease-summary');
-const prunePackageRegistryMetadata = require('./prepare-stable-commands/prune-package-registry-metadata');
 const testPackagingFixture = require('./shared-commands/test-packaging-fixture');
 const testTracingFixture = require('./shared-commands/test-tracing-fixture');
 const updateStableVersionNumbers = require('./prepare-stable-commands/update-stable-version-numbers');
@@ -29,7 +28,6 @@ const run = async () => {
     await checkOutPackages(params);
     await guessStableVersionNumbers(params, versionsMap);
     await confirmStableVersionNumbers(params, versionsMap);
-    await prunePackageRegistryMetadata(params);
     await updateStableVersionNumbers(params, versionsMap);
 
     if (!params.skipTests) {
