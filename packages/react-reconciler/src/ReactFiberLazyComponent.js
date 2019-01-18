@@ -47,6 +47,7 @@ export function readLazyComponentType<T>(lazyComponent: LazyComponent<T>): T {
       lazyComponent._status = Pending;
       const ctor = lazyComponent._ctor;
       const thenable = ctor();
+      lazyComponent._result = thenable;
       thenable.then(
         moduleObject => {
           if (lazyComponent._status === Pending) {
@@ -73,9 +74,9 @@ export function readLazyComponentType<T>(lazyComponent: LazyComponent<T>): T {
           }
         },
       );
-      // Don't race with a sync thenable
-      if (lazyComponent._status === Pending) {
-        lazyComponent._result = thenable;
+      // Check if it resolved synchronously
+      if (lazyComponent._status === Resolved) {
+        return lazyComponent._result;
       }
       throw thenable;
     }

@@ -74,7 +74,7 @@ describe('ReactLazy', () => {
       </Suspense>,
     );
 
-    expect(ReactTestRenderer).toHaveYielded(['Loading...', 'Hi']);
+    expect(ReactTestRenderer).toHaveYielded(['Hi']);
     expect(root).toMatchRenderedOutput('Hi');
   });
 
