@@ -426,14 +426,12 @@ export function useContext<T>(
 ): T {
   if (__DEV__) {
     currentHookNameInDev = 'useContext';
-  }
-  // Ensure we're in a function component (class components support only the
-  // .unstable_read() form)
-  if (__DEV__) {
     currentHookType = ContextHook;
     createWorkInProgressHook();
     currentHookType = null;
   }
+  // Ensure we're in a function component (class components support only the
+  // .unstable_read() form)
   resolveCurrentlyRenderingFiber();
   return readContext(context, observedBits);
 }
@@ -461,8 +459,8 @@ export function useReducer<S, A>(
       currentHookNameInDev = 'useReducer';
     }
   }
-  currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   currentHookType = reducer === basicStateReducer ? StateHook : ReducerHook;
+  currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   workInProgressHook = createWorkInProgressHook();
   currentHookType = null;
   let queue: UpdateQueue<S, A> | null = (workInProgressHook.queue: any);
@@ -679,9 +677,10 @@ export function useEffect(
 
 function useEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
-  currentHookType =
-    currentHookType || // it could be an ImperativeHandleHook
-    (fiberEffectTag === UpdateEffect ? EffectHook : LayoutEffectHook);
+  if (currentHookType !== ImperativeHandleHook) {    
+    currentHookType =
+      fiberEffectTag === UpdateEffect ? EffectHook : LayoutEffectHook;
+  }
   workInProgressHook = createWorkInProgressHook();
   currentHookType = null;
 
@@ -716,11 +715,11 @@ export function useImperativeHandle<T>(
   if (__DEV__) {
     currentHookNameInDev = 'useImperativeHandle';
   }
+  currentHookType = ImperativeHandleHook;
   // TODO: If deps are provided, should we skip comparing the ref itself?
   const nextDeps =
     deps !== null && deps !== undefined ? deps.concat([ref]) : [ref];
 
-  currentHookType = ImperativeHandleHook;
   // TODO: I've implemented this on top of useEffect because it's almost the
   // same thing, and it would require an equal amount of code. It doesn't seem
   // like a common enough use case to justify the additional size.
@@ -764,8 +763,8 @@ export function useCallback<T>(
   if (__DEV__) {
     currentHookNameInDev = 'useCallback';
   }
-  currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   currentHookType = CallbackHook;
+  currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   workInProgressHook = createWorkInProgressHook();
   currentHookType = null;
 
@@ -791,8 +790,8 @@ export function useMemo<T>(
   if (__DEV__) {
     currentHookNameInDev = 'useMemo';
   }
-  currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   currentHookType = MemoHook;
+  currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   workInProgressHook = createWorkInProgressHook();
   currentHookType = null;
 
