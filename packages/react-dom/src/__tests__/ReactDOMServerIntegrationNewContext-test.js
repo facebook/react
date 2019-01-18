@@ -348,6 +348,32 @@ describe('ReactDOMServerIntegration', () => {
         await render(<App />, 1);
       },
     );
+    itRenders(
+      'does not pollute the default value when a component throws',
+      async render => {
+        const message = 'from a component';
+        const Throw = () => {
+          throw new Error(message);
+        };
+        const Theme = React.createContext('dark');
+
+        try {
+          await render(
+            <Theme.Provider value="light">
+              <Throw />
+            </Theme.Provider>,
+          );
+        } catch (err) {
+          if (err.message !== message) {
+            throw err;
+          }
+        }
+        expect(
+          (await render(<Theme.Consumer>{theme => theme}</Theme.Consumer>))
+            .textContent,
+        ).toBe('dark');
+      },
+    );
 
     it('does not pollute parallel node streams', () => {
       const LoggedInUser = React.createContext();
