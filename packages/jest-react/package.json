@@ -3,7 +3,11 @@
   "version": "0.5.0",
   "description": "Jest matchers and utilities for testing React components.",
   "main": "index.js",
-  "repository": "facebook/react",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/facebook/react.git",
+    "directory": "packages/jest-react"
+  },
   "keywords": [
     "react",
     "jest",
