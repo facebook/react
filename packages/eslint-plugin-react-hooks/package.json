@@ -3,7 +3,11 @@
   "name": "eslint-plugin-react-hooks",
   "description": "ESLint rules for React Hooks",
   "version": "0.0.0",
-  "repository": "facebook/react",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/facebook/react.git",
+    "directory": "packages/eslint-plugin-react-hooks"
+  },
   "files": [
     "LICENSE",
     "README.md",
