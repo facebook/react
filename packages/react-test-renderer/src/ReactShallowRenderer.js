@@ -703,7 +703,7 @@ class ReactShallowRenderer {
     // because DOM refs are not available.
   }
 
-  _updateStateFromStaticLifecycle(props: Object) {
+  _updateNewStateFromStaticLifecycle(props: Object) {
     if (this._element === null) {
       return;
     }
