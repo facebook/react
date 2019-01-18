@@ -61,6 +61,23 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('Hi again');
   });
 
+  it('can resolve synchronously without suspending', async () => {
+    const LazyText = lazy(() => ({
+      then(cb) {
+        cb({default: Text});
+      },
+    }));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyText text="Hi" />
+      </Suspense>,
+    );
+
+    expect(ReactTestRenderer).toHaveYielded(['Hi']);
+    expect(root).toMatchRenderedOutput('Hi');
+  });
+
   it('multiple lazy components', async () => {
     function Foo() {
       return <Text text="Foo" />;
