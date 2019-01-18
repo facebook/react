@@ -411,7 +411,7 @@ export function useState<S>(
 }
 
 export function useReducer<S, A>(
-  reducer: (S, A) => S,
+  reducer: (S, A | any) => S,
   initialState: S,
   initialAction: A | void | null,
 ): [S, Dispatch<A>] {
@@ -557,7 +557,15 @@ export function useReducer<S, A>(
     initialState = reducer(initialState, initialAction);
   }
   currentlyRenderingFiber = fiber;
-  workInProgressHook.memoizedState = workInProgressHook.baseState = initialState;
+  if (initialState === undefined) {
+    // use default reducer state value
+    workInProgressHook.memoizedState = workInProgressHook.baseState = reducer(
+      initialState,
+      {},
+    );
+  } else {
+    workInProgressHook.memoizedState = workInProgressHook.baseState = initialState;
+  }
   queue = workInProgressHook.queue = {
     last: null,
     dispatch: null,

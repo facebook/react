@@ -525,6 +525,44 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Count: -2')]);
     });
 
+    it('accepts default reducer state value as initial state', () => {
+      const INCREMENT = 'INCREMENT';
+      const DECREMENT = 'DECREMENT';
+
+      function reducer(state = 0, action) {
+        switch (action) {
+          case 'INCREMENT':
+            return state + 1;
+          case 'DECREMENT':
+            return state - 1;
+          default:
+            return state;
+        }
+      }
+
+      function Counter(props, ref) {
+        const [count, dispatch] = useReducer(reducer);
+        useImperativeHandle(ref, () => ({dispatch}));
+        return <Text text={'Count: ' + count} />;
+      }
+
+      Counter = forwardRef(Counter);
+      const counter = React.createRef(null);
+      ReactNoop.render(<Counter ref={counter} />);
+      ReactNoop.flush();
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+
+      counter.current.dispatch(INCREMENT);
+      ReactNoop.flush();
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+
+      counter.current.dispatch(DECREMENT);
+      counter.current.dispatch(DECREMENT);
+      counter.current.dispatch(DECREMENT);
+      ReactNoop.flush();
+      expect(ReactNoop.getChildren()).toEqual([span('Count: -2')]);
+    });
+
     it('accepts an initial action', () => {
       const INCREMENT = 'INCREMENT';
       const DECREMENT = 'DECREMENT';

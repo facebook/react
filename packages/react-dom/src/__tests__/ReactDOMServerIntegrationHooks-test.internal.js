@@ -209,6 +209,23 @@ describe('ReactDOMServerHooks', () => {
       expect(domNode.textContent).toEqual('0');
     });
 
+    itRenders('with default reducer state value', async render => {
+      function reducer(state = 0, action) {
+        return action === 'increment' ? state + 1 : state;
+      }
+      function Counter() {
+        let [count] = useReducer(reducer);
+        yieldValue('Render: ' + count);
+        return <Text text={count} />;
+      }
+
+      const domNode = await render(<Counter />);
+
+      expect(clearYields()).toEqual(['Render: 0', 0]);
+      expect(domNode.tagName).toEqual('SPAN');
+      expect(domNode.textContent).toEqual('0');
+    });
+
     itRenders('lazy initialization with initialAction', async render => {
       function reducer(state, action) {
         return action === 'increment' ? state + 1 : state;

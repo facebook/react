@@ -225,7 +225,7 @@ export function useState<S>(
 }
 
 export function useReducer<S, A>(
-  reducer: (S, A) => S,
+  reducer: (S, A | any) => S,
   initialState: S,
   initialAction: A | void | null,
 ): [S, Dispatch<A>] {
@@ -277,7 +277,12 @@ export function useReducer<S, A>(
       initialState = reducer(initialState, initialAction);
     }
     currentlyRenderingComponent = component;
-    workInProgressHook.memoizedState = initialState;
+    if (initialState === undefined) {
+      // use default reducer state value
+      workInProgressHook.memoizedState = reducer(initialState, {});
+    } else {
+      workInProgressHook.memoizedState = initialState;
+    }
     const queue: UpdateQueue<A> = (workInProgressHook.queue = {
       last: null,
       dispatch: null,
