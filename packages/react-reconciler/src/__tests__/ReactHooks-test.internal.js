@@ -517,4 +517,83 @@ describe('ReactHooks', () => {
     const root = ReactTestRenderer.create(<App />);
     expect(root.toJSON()).toMatchSnapshot();
   });
+
+  it("throws when calling hooks inside .memo's compare function", () => {
+    const {useState} = React;
+    function App() {
+      useState(0);
+      return null;
+    }
+    const MemoApp = React.memo(App, () => {
+      useState(0);
+      return false;
+    });
+
+    const root = ReactTestRenderer.create(<MemoApp />);
+    // trying to render again should trigger comparison and throw
+    expect(() => root.update(<MemoApp />)).toThrow(
+      'Hooks can only be called inside the body of a function component',
+    );
+    // the next round, it does a fresh mount, so should render
+    expect(() => root.update(<MemoApp />)).not.toThrow(
+      'Hooks can only be called inside the body of a function component',
+    );
+    // and then again, fail
+    expect(() => root.update(<MemoApp />)).toThrow(
+      'Hooks can only be called inside the body of a function component',
+    );
+  });
+
+  it('throws when calling hooks inside useMemo', () => {
+    const {useMemo, useState} = React;
+    function App() {
+      useMemo(() => {
+        useState(0);
+        return 1;
+      });
+      return null;
+    }
+
+    function Simple() {
+      const [value] = useState(123);
+      return value;
+    }
+    let root = ReactTestRenderer.create(null);
+    expect(() => root.update(<App />)).toThrow(
+      'Hooks can only be called inside the body of a function component',
+    );
+
+    // we want to assure that no hook machinery has broken
+    // so we render a fresh component with a hook just to be sure
+    root.update(<Simple />);
+    expect(root.toJSON()).toEqual('123');
+  });
+
+  it('throws when calling hooks inside useReducer', () => {
+    const {useReducer, useRef} = React;
+    function App() {
+      const [value, dispatch] = useReducer((state, action) => {
+        useRef(0);
+        return state;
+      }, 0);
+      dispatch('foo');
+      return value;
+    }
+    expect(() => ReactTestRenderer.create(<App />)).toThrow(
+      'Hooks can only be called inside the body of a function component',
+    );
+  });
+
+  it("throws when calling hooks inside useState's initialize function", () => {
+    const {useState, useRef} = React;
+    function App() {
+      useState(() => {
+        useRef(0);
+        return 0;
+      });
+    }
+    expect(() => ReactTestRenderer.create(<App />)).toThrow(
+      'Hooks can only be called inside the body of a function component',
+    );
+  });
 });
