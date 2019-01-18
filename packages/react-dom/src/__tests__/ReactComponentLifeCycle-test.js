@@ -1201,7 +1201,7 @@ describe('ReactComponentLifeCycle', () => {
     expect(log).toEqual([]);
   });
 
-  it('should pass old state to shouldComponentUpdate even getDerivedStateFromProps return new state', () => {
+  it('should pass previous state to shouldComponentUpdate even with getDerivedStateFromProps', () => {
     const divRef = React.createRef();
     class SimpleComponent extends React.Component {
       constructor(props) {

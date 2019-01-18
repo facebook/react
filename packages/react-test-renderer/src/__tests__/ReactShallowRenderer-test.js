@@ -942,7 +942,7 @@ describe('ReactShallowRenderer', () => {
     expect(result).toEqual(<div>value:1</div>);
   });
 
-  it('should pass old state to shouldComponentUpdate even getDerivedStateFromProps return new state', () => {
+  it('should pass previous state to shouldComponentUpdate even with getDerivedStateFromProps', () => {
     class SimpleComponent extends React.Component {
       constructor(props) {
         super(props);

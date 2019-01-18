@@ -529,9 +529,17 @@ class ReactShallowRenderer {
           this._updater,
         );
 
-        const updated = this._updateNewStateFromStaticLifecycle(element.props);
-        if (updated) {
-          this._instance.state = this._newState;
+        if (typeof element.type.getDerivedStateFromProps === 'function') {
+          const oldState = this._instance.state;
+          const partialState = element.type.getDerivedStateFromProps.call(
+            null,
+            element.props,
+            oldState,
+          );
+          if (partialState != null) {
+            const newState = Object.assign({}, oldState, partialState);
+            this._instance.state = newState;
+          }
         }
 
         if (element.type.hasOwnProperty('contextTypes')) {
@@ -656,10 +664,19 @@ class ReactShallowRenderer {
         }
       }
     }
-    this._updateNewStateFromStaticLifecycle(props);
 
     // Read state after cWRP in case it calls setState
-    const state = this._newState || oldState;
+    let state = this._newState || oldState;
+    if (typeof type.getDerivedStateFromProps === 'function') {
+      const partialState = type.getDerivedStateFromProps.call(
+        null,
+        props,
+        state,
+      );
+      if (partialState != null) {
+        state = Object.assign({}, state, partialState);
+      }
+    }
 
     let shouldUpdate = true;
     if (this._forcedUpdate) {
@@ -695,35 +712,13 @@ class ReactShallowRenderer {
     this._instance.context = context;
     this._instance.props = props;
     this._instance.state = state;
+    this._newState = null;
 
     if (shouldUpdate) {
       this._rendered = this._instance.render();
     }
     // Intentionally do not call componentDidUpdate()
     // because DOM refs are not available.
-  }
-
-  _updateNewStateFromStaticLifecycle(props: Object) {
-    if (this._element === null) {
-      return;
-    }
-    const {type} = this._element;
-
-    if (typeof type.getDerivedStateFromProps === 'function') {
-      const oldState = this._newState || this._instance.state;
-      const partialState = type.getDerivedStateFromProps.call(
-        null,
-        props,
-        oldState,
-      );
-
-      if (partialState != null) {
-        const newState = Object.assign({}, oldState, partialState);
-        this._newState = newState;
-        return true;
-      }
-    }
-    return false;
   }
 }
 
