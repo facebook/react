@@ -91,6 +91,7 @@ function isReactiveHookCallback(node, options) {
 
 export default {
   meta: {
+    fixable: 'code',
     schema: [
       {
         type: 'object',
@@ -210,28 +211,30 @@ export default {
         // If the declared dependencies are not an array expression then we
         // can't verify that the user provided the correct dependencies. Tell
         // the user this in an error.
-        context.report(
-          declaredDependenciesNode,
-          `React Hook ${context.getSource(reactiveHook)} has a second ` +
+        context.report({
+          node: declaredDependenciesNode,
+          message:
+            `React Hook ${context.getSource(reactiveHook)} has a second ` +
             "argument which is not an array literal. This means we can't " +
             "statically verify whether you've passed the correct dependencies.",
-        );
+        });
       } else {
-        for (const declaredDependencyNode of declaredDependenciesNode.elements) {
+        declaredDependenciesNode.elements.forEach(declaredDependencyNode => {
           // Skip elided elements.
           if (declaredDependencyNode === null) {
-            continue;
+            return;
           }
           // If we see a spread element then add a special warning.
           if (declaredDependencyNode.type === 'SpreadElement') {
-            context.report(
-              declaredDependencyNode,
-              `React Hook ${context.getSource(reactiveHook)} has a spread ` +
+            context.report({
+              node: declaredDependencyNode,
+              message:
+                `React Hook ${context.getSource(reactiveHook)} has a spread ` +
                 "element in its dependency list. This means we can't " +
                 "statically verify whether you've passed the " +
                 'correct dependencies.',
-            );
-            continue;
+            });
+            return;
           }
           // Try to normalize the declared dependency. If we can't then an error
           // will be thrown. We will catch that error and report an error.
@@ -242,13 +245,14 @@ export default {
             );
           } catch (error) {
             if (/Unexpected node type/.test(error.message)) {
-              context.report(
-                declaredDependencyNode,
-                'Unsupported expression in React Hook ' +
+              context.report({
+                node: declaredDependencyNode,
+                message:
+                  'Unsupported expression in React Hook ' +
                   `${context.getSource(reactiveHook)}'s dependency list. ` +
                   'Currently only simple variables are supported.',
-              );
-              continue;
+              });
+              return;
             } else {
               throw error;
             }
@@ -256,12 +260,13 @@ export default {
           // If the programmer already declared this dependency then report a
           // duplicate dependency error.
           if (declaredDependencies.has(declaredDependency)) {
-            context.report(
-              declaredDependencyNode,
-              'Duplicate value in React Hook ' +
+            context.report({
+              node: declaredDependencyNode,
+              message:
+                'Duplicate value in React Hook ' +
                 `${context.getSource(reactiveHook)}'s dependency list for ` +
                 `"${context.getSource(declaredDependencyNode)}".`,
-            );
+            });
           } else {
             // Add the dependency to our declared dependency map.
             declaredDependencies.set(
@@ -269,7 +274,7 @@ export default {
               declaredDependencyNode,
             );
           }
-        }
+        });
       }
 
       let usedDependencies = new Set();
@@ -303,14 +308,15 @@ export default {
           // Oh no! Our dependency was not declared. So report an error for all
           // of the nodes which we expected to see an error from.
           for (const dependencyNode of dependencyNodes) {
-            context.report(
-              dependencyNode,
-              `React Hook ${context.getSource(reactiveHook)} references ` +
+            context.report({
+              node: dependencyNode,
+              message:
+                `React Hook ${context.getSource(reactiveHook)} references ` +
                 `"${context.getSource(dependencyNode)}", but it was not ` +
                 'listed in the hook dependencies argument. This means if ' +
                 `"${context.getSource(dependencyNode)}" changes then ` +
                 `${context.getSource(reactiveHook)} won't be able to update.`,
-            );
+            });
           }
         }
       }
@@ -322,13 +328,14 @@ export default {
           continue;
         }
 
-        context.report(
-          dependencyNode,
-          `React Hook ${context.getSource(reactiveHook)} has an extra ` +
+        context.report({
+          node: dependencyNode,
+          message:
+            `React Hook ${context.getSource(reactiveHook)} has an extra ` +
             `dependency "${context.getSource(dependencyNode)}" which ` +
             'is not used in its callback. Removing this dependency may mean ' +
             'the hook needs to execute fewer times.',
-        );
+        });
       }
     }
   },
