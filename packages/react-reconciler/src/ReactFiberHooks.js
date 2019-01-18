@@ -81,6 +81,7 @@ const HookDevNames = [
 ];
 
 let currentHookType: HookType | null = null;
+let currentHookMatches = [];
 
 export type Hook = {
   _debugType?: HookType,
@@ -199,6 +200,40 @@ function areHookInputsEqual(
   return true;
 }
 
+function verifyHookCallOrder() {
+  let mismatched = false;
+  for (let i = 0; i < currentHookMatches.length; i++) {
+    if (currentHookMatches[i][0] !== currentHookMatches[i][1]) {
+      mismatched = true;
+      break;
+    }
+  }
+  if (mismatched) {
+    const previousOrder = currentHookMatches
+      .map(
+        // $FlowFixMe - we're certain that prev is a number
+        ([prev, next]) => '- ' + HookDevNames[prev],
+      )
+      .join('\n');
+    const nextOrder = currentHookMatches
+      .map(
+        // $FlowFixMe - we're certain that next is a number
+        ([prev, next]) => '- ' + HookDevNames[next],
+      )
+      .join('\n');
+    warning(
+      false,
+      'React just detected that you changed the order of hooks called across separate renders.\n' +
+        'Previously, your component called the following hooks:\n%s\n' +
+        'But more recently, your component called the following:\n%s\n' +
+        'This will lead to bugs and errors if not fixed. ' +
+        'For more information, read the rules of hooks: https://fb.me/rules-of-hooks',
+      previousOrder,
+      nextOrder,
+    );
+  }
+}
+
 export function renderWithHooks(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -250,6 +285,8 @@ export function renderWithHooks(
           getComponentName(Component),
         );
       }
+      verifyHookCallOrder();
+      currentHookMatches = [];
     }
   } while (didScheduleRenderPhaseUpdate);
 
@@ -327,7 +364,10 @@ export function resetHooks(): void {
 
   if (__DEV__) {
     currentHookNameInDev = undefined;
+    verifyHookCallOrder();
   }
+  currentHookType = null;
+  currentHookMatches = [];
 
   didScheduleRenderPhaseUpdate = false;
   renderPhaseUpdates = null;
@@ -337,7 +377,7 @@ export function resetHooks(): void {
 function createHook(): Hook {
   let hook: Hook = __DEV__
     ? {
-        // $FlowFixMe
+        // $FlowFixMe - we're certain we've set currentHookType by now
         _debugType: currentHookType,
         memoizedState: null,
 
@@ -372,19 +412,8 @@ function cloneHook(hook: Hook): Hook {
   };
 
   if (__DEV__) {
-    if (currentHookType !== hook._debugType) {
-      warning(
-        false,
-        'React just detected that you called %s in a position previously called by %s. ' +
-          'This breaks the rules of hooks, and will cause bugs and errors. To fix this ' +
-          'make sure your component is returning the same hooks in the same order on every render. ' +
-          'Learn more about the rules of hooks here: https://reactjs.org/docs/hooks-rules.html', // todo - short url
-        // $FlowFixMe
-        HookDevNames[currentHookType],
-        // $FlowFixMe
-        HookDevNames[hook._debugType],
-      );
-    }
+    // anything faster than this?
+    currentHookMatches.push([currentHookType, hook._debugType]);
     nextHook._debugType = hook._debugType;
   }
   return nextHook;

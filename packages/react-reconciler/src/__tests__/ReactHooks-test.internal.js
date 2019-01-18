@@ -602,32 +602,89 @@ describe('ReactHooks', () => {
     function App(props) {
       /* eslint-disable no-unused-vars */
       if (props.flip) {
-        const [count, setCount] = useState(0);
-        const [state, dispatch] = useReducer((s, a) => a, 0);
-        return null;
+        useState(0);
+        useReducer((s, a) => a, 0);
       } else {
-        const [state, dispatch] = useReducer((s, a) => a, 0);
-        const [count, setCount] = useState(0);
-        return null;
+        useReducer((s, a) => a, 0);
+        useState(0);
       }
+      return null;
       /* eslint-enable no-unused-vars */
     }
     let root = ReactTestRenderer.create(<App flip={false} />);
     expect(() => {
       root.update(<App flip={true} />);
     }).toWarnDev([
-      'Warning: React just detected that you called useState ' +
-        'in a position previously called by useReducer. This breaks ' +
-        'the rules of hooks, and will cause bugs and errors. To fix this ' +
-        'make sure your component is returning the same hooks in the same ' +
-        'order on every render. Learn more about the rules of hooks here: ' +
-        'https://reactjs.org/docs/hooks-rules.html',
-      'Warning: React just detected that you called useReducer ' +
-        'in a position previously called by useState. This breaks ' +
-        'the rules of hooks, and will cause bugs and errors. To fix this ' +
-        'make sure your component is returning the same hooks in the same ' +
-        'order on every render. Learn more about the rules of hooks here: ' +
-        'https://reactjs.org/docs/hooks-rules.html',
+      'Warning: React just detected that you changed the order of hooks called across separate renders.\n' +
+        'Previously, your component called the following hooks:\n' +
+        '- useState\n' +
+        '- useReducer\n' +
+        'But more recently, your component called the following:\n' +
+        '- useReducer\n' +
+        '- useState\n' +
+        'This will lead to bugs and errors if not fixed. For more information, ' +
+        'read the rules of hooks: https://fb.me/rules-of-hooks',
     ]);
+
+    root.update(<App flip={false} />);
+
+    expect(() => {
+      root.update(<App flip={true} />);
+    }).toWarnDev([
+      'Warning: React just detected that you changed the order of hooks called across separate renders.\n' +
+        'Previously, your component called the following hooks:\n' +
+        '- useState\n' +
+        '- useReducer\n' +
+        'But more recently, your component called the following:\n' +
+        '- useReducer\n' +
+        '- useState\n' +
+        'This will lead to bugs and errors if not fixed. For more information, ' +
+        'read the rules of hooks: https://fb.me/rules-of-hooks',
+    ]);
+  });
+
+  it('detects a bad hook order even if the component throws', () => {
+    const {useState, useReducer, useContext} = React;
+
+    function App(props) {
+      /* eslint-disable no-unused-vars */
+      if (props.flip) {
+        useState(0);
+        useReducer((s, a) => a, 0);
+        throw new Error('custom error');
+      } else {
+        useReducer((s, a) => a, 0);
+        useState(0);
+      }
+      return null;
+      /* eslint-enable no-unused-vars */
+    }
+    let root = ReactTestRenderer.create(<App flip={false} />);
+    expect(() => {
+      expect(() => root.update(<App flip={true} />)).toThrow();
+    }).toWarnDev(
+      [
+        'Warning: React just detected that you changed the order of hooks called across separate renders.\n' +
+          'Previously, your component called the following hooks:\n' +
+          '- useState\n' +
+          '- useReducer\n' +
+          'But more recently, your component called the following:\n' +
+          '- useReducer\n' +
+          '- useState\n' +
+          'This will lead to bugs and errors if not fixed. For more information, ' +
+          'read the rules of hooks: https://fb.me/rules-of-hooks\n' +
+          '    in App (at **)',
+        'Warning: React just detected that you changed the order of hooks called across separate renders.\n' +
+          'Previously, your component called the following hooks:\n' +
+          '- useState\n' +
+          '- useReducer\n' +
+          'But more recently, your component called the following:\n' +
+          '- useReducer\n' +
+          '- useState\n' +
+          'This will lead to bugs and errors if not fixed. For more information, ' +
+          'read the rules of hooks: https://fb.me/rules-of-hooks',
+      ],
+      {withoutStack: 1},
+    );
   });
 });
