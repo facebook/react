@@ -70,7 +70,11 @@ describe('ErrorBoundaryReconciliation', () => {
         if (isConcurrent) {
           renderer.unstable_flushAll();
         }
-      }).toWarnDev(isConcurrent ? ['invalid', 'invalid', 'invalid', 'invalid'] : ['invalid']);
+      }).toWarnDev(
+        isConcurrent
+          ? ['invalid', 'invalid', 'invalid', 'invalid']
+          : ['invalid'],
+      );
       const Fallback = fallbackTagName;
       expect(renderer).toMatchRenderedOutput(<Fallback prop="ErrorBoundary" />);
     }

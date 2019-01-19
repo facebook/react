@@ -1173,7 +1173,20 @@ function mountIndeterminateComponent(
       context,
       renderExpirationTime,
     );
-    // TODO: double-render here in strict mode.
+    if (
+      debugRenderPhaseSideEffects ||
+      (debugRenderPhaseSideEffectsForStrictMode &&
+        workInProgress.mode & StrictMode)
+    ) {
+      renderWithHooks(
+        null,
+        workInProgress,
+        Component,
+        props,
+        context,
+        renderExpirationTime,
+      );
+    }
   } else {
     value = renderWithHooks(
       null,

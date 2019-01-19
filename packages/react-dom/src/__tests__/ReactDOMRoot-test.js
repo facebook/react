@@ -232,7 +232,7 @@ describe('ReactDOMRoot', () => {
     // Flush all async work.
     jest.runAllTimers();
     // Root should complete without committing.
-    expect(ops).toEqual(['Foo']);
+    expect(ops).toEqual(__DEV__ ? ['Foo', 'Foo'] : ['Foo']);
     expect(container.textContent).toEqual('');
 
     ops = [];

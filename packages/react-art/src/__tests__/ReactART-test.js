@@ -385,7 +385,7 @@ describe('ReactART', () => {
       </CurrentRendererContext.Provider>,
     );
 
-    ReactNoop.flushThrough(['A']);
+    ReactNoop.flushThrough(__DEV__ ? ['A', 'A'] : ['A']);
 
     ReactDOM.render(
       <Surface>
@@ -400,7 +400,9 @@ describe('ReactART', () => {
     expect(ops).toEqual([null, 'ART']);
 
     ops = [];
-    expect(ReactNoop.flush()).toEqual(['B', 'C']);
+    expect(ReactNoop.flush()).toEqual(
+      __DEV__ ? ['B', 'B', 'C', 'C'] : ['B', 'C'],
+    );
 
     expect(ops).toEqual(['Test']);
   });
