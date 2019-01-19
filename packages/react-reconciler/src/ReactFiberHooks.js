@@ -229,8 +229,8 @@ function flushHookMismatchWarnings() {
       nextOrder.join('\n'),
       currentHookMismatch,
     );
-  }
-  currentHookMismatch = null;
+    currentHookMismatch = null;
+  }  
 }
 
 export function renderWithHooks(
