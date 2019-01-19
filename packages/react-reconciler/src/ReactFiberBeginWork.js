@@ -250,6 +250,20 @@ function updateForwardRef(
       ref,
       renderExpirationTime,
     );
+    if (
+      debugRenderPhaseSideEffects ||
+      (debugRenderPhaseSideEffectsForStrictMode &&
+        workInProgress.mode & StrictMode)
+    ) {
+      renderWithHooks(
+        current,
+        workInProgress,
+        render,
+        nextProps,
+        ref,
+        renderExpirationTime,
+      );
+    }
     setCurrentPhase(null);
   } else {
     nextChildren = renderWithHooks(
@@ -543,6 +557,20 @@ function updateFunctionComponent(
       context,
       renderExpirationTime,
     );
+    if (
+      debugRenderPhaseSideEffects ||
+      (debugRenderPhaseSideEffectsForStrictMode &&
+        workInProgress.mode & StrictMode)
+    ) {
+      renderWithHooks(
+        current,
+        workInProgress,
+        Component,
+        nextProps,
+        context,
+        renderExpirationTime,
+      );
+    }
     setCurrentPhase(null);
   } else {
     nextChildren = renderWithHooks(
@@ -1145,6 +1173,7 @@ function mountIndeterminateComponent(
       context,
       renderExpirationTime,
     );
+    // TODO: double-render here in strict mode.
   } else {
     value = renderWithHooks(
       null,

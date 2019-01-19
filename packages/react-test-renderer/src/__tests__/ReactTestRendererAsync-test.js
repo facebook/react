@@ -66,7 +66,14 @@ describe('ReactTestRendererAsync', () => {
     expect(renderer.toJSON()).toEqual(['A:1', 'B:1', 'C:1']);
 
     renderer.update(<Parent step={2} />);
-    expect(renderer).toFlushAndYield(['A:2', 'B:2', 'C:2']);
+    expect(renderer).toFlushAndYield(__DEV__ ? [
+      'A:2',
+      'A:2',
+      'B:2',
+      'B:2',
+      'C:2',
+      'C:2'
+    ] : ['A:2', 'B:2', 'C:2']);
     expect(renderer.toJSON()).toEqual(['A:2', 'B:2', 'C:2']);
   });
 
