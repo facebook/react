@@ -363,8 +363,6 @@ export function resetHooks(): void {
 
   if (__DEV__) {
     currentHookNameInDev = undefined;
-    currentHookMismatch = null;
-    currentHookType = null;
   }
   didScheduleRenderPhaseUpdate = false;
   renderPhaseUpdates = null;
@@ -743,7 +741,8 @@ export function useEffect(
 
 function useEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
-  if (currentHookType !== ImperativeHandleHook) {
+  if (currentHookType === null) {
+    // it could be an ImperativeHandleHook
     currentHookType =
       fiberEffectTag === UpdateEffect ? EffectHook : LayoutEffectHook;
   }
