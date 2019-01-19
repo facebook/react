@@ -317,7 +317,7 @@ export default {
                 : null
               ),
               (unnecessaryDependencies.size > 0 ?
-                `duplicate [${Array.from(unnecessaryDependencies).join(', ')}]` :
+                `unnecessary [${Array.from(unnecessaryDependencies).join(', ')}]` :
                 null
               ),
             ].filter(Boolean).join(', ') +
