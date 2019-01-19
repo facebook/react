@@ -978,7 +978,7 @@ class ReactDOMServerRenderer {
               children: nextChildren,
               childIndex: 0,
               context: context,
-              footer: '',
+              footer: '<!--/$-->',
             };
             if (__DEV__) {
               ((frame: any): FrameDev).debugElementStack = [];
@@ -986,7 +986,7 @@ class ReactDOMServerRenderer {
             }
             this.stack.push(frame);
             this.suspenseDepth++;
-            return '';
+            return '<!--$-->';
           } else {
             invariant(false, 'ReactDOMServer does not yet support Suspense.');
           }
