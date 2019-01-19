@@ -205,14 +205,14 @@ function flushHookMismatchWarnings() {
     let current = firstCurrentHook;
     let previousOrder = [];
     while (current) {
-      previousOrder.push('  * ' + HookDevNames[current._debugType]);
+      previousOrder.push('  * ' + HookDevNames[((current._debugType:any):HookType)]);
       current = current.next;
     }
 
     let workInProgress = firstWorkInProgressHook;
     let nextOrder = [];
     while (workInProgress) {
-      nextOrder.push('  * ' + HookDevNames[workInProgress._debugType]);
+      nextOrder.push('  * ' + HookDevNames[((workInProgress._debugType:any):HookType)]);
       workInProgress = workInProgress.next;
     }
 
@@ -416,7 +416,7 @@ function cloneHook(hook: Hook): Hook {
           .slice(3, 10)
           .join('\n');
     }
-    nextHook._debugType = currentHookType;
+    nextHook._debugType = ((currentHookType:any):HookType);
   }
   return nextHook;
 }
