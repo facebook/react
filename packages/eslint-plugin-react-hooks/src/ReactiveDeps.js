@@ -105,6 +105,7 @@ export default {
     ],
   },
   create(context) {
+    const sourceCode = context.getSourceCode();
     // Parse the `additionalHooks` regex.
     const additionalHooks =
       context.options &&
@@ -257,86 +258,14 @@ export default {
               throw error;
             }
           }
-          // If the programmer already declared this dependency then report a
-          // duplicate dependency error.
-          if (declaredDependencies.has(declaredDependency)) {
-            context.report({
-              node: declaredDependencyNode,
-              message:
-                'Duplicate value in React Hook ' +
-                `${context.getSource(reactiveHook)}'s dependency list for ` +
-                `"${context.getSource(declaredDependencyNode)}".`,
-            });
-          } else {
-            // Add the dependency to our declared dependency map.
-            declaredDependencies.set(
-              declaredDependency,
-              declaredDependencyNode,
-            );
-          }
+          // Add the dependency to our declared dependency map.
+          declaredDependencies.set(
+            declaredDependency,
+            declaredDependencyNode,
+          );
         });
       }
 
-      let usedDependencies = new Set();
-
-      // Loop through all our dependencies to make sure they have been declared.
-      // If the dependency has not been declared we need to report some errors.
-      for (const [dependency, dependencyNodes] of dependencies) {
-        let isDeclared = false;
-
-        // If we can't find `foo.bar.baz`, search for `foo.bar`, then for `foo`.
-        let candidate = dependency;
-        while (candidate) {
-          if (declaredDependencies.has(candidate)) {
-            // Yay! Our dependency has been declared.
-            // Record this so we don't report is unused.
-            isDeclared = true;
-            usedDependencies.add(candidate);
-            break;
-          }
-          const lastDotAccessIndex = candidate.lastIndexOf('.');
-          if (lastDotAccessIndex === -1) {
-            break;
-          }
-          // If we didn't find `foo.bar.baz`, try `foo.bar`. Then try `foo`.
-          candidate = candidate.substring(0, lastDotAccessIndex);
-          // This is not super solid but works for simple cases we support.
-          // Alternatively we could stringify later and use nodes directly.
-        }
-
-        if (!isDeclared) {
-          // Oh no! Our dependency was not declared. So report an error for all
-          // of the nodes which we expected to see an error from.
-          for (const dependencyNode of dependencyNodes) {
-            context.report({
-              node: dependencyNode,
-              message:
-                `React Hook ${context.getSource(reactiveHook)} references ` +
-                `"${context.getSource(dependencyNode)}", but it was not ` +
-                'listed in the hook dependencies argument. This means if ' +
-                `"${context.getSource(dependencyNode)}" changes then ` +
-                `${context.getSource(reactiveHook)} won't be able to update.`,
-            });
-          }
-        }
-      }
-
-      // Loop through all the unused declared dependencies and report a warning
-      // so the programmer removes the unused dependency from their list.
-      for (const [dependency, dependencyNode] of declaredDependencies) {
-        if (usedDependencies.has(dependency)) {
-          continue;
-        }
-
-        context.report({
-          node: dependencyNode,
-          message:
-            `React Hook ${context.getSource(reactiveHook)} has an extra ` +
-            `dependency "${context.getSource(dependencyNode)}" which ` +
-            'is not used in its callback. Removing this dependency may mean ' +
-            'the hook needs to execute fewer times.',
-        });
-      }
     }
   },
 };
