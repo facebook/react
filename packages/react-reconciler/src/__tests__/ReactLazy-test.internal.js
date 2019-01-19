@@ -78,6 +78,36 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('Hi');
   });
 
+  it('can reject synchronously without suspending', async () => {
+    const LazyText = lazy(() => ({
+      then(resolve, reject) {
+        reject(new Error('oh no'));
+      },
+    }));
+
+    class ErrorBoundary extends React.Component {
+      state = {};
+      static getDerivedStateFromError(error) {
+        return {message: error.message};
+      }
+      render() {
+        return this.state.message
+          ? `Error: ${this.state.message}`
+          : this.props.children;
+      }
+    }
+
+    const root = ReactTestRenderer.create(
+      <ErrorBoundary>
+        <Suspense fallback={<Text text="Loading..." />}>
+          <LazyText text="Hi" />
+        </Suspense>
+      </ErrorBoundary>,
+    );
+    expect(ReactTestRenderer).toHaveYielded([]);
+    expect(root).toMatchRenderedOutput('Error: oh no');
+  });
+
   it('multiple lazy components', async () => {
     function Foo() {
       return <Text text="Foo" />;
