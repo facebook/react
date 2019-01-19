@@ -115,6 +115,8 @@ export default {
         : undefined;
     const options = {additionalHooks};
 
+    console.log('\n\n\n\n\n\n\n\n\n\n\n\n\n');
+
     return {
       FunctionExpression: visitFunctionExpression,
       ArrowFunctionExpression: visitFunctionExpression,
@@ -205,9 +207,7 @@ export default {
         }
       }
 
-      // Get all of the declared dependencies and put them in a set. We will
-      // compare this to the dependencies we found in the callback later.
-      const declaredDependencies = new Map();
+      const declaredDependencies = [];
       if (declaredDependenciesNode.type !== 'ArrayExpression') {
         // If the declared dependencies are not an array expression then we
         // can't verify that the user provided the correct dependencies. Tell
@@ -259,13 +259,77 @@ export default {
             }
           }
           // Add the dependency to our declared dependency map.
-          declaredDependencies.set(
-            declaredDependency,
-            declaredDependencyNode,
-          );
+          declaredDependencies.push({
+            key: declaredDependency,
+            node: declaredDependencyNode,
+          });
         });
       }
 
+      let suggestedDependencies = [];
+
+      let duplicateDependencies = new Set();
+      let unnecessaryDependencies = new Set();
+      let missingDependencies = new Set();
+
+      // First, ensure what user specified makes sense.
+      for (let {node, key} of declaredDependencies) {
+        if (dependencies.has(key)) {
+          // Legit dependency.
+          if (suggestedDependencies.indexOf(key) === -1) {
+            suggestedDependencies.push(key);
+          } else {
+            // Duplicate. Do nothing.
+            duplicateDependencies.add(key);
+          }
+        } else {
+          // Unnecessary dependency. Do nothing.
+          unnecessaryDependencies.add(key);
+        }
+      }
+      // Then fill in the missing ones.
+      for (let [key, usageNode] of dependencies) {
+        if (suggestedDependencies.indexOf(key) === -1) {
+          // Legit missing.
+          suggestedDependencies.push(key);
+          missingDependencies.add(key);
+        } else {
+          // Already did that. Do nothing.
+        }
+      }
+
+      if (
+        duplicateDependencies.size > 0 ||
+        missingDependencies.size > 0 ||
+        unnecessaryDependencies.size > 0
+      ) {
+        context.report({
+          node: declaredDependenciesNode,
+          message:
+            `React Hook ${context.getSource(reactiveHook)} has ` +
+            [
+              (missingDependencies.size > 0 ?
+                `missing [${Array.from(missingDependencies).join(', ')}]`
+                : null
+              ),
+              (duplicateDependencies.size > 0 ?
+                `duplicate [${Array.from(duplicateDependencies).join(', ')}]`
+                : null
+              ),
+              (unnecessaryDependencies.size > 0 ?
+                `duplicate [${Array.from(unnecessaryDependencies).join(', ')}]` :
+                null
+              ),
+            ].filter(Boolean).join(', ') +
+            ` dependencies. Either fix or remove the dependency array.`,
+          fix(fixer) {
+            return fixer.replaceText(
+              declaredDependenciesNode,
+              `[${suggestedDependencies.join(', ')}]`
+            );
+          }
+        });
+      }
     }
   },
 };
