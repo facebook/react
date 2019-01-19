@@ -81,7 +81,6 @@ const HookDevNames = [
 ];
 
 let currentHookType: HookType | null = null;
-let currentHookMatches = [];
 let currentHookMismatch = null;
 
 export type Hook = {
@@ -201,22 +200,21 @@ function areHookInputsEqual(
   return true;
 }
 
-function verifyHookCallOrder() {
-  if (currentHookMismatch) {
-    const previousOrder = currentHookMatches
-      .map(
-        // $FlowFixMe - we're certain that prev is a number
-        ([prev, next]) => '  * ' + HookDevNames[prev],
-      )
-      .join('\n');
-    const nextOrder = currentHookMatches
-      .map(
-        // $FlowFixMe - we're certain that next is a number
-        ([prev, next]) => '  * ' + HookDevNames[next],
-      )
-      .join('\n');
+function flushHookMismatchWarnings() {
+  if (__DEV__ && currentHookMismatch) {
+    let current = firstCurrentHook;
+    let previousOrder = [];
+    while (current) {
+      previousOrder.push('  * ' + HookDevNames[current._debugType]);
+      current = current.next;
+    }
 
-    const trace = currentHookMismatch;
+    let workInProgress = firstWorkInProgressHook;
+    let nextOrder = [];
+    while (workInProgress) {
+      nextOrder.push('  * ' + HookDevNames[workInProgress._debugType]);
+      workInProgress = workInProgress.next;
+    }
 
     warning(
       false,
@@ -227,11 +225,12 @@ function verifyHookCallOrder() {
         'For more information, read the rules of hooks: https://fb.me/rules-of-hooks\n\n' +
         '%s\n' +
         'This error occured:\n',
-      previousOrder,
-      nextOrder,
-      trace,
+      previousOrder.join('\n'),
+      nextOrder.join('\n'),
+      currentHookMismatch,
     );
   }
+  currentHookMismatch = null;
 }
 
 export function renderWithHooks(
@@ -285,9 +284,7 @@ export function renderWithHooks(
           getComponentName(Component),
         );
       }
-      verifyHookCallOrder();
-      currentHookMatches = [];
-      currentHookMismatch = null;
+      flushHookMismatchWarnings();
     }
   } while (didScheduleRenderPhaseUpdate);
 
@@ -348,6 +345,7 @@ export function resetHooks(): void {
   if (!enableHooks) {
     return;
   }
+  flushHookMismatchWarnings();
 
   // This is used to reset the state of this module when a component throws.
   // It's also called inside mountIndeterminateComponent if we determine the
@@ -365,11 +363,9 @@ export function resetHooks(): void {
 
   if (__DEV__) {
     currentHookNameInDev = undefined;
-    verifyHookCallOrder();
-    currentHookMatches = [];
     currentHookMismatch = null;
+    currentHookType = null;
   }
-  currentHookType = null;
   didScheduleRenderPhaseUpdate = false;
   renderPhaseUpdates = null;
   numberOfReRenders = -1;
@@ -378,8 +374,7 @@ export function resetHooks(): void {
 function createHook(): Hook {
   let hook: Hook = __DEV__
     ? {
-        // $FlowFixMe - we're certain we've set currentHookType by now
-        _debugType: currentHookType,
+        _debugType: ((currentHookType: any): HookType),
         memoizedState: null,
 
         baseState: null,
@@ -413,8 +408,6 @@ function cloneHook(hook: Hook): Hook {
   };
 
   if (__DEV__) {
-    // anything faster than this?
-    currentHookMatches.push([currentHookType, hook._debugType]);
     if (currentHookType !== hook._debugType) {
       currentHookMismatch =
         currentHookMismatch ||
@@ -425,7 +418,7 @@ function cloneHook(hook: Hook): Hook {
           .slice(3, 10)
           .join('\n');
     }
-    nextHook._debugType = hook._debugType;
+    nextHook._debugType = currentHookType;
   }
   return nextHook;
 }
