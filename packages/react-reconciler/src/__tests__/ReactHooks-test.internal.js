@@ -718,18 +718,13 @@ describe('ReactHooks', () => {
     expect(() => {
       expect(() => root.update(<App flip={true} />)).toThrow('custom error');
     }).toWarnDev(
-      // TODO - this should log just once
-      // it logs it twice because of the replay logic in the scheduler I think?
-      // must fix in some way, but pretty edge casey so letting this for now
       [
         'Warning: React has detected a change in the order of hooks called by App.\n' +
           '  Previous render   Next render\n' +
           '  ---               ---\n' +
           '> useReducer        useState\n' +
-          '> useState          useReducer\n',
-        'Warning: React has detected a change in the order of hooks called',
-      ],
-      {withoutStack: 1},
+          '> useState          useReducer\n'        
+      ]
     );
   });
 

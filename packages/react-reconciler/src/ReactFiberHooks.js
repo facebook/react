@@ -84,6 +84,8 @@ let currentHookType: HookType | null = null;
 // the first instance of a hook mismatch in a component,
 // represented by a portion of it's stacktrace
 let currentHookMismatch = null;
+const PossiblyWeakSet = typeof WeakSet === 'function' ? WeakSet : Set;
+const hookMismatchedFibers = new PossiblyWeakSet();
 
 export type Hook = {
   memoizedState: any,
@@ -219,53 +221,67 @@ function flushHookMismatchWarnings() {
   // we'll show the diff of the low level hooks,
   // and a stack trace so the dev can locate where
   // the first mismatch is coming from
-  if (__DEV__ && currentHookMismatch) {
-    const hookStackDiff = [];
-    let current = firstCurrentHook;
-    let previousOrder = [];
-    while (current) {
-      previousOrder.push(HookDevNames[((current: any): HookDev)._debugType]);
-      current = current.next;
-    }
-    let workInProgress = firstWorkInProgressHook;
-    let nextOrder = [];
-    while (workInProgress) {
-      nextOrder.push(HookDevNames[((workInProgress: any): HookDev)._debugType]);
-      workInProgress = workInProgress.next;
-    }
-    // some bookkeeping for formatting the output table
-    const columnLength = Math.max(
-      '  Previous render'.length,
-      ...previousOrder.map(hook => hook.length),
-    );
-    const hookStackHeader =
-      padEndSpaces('  Previous render', columnLength) +
-      '   Next render\n' +
-      padEndSpaces('  ---', columnLength) +
-      '   ---';
-    const hookStackLength = Math.max(previousOrder.length, nextOrder.length);
-    for (let i = 0; i < hookStackLength; i++) {
-      hookStackDiff.push(
-        (previousOrder[i] !== nextOrder[i] ? '> ' : '  ') +
-          padEndSpaces(previousOrder[i], columnLength) +
-          ' ' +
-          nextOrder[i],
+  if (__DEV__) {
+    if (
+      currentHookMismatch &&
+      !hookMismatchedFibers.has(currentlyRenderingFiber)
+    ) {
+      let componentName = getComponentName(
+        ((currentlyRenderingFiber: any): Fiber).type,
+      );
+      hookMismatchedFibers.add(currentlyRenderingFiber);
+      const hookStackDiff = [];
+      let current = firstCurrentHook;
+      let previousOrder = [];
+      while (current !== null) {
+        previousOrder.push(HookDevNames[((current: any): HookDev)._debugType]);
+        current = current.next;
+      }
+      let workInProgress = firstWorkInProgressHook;
+      let nextOrder = [];
+      while (workInProgress !== null) {
+        nextOrder.push(
+          HookDevNames[((workInProgress: any): HookDev)._debugType],
+        );
+        workInProgress = workInProgress.next;
+      }
+      // some bookkeeping for formatting the output table
+      const columnLength = Math.max.apply(
+        null,
+        previousOrder
+          .map(hook => hook.length)
+          .concat('  Previous render'.length),
+      );
+
+      const hookStackHeader =
+        padEndSpaces('  Previous render', columnLength) +
+        '   Next render\n' +
+        padEndSpaces('  ---', columnLength) +
+        '   ---';
+      const hookStackLength = Math.max(previousOrder.length, nextOrder.length);
+      for (let i = 0; i < hookStackLength; i++) {
+        hookStackDiff.push(
+          (previousOrder[i] !== nextOrder[i] ? '> ' : '  ') +
+            padEndSpaces(previousOrder[i], columnLength) +
+            ' ' +
+            nextOrder[i],
+        );
+      }
+      warning(
+        false,
+        'React has detected a change in the order of hooks called by %s.\n' +
+          '%s\n' +
+          '%s\n\n' +
+          'The first mismatched hook was at:\n' +
+          '%s\n\n' +
+          'This will lead to bugs and errors if not fixed. ' +
+          'For more information, read the rules of hooks: https://fb.me/rules-of-hooks\n',
+        componentName,
+        hookStackHeader,
+        hookStackDiff.join('\n'),
+        currentHookMismatch,
       );
     }
-    warning(
-      false,
-      'React has detected a change in the order of hooks called by %s.\n' +
-        '%s\n' +
-        '%s\n\n' +
-        'Error trace:\n' +
-        '%s\n\n' +
-        'This will lead to bugs and errors if not fixed. ' +
-        'For more information, read the rules of hooks: https://fb.me/rules-of-hooks\n',
-      getComponentName(((currentlyRenderingFiber: any): Fiber).type),
-      hookStackHeader,
-      hookStackDiff.join('\n'),
-      currentHookMismatch,
-    );
     currentHookMismatch = null;
   }
 }
