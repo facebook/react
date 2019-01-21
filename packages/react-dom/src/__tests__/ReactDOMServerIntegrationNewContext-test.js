@@ -157,6 +157,45 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.textContent).toBe('red');
     });
 
+    itRenders('readContext() in different components', async render => {
+      function readContext(Ctx, observedBits) {
+        const dispatcher =
+          React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+            .ReactCurrentDispatcher.current;
+        return dispatcher.readContext(Ctx, observedBits);
+      }
+
+      class Cls extends React.Component {
+        render() {
+          return readContext(Context);
+        }
+      }
+      function Fn() {
+        return readContext(Context);
+      }
+      const Memo = React.memo(() => {
+        return readContext(Context);
+      });
+      const FwdRef = React.forwardRef((props, ref) => {
+        return readContext(Context);
+      });
+
+      const e = await render(
+        <PurpleContextProvider>
+          <RedContextProvider>
+            <span>
+              <Fn />
+              <Cls />
+              <Memo />
+              <FwdRef />
+              <Consumer>{() => readContext(Context)}</Consumer>
+            </span>
+          </RedContextProvider>
+        </PurpleContextProvider>,
+      );
+      expect(e.textContent).toBe('redredredredred');
+    });
+
     itRenders('multiple contexts', async render => {
       const Theme = React.createContext('dark');
       const Language = React.createContext('french');
