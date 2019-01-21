@@ -489,6 +489,9 @@ function commitAllLifeCycles(
     }
   }
   while (nextEffect !== null) {
+    if (__DEV__) {
+      setCurrentFiber(nextEffect);
+    }
     const effectTag = nextEffect.effectTag;
 
     if (effectTag & (Update | Callback)) {
@@ -513,6 +516,9 @@ function commitAllLifeCycles(
 
     nextEffect = nextEffect.nextEffect;
   }
+  if (__DEV__) {
+    resetCurrentFiber();
+  }
 }
 
 function commitPassiveEffects(root: FiberRoot, firstEffect: Fiber): void {
@@ -526,6 +532,10 @@ function commitPassiveEffects(root: FiberRoot, firstEffect: Fiber): void {
 
   let effect = firstEffect;
   do {
+    if (__DEV__) {
+      setCurrentFiber(effect);
+    }
+
     if (effect.effectTag & Passive) {
       let didError = false;
       let error;
@@ -549,6 +559,9 @@ function commitPassiveEffects(root: FiberRoot, firstEffect: Fiber): void {
     }
     effect = effect.nextEffect;
   } while (effect !== null);
+  if (__DEV__) {
+    resetCurrentFiber();
+  }
 
   isRendering = previousIsRendering;
 
