@@ -1064,4 +1064,28 @@ describe('ReactLazy', () => {
     root.unstable_flushAll();
     expect(root).toMatchRenderedOutput('2');
   });
+
+  it('warns about ref on functions for lazy-loaded components', async () => {
+    const LazyFoo = lazy(() => {
+      const Foo = props => <div />;
+      return fakeImport(Foo);
+    });
+
+    const ref = React.createRef();
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyFoo ref={ref} />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    expect(root).toFlushAndYield(['Loading...']);
+    expect(root).toMatchRenderedOutput(null);
+    await Promise.resolve();
+    expect(() => {
+      expect(root).toFlushAndYield([]);
+    }).toWarnDev('Function components cannot be given refs');
+  });
 });
