@@ -7,8 +7,8 @@
  * @flow
  */
 
+import {readContext} from './ReactFiberNewContext';
 import {
-  readContext,
   useCallback,
   useContext,
   useEffect,
