@@ -682,17 +682,19 @@ describe('ReactHooks', () => {
     expect(() => {
       root.update(<App flip={true} />);
     }).toWarnDev([
-      'Warning: React has detected a change in the order of hooks called by App.\n' +
-        '  Previous render   Next render\n' +
-        '  ---               ---\n' +
-        '> useReducer        useState\n' +
-        '> useState          useReducer\n',
+      'Warning: React has detected a change in the order of Hooks called by App. ' +
+        'This will lead to bugs and errors if not fixed. For more information, ' +
+        'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+        '   Previous render    Next render\n' +
+        '   -------------------------------\n' +
+        '1. useReducer         useState\n' +
+        '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^',
     ]);
 
     expect(() => {
       root.update(<App flip={false} />);
     }).toWarnDev([
-      'Warning: React has detected a change in the order of hooks called',
+      'Warning: React has detected a change in the order of Hooks called',
     ]);
   });
 
@@ -717,15 +719,15 @@ describe('ReactHooks', () => {
     let root = ReactTestRenderer.create(<App flip={false} />);
     expect(() => {
       expect(() => root.update(<App flip={true} />)).toThrow('custom error');
-    }).toWarnDev(
-      [
-        'Warning: React has detected a change in the order of hooks called by App.\n' +
-          '  Previous render   Next render\n' +
-          '  ---               ---\n' +
-          '> useReducer        useState\n' +
-          '> useState          useReducer\n'        
-      ]
-    );
+    }).toWarnDev([
+      'Warning: React has detected a change in the order of Hooks called by App. ' +
+        'This will lead to bugs and errors if not fixed. For more information, ' +
+        'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+        '   Previous render    Next render\n' +
+        '   -------------------------------\n' +
+        '1. useReducer         useState\n' +
+        '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^',
+    ]);
   });
 
   it('double-invokes components with Hooks in Strict Mode', () => {

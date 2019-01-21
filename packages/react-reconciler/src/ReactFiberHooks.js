@@ -250,35 +250,42 @@ function flushHookMismatchWarnings() {
         null,
         previousOrder
           .map(hook => hook.length)
-          .concat('  Previous render'.length),
+          .concat('   Previous render'.length),
       );
 
-      const hookStackHeader =
-        padEndSpaces('  Previous render', columnLength) +
-        '   Next render\n' +
-        padEndSpaces('  ---', columnLength) +
-        '   ---';
+      let hookStackHeader =
+        padEndSpaces('   Previous render', columnLength) + '    Next render\n';
+      const hookStackWidth = hookStackHeader.length;
+      hookStackHeader += '   ' + new Array(hookStackWidth - 2).join('-');
+      let hookStackFooter = '   ' + new Array(hookStackWidth - 2).join('^');
+
       const hookStackLength = Math.max(previousOrder.length, nextOrder.length);
       for (let i = 0; i < hookStackLength; i++) {
         hookStackDiff.push(
-          (previousOrder[i] !== nextOrder[i] ? '> ' : '  ') +
+          padEndSpaces(i + 1 + '. ', 3) +
             padEndSpaces(previousOrder[i], columnLength) +
             ' ' +
             nextOrder[i],
         );
+        if (previousOrder[i] !== nextOrder[i]) {
+          break;
+        }
       }
       warning(
         false,
-        'React has detected a change in the order of hooks called by %s.\n' +
-          '%s\n' +
-          '%s\n\n' +
-          'The first mismatched hook was at:\n' +
-          '%s\n\n' +
+        'React has detected a change in the order of Hooks called by %s. ' +
           'This will lead to bugs and errors if not fixed. ' +
-          'For more information, read the rules of hooks: https://fb.me/rules-of-hooks\n',
+          'For more information, read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+          '%s\n' +
+          '%s\n' +
+          '%s\n' +
+          'The first Hook type mismatch occured at:\n' +
+          '%s\n\n' +
+          'This error occurred in the following component:',
         componentName,
         hookStackHeader,
         hookStackDiff.join('\n'),
+        hookStackFooter,
         currentHookMismatch,
       );
     }
