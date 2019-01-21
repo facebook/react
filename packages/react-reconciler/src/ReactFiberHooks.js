@@ -245,7 +245,7 @@ function flushHookMismatchWarnings() {
     const hookStackLength = Math.max(previousOrder.length, nextOrder.length);
     for (let i = 0; i < hookStackLength; i++) {
       hookStackDiff.push(
-        (previousOrder[i] !== nextOrder[i] ? '× ' : '  ') +
+        (previousOrder[i] !== nextOrder[i] ? '> ' : '  ') +
           padEndSpaces(previousOrder[i], columnLength) +
           ' ' +
           nextOrder[i],
@@ -253,13 +253,14 @@ function flushHookMismatchWarnings() {
     }
     warning(
       false,
-      'React has detected a change in the order of hooks called.\n' +
+      'React has detected a change in the order of hooks called by %s.\n' +
         '%s\n' +
         '%s\n\n' +
         'Error trace:\n' +
-        '%s\n' +
+        '%s\n\n' +
         'This will lead to bugs and errors if not fixed. ' +
-        'For more information, read the rules of hooks: https://fb.me/rules-of-hooks\n\n',
+        'For more information, read the rules of hooks: https://fb.me/rules-of-hooks\n',
+      getComponentName(currentlyRenderingFiber.type),
       hookStackHeader,
       hookStackDiff.join('\n'),
       currentHookMismatch,
@@ -446,7 +447,7 @@ function cloneHook(hook: Hook): Hook {
         currentHookMismatch ||
         new Error('tracer').stack
           .split('\n')
-          .slice(3, 10)
+          .slice(4)
           .join('\n');
     }
     nextHook._debugType = ((currentHookType: any): HookType);
