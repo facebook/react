@@ -14,7 +14,7 @@ import type {HookEffectTag} from './ReactHookEffectTags';
 
 import {NoWork} from './ReactFiberExpirationTime';
 import {enableHooks} from 'shared/ReactFeatureFlags';
-import {readContext} from './ReactFiberNewContext';
+import {readContext as readContextWithoutCheck} from './ReactFiberNewContext';
 import {
   Update as UpdateEffect,
   Passive as PassiveEffect,
@@ -409,7 +409,7 @@ export function resetHooks(): void {
 
   // This is used to reset the state of this module when a component throws.
   // It's also called inside mountIndeterminateComponent if we determine the
-  // component is a module-style component.
+  // component is a module-style component, and also in readContext() above.
   renderExpirationTime = NoWork;
   currentlyRenderingFiber = null;
 
@@ -555,7 +555,7 @@ export function useContext<T>(
   // Ensure we're in a function component (class components support only the
   // .unstable_read() form)
   resolveCurrentlyRenderingFiber();
-  return readContext(context, observedBits);
+  return readContextWithoutCheck(context, observedBits);
 }
 
 export function useState<S>(
@@ -845,6 +845,12 @@ export function useImperativeHandle<T>(
 ): void {
   if (__DEV__) {
     currentHookNameInDev = HookDevNames[ImperativeHandleHook];
+    warning(
+      typeof create === 'function',
+      'Expected useImperativeHandle() second argument to be a function ' +
+        'that creates a handle. Instead received: %s.',
+      create !== null ? typeof create : 'null',
+    );
   }
   currentHookType = ImperativeHandleHook;
   // TODO: If deps are provided, should we skip comparing the ref itself?
@@ -862,6 +868,14 @@ export function useImperativeHandle<T>(
       return () => refCallback(null);
     } else if (ref !== null && ref !== undefined) {
       const refObject = ref;
+      if (__DEV__) {
+        warning(
+          refObject.hasOwnProperty('current'),
+          'Expected useImperativeHandle() first argument to either be a ' +
+            'ref callback or React.createRef() object. Instead received: %s.',
+          'an object with keys {' + Object.keys(refObject).join(', ') + '}',
+        );
+      }
       const inst = create();
       refObject.current = inst;
       return () => {
@@ -945,6 +959,29 @@ export function useMemo<T>(
   currentlyRenderingFiber = fiber;
   workInProgressHook.memoizedState = [nextValue, nextDeps];
   return nextValue;
+}
+
+export function readContext<T>(
+  context: ReactContext<T>,
+  observedBits: void | number | boolean,
+): T {
+  // Forbid reading context inside Hooks.
+  // The outer check tells us whether we're inside a Hook like useMemo().
+  // However, it would also be true if we're rendering a class.
+  if (currentlyRenderingFiber === null) {
+    // The inner check tells us we're currently in renderWithHooks() phase
+    // rather than, for example, in a class or a context consumer.
+    // Then we know it should be an error.
+    if (renderExpirationTime !== NoWork) {
+      invariant(
+        false,
+        'Context can only be read inside the body of a component. ' +
+          'If you read context inside a Hook like useMemo or useReducer, ' +
+          'move the call directly into the component body.',
+      );
+    }
+  }
+  return readContextWithoutCheck(context, observedBits);
 }
 
 function dispatchAction<S, A>(

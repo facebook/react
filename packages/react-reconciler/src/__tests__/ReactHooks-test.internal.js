@@ -569,6 +569,45 @@ describe('ReactHooks', () => {
     ]);
   });
 
+  it('warns for bad useImperativeHandle first arg', () => {
+    const {useImperativeHandle} = React;
+    function App() {
+      useImperativeHandle({
+        focus() {},
+      });
+      return null;
+    }
+
+    expect(() => {
+      expect(() => {
+        ReactTestRenderer.create(<App />);
+      }).toThrow('create is not a function');
+    }).toWarnDev([
+      'Expected useImperativeHandle() first argument to either be a ' +
+        'ref callback or React.createRef() object. ' +
+        'Instead received: an object with keys {focus}.',
+      'Expected useImperativeHandle() second argument to be a function ' +
+        'that creates a handle. Instead received: undefined.',
+    ]);
+  });
+
+  it('warns for bad useImperativeHandle second arg', () => {
+    const {useImperativeHandle} = React;
+    const App = React.forwardRef((props, ref) => {
+      useImperativeHandle(ref, {
+        focus() {},
+      });
+      return null;
+    });
+
+    expect(() => {
+      ReactTestRenderer.create(<App />);
+    }).toWarnDev([
+      'Expected useImperativeHandle() second argument to be a function ' +
+        'that creates a handle. Instead received: object.',
+    ]);
+  });
+
   // https://github.com/facebook/react/issues/14022
   it('works with ReactDOMServer calls inside a component', () => {
     const {useState} = React;
@@ -631,6 +670,88 @@ describe('ReactHooks', () => {
     // so we render a fresh component with a hook just to be sure
     root.update(<Simple />);
     expect(root.toJSON()).toEqual('123');
+  });
+
+  it('throws when reading context inside useMemo', () => {
+    const {useMemo, createContext} = React;
+    const ReactCurrentDispatcher =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .ReactCurrentDispatcher;
+
+    const ThemeContext = createContext('light');
+    function App() {
+      return useMemo(() => {
+        return ReactCurrentDispatcher.current.readContext(ThemeContext);
+      }, []);
+    }
+
+    expect(() => ReactTestRenderer.create(<App />)).toThrow(
+      'Context can only be read inside the body of a component',
+    );
+  });
+
+  it('throws when reading context inside useEffect', () => {
+    const {useEffect, createContext} = React;
+    const ReactCurrentDispatcher =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .ReactCurrentDispatcher;
+
+    const ThemeContext = createContext('light');
+    function App() {
+      useEffect(() => {
+        ReactCurrentDispatcher.current.readContext(ThemeContext);
+      });
+      return null;
+    }
+
+    const root = ReactTestRenderer.create(<App />);
+    expect(() => root.update(<App />)).toThrow(
+      // The exact message doesn't matter, just make sure we don't allow this
+      "Cannot read property 'readContext' of null",
+    );
+  });
+
+  it('throws when reading context inside useLayoutEffect', () => {
+    const {useLayoutEffect, createContext} = React;
+    const ReactCurrentDispatcher =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .ReactCurrentDispatcher;
+
+    const ThemeContext = createContext('light');
+    function App() {
+      useLayoutEffect(() => {
+        ReactCurrentDispatcher.current.readContext(ThemeContext);
+      });
+      return null;
+    }
+
+    expect(() => ReactTestRenderer.create(<App />)).toThrow(
+      // The exact message doesn't matter, just make sure we don't allow this
+      "Cannot read property 'readContext' of null",
+    );
+  });
+
+  it('throws when reading context inside useReducer', () => {
+    const {useReducer, createContext} = React;
+    const ReactCurrentDispatcher =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .ReactCurrentDispatcher;
+
+    const ThemeContext = createContext('light');
+    function App() {
+      useReducer(
+        () => {
+          ReactCurrentDispatcher.current.readContext(ThemeContext);
+        },
+        null,
+        {},
+      );
+      return null;
+    }
+
+    expect(() => ReactTestRenderer.create(<App />)).toThrow(
+      'Context can only be read inside the body of a component.',
+    );
   });
 
   it('throws when calling hooks inside useReducer', () => {
