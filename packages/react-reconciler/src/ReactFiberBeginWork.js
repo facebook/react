@@ -250,23 +250,6 @@ function updateForwardRef(
       ref,
       renderExpirationTime,
     );
-    if (
-      debugRenderPhaseSideEffects ||
-      (debugRenderPhaseSideEffectsForStrictMode &&
-        workInProgress.mode & StrictMode)
-    ) {
-      // Only double-render components with Hooks
-      if (workInProgress.memoizedState !== null) {
-        renderWithHooks(
-          current,
-          workInProgress,
-          render,
-          nextProps,
-          ref,
-          renderExpirationTime,
-        );
-      }
-    }
     setCurrentPhase(null);
   } else {
     nextChildren = renderWithHooks(
@@ -560,23 +543,6 @@ function updateFunctionComponent(
       context,
       renderExpirationTime,
     );
-    if (
-      debugRenderPhaseSideEffects ||
-      (debugRenderPhaseSideEffectsForStrictMode &&
-        workInProgress.mode & StrictMode)
-    ) {
-      // Only double-render components with Hooks
-      if (workInProgress.memoizedState !== null) {
-        renderWithHooks(
-          current,
-          workInProgress,
-          Component,
-          nextProps,
-          context,
-          renderExpirationTime,
-        );
-      }
-    }
     setCurrentPhase(null);
   } else {
     nextChildren = renderWithHooks(
@@ -1244,25 +1210,6 @@ function mountIndeterminateComponent(
   } else {
     // Proceed under the assumption that this is a function component
     workInProgress.tag = FunctionComponent;
-    if (__DEV__) {
-      if (
-        debugRenderPhaseSideEffects ||
-        (debugRenderPhaseSideEffectsForStrictMode &&
-          workInProgress.mode & StrictMode)
-      ) {
-        // Only double-render components with Hooks
-        if (workInProgress.memoizedState !== null) {
-          renderWithHooks(
-            null,
-            workInProgress,
-            Component,
-            props,
-            context,
-            renderExpirationTime,
-          );
-        }
-      }
-    }
     reconcileChildren(null, workInProgress, value, renderExpirationTime);
     if (__DEV__) {
       validateFunctionComponentInDev(workInProgress, Component);
