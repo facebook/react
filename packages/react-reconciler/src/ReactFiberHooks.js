@@ -81,6 +81,8 @@ const HookDevNames = [
 ];
 
 let currentHookType: HookType | null = null;
+// the first instance of a hook mismatch in a component,
+// represented by a portion of it's stacktrace
 let currentHookMismatch = null;
 
 export type Hook = {
@@ -200,37 +202,70 @@ function areHookInputsEqual(
   return true;
 }
 
+// till we have String::padEnd, a small function to
+// right-pad strings with spaces till a minimum length
+function padEndSpaces(string: string, length: number) {
+  if (string.length >= length) {
+    return string;
+  } else {
+    return string + ' ' + new Array(length - string.length).join(' ');
+  }
+}
+
 function flushHookMismatchWarnings() {
+  // we'll show the diff of the low level hooks,
+  // and a stack trace so the dev can locate where
+  // the first mismatch is coming from
   if (__DEV__ && currentHookMismatch) {
+    const hookStackDiff = [];
     let current = firstCurrentHook;
     let previousOrder = [];
     while (current) {
-      previousOrder.push('  * ' + HookDevNames[((current._debugType:any):HookType)]);
+      previousOrder.push(HookDevNames[((current._debugType: any): HookType)]);
       current = current.next;
     }
-
     let workInProgress = firstWorkInProgressHook;
     let nextOrder = [];
     while (workInProgress) {
-      nextOrder.push('  * ' + HookDevNames[((workInProgress._debugType:any):HookType)]);
+      nextOrder.push(
+        HookDevNames[((workInProgress._debugType: any): HookType)],
+      );
       workInProgress = workInProgress.next;
     }
-
+    // some bookkeeping for formatting the output table
+    const columnLength = Math.max(
+      '  Previous render'.length,
+      ...previousOrder.map(hook => hook.length),
+    );
+    const hookStackHeader =
+      padEndSpaces('  Previous render', columnLength) +
+      '   Next render\n' +
+      padEndSpaces('  ---', columnLength) +
+      '   ---';
+    const hookStackLength = Math.max(previousOrder.length, nextOrder.length);
+    for (let i = 0; i < hookStackLength; i++) {
+      hookStackDiff.push(
+        (previousOrder[i] !== nextOrder[i] ? '× ' : '  ') +
+          padEndSpaces(previousOrder[i], columnLength) +
+          ' ' +
+          nextOrder[i],
+      );
+    }
     warning(
       false,
       'React has detected a change in the order of hooks called.\n' +
-        'On the first render, the following hooks were called:\n%s\n\n' +
-        'On the most recent render, the following hooks were called:\n%s\n\n' +
-        'This will lead to bugs and errors if not fixed. ' +
-        'For more information, read the rules of hooks: https://fb.me/rules-of-hooks\n\n' +
         '%s\n' +
-        'This error occured:\n',
-      previousOrder.join('\n'),
-      nextOrder.join('\n'),
+        '%s\n\n' +
+        'Error trace:\n' +
+        '%s\n' +
+        'This will lead to bugs and errors if not fixed. ' +
+        'For more information, read the rules of hooks: https://fb.me/rules-of-hooks\n\n',
+      hookStackHeader,
+      hookStackDiff.join('\n'),
       currentHookMismatch,
     );
     currentHookMismatch = null;
-  }  
+  }
 }
 
 export function renderWithHooks(
@@ -410,13 +445,11 @@ function cloneHook(hook: Hook): Hook {
       currentHookMismatch =
         currentHookMismatch ||
         new Error('tracer').stack
-          // the first few lines are always 'react' code.
-          // todo - maybe show a nice tree of hooks?
           .split('\n')
           .slice(3, 10)
           .join('\n');
     }
-    nextHook._debugType = ((currentHookType:any):HookType);
+    nextHook._debugType = ((currentHookType: any): HookType);
   }
   return nextHook;
 }

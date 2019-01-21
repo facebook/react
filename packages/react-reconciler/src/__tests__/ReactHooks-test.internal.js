@@ -599,14 +599,17 @@ describe('ReactHooks', () => {
 
   it('warns on using differently ordered hooks on subsequent renders', () => {
     const {useState, useReducer} = React;
+    function useCustomHook() {
+      return useState(0);
+    }
     function App(props) {
       /* eslint-disable no-unused-vars */
       if (props.flip) {
-        useState(0);
+        useCustomHook(0);
         useReducer((s, a) => a, 0);
       } else {
         useReducer((s, a) => a, 0);
-        useState(0);
+        useCustomHook(0);
       }
       return null;
       /* eslint-enable no-unused-vars */
@@ -616,13 +619,11 @@ describe('ReactHooks', () => {
       root.update(<App flip={true} />);
     }).toWarnDev([
       'Warning: React has detected a change in the order of hooks called.\n' +
-        'On the first render, the following hooks were called:\n' +
-        '  * useReducer\n' +
-        '  * useState\n\n' +
-        'On the most recent render, the following hooks were called:\n' +
-        '  * useState\n' +
-        '  * useReducer\n',
-    ]);    
+        '  Previous render   Next render\n' +
+        '  ---               ---\n' +
+        '× useReducer        useState\n' +
+        '× useState          useReducer\n',
+    ]);
 
     expect(() => {
       root.update(<App flip={false} />);
@@ -633,16 +634,18 @@ describe('ReactHooks', () => {
 
   it('detects a bad hook order even if the component throws', () => {
     const {useState, useReducer} = React;
-
+    function useCustomHook() {
+      useState(0);
+    }
     function App(props) {
       /* eslint-disable no-unused-vars */
       if (props.flip) {
-        useState(0);
+        useCustomHook();
         useReducer((s, a) => a, 0);
         throw new Error('custom error');
       } else {
         useReducer((s, a) => a, 0);
-        useState(0);
+        useCustomHook();
       }
       return null;
       /* eslint-enable no-unused-vars */
@@ -651,11 +654,15 @@ describe('ReactHooks', () => {
     expect(() => {
       expect(() => root.update(<App flip={true} />)).toThrow('custom error');
     }).toWarnDev(
-    // TODO - this should log just once
-    // it logs it twice because of the replay logic in the scheduler I think?
-    // must fix in some way, but pretty edge casey so letting this for now  
+      // TODO - this should log just once
+      // it logs it twice because of the replay logic in the scheduler I think?
+      // must fix in some way, but pretty edge casey so letting this for now
       [
-        'Warning: React has detected a change in the order of hooks called',
+        'Warning: React has detected a change in the order of hooks called.\n' +
+          '  Previous render   Next render\n' +
+          '  ---               ---\n' +
+          '× useReducer        useState\n' +
+          '× useState          useReducer\n',
         'Warning: React has detected a change in the order of hooks called',
       ],
       {withoutStack: 1},
