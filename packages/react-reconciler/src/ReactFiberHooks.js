@@ -14,7 +14,7 @@ import type {HookEffectTag} from './ReactHookEffectTags';
 
 import {NoWork} from './ReactFiberExpirationTime';
 import {enableHooks} from 'shared/ReactFeatureFlags';
-import {readContext} from './ReactFiberNewContext';
+import {readContext as readContextWithoutCheck} from './ReactFiberNewContext';
 import {
   Update as UpdateEffect,
   Passive as PassiveEffect,
@@ -394,7 +394,7 @@ export function useContext<T>(
   // Ensure we're in a function component (class components support only the
   // .unstable_read() form)
   resolveCurrentlyRenderingFiber();
-  return readContext(context, observedBits);
+  return readContextWithoutCheck(context, observedBits);
 }
 
 export function useState<S>(
@@ -769,6 +769,19 @@ export function useMemo<T>(
   currentlyRenderingFiber = fiber;
   workInProgressHook.memoizedState = [nextValue, nextDeps];
   return nextValue;
+}
+
+export function readContext<T>(
+  context: ReactContext<T>,
+  observedBits: void | number | boolean,
+): T {
+  invariant(
+    currentlyRenderingFiber !== null,
+    'Context can only be read inside the body of a function component. ' +
+      'If you read context inside a Hook like useMemo or useReducer, ' +
+      'move the call directly into the component body.',
+  );
+  return readContextWithoutCheck(context, observedBits);
 }
 
 function dispatchAction<S, A>(
