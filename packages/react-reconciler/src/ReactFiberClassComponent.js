@@ -20,6 +20,7 @@ import {
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {isMounted} from 'react-reconciler/reflection';
 import {get as getInstance, set as setInstance} from 'shared/ReactInstanceMap';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
@@ -47,13 +48,19 @@ import {
   hasContextChanged,
   emptyContextObject,
 } from './ReactFiberContext';
-import {readContext} from './ReactFiberNewContext';
 import {
   requestCurrentTime,
   computeExpirationForFiber,
   scheduleWork,
   flushPassiveEffects,
 } from './ReactFiberScheduler';
+
+const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+
+function readContext(contextType: any): any {
+  const dispatcher = ReactCurrentDispatcher.current;
+  return dispatcher.readContext(contextType);
+}
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
