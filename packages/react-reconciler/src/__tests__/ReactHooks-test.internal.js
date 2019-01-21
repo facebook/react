@@ -569,6 +569,45 @@ describe('ReactHooks', () => {
     ]);
   });
 
+  it('warns for bad useImperativeHandle first arg', () => {
+    const {useImperativeHandle} = React;
+    function App() {
+      useImperativeHandle({
+        focus() {},
+      });
+      return null;
+    }
+
+    expect(() => {
+      expect(() => {
+        ReactTestRenderer.create(<App />);
+      }).toThrow('create is not a function');
+    }).toWarnDev([
+      'Expected useImperativeHandle() first argument to either be a ' +
+        'ref callback or React.createRef() object. ' +
+        'Instead received: an object with keys {focus}.',
+      'Expected useImperativeHandle() second argument to be a function ' +
+        'that creates a handle. Instead received: undefined.',
+    ]);
+  });
+
+  it('warns for bad useImperativeHandle second arg', () => {
+    const {useImperativeHandle} = React;
+    const App = React.forwardRef((props, ref) => {
+      useImperativeHandle(ref, {
+        focus() {},
+      });
+      return null;
+    });
+
+    expect(() => {
+      ReactTestRenderer.create(<App />);
+    }).toWarnDev([
+      'Expected useImperativeHandle() second argument to be a function ' +
+        'that creates a handle. Instead received: object.',
+    ]);
+  });
+
   // https://github.com/facebook/react/issues/14022
   it('works with ReactDOMServer calls inside a component', () => {
     const {useState} = React;
