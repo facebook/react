@@ -37,9 +37,9 @@ describe('ReactDOMServerIntegration', () => {
   });
 
   describe('context', function() {
-    let PurpleContext, RedContext, Consumer;
+    let Context, PurpleContextProvider, RedContextProvider, Consumer;
     beforeEach(() => {
-      let Context = React.createContext('none');
+      Context = React.createContext('none');
 
       class Parent extends React.Component {
         render() {
@@ -51,8 +51,12 @@ describe('ReactDOMServerIntegration', () => {
         }
       }
       Consumer = Context.Consumer;
-      PurpleContext = props => <Parent text="purple">{props.children}</Parent>;
-      RedContext = props => <Parent text="red">{props.children}</Parent>;
+      PurpleContextProvider = props => (
+        <Parent text="purple">{props.children}</Parent>
+      );
+      RedContextProvider = props => (
+        <Parent text="red">{props.children}</Parent>
+      );
     });
 
     itRenders('class child with context', async render => {
@@ -67,9 +71,9 @@ describe('ReactDOMServerIntegration', () => {
       }
 
       const e = await render(
-        <PurpleContext>
+        <PurpleContextProvider>
           <ClassChildWithContext />
-        </PurpleContext>,
+        </PurpleContextProvider>,
       );
       expect(e.textContent).toBe('purple');
     });
@@ -80,9 +84,9 @@ describe('ReactDOMServerIntegration', () => {
       }
 
       const e = await render(
-        <PurpleContext>
+        <PurpleContextProvider>
           <FunctionChildWithContext />
-        </PurpleContext>,
+        </PurpleContextProvider>,
       );
       expect(e.textContent).toBe('purple');
     });
@@ -127,9 +131,9 @@ describe('ReactDOMServerIntegration', () => {
       const Child = props => <Grandchild />;
 
       const e = await render(
-        <PurpleContext>
+        <PurpleContextProvider>
           <Child />
-        </PurpleContext>,
+        </PurpleContextProvider>,
       );
       expect(e.textContent).toBe('purple');
     });
@@ -144,13 +148,52 @@ describe('ReactDOMServerIntegration', () => {
       };
 
       const e = await render(
-        <PurpleContext>
-          <RedContext>
+        <PurpleContextProvider>
+          <RedContextProvider>
             <Grandchild />
-          </RedContext>
-        </PurpleContext>,
+          </RedContextProvider>
+        </PurpleContextProvider>,
       );
       expect(e.textContent).toBe('red');
+    });
+
+    itRenders('readContext() in different components', async render => {
+      function readContext(Ctx, observedBits) {
+        const dispatcher =
+          React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+            .ReactCurrentDispatcher.current;
+        return dispatcher.readContext(Ctx, observedBits);
+      }
+
+      class Cls extends React.Component {
+        render() {
+          return readContext(Context);
+        }
+      }
+      function Fn() {
+        return readContext(Context);
+      }
+      const Memo = React.memo(() => {
+        return readContext(Context);
+      });
+      const FwdRef = React.forwardRef((props, ref) => {
+        return readContext(Context);
+      });
+
+      const e = await render(
+        <PurpleContextProvider>
+          <RedContextProvider>
+            <span>
+              <Fn />
+              <Cls />
+              <Memo />
+              <FwdRef />
+              <Consumer>{() => readContext(Context)}</Consumer>
+            </span>
+          </RedContextProvider>
+        </PurpleContextProvider>,
+      );
+      expect(e.textContent).toBe('redredredredred');
     });
 
     itRenders('multiple contexts', async render => {
