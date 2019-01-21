@@ -112,7 +112,7 @@ function coerceRef(
     typeof mixedRef !== 'object'
   ) {
     if (__DEV__) {
-      if (returnFiber.mode & StrictMode) {
+      if (returnFiber.mode && StrictMode) {
         const componentName = getComponentName(returnFiber.type) || 'Component';
         if (!didWarnAboutStringRefInStrictMode[componentName]) {
           warningWithoutStack(

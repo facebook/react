@@ -120,7 +120,7 @@ if (__DEV__) {
 
     let node = fiber;
     while (node !== null) {
-      if (node.mode & StrictMode) {
+      if (node.mode && StrictMode) {
         maybeStrictRoot = node;
       }
       node = node.return;
