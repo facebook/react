@@ -192,7 +192,9 @@ describe('ReactFunctionComponent', () => {
       ReactTestUtils.renderIntoDocument(<ParentUsingStringRef />),
     ).toWarnDev(
       'Warning: Function components cannot be given refs. ' +
-        'Attempts to access this ref will fail.\n\nCheck the render method ' +
+        'Attempts to access this ref will fail. ' +
+        'Did you mean to use React.forwardRef()?\n\n' +
+        'Check the render method ' +
         'of `ParentUsingStringRef`.\n' +
         '    in FunctionComponent (at **)\n' +
         '    in div (at **)\n' +
@@ -228,7 +230,9 @@ describe('ReactFunctionComponent', () => {
       ReactTestUtils.renderIntoDocument(<ParentUsingFunctionRef />),
     ).toWarnDev(
       'Warning: Function components cannot be given refs. ' +
-        'Attempts to access this ref will fail.\n\nCheck the render method ' +
+        'Attempts to access this ref will fail. ' +
+        'Did you mean to use React.forwardRef()?\n\n' +
+        'Check the render method ' +
         'of `ParentUsingFunctionRef`.\n' +
         '    in FunctionComponent (at **)\n' +
         '    in div (at **)\n' +
@@ -332,7 +336,9 @@ describe('ReactFunctionComponent', () => {
 
     expect(() => ReactTestUtils.renderIntoDocument(<Parent />)).toWarnDev(
       'Warning: Function components cannot be given refs. ' +
-        'Attempts to access this ref will fail.\n\nCheck the render method ' +
+        'Attempts to access this ref will fail. ' +
+        'Did you mean to use React.forwardRef()?\n\n' +
+        'Check the render method ' +
         'of `Parent`.\n' +
         '    in Child (at **)\n' +
         '    in Parent (at **)',

@@ -282,7 +282,9 @@ describe('ReactTestRenderer', () => {
     ReactTestRenderer.create(<Baz />);
     expect(() => ReactTestRenderer.create(<Foo />)).toWarnDev(
       'Warning: Function components cannot be given refs. Attempts ' +
-        'to access this ref will fail.\n\nCheck the render method of `Foo`.\n' +
+        'to access this ref will fail. ' +
+        'Did you mean to use React.forwardRef()?\n\n' +
+        'Check the render method of `Foo`.\n' +
         '    in Bar (at **)\n' +
         '    in Foo (at **)',
     );
