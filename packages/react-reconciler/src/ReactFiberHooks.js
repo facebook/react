@@ -284,7 +284,7 @@ export function resetHooks(): void {
 
   // This is used to reset the state of this module when a component throws.
   // It's also called inside mountIndeterminateComponent if we determine the
-  // component is a module-style component.
+  // component is a module-style component, and also in readContext() above.
   renderExpirationTime = NoWork;
   currentlyRenderingFiber = null;
 
@@ -775,12 +775,22 @@ export function readContext<T>(
   context: ReactContext<T>,
   observedBits: void | number | boolean,
 ): T {
-  invariant(
-    currentlyRenderingFiber !== null,
-    'Context can only be read inside the body of a function component. ' +
-      'If you read context inside a Hook like useMemo or useReducer, ' +
-      'move the call directly into the component body.',
-  );
+  // Forbid reading context inside Hooks.
+  // The outer check tells us whether we're inside a Hook like useMemo().
+  // However, it would also be true if we're rendering a class.
+  if (currentlyRenderingFiber === null) {
+    // The inner check tells us we're currently in renderWithHooks() phase
+    // rather than, for example, in a class or a context consumer.
+    // Then we know it should be an error.
+    if (renderExpirationTime !== NoWork) {
+      invariant(
+        false,
+        'Context can only be read inside the body of a component. ' +
+          'If you read context inside a Hook like useMemo or useReducer, ' +
+          'move the call directly into the component body.',
+      );
+    }
+  }
   return readContextWithoutCheck(context, observedBits);
 }
 

@@ -647,7 +647,7 @@ describe('ReactHooks', () => {
     }
 
     expect(() => ReactTestRenderer.create(<App />)).toThrow(
-      'Context can only be read inside the body of a function component',
+      'Context can only be read inside the body of a component',
     );
   });
 
@@ -711,7 +711,7 @@ describe('ReactHooks', () => {
     }
 
     expect(() => ReactTestRenderer.create(<App />)).toThrow(
-      'Context can only be read inside the body of a function component.',
+      'Context can only be read inside the body of a component.',
     );
   });
 
