@@ -241,11 +241,11 @@ describe('forwardRef', () => {
 
     ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />);
     ReactNoop.flush();
-    expect(renderCount).toBe(__DEV__ ? 2 : 1);
+    expect(renderCount).toBe(1);
 
     ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />);
     ReactNoop.flush();
-    expect(renderCount).toBe(__DEV__ ? 4 : 2);
+    expect(renderCount).toBe(2);
   });
 
   it('should bailout if forwardRef is wrapped in memo', () => {
@@ -264,13 +264,13 @@ describe('forwardRef', () => {
 
     ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />);
     ReactNoop.flush();
-    expect(renderCount).toBe(__DEV__ ? 2 : 1);
+    expect(renderCount).toBe(1);
 
     expect(ref.current.type).toBe('div');
 
     ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />);
     ReactNoop.flush();
-    expect(renderCount).toBe(__DEV__ ? 2 : 1);
+    expect(renderCount).toBe(1);
 
     const differentRef = React.createRef();
 
@@ -278,14 +278,14 @@ describe('forwardRef', () => {
       <RefForwardingComponent ref={differentRef} optional="foo" />,
     );
     ReactNoop.flush();
-    expect(renderCount).toBe(__DEV__ ? 4 : 2);
+    expect(renderCount).toBe(2);
 
     expect(ref.current).toBe(null);
     expect(differentRef.current.type).toBe('div');
 
     ReactNoop.render(<RefForwardingComponent ref={ref} optional="bar" />);
     ReactNoop.flush();
-    expect(renderCount).toBe(__DEV__ ? 6 : 3);
+    expect(renderCount).toBe(3);
   });
 
   it('should custom memo comparisons to compose', () => {
@@ -305,19 +305,19 @@ describe('forwardRef', () => {
 
     ReactNoop.render(<RefForwardingComponent ref={ref} a="0" b="0" c="1" />);
     ReactNoop.flush();
-    expect(renderCount).toBe(__DEV__ ? 2 : 1);
+    expect(renderCount).toBe(1);
 
     expect(ref.current.type).toBe('div');
 
     // Changing either a or b rerenders
     ReactNoop.render(<RefForwardingComponent ref={ref} a="0" b="1" c="1" />);
     ReactNoop.flush();
-    expect(renderCount).toBe(__DEV__ ? 4 : 2);
+    expect(renderCount).toBe(2);
 
     // Changing c doesn't rerender
     ReactNoop.render(<RefForwardingComponent ref={ref} a="0" b="1" c="2" />);
     ReactNoop.flush();
-    expect(renderCount).toBe(__DEV__ ? 4 : 2);
+    expect(renderCount).toBe(2);
 
     const ComposedMemo = React.memo(
       RefForwardingComponent,
@@ -326,29 +326,29 @@ describe('forwardRef', () => {
 
     ReactNoop.render(<ComposedMemo ref={ref} a="0" b="0" c="0" />);
     ReactNoop.flush();
-    expect(renderCount).toBe(__DEV__ ? 6 : 3);
+    expect(renderCount).toBe(3);
 
     // Changing just b no longer updates
     ReactNoop.render(<ComposedMemo ref={ref} a="0" b="1" c="0" />);
     ReactNoop.flush();
-    expect(renderCount).toBe(__DEV__ ? 6 : 3);
+    expect(renderCount).toBe(3);
 
     // Changing just a and c updates
     ReactNoop.render(<ComposedMemo ref={ref} a="2" b="2" c="2" />);
     ReactNoop.flush();
-    expect(renderCount).toBe(__DEV__ ? 8 : 4);
+    expect(renderCount).toBe(4);
 
     // Changing just c does not update
     ReactNoop.render(<ComposedMemo ref={ref} a="2" b="2" c="3" />);
     ReactNoop.flush();
-    expect(renderCount).toBe(__DEV__ ? 8 : 4);
+    expect(renderCount).toBe(4);
 
     // Changing ref still rerenders
     const differentRef = React.createRef();
 
     ReactNoop.render(<ComposedMemo ref={differentRef} a="2" b="2" c="3" />);
     ReactNoop.flush();
-    expect(renderCount).toBe(__DEV__ ? 10 : 5);
+    expect(renderCount).toBe(5);
 
     expect(ref.current).toBe(null);
     expect(differentRef.current.type).toBe('div');

@@ -255,14 +255,17 @@ function updateForwardRef(
       (debugRenderPhaseSideEffectsForStrictMode &&
         workInProgress.mode & StrictMode)
     ) {
-      renderWithHooks(
-        current,
-        workInProgress,
-        render,
-        nextProps,
-        ref,
-        renderExpirationTime,
-      );
+      // Only double-render components with Hooks
+      if (workInProgress.memoizedState !== null) {
+        renderWithHooks(
+          current,
+          workInProgress,
+          render,
+          nextProps,
+          ref,
+          renderExpirationTime,
+        );
+      }
     }
     setCurrentPhase(null);
   } else {
@@ -562,14 +565,17 @@ function updateFunctionComponent(
       (debugRenderPhaseSideEffectsForStrictMode &&
         workInProgress.mode & StrictMode)
     ) {
-      renderWithHooks(
-        current,
-        workInProgress,
-        Component,
-        nextProps,
-        context,
-        renderExpirationTime,
-      );
+      // Only double-render components with Hooks
+      if (workInProgress.memoizedState !== null) {
+        renderWithHooks(
+          current,
+          workInProgress,
+          Component,
+          nextProps,
+          context,
+          renderExpirationTime,
+        );
+      }
     }
     setCurrentPhase(null);
   } else {
@@ -1173,20 +1179,6 @@ function mountIndeterminateComponent(
       context,
       renderExpirationTime,
     );
-    if (
-      debugRenderPhaseSideEffects ||
-      (debugRenderPhaseSideEffectsForStrictMode &&
-        workInProgress.mode & StrictMode)
-    ) {
-      renderWithHooks(
-        null,
-        workInProgress,
-        Component,
-        props,
-        context,
-        renderExpirationTime,
-      );
-    }
   } else {
     value = renderWithHooks(
       null,
@@ -1249,6 +1241,25 @@ function mountIndeterminateComponent(
   } else {
     // Proceed under the assumption that this is a function component
     workInProgress.tag = FunctionComponent;
+    if (__DEV__) {
+      if (
+        debugRenderPhaseSideEffects ||
+        (debugRenderPhaseSideEffectsForStrictMode &&
+          workInProgress.mode & StrictMode)
+      ) {
+        // Only double-render components with Hooks
+        if (workInProgress.memoizedState !== null) {
+          renderWithHooks(
+            null,
+            workInProgress,
+            Component,
+            props,
+            context,
+            renderExpirationTime,
+          );
+        }
+      }
+    }
     reconcileChildren(null, workInProgress, value, renderExpirationTime);
     if (__DEV__) {
       validateFunctionComponentInDev(workInProgress, Component);
