@@ -476,12 +476,14 @@ function cloneHook(hook: Hook): Hook {
         next: null,
       };
 
-  if (__DEV__ && !currentHookMismatch) {
-    if (currentHookType !== ((hook: any): HookDev)._debugType) {
-      currentHookMismatch = new Error('tracer').stack
-        .split('\n')
-        .slice(4)
-        .join('\n');
+  if (__DEV__) {
+    if (!currentHookMismatch) {
+      if (currentHookType !== ((hook: any): HookDev)._debugType) {
+        currentHookMismatch = new Error('tracer').stack
+          .split('\n')
+          .slice(4)
+          .join('\n');
+      }
     }
   }
   return nextHook;
