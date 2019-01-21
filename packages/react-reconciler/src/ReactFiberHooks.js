@@ -86,7 +86,6 @@ let currentHookType: HookType | null = null;
 let currentHookMismatch = null;
 
 export type Hook = {
-  _debugType?: HookType,
   memoizedState: any,
 
   baseState: any,
@@ -94,6 +93,10 @@ export type Hook = {
   queue: UpdateQueue<any, any> | null,
 
   next: Hook | null,
+};
+
+type HookDev = Hook & {
+  _debugType: HookType,
 };
 
 type Effect = {
@@ -221,15 +224,13 @@ function flushHookMismatchWarnings() {
     let current = firstCurrentHook;
     let previousOrder = [];
     while (current) {
-      previousOrder.push(HookDevNames[((current._debugType: any): HookType)]);
+      previousOrder.push(HookDevNames[((current: any): HookDev)._debugType]);
       current = current.next;
     }
     let workInProgress = firstWorkInProgressHook;
     let nextOrder = [];
     while (workInProgress) {
-      nextOrder.push(
-        HookDevNames[((workInProgress._debugType: any): HookType)],
-      );
+      nextOrder.push(HookDevNames[((workInProgress: any): HookDev)._debugType]);
       workInProgress = workInProgress.next;
     }
     // some bookkeeping for formatting the output table
@@ -260,7 +261,7 @@ function flushHookMismatchWarnings() {
         '%s\n\n' +
         'This will lead to bugs and errors if not fixed. ' +
         'For more information, read the rules of hooks: https://fb.me/rules-of-hooks\n',
-      getComponentName(currentlyRenderingFiber.type),
+      getComponentName(((currentlyRenderingFiber: any): Fiber).type),
       hookStackHeader,
       hookStackDiff.join('\n'),
       currentHookMismatch,
@@ -431,26 +432,34 @@ function createHook(): Hook {
 }
 
 function cloneHook(hook: Hook): Hook {
-  let nextHook: Hook = {
-    memoizedState: hook.memoizedState,
+  let nextHook: Hook = __DEV__
+    ? {
+        _debugType: ((currentHookType: any): HookType),
+        memoizedState: hook.memoizedState,
 
-    baseState: hook.baseState,
-    queue: hook.queue,
-    baseUpdate: hook.baseUpdate,
+        baseState: hook.baseState,
+        queue: hook.queue,
+        baseUpdate: hook.baseUpdate,
 
-    next: null,
-  };
+        next: null,
+      }
+    : {
+        memoizedState: hook.memoizedState,
 
-  if (__DEV__) {
-    if (currentHookType !== hook._debugType) {
-      currentHookMismatch =
-        currentHookMismatch ||
-        new Error('tracer').stack
-          .split('\n')
-          .slice(4)
-          .join('\n');
+        baseState: hook.baseState,
+        queue: hook.queue,
+        baseUpdate: hook.baseUpdate,
+
+        next: null,
+      };
+
+  if (__DEV__ && !currentHookMismatch) {
+    if (currentHookType !== ((hook: any): HookDev)._debugType) {
+      currentHookMismatch = new Error('tracer').stack
+        .split('\n')
+        .slice(4)
+        .join('\n');
     }
-    nextHook._debugType = ((currentHookType: any): HookType);
   }
   return nextHook;
 }
@@ -775,7 +784,7 @@ export function useEffect(
 
 function useEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
-  if (currentHookType === null) {
+  if (currentHookType !== ImperativeHandleHook) {
     // it could be an ImperativeHandleHook
     currentHookType =
       fiberEffectTag === UpdateEffect ? EffectHook : LayoutEffectHook;
