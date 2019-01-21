@@ -984,6 +984,9 @@ function mountLazyComponent(
   let child;
   switch (resolvedTag) {
     case FunctionComponent: {
+      if (__DEV__) {
+        validateFunctionComponentInDev(workInProgress, Component);
+      }
       child = updateFunctionComponent(
         null,
         workInProgress,
