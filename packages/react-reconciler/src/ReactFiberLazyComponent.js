@@ -73,6 +73,13 @@ export function readLazyComponentType<T>(lazyComponent: LazyComponent<T>): T {
           }
         },
       );
+      // Handle synchronous thenables.
+      switch (lazyComponent._status) {
+        case Resolved:
+          return lazyComponent._result;
+        case Rejected:
+          throw lazyComponent._result;
+      }
       lazyComponent._result = thenable;
       throw thenable;
     }

@@ -61,6 +61,53 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('Hi again');
   });
 
+  it('can resolve synchronously without suspending', async () => {
+    const LazyText = lazy(() => ({
+      then(cb) {
+        cb({default: Text});
+      },
+    }));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyText text="Hi" />
+      </Suspense>,
+    );
+
+    expect(ReactTestRenderer).toHaveYielded(['Hi']);
+    expect(root).toMatchRenderedOutput('Hi');
+  });
+
+  it('can reject synchronously without suspending', async () => {
+    const LazyText = lazy(() => ({
+      then(resolve, reject) {
+        reject(new Error('oh no'));
+      },
+    }));
+
+    class ErrorBoundary extends React.Component {
+      state = {};
+      static getDerivedStateFromError(error) {
+        return {message: error.message};
+      }
+      render() {
+        return this.state.message
+          ? `Error: ${this.state.message}`
+          : this.props.children;
+      }
+    }
+
+    const root = ReactTestRenderer.create(
+      <ErrorBoundary>
+        <Suspense fallback={<Text text="Loading..." />}>
+          <LazyText text="Hi" />
+        </Suspense>
+      </ErrorBoundary>,
+    );
+    expect(ReactTestRenderer).toHaveYielded([]);
+    expect(root).toMatchRenderedOutput('Error: oh no');
+  });
+
   it('multiple lazy components', async () => {
     function Foo() {
       return <Text text="Foo" />;
@@ -1016,5 +1063,29 @@ describe('ReactLazy', () => {
     );
     root.unstable_flushAll();
     expect(root).toMatchRenderedOutput('2');
+  });
+
+  it('warns about ref on functions for lazy-loaded components', async () => {
+    const LazyFoo = lazy(() => {
+      const Foo = props => <div />;
+      return fakeImport(Foo);
+    });
+
+    const ref = React.createRef();
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyFoo ref={ref} />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    expect(root).toFlushAndYield(['Loading...']);
+    expect(root).toMatchRenderedOutput(null);
+    await Promise.resolve();
+    expect(() => {
+      expect(root).toFlushAndYield([]);
+    }).toWarnDev('Function components cannot be given refs');
   });
 });

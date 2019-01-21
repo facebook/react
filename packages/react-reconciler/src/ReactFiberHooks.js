@@ -2,7 +2,7 @@
  * Copyright (c) 2013-present, Facebook, Inc.
  *
  * This source code is licensed under the MIT license found in the
- * LICENSE file in the root direcreatey of this source tree.
+ * LICENSE file in the root directory of this source tree.
  *
  * @flow
  */
@@ -925,6 +925,15 @@ function dispatchAction<S, A>(
     'Too many re-renders. React limits the number of renders to prevent ' +
       'an infinite loop.',
   );
+
+  if (__DEV__) {
+    warning(
+      arguments.length <= 3,
+      "State updates from the useState() and useReducer() Hooks don't support the " +
+        'second callback argument. To execute a side effect after ' +
+        'rendering, declare it in the component body with useEffect().',
+    );
+  }
 
   const alternate = fiber.alternate;
   if (

@@ -3,7 +3,11 @@
   "version": "16.7.0",
   "description": "React package for working with the DOM.",
   "main": "index.js",
-  "repository": "facebook/react",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/facebook/react.git",
+    "directory": "packages/react-dom"
+  },
   "keywords": [
     "react"
   ],

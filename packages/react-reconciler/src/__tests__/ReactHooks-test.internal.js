@@ -183,6 +183,70 @@ describe('ReactHooks', () => {
     expect(root).toFlushAndYield(['Parent: 1, 2 (dark)']);
   });
 
+  it('warns about setState second argument', () => {
+    const {useState} = React;
+
+    let setCounter;
+    function Counter() {
+      const [counter, _setCounter] = useState(0);
+      setCounter = _setCounter;
+
+      ReactTestRenderer.unstable_yield(`Count: ${counter}`);
+      return counter;
+    }
+
+    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
+    root.update(<Counter />);
+    expect(root).toFlushAndYield(['Count: 0']);
+    expect(root).toMatchRenderedOutput('0');
+
+    expect(() => {
+      setCounter(1, () => {
+        throw new Error('Expected to ignore the callback.');
+      });
+    }).toWarnDev(
+      'State updates from the useState() and useReducer() Hooks ' +
+        "don't support the second callback argument. " +
+        'To execute a side effect after rendering, ' +
+        'declare it in the component body with useEffect().',
+      {withoutStack: true},
+    );
+    expect(root).toFlushAndYield(['Count: 1']);
+    expect(root).toMatchRenderedOutput('1');
+  });
+
+  it('warns about dispatch second argument', () => {
+    const {useReducer} = React;
+
+    let dispatch;
+    function Counter() {
+      const [counter, _dispatch] = useReducer((s, a) => a, 0);
+      dispatch = _dispatch;
+
+      ReactTestRenderer.unstable_yield(`Count: ${counter}`);
+      return counter;
+    }
+
+    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
+    root.update(<Counter />);
+    expect(root).toFlushAndYield(['Count: 0']);
+    expect(root).toMatchRenderedOutput('0');
+
+    expect(() => {
+      dispatch(1, () => {
+        throw new Error('Expected to ignore the callback.');
+      });
+    }).toWarnDev(
+      'State updates from the useState() and useReducer() Hooks ' +
+        "don't support the second callback argument. " +
+        'To execute a side effect after rendering, ' +
+        'declare it in the component body with useEffect().',
+      {withoutStack: true},
+    );
+    expect(root).toFlushAndYield(['Count: 1']);
+    expect(root).toMatchRenderedOutput('1');
+  });
+
   it('never bails out if context has changed', () => {
     const {useState, useLayoutEffect, useContext} = React;
 
@@ -667,5 +731,225 @@ describe('ReactHooks', () => {
       ],
       {withoutStack: 1},
     );
+  });
+
+  it('double-invokes components with Hooks in Strict Mode', () => {
+    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = true;
+
+    const {useState, StrictMode} = React;
+    let renderCount = 0;
+
+    function NoHooks() {
+      renderCount++;
+      return <div />;
+    }
+
+    function HasHooks() {
+      useState(0);
+      renderCount++;
+      return <div />;
+    }
+
+    const FwdRef = React.forwardRef((props, ref) => {
+      renderCount++;
+      return <div />;
+    });
+
+    const FwdRefHasHooks = React.forwardRef((props, ref) => {
+      useState(0);
+      renderCount++;
+      return <div />;
+    });
+
+    const Memo = React.memo(props => {
+      renderCount++;
+      return <div />;
+    });
+
+    const MemoHasHooks = React.memo(props => {
+      useState(0);
+      renderCount++;
+      return <div />;
+    });
+
+    function Factory() {
+      return {
+        state: {},
+        render() {
+          renderCount++;
+          return <div />;
+        },
+      };
+    }
+
+    let renderer = ReactTestRenderer.create(null);
+
+    renderCount = 0;
+    renderer.update(<NoHooks />);
+    expect(renderCount).toBe(1);
+    renderCount = 0;
+    renderer.update(<NoHooks />);
+    expect(renderCount).toBe(1);
+    renderCount = 0;
+    renderer.update(
+      <StrictMode>
+        <NoHooks />
+      </StrictMode>,
+    );
+    expect(renderCount).toBe(1);
+    renderCount = 0;
+    renderer.update(
+      <StrictMode>
+        <NoHooks />
+      </StrictMode>,
+    );
+    expect(renderCount).toBe(1);
+
+    renderCount = 0;
+    renderer.update(<FwdRef />);
+    expect(renderCount).toBe(1);
+    renderCount = 0;
+    renderer.update(<FwdRef />);
+    expect(renderCount).toBe(1);
+    renderCount = 0;
+    renderer.update(
+      <StrictMode>
+        <FwdRef />
+      </StrictMode>,
+    );
+    expect(renderCount).toBe(1);
+    renderCount = 0;
+    renderer.update(
+      <StrictMode>
+        <FwdRef />
+      </StrictMode>,
+    );
+    expect(renderCount).toBe(1);
+
+    renderCount = 0;
+    renderer.update(<Memo arg={1} />);
+    expect(renderCount).toBe(1);
+    renderCount = 0;
+    renderer.update(<Memo arg={2} />);
+    expect(renderCount).toBe(1);
+    renderCount = 0;
+    renderer.update(
+      <StrictMode>
+        <Memo arg={1} />
+      </StrictMode>,
+    );
+    expect(renderCount).toBe(1);
+    renderCount = 0;
+    renderer.update(
+      <StrictMode>
+        <Memo arg={2} />
+      </StrictMode>,
+    );
+    expect(renderCount).toBe(1);
+
+    renderCount = 0;
+    renderer.update(<Factory />);
+    expect(renderCount).toBe(1);
+    renderCount = 0;
+    renderer.update(<Factory />);
+    expect(renderCount).toBe(1);
+    renderCount = 0;
+    renderer.update(
+      <StrictMode>
+        <Factory />
+      </StrictMode>,
+    );
+    expect(renderCount).toBe(__DEV__ ? 2 : 1); // Treated like a class
+    renderCount = 0;
+    renderer.update(
+      <StrictMode>
+        <Factory />
+      </StrictMode>,
+    );
+    expect(renderCount).toBe(__DEV__ ? 2 : 1); // Treated like a class
+
+    renderCount = 0;
+    renderer.update(<HasHooks />);
+    expect(renderCount).toBe(1);
+    renderCount = 0;
+    renderer.update(<HasHooks />);
+    expect(renderCount).toBe(1);
+    renderCount = 0;
+    renderer.update(
+      <StrictMode>
+        <HasHooks />
+      </StrictMode>,
+    );
+    expect(renderCount).toBe(__DEV__ ? 2 : 1); // Has Hooks
+    renderCount = 0;
+    renderer.update(
+      <StrictMode>
+        <HasHooks />
+      </StrictMode>,
+    );
+    expect(renderCount).toBe(__DEV__ ? 2 : 1); // Has Hooks
+
+    renderCount = 0;
+    renderer.update(<FwdRefHasHooks />);
+    expect(renderCount).toBe(1);
+    renderCount = 0;
+    renderer.update(<FwdRefHasHooks />);
+    expect(renderCount).toBe(1);
+    renderCount = 0;
+    renderer.update(
+      <StrictMode>
+        <FwdRefHasHooks />
+      </StrictMode>,
+    );
+    expect(renderCount).toBe(__DEV__ ? 2 : 1); // Has Hooks
+    renderCount = 0;
+    renderer.update(
+      <StrictMode>
+        <FwdRefHasHooks />
+      </StrictMode>,
+    );
+    expect(renderCount).toBe(__DEV__ ? 2 : 1); // Has Hooks
+
+    renderCount = 0;
+    renderer.update(<MemoHasHooks arg={1} />);
+    expect(renderCount).toBe(1);
+    renderCount = 0;
+    renderer.update(<MemoHasHooks arg={2} />);
+    expect(renderCount).toBe(1);
+    renderCount = 0;
+    renderer.update(
+      <StrictMode>
+        <MemoHasHooks arg={1} />
+      </StrictMode>,
+    );
+    expect(renderCount).toBe(__DEV__ ? 2 : 1); // Has Hooks
+    renderCount = 0;
+    renderer.update(
+      <StrictMode>
+        <MemoHasHooks arg={2} />
+      </StrictMode>,
+    );
+    expect(renderCount).toBe(__DEV__ ? 2 : 1); // Has Hooks
+  });
+
+  it('double-invokes useMemo in DEV StrictMode despite []', () => {
+    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = true;
+    const {useMemo, StrictMode} = React;
+
+    let useMemoCount = 0;
+    function BadUseMemo() {
+      useMemo(() => {
+        useMemoCount++;
+      }, []);
+      return <div />;
+    }
+
+    useMemoCount = 0;
+    ReactTestRenderer.create(
+      <StrictMode>
+        <BadUseMemo />
+      </StrictMode>,
+    );
+    expect(useMemoCount).toBe(__DEV__ ? 2 : 1); // Has Hooks
   });
 });
