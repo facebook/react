@@ -1293,7 +1293,8 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
       warning(
         false,
         'Function components cannot be given refs. ' +
-          'Attempts to access this ref will fail.%s',
+          'Attempts to access this ref will fail. ' +
+          'Did you mean to use React.forwardRef()?%s',
         info,
       );
     }
