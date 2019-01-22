@@ -54,18 +54,17 @@ type UpdateQueue<S, A> = {
   eagerState: S | null,
 };
 
-opaque type HookType = string;
-
-const StateHook: HookType = 'useState';
-const ReducerHook: HookType = 'useReducer';
-const ContextHook: HookType = 'useContext';
-const RefHook: HookType = 'useRef';
-const EffectHook: HookType = 'useEffect';
-const LayoutEffectHook: HookType = 'useLayoutEffect';
-const CallbackHook: HookType = 'useCallback';
-const MemoHook: HookType = 'useMemo';
-const ImperativeHandleHook: HookType = 'useImperativeHandle';
-const DebugValueHook: HookType = 'useDebugValue';
+type HookType =
+  | 'useState'
+  | 'useReducer'
+  | 'useContext'
+  | 'useRef'
+  | 'useEffect'
+  | 'useLayoutEffect'
+  | 'useCallback'
+  | 'useMemo'
+  | 'useImperativeHandle'
+  | 'useDebugValue';
 
 // the first instance of a hook mismatch in a component,
 // represented by a portion of it's stacktrace
@@ -213,7 +212,7 @@ function flushHookMismatchWarnings() {
   // and a stack trace so the dev can locate where
   // the first mismatch is coming from
   if (__DEV__) {
-    if (currentHookMismatch) {
+    if (currentHookMismatch !== null) {
       let componentName = getComponentName(
         ((currentlyRenderingFiber: any): Fiber).type,
       );
@@ -221,13 +220,13 @@ function flushHookMismatchWarnings() {
         didWarnAboutMismatchedHooksForComponent.add(componentName);
         const hookStackDiff = [];
         let current = firstCurrentHook;
-        let previousOrder = [];
+        const previousOrder = [];
         while (current !== null) {
           previousOrder.push(((current: any): HookDev)._debugType);
           current = current.next;
         }
         let workInProgress = firstWorkInProgressHook;
-        let nextOrder = [];
+        const nextOrder = [];
         while (workInProgress !== null) {
           nextOrder.push(((workInProgress: any): HookDev)._debugType);
           workInProgress = workInProgress.next;
@@ -245,7 +244,7 @@ function flushHookMismatchWarnings() {
           '    Next render\n';
         const hookStackWidth = hookStackHeader.length;
         hookStackHeader += '   ' + new Array(hookStackWidth - 2).join('-');
-        let hookStackFooter = '   ' + new Array(hookStackWidth - 2).join('^');
+        const hookStackFooter = '   ' + new Array(hookStackWidth - 2).join('^');
 
         const hookStackLength = Math.max(
           previousOrder.length,
@@ -544,7 +543,7 @@ export function useContext<T>(
   observedBits: void | number | boolean,
 ): T {
   if (__DEV__) {
-    currentHookNameInDev = ContextHook;
+    currentHookNameInDev = 'useContext';
     createWorkInProgressHook();
     currentHookNameInDev = null;
   }
@@ -558,7 +557,7 @@ export function useState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {
   if (__DEV__) {
-    currentHookNameInDev = StateHook;
+    currentHookNameInDev = 'useState';
   }
   return useReducer(
     basicStateReducer,
@@ -574,7 +573,7 @@ export function useReducer<S, A>(
 ): [S, Dispatch<A>] {
   if (__DEV__) {
     if (reducer !== basicStateReducer) {
-      currentHookNameInDev = ReducerHook;
+      currentHookNameInDev = 'useReducer';
     }
   }
   let fiber = (currentlyRenderingFiber = resolveCurrentlyRenderingFiber());
@@ -759,7 +758,7 @@ function pushEffect(tag, create, destroy, deps) {
 export function useRef<T>(initialValue: T): {current: T} {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   if (__DEV__) {
-    currentHookNameInDev = RefHook;
+    currentHookNameInDev = 'useRef';
   }
   workInProgressHook = createWorkInProgressHook();
   currentHookNameInDev = null;
@@ -782,8 +781,8 @@ export function useLayoutEffect(
   deps: Array<mixed> | void | null,
 ): void {
   if (__DEV__) {
-    if (currentHookNameInDev !== ImperativeHandleHook) {
-      currentHookNameInDev = LayoutEffectHook;
+    if (currentHookNameInDev !== 'useImperativeHandle') {
+      currentHookNameInDev = 'useLayoutEffect';
     }
   }
   useEffectImpl(UpdateEffect, UnmountMutation | MountLayout, create, deps);
@@ -794,7 +793,7 @@ export function useEffect(
   deps: Array<mixed> | void | null,
 ): void {
   if (__DEV__) {
-    currentHookNameInDev = EffectHook;
+    currentHookNameInDev = 'useEffect';
   }
   useEffectImpl(
     UpdateEffect | PassiveEffect,
@@ -839,7 +838,7 @@ export function useImperativeHandle<T>(
   deps: Array<mixed> | void | null,
 ): void {
   if (__DEV__) {
-    currentHookNameInDev = ImperativeHandleHook;
+    currentHookNameInDev = 'useImperativeHandle';
     warning(
       typeof create === 'function',
       'Expected useImperativeHandle() second argument to be a function ' +
@@ -884,7 +883,7 @@ export function useDebugValue(
   formatterFn: ?(value: any) => any,
 ): void {
   if (__DEV__) {
-    currentHookNameInDev = DebugValueHook;
+    currentHookNameInDev = 'useDebugValue';
   }
 
   // This will trigger a warning if the hook is used in a non-Function component.
@@ -900,7 +899,7 @@ export function useCallback<T>(
   deps: Array<mixed> | void | null,
 ): T {
   if (__DEV__) {
-    currentHookNameInDev = CallbackHook;
+    currentHookNameInDev = 'useCallback';
   }
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   workInProgressHook = createWorkInProgressHook();
@@ -927,7 +926,7 @@ export function useMemo<T>(
   deps: Array<mixed> | void | null,
 ): T {
   if (__DEV__) {
-    currentHookNameInDev = MemoHook;
+    currentHookNameInDev = 'useMemo';
   }
   let fiber = (currentlyRenderingFiber = resolveCurrentlyRenderingFiber());
   workInProgressHook = createWorkInProgressHook();
