@@ -686,7 +686,7 @@ describe('ReactHooks', () => {
     }
 
     expect(() => ReactTestRenderer.create(<App />)).toThrow(
-      'Context can only be read inside the body of a component',
+      'Context can only be read while React is rendering',
     );
   });
 
@@ -708,7 +708,7 @@ describe('ReactHooks', () => {
     }
 
     expect(() => ReactTestRenderer.create(<App />)).toThrow(
-      'Context can only be read inside the body of a component',
+      'Context can only be read while React is rendering',
     );
     expect(firstRead).toBe('light');
     expect(secondRead).toBe('light');
@@ -774,7 +774,7 @@ describe('ReactHooks', () => {
     }
 
     expect(() => ReactTestRenderer.create(<App />)).toThrow(
-      'Context can only be read inside the body of a component.',
+      'Context can only be read while React is rendering',
     );
   });
 

@@ -14,7 +14,11 @@ import type {HookEffectTag} from './ReactHookEffectTags';
 
 import {NoWork} from './ReactFiberExpirationTime';
 import {enableHooks} from 'shared/ReactFeatureFlags';
-import {readContext as readContextWithoutCheck} from './ReactFiberNewContext';
+import {
+  readContext,
+  stashContextDependencies,
+  unstashContextDependencies,
+} from './ReactFiberNewContext';
 import {
   Update as UpdateEffect,
   Passive as PassiveEffect,
@@ -284,7 +288,7 @@ export function resetHooks(): void {
 
   // This is used to reset the state of this module when a component throws.
   // It's also called inside mountIndeterminateComponent if we determine the
-  // component is a module-style component, and also in readContext() above.
+  // component is a module-style component.
   renderExpirationTime = NoWork;
   currentlyRenderingFiber = null;
 
@@ -394,7 +398,7 @@ export function useContext<T>(
   // Ensure we're in a function component (class components support only the
   // .unstable_read() form)
   resolveCurrentlyRenderingFiber();
-  return readContextWithoutCheck(context, observedBits);
+  return readContext(context, observedBits);
 }
 
 export function useState<S>(
@@ -443,8 +447,10 @@ export function useReducer<S, A>(
             const action = update.action;
             // Temporarily clear to forbid calling Hooks in a reducer.
             currentlyRenderingFiber = null;
+            stashContextDependencies();
             newState = reducer(newState, action);
             currentlyRenderingFiber = fiber;
+            unstashContextDependencies();
             update = update.next;
           } while (update !== null);
 
@@ -515,8 +521,10 @@ export function useReducer<S, A>(
             const action = update.action;
             // Temporarily clear to forbid calling Hooks in a reducer.
             currentlyRenderingFiber = null;
+            stashContextDependencies();
             newState = reducer(newState, action);
             currentlyRenderingFiber = fiber;
+            unstashContextDependencies();
           }
         }
         prevUpdate = update;
@@ -547,6 +555,7 @@ export function useReducer<S, A>(
   }
   // Temporarily clear to forbid calling Hooks in a reducer.
   currentlyRenderingFiber = null;
+  stashContextDependencies();
   // There's no existing queue, so this is the initial render.
   if (reducer === basicStateReducer) {
     // Special case for `useState`.
@@ -557,6 +566,7 @@ export function useReducer<S, A>(
     initialState = reducer(initialState, initialAction);
   }
   currentlyRenderingFiber = fiber;
+  unstashContextDependencies();
   workInProgressHook.memoizedState = workInProgressHook.baseState = initialState;
   queue = workInProgressHook.queue = {
     last: null,
@@ -779,33 +789,12 @@ export function useMemo<T>(
 
   // Temporarily clear to forbid calling Hooks.
   currentlyRenderingFiber = null;
+  stashContextDependencies();
   const nextValue = nextCreate();
   currentlyRenderingFiber = fiber;
+  unstashContextDependencies();
   workInProgressHook.memoizedState = [nextValue, nextDeps];
   return nextValue;
-}
-
-export function readContext<T>(
-  context: ReactContext<T>,
-  observedBits: void | number | boolean,
-): T {
-  // Forbid reading context inside Hooks.
-  // The outer check tells us whether we're inside a Hook like useMemo().
-  // However, it would also be true if we're rendering a class.
-  if (currentlyRenderingFiber === null) {
-    // The inner check tells us we're currently in renderWithHooks() phase
-    // rather than, for example, in a class or a context consumer.
-    // Then we know it should be an error.
-    if (renderExpirationTime !== NoWork) {
-      invariant(
-        false,
-        'Context can only be read inside the body of a component. ' +
-          'If you read context inside a Hook like useMemo or useReducer, ' +
-          'move the call directly into the component body.',
-      );
-    }
-  }
-  return readContextWithoutCheck(context, observedBits);
 }
 
 function dispatchAction<S, A>(
