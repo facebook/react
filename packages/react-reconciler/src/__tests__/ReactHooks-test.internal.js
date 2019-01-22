@@ -731,7 +731,7 @@ describe('ReactHooks', () => {
     ]);
 
     // further warnings for this component are silenced
-    root.update(<App flip={false} />);    
+    root.update(<App flip={false} />);
   });
 
   it('detects a bad hook order even if the component throws', () => {
