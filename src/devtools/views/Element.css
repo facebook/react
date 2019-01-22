@@ -1,0 +1,46 @@
+.Element {
+  width: 100%;
+  border-radius: 0.25em;
+  cursor: pointer;
+  position: relative;
+}
+.Element:hover {
+  background-color: var(--color-state03);
+}
+
+.ArrowClosed,
+.ArrowOpen {
+  position: absolute;
+  margin-left: -1rem;
+  width: 1rem;
+  height: 1rem;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%23777d88' d='M8 5v14l11-7z'/%3E%3Cpath fill='none' d='M0 24V0h24v24H0z'/%3E%3C/svg%3E");
+  background-size: 12px 12px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+.ArrowOpen {
+  transform: rotate(90deg);
+}
+
+.Component {
+  color: var(--color-component);
+}
+.Component:before {
+  white-space: nowrap;
+  content: "<";
+  color: var(--color-tree-tag);
+}
+.Component:after {
+  white-space: nowrap;
+  content: ">";
+  color: var(--color-tree-tag);
+}
+
+.AttributeName {
+  color: var(--color-tree-attr-name);
+}
+
+.AttributeValue {
+  color: var(--color-tree-attr-value);
+}

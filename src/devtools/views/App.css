@@ -1,0 +1,49 @@
+:root {
+  /* TODO */
+  --color-base00: #ffffff;
+  --color-base01: #f3f3f3;
+  --color-base02: #eeeeee;
+  --color-base03: #dadada;
+  --color-base04: #333333;
+  --color-base05: #5a5a5a;
+  --color-special00: #8155cb;
+  --color-special01: #222222;
+  --color-special02: #1a1aa6;
+  --color-special03: #c80000;
+  --color-special04: #236e25;
+  --color-special05: #aa0d91;
+  --color-special06: #ef6632;
+  --color-special07: #777d88;
+  --color-state00: #0088FA;
+  --color-state01: #dadada;
+  --color-state02: #ffffff;
+  --color-state03: #ebf1fb;
+  --color-state04: #FFFF00;
+  --color-state05: #222222;
+  --color-state06: #222222;
+
+  --color-component: var(--color-special00);
+  --color-tree-tag: var(--color-base04);
+  --color-tree-attr-name: var(--color-special06);
+  --color-tree-attr-value: var(--color-special02);
+
+  --line-height-tree-compact: 1.5;
+  --line-height-tree-normal: 1.5;
+
+  /* GitHub.com system fonts */
+  --font-family-monospace: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  --font-size-tree-compact: 12px;
+  --font-size-tree-normal: 14px;
+}
+
+.App {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+
+  -webkit-font-smoothing:  antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}

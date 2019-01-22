@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf8">
+    <title>React DevTools</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      #target {
+        flex: 1;
+        border: none;
+        border-bottom: 1px solid #ccc;
+      }
+      #devtools {
+        display: flex;
+        height: 400px;
+        max-height: 50%;
+        overflow: hidden;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- React test app (shells/dev/app) is injected here -->
+    <!-- DevTools backend (shells/dev/src) is injected here -->
+    <!-- global "hook" is defined on the iframe's contentWindow -->
+    <iframe id="target"></iframe>
+
+    <!-- DevTools frontend UI (shells/dev/src) renders here -->
+    <div id="devtools"></div>
+
+    <!-- This script installs the hook, injects the backend, and renders the DevTools UI -->
+    <script src="build/devtools.js"></script>
+  </body>
+</html>

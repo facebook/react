@@ -1,0 +1,22 @@
+.Header {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.Input {
+  font-size: 1rem;
+  padding: 0.25rem;
+}
+
+.IconButton {
+  padding: 0.25rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.List {
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
