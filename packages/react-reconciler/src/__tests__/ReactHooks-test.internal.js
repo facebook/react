@@ -730,11 +730,8 @@ describe('ReactHooks', () => {
         '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^',
     ]);
 
-    expect(() => {
-      root.update(<App flip={false} />);
-    }).toWarnDev([
-      'Warning: React has detected a change in the order of Hooks called',
-    ]);
+    // further warnings for this component are silenced
+    root.update(<App flip={false} />);    
   });
 
   it('detects a bad hook order even if the component throws', () => {

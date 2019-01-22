@@ -54,38 +54,27 @@ type UpdateQueue<S, A> = {
   eagerState: S | null,
 };
 
-type HookType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+opaque type HookType = string;
 
-const StateHook = 0;
-const ReducerHook = 1;
-const ContextHook = 2;
-const RefHook = 3;
-const EffectHook = 4;
-const LayoutEffectHook = 5;
-const CallbackHook = 6;
-const MemoHook = 7;
-const ImperativeHandleHook = 8;
-const DebugValueHook = 9;
+const StateHook: HookType = 'useState';
+const ReducerHook: HookType = 'useReducer';
+const ContextHook: HookType = 'useContext';
+const RefHook: HookType = 'useRef';
+const EffectHook: HookType = 'useEffect';
+const LayoutEffectHook: HookType = 'useLayoutEffect';
+const CallbackHook: HookType = 'useCallback';
+const MemoHook: HookType = 'useMemo';
+const ImperativeHandleHook: HookType = 'useImperativeHandle';
+const DebugValueHook: HookType = 'useDebugValue';
 
-const HookDevNames = [
-  'useState',
-  'useReducer',
-  'useContext',
-  'useRef',
-  'useEffect',
-  'useLayoutEffect',
-  'useCallback',
-  'useMemo',
-  'useImperativeHandle',
-  'useDebugValue',
-];
-
-let currentHookType: HookType | null = null;
 // the first instance of a hook mismatch in a component,
 // represented by a portion of it's stacktrace
 let currentHookMismatch = null;
-const PossiblyWeakSet = typeof WeakSet === 'function' ? WeakSet : Set;
-const hookMismatchedFibers = new PossiblyWeakSet();
+
+let didWarnAboutMismatchedHooksForComponent;
+if (__DEV__) {
+  didWarnAboutMismatchedHooksForComponent = new Set();
+}
 
 export type Hook = {
   memoizedState: any,
@@ -155,7 +144,7 @@ let numberOfReRenders: number = -1;
 const RE_RENDER_LIMIT = 25;
 
 // In DEV, this is the name of the currently executing primitive hook
-let currentHookNameInDev: ?string;
+let currentHookNameInDev: ?HookType = null;
 
 function resolveCurrentlyRenderingFiber(): Fiber {
   invariant(
@@ -210,10 +199,12 @@ function areHookInputsEqual(
 // till we have String::padEnd, a small function to
 // right-pad strings with spaces till a minimum length
 function padEndSpaces(string: string, length: number) {
-  if (string.length >= length) {
-    return string;
-  } else {
-    return string + ' ' + new Array(length - string.length).join(' ');
+  if (__DEV__) {
+    if (string.length >= length) {
+      return string;
+    } else {
+      return string + ' ' + new Array(length - string.length).join(' ');
+    }
   }
 }
 
@@ -222,74 +213,75 @@ function flushHookMismatchWarnings() {
   // and a stack trace so the dev can locate where
   // the first mismatch is coming from
   if (__DEV__) {
-    if (
-      currentHookMismatch &&
-      !hookMismatchedFibers.has(((currentlyRenderingFiber: any): Fiber))
-    ) {
+    if (currentHookMismatch) {
       let componentName = getComponentName(
         ((currentlyRenderingFiber: any): Fiber).type,
       );
-      hookMismatchedFibers.add(((currentlyRenderingFiber: any): Fiber));
-      const hookStackDiff = [];
-      let current = firstCurrentHook;
-      let previousOrder = [];
-      while (current !== null) {
-        previousOrder.push(HookDevNames[((current: any): HookDev)._debugType]);
-        current = current.next;
-      }
-      let workInProgress = firstWorkInProgressHook;
-      let nextOrder = [];
-      while (workInProgress !== null) {
-        nextOrder.push(
-          HookDevNames[((workInProgress: any): HookDev)._debugType],
-        );
-        workInProgress = workInProgress.next;
-      }
-      // some bookkeeping for formatting the output table
-      const columnLength = Math.max.apply(
-        null,
-        previousOrder
-          .map(hook => hook.length)
-          .concat('   Previous render'.length),
-      );
-
-      let hookStackHeader =
-        padEndSpaces('   Previous render', columnLength) + '    Next render\n';
-      const hookStackWidth = hookStackHeader.length;
-      hookStackHeader += '   ' + new Array(hookStackWidth - 2).join('-');
-      let hookStackFooter = '   ' + new Array(hookStackWidth - 2).join('^');
-
-      const hookStackLength = Math.max(previousOrder.length, nextOrder.length);
-      for (let i = 0; i < hookStackLength; i++) {
-        hookStackDiff.push(
-          padEndSpaces(i + 1 + '. ', 3) +
-            padEndSpaces(previousOrder[i], columnLength) +
-            ' ' +
-            nextOrder[i],
-        );
-        if (previousOrder[i] !== nextOrder[i]) {
-          break;
+      if (!didWarnAboutMismatchedHooksForComponent.has(componentName)) {
+        didWarnAboutMismatchedHooksForComponent.add(componentName);
+        const hookStackDiff = [];
+        let current = firstCurrentHook;
+        let previousOrder = [];
+        while (current !== null) {
+          previousOrder.push(((current: any): HookDev)._debugType);
+          current = current.next;
         }
+        let workInProgress = firstWorkInProgressHook;
+        let nextOrder = [];
+        while (workInProgress !== null) {
+          nextOrder.push(((workInProgress: any): HookDev)._debugType);
+          workInProgress = workInProgress.next;
+        }
+        // some bookkeeping for formatting the output table
+        const columnLength = Math.max.apply(
+          null,
+          previousOrder
+            .map(hook => hook.length)
+            .concat('   Previous render'.length),
+        );
+
+        let hookStackHeader =
+          ((padEndSpaces('   Previous render', columnLength): any): string) +
+          '    Next render\n';
+        const hookStackWidth = hookStackHeader.length;
+        hookStackHeader += '   ' + new Array(hookStackWidth - 2).join('-');
+        let hookStackFooter = '   ' + new Array(hookStackWidth - 2).join('^');
+
+        const hookStackLength = Math.max(
+          previousOrder.length,
+          nextOrder.length,
+        );
+        for (let i = 0; i < hookStackLength; i++) {
+          hookStackDiff.push(
+            ((padEndSpaces(i + 1 + '. ', 3): any): string) +
+              ((padEndSpaces(previousOrder[i], columnLength): any): string) +
+              ' ' +
+              nextOrder[i],
+          );
+          if (previousOrder[i] !== nextOrder[i]) {
+            break;
+          }
+        }
+        warning(
+          false,
+          'React has detected a change in the order of Hooks called by %s. ' +
+            'This will lead to bugs and errors if not fixed. ' +
+            'For more information, read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+            '%s\n' +
+            '%s\n' +
+            '%s\n' +
+            'The first Hook type mismatch occured at:\n' +
+            '%s\n\n' +
+            'This error occurred in the following component:',
+          componentName,
+          hookStackHeader,
+          hookStackDiff.join('\n'),
+          hookStackFooter,
+          currentHookMismatch,
+        );
       }
-      warning(
-        false,
-        'React has detected a change in the order of Hooks called by %s. ' +
-          'This will lead to bugs and errors if not fixed. ' +
-          'For more information, read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
-          '%s\n' +
-          '%s\n' +
-          '%s\n' +
-          'The first Hook type mismatch occured at:\n' +
-          '%s\n\n' +
-          'This error occurred in the following component:',
-        componentName,
-        hookStackHeader,
-        hookStackDiff.join('\n'),
-        hookStackFooter,
-        currentHookMismatch,
-      );
+      currentHookMismatch = null;
     }
-    currentHookMismatch = null;
   }
 }
 
@@ -372,7 +364,7 @@ export function renderWithHooks(
   componentUpdateQueue = null;
 
   if (__DEV__) {
-    currentHookNameInDev = undefined;
+    currentHookNameInDev = null;
   }
 
   // These were reset above
@@ -405,7 +397,9 @@ export function resetHooks(): void {
   if (!enableHooks) {
     return;
   }
-  flushHookMismatchWarnings();
+  if (__DEV__) {
+    flushHookMismatchWarnings();
+  }
 
   // This is used to reset the state of this module when a component throws.
   // It's also called inside mountIndeterminateComponent if we determine the
@@ -422,8 +416,9 @@ export function resetHooks(): void {
   componentUpdateQueue = null;
 
   if (__DEV__) {
-    currentHookNameInDev = undefined;
+    currentHookNameInDev = null;
   }
+
   didScheduleRenderPhaseUpdate = false;
   renderPhaseUpdates = null;
   numberOfReRenders = -1;
@@ -432,7 +427,7 @@ export function resetHooks(): void {
 function createHook(): Hook {
   let hook: Hook = __DEV__
     ? {
-        _debugType: ((currentHookType: any): HookType),
+        _debugType: ((currentHookNameInDev: any): HookType),
         memoizedState: null,
 
         baseState: null,
@@ -457,7 +452,7 @@ function createHook(): Hook {
 function cloneHook(hook: Hook): Hook {
   let nextHook: Hook = __DEV__
     ? {
-        _debugType: ((currentHookType: any): HookType),
+        _debugType: ((currentHookNameInDev: any): HookType),
         memoizedState: hook.memoizedState,
 
         baseState: hook.baseState,
@@ -478,7 +473,7 @@ function cloneHook(hook: Hook): Hook {
 
   if (__DEV__) {
     if (!currentHookMismatch) {
-      if (currentHookType !== ((hook: any): HookDev)._debugType) {
+      if (currentHookNameInDev !== ((hook: any): HookDev)._debugType) {
         currentHookMismatch = new Error('tracer').stack
           .split('\n')
           .slice(4)
@@ -549,10 +544,9 @@ export function useContext<T>(
   observedBits: void | number | boolean,
 ): T {
   if (__DEV__) {
-    currentHookNameInDev = HookDevNames[ContextHook];
-    currentHookType = ContextHook;
+    currentHookNameInDev = ContextHook;
     createWorkInProgressHook();
-    currentHookType = null;
+    currentHookNameInDev = null;
   }
   // Ensure we're in a function component (class components support only the
   // .unstable_read() form)
@@ -564,7 +558,7 @@ export function useState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {
   if (__DEV__) {
-    currentHookNameInDev = HookDevNames[StateHook];
+    currentHookNameInDev = StateHook;
   }
   return useReducer(
     basicStateReducer,
@@ -580,13 +574,12 @@ export function useReducer<S, A>(
 ): [S, Dispatch<A>] {
   if (__DEV__) {
     if (reducer !== basicStateReducer) {
-      currentHookNameInDev = HookDevNames[ReducerHook];
+      currentHookNameInDev = ReducerHook;
     }
   }
-  currentHookType = reducer === basicStateReducer ? StateHook : ReducerHook;
   let fiber = (currentlyRenderingFiber = resolveCurrentlyRenderingFiber());
   workInProgressHook = createWorkInProgressHook();
-  currentHookType = null;
+  currentHookNameInDev = null;
   let queue: UpdateQueue<S, A> | null = (workInProgressHook.queue: any);
   if (queue !== null) {
     // Already have a queue, so this is an update.
@@ -765,9 +758,11 @@ function pushEffect(tag, create, destroy, deps) {
 
 export function useRef<T>(initialValue: T): {current: T} {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
-  currentHookType = RefHook;
+  if (__DEV__) {
+    currentHookNameInDev = RefHook;
+  }
   workInProgressHook = createWorkInProgressHook();
-  currentHookType = null;
+  currentHookNameInDev = null;
   let ref;
 
   if (workInProgressHook.memoizedState === null) {
@@ -787,7 +782,9 @@ export function useLayoutEffect(
   deps: Array<mixed> | void | null,
 ): void {
   if (__DEV__) {
-    currentHookNameInDev = HookDevNames[LayoutEffectHook];
+    if (currentHookNameInDev !== ImperativeHandleHook) {
+      currentHookNameInDev = LayoutEffectHook;
+    }
   }
   useEffectImpl(UpdateEffect, UnmountMutation | MountLayout, create, deps);
 }
@@ -797,7 +794,7 @@ export function useEffect(
   deps: Array<mixed> | void | null,
 ): void {
   if (__DEV__) {
-    currentHookNameInDev = HookDevNames[EffectHook];
+    currentHookNameInDev = EffectHook;
   }
   useEffectImpl(
     UpdateEffect | PassiveEffect,
@@ -809,13 +806,7 @@ export function useEffect(
 
 function useEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
-  if (currentHookType !== ImperativeHandleHook) {
-    // it could be an ImperativeHandleHook
-    currentHookType =
-      fiberEffectTag === UpdateEffect ? EffectHook : LayoutEffectHook;
-  }
   workInProgressHook = createWorkInProgressHook();
-  currentHookType = null;
 
   const nextDeps = deps === undefined ? null : deps;
   let destroy = null;
@@ -826,6 +817,7 @@ function useEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
       const prevDeps = prevEffect.deps;
       if (areHookInputsEqual(nextDeps, prevDeps)) {
         pushEffect(NoHookEffect, create, destroy, nextDeps);
+        currentHookNameInDev = null;
         return;
       }
     }
@@ -838,6 +830,7 @@ function useEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
     destroy,
     nextDeps,
   );
+  currentHookNameInDev = null;
 }
 
 export function useImperativeHandle<T>(
@@ -846,7 +839,7 @@ export function useImperativeHandle<T>(
   deps: Array<mixed> | void | null,
 ): void {
   if (__DEV__) {
-    currentHookNameInDev = HookDevNames[ImperativeHandleHook];
+    currentHookNameInDev = ImperativeHandleHook;
     warning(
       typeof create === 'function',
       'Expected useImperativeHandle() second argument to be a function ' +
@@ -854,7 +847,6 @@ export function useImperativeHandle<T>(
       create !== null ? typeof create : 'null',
     );
   }
-  currentHookType = ImperativeHandleHook;
   // TODO: If deps are provided, should we skip comparing the ref itself?
   const nextDeps =
     deps !== null && deps !== undefined ? deps.concat([ref]) : [ref];
@@ -892,7 +884,7 @@ export function useDebugValue(
   formatterFn: ?(value: any) => any,
 ): void {
   if (__DEV__) {
-    currentHookNameInDev = HookDevNames[DebugValueHook];
+    currentHookNameInDev = DebugValueHook;
   }
 
   // This will trigger a warning if the hook is used in a non-Function component.
@@ -908,12 +900,10 @@ export function useCallback<T>(
   deps: Array<mixed> | void | null,
 ): T {
   if (__DEV__) {
-    currentHookNameInDev = HookDevNames[CallbackHook];
+    currentHookNameInDev = CallbackHook;
   }
-  currentHookType = CallbackHook;
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   workInProgressHook = createWorkInProgressHook();
-  currentHookType = null;
 
   const nextDeps = deps === undefined ? null : deps;
 
@@ -922,11 +912,13 @@ export function useCallback<T>(
     if (nextDeps !== null) {
       const prevDeps: Array<mixed> | null = prevState[1];
       if (areHookInputsEqual(nextDeps, prevDeps)) {
+        currentHookNameInDev = null;
         return prevState[0];
       }
     }
   }
   workInProgressHook.memoizedState = [callback, nextDeps];
+  currentHookNameInDev = null;
   return callback;
 }
 
@@ -935,12 +927,10 @@ export function useMemo<T>(
   deps: Array<mixed> | void | null,
 ): T {
   if (__DEV__) {
-    currentHookNameInDev = HookDevNames[MemoHook];
+    currentHookNameInDev = MemoHook;
   }
-  currentHookType = MemoHook;
   let fiber = (currentlyRenderingFiber = resolveCurrentlyRenderingFiber());
   workInProgressHook = createWorkInProgressHook();
-  currentHookType = null;
 
   const nextDeps = deps === undefined ? null : deps;
 
@@ -950,6 +940,7 @@ export function useMemo<T>(
     if (nextDeps !== null) {
       const prevDeps: Array<mixed> | null = prevState[1];
       if (areHookInputsEqual(nextDeps, prevDeps)) {
+        currentHookNameInDev = null;
         return prevState[0];
       }
     }
@@ -960,6 +951,7 @@ export function useMemo<T>(
   const nextValue = nextCreate();
   currentlyRenderingFiber = fiber;
   workInProgressHook.memoizedState = [nextValue, nextDeps];
+  currentHookNameInDev = null;
   return nextValue;
 }
 
