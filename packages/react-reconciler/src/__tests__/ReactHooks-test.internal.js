@@ -690,16 +690,18 @@ describe('ReactHooks', () => {
     );
   });
 
-  it('throws when reading context inside useMemo after outside it', () => {
+  it('throws when reading context inside useMemo after reading outside it', () => {
     const {useMemo, createContext} = React;
     const ReactCurrentDispatcher =
       React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
         .ReactCurrentDispatcher;
 
     const ThemeContext = createContext('light');
-    let firstRead;
+    let firstRead, secondRead;
     function App() {
       firstRead = ReactCurrentDispatcher.current.readContext(ThemeContext);
+      useMemo(() => {});
+      secondRead = ReactCurrentDispatcher.current.readContext(ThemeContext);
       return useMemo(() => {
         return ReactCurrentDispatcher.current.readContext(ThemeContext);
       }, []);
@@ -709,6 +711,7 @@ describe('ReactHooks', () => {
       'Context can only be read inside the body of a component',
     );
     expect(firstRead).toBe('light');
+    expect(secondRead).toBe('light');
   });
 
   it('throws when reading context inside useEffect', () => {
