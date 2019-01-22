@@ -224,12 +224,12 @@ function flushHookMismatchWarnings() {
   if (__DEV__) {
     if (
       currentHookMismatch &&
-      !hookMismatchedFibers.has(currentlyRenderingFiber)
+      !hookMismatchedFibers.has(((currentlyRenderingFiber:any):Fiber))
     ) {
       let componentName = getComponentName(
         ((currentlyRenderingFiber: any): Fiber).type,
       );
-      hookMismatchedFibers.add(currentlyRenderingFiber);
+      hookMismatchedFibers.add(((currentlyRenderingFiber:any):Fiber));
       const hookStackDiff = [];
       let current = firstCurrentHook;
       let previousOrder = [];
