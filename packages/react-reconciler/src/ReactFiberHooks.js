@@ -54,6 +54,27 @@ type UpdateQueue<S, A> = {
   eagerState: S | null,
 };
 
+type HookType =
+  | 'useState'
+  | 'useReducer'
+  | 'useContext'
+  | 'useRef'
+  | 'useEffect'
+  | 'useLayoutEffect'
+  | 'useCallback'
+  | 'useMemo'
+  | 'useImperativeHandle'
+  | 'useDebugValue';
+
+// the first instance of a hook mismatch in a component,
+// represented by a portion of it's stacktrace
+let currentHookMismatch = null;
+
+let didWarnAboutMismatchedHooksForComponent;
+if (__DEV__) {
+  didWarnAboutMismatchedHooksForComponent = new Set();
+}
+
 export type Hook = {
   memoizedState: any,
 
@@ -62,6 +83,10 @@ export type Hook = {
   queue: UpdateQueue<any, any> | null,
 
   next: Hook | null,
+};
+
+type HookDev = Hook & {
+  _debugType: HookType,
 };
 
 type Effect = {
@@ -118,7 +143,7 @@ let numberOfReRenders: number = -1;
 const RE_RENDER_LIMIT = 25;
 
 // In DEV, this is the name of the currently executing primitive hook
-let currentHookNameInDev: ?string;
+let currentHookNameInDev: ?HookType = null;
 
 function resolveCurrentlyRenderingFiber(): Fiber {
   invariant(
@@ -168,6 +193,95 @@ function areHookInputsEqual(
     return false;
   }
   return true;
+}
+
+// till we have String::padEnd, a small function to
+// right-pad strings with spaces till a minimum length
+function padEndSpaces(string: string, length: number) {
+  if (__DEV__) {
+    if (string.length >= length) {
+      return string;
+    } else {
+      return string + ' ' + new Array(length - string.length).join(' ');
+    }
+  }
+}
+
+function flushHookMismatchWarnings() {
+  // we'll show the diff of the low level hooks,
+  // and a stack trace so the dev can locate where
+  // the first mismatch is coming from
+  if (__DEV__) {
+    if (currentHookMismatch !== null) {
+      let componentName = getComponentName(
+        ((currentlyRenderingFiber: any): Fiber).type,
+      );
+      if (!didWarnAboutMismatchedHooksForComponent.has(componentName)) {
+        didWarnAboutMismatchedHooksForComponent.add(componentName);
+        const hookStackDiff = [];
+        let current = firstCurrentHook;
+        const previousOrder = [];
+        while (current !== null) {
+          previousOrder.push(((current: any): HookDev)._debugType);
+          current = current.next;
+        }
+        let workInProgress = firstWorkInProgressHook;
+        const nextOrder = [];
+        while (workInProgress !== null) {
+          nextOrder.push(((workInProgress: any): HookDev)._debugType);
+          workInProgress = workInProgress.next;
+        }
+        // some bookkeeping for formatting the output table
+        const columnLength = Math.max.apply(
+          null,
+          previousOrder
+            .map(hook => hook.length)
+            .concat('   Previous render'.length),
+        );
+
+        let hookStackHeader =
+          ((padEndSpaces('   Previous render', columnLength): any): string) +
+          '    Next render\n';
+        const hookStackWidth = hookStackHeader.length;
+        hookStackHeader += '   ' + new Array(hookStackWidth - 2).join('-');
+        const hookStackFooter = '   ' + new Array(hookStackWidth - 2).join('^');
+
+        const hookStackLength = Math.max(
+          previousOrder.length,
+          nextOrder.length,
+        );
+        for (let i = 0; i < hookStackLength; i++) {
+          hookStackDiff.push(
+            ((padEndSpaces(i + 1 + '. ', 3): any): string) +
+              ((padEndSpaces(previousOrder[i], columnLength): any): string) +
+              ' ' +
+              nextOrder[i],
+          );
+          if (previousOrder[i] !== nextOrder[i]) {
+            break;
+          }
+        }
+        warning(
+          false,
+          'React has detected a change in the order of Hooks called by %s. ' +
+            'This will lead to bugs and errors if not fixed. ' +
+            'For more information, read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+            '%s\n' +
+            '%s\n' +
+            '%s\n' +
+            'The first Hook type mismatch occured at:\n' +
+            '%s\n\n' +
+            'This error occurred in the following component:',
+          componentName,
+          hookStackHeader,
+          hookStackDiff.join('\n'),
+          hookStackFooter,
+          currentHookMismatch,
+        );
+      }
+      currentHookMismatch = null;
+    }
+  }
 }
 
 export function renderWithHooks(
@@ -221,6 +335,7 @@ export function renderWithHooks(
           getComponentName(Component),
         );
       }
+      flushHookMismatchWarnings();
     }
   } while (didScheduleRenderPhaseUpdate);
 
@@ -248,7 +363,7 @@ export function renderWithHooks(
   componentUpdateQueue = null;
 
   if (__DEV__) {
-    currentHookNameInDev = undefined;
+    currentHookNameInDev = null;
   }
 
   // These were reset above
@@ -281,6 +396,9 @@ export function resetHooks(): void {
   if (!enableHooks) {
     return;
   }
+  if (__DEV__) {
+    flushHookMismatchWarnings();
+  }
 
   // This is used to reset the state of this module when a component throws.
   // It's also called inside mountIndeterminateComponent if we determine the
@@ -297,7 +415,7 @@ export function resetHooks(): void {
   componentUpdateQueue = null;
 
   if (__DEV__) {
-    currentHookNameInDev = undefined;
+    currentHookNameInDev = null;
   }
 
   didScheduleRenderPhaseUpdate = false;
@@ -306,27 +424,63 @@ export function resetHooks(): void {
 }
 
 function createHook(): Hook {
-  return {
-    memoizedState: null,
+  let hook: Hook = __DEV__
+    ? {
+        _debugType: ((currentHookNameInDev: any): HookType),
+        memoizedState: null,
 
-    baseState: null,
-    queue: null,
-    baseUpdate: null,
+        baseState: null,
+        queue: null,
+        baseUpdate: null,
 
-    next: null,
-  };
+        next: null,
+      }
+    : {
+        memoizedState: null,
+
+        baseState: null,
+        queue: null,
+        baseUpdate: null,
+
+        next: null,
+      };
+
+  return hook;
 }
 
 function cloneHook(hook: Hook): Hook {
-  return {
-    memoizedState: hook.memoizedState,
+  let nextHook: Hook = __DEV__
+    ? {
+        _debugType: ((currentHookNameInDev: any): HookType),
+        memoizedState: hook.memoizedState,
 
-    baseState: hook.baseState,
-    queue: hook.queue,
-    baseUpdate: hook.baseUpdate,
+        baseState: hook.baseState,
+        queue: hook.queue,
+        baseUpdate: hook.baseUpdate,
 
-    next: null,
-  };
+        next: null,
+      }
+    : {
+        memoizedState: hook.memoizedState,
+
+        baseState: hook.baseState,
+        queue: hook.queue,
+        baseUpdate: hook.baseUpdate,
+
+        next: null,
+      };
+
+  if (__DEV__) {
+    if (!currentHookMismatch) {
+      if (currentHookNameInDev !== ((hook: any): HookDev)._debugType) {
+        currentHookMismatch = new Error('tracer').stack
+          .split('\n')
+          .slice(4)
+          .join('\n');
+      }
+    }
+  }
+  return nextHook;
 }
 
 function createWorkInProgressHook(): Hook {
@@ -390,6 +544,8 @@ export function useContext<T>(
 ): T {
   if (__DEV__) {
     currentHookNameInDev = 'useContext';
+    createWorkInProgressHook();
+    currentHookNameInDev = null;
   }
   // Ensure we're in a function component (class components support only the
   // .unstable_read() form)
@@ -422,6 +578,7 @@ export function useReducer<S, A>(
   }
   let fiber = (currentlyRenderingFiber = resolveCurrentlyRenderingFiber());
   workInProgressHook = createWorkInProgressHook();
+  currentHookNameInDev = null;
   let queue: UpdateQueue<S, A> | null = (workInProgressHook.queue: any);
   if (queue !== null) {
     // Already have a queue, so this is an update.
@@ -600,7 +757,11 @@ function pushEffect(tag, create, destroy, deps) {
 
 export function useRef<T>(initialValue: T): {current: T} {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
+  if (__DEV__) {
+    currentHookNameInDev = 'useRef';
+  }
   workInProgressHook = createWorkInProgressHook();
+  currentHookNameInDev = null;
   let ref;
 
   if (workInProgressHook.memoizedState === null) {
@@ -620,7 +781,9 @@ export function useLayoutEffect(
   deps: Array<mixed> | void | null,
 ): void {
   if (__DEV__) {
-    currentHookNameInDev = 'useLayoutEffect';
+    if (currentHookNameInDev !== 'useImperativeHandle') {
+      currentHookNameInDev = 'useLayoutEffect';
+    }
   }
   useEffectImpl(UpdateEffect, UnmountMutation | MountLayout, create, deps);
 }
@@ -653,6 +816,7 @@ function useEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
       const prevDeps = prevEffect.deps;
       if (areHookInputsEqual(nextDeps, prevDeps)) {
         pushEffect(NoHookEffect, create, destroy, nextDeps);
+        currentHookNameInDev = null;
         return;
       }
     }
@@ -665,6 +829,7 @@ function useEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
     destroy,
     nextDeps,
   );
+  currentHookNameInDev = null;
 }
 
 export function useImperativeHandle<T>(
@@ -746,11 +911,13 @@ export function useCallback<T>(
     if (nextDeps !== null) {
       const prevDeps: Array<mixed> | null = prevState[1];
       if (areHookInputsEqual(nextDeps, prevDeps)) {
+        currentHookNameInDev = null;
         return prevState[0];
       }
     }
   }
   workInProgressHook.memoizedState = [callback, nextDeps];
+  currentHookNameInDev = null;
   return callback;
 }
 
@@ -772,6 +939,7 @@ export function useMemo<T>(
     if (nextDeps !== null) {
       const prevDeps: Array<mixed> | null = prevState[1];
       if (areHookInputsEqual(nextDeps, prevDeps)) {
+        currentHookNameInDev = null;
         return prevState[0];
       }
     }
@@ -782,6 +950,7 @@ export function useMemo<T>(
   const nextValue = nextCreate();
   currentlyRenderingFiber = fiber;
   workInProgressHook.memoizedState = [nextValue, nextDeps];
+  currentHookNameInDev = null;
   return nextValue;
 }
 
