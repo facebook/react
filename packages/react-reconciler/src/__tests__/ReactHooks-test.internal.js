@@ -699,4 +699,70 @@ describe('ReactHooks', () => {
       'Hooks can only be called inside the body of a function component',
     );
   });
+
+  it('warns on using differently ordered hooks on subsequent renders', () => {
+    const {useState, useReducer} = React;
+    function useCustomHook() {
+      return useState(0);
+    }
+    function App(props) {
+      /* eslint-disable no-unused-vars */
+      if (props.flip) {
+        useCustomHook(0);
+        useReducer((s, a) => a, 0);
+      } else {
+        useReducer((s, a) => a, 0);
+        useCustomHook(0);
+      }
+      return null;
+      /* eslint-enable no-unused-vars */
+    }
+    let root = ReactTestRenderer.create(<App flip={false} />);
+    expect(() => {
+      root.update(<App flip={true} />);
+    }).toWarnDev([
+      'Warning: React has detected a change in the order of Hooks called by App. ' +
+        'This will lead to bugs and errors if not fixed. For more information, ' +
+        'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+        '   Previous render    Next render\n' +
+        '   -------------------------------\n' +
+        '1. useReducer         useState\n' +
+        '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^',
+    ]);
+
+    // further warnings for this component are silenced
+    root.update(<App flip={false} />);
+  });
+
+  it('detects a bad hook order even if the component throws', () => {
+    const {useState, useReducer} = React;
+    function useCustomHook() {
+      useState(0);
+    }
+    function App(props) {
+      /* eslint-disable no-unused-vars */
+      if (props.flip) {
+        useCustomHook();
+        useReducer((s, a) => a, 0);
+        throw new Error('custom error');
+      } else {
+        useReducer((s, a) => a, 0);
+        useCustomHook();
+      }
+      return null;
+      /* eslint-enable no-unused-vars */
+    }
+    let root = ReactTestRenderer.create(<App flip={false} />);
+    expect(() => {
+      expect(() => root.update(<App flip={true} />)).toThrow('custom error');
+    }).toWarnDev([
+      'Warning: React has detected a change in the order of Hooks called by App. ' +
+        'This will lead to bugs and errors if not fixed. For more information, ' +
+        'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+        '   Previous render    Next render\n' +
+        '   -------------------------------\n' +
+        '1. useReducer         useState\n' +
+        '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^',
+    ]);
+  });
 });
