@@ -423,6 +423,3 @@ export const Dispatcher: DispatcherType = {
   // Debugging effect
   useDebugValue: noop,
 };
-export const DispatcherWithoutHooks = {
-  readContext,
-};
