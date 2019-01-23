@@ -361,6 +361,7 @@ export function appendChild(
 export function appendChildToContainer(
   container: DOMContainer,
   child: Instance | TextInstance,
+  containerIsRoot: boolean,
 ): void {
   let parentNode;
   if (container.nodeType === COMMENT_NODE) {
@@ -378,11 +379,7 @@ export function appendChildToContainer(
   // This is why we ensure that non React root containers have inline onclick
   // defined.
   // https://github.com/facebook/react/issues/11918
-  const reactRootContainer = container._reactRootContainer;
-  if (
-    (reactRootContainer === null || reactRootContainer === undefined) &&
-    parentNode.onclick === null
-  ) {
+  if (!containerIsRoot && parentNode.onclick === null) {
     // TODO: This cast may not be sound for SVG, MathML or custom elements.
     trapClickOnNonInteractiveElement(((parentNode: any): HTMLElement));
   }

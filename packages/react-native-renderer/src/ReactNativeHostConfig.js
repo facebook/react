@@ -301,6 +301,7 @@ export function appendChild(
 export function appendChildToContainer(
   parentInstance: Container,
   child: Instance | TextInstance,
+  containerIsRoot: boolean,
 ): void {
   const childTag = typeof child === 'number' ? child : child._nativeTag;
   UIManager.setChildren(

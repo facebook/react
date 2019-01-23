@@ -356,7 +356,7 @@ export function appendChild(parentInstance, child) {
   child.inject(parentInstance);
 }
 
-export function appendChildToContainer(parentInstance, child) {
+export function appendChildToContainer(parentInstance, child, containerIsRoot) {
   if (child.parentNode === parentInstance) {
     child.eject();
   }

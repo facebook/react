@@ -951,7 +951,8 @@ function commitPlacement(finishedWork: Fiber): void {
         }
       } else {
         if (isContainer) {
-          appendChildToContainer(parent, node.stateNode);
+          const containerIsRoot = parentFiber.tag === HostRoot;
+          appendChildToContainer(parent, node.stateNode, containerIsRoot);
         } else {
           appendChild(parent, node.stateNode);
         }
