@@ -1054,14 +1054,16 @@ function dispatchAction<S, A>(
       // same as the current state, we may be able to bail out entirely.
       const eagerReducer = queue.eagerReducer;
       if (eagerReducer !== null) {
+        // Note: this may be null and is *not* necessarily the `fiber`.
+        // In particular, they would be different if one component dispatches
+        // on another component in the render phase.
+        let savedCurrentlyRenderingFiber = currentlyRenderingFiber;
         try {
           const currentState: S = (queue.eagerState: any);
           // Temporarily clear to forbid calling Hooks in a reducer.
-          let maybeFiber = currentlyRenderingFiber; // Note: likely null now unlike `fiber`
           currentlyRenderingFiber = null;
           stashContextDependencies();
           const eagerState = eagerReducer(currentState, action);
-          currentlyRenderingFiber = maybeFiber;
           unstashContextDependencies();
           // Stash the eagerly computed state, and the reducer used to compute
           // it, on the update object. If the reducer hasn't changed by the
@@ -1078,6 +1080,8 @@ function dispatchAction<S, A>(
           }
         } catch (error) {
           // Suppress the error. It will throw again in the render phase.
+        } finally {
+          currentlyRenderingFiber = savedCurrentlyRenderingFiber;
         }
       }
     }
