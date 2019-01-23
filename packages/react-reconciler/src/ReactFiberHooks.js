@@ -16,8 +16,8 @@ import {NoWork} from './ReactFiberExpirationTime';
 import {enableHooks} from 'shared/ReactFeatureFlags';
 import {
   readContext,
-  stashContextDependencies,
-  unstashContextDependencies,
+  stashContextDependenciesInDEV,
+  unstashContextDependenciesInDEV,
 } from './ReactFiberNewContext';
 import {
   Update as UpdateEffect,
@@ -604,10 +604,14 @@ export function useReducer<S, A>(
             const action = update.action;
             // Temporarily clear to forbid calling Hooks in a reducer.
             currentlyRenderingFiber = null;
-            stashContextDependencies();
+            if (__DEV__) {
+              stashContextDependenciesInDEV();
+            }
             newState = reducer(newState, action);
             currentlyRenderingFiber = fiber;
-            unstashContextDependencies();
+            if (__DEV__) {
+              unstashContextDependenciesInDEV();
+            }
             update = update.next;
           } while (update !== null);
 
@@ -678,10 +682,14 @@ export function useReducer<S, A>(
             const action = update.action;
             // Temporarily clear to forbid calling Hooks in a reducer.
             currentlyRenderingFiber = null;
-            stashContextDependencies();
+            if (__DEV__) {
+              stashContextDependenciesInDEV();
+            }
             newState = reducer(newState, action);
             currentlyRenderingFiber = fiber;
-            unstashContextDependencies();
+            if (__DEV__) {
+              unstashContextDependenciesInDEV();
+            }
           }
         }
         prevUpdate = update;
@@ -712,7 +720,9 @@ export function useReducer<S, A>(
   }
   // Temporarily clear to forbid calling Hooks in a reducer.
   currentlyRenderingFiber = null;
-  stashContextDependencies();
+  if (__DEV__) {
+    stashContextDependenciesInDEV();
+  }
   // There's no existing queue, so this is the initial render.
   if (reducer === basicStateReducer) {
     // Special case for `useState`.
@@ -723,7 +733,9 @@ export function useReducer<S, A>(
     initialState = reducer(initialState, initialAction);
   }
   currentlyRenderingFiber = fiber;
-  unstashContextDependencies();
+  if (__DEV__) {
+    unstashContextDependenciesInDEV();
+  }
   workInProgressHook.memoizedState = workInProgressHook.baseState = initialState;
   queue = workInProgressHook.queue = {
     last: null,
@@ -957,10 +969,14 @@ export function useMemo<T>(
 
   // Temporarily clear to forbid calling Hooks.
   currentlyRenderingFiber = null;
-  stashContextDependencies();
+  if (__DEV__) {
+    stashContextDependenciesInDEV();
+  }
   const nextValue = nextCreate();
   currentlyRenderingFiber = fiber;
-  unstashContextDependencies();
+  if (__DEV__) {
+    unstashContextDependenciesInDEV();
+  }
   workInProgressHook.memoizedState = [nextValue, nextDeps];
   currentHookNameInDev = null;
   return nextValue;
@@ -1059,10 +1075,14 @@ function dispatchAction<S, A>(
           // Temporarily clear to forbid calling Hooks in a reducer.
           let maybeFiber = currentlyRenderingFiber; // Note: likely null now unlike `fiber`
           currentlyRenderingFiber = null;
-          stashContextDependencies();
+          if (__DEV__) {
+            stashContextDependenciesInDEV();
+          }
           const eagerState = eagerReducer(currentState, action);
           currentlyRenderingFiber = maybeFiber;
-          unstashContextDependencies();
+          if (__DEV__) {
+            unstashContextDependenciesInDEV();
+          }
           // Stash the eagerly computed state, and the reducer used to compute
           // it, on the update object. If the reducer hasn't changed by the
           // time we enter the render phase, then the eager state can be used

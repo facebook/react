@@ -672,7 +672,7 @@ describe('ReactHooks', () => {
     expect(root.toJSON()).toEqual('123');
   });
 
-  it('throws when reading context inside useMemo', () => {
+  it('warns when reading context inside useMemo', () => {
     const {useMemo, createContext} = React;
     const ReactCurrentDispatcher =
       React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
@@ -685,12 +685,12 @@ describe('ReactHooks', () => {
       }, []);
     }
 
-    expect(() => ReactTestRenderer.create(<App />)).toThrow(
+    expect(() => ReactTestRenderer.create(<App />)).toWarnDev(
       'Context can only be read while React is rendering',
     );
   });
 
-  it('throws when reading context inside useMemo after reading outside it', () => {
+  it('warns when reading context inside useMemo after reading outside it', () => {
     const {useMemo, createContext} = React;
     const ReactCurrentDispatcher =
       React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
@@ -707,13 +707,14 @@ describe('ReactHooks', () => {
       }, []);
     }
 
-    expect(() => ReactTestRenderer.create(<App />)).toThrow(
+    expect(() => ReactTestRenderer.create(<App />)).toWarnDev(
       'Context can only be read while React is rendering',
     );
     expect(firstRead).toBe('light');
     expect(secondRead).toBe('light');
   });
 
+  // Throws because there's no runtime cost for being strict here.
   it('throws when reading context inside useEffect', () => {
     const {useEffect, createContext} = React;
     const ReactCurrentDispatcher =
@@ -735,6 +736,7 @@ describe('ReactHooks', () => {
     );
   });
 
+  // Throws because there's no runtime cost for being strict here.
   it('throws when reading context inside useLayoutEffect', () => {
     const {useLayoutEffect, createContext} = React;
     const ReactCurrentDispatcher =
@@ -755,7 +757,7 @@ describe('ReactHooks', () => {
     );
   });
 
-  it('throws when reading context inside useReducer', () => {
+  it('warns when reading context inside useReducer', () => {
     const {useReducer, createContext} = React;
     const ReactCurrentDispatcher =
       React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
@@ -773,13 +775,13 @@ describe('ReactHooks', () => {
       return null;
     }
 
-    expect(() => ReactTestRenderer.create(<App />)).toThrow(
+    expect(() => ReactTestRenderer.create(<App />)).toWarnDev(
       'Context can only be read while React is rendering',
     );
   });
 
   // Edge case.
-  it('throws when reading context inside eager useReducer', () => {
+  it('warns when reading context inside eager useReducer', () => {
     const {useState, createContext} = React;
     const ThemeContext = createContext('light');
 
@@ -810,7 +812,7 @@ describe('ReactHooks', () => {
           <Cls />
         </React.Fragment>,
       ),
-    ).toThrow('Context can only be read while React is rendering');
+    ).toWarnDev('Context can only be read while React is rendering');
   });
 
   it('throws when calling hooks inside useReducer', () => {
