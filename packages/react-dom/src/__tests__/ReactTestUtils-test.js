@@ -519,7 +519,7 @@ describe('ReactTestUtils', () => {
     expect(mockArgs.length).toEqual(0);
   });
 
-  it('flushEffects should flush effects, duh', () => {
+  it('flushEffects should run any enqueued effects', () => {
     let effected = false;
     let layoutEffected = false;
     function App() {
