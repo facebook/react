@@ -922,6 +922,7 @@ describe('ReactHooks', () => {
       _setState(() => {
         throw new Error('Hello');
       });
+      return null;
     }
 
     expect(() =>
