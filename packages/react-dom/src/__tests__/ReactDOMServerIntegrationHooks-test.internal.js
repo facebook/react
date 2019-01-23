@@ -419,50 +419,47 @@ describe('ReactDOMServerHooks', () => {
       },
     );
 
-    itThrowsWhenRendering(
-      'a hook inside useMemo',
-      async render => {
-        function App() {
-          useMemo(() => {
-            useState();
-            return 0;
-          });
-          return null;
-        }
-        return render(<App />);
-      },
-      'Hooks can only be called inside the body of a function component.',
-    );
+    itRenders('with a warning for useState inside useMemo', async render => {
+      function App() {
+        useMemo(() => {
+          useState();
+          return 0;
+        });
+        return 'hi';
+      }
 
-    itThrowsWhenRendering(
-      'a hook inside useReducer',
-      async render => {
-        function App() {
-          const [value, dispatch] = useReducer((state, action) => {
-            useRef(0);
-            return state;
-          }, 0);
-          dispatch('foo');
-          return value;
-        }
-        return render(<App />);
-      },
-      'Hooks can only be called inside the body of a function component.',
-    );
+      const domNode = await render(<App />, 1);
+      expect(domNode.textContent).toEqual('hi');
+    });
 
-    itThrowsWhenRendering(
-      'a hook inside useState',
-      async render => {
-        function App() {
-          useState(() => {
-            useRef(0);
-            return 0;
-          });
+    itRenders('with a warning for useRef inside useReducer', async render => {
+      function App() {
+        const [value, dispatch] = useReducer((state, action) => {
+          useRef(0);
+          return state + 1;
+        }, 0);
+        if (value === 0) {
+          dispatch();
         }
-        return render(<App />);
-      },
-      'Hooks can only be called inside the body of a function component.',
-    );
+        return value;
+      }
+
+      const domNode = await render(<App />, 1);
+      expect(domNode.textContent).toEqual('1');
+    });
+
+    itRenders('with a warning for useRef inside useState', async render => {
+      function App() {
+        const [value] = useState(() => {
+          useRef(0);
+          return 0;
+        });
+        return value;
+      }
+
+      const domNode = await render(<App />, 1);
+      expect(domNode.textContent).toEqual('0');
+    });
   });
 
   describe('useRef', () => {
