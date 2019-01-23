@@ -474,4 +474,23 @@ describe('ReactDOMRoot', () => {
       {withoutStack: true},
     );
   });
+
+  it('warns when calling createRoot() multiple times on the same container', () => {
+    const root = ReactDOM.unstable_createRoot(container);
+    root.render(<div>Hi</div>);
+    jest.runAllTimers();
+    expect(container.textContent).toEqual('Hi');
+    expect(() => {
+      ReactDOM.unstable_createRoot(container);
+    }).toWarnDev(
+      [
+        'You are calling ReactDOM.unstable_createRoot() on a container where ' +
+          'ReactDOM.unstable_createRoot() was already called on. This is not ' +
+          'supported.',
+      ],
+      {withoutStack: true},
+    );
+    jest.runAllTimers();
+    expect(container.textContent).toEqual('Hi');
+  });
 });
