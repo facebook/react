@@ -17,9 +17,6 @@ let ReactDebugTools;
 describe('ReactHooksInspectionIntergration', () => {
   beforeEach(() => {
     jest.resetModules();
-    let ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    // TODO: Switch this test to non-internal once the flag is on by default.
-    ReactFeatureFlags.enableHooks = true;
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     ReactDebugTools = require('react-debug-tools');

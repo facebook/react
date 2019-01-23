@@ -15,7 +15,6 @@ import shallowEqual from 'shared/shallowEqual';
 import invariant from 'shared/invariant';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {enableHooks} from 'shared/ReactFeatureFlags';
 import warning from 'shared/warning';
 import is from 'shared/objectIs';
 
@@ -187,17 +186,15 @@ class ReactShallowRenderer {
     this._rendering = false;
     this._forcedUpdate = false;
     this._updater = new Updater(this);
-    if (enableHooks) {
-      this._dispatcher = this._createDispatcher();
-      this._workInProgressHook = null;
-      this._firstWorkInProgressHook = null;
-      this._isReRender = false;
-      this._didScheduleRenderPhaseUpdate = false;
-      this._renderPhaseUpdates = null;
-      this._currentlyRenderingComponent = null;
-      this._numberOfReRenders = 0;
-      this._previousComponentIdentity = null;
-    }
+    this._dispatcher = this._createDispatcher();
+    this._workInProgressHook = null;
+    this._firstWorkInProgressHook = null;
+    this._isReRender = false;
+    this._didScheduleRenderPhaseUpdate = false;
+    this._renderPhaseUpdates = null;
+    this._currentlyRenderingComponent = null;
+    this._numberOfReRenders = 0;
+    this._previousComponentIdentity = null;
   }
 
   _context: null | Object;
@@ -560,27 +557,19 @@ class ReactShallowRenderer {
 
         this._mountClassComponent(element, this._context);
       } else {
-        if (enableHooks) {
-          const prevDispatcher = ReactCurrentDispatcher.current;
-          ReactCurrentDispatcher.current = this._dispatcher;
-          this._prepareToUseHooks(element.type);
-          try {
-            this._rendered = element.type.call(
-              undefined,
-              element.props,
-              this._context,
-            );
-          } finally {
-            ReactCurrentDispatcher.current = prevDispatcher;
-          }
-          this._finishHooks(element, context);
-        } else {
+        const prevDispatcher = ReactCurrentDispatcher.current;
+        ReactCurrentDispatcher.current = this._dispatcher;
+        this._prepareToUseHooks(element.type);
+        try {
           this._rendered = element.type.call(
             undefined,
             element.props,
             this._context,
           );
+        } finally {
+          ReactCurrentDispatcher.current = prevDispatcher;
         }
+        this._finishHooks(element, context);
       }
     }
 

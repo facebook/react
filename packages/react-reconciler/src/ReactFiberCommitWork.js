@@ -24,7 +24,6 @@ import type {Thenable} from './ReactFiberScheduler';
 
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {
-  enableHooks,
   enableSchedulerTracing,
   enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
@@ -312,9 +311,6 @@ function commitHookEffectList(
   mountTag: number,
   finishedWork: Fiber,
 ) {
-  if (!enableHooks) {
-    return;
-  }
   const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
   let lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
   if (lastEffect !== null) {
