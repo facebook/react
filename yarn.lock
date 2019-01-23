@@ -2258,13 +2258,40 @@ globby@^5.0.0:
     pify "^2.0.0"
     pinkie-promise "^2.0.0"
 
-google-closure-compiler@20180506.0.0:
-  version "20180506.0.0"
-  resolved "https://registry.yarnpkg.com/google-closure-compiler/-/google-closure-compiler-20180506.0.0.tgz#f59cc34dbf8c9a4f48fba3ebb2cf098d25e345ab"
+google-closure-compiler-java@^20190106.0.0:
+  version "20190106.0.0"
+  resolved "https://registry.yarnpkg.com/google-closure-compiler-java/-/google-closure-compiler-java-20190106.0.0.tgz#10b89c17901bece749bc6f7f5ea5cfdedb0374ff"
+  integrity sha512-M/mrssfSTY7CQLzW9Zc1voGHvPCxMG2MK7Y1USY9/oBHBVzYRxDac3k0icjpglPu9/uIDw4BwpKTrGYfvv3O1Q==
+
+google-closure-compiler-js@^20190106.0.0:
+  version "20190106.0.0"
+  resolved "https://registry.yarnpkg.com/google-closure-compiler-js/-/google-closure-compiler-js-20190106.0.0.tgz#cf630a1d290bf7dd545d614754e844d08663fc5a"
+  integrity sha512-9gbXqArlCvwp3FZOQO8dyyt6BZChliLuU95aseoTS/aapCfkxclBT4R6ar9hrEvu/fA4Zgpz+KPQyeOeJkUauQ==
+
+google-closure-compiler-linux@^20190106.0.0:
+  version "20190106.0.0"
+  resolved "https://registry.yarnpkg.com/google-closure-compiler-linux/-/google-closure-compiler-linux-20190106.0.0.tgz#512cc89768c302b7f3ebe36a45bc0f41698cabe1"
+  integrity sha512-rShT8RSaGbbnNAFhPL1t2BP6Mq9ayBwWPpCPgH9bLtGSH4qrmmx+V5RMaZ4gOaOlhyB/UpwB6E7E4TEG5RbJyg==
+
+google-closure-compiler-osx@^20190106.0.0:
+  version "20190106.0.0"
+  resolved "https://registry.yarnpkg.com/google-closure-compiler-osx/-/google-closure-compiler-osx-20190106.0.0.tgz#ee013acedf97b9135b305bb206fc0a115c088aab"
+  integrity sha512-yLmJfb6MnqriG7daWCGQVz4YEtHDxjKmAbEkSXMy2YkWFACgRTF0b9u3BPIP8/pX/5XmKCKWWE1d66OMIlRaqQ==
+
+google-closure-compiler@20190106.0.0:
+  version "20190106.0.0"
+  resolved "https://registry.yarnpkg.com/google-closure-compiler/-/google-closure-compiler-20190106.0.0.tgz#dc06d30c5ef380cde7f54b6741e58e7378186d1a"
+  integrity sha512-6bXgR9T9kBgs9iZAtqmLe8tmk8uF6IjqDK8sal7PQ2rDju0hRbkJPgDHvlmGlCuB1wsJNanIXHYtqHUCrcvpcw==
   dependencies:
     chalk "^1.0.0"
+    google-closure-compiler-java "^20190106.0.0"
+    google-closure-compiler-js "^20190106.0.0"
+    minimist "^1.2.0"
     vinyl "^2.0.1"
     vinyl-sourcemaps-apply "^0.2.0"
+  optionalDependencies:
+    google-closure-compiler-linux "^20190106.0.0"
+    google-closure-compiler-osx "^20190106.0.0"
 
 graceful-fs@^4.1.11, graceful-fs@^4.1.2, graceful-fs@^4.1.4:
   version "4.1.11"
@@ -4469,6 +4496,14 @@ sane@^2.0.0:
 sax@^1.2.4:
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/sax/-/sax-1.2.4.tgz#2816234e2378bddc4e5354fab5caa895df7100d9"
+
+scheduler@^0.11.0:
+  version "0.11.3"
+  resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.11.3.tgz#b5769b90cf8b1464f3f3cfcafe8e3cd7555a2d6b"
+  integrity sha512-i9X9VRRVZDd3xZw10NY5Z2cVMbdYg6gqFecfj79USv1CFN+YrJ3gIPRKf1qlY+Sxly4djoKdfx1T+m9dnRB8kQ==
+  dependencies:
+    loose-envify "^1.1.0"
+    object-assign "^4.1.1"
 
 "semver@2 || 3 || 4 || 5", semver@^5.1.0, semver@^5.3.0, semver@^5.4.1, semver@^5.5.0:
   version "5.5.0"
