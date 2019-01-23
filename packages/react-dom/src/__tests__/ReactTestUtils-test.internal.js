@@ -1,17 +1,15 @@
-let ReactFeatureFlags
-let React 
-let ReactDOM
-let ReactTestUtils
+let ReactFeatureFlags;
+let React;
+let ReactDOM;
+let ReactTestUtils;
 
-describe("ReactTestUtils", () => {
+describe('ReactTestUtils', () => {
   beforeEach(() => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableHooks = true;
     React = require('react');
-    ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
   });
-
 
   it('flushEffects should run any enqueued effects', () => {
     let effected = false;
@@ -35,4 +33,4 @@ describe("ReactTestUtils", () => {
     // effects have now fired
     expect(effected).toBe(true);
   });
-})
+});
