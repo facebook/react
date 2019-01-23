@@ -851,6 +851,13 @@ function createRoot(container: DOMContainer, options?: RootOptions): ReactRoot {
         'passed to ReactDOM.render(). This is not supported.',
       enableStableConcurrentModeAPIs ? 'createRoot' : 'unstable_createRoot',
     );
+    warningWithoutStack(
+      !container._reactHasBeenPassedToCreateRootDEV,
+      'You are calling ReactDOM.%s() on a container where ReactDOM.%s() was ' +
+        'already called on. This is not supported.',
+      enableStableConcurrentModeAPIs ? 'createRoot' : 'unstable_createRoot',
+      enableStableConcurrentModeAPIs ? 'createRoot' : 'unstable_createRoot',
+    );
     container._reactHasBeenPassedToCreateRootDEV = true;
   }
   const hydrate = options != null && options.hydrate === true;
