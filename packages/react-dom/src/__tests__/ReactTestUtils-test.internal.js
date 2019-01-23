@@ -1,6 +1,5 @@
 let ReactFeatureFlags;
 let React;
-let ReactDOM;
 let ReactTestUtils;
 
 describe('ReactTestUtils', () => {
