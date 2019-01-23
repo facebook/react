@@ -56,7 +56,6 @@ import {
   SimpleMemoComponent,
 } from 'shared/ReactWorkTags';
 import {
-  enableHooks,
   enableSchedulerTracing,
   enableProfilerTimer,
   enableUserTimingAPI,
@@ -165,7 +164,7 @@ import {
   commitDetachRef,
   commitPassiveHookEffects,
 } from './ReactFiberCommitWork';
-import {Dispatcher, DispatcherWithoutHooks} from './ReactFiberDispatcher';
+import {Dispatcher} from './ReactFiberDispatcher';
 
 export type Thenable = {
   then(resolve: () => mixed, reject?: () => mixed): mixed,
@@ -510,7 +509,7 @@ function commitAllLifeCycles(
       commitAttachRef(nextEffect);
     }
 
-    if (enableHooks && effectTag & Passive) {
+    if (effectTag & Passive) {
       rootWithPendingPassiveEffects = finishedRoot;
     }
 
@@ -784,11 +783,7 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
     }
   }
 
-  if (
-    enableHooks &&
-    firstEffect !== null &&
-    rootWithPendingPassiveEffects !== null
-  ) {
+  if (firstEffect !== null && rootWithPendingPassiveEffects !== null) {
     // This commit included a passive effect. These do not need to fire until
     // after the next paint. Schedule an callback to fire them in an async
     // event. To ensure serial execution, the callback will be flushed early if
@@ -1221,11 +1216,7 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
   flushPassiveEffects();
 
   isWorking = true;
-  if (enableHooks) {
-    ReactCurrentDispatcher.current = Dispatcher;
-  } else {
-    ReactCurrentDispatcher.current = DispatcherWithoutHooks;
-  }
+  ReactCurrentDispatcher.current = Dispatcher;
 
   const expirationTime = root.nextExpirationTimeToWorkOn;
 
