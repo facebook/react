@@ -9,7 +9,6 @@
 
 'use strict';
 
-let ReactFeatureFlags;
 let React;
 let ReactDOM;
 let Suspense;
@@ -21,8 +20,6 @@ describe('ReactDOMSuspensePlaceholder', () => {
 
   beforeEach(() => {
     jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableHooks = true;
     React = require('react');
     ReactDOM = require('react-dom');
     ReactCache = require('react-cache');

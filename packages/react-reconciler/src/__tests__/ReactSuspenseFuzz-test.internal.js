@@ -23,7 +23,6 @@ describe('ReactSuspenseFuzz', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
-    ReactFeatureFlags.enableHooks = true;
     React = require('react');
     Suspense = React.Suspense;
     ReactTestRenderer = require('react-test-renderer');
