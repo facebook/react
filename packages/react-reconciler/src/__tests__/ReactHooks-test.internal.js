@@ -778,6 +778,41 @@ describe('ReactHooks', () => {
     );
   });
 
+  // Edge case.
+  it('throws when reading context inside eager useReducer', () => {
+    const {useState, createContext} = React;
+    const ThemeContext = createContext('light');
+
+    const ReactCurrentDispatcher =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .ReactCurrentDispatcher;
+
+    let _setState;
+    function Fn() {
+      const [, setState] = useState(0);
+      _setState = setState;
+      return null;
+    }
+
+    class Cls extends React.Component {
+      render() {
+        _setState(() => {
+          ReactCurrentDispatcher.current.readContext(ThemeContext);
+        });
+        return null;
+      }
+    }
+
+    expect(() =>
+      ReactTestRenderer.create(
+        <React.Fragment>
+          <Fn />
+          <Cls />
+        </React.Fragment>,
+      ),
+    ).toThrow('Context can only be read while React is rendering');
+  });
+
   it('throws when calling hooks inside useReducer', () => {
     const {useReducer, useRef} = React;
     function App() {

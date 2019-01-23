@@ -887,7 +887,13 @@ function dispatchAction<S, A>(
       if (eagerReducer !== null) {
         try {
           const currentState: S = (queue.eagerState: any);
+          // Temporarily clear to forbid calling Hooks in a reducer.
+          let maybeFiber = currentlyRenderingFiber; // Note: likely null now unlike `fiber`
+          currentlyRenderingFiber = null;
+          stashContextDependencies();
           const eagerState = eagerReducer(currentState, action);
+          currentlyRenderingFiber = maybeFiber;
+          unstashContextDependencies();
           // Stash the eagerly computed state, and the reducer used to compute
           // it, on the update object. If the reducer hasn't changed by the
           // time we enter the render phase, then the eager state can be used
