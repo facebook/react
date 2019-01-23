@@ -49,6 +49,8 @@ let renderPhaseUpdates: Map<UpdateQueue<any>, Update<any>> | null = null;
 let numberOfReRenders: number = 0;
 const RE_RENDER_LIMIT = 25;
 
+let shouldWarnAboutReadingContextInDEV = false;
+
 // In DEV, this is the name of the currently executing primitive hook
 let currentHookNameInDev: ?string;
 
@@ -137,6 +139,9 @@ function createWorkInProgressHook(): Hook {
 
 export function prepareToUseHooks(componentIdentity: Object): void {
   currentlyRenderingComponent = componentIdentity;
+  if (__DEV__) {
+    shouldWarnAboutReadingContextInDEV = false;
+  }
 
   // The following should have already been reset
   // didScheduleRenderPhaseUpdate = false;
@@ -173,6 +178,9 @@ export function finishHooks(
   numberOfReRenders = 0;
   renderPhaseUpdates = null;
   workInProgressHook = null;
+  if (__DEV__) {
+    shouldWarnAboutReadingContextInDEV = false;
+  }
 
   // These were reset above
   // currentlyRenderingComponent = null;
@@ -191,6 +199,15 @@ function readContext<T>(
 ): T {
   let threadID = currentThreadID;
   validateContextBounds(context, threadID);
+  if (__DEV__) {
+    warning(
+      !shouldWarnAboutReadingContextInDEV,
+      'Context can only be read while React is rendering. ' +
+        'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
+        'In function components, you can read it directly in the function body, but not ' +
+        'inside Hooks like useReducer() or useMemo().',
+    );
+  }
   return context[threadID];
 }
 
@@ -255,7 +272,13 @@ export function useReducer<S, A>(
           const action = update.action;
           // Temporarily clear to forbid calling Hooks.
           currentlyRenderingComponent = null;
+          if (__DEV__) {
+            shouldWarnAboutReadingContextInDEV = true;
+          }
           newState = reducer(newState, action);
+          if (__DEV__) {
+            shouldWarnAboutReadingContextInDEV = false;
+          }
           currentlyRenderingComponent = component;
           update = update.next;
         } while (update !== null);
@@ -311,8 +334,14 @@ function useMemo<T>(nextCreate: () => T, deps: Array<mixed> | void | null): T {
 
   // Temporarily clear to forbid calling Hooks.
   currentlyRenderingComponent = null;
+  if (__DEV__) {
+    shouldWarnAboutReadingContextInDEV = true;
+  }
   const nextValue = nextCreate();
   currentlyRenderingComponent = component;
+  if (__DEV__) {
+    shouldWarnAboutReadingContextInDEV = false;
+  }
   workInProgressHook.memoizedState = [nextValue, nextDeps];
   return nextValue;
 }
