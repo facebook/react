@@ -52,12 +52,37 @@ let currentlyRenderingFiber: Fiber | null = null;
 let lastContextDependency: ContextDependency<mixed> | null = null;
 let lastContextWithAllBitsObserved: ReactContext<any> | null = null;
 
+// We stash the variables above before entering user code in Hooks.
+let stashedCurrentlyRenderingFiber: Fiber | null = null;
+let stashedLastContextDependency: ContextDependency<mixed> | null = null;
+let stashedLastContextWithAllBitsObserved: ReactContext<any> | null = null;
+
 export function resetContextDependences(): void {
   // This is called right before React yields execution, to ensure `readContext`
   // cannot be called outside the render phase.
   currentlyRenderingFiber = null;
   lastContextDependency = null;
   lastContextWithAllBitsObserved = null;
+
+  stashedCurrentlyRenderingFiber = null;
+  stashedLastContextDependency = null;
+  stashedLastContextWithAllBitsObserved = null;
+}
+
+export function stashContextDependencies(): void {
+  stashedCurrentlyRenderingFiber = currentlyRenderingFiber;
+  stashedLastContextDependency = lastContextDependency;
+  stashedLastContextWithAllBitsObserved = lastContextWithAllBitsObserved;
+
+  currentlyRenderingFiber = null;
+  lastContextDependency = null;
+  lastContextWithAllBitsObserved = null;
+}
+
+export function unstashContextDependencies(): void {
+  currentlyRenderingFiber = stashedCurrentlyRenderingFiber;
+  lastContextDependency = stashedLastContextDependency;
+  lastContextWithAllBitsObserved = stashedLastContextWithAllBitsObserved;
 }
 
 export function pushProvider<T>(providerFiber: Fiber, nextValue: T): void {

@@ -672,6 +672,147 @@ describe('ReactHooks', () => {
     expect(root.toJSON()).toEqual('123');
   });
 
+  it('throws when reading context inside useMemo', () => {
+    const {useMemo, createContext} = React;
+    const ReactCurrentDispatcher =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .ReactCurrentDispatcher;
+
+    const ThemeContext = createContext('light');
+    function App() {
+      return useMemo(() => {
+        return ReactCurrentDispatcher.current.readContext(ThemeContext);
+      }, []);
+    }
+
+    expect(() => ReactTestRenderer.create(<App />)).toThrow(
+      'Context can only be read while React is rendering',
+    );
+  });
+
+  it('throws when reading context inside useMemo after reading outside it', () => {
+    const {useMemo, createContext} = React;
+    const ReactCurrentDispatcher =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .ReactCurrentDispatcher;
+
+    const ThemeContext = createContext('light');
+    let firstRead, secondRead;
+    function App() {
+      firstRead = ReactCurrentDispatcher.current.readContext(ThemeContext);
+      useMemo(() => {});
+      secondRead = ReactCurrentDispatcher.current.readContext(ThemeContext);
+      return useMemo(() => {
+        return ReactCurrentDispatcher.current.readContext(ThemeContext);
+      }, []);
+    }
+
+    expect(() => ReactTestRenderer.create(<App />)).toThrow(
+      'Context can only be read while React is rendering',
+    );
+    expect(firstRead).toBe('light');
+    expect(secondRead).toBe('light');
+  });
+
+  it('throws when reading context inside useEffect', () => {
+    const {useEffect, createContext} = React;
+    const ReactCurrentDispatcher =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .ReactCurrentDispatcher;
+
+    const ThemeContext = createContext('light');
+    function App() {
+      useEffect(() => {
+        ReactCurrentDispatcher.current.readContext(ThemeContext);
+      });
+      return null;
+    }
+
+    const root = ReactTestRenderer.create(<App />);
+    expect(() => root.update(<App />)).toThrow(
+      // The exact message doesn't matter, just make sure we don't allow this
+      "Cannot read property 'readContext' of null",
+    );
+  });
+
+  it('throws when reading context inside useLayoutEffect', () => {
+    const {useLayoutEffect, createContext} = React;
+    const ReactCurrentDispatcher =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .ReactCurrentDispatcher;
+
+    const ThemeContext = createContext('light');
+    function App() {
+      useLayoutEffect(() => {
+        ReactCurrentDispatcher.current.readContext(ThemeContext);
+      });
+      return null;
+    }
+
+    expect(() => ReactTestRenderer.create(<App />)).toThrow(
+      // The exact message doesn't matter, just make sure we don't allow this
+      "Cannot read property 'readContext' of null",
+    );
+  });
+
+  it('throws when reading context inside useReducer', () => {
+    const {useReducer, createContext} = React;
+    const ReactCurrentDispatcher =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .ReactCurrentDispatcher;
+
+    const ThemeContext = createContext('light');
+    function App() {
+      useReducer(
+        () => {
+          ReactCurrentDispatcher.current.readContext(ThemeContext);
+        },
+        null,
+        {},
+      );
+      return null;
+    }
+
+    expect(() => ReactTestRenderer.create(<App />)).toThrow(
+      'Context can only be read while React is rendering',
+    );
+  });
+
+  // Edge case.
+  it('throws when reading context inside eager useReducer', () => {
+    const {useState, createContext} = React;
+    const ThemeContext = createContext('light');
+
+    const ReactCurrentDispatcher =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .ReactCurrentDispatcher;
+
+    let _setState;
+    function Fn() {
+      const [, setState] = useState(0);
+      _setState = setState;
+      return null;
+    }
+
+    class Cls extends React.Component {
+      render() {
+        _setState(() => {
+          ReactCurrentDispatcher.current.readContext(ThemeContext);
+        });
+        return null;
+      }
+    }
+
+    expect(() =>
+      ReactTestRenderer.create(
+        <React.Fragment>
+          <Fn />
+          <Cls />
+        </React.Fragment>,
+      ),
+    ).toThrow('Context can only be read while React is rendering');
+  });
+
   it('throws when calling hooks inside useReducer', () => {
     const {useReducer, useRef} = React;
     function App() {
