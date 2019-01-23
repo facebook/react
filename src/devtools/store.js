@@ -37,7 +37,7 @@ class Store extends EventEmitter {
   }
 
   onBridgeMount = (element: Element) => {
-    const {id} = element;
+    const { id } = element;
     debug('onBridgeMount()', element);
     this._idToElement.set(id, element);
 
@@ -71,7 +71,7 @@ class Store extends EventEmitter {
   };
 
   onBridgeUpdated = (element: Element) => {
-    const {id} = element;
+    const { id } = element;
     debug('onBridgeUpdated()', element);
     this._idToElement.set(id, element);
 

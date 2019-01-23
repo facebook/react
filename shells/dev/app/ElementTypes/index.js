@@ -14,6 +14,9 @@ import React, {
   Suspense,
 } from 'react';
 
+const Context = createContext('abc');
+Context.displayName = 'testContext';
+
 class ClassComponent extends Component<any> {
   render() {
     return null;
@@ -30,14 +33,19 @@ const ForwardRefComponent = forwardRef((props, ref) => (
   <ClassComponent ref={ref} {...props} />
 ));
 
-const LazyComponent = lazy(() => Promise.resolve({
-  default: FunctionComponent,
-}));
+const LazyComponent = lazy(() =>
+  Promise.resolve({
+    default: FunctionComponent,
+  })
+);
 
 export default function ElementTypes() {
   return (
     <Profiler id="test" onRender={() => {}}>
       <Fragment>
+        <Context.Provider value={'def'}>
+          <Context.Consumer>{value => null}</Context.Consumer>
+        </Context.Provider>
         <StrictMode>
           <ConcurrentMode>
             <Suspense fallback={<div>Loading...</div>}>
@@ -51,5 +59,5 @@ export default function ElementTypes() {
         </StrictMode>
       </Fragment>
     </Profiler>
-  )
+  );
 }

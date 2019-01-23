@@ -7,12 +7,12 @@
  * @flow
  */
 
-import type {Hook} from './types';
+import type { Hook } from './types';
 
 declare var window: any;
 
 export function installHook(target: any): Hook {
-  if (target.hasOwnProperty('__REACT_DEVTOOLS_GLOBAL_HOOK__')) return
+  if (target.hasOwnProperty('__REACT_DEVTOOLS_GLOBAL_HOOK__')) return;
 
   function detectReactBuildType(renderer) {
     try {
@@ -68,12 +68,16 @@ export function installHook(target: any): Hook {
   }
 
   function inject(renderer) {
-    const id = Math.random().toString(16).slice(2);
+    const id = Math.random()
+      .toString(16)
+      .slice(2);
     renderers[id] = renderer;
 
-    const reactBuildType = hasDetectedBadDCE ? 'deadcode' : detectReactBuildType(renderer);
+    const reactBuildType = hasDetectedBadDCE
+      ? 'deadcode'
+      : detectReactBuildType(renderer);
 
-    hook.emit('renderer', {id, renderer, reactBuildType});
+    hook.emit('renderer', { id, renderer, reactBuildType });
 
     return id;
   }
@@ -130,7 +134,8 @@ export function installHook(target: any): Hook {
     const mountedRoots = hook.getFiberRoots(rendererID);
     const current = root.current;
     const isKnownRoot = mountedRoots.has(root);
-    const isUnmounting = current.memoizedState == null || current.memoizedState.element == null;
+    const isUnmounting =
+      current.memoizedState == null || current.memoizedState.element == null;
 
     // Keep track of mounted roots so we can hydrate when DevTools connect.
     if (!isKnownRoot && !isUnmounting) {
@@ -149,7 +154,7 @@ export function installHook(target: any): Hook {
   const listeners = {};
   const renderers = {};
 
-  const hook: Hook = ({
+  const hook: Hook = {
     rendererInterfaces,
     listeners,
     renderers,
@@ -169,14 +174,18 @@ export function installHook(target: any): Hook {
     checkDCE,
     onCommitFiberUnmount,
     onCommitFiberRoot,
-  });
+  };
 
-  Object.defineProperty(target, '__REACT_DEVTOOLS_GLOBAL_HOOK__', ({
-    enumerable: false,
-    get () {
-      return hook
-    }
-  }: Object));
+  Object.defineProperty(
+    target,
+    '__REACT_DEVTOOLS_GLOBAL_HOOK__',
+    ({
+      enumerable: false,
+      get() {
+        return hook;
+      },
+    }: Object)
+  );
 
   return hook;
 }

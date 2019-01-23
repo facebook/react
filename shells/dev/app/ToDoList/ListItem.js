@@ -1,9 +1,9 @@
 // @flow
 
-import React, { Fragment, useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 import styles from './ListItem.css';
 
-import type {Item} from './List';
+import type { Item } from './List';
 
 type Props = {|
   item: Item,
@@ -22,15 +22,18 @@ export default function ListItem({ item, removeItem, toggleItem }: Props) {
 
   return (
     <li className={styles.ListItem}>
-      <button className={styles.IconButton} onClick={handleDelete}>🗑</button>
+      <button className={styles.IconButton} onClick={handleDelete}>
+        🗑
+      </button>
       <label className={styles.Label}>
         <input
           className={styles.Input}
           checked={item.isComplete}
           onChange={handleToggle}
           type="checkbox"
-        /> {item.text}
+        />{' '}
+        {item.text}
       </label>
     </li>
-  )
+  );
 }

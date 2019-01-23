@@ -28,12 +28,12 @@
 }
 .Component:before {
   white-space: nowrap;
-  content: "<";
+  content: '<';
   color: var(--color-tree-tag);
 }
 .Component:after {
   white-space: nowrap;
-  content: ">";
+  content: '>';
   color: var(--color-tree-tag);
 }
 

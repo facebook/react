@@ -1,21 +1,10 @@
 // @flow
 
-import type {ElementType} from 'src/devtools/types';
+import type { ElementType } from 'src/devtools/types';
 
 type BundleType =
-  | 0  // PROD
+  | 0 // PROD
   | 1; // DEV
-
-type CompositeUpdater = {
-  canUpdate: boolean,
-  setInProps: ?(path: Array<string>, value: any) => void,
-  setInState: ?(path: Array<string>, value: any) => void,
-  setInContext: ?(path: Array<string>, value: any) => void,
-};
-
-type NativeUpdater = {
-  setNativeProps: ?(nativeProps: {[key: string]: any}) => void,
-};
 
 // TODO: Better type for Fiber
 export type Fiber = Object;
@@ -43,7 +32,11 @@ export type ReactRenderer = {
   findFiberByHostInstance: (hostInstance: NativeType) => ?Fiber,
   version: string,
   bundleType: BundleType,
-  overrideProps?: ?(fiber: Object, path: Array<string | number>, value: any) => void,
+  overrideProps?: ?(
+    fiber: Object,
+    path: Array<string | number>,
+    value: any
+  ) => void,
 };
 
 export type RendererInterface = {
@@ -58,12 +51,12 @@ export type RendererInterface = {
 export type Handler = (data: any) => void;
 
 export type Hook = {
-  listeners: {[key: string]: Array<Handler>},
-  rendererInterfaces: {[key: string]: RendererInterface},
-  renderers: {[key: string]: ReactRenderer},
+  listeners: { [key: string]: Array<Handler> },
+  rendererInterfaces: { [key: string]: RendererInterface },
+  renderers: { [key: string]: ReactRenderer },
 
   emit: (evt: string, data: any) => void,
-  getFiberRoots: (rendererID : string) => Set<Object>,
+  getFiberRoots: (rendererID: string) => Set<Object>,
   inject: (renderer: ReactRenderer) => string | null,
   on: (evt: string, handler: Handler) => void,
   off: (evt: string, handler: Handler) => void,

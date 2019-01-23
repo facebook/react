@@ -1,12 +1,14 @@
 // @flow
 
-import {createContext, useLayoutEffect, useRef, useState} from 'react';
+import { useLayoutEffect, useState } from 'react';
 
-import type {Element} from '../types';
+import type { Element } from '../types';
 import Store from '../store';
 
 export function useElement(store: Store, id: string): Element {
-  const [element, setElement] = useState<Element>(((store.getElement(id): any): Element));
+  const [element, setElement] = useState<Element>(
+    ((store.getElement(id): any): Element)
+  );
 
   useLayoutEffect(() => {
     const handler = () => setElement(((store.getElement(id): any): Element));

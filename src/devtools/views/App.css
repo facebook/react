@@ -14,11 +14,11 @@
   --color-special05: #aa0d91;
   --color-special06: #ef6632;
   --color-special07: #777d88;
-  --color-state00: #0088FA;
+  --color-state00: #0088fa;
   --color-state01: #dadada;
   --color-state02: #ffffff;
   --color-state03: #ebf1fb;
-  --color-state04: #FFFF00;
+  --color-state04: #ffff00;
   --color-state05: #222222;
   --color-state06: #222222;
 
@@ -31,7 +31,8 @@
   --line-height-tree-normal: 1.5;
 
   /* GitHub.com system fonts */
-  --font-family-monospace: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  --font-family-monospace: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo,
+    Courier, monospace;
   --font-size-tree-compact: 12px;
   --font-size-tree-normal: 14px;
 }
@@ -41,7 +42,7 @@
   height: 100%;
   overflow: auto;
 
-  -webkit-font-smoothing:  antialiased;
+  -webkit-font-smoothing: antialiased;
 }
 
 * {

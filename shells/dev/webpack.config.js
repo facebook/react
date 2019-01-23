@@ -1,5 +1,5 @@
-const {readFileSync} = require('fs');
-const {resolve} = require('path');
+const { readFileSync } = require('fs');
+const { resolve } = require('path');
 
 // TODO Share Webpack configs like alias
 

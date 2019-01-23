@@ -1,4 +1,39 @@
 {
+  "repository": "bvaughn/react-devtools-experimental",
+  "license": "BSD-3-Clause",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "jest": {
+    "modulePathIgnorePatterns": [
+      "<rootDir>/shells"
+    ]
+  },
+  "scripts": {
+    "build:extension": "yarn run build:extension:chrome && yarn run build:extension:firefox",
+    "build:extension:chrome": "node ./shells/chrome/build",
+    "build:extension:firefox": "node ./shells/firefox/build",
+    "build:standalone": "cd packages/react-devtools-core && yarn run build",
+    "deploy": "cd ./shells/theme-preview && ./build.sh && gh-pages -d .",
+    "linc": "lint-staged",
+    "lint": "eslint '**/*.js'",
+    "precommit": "lint-staged",
+    "prettier": "prettier --write '**/*.{js,json,css}'",
+    "start": "cd ./shells/dev && open ./index.html && webpack --config webpack.config.js --watch",
+    "test": "jest",
+    "test:chrome": "node ./shells/chrome/test",
+    "test:firefox": "node ./shells/firefox/test",
+    "test:standalone": "cd packages/react-devtools && yarn start",
+    "typecheck": "flow check"
+  },
+  "lint-staged": {
+    "{shells,src}/**/*.{js,json,css}": [
+      "prettier --write",
+      "git add"
+    ],
+    "**/*.js": "eslint --max-warnings 0"
+  },
   "dependencies": {
     "@babel/core": "^7.1.6",
     "@babel/plugin-proposal-class-properties": "^7.1.0",
@@ -8,32 +43,48 @@
     "@babel/preset-react": "^7.0.0",
     "adm-zip": "^0.4.7",
     "babel-core": "^7.0.0-bridge",
-    "babel-eslint": "6",
+    "babel-eslint": "^9.0.0",
     "babel-jest": "^23.6.0",
     "babel-loader": "^8.0.4",
     "child-process-promise": "^2.2.1",
+    "chrome-launch": "^1.1.4",
     "classnames": "2.2.1",
     "cli-spinners": "^1.0.0",
     "clipboard-js": "^0.3.3",
     "css-loader": "^1.0.1",
     "error-stack-parser": "^2.0.2",
     "es6-symbol": "3.0.2",
-    "eslint": "2.10.2",
-    "eslint-plugin-react": "5.1.1",
+    "eslint": "^4.19.1",
+    "eslint-config-prettier": "^2.9.0",
+    "eslint-config-react-app": "^2.1.0",
+    "eslint-config-standard": "^11.0.0",
+    "eslint-config-standard-react": "^6.0.0",
+    "eslint-plugin-flowtype": "^2.47.1",
+    "eslint-plugin-import": "^2.11.0",
+    "eslint-plugin-jsx-a11y": "^5",
+    "eslint-plugin-node": "^6.0.1",
+    "eslint-plugin-prettier": "^2.6.0",
+    "eslint-plugin-promise": "^3.7.0",
+    "eslint-plugin-react": "^7.7.0",
+    "eslint-plugin-standard": "^3.0.1",
     "events": "^3.0.0",
     "fbjs": "0.5.1",
     "fbjs-scripts": "0.7.0",
+    "firefox-profile": "^1.0.2",
     "flow-bin": "^0.91.0",
     "fs-extra": "^3.0.1",
     "gh-pages": "^1.0.0",
     "immutable": "3.7.6",
     "jest": "22.1.4",
+    "lerna": "^2.8.0",
+    "lint-staged": "^7.0.5",
     "log-update": "^2.0.0",
     "lru-cache": "^4.1.3",
     "memoize-one": "^3.1.1",
     "node-libs-browser": "0.5.3",
     "nullthrows": "^1.0.0",
     "object-assign": "4.0.1",
+    "prettier": "^1.16.1",
     "prop-types": "^15.6.1",
     "react": "^16.8.0-alpha.1",
     "react-color": "^2.11.7",
@@ -43,38 +94,8 @@
     "react-window": "^1.1.1",
     "semver": "^5.5.1",
     "style-loader": "^0.23.1",
+    "web-ext": "^1.10.1",
     "webpack": "^4.26.0",
     "webpack-cli": "^3.1.2"
-  },
-  "license": "BSD-3-Clause",
-  "repository": "facebook/react-devtools",
-  "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
-  "scripts": {
-    "build:extension": "yarn run build:extension:chrome && yarn run build:extension:firefox",
-    "build:extension:chrome": "node ./shells/chrome/build",
-    "build:extension:firefox": "node ./shells/firefox/build",
-    "build:standalone": "cd packages/react-devtools-core && yarn run build",
-    "deploy": "cd ./shells/theme-preview && ./build.sh && gh-pages -d .",
-    "lint": "eslint .",
-    "start": "cd ./shells/dev && open ./index.html && webpack --config webpack.config.js --watch",
-    "test": "jest",
-    "test:chrome": "node ./shells/chrome/test",
-    "test:firefox": "node ./shells/firefox/test",
-    "test:standalone": "cd packages/react-devtools && yarn start",
-    "typecheck": "flow check"
-  },
-  "jest": {
-    "modulePathIgnorePatterns": [
-      "<rootDir>/shells"
-    ]
-  },
-  "devDependencies": {
-    "chrome-launch": "^1.1.4",
-    "firefox-profile": "^1.0.2",
-    "lerna": "^2.8.0",
-    "web-ext": "^1.10.1"
   }
 }

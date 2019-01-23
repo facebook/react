@@ -12,56 +12,69 @@ export type Item = {|
 
 type Props = {||};
 
-export default function List({}: Props) {
+export default function List(props: Props) {
   const [newItemText, setNewItemText] = useState<string>('');
   const [items, setItems] = useState<Array<Item>>([
-    {id: 1, isComplete: true, text: "First"},
-    {id: 2, isComplete: true, text: "Second"},
-    {id: 3, isComplete: false, text: "Third"},
+    { id: 1, isComplete: true, text: 'First' },
+    { id: 2, isComplete: true, text: 'Second' },
+    { id: 3, isComplete: false, text: 'Third' },
   ]);
   const [uid, setUID] = useState<number>(4);
 
   const handleClick = useCallback(() => {
     if (newItemText !== '') {
-      setItems([...items, {
-        id: uid,
-        isComplete: false,
-        text: newItemText,
-      }]);
+      setItems([
+        ...items,
+        {
+          id: uid,
+          isComplete: false,
+          text: newItemText,
+        },
+      ]);
       setUID(uid + 1);
       setNewItemText('');
     }
   }, [newItemText]);
 
-  const handleKeyPress = useCallback(event => {
-    if (event.key === 'Enter') {
-      handleClick();
-    }
-  }, [handleClick]);
+  const handleKeyPress = useCallback(
+    event => {
+      if (event.key === 'Enter') {
+        handleClick();
+      }
+    },
+    [handleClick]
+  );
 
-  const handleChange = useCallback(event => {
-    setNewItemText(event.currentTarget.value);
-  }, [setNewItemText]);
+  const handleChange = useCallback(
+    event => {
+      setNewItemText(event.currentTarget.value);
+    },
+    [setNewItemText]
+  );
 
-  const removeItem = useCallback(itemToRemove => {
-    setItems(
-      items.filter(item => item !== itemToRemove)
-    );
-  }, [items]);
+  const removeItem = useCallback(
+    itemToRemove => {
+      setItems(items.filter(item => item !== itemToRemove));
+    },
+    [items]
+  );
 
-  const toggleItem = useCallback(itemToToggle => {
-    const index = items.indexOf(itemToToggle);
+  const toggleItem = useCallback(
+    itemToToggle => {
+      const index = items.indexOf(itemToToggle);
 
-    setItems(
-      items
-        .slice(0, index)
-        .concat({
-          ...itemToToggle,
-          isComplete: !itemToToggle.isComplete,
-        })
-        .concat(items.slice(index + 1))
-    );
-  }, [items]);
+      setItems(
+        items
+          .slice(0, index)
+          .concat({
+            ...itemToToggle,
+            isComplete: !itemToToggle.isComplete,
+          })
+          .concat(items.slice(index + 1))
+      );
+    },
+    [items]
+  );
 
   return (
     <Fragment>
@@ -78,7 +91,11 @@ export default function List({}: Props) {
         className={styles.IconButton}
         disabled={newItemText === ''}
         onClick={handleClick}
-      >➕</button>
+      >
+        <span role="img" aria-label="Add item">
+          ➕
+        </span>
+      </button>
       <ul className={styles.List}>
         {items.map(item => (
           <ListItem

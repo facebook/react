@@ -2,12 +2,17 @@
 
 import nullthrows from 'nullthrows';
 import EventEmitter from 'events';
-import {guid} from './utils';
-import {ElementTypeOtherOrUnknown} from 'src/devtools/types';
+import { guid } from './utils';
+import { ElementTypeOtherOrUnknown } from 'src/devtools/types';
 
-import type {Fiber, RendererData, RendererID, RendererInterface} from './types';
-import type {Bridge} from '../types';
-import type {Element} from 'src/devtools/types';
+import type {
+  Fiber,
+  RendererData,
+  RendererID,
+  RendererInterface,
+} from './types';
+import type { Bridge } from '../types';
+import type { Element } from 'src/devtools/types';
 
 const debug = (methodName, ...args) => {
   //console.log(`%cAgent %c${methodName}`, 'color: blue; font-weight: bold;', 'font-weight: bold;', ...args);
@@ -22,7 +27,7 @@ export default class Agent extends EventEmitter {
   _idToRendererData: Map<string, RendererData> = new Map();
   _idToRendererID: Map<string, RendererID> = new Map();
   _isRenderInProgress: boolean = false;
-  _rendererInterfaces: {[key: RendererID]: RendererInterface} = {};
+  _rendererInterfaces: { [key: RendererID]: RendererInterface } = {};
   _roots: Set<RendererID> = new Set();
 
   // Tree updates are debounced to reduce bridge traffic and improve performance.
@@ -43,7 +48,10 @@ export default class Agent extends EventEmitter {
     // TODO Add other methods for e.g. profiling.
   }
 
-  setRendererInterface(rendererID: RendererID, rendererInterface: RendererInterface) {
+  setRendererInterface(
+    rendererID: RendererID,
+    rendererInterface: RendererInterface
+  ) {
     this._rendererInterfaces[rendererID] = rendererInterface;
   }
 
@@ -53,20 +61,19 @@ export default class Agent extends EventEmitter {
     }
     if (!this._fiberToID.has(fiber)) {
       this._fiberToID.set(fiber, guid());
-      this._idToFiber.set(
-        nullthrows(this._fiberToID.get(fiber)),
-        fiber
-      );
+      this._idToFiber.set(nullthrows(this._fiberToID.get(fiber)), fiber);
     }
     return nullthrows(this._fiberToID.get(fiber));
   }
 
   _crawl(parent: Element, id: string): void {
-    const data: RendererData = ((this._idToRendererData.get(id): any): RendererData);
+    const data: RendererData = ((this._idToRendererData.get(
+      id
+    ): any): RendererData);
     if (data.type === ElementTypeOtherOrUnknown) {
       data.children.forEach(childFiber => {
         if (childFiber !== null) {
-          this._crawl(parent, this._getId(childFiber))
+          this._crawl(parent, this._getId(childFiber));
         }
       });
     } else {
@@ -77,8 +84,7 @@ export default class Agent extends EventEmitter {
   }
 
   _crawlPendingRoots(): void {
-console.log('_crawlPendingRoots', this._pendingRoots)
-    this._pendingRoots.forEach(id =>  this._crawlRoot(id));
+    this._pendingRoots.forEach(id => this._crawlRoot(id));
     this._pendingRoots.clear();
     this._lastCrawlTime = performance.now();
   }
@@ -110,12 +116,12 @@ console.log('_crawlPendingRoots', this._pendingRoots)
 
     data.children.forEach(childFiber => {
       if (childFiber !== null) {
-        this._crawl(nextElement, this._getId(childFiber))
+        this._crawl(nextElement, this._getId(childFiber));
       }
     });
 
     if (prevElement == null) {
-      debug('emit("mount")', id, nextElement)
+      debug('emit("mount")', id, nextElement);
       this.emit('mount', nextElement);
     } else if (!areElementsEqual(prevElement, nextElement)) {
       debug('emit("update")', id, nextElement);
@@ -123,21 +129,37 @@ console.log('_crawlPendingRoots', this._pendingRoots)
     }
   }
 
-  _maybeCrawlRoot = () =>  {
+  _maybeCrawlRoot = () => {
     this._pendingRootTimeoutID = null;
     if (!this._isRenderInProgress) {
       this._crawlPendingRoots();
     }
   };
 
-  onHookMount = ({data, fiber, renderer}: {data: RendererData, fiber: Fiber, renderer: RendererID}) => {
+  onHookMount = ({
+    data,
+    fiber,
+    renderer,
+  }: {
+    data: RendererData,
+    fiber: Fiber,
+    renderer: RendererID,
+  }) => {
     const id = this._getId(fiber);
 
     this._idToRendererData.set(id, data);
     this._idToRendererID.set(id, renderer);
   };
 
-  onHookRootCommitted = ({data, fiber, renderer}: {data: RendererData, fiber: Fiber, renderer: RendererID}) => {
+  onHookRootCommitted = ({
+    data,
+    fiber,
+    renderer,
+  }: {
+    data: RendererData,
+    fiber: Fiber,
+    renderer: RendererID,
+  }) => {
     const id = this._getId(fiber);
 
     this._isRenderInProgress = false;
@@ -147,11 +169,14 @@ console.log('_crawlPendingRoots', this._pendingRoots)
     if (delta >= THROTTLE_BY_MS) {
       this._crawlPendingRoots();
     } else if (this._pendingRootTimeoutID === null) {
-      this._pendingRootTimeoutID = setTimeout(this._maybeCrawlRoot, THROTTLE_BY_MS - delta);
+      this._pendingRootTimeoutID = setTimeout(
+        this._maybeCrawlRoot,
+        THROTTLE_BY_MS - delta
+      );
     }
   };
 
-  onHookUnmount = ({fiber}: {fiber: Fiber}) => {
+  onHookUnmount = ({ fiber }: { fiber: Fiber }) => {
     const id = this._getId(fiber);
 
     if (this._roots.has(id)) {
@@ -170,7 +195,7 @@ console.log('_crawlPendingRoots', this._pendingRoots)
     this._idToRendererID.delete(id);
   };
 
-  onHookUpdate = ({data, fiber}: {data: RendererData, fiber: Fiber}) => {
+  onHookUpdate = ({ data, fiber }: { data: RendererData, fiber: Fiber }) => {
     const id = this._getId(fiber);
 
     this._isRenderInProgress = true;
@@ -178,8 +203,11 @@ console.log('_crawlPendingRoots', this._pendingRoots)
   };
 }
 
-function areElementsEqual(prevElement: ?Element, nextElement: ?Element): boolean {
-  if (!prevElement  || !nextElement) {
+function areElementsEqual(
+  prevElement: ?Element,
+  nextElement: ?Element
+): boolean {
+  if (!prevElement || !nextElement) {
     return false;
   }
 
@@ -188,12 +216,12 @@ function areElementsEqual(prevElement: ?Element, nextElement: ?Element): boolean
     prevElement.displayName !== nextElement.displayName ||
     prevElement.children.length !== nextElement.children.length ||
     prevElement.type !== nextElement.type
-  ) { 
+  ) {
     return false;
   }
 
   for (let i = 0; i < prevElement.children.length; i++) {
-    if  (prevElement.children[i] !== nextElement.children[i])  {
+    if (prevElement.children[i] !== nextElement.children[i]) {
       return false;
     }
   }

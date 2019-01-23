@@ -8,14 +8,7 @@ export const ElementTypeOtherOrUnknown = 5;
 export const ElementTypeProfiler = 6;
 export const ElementTypeSuspense = 7;
 
-export type ElementType =
-  | 1
-  | 2
-  | 3
-  | 4
-  | 5
-  | 6
-  | 7;
+export type ElementType = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 // TODO: Add profiling node
 

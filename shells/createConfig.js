@@ -1,8 +1,8 @@
-const path = require('path')
-const webpack = require('webpack')
-const merge = require('webpack-merge')
-const { VueLoaderPlugin } = require('vue-loader')
-const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin')
+const path = require('path');
+const webpack = require('webpack');
+const merge = require('webpack-merge');
+const { VueLoaderPlugin } = require('vue-loader');
+const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
 
 module.exports = (config, target = { chrome: 52, firefox: 48 }) => {
   const bubleOptions = {
@@ -10,9 +10,9 @@ module.exports = (config, target = { chrome: 52, firefox: 48 }) => {
     objectAssign: 'Object.assign',
     transforms: {
       forOf: false,
-      modules: false
-    }
-  }
+      modules: false,
+    },
+  };
 
   const baseConfig = {
     mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
@@ -21,8 +21,8 @@ module.exports = (config, target = { chrome: 52, firefox: 48 }) => {
         src: path.resolve(__dirname, '../src'),
         views: path.resolve(__dirname, '../src/devtools/views'),
         components: path.resolve(__dirname, '../src/devtools/components'),
-        filters: path.resolve(__dirname, '../src/devtools/filters')
-      }
+        filters: path.resolve(__dirname, '../src/devtools/filters'),
+      },
     },
     module: {
       rules: [
@@ -30,25 +30,21 @@ module.exports = (config, target = { chrome: 52, firefox: 48 }) => {
           test: /\.js$/,
           loader: 'buble-loader',
           exclude: /node_modules|vue\/dist|vuex\/dist/,
-          options: bubleOptions
+          options: bubleOptions,
         },
         {
           test: /\.vue$/,
           loader: 'vue-loader',
           options: {
             compilerOptions: {
-              preserveWhitespace: false
+              preserveWhitespace: false,
             },
-            transpileOptions: bubleOptions
-          }
+            transpileOptions: bubleOptions,
+          },
         },
         {
           test: /\.css$/,
-          use: [
-            'vue-style-loader',
-            'css-loader',
-            'postcss-loader'
-          ]
+          use: ['vue-style-loader', 'css-loader', 'postcss-loader'],
         },
         {
           test: /\.styl(us)?$/,
@@ -61,43 +57,45 @@ module.exports = (config, target = { chrome: 52, firefox: 48 }) => {
               loader: 'style-resources-loader',
               options: {
                 patterns: [
-                  path.resolve(__dirname, '../src/devtools/style/imports.styl')
-                ]
-              }
-            }
-          ]
+                  path.resolve(__dirname, '../src/devtools/style/imports.styl'),
+                ],
+              },
+            },
+          ],
         },
         {
           test: /\.(png|woff2)$/,
-          loader: 'url-loader?limit=0'
-        }
-      ]
+          loader: 'url-loader?limit=0',
+        },
+      ],
     },
     performance: {
-      hints: false
+      hints: false,
     },
     plugins: [
       new VueLoaderPlugin(),
       ...(process.env.VUE_DEVTOOL_TEST ? [] : [new FriendlyErrorsPlugin()]),
       new webpack.DefinePlugin({
-        'process.env.RELEASE_CHANNEL': JSON.stringify(process.env.RELEASE_CHANNEL || 'stable')
-      })
+        'process.env.RELEASE_CHANNEL': JSON.stringify(
+          process.env.RELEASE_CHANNEL || 'stable'
+        ),
+      }),
     ],
     devServer: {
-      port: process.env.PORT
+      port: process.env.PORT,
     },
     stats: {
-      colors: true
-    }
-  }
+      colors: true,
+    },
+  };
 
   if (process.env.NODE_ENV === 'production') {
-    const UglifyPlugin = require('uglifyjs-webpack-plugin')
+    const UglifyPlugin = require('uglifyjs-webpack-plugin');
     baseConfig.plugins.push(
       new webpack.DefinePlugin({
-        'process.env.NODE_ENV': '"production"'
+        'process.env.NODE_ENV': '"production"',
       })
-    )
+    );
     baseConfig.optimization = {
       minimizer: [
         new UglifyPlugin({
@@ -132,19 +130,19 @@ module.exports = (config, target = { chrome: 52, firefox: 48 }) => {
               // required features to drop conditional branches
               conditionals: true,
               dead_code: true,
-              evaluate: true
+              evaluate: true,
             },
             mangle: {
-              safari10: true
-            }
+              safari10: true,
+            },
           },
           sourceMap: false,
           cache: true,
-          parallel: true
-        })
-      ]
-    }
+          parallel: true,
+        }),
+      ],
+    };
   }
 
-  return merge(baseConfig, config)
-}
+  return merge(baseConfig, config);
+};

@@ -1,14 +1,13 @@
 // @flow
 
-import type {Hook} from './types';
-import type {Bridge} from '../types';
+import type { Hook } from './types';
 import Agent from './agent';
 
 import { attach } from './renderer';
 
 export function initBackend(hook: Hook, agent: Agent): void {
   const subs = [
-    hook.sub('renderer-attached', ({id, renderer, rendererInterface}) => {
+    hook.sub('renderer-attached', ({ id, renderer, rendererInterface }) => {
       agent.setRendererInterface(id, rendererInterface);
       rendererInterface.walkTree();
     }),
@@ -27,7 +26,7 @@ export function initBackend(hook: Hook, agent: Agent): void {
     hook.emit('renderer-attached', {
       id,
       renderer,
-      rendererInterface
+      rendererInterface,
     });
   };
 
@@ -38,7 +37,7 @@ export function initBackend(hook: Hook, agent: Agent): void {
   }
 
   // Connect any new renderers that injected themselves.
-  hook.on('renderer', ({id, renderer}) => {
+  hook.on('renderer', ({ id, renderer }) => {
     attachRenderer(id, renderer);
   });
 
@@ -48,4 +47,4 @@ export function initBackend(hook: Hook, agent: Agent): void {
     subs.forEach(fn => fn());
     hook.reactDevtoolsAgent = null;
   });
-};
+}

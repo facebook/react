@@ -3,7 +3,10 @@
 const FB_MODULE_RE = /^(.*) \[from (.*)\]$/;
 const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
 
-export function getDisplayName(type: Function, fallbackName: string = 'Unknown'): string {
+export function getDisplayName(
+  type: Function,
+  fallbackName: string = 'Unknown'
+): string {
   const nameFromCache = cachedDisplayNames.get(type);
   if (nameFromCache != null) {
     return nameFromCache;
@@ -43,5 +46,10 @@ export function getDisplayName(type: Function, fallbackName: string = 'Unknown')
 }
 
 export function guid(): string {
-  return 'g' + Math.random().toString(16).substr(2);
+  return (
+    'g' +
+    Math.random()
+      .toString(16)
+      .substr(2)
+  );
 }

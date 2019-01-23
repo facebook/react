@@ -2,7 +2,7 @@
 
 import EventEmitter from 'events';
 
-import type {Wall} from './types';
+import type { Wall } from './types';
 
 const BATCH_DURATION = 100;
 
@@ -18,17 +18,17 @@ export default class Bridge extends EventEmitter {
 
   wall: Wall;
 
-  constructor (wall: Wall) {
+  constructor(wall: Wall) {
     super();
 
     this.wall = wall;
     wall.listen(messages => {
       if (Array.isArray(messages)) {
-        messages.forEach(message => this._emit(message))
+        messages.forEach(message => this._emit(message));
       } else {
-        this._emit(messages)
+        this._emit(messages);
       }
-    })
+    });
   }
 
   /**
@@ -38,23 +38,23 @@ export default class Bridge extends EventEmitter {
    * @param {*} payload
    */
 
-  send (event: string, payload: any) {
+  send(event: string, payload: any) {
     const time = this._time;
 
     if (time === null) {
-      this.wall.send([{ event, payload }])
-      this._time = Date.now()
+      this.wall.send([{ event, payload }]);
+      this._time = Date.now();
     } else {
       this._messageQueue.push({
         event,
-        payload
-      })
+        payload,
+      });
 
-      const now = Date.now()
+      const now = Date.now();
       if (now - time > BATCH_DURATION) {
-        this._flush()
+        this._flush();
       } else {
-        this._timeoutID = setTimeout(() => this._flush(), BATCH_DURATION)
+        this._timeoutID = setTimeout(() => this._flush(), BATCH_DURATION);
       }
     }
   }
@@ -65,27 +65,27 @@ export default class Bridge extends EventEmitter {
    * @param {String} message
    */
 
-  log (message: string): void {
-    this.send('log', message)
+  log(message: string): void {
+    this.send('log', message);
   }
 
-  _flush () {
+  _flush() {
     if (this._messageQueue.length) {
-      this.wall.send(this._messageQueue)
+      this.wall.send(this._messageQueue);
     }
     if (this._timeoutID !== null) {
-      clearTimeout(this._timeoutID)
+      clearTimeout(this._timeoutID);
       this._timeoutID = null;
     }
-    this._messageQueue = []
-    this._time = null
+    this._messageQueue = [];
+    this._time = null;
   }
 
-  _emit (message: string | Message) {
+  _emit(message: string | Message) {
     if (typeof message === 'string') {
-      this.emit(message)
+      this.emit(message);
     } else {
-      this.emit(message.event, message.payload)
+      this.emit(message.event, message.payload);
     }
   }
 }

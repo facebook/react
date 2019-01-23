@@ -6,10 +6,10 @@ import ElementTypes from './ElementTypes';
 import styles from './App.css';
 
 export default function App() {
- return (
+  return (
     <div className={styles.App}>
       <List />
       <ElementTypes />
     </div>
-  )
+  );
 }

@@ -1,6 +1,6 @@
 // @flow
 
-import {gte} from 'semver';
+import { gte } from 'semver';
 import {
   ElementTypeClassOrFunction,
   ElementTypeContext,
@@ -12,26 +12,16 @@ import {
 } from 'src/devtools/types';
 import { getDisplayName } from './utils';
 
-import type {Fiber, Hook, ReactRenderer, RendererData, RendererInterface} from './types';
+import type {
+  Fiber,
+  Hook,
+  ReactRenderer,
+  RendererData,
+  RendererInterface,
+} from './types';
 
 // TODO: If we're profiling, process update
 // TODO: Throttle process update to app tree
-
-// Taken from ReactElement.
-function resolveDefaultProps(Component: any, baseProps: Object): Object {
-  if (Component && Component.defaultProps) {
-    // Resolve default props. Taken from ReactElement
-    const props = Object.assign({}, baseProps);
-    const defaultProps = Component.defaultProps;
-    for (const propName in defaultProps) {
-      if (props[propName] === undefined) {
-        props[propName] = defaultProps[propName];
-      }
-    }
-    return props;
-  }
-  return baseProps;
-}
 
 function getInternalReactConstants(version) {
   const ReactSymbols = {
@@ -152,11 +142,14 @@ function getInternalReactConstants(version) {
 export function attach(
   hook: Hook,
   rendererID: string,
-  renderer: ReactRenderer,
+  renderer: ReactRenderer
 ): RendererInterface {
-  const {overrideProps} = renderer;
-  const {ReactTypeOfWork, ReactSymbols, ReactTypeOfSideEffect} = getInternalReactConstants(renderer.version);
-  const {PerformedWork} = ReactTypeOfSideEffect;
+  const {
+    ReactTypeOfWork,
+    ReactSymbols,
+    ReactTypeOfSideEffect,
+  } = getInternalReactConstants(renderer.version);
+  const { PerformedWork } = ReactTypeOfSideEffect;
   const {
     FunctionComponent,
     ClassComponent,
@@ -228,11 +221,9 @@ export function attach(
         break;
       case ForwardRef:
         const functionName = getDisplayName(resolvedType.render, '');
-        displayName = resolvedType.displayName || (
-          functionName !== ''
-            ? `ForwardRef(${functionName})`
-            : 'ForwardRef'
-        );
+        displayName =
+          resolvedType.displayName ||
+          (functionName !== '' ? `ForwardRef(${functionName})` : 'ForwardRef');
         rendererData = {
           children: [],
           displayName,
@@ -269,14 +260,14 @@ export function attach(
         };
         break;
       default:
-        const symbolOrNumber = typeof type === 'object' && type !== null
-          ? type.$$typeof
-          : type;
+        const symbolOrNumber =
+          typeof type === 'object' && type !== null ? type.$$typeof : type;
 
         // $FlowFixMe facebook/flow/issues/2362
-        const switchValue = typeof symbolOrNumber === 'symbol'
-          ? symbolOrNumber.toString()
-          : symbolOrNumber;
+        const switchValue =
+          typeof symbolOrNumber === 'symbol'
+            ? symbolOrNumber.toString()
+            : symbolOrNumber;
 
         switch (switchValue) {
           case CONCURRENT_MODE_NUMBER:
@@ -295,7 +286,8 @@ export function attach(
             // 16.3.0 exposed the context object as "context"
             // PR #12501 changed it to "_context" for 16.3.1+
             resolvedContext = fiber.type._context || fiber.type.context;
-            displayName  = `${resolvedContext.displayName || 'Context'}.Provider`;
+            displayName = `${resolvedContext.displayName ||
+              'Context'}.Provider`;
 
             rendererData = {
               children: [],
@@ -312,7 +304,8 @@ export function attach(
 
             // NOTE: TraceUpdatesBackendManager depends on the name ending in '.Consumer'
             // If you change the name, figure out a more resilient way to detect it.
-            displayName = `${resolvedContext.displayName || 'Context'}.Consumer`;
+            displayName = `${resolvedContext.displayName ||
+              'Context'}.Consumer`;
 
             rendererData = {
               children: [],
@@ -366,7 +359,7 @@ export function attach(
         break;
     }
 
-    const {children} = rendererData;
+    const { children } = rendererData;
     if (isTimedOutSuspense) {
       // The behavior of timed-out Suspense trees is unique.
       // Rather than unmount the timed out content (and possibly lose important state),
@@ -400,7 +393,7 @@ export function attach(
     if (primaryFibers.has(fiber)) {
       return fiber;
     }
-    const {alternate} = fiber;
+    const { alternate } = fiber;
     if (alternate != null && primaryFibers.has(alternate)) {
       return alternate;
     }
@@ -419,8 +412,8 @@ export function attach(
         // We don't reflect bailouts (either referential or sCU) in DevTools.
         // eslint-disable-next-line no-bitwise
         return (nextFiber.effectTag & PerformedWork) === PerformedWork;
-        // Note: ContextConsumer only gets PerformedWork effect in 16.3.3+
-        // so it won't get highlighted with React 16.3.0 to 16.3.2.
+      // Note: ContextConsumer only gets PerformedWork effect in 16.3.3+
+      // so it won't get highlighted with React 16.3.0 to 16.3.2.
       default:
         // For host components and other types, we compare inputs
         // to determine whether something is an update.
@@ -432,14 +425,15 @@ export function attach(
     }
   }
 
-  function haveProfilerTimesChanged(prevFiber: Fiber, nextFiber: Fiber): boolean {
+  function haveProfilerTimesChanged(
+    prevFiber: Fiber,
+    nextFiber: Fiber
+  ): boolean {
     return (
       prevFiber.actualDuration !== undefined && // Short-circuit check for non-profiling builds
-      (
-        prevFiber.actualDuration !== nextFiber.actualDuration ||
+      (prevFiber.actualDuration !== nextFiber.actualDuration ||
         prevFiber.actualStartTime !== nextFiber.actualStartTime ||
-        prevFiber.treeBaseDuration !== nextFiber.treeBaseDuration
-      )
+        prevFiber.treeBaseDuration !== nextFiber.treeBaseDuration)
     );
   }
 
@@ -476,10 +470,7 @@ export function attach(
   function enqueueUpdateIfNecessary(fiber, hasChildOrderChanged) {
     const data = getRendererDataFromFiber(fiber);
 
-    if (
-      !hasChildOrderChanged &&
-      !hasDataChanged(fiber.alternate, fiber)
-    ) {
+    if (!hasChildOrderChanged && !hasDataChanged(fiber.alternate, fiber)) {
       // If only timing information has changed, we still need to update the nodes.
       // But we can do it in a faster way since we know it's safe to skip the children.
       // It's also important to avoid emitting an "update" signal for the node in this case,
@@ -542,7 +533,7 @@ export function attach(
         continue;
       }
       enqueueMount(node);
-      if (node == fiber) {
+      if (node === fiber) {
         return;
       }
       if (node.sibling) {
@@ -553,7 +544,7 @@ export function attach(
       while (node.return) {
         node = node.return;
         enqueueMount(node);
-        if (node == fiber) {
+        if (node === fiber) {
           return;
         }
         if (node.sibling) {
@@ -568,10 +559,9 @@ export function attach(
 
   function updateFiber(nextFiber, prevFiber) {
     // Suspense components only have a non-null memoizedState if they're timed-out.
-    const isTimedOutSuspense = (
+    const isTimedOutSuspense =
       nextFiber.tag === ReactTypeOfWork.SuspenseComponent &&
-      nextFiber.memoizedState !== null
-    );
+      nextFiber.memoizedState !== null;
 
     if (isTimedOutSuspense) {
       // The behavior of timed-out Suspense trees is unique.
@@ -663,8 +653,11 @@ export function attach(
 
     if (alternate) {
       // TODO: relying on this seems a bit fishy.
-      const wasMounted = alternate.memoizedState != null && alternate.memoizedState.element != null;
-      const isMounted = current.memoizedState != null && current.memoizedState.element != null;
+      const wasMounted =
+        alternate.memoizedState != null &&
+        alternate.memoizedState.element != null;
+      const isMounted =
+        current.memoizedState != null && current.memoizedState.element != null;
       if (!wasMounted && isMounted) {
         // Mount a new root.
         mountFiber(current);
