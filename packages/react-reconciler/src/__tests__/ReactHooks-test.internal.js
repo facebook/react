@@ -647,29 +647,17 @@ describe('ReactHooks', () => {
     );
   });
 
-  it('throws when calling hooks inside useMemo', () => {
+  it('warns when calling hooks inside useMemo', () => {
     const {useMemo, useState} = React;
     function App() {
       useMemo(() => {
         useState(0);
-        return 1;
       });
       return null;
     }
-
-    function Simple() {
-      const [value] = useState(123);
-      return value;
-    }
-    let root = ReactTestRenderer.create(null);
-    expect(() => root.update(<App />)).toThrow(
+    expect(() => ReactTestRenderer.create(<App />)).toWarnDev(
       'Hooks can only be called inside the body of a function component',
     );
-
-    // we want to assure that no hook machinery has broken
-    // so we render a fresh component with a hook just to be sure
-    root.update(<Simple />);
-    expect(root.toJSON()).toEqual('123');
   });
 
   it('warns when reading context inside useMemo', () => {
@@ -815,17 +803,19 @@ describe('ReactHooks', () => {
     ).toWarnDev('Context can only be read while React is rendering');
   });
 
-  it('throws when calling hooks inside useReducer', () => {
+  it('warns when calling hooks inside useReducer', () => {
     const {useReducer, useRef} = React;
     function App() {
       const [value, dispatch] = useReducer((state, action) => {
         useRef(0);
-        return state;
+        return state + 1;
       }, 0);
-      dispatch('foo');
+      if (value === 0) {
+        dispatch('foo');
+      }
       return value;
     }
-    expect(() => ReactTestRenderer.create(<App />)).toThrow(
+    expect(() => ReactTestRenderer.create(<App />)).toWarnDev(
       'Hooks can only be called inside the body of a function component',
     );
   });
@@ -837,8 +827,9 @@ describe('ReactHooks', () => {
         useRef(0);
         return 0;
       });
+      return null;
     }
-    expect(() => ReactTestRenderer.create(<App />)).toThrow(
+    expect(() => ReactTestRenderer.create(<App />)).toWarnDev(
       'Hooks can only be called inside the body of a function component',
     );
   });
@@ -906,6 +897,38 @@ describe('ReactHooks', () => {
         '   -------------------------------\n' +
         '1. useReducer         useState\n' +
         '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^',
+    ]);
+  });
+
+  // Regression test for #14674
+  it('does not swallow original error when updating another component in render phase', () => {
+    let {useState} = React;
+
+    let _setState;
+    function A() {
+      const [, setState] = useState(0);
+      _setState = setState;
+      return null;
+    }
+
+    function B() {
+      _setState(() => {
+        throw new Error('Hello');
+      });
+      return null;
+    }
+
+    expect(() =>
+      expect(() =>
+        ReactTestRenderer.create(
+          <React.Fragment>
+            <A />
+            <B />
+          </React.Fragment>,
+        ),
+      ).toThrow('Hello'),
+    ).toWarnDev([
+      'Hooks can only be called inside the body of a function component',
     ]);
   });
 });
