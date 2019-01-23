@@ -716,4 +716,36 @@ describe('ReactDOMServerHooks', () => {
       expect(domNode.textContent).toEqual('undefined');
     });
   });
+
+  describe('readContext', () => {
+    function readContext(Context, observedBits) {
+      const dispatcher =
+        React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+          .ReactCurrentDispatcher.current;
+      return dispatcher.readContext(Context, observedBits);
+    }
+
+    itRenders('with a warning inside useMemo and useReducer', async render => {
+      const Context = React.createContext(42);
+
+      function ReadInMemo(props) {
+        let count = React.useMemo(() => readContext(Context), []);
+        return <Text text={count} />;
+      }
+
+      function ReadInReducer(props) {
+        let [count, dispatch] = React.useReducer(() => readContext(Context));
+        if (count !== 42) {
+          dispatch();
+        }
+        return <Text text={count} />;
+      }
+
+      const domNode1 = await render(<ReadInMemo />, 1);
+      expect(domNode1.textContent).toEqual('42');
+
+      const domNode2 = await render(<ReadInReducer />, 1);
+      expect(domNode2.textContent).toEqual('42');
+    });
+  });
 });
