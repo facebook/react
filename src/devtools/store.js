@@ -5,6 +5,10 @@ import EventEmitter from 'events';
 import type { Element } from './types';
 import type { Bridge } from '../types';
 
+const debug = (methodName, ...args) => {
+  //console.log(`%cAgent %c${methodName}`, 'color: red; font-weight: bold;', 'font-weight: bold;', ...args);
+};
+
 /**
  * The store is the single source of truth for updates from the backend.
  * ContextProviders can subscribe to the Store for specific things they want to provide.
@@ -34,7 +38,7 @@ class Store extends EventEmitter {
 
   onBridgeMount = (element: Element) => {
     const {id} = element;
-    console.log('%cStore%c onBridgeMount()', 'color: red; font-weight: bold;', 'font-weight: bold;', element);
+    debug('onBridgeMount()', element);
     this._idToElement.set(id, element);
 
     element.children.forEach(childID => {
@@ -45,7 +49,7 @@ class Store extends EventEmitter {
   };
 
   onBridgeRoot = (id: string) => {
-    console.log('%cStore%c onBridgeRoot()', 'color: red; font-weight: bold;', 'font-weight: bold;', id);
+    debug('onBridgeRoot()', id);
     if (!this.roots.has(id)) {
       this.roots.add(id);
       this.emit('roots');
@@ -53,7 +57,7 @@ class Store extends EventEmitter {
   };
 
   onBridgeUnmounted = (id: string) => {
-    console.log('%cStore%c onBridgeUnmounted()', 'color: red; font-weight: bold;', 'font-weight: bold;', id);
+    debug('onBridgeUnmounted()', id);
     this._idToElement.delete(id);
 
     if (this._idToParentID.has(id)) {
@@ -68,7 +72,7 @@ class Store extends EventEmitter {
 
   onBridgeUpdated = (element: Element) => {
     const {id} = element;
-    console.log('%cStore%c onBridgeUpdated()', 'color: red; font-weight: bold;', 'font-weight: bold;', element);
+    debug('onBridgeUpdated()', element);
     this._idToElement.set(id, element);
 
     this.emit(id);

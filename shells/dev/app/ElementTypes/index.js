@@ -8,12 +8,13 @@ import React, {
   Component,
   ConcurrentMode,
   Fragment,
+  // $FlowFixMe Flow doesn't know about the Profiler import yet
   Profiler,
   StrictMode,
   Suspense,
 } from 'react';
 
-class ClassComponent extends Component {
+class ClassComponent extends Component<any> {
   render() {
     return null;
   }

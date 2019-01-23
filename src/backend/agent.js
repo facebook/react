@@ -9,14 +9,28 @@ import type {Fiber, RendererData, RendererID, RendererInterface} from './types';
 import type {Bridge} from '../types';
 import type {Element} from 'src/devtools/types';
 
+const debug = (methodName, ...args) => {
+  //console.log(`%cAgent %c${methodName}`, 'color: blue; font-weight: bold;', 'font-weight: bold;', ...args);
+};
+
+const THROTTLE_BY_MS = 350;
+
 export default class Agent extends EventEmitter {
-  fiberToID: WeakMap<Fiber, string> = new WeakMap();
-  idToElement: Map<string, Element> = new Map();
-  idToFiber: Map<string, Fiber> = new Map();
-  idToRendererData: Map<string, RendererData> = new Map();
-  idToRendererID: Map<string, RendererID> = new Map();
-  rendererInterfaces: {[key: RendererID]: RendererInterface} = {};
-  roots: Set<RendererID> = new Set();
+  _fiberToID: WeakMap<Fiber, string> = new WeakMap();
+  _idToElement: Map<string, Element> = new Map();
+  _idToFiber: Map<string, Fiber> = new Map();
+  _idToRendererData: Map<string, RendererData> = new Map();
+  _idToRendererID: Map<string, RendererID> = new Map();
+  _isRenderInProgress: boolean = false;
+  _rendererInterfaces: {[key: RendererID]: RendererInterface} = {};
+  _roots: Set<RendererID> = new Set();
+
+  // Tree updates are debounced to reduce bridge traffic and improve performance.
+  // This reduces the potential negative impact that DevTools has on React performance.
+  // Eventual consistency is good enough for the Elements tree.
+  _lastCrawlTime: number = -THROTTLE_BY_MS;
+  _pendingRoots: Set<string> = new Set();
+  _pendingRootTimeoutID: TimeoutID | null = null;
 
   addBridge(bridge: Bridge) {
     // TODO Listen to bridge for things like selection.
@@ -30,25 +44,25 @@ export default class Agent extends EventEmitter {
   }
 
   setRendererInterface(rendererID: RendererID, rendererInterface: RendererInterface) {
-    this.rendererInterfaces[rendererID] = rendererInterface;
+    this._rendererInterfaces[rendererID] = rendererInterface;
   }
 
   _getId(fiber: Fiber): string {
     if (typeof fiber !== 'object' || !fiber) {
       return fiber;
     }
-    if (!this.fiberToID.has(fiber)) {
-      this.fiberToID.set(fiber, guid());
-      this.idToFiber.set(
-        nullthrows(this.fiberToID.get(fiber)),
+    if (!this._fiberToID.has(fiber)) {
+      this._fiberToID.set(fiber, guid());
+      this._idToFiber.set(
+        nullthrows(this._fiberToID.get(fiber)),
         fiber
       );
     }
-    return nullthrows(this.fiberToID.get(fiber));
+    return nullthrows(this._fiberToID.get(fiber));
   }
 
   _crawl(parent: Element, id: string): void {
-    const data: RendererData = ((this.idToRendererData.get(id): any): RendererData);
+    const data: RendererData = ((this._idToRendererData.get(id): any): RendererData);
     if (data.type === ElementTypeOtherOrUnknown) {
       data.children.forEach(childFiber => {
         if (childFiber !== null) {
@@ -62,8 +76,28 @@ export default class Agent extends EventEmitter {
     }
   }
 
+  _crawlPendingRoots(): void {
+console.log('_crawlPendingRoots', this._pendingRoots)
+    this._pendingRoots.forEach(id =>  this._crawlRoot(id));
+    this._pendingRoots.clear();
+    this._lastCrawlTime = performance.now();
+  }
+
+  _crawlRoot(id: string): void {
+    const data = ((this._idToRendererData.get(id): any): RendererData);
+
+    // TODO: Can we use the effects list on update for a faster path?
+    this._createOrUpdateElement(id, data);
+
+    if (!this._roots.has(id)) {
+      this._roots.add(id);
+      debug('emit("root")', id);
+      this.emit('root', id);
+    }
+  }
+
   _createOrUpdateElement(id: string, data: RendererData): void {
-    const prevElement: ?Element = this.idToElement.get(id);
+    const prevElement: ?Element = this._idToElement.get(id);
     const nextElement: Element = {
       id,
       key: data.key,
@@ -72,7 +106,7 @@ export default class Agent extends EventEmitter {
       type: data.type,
     };
 
-    this.idToElement.set(id, nextElement);
+    this._idToElement.set(id, nextElement);
 
     data.children.forEach(childFiber => {
       if (childFiber !== null) {
@@ -81,57 +115,66 @@ export default class Agent extends EventEmitter {
     });
 
     if (prevElement == null) {
-console.log('%cAgent%c emit("mount")', 'color: blue; font-weight: bold;', 'font-weight: bold;', id, nextElement)
+      debug('emit("mount")', id, nextElement)
       this.emit('mount', nextElement);
     } else if (!areElementsEqual(prevElement, nextElement)) {
-console.log('%cAgent%c emit("update")', 'color: blue; font-weight: bold;', 'font-weight: bold;', id, nextElement)
+      debug('emit("update")', id, nextElement);
       this.emit('update', nextElement);
     }
   }
 
+  _maybeCrawlRoot = () =>  {
+    this._pendingRootTimeoutID = null;
+    if (!this._isRenderInProgress) {
+      this._crawlPendingRoots();
+    }
+  };
+
   onHookMount = ({data, fiber, renderer}: {data: RendererData, fiber: Fiber, renderer: RendererID}) => {
     const id = this._getId(fiber);
 
-    this.idToRendererData.set(id, data);
-    this.idToRendererID.set(id, renderer);
+    this._idToRendererData.set(id, data);
+    this._idToRendererID.set(id, renderer);
   };
 
   onHookRootCommitted = ({data, fiber, renderer}: {data: RendererData, fiber: Fiber, renderer: RendererID}) => {
     const id = this._getId(fiber);
-console.log('%cAgent%c onHookRootCommitted()', 'color: blue; font-weight: bold;', 'font-weight: bold;', id);
 
-    this._createOrUpdateElement(id, data);
+    this._isRenderInProgress = false;
+    this._pendingRoots.add(id);
 
-    if (!this.roots.has(id)) {
-      this.roots.add(id);
-
-      this.emit('root', id);
+    const delta = performance.now() - this._lastCrawlTime;
+    if (delta >= THROTTLE_BY_MS) {
+      this._crawlPendingRoots();
+    } else if (this._pendingRootTimeoutID === null) {
+      this._pendingRootTimeoutID = setTimeout(this._maybeCrawlRoot, THROTTLE_BY_MS - delta);
     }
   };
 
   onHookUnmount = ({fiber}: {fiber: Fiber}) => {
     const id = this._getId(fiber);
 
-    if (this.roots.has(id)) {
-      this.roots.delete(id);
+    if (this._roots.has(id)) {
+      this._roots.delete(id);
       this.emit('rootUnmounted', id);
     }
 
-    if (this.idToElement.has(id)) {
-      this.idToElement.delete(id);
-console.log('%cAgent%c emit("unmount")', 'color: blue; font-weight: bold;', 'font-weight: bold;', id)
+    if (this._idToElement.has(id)) {
+      this._idToElement.delete(id);
+      debug('emit("unmount")', id);
       this.emit('unmount', id);
     }
 
-    this.fiberToID.delete(fiber);
-    this.idToRendererData.delete(id);
-    this.idToRendererID.delete(id);
+    this._fiberToID.delete(fiber);
+    this._idToRendererData.delete(id);
+    this._idToRendererID.delete(id);
   };
 
   onHookUpdate = ({data, fiber}: {data: RendererData, fiber: Fiber}) => {
     const id = this._getId(fiber);
 
-    this.idToRendererData.set(id, data);
+    this._isRenderInProgress = true;
+    this._idToRendererData.set(id, data);
   };
 }
 
