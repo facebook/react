@@ -88,6 +88,10 @@ import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 import {NoWork} from './ReactFiberExpirationTime';
+import {
+  stashContextDependenciesInDEV,
+  unstashContextDependenciesInDEV,
+} from './ReactFiberNewContext';
 import {Callback, ShouldCapture, DidCapture} from 'shared/ReactSideEffectTags';
 import {ClassComponent} from 'shared/ReactWorkTags';
 
@@ -348,6 +352,7 @@ function getStateFromUpdate<State>(
       if (typeof payload === 'function') {
         // Updater function
         if (__DEV__) {
+          stashContextDependenciesInDEV();
           if (
             debugRenderPhaseSideEffects ||
             (debugRenderPhaseSideEffectsForStrictMode &&
@@ -356,7 +361,11 @@ function getStateFromUpdate<State>(
             payload.call(instance, prevState, nextProps);
           }
         }
-        return payload.call(instance, prevState, nextProps);
+        const nextState = payload.call(instance, prevState, nextProps);
+        if (__DEV__) {
+          unstashContextDependenciesInDEV();
+        }
+        return nextState;
       }
       // State object
       return payload;
@@ -372,6 +381,7 @@ function getStateFromUpdate<State>(
       if (typeof payload === 'function') {
         // Updater function
         if (__DEV__) {
+          stashContextDependenciesInDEV();
           if (
             debugRenderPhaseSideEffects ||
             (debugRenderPhaseSideEffectsForStrictMode &&
@@ -381,6 +391,9 @@ function getStateFromUpdate<State>(
           }
         }
         partialState = payload.call(instance, prevState, nextProps);
+        if (__DEV__) {
+          unstashContextDependenciesInDEV();
+        }
       } else {
         // Partial state object
         partialState = payload;
