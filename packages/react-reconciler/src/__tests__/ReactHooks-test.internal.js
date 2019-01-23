@@ -906,4 +906,31 @@ describe('ReactHooks', () => {
         '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^',
     ]);
   });
+
+  // Regression test for #14674
+  it('does not swallow original error when updating another component in render phase', () => {
+    let {useState} = React;
+
+    let _setState;
+    function A() {
+      const [, setState] = useState(0);
+      _setState = setState;
+      return null;
+    }
+
+    function B() {
+      _setState(() => {
+        throw new Error('Hello');
+      });
+    }
+
+    expect(() =>
+      ReactTestRenderer.create(
+        <React.Fragment>
+          <A />
+          <B />
+        </React.Fragment>,
+      ),
+    ).toThrow('Hello');
+  });
 });
