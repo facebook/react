@@ -491,5 +491,191 @@ describe('ReactDOMFiberAsync', () => {
       expect(container.textContent).toEqual('1');
       expect(returnValue).toBe(undefined);
     });
+
+    it('ignores discrete events on a pending removed element', () => {
+      const disableButtonRef = React.createRef();
+      const submitButtonRef = React.createRef();
+
+      let formSubmitted = false;
+
+      class Form extends React.Component {
+        state = {active: true};
+        disableForm = () => {
+          this.setState({active: false});
+        };
+        submitForm = () => {
+          formSubmitted = true; // This should not get invoked
+        };
+        render() {
+          return (
+            <div>
+              <button onClick={this.disableForm} ref={disableButtonRef}>
+                Disable
+              </button>
+              {this.state.active ? (
+                <button onClick={this.submitForm} ref={submitButtonRef}>
+                  Submit
+                </button>
+              ) : null}
+            </div>
+          );
+        }
+      }
+
+      const root = ReactDOM.unstable_createRoot(container);
+      root.render(<Form />);
+      // Flush
+      jest.runAllTimers();
+
+      let disableButton = disableButtonRef.current;
+      expect(disableButton.tagName).toBe('BUTTON');
+
+      // Dispatch a click event on the Disable-button.
+      let firstEvent = document.createEvent('Event');
+      firstEvent.initEvent('click', true, true);
+      disableButton.dispatchEvent(firstEvent);
+
+      // There should now be a pending update to disable the form.
+
+      // This should not have flushed yet since it's in concurrent mode.
+      let submitButton = submitButtonRef.current;
+      expect(submitButton.tagName).toBe('BUTTON');
+
+      // In the meantime, we can dispatch a new client event on the submit button.
+      let secondEvent = document.createEvent('Event');
+      secondEvent.initEvent('click', true, true);
+      // This should force the pending update to flush which disables the submit button before the event is invoked.
+      submitButton.dispatchEvent(secondEvent);
+
+      // Therefore the form should never have been submitted.
+      expect(formSubmitted).toBe(false);
+
+      expect(submitButtonRef.current).toBe(null);
+    });
+
+    it('ignores discrete events on a pending removed event listener', () => {
+      const disableButtonRef = React.createRef();
+      const submitButtonRef = React.createRef();
+
+      let formSubmitted = false;
+
+      class Form extends React.Component {
+        state = {active: true};
+        disableForm = () => {
+          this.setState({active: false});
+        };
+        submitForm = () => {
+          formSubmitted = true; // This should not get invoked
+        };
+        disabledSubmitForm = () => {
+          // The form is disabled.
+        };
+        render() {
+          return (
+            <div>
+              <button onClick={this.disableForm} ref={disableButtonRef}>
+                Disable
+              </button>
+              <button
+                onClick={
+                  this.state.active ? this.submitForm : this.disabledSubmitForm
+                }
+                ref={submitButtonRef}>
+                Submit
+              </button>{' '}
+              : null}
+            </div>
+          );
+        }
+      }
+
+      const root = ReactDOM.unstable_createRoot(container);
+      root.render(<Form />);
+      // Flush
+      jest.runAllTimers();
+
+      let disableButton = disableButtonRef.current;
+      expect(disableButton.tagName).toBe('BUTTON');
+
+      // Dispatch a click event on the Disable-button.
+      let firstEvent = document.createEvent('Event');
+      firstEvent.initEvent('click', true, true);
+      disableButton.dispatchEvent(firstEvent);
+
+      // There should now be a pending update to disable the form.
+
+      // This should not have flushed yet since it's in concurrent mode.
+      let submitButton = submitButtonRef.current;
+      expect(submitButton.tagName).toBe('BUTTON');
+
+      // In the meantime, we can dispatch a new client event on the submit button.
+      let secondEvent = document.createEvent('Event');
+      secondEvent.initEvent('click', true, true);
+      // This should force the pending update to flush which disables the submit button before the event is invoked.
+      submitButton.dispatchEvent(secondEvent);
+
+      // Therefore the form should never have been submitted.
+      expect(formSubmitted).toBe(false);
+    });
+
+    it('uses the newest discrete events on a pending changed event listener', () => {
+      const enableButtonRef = React.createRef();
+      const submitButtonRef = React.createRef();
+
+      let formSubmitted = false;
+
+      class Form extends React.Component {
+        state = {active: false};
+        enableForm = () => {
+          this.setState({active: true});
+        };
+        submitForm = () => {
+          formSubmitted = true; // This should happen
+        };
+        render() {
+          return (
+            <div>
+              <button onClick={this.enableForm} ref={enableButtonRef}>
+                Enable
+              </button>
+              <button
+                onClick={this.state.active ? this.submitForm : null}
+                ref={submitButtonRef}>
+                Submit
+              </button>{' '}
+              : null}
+            </div>
+          );
+        }
+      }
+
+      const root = ReactDOM.unstable_createRoot(container);
+      root.render(<Form />);
+      // Flush
+      jest.runAllTimers();
+
+      let enableButton = enableButtonRef.current;
+      expect(enableButton.tagName).toBe('BUTTON');
+
+      // Dispatch a click event on the Enable-button.
+      let firstEvent = document.createEvent('Event');
+      firstEvent.initEvent('click', true, true);
+      enableButton.dispatchEvent(firstEvent);
+
+      // There should now be a pending update to enable the form.
+
+      // This should not have flushed yet since it's in concurrent mode.
+      let submitButton = submitButtonRef.current;
+      expect(submitButton.tagName).toBe('BUTTON');
+
+      // In the meantime, we can dispatch a new client event on the submit button.
+      let secondEvent = document.createEvent('Event');
+      secondEvent.initEvent('click', true, true);
+      // This should force the pending update to flush which enables the submit button before the event is invoked.
+      submitButton.dispatchEvent(secondEvent);
+
+      // Therefore the form should have been submitted.
+      expect(formSubmitted).toBe(true);
+    });
   });
 });
