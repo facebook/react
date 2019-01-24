@@ -68,7 +68,8 @@ export const supportsHydration = $$$hostConfig.supportsHydration;
 // -------------------
 export const appendChild = $$$hostConfig.appendChild;
 export const appendChildToContainer = $$$hostConfig.appendChildToContainer;
-export const appendChildToPortalContainer = $$$hostConfig.appendChildToPortalContainer;
+export const appendChildToPortalContainer =
+  $$$hostConfig.appendChildToPortalContainer;
 export const commitTextUpdate = $$$hostConfig.commitTextUpdate;
 export const commitMount = $$$hostConfig.commitMount;
 export const commitUpdate = $$$hostConfig.commitUpdate;

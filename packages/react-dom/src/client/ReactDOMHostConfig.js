@@ -375,27 +375,27 @@ export function appendChildToContainer(
 export function appendChildToPortalContainer(
   container: DOMContainer,
   child: Instance | TextInstance,
-  ): void {
-    let parentNode;
-    if (container.nodeType === COMMENT_NODE) {
-      parentNode = (container.parentNode: any);
-      parentNode.insertBefore(child, container);
-    } else {
-      parentNode = container;
-      parentNode.appendChild(child);
-    }
+): void {
+  let parentNode;
+  if (container.nodeType === COMMENT_NODE) {
+    parentNode = (container.parentNode: any);
+    parentNode.insertBefore(child, container);
+  } else {
+    parentNode = container;
+    parentNode.appendChild(child);
+  }
 
-    // If something inside a portal is clicked, that click should bubble
-    // through the React tree. However, on Mobile Safari the click would
-    // never bubble through the *DOM* tree unless an ancestor with onclick
-    // event exists. So we wouldn't see it and dispatch it.
-    // This is why we ensure that portal containers have inline onclick
-    // defined.
-    // https://github.com/facebook/react/issues/11918
-    if (parentNode.onclick === null) {
-      // TODO: This cast may not be sound for SVG, MathML or custom elements.
-      trapClickOnNonInteractiveElement(((parentNode: any): HTMLElement));
-    }
+  // If something inside a portal is clicked, that click should bubble
+  // through the React tree. However, on Mobile Safari the click would
+  // never bubble through the *DOM* tree unless an ancestor with onclick
+  // event exists. So we wouldn't see it and dispatch it.
+  // This is why we ensure that portal containers have inline onclick
+  // defined.
+  // https://github.com/facebook/react/issues/11918
+  if (parentNode.onclick === null) {
+    // TODO: This cast may not be sound for SVG, MathML or custom elements.
+    trapClickOnNonInteractiveElement(((parentNode: any): HTMLElement));
+  }
 }
 
 export function insertBefore(
