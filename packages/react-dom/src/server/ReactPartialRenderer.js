@@ -21,7 +21,6 @@ import describeComponentFrame from 'shared/describeComponentFrame';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   warnAboutDeprecatedLifecycles,
-  enableHooks,
   enableSuspenseServerRenderer,
 } from 'shared/ReactFeatureFlags';
 
@@ -55,7 +54,6 @@ import {
   prepareToUseHooks,
   finishHooks,
   Dispatcher,
-  DispatcherWithoutHooks,
   currentThreadID,
   setCurrentThreadID,
 } from './ReactPartialRendererHooks';
@@ -786,11 +784,7 @@ class ReactDOMServerRenderer {
     const prevThreadID = currentThreadID;
     setCurrentThreadID(this.threadID);
     const prevDispatcher = ReactCurrentDispatcher.current;
-    if (enableHooks) {
-      ReactCurrentDispatcher.current = Dispatcher;
-    } else {
-      ReactCurrentDispatcher.current = DispatcherWithoutHooks;
-    }
+    ReactCurrentDispatcher.current = Dispatcher;
     try {
       // Markup generated within <Suspense> ends up buffered until we know
       // nothing in that boundary suspended

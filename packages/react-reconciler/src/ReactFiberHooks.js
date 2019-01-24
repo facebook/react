@@ -13,7 +13,6 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {HookEffectTag} from './ReactHookEffectTags';
 
 import {NoWork} from './ReactFiberExpirationTime';
-import {enableHooks} from 'shared/ReactFeatureFlags';
 import {
   readContext,
   stashContextDependencies,
@@ -296,9 +295,6 @@ export function renderWithHooks(
   refOrContext: any,
   nextRenderExpirationTime: ExpirationTime,
 ): any {
-  if (!enableHooks) {
-    return Component(props, refOrContext);
-  }
   renderExpirationTime = nextRenderExpirationTime;
   currentlyRenderingFiber = workInProgress;
   firstCurrentHook = current !== null ? current.memoizedState : null;
@@ -397,9 +393,6 @@ export function bailoutHooks(
 }
 
 export function resetHooks(): void {
-  if (!enableHooks) {
-    return;
-  }
   if (__DEV__) {
     flushHookMismatchWarnings();
   }

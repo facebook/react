@@ -16,9 +16,6 @@ let React;
 describe('ReactShallowRenderer with hooks', () => {
   beforeEach(() => {
     jest.resetModules();
-    let ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    // TODO: Switch this test to non-internal once the flag is on by default.
-    ReactFeatureFlags.enableHooks = true;
     createRenderer = require('react-test-renderer/shallow').createRenderer;
     React = require('react');
   });

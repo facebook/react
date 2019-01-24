@@ -16,7 +16,6 @@ import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.native-fb';
 export const {debugRenderPhaseSideEffects} = require('ReactFeatureFlags');
 
 // The rest of the flags are static for better dead code elimination.
-export const enableHooks = true;
 export const enableUserTimingAPI = __DEV__;
 export const enableProfilerTimer = __PROFILE__;
 export const enableSchedulerTracing = __PROFILE__;
