@@ -15,8 +15,8 @@ import type {HookEffectTag} from './ReactHookEffectTags';
 import {NoWork} from './ReactFiberExpirationTime';
 import {
   readContext,
-  stashContextDependencies,
-  unstashContextDependencies,
+  enterDisallowedContextReadInDEV,
+  exitDisallowedContextReadInDEV,
 } from './ReactFiberNewContext';
 import {
   Update as UpdateEffect,
@@ -72,6 +72,7 @@ type HookType =
 // the first instance of a hook mismatch in a component,
 // represented by a portion of it's stacktrace
 let currentHookMismatchInDev = null;
+let isInHookUserCodeInDev = false;
 
 let didWarnAboutMismatchedHooksForComponent;
 if (__DEV__) {
@@ -153,6 +154,17 @@ function resolveCurrentlyRenderingFiber(): Fiber {
     currentlyRenderingFiber !== null,
     'Hooks can only be called inside the body of a function component.',
   );
+  if (__DEV__) {
+    // Check if we're inside Hooks like useMemo(). DEV-only for perf.
+    // TODO: we can make a better warning message with currentHookNameInDev
+    // if we also make sure it's consistently assigned in the right order.
+    warning(
+      !isInHookUserCodeInDev,
+      'Hooks can only be called inside the body of a function component. ' +
+        'Do not call Hooks inside other Hooks. For more information, see ' +
+        'https://fb.me/rules-of-hooks',
+    );
+  }
   return currentlyRenderingFiber;
 }
 
@@ -299,6 +311,11 @@ export function renderWithHooks(
   currentlyRenderingFiber = workInProgress;
   firstCurrentHook = current !== null ? current.memoizedState : null;
 
+  if (__DEV__) {
+    exitDisallowedContextReadInDEV();
+    isInHookUserCodeInDev = false;
+  }
+
   // The following should have already been reset
   // currentHook = null;
   // workInProgressHook = null;
@@ -395,6 +412,8 @@ export function bailoutHooks(
 export function resetHooks(): void {
   if (__DEV__) {
     flushHookMismatchWarnings();
+    exitDisallowedContextReadInDEV();
+    isInHookUserCodeInDev = false;
   }
 
   // This is used to reset the state of this module when a component throws.
@@ -573,7 +592,7 @@ export function useReducer<S, A>(
       currentHookNameInDev = 'useReducer';
     }
   }
-  let fiber = (currentlyRenderingFiber = resolveCurrentlyRenderingFiber());
+  currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   workInProgressHook = createWorkInProgressHook();
   if (__DEV__) {
     currentHookNameInDev = null;
@@ -597,12 +616,15 @@ export function useReducer<S, A>(
             // priority because it will always be the same as the current
             // render's.
             const action = update.action;
-            // Temporarily clear to forbid calling Hooks in a reducer.
-            currentlyRenderingFiber = null;
-            stashContextDependencies();
+            if (__DEV__) {
+              enterDisallowedContextReadInDEV();
+              isInHookUserCodeInDev = true;
+            }
             newState = reducer(newState, action);
-            currentlyRenderingFiber = fiber;
-            unstashContextDependencies();
+            if (__DEV__) {
+              exitDisallowedContextReadInDEV();
+              isInHookUserCodeInDev = false;
+            }
             update = update.next;
           } while (update !== null);
 
@@ -671,12 +693,15 @@ export function useReducer<S, A>(
             newState = ((update.eagerState: any): S);
           } else {
             const action = update.action;
-            // Temporarily clear to forbid calling Hooks in a reducer.
-            currentlyRenderingFiber = null;
-            stashContextDependencies();
+            if (__DEV__) {
+              enterDisallowedContextReadInDEV();
+              isInHookUserCodeInDev = true;
+            }
             newState = reducer(newState, action);
-            currentlyRenderingFiber = fiber;
-            unstashContextDependencies();
+            if (__DEV__) {
+              exitDisallowedContextReadInDEV();
+              isInHookUserCodeInDev = false;
+            }
           }
         }
         prevUpdate = update;
@@ -705,9 +730,10 @@ export function useReducer<S, A>(
     const dispatch: Dispatch<A> = (queue.dispatch: any);
     return [workInProgressHook.memoizedState, dispatch];
   }
-  // Temporarily clear to forbid calling Hooks in a reducer.
-  currentlyRenderingFiber = null;
-  stashContextDependencies();
+  if (__DEV__) {
+    enterDisallowedContextReadInDEV();
+    isInHookUserCodeInDev = true;
+  }
   // There's no existing queue, so this is the initial render.
   if (reducer === basicStateReducer) {
     // Special case for `useState`.
@@ -717,8 +743,10 @@ export function useReducer<S, A>(
   } else if (initialAction !== undefined && initialAction !== null) {
     initialState = reducer(initialState, initialAction);
   }
-  currentlyRenderingFiber = fiber;
-  unstashContextDependencies();
+  if (__DEV__) {
+    exitDisallowedContextReadInDEV();
+    isInHookUserCodeInDev = false;
+  }
   workInProgressHook.memoizedState = workInProgressHook.baseState = initialState;
   queue = workInProgressHook.queue = {
     last: null,
@@ -941,7 +969,7 @@ export function useMemo<T>(
   if (__DEV__) {
     currentHookNameInDev = 'useMemo';
   }
-  let fiber = (currentlyRenderingFiber = resolveCurrentlyRenderingFiber());
+  currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   workInProgressHook = createWorkInProgressHook();
 
   const nextDeps = deps === undefined ? null : deps;
@@ -960,12 +988,15 @@ export function useMemo<T>(
     }
   }
 
-  // Temporarily clear to forbid calling Hooks.
-  currentlyRenderingFiber = null;
-  stashContextDependencies();
+  if (__DEV__) {
+    enterDisallowedContextReadInDEV();
+    isInHookUserCodeInDev = true;
+  }
   const nextValue = nextCreate();
-  currentlyRenderingFiber = fiber;
-  unstashContextDependencies();
+  if (__DEV__) {
+    exitDisallowedContextReadInDEV();
+    isInHookUserCodeInDev = false;
+  }
   workInProgressHook.memoizedState = [nextValue, nextDeps];
   if (__DEV__) {
     currentHookNameInDev = null;
@@ -1063,13 +1094,15 @@ function dispatchAction<S, A>(
       if (eagerReducer !== null) {
         try {
           const currentState: S = (queue.eagerState: any);
-          // Temporarily clear to forbid calling Hooks in a reducer.
-          let maybeFiber = currentlyRenderingFiber; // Note: likely null now unlike `fiber`
-          currentlyRenderingFiber = null;
-          stashContextDependencies();
+          if (__DEV__) {
+            enterDisallowedContextReadInDEV();
+            isInHookUserCodeInDev = true;
+          }
           const eagerState = eagerReducer(currentState, action);
-          currentlyRenderingFiber = maybeFiber;
-          unstashContextDependencies();
+          if (__DEV__) {
+            exitDisallowedContextReadInDEV();
+            isInHookUserCodeInDev = false;
+          }
           // Stash the eagerly computed state, and the reducer used to compute
           // it, on the update object. If the reducer hasn't changed by the
           // time we enter the render phase, then the eager state can be used
@@ -1085,6 +1118,11 @@ function dispatchAction<S, A>(
           }
         } catch (error) {
           // Suppress the error. It will throw again in the render phase.
+        } finally {
+          if (__DEV__) {
+            exitDisallowedContextReadInDEV();
+            isInHookUserCodeInDev = false;
+          }
         }
       }
     }

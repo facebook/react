@@ -419,50 +419,47 @@ describe('ReactDOMServerHooks', () => {
       },
     );
 
-    itThrowsWhenRendering(
-      'a hook inside useMemo',
-      async render => {
-        function App() {
-          useMemo(() => {
-            useState();
-            return 0;
-          });
-          return null;
-        }
-        return render(<App />);
-      },
-      'Hooks can only be called inside the body of a function component.',
-    );
+    itRenders('with a warning for useState inside useMemo', async render => {
+      function App() {
+        useMemo(() => {
+          useState();
+          return 0;
+        });
+        return 'hi';
+      }
 
-    itThrowsWhenRendering(
-      'a hook inside useReducer',
-      async render => {
-        function App() {
-          const [value, dispatch] = useReducer((state, action) => {
-            useRef(0);
-            return state;
-          }, 0);
-          dispatch('foo');
-          return value;
-        }
-        return render(<App />);
-      },
-      'Hooks can only be called inside the body of a function component.',
-    );
+      const domNode = await render(<App />, 1);
+      expect(domNode.textContent).toEqual('hi');
+    });
 
-    itThrowsWhenRendering(
-      'a hook inside useState',
-      async render => {
-        function App() {
-          useState(() => {
-            useRef(0);
-            return 0;
-          });
+    itRenders('with a warning for useRef inside useReducer', async render => {
+      function App() {
+        const [value, dispatch] = useReducer((state, action) => {
+          useRef(0);
+          return state + 1;
+        }, 0);
+        if (value === 0) {
+          dispatch();
         }
-        return render(<App />);
-      },
-      'Hooks can only be called inside the body of a function component.',
-    );
+        return value;
+      }
+
+      const domNode = await render(<App />, 1);
+      expect(domNode.textContent).toEqual('1');
+    });
+
+    itRenders('with a warning for useRef inside useState', async render => {
+      function App() {
+        const [value] = useState(() => {
+          useRef(0);
+          return 0;
+        });
+        return value;
+      }
+
+      const domNode = await render(<App />, 1);
+      expect(domNode.textContent).toEqual('0');
+    });
   });
 
   describe('useRef', () => {
@@ -714,6 +711,38 @@ describe('ReactDOMServerHooks', () => {
 
       const domNode = await render(<Counter />);
       expect(domNode.textContent).toEqual('undefined');
+    });
+  });
+
+  describe('readContext', () => {
+    function readContext(Context, observedBits) {
+      const dispatcher =
+        React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+          .ReactCurrentDispatcher.current;
+      return dispatcher.readContext(Context, observedBits);
+    }
+
+    itRenders('with a warning inside useMemo and useReducer', async render => {
+      const Context = React.createContext(42);
+
+      function ReadInMemo(props) {
+        let count = React.useMemo(() => readContext(Context), []);
+        return <Text text={count} />;
+      }
+
+      function ReadInReducer(props) {
+        let [count, dispatch] = React.useReducer(() => readContext(Context));
+        if (count !== 42) {
+          dispatch();
+        }
+        return <Text text={count} />;
+      }
+
+      const domNode1 = await render(<ReadInMemo />, 1);
+      expect(domNode1.textContent).toEqual('42');
+
+      const domNode2 = await render(<ReadInReducer />, 1);
+      expect(domNode2.textContent).toEqual('42');
     });
   });
 });

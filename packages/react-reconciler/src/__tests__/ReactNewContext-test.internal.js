@@ -1346,6 +1346,31 @@ describe('ReactNewContext', () => {
       expect(ReactNoop.flush()).toEqual(['App', 'App#renderConsumer']);
       expect(ReactNoop.getChildren()).toEqual([span('goodbye')]);
     });
+
+    it('warns when reading context inside render phase class setState updater', () => {
+      const ThemeContext = React.createContext('light');
+
+      class Cls extends React.Component {
+        state = {};
+        render() {
+          this.setState(() => {
+            readContext(ThemeContext);
+          });
+          return null;
+        }
+      }
+
+      ReactNoop.render(<Cls />);
+      expect(ReactNoop.flush).toWarnDev(
+        [
+          'Context can only be read while React is rendering',
+          'Cannot update during an existing state transition',
+        ],
+        {
+          withoutStack: 1,
+        },
+      );
+    });
   });
 
   describe('useContext', () => {
