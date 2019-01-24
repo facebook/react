@@ -164,11 +164,11 @@ setRestoreImplementation(restoreControlledState);
 export type DOMContainer =
   | (Element & {
       _reactRootContainer: ?Root,
-      _reactHasBeenPassedToCreateRootDEV: ?boolean,
+      _reactHasBeenPassedToCreateRoot: ?boolean,
     })
   | (Document & {
       _reactRootContainer: ?Root,
-      _reactHasBeenPassedToCreateRootDEV: ?boolean,
+      _reactHasBeenPassedToCreateRoot: ?boolean,
     });
 
 type Batch = FiberRootBatch & {
@@ -658,7 +658,7 @@ const ReactDOM: Object = {
     );
     if (__DEV__) {
       warningWithoutStack(
-        !container._reactHasBeenPassedToCreateRootDEV,
+        !container._reactHasBeenPassedToCreateRoot,
         'You are calling ReactDOM.hydrate() on a container that was previously ' +
           'passed to ReactDOM.%s(). This is not supported. ' +
           'Did you mean to call root.render(element, {hydrate: true})?',
@@ -686,7 +686,7 @@ const ReactDOM: Object = {
     );
     if (__DEV__) {
       warningWithoutStack(
-        !container._reactHasBeenPassedToCreateRootDEV,
+        !container._reactHasBeenPassedToCreateRoot,
         'You are calling ReactDOM.render() on a container that was previously ' +
           'passed to ReactDOM.%s(). This is not supported. ' +
           'Did you mean to call root.render(element)?',
@@ -733,7 +733,7 @@ const ReactDOM: Object = {
 
     if (__DEV__) {
       warningWithoutStack(
-        !container._reactHasBeenPassedToCreateRootDEV,
+        !container._reactHasBeenPassedToCreateRoot,
         'You are calling ReactDOM.unmountComponentAtNode() on a container that was previously ' +
           'passed to ReactDOM.%s(). This is not supported. Did you mean to call root.unmount()?',
         enableStableConcurrentModeAPIs ? 'createRoot' : 'unstable_createRoot',
@@ -851,8 +851,8 @@ function createRoot(container: DOMContainer, options?: RootOptions): ReactRoot {
         'passed to ReactDOM.render(). This is not supported.',
       enableStableConcurrentModeAPIs ? 'createRoot' : 'unstable_createRoot',
     );
-    container._reactHasBeenPassedToCreateRootDEV = true;
   }
+  container._reactHasBeenPassedToCreateRoot = true;
   const hydrate = options != null && options.hydrate === true;
   return new ReactRoot(container, true, hydrate);
 }

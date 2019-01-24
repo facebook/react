@@ -379,8 +379,11 @@ export function appendChildToContainer(
   // defined.
   // https://github.com/facebook/react/issues/11918
   const reactRootContainer = container._reactRootContainer;
+  const hasBeenPassedToCreateRoot = container._reactHasBeenPassedToCreateRoot;
   if (
     (reactRootContainer === null || reactRootContainer === undefined) &&
+    (hasBeenPassedToCreateRoot === null ||
+      hasBeenPassedToCreateRoot === undefined) &&
     parentNode.onclick === null
   ) {
     // TODO: This cast may not be sound for SVG, MathML or custom elements.

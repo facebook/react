@@ -2688,7 +2688,21 @@ describe('ReactDOMComponent', () => {
       expect(typeof portalContainer.onclick).toBe('function');
     });
 
-    it('does not add onclick handler to the React root', () => {
+    it('does not add onclick handler to a React root', () => {
+      const container = document.createElement('div');
+
+      function Component() {
+        return <div onClick={() => {}} />;
+      }
+
+      const root = ReactDOM.unstable_createRoot(container);
+      root.render(<Component />);
+      jest.runAllTimers();
+
+      expect(typeof container.onclick).not.toBe('function');
+    });
+
+    it('does not add onclick handler to a legacy React root', () => {
       const container = document.createElement('div');
 
       function Component() {
