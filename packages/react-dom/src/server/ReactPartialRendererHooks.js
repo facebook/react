@@ -55,7 +55,8 @@ let currentHookNameInDev: ?string;
 function resolveCurrentlyRenderingComponent(): Object {
   invariant(
     currentlyRenderingComponent !== null,
-    'Hooks can only be called inside the body of a function component.',
+    'Hooks can only be called inside the body of a function component. ' +
+      'See https://fb.me/react-hooks-in-function-components for more information',
   );
   return currentlyRenderingComponent;
 }

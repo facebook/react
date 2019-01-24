@@ -151,7 +151,8 @@ let currentHookNameInDev: ?HookType = null;
 function resolveCurrentlyRenderingFiber(): Fiber {
   invariant(
     currentlyRenderingFiber !== null,
-    'Hooks can only be called inside the body of a function component.',
+    'Hooks can only be called inside the body of a function component. ' +
+      'See https://fb.me/react-hooks-in-function-components for more information',
   );
   return currentlyRenderingFiber;
 }
