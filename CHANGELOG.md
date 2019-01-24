@@ -21,6 +21,9 @@
 * Support Hooks in the shallow renderer. ([@trueadm](https://github.com/trueadm) in [#14567](https://github.com/facebook/react/pull/14567))
 * Fix shallow renderer passing incorrect state to `shouldComponentUpdate` in the presence of `getDerivedStateFromProps`. ([@chenesan](https://github.com/chenesan) in [#14613](https://github.com/facebook/react/pull/14613))
 
+### ESLint Plugin: React Hooks
+
+* Initial [release](https://www.npmjs.com/package/eslint-plugin-react-hooks). ([@calebmer](https://github.com/calebmer) in [#13968](https://github.com/facebook/react/pull/13968))
 
 ## 16.7.0 (December 19, 2018)
 
