@@ -6,7 +6,7 @@ import type { Element } from './types';
 import type { Bridge } from '../types';
 
 const debug = (methodName, ...args) => {
-  //console.log(`%cAgent %c${methodName}`, 'color: red; font-weight: bold;', 'font-weight: bold;', ...args);
+  // console.log(`%cAgent %c${methodName}`, 'color: red; font-weight: bold;', 'font-weight: bold;', ...args);
 };
 
 /**

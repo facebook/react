@@ -30,7 +30,11 @@ initDevTools({
       cb(bridge);
 
       render(
-        createElement(App, { bridge }),
+        createElement(App, {
+          bridge,
+          browserName: 'Chrome',
+          themeName: 'light',
+        }),
         ((document.getElementById('devtools'): any): HTMLElement)
       );
     });

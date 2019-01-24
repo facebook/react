@@ -13,6 +13,9 @@
 .*node_modules/webpack.*
 .*node_modules/fbjs/flow.*
 .*node_modules/web-ext.*
+shells/browser/chrome/build/*
+shells/browser/firefox/build/*
+shells/dev/build/*
 
 [include]
 

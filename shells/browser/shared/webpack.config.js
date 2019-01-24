@@ -2,7 +2,8 @@ const { readFileSync } = require('fs');
 const { resolve } = require('path');
 const webpack = require('webpack');
 
-const __DEV__ = process.env.NODE_ENV !== 'production';
+//const __DEV__ = process.env.NODE_ENV !== 'production';
+const __DEV__ = true; // TODO
 
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
@@ -18,6 +19,11 @@ module.exports = {
     path: __dirname + '/build',
     filename: '[name].js',
   },
+  resolve: {
+    alias: {
+      src: resolve(__dirname, '../../../src'),
+    },
+  },
   plugins: __DEV__
     ? []
     : [
@@ -31,7 +37,9 @@ module.exports = {
       {
         test: /\.js$/,
         loader: 'babel-loader',
-        options: JSON.parse(readFileSync(resolve(__dirname, '../../.babelrc'))),
+        options: JSON.parse(
+          readFileSync(resolve(__dirname, '../../../.babelrc'))
+        ),
       },
       {
         test: /\.css$/,

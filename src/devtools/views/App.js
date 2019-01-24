@@ -8,11 +8,13 @@ import styles from './App.css';
 
 import type { Bridge } from '../../types';
 
-type Props = {|
+export type Props = {|
   bridge: Bridge,
+  browserName: string,
+  themeName: string,
 |};
 
-export default function App({ bridge }: Props) {
+export default function App({ bridge, browserName, themeName }: Props) {
   const store = useMemo(() => new Store(bridge), []);
 
   return (

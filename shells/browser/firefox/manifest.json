@@ -1,10 +1,15 @@
 {
   "manifest_version": 2,
   "name": "React Developer Tools",
-  "description": "Adds React debugging tools to the Chrome Developer Tools.",
+  "description": "Adds React debugging tools to the Firefox Developer Tools.",
   "version": "4.0.0",
 
-  "minimum_chrome_version": "49",
+  "applications": {
+    "gecko": {
+      "id": "@react-devtools",
+      "strict_min_version": "54.0"
+    }
+  },
 
   "icons": {
     "16": "icons/16-production.png",
@@ -21,7 +26,8 @@
       "128": "icons/128-disabled.png"
     },
 
-    "default_popup": "popups/disabled.html"
+    "default_popup": "popups/disabled.html",
+    "browser_style": true
   },
 
   "devtools_page": "main.html",

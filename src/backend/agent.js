@@ -15,7 +15,7 @@ import type { Bridge } from '../types';
 import type { Element } from 'src/devtools/types';
 
 const debug = (methodName, ...args) => {
-  //console.log(`%cAgent %c${methodName}`, 'color: blue; font-weight: bold;', 'font-weight: bold;', ...args);
+  // debug(`%cAgent %c${methodName}`, 'color: blue; font-weight: bold;', 'font-weight: bold;', ...args);
 };
 
 const THROTTLE_BY_MS = 350;

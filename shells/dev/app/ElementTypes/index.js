@@ -15,7 +15,8 @@ import React, {
 } from 'react';
 
 const Context = createContext('abc');
-Context.displayName = 'testContext';
+// $FlowFixMe Flow doesn't support this property yet.
+Context.displayName = 'ExampleContext';
 
 class ClassComponent extends Component<any> {
   render() {
