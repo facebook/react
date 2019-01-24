@@ -6,6 +6,22 @@
   </summary>
 </details>
 
+## 16.8.0 (TODO)
+
+### React
+
+* Adds [Hooks](https://reactjs.org/docs/hooks-intro.html) — a way to use state and other React features without writing a class. ([@acdlite](https://github.com/acdlite) et al. in [#13968](https://github.com/facebook/react/pull/13968))
+
+### React DOM
+
+* Support synchronous thenables passed to `React.lazy()`. ([@gaearon](https://github.com/gaearon) in [#14626](https://github.com/facebook/react/pull/14626))
+
+### React Test Renderer
+
+* Support Hooks in the shallow renderer. ([@trueadm](https://github.com/trueadm) in [#14567](https://github.com/facebook/react/pull/14567))
+* Fix shallow renderer passing incorrect state to `shouldComponentUpdate` in the presence of `getDerivedStateFromProps`. ([@chenesan](https://github.com/chenesan) in [#14613](https://github.com/facebook/react/pull/14613))
+
+
 ## 16.7.0 (December 19, 2018)
 
 ### React DOM
