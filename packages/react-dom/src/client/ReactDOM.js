@@ -392,6 +392,7 @@ ReactRoot.prototype.unmount = function(callback: ?() => mixed): Work {
   callback = callback === undefined ? null : callback;
   if (__DEV__) {
     warnOnInvalidCallback(callback, 'render');
+    root.containerInfo._reactHasBeenPassedToCreateRootDEV = null;
   }
   if (callback !== null) {
     work.then(callback);

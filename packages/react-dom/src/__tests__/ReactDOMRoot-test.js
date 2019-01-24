@@ -493,4 +493,19 @@ describe('ReactDOMRoot', () => {
     jest.runAllTimers();
     expect(container.textContent).toEqual('Hi');
   });
+
+  it('allows calling createRoot() multiple times if the root is unmounted', () => {
+    const root = ReactDOM.unstable_createRoot(container);
+    root.render(<div>Hi</div>);
+    jest.runAllTimers();
+    expect(container.textContent).toEqual('Hi');
+    root.unmount();
+    jest.runAllTimers();
+    expect(container.textContent).toEqual('');
+
+    const root2 = ReactDOM.unstable_createRoot(container);
+    root2.render(<div>Ho</div>);
+    jest.runAllTimers();
+    expect(container.textContent).toEqual('Ho');
+  });
 });
