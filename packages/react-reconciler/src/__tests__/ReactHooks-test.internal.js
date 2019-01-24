@@ -833,6 +833,100 @@ describe('ReactHooks', () => {
     );
   });
 
+  it('resets warning internal state when interrupted by an error', () => {
+    const ReactCurrentDispatcher =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .ReactCurrentDispatcher;
+
+    const ThemeContext = React.createContext('light');
+    function App() {
+      React.useMemo(() => {
+        // Trigger warnings
+        ReactCurrentDispatcher.current.readContext(ThemeContext);
+        React.useRef();
+        // Interrupt exit from a Hook
+        throw new Error('No.');
+      }, []);
+    }
+
+    class Boundary extends React.Component {
+      state = {};
+      static getDerivedStateFromError(error) {
+        return {err: true};
+      }
+      render() {
+        if (this.state.err) {
+          return 'Oops';
+        }
+        return this.props.children;
+      }
+    }
+
+    expect(() => {
+      ReactTestRenderer.create(
+        <Boundary>
+          <App />
+        </Boundary>,
+      );
+    }).toWarnDev([
+      // We see it twice due to replay
+      'Context can only be read while React is rendering',
+      'Hooks can only be called inside the body of a function component',
+      'Context can only be read while React is rendering',
+      'Hooks can only be called inside the body of a function component',
+    ]);
+
+    function Valid() {
+      React.useState();
+      React.useMemo(() => {});
+      React.useReducer(() => {});
+      React.useEffect(() => {});
+      React.useLayoutEffect(() => {});
+      React.useCallback(() => {});
+      React.useRef();
+      React.useImperativeHandle(() => {}, () => {});
+      if (__DEV__) {
+        React.useDebugValue();
+      }
+      return null;
+    }
+    // Verify it doesn't think we're still inside a Hook.
+    // Should have no warnings.
+    ReactTestRenderer.create(<Valid />);
+
+    // Verify warnings don't get permanently disabled.
+    expect(() => {
+      ReactTestRenderer.create(
+        <Boundary>
+          <App />
+        </Boundary>,
+      );
+    }).toWarnDev([
+      // We see it twice due to replay
+      'Context can only be read while React is rendering',
+      'Hooks can only be called inside the body of a function component',
+      'Context can only be read while React is rendering',
+      'Hooks can only be called inside the body of a function component',
+    ]);
+  });
+
+  it('warns when reading context inside useMemo', () => {
+    const {useMemo, createContext} = React;
+    const ReactCurrentDispatcher =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .ReactCurrentDispatcher;
+
+    const ThemeContext = createContext('light');
+    function App() {
+      return useMemo(() => {
+        return ReactCurrentDispatcher.current.readContext(ThemeContext);
+      }, []);
+    }
+
+    expect(() => ReactTestRenderer.create(<App />)).toWarnDev(
+      'Context can only be read while React is rendering',
+    );
+  });
   it('double-invokes components with Hooks in Strict Mode', () => {
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = true;
 
@@ -1138,16 +1232,12 @@ describe('ReactHooks', () => {
     }
 
     expect(() =>
-      expect(() =>
-        ReactTestRenderer.create(
-          <React.Fragment>
-            <A />
-            <B />
-          </React.Fragment>,
-        ),
-      ).toThrow('Hello'),
-    ).toWarnDev([
-      'Hooks can only be called inside the body of a function component',
-    ]);
+      ReactTestRenderer.create(
+        <React.Fragment>
+          <A />
+          <B />
+        </React.Fragment>,
+      ),
+    ).toThrow('Hello');
   });
 });

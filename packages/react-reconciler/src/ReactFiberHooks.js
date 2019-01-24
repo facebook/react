@@ -311,6 +311,11 @@ export function renderWithHooks(
   currentlyRenderingFiber = workInProgress;
   firstCurrentHook = current !== null ? current.memoizedState : null;
 
+  if (__DEV__) {
+    exitDisallowedContextReadInDEV();
+    isInHookUserCodeInDev = false;
+  }
+
   // The following should have already been reset
   // currentHook = null;
   // workInProgressHook = null;
@@ -407,6 +412,8 @@ export function bailoutHooks(
 export function resetHooks(): void {
   if (__DEV__) {
     flushHookMismatchWarnings();
+    exitDisallowedContextReadInDEV();
+    isInHookUserCodeInDev = false;
   }
 
   // This is used to reset the state of this module when a component throws.
@@ -1113,6 +1120,7 @@ function dispatchAction<S, A>(
           // Suppress the error. It will throw again in the render phase.
         } finally {
           if (__DEV__) {
+            exitDisallowedContextReadInDEV();
             isInHookUserCodeInDev = false;
           }
         }
