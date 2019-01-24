@@ -110,29 +110,54 @@ export default {
          * Segments 1 and 2 have one path to the beginning of `MyComponent` and
          * segment 3 has two paths to the beginning of `MyComponent` since we
          * could have either taken the path of segment 1 or segment 2.
+         *
+         * Populates `cyclic` with cyclic segments.
          */
 
-        function countPathsFromStart(segment, visited = new Set()) {
-          if (codePath.thrownSegments.includes(segment)) {
-            return 0;
-          }
+        function countPathsFromStart(segment) {
+          const {cache} = countPathsFromStart;
+          let paths = cache.get(segment.id);
 
-          // We reached the destination
-          if (segment.prevSegments.length === 0) {
-            return 1;
-          }
-
-          let paths = 0;
-          visited.add(segment.id);
-
-          for (const prevSegment of segment.prevSegments) {
-            // Check if we already visited the segment so we don't fall into a cycle.
-            if (!visited.has(prevSegment.id)) {
-              paths += countPathsFromStart(prevSegment, visited);
+          // If `paths` is null then we've found a cycle! Add it to `cyclic` and
+          // any other segments which are a part of this cycle.
+          if (paths === null) {
+            if (cyclic.has(segment.id)) {
+              return 0;
+            } else {
+              cyclic.add(segment.id);
+              for (const prevSegment of segment.prevSegments) {
+                countPathsFromStart(prevSegment);
+              }
+              return 0;
             }
           }
 
-          visited.delete(segment.id);
+          // We have a cached `paths`. Return it.
+          if (paths !== undefined) {
+            return paths;
+          }
+
+          // Compute `paths` and cache it. Guarding against cycles.
+          cache.set(segment.id, null);
+          if (codePath.thrownSegments.includes(segment)) {
+            paths = 0;
+          } else if (segment.prevSegments.length === 0) {
+            paths = 1;
+          } else {
+            paths = 0;
+            for (const prevSegment of segment.prevSegments) {
+              paths += countPathsFromStart(prevSegment);
+            }
+          }
+
+          // If our segment is reachable then there should be at least one path
+          // to it from the start of our code path.
+          if (segment.reachable && paths === 0) {
+            cache.delete(segment.id);
+          } else {
+            cache.set(segment.id, paths);
+          }
+
           return paths;
         }
 
@@ -253,6 +278,7 @@ export default {
           return length;
         }
 
+        countPathsFromStart.cache = new Map();
         countPathsToEnd.cache = new Map();
         shortestPathLengthToStart.cache = new Map();
 
