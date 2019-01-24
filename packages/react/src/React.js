@@ -83,7 +83,7 @@ const React = {
   createElement: __DEV__ ? createElementWithValidation : createElement,
   cloneElement: __DEV__ ? cloneElementWithValidation : cloneElement,
   createFactory: __DEV__ ? createFactoryWithValidation : createFactory,
-  isValidElement: isValidElement,
+  isValidElement,
 
   version: ReactVersion,
 
