@@ -70,7 +70,7 @@ type HookType =
   | 'useDebugValue';
 
 // the first instance of a hook mismatch in a component,
-// represented by a portion of it's stacktrace
+// represented by a portion of its stacktrace
 let currentHookMismatchInDev = null;
 let isInHookUserCodeInDev = false;
 
