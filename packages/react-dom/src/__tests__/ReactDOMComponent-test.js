@@ -2683,6 +2683,23 @@ describe('ReactDOMComponent', () => {
           portalContainer,
         );
       }
+      const root = ReactDOM.unstable_createRoot(container);
+      root.render(<Component />);
+      jest.runAllTimers();
+
+      expect(typeof portalContainer.onclick).toBe('function');
+    });
+
+    it('adds onclick handler to a portal root mounted via a legacy React root', () => {
+      const container = document.createElement('div');
+      const portalContainer = document.createElement('div');
+
+      function Component() {
+        return ReactDOM.createPortal(
+          <div onClick={() => {}} />,
+          portalContainer,
+        );
+      }
 
       ReactDOM.render(<Component />, container);
       expect(typeof portalContainer.onclick).toBe('function');
