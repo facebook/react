@@ -30,6 +30,7 @@ The documentation is divided into several sections:
 * [Main Concepts](https://reactjs.org/docs/hello-world.html)
 * [Advanced Guides](https://reactjs.org/docs/jsx-in-depth.html)
 * [API Reference](https://reactjs.org/docs/react-api.html)
+* [Hooks(Preview)](https://reactjs.org/docs/hooks-intro.html)
 * [Where to Get Support](https://reactjs.org/community/support.html)
 * [Contributing Guide](https://reactjs.org/docs/how-to-contribute.html)
 
