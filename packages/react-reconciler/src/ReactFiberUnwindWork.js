@@ -25,6 +25,7 @@ import {
   HostPortal,
   ContextProvider,
   SuspenseComponent,
+  DehydratedSuspenseComponent,
   IncompleteClassComponent,
 } from 'shared/ReactWorkTags';
 import {
@@ -36,7 +37,10 @@ import {
 } from 'shared/ReactSideEffectTags';
 import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
 import {ConcurrentMode} from './ReactTypeOfMode';
-import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent';
+import {
+  shouldCaptureSuspense,
+  shouldCaptureDehydratedSuspense,
+} from './ReactFiberSuspenseComponent';
 
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -197,6 +201,8 @@ function throwException(
             earliestTimeoutMs = timeoutPropMs;
           }
         }
+      } else if (workInProgress.tag === DehydratedSuspenseComponent) {
+        // TODO
       }
       workInProgress = workInProgress.return;
     } while (workInProgress !== null);
@@ -334,6 +340,12 @@ function throwException(
         workInProgress.effectTag |= ShouldCapture;
         workInProgress.expirationTime = renderExpirationTime;
         return;
+      } else if (
+        workInProgress.tag === DehydratedSuspenseComponent &&
+        shouldCaptureDehydratedSuspense(workInProgress)
+      ) {
+        // TODO
+        return;
       }
       // This boundary already captured during this render. Continue to the next
       // boundary.
@@ -432,6 +444,7 @@ function unwindWork(
       return workInProgress;
     }
     case HostComponent: {
+      // TODO: popHydrationState
       popHostContext(workInProgress);
       return null;
     }
@@ -442,6 +455,11 @@ function unwindWork(
         // Captured a suspense effect. Re-render the boundary.
         return workInProgress;
       }
+      return null;
+    }
+    case DehydratedSuspenseComponent: {
+      // TODO: popHydrationState
+      // TODO: Maybe re-render if it captured?
       return null;
     }
     case HostPortal:

@@ -30,6 +30,7 @@ import {
   ContextConsumer,
   Profiler,
   SuspenseComponent,
+  DehydratedSuspenseComponent,
   MemoComponent,
   SimpleMemoComponent,
   LazyComponent,
@@ -1392,6 +1393,13 @@ function updateSuspenseComponent(
   // children -- we skip over the primary children entirely.
   let next;
   if (current === null) {
+    // If we're currently hydrating, try to hydrate this boundary.
+    tryToClaimNextHydratableInstance(workInProgress);
+    // This could've changed the tag if this was a dehydrated suspense component.
+    if (workInProgress.tag === DehydratedSuspenseComponent) {
+      return updateDehydratedSuspenseComponent(null, workInProgress);
+    }
+
     // This is the initial mount. This branch is pretty simple because there's
     // no previous state that needs to be preserved.
     if (nextDidTimeout) {
@@ -1596,6 +1604,13 @@ function updateSuspenseComponent(
   workInProgress.memoizedState = nextState;
   workInProgress.child = child;
   return next;
+}
+
+function updateDehydratedSuspenseComponent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+) {
+  return null;
 }
 
 function updatePortalComponent(
@@ -2050,6 +2065,9 @@ function beginWork(
         resolvedProps,
         renderExpirationTime,
       );
+    }
+    case DehydratedSuspenseComponent: {
+      return updateDehydratedSuspenseComponent(current, workInProgress);
     }
     default:
       invariant(

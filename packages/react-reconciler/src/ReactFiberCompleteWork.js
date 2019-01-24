@@ -34,6 +34,7 @@ import {
   Mode,
   Profiler,
   SuspenseComponent,
+  DehydratedSuspenseComponent,
   MemoComponent,
   SimpleMemoComponent,
   LazyComponent,
@@ -759,6 +760,17 @@ function completeWork(
       const Component = workInProgress.type;
       if (isLegacyContextProvider(Component)) {
         popLegacyContext(workInProgress);
+      }
+      break;
+    }
+    case DehydratedSuspenseComponent: {
+      if (current === null) {
+        let wasHydrated = popHydrationState(workInProgress);
+        invariant(
+          wasHydrated,
+          'A dehydrated suspense component was completed without a hydrated node. ' +
+            'This is probably a bug in React.',
+        );
       }
       break;
     }
