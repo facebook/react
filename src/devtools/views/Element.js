@@ -17,7 +17,7 @@ export default function Element({ depth, id }: Props) {
 
   const { children, displayName, key } = element;
 
-  // TODO: Toggle open/close state
+  // TODO: Add state for toggling element open/close
 
   return (
     <Fragment>

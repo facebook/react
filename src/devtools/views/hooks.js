@@ -10,6 +10,8 @@ export function useElement(store: Store, id: string): Element {
     ((store.getElement(id): any): Element)
   );
 
+  // TODO: We might still miss updates in concurrent mode.
+  //       We should just useEffect and do a sync comparison (like in create-subscription) to handle this.
   useLayoutEffect(() => {
     const handler = () => setElement(((store.getElement(id): any): Element));
     store.addListener(id, handler);
@@ -22,6 +24,8 @@ export function useElement(store: Store, id: string): Element {
 export function useRoots(store: Store): Array<string> {
   const [roots, setRoots] = useState<Array<string>>(Array.from(store.roots));
 
+  // TODO: We might still miss updates in concurrent mode.
+  //       We should just useEffect and do a sync comparison (like in create-subscription) to handle this.
   useLayoutEffect(() => {
     const handler = () => setRoots(Array.from(store.roots));
     store.addListener('roots', handler);

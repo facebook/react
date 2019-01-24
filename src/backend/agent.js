@@ -26,16 +26,8 @@ export default class Agent extends EventEmitter {
   _idToFiber: Map<string, Fiber> = new Map();
   _idToRendererData: Map<string, RendererData> = new Map();
   _idToRendererID: Map<string, RendererID> = new Map();
-  _isRenderInProgress: boolean = false;
   _rendererInterfaces: { [key: RendererID]: RendererInterface } = {};
   _roots: Set<RendererID> = new Set();
-
-  // Tree updates are debounced to reduce bridge traffic and improve performance.
-  // This reduces the potential negative impact that DevTools has on React performance.
-  // Eventual consistency is good enough for the Elements tree.
-  _lastCrawlTime: number = -THROTTLE_BY_MS;
-  _pendingRoots: Set<string> = new Set();
-  _pendingRootTimeoutID: TimeoutID | null = null;
 
   addBridge(bridge: Bridge) {
     // TODO Listen to bridge for things like selection.
@@ -83,25 +75,6 @@ export default class Agent extends EventEmitter {
     }
   }
 
-  _crawlPendingRoots(): void {
-    this._pendingRoots.forEach(id => this._crawlRoot(id));
-    this._pendingRoots.clear();
-    this._lastCrawlTime = performance.now();
-  }
-
-  _crawlRoot(id: string): void {
-    const data = ((this._idToRendererData.get(id): any): RendererData);
-
-    // TODO: Can we use the effects list on update for a faster path?
-    this._createOrUpdateElement(id, data);
-
-    if (!this._roots.has(id)) {
-      this._roots.add(id);
-      debug('emit("root")', id);
-      this.emit('root', id);
-    }
-  }
-
   _createOrUpdateElement(id: string, data: RendererData): void {
     const prevElement: ?Element = this._idToElement.get(id);
     const nextElement: Element = {
@@ -129,13 +102,6 @@ export default class Agent extends EventEmitter {
     }
   }
 
-  _maybeCrawlRoot = () => {
-    this._pendingRootTimeoutID = null;
-    if (!this._isRenderInProgress) {
-      this._crawlPendingRoots();
-    }
-  };
-
   onHookMount = ({
     data,
     fiber,
@@ -162,17 +128,14 @@ export default class Agent extends EventEmitter {
   }) => {
     const id = this._getId(fiber);
 
-    this._isRenderInProgress = false;
-    this._pendingRoots.add(id);
+    // TODO: Can we use the effects list on update for a faster path?
+    //       Mounts (Placements) and unmounts (Deletions) are on the child; need to update parent children in that case.
+    this._createOrUpdateElement(id, data);
 
-    const delta = performance.now() - this._lastCrawlTime;
-    if (delta >= THROTTLE_BY_MS) {
-      this._crawlPendingRoots();
-    } else if (this._pendingRootTimeoutID === null) {
-      this._pendingRootTimeoutID = setTimeout(
-        this._maybeCrawlRoot,
-        THROTTLE_BY_MS - delta
-      );
+    if (!this._roots.has(id)) {
+      this._roots.add(id);
+      debug('emit("root")', id);
+      this.emit('root', id);
     }
   };
 
@@ -198,7 +161,6 @@ export default class Agent extends EventEmitter {
   onHookUpdate = ({ data, fiber }: { data: RendererData, fiber: Fiber }) => {
     const id = this._getId(fiber);
 
-    this._isRenderInProgress = true;
     this._idToRendererData.set(id, data);
   };
 }
