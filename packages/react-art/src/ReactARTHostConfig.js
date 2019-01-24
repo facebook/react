@@ -356,12 +356,14 @@ export function appendChild(parentInstance, child) {
   child.inject(parentInstance);
 }
 
-export function appendChildToContainer(parentInstance, child, containerIsRoot) {
+export function appendChildToContainer(parentInstance, child) {
   if (child.parentNode === parentInstance) {
     child.eject();
   }
   child.inject(parentInstance);
 }
+
+export const appendChildToPortalContainer = appendChildToContainer;
 
 export function insertBefore(parentInstance, child, beforeChild) {
   invariant(

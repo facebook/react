@@ -251,6 +251,7 @@ export function resetTextContent(testElement: Instance): void {
 }
 
 export const appendChildToContainer = appendChild;
+export const appendChildToPortalContainer = appendChild;
 export const insertInContainerBefore = insertBefore;
 export const removeChildFromContainer = removeChild;
 

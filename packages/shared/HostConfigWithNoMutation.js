@@ -25,6 +25,7 @@ function shim(...args: any) {
 export const supportsMutation = false;
 export const appendChild = shim;
 export const appendChildToContainer = shim;
+export const appendChildToPortalContainer = shim;
 export const commitTextUpdate = shim;
 export const commitMount = shim;
 export const commitUpdate = shim;

@@ -66,7 +66,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   function appendChildToContainer(
     parentInstance: Container,
     child: Instance | TextInstance,
-    containerIsRoot: boolean,
   ): void {
     if (typeof parentInstance.rootID !== 'string') {
       // Some calls to this aren't typesafe.
@@ -392,6 +391,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
         appendChild,
         appendChildToContainer,
+        appendChildToPortalContainer: appendChildToContainer,
         insertBefore,
         insertInContainerBefore,
         removeChild,

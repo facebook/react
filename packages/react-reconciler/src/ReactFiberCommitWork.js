@@ -75,6 +75,7 @@ import {
   commitTextUpdate,
   appendChild,
   appendChildToContainer,
+  appendChildToPortalContainer,
   insertBefore,
   insertInContainerBefore,
   removeChild,
@@ -951,8 +952,11 @@ function commitPlacement(finishedWork: Fiber): void {
         }
       } else {
         if (isContainer) {
-          const containerIsRoot = parentFiber.tag === HostRoot;
-          appendChildToContainer(parent, node.stateNode, containerIsRoot);
+          if (parentFiber.tag === HostRoot) {
+            appendChildToContainer(parent, node.stateNode);
+          } else {
+            appendChildToPortalContainer(parent, node.stateNode);
+          }
         } else {
           appendChild(parent, node.stateNode);
         }
