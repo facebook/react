@@ -56,7 +56,8 @@ export type Props = {
 export type Container = Element | Document;
 export type Instance = Element;
 export type TextInstance = Text;
-export type HydratableInstance = Element | Text;
+export type SuspenseInstance = Comment;
+export type HydratableInstance = Instance | TextInstance | SuspenseInstance;
 export type PublicInstance = Element | Text;
 type HostContextDev = {
   namespace: string,
@@ -84,6 +85,8 @@ let SUPPRESS_HYDRATION_WARNING;
 if (__DEV__) {
   SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
 }
+
+const SUSPENSE_DATA = '$';
 
 const STYLE = 'style';
 
@@ -416,14 +419,14 @@ export function insertInContainerBefore(
 
 export function removeChild(
   parentInstance: Instance,
-  child: Instance | TextInstance,
+  child: Instance | TextInstance | SuspenseInstance,
 ): void {
   parentInstance.removeChild(child);
 }
 
 export function removeChildFromContainer(
   container: Container,
-  child: Instance | TextInstance,
+  child: Instance | TextInstance | SuspenseInstance,
 ): void {
   if (container.nodeType === COMMENT_NODE) {
     (container.parentNode: any).removeChild(child);
@@ -469,7 +472,7 @@ export function unhideTextInstance(
 export const supportsHydration = true;
 
 export function canHydrateInstance(
-  instance: Instance | TextInstance,
+  instance: HydratableInstance,
   type: string,
   props: Props,
 ): null | Instance {
@@ -484,7 +487,7 @@ export function canHydrateInstance(
 }
 
 export function canHydrateTextInstance(
-  instance: Instance | TextInstance,
+  instance: HydratableInstance,
   text: string,
 ): null | TextInstance {
   if (text === '' || instance.nodeType !== TEXT_NODE) {
@@ -495,15 +498,27 @@ export function canHydrateTextInstance(
   return ((instance: any): TextInstance);
 }
 
+export function canHydrateSuspenseInstance(
+  instance: HydratableInstance,
+): null | SuspenseInstance {
+  if (instance.nodeType !== COMMENT_NODE) {
+    // Empty strings are not parsed by HTML so there won't be a correct match here.
+    return null;
+  }
+  // This has now been refined to a text node.
+  return ((instance: any): SuspenseInstance);
+}
+
 export function getNextHydratableSibling(
-  instance: Instance | TextInstance,
-): null | Instance | TextInstance {
+  instance: HydratableInstance,
+): null | HydratableInstance {
   let node = instance.nextSibling;
   // Skip non-hydratable nodes.
   while (
     node &&
     node.nodeType !== ELEMENT_NODE &&
-    node.nodeType !== TEXT_NODE
+    node.nodeType !== TEXT_NODE &&
+    (node.nodeType !== COMMENT_NODE || (node: any).data !== SUSPENSE_DATA)
   ) {
     node = node.nextSibling;
   }
@@ -512,13 +527,14 @@ export function getNextHydratableSibling(
 
 export function getFirstHydratableChild(
   parentInstance: Container | Instance,
-): null | Instance | TextInstance {
+): null | HydratableInstance {
   let next = parentInstance.firstChild;
   // Skip non-hydratable nodes.
   while (
     next &&
     next.nodeType !== ELEMENT_NODE &&
-    next.nodeType !== TEXT_NODE
+    next.nodeType !== TEXT_NODE &&
+    (next.nodeType !== COMMENT_NODE || (next: any).data !== SUSPENSE_DATA)
   ) {
     next = next.nextSibling;
   }
@@ -586,11 +602,13 @@ export function didNotMatchHydratedTextInstance(
 
 export function didNotHydrateContainerInstance(
   parentContainer: Container,
-  instance: Instance | TextInstance,
+  instance: HydratableInstance,
 ) {
   if (__DEV__) {
     if (instance.nodeType === ELEMENT_NODE) {
       warnForDeletedHydratableElement(parentContainer, (instance: any));
+    } else if (instance.nodeType === COMMENT_NODE) {
+      // TODO: warnForDeletedHydratableSuspenseBoundary
     } else {
       warnForDeletedHydratableText(parentContainer, (instance: any));
     }
@@ -601,11 +619,13 @@ export function didNotHydrateInstance(
   parentType: string,
   parentProps: Props,
   parentInstance: Instance,
-  instance: Instance | TextInstance,
+  instance: HydratableInstance,
 ) {
   if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
     if (instance.nodeType === ELEMENT_NODE) {
       warnForDeletedHydratableElement(parentInstance, (instance: any));
+    } else if (instance.nodeType === COMMENT_NODE) {
+      // TODO: warnForDeletedHydratableSuspenseBoundary
     } else {
       warnForDeletedHydratableText(parentInstance, (instance: any));
     }
@@ -631,6 +651,14 @@ export function didNotFindHydratableContainerTextInstance(
   }
 }
 
+export function didNotFindHydratableContainerSuspenseInstance(
+  parentContainer: Container,
+) {
+  if (__DEV__) {
+    // TODO: warnForInsertedHydratedSupsense(parentContainer);
+  }
+}
+
 export function didNotFindHydratableInstance(
   parentType: string,
   parentProps: Props,
@@ -651,5 +679,15 @@ export function didNotFindHydratableTextInstance(
 ) {
   if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
     warnForInsertedHydratedText(parentInstance, text);
+  }
+}
+
+export function didNotFindHydratableSuspenseInstance(
+  parentType: string,
+  parentProps: Props,
+  parentInstance: Instance,
+) {
+  if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
+    // TODO: warnForInsertedHydratedSuspense(parentInstance);
   }
 }

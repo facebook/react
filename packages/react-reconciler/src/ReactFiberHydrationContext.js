@@ -12,11 +12,18 @@ import type {
   Instance,
   TextInstance,
   HydratableInstance,
+  SuspenseInstance,
   Container,
   HostContext,
 } from './ReactFiberHostConfig';
 
-import {HostComponent, HostText, HostRoot} from 'shared/ReactWorkTags';
+import {
+  HostComponent,
+  HostText,
+  HostRoot,
+  SuspenseComponent,
+  DehydratedSuspenseComponent,
+} from 'shared/ReactWorkTags';
 import {Deletion, Placement} from 'shared/ReactSideEffectTags';
 import invariant from 'shared/invariant';
 
@@ -26,6 +33,7 @@ import {
   supportsHydration,
   canHydrateInstance,
   canHydrateTextInstance,
+  canHydrateSuspenseInstance,
   getNextHydratableSibling,
   getFirstHydratableChild,
   hydrateInstance,
@@ -36,8 +44,10 @@ import {
   didNotHydrateInstance,
   didNotFindHydratableContainerInstance,
   didNotFindHydratableContainerTextInstance,
+  didNotFindHydratableContainerSuspenseInstance,
   didNotFindHydratableInstance,
   didNotFindHydratableTextInstance,
+  didNotFindHydratableSuspenseInstance,
 } from './ReactFiberHostConfig';
 
 // The deepest Fiber on the stack involved in a hydration context.
@@ -115,6 +125,9 @@ function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
             const text = fiber.pendingProps;
             didNotFindHydratableContainerTextInstance(parentContainer, text);
             break;
+          case SuspenseComponent:
+            didNotFindHydratableContainerSuspenseInstance(parentContainer);
+            break;
         }
         break;
       }
@@ -143,6 +156,13 @@ function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
               text,
             );
             break;
+          case SuspenseComponent:
+            didNotFindHydratableSuspenseInstance(
+              parentType,
+              parentProps,
+              parentInstance,
+            );
+            break;
         }
         break;
       }
@@ -169,6 +189,16 @@ function tryHydrate(fiber, nextInstance) {
       const textInstance = canHydrateTextInstance(nextInstance, text);
       if (textInstance !== null) {
         fiber.stateNode = (textInstance: TextInstance);
+        return true;
+      }
+      return false;
+    }
+    case SuspenseComponent: {
+      const suspenseInstance = canHydrateSuspenseInstance(nextInstance);
+      if (suspenseInstance !== null) {
+        // Downgrade the tag to a dehydrated component until we've hydrated it.
+        fiber.tag = DehydratedSuspenseComponent;
+        fiber.stateNode = (suspenseInstance: SuspenseInstance);
         return true;
       }
       return false;
@@ -301,7 +331,8 @@ function popToNextHostParent(fiber: Fiber): void {
   while (
     parent !== null &&
     parent.tag !== HostComponent &&
-    parent.tag !== HostRoot
+    parent.tag !== HostRoot &&
+    parent.tag !== DehydratedSuspenseComponent
   ) {
     parent = parent.return;
   }

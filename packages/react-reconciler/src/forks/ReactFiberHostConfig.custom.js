@@ -104,6 +104,8 @@ export const createHiddenTextInstance = $$$hostConfig.createHiddenTextInstance;
 // -------------------
 export const canHydrateInstance = $$$hostConfig.canHydrateInstance;
 export const canHydrateTextInstance = $$$hostConfig.canHydrateTextInstance;
+export const canHydrateSuspenseInstance =
+  $$$hostConfig.canHydrateSuspenseInstance;
 export const getNextHydratableSibling = $$$hostConfig.getNextHydratableSibling;
 export const getFirstHydratableChild = $$$hostConfig.getFirstHydratableChild;
 export const hydrateInstance = $$$hostConfig.hydrateInstance;
@@ -119,7 +121,11 @@ export const didNotFindHydratableContainerInstance =
   $$$hostConfig.didNotFindHydratableContainerInstance;
 export const didNotFindHydratableContainerTextInstance =
   $$$hostConfig.didNotFindHydratableContainerTextInstance;
+export const didNotFindHydratableContainerSuspenseInstance =
+  $$$hostConfig.didNotFindHydratableContainerSuspenseInstance;
 export const didNotFindHydratableInstance =
   $$$hostConfig.didNotFindHydratableInstance;
 export const didNotFindHydratableTextInstance =
   $$$hostConfig.didNotFindHydratableTextInstance;
+export const didNotFindHydratableSuspenseInstance =
+  $$$hostConfig.didNotFindHydratableSuspenseInstance;
