@@ -677,5 +677,43 @@ describe('ReactDOMFiberAsync', () => {
       // Therefore the form should have been submitted.
       expect(formSubmitted).toBe(true);
     });
+
+    it('discrete events commit in sequence', () => {
+      const buttonRef = React.createRef();
+      class Counter extends React.Component {
+        state = {counter: 0};
+        render() {
+          const {counter} = this.state;
+          return (
+            <button
+              ref={buttonRef}
+              onClick={() => this.setState({counter: counter + 1})}>
+              {counter}
+            </button>
+          );
+        }
+      }
+      ReactDOM.render(
+        <ConcurrentMode>
+          <Counter />
+        </ConcurrentMode>,
+        container,
+      );
+      let button = buttonRef.current;
+      // Dispatch a click event on the counter button to increment
+      function dispatchButtonClick() {
+        let firstEvent = document.createEvent('Event');
+        firstEvent.initEvent('click', true, true);
+        button.dispatchEvent(firstEvent);
+      }
+      // Dispatch a sequence of 5 click events before flushing any work
+      dispatchButtonClick();
+      dispatchButtonClick();
+      dispatchButtonClick();
+      dispatchButtonClick();
+      dispatchButtonClick();
+      jest.runAllTimers();
+      expect(button.textContent).toBe('5');
+    });
   });
 });
