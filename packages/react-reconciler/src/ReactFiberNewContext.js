@@ -52,8 +52,7 @@ let currentlyRenderingFiber: Fiber | null = null;
 let lastContextDependency: ContextDependency<mixed> | null = null;
 let lastContextWithAllBitsObserved: ReactContext<any> | null = null;
 
-// Used in DEV to track whether reading context should warn.
-let areContextDependenciesStashedInDEV: boolean = false;
+let isDisallowedContextReadInDEV: boolean = false;
 
 export function resetContextDependences(): void {
   // This is called right before React yields execution, to ensure `readContext`
@@ -62,19 +61,19 @@ export function resetContextDependences(): void {
   lastContextDependency = null;
   lastContextWithAllBitsObserved = null;
   if (__DEV__) {
-    areContextDependenciesStashedInDEV = false;
+    isDisallowedContextReadInDEV = false;
   }
 }
 
-export function stashContextDependenciesInDEV(): void {
+export function enterDisallowedContextReadInDEV(): void {
   if (__DEV__) {
-    areContextDependenciesStashedInDEV = true;
+    isDisallowedContextReadInDEV = true;
   }
 }
 
-export function unstashContextDependenciesInDEV(): void {
+export function exitDisallowedContextReadInDEV(): void {
   if (__DEV__) {
-    areContextDependenciesStashedInDEV = false;
+    isDisallowedContextReadInDEV = false;
   }
 }
 
@@ -301,7 +300,7 @@ export function readContext<T>(
     // This warning would fire if you read context inside a Hook like useMemo.
     // Unlike the class check below, it's not enforced in production for perf.
     warning(
-      !areContextDependenciesStashedInDEV,
+      !isDisallowedContextReadInDEV,
       'Context can only be read while React is rendering. ' +
         'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
         'In function components, you can read it directly in the function body, but not ' +

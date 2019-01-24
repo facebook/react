@@ -15,8 +15,8 @@ import type {HookEffectTag} from './ReactHookEffectTags';
 import {NoWork} from './ReactFiberExpirationTime';
 import {
   readContext,
-  stashContextDependenciesInDEV,
-  unstashContextDependenciesInDEV,
+  enterDisallowedContextReadInDEV,
+  exitDisallowedContextReadInDEV,
 } from './ReactFiberNewContext';
 import {
   Update as UpdateEffect,
@@ -610,12 +610,12 @@ export function useReducer<S, A>(
             // render's.
             const action = update.action;
             if (__DEV__) {
-              stashContextDependenciesInDEV();
+              enterDisallowedContextReadInDEV();
               isInHookUserCodeInDev = true;
             }
             newState = reducer(newState, action);
             if (__DEV__) {
-              unstashContextDependenciesInDEV();
+              exitDisallowedContextReadInDEV();
               isInHookUserCodeInDev = false;
             }
             update = update.next;
@@ -687,12 +687,12 @@ export function useReducer<S, A>(
           } else {
             const action = update.action;
             if (__DEV__) {
-              stashContextDependenciesInDEV();
+              enterDisallowedContextReadInDEV();
               isInHookUserCodeInDev = true;
             }
             newState = reducer(newState, action);
             if (__DEV__) {
-              unstashContextDependenciesInDEV();
+              exitDisallowedContextReadInDEV();
               isInHookUserCodeInDev = false;
             }
           }
@@ -724,7 +724,7 @@ export function useReducer<S, A>(
     return [workInProgressHook.memoizedState, dispatch];
   }
   if (__DEV__) {
-    stashContextDependenciesInDEV();
+    enterDisallowedContextReadInDEV();
     isInHookUserCodeInDev = true;
   }
   // There's no existing queue, so this is the initial render.
@@ -737,7 +737,7 @@ export function useReducer<S, A>(
     initialState = reducer(initialState, initialAction);
   }
   if (__DEV__) {
-    unstashContextDependenciesInDEV();
+    exitDisallowedContextReadInDEV();
     isInHookUserCodeInDev = false;
   }
   workInProgressHook.memoizedState = workInProgressHook.baseState = initialState;
@@ -982,12 +982,12 @@ export function useMemo<T>(
   }
 
   if (__DEV__) {
-    stashContextDependenciesInDEV();
+    enterDisallowedContextReadInDEV();
     isInHookUserCodeInDev = true;
   }
   const nextValue = nextCreate();
   if (__DEV__) {
-    unstashContextDependenciesInDEV();
+    exitDisallowedContextReadInDEV();
     isInHookUserCodeInDev = false;
   }
   workInProgressHook.memoizedState = [nextValue, nextDeps];
@@ -1088,12 +1088,12 @@ function dispatchAction<S, A>(
         try {
           const currentState: S = (queue.eagerState: any);
           if (__DEV__) {
-            stashContextDependenciesInDEV();
+            enterDisallowedContextReadInDEV();
             isInHookUserCodeInDev = true;
           }
           const eagerState = eagerReducer(currentState, action);
           if (__DEV__) {
-            unstashContextDependenciesInDEV();
+            exitDisallowedContextReadInDEV();
             isInHookUserCodeInDev = false;
           }
           // Stash the eagerly computed state, and the reducer used to compute
