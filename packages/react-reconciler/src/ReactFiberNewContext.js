@@ -52,10 +52,7 @@ let currentlyRenderingFiber: Fiber | null = null;
 let lastContextDependency: ContextDependency<mixed> | null = null;
 let lastContextWithAllBitsObserved: ReactContext<any> | null = null;
 
-// We stash the variables above before entering user code in Hooks.
-let stashedCurrentlyRenderingFiber: Fiber | null = null;
-let stashedLastContextDependency: ContextDependency<mixed> | null = null;
-let stashedLastContextWithAllBitsObserved: ReactContext<any> | null = null;
+let isDisallowedContextReadInDEV: boolean = false;
 
 export function resetContextDependences(): void {
   // This is called right before React yields execution, to ensure `readContext`
@@ -63,26 +60,21 @@ export function resetContextDependences(): void {
   currentlyRenderingFiber = null;
   lastContextDependency = null;
   lastContextWithAllBitsObserved = null;
-
-  stashedCurrentlyRenderingFiber = null;
-  stashedLastContextDependency = null;
-  stashedLastContextWithAllBitsObserved = null;
+  if (__DEV__) {
+    isDisallowedContextReadInDEV = false;
+  }
 }
 
-export function stashContextDependencies(): void {
-  stashedCurrentlyRenderingFiber = currentlyRenderingFiber;
-  stashedLastContextDependency = lastContextDependency;
-  stashedLastContextWithAllBitsObserved = lastContextWithAllBitsObserved;
-
-  currentlyRenderingFiber = null;
-  lastContextDependency = null;
-  lastContextWithAllBitsObserved = null;
+export function enterDisallowedContextReadInDEV(): void {
+  if (__DEV__) {
+    isDisallowedContextReadInDEV = true;
+  }
 }
 
-export function unstashContextDependencies(): void {
-  currentlyRenderingFiber = stashedCurrentlyRenderingFiber;
-  lastContextDependency = stashedLastContextDependency;
-  lastContextWithAllBitsObserved = stashedLastContextWithAllBitsObserved;
+export function exitDisallowedContextReadInDEV(): void {
+  if (__DEV__) {
+    isDisallowedContextReadInDEV = false;
+  }
 }
 
 export function pushProvider<T>(providerFiber: Fiber, nextValue: T): void {
@@ -304,6 +296,18 @@ export function readContext<T>(
   context: ReactContext<T>,
   observedBits: void | number | boolean,
 ): T {
+  if (__DEV__) {
+    // This warning would fire if you read context inside a Hook like useMemo.
+    // Unlike the class check below, it's not enforced in production for perf.
+    warning(
+      !isDisallowedContextReadInDEV,
+      'Context can only be read while React is rendering. ' +
+        'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
+        'In function components, you can read it directly in the function body, but not ' +
+        'inside Hooks like useReducer() or useMemo().',
+    );
+  }
+
   if (lastContextWithAllBitsObserved === context) {
     // Nothing to do. We already observe everything in this context.
   } else if (observedBits === false || observedBits === 0) {

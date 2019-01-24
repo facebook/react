@@ -49,6 +49,8 @@ let renderPhaseUpdates: Map<UpdateQueue<any>, Update<any>> | null = null;
 let numberOfReRenders: number = 0;
 const RE_RENDER_LIMIT = 25;
 
+let isInHookUserCodeInDev = false;
+
 // In DEV, this is the name of the currently executing primitive hook
 let currentHookNameInDev: ?string;
 
@@ -57,6 +59,14 @@ function resolveCurrentlyRenderingComponent(): Object {
     currentlyRenderingComponent !== null,
     'Hooks can only be called inside the body of a function component.',
   );
+  if (__DEV__) {
+    warning(
+      !isInHookUserCodeInDev,
+      'Hooks can only be called inside the body of a function component. ' +
+        'Do not call Hooks inside other Hooks. For more information, see ' +
+        'https://fb.me/rules-of-hooks',
+    );
+  }
   return currentlyRenderingComponent;
 }
 
@@ -137,6 +147,9 @@ function createWorkInProgressHook(): Hook {
 
 export function prepareToUseHooks(componentIdentity: Object): void {
   currentlyRenderingComponent = componentIdentity;
+  if (__DEV__) {
+    isInHookUserCodeInDev = false;
+  }
 
   // The following should have already been reset
   // didScheduleRenderPhaseUpdate = false;
@@ -173,6 +186,9 @@ export function finishHooks(
   numberOfReRenders = 0;
   renderPhaseUpdates = null;
   workInProgressHook = null;
+  if (__DEV__) {
+    isInHookUserCodeInDev = false;
+  }
 
   // These were reset above
   // currentlyRenderingComponent = null;
@@ -191,6 +207,15 @@ function readContext<T>(
 ): T {
   let threadID = currentThreadID;
   validateContextBounds(context, threadID);
+  if (__DEV__) {
+    warning(
+      !isInHookUserCodeInDev,
+      'Context can only be read while React is rendering. ' +
+        'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
+        'In function components, you can read it directly in the function body, but not ' +
+        'inside Hooks like useReducer() or useMemo().',
+    );
+  }
   return context[threadID];
 }
 
@@ -234,7 +259,7 @@ export function useReducer<S, A>(
       currentHookNameInDev = 'useReducer';
     }
   }
-  let component = (currentlyRenderingComponent = resolveCurrentlyRenderingComponent());
+  currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
   workInProgressHook = createWorkInProgressHook();
   if (isReRender) {
     // This is a re-render. Apply the new render phase updates to the previous
@@ -253,10 +278,13 @@ export function useReducer<S, A>(
           // priority because it will always be the same as the current
           // render's.
           const action = update.action;
-          // Temporarily clear to forbid calling Hooks.
-          currentlyRenderingComponent = null;
+          if (__DEV__) {
+            isInHookUserCodeInDev = true;
+          }
           newState = reducer(newState, action);
-          currentlyRenderingComponent = component;
+          if (__DEV__) {
+            isInHookUserCodeInDev = false;
+          }
           update = update.next;
         } while (update !== null);
 
@@ -267,7 +295,9 @@ export function useReducer<S, A>(
     }
     return [workInProgressHook.memoizedState, dispatch];
   } else {
-    currentlyRenderingComponent = null;
+    if (__DEV__) {
+      isInHookUserCodeInDev = true;
+    }
     if (reducer === basicStateReducer) {
       // Special case for `useState`.
       if (typeof initialState === 'function') {
@@ -276,7 +306,9 @@ export function useReducer<S, A>(
     } else if (initialAction !== undefined && initialAction !== null) {
       initialState = reducer(initialState, initialAction);
     }
-    currentlyRenderingComponent = component;
+    if (__DEV__) {
+      isInHookUserCodeInDev = false;
+    }
     workInProgressHook.memoizedState = initialState;
     const queue: UpdateQueue<A> = (workInProgressHook.queue = {
       last: null,
@@ -292,7 +324,7 @@ export function useReducer<S, A>(
 }
 
 function useMemo<T>(nextCreate: () => T, deps: Array<mixed> | void | null): T {
-  let component = (currentlyRenderingComponent = resolveCurrentlyRenderingComponent());
+  currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
   workInProgressHook = createWorkInProgressHook();
 
   const nextDeps = deps === undefined ? null : deps;
@@ -309,10 +341,13 @@ function useMemo<T>(nextCreate: () => T, deps: Array<mixed> | void | null): T {
     }
   }
 
-  // Temporarily clear to forbid calling Hooks.
-  currentlyRenderingComponent = null;
+  if (__DEV__) {
+    isInHookUserCodeInDev = true;
+  }
   const nextValue = nextCreate();
-  currentlyRenderingComponent = component;
+  if (__DEV__) {
+    isInHookUserCodeInDev = false;
+  }
   workInProgressHook.memoizedState = [nextValue, nextDeps];
   return nextValue;
 }
