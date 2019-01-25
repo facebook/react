@@ -12,6 +12,8 @@ import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {HookEffectTag} from './ReactHookEffectTags';
 
+import ReactSharedInternals from 'shared/ReactSharedInternals';
+
 import {NoWork} from './ReactFiberExpirationTime';
 import {
   readContext,
@@ -41,6 +43,32 @@ import warning from 'shared/warning';
 import getComponentName from 'shared/getComponentName';
 import is from 'shared/objectIs';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
+
+const {ReactCurrentDispatcher} = ReactSharedInternals;
+
+export type Dispatcher = {
+  useState<S>(initialState: (() => S) | S): [S, Dispatch<BasicStateAction<S>>],
+  useReducer<S, A>(
+    reducer: (S, A) => S,
+    initialState: S,
+    initialAction: A | void | null,
+  ): [S, Dispatch<A>],
+  useContext<T>(
+    context: ReactContext<T>,
+    observedBits: void | number | boolean,
+  ): T,
+  useRef<T>(initialValue: T): {current: T},
+  useEffect(create: () => mixed, deps: Array<mixed> | void | null): void,
+  useLayoutEffect(create: () => mixed, deps: Array<mixed> | void | null): void,
+  useCallback<T>(callback: T, deps: Array<mixed> | void | null): T,
+  useMemo<T>(nextCreate: () => T, deps: Array<mixed> | void | null): T,
+  useImperativeHandle<T>(
+    ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
+    create: () => T,
+    deps: Array<mixed> | void | null,
+  ): void,
+  useDebugValue(value: any, formatterFn: ?(value: any) => any): void,
+};
 
 type Update<S, A> = {
   expirationTime: ExpirationTime,
@@ -166,6 +194,13 @@ function resolveCurrentlyRenderingFiber(): Fiber {
     );
   }
   return currentlyRenderingFiber;
+}
+
+function throwInvalidHookError() {
+  invariant(
+    false,
+    'Hooks can only be called inside the body of a function component.',
+  );
 }
 
 function areHookInputsEqual(
@@ -322,6 +357,8 @@ export function renderWithHooks(
   // renderPhaseUpdates = null;
   // numberOfReRenders = -1;
 
+  ReactCurrentDispatcher.current = HooksDispatcher;
+
   let children;
   do {
     didScheduleRenderPhaseUpdate = false;
@@ -350,6 +387,8 @@ export function renderWithHooks(
       flushHookMismatchWarnings();
     }
   } while (didScheduleRenderPhaseUpdate);
+
+  ReactCurrentDispatcher.current = ContextOnlyDispatcher;
 
   renderPhaseUpdates = null;
   numberOfReRenders = -1;
@@ -549,7 +588,7 @@ function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S {
   return typeof action === 'function' ? action(state) : action;
 }
 
-export function useContext<T>(
+function useContext<T>(
   context: ReactContext<T>,
   observedBits: void | number | boolean,
 ): T {
@@ -564,7 +603,7 @@ export function useContext<T>(
   return readContext(context, observedBits);
 }
 
-export function useState<S>(
+function useState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {
   if (__DEV__) {
@@ -577,7 +616,7 @@ export function useState<S>(
   );
 }
 
-export function useReducer<S, A>(
+function useReducer<S, A>(
   reducer: (S, A) => S,
   initialState: S,
   initialAction: A | void | null,
@@ -783,7 +822,7 @@ function pushEffect(tag, create, destroy, deps) {
   return effect;
 }
 
-export function useRef<T>(initialValue: T): {current: T} {
+function useRef<T>(initialValue: T): {current: T} {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   if (__DEV__) {
     currentHookNameInDev = 'useRef';
@@ -806,7 +845,7 @@ export function useRef<T>(initialValue: T): {current: T} {
   return ref;
 }
 
-export function useLayoutEffect(
+function useLayoutEffect(
   create: () => mixed,
   deps: Array<mixed> | void | null,
 ): void {
@@ -818,7 +857,7 @@ export function useLayoutEffect(
   useEffectImpl(UpdateEffect, UnmountMutation | MountLayout, create, deps);
 }
 
-export function useEffect(
+function useEffect(
   create: () => mixed,
   deps: Array<mixed> | void | null,
 ): void {
@@ -866,7 +905,7 @@ function useEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
   }
 }
 
-export function useImperativeHandle<T>(
+function useImperativeHandle<T>(
   ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
   create: () => T,
   deps: Array<mixed> | void | null,
@@ -912,10 +951,7 @@ export function useImperativeHandle<T>(
   }, nextDeps);
 }
 
-export function useDebugValue(
-  value: any,
-  formatterFn: ?(value: any) => any,
-): void {
+function useDebugValue(value: any, formatterFn: ?(value: any) => any): void {
   if (__DEV__) {
     currentHookNameInDev = 'useDebugValue';
   }
@@ -928,10 +964,7 @@ export function useDebugValue(
   // so that e.g. DevTools can display custom hook values.
 }
 
-export function useCallback<T>(
-  callback: T,
-  deps: Array<mixed> | void | null,
-): T {
+function useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
   if (__DEV__) {
     currentHookNameInDev = 'useCallback';
   }
@@ -957,10 +990,7 @@ export function useCallback<T>(
   return callback;
 }
 
-export function useMemo<T>(
-  nextCreate: () => T,
-  deps: Array<mixed> | void | null,
-): T {
+function useMemo<T>(nextCreate: () => T, deps: Array<mixed> | void | null): T {
   if (__DEV__) {
     currentHookNameInDev = 'useMemo';
   }
@@ -1124,3 +1154,33 @@ function dispatchAction<S, A>(
     scheduleWork(fiber, expirationTime);
   }
 }
+
+export const ContextOnlyDispatcher: Dispatcher = {
+  readContext,
+
+  useCallback: throwInvalidHookError,
+  useContext: throwInvalidHookError,
+  useEffect: throwInvalidHookError,
+  useImperativeHandle: throwInvalidHookError,
+  useLayoutEffect: throwInvalidHookError,
+  useMemo: throwInvalidHookError,
+  useReducer: throwInvalidHookError,
+  useRef: throwInvalidHookError,
+  useState: throwInvalidHookError,
+  useDebugValue: throwInvalidHookError,
+};
+
+export const HooksDispatcher: Dispatcher = {
+  readContext,
+
+  useCallback,
+  useContext,
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+  useDebugValue,
+};

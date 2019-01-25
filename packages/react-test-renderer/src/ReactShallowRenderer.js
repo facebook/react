@@ -18,7 +18,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import warning from 'shared/warning';
 import is from 'shared/objectIs';
 
-import typeof {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactFiberDispatcher';
+import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactFiberHooks';
 import type {ReactContext} from 'shared/ReactTypes';
 import type {ReactElement} from 'shared/ReactElementType';
 
