@@ -210,18 +210,6 @@ function areHookInputsEqual(
   return true;
 }
 
-// till we have String::padEnd, a small function to
-// right-pad strings with spaces till a minimum length
-function padEndSpaces(string: string, length: number) {
-  if (__DEV__) {
-    if (string.length >= length) {
-      return string;
-    } else {
-      return string + ' ' + new Array(length - string.length).join(' ');
-    }
-  }
-}
-
 function flushHookMismatchWarnings() {
   // we'll show the diff of the low level hooks,
   // and a stack trace so the dev can locate where
@@ -253,6 +241,13 @@ function flushHookMismatchWarnings() {
             .map(hook => hook.length)
             .concat('   Previous render'.length),
         );
+
+        const padEndSpaces = (string, length) => {
+          if (string.length >= length) {
+            return string;
+          }
+          return string + ' ' + new Array(length - string.length).join(' ');
+        };
 
         let hookStackHeader =
           ((padEndSpaces('   Previous render', columnLength): any): string) +
