@@ -719,7 +719,7 @@ describe('ReactHooks', () => {
     const root = ReactTestRenderer.create(<App />);
     expect(() => root.update(<App />)).toThrow(
       // The exact message doesn't matter, just make sure we don't allow this
-      "Cannot read property 'readContext' of null",
+      'Context can only be read while React is rendering',
     );
   });
 
@@ -740,7 +740,7 @@ describe('ReactHooks', () => {
 
     expect(() => ReactTestRenderer.create(<App />)).toThrow(
       // The exact message doesn't matter, just make sure we don't allow this
-      "Cannot read property 'readContext' of null",
+      'Context can only be read while React is rendering',
     );
   });
 
