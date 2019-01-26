@@ -715,6 +715,7 @@ class ReactDOMServerRenderer {
   destroy() {
     if (!this.exhausted) {
       this.exhausted = true;
+      this.clearProviders();
       freeThreadID(this.threadID);
     }
   }
@@ -748,7 +749,7 @@ class ReactDOMServerRenderer {
     context[threadID] = provider.props.value;
   }
 
-  popProvider<T>(provider: ReactProvider<T>): void {
+  popProvider<T>(provider?: ReactProvider<T>): void {
     const index = this.contextIndex;
     if (__DEV__) {
       warningWithoutStack(
@@ -774,6 +775,16 @@ class ReactDOMServerRenderer {
     // We've already verified that this context has been expanded to accommodate
     // this thread id, so we don't need to do it again.
     context[this.threadID] = previousValue;
+  }
+
+  clearProviders(): void {
+    while (this.contextIndex > -1) {
+      if (__DEV__) {
+        this.popProvider((this.contextProviderStack: any)[this.contextIndex]);
+      } else {
+        this.popProvider();
+      }
+    }
   }
 
   read(bytes: number): string | null {

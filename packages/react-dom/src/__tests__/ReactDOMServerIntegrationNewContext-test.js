@@ -482,5 +482,30 @@ describe('ReactDOMServerIntegration', () => {
         );
       }
     });
+
+    it('frees context value reference when stream destroyed', () => {
+      const LoggedInUser = React.createContext('default');
+
+      const AppWithUser = user => (
+        <LoggedInUser.Provider value={user}>
+          <header>
+            <LoggedInUser.Consumer>{whoAmI => whoAmI}</LoggedInUser.Consumer>
+          </header>
+        </LoggedInUser.Provider>
+      );
+
+      const stream = ReactDOMServer.renderToNodeStream(
+        AppWithUser('Amy'),
+      ).setEncoding('utf8');
+
+      const {threadID} = stream.partialRenderer;
+
+      // Read enough to render Provider but not enough for it to be exited
+      stream._read(10);
+      expect(LoggedInUser[threadID]).toBe('Amy');
+
+      stream.destroy();
+      expect(LoggedInUser[threadID]).toBe('default');
+    });
   });
 });
