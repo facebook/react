@@ -60,9 +60,9 @@ You'll notice that we used an HTML-like syntax; [we call it JSX](https://reactjs
 
 The main purpose of this repository is to continue to evolve React core, making it faster and easier to use. Development of React happens in the open on GitHub, and we are grateful to the community for contributing bugfixes and improvements. Read below to learn how you can take part in improving React.
 
-### [Code of Conduct](https://code.facebook.com/codeofconduct)
+### [Code of Conduct](https://code.fb.com/codeofconduct)
 
-Facebook has adopted a Code of Conduct that we expect project participants to adhere to. Please read [the full text](https://code.facebook.com/codeofconduct) so that you can understand what actions will and will not be tolerated.
+Facebook has adopted a Code of Conduct that we expect project participants to adhere to. Please read [the full text](https://code.fb.com/codeofconduct) so that you can understand what actions will and will not be tolerated.
 
 ### [Contributing Guide](https://reactjs.org/contributing/how-to-contribute.html)
 
