@@ -3,7 +3,7 @@
 import { createElement } from 'react';
 import { render } from 'react-dom';
 import Bridge from 'src/bridge';
-import App from 'src/devtools/views/App';
+import Elements from 'src/devtools/views/Elements';
 import inject from './inject';
 
 const IS_CHROME = navigator.userAgent.indexOf('Firefox') < 0;
@@ -58,5 +58,5 @@ inject(chrome.runtime.getURL('build/backend.js'), () => {
     },
   });
 
-  render(createElement(App, { bridge, browserName, themeName }), node);
+  render(createElement(Elements, { bridge, browserName, themeName }), node);
 });

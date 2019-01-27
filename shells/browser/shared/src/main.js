@@ -15,7 +15,9 @@ function createPanelIfReactLoaded() {
 
       clearInterval(loadCheckInterval);
       panelCreated = true;
-      chrome.devtools.panels.create('React', '', 'panel.html', function(panel) {
+      chrome.devtools.panels.create('⚛ Elements', '', 'panel.html', function(
+        panel
+      ) {
         panel.onShown.addListener(function(window) {
           // TODO: When the user switches to the panel, check for an Elements tab selection.
         });

@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 import Store from '../store';
 import Tree from './Tree';
 import { StoreContext } from './contexts';
-import styles from './App.css';
+import styles from './Elements.css';
 
 import type { Bridge } from '../../types';
 
@@ -14,12 +14,12 @@ export type Props = {|
   themeName: string,
 |};
 
-export default function App({ bridge, browserName, themeName }: Props) {
+export default function Elements({ bridge, browserName, themeName }: Props) {
   const store = useMemo(() => new Store(bridge), []);
 
   return (
     <StoreContext.Provider value={store}>
-      <div className={styles.App}>
+      <div className={styles.Elements}>
         <Tree />
       </div>
     </StoreContext.Provider>

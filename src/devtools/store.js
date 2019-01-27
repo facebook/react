@@ -17,7 +17,9 @@ class Store extends EventEmitter {
   _idToElement: Map<string, Element> = new Map();
   _idToParentID: Map<string, string> = new Map();
 
-  roots: Set<string> = new Set();
+  // This Array must be treated as immutable!
+  // Passive effects will check it for changes between render and mount.
+  roots: $ReadOnlyArray<string> = [];
 
   constructor(bridge: Bridge) {
     super();
@@ -50,8 +52,8 @@ class Store extends EventEmitter {
 
   onBridgeRoot = (id: string) => {
     debug('onBridgeRoot()', id);
-    if (!this.roots.has(id)) {
-      this.roots.add(id);
+    if (!this.roots.includes(id)) {
+      this.roots = this.roots.concat(id);
       this.emit('roots');
     }
   };
@@ -64,8 +66,11 @@ class Store extends EventEmitter {
       this._idToParentID.delete(id);
     }
 
-    if (this.roots.has(id)) {
-      this.roots.delete(id);
+    const index = this.roots.indexOf(id);
+    if (index >= 0) {
+      this.roots = this.roots
+        .slice(0, index)
+        .concat(this.roots.slice(index + 1));
       this.emit('roots');
     }
   };

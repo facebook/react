@@ -1,17 +1,41 @@
 /** @flow */
 
 import { createElement } from 'react';
-import { render } from 'react-dom';
+// $FlowFixMe Flow does not yet know about createRoot()
+import { createRoot } from 'react-dom';
 import Bridge from 'src/bridge';
 import { installHook } from 'src/hook';
 import { initDevTools } from 'src/devtools';
-import App from 'src/devtools/views/App';
+import Elements from 'src/devtools/views/Elements';
 
 const iframe = ((document.getElementById('target'): any): HTMLIFrameElement);
 
 const { contentDocument, contentWindow } = iframe;
 
 installHook(contentWindow);
+
+const container = ((document.getElementById('devtools'): any): HTMLElement);
+
+let isTestAppMounted = true;
+
+const mountButton = ((document.getElementById(
+  'mountButton'
+): any): HTMLButtonElement);
+mountButton.addEventListener('click', function() {
+  if (isTestAppMounted) {
+    if (typeof window.unmountTestApp === 'function') {
+      window.unmountTestApp();
+      mountButton.innerText = 'Mount test app';
+      isTestAppMounted = false;
+    }
+  } else {
+    if (typeof window.mountTestApp === 'function') {
+      window.mountTestApp();
+      mountButton.innerText = 'Unmount test app';
+      isTestAppMounted = true;
+    }
+  }
+});
 
 initDevTools({
   connect(cb) {
@@ -29,13 +53,13 @@ initDevTools({
 
       cb(bridge);
 
-      render(
-        createElement(App, {
+      const root = createRoot(container);
+      root.render(
+        createElement(Elements, {
           bridge,
           browserName: 'Chrome',
           themeName: 'light',
-        }),
-        ((document.getElementById('devtools'): any): HTMLElement)
+        })
       );
     });
   },

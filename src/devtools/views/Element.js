@@ -15,6 +15,14 @@ export default function Element({ depth, id }: Props) {
   const store = useContext(StoreContext);
   const element = useElement(store, id);
 
+  // DevTools are rendered in concurrent mode.
+  // It's possible the store has updated since the commit that triggered this render.
+  // So we need to guard against an undefined element.
+  // TODO: Handle this by switching to a Suspense based approach.
+  if (element == null) {
+    return null;
+  }
+
   const { children, displayName, key } = element;
 
   // TODO: Add state for toggling element open/close
