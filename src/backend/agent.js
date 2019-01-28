@@ -15,7 +15,7 @@ import type { Bridge } from '../types';
 import type { Element } from 'src/devtools/types';
 
 const debug = (methodName, ...args) => {
-  // debug(`%cAgent %c${methodName}`, 'color: blue; font-weight: bold;', 'font-weight: bold;', ...args);
+  console.log(`%cAgent %c${methodName}`, 'color: blue; font-weight: bold;', 'font-weight: bold;', ...args);
 };
 
 const THROTTLE_BY_MS = 350;
@@ -34,6 +34,7 @@ export default class Agent extends EventEmitter {
     // bridge.on('...'), this...);
 
     this.addListener('root', id => bridge.send('root', id));
+    this.addListener('rootCommitted', id => bridge.send('rootCommitted', id));
     this.addListener('mount', data => bridge.send('mount', data));
     this.addListener('update', data => bridge.send('update', data));
     this.addListener('unmount', data => bridge.send('unmount', data));
@@ -137,6 +138,8 @@ export default class Agent extends EventEmitter {
       debug('emit("root")', id);
       this.emit('root', id);
     }
+
+    this.emit('rootCommitted', id);
   };
 
   onHookUnmount = ({ fiber }: { fiber: Fiber }) => {

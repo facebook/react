@@ -1,19 +1,18 @@
 // @flow
 
 import React, { Fragment, useContext } from 'react';
-import { useElement } from './hooks';
-import { StoreContext } from './contexts';
+import { TreeContext } from './contexts';
 
 import styles from './Element.css';
 
 type Props = {|
-  depth: number,
-  id: string,
+  index: number,
+  style: Object,
 |};
 
-export default function Element({ depth, id }: Props) {
-  const store = useContext(StoreContext);
-  const element = useElement(store, id);
+export default function Element({ index, style }: Props) {
+  const {store} = useContext(TreeContext);
+  const element = store.getElementAtIndex(index);
 
   // DevTools are rendered in concurrent mode.
   // It's possible the store has updated since the commit that triggered this render.
@@ -23,32 +22,32 @@ export default function Element({ depth, id }: Props) {
     return null;
   }
 
+  const elementTreeMetadata = store.getTreeMetadataForElement(element);
+
   const { children, displayName, key } = element;
+  const { depth } = elementTreeMetadata;
 
   // TODO: Add state for toggling element open/close
 
   return (
-    <Fragment>
-      <div
-        className={styles.Element}
-        style={{ paddingLeft: `${1 + depth}rem` }}
-      >
-        {children.length > 0 && <span className={styles.ArrowOpen} />}
+    <div
+      className={styles.Element}
+      style={{
+        ...style,
+        paddingLeft: `${1 + depth}rem`
+      }}
+    >
+      {children.length > 0 && <span className={styles.ArrowOpen} />}
 
-        <span className={styles.Component}>
-          {displayName}
-          {key && (
-            <Fragment>
-              &nbsp;<span className={styles.AttributeName}>key</span>=
-              <span className={styles.AttributeValue}>"{key}"</span>
-            </Fragment>
-          )}
-        </span>
-      </div>
-
-      {children.map(childID => (
-        <Element key={childID} depth={depth + 1} id={childID} />
-      ))}
-    </Fragment>
+      <span className={styles.Component}>
+        {displayName}
+        {key && (
+          <Fragment>
+            &nbsp;<span className={styles.AttributeName}>key</span>=
+            <span className={styles.AttributeValue}>"{key}"</span>
+          </Fragment>
+        )}
+      </span>
+    </div>
   );
 }

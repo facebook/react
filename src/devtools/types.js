@@ -1,5 +1,7 @@
 // @flow
 
+import typeof Store from './Store';
+
 export const ElementTypeClassOrFunction = 1;
 export const ElementTypeContext = 2;
 export const ElementTypeForwardRef = 3;
@@ -20,6 +22,12 @@ export type Element = {|
   children: Array<string>,
 |};
 
+export type ElementTreeMetadata = {|
+  depth: number,
+  rootID: string,
+  weight: number,
+|};
+
 export type InspectedElement = {|
   id: string,
   context: Object | null,
@@ -28,4 +36,9 @@ export type InspectedElement = {|
   state: Object | null,
   canEditProps: boolean,
   source: Object,
+|};
+
+export type TreeContext = {|
+  size: number,
+  store: Store,
 |};

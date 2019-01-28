@@ -2,7 +2,7 @@
 
 import { useLayoutEffect, useState } from 'react';
 
-import type { Element } from '../types';
+import type { Element, ElementTreeMetadata } from '../types';
 import Store from '../store';
 
 // TODO useEffect has a bug where sometimes subscriptions don't get cleaned up correctly.
@@ -10,16 +10,17 @@ import Store from '../store';
 // As a temporary work around, switch back to layout effect.
 
 export function useElement(store: Store, id: string): ?Element {
-  const [element, setElement] = useState<?Element>(store.getElement(id));
+  const [element, setElement] = useState<?Element>(store.getElementByID(id));
 
   useLayoutEffect(() => {
-    const handler = () => setElement(((store.getElement(id): any): Element));
+    const handler = () =>
+      setElement(((store.getElementByID(id): any): Element));
 
     // Listen for changes to the element.
     store.addListener(id, handler);
 
     // Check for changes that may have happened between render and mount.
-    const newElement = store.getElement(id);
+    const newElement = store.getElementByID(id);
     if (element !== newElement) {
       setElement(newElement);
     }
