@@ -468,7 +468,7 @@ export function resetHooks(): void {
   numberOfReRenders = 0;
 }
 
-function createHook(): Hook {
+function mountWorkInProgressHook(): Hook {
   const hook: Hook = {
     memoizedState: null,
 
@@ -493,42 +493,12 @@ function createHook(): Hook {
       );
     }
   }
-
-  return hook;
-}
-
-function cloneHook(hook: Hook): Hook {
-  const nextHook: Hook = {
-    memoizedState: hook.memoizedState,
-
-    baseState: hook.baseState,
-    queue: hook.queue,
-    baseUpdate: hook.baseUpdate,
-
-    next: null,
-  };
-
-  if (__DEV__) {
-    nextHook._debugType = ((currentHookNameInDev: any): HookType);
-    if (currentHookMismatchInDev === null) {
-      if (currentHookNameInDev !== ((hook: any): HookDev)._debugType) {
-        currentHookMismatchInDev = new Error('tracer').stack
-          .split('\n')
-          .slice(4)
-          .join('\n');
-      }
-    }
-  }
-  return nextHook;
-}
-
-function mountWorkInProgressHook(): Hook {
   if (workInProgressHook === null) {
     // This is the first hook in the list
-    firstWorkInProgressHook = workInProgressHook = createHook();
+    firstWorkInProgressHook = workInProgressHook = hook;
   } else {
     // Append to the end of the list
-    workInProgressHook = workInProgressHook.next = createHook();
+    workInProgressHook = workInProgressHook.next = hook;
   }
   return workInProgressHook;
 }
@@ -560,12 +530,35 @@ function updateWorkInProgressHook(): Hook {
         'file an issue.',
     );
     currentHook = nextCurrentHook;
+
+    const newHook: Hook = {
+      memoizedState: currentHook.memoizedState,
+
+      baseState: currentHook.baseState,
+      queue: currentHook.queue,
+      baseUpdate: currentHook.baseUpdate,
+
+      next: null,
+    };
+
+    if (__DEV__) {
+      newHook._debugType = ((currentHookNameInDev: any): HookType);
+      if (currentHookMismatchInDev === null) {
+        if (currentHookNameInDev !== ((currentHook: any): HookDev)._debugType) {
+          currentHookMismatchInDev = new Error('tracer').stack
+            .split('\n')
+            .slice(4)
+            .join('\n');
+        }
+      }
+    }
+
     if (workInProgressHook === null) {
       // This is the first hook in the list.
-      workInProgressHook = firstWorkInProgressHook = cloneHook(currentHook);
+      workInProgressHook = firstWorkInProgressHook = newHook;
     } else {
       // Append to the end of the list.
-      workInProgressHook = workInProgressHook.next = cloneHook(currentHook);
+      workInProgressHook = workInProgressHook.next = newHook;
     }
     nextCurrentHook = currentHook.next;
     if (nextCurrentHook === null) {
@@ -610,18 +603,17 @@ function updateContext<T>(
   return readContext(context, observedBits);
 }
 
-function mountReducerImpl<S, A>(
-  hook: Hook,
+function mountReducer<S, A>(
   reducer: (S, A) => S,
   initialState: void | S,
   initialAction: void | null | A,
 ): [S, Dispatch<A>] {
-  if (reducer === basicStateReducer) {
-    // Special case for `useState`.
-    if (typeof initialState === 'function') {
-      initialState = initialState();
-    }
-  } else if (initialAction !== undefined && initialAction !== null) {
+  if (__DEV__) {
+    currentHookNameInDev = 'useReducer';
+  }
+  const hook = mountWorkInProgressHook();
+  // TODO: Lazy init API will change before release.
+  if (initialAction !== undefined && initialAction !== null) {
     initialState = reducer(initialState, initialAction);
   }
   hook.memoizedState = hook.baseState = initialState;
@@ -637,18 +629,6 @@ function mountReducerImpl<S, A>(
     queue,
   ): any));
   return [hook.memoizedState, dispatch];
-}
-
-function mountReducer<S, A>(
-  reducer: (S, A) => S,
-  initialState: void | S,
-  initialAction: void | null | A,
-): [S, Dispatch<A>] {
-  if (__DEV__) {
-    currentHookNameInDev = 'useReducer';
-  }
-  const hook = mountWorkInProgressHook();
-  return mountReducerImpl(hook, reducer, initialState, initialAction);
 }
 
 function updateReducerImpl<S, A>(
@@ -803,7 +783,23 @@ function mountState<S>(
     currentHookNameInDev = 'useState';
   }
   const hook = mountWorkInProgressHook();
-  return mountReducerImpl(hook, basicStateReducer, initialState);
+  // TODO: Lazy init API will change before release.
+  if (typeof initialState === 'function') {
+    initialState = initialState();
+  }
+  hook.memoizedState = hook.baseState = initialState;
+  const queue = (hook.queue = {
+    last: null,
+    dispatch: null,
+    eagerReducer: basicStateReducer,
+    eagerState: initialState,
+  });
+  const dispatch: Dispatch<A> = (queue.dispatch = (dispatchAction.bind(
+    null,
+    currentlyRenderingFiber,
+    queue,
+  ): any));
+  return [hook.memoizedState, dispatch];
 }
 
 function updateState<S>(
@@ -863,25 +859,15 @@ function updateRef<T>(initialValue: T): {current: T} {
   return hook.memoizedState;
 }
 
-function mountEffectImpl(
-  hook,
-  fiberEffectTag,
-  hookEffectTag,
-  create,
-  deps,
-): void {
+function mountEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
+  const hook = mountWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
   sideEffectTag |= fiberEffectTag;
   hook.memoizedState = pushEffect(hookEffectTag, create, null, nextDeps);
 }
 
-function updateEffectImpl(
-  hook,
-  fiberEffectTag,
-  hookEffectTag,
-  create,
-  deps,
-): void {
+function updateEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
+  const hook = updateWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
   let destroy = null;
 
@@ -901,12 +887,7 @@ function updateEffectImpl(
   }
 
   sideEffectTag |= fiberEffectTag;
-  workInProgressHook.memoizedState = pushEffect(
-    hookEffectTag,
-    create,
-    destroy,
-    nextDeps,
-  );
+  hook.memoizedState = pushEffect(hookEffectTag, create, destroy, nextDeps);
 }
 
 function mountEffect(
@@ -916,9 +897,7 @@ function mountEffect(
   if (__DEV__) {
     currentHookNameInDev = 'useEffect';
   }
-  const hook = mountWorkInProgressHook();
   return mountEffectImpl(
-    hook,
     UpdateEffect | PassiveEffect,
     UnmountPassive | MountPassive,
     create,
@@ -933,9 +912,7 @@ function updateEffect(
   if (__DEV__) {
     currentHookNameInDev = 'useEffect';
   }
-  const hook = updateWorkInProgressHook();
   return updateEffectImpl(
-    hook,
     UpdateEffect | PassiveEffect,
     UnmountPassive | MountPassive,
     create,
@@ -950,9 +927,7 @@ function mountLayoutEffect(
   if (__DEV__) {
     currentHookNameInDev = 'useLayoutEffect';
   }
-  const hook = mountWorkInProgressHook();
   return mountEffectImpl(
-    hook,
     UpdateEffect,
     UnmountMutation | MountLayout,
     create,
@@ -967,9 +942,7 @@ function updateLayoutEffect(
   if (__DEV__) {
     currentHookNameInDev = 'useLayoutEffect';
   }
-  const hook = updateWorkInProgressHook();
   return updateEffectImpl(
-    hook,
     UpdateEffect,
     UnmountMutation | MountLayout,
     create,
@@ -1015,14 +988,12 @@ function mountImperativeHandle(
       create !== null ? typeof create : 'null',
     );
   }
-  const hook = mountWorkInProgressHook();
 
   // TODO: If deps are provided, should we skip comparing the ref itself?
   const effectDeps =
     deps !== null && deps !== undefined ? deps.concat([ref]) : [ref];
 
   return mountEffectImpl(
-    hook,
     UpdateEffect,
     UnmountMutation | MountLayout,
     imperativeHandleEffect.bind(null, create, ref),
@@ -1044,14 +1015,12 @@ function updateImperativeHandle(
       create !== null ? typeof create : 'null',
     );
   }
-  const hook = updateWorkInProgressHook();
 
   // TODO: If deps are provided, should we skip comparing the ref itself?
   const effectDeps =
     deps !== null && deps !== undefined ? deps.concat([ref]) : [ref];
 
   return updateEffectImpl(
-    hook,
     UpdateEffect,
     UnmountMutation | MountLayout,
     imperativeHandleEffect.bind(null, create, ref),
@@ -1286,7 +1255,7 @@ const HooksDispatcherOnMount: Dispatcher = {
   readContext,
 
   useCallback: mountCallback,
-  useContext: __DEV__ ? mountContext : readContext,
+  useContext: readContext,
   useEffect: mountEffect,
   useImperativeHandle: mountImperativeHandle,
   useLayoutEffect: mountLayoutEffect,
@@ -1301,7 +1270,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   readContext,
 
   useCallback: updateCallback,
-  useContext: __DEV__ ? updateContext : readContext,
+  useContext: readContext,
   useEffect: updateEffect,
   useImperativeHandle: updateImperativeHandle,
   useLayoutEffect: updateLayoutEffect,
