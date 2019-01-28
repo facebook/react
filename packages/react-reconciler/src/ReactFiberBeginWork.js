@@ -1397,7 +1397,11 @@ function updateSuspenseComponent(
     tryToClaimNextHydratableInstance(workInProgress);
     // This could've changed the tag if this was a dehydrated suspense component.
     if (workInProgress.tag === DehydratedSuspenseComponent) {
-      return updateDehydratedSuspenseComponent(null, workInProgress);
+      return updateDehydratedSuspenseComponent(
+        null,
+        workInProgress,
+        renderExpirationTime,
+      );
     }
 
     // This is the initial mount. This branch is pretty simple because there's
@@ -1609,8 +1613,37 @@ function updateSuspenseComponent(
 function updateDehydratedSuspenseComponent(
   current: Fiber | null,
   workInProgress: Fiber,
+  renderExpirationTime: ExpirationTime,
 ) {
-  return null;
+  if (current === null) {
+    // During the first pass, we'll bail out and not drill into the children.
+    // Instead, we'll leave the content in place and try to hydrate it later.
+    workInProgress.expirationTime = workInProgress.childExpirationTime = Never;
+    return null;
+  }
+  if ((workInProgress.effectTag & DidCapture) === NoEffect) {
+    // This is the first attempt.
+    const prevProps = current.memoizedProps;
+    const nextProps = workInProgress.pendingProps;
+    if (prevProps !== nextProps) {
+      // TODO: Delete children and upgrade to a regular suspense component without
+      // hydrating.
+    }
+    // TODO: Restore hydration state
+    const nextChildren = nextProps.children;
+    workInProgress.child = mountChildFibers(
+      workInProgress,
+      null,
+      nextChildren,
+      renderExpirationTime,
+    );
+    return workInProgress.child;
+  } else {
+    // Something suspended. Leave the existing children in place.
+    // TODO: In non-concurrent mode, should we commit the nodes we have hydrated so far?
+    workInProgress.child = null;
+    return null;
+  }
 }
 
 function updatePortalComponent(
@@ -1897,6 +1930,13 @@ function beginWork(
           }
           break;
         }
+        case DehydratedSuspenseComponent: {
+          // We know that this component will suspend again because if it has
+          // been unsuspended it has committed as a regular Suspense component.
+          // If it needs to be retried, it should have work scheduled on it.
+          workInProgress.effectTag |= DidCapture;
+          break;
+        }
       }
       return bailoutOnAlreadyFinishedWork(
         current,
@@ -2067,7 +2107,11 @@ function beginWork(
       );
     }
     case DehydratedSuspenseComponent: {
-      return updateDehydratedSuspenseComponent(current, workInProgress);
+      return updateDehydratedSuspenseComponent(
+        current,
+        workInProgress,
+        renderExpirationTime,
+      );
     }
     default:
       invariant(

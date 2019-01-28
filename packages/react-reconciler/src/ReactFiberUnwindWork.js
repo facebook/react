@@ -66,6 +66,7 @@ import {
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
   pingSuspendedRoot,
+  retryTimedOutBoundary,
 } from './ReactFiberScheduler';
 
 import invariant from 'shared/invariant';
@@ -77,6 +78,7 @@ import {
 } from './ReactFiberExpirationTime';
 import {findEarliestOutstandingPriorityLevel} from './ReactFiberPendingPriority';
 
+const PossiblyWeakSet = typeof WeakSet === 'function' ? WeakSet : Set;
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
 function createRootErrorUpdate(
@@ -146,6 +148,43 @@ function createClassErrorUpdate(
     };
   }
   return update;
+}
+
+function attachPingListener(
+  root: FiberRoot,
+  renderExpirationTime: ExpirationTime,
+  thenable: Thenable,
+) {
+  // Attach a listener to the promise to "ping" the root and retry. But
+  // only if one does not already exist for the current render expiration
+  // time (which acts like a "thread ID" here).
+  let pingCache = root.pingCache;
+  let threadIDs;
+  if (pingCache === null) {
+    pingCache = root.pingCache = new PossiblyWeakMap();
+    threadIDs = new Set();
+    pingCache.set(thenable, threadIDs);
+  } else {
+    threadIDs = pingCache.get(thenable);
+    if (threadIDs === undefined) {
+      threadIDs = new Set();
+      pingCache.set(thenable, threadIDs);
+    }
+  }
+  if (!threadIDs.has(renderExpirationTime)) {
+    // Memoize using the thread ID to prevent redundant listeners.
+    threadIDs.add(renderExpirationTime);
+    let ping = pingSuspendedRoot.bind(
+      null,
+      root,
+      thenable,
+      renderExpirationTime,
+    );
+    if (enableSchedulerTracing) {
+      ping = Schedule_tracing_wrap(ping);
+    }
+    thenable.then(ping, ping);
+  }
 }
 
 function throwException(
@@ -271,36 +310,7 @@ function throwException(
         // Confirmed that the boundary is in a concurrent mode tree. Continue
         // with the normal suspend path.
 
-        // Attach a listener to the promise to "ping" the root and retry. But
-        // only if one does not already exist for the current render expiration
-        // time (which acts like a "thread ID" here).
-        let pingCache = root.pingCache;
-        let threadIDs;
-        if (pingCache === null) {
-          pingCache = root.pingCache = new PossiblyWeakMap();
-          threadIDs = new Set();
-          pingCache.set(thenable, threadIDs);
-        } else {
-          threadIDs = pingCache.get(thenable);
-          if (threadIDs === undefined) {
-            threadIDs = new Set();
-            pingCache.set(thenable, threadIDs);
-          }
-        }
-        if (!threadIDs.has(renderExpirationTime)) {
-          // Memoize using the thread ID to prevent redundant listeners.
-          threadIDs.add(renderExpirationTime);
-          let ping = pingSuspendedRoot.bind(
-            null,
-            root,
-            thenable,
-            renderExpirationTime,
-          );
-          if (enableSchedulerTracing) {
-            ping = Schedule_tracing_wrap(ping);
-          }
-          thenable.then(ping, ping);
-        }
+        attachPingListener(root, renderExpirationTime, thenable);
 
         let absoluteTimeoutMs;
         if (earliestTimeoutMs === -1) {
@@ -344,7 +354,35 @@ function throwException(
         workInProgress.tag === DehydratedSuspenseComponent &&
         shouldCaptureDehydratedSuspense(workInProgress)
       ) {
-        // TODO
+        attachPingListener(root, renderExpirationTime, thenable);
+
+        // Since we already have a current fiber, we can eagerly add a ping listener.
+        let retryCache = workInProgress.memoizedState;
+        if (retryCache === null) {
+          retryCache = workInProgress.memoizedState = new PossiblyWeakSet();
+          const current = workInProgress.alternate;
+          invariant(
+            current,
+            'A dehydrated suspense boundary must commit before trying to render. ' +
+              'This is probably a bug in React.',
+          );
+          current.memoizedState = retryCache;
+        }
+        // Memoize using the boundary fiber to prevent redundant listeners.
+        if (!retryCache.has(thenable)) {
+          retryCache.add(thenable);
+          let retry = retryTimedOutBoundary.bind(
+            null,
+            workInProgress,
+            thenable,
+          );
+          if (enableSchedulerTracing) {
+            retry = Schedule_tracing_wrap(retry);
+          }
+          thenable.then(retry, retry);
+        }
+        workInProgress.effectTag |= ShouldCapture;
+        workInProgress.expirationTime = renderExpirationTime;
         return;
       }
       // This boundary already captured during this render. Continue to the next
@@ -459,7 +497,12 @@ function unwindWork(
     }
     case DehydratedSuspenseComponent: {
       // TODO: popHydrationState
-      // TODO: Maybe re-render if it captured?
+      const effectTag = workInProgress.effectTag;
+      if (effectTag & ShouldCapture) {
+        workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
+        // Captured a suspense effect. Re-render the boundary.
+        return workInProgress;
+      }
       return null;
     }
     case HostPortal:

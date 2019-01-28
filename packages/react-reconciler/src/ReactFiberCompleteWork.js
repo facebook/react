@@ -773,6 +773,15 @@ function completeWork(
             'This is probably a bug in React.',
         );
         skipPastDehydratedSuspenseInstance(workInProgress);
+      } else if ((workInProgress.effectTag & DidCapture) === NoEffect) {
+        // This boundary did not suspend so it's now hydrated.
+        // To handle any future suspense cases, we're going to now upgrade it
+        // to a Suspense component. We detach it from the existing current fiber.
+        current.alternate = null;
+        workInProgress.alternate = null;
+        workInProgress.tag = SuspenseComponent;
+        workInProgress.memoizedState = null;
+        workInProgress.stateNode = null;
       }
       break;
     }
