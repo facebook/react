@@ -401,7 +401,7 @@ export function appendChildToContainer(
 export function insertBefore(
   parentInstance: Instance,
   child: Instance | TextInstance,
-  beforeChild: Instance | TextInstance,
+  beforeChild: Instance | TextInstance | SuspenseInstance,
 ): void {
   parentInstance.insertBefore(child, beforeChild);
 }
@@ -409,7 +409,7 @@ export function insertBefore(
 export function insertInContainerBefore(
   container: Container,
   child: Instance | TextInstance,
-  beforeChild: Instance | TextInstance,
+  beforeChild: Instance | TextInstance | SuspenseInstance,
 ): void {
   if (container.nodeType === COMMENT_NODE) {
     (container.parentNode: any).insertBefore(child, beforeChild);

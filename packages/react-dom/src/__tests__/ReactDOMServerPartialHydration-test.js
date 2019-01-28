@@ -70,4 +70,62 @@ describe('ReactDOMServerPartialHydration', () => {
     // Resolving the promise should continue hydration
     resolve();
   });
+
+  it('can insert siblings before the dehydrated boundary', () => {
+    let suspend = false;
+    let resolve;
+    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+    let showSibling;
+
+    function Child() {
+      if (suspend) {
+        throw promise;
+      } else {
+        return 'Hello';
+      }
+    }
+
+    function Sibling() {
+      let [visible, setVisibilty] = React.useState(false);
+      showSibling = () => setVisibilty(true);
+      if (visible) {
+        return <div>Hello</div>;
+      }
+      return null;
+    }
+
+    function App() {
+      return (
+        <div>
+          <Sibling />
+          <Suspense fallback="Loading...">
+            <span>
+              <Child />
+            </span>
+          </Suspense>
+        </div>
+      );
+    }
+
+    suspend = false;
+    let finalHTML = ReactDOMServer.renderToString(<App />);
+    let container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    // On the client we don't have all data yet but we want to start
+    // hydrating anyway.
+    suspend = true;
+    ReactDOM.hydrate(<App />, container);
+
+    expect(container.firstChild.firstChild.tagName).not.toBe('DIV');
+
+    // In this state, we can still update the siblings.
+    showSibling();
+
+    expect(container.firstChild.firstChild.tagName).toBe('DIV');
+    expect(container.firstChild.firstChild.textContent).toBe('Hello');
+
+    // Resolving the promise should continue hydration
+    resolve();
+  });
 });

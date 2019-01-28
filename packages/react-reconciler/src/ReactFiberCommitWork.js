@@ -37,6 +37,7 @@ import {
   HostPortal,
   Profiler,
   SuspenseComponent,
+  DehydratedSuspenseComponent,
   IncompleteClassComponent,
   MemoComponent,
   SimpleMemoComponent,
@@ -881,7 +882,11 @@ function getHostSibling(fiber: Fiber): ?Instance {
     }
     node.sibling.return = node.return;
     node = node.sibling;
-    while (node.tag !== HostComponent && node.tag !== HostText) {
+    while (
+      node.tag !== HostComponent &&
+      node.tag !== HostText &&
+      node.tag !== DehydratedSuspenseComponent
+    ) {
       // If it is not host node and, we might have a host node inside it.
       // Try to search down until we find one.
       if (node.effectTag & Placement) {
