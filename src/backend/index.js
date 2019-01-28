@@ -12,10 +12,8 @@ export function initBackend(hook: Hook, agent: Agent): void {
       rendererInterface.walkTree();
     }),
 
+    hook.sub('operations', agent.onHookOperations),
     hook.sub('rootCommitted', agent.onHookRootCommitted),
-    hook.sub('mount', agent.onHookMount),
-    hook.sub('update', agent.onHookUpdate),
-    hook.sub('unmount', agent.onHookUnmount),
 
     // TODO Add additional subscriptions required for profiling mode
   ];

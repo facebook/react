@@ -90,7 +90,7 @@
     "react-dom": "^16.8.0-alpha.1",
     "react-portal": "^3.1.0",
     "react-virtualized-auto-sizer": "^1.0.2",
-    "react-window": "^1.5.0",
+    "react-window": "^1.5.1",
     "semver": "^5.5.1",
     "style-loader": "^0.23.1",
     "web-ext": "^1.10.1",

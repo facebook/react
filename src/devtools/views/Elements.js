@@ -15,12 +15,12 @@ export type Props = {|
 |};
 
 export default function Elements({ bridge, browserName, themeName }: Props) {
-  const store = useMemo(() => new Store(bridge), []);
+  const store = useMemo<Store>(() => new Store(bridge), []);
 
-  const [treeContext, setTreeContext] = useState(({
+  const [treeContext, setTreeContext] = useState({
     size: store.numElements,
     store,
-  }));
+  });
 
   useLayoutEffect(() => {
     const handler = () => {

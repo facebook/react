@@ -5,13 +5,13 @@ import { TreeContext } from './contexts';
 
 import styles from './Element.css';
 
-type Props = {|
+type Props = {
   index: number,
   style: Object,
-|};
+};
 
 export default function Element({ index, style }: Props) {
-  const {store} = useContext(TreeContext);
+  const { store } = useContext(TreeContext);
   const element = store.getElementAtIndex(index);
 
   // DevTools are rendered in concurrent mode.
@@ -22,10 +22,7 @@ export default function Element({ index, style }: Props) {
     return null;
   }
 
-  const elementTreeMetadata = store.getTreeMetadataForElement(element);
-
-  const { children, displayName, key } = element;
-  const { depth } = elementTreeMetadata;
+  const { children, depth, displayName, key } = element;
 
   // TODO: Add state for toggling element open/close
 
@@ -34,7 +31,7 @@ export default function Element({ index, style }: Props) {
       className={styles.Element}
       style={{
         ...style,
-        paddingLeft: `${1 + depth}rem`
+        paddingLeft: `${1 + depth}rem`,
       }}
     >
       {children.length > 0 && <span className={styles.ArrowOpen} />}

@@ -8,20 +8,24 @@ import {
   ElementTypeMemo,
   ElementTypeOtherOrUnknown,
   ElementTypeProfiler,
+  ElementTypeRoot,
   ElementTypeSuspense,
 } from 'src/devtools/types';
+import { utfEncodeString } from '../utils';
 import { getDisplayName } from './utils';
+import {
+  TREE_OPERATION_ADD,
+  TREE_OPERATION_REMOVE,
+  TREE_OPERATION_RESET_CHILDREN,
+} from '../constants';
 
 import type {
   Fiber,
   Hook,
   ReactRenderer,
-  RendererData,
+  FiberData,
   RendererInterface,
 } from './types';
-
-// TODO: If we're profiling, process update
-// TODO: Throttle process update to app tree
 
 function getInternalReactConstants(version) {
   const ReactSymbols = {
@@ -184,10 +188,61 @@ export function attach(
 
   const primaryFibers: WeakSet<Fiber> = new WeakSet();
 
-  // TODO: we might want to change the data structure
-  // once we no longer suppport Stack versions of `getData`.
+  // Keep this function in sync with getDataForFiber()
+  function shouldFilterFiber(fiber: Fiber): boolean {
+    const { type, tag } = fiber;
+
+    switch (tag) {
+      case ClassComponent:
+      case FunctionComponent:
+      case IncompleteClassComponent:
+      case IndeterminateComponent:
+      case ForwardRef:
+      case HostRoot:
+      case MemoComponent:
+      case SimpleMemoComponent:
+        return false;
+      case HostPortal:
+      case HostComponent:
+      case HostText:
+      case Fragment:
+        return true;
+      default:
+        const symbolOrNumber =
+          typeof type === 'object' && type !== null ? type.$$typeof : type;
+
+        const switchValue =
+          // $FlowFixMe facebook/flow/issues/2362
+          typeof symbolOrNumber === 'symbol'
+            ? symbolOrNumber.toString()
+            : symbolOrNumber;
+
+        switch (switchValue) {
+          case CONCURRENT_MODE_NUMBER:
+          case CONCURRENT_MODE_SYMBOL_STRING:
+          case DEPRECATED_ASYNC_MODE_SYMBOL_STRING:
+          case STRICT_MODE_NUMBER:
+          case STRICT_MODE_SYMBOL_STRING:
+            return true;
+          case CONTEXT_PROVIDER_NUMBER:
+          case CONTEXT_PROVIDER_SYMBOL_STRING:
+          case CONTEXT_CONSUMER_NUMBER:
+          case CONTEXT_CONSUMER_SYMBOL_STRING:
+          case SUSPENSE_NUMBER:
+          case SUSPENSE_SYMBOL_STRING:
+          case DEPRECATED_PLACEHOLDER_SYMBOL_STRING:
+          case PROFILER_NUMBER:
+          case PROFILER_SYMBOL_STRING:
+            return false;
+          default:
+            return false;
+        }
+    }
+  }
+
+  // TODO: we might want to change the data structure once we no longer suppport Stack versions of `getData`.
   // TODO: Keep in sync with getElementType()
-  function getRendererDataFromFiber(fiber: Fiber): RendererData {
+  function getDataForFiber(fiber: Fiber): FiberData {
     const { elementType, type, key, tag } = fiber;
 
     // This is to support lazy components with a Promise as the type.
@@ -199,11 +254,7 @@ export function attach(
       }
     }
 
-    // Suspense has some special behavior when timed out that we have to handle.
-    // see https://github.com/facebook/react/pull/13823
-    let isTimedOutSuspense: boolean = false;
-
-    let rendererData: RendererData = ((null: any): RendererData);
+    let fiberData: FiberData = ((null: any): FiberData);
     let displayName: string = ((null: any): string);
     let resolvedContext: any = null;
 
@@ -212,8 +263,7 @@ export function attach(
       case FunctionComponent:
       case IncompleteClassComponent:
       case IndeterminateComponent:
-        rendererData = {
-          children: [],
+        fiberData = {
           displayName: getDisplayName(resolvedType),
           key,
           type: ElementTypeClassOrFunction,
@@ -224,26 +274,28 @@ export function attach(
         displayName =
           resolvedType.displayName ||
           (functionName !== '' ? `ForwardRef(${functionName})` : 'ForwardRef');
-        rendererData = {
-          children: [],
+
+        fiberData = {
           displayName,
           key,
           type: ElementTypeForwardRef,
         };
         break;
       case HostRoot:
+        return {
+          displayName: null,
+          key: null,
+          type: ElementTypeRoot,
+        };
       case HostPortal:
       case HostComponent:
       case HostText:
       case Fragment:
-        // Not displayed in Elements tree
-        rendererData = {
-          children: [],
+        return {
           displayName: null,
-          key,
+          key: null,
           type: ElementTypeOtherOrUnknown,
         };
-        break;
       case MemoComponent:
       case SimpleMemoComponent:
         if (elementType.displayName) {
@@ -252,8 +304,7 @@ export function attach(
           displayName = type.displayName || type.name;
           displayName = displayName ? `Memo(${displayName})` : 'Memo';
         }
-        rendererData = {
-          children: [],
+        fiberData = {
           displayName,
           key,
           type: ElementTypeMemo,
@@ -273,14 +324,11 @@ export function attach(
           case CONCURRENT_MODE_NUMBER:
           case CONCURRENT_MODE_SYMBOL_STRING:
           case DEPRECATED_ASYNC_MODE_SYMBOL_STRING:
-            // Not displayed in Elements tree
-            rendererData = {
-              children: [],
+            return {
               displayName: null,
-              key,
+              key: null,
               type: ElementTypeOtherOrUnknown,
             };
-            break;
           case CONTEXT_PROVIDER_NUMBER:
           case CONTEXT_PROVIDER_SYMBOL_STRING:
             // 16.3.0 exposed the context object as "context"
@@ -289,8 +337,7 @@ export function attach(
             displayName = `${resolvedContext.displayName ||
               'Context'}.Provider`;
 
-            rendererData = {
-              children: [],
+            fiberData = {
               displayName,
               key,
               type: ElementTypeContext,
@@ -307,8 +354,7 @@ export function attach(
             displayName = `${resolvedContext.displayName ||
               'Context'}.Consumer`;
 
-            rendererData = {
-              children: [],
+            fiberData = {
               displayName,
               key,
               type: ElementTypeContext,
@@ -316,8 +362,7 @@ export function attach(
             break;
           case STRICT_MODE_NUMBER:
           case STRICT_MODE_SYMBOL_STRING:
-            rendererData = {
-              children: [],
+            fiberData = {
               displayName: null,
               key,
               type: ElementTypeOtherOrUnknown,
@@ -326,11 +371,7 @@ export function attach(
           case SUSPENSE_NUMBER:
           case SUSPENSE_SYMBOL_STRING:
           case DEPRECATED_PLACEHOLDER_SYMBOL_STRING:
-            // Suspense components only have a non-null memoizedState if they're timed-out.
-            isTimedOutSuspense = fiber.memoizedState !== null;
-
-            rendererData = {
-              children: [],
+            fiberData = {
               displayName: 'Suspense',
               key,
               type: ElementTypeSuspense,
@@ -338,8 +379,7 @@ export function attach(
             break;
           case PROFILER_NUMBER:
           case PROFILER_SYMBOL_STRING:
-            rendererData = {
-              children: [],
+            fiberData = {
               displayName: `Profiler(${fiber.memoizedProps.id})`,
               key,
               type: ElementTypeProfiler,
@@ -348,8 +388,7 @@ export function attach(
           default:
             // Unknown element type.
             // This may mean a new element type that has not yet been added to DevTools.
-            rendererData = {
-              children: [],
+            fiberData = {
               displayName: null,
               key,
               type: ElementTypeOtherOrUnknown,
@@ -359,30 +398,7 @@ export function attach(
         break;
     }
 
-    const { children } = rendererData;
-    if (isTimedOutSuspense) {
-      // The behavior of timed-out Suspense trees is unique.
-      // Rather than unmount the timed out content (and possibly lose important state),
-      // React re-parents this content within a hidden Fragment while the fallback is showing.
-      // This behavior doesn't need to be observable in the DevTools though.
-      // It might even result in a bad user experience for e.g. node selection in the Elements panel.
-      // The easiest fix is to strip out the intermediate Fragment fibers,
-      // so the Elements panel and Profiler don't need to special case them.
-      const primaryChildFragment = fiber.child;
-      const primaryChild = primaryChildFragment.child;
-      const fallbackChildFragment = primaryChildFragment.sibling;
-      const fallbackChild = fallbackChildFragment.child;
-      children.push(primaryChild);
-      children.push(fallbackChild);
-    } else {
-      let child = fiber.child;
-      while (child) {
-        children.push(getPrimaryFiber(child));
-        child = child.sibling;
-      }
-    }
-
-    return rendererData;
+    return fiberData;
   }
 
   // This is a slightly annoying indirection.
@@ -401,6 +417,17 @@ export function attach(
     return fiber;
   }
 
+  let uidCounter: number = 0;
+  const fiberToIDMap: WeakMap<Fiber, number> = new WeakMap();
+
+  function getFiberID(primaryFiber: Fiber): number {
+    if (!fiberToIDMap.has(primaryFiber)) {
+      fiberToIDMap.set(primaryFiber, ++uidCounter);
+    }
+    return ((fiberToIDMap.get(primaryFiber): any): number);
+  }
+
+  // eslint-disable-next-line no-unused-vars
   function hasDataChanged(prevFiber: Fiber, nextFiber: Fiber): boolean {
     switch (nextFiber.tag) {
       case ClassComponent:
@@ -425,6 +452,7 @@ export function attach(
     }
   }
 
+  // eslint-disable-next-line no-unused-vars
   function haveProfilerTimesChanged(
     prevFiber: Fiber,
     nextFiber: Fiber
@@ -437,127 +465,176 @@ export function attach(
     );
   }
 
-  let pendingEvents = [];
+  let pendingOperations: Uint32Array = new Uint32Array(0);
 
-  // TODO: Do we still need to send events like this?
-  function flushPendingEvents() {
-    const events = pendingEvents;
-    pendingEvents = [];
-    for (let i = 0; i < events.length; i++) {
-      const event = events[i];
-      hook.emit(event.type, event);
+  function addOperation(
+    newAction: Uint32Array,
+    addToStartOfQueue: boolean = false
+  ): void {
+    const oldActions = pendingOperations;
+    pendingOperations = new Uint32Array(oldActions.length + newAction.length);
+    if (addToStartOfQueue) {
+      pendingOperations.set(newAction);
+      pendingOperations.set(oldActions, newAction.length);
+    } else {
+      pendingOperations.set(oldActions);
+      pendingOperations.set(newAction, oldActions.length);
     }
   }
 
-  function enqueueMount(fiber) {
-    pendingEvents.push({
-      fiber: getPrimaryFiber(fiber),
-      data: getRendererDataFromFiber(fiber),
-      renderer: rendererID,
-      type: 'mount',
-    });
+  function flushPendingEvents(root: Object): void {
+    // Let the frontend know about tree operations.
+    hook.emit('operations', pendingOperations);
+    pendingOperations = new Uint32Array(0);
 
+    // Let the frontend know that we're done working on this root.
+    // Technically this could be inferred, but it's better to explicitly do this for the case of multi roots.
+    // Else the frontend would need to traverse the tree to identify which updates corresponded to which roots.
+    hook.emit('rootCommitted', getFiberID(getPrimaryFiber(root.current)));
+  }
+
+  function enqueueMount(fiber: Fiber, parentFiber: Fiber | null) {
     const isRoot = fiber.tag === HostRoot;
+    const id = getFiberID(getPrimaryFiber(fiber));
+
     if (isRoot) {
-      pendingEvents.push({
-        fiber: getPrimaryFiber(fiber),
-        renderer: rendererID,
-        type: 'root',
-      });
-    }
-  }
+      const operation = new Uint32Array(4);
+      operation[0] = TREE_OPERATION_ADD;
+      operation[1] = id;
+      operation[2] = ElementTypeRoot;
+      operation[3] = 0; // Identifies this fiber as a root
+      addOperation(operation);
+    } else {
+      const { displayName, key, type } = getDataForFiber(fiber);
 
-  function enqueueUpdateIfNecessary(fiber, hasChildOrderChanged) {
-    const data = getRendererDataFromFiber(fiber);
+      let encodedDisplayName = ((null: any): Uint8Array);
+      let encodedKey = ((null: any): Uint8Array);
 
-    if (!hasChildOrderChanged && !hasDataChanged(fiber.alternate, fiber)) {
-      // If only timing information has changed, we still need to update the nodes.
-      // But we can do it in a faster way since we know it's safe to skip the children.
-      // It's also important to avoid emitting an "update" signal for the node in this case,
-      // Since that would indicate to the Profiler that it was part of the "commit" when it wasn't.
-      if (haveProfilerTimesChanged(fiber.alternate, fiber)) {
-        pendingEvents.push({
-          fiber: getPrimaryFiber(fiber),
-          data,
-          renderer: rendererID,
-          type: 'updateProfileTimes',
-        });
+      if (displayName !== null) {
+        encodedDisplayName = utfEncodeString(displayName);
       }
-      return;
+
+      if (key !== null) {
+        if (typeof key === 'number') {
+          encodedKey = new Uint8Array(1);
+          encodedKey[0] = key;
+        } else {
+          encodedKey = utfEncodeString(key);
+        }
+      }
+
+      const encodedDisplayNameSize =
+        displayName === null ? 0 : encodedDisplayName.length;
+      const encodedKeySize = key === null ? 0 : encodedKey.length;
+
+      const operation = new Uint32Array(
+        6 + encodedDisplayNameSize + encodedKeySize
+      );
+      operation[0] = TREE_OPERATION_ADD;
+      operation[1] = id;
+      operation[2] = type;
+      operation[3] = getFiberID(getPrimaryFiber(parentFiber));
+      operation[4] = encodedDisplayNameSize;
+      if (displayName !== null) {
+        operation.set(encodedDisplayName, 5);
+      }
+      operation[5 + encodedDisplayNameSize] = encodedKeySize;
+      if (key !== null) {
+        operation.set(encodedKey, 5 + encodedDisplayNameSize + 1);
+      }
+      addOperation(operation);
     }
-    pendingEvents.push({
-      fiber: getPrimaryFiber(fiber),
-      data,
-      renderer: rendererID,
-      type: 'update',
-    });
   }
 
   function enqueueUnmount(fiber) {
     const isRoot = fiber.tag === HostRoot;
     const primaryFiber = getPrimaryFiber(fiber);
-    const event = {
-      fiber: primaryFiber,
-      renderer: rendererID,
-      type: 'unmount',
-    };
     if (isRoot) {
-      pendingEvents.push(event);
-    } else {
+      const id = getFiberID(getPrimaryFiber(fiber));
+      const operation = new Uint32Array(2);
+      operation[0] = TREE_OPERATION_REMOVE;
+      operation[1] = id;
+      addOperation(operation);
+    } else if (!shouldFilterFiber(fiber)) {
       // Non-root fibers are deleted during the commit phase.
       // They are deleted in the child-first order. However
       // DevTools currently expects deletions to be parent-first.
       // This is why we unshift deletions rather than push them.
-      pendingEvents.unshift(event);
+      const id = getFiberID(getPrimaryFiber(fiber));
+      const operation = new Uint32Array(2);
+      operation[0] = TREE_OPERATION_REMOVE;
+      operation[1] = id;
+      addOperation(operation, true);
     }
     primaryFibers.delete(primaryFiber);
+    fiberToIDMap.delete(primaryFiber);
   }
 
-  function markRootCommitted(fiber) {
-    pendingEvents.push({
-      fiber: getPrimaryFiber(fiber),
-      data: getRendererDataFromFiber(fiber),
-      renderer: rendererID,
-      type: 'rootCommitted',
-    });
-  }
+  function mountFiber(fiber: Fiber, parentFiber: Fiber | null) {
+    const shouldEnqueueMount = !shouldFilterFiber(fiber);
 
-  function mountFiber(fiber) {
-    // Depth-first.
-    // Logs mounting of children first, parents later.
-    let node = fiber;
-    outer: while (true) {
-      if (node.child) {
-        node.child.return = node;
-        node = node.child;
-        continue;
-      }
-      enqueueMount(node);
-      if (node === fiber) {
-        return;
-      }
-      if (node.sibling) {
-        node.sibling.return = node.return;
-        node = node.sibling;
-        continue;
-      }
-      while (node.return) {
-        node = node.return;
-        enqueueMount(node);
-        if (node === fiber) {
-          return;
-        }
-        if (node.sibling) {
-          node.sibling.return = node.return;
-          node = node.sibling;
-          continue outer;
-        }
-      }
-      return;
+    if (shouldEnqueueMount) {
+      enqueueMount(fiber, parentFiber);
+    }
+
+    if (fiber.child !== null) {
+      mountFiber(fiber.child, shouldEnqueueMount ? fiber : parentFiber);
+    }
+
+    if (fiber.sibling) {
+      mountFiber(fiber.sibling, parentFiber);
     }
   }
 
-  function updateFiber(nextFiber, prevFiber) {
+  function enqueueUpdateIfNecessary(
+    fiber: Fiber,
+    hasChildOrderChanged: boolean
+  ) {
+    // The frontend only really cares about the displayName, key, and children.
+    // The first two don't really change, so we are only concerned with the order of children here.
+    // This is trickier than a simple comparison though, since certain types of fibers are filtered.
+    if (hasChildOrderChanged) {
+      const nextChildren: Array<number> = [];
+
+      // This is a naive implimentation that shallowly recurses children.
+      // We might want to revisit this if it proves to be too inefficient.
+      let child = fiber.child;
+      while (child !== null) {
+        findReorderedChildren(child, nextChildren);
+        child = child.sibling;
+      }
+
+      const numChildren = nextChildren.length;
+      const operation = new Uint32Array(3 + numChildren);
+      operation[0] = TREE_OPERATION_RESET_CHILDREN;
+      operation[1] = getFiberID(getPrimaryFiber(fiber));
+      operation[2] = numChildren;
+      operation.set(nextChildren, 3);
+      addOperation(operation);
+    }
+
+    // TODO (profiling) If we're profiling, also check to see if that data has changed.
+  }
+
+  function findReorderedChildren(fiber: Fiber, nextChildren: Array<number>) {
+    if (!shouldFilterFiber(fiber)) {
+      nextChildren.push(getFiberID(getPrimaryFiber(fiber)));
+    } else {
+      let child = fiber.child;
+      while (child !== null) {
+        findReorderedChildren(child, nextChildren);
+        child = child.sibling;
+      }
+    }
+  }
+
+  function updateFiber(
+    nextFiber: Fiber,
+    prevFiber: Fiber,
+    parentFiber: Fiber | null
+  ) {
+    const shouldEnqueueUpdate = !shouldFilterFiber(nextFiber);
+
     // Suspense components only have a non-null memoizedState if they're timed-out.
     const isTimedOutSuspense =
       nextFiber.tag === ReactTypeOfWork.SuspenseComponent &&
@@ -574,15 +651,19 @@ export function attach(
       const primaryChildFragment = nextFiber.child;
       const fallbackChildFragment = primaryChildFragment.sibling;
       const fallbackChild = fallbackChildFragment.child;
+
       // The primary, hidden child is never actually updated in this case,
       // so we can skip any updates to its tree.
       // We only need to track updates to the Fallback UI for now.
       if (fallbackChild.alternate) {
-        updateFiber(fallbackChild, fallbackChild.alternate);
+        updateFiber(fallbackChild, fallbackChild.alternate, nextFiber);
       } else {
-        mountFiber(fallbackChild);
+        mountFiber(fallbackChild, nextFiber);
       }
-      enqueueUpdateIfNecessary(nextFiber, false);
+
+      if (shouldEnqueueUpdate) {
+        enqueueUpdateIfNecessary(nextFiber, false);
+      }
     } else {
       let hasChildOrderChanged = false;
       if (nextFiber.child !== prevFiber.child) {
@@ -597,7 +678,11 @@ export function attach(
           // We don't track deletions here because they are reported separately.
           if (nextChild.alternate) {
             const prevChild = nextChild.alternate;
-            updateFiber(nextChild, prevChild);
+            updateFiber(
+              nextChild,
+              prevChild,
+              shouldEnqueueUpdate ? nextFiber : parentFiber
+            );
             // However we also keep track if the order of the children matches
             // the previous order. They are always different referentially, but
             // if the instances line up conceptually we'll want to know that.
@@ -605,7 +690,10 @@ export function attach(
               hasChildOrderChanged = true;
             }
           } else {
-            mountFiber(nextChild);
+            mountFiber(
+              nextChild,
+              shouldEnqueueUpdate ? nextFiber : parentFiber
+            );
             if (!hasChildOrderChanged) {
               hasChildOrderChanged = true;
             }
@@ -623,7 +711,10 @@ export function attach(
           hasChildOrderChanged = true;
         }
       }
-      enqueueUpdateIfNecessary(nextFiber, hasChildOrderChanged);
+
+      if (shouldEnqueueUpdate) {
+        enqueueUpdateIfNecessary(nextFiber, hasChildOrderChanged);
+      }
     }
   }
 
@@ -632,12 +723,11 @@ export function attach(
   }
 
   function walkTree() {
+    // Hydrate all the roots for the first time.
     hook.getFiberRoots(rendererID).forEach(root => {
-      // Hydrate all the roots for the first time.
-      mountFiber(root.current);
-      markRootCommitted(root.current);
+      mountFiber(root.current, null);
+      flushPendingEvents(root);
     });
-    flushPendingEvents();
   }
 
   function handleCommitFiberUnmount(fiber) {
@@ -660,21 +750,20 @@ export function attach(
         current.memoizedState != null && current.memoizedState.element != null;
       if (!wasMounted && isMounted) {
         // Mount a new root.
-        mountFiber(current);
+        mountFiber(current, null);
       } else if (wasMounted && isMounted) {
         // Update an existing root.
-        updateFiber(current, alternate);
+        updateFiber(current, alternate, null);
       } else if (wasMounted && !isMounted) {
         // Unmount an existing root.
         enqueueUnmount(current);
       }
     } else {
       // Mount a new root.
-      mountFiber(current);
+      mountFiber(current, null);
     }
-    markRootCommitted(current);
     // We're done here.
-    flushPendingEvents();
+    flushPendingEvents(root);
   }
 
   // The naming is confusing.

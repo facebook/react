@@ -12,10 +12,9 @@ export type Fiber = Object;
 // TODO: If it's useful for the frontend to know which types of data an Element has
 // (e.g. props, state, context, hooks) then we could add a bitmask field for this
 // to keep the number of attributes small.
-export type RendererData = {|
+export type FiberData = {|
   key: React$Key | null,
   displayName: string | null,
-  children: Array<Fiber>,
   type: ElementType,
 |};
 
