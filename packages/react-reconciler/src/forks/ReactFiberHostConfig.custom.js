@@ -29,6 +29,7 @@ export opaque type Props = mixed; // eslint-disable-line no-undef
 export opaque type Container = mixed; // eslint-disable-line no-undef
 export opaque type Instance = mixed; // eslint-disable-line no-undef
 export opaque type TextInstance = mixed; // eslint-disable-line no-undef
+export opaque type SuspenseInstance = mixed; // eslint-disable-line no-undef
 export opaque type HydratableInstance = mixed; // eslint-disable-line no-undef
 export opaque type PublicInstance = mixed; // eslint-disable-line no-undef
 export opaque type HostContext = mixed; // eslint-disable-line no-undef
@@ -112,6 +113,9 @@ export const hydrateInstance = $$$hostConfig.hydrateInstance;
 export const hydrateTextInstance = $$$hostConfig.hydrateTextInstance;
 export const getNextHydratableInstanceAfterSuspenseInstance =
   $$$hostConfig.getNextHydratableInstanceAfterSuspenseInstance;
+export const clearSuspenseBoundary = $$$hostConfig.clearSuspenseBoundary;
+export const clearSuspenseBoundaryFromContainer =
+  $$$hostConfig.clearSuspenseBoundaryFromContainer;
 export const didNotMatchHydratedContainerTextInstance =
   $$$hostConfig.didNotMatchHydratedContainerTextInstance;
 export const didNotMatchHydratedTextInstance =

@@ -436,6 +436,49 @@ export function removeChildFromContainer(
   }
 }
 
+export function clearSuspenseBoundary(
+  parentInstance: Instance,
+  suspenseInstance: SuspenseInstance,
+): void {
+  let node = suspenseInstance;
+  // Delete all nodes within this suspense boundary.
+  // There might be nested nodes so we need to keep track of how
+  // deep we are and only break out when we're back on top.
+  let depth = 0;
+  do {
+    let nextNode = node.nextSibling;
+    parentInstance.removeChild(node);
+    if (nextNode && nextNode.nodeType === COMMENT_NODE) {
+      let data = ((nextNode: any).data: string);
+      if (data === SUSPENSE_END_DATA) {
+        if (depth === 0) {
+          parentInstance.removeChild(nextNode);
+          return;
+        } else {
+          depth--;
+        }
+      } else if (nextNode === SUSPENSE_START_DATA) {
+        depth++;
+      }
+    }
+    node = nextNode;
+  } while (node);
+  // TODO: Warn, we didn't find the end comment boundary.
+}
+
+export function clearSuspenseBoundaryFromContainer(
+  container: Container,
+  suspenseInstance: SuspenseInstance,
+): void {
+  if (container.nodeType === COMMENT_NODE) {
+    clearSuspenseBoundary((container.parentNode: any), suspenseInstance);
+  } else if (container.nodeType === ELEMENT_NODE) {
+    clearSuspenseBoundary((container: any), suspenseInstance);
+  } else {
+    // Document nodes should never contain suspense boundaries.
+  }
+}
+
 export function hideInstance(instance: Instance): void {
   // TODO: Does this work for all element types? What about MathML? Should we
   // pass host context to this method?

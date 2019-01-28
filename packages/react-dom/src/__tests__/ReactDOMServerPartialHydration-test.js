@@ -137,4 +137,57 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.firstChild.firstChild.tagName).toBe('DIV');
     expect(container.firstChild.firstChild.textContent).toBe('First');
   });
+
+  it('can delete the dehydrated boundary before it is hydrated', () => {
+    let suspend = false;
+    let promise = new Promise(() => {});
+    let hideMiddle;
+
+    function Child() {
+      if (suspend) {
+        throw promise;
+      } else {
+        return (
+          <React.Fragment>
+            <div>Middle</div>
+            Some text
+          </React.Fragment>
+        );
+      }
+    }
+
+    function App() {
+      let [visible, setVisibilty] = React.useState(true);
+      hideMiddle = () => setVisibilty(false);
+
+      return (
+        <div>
+          <div>Before</div>
+          {visible ? (
+            <Suspense fallback="Loading...">
+              <Child />
+            </Suspense>
+          ) : null}
+          <div>After</div>
+        </div>
+      );
+    }
+
+    suspend = false;
+    let finalHTML = ReactDOMServer.renderToString(<App />);
+    let container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    // On the client we don't have all data yet but we want to start
+    // hydrating anyway.
+    suspend = true;
+    ReactDOM.hydrate(<App />, container);
+
+    expect(container.firstChild.children[1].textContent).toBe('Middle');
+
+    // In this state, we can still delete the boundary.
+    hideMiddle();
+
+    expect(container.firstChild.children[1].textContent).toBe('After');
+  });
 });

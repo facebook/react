@@ -10,6 +10,7 @@
 import type {
   Instance,
   TextInstance,
+  SuspenseInstance,
   Container,
   ChildSet,
   UpdatePayload,
@@ -80,6 +81,8 @@ import {
   insertInContainerBefore,
   removeChild,
   removeChildFromContainer,
+  clearSuspenseBoundary,
+  clearSuspenseBoundaryFromContainer,
   replaceContainerChildren,
   createContainerChildSet,
   hideInstance,
@@ -1037,11 +1040,30 @@ function unmountHostComponents(current): void {
       // After all the children have unmounted, it is now safe to remove the
       // node from the tree.
       if (currentParentIsContainer) {
-        removeChildFromContainer((currentParent: any), node.stateNode);
+        removeChildFromContainer(
+          ((currentParent: any): Container),
+          (node.stateNode: Instance | TextInstance),
+        );
       } else {
-        removeChild((currentParent: any), node.stateNode);
+        removeChild(
+          ((currentParent: any): Instance),
+          (node.stateNode: Instance | TextInstance),
+        );
       }
       // Don't visit children because we already visited them.
+    } else if (node.tag === DehydratedSuspenseComponent) {
+      // Delete the dehydrated suspense boundary and all of its content.
+      if (currentParentIsContainer) {
+        clearSuspenseBoundaryFromContainer(
+          ((currentParent: any): Container),
+          (node.stateNode: SuspenseInstance),
+        );
+      } else {
+        clearSuspenseBoundary(
+          ((currentParent: any): Instance),
+          (node.stateNode: SuspenseInstance),
+        );
+      }
     } else if (node.tag === HostPortal) {
       // When we go into a portal, it becomes the parent to remove from.
       // We will reassign it back when we pop the portal on the way up.
