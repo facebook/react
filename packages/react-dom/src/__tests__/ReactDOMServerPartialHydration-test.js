@@ -32,6 +32,7 @@ describe('ReactDOMServerPartialHydration', () => {
     let suspend = false;
     let resolve;
     let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+    let ref = React.createRef();
 
     function Child() {
       if (suspend) {
@@ -45,7 +46,7 @@ describe('ReactDOMServerPartialHydration', () => {
       return (
         <div>
           <Suspense fallback="Loading...">
-            <span>
+            <span ref={ref}>
               <Child />
             </span>
           </Suspense>
@@ -62,18 +63,25 @@ describe('ReactDOMServerPartialHydration', () => {
     let container = document.createElement('div');
     container.innerHTML = finalHTML;
 
+    let span = container.getElementsByTagName('span')[0];
+
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
     root.render(<App />);
     jest.runAllTimers();
+
+    expect(ref.current).toBe(null);
 
     // Resolving the promise should continue hydration
     suspend = false;
     resolve();
     await promise;
     jest.runAllTimers();
+
+    // We should now have hydrated with a ref on the existing span.
+    expect(ref.current).toBe(span);
   });
 
   it('can insert siblings before the dehydrated boundary', () => {

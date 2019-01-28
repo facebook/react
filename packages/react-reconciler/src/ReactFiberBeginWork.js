@@ -104,6 +104,7 @@ import {
 } from './ReactFiberContext';
 import {
   enterHydrationState,
+  reenterHydrationStateFromDehydratedSuspenseInstance,
   resetHydrationState,
   tryToClaimNextHydratableInstance,
 } from './ReactFiberHydrationContext';
@@ -1629,7 +1630,7 @@ function updateDehydratedSuspenseComponent(
       // TODO: Delete children and upgrade to a regular suspense component without
       // hydrating.
     }
-    // TODO: Restore hydration state
+    reenterHydrationStateFromDehydratedSuspenseInstance(workInProgress);
     const nextChildren = nextProps.children;
     workInProgress.child = mountChildFibers(
       workInProgress,

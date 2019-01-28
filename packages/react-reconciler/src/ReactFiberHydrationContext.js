@@ -69,6 +69,20 @@ function enterHydrationState(fiber: Fiber): boolean {
   return true;
 }
 
+function reenterHydrationStateFromDehydratedSuspenseInstance(
+  fiber: Fiber,
+): boolean {
+  if (!supportsHydration) {
+    return false;
+  }
+
+  const suspenseInstance = fiber.stateNode;
+  nextHydratableInstance = getNextHydratableSibling(suspenseInstance);
+  popToNextHostParent(fiber);
+  isHydrating = true;
+  return true;
+}
+
 function deleteHydratableInstance(
   returnFiber: Fiber,
   instance: HydratableInstance,
@@ -416,6 +430,7 @@ function resetHydrationState(): void {
 
 export {
   enterHydrationState,
+  reenterHydrationStateFromDehydratedSuspenseInstance,
   resetHydrationState,
   tryToClaimNextHydratableInstance,
   prepareToHydrateHostInstance,
