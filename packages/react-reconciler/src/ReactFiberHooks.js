@@ -145,8 +145,10 @@ let currentlyRenderingFiber: Fiber | null = null;
 // work-in-progress fiber.
 let firstCurrentHook: Hook | null = null;
 let currentHook: Hook | null = null;
+let nextCurrentHook: Hook | null = null;
 let firstWorkInProgressHook: Hook | null = null;
 let workInProgressHook: Hook | null = null;
+let nextWorkInProgressHook: Hook | null = null;
 
 let remainingExpirationTime: ExpirationTime = NoWork;
 let componentUpdateQueue: FunctionComponentUpdateQueue | null = null;
@@ -317,7 +319,9 @@ export function renderWithHooks(
 ): any {
   renderExpirationTime = nextRenderExpirationTime;
   currentlyRenderingFiber = workInProgress;
-  firstCurrentHook = current !== null ? current.memoizedState : null;
+  firstCurrentHook = nextCurrentHook =
+    current !== null ? current.memoizedState : null;
+  nextWorkInProgressHook = null;
 
   // The following should have already been reset
   // currentHook = null;
@@ -333,28 +337,35 @@ export function renderWithHooks(
 
   if (__DEV__) {
     ReactCurrentDispatcher.current =
-      current === null
+      nextCurrentHook === null
         ? HooksDispatcherOnMountInDEV
         : HooksDispatcherOnUpdateInDEV;
   } else {
     ReactCurrentDispatcher.current =
-      current === null ? HooksDispatcherOnMount : HooksDispatcherOnUpdate;
+      nextCurrentHook === null
+        ? HooksDispatcherOnMount
+        : HooksDispatcherOnUpdate;
   }
 
   let children = Component(props, refOrContext);
 
   if (didScheduleRenderPhaseUpdate) {
-    ReactCurrentDispatcher.current = __DEV__
-      ? HooksDispatcherOnUpdateInDEV
-      : HooksDispatcherOnUpdate;
     do {
       didScheduleRenderPhaseUpdate = false;
       numberOfReRenders += 1;
 
       // Start over from the beginning of the list
+      firstCurrentHook = nextCurrentHook =
+        current !== null ? current.memoizedState : null;
+      nextWorkInProgressHook = firstWorkInProgressHook;
+
       currentHook = null;
       workInProgressHook = null;
       componentUpdateQueue = null;
+
+      ReactCurrentDispatcher.current = __DEV__
+        ? HooksDispatcherOnUpdateInDEV
+        : HooksDispatcherOnUpdate;
 
       children = Component(props, refOrContext);
     } while (didScheduleRenderPhaseUpdate);
@@ -363,25 +374,14 @@ export function renderWithHooks(
     numberOfReRenders = 0;
   }
 
+  if (__DEV__) {
+    flushHookMismatchWarnings();
+    currentHookNameInDev = null;
+  }
+
   // We can assume the previous dispatcher is always this one, since we set it
   // at the beginning of the render phase and there's no re-entrancy.
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
-
-  if (__DEV__) {
-    if (
-      current !== null &&
-      workInProgressHook !== null &&
-      currentHook === null
-    ) {
-      warning(
-        false,
-        '%s: Rendered more hooks than during the previous render. This is ' +
-          'not currently supported and may lead to unexpected behavior.',
-        getComponentName(Component),
-      );
-    }
-    flushHookMismatchWarnings();
-  }
 
   const renderedWork: Fiber = (currentlyRenderingFiber: any);
 
@@ -398,16 +398,14 @@ export function renderWithHooks(
 
   firstCurrentHook = null;
   currentHook = null;
+  nextCurrentHook = null;
   firstWorkInProgressHook = null;
   workInProgressHook = null;
+  nextWorkInProgressHook = null;
 
   remainingExpirationTime = NoWork;
   componentUpdateQueue = null;
   sideEffectTag = 0;
-
-  if (__DEV__) {
-    currentHookNameInDev = null;
-  }
 
   // These were reset above
   // didScheduleRenderPhaseUpdate = false;
@@ -452,8 +450,10 @@ export function resetHooks(): void {
 
   firstCurrentHook = null;
   currentHook = null;
+  nextCurrentHook = null;
   firstWorkInProgressHook = null;
   workInProgressHook = null;
+  nextWorkInProgressHook = null;
 
   remainingExpirationTime = NoWork;
   componentUpdateQueue = null;
@@ -469,53 +469,47 @@ export function resetHooks(): void {
 }
 
 function createHook(): Hook {
-  let hook: Hook = __DEV__
-    ? {
-        _debugType: ((currentHookNameInDev: any): HookType),
-        memoizedState: null,
+  const hook: Hook = {
+    memoizedState: null,
 
-        baseState: null,
-        queue: null,
-        baseUpdate: null,
+    baseState: null,
+    queue: null,
+    baseUpdate: null,
 
-        next: null,
-      }
-    : {
-        memoizedState: null,
+    next: null,
+  };
 
-        baseState: null,
-        queue: null,
-        baseUpdate: null,
-
-        next: null,
-      };
+  if (__DEV__) {
+    hook._debugType = ((currentHookNameInDev: any): HookType);
+    if (
+      currentlyRenderingFiber !== null &&
+      currentlyRenderingFiber.alternate !== null
+    ) {
+      warning(
+        false,
+        '%s: Rendered more hooks than during the previous render. This is ' +
+          'not currently supported and may lead to unexpected behavior.',
+        getComponentName(currentlyRenderingFiber.type),
+      );
+    }
+  }
 
   return hook;
 }
 
 function cloneHook(hook: Hook): Hook {
-  let nextHook: Hook = __DEV__
-    ? {
-        _debugType: ((currentHookNameInDev: any): HookType),
-        memoizedState: hook.memoizedState,
+  const nextHook: Hook = {
+    memoizedState: hook.memoizedState,
 
-        baseState: hook.baseState,
-        queue: hook.queue,
-        baseUpdate: hook.baseUpdate,
+    baseState: hook.baseState,
+    queue: hook.queue,
+    baseUpdate: hook.baseUpdate,
 
-        next: null,
-      }
-    : {
-        memoizedState: hook.memoizedState,
-
-        baseState: hook.baseState,
-        queue: hook.queue,
-        baseUpdate: hook.baseUpdate,
-
-        next: null,
-      };
+    next: null,
+  };
 
   if (__DEV__) {
+    nextHook._debugType = ((currentHookNameInDev: any): HookType);
     if (currentHookMismatchInDev === null) {
       if (currentHookNameInDev !== ((hook: any): HookDev)._debugType) {
         currentHookMismatchInDev = new Error('tracer').stack
@@ -540,45 +534,45 @@ function mountWorkInProgressHook(): Hook {
 }
 
 function updateWorkInProgressHook(): Hook {
-  if (workInProgressHook === null) {
-    // This is the first hook in the list
-    if (firstWorkInProgressHook === null) {
-      currentHook = firstCurrentHook;
-      if (currentHook === null) {
-        // This is a newly mounted hook
-        workInProgressHook = createHook();
-      } else {
-        // Clone the current hook.
-        workInProgressHook = cloneHook(currentHook);
-      }
-      firstWorkInProgressHook = workInProgressHook;
-    } else {
-      // There's already a work-in-progress. Reuse it.
-      currentHook = firstCurrentHook;
-      workInProgressHook = firstWorkInProgressHook;
+  // This function is used both for updates and for re-renders triggered by a
+  // render phase update. It assumes there is either a current hook we can
+  // clone, or a work-in-progress hook from a previous render pass that we can
+  // use as a base. When we reach the end of the base list, we must switch to
+  // the dispatcher used for mounts.
+  if (nextWorkInProgressHook !== null) {
+    // There's already a work-in-progress. Reuse it.
+    workInProgressHook = nextWorkInProgressHook;
+    nextWorkInProgressHook = workInProgressHook.next;
+
+    currentHook = nextCurrentHook;
+    nextCurrentHook = currentHook !== null ? currentHook.next : null;
+    if (nextCurrentHook === null && nextWorkInProgressHook === null) {
+      // We've reached the end of both lists. Switch to mount dispatcher.
+      ReactCurrentDispatcher.current = __DEV__
+        ? HooksDispatcherOnMountInDEV
+        : HooksDispatcherOnMount;
     }
   } else {
-    if (workInProgressHook.next === null) {
-      let hook;
-      if (currentHook === null) {
-        // This is a newly mounted hook
-        hook = createHook();
-      } else {
-        currentHook = currentHook.next;
-        if (currentHook === null) {
-          // This is a newly mounted hook
-          hook = createHook();
-        } else {
-          // Clone the current hook.
-          hook = cloneHook(currentHook);
-        }
-      }
-      // Append to the end of the list
-      workInProgressHook = workInProgressHook.next = hook;
+    // Clone from the current hook.
+    invariant(
+      nextCurrentHook !== null,
+      'Should have a current hook. This is likely a bug in React. Please ' +
+        'file an issue.',
+    );
+    currentHook = nextCurrentHook;
+    if (workInProgressHook === null) {
+      // This is the first hook in the list.
+      workInProgressHook = firstWorkInProgressHook = cloneHook(currentHook);
     } else {
-      // There's already a work-in-progress. Reuse it.
-      workInProgressHook = workInProgressHook.next;
-      currentHook = currentHook !== null ? currentHook.next : null;
+      // Append to the end of the list.
+      workInProgressHook = workInProgressHook.next = cloneHook(currentHook);
+    }
+    nextCurrentHook = currentHook.next;
+    if (nextCurrentHook === null) {
+      // Check if we've reached the end of the current list.
+      ReactCurrentDispatcher.current = __DEV__
+        ? HooksDispatcherOnMountInDEV
+        : HooksDispatcherOnMount;
     }
   }
   return workInProgressHook;
@@ -601,7 +595,6 @@ function mountContext<T>(
   if (__DEV__) {
     currentHookNameInDev = 'useContext';
     mountWorkInProgressHook();
-    currentHookNameInDev = null;
   }
   return readContext(context, observedBits);
 }
@@ -613,7 +606,6 @@ function updateContext<T>(
   if (__DEV__) {
     currentHookNameInDev = 'useContext';
     updateWorkInProgressHook();
-    currentHookNameInDev = null;
   }
   return readContext(context, observedBits);
 }
@@ -666,10 +658,10 @@ function updateReducerImpl<S, A>(
   initialAction: void | null | A,
 ): [S, Dispatch<A>] {
   const queue = hook.queue;
-
-  if (queue === null) {
-    return mountReducerImpl(hook, reducer, initialState, initialAction);
-  }
+  invariant(
+    queue !== null,
+    'Should have a queue. This is likely a bug in React. Please file an issue.',
+  );
 
   if (numberOfReRenders > 0) {
     // This is a re-render. Apply the new render phase updates to the previous
@@ -868,15 +860,7 @@ function updateRef<T>(initialValue: T): {current: T} {
     currentHookNameInDev = 'useRef';
   }
   const hook = updateWorkInProgressHook();
-  let ref = hook.memoizedState;
-  if (ref === null) {
-    ref = {current: initialValue};
-    if (__DEV__) {
-      Object.seal(ref);
-    }
-    hook.memoizedState = ref;
-  }
-  return ref;
+  return hook.memoizedState;
 }
 
 function mountEffectImpl(
@@ -1250,7 +1234,8 @@ function dispatchAction<S, A>(
       const eagerReducer = queue.eagerReducer;
       if (eagerReducer !== null) {
         if (__DEV__) {
-          ReactCurrentDispatcher.current = InvalidHooksDispatcherOnUpdateInDEV;
+          hooksAccessForbiddenInDEV = true;
+          ReactCurrentDispatcher.current = HooksDispatcherOnUpdateInDEV;
         }
         try {
           const currentState: S = (queue.eagerState: any);
@@ -1272,7 +1257,8 @@ function dispatchAction<S, A>(
           // Suppress the error. It will throw again in the render phase.
         } finally {
           if (__DEV__) {
-            ReactCurrentDispatcher.current = InvalidHooksDispatcherOnUpdateInDEV;
+            hooksAccessForbiddenInDEV = false;
+            ReactCurrentDispatcher.current = HooksDispatcherOnUpdateInDEV;
           }
         }
       }
@@ -1311,45 +1297,6 @@ const HooksDispatcherOnMount: Dispatcher = {
   useDebugValue: mountDebugValue,
 };
 
-const HooksDispatcherOnMountInDEV: Dispatcher = {
-  readContext,
-
-  useCallback: mountCallback,
-  useContext: __DEV__ ? mountContext : readContext,
-  useEffect: mountEffect,
-  useImperativeHandle: mountImperativeHandle,
-  useLayoutEffect: mountLayoutEffect,
-  useMemo(create, deps) {
-    const prevDispatcher = ReactCurrentDispatcher.current;
-    ReactCurrentDispatcher.current = InvalidHooksDispatcherOnMountInDEV;
-    try {
-      return mountMemo(create, deps);
-    } finally {
-      ReactCurrentDispatcher.current = prevDispatcher;
-    }
-  },
-  useReducer(reducer, initialState, initialAction) {
-    const prevDispatcher = ReactCurrentDispatcher.current;
-    ReactCurrentDispatcher.current = InvalidHooksDispatcherOnMountInDEV;
-    try {
-      return mountReducer(reducer, initialState, initialAction);
-    } finally {
-      ReactCurrentDispatcher.current = prevDispatcher;
-    }
-  },
-  useRef: mountRef,
-  useState(initialState) {
-    const prevDispatcher = ReactCurrentDispatcher.current;
-    ReactCurrentDispatcher.current = InvalidHooksDispatcherOnMountInDEV;
-    try {
-      return mountState(initialState);
-    } finally {
-      ReactCurrentDispatcher.current = prevDispatcher;
-    }
-  },
-  useDebugValue: mountDebugValue,
-};
-
 const HooksDispatcherOnUpdate: Dispatcher = {
   readContext,
 
@@ -1365,50 +1312,22 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useDebugValue: updateDebugValue,
 };
 
-const HooksDispatcherOnUpdateInDEV: Dispatcher = {
-  readContext,
-
-  useCallback: updateCallback,
-  useContext: __DEV__ ? updateContext : readContext,
-  useEffect: updateEffect,
-  useImperativeHandle: updateImperativeHandle,
-  useLayoutEffect: updateLayoutEffect,
-  useMemo(create, deps) {
-    const prevDispatcher = ReactCurrentDispatcher.current;
-    ReactCurrentDispatcher.current = InvalidHooksDispatcherOnUpdateInDEV;
-    try {
-      return updateMemo(create, deps);
-    } finally {
-      ReactCurrentDispatcher.current = prevDispatcher;
-    }
-  },
-  useReducer(reducer, initialState, initialAction) {
-    const prevDispatcher = ReactCurrentDispatcher.current;
-    ReactCurrentDispatcher.current = InvalidHooksDispatcherOnUpdateInDEV;
-    try {
-      return updateReducer(reducer, initialState, initialAction);
-    } finally {
-      ReactCurrentDispatcher.current = prevDispatcher;
-    }
-  },
-  useRef: updateRef,
-  useState(initialState) {
-    const prevDispatcher = ReactCurrentDispatcher.current;
-    ReactCurrentDispatcher.current = InvalidHooksDispatcherOnUpdateInDEV;
-    try {
-      return updateState(initialState);
-    } finally {
-      ReactCurrentDispatcher.current = prevDispatcher;
-    }
-  },
-  useDebugValue: updateDebugValue,
-};
-
-let InvalidHooksDispatcherOnMountInDEV: Dispatcher | null;
-let InvalidHooksDispatcherOnUpdateInDEV: Dispatcher | null;
+let hooksAccessForbiddenInDEV = false;
+let warnInvalidContextAccess = null;
+let warnInvalidHookAccess = null;
 
 if (__DEV__) {
-  const warnInvalidHookAccess = () => {
+  warnInvalidContextAccess = () => {
+    warning(
+      false,
+      'Context can only be read while React is rendering. ' +
+        'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
+        'In function components, you can read it directly in the function body, but not ' +
+        'inside Hooks like useReducer() or useMemo().',
+    );
+  };
+
+  warnInvalidHookAccess = () => {
     warning(
       false,
       'Hooks can only be called inside the body of a function component. ' +
@@ -1416,114 +1335,180 @@ if (__DEV__) {
         'https://fb.me/rules-of-hooks',
     );
   };
-
-  InvalidHooksDispatcherOnMountInDEV = {
-    readContext(context, observedBits) {
-      warning(
-        false,
-        'Context can only be read while React is rendering. ' +
-          'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
-          'In function components, you can read it directly in the function body, but not ' +
-          'inside Hooks like useReducer() or useMemo().',
-      );
-
-      return readContext(context, observedBits);
-    },
-
-    useCallback(callback, deps) {
-      warnInvalidHookAccess();
-      return mountCallback(callback, deps);
-    },
-    useContext(context, observedBits) {
-      warnInvalidHookAccess();
-      return mountContext(context, observedBits);
-    },
-    useEffect(create, deps) {
-      warnInvalidHookAccess();
-      return mountEffect(create, deps);
-    },
-    useImperativeHandle(ref, create, deps) {
-      warnInvalidHookAccess();
-      return mountImperativeHandle(ref, create, deps);
-    },
-    useLayoutEffect(create, deps) {
-      warnInvalidHookAccess();
-      return mountLayoutEffect(create, deps);
-    },
-    useMemo(create, deps) {
-      warnInvalidHookAccess();
-      return mountMemo(create, deps);
-    },
-    useReducer(reducer, initialState, initialAction) {
-      warnInvalidHookAccess();
-      return mountReducer(reducer, initialState, initialAction);
-    },
-    useRef(initialValue) {
-      warnInvalidHookAccess();
-      return mountReducer(initialValue);
-    },
-    useState(initialState) {
-      warnInvalidHookAccess();
-      return mountState(initialState);
-    },
-    useDebugValue(value, formatterFn) {
-      warnInvalidHookAccess();
-      return mountDebugValue(value, formatterFn);
-    },
-  };
-
-  InvalidHooksDispatcherOnUpdateInDEV = {
-    readContext(context, observedBits) {
-      warning(
-        false,
-        'Context can only be read while React is rendering. ' +
-          'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
-          'In function components, you can read it directly in the function body, but not ' +
-          'inside Hooks like useReducer() or useMemo().',
-      );
-
-      return readContext(context, observedBits);
-    },
-
-    useCallback(callback, deps) {
-      warnInvalidHookAccess();
-      return updateCallback(callback, deps);
-    },
-    useContext(context, observedBits) {
-      warnInvalidHookAccess();
-      return updateContext(context, observedBits);
-    },
-    useEffect(create, deps) {
-      warnInvalidHookAccess();
-      return updateEffect(create, deps);
-    },
-    useImperativeHandle(ref, create, deps) {
-      warnInvalidHookAccess();
-      return updateImperativeHandle(ref, create, deps);
-    },
-    useLayoutEffect(create, deps) {
-      warnInvalidHookAccess();
-      return updateLayoutEffect(create, deps);
-    },
-    useMemo(create, deps) {
-      warnInvalidHookAccess();
-      return updateMemo(create, deps);
-    },
-    useReducer(reducer, initialState, initialAction) {
-      warnInvalidHookAccess();
-      return updateReducer(reducer, initialState, initialAction);
-    },
-    useRef(initialValue) {
-      warnInvalidHookAccess();
-      return updateReducer(initialValue);
-    },
-    useState(initialState) {
-      warnInvalidHookAccess();
-      return updateState(initialState);
-    },
-    useDebugValue(value, formatterFn) {
-      warnInvalidHookAccess();
-      return updateDebugValue(value, formatterFn);
-    },
-  };
 }
+
+const HooksDispatcherOnMountInDEV: Dispatcher = {
+  readContext(context, observedBits) {
+    if (hooksAccessForbiddenInDEV) {
+      warnInvalidContextAccess();
+    }
+    return readContext(context, observedBits);
+  },
+
+  useCallback(callback, deps) {
+    if (hooksAccessForbiddenInDEV) {
+      warnInvalidHookAccess();
+    }
+    return mountCallback(callback, deps);
+  },
+  useContext(context, observedBits) {
+    if (hooksAccessForbiddenInDEV) {
+      warnInvalidHookAccess();
+    }
+    return mountContext(context, observedBits);
+  },
+  useEffect(create, deps) {
+    if (hooksAccessForbiddenInDEV) {
+      warnInvalidHookAccess();
+    }
+    return mountEffect(create, deps);
+  },
+  useImperativeHandle(ref, create, deps) {
+    if (hooksAccessForbiddenInDEV) {
+      warnInvalidHookAccess();
+    }
+    return mountImperativeHandle(ref, create, deps);
+  },
+  useLayoutEffect(create, deps) {
+    if (hooksAccessForbiddenInDEV) {
+      warnInvalidHookAccess();
+    }
+    return mountLayoutEffect(create, deps);
+  },
+  useMemo(create, deps) {
+    if (hooksAccessForbiddenInDEV) {
+      warnInvalidHookAccess();
+    }
+    const prevHooksAccessForbiddenInDEV = hooksAccessForbiddenInDEV;
+    hooksAccessForbiddenInDEV = true;
+    try {
+      return mountMemo(create, deps);
+    } finally {
+      hooksAccessForbiddenInDEV = prevHooksAccessForbiddenInDEV;
+    }
+  },
+  useReducer(reducer, initialState, initialAction) {
+    if (hooksAccessForbiddenInDEV) {
+      warnInvalidHookAccess();
+    }
+    const prevHooksAccessForbiddenInDEV = hooksAccessForbiddenInDEV;
+    hooksAccessForbiddenInDEV = true;
+    try {
+      return mountReducer(reducer, initialState, initialAction);
+    } finally {
+      hooksAccessForbiddenInDEV = prevHooksAccessForbiddenInDEV;
+    }
+  },
+  useRef(initialValue) {
+    if (hooksAccessForbiddenInDEV) {
+      warnInvalidHookAccess();
+    }
+    return mountRef(initialValue);
+  },
+  useState(initialState) {
+    if (hooksAccessForbiddenInDEV) {
+      warnInvalidHookAccess();
+    }
+    const prevHooksAccessForbiddenInDEV = hooksAccessForbiddenInDEV;
+    hooksAccessForbiddenInDEV = true;
+    try {
+      return mountState(initialState);
+    } finally {
+      hooksAccessForbiddenInDEV = prevHooksAccessForbiddenInDEV;
+    }
+  },
+  useDebugValue(value, formatterFn) {
+    if (hooksAccessForbiddenInDEV) {
+      warnInvalidHookAccess();
+    }
+    return mountDebugValue(value, formatterFn);
+  },
+};
+
+const HooksDispatcherOnUpdateInDEV: Dispatcher = {
+  readContext(context, observedBits) {
+    if (hooksAccessForbiddenInDEV) {
+      warnInvalidContextAccess();
+    }
+    return readContext(context, observedBits);
+  },
+
+  useCallback(callback, deps) {
+    if (hooksAccessForbiddenInDEV) {
+      warnInvalidHookAccess();
+    }
+    return updateCallback(callback, deps);
+  },
+  useContext(context, observedBits) {
+    if (hooksAccessForbiddenInDEV) {
+      warnInvalidHookAccess();
+    }
+    return updateContext(context, observedBits);
+  },
+  useEffect(create, deps) {
+    if (hooksAccessForbiddenInDEV) {
+      warnInvalidHookAccess();
+    }
+    return updateEffect(create, deps);
+  },
+  useImperativeHandle(ref, create, deps) {
+    if (hooksAccessForbiddenInDEV) {
+      warnInvalidHookAccess();
+    }
+    return updateImperativeHandle(ref, create, deps);
+  },
+  useLayoutEffect(create, deps) {
+    if (hooksAccessForbiddenInDEV) {
+      warnInvalidHookAccess();
+    }
+    return updateLayoutEffect(create, deps);
+  },
+  useMemo(create, deps) {
+    if (hooksAccessForbiddenInDEV) {
+      warnInvalidHookAccess();
+    }
+    const prevHooksAccessForbiddenInDEV = hooksAccessForbiddenInDEV;
+    hooksAccessForbiddenInDEV = true;
+    try {
+      return updateMemo(create, deps);
+    } finally {
+      hooksAccessForbiddenInDEV = prevHooksAccessForbiddenInDEV;
+    }
+  },
+  useReducer(reducer, initialState, initialAction) {
+    if (hooksAccessForbiddenInDEV) {
+      warnInvalidHookAccess();
+    }
+    const prevHooksAccessForbiddenInDEV = hooksAccessForbiddenInDEV;
+    hooksAccessForbiddenInDEV = true;
+    try {
+      return updateReducer(reducer, initialState, initialAction);
+    } finally {
+      hooksAccessForbiddenInDEV = prevHooksAccessForbiddenInDEV;
+    }
+  },
+  useRef(initialValue) {
+    if (hooksAccessForbiddenInDEV) {
+      warnInvalidHookAccess();
+    }
+    return updateRef(initialValue);
+  },
+  useState(initialState) {
+    if (hooksAccessForbiddenInDEV) {
+      warnInvalidHookAccess();
+    }
+    const prevHooksAccessForbiddenInDEV = hooksAccessForbiddenInDEV;
+    hooksAccessForbiddenInDEV = true;
+    try {
+      return updateState(initialState);
+    } finally {
+      hooksAccessForbiddenInDEV = prevHooksAccessForbiddenInDEV;
+    }
+  },
+  useDebugValue(value, formatterFn) {
+    if (hooksAccessForbiddenInDEV) {
+      warnInvalidHookAccess();
+    }
+    return updateDebugValue(value, formatterFn);
+  },
+};
