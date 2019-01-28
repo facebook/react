@@ -38,6 +38,7 @@ import {
   getFirstHydratableChild,
   hydrateInstance,
   hydrateTextInstance,
+  getNextHydratableInstanceAfterSuspenseInstance,
   didNotMatchHydratedContainerTextInstance,
   didNotMatchHydratedTextInstance,
   didNotHydrateContainerInstance,
@@ -326,6 +327,25 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
   return shouldUpdate;
 }
 
+function skipPastDehydratedSuspenseInstance(fiber: Fiber): void {
+  if (!supportsHydration) {
+    invariant(
+      false,
+      'Expected skipPastDehydratedSuspenseInstance() to never be called. ' +
+        'This error is likely caused by a bug in React. Please file an issue.',
+    );
+  }
+  let suspenseInstance = fiber.stateNode;
+  invariant(
+    suspenseInstance,
+    'Expected to have a hydrated suspense instance. ' +
+      'This error is likely caused by a bug in React. Please file an issue.',
+  );
+  nextHydratableInstance = getNextHydratableInstanceAfterSuspenseInstance(
+    suspenseInstance,
+  );
+}
+
 function popToNextHostParent(fiber: Fiber): void {
   let parent = fiber.return;
   while (
@@ -400,5 +420,6 @@ export {
   tryToClaimNextHydratableInstance,
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,
+  skipPastDehydratedSuspenseInstance,
   popHydrationState,
 };

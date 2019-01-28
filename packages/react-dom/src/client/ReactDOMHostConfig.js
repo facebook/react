@@ -86,7 +86,8 @@ if (__DEV__) {
   SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
 }
 
-const SUSPENSE_DATA = '$';
+const SUSPENSE_START_DATA = '$';
+const SUSPENSE_END_DATA = '/$';
 
 const STYLE = 'style';
 
@@ -518,7 +519,7 @@ export function getNextHydratableSibling(
     node &&
     node.nodeType !== ELEMENT_NODE &&
     node.nodeType !== TEXT_NODE &&
-    (node.nodeType !== COMMENT_NODE || (node: any).data !== SUSPENSE_DATA)
+    (node.nodeType !== COMMENT_NODE || (node: any).data !== SUSPENSE_START_DATA)
   ) {
     node = node.nextSibling;
   }
@@ -534,7 +535,7 @@ export function getFirstHydratableChild(
     next &&
     next.nodeType !== ELEMENT_NODE &&
     next.nodeType !== TEXT_NODE &&
-    (next.nodeType !== COMMENT_NODE || (next: any).data !== SUSPENSE_DATA)
+    (next.nodeType !== COMMENT_NODE || (next: any).data !== SUSPENSE_START_DATA)
   ) {
     next = next.nextSibling;
   }
@@ -576,6 +577,33 @@ export function hydrateTextInstance(
 ): boolean {
   precacheFiberNode(internalInstanceHandle, textInstance);
   return diffHydratedText(textInstance, text);
+}
+
+export function getNextHydratableInstanceAfterSuspenseInstance(
+  suspenseInstance: SuspenseInstance,
+): null | HydratableInstance {
+  let node = suspenseInstance.nextSibling;
+  // Skip past all nodes within this suspense boundary.
+  // There might be nested nodes so we need to keep track of how
+  // deep we are and only break out when we're back on top.
+  let depth = 0;
+  while (node) {
+    if (node.nodeType === COMMENT_NODE) {
+      let data = ((node: any).data: string);
+      if (data === SUSPENSE_END_DATA) {
+        if (depth === 0) {
+          return getNextHydratableSibling((node: any));
+        } else {
+          depth--;
+        }
+      } else if (data === SUSPENSE_START_DATA) {
+        depth++;
+      }
+    }
+    node = node.nextSibling;
+  }
+  // TODO: Warn, we didn't find the end comment boundary.
+  return null;
 }
 
 export function didNotMatchHydratedContainerTextInstance(

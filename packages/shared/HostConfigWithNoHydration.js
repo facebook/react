@@ -30,6 +30,7 @@ export const getNextHydratableSibling = shim;
 export const getFirstHydratableChild = shim;
 export const hydrateInstance = shim;
 export const hydrateTextInstance = shim;
+export const getNextHydratableInstanceAfterSuspenseInstance = shim;
 export const didNotMatchHydratedContainerTextInstance = shim;
 export const didNotMatchHydratedTextInstance = shim;
 export const didNotHydrateContainerInstance = shim;
