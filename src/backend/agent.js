@@ -1,17 +1,20 @@
 // @flow
 
 import EventEmitter from 'events';
+import { __DEBUG__ } from '../constants';
 
 import type { RendererID, RendererInterface } from './types';
 import type { Bridge } from '../types';
 
 const debug = (methodName, ...args) => {
-  console.log(
-    `%cAgent %c${methodName}`,
-    'color: purple; font-weight: bold;',
-    'font-weight: bold;',
-    ...args
-  );
+  if (__DEBUG__) {
+    console.log(
+      `%cAgent %c${methodName}`,
+      'color: purple; font-weight: bold;',
+      'font-weight: bold;',
+      ...args
+    );
+  }
 };
 
 export default class Agent extends EventEmitter {

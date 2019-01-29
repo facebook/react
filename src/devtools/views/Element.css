@@ -3,6 +3,7 @@
   border-radius: 0.25em;
   cursor: pointer;
   position: relative;
+  white-space: nowrap;
 }
 .Element:hover {
   background-color: var(--color-state03);

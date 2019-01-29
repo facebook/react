@@ -7,17 +7,20 @@ import {
   TREE_OPERATION_RESET_CHILDREN,
 } from '../constants';
 import { utfDecodeString } from '../utils';
+import { __DEBUG__ } from '../constants';
 
 import type { Element, ElementType } from './types';
 import type { Bridge } from '../types';
 
 const debug = (methodName, ...args) => {
-  console.log(
-    `%cStore %c${methodName}`,
-    'color: green; font-weight: bold;',
-    'font-weight: bold;',
-    ...args
-  );
+  if (__DEBUG__) {
+    console.log(
+      `%cStore %c${methodName}`,
+      'color: green; font-weight: bold;',
+      'font-weight: bold;',
+      ...args
+    );
+  }
 };
 
 /**
