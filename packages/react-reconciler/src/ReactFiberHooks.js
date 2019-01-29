@@ -44,6 +44,10 @@ import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
 const {ReactCurrentDispatcher} = ReactSharedInternals;
 
 export type Dispatcher = {
+  readContext<T>(
+    context: ReactContext<T>,
+    observedBits: void | number | boolean,
+  ): T,
   useState<S>(initialState: (() => S) | S): [S, Dispatch<BasicStateAction<S>>],
   useReducer<S, A>(
     reducer: (S, A) => S,
@@ -64,7 +68,7 @@ export type Dispatcher = {
     create: () => T,
     deps: Array<mixed> | void | null,
   ): void,
-  useDebugValue(value: any, formatterFn: ?(value: any) => any): void,
+  useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
 };
 
 type Update<S, A> = {
@@ -321,7 +325,6 @@ export function renderWithHooks(
   currentlyRenderingFiber = workInProgress;
   firstCurrentHook = nextCurrentHook =
     current !== null ? current.memoizedState : null;
-  nextWorkInProgressHook = null;
 
   // The following should have already been reset
   // currentHook = null;
@@ -480,7 +483,7 @@ function mountWorkInProgressHook(): Hook {
   };
 
   if (__DEV__) {
-    hook._debugType = ((currentHookNameInDev: any): HookType);
+    (hook: any)._debugType = (currentHookNameInDev: any);
     if (
       currentlyRenderingFiber !== null &&
       currentlyRenderingFiber.alternate !== null
@@ -542,7 +545,7 @@ function updateWorkInProgressHook(): Hook {
     };
 
     if (__DEV__) {
-      newHook._debugType = ((currentHookNameInDev: any): HookType);
+      (newHook: any)._debugType = (currentHookNameInDev: any);
       if (currentHookMismatchInDev === null) {
         if (currentHookNameInDev !== ((currentHook: any): HookDev)._debugType) {
           currentHookMismatchInDev = new Error('tracer').stack
@@ -586,7 +589,6 @@ function mountContext<T>(
   observedBits: void | number | boolean,
 ): T {
   if (__DEV__) {
-    currentHookNameInDev = 'useContext';
     mountWorkInProgressHook();
   }
   return readContext(context, observedBits);
@@ -597,7 +599,6 @@ function updateContext<T>(
   observedBits: void | number | boolean,
 ): T {
   if (__DEV__) {
-    currentHookNameInDev = 'useContext';
     updateWorkInProgressHook();
   }
   return readContext(context, observedBits);
@@ -608,12 +609,10 @@ function mountReducer<S, A>(
   initialState: void | S,
   initialAction: void | null | A,
 ): [S, Dispatch<A>] {
-  if (__DEV__) {
-    currentHookNameInDev = 'useReducer';
-  }
   const hook = mountWorkInProgressHook();
   // TODO: Lazy init API will change before release.
   if (initialAction !== undefined && initialAction !== null) {
+    // $FlowFixMe - Must express with overloading.
     initialState = reducer(initialState, initialAction);
   }
   hook.memoizedState = hook.baseState = initialState;
@@ -625,18 +624,20 @@ function mountReducer<S, A>(
   });
   const dispatch: Dispatch<A> = (queue.dispatch = (dispatchAction.bind(
     null,
-    currentlyRenderingFiber,
+    // Flow doesn't know this is non-null, but we do.
+    // $FlowFixMe – I have no idea why Flow is still complaining about this.
+    ((currentlyRenderingFiber: any): Fiber),
     queue,
   ): any));
   return [hook.memoizedState, dispatch];
 }
 
-function updateReducerImpl<S, A>(
-  hook: Hook,
+function updateReducer<S, A>(
   reducer: (S, A) => S,
   initialState: void | S,
   initialAction: void | null | A,
 ): [S, Dispatch<A>] {
+  const hook = updateWorkInProgressHook();
   const queue = hook.queue;
   invariant(
     queue !== null,
@@ -652,7 +653,7 @@ function updateReducerImpl<S, A>(
       const firstRenderPhaseUpdate = renderPhaseUpdates.get(queue);
       if (firstRenderPhaseUpdate !== undefined) {
         renderPhaseUpdates.delete(queue);
-        let newState = workInProgressHook.memoizedState;
+        let newState = hook.memoizedState;
         let update = firstRenderPhaseUpdate;
         do {
           // Process this render phase update. We don't have to check the
@@ -764,24 +765,9 @@ function updateReducerImpl<S, A>(
   return [hook.memoizedState, dispatch];
 }
 
-function updateReducer<S, A>(
-  reducer: (S, A) => S,
-  initialState: void | S,
-  initialAction: void | null | A,
-): [S, Dispatch<A>] {
-  if (__DEV__) {
-    currentHookNameInDev = 'useReducer';
-  }
-  const hook = updateWorkInProgressHook();
-  return updateReducerImpl(hook, reducer, initialState, initialAction);
-}
-
 function mountState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {
-  if (__DEV__) {
-    currentHookNameInDev = 'useState';
-  }
   const hook = mountWorkInProgressHook();
   // TODO: Lazy init API will change before release.
   if (typeof initialState === 'function') {
@@ -794,9 +780,12 @@ function mountState<S>(
     eagerReducer: basicStateReducer,
     eagerState: initialState,
   });
-  const dispatch: Dispatch<A> = (queue.dispatch = (dispatchAction.bind(
+  const dispatch: Dispatch<
+    BasicStateAction<S>,
+  > = (queue.dispatch = (dispatchAction.bind(
     null,
-    currentlyRenderingFiber,
+    // Flow doesn't know this is non-null, but we do.
+    ((currentlyRenderingFiber: any): Fiber),
     queue,
   ): any));
   return [hook.memoizedState, dispatch];
@@ -805,11 +794,7 @@ function mountState<S>(
 function updateState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {
-  if (__DEV__) {
-    currentHookNameInDev = 'useState';
-  }
-  const hook = updateWorkInProgressHook();
-  return updateReducerImpl(hook, basicStateReducer, initialState);
+  return updateReducer(basicStateReducer, (initialState: any));
 }
 
 function pushEffect(tag, create, destroy, deps) {
@@ -839,9 +824,6 @@ function pushEffect(tag, create, destroy, deps) {
 }
 
 function mountRef<T>(initialValue: T): {current: T} {
-  if (__DEV__) {
-    currentHookNameInDev = 'useRef';
-  }
   const hook = mountWorkInProgressHook();
   const ref = {current: initialValue};
   if (__DEV__) {
@@ -852,9 +834,6 @@ function mountRef<T>(initialValue: T): {current: T} {
 }
 
 function updateRef<T>(initialValue: T): {current: T} {
-  if (__DEV__) {
-    currentHookNameInDev = 'useRef';
-  }
   const hook = updateWorkInProgressHook();
   return hook.memoizedState;
 }
@@ -878,9 +857,6 @@ function updateEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
       const prevDeps = prevEffect.deps;
       if (areHookInputsEqual(nextDeps, prevDeps)) {
         pushEffect(NoHookEffect, create, destroy, nextDeps);
-        if (__DEV__) {
-          currentHookNameInDev = null;
-        }
         return;
       }
     }
@@ -894,9 +870,6 @@ function mountEffect(
   create: () => mixed,
   deps: Array<mixed> | void | null,
 ): void {
-  if (__DEV__) {
-    currentHookNameInDev = 'useEffect';
-  }
   return mountEffectImpl(
     UpdateEffect | PassiveEffect,
     UnmountPassive | MountPassive,
@@ -909,9 +882,6 @@ function updateEffect(
   create: () => mixed,
   deps: Array<mixed> | void | null,
 ): void {
-  if (__DEV__) {
-    currentHookNameInDev = 'useEffect';
-  }
   return updateEffectImpl(
     UpdateEffect | PassiveEffect,
     UnmountPassive | MountPassive,
@@ -924,9 +894,6 @@ function mountLayoutEffect(
   create: () => mixed,
   deps: Array<mixed> | void | null,
 ): void {
-  if (__DEV__) {
-    currentHookNameInDev = 'useLayoutEffect';
-  }
   return mountEffectImpl(
     UpdateEffect,
     UnmountMutation | MountLayout,
@@ -939,9 +906,6 @@ function updateLayoutEffect(
   create: () => mixed,
   deps: Array<mixed> | void | null,
 ): void {
-  if (__DEV__) {
-    currentHookNameInDev = 'useLayoutEffect';
-  }
   return updateEffectImpl(
     UpdateEffect,
     UnmountMutation | MountLayout,
@@ -950,7 +914,10 @@ function updateLayoutEffect(
   );
 }
 
-function imperativeHandleEffect(create, ref) {
+function imperativeHandleEffect<T>(
+  create: () => T,
+  ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
+) {
   if (typeof ref === 'function') {
     const refCallback = ref;
     const inst = create();
@@ -974,13 +941,12 @@ function imperativeHandleEffect(create, ref) {
   }
 }
 
-function mountImperativeHandle(
+function mountImperativeHandle<T>(
   ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
   create: () => T,
   deps: Array<mixed> | void | null,
 ): void {
   if (__DEV__) {
-    currentHookNameInDev = 'useImperativeHandle';
     warning(
       typeof create === 'function',
       'Expected useImperativeHandle() second argument to be a function ' +
@@ -1001,13 +967,12 @@ function mountImperativeHandle(
   );
 }
 
-function updateImperativeHandle(
+function updateImperativeHandle<T>(
   ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
   create: () => T,
   deps: Array<mixed> | void | null,
 ): void {
   if (__DEV__) {
-    currentHookNameInDev = 'useImperativeHandle';
     warning(
       typeof create === 'function',
       'Expected useImperativeHandle() second argument to be a function ' +
@@ -1028,11 +993,7 @@ function updateImperativeHandle(
   );
 }
 
-function mountDebugValue(value: any, formatterFn: ?(value: any) => any): void {
-  if (__DEV__) {
-    currentHookNameInDev = 'useDebugValue';
-  }
-
+function mountDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
   // This hook is normally a no-op.
   // The react-debug-hooks package injects its own implementation
   // so that e.g. DevTools can display custom hook values.
@@ -1041,9 +1002,6 @@ function mountDebugValue(value: any, formatterFn: ?(value: any) => any): void {
 const updateDebugValue = mountDebugValue;
 
 function mountCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
-  if (__DEV__) {
-    currentHookNameInDev = 'useCallback';
-  }
   const hook = mountWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
   hook.memoizedState = [callback, nextDeps];
@@ -1051,9 +1009,6 @@ function mountCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
 }
 
 function updateCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
-  if (__DEV__) {
-    currentHookNameInDev = 'useCallback';
-  }
   const hook = updateWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
   const prevState = hook.memoizedState;
@@ -1061,15 +1016,11 @@ function updateCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
     if (nextDeps !== null) {
       const prevDeps: Array<mixed> | null = prevState[1];
       if (areHookInputsEqual(nextDeps, prevDeps)) {
-        currentHookNameInDev = null;
         return prevState[0];
       }
     }
   }
   hook.memoizedState = [callback, nextDeps];
-  if (__DEV__) {
-    currentHookNameInDev = null;
-  }
   return callback;
 }
 
@@ -1077,9 +1028,6 @@ function mountMemo<T>(
   nextCreate: () => T,
   deps: Array<mixed> | void | null,
 ): T {
-  if (__DEV__) {
-    currentHookNameInDev = 'useMemo';
-  }
   const hook = mountWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
   const nextValue = nextCreate();
@@ -1091,9 +1039,6 @@ function updateMemo<T>(
   nextCreate: () => T,
   deps: Array<mixed> | void | null,
 ): T {
-  if (__DEV__) {
-    currentHookNameInDev = 'useMemo';
-  }
   const hook = updateWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
   const prevState = hook.memoizedState;
@@ -1102,9 +1047,6 @@ function updateMemo<T>(
     if (nextDeps !== null) {
       const prevDeps: Array<mixed> | null = prevState[1];
       if (areHookInputsEqual(nextDeps, prevDeps)) {
-        if (__DEV__) {
-          currentHookNameInDev = null;
-        }
         return prevState[0];
       }
     }
@@ -1282,11 +1224,12 @@ const HooksDispatcherOnUpdate: Dispatcher = {
 };
 
 let hooksAccessForbiddenInDEV = false;
-let warnInvalidContextAccess = null;
-let warnInvalidHookAccess = null;
+
+let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
+let HooksDispatcherOnUpdateInDEV: Dispatcher | null = null;
 
 if (__DEV__) {
-  warnInvalidContextAccess = () => {
+  const warnInvalidContextAccess = () => {
     warning(
       false,
       'Context can only be read while React is rendering. ' +
@@ -1296,7 +1239,7 @@ if (__DEV__) {
     );
   };
 
-  warnInvalidHookAccess = () => {
+  const warnInvalidHookAccess = () => {
     warning(
       false,
       'Hooks can only be called inside the body of a function component. ' +
@@ -1304,180 +1247,238 @@ if (__DEV__) {
         'https://fb.me/rules-of-hooks',
     );
   };
+
+  HooksDispatcherOnMountInDEV = {
+    readContext<T>(
+      context: ReactContext<T>,
+      observedBits: void | number | boolean,
+    ): T {
+      if (hooksAccessForbiddenInDEV) {
+        warnInvalidContextAccess();
+      }
+      return readContext(context, observedBits);
+    },
+
+    useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
+      currentHookNameInDev = 'useCallback';
+      if (hooksAccessForbiddenInDEV) {
+        warnInvalidHookAccess();
+      }
+      return mountCallback(callback, deps);
+    },
+    useContext<T>(
+      context: ReactContext<T>,
+      observedBits: void | number | boolean,
+    ): T {
+      currentHookNameInDev = 'useContext';
+      if (hooksAccessForbiddenInDEV) {
+        warnInvalidHookAccess();
+      }
+      return mountContext(context, observedBits);
+    },
+    useEffect(create: () => mixed, deps: Array<mixed> | void | null): void {
+      currentHookNameInDev = 'useEffect';
+      if (hooksAccessForbiddenInDEV) {
+        warnInvalidHookAccess();
+      }
+      return mountEffect(create, deps);
+    },
+    useImperativeHandle<T>(
+      ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
+      create: () => T,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useImperativeHandle';
+      if (hooksAccessForbiddenInDEV) {
+        warnInvalidHookAccess();
+      }
+      return mountImperativeHandle(ref, create, deps);
+    },
+    useLayoutEffect(
+      create: () => mixed,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useLayoutEffect';
+      if (hooksAccessForbiddenInDEV) {
+        warnInvalidHookAccess();
+      }
+      return mountLayoutEffect(create, deps);
+    },
+    useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
+      currentHookNameInDev = 'useMemo';
+      if (hooksAccessForbiddenInDEV) {
+        warnInvalidHookAccess();
+      }
+      const prevHooksAccessForbiddenInDEV = hooksAccessForbiddenInDEV;
+      hooksAccessForbiddenInDEV = true;
+      try {
+        return mountMemo(create, deps);
+      } finally {
+        hooksAccessForbiddenInDEV = prevHooksAccessForbiddenInDEV;
+      }
+    },
+    useReducer<S, A>(
+      reducer: (S, A) => S,
+      initialState: S,
+      initialAction: A | void | null,
+    ): [S, Dispatch<A>] {
+      currentHookNameInDev = 'useReducer';
+      if (hooksAccessForbiddenInDEV) {
+        warnInvalidHookAccess();
+      }
+      const prevHooksAccessForbiddenInDEV = hooksAccessForbiddenInDEV;
+      hooksAccessForbiddenInDEV = true;
+      try {
+        return mountReducer(reducer, initialState, initialAction);
+      } finally {
+        hooksAccessForbiddenInDEV = prevHooksAccessForbiddenInDEV;
+      }
+    },
+    useRef<T>(initialValue: T): {current: T} {
+      currentHookNameInDev = 'useRef';
+      if (hooksAccessForbiddenInDEV) {
+        warnInvalidHookAccess();
+      }
+      return mountRef(initialValue);
+    },
+    useState<S>(
+      initialState: (() => S) | S,
+    ): [S, Dispatch<BasicStateAction<S>>] {
+      currentHookNameInDev = 'useState';
+      if (hooksAccessForbiddenInDEV) {
+        warnInvalidHookAccess();
+      }
+      const prevHooksAccessForbiddenInDEV = hooksAccessForbiddenInDEV;
+      hooksAccessForbiddenInDEV = true;
+      try {
+        return mountState(initialState);
+      } finally {
+        hooksAccessForbiddenInDEV = prevHooksAccessForbiddenInDEV;
+      }
+    },
+    useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
+      currentHookNameInDev = 'useDebugValue';
+      if (hooksAccessForbiddenInDEV) {
+        warnInvalidHookAccess();
+      }
+      return mountDebugValue(value, formatterFn);
+    },
+  };
+
+  HooksDispatcherOnUpdateInDEV = {
+    readContext<T>(
+      context: ReactContext<T>,
+      observedBits: void | number | boolean,
+    ): T {
+      if (hooksAccessForbiddenInDEV) {
+        warnInvalidContextAccess();
+      }
+      return readContext(context, observedBits);
+    },
+
+    useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
+      currentHookNameInDev = 'useCallback';
+      if (hooksAccessForbiddenInDEV) {
+        warnInvalidHookAccess();
+      }
+      return updateCallback(callback, deps);
+    },
+    useContext<T>(
+      context: ReactContext<T>,
+      observedBits: void | number | boolean,
+    ): T {
+      currentHookNameInDev = 'useContext';
+      if (hooksAccessForbiddenInDEV) {
+        warnInvalidHookAccess();
+      }
+      return updateContext(context, observedBits);
+    },
+    useEffect(create: () => mixed, deps: Array<mixed> | void | null): void {
+      currentHookNameInDev = 'useEffect';
+      if (hooksAccessForbiddenInDEV) {
+        warnInvalidHookAccess();
+      }
+      return updateEffect(create, deps);
+    },
+    useImperativeHandle<T>(
+      ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
+      create: () => T,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useImperativeHandle';
+      if (hooksAccessForbiddenInDEV) {
+        warnInvalidHookAccess();
+      }
+      return updateImperativeHandle(ref, create, deps);
+    },
+    useLayoutEffect(
+      create: () => mixed,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useLayoutEffect';
+      if (hooksAccessForbiddenInDEV) {
+        warnInvalidHookAccess();
+      }
+      return updateLayoutEffect(create, deps);
+    },
+    useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
+      currentHookNameInDev = 'useMemo';
+      if (hooksAccessForbiddenInDEV) {
+        warnInvalidHookAccess();
+      }
+      const prevHooksAccessForbiddenInDEV = hooksAccessForbiddenInDEV;
+      hooksAccessForbiddenInDEV = true;
+      try {
+        return updateMemo(create, deps);
+      } finally {
+        hooksAccessForbiddenInDEV = prevHooksAccessForbiddenInDEV;
+      }
+    },
+    useReducer<S, A>(
+      reducer: (S, A) => S,
+      initialState: S,
+      initialAction: A | void | null,
+    ): [S, Dispatch<A>] {
+      currentHookNameInDev = 'useReducer';
+      if (hooksAccessForbiddenInDEV) {
+        warnInvalidHookAccess();
+      }
+      const prevHooksAccessForbiddenInDEV = hooksAccessForbiddenInDEV;
+      hooksAccessForbiddenInDEV = true;
+      try {
+        return updateReducer(reducer, initialState, initialAction);
+      } finally {
+        hooksAccessForbiddenInDEV = prevHooksAccessForbiddenInDEV;
+      }
+    },
+    useRef<T>(initialValue: T): {current: T} {
+      currentHookNameInDev = 'useRef';
+      if (hooksAccessForbiddenInDEV) {
+        warnInvalidHookAccess();
+      }
+      return updateRef(initialValue);
+    },
+    useState<S>(
+      initialState: (() => S) | S,
+    ): [S, Dispatch<BasicStateAction<S>>] {
+      currentHookNameInDev = 'useState';
+      if (hooksAccessForbiddenInDEV) {
+        warnInvalidHookAccess();
+      }
+      const prevHooksAccessForbiddenInDEV = hooksAccessForbiddenInDEV;
+      hooksAccessForbiddenInDEV = true;
+      try {
+        return updateState(initialState);
+      } finally {
+        hooksAccessForbiddenInDEV = prevHooksAccessForbiddenInDEV;
+      }
+    },
+    useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
+      currentHookNameInDev = 'useDebugValue';
+      if (hooksAccessForbiddenInDEV) {
+        warnInvalidHookAccess();
+      }
+      return updateDebugValue(value, formatterFn);
+    },
+  };
 }
-
-const HooksDispatcherOnMountInDEV: Dispatcher = {
-  readContext(context, observedBits) {
-    if (hooksAccessForbiddenInDEV) {
-      warnInvalidContextAccess();
-    }
-    return readContext(context, observedBits);
-  },
-
-  useCallback(callback, deps) {
-    if (hooksAccessForbiddenInDEV) {
-      warnInvalidHookAccess();
-    }
-    return mountCallback(callback, deps);
-  },
-  useContext(context, observedBits) {
-    if (hooksAccessForbiddenInDEV) {
-      warnInvalidHookAccess();
-    }
-    return mountContext(context, observedBits);
-  },
-  useEffect(create, deps) {
-    if (hooksAccessForbiddenInDEV) {
-      warnInvalidHookAccess();
-    }
-    return mountEffect(create, deps);
-  },
-  useImperativeHandle(ref, create, deps) {
-    if (hooksAccessForbiddenInDEV) {
-      warnInvalidHookAccess();
-    }
-    return mountImperativeHandle(ref, create, deps);
-  },
-  useLayoutEffect(create, deps) {
-    if (hooksAccessForbiddenInDEV) {
-      warnInvalidHookAccess();
-    }
-    return mountLayoutEffect(create, deps);
-  },
-  useMemo(create, deps) {
-    if (hooksAccessForbiddenInDEV) {
-      warnInvalidHookAccess();
-    }
-    const prevHooksAccessForbiddenInDEV = hooksAccessForbiddenInDEV;
-    hooksAccessForbiddenInDEV = true;
-    try {
-      return mountMemo(create, deps);
-    } finally {
-      hooksAccessForbiddenInDEV = prevHooksAccessForbiddenInDEV;
-    }
-  },
-  useReducer(reducer, initialState, initialAction) {
-    if (hooksAccessForbiddenInDEV) {
-      warnInvalidHookAccess();
-    }
-    const prevHooksAccessForbiddenInDEV = hooksAccessForbiddenInDEV;
-    hooksAccessForbiddenInDEV = true;
-    try {
-      return mountReducer(reducer, initialState, initialAction);
-    } finally {
-      hooksAccessForbiddenInDEV = prevHooksAccessForbiddenInDEV;
-    }
-  },
-  useRef(initialValue) {
-    if (hooksAccessForbiddenInDEV) {
-      warnInvalidHookAccess();
-    }
-    return mountRef(initialValue);
-  },
-  useState(initialState) {
-    if (hooksAccessForbiddenInDEV) {
-      warnInvalidHookAccess();
-    }
-    const prevHooksAccessForbiddenInDEV = hooksAccessForbiddenInDEV;
-    hooksAccessForbiddenInDEV = true;
-    try {
-      return mountState(initialState);
-    } finally {
-      hooksAccessForbiddenInDEV = prevHooksAccessForbiddenInDEV;
-    }
-  },
-  useDebugValue(value, formatterFn) {
-    if (hooksAccessForbiddenInDEV) {
-      warnInvalidHookAccess();
-    }
-    return mountDebugValue(value, formatterFn);
-  },
-};
-
-const HooksDispatcherOnUpdateInDEV: Dispatcher = {
-  readContext(context, observedBits) {
-    if (hooksAccessForbiddenInDEV) {
-      warnInvalidContextAccess();
-    }
-    return readContext(context, observedBits);
-  },
-
-  useCallback(callback, deps) {
-    if (hooksAccessForbiddenInDEV) {
-      warnInvalidHookAccess();
-    }
-    return updateCallback(callback, deps);
-  },
-  useContext(context, observedBits) {
-    if (hooksAccessForbiddenInDEV) {
-      warnInvalidHookAccess();
-    }
-    return updateContext(context, observedBits);
-  },
-  useEffect(create, deps) {
-    if (hooksAccessForbiddenInDEV) {
-      warnInvalidHookAccess();
-    }
-    return updateEffect(create, deps);
-  },
-  useImperativeHandle(ref, create, deps) {
-    if (hooksAccessForbiddenInDEV) {
-      warnInvalidHookAccess();
-    }
-    return updateImperativeHandle(ref, create, deps);
-  },
-  useLayoutEffect(create, deps) {
-    if (hooksAccessForbiddenInDEV) {
-      warnInvalidHookAccess();
-    }
-    return updateLayoutEffect(create, deps);
-  },
-  useMemo(create, deps) {
-    if (hooksAccessForbiddenInDEV) {
-      warnInvalidHookAccess();
-    }
-    const prevHooksAccessForbiddenInDEV = hooksAccessForbiddenInDEV;
-    hooksAccessForbiddenInDEV = true;
-    try {
-      return updateMemo(create, deps);
-    } finally {
-      hooksAccessForbiddenInDEV = prevHooksAccessForbiddenInDEV;
-    }
-  },
-  useReducer(reducer, initialState, initialAction) {
-    if (hooksAccessForbiddenInDEV) {
-      warnInvalidHookAccess();
-    }
-    const prevHooksAccessForbiddenInDEV = hooksAccessForbiddenInDEV;
-    hooksAccessForbiddenInDEV = true;
-    try {
-      return updateReducer(reducer, initialState, initialAction);
-    } finally {
-      hooksAccessForbiddenInDEV = prevHooksAccessForbiddenInDEV;
-    }
-  },
-  useRef(initialValue) {
-    if (hooksAccessForbiddenInDEV) {
-      warnInvalidHookAccess();
-    }
-    return updateRef(initialValue);
-  },
-  useState(initialState) {
-    if (hooksAccessForbiddenInDEV) {
-      warnInvalidHookAccess();
-    }
-    const prevHooksAccessForbiddenInDEV = hooksAccessForbiddenInDEV;
-    hooksAccessForbiddenInDEV = true;
-    try {
-      return updateState(initialState);
-    } finally {
-      hooksAccessForbiddenInDEV = prevHooksAccessForbiddenInDEV;
-    }
-  },
-  useDebugValue(value, formatterFn) {
-    if (hooksAccessForbiddenInDEV) {
-      warnInvalidHookAccess();
-    }
-    return updateDebugValue(value, formatterFn);
-  },
-};
