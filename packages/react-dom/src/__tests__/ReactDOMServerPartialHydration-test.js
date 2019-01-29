@@ -190,4 +190,139 @@ describe('ReactDOMServerPartialHydration', () => {
 
     expect(container.firstChild.children[1].textContent).toBe('After');
   });
+
+  it('regenerates the content if props have changed before hydration completes', async () => {
+    let suspend = false;
+    let resolve;
+    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+    let ref = React.createRef();
+
+    function Child({text}) {
+      if (suspend) {
+        throw promise;
+      } else {
+        return text;
+      }
+    }
+
+    function App({text, className}) {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <span ref={ref} className={className}>
+              <Child text={text} />
+            </span>
+          </Suspense>
+        </div>
+      );
+    }
+
+    suspend = false;
+    let finalHTML = ReactDOMServer.renderToString(
+      <App text="Hello" className="hello" />,
+    );
+    let container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    let span = container.getElementsByTagName('span')[0];
+
+    // On the client we don't have all data yet but we want to start
+    // hydrating anyway.
+    suspend = true;
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    root.render(<App text="Hello" className="hello" />);
+    jest.runAllTimers();
+
+    expect(ref.current).toBe(null);
+    expect(span.textContent).toBe('Hello');
+
+    // Render an update, which will be higher or the same priority as pinging the hydration.
+    root.render(<App text="Hi" className="hi" />);
+
+    // At the same time, resolving the promise so that rendering can complete.
+    suspend = false;
+    resolve();
+    await promise;
+
+    // Flushing both of these in the same batch won't be able to hydrate so we'll
+    // probably throw away the existing subtree.
+    jest.runAllTimers();
+
+    // Pick up the new span. In an ideal implementation this might be the same span
+    // but patched up. At the time of writing, this will be a new span though.
+    span = container.getElementsByTagName('span')[0];
+
+    // We should now have fully rendered with a ref on the new span.
+    expect(ref.current).toBe(span);
+    expect(span.textContent).toBe('Hi');
+    // If we ended up hydrating the existing content, we won't have properly
+    // patched up the tree, which might mean we haven't patched the className.
+    expect(span.className).toBe('hi');
+  });
+
+  it('shows the fallback if props have changed before hydration completes and is still suspended', async () => {
+    let suspend = false;
+    let resolve;
+    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+    let ref = React.createRef();
+
+    function Child({text}) {
+      if (suspend) {
+        throw promise;
+      } else {
+        return text;
+      }
+    }
+
+    function App({text, className}) {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <span ref={ref} className={className}>
+              <Child text={text} />
+            </span>
+          </Suspense>
+        </div>
+      );
+    }
+
+    suspend = false;
+    let finalHTML = ReactDOMServer.renderToString(
+      <App text="Hello" className="hello" />,
+    );
+    let container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    // On the client we don't have all data yet but we want to start
+    // hydrating anyway.
+    suspend = true;
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    root.render(<App text="Hello" className="hello" />);
+    jest.runAllTimers();
+
+    expect(ref.current).toBe(null);
+
+    // Render an update, but leave it still suspended.
+    root.render(<App text="Hi" className="hi" />);
+
+    // Flushing now should delete the existing content and show the fallback.
+    jest.runAllTimers();
+
+    expect(container.getElementsByTagName('span').length).toBe(0);
+    expect(ref.current).toBe(null);
+    expect(container.textContent).toBe('Loading...');
+
+    // Unsuspending shows the content.
+    suspend = false;
+    resolve();
+    await promise;
+
+    jest.runAllTimers();
+
+    let span = container.getElementsByTagName('span')[0];
+    expect(span.textContent).toBe('Hi');
+    expect(span.className).toBe('hi');
+    expect(ref.current).toBe(span);
+    expect(container.textContent).toBe('Hi');
+  });
 });

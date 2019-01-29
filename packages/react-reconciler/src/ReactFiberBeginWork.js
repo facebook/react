@@ -44,6 +44,7 @@ import {
   DidCapture,
   Update,
   Ref,
+  Deletion,
 } from 'shared/ReactSideEffectTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -1622,14 +1623,48 @@ function updateDehydratedSuspenseComponent(
     workInProgress.expirationTime = workInProgress.childExpirationTime = Never;
     return null;
   }
+  const prevProps = current.memoizedProps;
+  const nextProps = workInProgress.pendingProps;
+  if (prevProps !== nextProps) {
+    // This boundary has changed since the first render. This means that we are now unable to
+    // hydrate it. We might still be able to hydrate it using an earlier expiration time but
+    // during this render we can't. Instead, we're going to delete the whole subtree and
+    // instead inject a new real Suspense boundary to take its place, which may render content
+    // or fallback. The real Suspense boundary will suspend for a while so we have some time
+    // to ensure it can produce real content, but all state and pending events will be lost.
+
+    // Detach from the current dehydrated boundary.
+    current.alternate = null;
+    workInProgress.alternate = null;
+
+    // Insert a deletion in the effect list.
+    let returnFiber = workInProgress.return;
+    invariant(
+      returnFiber !== null,
+      'Suspense boundaries are never on the root. ' +
+        'This is probably a bug in React.',
+    );
+    const last = returnFiber.lastEffect;
+    if (last !== null) {
+      last.nextEffect = current;
+      returnFiber.lastEffect = current;
+    } else {
+      returnFiber.firstEffect = returnFiber.lastEffect = current;
+    }
+    current.nextEffect = null;
+    current.effectTag = Deletion;
+
+    // Upgrade this work in progress to a real Suspense component.
+    workInProgress.tag = SuspenseComponent;
+    workInProgress.stateNode = null;
+    workInProgress.memoizedState = null;
+    // This is now an insertion.
+    workInProgress.effectTag |= Placement;
+    // Retry as a real Suspense component.
+    return updateSuspenseComponent(null, workInProgress, renderExpirationTime);
+  }
   if ((workInProgress.effectTag & DidCapture) === NoEffect) {
     // This is the first attempt.
-    const prevProps = current.memoizedProps;
-    const nextProps = workInProgress.pendingProps;
-    if (prevProps !== nextProps) {
-      // TODO: Delete children and upgrade to a regular suspense component without
-      // hydrating.
-    }
     reenterHydrationStateFromDehydratedSuspenseInstance(workInProgress);
     const nextChildren = nextProps.children;
     workInProgress.child = mountChildFibers(
