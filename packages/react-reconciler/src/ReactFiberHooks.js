@@ -184,11 +184,9 @@ function warnOnHookMismatchInDev() {
     if (!didWarnAboutMismatchedHooksForComponent.has(componentName)) {
       didWarnAboutMismatchedHooksForComponent.add(componentName);
 
-      let table =
-        '   Previous render    Next render\n' +
-        '   -------------------------------\n';
       const secondColumnStart = 22;
 
+      let table = '';
       let prevHook: HookDev | null = (firstCurrentHook: any);
       let nextHook: HookDev | null = (firstWorkInProgressHook: any);
       let n = 1;
@@ -212,14 +210,15 @@ function warnOnHookMismatchInDev() {
         n++;
       }
 
-      table += '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^';
-
       warning(
         false,
         'React has detected a change in the order of Hooks called by %s. ' +
           'This will lead to bugs and errors if not fixed. ' +
           'For more information, read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
-          '%s\n',
+          '   Previous render    Next render\n' +
+          '   -------------------------------\n' +
+          '%s' +
+          '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n',
         componentName,
         table,
       );
