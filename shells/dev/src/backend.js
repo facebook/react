@@ -10,8 +10,8 @@ const bridge = new Bridge({
       fn(event.data);
     });
   },
-  send(data) {
-    window.parent.postMessage(data, '*');
+  send(event: string, payload: any, transferable?: Array<any>) {
+    window.parent.postMessage({ event, payload }, '*', transferable);
   },
 });
 

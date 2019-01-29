@@ -46,8 +46,8 @@ initDevTools({
             fn(data);
           });
         },
-        send(data) {
-          contentWindow.postMessage(data, '*');
+        send(event: string, payload: any, transferable?: Array<any>) {
+          contentWindow.postMessage({ event, payload }, '*', transferable);
         },
       });
 

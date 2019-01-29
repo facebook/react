@@ -4,7 +4,7 @@ const { exec } = require('child-process-promise');
 const { Finder } = require('firefox-profile');
 const { resolve } = require('path');
 
-const EXTENSION_PATH = resolve('shells/firefox/build/unpacked');
+const EXTENSION_PATH = resolve('shells/browser/firefox/build/unpacked');
 const START_URL = 'https://facebook.github.io/react/';
 
 const main = async () => {

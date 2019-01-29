@@ -12,7 +12,7 @@ type Message = {|
 |};
 
 export default class Bridge extends EventEmitter {
-  _messageQueue: Array<Message> = [];
+  _messageQueue: Array<any> = [];
   _time: number | null = null;
   _timeoutID: TimeoutID | null = null;
 
@@ -22,33 +22,20 @@ export default class Bridge extends EventEmitter {
     super();
 
     this.wall = wall;
-    wall.listen(messages => {
-      if (Array.isArray(messages)) {
-        messages.forEach(message => this._emit(message));
-      } else {
-        this._emit(messages);
-      }
+
+    wall.listen((message: Message) => {
+      this._emit(message);
     });
   }
 
-  /**
-   * Send an event.
-   *
-   * @param {String} event
-   * @param {*} payload
-   */
-
-  send(event: string, payload: any) {
+  send(event: string, payload: any, transferable?: Array<any>) {
     const time = this._time;
 
     if (time === null) {
-      this.wall.send([{ event, payload }]);
+      this.wall.send(event, payload, transferable);
       this._time = Date.now();
     } else {
-      this._messageQueue.push({
-        event,
-        payload,
-      });
+      this._messageQueue.push(event, payload, transferable);
 
       const now = Date.now();
       if (now - time > BATCH_DURATION) {
@@ -59,24 +46,20 @@ export default class Bridge extends EventEmitter {
     }
   }
 
-  /**
-   * Log a message to the devtools background page.
-   *
-   * @param {String} message
-   */
-
   log(message: string): void {
     this.send('log', message);
   }
 
   _flush() {
-    if (this._messageQueue.length) {
-      this.wall.send(this._messageQueue);
+    while (this._messageQueue.length) {
+      this.wall.send.apply(this.wall, this._messageQueue.splice(0, 3));
     }
+
     if (this._timeoutID !== null) {
       clearTimeout(this._timeoutID);
       this._timeoutID = null;
     }
+
     this._messageQueue = [];
     this._time = null;
   }

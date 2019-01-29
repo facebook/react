@@ -50,11 +50,11 @@ inject(chrome.runtime.getURL('build/backend.js'), () => {
     listen(fn) {
       port.onMessage.addListener(message => fn(message));
     },
-    send(data) {
+    send(event: string, payload: any, transferable?: Array<any>) {
       if (disconnected) {
         return;
       }
-      port.postMessage(data);
+      port.postMessage({ event, payload }, transferable);
     },
   });
 

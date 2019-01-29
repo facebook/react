@@ -42,13 +42,14 @@ function setup(hook) {
       listeners.push(listener);
       window.addEventListener('message', listener);
     },
-    send(data) {
+    send(event: string, payload: any, transferable?: Array<any>) {
       window.postMessage(
         {
           source: 'react-devtools-bridge',
-          payload: data,
+          payload: { event, payload },
         },
-        '*'
+        '*',
+        transferable
       );
     },
   });

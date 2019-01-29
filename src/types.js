@@ -8,5 +8,5 @@ export type Hook = any;
 
 export type Wall = {|
   listen: (fn: Function) => void,
-  send: (data: any) => void,
+  send: (event: string, payload: any, transferable?: Array<any>) => void,
 |};
