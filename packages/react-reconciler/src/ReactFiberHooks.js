@@ -620,23 +620,18 @@ function mountReducer<S, A>(
     last: null,
     dispatch: null,
     eagerReducer: reducer,
-    eagerState: initialState,
+    eagerState: (initialState: any),
   });
   const dispatch: Dispatch<A> = (queue.dispatch = (dispatchAction.bind(
     null,
     // Flow doesn't know this is non-null, but we do.
-    // $FlowFixMe – I have no idea why Flow is still complaining about this.
     ((currentlyRenderingFiber: any): Fiber),
     queue,
   ): any));
   return [hook.memoizedState, dispatch];
 }
 
-function updateReducer<S, A>(
-  reducer: (S, A) => S,
-  initialState: void | S,
-  initialAction: void | null | A,
-): [S, Dispatch<A>] {
+function updateReducer<S, A>(reducer: (S, A) => S): [S, Dispatch<A>] {
   const hook = updateWorkInProgressHook();
   const queue = hook.queue;
   invariant(
@@ -778,7 +773,7 @@ function mountState<S>(
     last: null,
     dispatch: null,
     eagerReducer: basicStateReducer,
-    eagerState: initialState,
+    eagerState: (initialState: any),
   });
   const dispatch: Dispatch<
     BasicStateAction<S>,
@@ -791,10 +786,8 @@ function mountState<S>(
   return [hook.memoizedState, dispatch];
 }
 
-function updateState<S>(
-  initialState: (() => S) | S,
-): [S, Dispatch<BasicStateAction<S>>] {
-  return updateReducer(basicStateReducer, (initialState: any));
+function updateState<S>(): [S, Dispatch<BasicStateAction<S>>] {
+  return updateReducer(basicStateReducer);
 }
 
 function pushEffect(tag, create, destroy, deps) {
@@ -1446,7 +1439,7 @@ if (__DEV__) {
       const prevHooksAccessForbiddenInDEV = hooksAccessForbiddenInDEV;
       hooksAccessForbiddenInDEV = true;
       try {
-        return updateReducer(reducer, initialState, initialAction);
+        return updateReducer(reducer);
       } finally {
         hooksAccessForbiddenInDEV = prevHooksAccessForbiddenInDEV;
       }
@@ -1468,7 +1461,7 @@ if (__DEV__) {
       const prevHooksAccessForbiddenInDEV = hooksAccessForbiddenInDEV;
       hooksAccessForbiddenInDEV = true;
       try {
-        return updateState(initialState);
+        return updateState();
       } finally {
         hooksAccessForbiddenInDEV = prevHooksAccessForbiddenInDEV;
       }
