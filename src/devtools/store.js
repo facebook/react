@@ -234,7 +234,7 @@ export default class Store extends EventEmitter {
           debug('Re-order', `fiber ${id} children ${children.join(',')}`);
 
           element = ((this._idToElement.get(id): any): Element);
-          element.children = children;
+          element.children = Array.from(children);
 
           const prevWeight = element.weight;
           let childWeight = 0;
