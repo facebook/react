@@ -752,19 +752,19 @@ describe('ReactHooks', () => {
 
     const ThemeContext = createContext('light');
     function App() {
-      useReducer(
-        () => {
-          ReactCurrentDispatcher.current.readContext(ThemeContext);
-        },
-        null,
-        {},
-      );
+      const [state, dispatch] = useReducer((s, action) => {
+        ReactCurrentDispatcher.current.readContext(ThemeContext);
+        return action;
+      }, 0);
+      if (state === 0) {
+        dispatch(1);
+      }
       return null;
     }
 
-    expect(() => ReactTestRenderer.create(<App />)).toWarnDev(
+    expect(() => ReactTestRenderer.create(<App />)).toWarnDev([
       'Context can only be read while React is rendering',
-    );
+    ]);
   });
 
   // Edge case.
