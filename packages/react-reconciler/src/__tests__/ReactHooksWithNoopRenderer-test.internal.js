@@ -1596,11 +1596,11 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
   });
 
-  describe('progressive enhancement', () => {
+  describe('progressive enhancement (not supported)', () => {
     it('mount additional state', () => {
       let updateA;
       let updateB;
-      let updateC;
+      // let updateC;
 
       function App(props) {
         const [A, _updateA] = useState(0);
@@ -1610,9 +1610,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
         let C;
         if (props.loadC) {
-          const [_C, _updateC] = useState(0);
-          C = _C;
-          updateC = _updateC;
+          useState(0);
         } else {
           C = '[not loaded]';
         }
@@ -1636,14 +1634,14 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.render(<App loadC={true} />);
       expect(() => {
         expect(ReactNoop.flush()).toEqual(['A: 2, B: 3, C: 0']);
-      }).toWarnDev([
-        'App: Rendered more hooks than during the previous render',
-      ]);
-      expect(ReactNoop.getChildren()).toEqual([span('A: 2, B: 3, C: 0')]);
+      }).toThrow('Rendered more hooks than during the previous render');
 
-      updateC(4);
-      expect(ReactNoop.flush()).toEqual(['A: 2, B: 3, C: 4']);
-      expect(ReactNoop.getChildren()).toEqual([span('A: 2, B: 3, C: 4')]);
+      // Uncomment if/when we support this again
+      // expect(ReactNoop.getChildren()).toEqual([span('A: 2, B: 3, C: 0')]);
+
+      // updateC(4);
+      // expect(ReactNoop.flush()).toEqual(['A: 2, B: 3, C: 4']);
+      // expect(ReactNoop.getChildren()).toEqual([span('A: 2, B: 3, C: 4')]);
     });
 
     it('unmount state', () => {
@@ -1714,17 +1712,17 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.render(<App showMore={true} />);
       expect(() => {
         expect(ReactNoop.flush()).toEqual([]);
-      }).toWarnDev([
-        'App: Rendered more hooks than during the previous render',
-      ]);
-      flushPassiveEffects();
-      expect(ReactNoop.clearYields()).toEqual(['Mount B']);
+      }).toThrow('Rendered more hooks than during the previous render');
 
-      ReactNoop.render(<App showMore={false} />);
-      expect(() => ReactNoop.flush()).toThrow(
-        'Rendered fewer hooks than expected. This may be caused by an ' +
-          'accidental early return statement.',
-      );
+      // Uncomment if/when we support this again
+      // flushPassiveEffects();
+      // expect(ReactNoop.clearYields()).toEqual(['Mount B']);
+
+      // ReactNoop.render(<App showMore={false} />);
+      // expect(() => ReactNoop.flush()).toThrow(
+      //   'Rendered fewer hooks than expected. This may be caused by an ' +
+      //     'accidental early return statement.',
+      // );
     });
   });
 });
