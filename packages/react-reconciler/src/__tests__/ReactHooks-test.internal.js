@@ -1159,7 +1159,7 @@ describe('ReactHooks', () => {
   });
 
   it('warns on using differently ordered hooks on subsequent renders', () => {
-    const {useState, useReducer} = React;
+    const {useState, useReducer, useRef} = React;
     function useCustomHook() {
       return useState(0);
     }
@@ -1172,6 +1172,9 @@ describe('ReactHooks', () => {
         useReducer((s, a) => a, 0);
         useCustomHook(0);
       }
+      // This should not appear in the warning message because it occurs after
+      // the first mismatch
+      const ref = useRef(null);
       return null;
       /* eslint-enable no-unused-vars */
     }
@@ -1185,7 +1188,8 @@ describe('ReactHooks', () => {
         '   Previous render    Next render\n' +
         '   -------------------------------\n' +
         '1. useReducer         useState\n' +
-        '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^',
+        '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n' +
+        '    in App (at **)',
     ]);
 
     // further warnings for this component are silenced
