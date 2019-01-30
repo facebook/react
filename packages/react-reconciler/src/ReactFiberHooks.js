@@ -618,7 +618,11 @@ function mountReducer<S, A>(
   return [hook.memoizedState, dispatch];
 }
 
-function updateReducer<S, A>(reducer: (S, A) => S): [S, Dispatch<A>] {
+function updateReducer<S, A>(
+  reducer: (S, A) => S,
+  initialState: void | S,
+  initialAction: void | null | A,
+): [S, Dispatch<A>] {
   const hook = updateWorkInProgressHook();
   const queue = hook.queue;
   invariant(
@@ -773,8 +777,10 @@ function mountState<S>(
   return [hook.memoizedState, dispatch];
 }
 
-function updateState<S>(): [S, Dispatch<BasicStateAction<S>>] {
-  return updateReducer(basicStateReducer);
+function updateState<S>(
+  initialState: (() => S) | S,
+): [S, Dispatch<BasicStateAction<S>>] {
+  return updateReducer(basicStateReducer, (initialState: any));
 }
 
 function pushEffect(tag, create, destroy, deps) {
@@ -1369,7 +1375,7 @@ if (__DEV__) {
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
-        return updateReducer(reducer);
+        return updateReducer(reducer, initialState, initialAction);
       } finally {
         ReactCurrentDispatcher.current = prevDispatcher;
       }
@@ -1385,7 +1391,7 @@ if (__DEV__) {
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
-        return updateState();
+        return updateState(initialState);
       } finally {
         ReactCurrentDispatcher.current = prevDispatcher;
       }
@@ -1556,7 +1562,7 @@ if (__DEV__) {
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
-        return updateReducer(reducer);
+        return updateReducer(reducer, initialState, initialAction);
       } finally {
         ReactCurrentDispatcher.current = prevDispatcher;
       }
@@ -1574,7 +1580,7 @@ if (__DEV__) {
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
-        return updateState();
+        return updateState(initialState);
       } finally {
         ReactCurrentDispatcher.current = prevDispatcher;
       }
