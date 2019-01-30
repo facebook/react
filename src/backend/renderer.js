@@ -14,6 +14,7 @@ import {
 import { utfEncodeString } from '../utils';
 import { getDisplayName } from './utils';
 import {
+  __DEBUG__,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_RESET_CHILDREN,
@@ -185,6 +186,31 @@ export function attach(
     SUSPENSE_SYMBOL_STRING,
     DEPRECATED_PLACEHOLDER_SYMBOL_STRING,
   } = ReactSymbols;
+
+  const debug = (name: string, fiber: Fiber, parentFiber: ?Fiber): void => {
+    if (__DEBUG__) {
+      const fiberData = getDataForFiber(fiber);
+      const fiberDisplayName = (fiberData && fiberData.displayName) || 'null';
+      const parentFiberData =
+        parentFiber == null ? null : getDataForFiber(parentFiber);
+      const parentFiberDisplayName =
+        (parentFiberData && parentFiberData.displayName) || 'null';
+      console.log(
+        `[renderer] %c${name} %c${getFiberID(
+          getPrimaryFiber(fiber)
+        )}:${fiberDisplayName} %c${
+          parentFiber
+            ? getFiberID(getPrimaryFiber(parentFiber)) +
+              ':' +
+              parentFiberDisplayName
+            : ''
+        }`,
+        'color: red; font-weight: bold;',
+        'color: blue;',
+        'color: purple;'
+      );
+    }
+  };
 
   const primaryFibers: WeakSet<Fiber> = new WeakSet();
 
@@ -571,6 +597,8 @@ export function attach(
   }
 
   function mountFiber(fiber: Fiber, parentFiber: Fiber | null) {
+    debug('mountFiber()', fiber, parentFiber);
+
     const shouldEnqueueMount = !shouldFilterFiber(fiber);
 
     if (shouldEnqueueMount) {
@@ -590,6 +618,8 @@ export function attach(
     fiber: Fiber,
     hasChildOrderChanged: boolean
   ) {
+    debug('enqueueUpdateIfNecessary()', fiber);
+
     // The frontend only really cares about the displayName, key, and children.
     // The first two don't really change, so we are only concerned with the order of children here.
     // This is trickier than a simple comparison though, since certain types of fibers are filtered.
@@ -633,6 +663,8 @@ export function attach(
     prevFiber: Fiber,
     parentFiber: Fiber | null
   ) {
+    debug('enqueueUpdateIfNecessary()', nextFiber, parentFiber);
+
     const shouldEnqueueUpdate = !shouldFilterFiber(nextFiber);
 
     // Suspense components only have a non-null memoizedState if they're timed-out.

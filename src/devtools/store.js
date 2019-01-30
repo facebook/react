@@ -28,7 +28,8 @@ const debug = (methodName, ...args) => {
  * ContextProviders can subscribe to the Store for specific things they want to provide.
  */
 export default class Store extends EventEmitter {
-  // TODO Should items in this map be read-only for easier props comparison?
+  // TODO Should items in this map be read-only/immutable for easier props comparison?
+  //      We currently mutate "children" and "weight" props.
   _idToElement: Map<number, Element> = new Map();
 
   // Total number of visible elements (within all roots).
@@ -169,13 +170,15 @@ export default class Store extends EventEmitter {
                 : utfDecodeString((operations.slice(i, i + keyLength): any));
             i += +keyLength;
 
-            debug('Add', `fiber ${id}, type ${type}, as child of ${parentID}`);
+            debug(
+              'Add',
+              `fiber ${id} (${displayName || 'null'}) as child of ${parentID}`
+            );
 
-            // TODO Fix this; there should not be duplicate "ADD" operations for a given element.
             if (this._idToElement.has(id)) {
-              console.warn(
-                `fiber ${id}, type ${type}, already added as child of ${parentID}`
-              );
+              // The renderer's tree walking approach sometimes mounts the same Fiber twice with Suspense and Lazy.
+              // For now, we avoid adding it to the tree twice by checking if it's already been mounted.
+              // Maybe in the future we'll revisit this.
             } else {
               parentElement = ((this._idToElement.get(parentID): any): Element);
               parentElement.children = parentElement.children.concat(id);

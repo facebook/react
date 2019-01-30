@@ -1,8 +1,7 @@
 const { readFileSync } = require('fs');
 const { resolve } = require('path');
 
-//const __DEV__ = process.env.NODE_ENV !== 'production';
-const __DEV__ = true; // TODO
+const __DEV__ = process.env.NODE_ENV !== 'production';
 
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
