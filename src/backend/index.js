@@ -43,6 +43,9 @@ export function initBackend(hook: Hook, agent: Agent): void {
   hook.reactDevtoolsAgent = agent;
   agent.addListener('shutdown', () => {
     subs.forEach(fn => fn());
+    for (let id in hook.rendererInterfaces) {
+      hook.rendererInterfaces[id].cleanup();
+    }
     hook.reactDevtoolsAgent = null;
   });
 }

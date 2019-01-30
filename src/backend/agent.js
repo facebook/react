@@ -24,6 +24,8 @@ export default class Agent extends EventEmitter {
   addBridge(bridge: Bridge) {
     this._bridge = bridge;
 
+    bridge.on('shutdown', () => this.emit('shutdown'));
+
     // TODO Listen to bridge for things like selection.
     // bridge.on('...'), this...);
   }

@@ -1,7 +1,7 @@
 /* global chrome */
 
 import { createElement } from 'react';
-import { render } from 'react-dom';
+import { render, unmountComponentAtNode } from 'react-dom';
 import Bridge from 'src/bridge';
 import Elements from 'src/devtools/views/Elements';
 import inject from './inject';
@@ -36,27 +36,56 @@ if (IS_CHROME) {
 
 const node = ((document.getElementById('container'): any): HTMLElement);
 
-inject(chrome.runtime.getURL('build/backend.js'), () => {
-  let disconnected = false;
+function reloadDevTools() {
+  setTimeout(() => {
+    unmountComponentAtNode(node);
 
-  const port = chrome.runtime.connect({
-    name: '' + chrome.devtools.inspectedWindow.tabId,
-  });
-  port.onDisconnect.addListener(() => {
-    disconnected = true;
-  });
+    node.innerHTML = '';
 
-  const bridge = new Bridge({
-    listen(fn) {
-      port.onMessage.addListener(message => fn(message));
-    },
-    send(event: string, payload: any, transferable?: Array<any>) {
-      if (disconnected) {
-        return;
-      }
-      port.postMessage({ event, payload }, transferable);
-    },
-  });
+    injectAndInit();
+  }, 100);
+}
 
-  render(createElement(Elements, { bridge, browserName, themeName }), node);
-});
+function injectAndInit() {
+  inject(chrome.runtime.getURL('build/backend.js'), () => {
+    let disconnected = false;
+
+    const port = chrome.runtime.connect({
+      name: '' + chrome.devtools.inspectedWindow.tabId,
+    });
+    port.onDisconnect.addListener(() => {
+      disconnected = true;
+    });
+
+    const bridge = new Bridge({
+      listen(fn) {
+        port.onMessage.addListener(message => fn(message));
+      },
+      send(event: string, payload: any, transferable?: Array<any>) {
+        if (disconnected) {
+          return;
+        }
+        port.postMessage({ event, payload }, transferable);
+      },
+    });
+
+    // Reload the DevTools extension when the user navigates to a new page.
+    function onNavigated() {
+      chrome.devtools.network.onNavigated.removeListener(onNavigated);
+      bridge.send('shutdown');
+      reloadDevTools();
+    }
+    chrome.devtools.network.onNavigated.addListener(onNavigated);
+
+    render(
+      createElement(Elements, {
+        bridge,
+        browserName,
+        themeName,
+      }),
+      node
+    );
+  });
+}
+
+injectAndInit();

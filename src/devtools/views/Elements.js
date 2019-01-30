@@ -14,7 +14,11 @@ export type Props = {|
   themeName: string,
 |};
 
-export default function Elements({ bridge, browserName, themeName }: Props) {
+export default function Elements({
+  bridge,
+  browserName,
+  themeName,
+}: Props) {
   const store = useMemo<Store>(() => new Store(bridge), []);
 
   const [treeContext, setTreeContext] = useState({
