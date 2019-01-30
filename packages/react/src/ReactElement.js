@@ -46,6 +46,20 @@ function hasValidKey(config) {
   return config.key !== undefined;
 }
 
+function checkPropsForNull(props) {
+  const origProps = Object.assign({}, props);
+  let propsToAdd = {};
+
+  for (let propName in origProps) {
+    if (typeof origProps[propName] === 'undefined') {
+    } else {
+      propsToAdd[propName] = origProps[propName];
+    }
+  }
+
+  return propsToAdd;
+}
+
 function defineKeyPropWarningGetter(props, displayName) {
   const warnAboutAccessingKey = function() {
     if (!specialPropKeyWarningShown) {
@@ -294,8 +308,8 @@ export function cloneElement(element, config, children) {
 
   let propName;
 
-  // Original props are copied
-  const props = Object.assign({}, element.props);
+  // Original props are copied, only the props that are not undefined are copied
+  const props = checkPropsForNull(element.props);
 
   // Reserved names are extracted
   let key = element.key;
