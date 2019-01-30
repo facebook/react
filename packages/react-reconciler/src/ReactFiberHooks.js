@@ -126,7 +126,7 @@ type HookDev = Hook & {
 type Effect = {
   tag: HookEffectTag,
   create: () => (() => void) | void,
-  destroy: (() => void) | null,
+  destroy: (() => void) | void,
   deps: Array<mixed> | null,
   next: Effect,
 };
@@ -786,13 +786,13 @@ function mountEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
   const hook = mountWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
   sideEffectTag |= fiberEffectTag;
-  hook.memoizedState = pushEffect(hookEffectTag, create, null, nextDeps);
+  hook.memoizedState = pushEffect(hookEffectTag, create, undefined, nextDeps);
 }
 
 function updateEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
   const hook = updateWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
-  let destroy = null;
+  let destroy = undefined;
 
   if (currentHook !== null) {
     const prevEffect = currentHook.memoizedState;
