@@ -69,7 +69,7 @@ initDevTools({
   },
 });
 
-inject('./build/app.js');
+inject('./build/App.js');
 
 function inject(sourcePath, callback) {
   const script = contentDocument.createElement('script');
