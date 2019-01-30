@@ -213,7 +213,9 @@ export default class Store extends EventEmitter {
           this._idToElement.delete(id);
 
           parentElement = ((this._idToElement.get(parentID): any): Element);
-          if (parentElement != null) {
+          if (parentElement == null) {
+            this._roots = this._roots.filter(rootID => rootID !== id);
+          } else {
             parentElement.children = parentElement.children.filter(
               childID => childID !== id
             );
