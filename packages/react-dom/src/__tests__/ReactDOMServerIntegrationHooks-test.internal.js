@@ -432,21 +432,25 @@ describe('ReactDOMServerHooks', () => {
       expect(domNode.textContent).toEqual('hi');
     });
 
-    itRenders('with a warning for useRef inside useReducer', async render => {
-      function App() {
-        const [value, dispatch] = useReducer((state, action) => {
-          useRef(0);
-          return state + 1;
-        }, 0);
-        if (value === 0) {
-          dispatch();
+    itThrowsWhenRendering(
+      'with a warning for useRef inside useReducer',
+      async render => {
+        function App() {
+          const [value, dispatch] = useReducer((state, action) => {
+            useRef(0);
+            return state + 1;
+          }, 0);
+          if (value === 0) {
+            dispatch();
+          }
+          return value;
         }
-        return value;
-      }
 
-      const domNode = await render(<App />, 1);
-      expect(domNode.textContent).toEqual('1');
-    });
+        const domNode = await render(<App />, 1);
+        expect(domNode.textContent).toEqual('1');
+      },
+      'Rendered more hooks than during the previous render',
+    );
 
     itRenders('with a warning for useRef inside useState', async render => {
       function App() {

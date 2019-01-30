@@ -519,18 +519,11 @@ function updateWorkInProgressHook(): Hook {
 
     currentHook = nextCurrentHook;
     nextCurrentHook = currentHook !== null ? currentHook.next : null;
-    if (nextCurrentHook === null && nextWorkInProgressHook === null) {
-      // We've reached the end of both lists. Switch to mount dispatcher.
-      ReactCurrentDispatcher.current = __DEV__
-        ? HooksDispatcherOnMountInDEV
-        : HooksDispatcherOnMount;
-    }
   } else {
     // Clone from the current hook.
     invariant(
       nextCurrentHook !== null,
-      'Should have a current hook. This is likely a bug in React. Please ' +
-        'file an issue.',
+      'Rendered more hooks than during the previous render.',
     );
     currentHook = nextCurrentHook;
 
@@ -564,12 +557,6 @@ function updateWorkInProgressHook(): Hook {
       workInProgressHook = workInProgressHook.next = newHook;
     }
     nextCurrentHook = currentHook.next;
-    if (nextCurrentHook === null) {
-      // Check if we've reached the end of the current list.
-      ReactCurrentDispatcher.current = __DEV__
-        ? HooksDispatcherOnMountInDEV
-        : HooksDispatcherOnMount;
-    }
   }
   return workInProgressHook;
 }
@@ -1137,9 +1124,10 @@ function dispatchAction<S, A>(
       // same as the current state, we may be able to bail out entirely.
       const eagerReducer = queue.eagerReducer;
       if (eagerReducer !== null) {
+        let prevDispatcher;
         if (__DEV__) {
-          hooksAccessForbiddenInDEV = true;
-          ReactCurrentDispatcher.current = HooksDispatcherOnUpdateInDEV;
+          prevDispatcher = ReactCurrentDispatcher.current;
+          ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
         }
         try {
           const currentState: S = (queue.eagerState: any);
@@ -1161,8 +1149,7 @@ function dispatchAction<S, A>(
           // Suppress the error. It will throw again in the render phase.
         } finally {
           if (__DEV__) {
-            hooksAccessForbiddenInDEV = false;
-            ReactCurrentDispatcher.current = HooksDispatcherOnUpdateInDEV;
+            ReactCurrentDispatcher.current = prevDispatcher;
           }
         }
       }
@@ -1216,10 +1203,10 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useDebugValue: updateDebugValue,
 };
 
-let hooksAccessForbiddenInDEV = false;
-
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
 let HooksDispatcherOnUpdateInDEV: Dispatcher | null = null;
+let InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher | null = null;
+let InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher | null = null;
 
 if (__DEV__) {
   const warnInvalidContextAccess = () => {
@@ -1246,17 +1233,11 @@ if (__DEV__) {
       context: ReactContext<T>,
       observedBits: void | number | boolean,
     ): T {
-      if (hooksAccessForbiddenInDEV) {
-        warnInvalidContextAccess();
-      }
       return readContext(context, observedBits);
     },
 
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
-      if (hooksAccessForbiddenInDEV) {
-        warnInvalidHookAccess();
-      }
       return mountCallback(callback, deps);
     },
     useContext<T>(
@@ -1264,16 +1245,10 @@ if (__DEV__) {
       observedBits: void | number | boolean,
     ): T {
       currentHookNameInDev = 'useContext';
-      if (hooksAccessForbiddenInDEV) {
-        warnInvalidHookAccess();
-      }
       return mountContext(context, observedBits);
     },
     useEffect(create: () => mixed, deps: Array<mixed> | void | null): void {
       currentHookNameInDev = 'useEffect';
-      if (hooksAccessForbiddenInDEV) {
-        warnInvalidHookAccess();
-      }
       return mountEffect(create, deps);
     },
     useImperativeHandle<T>(
@@ -1282,9 +1257,6 @@ if (__DEV__) {
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useImperativeHandle';
-      if (hooksAccessForbiddenInDEV) {
-        warnInvalidHookAccess();
-      }
       return mountImperativeHandle(ref, create, deps);
     },
     useLayoutEffect(
@@ -1292,22 +1264,16 @@ if (__DEV__) {
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
-      if (hooksAccessForbiddenInDEV) {
-        warnInvalidHookAccess();
-      }
       return mountLayoutEffect(create, deps);
     },
     useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useMemo';
-      if (hooksAccessForbiddenInDEV) {
-        warnInvalidHookAccess();
-      }
-      const prevHooksAccessForbiddenInDEV = hooksAccessForbiddenInDEV;
-      hooksAccessForbiddenInDEV = true;
+      const prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
       try {
         return mountMemo(create, deps);
       } finally {
-        hooksAccessForbiddenInDEV = prevHooksAccessForbiddenInDEV;
+        ReactCurrentDispatcher.current = prevDispatcher;
       }
     },
     useReducer<S, A>(
@@ -1316,44 +1282,32 @@ if (__DEV__) {
       initialAction: A | void | null,
     ): [S, Dispatch<A>] {
       currentHookNameInDev = 'useReducer';
-      if (hooksAccessForbiddenInDEV) {
-        warnInvalidHookAccess();
-      }
-      const prevHooksAccessForbiddenInDEV = hooksAccessForbiddenInDEV;
-      hooksAccessForbiddenInDEV = true;
+      const prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
       try {
         return mountReducer(reducer, initialState, initialAction);
       } finally {
-        hooksAccessForbiddenInDEV = prevHooksAccessForbiddenInDEV;
+        ReactCurrentDispatcher.current = prevDispatcher;
       }
     },
     useRef<T>(initialValue: T): {current: T} {
       currentHookNameInDev = 'useRef';
-      if (hooksAccessForbiddenInDEV) {
-        warnInvalidHookAccess();
-      }
       return mountRef(initialValue);
     },
     useState<S>(
       initialState: (() => S) | S,
     ): [S, Dispatch<BasicStateAction<S>>] {
       currentHookNameInDev = 'useState';
-      if (hooksAccessForbiddenInDEV) {
-        warnInvalidHookAccess();
-      }
-      const prevHooksAccessForbiddenInDEV = hooksAccessForbiddenInDEV;
-      hooksAccessForbiddenInDEV = true;
+      const prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
       try {
         return mountState(initialState);
       } finally {
-        hooksAccessForbiddenInDEV = prevHooksAccessForbiddenInDEV;
+        ReactCurrentDispatcher.current = prevDispatcher;
       }
     },
     useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
       currentHookNameInDev = 'useDebugValue';
-      if (hooksAccessForbiddenInDEV) {
-        warnInvalidHookAccess();
-      }
       return mountDebugValue(value, formatterFn);
     },
   };
@@ -1363,17 +1317,11 @@ if (__DEV__) {
       context: ReactContext<T>,
       observedBits: void | number | boolean,
     ): T {
-      if (hooksAccessForbiddenInDEV) {
-        warnInvalidContextAccess();
-      }
       return readContext(context, observedBits);
     },
 
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
-      if (hooksAccessForbiddenInDEV) {
-        warnInvalidHookAccess();
-      }
       return updateCallback(callback, deps);
     },
     useContext<T>(
@@ -1381,16 +1329,10 @@ if (__DEV__) {
       observedBits: void | number | boolean,
     ): T {
       currentHookNameInDev = 'useContext';
-      if (hooksAccessForbiddenInDEV) {
-        warnInvalidHookAccess();
-      }
       return updateContext(context, observedBits);
     },
     useEffect(create: () => mixed, deps: Array<mixed> | void | null): void {
       currentHookNameInDev = 'useEffect';
-      if (hooksAccessForbiddenInDEV) {
-        warnInvalidHookAccess();
-      }
       return updateEffect(create, deps);
     },
     useImperativeHandle<T>(
@@ -1399,9 +1341,6 @@ if (__DEV__) {
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useImperativeHandle';
-      if (hooksAccessForbiddenInDEV) {
-        warnInvalidHookAccess();
-      }
       return updateImperativeHandle(ref, create, deps);
     },
     useLayoutEffect(
@@ -1409,22 +1348,16 @@ if (__DEV__) {
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
-      if (hooksAccessForbiddenInDEV) {
-        warnInvalidHookAccess();
-      }
       return updateLayoutEffect(create, deps);
     },
     useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useMemo';
-      if (hooksAccessForbiddenInDEV) {
-        warnInvalidHookAccess();
-      }
-      const prevHooksAccessForbiddenInDEV = hooksAccessForbiddenInDEV;
-      hooksAccessForbiddenInDEV = true;
+      const prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
         return updateMemo(create, deps);
       } finally {
-        hooksAccessForbiddenInDEV = prevHooksAccessForbiddenInDEV;
+        ReactCurrentDispatcher.current = prevDispatcher;
       }
     },
     useReducer<S, A>(
@@ -1433,44 +1366,222 @@ if (__DEV__) {
       initialAction: A | void | null,
     ): [S, Dispatch<A>] {
       currentHookNameInDev = 'useReducer';
-      if (hooksAccessForbiddenInDEV) {
-        warnInvalidHookAccess();
-      }
-      const prevHooksAccessForbiddenInDEV = hooksAccessForbiddenInDEV;
-      hooksAccessForbiddenInDEV = true;
+      const prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
         return updateReducer(reducer);
       } finally {
-        hooksAccessForbiddenInDEV = prevHooksAccessForbiddenInDEV;
+        ReactCurrentDispatcher.current = prevDispatcher;
       }
     },
     useRef<T>(initialValue: T): {current: T} {
       currentHookNameInDev = 'useRef';
-      if (hooksAccessForbiddenInDEV) {
-        warnInvalidHookAccess();
-      }
       return updateRef(initialValue);
     },
     useState<S>(
       initialState: (() => S) | S,
     ): [S, Dispatch<BasicStateAction<S>>] {
       currentHookNameInDev = 'useState';
-      if (hooksAccessForbiddenInDEV) {
-        warnInvalidHookAccess();
-      }
-      const prevHooksAccessForbiddenInDEV = hooksAccessForbiddenInDEV;
-      hooksAccessForbiddenInDEV = true;
+      const prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
         return updateState();
       } finally {
-        hooksAccessForbiddenInDEV = prevHooksAccessForbiddenInDEV;
+        ReactCurrentDispatcher.current = prevDispatcher;
       }
     },
     useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
       currentHookNameInDev = 'useDebugValue';
-      if (hooksAccessForbiddenInDEV) {
-        warnInvalidHookAccess();
+      return updateDebugValue(value, formatterFn);
+    },
+  };
+
+  InvalidNestedHooksDispatcherOnMountInDEV = {
+    readContext<T>(
+      context: ReactContext<T>,
+      observedBits: void | number | boolean,
+    ): T {
+      warnInvalidContextAccess();
+      return readContext(context, observedBits);
+    },
+
+    useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
+      currentHookNameInDev = 'useCallback';
+      warnInvalidHookAccess();
+      return mountCallback(callback, deps);
+    },
+    useContext<T>(
+      context: ReactContext<T>,
+      observedBits: void | number | boolean,
+    ): T {
+      currentHookNameInDev = 'useContext';
+      warnInvalidHookAccess();
+      return mountContext(context, observedBits);
+    },
+    useEffect(create: () => mixed, deps: Array<mixed> | void | null): void {
+      currentHookNameInDev = 'useEffect';
+      warnInvalidHookAccess();
+      return mountEffect(create, deps);
+    },
+    useImperativeHandle<T>(
+      ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
+      create: () => T,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useImperativeHandle';
+      warnInvalidHookAccess();
+      return mountImperativeHandle(ref, create, deps);
+    },
+    useLayoutEffect(
+      create: () => mixed,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useLayoutEffect';
+      warnInvalidHookAccess();
+      return mountLayoutEffect(create, deps);
+    },
+    useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
+      currentHookNameInDev = 'useMemo';
+      warnInvalidHookAccess();
+      const prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
+      try {
+        return mountMemo(create, deps);
+      } finally {
+        ReactCurrentDispatcher.current = prevDispatcher;
       }
+    },
+    useReducer<S, A>(
+      reducer: (S, A) => S,
+      initialState: S,
+      initialAction: A | void | null,
+    ): [S, Dispatch<A>] {
+      currentHookNameInDev = 'useReducer';
+      warnInvalidHookAccess();
+      const prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
+      try {
+        return mountReducer(reducer, initialState, initialAction);
+      } finally {
+        ReactCurrentDispatcher.current = prevDispatcher;
+      }
+    },
+    useRef<T>(initialValue: T): {current: T} {
+      currentHookNameInDev = 'useRef';
+      warnInvalidHookAccess();
+      return mountRef(initialValue);
+    },
+    useState<S>(
+      initialState: (() => S) | S,
+    ): [S, Dispatch<BasicStateAction<S>>] {
+      currentHookNameInDev = 'useState';
+      warnInvalidHookAccess();
+      const prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
+      try {
+        return mountState(initialState);
+      } finally {
+        ReactCurrentDispatcher.current = prevDispatcher;
+      }
+    },
+    useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
+      currentHookNameInDev = 'useDebugValue';
+      warnInvalidHookAccess();
+      return mountDebugValue(value, formatterFn);
+    },
+  };
+
+  InvalidNestedHooksDispatcherOnUpdateInDEV = {
+    readContext<T>(
+      context: ReactContext<T>,
+      observedBits: void | number | boolean,
+    ): T {
+      warnInvalidContextAccess();
+      return readContext(context, observedBits);
+    },
+
+    useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
+      currentHookNameInDev = 'useCallback';
+      warnInvalidHookAccess();
+      return updateCallback(callback, deps);
+    },
+    useContext<T>(
+      context: ReactContext<T>,
+      observedBits: void | number | boolean,
+    ): T {
+      currentHookNameInDev = 'useContext';
+      warnInvalidHookAccess();
+      return updateContext(context, observedBits);
+    },
+    useEffect(create: () => mixed, deps: Array<mixed> | void | null): void {
+      currentHookNameInDev = 'useEffect';
+      warnInvalidHookAccess();
+      return updateEffect(create, deps);
+    },
+    useImperativeHandle<T>(
+      ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
+      create: () => T,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useImperativeHandle';
+      warnInvalidHookAccess();
+      return updateImperativeHandle(ref, create, deps);
+    },
+    useLayoutEffect(
+      create: () => mixed,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useLayoutEffect';
+      warnInvalidHookAccess();
+      return updateLayoutEffect(create, deps);
+    },
+    useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
+      currentHookNameInDev = 'useMemo';
+      warnInvalidHookAccess();
+      const prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      try {
+        return updateMemo(create, deps);
+      } finally {
+        ReactCurrentDispatcher.current = prevDispatcher;
+      }
+    },
+    useReducer<S, A>(
+      reducer: (S, A) => S,
+      initialState: S,
+      initialAction: A | void | null,
+    ): [S, Dispatch<A>] {
+      currentHookNameInDev = 'useReducer';
+      warnInvalidHookAccess();
+      const prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      try {
+        return updateReducer(reducer);
+      } finally {
+        ReactCurrentDispatcher.current = prevDispatcher;
+      }
+    },
+    useRef<T>(initialValue: T): {current: T} {
+      currentHookNameInDev = 'useRef';
+      warnInvalidHookAccess();
+      return updateRef(initialValue);
+    },
+    useState<S>(
+      initialState: (() => S) | S,
+    ): [S, Dispatch<BasicStateAction<S>>] {
+      currentHookNameInDev = 'useState';
+      warnInvalidHookAccess();
+      const prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
+      try {
+        return updateState();
+      } finally {
+        ReactCurrentDispatcher.current = prevDispatcher;
+      }
+    },
+    useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
+      currentHookNameInDev = 'useDebugValue';
+      warnInvalidHookAccess();
       return updateDebugValue(value, formatterFn);
     },
   };

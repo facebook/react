@@ -113,6 +113,9 @@ function areHookInputsEqual(
 }
 
 function createHook(): Hook {
+  if (numberOfReRenders > 0) {
+    invariant(false, 'Rendered more hooks than during the previous render');
+  }
   return {
     memoizedState: null,
     queue: null,

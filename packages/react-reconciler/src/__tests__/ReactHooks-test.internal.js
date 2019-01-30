@@ -803,7 +803,10 @@ describe('ReactHooks', () => {
   });
 
   it('warns when calling hooks inside useReducer', () => {
-    const {useReducer, useRef} = React;
+    const {useReducer, useState, useRef} = React;
+
+    spyOnDev(console, 'error');
+
     function App() {
       const [value, dispatch] = useReducer((state, action) => {
         useRef(0);
@@ -812,11 +815,19 @@ describe('ReactHooks', () => {
       if (value === 0) {
         dispatch('foo');
       }
+      useState();
       return value;
     }
-    expect(() => ReactTestRenderer.create(<App />)).toWarnDev(
-      'Hooks can only be called inside the body of a function component',
-    );
+    expect(() => {
+      ReactTestRenderer.create(<App />);
+    }).toThrow('Rendered more hooks than during the previous render.');
+
+    if (__DEV__) {
+      expect(console.error).toHaveBeenCalledTimes(3);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Hooks can only be called inside the body of a function component',
+      );
+    }
   });
 
   it("throws when calling hooks inside useState's initialize function", () => {
