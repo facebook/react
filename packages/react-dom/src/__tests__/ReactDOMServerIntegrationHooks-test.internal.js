@@ -208,12 +208,12 @@ describe('ReactDOMServerHooks', () => {
       expect(domNode.textContent).toEqual('0');
     });
 
-    itRenders('lazy initialization with initialAction', async render => {
+    itRenders('lazy initialization', async render => {
       function reducer(state, action) {
         return action === 'increment' ? state + 1 : state;
       }
       function Counter() {
-        let [count] = useReducer(reducer, 0, 'increment');
+        let [count] = useReducer(reducer, 0, c => c + 1);
         yieldValue('Render: ' + count);
         return <Text text={count} />;
       }

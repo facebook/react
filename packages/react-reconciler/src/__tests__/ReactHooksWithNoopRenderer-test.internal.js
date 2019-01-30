@@ -524,14 +524,12 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Count: -2')]);
     });
 
-    it('accepts an initial action', () => {
+    it('lazy init', () => {
       const INCREMENT = 'INCREMENT';
       const DECREMENT = 'DECREMENT';
 
       function reducer(state, action) {
         switch (action) {
-          case 'INITIALIZE':
-            return 10;
           case 'INCREMENT':
             return state + 1;
           case 'DECREMENT':
@@ -541,27 +539,28 @@ describe('ReactHooksWithNoopRenderer', () => {
         }
       }
 
-      const initialAction = 'INITIALIZE';
-
       function Counter(props, ref) {
-        const [count, dispatch] = useReducer(reducer, 0, initialAction);
+        const [count, dispatch] = useReducer(reducer, props, p => {
+          ReactNoop.yield('Init');
+          return p.initialCount;
+        });
         useImperativeHandle(ref, () => ({dispatch}));
         return <Text text={'Count: ' + count} />;
       }
       Counter = forwardRef(Counter);
       const counter = React.createRef(null);
-      ReactNoop.render(<Counter ref={counter} />);
-      ReactNoop.flush();
+      ReactNoop.render(<Counter initialCount={10} ref={counter} />);
+      expect(ReactNoop.flush()).toEqual(['Init', 'Count: 10']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 10')]);
 
       counter.current.dispatch(INCREMENT);
-      ReactNoop.flush();
+      expect(ReactNoop.flush()).toEqual(['Count: 11']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 11')]);
 
       counter.current.dispatch(DECREMENT);
       counter.current.dispatch(DECREMENT);
       counter.current.dispatch(DECREMENT);
-      ReactNoop.flush();
+      expect(ReactNoop.flush()).toEqual(['Count: 8']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 8')]);
     });
 
