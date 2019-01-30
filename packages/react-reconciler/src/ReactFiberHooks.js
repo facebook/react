@@ -51,8 +51,8 @@ export type Dispatcher = {
   useState<S>(initialState: (() => S) | S): [S, Dispatch<BasicStateAction<S>>],
   useReducer<S, A>(
     reducer: (S, A) => S,
-    initialState: S,
-    initialAction: A | void | null,
+    initialArg: S,
+    init?: (any) => S,
   ): [S, Dispatch<A>],
   useContext<T>(
     context: ReactContext<T>,
@@ -593,14 +593,15 @@ function updateContext<T>(
 
 function mountReducer<S, A>(
   reducer: (S, A) => S,
-  initialState: void | S,
-  initialAction: void | null | A,
+  initialArg: S,
+  init?: any => S,
 ): [S, Dispatch<A>] {
   const hook = mountWorkInProgressHook();
-  // TODO: Lazy init API will change before release.
-  if (initialAction !== undefined && initialAction !== null) {
-    // $FlowFixMe - Must express with overloading.
-    initialState = reducer(initialState, initialAction);
+  let initialState;
+  if (init !== undefined) {
+    initialState = init(initialArg);
+  } else {
+    initialState = initialArg;
   }
   hook.memoizedState = hook.baseState = initialState;
   const queue = (hook.queue = {
@@ -620,8 +621,8 @@ function mountReducer<S, A>(
 
 function updateReducer<S, A>(
   reducer: (S, A) => S,
-  initialState: void | S,
-  initialAction: void | null | A,
+  initialArg: S,
+  init?: any => S,
 ): [S, Dispatch<A>] {
   const hook = updateWorkInProgressHook();
   const queue = hook.queue;
@@ -755,7 +756,6 @@ function mountState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {
   const hook = mountWorkInProgressHook();
-  // TODO: Lazy init API will change before release.
   if (typeof initialState === 'function') {
     initialState = initialState();
   }
@@ -1284,14 +1284,14 @@ if (__DEV__) {
     },
     useReducer<S, A>(
       reducer: (S, A) => S,
-      initialState: S,
-      initialAction: A | void | null,
+      initialArg: S,
+      init?: any => S,
     ): [S, Dispatch<A>] {
       currentHookNameInDev = 'useReducer';
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
       try {
-        return mountReducer(reducer, initialState, initialAction);
+        return mountReducer(reducer, initialArg, init);
       } finally {
         ReactCurrentDispatcher.current = prevDispatcher;
       }
@@ -1368,14 +1368,14 @@ if (__DEV__) {
     },
     useReducer<S, A>(
       reducer: (S, A) => S,
-      initialState: S,
-      initialAction: A | void | null,
+      initialArg: S,
+      init?: any => S,
     ): [S, Dispatch<A>] {
       currentHookNameInDev = 'useReducer';
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
-        return updateReducer(reducer, initialState, initialAction);
+        return updateReducer(reducer, initialArg, init);
       } finally {
         ReactCurrentDispatcher.current = prevDispatcher;
       }
@@ -1459,15 +1459,15 @@ if (__DEV__) {
     },
     useReducer<S, A>(
       reducer: (S, A) => S,
-      initialState: S,
-      initialAction: A | void | null,
+      initialArg: S,
+      init?: any => S,
     ): [S, Dispatch<A>] {
       currentHookNameInDev = 'useReducer';
       warnInvalidHookAccess();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
       try {
-        return mountReducer(reducer, initialState, initialAction);
+        return mountReducer(reducer, initialArg, init);
       } finally {
         ReactCurrentDispatcher.current = prevDispatcher;
       }
@@ -1554,15 +1554,15 @@ if (__DEV__) {
     },
     useReducer<S, A>(
       reducer: (S, A) => S,
-      initialState: S,
-      initialAction: A | void | null,
+      initialArg: S,
+      init?: any => S,
     ): [S, Dispatch<A>] {
       currentHookNameInDev = 'useReducer';
       warnInvalidHookAccess();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
-        return updateReducer(reducer, initialState, initialAction);
+        return updateReducer(reducer, initialArg, init);
       } finally {
         ReactCurrentDispatcher.current = prevDispatcher;
       }

@@ -58,11 +58,11 @@ export function useState<S>(initialState: (() => S) | S) {
 
 export function useReducer<S, A>(
   reducer: (S, A) => S,
-  initialState: S,
-  initialAction: A | void | null,
+  initialArg: S,
+  init?: any => S,
 ) {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useReducer(reducer, initialState, initialAction);
+  return dispatcher.useReducer(reducer, initialArg, init);
 }
 
 export function useRef<T>(initialValue: T): {current: T} {

@@ -254,8 +254,8 @@ export function useState<S>(
 
 export function useReducer<S, A>(
   reducer: (S, A) => S,
-  initialState: S,
-  initialAction: A | void | null,
+  initialArg: S,
+  init?: any => S,
 ): [S, Dispatch<A>] {
   if (__DEV__) {
     if (reducer !== basicStateReducer) {
@@ -301,13 +301,13 @@ export function useReducer<S, A>(
     if (__DEV__) {
       isInHookUserCodeInDev = true;
     }
+    let initialState;
     if (reducer === basicStateReducer) {
       // Special case for `useState`.
-      if (typeof initialState === 'function') {
-        initialState = initialState();
-      }
-    } else if (initialAction !== undefined && initialAction !== null) {
-      initialState = reducer(initialState, initialAction);
+      initialState =
+        typeof initialArg === 'function' ? initialArg() : initialArg;
+    } else {
+      initialState = init !== undefined ? init(initialArg) : initialArg;
     }
     if (__DEV__) {
       isInHookUserCodeInDev = false;
