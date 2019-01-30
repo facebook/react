@@ -56,10 +56,10 @@ export function useState<S>(initialState: (() => S) | S) {
   return dispatcher.useState(initialState);
 }
 
-export function useReducer<S, A>(
+export function useReducer<S, I, A>(
   reducer: (S, A) => S,
-  initialArg: S,
-  init?: any => S,
+  initialArg: I,
+  init?: I => S,
 ) {
   const dispatcher = resolveDispatcher();
   return dispatcher.useReducer(reducer, initialArg, init);

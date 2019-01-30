@@ -223,10 +223,10 @@ class ReactShallowRenderer {
   }
 
   _createDispatcher(): DispatcherType {
-    const useReducer = <S, A>(
+    const useReducer = <S, I, A>(
       reducer: (S, A) => S,
-      initialArg: S,
-      init?: any => S,
+      initialArg: I,
+      init?: I => S,
     ): [S, Dispatch<A>] => {
       this._validateCurrentlyRenderingComponent();
       this._createWorkInProgressHook();
@@ -263,9 +263,12 @@ class ReactShallowRenderer {
         if (reducer === basicStateReducer) {
           // Special case for `useState`.
           initialState =
-            typeof initialArg === 'function' ? initialArg() : initialArg;
-        } else if (init !== undefined && init !== null) {
-          initialState = init(initialArg);
+            typeof initialArg === 'function'
+              ? ((initialArg: any): () => S)()
+              : ((initialArg: any): S);
+        } else {
+          initialState =
+            init !== undefined ? init(initialArg) : ((initialArg: any): S);
         }
         workInProgressHook.memoizedState = initialState;
         const queue: UpdateQueue<A> = (workInProgressHook.queue = {

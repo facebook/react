@@ -115,17 +115,17 @@ function useState<S>(
   return [state, (action: BasicStateAction<S>) => {}];
 }
 
-function useReducer<S, A>(
+function useReducer<S, I, A>(
   reducer: (S, A) => S,
-  initialArg: S,
-  init?: any => S,
+  initialArg: I,
+  init?: I => S,
 ): [S, Dispatch<A>] {
   let hook = nextHook();
   let state;
   if (hook !== null) {
     state = hook.memoizedState;
   } else {
-    state = init !== undefined ? init(initialArg) : initialArg;
+    state = init !== undefined ? init(initialArg) : ((initialArg: any): S);
   }
   hookLog.push({
     primitive: 'Reducer',

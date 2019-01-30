@@ -49,10 +49,10 @@ export type Dispatcher = {
     observedBits: void | number | boolean,
   ): T,
   useState<S>(initialState: (() => S) | S): [S, Dispatch<BasicStateAction<S>>],
-  useReducer<S, A>(
+  useReducer<S, I, A>(
     reducer: (S, A) => S,
-    initialArg: S,
-    init?: (any) => S,
+    initialArg: I,
+    init?: (I) => S,
   ): [S, Dispatch<A>],
   useContext<T>(
     context: ReactContext<T>,
@@ -591,17 +591,17 @@ function updateContext<T>(
   return readContext(context, observedBits);
 }
 
-function mountReducer<S, A>(
+function mountReducer<S, I, A>(
   reducer: (S, A) => S,
-  initialArg: S,
-  init?: any => S,
+  initialArg: I,
+  init?: I => S,
 ): [S, Dispatch<A>] {
   const hook = mountWorkInProgressHook();
   let initialState;
   if (init !== undefined) {
     initialState = init(initialArg);
   } else {
-    initialState = initialArg;
+    initialState = ((initialArg: any): S);
   }
   hook.memoizedState = hook.baseState = initialState;
   const queue = (hook.queue = {
@@ -619,10 +619,10 @@ function mountReducer<S, A>(
   return [hook.memoizedState, dispatch];
 }
 
-function updateReducer<S, A>(
+function updateReducer<S, I, A>(
   reducer: (S, A) => S,
-  initialArg: S,
-  init?: any => S,
+  initialArg: I,
+  init?: I => S,
 ): [S, Dispatch<A>] {
   const hook = updateWorkInProgressHook();
   const queue = hook.queue;
@@ -1282,10 +1282,10 @@ if (__DEV__) {
         ReactCurrentDispatcher.current = prevDispatcher;
       }
     },
-    useReducer<S, A>(
+    useReducer<S, I, A>(
       reducer: (S, A) => S,
-      initialArg: S,
-      init?: any => S,
+      initialArg: I,
+      init?: I => S,
     ): [S, Dispatch<A>] {
       currentHookNameInDev = 'useReducer';
       const prevDispatcher = ReactCurrentDispatcher.current;
@@ -1366,10 +1366,10 @@ if (__DEV__) {
         ReactCurrentDispatcher.current = prevDispatcher;
       }
     },
-    useReducer<S, A>(
+    useReducer<S, I, A>(
       reducer: (S, A) => S,
-      initialArg: S,
-      init?: any => S,
+      initialArg: I,
+      init?: I => S,
     ): [S, Dispatch<A>] {
       currentHookNameInDev = 'useReducer';
       const prevDispatcher = ReactCurrentDispatcher.current;
@@ -1457,10 +1457,10 @@ if (__DEV__) {
         ReactCurrentDispatcher.current = prevDispatcher;
       }
     },
-    useReducer<S, A>(
+    useReducer<S, I, A>(
       reducer: (S, A) => S,
-      initialArg: S,
-      init?: any => S,
+      initialArg: I,
+      init?: I => S,
     ): [S, Dispatch<A>] {
       currentHookNameInDev = 'useReducer';
       warnInvalidHookAccess();
@@ -1552,10 +1552,10 @@ if (__DEV__) {
         ReactCurrentDispatcher.current = prevDispatcher;
       }
     },
-    useReducer<S, A>(
+    useReducer<S, I, A>(
       reducer: (S, A) => S,
-      initialArg: S,
-      init?: any => S,
+      initialArg: I,
+      init?: I => S,
     ): [S, Dispatch<A>] {
       currentHookNameInDev = 'useReducer';
       warnInvalidHookAccess();
