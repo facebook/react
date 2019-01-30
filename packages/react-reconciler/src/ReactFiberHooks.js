@@ -98,10 +98,6 @@ type HookType =
   | 'useImperativeHandle'
   | 'useDebugValue';
 
-// the first instance of a hook mismatch in a component,
-// represented by a portion of its stacktrace
-let currentHookMismatchInDev = null;
-
 let didWarnAboutMismatchedHooksForComponent;
 if (__DEV__) {
   didWarnAboutMismatchedHooksForComponent = new Set();
@@ -180,6 +176,56 @@ const RE_RENDER_LIMIT = 25;
 // In DEV, this is the name of the currently executing primitive hook
 let currentHookNameInDev: ?HookType = null;
 
+function warnOnHookMismatchInDev() {
+  if (__DEV__) {
+    const componentName = getComponentName(
+      ((currentlyRenderingFiber: any): Fiber).type,
+    );
+    if (!didWarnAboutMismatchedHooksForComponent.has(componentName)) {
+      didWarnAboutMismatchedHooksForComponent.add(componentName);
+
+      const secondColumnStart = 22;
+
+      let table = '';
+      let prevHook: HookDev | null = (firstCurrentHook: any);
+      let nextHook: HookDev | null = (firstWorkInProgressHook: any);
+      let n = 1;
+      while (prevHook !== null && nextHook !== null) {
+        const oldHookName = prevHook._debugType;
+        const newHookName = nextHook._debugType;
+
+        let row = `${n}. ${oldHookName}`;
+
+        // Extra space so second column lines up
+        // lol @ IE not supporting String#repeat
+        while (row.length < secondColumnStart) {
+          row += ' ';
+        }
+
+        row += newHookName + '\n';
+
+        table += row;
+        prevHook = (prevHook.next: any);
+        nextHook = (nextHook.next: any);
+        n++;
+      }
+
+      warning(
+        false,
+        'React has detected a change in the order of Hooks called by %s. ' +
+          'This will lead to bugs and errors if not fixed. ' +
+          'For more information, read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+          '   Previous render    Next render\n' +
+          '   -------------------------------\n' +
+          '%s' +
+          '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n',
+        componentName,
+        table,
+      );
+    }
+  }
+}
+
 function throwInvalidHookError() {
   invariant(
     false,
@@ -227,90 +273,6 @@ function areHookInputsEqual(
     return false;
   }
   return true;
-}
-
-function flushHookMismatchWarnings() {
-  // we'll show the diff of the low level hooks,
-  // and a stack trace so the dev can locate where
-  // the first mismatch is coming from
-  if (__DEV__) {
-    if (currentHookMismatchInDev !== null) {
-      let componentName = getComponentName(
-        ((currentlyRenderingFiber: any): Fiber).type,
-      );
-      if (!didWarnAboutMismatchedHooksForComponent.has(componentName)) {
-        didWarnAboutMismatchedHooksForComponent.add(componentName);
-        const hookStackDiff = [];
-        let current = firstCurrentHook;
-        const previousOrder = [];
-        while (current !== null) {
-          previousOrder.push(((current: any): HookDev)._debugType);
-          current = current.next;
-        }
-        let workInProgress = firstWorkInProgressHook;
-        const nextOrder = [];
-        while (workInProgress !== null) {
-          nextOrder.push(((workInProgress: any): HookDev)._debugType);
-          workInProgress = workInProgress.next;
-        }
-        // some bookkeeping for formatting the output table
-        const columnLength = Math.max.apply(
-          null,
-          previousOrder
-            .map(hook => hook.length)
-            .concat('   Previous render'.length),
-        );
-
-        const padEndSpaces = (string, length) => {
-          if (string.length >= length) {
-            return string;
-          }
-          return string + ' ' + new Array(length - string.length).join(' ');
-        };
-
-        let hookStackHeader =
-          ((padEndSpaces('   Previous render', columnLength): any): string) +
-          '    Next render\n';
-        const hookStackWidth = hookStackHeader.length;
-        hookStackHeader += '   ' + new Array(hookStackWidth - 2).join('-');
-        const hookStackFooter = '   ' + new Array(hookStackWidth - 2).join('^');
-
-        const hookStackLength = Math.max(
-          previousOrder.length,
-          nextOrder.length,
-        );
-        for (let i = 0; i < hookStackLength; i++) {
-          hookStackDiff.push(
-            ((padEndSpaces(i + 1 + '. ', 3): any): string) +
-              ((padEndSpaces(previousOrder[i], columnLength): any): string) +
-              ' ' +
-              nextOrder[i],
-          );
-          if (previousOrder[i] !== nextOrder[i]) {
-            break;
-          }
-        }
-        warning(
-          false,
-          'React has detected a change in the order of Hooks called by %s. ' +
-            'This will lead to bugs and errors if not fixed. ' +
-            'For more information, read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
-            '%s\n' +
-            '%s\n' +
-            '%s\n' +
-            'The first Hook type mismatch occured at:\n' +
-            '%s\n\n' +
-            'This error occurred in the following component:',
-          componentName,
-          hookStackHeader,
-          hookStackDiff.join('\n'),
-          hookStackFooter,
-          currentHookMismatchInDev,
-        );
-      }
-      currentHookMismatchInDev = null;
-    }
-  }
 }
 
 export function renderWithHooks(
@@ -378,7 +340,6 @@ export function renderWithHooks(
   }
 
   if (__DEV__) {
-    flushHookMismatchWarnings();
     currentHookNameInDev = null;
   }
 
@@ -437,10 +398,6 @@ export function bailoutHooks(
 }
 
 export function resetHooks(): void {
-  if (__DEV__) {
-    flushHookMismatchWarnings();
-  }
-
   // We can assume the previous dispatcher is always this one, since we set it
   // at the beginning of the render phase and there's no re-entrancy.
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
@@ -537,18 +494,6 @@ function updateWorkInProgressHook(): Hook {
       next: null,
     };
 
-    if (__DEV__) {
-      (newHook: any)._debugType = (currentHookNameInDev: any);
-      if (currentHookMismatchInDev === null) {
-        if (currentHookNameInDev !== ((currentHook: any): HookDev)._debugType) {
-          currentHookMismatchInDev = new Error('tracer').stack
-            .split('\n')
-            .slice(4)
-            .join('\n');
-        }
-      }
-    }
-
     if (workInProgressHook === null) {
       // This is the first hook in the list.
       workInProgressHook = firstWorkInProgressHook = newHook;
@@ -557,6 +502,13 @@ function updateWorkInProgressHook(): Hook {
       workInProgressHook = workInProgressHook.next = newHook;
     }
     nextCurrentHook = currentHook.next;
+
+    if (__DEV__) {
+      (newHook: any)._debugType = (currentHookNameInDev: any);
+      if (currentHookNameInDev !== ((currentHook: any): HookDev)._debugType) {
+        warnOnHookMismatchInDev();
+      }
+    }
   }
   return workInProgressHook;
 }
