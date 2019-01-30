@@ -7,7 +7,7 @@
  * @flow
  */
 
-import typeof {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactFiberDispatcher';
+import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactFiberHooks';
 import type {ThreadID} from './ReactThreadIDAllocator';
 import type {ReactContext} from 'shared/ReactTypes';
 
@@ -113,6 +113,9 @@ function areHookInputsEqual(
 }
 
 function createHook(): Hook {
+  if (numberOfReRenders > 0) {
+    invariant(false, 'Rendered more hooks than during the previous render');
+  }
   return {
     memoizedState: null,
     queue: null,

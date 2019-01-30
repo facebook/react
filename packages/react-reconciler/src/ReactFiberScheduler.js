@@ -164,7 +164,7 @@ import {
   commitDetachRef,
   commitPassiveHookEffects,
 } from './ReactFiberCommitWork';
-import {Dispatcher} from './ReactFiberDispatcher';
+import {ContextOnlyDispatcher} from './ReactFiberHooks';
 
 export type Thenable = {
   then(resolve: () => mixed, reject?: () => mixed): mixed,
@@ -1216,7 +1216,8 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
   flushPassiveEffects();
 
   isWorking = true;
-  ReactCurrentDispatcher.current = Dispatcher;
+  const previousDispatcher = ReactCurrentDispatcher.current;
+  ReactCurrentDispatcher.current = ContextOnlyDispatcher;
 
   const expirationTime = root.nextExpirationTimeToWorkOn;
 
@@ -1377,7 +1378,7 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
 
   // We're done performing work. Time to clean up.
   isWorking = false;
-  ReactCurrentDispatcher.current = null;
+  ReactCurrentDispatcher.current = previousDispatcher;
   resetContextDependences();
   resetHooks();
 
