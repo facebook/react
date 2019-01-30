@@ -10,7 +10,7 @@
 import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {Hook} from 'react-reconciler/src/ReactFiberHooks';
-import typeof {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactFiberDispatcher';
+import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactFiberHooks';
 
 import ErrorStackParser from 'error-stack-parser';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -115,13 +115,18 @@ function useState<S>(
   return [state, (action: BasicStateAction<S>) => {}];
 }
 
-function useReducer<S, A>(
+function useReducer<S, I, A>(
   reducer: (S, A) => S,
-  initialState: S,
-  initialAction: A | void | null,
+  initialArg: I,
+  init?: I => S,
 ): [S, Dispatch<A>] {
   let hook = nextHook();
-  let state = hook !== null ? hook.memoizedState : initialState;
+  let state;
+  if (hook !== null) {
+    state = hook.memoizedState;
+  } else {
+    state = init !== undefined ? init(initialArg) : ((initialArg: any): S);
+  }
   hookLog.push({
     primitive: 'Reducer',
     stackError: new Error(),

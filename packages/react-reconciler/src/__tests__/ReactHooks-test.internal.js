@@ -719,7 +719,7 @@ describe('ReactHooks', () => {
     const root = ReactTestRenderer.create(<App />);
     expect(() => root.update(<App />)).toThrow(
       // The exact message doesn't matter, just make sure we don't allow this
-      "Cannot read property 'readContext' of null",
+      'Context can only be read while React is rendering',
     );
   });
 
@@ -740,7 +740,7 @@ describe('ReactHooks', () => {
 
     expect(() => ReactTestRenderer.create(<App />)).toThrow(
       // The exact message doesn't matter, just make sure we don't allow this
-      "Cannot read property 'readContext' of null",
+      'Context can only be read while React is rendering',
     );
   });
 
@@ -752,19 +752,19 @@ describe('ReactHooks', () => {
 
     const ThemeContext = createContext('light');
     function App() {
-      useReducer(
-        () => {
-          ReactCurrentDispatcher.current.readContext(ThemeContext);
-        },
-        null,
-        {},
-      );
+      const [state, dispatch] = useReducer((s, action) => {
+        ReactCurrentDispatcher.current.readContext(ThemeContext);
+        return action;
+      }, 0);
+      if (state === 0) {
+        dispatch(1);
+      }
       return null;
     }
 
-    expect(() => ReactTestRenderer.create(<App />)).toWarnDev(
+    expect(() => ReactTestRenderer.create(<App />)).toWarnDev([
       'Context can only be read while React is rendering',
-    );
+    ]);
   });
 
   // Edge case.
@@ -803,7 +803,10 @@ describe('ReactHooks', () => {
   });
 
   it('warns when calling hooks inside useReducer', () => {
-    const {useReducer, useRef} = React;
+    const {useReducer, useState, useRef} = React;
+
+    spyOnDev(console, 'error');
+
     function App() {
       const [value, dispatch] = useReducer((state, action) => {
         useRef(0);
@@ -812,11 +815,19 @@ describe('ReactHooks', () => {
       if (value === 0) {
         dispatch('foo');
       }
+      useState();
       return value;
     }
-    expect(() => ReactTestRenderer.create(<App />)).toWarnDev(
-      'Hooks can only be called inside the body of a function component',
-    );
+    expect(() => {
+      ReactTestRenderer.create(<App />);
+    }).toThrow('Rendered more hooks than during the previous render.');
+
+    if (__DEV__) {
+      expect(console.error).toHaveBeenCalledTimes(3);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Hooks can only be called inside the body of a function component',
+      );
+    }
   });
 
   it("throws when calling hooks inside useState's initialize function", () => {

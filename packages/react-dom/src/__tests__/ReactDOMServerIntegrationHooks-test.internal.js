@@ -208,12 +208,12 @@ describe('ReactDOMServerHooks', () => {
       expect(domNode.textContent).toEqual('0');
     });
 
-    itRenders('lazy initialization with initialAction', async render => {
+    itRenders('lazy initialization', async render => {
       function reducer(state, action) {
         return action === 'increment' ? state + 1 : state;
       }
       function Counter() {
-        let [count] = useReducer(reducer, 0, 'increment');
+        let [count] = useReducer(reducer, 0, c => c + 1);
         yieldValue('Render: ' + count);
         return <Text text={count} />;
       }
@@ -432,21 +432,25 @@ describe('ReactDOMServerHooks', () => {
       expect(domNode.textContent).toEqual('hi');
     });
 
-    itRenders('with a warning for useRef inside useReducer', async render => {
-      function App() {
-        const [value, dispatch] = useReducer((state, action) => {
-          useRef(0);
-          return state + 1;
-        }, 0);
-        if (value === 0) {
-          dispatch();
+    itThrowsWhenRendering(
+      'with a warning for useRef inside useReducer',
+      async render => {
+        function App() {
+          const [value, dispatch] = useReducer((state, action) => {
+            useRef(0);
+            return state + 1;
+          }, 0);
+          if (value === 0) {
+            dispatch();
+          }
+          return value;
         }
-        return value;
-      }
 
-      const domNode = await render(<App />, 1);
-      expect(domNode.textContent).toEqual('1');
-    });
+        const domNode = await render(<App />, 1);
+        expect(domNode.textContent).toEqual('1');
+      },
+      'Rendered more hooks than during the previous render',
+    );
 
     itRenders('with a warning for useRef inside useState', async render => {
       function App() {
