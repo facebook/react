@@ -333,23 +333,32 @@ function commitHookEffectList(
         if (__DEV__) {
           const destroy = effect.destroy;
           if (destroy !== undefined && typeof destroy !== 'function') {
+            let addendum;
+            if (destroy === null) {
+              addendum =
+                ' You returned null. If your effect does not require clean ' +
+                'up, return undefined (or nothing).';
+            } else if (typeof destroy.then === 'function') {
+              addendum =
+                '\n\nIt looks like you wrote useEffect(async () => ...) or returned a Promise. ' +
+                'Instead, you may write an async function separately ' +
+                'and then call it from inside the effect:\n\n' +
+                'async function fetchComment(commentId) {\n' +
+                '  // You can await here\n' +
+                '}\n\n' +
+                'useEffect(() => {\n' +
+                '  fetchComment(commentId);\n' +
+                '}, [commentId]);\n\n' +
+                'In the future, React will provide a more idiomatic solution for data fetching ' +
+                "that doesn't involve writing effects manually.";
+            } else {
+              addendum = ' You returned: ' + destroy;
+            }
             warningWithoutStack(
               false,
-              'useEffect function must return a cleanup function or ' +
-                'nothing (undefined).%s%s',
-              destroy !== null && typeof destroy.then === 'function'
-                ? '\n\nIt looks like you wrote useEffect(async () => ...) or returned a Promise. ' +
-                  'Instead, you may write an async function separately ' +
-                  'and then call it from inside the effect:\n\n' +
-                  'async function fetchComment(commentId) {\n' +
-                  '  // You can await here\n' +
-                  '}\n\n' +
-                  'useEffect(() => {\n' +
-                  '  fetchComment(commentId);\n' +
-                  '}, [commentId]);\n\n' +
-                  'In the future, React will provide a more idiomatic solution for data fetching ' +
-                  "that doesn't involve writing effects manually."
-                : '',
+              'An Effect function must not return anything besides a function, ' +
+                'which is used for clean-up.%s%s',
+              addendum,
               getStackByFiberInDevAndProd(finishedWork),
             );
           }
