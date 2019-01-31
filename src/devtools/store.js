@@ -43,6 +43,8 @@ export default class Store extends EventEmitter {
   constructor(bridge: Bridge) {
     super();
 
+    debug('constructor', 'subscribing to Bridge');
+
     bridge.on('operations', this.onBridgeOperations);
     bridge.on('rootCommitted', this.onBridgeRootCommitted);
   }
@@ -78,8 +80,10 @@ export default class Store extends EventEmitter {
       }
     }
 
-    // Crawl the tree to find the correct root...
-    let currentElement = ((root: any): Element);
+    // Find the element in the tree using the weight of each node...
+    // Skip over the root itself, because roots aren't visible in the Elements tree.
+    const firstChildID = ((root: any): Element).children[0];
+    let currentElement = ((this._idToElement.get(firstChildID): any): Element);
     let currentWeight = 0;
     while (index !== currentWeight) {
       for (let i = 0; i < currentElement.children.length; i++) {
@@ -145,13 +149,13 @@ export default class Store extends EventEmitter {
 
             this._idToElement.set(id, {
               children: [],
-              depth: 0,
+              depth: -1,
               displayName: null,
               id,
               key: null,
               parentID: 0,
               type,
-              weight: 1,
+              weight: 0,
             });
 
             haveRootsChanged = true;
@@ -283,7 +287,7 @@ export default class Store extends EventEmitter {
     const printElement = (id: number) => {
       const element = ((this._idToElement.get(id): any): Element);
       console.log(
-        `${'  '.repeat(element.depth)}${element.id}:${element.displayName ||
+        `${'•'.repeat(element.depth)}${element.id}:${element.displayName ||
           ''}${element.key ? `key:"${element.key}"` : ''} (${element.weight})`
       );
       element.children.forEach(printElement);
