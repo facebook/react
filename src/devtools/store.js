@@ -57,13 +57,15 @@ export default class Store extends EventEmitter {
     return this._roots;
   }
 
-  getElementAtIndex(index: number): Element {
+  getElementAtIndex(index: number): Element | null {
     if (index < 0 || index >= this.numElements) {
-      throw Error(
+      console.warn(
         `Invalid index ${index} specified; store contains ${
           this.numElements
         } items.`
       );
+
+      return null;
     }
 
     // Find wich root this element is in...
