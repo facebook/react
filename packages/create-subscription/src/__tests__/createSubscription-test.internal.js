@@ -148,7 +148,7 @@ describe('createSubscription', () => {
 
       // Test a promise that resolves before render
       // Note that this will require an extra render anyway,
-      // Because there is no way to syncrhonously get a Promise's value
+      // Because there is no way to synchronously get a Promise's value
       rejectB(false);
       ReactNoop.render(<Subscription source={promiseB}>{render}</Subscription>);
       expect(ReactNoop.flush()).toEqual(['loading']);
