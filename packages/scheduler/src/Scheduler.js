@@ -511,6 +511,7 @@ if (hasNativePerformanceNow) {
 var requestHostCallback;
 var cancelHostCallback;
 var shouldYieldToHost;
+var forceFrameRate;
 
 var globalValue = null;
 if (typeof window !== 'undefined') {
@@ -526,6 +527,7 @@ if (globalValue && globalValue._schedMock) {
   cancelHostCallback = globalImpl[1];
   shouldYieldToHost = globalImpl[2];
   getCurrentTime = globalImpl[3];
+  forceFrameRate = globalImpl[4];
 } else if (
   // If Scheduler runs in a non-DOM environment, it falls back to a naive
   // implementation using setTimeout.
@@ -560,6 +562,7 @@ if (globalValue && globalValue._schedMock) {
   shouldYieldToHost = function() {
     return false;
   };
+  forceFrameRate = function() {};
 } else {
   if (typeof console !== 'undefined') {
     // TODO: Remove fb.me link
@@ -593,9 +596,28 @@ if (globalValue && globalValue._schedMock) {
   // frames.
   var previousFrameTime = 33;
   var activeFrameTime = 33;
+  var fpsLocked = false;
 
   shouldYieldToHost = function() {
     return frameDeadline <= getCurrentTime();
+  };
+
+  forceFrameRate = function(fps) {
+    if (fps < 0 || fps > 125) {
+      console.error(
+        'forceFrameRate takes a positive int between 0 and 125, '+
+        'forcing framerates higher than 125 fps is not unsupported',
+      );
+      return;
+    }
+    if (fps > 0) {
+      activeFrameTime = Math.floor(1000/fps);
+      fpsLocked = true;
+    } else {
+      // reset the framerate
+      activeFrameTime = 33;
+      fpsLocked = false;
+    }
   };
 
   // We use the postMessage trick to defer idle work until after the repaint.
@@ -662,6 +684,7 @@ if (globalValue && globalValue._schedMock) {
 
     var nextFrameTime = rafTime - frameDeadline + activeFrameTime;
     if (
+      !fpsLocked &&
       nextFrameTime < activeFrameTime &&
       previousFrameTime < activeFrameTime
     ) {
@@ -729,4 +752,5 @@ export {
   unstable_pauseExecution,
   unstable_getFirstCallbackNode,
   getCurrentTime as unstable_now,
+  forceFrameRate as unstable_forceFrameRate,
 };
