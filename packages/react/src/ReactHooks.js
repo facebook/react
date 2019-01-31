@@ -84,7 +84,7 @@ export function useRef<T>(initialValue: T): {current: T} {
 }
 
 export function useEffect(
-  create: () => mixed,
+  create: () => (() => void) | void,
   inputs: Array<mixed> | void | null,
 ) {
   const dispatcher = resolveDispatcher();
@@ -92,7 +92,7 @@ export function useEffect(
 }
 
 export function useLayoutEffect(
-  create: () => mixed,
+  create: () => (() => void) | void,
   inputs: Array<mixed> | void | null,
 ) {
   const dispatcher = resolveDispatcher();
