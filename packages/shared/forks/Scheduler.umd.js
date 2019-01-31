@@ -27,6 +27,7 @@ const {
   unstable_NormalPriority,
   unstable_LowPriority,
   unstable_IdlePriority,
+  unstable_forceFrameRate,
 } = ReactInternals.Scheduler;
 
 export {
@@ -45,4 +46,5 @@ export {
   unstable_NormalPriority,
   unstable_LowPriority,
   unstable_IdlePriority,
+  unstable_forceFrameRate,
 };
