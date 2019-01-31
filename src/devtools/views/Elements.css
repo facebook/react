@@ -46,4 +46,5 @@
   width: 100%;
   overflow: auto;
   flex: 1 0 auto;
+  padding: 0.25rem;
 }

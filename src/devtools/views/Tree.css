@@ -1,11 +1,5 @@
 .Tree {
-  width: 100%;
-  padding: 0.25rem;
-  overflow: auto;
-
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-tree-compact);
-
-  /* TODO */
   line-height: var(--line-height-tree-compact);
 }
