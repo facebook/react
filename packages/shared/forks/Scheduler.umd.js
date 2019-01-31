@@ -19,6 +19,7 @@ const {
   unstable_getFirstCallbackNode,
   unstable_continueExecution,
   unstable_pauseExecution,
+  unstable_forceFrameTimes,
 } = ReactInternals.Scheduler;
 
 export {
@@ -29,4 +30,5 @@ export {
   unstable_getFirstCallbackNode,
   unstable_continueExecution,
   unstable_pauseExecution,
+  unstable_forceFrameTimes,
 };

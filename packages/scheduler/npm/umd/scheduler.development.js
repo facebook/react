@@ -89,6 +89,13 @@
     );
   }
 
+  function unstable_forceFrameTimes() {
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_forceFrameTimes.apply(
+      this,
+      arguments
+    );
+  }
+
   return Object.freeze({
     unstable_now: unstable_now,
     unstable_scheduleCallback: unstable_scheduleCallback,
@@ -100,5 +107,6 @@
     unstable_continueExecution: unstable_continueExecution,
     unstable_pauseExecution: unstable_pauseExecution,
     unstable_getFirstCallbackNode: unstable_getFirstCallbackNode,
+    unstable_forceFrameTimes: unstable_forceFrameTimes,
   });
 });

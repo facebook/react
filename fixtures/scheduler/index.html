@@ -105,6 +105,20 @@
         <div><b>Actual:</b></div>
         <div id="test-8"></div>
     </li>
+    <li>
+      <p>Can force a specific framerate</p>
+      <p><b>IMPORTANT:</b> This test may be flaky if other tests have been run in this js instance. To get a clean test refresh the page before running test 9</p>
+      <button onClick="runTestNine()">Run Test 9</button>
+      <div><b>Expected:</b></div>
+      <div id="test-9-expected">
+      </div>
+      <div> -------------------------------------------------</div>
+      <div> If you see the same above and below it's correct.
+        <div> -------------------------------------------------</div>
+        <div><b>Actual:</b></div>
+        <div id="test-9"></div>
+      </div>
+    </li>
   </ol>
   <script src="../../build/node_modules/react/umd/react.development.js"></script>
   <script src="../../build/node_modules/scheduler/umd/scheduler.development.js"></script>
@@ -117,6 +131,8 @@ const {
   unstable_getFirstCallbackNode: getFirstCallbackNode,
   unstable_pauseExecution: pauseExecution,
   unstable_continueExecution: continueExecution,
+  unstable_forceFrameTimes: forceFrameTimes,
+  unstable_shouldYield: shouldYield,
 } = Scheduler;
 function displayTestResult(testNumber) {
   const expectationNode = document.getElementById('test-' + testNumber + '-expected');
@@ -242,6 +258,13 @@ const expectedResults = [
     'Queue size: 2.',
     'Finishing...',
     'Done!',
+  ],
+  // test 9
+  [
+    'Forcing new frame times...',
+    'Using new frame time!',
+    'Using new frame time!',
+    'Finished!',
   ],
 ];
 function runTestOne() {
@@ -567,6 +590,48 @@ function runTestEight() {
 
 function continueTestEight() {
   continueExecution();
+}
+
+function runTestNine() {
+  clearTestResult(9);
+  // We have this to make sure that the thing that goes right after it can get a full frame
+  var forceFrameFinish = () => {
+    while (!shouldYield()) {
+      waitForTimeToPass(1);
+    }
+    waitForTimeToPass(100);
+  }
+  scheduleCallback(forceFrameFinish);
+  scheduleCallback(() => {
+    var startTime = now();
+    while (!shouldYield()) {}
+    var initialFrameTime = now() - startTime;
+    var newFrameTime = (initialFrameTime * 2) > 60 ? (initialFrameTime * 2) : 60;
+    updateTestResult(9, `Forcing new frame times...`);
+    displayTestResult(9);
+    forceFrameTimes({minFrameTime: newFrameTime, startingFrameTime: newFrameTime});
+    var toSchedule = (again) => {
+      var startTime = now();
+      while (!shouldYield()) {}
+      var frameTime = now() - startTime;
+      if (frameTime >= (newFrameTime-8)) {
+        updateTestResult(9, `Using new frame time!`);
+      } else {
+        updateTestResult(9, `Failed to use new frame time. (off by ${newFrameTime - frameTime}ms)`);
+      }
+      displayTestResult(9);
+      if (again) {
+        scheduleCallback(forceFrameFinish);
+        scheduleCallback(() => {toSchedule(false);});
+      } else {
+        updateTestResult(9, `Finished!`);
+        displayTestResult(9);
+        checkTestResult(9);
+      }
+    }
+    scheduleCallback(forceFrameFinish);
+    scheduleCallback(() => {toSchedule(true);});
+  });
 }
 
     </script type="text/babel">

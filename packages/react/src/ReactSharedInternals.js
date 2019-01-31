@@ -17,6 +17,7 @@ import {
   unstable_continueExecution,
   unstable_wrapCallback,
   unstable_getCurrentPriorityLevel,
+  unstable_forceFrameTimes,
 } from 'scheduler';
 import {
   __interactionsRef,
@@ -58,6 +59,7 @@ if (__UMD__) {
       unstable_pauseExecution,
       unstable_continueExecution,
       unstable_getCurrentPriorityLevel,
+      unstable_forceFrameTimes,
     },
     SchedulerTracing: {
       __interactionsRef,

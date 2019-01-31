@@ -480,6 +480,7 @@ if (hasNativePerformanceNow) {
 var requestHostCallback;
 var cancelHostCallback;
 var shouldYieldToHost;
+var forceFrameTimes;
 
 var globalValue = null;
 if (typeof window !== 'undefined') {
@@ -495,6 +496,7 @@ if (globalValue && globalValue._schedMock) {
   cancelHostCallback = globalImpl[1];
   shouldYieldToHost = globalImpl[2];
   getCurrentTime = globalImpl[3];
+  forceFrameTimes = globalImpl[4];
 } else if (
   // If Scheduler runs in a non-DOM environment, it falls back to a naive
   // implementation using setTimeout.
@@ -529,6 +531,7 @@ if (globalValue && globalValue._schedMock) {
   shouldYieldToHost = function() {
     return false;
   };
+  forceFrameTimes = function() {};
 } else {
   if (typeof console !== 'undefined') {
     // TODO: Remove fb.me link
@@ -562,9 +565,19 @@ if (globalValue && globalValue._schedMock) {
   // frames.
   var previousFrameTime = 33;
   var activeFrameTime = 33;
+  var minFrameTime = 8;
 
   shouldYieldToHost = function() {
     return frameDeadline <= getCurrentTime();
+  };
+
+  forceFrameTimes = function(options) {
+    if (options.minFrameTime) {
+      minFrameTime = options.minFrameTime;
+    }
+    if (options.startingFrameTime) {
+      previousFrameTime = activeFrameTime = options.startingFrameTime;
+    }
   };
 
   // We use the postMessage trick to defer idle work until after the repaint.
@@ -634,10 +647,10 @@ if (globalValue && globalValue._schedMock) {
       nextFrameTime < activeFrameTime &&
       previousFrameTime < activeFrameTime
     ) {
-      if (nextFrameTime < 8) {
+      if (nextFrameTime < minFrameTime) {
         // Defensive coding. We don't support higher frame rates than 120hz.
         // If the calculated frame time gets lower than 8, it is probably a bug.
-        nextFrameTime = 8;
+        nextFrameTime = minFrameTime;
       }
       // If one frame goes long, then the next one can be short to catch up.
       // If two frames are short in a row, then that's an indication that we
@@ -697,4 +710,5 @@ export {
   unstable_pauseExecution,
   unstable_getFirstCallbackNode,
   getCurrentTime as unstable_now,
+  forceFrameTimes as unstable_forceFrameTimes,
 };
