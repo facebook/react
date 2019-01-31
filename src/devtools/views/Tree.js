@@ -1,6 +1,6 @@
 // @flow
 
-import React, { useContext, useMemo } from 'react';
+import React, { useContext } from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList } from 'react-window';
 import Element from './Element';

@@ -57,7 +57,11 @@ export default class Store extends EventEmitter {
 
   getElementAtIndex(index: number): Element {
     if (index < 0 || index >= this.numElements) {
-      throw Error(`Invalid index ${index} specified; store contains ${this.numElements} items.`);
+      throw Error(
+        `Invalid index ${index} specified; store contains ${
+          this.numElements
+        } items.`
+      );
     }
 
     // Find wich root this element is in...
