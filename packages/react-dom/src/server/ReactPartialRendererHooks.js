@@ -375,8 +375,8 @@ function useRef<T>(initialValue: T): {current: T} {
 }
 
 export function useLayoutEffect(
-  create: () => mixed,
-  deps: Array<mixed> | void | null,
+  create: () => (() => void) | void,
+  inputs: Array<mixed> | void | null,
 ) {
   if (__DEV__) {
     currentHookNameInDev = 'useLayoutEffect';

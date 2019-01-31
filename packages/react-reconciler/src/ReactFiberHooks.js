@@ -59,8 +59,14 @@ export type Dispatcher = {
     observedBits: void | number | boolean,
   ): T,
   useRef<T>(initialValue: T): {current: T},
-  useEffect(create: () => mixed, deps: Array<mixed> | void | null): void,
-  useLayoutEffect(create: () => mixed, deps: Array<mixed> | void | null): void,
+  useEffect(
+    create: () => (() => void) | void,
+    deps: Array<mixed> | void | null,
+  ): void,
+  useLayoutEffect(
+    create: () => (() => void) | void,
+    deps: Array<mixed> | void | null,
+  ): void,
   useCallback<T>(callback: T, deps: Array<mixed> | void | null): T,
   useMemo<T>(nextCreate: () => T, deps: Array<mixed> | void | null): T,
   useImperativeHandle<T>(
@@ -119,8 +125,8 @@ type HookDev = Hook & {
 
 type Effect = {
   tag: HookEffectTag,
-  create: () => mixed,
-  destroy: (() => mixed) | null,
+  create: () => (() => void) | void,
+  destroy: (() => void) | void,
   deps: Array<mixed> | null,
   next: Effect,
 };
@@ -780,13 +786,13 @@ function mountEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
   const hook = mountWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
   sideEffectTag |= fiberEffectTag;
-  hook.memoizedState = pushEffect(hookEffectTag, create, null, nextDeps);
+  hook.memoizedState = pushEffect(hookEffectTag, create, undefined, nextDeps);
 }
 
 function updateEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
   const hook = updateWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
-  let destroy = null;
+  let destroy = undefined;
 
   if (currentHook !== null) {
     const prevEffect = currentHook.memoizedState;
@@ -805,7 +811,7 @@ function updateEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
 }
 
 function mountEffect(
-  create: () => mixed,
+  create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
   return mountEffectImpl(
@@ -817,7 +823,7 @@ function mountEffect(
 }
 
 function updateEffect(
-  create: () => mixed,
+  create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
   return updateEffectImpl(
@@ -829,7 +835,7 @@ function updateEffect(
 }
 
 function mountLayoutEffect(
-  create: () => mixed,
+  create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
   return mountEffectImpl(
@@ -841,7 +847,7 @@ function mountLayoutEffect(
 }
 
 function updateLayoutEffect(
-  create: () => mixed,
+  create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
   return updateEffectImpl(
@@ -860,7 +866,9 @@ function imperativeHandleEffect<T>(
     const refCallback = ref;
     const inst = create();
     refCallback(inst);
-    return () => refCallback(null);
+    return () => {
+      refCallback(null);
+    };
   } else if (ref !== null && ref !== undefined) {
     const refObject = ref;
     if (__DEV__) {
@@ -1205,7 +1213,10 @@ if (__DEV__) {
       currentHookNameInDev = 'useContext';
       return mountContext(context, observedBits);
     },
-    useEffect(create: () => mixed, deps: Array<mixed> | void | null): void {
+    useEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
       currentHookNameInDev = 'useEffect';
       return mountEffect(create, deps);
     },
@@ -1218,7 +1229,7 @@ if (__DEV__) {
       return mountImperativeHandle(ref, create, deps);
     },
     useLayoutEffect(
-      create: () => mixed,
+      create: () => (() => void) | void,
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
@@ -1289,7 +1300,10 @@ if (__DEV__) {
       currentHookNameInDev = 'useContext';
       return updateContext(context, observedBits);
     },
-    useEffect(create: () => mixed, deps: Array<mixed> | void | null): void {
+    useEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
       currentHookNameInDev = 'useEffect';
       return updateEffect(create, deps);
     },
@@ -1302,7 +1316,7 @@ if (__DEV__) {
       return updateImperativeHandle(ref, create, deps);
     },
     useLayoutEffect(
-      create: () => mixed,
+      create: () => (() => void) | void,
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
@@ -1376,7 +1390,10 @@ if (__DEV__) {
       warnInvalidHookAccess();
       return mountContext(context, observedBits);
     },
-    useEffect(create: () => mixed, deps: Array<mixed> | void | null): void {
+    useEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
       currentHookNameInDev = 'useEffect';
       warnInvalidHookAccess();
       return mountEffect(create, deps);
@@ -1391,7 +1408,7 @@ if (__DEV__) {
       return mountImperativeHandle(ref, create, deps);
     },
     useLayoutEffect(
-      create: () => mixed,
+      create: () => (() => void) | void,
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
@@ -1471,7 +1488,10 @@ if (__DEV__) {
       warnInvalidHookAccess();
       return updateContext(context, observedBits);
     },
-    useEffect(create: () => mixed, deps: Array<mixed> | void | null): void {
+    useEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
       currentHookNameInDev = 'useEffect';
       warnInvalidHookAccess();
       return updateEffect(create, deps);
@@ -1486,7 +1506,7 @@ if (__DEV__) {
       return updateImperativeHandle(ref, create, deps);
     },
     useLayoutEffect(
-      create: () => mixed,
+      create: () => (() => void) | void,
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
