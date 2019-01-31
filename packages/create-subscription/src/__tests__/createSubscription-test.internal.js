@@ -431,7 +431,7 @@ describe('createSubscription', () => {
       'Parent.componentDidUpdate',
     ]);
 
-    // Updates from the new subsribable should be ignored.
+    // Updates from the new subscribable should be ignored.
     observableB.next('b-1');
     expect(ReactNoop.flush()).toEqual([]);
     expect(log).toEqual([
