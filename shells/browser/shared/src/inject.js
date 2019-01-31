@@ -1,7 +1,7 @@
 /* global chrome */
 
-export default function inject(scriptName: string, done: () => void) {
-  const src = `
+export default function inject(scriptName: string, done: ?Function) {
+  const source = `
   // the prototype stuff is in case document.createElement has been modified
   (function () {
     var script = document.constructor.prototype.createElement.call(document, 'script');
@@ -12,10 +12,13 @@ export default function inject(scriptName: string, done: () => void) {
   })()
   `;
 
-  chrome.devtools.inspectedWindow.eval(src, function(res, err) {
-    if (err) {
-      console.log(err);
+  chrome.devtools.inspectedWindow.eval(source, function(response, error) {
+    if (error) {
+      console.log(error);
     }
-    done();
+
+    if (typeof done === 'function') {
+      done();
+    }
   });
 }

@@ -1,7 +1,7 @@
 /* global chrome */
 
 import { createElement } from 'react';
-import { render, unmountComponentAtNode } from 'react-dom';
+import { createRoot, flushSync } from 'react-dom';
 import Bridge from 'src/bridge';
 import Elements from 'src/devtools/views/Elements';
 import inject from './inject';
@@ -34,58 +34,55 @@ if (IS_CHROME) {
   }
 }
 
-const node = ((document.getElementById('container'): any): HTMLElement);
-
-function reloadDevTools() {
-  setTimeout(() => {
-    unmountComponentAtNode(node);
-
-    node.innerHTML = '';
-
-    injectAndInit();
-  }, 100);
-}
+const container = ((document.getElementById('container'): any): HTMLElement);
 
 function injectAndInit() {
-  inject(chrome.runtime.getURL('build/backend.js'), () => {
-    let disconnected = false;
+  let disconnected = false;
 
-    const port = chrome.runtime.connect({
-      name: '' + chrome.devtools.inspectedWindow.tabId,
-    });
-    port.onDisconnect.addListener(() => {
-      disconnected = true;
-    });
-
-    const bridge = new Bridge({
-      listen(fn) {
-        port.onMessage.addListener(message => fn(message));
-      },
-      send(event: string, payload: any, transferable?: Array<any>) {
-        if (disconnected) {
-          return;
-        }
-        port.postMessage({ event, payload }, transferable);
-      },
-    });
-
-    // Reload the DevTools extension when the user navigates to a new page.
-    function onNavigated() {
-      chrome.devtools.network.onNavigated.removeListener(onNavigated);
-      bridge.send('shutdown');
-      reloadDevTools();
-    }
-    chrome.devtools.network.onNavigated.addListener(onNavigated);
-
-    render(
-      createElement(Elements, {
-        bridge,
-        browserName,
-        themeName,
-      }),
-      node
-    );
+  const port = chrome.runtime.connect({
+    name: '' + chrome.devtools.inspectedWindow.tabId,
   });
+  port.onDisconnect.addListener(() => {
+    disconnected = true;
+  });
+
+  const bridge = new Bridge({
+    listen(fn) {
+      port.onMessage.addListener(message => fn(message));
+    },
+    send(event: string, payload: any, transferable?: Array<any>) {
+      if (disconnected) {
+        return;
+      }
+      port.postMessage({ event, payload }, transferable);
+    },
+  });
+
+  // Clear the "React not found" initial message before rendering.
+  container.innerHTML = '';
+
+  const root = createRoot(container);
+  root.render(
+    createElement(Elements, {
+      bridge,
+      browserName,
+      themeName,
+    })
+  );
+
+  // Initialize the backend only once the DevTools frontend Store has been initialized.
+  // Otherwise the Store may miss important initial tree op codes.
+  inject(chrome.runtime.getURL('build/backend.js'));
+
+  // Reload the DevTools extension when the user navigates to a new page.
+  function onNavigated() {
+    chrome.devtools.network.onNavigated.removeListener(onNavigated);
+
+    bridge.send('shutdown');
+
+    flushSync(() => root.unmount(injectAndInit));
+  }
+  chrome.devtools.network.onNavigated.addListener(onNavigated);
 }
 
 injectAndInit();

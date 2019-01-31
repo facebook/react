@@ -37,9 +37,9 @@ mountButton.addEventListener('click', function() {
   }
 });
 
-initDevTools({
-  connect(cb) {
-    inject('./build/backend.js', () => {
+inject('./build/App.js', () => {
+  initDevTools({
+    connect(cb) {
       const bridge = new Bridge({
         listen(fn) {
           contentWindow.parent.addEventListener('message', ({ data }) => {
@@ -54,22 +54,28 @@ initDevTools({
       cb(bridge);
 
       const root = createRoot(container);
-      root.render(
+      const batch = root.createBatch();
+      batch.render(
         createElement(Elements, {
           bridge,
           browserName: 'Chrome',
           themeName: 'light',
         })
       );
-    });
-  },
+      batch.then(() => {
+        batch.commit();
 
-  onReload(reloadFn) {
-    iframe.onload = reloadFn;
-  },
+        // Initialize the backend only once the DevTools frontend Store has been initialized.
+        // Otherwise the Store may miss important initial tree op codes.
+        inject('./build/backend.js');
+      });
+    },
+
+    onReload(reloadFn) {
+      iframe.onload = reloadFn;
+    },
+  });
 });
-
-inject('./build/App.js');
 
 function inject(sourcePath, callback) {
   const script = contentDocument.createElement('script');

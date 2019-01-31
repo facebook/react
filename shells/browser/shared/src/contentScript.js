@@ -1,21 +1,17 @@
 /* global chrome */
 
-// proxy from main page to devtools (via the background page)
-var port = chrome.runtime.connect({
-  name: 'content-script',
-});
+let backendDisconnected: boolean = false;
+let backendInitialized: boolean = false;
 
-port.onMessage.addListener(handleMessageFromDevtools);
-port.onDisconnect.addListener(handleDisconnect);
-window.addEventListener('message', handleMessageFromPage);
-
-window.postMessage(
-  {
-    source: 'react-devtools-content-script',
-    hello: true,
-  },
-  '*'
-);
+function sayHelloToBackend() {
+  window.postMessage(
+    {
+      source: 'react-devtools-content-script',
+      hello: true,
+    },
+    '*'
+  );
+}
 
 function handleMessageFromDevtools(message) {
   window.postMessage(
@@ -33,12 +29,17 @@ function handleMessageFromPage(evt) {
     evt.data &&
     evt.data.source === 'react-devtools-bridge'
   ) {
+    backendInitialized = true;
+
     port.postMessage(evt.data.payload);
   }
 }
 
 function handleDisconnect() {
+  backendDisconnected = true;
+
   window.removeEventListener('message', handleMessageFromPage);
+
   window.postMessage(
     {
       source: 'react-devtools-content-script',
@@ -50,3 +51,23 @@ function handleDisconnect() {
     '*'
   );
 }
+
+// proxy from main page to devtools (via the background page)
+var port = chrome.runtime.connect({
+  name: 'content-script',
+});
+port.onMessage.addListener(handleMessageFromDevtools);
+port.onDisconnect.addListener(handleDisconnect);
+
+window.addEventListener('message', handleMessageFromPage);
+
+// The backend waits to install the global hook until notified by the content script.
+// In the event of a page reload, the content script might be loaded before the backend is injected.
+// Because of this we need to poll the backend until it has been initialized.
+const intervalID = setInterval(() => {
+  if (backendInitialized || backendDisconnected) {
+    clearInterval(intervalID);
+  } else {
+    sayHelloToBackend();
+  }
+}, 500);

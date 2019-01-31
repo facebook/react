@@ -15,13 +15,12 @@ export default class Bridge extends EventEmitter {
   _messageQueue: Array<any> = [];
   _time: number | null = null;
   _timeoutID: TimeoutID | null = null;
-
-  wall: Wall;
+  _wall: Wall;
 
   constructor(wall: Wall) {
     super();
 
-    this.wall = wall;
+    this._wall = wall;
 
     wall.listen((message: Message) => {
       this._emit(message);
@@ -32,7 +31,7 @@ export default class Bridge extends EventEmitter {
     const time = this._time;
 
     if (time === null) {
-      this.wall.send(event, payload, transferable);
+      this._wall.send(event, payload, transferable);
       this._time = Date.now();
     } else {
       this._messageQueue.push(event, payload, transferable);
@@ -46,13 +45,9 @@ export default class Bridge extends EventEmitter {
     }
   }
 
-  log(message: string): void {
-    this.send('log', message);
-  }
-
   _flush() {
     while (this._messageQueue.length) {
-      this.wall.send.apply(this.wall, this._messageQueue.splice(0, 3));
+      this._wall.send.apply(this._wall, this._messageQueue.splice(0, 3));
     }
 
     if (this._timeoutID !== null) {
@@ -64,11 +59,7 @@ export default class Bridge extends EventEmitter {
     this._time = null;
   }
 
-  _emit(message: string | Message) {
-    if (typeof message === 'string') {
-      this.emit(message);
-    } else {
-      this.emit(message.event, message.payload);
-    }
+  _emit(message: Message) {
+    this.emit(message.event, message.payload);
   }
 }
