@@ -42,13 +42,6 @@
   color: var(--color-special02);
 }
 
-.IconButtonSVG {
-  width: 1rem;
-  height: 1rem;
-  margin-right: 0.25rem;
-  fill: currentColor;
-}
-
 .Tree {
   width: 100%;
   overflow: auto;
