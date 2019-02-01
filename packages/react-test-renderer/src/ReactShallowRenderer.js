@@ -218,7 +218,8 @@ class ReactShallowRenderer {
   _validateCurrentlyRenderingComponent() {
     invariant(
       this._currentlyRenderingComponent !== null,
-      'Hooks can only be called inside the body of a function component.',
+      'Hooks can only be called inside the body of a function component. ' +
+        '(https://fb.me/react-invalid-hook-call)',
     );
   }
 

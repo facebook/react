@@ -17,7 +17,8 @@ function resolveDispatcher() {
   const dispatcher = ReactCurrentDispatcher.current;
   invariant(
     dispatcher !== null,
-    'Hooks can only be called inside the body of a function component.',
+    'Hooks can only be called inside the body of a function component. ' +
+      '(https://fb.me/react-invalid-hook-call)',
   );
   return dispatcher;
 }
