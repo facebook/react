@@ -35,6 +35,7 @@ import {
   getPublicRootInstance,
   findHostInstance,
   findHostInstanceWithWarning,
+  flushPassiveEffects,
 } from 'react-reconciler/inline.dom';
 import {createPortal as createPortalImpl} from 'shared/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
@@ -801,6 +802,11 @@ const ReactDOM: Object = {
   unstable_batchedUpdates: batchedUpdates,
 
   unstable_interactiveUpdates: interactiveUpdates,
+
+  unstable_interact(callback: () => void) {
+    batchedUpdates(callback);
+    flushPassiveEffects();
+  },
 
   flushSync: flushSync,
 

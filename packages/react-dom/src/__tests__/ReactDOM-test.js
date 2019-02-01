@@ -509,4 +509,57 @@ describe('ReactDOM', () => {
         '    in App (at **)',
     ]);
   });
+
+  it('can use interact to batch effects', () => {
+    function App(props) {
+      React.useEffect(props.callback);
+      return null;
+    }
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    try {
+      let called = false;
+      ReactDOM.unstable_interact(() => {
+        ReactDOM.render(
+          <App
+            callback={() => {
+              called = true;
+            }}
+          />,
+          container,
+        );
+      });
+
+      expect(called).toBe(true);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+  it('can use interact to batch effects on updates too', () => {
+    function App() {
+      let [ctr, setCtr] = React.useState(0);
+      return (
+        <button id="button" onClick={() => setCtr(x => x + 1)}>
+          {ctr}
+        </button>
+      );
+    }
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    let button;
+    try {
+      ReactDOM.unstable_interact(() => {
+        ReactDOM.render(<App />, container);
+      });
+      button = document.getElementById('button');
+      expect(button.innerHTML).toBe('0');
+      ReactDOM.unstable_interact(() => {
+        button.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(button.innerHTML).toBe('1');
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
 });
