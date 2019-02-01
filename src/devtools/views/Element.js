@@ -1,7 +1,7 @@
 // @flow
 
 import React, { Fragment, useContext } from 'react';
-import { TreeContext } from './contexts';
+import { TreeContext } from './context';
 
 import styles from './Element.css';
 

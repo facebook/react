@@ -3,7 +3,7 @@
 import React, { useLayoutEffect, useMemo, useState } from 'react';
 import Store from '../store';
 import Tree from './Tree';
-import { StoreContext, TreeContext } from './contexts';
+import { StoreContext, TreeContext } from './context';
 import SearchIcon from './SearchIcon';
 import styles from './Elements.css';
 
