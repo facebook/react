@@ -235,7 +235,8 @@ function warnOnHookMismatchInDev() {
 function throwInvalidHookError() {
   invariant(
     false,
-    'Hooks can only be called inside the body of a function component.',
+    'Hooks can only be called inside the body of a function component. ' +
+      '(https://fb.me/react-invalid-hook-call)',
   );
 }
 
@@ -1188,8 +1189,9 @@ if (__DEV__) {
   const warnInvalidHookAccess = () => {
     warning(
       false,
-      'Hooks can only be called inside the body of a function component. ' +
-        'Do not call Hooks inside other Hooks. For more information, see ' +
+      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. ' +
+        'You can only call Hooks at the top level of your React function. ' +
+        'For more information, see ' +
         'https://fb.me/rules-of-hooks',
     );
   };
