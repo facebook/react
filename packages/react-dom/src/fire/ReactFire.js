@@ -617,6 +617,13 @@ function createPortal(
   return createPortalImpl(children, container, null, key);
 }
 
+// a helper for tests to scope their actions on the dom
+// batches and flushes effects and updates
+function batchedInteraction(callback: () => void) {
+  batchedUpdates(callback);
+  flushPassiveEffects();
+}
+
 const ReactDOM: Object = {
   createPortal,
 
@@ -808,11 +815,6 @@ const ReactDOM: Object = {
 
   unstable_interactiveUpdates: interactiveUpdates,
 
-  unstable_interact(callback: () => void) {
-    batchedUpdates(callback);
-    flushPassiveEffects();
-  },
-
   flushSync: flushSync,
 
   unstable_createRoot: createRoot,
@@ -833,6 +835,7 @@ const ReactDOM: Object = {
       restoreStateIfNeeded,
       dispatchEvent,
       runEventsInBatch,
+      batchedInteraction,
     ],
   },
 };

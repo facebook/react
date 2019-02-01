@@ -515,4 +515,58 @@ describe('ReactTestUtils', () => {
     ReactTestUtils.renderIntoDocument(<Component />);
     expect(mockArgs.length).toEqual(0);
   });
+
+  it('can use interact to batch effects', () => {
+    function App(props) {
+      React.useEffect(props.callback);
+      return null;
+    }
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    try {
+      let called = false;
+      ReactTestUtils.interact(() => {
+        ReactDOM.render(
+          <App
+            callback={() => {
+              called = true;
+            }}
+          />,
+          container,
+        );
+      });
+
+      expect(called).toBe(true);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+
+  it('can use interact to batch effects on updates too', () => {
+    function App() {
+      let [ctr, setCtr] = React.useState(0);
+      return (
+        <button id="button" onClick={() => setCtr(x => x + 1)}>
+          {ctr}
+        </button>
+      );
+    }
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    let button;
+    try {
+      ReactTestUtils.interact(() => {
+        ReactDOM.render(<App />, container);
+      });
+      button = document.getElementById('button');
+      expect(button.innerHTML).toBe('0');
+      ReactTestUtils.interact(() => {
+        button.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(button.innerHTML).toBe('1');
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
 });
