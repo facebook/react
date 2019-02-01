@@ -145,6 +145,10 @@ function validateClassInstance(inst, methodName) {
   );
 }
 
+// stub elements used by act() when flushing effects
+let actElement = <div />;
+let actContainerElement = document.createElement('div');
+
 /**
  * Utilities for making it easy to test React components.
  *
@@ -381,9 +385,9 @@ const ReactTestUtils = {
   Simulate: null,
   SimulateNative: {},
 
-  interact(callback: () => void) {
+  act(callback: () => void) {
     ReactDOM.unstable_batchedUpdates(callback);
-    ReactDOM.render(null, document.createElement('div'));
+    ReactDOM.render(actElement, actContainerElement);
   },
 };
 

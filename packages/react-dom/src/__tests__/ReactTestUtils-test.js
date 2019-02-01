@@ -516,7 +516,7 @@ describe('ReactTestUtils', () => {
     expect(mockArgs.length).toEqual(0);
   });
 
-  it('can use interact to batch effects', () => {
+  it('can use act to batch effects', () => {
     function App(props) {
       React.useEffect(props.callback);
       return null;
@@ -526,7 +526,7 @@ describe('ReactTestUtils', () => {
 
     try {
       let called = false;
-      ReactTestUtils.interact(() => {
+      ReactTestUtils.act(() => {
         ReactDOM.render(
           <App
             callback={() => {
@@ -543,7 +543,7 @@ describe('ReactTestUtils', () => {
     }
   });
 
-  it('can use interact to batch effects on updates too', () => {
+  it('can use act to batch effects on updates too', () => {
     function App() {
       let [ctr, setCtr] = React.useState(0);
       return (
@@ -556,12 +556,12 @@ describe('ReactTestUtils', () => {
     document.body.appendChild(container);
     let button;
     try {
-      ReactTestUtils.interact(() => {
+      ReactTestUtils.act(() => {
         ReactDOM.render(<App />, container);
       });
       button = document.getElementById('button');
       expect(button.innerHTML).toBe('0');
-      ReactTestUtils.interact(() => {
+      ReactTestUtils.act(() => {
         button.dispatchEvent(new MouseEvent('click', {bubbles: true}));
       });
       expect(button.innerHTML).toBe('1');
