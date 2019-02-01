@@ -310,7 +310,6 @@ export {
   flushInteractiveUpdates,
   flushControlled,
   flushSync,
-  flushPassiveEffects,
 };
 
 export function getPublicRootInstance(

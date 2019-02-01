@@ -40,7 +40,6 @@ import {
   getPublicRootInstance,
   findHostInstance,
   findHostInstanceWithWarning,
-  flushPassiveEffects,
 } from 'react-reconciler/inline.fire';
 import {createPortal as createPortalImpl} from 'shared/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
@@ -617,13 +616,6 @@ function createPortal(
   return createPortalImpl(children, container, null, key);
 }
 
-// a helper for tests to scope their actions on the dom
-// batches and flushes effects and updates
-function batchedInteraction(callback: () => void) {
-  batchedUpdates(callback);
-  flushPassiveEffects();
-}
-
 const ReactDOM: Object = {
   createPortal,
 
@@ -835,7 +827,6 @@ const ReactDOM: Object = {
       restoreStateIfNeeded,
       dispatchEvent,
       runEventsInBatch,
-      batchedInteraction,
     ],
   },
 };
