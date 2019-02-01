@@ -148,7 +148,7 @@ describe('createSubscription', () => {
 
       // Test a promise that resolves before render
       // Note that this will require an extra render anyway,
-      // Because there is no way to syncrhonously get a Promise's value
+      // Because there is no way to synchronously get a Promise's value
       rejectB(false);
       ReactNoop.render(<Subscription source={promiseB}>{render}</Subscription>);
       expect(ReactNoop.flush()).toEqual(['loading']);
@@ -431,7 +431,7 @@ describe('createSubscription', () => {
       'Parent.componentDidUpdate',
     ]);
 
-    // Updates from the new subsribable should be ignored.
+    // Updates from the new subscribable should be ignored.
     observableB.next('b-1');
     expect(ReactNoop.flush()).toEqual([]);
     expect(log).toEqual([
