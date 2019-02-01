@@ -665,7 +665,7 @@ describe('ReactHooks', () => {
       return null;
     }
     expect(() => ReactTestRenderer.create(<App />)).toWarnDev(
-      'Hooks can only be called inside the body of a function component',
+      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks.',
     );
   });
 
@@ -835,12 +835,12 @@ describe('ReactHooks', () => {
     if (__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(3);
       expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Hooks can only be called inside the body of a function component',
+        'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
       );
     }
   });
 
-  it("throws when calling hooks inside useState's initialize function", () => {
+  it("warns when calling hooks inside useState's initialize function", () => {
     const {useState, useRef} = React;
     function App() {
       useState(() => {
@@ -850,7 +850,7 @@ describe('ReactHooks', () => {
       return null;
     }
     expect(() => ReactTestRenderer.create(<App />)).toWarnDev(
-      'Hooks can only be called inside the body of a function component',
+      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks.',
     );
   });
 
@@ -892,9 +892,9 @@ describe('ReactHooks', () => {
     }).toWarnDev([
       // We see it twice due to replay
       'Context can only be read while React is rendering',
-      'Hooks can only be called inside the body of a function component',
+      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
       'Context can only be read while React is rendering',
-      'Hooks can only be called inside the body of a function component',
+      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
     ]);
 
     function Valid() {
@@ -925,9 +925,9 @@ describe('ReactHooks', () => {
     }).toWarnDev([
       // We see it twice due to replay
       'Context can only be read while React is rendering',
-      'Hooks can only be called inside the body of a function component',
+      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
       'Context can only be read while React is rendering',
-      'Hooks can only be called inside the body of a function component',
+      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
     ]);
   });
 
