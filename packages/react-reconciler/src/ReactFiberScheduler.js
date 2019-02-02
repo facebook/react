@@ -1789,6 +1789,23 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
   return root;
 }
 
+const isJSDOM =
+  'undefined' !== typeof global.navigator &&
+  (navigator.userAgent.includes('Node.js') ||
+    navigator.userAgent.includes('jsdom'));
+
+export function ensureBatchingAndScheduleWork(
+  fiber: Fiber,
+  expirationTime: ExpirationTime,
+) {
+  if (__DEV__) {
+    if (isJSDOM && !isBatchingUpdates) {
+      warningWithoutStack(false, "called a hook's setState outside of .act()");
+    }
+  }
+  scheduleWork(fiber, expirationTime);
+}
+
 function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
   const root = scheduleWorkToRoot(fiber, expirationTime);
   if (root === null) {

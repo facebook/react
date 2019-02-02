@@ -31,6 +31,7 @@ import {
 } from './ReactHookEffectTags';
 import {
   scheduleWork,
+  ensureBatchingAndScheduleWork,
   computeExpirationForFiber,
   flushPassiveEffects,
   requestCurrentTime,
@@ -1126,6 +1127,7 @@ function dispatchAction<S, A>(
         }
       }
     }
-    scheduleWork(fiber, expirationTime);
+    ensureBatchingAndScheduleWork(fiber, expirationTime);
+    // scheduleWork(fiber, expirationTime);
   }
 }
