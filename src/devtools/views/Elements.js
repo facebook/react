@@ -4,7 +4,8 @@ import React, { useLayoutEffect, useMemo, useState } from 'react';
 import Store from '../store';
 import Tree from './Tree';
 import { StoreContext, TreeContext } from './context';
-import SearchIcon from './SearchIcon';
+import SelectedElement from './SelectedElement';
+import { SelectedElementController } from './SelectedElementContext';
 import styles from './Elements.css';
 
 import './root.css';
@@ -38,23 +39,20 @@ export default function Elements({ bridge, browserName, themeName }: Props) {
     return () => store.removeListener('rootCommitted', handler);
   }, [store]);
 
+  // TODO Flex wrappers below should be user resizable.
   return (
     <StoreContext.Provider value={store}>
       <TreeContext.Provider value={treeContext}>
-        <div className={styles.Elements}>
-          <div className={styles.SearchRow}>
-            <input
-              className={styles.SearchInput}
-              placeholder="Search (text or /regex/)"
-            />
-            <button className={styles.IconButton}>
-              <SearchIcon /> Select
-            </button>
+        <SelectedElementController>
+          <div className={styles.Elements}>
+            <div className={styles.TreeWrapper}>
+              <Tree />
+            </div>
+            <div className={styles.SelectedElementWrapper}>
+              <SelectedElement />
+            </div>
           </div>
-          <div className={styles.Tree}>
-            <Tree />
-          </div>
-        </div>
+        </SelectedElementController>
       </TreeContext.Provider>
     </StoreContext.Provider>
   );

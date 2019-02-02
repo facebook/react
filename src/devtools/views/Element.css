@@ -1,12 +1,24 @@
-.Element {
+.Element,
+.SelectedElement {
   width: 100%;
   border-radius: 0.25em;
   cursor: pointer;
   position: relative;
   white-space: nowrap;
+  line-height: 20px;
 }
 .Element:hover {
   background-color: var(--color-state03);
+}
+
+.SelectedElement {
+  background-color: var(--color-state00);
+
+  /* Invert colors */
+  --color-component: var(--color-base00);
+  --color-tree-tag: rgba(255, 255, 255, 0.8);
+  --color-tree-attr-name: #b3e5fc;
+  --color-tree-attr-value: #fff;
 }
 
 .ArrowClosed,

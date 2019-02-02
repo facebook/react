@@ -1,7 +1,8 @@
 // @flow
 
-import React, { Fragment, useContext } from 'react';
+import React, { Fragment, useCallback, useContext } from 'react';
 import { TreeContext } from './context';
+import { SelectedElementContext } from './SelectedElementContext';
 
 import styles from './Element.css';
 
@@ -22,13 +23,24 @@ export default function Element({ index, style }: Props) {
     return null;
   }
 
-  const { children, depth, displayName, key } = element;
+  const { children, depth, displayName, id, key } = element;
 
-  // TODO: Add state for toggling element open/close
+  const selectedElement = useContext(SelectedElementContext);
+  const handleClick = useCallback(
+    ({ metaKey }) => {
+      selectedElement.id = metaKey ? null : id;
+    },
+    [id]
+  );
+
+  // TODO: Add click and key handlers for toggling element open/close state.
 
   return (
     <div
-      className={styles.Element}
+      className={
+        selectedElement.id === id ? styles.SelectedElement : styles.Element
+      }
+      onClick={handleClick}
       style={{
         ...style,
         paddingLeft: `${1 + depth}rem`,

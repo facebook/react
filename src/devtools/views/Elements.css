@@ -2,49 +2,24 @@
   width: 100%;
   height: 100%;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
 
+  font-family: var(--font-family-sans);
   -webkit-font-smoothing: antialiased;
 }
 
-.SearchRow {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  font-size: 16px;
-  border-bottom: 1px solid var(--color-base02);
-  padding: 0.5rem;
+.TreeWrapper {
+  flex: 0 0 65%;
 }
 
-.SearchInput {
-  font-size: 1rem;
-  flex: 1;
-  outline: none;
-  border: none;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: left center;
-  background-size: 16px 16px;
-  padding-left: 1.5rem;
+.SelectedElementWrapper {
+  flex: 0 0 35%;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
-.IconButton {
-  border: none;
-  background: none;
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem;
-  cursor: pointer;
-  color: var(--color-state00);
-  flex: 0 0 auto;
-}
-.IconButton:hover {
-  color: var(--color-special02);
-}
-
-.Tree {
-  width: 100%;
-  overflow: auto;
-  flex: 1 0 auto;
-  padding: 0.25rem;
+@media screen and (max-width: 600px) {
+  .Elements {
+    flex-direction: column;
+  }
 }

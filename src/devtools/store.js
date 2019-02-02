@@ -105,14 +105,16 @@ export default class Store extends EventEmitter {
     return ((currentElement: any): Element);
   }
 
-  getElementByID(id: number): Element {
+  getElementByID(id: number): Element | null {
     const element = this._idToElement.get(id);
 
     if (element == null) {
-      throw Error(`No element found with id "${id}`);
+      console.warn(`No element found with id "${id}`);
+
+      return null;
     }
 
-    return ((element: any): Element);
+    return element;
   }
 
   onBridgeOperations = (operations: Uint32Array) => {

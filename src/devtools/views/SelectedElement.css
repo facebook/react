@@ -1,0 +1,54 @@
+.SelectedElement {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  border-left: 1px solid var(--color-base02);
+  border-top: 1px solid var(--color-base02);
+}
+
+.TitleRow {
+  flex: 0 0 42px;
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  border-bottom: 1px solid var(--color-base02);
+  padding: 0.5rem;
+}
+
+.IconButton {
+  flex: 0 0 auto;
+  border: none;
+  background: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem;
+  cursor: pointer;
+  color: var(--color-state00);
+}
+.IconButton:hover {
+  color: var(--color-special02);
+}
+
+.SelectedComponentName {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.Component {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-component);
+  flex: 1 1 auto;
+}
+.Component:before {
+  white-space: nowrap;
+  content: '<';
+  color: var(--color-tree-tag);
+}
+.Component:after {
+  white-space: nowrap;
+  content: '>';
+  color: var(--color-tree-tag);
+}
