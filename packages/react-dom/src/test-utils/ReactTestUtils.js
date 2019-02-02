@@ -183,7 +183,7 @@ const ReactTestUtils = {
 
   isCompositeComponent: function(inst) {
     if (ReactTestUtils.isDOMComponent(inst)) {
-      // Accessing inst.setState warns; just return false as that'll be what
+      // Accessing inst.setState warns just return false as that'll be what
       // this returns when we have DOM nodes as refs directly
       return false;
     }
