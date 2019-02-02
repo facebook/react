@@ -320,42 +320,49 @@ function commitHookEffectList(
       if ((effect.tag & unmountTag) !== NoHookEffect) {
         // Unmount
         const destroy = effect.destroy;
-        effect.destroy = null;
-        if (destroy !== null) {
+        effect.destroy = undefined;
+        if (destroy !== undefined) {
           destroy();
         }
       }
       if ((effect.tag & mountTag) !== NoHookEffect) {
         // Mount
         const create = effect.create;
-        let destroy = create();
-        if (typeof destroy !== 'function') {
-          if (__DEV__) {
-            if (destroy !== null && destroy !== undefined) {
-              warningWithoutStack(
-                false,
-                'useEffect function must return a cleanup function or ' +
-                  'nothing.%s%s',
-                typeof destroy.then === 'function'
-                  ? '\n\nIt looks like you wrote useEffect(async () => ...) or returned a Promise. ' +
-                    'Instead, you may write an async function separately ' +
-                    'and then call it from inside the effect:\n\n' +
-                    'async function fetchComment(commentId) {\n' +
-                    '  // You can await here\n' +
-                    '}\n\n' +
-                    'useEffect(() => {\n' +
-                    '  fetchComment(commentId);\n' +
-                    '}, [commentId]);\n\n' +
-                    'In the future, React will provide a more idiomatic solution for data fetching ' +
-                    "that doesn't involve writing effects manually."
-                  : '',
-                getStackByFiberInDevAndProd(finishedWork),
-              );
+        effect.destroy = create();
+
+        if (__DEV__) {
+          const destroy = effect.destroy;
+          if (destroy !== undefined && typeof destroy !== 'function') {
+            let addendum;
+            if (destroy === null) {
+              addendum =
+                ' You returned null. If your effect does not require clean ' +
+                'up, return undefined (or nothing).';
+            } else if (typeof destroy.then === 'function') {
+              addendum =
+                '\n\nIt looks like you wrote useEffect(async () => ...) or returned a Promise. ' +
+                'Instead, you may write an async function separately ' +
+                'and then call it from inside the effect:\n\n' +
+                'async function fetchComment(commentId) {\n' +
+                '  // You can await here\n' +
+                '}\n\n' +
+                'useEffect(() => {\n' +
+                '  fetchComment(commentId);\n' +
+                '}, [commentId]);\n\n' +
+                'In the future, React will provide a more idiomatic solution for data fetching ' +
+                "that doesn't involve writing effects manually.";
+            } else {
+              addendum = ' You returned: ' + destroy;
             }
+            warningWithoutStack(
+              false,
+              'An Effect function must not return anything besides a function, ' +
+                'which is used for clean-up.%s%s',
+              addendum,
+              getStackByFiberInDevAndProd(finishedWork),
+            );
           }
-          destroy = null;
         }
-        effect.destroy = destroy;
       }
       effect = effect.next;
     } while (effect !== firstEffect);
@@ -696,7 +703,7 @@ function commitUnmount(current: Fiber): void {
           let effect = firstEffect;
           do {
             const destroy = effect.destroy;
-            if (destroy !== null) {
+            if (destroy !== undefined) {
               safelyCallDestroy(current, destroy);
             }
             effect = effect.next;

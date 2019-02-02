@@ -59,8 +59,14 @@ export type Dispatcher = {
     observedBits: void | number | boolean,
   ): T,
   useRef<T>(initialValue: T): {current: T},
-  useEffect(create: () => mixed, deps: Array<mixed> | void | null): void,
-  useLayoutEffect(create: () => mixed, deps: Array<mixed> | void | null): void,
+  useEffect(
+    create: () => (() => void) | void,
+    deps: Array<mixed> | void | null,
+  ): void,
+  useLayoutEffect(
+    create: () => (() => void) | void,
+    deps: Array<mixed> | void | null,
+  ): void,
   useCallback<T>(callback: T, deps: Array<mixed> | void | null): T,
   useMemo<T>(nextCreate: () => T, deps: Array<mixed> | void | null): T,
   useImperativeHandle<T>(
@@ -98,10 +104,6 @@ type HookType =
   | 'useImperativeHandle'
   | 'useDebugValue';
 
-// the first instance of a hook mismatch in a component,
-// represented by a portion of its stacktrace
-let currentHookMismatchInDev = null;
-
 let didWarnAboutMismatchedHooksForComponent;
 if (__DEV__) {
   didWarnAboutMismatchedHooksForComponent = new Set();
@@ -123,8 +125,8 @@ type HookDev = Hook & {
 
 type Effect = {
   tag: HookEffectTag,
-  create: () => mixed,
-  destroy: (() => mixed) | null,
+  create: () => (() => void) | void,
+  destroy: (() => void) | void,
   deps: Array<mixed> | null,
   next: Effect,
 };
@@ -180,10 +182,61 @@ const RE_RENDER_LIMIT = 25;
 // In DEV, this is the name of the currently executing primitive hook
 let currentHookNameInDev: ?HookType = null;
 
+function warnOnHookMismatchInDev() {
+  if (__DEV__) {
+    const componentName = getComponentName(
+      ((currentlyRenderingFiber: any): Fiber).type,
+    );
+    if (!didWarnAboutMismatchedHooksForComponent.has(componentName)) {
+      didWarnAboutMismatchedHooksForComponent.add(componentName);
+
+      const secondColumnStart = 22;
+
+      let table = '';
+      let prevHook: HookDev | null = (firstCurrentHook: any);
+      let nextHook: HookDev | null = (firstWorkInProgressHook: any);
+      let n = 1;
+      while (prevHook !== null && nextHook !== null) {
+        const oldHookName = prevHook._debugType;
+        const newHookName = nextHook._debugType;
+
+        let row = `${n}. ${oldHookName}`;
+
+        // Extra space so second column lines up
+        // lol @ IE not supporting String#repeat
+        while (row.length < secondColumnStart) {
+          row += ' ';
+        }
+
+        row += newHookName + '\n';
+
+        table += row;
+        prevHook = (prevHook.next: any);
+        nextHook = (nextHook.next: any);
+        n++;
+      }
+
+      warning(
+        false,
+        'React has detected a change in the order of Hooks called by %s. ' +
+          'This will lead to bugs and errors if not fixed. ' +
+          'For more information, read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+          '   Previous render    Next render\n' +
+          '   -------------------------------\n' +
+          '%s' +
+          '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n',
+        componentName,
+        table,
+      );
+    }
+  }
+}
+
 function throwInvalidHookError() {
   invariant(
     false,
-    'Hooks can only be called inside the body of a function component.',
+    'Hooks can only be called inside the body of a function component. ' +
+      '(https://fb.me/react-invalid-hook-call)',
   );
 }
 
@@ -227,90 +280,6 @@ function areHookInputsEqual(
     return false;
   }
   return true;
-}
-
-function flushHookMismatchWarnings() {
-  // we'll show the diff of the low level hooks,
-  // and a stack trace so the dev can locate where
-  // the first mismatch is coming from
-  if (__DEV__) {
-    if (currentHookMismatchInDev !== null) {
-      let componentName = getComponentName(
-        ((currentlyRenderingFiber: any): Fiber).type,
-      );
-      if (!didWarnAboutMismatchedHooksForComponent.has(componentName)) {
-        didWarnAboutMismatchedHooksForComponent.add(componentName);
-        const hookStackDiff = [];
-        let current = firstCurrentHook;
-        const previousOrder = [];
-        while (current !== null) {
-          previousOrder.push(((current: any): HookDev)._debugType);
-          current = current.next;
-        }
-        let workInProgress = firstWorkInProgressHook;
-        const nextOrder = [];
-        while (workInProgress !== null) {
-          nextOrder.push(((workInProgress: any): HookDev)._debugType);
-          workInProgress = workInProgress.next;
-        }
-        // some bookkeeping for formatting the output table
-        const columnLength = Math.max.apply(
-          null,
-          previousOrder
-            .map(hook => hook.length)
-            .concat('   Previous render'.length),
-        );
-
-        const padEndSpaces = (string, length) => {
-          if (string.length >= length) {
-            return string;
-          }
-          return string + ' ' + new Array(length - string.length).join(' ');
-        };
-
-        let hookStackHeader =
-          ((padEndSpaces('   Previous render', columnLength): any): string) +
-          '    Next render\n';
-        const hookStackWidth = hookStackHeader.length;
-        hookStackHeader += '   ' + new Array(hookStackWidth - 2).join('-');
-        const hookStackFooter = '   ' + new Array(hookStackWidth - 2).join('^');
-
-        const hookStackLength = Math.max(
-          previousOrder.length,
-          nextOrder.length,
-        );
-        for (let i = 0; i < hookStackLength; i++) {
-          hookStackDiff.push(
-            ((padEndSpaces(i + 1 + '. ', 3): any): string) +
-              ((padEndSpaces(previousOrder[i], columnLength): any): string) +
-              ' ' +
-              nextOrder[i],
-          );
-          if (previousOrder[i] !== nextOrder[i]) {
-            break;
-          }
-        }
-        warning(
-          false,
-          'React has detected a change in the order of Hooks called by %s. ' +
-            'This will lead to bugs and errors if not fixed. ' +
-            'For more information, read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
-            '%s\n' +
-            '%s\n' +
-            '%s\n' +
-            'The first Hook type mismatch occured at:\n' +
-            '%s\n\n' +
-            'This error occurred in the following component:',
-          componentName,
-          hookStackHeader,
-          hookStackDiff.join('\n'),
-          hookStackFooter,
-          currentHookMismatchInDev,
-        );
-      }
-      currentHookMismatchInDev = null;
-    }
-  }
 }
 
 export function renderWithHooks(
@@ -378,7 +347,6 @@ export function renderWithHooks(
   }
 
   if (__DEV__) {
-    flushHookMismatchWarnings();
     currentHookNameInDev = null;
   }
 
@@ -437,10 +405,6 @@ export function bailoutHooks(
 }
 
 export function resetHooks(): void {
-  if (__DEV__) {
-    flushHookMismatchWarnings();
-  }
-
   // We can assume the previous dispatcher is always this one, since we set it
   // at the beginning of the render phase and there's no re-entrancy.
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
@@ -537,18 +501,6 @@ function updateWorkInProgressHook(): Hook {
       next: null,
     };
 
-    if (__DEV__) {
-      (newHook: any)._debugType = (currentHookNameInDev: any);
-      if (currentHookMismatchInDev === null) {
-        if (currentHookNameInDev !== ((currentHook: any): HookDev)._debugType) {
-          currentHookMismatchInDev = new Error('tracer').stack
-            .split('\n')
-            .slice(4)
-            .join('\n');
-        }
-      }
-    }
-
     if (workInProgressHook === null) {
       // This is the first hook in the list.
       workInProgressHook = firstWorkInProgressHook = newHook;
@@ -557,6 +509,13 @@ function updateWorkInProgressHook(): Hook {
       workInProgressHook = workInProgressHook.next = newHook;
     }
     nextCurrentHook = currentHook.next;
+
+    if (__DEV__) {
+      (newHook: any)._debugType = (currentHookNameInDev: any);
+      if (currentHookNameInDev !== ((currentHook: any): HookDev)._debugType) {
+        warnOnHookMismatchInDev();
+      }
+    }
   }
   return workInProgressHook;
 }
@@ -828,13 +787,13 @@ function mountEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
   const hook = mountWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
   sideEffectTag |= fiberEffectTag;
-  hook.memoizedState = pushEffect(hookEffectTag, create, null, nextDeps);
+  hook.memoizedState = pushEffect(hookEffectTag, create, undefined, nextDeps);
 }
 
 function updateEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
   const hook = updateWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
-  let destroy = null;
+  let destroy = undefined;
 
   if (currentHook !== null) {
     const prevEffect = currentHook.memoizedState;
@@ -853,7 +812,7 @@ function updateEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
 }
 
 function mountEffect(
-  create: () => mixed,
+  create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
   return mountEffectImpl(
@@ -865,7 +824,7 @@ function mountEffect(
 }
 
 function updateEffect(
-  create: () => mixed,
+  create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
   return updateEffectImpl(
@@ -877,7 +836,7 @@ function updateEffect(
 }
 
 function mountLayoutEffect(
-  create: () => mixed,
+  create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
   return mountEffectImpl(
@@ -889,7 +848,7 @@ function mountLayoutEffect(
 }
 
 function updateLayoutEffect(
-  create: () => mixed,
+  create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
   return updateEffectImpl(
@@ -908,7 +867,9 @@ function imperativeHandleEffect<T>(
     const refCallback = ref;
     const inst = create();
     refCallback(inst);
-    return () => refCallback(null);
+    return () => {
+      refCallback(null);
+    };
   } else if (ref !== null && ref !== undefined) {
     const refObject = ref;
     if (__DEV__) {
@@ -1228,8 +1189,9 @@ if (__DEV__) {
   const warnInvalidHookAccess = () => {
     warning(
       false,
-      'Hooks can only be called inside the body of a function component. ' +
-        'Do not call Hooks inside other Hooks. For more information, see ' +
+      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. ' +
+        'You can only call Hooks at the top level of your React function. ' +
+        'For more information, see ' +
         'https://fb.me/rules-of-hooks',
     );
   };
@@ -1253,7 +1215,10 @@ if (__DEV__) {
       currentHookNameInDev = 'useContext';
       return mountContext(context, observedBits);
     },
-    useEffect(create: () => mixed, deps: Array<mixed> | void | null): void {
+    useEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
       currentHookNameInDev = 'useEffect';
       return mountEffect(create, deps);
     },
@@ -1266,7 +1231,7 @@ if (__DEV__) {
       return mountImperativeHandle(ref, create, deps);
     },
     useLayoutEffect(
-      create: () => mixed,
+      create: () => (() => void) | void,
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
@@ -1337,7 +1302,10 @@ if (__DEV__) {
       currentHookNameInDev = 'useContext';
       return updateContext(context, observedBits);
     },
-    useEffect(create: () => mixed, deps: Array<mixed> | void | null): void {
+    useEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
       currentHookNameInDev = 'useEffect';
       return updateEffect(create, deps);
     },
@@ -1350,7 +1318,7 @@ if (__DEV__) {
       return updateImperativeHandle(ref, create, deps);
     },
     useLayoutEffect(
-      create: () => mixed,
+      create: () => (() => void) | void,
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
@@ -1424,7 +1392,10 @@ if (__DEV__) {
       warnInvalidHookAccess();
       return mountContext(context, observedBits);
     },
-    useEffect(create: () => mixed, deps: Array<mixed> | void | null): void {
+    useEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
       currentHookNameInDev = 'useEffect';
       warnInvalidHookAccess();
       return mountEffect(create, deps);
@@ -1439,7 +1410,7 @@ if (__DEV__) {
       return mountImperativeHandle(ref, create, deps);
     },
     useLayoutEffect(
-      create: () => mixed,
+      create: () => (() => void) | void,
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
@@ -1519,7 +1490,10 @@ if (__DEV__) {
       warnInvalidHookAccess();
       return updateContext(context, observedBits);
     },
-    useEffect(create: () => mixed, deps: Array<mixed> | void | null): void {
+    useEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
       currentHookNameInDev = 'useEffect';
       warnInvalidHookAccess();
       return updateEffect(create, deps);
@@ -1534,7 +1508,7 @@ if (__DEV__) {
       return updateImperativeHandle(ref, create, deps);
     },
     useLayoutEffect(
-      create: () => mixed,
+      create: () => (() => void) | void,
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useLayoutEffect';

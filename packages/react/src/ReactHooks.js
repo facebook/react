@@ -17,17 +17,31 @@ function resolveDispatcher() {
   const dispatcher = ReactCurrentDispatcher.current;
   invariant(
     dispatcher !== null,
-    'Hooks can only be called inside the body of a function component.',
+    'Hooks can only be called inside the body of a function component. ' +
+      '(https://fb.me/react-invalid-hook-call)',
   );
   return dispatcher;
 }
 
 export function useContext<T>(
   Context: ReactContext<T>,
-  observedBits: number | boolean | void,
+  unstable_observedBits: number | boolean | void,
 ) {
   const dispatcher = resolveDispatcher();
   if (__DEV__) {
+    warning(
+      unstable_observedBits === undefined,
+      'useContext() second argument is reserved for future ' +
+        'use in React. Passing it is not supported. ' +
+        'You passed: %s.%s',
+      unstable_observedBits,
+      typeof unstable_observedBits === 'number' && Array.isArray(arguments[2])
+        ? '\n\nDid you call array.map(useContext)? ' +
+          'Calling Hooks inside a loop is not supported. ' +
+          'Learn more at https://fb.me/rules-of-hooks'
+        : '',
+    );
+
     // TODO: add a more generic warning for invalid values.
     if ((Context: any)._context !== undefined) {
       const realContext = (Context: any)._context;
@@ -48,7 +62,7 @@ export function useContext<T>(
       }
     }
   }
-  return dispatcher.useContext(Context, observedBits);
+  return dispatcher.useContext(Context, unstable_observedBits);
 }
 
 export function useState<S>(initialState: (() => S) | S) {
@@ -71,7 +85,7 @@ export function useRef<T>(initialValue: T): {current: T} {
 }
 
 export function useEffect(
-  create: () => mixed,
+  create: () => (() => void) | void,
   inputs: Array<mixed> | void | null,
 ) {
   const dispatcher = resolveDispatcher();
@@ -79,7 +93,7 @@ export function useEffect(
 }
 
 export function useLayoutEffect(
-  create: () => mixed,
+  create: () => (() => void) | void,
   inputs: Array<mixed> | void | null,
 ) {
   const dispatcher = resolveDispatcher();

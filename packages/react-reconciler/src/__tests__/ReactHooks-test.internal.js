@@ -542,30 +542,40 @@ describe('ReactHooks', () => {
     ]);
   });
 
-  it('warns for bad useEffect return values', () => {
+  it('assumes useEffect clean-up function is either a function or undefined', () => {
     const {useLayoutEffect} = React;
+
     function App(props) {
       useLayoutEffect(() => {
         return props.return;
       });
       return null;
     }
-    let root;
 
-    expect(() => {
-      root = ReactTestRenderer.create(<App return={17} />);
-    }).toWarnDev([
-      'Warning: useEffect function must return a cleanup function or ' +
-        'nothing.\n' +
-        '    in App (at **)',
+    const root1 = ReactTestRenderer.create(null);
+    expect(() => root1.update(<App return={17} />)).toWarnDev([
+      'Warning: An Effect function must not return anything besides a ' +
+        'function, which is used for clean-up. You returned: 17',
     ]);
 
-    expect(() => {
-      root.update(<App return={Promise.resolve()} />);
-    }).toWarnDev([
-      'Warning: useEffect function must return a cleanup function or nothing.\n\n' +
+    const root2 = ReactTestRenderer.create(null);
+    expect(() => root2.update(<App return={null} />)).toWarnDev([
+      'Warning: An Effect function must not return anything besides a ' +
+        'function, which is used for clean-up. You returned null. If your ' +
+        'effect does not require clean up, return undefined (or nothing).',
+    ]);
+
+    const root3 = ReactTestRenderer.create(null);
+    expect(() => root3.update(<App return={Promise.resolve()} />)).toWarnDev([
+      'Warning: An Effect function must not return anything besides a ' +
+        'function, which is used for clean-up.\n\n' +
         'It looks like you wrote useEffect(async () => ...) or returned a Promise.',
     ]);
+
+    // Error on unmount because React assumes the value is a function
+    expect(() => {
+      root3.update(null);
+    }).toThrow('is not a function');
   });
 
   it('warns for bad useImperativeHandle first arg', () => {
@@ -655,7 +665,7 @@ describe('ReactHooks', () => {
       return null;
     }
     expect(() => ReactTestRenderer.create(<App />)).toWarnDev(
-      'Hooks can only be called inside the body of a function component',
+      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks.',
     );
   });
 
@@ -825,12 +835,12 @@ describe('ReactHooks', () => {
     if (__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(3);
       expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Hooks can only be called inside the body of a function component',
+        'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
       );
     }
   });
 
-  it("throws when calling hooks inside useState's initialize function", () => {
+  it("warns when calling hooks inside useState's initialize function", () => {
     const {useState, useRef} = React;
     function App() {
       useState(() => {
@@ -840,7 +850,7 @@ describe('ReactHooks', () => {
       return null;
     }
     expect(() => ReactTestRenderer.create(<App />)).toWarnDev(
-      'Hooks can only be called inside the body of a function component',
+      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks.',
     );
   });
 
@@ -882,9 +892,9 @@ describe('ReactHooks', () => {
     }).toWarnDev([
       // We see it twice due to replay
       'Context can only be read while React is rendering',
-      'Hooks can only be called inside the body of a function component',
+      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
       'Context can only be read while React is rendering',
-      'Hooks can only be called inside the body of a function component',
+      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
     ]);
 
     function Valid() {
@@ -915,9 +925,9 @@ describe('ReactHooks', () => {
     }).toWarnDev([
       // We see it twice due to replay
       'Context can only be read while React is rendering',
-      'Hooks can only be called inside the body of a function component',
+      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
       'Context can only be read while React is rendering',
-      'Hooks can only be called inside the body of a function component',
+      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
     ]);
   });
 
@@ -1159,7 +1169,7 @@ describe('ReactHooks', () => {
   });
 
   it('warns on using differently ordered hooks on subsequent renders', () => {
-    const {useState, useReducer} = React;
+    const {useState, useReducer, useRef} = React;
     function useCustomHook() {
       return useState(0);
     }
@@ -1172,6 +1182,9 @@ describe('ReactHooks', () => {
         useReducer((s, a) => a, 0);
         useCustomHook(0);
       }
+      // This should not appear in the warning message because it occurs after
+      // the first mismatch
+      const ref = useRef(null);
       return null;
       /* eslint-enable no-unused-vars */
     }
@@ -1185,7 +1198,8 @@ describe('ReactHooks', () => {
         '   Previous render    Next render\n' +
         '   -------------------------------\n' +
         '1. useReducer         useState\n' +
-        '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^',
+        '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n' +
+        '    in App (at **)',
     ]);
 
     // further warnings for this component are silenced

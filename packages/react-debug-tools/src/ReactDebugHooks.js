@@ -147,7 +147,7 @@ function useRef<T>(initialValue: T): {current: T} {
 }
 
 function useLayoutEffect(
-  create: () => mixed,
+  create: () => (() => void) | void,
   inputs: Array<mixed> | void | null,
 ): void {
   nextHook();
@@ -159,7 +159,7 @@ function useLayoutEffect(
 }
 
 function useEffect(
-  create: () => mixed,
+  create: () => (() => void) | void,
   inputs: Array<mixed> | void | null,
 ): void {
   nextHook();
