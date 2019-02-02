@@ -1006,10 +1006,11 @@ export function useMemo<T>(
   return nextValue;
 }
 
-let isTestEnvironment;
+let isTestDOMEnvironment;
 
 if (__DEV__) {
-  isTestEnvironment = canUseDOM &&
+  isTestDOMEnvironment =
+    canUseDOM &&
     (navigator.userAgent.includes('Node.js') ||
       navigator.userAgent.includes('jsdom'));
 }
@@ -1139,7 +1140,7 @@ function dispatchAction<S, A>(
     if (__DEV__) {
       // if we're in a test-like environment, warn if we're calling this
       // outside of a batchedUpdates/TestUtils.act scope
-      if (isTestEnvironment) {
+      if (isTestDOMEnvironment === true) {
         ensureBatchingAndScheduleWork(fiber, expirationTime);
       } else {
         scheduleWork(fiber, expirationTime);

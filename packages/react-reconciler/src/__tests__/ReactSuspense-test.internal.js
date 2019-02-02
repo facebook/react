@@ -797,7 +797,7 @@ describe('ReactSuspense', () => {
       ]);
       expect(root).toMatchRenderedOutput('Tab: 0 + sibling');
 
-      setTab(1);
+      setTab(1); // why does this warn? why is canUseDOM === true here?
       expect(ReactTestRenderer).toHaveYielded([
         'Suspend! [Tab: 1]',
         ' + sibling',
@@ -811,7 +811,7 @@ describe('ReactSuspense', () => {
       ]);
       expect(root).toMatchRenderedOutput('Tab: 1 + sibling');
 
-      setTab(2);
+      setTab(2); // this too - why does this warn?
       expect(ReactTestRenderer).toHaveYielded([
         'Suspend! [Tab: 2]',
         ' + sibling',

@@ -1794,7 +1794,7 @@ export function ensureBatchingAndScheduleWork(
   expirationTime: ExpirationTime,
 ) {
   if (__DEV__) {
-    if (!isBatchingUpdates) {
+    if (isBatchingUpdates === false) {
       warningWithoutStack(false, "called a hook's setState outside of .act()");
     }
   }
