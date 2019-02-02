@@ -46,6 +46,11 @@ function hasValidKey(config) {
   return config.key !== undefined;
 }
 
+/**
+ * @description Remove props whose values are set to undefined
+ * @param {*} props
+ * @returns
+ */
 function checkPropsForUndefined(props) {
   const origProps = Object.assign({}, props);
   let propsToAdd = {};

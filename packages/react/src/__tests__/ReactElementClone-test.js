@@ -9,14 +9,12 @@
 
 'use strict';
 
-let PropTypes;
-let React;
-let ReactDOM;
-let ReactTestUtils;
-
 describe('ReactElementClone', () => {
   let ComponentClass;
-
+  let PropTypes;
+  let React;
+  let ReactDOM;
+  let ReactTestUtils;
   beforeEach(() => {
     PropTypes = require('prop-types');
     React = require('react');
@@ -49,6 +47,25 @@ describe('ReactElementClone', () => {
     }
     const component = ReactTestUtils.renderIntoDocument(<Grandparent />);
     expect(ReactDOM.findDOMNode(component).childNodes[0].className).toBe('xyz');
+  });
+
+  it('should clone a DOM component with new props while filtering those set as undefined ', () => {
+    class Grandparent extends React.Component {
+      render() {
+        return <Parent child={<div className="child" />} />;
+      }
+    }
+    class Parent extends React.Component {
+      render() {
+        return (
+          <div className="parent">
+            {React.cloneElement(this.props.child, {className: undefined})}
+          </div>
+        );
+      }
+    }
+    const component = ReactTestUtils.renderIntoDocument(<Grandparent />);
+    expect(ReactDOM.findDOMNode(component).childNodes[0].className).toBe('');
   });
 
   it('should clone a composite component with new props', () => {
