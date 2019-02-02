@@ -1789,17 +1789,12 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
   return root;
 }
 
-const isJSDOM =
-  'undefined' !== typeof global.navigator &&
-  (navigator.userAgent.includes('Node.js') ||
-    navigator.userAgent.includes('jsdom'));
-
 export function ensureBatchingAndScheduleWork(
   fiber: Fiber,
   expirationTime: ExpirationTime,
 ) {
   if (__DEV__) {
-    if (isJSDOM && !isBatchingUpdates) {
+    if (!isBatchingUpdates) {
       warningWithoutStack(false, "called a hook's setState outside of .act()");
     }
   }

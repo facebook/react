@@ -41,6 +41,7 @@ import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 import getComponentName from 'shared/getComponentName';
 import is from 'shared/objectIs';
+import {canUseDOM} from 'shared/ExecutionEnvironment';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
 
 type Update<S, A> = {
@@ -1005,6 +1006,14 @@ export function useMemo<T>(
   return nextValue;
 }
 
+let isTestEnvironment;
+
+if (__DEV__) {
+  isTestEnvironment = canUseDOM &&
+    (navigator.userAgent.includes('Node.js') ||
+      navigator.userAgent.includes('jsdom'));
+}
+
 function dispatchAction<S, A>(
   fiber: Fiber,
   queue: UpdateQueue<S, A>,
@@ -1127,7 +1136,16 @@ function dispatchAction<S, A>(
         }
       }
     }
-    ensureBatchingAndScheduleWork(fiber, expirationTime);
-    // scheduleWork(fiber, expirationTime);
+    if (__DEV__) {
+      // if we're in a test-like environment, warn if we're calling this
+      // outside of a batchedUpdates/TestUtils.act scope
+      if (isTestEnvironment) {
+        ensureBatchingAndScheduleWork(fiber, expirationTime);
+      } else {
+        scheduleWork(fiber, expirationTime);
+      }
+    } else {
+      scheduleWork(fiber, expirationTime);
+    }
   }
 }

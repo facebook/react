@@ -555,19 +555,16 @@ describe('ReactTestUtils', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     let button;
-    try {
-      ReactTestUtils.act(() => {
-        ReactDOM.render(<App />, container);
-      });
-      button = document.getElementById('button');
-      expect(button.innerHTML).toBe('0');
-      ReactTestUtils.act(() => {
-        button.dispatchEvent(new MouseEvent('click', {bubbles: true}));
-      });
-      expect(button.innerHTML).toBe('1');
-    } finally {
-      document.body.removeChild(container);
-    }
+    ReactTestUtils.act(() => {
+      ReactDOM.render(<App />, container);
+    });
+    button = document.getElementById('button');
+    expect(button.innerHTML).toBe('0');
+    ReactTestUtils.act(() => {
+      button.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+    });
+    expect(button.innerHTML).toBe('1');
+    document.body.removeChild(container);
   });
 
   it('detects setState being called outside of .act()', () => {
@@ -582,11 +579,11 @@ describe('ReactTestUtils', () => {
       );
     }
     const container = document.createElement('div');
-    document.body.appendChild(container)
-    let button
+    document.body.appendChild(container);
+    let button;
     ReactTestUtils.act(() => {
       ReactDOM.render(<App />, container);
-      button = container.querySelector('#button')      
+      button = container.querySelector('#button');
       button.dispatchEvent(new MouseEvent('click', {bubbles: true}));
     });
     expect(button.innerHTML).toBe('2');
@@ -594,7 +591,7 @@ describe('ReactTestUtils', () => {
       ["called a hook's setState outside of .act()"],
       {withoutStack: 1},
     );
-    document.body.removeChild(container)
+    document.body.removeChild(container);
   });
 
   it('lets a ticker update', () => {
@@ -609,15 +606,14 @@ describe('ReactTestUtils', () => {
       return toggle;
     }
     const container = document.createElement('div');
-    
+
     ReactTestUtils.act(() => {
-      ReactTestUtils.act(()=> {
-        ReactDOM.render(<App />, container);  
-      })      
+      ReactTestUtils.act(() => {
+        ReactDOM.render(<App />, container);
+      });
       jest.advanceTimersByTime(250);
     });
-    
+
     expect(container.innerHTML).toBe('1');
   });
-  
 });
