@@ -528,19 +528,19 @@ describe('ReactTestUtils', () => {
       );
     }
     const container = document.createElement('div');
-    document.body.appendChild(container);
+    document.body.appendChild(container)
+    let button
     act(() => {
       ReactDOM.render(<App />, container);
-      container
-        .querySelector('#button')
-        .dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      button = container.querySelector('#button')      
+      button.dispatchEvent(new MouseEvent('click', {bubbles: true}));
     });
-
     expect(button.innerHTML).toBe('2');
     expect(() => setValueRef(1)).toWarnDev(
       ["called a hook's setState outside of .act()"],
       {withoutStack: 1},
     );
+    document.body.removeChild(container)
   });
 
   it('lets a ticker update', () => {
@@ -555,10 +555,14 @@ describe('ReactTestUtils', () => {
       return toggle;
     }
     const container = document.createElement('div');
+    
     act(() => {
-      ReactDOM.render(<App />, container);
+      act(()=> {
+        ReactDOM.render(<App />, container);  
+      })      
+      jest.advanceTimersByTime(250);
     });
-    jest.advanceTimersByTime(250); // this warns!!!
+    
     expect(container.innerHTML).toBe('1');
   });
 });
