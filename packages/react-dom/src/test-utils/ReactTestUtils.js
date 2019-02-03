@@ -386,8 +386,9 @@ const ReactTestUtils = {
   SimulateNative: {},
 
   act(callback: () => void) {
-    ReactDOM.unstable_batchedUpdates(callback);
+    let result = ReactDOM.unstable_batchedUpdates(callback);
     ReactDOM.render(actElement, actContainerElement);
+    return result;
   },
 };
 

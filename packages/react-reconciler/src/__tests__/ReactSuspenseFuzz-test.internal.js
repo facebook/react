@@ -1,7 +1,3 @@
-/**
- * @jest-environment node
- */
-
 let React;
 let Suspense;
 let ReactTestRenderer;

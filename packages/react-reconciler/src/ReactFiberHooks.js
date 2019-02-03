@@ -31,7 +31,7 @@ import {
 } from './ReactHookEffectTags';
 import {
   scheduleWork,
-  ensureBatchingAndScheduleWork,
+  getBatchingStatus,
   computeExpirationForFiber,
   flushPassiveEffects,
   requestCurrentTime,
@@ -41,6 +41,7 @@ import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 import getComponentName from 'shared/getComponentName';
 import is from 'shared/objectIs';
+import {canUseDOM} from 'shared/ExecutionEnvironment';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
 
 type Update<S, A> = {
@@ -1132,5 +1133,62 @@ function dispatchAction<S, A>(
     } else {
       scheduleWork(fiber, expirationTime);
     }
+  }
+}
+
+// in a dom-like test environment, we want to warn if dispatchAction()
+// is called outside of a batchedUpdates/TestUtils.act(...) call.
+
+let isNotDOMRenderer = undefined;
+// some folks initialize a jsdom, but still use TestRenderer.
+// So when dispatchAction is called first, we'll test the
+// fiber tree and set this value.
+
+let ensureBatchingAndScheduleWork = (
+  fiber: Fiber,
+  expirationTime: ExpirationTime,
+) => {
+  scheduleWork(fiber, expirationTime);
+};
+// we'll swap out the function definition when we learn more about the environment
+
+function ensureBatchingAndScheduleWorkImpl(
+  fiber: Fiber,
+  expirationTime: ExpirationTime,
+) {
+  if (__DEV__) {
+    if (isNotDOMRenderer === undefined) {
+      let f = fiber;
+      while (f.return) {
+        f = f.return;
+      }
+      if (f.stateNode.containerInfo instanceof HTMLElement) {
+        isNotDOMRenderer = false;
+      } else {
+        isNotDOMRenderer = true;
+        ensureBatchingAndScheduleWork = scheduleWork;
+      }
+    }
+    if (isNotDOMRenderer === false && getBatchingStatus() === false) {
+      warning(
+        false,
+        'It looks like you are in a test environment, trying to ' +
+          'set state outside of TestUtils.act(...). ' +
+          'This could lead to unexpected ui while testing. Use ' +
+          'ReactTestUtils.act(...) to batch your updates and remove this warning.',
+      );
+    }
+  }
+  scheduleWork(fiber, expirationTime);
+}
+
+if (__DEV__) {
+  if (
+    canUseDOM &&
+    (navigator.userAgent.indexOf('Node.js') >= 0 ||
+      navigator.userAgent.indexOf('jsdom') >= 0)
+    // we should probably add puppeteer-like environments here too
+  ) {
+    ensureBatchingAndScheduleWork = ensureBatchingAndScheduleWorkImpl;
   }
 }
