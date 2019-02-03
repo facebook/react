@@ -51,7 +51,15 @@ describe('ReactNewContext', () => {
     Context =>
       function Consumer(props) {
         const observedBits = props.unstable_observedBits;
-        const contextValue = useContext(Context, observedBits);
+        let contextValue;
+        expect(() => {
+          contextValue = useContext(Context, observedBits);
+        }).toWarnDev(
+          observedBits !== undefined
+            ? 'useContext() second argument is reserved for future use in React. ' +
+              `Passing it is not supported. You passed: ${observedBits}.`
+            : [],
+        );
         const render = props.children;
         return render(contextValue);
       },
@@ -59,7 +67,15 @@ describe('ReactNewContext', () => {
   sharedContextTests('useContext inside forwardRef component', Context =>
     React.forwardRef(function Consumer(props, ref) {
       const observedBits = props.unstable_observedBits;
-      const contextValue = useContext(Context, observedBits);
+      let contextValue;
+      expect(() => {
+        contextValue = useContext(Context, observedBits);
+      }).toWarnDev(
+        observedBits !== undefined
+          ? 'useContext() second argument is reserved for future use in React. ' +
+            `Passing it is not supported. You passed: ${observedBits}.`
+          : [],
+      );
       const render = props.children;
       return render(contextValue);
     }),
@@ -67,7 +83,15 @@ describe('ReactNewContext', () => {
   sharedContextTests('useContext inside memoized function component', Context =>
     React.memo(function Consumer(props) {
       const observedBits = props.unstable_observedBits;
-      const contextValue = useContext(Context, observedBits);
+      let contextValue;
+      expect(() => {
+        contextValue = useContext(Context, observedBits);
+      }).toWarnDev(
+        observedBits !== undefined
+          ? 'useContext() second argument is reserved for future use in React. ' +
+            `Passing it is not supported. You passed: ${observedBits}.`
+          : [],
+      );
       const render = props.children;
       return render(contextValue);
     }),
@@ -1300,6 +1324,97 @@ describe('ReactNewContext', () => {
   });
 
   describe('readContext', () => {
+    it('can read the same context multiple times in the same function', () => {
+      const Context = React.createContext({foo: 0, bar: 0, baz: 0}, (a, b) => {
+        let result = 0;
+        if (a.foo !== b.foo) {
+          result |= 0b001;
+        }
+        if (a.bar !== b.bar) {
+          result |= 0b010;
+        }
+        if (a.baz !== b.baz) {
+          result |= 0b100;
+        }
+        return result;
+      });
+
+      function Provider(props) {
+        return (
+          <Context.Provider
+            value={{foo: props.foo, bar: props.bar, baz: props.baz}}>
+            {props.children}
+          </Context.Provider>
+        );
+      }
+
+      function FooAndBar() {
+        const {foo} = readContext(Context, 0b001);
+        const {bar} = readContext(Context, 0b010);
+        return <Text text={`Foo: ${foo}, Bar: ${bar}`} />;
+      }
+
+      function Baz() {
+        const {baz} = readContext(Context, 0b100);
+        return <Text text={'Baz: ' + baz} />;
+      }
+
+      class Indirection extends React.Component {
+        shouldComponentUpdate() {
+          return false;
+        }
+        render() {
+          return this.props.children;
+        }
+      }
+
+      function App(props) {
+        return (
+          <Provider foo={props.foo} bar={props.bar} baz={props.baz}>
+            <Indirection>
+              <Indirection>
+                <FooAndBar />
+              </Indirection>
+              <Indirection>
+                <Baz />
+              </Indirection>
+            </Indirection>
+          </Provider>
+        );
+      }
+
+      ReactNoop.render(<App foo={1} bar={1} baz={1} />);
+      expect(ReactNoop.flush()).toEqual(['Foo: 1, Bar: 1', 'Baz: 1']);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('Foo: 1, Bar: 1'),
+        span('Baz: 1'),
+      ]);
+
+      // Update only foo
+      ReactNoop.render(<App foo={2} bar={1} baz={1} />);
+      expect(ReactNoop.flush()).toEqual(['Foo: 2, Bar: 1']);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('Foo: 2, Bar: 1'),
+        span('Baz: 1'),
+      ]);
+
+      // Update only bar
+      ReactNoop.render(<App foo={2} bar={2} baz={1} />);
+      expect(ReactNoop.flush()).toEqual(['Foo: 2, Bar: 2']);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('Foo: 2, Bar: 2'),
+        span('Baz: 1'),
+      ]);
+
+      // Update only baz
+      ReactNoop.render(<App foo={2} bar={2} baz={2} />);
+      expect(ReactNoop.flush()).toEqual(['Baz: 2']);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('Foo: 2, Bar: 2'),
+        span('Baz: 2'),
+      ]);
+    });
+
     // Context consumer bails out on propagating "deep" updates when `value` hasn't changed.
     // However, it doesn't bail out from rendering if the component above it re-rendered anyway.
     // If we bailed out on referential equality, it would be confusing that you
@@ -1374,95 +1489,20 @@ describe('ReactNewContext', () => {
   });
 
   describe('useContext', () => {
-    it('can use the same context multiple times in the same function', () => {
-      const Context = React.createContext({foo: 0, bar: 0, baz: 0}, (a, b) => {
-        let result = 0;
-        if (a.foo !== b.foo) {
-          result |= 0b001;
-        }
-        if (a.bar !== b.bar) {
-          result |= 0b010;
-        }
-        if (a.baz !== b.baz) {
-          result |= 0b100;
-        }
-        return result;
-      });
-
-      function Provider(props) {
-        return (
-          <Context.Provider
-            value={{foo: props.foo, bar: props.bar, baz: props.baz}}>
-            {props.children}
-          </Context.Provider>
-        );
+    it('warns on array.map(useContext)', () => {
+      const Context = React.createContext(0);
+      function Foo() {
+        return [Context].map(useContext);
       }
-
-      function FooAndBar() {
-        const {foo} = useContext(Context, 0b001);
-        const {bar} = useContext(Context, 0b010);
-        return <Text text={`Foo: ${foo}, Bar: ${bar}`} />;
-      }
-
-      function Baz() {
-        const {baz} = useContext(Context, 0b100);
-        return <Text text={'Baz: ' + baz} />;
-      }
-
-      class Indirection extends React.Component {
-        shouldComponentUpdate() {
-          return false;
-        }
-        render() {
-          return this.props.children;
-        }
-      }
-
-      function App(props) {
-        return (
-          <Provider foo={props.foo} bar={props.bar} baz={props.baz}>
-            <Indirection>
-              <Indirection>
-                <FooAndBar />
-              </Indirection>
-              <Indirection>
-                <Baz />
-              </Indirection>
-            </Indirection>
-          </Provider>
-        );
-      }
-
-      ReactNoop.render(<App foo={1} bar={1} baz={1} />);
-      expect(ReactNoop.flush()).toEqual(['Foo: 1, Bar: 1', 'Baz: 1']);
-      expect(ReactNoop.getChildren()).toEqual([
-        span('Foo: 1, Bar: 1'),
-        span('Baz: 1'),
-      ]);
-
-      // Update only foo
-      ReactNoop.render(<App foo={2} bar={1} baz={1} />);
-      expect(ReactNoop.flush()).toEqual(['Foo: 2, Bar: 1']);
-      expect(ReactNoop.getChildren()).toEqual([
-        span('Foo: 2, Bar: 1'),
-        span('Baz: 1'),
-      ]);
-
-      // Update only bar
-      ReactNoop.render(<App foo={2} bar={2} baz={1} />);
-      expect(ReactNoop.flush()).toEqual(['Foo: 2, Bar: 2']);
-      expect(ReactNoop.getChildren()).toEqual([
-        span('Foo: 2, Bar: 2'),
-        span('Baz: 1'),
-      ]);
-
-      // Update only baz
-      ReactNoop.render(<App foo={2} bar={2} baz={2} />);
-      expect(ReactNoop.flush()).toEqual(['Baz: 2']);
-      expect(ReactNoop.getChildren()).toEqual([
-        span('Foo: 2, Bar: 2'),
-        span('Baz: 2'),
-      ]);
+      ReactNoop.render(<Foo />);
+      expect(ReactNoop.flush).toWarnDev(
+        'useContext() second argument is reserved for future ' +
+          'use in React. Passing it is not supported. ' +
+          'You passed: 0.\n\n' +
+          'Did you call array.map(useContext)? ' +
+          'Calling Hooks inside a loop is not supported. ' +
+          'Learn more at https://fb.me/rules-of-hooks',
+      );
     });
 
     it('throws when used in a class component', () => {

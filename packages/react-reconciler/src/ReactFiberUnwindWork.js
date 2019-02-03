@@ -298,7 +298,7 @@ function throwException(
 
         let absoluteTimeoutMs;
         if (earliestTimeoutMs === -1) {
-          // If no explicit threshold is given, default to an abitrarily large
+          // If no explicit threshold is given, default to an arbitrarily large
           // value. The actual size doesn't matter because the threshold for the
           // whole tree will be clamped to the expiration time.
           absoluteTimeoutMs = maxSigned31BitInt;

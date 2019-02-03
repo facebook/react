@@ -91,23 +91,19 @@ describe('ReactShallowRenderer with hooks', () => {
   });
 
   it('should work with useReducer', () => {
-    const initialState = {count: 0};
-
     function reducer(state, action) {
       switch (action.type) {
-        case 'reset':
-          return initialState;
         case 'increment':
           return {count: state.count + 1};
         case 'decrement':
           return {count: state.count - 1};
-        default:
-          return state;
       }
     }
 
-    function SomeComponent({initialCount}) {
-      const [state] = React.useReducer(reducer, {count: initialCount});
+    function SomeComponent(props) {
+      const [state] = React.useReducer(reducer, props, p => ({
+        count: p.initialCount,
+      }));
 
       return (
         <div>
@@ -141,25 +137,19 @@ describe('ReactShallowRenderer with hooks', () => {
   });
 
   it('should work with a dispatched state change for a useReducer', () => {
-    const initialState = {count: 0};
-
     function reducer(state, action) {
       switch (action.type) {
-        case 'reset':
-          return initialState;
         case 'increment':
           return {count: state.count + 1};
         case 'decrement':
           return {count: state.count - 1};
-        default:
-          return state;
       }
     }
 
-    function SomeComponent({initialCount}) {
-      const [state, dispatch] = React.useReducer(reducer, {
-        count: initialCount,
-      });
+    function SomeComponent(props) {
+      const [state, dispatch] = React.useReducer(reducer, props, p => ({
+        count: p.initialCount,
+      }));
 
       if (state.count === 0) {
         dispatch({type: 'increment'});
