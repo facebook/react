@@ -1011,8 +1011,8 @@ let isTestDOMEnvironment = false;
 if (__DEV__) {
   isTestDOMEnvironment =
     canUseDOM &&
-    (navigator.userAgent.includes('Node.js') ||
-      navigator.userAgent.includes('jsdom'));
+    (navigator.userAgent.indexOf('Node.js') >= 0 ||
+      navigator.userAgent.indexOf('jsdom') >= 0);
 }
 
 function dispatchAction<S, A>(
