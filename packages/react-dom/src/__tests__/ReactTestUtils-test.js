@@ -588,7 +588,9 @@ describe('ReactTestUtils', () => {
     });
     expect(button.innerHTML).toBe('2');
     expect(() => setValueRef(1)).toWarnDev(
-      ["called a hook's setState outside of .act()"],
+      [
+        'It looks like you are in a test environment, trying to set state outside of TestUtils.act(...).',
+      ],
       {withoutStack: 1},
     );
     document.body.removeChild(container);

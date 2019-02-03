@@ -65,6 +65,7 @@ import {
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import {canUseDOM} from 'shared/ExecutionEnvironment';
 
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import {
@@ -1789,13 +1790,30 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
   return root;
 }
 
+let isTestDOMEnvironment = false;
+
+if (__DEV__) {
+  isTestDOMEnvironment =
+    canUseDOM &&
+    (navigator.userAgent.indexOf('Node.js') >= 0 ||
+      navigator.userAgent.indexOf('jsdom') >= 0);
+}
+
+// if we're in a test-like environment, warn if we're calling this
+// outside of a batchedUpdates/TestUtils.act scope
 export function ensureBatchingAndScheduleWork(
   fiber: Fiber,
   expirationTime: ExpirationTime,
 ) {
   if (__DEV__) {
-    if (isBatchingUpdates === false) {
-      warningWithoutStack(false, "called a hook's setState outside of .act()");
+    if (isTestDOMEnvironment === true && isBatchingUpdates === false) {
+      warningWithoutStack(
+        false,
+        'It looks like you are in a test environment, trying to ' +
+          'set state outside of TestUtils.act(...). ' +
+          'This could lead to unexpected ui while testing. Use ' +
+          'ReactTestUtils.act(...) to batch your updates and remove this warning.',
+      );
     }
   }
   scheduleWork(fiber, expirationTime);
