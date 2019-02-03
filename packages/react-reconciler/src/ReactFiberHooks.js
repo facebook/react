@@ -1006,7 +1006,7 @@ export function useMemo<T>(
   return nextValue;
 }
 
-let isTestDOMEnvironment;
+let isTestDOMEnvironment = false;
 
 if (__DEV__) {
   isTestDOMEnvironment =

@@ -1,3 +1,7 @@
+/**
+ * @jest-environment node
+ */
+
 let React;
 let ReactTestRenderer;
 let ReactFeatureFlags;
@@ -797,7 +801,7 @@ describe('ReactSuspense', () => {
       ]);
       expect(root).toMatchRenderedOutput('Tab: 0 + sibling');
 
-      setTab(1); // why does this warn? why is canUseDOM === true here?
+      setTab(1);
       expect(ReactTestRenderer).toHaveYielded([
         'Suspend! [Tab: 1]',
         ' + sibling',
@@ -811,7 +815,7 @@ describe('ReactSuspense', () => {
       ]);
       expect(root).toMatchRenderedOutput('Tab: 1 + sibling');
 
-      setTab(2); // this too - why does this warn?
+      setTab(2);
       expect(ReactTestRenderer).toHaveYielded([
         'Suspend! [Tab: 2]',
         ' + sibling',

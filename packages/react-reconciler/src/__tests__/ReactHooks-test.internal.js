@@ -81,7 +81,7 @@ describe('ReactHooks', () => {
     expect(root).toMatchRenderedOutput('0, 0');
 
     // Normal update
-    setCounter1(1); // why does this not warn?
+    setCounter1(1);
     setCounter2(1);
     expect(root).toFlushAndYield([
       'Parent: 1, 1',
