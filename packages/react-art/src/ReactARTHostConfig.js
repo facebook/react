@@ -424,3 +424,5 @@ export function unhideInstance(instance, props) {
 export function unhideTextInstance(textInstance, text): void {
   // Noop
 }
+
+export const shouldWarnForUnbatchedSetState = false;
