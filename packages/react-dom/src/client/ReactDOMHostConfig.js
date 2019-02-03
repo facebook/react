@@ -664,4 +664,4 @@ if (__DEV__) {
   }
 }
 
-export const shouldBatchDispatchedActions = ensureBatchedDispatchedActions;
+export const shouldWarnForUnbatchedSetState = ensureBatchedDispatchedActions;

@@ -486,3 +486,5 @@ export function unhideTextInstance(
 ): void {
   throw new Error('Not yet implemented.');
 }
+
+export const shouldWarnForUnbatchedSetState = false;

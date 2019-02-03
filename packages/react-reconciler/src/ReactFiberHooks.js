@@ -37,7 +37,7 @@ import {
   requestCurrentTime,
 } from './ReactFiberScheduler';
 
-import {shouldBatchDispatchedActions} from './ReactFiberHostConfig';
+import {shouldWarnForUnbatchedSetState} from './ReactFiberHostConfig';
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 import getComponentName from 'shared/getComponentName';
@@ -1129,7 +1129,7 @@ function dispatchAction<S, A>(
       }
     }
     if (__DEV__) {
-      if (shouldBatchDispatchedActions === true) {
+      if (shouldWarnForUnbatchedSetState === true) {
         ensureBatchingAndScheduleWork(fiber, expirationTime);
       } else {
         scheduleWork(fiber, expirationTime);

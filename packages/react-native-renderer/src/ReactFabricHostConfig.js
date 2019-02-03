@@ -436,3 +436,5 @@ export function replaceContainerChildren(
   container: Container,
   newChildren: ChildSet,
 ): void {}
+
+export const shouldWarnForUnbatchedSetState = false;
