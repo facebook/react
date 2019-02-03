@@ -1789,8 +1789,22 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
   return root;
 }
 
-export function getBatchingStatus(): boolean {
-  return isBatchingUpdates;
+export function ensureBatchingAndScheduleWork(
+  fiber: Fiber,
+  expirationTime: ExpirationTime,
+) {
+  if (__DEV__) {
+    if (isBatchingUpdates === false) {
+      warningWithoutStack(
+        false,
+        'It looks like you are in a test environment, trying to ' +
+          'set state outside of TestUtils.act(...). ' +
+          'This could lead to unexpected ui while testing. Use ' +
+          'ReactTestUtils.act(...) to batch your updates and remove this warning.',
+      );
+    }
+  }
+  scheduleWork(fiber, expirationTime);
 }
 
 function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
