@@ -17,8 +17,8 @@ import {
   updateContainer,
   flushSync,
   injectIntoDevTools,
+  batchedUpdates,
 } from 'react-reconciler/inline.test';
-import {batchedUpdates} from 'events/ReactGenericBatching';
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
 import {
   Fragment,
@@ -557,6 +557,10 @@ const ReactTestRendererFiber = {
   /* eslint-enable camelcase */
 
   unstable_setNowImplementation: setNowImplementation,
+
+  act<X>(callback: () => X): X {
+    return batchedUpdates(callback);
+  },
 };
 
 const fiberToWrapper = new WeakMap();

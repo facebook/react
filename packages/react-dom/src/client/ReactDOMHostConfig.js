@@ -39,7 +39,6 @@ import {
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
 import dangerousStyleValue from '../shared/dangerousStyleValue';
-import {canUseDOM} from 'shared/ExecutionEnvironment';
 
 import type {DOMContainer} from './ReactDOM';
 
@@ -648,20 +647,3 @@ export function didNotFindHydratableTextInstance(
     warnForInsertedHydratedText(parentInstance, text);
   }
 }
-
-// in a dom-like test environment, we want to warn if dispatchAction()
-// is called outside of a batchedUpdates/TestUtils.act(...) call.
-let ensureBatchedDispatchedActions = false;
-
-if (__DEV__) {
-  if (
-    canUseDOM &&
-    (navigator.userAgent.indexOf('Node.js') >= 0 ||
-      navigator.userAgent.indexOf('jsdom') >= 0)
-    // we should probably add puppeteer-like environments here too
-  ) {
-    ensureBatchedDispatchedActions = true;
-  }
-}
-
-export const shouldWarnForUnbatchedSetState = ensureBatchedDispatchedActions;

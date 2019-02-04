@@ -1799,9 +1799,9 @@ export function ensureBatchingAndScheduleWork(
       warningWithoutStack(
         false,
         'It looks like you are in a test environment, trying to ' +
-          'set state outside of TestUtils.act(...). ' +
+          'set state outside of an act(...) call. ' +
           'This could lead to unexpected ui while testing. Use ' +
-          'ReactTestUtils.act(...) to batch your updates and remove this warning.',
+          'act(...) to batch your updates and remove this warning.',
       );
     }
   }

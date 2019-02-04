@@ -145,8 +145,7 @@ function validateClassInstance(inst, methodName) {
   );
 }
 
-// stub elements used by act() when flushing effects
-let actElement = <div />;
+// stub element used by act() when flushing effects
 let actContainerElement = document.createElement('div');
 
 /**
@@ -387,7 +386,7 @@ const ReactTestUtils = {
 
   act<X>(callback: () => X): X {
     let result = ReactDOM.unstable_batchedUpdates(callback);
-    ReactDOM.render(actElement, actContainerElement);
+    ReactDOM.render(<div />, actContainerElement);
     return result;
   },
 };

@@ -848,6 +848,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     interactiveUpdates: NoopRenderer.interactiveUpdates,
 
+    // maybe this should exist only in the test file
+    act<X>(callback: void => X): X {
+      return NoopRenderer.batchedUpdates(callback);
+      // flush updates?
+    },
+
     flushSync(fn: () => mixed) {
       yieldedValues = [];
       NoopRenderer.flushSync(fn);

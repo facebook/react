@@ -121,6 +121,3 @@ export const didNotFindHydratableInstance =
   $$$hostConfig.didNotFindHydratableInstance;
 export const didNotFindHydratableTextInstance =
   $$$hostConfig.didNotFindHydratableTextInstance;
-
-export const shouldWarnForUnbatchedSetState =
-  $$$hostConfig.shouldWarnForUnbatchedSetState;

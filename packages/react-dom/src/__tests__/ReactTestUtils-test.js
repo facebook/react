@@ -14,6 +14,7 @@ let React;
 let ReactDOM;
 let ReactDOMServer;
 let ReactTestUtils;
+let act;
 
 function getTestDocument(markup) {
   const doc = document.implementation.createHTMLDocument('');
@@ -33,6 +34,7 @@ describe('ReactTestUtils', () => {
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('react-dom/test-utils');
+    act = ReactTestUtils.act;
   });
 
   it('Simulate should have locally attached media events', () => {
@@ -526,7 +528,7 @@ describe('ReactTestUtils', () => {
 
     try {
       let called = false;
-      ReactTestUtils.act(() => {
+      act(() => {
         ReactDOM.render(
           <App
             callback={() => {
@@ -543,6 +545,51 @@ describe('ReactTestUtils', () => {
     }
   });
 
+  it('flushes effects on every call', () => {
+    function App(props) {
+      let [ctr, setCtr] = React.useState(0);
+      React.useEffect(() => {
+        props.callback(ctr);
+      });
+      return (
+        <button id="button" onClick={() => setCtr(x => x + 1)}>
+          click me!
+        </button>
+      );
+    }
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    let calledCtr = 0;
+    act(() =>
+      ReactDOM.render(
+        <App
+          callback={val => {
+            calledCtr = val;
+          }}
+        />,
+        container,
+      ),
+    );
+    const button = document.getElementById('button');
+    function click() {
+      button.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+    }
+
+    act(() => {
+      click();
+      click();
+      click();
+    });
+    expect(calledCtr).toBe(3);
+    act(click);
+    expect(calledCtr).toBe(4);
+    act(click);
+    expect(calledCtr).toBe(5);
+
+    document.body.removeChild(container);
+  });
+
   it('can use act to batch effects on updates too', () => {
     function App() {
       let [ctr, setCtr] = React.useState(0);
@@ -555,19 +602,15 @@ describe('ReactTestUtils', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     let button;
-    ReactTestUtils.act(() => {
-      ReactDOM.render(<App />, container);
-    });
+    act(() => ReactDOM.render(<App />, container));
     button = document.getElementById('button');
     expect(button.innerHTML).toBe('0');
-    ReactTestUtils.act(() => {
-      button.dispatchEvent(new MouseEvent('click', {bubbles: true}));
-    });
+    act(() => button.dispatchEvent(new MouseEvent('click', {bubbles: true})));
     expect(button.innerHTML).toBe('1');
     document.body.removeChild(container);
   });
 
-  it('detects setState being called outside of .act()', () => {
+  it('detects setState being called outside of act(...)', () => {
     let setValueRef = null;
     function App() {
       let [value, setValue] = React.useState(0);
@@ -581,7 +624,7 @@ describe('ReactTestUtils', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     let button;
-    ReactTestUtils.act(() => {
+    act(() => {
       ReactDOM.render(<App />, container);
       button = container.querySelector('#button');
       button.dispatchEvent(new MouseEvent('click', {bubbles: true}));
@@ -589,7 +632,7 @@ describe('ReactTestUtils', () => {
     expect(button.innerHTML).toBe('2');
     expect(() => setValueRef(1)).toWarnDev(
       [
-        'It looks like you are in a test environment, trying to set state outside of TestUtils.act(...).',
+        'It looks like you are in a test environment, trying to set state outside of an act(...) call.',
       ],
       {withoutStack: 1},
     );
@@ -609,10 +652,8 @@ describe('ReactTestUtils', () => {
     }
     const container = document.createElement('div');
 
-    ReactTestUtils.act(() => {
-      ReactTestUtils.act(() => {
-        ReactDOM.render(<App />, container);
-      });
+    act(() => {
+      act(() => ReactDOM.render(<App />, container));
       jest.advanceTimersByTime(250);
     });
 

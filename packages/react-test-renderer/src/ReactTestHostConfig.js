@@ -272,5 +272,3 @@ export function unhideTextInstance(
 ): void {
   textInstance.isHidden = false;
 }
-
-export const shouldWarnForUnbatchedSetState = false;

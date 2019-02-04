@@ -13,12 +13,14 @@
 let React;
 let ReactTestRenderer;
 let ReactDebugTools;
+let act;
 
-describe('ReactHooksInspectionIntergration', () => {
+describe('ReactHooksInspectionIntegration', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
+    act = ReactTestRenderer.act;
     ReactDebugTools = require('react-debug-tools');
   });
 
@@ -47,7 +49,7 @@ describe('ReactHooksInspectionIntergration', () => {
       onMouseUp: setStateB,
     } = renderer.root.findByType('div').props;
 
-    setStateA('Hi');
+    act(() => setStateA('Hi'));
 
     childFiber = renderer.root.findByType(Foo)._currentFiber();
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
@@ -57,7 +59,7 @@ describe('ReactHooksInspectionIntergration', () => {
       {name: 'State', value: 'world', subHooks: []},
     ]);
 
-    setStateB('world!');
+    act(() => setStateB('world!'));
 
     childFiber = renderer.root.findByType(Foo)._currentFiber();
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
@@ -120,7 +122,7 @@ describe('ReactHooksInspectionIntergration', () => {
       {name: 'Callback', value: updateStates, subHooks: []},
     ]);
 
-    updateStates();
+    act(updateStates);
 
     childFiber = renderer.root.findByType(Foo)._currentFiber();
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
@@ -132,7 +134,7 @@ describe('ReactHooksInspectionIntergration', () => {
       {name: 'LayoutEffect', value: effect, subHooks: []},
       {name: 'Effect', value: effect, subHooks: []},
       {name: 'ImperativeHandle', value: outsideRef.current, subHooks: []},
-      {name: 'Memo', value: 'Ab', subHooks: []},
+      {name: 'Memo', value: 'AB', subHooks: []},
       {name: 'Callback', value: updateStates, subHooks: []},
     ]);
   });
