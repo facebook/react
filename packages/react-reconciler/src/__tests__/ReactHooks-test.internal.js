@@ -114,6 +114,30 @@ describe('ReactHooks', () => {
     // Because the final values are the same as the current values, the
     // component bails out.
     expect(root).toFlushAndYield(['Parent: 1, 2']);
+
+    // prepare to check SameValue
+    setCounter1(0 / -1);
+    setCounter2(NaN);
+    expect(root).toFlushAndYield([
+      'Parent: 0, NaN',
+      'Child: 0, NaN',
+      'Effect: 0, NaN',
+    ]);
+
+    // check if re-setting to negative 0 / NaN still bails out
+    setCounter1(0 / -1);
+    setCounter2(NaN);
+    setCounter2(Infinity);
+    setCounter2(NaN);
+    expect(root).toFlushAndYield(['Parent: 0, NaN']);
+
+    // check if changing negative 0 to positive 0 does not bail out
+    setCounter1(0);
+    expect(root).toFlushAndYield([
+      'Parent: 0, NaN',
+      'Child: 0, NaN',
+      'Effect: 0, NaN',
+    ]);
   });
 
   it('bails out in render phase if all the state is the same and props bail out with memo', () => {
@@ -375,6 +399,26 @@ describe('ReactHooks', () => {
     setCounter(2);
     expect(root).toFlushAndYield(['Parent: 2', 'Child: 2', 'Effect: 2']);
     expect(root).toMatchRenderedOutput('2');
+
+    // prepare to check SameValue
+    setCounter(0);
+    expect(root).toFlushAndYield(['Parent: 0', 'Child: 0', 'Effect: 0']);
+    expect(root).toMatchRenderedOutput('0');
+
+    // Update to the same state for the first time to flush the queue
+    setCounter(0);
+    expect(root).toFlushAndYield(['Parent: 0']);
+    expect(root).toMatchRenderedOutput('0');
+
+    // Update again to the same state. Should bail out.
+    setCounter(0);
+    expect(root).toFlushAndYield([]);
+    expect(root).toMatchRenderedOutput('0');
+
+    // Update to a different state (positive 0 to negative 0)
+    setCounter(0 / -1);
+    expect(root).toFlushAndYield(['Parent: 0', 'Child: 0', 'Effect: 0']);
+    expect(root).toMatchRenderedOutput('0');
   });
 
   it('bails out multiple times in a row without entering render phase', () => {
