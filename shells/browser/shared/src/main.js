@@ -7,7 +7,7 @@ function createPanelIfReactLoaded() {
     return;
   }
   chrome.devtools.inspectedWindow.eval(
-    'window.__REACT_DEVTOOLS_GLOBAL_HOOK__ && Object.keys(window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers).length > 0',
+    'window.__REACT_DEVTOOLS_GLOBAL_HOOK__ && window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers.size > 0',
     function(pageHasReact, err) {
       if (!pageHasReact || panelCreated) {
         return;
