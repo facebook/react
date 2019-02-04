@@ -1790,10 +1790,7 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
   return root;
 }
 
-export function ensureBatchingAndScheduleWork(
-  fiber: Fiber,
-  expirationTime: ExpirationTime,
-) {
+export function warnIfNotCurrentlyBatchingInDev(): void {
   if (__DEV__) {
     if (isBatchingUpdates === false) {
       warningWithoutStack(
@@ -1805,7 +1802,6 @@ export function ensureBatchingAndScheduleWork(
       );
     }
   }
-  scheduleWork(fiber, expirationTime);
 }
 
 function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {

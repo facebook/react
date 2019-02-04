@@ -30,7 +30,7 @@ import {
 } from './ReactHookEffectTags';
 import {
   scheduleWork,
-  ensureBatchingAndScheduleWork,
+  warnIfNotCurrentlyBatchingInDev,
   computeExpirationForFiber,
   flushPassiveEffects,
   requestCurrentTime,
@@ -1137,13 +1137,10 @@ function dispatchAction<S, A>(
     }
     if (__DEV__) {
       if (shouldWarnForUnbatchedSetState === true) {
-        ensureBatchingAndScheduleWork(fiber, expirationTime);
-      } else {
-        scheduleWork(fiber, expirationTime);
+        warnIfNotCurrentlyBatchingInDev();
       }
-    } else {
-      scheduleWork(fiber, expirationTime);
     }
+    scheduleWork(fiber, expirationTime);
   }
 }
 
