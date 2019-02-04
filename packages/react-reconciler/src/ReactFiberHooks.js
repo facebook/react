@@ -612,7 +612,7 @@ function updateReducer<S, I, A>(
 
         // Mark that the fiber performed work, but only if the new state is
         // different from the current state.
-        if (newState !== hook.memoizedState) {
+        if (!is(newState, hook.memoizedState)) {
           markWorkInProgressReceivedUpdate();
         }
 
@@ -695,7 +695,7 @@ function updateReducer<S, I, A>(
 
     // Mark that the fiber performed work, but only if the new state is
     // different from the current state.
-    if (newState !== hook.memoizedState) {
+    if (!is(newState, hook.memoizedState)) {
       markWorkInProgressReceivedUpdate();
     }
 
@@ -1105,7 +1105,7 @@ function dispatchAction<S, A>(
           // without calling the reducer again.
           update.eagerReducer = eagerReducer;
           update.eagerState = eagerState;
-          if (eagerState === currentState) {
+          if (is(eagerState, currentState)) {
             // Fast path. We can bail out without scheduling React to re-render.
             // It's still possible that we'll need to rebase this update later,
             // if the component re-renders for a different reason and by that
