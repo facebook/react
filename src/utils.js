@@ -1,5 +1,11 @@
 // @flow
 
+let uidCounter: number = 0;
+
+export function getUID(): number {
+  return ++uidCounter;
+}
+
 export function utfDecodeString(array: Uint8Array): string {
   let string = '';
   const { length } = array;

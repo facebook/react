@@ -3,7 +3,7 @@
   --color-base00: #ffffff;
   --color-base01: #f3f3f3;
   --color-base02: #eeeeee;
-  --color-base03: #dadada;
+  --color-base03: #cfd1d5;
   --color-base04: #333333;
   --color-base05: #5a5a5a;
   --color-special00: #8155cb;
@@ -22,6 +22,7 @@
   --color-state05: #222222;
   --color-state06: #222222;
 
+  --color-arrow: var(--color-special07);
   --color-component: var(--color-special00);
   --color-tree-tag: var(--color-base04);
   --color-tree-attr-name: var(--color-special06);
@@ -37,8 +38,12 @@
     Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol;
   --font-size-tree-compact: 12px;
   --font-size-tree-normal: 14px;
+  --line-height-compact: 20px;
+  --line-height-normal: 24px;
 }
 
 * {
   box-sizing: border-box;
+
+  -webkit-font-smoothing: antialiased;
 }

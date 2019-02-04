@@ -5,7 +5,6 @@
   flex-direction: row;
 
   font-family: var(--font-family-sans);
-  -webkit-font-smoothing: antialiased;
 }
 
 .TreeWrapper {

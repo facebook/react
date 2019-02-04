@@ -38,6 +38,11 @@ export type Element = {|
   weight: number,
 |};
 
+export type Owner = {|
+  displayName: string,
+  id: number,
+|};
+
 export type InspectedElement = {|
   id: number,
 
@@ -51,10 +56,10 @@ export type InspectedElement = {|
   state: Object | null,
 
   // List of owners
-  owners: Array<number>,
+  owners: Array<Owner> | null,
 
   // Location of component in source coude.
-  source: Object,
+  source: Object | null,
 |};
 
 // TODO: Add profiling type
@@ -65,4 +70,9 @@ export type InspectedElement = {|
 export type TreeMetadataType = {|
   size: number,
   store: Store,
+|};
+
+export type DehydratedData = {|
+  cleaned: Array<Array<string>>,
+  data: Object,
 |};

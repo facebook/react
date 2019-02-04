@@ -1,9 +1,9 @@
 // @flow
 
-import React, { useLayoutEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Store from '../store';
 import Tree from './Tree';
-import { StoreContext, TreeContext } from './context';
+import { BridgeContext, StoreContext, TreeContext } from './context';
 import SelectedElement from './SelectedElement';
 import { SelectedElementController } from './SelectedElementContext';
 import styles from './Elements.css';
@@ -26,13 +26,19 @@ export default function Elements({ bridge, browserName, themeName }: Props) {
     store,
   });
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const handler = () => {
       setTreeContext({
         size: store.numElements,
         store,
       });
     };
+
+    // Check for changes that happened between async render and passive effect.
+    // (We had not yet subscribed to the store so we would have missed these.)
+    if (treeContext.size !== store.numElements) {
+      handler();
+    }
 
     store.addListener('rootCommitted', handler);
 
@@ -41,19 +47,21 @@ export default function Elements({ bridge, browserName, themeName }: Props) {
 
   // TODO Flex wrappers below should be user resizable.
   return (
-    <StoreContext.Provider value={store}>
-      <TreeContext.Provider value={treeContext}>
-        <SelectedElementController>
-          <div className={styles.Elements}>
-            <div className={styles.TreeWrapper}>
-              <Tree />
+    <BridgeContext.Provider value={bridge}>
+      <StoreContext.Provider value={store}>
+        <TreeContext.Provider value={treeContext}>
+          <SelectedElementController>
+            <div className={styles.Elements}>
+              <div className={styles.TreeWrapper}>
+                <Tree />
+              </div>
+              <div className={styles.SelectedElementWrapper}>
+                <SelectedElement />
+              </div>
             </div>
-            <div className={styles.SelectedElementWrapper}>
-              <SelectedElement />
-            </div>
-          </div>
-        </SelectedElementController>
-      </TreeContext.Provider>
-    </StoreContext.Provider>
+          </SelectedElementController>
+        </TreeContext.Provider>
+      </StoreContext.Provider>
+    </BridgeContext.Provider>
   );
 }

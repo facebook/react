@@ -40,6 +40,9 @@ export default class Store extends EventEmitter {
   // Passive effects will check it for changes between render and mount.
   _roots: $ReadOnlyArray<number> = [];
 
+  // Renderer ID is needed to support inspection fiber props, state, and hooks.
+  _rootIDToRendererID: Map<number, number> = new Map();
+
   constructor(bridge: Bridge) {
     super();
 
@@ -117,6 +120,70 @@ export default class Store extends EventEmitter {
     return element;
   }
 
+  getIndexOfElementID(id: number): number | null {
+    const element = this.getElementByID(id);
+
+    if (element === null) {
+      return null;
+    }
+
+    // Walk up the tree to the root.
+    // Increment the index by one for each node we encounter,
+    // and by the weight of all nodes to the left of the current one.
+    // This should be a relatively fast way of determining the index of a node within the tree.
+    let previousID = id;
+    let currentID = element.parentID;
+    let index = 0;
+    while (true) {
+      const current = ((this._idToElement.get(currentID): any): Element);
+      if (current.parentID === 0) {
+        // We found the root; stop crawling.
+        break;
+      }
+
+      index++;
+
+      const { children } = current;
+      for (let i = 0; i < children.length; i++) {
+        const childID = children[i];
+        if (childID === previousID) {
+          break;
+        }
+        const child = ((this._idToElement.get(childID): any): Element);
+        index += child.weight;
+      }
+
+      previousID = current.id;
+      currentID = current.parentID;
+    }
+
+    // At this point, the current ID is a root (from the previous loop).
+    // We also need to offset the index by previous root weights.
+    for (let i = 0; i < this._roots.length; i++) {
+      const rootID = this._roots[i];
+      if (rootID === currentID) {
+        break;
+      }
+      const root = ((this._idToElement.get(rootID): any): Element);
+      index += root.weight;
+    }
+
+    return index;
+  }
+
+  getRendererIDForElement(id: number): number | null {
+    let current = this._idToElement.get(id);
+    while (current != null) {
+      if (current.parentID === 0) {
+        const rendererID = this._rootIDToRendererID.get(current.id);
+        return rendererID == null ? null : ((rendererID: any): number);
+      } else {
+        current = this._idToElement.get(current.parentID);
+      }
+    }
+    return null;
+  }
+
   onBridgeOperations = (operations: Uint32Array) => {
     if (!(operations instanceof Uint32Array)) {
       // $FlowFixMe TODO HACK Temporary workaround for the fact that Chrome is not transferring the typed array.
@@ -127,7 +194,9 @@ export default class Store extends EventEmitter {
 
     let haveRootsChanged = false;
 
-    let i = 0;
+    const rendererID = operations[0];
+
+    let i = 1;
     while (i < operations.length) {
       let id: number = ((null: any): number);
       let element: Element = ((null: any): Element);
@@ -150,6 +219,7 @@ export default class Store extends EventEmitter {
             debug('Add', `new root fiber ${id}`);
 
             this._roots = this._roots.concat(id);
+            this._rootIDToRendererID.set(id, rendererID);
 
             this._idToElement.set(id, {
               children: [],
@@ -227,6 +297,7 @@ export default class Store extends EventEmitter {
           parentElement = ((this._idToElement.get(parentID): any): Element);
           if (parentElement == null) {
             this._roots = this._roots.filter(rootID => rootID !== id);
+            this._rootIDToRendererID.delete(id);
           } else {
             parentElement.children = parentElement.children.filter(
               childID => childID !== id

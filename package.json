@@ -88,6 +88,7 @@
     "react": "^16.8.0-alpha.1",
     "react-color": "^2.11.7",
     "react-dom": "^16.8.0-alpha.1",
+    "react-is": "^16.8.0-alpha.1",
     "react-portal": "^3.1.0",
     "react-virtualized-auto-sizer": "^1.0.2",
     "react-window": "^1.5.1",

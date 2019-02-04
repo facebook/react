@@ -1,16 +1,27 @@
 // @flow
 
-import type { Hook } from './types';
+import type { Hook, ReactRenderer, RendererInterface } from './types';
 import Agent from './agent';
 
 import { attach } from './renderer';
 
 export function initBackend(hook: Hook, agent: Agent): void {
   const subs = [
-    hook.sub('renderer-attached', ({ id, renderer, rendererInterface }) => {
-      agent.setRendererInterface(id, rendererInterface);
-      rendererInterface.walkTree();
-    }),
+    hook.sub(
+      'renderer-attached',
+      ({
+        id,
+        renderer,
+        rendererInterface,
+      }: {
+        id: number,
+        renderer: ReactRenderer,
+        rendererInterface: RendererInterface,
+      }) => {
+        agent.setRendererInterface(id, rendererInterface);
+        rendererInterface.walkTree();
+      }
+    ),
 
     hook.sub('operations', agent.onHookOperations),
     hook.sub('rootCommitted', agent.onHookRootCommitted),
@@ -18,9 +29,9 @@ export function initBackend(hook: Hook, agent: Agent): void {
     // TODO Add additional subscriptions required for profiling mode
   ];
 
-  const attachRenderer = (id, renderer) => {
+  const attachRenderer = (id: number, renderer: ReactRenderer) => {
     const rendererInterface = attach(hook, id, renderer);
-    hook.rendererInterfaces[id] = rendererInterface;
+    hook.rendererInterfaces.set(id, rendererInterface);
     hook.emit('renderer-attached', {
       id,
       renderer,
@@ -29,23 +40,25 @@ export function initBackend(hook: Hook, agent: Agent): void {
   };
 
   // Connect renderers that have already injected themselves.
-  for (let id in hook.renderers) {
-    const renderer = hook.renderers[id];
-    attachRenderer(id, renderer);
-  }
-
-  // Connect any new renderers that injected themselves.
-  hook.on('renderer', ({ id, renderer }) => {
+  hook.renderers.forEach((renderer, id) => {
     attachRenderer(id, renderer);
   });
+
+  // Connect any new renderers that injected themselves.
+  hook.on(
+    'renderer',
+    ({ id, renderer }: { id: number, renderer: ReactRenderer }) => {
+      attachRenderer(id, renderer);
+    }
+  );
 
   hook.emit('react-devtools', agent);
   hook.reactDevtoolsAgent = agent;
   agent.addListener('shutdown', () => {
     subs.forEach(fn => fn());
-    for (let id in hook.rendererInterfaces) {
-      hook.rendererInterfaces[id].cleanup();
-    }
+    hook.rendererInterfaces.forEach(rendererInterface => {
+      rendererInterface.cleanup();
+    });
     hook.reactDevtoolsAgent = null;
   });
 }

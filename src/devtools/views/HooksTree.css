@@ -1,0 +1,10 @@
+.HooksTree {
+  padding: 0.25rem;
+  border-bottom: 1px solid var(--color-base02);
+}
+
+.ComingSoon {
+  padding-left: 1rem;
+  color: var(--color-base03);
+  font-style: italic;
+}

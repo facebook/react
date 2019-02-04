@@ -1,9 +1,11 @@
 // @flow
 
-import React, { createContext, useMemo, useState } from 'react';
+import React, { createContext, useContext, useMemo, useState } from 'react';
+import { StoreContext } from './context';
 
-type SelectedElementContextValue = {|
+export type SelectedElementContextValue = {|
   id: number | null,
+  index: number | null,
 |};
 
 const SelectedElementContext = createContext<SelectedElementContextValue>(
@@ -18,7 +20,11 @@ type Props = {|
 
 // TODO Remove this wrapper element once global Context.write API exists.
 function SelectedElementController({ children }: Props) {
+  const store = useContext(StoreContext);
+
   const [id, setID] = useState<number | null>(null);
+  const [index, setIndex] = useState<number | null>(null);
+
   const value = useMemo(
     () => ({
       get id() {
@@ -26,6 +32,15 @@ function SelectedElementController({ children }: Props) {
       },
       set id(id: number | null) {
         setID(id);
+        setIndex(id !== null ? store.getIndexOfElementID(id) : null);
+      },
+      get index() {
+        return index;
+      },
+      set index(index: number | null) {
+        const element = index !== null ? store.getElementAtIndex(index) : null;
+        setID(element !== null ? element.id : null);
+        setIndex(index);
       },
     }),
     [id]

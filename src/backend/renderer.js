@@ -12,13 +12,15 @@ import {
   ElementTypeSuspense,
 } from 'src/devtools/types';
 import { utfEncodeString } from '../utils';
-import { getDisplayName } from './utils';
+import { cleanForBridge, cleanPropsForBridge, getDisplayName } from './utils';
 import {
   __DEBUG__,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_RESET_CHILDREN,
 } from '../constants';
+import { getUID } from '../utils';
+import { inspectHooksOfFiber } from './ReactDebugHooks';
 
 import type {
   Fiber,
@@ -27,6 +29,7 @@ import type {
   FiberData,
   RendererInterface,
 } from './types';
+import type { InspectedElement } from 'src/devtools/types';
 
 function getInternalReactConstants(version) {
   const ReactSymbols = {
@@ -51,7 +54,9 @@ function getInternalReactConstants(version) {
   };
 
   const ReactTypeOfSideEffect = {
-    PerformedWork: 1,
+    NoEffect: 0b00,
+    PerformedWork: 0b01,
+    Placement: 0b10,
   };
 
   let ReactTypeOfWork;
@@ -146,7 +151,7 @@ function getInternalReactConstants(version) {
 
 export function attach(
   hook: Hook,
-  rendererID: string,
+  rendererID: number,
   renderer: ReactRenderer
 ): RendererInterface {
   const {
@@ -154,7 +159,7 @@ export function attach(
     ReactSymbols,
     ReactTypeOfSideEffect,
   } = getInternalReactConstants(renderer.version);
-  const { PerformedWork } = ReactTypeOfSideEffect;
+  const { NoEffect, PerformedWork, Placement } = ReactTypeOfSideEffect;
   const {
     FunctionComponent,
     ClassComponent,
@@ -211,8 +216,6 @@ export function attach(
       );
     }
   };
-
-  const primaryFibers: WeakSet<Fiber> = new WeakSet();
 
   // Keep this function in sync with getDataForFiber()
   function shouldFilterFiber(fiber: Fiber): boolean {
@@ -443,12 +446,15 @@ export function attach(
     return fiber;
   }
 
-  let uidCounter: number = 0;
-  const fiberToIDMap: WeakMap<Fiber, number> = new WeakMap();
+  const fiberToIDMap: Map<Fiber, number> = new Map();
+  const idToFiberMap: Map<number, Fiber> = new Map();
+  const primaryFibers: Set<Fiber> = new Set();
 
   function getFiberID(primaryFiber: Fiber): number {
     if (!fiberToIDMap.has(primaryFiber)) {
-      fiberToIDMap.set(primaryFiber, ++uidCounter);
+      const id = getUID();
+      fiberToIDMap.set(primaryFiber, id);
+      idToFiberMap.set(id, primaryFiber);
     }
     return ((fiberToIDMap.get(primaryFiber): any): number);
   }
@@ -509,6 +515,13 @@ export function attach(
   }
 
   function flushPendingEvents(root: Object): void {
+    // Identify which renderer this update is coming from.
+    // This enables roots to be mapped to renderers,
+    // Which in turn enables fiber props, states, and hooks to be inspected.
+    const idArray = new Uint32Array(1);
+    idArray[0] = rendererID;
+    addOperation(idArray, true);
+
     // Let the frontend know about tree operations.
     hook.emit('operations', pendingOperations);
     pendingOperations = new Uint32Array(0);
@@ -575,8 +588,8 @@ export function attach(
   function enqueueUnmount(fiber) {
     const isRoot = fiber.tag === HostRoot;
     const primaryFiber = getPrimaryFiber(fiber);
+    const id = getFiberID(primaryFiber);
     if (isRoot) {
-      const id = getFiberID(getPrimaryFiber(fiber));
       const operation = new Uint32Array(2);
       operation[0] = TREE_OPERATION_REMOVE;
       operation[1] = id;
@@ -585,15 +598,15 @@ export function attach(
       // Non-root fibers are deleted during the commit phase.
       // They are deleted in the child-first order. However
       // DevTools currently expects deletions to be parent-first.
-      // This is why we unshift deletions rather than push them.
-      const id = getFiberID(getPrimaryFiber(fiber));
+      // This is why we unshift deletions rather tha
       const operation = new Uint32Array(2);
       operation[0] = TREE_OPERATION_REMOVE;
       operation[1] = id;
       addOperation(operation, true);
     }
-    primaryFibers.delete(primaryFiber);
+    idToFiberMap.delete(id);
     fiberToIDMap.delete(primaryFiber);
+    primaryFibers.delete(primaryFiber);
   }
 
   function mountFiber(fiber: Fiber, parentFiber: Fiber | null) {
@@ -820,11 +833,255 @@ export function attach(
     return null;
   }
 
+  const MOUNTING = 1;
+  const MOUNTED = 2;
+  const UNMOUNTED = 3;
+
+  // This function is copied from React and should be kept in sync:
+  // https://github.com/facebook/react/blob/master/packages/react-reconciler/src/ReactFiberTreeReflection.js
+  function isFiberMountedImpl(fiber: Fiber): number {
+    let node = fiber;
+    if (!fiber.alternate) {
+      // If there is no alternate, this might be a new tree that isn't inserted
+      // yet. If it is, then it will have a pending insertion effect on it.
+      if ((node.effectTag & Placement) !== NoEffect) {
+        return MOUNTING;
+      }
+      while (node.return) {
+        node = node.return;
+        if ((node.effectTag & Placement) !== NoEffect) {
+          return MOUNTING;
+        }
+      }
+    } else {
+      while (node.return) {
+        node = node.return;
+      }
+    }
+    if (node.tag === HostRoot) {
+      // TODO: Check if this was a nested HostRoot when used with
+      // renderContainerIntoSubtree.
+      return MOUNTED;
+    }
+    // If we didn't hit the root, that means that we're in an disconnected tree
+    // that has been unmounted.
+    return UNMOUNTED;
+  }
+
+  // This function is copied from React and should be kept in sync:
+  // https://github.com/facebook/react/blob/master/packages/react-reconciler/src/ReactFiberTreeReflection.js
+  // It would be nice if we updated React to inject this function directly (vs just indirectly via findDOMNode).
+  function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
+    let alternate = fiber.alternate;
+    if (!alternate) {
+      // If there is no alternate, then we only need to check if it is mounted.
+      const state = isFiberMountedImpl(fiber);
+      if (state === UNMOUNTED) {
+        throw Error('Unable to find node on an unmounted component.');
+      }
+      if (state === MOUNTING) {
+        return null;
+      }
+      return fiber;
+    }
+    // If we have two possible branches, we'll walk backwards up to the root
+    // to see what path the root points to. On the way we may hit one of the
+    // special cases and we'll deal with them.
+    let a = fiber;
+    let b = alternate;
+    while (true) {
+      let parentA = a.return;
+      let parentB = parentA ? parentA.alternate : null;
+      if (!parentA || !parentB) {
+        // We're at the root.
+        break;
+      }
+
+      // If both copies of the parent fiber point to the same child, we can
+      // assume that the child is current. This happens when we bailout on low
+      // priority: the bailed out fiber's child reuses the current child.
+      if (parentA.child === parentB.child) {
+        let child = parentA.child;
+        while (child) {
+          if (child === a) {
+            // We've determined that A is the current branch.
+            if (isFiberMountedImpl(parentA) !== MOUNTED) {
+              throw Error('Unable to find node on an unmounted component.');
+            }
+            return fiber;
+          }
+          if (child === b) {
+            // We've determined that B is the current branch.
+            if (isFiberMountedImpl(parentA) !== MOUNTED) {
+              throw Error('Unable to find node on an unmounted component.');
+            }
+            return alternate;
+          }
+          child = child.sibling;
+        }
+        // We should never have an alternate for any mounting node. So the only
+        // way this could possibly happen is if this was unmounted, if at all.
+        throw Error('Unable to find node on an unmounted component.');
+      }
+
+      if (a.return !== b.return) {
+        // The return pointer of A and the return pointer of B point to different
+        // fibers. We assume that return pointers never criss-cross, so A must
+        // belong to the child set of A.return, and B must belong to the child
+        // set of B.return.
+        a = parentA;
+        b = parentB;
+      } else {
+        // The return pointers point to the same fiber. We'll have to use the
+        // default, slow path: scan the child sets of each parent alternate to see
+        // which child belongs to which set.
+        //
+        // Search parent A's child set
+        let didFindChild = false;
+        let child = parentA.child;
+        while (child) {
+          if (child === a) {
+            didFindChild = true;
+            a = parentA;
+            b = parentB;
+            break;
+          }
+          if (child === b) {
+            didFindChild = true;
+            b = parentA;
+            a = parentB;
+            break;
+          }
+          child = child.sibling;
+        }
+        if (!didFindChild) {
+          // Search parent B's child set
+          child = parentB.child;
+          while (child) {
+            if (child === a) {
+              didFindChild = true;
+              a = parentB;
+              b = parentA;
+              break;
+            }
+            if (child === b) {
+              didFindChild = true;
+              b = parentB;
+              a = parentA;
+              break;
+            }
+            child = child.sibling;
+          }
+          if (!didFindChild) {
+            throw Error(
+              'Child was not found in either parent set. This indicates a bug ' +
+                'in React related to the return pointer. Please file an issue.'
+            );
+          }
+        }
+      }
+
+      if (a.alternate !== b) {
+        throw Error(
+          "Return fibers should always be each others' alternates. " +
+            'This error is likely caused by a bug in React. Please file an issue.'
+        );
+      }
+    }
+    // If the root is not a host container, we're in a disconnected tree. I.e.
+    // unmounted.
+    if (a.tag !== HostRoot) {
+      throw Error('Unable to find node on an unmounted component.');
+    }
+    if (a.stateNode.current === a) {
+      // We've determined that A is the current branch.
+      return fiber;
+    }
+    // Otherwise B has to be current branch.
+    return alternate;
+  }
+
+  function inspectElement(id: number): InspectedElement | null {
+    let fiber = idToFiberMap.get(id);
+
+    if (fiber == null) {
+      console.warn(`Could not find Fiber with id "${id}"`);
+      return null;
+    }
+
+    // Find the currently mounted version of this fiber (so we don't show the wrong props and state).
+    fiber = findCurrentFiberUsingSlowPath(fiber);
+
+    const {
+      _debugOwner,
+      _debugSource,
+      stateNode,
+      memoizedProps,
+      memoizedState,
+      tag,
+    } = ((fiber: any): Fiber);
+
+    const usesHooks =
+      (tag === FunctionComponent ||
+        tag === SimpleMemoComponent ||
+        tag === ForwardRef) &&
+      !!memoizedState;
+
+    const hasContext =
+      tag === ClassComponent ||
+      tag === FunctionComponent ||
+      tag === IncompleteClassComponent ||
+      tag === IndeterminateComponent;
+
+    let owners = null;
+    if (_debugOwner) {
+      owners = [];
+      let owner = _debugOwner;
+      while (owner !== null) {
+        owners.push({
+          displayName: getDataForFiber(owner).displayName || 'Unknown',
+          id: getFiberID(getPrimaryFiber(owner)),
+        });
+        owner = owner._debugOwner;
+      }
+    }
+
+    return {
+      id,
+
+      // Does the current renderer support editable props/state/hooks?
+      canEditValues: false, // TODO
+
+      // Inspectable properties.
+      // TODO Sanitize props, state, and context
+      context:
+        (hasContext &&
+          stateNode &&
+          Object.keys(stateNode.context).length > 0 &&
+          cleanForBridge(stateNode.context)) ||
+        null,
+      hooks: usesHooks
+        ? cleanForBridge(
+            inspectHooksOfFiber(fiber, (renderer.currentDispatcherRef: any))
+          )
+        : null,
+      props: cleanPropsForBridge(memoizedProps),
+      state: usesHooks ? null : cleanForBridge(memoizedState),
+
+      // List of owners
+      owners,
+
+      // Location of component in source coude.
+      source: _debugSource,
+    };
+  }
+
   return {
     getNativeFromReactElement,
     getReactElementFromNative,
     handleCommitFiberRoot,
     handleCommitFiberUnmount,
+    inspectElement,
     cleanup,
     walkTree,
     renderer,

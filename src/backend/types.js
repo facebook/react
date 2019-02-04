@@ -1,6 +1,6 @@
 // @flow
 
-import type { ElementType } from 'src/devtools/types';
+import type { ElementType, InspectedElement } from 'src/devtools/types';
 
 type BundleType =
   | 0 // PROD
@@ -24,7 +24,9 @@ export type Interaction = {|
 |};
 
 export type NativeType = {};
-export type RendererID = string;
+export type RendererID = number;
+
+type Dispatcher = any;
 
 export type ReactRenderer = {
   findHostInstanceByFiber: (fiber: Object) => ?NativeType,
@@ -36,6 +38,9 @@ export type ReactRenderer = {
     path: Array<string | number>,
     value: any
   ) => void,
+
+  // Only injected by React v16.8+ in order to support hooks inspection.
+  currentDispatcherRef?: {| current: null | Dispatcher |},
 };
 
 export type RendererInterface = {
@@ -43,6 +48,7 @@ export type RendererInterface = {
   getNativeFromReactElement?: ?(component: Fiber) => ?NativeType,
   getReactElementFromNative?: ?(component: NativeType) => ?Fiber,
   handleCommitFiberRoot: (fiber: Object) => void,
+  inspectElement: (id: number) => InspectedElement | null,
   renderer: ReactRenderer | null,
   walkTree: () => void,
 };
@@ -51,11 +57,11 @@ export type Handler = (data: any) => void;
 
 export type Hook = {
   listeners: { [key: string]: Array<Handler> },
-  rendererInterfaces: { [key: string]: RendererInterface },
-  renderers: { [key: string]: ReactRenderer },
+  rendererInterfaces: Map<RendererID, RendererInterface>,
+  renderers: Map<RendererID, ReactRenderer>,
 
   emit: (evt: string, data: any) => void,
-  getFiberRoots: (rendererID: string) => Set<Object>,
+  getFiberRoots: (rendererID: RendererID) => Set<Object>,
   inject: (renderer: ReactRenderer) => string | null,
   on: (evt: string, handler: Handler) => void,
   off: (evt: string, handler: Handler) => void,
@@ -67,3 +73,16 @@ export type Hook = {
   onCommitFiberUnmount: (rendererID: RendererID, fiber: Object) => void,
   onCommitFiberRoot: (rendererID: RendererID, fiber: Object) => void,
 };
+
+export type HooksNode = {
+  name: string,
+  value: mixed,
+  subHooks: Array<HooksNode>,
+};
+export type HooksTree = Array<HooksNode>;
+
+export type InspectedHooks = {|
+  elementID: string,
+  id: string,
+  hooksTree: HooksTree,
+|};

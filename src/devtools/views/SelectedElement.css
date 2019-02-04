@@ -36,19 +36,47 @@
   text-overflow: ellipsis;
 }
 
-.Component {
+.Owners {
+  padding: 0.25rem;
+}
+
+.Component,
+.Owner {
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--color-component);
-  flex: 1 1 auto;
 }
-.Component:before {
+.Component:before,
+.Owner:before {
   white-space: nowrap;
   content: '<';
   color: var(--color-tree-tag);
 }
-.Component:after {
+.Component:after,
+.Owner:after {
   white-space: nowrap;
   content: '>';
   color: var(--color-tree-tag);
+}
+
+.Component {
+  flex: 1 1 auto;
+}
+
+.InspectedElement {
+  overflow: auto;
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-tree-compact);
+  line-height: var(--line-height-compact);
+}
+
+.Owner {
+  padding-left: 1rem;
+  cursor: pointer;
+}
+
+.Loading {
+  padding: 0.25rem;
+  color: var(--color-base03);
+  font-style: italic;
 }

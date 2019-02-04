@@ -3,6 +3,7 @@
 import React, { Fragment, useCallback, useContext } from 'react';
 import { TreeContext } from './context';
 import { SelectedElementContext } from './SelectedElementContext';
+import Icon from './Icon';
 
 import styles from './Element.css';
 
@@ -23,6 +24,8 @@ export default function Element({ index, style }: Props) {
     return null;
   }
 
+  // TODO Add click and key handlers for toggling element open/close state.
+
   const { children, depth, displayName, id, key } = element;
 
   const selectedElement = useContext(SelectedElementContext);
@@ -33,8 +36,6 @@ export default function Element({ index, style }: Props) {
     [id]
   );
 
-  // TODO: Add click and key handlers for toggling element open/close state.
-
   return (
     <div
       className={
@@ -42,11 +43,15 @@ export default function Element({ index, style }: Props) {
       }
       onClick={handleClick}
       style={{
-        ...style,
+        ...style, // "style" comes from react-window
         paddingLeft: `${1 + depth}rem`,
       }}
     >
-      {children.length > 0 && <span className={styles.ArrowOpen} />}
+      {children.length > 0 && (
+        <span className={styles.ArrowOpen}>
+          <Icon type="arrow" />
+        </span>
+      )}
 
       <span className={styles.Component}>
         {displayName}

@@ -67,11 +67,11 @@ export function installHook(target: any): Hook {
     } catch (err) {}
   }
 
+  let uidCounter = 0;
+
   function inject(renderer) {
-    const id = Math.random()
-      .toString(16)
-      .slice(2);
-    renderers[id] = renderer;
+    const id = ++uidCounter;
+    renderers.set(id, renderer);
 
     const reactBuildType = hasDetectedBadDCE
       ? 'deadcode'
@@ -125,8 +125,9 @@ export function installHook(target: any): Hook {
 
   function onCommitFiberUnmount(rendererID, fiber) {
     // TODO: can we use hook for roots too?
-    if (rendererInterfaces[rendererID]) {
-      rendererInterfaces[rendererID].handleCommitFiberUnmount(fiber);
+    const rendererInterface = rendererInterfaces.get(rendererID);
+    if (rendererInterface != null) {
+      rendererInterface.handleCommitFiberUnmount(fiber);
     }
   }
 
@@ -143,16 +144,17 @@ export function installHook(target: any): Hook {
     } else if (isKnownRoot && isUnmounting) {
       mountedRoots.delete(root);
     }
-    if (rendererInterfaces[rendererID]) {
-      rendererInterfaces[rendererID].handleCommitFiberRoot(root);
+    const rendererInterface = rendererInterfaces.get(rendererID);
+    if (rendererInterface != null) {
+      rendererInterface.handleCommitFiberRoot(root);
     }
   }
 
   // TODO: More meaningful names for "rendererInterfaces" and "renderers".
   const fiberRoots = {};
-  const rendererInterfaces = {};
+  const rendererInterfaces = new Map();
   const listeners = {};
-  const renderers = {};
+  const renderers = new Map();
 
   const hook: Hook = {
     rendererInterfaces,

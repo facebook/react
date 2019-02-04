@@ -24,11 +24,22 @@ export default class Agent extends EventEmitter {
   addBridge(bridge: Bridge) {
     this._bridge = bridge;
 
-    bridge.on('shutdown', () => this.emit('shutdown'));
+    bridge.addListener('shutdown', () => this.emit('shutdown'));
 
+    bridge.addListener('inspectElement', this.inspectElement);
     // TODO Listen to bridge for things like selection.
     // bridge.on('...'), this...);
   }
+
+  inspectElement = ({ id, rendererID }: { id: number, rendererID: number }) => {
+    const renderer = this._rendererInterfaces[rendererID];
+
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+    } else {
+      this._bridge.send('inspectedElement', renderer.inspectElement(id));
+    }
+  };
 
   setRendererInterface(
     rendererID: RendererID,
@@ -36,16 +47,6 @@ export default class Agent extends EventEmitter {
   ) {
     this._rendererInterfaces[rendererID] = rendererInterface;
   }
-
-  onHookDisplayNames = (displayNames: Map<number, string>) => {
-    debug('onHookDisplayNames', displayNames);
-    this._bridge.send('displayNames', displayNames);
-  };
-
-  onHookKeys = (keys: Map<number, string>) => {
-    debug('onHookKeys', keys);
-    this._bridge.send('keys', keys);
-  };
 
   onHookOperations = (operations: Uint32Array) => {
     debug('onHookOperations', operations);
