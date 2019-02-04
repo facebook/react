@@ -208,12 +208,12 @@ describe('ReactDOMServerHooks', () => {
       expect(domNode.textContent).toEqual('0');
     });
 
-    itRenders('lazy initialization with initialAction', async render => {
+    itRenders('lazy initialization', async render => {
       function reducer(state, action) {
         return action === 'increment' ? state + 1 : state;
       }
       function Counter() {
-        let [count] = useReducer(reducer, 0, 'increment');
+        let [count] = useReducer(reducer, 0, c => c + 1);
         yieldValue('Render: ' + count);
         return <Text text={count} />;
       }
@@ -419,50 +419,51 @@ describe('ReactDOMServerHooks', () => {
       },
     );
 
-    itThrowsWhenRendering(
-      'a hook inside useMemo',
-      async render => {
-        function App() {
-          useMemo(() => {
-            useState();
-            return 0;
-          });
-          return null;
-        }
-        return render(<App />);
-      },
-      'Hooks can only be called inside the body of a function component.',
-    );
+    itRenders('with a warning for useState inside useMemo', async render => {
+      function App() {
+        useMemo(() => {
+          useState();
+          return 0;
+        });
+        return 'hi';
+      }
+
+      const domNode = await render(<App />, 1);
+      expect(domNode.textContent).toEqual('hi');
+    });
 
     itThrowsWhenRendering(
-      'a hook inside useReducer',
+      'with a warning for useRef inside useReducer',
       async render => {
         function App() {
           const [value, dispatch] = useReducer((state, action) => {
             useRef(0);
-            return state;
+            return state + 1;
           }, 0);
-          dispatch('foo');
+          if (value === 0) {
+            dispatch();
+          }
           return value;
         }
-        return render(<App />);
+
+        const domNode = await render(<App />, 1);
+        expect(domNode.textContent).toEqual('1');
       },
-      'Hooks can only be called inside the body of a function component.',
+      'Rendered more hooks than during the previous render',
     );
 
-    itThrowsWhenRendering(
-      'a hook inside useState',
-      async render => {
-        function App() {
-          useState(() => {
-            useRef(0);
-            return 0;
-          });
-        }
-        return render(<App />);
-      },
-      'Hooks can only be called inside the body of a function component.',
-    );
+    itRenders('with a warning for useRef inside useState', async render => {
+      function App() {
+        const [value] = useState(() => {
+          useRef(0);
+          return 0;
+        });
+        return value;
+      }
+
+      const domNode = await render(<App />, 1);
+      expect(domNode.textContent).toEqual('0');
+    });
   });
 
   describe('useRef', () => {
@@ -612,8 +613,114 @@ describe('ReactDOMServerHooks', () => {
   });
 
   describe('useContext', () => {
+    itThrowsWhenRendering(
+      'if used inside a class component',
+      async render => {
+        const Context = React.createContext({}, () => {});
+        class Counter extends React.Component {
+          render() {
+            let [count] = useContext(Context);
+            return <Text text={count} />;
+          }
+        }
+
+        return render(<Counter />);
+      },
+      'Hooks can only be called inside the body of a function component.',
+    );
+  });
+
+  itRenders(
+    'can use the same context multiple times in the same function',
+    async render => {
+      const Context = React.createContext({foo: 0, bar: 0, baz: 0});
+
+      function Provider(props) {
+        return (
+          <Context.Provider
+            value={{foo: props.foo, bar: props.bar, baz: props.baz}}>
+            {props.children}
+          </Context.Provider>
+        );
+      }
+
+      function FooAndBar() {
+        const {foo} = useContext(Context);
+        const {bar} = useContext(Context);
+        return <Text text={`Foo: ${foo}, Bar: ${bar}`} />;
+      }
+
+      function Baz() {
+        const {baz} = useContext(Context);
+        return <Text text={'Baz: ' + baz} />;
+      }
+
+      class Indirection extends React.Component {
+        render() {
+          return this.props.children;
+        }
+      }
+
+      function App(props) {
+        return (
+          <div>
+            <Provider foo={props.foo} bar={props.bar} baz={props.baz}>
+              <Indirection>
+                <Indirection>
+                  <FooAndBar />
+                </Indirection>
+                <Indirection>
+                  <Baz />
+                </Indirection>
+              </Indirection>
+            </Provider>
+          </div>
+        );
+      }
+
+      const domNode = await render(<App foo={1} bar={3} baz={5} />);
+      expect(clearYields()).toEqual(['Foo: 1, Bar: 3', 'Baz: 5']);
+      expect(domNode.childNodes.length).toBe(2);
+      expect(domNode.firstChild.tagName).toEqual('SPAN');
+      expect(domNode.firstChild.textContent).toEqual('Foo: 1, Bar: 3');
+      expect(domNode.lastChild.tagName).toEqual('SPAN');
+      expect(domNode.lastChild.textContent).toEqual('Baz: 5');
+    },
+  );
+
+  itRenders('warns when bitmask is passed to useContext', async render => {
+    let Context = React.createContext('Hi');
+
+    function Foo() {
+      return <span>{useContext(Context, 1)}</span>;
+    }
+
+    const domNode = await render(<Foo />, 1);
+    expect(domNode.textContent).toBe('Hi');
+  });
+
+  describe('useDebugValue', () => {
+    itRenders('is a noop', async render => {
+      function Counter(props) {
+        const debugValue = useDebugValue(123);
+        return <Text text={typeof debugValue} />;
+      }
+
+      const domNode = await render(<Counter />);
+      expect(domNode.textContent).toEqual('undefined');
+    });
+  });
+
+  describe('readContext', () => {
+    function readContext(Context, observedBits) {
+      const dispatcher =
+        React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+          .ReactCurrentDispatcher.current;
+      return dispatcher.readContext(Context, observedBits);
+    }
+
     itRenders(
-      'can use the same context multiple times in the same function',
+      'can read the same context multiple times in the same function',
       async render => {
         const Context = React.createContext(
           {foo: 0, bar: 0, baz: 0},
@@ -642,13 +749,13 @@ describe('ReactDOMServerHooks', () => {
         }
 
         function FooAndBar() {
-          const {foo} = useContext(Context, 0b001);
-          const {bar} = useContext(Context, 0b010);
+          const {foo} = readContext(Context, 0b001);
+          const {bar} = readContext(Context, 0b010);
           return <Text text={`Foo: ${foo}, Bar: ${bar}`} />;
         }
 
         function Baz() {
-          const {baz} = useContext(Context, 0b100);
+          const {baz} = readContext(Context, 0b100);
           return <Text text={'Baz: ' + baz} />;
         }
 
@@ -688,32 +795,27 @@ describe('ReactDOMServerHooks', () => {
       },
     );
 
-    itThrowsWhenRendering(
-      'if used inside a class component',
-      async render => {
-        const Context = React.createContext({}, () => {});
-        class Counter extends React.Component {
-          render() {
-            let [count] = useContext(Context);
-            return <Text text={count} />;
-          }
-        }
+    itRenders('with a warning inside useMemo and useReducer', async render => {
+      const Context = React.createContext(42);
 
-        return render(<Counter />);
-      },
-      'Hooks can only be called inside the body of a function component.',
-    );
-  });
-
-  describe('useDebugValue', () => {
-    itRenders('is a noop', async render => {
-      function Counter(props) {
-        const debugValue = useDebugValue(123);
-        return <Text text={typeof debugValue} />;
+      function ReadInMemo(props) {
+        let count = React.useMemo(() => readContext(Context), []);
+        return <Text text={count} />;
       }
 
-      const domNode = await render(<Counter />);
-      expect(domNode.textContent).toEqual('undefined');
+      function ReadInReducer(props) {
+        let [count, dispatch] = React.useReducer(() => readContext(Context));
+        if (count !== 42) {
+          dispatch();
+        }
+        return <Text text={count} />;
+      }
+
+      const domNode1 = await render(<ReadInMemo />, 1);
+      expect(domNode1.textContent).toEqual('42');
+
+      const domNode2 = await render(<ReadInReducer />, 1);
+      expect(domNode2.textContent).toEqual('42');
     });
   });
 });

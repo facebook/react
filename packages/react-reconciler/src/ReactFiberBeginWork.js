@@ -257,7 +257,7 @@ function updateForwardRef(
     ) {
       // Only double-render components with Hooks
       if (workInProgress.memoizedState !== null) {
-        renderWithHooks(
+        nextChildren = renderWithHooks(
           current,
           workInProgress,
           render,
@@ -567,7 +567,7 @@ function updateFunctionComponent(
     ) {
       // Only double-render components with Hooks
       if (workInProgress.memoizedState !== null) {
-        renderWithHooks(
+        nextChildren = renderWithHooks(
           current,
           workInProgress,
           Component,
@@ -1252,7 +1252,7 @@ function mountIndeterminateComponent(
       ) {
         // Only double-render components with Hooks
         if (workInProgress.memoizedState !== null) {
-          renderWithHooks(
+          value = renderWithHooks(
             null,
             workInProgress,
             Component,

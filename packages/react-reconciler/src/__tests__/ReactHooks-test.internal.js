@@ -114,6 +114,30 @@ describe('ReactHooks', () => {
     // Because the final values are the same as the current values, the
     // component bails out.
     expect(root).toFlushAndYield(['Parent: 1, 2']);
+
+    // prepare to check SameValue
+    setCounter1(0 / -1);
+    setCounter2(NaN);
+    expect(root).toFlushAndYield([
+      'Parent: 0, NaN',
+      'Child: 0, NaN',
+      'Effect: 0, NaN',
+    ]);
+
+    // check if re-setting to negative 0 / NaN still bails out
+    setCounter1(0 / -1);
+    setCounter2(NaN);
+    setCounter2(Infinity);
+    setCounter2(NaN);
+    expect(root).toFlushAndYield(['Parent: 0, NaN']);
+
+    // check if changing negative 0 to positive 0 does not bail out
+    setCounter1(0);
+    expect(root).toFlushAndYield([
+      'Parent: 0, NaN',
+      'Child: 0, NaN',
+      'Effect: 0, NaN',
+    ]);
   });
 
   it('bails out in render phase if all the state is the same and props bail out with memo', () => {
@@ -375,6 +399,26 @@ describe('ReactHooks', () => {
     setCounter(2);
     expect(root).toFlushAndYield(['Parent: 2', 'Child: 2', 'Effect: 2']);
     expect(root).toMatchRenderedOutput('2');
+
+    // prepare to check SameValue
+    setCounter(0);
+    expect(root).toFlushAndYield(['Parent: 0', 'Child: 0', 'Effect: 0']);
+    expect(root).toMatchRenderedOutput('0');
+
+    // Update to the same state for the first time to flush the queue
+    setCounter(0);
+    expect(root).toFlushAndYield(['Parent: 0']);
+    expect(root).toMatchRenderedOutput('0');
+
+    // Update again to the same state. Should bail out.
+    setCounter(0);
+    expect(root).toFlushAndYield([]);
+    expect(root).toMatchRenderedOutput('0');
+
+    // Update to a different state (positive 0 to negative 0)
+    setCounter(0 / -1);
+    expect(root).toFlushAndYield(['Parent: 0', 'Child: 0', 'Effect: 0']);
+    expect(root).toMatchRenderedOutput('0');
   });
 
   it('bails out multiple times in a row without entering render phase', () => {
@@ -542,30 +586,40 @@ describe('ReactHooks', () => {
     ]);
   });
 
-  it('warns for bad useEffect return values', () => {
+  it('assumes useEffect clean-up function is either a function or undefined', () => {
     const {useLayoutEffect} = React;
+
     function App(props) {
       useLayoutEffect(() => {
         return props.return;
       });
       return null;
     }
-    let root;
 
-    expect(() => {
-      root = ReactTestRenderer.create(<App return={17} />);
-    }).toWarnDev([
-      'Warning: useEffect function must return a cleanup function or ' +
-        'nothing.\n' +
-        '    in App (at **)',
+    const root1 = ReactTestRenderer.create(null);
+    expect(() => root1.update(<App return={17} />)).toWarnDev([
+      'Warning: An Effect function must not return anything besides a ' +
+        'function, which is used for clean-up. You returned: 17',
     ]);
 
-    expect(() => {
-      root.update(<App return={Promise.resolve()} />);
-    }).toWarnDev([
-      'Warning: useEffect function must return a cleanup function or nothing.\n\n' +
+    const root2 = ReactTestRenderer.create(null);
+    expect(() => root2.update(<App return={null} />)).toWarnDev([
+      'Warning: An Effect function must not return anything besides a ' +
+        'function, which is used for clean-up. You returned null. If your ' +
+        'effect does not require clean up, return undefined (or nothing).',
+    ]);
+
+    const root3 = ReactTestRenderer.create(null);
+    expect(() => root3.update(<App return={Promise.resolve()} />)).toWarnDev([
+      'Warning: An Effect function must not return anything besides a ' +
+        'function, which is used for clean-up.\n\n' +
         'It looks like you wrote useEffect(async () => ...) or returned a Promise.',
     ]);
+
+    // Error on unmount because React assumes the value is a function
+    expect(() => {
+      root3.update(null);
+    }).toThrow('is not a function');
   });
 
   it('warns for bad useImperativeHandle first arg', () => {
@@ -646,32 +700,20 @@ describe('ReactHooks', () => {
     );
   });
 
-  it('throws when calling hooks inside useMemo', () => {
+  it('warns when calling hooks inside useMemo', () => {
     const {useMemo, useState} = React;
     function App() {
       useMemo(() => {
         useState(0);
-        return 1;
       });
       return null;
     }
-
-    function Simple() {
-      const [value] = useState(123);
-      return value;
-    }
-    let root = ReactTestRenderer.create(null);
-    expect(() => root.update(<App />)).toThrow(
-      'Hooks can only be called inside the body of a function component',
+    expect(() => ReactTestRenderer.create(<App />)).toWarnDev(
+      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks.',
     );
-
-    // we want to assure that no hook machinery has broken
-    // so we render a fresh component with a hook just to be sure
-    root.update(<Simple />);
-    expect(root.toJSON()).toEqual('123');
   });
 
-  it('throws when reading context inside useMemo', () => {
+  it('warns when reading context inside useMemo', () => {
     const {useMemo, createContext} = React;
     const ReactCurrentDispatcher =
       React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
@@ -684,12 +726,12 @@ describe('ReactHooks', () => {
       }, []);
     }
 
-    expect(() => ReactTestRenderer.create(<App />)).toThrow(
+    expect(() => ReactTestRenderer.create(<App />)).toWarnDev(
       'Context can only be read while React is rendering',
     );
   });
 
-  it('throws when reading context inside useMemo after reading outside it', () => {
+  it('warns when reading context inside useMemo after reading outside it', () => {
     const {useMemo, createContext} = React;
     const ReactCurrentDispatcher =
       React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
@@ -706,13 +748,14 @@ describe('ReactHooks', () => {
       }, []);
     }
 
-    expect(() => ReactTestRenderer.create(<App />)).toThrow(
+    expect(() => ReactTestRenderer.create(<App />)).toWarnDev(
       'Context can only be read while React is rendering',
     );
     expect(firstRead).toBe('light');
     expect(secondRead).toBe('light');
   });
 
+  // Throws because there's no runtime cost for being strict here.
   it('throws when reading context inside useEffect', () => {
     const {useEffect, createContext} = React;
     const ReactCurrentDispatcher =
@@ -730,10 +773,11 @@ describe('ReactHooks', () => {
     const root = ReactTestRenderer.create(<App />);
     expect(() => root.update(<App />)).toThrow(
       // The exact message doesn't matter, just make sure we don't allow this
-      "Cannot read property 'readContext' of null",
+      'Context can only be read while React is rendering',
     );
   });
 
+  // Throws because there's no runtime cost for being strict here.
   it('throws when reading context inside useLayoutEffect', () => {
     const {useLayoutEffect, createContext} = React;
     const ReactCurrentDispatcher =
@@ -750,11 +794,11 @@ describe('ReactHooks', () => {
 
     expect(() => ReactTestRenderer.create(<App />)).toThrow(
       // The exact message doesn't matter, just make sure we don't allow this
-      "Cannot read property 'readContext' of null",
+      'Context can only be read while React is rendering',
     );
   });
 
-  it('throws when reading context inside useReducer', () => {
+  it('warns when reading context inside useReducer', () => {
     const {useReducer, createContext} = React;
     const ReactCurrentDispatcher =
       React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
@@ -762,23 +806,23 @@ describe('ReactHooks', () => {
 
     const ThemeContext = createContext('light');
     function App() {
-      useReducer(
-        () => {
-          ReactCurrentDispatcher.current.readContext(ThemeContext);
-        },
-        null,
-        {},
-      );
+      const [state, dispatch] = useReducer((s, action) => {
+        ReactCurrentDispatcher.current.readContext(ThemeContext);
+        return action;
+      }, 0);
+      if (state === 0) {
+        dispatch(1);
+      }
       return null;
     }
 
-    expect(() => ReactTestRenderer.create(<App />)).toThrow(
+    expect(() => ReactTestRenderer.create(<App />)).toWarnDev([
       'Context can only be read while React is rendering',
-    );
+    ]);
   });
 
   // Edge case.
-  it('throws when reading context inside eager useReducer', () => {
+  it('warns when reading context inside eager useReducer', () => {
     const {useState, createContext} = React;
     const ThemeContext = createContext('light');
 
@@ -809,37 +853,145 @@ describe('ReactHooks', () => {
           <Cls />
         </React.Fragment>,
       ),
-    ).toThrow('Context can only be read while React is rendering');
+    ).toWarnDev('Context can only be read while React is rendering');
   });
 
-  it('throws when calling hooks inside useReducer', () => {
-    const {useReducer, useRef} = React;
+  it('warns when calling hooks inside useReducer', () => {
+    const {useReducer, useState, useRef} = React;
+
+    spyOnDev(console, 'error');
+
     function App() {
       const [value, dispatch] = useReducer((state, action) => {
         useRef(0);
-        return state;
+        return state + 1;
       }, 0);
-      dispatch('foo');
+      if (value === 0) {
+        dispatch('foo');
+      }
+      useState();
       return value;
     }
-    expect(() => ReactTestRenderer.create(<App />)).toThrow(
-      'Hooks can only be called inside the body of a function component',
-    );
+    expect(() => {
+      ReactTestRenderer.create(<App />);
+    }).toThrow('Rendered more hooks than during the previous render.');
+
+    if (__DEV__) {
+      expect(console.error).toHaveBeenCalledTimes(3);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
+      );
+    }
   });
 
-  it("throws when calling hooks inside useState's initialize function", () => {
+  it("warns when calling hooks inside useState's initialize function", () => {
     const {useState, useRef} = React;
     function App() {
       useState(() => {
         useRef(0);
         return 0;
       });
+      return null;
     }
-    expect(() => ReactTestRenderer.create(<App />)).toThrow(
-      'Hooks can only be called inside the body of a function component',
+    expect(() => ReactTestRenderer.create(<App />)).toWarnDev(
+      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks.',
     );
   });
 
+  it('resets warning internal state when interrupted by an error', () => {
+    const ReactCurrentDispatcher =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .ReactCurrentDispatcher;
+
+    const ThemeContext = React.createContext('light');
+    function App() {
+      React.useMemo(() => {
+        // Trigger warnings
+        ReactCurrentDispatcher.current.readContext(ThemeContext);
+        React.useRef();
+        // Interrupt exit from a Hook
+        throw new Error('No.');
+      }, []);
+    }
+
+    class Boundary extends React.Component {
+      state = {};
+      static getDerivedStateFromError(error) {
+        return {err: true};
+      }
+      render() {
+        if (this.state.err) {
+          return 'Oops';
+        }
+        return this.props.children;
+      }
+    }
+
+    expect(() => {
+      ReactTestRenderer.create(
+        <Boundary>
+          <App />
+        </Boundary>,
+      );
+    }).toWarnDev([
+      // We see it twice due to replay
+      'Context can only be read while React is rendering',
+      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
+      'Context can only be read while React is rendering',
+      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
+    ]);
+
+    function Valid() {
+      React.useState();
+      React.useMemo(() => {});
+      React.useReducer(() => {});
+      React.useEffect(() => {});
+      React.useLayoutEffect(() => {});
+      React.useCallback(() => {});
+      React.useRef();
+      React.useImperativeHandle(() => {}, () => {});
+      if (__DEV__) {
+        React.useDebugValue();
+      }
+      return null;
+    }
+    // Verify it doesn't think we're still inside a Hook.
+    // Should have no warnings.
+    ReactTestRenderer.create(<Valid />);
+
+    // Verify warnings don't get permanently disabled.
+    expect(() => {
+      ReactTestRenderer.create(
+        <Boundary>
+          <App />
+        </Boundary>,
+      );
+    }).toWarnDev([
+      // We see it twice due to replay
+      'Context can only be read while React is rendering',
+      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
+      'Context can only be read while React is rendering',
+      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
+    ]);
+  });
+
+  it('warns when reading context inside useMemo', () => {
+    const {useMemo, createContext} = React;
+    const ReactCurrentDispatcher =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .ReactCurrentDispatcher;
+
+    const ThemeContext = createContext('light');
+    function App() {
+      return useMemo(() => {
+        return ReactCurrentDispatcher.current.readContext(ThemeContext);
+      }, []);
+    }
+
+    expect(() => ReactTestRenderer.create(<App />)).toWarnDev(
+      'Context can only be read while React is rendering',
+    );
+  });
   it('double-invokes components with Hooks in Strict Mode', () => {
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = true;
 
@@ -1061,7 +1213,7 @@ describe('ReactHooks', () => {
   });
 
   it('warns on using differently ordered hooks on subsequent renders', () => {
-    const {useState, useReducer} = React;
+    const {useState, useReducer, useRef} = React;
     function useCustomHook() {
       return useState(0);
     }
@@ -1074,6 +1226,9 @@ describe('ReactHooks', () => {
         useReducer((s, a) => a, 0);
         useCustomHook(0);
       }
+      // This should not appear in the warning message because it occurs after
+      // the first mismatch
+      const ref = useRef(null);
       return null;
       /* eslint-enable no-unused-vars */
     }
@@ -1087,7 +1242,8 @@ describe('ReactHooks', () => {
         '   Previous render    Next render\n' +
         '   -------------------------------\n' +
         '1. useReducer         useState\n' +
-        '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^',
+        '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n' +
+        '    in App (at **)',
     ]);
 
     // further warnings for this component are silenced
@@ -1124,5 +1280,33 @@ describe('ReactHooks', () => {
         '1. useReducer         useState\n' +
         '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^',
     ]);
+  });
+
+  // Regression test for #14674
+  it('does not swallow original error when updating another component in render phase', () => {
+    let {useState} = React;
+
+    let _setState;
+    function A() {
+      const [, setState] = useState(0);
+      _setState = setState;
+      return null;
+    }
+
+    function B() {
+      _setState(() => {
+        throw new Error('Hello');
+      });
+      return null;
+    }
+
+    expect(() =>
+      ReactTestRenderer.create(
+        <React.Fragment>
+          <A />
+          <B />
+        </React.Fragment>,
+      ),
+    ).toThrow('Hello');
   });
 });

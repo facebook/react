@@ -149,7 +149,14 @@ export default {
               paths += countPathsFromStart(prevSegment);
             }
           }
-          cache.set(segment.id, paths);
+
+          // If our segment is reachable then there should be at least one path
+          // to it from the start of our code path.
+          if (segment.reachable && paths === 0) {
+            cache.delete(segment.id);
+          } else {
+            cache.set(segment.id, paths);
+          }
 
           return paths;
         }

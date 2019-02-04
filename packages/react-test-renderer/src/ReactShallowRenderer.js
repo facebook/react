@@ -18,7 +18,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import warning from 'shared/warning';
 import is from 'shared/objectIs';
 
-import typeof {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactFiberDispatcher';
+import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactFiberHooks';
 import type {ReactContext} from 'shared/ReactTypes';
 import type {ReactElement} from 'shared/ReactElementType';
 
@@ -218,15 +218,16 @@ class ReactShallowRenderer {
   _validateCurrentlyRenderingComponent() {
     invariant(
       this._currentlyRenderingComponent !== null,
-      'Hooks can only be called inside the body of a function component.',
+      'Hooks can only be called inside the body of a function component. ' +
+        '(https://fb.me/react-invalid-hook-call)',
     );
   }
 
   _createDispatcher(): DispatcherType {
-    const useReducer = <S, A>(
+    const useReducer = <S, I, A>(
       reducer: (S, A) => S,
-      initialState: S,
-      initialAction: A | void | null,
+      initialArg: I,
+      init?: I => S,
     ): [S, Dispatch<A>] => {
       this._validateCurrentlyRenderingComponent();
       this._createWorkInProgressHook();
@@ -259,13 +260,16 @@ class ReactShallowRenderer {
         }
         return [workInProgressHook.memoizedState, dispatch];
       } else {
+        let initialState;
         if (reducer === basicStateReducer) {
           // Special case for `useState`.
-          if (typeof initialState === 'function') {
-            initialState = initialState();
-          }
-        } else if (initialAction !== undefined && initialAction !== null) {
-          initialState = reducer(initialState, initialAction);
+          initialState =
+            typeof initialArg === 'function'
+              ? ((initialArg: any): () => S)()
+              : ((initialArg: any): S);
+        } else {
+          initialState =
+            init !== undefined ? init(initialArg) : ((initialArg: any): S);
         }
         workInProgressHook.memoizedState = initialState;
         const queue: UpdateQueue<A> = (workInProgressHook.queue = {

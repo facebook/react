@@ -7,7 +7,7 @@
  * @flow
  */
 
-import typeof {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactFiberDispatcher';
+import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactFiberHooks';
 import type {ThreadID} from './ReactThreadIDAllocator';
 import type {ReactContext} from 'shared/ReactTypes';
 
@@ -49,14 +49,26 @@ let renderPhaseUpdates: Map<UpdateQueue<any>, Update<any>> | null = null;
 let numberOfReRenders: number = 0;
 const RE_RENDER_LIMIT = 25;
 
+let isInHookUserCodeInDev = false;
+
 // In DEV, this is the name of the currently executing primitive hook
 let currentHookNameInDev: ?string;
 
 function resolveCurrentlyRenderingComponent(): Object {
   invariant(
     currentlyRenderingComponent !== null,
-    'Hooks can only be called inside the body of a function component.',
+    'Hooks can only be called inside the body of a function component. ' +
+      '(https://fb.me/react-invalid-hook-call)',
   );
+  if (__DEV__) {
+    warning(
+      !isInHookUserCodeInDev,
+      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. ' +
+        'You can only call Hooks at the top level of your React function. ' +
+        'For more information, see ' +
+        'https://fb.me/rules-of-hooks',
+    );
+  }
   return currentlyRenderingComponent;
 }
 
@@ -103,6 +115,9 @@ function areHookInputsEqual(
 }
 
 function createHook(): Hook {
+  if (numberOfReRenders > 0) {
+    invariant(false, 'Rendered more hooks than during the previous render');
+  }
   return {
     memoizedState: null,
     queue: null,
@@ -137,6 +152,9 @@ function createWorkInProgressHook(): Hook {
 
 export function prepareToUseHooks(componentIdentity: Object): void {
   currentlyRenderingComponent = componentIdentity;
+  if (__DEV__) {
+    isInHookUserCodeInDev = false;
+  }
 
   // The following should have already been reset
   // didScheduleRenderPhaseUpdate = false;
@@ -173,6 +191,9 @@ export function finishHooks(
   numberOfReRenders = 0;
   renderPhaseUpdates = null;
   workInProgressHook = null;
+  if (__DEV__) {
+    isInHookUserCodeInDev = false;
+  }
 
   // These were reset above
   // currentlyRenderingComponent = null;
@@ -191,6 +212,15 @@ function readContext<T>(
 ): T {
   let threadID = currentThreadID;
   validateContextBounds(context, threadID);
+  if (__DEV__) {
+    warning(
+      !isInHookUserCodeInDev,
+      'Context can only be read while React is rendering. ' +
+        'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
+        'In function components, you can read it directly in the function body, but not ' +
+        'inside Hooks like useReducer() or useMemo().',
+    );
+  }
   return context[threadID];
 }
 
@@ -224,17 +254,17 @@ export function useState<S>(
   );
 }
 
-export function useReducer<S, A>(
+export function useReducer<S, I, A>(
   reducer: (S, A) => S,
-  initialState: S,
-  initialAction: A | void | null,
+  initialArg: I,
+  init?: I => S,
 ): [S, Dispatch<A>] {
   if (__DEV__) {
     if (reducer !== basicStateReducer) {
       currentHookNameInDev = 'useReducer';
     }
   }
-  let component = (currentlyRenderingComponent = resolveCurrentlyRenderingComponent());
+  currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
   workInProgressHook = createWorkInProgressHook();
   if (isReRender) {
     // This is a re-render. Apply the new render phase updates to the previous
@@ -253,10 +283,13 @@ export function useReducer<S, A>(
           // priority because it will always be the same as the current
           // render's.
           const action = update.action;
-          // Temporarily clear to forbid calling Hooks.
-          currentlyRenderingComponent = null;
+          if (__DEV__) {
+            isInHookUserCodeInDev = true;
+          }
           newState = reducer(newState, action);
-          currentlyRenderingComponent = component;
+          if (__DEV__) {
+            isInHookUserCodeInDev = false;
+          }
           update = update.next;
         } while (update !== null);
 
@@ -267,16 +300,23 @@ export function useReducer<S, A>(
     }
     return [workInProgressHook.memoizedState, dispatch];
   } else {
-    currentlyRenderingComponent = null;
+    if (__DEV__) {
+      isInHookUserCodeInDev = true;
+    }
+    let initialState;
     if (reducer === basicStateReducer) {
       // Special case for `useState`.
-      if (typeof initialState === 'function') {
-        initialState = initialState();
-      }
-    } else if (initialAction !== undefined && initialAction !== null) {
-      initialState = reducer(initialState, initialAction);
+      initialState =
+        typeof initialArg === 'function'
+          ? ((initialArg: any): () => S)()
+          : ((initialArg: any): S);
+    } else {
+      initialState =
+        init !== undefined ? init(initialArg) : ((initialArg: any): S);
     }
-    currentlyRenderingComponent = component;
+    if (__DEV__) {
+      isInHookUserCodeInDev = false;
+    }
     workInProgressHook.memoizedState = initialState;
     const queue: UpdateQueue<A> = (workInProgressHook.queue = {
       last: null,
@@ -292,7 +332,7 @@ export function useReducer<S, A>(
 }
 
 function useMemo<T>(nextCreate: () => T, deps: Array<mixed> | void | null): T {
-  let component = (currentlyRenderingComponent = resolveCurrentlyRenderingComponent());
+  currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
   workInProgressHook = createWorkInProgressHook();
 
   const nextDeps = deps === undefined ? null : deps;
@@ -309,10 +349,13 @@ function useMemo<T>(nextCreate: () => T, deps: Array<mixed> | void | null): T {
     }
   }
 
-  // Temporarily clear to forbid calling Hooks.
-  currentlyRenderingComponent = null;
+  if (__DEV__) {
+    isInHookUserCodeInDev = true;
+  }
   const nextValue = nextCreate();
-  currentlyRenderingComponent = component;
+  if (__DEV__) {
+    isInHookUserCodeInDev = false;
+  }
   workInProgressHook.memoizedState = [nextValue, nextDeps];
   return nextValue;
 }
@@ -334,8 +377,8 @@ function useRef<T>(initialValue: T): {current: T} {
 }
 
 export function useLayoutEffect(
-  create: () => mixed,
-  deps: Array<mixed> | void | null,
+  create: () => (() => void) | void,
+  inputs: Array<mixed> | void | null,
 ) {
   if (__DEV__) {
     currentHookNameInDev = 'useLayoutEffect';
