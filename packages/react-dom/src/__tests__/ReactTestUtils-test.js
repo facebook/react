@@ -561,7 +561,7 @@ describe('ReactTestUtils', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     let calledCtr = 0;
-    act(() =>
+    act(() => {
       ReactDOM.render(
         <App
           callback={val => {
@@ -569,8 +569,8 @@ describe('ReactTestUtils', () => {
           }}
         />,
         container,
-      ),
-    );
+      );
+    });
     const button = document.getElementById('button');
     function click() {
       button.dispatchEvent(new MouseEvent('click', {bubbles: true}));
@@ -602,10 +602,14 @@ describe('ReactTestUtils', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     let button;
-    act(() => ReactDOM.render(<App />, container));
+    act(() => {
+      ReactDOM.render(<App />, container);
+    });
     button = document.getElementById('button');
     expect(button.innerHTML).toBe('0');
-    act(() => button.dispatchEvent(new MouseEvent('click', {bubbles: true})));
+    act(() => {
+      button.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+    });
     expect(button.innerHTML).toBe('1');
     document.body.removeChild(container);
   });
@@ -653,7 +657,9 @@ describe('ReactTestUtils', () => {
     const container = document.createElement('div');
 
     act(() => {
-      act(() => ReactDOM.render(<App />, container));
+      act(() => {
+        ReactDOM.render(<App />, container);
+      });
       jest.advanceTimersByTime(250);
     });
 

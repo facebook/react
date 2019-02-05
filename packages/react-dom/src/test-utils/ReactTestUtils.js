@@ -18,6 +18,7 @@ import {
 import SyntheticEvent from 'events/SyntheticEvent';
 import invariant from 'shared/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 import * as DOMTopLevelEventTypes from '../events/DOMTopLevelEventTypes';
 
@@ -384,10 +385,17 @@ const ReactTestUtils = {
   Simulate: null,
   SimulateNative: {},
 
-  act<X>(callback: () => X): X {
-    let result = ReactDOM.unstable_batchedUpdates(callback);
+  act(callback: () => void): void {
+    const result = ReactDOM.unstable_batchedUpdates(callback);
+    if (result !== undefined) {
+      warningWithoutStack(false, "Do not return a value from 'act' ");
+    }
     ReactDOM.render(<div />, actContainerElement);
-    return result;
+    return {
+      then() {
+        warningWithoutStack(false, "Do not return a value from 'act'");
+      },
+    };
   },
 };
 

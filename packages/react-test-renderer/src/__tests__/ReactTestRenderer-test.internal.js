@@ -1021,4 +1021,22 @@ describe('ReactTestRenderer', () => {
     ReactNoop.flush();
     ReactTestRenderer.create(<App />);
   });
+
+  describe.only('act', () => {
+    it('works', () => {
+      function App(props){
+        React.useEffect(() => {
+          props.callback()
+        })
+        return null 
+      }
+      let called = false 
+      let inst
+      ReactTestRenderer.act(() => {
+        inst = ReactTestRenderer.create(<App callback={() => {called = true}}/>)  
+      })            
+      
+      expect(called).toBe(true)
+    })
+  })
 });

@@ -146,7 +146,9 @@ describe('ReactDOMSuspensePlaceholder', () => {
         );
       }
 
-      act(() => ReactDOM.render(<App />, container));
+      act(() => {
+        ReactDOM.render(<App />, container);
+      });
       expect(container.innerHTML).toEqual(
         '<span style="display: none;">Sibling</span><span style="display: none;"></span>Loading...',
       );

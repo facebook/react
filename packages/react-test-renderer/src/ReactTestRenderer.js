@@ -559,7 +559,7 @@ const ReactTestRendererFiber = {
   unstable_setNowImplementation: setNowImplementation,
 
   act<X>(callback: () => X): X {
-    return batchedUpdates(callback);
+    batchedUpdates(callback);
   },
 };
 
