@@ -18,4 +18,4 @@ const bridge = new Bridge({
 const agent = new Agent();
 agent.addBridge(bridge);
 
-initBackend(window.__REACT_DEVTOOLS_GLOBAL_HOOK__, agent);
+initBackend(window.__REACT_DEVTOOLS_GLOBAL_HOOK__, agent, window.parent);

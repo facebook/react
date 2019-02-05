@@ -144,6 +144,9 @@ function useInspectedElement(id: number | null): InspectedElement | null {
 
     let timeoutID = null;
 
+    // Update the $r variable.
+    bridge.send('selectElement', { id, rendererID });
+
     const sendBridgeRequest = () => {
       bridge.send('inspectElement', { id, rendererID });
     };

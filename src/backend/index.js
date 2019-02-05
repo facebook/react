@@ -5,7 +5,7 @@ import Agent from './agent';
 
 import { attach } from './renderer';
 
-export function initBackend(hook: Hook, agent: Agent): void {
+export function initBackend(hook: Hook, agent: Agent, global: Object): void {
   const subs = [
     hook.sub(
       'renderer-attached',
@@ -30,7 +30,7 @@ export function initBackend(hook: Hook, agent: Agent): void {
   ];
 
   const attachRenderer = (id: number, renderer: ReactRenderer) => {
-    const rendererInterface = attach(hook, id, renderer);
+    const rendererInterface = attach(hook, id, renderer, global);
     hook.rendererInterfaces.set(id, rendererInterface);
     hook.emit('renderer-attached', {
       id,

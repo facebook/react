@@ -29,7 +29,12 @@ export default function InspectedElementTree({
         {isEmpty && <div className={styles.Empty}>None</div>}
         {!isEmpty &&
           Object.keys((data: any)).map(name => (
-            <KeyValue key={name} depth={1} name={name} value={(data: any)[name]} />
+            <KeyValue
+              key={name}
+              depth={1}
+              name={name}
+              value={(data: any)[name]}
+            />
           ))}
       </div>
     );

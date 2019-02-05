@@ -50,6 +50,7 @@ export type RendererInterface = {
   handleCommitFiberRoot: (fiber: Object) => void,
   inspectElement: (id: number) => InspectedElement | null,
   renderer: ReactRenderer | null,
+  selectElement: (id: number) => void,
   walkTree: () => void,
 };
 

@@ -152,7 +152,8 @@ function getInternalReactConstants(version) {
 export function attach(
   hook: Hook,
   rendererID: number,
-  renderer: ReactRenderer
+  renderer: ReactRenderer,
+  global: Object
 ): RendererInterface {
   const {
     ReactTypeOfWork,
@@ -1001,6 +1002,32 @@ export function attach(
     return alternate;
   }
 
+  function selectElement(id: number): void {
+    let fiber = idToFiberMap.get(id);
+
+    if (fiber == null) {
+      console.warn(`Could not find Fiber with id "${id}"`);
+      return;
+    }
+
+    switch (fiber.tag) {
+      case ClassComponent:
+      case IncompleteClassComponent:
+      case IndeterminateComponent:
+        global.$r = fiber.stateNode;
+        break;
+      case FunctionComponent:
+        global.$r = {
+          props: fiber.memoizedProps,
+          type: fiber.type,
+        };
+        break;
+      default:
+        global.$r = null;
+        break;
+    }
+  }
+
   function inspectElement(id: number): InspectedElement | null {
     let fiber = idToFiberMap.get(id);
 
@@ -1127,6 +1154,7 @@ export function attach(
     handleCommitFiberRoot,
     handleCommitFiberUnmount,
     inspectElement,
+    selectElement,
     cleanup,
     walkTree,
     renderer,

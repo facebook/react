@@ -1,6 +1,7 @@
 // @flow
 
 import React, { Fragment, useCallback, useContext } from 'react';
+import { ElementTypeClassOrFunction } from 'src/devtools/types';
 import { TreeContext } from './context';
 import { SelectedElementContext } from './SelectedElementContext';
 import Icon from './Icon';
@@ -26,7 +27,7 @@ export default function Element({ index, style }: Props) {
 
   // TODO Add click and key handlers for toggling element open/close state.
 
-  const { children, depth, displayName, id, key } = element;
+  const { children, depth, displayName, id, key, type } = element;
 
   const selectedElement = useContext(SelectedElementContext);
   const handleClick = useCallback(
@@ -36,11 +37,12 @@ export default function Element({ index, style }: Props) {
     [id]
   );
 
+  const isSelected = selectedElement.id === id;
+  const showDollarR = isSelected && type === ElementTypeClassOrFunction;
+
   return (
     <div
-      className={
-        selectedElement.id === id ? styles.SelectedElement : styles.Element
-      }
+      className={isSelected ? styles.SelectedElement : styles.Element}
       onClick={handleClick}
       style={{
         ...style, // "style" comes from react-window
@@ -62,6 +64,7 @@ export default function Element({ index, style }: Props) {
           </Fragment>
         )}
       </span>
+      {showDollarR && <span className={styles.DollarR}>&nbsp;== $r</span>}
     </div>
   );
 }

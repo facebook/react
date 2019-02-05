@@ -26,6 +26,10 @@
   --color-attribute-value: #fff;
 }
 
+.DollarR {
+  color: var(--color-tree-jsx-arrow-brackets);
+}
+
 .ArrowClosed,
 .ArrowOpen {
   position: absolute;

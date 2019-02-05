@@ -64,5 +64,5 @@ function setup(hook) {
     listeners.splice(0);
   });
 
-  initBackend(window.__REACT_DEVTOOLS_GLOBAL_HOOK__, agent);
+  initBackend(window.__REACT_DEVTOOLS_GLOBAL_HOOK__, agent, window);
 }
