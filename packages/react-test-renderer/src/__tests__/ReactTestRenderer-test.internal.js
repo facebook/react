@@ -1022,21 +1022,26 @@ describe('ReactTestRenderer', () => {
     ReactTestRenderer.create(<App />);
   });
 
-  describe.only('act', () => {
+  describe('act', () => {
     it('works', () => {
-      function App(props){
+      function App(props) {
         React.useEffect(() => {
-          props.callback()
-        })
-        return null 
+          props.callback();
+        });
+        return null;
       }
-      let called = false 
-      let inst
+      let called = false;
       ReactTestRenderer.act(() => {
-        inst = ReactTestRenderer.create(<App callback={() => {called = true}}/>)  
-      })            
-      
-      expect(called).toBe(true)
-    })
-  })
+        ReactTestRenderer.create(
+          <App
+            callback={() => {
+              called = true;
+            }}
+          />,
+        );
+      });
+
+      expect(called).toBe(true);
+    });
+  });
 });

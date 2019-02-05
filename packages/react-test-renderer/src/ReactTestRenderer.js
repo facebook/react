@@ -39,6 +39,7 @@ import {
 } from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 import ReactVersion from 'shared/ReactVersion';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 import {getPublicInstance} from './ReactTestHostConfig';
 import {
@@ -69,6 +70,11 @@ type FindOptions = $Shape<{
 }>;
 
 export type Predicate = (node: ReactTestInstance) => ?boolean;
+
+// for .act's return value
+type Thenable = {
+  then(resolve: () => mixed, reject?: () => mixed): mixed,
+};
 
 const defaultTestOptions = {
   createNodeMock: function() {
@@ -558,10 +564,58 @@ const ReactTestRendererFiber = {
 
   unstable_setNowImplementation: setNowImplementation,
 
-  act<X>(callback: () => X): X {
-    batchedUpdates(callback);
+  act(callback: () => void): Thenable {
+    let result = batchedUpdates(callback);
+    // warnings copied from ReactTestUtils
+    if (__DEV__) {
+      if (result !== undefined) {
+        let addendum;
+        if (typeof result.then === 'function') {
+          addendum =
+            '\n\nIt looks like you wrote act(async () => ...) or returned a Promise. ' +
+            'Do not write async logic inside act(...)\n';
+        } else {
+          addendum = ' You returned: ' + result;
+        }
+        warningWithoutStack(
+          false,
+          'An .act(...) function must not return anything.%s',
+          addendum,
+        );
+      }
+    }
+    flushPassiveEffects();
+    // we want the user to not expect a return,
+    // but we want to warn if they use it like they can await on it.
+    return {
+      then() {
+        if (__DEV__) {
+          warningWithoutStack(
+            false,
+            'Do not await an act(...) call, it is not a promise',
+          );
+        }
+      },
+    };
   },
 };
+
+// root used to flush effects during .act() calls
+const actRoot = createContainer(
+  {
+    children: [],
+    createNodeMock: defaultTestOptions.createNodeMock,
+    tag: 'CONTAINER',
+  },
+  true,
+  false,
+);
+
+function flushPassiveEffects() {
+  // Trick to flush passive effects without exposing an internal API:
+  // Create a throwaway root and schedule a dummy update on it.
+  updateContainer(null, actRoot, null, null);
+}
 
 const fiberToWrapper = new WeakMap();
 function wrapFiber(fiber: Fiber): ReactTestInstance {

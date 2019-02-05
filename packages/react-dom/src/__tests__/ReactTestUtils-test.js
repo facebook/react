@@ -665,4 +665,18 @@ describe('ReactTestUtils', () => {
 
     expect(container.innerHTML).toBe('1');
   });
+
+  it('warns if you return a value inside act', () => {
+    expect(() => act(() => 123)).toWarnDev(
+      ['An .act(...) function must not return anything'],
+      {withoutStack: true},
+    );
+  });
+
+  it('warns if you try to await an .act call', () => {
+    expect(act(() => {}).then).toWarnDev(
+      ['Do not await an act(...) call, it is not a promise'],
+      {withoutStack: true},
+    );
+  });
 });

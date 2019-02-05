@@ -21,6 +21,12 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import {createPortal} from 'shared/ReactPortal';
 import expect from 'expect';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import warningWithoutStack from 'shared/warningWithoutStack';
+
+// for .act's return value
+type Thenable = {
+  then(resolve: () => mixed, reject?: () => mixed): mixed,
+};
 
 type Container = {
   rootID: string,
@@ -865,9 +871,38 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     interactiveUpdates: NoopRenderer.interactiveUpdates,
 
     // maybe this should exist only in the test file
-    act<X>(callback: void => X): X {
-      return NoopRenderer.batchedUpdates(callback);
-      // flush updates?
+    act(callback: () => void): Thenable {
+      let result = NoopRenderer.batchedUpdates(callback);
+      if (__DEV__) {
+        if (result !== undefined) {
+          let addendum;
+          if (typeof result.then === 'function') {
+            addendum =
+              '\n\nIt looks like you wrote act(async () => ...) or returned a Promise. ' +
+              'Do not write async logic inside act(...)\n';
+          } else {
+            addendum = ' You returned: ' + result;
+          }
+          warningWithoutStack(
+            false,
+            'An .act(...) function must not return anything.%s',
+            addendum,
+          );
+        }
+      }
+      ReactNoop.flushPassiveEffects();
+      // we want the user to not expect a return,
+      // but we want to warn if they use it like they can await on it.
+      return {
+        then() {
+          if (__DEV__) {
+            warningWithoutStack(
+              false,
+              'Do not await an act(...) call, it is not a promise',
+            );
+          }
+        },
+      };
     },
 
     flushSync(fn: () => mixed) {

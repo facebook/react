@@ -126,8 +126,10 @@ describe('ReactHooks', () => {
     expect(root).toFlushAndYield(['Parent: 1, 2']);
 
     // prepare to check SameValue
-    setCounter1(0 / -1);
-    setCounter2(NaN);
+    act(() => {
+      setCounter1(0 / -1);
+      setCounter2(NaN);
+    });
     expect(root).toFlushAndYield([
       'Parent: 0, NaN',
       'Child: 0, NaN',
@@ -135,14 +137,19 @@ describe('ReactHooks', () => {
     ]);
 
     // check if re-setting to negative 0 / NaN still bails out
-    setCounter1(0 / -1);
-    setCounter2(NaN);
-    setCounter2(Infinity);
-    setCounter2(NaN);
+    act(() => {
+      setCounter1(0 / -1);
+      setCounter2(NaN);
+      setCounter2(Infinity);
+      setCounter2(NaN);
+    });
+
     expect(root).toFlushAndYield(['Parent: 0, NaN']);
 
     // check if changing negative 0 to positive 0 does not bail out
-    setCounter1(0);
+    act(() => {
+      setCounter1(0);
+    });
     expect(root).toFlushAndYield([
       'Parent: 0, NaN',
       'Child: 0, NaN',
@@ -430,22 +437,31 @@ describe('ReactHooks', () => {
     expect(root).toMatchRenderedOutput('2');
 
     // prepare to check SameValue
-    setCounter(0);
+    act(() => {
+      setCounter(0);
+    });
     expect(root).toFlushAndYield(['Parent: 0', 'Child: 0', 'Effect: 0']);
     expect(root).toMatchRenderedOutput('0');
 
     // Update to the same state for the first time to flush the queue
-    setCounter(0);
+    act(() => {
+      setCounter(0);
+    });
+
     expect(root).toFlushAndYield(['Parent: 0']);
     expect(root).toMatchRenderedOutput('0');
 
     // Update again to the same state. Should bail out.
-    setCounter(0);
+    act(() => {
+      setCounter(0);
+    });
     expect(root).toFlushAndYield([]);
     expect(root).toMatchRenderedOutput('0');
 
     // Update to a different state (positive 0 to negative 0)
-    setCounter(0 / -1);
+    act(() => {
+      setCounter(0 / -1);
+    });
     expect(root).toFlushAndYield(['Parent: 0', 'Child: 0', 'Effect: 0']);
     expect(root).toMatchRenderedOutput('0');
   });
@@ -886,7 +902,13 @@ describe('ReactHooks', () => {
           <Cls />
         </React.Fragment>,
       ),
-    ).toWarnDev('Context can only be read while React is rendering');
+    ).toWarnDev(
+      [
+        'Context can only be read while React is rendering',
+        'Render methods should be a pure function of props and state',
+      ],
+      {withoutStack: 1},
+    );
   });
 
   it('warns when calling hooks inside useReducer', () => {

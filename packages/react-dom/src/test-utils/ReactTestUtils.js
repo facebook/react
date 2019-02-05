@@ -22,6 +22,11 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 import * as DOMTopLevelEventTypes from '../events/DOMTopLevelEventTypes';
 
+// for .act's return value
+type Thenable = {
+  then(resolve: () => mixed, reject?: () => mixed): mixed,
+};
+
 const {findDOMNode} = ReactDOM;
 // Keep in sync with ReactDOMUnstableNativeDependencies.js
 // and ReactDOM.js:
@@ -385,15 +390,36 @@ const ReactTestUtils = {
   Simulate: null,
   SimulateNative: {},
 
-  act(callback: () => void): void {
+  act(callback: () => void): Thenable {
     const result = ReactDOM.unstable_batchedUpdates(callback);
-    if (result !== undefined) {
-      warningWithoutStack(false, "Do not return a value from 'act' ");
+    if (__DEV__) {
+      if (result !== undefined) {
+        let addendum;
+        if (typeof result.then === 'function') {
+          addendum =
+            '\n\nIt looks like you wrote act(async () => ...) or returned a Promise. ' +
+            'Do not write async logic inside act(...)\n';
+        } else {
+          addendum = ' You returned: ' + result;
+        }
+        warningWithoutStack(
+          false,
+          'An .act(...) function must not return anything.%s',
+          addendum,
+        );
+      }
     }
     ReactDOM.render(<div />, actContainerElement);
+    // we want the user to not expect a return,
+    // but we want to warn if they use it like they can await on it.
     return {
       then() {
-        warningWithoutStack(false, "Do not return a value from 'act'");
+        if (__DEV__) {
+          warningWithoutStack(
+            false,
+            'Do not await an act(...) call, it is not a promise',
+          );
+        }
       },
     };
   },
