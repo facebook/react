@@ -4,6 +4,8 @@ import { meta } from '../../hydration';
 
 export function getMetaValueLabel(data: Object): string | null {
   switch (data[meta.type]) {
+    case 'react_element':
+      return `<${data[meta.name]} />`;
     case 'function':
       return `${data[meta.name] || 'fn'}()`;
     case 'object':

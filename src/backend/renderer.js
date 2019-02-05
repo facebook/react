@@ -11,8 +11,8 @@ import {
   ElementTypeRoot,
   ElementTypeSuspense,
 } from 'src/devtools/types';
-import { utfEncodeString } from '../utils';
-import { cleanForBridge, cleanPropsForBridge, getDisplayName } from './utils';
+import { getDisplayName, utfEncodeString } from '../utils';
+import { cleanForBridge } from './utils';
 import {
   __DEBUG__,
   TREE_OPERATION_ADD,
@@ -1110,7 +1110,7 @@ export function attach(
             inspectHooksOfFiber(fiber, (renderer.currentDispatcherRef: any))
           )
         : null,
-      props: cleanPropsForBridge(memoizedProps),
+      props: cleanForBridge(memoizedProps),
       state: usesHooks ? null : cleanForBridge(memoizedState),
 
       // List of owners

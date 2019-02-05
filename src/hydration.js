@@ -1,5 +1,23 @@
 // @flow
 
+import {
+  isElement,
+  typeOf,
+  AsyncMode,
+  ConcurrentMode,
+  ContextConsumer,
+  ContextProvider,
+  ForwardRef,
+  Fragment,
+  Lazy,
+  Memo,
+  Portal,
+  Profiler,
+  StrictMode,
+  Suspense,
+} from 'react-is';
+import { getDisplayName } from './utils';
+
 export const meta = {
   name: Symbol('name'),
   type: Symbol('type'),
@@ -27,12 +45,13 @@ function getPropType(data: Object): string | null {
   if (!data) {
     return null;
   }
-  const type = typeof data;
 
+  if (isElement(data)) {
+    return 'react_element';
+  }
+
+  const type = typeof data;
   if (type === 'object') {
-    if (data._reactFragment) {
-      return 'react_fragment';
-    }
     if (Array.isArray(data)) {
       return 'array';
     }
@@ -132,9 +151,14 @@ export function dehydrate(
         name: data.toString(),
       };
 
-    // React Fragments error if you try to inspect them.
-    case 'react_fragment':
-      return 'A React Fragment';
+    // React Elements aren't very inspector-friendly,
+    // and often contain private fields or circular references.
+    case 'react_element':
+      cleaned.push(path);
+      return {
+        name: getDisplayNameForReactElement(data),
+        type: 'react_element',
+      };
 
     // ArrayBuffers error if you try to inspect them.
     case 'array_buffer':
@@ -213,4 +237,44 @@ export function hydrate(data: Object, cleaned: Array<Array<string>>): Object {
     reduced[last] = replace;
   });
   return data;
+}
+
+export function getDisplayNameForReactElement(
+  element: React$Element<any>
+): string | null {
+  const elementType = typeOf(element);
+  switch (elementType) {
+    case AsyncMode:
+    case ConcurrentMode:
+      return 'ConcurrentMode';
+    case ContextConsumer:
+      return 'ContextConsumer';
+    case ContextProvider:
+      return 'ContextProvider';
+    case ForwardRef:
+      return 'ForwardRef';
+    case Fragment:
+      return 'Fragment';
+    case Lazy:
+      return 'Lazy';
+    case Memo:
+      return 'Memo';
+    case Portal:
+      return 'Portal';
+    case Profiler:
+      return 'Profiler';
+    case StrictMode:
+      return 'StrictMode';
+    case Suspense:
+      return 'Suspense';
+    default:
+      const { type } = element;
+      if (typeof type === 'string') {
+        return type;
+      } else if (type != null) {
+        return getDisplayName(type, 'Unknown');
+      } else {
+        return 'Element';
+      }
+  }
 }
