@@ -18,10 +18,6 @@ import {
   unstable_wrap as Schedule_tracing_wrap,
 } from 'scheduler/tracing';
 import {
-  unstable_scheduleCallback as Schedule_scheduleCallback,
-  unstable_cancelCallback as Schedule_cancelCallback,
-} from 'scheduler';
-import {
   invokeGuardedCallback,
   hasCaughtError,
   clearCaughtError,
@@ -83,6 +79,8 @@ import {
   scheduleTimeout,
   cancelTimeout,
   noTimeout,
+  schedulePassiveEffects,
+  cancelPassiveEffects,
 } from './ReactFiberHostConfig';
 import {
   markPendingPriorityLevel,
@@ -587,8 +585,10 @@ function markLegacyErrorBoundaryAsFailed(instance: mixed) {
 }
 
 function flushPassiveEffects() {
+  if (passiveEffectCallbackHandle !== null) {
+    cancelPassiveEffects(passiveEffectCallbackHandle);
+  }
   if (passiveEffectCallback !== null) {
-    Schedule_cancelCallback(passiveEffectCallbackHandle);
     // We call the scheduled callback instead of commitPassiveEffects directly
     // to ensure tracing works correctly.
     passiveEffectCallback();
@@ -795,7 +795,7 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
       // here because that code is still in flux.
       callback = Schedule_tracing_wrap(callback);
     }
-    passiveEffectCallbackHandle = Schedule_scheduleCallback(callback);
+    passiveEffectCallbackHandle = schedulePassiveEffects(callback);
     passiveEffectCallback = callback;
   }
 

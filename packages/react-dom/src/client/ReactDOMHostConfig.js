@@ -69,6 +69,10 @@ export type ChildSet = void; // Unused
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 
+import {
+  unstable_scheduleCallback as scheduleDeferredCallback,
+  unstable_cancelCallback as cancelDeferredCallback,
+} from 'scheduler';
 export {
   unstable_now as now,
   unstable_scheduleCallback as scheduleDeferredCallback,
@@ -296,6 +300,8 @@ export const scheduleTimeout =
 export const cancelTimeout =
   typeof clearTimeout === 'function' ? clearTimeout : (undefined: any);
 export const noTimeout = -1;
+export const schedulePassiveEffects = scheduleDeferredCallback;
+export const cancelPassiveEffects = cancelDeferredCallback;
 
 // -------------------
 //     Mutation

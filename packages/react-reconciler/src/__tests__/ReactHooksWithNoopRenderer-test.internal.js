@@ -25,7 +25,6 @@ let useMemo;
 let useRef;
 let useImperativeHandle;
 let forwardRef;
-let flushPassiveEffects;
 let memo;
 let act;
 
@@ -35,28 +34,6 @@ let act;
 describe('ReactHooksWithNoopRenderer', () => {
   beforeEach(() => {
     jest.resetModules();
-
-    jest.mock('scheduler', () => {
-      let scheduledCallbacks = new Map();
-
-      flushPassiveEffects = () => {
-        scheduledCallbacks.forEach(cb => {
-          cb();
-        });
-        scheduledCallbacks = new Map();
-      };
-
-      return {
-        unstable_scheduleCallback(callback) {
-          const handle = {};
-          scheduledCallbacks.set(handle, callback);
-          return handle;
-        },
-        unstable_cancelCallback(handle) {
-          scheduledCallbacks.delete(handle);
-        },
-      };
-    });
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
@@ -622,14 +599,14 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.render(<Counter count={0} />);
       expect(ReactNoop.flush()).toEqual(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      flushPassiveEffects();
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual(['Did commit [0]']);
 
       ReactNoop.render(<Counter count={1} />);
       expect(ReactNoop.flush()).toEqual(['Count: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
       // Effects are deferred until after the commit
-      flushPassiveEffects();
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual(['Did commit [1]']);
     });
 
@@ -661,7 +638,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Passive')]);
 
       // (No effects are left to flush.)
-      flushPassiveEffects();
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual(null);
     });
 
@@ -762,7 +739,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         ]);
         expect(ReactNoop.getChildren()).toEqual([span(1)]);
 
-        flushPassiveEffects();
+        ReactNoop.flushPassiveEffects();
         expect(ReactNoop.clearYields()).toEqual([
           'Committed state when effect was fired: 1',
         ]);
@@ -784,14 +761,14 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.render(<Counter count={0} />);
       expect(ReactNoop.flush()).toEqual(['Count: (empty)']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
-      act(flushPassiveEffects);
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual(['Schedule update [0]']);
       expect(ReactNoop.flush()).toEqual(['Count: 0']);
 
       ReactNoop.render(<Counter count={1} />);
       expect(ReactNoop.flush()).toEqual(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      act(flushPassiveEffects);
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual(['Schedule update [1]']);
       expect(ReactNoop.flush()).toEqual(['Count: 1']);
     });
@@ -820,7 +797,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.flush()).toEqual([]);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
-      act(flushPassiveEffects);
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.flush()).toEqual(['Schedule update [1]', 'Count: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
     });
@@ -923,7 +900,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         expect(ReactNoop.flush()).toEqual(['Count: (empty)']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
         // Now fire the effects
-        act(flushPassiveEffects);
+        ReactNoop.flushPassiveEffects();
         // There were multiple updates, but there should only be a
         // single render
         expect(ReactNoop.clearYields()).toEqual(['Count: 0']);
@@ -950,7 +927,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
 
       expect(() => {
-        flushPassiveEffects();
+        ReactNoop.flushPassiveEffects();
       }).toThrow('flushSync was called from inside a lifecycle method');
     });
 
@@ -967,13 +944,13 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.render(<Counter count={0} />);
       expect(ReactNoop.flush()).toEqual(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      flushPassiveEffects();
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual(['Did create [0]']);
 
       ReactNoop.render(<Counter count={1} />);
       expect(ReactNoop.flush()).toEqual(['Count: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
-      flushPassiveEffects();
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual([
         'Did destroy [0]',
         'Did create [1]',
@@ -993,7 +970,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.render(<Counter count={0} />);
       expect(ReactNoop.flush()).toEqual(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      flushPassiveEffects();
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual(['Did create [0]']);
 
       ReactNoop.render(null);
@@ -1014,13 +991,13 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.render(<Counter count={0} />);
       expect(ReactNoop.flush()).toEqual(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      flushPassiveEffects();
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual(['Did create [0]']);
 
       ReactNoop.render(<Counter count={1} />);
       expect(ReactNoop.flush()).toEqual(['Count: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
-      flushPassiveEffects();
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual(null);
 
       ReactNoop.render(null);
@@ -1042,13 +1019,13 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.render(<Counter count={0} />);
       expect(ReactNoop.flush()).toEqual(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      flushPassiveEffects();
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual(['Did create']);
 
       ReactNoop.render(<Counter count={1} />);
       expect(ReactNoop.flush()).toEqual(['Count: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
-      flushPassiveEffects();
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual(['Did destroy', 'Did create']);
 
       ReactNoop.render(null);
@@ -1072,7 +1049,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       }
       ReactNoop.render(<Counter label="Count" count={0} />);
       expect(ReactNoop.flush()).toEqual(['Count: 0']);
-      flushPassiveEffects();
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual(['Did create [Count: 0]']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
@@ -1080,7 +1057,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       // Count changed
       expect(ReactNoop.flush()).toEqual(['Count: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
-      flushPassiveEffects();
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual([
         'Did destroy [Count: 0]',
         'Did create [Count: 1]',
@@ -1089,7 +1066,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.render(<Counter label="Count" count={1} />);
       // Nothing changed, so no effect should have fired
       expect(ReactNoop.flush()).toEqual(['Count: 1']);
-      flushPassiveEffects();
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual(null);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
 
@@ -1097,7 +1074,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       // Label changed
       expect(ReactNoop.flush()).toEqual(['Total: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Total: 1')]);
-      flushPassiveEffects();
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual([
         'Did destroy [Count: 1]',
         'Did create [Total: 1]',
@@ -1117,7 +1094,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.render(<Counter count={0} />);
       expect(ReactNoop.flush()).toEqual(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      flushPassiveEffects();
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual([
         'Did commit 1 [0]',
         'Did commit 2 [0]',
@@ -1126,7 +1103,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.render(<Counter count={1} />);
       expect(ReactNoop.flush()).toEqual(['Count: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
-      flushPassiveEffects();
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual([
         'Did commit 1 [1]',
         'Did commit 2 [1]',
@@ -1152,13 +1129,13 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.render(<Counter count={0} />);
       expect(ReactNoop.flush()).toEqual(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      flushPassiveEffects();
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual(['Mount A [0]', 'Mount B [0]']);
 
       ReactNoop.render(<Counter count={1} />);
       expect(ReactNoop.flush()).toEqual(['Count: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
-      flushPassiveEffects();
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual([
         'Unmount A [0]',
         'Unmount B [0]',
@@ -1189,7 +1166,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.render(<Counter count={0} />);
       expect(ReactNoop.flush()).toEqual(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      expect(() => flushPassiveEffects()).toThrow('Oops');
+      expect(() => ReactNoop.flushPassiveEffects()).toThrow('Oops');
       expect(ReactNoop.clearYields()).toEqual([
         'Mount A [0]',
         'Oops!',
@@ -1223,14 +1200,14 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.render(<Counter count={0} />);
       expect(ReactNoop.flush()).toEqual(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      flushPassiveEffects();
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual(['Mount A [0]', 'Mount B [0]']);
 
       // This update will trigger an errror
       ReactNoop.render(<Counter count={1} />);
       expect(ReactNoop.flush()).toEqual(['Count: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
-      expect(() => flushPassiveEffects()).toThrow('Oops');
+      expect(() => ReactNoop.flushPassiveEffects()).toThrow('Oops');
       expect(ReactNoop.clearYields()).toEqual([
         'Unmount A [0]',
         'Unmount B [0]',
@@ -1265,14 +1242,14 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.render(<Counter count={0} />);
       expect(ReactNoop.flush()).toEqual(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      flushPassiveEffects();
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual(['Mount A [0]', 'Mount B [0]']);
 
       // This update will trigger an errror
       ReactNoop.render(<Counter count={1} />);
       expect(ReactNoop.flush()).toEqual(['Count: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
-      expect(() => flushPassiveEffects()).toThrow('Oops');
+      expect(() => ReactNoop.flushPassiveEffects()).toThrow('Oops');
       expect(ReactNoop.clearYields()).toEqual([
         'Oops!',
         // B unmounts even though an error was thrown in the previous effect
@@ -1366,7 +1343,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
       expect(committedText).toEqual('1');
 
-      flushPassiveEffects();
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual([
         'Unmount normal [current: 1]',
         'Mount normal [current: 1]',
@@ -1724,7 +1701,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       ReactNoop.render(<App showMore={false} />);
       expect(ReactNoop.flush()).toEqual([]);
-      flushPassiveEffects();
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual(['Mount A']);
 
       ReactNoop.render(<App showMore={true} />);
@@ -1733,7 +1710,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       }).toThrow('Rendered more hooks than during the previous render');
 
       // Uncomment if/when we support this again
-      // flushPassiveEffects();
+      // ReactNoop.flushPassiveEffects();
       // expect(ReactNoop.clearYields()).toEqual(['Mount B']);
 
       // ReactNoop.render(<App showMore={false} />);
