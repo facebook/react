@@ -566,6 +566,7 @@ const ReactTestRendererFiber = {
 
   act(callback: () => void): Thenable {
     // note: keep these warning messages in sync with
+    // createNoop.js and ReactTestUtils.js
     let result = batchedUpdates(callback);
     if (__DEV__) {
       if (result !== undefined) {
