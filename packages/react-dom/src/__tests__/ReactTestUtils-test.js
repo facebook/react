@@ -635,9 +635,7 @@ describe('ReactTestUtils', () => {
     });
     expect(button.innerHTML).toBe('2');
     expect(() => setValueRef(1)).toWarnDev(
-      [
-        'An update to App inside a test was not wrapped in act(...).',
-      ],
+      ['An update to App inside a test was not wrapped in act(...).'],
       {withoutStack: 1},
     );
     document.body.removeChild(container);
