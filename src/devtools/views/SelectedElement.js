@@ -94,7 +94,7 @@ function InspectedElementView({
 
       {owners !== null && owners.length > 0 && (
         <div className={styles.Owners}>
-          <div>owners</div>
+          <div>owner stack</div>
           {owners.map(owner => (
             <div
               key={owner.id}

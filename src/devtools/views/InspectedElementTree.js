@@ -43,6 +43,13 @@ function KeyValue({ depth, name, value }: KeyValueProps) {
 
   let children = null;
   if (isSimpleType) {
+    let displayValue = value;
+    if (dataType === 'string') {
+      displayValue = `"${value}"`;
+    } else if (dataType === 'boolean') {
+      displayValue = value ? 'true' : 'false';
+    }
+
     children = (
       <div
         key="root"
@@ -50,9 +57,7 @@ function KeyValue({ depth, name, value }: KeyValueProps) {
         style={{ paddingLeft: `${depth}rem` }}
       >
         <span className={styles.Name}>{name}</span>:{' '}
-        <span className={styles.Value}>
-          {dataType === 'string' ? `"${value}"` : value}
-        </span>
+        <span className={styles.Value}>{displayValue}</span>
       </div>
     );
   } else if (value.hasOwnProperty(meta.type)) {

@@ -219,7 +219,7 @@ export function attach(
 
   // Keep this function in sync with getDataForFiber()
   function shouldFilterFiber(fiber: Fiber): boolean {
-    const { type, tag } = fiber;
+    const { tag } = fiber;
 
     switch (tag) {
       case ClassComponent:
@@ -237,16 +237,9 @@ export function attach(
       case Fragment:
         return true;
       default:
-        const symbolOrNumber =
-          typeof type === 'object' && type !== null ? type.$$typeof : type;
+        const typeSymbol = getTypeSymbol(fiber);
 
-        const switchValue =
-          // $FlowFixMe facebook/flow/issues/2362
-          typeof symbolOrNumber === 'symbol'
-            ? symbolOrNumber.toString()
-            : symbolOrNumber;
-
-        switch (switchValue) {
+        switch (typeSymbol) {
           case CONCURRENT_MODE_NUMBER:
           case CONCURRENT_MODE_SYMBOL_STRING:
           case DEPRECATED_ASYNC_MODE_SYMBOL_STRING:
@@ -267,6 +260,18 @@ export function attach(
             return false;
         }
     }
+  }
+
+  function getTypeSymbol(fiber: Fiber): Symbol | number {
+    const { type } = fiber;
+
+    const symbolOrNumber =
+      typeof type === 'object' && type !== null ? type.$$typeof : type;
+
+    // $FlowFixMe facebook/flow/issues/2362
+    return typeof symbolOrNumber === 'symbol'
+      ? symbolOrNumber.toString()
+      : symbolOrNumber;
   }
 
   // TODO: we might want to change the data structure once we no longer suppport Stack versions of `getData`.
@@ -340,16 +345,9 @@ export function attach(
         };
         break;
       default:
-        const symbolOrNumber =
-          typeof type === 'object' && type !== null ? type.$$typeof : type;
+        const typeSymbol = getTypeSymbol(fiber);
 
-        const switchValue =
-          // $FlowFixMe facebook/flow/issues/2362
-          typeof symbolOrNumber === 'symbol'
-            ? symbolOrNumber.toString()
-            : symbolOrNumber;
-
-        switch (switchValue) {
+        switch (typeSymbol) {
           case CONCURRENT_MODE_NUMBER:
           case CONCURRENT_MODE_SYMBOL_STRING:
           case DEPRECATED_ASYNC_MODE_SYMBOL_STRING:
@@ -362,6 +360,7 @@ export function attach(
           case CONTEXT_PROVIDER_SYMBOL_STRING:
             // 16.3.0 exposed the context object as "context"
             // PR #12501 changed it to "_context" for 16.3.1+
+            // NOTE Keep in sync with inspectElement()
             resolvedContext = fiber.type._context || fiber.type.context;
             displayName = `${resolvedContext.displayName ||
               'Context'}.Provider`;
@@ -376,6 +375,7 @@ export function attach(
           case CONTEXT_CONSUMER_SYMBOL_STRING:
             // 16.3-16.5 read from "type" because the Consumer is the actual context object.
             // 16.6+ should read from "type._context" because Consumer can be different (in DEV).
+            // NOTE Keep in sync with inspectElement()
             resolvedContext = fiber.type._context || fiber.type;
 
             // NOTE: TraceUpdatesBackendManager depends on the name ending in '.Consumer'
@@ -1019,6 +1019,7 @@ export function attach(
       memoizedProps,
       memoizedState,
       tag,
+      type,
     } = ((fiber: any): Fiber);
 
     const usesHooks =
@@ -1027,11 +1028,60 @@ export function attach(
         tag === ForwardRef) &&
       !!memoizedState;
 
-    const hasContext =
+    const typeSymbol = getTypeSymbol(fiber);
+
+    let context = null;
+    if (
       tag === ClassComponent ||
       tag === FunctionComponent ||
       tag === IncompleteClassComponent ||
-      tag === IndeterminateComponent;
+      tag === IndeterminateComponent
+    ) {
+      if (stateNode && Object.keys(stateNode.context).length > 0) {
+        context = stateNode.context;
+      }
+    } else if (
+      typeSymbol === CONTEXT_CONSUMER_NUMBER ||
+      typeSymbol === CONTEXT_CONSUMER_SYMBOL_STRING
+    ) {
+      // 16.3-16.5 read from "type" because the Consumer is the actual context object.
+      // 16.6+ should read from "type._context" because Consumer can be different (in DEV).
+      // NOTE Keep in sync with getDataForFiber()
+      const consumerResolvedContext = type._context || type;
+
+      // Global context value.
+      context = consumerResolvedContext._currentValue || null;
+
+      // Look for overridden value.
+      let current = ((fiber: any): Fiber).return;
+      while (current !== null) {
+        const currentTypeSymbol = getTypeSymbol(current);
+        if (
+          currentTypeSymbol === CONTEXT_PROVIDER_NUMBER ||
+          currentTypeSymbol === CONTEXT_PROVIDER_SYMBOL_STRING
+        ) {
+          const currentType = current.type;
+
+          // 16.3.0 exposed the context object as "context"
+          // PR #12501 changed it to "_context" for 16.3.1+
+          // NOTE Keep in sync with getDataForFiber()
+          const providerResolvedContext =
+            currentType._context || currentType.context;
+          if (providerResolvedContext === consumerResolvedContext) {
+            context = current.memoizedProps.value;
+            break;
+          }
+        }
+
+        current = current.return;
+      }
+    }
+
+    if (context !== null) {
+      // To simplify hydration and display logic for context, wrap in a value object.
+      // Otherwise simple values (e.g. strings, booleans) become harder to handle.
+      context = cleanForBridge({ value: context });
+    }
 
     let owners = null;
     if (_debugOwner) {
@@ -1054,12 +1104,7 @@ export function attach(
 
       // Inspectable properties.
       // TODO Sanitize props, state, and context
-      context:
-        (hasContext &&
-          stateNode &&
-          Object.keys(stateNode.context).length > 0 &&
-          cleanForBridge(stateNode.context)) ||
-        null,
+      context,
       hooks: usesHooks
         ? cleanForBridge(
             inspectHooksOfFiber(fiber, (renderer.currentDispatcherRef: any))

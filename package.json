@@ -84,7 +84,7 @@
     "nullthrows": "^1.0.0",
     "object-assign": "4.0.1",
     "prettier": "^1.16.1",
-    "prop-types": "^15.6.1",
+    "prop-types": "^15.6.2",
     "react": "^16.8.0-alpha.1",
     "react-color": "^2.11.7",
     "react-dom": "^16.8.0-alpha.1",
