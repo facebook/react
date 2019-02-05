@@ -6,12 +6,19 @@ import { meta } from '../../hydration';
 import styles from './InspectedElementTree.css';
 
 type Props = {|
-  label: string,
   data: Object | null,
+  label: string,
+  showWhenEmpty?: boolean,
 |};
 
-export default function InspectedElementTree({ data, label }: Props) {
-  if (data === null || Object.keys(data).length === 0) {
+export default function InspectedElementTree({
+  data,
+  label,
+  showWhenEmpty = false,
+}: Props) {
+  const isEmpty = data === null || Object.keys(data).length === 0;
+
+  if (isEmpty && !showWhenEmpty) {
     return null;
   } else {
     // TODO Add click and key handlers for toggling element open/close state.
@@ -19,9 +26,11 @@ export default function InspectedElementTree({ data, label }: Props) {
     return (
       <div className={styles.InspectedElementTree}>
         <div className={styles.Item}>{label}</div>
-        {Object.keys(data).map(name => (
-          <KeyValue key={name} depth={1} name={name} value={data[name]} />
-        ))}
+        {isEmpty && <div className={styles.Empty}>None</div>}
+        {!isEmpty &&
+          Object.keys((data: any)).map(name => (
+            <KeyValue key={name} depth={1} name={name} value={(data: any)[name]} />
+          ))}
       </div>
     );
   }

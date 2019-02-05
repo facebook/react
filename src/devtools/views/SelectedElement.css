@@ -3,8 +3,8 @@
   flex-direction: column;
   height: 100%;
   width: 100%;
-  border-left: 1px solid var(--color-base02);
-  border-top: 1px solid var(--color-base02);
+  border-left: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border);
 }
 
 .TitleRow {
@@ -12,7 +12,7 @@
   display: flex;
   align-items: center;
   font-size: 16px;
-  border-bottom: 1px solid var(--color-base02);
+  border-bottom: 1px solid var(--color-border);
   padding: 0.5rem;
 }
 
@@ -24,10 +24,10 @@
   align-items: center;
   padding: 0.25rem;
   cursor: pointer;
-  color: var(--color-state00);
+  color: var(--color-button);
 }
 .IconButton:hover {
-  color: var(--color-special02);
+  color: var(--color-button-hover);
 }
 
 .SelectedComponentName {
@@ -44,19 +44,19 @@
 .Owner {
   overflow: hidden;
   text-overflow: ellipsis;
-  color: var(--color-component);
+  color: var(--color-component-name);
 }
 .Component:before,
 .Owner:before {
   white-space: nowrap;
   content: '<';
-  color: var(--color-tree-tag);
+  color: var(--color-tree-jsx-arrow-brackets);
 }
 .Component:after,
 .Owner:after {
   white-space: nowrap;
   content: '>';
-  color: var(--color-tree-tag);
+  color: var(--color-tree-jsx-arrow-brackets);
 }
 
 .Component {
@@ -66,8 +66,8 @@
 .InspectedElement {
   overflow: auto;
   font-family: var(--font-family-monospace);
-  font-size: var(--font-size-tree-compact);
-  line-height: var(--line-height-compact);
+  font-size: var(--font-size-normal);
+  line-height: var(--line-height-data);
 }
 
 .Owner {
@@ -77,6 +77,6 @@
 
 .Loading {
   padding: 0.25rem;
-  color: var(--color-base03);
+  color: var(--color-deemphasized);
   font-style: italic;
 }

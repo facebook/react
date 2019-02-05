@@ -3,7 +3,7 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  border-top: 1px solid var(--color-base02);
+  border-top: 1px solid var(--color-border);
 }
 
 .SearchRow {
@@ -11,7 +11,7 @@
   display: flex;
   align-items: center;
   font-size: 16px;
-  border-bottom: 1px solid var(--color-base02);
+  border-bottom: 1px solid var(--color-border);
   padding: 0.5rem;
 }
 
@@ -34,11 +34,11 @@
   align-items: center;
   padding: 0.25rem;
   cursor: pointer;
-  color: var(--color-state00);
+  color: var(--color-button);
   flex: 0 0 auto;
 }
 .IconButton:hover {
-  color: var(--color-special02);
+  color: var(--color-button-hover);
 }
 
 .AutoSizerWrapper {
@@ -50,6 +50,6 @@
 
 .List {
   font-family: var(--font-family-monospace);
-  font-size: var(--font-size-tree-compact);
-  line-height: var(--line-height-tree-compact);
+  font-size: var(--font-size-normal);
+  line-height: var(--line-height-data);
 }

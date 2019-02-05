@@ -10,18 +10,20 @@
   align-items: center;
 }
 .Element:hover {
-  background-color: var(--color-state03);
+  background-color: var(--color-tree-node-hover);
 }
 
 .SelectedElement {
-  background-color: var(--color-state00);
+  background-color: var(--color-tree-node-selected);
 
   /* Invert colors */
-  --color-component: var(--color-base00);
-  --color-arrow: var(--color-base00);
-  --color-tree-tag: rgba(255, 255, 255, 0.8);
-  --color-tree-attr-name: #b3e5fc;
-  --color-tree-attr-value: #fff;
+  --color-component-name: var(--color-component-name-inverted);
+  --color-arrow: var(--color-arrow-inverted);
+  --color-tree-jsx-arrow-brackets: var(
+    --color-tree-jsx-arrow-brackets-inverted
+  );
+  --color-attribute-name: #b3e5fc;
+  --color-attribute-value: #fff;
 }
 
 .ArrowClosed,
@@ -37,23 +39,23 @@
 }
 
 .Component {
-  color: var(--color-component);
+  color: var(--color-component-name);
 }
 .Component:before {
   white-space: nowrap;
   content: '<';
-  color: var(--color-tree-tag);
+  color: var(--color-tree-jsx-arrow-brackets);
 }
 .Component:after {
   white-space: nowrap;
   content: '>';
-  color: var(--color-tree-tag);
+  color: var(--color-tree-jsx-arrow-brackets);
 }
 
 .AttributeName {
-  color: var(--color-tree-attr-name);
+  color: var(--color-attribute-name);
 }
 
 .AttributeValue {
-  color: var(--color-tree-attr-value);
+  color: var(--color-attribute-value);
 }

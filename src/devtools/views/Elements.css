@@ -3,7 +3,7 @@
   height: 100%;
   display: flex;
   flex-direction: row;
-
+  background-color: var(--color-background);
   font-family: var(--font-family-sans);
 }
 

@@ -87,7 +87,7 @@ function InspectedElementView({
 
   return (
     <div className={styles.InspectedElement}>
-      <InspectedElementTree label="props" data={props} />
+      <InspectedElementTree label="props" data={props} showWhenEmpty />
       <InspectedElementTree label="state" data={state} />
       <HooksTree hooksTree={hooks} />
       <InspectedElementTree label="context" data={context} />

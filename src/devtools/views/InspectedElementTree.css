@@ -1,20 +1,26 @@
 .InspectedElementTree {
   padding: 0.25rem;
-  border-bottom: 1px solid var(--color-base02);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .Item {
 }
 
 .Name {
-  color: var(--color-tree-attr-name);
+  color: var(--color-attribute-name);
 }
 
 .Value {
-  color: var(--color-tree-attr-value);
+  color: var(--color-attribute-value);
 }
 
 .None {
-  color: var(--color-base03);
+  color: var(--color-deemphasized);
   font-style: italic;
+}
+
+.Empty {
+  color: var(--color-deemphasized);
+  font-style: italic;
+  padding-left: 1rem;
 }
