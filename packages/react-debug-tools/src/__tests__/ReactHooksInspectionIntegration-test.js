@@ -93,8 +93,12 @@ describe('ReactHooksInspectionIntegration', () => {
       React.useMemo(() => state1 + state2, [state1]);
 
       function update() {
-        setState('A');
-        dispatch({value: 'B'});
+        act(() => {
+          setState('A');
+        });
+        act(() => {
+          dispatch({value: 'B'});
+        });
         ref.current = 'C';
       }
       let memoizedUpdate = React.useCallback(update, []);
@@ -122,7 +126,7 @@ describe('ReactHooksInspectionIntegration', () => {
       {name: 'Callback', value: updateStates, subHooks: []},
     ]);
 
-    act(updateStates);
+    updateStates();
 
     childFiber = renderer.root.findByType(Foo)._currentFiber();
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
@@ -134,7 +138,7 @@ describe('ReactHooksInspectionIntegration', () => {
       {name: 'LayoutEffect', value: effect, subHooks: []},
       {name: 'Effect', value: effect, subHooks: []},
       {name: 'ImperativeHandle', value: outsideRef.current, subHooks: []},
-      {name: 'Memo', value: 'AB', subHooks: []},
+      {name: 'Memo', value: 'Ab', subHooks: []},
       {name: 'Callback', value: updateStates, subHooks: []},
     ]);
   });

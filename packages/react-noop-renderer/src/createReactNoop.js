@@ -872,20 +872,22 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     // maybe this should exist only in the test file
     act(callback: () => void): Thenable {
+      // note: keep these warning messages in sync with
+      // ReactTestRenderer.js and ReactTestUtils.js
       let result = NoopRenderer.batchedUpdates(callback);
       if (__DEV__) {
         if (result !== undefined) {
           let addendum;
           if (typeof result.then === 'function') {
             addendum =
-              '\n\nIt looks like you wrote act(async () => ...) or returned a Promise. ' +
-              'Do not write async logic inside act(...)\n';
+              "\n\nIt looks like you wrote ReactNoop.act(async () => ...) or returned a Promise from it's callback. " +
+              'Putting asynchronous logic inside ReactNoop.act(...) is not supported.\n';
           } else {
             addendum = ' You returned: ' + result;
           }
           warningWithoutStack(
             false,
-            'An .act(...) function must not return anything.%s',
+            'The callback passed to ReactNoop.act(...) function must not return anything.%s',
             addendum,
           );
         }
@@ -898,7 +900,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           if (__DEV__) {
             warningWithoutStack(
               false,
-              'Do not await an act(...) call, it is not a promise',
+              'Do not await the result of calling ReactNoop.act(...), it is not a Promise.',
             );
           }
         },

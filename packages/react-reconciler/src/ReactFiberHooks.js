@@ -1137,7 +1137,7 @@ function dispatchAction<S, A>(
     }
     if (__DEV__) {
       if (shouldWarnForUnbatchedSetState === true) {
-        warnIfNotCurrentlyBatchingInDev();
+        warnIfNotCurrentlyBatchingInDev(fiber);
       }
     }
     scheduleWork(fiber, expirationTime);

@@ -1790,15 +1790,20 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
   return root;
 }
 
-export function warnIfNotCurrentlyBatchingInDev(): void {
+export function warnIfNotCurrentlyBatchingInDev(fiber: Fiber): void {
   if (__DEV__) {
-    if (isBatchingUpdates === false) {
+    if (isRendering === false && isBatchingUpdates === false) {
       warningWithoutStack(
         false,
-        'It looks like you are in a test environment, trying to ' +
-          'set state outside of an act(...) call. ' +
-          'This could lead to unexpected ui while testing. Use ' +
-          'act(...) to batch your updates and remove this warning.',
+        'An update to %s inside a test was not wrapped in ReactTestUtils.act(...).\n\n' +
+          'When testing, code that causes React state updates should be wrapped into ReactTestUtils.act(...):\n\n' +
+          'ReactTestUtils.act(() => {\n' +
+          '  /* fire events */\n' +
+          '});\n' +
+          '/* assert on the output */\n\n' +
+          "This ensures that you're testing the behavior the user would see in the browser." +
+          ' Learn more at https://fb.me/react-testutils-act',
+        getComponentName(fiber.type),
       );
     }
   }

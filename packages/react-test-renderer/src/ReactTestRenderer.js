@@ -565,21 +565,21 @@ const ReactTestRendererFiber = {
   unstable_setNowImplementation: setNowImplementation,
 
   act(callback: () => void): Thenable {
+    // note: keep these warning messages in sync with
     let result = batchedUpdates(callback);
-    // warnings copied from ReactTestUtils
     if (__DEV__) {
       if (result !== undefined) {
         let addendum;
         if (typeof result.then === 'function') {
           addendum =
-            '\n\nIt looks like you wrote act(async () => ...) or returned a Promise. ' +
-            'Do not write async logic inside act(...)\n';
+            "\n\nIt looks like you wrote TestRenderer.act(async () => ...) or returned a Promise from it's callback. " +
+            'Putting asynchronous logic inside TestRenderer.act(...) is not supported.\n';
         } else {
           addendum = ' You returned: ' + result;
         }
         warningWithoutStack(
           false,
-          'An .act(...) function must not return anything.%s',
+          'The callback passed to TestRenderer.act(...) function must not return anything.%s',
           addendum,
         );
       }
@@ -592,7 +592,7 @@ const ReactTestRendererFiber = {
         if (__DEV__) {
           warningWithoutStack(
             false,
-            'Do not await an act(...) call, it is not a promise',
+            'Do not await the result of calling TestRenderer.act(...), it is not a Promise.',
           );
         }
       },

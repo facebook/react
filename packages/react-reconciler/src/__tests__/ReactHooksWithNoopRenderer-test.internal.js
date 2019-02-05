@@ -764,18 +764,14 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.render(<Counter count={0} />);
       expect(ReactNoop.flush()).toEqual(['Count: (empty)']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
-      act(() => {
-        ReactNoop.flushPassiveEffects();
-      });
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual(['Schedule update [0]']);
       expect(ReactNoop.flush()).toEqual(['Count: 0']);
 
       ReactNoop.render(<Counter count={1} />);
       expect(ReactNoop.flush()).toEqual(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      act(() => {
-        ReactNoop.flushPassiveEffects();
-      });
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.clearYields()).toEqual(['Schedule update [1]']);
       expect(ReactNoop.flush()).toEqual(['Count: 1']);
     });
@@ -797,10 +793,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
 
       // Rendering again should flush the previous commit's effects
-      expect(() => ReactNoop.render(<Counter count={1} />)).toWarnDev(
-        ['It looks like you are in a test environment'],
-        {withoutStack: true},
-      );
+      ReactNoop.render(<Counter count={1} />);
       ReactNoop.flushThrough(['Schedule update [0]', 'Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
 
@@ -810,7 +803,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
-      act(() => ReactNoop.flushPassiveEffects());
+      ReactNoop.flushPassiveEffects();
       expect(ReactNoop.flush()).toEqual(['Schedule update [1]', 'Count: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
     });
@@ -913,9 +906,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         expect(ReactNoop.flush()).toEqual(['Count: (empty)']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
         // Now fire the effects
-        act(() => {
-          ReactNoop.flushPassiveEffects();
-        });
+        ReactNoop.flushPassiveEffects();
         // There were multiple updates, but there should only be a
         // single render
         expect(ReactNoop.clearYields()).toEqual(['Count: 0']);

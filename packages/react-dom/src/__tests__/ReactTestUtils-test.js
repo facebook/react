@@ -636,7 +636,7 @@ describe('ReactTestUtils', () => {
     expect(button.innerHTML).toBe('2');
     expect(() => setValueRef(1)).toWarnDev(
       [
-        'It looks like you are in a test environment, trying to set state outside of an act(...) call.',
+        'An update to App inside a test was not wrapped in ReactTestUtils.act(...).',
       ],
       {withoutStack: 1},
     );
@@ -668,14 +668,18 @@ describe('ReactTestUtils', () => {
 
   it('warns if you return a value inside act', () => {
     expect(() => act(() => 123)).toWarnDev(
-      ['An .act(...) function must not return anything'],
+      [
+        'The callback passed to ReactTestUtils.act(...) function must not return anything.',
+      ],
       {withoutStack: true},
     );
   });
 
   it('warns if you try to await an .act call', () => {
     expect(act(() => {}).then).toWarnDev(
-      ['Do not await an act(...) call, it is not a promise'],
+      [
+        'Do not await the result of calling ReactTestUtils.act(...), it is not a Promise.',
+      ],
       {withoutStack: true},
     );
   });

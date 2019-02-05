@@ -391,20 +391,23 @@ const ReactTestUtils = {
   SimulateNative: {},
 
   act(callback: () => void): Thenable {
+    // note: keep these warning messages in sync with
+    // createReactNoop.js and ReactTestRenderer.js
     const result = ReactDOM.unstable_batchedUpdates(callback);
     if (__DEV__) {
       if (result !== undefined) {
         let addendum;
         if (typeof result.then === 'function') {
           addendum =
-            '\n\nIt looks like you wrote act(async () => ...) or returned a Promise. ' +
-            'Do not write async logic inside act(...)\n';
+            '\n\nIt looks like you wrote ReactTestUtils.act(async () => ...), ' +
+            'or returned a Promise from the callback passed to it. ' +
+            'Putting asynchronous logic inside ReactTestUtils.act(...) is not supported.\n';
         } else {
           addendum = ' You returned: ' + result;
         }
         warningWithoutStack(
           false,
-          'An .act(...) function must not return anything.%s',
+          'The callback passed to ReactTestUtils.act(...) function must not return anything.%s',
           addendum,
         );
       }
@@ -417,7 +420,7 @@ const ReactTestUtils = {
         if (__DEV__) {
           warningWithoutStack(
             false,
-            'Do not await an act(...) call, it is not a promise',
+            'Do not await the result of calling ReactTestUtils.act(...), it is not a Promise.',
           );
         }
       },
