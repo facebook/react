@@ -1795,14 +1795,14 @@ export function warnIfNotCurrentlyBatchingInDev(fiber: Fiber): void {
     if (isRendering === false && isBatchingUpdates === false) {
       warningWithoutStack(
         false,
-        'An update to %s inside a test was not wrapped in ReactTestUtils.act(...).\n\n' +
-          'When testing, code that causes React state updates should be wrapped into ReactTestUtils.act(...):\n\n' +
-          'ReactTestUtils.act(() => {\n' +
+        'An update to %s inside a test was not wrapped in act(...).\n\n' +
+          'When testing, code that causes React state updates should be wrapped into act(...):\n\n' +
+          'act(() => {\n' +
           '  /* fire events that update state */\n' +
           '});\n' +
           '/* assert on the output */\n\n' +
           "This ensures that you're testing the behavior the user would see in the browser." +
-          ' Learn more at https://fb.me/react-testutils-act',
+          ' Learn more at https://fb.me/react-wrap-tests-with-act',
         getComponentName(fiber.type),
       );
     }
