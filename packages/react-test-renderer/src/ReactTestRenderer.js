@@ -571,7 +571,7 @@ const ReactTestRendererFiber = {
     if (__DEV__) {
       if (result !== undefined) {
         let addendum;
-        if (typeof result.then === 'function') {
+        if (result !== null && typeof result.then === 'function') {
           addendum =
             "\n\nIt looks like you wrote TestRenderer.act(async () => ...) or returned a Promise from it's callback. " +
             'Putting asynchronous logic inside TestRenderer.act(...) is not supported.\n';

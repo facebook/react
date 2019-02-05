@@ -397,7 +397,7 @@ const ReactTestUtils = {
     if (__DEV__) {
       if (result !== undefined) {
         let addendum;
-        if (typeof result.then === 'function') {
+        if (result !== null && typeof result.then === 'function') {
           addendum =
             '\n\nIt looks like you wrote ReactTestUtils.act(async () => ...), ' +
             'or returned a Promise from the callback passed to it. ' +

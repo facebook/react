@@ -878,7 +878,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       if (__DEV__) {
         if (result !== undefined) {
           let addendum;
-          if (typeof result.then === 'function') {
+          if (result !== null && typeof result.then === 'function') {
             addendum =
               "\n\nIt looks like you wrote ReactNoop.act(async () => ...) or returned a Promise from it's callback. " +
               'Putting asynchronous logic inside ReactNoop.act(...) is not supported.\n';
