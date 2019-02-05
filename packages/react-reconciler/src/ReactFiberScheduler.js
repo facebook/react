@@ -1798,7 +1798,7 @@ export function warnIfNotCurrentlyBatchingInDev(fiber: Fiber): void {
         'An update to %s inside a test was not wrapped in ReactTestUtils.act(...).\n\n' +
           'When testing, code that causes React state updates should be wrapped into ReactTestUtils.act(...):\n\n' +
           'ReactTestUtils.act(() => {\n' +
-          '  /* fire events */\n' +
+          '  /* fire events that update state */\n' +
           '});\n' +
           '/* assert on the output */\n\n' +
           "This ensures that you're testing the behavior the user would see in the browser." +
