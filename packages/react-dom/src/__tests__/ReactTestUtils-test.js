@@ -665,6 +665,12 @@ describe('ReactTestUtils', () => {
   });
 
   it('warns if you return a value inside act', () => {
+    expect(() => act(() => null)).toWarnDev(
+      [
+        'The callback passed to ReactTestUtils.act(...) function must not return anything.',
+      ],
+      {withoutStack: true},
+    );
     expect(() => act(() => 123)).toWarnDev(
       [
         'The callback passed to ReactTestUtils.act(...) function must not return anything.',
