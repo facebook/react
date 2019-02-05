@@ -18,8 +18,14 @@ import {
 import SyntheticEvent from 'events/SyntheticEvent';
 import invariant from 'shared/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 import * as DOMTopLevelEventTypes from '../events/DOMTopLevelEventTypes';
+
+// for .act's return value
+type Thenable = {
+  then(resolve: () => mixed, reject?: () => mixed): mixed,
+};
 
 const {findDOMNode} = ReactDOM;
 // Keep in sync with ReactDOMUnstableNativeDependencies.js
@@ -144,6 +150,9 @@ function validateClassInstance(inst, methodName) {
     received,
   );
 }
+
+// stub element used by act() when flushing effects
+let actContainerElement = document.createElement('div');
 
 /**
  * Utilities for making it easy to test React components.
@@ -380,6 +389,43 @@ const ReactTestUtils = {
 
   Simulate: null,
   SimulateNative: {},
+
+  act(callback: () => void): Thenable {
+    // note: keep these warning messages in sync with
+    // createReactNoop.js and ReactTestRenderer.js
+    const result = ReactDOM.unstable_batchedUpdates(callback);
+    if (__DEV__) {
+      if (result !== undefined) {
+        let addendum;
+        if (typeof result.then === 'function') {
+          addendum =
+            '\n\nIt looks like you wrote ReactTestUtils.act(async () => ...), ' +
+            'or returned a Promise from the callback passed to it. ' +
+            'Putting asynchronous logic inside ReactTestUtils.act(...) is not supported.\n';
+        } else {
+          addendum = ' You returned: ' + result;
+        }
+        warningWithoutStack(
+          false,
+          'The callback passed to ReactTestUtils.act(...) function must not return anything.%s',
+          addendum,
+        );
+      }
+    }
+    ReactDOM.render(<div />, actContainerElement);
+    // we want the user to not expect a return,
+    // but we want to warn if they use it like they can await on it.
+    return {
+      then() {
+        if (__DEV__) {
+          warningWithoutStack(
+            false,
+            'Do not await the result of calling ReactTestUtils.act(...), it is not a Promise.',
+          );
+        }
+      },
+    };
+  },
 };
 
 /**

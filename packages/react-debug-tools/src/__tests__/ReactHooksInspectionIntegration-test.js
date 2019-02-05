@@ -13,12 +13,14 @@
 let React;
 let ReactTestRenderer;
 let ReactDebugTools;
+let act;
 
-describe('ReactHooksInspectionIntergration', () => {
+describe('ReactHooksInspectionIntegration', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
+    act = ReactTestRenderer.act;
     ReactDebugTools = require('react-debug-tools');
   });
 
@@ -47,7 +49,7 @@ describe('ReactHooksInspectionIntergration', () => {
       onMouseUp: setStateB,
     } = renderer.root.findByType('div').props;
 
-    setStateA('Hi');
+    act(() => setStateA('Hi'));
 
     childFiber = renderer.root.findByType(Foo)._currentFiber();
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
@@ -57,7 +59,7 @@ describe('ReactHooksInspectionIntergration', () => {
       {name: 'State', value: 'world', subHooks: []},
     ]);
 
-    setStateB('world!');
+    act(() => setStateB('world!'));
 
     childFiber = renderer.root.findByType(Foo)._currentFiber();
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
@@ -91,8 +93,12 @@ describe('ReactHooksInspectionIntergration', () => {
       React.useMemo(() => state1 + state2, [state1]);
 
       function update() {
-        setState('A');
-        dispatch({value: 'B'});
+        act(() => {
+          setState('A');
+        });
+        act(() => {
+          dispatch({value: 'B'});
+        });
         ref.current = 'C';
       }
       let memoizedUpdate = React.useCallback(update, []);

@@ -13,7 +13,9 @@ let React;
 let ReactDOM;
 let Suspense;
 let ReactCache;
+let ReactTestUtils;
 let TextResource;
+let act;
 
 describe('ReactDOMSuspensePlaceholder', () => {
   let container;
@@ -23,6 +25,8 @@ describe('ReactDOMSuspensePlaceholder', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactCache = require('react-cache');
+    ReactTestUtils = require('react-dom/test-utils');
+    act = ReactTestUtils.act;
     Suspense = React.Suspense;
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -142,12 +146,14 @@ describe('ReactDOMSuspensePlaceholder', () => {
         );
       }
 
-      ReactDOM.render(<App />, container);
+      act(() => {
+        ReactDOM.render(<App />, container);
+      });
       expect(container.innerHTML).toEqual(
         '<span style="display: none;">Sibling</span><span style="display: none;"></span>Loading...',
       );
 
-      setIsVisible(true);
+      act(() => setIsVisible(true));
       expect(container.innerHTML).toEqual(
         '<span style="display: none;">Sibling</span><span style="display: none;"></span>Loading...',
       );

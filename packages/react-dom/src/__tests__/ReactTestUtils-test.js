@@ -14,6 +14,7 @@ let React;
 let ReactDOM;
 let ReactDOMServer;
 let ReactTestUtils;
+let act;
 
 function getTestDocument(markup) {
   const doc = document.implementation.createHTMLDocument('');
@@ -33,6 +34,7 @@ describe('ReactTestUtils', () => {
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('react-dom/test-utils');
+    act = ReactTestUtils.act;
   });
 
   it('Simulate should have locally attached media events', () => {
@@ -514,5 +516,169 @@ describe('ReactTestUtils', () => {
 
     ReactTestUtils.renderIntoDocument(<Component />);
     expect(mockArgs.length).toEqual(0);
+  });
+
+  it('can use act to batch effects', () => {
+    function App(props) {
+      React.useEffect(props.callback);
+      return null;
+    }
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    try {
+      let called = false;
+      act(() => {
+        ReactDOM.render(
+          <App
+            callback={() => {
+              called = true;
+            }}
+          />,
+          container,
+        );
+      });
+
+      expect(called).toBe(true);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+
+  it('flushes effects on every call', () => {
+    function App(props) {
+      let [ctr, setCtr] = React.useState(0);
+      React.useEffect(() => {
+        props.callback(ctr);
+      });
+      return (
+        <button id="button" onClick={() => setCtr(x => x + 1)}>
+          click me!
+        </button>
+      );
+    }
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    let calledCtr = 0;
+    act(() => {
+      ReactDOM.render(
+        <App
+          callback={val => {
+            calledCtr = val;
+          }}
+        />,
+        container,
+      );
+    });
+    const button = document.getElementById('button');
+    function click() {
+      button.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+    }
+
+    act(() => {
+      click();
+      click();
+      click();
+    });
+    expect(calledCtr).toBe(3);
+    act(click);
+    expect(calledCtr).toBe(4);
+    act(click);
+    expect(calledCtr).toBe(5);
+
+    document.body.removeChild(container);
+  });
+
+  it('can use act to batch effects on updates too', () => {
+    function App() {
+      let [ctr, setCtr] = React.useState(0);
+      return (
+        <button id="button" onClick={() => setCtr(x => x + 1)}>
+          {ctr}
+        </button>
+      );
+    }
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    let button;
+    act(() => {
+      ReactDOM.render(<App />, container);
+    });
+    button = document.getElementById('button');
+    expect(button.innerHTML).toBe('0');
+    act(() => {
+      button.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+    });
+    expect(button.innerHTML).toBe('1');
+    document.body.removeChild(container);
+  });
+
+  it('detects setState being called outside of act(...)', () => {
+    let setValueRef = null;
+    function App() {
+      let [value, setValue] = React.useState(0);
+      setValueRef = setValue;
+      return (
+        <button id="button" onClick={() => setValue(2)}>
+          {value}
+        </button>
+      );
+    }
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    let button;
+    act(() => {
+      ReactDOM.render(<App />, container);
+      button = container.querySelector('#button');
+      button.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+    });
+    expect(button.innerHTML).toBe('2');
+    expect(() => setValueRef(1)).toWarnDev(
+      ['An update to App inside a test was not wrapped in act(...).'],
+      {withoutStack: 1},
+    );
+    document.body.removeChild(container);
+  });
+
+  it('lets a ticker update', () => {
+    function App() {
+      let [toggle, setToggle] = React.useState(0);
+      React.useEffect(() => {
+        let timeout = setTimeout(() => {
+          setToggle(1);
+        }, 200);
+        return () => clearTimeout(timeout);
+      });
+      return toggle;
+    }
+    const container = document.createElement('div');
+
+    act(() => {
+      act(() => {
+        ReactDOM.render(<App />, container);
+      });
+      jest.advanceTimersByTime(250);
+    });
+
+    expect(container.innerHTML).toBe('1');
+  });
+
+  it('warns if you return a value inside act', () => {
+    expect(() => act(() => 123)).toWarnDev(
+      [
+        'The callback passed to ReactTestUtils.act(...) function must not return anything.',
+      ],
+      {withoutStack: true},
+    );
+  });
+
+  it('warns if you try to await an .act call', () => {
+    expect(act(() => {}).then).toWarnDev(
+      [
+        'Do not await the result of calling ReactTestUtils.act(...), it is not a Promise.',
+      ],
+      {withoutStack: true},
+    );
   });
 });

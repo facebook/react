@@ -26,6 +26,7 @@ let useRef;
 let useImperativeHandle;
 let forwardRef;
 let memo;
+let act;
 
 // These tests use React Noop Renderer. All new tests should use React Test
 // Renderer and go in ReactHooks-test; plan is gradually migrate the noop tests
@@ -50,6 +51,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     useImperativeHandle = React.useImperativeHandle;
     forwardRef = React.forwardRef;
     memo = React.memo;
+    act = ReactNoop.act;
   });
 
   function span(prop) {
@@ -76,8 +78,11 @@ describe('ReactHooksWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
     // Schedule some updates
-    counter.current.updateCount(1);
-    counter.current.updateCount(count => count + 10);
+    act(() => {
+      counter.current.updateCount(1);
+      counter.current.updateCount(count => count + 10);
+    });
+
     // Partially flush without committing
     ReactNoop.flushThrough(['Count: 11']);
     expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
@@ -157,11 +162,11 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.flush();
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
-      counter.current.updateCount(1);
+      act(() => counter.current.updateCount(1));
       ReactNoop.flush();
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
 
-      counter.current.updateCount(count => count + 10);
+      act(() => counter.current.updateCount(count => count + 10));
       ReactNoop.flush();
       expect(ReactNoop.getChildren()).toEqual([span('Count: 11')]);
     });
@@ -181,7 +186,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.flush()).toEqual(['getInitialState', 'Count: 42']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 42')]);
 
-      counter.current.updateCount(7);
+      act(() => counter.current.updateCount(7));
       expect(ReactNoop.flush()).toEqual(['Count: 7']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 7')]);
     });
@@ -199,10 +204,10 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.flush();
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
-      counter.current.updateCount(7);
+      act(() => counter.current.updateCount(7));
       expect(ReactNoop.flush()).toEqual(['Count: 7']);
 
-      counter.current.updateLabel('Total');
+      act(() => counter.current.updateLabel('Total'));
       expect(ReactNoop.flush()).toEqual(['Total: 7']);
     });
 
@@ -217,11 +222,11 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.flush();
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
-      updaters[0](1);
+      act(() => updaters[0](1));
       ReactNoop.flush();
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
 
-      updaters[0](count => count + 10);
+      act(() => updaters[0](count => count + 10));
       ReactNoop.flush();
       expect(ReactNoop.getChildren()).toEqual([span('Count: 11')]);
 
@@ -240,7 +245,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.flush();
       ReactNoop.render(null);
       ReactNoop.flush();
-      expect(() => _updateCount(1)).toWarnDev(
+      expect(() => act(() => _updateCount(1))).toWarnDev(
         "Warning: Can't perform a React state update on an unmounted " +
           'component. This is a no-op, but it indicates a memory leak in your ' +
           'application. To fix, cancel all subscriptions and asynchronous ' +
@@ -266,7 +271,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.flush()).toEqual([]);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
-      _updateCount(1);
+      act(() => _updateCount(1));
       expect(ReactNoop.flush()).toEqual(['Count: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
     });
@@ -490,13 +495,15 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.flush();
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
-      counter.current.dispatch(INCREMENT);
+      act(() => counter.current.dispatch(INCREMENT));
       ReactNoop.flush();
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+      act(() => {
+        counter.current.dispatch(DECREMENT);
+        counter.current.dispatch(DECREMENT);
+        counter.current.dispatch(DECREMENT);
+      });
 
-      counter.current.dispatch(DECREMENT);
-      counter.current.dispatch(DECREMENT);
-      counter.current.dispatch(DECREMENT);
       ReactNoop.flush();
       expect(ReactNoop.getChildren()).toEqual([span('Count: -2')]);
     });
@@ -530,13 +537,16 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.flush()).toEqual(['Init', 'Count: 10']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 10')]);
 
-      counter.current.dispatch(INCREMENT);
+      act(() => counter.current.dispatch(INCREMENT));
       expect(ReactNoop.flush()).toEqual(['Count: 11']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 11')]);
 
-      counter.current.dispatch(DECREMENT);
-      counter.current.dispatch(DECREMENT);
-      counter.current.dispatch(DECREMENT);
+      act(() => {
+        counter.current.dispatch(DECREMENT);
+        counter.current.dispatch(DECREMENT);
+        counter.current.dispatch(DECREMENT);
+      });
+
       expect(ReactNoop.flush()).toEqual(['Count: 8']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 8')]);
     });
@@ -562,9 +572,12 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.flush();
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
-      counter.current.dispatch(INCREMENT);
-      counter.current.dispatch(INCREMENT);
-      counter.current.dispatch(INCREMENT);
+      act(() => {
+        counter.current.dispatch(INCREMENT);
+        counter.current.dispatch(INCREMENT);
+        counter.current.dispatch(INCREMENT);
+      });
+
       ReactNoop.flushSync(() => {
         counter.current.dispatch(INCREMENT);
       });
@@ -647,15 +660,20 @@ describe('ReactHooksWithNoopRenderer', () => {
         });
         return <Text text="Layout" />;
       }
+
       ReactNoop.render([<PassiveEffect key="p" />, <LayoutEffect key="l" />]);
-      expect(ReactNoop.flush()).toEqual([
-        'Passive',
-        'Layout',
-        'Layout effect 0',
-        'Passive effect',
-        'Layout',
-        'Layout effect 1',
-      ]);
+
+      act(() => {
+        expect(ReactNoop.flush()).toEqual([
+          'Passive',
+          'Layout',
+          'Layout effect 0',
+          'Passive effect',
+          'Layout',
+          'Layout effect 1',
+        ]);
+      });
+
       expect(ReactNoop.getChildren()).toEqual([
         span('Passive'),
         span('Layout'),
@@ -779,7 +797,10 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.flushThrough(['Schedule update [0]', 'Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
 
-      expect(ReactNoop.flush()).toEqual([]);
+      ReactNoop.batchedUpdates(() => {
+        expect(ReactNoop.flush()).toEqual([]);
+      });
+
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
       ReactNoop.flushPassiveEffects();
@@ -805,7 +826,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       // Enqueuing this update forces the passive effect to be flushed --
       // updateCount(1) happens first, so 2 wins.
-      _updateCount(2);
+      act(() => _updateCount(2));
       expect(ReactNoop.flush()).toEqual(['Will set count to 1', 'Count: 2']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 2')]);
     });
@@ -851,7 +872,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       // Enqueuing this update forces the passive effect to be flushed --
       // updateCount(1) happens first, so 2 wins.
-      _updateCount(2);
+      act(() => _updateCount(2));
       expect(ReactNoop.flush()).toEqual(['Will set count to 1', 'Count: 2']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 2')]);
 
@@ -1368,7 +1389,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         span('Count: 0'),
       ]);
 
-      button.current.increment();
+      act(button.current.increment);
       expect(ReactNoop.flush()).toEqual([
         // Button should not re-render, because its props haven't changed
         // 'Increment',
@@ -1392,7 +1413,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
 
       // Callback should have updated
-      button.current.increment();
+      act(button.current.increment);
       expect(ReactNoop.flush()).toEqual(['Count: 11']);
       expect(ReactNoop.getChildren()).toEqual([
         span('Increment'),
@@ -1600,8 +1621,11 @@ describe('ReactHooksWithNoopRenderer', () => {
         span('A: 0, B: 0, C: [not loaded]'),
       ]);
 
-      updateA(2);
-      updateB(3);
+      act(() => {
+        updateA(2);
+        updateB(3);
+      });
+
       expect(ReactNoop.flush()).toEqual(['A: 2, B: 3, C: [not loaded]']);
       expect(ReactNoop.getChildren()).toEqual([
         span('A: 2, B: 3, C: [not loaded]'),
@@ -1646,10 +1670,11 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.render(<App loadC={true} />);
       expect(ReactNoop.flush()).toEqual(['A: 0, B: 0, C: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('A: 0, B: 0, C: 0')]);
-
-      updateA(2);
-      updateB(3);
-      updateC(4);
+      act(() => {
+        updateA(2);
+        updateB(3);
+        updateC(4);
+      });
       expect(ReactNoop.flush()).toEqual(['A: 2, B: 3, C: 4']);
       expect(ReactNoop.getChildren()).toEqual([span('A: 2, B: 3, C: 4')]);
       ReactNoop.render(<App loadC={false} />);

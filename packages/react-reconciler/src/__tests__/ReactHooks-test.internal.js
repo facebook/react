@@ -16,6 +16,7 @@ let React;
 let ReactFeatureFlags;
 let ReactTestRenderer;
 let ReactDOMServer;
+let act;
 
 // Additional tests can be found in ReactHooksWithNoopRenderer. Plan is to
 // gradually migrate those to this file.
@@ -28,6 +29,7 @@ describe('ReactHooks', () => {
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     ReactDOMServer = require('react-dom/server');
+    act = ReactTestRenderer.act;
   });
 
   if (__DEV__) {
@@ -81,8 +83,11 @@ describe('ReactHooks', () => {
     expect(root).toMatchRenderedOutput('0, 0');
 
     // Normal update
-    setCounter1(1);
-    setCounter2(1);
+    act(() => {
+      setCounter1(1);
+      setCounter2(1);
+    });
+
     expect(root).toFlushAndYield([
       'Parent: 1, 1',
       'Child: 1, 1',
@@ -90,13 +95,16 @@ describe('ReactHooks', () => {
     ]);
 
     // Update that bails out.
-    setCounter1(1);
+    act(() => setCounter1(1));
     expect(root).toFlushAndYield(['Parent: 1, 1']);
 
     // This time, one of the state updates but the other one doesn't. So we
     // can't bail out.
-    setCounter1(1);
-    setCounter2(2);
+    act(() => {
+      setCounter1(1);
+      setCounter2(2);
+    });
+
     expect(root).toFlushAndYield([
       'Parent: 1, 2',
       'Child: 1, 2',
@@ -104,20 +112,24 @@ describe('ReactHooks', () => {
     ]);
 
     // Lots of updates that eventually resolve to the current values.
-    setCounter1(9);
-    setCounter2(3);
-    setCounter1(4);
-    setCounter2(7);
-    setCounter1(1);
-    setCounter2(2);
+    act(() => {
+      setCounter1(9);
+      setCounter2(3);
+      setCounter1(4);
+      setCounter2(7);
+      setCounter1(1);
+      setCounter2(2);
+    });
 
     // Because the final values are the same as the current values, the
     // component bails out.
     expect(root).toFlushAndYield(['Parent: 1, 2']);
 
     // prepare to check SameValue
-    setCounter1(0 / -1);
-    setCounter2(NaN);
+    act(() => {
+      setCounter1(0 / -1);
+      setCounter2(NaN);
+    });
     expect(root).toFlushAndYield([
       'Parent: 0, NaN',
       'Child: 0, NaN',
@@ -125,14 +137,19 @@ describe('ReactHooks', () => {
     ]);
 
     // check if re-setting to negative 0 / NaN still bails out
-    setCounter1(0 / -1);
-    setCounter2(NaN);
-    setCounter2(Infinity);
-    setCounter2(NaN);
+    act(() => {
+      setCounter1(0 / -1);
+      setCounter2(NaN);
+      setCounter2(Infinity);
+      setCounter2(NaN);
+    });
+
     expect(root).toFlushAndYield(['Parent: 0, NaN']);
 
     // check if changing negative 0 to positive 0 does not bail out
-    setCounter1(0);
+    act(() => {
+      setCounter1(0);
+    });
     expect(root).toFlushAndYield([
       'Parent: 0, NaN',
       'Child: 0, NaN',
@@ -172,21 +189,27 @@ describe('ReactHooks', () => {
     expect(root).toMatchRenderedOutput('0, 0 (light)');
 
     // Normal update
-    setCounter1(1);
-    setCounter2(1);
+    act(() => {
+      setCounter1(1);
+      setCounter2(1);
+    });
+
     expect(root).toFlushAndYield([
       'Parent: 1, 1 (light)',
       'Child: 1, 1 (light)',
     ]);
 
     // Update that bails out.
-    setCounter1(1);
+    act(() => setCounter1(1));
     expect(root).toFlushAndYield(['Parent: 1, 1 (light)']);
 
     // This time, one of the state updates but the other one doesn't. So we
     // can't bail out.
-    setCounter1(1);
-    setCounter2(2);
+    act(() => {
+      setCounter1(1);
+      setCounter2(2);
+    });
+
     expect(root).toFlushAndYield([
       'Parent: 1, 2 (light)',
       'Child: 1, 2 (light)',
@@ -194,14 +217,20 @@ describe('ReactHooks', () => {
 
     // Updates bail out, but component still renders because props
     // have changed
-    setCounter1(1);
-    setCounter2(2);
+    act(() => {
+      setCounter1(1);
+      setCounter2(2);
+    });
+
     root.update(<Parent theme="dark" />);
     expect(root).toFlushAndYield(['Parent: 1, 2 (dark)', 'Child: 1, 2 (dark)']);
 
     // Both props and state bail out
-    setCounter1(1);
-    setCounter2(2);
+    act(() => {
+      setCounter1(1);
+      setCounter2(2);
+    });
+
     root.update(<Parent theme="dark" />);
     expect(root).toFlushAndYield(['Parent: 1, 2 (dark)']);
   });
@@ -224,9 +253,11 @@ describe('ReactHooks', () => {
     expect(root).toMatchRenderedOutput('0');
 
     expect(() => {
-      setCounter(1, () => {
-        throw new Error('Expected to ignore the callback.');
-      });
+      act(() =>
+        setCounter(1, () => {
+          throw new Error('Expected to ignore the callback.');
+        }),
+      );
     }).toWarnDev(
       'State updates from the useState() and useReducer() Hooks ' +
         "don't support the second callback argument. " +
@@ -256,9 +287,11 @@ describe('ReactHooks', () => {
     expect(root).toMatchRenderedOutput('0');
 
     expect(() => {
-      dispatch(1, () => {
-        throw new Error('Expected to ignore the callback.');
-      });
+      act(() =>
+        dispatch(1, () => {
+          throw new Error('Expected to ignore the callback.');
+        }),
+      );
     }).toWarnDev(
       'State updates from the useState() and useReducer() Hooks ' +
         "don't support the second callback argument. " +
@@ -326,7 +359,7 @@ describe('ReactHooks', () => {
     expect(root).toMatchRenderedOutput('0 (light)');
 
     // Normal update
-    setCounter(1);
+    act(() => setCounter(1));
     expect(root).toFlushAndYield([
       'Parent: 1 (light)',
       'Child: 1 (light)',
@@ -335,14 +368,17 @@ describe('ReactHooks', () => {
     expect(root).toMatchRenderedOutput('1 (light)');
 
     // Update that doesn't change state, so it bails out
-    setCounter(1);
+    act(() => setCounter(1));
     expect(root).toFlushAndYield(['Parent: 1 (light)']);
     expect(root).toMatchRenderedOutput('1 (light)');
 
     // Update that doesn't change state, but the context changes, too, so it
     // can't bail out
-    setCounter(1);
-    setTheme('dark');
+    act(() => {
+      setCounter(1);
+      setTheme('dark');
+    });
+
     expect(root).toFlushAndYield([
       'Theme: dark',
       'Parent: 1 (dark)',
@@ -377,7 +413,7 @@ describe('ReactHooks', () => {
     expect(root).toMatchRenderedOutput('0');
 
     // Normal update
-    setCounter(1);
+    act(() => setCounter(1));
     expect(root).toFlushAndYield(['Parent: 1', 'Child: 1', 'Effect: 1']);
     expect(root).toMatchRenderedOutput('1');
 
@@ -385,38 +421,47 @@ describe('ReactHooks', () => {
     // because the alterate fiber has pending update priority, so we have to
     // enter the render phase before we can bail out. But we bail out before
     // rendering the child, and we don't fire any effects.
-    setCounter(1);
+    act(() => setCounter(1));
     expect(root).toFlushAndYield(['Parent: 1']);
     expect(root).toMatchRenderedOutput('1');
 
     // Update to the same state again. This times, neither fiber has pending
     // update priority, so we can bail out before even entering the render phase.
-    setCounter(1);
+    act(() => setCounter(1));
     expect(root).toFlushAndYield([]);
     expect(root).toMatchRenderedOutput('1');
 
     // This changes the state to something different so it renders normally.
-    setCounter(2);
+    act(() => setCounter(2));
     expect(root).toFlushAndYield(['Parent: 2', 'Child: 2', 'Effect: 2']);
     expect(root).toMatchRenderedOutput('2');
 
     // prepare to check SameValue
-    setCounter(0);
+    act(() => {
+      setCounter(0);
+    });
     expect(root).toFlushAndYield(['Parent: 0', 'Child: 0', 'Effect: 0']);
     expect(root).toMatchRenderedOutput('0');
 
     // Update to the same state for the first time to flush the queue
-    setCounter(0);
+    act(() => {
+      setCounter(0);
+    });
+
     expect(root).toFlushAndYield(['Parent: 0']);
     expect(root).toMatchRenderedOutput('0');
 
     // Update again to the same state. Should bail out.
-    setCounter(0);
+    act(() => {
+      setCounter(0);
+    });
     expect(root).toFlushAndYield([]);
     expect(root).toMatchRenderedOutput('0');
 
     // Update to a different state (positive 0 to negative 0)
-    setCounter(0 / -1);
+    act(() => {
+      setCounter(0 / -1);
+    });
     expect(root).toFlushAndYield(['Parent: 0', 'Child: 0', 'Effect: 0']);
     expect(root).toMatchRenderedOutput('0');
   });
@@ -450,12 +495,14 @@ describe('ReactHooks', () => {
         return value;
       });
     };
-    update(0);
-    update(0);
-    update(0);
-    update(1);
-    update(2);
-    update(3);
+    act(() => {
+      update(0);
+      update(0);
+      update(0);
+      update(1);
+      update(2);
+      update(3);
+    });
 
     expect(ReactTestRenderer).toHaveYielded([
       // The first four updates were eagerly computed, because the queue is
@@ -511,7 +558,7 @@ describe('ReactHooks', () => {
     };
 
     // Update at normal priority
-    update(n => n * 100);
+    act(() => update(n => n * 100));
 
     // The new state is eagerly computed.
     expect(ReactTestRenderer).toHaveYielded(['Compute state (1 -> 100)']);
@@ -839,9 +886,11 @@ describe('ReactHooks', () => {
 
     class Cls extends React.Component {
       render() {
-        _setState(() => {
-          ReactCurrentDispatcher.current.readContext(ThemeContext);
-        });
+        act(() =>
+          _setState(() => {
+            ReactCurrentDispatcher.current.readContext(ThemeContext);
+          }),
+        );
         return null;
       }
     }
@@ -853,7 +902,13 @@ describe('ReactHooks', () => {
           <Cls />
         </React.Fragment>,
       ),
-    ).toWarnDev('Context can only be read while React is rendering');
+    ).toWarnDev(
+      [
+        'Context can only be read while React is rendering',
+        'Render methods should be a pure function of props and state',
+      ],
+      {withoutStack: 1},
+    );
   });
 
   it('warns when calling hooks inside useReducer', () => {
@@ -1294,9 +1349,11 @@ describe('ReactHooks', () => {
     }
 
     function B() {
-      _setState(() => {
-        throw new Error('Hello');
-      });
+      act(() =>
+        _setState(() => {
+          throw new Error('Hello');
+        }),
+      );
       return null;
     }
 

@@ -158,7 +158,7 @@ describe('ReactSuspenseFuzz', () => {
         if ((elapsedTime += 1000) > 1000000) {
           throw new Error('Something did not resolve properly.');
         }
-        jest.advanceTimersByTime(1000);
+        ReactTestRenderer.act(() => jest.advanceTimersByTime(1000));
         root.unstable_flushAll();
       }
 
