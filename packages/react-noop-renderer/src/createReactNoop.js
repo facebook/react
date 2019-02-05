@@ -873,7 +873,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     flushPassiveEffects() {
       // Trick to flush passive effects without exposing an internal API:
       // Create a throwaway root and schedule a dummy update on it.
-      const rootID = 'bloop';
+      const rootID = 'bloopandthenmoreletterstoavoidaconflict';
       const container = {rootID: rootID, children: []};
       rootContainers.set(rootID, container);
       const root = NoopRenderer.createContainer(container, true, false);
