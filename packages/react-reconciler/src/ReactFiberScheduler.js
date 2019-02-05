@@ -1790,6 +1790,25 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
   return root;
 }
 
+export function warnIfNotCurrentlyBatchingInDev(fiber: Fiber): void {
+  if (__DEV__) {
+    if (isRendering === false && isBatchingUpdates === false) {
+      warningWithoutStack(
+        false,
+        'An update to %s inside a test was not wrapped in act(...).\n\n' +
+          'When testing, code that causes React state updates should be wrapped into act(...):\n\n' +
+          'act(() => {\n' +
+          '  /* fire events that update state */\n' +
+          '});\n' +
+          '/* assert on the output */\n\n' +
+          "This ensures that you're testing the behavior the user would see in the browser." +
+          ' Learn more at https://fb.me/react-wrap-tests-with-act',
+        getComponentName(fiber.type),
+      );
+    }
+  }
+}
+
 function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
   const root = scheduleWorkToRoot(fiber, expirationTime);
   if (root === null) {

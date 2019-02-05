@@ -30,6 +30,7 @@ import {
 } from './ReactHookEffectTags';
 import {
   scheduleWork,
+  warnIfNotCurrentlyBatchingInDev,
   computeExpirationForFiber,
   flushPassiveEffects,
   requestCurrentTime,
@@ -1003,6 +1004,19 @@ function updateMemo<T>(
   return nextValue;
 }
 
+// in a test-like environment, we want to warn if dispatchAction()
+// is called outside of a batchedUpdates/TestUtils.act(...) call.
+let shouldWarnForUnbatchedSetState = false;
+
+if (__DEV__) {
+  // jest isnt' a 'global', it's just exposed to tests via a wrapped function
+  // further, this isn't a test file, so flow doesn't recognize the symbol. So...
+  // $FlowExpectedError - because requirements don't give a damn about your type sigs.
+  if ('undefined' !== typeof jest) {
+    shouldWarnForUnbatchedSetState = true;
+  }
+}
+
 function dispatchAction<S, A>(
   fiber: Fiber,
   queue: UpdateQueue<S, A>,
@@ -1119,6 +1133,11 @@ function dispatchAction<S, A>(
             ReactCurrentDispatcher.current = prevDispatcher;
           }
         }
+      }
+    }
+    if (__DEV__) {
+      if (shouldWarnForUnbatchedSetState === true) {
+        warnIfNotCurrentlyBatchingInDev(fiber);
       }
     }
     scheduleWork(fiber, expirationTime);
