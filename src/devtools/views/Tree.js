@@ -4,8 +4,9 @@ import React, { useContext, useEffect, useLayoutEffect, useRef } from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList } from 'react-window';
 import { SelectedElementContext } from './SelectedElementContext';
-import Element from './Element';
 import ButtonIcon from './ButtonIcon';
+import Element from './Element';
+import SearchInput from './SearchInput';
 import { TreeContext } from './context';
 
 import styles from './Tree.css';
@@ -15,7 +16,7 @@ type Props = {||};
 export default function Tree(props: Props) {
   const selectedElementContext = useContext(SelectedElementContext);
   const treeContext = useContext(TreeContext);
-  const listRef = useRef();
+  const listRef = useRef<FixedSizeList<any>>();
 
   // Make sure a newly selected element is visible in the list.
   // This is helpful for things like the owners list.
@@ -59,11 +60,8 @@ export default function Tree(props: Props) {
 
   return (
     <div className={styles.Tree}>
-      <div className={styles.SearchRow}>
-        <input
-          className={styles.SearchInput}
-          placeholder="Search (text or /regex/)"
-        />
+      <div className={styles.SearchInput}>
+        <SearchInput />
         <button
           className={styles.IconButton}
           title="Select an element in the page to inspect it"

@@ -10,9 +10,12 @@
   --theme-light-color-border: #eeeeee;
   --theme-light-component-name: #8155cb;
   --theme-light-component-name-inverted: #ffffff;
-  --theme-light-deemphasized: #cfd1d5;
+  --theme-light-dim: #777d88;
+  --theme-light-dimmer: #cfd1d5;
   --theme-light-jsx-arrow-brackets: #333333;
   --theme-light-jsx-arrow-brackets-inverted: rgba(255, 255, 255, 0.7);
+  --theme-light-search-match: yellow;
+  --theme-light-search-match-current: orange;
   --theme-light-tree-node-selected: #0088fa;
   --theme-light-tree-node-hover: #ebf1fb;
 
@@ -29,7 +32,10 @@
   --color-button-hover: var(--theme-light-button-hover);
   --color-component-name: var(--theme-light-component-name);
   --color-component-name-inverted: var(--theme-light-component-name-inverted);
-  --color-deemphasized: var(--theme-light-deemphasized);
+  --color-dim: var(--theme-light-dim);
+  --color-dimmer: var(--theme-light-dimmer);
+  --color-search-match: var(--theme-light-search-match);
+  --color-search-match-current: var(--theme-light-search-match-current);
   --color-tree-jsx-arrow-brackets: var(--theme-light-jsx-arrow-brackets);
   --color-tree-jsx-arrow-brackets-inverted: var(
     --theme-light-jsx-arrow-brackets-inverted

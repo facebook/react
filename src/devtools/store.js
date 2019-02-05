@@ -265,7 +265,7 @@ export default class Store extends EventEmitter {
               parentElement = ((this._idToElement.get(parentID): any): Element);
               parentElement.children = parentElement.children.concat(id);
 
-              this._idToElement.set(id, {
+              const element: Element = {
                 children: [],
                 depth: parentElement.depth + 1,
                 displayName,
@@ -274,7 +274,11 @@ export default class Store extends EventEmitter {
                 parentID: parentElement.id,
                 type,
                 weight: 1,
-              });
+              };
+
+              this._idToElement.set(id, element);
+
+              this.emit('elementAdded', element);
 
               weightDelta = 1;
             }
@@ -303,6 +307,8 @@ export default class Store extends EventEmitter {
               childID => childID !== id
             );
           }
+
+          this.emit('elementRemoved', element);
           break;
         case TREE_OPERATION_RESET_CHILDREN:
           id = ((operations[i + 1]: any): number);

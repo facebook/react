@@ -1,8 +1,9 @@
 // @flow
 
-import React, { Fragment, useCallback, useContext } from 'react';
+import React, { Fragment, useCallback, useContext, useMemo } from 'react';
 import { ElementTypeClassOrFunction } from 'src/devtools/types';
 import { TreeContext } from './context';
+import { SearchContext } from './SearchContext';
 import { SelectedElementContext } from './SelectedElementContext';
 import Icon from './Icon';
 
@@ -56,7 +57,7 @@ export default function Element({ index, style }: Props) {
       )}
 
       <span className={styles.Component}>
-        {displayName}
+        <DisplayName displayName={displayName} id={id} />
         {key && (
           <Fragment>
             &nbsp;<span className={styles.AttributeName}>key</span>=
@@ -67,4 +68,49 @@ export default function Element({ index, style }: Props) {
       {showDollarR && <span className={styles.DollarR}>&nbsp;== $r</span>}
     </div>
   );
+}
+
+type DisplayNameProps = {|
+  displayName: string | null,
+  id: number,
+|};
+
+function DisplayName({ displayName, id }: DisplayNameProps) {
+  const {
+    currentIndex: currentSearchIndex,
+    ids: searchIDs,
+    text: searchText,
+  } = useContext(SearchContext);
+  const isSearchResult = useMemo(() => {
+    return searchIDs.includes(id);
+  }, [id, searchIDs]);
+  const isCurrentResult =
+    currentSearchIndex !== null && id === searchIDs[currentSearchIndex];
+
+  if (!isSearchResult || displayName === null) {
+    return displayName;
+  }
+
+  const startIndex = displayName
+    .toLowerCase()
+    .indexOf(searchText.toLowerCase());
+  const stopIndex = startIndex + searchText.length;
+
+  const children = [];
+  if (startIndex > 0) {
+    children.push(<span key="begin">{displayName.slice(0, startIndex)}</span>);
+  }
+  children.push(
+    <mark
+      key="middle"
+      className={isCurrentResult ? styles.CurrentHighlight : styles.Highlight}
+    >
+      {displayName.slice(startIndex, stopIndex)}
+    </mark>
+  );
+  if (stopIndex < displayName.length) {
+    children.push(<span key="end">{displayName.slice(stopIndex)}</span>);
+  }
+
+  return children;
 }

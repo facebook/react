@@ -18,12 +18,12 @@
 }
 
 .None {
-  color: var(--color-deemphasized);
+  color: var(--color-dimmer);
   font-style: italic;
 }
 
 .Empty {
-  color: var(--color-deemphasized);
+  color: var(--color-dimmer);
   font-style: italic;
   padding-left: 1rem;
 }

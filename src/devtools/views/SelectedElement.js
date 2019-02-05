@@ -135,12 +135,12 @@ function useInspectedElement(id: number | null): InspectedElement | null {
   idRef.current = id;
 
   useLayoutEffect(() => {
+    // Hide previous/stale insepected element to avoid temporarily showing the wrong values.
+    setInspectedElement(null);
+
     if (id === null) {
       return () => {};
     }
-
-    // Hide previous/stale insepected element to avoid temporarily showing the wrong values.
-    setInspectedElement(null);
 
     let timeoutID = null;
 
@@ -152,15 +152,17 @@ function useInspectedElement(id: number | null): InspectedElement | null {
     };
 
     const onInspectedElement = (inspectedElement: InspectedElement) => {
-      if (idRef.current !== inspectedElement.id) {
+      if (inspectedElement && inspectedElement.id !== idRef.current) {
         // Ignore bridge updates about previously selected elements.
         return;
       }
 
-      inspectedElement.context = hydrateHelper(inspectedElement.context);
-      inspectedElement.hooks = hydrateHelper(inspectedElement.hooks);
-      inspectedElement.props = hydrateHelper(inspectedElement.props);
-      inspectedElement.state = hydrateHelper(inspectedElement.state);
+      if (inspectedElement !== null) {
+        inspectedElement.context = hydrateHelper(inspectedElement.context);
+        inspectedElement.hooks = hydrateHelper(inspectedElement.hooks);
+        inspectedElement.props = hydrateHelper(inspectedElement.props);
+        inspectedElement.state = hydrateHelper(inspectedElement.state);
+      }
 
       setInspectedElement(inspectedElement);
 

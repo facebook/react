@@ -78,6 +78,6 @@
 
 .Loading {
   padding: 0.25rem;
-  color: var(--color-deemphasized);
+  color: var(--color-dimmer);
   font-style: italic;
 }

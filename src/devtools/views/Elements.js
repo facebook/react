@@ -5,6 +5,7 @@ import Store from '../store';
 import Tree from './Tree';
 import { BridgeContext, StoreContext, TreeContext } from './context';
 import SelectedElement from './SelectedElement';
+import { SearchController } from './SearchContext';
 import { SelectedElementController } from './SelectedElementContext';
 import styles from './Elements.css';
 
@@ -51,14 +52,16 @@ export default function Elements({ bridge, browserName, themeName }: Props) {
       <StoreContext.Provider value={store}>
         <TreeContext.Provider value={treeContext}>
           <SelectedElementController>
-            <div className={styles.Elements}>
-              <div className={styles.TreeWrapper}>
-                <Tree />
+            <SearchController>
+              <div className={styles.Elements}>
+                <div className={styles.TreeWrapper}>
+                  <Tree />
+                </div>
+                <div className={styles.SelectedElementWrapper}>
+                  <SelectedElement />
+                </div>
               </div>
-              <div className={styles.SelectedElementWrapper}>
-                <SelectedElement />
-              </div>
-            </div>
+            </SearchController>
           </SelectedElementController>
         </TreeContext.Provider>
       </StoreContext.Provider>

@@ -19,6 +19,6 @@
 }
 
 .None {
-  color: var(--color-deemphasized);
+  color: var(--color-dimmer);
   font-style: italic;
 }
