@@ -89,7 +89,7 @@ function InspectedElementView({
     <div className={styles.InspectedElement}>
       <InspectedElementTree label="props" data={props} />
       <InspectedElementTree label="state" data={state} />
-      <HooksTree inspectedHooks={hooks} />
+      <HooksTree hooksTree={hooks} />
       <InspectedElementTree label="context" data={context} />
 
       {owners !== null && owners.length > 0 && (

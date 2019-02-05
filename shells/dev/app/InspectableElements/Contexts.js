@@ -88,8 +88,8 @@ class ModernContextType extends Component<any> {
 }
 
 function FunctionalContextConsumer() {
-  const string = useContext(StringContext);
-  return string;
+  useContext(StringContext);
+  return null;
 }
 
 export default function Contexts() {

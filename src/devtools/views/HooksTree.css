@@ -1,10 +1,24 @@
-.HooksTree {
+.HooksTreeView {
   padding: 0.25rem;
   border-bottom: 1px solid var(--color-base02);
 }
 
-.ComingSoon {
+.HooksNode {
   padding-left: 1rem;
+}
+
+.NameValueRow {
+}
+
+.Name {
+  color: var(--color-tree-attr-name);
+}
+
+.Value {
+  color: var(--color-tree-attr-value);
+}
+
+.None {
   color: var(--color-base03);
   font-style: italic;
 }

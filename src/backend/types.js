@@ -80,9 +80,3 @@ export type HooksNode = {
   subHooks: Array<HooksNode>,
 };
 export type HooksTree = Array<HooksNode>;
-
-export type InspectedHooks = {|
-  elementID: string,
-  id: string,
-  hooksTree: HooksTree,
-|};

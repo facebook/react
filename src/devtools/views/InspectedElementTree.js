@@ -1,6 +1,7 @@
 // @flow
 
 import React from 'react';
+import { getMetaValueLabel } from './utils';
 import { meta } from '../../hydration';
 import styles from './InspectedElementTree.css';
 
@@ -15,7 +16,6 @@ export default function InspectedElementTree({ data, label }: Props) {
   } else {
     // TODO Add click and key handlers for toggling element open/close state.
     // TODO Support editable props
-
     return (
       <div className={styles.InspectedElementTree}>
         <div className={styles.Item}>{label}</div>
@@ -107,25 +107,4 @@ function KeyValue({ depth, name, value }: KeyValueProps) {
   }
 
   return children;
-}
-
-function getMetaValueLabel(data: Object): string | null {
-  switch (data[meta.type]) {
-    case 'function':
-      return `${data[meta.name] || 'fn'}()`;
-    case 'object':
-      return 'Object';
-    case 'date':
-    case 'symbol':
-      return data[meta.name];
-    case 'iterator':
-      return `${data[meta.name]}(…)`;
-    case 'array_buffer':
-    case 'data_view':
-    case 'array':
-    case 'typed_array':
-      return `${data[meta.name]}[${data[meta.meta].length}]`;
-    default:
-      return null;
-  }
 }

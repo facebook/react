@@ -1103,7 +1103,7 @@ export function attach(
       canEditValues: false, // TODO
 
       // Inspectable properties.
-      // TODO Sanitize props, state, and context
+      // TODO Review sanitization approach for the below inspectable values.
       context,
       hooks: usesHooks
         ? cleanForBridge(
