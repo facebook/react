@@ -6,7 +6,7 @@ It is a part of the [Hooks proposal](https://reactjs.org/docs/hooks-intro.html) 
 
 ## Experimental Status
 
-This is an experimental release and is intended to be used for testing the Hooks proposal with React 16.7 alpha. The exact heuristics it uses may be adjusted.
+This is an experimental release and is intended to be used for testing the Hooks proposal with React 16.8 alpha. The exact heuristics it uses may be adjusted.
 
 The [Rules of Hooks](https://reactjs.org/docs/hooks-rules.html) documentation contains a link to the technical RFC. Please leave a comment on the RFC if you have concerns or ideas about how this plugin should work.
 
