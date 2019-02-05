@@ -330,6 +330,8 @@ export const shouldYield = ReactNativeFrameSchedulingShouldYield;
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
 export const noTimeout = -1;
+export const schedulePassiveEffects = scheduleDeferredCallback;
+export const cancelPassiveEffects = cancelDeferredCallback;
 
 // -------------------
 //     Persistence

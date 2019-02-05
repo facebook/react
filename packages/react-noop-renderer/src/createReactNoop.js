@@ -47,6 +47,7 @@ if (__DEV__) {
 function createReactNoop(reconciler: Function, useMutation: boolean) {
   let scheduledCallback = null;
   let scheduledCallbackTimeout = -1;
+  let scheduledPassiveCallback = null;
   let instanceCounter = 0;
   let hostDiffCounter = 0;
   let hostUpdateCounter = 0;
@@ -338,6 +339,21 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     scheduleTimeout: setTimeout,
     cancelTimeout: clearTimeout,
     noTimeout: -1,
+    schedulePassiveEffects(callback) {
+      if (scheduledCallback) {
+        throw new Error(
+          'Scheduling a callback twice is excessive. Instead, keep track of ' +
+            'whether the callback has already been scheduled.',
+        );
+      }
+      scheduledPassiveCallback = callback;
+    },
+    cancelPassiveEffects() {
+      if (scheduledPassiveCallback === null) {
+        throw new Error('No passive effects callback is scheduled.');
+      }
+      scheduledPassiveCallback = null;
+    },
 
     prepareForCommit(): void {},
 
@@ -852,6 +868,16 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       yieldedValues = [];
       NoopRenderer.flushSync(fn);
       return yieldedValues;
+    },
+
+    flushPassiveEffects() {
+      // Trick to flush passive effects without exposing an internal API:
+      // Create a throwaway root and schedule a dummy update on it.
+      const rootID = 'bloopandthenmoreletterstoavoidaconflict';
+      const container = {rootID: rootID, children: []};
+      rootContainers.set(rootID, container);
+      const root = NoopRenderer.createContainer(container, true, false);
+      NoopRenderer.updateContainer(null, root, null, null);
     },
 
     // Logs the current state of the tree.
