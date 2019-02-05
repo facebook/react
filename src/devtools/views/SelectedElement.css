@@ -38,6 +38,7 @@
 
 .Owners {
   padding: 0.25rem;
+  border-top: 1px solid var(--color-border);
 }
 
 .Component,
