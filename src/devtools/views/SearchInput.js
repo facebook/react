@@ -9,6 +9,10 @@ import styles from './SearchInput.css';
 type Props = {||};
 
 export default function SearchInput(props: Props) {
+  // We use the wrapper searchContext object rather than its individual parts–
+  // (specifically for the useCallback input arrays below)–
+  // because a change in any one value (e.g. ids array) impacts other values (e.g. currentIndex).
+  // It's easier to avoid stale scope issues if we depend on the entire search state.
   const searchContext = useContext(SearchContext);
 
   const inputRef = useRef();
