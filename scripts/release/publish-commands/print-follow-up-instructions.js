@@ -21,7 +21,9 @@ const run = async ({cwd, packages, tags}) => {
   clear();
 
   if (tags.length === 1 && tags[0] === 'canary') {
-    console.log(theme.header`A canary release has been pulbished!`);
+    console.log(
+      theme`{header A canary release} {version ${version}} {header has been published!}`
+    );
   } else {
     console.log(
       theme.caution`The release has been published but you're not done yet!`
