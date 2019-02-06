@@ -6,6 +6,36 @@
   </summary>
 </details>
 
+## 16.8.0 (February 6, 2019)
+
+### React
+
+* Add [Hooks](https://reactjs.org/docs/hooks-intro.html) — a way to use state and other React features without writing a class. ([@acdlite](https://github.com/acdlite) et al. in [#13968](https://github.com/facebook/react/pull/13968))
+* Improve the `useReducer` Hook lazy initialization API. ([@acdlite](https://github.com/acdlite) in [#14723](https://github.com/facebook/react/pull/14723))
+
+### React DOM
+
+* Bail out of rendering on identical values for `useState` and `useReducer` Hooks. ([@acdlite](https://github.com/acdlite) in [#14569](https://github.com/facebook/react/pull/14569))
+* Use `Object.is` algorithm for comparing `useState` and `useReducer` values. ([@Jessidhia](https://github.com/Jessidhia) in [#14752](https://github.com/facebook/react/pull/14752))
+* Don’t compare the first argument passed to `useEffect`/`useMemo`/`useCallback` Hooks. ([@acdlite](https://github.com/acdlite) in [#14594](https://github.com/facebook/react/pull/14594))
+* Support synchronous thenables passed to `React.lazy()`. ([@gaearon](https://github.com/gaearon) in [#14626](https://github.com/facebook/react/pull/14626))
+* Render components with Hooks twice in Strict Mode (DEV-only) to match class behavior. ([@gaearon](https://github.com/gaearon) in [#14654](https://github.com/facebook/react/pull/14654))
+* Warn about mismatching Hook order in development. ([@threepointone](https://github.com/threepointone) in [#14585](https://github.com/facebook/react/pull/14585) and [@acdlite](https://github.com/acdlite) in [#14591](https://github.com/facebook/react/pull/14591))
+* Effect clean-up functions must return either `undefined` or a function. All other values, including `null`, are not allowed. [@acdlite](https://github.com/acdlite) in [#14119](https://github.com/facebook/react/pull/14119)
+
+### React Test Renderer and Test Utils
+
+* Support Hooks in the shallow renderer. ([@trueadm](https://github.com/trueadm) in [#14567](https://github.com/facebook/react/pull/14567))
+* Fix wrong state in `shouldComponentUpdate` in the presence of `getDerivedStateFromProps` for Shallow Renderer. ([@chenesan](https://github.com/chenesan) in [#14613](https://github.com/facebook/react/pull/14613))
+* Add `ReactTestRenderer.act()` and `ReactTestUtils.act()` for batching updates so that tests more closely match real behavior. ([@threepointone](https://github.com/threepointone) in [#14744](https://github.com/facebook/react/pull/14744))
+
+
+### ESLint Plugin: React Hooks
+
+* Initial [release](https://www.npmjs.com/package/eslint-plugin-react-hooks). ([@calebmer](https://github.com/calebmer) in [#13968](https://github.com/facebook/react/pull/13968))
+* Fix reporting after encountering a loop. ([@calebmer](https://github.com/calebmer) and [@Yurickh](https://github.com/Yurickh) in [#14661](https://github.com/facebook/react/pull/14661))
+* Don't consider throwing to be a rule violation. ([@sophiebits](https://github.com/sophiebits) in [#14040](https://github.com/facebook/react/pull/14040))
+
 ## 16.7.0 (December 19, 2018)
 
 ### React DOM
