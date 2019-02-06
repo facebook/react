@@ -6,7 +6,7 @@
   </summary>
 </details>
 
-## 16.8.0 (February 5, 2019)
+## 16.8.0 (February 6, 2019)
 
 ### React
 
