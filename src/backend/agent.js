@@ -59,9 +59,4 @@ export default class Agent extends EventEmitter {
     debug('onHookOperations', operations);
     this._bridge.send('operations', operations, [operations.buffer]);
   };
-
-  onHookRootCommitted = (rootID: string) => {
-    debug('onHookRootCommitted', rootID);
-    this._bridge.send('rootCommitted', rootID);
-  };
 }

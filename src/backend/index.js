@@ -24,7 +24,6 @@ export function initBackend(hook: Hook, agent: Agent, global: Object): void {
     ),
 
     hook.sub('operations', agent.onHookOperations),
-    hook.sub('rootCommitted', agent.onHookRootCommitted),
 
     // TODO Add additional subscriptions required for profiling mode
   ];

@@ -49,7 +49,6 @@ export default class Store extends EventEmitter {
     debug('constructor', 'subscribing to Bridge');
 
     bridge.on('operations', this.onBridgeOperations);
-    bridge.on('rootCommitted', this.onBridgeRootCommitted);
   }
 
   get numElements(): number {
@@ -196,6 +195,9 @@ export default class Store extends EventEmitter {
 
     const rendererID = operations[0];
 
+    let addedElementIDs: Uint32Array = new Uint32Array(0);
+    let removedElementIDs: Uint32Array = new Uint32Array(0);
+
     let i = 1;
     while (i < operations.length) {
       let id: number = ((null: any): number);
@@ -278,7 +280,9 @@ export default class Store extends EventEmitter {
 
               this._idToElement.set(id, element);
 
-              this.emit('elementAdded', element);
+              // Track newly addewd items so search results can be updated
+              addedElementIDs = new Uint32Array(addedElementIDs.length + 1);
+              addedElementIDs[addedElementIDs.length - 1] = id;
 
               weightDelta = 1;
             }
@@ -308,7 +312,9 @@ export default class Store extends EventEmitter {
             );
           }
 
-          this.emit('elementRemoved', element);
+          // Track removed items so search results can be updated
+          removedElementIDs = new Uint32Array(removedElementIDs.length + 1);
+          removedElementIDs[removedElementIDs.length - 1] = id;
           break;
         case TREE_OPERATION_RESET_CHILDREN:
           id = ((operations[i + 1]: any): number);
@@ -353,14 +359,8 @@ export default class Store extends EventEmitter {
     if (haveRootsChanged) {
       this.emit('roots');
     }
-  };
 
-  onBridgeRootCommitted = (rootID: number) => {
-    debug('onBridgeRootCommitted', rootID);
-
-    this.emit('rootCommitted');
-
-    // this.__printTree(rootID);
+    this.emit('mutated', [addedElementIDs, removedElementIDs]);
   };
 
   // DEBUG

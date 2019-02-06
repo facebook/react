@@ -126,7 +126,8 @@ function useInspectedElement(id: number | null): InspectedElement | null {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
-  const rendererID = id === null ? null : store.getRendererIDForElement(id);
+  const rendererID =
+    id === null ? null : store.getRendererIDForElement(id) || null;
 
   const [inspectedElement, setInspectedElement] = useState(null);
 
@@ -138,7 +139,9 @@ function useInspectedElement(id: number | null): InspectedElement | null {
     // Hide previous/stale insepected element to avoid temporarily showing the wrong values.
     setInspectedElement(null);
 
-    if (id === null) {
+    // A null id indicates that there's nothing currently selected in the tree.
+    // A null renderer ID indicates that the previously selected element has been unmounted.
+    if (id === null || rendererID === null) {
       return () => {};
     }
 

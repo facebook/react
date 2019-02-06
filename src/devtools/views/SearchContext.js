@@ -5,7 +5,7 @@ import React, {
   useContext,
   useLayoutEffect,
   useMemo,
-  useState,
+  useReducer,
 } from 'react';
 import { StoreContext } from './context';
 import { SelectedElementContext } from './SelectedElementContext';
@@ -27,6 +27,29 @@ const SearchContext = createContext<SearchContextValue>(
 // $FlowFixMe displayName is a valid attribute of React$Context
 SearchContext.displayName = 'SearchContext';
 
+type State = {|
+  currentIndex: number | null,
+  ids: Array<number>,
+  text: string,
+|};
+
+type Action = {|
+  type: 'UPDATE',
+  payload: $Shape<State>,
+|};
+
+function reducer(state: State, action: Action) {
+  switch (action.type) {
+    case 'UPDATE':
+      return {
+        ...state,
+        ...action.payload,
+      };
+    default:
+      throw new Error();
+  }
+}
+
 type Props = {|
   children: React$Node,
 |};
@@ -36,138 +59,161 @@ function SearchController({ children }: Props) {
   const store = useContext(StoreContext);
   const selectedElement = useContext(SelectedElementContext);
 
-  const [currentIndex, setCurrentIndex] = useState<number | null>(null);
-  const [ids, setIDs] = useState<Array<number>>([]);
-  const [text, setText] = useState<string>('');
-
-  const updateIndexHelper = (
-    newCurrentIndex: number | null,
-    newOrCurrentIDs: Array<number>
-  ) => {
-    setCurrentIndex(newCurrentIndex);
-
-    // Make sure a new search result is also selected.
-    selectedElement.id =
-      newCurrentIndex !== null ? newOrCurrentIDs[newCurrentIndex] : null;
-  };
+  const [state, dispatch] = useReducer(reducer, {
+    currentIndex: null,
+    ids: [],
+    text: '',
+  });
 
   const value = useMemo(
     () => ({
       get currentIndex(): number | null {
-        return currentIndex;
+        return state.currentIndex;
       },
 
       get ids(): Array<number> {
-        return ids;
+        return state.ids;
       },
 
       get text(): string {
-        return text;
+        return state.text;
       },
 
       updateCurrentIndex(newCurrentIndex: number) {
-        updateIndexHelper(newCurrentIndex, ids);
+        dispatch({
+          type: 'UPDATE',
+          payload: {
+            currentIndex: newCurrentIndex,
+          },
+        });
+
+        // Make sure a new search result is also selected.
+        selectedElement.id =
+          newCurrentIndex !== null ? state.ids[newCurrentIndex] : null;
       },
 
       updateText(newText: string) {
-        setText(newText);
+        const { currentIndex: oldCurrentIndex, text: oldText } = state;
+
+        let newCurrentIndex = oldCurrentIndex;
+        let newIDs = [];
 
         // Find all matching elements.
-        const newIDs = [];
         if (newText !== '') {
           const regExp = new RegExp(newText, 'i');
           store.roots.forEach(rootID => {
             searchTree(store, rootID, regExp, newIDs);
           });
 
-          setIDs(newIDs);
-
           // If this is a refinement of a previous search, preserve the current index (unless it's no longer valid).
           // If it's a new search, reset the index.
           if (newIDs.length === 0) {
-            updateIndexHelper(null, newIDs);
-          } else if (currentIndex !== null && newText.startsWith(text)) {
-            updateIndexHelper(
-              Math.min(currentIndex, newIDs.length - 1),
-              newIDs
-            );
+            newCurrentIndex = null;
+          } else if (oldCurrentIndex !== null && newText.startsWith(oldText)) {
+            newCurrentIndex = Math.min(oldCurrentIndex, newIDs.length - 1);
           } else {
-            updateIndexHelper(0, newIDs);
+            newCurrentIndex = 0;
           }
         } else {
-          setIDs([]);
-          updateIndexHelper(null, newIDs);
+          newCurrentIndex = null;
         }
+
+        dispatch({
+          type: 'UPDATE',
+          payload: {
+            currentIndex: newCurrentIndex,
+            ids: newIDs,
+            text: newText,
+          },
+        });
+
+        // Make sure a new search result is also selected.
+        selectedElement.id =
+          newCurrentIndex !== null ? newIDs[newCurrentIndex] : null;
       },
     }),
-    [currentIndex, ids, text]
+    [state]
   );
 
   // Listen for changes to the tree and incrementally adjust the search results.
   useLayoutEffect(() => {
-    const handleElementAdded = (element: Element) => {
+    const handleStoreMutated = ([
+      addedElementIDs,
+      removedElementIDs,
+    ]: Array<Uint32Array>) => {
+      const { currentIndex, ids, text } = state;
+
       if (!text) {
         return;
       }
 
-      const { displayName, id } = element;
+      let newIDs = ids;
+      let newCurrentIndex = currentIndex;
 
-      // Add this item to the search results if it matches.
-      const regExp = new RegExp(text, 'i');
-      if (displayName !== null && regExp.test(displayName)) {
-        const newElementIndex = ((store.getIndexOfElementID(id): any): number);
+      removedElementIDs.forEach(id => {
+        // Prune this item from the search results.
+        const index = newIDs.indexOf(id);
+        if (index >= 0) {
+          newIDs = newIDs.slice(0, index).concat(newIDs.slice(index + 1));
 
-        let newIDs = null;
-        for (let index = 0; index < ids.length; index++) {
-          const id = ids[index];
-          if (
-            newElementIndex < ((store.getIndexOfElementID(id): any): number)
-          ) {
-            newIDs = ids
-              .slice(0, index)
-              .concat(id)
-              .concat(ids.slice(index));
-            break;
+          // If the results are now empty, also deselect things.
+          if (newIDs.length === 0) {
+            newCurrentIndex = null;
+          } else if (((newCurrentIndex: any): number) >= newIDs.length) {
+            newCurrentIndex = newIDs.length - 1;
           }
         }
-        if (newIDs === null) {
-          newIDs = ids.concat(id);
+      });
+
+      addedElementIDs.forEach(id => {
+        const { displayName } = ((store.getElementByID(id): any): Element);
+
+        // Add this item to the search results if it matches.
+        const regExp = new RegExp(text, 'i');
+        if (displayName !== null && regExp.test(displayName)) {
+          const newElementIndex = ((store.getIndexOfElementID(
+            id
+          ): any): number);
+
+          let foundMatch = false;
+          for (let index = 0; index < newIDs.length; index++) {
+            const id = newIDs[index];
+            if (
+              newElementIndex < ((store.getIndexOfElementID(id): any): number)
+            ) {
+              foundMatch = true;
+              newIDs = newIDs
+                .slice(0, index)
+                .concat(id)
+                .concat(newIDs.slice(index));
+              break;
+            }
+          }
+          if (!foundMatch) {
+            newIDs = newIDs.concat(id);
+          }
+
+          newCurrentIndex = newCurrentIndex === null ? 0 : newCurrentIndex;
         }
+      });
 
-        setIDs(newIDs);
-        updateIndexHelper(currentIndex === null ? 0 : currentIndex, newIDs);
-      }
-    };
-    const handleElementRemoved = (element: Element) => {
-      if (!text) {
-        return;
-      }
+      dispatch({
+        type: 'UPDATE',
+        payload: {
+          currentIndex: newCurrentIndex,
+          ids: newIDs,
+        },
+      });
 
-      // Prune this item from the search results.
-      const index = ids.indexOf(element.id);
-      if (index >= 0) {
-        const newIDs = ids.slice(0, index).concat(ids.slice(index + 1));
-        setIDs(newIDs);
-
-        // If the results are now empty, also deselect things.
-        if (newIDs.length === 0) {
-          updateIndexHelper(null, newIDs);
-        } else if (((currentIndex: any): number) < newIDs.length) {
-          updateIndexHelper(currentIndex, newIDs);
-        } else {
-          updateIndexHelper(newIDs.length - 1, newIDs);
-        }
-      }
+      // Make sure a new search result is also selected.
+      selectedElement.id =
+        newCurrentIndex !== null ? newIDs[newCurrentIndex] : null;
     };
 
-    store.addListener('elementAdded', handleElementAdded);
-    store.addListener('elementRemoved', handleElementRemoved);
+    store.addListener('mutated', handleStoreMutated);
 
-    return () => {
-      store.removeListener('elementAdded', handleElementAdded);
-      store.removeListener('elementRemoved', handleElementRemoved);
-    };
-  }, [currentIndex, ids, store, text]);
+    return () => store.removeListener('mutated', handleStoreMutated);
+  }, [state, store]);
 
   return (
     <SearchContext.Provider value={value}>{children}</SearchContext.Provider>

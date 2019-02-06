@@ -524,13 +524,10 @@ export function attach(
     addOperation(idArray, true);
 
     // Let the frontend know about tree operations.
+    // The first value in this array will identify which root it corresponds to,
+    // so we do no longer need to dispatch a separate root-committed event.
     hook.emit('operations', pendingOperations);
     pendingOperations = new Uint32Array(0);
-
-    // Let the frontend know that we're done working on this root.
-    // Technically this could be inferred, but it's better to explicitly do this for the case of multi roots.
-    // Else the frontend would need to traverse the tree to identify which updates corresponded to which roots.
-    hook.emit('rootCommitted', getFiberID(getPrimaryFiber(root.current)));
   }
 
   function enqueueMount(fiber: Fiber, parentFiber: Fiber | null) {

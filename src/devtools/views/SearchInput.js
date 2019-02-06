@@ -9,49 +9,46 @@ import styles from './SearchInput.css';
 type Props = {||};
 
 export default function SearchInput(props: Props) {
-  const {
-    currentIndex,
-    ids,
-    updateCurrentIndex,
-    updateText,
-    text,
-  } = useContext(SearchContext);
+  const searchContext = useContext(SearchContext);
 
   const inputRef = useRef();
 
   const handleTextChange = useCallback(({ currentTarget }) => {
-    updateText(currentTarget.value);
+    searchContext.updateText(currentTarget.value);
   });
 
   const selectNext = useCallback(() => {
+    const { currentIndex } = searchContext;
     if (currentIndex !== null) {
-      updateCurrentIndex(currentIndex + 1);
+      searchContext.updateCurrentIndex(currentIndex + 1);
     }
-  }, [currentIndex]);
+  }, [searchContext]);
 
   const selectPrevious = useCallback(() => {
+    const { currentIndex } = searchContext;
     if (currentIndex !== null) {
-      updateCurrentIndex(currentIndex - 1);
+      searchContext.updateCurrentIndex(currentIndex - 1);
     }
-  }, [currentIndex]);
+  }, [searchContext]);
 
   const resetSearch = useCallback(() => {
-    updateText('');
-  }, [updateText]);
+    searchContext.updateText('');
+  }, [searchContext]);
 
   const handleInputKeyPress = useCallback(
     ({ key }) => {
       if (key === 'Enter') {
+        const { currentIndex, ids } = searchContext;
         if (currentIndex !== null) {
           if (currentIndex + 1 < ids.length) {
-            updateCurrentIndex(currentIndex + 1);
+            searchContext.updateCurrentIndex(currentIndex + 1);
           } else {
-            updateCurrentIndex(0);
+            searchContext.updateCurrentIndex(0);
           }
         }
       }
     },
-    [currentIndex, ids]
+    [searchContext]
   );
 
   // Auto-focus search input
@@ -70,6 +67,8 @@ export default function SearchInput(props: Props) {
 
     return () => window.removeEventListener('keydown', handleWindowKeyDown);
   }, [inputRef]);
+
+  const { currentIndex, ids, text } = searchContext;
 
   return (
     <div className={styles.SearchInput}>

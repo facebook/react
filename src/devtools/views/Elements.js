@@ -41,9 +41,9 @@ export default function Elements({ bridge, browserName, themeName }: Props) {
       handler();
     }
 
-    store.addListener('rootCommitted', handler);
+    store.addListener('mutated', handler);
 
-    return () => store.removeListener('rootCommitted', handler);
+    return () => store.removeListener('mutated', handler);
   }, [store]);
 
   // TODO Flex wrappers below should be user resizable.
