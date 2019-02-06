@@ -152,13 +152,13 @@ function validateClassInstance(inst, methodName) {
 }
 
 // stub element used by act() when flushing effects
-let actContainerElement = null
+let actContainerElement = null;
 
  function getActContainerElement () {
-  if(!actContainerElement){
+  if (!actContainerElement) {
     actContainerElement = document.createElement('div');
   }
-  return actContainerElement
+  return actContainerElement;
 }
 
 /**
