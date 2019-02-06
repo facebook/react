@@ -1023,7 +1023,7 @@ describe('ReactTestRenderer', () => {
   });
 
   describe('act', () => {
-    it('works', () => {
+    it('can use .act() to batch updates and effects', () => {
       function App(props) {
         React.useEffect(() => {
           props.callback();
@@ -1042,6 +1042,13 @@ describe('ReactTestRenderer', () => {
       });
 
       expect(called).toBe(true);
+    });
+    it('warns if you use TestUtils.act instead of TestRenderer.act in node', () => {
+      jest.resetModules();
+      const {act} = require('react-dom/test-utils');
+      expect(() => act(() => {})).toThrow(
+        'It looks like you called TestUtils.act() in a non-browser-like environment(like node.js)',
+      );
     });
   });
 });
