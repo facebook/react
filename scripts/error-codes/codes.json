@@ -305,5 +305,11 @@
   "303": "suspense fallback not found, something is broken",
   "304": "Maximum number of concurrent React renderers exceeded. This can happen if you are not properly destroying the Readable provided by React. Ensure that you call .destroy() on it if you no longer want to read from it, and did not read to the end. If you use .pipe() this should be automatic.",
   "305": "The current renderer does not support hydration. This error is likely caused by a bug in React. Please file an issue.",
-  "306": "Element type is invalid. Received a promise that resolves to: %s. Lazy element type must resolve to a class or function.%s"
+  "306": "Element type is invalid. Received a promise that resolves to: %s. Lazy element type must resolve to a class or function.%s",
+  "307": "Hooks can only be called inside the body of a function component. (https://fb.me/react-invalid-hook-call)",
+  "308": "Context can only be read while React is rendering. In classes, you can read it in the render method or getDerivedStateFromProps. In function components, you can read it directly in the function body, but not inside Hooks like useReducer() or useMemo().",
+  "309": "Function components cannot have refs. Did you mean to use React.forwardRef()?",
+  "310": "Rendered more hooks than during the previous render.",
+  "311": "Should have a queue. This is likely a bug in React. Please file an issue.",
+  "312": "Rendered more hooks than during the previous render"
 }
