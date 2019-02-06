@@ -1267,6 +1267,74 @@ describe('ReactHooks', () => {
     expect(useMemoCount).toBe(__DEV__ ? 2 : 1); // Has Hooks
   });
 
+  it('does not double-invoke useMemo when cascading if the cascading update is unrelated', () => {
+    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = true;
+    let renderCount = 0;
+    let memoCount = 0;
+
+    const {useState, useMemo, StrictMode} = React;
+    function MemoCountTest({arg}) {
+      renderCount++;
+      const [foo, setFoo] = useState('foo');
+
+      useMemo(
+        () => {
+          memoCount++;
+        },
+        [arg],
+      );
+
+      if (arg === 0 && foo === 'foo') {
+        setFoo('bar');
+      }
+      if (arg === 1 && foo === 'bar') {
+        setFoo('foo');
+      }
+
+      return null;
+    }
+
+    const root = ReactTestRenderer.create(
+      <StrictMode>
+        <MemoCountTest arg={0} />
+      </StrictMode>,
+    );
+    expect(renderCount).toBe(__DEV__ ? 4 : 2);
+    expect(memoCount).toBe(__DEV__ ? 2 : 1);
+
+    renderCount = 0;
+    memoCount = 0;
+    root.update(
+      <StrictMode>
+        <MemoCountTest arg={0} />
+      </StrictMode>,
+    );
+    expect(renderCount).toBe(__DEV__ ? 2 : 1);
+    expect(memoCount).toBe(0);
+
+    renderCount = 0;
+    memoCount = 0;
+    root.update(
+      <StrictMode>
+        <MemoCountTest arg={1} />
+      </StrictMode>,
+    );
+
+    expect(renderCount).toBe(__DEV__ ? 4 : 2);
+    expect(memoCount).toBe(__DEV__ ? 2 : 1);
+
+    renderCount = 0;
+    memoCount = 0;
+
+    root.update(
+      <StrictMode>
+        <MemoCountTest arg={2} />
+      </StrictMode>,
+    );
+    expect(renderCount).toBe(__DEV__ ? 2 : 1);
+    expect(memoCount).toBe(__DEV__ ? 2 : 1);
+  });
+
   it('warns on using differently ordered hooks on subsequent renders', () => {
     const {useState, useReducer, useRef} = React;
     function useCustomHook() {
