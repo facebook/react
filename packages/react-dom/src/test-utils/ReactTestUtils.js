@@ -392,16 +392,17 @@ const ReactTestUtils = {
 
   act(callback: () => void): Thenable {
     if (actContainerElement === null) {
-      // first, test whether we can actually create the stub element
-      invariant(
-        typeof document !== 'undefined' &&
-          document !== null &&
-          typeof document.createElement === 'function',
-        'It looks like you called TestUtils.act() in a non-browser-like environment' +
-          "(like node.js). This is not supported. If you're using" +
-          'TestRenderer for your tests, you should call ' +
-          'TestRenderer.act(...) instead of TestUtils.act(...).',
-      );
+      // warn if we can't actually create the stub element
+      if (__DEV__) {
+        warningWithoutStack(
+          typeof document !== 'undefined' &&
+            document !== null &&
+            typeof document.createElement === 'function',
+          'It looks like you called TestUtils.act() in a non-browser environment. ' +
+            "If you're using TestRenderer for your tests, you should call " +
+            'TestRenderer.act(...) instead of TestUtils.act(...).',
+        );
+      }
       // then make it
       actContainerElement = document.createElement('div');
     }

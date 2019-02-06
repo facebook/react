@@ -1043,11 +1043,18 @@ describe('ReactTestRenderer', () => {
 
       expect(called).toBe(true);
     });
-    it('throws if you use TestUtils.act instead of TestRenderer.act in node', () => {
+    it('warns and throws if you use TestUtils.act instead of TestRenderer.act in node', () => {
+      // we warn when you try to load 2 renderers in the same 'scope'
+      // so as suggested, we call resetModules() to carry on with the test
       jest.resetModules();
       const {act} = require('react-dom/test-utils');
-      expect(() => act(() => {})).toThrow(
-        'It looks like you called TestUtils.act() in a non-browser-like environment(like node.js)',
+      expect(() => {
+        expect(() => act(() => {})).toThrow('document is not defined');
+      }).toWarnDev(
+        [
+          'It looks like you called TestUtils.act() in a non-browser environment',
+        ],
+        {withoutStack: 1},
       );
     });
   });
