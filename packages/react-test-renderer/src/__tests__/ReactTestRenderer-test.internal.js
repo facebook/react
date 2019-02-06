@@ -1052,7 +1052,7 @@ describe('ReactTestRenderer', () => {
         expect(() => act(() => {})).toThrow('document is not defined');
       }).toWarnDev(
         [
-          'It looks like you called TestUtils.act() in a non-browser environment',
+          'It looks like you called TestUtils.act(...) in a non-browser environment',
         ],
         {withoutStack: 1},
       );

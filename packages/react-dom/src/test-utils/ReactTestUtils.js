@@ -398,7 +398,7 @@ const ReactTestUtils = {
           typeof document !== 'undefined' &&
             document !== null &&
             typeof document.createElement === 'function',
-          'It looks like you called TestUtils.act() in a non-browser environment. ' +
+          'It looks like you called TestUtils.act(...) in a non-browser environment. ' +
             "If you're using TestRenderer for your tests, you should call " +
             'TestRenderer.act(...) instead of TestUtils.act(...).',
         );
