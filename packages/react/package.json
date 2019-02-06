@@ -4,7 +4,7 @@
   "keywords": [
     "react"
   ],
-  "version": "16.7.0",
+  "version": "16.8.0",
   "homepage": "https://reactjs.org/",
   "bugs": "https://github.com/facebook/react/issues",
   "license": "MIT",
@@ -18,8 +18,8 @@
   ],
   "main": "index.js",
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/facebook/react.git",
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
     "directory": "packages/react"
   },
   "engines": {
@@ -29,7 +29,7 @@
     "loose-envify": "^1.1.0",
     "object-assign": "^4.1.1",
     "prop-types": "^15.6.2",
-    "scheduler": "^0.12.0"
+    "scheduler": "^0.13.0"
   },
   "browserify": {
     "transform": [
