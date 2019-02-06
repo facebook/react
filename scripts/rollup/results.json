@@ -928,15 +928,15 @@
       "filename": "eslint-plugin-react-hooks.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "eslint-plugin-react-hooks",
-      "size": 25592,
-      "gzip": 5885
+      "size": 26113,
+      "gzip": 6008
     },
     {
       "filename": "eslint-plugin-react-hooks.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "eslint-plugin-react-hooks",
-      "size": 4943,
-      "gzip": 1815
+      "size": 5080,
+      "gzip": 1872
     },
     {
       "filename": "ReactDOMFizzServer-dev.js",
@@ -1021,6 +1021,13 @@
       "packageName": "react-dom",
       "size": 1122,
       "gzip": 659
+    },
+    {
+      "filename": "ESLintPluginReactHooks-dev.js",
+      "bundleType": "FB_WWW_DEV",
+      "packageName": "eslint-plugin-react-hooks",
+      "size": 27786,
+      "gzip": 6149
     }
   ]
 }
