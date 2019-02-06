@@ -15,18 +15,8 @@ import type {Interaction} from 'scheduler/src/Tracing';
 import {
   __interactionsRef,
   __subscriberRef,
-  unstable_wrap as Scheduler_tracing_wrap,
+  unstable_wrap as Schedule_tracing_wrap,
 } from 'scheduler/tracing';
-import {
-  unstable_next as Scheduler_next,
-  unstable_getCurrentPriorityLevel as getCurrentPriorityLevel,
-  unstable_runWithPriority as runWithPriority,
-  unstable_ImmediatePriority as ImmediatePriority,
-  unstable_UserBlockingPriority as UserBlockingPriority,
-  unstable_NormalPriority as NormalPriority,
-  unstable_LowPriority as LowPriority,
-  unstable_IdlePriority as IdlePriority,
-} from 'scheduler';
 import {
   invokeGuardedCallback,
   hasCaughtError,
@@ -132,7 +122,7 @@ import {
   computeAsyncExpiration,
   computeInteractiveExpiration,
 } from './ReactFiberExpirationTime';
-import {ConcurrentMode, ProfileMode, NoContext} from './ReactTypeOfMode';
+import {ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
 import {enqueueUpdate, resetCurrentlyProcessingQueue} from './ReactUpdateQueue';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -251,6 +241,11 @@ if (__DEV__) {
 
 // Used to ensure computeUniqueAsyncExpiration is monotonically decreasing.
 let lastUniqueAsyncExpiration: number = Sync - 1;
+
+// Represents the expiration time that incoming updates should use. (If this
+// is NoWork, use the default strategy: async updates in async mode, sync
+// updates in sync mode.)
+let expirationContext: ExpirationTime = NoWork;
 
 let isWorking: boolean = false;
 
@@ -798,11 +793,9 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
       // TODO: Avoid this extra callback by mutating the tracing ref directly,
       // like we do at the beginning of commitRoot. I've opted not to do that
       // here because that code is still in flux.
-      callback = Scheduler_tracing_wrap(callback);
+      callback = Schedule_tracing_wrap(callback);
     }
-    passiveEffectCallbackHandle = runWithPriority(NormalPriority, () => {
-      return schedulePassiveEffects(callback);
-    });
+    passiveEffectCallbackHandle = schedulePassiveEffects(callback);
     passiveEffectCallback = callback;
   }
 
@@ -1586,58 +1579,52 @@ function computeUniqueAsyncExpiration(): ExpirationTime {
 }
 
 function computeExpirationForFiber(currentTime: ExpirationTime, fiber: Fiber) {
-  const priorityLevel = getCurrentPriorityLevel();
-
   let expirationTime;
-  if ((fiber.mode & ConcurrentMode) === NoContext) {
-    // Outside of concurrent mode, updates are always synchronous.
-    expirationTime = Sync;
-  } else if (isWorking && !isCommitting) {
-    // During render phase, updates expire during as the current render.
-    expirationTime = nextRenderExpirationTime;
+  if (expirationContext !== NoWork) {
+    // An explicit expiration context was set;
+    expirationTime = expirationContext;
+  } else if (isWorking) {
+    if (isCommitting) {
+      // Updates that occur during the commit phase should have sync priority
+      // by default.
+      expirationTime = Sync;
+    } else {
+      // Updates during the render phase should expire at the same time as
+      // the work that is being rendered.
+      expirationTime = nextRenderExpirationTime;
+    }
   } else {
-    switch (priorityLevel) {
-      case ImmediatePriority:
-        expirationTime = Sync;
-        break;
-      case UserBlockingPriority:
+    // No explicit expiration context was set, and we're not currently
+    // performing work. Calculate a new expiration time.
+    if (fiber.mode & ConcurrentMode) {
+      if (isBatchingInteractiveUpdates) {
+        // This is an interactive update
         expirationTime = computeInteractiveExpiration(currentTime);
-        break;
-      case NormalPriority:
-        // This is a normal, concurrent update
+      } else {
+        // This is an async update
         expirationTime = computeAsyncExpiration(currentTime);
-        break;
-      case LowPriority:
-      case IdlePriority:
-        expirationTime = Never;
-        break;
-      default:
-        invariant(
-          false,
-          'Unknown priority level. This error is likely caused by a bug in ' +
-            'React. Please file an issue.',
-        );
-    }
-
-    // If we're in the middle of rendering a tree, do not update at the same
-    // expiration time that is already rendering.
-    if (nextRoot !== null && expirationTime === nextRenderExpirationTime) {
-      expirationTime -= 1;
+      }
+      // If we're in the middle of rendering a tree, do not update at the same
+      // expiration time that is already rendering.
+      if (nextRoot !== null && expirationTime === nextRenderExpirationTime) {
+        expirationTime -= 1;
+      }
+    } else {
+      // This is a sync update
+      expirationTime = Sync;
     }
   }
-
-  // Keep track of the lowest pending interactive expiration time. This
-  // allows us to synchronously flush all interactive updates
-  // when needed.
-  // TODO: Move this to renderer?
-  if (
-    priorityLevel === UserBlockingPriority &&
-    (lowestPriorityPendingInteractiveExpirationTime === NoWork ||
-      expirationTime < lowestPriorityPendingInteractiveExpirationTime)
-  ) {
-    lowestPriorityPendingInteractiveExpirationTime = expirationTime;
+  if (isBatchingInteractiveUpdates) {
+    // This is an interactive update. Keep track of the lowest pending
+    // interactive expiration time. This allows us to synchronously flush
+    // all interactive updates when needed.
+    if (
+      lowestPriorityPendingInteractiveExpirationTime === NoWork ||
+      expirationTime < lowestPriorityPendingInteractiveExpirationTime
+    ) {
+      lowestPriorityPendingInteractiveExpirationTime = expirationTime;
+    }
   }
-
   return expirationTime;
 }
 
@@ -1875,6 +1862,20 @@ function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
   }
 }
 
+function deferredUpdates<A>(fn: () => A): A {
+  const currentTime = requestCurrentTime();
+  const previousExpirationContext = expirationContext;
+  const previousIsBatchingInteractiveUpdates = isBatchingInteractiveUpdates;
+  expirationContext = computeAsyncExpiration(currentTime);
+  isBatchingInteractiveUpdates = false;
+  try {
+    return fn();
+  } finally {
+    expirationContext = previousExpirationContext;
+    isBatchingInteractiveUpdates = previousIsBatchingInteractiveUpdates;
+  }
+}
+
 function syncUpdates<A, B, C0, D, R>(
   fn: (A, B, C0, D) => R,
   a: A,
@@ -1882,9 +1883,13 @@ function syncUpdates<A, B, C0, D, R>(
   c: C0,
   d: D,
 ): R {
-  return runWithPriority(ImmediatePriority, () => {
+  const previousExpirationContext = expirationContext;
+  expirationContext = Sync;
+  try {
     return fn(a, b, c, d);
-  });
+  } finally {
+    expirationContext = previousExpirationContext;
+  }
 }
 
 // TODO: Everything below this is written as if it has been lifted to the
@@ -1905,6 +1910,7 @@ let unhandledError: mixed | null = null;
 
 let isBatchingUpdates: boolean = false;
 let isUnbatchingUpdates: boolean = false;
+let isBatchingInteractiveUpdates: boolean = false;
 
 let completedBatches: Array<Batch> | null = null;
 
@@ -2435,9 +2441,7 @@ function completeRoot(
     lastCommittedRootDuringThisBatch = root;
     nestedUpdateCount = 0;
   }
-  runWithPriority(ImmediatePriority, () => {
-    commitRoot(root, finishedWork);
-  });
+  commitRoot(root, finishedWork);
 }
 
 function onUncaughtError(error: mixed) {
@@ -2503,6 +2507,9 @@ function flushSync<A, R>(fn: (a: A) => R, a: A): R {
 }
 
 function interactiveUpdates<A, B, R>(fn: (A, B) => R, a: A, b: B): R {
+  if (isBatchingInteractiveUpdates) {
+    return fn(a, b);
+  }
   // If there are any pending interactive updates, synchronously flush them.
   // This needs to happen before we read any handlers, because the effect of
   // the previous event may influence which handlers are called during
@@ -2516,13 +2523,14 @@ function interactiveUpdates<A, B, R>(fn: (A, B) => R, a: A, b: B): R {
     performWork(lowestPriorityPendingInteractiveExpirationTime, false);
     lowestPriorityPendingInteractiveExpirationTime = NoWork;
   }
+  const previousIsBatchingInteractiveUpdates = isBatchingInteractiveUpdates;
   const previousIsBatchingUpdates = isBatchingUpdates;
+  isBatchingInteractiveUpdates = true;
   isBatchingUpdates = true;
   try {
-    return runWithPriority(UserBlockingPriority, () => {
-      return fn(a, b);
-    });
+    return fn(a, b);
   } finally {
+    isBatchingInteractiveUpdates = previousIsBatchingInteractiveUpdates;
     isBatchingUpdates = previousIsBatchingUpdates;
     if (!isBatchingUpdates && !isRendering) {
       performSyncWork();
@@ -2572,7 +2580,7 @@ export {
   unbatchedUpdates,
   flushSync,
   flushControlled,
-  Scheduler_next as deferredUpdates,
+  deferredUpdates,
   syncUpdates,
   interactiveUpdates,
   flushInteractiveUpdates,

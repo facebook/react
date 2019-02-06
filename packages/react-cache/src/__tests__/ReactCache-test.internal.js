@@ -24,8 +24,6 @@ describe('ReactCache', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    let currentPriorityLevel = 3;
-
     jest.mock('scheduler', () => {
       let callbacks = [];
       return {
@@ -39,26 +37,6 @@ describe('ReactCache', () => {
             const callback = callbacks.pop();
             callback();
           }
-        },
-
-        unstable_ImmediatePriority: 1,
-        unstable_UserBlockingPriority: 2,
-        unstable_NormalPriority: 3,
-        unstable_LowPriority: 4,
-        unstable_IdlePriority: 5,
-
-        unstable_runWithPriority(priorityLevel, fn) {
-          const prevPriorityLevel = currentPriorityLevel;
-          currentPriorityLevel = priorityLevel;
-          try {
-            return fn();
-          } finally {
-            currentPriorityLevel = prevPriorityLevel;
-          }
-        },
-
-        unstable_getCurrentPriorityLevel() {
-          return currentPriorityLevel;
         },
       };
     });

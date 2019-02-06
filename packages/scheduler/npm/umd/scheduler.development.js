@@ -54,13 +54,6 @@
     );
   }
 
-  function unstable_next() {
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_next.apply(
-      this,
-      arguments
-    );
-  }
-
   function unstable_wrapCallback() {
     return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_wrapCallback.apply(
       this,
@@ -102,7 +95,6 @@
     unstable_cancelCallback: unstable_cancelCallback,
     unstable_shouldYield: unstable_shouldYield,
     unstable_runWithPriority: unstable_runWithPriority,
-    unstable_next: unstable_next,
     unstable_wrapCallback: unstable_wrapCallback,
     unstable_getCurrentPriorityLevel: unstable_getCurrentPriorityLevel,
     unstable_continueExecution: unstable_continueExecution,
