@@ -6,6 +6,16 @@
   </summary>
 </details>
 
+## 16.8.1 (February 6, 2019)
+
+### React DOM and React Test Renderer
+
+* Fix a crash when used together with an older version of React. ([@bvaughn](https://github.com/bvaughn) in [#14770](https://github.com/facebook/react/pull/14770))
+
+### React Test Utils
+
+* Fix a crash in Node environment. ([@threepointone](https://github.com/threepointone) in [#14768](https://github.com/facebook/react/pull/14768))
+
 ## 16.8.0 (February 6, 2019)
 
 ### React
