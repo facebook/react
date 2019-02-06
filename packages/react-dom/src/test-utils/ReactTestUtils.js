@@ -152,7 +152,14 @@ function validateClassInstance(inst, methodName) {
 }
 
 // stub element used by act() when flushing effects
-let actContainerElement = document.createElement('div');
+let actContainerElement = null
+
+ function getActContainerElement () {
+  if(!actContainerElement){
+    actContainerElement = document.createElement('div');
+  }
+  return actContainerElement
+}
 
 /**
  * Utilities for making it easy to test React components.
@@ -412,7 +419,7 @@ const ReactTestUtils = {
         );
       }
     }
-    ReactDOM.render(<div />, actContainerElement);
+    ReactDOM.render(<div />, getActContainerElement);
     // we want the user to not expect a return,
     // but we want to warn if they use it like they can await on it.
     return {
