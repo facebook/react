@@ -1043,7 +1043,7 @@ describe('ReactTestRenderer', () => {
 
       expect(called).toBe(true);
     });
-    it('warns if you use TestUtils.act instead of TestRenderer.act in node', () => {
+    it('throws if you use TestUtils.act instead of TestRenderer.act in node', () => {
       jest.resetModules();
       const {act} = require('react-dom/test-utils');
       expect(() => act(() => {})).toThrow(
