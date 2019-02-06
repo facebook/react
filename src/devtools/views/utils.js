@@ -1,6 +1,11 @@
 // @flow
 
+import escapeStringRegExp from 'escape-string-regexp';
 import { meta } from '../../hydration';
+
+export function createRegExp(string: string): RegExp {
+  return new RegExp(escapeStringRegExp(string), 'i');
+}
 
 export function getMetaValueLabel(data: Object): string | null {
   switch (data[meta.type]) {

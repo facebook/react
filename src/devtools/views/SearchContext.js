@@ -7,6 +7,7 @@ import React, {
   useMemo,
   useReducer,
 } from 'react';
+import { createRegExp } from './utils';
 import { StoreContext } from './context';
 import { SelectedElementContext } from './SelectedElementContext';
 import Store from '../store';
@@ -100,7 +101,7 @@ function SearchController({ children }: Props) {
 
         // Find all matching elements.
         if (newText !== '') {
-          const regExp = new RegExp(newText, 'i');
+          let regExp = createRegExp(newText);
           store.roots.forEach(rootID => {
             searchTree(store, rootID, regExp, newIDs);
           });
@@ -169,7 +170,7 @@ function SearchController({ children }: Props) {
         const { displayName } = ((store.getElementByID(id): any): Element);
 
         // Add this item to the search results if it matches.
-        const regExp = new RegExp(text, 'i');
+        const regExp = createRegExp(text);
         if (displayName !== null && regExp.test(displayName)) {
           const newElementIndex = ((store.getIndexOfElementID(
             id

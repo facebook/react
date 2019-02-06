@@ -3,6 +3,7 @@
 import React, { Fragment, useCallback, useContext, useMemo } from 'react';
 import { ElementTypeClassOrFunction } from 'src/devtools/types';
 import { TreeContext } from './context';
+import { createRegExp } from './utils';
 import { SearchContext } from './SearchContext';
 import { SelectedElementContext } from './SelectedElementContext';
 import Icon from './Icon';
@@ -91,10 +92,14 @@ function DisplayName({ displayName, id }: DisplayNameProps) {
     return displayName;
   }
 
-  const startIndex = displayName
-    .toLowerCase()
-    .indexOf(searchText.toLowerCase());
-  const stopIndex = startIndex + searchText.length;
+  const match = createRegExp(searchText).exec(displayName);
+
+  if (match === null) {
+    return displayName;
+  }
+
+  const startIndex = match.index;
+  const stopIndex = startIndex + match[0].length;
 
   const children = [];
   if (startIndex > 0) {
