@@ -154,7 +154,7 @@ function validateClassInstance(inst, methodName) {
 // stub element used by act() when flushing effects
 let actContainerElement = null;
 
- function getActContainerElement () {
+function getActContainerElement () {
   if (!actContainerElement) {
     actContainerElement = document.createElement('div');
   }
