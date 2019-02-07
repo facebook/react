@@ -1,7 +1,7 @@
 // @flow
 
 import React, { useCallback, useContext, useEffect, useRef } from 'react';
-import { SearchContext } from './SearchContext';
+import { SearchAndSelectionContext } from './SearchAndSelectionContext';
 import ButtonIcon from './ButtonIcon';
 
 import styles from './SearchInput.css';
@@ -9,50 +9,33 @@ import styles from './SearchInput.css';
 type Props = {||};
 
 export default function SearchInput(props: Props) {
-  // We use the wrapper searchContext object rather than its individual parts–
-  // (specifically for the useCallback input arrays below)–
-  // because a change in any one value (e.g. ids array) impacts other values (e.g. currentIndex).
-  // It's easier to avoid stale scope issues if we depend on the entire search state.
-  const searchContext = useContext(SearchContext);
+  const {
+    decrementSearchIndex,
+    incrementSearchIndex,
+    searchIndex,
+    searchResults,
+    searchText,
+    updateSearchText,
+  } = useContext(SearchAndSelectionContext);
 
   const inputRef = useRef();
 
-  const handleTextChange = useCallback(({ currentTarget }) => {
-    searchContext.updateText(currentTarget.value);
-  });
-
-  const selectNext = useCallback(() => {
-    const { currentIndex } = searchContext;
-    if (currentIndex !== null) {
-      searchContext.updateCurrentIndex(currentIndex + 1);
-    }
-  }, [searchContext]);
-
-  const selectPrevious = useCallback(() => {
-    const { currentIndex } = searchContext;
-    if (currentIndex !== null) {
-      searchContext.updateCurrentIndex(currentIndex - 1);
-    }
-  }, [searchContext]);
+  const handleTextChange = useCallback(
+    ({ currentTarget }) => updateSearchText(currentTarget.value),
+    [updateSearchText]
+  );
 
   const resetSearch = useCallback(() => {
-    searchContext.updateText('');
-  }, [searchContext]);
+    updateSearchText('');
+  }, [updateSearchText]);
 
   const handleInputKeyPress = useCallback(
     ({ key }) => {
       if (key === 'Enter') {
-        const { currentIndex, ids } = searchContext;
-        if (currentIndex !== null) {
-          if (currentIndex + 1 < ids.length) {
-            searchContext.updateCurrentIndex(currentIndex + 1);
-          } else {
-            searchContext.updateCurrentIndex(0);
-          }
-        }
+        incrementSearchIndex();
       }
     },
-    [searchContext]
+    [incrementSearchIndex]
   );
 
   // Auto-focus search input
@@ -72,8 +55,6 @@ export default function SearchInput(props: Props) {
     return () => window.removeEventListener('keydown', handleWindowKeyDown);
   }, [inputRef]);
 
-  const { currentIndex, ids, text } = searchContext;
-
   return (
     <div className={styles.SearchInput}>
       <input
@@ -82,33 +63,32 @@ export default function SearchInput(props: Props) {
         onChange={handleTextChange}
         placeholder="Search (text or /regex/)"
         ref={inputRef}
-        value={text}
+        value={searchText}
       />
-      {!!text && (
+      {!!searchText && (
         <span className={styles.IndexLabel}>
-          {Math.min(currentIndex + 1, ids.length)} | {ids.length}
+          {Math.min(searchIndex + 1, searchResults.length)} |{' '}
+          {searchResults.length}
         </span>
       )}
       <div className={styles.LeftVRule} />
       <button
         className={styles.IconButton}
-        disabled={currentIndex === null || currentIndex === 0}
-        onClick={selectPrevious}
+        onClick={decrementSearchIndex}
         title="Scroll to previous search result"
       >
         <ButtonIcon type="up" />
       </button>
       <button
         className={styles.IconButton}
-        disabled={currentIndex === null || currentIndex === ids.length - 1}
-        onClick={selectNext}
+        onClick={incrementSearchIndex}
         title="Scroll to next search result"
       >
         <ButtonIcon type="down" />
       </button>
       <button
         className={styles.IconButton}
-        disabled={!text}
+        disabled={!searchText}
         onClick={resetSearch}
         title="Reset search"
       >

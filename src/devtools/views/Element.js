@@ -4,8 +4,7 @@ import React, { Fragment, useCallback, useContext, useMemo } from 'react';
 import { ElementTypeClassOrFunction } from 'src/devtools/types';
 import { TreeContext } from './context';
 import { createRegExp } from './utils';
-import { SearchContext } from './SearchContext';
-import { SelectedElementContext } from './SelectedElementContext';
+import { SearchAndSelectionContext } from './SearchAndSelectionContext';
 import Icon from './Icon';
 
 import styles from './Element.css';
@@ -31,15 +30,15 @@ export default function Element({ index, style }: Props) {
 
   const { children, depth, displayName, id, key, type } = element;
 
-  const selectedElement = useContext(SelectedElementContext);
+  const { selectedElementID, selectElementWithID } = useContext(
+    SearchAndSelectionContext
+  );
   const handleClick = useCallback(
-    ({ metaKey }) => {
-      selectedElement.id = metaKey ? null : id;
-    },
+    ({ metaKey }) => selectElementWithID(metaKey ? null : id),
     [id]
   );
 
-  const isSelected = selectedElement.id === id;
+  const isSelected = selectedElementID === id;
   const showDollarR = isSelected && type === ElementTypeClassOrFunction;
 
   return (
@@ -77,16 +76,14 @@ type DisplayNameProps = {|
 |};
 
 function DisplayName({ displayName, id }: DisplayNameProps) {
-  const {
-    currentIndex: currentSearchIndex,
-    ids: searchIDs,
-    text: searchText,
-  } = useContext(SearchContext);
+  const { searchIndex, searchResults, searchText } = useContext(
+    SearchAndSelectionContext
+  );
   const isSearchResult = useMemo(() => {
-    return searchIDs.includes(id);
-  }, [id, searchIDs]);
+    return searchResults.includes(id);
+  }, [id, searchResults]);
   const isCurrentResult =
-    currentSearchIndex !== null && id === searchIDs[currentSearchIndex];
+    searchIndex !== null && id === searchResults[searchIndex];
 
   if (!isSearchResult || displayName === null) {
     return displayName;

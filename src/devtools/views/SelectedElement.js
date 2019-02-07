@@ -1,7 +1,7 @@
 // @flow
 
 import React, { useContext, useLayoutEffect, useRef, useState } from 'react';
-import { SelectedElementContext } from './SelectedElementContext';
+import { SearchAndSelectionContext } from './SearchAndSelectionContext';
 import { BridgeContext, StoreContext } from './context';
 import ButtonIcon from './ButtonIcon';
 import HooksTree from './HooksTree';
@@ -11,17 +11,16 @@ import styles from './SelectedElement.css';
 
 import type { InspectedElement } from '../types';
 import type { DehydratedData } from 'src/devtools/types';
-import type { SelectedElementContextValue } from './SelectedElementContext';
 
 export type Props = {||};
 
 export default function SelectedElement(_: Props) {
-  const selectedElement = useContext(SelectedElementContext);
-  const { id } = selectedElement;
+  const { selectedElementID } = useContext(SearchAndSelectionContext);
   const store = useContext(StoreContext);
-  const element = id !== null ? store.getElementByID(id) : null;
+  const element =
+    selectedElementID !== null ? store.getElementByID(selectedElementID) : null;
 
-  const inspectedElement = useInspectedElement(id);
+  const inspectedElement = useInspectedElement(selectedElementID);
 
   // TODO Make "view DOM" and "view source" buttons work
 
@@ -65,10 +64,7 @@ export default function SelectedElement(_: Props) {
       )}
 
       {inspectedElement !== null && (
-        <InspectedElementView
-          inspectedElement={inspectedElement}
-          selectedElement={selectedElement}
-        />
+        <InspectedElementView inspectedElement={inspectedElement} />
       )}
     </div>
   );
@@ -76,13 +72,11 @@ export default function SelectedElement(_: Props) {
 
 type InspectedElementViewProps = {|
   inspectedElement: InspectedElement,
-  selectedElement: SelectedElementContextValue,
 |};
 
-function InspectedElementView({
-  inspectedElement,
-  selectedElement,
-}: InspectedElementViewProps) {
+function InspectedElementView({ inspectedElement }: InspectedElementViewProps) {
+  const { selectElementWithID } = useContext(SearchAndSelectionContext);
+
   let { context, hooks, owners, props, state } = inspectedElement;
 
   return (
@@ -99,9 +93,7 @@ function InspectedElementView({
             <div
               key={owner.id}
               className={styles.Owner}
-              onClick={() => {
-                selectedElement.id = owner.id;
-              }}
+              onClick={() => selectElementWithID(owner.id)}
               title={owner.displayName}
             >
               {owner.displayName}

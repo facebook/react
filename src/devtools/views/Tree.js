@@ -3,7 +3,7 @@
 import React, { useContext, useEffect, useLayoutEffect, useRef } from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList } from 'react-window';
-import { SelectedElementContext } from './SelectedElementContext';
+import { SearchAndSelectionContext } from './SearchAndSelectionContext';
 import ButtonIcon from './ButtonIcon';
 import Element from './Element';
 import SearchInput from './SearchInput';
@@ -14,37 +14,37 @@ import styles from './Tree.css';
 type Props = {||};
 
 export default function Tree(props: Props) {
-  const selectedElementContext = useContext(SelectedElementContext);
+  const { selectedElementIndex, selectElementAtIndex } = useContext(
+    SearchAndSelectionContext
+  );
   const treeContext = useContext(TreeContext);
   const listRef = useRef<FixedSizeList<any>>();
 
   // Make sure a newly selected element is visible in the list.
   // This is helpful for things like the owners list.
   useLayoutEffect(() => {
-    const { index } = selectedElementContext;
-    if (index !== null && listRef.current != null) {
-      listRef.current.scrollToItem(index);
+    if (selectedElementIndex !== null && listRef.current != null) {
+      listRef.current.scrollToItem(selectedElementIndex);
     }
-  }, [listRef, selectedElementContext]);
+  }, [listRef, selectedElementIndex]);
 
   // Navigate the tree with up/down arrow keys.
   useEffect(() => {
     const handleKeyDown = event => {
-      let index;
-
       // eslint-disable-next-line default-case
       switch (event.key) {
         case 'ArrowDown':
-          index = selectedElementContext.index;
-          if (index !== null && index + 1 < treeContext.size) {
-            selectedElementContext.index = ((index: any): number) + 1;
+          if (
+            selectedElementIndex !== null &&
+            selectedElementIndex + 1 < treeContext.size
+          ) {
+            selectElementAtIndex(((selectedElementIndex: any): number) + 1);
           }
           event.preventDefault();
           break;
         case 'ArrowUp':
-          index = selectedElementContext.index;
-          if (index !== null && index > 0) {
-            selectedElementContext.index = ((index: any): number) - 1;
+          if (selectedElementIndex !== null && selectedElementIndex > 0) {
+            selectElementAtIndex(((selectedElementIndex: any): number) - 1);
           }
           event.preventDefault();
           break;
@@ -56,7 +56,7 @@ export default function Tree(props: Props) {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [selectedElementContext, treeContext]);
+  }, [selectedElementIndex, selectElementAtIndex, treeContext]);
 
   return (
     <div className={styles.Tree}>
