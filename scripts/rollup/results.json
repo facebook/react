@@ -4,15 +4,15 @@
       "filename": "react.development.js",
       "bundleType": "UMD_DEV",
       "packageName": "react",
-      "size": 102592,
-      "gzip": 26606
+      "size": 102614,
+      "gzip": 26609
     },
     {
       "filename": "react.production.min.js",
       "bundleType": "UMD_PROD",
       "packageName": "react",
-      "size": 12812,
-      "gzip": 4973
+      "size": 12834,
+      "gzip": 4978
     },
     {
       "filename": "react.development.js",
@@ -676,15 +676,15 @@
       "filename": "scheduler.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "scheduler",
-      "size": 24456,
-      "gzip": 6331
+      "size": 24478,
+      "gzip": 6334
     },
     {
       "filename": "scheduler.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "scheduler",
-      "size": 5321,
-      "gzip": 2015
+      "size": 5343,
+      "gzip": 2022
     },
     {
       "filename": "SimpleCacheProvider-dev.js",
@@ -739,14 +739,14 @@
       "filename": "Scheduler-dev.js",
       "bundleType": "FB_WWW_DEV",
       "packageName": "scheduler",
-      "size": 24739,
-      "gzip": 6379
+      "size": 24761,
+      "gzip": 6384
     },
     {
       "filename": "Scheduler-prod.js",
       "bundleType": "FB_WWW_PROD",
       "packageName": "scheduler",
-      "size": 14857,
+      "size": 14879,
       "gzip": 3124
     },
     {
@@ -788,8 +788,8 @@
       "filename": "react.profiling.min.js",
       "bundleType": "UMD_PROFILING",
       "packageName": "react",
-      "size": 15063,
-      "gzip": 5520
+      "size": 15085,
+      "gzip": 5529
     },
     {
       "filename": "react-dom.profiling.min.js",

@@ -688,10 +688,10 @@ if (globalValue && globalValue._schedMock) {
       nextFrameTime < activeFrameTime &&
       previousFrameTime < activeFrameTime
     ) {
-      if (nextFrameTime < 8) {
+      if (nextFrameTime < minFrameTime) {
         // Defensive coding. We don't support higher frame rates than 120hz.
         // If the calculated frame time gets lower than 8, it is probably a bug.
-        nextFrameTime = 8;
+        nextFrameTime = minFrameTime;
       }
       // If one frame goes long, then the next one can be short to catch up.
       // If two frames are short in a row, then that's an indication that we
