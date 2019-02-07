@@ -543,6 +543,10 @@ export function attach(
       addOperation(operation);
     } else {
       const { displayName, key, type } = getDataForFiber(fiber);
+      const { _debugOwner } = fiber;
+
+      const ownerID =
+        _debugOwner !== null ? getFiberID(getPrimaryFiber(_debugOwner)) : 0;
 
       let encodedDisplayName = ((null: any): Uint8Array);
       let encodedKey = ((null: any): Uint8Array);
@@ -565,19 +569,20 @@ export function attach(
       const encodedKeySize = key === null ? 0 : encodedKey.length;
 
       const operation = new Uint32Array(
-        6 + encodedDisplayNameSize + encodedKeySize
+        7 + encodedDisplayNameSize + encodedKeySize
       );
       operation[0] = TREE_OPERATION_ADD;
       operation[1] = id;
       operation[2] = type;
       operation[3] = getFiberID(getPrimaryFiber(parentFiber));
-      operation[4] = encodedDisplayNameSize;
+      operation[4] = ownerID;
+      operation[5] = encodedDisplayNameSize;
       if (displayName !== null) {
-        operation.set(encodedDisplayName, 5);
+        operation.set(encodedDisplayName, 6);
       }
-      operation[5 + encodedDisplayNameSize] = encodedKeySize;
+      operation[6 + encodedDisplayNameSize] = encodedKeySize;
       if (key !== null) {
-        operation.set(encodedKey, 5 + encodedDisplayNameSize + 1);
+        operation.set(encodedKey, 6 + encodedDisplayNameSize + 1);
       }
       addOperation(operation);
     }

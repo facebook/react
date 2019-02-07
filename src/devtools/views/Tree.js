@@ -1,11 +1,18 @@
 // @flow
 
-import React, { useContext, useEffect, useLayoutEffect, useRef } from 'react';
+import React, {
+  useContext,
+  useEffect,
+  useMemo,
+  useLayoutEffect,
+  useRef,
+} from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList } from 'react-window';
 import { SearchAndSelectionContext } from './SearchAndSelectionContext';
 import ButtonIcon from './ButtonIcon';
 import Element from './Element';
+import OwnersStack from './OwnersStack';
 import SearchInput from './SearchInput';
 import { TreeContext } from './context';
 
@@ -14,9 +21,13 @@ import styles from './Tree.css';
 type Props = {||};
 
 export default function Tree(props: Props) {
-  const { selectedElementIndex, selectElementAtIndex } = useContext(
-    SearchAndSelectionContext
-  );
+  const {
+    ownerIDStack,
+    ownerList,
+    selectedElementIndex,
+    selectNextElementInTree,
+    selectPreviousElementInTree,
+  } = useContext(SearchAndSelectionContext);
   const treeContext = useContext(TreeContext);
   const listRef = useRef<FixedSizeList<any>>();
 
@@ -30,22 +41,17 @@ export default function Tree(props: Props) {
 
   // Navigate the tree with up/down arrow keys.
   useEffect(() => {
+    // TODO Use selectNextElement / selectPreviousElement (with dispatch)
+
     const handleKeyDown = event => {
       // eslint-disable-next-line default-case
       switch (event.key) {
         case 'ArrowDown':
-          if (
-            selectedElementIndex !== null &&
-            selectedElementIndex + 1 < treeContext.size
-          ) {
-            selectElementAtIndex(((selectedElementIndex: any): number) + 1);
-          }
+          selectNextElementInTree();
           event.preventDefault();
           break;
         case 'ArrowUp':
-          if (selectedElementIndex !== null && selectedElementIndex > 0) {
-            selectElementAtIndex(((selectedElementIndex: any): number) - 1);
-          }
+          selectPreviousElementInTree();
           event.preventDefault();
           break;
       }
@@ -56,12 +62,26 @@ export default function Tree(props: Props) {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [selectedElementIndex, selectElementAtIndex, treeContext]);
+  }, [
+    selectedElementIndex,
+    selectNextElementInTree,
+    selectPreviousElementInTree,
+    treeContext,
+  ]);
+
+  const itemCount = ownerList !== null ? ownerList.length : treeContext.size;
+
+  // Let react-window know to re-render any time the underlying tree data changes.
+  // This includes the owner context, since it controls a filtered view of the tree.
+  const itemData = useMemo(() => ({ treeContext, ownerList }), [
+    treeContext,
+    ownerList,
+  ]);
 
   return (
     <div className={styles.Tree}>
       <div className={styles.SearchInput}>
-        <SearchInput />
+        {ownerIDStack.length > 0 ? <OwnersStack /> : <SearchInput />}
         <button
           className={styles.IconButton}
           title="Select an element in the page to inspect it"
@@ -75,8 +95,8 @@ export default function Tree(props: Props) {
             <FixedSizeList
               className={styles.List}
               height={height}
-              itemCount={treeContext.size}
-              itemData={treeContext}
+              itemCount={itemCount}
+              itemData={itemData}
               itemSize={20}
               ref={listRef}
               width={width}

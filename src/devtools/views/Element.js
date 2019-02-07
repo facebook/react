@@ -7,6 +7,8 @@ import { createRegExp } from './utils';
 import { SearchAndSelectionContext } from './SearchAndSelectionContext';
 import Icon from './Icon';
 
+import type { Element } from '../types';
+
 import styles from './Element.css';
 
 type Props = {
@@ -14,25 +16,32 @@ type Props = {
   style: Object,
 };
 
-export default function Element({ index, style }: Props) {
+export default function ElementView({ index, style }: Props) {
   const { store } = useContext(TreeContext);
-  const element = store.getElementAtIndex(index);
 
-  // DevTools are rendered in concurrent mode.
-  // It's possible the store has updated since the commit that triggered this render.
-  // So we need to guard against an undefined element.
-  // TODO: Handle this by switching to a Suspense based approach.
-  if (element == null) {
-    return null;
+  const {
+    ownerList,
+    pushOwnerList,
+    selectedElementID,
+    selectElementWithID,
+  } = useContext(SearchAndSelectionContext);
+
+  const element =
+    ownerList !== null
+      ? ((store.getElementByID(ownerList[index]): any): Element)
+      : ((store.getElementAtIndex(index): any): Element);
+  const { children, depth, displayName, id, key, type } = element;
+
+  let calculatedDepth = depth;
+  if (ownerList !== null) {
+    const owner = ((store.getElementByID(ownerList[0]): any): Element);
+    calculatedDepth = depth - owner.depth;
   }
+
+  const handleDoubleClick = useCallback(() => pushOwnerList(id), [id]);
 
   // TODO Add click and key handlers for toggling element open/close state.
 
-  const { children, depth, displayName, id, key, type } = element;
-
-  const { selectedElementID, selectElementWithID } = useContext(
-    SearchAndSelectionContext
-  );
   const handleClick = useCallback(
     ({ metaKey }) => selectElementWithID(metaKey ? null : id),
     [id]
@@ -45,9 +54,10 @@ export default function Element({ index, style }: Props) {
     <div
       className={isSelected ? styles.SelectedElement : styles.Element}
       onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
       style={{
         ...style, // "style" comes from react-window
-        paddingLeft: `${1 + depth}rem`,
+        paddingLeft: `${1 + calculatedDepth}rem`,
       }}
     >
       {children.length > 0 && (

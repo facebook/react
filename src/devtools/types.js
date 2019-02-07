@@ -28,6 +28,9 @@ export type Element = {|
   displayName: string | null,
   key: number | string | null,
 
+  // Owner (if available)
+  ownerID: number,
+
   // How many levels deep within the tree is this element?
   // This determines how much indentation (left padding) should be used in the Elements tree.
   depth: number,

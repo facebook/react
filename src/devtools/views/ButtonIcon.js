@@ -4,12 +4,22 @@ import React from 'react';
 import styles from './ButtonIcon.css';
 
 type Props = {|
-  type: 'close' | 'down' | 'search' | 'up' | 'view-dom' | 'view-source',
+  type:
+    | 'back'
+    | 'close'
+    | 'down'
+    | 'search'
+    | 'up'
+    | 'view-dom'
+    | 'view-source',
 |};
 
 export default function ButtonIcon({ type }: Props) {
   let pathData = null;
   switch (type) {
+    case 'back':
+      pathData = PATH_BACK;
+      break;
     case 'close':
       pathData = PATH_CLOSE;
       break;
@@ -46,6 +56,12 @@ export default function ButtonIcon({ type }: Props) {
     </svg>
   );
 }
+
+const PATH_BACK = `
+  M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9
+  2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41
+  10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z
+`;
 
 const PATH_CLOSE =
   'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z';

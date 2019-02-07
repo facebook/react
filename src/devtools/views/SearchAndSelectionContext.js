@@ -1,7 +1,7 @@
 // @flow
 
-// This context contains both the current search state and the selected element.
-// These values are combined into a single context because changes in one often impact the other.
+// This context contains both the search, owners stack, and selected element states.
+// These values are combined into a single context because changes in one often impact the others.
 // Combining them enables us to avoid cascading renders.
 
 import React, {
@@ -19,7 +19,9 @@ import Store from '../store';
 import type { Element } from 'src/devtools/types';
 
 type Context = {|
-  // Read current context values:
+  // Read current context values
+  ownerIDStack: Array<number>,
+  ownerList: Array<number> | null,
   searchIndex: number | null,
   searchResults: Array<number>,
   searchText: string,
@@ -27,10 +29,14 @@ type Context = {|
   selectedElementIndex: number | null,
 
   // Update current context values:
+  clearOwnerList: () => void,
   decrementSearchIndex(): void,
   incrementSearchIndex(): void,
+  popToOwnerList(elementID: number): void,
+  pushOwnerList(elementID: number): void,
   selectElementWithID(id: number | null): void,
-  selectElementAtIndex(index: number | null): void,
+  selectNextElementInTree(): void,
+  selectPreviousElementInTree(): void,
   updateSearchText(searchText: string): void,
 |};
 
@@ -41,6 +47,8 @@ const SearchAndSelectionContext = createContext<Context>(
 SearchAndSelectionContext.displayName = 'SearchAndSelectionContext';
 
 type State = {|
+  ownerIDStack: Array<number>,
+  ownerList: Array<number> | null,
   searchIndex: number | null,
   searchResults: Array<number>,
   searchText: string,
@@ -50,11 +58,15 @@ type State = {|
 
 type Action = {|
   type:
+    | 'CLEAR_OWNER_LIST'
     | 'DECREMENT_SEARCH_INDEX'
     | 'INCREMENT_SEARCH_INDEX'
-    | 'REFINE_SEARCH_RESULTS'
+    | 'POP_TO_OWNER_LIST'
+    | 'PUSH_OWNER_LIST'
+    | 'REFINE_AFTER_MUTATION'
     | 'SELECT_ELEMENT_WITH_ID'
-    | 'SELECT_ELEMENT_AT_INDEX'
+    | 'SELECT_NEXT_ELEMENT_IN_TREE'
+    | 'SELECT_PREVIOUS_ELEMENT_IN_TREE'
     | 'UPDATE_SEARCH_TEXT',
   payload?: any,
 |};
@@ -73,16 +85,70 @@ function SearchAndSelectionController({ children }: Props) {
   const reducer = useMemo(
     () =>
       function reducer(state: State, action: Action): State {
-        const { searchIndex, searchResults, searchText } = state;
+        const {
+          ownerIDStack,
+          ownerList,
+          searchIndex,
+          searchResults,
+          searchText,
+          selectedElementID,
+          selectedElementIndex,
+        } = state;
         const { payload, type } = action;
 
-        let newSearchIndex,
+        let element,
+          elementID,
+          newOwnerList,
+          newOwnerIDStack,
+          newSearchIndex,
           newSearchResults,
           newSearchText,
-          newSelectedElementID;
+          newSelectedElementID,
+          newSelectedElementIndex;
+
+        const updateSelectedElementIndexHelper = (
+          newSelectedElementIndex: number
+        ) => {
+          if (ownerList !== null) {
+            newSelectedElementID =
+              newSelectedElementIndex !== null
+                ? ownerList[newSelectedElementIndex]
+                : null;
+
+            return {
+              ...state,
+              selectedElementID: newSelectedElementID,
+              selectedElementIndex: newSelectedElementIndex,
+            };
+          } else {
+            element =
+              newSelectedElementIndex !== null
+                ? store.getElementAtIndex(newSelectedElementIndex)
+                : null;
+
+            return {
+              ...state,
+              selectedElementID: element !== null ? element.id : null,
+              selectedElementIndex: newSelectedElementIndex,
+            };
+          }
+        };
 
         switch (type) {
+          case 'CLEAR_OWNER_LIST':
+            return {
+              ...state,
+              ownerList: null,
+              ownerIDStack: [],
+            };
+
           case 'DECREMENT_SEARCH_INDEX':
+            if (ownerList !== null) {
+              throw Error(
+                `Can't update search index while owner list is active`
+              );
+            }
+
             if (searchResults.length === 0) return state;
 
             newSearchIndex =
@@ -101,6 +167,12 @@ function SearchAndSelectionController({ children }: Props) {
             };
 
           case 'INCREMENT_SEARCH_INDEX':
+            if (ownerList !== null) {
+              throw Error(
+                `Can't update search index while owner list is active`
+              );
+            }
+
             if (searchResults.length === 0) return state;
 
             newSearchIndex =
@@ -118,108 +190,245 @@ function SearchAndSelectionController({ children }: Props) {
               ),
             };
 
-          case 'REFINE_SEARCH_RESULTS':
+          case 'POP_TO_OWNER_LIST':
+            elementID = ((payload: any): number);
+            return {
+              ...state,
+              ownerList: calculateCurrentOwnerList(
+                store,
+                elementID,
+                elementID,
+                []
+              ),
+              ownerIDStack: ownerIDStack.slice(
+                0,
+                ownerIDStack.indexOf(elementID) + 1
+              ),
+              selectedElementIndex: null,
+              selectedElementID: null,
+            };
+
+          case 'PUSH_OWNER_LIST':
+            elementID = ((payload: any): number);
+            if (ownerIDStack.includes(elementID)) return state;
+
+            // Add this new owner, and fill in the owners above it as well.
+            const ownerIDsToConcat = [];
+            let currentOwnerID = elementID;
+            while (
+              currentOwnerID !== 0 &&
+              ownerIDStack[ownerIDStack.length - 1] !== currentOwnerID
+            ) {
+              ownerIDsToConcat.unshift(currentOwnerID);
+              currentOwnerID = ((store.getElementByID(
+                currentOwnerID
+              ): any): Element).ownerID;
+            }
+
+            return {
+              ...state,
+              ownerList: calculateCurrentOwnerList(
+                store,
+                elementID,
+                elementID,
+                []
+              ),
+              ownerIDStack: ownerIDStack.concat(ownerIDsToConcat),
+              selectedElementIndex: null,
+              selectedElementID: null,
+              searchIndex: null,
+              searchResults: [],
+              searchText: '',
+            };
+
+          case 'REFINE_AFTER_MUTATION':
             const [
               addedElementIDs,
               removedElementIDs,
             ] = ((payload: any): Array<Uint32Array>);
 
-            newSearchResults = searchResults;
+            newOwnerList = ownerList;
+            newOwnerIDStack = ownerIDStack;
             newSearchIndex = searchIndex;
+            newSearchResults = searchResults;
+            newSearchText = searchText;
+            newSelectedElementID = selectedElementID;
+            newSelectedElementIndex = selectedElementIndex;
 
-            removedElementIDs.forEach(id => {
-              // Prune this item from the search results.
-              const index = newSearchResults.indexOf(id);
-              if (index >= 0) {
-                newSearchResults = newSearchResults
-                  .slice(0, index)
-                  .concat(newSearchResults.slice(index + 1));
+            if (searchText !== '') {
+              removedElementIDs.forEach(id => {
+                // Prune this item from the search results.
+                const index = newSearchResults.indexOf(id);
+                if (index >= 0) {
+                  newSearchResults = newSearchResults
+                    .slice(0, index)
+                    .concat(newSearchResults.slice(index + 1));
 
-                // If the results are now empty, also deselect things.
-                if (newSearchResults.length === 0) {
-                  newSearchIndex = null;
-                } else if (
-                  ((newSearchIndex: any): number) >= newSearchResults.length
-                ) {
-                  newSearchIndex = newSearchResults.length - 1;
-                }
-              }
-            });
-
-            addedElementIDs.forEach(id => {
-              const { displayName } = ((store.getElementByID(
-                id
-              ): any): Element);
-
-              // Add this item to the search results if it matches.
-              const regExp = createRegExp(searchText);
-              if (displayName !== null && regExp.test(displayName)) {
-                const newElementIndex = ((store.getIndexOfElementID(
-                  id
-                ): any): number);
-
-                let foundMatch = false;
-                for (let index = 0; index < newSearchResults.length; index++) {
-                  const id = newSearchResults[index];
-                  if (
-                    newElementIndex <
-                    ((store.getIndexOfElementID(id): any): number)
+                  // If the results are now empty, also deselect things.
+                  if (newSearchResults.length === 0) {
+                    newSearchIndex = null;
+                  } else if (
+                    ((newSearchIndex: any): number) >= newSearchResults.length
                   ) {
-                    foundMatch = true;
-                    newSearchResults = newSearchResults
-                      .slice(0, index)
-                      .concat(id)
-                      .concat(newSearchResults.slice(index));
-                    break;
+                    newSearchIndex = newSearchResults.length - 1;
                   }
                 }
-                if (!foundMatch) {
-                  newSearchResults = newSearchResults.concat(id);
+              });
+
+              addedElementIDs.forEach(id => {
+                const { displayName } = ((store.getElementByID(
+                  id
+                ): any): Element);
+
+                // Add this item to the search results if it matches.
+                const regExp = createRegExp(searchText);
+                if (displayName !== null && regExp.test(displayName)) {
+                  const newElementIndex = ((store.getIndexOfElementID(
+                    id
+                  ): any): number);
+
+                  let foundMatch = false;
+                  for (
+                    let index = 0;
+                    index < newSearchResults.length;
+                    index++
+                  ) {
+                    const id = newSearchResults[index];
+                    if (
+                      newElementIndex <
+                      ((store.getIndexOfElementID(id): any): number)
+                    ) {
+                      foundMatch = true;
+                      newSearchResults = newSearchResults
+                        .slice(0, index)
+                        .concat(id)
+                        .concat(newSearchResults.slice(index));
+                      break;
+                    }
+                  }
+                  if (!foundMatch) {
+                    newSearchResults = newSearchResults.concat(id);
+                  }
+
+                  newSearchIndex = newSearchIndex === null ? 0 : newSearchIndex;
                 }
+              });
 
-                newSearchIndex = newSearchIndex === null ? 0 : newSearchIndex;
+              newSelectedElementID =
+                newSearchIndex !== null
+                  ? newSearchResults[newSearchIndex]
+                  : null;
+              newSelectedElementIndex =
+                newSelectedElementID !== null
+                  ? store.getIndexOfElementID(newSelectedElementID)
+                  : null;
+            }
+
+            // If an item in the owner stack has been removed from the tree, unwind it.
+            if (ownerIDStack.length > 0) {
+              let indexOfRemovedItem = -1;
+              for (let i = 0; i < ownerIDStack.length; i++) {
+                if (removedElementIDs.includes(ownerIDStack[i])) {
+                  indexOfRemovedItem = i;
+                  break;
+                }
               }
-            });
 
-            newSelectedElementID =
-              newSearchIndex !== null ? newSearchResults[newSearchIndex] : null;
+              if (indexOfRemovedItem >= 0) {
+                newOwnerIDStack = ownerIDStack.slice(0, indexOfRemovedItem);
+              }
+
+              if (newOwnerIDStack.length === 0) {
+                newOwnerList = null;
+              } else {
+                elementID = newOwnerIDStack[newOwnerIDStack.length - 1];
+
+                newOwnerList = calculateCurrentOwnerList(
+                  store,
+                  elementID,
+                  elementID,
+                  []
+                );
+
+                newSelectedElementIndex =
+                  newSelectedElementID !== null
+                    ? newOwnerList.indexOf(newSelectedElementID)
+                    : null;
+              }
+            }
 
             return {
               ...state,
+              ownerIDStack: newOwnerIDStack,
+              ownerList: newOwnerList,
               searchIndex: newSearchIndex,
               searchResults: newSearchResults,
               selectedElementID: newSelectedElementID,
-              selectedElementIndex:
-                newSelectedElementID !== null
-                  ? store.getIndexOfElementID(newSelectedElementID)
-                  : null,
+              selectedElementIndex: newSelectedElementIndex,
             };
 
           case 'SELECT_ELEMENT_WITH_ID':
             newSelectedElementID = ((payload: any): number | null);
+            newSelectedElementIndex = null;
+
+            if (newSelectedElementID !== null) {
+              if (ownerList !== null) {
+                newSelectedElementIndex = ownerList.indexOf(
+                  newSelectedElementID
+                );
+              } else {
+                newSelectedElementIndex = store.getIndexOfElementID(
+                  newSelectedElementID
+                );
+              }
+            }
+
+            const isInOwnerList =
+              newSelectedElementID !== null &&
+              ownerList !== null &&
+              ownerList.includes(newSelectedElementID);
 
             return {
               ...state,
+              ownerIDStack: isInOwnerList ? ownerIDStack : [],
+              ownerList: isInOwnerList ? ownerList : null,
               selectedElementID: newSelectedElementID,
-              selectedElementIndex:
-                newSelectedElementID !== null
-                  ? store.getIndexOfElementID(newSelectedElementID)
-                  : null,
+              selectedElementIndex: newSelectedElementIndex,
             };
 
-          case 'SELECT_ELEMENT_AT_INDEX':
-            newSearchIndex = ((payload: any): number | null);
+          case 'SELECT_NEXT_ELEMENT_IN_TREE':
+            if (selectedElementIndex === null) {
+              return state;
+            } else if (ownerList !== null) {
+              return updateSelectedElementIndexHelper(
+                selectedElementIndex + 1 < ownerList.length
+                  ? selectedElementIndex + 1
+                  : selectedElementIndex
+              );
+            } else {
+              return updateSelectedElementIndexHelper(
+                selectedElementIndex + 1 < store.numElements
+                  ? selectedElementIndex + 1
+                  : selectedElementIndex
+              );
+            }
 
-            const element =
-              newSearchIndex !== null
-                ? store.getElementAtIndex(newSearchIndex)
-                : null;
-
-            return {
-              ...state,
-              selectedElementID: element !== null ? element.id : null,
-              selectedElementIndex: newSearchIndex,
-            };
+          case 'SELECT_PREVIOUS_ELEMENT_IN_TREE':
+            if (selectedElementIndex === null) {
+              return state;
+            } else if (ownerList !== null) {
+              return updateSelectedElementIndexHelper(
+                selectedElementIndex > 0
+                  ? selectedElementIndex - 1
+                  : selectedElementIndex
+              );
+            } else {
+              return updateSelectedElementIndexHelper(
+                selectedElementIndex > 0
+                  ? selectedElementIndex - 1
+                  : selectedElementIndex
+              );
+            }
 
           case 'UPDATE_SEARCH_TEXT':
             newSearchIndex = searchIndex;
@@ -275,6 +484,8 @@ function SearchAndSelectionController({ children }: Props) {
   );
 
   const [state, dispatch] = useReducer(reducer, {
+    ownerIDStack: [],
+    ownerList: null,
     searchIndex: null,
     searchResults: [],
     searchText: '',
@@ -282,6 +493,10 @@ function SearchAndSelectionController({ children }: Props) {
     selectedElementIndex: null,
   });
 
+  const clearOwnerList = useCallback(
+    () => dispatch({ type: 'CLEAR_OWNER_LIST' }),
+    [dispatch]
+  );
   const decrementSearchIndex = useCallback(
     () => dispatch({ type: 'DECREMENT_SEARCH_INDEX' }),
     [dispatch]
@@ -290,14 +505,27 @@ function SearchAndSelectionController({ children }: Props) {
     () => dispatch({ type: 'INCREMENT_SEARCH_INDEX' }),
     [dispatch]
   );
+  const popToOwnerList = useCallback(
+    (elementID: number) =>
+      dispatch({ type: 'POP_TO_OWNER_LIST', payload: elementID }),
+    [dispatch]
+  );
+  const pushOwnerList = useCallback(
+    (elementID: number) =>
+      dispatch({ type: 'PUSH_OWNER_LIST', payload: elementID }),
+    [dispatch]
+  );
   const selectElementWithID = useCallback(
     (id: number | null) =>
       dispatch({ type: 'SELECT_ELEMENT_WITH_ID', payload: id }),
     [dispatch]
   );
-  const selectElementAtIndex = useCallback(
-    (index: number | null) =>
-      dispatch({ type: 'SELECT_ELEMENT_AT_INDEX', payload: index }),
+  const selectNextElementInTree = useCallback(
+    () => dispatch({ type: 'SELECT_NEXT_ELEMENT_IN_TREE' }),
+    [dispatch]
+  );
+  const selectPreviousElementInTree = useCallback(
+    () => dispatch({ type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE' }),
     [dispatch]
   );
   const updateSearchText = useCallback(
@@ -308,16 +536,22 @@ function SearchAndSelectionController({ children }: Props) {
 
   const value = useMemo(
     () => ({
+      ownerList: state.ownerList,
+      ownerIDStack: state.ownerIDStack,
       searchIndex: state.searchIndex,
       searchResults: state.searchResults,
       searchText: state.searchText,
       selectedElementID: state.selectedElementID,
       selectedElementIndex: state.selectedElementIndex,
 
+      clearOwnerList,
       decrementSearchIndex,
       incrementSearchIndex,
+      popToOwnerList,
+      pushOwnerList,
       selectElementWithID,
-      selectElementAtIndex,
+      selectNextElementInTree,
+      selectPreviousElementInTree,
       updateSearchText,
     }),
     [state]
@@ -329,12 +563,12 @@ function SearchAndSelectionController({ children }: Props) {
       addedElementIDs,
       removedElementIDs,
     ]: Array<Uint32Array>) => {
-      if (!state.searchText) {
+      if (!state.searchText && state.ownerList === null) {
         return;
       }
 
       dispatch({
-        type: 'REFINE_SEARCH_RESULTS',
+        type: 'REFINE_AFTER_MUTATION',
         payload: [addedElementIDs, removedElementIDs],
       });
     };
@@ -349,6 +583,33 @@ function SearchAndSelectionController({ children }: Props) {
       {children}
     </SearchAndSelectionContext.Provider>
   );
+}
+
+function calculateCurrentOwnerList(
+  store: Store,
+  rootOwnerID: number,
+  elementID: number,
+  ownerList: Array<number>
+): Array<number> {
+  if (elementID === rootOwnerID) {
+    ownerList.push(elementID);
+    const { children } = ((store.getElementByID(elementID): any): Element);
+    children.forEach(childID =>
+      calculateCurrentOwnerList(store, rootOwnerID, childID, ownerList)
+    );
+  } else {
+    const { children, ownerID } = ((store.getElementByID(
+      elementID
+    ): any): Element);
+    if (ownerID === rootOwnerID) {
+      ownerList.push(elementID);
+      children.forEach(childID =>
+        calculateCurrentOwnerList(store, rootOwnerID, childID, ownerList)
+      );
+    }
+  }
+
+  return ownerList;
 }
 
 function recursivelySearchTree(

@@ -1,6 +1,12 @@
 // @flow
 
-import React, { useContext, useLayoutEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useContext,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import { SearchAndSelectionContext } from './SearchAndSelectionContext';
 import { BridgeContext, StoreContext } from './context';
 import ButtonIcon from './ButtonIcon';
@@ -75,8 +81,6 @@ type InspectedElementViewProps = {|
 |};
 
 function InspectedElementView({ inspectedElement }: InspectedElementViewProps) {
-  const { selectElementWithID } = useContext(SearchAndSelectionContext);
-
   let { context, hooks, owners, props, state } = inspectedElement;
 
   return (
@@ -90,17 +94,31 @@ function InspectedElementView({ inspectedElement }: InspectedElementViewProps) {
         <div className={styles.Owners}>
           <div>owner stack</div>
           {owners.map(owner => (
-            <div
+            <OwnerView
               key={owner.id}
-              className={styles.Owner}
-              onClick={() => selectElementWithID(owner.id)}
-              title={owner.displayName}
-            >
-              {owner.displayName}
-            </div>
+              displayName={owner.displayName}
+              id={owner.id}
+            />
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function OwnerView({ displayName, id }: { displayName: string, id: number }) {
+  const { selectElementWithID } = useContext(SearchAndSelectionContext);
+
+  const handleClick = useCallback(() => selectElementWithID(id), [id]);
+
+  return (
+    <div
+      key={id}
+      className={styles.Owner}
+      onClick={handleClick}
+      title={displayName}
+    >
+      {displayName}
     </div>
   );
 }

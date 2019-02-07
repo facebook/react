@@ -1,0 +1,49 @@
+.OwnerStack {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.IconButton {
+  border: none;
+  background: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem;
+  cursor: pointer;
+  color: var(--color-button);
+  flex: 0 0 auto;
+}
+.IconButton:hover {
+  color: var(--color-button-hover);
+}
+.IconButton:disabled {
+  color: var(--color-dimmer);
+  cursor: default;
+}
+
+.Component,
+.FocusedComponent {
+  padding: 0.25rem;
+  margin-right: 0.5rem;
+  color: var(--color-component-name);
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-normal);
+}
+
+.Component {
+  cursor: pointer;
+  color: var(--color-component-name);
+  background: var(--color-dimmest);
+  border-radius: 0.125rem;
+}
+.Component:hover {
+  background: var(--color-dimmer);
+}
+
+.VRule {
+  height: 20px;
+  width: 1px;
+  background-color: var(--color-border);
+  margin-right: 0.5rem;
+}

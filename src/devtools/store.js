@@ -202,6 +202,7 @@ export default class Store extends EventEmitter {
     while (i < operations.length) {
       let id: number = ((null: any): number);
       let element: Element = ((null: any): Element);
+      let ownerID: number = 0;
       let parentID: number = ((null: any): number);
       let parentElement: Element = ((null: any): Element);
       let type: ElementType = ((null: any): ElementType);
@@ -229,6 +230,7 @@ export default class Store extends EventEmitter {
               displayName: null,
               id,
               key: null,
+              ownerID: 0,
               parentID: 0,
               type,
               weight: 0,
@@ -236,6 +238,9 @@ export default class Store extends EventEmitter {
 
             haveRootsChanged = true;
           } else {
+            ownerID = ((operations[i]: any): number);
+            i++;
+
             const displayNameLength = operations[i];
             i++;
             const displayName =
@@ -273,6 +278,7 @@ export default class Store extends EventEmitter {
                 displayName,
                 id,
                 key,
+                ownerID,
                 parentID: parentElement.id,
                 type,
                 weight: 1,

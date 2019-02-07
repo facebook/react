@@ -12,6 +12,7 @@
   --theme-light-component-name-inverted: #ffffff;
   --theme-light-dim: #777d88;
   --theme-light-dimmer: #cfd1d5;
+  --theme-light-dimmest: #eff0f1;
   --theme-light-jsx-arrow-brackets: #333333;
   --theme-light-jsx-arrow-brackets-inverted: rgba(255, 255, 255, 0.7);
   --theme-light-search-match: yellow;
@@ -34,6 +35,7 @@
   --color-component-name-inverted: var(--theme-light-component-name-inverted);
   --color-dim: var(--theme-light-dim);
   --color-dimmer: var(--theme-light-dimmer);
+  --color-dimmest: var(--theme-light-dimmest);
   --color-search-match: var(--theme-light-search-match);
   --color-search-match-current: var(--theme-light-search-match-current);
   --color-tree-jsx-arrow-brackets: var(--theme-light-jsx-arrow-brackets);
