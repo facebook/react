@@ -28,13 +28,17 @@ const debug = (methodName, ...args) => {
  * ContextProviders can subscribe to the Store for specific things they want to provide.
  */
 export default class Store extends EventEmitter {
-  // TODO Should items in this map be read-only/immutable for easier props comparison?
-  //      We currently mutate "children" and "weight" props.
+  // Map of ID to Element.
+  // Elements are read-only so they wokr well with memoization.
   _idToElement: Map<number, Element> = new Map();
 
   // Total number of visible elements (within all roots).
   // Used for windowing purposes.
   _numElements: number = 0;
+
+  // Incremented each time the store is mutated.
+  // This enables a passive effect to detect a mutation between render and commit phase.
+  _revision: number = 0;
 
   // This Array must be treated as immutable!
   // Passive effects will check it for changes between render and mount.
@@ -53,6 +57,10 @@ export default class Store extends EventEmitter {
 
   get numElements(): number {
     return this._numElements;
+  }
+
+  get revision(): number {
+    return this._revision;
   }
 
   get roots(): $ReadOnlyArray<number> {
@@ -275,7 +283,11 @@ export default class Store extends EventEmitter {
               // Maybe in the future we'll revisit this.
             } else {
               parentElement = ((this._idToElement.get(parentID): any): Element);
-              parentElement.children = parentElement.children.concat(id);
+
+              this._idToElement.set(parentID, {
+                ...parentElement,
+                children: parentElement.children.concat(id),
+              });
 
               const element: Element = {
                 children: [],
@@ -319,9 +331,12 @@ export default class Store extends EventEmitter {
             this._roots = this._roots.filter(rootID => rootID !== id);
             this._rootIDToRendererID.delete(id);
           } else {
-            parentElement.children = parentElement.children.filter(
-              childID => childID !== id
-            );
+            this._idToElement.set(parentID, {
+              ...parentElement,
+              children: parentElement.children.filter(
+                childID => childID !== id
+              ),
+            });
           }
 
           // Track removed items so search results can be updated
@@ -343,7 +358,6 @@ export default class Store extends EventEmitter {
           debug('Re-order', `fiber ${id} children ${children.join(',')}`);
 
           element = ((this._idToElement.get(id): any): Element);
-          element.children = Array.from(children);
 
           const prevWeight = element.weight;
           let childWeight = 0;
@@ -353,7 +367,12 @@ export default class Store extends EventEmitter {
             childWeight += child.weight;
           });
 
-          element.weight = childWeight + 1;
+          this._idToElement.set(id, {
+            ...element,
+            children: Array.from(children),
+            weight: childWeight + 1,
+          });
+
           weightDelta = childWeight + 1 - prevWeight;
           break;
         default:
@@ -369,6 +388,8 @@ export default class Store extends EventEmitter {
         ): any): Element);
       }
     }
+
+    this._revision++;
 
     if (haveRootsChanged) {
       this.emit('roots');

@@ -21,7 +21,7 @@ import React, {
   createContext,
   useCallback,
   useContext,
-  useLayoutEffect,
+  useEffect,
   useMemo,
   useReducer,
 } from 'react';
@@ -112,11 +112,11 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
         numElements = store.numElements;
 
         // If the currently-selected Element has been removed from the tree, update selection state.
-        if (selectedElementID !== null) {
-          const removedElementIDs = ((payload: any): Array<Uint32Array>)[1];
-          if (removedElementIDs.includes(((selectedElementID: any): number))) {
-            selectedElementIndex = null;
-          }
+        if (
+          selectedElementID !== null &&
+          store.getElementByID(selectedElementID) === null
+        ) {
+          selectedElementIndex = null;
         }
         break;
       case 'SELECT_ELEMENT_AT_INDEX':
@@ -330,12 +330,9 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
   switch (type) {
     case 'HANDLE_STORE_MUTATION':
       if (ownerStack.length > 0) {
-        // eslint-disable-next-line no-unused-vars
-        const [_, removedElementIDs] = ((payload: any): Array<Uint32Array>);
-
         let indexOfRemovedItem = -1;
         for (let i = 0; i < ownerStack.length; i++) {
-          if (removedElementIDs.includes(ownerStack[i])) {
+          if (store.getElementByID(ownerStack[i]) === null) {
             indexOfRemovedItem = i;
             break;
           }
@@ -467,6 +464,7 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
 // TODO Remove TreeContextController wrapper element once global ConsearchText.write API exists.
 function TreeContextController({ children }: {| children: React$Node |}) {
   const store = useContext(StoreContext);
+  const initialRevision = useMemo(() => store.revision, [store]);
 
   // This reducer is created inline because it needs access to the Store.
   // The store is mutable, but the Store itself is global and lives for the lifetime of the DevTools,
@@ -592,7 +590,7 @@ function TreeContextController({ children }: {| children: React$Node |}) {
   );
 
   // Mutations to the underlying tree may impact this context (e.g. search results, selection state).
-  useLayoutEffect(() => {
+  useEffect(() => {
     const handleStoreMutated = ([
       addedElementIDs,
       removedElementIDs,
@@ -603,13 +601,21 @@ function TreeContextController({ children }: {| children: React$Node |}) {
       });
     };
 
-    // TODO Even though we're using layout effect, concurrent rendering may cause us to miss a mutation.
-    // Should the store expose some sort of version number that we could check after mounting?
+    // Since this is a passive effect, the tree may have been mutated before our initial subscription.
+    if (store.revision !== initialRevision) {
+      // At the moment, we can treat this as a mutation.
+      // We don't know which Elements were newly added/removed, but that should be okay in this case.
+      // It would only impact the search state, which is unlikely to exist yet at this point.
+      dispatch({
+        type: 'HANDLE_STORE_MUTATION',
+        payload: [new Uint32Array(0), new Uint32Array(0)],
+      });
+    }
 
     store.addListener('mutated', handleStoreMutated);
 
     return () => store.removeListener('mutated', handleStoreMutated);
-  }, [state, store]);
+  }, [store]);
 
   return <TreeContext.Provider value={value}>{children}</TreeContext.Provider>;
 }
