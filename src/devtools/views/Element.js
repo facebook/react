@@ -4,7 +4,6 @@ import React, { Fragment, useCallback, useContext, useMemo } from 'react';
 import { ElementTypeClassOrFunction } from 'src/devtools/types';
 import { createRegExp } from './utils';
 import { TreeContext } from './TreeContext';
-import Icon from './Icon';
 
 import type { Element } from '../types';
 
@@ -25,14 +24,7 @@ export default function ElementView({ index, style }: Props) {
   } = useContext(TreeContext);
 
   const element = getElementAtIndex(index);
-  const {
-    children,
-    depth,
-    displayName,
-    id,
-    key,
-    type,
-  } = ((element: any): Element);
+  const { depth, displayName, id, key, type } = ((element: any): Element);
 
   const handleDoubleClick = useCallback(() => selectOwner(id), [id]);
 
@@ -53,15 +45,9 @@ export default function ElementView({ index, style }: Props) {
       onDoubleClick={handleDoubleClick}
       style={{
         ...style, // "style" comes from react-window
-        paddingLeft: `${1 + depth - baseDepth}rem`,
+        paddingLeft: `${depth - baseDepth}.25rem`,
       }}
     >
-      {children.length > 0 && (
-        <span className={styles.ArrowOpen}>
-          <Icon type="arrow" />
-        </span>
-      )}
-
       <span className={styles.Component}>
         <DisplayName displayName={displayName} id={id} />
         {key && (

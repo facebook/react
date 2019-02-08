@@ -30,18 +30,6 @@
   color: var(--color-tree-jsx-arrow-brackets);
 }
 
-.ArrowClosed,
-.ArrowOpen {
-  position: absolute;
-  margin-left: -1rem;
-  width: 1rem;
-  height: 1rem;
-  color: var(--color-arrow);
-}
-.ArrowOpen {
-  transform: rotate(90deg);
-}
-
 .Component {
   color: var(--color-component-name);
 }
