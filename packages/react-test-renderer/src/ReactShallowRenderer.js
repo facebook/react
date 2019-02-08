@@ -384,7 +384,7 @@ class ReactShallowRenderer {
         'an infinite loop.',
     );
 
-    if (componentIdentity === this._currentlyRenderingComponent) {
+    if (componentIdentity === this._previousComponentIdentity) {
       // This is a render phase update. Stash it in a lazily-created map of
       // queue -> linked list of updates. After this render pass, we'll restart
       // and apply the stashed updates on top of the work-in-progress hook.
@@ -407,6 +407,10 @@ class ReactShallowRenderer {
           lastRenderPhaseUpdate = lastRenderPhaseUpdate.next;
         }
         lastRenderPhaseUpdate.next = update;
+      }
+
+      if (!this._rendering) {
+        this.render(this._element, this._context);
       }
     } else {
       // This means an update has happened after the function component has
