@@ -1593,6 +1593,111 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
   });
 
+  describe('useImperativeHandle', () => {
+    it('does not update when deps are the same', () => {
+      const INCREMENT = 'INCREMENT';
+
+      function reducer(state, action) {
+        return action === INCREMENT ? state + 1 : state;
+      }
+
+      function Counter(props, ref) {
+        const [count, dispatch] = useReducer(reducer, 0);
+        useImperativeHandle(ref, () => ({count, dispatch}), []);
+        return <Text text={'Count: ' + count} />;
+      }
+
+      Counter = forwardRef(Counter);
+      const counter = React.createRef(null);
+      ReactNoop.render(<Counter ref={counter} />);
+      ReactNoop.flush();
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+      expect(counter.current.count).toBe(0);
+
+      act(() => {
+        counter.current.dispatch(INCREMENT);
+      });
+      ReactNoop.flush();
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+      // Intentionally not updated because of [] deps:
+      expect(counter.current.count).toBe(0);
+    });
+
+    // Regression test for https://github.com/facebook/react/issues/14782
+    it('automatically updates when deps are not specified', () => {
+      const INCREMENT = 'INCREMENT';
+
+      function reducer(state, action) {
+        return action === INCREMENT ? state + 1 : state;
+      }
+
+      function Counter(props, ref) {
+        const [count, dispatch] = useReducer(reducer, 0);
+        useImperativeHandle(ref, () => ({count, dispatch}));
+        return <Text text={'Count: ' + count} />;
+      }
+
+      Counter = forwardRef(Counter);
+      const counter = React.createRef(null);
+      ReactNoop.render(<Counter ref={counter} />);
+      ReactNoop.flush();
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+      expect(counter.current.count).toBe(0);
+
+      act(() => {
+        counter.current.dispatch(INCREMENT);
+      });
+      ReactNoop.flush();
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+      expect(counter.current.count).toBe(1);
+    });
+
+    it('updates when deps are different', () => {
+      const INCREMENT = 'INCREMENT';
+
+      function reducer(state, action) {
+        return action === INCREMENT ? state + 1 : state;
+      }
+
+      let totalRefUpdates = 0;
+      function Counter(props, ref) {
+        const [count, dispatch] = useReducer(reducer, 0);
+        useImperativeHandle(
+          ref,
+          () => {
+            totalRefUpdates++;
+            return {count, dispatch};
+          },
+          [count],
+        );
+        return <Text text={'Count: ' + count} />;
+      }
+
+      Counter = forwardRef(Counter);
+      const counter = React.createRef(null);
+      ReactNoop.render(<Counter ref={counter} />);
+      ReactNoop.flush();
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+      expect(counter.current.count).toBe(0);
+      expect(totalRefUpdates).toBe(1);
+
+      act(() => {
+        counter.current.dispatch(INCREMENT);
+      });
+      ReactNoop.flush();
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+      expect(counter.current.count).toBe(1);
+      expect(totalRefUpdates).toBe(2);
+
+      // Update that doesn't change the ref dependencies
+      ReactNoop.render(<Counter ref={counter} />);
+      ReactNoop.flush();
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+      expect(counter.current.count).toBe(1);
+      expect(totalRefUpdates).toBe(2); // Should not increase since last time
+    });
+  });
+
   describe('progressive enhancement (not supported)', () => {
     it('mount additional state', () => {
       let updateA;
