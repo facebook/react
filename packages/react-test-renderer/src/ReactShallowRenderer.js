@@ -414,8 +414,7 @@ class ReactShallowRenderer {
       }
     } else {
       // This means an update has happened after the function component has
-      // returned. On the server this is a no-op. In React Fiber, the update
-      // would be scheduled for a future render.
+      // returned from a different component.
     }
   }
 
