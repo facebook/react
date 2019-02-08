@@ -22,8 +22,8 @@
   --color-tree-jsx-arrow-brackets: var(
     --color-tree-jsx-arrow-brackets-inverted
   );
-  --color-attribute-name: #b3e5fc;
-  --color-attribute-value: #fff;
+  --color-attribute-name: var(--color-tree-node-hover);
+  --color-attribute-value: var(--color-component-name-inverted);
 }
 
 .DollarR {

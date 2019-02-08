@@ -31,16 +31,20 @@
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-normal);
   white-space: nowrap;
+  border-radius: 0.125rem;
 }
 
 .Component {
   cursor: pointer;
   color: var(--color-component-name);
-  background: var(--color-dimmest);
-  border-radius: 0.125rem;
 }
 .Component:hover {
-  background: var(--color-dimmer);
+  background-color: var(--color-tree-node-hover);
+}
+
+.FocusedComponent {
+  background-color: var(--color-tree-node-selected);
+  color: var(--color-component-name-inverted);
 }
 
 .VRule {
