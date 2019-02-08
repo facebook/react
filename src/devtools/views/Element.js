@@ -2,9 +2,8 @@
 
 import React, { Fragment, useCallback, useContext, useMemo } from 'react';
 import { ElementTypeClassOrFunction } from 'src/devtools/types';
-import { TreeContext } from './context';
 import { createRegExp } from './utils';
-import { SearchAndSelectionContext } from './SearchAndSelectionContext';
+import { TreeContext } from './TreeContext';
 import Icon from './Icon';
 
 import type { Element } from '../types';
@@ -17,33 +16,30 @@ type Props = {
 };
 
 export default function ElementView({ index, style }: Props) {
-  const { store } = useContext(TreeContext);
-
   const {
-    ownerList,
-    pushOwnerList,
+    baseDepth,
+    getElementAtIndex,
+    selectOwner,
     selectedElementID,
-    selectElementWithID,
-  } = useContext(SearchAndSelectionContext);
+    selectElementByID,
+  } = useContext(TreeContext);
 
-  const element =
-    ownerList !== null
-      ? ((store.getElementByID(ownerList[index]): any): Element)
-      : ((store.getElementAtIndex(index): any): Element);
-  const { children, depth, displayName, id, key, type } = element;
+  const element = getElementAtIndex(index);
+  const {
+    children,
+    depth,
+    displayName,
+    id,
+    key,
+    type,
+  } = ((element: any): Element);
 
-  let calculatedDepth = depth;
-  if (ownerList !== null) {
-    const owner = ((store.getElementByID(ownerList[0]): any): Element);
-    calculatedDepth = depth - owner.depth;
-  }
-
-  const handleDoubleClick = useCallback(() => pushOwnerList(id), [id]);
+  const handleDoubleClick = useCallback(() => selectOwner(id), [id]);
 
   // TODO Add click and key handlers for toggling element open/close state.
 
   const handleClick = useCallback(
-    ({ metaKey }) => selectElementWithID(metaKey ? null : id),
+    ({ metaKey }) => selectElementByID(metaKey ? null : id),
     [id]
   );
 
@@ -57,7 +53,7 @@ export default function ElementView({ index, style }: Props) {
       onDoubleClick={handleDoubleClick}
       style={{
         ...style, // "style" comes from react-window
-        paddingLeft: `${1 + calculatedDepth}rem`,
+        paddingLeft: `${1 + depth - baseDepth}rem`,
       }}
     >
       {children.length > 0 && (
@@ -86,9 +82,7 @@ type DisplayNameProps = {|
 |};
 
 function DisplayName({ displayName, id }: DisplayNameProps) {
-  const { searchIndex, searchResults, searchText } = useContext(
-    SearchAndSelectionContext
-  );
+  const { searchIndex, searchResults, searchText } = useContext(TreeContext);
   const isSearchResult = useMemo(() => {
     return searchResults.includes(id);
   }, [id, searchResults]);

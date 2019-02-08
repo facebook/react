@@ -9,12 +9,11 @@ import React, {
 } from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList } from 'react-window';
-import { SearchAndSelectionContext } from './SearchAndSelectionContext';
+import { TreeContext } from './TreeContext';
 import ButtonIcon from './ButtonIcon';
 import Element from './Element';
 import OwnersStack from './OwnersStack';
 import SearchInput from './SearchInput';
-import { TreeContext } from './context';
 
 import styles from './Tree.css';
 
@@ -22,13 +21,14 @@ type Props = {||};
 
 export default function Tree(props: Props) {
   const {
-    ownerIDStack,
-    ownerList,
+    baseDepth,
+    getElementAtIndex,
+    numElements,
+    ownerStack,
     selectedElementIndex,
     selectNextElementInTree,
     selectPreviousElementInTree,
-  } = useContext(SearchAndSelectionContext);
-  const treeContext = useContext(TreeContext);
+  } = useContext(TreeContext);
   const listRef = useRef<FixedSizeList<any>>();
 
   // Make sure a newly selected element is visible in the list.
@@ -66,22 +66,23 @@ export default function Tree(props: Props) {
     selectedElementIndex,
     selectNextElementInTree,
     selectPreviousElementInTree,
-    treeContext,
   ]);
-
-  const itemCount = ownerList !== null ? ownerList.length : treeContext.size;
 
   // Let react-window know to re-render any time the underlying tree data changes.
   // This includes the owner context, since it controls a filtered view of the tree.
-  const itemData = useMemo(() => ({ treeContext, ownerList }), [
-    treeContext,
-    ownerList,
-  ]);
+  const itemData = useMemo(
+    () => ({
+      baseDepth,
+      numElements,
+      getElementAtIndex,
+    }),
+    [baseDepth, numElements, getElementAtIndex]
+  );
 
   return (
     <div className={styles.Tree}>
       <div className={styles.SearchInput}>
-        {ownerIDStack.length > 0 ? <OwnersStack /> : <SearchInput />}
+        {ownerStack.length > 0 ? <OwnersStack /> : <SearchInput />}
         <button
           className={styles.IconButton}
           title="Select an element in the page to inspect it"
@@ -95,7 +96,7 @@ export default function Tree(props: Props) {
             <FixedSizeList
               className={styles.List}
               height={height}
-              itemCount={itemCount}
+              itemCount={numElements}
               itemData={itemData}
               itemSize={20}
               ref={listRef}

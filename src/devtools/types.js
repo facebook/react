@@ -1,7 +1,5 @@
 // @flow
 
-import Store from './Store';
-
 export const ElementTypeClassOrFunction = 1;
 export const ElementTypeContext = 2;
 export const ElementTypeForwardRef = 3;
@@ -66,14 +64,6 @@ export type InspectedElement = {|
 |};
 
 // TODO: Add profiling type
-
-// The frontend Store is mutable.
-// This wrapper object is recreated whenever the store's tree is mutated.
-// It is used to trigger a re-render of the virtualized Elements tree.
-export type TreeMetadataType = {|
-  size: number,
-  store: Store,
-|};
 
 export type DehydratedData = {|
   cleaned: Array<Array<string>>,

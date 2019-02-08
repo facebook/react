@@ -107,6 +107,11 @@ export default class Store extends EventEmitter {
     return ((currentElement: any): Element);
   }
 
+  getElementIDAtIndex(index: number): number | null {
+    const element: Element | null = this.getElementAtIndex(index);
+    return element === null ? null : element.id;
+  }
+
   getElementByID(id: number): Element | null {
     const element = this._idToElement.get(id);
 
@@ -286,9 +291,10 @@ export default class Store extends EventEmitter {
 
               this._idToElement.set(id, element);
 
-              // Track newly addewd items so search results can be updated
+              const oldAddedElementIDs = addedElementIDs;
               addedElementIDs = new Uint32Array(addedElementIDs.length + 1);
-              addedElementIDs[addedElementIDs.length - 1] = id;
+              addedElementIDs.set(oldAddedElementIDs);
+              addedElementIDs[oldAddedElementIDs.length] = id;
 
               weightDelta = 1;
             }
@@ -319,8 +325,10 @@ export default class Store extends EventEmitter {
           }
 
           // Track removed items so search results can be updated
+          const oldRemovededElementIDs = removedElementIDs;
           removedElementIDs = new Uint32Array(removedElementIDs.length + 1);
-          removedElementIDs[removedElementIDs.length - 1] = id;
+          removedElementIDs.set(oldRemovededElementIDs);
+          removedElementIDs[oldRemovededElementIDs.length] = id;
           break;
         case TREE_OPERATION_RESET_CHILDREN:
           id = ((operations[i + 1]: any): number);

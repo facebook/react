@@ -1,7 +1,7 @@
 // @flow
 
 import React, { useCallback, useContext, useEffect, useRef } from 'react';
-import { SearchAndSelectionContext } from './SearchAndSelectionContext';
+import { TreeContext } from './TreeContext';
 import ButtonIcon from './ButtonIcon';
 
 import styles from './SearchInput.css';
@@ -10,32 +10,32 @@ type Props = {||};
 
 export default function SearchInput(props: Props) {
   const {
-    decrementSearchIndex,
-    incrementSearchIndex,
+    goToNextSearchResult,
+    goToPreviousSearchResult,
     searchIndex,
     searchResults,
     searchText,
-    updateSearchText,
-  } = useContext(SearchAndSelectionContext);
+    setSearchText,
+  } = useContext(TreeContext);
 
   const inputRef = useRef();
 
   const handleTextChange = useCallback(
-    ({ currentTarget }) => updateSearchText(currentTarget.value),
-    [updateSearchText]
+    ({ currentTarget }) => setSearchText(currentTarget.value),
+    [setSearchText]
   );
 
   const resetSearch = useCallback(() => {
-    updateSearchText('');
-  }, [updateSearchText]);
+    setSearchText('');
+  }, [setSearchText]);
 
   const handleInputKeyPress = useCallback(
     ({ key }) => {
       if (key === 'Enter') {
-        incrementSearchIndex();
+        goToNextSearchResult();
       }
     },
-    [incrementSearchIndex]
+    [goToNextSearchResult]
   );
 
   // Auto-focus search input
@@ -74,14 +74,16 @@ export default function SearchInput(props: Props) {
       <div className={styles.LeftVRule} />
       <button
         className={styles.IconButton}
-        onClick={decrementSearchIndex}
+        disabled={!searchText}
+        onClick={goToPreviousSearchResult}
         title="Scroll to previous search result"
       >
         <ButtonIcon type="up" />
       </button>
       <button
         className={styles.IconButton}
-        onClick={incrementSearchIndex}
+        disabled={!searchText}
+        onClick={goToNextSearchResult}
         title="Scroll to next search result"
       >
         <ButtonIcon type="down" />

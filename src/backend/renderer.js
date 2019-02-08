@@ -546,7 +546,7 @@ export function attach(
       const { _debugOwner } = fiber;
 
       const ownerID =
-        _debugOwner !== null ? getFiberID(getPrimaryFiber(_debugOwner)) : 0;
+        _debugOwner != null ? getFiberID(getPrimaryFiber(_debugOwner)) : 0;
 
       let encodedDisplayName = ((null: any): Uint8Array);
       let encodedKey = ((null: any): Uint8Array);

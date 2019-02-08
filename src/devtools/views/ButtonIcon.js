@@ -8,6 +8,7 @@ type Props = {|
     | 'back'
     | 'close'
     | 'down'
+    | 'more'
     | 'search'
     | 'up'
     | 'view-dom'
@@ -25,6 +26,9 @@ export default function ButtonIcon({ type }: Props) {
       break;
     case 'down':
       pathData = PATH_DOWN;
+      break;
+    case 'more':
+      pathData = PATH_MORE;
       break;
     case 'search':
       pathData = PATH_SEARCH;
@@ -67,6 +71,13 @@ const PATH_CLOSE =
   'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z';
 
 const PATH_DOWN = 'M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z';
+
+const PATH_MORE = `
+  M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.97.89 1.66.89H22c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9
+  13.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm5 0c-.83
+  0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm5 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5
+  1.5.67 1.5 1.5-.67 1.5-1.5 1.5z
+`;
 
 const PATH_SEARCH = `
   M20.94 11c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46

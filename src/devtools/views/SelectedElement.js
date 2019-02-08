@@ -7,7 +7,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { SearchAndSelectionContext } from './SearchAndSelectionContext';
+import { TreeContext } from './TreeContext';
 import { BridgeContext, StoreContext } from './context';
 import ButtonIcon from './ButtonIcon';
 import HooksTree from './HooksTree';
@@ -21,7 +21,7 @@ import type { DehydratedData } from 'src/devtools/types';
 export type Props = {||};
 
 export default function SelectedElement(_: Props) {
-  const { selectedElementID } = useContext(SearchAndSelectionContext);
+  const { selectedElementID } = useContext(TreeContext);
   const store = useContext(StoreContext);
   const element =
     selectedElementID !== null ? store.getElementByID(selectedElementID) : null;
@@ -107,9 +107,9 @@ function InspectedElementView({ inspectedElement }: InspectedElementViewProps) {
 }
 
 function OwnerView({ displayName, id }: { displayName: string, id: number }) {
-  const { selectElementWithID } = useContext(SearchAndSelectionContext);
+  const { selectElementByID } = useContext(TreeContext);
 
-  const handleClick = useCallback(() => selectElementWithID(id), [id]);
+  const handleClick = useCallback(() => selectElementByID(id), [id]);
 
   return (
     <div

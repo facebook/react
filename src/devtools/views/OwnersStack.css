@@ -2,6 +2,7 @@
   flex: 1;
   display: flex;
   align-items: center;
+  overflow-x: auto;
 }
 
 .IconButton {
@@ -29,6 +30,7 @@
   color: var(--color-component-name);
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-normal);
+  white-space: nowrap;
 }
 
 .Component {

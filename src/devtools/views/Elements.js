@@ -1,11 +1,11 @@
 // @flow
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import Store from '../store';
 import Tree from './Tree';
-import { BridgeContext, StoreContext, TreeContext } from './context';
+import { BridgeContext, StoreContext } from './context';
 import SelectedElement from './SelectedElement';
-import { SearchAndSelectionController } from './SearchAndSelectionContext';
+import { TreeContextController } from './TreeContext';
 import styles from './Elements.css';
 
 import './root.css';
@@ -21,46 +21,20 @@ export type Props = {|
 export default function Elements({ bridge, browserName, themeName }: Props) {
   const store = useMemo<Store>(() => new Store(bridge), []);
 
-  const [treeContext, setTreeContext] = useState({
-    size: store.numElements,
-    store,
-  });
-
-  useEffect(() => {
-    const handler = () => {
-      setTreeContext({
-        size: store.numElements,
-        store,
-      });
-    };
-
-    // Check for changes that happened between async render and passive effect.
-    // (We had not yet subscribed to the store so we would have missed these.)
-    if (treeContext.size !== store.numElements) {
-      handler();
-    }
-
-    store.addListener('mutated', handler);
-
-    return () => store.removeListener('mutated', handler);
-  }, [store]);
-
   // TODO Flex wrappers below should be user resizable.
   return (
     <BridgeContext.Provider value={bridge}>
       <StoreContext.Provider value={store}>
-        <TreeContext.Provider value={treeContext}>
-          <SearchAndSelectionController>
-            <div className={styles.Elements}>
-              <div className={styles.TreeWrapper}>
-                <Tree />
-              </div>
-              <div className={styles.SelectedElementWrapper}>
-                <SelectedElement />
-              </div>
+        <TreeContextController>
+          <div className={styles.Elements}>
+            <div className={styles.TreeWrapper}>
+              <Tree />
             </div>
-          </SearchAndSelectionController>
-        </TreeContext.Provider>
+            <div className={styles.SelectedElementWrapper}>
+              <SelectedElement />
+            </div>
+          </div>
+        </TreeContextController>
       </StoreContext.Provider>
     </BridgeContext.Provider>
   );
