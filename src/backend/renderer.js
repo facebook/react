@@ -816,9 +816,9 @@ export function attach(
 
   // The naming is confusing.
   // They deal with opaque nodes (fibers), not elements.
-  function getNativeFromReactElement(fiber) {
+  function getNativeFromReactElement(id: number) {
     try {
-      const primaryFiber = fiber;
+      const primaryFiber = getPrimaryFiber(idToFiberMap.get(id));
       const hostInstance = renderer.findHostInstanceByFiber(primaryFiber);
       return hostInstance;
     } catch (err) {

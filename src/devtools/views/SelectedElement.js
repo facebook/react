@@ -22,11 +22,26 @@ export type Props = {||};
 
 export default function SelectedElement(_: Props) {
   const { selectedElementID } = useContext(TreeContext);
+  const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
   const element =
     selectedElementID !== null ? store.getElementByID(selectedElementID) : null;
 
   const inspectedElement = useInspectedElement(selectedElementID);
+
+  const handleClick = useCallback(() => {
+    if (element !== null && selectedElementID !== null) {
+      const rendererID =
+        store.getRendererIDForElement(selectedElementID) || null;
+      if (rendererID !== null) {
+        bridge.send('highlightElementInDOM', {
+          displayName: element.displayName,
+          id: selectedElementID,
+          rendererID,
+        });
+      }
+    }
+  }, [bridge, selectedElementID, store]);
 
   // TODO Make "view DOM" and "view source" buttons work
 
@@ -51,6 +66,7 @@ export default function SelectedElement(_: Props) {
 
         <button
           className={styles.IconButton}
+          onClick={handleClick}
           title="Highlight this element in the page"
         >
           <ButtonIcon type="view-dom" />
