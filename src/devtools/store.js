@@ -29,7 +29,7 @@ const debug = (methodName, ...args) => {
  */
 export default class Store extends EventEmitter {
   // Map of ID to Element.
-  // Elements are read-only so they wokr well with memoization.
+  // Elements are mutable (for now) to avoid excessive cloning during tree updates.
   _idToElement: Map<number, Element> = new Map();
 
   // Total number of visible elements (within all roots).
@@ -283,11 +283,7 @@ export default class Store extends EventEmitter {
               // Maybe in the future we'll revisit this.
             } else {
               parentElement = ((this._idToElement.get(parentID): any): Element);
-
-              this._idToElement.set(parentID, {
-                ...parentElement,
-                children: parentElement.children.concat(id),
-              });
+              parentElement.children = parentElement.children.concat(id);
 
               const element: Element = {
                 children: [],
@@ -331,12 +327,9 @@ export default class Store extends EventEmitter {
             this._roots = this._roots.filter(rootID => rootID !== id);
             this._rootIDToRendererID.delete(id);
           } else {
-            this._idToElement.set(parentID, {
-              ...parentElement,
-              children: parentElement.children.filter(
-                childID => childID !== id
-              ),
-            });
+            parentElement.children = parentElement.children.filter(
+              childID => childID !== id
+            );
           }
 
           // Track removed items so search results can be updated
@@ -358,6 +351,7 @@ export default class Store extends EventEmitter {
           debug('Re-order', `fiber ${id} children ${children.join(',')}`);
 
           element = ((this._idToElement.get(id): any): Element);
+          element.children = Array.from(children);
 
           const prevWeight = element.weight;
           let childWeight = 0;
@@ -367,11 +361,7 @@ export default class Store extends EventEmitter {
             childWeight += child.weight;
           });
 
-          this._idToElement.set(id, {
-            ...element,
-            children: Array.from(children),
-            weight: childWeight + 1,
-          });
+          element.weight = childWeight + 1;
 
           weightDelta = childWeight + 1 - prevWeight;
           break;

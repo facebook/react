@@ -18,7 +18,7 @@ export type ElementType = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 // Some of its information (e.g. id, type, displayName) come from the backend.
 // Other bits (e.g. weight and depth) are computed on the frontend for windowing and display purposes.
 // Elements are udpated on a push basis– meaning the backend pushes updates to the frontend when needed.
-export type Element = $ReadOnly<{|
+export type Element = {|
   id: number,
   parentID: number,
   children: Array<number>,
@@ -37,7 +37,7 @@ export type Element = $ReadOnly<{|
   // This property is used to quickly determine the total number of Elements,
   // and the Element at any given index (for windowing purposes).
   weight: number,
-|}>;
+|};
 
 export type Owner = {|
   displayName: string,
