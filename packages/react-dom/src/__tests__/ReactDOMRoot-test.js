@@ -410,7 +410,7 @@ describe('ReactDOMRoot', () => {
         // We care about this warning:
         'You are calling ReactDOM.hydrate() on a container that was previously ' +
           'passed to ReactDOM.unstable_createRoot(). This is not supported. ' +
-          'Did you mean to call root.render(element, {hydrate: true})?',
+          'Did you mean to call createRoot(container, {hydrate: true}).render(element)?',
         // This is more of a symptom but restructuring the code to avoid it isn't worth it:
         'Replacing React-rendered children with a new root component.',
       ],

@@ -661,7 +661,7 @@ const ReactDOM: Object = {
         !container._reactHasBeenPassedToCreateRootDEV,
         'You are calling ReactDOM.hydrate() on a container that was previously ' +
           'passed to ReactDOM.%s(). This is not supported. ' +
-          'Did you mean to call root.render(element, {hydrate: true})?',
+          'Did you mean to call createRoot(container, {hydrate: true}).render(element)?',
         enableStableConcurrentModeAPIs ? 'createRoot' : 'unstable_createRoot',
       );
     }
