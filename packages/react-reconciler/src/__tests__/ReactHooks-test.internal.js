@@ -669,6 +669,37 @@ describe('ReactHooks', () => {
     }).toThrow('is not a function');
   });
 
+  it('calling dispatch from useEffect clean-up function calls the reducer', () => {
+    const {useEffect, useReducer} = React;
+
+    let count = 0;
+
+    function reducer(state, action) {
+      count += 1;
+      return state;
+    }
+
+    function App(props) {
+      const [state, dispatch] = useReducer(reducer, {});
+
+      useEffect(
+        () => {
+          return () => {
+            dispatch();
+          };
+        },
+        [state],
+      );
+
+      return null;
+    }
+
+    const root1 = ReactTestRenderer.create(null);
+    root1.update(<App />);
+    root1.update(null);
+    expect(count).toEqual(1);
+  });
+
   it('warns for bad useImperativeHandle first arg', () => {
     const {useImperativeHandle} = React;
     function App() {
