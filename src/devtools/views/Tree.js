@@ -79,6 +79,10 @@ export default function Tree(props: Props) {
     [baseDepth, numElements, getElementAtIndex]
   );
 
+  const itemSize = parseInt(
+    getComputedStyle(document.body).getPropertyValue('--line-height-data')
+  );
+
   return (
     <div className={styles.Tree}>
       <div className={styles.SearchInput}>
@@ -98,7 +102,7 @@ export default function Tree(props: Props) {
               height={height}
               itemCount={numElements}
               itemData={itemData}
-              itemSize={20}
+              itemSize={itemSize}
               ref={listRef}
               width={width}
             >

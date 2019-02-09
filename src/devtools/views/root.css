@@ -45,8 +45,9 @@
   --color-tree-node-selected: var(--theme-light-tree-node-selected);
   --color-tree-node-hover: var(--theme-light-tree-node-hover);
 
-  --font-size-normal: 12px;
-  --line-height-data: 1.5rem;
+  --font-size-normal: 11px;
+  --font-size-large: 15px;
+  --line-height-data: 18px;
 
   /* GitHub.com system fonts */
   --font-family-monospace: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo,

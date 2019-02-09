@@ -5,7 +5,7 @@
   cursor: pointer;
   position: relative;
   white-space: nowrap;
-  line-height: 20px;
+  line-height: var(--line-height-data);
   display: flex;
   align-items: center;
 }

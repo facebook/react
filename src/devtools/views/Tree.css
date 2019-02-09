@@ -10,7 +10,7 @@
   flex: 0 0 42px;
   display: flex;
   align-items: center;
-  font-size: 16px;
+  font-size: var(--font-size-large);
   border-bottom: 1px solid var(--color-border);
   padding: 0.5rem;
 }
