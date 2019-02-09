@@ -293,7 +293,7 @@ export default {
         // hook functions.
         const codePathFunctionName = getFunctionName(codePathNode);
 
-        // This is a valid code path for React hooks if we are direcly in a React
+        // This is a valid code path for React hooks if we are directly in a React
         // function component or we are in a hook function.
         const isSomewhereInsideComponentOrHook = isInsideComponentOrHook(
           codePathNode,
@@ -422,7 +422,7 @@ export default {
               // false positives due to feature flag checks. We're less
               // sensitive to them in classes because hooks would produce
               // runtime errors in classes anyway, and because a use*()
-              // call in a class, if it works, is unambigously *not* a hook.
+              // call in a class, if it works, is unambiguously *not* a hook.
             } else if (codePathFunctionName) {
               // Custom message if we found an invalid function name.
               const message =
@@ -476,7 +476,7 @@ export default {
 };
 
 /**
- * Gets tbe static name of a function AST node. For function declarations it is
+ * Gets the static name of a function AST node. For function declarations it is
  * easy. For anonymous function expressions it is much harder. If you search for
  * `IsAnonymousFunctionDefinition()` in the ECMAScript spec you'll find places
  * where JS gives anonymous function expressions names. We roughly detect the
