@@ -321,7 +321,7 @@ function commitHookEffectList(
         // Unmount
         const destroy = effect.destroy;
         effect.destroy = undefined;
-        if (destroy !== undefined) {
+        if (typeof destroy === 'function') {
           destroy();
         }
       }
@@ -824,8 +824,7 @@ function commitContainer(finishedWork: Fiber) {
       const portalOrRoot: {
         containerInfo: Container,
         pendingChildren: ChildSet,
-      } =
-        finishedWork.stateNode;
+      } = finishedWork.stateNode;
       const {containerInfo, pendingChildren} = portalOrRoot;
       replaceContainerChildren(containerInfo, pendingChildren);
       return;
