@@ -140,7 +140,7 @@ describe('SchedulerDOM', () => {
         expect(callbackLog).toEqual(['A', 'B']);
       });
 
-      it("accepts callbacks betweeen animationFrame and postMessage and doesn't stall", () => {
+      it("accepts callbacks between animationFrame and postMessage and doesn't stall", () => {
         const {unstable_scheduleCallback: scheduleCallback} = Scheduler;
         const callbackLog = [];
         const callbackA = jest.fn(() => callbackLog.push('A'));

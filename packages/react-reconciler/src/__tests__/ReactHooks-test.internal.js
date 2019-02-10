@@ -352,7 +352,7 @@ describe('ReactHooks', () => {
     ]);
     expect(root).toMatchRenderedOutput('0 (light)');
 
-    // Updating the theme to the same value does't cause the consumers
+    // Updating the theme to the same value doesn't cause the consumers
     // to re-render.
     setTheme('light');
     expect(root).toFlushAndYield([]);

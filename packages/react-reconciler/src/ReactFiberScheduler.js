@@ -1455,7 +1455,7 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
       return;
     } else if (
       // There's no lower priority work, but we're rendering asynchronously.
-      // Synchronsouly attempt to render the same level one more time. This is
+      // Synchronously attempt to render the same level one more time. This is
       // similar to a suspend, but without a timeout because we're not waiting
       // for a promise to resolve.
       !root.didError &&
