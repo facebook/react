@@ -14,6 +14,7 @@ let ReactDOM;
 let ReactDOMServer;
 let ReactFeatureFlags;
 let Suspense;
+let act;
 
 describe('ReactDOMServerPartialHydration', () => {
   beforeEach(() => {
@@ -24,6 +25,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
+    act = require('react-dom/test-utils').act;
     ReactDOMServer = require('react-dom/server');
     Suspense = React.Suspense;
   });
@@ -127,12 +129,15 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    ReactDOM.hydrate(<App />, container);
+
+    act(() => {
+      ReactDOM.hydrate(<App />, container);
+    });
 
     expect(container.firstChild.firstChild.tagName).not.toBe('DIV');
 
     // In this state, we can still update the siblings.
-    showSibling();
+    act(() => showSibling());
 
     expect(container.firstChild.firstChild.tagName).toBe('DIV');
     expect(container.firstChild.firstChild.textContent).toBe('First');
@@ -181,12 +186,14 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    ReactDOM.hydrate(<App />, container);
+    act(() => {
+      ReactDOM.hydrate(<App />, container);
+    });
 
     expect(container.firstChild.children[1].textContent).toBe('Middle');
 
     // In this state, we can still delete the boundary.
-    hideMiddle();
+    act(() => hideMiddle());
 
     expect(container.firstChild.children[1].textContent).toBe('After');
   });
