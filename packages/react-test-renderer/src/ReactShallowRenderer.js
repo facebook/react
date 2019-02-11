@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import {isForwardRef} from 'react-is';
+import {isForwardRef, isMemo} from 'react-is';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import getComponentName from 'shared/getComponentName';
 import shallowEqual from 'shared/shallowEqual';
@@ -500,7 +500,8 @@ class ReactShallowRenderer {
       element.type,
     );
     invariant(
-      isForwardRef(element) || typeof element.type === 'function',
+      isForwardRef(element) ||
+        (typeof element.type === 'function' || isMemo(element.type)),
       'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
         'components, but the provided element type was `%s`.',
       Array.isArray(element.type)
@@ -514,22 +515,35 @@ class ReactShallowRenderer {
       return;
     }
 
+    const elementType = isMemo(element.type) ? element.type.type : element.type;
     this._rendering = true;
+
     this._element = element;
-    this._context = getMaskedContext(element.type.contextTypes, context);
+    this._context = getMaskedContext(elementType.contextTypes, context);
+
+    // Inner memo component props aren't currently validated in createElement.
+    if (isMemo(element.type) && elementType.propTypes) {
+      currentlyValidatingElement = element;
+      checkPropTypes(
+        elementType.propTypes,
+        element.props,
+        'prop',
+        getComponentName(elementType),
+        getStackAddendum,
+      );
+    }
 
     if (this._instance) {
       this._updateClassComponent(element, this._context);
     } else {
-      if (shouldConstruct(element.type)) {
-        this._instance = new element.type(
+      if (shouldConstruct(elementType)) {
+        this._instance = new elementType(
           element.props,
           this._context,
           this._updater,
         );
-
-        if (typeof element.type.getDerivedStateFromProps === 'function') {
-          const partialState = element.type.getDerivedStateFromProps.call(
+        if (typeof elementType.getDerivedStateFromProps === 'function') {
+          const partialState = elementType.getDerivedStateFromProps.call(
             null,
             element.props,
             this._instance.state,
@@ -543,14 +557,13 @@ class ReactShallowRenderer {
           }
         }
 
-        if (element.type.hasOwnProperty('contextTypes')) {
+        if (elementType.hasOwnProperty('contextTypes')) {
           currentlyValidatingElement = element;
-
           checkPropTypes(
-            element.type.contextTypes,
+            elementType.contextTypes,
             this._context,
             'context',
-            getName(element.type, this._instance),
+            getName(elementType, this._instance),
             getStackAddendum,
           );
 
@@ -561,12 +574,16 @@ class ReactShallowRenderer {
       } else {
         const prevDispatcher = ReactCurrentDispatcher.current;
         ReactCurrentDispatcher.current = this._dispatcher;
-        this._prepareToUseHooks(element.type);
+        this._prepareToUseHooks(elementType);
         try {
           if (isForwardRef(element)) {
-            this._rendered = element.type.render(element.props, element.ref);
+            this._rendered = elementType.render.call(
+              undefined,
+              element.props,
+              element.ref
+            );
           } else {
-            this._rendered = element.type.call(
+            this._rendered = elementType.call(
               undefined,
               element.props,
               this._context,
@@ -606,6 +623,7 @@ class ReactShallowRenderer {
     this._instance.props = element.props;
     this._instance.state = this._instance.state || null;
     this._instance.updater = this._updater;
+    const elementType = isMemo(element.type) ? element.type.type : element.type;
 
     if (
       typeof this._instance.UNSAFE_componentWillMount === 'function' ||
@@ -616,7 +634,7 @@ class ReactShallowRenderer {
       // In order to support react-lifecycles-compat polyfilled components,
       // Unsafe lifecycles should not be invoked for components using the new APIs.
       if (
-        typeof element.type.getDerivedStateFromProps !== 'function' &&
+        typeof elementType.getDerivedStateFromProps !== 'function' &&
         typeof this._instance.getSnapshotBeforeUpdate !== 'function'
       ) {
         if (typeof this._instance.componentWillMount === 'function') {
@@ -639,16 +657,17 @@ class ReactShallowRenderer {
   }
 
   _updateClassComponent(element: ReactElement, context: null | Object) {
-    const {props, type} = element;
+    const {props} = element;
 
     const oldState = this._instance.state || emptyObject;
     const oldProps = this._instance.props;
+    const elementType = isMemo(element.type) ? element.type.type : element.type;
 
     if (oldProps !== props) {
       // In order to support react-lifecycles-compat polyfilled components,
       // Unsafe lifecycles should not be invoked for components using the new APIs.
       if (
-        typeof element.type.getDerivedStateFromProps !== 'function' &&
+        typeof elementType.getDerivedStateFromProps !== 'function' &&
         typeof this._instance.getSnapshotBeforeUpdate !== 'function'
       ) {
         if (typeof this._instance.componentWillReceiveProps === 'function') {
@@ -664,8 +683,8 @@ class ReactShallowRenderer {
 
     // Read state after cWRP in case it calls setState
     let state = this._newState || oldState;
-    if (typeof type.getDerivedStateFromProps === 'function') {
-      const partialState = type.getDerivedStateFromProps.call(
+    if (typeof elementType.getDerivedStateFromProps === 'function') {
+      const partialState = elementType.getDerivedStateFromProps.call(
         null,
         props,
         state,
@@ -685,7 +704,10 @@ class ReactShallowRenderer {
         state,
         context,
       );
-    } else if (type.prototype && type.prototype.isPureReactComponent) {
+    } else if (
+      elementType.prototype &&
+      elementType.prototype.isPureReactComponent
+    ) {
       shouldUpdate =
         !shallowEqual(oldProps, props) || !shallowEqual(oldState, state);
     }
@@ -694,7 +716,7 @@ class ReactShallowRenderer {
       // In order to support react-lifecycles-compat polyfilled components,
       // Unsafe lifecycles should not be invoked for components using the new APIs.
       if (
-        typeof element.type.getDerivedStateFromProps !== 'function' &&
+        typeof elementType.getDerivedStateFromProps !== 'function' &&
         typeof this._instance.getSnapshotBeforeUpdate !== 'function'
       ) {
         if (typeof this._instance.componentWillUpdate === 'function') {
@@ -729,7 +751,8 @@ function getDisplayName(element) {
   } else if (typeof element.type === 'string') {
     return element.type;
   } else {
-    return element.type.displayName || element.type.name || 'Unknown';
+    const elementType = isMemo(element.type) ? element.type.type : element.type;
+    return elementType.displayName || elementType.name || 'Unknown';
   }
 }
 
