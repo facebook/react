@@ -905,7 +905,7 @@ function mountImperativeHandle<T>(
 
   // TODO: If deps are provided, should we skip comparing the ref itself?
   const effectDeps =
-    deps !== null && deps !== undefined ? deps.concat([ref]) : [ref];
+    deps !== null && deps !== undefined ? deps.concat([ref]) : null;
 
   return mountEffectImpl(
     UpdateEffect,
@@ -931,7 +931,7 @@ function updateImperativeHandle<T>(
 
   // TODO: If deps are provided, should we skip comparing the ref itself?
   const effectDeps =
-    deps !== null && deps !== undefined ? deps.concat([ref]) : [ref];
+    deps !== null && deps !== undefined ? deps.concat([ref]) : null;
 
   return updateEffectImpl(
     UpdateEffect,
