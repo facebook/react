@@ -516,8 +516,9 @@ class ReactShallowRenderer {
     }
 
     const elementType = isMemo(element.type) ? element.type.type : element.type;
-    this._rendering = true;
+    const previousElement = this._element;
 
+    this._rendering = true;
     this._element = element;
     this._context = getMaskedContext(elementType.contextTypes, context);
 
@@ -572,27 +573,40 @@ class ReactShallowRenderer {
 
         this._mountClassComponent(element, this._context);
       } else {
-        const prevDispatcher = ReactCurrentDispatcher.current;
-        ReactCurrentDispatcher.current = this._dispatcher;
-        this._prepareToUseHooks(elementType);
-        try {
-          if (isForwardRef(element)) {
-            this._rendered = elementType.render.call(
-              undefined,
-              element.props,
-              element.ref
-            );
-          } else {
-            this._rendered = elementType.call(
-              undefined,
-              element.props,
-              this._context,
-            );
+        let shouldRender = true;
+        if (
+          isMemo(element.type) &&
+          elementType === this._previousComponentIdentity
+        ) {
+          // This is a Memo component that is being re-rendered.
+          const compare = element.type.compare || shallowEqual;
+          if (compare(previousElement.props, element.props)) {
+            shouldRender = false;
           }
-        } finally {
-          ReactCurrentDispatcher.current = prevDispatcher;
         }
-        this._finishHooks(element, context);
+        if (shouldRender) {
+          const prevDispatcher = ReactCurrentDispatcher.current;
+          ReactCurrentDispatcher.current = this._dispatcher;
+          this._prepareToUseHooks(elementType);
+          try {
+            if (isForwardRef(element)) {
+              this._rendered = elementType.render.call(
+                undefined,
+                element.props,
+                element.ref
+              );
+            } else {
+              this._rendered = elementType.call(
+                undefined,
+                element.props,
+                this._context,
+              );
+            }
+          } finally {
+            ReactCurrentDispatcher.current = prevDispatcher;
+          }
+          this._finishHooks(element, context);
+        }
       }
     }
 

@@ -1456,11 +1456,57 @@ describe('ReactShallowRenderer', () => {
   });
 
   it('should handle memo', () => {
-    const Foo = () => {
-      return <div>Foo</div>;
-    };
+    function Foo() {
+      return <div>foo</div>;
+    }
     const MemoFoo = React.memo(Foo);
     const shallowRenderer = createRenderer();
     shallowRenderer.render(<MemoFoo />);
+  });
+
+  it('should enable React.memo to prevent a re-render', () => {
+    const logs = [];
+    const Foo = React.memo(({count}) => {
+      logs.push(`Foo: ${count}`);
+      return <div>{count}</div>;
+    });
+    const Bar = React.memo(({count}) => {
+      logs.push(`Bar: ${count}`);
+      return <div>{count}</div>;
+    });
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Foo count={1} />);
+    expect(logs).toEqual(['Foo: 1']);
+    logs.length = 0;
+    // Rendering the same element with the same props should be prevented
+    shallowRenderer.render(<Foo count={1} />);
+    expect(logs).toEqual([]);
+    // A different element with the same props should cause a re-render
+    shallowRenderer.render(<Bar count={1} />);
+    expect(logs).toEqual(['Bar: 1']);
+  });
+
+  it('should respect a custom comparison function with React.memo', () => {
+    let renderCount = 0;
+    function areEqual(props, nextProps) {
+      return props.foo === nextProps.foo;
+    }
+    const Foo = React.memo(({foo, bar}) => {
+      renderCount++;
+      return (
+        <div>
+          {foo} {bar}
+        </div>
+      );
+    }, areEqual);
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Foo foo={1} bar={1} />);
+    expect(renderCount).toBe(1);
+    // Change a prop that the comparison funciton ignores
+    shallowRenderer.render(<Foo foo={1} bar={2} />);
+    expect(renderCount).toBe(1);
+    shallowRenderer.render(<Foo foo={2} bar={2} />);
+    expect(renderCount).toBe(2);
   });
 });
