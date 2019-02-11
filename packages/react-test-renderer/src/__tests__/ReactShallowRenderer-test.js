@@ -1510,6 +1510,17 @@ describe('ReactShallowRenderer', () => {
     expect(renderCount).toBe(2);
   });
 
+  it('should not call the comparison function with React.memo on the initial render', () => {
+    const areEqual = jest.fn(() => false);
+    const SomeComponent = React.memo(({foo}) => {
+      return <div>{foo}</div>;
+    }, areEqual);
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<SomeComponent foo={1} />);
+    expect(areEqual).not.toHaveBeenCalled();
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>1</div>);
+  });
+
   it('should handle memo(forwardRef())', () => {
     const testRef = React.createRef();
     const SomeComponent = React.forwardRef((props, ref) => {

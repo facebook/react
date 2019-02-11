@@ -576,7 +576,8 @@ class ReactShallowRenderer {
         let shouldRender = true;
         if (
           isMemo(element.type) &&
-          elementType === this._previousComponentIdentity
+          elementType === this._previousComponentIdentity &&
+          previousElement !== null
         ) {
           // This is a Memo component that is being re-rendered.
           const compare = element.type.compare || shallowEqual;
