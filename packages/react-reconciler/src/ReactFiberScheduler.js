@@ -573,7 +573,7 @@ function commitPassiveEffects(root: FiberRoot, firstEffect: Fiber): void {
     requestWork(root, rootExpirationTime);
   }
   // Flush any sync work that was scheduled by effects
-  if (!isRendering) {
+  if (!isBatchingUpdates && !isRendering) {
     performSyncWork();
   }
 }
