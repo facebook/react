@@ -1509,4 +1509,49 @@ describe('ReactShallowRenderer', () => {
     shallowRenderer.render(<Foo foo={2} bar={2} />);
     expect(renderCount).toBe(2);
   });
+
+  it('should handle memo(forwardRef())', () => {
+    const testRef = React.createRef();
+    const SomeComponent = React.forwardRef((props, ref) => {
+      expect(ref).toEqual(testRef);
+      return (
+        <div>
+          <span className="child1" />
+          <span className="child2" />
+        </div>
+      );
+    });
+
+    const SomeMemoComponent = React.memo(SomeComponent);
+
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<SomeMemoComponent ref={testRef} />);
+
+    expect(result.type).toBe('div');
+    expect(result.props.children).toEqual([
+      <span className="child1" />,
+      <span className="child2" />,
+    ]);
+  });
+
+  it('should warn for forwardRef(memo())', () => {
+    const testRef = React.createRef();
+    const SomeMemoComponent = React.memo(({foo}) => {
+      return <div>{foo}</div>;
+    });
+    const shallowRenderer = createRenderer();
+    expect(() => {
+      expect(() => {
+        const SomeComponent = React.forwardRef(SomeMemoComponent);
+        shallowRenderer.render(<SomeComponent ref={testRef} />);
+      }).toWarnDev(
+        'Warning: forwardRef requires a render function but received ' +
+          'a `memo` component. Instead of forwardRef(memo(...)), use ' +
+          'memo(forwardRef(...))',
+        {withoutStack: true},
+      );
+    }).toThrowError(
+      'forwardRef requires a render function but was given object.',
+    );
+  });
 });

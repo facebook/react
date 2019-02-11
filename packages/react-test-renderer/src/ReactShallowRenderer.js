@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import {isForwardRef, isMemo} from 'react-is';
+import {isForwardRef, isMemo, ForwardRef} from 'react-is';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import getComponentName from 'shared/getComponentName';
 import shallowEqual from 'shared/shallowEqual';
@@ -589,18 +589,21 @@ class ReactShallowRenderer {
           ReactCurrentDispatcher.current = this._dispatcher;
           this._prepareToUseHooks(elementType);
           try {
-            if (isForwardRef(element)) {
+            // elementType could still be a ForwardRef if it was
+            // nested inside Memo.
+            if (elementType.$$typeof === ForwardRef) {
+              invariant(
+                typeof elementType.render === 'function',
+                'forwardRef requires a render function but was given %s.',
+                typeof elementType.render,
+              );
               this._rendered = elementType.render.call(
                 undefined,
                 element.props,
-                element.ref
+                element.ref,
               );
             } else {
-              this._rendered = elementType.call(
-                undefined,
-                element.props,
-                this._context,
-              );
+              this._rendered = elementType(element.props, this._context);
             }
           } finally {
             ReactCurrentDispatcher.current = prevDispatcher;

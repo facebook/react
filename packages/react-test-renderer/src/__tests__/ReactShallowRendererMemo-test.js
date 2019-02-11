@@ -221,28 +221,6 @@ describe('ReactShallowRendererMemo', () => {
     ]);
   });
 
-  it('should handle ForwardRef', () => {
-    const testRef = React.createRef();
-    const SomeComponent = React.forwardRef((props, ref) => {
-      expect(ref).toEqual(testRef);
-      return (
-        <div>
-          <span className="child1" />
-          <span className="child2" />
-        </div>
-      );
-    });
-
-    const shallowRenderer = createRenderer();
-    const result = shallowRenderer.render(<SomeComponent ref={testRef} />);
-
-    expect(result.type).toBe('div');
-    expect(result.props.children).toEqual([
-      <span className="child1" />,
-      <span className="child2" />,
-    ]);
-  });
-
   it('should handle Profiler', () => {
     const SomeComponent = React.memo(
       class SomeComponent extends React.Component {
