@@ -50,6 +50,7 @@ import {
   didNotFindHydratableTextInstance,
   didNotFindHydratableSuspenseInstance,
 } from './ReactFiberHostConfig';
+import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
 
 // The deepest Fiber on the stack involved in a hydration context.
 // This may have been an insertion or a hydration.
@@ -209,12 +210,14 @@ function tryHydrate(fiber, nextInstance) {
       return false;
     }
     case SuspenseComponent: {
-      const suspenseInstance = canHydrateSuspenseInstance(nextInstance);
-      if (suspenseInstance !== null) {
-        // Downgrade the tag to a dehydrated component until we've hydrated it.
-        fiber.tag = DehydratedSuspenseComponent;
-        fiber.stateNode = (suspenseInstance: SuspenseInstance);
-        return true;
+      if (enableSuspenseServerRenderer) {
+        const suspenseInstance = canHydrateSuspenseInstance(nextInstance);
+        if (suspenseInstance !== null) {
+          // Downgrade the tag to a dehydrated component until we've hydrated it.
+          fiber.tag = DehydratedSuspenseComponent;
+          fiber.stateNode = (suspenseInstance: SuspenseInstance);
+          return true;
+        }
       }
       return false;
     }

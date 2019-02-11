@@ -43,6 +43,7 @@ import {
 } from 'react-reconciler/src/ReactUpdateQueue';
 import {NoWork} from './ReactFiberExpirationTime';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
+import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
 
 const valueCursor: StackCursor<mixed> = createCursor(null);
 
@@ -251,7 +252,10 @@ export function propagateContextChange(
     } else if (fiber.tag === ContextProvider) {
       // Don't scan deeper if this is a matching provider
       nextFiber = fiber.type === workInProgress.type ? null : fiber.child;
-    } else if (fiber.tag === DehydratedSuspenseComponent) {
+    } else if (
+      enableSuspenseServerRenderer &&
+      fiber.tag === DehydratedSuspenseComponent
+    ) {
       // If a dehydrated suspense component is in this subtree, we don't know
       // if it will have any context consumers in it. The best we can do is
       // mark it as having updates on its children.

@@ -27,6 +27,7 @@ import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {
   enableSchedulerTracing,
   enableProfilerTimer,
+  enableSuspenseServerRenderer,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -1051,7 +1052,10 @@ function unmountHostComponents(current): void {
         );
       }
       // Don't visit children because we already visited them.
-    } else if (node.tag === DehydratedSuspenseComponent) {
+    } else if (
+      enableSuspenseServerRenderer &&
+      node.tag === DehydratedSuspenseComponent
+    ) {
       // Delete the dehydrated suspense boundary and all of its content.
       if (currentParentIsContainer) {
         clearSuspenseBoundaryFromContainer(

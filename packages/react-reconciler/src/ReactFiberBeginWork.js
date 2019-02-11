@@ -51,6 +51,7 @@ import {
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
   enableProfilerTimer,
+  enableSuspenseServerRenderer,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
@@ -1395,15 +1396,17 @@ function updateSuspenseComponent(
   // children -- we skip over the primary children entirely.
   let next;
   if (current === null) {
-    // If we're currently hydrating, try to hydrate this boundary.
-    tryToClaimNextHydratableInstance(workInProgress);
-    // This could've changed the tag if this was a dehydrated suspense component.
-    if (workInProgress.tag === DehydratedSuspenseComponent) {
-      return updateDehydratedSuspenseComponent(
-        null,
-        workInProgress,
-        renderExpirationTime,
-      );
+    if (enableSuspenseServerRenderer) {
+      // If we're currently hydrating, try to hydrate this boundary.
+      tryToClaimNextHydratableInstance(workInProgress);
+      // This could've changed the tag if this was a dehydrated suspense component.
+      if (workInProgress.tag === DehydratedSuspenseComponent) {
+        return updateDehydratedSuspenseComponent(
+          null,
+          workInProgress,
+          renderExpirationTime,
+        );
+      }
     }
 
     // This is the initial mount. This branch is pretty simple because there's
@@ -1972,11 +1975,13 @@ function beginWork(
           break;
         }
         case DehydratedSuspenseComponent: {
-          // We know that this component will suspend again because if it has
-          // been unsuspended it has committed as a regular Suspense component.
-          // If it needs to be retried, it should have work scheduled on it.
-          workInProgress.effectTag |= DidCapture;
-          break;
+          if (enableSuspenseServerRenderer) {
+            // We know that this component will suspend again because if it has
+            // been unsuspended it has committed as a regular Suspense component.
+            // If it needs to be retried, it should have work scheduled on it.
+            workInProgress.effectTag |= DidCapture;
+            break;
+          }
         }
       }
       return bailoutOnAlreadyFinishedWork(
@@ -2148,19 +2153,21 @@ function beginWork(
       );
     }
     case DehydratedSuspenseComponent: {
-      return updateDehydratedSuspenseComponent(
-        current,
-        workInProgress,
-        renderExpirationTime,
-      );
+      if (enableSuspenseServerRenderer) {
+        return updateDehydratedSuspenseComponent(
+          current,
+          workInProgress,
+          renderExpirationTime,
+        );
+      }
+      break;
     }
-    default:
-      invariant(
-        false,
-        'Unknown unit of work tag. This error is likely caused by a bug in ' +
-          'React. Please file an issue.',
-      );
   }
+  invariant(
+    false,
+    'Unknown unit of work tag. This error is likely caused by a bug in ' +
+      'React. Please file an issue.',
+  );
 }
 
 export {beginWork};

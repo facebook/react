@@ -74,6 +74,7 @@ import {
   unstable_scheduleCallback as scheduleDeferredCallback,
   unstable_cancelCallback as cancelDeferredCallback,
 } from 'scheduler';
+import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
 export {
   unstable_now as now,
   unstable_scheduleCallback as scheduleDeferredCallback,
@@ -562,7 +563,9 @@ export function getNextHydratableSibling(
     node &&
     node.nodeType !== ELEMENT_NODE &&
     node.nodeType !== TEXT_NODE &&
-    (node.nodeType !== COMMENT_NODE || (node: any).data !== SUSPENSE_START_DATA)
+    (!enableSuspenseServerRenderer ||
+      node.nodeType !== COMMENT_NODE ||
+      (node: any).data !== SUSPENSE_START_DATA)
   ) {
     node = node.nextSibling;
   }
@@ -578,7 +581,9 @@ export function getFirstHydratableChild(
     next &&
     next.nodeType !== ELEMENT_NODE &&
     next.nodeType !== TEXT_NODE &&
-    (next.nodeType !== COMMENT_NODE || (next: any).data !== SUSPENSE_START_DATA)
+    (!enableSuspenseServerRenderer ||
+      next.nodeType !== COMMENT_NODE ||
+      (next: any).data !== SUSPENSE_START_DATA)
   ) {
     next = next.nextSibling;
   }

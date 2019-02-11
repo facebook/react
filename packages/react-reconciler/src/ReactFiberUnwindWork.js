@@ -35,7 +35,10 @@ import {
   ShouldCapture,
   LifecycleEffectMask,
 } from 'shared/ReactSideEffectTags';
-import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
+import {
+  enableSchedulerTracing,
+  enableSuspenseServerRenderer,
+} from 'shared/ReactFeatureFlags';
 import {ConcurrentMode} from './ReactTypeOfMode';
 import {
   shouldCaptureSuspense,
@@ -240,7 +243,10 @@ function throwException(
             earliestTimeoutMs = timeoutPropMs;
           }
         }
-      } else if (workInProgress.tag === DehydratedSuspenseComponent) {
+      } else if (
+        enableSuspenseServerRenderer &&
+        workInProgress.tag === DehydratedSuspenseComponent
+      ) {
         // TODO
       }
       workInProgress = workInProgress.return;
@@ -351,6 +357,7 @@ function throwException(
         workInProgress.expirationTime = renderExpirationTime;
         return;
       } else if (
+        enableSuspenseServerRenderer &&
         workInProgress.tag === DehydratedSuspenseComponent &&
         shouldCaptureDehydratedSuspense(workInProgress)
       ) {
@@ -496,12 +503,14 @@ function unwindWork(
       return null;
     }
     case DehydratedSuspenseComponent: {
-      // TODO: popHydrationState
-      const effectTag = workInProgress.effectTag;
-      if (effectTag & ShouldCapture) {
-        workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
-        // Captured a suspense effect. Re-render the boundary.
-        return workInProgress;
+      if (enableSuspenseServerRenderer) {
+        // TODO: popHydrationState
+        const effectTag = workInProgress.effectTag;
+        if (effectTag & ShouldCapture) {
+          workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
+          // Captured a suspense effect. Re-render the boundary.
+          return workInProgress;
+        }
       }
       return null;
     }
