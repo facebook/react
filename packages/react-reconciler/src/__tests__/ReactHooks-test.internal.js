@@ -1366,4 +1366,35 @@ describe('ReactHooks', () => {
       ),
     ).toThrow('Hello');
   });
+
+  // Regression test for https://github.com/facebook/react/issues/14790
+  it('does not fire a false positive warning when suspending', async () => {
+    const {Suspense, useState, useRef} = React;
+
+    let wasSuspended = false;
+    function trySuspend() {
+      if (!wasSuspended) {
+        throw new Promise(resolve => {
+          wasSuspended = true;
+          resolve();
+        });
+      }
+    }
+
+    function Child() {
+      React.useState();
+      trySuspend();
+      return 'hello';
+    }
+
+    const Wrapper = React.memo(Child);
+    const root = ReactTestRenderer.create(
+      <Suspense fallback="loading">
+        <Wrapper />
+      </Suspense>,
+    );
+    expect(root).toMatchRenderedOutput('loading');
+    await Promise.resolve();
+    expect(root).toMatchRenderedOutput('hello');
+  });
 });
