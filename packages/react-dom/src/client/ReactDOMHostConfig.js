@@ -550,7 +550,7 @@ export function canHydrateSuspenseInstance(
     // Empty strings are not parsed by HTML so there won't be a correct match here.
     return null;
   }
-  // This has now been refined to a text node.
+  // This has now been refined to a suspense node.
   return ((instance: any): SuspenseInstance);
 }
 
