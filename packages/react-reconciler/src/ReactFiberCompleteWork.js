@@ -34,6 +34,7 @@ import {
   Mode,
   Profiler,
   SuspenseComponent,
+  DehydratedSuspenseComponent,
   MemoComponent,
   SimpleMemoComponent,
   LazyComponent,
@@ -80,8 +81,10 @@ import {popProvider} from './ReactFiberNewContext';
 import {
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,
+  skipPastDehydratedSuspenseInstance,
   popHydrationState,
 } from './ReactFiberHydrationContext';
+import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -759,6 +762,29 @@ function completeWork(
       const Component = workInProgress.type;
       if (isLegacyContextProvider(Component)) {
         popLegacyContext(workInProgress);
+      }
+      break;
+    }
+    case DehydratedSuspenseComponent: {
+      if (enableSuspenseServerRenderer) {
+        if (current === null) {
+          let wasHydrated = popHydrationState(workInProgress);
+          invariant(
+            wasHydrated,
+            'A dehydrated suspense component was completed without a hydrated node. ' +
+              'This is probably a bug in React.',
+          );
+          skipPastDehydratedSuspenseInstance(workInProgress);
+        } else if ((workInProgress.effectTag & DidCapture) === NoEffect) {
+          // This boundary did not suspend so it's now hydrated.
+          // To handle any future suspense cases, we're going to now upgrade it
+          // to a Suspense component. We detach it from the existing current fiber.
+          current.alternate = null;
+          workInProgress.alternate = null;
+          workInProgress.tag = SuspenseComponent;
+          workInProgress.memoizedState = null;
+          workInProgress.stateNode = null;
+        }
       }
       break;
     }

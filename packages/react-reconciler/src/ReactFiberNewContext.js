@@ -27,7 +27,11 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
-import {ContextProvider, ClassComponent} from 'shared/ReactWorkTags';
+import {
+  ContextProvider,
+  ClassComponent,
+  DehydratedSuspenseComponent,
+} from 'shared/ReactWorkTags';
 
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
@@ -39,6 +43,7 @@ import {
 } from 'react-reconciler/src/ReactUpdateQueue';
 import {NoWork} from './ReactFiberExpirationTime';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
+import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
 
 const valueCursor: StackCursor<mixed> = createCursor(null);
 
@@ -150,6 +155,37 @@ export function calculateChangedBits<T>(
   }
 }
 
+function scheduleWorkOnParentPath(
+  parent: Fiber | null,
+  renderExpirationTime: ExpirationTime,
+) {
+  // Update the child expiration time of all the ancestors, including
+  // the alternates.
+  let node = parent;
+  while (node !== null) {
+    let alternate = node.alternate;
+    if (node.childExpirationTime < renderExpirationTime) {
+      node.childExpirationTime = renderExpirationTime;
+      if (
+        alternate !== null &&
+        alternate.childExpirationTime < renderExpirationTime
+      ) {
+        alternate.childExpirationTime = renderExpirationTime;
+      }
+    } else if (
+      alternate !== null &&
+      alternate.childExpirationTime < renderExpirationTime
+    ) {
+      alternate.childExpirationTime = renderExpirationTime;
+    } else {
+      // Neither alternate was updated, which means the rest of the
+      // ancestor path already has sufficient priority.
+      break;
+    }
+    node = node.return;
+  }
+}
+
 export function propagateContextChange(
   workInProgress: Fiber,
   context: ReactContext<mixed>,
@@ -199,31 +235,8 @@ export function propagateContextChange(
           ) {
             alternate.expirationTime = renderExpirationTime;
           }
-          // Update the child expiration time of all the ancestors, including
-          // the alternates.
-          let node = fiber.return;
-          while (node !== null) {
-            alternate = node.alternate;
-            if (node.childExpirationTime < renderExpirationTime) {
-              node.childExpirationTime = renderExpirationTime;
-              if (
-                alternate !== null &&
-                alternate.childExpirationTime < renderExpirationTime
-              ) {
-                alternate.childExpirationTime = renderExpirationTime;
-              }
-            } else if (
-              alternate !== null &&
-              alternate.childExpirationTime < renderExpirationTime
-            ) {
-              alternate.childExpirationTime = renderExpirationTime;
-            } else {
-              // Neither alternate was updated, which means the rest of the
-              // ancestor path already has sufficient priority.
-              break;
-            }
-            node = node.return;
-          }
+
+          scheduleWorkOnParentPath(fiber.return, renderExpirationTime);
 
           // Mark the expiration time on the list, too.
           if (list.expirationTime < renderExpirationTime) {
@@ -239,6 +252,29 @@ export function propagateContextChange(
     } else if (fiber.tag === ContextProvider) {
       // Don't scan deeper if this is a matching provider
       nextFiber = fiber.type === workInProgress.type ? null : fiber.child;
+    } else if (
+      enableSuspenseServerRenderer &&
+      fiber.tag === DehydratedSuspenseComponent
+    ) {
+      // If a dehydrated suspense component is in this subtree, we don't know
+      // if it will have any context consumers in it. The best we can do is
+      // mark it as having updates on its children.
+      if (fiber.expirationTime < renderExpirationTime) {
+        fiber.expirationTime = renderExpirationTime;
+      }
+      let alternate = fiber.alternate;
+      if (
+        alternate !== null &&
+        alternate.expirationTime < renderExpirationTime
+      ) {
+        alternate.expirationTime = renderExpirationTime;
+      }
+      // This is intentionally passing this fiber as the parent
+      // because we want to schedule this fiber as having work
+      // on its children. We'll use the childExpirationTime on
+      // this fiber to indicate that a context has changed.
+      scheduleWorkOnParentPath(fiber, renderExpirationTime);
+      nextFiber = fiber.sibling;
     } else {
       // Traverse down.
       nextFiber = fiber.child;

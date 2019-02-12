@@ -12,11 +12,18 @@ import type {
   Instance,
   TextInstance,
   HydratableInstance,
+  SuspenseInstance,
   Container,
   HostContext,
 } from './ReactFiberHostConfig';
 
-import {HostComponent, HostText, HostRoot} from 'shared/ReactWorkTags';
+import {
+  HostComponent,
+  HostText,
+  HostRoot,
+  SuspenseComponent,
+  DehydratedSuspenseComponent,
+} from 'shared/ReactWorkTags';
 import {Deletion, Placement} from 'shared/ReactSideEffectTags';
 import invariant from 'shared/invariant';
 
@@ -26,19 +33,24 @@ import {
   supportsHydration,
   canHydrateInstance,
   canHydrateTextInstance,
+  canHydrateSuspenseInstance,
   getNextHydratableSibling,
   getFirstHydratableChild,
   hydrateInstance,
   hydrateTextInstance,
+  getNextHydratableInstanceAfterSuspenseInstance,
   didNotMatchHydratedContainerTextInstance,
   didNotMatchHydratedTextInstance,
   didNotHydrateContainerInstance,
   didNotHydrateInstance,
   didNotFindHydratableContainerInstance,
   didNotFindHydratableContainerTextInstance,
+  didNotFindHydratableContainerSuspenseInstance,
   didNotFindHydratableInstance,
   didNotFindHydratableTextInstance,
+  didNotFindHydratableSuspenseInstance,
 } from './ReactFiberHostConfig';
+import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
 
 // The deepest Fiber on the stack involved in a hydration context.
 // This may have been an insertion or a hydration.
@@ -54,6 +66,20 @@ function enterHydrationState(fiber: Fiber): boolean {
   const parentInstance = fiber.stateNode.containerInfo;
   nextHydratableInstance = getFirstHydratableChild(parentInstance);
   hydrationParentFiber = fiber;
+  isHydrating = true;
+  return true;
+}
+
+function reenterHydrationStateFromDehydratedSuspenseInstance(
+  fiber: Fiber,
+): boolean {
+  if (!supportsHydration) {
+    return false;
+  }
+
+  const suspenseInstance = fiber.stateNode;
+  nextHydratableInstance = getNextHydratableSibling(suspenseInstance);
+  popToNextHostParent(fiber);
   isHydrating = true;
   return true;
 }
@@ -115,6 +141,9 @@ function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
             const text = fiber.pendingProps;
             didNotFindHydratableContainerTextInstance(parentContainer, text);
             break;
+          case SuspenseComponent:
+            didNotFindHydratableContainerSuspenseInstance(parentContainer);
+            break;
         }
         break;
       }
@@ -141,6 +170,13 @@ function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
               parentProps,
               parentInstance,
               text,
+            );
+            break;
+          case SuspenseComponent:
+            didNotFindHydratableSuspenseInstance(
+              parentType,
+              parentProps,
+              parentInstance,
             );
             break;
         }
@@ -170,6 +206,18 @@ function tryHydrate(fiber, nextInstance) {
       if (textInstance !== null) {
         fiber.stateNode = (textInstance: TextInstance);
         return true;
+      }
+      return false;
+    }
+    case SuspenseComponent: {
+      if (enableSuspenseServerRenderer) {
+        const suspenseInstance = canHydrateSuspenseInstance(nextInstance);
+        if (suspenseInstance !== null) {
+          // Downgrade the tag to a dehydrated component until we've hydrated it.
+          fiber.tag = DehydratedSuspenseComponent;
+          fiber.stateNode = (suspenseInstance: SuspenseInstance);
+          return true;
+        }
       }
       return false;
     }
@@ -296,12 +344,32 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
   return shouldUpdate;
 }
 
+function skipPastDehydratedSuspenseInstance(fiber: Fiber): void {
+  if (!supportsHydration) {
+    invariant(
+      false,
+      'Expected skipPastDehydratedSuspenseInstance() to never be called. ' +
+        'This error is likely caused by a bug in React. Please file an issue.',
+    );
+  }
+  let suspenseInstance = fiber.stateNode;
+  invariant(
+    suspenseInstance,
+    'Expected to have a hydrated suspense instance. ' +
+      'This error is likely caused by a bug in React. Please file an issue.',
+  );
+  nextHydratableInstance = getNextHydratableInstanceAfterSuspenseInstance(
+    suspenseInstance,
+  );
+}
+
 function popToNextHostParent(fiber: Fiber): void {
   let parent = fiber.return;
   while (
     parent !== null &&
     parent.tag !== HostComponent &&
-    parent.tag !== HostRoot
+    parent.tag !== HostRoot &&
+    parent.tag !== DehydratedSuspenseComponent
   ) {
     parent = parent.return;
   }
@@ -365,9 +433,11 @@ function resetHydrationState(): void {
 
 export {
   enterHydrationState,
+  reenterHydrationStateFromDehydratedSuspenseInstance,
   resetHydrationState,
   tryToClaimNextHydratableInstance,
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,
+  skipPastDehydratedSuspenseInstance,
   popHydrationState,
 };

@@ -60,6 +60,8 @@ import {
   HostRoot,
   MemoComponent,
   SimpleMemoComponent,
+  SuspenseComponent,
+  DehydratedSuspenseComponent,
 } from 'shared/ReactWorkTags';
 import {
   enableSchedulerTracing,
@@ -67,6 +69,7 @@ import {
   enableUserTimingAPI,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   warnAboutDeprecatedLifecycles,
+  enableSuspenseServerRenderer,
 } from 'shared/ReactFeatureFlags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
@@ -1697,8 +1700,25 @@ function retryTimedOutBoundary(boundaryFiber: Fiber, thenable: Thenable) {
   // resolved, which means at least part of the tree was likely unblocked. Try
   // rendering again, at a new expiration time.
 
-  const retryCache: WeakSet<Thenable> | Set<Thenable> | null =
-    boundaryFiber.stateNode;
+  let retryCache: WeakSet<Thenable> | Set<Thenable> | null;
+  if (enableSuspenseServerRenderer) {
+    switch (boundaryFiber.tag) {
+      case SuspenseComponent:
+        retryCache = boundaryFiber.stateNode;
+        break;
+      case DehydratedSuspenseComponent:
+        retryCache = boundaryFiber.memoizedState;
+        break;
+      default:
+        invariant(
+          false,
+          'Pinged unknown suspense boundary type. ' +
+            'This is probably a bug in React.',
+        );
+    }
+  } else {
+    retryCache = boundaryFiber.stateNode;
+  }
   if (retryCache !== null) {
     // The thenable resolved, so we no longer need to memoize, because it will
     // never be thrown again.

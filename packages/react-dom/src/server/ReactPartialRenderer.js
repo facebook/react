@@ -956,9 +956,27 @@ class ReactDOMServerRenderer {
         }
         case REACT_SUSPENSE_TYPE: {
           if (enableSuspenseServerRenderer) {
-            const fallbackChildren = toArray(
-              ((nextChild: any): ReactElement).props.fallback,
-            );
+            const fallback = ((nextChild: any): ReactElement).props.fallback;
+            if (fallback === undefined) {
+              // If there is no fallback, then this just behaves as a fragment.
+              const nextChildren = toArray(
+                ((nextChild: any): ReactElement).props.children,
+              );
+              const frame: Frame = {
+                type: null,
+                domNamespace: parentNamespace,
+                children: nextChildren,
+                childIndex: 0,
+                context: context,
+                footer: '',
+              };
+              if (__DEV__) {
+                ((frame: any): FrameDev).debugElementStack = [];
+              }
+              this.stack.push(frame);
+              return '';
+            }
+            const fallbackChildren = toArray(fallback);
             const nextChildren = toArray(
               ((nextChild: any): ReactElement).props.children,
             );
@@ -978,7 +996,7 @@ class ReactDOMServerRenderer {
               children: nextChildren,
               childIndex: 0,
               context: context,
-              footer: '',
+              footer: '<!--/$-->',
             };
             if (__DEV__) {
               ((frame: any): FrameDev).debugElementStack = [];
@@ -986,7 +1004,7 @@ class ReactDOMServerRenderer {
             }
             this.stack.push(frame);
             this.suspenseDepth++;
-            return '';
+            return '<!--$-->';
           } else {
             invariant(false, 'ReactDOMServer does not yet support Suspense.');
           }
