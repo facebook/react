@@ -458,7 +458,7 @@ export function clearSuspenseBoundary(
         } else {
           depth--;
         }
-      } else if (nextNode === SUSPENSE_START_DATA) {
+      } else if (data === SUSPENSE_START_DATA) {
         depth++;
       }
     }
