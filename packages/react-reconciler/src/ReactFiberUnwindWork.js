@@ -359,7 +359,7 @@ function throwException(
       ) {
         attachPingListener(root, renderExpirationTime, thenable);
 
-        // Since we already have a current fiber, we can eagerly add a ping listener.
+        // Since we already have a current fiber, we can eagerly add a retry listener.
         let retryCache = workInProgress.memoizedState;
         if (retryCache === null) {
           retryCache = workInProgress.memoizedState = new PossiblyWeakSet();
