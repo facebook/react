@@ -44,6 +44,7 @@ const [
   restoreStateIfNeeded,
   dispatchEvent,
   runEventsInBatch,
+  setIsActingInDev,
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
 
 function Event(suffix) {}
@@ -390,7 +391,7 @@ const ReactTestUtils = {
   Simulate: null,
   SimulateNative: {},
 
-  act(callback: () => void): Thenable {
+  act(callback: () => void | Promise<void>): Thenable {
     if (actContainerElement === null) {
       // warn if we can't actually create the stub element
       if (__DEV__) {
@@ -406,43 +407,72 @@ const ReactTestUtils = {
       // then make it
       actContainerElement = document.createElement('div');
     }
+    let prevCtr = actingCtr.current;
+    actingCtr.current++;
+    setIsActingInDev(true);
 
     const result = ReactDOM.unstable_batchedUpdates(callback);
-    // note: keep these warning messages in sync with
-    // createReactNoop.js and ReactTestRenderer.js
-    if (__DEV__) {
-      if (result !== undefined) {
-        let addendum;
-        if (result !== null && typeof result.then === 'function') {
-          addendum =
-            '\n\nIt looks like you wrote ReactTestUtils.act(async () => ...), ' +
-            'or returned a Promise from the callback passed to it. ' +
-            'Putting asynchronous logic inside ReactTestUtils.act(...) is not supported.\n';
-        } else {
-          addendum = ' You returned: ' + result;
+    if (result && typeof result.then === 'function') {
+      // the returned thenable MUST be called
+      let called = false;
+      setImmediate(() => {
+        if (!called) {
+          warningWithoutStack(null, 'you need to await your async acts');
         }
-        warningWithoutStack(
-          false,
-          'The callback passed to ReactTestUtils.act(...) function must not return anything.%s',
-          addendum,
-        );
-      }
-    }
-    ReactDOM.render(<div />, actContainerElement);
-    // we want the user to not expect a return,
-    // but we want to warn if they use it like they can await on it.
-    return {
-      then() {
-        if (__DEV__) {
+      });
+      return {
+        then(fn) {
+          called = true;
+          result.then(() => {
+            ReactDOM.render(<div />, actContainerElement);
+            // await null?
+            if (actingCtr.current - 1 !== prevCtr) {
+              warningWithoutStack(
+                null,
+                'you did not resolve a previous act call',
+              );
+            }
+            actingCtr.current--;
+
+            if (actingCtr.current === 0) {
+              setIsActingInDev(false);
+            }
+            fn();
+          });
+        },
+      };
+    } else {
+      if (__DEV__) {
+        if (result !== undefined) {
           warningWithoutStack(
             false,
-            'Do not await the result of calling ReactTestUtils.act(...), it is not a Promise.',
+            'The callback passed to ReactTestUtils.act(...) function ' +
+              'must return undefined, or a Promise. You returned %s',
+            result,
           );
         }
-      },
-    };
+      }
+      ReactDOM.render(<div />, actContainerElement);
+      actingCtr.current--;
+
+      if (actingCtr.current === 0) {
+        setIsActingInDev(false);
+      }
+      return {
+        then() {
+          if (__DEV__) {
+            warningWithoutStack(
+              false,
+              'Do not await the result of calling ReactTestUtils.act(...) with sync logic, it is not a Promise.',
+            );
+          }
+        },
+      };
+    }
   },
 };
+
+let actingCtr = {current: 0};
 
 /**
  * Exports:

@@ -30,7 +30,6 @@ import {
 } from './ReactHookEffectTags';
 import {
   scheduleWork,
-  warnIfNotCurrentlyBatchingInDev,
   computeExpirationForFiber,
   flushPassiveEffects,
   requestCurrentTime,
@@ -1004,16 +1003,41 @@ function updateMemo<T>(
   return nextValue;
 }
 
+let isActing = false;
+
+export function warnIfNotCurrentlyActingInDev(fiber: Fiber): void {
+  if (__DEV__) {
+    if (isActing === false) {
+      warning(
+        false,
+        'An update to %s inside a test was not wrapped in act(...).\n\n' +
+          'When testing, code that causes React state updates should be wrapped into act(...):\n\n' +
+          'act(() => {\n' +
+          '  /* fire events that update state */\n' +
+          '});\n' +
+          '/* assert on the output */\n\n' +
+          "This ensures that you're testing the behavior the user would see in the browser." +
+          ' Learn more at https://fb.me/react-wrap-tests-with-act',
+        getComponentName(fiber.type),
+      );
+    }
+  }
+}
+
+export function setIsActingInDEV(toggle: boolean) {
+  isActing = toggle;
+}
+
 // in a test-like environment, we want to warn if dispatchAction()
 // is called outside of a batchedUpdates/TestUtils.act(...) call.
-let shouldWarnForUnbatchedSetState = false;
+let shouldWarnForUnactedSetState = false;
 
 if (__DEV__) {
   // jest isn't a 'global', it's just exposed to tests via a wrapped function
   // further, this isn't a test file, so flow doesn't recognize the symbol. So...
   // $FlowExpectedError - because requirements don't give a damn about your type sigs.
   if ('undefined' !== typeof jest) {
-    shouldWarnForUnbatchedSetState = true;
+    shouldWarnForUnactedSetState = true;
   }
 }
 
@@ -1136,8 +1160,8 @@ function dispatchAction<S, A>(
       }
     }
     if (__DEV__) {
-      if (shouldWarnForUnbatchedSetState === true) {
-        warnIfNotCurrentlyBatchingInDev(fiber);
+      if (shouldWarnForUnactedSetState === true) {
+        warnIfNotCurrentlyActingInDev(fiber);
       }
     }
     scheduleWork(fiber, expirationTime);

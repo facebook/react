@@ -649,7 +649,7 @@ describe('ReactTestUtils', () => {
           setToggle(1);
         }, 200);
         return () => clearTimeout(timeout);
-      });
+      }, []);
       return toggle;
     }
     const container = document.createElement('div');
@@ -658,7 +658,7 @@ describe('ReactTestUtils', () => {
       act(() => {
         ReactDOM.render(<App />, container);
       });
-      jest.advanceTimersByTime(250);
+      jest.runAllTimers();
     });
 
     expect(container.innerHTML).toBe('1');
@@ -667,13 +667,13 @@ describe('ReactTestUtils', () => {
   it('warns if you return a value inside act', () => {
     expect(() => act(() => null)).toWarnDev(
       [
-        'The callback passed to ReactTestUtils.act(...) function must not return anything.',
+        'The callback passed to ReactTestUtils.act(...) function must return undefined, or a Promise.',
       ],
       {withoutStack: true},
     );
     expect(() => act(() => 123)).toWarnDev(
       [
-        'The callback passed to ReactTestUtils.act(...) function must not return anything.',
+        'The callback passed to ReactTestUtils.act(...) function must return undefined, or a Promise.',
       ],
       {withoutStack: true},
     );
@@ -682,9 +682,45 @@ describe('ReactTestUtils', () => {
   it('warns if you try to await an .act call', () => {
     expect(act(() => {}).then).toWarnDev(
       [
-        'Do not await the result of calling ReactTestUtils.act(...), it is not a Promise.',
+        'Do not await the result of calling ReactTestUtils.act(...) with sync logic, it is not a Promise.',
       ],
       {withoutStack: true},
     );
   });
+  it('does the async stuff', async () => {
+    jest.useRealTimers();
+    function App() {
+      let [ctr, setCtr] = React.useState(0);
+      function doSomething() {
+        setTimeout(() => {
+          console.log('callingsdad');
+          setCtr(1);
+        }, 200);
+      }
+
+      React.useEffect(() => {
+        doSomething();
+      }, []);
+      return ctr;
+    }
+    const el = document.createElement('div');
+    await act(async () => {
+      act(() => {
+        ReactDOM.render(<App />, el);
+      });
+
+      await sleep(500);
+      expect(el.innerHTML).toBe('1')
+      
+    });
+    jest.useFakeTimers();
+  });
 });
+
+function sleep(period) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve(true);
+    }, period);
+  });
+}
