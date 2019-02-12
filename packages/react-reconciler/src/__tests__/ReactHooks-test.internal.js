@@ -1369,7 +1369,7 @@ describe('ReactHooks', () => {
 
   // Regression test for https://github.com/facebook/react/issues/14790
   it('does not fire a false positive warning when suspending memo', async () => {
-    const {Suspense, useState, useRef} = React;
+    const {Suspense, useState} = React;
 
     let wasSuspended = false;
     function trySuspend() {
@@ -1382,7 +1382,7 @@ describe('ReactHooks', () => {
     }
 
     function Child() {
-      React.useState();
+      useState();
       trySuspend();
       return 'hello';
     }
@@ -1400,7 +1400,7 @@ describe('ReactHooks', () => {
 
   // Regression test for https://github.com/facebook/react/issues/14790
   it('does not fire a false positive warning when suspending forwardRef', async () => {
-    const {Suspense, useState, useRef} = React;
+    const {Suspense, useState} = React;
 
     let wasSuspended = false;
     function trySuspend() {
@@ -1413,7 +1413,7 @@ describe('ReactHooks', () => {
     }
 
     function render(props, ref) {
-      React.useState();
+      useState();
       trySuspend();
       return 'hello';
     }
@@ -1431,7 +1431,7 @@ describe('ReactHooks', () => {
 
   // Regression test for https://github.com/facebook/react/issues/14790
   it('does not fire a false positive warning when suspending memo(forwardRef)', async () => {
-    const {Suspense, useState, useRef} = React;
+    const {Suspense, useState} = React;
 
     let wasSuspended = false;
     function trySuspend() {
@@ -1444,7 +1444,7 @@ describe('ReactHooks', () => {
     }
 
     function render(props, ref) {
-      React.useState();
+      useState();
       trySuspend();
       return 'hello';
     }
