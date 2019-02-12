@@ -541,9 +541,10 @@ describe('ReactContextValidator', () => {
 
   it('should warn if an invalid contextType is defined', () => {
     const Context = React.createContext();
-
+    // This tests that both Context.Consumer and Context.Provider
+    // warn about invalid contextType.
     class ComponentA extends React.Component {
-      static contextType = Context.Provider;
+      static contextType = Context.Consumer;
       render() {
         return <div />;
       }
@@ -560,7 +561,7 @@ describe('ReactContextValidator', () => {
     }).toWarnDev(
       'Warning: ComponentA defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
-        'Did you accidentally pass the Context.Provider instead?',
+        'Did you accidentally pass the Context.Consumer instead?',
       {withoutStack: true},
     );
 

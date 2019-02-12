@@ -515,8 +515,11 @@ function constructClassInstance(
   const contextType = ctor.contextType;
   if (typeof contextType === 'object' && contextType !== null) {
     if (__DEV__) {
+      const isContextConsumer =
+        contextType.$$typeof === REACT_CONTEXT_TYPE &&
+        contextType._context !== undefined;
       if (
-        contextType.$$typeof !== REACT_CONTEXT_TYPE &&
+        (contextType.$$typeof !== REACT_CONTEXT_TYPE || isContextConsumer) &&
         !didWarnAboutInvalidateContextType.has(ctor)
       ) {
         didWarnAboutInvalidateContextType.add(ctor);
@@ -524,8 +527,9 @@ function constructClassInstance(
           false,
           '%s defines an invalid contextType. ' +
             'contextType should point to the Context object returned by React.createContext(). ' +
-            'Did you accidentally pass the Context.Provider instead?',
+            'Did you accidentally pass the Context.%s instead?',
           getComponentName(ctor) || 'Component',
+          isContextConsumer ? 'Consumer' : 'Provider',
         );
       }
     }
