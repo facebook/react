@@ -12,7 +12,7 @@
 let React;
 let ReactDOM;
 
-describe('ReactDOMSuspensePlaceholder', () => {
+describe('ReactDOMHooks', () => {
   let container;
 
   beforeEach(() => {
@@ -27,6 +27,83 @@ describe('ReactDOMSuspensePlaceholder', () => {
 
   afterEach(() => {
     document.body.removeChild(container);
+  });
+
+  it('can ReactDOM.render() from useEffect', () => {
+    let container2 = document.createElement('div');
+    let container3 = document.createElement('div');
+
+    function Example1({n}) {
+      React.useEffect(() => {
+        ReactDOM.render(<Example2 n={n} />, container2);
+      });
+      return 1 * n;
+    }
+
+    function Example2({n}) {
+      React.useEffect(() => {
+        ReactDOM.render(<Example3 n={n} />, container3);
+      });
+      return 2 * n;
+    }
+
+    function Example3({n}) {
+      return 3 * n;
+    }
+
+    ReactDOM.render(<Example1 n={1} />, container);
+    expect(container.textContent).toBe('1');
+    expect(container2.textContent).toBe('');
+    expect(container3.textContent).toBe('');
+    jest.runAllTimers();
+    expect(container.textContent).toBe('1');
+    expect(container2.textContent).toBe('2');
+    expect(container3.textContent).toBe('3');
+
+    ReactDOM.render(<Example1 n={2} />, container);
+    expect(container.textContent).toBe('2');
+    expect(container2.textContent).toBe('2'); // Not flushed yet
+    expect(container3.textContent).toBe('3'); // Not flushed yet
+    jest.runAllTimers();
+    expect(container.textContent).toBe('2');
+    expect(container2.textContent).toBe('4');
+    expect(container3.textContent).toBe('6');
+  });
+
+  it('can batch synchronous work inside effects with other work', () => {
+    let otherContainer = document.createElement('div');
+
+    let calledA = false;
+    function A() {
+      calledA = true;
+      return 'A';
+    }
+
+    let calledB = false;
+    function B() {
+      calledB = true;
+      return 'B';
+    }
+
+    let _set;
+    function Foo() {
+      _set = React.useState(0)[1];
+      React.useEffect(() => {
+        ReactDOM.render(<A />, otherContainer);
+      });
+      return null;
+    }
+
+    ReactDOM.render(<Foo />, container);
+    ReactDOM.unstable_batchedUpdates(() => {
+      _set(0); // Forces the effect to be flushed
+      expect(otherContainer.textContent).toBe('');
+      ReactDOM.render(<B />, otherContainer);
+      expect(otherContainer.textContent).toBe('');
+    });
+    expect(otherContainer.textContent).toBe('B');
+    expect(calledA).toBe(false); // It was in a batch
+    expect(calledB).toBe(true);
   });
 
   it('should not bail out when an update is scheduled from within an event handler', () => {
