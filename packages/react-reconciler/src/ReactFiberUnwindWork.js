@@ -40,10 +40,7 @@ import {
   enableSuspenseServerRenderer,
 } from 'shared/ReactFeatureFlags';
 import {ConcurrentMode} from './ReactTypeOfMode';
-import {
-  shouldCaptureSuspense,
-  shouldCaptureDehydratedSuspense,
-} from './ReactFiberSuspenseComponent';
+import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent';
 
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -358,8 +355,7 @@ function throwException(
         return;
       } else if (
         enableSuspenseServerRenderer &&
-        workInProgress.tag === DehydratedSuspenseComponent &&
-        shouldCaptureDehydratedSuspense(workInProgress)
+        workInProgress.tag === DehydratedSuspenseComponent
       ) {
         attachPingListener(root, renderExpirationTime, thenable);
 

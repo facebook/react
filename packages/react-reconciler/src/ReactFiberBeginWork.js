@@ -1398,14 +1398,17 @@ function updateSuspenseComponent(
   if (current === null) {
     if (enableSuspenseServerRenderer) {
       // If we're currently hydrating, try to hydrate this boundary.
-      tryToClaimNextHydratableInstance(workInProgress);
-      // This could've changed the tag if this was a dehydrated suspense component.
-      if (workInProgress.tag === DehydratedSuspenseComponent) {
-        return updateDehydratedSuspenseComponent(
-          null,
-          workInProgress,
-          renderExpirationTime,
-        );
+      // But only if this has a fallback.
+      if (nextProps.fallback !== undefined) {
+        tryToClaimNextHydratableInstance(workInProgress);
+        // This could've changed the tag if this was a dehydrated suspense component.
+        if (workInProgress.tag === DehydratedSuspenseComponent) {
+          return updateDehydratedSuspenseComponent(
+            null,
+            workInProgress,
+            renderExpirationTime,
+          );
+        }
       }
     }
 

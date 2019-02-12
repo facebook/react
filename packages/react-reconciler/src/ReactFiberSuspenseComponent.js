@@ -24,13 +24,3 @@ export function shouldCaptureSuspense(workInProgress: Fiber): boolean {
   const nextState: SuspenseState | null = workInProgress.memoizedState;
   return nextState === null;
 }
-
-export function shouldCaptureDehydratedSuspense(
-  workInProgress: Fiber,
-): boolean {
-  // In order to capture, the Suspense component must have a fallback prop.
-  if (workInProgress.memoizedProps.fallback === undefined) {
-    return false;
-  }
-  return true;
-}
