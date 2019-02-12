@@ -240,12 +240,10 @@ function throwException(
             earliestTimeoutMs = timeoutPropMs;
           }
         }
-      } else if (
-        enableSuspenseServerRenderer &&
-        workInProgress.tag === DehydratedSuspenseComponent
-      ) {
-        // TODO
       }
+      // If there is a DehydratedSuspenseComponent we don't have to do anything because
+      // if something suspends inside it, we will simply leave that as dehydrated. It
+      // will never timeout.
       workInProgress = workInProgress.return;
     } while (workInProgress !== null);
 
