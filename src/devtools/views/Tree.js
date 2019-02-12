@@ -80,7 +80,10 @@ export default function Tree(props: Props) {
   );
 
   const itemSize = parseInt(
-    getComputedStyle(document.body).getPropertyValue('--line-height-data')
+    getComputedStyle((document.body: any)).getPropertyValue(
+      '--line-height-data'
+    ),
+    10
   );
 
   return (

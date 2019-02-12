@@ -3,6 +3,7 @@
 import React, { useCallback, useContext, useEffect, useRef } from 'react';
 import { TreeContext } from './TreeContext';
 import ButtonIcon from './ButtonIcon';
+import Icon from './Icon';
 
 import styles from './SearchInput.css';
 
@@ -57,6 +58,7 @@ export default function SearchInput(props: Props) {
 
   return (
     <div className={styles.SearchInput}>
+      <Icon className={styles.InputIcon} type="search" />
       <input
         className={styles.Input}
         onKeyPress={handleInputKeyPress}

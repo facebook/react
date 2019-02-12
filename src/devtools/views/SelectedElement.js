@@ -98,6 +98,7 @@ type InspectedElementViewProps = {|
 
 function InspectedElementView({ inspectedElement }: InspectedElementViewProps) {
   let { context, hooks, owners, props, state } = inspectedElement;
+  const { ownerStack } = useContext(TreeContext);
 
   return (
     <div className={styles.InspectedElement}>
@@ -106,7 +107,7 @@ function InspectedElementView({ inspectedElement }: InspectedElementViewProps) {
       <HooksTree hooksTree={hooks} />
       <InspectedElementTree label="context" data={context} />
 
-      {owners !== null && owners.length > 0 && (
+      {ownerStack.length === 0 && owners !== null && owners.length > 0 && (
         <div className={styles.Owners}>
           <div>owner stack</div>
           {owners.map(owner => (
@@ -182,9 +183,13 @@ function useInspectedElement(id: number | null): InspectedElement | null {
 
     const onInspectedElement = (inspectedElement: InspectedElement) => {
       if (inspectedElement && inspectedElement.id !== idRef.current) {
+        // TODO Is this sufficient? Will this leak?
         // Ignore bridge updates about previously selected elements.
         return;
       }
+
+      // TODO I think there's a bug here with stale state or a bad listener.
+      // "Cannot read property 'inspectElement' of undefined"
 
       if (inspectedElement !== null) {
         inspectedElement.context = hydrateHelper(inspectedElement.context);

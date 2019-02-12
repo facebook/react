@@ -327,6 +327,8 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
     _ownerFlatTree,
   } = state;
 
+  let prevSelectedElementIndex = selectedElementIndex;
+
   switch (type) {
     case 'HANDLE_STORE_MUTATION':
       if (ownerStack.length > 0) {
@@ -351,6 +353,7 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
     case 'RESET_OWNER_STACK':
       ownerStack = [];
       ownerStackIndex = null;
+      selectedElementIndex = null;
       _ownerFlatTree = null;
       break;
     case 'SELECT_ELEMENT_AT_INDEX':
@@ -383,6 +386,10 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
     case 'SELECT_OWNER':
       ownerStackIndex = ownerStack.indexOf(payload);
 
+      // Always force reset selection to be the top of the new owner tree.
+      selectedElementIndex = 0;
+      prevSelectedElementIndex = null;
+
       // If this owner is already in the current stack, just select it.
       // Otherwise, create a new stack.
       if (ownerStackIndex < 0) {
@@ -396,7 +403,6 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
           ): any): Element).ownerID;
         }
         ownerStackIndex = ownerStack.length - 1;
-        selectedElementIndex = 0;
 
         if (searchText !== '') {
           searchIndex = null;
@@ -435,7 +441,7 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
   }
 
   // Keep selected item ID and index in sync.
-  if (selectedElementIndex !== state.selectedElementIndex) {
+  if (selectedElementIndex !== prevSelectedElementIndex) {
     if (selectedElementIndex === null) {
       selectedElementID = null;
     } else if (_ownerFlatTree !== null) {
