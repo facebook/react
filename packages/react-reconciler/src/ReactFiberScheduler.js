@@ -575,6 +575,10 @@ function commitPassiveEffects(root: FiberRoot, firstEffect: Fiber): void {
   if (rootExpirationTime !== NoWork) {
     requestWork(root, rootExpirationTime);
   }
+  // Flush any sync work that was scheduled by effects
+  if (!isBatchingUpdates && !isRendering) {
+    performSyncWork();
+  }
 }
 
 function isAlreadyFailedLegacyErrorBoundary(instance: mixed): boolean {
