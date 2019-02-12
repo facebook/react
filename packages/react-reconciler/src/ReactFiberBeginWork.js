@@ -1632,11 +1632,7 @@ function updateDehydratedSuspenseComponent(
   // We use childExpirationTime to indicate that a child might depend on context, so if
   // any context has changed, we need to treat is as if the input might have changed.
   const hasContextChanged = current.childExpirationTime >= renderExpirationTime;
-
-  const prevProps = current.memoizedProps;
-  const nextProps = workInProgress.pendingProps;
-
-  if (hasContextChanged || prevProps !== nextProps) {
+  if (didReceiveUpdate || hasContextChanged) {
     // This boundary has changed since the first render. This means that we are now unable to
     // hydrate it. We might still be able to hydrate it using an earlier expiration time but
     // during this render we can't. Instead, we're going to delete the whole subtree and
@@ -1677,6 +1673,7 @@ function updateDehydratedSuspenseComponent(
   if ((workInProgress.effectTag & DidCapture) === NoEffect) {
     // This is the first attempt.
     reenterHydrationStateFromDehydratedSuspenseInstance(workInProgress);
+    const nextProps = workInProgress.pendingProps;
     const nextChildren = nextProps.children;
     workInProgress.child = mountChildFibers(
       workInProgress,
