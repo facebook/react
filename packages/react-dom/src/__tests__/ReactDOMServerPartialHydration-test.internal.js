@@ -634,4 +634,56 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
     expect(container.textContent).toBe('Hi');
   });
+
+  it('replaces the fallback with client content if it is not rendered by the server', async () => {
+    let suspend = false;
+    let promise = new Promise(resolvePromise => {});
+    let ref = React.createRef();
+
+    function Child() {
+      if (suspend) {
+        throw promise;
+      } else {
+        return 'Hello';
+      }
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <span ref={ref}>
+              <Child />
+            </span>
+          </Suspense>
+        </div>
+      );
+    }
+
+    // First we render the final HTML. With the streaming renderer
+    // this may have suspense points on the server but here we want
+    // to test the completed HTML. Don't suspend on the server.
+    suspend = true;
+    let finalHTML = ReactDOMServer.renderToString(<App />);
+    let container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    expect(container.getElementsByTagName('span').length).toBe(0);
+
+    // On the client we have the data available quickly for some reason.
+    suspend = false;
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    root.render(<App />);
+    expect(() => jest.runAllTimers()).toWarnDev(
+      [
+        'Warning: Did not expect server HTML to contain the text node "Loading..." in <div>.',
+      ],
+      {withoutStack: true},
+    );
+
+    expect(container.textContent).toBe('Hello');
+
+    let span = container.getElementsByTagName('span')[0];
+    expect(ref.current).toBe(span);
+  });
 });
