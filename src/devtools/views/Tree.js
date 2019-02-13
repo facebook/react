@@ -79,12 +79,13 @@ export default function Tree(props: Props) {
     [baseDepth, numElements, getElementAtIndex]
   );
 
-  const itemSize = parseInt(
-    getComputedStyle((document.body: any)).getPropertyValue(
-      '--line-height-data'
-    ),
-    10
-  );
+  const itemSize =
+    parseInt(
+      getComputedStyle((document.body: any)).getPropertyValue(
+        '--line-height-data'
+      ),
+      10
+    ) || 18;
 
   return (
     <div className={styles.Tree}>
