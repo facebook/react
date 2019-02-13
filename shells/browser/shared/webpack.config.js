@@ -1,8 +1,12 @@
 const { readFileSync } = require('fs');
 const { resolve } = require('path');
-const webpack = require('webpack');
+const { DefinePlugin } = require('webpack');
 
 const __DEV__ = process.env.NODE_ENV !== 'production';
+
+const DEVTOOLS_VERSION = JSON.parse(
+  readFileSync(resolve(__dirname, '../../../package.json'))
+).version;
 
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
@@ -24,11 +28,18 @@ module.exports = {
     },
   },
   plugins: __DEV__
-    ? []
+    ? [
+        new DefinePlugin({
+          'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
+        }),
+      ]
     : [
         // Ensure we get production React
-        new webpack.DefinePlugin({
+        new DefinePlugin({
           'process.env.NODE_ENV': '"production"',
+        }),
+        new DefinePlugin({
+          'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
         }),
       ],
   module: {

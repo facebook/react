@@ -29,7 +29,7 @@
   margin-right: 0.5rem;
   color: var(--color-component-name);
   font-family: var(--font-family-monospace);
-  font-size: var(--font-size-normal);
+  font-size: var(--font-size-monospace-normal);
   white-space: nowrap;
   border-radius: 0.125rem;
 }

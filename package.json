@@ -1,4 +1,5 @@
 {
+  "version": "4.0.0",
   "repository": "bvaughn/react-devtools-experimental",
   "license": "BSD-3-Clause",
   "private": true,

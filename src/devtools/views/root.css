@@ -1,4 +1,8 @@
 :root {
+  /**
+   * IMPORTANT: When new theme variables are added below– also add them to SettingsContext updateThemeVariables()
+   */
+
   /* Light theme */
   --theme-light-arrow: #777d88;
   --theme-light-arrow-inverted: #ffffff;
@@ -6,7 +10,7 @@
   --theme-light-attribute-value: #1a1aa6;
   --theme-light-background: #ffffff;
   --theme-light-button: #0088fa;
-  --theme-light-button-hover: #1a1aa6;
+  --theme-light-button-hover: #3578e5;
   --theme-light-color-border: #eeeeee;
   --theme-light-component-name: #8155cb;
   --theme-light-component-name-inverted: #ffffff;
@@ -41,35 +45,21 @@
   --theme-dark-search-match-current: #f7923b;
   --theme-dark-text-color: #ffffff;
   --theme-dark-tree-node-selected: #31a38d;
-  --theme-dark-tree-node-hover: #23272f;
+  --theme-dark-tree-node-hover: #303846;
 
-  /* "theme" values referenced by other stylesheets */
-  --color-arrow: var(--theme-light-arrow);
-  --color-arrow-inverted: var(--theme-light-arrow-inverted);
-  --color-attribute-name: var(--theme-light-attribute-name);
-  --color-attribute-value: var(--theme-light-attribute-value);
-  --color-background: var(--theme-light-background);
-  --color-border: var(--theme-light-color-border);
-  --color-button: var(--theme-light-button);
-  --color-button-hover: var(--theme-light-button-hover);
-  --color-component-name: var(--theme-light-component-name);
-  --color-component-name-inverted: var(--theme-light-component-name-inverted);
-  --color-dim: var(--theme-light-dim);
-  --color-dimmer: var(--theme-light-dimmer);
-  --color-dimmest: var(--theme-light-dimmest);
-  --color-search-match: var(--theme-light-search-match);
-  --color-search-match-current: var(--theme-light-search-match-current);
-  --color-text-color: var(--theme-light-text-color);
-  --color-tree-jsx-arrow-brackets: var(--theme-light-jsx-arrow-brackets);
-  --color-tree-jsx-arrow-brackets-inverted: var(
-    --theme-light-jsx-arrow-brackets-inverted
-  );
-  --color-tree-node-selected: var(--theme-light-tree-node-selected);
-  --color-tree-node-hover: var(--theme-light-tree-node-hover);
+  /* Compact density */
+  --compact-font-size-monospace-normal: 11px;
+  --compact-font-size-monospace-large: 15px;
+  --compact-font-size-sans-normal: 12px;
+  --compact-font-size-sans-large: 14px;
+  --compact-line-height-data: 18px;
 
-  --font-size-normal: 11px;
-  --font-size-large: 15px;
-  --line-height-data: 18px;
+  /* Comfortable density */
+  --comfortable-font-size-monospace-normal: 13px;
+  --comfortable-font-size-monospace-large: 17px;
+  --comfortable-font-size-sans-normal: 14px;
+  --comfortable-font-size-sans-large: 16px;
+  --comfortable-line-height-data: 22px;
 
   /* GitHub.com system fonts */
   --font-family-monospace: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo,

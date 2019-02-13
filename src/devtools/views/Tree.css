@@ -10,7 +10,6 @@
   flex: 0 0 42px;
   display: flex;
   align-items: center;
-  font-size: var(--font-size-large);
   border-bottom: 1px solid var(--color-border);
   padding: 0.5rem;
 }
@@ -24,7 +23,7 @@
 
 .List {
   font-family: var(--font-family-monospace);
-  font-size: var(--font-size-normal);
+  font-size: var(--font-size-monospace-normal);
   line-height: var(--line-height-data);
 }
 

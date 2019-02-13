@@ -6,7 +6,7 @@ import { createRoot } from 'react-dom';
 import Bridge from 'src/bridge';
 import { installHook } from 'src/hook';
 import { initDevTools } from 'src/devtools';
-import Elements from 'src/devtools/views/Elements';
+import DevTools from 'src/devtools/views/DevTools';
 
 const iframe = ((document.getElementById('target'): any): HTMLIFrameElement);
 
@@ -56,10 +56,11 @@ inject('./build/App.js', () => {
       const root = createRoot(container);
       const batch = root.createBatch();
       batch.render(
-        createElement(Elements, {
+        createElement(DevTools, {
           bridge,
           browserName: 'Chrome',
-          themeName: 'light',
+          browserTheme: 'light',
+          showTabBar: true,
         })
       );
       batch.then(() => {

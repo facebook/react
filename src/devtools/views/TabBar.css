@@ -1,0 +1,51 @@
+.TabBar {
+  display: flex;
+  align-items: center;
+  padding: 0 0.5rem;
+  background-color: var(--color-background);
+  color: var(--color-tree-node-selected);
+  border-top: 1px solid var(--color-border);
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-sans-large);
+}
+
+.Tabs {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  overflow-x: auto;
+}
+
+.TabCurrent,
+.Tab {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  user-select: none;
+}
+.TabCurrent:hover,
+.Tab:hover {
+  background-color: var(--color-tree-node-hover);
+}
+
+.TabCurrent {
+  border-bottom: 3px solid var(--color-tree-node-selected);
+}
+
+.Input {
+  width: 0;
+  margin: 0;
+  opacity: 0;
+}
+
+.Icon {
+  margin-right: 0.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+}

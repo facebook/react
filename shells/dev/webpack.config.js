@@ -1,5 +1,10 @@
 const { readFileSync } = require('fs');
 const { resolve } = require('path');
+const { DefinePlugin } = require('webpack');
+
+const DEVTOOLS_VERSION = JSON.parse(
+  readFileSync(resolve(__dirname, '../../package.json'))
+).version;
 
 // TODO Share Webpack configs like alias
 
@@ -20,6 +25,11 @@ module.exports = {
       src: resolve(__dirname, '../../src'),
     },
   },
+  plugins: [
+    new DefinePlugin({
+      'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
+    }),
+  ],
   module: {
     rules: [
       {

@@ -6,7 +6,7 @@
 
 .Input {
   flex: 1;
-  font-size: 1rem;
+  font-size: var(--font-size-sans-large);
   outline: none;
   border: none;
   background-color: var(--color-background);
@@ -22,7 +22,7 @@
 
 .IndexLabel {
   color: var(--color-dim);
-  font-size: var(--font-size-normal);
+  font-size: var(--font-size-sans-normal);
 }
 
 .IconButton {
