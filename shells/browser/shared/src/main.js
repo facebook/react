@@ -25,12 +25,14 @@ function createPanelIfReactLoaded() {
         });
       });
 
+      /* TODO Revisit this architecture; currently it causes duplicate agent/bridge traffic.
       chrome.devtools.panels.create(
         '⚛ Settings',
         '',
         'settings.html',
         panel => {}
       );
+      */
     }
   );
 }
