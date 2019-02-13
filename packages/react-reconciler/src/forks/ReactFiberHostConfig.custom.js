@@ -107,6 +107,10 @@ export const canHydrateInstance = $$$hostConfig.canHydrateInstance;
 export const canHydrateTextInstance = $$$hostConfig.canHydrateTextInstance;
 export const canHydrateSuspenseInstance =
   $$$hostConfig.canHydrateSuspenseInstance;
+export const isSuspenseInstancePending =
+  $$$hostConfig.isSuspenseInstancePending;
+export const isSuspenseInstanceFallback =
+  $$$hostConfig.isSuspenseInstanceFallback;
 export const getNextHydratableSibling = $$$hostConfig.getNextHydratableSibling;
 export const getFirstHydratableChild = $$$hostConfig.getFirstHydratableChild;
 export const hydrateInstance = $$$hostConfig.hydrateInstance;

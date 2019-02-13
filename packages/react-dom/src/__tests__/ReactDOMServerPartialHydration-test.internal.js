@@ -674,12 +674,7 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = false;
     let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
     root.render(<App />);
-    expect(() => jest.runAllTimers()).toWarnDev(
-      [
-        'Warning: Did not expect server HTML to contain the text node "Loading..." in <div>.',
-      ],
-      {withoutStack: true},
-    );
+    jest.runAllTimers();
 
     expect(container.textContent).toBe('Hello');
 

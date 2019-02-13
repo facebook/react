@@ -89,6 +89,8 @@ if (__DEV__) {
 
 const SUSPENSE_START_DATA = '$';
 const SUSPENSE_END_DATA = '/$';
+const SUSPENSE_PENDING_START_DATA = '$?';
+const SUSPENSE_FALLBACK_START_DATA = '$!';
 
 const STYLE = 'style';
 
@@ -458,7 +460,11 @@ export function clearSuspenseBoundary(
         } else {
           depth--;
         }
-      } else if (data === SUSPENSE_START_DATA) {
+      } else if (
+        data === SUSPENSE_START_DATA ||
+        data === SUSPENSE_PENDING_START_DATA ||
+        data === SUSPENSE_FALLBACK_START_DATA
+      ) {
         depth++;
       }
     }
@@ -554,6 +560,14 @@ export function canHydrateSuspenseInstance(
   return ((instance: any): SuspenseInstance);
 }
 
+export function isSuspenseInstancePending(instance: SuspenseInstance) {
+  return instance.data === SUSPENSE_PENDING_START_DATA;
+}
+
+export function isSuspenseInstanceFallback(instance: SuspenseInstance) {
+  return instance.data === SUSPENSE_FALLBACK_START_DATA;
+}
+
 export function getNextHydratableSibling(
   instance: HydratableInstance,
 ): null | HydratableInstance {
@@ -565,7 +579,9 @@ export function getNextHydratableSibling(
     node.nodeType !== TEXT_NODE &&
     (!enableSuspenseServerRenderer ||
       node.nodeType !== COMMENT_NODE ||
-      (node: any).data !== SUSPENSE_START_DATA)
+      ((node: any).data !== SUSPENSE_START_DATA &&
+        (node: any).data !== SUSPENSE_PENDING_START_DATA &&
+        (node: any).data !== SUSPENSE_FALLBACK_START_DATA))
   ) {
     node = node.nextSibling;
   }
@@ -583,7 +599,9 @@ export function getFirstHydratableChild(
     next.nodeType !== TEXT_NODE &&
     (!enableSuspenseServerRenderer ||
       next.nodeType !== COMMENT_NODE ||
-      (next: any).data !== SUSPENSE_START_DATA)
+      ((next: any).data !== SUSPENSE_START_DATA &&
+        (next: any).data !== SUSPENSE_FALLBACK_START_DATA &&
+        (next: any).data !== SUSPENSE_PENDING_START_DATA))
   ) {
     next = next.nextSibling;
   }
