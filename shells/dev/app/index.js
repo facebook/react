@@ -1,19 +1,33 @@
 /** @flow */
 
+// This test harness mounts each test app as a separate root to test multi-root applications.
+
 import { createElement } from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
-import App from './App';
+import ElementTypes from './ElementTypes';
+import InspectableElements from './InspectableElements';
+import ToDoList from './ToDoList';
 
-const container = document.createElement('div');
+const containers = [];
 
-((document.body: any): HTMLBodyElement).appendChild(container);
+function mountHelper(App) {
+  const container = document.createElement('div');
 
-function mountTestApp() {
+  ((document.body: any): HTMLBodyElement).appendChild(container);
+
+  containers.push(container);
+
   render(createElement(App), container);
 }
 
+function mountTestApp() {
+  mountHelper(ToDoList);
+  mountHelper(InspectableElements);
+  mountHelper(ElementTypes);
+}
+
 function unmountTestApp() {
-  unmountComponentAtNode(container);
+  containers.forEach(container => unmountComponentAtNode(container));
 }
 
 mountTestApp();

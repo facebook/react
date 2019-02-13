@@ -1,6 +1,6 @@
 // @flow
 
-import React, { Fragment } from 'react';
+import React from 'react';
 import Contexts from './Contexts';
 import CustomHooks from './CustomHooks';
 import NestedProps from './NestedProps';
@@ -10,11 +10,11 @@ import styles from './InspectableElements.css';
 
 export default function InspectableElements() {
   return (
-    <Fragment>
+    <div className={styles.App}>
       <div className={styles.Header}>Inspectable elements</div>
       <NestedProps />
       <Contexts />
       <CustomHooks />
-    </Fragment>
+    </div>
   );
 }

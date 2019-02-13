@@ -53,6 +53,7 @@ export default class Store extends EventEmitter {
     debug('constructor', 'subscribing to Bridge');
 
     bridge.on('operations', this.onBridgeOperations);
+    bridge.on('shutdown', this.onBridgeShutdown);
   }
 
   get numElements(): number {
@@ -85,7 +86,9 @@ export default class Store extends EventEmitter {
     for (let i = 0; i < this._roots.length; i++) {
       rootID = this._roots[i];
       root = ((this._idToElement.get(rootID): any): Element);
-      if (rootWeight + root.weight > index) {
+      if (root.children.length === 0) {
+        continue;
+      } else if (rootWeight + root.weight > index) {
         break;
       } else {
         rootWeight += root.weight;
@@ -96,7 +99,7 @@ export default class Store extends EventEmitter {
     // Skip over the root itself, because roots aren't visible in the Elements tree.
     const firstChildID = ((root: any): Element).children[0];
     let currentElement = ((this._idToElement.get(firstChildID): any): Element);
-    let currentWeight = 0;
+    let currentWeight = rootWeight;
     while (index !== currentWeight) {
       for (let i = 0; i < currentElement.children.length; i++) {
         const childID = currentElement.children[i];
@@ -234,22 +237,28 @@ export default class Store extends EventEmitter {
           if (parentID === 0) {
             debug('Add', `new root fiber ${id}`);
 
-            this._roots = this._roots.concat(id);
-            this._rootIDToRendererID.set(id, rendererID);
+            if (this._idToElement.has(id)) {
+              // The renderer's tree walking approach sometimes mounts the same Fiber twice with Suspense and Lazy.
+              // For now, we avoid adding it to the tree twice by checking if it's already been mounted.
+              // Maybe in the future we'll revisit this.
+            } else {
+              this._roots = this._roots.concat(id);
+              this._rootIDToRendererID.set(id, rendererID);
 
-            this._idToElement.set(id, {
-              children: [],
-              depth: -1,
-              displayName: null,
-              id,
-              key: null,
-              ownerID: 0,
-              parentID: 0,
-              type,
-              weight: 0,
-            });
+              this._idToElement.set(id, {
+                children: [],
+                depth: -1,
+                displayName: null,
+                id,
+                key: null,
+                ownerID: 0,
+                parentID: 0,
+                type,
+                weight: 0,
+              });
 
-            haveRootsChanged = true;
+              haveRootsChanged = true;
+            }
           } else {
             ownerID = ((operations[i]: any): number);
             i++;
@@ -313,8 +322,6 @@ export default class Store extends EventEmitter {
 
           i = i + 2;
 
-          debug('Remove', `fiber ${id} from tree`);
-
           element = ((this._idToElement.get(id): any): Element);
           parentID = element.parentID;
 
@@ -324,9 +331,13 @@ export default class Store extends EventEmitter {
 
           parentElement = ((this._idToElement.get(parentID): any): Element);
           if (parentElement == null) {
+            debug('Remove', `fiber ${id} root`);
+
             this._roots = this._roots.filter(rootID => rootID !== id);
             this._rootIDToRendererID.delete(id);
           } else {
+            debug('Remove', `fiber ${id} from parent ${parentID}`);
+
             parentElement.children = parentElement.children.filter(
               childID => childID !== id
             );
@@ -388,18 +399,42 @@ export default class Store extends EventEmitter {
     this.emit('mutated', [addedElementIDs, removedElementIDs]);
   };
 
+  onBridgeShutdown = () => {
+    debug('onBridgeShutdown', 'unsubscribing from Bridge');
+
+    bridge.off('operations', this.onBridgeOperations);
+    bridge.off('shutdown', this.onBridgeShutdown);
+  };
+
   // DEBUG
-  __printTree = (rootID: number) => {
-    const printElement = (id: number) => {
-      const element = ((this._idToElement.get(id): any): Element);
-      console.log(
-        `${'•'.repeat(element.depth)}${element.id}:${element.displayName ||
-          ''}${element.key ? `key:"${element.key}"` : ''} (${element.weight})`
-      );
-      element.children.forEach(printElement);
-    };
-    const root = ((this._idToElement.get(rootID): any): Element);
-    console.log('printing root:', rootID);
-    root.children.forEach(printElement);
+  __printTree = () => {
+    console.group('__printTree()');
+    this._roots.forEach((rootID: number) => {
+      const printElement = (id: number) => {
+        const element = ((this._idToElement.get(id): any): Element);
+        console.log(
+          `${'•'.repeat(element.depth)}${element.id}:${element.displayName ||
+            ''}${element.key ? `key:"${element.key}"` : ''} (${element.weight})`
+        );
+        element.children.forEach(printElement);
+      };
+      const root = ((this._idToElement.get(rootID): any): Element);
+      console.group(`${rootID}:root (${root.weight})`);
+      root.children.forEach(printElement);
+      console.groupEnd();
+    });
+    console.group(`List of ${this.numElements} elements`);
+    for (let i = 0; i < this.numElements; i++) {
+      //if (i === 4) { debugger }
+      const element = this.getElementAtIndex(i);
+      if (element != null) {
+        console.log(
+          `${'•'.repeat(element.depth)}${i}: ${element.displayName ||
+            'Unknown'}`
+        );
+      }
+    }
+    console.groupEnd();
+    console.groupEnd();
   };
 }

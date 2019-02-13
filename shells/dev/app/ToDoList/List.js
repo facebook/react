@@ -1,6 +1,6 @@
 // @flow
 
-import React, { Fragment, useCallback, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import ListItem from './ListItem';
 import styles from './List.css';
 
@@ -77,7 +77,7 @@ export default function List(props: Props) {
   );
 
   return (
-    <Fragment>
+    <div className={styles.App}>
       <div className={styles.Header}>List</div>
       <input
         type="text"
@@ -106,6 +106,6 @@ export default function List(props: Props) {
           />
         ))}
       </ul>
-    </Fragment>
+    </div>
   );
 }
