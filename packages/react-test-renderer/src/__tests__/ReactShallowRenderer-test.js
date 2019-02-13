@@ -1454,4 +1454,37 @@ describe('ReactShallowRenderer', () => {
     shallowRenderer.render(<Foo foo="bar" />);
     expect(logs).toEqual([undefined]);
   });
+
+  it('should work with updating a value from useState outside the render', () => {
+    function SomeComponent({defaultName}) {
+      const [name, updateName] = React.useState(defaultName);
+
+      return (
+        <div onClick={() => updateName('Dan')}>
+          <p>
+            Your name is: <span>{name}</span>
+          </p>
+        </div>
+      );
+    }
+
+    const shallowRenderer = createRenderer();
+    const element = <SomeComponent defaultName={'Dominic'} />;
+    const result = shallowRenderer.render(element);
+
+    expect(result.props.children).toEqual(
+      <p>
+        Your name is: <span>Dominic</span>
+      </p>,
+    );
+
+    result.props.onClick();
+    const updated = shallowRenderer.render(element);
+
+    expect(updated.props.children).toEqual(
+      <p>
+        Your name is: <span>Dan</span>
+      </p>,
+    );
+  });
 });

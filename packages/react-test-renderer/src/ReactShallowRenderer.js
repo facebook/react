@@ -195,6 +195,7 @@ class ReactShallowRenderer {
     this._currentlyRenderingComponent = null;
     this._numberOfReRenders = 0;
     this._previousComponentIdentity = null;
+    this._nonRenderPhaseUpdates = null;
   }
 
   _context: null | Object;
@@ -211,6 +212,7 @@ class ReactShallowRenderer {
   _currentlyRenderingComponent: null | Object;
   _previousComponentIdentity: null | Object;
   _renderPhaseUpdates: Map<UpdateQueue<any>, Update<any>> | null;
+  _nonRenderPhaseUpdates: Map<UpdateQueue<any>, Update<any>> | null;
   _isReRender: boolean;
   _didScheduleRenderPhaseUpdate: boolean;
   _numberOfReRenders: number;
@@ -221,6 +223,35 @@ class ReactShallowRenderer {
       'Hooks can only be called inside the body of a function component. ' +
         '(https://fb.me/react-invalid-hook-call)',
     );
+  }
+
+  _getPreviousStateAndDispatcherFromUpdateMap<S, A>(
+    workInProgressHook: Hook,
+    reducer: (S, A) => S,
+    updateMap: Map<UpdateQueue<any>, Update<any>>,
+    queue: UpdateQueue<A>,
+    dispatch: Dispatch<A>,
+  ): null | [S, Dispatch<A>] {
+    // Render phase updates are stored in a map of queue -> linked list
+    const firstRenderPhaseUpdate = updateMap.get(queue);
+    if (firstRenderPhaseUpdate !== undefined) {
+      updateMap.delete(queue);
+      let newState = workInProgressHook.memoizedState;
+      let update = firstRenderPhaseUpdate;
+      do {
+        // Process this render phase update. We don't have to check the
+        // priority because it will always be the same as the current
+        // render's.
+        const action = update.action;
+        newState = reducer(newState, action);
+        update = update.next;
+      } while (update !== null);
+
+      workInProgressHook.memoizedState = newState;
+
+      return [newState, dispatch];
+    }
+    return null;
   }
 
   _createDispatcher(): DispatcherType {
@@ -237,25 +268,34 @@ class ReactShallowRenderer {
         // current hook.
         const queue: UpdateQueue<A> = (workInProgressHook.queue: any);
         const dispatch: Dispatch<A> = (queue.dispatch: any);
+        if (this._nonRenderPhaseUpdates !== null) {
+          const possibleStateAndDispatcher = this._getPreviousStateAndDispatcherFromUpdateMap(
+            workInProgressHook,
+            reducer,
+            this._nonRenderPhaseUpdates,
+            queue,
+            dispatch,
+          );
+          if (possibleStateAndDispatcher !== null) {
+            this._nonRenderPhaseUpdates = null;
+            // A sanity check to ensure two maps do not get used together
+            invariant(
+              this._didScheduleRenderPhaseUpdate === false,
+              'non-render phase updates should never occur in combination with render phase updates',
+            );
+            return possibleStateAndDispatcher;
+          }
+        }
         if (this._renderPhaseUpdates !== null) {
-          // Render phase updates are stored in a map of queue -> linked list
-          const firstRenderPhaseUpdate = this._renderPhaseUpdates.get(queue);
-          if (firstRenderPhaseUpdate !== undefined) {
-            (this._renderPhaseUpdates: any).delete(queue);
-            let newState = workInProgressHook.memoizedState;
-            let update = firstRenderPhaseUpdate;
-            do {
-              // Process this render phase update. We don't have to check the
-              // priority because it will always be the same as the current
-              // render's.
-              const action = update.action;
-              newState = reducer(newState, action);
-              update = update.next;
-            } while (update !== null);
-
-            workInProgressHook.memoizedState = newState;
-
-            return [newState, dispatch];
+          const possibleStateAndDispatcher = this._getPreviousStateAndDispatcherFromUpdateMap(
+            workInProgressHook,
+            reducer,
+            this._renderPhaseUpdates,
+            queue,
+            dispatch,
+          );
+          if (possibleStateAndDispatcher !== null) {
+            return possibleStateAndDispatcher;
           }
         }
         return [workInProgressHook.memoizedState, dispatch];
@@ -383,35 +423,42 @@ class ReactShallowRenderer {
       'Too many re-renders. React limits the number of renders to prevent ' +
         'an infinite loop.',
     );
+    let updatesMap;
 
     if (componentIdentity === this._currentlyRenderingComponent) {
       // This is a render phase update. Stash it in a lazily-created map of
       // queue -> linked list of updates. After this render pass, we'll restart
       // and apply the stashed updates on top of the work-in-progress hook.
       this._didScheduleRenderPhaseUpdate = true;
+      if (this._renderPhaseUpdates === null) {
+        this._renderPhaseUpdates = new Map();
+      }
+      updatesMap = this._renderPhaseUpdates;
+    } else if (componentIdentity === this._previousComponentIdentity) {
+      // This means an update has happened after the function component has
+      // returned. As this is outside of the render phase, we need to schedule
+      // a new update for non-render phase.
+      if (this._nonRenderPhaseUpdates === null) {
+        this._nonRenderPhaseUpdates = new Map();
+      }
+      updatesMap = this._nonRenderPhaseUpdates;
+    }
+    if (updatesMap !== undefined) {
       const update: Update<A> = {
         action,
         next: null,
       };
-      let renderPhaseUpdates = this._renderPhaseUpdates;
-      if (renderPhaseUpdates === null) {
-        this._renderPhaseUpdates = renderPhaseUpdates = new Map();
-      }
-      const firstRenderPhaseUpdate = renderPhaseUpdates.get(queue);
-      if (firstRenderPhaseUpdate === undefined) {
-        renderPhaseUpdates.set(queue, update);
+      const firstUpdate = updatesMap.get(queue);
+      if (firstUpdate === undefined) {
+        updatesMap.set(queue, update);
       } else {
         // Append the update to the end of the list.
-        let lastRenderPhaseUpdate = firstRenderPhaseUpdate;
-        while (lastRenderPhaseUpdate.next !== null) {
-          lastRenderPhaseUpdate = lastRenderPhaseUpdate.next;
+        let lastUpdate = firstUpdate;
+        while (lastUpdate.next !== null) {
+          lastUpdate = lastUpdate.next;
         }
-        lastRenderPhaseUpdate.next = update;
+        lastUpdate.next = update;
       }
-    } else {
-      // This means an update has happened after the function component has
-      // returned. On the server this is a no-op. In React Fiber, the update
-      // would be scheduled for a future render.
     }
   }
 
@@ -446,6 +493,9 @@ class ReactShallowRenderer {
       this._previousComponentIdentity !== null &&
       this._previousComponentIdentity !== componentIdentity
     ) {
+      // Clear the update maps
+      this._renderPhaseUpdates = null;
+      this._nonRenderPhaseUpdates = null;
       this._firstWorkInProgressHook = null;
     }
     this._currentlyRenderingComponent = componentIdentity;
