@@ -14,7 +14,6 @@ import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.www';
 export const {
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
-  enableSuspenseServerRenderer,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   warnAboutDeprecatedLifecycles,
   disableInputAttributeSyncing,
@@ -34,6 +33,8 @@ export const enableSchedulerTracing = __PROFILE__;
 export const enableSchedulerDebugging = true;
 
 export const enableStableConcurrentModeAPIs = false;
+
+export const enableSuspenseServerRenderer = true;
 
 let refCount = 0;
 export function addUserTimingListener() {
