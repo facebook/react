@@ -24,6 +24,12 @@ export default function ElementView({ index, style }: Props) {
   } = useContext(TreeContext);
 
   const element = getElementAtIndex(index);
+
+  if (element == null) {
+    console.warn(`<ElementView> Could not find element at index ${index}`);
+    return null;
+  }
+
   const { depth, displayName, id, key, type } = ((element: any): Element);
 
   const handleDoubleClick = useCallback(() => selectOwner(id), [id]);

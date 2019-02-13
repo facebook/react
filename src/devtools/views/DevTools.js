@@ -10,16 +10,19 @@ import TabBar from './TabBar';
 import { SettingsContextController } from './SettingsContext';
 import { TreeContextController } from './TreeContext';
 
+import styles from './DevTools.css';
+
 import './root.css';
 
 import type { Bridge } from '../../types';
 
-export type TabID = 'elements' | 'profiler' | 'settings';
+export type BrowserName = 'Chrome' | 'Firefox';
 export type BrowserTheme = 'dark' | 'light';
+export type TabID = 'elements' | 'profiler' | 'settings';
 
 export type Props = {|
   bridge: Bridge,
-  browserName: string,
+  browserName: BrowserName,
   defaultTab?: TabID,
   browserTheme: BrowserTheme,
   showTabBar?: boolean,
@@ -54,8 +57,14 @@ export default function DevTools({
       <StoreContext.Provider value={store}>
         <SettingsContextController browserTheme={browserTheme}>
           <TreeContextController>
-            {showTabBar && <TabBar currentTab={tab} selectTab={setTab} />}
-            {tabElement}
+            <div className={styles.DevTools}>
+              {showTabBar && (
+                <div className={styles.TabBar}>
+                  <TabBar currentTab={tab} selectTab={setTab} />
+                </div>
+              )}
+              <div className={styles.TabContent}>{tabElement}</div>
+            </div>
           </TreeContextController>
         </SettingsContextController>
       </StoreContext.Provider>

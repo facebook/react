@@ -1,0 +1,17 @@
+.DevTools {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-background);
+  color: var(--color-text-color);
+}
+
+.TabBar {
+  flex: 0 0 auto;
+}
+
+.TabContent {
+  flex: 1 1 100%;
+  overflow: auto;
+}

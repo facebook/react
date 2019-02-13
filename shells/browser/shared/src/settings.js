@@ -10,25 +10,10 @@ import { getBrowserName, getBrowserTheme } from './utils';
 const container = ((document.getElementById('container'): any): HTMLElement);
 
 function injectAndInit() {
-  let disconnected = false;
-
-  const port = chrome.runtime.connect({
-    name: '' + chrome.devtools.inspectedWindow.tabId,
-  });
-  port.onDisconnect.addListener(() => {
-    disconnected = true;
-  });
-
+  // Noop Bridge for the Settings panel
   const bridge = new Bridge({
-    listen(fn) {
-      port.onMessage.addListener(message => fn(message));
-    },
-    send(event: string, payload: any, transferable?: Array<any>) {
-      if (disconnected) {
-        return;
-      }
-      port.postMessage({ event, payload }, transferable);
-    },
+    listen(fn) {},
+    send(event: string, payload: any, transferable?: Array<any>) {},
   });
 
   // Clear the "React not found" initial message before rendering.
@@ -40,7 +25,7 @@ function injectAndInit() {
       bridge,
       browserName: getBrowserName(),
       browserTheme: getBrowserTheme(),
-      defaultTab: 'elements',
+      defaultTab: 'settings',
       showTabBar: false,
     })
   );

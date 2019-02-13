@@ -17,6 +17,7 @@ module.exports = {
     inject: './src/GlobalHook.js',
     main: './src/main.js',
     panel: './src/panel.js',
+    settings: './src/settings.js',
   },
   output: {
     path: __dirname + '/build',

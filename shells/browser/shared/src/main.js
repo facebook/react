@@ -6,6 +6,7 @@ function createPanelIfReactLoaded() {
   if (panelCreated) {
     return;
   }
+
   chrome.devtools.inspectedWindow.eval(
     'window.__REACT_DEVTOOLS_GLOBAL_HOOK__ && window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers.size > 0',
     function(pageHasReact, err) {
@@ -15,9 +16,7 @@ function createPanelIfReactLoaded() {
 
       clearInterval(loadCheckInterval);
       panelCreated = true;
-      chrome.devtools.panels.create('⚛ Elements', '', 'panel.html', function(
-        panel
-      ) {
+      chrome.devtools.panels.create('⚛ Elements', '', 'panel.html', panel => {
         panel.onShown.addListener(function(window) {
           // TODO: When the user switches to the panel, check for an Elements tab selection.
         });
@@ -25,6 +24,13 @@ function createPanelIfReactLoaded() {
           // TODO: Stop highlighting and stuff.
         });
       });
+
+      chrome.devtools.panels.create(
+        '⚛ Settings',
+        '',
+        'settings.html',
+        panel => {}
+      );
     }
   );
 }

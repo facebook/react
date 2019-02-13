@@ -7,7 +7,13 @@ const { join } = require('path');
 
 // These files are copied along with Webpack-bundled files
 // to produce the final web extension
-const STATIC_FILES = ['icons', 'popups', 'main.html', 'panel.html'];
+const STATIC_FILES = [
+  'icons',
+  'popups',
+  'main.html',
+  'panel.html',
+  'settings.html',
+];
 
 const preProcess = async (destinationPath, tempPath) => {
   await remove(destinationPath); // Clean up from previously completed builds
