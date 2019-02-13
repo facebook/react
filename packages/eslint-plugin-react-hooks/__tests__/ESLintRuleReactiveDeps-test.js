@@ -215,6 +215,7 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
   invalid: [
     {
       code: `
+        /*only*/
         function MyComponent() {
           const local = 42;
           useEffect(() => {
@@ -222,7 +223,18 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
           }, []);
         }
       `,
-      errors: [missingError('local')],
+      output: `
+        /*only*/
+        function MyComponent() {
+          const local = 42;
+          useEffect(() => {
+            console.log(local);
+          }, [local]);
+        }
+      `,
+      errors: [
+        'React Hook useEffect has missing [local] dependencies. Either fix or remove the dependency array.'
+      ],
     },
     {
       code: `
