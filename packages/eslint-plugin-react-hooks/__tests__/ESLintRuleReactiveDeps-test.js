@@ -211,7 +211,7 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
       `,
       options: [{additionalHooks: 'useCustomEffect'}],
     },
-  ],
+  ].filter(x => x.code && x.code.indexOf('/*only*/') > -1),
   invalid: [
     {
       code: `
@@ -615,7 +615,7 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
           'Currently only simple variables are supported.',
       ],
     },
-  ],
+  ].filter(x => x.code && x.code.indexOf('/*only*/') > -1),
 });
 
 function missingError(dependency, hook = 'useEffect') {
