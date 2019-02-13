@@ -460,7 +460,8 @@ class ReactShallowRenderer {
         lastUpdate.next = update;
       }
       // Finally, invoke a new render
-      this._renderer.render(this._renderer._element, this._renderer._context);
+      const renderer = this._updater._renderer;
+      renderer.render(renderer._element, renderer._context);
     }
   }
 
