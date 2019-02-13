@@ -37,7 +37,7 @@ mountButton.addEventListener('click', function() {
   }
 });
 
-inject('./build/App.js', () => {
+inject('./build/app.js', () => {
   initDevTools({
     connect(cb) {
       const bridge = new Bridge({
