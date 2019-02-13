@@ -449,17 +449,6 @@ function mountWorkInProgressHook(): Hook {
 
   if (__DEV__) {
     (hook: any)._debugType = (currentHookNameInDev: any);
-    if (
-      currentlyRenderingFiber !== null &&
-      currentlyRenderingFiber.alternate !== null
-    ) {
-      warning(
-        false,
-        '%s: Rendered more hooks than during the previous render. This is ' +
-          'not currently supported and may lead to unexpected behavior.',
-        getComponentName(currentlyRenderingFiber.type),
-      );
-    }
   }
   if (workInProgressHook === null) {
     // This is the first hook in the list
