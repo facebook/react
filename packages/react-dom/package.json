@@ -1,6 +1,6 @@
 {
   "name": "react-dom",
-  "version": "16.8.1",
+  "version": "16.8.2",
   "description": "React package for working with the DOM.",
   "main": "index.js",
   "repository": {
@@ -20,7 +20,7 @@
     "loose-envify": "^1.1.0",
     "object-assign": "^4.1.1",
     "prop-types": "^15.6.2",
-    "scheduler": "^0.13.1"
+    "scheduler": "^0.13.2"
   },
   "peerDependencies": {
     "react": "^16.0.0"
