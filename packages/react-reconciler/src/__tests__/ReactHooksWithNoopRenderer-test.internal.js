@@ -454,7 +454,9 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       // Test that it works on update, too. This time the log is a bit different
       // because we started with reducerB instead of reducerA.
-      counter.current.dispatch('reset');
+      ReactNoop.act(() => {
+        counter.current.dispatch('reset');
+      });
       ReactNoop.render(<Counter ref={counter} />);
       expect(ReactNoop.flush()).toEqual([
         'Render: 0',
