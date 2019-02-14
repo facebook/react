@@ -148,10 +148,9 @@ describe('act', () => {
         button.dispatchEvent(new MouseEvent('click', {bubbles: true}));
       });
       expect(button.innerHTML).toBe('2');
-      expect(() => setValueRef(1)).toWarnDev(
-        ['An update to App inside a test was not wrapped in act(...).'],
-        {withoutStack: 1},
-      );
+      expect(() => setValueRef(1)).toWarnDev([
+        'An update to App inside a test was not wrapped in act(...).',
+      ]);
       document.body.removeChild(container);
     });
     describe('fake timers', () => {
