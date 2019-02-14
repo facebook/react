@@ -495,7 +495,7 @@ function makeSimulator(eventType) {
 
     ReactDOM.unstable_batchedUpdates(function() {
       // Normally extractEvent enqueues a state restore, but we'll just always
-      // do that since we we're by-passing it here.
+      // do that since we're by-passing it here.
       enqueueStateRestore(domNode);
       runEventsInBatch(event);
     });
