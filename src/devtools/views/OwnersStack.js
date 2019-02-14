@@ -24,7 +24,7 @@ export default function OwnerStack() {
         onClick={resetOwnerStack}
         title="Back to tree view"
       >
-        <ButtonIcon type="back" />
+        <ButtonIcon type="close" />
       </button>
       <div className={styles.VRule} />
       {elements}

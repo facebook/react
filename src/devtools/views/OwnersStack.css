@@ -51,5 +51,5 @@
   height: 20px;
   width: 1px;
   background-color: var(--color-border);
-  margin-right: 0.5rem;
+  margin: 0 0.5rem;
 }
