@@ -18,14 +18,9 @@ import {
 import SyntheticEvent from 'events/SyntheticEvent';
 import invariant from 'shared/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
-import warningWithoutStack from 'shared/warningWithoutStack';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 import * as DOMTopLevelEventTypes from '../events/DOMTopLevelEventTypes';
-
-// for .act's return value
-type Thenable = {
-  then(resolve: () => mixed, reject?: () => mixed): mixed,
-};
+import act from './ReactTestUtilsAct';
 
 const {findDOMNode} = ReactDOM;
 // Keep in sync with ReactDOMUnstableNativeDependencies.js
@@ -44,7 +39,8 @@ const [
   restoreStateIfNeeded,
   dispatchEvent,
   runEventsInBatch,
-  setIsActingInDev,
+  // eslint-disable-next-line no-unused-vars
+  setIsActingUpdatesInDev,
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
 
 function Event(suffix) {}
@@ -151,9 +147,6 @@ function validateClassInstance(inst, methodName) {
     received,
   );
 }
-
-// a stub element, lazily initialized, used by act() when flushing effects
-let actContainerElement = null;
 
 /**
  * Utilities for making it easy to test React components.
@@ -390,89 +383,8 @@ const ReactTestUtils = {
 
   Simulate: null,
   SimulateNative: {},
-
-  act(callback: () => void | Promise<void>): Thenable {
-    if (actContainerElement === null) {
-      // warn if we can't actually create the stub element
-      if (__DEV__) {
-        warningWithoutStack(
-          typeof document !== 'undefined' &&
-            document !== null &&
-            typeof document.createElement === 'function',
-          'It looks like you called TestUtils.act(...) in a non-browser environment. ' +
-            "If you're using TestRenderer for your tests, you should call " +
-            'TestRenderer.act(...) instead of TestUtils.act(...).',
-        );
-      }
-      // then make it
-      actContainerElement = document.createElement('div');
-    }
-    let prevCtr = actingCtr.current;
-    actingCtr.current++;
-    setIsActingInDev(true);
-
-    const result = ReactDOM.unstable_batchedUpdates(callback);
-    if (result && typeof result.then === 'function') {
-      // the returned thenable MUST be called
-      let called = false;
-      setImmediate(() => {
-        if (!called) {
-          warningWithoutStack(null, 'you need to await your async acts');
-        }
-      });
-      return {
-        then(fn) {
-          called = true;
-          result.then(() => {
-            ReactDOM.render(<div />, actContainerElement);
-            // await null?
-            if (actingCtr.current - 1 !== prevCtr) {
-              warningWithoutStack(
-                null,
-                'you did not resolve a previous act call',
-              );
-            }
-            actingCtr.current--;
-
-            if (actingCtr.current === 0) {
-              setIsActingInDev(false);
-            }
-            fn();
-          });
-        },
-      };
-    } else {
-      if (__DEV__) {
-        if (result !== undefined) {
-          warningWithoutStack(
-            false,
-            'The callback passed to ReactTestUtils.act(...) function ' +
-              'must return undefined, or a Promise. You returned %s',
-            result,
-          );
-        }
-      }
-      ReactDOM.render(<div />, actContainerElement);
-      actingCtr.current--;
-
-      if (actingCtr.current === 0) {
-        setIsActingInDev(false);
-      }
-      return {
-        then() {
-          if (__DEV__) {
-            warningWithoutStack(
-              false,
-              'Do not await the result of calling ReactTestUtils.act(...) with sync logic, it is not a Promise.',
-            );
-          }
-        },
-      };
-    }
-  },
+  act,
 };
-
-let actingCtr = {current: 0};
 
 /**
  * Exports:

@@ -1003,11 +1003,20 @@ function updateMemo<T>(
   return nextValue;
 }
 
-let isActing = false;
+// in a test-like environment, we want to warn if dispatchAction()
+// is called outside of a TestUtils.act(...) call.
+
+let isActingUpdates: boolean = false;
+
+export function setIsActingUpdatesInDev(toggle: boolean) {
+  if (__DEV__) {
+    isActingUpdates = toggle;
+  }
+}
 
 export function warnIfNotCurrentlyActingInDev(fiber: Fiber): void {
   if (__DEV__) {
-    if (isActing === false) {
+    if (isActingUpdates === false) {
       warning(
         false,
         'An update to %s inside a test was not wrapped in act(...).\n\n' +
@@ -1024,12 +1033,6 @@ export function warnIfNotCurrentlyActingInDev(fiber: Fiber): void {
   }
 }
 
-export function setIsActingInDEV(toggle: boolean) {
-  isActing = toggle;
-}
-
-// in a test-like environment, we want to warn if dispatchAction()
-// is called outside of a batchedUpdates/TestUtils.act(...) call.
 let shouldWarnForUnactedSetState = false;
 
 if (__DEV__) {

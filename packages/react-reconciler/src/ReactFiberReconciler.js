@@ -64,7 +64,7 @@ import {
 } from './ReactCurrentFiber';
 import {StrictMode} from './ReactTypeOfMode';
 import {Sync} from './ReactFiberExpirationTime';
-import {setIsActingInDEV} from './ReactFiberHooks';
+import {setIsActingUpdatesInDev} from './ReactFiberHooks';
 
 type OpaqueRoot = FiberRoot;
 
@@ -311,7 +311,7 @@ export {
   flushInteractiveUpdates,
   flushControlled,
   flushSync,
-  setIsActingInDEV,
+  setIsActingUpdatesInDev,
 };
 
 export function getPublicRootInstance(
