@@ -48,6 +48,7 @@ export type RendererInterface = {
   getNativeFromReactElement?: ?(component: Fiber) => ?NativeType,
   getReactElementFromNative?: ?(component: NativeType) => ?Fiber,
   handleCommitFiberRoot: (fiber: Object) => void,
+  handleCommitFiberUnmount: (fiber: Object) => void,
   inspectElement: (id: number) => InspectedElement | null,
   renderer: ReactRenderer | null,
   selectElement: (id: number) => void,
@@ -63,7 +64,7 @@ export type Hook = {
 
   emit: (evt: string, data: any) => void,
   getFiberRoots: (rendererID: RendererID) => Set<Object>,
-  inject: (renderer: ReactRenderer) => string | null,
+  inject: (renderer: ReactRenderer) => number | null,
   on: (evt: string, handler: Handler) => void,
   off: (evt: string, handler: Handler) => void,
   reactDevtoolsAgent?: ?Object,

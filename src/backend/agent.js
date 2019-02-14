@@ -31,7 +31,7 @@ export default class Agent extends EventEmitter {
     bridge.addListener('shutdown', this.shutdown);
 
     // TODO Listen to bridge for things like selection.
-    // bridge.on('...'), this...);
+    // bridge.addListener('...'), this...);
   }
 
   highlightElementInDOM = ({

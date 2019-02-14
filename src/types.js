@@ -1,10 +1,10 @@
 // @flow
 
-// TODO
-export type Bridge = any;
-
-// TODO
-export type Hook = any;
+export type Bridge = {
+  addListener(type: string, callback: Function): void,
+  removeListener(type: string, callback: Function): void,
+  send(type: string, data?: any): void,
+};
 
 export type Wall = {|
   listen: (fn: Function) => void,

@@ -55,8 +55,8 @@ export default class Store extends EventEmitter {
     debug('constructor', 'subscribing to Bridge');
 
     this._bridge = bridge;
-    this._bridge.on('operations', this.onBridgeOperations);
-    this._bridge.on('shutdown', this.onBridgeShutdown);
+    this._bridge.addListener('operations', this.onBridgeOperations);
+    this._bridge.addListener('shutdown', this.onBridgeShutdown);
   }
 
   get numElements(): number {
@@ -405,8 +405,8 @@ export default class Store extends EventEmitter {
   onBridgeShutdown = () => {
     debug('onBridgeShutdown', 'unsubscribing from Bridge');
 
-    this._bridge.off('operations', this.onBridgeOperations);
-    this._bridge.off('shutdown', this.onBridgeShutdown);
+    this._bridge.removeListener('operations', this.onBridgeOperations);
+    this._bridge.removeListener('shutdown', this.onBridgeShutdown);
   };
 
   // DEBUG

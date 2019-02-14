@@ -7,12 +7,12 @@
  * @flow
  */
 
-import type { Hook } from './types';
+import type { Hook } from 'src/backend/types';
 
 declare var window: any;
 
-export function installHook(target: any): Hook {
-  if (target.hasOwnProperty('__REACT_DEVTOOLS_GLOBAL_HOOK__')) return;
+export function installHook(target: any): Hook | null {
+  if (target.hasOwnProperty('__REACT_DEVTOOLS_GLOBAL_HOOK__')) return null;
 
   function detectReactBuildType(renderer) {
     try {
@@ -124,7 +124,6 @@ export function installHook(target: any): Hook {
   }
 
   function onCommitFiberUnmount(rendererID, fiber) {
-    // TODO: can we use hook for roots too?
     const rendererInterface = rendererInterfaces.get(rendererID);
     if (rendererInterface != null) {
       rendererInterface.handleCommitFiberUnmount(fiber);
