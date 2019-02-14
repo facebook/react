@@ -45,8 +45,6 @@ export default function Tree(props: Props) {
 
   // Navigate the tree with up/down arrow keys.
   useEffect(() => {
-    // TODO Use selectNextElement / selectPreviousElement (with dispatch)
-
     const handleKeyDown = event => {
       // eslint-disable-next-line default-case
       switch (event.key) {

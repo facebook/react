@@ -829,8 +829,7 @@ export function attach(
   function getReactElementFromNative(hostInstance) {
     const fiber = renderer.findFiberByHostInstance(hostInstance);
     if (fiber != null) {
-      // TODO: type fibers.
-      const primaryFiber = getPrimaryFiber((fiber: any));
+      const primaryFiber = getPrimaryFiber(((fiber: any): Fiber));
       return primaryFiber;
     }
     return null;

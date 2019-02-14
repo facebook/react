@@ -44,7 +44,7 @@ export default function SelectedElement(_: Props) {
     }
   }, [bridge, selectedElementID, store]);
 
-  // TODO Make "view DOM" and "view source" buttons work
+  // TODO Make "view source" button work
 
   if (element === null) {
     return (
@@ -184,13 +184,9 @@ function useInspectedElement(id: number | null): InspectedElement | null {
 
     const onInspectedElement = (inspectedElement: InspectedElement) => {
       if (inspectedElement && inspectedElement.id !== idRef.current) {
-        // TODO Is this sufficient? Will this leak?
         // Ignore bridge updates about previously selected elements.
         return;
       }
-
-      // TODO I think there's a bug here with stale state or a bad listener.
-      // "Cannot read property 'inspectElement' of undefined"
 
       if (inspectedElement !== null) {
         inspectedElement.context = hydrateHelper(inspectedElement.context);
