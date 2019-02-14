@@ -524,7 +524,7 @@ function TreeContextController({ children }: {| children: React$Node |}) {
         ? store.getElementAtIndex(index)
         : store.getElementByID(state._ownerFlatTree[index]);
     },
-    [state]
+    [state, store]
   );
   const selectElementAtIndex = useCallback(
     (index: number) =>

@@ -1,6 +1,6 @@
 // @flow
 
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import Store from '../store';
 import { BridgeContext, StoreContext } from './context';
 import Elements from './Elements';
@@ -26,6 +26,7 @@ export type Props = {|
   defaultTab?: TabID,
   browserTheme: BrowserTheme,
   showTabBar?: boolean,
+  store: Store,
 |};
 
 export default function DevTools({
@@ -34,8 +35,8 @@ export default function DevTools({
   defaultTab = 'elements',
   browserTheme = 'light',
   showTabBar = false,
+  store,
 }: Props) {
-  const store = useMemo<Store>(() => new Store(bridge), []);
   const [tab, setTab] = useState(defaultTab);
 
   let tabElement;

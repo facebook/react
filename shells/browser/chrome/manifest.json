@@ -28,8 +28,8 @@
 
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
   "web_accessible_resources": [
+    "elements.html",
     "main.html",
-    "panel.html",
     "settings.html",
     "build/backend.js"
   ],

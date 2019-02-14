@@ -28,6 +28,8 @@ const debug = (methodName, ...args) => {
  * ContextProviders can subscribe to the Store for specific things they want to provide.
  */
 export default class Store extends EventEmitter {
+  _bridge: Bridge;
+
   // Map of ID to Element.
   // Elements are mutable (for now) to avoid excessive cloning during tree updates.
   _idToElement: Map<number, Element> = new Map();
@@ -52,8 +54,9 @@ export default class Store extends EventEmitter {
 
     debug('constructor', 'subscribing to Bridge');
 
-    bridge.on('operations', this.onBridgeOperations);
-    bridge.on('shutdown', this.onBridgeShutdown);
+    this._bridge = bridge;
+    this._bridge.on('operations', this.onBridgeOperations);
+    this._bridge.on('shutdown', this.onBridgeShutdown);
   }
 
   get numElements(): number {
@@ -402,8 +405,8 @@ export default class Store extends EventEmitter {
   onBridgeShutdown = () => {
     debug('onBridgeShutdown', 'unsubscribing from Bridge');
 
-    bridge.off('operations', this.onBridgeOperations);
-    bridge.off('shutdown', this.onBridgeShutdown);
+    this._bridge.off('operations', this.onBridgeOperations);
+    this._bridge.off('shutdown', this.onBridgeShutdown);
   };
 
   // DEBUG

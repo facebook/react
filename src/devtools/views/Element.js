@@ -44,6 +44,8 @@ export default function ElementView({ index, style }: Props) {
   const isSelected = selectedElementID === id;
   const showDollarR = isSelected && type === ElementTypeClassOrFunction;
 
+  // TODO styles.SelectedElement is 100% width but it doesn't take horizontal overflow into account.
+
   return (
     <div
       className={isSelected ? styles.SelectedElement : styles.Element}

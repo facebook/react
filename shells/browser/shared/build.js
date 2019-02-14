@@ -10,8 +10,8 @@ const { join } = require('path');
 const STATIC_FILES = [
   'icons',
   'popups',
+  'elements.html',
   'main.html',
-  'panel.html',
   'settings.html',
 ];
 
