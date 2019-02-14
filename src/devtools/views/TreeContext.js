@@ -344,6 +344,7 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
           ownerStack = ownerStack.slice(0, indexOfRemovedItem);
           if (ownerStack.length === 0) {
             _ownerFlatTree = null;
+            ownerStackIndex = null;
           } else {
             ownerStackIndex = ownerStack.length - 1;
           }

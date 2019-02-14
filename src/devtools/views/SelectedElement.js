@@ -3,7 +3,7 @@
 import React, {
   useCallback,
   useContext,
-  useLayoutEffect,
+  useEffect,
   useRef,
   useState,
 } from 'react';
@@ -154,36 +154,35 @@ function useInspectedElement(id: number | null): InspectedElement | null {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
-  const rendererID =
-    id === null ? null : store.getRendererIDForElement(id) || null;
-
   const [inspectedElement, setInspectedElement] = useState(null);
 
-  // Track the most recently-requested element.
-  // We'll ignore any backend updates about previous elements.
-  idRef.current = id;
+  useEffect(() => {
+    // Track the current selected element ID.
+    // We ignore any backend updates about previously selected elements.
+    idRef.current = id;
 
-  useLayoutEffect(() => {
     // Hide previous/stale insepected element to avoid temporarily showing the wrong values.
     setInspectedElement(null);
 
     // A null id indicates that there's nothing currently selected in the tree.
-    // A null renderer ID indicates that the previously selected element has been unmounted.
-    if (id === null || rendererID === null) {
+    if (id === null) {
       return () => {};
     }
 
-    let timeoutID = null;
+    const rendererID = store.getRendererIDForElement(id) || null;
 
     // Update the $r variable.
     bridge.send('selectElement', { id, rendererID });
 
+    // Update props, state, and context in the side panel.
     const sendBridgeRequest = () => {
       bridge.send('inspectElement', { id, rendererID });
     };
 
+    let timeoutID = null;
+
     const onInspectedElement = (inspectedElement: InspectedElement) => {
-      if (inspectedElement && inspectedElement.id !== idRef.current) {
+      if (!inspectedElement || inspectedElement.id !== idRef.current) {
         // Ignore bridge updates about previously selected elements.
         return;
       }
