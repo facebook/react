@@ -97,7 +97,7 @@ function KeyValue({ depth, name, value }: KeyValueProps) {
       ));
       children.unshift(
         <div
-          key="root"
+          key={`${depth}-root`}
           className={styles.Item}
           style={{ paddingLeft: `${depth}rem` }}
         >
@@ -110,7 +110,7 @@ function KeyValue({ depth, name, value }: KeyValueProps) {
       ));
       children.unshift(
         <div
-          key="root"
+          key={`${depth}-root`}
           className={styles.Item}
           style={{ paddingLeft: `${depth}rem` }}
         >
