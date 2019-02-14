@@ -1366,4 +1366,97 @@ describe('ReactHooks', () => {
       ),
     ).toThrow('Hello');
   });
+
+  // Regression test for https://github.com/facebook/react/issues/14790
+  it('does not fire a false positive warning when suspending memo', async () => {
+    const {Suspense, useState} = React;
+
+    let wasSuspended = false;
+    function trySuspend() {
+      if (!wasSuspended) {
+        throw new Promise(resolve => {
+          wasSuspended = true;
+          resolve();
+        });
+      }
+    }
+
+    function Child() {
+      useState();
+      trySuspend();
+      return 'hello';
+    }
+
+    const Wrapper = React.memo(Child);
+    const root = ReactTestRenderer.create(
+      <Suspense fallback="loading">
+        <Wrapper />
+      </Suspense>,
+    );
+    expect(root).toMatchRenderedOutput('loading');
+    await Promise.resolve();
+    expect(root).toMatchRenderedOutput('hello');
+  });
+
+  // Regression test for https://github.com/facebook/react/issues/14790
+  it('does not fire a false positive warning when suspending forwardRef', async () => {
+    const {Suspense, useState} = React;
+
+    let wasSuspended = false;
+    function trySuspend() {
+      if (!wasSuspended) {
+        throw new Promise(resolve => {
+          wasSuspended = true;
+          resolve();
+        });
+      }
+    }
+
+    function render(props, ref) {
+      useState();
+      trySuspend();
+      return 'hello';
+    }
+
+    const Wrapper = React.forwardRef(render);
+    const root = ReactTestRenderer.create(
+      <Suspense fallback="loading">
+        <Wrapper />
+      </Suspense>,
+    );
+    expect(root).toMatchRenderedOutput('loading');
+    await Promise.resolve();
+    expect(root).toMatchRenderedOutput('hello');
+  });
+
+  // Regression test for https://github.com/facebook/react/issues/14790
+  it('does not fire a false positive warning when suspending memo(forwardRef)', async () => {
+    const {Suspense, useState} = React;
+
+    let wasSuspended = false;
+    function trySuspend() {
+      if (!wasSuspended) {
+        throw new Promise(resolve => {
+          wasSuspended = true;
+          resolve();
+        });
+      }
+    }
+
+    function render(props, ref) {
+      useState();
+      trySuspend();
+      return 'hello';
+    }
+
+    const Wrapper = React.memo(React.forwardRef(render));
+    const root = ReactTestRenderer.create(
+      <Suspense fallback="loading">
+        <Wrapper />
+      </Suspense>,
+    );
+    expect(root).toMatchRenderedOutput('loading');
+    await Promise.resolve();
+    expect(root).toMatchRenderedOutput('hello');
+  });
 });

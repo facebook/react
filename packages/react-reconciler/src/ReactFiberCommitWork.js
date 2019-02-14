@@ -10,6 +10,7 @@
 import type {
   Instance,
   TextInstance,
+  SuspenseInstance,
   Container,
   ChildSet,
   UpdatePayload,
@@ -26,6 +27,7 @@ import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {
   enableSchedulerTracing,
   enableProfilerTimer,
+  enableSuspenseServerRenderer,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -37,6 +39,7 @@ import {
   HostPortal,
   Profiler,
   SuspenseComponent,
+  DehydratedSuspenseComponent,
   IncompleteClassComponent,
   MemoComponent,
   SimpleMemoComponent,
@@ -79,6 +82,8 @@ import {
   insertInContainerBefore,
   removeChild,
   removeChildFromContainer,
+  clearSuspenseBoundary,
+  clearSuspenseBoundaryFromContainer,
   replaceContainerChildren,
   createContainerChildSet,
   hideInstance,
@@ -881,7 +886,11 @@ function getHostSibling(fiber: Fiber): ?Instance {
     }
     node.sibling.return = node.return;
     node = node.sibling;
-    while (node.tag !== HostComponent && node.tag !== HostText) {
+    while (
+      node.tag !== HostComponent &&
+      node.tag !== HostText &&
+      node.tag !== DehydratedSuspenseComponent
+    ) {
       // If it is not host node and, we might have a host node inside it.
       // Try to search down until we find one.
       if (node.effectTag & Placement) {
@@ -1032,11 +1041,33 @@ function unmountHostComponents(current): void {
       // After all the children have unmounted, it is now safe to remove the
       // node from the tree.
       if (currentParentIsContainer) {
-        removeChildFromContainer((currentParent: any), node.stateNode);
+        removeChildFromContainer(
+          ((currentParent: any): Container),
+          (node.stateNode: Instance | TextInstance),
+        );
       } else {
-        removeChild((currentParent: any), node.stateNode);
+        removeChild(
+          ((currentParent: any): Instance),
+          (node.stateNode: Instance | TextInstance),
+        );
       }
       // Don't visit children because we already visited them.
+    } else if (
+      enableSuspenseServerRenderer &&
+      node.tag === DehydratedSuspenseComponent
+    ) {
+      // Delete the dehydrated suspense boundary and all of its content.
+      if (currentParentIsContainer) {
+        clearSuspenseBoundaryFromContainer(
+          ((currentParent: any): Container),
+          (node.stateNode: SuspenseInstance),
+        );
+      } else {
+        clearSuspenseBoundary(
+          ((currentParent: any): Instance),
+          (node.stateNode: SuspenseInstance),
+        );
+      }
     } else if (node.tag === HostPortal) {
       if (node.child !== null) {
         // When we go into a portal, it becomes the parent to remove from.
