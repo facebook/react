@@ -1815,8 +1815,9 @@ export function warnIfNotCurrentlyBatchingInDev(fiber: Fiber): void {
           '});\n' +
           '/* assert on the output */\n\n' +
           "This ensures that you're testing the behavior the user would see in the browser." +
-          ' Learn more at https://fb.me/react-wrap-tests-with-act',
+          ' Learn more at https://fb.me/react-wrap-tests-with-act\n%s',
         getComponentName(fiber.type),
+        getStackByFiberInDevAndProd(fiber)
       );
     }
   }
