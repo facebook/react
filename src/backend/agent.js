@@ -73,16 +73,18 @@ export default class Agent extends EventEmitter {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+    } else {
+      this._bridge.send('inspectedElement', renderer.inspectElement(id));
     }
-    this._bridge.send('inspectedElement', renderer.inspectElement(id));
   };
 
   selectElement = ({ id, rendererID }: { id: number, rendererID: number }) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+    } else {
+      this._bridge.send('selectElement', renderer.selectElement(id));
     }
-    this._bridge.send('selectElement', renderer.selectElement(id));
   };
 
   setRendererInterface(
