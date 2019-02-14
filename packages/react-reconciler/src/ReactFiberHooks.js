@@ -607,7 +607,6 @@ function updateReducer<S, I, A>(
         }
 
         hook.memoizedState = newState;
-
         // Don't persist the state accumlated from the render phase updates to
         // the base state unless the queue is empty.
         // TODO: Not sure if this is the desired semantics, but it's what we
@@ -615,6 +614,9 @@ function updateReducer<S, I, A>(
         if (hook.baseUpdate === queue.last) {
           hook.baseState = newState;
         }
+
+        queue.eagerReducer = reducer;
+        queue.eagerState = newState;
 
         return [newState, dispatch];
       }
