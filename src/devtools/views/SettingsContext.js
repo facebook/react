@@ -11,6 +11,11 @@ export type Theme = 'auto' | 'light' | 'dark';
 type Context = {|
   displayDensity: DisplayDensity,
   setDisplayDensity(value: DisplayDensity): void,
+
+  // Derived from display density.
+  // Specified as a separate prop so it can trigger a re-render of FixedSizeList.
+  lineHeight: number,
+
   theme: Theme,
   setTheme(value: Theme): void,
 |};
@@ -30,6 +35,19 @@ function SettingsContextController({ browserTheme, children }: Props) {
     'compact'
   );
   const [theme, setTheme] = useLocalStorage<Theme>('theme', 'auto');
+
+  const comfortableLineHeight = parseInt(
+    getComputedStyle((document.body: any)).getPropertyValue(
+      '--comfortable-line-height-data'
+    ),
+    10
+  );
+  const compactLineHeight = parseInt(
+    getComputedStyle((document.body: any)).getPropertyValue(
+      '--compact-line-height-data'
+    ),
+    10
+  );
 
   useLayoutEffect(() => {
     switch (displayDensity) {
@@ -66,6 +84,10 @@ function SettingsContextController({ browserTheme, children }: Props) {
       setDisplayDensity,
       theme,
       setTheme,
+      lineHeight:
+        displayDensity === 'compact'
+          ? compactLineHeight
+          : comfortableLineHeight,
     }),
     [displayDensity, setDisplayDensity, theme, setTheme]
   );

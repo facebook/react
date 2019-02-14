@@ -10,6 +10,7 @@ import React, {
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList } from 'react-window';
 import { TreeContext } from './TreeContext';
+import { SettingsContext } from './SettingsContext';
 import ButtonIcon from './ButtonIcon';
 import Element from './Element';
 import OwnersStack from './OwnersStack';
@@ -30,6 +31,8 @@ export default function Tree(props: Props) {
     selectPreviousElementInTree,
   } = useContext(TreeContext);
   const listRef = useRef<FixedSizeList<any>>();
+
+  const { lineHeight } = useContext(SettingsContext);
 
   // Make sure a newly selected element is visible in the list.
   // This is helpful for things like the owners list.
@@ -79,14 +82,6 @@ export default function Tree(props: Props) {
     [baseDepth, numElements, getElementAtIndex]
   );
 
-  const itemSize =
-    parseInt(
-      getComputedStyle((document.body: any)).getPropertyValue(
-        '--line-height-data'
-      ),
-      10
-    ) || 18;
-
   return (
     <div className={styles.Tree}>
       <div className={styles.SearchInput}>
@@ -106,7 +101,7 @@ export default function Tree(props: Props) {
               height={height}
               itemCount={numElements}
               itemData={itemData}
-              itemSize={itemSize}
+              itemSize={lineHeight}
               ref={listRef}
               width={width}
             >
