@@ -749,7 +749,7 @@ class ReactDOMServerRenderer {
     context[threadID] = provider.props.value;
   }
 
-  popProvider<T>(provider?: ReactProvider<T>): void {
+  popProvider<T>(provider: ReactProvider<T>): void {
     const index = this.contextIndex;
     if (__DEV__) {
       warningWithoutStack(
@@ -778,12 +778,11 @@ class ReactDOMServerRenderer {
   }
 
   clearProviders(): void {
-    while (this.contextIndex > -1) {
-      if (__DEV__) {
-        this.popProvider((this.contextProviderStack: any)[this.contextIndex]);
-      } else {
-        this.popProvider();
-      }
+    // Restore any remaining providers on the stack to previous values
+    for (let index = this.contextIndex; index >= 0; index--) {
+      const context: ReactContext<any> = this.contextStack[index];
+      const previousValue = this.contextValueStack[index];
+      context[this.threadID] = previousValue;
     }
   }
 
