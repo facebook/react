@@ -27,15 +27,15 @@
 
   /* Dark theme */
   --theme-dark-arrow: #777d88;
-  --theme-dark-arrow-inverted: #23272f;
+  --theme-dark-arrow-inverted: #282828;
   --theme-dark-attribute-name: #9d87d2;
   --theme-dark-attribute-value: #cedae0;
-  --theme-dark-background: #23272f;
-  --theme-dark-button: #4dbba6;
-  --theme-dark-button-hover: #80d4c4;
-  --theme-dark-color-border: #303846;
-  --theme-dark-component-name: #4dbba6;
-  --theme-dark-component-name-inverted: ##23272f;
+  --theme-dark-background: #282c34;
+  --theme-dark-button: #61dafb;
+  --theme-dark-button-hover: #a2e9fc;
+  --theme-dark-color-border: #3d424a;
+  --theme-dark-component-name: #61dafb;
+  --theme-dark-component-name-inverted: ##282828;
   --theme-dark-dim: #8f949d;
   --theme-dark-dimmer: #777d88;
   --theme-dark-dimmest: #4f5766;
@@ -44,8 +44,8 @@
   --theme-dark-search-match: yellow;
   --theme-dark-search-match-current: #f7923b;
   --theme-dark-text-color: #ffffff;
-  --theme-dark-tree-node-selected: #31a38d;
-  --theme-dark-tree-node-hover: #303846;
+  --theme-dark-tree-node-selected: #178fb9;
+  --theme-dark-tree-node-hover: #3d424a;
 
   /* Compact density */
   --compact-font-size-monospace-normal: 11px;

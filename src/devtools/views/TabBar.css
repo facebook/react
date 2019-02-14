@@ -3,7 +3,7 @@
   align-items: center;
   padding: 0 0.5rem;
   background-color: var(--color-background);
-  color: var(--color-tree-node-selected);
+  color: var(--color-button);
   border-top: 1px solid var(--color-border);
   font-family: var(--font-family-sans);
   font-size: var(--font-size-sans-large);
