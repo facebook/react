@@ -105,7 +105,6 @@ export default {
     ],
   },
   create(context) {
-    const sourceCode = context.getSourceCode();
     // Parse the `additionalHooks` regex.
     const additionalHooks =
       context.options &&
@@ -114,8 +113,6 @@ export default {
         ? new RegExp(context.options[0].additionalHooks)
         : undefined;
     const options = {additionalHooks};
-
-    console.log('\n\n\n\n\n\n\n\n\n\n\n\n\n');
 
     return {
       FunctionExpression: visitFunctionExpression,
@@ -273,7 +270,7 @@ export default {
       let missingDependencies = new Set();
 
       // First, ensure what user specified makes sense.
-      for (let {node, key} of declaredDependencies) {
+      for (let {key} of declaredDependencies) {
         if (dependencies.has(key)) {
           // Legit dependency.
           if (suggestedDependencies.indexOf(key) === -1) {
@@ -288,7 +285,7 @@ export default {
         }
       }
       // Then fill in the missing ones.
-      for (let [key, usageNode] of dependencies) {
+      for (let [key] of dependencies) {
         if (suggestedDependencies.indexOf(key) === -1) {
           // Legit missing.
           suggestedDependencies.push(key);
@@ -308,26 +305,27 @@ export default {
           message:
             `React Hook ${context.getSource(reactiveHook)} has ` +
             [
-              (missingDependencies.size > 0 ?
-                `missing [${Array.from(missingDependencies).join(', ')}]`
-                : null
-              ),
-              (duplicateDependencies.size > 0 ?
-                `duplicate [${Array.from(duplicateDependencies).join(', ')}]`
-                : null
-              ),
-              (unnecessaryDependencies.size > 0 ?
-                `unnecessary [${Array.from(unnecessaryDependencies).join(', ')}]` :
-                null
-              ),
-            ].filter(Boolean).join(', ') +
+              missingDependencies.size > 0
+                ? `missing [${Array.from(missingDependencies).join(', ')}]`
+                : null,
+              duplicateDependencies.size > 0
+                ? `duplicate [${Array.from(duplicateDependencies).join(', ')}]`
+                : null,
+              unnecessaryDependencies.size > 0
+                ? `unnecessary [${Array.from(unnecessaryDependencies).join(
+                    ', ',
+                  )}]`
+                : null,
+            ]
+              .filter(Boolean)
+              .join(', ') +
             ` dependencies. Either fix or remove the dependency array.`,
           fix(fixer) {
             return fixer.replaceText(
               declaredDependenciesNode,
-              `[${suggestedDependencies.join(', ')}]`
+              `[${suggestedDependencies.join(', ')}]`,
             );
-          }
+          },
         });
       }
     }

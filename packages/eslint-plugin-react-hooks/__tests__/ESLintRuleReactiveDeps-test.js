@@ -19,17 +19,20 @@ ESLintTester.setDefaultConfig({
   },
 });
 
-const eslintTester = new ESLintTester();
-eslintTester.run('react-hooks', ReactHooksESLintRule, {
+// ***************************************************
+// For easier local testing, you can add to any case:
+// {
+//   skip: true,
+//   --or--
+//   only: true,
+//   ...
+// }
+// ***************************************************
+
+const tests = {
   valid: [
-    `
-      // TODO: we don't care about hooks outside of components.
-      const local = 42;
-      useEffect(() => {
-        console.log(local);
-      }, []);
-    `,
-    `
+    {
+      code: `
       function MyComponent() {
         const local = 42;
         useEffect(() => {
@@ -37,7 +40,9 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
         });
       }
     `,
-    `
+    },
+    {
+      code: `
       function MyComponent() {
         useEffect(() => {
           const local = 42;
@@ -45,7 +50,9 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
         }, []);
       }
     `,
-    `
+    },
+    {
+      code: `
       function MyComponent() {
         const local = 42;
         useEffect(() => {
@@ -53,18 +60,9 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
         }, [local]);
       }
     `,
-    `
-      // TODO: we don't care about hooks outside of components.
-      const local1 = 42;
-      {
-        const local2 = 42;
-        useEffect(() => {
-          console.log(local1);
-          console.log(local2);
-        }, []);
-      }
-    `,
-    `
+    },
+    {
+      code: `
       function MyComponent() {
         const local1 = 42;
         {
@@ -76,7 +74,9 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
         }
       }
     `,
-    `
+    },
+    {
+      code: `
       function MyComponent() {
         const local1 = 42;
         {
@@ -88,7 +88,9 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
         }
       }
     `,
-    `
+    },
+    {
+      code: `
       function MyComponent() {
         const local1 = 42;
         function MyNestedComponent() {
@@ -100,7 +102,9 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
         }
       }
     `,
-    `
+    },
+    {
+      code: `
       function MyComponent() {
         const local = 42;
         useEffect(() => {
@@ -109,14 +113,18 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
         }, [local]);
       }
     `,
-    `
+    },
+    {
+      code: `
       function MyComponent() {
         useEffect(() => {
           console.log(unresolved);
         }, []);
       }
     `,
-    `
+    },
+    {
+      code: `
       function MyComponent() {
         const local = 42;
         useEffect(() => {
@@ -124,7 +132,10 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
         }, [,,,local,,,]);
       }
     `,
-    `
+    },
+    {
+      skip: true, // TODO
+      code: `
       // Regression test
       function MyComponent({ foo }) {
         useEffect(() => {
@@ -132,7 +143,10 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
         }, [foo]);
       }
     `,
-    `
+    },
+    {
+      skip: true, // TODO
+      code: `
       // Regression test
       function MyComponent({ foo }) {
         useEffect(() => {
@@ -141,7 +155,10 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
         }, [foo]);
       }
     `,
-    `
+    },
+    {
+      skip: true, // TODO
+      code: `
       // Regression test
       function MyComponent({ history }) {
         useEffect(() => {
@@ -149,16 +166,20 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
         }, [history]);
       }
     `,
-    `
+    },
+    {
       // TODO: we might want to forbid dot-access in deps.
+      code: `
       function MyComponent(props) {
         useEffect(() => {
           console.log(props.foo);
         }, [props.foo]);
       }
     `,
-    `
+    },
+    {
       // TODO: we might want to forbid dot-access in deps.
+      code: `
       function MyComponent(props) {
         useEffect(() => {
           console.log(props.foo);
@@ -166,8 +187,10 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
         }, [props.foo, props.bar]);
       }
     `,
-    `
+    },
+    {
       // TODO: we might want to forbid dot-access in deps.
+      code: `
       function MyComponent(props) {
         const local = 42;
         useEffect(() => {
@@ -177,10 +200,12 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
         }, [props.foo, props.bar, local]);
       }
     `,
+    },
     {
+      skip: true, // TODO
+      // TODO: we might want to warn "props.foo"
+      // is extraneous because we already have "props".
       code: `
-        // TODO: we might want to warn "props.foo"
-        // is extraneous because we already have "props".
         function MyComponent(props) {
           const local = 42;
           useEffect(() => {
@@ -201,8 +226,8 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
       options: [{additionalHooks: 'useCustomEffect'}],
     },
     {
+      // TODO: we might want to forbid dot-access in deps.
       code: `
-        // TODO: we might want to forbid dot-access in deps.
         function MyComponent(props) {
           useCustomEffect(() => {
             console.log(props.foo);
@@ -211,11 +236,32 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
       `,
       options: [{additionalHooks: 'useCustomEffect'}],
     },
-  ].filter(x => x.code && x.code.indexOf('/*only*/') > -1),
+    {
+      code: `
+      // Valid because we don't care about hooks outside of components.
+      const local = 42;
+      useEffect(() => {
+        console.log(local);
+      }, []);
+    `,
+    },
+    {
+      code: `
+      // Valid because we don't care about hooks outside of components.
+      const local1 = 42;
+      {
+        const local2 = 42;
+        useEffect(() => {
+          console.log(local1);
+          console.log(local2);
+        }, []);
+      }
+    `,
+    },
+  ],
   invalid: [
     {
       code: `
-        /*only*/
         function MyComponent() {
           const local = 42;
           useEffect(() => {
@@ -224,7 +270,6 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
         }
       `,
       output: `
-        /*only*/
         function MyComponent() {
           const local = 42;
           useEffect(() => {
@@ -233,7 +278,8 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
         }
       `,
       errors: [
-        'React Hook useEffect has missing [local] dependencies. Either fix or remove the dependency array.'
+        'React Hook useEffect has missing [local] dependencies. ' +
+          'Either fix or remove the dependency array.',
       ],
     },
     {
@@ -248,7 +294,21 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
           }, []);
         }
       `,
-      errors: [missingError('local')],
+      output: `
+        // Regression test
+        function MyComponent() {
+          const local = 42;
+          useEffect(() => {
+            if (true) {
+              console.log(local);
+            }
+          }, [local]);
+        }
+      `,
+      errors: [
+        'React Hook useEffect has missing [local] dependencies. ' +
+          'Either fix or remove the dependency array.',
+      ],
     },
     {
       code: `
@@ -262,7 +322,21 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
           }, []);
         }
       `,
-      errors: [missingError('local')],
+      output: `
+        // Regression test
+        function MyComponent() {
+          const local = 42;
+          useEffect(() => {
+            try {
+              console.log(local);
+            } finally {}
+          }, [local]);
+        }
+      `,
+      errors: [
+        'React Hook useEffect has missing [local] dependencies. ' +
+          'Either fix or remove the dependency array.',
+      ],
     },
     {
       code: `
@@ -277,7 +351,22 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
           }, []);
         }
       `,
-      errors: [missingError('local')],
+      output: `
+        // Regression test
+        function MyComponent() {
+          const local = 42;
+          useEffect(() => {
+            function inner() {
+              console.log(local);
+            }
+            inner();
+          }, [local]);
+        }
+      `,
+      errors: [
+        'React Hook useEffect has missing [local] dependencies. ' +
+          'Either fix or remove the dependency array.',
+      ],
     },
     {
       code: `
@@ -292,7 +381,22 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
           }
         }
       `,
-      errors: [missingError('local1'), missingError('local2')],
+      output: `
+        function MyComponent() {
+          const local1 = 42;
+          {
+            const local2 = 42;
+            useEffect(() => {
+              console.log(local1);
+              console.log(local2);
+            }, [local1, local2]);
+          }
+        }
+      `,
+      errors: [
+        'React Hook useEffect has missing [local1, local2] dependencies. ' +
+          'Either fix or remove the dependency array.',
+      ],
     },
     {
       code: `
@@ -305,7 +409,20 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
           }, [local1]);
         }
       `,
-      errors: [missingError('local2')],
+      output: `
+        function MyComponent() {
+          const local1 = 42;
+          const local2 = 42;
+          useEffect(() => {
+            console.log(local1);
+            console.log(local2);
+          }, [local1, local2]);
+        }
+      `,
+      errors: [
+        'React Hook useEffect has missing [local2] dependencies. ' +
+          'Either fix or remove the dependency array.',
+      ],
     },
     {
       code: `
@@ -317,9 +434,23 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
           }, [local1, local2]);
         }
       `,
-      errors: [extraError('local2')],
+      output: `
+        function MyComponent() {
+          const local1 = 42;
+          const local2 = 42;
+          useEffect(() => {
+            console.log(local1);
+          }, [local1]);
+        }
+      `,
+      errors: [
+        'React Hook useEffect has unnecessary [local2] dependencies. ' +
+          'Either fix or remove the dependency array.',
+      ],
     },
     {
+      // TODO: this case is weird.
+      // Maybe it should not consider local1 unused despite component nesting?
       code: `
         function MyComponent() {
           const local1 = 42;
@@ -332,7 +463,22 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
           }
         }
       `,
-      errors: [missingError('local2'), extraError('local1')],
+      output: `
+        function MyComponent() {
+          const local1 = 42;
+          function MyNestedComponent() {
+            const local2 = 42;
+            useEffect(() => {
+              console.log(local1);
+              console.log(local2);
+            }, [local2]);
+          }
+        }
+      `,
+      errors: [
+        'React Hook useEffect has missing [local2], unnecessary [local1] dependencies. ' +
+          'Either fix or remove the dependency array.',
+      ],
     },
     {
       code: `
@@ -344,7 +490,19 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
           }, []);
         }
       `,
-      errors: [missingError('local'), missingError('local')],
+      output: `
+        function MyComponent() {
+          const local = 42;
+          useEffect(() => {
+            console.log(local);
+            console.log(local);
+          }, [local]);
+        }
+      `,
+      errors: [
+        'React Hook useEffect has missing [local] dependencies. ' +
+          'Either fix or remove the dependency array.',
+      ],
     },
     {
       code: `
@@ -356,7 +514,19 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
           }, [local, local]);
         }
       `,
-      errors: [duplicateError('local')],
+      output: `
+        function MyComponent() {
+          const local = 42;
+          useEffect(() => {
+            console.log(local);
+            console.log(local);
+          }, [local]);
+        }
+      `,
+      errors: [
+        'React Hook useEffect has duplicate [local] dependencies. ' +
+          'Either fix or remove the dependency array.',
+      ],
     },
     {
       code: `
@@ -364,10 +534,24 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
           useEffect(() => {}, [local]);
         }
       `,
-      errors: [extraError('local')],
+      output: `
+        function MyComponent() {
+          useEffect(() => {}, []);
+        }
+      `,
+      errors: [
+        'React Hook useEffect has unnecessary [local] dependencies. ' +
+          'Either fix or remove the dependency array.',
+      ],
     },
     {
       code: `
+        function MyComponent() {
+          const dependencies = [];
+          useEffect(() => {}, dependencies);
+        }
+      `,
+      output: `
         function MyComponent() {
           const dependencies = [];
           useEffect(() => {}, dependencies);
@@ -389,11 +573,22 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
           }, dependencies);
         }
       `,
+      // TODO: should this autofix or bail out?
+      output: `
+        function MyComponent() {
+          const local = 42;
+          const dependencies = [local];
+          useEffect(() => {
+            console.log(local);
+          }, [local]);
+        }
+      `,
       errors: [
-        missingError('local'),
         'React Hook useEffect has a second argument which is not an array ' +
           "literal. This means we can't statically verify whether you've " +
           'passed the correct dependencies.',
+        'React Hook useEffect has missing [local] dependencies. ' +
+          'Either fix or remove the dependency array.',
       ],
     },
     {
@@ -406,8 +601,19 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
           }, [...dependencies]);
         }
       `,
+      // TODO: should this autofix or bail out?
+      output: `
+        function MyComponent() {
+          const local = 42;
+          const dependencies = [local];
+          useEffect(() => {
+            console.log(local);
+          }, [local]);
+        }
+      `,
       errors: [
-        missingError('local'),
+        'React Hook useEffect has missing [local] dependencies. ' +
+          'Either fix or remove the dependency array.',
         'React Hook useEffect has a spread element in its dependency list. ' +
           "This means we can't statically verify whether you've passed the " +
           'correct dependencies.',
@@ -415,6 +621,14 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
     },
     {
       code: `
+        function MyComponent() {
+          const local = 42;
+          useEffect(() => {
+            console.log(local);
+          }, [local, ...dependencies]);
+        }
+      `,
+      output: `
         function MyComponent() {
           const local = 42;
           useEffect(() => {
@@ -437,15 +651,26 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
           }, [computeCacheKey(local)]);
         }
       `,
+      // TODO: I'm not sure this is a good idea.
+      // Maybe bail out?
+      output: `
+        function MyComponent() {
+          const local = 42;
+          useEffect(() => {
+            console.log(local);
+          }, [local]);
+        }
+      `,
       errors: [
-        missingError('local'),
+        'React Hook useEffect has missing [local] dependencies. ' +
+          'Either fix or remove the dependency array.',
         "Unsupported expression in React Hook useEffect's dependency list. " +
           'Currently only simple variables are supported.',
       ],
     },
     {
+      // TODO: need to think more about this case.
       code: `
-        // TODO: need to think more about this case.
         function MyComponent() {
           const local = {id: 42};
           useEffect(() => {
@@ -453,7 +678,19 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
           }, [local.id]);
         }
       `,
-      errors: [missingError('local'), extraError('local.id')],
+      // TODO: this may not be a good idea.
+      output: `
+        function MyComponent() {
+          const local = {id: 42};
+          useEffect(() => {
+            console.log(local);
+          }, [local]);
+        }
+      `,
+      errors: [
+        'React Hook useEffect has missing [local], unnecessary [local.id] dependencies. ' +
+          'Either fix or remove the dependency array.',
+      ],
     },
     {
       code: `
@@ -464,7 +701,18 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
           }, [local, local]);
         }
       `,
-      errors: [duplicateError('local')],
+      output: `
+        function MyComponent() {
+          const local = 42;
+          useEffect(() => {
+            console.log(local);
+          }, [local]);
+        }
+      `,
+      errors: [
+        'React Hook useEffect has duplicate [local] dependencies. ' +
+          'Either fix or remove the dependency array.',
+      ],
     },
     {
       code: `
@@ -476,7 +724,19 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
           }, [local1]);
         }
       `,
-      errors: [extraError('local1')],
+      output: `
+        function MyComponent() {
+          const local1 = 42;
+          useEffect(() => {
+            const local1 = 42;
+            console.log(local1);
+          }, []);
+        }
+      `,
+      errors: [
+        'React Hook useEffect has unnecessary [local1] dependencies. ' +
+          'Either fix or remove the dependency array.',
+      ],
     },
     {
       code: `
@@ -485,44 +745,61 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
           useEffect(() => {}, [local1]);
         }
       `,
-      errors: [extraError('local1')],
-    },
-    {
-      code: `
-        function MyComponent(props) {
-          useEffect(() => {
-            console.log(props.foo);
-          }, []);
-        }
-      `,
-      errors: [missingError('props.foo')],
-    },
-    {
-      code: `
-        function MyComponent(props) {
-          useEffect(() => {
-            console.log(props.foo);
-            console.log(props.bar);
-          }, []);
-        }
-      `,
-      errors: [missingError('props.foo'), missingError('props.bar')],
-    },
-    {
-      code: `
-        function MyComponent(props) {
-          const local = 42;
-          useEffect(() => {
-            console.log(props.foo);
-            console.log(props.bar);
-            console.log(local);
-          }, []);
+      output: `
+        function MyComponent() {
+          const local1 = 42;
+          useEffect(() => {}, []);
         }
       `,
       errors: [
-        missingError('props.foo'),
-        missingError('props.bar'),
-        missingError('local'),
+        'React Hook useEffect has unnecessary [local1] dependencies. ' +
+          'Either fix or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.foo);
+          }, []);
+        }
+      `,
+      // TODO: we need to think about ideal output here.
+      // Should it capture by default?
+      output: `
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.foo);
+          }, [props.foo]);
+        }
+      `,
+      errors: [
+        'React Hook useEffect has missing [props.foo] dependencies. ' +
+          'Either fix or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.foo);
+            console.log(props.bar);
+          }, []);
+        }
+      `,
+      // TODO: we need to think about ideal output here.
+      // Should it capture by default?
+      output: `
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.foo);
+            console.log(props.bar);
+          }, [props.foo, props.bar]);
+        }
+      `,
+      errors: [
+        'React Hook useEffect has missing [props.foo, props.bar] dependencies. ' +
+          'Either fix or remove the dependency array.',
       ],
     },
     {
@@ -533,10 +810,52 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
             console.log(props.foo);
             console.log(props.bar);
             console.log(local);
+          }, []);
+        }
+      `,
+      // TODO: we need to think about ideal output here.
+      // Should it capture by default?
+      output: `
+        function MyComponent(props) {
+          const local = 42;
+          useEffect(() => {
+            console.log(props.foo);
+            console.log(props.bar);
+            console.log(local);
+          }, [props.foo, props.bar, local]);
+        }
+      `,
+      errors: [
+        'React Hook useEffect has missing [props.foo, props.bar, local] dependencies. ' +
+          'Either fix or remove the dependency array.',
+      ],
+    },
+    {
+      skip: true, // TODO
+      code: `
+        function MyComponent(props) {
+          const local = 42;
+          useEffect(() => {
+            console.log(props.foo);
+            console.log(props.bar);
+            console.log(local);
           }, [props]);
         }
       `,
-      errors: [missingError('local')],
+      output: `
+        function MyComponent(props) {
+          const local = 42;
+          useEffect(() => {
+            console.log(props.foo);
+            console.log(props.bar);
+            console.log(local);
+          }, [props, local]);
+        }
+      `,
+      errors: [
+        'React Hook useEffect has missing [local] dependencies. ' +
+          'Either fix or remove the dependency array.',
+      ],
     },
     {
       code: `
@@ -564,13 +883,44 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
           }, []);
         }
       `,
+      output: `
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.foo);
+          }, [props.foo]);
+          useCallback(() => {
+            console.log(props.foo);
+          }, [props.foo]);
+          useMemo(() => {
+            console.log(props.foo);
+          }, [props.foo]);
+          React.useEffect(() => {
+            console.log(props.foo);
+          }, [props.foo]);
+          React.useCallback(() => {
+            console.log(props.foo);
+          }, [props.foo]);
+          React.useMemo(() => {
+            console.log(props.foo);
+          }, [props.foo]);
+          React.notReactiveHook(() => {
+            console.log(props.foo);
+          }, []);
+        }
+      `,
       errors: [
-        missingError('props.foo', 'useEffect'),
-        missingError('props.foo', 'useCallback'),
-        missingError('props.foo', 'useMemo'),
-        missingError('props.foo', 'React.useEffect'),
-        missingError('props.foo', 'React.useCallback'),
-        missingError('props.foo', 'React.useMemo'),
+        'React Hook useEffect has missing [props.foo] dependencies. ' +
+          'Either fix or remove the dependency array.',
+        'React Hook useCallback has missing [props.foo] dependencies. ' +
+          'Either fix or remove the dependency array.',
+        'React Hook useMemo has missing [props.foo] dependencies. ' +
+          'Either fix or remove the dependency array.',
+        'React Hook React.useEffect has missing [props.foo] dependencies. ' +
+          'Either fix or remove the dependency array.',
+        'React Hook React.useCallback has missing [props.foo] dependencies. ' +
+          'Either fix or remove the dependency array.',
+        'React Hook React.useMemo has missing [props.foo] dependencies. ' +
+          'Either fix or remove the dependency array.',
       ],
     },
     {
@@ -590,11 +940,30 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
           }, []);
         }
       `,
+      output: `
+        function MyComponent(props) {
+          useCustomEffect(() => {
+            console.log(props.foo);
+          }, [props.foo]);
+          useEffect(() => {
+            console.log(props.foo);
+          }, [props.foo]);
+          React.useEffect(() => {
+            console.log(props.foo);
+          }, [props.foo]);
+          React.useCustomEffect(() => {
+            console.log(props.foo);
+          }, []);
+        }
+      `,
       options: [{additionalHooks: 'useCustomEffect'}],
       errors: [
-        missingError('props.foo', 'useCustomEffect'),
-        missingError('props.foo', 'useEffect'),
-        missingError('props.foo', 'React.useEffect'),
+        'React Hook useCustomEffect has missing [props.foo] dependencies. ' +
+          'Either fix or remove the dependency array.',
+        'React Hook useEffect has missing [props.foo] dependencies. ' +
+          'Either fix or remove the dependency array.',
+        'React Hook React.useEffect has missing [props.foo] dependencies. ' +
+          'Either fix or remove the dependency array.',
       ],
     },
     {
@@ -606,8 +975,18 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
           }, [a ? local : b]);
         }
       `,
+      // TODO: should we bail out instead?
+      output: `
+        function MyComponent() {
+          const local = 42;
+          useEffect(() => {
+            console.log(local);
+          }, [local]);
+        }
+      `,
       errors: [
-        missingError('local'),
+        'React Hook useEffect has missing [local] dependencies. ' +
+          'Either fix or remove the dependency array.',
         "Unsupported expression in React Hook useEffect's dependency list. " +
           'Currently only simple variables are supported.',
       ],
@@ -621,31 +1000,51 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
           }, [a && local]);
         }
       `,
+      // TODO: should we bail out instead?
+      output: `
+        function MyComponent() {
+          const local = 42;
+          useEffect(() => {
+            console.log(local);
+          }, [local]);
+        }
+      `,
       errors: [
-        missingError('local'),
+        'React Hook useEffect has missing [local] dependencies. ' +
+          'Either fix or remove the dependency array.',
         "Unsupported expression in React Hook useEffect's dependency list. " +
           'Currently only simple variables are supported.',
       ],
     },
-  ].filter(x => x.code && x.code.indexOf('/*only*/') > -1),
-});
+  ],
+};
 
-function missingError(dependency, hook = 'useEffect') {
-  return (
-    `React Hook ${hook} references "${dependency}", but it was not listed in ` +
-    `the hook dependencies argument. This means if "${dependency}" changes ` +
-    `then ${hook} won't be able to update.`
-  );
+// For easier local testing
+if (!process.env.CI) {
+  let only = [];
+  let skipped = [];
+  [...tests.valid, ...tests.invalid].forEach(t => {
+    if (t.skip) {
+      delete t.skip;
+      skipped.push(t);
+    }
+    if (t.only) {
+      delete t.only;
+      only.push(t);
+    }
+  });
+  const predicate = t => {
+    if (only.length > 0) {
+      return only.indexOf(t) !== -1;
+    }
+    if (skipped.length > 0) {
+      return skipped.indexOf(t) === -1;
+    }
+    return true;
+  };
+  tests.valid = tests.valid.filter(predicate);
+  tests.invalid = tests.invalid.filter(predicate);
 }
 
-function extraError(dependency) {
-  return (
-    `React Hook useEffect has an extra dependency "${dependency}" which is ` +
-    `not used in its callback. Removing this dependency may mean the hook ` +
-    `needs to execute fewer times.`
-  );
-}
-
-function duplicateError(dependency) {
-  return `Duplicate value in React Hook useEffect's dependency list for "${dependency}".`;
-}
+const eslintTester = new ESLintTester();
+eslintTester.run('react-hooks', ReactHooksESLintRule, tests);
