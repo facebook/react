@@ -483,6 +483,7 @@ describe('ReactDOMServerIntegration', () => {
       }
     });
 
+    // Regression test for https://github.com/facebook/react/issues/14705
     it('does not pollute later renders when stream destroyed', () => {
       const LoggedInUser = React.createContext('default');
 
@@ -498,6 +499,7 @@ describe('ReactDOMServerIntegration', () => {
         AppWithUser('Amy'),
       ).setEncoding('utf8');
 
+      // This is an implementation detail because we test a memory leak
       const {threadID} = stream.partialRenderer;
 
       // Read enough to render Provider but not enough for it to be exited
@@ -523,6 +525,7 @@ describe('ReactDOMServerIntegration', () => {
       expect(markup).toBe('default');
     });
 
+    // Regression test for https://github.com/facebook/react/issues/14705
     it('frees context value reference when stream destroyed', () => {
       const LoggedInUser = React.createContext('default');
 
@@ -538,6 +541,7 @@ describe('ReactDOMServerIntegration', () => {
         AppWithUser('Amy'),
       ).setEncoding('utf8');
 
+      // This is an implementation detail because we test a memory leak
       const {threadID} = stream.partialRenderer;
 
       // Read enough to render Provider but not enough for it to be exited
@@ -546,6 +550,30 @@ describe('ReactDOMServerIntegration', () => {
 
       stream.destroy();
       expect(LoggedInUser[threadID]).toBe('default');
+    });
+
+    it('does not pollute sync renders after an error', () => {
+      const LoggedInUser = React.createContext('default');
+      const Crash = () => {
+        throw new Error('Boo!');
+      };
+      const AppWithUser = user => (
+        <LoggedInUser.Provider value={user}>
+          <LoggedInUser.Consumer>{whoAmI => whoAmI}</LoggedInUser.Consumer>
+          <Crash />
+        </LoggedInUser.Provider>
+      );
+
+      expect(() => {
+        ReactDOMServer.renderToString(AppWithUser('Casper'));
+      }).toThrow('Boo');
+
+      // Should not report a value from failed render
+      expect(
+        ReactDOMServer.renderToString(
+          <LoggedInUser.Consumer>{whoAmI => whoAmI}</LoggedInUser.Consumer>,
+        ),
+      ).toBe('default');
     });
   });
 });
