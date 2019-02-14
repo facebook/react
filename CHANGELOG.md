@@ -16,6 +16,10 @@
 * Fix `crossOrigin` attribute to work in SVG `image` elements. ([@aweary](https://github.com/aweary) in [#14832](https://github.com/facebook/react/pull/14832))
 * Fix a false positive warning when using Suspense with Hooks. ([@gaearon](https://github.com/gaearon) in [#14821](https://github.com/facebook/react/pull/14821))
 
+### React Test Utils and React Test Renderer
+
+* Include component stack into the `act()` warning. ([@threepointone](https://github.com/threepointone) in [#14855](https://github.com/facebook/react/pull/14855))
+
 ## 16.8.1 (February 6, 2019)
 
 ### React DOM and React Test Renderer
