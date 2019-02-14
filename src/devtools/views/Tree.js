@@ -11,6 +11,7 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList } from 'react-window';
 import { TreeContext } from './TreeContext';
 import { SettingsContext } from './SettingsContext';
+import Button from './Button';
 import ButtonIcon from './ButtonIcon';
 import Element from './Element';
 import OwnersStack from './OwnersStack';
@@ -86,12 +87,12 @@ export default function Tree(props: Props) {
     <div className={styles.Tree}>
       <div className={styles.SearchInput}>
         {ownerStack.length > 0 ? <OwnersStack /> : <SearchInput />}
-        <button
+        <Button
           className={styles.IconButton}
           title="Select an element in the page to inspect it"
         >
           <ButtonIcon type="search" />
-        </button>
+        </Button>
       </div>
       <div className={styles.AutoSizerWrapper}>
         <AutoSizer>

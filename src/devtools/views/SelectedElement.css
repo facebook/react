@@ -16,20 +16,6 @@
   padding: 0.5rem;
 }
 
-.IconButton {
-  flex: 0 0 auto;
-  border: none;
-  background: none;
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem;
-  cursor: pointer;
-  color: var(--color-button);
-}
-.IconButton:hover {
-  color: var(--color-button-hover);
-}
-
 .SelectedComponentName {
   flex: 1 1 auto;
   overflow: hidden;
@@ -51,13 +37,13 @@
 .Owner:before {
   white-space: nowrap;
   content: '<';
-  color: var(--color-tree-jsx-arrow-brackets);
+  color: var(--color-jsx-arrow-brackets);
 }
 .Component:after,
 .Owner:after {
   white-space: nowrap;
   content: '>';
-  color: var(--color-tree-jsx-arrow-brackets);
+  color: var(--color-jsx-arrow-brackets);
 }
 
 .Component {

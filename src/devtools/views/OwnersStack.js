@@ -1,6 +1,7 @@
 // @flow
 
 import React, { useCallback, useContext } from 'react';
+import Button from './Button';
 import ButtonIcon from './ButtonIcon';
 import { TreeContext } from './TreeContext';
 import { StoreContext } from './context';
@@ -19,13 +20,13 @@ export default function OwnerStack() {
 
   return (
     <div className={styles.OwnerStack}>
-      <button
+      <Button
         className={styles.IconButton}
         onClick={resetOwnerStack}
         title="Back to tree view"
       >
         <ButtonIcon type="close" />
-      </button>
+      </Button>
       <div className={styles.VRule} />
       {elements}
     </div>

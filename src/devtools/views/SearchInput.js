@@ -2,6 +2,7 @@
 
 import React, { useCallback, useContext, useEffect, useRef } from 'react';
 import { TreeContext } from './TreeContext';
+import Button from './Button';
 import ButtonIcon from './ButtonIcon';
 import Icon from './Icon';
 
@@ -74,30 +75,30 @@ export default function SearchInput(props: Props) {
         </span>
       )}
       <div className={styles.LeftVRule} />
-      <button
+      <Button
         className={styles.IconButton}
         disabled={!searchText}
         onClick={goToPreviousSearchResult}
         title="Scroll to previous search result"
       >
         <ButtonIcon type="up" />
-      </button>
-      <button
+      </Button>
+      <Button
         className={styles.IconButton}
         disabled={!searchText}
         onClick={goToNextSearchResult}
         title="Scroll to next search result"
       >
         <ButtonIcon type="down" />
-      </button>
-      <button
+      </Button>
+      <Button
         className={styles.IconButton}
         disabled={!searchText}
         onClick={resetSearch}
         title="Reset search"
       >
         <ButtonIcon type="close" />
-      </button>
+      </Button>
       <div className={styles.RightVRule} />
     </div>
   );

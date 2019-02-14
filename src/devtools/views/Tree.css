@@ -26,17 +26,3 @@
   font-size: var(--font-size-monospace-normal);
   line-height: var(--line-height-data);
 }
-
-.IconButton {
-  border: none;
-  background: none;
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem;
-  cursor: pointer;
-  color: var(--color-button);
-  flex: 0 0 auto;
-}
-.IconButton:hover {
-  color: var(--color-button-hover);
-}

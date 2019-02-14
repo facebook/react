@@ -103,86 +103,42 @@ function setStyleVariable(name: string, value: string) {
   (document.documentElement: any).style.setProperty(name, value);
 }
 
+function updateStyleHelper(themeKey: string, style: string) {
+  setStyleVariable(`--${style}`, `var(--${themeKey}-${style})`);
+}
+
 function updateDisplayDensity(displayDensity: DisplayDensity): void {
-  setStyleVariable(
-    '--font-size-monospace-normal',
-    `var(--${displayDensity}-font-size-monospace-normal)`
-  );
-  setStyleVariable(
-    '--font-size-monospace-large',
-    `var(--${displayDensity}-font-size-monospace-large)`
-  );
-  setStyleVariable(
-    '--font-size-sans-normal',
-    `var(--${displayDensity}-font-size-sans-normal)`
-  );
-  setStyleVariable(
-    '--font-size-sans-large',
-    `var(--${displayDensity}-font-size-sans-large)`
-  );
-  setStyleVariable(
-    '--line-height-data',
-    `var(--${displayDensity}-line-height-data)`
-  );
+  updateStyleHelper(displayDensity, 'font-size-monospace-normal');
+  updateStyleHelper(displayDensity, 'font-size-monospace-large');
+  updateStyleHelper(displayDensity, 'font-size-sans-normal');
+  updateStyleHelper(displayDensity, 'font-size-sans-large');
+  updateStyleHelper(displayDensity, 'line-height-data');
 }
 
 function updateThemeVariables(theme: Theme): void {
-  setStyleVariable('--color-arrow', `var(--theme-${theme}-arrow)`);
-  setStyleVariable(
-    '--color-arrow-inverted',
-    `var(--theme-${theme}-arrow-inverted)`
-  );
-  setStyleVariable(
-    '--color-attribute-name',
-    `var(--theme-${theme}-attribute-name)`
-  );
-  setStyleVariable(
-    '--color-attribute-value',
-    `var(--theme-${theme}-attribute-value)`
-  );
-  setStyleVariable('--color-background', `var(--theme-${theme}-background)`);
-  setStyleVariable('--color-border', `var(--theme-${theme}-color-border)`);
-  setStyleVariable('--color-button', `var(--theme-${theme}-button)`);
-  setStyleVariable(
-    '--color-button-hover',
-    `var(--theme-${theme}-button-hover)`
-  );
-  setStyleVariable(
-    '--color-component-name',
-    `var(--theme-${theme}-component-name)`
-  );
-  setStyleVariable(
-    '--color-component-name-inverted',
-    `var(--theme-${theme}-component-name-inverted)`
-  );
-  setStyleVariable('--color-dim', `var(--theme-${theme}-dim)`);
-  setStyleVariable('--color-dimmer', `var(--theme-${theme}-dimmer)`);
-  setStyleVariable('--color-dimmest', `var(--theme-${theme}-dimmest)`);
-  setStyleVariable(
-    '--color-search-match',
-    `var(--theme-${theme}-search-match)`
-  );
-  setStyleVariable(
-    '--color-search-match-current',
-    `var(--theme-${theme}-search-match-current)`
-  );
-  setStyleVariable('--color-text-color', `var(--theme-${theme}-text-color)`);
-  setStyleVariable(
-    '--color-tree-jsx-arrow-brackets',
-    `var(--theme-${theme}-jsx-arrow-brackets)`
-  );
-  setStyleVariable(
-    '--color-tree-jsx-arrow-brackets-inverted',
-    `var(--theme-${theme}-jsx-arrow-brackets-inverted)`
-  );
-  setStyleVariable(
-    '--color-tree-node-selected',
-    `var(--theme-${theme}-tree-node-selected)`
-  );
-  setStyleVariable(
-    '--color-tree-node-hover',
-    `var(--theme-${theme}-tree-node-hover)`
-  );
+  updateStyleHelper(theme, 'color-attribute-name');
+  updateStyleHelper(theme, 'color-attribute-value');
+  updateStyleHelper(theme, 'color-background');
+  updateStyleHelper(theme, 'color-border');
+  updateStyleHelper(theme, 'color-button-background');
+  updateStyleHelper(theme, 'color-button-background-focus');
+  updateStyleHelper(theme, 'color-button-background-hover');
+  updateStyleHelper(theme, 'color-button');
+  updateStyleHelper(theme, 'color-button-disabled');
+  updateStyleHelper(theme, 'color-button-focus');
+  updateStyleHelper(theme, 'color-button-hover');
+  updateStyleHelper(theme, 'color-component-name');
+  updateStyleHelper(theme, 'color-component-name-inverted');
+  updateStyleHelper(theme, 'color-dim');
+  updateStyleHelper(theme, 'color-dimmer');
+  updateStyleHelper(theme, 'color-dimmest');
+  updateStyleHelper(theme, 'color-search-match');
+  updateStyleHelper(theme, 'color-search-match-current');
+  updateStyleHelper(theme, 'color-text-color');
+  updateStyleHelper(theme, 'color-jsx-arrow-brackets');
+  updateStyleHelper(theme, 'color-jsx-arrow-brackets-inverted');
+  updateStyleHelper(theme, 'color-tree-node-selected');
+  updateStyleHelper(theme, 'color-tree-node-hover');
 }
 
 export { SettingsContext, SettingsContextController };

@@ -9,6 +9,7 @@ import React, {
 } from 'react';
 import { TreeContext } from './TreeContext';
 import { BridgeContext, StoreContext } from './context';
+import Button from './Button';
 import ButtonIcon from './ButtonIcon';
 import HooksTree from './HooksTree';
 import InspectedElementTree from './InspectedElementTree';
@@ -64,20 +65,20 @@ export default function SelectedElement(_: Props) {
           </div>
         </div>
 
-        <button
+        <Button
           className={styles.IconButton}
           onClick={handleClick}
           title="Highlight this element in the page"
         >
           <ButtonIcon type="view-dom" />
-        </button>
+        </Button>
         {source !== null && (
-          <button
+          <Button
             className={styles.IconButton}
             title="View source for this element"
           >
             <ButtonIcon type="view-source" />
-          </button>
+          </Button>
         )}
       </div>
 
