@@ -55,6 +55,8 @@ function KeyValue({ depth, name, value }: KeyValueProps) {
     dataType === 'boolean' ||
     value == null;
 
+  const paddingLeft = `${depth * 0.75}rem`;
+
   let children = null;
   if (isSimpleType) {
     let displayValue = value;
@@ -65,22 +67,14 @@ function KeyValue({ depth, name, value }: KeyValueProps) {
     }
 
     children = (
-      <div
-        key="root"
-        className={styles.Item}
-        style={{ paddingLeft: `${depth}rem` }}
-      >
+      <div key="root" className={styles.Item} style={{ paddingLeft }}>
         <span className={styles.Name}>{name}</span>:{' '}
         <span className={styles.Value}>{displayValue}</span>
       </div>
     );
   } else if (value.hasOwnProperty(meta.type)) {
     children = (
-      <div
-        key="root"
-        className={styles.Item}
-        style={{ paddingLeft: `${depth}rem` }}
-      >
+      <div key="root" className={styles.Item} style={{ paddingLeft }}>
         <span className={styles.Name}>{name}</span>:{' '}
         <span className={styles.Value}>{getMetaValueLabel(value)}</span>
       </div>
@@ -99,7 +93,7 @@ function KeyValue({ depth, name, value }: KeyValueProps) {
         <div
           key={`${depth}-root`}
           className={styles.Item}
-          style={{ paddingLeft: `${depth}rem` }}
+          style={{ paddingLeft }}
         >
           <span className={styles.Name}>{name}</span>: <span>Array</span>
         </div>
@@ -112,7 +106,7 @@ function KeyValue({ depth, name, value }: KeyValueProps) {
         <div
           key={`${depth}-root`}
           className={styles.Item}
-          style={{ paddingLeft: `${depth}rem` }}
+          style={{ paddingLeft }}
         >
           <span className={styles.Name}>{name}</span>: <span>Object</span>
         </div>

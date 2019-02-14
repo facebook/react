@@ -25,5 +25,5 @@
 .Empty {
   color: var(--color-dimmer);
   font-style: italic;
-  padding-left: 1rem;
+  padding-left: 0.75rem;
 }

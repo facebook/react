@@ -53,7 +53,7 @@ export default function ElementView({ index, style }: Props) {
       onDoubleClick={handleDoubleClick}
       style={{
         ...style, // "style" comes from react-window
-        paddingLeft: `${depth - baseDepth}.25rem`,
+        paddingLeft: `${(depth - baseDepth) * 0.75 + 0.25}rem`,
       }}
     >
       <span className={styles.Component}>
