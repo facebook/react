@@ -482,5 +482,98 @@ describe('ReactDOMServerIntegration', () => {
         );
       }
     });
+
+    // Regression test for https://github.com/facebook/react/issues/14705
+    it('does not pollute later renders when stream destroyed', () => {
+      const LoggedInUser = React.createContext('default');
+
+      const AppWithUser = user => (
+        <LoggedInUser.Provider value={user}>
+          <header>
+            <LoggedInUser.Consumer>{whoAmI => whoAmI}</LoggedInUser.Consumer>
+          </header>
+        </LoggedInUser.Provider>
+      );
+
+      const stream = ReactDOMServer.renderToNodeStream(
+        AppWithUser('Amy'),
+      ).setEncoding('utf8');
+
+      // This is an implementation detail because we test a memory leak
+      const {threadID} = stream.partialRenderer;
+
+      // Read enough to render Provider but not enough for it to be exited
+      stream._read(10);
+      expect(LoggedInUser[threadID]).toBe('Amy');
+
+      stream.destroy();
+
+      const AppWithUserNoProvider = () => (
+        <LoggedInUser.Consumer>{whoAmI => whoAmI}</LoggedInUser.Consumer>
+      );
+
+      const stream2 = ReactDOMServer.renderToNodeStream(
+        AppWithUserNoProvider(),
+      ).setEncoding('utf8');
+
+      // Sanity check to ensure 2nd render has same threadID as 1st render,
+      // otherwise this test is not testing what it's meant to
+      expect(stream2.partialRenderer.threadID).toBe(threadID);
+
+      const markup = stream2.read(Infinity);
+
+      expect(markup).toBe('default');
+    });
+
+    // Regression test for https://github.com/facebook/react/issues/14705
+    it('frees context value reference when stream destroyed', () => {
+      const LoggedInUser = React.createContext('default');
+
+      const AppWithUser = user => (
+        <LoggedInUser.Provider value={user}>
+          <header>
+            <LoggedInUser.Consumer>{whoAmI => whoAmI}</LoggedInUser.Consumer>
+          </header>
+        </LoggedInUser.Provider>
+      );
+
+      const stream = ReactDOMServer.renderToNodeStream(
+        AppWithUser('Amy'),
+      ).setEncoding('utf8');
+
+      // This is an implementation detail because we test a memory leak
+      const {threadID} = stream.partialRenderer;
+
+      // Read enough to render Provider but not enough for it to be exited
+      stream._read(10);
+      expect(LoggedInUser[threadID]).toBe('Amy');
+
+      stream.destroy();
+      expect(LoggedInUser[threadID]).toBe('default');
+    });
+
+    it('does not pollute sync renders after an error', () => {
+      const LoggedInUser = React.createContext('default');
+      const Crash = () => {
+        throw new Error('Boo!');
+      };
+      const AppWithUser = user => (
+        <LoggedInUser.Provider value={user}>
+          <LoggedInUser.Consumer>{whoAmI => whoAmI}</LoggedInUser.Consumer>
+          <Crash />
+        </LoggedInUser.Provider>
+      );
+
+      expect(() => {
+        ReactDOMServer.renderToString(AppWithUser('Casper'));
+      }).toThrow('Boo');
+
+      // Should not report a value from failed render
+      expect(
+        ReactDOMServer.renderToString(
+          <LoggedInUser.Consumer>{whoAmI => whoAmI}</LoggedInUser.Consumer>,
+        ),
+      ).toBe('default');
+    });
   });
 });
