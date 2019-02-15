@@ -132,13 +132,13 @@ function updateThemeVariables(theme: Theme): void {
   updateStyleHelper(theme, 'color-dim');
   updateStyleHelper(theme, 'color-dimmer');
   updateStyleHelper(theme, 'color-dimmest');
-  updateStyleHelper(theme, 'color-search-match');
-  updateStyleHelper(theme, 'color-search-match-current');
-  updateStyleHelper(theme, 'color-text-color');
   updateStyleHelper(theme, 'color-jsx-arrow-brackets');
   updateStyleHelper(theme, 'color-jsx-arrow-brackets-inverted');
   updateStyleHelper(theme, 'color-tree-node-selected');
   updateStyleHelper(theme, 'color-tree-node-hover');
+  updateStyleHelper(theme, 'color-search-match');
+  updateStyleHelper(theme, 'color-search-match-current');
+  updateStyleHelper(theme, 'color-text-color');
 }
 
 export { SettingsContext, SettingsContextController };

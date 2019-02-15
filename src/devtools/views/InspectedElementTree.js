@@ -47,7 +47,7 @@ type KeyValueProps = {|
   value: any,
 |};
 
-function KeyValue({ depth, name, value }: KeyValueProps) {
+export function KeyValue({ depth, name, value }: KeyValueProps) {
   const dataType = typeof value;
   const isSimpleType =
     dataType === 'number' ||
@@ -64,6 +64,10 @@ function KeyValue({ depth, name, value }: KeyValueProps) {
       displayValue = `"${value}"`;
     } else if (dataType === 'boolean') {
       displayValue = value ? 'true' : 'false';
+    } else if (value === null) {
+      displayValue = 'null';
+    } else if (value === undefined) {
+      displayValue = 'undefined';
     }
 
     children = (
@@ -99,6 +103,7 @@ function KeyValue({ depth, name, value }: KeyValueProps) {
         </div>
       );
     } else {
+      // $FlowFixMe
       children = Object.entries(value).map(([name, value]) => (
         <KeyValue key={name} depth={depth + 1} name={name} value={value} />
       ));

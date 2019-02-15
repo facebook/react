@@ -11,6 +11,16 @@ import React, {
   useState,
 } from 'react';
 
+const object = {
+  string: 'abc',
+  number: 123,
+  boolean: true,
+  null: null,
+  undefined: undefined,
+  array: ['a', 'b', 'c'],
+  object: { foo: 1, bar: 2, baz: 3 },
+};
+
 function useNestedInnerHook() {
   return useState(123);
 }
@@ -18,11 +28,19 @@ function useNestedOuterHook() {
   return useNestedInnerHook();
 }
 
+function useCustomObject() {
+  useDebugValue(object);
+  return useState(123);
+}
+
 function FunctionWithHooks(props: any, ref: React$Ref<any>) {
   const [count, updateCount] = useState(0);
+  const [_, __] = useState(object);
 
   // Custom hook with a custom debug label
   const debouncedCount = useDebounce(count, 1000);
+
+  useCustomObject();
 
   const onClick = useCallback(
     function onClick() {
