@@ -134,7 +134,6 @@ const tests = {
     `,
     },
     {
-      skip: true, // TODO
       code: `
       // Regression test
       function MyComponent({ foo }) {
@@ -145,7 +144,6 @@ const tests = {
     `,
     },
     {
-      skip: true, // TODO
       code: `
       // Regression test
       function MyComponent({ foo }) {
@@ -157,7 +155,6 @@ const tests = {
     `,
     },
     {
-      skip: true, // TODO
       code: `
       // Regression test
       function MyComponent({ history }) {
@@ -202,7 +199,6 @@ const tests = {
     `,
     },
     {
-      skip: true, // TODO
       // TODO: we might want to warn "props.foo"
       // is extraneous because we already have "props".
       code: `
@@ -831,7 +827,6 @@ const tests = {
       ],
     },
     {
-      skip: true, // TODO
       code: `
         function MyComponent(props) {
           const local = 42;

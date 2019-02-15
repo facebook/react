@@ -269,9 +269,16 @@ export default {
       let unnecessaryDependencies = new Set();
       let missingDependencies = new Set();
 
+      let actualDependencies = Array.from(dependencies.keys());
+
+      function satisfies(actualDep, dep) {
+        return actualDep === dep || actualDep.startsWith(dep + '.');
+      }
+
+      // TODO: this could use some refactoring and optimizations.
       // First, ensure what user specified makes sense.
-      for (let {key} of declaredDependencies) {
-        if (dependencies.has(key)) {
+      declaredDependencies.forEach(({key}) => {
+        if (actualDependencies.some(actualDep => satisfies(actualDep, key))) {
           // Legit dependency.
           if (suggestedDependencies.indexOf(key) === -1) {
             suggestedDependencies.push(key);
@@ -283,17 +290,21 @@ export default {
           // Unnecessary dependency. Do nothing.
           unnecessaryDependencies.add(key);
         }
-      }
+      });
       // Then fill in the missing ones.
-      for (let [key] of dependencies) {
-        if (suggestedDependencies.indexOf(key) === -1) {
+      Array.from(dependencies.keys()).forEach(key => {
+        if (
+          !suggestedDependencies.some(suggestedDep =>
+            satisfies(key, suggestedDep),
+          )
+        ) {
           // Legit missing.
           suggestedDependencies.push(key);
           missingDependencies.add(key);
         } else {
           // Already did that. Do nothing.
         }
-      }
+      });
 
       if (
         duplicateDependencies.size > 0 ||
