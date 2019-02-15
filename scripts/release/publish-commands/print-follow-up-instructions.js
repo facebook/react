@@ -78,7 +78,10 @@ const run = async ({cwd, packages, tags}) => {
     console.log(theme.command`  git push origin --tags`);
 
     console.log();
-    console.log(theme.header`Lastly, please fill in the release on GitHub:`);
+    console.log(
+      theme.header`Lastly, please fill in the release on GitHub. ` +
+        theme`Don't forget to attach build artifacts from {path build/node_modules/}`
+    );
     console.log(
       theme.link`https://github.com/facebook/react/releases/tag/v%s`,
       version

@@ -4,14 +4,58 @@ The release process consists of several phases, each one represented by one of t
 
 A typical release goes like this:
 1. When a commit is pushed to the React repo, [Circle CI](https://circleci.com/gh/facebook/react/) will build all release bundles and run unit tests against both the source code and the built bundles.
-2. Next the release is published as a canary using the [`prepare-canary`](#prepare-canary) and [`publish`](#publish) scripts. (Currently this process is manual but might be automated in the future using [GitHub "actions"](https://github.com/features/actions).)
-3. Finally, a canary releases can be promoted to stable using the [`prepare-stable`](#prepare-stable) and [`publish`](#publish) scripts. (This process is always manual.)
+2. Next the release is [**published as a canary**](#publishing-a-canary) using the [`prepare-canary`](#prepare-canary) and [`publish`](#publish) scripts. (Currently this process is manual but might be automated in the future using [GitHub "actions"](https://github.com/features/actions).)
+3. Finally, a canary releases can be [**promoted to stable**](#publishing-a-stable-release) using the [`prepare-stable`](#prepare-stable) and [`publish`](#publish) scripts. (This process is always manual.)
 
-One or more release scripts are used for each of the above phases. Learn more about these scripts below:
+The high level process of creating releases is [documented below](#process). Individual scripts are documented as well:
 * [`create-canary`](#create-canary)
 * [`prepare-canary`](#prepare-canary)
 * [`prepare-stable`](#prepare-stable)
 * [`publish`](#publish)
+
+# Process
+
+## Publishing a Canary
+
+Canaries are meant to be lightweight and published often. In most cases, canaries can be published using artifacts built by Circle CI.
+
+To prepare a canary for a particular commit:
+1. Choose a commit from [the commit log](https://github.com/facebook/react/commits/master).
+2. Click the "“✓" icon and click the Circle CI "Details" link.
+4. Copy the build ID from the URL (e.g. the build ID for [circleci.com/gh/facebook/react/13471](https://circleci.com/gh/facebook/react/13471) is  **13471**).
+5. Run the [`prepare-canary`](#prepare-canary) script with the build ID you found <sup>1</sup>:
+```sh
+scripts/release/prepare-canary.js --build=13471
+```
+
+Once the canary has been checked out and tested locally, you're ready to publish it:
+```sh
+scripts/release/publish.js --tags canary
+```
+
+<sup>1: You can omit the `build` param if you just want to release the latest commit as a canary.</sup>
+
+## Publishing a Stable Release
+
+Stable releases should always be created from a previously-released canary. This encourages better testing of the actual release artifacts and reduces the chance of unintended changes accidentally being included in a stable release.
+
+To prepare a stable release, choose a canary version and  run the [`prepare-stable`](#prepare-stable) script <sup>1</sup>:
+
+```sh
+scripts/release/prepare-stable.js --version=0.0.0-5bf84d292
+```
+
+This script will prompt you to select stable version numbers for each of the packages. It will update the package JSON versions (and dependencies) based on the numbers you select.
+
+Once this step is complete, you're ready to publish the release:
+
+```sh
+scripts/release/publish.js --tags next latest
+```
+
+<sup>1: You can omit the `version` param if you just want to promote the latest canary to stable.</sup>
+
+# Scripts
 
 ## `create-canary`
 Creates a canary build from the current (local) Git revision.
