@@ -311,5 +311,13 @@
   "309": "Function components cannot have refs. Did you mean to use React.forwardRef()?",
   "310": "Rendered more hooks than during the previous render.",
   "311": "Should have a queue. This is likely a bug in React. Please file an issue.",
-  "312": "Rendered more hooks than during the previous render"
+  "312": "Rendered more hooks than during the previous render",
+  "313": "Unknown priority level. This error is likely caused by a bug in React. Please file an issue.",
+  "314": "Pinged unknown suspense boundary type. This is probably a bug in React.",
+  "315": "Suspense boundaries are never on the root. This is probably a bug in React.",
+  "316": "Expected skipPastDehydratedSuspenseInstance() to never be called. This error is likely caused by a bug in React. Please file an issue.",
+  "317": "Expected to have a hydrated suspense instance. This error is likely caused by a bug in React. Please file an issue.",
+  "318": "A dehydrated suspense component was completed without a hydrated node. This is probably a bug in React.",
+  "319": "A dehydrated suspense boundary must commit before trying to render. This is probably a bug in React.",
+  "320": "Expected ReactFiberErrorDialog.showErrorDialog to be a function."
 }

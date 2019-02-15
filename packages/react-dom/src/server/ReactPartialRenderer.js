@@ -715,6 +715,7 @@ class ReactDOMServerRenderer {
   destroy() {
     if (!this.exhausted) {
       this.exhausted = true;
+      this.clearProviders();
       freeThreadID(this.threadID);
     }
   }
@@ -774,6 +775,15 @@ class ReactDOMServerRenderer {
     // We've already verified that this context has been expanded to accommodate
     // this thread id, so we don't need to do it again.
     context[this.threadID] = previousValue;
+  }
+
+  clearProviders(): void {
+    // Restore any remaining providers on the stack to previous values
+    for (let index = this.contextIndex; index >= 0; index--) {
+      const context: ReactContext<any> = this.contextStack[index];
+      const previousValue = this.contextValueStack[index];
+      context[this.threadID] = previousValue;
+    }
   }
 
   read(bytes: number): string | null {
