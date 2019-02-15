@@ -54,6 +54,7 @@ import {
   interactiveUpdates,
   flushInteractiveUpdates,
   flushPassiveEffects,
+  setIsActingUpdatesInDev,
 } from './ReactFiberScheduler';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
@@ -64,7 +65,6 @@ import {
 } from './ReactCurrentFiber';
 import {StrictMode} from './ReactTypeOfMode';
 import {Sync} from './ReactFiberExpirationTime';
-import {setIsActingUpdatesInDev} from './ReactFiberHooks';
 
 type OpaqueRoot = FiberRoot;
 

@@ -1827,6 +1827,42 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
   return root;
 }
 
+// in a test-like environment, we want to warn if dispatchAction()
+// is called outside of a TestUtils.act(...) call.
+
+let isActingUpdates: boolean = false;
+
+export function setIsActingUpdatesInDev(toggle: boolean) {
+  if (__DEV__) {
+    isActingUpdates = toggle;
+  }
+}
+
+export function warnIfNotCurrentlyActingInDev(fiber: Fiber): void {
+  if (__DEV__) {
+    if (
+      isActingUpdates === false &&
+      isRendering === false &&
+      isBatchingUpdates === false
+    ) {
+      warningWithoutStack(
+        false,
+        'An update to %s inside a test was not wrapped in act(...).\n\n' +
+          'When testing, code that causes React state updates should be wrapped into act(...):\n\n' +
+          'act(() => {\n' +
+          '  /* fire events that update state */\n' +
+          '});\n' +
+          '/* assert on the output */\n\n' +
+          "This ensures that you're testing the behavior the user would see in the browser." +
+          ' Learn more at https://fb.me/react-wrap-tests-with-act' +
+          '%s',
+        getComponentName(fiber.type),
+        getStackByFiberInDevAndProd(fiber),
+      );
+    }
+  }
+}
+
 function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
   const root = scheduleWorkToRoot(fiber, expirationTime);
   if (root === null) {

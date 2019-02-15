@@ -258,7 +258,7 @@ describe('act', () => {
       expect(console.error).toHaveBeenCalledTimes(1);
     });
 
-    it('commits are effects are guaranteed to be flushed', async () => {
+    it('commits and effects are guaranteed to be flushed', async () => {
       function App(props) {
         let [state, setState] = React.useState(0);
         async function something() {
