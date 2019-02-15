@@ -1841,7 +1841,8 @@ export function actedUpdates(callback: () => void | Promise<void>): Thenable {
   }
 
   const result = batchedUpdates(callback);
-  if (result && result.then) { // saving a few bytes without the typeof === 'function' check
+  if (result && result.then) {
+    // saving a few bytes without the typeof === 'function' check
     // the returned thenable MUST be called
     let called = false;
     if (__DEV__) {
