@@ -18,9 +18,10 @@ import {
 import SyntheticEvent from 'events/SyntheticEvent';
 import invariant from 'shared/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
+import createAct from 'shared/createAct';
 import * as DOMTopLevelEventTypes from '../events/DOMTopLevelEventTypes';
-import act from './ReactTestUtilsAct';
 
 const {findDOMNode} = ReactDOM;
 // Keep in sync with ReactDOMUnstableNativeDependencies.js
@@ -39,7 +40,6 @@ const [
   restoreStateIfNeeded,
   dispatchEvent,
   runEventsInBatch,
-  // eslint-disable-next-line no-unused-vars
   setIsActingUpdatesInDev,
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
 
@@ -146,6 +146,44 @@ function validateClassInstance(inst, methodName) {
     methodName,
     received,
   );
+}
+
+// for .act's return value
+type Thenable = {
+  then(resolve: () => void, reject?: () => void): void,
+  // ^ todo - maybe this should return a promise...
+};
+
+// a stub element, lazily initialized, used by act() when flushing effects
+let actContainerElement = null;
+
+const createdAct = createAct(
+  'ReactTestUtils',
+  setIsActingUpdatesInDev,
+  () => {
+    ReactDOM.render(<div />, actContainerElement);
+  },
+  ReactDOM.unstable_batchedUpdates,
+);
+
+function act(callback: () => void | Promise<void>): Thenable {
+  if (actContainerElement === null) {
+    // warn if we can't actually create the stub element
+    if (__DEV__) {
+      warningWithoutStack(
+        typeof document !== 'undefined' &&
+          document !== null &&
+          typeof document.createElement === 'function',
+        'It looks like you called ReactTestUtils.act(...) in a non-browser environment. ' +
+          "If you're using TestRenderer for your tests, you should call " +
+          'ReactTestRenderer.act(...) instead of TestUtils.act(...).',
+      );
+    }
+    // then make it
+    actContainerElement = document.createElement('div');
+  }
+
+  return createdAct(callback);
 }
 
 /**
