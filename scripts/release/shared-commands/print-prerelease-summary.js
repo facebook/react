@@ -19,7 +19,7 @@ module.exports = ({cwd}, isStableRelease) => {
     message = theme`
       {caution A stable release candidate has been prepared!}
 
-      You can review the contents of this release in {path ./build/node_modules/}
+      You can review the contents of this release in {path build/node_modules/}
 
       {header Before publishing, consider testing this release locally with create-react-app!}
 
@@ -30,7 +30,7 @@ module.exports = ({cwd}, isStableRelease) => {
     message = theme`
       {caution A canary release candidate has been prepared!}
 
-      You can review the contents of this release in {path ./build/node_modules/}
+      You can review the contents of this release in {path build/node_modules/}
 
       You can publish this release by running:
       {path   ${publishPath}}
