@@ -3,7 +3,9 @@
 'use strict';
 
 const clear = require('clear');
+const {existsSync} = require('fs');
 const {readJsonSync} = require('fs-extra');
+const {join} = require('path');
 const theme = require('../theme');
 
 const run = async ({cwd, packages, tags}) => {
@@ -25,6 +27,8 @@ const run = async ({cwd, packages, tags}) => {
       theme`{header A canary release} {version ${version}} {header has been published!}`
     );
   } else {
+    const nodeModulesPath = join(cwd, 'build/node_modules');
+
     console.log(
       theme.caution`The release has been published but you're not done yet!`
     );
@@ -78,14 +82,28 @@ const run = async ({cwd, packages, tags}) => {
     console.log(theme.command`  git push origin --tags`);
 
     console.log();
-    console.log(
-      theme.header`Lastly, please fill in the release on GitHub. ` +
-        theme`Don't forget to attach build artifacts from {path build/node_modules/}`
-    );
+    console.log(theme.header`Lastly, please fill in the release on GitHub.`);
     console.log(
       theme.link`https://github.com/facebook/react/releases/tag/v%s`,
       version
     );
+    console.log(
+      theme`\nThe GitHub release should also include links to the following artifacts:`
+    );
+    for (let i = 0; i < packages.length; i++) {
+      const packageName = packages[i];
+      if (existsSync(join(nodeModulesPath, packageName, 'umd'))) {
+        const {version: packageVersion} = readJsonSync(
+          join(nodeModulesPath, packageName, 'package.json')
+        );
+        console.log(
+          theme`{path • %s:} {link https://unpkg.com/%s@%s/umd/}`,
+          packageName,
+          packageName,
+          packageVersion
+        );
+      }
+    }
     console.log();
   }
 };
