@@ -148,21 +148,13 @@ function validateClassInstance(inst, methodName) {
 }
 
 let didWarnAboutActInNodejs = false;
-let isBrowserLikeEnvironment =
-  typeof document !== 'undefined' && document !== null;
-
 function act(callback: () => void | Promise<void>) {
   if (__DEV__) {
     // warn if we're trying to use this in something like node (without jsdom)
-    if (
-      didWarnAboutActInNodejs === false &&
-      isBrowserLikeEnvironment === false
-    ) {
+    if (didWarnAboutActInNodejs === false) {
       didWarnAboutActInNodejs = true;
       warningWithoutStack(
-        typeof document !== 'undefined' &&
-          document !== null &&
-          typeof document.createElement === 'function',
+        typeof document !== 'undefined' && document !== null,
         'It looks like you called ReactTestUtils.act(...) in a non-browser environment. ' +
           "If you're using TestRenderer for your tests, you should call " +
           'ReactTestRenderer.act(...) instead of ReactTestUtils.act(...).',
