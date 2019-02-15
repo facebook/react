@@ -21,7 +21,6 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import {createPortal} from 'shared/ReactPortal';
 import expect from 'expect';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
-import createAct from 'shared/createAct';
 
 type Container = {
   rootID: string,
@@ -865,14 +864,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     interactiveUpdates: NoopRenderer.interactiveUpdates,
 
-    act: createAct(
-      'ReactNoopRenderer',
-      NoopRenderer.setIsActingUpdatesInDev,
-      () => {
-        ReactNoop.flushPassiveEffects();
-      },
-      NoopRenderer.batchedUpdates,
-    ),
+    act: NoopRenderer.actedUpdates,
 
     flushSync(fn: () => mixed) {
       yieldedValues = [];

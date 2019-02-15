@@ -54,7 +54,7 @@ import {
   interactiveUpdates,
   flushInteractiveUpdates,
   flushPassiveEffects,
-  setIsActingUpdatesInDev,
+  actedUpdates,
 } from './ReactFiberScheduler';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
@@ -311,7 +311,7 @@ export {
   flushInteractiveUpdates,
   flushControlled,
   flushSync,
-  setIsActingUpdatesInDev,
+  actedUpdates,
 };
 
 export function getPublicRootInstance(

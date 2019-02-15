@@ -18,7 +18,7 @@ import {
   flushSync,
   injectIntoDevTools,
   batchedUpdates,
-  setIsActingUpdatesInDev,
+  actedUpdates,
 } from 'react-reconciler/inline.test';
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
 import {
@@ -40,7 +40,6 @@ import {
 } from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 import ReactVersion from 'shared/ReactVersion';
-import createAct from 'shared/createAct';
 
 import {getPublicInstance} from './ReactTestHostConfig';
 import {
@@ -560,30 +559,8 @@ const ReactTestRendererFiber = {
 
   unstable_setNowImplementation: setNowImplementation,
 
-  act: createAct(
-    'ReactTestRenderer',
-    setIsActingUpdatesInDev,
-    flushPassiveEffects,
-    batchedUpdates,
-  ),
+  act: actedUpdates,
 };
-
-// root used to flush effects during .act() calls
-const actRoot = createContainer(
-  {
-    children: [],
-    createNodeMock: defaultTestOptions.createNodeMock,
-    tag: 'CONTAINER',
-  },
-  true,
-  false,
-);
-
-function flushPassiveEffects() {
-  // Trick to flush passive effects without exposing an internal API:
-  // Create a throwaway root and schedule a dummy update on it.
-  updateContainer(null, actRoot, null, null);
-}
 
 const fiberToWrapper = new WeakMap();
 function wrapFiber(fiber: Fiber): ReactTestInstance {

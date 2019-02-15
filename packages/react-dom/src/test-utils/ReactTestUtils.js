@@ -20,7 +20,6 @@ import invariant from 'shared/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
-import createAct from 'shared/createAct';
 import * as DOMTopLevelEventTypes from '../events/DOMTopLevelEventTypes';
 
 const {findDOMNode} = ReactDOM;
@@ -40,7 +39,7 @@ const [
   restoreStateIfNeeded,
   dispatchEvent,
   runEventsInBatch,
-  setIsActingUpdatesInDev,
+  actedUpdates,
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
 
 function Event(suffix) {}
@@ -157,15 +156,6 @@ type Thenable = {
 // a stub element, lazily initialized, used by act() when flushing effects
 let actContainerElement = null;
 
-const createdAct = createAct(
-  'ReactTestUtils',
-  setIsActingUpdatesInDev,
-  () => {
-    ReactDOM.render(<div />, actContainerElement);
-  },
-  ReactDOM.unstable_batchedUpdates,
-);
-
 function act(callback: () => void | Promise<void>): Thenable {
   if (actContainerElement === null) {
     // warn if we can't actually create the stub element
@@ -183,7 +173,7 @@ function act(callback: () => void | Promise<void>): Thenable {
     actContainerElement = document.createElement('div');
   }
 
-  return createdAct(callback);
+  return actedUpdates(callback);
 }
 
 /**

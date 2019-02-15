@@ -187,13 +187,13 @@ describe('act', () => {
     it('warns if you return a value inside act', () => {
       expect(() => act(() => null)).toWarnDev(
         [
-          'The callback passed to ReactTestUtils.act(...) function must return undefined, or a Promise.',
+          'The callback passed to act(...) function must return undefined, or a Promise.',
         ],
         {withoutStack: true},
       );
       expect(() => act(() => 123)).toWarnDev(
         [
-          'The callback passed to ReactTestUtils.act(...) function must return undefined, or a Promise.',
+          'The callback passed to act(...) function must return undefined, or a Promise.',
         ],
         {withoutStack: true},
       );
@@ -202,7 +202,7 @@ describe('act', () => {
     it('warns if you try to await an .act call', () => {
       expect(act(() => {}).then).toWarnDev(
         [
-          'Do not await the result of calling ReactTestUtils.act(...) with sync logic, it is not a Promise.',
+          'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
         ],
         {withoutStack: true},
       );

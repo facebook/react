@@ -29,6 +29,23 @@ describe('ReactTestRenderer', () => {
     });
   });
 
+  describe('act', () => {
+    it('should work', () => {
+      function App() {
+        let [ctr, setCtr] = React.useState(0);
+        React.useEffect(() => {
+          setCtr(1);
+        });
+        return ctr;
+      }
+      let root;
+      ReactTestRenderer.act(() => {
+        root = ReactTestRenderer.create(<App />);
+      });
+      expect(root.toJSON()).toEqual('1');
+    });
+  });
+
   describe('timed out Suspense hidden subtrees should not be observable via toJSON', () => {
     let AsyncText;
     let PendingResources;

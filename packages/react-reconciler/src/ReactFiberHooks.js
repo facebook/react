@@ -33,7 +33,7 @@ import {
   computeExpirationForFiber,
   flushPassiveEffects,
   requestCurrentTime,
-  warnIfNotCurrentlyActingInDev,
+  warnIfNotCurrentlyActingUpdatesInDev,
 } from './ReactFiberScheduler';
 
 import invariant from 'shared/invariant';
@@ -1124,7 +1124,7 @@ function dispatchAction<S, A>(
     }
     if (__DEV__) {
       if (shouldWarnForUnactedSetState === true) {
-        warnIfNotCurrentlyActingInDev(fiber);
+        warnIfNotCurrentlyActingUpdatesInDev(fiber);
       }
     }
     scheduleWork(fiber, expirationTime);

@@ -1827,21 +1827,92 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
   return root;
 }
 
-// in a test-like environment, we want to warn if dispatchAction()
-// is called outside of a TestUtils.act(...) call.
+// in a test-like environment, we want to warn if dispatchAction() is
+// called outside of a TestUtils.act(...)/batchedUpdates/render call.
+// so we have a a step counter for when we descend/ascend from
+// actedUpdates() calls, and test on it for when to warn 
+let actingUpdatesScopeDepth = 0;
 
-let isActingUpdates: boolean = false;
-
-export function setIsActingUpdatesInDev(toggle: boolean) {
+export function actedUpdates(callback: () => void | Promise<void>): Thenable {
+  let previousActingUpdatesScopeDepth;
   if (__DEV__) {
-    isActingUpdates = toggle;
+    previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
+    actingUpdatesScopeDepth++;
+  }
+
+  const result = batchedUpdates(callback);
+  if (result && typeof result.then === 'function') {
+    // the returned thenable MUST be called
+    let called = false;
+    setTimeout(() => {
+      if (__DEV__) {
+        if (!called) {
+          warningWithoutStack(
+            null,
+            'You called act() without awaiting its result. ' +
+              'This could lead to unexpected testing behaviour, interleaving multiple act ' +
+              'calls and mixing their scopes. You should - await act(async () => ...);',
+            // todo - a better warning here. open to suggestions.
+          );
+        }
+      }
+    }, 0);
+    return {
+      then(fn, errorFn) {
+        called = true;
+        result.then(() => {
+          flushPassiveEffects();
+          if (__DEV__) {
+            if (actingUpdatesScopeDepth - 1 > previousActingUpdatesScopeDepth) {
+              // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
+              warningWithoutStack(
+                null,
+                'You seem to have interleaved multiple act() calls, this is not supported. ' +
+                  'Be sure to await previous sibling act calls before making a new one. ',
+                // todo - a better warning here. open to suggestions.
+              );
+            }
+            actingUpdatesScopeDepth--;
+          }
+
+          fn();
+        }, errorFn);
+      },
+    };
+  } else {
+    if (__DEV__) {
+      if (result !== undefined) {
+        warningWithoutStack(
+          false,
+          'The callback passed to act(...) function ' +
+            'must return undefined, or a Promise. You returned %s',
+          result,
+        );
+      }
+    }
+    flushPassiveEffects();
+    if (__DEV__) {
+      actingUpdatesScopeDepth--;
+    }
+
+    return {
+      then() {
+        if (__DEV__) {
+          warningWithoutStack(
+            false,
+            // todo - well... why not? maybe this would be fine.
+            'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
+          );
+        }
+      },
+    };
   }
 }
 
-export function warnIfNotCurrentlyActingInDev(fiber: Fiber): void {
+export function warnIfNotCurrentlyActingUpdatesInDev(fiber: Fiber): void {
   if (__DEV__) {
     if (
-      isActingUpdates === false &&
+      actingUpdatesScopeDepth === 0 &&
       isRendering === false &&
       isBatchingUpdates === false
     ) {
