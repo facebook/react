@@ -1048,9 +1048,7 @@ describe('ReactTestRenderer', () => {
       // so as suggested, we call resetModules() to carry on with the test
       jest.resetModules();
       const {act} = require('react-dom/test-utils');
-      expect(() => {
-        expect(() => act(() => {})).toThrow('document is not defined');
-      }).toWarnDev(
+      expect(() => act(() => {})).toWarnDev(
         [
           'It looks like you called ReactTestUtils.act(...) in a non-browser environment',
         ],

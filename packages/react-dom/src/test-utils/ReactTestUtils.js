@@ -147,32 +147,28 @@ function validateClassInstance(inst, methodName) {
   );
 }
 
-// for .act's return value
-type Thenable = {
-  then(resolve: () => void, reject?: () => void): void,
-  // ^ todo - maybe this should return a promise...
-};
+let didWarnAboutActInNodejs = false;
+let isBrowserLikeEnvironment =
+  typeof document !== 'undefined' && document !== null;
 
-// a stub element, lazily initialized, used by act() when flushing effects
-let actContainerElement = null;
-
-function act(callback: () => void | Promise<void>): Thenable {
-  if (actContainerElement === null) {
-    // warn if we can't actually create the stub element
-    if (__DEV__) {
+function act(callback: () => void | Promise<void>) {
+  if (__DEV__) {
+    // warn if we're trying to use this in something like node (without jsdom)
+    if (
+      didWarnAboutActInNodejs === false &&
+      isBrowserLikeEnvironment === false
+    ) {
+      didWarnAboutActInNodejs = true;
       warningWithoutStack(
         typeof document !== 'undefined' &&
           document !== null &&
           typeof document.createElement === 'function',
         'It looks like you called ReactTestUtils.act(...) in a non-browser environment. ' +
           "If you're using TestRenderer for your tests, you should call " +
-          'ReactTestRenderer.act(...) instead of TestUtils.act(...).',
+          'ReactTestRenderer.act(...) instead of ReactTestUtils.act(...).',
       );
     }
-    // then make it
-    actContainerElement = document.createElement('div');
   }
-
   return actedUpdates(callback);
 }
 
