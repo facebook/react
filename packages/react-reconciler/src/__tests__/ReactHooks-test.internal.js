@@ -886,11 +886,10 @@ describe('ReactHooks', () => {
 
     class Cls extends React.Component {
       render() {
-        act(() =>
-          _setState(() => {
-            ReactCurrentDispatcher.current.readContext(ThemeContext);
-          }),
+        _setState(() =>
+          ReactCurrentDispatcher.current.readContext(ThemeContext),
         );
+
         return null;
       }
     }
@@ -902,13 +901,7 @@ describe('ReactHooks', () => {
           <Cls />
         </React.Fragment>,
       ),
-    ).toWarnDev(
-      [
-        'Context can only be read while React is rendering',
-        'Render methods should be a pure function of props and state',
-      ],
-      {withoutStack: 1},
-    );
+    ).toWarnDev(['Context can only be read while React is rendering']);
   });
 
   it('warns when calling hooks inside useReducer', () => {
