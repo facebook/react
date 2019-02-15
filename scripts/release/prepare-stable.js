@@ -40,7 +40,7 @@ const run = async () => {
       await testTracingFixture(params);
     }
 
-    await printPrereleaseSummary(params);
+    await printPrereleaseSummary(params, true);
   } catch (error) {
     handleError(error);
   }
