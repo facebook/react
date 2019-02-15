@@ -1830,7 +1830,7 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
 // in a test-like environment, we want to warn if dispatchAction() is
 // called outside of a TestUtils.act(...)/batchedUpdates/render call.
 // so we have a a step counter for when we descend/ascend from
-// actedUpdates() calls, and test on it for when to warn 
+// actedUpdates() calls, and test on it for when to warn
 let actingUpdatesScopeDepth = 0;
 
 export function actedUpdates(callback: () => void | Promise<void>): Thenable {
@@ -1841,11 +1841,11 @@ export function actedUpdates(callback: () => void | Promise<void>): Thenable {
   }
 
   const result = batchedUpdates(callback);
-  if (result && typeof result.then === 'function') {
+  if (result && result.then) { // saving a few bytes without the typeof === 'function' check
     // the returned thenable MUST be called
     let called = false;
-    setTimeout(() => {
-      if (__DEV__) {
+    if (__DEV__) {
+      setTimeout(() => {
         if (!called) {
           warningWithoutStack(
             null,
@@ -1855,10 +1855,10 @@ export function actedUpdates(callback: () => void | Promise<void>): Thenable {
             // todo - a better warning here. open to suggestions.
           );
         }
-      }
-    }, 0);
+      }, 0);
+    }
     return {
-      then(fn, errorFn) {
+      then(successFn, errorFn) {
         called = true;
         result.then(() => {
           flushPassiveEffects();
@@ -1874,8 +1874,7 @@ export function actedUpdates(callback: () => void | Promise<void>): Thenable {
             }
             actingUpdatesScopeDepth--;
           }
-
-          fn();
+          successFn();
         }, errorFn);
       },
     };
