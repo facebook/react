@@ -239,7 +239,9 @@ describe('act', () => {
       act(async () => {});
       // it's annoying that we have to wait a tick before this warning comes in
       await sleep(0);
-      expect(console.error).toHaveBeenCalledTimes(1);
+      if (__DEV__) {
+        expect(console.error).toHaveBeenCalledTimes(1);
+      }
     });
 
     it('it warns if you try to interleave multiple act calls', async () => {
@@ -255,7 +257,9 @@ describe('act', () => {
       });
 
       await sleep(1000);
-      expect(console.error).toHaveBeenCalledTimes(1);
+      if (__DEV__) {
+        expect(console.error).toHaveBeenCalledTimes(1);
+      }
     });
 
     it('commits and effects are guaranteed to be flushed', async () => {

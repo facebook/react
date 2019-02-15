@@ -40,6 +40,7 @@ import {
   getPublicRootInstance,
   findHostInstance,
   findHostInstanceWithWarning,
+  actedUpdates,
 } from 'react-reconciler/inline.fire';
 import {createPortal as createPortalImpl} from 'shared/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
@@ -827,6 +828,7 @@ const ReactDOM: Object = {
       restoreStateIfNeeded,
       dispatchEvent,
       runEventsInBatch,
+      actedUpdates,
     ],
   },
 };
