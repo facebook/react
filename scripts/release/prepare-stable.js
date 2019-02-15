@@ -7,6 +7,7 @@ const {getPublicPackages, handleError} = require('./utils');
 
 const checkOutPackages = require('./prepare-stable-commands/check-out-packages');
 const confirmStableVersionNumbers = require('./prepare-stable-commands/confirm-stable-version-numbers');
+const getLatestCanaryVersion = require('./prepare-stable-commands/get-latest-canary-version');
 const guessStableVersionNumbers = require('./prepare-stable-commands/guess-stable-version-numbers');
 const parseParams = require('./prepare-stable-commands/parse-params');
 const printPrereleaseSummary = require('./shared-commands/print-prerelease-summary');
@@ -24,6 +25,10 @@ const run = async () => {
     // This Map is initially populated with guesses based on local versions.
     // The developer running the release later confirms or overrides each version.
     const versionsMap = new Map();
+
+    if (!params.version) {
+      params.version = await getLatestCanaryVersion();
+    }
 
     await checkOutPackages(params);
     await guessStableVersionNumbers(params, versionsMap);
