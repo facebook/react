@@ -21,10 +21,14 @@ export default function TabBar({ currentTab, selectTab }: Props) {
 
   return (
     <div className={styles.TabBar}>
-      <ReactLogo /> DevTools {process.env.DEVTOOLS_VERSION}
+      <ReactLogo />
+      <span className={styles.DevToolsVersion}>
+        {process.env.DEVTOOLS_VERSION}
+      </span>
       <div className={styles.Tabs}>
         <label
           className={currentTab === 'elements' ? styles.TabCurrent : styles.Tab}
+          title="React Elements"
         >
           <input
             type="radio"
@@ -35,10 +39,11 @@ export default function TabBar({ currentTab, selectTab }: Props) {
             onChange={onChange}
           />
           <Icon className={styles.Icon} type="elements" />
-          Elements
+          <span className={styles.TabLabel}>Elements</span>
         </label>
         <label
           className={currentTab === 'profiler' ? styles.TabCurrent : styles.Tab}
+          title="React Profiler"
         >
           <input
             type="radio"
@@ -49,10 +54,11 @@ export default function TabBar({ currentTab, selectTab }: Props) {
             onChange={onChange}
           />
           <Icon className={styles.Icon} type="profiler" />
-          Profiler
+          <span className={styles.TabLabel}>Profiler</span>
         </label>
         <label
           className={currentTab === 'settings' ? styles.TabCurrent : styles.Tab}
+          title="React Settings"
         >
           <input
             type="radio"
@@ -63,7 +69,7 @@ export default function TabBar({ currentTab, selectTab }: Props) {
             onChange={onChange}
           />
           <Icon className={styles.Icon} type="settings" />
-          Settings
+          <span className={styles.TabLabel}>Settings</span>
         </label>
       </div>
     </div>

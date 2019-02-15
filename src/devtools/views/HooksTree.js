@@ -1,7 +1,6 @@
 // @flow
 
 import React from 'react';
-import { getMetaValueLabel } from './utils';
 import { KeyValue } from './InspectedElementTree';
 import styles from './HooksTree.css';
 

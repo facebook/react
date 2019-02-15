@@ -9,6 +9,10 @@
   font-size: var(--font-size-sans-large);
 }
 
+.DevToolsVersion:before {
+  content: 'DevTools ';
+}
+
 .Tabs {
   flex: 1 1 auto;
   display: flex;
@@ -48,4 +52,23 @@
   margin-right: 0.5rem;
   width: 1.5rem;
   height: 1.5rem;
+}
+
+.TabLabel {
+}
+
+@media screen and (max-width: 600px) {
+  .Icon {
+    margin-right: 0;
+  }
+
+  .TabLabel {
+    display: none;
+  }
+}
+
+@media screen and (max-width: 350px) {
+  .DevToolsVersion:before {
+    content: '';
+  }
 }

@@ -35,6 +35,8 @@ function useCustomObject() {
 
 function FunctionWithHooks(props: any, ref: React$Ref<any>) {
   const [count, updateCount] = useState(0);
+
+  // eslint-disable-next-line no-unused-vars
   const [_, __] = useState(object);
 
   // Custom hook with a custom debug label

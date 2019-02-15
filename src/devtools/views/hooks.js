@@ -30,7 +30,8 @@ export function useLocalStorage<T>(
     }
   };
 
-  // Listen for changes in other extension panels.
+  // Listen for changes to this local storage value made from other windows.
+  // This enables the e.g. "⚛️ Elements" tab to update in response to changes from "⚛️ Settings".
   useLayoutEffect(() => {
     const onStorage = event => {
       const newValue = getValueFromLocalStorage();
