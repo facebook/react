@@ -355,6 +355,7 @@ function getDependency(node) {
   if (
     node.parent.type === 'MemberExpression' &&
     node.parent.object === node &&
+    node.parent.property.name !== 'current' &&
     !node.parent.computed &&
     !(
       node.parent.parent != null &&

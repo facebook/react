@@ -254,6 +254,16 @@ const tests = {
       }
     `,
     },
+    {
+      code: `
+      function MyComponent() {
+        const ref = useRef();
+        useEffect(() => {
+          console.log(ref.current);
+        }, [ref]);
+      }
+    `,
+    },
   ],
   invalid: [
     {
@@ -1055,6 +1065,75 @@ const tests = {
           'Either fix or remove the dependency array.',
         "Unsupported expression in React Hook useEffect's dependency list. " +
           'Currently only simple variables are supported.',
+      ],
+    },
+    {
+      code: `
+        function MyComponent() {
+          const ref = useRef();
+          useEffect(() => {
+            console.log(ref.current);
+          }, []);
+        }
+      `,
+      output: `
+        function MyComponent() {
+          const ref = useRef();
+          useEffect(() => {
+            console.log(ref.current);
+          }, [ref]);
+        }
+      `,
+      // TODO: better message for the ref case.
+      errors: [
+        'React Hook useEffect has missing [ref] dependencies. ' +
+          'Either fix or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
+          const ref1 = useRef();
+          const ref2 = useRef();
+          useEffect(() => {
+            ref1.current.focus();
+            console.log(ref2.current.textContent);
+            alert(props.someOtherRefs.current.innerHTML);
+            fetch(props.color);
+          }, []);
+        }
+      `,
+      output: `
+        function MyComponent(props) {
+          const ref1 = useRef();
+          const ref2 = useRef();
+          useEffect(() => {
+            ref1.current.focus();
+            console.log(ref2.current.textContent);
+            alert(props.someOtherRefs.current.innerHTML);
+            fetch(props.color);
+          }, [ref1, ref2, props.someOtherRefs, props.color]);
+        }
+      `,
+      // TODO: better message for the ref case.
+      errors: [
+        'React Hook useEffect has missing [ref1, ref2, props.someOtherRefs, props.color] dependencies. ' +
+          'Either fix or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+      function MyComponent() {
+        const ref = useRef();
+        useEffect(() => {
+          console.log(ref.current);
+        }, [ref.current]);
+      }
+    `,
+      // TODO: better message for the ref case.
+      errors: [
+        'React Hook useEffect has missing [ref], unnecessary [ref.current] dependencies. ' +
+          'Either fix or remove the dependency array.',
       ],
     },
   ],
