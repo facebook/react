@@ -355,7 +355,12 @@ function getDependency(node) {
   if (
     node.parent.type === 'MemberExpression' &&
     node.parent.object === node &&
-    !node.parent.computed
+    !node.parent.computed &&
+    !(
+      node.parent.parent != null &&
+      node.parent.parent.type === 'CallExpression' &&
+      node.parent.parent.callee === node.parent
+    )
   ) {
     return node.parent;
   } else {

@@ -542,6 +542,52 @@ const tests = {
     },
     {
       code: `
+      function MyComponent({ history }) {
+        useEffect(() => {
+          return history.listen();
+        }, []);
+      }
+      `,
+      output: `
+      function MyComponent({ history }) {
+        useEffect(() => {
+          return history.listen();
+        }, [history]);
+      }
+      `,
+      errors: [
+        'React Hook useEffect has missing [history] dependencies. ' +
+          'Either fix or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+      function MyComponent({ history }) {
+        useEffect(() => {
+          return [
+            history.foo.bar[2].dobedo.listen(),
+            history.foo.bar().dobedo.listen[2]
+          ];
+        }, []);
+      }
+      `,
+      output: `
+      function MyComponent({ history }) {
+        useEffect(() => {
+          return [
+            history.foo.bar[2].dobedo.listen(),
+            history.foo.bar().dobedo.listen[2]
+          ];
+        }, [history.foo]);
+      }
+      `,
+      errors: [
+        'React Hook useEffect has missing [history.foo] dependencies. ' +
+          'Either fix or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
         function MyComponent() {
           const dependencies = [];
           useEffect(() => {}, dependencies);
