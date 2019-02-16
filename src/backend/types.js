@@ -46,7 +46,10 @@ export type ReactRenderer = {
 export type RendererInterface = {
   cleanup: () => void,
   getNativeFromReactElement?: ?(component: Fiber) => ?NativeType,
-  getReactElementFromNative?: ?(component: NativeType) => ?Fiber,
+  getFiberIDFromNative: (
+    component: NativeType,
+    findNearestUnfilteredAncestor?: boolean
+  ) => number | null,
   handleCommitFiberRoot: (fiber: Object) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,
   inspectElement: (id: number) => InspectedElement | null,

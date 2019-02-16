@@ -826,11 +826,18 @@ export function attach(
       return null;
     }
   }
-  function getReactElementFromNative(hostInstance) {
-    const fiber = renderer.findFiberByHostInstance(hostInstance);
+  function getFiberIDFromNative(
+    hostInstance,
+    findNearestUnfilteredAncestor = false
+  ) {
+    let fiber = renderer.findFiberByHostInstance(hostInstance);
     if (fiber != null) {
-      const primaryFiber = getPrimaryFiber(((fiber: any): Fiber));
-      return primaryFiber;
+      if (findNearestUnfilteredAncestor) {
+        while (fiber !== null && shouldFilterFiber(fiber)) {
+          fiber = fiber.return;
+        }
+      }
+      return getFiberID(getPrimaryFiber(((fiber: any): Fiber)));
     }
     return null;
   }
@@ -1150,8 +1157,8 @@ export function attach(
   }
 
   return {
+    getFiberIDFromNative,
     getNativeFromReactElement,
-    getReactElementFromNative,
     handleCommitFiberRoot,
     handleCommitFiberUnmount,
     inspectElement,

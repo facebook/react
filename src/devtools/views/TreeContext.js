@@ -26,7 +26,7 @@ import React, {
   useReducer,
 } from 'react';
 import { createRegExp } from './utils';
-import { StoreContext } from './context';
+import { BridgeContext, StoreContext } from './context';
 import Store from '../store';
 
 import type { Element } from 'src/devtools/types';
@@ -470,7 +470,9 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
 
 // TODO Remove TreeContextController wrapper element once global ConsearchText.write API exists.
 function TreeContextController({ children }: {| children: React$Node |}) {
+  const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
+
   const initialRevision = useMemo(() => store.revision, [store]);
 
   // This reducer is created inline because it needs access to the Store.
@@ -596,6 +598,14 @@ function TreeContextController({ children }: {| children: React$Node |}) {
     [state]
   );
 
+  // Listen for host element selections.
+  useEffect(() => {
+    const handleSelectFiber = (id: number) =>
+      dispatch({ type: 'SELECT_ELEMENT_BY_ID', payload: id });
+    bridge.addListener('selectFiber', handleSelectFiber);
+    return () => bridge.removeListener('selectFiber', handleSelectFiber);
+  }, [bridge, dispatch]);
+
   // Mutations to the underlying tree may impact this context (e.g. search results, selection state).
   useEffect(() => {
     const handleStoreMutated = ([
@@ -622,7 +632,7 @@ function TreeContextController({ children }: {| children: React$Node |}) {
     store.addListener('mutated', handleStoreMutated);
 
     return () => store.removeListener('mutated', handleStoreMutated);
-  }, [store]);
+  }, [dispatch, store]);
 
   return <TreeContext.Provider value={value}>{children}</TreeContext.Provider>;
 }

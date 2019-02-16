@@ -28,10 +28,21 @@ export default class Agent extends EventEmitter {
     bridge.addListener('highlightElementInDOM', this.highlightElementInDOM);
     bridge.addListener('inspectElement', this.inspectElement);
     bridge.addListener('selectElement', this.selectElement);
+    bridge.addListener('startInspectingDOM', this.startInspectingDOM);
+    bridge.addListener('stopInspectingDOM', this.stopInspectingDOM);
     bridge.addListener('shutdown', this.shutdown);
+  }
 
-    // TODO Listen to bridge for things like selection.
-    // bridge.addListener('...'), this...);
+  getIDForNode(node: Object): number | null {
+    for (let rendererID in this._rendererInterfaces) {
+      // A renderer will throw if it can't find a fiber for the specified node.
+      try {
+        // $FlowFixMe
+        const renderer = this._rendererInterfaces[rendererID];
+        return renderer.getFiberIDFromNative(node, true);
+      } catch (e) {}
+    }
+    return null;
   }
 
   highlightElementInDOM = ({
@@ -98,6 +109,20 @@ export default class Agent extends EventEmitter {
     this.emit('shutdown');
   };
 
+  startInspectingDOM = () => {
+    window.addEventListener('click', this._onClick);
+    window.addEventListener('mousedown', this._onMouseDown);
+    window.addEventListener('mouseover', this._onMouseOver);
+  };
+
+  stopInspectingDOM = () => {
+    hideOverlay();
+
+    window.removeEventListener('click', this._onClick);
+    window.removeEventListener('mousedown', this._onMouseDown);
+    window.removeEventListener('mouseover', this._onMouseOver);
+  };
+
   onHookOperations = (operations: Uint32Array) => {
     debug('onHookOperations', operations);
 
@@ -106,5 +131,34 @@ export default class Agent extends EventEmitter {
     // Sometimes using transferrables also cause Chrome or Firefox to throw "ArrayBuffer at index 0 is already neutered".
     // this._bridge.send('operations', operations, [operations.buffer]);
     this._bridge.send('operations', operations);
+  };
+
+  _onClick = (event: MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    this.stopInspectingDOM();
+    this._bridge.send('stopInspectingDOM');
+  };
+
+  _onMouseDown = (event: MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const target = ((event.target: any): HTMLElement);
+    const id = this.getIDForNode(target);
+
+    if (id !== null) {
+      this._bridge.send('selectFiber', id);
+    }
+  };
+
+  _onMouseOver = (event: MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const target = ((event.target: any): HTMLElement);
+
+    showOverlay(target, target.tagName.toLowerCase());
   };
 }

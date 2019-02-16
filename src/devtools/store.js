@@ -130,7 +130,7 @@ export default class Store extends EventEmitter {
     const element = this._idToElement.get(id);
 
     if (element == null) {
-      console.warn(`No element found with id "${id}`);
+      console.warn(`No element found with id "${id}"`);
 
       return null;
     }
