@@ -238,7 +238,7 @@ describe('act', () => {
       function App() {
         let [ctr, setCtr] = React.useState(0);
         async function someAsyncFunction() {
-          await sleep(0);
+          await null;
           setCtr(1);
         }
         React.useEffect(() => {

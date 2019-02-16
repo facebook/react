@@ -21,6 +21,7 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import {createPortal} from 'shared/ReactPortal';
 import expect from 'expect';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 type Container = {
   rootID: string,
@@ -864,7 +865,49 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     interactiveUpdates: NoopRenderer.interactiveUpdates,
 
-    act: NoopRenderer.actedUpdates,
+    act(callback: () => void | Promise<void>) {
+      // note: keep these warning messages in sync with
+      // ReactTestRenderer.js and ReactTestUtils.js
+      const result = NoopRenderer.actedUpdates(callback);
+      if (result && result.then) {
+        let called = false;
+        if (__DEV__) {
+          setTimeout(() => {
+            if (!called) {
+              warningWithoutStack(
+                null,
+                'You called act() without awaiting its result. ' +
+                  'This could lead to unexpected testing behaviour, interleaving multiple act ' +
+                  'calls and mixing their scopes. You should - await act(async () => ...);',
+                // todo - a better warning here. open to suggestions.
+              );
+            }
+          }, 0);
+        }
+        return {
+          then(successFn: (*) => *, errorFn: (*) => *) {
+            called = true;
+            return result.then(() => {
+              ReactNoop.flushPassiveEffects();
+              successFn();
+            }, errorFn);
+          },
+        };
+      } else {
+        ReactNoop.flushPassiveEffects();
+        return {
+          then() {
+            if (__DEV__) {
+              warningWithoutStack(
+                false,
+                // todo - well... why not? maybe this would be fine.
+                'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
+              );
+            }
+          },
+        };
+      }
+    },
 
     flushSync(fn: () => mixed) {
       yieldedValues = [];

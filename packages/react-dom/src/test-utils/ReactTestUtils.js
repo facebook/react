@@ -147,21 +147,67 @@ function validateClassInstance(inst, methodName) {
   );
 }
 
+// a stub element, lazily initialized, used by act() when flushing effects
+let actContainerElement = null;
 let didWarnAboutActInNodejs = false;
 function act(callback: () => void | Promise<void>) {
-  if (__DEV__) {
-    // warn if we're trying to use this in something like node (without jsdom)
-    if (didWarnAboutActInNodejs === false) {
-      didWarnAboutActInNodejs = true;
-      warningWithoutStack(
-        typeof document !== 'undefined' && document !== null,
-        'It looks like you called ReactTestUtils.act(...) in a non-browser environment. ' +
-          "If you're using TestRenderer for your tests, you should call " +
-          'ReactTestRenderer.act(...) instead of ReactTestUtils.act(...).',
-      );
+  if (actContainerElement === null) {
+    if (__DEV__) {
+      // warn if we're trying to use this in something like node (without jsdom)
+      if (didWarnAboutActInNodejs === false) {
+        didWarnAboutActInNodejs = true;
+        warningWithoutStack(
+          typeof document !== 'undefined' && document !== null,
+          'It looks like you called ReactTestUtils.act(...) in a non-browser environment. ' +
+            "If you're using TestRenderer for your tests, you should call " +
+            'ReactTestRenderer.act(...) instead of ReactTestUtils.act(...).',
+        );
+      }
     }
+    // now make the stub element
+    actContainerElement = document.createElement('div');
   }
-  return actedUpdates(callback);
+  // note: keep these warning messages in sync with
+  // createReactNoop.js and ReactTestRenderer.js
+  const result = actedUpdates(callback);
+  if (result && result.then) {
+    let called = false;
+    if (__DEV__) {
+      setTimeout(() => {
+        if (!called) {
+          warningWithoutStack(
+            null,
+            'You called act() without awaiting its result. ' +
+              'This could lead to unexpected testing behaviour, interleaving multiple act ' +
+              'calls and mixing their scopes. You should - await act(async () => ...);',
+            // todo - a better warning here. open to suggestions.
+          );
+        }
+      }, 0);
+    }
+    return {
+      then(successFn, errorFn) {
+        called = true;
+        return result.then(() => {
+          ReactDOM.render(<div />, actContainerElement);
+          successFn();
+        }, errorFn);
+      },
+    };
+  } else {
+    ReactDOM.render(<div />, actContainerElement);
+    return {
+      then() {
+        if (__DEV__) {
+          warningWithoutStack(
+            false,
+            // todo - well... why not? maybe this would be fine.
+            'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
+          );
+        }
+      },
+    };
+  }
 }
 
 /**

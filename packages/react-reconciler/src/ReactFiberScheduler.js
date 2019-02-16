@@ -1833,7 +1833,7 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
 // actedUpdates() calls, and test on it for when to warn
 let actingUpdatesScopeDepth = 0;
 
-export function actedUpdates(callback: () => void | Promise<void>): Thenable {
+export function actedUpdates(callback: () => void | Promise<void>) {
   let previousActingUpdatesScopeDepth;
   if (__DEV__) {
     previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
@@ -1843,42 +1843,20 @@ export function actedUpdates(callback: () => void | Promise<void>): Thenable {
   const result = batchedUpdates(callback);
   if (result && result.then) {
     // saving a few bytes without the typeof === 'function' check
-    // the returned thenable MUST be called
-    let called = false;
-    if (__DEV__) {
-      setTimeout(() => {
-        if (!called) {
+    return result.then(() => {
+      if (__DEV__) {
+        if (actingUpdatesScopeDepth - 1 > previousActingUpdatesScopeDepth) {
+          // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
           warningWithoutStack(
             null,
-            'You called act() without awaiting its result. ' +
-              'This could lead to unexpected testing behaviour, interleaving multiple act ' +
-              'calls and mixing their scopes. You should - await act(async () => ...);',
+            'You seem to have interleaved multiple act() calls, this is not supported. ' +
+              'Be sure to await previous sibling act calls before making a new one. ',
             // todo - a better warning here. open to suggestions.
           );
         }
-      }, 0);
-    }
-    return {
-      then(successFn, errorFn) {
-        called = true;
-        result.then(() => {
-          flushPassiveEffects();
-          if (__DEV__) {
-            if (actingUpdatesScopeDepth - 1 > previousActingUpdatesScopeDepth) {
-              // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
-              warningWithoutStack(
-                null,
-                'You seem to have interleaved multiple act() calls, this is not supported. ' +
-                  'Be sure to await previous sibling act calls before making a new one. ',
-                // todo - a better warning here. open to suggestions.
-              );
-            }
-            actingUpdatesScopeDepth--;
-          }
-          successFn();
-        }, errorFn);
-      },
-    };
+        actingUpdatesScopeDepth--;
+      }
+    });
   } else {
     if (__DEV__) {
       if (result !== undefined) {
@@ -1889,23 +1867,9 @@ export function actedUpdates(callback: () => void | Promise<void>): Thenable {
           result,
         );
       }
-    }
-    flushPassiveEffects();
-    if (__DEV__) {
       actingUpdatesScopeDepth--;
+      // todo - this needs a warning too
     }
-
-    return {
-      then() {
-        if (__DEV__) {
-          warningWithoutStack(
-            false,
-            // todo - well... why not? maybe this would be fine.
-            'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
-          );
-        }
-      },
-    };
   }
 }
 
