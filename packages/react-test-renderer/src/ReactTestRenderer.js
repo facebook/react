@@ -560,7 +560,49 @@ const ReactTestRendererFiber = {
 
   unstable_setNowImplementation: setNowImplementation,
 
-  act,
+  act(callback: () => void | Promise<void>) {
+    // note: keep these warning messages in sync with
+    // createReactNoop.js and ReactTestUtils.js
+    const result = actedUpdates(callback);
+    if (result && result.then) {
+      let called = false;
+      if (__DEV__) {
+        setTimeout(() => {
+          if (!called) {
+            warningWithoutStack(
+              null,
+              'You called act() without awaiting its result. ' +
+                'This could lead to unexpected testing behaviour, interleaving multiple act ' +
+                'calls and mixing their scopes. You should - await act(async () => ...);',
+              // todo - a better warning here. open to suggestions.
+            );
+          }
+        }, 0);
+      }
+      return {
+        then(successFn: (*) => *, errorFn: (*) => *) {
+          called = true;
+          return result.then(() => {
+            flushPassiveEffects();
+            successFn();
+          }, errorFn);
+        },
+      };
+    } else {
+      flushPassiveEffects();
+      return {
+        then() {
+          if (__DEV__) {
+            warningWithoutStack(
+              false,
+              // todo - well... why not? maybe this would be fine.
+              'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
+            );
+          }
+        },
+      };
+    }
+  },
 };
 
 // root used to flush effects during .act() calls
@@ -578,50 +620,6 @@ function flushPassiveEffects() {
   // Trick to flush passive effects without exposing an internal API:
   // Create a throwaway root and schedule a dummy update on it.
   updateContainer(null, actRoot, null, null);
-}
-
-function act(callback: () => void | Promise<void>) {
-  // note: keep these warning messages in sync with
-  // createReactNoop.js and ReactTestUtils.js
-  const result = actedUpdates(callback);
-  if (result && result.then) {
-    let called = false;
-    if (__DEV__) {
-      setTimeout(() => {
-        if (!called) {
-          warningWithoutStack(
-            null,
-            'You called act() without awaiting its result. ' +
-              'This could lead to unexpected testing behaviour, interleaving multiple act ' +
-              'calls and mixing their scopes. You should - await act(async () => ...);',
-            // todo - a better warning here. open to suggestions.
-          );
-        }
-      }, 0);
-    }
-    return {
-      then(successFn: (*) => *, errorFn: (*) => *) {
-        called = true;
-        return result.then(() => {
-          flushPassiveEffects();
-          successFn();
-        }, errorFn);
-      },
-    };
-  } else {
-    flushPassiveEffects();
-    return {
-      then() {
-        if (__DEV__) {
-          warningWithoutStack(
-            false,
-            // todo - well... why not? maybe this would be fine.
-            'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
-          );
-        }
-      },
-    };
-  }
 }
 
 const fiberToWrapper = new WeakMap();
