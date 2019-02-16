@@ -5,3 +5,5 @@ To get started...
 yarn install
 yarn start
 ```
+
+A preview build of this rewrite is available at [react-devtools-experimental.now.sh](https://react-devtools-experimental.now.sh/).
