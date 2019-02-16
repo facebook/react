@@ -54,12 +54,12 @@ describe('ReactTestRenderer', () => {
     });
     describe('async', () => {
       beforeEach(() => {
-        jest.useRealTimers()
-      })
+        jest.useRealTimers();
+      });
       afterEach(() => {
-        jest.useFakeTimers()
-      })
-      it('should work async too', async () => {        
+        jest.useFakeTimers();
+      });
+      it('should work async too', async () => {
         function App() {
           let [ctr, setCtr] = React.useState(0);
           async function someAsyncFunction() {
