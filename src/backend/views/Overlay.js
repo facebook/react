@@ -15,7 +15,7 @@ type Rect = {
 // because it highlights elements in the main Chrome window (outside of devtools).
 // The colors below were chosen to roughly match those used by Chrome devtools.
 export default class Overlay {
-  win: Object;
+  window: window;
   container: HTMLElement;
   node: HTMLElement;
   border: HTMLElement;
@@ -26,8 +26,14 @@ export default class Overlay {
   dimSpan: HTMLElement;
 
   constructor() {
-    const doc = window.document;
-    this.win = window;
+    // Find the root window, because overlays are positioned relative to it.
+    let currentWindow = window;
+    while (currentWindow !== currentWindow.parent) {
+      currentWindow = currentWindow.parent;
+    }
+
+    const doc = currentWindow.document;
+    this.window = currentWindow;
     this.container = doc.createElement('div');
     this.node = doc.createElement('div');
     this.border = doc.createElement('div');
@@ -93,7 +99,7 @@ export default class Overlay {
     if (node.nodeType !== Node.ELEMENT_NODE) {
       return;
     }
-    const box = getNestedBoundingClientRect(node, this.win);
+    const box = getNestedBoundingClientRect(node, this.window);
     const dims = getElementDimensions(node);
 
     boxWrap(dims, 'margin', this.node);
@@ -133,7 +139,7 @@ export default class Overlay {
         height: box.height + dims.marginTop + dims.marginBottom,
         width: box.width + dims.marginLeft + dims.marginRight,
       },
-      this.win
+      this.window
     );
     assign(this.tip.style, tipPos);
   }
