@@ -17,6 +17,14 @@ const React = require('react');
 const ReactCache = require('react-cache');
 const ReactTestRenderer = require('react-test-renderer');
 
+function sleep(period) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve(true);
+    }, period);
+  });
+}
+
 describe('ReactTestRenderer', () => {
   it('should warn if used to render a ReactDOM portal', () => {
     const container = document.createElement('div');
@@ -43,6 +51,37 @@ describe('ReactTestRenderer', () => {
         root = ReactTestRenderer.create(<App />);
       });
       expect(root.toJSON()).toEqual('1');
+    });
+    describe('async', () => {
+      beforeEach(() => {
+        jest.useRealTimers()
+      })
+      afterEach(() => {
+        jest.useFakeTimers()
+      })
+      it('should work async too', async () => {        
+        function App() {
+          let [ctr, setCtr] = React.useState(0);
+          async function someAsyncFunction() {
+            await sleep(100);
+            setCtr(1);
+          }
+          React.useEffect(() => {
+            someAsyncFunction();
+          }, []);
+          return ctr;
+        }
+        let root;
+        await ReactTestRenderer.act(async () => {
+          // todo - I don't understand why a nested async act call
+          // flushes the effect correctly
+          await ReactTestRenderer.act(async () => {
+            root = ReactTestRenderer.create(<App />);
+          });
+          await sleep(200);
+        });
+        expect(root.toJSON()).toEqual('1');
+      });
     });
   });
 

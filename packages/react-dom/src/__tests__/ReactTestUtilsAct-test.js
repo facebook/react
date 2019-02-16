@@ -234,6 +234,29 @@ describe('act', () => {
       });
     });
 
+    it('can handle async await', async () => {
+      function App() {
+        let [ctr, setCtr] = React.useState(0);
+        async function someAsyncFunction() {
+          await sleep(0);
+          setCtr(1);
+        }
+        React.useEffect(() => {
+          someAsyncFunction();
+        }, []);
+        return ctr;
+      }
+      const el = document.createElement('div');
+
+      await act(async () => {
+        act(() => {
+          ReactDOM.render(<App />, el);
+        });
+        await sleep(100);
+      });
+      expect(el.innerHTML).toEqual('1');
+    });
+
     it('warns if you do not await an act call', async () => {
       spyOnDevAndProd(console, 'error');
       act(async () => {});
