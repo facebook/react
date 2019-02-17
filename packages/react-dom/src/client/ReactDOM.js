@@ -452,8 +452,8 @@ ReactRoot.prototype.createBatch = function(): Batch {
  * @return {boolean} True if the DOM is a valid DOM node.
  * @internal
  */
-function isValidContainer(node) {
-  return !!(
+function isValidContainer(node): boolean {
+  return (
     node &&
     (node.nodeType === ELEMENT_NODE ||
       node.nodeType === DOCUMENT_NODE ||
