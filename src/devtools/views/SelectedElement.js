@@ -15,9 +15,10 @@ import HooksTree from './HooksTree';
 import InspectedElementTree from './InspectedElementTree';
 import { hydrate } from 'src/hydration';
 import styles from './SelectedElement.css';
+import { ElementTypeClass, ElementTypeFunction } from '../types';
 
 import type { InspectedElement } from '../types';
-import type { DehydratedData } from 'src/devtools/types';
+import type { DehydratedData, Element } from 'src/devtools/types';
 
 export type Props = {||};
 
@@ -87,26 +88,74 @@ export default function SelectedElement(_: Props) {
       )}
 
       {inspectedElement !== null && (
-        <InspectedElementView inspectedElement={inspectedElement} />
+        <InspectedElementView
+          element={element}
+          inspectedElement={inspectedElement}
+        />
       )}
     </div>
   );
 }
 
 type InspectedElementViewProps = {|
+  element: Element,
   inspectedElement: InspectedElement,
 |};
 
-function InspectedElementView({ inspectedElement }: InspectedElementViewProps) {
-  let { context, hooks, owners, props, state } = inspectedElement;
+function InspectedElementView({
+  element,
+  inspectedElement,
+}: InspectedElementViewProps) {
+  const { id, type } = element;
+  const { context, hooks, owners, props, state } = inspectedElement;
+
   const { ownerStack } = useContext(TreeContext);
+  const bridge = useContext(BridgeContext);
+  const store = useContext(StoreContext);
+
+  let overrideContextFn = null;
+  let overridePropsFn = null;
+  let overrideStateFn = null;
+  if (type === ElementTypeClass) {
+    overrideContextFn = (path: Array<string | number>, value: any) => {
+      const rendererID = store.getRendererIDForElement(id);
+      bridge.send('overrideContext', { id, path, rendererID, value });
+    };
+    overridePropsFn = (path: Array<string | number>, value: any) => {
+      const rendererID = store.getRendererIDForElement(id);
+      bridge.send('overrideProps', { id, path, rendererID, value });
+    };
+    overrideStateFn = (path: Array<string | number>, value: any) => {
+      const rendererID = store.getRendererIDForElement(id);
+      bridge.send('overrideState', { id, path, rendererID, value });
+    };
+  } else if (type === ElementTypeFunction) {
+    // TODO Only enable this if renderer.canEditFunctionProps is true!
+    overridePropsFn = (path: Array<string | number>, value: any) => {
+      const rendererID = store.getRendererIDForElement(id);
+      bridge.send('overrideProps', { id, path, rendererID, value });
+    };
+  }
 
   return (
     <div className={styles.InspectedElement}>
-      <InspectedElementTree label="props" data={props} showWhenEmpty />
-      <InspectedElementTree label="state" data={state} />
+      <InspectedElementTree
+        label="props"
+        data={props}
+        overrideValueFn={overridePropsFn}
+        showWhenEmpty
+      />
+      <InspectedElementTree
+        label="state"
+        data={state}
+        overrideValueFn={overrideStateFn}
+      />
       <HooksTree hooksTree={hooks} />
-      <InspectedElementTree label="context" data={context} />
+      <InspectedElementTree
+        label="context"
+        data={context}
+        overrideValueFn={overrideContextFn}
+      />
 
       {ownerStack.length === 0 && owners !== null && owners.length > 0 && (
         <div className={styles.Owners}>

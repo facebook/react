@@ -6,6 +6,7 @@
   /* Light theme */
   --light-color-attribute-name: #ef6632;
   --light-color-attribute-value: #1a1aa6;
+  --light-color-attribute-editable-value: #1a1aa6;
   --light-color-background: #ffffff;
   --light-color-button-background: #ffffff;
   --light-color-button-background-focus: #ebf1fb;
@@ -31,6 +32,7 @@
   /* Dark theme */
   --dark-color-attribute-name: #9d87d2;
   --dark-color-attribute-value: #cedae0;
+  --dark-color-attribute-editable-value: yellow;
   --dark-color-background: #282c34;
   --dark-color-button-background: #282c34;
   --dark-color-button-background-focus: #3d424a;

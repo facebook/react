@@ -118,6 +118,7 @@ function updateDisplayDensity(displayDensity: DisplayDensity): void {
 function updateThemeVariables(theme: Theme): void {
   updateStyleHelper(theme, 'color-attribute-name');
   updateStyleHelper(theme, 'color-attribute-value');
+  updateStyleHelper(theme, 'color-attribute-editable-value');
   updateStyleHelper(theme, 'color-background');
   updateStyleHelper(theme, 'color-border');
   updateStyleHelper(theme, 'color-button-background');

@@ -1,7 +1,7 @@
 // @flow
 
 import React, { Fragment, useCallback, useContext, useMemo } from 'react';
-import { ElementTypeClassOrFunction } from 'src/devtools/types';
+import { ElementTypeClass, ElementTypeFunction } from 'src/devtools/types';
 import { createRegExp } from './utils';
 import { TreeContext } from './TreeContext';
 
@@ -42,7 +42,8 @@ export default function ElementView({ index, style }: Props) {
   );
 
   const isSelected = selectedElementID === id;
-  const showDollarR = isSelected && type === ElementTypeClassOrFunction;
+  const showDollarR =
+    isSelected && (type === ElementTypeClass || type === ElementTypeFunction);
 
   // TODO styles.SelectedElement is 100% width but it doesn't take horizontal overflow into account.
 

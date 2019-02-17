@@ -2,7 +2,8 @@
 
 import { gte } from 'semver';
 import {
-  ElementTypeClassOrFunction,
+  ElementTypeClass,
+  ElementTypeFunction,
   ElementTypeContext,
   ElementTypeForwardRef,
   ElementTypeMemo,
@@ -12,7 +13,7 @@ import {
   ElementTypeSuspense,
 } from 'src/devtools/types';
 import { getDisplayName, utfEncodeString } from '../utils';
-import { cleanForBridge } from './utils';
+import { cleanForBridge, copyWithSet, setInObject } from './utils';
 import {
   __DEBUG__,
   TREE_OPERATION_ADD,
@@ -193,6 +194,8 @@ export function attach(
     DEPRECATED_PLACEHOLDER_SYMBOL_STRING,
   } = ReactSymbols;
 
+  const { overrideProps } = renderer;
+
   const debug = (name: string, fiber: Fiber, parentFiber: ?Fiber): void => {
     if (__DEBUG__) {
       const fiberData = getDataForFiber(fiber);
@@ -295,13 +298,19 @@ export function attach(
 
     switch (tag) {
       case ClassComponent:
-      case FunctionComponent:
       case IncompleteClassComponent:
+        fiberData = {
+          displayName: getDisplayName(resolvedType),
+          key,
+          type: ElementTypeClass,
+        };
+        break;
+      case FunctionComponent:
       case IndeterminateComponent:
         fiberData = {
           displayName: getDisplayName(resolvedType),
           key,
-          type: ElementTypeClassOrFunction,
+          type: ElementTypeFunction,
         };
         break;
       case ForwardRef:
@@ -1072,7 +1081,7 @@ export function attach(
       tag === IncompleteClassComponent ||
       tag === IndeterminateComponent
     ) {
-      if (stateNode && Object.keys(stateNode.context).length > 0) {
+      if (stateNode && stateNode.context != null) {
         context = stateNode.context;
       }
     } else if (
@@ -1135,7 +1144,7 @@ export function attach(
       id,
 
       // Does the current renderer support editable props/state/hooks?
-      canEditValues: false, // TODO
+      canEditFunctionProps: typeof overrideProps === 'function',
 
       // Inspectable properties.
       // TODO Review sanitization approach for the below inspectable values.
@@ -1156,6 +1165,49 @@ export function attach(
     };
   }
 
+  function setInProps(id: number, path: Array<string | number>, value: any) {
+    const fiber = findCurrentFiberUsingSlowPath(idToFiberMap.get(id));
+    if (fiber !== null) {
+      const instance = fiber.stateNode;
+      if (instance === null) {
+        if (typeof overrideProps === 'function') {
+          overrideProps(fiber, path, value);
+        }
+      } else {
+        fiber.pendingProps = copyWithSet(instance.props, path, value);
+        instance.forceUpdate();
+      }
+    }
+  }
+
+  function setInState(id: number, path: Array<string | number>, value: any) {
+    const fiber = findCurrentFiberUsingSlowPath(idToFiberMap.get(id));
+    if (fiber !== null) {
+      const instance = fiber.stateNode;
+      setInObject(instance.state, path, value);
+      instance.forceUpdate();
+    }
+  }
+
+  function setInContext(id: number, path: Array<string | number>, value: any) {
+    // To simplify hydration and display of primative context values (e.g. number, string)
+    // the inspectElement() method wraps context in a {value: ...} object.
+    // We need to remove the first part of the path (the "value") before continuing.
+    path = path.slice(1);
+
+    const fiber = findCurrentFiberUsingSlowPath(idToFiberMap.get(id));
+    if (fiber !== null) {
+      const instance = fiber.stateNode;
+      if (path.length === 0) {
+        // Simple context value
+        instance.context = value;
+      } else {
+        setInObject(instance.context, path, value);
+      }
+      instance.forceUpdate();
+    }
+  }
+
   return {
     getFiberIDFromNative,
     getNativeFromReactElement,
@@ -1164,7 +1216,10 @@ export function attach(
     inspectElement,
     selectElement,
     cleanup,
-    walkTree,
     renderer,
+    setInContext,
+    setInProps,
+    setInState,
+    walkTree,
   };
 }

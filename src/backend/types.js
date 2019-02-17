@@ -55,6 +55,9 @@ export type RendererInterface = {
   inspectElement: (id: number) => InspectedElement | null,
   renderer: ReactRenderer | null,
   selectElement: (id: number) => void,
+  setInProps: (id: number, path: Array<string | number>, value: any) => void,
+  setInState: (id: number, path: Array<string | number>, value: any) => void,
+  setInContext: (id: number, path: Array<string | number>, value: any) => void,
   walkTree: () => void,
 };
 

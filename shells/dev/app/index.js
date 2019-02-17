@@ -4,6 +4,7 @@
 
 import { createElement } from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
+import EditableProps from './EditableProps';
 import ElementTypes from './ElementTypes';
 import InspectableElements from './InspectableElements';
 import ToDoList from './ToDoList';
@@ -24,6 +25,7 @@ function mountTestApp() {
   mountHelper(ToDoList);
   mountHelper(InspectableElements);
   mountHelper(ElementTypes);
+  mountHelper(EditableProps);
 }
 
 function unmountTestApp() {

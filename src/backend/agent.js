@@ -18,6 +18,18 @@ const debug = (methodName, ...args) => {
   }
 };
 
+type InspectSelectParams = {|
+  id: number,
+  rendererID: number,
+|};
+
+type SetInParams = {|
+  id: number,
+  path: Array<string | number>,
+  rendererID: number,
+  value: any,
+|};
+
 export default class Agent extends EventEmitter {
   _bridge: Bridge = ((null: any): Bridge);
   _rendererInterfaces: { [key: RendererID]: RendererInterface } = {};
@@ -27,6 +39,9 @@ export default class Agent extends EventEmitter {
 
     bridge.addListener('highlightElementInDOM', this.highlightElementInDOM);
     bridge.addListener('inspectElement', this.inspectElement);
+    bridge.addListener('overrideContext', this.overrideContext);
+    bridge.addListener('overrideProps', this.overrideProps);
+    bridge.addListener('overrideState', this.overrideState);
     bridge.addListener('selectElement', this.selectElement);
     bridge.addListener('startInspectingDOM', this.startInspectingDOM);
     bridge.addListener('stopInspectingDOM', this.stopInspectingDOM);
@@ -80,7 +95,7 @@ export default class Agent extends EventEmitter {
     }
   };
 
-  inspectElement = ({ id, rendererID }: { id: number, rendererID: number }) => {
+  inspectElement = ({ id, rendererID }: InspectSelectParams) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -89,12 +104,39 @@ export default class Agent extends EventEmitter {
     }
   };
 
-  selectElement = ({ id, rendererID }: { id: number, rendererID: number }) => {
+  selectElement = ({ id, rendererID }: InspectSelectParams) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
     } else {
       this._bridge.send('selectElement', renderer.selectElement(id));
+    }
+  };
+
+  overrideContext = ({ id, path, rendererID, value }: SetInParams) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+    } else {
+      renderer.setInContext(id, path, value);
+    }
+  };
+
+  overrideProps = ({ id, path, rendererID, value }: SetInParams) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+    } else {
+      renderer.setInProps(id, path, value);
+    }
+  };
+
+  overrideState = ({ id, path, rendererID, value }: SetInParams) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+    } else {
+      renderer.setInState(id, path, value);
     }
   };
 
