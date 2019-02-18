@@ -193,11 +193,42 @@ export default {
           const dependency = normalizeDependencyNode(dependencyNode);
           // Add the dependency to a map so we can make sure it is referenced
           // again in our dependencies array.
-          let nodes = dependencies.get(dependency);
-          if (!nodes) {
-            dependencies.set(dependency, (nodes = []));
+          let info = dependencies.get(dependency);
+          if (!info) {
+            info = {isKnownToBeStatic: false};
+            dependencies.set(dependency, info);
+
+            if (
+              reference.resolved != null &&
+              Array.isArray(reference.resolved.defs)
+            ) {
+              const def = reference.resolved.defs[0];
+              if (def != null && def.node.init != null) {
+                const init = def.node.init;
+                if (init.callee != null) {
+                  if (
+                    init.callee.name === 'useRef' &&
+                    def.node.id.type === 'Identifier'
+                  ) {
+                    info.isKnownToBeStatic = true;
+                  } else if (
+                    init.callee.name === 'useState' ||
+                    init.callee.name === 'useReducer'
+                  ) {
+                    if (
+                      def.node.id.type === 'ArrayPattern' &&
+                      def.node.id.elements.length === 2 &&
+                      Array.isArray(reference.resolved.identifiers) &&
+                      def.node.id.elements[1] ===
+                        reference.resolved.identifiers[0]
+                    ) {
+                      info.isKnownToBeStatic = true;
+                    }
+                  }
+                }
+              }
+            }
           }
-          nodes.push(dependencyNode);
         }
         for (const childScope of currentScope.childScopes) {
           gatherDependenciesRecursively(childScope);
@@ -292,7 +323,7 @@ export default {
         }
       });
       // Then fill in the missing ones.
-      Array.from(dependencies.keys()).forEach(key => {
+      dependencies.forEach((info, key) => {
         if (
           !suggestedDependencies.some(suggestedDep =>
             satisfies(key, suggestedDep),
@@ -300,7 +331,9 @@ export default {
         ) {
           // Legit missing.
           suggestedDependencies.push(key);
-          missingDependencies.add(key);
+          if (!info.isKnownToBeStatic) {
+            missingDependencies.add(key);
+          }
         } else {
           // Already did that. Do nothing.
         }
