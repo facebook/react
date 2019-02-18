@@ -386,6 +386,28 @@ const tests = {
         }
       `,
     },
+    {
+      code: `
+        const MyComponent = forwardRef((props, ref) => {
+          useImperativeHandle(ref, () => ({
+            focus() {
+              alert(props.hello);
+            }
+          }))
+        });
+      `,
+    },
+    {
+      code: `
+        const MyComponent = forwardRef((props, ref) => {
+          useImperativeHandle(ref, () => ({
+            focus() {
+              alert(props.hello);
+            }
+          }), [props.hello])
+        });
+      `,
+    },
   ],
   invalid: [
     {
@@ -1266,6 +1288,30 @@ const tests = {
       // TODO: better message for the ref case.
       errors: [
         'React Hook useEffect has unnecessary [ref.current] dependencies. ' +
+          'Either fix or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+        const MyComponent = forwardRef((props, ref) => {
+          useImperativeHandle(ref, () => ({
+            focus() {
+              alert(props.hello);
+            }
+          }), [])
+        });
+      `,
+      output: `
+        const MyComponent = forwardRef((props, ref) => {
+          useImperativeHandle(ref, () => ({
+            focus() {
+              alert(props.hello);
+            }
+          }), [props.hello])
+        });
+      `,
+      errors: [
+        'React Hook useImperativeHandle has missing [props.hello] dependencies. ' +
           'Either fix or remove the dependency array.',
       ],
     },

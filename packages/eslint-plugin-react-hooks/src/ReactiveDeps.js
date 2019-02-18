@@ -9,21 +9,11 @@
 
 'use strict';
 
-/**
- * Is this node a reactive React Hook? This includes:
- *
- * - `useEffect()`
- * - `useCallback()`
- * - `useMemo()`
- *
- * TODO: implement autofix.
- *
- * Also supports `React` namespacing. e.g. `React.useEffect()`.
- *
- * NOTE: This is a very naive check. We don't look to make sure these reactive
- * hooks are imported correctly.
- */
-function isReactiveHook(node, options) {
+// -1 if not a reactive Hook.
+// 0 for useEffect/useMemo/useCallback.
+// 1 for useImperativeHandle.
+// For additionally configured Hooks, assume 0.
+function getReactiveHookCallbackIndex(node, options) {
   if (
     node.type === 'MemberExpression' &&
     node.object.type === 'Identifier' &&
@@ -31,7 +21,7 @@ function isReactiveHook(node, options) {
     node.property.type === 'Identifier' &&
     !node.computed
   ) {
-    return isReactiveHook(node.property);
+    return getReactiveHookCallbackIndex(node.property);
   } else if (
     node.type === 'Identifier' &&
     (node.name === 'useEffect' ||
@@ -39,7 +29,12 @@ function isReactiveHook(node, options) {
       node.name === 'useCallback' ||
       node.name === 'useMemo')
   ) {
-    return true;
+    return 0;
+  } else if (
+    node.type === 'Identifier' &&
+    node.name === 'useImperativeHandle'
+  ) {
+    return 1;
   } else if (options && options.additionalHooks) {
     // Allow the user to provide a regular expression which enables the lint to
     // target custom reactive hooks.
@@ -48,14 +43,14 @@ function isReactiveHook(node, options) {
       name = getAdditionalHookName(node);
     } catch (error) {
       if (/Unsupported node type/.test(error.message)) {
-        return false;
+        return 0;
       } else {
         throw error;
       }
     }
-    return options.additionalHooks.test(name);
+    return options.additionalHooks.test(name) ? 0 : -1;
   } else {
-    return false;
+    return -1;
   }
 }
 
@@ -72,21 +67,6 @@ function getAdditionalHookName(node) {
   } else {
     throw new Error(`Unsupported node type: ${node.type}`);
   }
-}
-
-/**
- * Is this node the callback for a reactive hook? It is if the parent is a call
- * expression with a reactive hook callee and this node is a function expression
- * and the first argument.
- */
-function isReactiveHookCallback(node, options) {
-  return (
-    (node.type === 'FunctionExpression' ||
-      node.type === 'ArrowFunctionExpression') &&
-    node.parent.type === 'CallExpression' &&
-    isReactiveHook(node.parent.callee, options) &&
-    node.parent.arguments[0] === node
-  );
 }
 
 export default {
@@ -124,7 +104,19 @@ export default {
      */
     function visitFunctionExpression(node) {
       // We only want to lint nodes which are reactive hook callbacks.
-      if (!isReactiveHookCallback(node, options)) {
+      if (
+        (node.type !== 'FunctionExpression' &&
+          node.type !== 'ArrowFunctionExpression') ||
+        node.parent.type !== 'CallExpression'
+      ) {
+        return;
+      }
+
+      const callbackIndex = getReactiveHookCallbackIndex(
+        node.parent.callee,
+        options,
+      );
+      if (node.parent.arguments[callbackIndex] !== node) {
         return;
       }
 
@@ -134,7 +126,8 @@ export default {
       // Get the declared dependencies for this reactive hook. If there is no
       // second argument then the reactive callback will re-run on every render.
       // So no need to check for dependency inclusion.
-      const declaredDependenciesNode = node.parent.arguments[1];
+      const depsIndex = callbackIndex + 1;
+      const declaredDependenciesNode = node.parent.arguments[depsIndex];
       if (!declaredDependenciesNode) {
         return;
       }
