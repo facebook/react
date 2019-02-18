@@ -332,39 +332,62 @@ export default {
         }
       });
 
-      if (
-        duplicateDependencies.size > 0 ||
-        missingDependencies.size > 0 ||
-        unnecessaryDependencies.size > 0
-      ) {
-        context.report({
-          node: declaredDependenciesNode,
-          message:
-            `React Hook ${context.getSource(reactiveHook)} has ` +
-            [
-              missingDependencies.size > 0
-                ? `missing [${Array.from(missingDependencies).join(', ')}]`
-                : null,
-              duplicateDependencies.size > 0
-                ? `duplicate [${Array.from(duplicateDependencies).join(', ')}]`
-                : null,
-              unnecessaryDependencies.size > 0
-                ? `unnecessary [${Array.from(unnecessaryDependencies).join(
-                    ', ',
-                  )}]`
-                : null,
-            ]
-              .filter(Boolean)
-              .join(', ') +
-            ` dependencies. Either fix or remove the dependency array.`,
-          fix(fixer) {
-            return fixer.replaceText(
-              declaredDependenciesNode,
-              `[${suggestedDependencies.join(', ')}]`,
-            );
-          },
-        });
+      const problemCount =
+        duplicateDependencies.size +
+        missingDependencies.size +
+        unnecessaryDependencies.size;
+
+      if (problemCount === 0) {
+        return;
       }
+
+      const quote = name => "'" + name + "'";
+      const join = (arr, forceComma) => {
+        let s = '';
+        for (let i = 0; i < arr.length; i++) {
+          s += arr[i];
+          if (i === 0 && arr.length === 2) {
+            s += ' and ';
+          } else if (i === arr.length - 2 && arr.length > 2) {
+            s += ', and ';
+          } else if (i < arr.length - 1) {
+            s += ', ';
+          }
+        }
+        return s;
+      };
+      const list = (set, label, singlePrefix, fixVerb) => {
+        if (set.size === 0) {
+          return null;
+        }
+        return (
+          (set.size > 1 ? '' : singlePrefix + ' ') +
+          label +
+          ' ' +
+          join(Array.from(set).map(quote)) +
+          ' ' +
+          (set.size > 1 ? 'dependencies' : 'dependency') +
+          `. Either ${fixVerb} ${
+            set.size > 1 ? 'them' : 'it'
+          } or remove the dependency array.`
+        );
+      };
+      context.report({
+        node: declaredDependenciesNode,
+        message:
+          `React Hook ${context.getSource(reactiveHook)} has ` +
+          // To avoid a long message, show the next actionable item.
+          (list(missingDependencies, 'missing', 'a', 'include') ||
+            list(unnecessaryDependencies, 'unnecessary', 'an', 'exclude') ||
+            list(duplicateDependencies, 'duplicate', 'a', 'omit')),
+        fix(fixer) {
+          // TODO: consider keeping the comments?
+          return fixer.replaceText(
+            declaredDependenciesNode,
+            `[${suggestedDependencies.join(', ')}]`,
+          );
+        },
+      });
     }
   },
 };
