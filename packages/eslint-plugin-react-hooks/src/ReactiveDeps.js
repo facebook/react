@@ -199,23 +199,33 @@ export default {
               if (def != null && def.node.init != null) {
                 const init = def.node.init;
                 if (init.callee != null) {
+                  let callee = init.callee;
                   if (
-                    init.callee.name === 'useRef' &&
-                    def.node.id.type === 'Identifier'
+                    callee.type === 'MemberExpression' &&
+                    callee.object.name === 'React' &&
+                    callee.property != null
                   ) {
-                    info.isKnownToBeStatic = true;
-                  } else if (
-                    init.callee.name === 'useState' ||
-                    init.callee.name === 'useReducer'
-                  ) {
+                    callee = callee.property;
+                  }
+                  if (callee.type === 'Identifier') {
                     if (
-                      def.node.id.type === 'ArrayPattern' &&
-                      def.node.id.elements.length === 2 &&
-                      Array.isArray(reference.resolved.identifiers) &&
-                      def.node.id.elements[1] ===
-                        reference.resolved.identifiers[0]
+                      callee.name === 'useRef' &&
+                      def.node.id.type === 'Identifier'
                     ) {
                       info.isKnownToBeStatic = true;
+                    } else if (
+                      callee.name === 'useState' ||
+                      callee.name === 'useReducer'
+                    ) {
+                      if (
+                        def.node.id.type === 'ArrayPattern' &&
+                        def.node.id.elements.length === 2 &&
+                        Array.isArray(reference.resolved.identifiers) &&
+                        def.node.id.elements[1] ===
+                          reference.resolved.identifiers[0]
+                      ) {
+                        info.isKnownToBeStatic = true;
+                      }
                     }
                   }
                 }

@@ -281,9 +281,9 @@ const tests = {
           const definitelyRef2 = useRef();
           const maybeRef1 = useSomeOtherRefyThing();
           const [state1, setState1] = useState();
-          const [state2, setState2] = useState();
+          const [state2, setState2] = React.useState();
           const [state3, dispatch1] = useReducer();
-          const [state4, dispatch2] = useReducer();
+          const [state4, dispatch2] = React.useReducer();
           const [state5, maybeSetState] = useFunnyState();
           const [state6, maybeDispatch] = useFunnyReducer();
           function mySetState() {}
@@ -336,9 +336,9 @@ const tests = {
           const maybeRef1 = useSomeOtherRefyThing();
 
           const [state1, setState1] = useState();
-          const [state2, setState2] = useState();
+          const [state2, setState2] = React.useState();
           const [state3, dispatch1] = useReducer();
-          const [state4, dispatch2] = useReducer();
+          const [state4, dispatch2] = React.useReducer();
 
           const [state5, maybeSetState] = useFunnyState();
           const [state6, maybeDispatch] = useFunnyReducer();
