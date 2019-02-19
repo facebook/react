@@ -34,7 +34,7 @@ export default function List(props: Props) {
       setUID(uid + 1);
       setNewItemText('');
     }
-  }, [newItemText]);
+  }, [newItemText, items, uid]);
 
   const handleKeyPress = useCallback(
     event => {

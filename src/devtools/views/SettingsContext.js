@@ -76,7 +76,7 @@ function SettingsContextController({ browserTheme, children }: Props) {
       default:
         throw Error(`Unsupported theme value "${theme}"`);
     }
-  }, [theme]);
+  }, [browserTheme, theme]);
 
   const value = useMemo(
     () => ({
@@ -89,7 +89,14 @@ function SettingsContextController({ browserTheme, children }: Props) {
           ? compactLineHeight
           : comfortableLineHeight,
     }),
-    [displayDensity, setDisplayDensity, theme, setTheme]
+    [
+      comfortableLineHeight,
+      compactLineHeight,
+      displayDensity,
+      setDisplayDensity,
+      setTheme,
+      theme,
+    ]
   );
 
   return (

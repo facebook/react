@@ -1,13 +1,13 @@
 // @flow
 
-import { useLayoutEffect, useState } from 'react';
+import { useCallback, useLayoutEffect, useState } from 'react';
 
 // Forked from https://usehooks.com/useLocalStorage/
 export function useLocalStorage<T>(
   key: string,
   initialValue: T
 ): [T, (value: T | (() => T)) => void] {
-  const getValueFromLocalStorage = () => {
+  const getValueFromLocalStorage = useCallback(() => {
     try {
       const item = window.localStorage.getItem(key);
       return item ? JSON.parse(item) : initialValue;
@@ -15,20 +15,23 @@ export function useLocalStorage<T>(
       console.log(error);
       return initialValue;
     }
-  };
+  }, [initialValue, key]);
 
   const [storedValue, setStoredValue] = useState(getValueFromLocalStorage);
 
-  const setValue = value => {
-    try {
-      const valueToStore =
-        value instanceof Function ? value(storedValue) : value;
-      setStoredValue(valueToStore);
-      window.localStorage.setItem(key, JSON.stringify(valueToStore));
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  const setValue = useCallback(
+    value => {
+      try {
+        const valueToStore =
+          value instanceof Function ? value(storedValue) : value;
+        setStoredValue(valueToStore);
+        window.localStorage.setItem(key, JSON.stringify(valueToStore));
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    [key, storedValue]
+  );
 
   // Listen for changes to this local storage value made from other windows.
   // This enables the e.g. "⚛️ Elements" tab to update in response to changes from "⚛️ Settings".
@@ -45,7 +48,7 @@ export function useLocalStorage<T>(
     return () => {
       window.removeEventListener('storage', onStorage);
     };
-  }, [key, storedValue]);
+  }, [getValueFromLocalStorage, key, storedValue, setValue]);
 
   return [storedValue, setValue];
 }

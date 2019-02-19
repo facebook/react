@@ -595,7 +595,19 @@ function TreeContextController({ children }: {| children: React$Node |}) {
       resetOwnerStack,
       selectOwner,
     }),
-    [state]
+    [
+      getElementAtIndex,
+      goToNextSearchResult,
+      goToPreviousSearchResult,
+      resetOwnerStack,
+      selectElementAtIndex,
+      selectElementByID,
+      selectNextElementInTree,
+      selectOwner,
+      selectPreviousElementInTree,
+      setSearchText,
+      state,
+    ]
   );
 
   // Listen for host element selections.
@@ -632,7 +644,7 @@ function TreeContextController({ children }: {| children: React$Node |}) {
     store.addListener('mutated', handleStoreMutated);
 
     return () => store.removeListener('mutated', handleStoreMutated);
-  }, [dispatch, store]);
+  }, [dispatch, initialRevision, store]);
 
   return <TreeContext.Provider value={value}>{children}</TreeContext.Provider>;
 }

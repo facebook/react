@@ -25,21 +25,34 @@ export default function ElementView({ index, style }: Props) {
 
   const element = getElementAtIndex(index);
 
-  if (element == null) {
-    console.warn(`<ElementView> Could not find element at index ${index}`);
-    return null;
-  }
+  const id = element === null ? null : element.id;
 
-  const { depth, displayName, id, key, type } = ((element: any): Element);
-
-  const handleDoubleClick = useCallback(() => selectOwner(id), [id]);
+  const handleDoubleClick = useCallback(() => {
+    if (id !== null) {
+      selectOwner(id);
+    }
+  }, [id, selectOwner]);
 
   // TODO Add click and key handlers for toggling element open/close state.
 
   const handleClick = useCallback(
-    ({ metaKey }) => selectElementByID(metaKey ? null : id),
-    [id]
+    ({ metaKey }) => {
+      if (id !== null) {
+        selectElementByID(metaKey ? null : id);
+      }
+    },
+    [id, selectElementByID]
   );
+
+  // Handle elements that are removed from the tree while an async render is in progress.
+  if (element == null) {
+    console.warn(`<ElementView> Could not find element at index ${index}`);
+
+    // This return needs to happen after hooks, since hooks can't be conditional.
+    return null;
+  }
+
+  const { depth, displayName, key, type } = ((element: any): Element);
 
   const isSelected = selectedElementID === id;
   const showDollarR =
@@ -58,7 +71,7 @@ export default function ElementView({ index, style }: Props) {
       }}
     >
       <span className={styles.Component}>
-        <DisplayName displayName={displayName} id={id} />
+        <DisplayName displayName={displayName} id={((id: any): number)} />
         {key && (
           <Fragment>
             &nbsp;<span className={styles.AttributeName}>key</span>=

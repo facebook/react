@@ -183,7 +183,7 @@ function EditableValue({
         setEditableValue(target.value);
       }
     },
-    [dataType, setEditableValue]
+    [dataType, overrideValueFn, path]
   );
 
   const handleKeyPress = useCallback(

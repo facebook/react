@@ -43,7 +43,7 @@ export default function SelectedElement(_: Props) {
         });
       }
     }
-  }, [bridge, selectedElementID, store]);
+  }, [bridge, element, selectedElementID, store]);
 
   // TODO Make "view source" button work
 
@@ -176,7 +176,10 @@ function InspectedElementView({
 function OwnerView({ displayName, id }: { displayName: string, id: number }) {
   const { selectElementByID } = useContext(TreeContext);
 
-  const handleClick = useCallback(() => selectElementByID(id), [id]);
+  const handleClick = useCallback(() => selectElementByID(id), [
+    id,
+    selectElementByID,
+  ]);
 
   return (
     <div
@@ -260,7 +263,7 @@ function useInspectedElement(id: number | null): InspectedElement | null {
 
       bridge.removeListener('inspectedElement', onInspectedElement);
     };
-  }, [id]);
+  }, [bridge, id, idRef, store]);
 
   return inspectedElement;
 }
