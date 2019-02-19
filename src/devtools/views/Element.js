@@ -1,6 +1,13 @@
 // @flow
 
-import React, { Fragment, useCallback, useContext, useMemo } from 'react';
+import React, {
+  Fragment,
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+  useEffect,
+} from 'react';
 import { ElementTypeClass, ElementTypeFunction } from 'src/devtools/types';
 import { createRegExp } from './utils';
 import { TreeContext } from './TreeContext';
@@ -45,6 +52,13 @@ export default function ElementView({ index, style }: Props) {
   const showDollarR =
     isSelected && (type === ElementTypeClass || type === ElementTypeFunction);
 
+  const component = useRef(null);
+  useEffect(() => {
+    if (isSelected && component.current !== null) {
+      component.current.scrollIntoView();
+    }
+  }, [isSelected]);
+
   // TODO styles.SelectedElement is 100% width but it doesn't take horizontal overflow into account.
 
   return (
@@ -57,7 +71,7 @@ export default function ElementView({ index, style }: Props) {
         paddingLeft: `${(depth - baseDepth) * 0.75 + 0.25}rem`,
       }}
     >
-      <span className={styles.Component}>
+      <span ref={component} className={styles.Component}>
         <DisplayName displayName={displayName} id={id} />
         {key && (
           <Fragment>
