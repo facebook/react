@@ -669,6 +669,76 @@ describe('ReactHooks', () => {
     }).toThrow('is not a function');
   });
 
+  it('does not forget render phase useState updates inside an effect', () => {
+    const {useState, useEffect} = React;
+
+    function Counter() {
+      const [counter, setCounter] = useState(0);
+      if (counter === 0) {
+        setCounter(x => x + 1);
+        setCounter(x => x + 1);
+      }
+      useEffect(() => {
+        setCounter(x => x + 1);
+        setCounter(x => x + 1);
+      }, []);
+      return counter;
+    }
+
+    const root = ReactTestRenderer.create(null);
+    ReactTestRenderer.act(() => {
+      root.update(<Counter />);
+    });
+    expect(root).toMatchRenderedOutput('4');
+  });
+
+  it('does not forget render phase useReducer updates inside an effect with hoisted reducer', () => {
+    const {useReducer, useEffect} = React;
+
+    const reducer = x => x + 1;
+    function Counter() {
+      const [counter, increment] = useReducer(reducer, 0);
+      if (counter === 0) {
+        increment();
+        increment();
+      }
+      useEffect(() => {
+        increment();
+        increment();
+      }, []);
+      return counter;
+    }
+
+    const root = ReactTestRenderer.create(null);
+    ReactTestRenderer.act(() => {
+      root.update(<Counter />);
+    });
+    expect(root).toMatchRenderedOutput('4');
+  });
+
+  it('does not forget render phase useReducer updates inside an effect with inline reducer', () => {
+    const {useReducer, useEffect} = React;
+
+    function Counter() {
+      const [counter, increment] = useReducer(x => x + 1, 0);
+      if (counter === 0) {
+        increment();
+        increment();
+      }
+      useEffect(() => {
+        increment();
+        increment();
+      }, []);
+      return counter;
+    }
+
+    const root = ReactTestRenderer.create(null);
+    ReactTestRenderer.act(() => {
+      root.update(<Counter />);
+    });
+    expect(root).toMatchRenderedOutput('4');
+  });
+
   it('warns for bad useImperativeHandle first arg', () => {
     const {useImperativeHandle} = React;
     function App() {
