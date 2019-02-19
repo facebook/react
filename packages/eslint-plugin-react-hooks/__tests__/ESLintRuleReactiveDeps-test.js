@@ -1263,10 +1263,41 @@ const tests = {
           }, [ref1, ref2, props.someOtherRefs, props.color]);
         }
       `,
-      // TODO: special message for the ref case.
       errors: [
         "React Hook useEffect has missing dependencies: 'props.someOtherRefs' and 'props.color'. " +
           'Either include them or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
+          const ref1 = useRef();
+          const ref2 = useRef();
+          useEffect(() => {
+            ref1.current.focus();
+            console.log(ref2.current.textContent);
+            alert(props.someOtherRefs.current.innerHTML);
+            fetch(props.color);
+          }, [ref1.current, ref2.current, props.someOtherRefs, props.color]);
+        }
+      `,
+      output: `
+        function MyComponent(props) {
+          const ref1 = useRef();
+          const ref2 = useRef();
+          useEffect(() => {
+            ref1.current.focus();
+            console.log(ref2.current.textContent);
+            alert(props.someOtherRefs.current.innerHTML);
+            fetch(props.color);
+          }, [props.someOtherRefs, props.color, ref1, ref2]);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has unnecessary dependencies: 'ref1.current' and 'ref2.current'. " +
+          'Either exclude them or remove the dependency array. ' +
+          "Mutable values like 'ref1.current' aren't valid dependencies " +
+          "because their mutation doesn't re-render the component.",
       ],
     },
     {
@@ -1286,10 +1317,11 @@ const tests = {
           }, [ref]);
         }
       `,
-      // TODO: special message for the ref case.
       errors: [
         "React Hook useEffect has an unnecessary dependency: 'ref.current'. " +
-          'Either exclude it or remove the dependency array.',
+          'Either exclude it or remove the dependency array. ' +
+          "Mutable values like 'ref.current' aren't valid dependencies " +
+          "because their mutation doesn't re-render the component.",
       ],
     },
     {

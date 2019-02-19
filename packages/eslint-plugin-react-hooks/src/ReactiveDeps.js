@@ -382,6 +382,24 @@ export default {
           } or remove the dependency array.`
         );
       };
+      let extraWarning = '';
+      if (unnecessaryDependencies.size > 0) {
+        let badRef = null;
+        Array.from(unnecessaryDependencies.keys()).forEach(key => {
+          if (badRef !== null) {
+            return;
+          }
+          if (key.endsWith('.current')) {
+            badRef = key;
+          }
+        });
+        if (badRef !== null) {
+          extraWarning =
+            ` Mutable values like '${badRef}' aren't valid dependencies ` +
+            "because their mutation doesn't re-render the component.";
+        }
+      }
+
       context.report({
         node: declaredDependenciesNode,
         message:
@@ -389,7 +407,8 @@ export default {
           // To avoid a long message, show the next actionable item.
           (list(missingDependencies, 'a', 'missing', 'include') ||
             list(unnecessaryDependencies, 'an', 'unnecessary', 'exclude') ||
-            list(duplicateDependencies, 'a', 'duplicate', 'omit')),
+            list(duplicateDependencies, 'a', 'duplicate', 'omit')) +
+          extraWarning,
         fix(fixer) {
           // TODO: consider keeping the comments?
           return fixer.replaceText(
