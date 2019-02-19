@@ -66,7 +66,7 @@ import {
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
   pingSuspendedRoot,
-  retryTimedOutBoundary,
+  resolveRetryThenable,
 } from './ReactFiberScheduler';
 
 import invariant from 'shared/invariant';
@@ -372,11 +372,7 @@ function throwException(
         // Memoize using the boundary fiber to prevent redundant listeners.
         if (!retryCache.has(thenable)) {
           retryCache.add(thenable);
-          let retry = retryTimedOutBoundary.bind(
-            null,
-            workInProgress,
-            thenable,
-          );
+          let retry = resolveRetryThenable.bind(null, workInProgress, thenable);
           if (enableSchedulerTracing) {
             retry = Schedule_tracing_wrap(retry);
           }

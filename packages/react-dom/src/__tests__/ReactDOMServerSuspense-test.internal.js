@@ -94,6 +94,8 @@ describe('ReactDOMServerSuspense', () => {
     );
     const e = c.children[0];
 
-    expect(e.innerHTML).toBe('<div>Children</div><div>Fallback</div>');
+    expect(e.innerHTML).toBe(
+      '<div>Children</div><!--$!--><div>Fallback</div><!--/$-->',
+    );
   });
 });
