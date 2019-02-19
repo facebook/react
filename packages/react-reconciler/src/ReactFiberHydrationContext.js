@@ -34,8 +34,6 @@ import {
   canHydrateInstance,
   canHydrateTextInstance,
   canHydrateSuspenseInstance,
-  isSuspenseInstancePending,
-  isSuspenseInstanceFallback,
   getNextHydratableSibling,
   getFirstHydratableChild,
   hydrateInstance,
@@ -84,14 +82,6 @@ function reenterHydrationStateFromDehydratedSuspenseInstance(
   popToNextHostParent(fiber);
   isHydrating = true;
   return true;
-}
-
-function isDehydratedSuspenseComponentPending(fiber: Fiber) {
-  return isSuspenseInstancePending((fiber.stateNode: SuspenseInstance));
-}
-
-function isDehydratedSuspenseComponentFallback(fiber: Fiber) {
-  return isSuspenseInstanceFallback((fiber.stateNode: SuspenseInstance));
 }
 
 function deleteHydratableInstance(
@@ -444,8 +434,6 @@ function resetHydrationState(): void {
 export {
   enterHydrationState,
   reenterHydrationStateFromDehydratedSuspenseInstance,
-  isDehydratedSuspenseComponentPending,
-  isDehydratedSuspenseComponentFallback,
   resetHydrationState,
   tryToClaimNextHydratableInstance,
   prepareToHydrateHostInstance,

@@ -84,7 +84,10 @@ import {
 import {
   shouldSetTextContent,
   shouldDeprioritizeSubtree,
+  isSuspenseInstancePending,
+  isSuspenseInstanceFallback,
 } from './ReactFiberHostConfig';
+import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {pushHostContext, pushHostContainer} from './ReactFiberHostContext';
 import {
   pushProvider,
@@ -107,8 +110,6 @@ import {
 import {
   enterHydrationState,
   reenterHydrationStateFromDehydratedSuspenseInstance,
-  isDehydratedSuspenseComponentPending,
-  isDehydratedSuspenseComponentFallback,
   resetHydrationState,
   tryToClaimNextHydratableInstance,
 } from './ReactFiberHydrationContext';
@@ -1648,10 +1649,11 @@ function updateDehydratedSuspenseComponent(
   // We use childExpirationTime to indicate that a child might depend on context, so if
   // any context has changed, we need to treat is as if the input might have changed.
   const hasContextChanged = current.childExpirationTime >= renderExpirationTime;
+  const suspenseInstance = (current.stateNode: SuspenseInstance);
   if (
     didReceiveUpdate ||
     hasContextChanged ||
-    isDehydratedSuspenseComponentFallback(current)
+    isSuspenseInstanceFallback(suspenseInstance)
   ) {
     // This boundary has changed since the first render. This means that we are now unable to
     // hydrate it. We might still be able to hydrate it using an earlier expiration time but
@@ -1693,7 +1695,7 @@ function updateDehydratedSuspenseComponent(
     workInProgress.effectTag |= Placement;
     // Retry as a real Suspense component.
     return updateSuspenseComponent(null, workInProgress, renderExpirationTime);
-  } else if (isDehydratedSuspenseComponentPending(current)) {
+  } else if (isSuspenseInstancePending(suspenseInstance)) {
     // This component is still pending more data from the server, so we can't hydrate its
     // content. We treat it as if this component suspended itself. It might seem as if
     // we could just try to render it client-side instead. However, this will perform a
