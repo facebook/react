@@ -51,20 +51,15 @@ export function getUID(): number {
   return ++uidCounter;
 }
 
-export function utfDecodeString(array: Uint8Array): string {
-  let string = '';
-  const { length } = array;
-  for (let i = 0; i < length; i++) {
-    string += String.fromCharCode(array[i]);
-  }
-  return string;
+export function utfDecodeString(array: Uint32Array): string {
+  return String.fromCodePoint(...array);
 }
 
-export function utfEncodeString(string: string): Uint8Array {
-  const array = new Uint8Array(string.length);
-  const { length } = string;
-  for (let i = 0; i < length; i++) {
-    array[i] = string.charCodeAt(i);
-  }
-  return array;
+export function utfEncodeString(string: string): Uint32Array {
+  // $FlowFixMe Flow's Uint32Array.from's type definition is wrong; first argument of mapFn will be string
+  return Uint32Array.from(string, toCodePoint);
+}
+
+function toCodePoint(string: string) {
+  return string.codePointAt(0);
 }

@@ -566,6 +566,8 @@ export function attach(
 
       if (key !== null) {
         if (typeof key === 'number') {
+          // unreachable code?
+          // https://github.com/facebook/react/blob/master/packages/react/src/ReactElement.js#L187
           encodedKey = new Uint8Array(1);
           encodedKey[0] = key;
         } else {
