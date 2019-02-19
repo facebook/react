@@ -86,6 +86,7 @@ import {
   shouldDeprioritizeSubtree,
   isSuspenseInstancePending,
   isSuspenseInstanceFallback,
+  registerSuspenseInstanceRetry,
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {pushHostContext, pushHostContainer} from './ReactFiberHostContext';
@@ -132,6 +133,7 @@ import {
   createWorkInProgress,
   isSimpleFunctionComponent,
 } from './ReactFiber';
+import {retryTimedOutBoundary} from './ReactFiberScheduler';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -1708,6 +1710,11 @@ function updateDehydratedSuspenseComponent(
     workInProgress.effectTag |= DidCapture;
     // Leave the children in place. I.e. empty.
     workInProgress.child = null;
+    // Register a callback to retry this boundary once the server has sent the result.
+    registerSuspenseInstanceRetry(
+      suspenseInstance,
+      retryTimedOutBoundary.bind(null, current),
+    );
     return null;
   } else {
     // This is the first attempt.

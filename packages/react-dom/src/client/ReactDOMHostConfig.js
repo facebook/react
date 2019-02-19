@@ -56,7 +56,7 @@ export type Props = {
 export type Container = Element | Document;
 export type Instance = Element;
 export type TextInstance = Text;
-export type SuspenseInstance = Comment;
+export type SuspenseInstance = Comment & {_reactRetry?: () => void};
 export type HydratableInstance = Instance | TextInstance | SuspenseInstance;
 export type PublicInstance = Element | Text;
 type HostContextDev = {
@@ -566,6 +566,13 @@ export function isSuspenseInstancePending(instance: SuspenseInstance) {
 
 export function isSuspenseInstanceFallback(instance: SuspenseInstance) {
   return instance.data === SUSPENSE_FALLBACK_START_DATA;
+}
+
+export function registerSuspenseInstanceRetry(
+  instance: SuspenseInstance,
+  callback: () => void,
+) {
+  instance._reactRetry = callback;
 }
 
 export function getNextHydratableSibling(

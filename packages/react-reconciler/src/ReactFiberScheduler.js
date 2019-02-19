@@ -2592,6 +2592,7 @@ export {
   renderDidSuspend,
   renderDidError,
   pingSuspendedRoot,
+  retryTimedOutBoundary,
   resolveRetryThenable,
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,

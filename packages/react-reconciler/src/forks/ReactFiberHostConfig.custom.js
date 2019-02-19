@@ -111,6 +111,8 @@ export const isSuspenseInstancePending =
   $$$hostConfig.isSuspenseInstancePending;
 export const isSuspenseInstanceFallback =
   $$$hostConfig.isSuspenseInstanceFallback;
+export const registerSuspenseInstanceRetry =
+  $$$hostConfig.registerSuspenseInstanceRetry;
 export const getNextHydratableSibling = $$$hostConfig.getNextHydratableSibling;
 export const getFirstHydratableChild = $$$hostConfig.getFirstHydratableChild;
 export const hydrateInstance = $$$hostConfig.hydrateInstance;
