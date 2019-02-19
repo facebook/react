@@ -1348,6 +1348,32 @@ const tests = {
           'Either include it or remove the dependency array.',
       ],
     },
+    {
+      code: `
+        function MyComponent(props) {
+          useEffect(() => {
+            if (props.onChange) {
+              props.onChange();
+            }
+          }, []);
+        }
+      `,
+      // TODO: [props.onChange] is superfluous. Fix to just [props.onChange].
+      output: `
+        function MyComponent(props) {
+          useEffect(() => {
+            if (props.onChange) {
+              props.onChange();
+            }
+          }, [props.onChange, props]);
+        }
+      `,
+      errors: [
+        // TODO: reporting props separately is superfluous. Fix to just props.onChange.
+        "React Hook useEffect has missing dependencies: 'props.onChange' and 'props'. " +
+          'Either include them or remove the dependency array.',
+      ],
+    },
   ],
 };
 
