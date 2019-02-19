@@ -1698,7 +1698,20 @@ function pingSuspendedRoot(
   }
 }
 
-function retryTimedOutBoundary(boundaryFiber: Fiber, thenable: Thenable) {
+function retryTimedOutBoundary(boundaryFiber: Fiber) {
+  const currentTime = requestCurrentTime();
+  const retryTime = computeExpirationForFiber(currentTime, boundaryFiber);
+  const root = scheduleWorkToRoot(boundaryFiber, retryTime);
+  if (root !== null) {
+    markPendingPriorityLevel(root, retryTime);
+    const rootExpirationTime = root.expirationTime;
+    if (rootExpirationTime !== NoWork) {
+      requestWork(root, rootExpirationTime);
+    }
+  }
+}
+
+function resolveRetryThenable(boundaryFiber: Fiber, thenable: Thenable) {
   // The boundary fiber (a Suspense component) previously timed out and was
   // rendered in its fallback state. One of the promises that suspended it has
   // resolved, which means at least part of the tree was likely unblocked. Try
@@ -1729,16 +1742,7 @@ function retryTimedOutBoundary(boundaryFiber: Fiber, thenable: Thenable) {
     retryCache.delete(thenable);
   }
 
-  const currentTime = requestCurrentTime();
-  const retryTime = computeExpirationForFiber(currentTime, boundaryFiber);
-  const root = scheduleWorkToRoot(boundaryFiber, retryTime);
-  if (root !== null) {
-    markPendingPriorityLevel(root, retryTime);
-    const rootExpirationTime = root.expirationTime;
-    if (rootExpirationTime !== NoWork) {
-      requestWork(root, rootExpirationTime);
-    }
-  }
+  retryTimedOutBoundary(boundaryFiber);
 }
 
 function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
@@ -2589,6 +2593,7 @@ export {
   renderDidError,
   pingSuspendedRoot,
   retryTimedOutBoundary,
+  resolveRetryThenable,
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
   scheduleWork,

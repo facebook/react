@@ -710,7 +710,12 @@ function completeWork(
       const nextDidTimeout = nextState !== null;
       const prevDidTimeout = current !== null && current.memoizedState !== null;
 
-      if (current !== null && !nextDidTimeout && prevDidTimeout) {
+      if (current === null) {
+        // In cases where we didn't find a suitable hydration boundary we never
+        // downgraded this to a DehydratedSuspenseComponent, but we still need to
+        // pop the hydration state since we might be inside the insertion tree.
+        popHydrationState(workInProgress);
+      } else if (!nextDidTimeout && prevDidTimeout) {
         // We just switched from the fallback to the normal children. Delete
         // the fallback.
         // TODO: Would it be better to store the fallback fragment on
