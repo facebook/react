@@ -51,7 +51,7 @@ export function getUID(): number {
   return ++uidCounter;
 }
 
-export function utfDecodeString(array: Uint8Array): string {
+export function utfDecodeString(array: Uint16Array): string {
   let string = '';
   const { length } = array;
   for (let i = 0; i < length; i++) {
@@ -60,8 +60,8 @@ export function utfDecodeString(array: Uint8Array): string {
   return string;
 }
 
-export function utfEncodeString(string: string): Uint8Array {
-  const array = new Uint8Array(string.length);
+export function utfEncodeString(string: string): Uint16Array {
+  const array = new Uint16Array(string.length);
   const { length } = string;
   for (let i = 0; i < length; i++) {
     array[i] = string.charCodeAt(i);
