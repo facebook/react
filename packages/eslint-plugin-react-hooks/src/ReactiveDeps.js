@@ -356,7 +356,7 @@ export default {
         }
         return s;
       };
-      const list = (set, label, singlePrefix, fixVerb) => {
+      const list = (set, singlePrefix, label, fixVerb) => {
         if (set.size === 0) {
           return null;
         }
@@ -364,9 +364,9 @@ export default {
           (set.size > 1 ? '' : singlePrefix + ' ') +
           label +
           ' ' +
-          join(Array.from(set).map(quote)) +
-          ' ' +
           (set.size > 1 ? 'dependencies' : 'dependency') +
+          ': ' +
+          join(Array.from(set).map(quote)) +
           `. Either ${fixVerb} ${
             set.size > 1 ? 'them' : 'it'
           } or remove the dependency array.`
@@ -377,9 +377,9 @@ export default {
         message:
           `React Hook ${context.getSource(reactiveHook)} has ` +
           // To avoid a long message, show the next actionable item.
-          (list(missingDependencies, 'missing', 'a', 'include') ||
-            list(unnecessaryDependencies, 'unnecessary', 'an', 'exclude') ||
-            list(duplicateDependencies, 'duplicate', 'a', 'omit')),
+          (list(missingDependencies, 'a', 'missing', 'include') ||
+            list(unnecessaryDependencies, 'an', 'unnecessary', 'exclude') ||
+            list(duplicateDependencies, 'a', 'duplicate', 'omit')),
         fix(fixer) {
           // TODO: consider keeping the comments?
           return fixer.replaceText(

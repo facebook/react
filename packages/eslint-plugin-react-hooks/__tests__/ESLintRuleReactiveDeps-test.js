@@ -428,7 +428,7 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useEffect has a missing 'local' dependency. " +
+        "React Hook useEffect has a missing dependency: 'local'. " +
           'Either include it or remove the dependency array.',
       ],
     },
@@ -456,7 +456,7 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useEffect has a missing 'local' dependency. " +
+        "React Hook useEffect has a missing dependency: 'local'. " +
           'Either include it or remove the dependency array.',
       ],
     },
@@ -484,7 +484,7 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useEffect has a missing 'local' dependency. " +
+        "React Hook useEffect has a missing dependency: 'local'. " +
           'Either include it or remove the dependency array.',
       ],
     },
@@ -514,7 +514,7 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useEffect has a missing 'local' dependency. " +
+        "React Hook useEffect has a missing dependency: 'local'. " +
           'Either include it or remove the dependency array.',
       ],
     },
@@ -544,7 +544,7 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useEffect has missing 'local1' and 'local2' dependencies. " +
+        "React Hook useEffect has missing dependencies: 'local1' and 'local2'. " +
           'Either include them or remove the dependency array.',
       ],
     },
@@ -570,7 +570,7 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useEffect has a missing 'local2' dependency. " +
+        "React Hook useEffect has a missing dependency: 'local2'. " +
           'Either include it or remove the dependency array.',
       ],
     },
@@ -594,7 +594,7 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useEffect has an unnecessary 'local2' dependency. " +
+        "React Hook useEffect has an unnecessary dependency: 'local2'. " +
           'Either exclude it or remove the dependency array.',
       ],
     },
@@ -627,7 +627,7 @@ const tests = {
       `,
       errors: [
         // Focus on the more important part first (missing dep)
-        "React Hook useEffect has a missing 'local2' dependency. " +
+        "React Hook useEffect has a missing dependency: 'local2'. " +
           'Either include it or remove the dependency array.',
       ],
     },
@@ -651,7 +651,7 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useEffect has a missing 'local' dependency. " +
+        "React Hook useEffect has a missing dependency: 'local'. " +
           'Either include it or remove the dependency array.',
       ],
     },
@@ -675,7 +675,7 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useEffect has a duplicate 'local' dependency. " +
+        "React Hook useEffect has a duplicate dependency: 'local'. " +
           'Either omit it or remove the dependency array.',
       ],
     },
@@ -691,7 +691,7 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useEffect has an unnecessary 'local' dependency. " +
+        "React Hook useEffect has an unnecessary dependency: 'local'. " +
           'Either exclude it or remove the dependency array.',
       ],
     },
@@ -711,7 +711,7 @@ const tests = {
       }
       `,
       errors: [
-        "React Hook useEffect has a missing 'history' dependency. " +
+        "React Hook useEffect has a missing dependency: 'history'. " +
           'Either include it or remove the dependency array.',
       ],
     },
@@ -737,7 +737,7 @@ const tests = {
       }
       `,
       errors: [
-        "React Hook useEffect has a missing 'history.foo' dependency. " +
+        "React Hook useEffect has a missing dependency: 'history.foo'. " +
           'Either include it or remove the dependency array.',
       ],
     },
@@ -784,7 +784,7 @@ const tests = {
         'React Hook useEffect has a second argument which is not an array ' +
           "literal. This means we can't statically verify whether you've " +
           'passed the correct dependencies.',
-        "React Hook useEffect has a missing 'local' dependency. " +
+        "React Hook useEffect has a missing dependency: 'local'. " +
           'Either include it or remove the dependency array.',
       ],
     },
@@ -809,7 +809,7 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useEffect has a missing 'local' dependency. " +
+        "React Hook useEffect has a missing dependency: 'local'. " +
           'Either include it or remove the dependency array.',
         'React Hook useEffect has a spread element in its dependency list. ' +
           "This means we can't statically verify whether you've passed the " +
@@ -859,7 +859,7 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useEffect has a missing 'local' dependency. " +
+        "React Hook useEffect has a missing dependency: 'local'. " +
           'Either include it or remove the dependency array.',
         "Unsupported expression in React Hook useEffect's dependency list. " +
           'Currently only simple variables are supported.',
@@ -885,7 +885,7 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useEffect has a missing 'local' dependency. " +
+        "React Hook useEffect has a missing dependency: 'local'. " +
           'Either include it or remove the dependency array.',
       ],
     },
@@ -907,7 +907,7 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useEffect has a duplicate 'local' dependency. " +
+        "React Hook useEffect has a duplicate dependency: 'local'. " +
           'Either omit it or remove the dependency array.',
       ],
     },
@@ -931,7 +931,7 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useEffect has an unnecessary 'local1' dependency. " +
+        "React Hook useEffect has an unnecessary dependency: 'local1'. " +
           'Either exclude it or remove the dependency array.',
       ],
     },
@@ -949,7 +949,7 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useEffect has an unnecessary 'local1' dependency. " +
+        "React Hook useEffect has an unnecessary dependency: 'local1'. " +
           'Either exclude it or remove the dependency array.',
       ],
     },
@@ -971,7 +971,7 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useEffect has a missing 'props.foo' dependency. " +
+        "React Hook useEffect has a missing dependency: 'props.foo'. " +
           'Either include it or remove the dependency array.',
       ],
     },
@@ -995,7 +995,7 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useEffect has missing 'props.foo' and 'props.bar' dependencies. " +
+        "React Hook useEffect has missing dependencies: 'props.foo' and 'props.bar'. " +
           'Either include them or remove the dependency array.',
       ],
     },
@@ -1023,7 +1023,7 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useEffect has missing 'props.foo', 'props.bar', and 'local' dependencies. " +
+        "React Hook useEffect has missing dependencies: 'props.foo', 'props.bar', and 'local'. " +
           'Either include them or remove the dependency array.',
       ],
     },
@@ -1049,7 +1049,7 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useEffect has a missing 'local' dependency. " +
+        "React Hook useEffect has a missing dependency: 'local'. " +
           'Either include it or remove the dependency array.',
       ],
     },
@@ -1105,17 +1105,17 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useEffect has a missing 'props.foo' dependency. " +
+        "React Hook useEffect has a missing dependency: 'props.foo'. " +
           'Either include it or remove the dependency array.',
-        "React Hook useCallback has a missing 'props.foo' dependency. " +
+        "React Hook useCallback has a missing dependency: 'props.foo'. " +
           'Either include it or remove the dependency array.',
-        "React Hook useMemo has a missing 'props.foo' dependency. " +
+        "React Hook useMemo has a missing dependency: 'props.foo'. " +
           'Either include it or remove the dependency array.',
-        "React Hook React.useEffect has a missing 'props.foo' dependency. " +
+        "React Hook React.useEffect has a missing dependency: 'props.foo'. " +
           'Either include it or remove the dependency array.',
-        "React Hook React.useCallback has a missing 'props.foo' dependency. " +
+        "React Hook React.useCallback has a missing dependency: 'props.foo'. " +
           'Either include it or remove the dependency array.',
-        "React Hook React.useMemo has a missing 'props.foo' dependency. " +
+        "React Hook React.useMemo has a missing dependency: 'props.foo'. " +
           'Either include it or remove the dependency array.',
       ],
     },
@@ -1154,11 +1154,11 @@ const tests = {
       `,
       options: [{additionalHooks: 'useCustomEffect'}],
       errors: [
-        "React Hook useCustomEffect has a missing 'props.foo' dependency. " +
+        "React Hook useCustomEffect has a missing dependency: 'props.foo'. " +
           'Either include it or remove the dependency array.',
-        "React Hook useEffect has a missing 'props.foo' dependency. " +
+        "React Hook useEffect has a missing dependency: 'props.foo'. " +
           'Either include it or remove the dependency array.',
-        "React Hook React.useEffect has a missing 'props.foo' dependency. " +
+        "React Hook React.useEffect has a missing dependency: 'props.foo'. " +
           'Either include it or remove the dependency array.',
       ],
     },
@@ -1181,7 +1181,7 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useEffect has a missing 'local' dependency. " +
+        "React Hook useEffect has a missing dependency: 'local'. " +
           'Either include it or remove the dependency array.',
         "Unsupported expression in React Hook useEffect's dependency list. " +
           'Currently only simple variables are supported.',
@@ -1206,7 +1206,7 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useEffect has a missing 'local' dependency. " +
+        "React Hook useEffect has a missing dependency: 'local'. " +
           'Either include it or remove the dependency array.',
         "Unsupported expression in React Hook useEffect's dependency list. " +
           'Currently only simple variables are supported.',
@@ -1234,7 +1234,7 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useEffect has a missing 'state' dependency. " +
+        "React Hook useEffect has a missing dependency: 'state'. " +
           'Either include it or remove the dependency array.',
       ],
     },
@@ -1265,7 +1265,7 @@ const tests = {
       `,
       // TODO: special message for the ref case.
       errors: [
-        "React Hook useEffect has missing 'props.someOtherRefs' and 'props.color' dependencies. " +
+        "React Hook useEffect has missing dependencies: 'props.someOtherRefs' and 'props.color'. " +
           'Either include them or remove the dependency array.',
       ],
     },
@@ -1288,7 +1288,7 @@ const tests = {
       `,
       // TODO: special message for the ref case.
       errors: [
-        "React Hook useEffect has an unnecessary 'ref.current' dependency. " +
+        "React Hook useEffect has an unnecessary dependency: 'ref.current'. " +
           'Either exclude it or remove the dependency array.',
       ],
     },
@@ -1312,7 +1312,7 @@ const tests = {
         });
       `,
       errors: [
-        "React Hook useImperativeHandle has a missing 'props.hello' dependency. " +
+        "React Hook useImperativeHandle has a missing dependency: 'props.hello'. " +
           'Either include it or remove the dependency array.',
       ],
     },
