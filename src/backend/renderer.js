@@ -565,14 +565,10 @@ export function attach(
       }
 
       if (key !== null) {
-        if (typeof key === 'number') {
-          // unreachable code?
-          // https://github.com/facebook/react/blob/master/packages/react/src/ReactElement.js#L187
-          encodedKey = new Uint8Array(1);
-          encodedKey[0] = key;
-        } else {
-          encodedKey = utfEncodeString(key);
-        }
+        // React$Key supports string and number types as inputs,
+        // But React converts numeric keys to strings, so we only have to handle that type here.
+        // https://github.com/facebook/react/blob/0e67969cb1ad8c27a72294662e68fa5d7c2c9783/packages/react/src/ReactElement.js#L187
+        encodedKey = utfEncodeString(((key: any): string));
       }
 
       const encodedDisplayNameSize =
