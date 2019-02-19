@@ -55,7 +55,11 @@ export default function ElementView({ index, style }: Props) {
   const component = useRef(null);
   useEffect(() => {
     if (isSelected && component.current !== null) {
-      component.current.scrollIntoView();
+      component.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'center',
+      });
     }
   }, [isSelected]);
 
