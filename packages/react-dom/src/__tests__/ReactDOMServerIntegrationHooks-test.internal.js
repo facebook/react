@@ -422,7 +422,7 @@ describe('ReactDOMServerHooks', () => {
     itRenders('with a warning for useState inside useMemo', async render => {
       function App() {
         useMemo(() => {
-          useState();
+          useState(0);
           return 0;
         });
         return 'hi';
@@ -804,7 +804,10 @@ describe('ReactDOMServerHooks', () => {
       }
 
       function ReadInReducer(props) {
-        let [count, dispatch] = React.useReducer(() => readContext(Context));
+        let [count, dispatch] = React.useReducer(
+          () => readContext(Context),
+          undefined,
+        );
         if (count !== 42) {
           dispatch();
         }

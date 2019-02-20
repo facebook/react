@@ -994,7 +994,7 @@ describe('ReactHooks', () => {
       if (value === 0) {
         dispatch('foo');
       }
-      useState();
+      useState(undefined);
       return value;
     }
     expect(() => {
@@ -1033,7 +1033,7 @@ describe('ReactHooks', () => {
       React.useMemo(() => {
         // Trigger warnings
         ReactCurrentDispatcher.current.readContext(ThemeContext);
-        React.useRef();
+        React.useRef(0);
         // Interrupt exit from a Hook
         throw new Error('No.');
       }, []);
@@ -1067,13 +1067,13 @@ describe('ReactHooks', () => {
     ]);
 
     function Valid() {
-      React.useState();
+      React.useState(undefined);
       React.useMemo(() => {});
-      React.useReducer(() => {});
+      React.useReducer(() => {}, undefined);
       React.useEffect(() => {});
       React.useLayoutEffect(() => {});
       React.useCallback(() => {});
-      React.useRef();
+      React.useRef(undefined);
       React.useImperativeHandle(() => {}, () => {});
       if (__DEV__) {
         React.useDebugValue();
@@ -1452,7 +1452,7 @@ describe('ReactHooks', () => {
     }
 
     function Child() {
-      useState();
+      useState(undefined);
       trySuspend();
       return 'hello';
     }
@@ -1483,7 +1483,7 @@ describe('ReactHooks', () => {
     }
 
     function render(props, ref) {
-      useState();
+      useState(undefined);
       trySuspend();
       return 'hello';
     }
@@ -1514,7 +1514,7 @@ describe('ReactHooks', () => {
     }
 
     function render(props, ref) {
-      useState();
+      useState(undefined);
       trySuspend();
       return 'hello';
     }
