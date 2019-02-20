@@ -232,6 +232,7 @@ const Dispatcher: DispatcherType = {
 // Inspect
 
 type HooksNode = {
+  nativeHookIndex: number,
   name: string,
   value: mixed,
   subHooks: Array<HooksNode>,
