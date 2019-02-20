@@ -85,6 +85,15 @@ export function useReducer<S, I, A>(
   init?: I => S,
 ) {
   const dispatcher = resolveDispatcher();
+  if (__DEV__) {
+    // this is the only place where, if the user gives no arguments,
+    // the argument will actually be missing instead of just being undefined.
+    warning(
+      arguments.length >= 2 && arguments.length <= 3,
+      'Expected between 2 and 3 arguments to React.useReducer(reducer, value), instead received %s.',
+      arguments.length,
+    );
+  }
   return dispatcher.useReducer(reducer, initialArg, init);
 }
 
