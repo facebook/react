@@ -28,6 +28,7 @@ describe('ReactHooksInspection', () => {
     let tree = ReactDebugTools.inspectHooks(Foo, {});
     expect(tree).toEqual([
       {
+        nativeHookIndex: 0,
         name: 'State',
         value: 'hello world',
         subHooks: [],
@@ -48,10 +49,12 @@ describe('ReactHooksInspection', () => {
     let tree = ReactDebugTools.inspectHooks(Foo, {});
     expect(tree).toEqual([
       {
+        nativeHookIndex: -1,
         name: 'Custom',
         value: __DEV__ ? 'custom hook label' : undefined,
         subHooks: [
           {
+            nativeHookIndex: 0,
             name: 'State',
             value: 'hello world',
             subHooks: [],
@@ -80,15 +83,18 @@ describe('ReactHooksInspection', () => {
     let tree = ReactDebugTools.inspectHooks(Foo, {});
     expect(tree).toEqual([
       {
+        nativeHookIndex: -1,
         name: 'Custom',
         value: undefined,
         subHooks: [
           {
+            nativeHookIndex: 0,
             name: 'State',
             subHooks: [],
             value: 'hello',
           },
           {
+            nativeHookIndex: 1,
             name: 'Effect',
             subHooks: [],
             value: effect,
@@ -96,15 +102,18 @@ describe('ReactHooksInspection', () => {
         ],
       },
       {
+        nativeHookIndex: -1,
         name: 'Custom',
         value: undefined,
         subHooks: [
           {
+            nativeHookIndex: 2,
             name: 'State',
             value: 'world',
             subHooks: [],
           },
           {
+            nativeHookIndex: 3,
             name: 'Effect',
             value: effect,
             subHooks: [],
@@ -143,19 +152,23 @@ describe('ReactHooksInspection', () => {
     let tree = ReactDebugTools.inspectHooks(Foo, {});
     expect(tree).toEqual([
       {
+        nativeHookIndex: -1,
         name: 'Bar',
         value: undefined,
         subHooks: [
           {
+            nativeHookIndex: -1,
             name: 'Custom',
             value: undefined,
             subHooks: [
               {
+                nativeHookIndex: 0,
                 name: 'Reducer',
                 value: 'hello',
                 subHooks: [],
               },
               {
+                nativeHookIndex: 1,
                 name: 'Effect',
                 value: effect,
                 subHooks: [],
@@ -163,6 +176,7 @@ describe('ReactHooksInspection', () => {
             ],
           },
           {
+            nativeHookIndex: 2,
             name: 'LayoutEffect',
             value: effect,
             subHooks: [],
@@ -170,23 +184,28 @@ describe('ReactHooksInspection', () => {
         ],
       },
       {
+        nativeHookIndex: -1,
         name: 'Baz',
         value: undefined,
         subHooks: [
           {
+            nativeHookIndex: 3,
             name: 'LayoutEffect',
             value: effect,
             subHooks: [],
           },
           {
+            nativeHookIndex: -1,
             name: 'Custom',
             subHooks: [
               {
+                nativeHookIndex: 4,
                 name: 'Reducer',
                 subHooks: [],
                 value: 'world',
               },
               {
+                nativeHookIndex: 5,
                 name: 'Effect',
                 subHooks: [],
                 value: effect,
@@ -208,6 +227,7 @@ describe('ReactHooksInspection', () => {
     let tree = ReactDebugTools.inspectHooks(Foo, {});
     expect(tree).toEqual([
       {
+        nativeHookIndex: 0,
         name: 'Context',
         value: 'default',
         subHooks: [],
@@ -270,9 +290,12 @@ describe('ReactHooksInspection', () => {
       let tree = ReactDebugTools.inspectHooks(Foo, {});
       expect(tree).toEqual([
         {
+          nativeHookIndex: -1,
           name: 'Custom',
           value: __DEV__ ? 'bar:123' : undefined,
-          subHooks: [{name: 'State', subHooks: [], value: 0}],
+          subHooks: [
+            {nativeHookIndex: 0, name: 'State', subHooks: [], value: 0},
+          ],
         },
       ]);
     });

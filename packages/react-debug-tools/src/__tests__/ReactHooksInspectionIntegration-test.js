@@ -40,8 +40,8 @@ describe('ReactHooksInspectionIntegration', () => {
     let childFiber = renderer.root.findByType(Foo)._currentFiber();
     let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
     expect(tree).toEqual([
-      {name: 'State', value: 'hello', subHooks: []},
-      {name: 'State', value: 'world', subHooks: []},
+      {nativeHookIndex: 0, name: 'State', value: 'hello', subHooks: []},
+      {nativeHookIndex: 1, name: 'State', value: 'world', subHooks: []},
     ]);
 
     let {
@@ -55,8 +55,8 @@ describe('ReactHooksInspectionIntegration', () => {
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
 
     expect(tree).toEqual([
-      {name: 'State', value: 'Hi', subHooks: []},
-      {name: 'State', value: 'world', subHooks: []},
+      {nativeHookIndex: 0, name: 'State', value: 'Hi', subHooks: []},
+      {nativeHookIndex: 1, name: 'State', value: 'world', subHooks: []},
     ]);
 
     act(() => setStateB('world!'));
@@ -65,8 +65,8 @@ describe('ReactHooksInspectionIntegration', () => {
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
 
     expect(tree).toEqual([
-      {name: 'State', value: 'Hi', subHooks: []},
-      {name: 'State', value: 'world!', subHooks: []},
+      {nativeHookIndex: 0, name: 'State', value: 'Hi', subHooks: []},
+      {nativeHookIndex: 1, name: 'State', value: 'world!', subHooks: []},
     ]);
   });
 
@@ -116,14 +116,19 @@ describe('ReactHooksInspectionIntegration', () => {
 
     let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
     expect(tree).toEqual([
-      {name: 'State', value: 'a', subHooks: []},
-      {name: 'Reducer', value: 'b', subHooks: []},
-      {name: 'Ref', value: 'c', subHooks: []},
-      {name: 'LayoutEffect', value: effect, subHooks: []},
-      {name: 'Effect', value: effect, subHooks: []},
-      {name: 'ImperativeHandle', value: outsideRef.current, subHooks: []},
-      {name: 'Memo', value: 'ab', subHooks: []},
-      {name: 'Callback', value: updateStates, subHooks: []},
+      {nativeHookIndex: 0, name: 'State', value: 'a', subHooks: []},
+      {nativeHookIndex: 1, name: 'Reducer', value: 'b', subHooks: []},
+      {nativeHookIndex: 2, name: 'Ref', value: 'c', subHooks: []},
+      {nativeHookIndex: 3, name: 'LayoutEffect', value: effect, subHooks: []},
+      {nativeHookIndex: 4, name: 'Effect', value: effect, subHooks: []},
+      {
+        nativeHookIndex: 5,
+        name: 'ImperativeHandle',
+        value: outsideRef.current,
+        subHooks: [],
+      },
+      {nativeHookIndex: 6, name: 'Memo', value: 'ab', subHooks: []},
+      {nativeHookIndex: 7, name: 'Callback', value: updateStates, subHooks: []},
     ]);
 
     updateStates();
@@ -132,14 +137,19 @@ describe('ReactHooksInspectionIntegration', () => {
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
 
     expect(tree).toEqual([
-      {name: 'State', value: 'A', subHooks: []},
-      {name: 'Reducer', value: 'B', subHooks: []},
-      {name: 'Ref', value: 'C', subHooks: []},
-      {name: 'LayoutEffect', value: effect, subHooks: []},
-      {name: 'Effect', value: effect, subHooks: []},
-      {name: 'ImperativeHandle', value: outsideRef.current, subHooks: []},
-      {name: 'Memo', value: 'Ab', subHooks: []},
-      {name: 'Callback', value: updateStates, subHooks: []},
+      {nativeHookIndex: 0, name: 'State', value: 'A', subHooks: []},
+      {nativeHookIndex: 1, name: 'Reducer', value: 'B', subHooks: []},
+      {nativeHookIndex: 2, name: 'Ref', value: 'C', subHooks: []},
+      {nativeHookIndex: 3, name: 'LayoutEffect', value: effect, subHooks: []},
+      {nativeHookIndex: 4, name: 'Effect', value: effect, subHooks: []},
+      {
+        nativeHookIndex: 5,
+        name: 'ImperativeHandle',
+        value: outsideRef.current,
+        subHooks: [],
+      },
+      {nativeHookIndex: 6, name: 'Memo', value: 'Ab', subHooks: []},
+      {nativeHookIndex: 7, name: 'Callback', value: updateStates, subHooks: []},
     ]);
   });
 
@@ -158,6 +168,7 @@ describe('ReactHooksInspectionIntegration', () => {
     let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
     expect(tree).toEqual([
       {
+        nativeHookIndex: 0,
         name: 'Context',
         value: 'contextual',
         subHooks: [],
@@ -177,7 +188,7 @@ describe('ReactHooksInspectionIntegration', () => {
     let childFiber = renderer.root.findByType(Foo)._currentFiber();
     let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
     expect(tree).toEqual([
-      {name: 'ImperativeHandle', value: obj, subHooks: []},
+      {nativeHookIndex: 0, name: 'ImperativeHandle', value: obj, subHooks: []},
     ]);
   });
 
@@ -191,7 +202,9 @@ describe('ReactHooksInspectionIntegration', () => {
     // TODO: Test renderer findByType is broken for memo. Have to search for the inner.
     let childFiber = renderer.root.findByType(InnerFoo)._currentFiber();
     let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
-    expect(tree).toEqual([{name: 'State', value: 'hello', subHooks: []}]);
+    expect(tree).toEqual([
+      {nativeHookIndex: 0, name: 'State', value: 'hello', subHooks: []},
+    ]);
   });
 
   it('should inspect custom hooks', () => {
@@ -208,9 +221,12 @@ describe('ReactHooksInspectionIntegration', () => {
     let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
     expect(tree).toEqual([
       {
+        nativeHookIndex: -1,
         name: 'Custom',
         value: undefined,
-        subHooks: [{name: 'State', value: 'hello', subHooks: []}],
+        subHooks: [
+          {nativeHookIndex: 0, name: 'State', value: 'hello', subHooks: []},
+        ],
       },
     ]);
   });
@@ -238,24 +254,34 @@ describe('ReactHooksInspectionIntegration', () => {
       let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
       expect(tree).toEqual([
         {
+          nativeHookIndex: -1,
           name: 'LabeledValue',
           value: __DEV__ ? 'custom label a' : undefined,
-          subHooks: [{name: 'State', value: 'a', subHooks: []}],
+          subHooks: [
+            {nativeHookIndex: 0, name: 'State', value: 'a', subHooks: []},
+          ],
         },
         {
+          nativeHookIndex: 1,
           name: 'State',
           value: 'b',
           subHooks: [],
         },
         {
+          nativeHookIndex: -1,
           name: 'Anonymous',
           value: undefined,
-          subHooks: [{name: 'State', value: 'c', subHooks: []}],
+          subHooks: [
+            {nativeHookIndex: 2, name: 'State', value: 'c', subHooks: []},
+          ],
         },
         {
+          nativeHookIndex: -1,
           name: 'LabeledValue',
           value: __DEV__ ? 'custom label d' : undefined,
-          subHooks: [{name: 'State', value: 'd', subHooks: []}],
+          subHooks: [
+            {nativeHookIndex: 3, name: 'State', value: 'd', subHooks: []},
+          ],
         },
       ]);
     });
@@ -278,13 +304,17 @@ describe('ReactHooksInspectionIntegration', () => {
       let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
       expect(tree).toEqual([
         {
+          nativeHookIndex: -1,
           name: 'Outer',
           value: __DEV__ ? 'outer' : undefined,
           subHooks: [
             {
+              nativeHookIndex: -1,
               name: 'Inner',
               value: __DEV__ ? 'inner' : undefined,
-              subHooks: [{name: 'State', value: 0, subHooks: []}],
+              subHooks: [
+                {nativeHookIndex: 0, name: 'State', value: 0, subHooks: []},
+              ],
             },
           ],
         },
@@ -313,19 +343,28 @@ describe('ReactHooksInspectionIntegration', () => {
       let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
       expect(tree).toEqual([
         {
+          nativeHookIndex: -1,
           name: 'SingleLabelCustom',
           value: __DEV__ ? 'single one' : undefined,
-          subHooks: [{name: 'State', value: 0, subHooks: []}],
+          subHooks: [
+            {nativeHookIndex: 0, name: 'State', value: 0, subHooks: []},
+          ],
         },
         {
+          nativeHookIndex: -1,
           name: 'MultiLabelCustom',
           value: __DEV__ ? ['one', 'two', 'three'] : undefined,
-          subHooks: [{name: 'State', value: 0, subHooks: []}],
+          subHooks: [
+            {nativeHookIndex: 1, name: 'State', value: 0, subHooks: []},
+          ],
         },
         {
+          nativeHookIndex: -1,
           name: 'SingleLabelCustom',
           value: __DEV__ ? 'single two' : undefined,
-          subHooks: [{name: 'State', value: 0, subHooks: []}],
+          subHooks: [
+            {nativeHookIndex: 2, name: 'State', value: 0, subHooks: []},
+          ],
         },
       ]);
     });
@@ -355,9 +394,12 @@ describe('ReactHooksInspectionIntegration', () => {
       let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
       expect(tree).toEqual([
         {
+          nativeHookIndex: -1,
           name: 'Custom',
           value: __DEV__ ? 'bar:123' : undefined,
-          subHooks: [{name: 'State', subHooks: [], value: 0}],
+          subHooks: [
+            {nativeHookIndex: 0, name: 'State', subHooks: [], value: 0},
+          ],
         },
       ]);
     });
@@ -390,7 +432,9 @@ describe('ReactHooksInspectionIntegration', () => {
 
     let childFiber = renderer.root._currentFiber();
     let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
-    expect(tree).toEqual([{name: 'State', value: 'def', subHooks: []}]);
+    expect(tree).toEqual([
+      {nativeHookIndex: 0, name: 'State', value: 'def', subHooks: []},
+    ]);
   });
 
   it('should support an injected dispatcher', () => {
