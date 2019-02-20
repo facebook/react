@@ -332,9 +332,9 @@ export default {
             satisfies(key, suggestedDep),
           )
         ) {
-          // Legit missing.
-          suggestedDependencies.push(key);
           if (!info.isKnownToBeStatic) {
+            // Legit missing.
+            suggestedDependencies.push(key);
             missingDependencies.add(key);
           }
         } else {

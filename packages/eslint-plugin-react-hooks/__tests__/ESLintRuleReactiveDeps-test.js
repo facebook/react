@@ -1310,7 +1310,36 @@ const tests = {
           useEffect(() => {
             ref.current = 42;
             setState(state + 1);
-          }, [ref, setState, state]);
+          }, [state]);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has a missing dependency: 'state'. " +
+          'Either include it or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+        function MyComponent() {
+          const ref = useRef();
+          const [state, setState] = useState();
+          useEffect(() => {
+            ref.current = 42;
+            setState(state + 1);
+          }, [ref]);
+        }
+      `,
+      // We don't ask to remove static deps but don't add them either.
+      // Don't suggest removing "ref" (it's fine either way)
+      // but *do* add "state". *Don't* add "setState" ourselves.
+      output: `
+        function MyComponent() {
+          const ref = useRef();
+          const [state, setState] = useState();
+          useEffect(() => {
+            ref.current = 42;
+            setState(state + 1);
+          }, [ref, state]);
         }
       `,
       errors: [
@@ -1340,7 +1369,7 @@ const tests = {
             console.log(ref2.current.textContent);
             alert(props.someOtherRefs.current.innerHTML);
             fetch(props.color);
-          }, [props.color, props.someOtherRefs, ref1, ref2]);
+          }, [props.color, props.someOtherRefs]);
         }
       `,
       errors: [
@@ -1370,7 +1399,7 @@ const tests = {
             console.log(ref2.current.textContent);
             alert(props.someOtherRefs.current.innerHTML);
             fetch(props.color);
-          }, [props.someOtherRefs, props.color, ref1, ref2]);
+          }, [props.someOtherRefs, props.color]);
         }
       `,
       errors: [
@@ -1387,6 +1416,30 @@ const tests = {
           useEffect(() => {
             console.log(ref.current);
           }, [ref.current]);
+        }
+      `,
+      output: `
+        function MyComponent() {
+          const ref = useRef();
+          useEffect(() => {
+            console.log(ref.current);
+          }, []);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has an unnecessary dependency: 'ref.current'. " +
+          'Either exclude it or remove the dependency array. ' +
+          "Mutable values like 'ref.current' aren't valid dependencies " +
+          "because their mutation doesn't re-render the component.",
+      ],
+    },
+    {
+      code: `
+        function MyComponent() {
+          const ref = useRef();
+          useEffect(() => {
+            console.log(ref.current);
+          }, [ref.current, ref]);
         }
       `,
       output: `
