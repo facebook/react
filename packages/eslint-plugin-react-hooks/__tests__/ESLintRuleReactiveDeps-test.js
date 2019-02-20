@@ -1019,7 +1019,30 @@ const tests = {
           }, [c, a, g]);
         }
       `,
-      // Alphabetize during the autofix.
+      // Don't alphabetize if it wasn't alphabetized in the first place.
+      output: `
+        function MyComponent(props) {
+          let a, b, c, d, e, f, g;
+          useEffect(() => {
+            console.log(b, e, d, c, a, g, f);
+          }, [c, a, g, b, e, d, f]);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has missing dependencies: 'b', 'd', 'e', and 'f'. " +
+          'Either include them or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
+          let a, b, c, d, e, f, g;
+          useEffect(() => {
+            console.log(b, e, d, c, a, g, f);
+          }, [a, c, g]);
+        }
+      `,
+      // Alphabetize if it was alphabetized.
       output: `
         function MyComponent(props) {
           let a, b, c, d, e, f, g;
@@ -1030,6 +1053,29 @@ const tests = {
       `,
       errors: [
         "React Hook useEffect has missing dependencies: 'b', 'd', 'e', and 'f'. " +
+          'Either include them or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
+          let a, b, c, d, e, f, g;
+          useEffect(() => {
+            console.log(b, e, d, c, a, g, f);
+          }, []);
+        }
+      `,
+      // Alphabetize if it was empty.
+      output: `
+        function MyComponent(props) {
+          let a, b, c, d, e, f, g;
+          useEffect(() => {
+            console.log(b, e, d, c, a, g, f);
+          }, [a, b, c, d, e, f, g]);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has missing dependencies: 'a', 'b', 'c', 'd', 'e', 'f', and 'g'. " +
           'Either include them or remove the dependency array.',
       ],
     },
@@ -1324,7 +1370,7 @@ const tests = {
             console.log(ref2.current.textContent);
             alert(props.someOtherRefs.current.innerHTML);
             fetch(props.color);
-          }, [props.color, props.someOtherRefs, ref1, ref2]);
+          }, [props.someOtherRefs, props.color, ref1, ref2]);
         }
       `,
       errors: [

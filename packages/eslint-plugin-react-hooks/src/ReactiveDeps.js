@@ -341,8 +341,20 @@ export default {
           // Already did that. Do nothing.
         }
       });
-      // Alphabetize for the autofix.
-      suggestedDependencies.sort();
+
+      function areDeclaredDepsAlphabetized() {
+        if (declaredDependencies.length === 0) {
+          return true;
+        }
+        const declaredDepKeys = declaredDependencies.map(dep => dep.key);
+        const sortedDeclaredDepKeys = declaredDepKeys.slice().sort();
+        return declaredDepKeys.join(',') === sortedDeclaredDepKeys.join(',');
+      }
+
+      if (areDeclaredDepsAlphabetized()) {
+        // Alphabetize the autofix, but only if deps were already alphabetized.
+        suggestedDependencies.sort();
+      }
 
       const problemCount =
         duplicateDependencies.size +
