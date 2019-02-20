@@ -181,6 +181,17 @@ const tests = {
         useEffect(() => {
           console.log(props.foo);
           console.log(props.bar);
+        }, [props.bar, props.foo]);
+      }
+    `,
+    },
+    {
+      // TODO: we might want to forbid dot-access in deps.
+      code: `
+      function MyComponent(props) {
+        useEffect(() => {
+          console.log(props.foo);
+          console.log(props.bar);
         }, [props.foo, props.bar]);
       }
     `,
@@ -991,11 +1002,34 @@ const tests = {
           useEffect(() => {
             console.log(props.foo);
             console.log(props.bar);
-          }, [props.foo, props.bar]);
+          }, [props.bar, props.foo]);
         }
       `,
       errors: [
-        "React Hook useEffect has missing dependencies: 'props.foo' and 'props.bar'. " +
+        "React Hook useEffect has missing dependencies: 'props.bar' and 'props.foo'. " +
+          'Either include them or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
+          let a, b, c, d, e, f, g;
+          useEffect(() => {
+            console.log(b, e, d, c, a, g, f);
+          }, [c, a, g]);
+        }
+      `,
+      // Alphabetize during the autofix.
+      output: `
+        function MyComponent(props) {
+          let a, b, c, d, e, f, g;
+          useEffect(() => {
+            console.log(b, e, d, c, a, g, f);
+          }, [a, b, c, d, e, f, g]);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has missing dependencies: 'b', 'd', 'e', and 'f'. " +
           'Either include them or remove the dependency array.',
       ],
     },
@@ -1019,11 +1053,11 @@ const tests = {
             console.log(props.foo);
             console.log(props.bar);
             console.log(local);
-          }, [props.foo, props.bar, local]);
+          }, [local, props.bar, props.foo]);
         }
       `,
       errors: [
-        "React Hook useEffect has missing dependencies: 'props.foo', 'props.bar', and 'local'. " +
+        "React Hook useEffect has missing dependencies: 'local', 'props.bar', and 'props.foo'. " +
           'Either include them or remove the dependency array.',
       ],
     },
@@ -1045,7 +1079,7 @@ const tests = {
             console.log(props.foo);
             console.log(props.bar);
             console.log(local);
-          }, [props, local]);
+          }, [local, props]);
         }
       `,
       errors: [
@@ -1260,11 +1294,11 @@ const tests = {
             console.log(ref2.current.textContent);
             alert(props.someOtherRefs.current.innerHTML);
             fetch(props.color);
-          }, [ref1, ref2, props.someOtherRefs, props.color]);
+          }, [props.color, props.someOtherRefs, ref1, ref2]);
         }
       `,
       errors: [
-        "React Hook useEffect has missing dependencies: 'props.someOtherRefs' and 'props.color'. " +
+        "React Hook useEffect has missing dependencies: 'props.color' and 'props.someOtherRefs'. " +
           'Either include them or remove the dependency array.',
       ],
     },
@@ -1290,7 +1324,7 @@ const tests = {
             console.log(ref2.current.textContent);
             alert(props.someOtherRefs.current.innerHTML);
             fetch(props.color);
-          }, [props.someOtherRefs, props.color, ref1, ref2]);
+          }, [props.color, props.someOtherRefs, ref1, ref2]);
         }
       `,
       errors: [
@@ -1365,12 +1399,12 @@ const tests = {
             if (props.onChange) {
               props.onChange();
             }
-          }, [props.onChange, props]);
+          }, [props, props.onChange]);
         }
       `,
       errors: [
         // TODO: reporting props separately is superfluous. Fix to just props.onChange.
-        "React Hook useEffect has missing dependencies: 'props.onChange' and 'props'. " +
+        "React Hook useEffect has missing dependencies: 'props' and 'props.onChange'. " +
           'Either include them or remove the dependency array.',
       ],
     },

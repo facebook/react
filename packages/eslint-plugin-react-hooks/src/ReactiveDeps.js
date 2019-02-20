@@ -341,6 +341,8 @@ export default {
           // Already did that. Do nothing.
         }
       });
+      // Alphabetize for the autofix.
+      suggestedDependencies.sort();
 
       const problemCount =
         duplicateDependencies.size +
@@ -376,7 +378,11 @@ export default {
           ' ' +
           (set.size > 1 ? 'dependencies' : 'dependency') +
           ': ' +
-          join(Array.from(set).map(quote)) +
+          join(
+            Array.from(set)
+              .sort()
+              .map(quote),
+          ) +
           `. Either ${fixVerb} ${
             set.size > 1 ? 'them' : 'it'
           } or remove the dependency array.`
