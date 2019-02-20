@@ -1533,7 +1533,7 @@ describe('ReactHooks', () => {
   it('warns about incorrect number of arguments to useState', () => {
     const {useState} = React;
 
-    function Counter() {
+    function Test() {
       useState();
       useState(undefined);
       useState('too', 'many');
@@ -1541,7 +1541,7 @@ describe('ReactHooks', () => {
     }
 
     expect(() => {
-      ReactTestRenderer.create(<Counter />);
+      ReactTestRenderer.create(<Test />);
     }).toWarnDev([
       'Expected exactly one argument to React.useState(initialState), instead received 0.',
       'Expected exactly one argument to React.useState(initialState), instead received 2.',
@@ -1551,7 +1551,7 @@ describe('ReactHooks', () => {
   it('warns about incorrect number of arguments to useRef', () => {
     const {useRef} = React;
 
-    function Counter() {
+    function Test() {
       useRef();
       useRef(undefined);
       useRef('too', 'many');
@@ -1559,7 +1559,7 @@ describe('ReactHooks', () => {
     }
 
     expect(() => {
-      ReactTestRenderer.create(<Counter />);
+      ReactTestRenderer.create(<Test />);
     }).toWarnDev([
       'Expected exactly one argument to React.useRef(initialValue), instead received 0.',
       'Expected exactly one argument to React.useRef(initialValue), instead received 2.',
@@ -1569,7 +1569,7 @@ describe('ReactHooks', () => {
   it('warns about incorrect number of arguments to useReducer', () => {
     const {useReducer} = React;
 
-    function Counter() {
+    function Test() {
       useReducer();
       useReducer(() => 'too few');
       useReducer(() => 0, 0);
@@ -1579,7 +1579,7 @@ describe('ReactHooks', () => {
     }
 
     expect(() => {
-      ReactTestRenderer.create(<Counter />);
+      ReactTestRenderer.create(<Test />);
     }).toWarnDev([
       'Expected between 2 and 3 arguments to React.useReducer(reducer, value), instead received 0.',
       'Expected between 2 and 3 arguments to React.useReducer(reducer, value), instead received 1.',
