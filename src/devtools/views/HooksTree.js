@@ -1,36 +1,67 @@
 // @flow
 
-import React from 'react';
-import { KeyValue } from './InspectedElementTree';
+import React, { useContext } from 'react';
+import { BridgeContext, StoreContext } from './context';
+import { EditableValue, KeyValue } from './InspectedElementTree';
 import styles from './HooksTree.css';
 
 import type { HooksNode, HooksTree } from 'src/backend/types';
 
-export function HooksTreeView({ hooksTree }: { hooksTree: HooksTree | null }) {
-  if (hooksTree === null) {
+type HooksTreeViewProps = {|
+  canEditHooks: boolean,
+  hooks: HooksTree | null,
+  id: number,
+|};
+
+export function HooksTreeView({ canEditHooks, hooks, id }: HooksTreeViewProps) {
+  if (hooks === null) {
     return null;
   } else {
     return (
       <div className={styles.HooksTreeView}>
         <div className={styles.Item}>hooks</div>
-        <InnerHooksTreeView hooksTree={hooksTree} />
+        <InnerHooksTreeView canEditHooks={canEditHooks} hooks={hooks} id={id} />
       </div>
     );
   }
 }
 
-export function InnerHooksTreeView({ hooksTree }: { hooksTree: HooksTree }) {
+type InnerHooksTreeViewProps = {|
+  canEditHooks: boolean,
+  hooks: HooksTree,
+  id: number,
+|};
+
+export function InnerHooksTreeView({
+  canEditHooks,
+  hooks,
+  id,
+}: InnerHooksTreeViewProps) {
   // $FlowFixMe "Missing type annotation for U" whatever that means
-  return hooksTree.map((hooksNode, index) => (
-    <HooksNodeView key={index} hooksNode={hooksTree[index]} />
+  return hooks.map((hook, index) => (
+    <HookView
+      key={index}
+      canEditHooks={canEditHooks}
+      hook={hooks[index]}
+      id={id}
+    />
   ));
 }
 
-function HooksNodeView({ hooksNode }: { hooksNode: HooksNode }) {
-  const { name, subHooks, value } = hooksNode;
+type HookViewProps = {|
+  canEditHooks: boolean,
+  hook: HooksNode,
+  id: number,
+  path?: Array<any>,
+|};
+
+function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
+  const { name, nativeHookIndex, subHooks, value } = hook;
+
+  const bridge = useContext(BridgeContext);
+  const store = useContext(StoreContext);
 
   // TODO Add click and key handlers for toggling element open/close state.
-  // TODO Support editable props
 
   const isCustomHook = subHooks.length > 0;
 
@@ -40,7 +71,11 @@ function HooksNodeView({ hooksNode }: { hooksNode: HooksNode }) {
   let isComplexDisplayValue = false;
 
   // Format data for display to mimic the props/state/context for now.
-  if (type === 'number' || type === 'string' || type === 'boolean') {
+  if (type === 'string') {
+    displayValue = `"${((value: any): string)}"`;
+  } else if (type === 'boolean') {
+    displayValue = value ? 'true' : 'false';
+  } else if (type === 'number') {
     displayValue = value;
   } else if (value === null) {
     displayValue = 'null';
@@ -57,39 +92,75 @@ function HooksNodeView({ hooksNode }: { hooksNode: HooksNode }) {
   if (isCustomHook) {
     if (isComplexDisplayValue) {
       return (
-        <div className={styles.HooksNode}>
+        <div className={styles.Hook}>
           <div className={styles.NameValueRow}>
-            <span className={styles.Name}>{name}: </span>
+            <span className={styles.Name}>{name}</span>
           </div>
           <KeyValue depth={1} name="DebugValue" value={value} />
-          <InnerHooksTreeView hooksTree={subHooks} />
+          <InnerHooksTreeView
+            canEditHooks={canEditHooks}
+            hooks={subHooks}
+            id={id}
+          />
         </div>
       );
     } else {
       return (
-        <div className={styles.HooksNode}>
+        <div className={styles.Hook}>
           <div className={styles.NameValueRow}>
-            <span className={styles.Name}>{name}: </span> {/* $FlowFixMe */}
+            <span className={styles.Name}>{name}</span> {/* $FlowFixMe */}
             <span className={styles.Value}>{displayValue}</span>
           </div>
-          <InnerHooksTreeView hooksTree={subHooks} />
+          <InnerHooksTreeView
+            canEditHooks={canEditHooks}
+            hooks={subHooks}
+            id={id}
+          />
         </div>
       );
     }
   } else {
+    let overrideValueFn = null;
+    if (canEditHooks && name === 'State') {
+      overrideValueFn = (path: Array<string | number>, value: any) => {
+        const rendererID = store.getRendererIDForElement(id);
+        bridge.send('overrideHook', {
+          id,
+          nativeHookIndex,
+          path,
+          rendererID,
+          value,
+        });
+      };
+    }
+
     if (isComplexDisplayValue) {
       return (
-        <div className={styles.HooksNode}>
-          <KeyValue depth={0} name={name} value={value} />
+        <div className={styles.Hook}>
+          <KeyValue
+            depth={0}
+            name={name}
+            overrideValueFn={overrideValueFn}
+            value={value}
+          />
         </div>
       );
     } else {
       return (
-        <div className={styles.HooksNode}>
+        <div className={styles.Hook}>
           <div className={styles.NameValueRow}>
-            <span className={styles.Name}>{name}: </span>
-            {/* $FlowFixMe */}
-            <span className={styles.Value}>{displayValue}</span>
+            <span className={styles.Name}>{name}</span>
+            {typeof overrideValueFn === 'function' ? (
+              <EditableValue
+                dataType={type}
+                overrideValueFn={overrideValueFn}
+                path={[]}
+                value={value}
+              />
+            ) : (
+              // $FlowFixMe Cannot create span element because in property children
+              <span className={styles.Value}>{displayValue}</span>
+            )}
           </div>
         </div>
       );

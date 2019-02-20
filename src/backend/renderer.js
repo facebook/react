@@ -24,8 +24,8 @@ import { getUID } from '../utils';
 import { inspectHooksOfFiber } from './ReactDebugHooks';
 
 import type {
+  DevToolsHook,
   Fiber,
-  Hook,
   ReactRenderer,
   FiberData,
   RendererInterface,
@@ -151,7 +151,7 @@ function getInternalReactConstants(version) {
 }
 
 export function attach(
-  hook: Hook,
+  hook: DevToolsHook,
   rendererID: number,
   renderer: ReactRenderer,
   global: Object
@@ -194,7 +194,7 @@ export function attach(
     DEPRECATED_PLACEHOLDER_SYMBOL_STRING,
   } = ReactSymbols;
 
-  const { overrideProps } = renderer;
+  const { overrideHook, overrideProps } = renderer;
 
   const debug = (name: string, fiber: Fiber, parentFiber: ?Fiber): void => {
     if (__DEBUG__) {
@@ -1141,7 +1141,10 @@ export function attach(
     return {
       id,
 
-      // Does the current renderer support editable props/state/hooks?
+      // Does the current renderer support editable hooks?
+      canEditHooks: typeof overrideHook === 'function',
+
+      // Does the current renderer support editable function props?
       canEditFunctionProps: typeof overrideProps === 'function',
 
       // Inspectable properties.
@@ -1161,6 +1164,20 @@ export function attach(
       // Location of component in source coude.
       source: _debugSource,
     };
+  }
+
+  function setInHook(
+    id: number,
+    nativeHookIndex: number,
+    path: Array<string | number>,
+    value: any
+  ) {
+    const fiber = findCurrentFiberUsingSlowPath(idToFiberMap.get(id));
+    if (fiber !== null) {
+      if (typeof overrideHook === 'function') {
+        overrideHook(fiber, nativeHookIndex, path, value);
+      }
+    }
   }
 
   function setInProps(id: number, path: Array<string | number>, value: any) {
@@ -1216,6 +1233,7 @@ export function attach(
     cleanup,
     renderer,
     setInContext,
+    setInHook,
     setInProps,
     setInState,
     walkTree,

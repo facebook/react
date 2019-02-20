@@ -3,15 +3,22 @@
   border-top: 1px solid var(--color-border);
 }
 
-.HooksNode {
+.Hook {
   padding-left: 0.75rem;
 }
 
 .NameValueRow {
+  display: flex;
 }
 
 .Name {
   color: var(--color-attribute-name);
+  flex: 0 0 auto;
+}
+.Name:after {
+  content: ': ';
+  color: var(--color-text-color);
+  margin-right: 0.5rem;
 }
 
 .Value {

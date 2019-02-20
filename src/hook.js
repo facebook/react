@@ -7,11 +7,11 @@
  * @flow
  */
 
-import type { Hook } from 'src/backend/types';
+import type { DevToolsHook } from 'src/backend/types';
 
 declare var window: any;
 
-export function installHook(target: any): Hook | null {
+export function installHook(target: any): DevToolsHook | null {
   if (target.hasOwnProperty('__REACT_DEVTOOLS_GLOBAL_HOOK__')) return null;
 
   function detectReactBuildType(renderer) {
@@ -155,7 +155,7 @@ export function installHook(target: any): Hook | null {
   const listeners = {};
   const renderers = new Map();
 
-  const hook: Hook = {
+  const hook: DevToolsHook = {
     rendererInterfaces,
     listeners,
     renderers,

@@ -225,6 +225,7 @@ type ReactCurrentDispatcher = {
 };
 
 type HooksNode = {
+  nativeHookIndex: number,
   name: string,
   value: mixed,
   subHooks: Array<HooksNode>,
@@ -366,6 +367,7 @@ function buildTree(rootStack, readHookLog): HooksTree {
   const rootChildren = [];
   let prevStack = null;
   let levelChildren = rootChildren;
+  let nativeHookIndex = 0;
   const stackOfChildren = [];
   for (let i = 0; i < readHookLog.length; i++) {
     const hook = readHookLog[i];
@@ -399,6 +401,7 @@ function buildTree(rootStack, readHookLog): HooksTree {
         levelChildren.push({
           name: parseCustomHookName(stack[j - 1].functionName),
           value: undefined,
+          nativeHookIndex: -1,
           subHooks: children,
         });
         stackOfChildren.push(levelChildren);
@@ -409,12 +412,13 @@ function buildTree(rootStack, readHookLog): HooksTree {
     levelChildren.push({
       name: hook.primitive,
       value: hook.value,
+      nativeHookIndex: hook.primitive === 'DebugValue' ? -1 : nativeHookIndex++,
       subHooks: [],
     });
   }
 
   // Associate custom hook values (useDebugValue() hook entries) with the correct hooks.
-  rollupDebugValues(rootChildren, null);
+  processDebugValues(rootChildren, null);
 
   return rootChildren;
 }
@@ -423,7 +427,7 @@ function buildTree(rootStack, readHookLog): HooksTree {
 // That hook adds the user-provided values to the hooks tree.
 // This method removes those values (so they don't appear in DevTools),
 // and bubbles them up to the "value" attribute of their parent custom hook.
-function rollupDebugValues(
+function processDebugValues(
   hooksTree: HooksTree,
   parentHooksNode: HooksNode | null
 ): void {
@@ -436,7 +440,7 @@ function rollupDebugValues(
       i--;
       debugValueHooksNodes.push(hooksNode);
     } else {
-      rollupDebugValues(hooksNode.subHooks, hooksNode);
+      processDebugValues(hooksNode.subHooks, hooksNode);
     }
   }
 

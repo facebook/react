@@ -48,6 +48,9 @@ export type Owner = {|
 export type InspectedElement = {|
   id: number,
 
+  // Does the current renderer support editable hooks?
+  canEditHooks: boolean,
+
   // Does the current renderer support editable function props?
   canEditFunctionProps: boolean,
 

@@ -26,7 +26,6 @@ export default function InspectedElementTree({
     return null;
   } else {
     // TODO Add click and key handlers for toggling element open/close state.
-    // TODO Support editable props
     return (
       <div className={styles.InspectedElementTree}>
         <div className={styles.Item}>{label}</div>
@@ -164,7 +163,7 @@ type EditableValueProps = {|
   value: any,
 |};
 
-function EditableValue({
+export function EditableValue({
   dataType,
   overrideValueFn,
   path,
@@ -214,7 +213,13 @@ function EditableValue({
         onKeyDown={handleKeyDown}
         onKeyPress={handleKeyPress}
         type={type}
-        value={dataType === 'boolean' ? undefined : editableValue || ''}
+        value={
+          dataType === 'boolean'
+            ? undefined
+            : editableValue != null
+            ? editableValue
+            : ''
+        }
       />
     </label>
   );

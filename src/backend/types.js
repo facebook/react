@@ -33,6 +33,16 @@ export type ReactRenderer = {
   findFiberByHostInstance: (hostInstance: NativeType) => ?Fiber,
   version: string,
   bundleType: BundleType,
+
+  // 16.9+
+  overrideHook?: ?(
+    fiber: Object,
+    nativeHookIndex: number,
+    path: Array<string | number>,
+    value: any
+  ) => void,
+
+  // 16.7+
   overrideProps?: ?(
     fiber: Object,
     path: Array<string | number>,
@@ -55,15 +65,21 @@ export type RendererInterface = {
   inspectElement: (id: number) => InspectedElement | null,
   renderer: ReactRenderer | null,
   selectElement: (id: number) => void,
+  setInContext: (id: number, path: Array<string | number>, value: any) => void,
+  setInHook: (
+    id: number,
+    nativeHookIndex: number,
+    path: Array<string | number>,
+    value: any
+  ) => void,
   setInProps: (id: number, path: Array<string | number>, value: any) => void,
   setInState: (id: number, path: Array<string | number>, value: any) => void,
-  setInContext: (id: number, path: Array<string | number>, value: any) => void,
   walkTree: () => void,
 };
 
 export type Handler = (data: any) => void;
 
-export type Hook = {
+export type DevToolsHook = {
   listeners: { [key: string]: Array<Handler> },
   rendererInterfaces: Map<RendererID, RendererInterface>,
   renderers: Map<RendererID, ReactRenderer>,
@@ -83,6 +99,7 @@ export type Hook = {
 };
 
 export type HooksNode = {
+  nativeHookIndex: number,
   name: string,
   value: mixed,
   subHooks: Array<HooksNode>,

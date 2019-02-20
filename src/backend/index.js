@@ -1,11 +1,15 @@
 // @flow
 
-import type { Hook, ReactRenderer, RendererInterface } from './types';
+import type { DevToolsHook, ReactRenderer, RendererInterface } from './types';
 import Agent from './agent';
 
 import { attach } from './renderer';
 
-export function initBackend(hook: Hook, agent: Agent, global: Object): void {
+export function initBackend(
+  hook: DevToolsHook,
+  agent: Agent,
+  global: Object
+): void {
   const subs = [
     hook.sub(
       'renderer-attached',

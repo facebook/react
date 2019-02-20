@@ -107,7 +107,15 @@ function InspectedElementView({
   inspectedElement,
 }: InspectedElementViewProps) {
   const { id, type } = element;
-  const { context, hooks, owners, props, state } = inspectedElement;
+  const {
+    canEditFunctionProps,
+    canEditHooks,
+    context,
+    hooks,
+    owners,
+    props,
+    state,
+  } = inspectedElement;
 
   const { ownerStack } = useContext(TreeContext);
   const bridge = useContext(BridgeContext);
@@ -129,8 +137,7 @@ function InspectedElementView({
       const rendererID = store.getRendererIDForElement(id);
       bridge.send('overrideState', { id, path, rendererID, value });
     };
-  } else if (type === ElementTypeFunction) {
-    // TODO Only enable this if renderer.canEditFunctionProps is true!
+  } else if (type === ElementTypeFunction && canEditFunctionProps) {
     overridePropsFn = (path: Array<string | number>, value: any) => {
       const rendererID = store.getRendererIDForElement(id);
       bridge.send('overrideProps', { id, path, rendererID, value });
@@ -150,7 +157,7 @@ function InspectedElementView({
         data={state}
         overrideValueFn={overrideStateFn}
       />
-      <HooksTree hooksTree={hooks} />
+      <HooksTree canEditHooks={canEditHooks} hooks={hooks} id={id} />
       <InspectedElementTree
         label="context"
         data={context}

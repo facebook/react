@@ -23,6 +23,14 @@ type InspectSelectParams = {|
   rendererID: number,
 |};
 
+type OverrideHookParams = {|
+  id: number,
+  nativeHookIndex: number,
+  path: Array<string | number>,
+  rendererID: number,
+  value: any,
+|};
+
 type SetInParams = {|
   id: number,
   path: Array<string | number>,
@@ -40,6 +48,7 @@ export default class Agent extends EventEmitter {
     bridge.addListener('highlightElementInDOM', this.highlightElementInDOM);
     bridge.addListener('inspectElement', this.inspectElement);
     bridge.addListener('overrideContext', this.overrideContext);
+    bridge.addListener('overrideHook', this.overrideHook);
     bridge.addListener('overrideProps', this.overrideProps);
     bridge.addListener('overrideState', this.overrideState);
     bridge.addListener('selectElement', this.selectElement);
@@ -119,6 +128,21 @@ export default class Agent extends EventEmitter {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
     } else {
       renderer.setInContext(id, path, value);
+    }
+  };
+
+  overrideHook = ({
+    id,
+    nativeHookIndex,
+    path,
+    rendererID,
+    value,
+  }: OverrideHookParams) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+    } else {
+      renderer.setInHook(id, nativeHookIndex, path, value);
     }
   };
 
