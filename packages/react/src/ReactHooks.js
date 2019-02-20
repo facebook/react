@@ -80,6 +80,7 @@ export function useReducer<S, I, A>(
 }
 
 export function useRef<T>(initialValue: T): {current: T} {
+  const dispatcher = resolveDispatcher();
   if (__DEV__) {
     // this is the only place where, if the user gives no arguments,
     // the argument will actually be missing instead of just being undefined.
@@ -89,7 +90,6 @@ export function useRef<T>(initialValue: T): {current: T} {
       arguments.length,
     );
   }
-  const dispatcher = resolveDispatcher();
   return dispatcher.useRef(initialValue);
 }
 
