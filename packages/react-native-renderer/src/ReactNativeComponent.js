@@ -153,7 +153,8 @@ export default function(
         return;
       }
 
-      const nativeTag = maybeInstance._nativeTag || maybeInstance.canonical._nativeTag;
+      const nativeTag =
+        maybeInstance._nativeTag || maybeInstance.canonical._nativeTag;
       const viewConfig: ReactNativeBaseComponentViewConfig<> =
         maybeInstance.viewConfig || maybeInstance.canonical.viewConfig;
 
