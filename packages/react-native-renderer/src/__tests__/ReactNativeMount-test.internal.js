@@ -13,8 +13,10 @@
 let React;
 let StrictMode;
 let ReactNative;
+let createReactClass;
 let createReactNativeComponentClass;
 let UIManager;
+let NativeMethodsMixin;
 
 describe('ReactNative', () => {
   beforeEach(() => {
@@ -24,8 +26,16 @@ describe('ReactNative', () => {
     StrictMode = React.StrictMode;
     ReactNative = require('react-native-renderer');
     UIManager = require('UIManager');
+    createReactClass = require('create-react-class/factory')(
+      React.Component,
+      React.isValidElement,
+      new React.Component().updater,
+    );
     createReactNativeComponentClass = require('ReactNativeViewConfigRegistry')
       .register;
+    NativeMethodsMixin =
+      ReactNative.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .NativeMethodsMixin;
   });
 
   it('should be able to create and render a native component', () => {
@@ -100,7 +110,14 @@ describe('ReactNative', () => {
       }
     }
 
-    [View, Subclass].forEach(Component => {
+    const CreateClass = createReactClass({
+      mixins: [NativeMethodsMixin],
+      render: () => {
+        return <View />;
+      },
+    });
+
+    [View, Subclass, CreateClass].forEach(Component => {
       UIManager.updateView.mockReset();
 
       let viewRef;

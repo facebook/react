@@ -12,10 +12,12 @@
 
 let React;
 let ReactFabric;
+let createReactClass;
 let createReactNativeComponentClass;
 let UIManager;
 let FabricUIManager;
 let StrictMode;
+let NativeMethodsMixin;
 
 jest.mock('shared/ReactFeatureFlags', () =>
   require('shared/forks/ReactFeatureFlags.native-oss'),
@@ -30,8 +32,16 @@ describe('ReactFabric', () => {
     ReactFabric = require('react-native-renderer/fabric');
     FabricUIManager = require('FabricUIManager');
     UIManager = require('UIManager');
+    createReactClass = require('create-react-class/factory')(
+      React.Component,
+      React.isValidElement,
+      new React.Component().updater,
+    );
     createReactNativeComponentClass = require('ReactNativeViewConfigRegistry')
       .register;
+    NativeMethodsMixin =
+      ReactFabric.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .NativeMethodsMixin;
   });
 
   it('should be able to create and render a native component', () => {
@@ -169,7 +179,14 @@ describe('ReactFabric', () => {
       }
     }
 
-    [View, Subclass].forEach(Component => {
+    const CreateClass = createReactClass({
+      mixins: [NativeMethodsMixin],
+      render: () => {
+        return <View />;
+      },
+    });
+
+    [View, Subclass, CreateClass].forEach(Component => {
       UIManager.updateView.mockReset();
 
       let viewRef;
