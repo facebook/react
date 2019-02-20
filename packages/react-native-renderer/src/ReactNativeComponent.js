@@ -153,6 +153,7 @@ export default function(
         return;
       }
 
+      const nativeTag = maybeInstance._nativeTag || maybeInstance.canonical._nativeTag;
       const viewConfig: ReactNativeBaseComponentViewConfig<> =
         maybeInstance.viewConfig || maybeInstance.canonical.viewConfig;
 
@@ -163,7 +164,7 @@ export default function(
       // view invalidation for certain components (eg RCTTextInput) on iOS.
       if (updatePayload != null) {
         UIManager.updateView(
-          maybeInstance._nativeTag,
+          nativeTag,
           viewConfig.uiViewClassName,
           updatePayload,
         );
