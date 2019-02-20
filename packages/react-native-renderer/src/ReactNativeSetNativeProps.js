@@ -10,16 +10,12 @@
 import {create} from './ReactNativeAttributePayload';
 import {warnForStyleProps} from './NativeMethodsMixinUtils';
 
-import ReactSharedInternals from 'shared/ReactSharedInternals';
-import getComponentName from 'shared/getComponentName';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
 // Module provided by RN:
 import UIManager from 'UIManager';
 
-const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-
-export function setNativeProps(handle, nativeProps: Object) {
+export function setNativeProps(handle: any, nativeProps: Object) {
   if (handle._nativeTag == null) {
     warningWithoutStack(
       handle._nativeTag != null,
@@ -34,7 +30,6 @@ export function setNativeProps(handle, nativeProps: Object) {
   }
 
   const updatePayload = create(nativeProps, handle.viewConfig.validAttributes);
-
   // Avoid the overhead of bridge calls if there's no update.
   // This is an expensive no-op for Android, and causes an unnecessary
   // view invalidation for certain components (eg RCTTextInput) on iOS.

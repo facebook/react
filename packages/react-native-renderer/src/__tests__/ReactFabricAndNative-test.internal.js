@@ -13,12 +13,14 @@
 let React;
 let ReactFabric;
 let ReactNative;
+let UIManager;
 let createReactNativeComponentClass;
 
 describe('ReactFabric', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactNative = require('react-native-renderer');
+    UIManager = require('UIManager');
     jest.resetModules();
     jest.mock('shared/ReactFeatureFlags', () =>
       require('shared/forks/ReactFeatureFlags.native-oss'),
@@ -49,4 +51,25 @@ describe('ReactFabric', () => {
     let handle = ReactNative.findNodeHandle(ref.current);
     expect(handle).toBe(2);
   });
+
+  it('sets native props with setNativeProps on Fabric nodes with the RN renderer', () => {
+    UIManager.updateView.mockReset();
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {title: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    let ref = React.createRef();
+
+    ReactFabric.render(<View title="bar" ref={ref} />, 11);
+    expect(UIManager.updateView).not.toBeCalled();
+    ReactNative.setNativeProps(ref.current, {title: 'baz'});
+    expect(UIManager.updateView).toHaveBeenCalledTimes(1);
+    expect(UIManager.updateView).toHaveBeenCalledWith(
+      expect.any(Number),
+      'RCTView',
+      {title: 'baz'},
+    );
+  });
+
 });
