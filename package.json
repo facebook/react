@@ -67,6 +67,7 @@
     "eslint-plugin-prettier": "^2.6.0",
     "eslint-plugin-promise": "^3.7.0",
     "eslint-plugin-react": "^7.7.0",
+    "eslint-plugin-react-hooks": "^1.1.0-rc.0",
     "eslint-plugin-standard": "^3.0.1",
     "events": "^3.0.0",
     "fbjs": "0.5.1",
