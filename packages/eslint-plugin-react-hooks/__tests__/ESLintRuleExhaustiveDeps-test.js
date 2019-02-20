@@ -9,7 +9,7 @@
 
 const ESLintTester = require('eslint').RuleTester;
 const ReactHooksESLintPlugin = require('eslint-plugin-react-hooks');
-const ReactHooksESLintRule = ReactHooksESLintPlugin.rules['reactive-deps'];
+const ReactHooksESLintRule = ReactHooksESLintPlugin.rules['exhaustive-deps'];
 
 ESLintTester.setDefaultConfig({
   parser: 'babel-eslint',

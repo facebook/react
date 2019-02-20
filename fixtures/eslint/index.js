@@ -24,6 +24,6 @@ function Comment({comment, commentSource}) {
       );
       return () => subscription.dispose();
     },
-    [commentID, environment, currentUserID, commentSource]
+    [commentID, commentSource, currentUserID, environment]
   );
 }
