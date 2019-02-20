@@ -120,6 +120,11 @@ describe('ReactNative', () => {
 
       viewRef.setNativeProps({foo: 'baz'});
       expect(UIManager.updateView).toHaveBeenCalledTimes(1);
+      expect(UIManager.updateView).toHaveBeenCalledWith(
+        expect.any(Number),
+        'RCTView',
+        {foo: 'baz'},
+      );
     });
   });
 
