@@ -38,6 +38,7 @@ import NativeMethodsMixin from './NativeMethodsMixin';
 import ReactNativeComponent from './ReactNativeComponent';
 import {getClosestInstanceFromNode} from './ReactNativeComponentTree';
 import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
+import {setNativeProps} from './ReactNativeSetNativeProps';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
@@ -115,6 +116,8 @@ const ReactNativeRenderer: ReactNativeType = {
   NativeComponent: ReactNativeComponent(findNodeHandle, findHostInstance),
 
   findNodeHandle,
+
+  setNativeProps,
 
   render(element: React$Element<any>, containerTag: any, callback: ?Function) {
     let root = roots.get(containerTag);
