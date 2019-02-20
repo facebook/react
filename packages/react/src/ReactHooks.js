@@ -67,6 +67,15 @@ export function useContext<T>(
 
 export function useState<S>(initialState: (() => S) | S) {
   const dispatcher = resolveDispatcher();
+  if (__DEV__) {
+    // this is the only place where, if the user gives no arguments,
+    // the argument will actually be missing instead of just being undefined.
+    warning(
+      arguments.length === 1,
+      'Expected exactly one argument to React.useState(initialState), instead received %s.',
+      arguments.length,
+    );
+  }
   return dispatcher.useState(initialState);
 }
 
