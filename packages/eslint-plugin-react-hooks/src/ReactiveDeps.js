@@ -262,7 +262,7 @@ export default {
               node: declaredDependencyNode,
               message:
                 `React Hook ${context.getSource(reactiveHook)} has a spread ` +
-                "element in its dependency list. This means we can't " +
+                "element in its dependency array. This means we can't " +
                 "statically verify whether you've passed the " +
                 'correct dependencies.',
             });
@@ -280,9 +280,9 @@ export default {
               context.report({
                 node: declaredDependencyNode,
                 message:
-                  'Unsupported expression in React Hook ' +
-                  `${context.getSource(reactiveHook)}'s dependency list. ` +
-                  'Currently only simple variables are supported.',
+                  `React Hook ${context.getSource(reactiveHook)} has a ` +
+                  `complex expression in the dependency array. ` +
+                  'Extract it to a separate variable so it can be statically checked.',
               });
               return;
             } else {

@@ -836,7 +836,7 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'local'. " +
           'Either include it or remove the dependency array.',
-        'React Hook useEffect has a spread element in its dependency list. ' +
+        'React Hook useEffect has a spread element in its dependency array. ' +
           "This means we can't statically verify whether you've passed the " +
           'correct dependencies.',
       ],
@@ -859,7 +859,7 @@ const tests = {
         }
       `,
       errors: [
-        'React Hook useEffect has a spread element in its dependency list. ' +
+        'React Hook useEffect has a spread element in its dependency array. ' +
           "This means we can't statically verify whether you've passed the " +
           'correct dependencies.',
       ],
@@ -886,8 +886,8 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'local'. " +
           'Either include it or remove the dependency array.',
-        "Unsupported expression in React Hook useEffect's dependency list. " +
-          'Currently only simple variables are supported.',
+        'React Hook useEffect has a complex expression in the dependency array. ' +
+          'Extract it to a separate variable so it can be statically checked.',
       ],
     },
     {
@@ -1277,8 +1277,8 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'local'. " +
           'Either include it or remove the dependency array.',
-        "Unsupported expression in React Hook useEffect's dependency list. " +
-          'Currently only simple variables are supported.',
+        'React Hook useEffect has a complex expression in the dependency array. ' +
+          'Extract it to a separate variable so it can be statically checked.',
       ],
     },
     {
@@ -1302,8 +1302,8 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'local'. " +
           'Either include it or remove the dependency array.',
-        "Unsupported expression in React Hook useEffect's dependency list. " +
-          'Currently only simple variables are supported.',
+        'React Hook useEffect has a complex expression in the dependency array. ' +
+          'Extract it to a separate variable so it can be statically checked.',
       ],
     },
     {
