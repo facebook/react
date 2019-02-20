@@ -62,6 +62,20 @@ const tests = {
     `,
     },
     {
+      // OK because `props` wasn't defined.
+      // We don't technically know if `props` is supposed
+      // to be an import that hasn't been added yet, or
+      // a component-level variable. Ignore it until it
+      //  gets defined (a different rule would flag it anyway).
+      code: `
+      function MyComponent() {
+        useEffect(() => {
+          console.log(props.foo);
+        }, []);
+      }
+    `,
+    },
+    {
       code: `
       function MyComponent() {
         const local1 = 42;
