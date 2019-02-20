@@ -9,64 +9,60 @@
 
 'use strict';
 
-// -1 if not a reactive Hook.
-// 0 for useEffect/useMemo/useCallback.
-// 1 for useImperativeHandle.
-// For additionally configured Hooks, assume 0.
-function getReactiveHookCallbackIndex(node, options) {
+// const [state, setState] = useState() / React.useState()
+//               ^^^ true for this reference
+// const [state, dispatch] = useReducer() / React.useReducer()
+//               ^^^ true for this reference
+// const ref = useRef()
+//       ^^ true for this reference
+// False for everything else.
+function isDefinitelyStaticDependency(reference) {
+  // This function is written defensively because I'm not sure about corner cases.
+  // TODO: we can strengthen this if we're sure about the types.
+  const resolved = reference.resolved;
+  if (resolved == null || !Array.isArray(resolved.defs)) {
+    return false;
+  }
+  const def = resolved.defs[0];
+  if (def == null || def.node.init == null) {
+    return false;
+  }
+  // Look for `let stuff = SomeHook();`
+  const init = def.node.init;
+  if (init.callee == null) {
+    return false;
+  }
+  let callee = init.callee;
+  // Step into `= React.something` initializer.
   if (
-    node.type === 'MemberExpression' &&
-    node.object.type === 'Identifier' &&
-    node.object.name === 'React' &&
-    node.property.type === 'Identifier' &&
-    !node.computed
+    callee.type === 'MemberExpression' &&
+    callee.object.name === 'React' &&
+    callee.property != null &&
+    !callee.computed
   ) {
-    return getReactiveHookCallbackIndex(node.property);
-  } else if (
-    node.type === 'Identifier' &&
-    (node.name === 'useEffect' ||
-      node.name === 'useLayoutEffect' ||
-      node.name === 'useCallback' ||
-      node.name === 'useMemo')
-  ) {
-    return 0;
-  } else if (
-    node.type === 'Identifier' &&
-    node.name === 'useImperativeHandle'
-  ) {
-    return 1;
-  } else if (options && options.additionalHooks) {
-    // Allow the user to provide a regular expression which enables the lint to
-    // target custom reactive hooks.
-    let name;
-    try {
-      name = getAdditionalHookName(node);
-    } catch (error) {
-      if (/Unsupported node type/.test(error.message)) {
-        return 0;
-      } else {
-        throw error;
-      }
+    callee = callee.property;
+  }
+  if (callee.type !== 'Identifier') {
+    return;
+  }
+  const id = def.node.id;
+  if (callee.name === 'useRef' && id.type === 'Identifier') {
+    // useRef() return value is static.
+    return true;
+  } else if (callee.name === 'useState' || callee.name === 'useReducer') {
+    // Only consider second value in initializing tuple static.
+    if (
+      id.type === 'ArrayPattern' &&
+      id.elements.length === 2 &&
+      Array.isArray(reference.resolved.identifiers) &&
+      // Is second tuple value the same reference we're checking?
+      id.elements[1] === reference.resolved.identifiers[0]
+    ) {
+      return true;
     }
-    return options.additionalHooks.test(name) ? 0 : -1;
-  } else {
-    return -1;
   }
-}
-
-/**
- * Create a name we will test against our `additionalHooks` regular expression.
- */
-function getAdditionalHookName(node) {
-  if (node.type === 'Identifier') {
-    return node.name;
-  } else if (node.type === 'MemberExpression' && !node.computed) {
-    const object = getAdditionalHookName(node.object);
-    const property = getAdditionalHookName(node.property);
-    return `${object}.${property}`;
-  } else {
-    throw new Error(`Unsupported node type: ${node.type}`);
-  }
+  // By default assume it's dynamic.
+  return false;
 }
 
 export default {
@@ -162,6 +158,7 @@ export default {
       }
 
       // Get dependencies from all our resolved references in pure scopes.
+      // Key is dependency string, value is whether it's static.
       const dependencies = new Map();
       gatherDependenciesRecursively(scope);
 
@@ -183,54 +180,13 @@ export default {
             reference.identifier,
           );
           const dependencyNode = getDependency(referenceNode);
-          const dependency = normalizeDependencyNode(dependencyNode);
-          // Add the dependency to a map so we can make sure it is referenced
-          // again in our dependencies array.
-          let info = dependencies.get(dependency);
-          if (!info) {
-            info = {isKnownToBeStatic: false};
-            dependencies.set(dependency, info);
+          const dependency = toPropertyAccessString(dependencyNode);
 
-            if (
-              reference.resolved != null &&
-              Array.isArray(reference.resolved.defs)
-            ) {
-              const def = reference.resolved.defs[0];
-              if (def != null && def.node.init != null) {
-                const init = def.node.init;
-                if (init.callee != null) {
-                  let callee = init.callee;
-                  if (
-                    callee.type === 'MemberExpression' &&
-                    callee.object.name === 'React' &&
-                    callee.property != null
-                  ) {
-                    callee = callee.property;
-                  }
-                  if (callee.type === 'Identifier') {
-                    if (
-                      callee.name === 'useRef' &&
-                      def.node.id.type === 'Identifier'
-                    ) {
-                      info.isKnownToBeStatic = true;
-                    } else if (
-                      callee.name === 'useState' ||
-                      callee.name === 'useReducer'
-                    ) {
-                      if (
-                        def.node.id.type === 'ArrayPattern' &&
-                        def.node.id.elements.length === 2 &&
-                        Array.isArray(reference.resolved.identifiers) &&
-                        def.node.id.elements[1] ===
-                          reference.resolved.identifiers[0]
-                      ) {
-                        info.isKnownToBeStatic = true;
-                      }
-                    }
-                  }
-                }
-              }
-            }
+          // Add the dependency to a map so we can make sure it is referenced
+          // again in our dependencies array. Remember whether it's static.
+          if (!dependencies.has(dependency)) {
+            const isStatic = isDefinitelyStaticDependency(reference);
+            dependencies.set(dependency, isStatic);
           }
         }
         for (const childScope of currentScope.childScopes) {
@@ -272,11 +228,9 @@ export default {
           // will be thrown. We will catch that error and report an error.
           let declaredDependency;
           try {
-            declaredDependency = normalizeDependencyNode(
-              declaredDependencyNode,
-            );
+            declaredDependency = toPropertyAccessString(declaredDependencyNode);
           } catch (error) {
-            if (/Unexpected node type/.test(error.message)) {
+            if (/Unsupported node type/.test(error.message)) {
               context.report({
                 node: declaredDependencyNode,
                 message:
@@ -297,19 +251,18 @@ export default {
         });
       }
 
+      // TODO: we can do a pass at this code and pick more appropriate
+      // data structures to avoid nested loops if we can.
       let suggestedDependencies = [];
-
       let duplicateDependencies = new Set();
       let unnecessaryDependencies = new Set();
       let missingDependencies = new Set();
-
       let actualDependencies = Array.from(dependencies.keys());
 
       function satisfies(actualDep, dep) {
         return actualDep === dep || actualDep.startsWith(dep + '.');
       }
 
-      // TODO: this could use some refactoring and optimizations.
       // First, ensure what user specified makes sense.
       declaredDependencies.forEach(({key}) => {
         if (actualDependencies.some(actualDep => satisfies(actualDep, key))) {
@@ -325,14 +278,15 @@ export default {
           unnecessaryDependencies.add(key);
         }
       });
+
       // Then fill in the missing ones.
-      dependencies.forEach((info, key) => {
+      dependencies.forEach((isStatic, key) => {
         if (
           !suggestedDependencies.some(suggestedDep =>
             satisfies(key, suggestedDep),
           )
         ) {
-          if (!info.isKnownToBeStatic) {
+          if (!isStatic) {
             // Legit missing.
             suggestedDependencies.push(key);
             missingDependencies.add(key);
@@ -365,41 +319,27 @@ export default {
         return;
       }
 
-      const quote = name => "'" + name + "'";
-      const join = (arr, forceComma) => {
-        let s = '';
-        for (let i = 0; i < arr.length; i++) {
-          s += arr[i];
-          if (i === 0 && arr.length === 2) {
-            s += ' and ';
-          } else if (i === arr.length - 2 && arr.length > 2) {
-            s += ', and ';
-          } else if (i < arr.length - 1) {
-            s += ', ';
-          }
-        }
-        return s;
-      };
-      const list = (set, singlePrefix, label, fixVerb) => {
-        if (set.size === 0) {
+      function getWarningMessage(deps, singlePrefix, label, fixVerb) {
+        if (deps.size === 0) {
           return null;
         }
         return (
-          (set.size > 1 ? '' : singlePrefix + ' ') +
+          (deps.size > 1 ? '' : singlePrefix + ' ') +
           label +
           ' ' +
-          (set.size > 1 ? 'dependencies' : 'dependency') +
+          (deps.size > 1 ? 'dependencies' : 'dependency') +
           ': ' +
-          join(
-            Array.from(set)
+          joinEnglish(
+            Array.from(deps)
               .sort()
-              .map(quote),
+              .map(name => "'" + name + "'"),
           ) +
           `. Either ${fixVerb} ${
-            set.size > 1 ? 'them' : 'it'
+            deps.size > 1 ? 'them' : 'it'
           } or remove the dependency array.`
         );
-      };
+      }
+
       let extraWarning = '';
       if (unnecessaryDependencies.size > 0) {
         let badRef = null;
@@ -423,12 +363,22 @@ export default {
         message:
           `React Hook ${context.getSource(reactiveHook)} has ` +
           // To avoid a long message, show the next actionable item.
-          (list(missingDependencies, 'a', 'missing', 'include') ||
-            list(unnecessaryDependencies, 'an', 'unnecessary', 'exclude') ||
-            list(duplicateDependencies, 'a', 'duplicate', 'omit')) +
+          (getWarningMessage(missingDependencies, 'a', 'missing', 'include') ||
+            getWarningMessage(
+              unnecessaryDependencies,
+              'an',
+              'unnecessary',
+              'exclude',
+            ) ||
+            getWarningMessage(
+              duplicateDependencies,
+              'a',
+              'duplicate',
+              'omit',
+            )) +
           extraWarning,
         fix(fixer) {
-          // TODO: consider keeping the comments?
+          // TODO: consider preserving the comments or formatting?
           return fixer.replaceText(
             declaredDependenciesNode,
             `[${suggestedDependencies.join(', ')}]`,
@@ -440,12 +390,10 @@ export default {
 };
 
 /**
- * Gets a dependency for our reactive callback from an identifier. If the
- * identifier is the object part of a member expression then we use the entire
- * member expression as a dependency.
- *
- * For instance, if we get `props` in `props.foo` then our dependency should be
- * the full member expression.
+ * Assuming () means the passed/returned node:
+ * (props) => (props)
+ * props.(foo) => (props.foo)
+ * props.foo.(bar) => (props.foo).bar
  */
 function getDependency(node) {
   if (
@@ -466,20 +414,72 @@ function getDependency(node) {
 }
 
 /**
- * Normalizes a dependency into a standard string representation which can
- * easily be compared.
- *
- * Throws an error if the node type is not a valid dependency.
+ * Assuming () means the passed node.
+ * (foo) -> 'foo'
+ * foo.(bar) -> 'foo.bar'
+ * foo.bar.(baz) -> 'foo.bar.baz'
+ * Otherwise throw.
  */
-function normalizeDependencyNode(node) {
+function toPropertyAccessString(node) {
   if (node.type === 'Identifier') {
     return node.name;
   } else if (node.type === 'MemberExpression' && !node.computed) {
-    const object = normalizeDependencyNode(node.object);
-    const property = normalizeDependencyNode(node.property);
+    const object = toPropertyAccessString(node.object);
+    const property = toPropertyAccessString(node.property);
     return `${object}.${property}`;
   } else {
-    throw new Error(`Unexpected node type: ${node.type}`);
+    throw new Error(`Unsupported node type: ${node.type}`);
+  }
+}
+
+// What's the index of callback that needs to be analyzed for a given Hook?
+// -1 if it's not a Hook we care about (e.g. useState).
+// 0 for useEffect/useMemo/useCallback(fn).
+// 1 for useImperativeHandle(ref, fn).
+// For additionally configured Hooks, assume that they're like useEffect (0).
+function getReactiveHookCallbackIndex(node, options) {
+  let isOnReactObject = false;
+  if (
+    node.type === 'MemberExpression' &&
+    node.object.type === 'Identifier' &&
+    node.object.name === 'React' &&
+    node.property.type === 'Identifier' &&
+    !node.computed
+  ) {
+    node = node.property;
+    isOnReactObject = true;
+  }
+  if (node.type !== 'Identifier') {
+    return;
+  }
+  switch (node.name) {
+    case 'useEffect':
+    case 'useLayoutEffect':
+    case 'useCallback':
+    case 'useMemo':
+      // useEffect(fn)
+      return 0;
+    case 'useImperativeHandle':
+      // useImperativeHandle(ref, fn)
+      return 1;
+    default:
+      if (!isOnReactObject && options && options.additionalHooks) {
+        // Allow the user to provide a regular expression which enables the lint to
+        // target custom reactive hooks.
+        let name;
+        try {
+          name = toPropertyAccessString(node);
+        } catch (error) {
+          if (/Unsupported node type/.test(error.message)) {
+            return 0;
+          } else {
+            throw error;
+          }
+        }
+        return options.additionalHooks.test(name) ? 0 : -1;
+      } else {
+        return -1;
+      }
   }
 }
 
@@ -527,6 +527,21 @@ function fastFindReferenceWithParent(start, target) {
   }
 
   return null;
+}
+
+function joinEnglish(arr) {
+  let s = '';
+  for (let i = 0; i < arr.length; i++) {
+    s += arr[i];
+    if (i === 0 && arr.length === 2) {
+      s += ' and ';
+    } else if (i === arr.length - 2 && arr.length > 2) {
+      s += ', and ';
+    } else if (i < arr.length - 1) {
+      s += ', ';
+    }
+  }
+  return s;
 }
 
 function isNodeLike(val) {

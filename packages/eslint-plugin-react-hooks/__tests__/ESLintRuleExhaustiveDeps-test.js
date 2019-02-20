@@ -891,6 +891,93 @@ const tests = {
       ],
     },
     {
+      // only: true,
+      code: `
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.items[0]);
+          }, [props.items[0]]);
+        }
+      `,
+      output: `
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.items[0]);
+          }, [props.items]);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has a missing dependency: 'props.items'. " +
+          'Either include it or remove the dependency array.',
+        'React Hook useEffect has a complex expression in the dependency array. ' +
+          'Extract it to a separate variable so it can be statically checked.',
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.items[0]);
+          }, [props.items, props.items[0]]);
+        }
+      `,
+      // TODO: ideally autofix would remove the bad expression?
+      output: `
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.items[0]);
+          }, [props.items, props.items[0]]);
+        }
+      `,
+      errors: [
+        'React Hook useEffect has a complex expression in the dependency array. ' +
+          'Extract it to a separate variable so it can be statically checked.',
+      ],
+    },
+    {
+      code: `
+        function MyComponent({ items }) {
+          useEffect(() => {
+            console.log(items[0]);
+          }, [items[0]]);
+        }
+      `,
+      output: `
+        function MyComponent({ items }) {
+          useEffect(() => {
+            console.log(items[0]);
+          }, [items]);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has a missing dependency: 'items'. " +
+          'Either include it or remove the dependency array.',
+        'React Hook useEffect has a complex expression in the dependency array. ' +
+          'Extract it to a separate variable so it can be statically checked.',
+      ],
+    },
+    {
+      code: `
+        function MyComponent({ items }) {
+          useEffect(() => {
+            console.log(items[0]);
+          }, [items, items[0]]);
+        }
+      `,
+      // TODO: ideally autofix would remove the bad expression?
+      output: `
+        function MyComponent({ items }) {
+          useEffect(() => {
+            console.log(items[0]);
+          }, [items, items[0]]);
+        }
+      `,
+      errors: [
+        'React Hook useEffect has a complex expression in the dependency array. ' +
+          'Extract it to a separate variable so it can be statically checked.',
+      ],
+    },
+    {
       // TODO: need to think more about this case.
       code: `
         function MyComponent() {
