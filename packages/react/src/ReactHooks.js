@@ -80,6 +80,15 @@ export function useReducer<S, I, A>(
 }
 
 export function useRef<T>(initialValue: T): {current: T} {
+  if (__DEV__) {
+    // this is the only place where, if the user gives no arguments,
+    // the argument will actually be missing instead of just being undefined.
+    warning(
+      arguments.length === 1,
+      'Expected exactly one argument to React.useRef(initialValue), instead received %s.',
+      arguments.length,
+    );
+  }
   const dispatcher = resolveDispatcher();
   return dispatcher.useRef(initialValue);
 }
