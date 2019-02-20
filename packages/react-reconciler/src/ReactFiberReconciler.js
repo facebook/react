@@ -341,6 +341,7 @@ export function findHostInstanceWithNoPortals(
   return hostFiber.stateNode;
 }
 
+let overrideHook = null;
 let overrideProps = null;
 
 if (__DEV__) {
@@ -368,6 +369,24 @@ if (__DEV__) {
     return copyWithSetImpl(obj, path, 0, value);
   };
 
+  // Support DevTools editable hooks state.
+  overrideHook = (
+    fiber: Fiber,
+    nativeHookIndex: number,
+    path: Array<string | number>,
+    value: any,
+  ) => {
+    let currentHook = fiber.memoizedState;
+    while (currentHook !== null && nativeHookIndex > 0) {
+      currentHook = currentHook.next;
+      nativeHookIndex--;
+    }
+    if (currentHook !== null) {
+      let updatedState = copyWithSet(currentHook.memoizedState, path, value);
+      currentHook.queue.dispatch(updatedState);
+    }
+  };
+
   // Support DevTools props for function components, forwardRef, memo, host components, etc.
   overrideProps = (fiber: Fiber, path: Array<string | number>, value: any) => {
     flushPassiveEffects();
@@ -385,6 +404,7 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
 
   return injectInternals({
     ...devToolsConfig,
+    overrideHook,
     overrideProps,
     currentDispatcherRef: ReactCurrentDispatcher,
     findHostInstanceByFiber(fiber: Fiber): Instance | TextInstance | null {
