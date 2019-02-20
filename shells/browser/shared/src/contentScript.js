@@ -45,7 +45,7 @@ function handleDisconnect() {
       source: 'react-devtools-content-script',
       payload: {
         type: 'event',
-        evt: 'shutdown',
+        event: 'shutdown',
       },
     },
     '*'

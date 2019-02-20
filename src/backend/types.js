@@ -68,13 +68,13 @@ export type Hook = {
   rendererInterfaces: Map<RendererID, RendererInterface>,
   renderers: Map<RendererID, ReactRenderer>,
 
-  emit: (evt: string, data: any) => void,
+  emit: (event: string, data: any) => void,
   getFiberRoots: (rendererID: RendererID) => Set<Object>,
   inject: (renderer: ReactRenderer) => number | null,
-  on: (evt: string, handler: Handler) => void,
-  off: (evt: string, handler: Handler) => void,
+  on: (event: string, handler: Handler) => void,
+  off: (event: string, handler: Handler) => void,
   reactDevtoolsAgent?: ?Object,
-  sub: (evt: string, handler: Handler) => () => void,
+  sub: (event: string, handler: Handler) => () => void,
 
   // React uses these methods.
   checkDCE: (fn: Function) => void,

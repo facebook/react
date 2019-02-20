@@ -1,9 +1,6 @@
-/* global chrome */
-
 import { createElement } from 'react';
 import { createRoot, flushSync } from 'react-dom';
 import DevTools from 'src/devtools/views/DevTools';
-import inject from '../inject';
 import { getBrowserName, getBrowserTheme } from '../utils';
 
 export function createPanel(defaultTab) {
@@ -45,9 +42,5 @@ export function createPanel(defaultTab) {
         store: injectedStore,
       })
     );
-
-    // Initialize the backend only once the DevTools frontend Store has been initialized.
-    // Otherwise the Store may miss important initial tree op codes.
-    inject(chrome.runtime.getURL('build/backend.js'));
   }
 }

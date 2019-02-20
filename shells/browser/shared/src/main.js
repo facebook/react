@@ -2,6 +2,7 @@
 
 import Bridge from 'src/bridge';
 import Store from 'src/devtools/Store';
+import inject from './inject';
 
 let panelCreated = false;
 
@@ -47,6 +48,10 @@ function createPanelIfReactLoaded() {
         });
 
         store = new Store(bridge);
+
+        // Initialize the backend only once the Store has been initialized.
+        // Otherwise the Store may miss important initial tree op codes.
+        inject(chrome.runtime.getURL('build/backend.js'));
 
         if (elementsPanel !== null) {
           elementsPanel.injectBridgeAndStore(bridge, store);
