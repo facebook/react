@@ -433,6 +433,19 @@ const tests = {
         });
       `,
     },
+    {
+      // This is not ideal but warning would likely create
+      // too many false positives. We do, however, prevent
+      // direct assignments.
+      code: `
+        function MyComponent(props) {
+          let obj = {};
+          useEffect(() => {
+            obj.foo = true;
+          }, [obj]);
+        }
+      `,
+    },
   ],
   invalid: [
     {
