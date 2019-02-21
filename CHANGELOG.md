@@ -6,6 +6,16 @@
   </summary>
 </details>
 
+## 16.8.3 (February 21, 2019)
+
+### React DOM
+
+- Fix a bug that caused inputs to behave incorrectly in UMD builds. ([@gaearon](https://github.com/gaearon) in [#14914](https://github.com/facebook/react/pull/14914))
+- Fix a bug that caused render phase updates to be discarded. ([@gaearon](https://github.com/gaearon) in [#14852](https://github.com/facebook/react/pull/14852))
+
+### React DOM Server
+- Unwind the context stack when a stream is destroyed without completing, to prevent incorrect values during a subsequent render. ([@overlookmotel](https://github.com/overlookmotel) in [#14706](https://github.com/facebook/react/pull/14706/))
+
 ## 16.8.2 (February 14, 2019)
 
 ### React DOM
