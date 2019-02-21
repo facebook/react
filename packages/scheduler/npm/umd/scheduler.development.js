@@ -108,5 +108,25 @@
     unstable_continueExecution: unstable_continueExecution,
     unstable_pauseExecution: unstable_pauseExecution,
     unstable_getFirstCallbackNode: unstable_getFirstCallbackNode,
+    get unstable_IdlePriority() {
+      return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .Scheduler.unstable_IdlePriority;
+    },
+    get unstable_ImmediatePriority() {
+      return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .Scheduler.unstable_ImmediatePriority;
+    },
+    get unstable_LowPriority() {
+      return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .Scheduler.unstable_LowPriority;
+    },
+    get unstable_NormalPriority() {
+      return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .Scheduler.unstable_NormalPriority;
+    },
+    get unstable_UserBlockingPriority() {
+      return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .Scheduler.unstable_UserBlockingPriority;
+    },
   });
 });

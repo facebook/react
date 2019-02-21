@@ -18,6 +18,11 @@ import {
   unstable_continueExecution,
   unstable_wrapCallback,
   unstable_getCurrentPriorityLevel,
+  unstable_IdlePriority,
+  unstable_ImmediatePriority,
+  unstable_LowPriority,
+  unstable_NormalPriority,
+  unstable_UserBlockingPriority,
 } from 'scheduler';
 import {
   __interactionsRef,
@@ -60,6 +65,11 @@ if (__UMD__) {
       unstable_pauseExecution,
       unstable_continueExecution,
       unstable_getCurrentPriorityLevel,
+      unstable_IdlePriority,
+      unstable_ImmediatePriority,
+      unstable_LowPriority,
+      unstable_NormalPriority,
+      unstable_UserBlockingPriority,
     },
     SchedulerTracing: {
       __interactionsRef,
