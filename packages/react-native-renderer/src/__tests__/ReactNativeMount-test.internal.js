@@ -218,7 +218,7 @@ describe('ReactNative', () => {
         ReactNative.setNativeProps(viewRef, {foo: 'baz'});
       }).toWarnDev(
         [
-          "Warning: setNativeProps was called on a ref that isn't a " +
+          "Warning: setNativeProps was called with a ref that isn't a " +
             'native component. Use React.forwardRef to get access ' +
             'to the underlying native component',
         ],
