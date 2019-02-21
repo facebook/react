@@ -32,7 +32,7 @@ import NativeMethodsMixin from './NativeMethodsMixin';
 import ReactNativeComponent from './ReactNativeComponent';
 import {getClosestInstanceFromNode} from './ReactFabricComponentTree';
 import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
-import {setNativeProps} from './ReactNativeSetNativeProps';
+import {setNativeProps} from './ReactNativeRendererSharedExports';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
