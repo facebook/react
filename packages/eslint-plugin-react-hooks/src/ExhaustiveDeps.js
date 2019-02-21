@@ -186,7 +186,10 @@ export default {
           // again in our dependencies array. Remember whether it's static.
           if (!dependencies.has(dependency)) {
             const isStatic = isDefinitelyStaticDependency(reference);
-            dependencies.set(dependency, isStatic);
+            dependencies.set(dependency, {
+              isStatic,
+              reference,
+            });
           }
         }
         for (const childScope of currentScope.childScopes) {
@@ -258,6 +261,7 @@ export default {
       let unnecessaryDependencies = new Set();
       let missingDependencies = new Set();
       let actualDependencies = Array.from(dependencies.keys());
+      let foundStaleAssignments = false;
 
       function satisfies(actualDep, dep) {
         return actualDep === dep || actualDep.startsWith(dep + '.');
@@ -280,7 +284,22 @@ export default {
       });
 
       // Then fill in the missing ones.
-      dependencies.forEach((isStatic, key) => {
+      dependencies.forEach(({isStatic, reference}, key) => {
+        if (reference.writeExpr) {
+          foundStaleAssignments = true;
+          context.report({
+            node: reference.writeExpr,
+            message:
+              `Assignments to the '${key}' variable from inside a React ${context.getSource(
+                reactiveHook,
+              )} Hook ` +
+              `will not persist between re-renders. ` +
+              `If it's only needed by this Hook, move the variable inside it. ` +
+              `Alternatively, declare a ref with the useRef Hook, ` +
+              `and keep the mutable value in its 'current' property.`,
+          });
+        }
+
         if (
           !suggestedDependencies.some(suggestedDep =>
             satisfies(key, suggestedDep),
@@ -316,6 +335,11 @@ export default {
         unnecessaryDependencies.size;
 
       if (problemCount === 0) {
+        return;
+      }
+
+      if (foundStaleAssignments) {
+        // The intent isn't clear so we'll wait until you fix those first.
         return;
       }
 
