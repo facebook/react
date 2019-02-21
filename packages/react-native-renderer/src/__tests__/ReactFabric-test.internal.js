@@ -167,7 +167,7 @@ describe('ReactFabric', () => {
     expect(FabricUIManager.__dumpHierarchyForJestTestsOnly()).toMatchSnapshot();
   });
 
-  it('should not call UIManager.updateView from setNativeProps for properties that have not changed', () => {
+  it('should not call UIManager.updateView from ref.setNativeProps for properties that have not changed', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
       uiViewClassName: 'RCTView',
@@ -211,6 +211,90 @@ describe('ReactFabric', () => {
         'RCTView',
         {foo: 'baz'},
       );
+    });
+  });
+
+  it('should be able to setNativeProps on native refs', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    UIManager.updateView.mockReset();
+
+    let viewRef;
+    ReactFabric.render(
+      <View
+        foo="bar"
+        ref={ref => {
+          viewRef = ref;
+        }}
+      />,
+      11,
+    );
+
+    expect(UIManager.updateView).not.toBeCalled();
+    ReactFabric.setNativeProps(viewRef, {foo: 'baz'});
+    expect(UIManager.updateView).toHaveBeenCalledTimes(1);
+    expect(UIManager.updateView).toHaveBeenCalledWith(
+      expect.any(Number),
+      'RCTView',
+      {foo: 'baz'},
+    );
+  });
+
+  it('should warn and no-op if calling setNativeProps on non native refs', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    class BasicClass extends React.Component {
+      render() {
+        return <React.Fragment />;
+      }
+    }
+
+    class Subclass extends ReactFabric.NativeComponent {
+      render() {
+        return <View />;
+      }
+    }
+
+    const CreateClass = createReactClass({
+      mixins: [NativeMethodsMixin],
+      render: () => {
+        return <View />;
+      },
+    });
+
+    [BasicClass, Subclass, CreateClass].forEach(Component => {
+      UIManager.updateView.mockReset();
+
+      let viewRef;
+      ReactFabric.render(
+        <Component
+          foo="bar"
+          ref={ref => {
+            viewRef = ref;
+          }}
+        />,
+        11,
+      );
+
+      expect(UIManager.updateView).not.toBeCalled();
+      expect(() => {
+        ReactFabric.setNativeProps(viewRef, {foo: 'baz'});
+      }).toWarnDev(
+        [
+          "Warning: setNativeProps was called on a ref that isn't a " +
+            'native component. Use React.forwardRef to get access ' +
+            'to the underlying native component',
+        ],
+        {withoutStack: true},
+      );
+
+      expect(UIManager.updateView).not.toBeCalled();
     });
   });
 
