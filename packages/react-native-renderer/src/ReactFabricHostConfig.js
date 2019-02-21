@@ -30,6 +30,7 @@ import {get as getViewConfigForType} from 'ReactNativeViewConfigRegistry';
 
 import deepFreezeAndThrowOnMutationInDev from 'deepFreezeAndThrowOnMutationInDev';
 import invariant from 'shared/invariant';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 import {dispatchEvent} from './ReactFabricEventEmitter';
 
@@ -140,6 +141,13 @@ class ReactFabricHostComponent {
 
   setNativeProps(nativeProps: Object) {
     if (__DEV__) {
+      warningWithoutStack(
+        false,
+        'Warning: Calling ref.setNativeProps(nativeProps) ' +
+          'is deprecated and will be removed in a future release. ' +
+          'Use the setNativeProps export from the react-native package instead.' +
+          "\n\timport {setNativeProps} from 'react-native';\n\tsetNativeProps(ref, nativeProps);\n",
+      );
       warnForStyleProps(nativeProps, this.viewConfig.validAttributes);
     }
 

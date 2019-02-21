@@ -18,6 +18,12 @@ let createReactNativeComponentClass;
 let UIManager;
 let NativeMethodsMixin;
 
+const SET_NATIVE_PROPS_DEPRECATION_MESSAGE =
+  'Warning: Calling ref.setNativeProps(nativeProps) ' +
+  'is deprecated and will be removed in a future release. ' +
+  'Use the setNativeProps export from the react-native package instead.' +
+  "\n\timport {setNativeProps} from 'react-native';\n\tsetNativeProps(ref, nativeProps);\n";
+
 describe('ReactNative', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -98,7 +104,7 @@ describe('ReactNative', () => {
     expect(UIManager.updateView).toHaveBeenCalledTimes(4);
   });
 
-  it('should not call UIManager.updateView from setNativeProps for properties that have not changed', () => {
+  it('should not call UIManager.updateView from ref.setNativeProps for properties that have not changed', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
       uiViewClassName: 'RCTView',
@@ -132,10 +138,19 @@ describe('ReactNative', () => {
       );
       expect(UIManager.updateView).not.toBeCalled();
 
-      viewRef.setNativeProps({});
+      expect(() => {
+        viewRef.setNativeProps({});
+      }).toWarnDev([SET_NATIVE_PROPS_DEPRECATION_MESSAGE], {
+        withoutStack: true,
+      });
       expect(UIManager.updateView).not.toBeCalled();
 
-      viewRef.setNativeProps({foo: 'baz'});
+      expect(() => {
+        viewRef.setNativeProps({foo: 'baz'});
+      }).toWarnDev([SET_NATIVE_PROPS_DEPRECATION_MESSAGE], {
+        withoutStack: true,
+      });
+
       expect(UIManager.updateView).toHaveBeenCalledTimes(1);
       expect(UIManager.updateView).toHaveBeenCalledWith(
         expect.any(Number),
@@ -164,7 +179,9 @@ describe('ReactNative', () => {
       11,
     );
 
+    ReactNative.setNativeProps(viewRef, {});
     expect(UIManager.updateView).not.toBeCalled();
+
     ReactNative.setNativeProps(viewRef, {foo: 'baz'});
     expect(UIManager.updateView).toHaveBeenCalledTimes(1);
     expect(UIManager.updateView).toHaveBeenCalledWith(

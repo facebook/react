@@ -24,6 +24,8 @@ import UIManager from 'UIManager';
 import {create} from './ReactNativeAttributePayload';
 import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';
 
+import warningWithoutStack from 'shared/warningWithoutStack';
+
 export default function(
   findNodeHandle: any => ?number,
   findHostInstance: any => any,
@@ -132,6 +134,16 @@ export default function(
      * Manipulation](docs/direct-manipulation.html)).
      */
     setNativeProps(nativeProps: Object): void {
+      if (__DEV__) {
+        warningWithoutStack(
+          false,
+          'Warning: Calling ref.setNativeProps(nativeProps) ' +
+            'is deprecated and will be removed in a future release. ' +
+            'Use the setNativeProps export from the react-native package instead.' +
+            "\n\timport {setNativeProps} from 'react-native';\n\tsetNativeProps(ref, nativeProps);\n",
+        );
+      }
+
       // Class components don't have viewConfig -> validateAttributes.
       // Nor does it make sense to set native props on a non-native component.
       // Instead, find the nearest host component and set props on it.
