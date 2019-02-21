@@ -36,7 +36,8 @@ function checkSchedulerAPI() {
       throw 'API is not defined';
     }
 
-    if (Scheduler.unstable_now() !== performance.now()) {
+    const abs = Math.abs(Scheduler.unstable_now() - performance.now());
+    if (typeof abs !== 'number' || Number.isNaN(abs) || abs > 5) {
       throw 'API does not work';
     }
 
