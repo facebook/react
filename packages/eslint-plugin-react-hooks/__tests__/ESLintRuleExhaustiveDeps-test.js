@@ -891,7 +891,6 @@ const tests = {
       ],
     },
     {
-      // only: true,
       code: `
         function MyComponent(props) {
           useEffect(() => {
@@ -1606,6 +1605,124 @@ const tests = {
         // TODO: reporting props separately is superfluous. Fix to just props.onChange.
         "React Hook useEffect has missing dependencies: 'props' and 'props.onChange'. " +
           'Either include them or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
+          let value;
+          let value2;
+          let value3;
+          let asyncValue;
+          useEffect(() => {
+            value = 42;
+            value2 = 100;
+            console.log(value2);
+            console.log(value3);
+            setTimeout(() => {
+              asyncValue = 100;
+            });
+          }, []);
+        }
+      `,
+      // This is a separate warning unrelated to others.
+      // We could've made a separate rule for it but it's rare enough to name it.
+      // No autofix suggestion because the intent isn't clear.
+      output: `
+        function MyComponent(props) {
+          let value;
+          let value2;
+          let value3;
+          let asyncValue;
+          useEffect(() => {
+            value = 42;
+            value2 = 100;
+            console.log(value2);
+            console.log(value3);
+            setTimeout(() => {
+              asyncValue = 100;
+            });
+          }, []);
+        }
+      `,
+      errors: [
+        // value
+        `Assigning a variable from inside a React useEffect Hook ` +
+          `will not persist between re-renders. ` +
+          `If it's only needed by this Hook, move the variable inside it. ` +
+          `Alternatively, declare a ref with the useRef Hook, ` +
+          `and keep the mutable value in its 'current' property.`,
+        // value2
+        `Assigning a variable from inside a React useEffect Hook ` +
+          `will not persist between re-renders. ` +
+          `If it's only needed by this Hook, move the variable inside it. ` +
+          `Alternatively, declare a ref with the useRef Hook, ` +
+          `and keep the mutable value in its 'current' property.`,
+        // asyncValue
+        `Assigning a variable from inside a React useEffect Hook ` +
+          `will not persist between re-renders. ` +
+          `If it's only needed by this Hook, move the variable inside it. ` +
+          `Alternatively, declare a ref with the useRef Hook, ` +
+          `and keep the mutable value in its 'current' property.`,
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
+          let value;
+          let value2;
+          let value3;
+          let asyncValue;
+          useEffect(() => {
+            value = 42;
+            value2 = 100;
+            console.log(value2);
+            console.log(value3);
+            setTimeout(() => {
+              asyncValue = 100;
+            });
+          }, [value, value2, value3]);
+        }
+      `,
+      // This is a separate warning unrelated to others.
+      // We could've made a separate rule for it but it's rare enough to name it.
+      // No autofix suggestion because the intent isn't clear.
+      output: `
+        function MyComponent(props) {
+          let value;
+          let value2;
+          let value3;
+          let asyncValue;
+          useEffect(() => {
+            value = 42;
+            value2 = 100;
+            console.log(value2);
+            console.log(value3);
+            setTimeout(() => {
+              asyncValue = 100;
+            });
+          }, [value, value2, value3]);
+        }
+      `,
+      errors: [
+        // value
+        `Assigning a variable from inside a React useEffect Hook ` +
+          `will not persist between re-renders. ` +
+          `If it's only needed by this Hook, move the variable inside it. ` +
+          `Alternatively, declare a ref with the useRef Hook, ` +
+          `and keep the mutable value in its 'current' property.`,
+        // value2
+        `Assigning a variable from inside a React useEffect Hook ` +
+          `will not persist between re-renders. ` +
+          `If it's only needed by this Hook, move the variable inside it. ` +
+          `Alternatively, declare a ref with the useRef Hook, ` +
+          `and keep the mutable value in its 'current' property.`,
+        // asyncValue
+        `Assigning a variable from inside a React useEffect Hook ` +
+          `will not persist between re-renders. ` +
+          `If it's only needed by this Hook, move the variable inside it. ` +
+          `Alternatively, declare a ref with the useRef Hook, ` +
+          `and keep the mutable value in its 'current' property.`,
       ],
     },
   ],
