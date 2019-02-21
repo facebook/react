@@ -145,6 +145,90 @@ describe('ReactNative', () => {
     });
   });
 
+  it('should be able to setNativeProps on native refs', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    UIManager.updateView.mockReset();
+
+    let viewRef;
+    ReactNative.render(
+      <View
+        foo="bar"
+        ref={ref => {
+          viewRef = ref;
+        }}
+      />,
+      11,
+    );
+
+    expect(UIManager.updateView).not.toBeCalled();
+    ReactNative.setNativeProps(viewRef, {foo: 'baz'});
+    expect(UIManager.updateView).toHaveBeenCalledTimes(1);
+    expect(UIManager.updateView).toHaveBeenCalledWith(
+      expect.any(Number),
+      'RCTView',
+      {foo: 'baz'},
+    );
+  });
+
+  it('should warn and no-op if calling setNativeProps on non native refs', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    class BasicClass extends React.Component {
+      render() {
+        return <React.Fragment />;
+      }
+    }
+
+    class Subclass extends ReactNative.NativeComponent {
+      render() {
+        return <View />;
+      }
+    }
+
+    const CreateClass = createReactClass({
+      mixins: [NativeMethodsMixin],
+      render: () => {
+        return <View />;
+      },
+    });
+
+    [BasicClass, Subclass, CreateClass].forEach(Component => {
+      UIManager.updateView.mockReset();
+
+      let viewRef;
+      ReactNative.render(
+        <Component
+          foo="bar"
+          ref={ref => {
+            viewRef = ref;
+          }}
+        />,
+        11,
+      );
+
+      expect(UIManager.updateView).not.toBeCalled();
+      expect(() => {
+        ReactNative.setNativeProps(viewRef, {foo: 'baz'});
+      }).toWarnDev(
+        [
+          "Warning: setNativeProps was called on a ref that isn't a " +
+            'native component. Use React.forwardRef to get access ' +
+            'to the underlying native component',
+        ],
+        {withoutStack: true},
+      );
+
+      expect(UIManager.updateView).not.toBeCalled();
+    });
+  });
+
   it('returns the correct instance and calls it in the callback', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
