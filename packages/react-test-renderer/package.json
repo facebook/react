@@ -1,6 +1,6 @@
 {
   "name": "react-test-renderer",
-  "version": "16.8.2",
+  "version": "16.8.3",
   "description": "React package for snapshot testing.",
   "main": "index.js",
   "repository": {
@@ -21,8 +21,8 @@
   "dependencies": {
     "object-assign": "^4.1.1",
     "prop-types": "^15.6.2",
-    "react-is": "^16.8.2",
-    "scheduler": "^0.13.2"
+    "react-is": "^16.8.3",
+    "scheduler": "^0.13.3"
   },
   "peerDependencies": {
     "react": "^16.0.0"
