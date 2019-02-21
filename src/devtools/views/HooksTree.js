@@ -2,7 +2,8 @@
 
 import React, { useContext } from 'react';
 import { BridgeContext, StoreContext } from './context';
-import { EditableValue, KeyValue } from './InspectedElementTree';
+import EditableValue from './EditableValue';
+import KeyValue from './KeyValue';
 import styles from './HooksTree.css';
 
 import type { HooksNode, HooksTree } from 'src/backend/types';

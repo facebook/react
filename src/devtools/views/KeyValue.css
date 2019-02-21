@@ -1,15 +1,3 @@
-.InspectedElementTree {
-  padding: 0.25rem;
-  border-top: 1px solid var(--color-border);
-}
-.InspectedElementTree:first-of-type {
-  border-top: none;
-}
-
-.Header {
-  font-family: var(--font-family-sans);
-}
-
 .Item {
   display: flex;
 }
@@ -31,10 +19,4 @@
 .None {
   color: var(--color-dimmer);
   font-style: italic;
-}
-
-.Empty {
-  color: var(--color-dimmer);
-  font-style: italic;
-  padding-left: 0.75rem;
 }
