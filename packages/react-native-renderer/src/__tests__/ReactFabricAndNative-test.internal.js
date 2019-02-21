@@ -71,5 +71,4 @@ describe('ReactFabric', () => {
       {title: 'baz'},
     );
   });
-
 });
