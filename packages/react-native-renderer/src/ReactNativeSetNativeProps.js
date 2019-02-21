@@ -15,7 +15,7 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 // Module provided by RN:
 import UIManager from 'UIManager';
 
-export function setNativeProps(handle: any, nativeProps: Object) {
+export function setNativeProps(handle: any, nativeProps: Object): void {
   if (handle._nativeTag == null) {
     warningWithoutStack(
       handle._nativeTag != null,
