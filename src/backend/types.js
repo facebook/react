@@ -37,7 +37,7 @@ export type ReactRenderer = {
   // 16.9+
   overrideHook?: ?(
     fiber: Object,
-    nativeHookIndex: number,
+    index: number,
     path: Array<string | number>,
     value: any
   ) => void,
@@ -68,7 +68,7 @@ export type RendererInterface = {
   setInContext: (id: number, path: Array<string | number>, value: any) => void,
   setInHook: (
     id: number,
-    nativeHookIndex: number,
+    index: number,
     path: Array<string | number>,
     value: any
   ) => void,
@@ -99,7 +99,7 @@ export type DevToolsHook = {
 };
 
 export type HooksNode = {
-  nativeHookIndex: number,
+  index: number,
   name: string,
   value: mixed,
   subHooks: Array<HooksNode>,

@@ -1168,14 +1168,14 @@ export function attach(
 
   function setInHook(
     id: number,
-    nativeHookIndex: number,
+    index: number,
     path: Array<string | number>,
     value: any
   ) {
     const fiber = findCurrentFiberUsingSlowPath(idToFiberMap.get(id));
     if (fiber !== null) {
       if (typeof overrideHook === 'function') {
-        overrideHook(fiber, nativeHookIndex, path, value);
+        overrideHook(fiber, index, path, value);
       }
     }
   }

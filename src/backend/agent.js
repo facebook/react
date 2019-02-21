@@ -25,7 +25,7 @@ type InspectSelectParams = {|
 
 type OverrideHookParams = {|
   id: number,
-  nativeHookIndex: number,
+  index: number,
   path: Array<string | number>,
   rendererID: number,
   value: any,
@@ -133,7 +133,7 @@ export default class Agent extends EventEmitter {
 
   overrideHook = ({
     id,
-    nativeHookIndex,
+    index,
     path,
     rendererID,
     value,
@@ -142,7 +142,7 @@ export default class Agent extends EventEmitter {
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
     } else {
-      renderer.setInHook(id, nativeHookIndex, path, value);
+      renderer.setInHook(id, index, path, value);
     }
   };
 

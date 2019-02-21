@@ -56,7 +56,7 @@ type HookViewProps = {|
 |};
 
 function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
-  const { name, nativeHookIndex, subHooks, value } = hook;
+  const { name, index, subHooks, value } = hook;
 
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
@@ -126,7 +126,7 @@ function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
         const rendererID = store.getRendererIDForElement(id);
         bridge.send('overrideHook', {
           id,
-          nativeHookIndex,
+          index,
           path,
           rendererID,
           value,

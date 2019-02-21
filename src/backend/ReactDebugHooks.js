@@ -225,7 +225,7 @@ type ReactCurrentDispatcher = {
 };
 
 type HooksNode = {
-  nativeHookIndex: number,
+  index: number,
   name: string,
   value: mixed,
   subHooks: Array<HooksNode>,
@@ -367,7 +367,7 @@ function buildTree(rootStack, readHookLog): HooksTree {
   const rootChildren = [];
   let prevStack = null;
   let levelChildren = rootChildren;
-  let nativeHookIndex = 0;
+  let index = 0;
   const stackOfChildren = [];
   for (let i = 0; i < readHookLog.length; i++) {
     const hook = readHookLog[i];
@@ -401,7 +401,7 @@ function buildTree(rootStack, readHookLog): HooksTree {
         levelChildren.push({
           name: parseCustomHookName(stack[j - 1].functionName),
           value: undefined,
-          nativeHookIndex: -1,
+          index: -1,
           subHooks: children,
         });
         stackOfChildren.push(levelChildren);
@@ -412,7 +412,7 @@ function buildTree(rootStack, readHookLog): HooksTree {
     levelChildren.push({
       name: hook.primitive,
       value: hook.value,
-      nativeHookIndex: hook.primitive === 'DebugValue' ? -1 : nativeHookIndex++,
+      index: hook.primitive === 'DebugValue' ? -1 : index++,
       subHooks: [],
     });
   }
