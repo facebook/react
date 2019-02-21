@@ -233,6 +233,7 @@ const Dispatcher: DispatcherType = {
 
 type HooksNode = {
   index: number,
+  isEditable: boolean,
   name: string,
   value: mixed,
   subHooks: Array<HooksNode>,
@@ -406,6 +407,7 @@ function buildTree(rootStack, readHookLog): HooksTree {
         let children = [];
         levelChildren.push({
           index: -1,
+          isEditable: false,
           name: parseCustomHookName(stack[j - 1].functionName),
           value: undefined,
           subHooks: children,
@@ -415,9 +417,11 @@ function buildTree(rootStack, readHookLog): HooksTree {
       }
       prevStack = stack;
     }
+    const {primitive} = hook;
     levelChildren.push({
-      index: hook.primitive === 'DebugValue' ? -1 : index++,
-      name: hook.primitive,
+      index: primitive === 'DebugValue' ? -1 : index++,
+      isEditable: primitive === 'Reducer' || primitive === 'State',
+      name: primitive,
       value: hook.value,
       subHooks: [],
     });

@@ -369,7 +369,7 @@ if (__DEV__) {
     return copyWithSetImpl(obj, path, 0, value);
   };
 
-  // Support DevTools editable hooks state.
+  // Support DevTools editable values for useState and useReducer.
   overrideHook = (
     fiber: Fiber,
     index: number,
@@ -382,8 +382,11 @@ if (__DEV__) {
       index--;
     }
     if (currentHook !== null) {
-      let updatedState = copyWithSet(currentHook.memoizedState, path, value);
-      currentHook.queue.dispatch(updatedState);
+      flushPassiveEffects();
+      const newState = copyWithSet(currentHook.memoizedState, path, value);
+      currentHook.memoizedState = newState;
+      currentHook.baseState = newState;
+      scheduleWork(fiber, Sync);
     }
   };
 
