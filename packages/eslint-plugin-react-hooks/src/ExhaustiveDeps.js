@@ -290,7 +290,7 @@ export default {
           context.report({
             node: reference.writeExpr,
             message:
-              `Assigning a variable from inside a React ${context.getSource(
+              `Assignments to the '${key}' variable from inside a React ${context.getSource(
                 reactiveHook,
               )} Hook ` +
               `will not persist between re-renders. ` +

@@ -1617,6 +1617,7 @@ const tests = {
           useEffect(() => {
             value = 42;
             value2 = 100;
+            value = 43;
             console.log(value2);
             console.log(value3);
             setTimeout(() => {
@@ -1637,6 +1638,7 @@ const tests = {
           useEffect(() => {
             value = 42;
             value2 = 100;
+            value = 43;
             console.log(value2);
             console.log(value3);
             setTimeout(() => {
@@ -1647,19 +1649,19 @@ const tests = {
       `,
       errors: [
         // value
-        `Assigning a variable from inside a React useEffect Hook ` +
+        `Assignments to the 'value' variable from inside a React useEffect Hook ` +
           `will not persist between re-renders. ` +
           `If it's only needed by this Hook, move the variable inside it. ` +
           `Alternatively, declare a ref with the useRef Hook, ` +
           `and keep the mutable value in its 'current' property.`,
         // value2
-        `Assigning a variable from inside a React useEffect Hook ` +
+        `Assignments to the 'value2' variable from inside a React useEffect Hook ` +
           `will not persist between re-renders. ` +
           `If it's only needed by this Hook, move the variable inside it. ` +
           `Alternatively, declare a ref with the useRef Hook, ` +
           `and keep the mutable value in its 'current' property.`,
         // asyncValue
-        `Assigning a variable from inside a React useEffect Hook ` +
+        `Assignments to the 'asyncValue' variable from inside a React useEffect Hook ` +
           `will not persist between re-renders. ` +
           `If it's only needed by this Hook, move the variable inside it. ` +
           `Alternatively, declare a ref with the useRef Hook, ` +
@@ -1676,6 +1678,7 @@ const tests = {
           useEffect(() => {
             value = 42;
             value2 = 100;
+            value = 43;
             console.log(value2);
             console.log(value3);
             setTimeout(() => {
@@ -1696,6 +1699,7 @@ const tests = {
           useEffect(() => {
             value = 42;
             value2 = 100;
+            value = 43;
             console.log(value2);
             console.log(value3);
             setTimeout(() => {
@@ -1706,19 +1710,19 @@ const tests = {
       `,
       errors: [
         // value
-        `Assigning a variable from inside a React useEffect Hook ` +
+        `Assignments to the 'value' variable from inside a React useEffect Hook ` +
           `will not persist between re-renders. ` +
           `If it's only needed by this Hook, move the variable inside it. ` +
           `Alternatively, declare a ref with the useRef Hook, ` +
           `and keep the mutable value in its 'current' property.`,
         // value2
-        `Assigning a variable from inside a React useEffect Hook ` +
+        `Assignments to the 'value2' variable from inside a React useEffect Hook ` +
           `will not persist between re-renders. ` +
           `If it's only needed by this Hook, move the variable inside it. ` +
           `Alternatively, declare a ref with the useRef Hook, ` +
           `and keep the mutable value in its 'current' property.`,
         // asyncValue
-        `Assigning a variable from inside a React useEffect Hook ` +
+        `Assignments to the 'asyncValue' variable from inside a React useEffect Hook ` +
           `will not persist between re-renders. ` +
           `If it's only needed by this Hook, move the variable inside it. ` +
           `Alternatively, declare a ref with the useRef Hook, ` +
