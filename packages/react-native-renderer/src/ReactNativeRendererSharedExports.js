@@ -19,7 +19,7 @@ export function setNativeProps(handle: any, nativeProps: Object): void {
   if (handle._nativeTag == null) {
     warningWithoutStack(
       handle._nativeTag != null,
-      "setNativeProps was called on a ref that isn't a " +
+      "setNativeProps was called with a ref that isn't a " +
         'native component. Use React.forwardRef to get access to the underlying native component',
     );
     return;
