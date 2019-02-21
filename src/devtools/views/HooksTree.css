@@ -7,17 +7,21 @@
   padding-left: 0.75rem;
 }
 
+.Header {
+  font-family: var(--font-family-sans);
+  color: var(--color-dim);
+}
+
 .NameValueRow {
   display: flex;
 }
 
 .Name {
-  color: var(--color-attribute-name);
+  color: var(--color-text-color);
   flex: 0 0 auto;
 }
 .Name:after {
   content: ': ';
-  color: var(--color-text-color);
   margin-right: 0.5rem;
 }
 

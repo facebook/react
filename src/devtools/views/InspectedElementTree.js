@@ -30,7 +30,7 @@ export default function InspectedElementTree({
     // TODO Add click and key handlers for toggling element open/close state.
     return (
       <div className={styles.InspectedElementTree}>
-        <div className={styles.Item}>{label}</div>
+        <div className={styles.Header}>{label}</div>
         {isEmpty && <div className={styles.Empty}>None</div>}
         {!isEmpty &&
           Object.keys((data: any)).map(name => (
@@ -51,6 +51,7 @@ export default function InspectedElementTree({
 type KeyValueProps = {|
   depth: number,
   name: string,
+  nameClassName?: string,
   overrideValueFn?: ?OverrideValueFn,
   path?: Array<any>,
   value: any,
@@ -59,6 +60,7 @@ type KeyValueProps = {|
 export function KeyValue({
   depth,
   name,
+  nameClassName = styles.Name,
   overrideValueFn,
   path = [],
   value,
@@ -87,7 +89,7 @@ export function KeyValue({
 
     children = (
       <div key="root" className={styles.Item} style={{ paddingLeft }}>
-        <span className={styles.Name}>{name}</span>
+        <span className={nameClassName}>{name}</span>
         {typeof overrideValueFn === 'function' ? (
           <EditableValue
             dataType={dataType}
@@ -104,7 +106,7 @@ export function KeyValue({
     // TODO Is this type even necessary? Can we just drop it?
     children = (
       <div key="root" className={styles.Item} style={{ paddingLeft }}>
-        <span className={styles.Name}>{name}</span>
+        <span className={nameClassName}>{name}</span>
         <span className={styles.Value}>{getMetaValueLabel(value)}</span>
       </div>
     );
@@ -126,7 +128,7 @@ export function KeyValue({
           className={styles.Item}
           style={{ paddingLeft }}
         >
-          <span className={styles.Name}>{name}</span>
+          <span className={nameClassName}>{name}</span>
           <span>Array</span>
         </div>
       );
@@ -148,7 +150,7 @@ export function KeyValue({
           className={styles.Item}
           style={{ paddingLeft }}
         >
-          <span className={styles.Name}>{name}</span>
+          <span className={nameClassName}>{name}</span>
           <span>Object</span>
         </div>
       );
@@ -239,7 +241,7 @@ export function EditableValue({
           value={dataType === 'boolean' ? undefined : inputValue}
         />
       </label>
-      {hasPendingChanges && (
+      {hasPendingChanges && dataType !== 'boolean' && (
         <Button
           className={styles.ResetButton}
           onClick={handleReset}

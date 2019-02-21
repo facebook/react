@@ -6,6 +6,11 @@
   border-top: none;
 }
 
+.Header {
+  font-family: var(--font-family-sans);
+  color: var(--color-dim);
+}
+
 .Item {
   display: flex;
 }
