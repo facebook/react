@@ -1,16 +1,61 @@
 // @flow
 
-import React, { createContext, Component, Fragment } from 'react';
+import React, {
+  createContext,
+  Component,
+  Fragment,
+  useCallback,
+  useDebugValue,
+  useEffect,
+  useReducer,
+  useState,
+} from 'react';
 import styles from './EditableProps.css';
 
-type StatefulFunctionProps = {| count: number |};
+const initialData = { foo: 'FOO', bar: 'BAR' };
 
-function StatefulFunction({ count }: StatefulFunctionProps) {
-  return <li>Count: {count}</li>;
+function reducer(state, action) {
+  switch (action.type) {
+    case 'swap':
+      return { foo: state.bar, bar: state.foo };
+    default:
+      throw new Error();
+  }
+}
+
+type StatefulFunctionProps = {| name: string |};
+
+function StatefulFunction({ name }: StatefulFunctionProps) {
+  const [count, updateCount] = useState(0);
+  const debouncedCount = useDebounce(count, 1000);
+  const handleUpdateCountClick = useCallback(() => updateCount(count + 1), [
+    count,
+  ]);
+
+  const [data, dispatch] = useReducer(reducer, initialData);
+  const handleUpdateReducerClick = useCallback(
+    () => dispatch({ type: 'swap' }),
+    []
+  );
+
+  return (
+    <Fragment>
+      <li>Name: {name}</li>
+      <li>
+        <button onClick={handleUpdateCountClick}>
+          Debounced count: {debouncedCount}
+        </button>
+      </li>
+      <li>
+        <button onClick={handleUpdateReducerClick}>
+          Reducer state: {JSON.stringify(data, null, 2)}
+        </button>
+      </li>
+    </Fragment>
+  );
 }
 
 const BoolContext = createContext(true);
-// $FlowFixMe Flow does not yet know about Context.displayName
 BoolContext.displayName = 'BoolContext';
 
 type Props = {| name: string, toggle: boolean |};
@@ -50,8 +95,37 @@ export default function EditableProps() {
       <div className={styles.Header}>Editable props</div>
       <ul>
         <StatefulClass name="Brian" toggle={true} />
-        <StatefulFunction count={1} />
+        <StatefulFunction name="Brian" />
       </ul>
     </div>
   );
 }
+
+// Below copied from https://usehooks.com/
+function useDebounce(value, delay) {
+  // State and setters for debounced value
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  // Show the value in DevTools
+  useDebugValue(debouncedValue);
+
+  useEffect(
+    () => {
+      // Update debounced value after delay
+      const handler = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
+
+      // Cancel the timeout if value changes (also on delay change or unmount)
+      // This is how we prevent debounced value from updating if value is changed ...
+      // .. within the delay period. Timeout gets cleared and restarted.
+      return () => {
+        clearTimeout(handler);
+      };
+    },
+    [value, delay] // Only re-call effect if value or delay changes
+  );
+
+  return debouncedValue;
+}
+// Above copied from https://usehooks.com/

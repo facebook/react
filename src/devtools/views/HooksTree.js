@@ -56,7 +56,7 @@ type HookViewProps = {|
 |};
 
 function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
-  const { name, index, subHooks, value } = hook;
+  const { name, index, isEditable, subHooks, value } = hook;
 
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
@@ -121,7 +121,8 @@ function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
     }
   } else {
     let overrideValueFn = null;
-    if (canEditHooks && name === 'State') {
+    // TODO Maybe read editable value from debug hook?
+    if (canEditHooks && isEditable) {
       overrideValueFn = (path: Array<string | number>, value: any) => {
         const rendererID = store.getRendererIDForElement(id);
         bridge.send('overrideHook', {

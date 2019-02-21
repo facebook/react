@@ -1,6 +1,8 @@
 // @flow
 
-import React, { useCallback, useState } from 'react';
+import React, { Fragment, useCallback, useState } from 'react';
+import Button from './Button';
+import ButtonIcon from './ButtonIcon';
 import { getMetaValueLabel } from './utils';
 import { meta } from '../../hydration';
 import styles from './InspectedElementTree.css';
@@ -169,7 +171,12 @@ export function EditableValue({
   path,
   value,
 }: EditableValueProps) {
+  const [hasPendingChanges, setHasPendingChanges] = useState(false);
   const [editableValue, setEditableValue] = useState(value);
+
+  if (hasPendingChanges && editableValue === value) {
+    setHasPendingChanges(false);
+  }
 
   const handleChange = useCallback(
     ({ target }) => {
@@ -181,14 +188,24 @@ export function EditableValue({
       } else {
         setEditableValue(target.value);
       }
+      setHasPendingChanges(true);
     },
     [dataType, overrideValueFn, path]
   );
+
+  const handleReset = useCallback(() => {
+    setEditableValue(value);
+    setHasPendingChanges(false);
+  }, [value]);
 
   const handleKeyPress = useCallback(
     ({ key }) => {
       if (key === 'Enter') {
         overrideValueFn(path, editableValue);
+
+        // Don't reset the pending change flag here.
+        // The inspected fiber won't be updated until after the next "inspectElement" message.
+        // We'll reset that flag during a subsequent render.
       }
     },
     [path, editableValue, overrideValueFn]
@@ -204,23 +221,33 @@ export function EditableValue({
     type = 'number';
   }
 
+  let inputValue = value;
+  if (hasPendingChanges) {
+    inputValue = editableValue == null ? '' : editableValue;
+  }
+
   return (
-    <label className={styles.ValueInputLabel}>
-      <input
-        checked={dataType === 'boolean' ? editableValue : undefined}
-        className={styles.ValueInput}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-        onKeyPress={handleKeyPress}
-        type={type}
-        value={
-          dataType === 'boolean'
-            ? undefined
-            : editableValue != null
-            ? editableValue
-            : ''
-        }
-      />
-    </label>
+    <Fragment>
+      <label className={styles.ValueInputLabel}>
+        <input
+          checked={dataType === 'boolean' ? inputValue : undefined}
+          className={styles.ValueInput}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          onKeyPress={handleKeyPress}
+          type={type}
+          value={dataType === 'boolean' ? undefined : inputValue}
+        />
+      </label>
+      {hasPendingChanges && (
+        <Button
+          className={styles.ResetButton}
+          onClick={handleReset}
+          title="Reset value"
+        >
+          <ButtonIcon type="undo" />
+        </Button>
+      )}
+    </Fragment>
   );
 }

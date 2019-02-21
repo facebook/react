@@ -32,11 +32,11 @@
 }
 
 .ValueInput {
+  width: 100%;
   background: none;
   border: 1px solid transparent;
   color: var(--color-attribute-editable-value);
   border-radius: 0.125rem;
-  width: 100%;
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-monospace-normal);
 }
@@ -54,4 +54,9 @@
   color: var(--color-dimmer);
   font-style: italic;
   padding-left: 0.75rem;
+}
+
+.ResetButton {
+  flex: 0 0 auto;
+  padding: 0 0.5rem;
 }

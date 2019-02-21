@@ -10,6 +10,7 @@ type Props = {|
     | 'down'
     | 'more'
     | 'search'
+    | 'undo'
     | 'up'
     | 'view-dom'
     | 'view-source',
@@ -32,6 +33,9 @@ export default function ButtonIcon({ type }: Props) {
       break;
     case 'search':
       pathData = PATH_SEARCH;
+      break;
+    case 'undo':
+      pathData = PATH_UNDO;
       break;
     case 'up':
       pathData = PATH_UP;
@@ -83,6 +87,11 @@ const PATH_SEARCH = `
   M20.94 11c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46
   4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87
   0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z
+`;
+
+const PATH_UNDO = `
+  M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88
+  3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z
 `;
 
 const PATH_UP = 'M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z';

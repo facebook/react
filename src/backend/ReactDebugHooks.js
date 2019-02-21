@@ -226,6 +226,7 @@ type ReactCurrentDispatcher = {
 
 type HooksNode = {
   index: number,
+  isEditable: boolean,
   name: string,
   value: mixed,
   subHooks: Array<HooksNode>,
@@ -402,6 +403,7 @@ function buildTree(rootStack, readHookLog): HooksTree {
           name: parseCustomHookName(stack[j - 1].functionName),
           value: undefined,
           index: -1,
+          isEditable: false,
           subHooks: children,
         });
         stackOfChildren.push(levelChildren);
@@ -409,10 +411,12 @@ function buildTree(rootStack, readHookLog): HooksTree {
       }
       prevStack = stack;
     }
+    const { primitive } = hook;
     levelChildren.push({
-      name: hook.primitive,
+      index: primitive === 'DebugValue' ? -1 : index++,
+      isEditable: primitive === 'Reducer' || primitive === 'State',
+      name: primitive,
       value: hook.value,
-      index: hook.primitive === 'DebugValue' ? -1 : index++,
       subHooks: [],
     });
   }
