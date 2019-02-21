@@ -221,7 +221,7 @@ export function EditableValue({
     type = 'number';
   }
 
-  let inputValue = value;
+  let inputValue = value == null ? '' : value;
   if (hasPendingChanges) {
     inputValue = editableValue == null ? '' : editableValue;
   }

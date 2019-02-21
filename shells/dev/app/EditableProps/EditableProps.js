@@ -47,9 +47,10 @@ function StatefulFunction({ name }: StatefulFunctionProps) {
         </button>
       </li>
       <li>
-        <button onClick={handleUpdateReducerClick}>
-          Reducer state: {JSON.stringify(data, null, 2)}
-        </button>
+        Reducer state: foo "{data.foo}", bar "{data.bar}"
+      </li>
+      <li>
+        <button onClick={handleUpdateReducerClick}>Swap reducer values</button>
       </li>
     </Fragment>
   );
