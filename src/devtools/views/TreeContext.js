@@ -223,35 +223,41 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
           });
 
           addedElementIDs.forEach(id => {
-            const { displayName } = ((store.getElementByID(id): any): Element);
+            const element = ((store.getElementByID(id): any): Element);
 
-            // Add this item to the search results if it matches.
-            const regExp = createRegExp(searchText);
-            if (displayName !== null && regExp.test(displayName)) {
-              const newElementIndex = ((store.getIndexOfElementID(
-                id
-              ): any): number);
+            // It's possible that multiple tree operations will fire before this action has run.
+            // So it's important to check for elements that may have been added and then removed.
+            if (element !== null) {
+              const { displayName } = element;
 
-              let foundMatch = false;
-              for (let index = 0; index < searchResults.length; index++) {
-                const id = searchResults[index];
-                if (
-                  newElementIndex <
-                  ((store.getIndexOfElementID(id): any): number)
-                ) {
-                  foundMatch = true;
-                  searchResults = searchResults
-                    .slice(0, index)
-                    .concat(id)
-                    .concat(searchResults.slice(index));
-                  break;
+              // Add this item to the search results if it matches.
+              const regExp = createRegExp(searchText);
+              if (displayName !== null && regExp.test(displayName)) {
+                const newElementIndex = ((store.getIndexOfElementID(
+                  id
+                ): any): number);
+
+                let foundMatch = false;
+                for (let index = 0; index < searchResults.length; index++) {
+                  const id = searchResults[index];
+                  if (
+                    newElementIndex <
+                    ((store.getIndexOfElementID(id): any): number)
+                  ) {
+                    foundMatch = true;
+                    searchResults = searchResults
+                      .slice(0, index)
+                      .concat(id)
+                      .concat(searchResults.slice(index));
+                    break;
+                  }
                 }
-              }
-              if (!foundMatch) {
-                searchResults = searchResults.concat(id);
-              }
+                if (!foundMatch) {
+                  searchResults = searchResults.concat(id);
+                }
 
-              searchIndex = searchIndex === null ? 0 : searchIndex;
+                searchIndex = searchIndex === null ? 0 : searchIndex;
+              }
             }
           });
         }

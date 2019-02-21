@@ -524,6 +524,10 @@ export function attach(
   }
 
   function flushPendingEvents(root: Object): void {
+    if (pendingOperations.length === 0) {
+      return;
+    }
+
     // Identify which renderer this update is coming from.
     // This enables roots to be mapped to renderers,
     // Which in turn enables fiber props, states, and hooks to be inspected.

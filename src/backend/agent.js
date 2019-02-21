@@ -194,9 +194,7 @@ export default class Agent extends EventEmitter {
 
     // TODO The chrome.runtime does not currently support transferables; it forces JSON serialization.
     // The Store has a fallback in place that parses the message as JSON if the type isn't an array.
-    // Sometimes using transferrables also cause Chrome or Firefox to throw "ArrayBuffer at index 0 is already neutered".
-    // this._bridge.send('operations', operations, [operations.buffer]);
-    this._bridge.send('operations', operations);
+    this._bridge.send('operations', operations, [operations.buffer]);
   };
 
   _onClick = (event: MouseEvent) => {
