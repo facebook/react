@@ -13,7 +13,6 @@ import styles from './OwnersStack.css';
 export default function OwnerStack() {
   const { ownerStack, resetOwnerStack } = useContext(TreeContext);
 
-  // $FlowFixMe "Missing type annotation for U" whatever that means
   const elements = ownerStack.map((id, index) => (
     <ElementView key={id} id={id} index={index} />
   ));

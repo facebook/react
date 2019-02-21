@@ -59,7 +59,6 @@ type Context = {|
 |};
 
 const TreeContext = createContext<Context>(((null: any): Context));
-// $FlowFixMe displayName is a valid attribute of React$ConsearchText
 TreeContext.displayName = 'TreeContext';
 
 type State = {|

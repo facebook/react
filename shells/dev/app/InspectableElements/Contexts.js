@@ -52,31 +52,22 @@ class LegacyContextConsumer extends Component<any> {
 }
 
 const ModernContext = createContext();
-// $FlowFixMe Flow does not yet know about Context.displayName
 ModernContext.displayName = 'ModernContext';
 const ArrayContext = createContext(contextData.array);
-// $FlowFixMe Flow does not yet know about Context.displayName
 ArrayContext.displayName = 'ArrayContext';
 const BoolContext = createContext(contextData.bool);
-// $FlowFixMe Flow does not yet know about Context.displayName
 BoolContext.displayName = 'BoolContext';
 const FuncContext = createContext(contextData.func);
-// $FlowFixMe Flow does not yet know about Context.displayName
 FuncContext.displayName = 'FuncContext';
 const NumberContext = createContext(contextData.number);
-// $FlowFixMe Flow does not yet know about Context.displayName
 NumberContext.displayName = 'NumberContext';
 const StringContext = createContext(contextData.string);
-// $FlowFixMe Flow does not yet know about Context.displayName
 StringContext.displayName = 'StringContext';
 const SymbolContext = createContext(contextData.symbol);
-// $FlowFixMe Flow does not yet know about Context.displayName
 SymbolContext.displayName = 'SymbolContext';
 const NullContext = createContext(null);
-// $FlowFixMe Flow does not yet know about Context.displayName
 NullContext.displayName = 'NullContext';
 const UndefinedContext = createContext(undefined);
-// $FlowFixMe Flow does not yet know about Context.displayName
 UndefinedContext.displayName = 'UndefinedContext';
 
 class ModernContextType extends Component<any> {

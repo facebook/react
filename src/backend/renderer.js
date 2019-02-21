@@ -272,7 +272,6 @@ export function attach(
     const symbolOrNumber =
       typeof type === 'object' && type !== null ? type.$$typeof : type;
 
-    // $FlowFixMe facebook/flow/issues/2362
     return typeof symbolOrNumber === 'symbol'
       ? symbolOrNumber.toString()
       : symbolOrNumber;

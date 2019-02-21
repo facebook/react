@@ -129,7 +129,7 @@ export function KeyValue({
         </div>
       );
     } else {
-      // $FlowFixMe
+      // $FlowFixMe "Missing type annotation for U" whatever that means
       children = Object.entries(value).map(([name, value]) => (
         <KeyValue
           key={name}

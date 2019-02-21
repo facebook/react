@@ -5,7 +5,6 @@ import React, {
   Fragment,
   memo,
   useCallback,
-  // $FlowFixMe Flow doesn't yet know about this hook
   useDebugValue,
   useEffect,
   useState,

@@ -20,7 +20,7 @@ export default function SearchInput(props: Props) {
     setSearchText,
   } = useContext(TreeContext);
 
-  const inputRef = useRef();
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const handleTextChange = useCallback(
     ({ currentTarget }) => setSearchText(currentTarget.value),

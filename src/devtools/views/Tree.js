@@ -30,7 +30,7 @@ export default function Tree(props: Props) {
     selectNextElementInTree,
     selectPreviousElementInTree,
   } = useContext(TreeContext);
-  const listRef = useRef<FixedSizeList<any>>();
+  const listRef = useRef<FixedSizeList<any> | null>(null);
 
   const { lineHeight } = useContext(SettingsContext);
 

@@ -21,7 +21,6 @@ type Context = {|
 |};
 
 const SettingsContext = createContext<Context>(((null: any): Context));
-// $FlowFixMe displayName is a valid attribute of React$ConsearchText
 SettingsContext.displayName = 'SettingsContext';
 
 type Props = {|
