@@ -200,20 +200,26 @@ export function EditableValue({
     setHasPendingChanges(false);
   }, [value]);
 
-  const handleKeyPress = useCallback(
-    ({ key }) => {
+  const handleKeyDown = useCallback(
+    event => {
+      // Prevent keydown events from e.g. change selected element in the tree
+      event.stopPropagation();
+
+      const { key } = event;
+
       if (key === 'Enter') {
         overrideValueFn(path, editableValue);
 
         // Don't reset the pending change flag here.
         // The inspected fiber won't be updated until after the next "inspectElement" message.
         // We'll reset that flag during a subsequent render.
+      } else if (key === 'Escape') {
+        setEditableValue(value);
+        setHasPendingChanges(false);
       }
     },
-    [path, editableValue, overrideValueFn]
+    [path, editableValue, overrideValueFn, value]
   );
-
-  const handleKeyDown = useCallback(event => event.stopPropagation(), []);
 
   // Render different input types based on the dataType
   let type = 'text';
@@ -236,7 +242,6 @@ export function EditableValue({
           className={styles.ValueInput}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          onKeyPress={handleKeyPress}
           type={type}
           value={dataType === 'boolean' ? undefined : inputValue}
         />

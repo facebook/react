@@ -9,7 +9,6 @@
 
 .Header {
   font-family: var(--font-family-sans);
-  color: var(--color-dim);
 }
 
 .NameValueRow {
@@ -17,10 +16,11 @@
 }
 
 .Name {
-  color: var(--color-text-color);
+  color: var(--color-dim);
   flex: 0 0 auto;
 }
 .Name:after {
+  color: var(--color-text-color);
   content: ': ';
   margin-right: 0.5rem;
 }
