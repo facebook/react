@@ -232,7 +232,7 @@ const Dispatcher: DispatcherType = {
 // Inspect
 
 type HooksNode = {
-  nativeHookIndex: number,
+  index: number,
   name: string,
   value: mixed,
   subHooks: Array<HooksNode>,
@@ -374,7 +374,7 @@ function buildTree(rootStack, readHookLog): HooksTree {
   let rootChildren = [];
   let prevStack = null;
   let levelChildren = rootChildren;
-  let nativeHookIndex = 0;
+  let index = 0;
   let stackOfChildren = [];
   for (let i = 0; i < readHookLog.length; i++) {
     let hook = readHookLog[i];
@@ -405,7 +405,7 @@ function buildTree(rootStack, readHookLog): HooksTree {
       for (let j = stack.length - commonSteps - 1; j >= 1; j--) {
         let children = [];
         levelChildren.push({
-          nativeHookIndex: -1,
+          index: -1,
           name: parseCustomHookName(stack[j - 1].functionName),
           value: undefined,
           subHooks: children,
@@ -416,7 +416,7 @@ function buildTree(rootStack, readHookLog): HooksTree {
       prevStack = stack;
     }
     levelChildren.push({
-      nativeHookIndex: hook.primitive === 'DebugValue' ? -1 : nativeHookIndex++,
+      index: hook.primitive === 'DebugValue' ? -1 : index++,
       name: hook.primitive,
       value: hook.value,
       subHooks: [],

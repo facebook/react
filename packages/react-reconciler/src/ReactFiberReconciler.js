@@ -372,14 +372,14 @@ if (__DEV__) {
   // Support DevTools editable hooks state.
   overrideHook = (
     fiber: Fiber,
-    nativeHookIndex: number,
+    index: number,
     path: Array<string | number>,
     value: any,
   ) => {
     let currentHook = fiber.memoizedState;
-    while (currentHook !== null && nativeHookIndex > 0) {
+    while (currentHook !== null && index > 0) {
       currentHook = currentHook.next;
-      nativeHookIndex--;
+      index--;
     }
     if (currentHook !== null) {
       let updatedState = copyWithSet(currentHook.memoizedState, path, value);
