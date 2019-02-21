@@ -1,6 +1,6 @@
 // @flow
 
-import React, { Fragment, useCallback, useState } from 'react';
+import React, { Fragment, useCallback, useRef, useState } from 'react';
 import Button from './Button';
 import ButtonIcon from './ButtonIcon';
 import { getMetaValueLabel } from './utils';
@@ -175,6 +175,7 @@ export function EditableValue({
 }: EditableValueProps) {
   const [hasPendingChanges, setHasPendingChanges] = useState(false);
   const [editableValue, setEditableValue] = useState(value);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   if (hasPendingChanges && editableValue === value) {
     setHasPendingChanges(false);
@@ -198,6 +199,10 @@ export function EditableValue({
   const handleReset = useCallback(() => {
     setEditableValue(value);
     setHasPendingChanges(false);
+
+    if (inputRef.current !== null) {
+      inputRef.current.focus();
+    }
   }, [value]);
 
   const handleKeyDown = useCallback(
@@ -242,6 +247,7 @@ export function EditableValue({
           className={styles.ValueInput}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
+          ref={inputRef}
           type={type}
           value={dataType === 'boolean' ? undefined : inputValue}
         />
