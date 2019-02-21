@@ -433,6 +433,19 @@ const tests = {
         });
       `,
     },
+    {
+      // This is not ideal but warning would likely create
+      // too many false positives. We do, however, prevent
+      // direct assignments.
+      code: `
+        function MyComponent(props) {
+          let obj = {};
+          useEffect(() => {
+            obj.foo = true;
+          }, [obj]);
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -891,7 +904,6 @@ const tests = {
       ],
     },
     {
-      // only: true,
       code: `
         function MyComponent(props) {
           useEffect(() => {
@@ -1606,6 +1618,128 @@ const tests = {
         // TODO: reporting props separately is superfluous. Fix to just props.onChange.
         "React Hook useEffect has missing dependencies: 'props' and 'props.onChange'. " +
           'Either include them or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
+          let value;
+          let value2;
+          let value3;
+          let asyncValue;
+          useEffect(() => {
+            value = 42;
+            value2 = 100;
+            value = 43;
+            console.log(value2);
+            console.log(value3);
+            setTimeout(() => {
+              asyncValue = 100;
+            });
+          }, []);
+        }
+      `,
+      // This is a separate warning unrelated to others.
+      // We could've made a separate rule for it but it's rare enough to name it.
+      // No autofix suggestion because the intent isn't clear.
+      output: `
+        function MyComponent(props) {
+          let value;
+          let value2;
+          let value3;
+          let asyncValue;
+          useEffect(() => {
+            value = 42;
+            value2 = 100;
+            value = 43;
+            console.log(value2);
+            console.log(value3);
+            setTimeout(() => {
+              asyncValue = 100;
+            });
+          }, []);
+        }
+      `,
+      errors: [
+        // value
+        `Assignments to the 'value' variable from inside a React useEffect Hook ` +
+          `will not persist between re-renders. ` +
+          `If it's only needed by this Hook, move the variable inside it. ` +
+          `Alternatively, declare a ref with the useRef Hook, ` +
+          `and keep the mutable value in its 'current' property.`,
+        // value2
+        `Assignments to the 'value2' variable from inside a React useEffect Hook ` +
+          `will not persist between re-renders. ` +
+          `If it's only needed by this Hook, move the variable inside it. ` +
+          `Alternatively, declare a ref with the useRef Hook, ` +
+          `and keep the mutable value in its 'current' property.`,
+        // asyncValue
+        `Assignments to the 'asyncValue' variable from inside a React useEffect Hook ` +
+          `will not persist between re-renders. ` +
+          `If it's only needed by this Hook, move the variable inside it. ` +
+          `Alternatively, declare a ref with the useRef Hook, ` +
+          `and keep the mutable value in its 'current' property.`,
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
+          let value;
+          let value2;
+          let value3;
+          let asyncValue;
+          useEffect(() => {
+            value = 42;
+            value2 = 100;
+            value = 43;
+            console.log(value2);
+            console.log(value3);
+            setTimeout(() => {
+              asyncValue = 100;
+            });
+          }, [value, value2, value3]);
+        }
+      `,
+      // This is a separate warning unrelated to others.
+      // We could've made a separate rule for it but it's rare enough to name it.
+      // No autofix suggestion because the intent isn't clear.
+      output: `
+        function MyComponent(props) {
+          let value;
+          let value2;
+          let value3;
+          let asyncValue;
+          useEffect(() => {
+            value = 42;
+            value2 = 100;
+            value = 43;
+            console.log(value2);
+            console.log(value3);
+            setTimeout(() => {
+              asyncValue = 100;
+            });
+          }, [value, value2, value3]);
+        }
+      `,
+      errors: [
+        // value
+        `Assignments to the 'value' variable from inside a React useEffect Hook ` +
+          `will not persist between re-renders. ` +
+          `If it's only needed by this Hook, move the variable inside it. ` +
+          `Alternatively, declare a ref with the useRef Hook, ` +
+          `and keep the mutable value in its 'current' property.`,
+        // value2
+        `Assignments to the 'value2' variable from inside a React useEffect Hook ` +
+          `will not persist between re-renders. ` +
+          `If it's only needed by this Hook, move the variable inside it. ` +
+          `Alternatively, declare a ref with the useRef Hook, ` +
+          `and keep the mutable value in its 'current' property.`,
+        // asyncValue
+        `Assignments to the 'asyncValue' variable from inside a React useEffect Hook ` +
+          `will not persist between re-renders. ` +
+          `If it's only needed by this Hook, move the variable inside it. ` +
+          `Alternatively, declare a ref with the useRef Hook, ` +
+          `and keep the mutable value in its 'current' property.`,
       ],
     },
   ],
