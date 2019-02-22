@@ -20,10 +20,15 @@
 }
 
 .ToggleOn,
-.ToggleOn:active,
-.ToggleOn:focus {
+.ToggleOn:active {
   background: var(--color-button-background-focus);
   color: var(--color-button-focus);
+  outline: none;
+}
+
+.ToggleOn:focus-within,
+.ToggleOff:focus-within {
+  box-shadow: 0 0 0 2px var(--color-button-background-focus) inset;
   outline: none;
 }
 
