@@ -781,6 +781,53 @@ const tests = {
     },
     {
       code: `
+        function MyComponent({ foo, bar, baz }) {
+          useEffect(() => {
+            console.log(foo, bar, baz);
+          }, ['foo', 'bar']);
+        }
+      `,
+      output: `
+        function MyComponent({ foo, bar, baz }) {
+          useEffect(() => {
+            console.log(foo, bar, baz);
+          }, [bar, baz, foo]);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has missing dependencies: 'bar', 'baz', and 'foo'. " +
+          'Either include them or remove the dependency array.',
+        "The 'foo' string literal is not a valid dependency because it never changes. " +
+          'Did you mean to include foo in the array instead?',
+        "The 'bar' string literal is not a valid dependency because it never changes. " +
+          'Did you mean to include bar in the array instead?',
+      ],
+    },
+    {
+      code: `
+        function MyComponent({ foo, bar, baz }) {
+          useEffect(() => {
+            console.log(foo, bar, baz);
+          }, [42, false, null]);
+        }
+      `,
+      output: `
+        function MyComponent({ foo, bar, baz }) {
+          useEffect(() => {
+            console.log(foo, bar, baz);
+          }, [bar, baz, foo]);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has missing dependencies: 'bar', 'baz', and 'foo'. " +
+          'Either include them or remove the dependency array.',
+        "The '42' literal is not a valid dependency because it never changes. You can safely remove it.",
+        "The 'false' literal is not a valid dependency because it never changes. You can safely remove it.",
+        "The 'null' literal is not a valid dependency because it never changes. You can safely remove it.",
+      ],
+    },
+    {
+      code: `
         function MyComponent() {
           const dependencies = [];
           useEffect(() => {}, dependencies);

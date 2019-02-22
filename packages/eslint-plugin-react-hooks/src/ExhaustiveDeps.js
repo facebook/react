@@ -234,13 +234,39 @@ export default {
             declaredDependency = toPropertyAccessString(declaredDependencyNode);
           } catch (error) {
             if (/Unsupported node type/.test(error.message)) {
-              context.report({
-                node: declaredDependencyNode,
-                message:
-                  `React Hook ${context.getSource(reactiveHook)} has a ` +
-                  `complex expression in the dependency array. ` +
-                  'Extract it to a separate variable so it can be statically checked.',
-              });
+              if (declaredDependencyNode.type === 'Literal') {
+                if (typeof declaredDependencyNode.value === 'string') {
+                  context.report({
+                    node: declaredDependencyNode,
+                    message:
+                      `The ${
+                        declaredDependencyNode.raw
+                      } string literal is not a valid dependency ` +
+                      `because it never changes. Did you mean to ` +
+                      `include ${
+                        declaredDependencyNode.value
+                      } in the array instead?`,
+                  });
+                } else {
+                  context.report({
+                    node: declaredDependencyNode,
+                    message:
+                      `The '${
+                        declaredDependencyNode.raw
+                      }' literal is not a valid dependency ` +
+                      'because it never changes. You can safely remove it.',
+                  });
+                }
+              } else {
+                context.report({
+                  node: declaredDependencyNode,
+                  message:
+                    `React Hook ${context.getSource(reactiveHook)} has a ` +
+                    `complex expression in the dependency array. ` +
+                    'Extract it to a separate variable so it can be statically checked.',
+                });
+              }
+
               return;
             } else {
               throw error;
