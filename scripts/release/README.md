@@ -5,13 +5,15 @@ The release process consists of several phases, each one represented by one of t
 A typical release goes like this:
 1. When a commit is pushed to the React repo, [Circle CI](https://circleci.com/gh/facebook/react/) will build all release bundles and run unit tests against both the source code and the built bundles.
 2. Next the release is [**published as a canary**](#publishing-a-canary) using the [`prepare-canary`](#prepare-canary) and [`publish`](#publish) scripts. (Currently this process is manual but might be automated in the future using [GitHub "actions"](https://github.com/features/actions).)
-3. Finally, a canary releases can be [**promoted to stable**](#publishing-a-stable-release) using the [`prepare-stable`](#prepare-stable) and [`publish`](#publish) scripts. (This process is always manual.)
+3. Finally, a canary releases can be [**promoted to stable**](#publishing-a-stable-release)<sup>1</sup> using the [`prepare-stable`](#prepare-stable) and [`publish`](#publish) scripts. (This process is always manual.)
 
 The high level process of creating releases is [documented below](#process). Individual scripts are documented as well:
 * [`create-canary`](#create-canary)
 * [`prepare-canary`](#prepare-canary)
 * [`prepare-stable`](#prepare-stable)
 * [`publish`](#publish)
+
+<sup>Note that [**creating a patch release**](creating-a-patch-release) has a slightly different process than a major/minor release.</sup>
 
 # Process
 
@@ -53,7 +55,35 @@ Once this step is complete, you're ready to publish the release:
 scripts/release/publish.js --tags next latest
 ```
 
+After successfully publishing the release, follow the on-screen instructions to ensure that all of the appropriate post-release steps are executed.
+
 <sup>1: You can omit the `version` param if you just want to promote the latest canary to stable.</sup>
+
+## Creating a Patch Release
+
+Patch releases should always be created by branching from a previous release. This reduces the likelihood of unstable changes being accidentally included in the release.
+
+Begin by creating a branch from the previous git tag<sup>1</sup>:
+
+```sh
+git checkout -b 16.8.3 v16.8.2
+```
+
+Next cherry pick any changes from master that you want to include in the release:
+
+```sh
+it cherry-pick <commit-hash>
+```
+
+Once you have cherry picked all of the commits you want to include in the release, push your feature branch and create a Pull Request (so that Circle CI will create a canary):
+
+```sh
+git push origin 16.8.3
+```
+
+Once CI is complete, follow the regular [**canary**](#publishing-a-canary) and [**promote to stable**](#publishing-a-stable-release) processes.
+
+<sup>1: The `build-info.json` artifact can also be used to identify the appropriate commit (e.g. [unpkg.com/react@16.8.3/build-info.json](https://unpkg.com/react@16.8.3/build-info.json) shows us that react version 16.8.3 was created from commit [`29b7b775f`](https://github.com/facebook/react/commit/29b7b775f)).</sup>
 
 # Scripts
 
