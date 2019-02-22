@@ -1,15 +1,10 @@
 #!/usr/bin/env node
 
 const chalk = require('chalk');
-const { join } = require('path');
 const build = require('../shared/build');
 
 const main = async () => {
-  await build(
-    'firefox',
-    join(__dirname, 'manifest.json'),
-    join(__dirname, 'build')
-  );
+  await build('firefox');
 
   console.log(chalk.green('\nThe Firefox extension has been built!'));
   console.log(chalk.green('You can test this build by running:'));
@@ -36,3 +31,5 @@ const main = async () => {
 };
 
 main();
+
+module.exports = { main };

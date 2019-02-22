@@ -78,7 +78,11 @@ const postProcess = async (tempPath, destinationPath) => {
   await remove(tempPath); // Clean up temp directory and files
 };
 
-const main = async (buildId, manifestPath, destinationPath) => {
+const main = async buildId => {
+  const root = join(__dirname, '..', buildId);
+  const manifestPath = join(root, 'manifest.json');
+  const destinationPath = join(root, 'build');
+
   try {
     const tempPath = join(__dirname, 'build', buildId);
     await preProcess(destinationPath, tempPath);
