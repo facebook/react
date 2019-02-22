@@ -66,7 +66,11 @@ const run = async ({cwd}) => {
   }
 
   if (errorMessage) {
-    console.error(theme.error(errorMessage));
+    console.error(
+      theme.error('✗'),
+      'Verifying "packaging" fixture\n ',
+      theme.error(errorMessage)
+    );
     process.exit(1);
   }
 };
