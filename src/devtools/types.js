@@ -54,6 +54,9 @@ export type InspectedElement = {|
   // Does the current renderer support editable function props?
   canEditFunctionProps: boolean,
 
+  // Can view component source location.
+  canViewSource: boolean,
+
   // Inspectable properties.
   context: Object | null,
   hooks: Object | null,

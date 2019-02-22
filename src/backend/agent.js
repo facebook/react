@@ -55,6 +55,7 @@ export default class Agent extends EventEmitter {
     bridge.addListener('startInspectingDOM', this.startInspectingDOM);
     bridge.addListener('stopInspectingDOM', this.stopInspectingDOM);
     bridge.addListener('shutdown', this.shutdown);
+    bridge.addListener('viewElementSource', this.viewElementSource);
   }
 
   getIDForNode(node: Object): number | null {
@@ -187,6 +188,15 @@ export default class Agent extends EventEmitter {
     window.removeEventListener('click', this._onClick);
     window.removeEventListener('mousedown', this._onMouseDown);
     window.removeEventListener('mouseover', this._onMouseOver);
+  };
+
+  viewElementSource = ({ id, rendererID }: InspectSelectParams) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+    } else {
+      renderer.prepareViewElementSource(id);
+    }
   };
 
   onHookOperations = (operations: Uint32Array) => {

@@ -23,15 +23,16 @@ import type { DehydratedData, Element } from 'src/devtools/types';
 export type Props = {||};
 
 export default function SelectedElement(_: Props) {
-  const { selectedElementID } = useContext(TreeContext);
+  const { selectedElementID, viewElementSource } = useContext(TreeContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
+
   const element =
     selectedElementID !== null ? store.getElementByID(selectedElementID) : null;
 
   const inspectedElement = useInspectedElement(selectedElementID);
 
-  const handleClick = useCallback(() => {
+  const highlightElement = useCallback(() => {
     if (element !== null && selectedElementID !== null) {
       const rendererID =
         store.getRendererIDForElement(selectedElementID) || null;
@@ -45,7 +46,11 @@ export default function SelectedElement(_: Props) {
     }
   }, [bridge, element, selectedElementID, store]);
 
-  // TODO Make "view source" button work
+  const viewSource = useCallback(() => {
+    if (viewElementSource != null && selectedElementID !== null) {
+      viewElementSource(selectedElementID);
+    }
+  }, [selectedElementID, viewElementSource]);
 
   if (element === null) {
     return (
@@ -55,7 +60,10 @@ export default function SelectedElement(_: Props) {
     );
   }
 
-  const source = inspectedElement ? inspectedElement.source : null;
+  const canViewSource =
+    inspectedElement &&
+    inspectedElement.canViewSource &&
+    viewElementSource !== null;
 
   return (
     <div className={styles.SelectedElement}>
@@ -68,14 +76,15 @@ export default function SelectedElement(_: Props) {
 
         <Button
           className={styles.IconButton}
-          onClick={handleClick}
+          onClick={highlightElement}
           title="Highlight this element in the page"
         >
           <ButtonIcon type="view-dom" />
         </Button>
-        {source !== null && (
+        {canViewSource && (
           <Button
             className={styles.IconButton}
+            onClick={viewSource}
             title="View source for this element"
           >
             <ButtonIcon type="view-source" />

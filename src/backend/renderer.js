@@ -1028,20 +1028,52 @@ export function attach(
       return;
     }
 
-    switch (fiber.tag) {
+    const { memoizedProps, stateNode, tag, type } = fiber;
+
+    switch (tag) {
       case ClassComponent:
       case IncompleteClassComponent:
       case IndeterminateComponent:
-        global.$r = fiber.stateNode;
+        global.$r = stateNode;
         break;
       case FunctionComponent:
         global.$r = {
-          props: fiber.memoizedProps,
-          type: fiber.type,
+          props: memoizedProps,
+          type,
+        };
+        break;
+      case ForwardRef:
+        global.$r = {
+          props: memoizedProps,
+          type: type.render,
         };
         break;
       default:
         global.$r = null;
+        break;
+    }
+  }
+
+  function prepareViewElementSource(id: number): void {
+    let fiber = idToFiberMap.get(id);
+
+    if (fiber == null) {
+      console.warn(`Could not find Fiber with id "${id}"`);
+      return;
+    }
+
+    switch (fiber.tag) {
+      case ClassComponent:
+      case IncompleteClassComponent:
+      case IndeterminateComponent:
+      case FunctionComponent:
+        global.$type = fiber.type;
+        break;
+      case ForwardRef:
+        global.$type = fiber.type.render;
+        break;
+      default:
+        global.$type = null;
         break;
     }
   }
@@ -1075,13 +1107,16 @@ export function attach(
 
     const typeSymbol = getTypeSymbol(fiber);
 
+    let canViewSource = false;
     let context = null;
     if (
       tag === ClassComponent ||
       tag === FunctionComponent ||
       tag === IncompleteClassComponent ||
-      tag === IndeterminateComponent
+      tag === IndeterminateComponent ||
+      tag === ForwardRef
     ) {
+      canViewSource = true;
       if (stateNode && stateNode.context != null) {
         context = stateNode.context;
       }
@@ -1149,6 +1184,9 @@ export function attach(
 
       // Does the current renderer support editable function props?
       canEditFunctionProps: typeof overrideProps === 'function',
+
+      // Can view component source location.
+      canViewSource,
 
       // Inspectable properties.
       // TODO Review sanitization approach for the below inspectable values.
@@ -1227,14 +1265,15 @@ export function attach(
   }
 
   return {
+    cleanup,
     getFiberIDFromNative,
     getNativeFromReactElement,
     handleCommitFiberRoot,
     handleCommitFiberUnmount,
     inspectElement,
-    selectElement,
-    cleanup,
+    prepareViewElementSource,
     renderer,
+    selectElement,
     setInContext,
     setInHook,
     setInProps,

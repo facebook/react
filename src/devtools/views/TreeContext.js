@@ -56,6 +56,9 @@ type Context = {|
   ownerStackIndex: number | null,
   resetOwnerStack(): void,
   selectOwner(id: number): void,
+
+  // Injected by parent HTML/JavaScript
+  viewElementSource: Function | null,
 |};
 
 const TreeContext = createContext<Context>(((null: any): Context));
@@ -473,8 +476,13 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
   };
 }
 
+type Props = {|
+  children: React$Node,
+  viewElementSource: Function | null,
+|};
+
 // TODO Remove TreeContextController wrapper element once global ConsearchText.write API exists.
-function TreeContextController({ children }: {| children: React$Node |}) {
+function TreeContextController({ children, viewElementSource }: Props) {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
@@ -599,6 +607,9 @@ function TreeContextController({ children }: {| children: React$Node |}) {
       ownerStackIndex: state.ownerStackIndex,
       resetOwnerStack,
       selectOwner,
+
+      // Injected by parent HTML/JavaScript
+      viewElementSource,
     }),
     [
       getElementAtIndex,
@@ -612,6 +623,7 @@ function TreeContextController({ children }: {| children: React$Node |}) {
       selectPreviousElementInTree,
       setSearchText,
       state,
+      viewElementSource,
     ]
   );
 

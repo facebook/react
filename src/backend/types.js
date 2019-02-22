@@ -63,6 +63,7 @@ export type RendererInterface = {
   handleCommitFiberRoot: (fiber: Object) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,
   inspectElement: (id: number) => InspectedElement | null,
+  prepareViewElementSource: (id: number) => void,
   renderer: ReactRenderer | null,
   selectElement: (id: number) => void,
   setInContext: (id: number, path: Array<string | number>, value: any) => void,

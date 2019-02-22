@@ -1,3 +1,5 @@
+/* global chrome */
+
 import { createElement } from 'react';
 import { createRoot, flushSync } from 'react-dom';
 import DevTools from 'src/devtools/views/DevTools';
@@ -23,6 +25,29 @@ export function createPanel(defaultTab) {
     }
   };
 
+  function viewElementSource(id) {
+    if (injectedBridge == null || injectedStore == null) {
+      return;
+    }
+
+    const rendererID = injectedStore.getRendererIDForElement(id);
+    if (rendererID != null) {
+      // Ask the renderer interface to determine the component function,
+      // and store it as a global variable on the window
+      injectedBridge.send('viewElementSource', { id, rendererID });
+
+      setTimeout(() => {
+        // Ask Chrome to display the location of the component function,
+        // assuming the renderer found one.
+        chrome.devtools.inspectedWindow.eval(`
+          if (window.$type != null) {
+            inspect(window.$type);
+          }
+        `);
+      }, 100);
+    }
+  }
+
   function injectAndInit() {
     const container = ((document.getElementById(
       'container'
@@ -40,6 +65,7 @@ export function createPanel(defaultTab) {
         defaultTab,
         showTabBar: false,
         store: injectedStore,
+        viewElementSource,
       })
     );
   }

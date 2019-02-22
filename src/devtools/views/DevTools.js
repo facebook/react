@@ -27,6 +27,7 @@ export type Props = {|
   browserTheme: BrowserTheme,
   showTabBar?: boolean,
   store: Store,
+  viewElementSource?: ?Function,
 |};
 
 export default function DevTools({
@@ -36,6 +37,7 @@ export default function DevTools({
   browserTheme = 'light',
   showTabBar = false,
   store,
+  viewElementSource = null,
 }: Props) {
   const [tab, setTab] = useState(defaultTab);
 
@@ -57,7 +59,7 @@ export default function DevTools({
     <BridgeContext.Provider value={bridge}>
       <StoreContext.Provider value={store}>
         <SettingsContextController browserTheme={browserTheme}>
-          <TreeContextController>
+          <TreeContextController viewElementSource={viewElementSource}>
             <div className={styles.DevTools}>
               {showTabBar && (
                 <div className={styles.TabBar}>
