@@ -6,7 +6,13 @@
   border-top: none;
 }
 
+.HeaderRow {
+  display: flex;
+  align-items: center;
+}
+
 .Header {
+  flex: 1 1;
   font-family: var(--font-family-sans);
 }
 

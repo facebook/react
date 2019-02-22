@@ -1,9 +1,13 @@
 // @flow
 
-import React, { useContext } from 'react';
+import { copy } from 'clipboard-js';
+import React, { useCallback, useContext } from 'react';
 import { BridgeContext, StoreContext } from './context';
+import Button from './Button';
+import ButtonIcon from './ButtonIcon';
 import EditableValue from './EditableValue';
 import KeyValue from './KeyValue';
+import { serializeHooksForCopy } from './utils';
 import styles from './HooksTree.css';
 
 import type { HooksNode, HooksTree } from 'src/backend/types';
@@ -15,12 +19,21 @@ type HooksTreeViewProps = {|
 |};
 
 export function HooksTreeView({ canEditHooks, hooks, id }: HooksTreeViewProps) {
+  const handleCopy = useCallback(() => copy(serializeHooksForCopy(hooks)), [
+    hooks,
+  ]);
+
   if (hooks === null) {
     return null;
   } else {
     return (
       <div className={styles.HooksTreeView}>
-        <div className={styles.Header}>hooks</div>
+        <div className={styles.HeaderRow}>
+          <div className={styles.Header}>hooks</div>
+          <Button onClick={handleCopy}>
+            <ButtonIcon type="copy" />
+          </Button>
+        </div>
         <InnerHooksTreeView canEditHooks={canEditHooks} hooks={hooks} id={id} />
       </div>
     );

@@ -2636,9 +2636,10 @@ cli-width@^2.0.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/cli-width/-/cli-width-2.1.0.tgz#b234ca209b29ef66fc518d9b98d5847b00edf00a"
 
-clipboard-js@^0.3.3:
-  version "0.3.3"
-  resolved "https://registry.yarnpkg.com/clipboard-js/-/clipboard-js-0.3.3.tgz#62264c17c80ebf84f4022286f032501e890b8922"
+clipboard-js@^0.3.6:
+  version "0.3.6"
+  resolved "https://registry.yarnpkg.com/clipboard-js/-/clipboard-js-0.3.6.tgz#6260add69b5318fde40b80f9d3c8c863efdaf339"
+  integrity sha512-hyrmvbrYCeRBHdiR3KrEz0tmrUTXXEU8HLeGW0Y0icUSwYmAsmc+d6wfE4EDb/TxZmAVJG0eTfMlulCIT+ecfw==
 
 cliui@^2.1.0:
   version "2.1.0"

@@ -1,7 +1,11 @@
 // @flow
 
-import React from 'react';
+import { copy } from 'clipboard-js';
+import React, { useCallback } from 'react';
+import Button from './Button';
+import ButtonIcon from './ButtonIcon';
 import KeyValue from './KeyValue';
+import { serializeDataForCopy } from './utils';
 import styles from './InspectedElementTree.css';
 
 type OverrideValueFn = (path: Array<string | number>, value: any) => void;
@@ -21,13 +25,24 @@ export default function InspectedElementTree({
 }: Props) {
   const isEmpty = data === null || Object.keys(data).length === 0;
 
+  const handleCopy = useCallback(() => copy(serializeDataForCopy(data)), [
+    data,
+  ]);
+
   if (isEmpty && !showWhenEmpty) {
     return null;
   } else {
     // TODO Add click and key handlers for toggling element open/close state.
     return (
       <div className={styles.InspectedElementTree}>
-        <div className={styles.Header}>{label}</div>
+        <div className={styles.HeaderRow}>
+          <div className={styles.Header}>{label}</div>
+          {!isEmpty && (
+            <Button onClick={handleCopy}>
+              <ButtonIcon type="copy" />
+            </Button>
+          )}
+        </div>
         {isEmpty && <div className={styles.Empty}>None</div>}
         {!isEmpty &&
           Object.keys((data: any)).map(name => (
