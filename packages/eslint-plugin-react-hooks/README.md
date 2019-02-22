@@ -29,7 +29,7 @@ Then add it to your ESLint configuration:
   "rules": {
     // ...
     "react-hooks/rules-of-hooks": "error",
-    "react-hooks/exhaustive-deps": "warning"
+    "react-hooks/exhaustive-deps": "warn"
   }
 }
 ```
