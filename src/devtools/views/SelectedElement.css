@@ -51,7 +51,8 @@
 }
 
 .InspectedElement {
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-monospace-normal);
   line-height: var(--line-height-data);

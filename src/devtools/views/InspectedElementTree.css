@@ -26,6 +26,8 @@
 
 .Value {
   color: var(--color-attribute-value);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .None {

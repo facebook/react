@@ -1,12 +1,13 @@
 .ValueInputLabel {
   flex: 1 1 100%;
+  display: flex;
 }
 .ValueInputLabel:focus-within {
   background-color: var(--color-button-background-focus);
 }
 
 .ValueInput {
-  width: 100%;
+  flex: 1 1;
   background: none;
   border: 1px solid transparent;
   color: var(--color-attribute-editable-value);
