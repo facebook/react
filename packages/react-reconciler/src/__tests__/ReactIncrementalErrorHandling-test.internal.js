@@ -318,7 +318,7 @@ describe('ReactIncrementalErrorHandling', () => {
       );
     }
 
-    ReactNoop.render(<Parent />);
+    ReactNoop.render(<Parent />, () => ReactNoop.yield('commit'));
 
     // Render the bad component asynchronously
     ReactNoop.flushThrough(['Parent', 'BadRender']);
@@ -326,10 +326,9 @@ describe('ReactIncrementalErrorHandling', () => {
     // Finish the rest of the async work
     ReactNoop.flushThrough(['Sibling']);
 
-    // Rendering two more units of work should be enough to trigger the retry
-    // and synchronously throw an error.
+    // React retries once, synchronously, before throwing.
     ops = [];
-    expect(() => ReactNoop.flushUnitsOfWork(2)).toThrow('oops');
+    expect(() => ReactNoop.flushNextYield()).toThrow('oops');
     expect(ops).toEqual(['Parent', 'BadRender', 'Sibling']);
   });
 
@@ -409,7 +408,7 @@ describe('ReactIncrementalErrorHandling', () => {
         <BrokenRender />
       </ErrorBoundary>,
     );
-    ReactNoop.flushDeferredPri();
+    ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: Hello.')]);
   });
 
@@ -588,20 +587,19 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('propagates an error from a noop error boundary during partial deferred mounting', () => {
-    const ops = [];
     class RethrowErrorBoundary extends React.Component {
       componentDidCatch(error) {
-        ops.push('RethrowErrorBoundary componentDidCatch');
+        ReactNoop.yield('RethrowErrorBoundary componentDidCatch');
         throw error;
       }
       render() {
-        ops.push('RethrowErrorBoundary render');
+        ReactNoop.yield('RethrowErrorBoundary render');
         return this.props.children;
       }
     }
 
     function BrokenRender() {
-      ops.push('BrokenRender');
+      ReactNoop.yield('BrokenRender');
       throw new Error('Hello');
     }
 
@@ -611,16 +609,12 @@ describe('ReactIncrementalErrorHandling', () => {
       </RethrowErrorBoundary>,
     );
 
-    ReactNoop.flushDeferredPri(15);
-    expect(ops).toEqual(['RethrowErrorBoundary render']);
+    ReactNoop.flushThrough(['RethrowErrorBoundary render']);
 
-    ops.length = 0;
     expect(() => {
       ReactNoop.flush();
     }).toThrow('Hello');
-    expect(ops).toEqual([
-      'BrokenRender',
-
+    expect(ReactNoop.clearYields()).toEqual([
       // React retries one more time
       'RethrowErrorBoundary render',
       'BrokenRender',
@@ -1526,7 +1520,7 @@ describe('ReactIncrementalErrorHandling', () => {
         <BrokenRender />
       </ErrorBoundary>,
     );
-    ReactNoop.flushDeferredPri();
+    ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([
       span(
         'Caught an error:\n' +
@@ -1562,7 +1556,7 @@ describe('ReactIncrementalErrorHandling', () => {
         <BrokenRender />
       </ErrorBoundary>,
     );
-    ReactNoop.flushDeferredPri();
+    ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: Hello')]);
   });
 

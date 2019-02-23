@@ -117,6 +117,7 @@ describe('ReactDebugFiberPerf', () => {
     require('shared/ReactFeatureFlags').enableUserTimingAPI = true;
     require('shared/ReactFeatureFlags').enableProfilerTimer = false;
     require('shared/ReactFeatureFlags').replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
+    require('shared/ReactFeatureFlags').debugRenderPhaseSideEffectsForStrictMode = false;
 
     // Import after the polyfill is set up:
     React = require('react');
@@ -397,12 +398,21 @@ describe('ReactDebugFiberPerf', () => {
   it('measures deferred work in chunks', () => {
     class A extends React.Component {
       render() {
+        ReactNoop.yield('A');
         return <div>{this.props.children}</div>;
       }
     }
 
     class B extends React.Component {
       render() {
+        ReactNoop.yield('B');
+        return <div>{this.props.children}</div>;
+      }
+    }
+
+    class C extends React.Component {
+      render() {
+        ReactNoop.yield('C');
         return <div>{this.props.children}</div>;
       }
     }
@@ -415,14 +425,15 @@ describe('ReactDebugFiberPerf', () => {
         <B>
           <Child />
         </B>
+        <C>
+          <Child />
+        </C>
       </Parent>,
     );
-    addComment('Start mounting Parent and A');
-    ReactNoop.flushDeferredPri(40);
-    addComment('Mount B just a little (but not enough to memoize)');
-    ReactNoop.flushDeferredPri(10);
-    addComment('Complete B and Parent');
-    ReactNoop.flushDeferredPri();
+    addComment('Start rendering through B');
+    ReactNoop.flushThrough(['A', 'B']);
+    addComment('Complete the rest');
+    ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();
   });
 
@@ -632,11 +643,12 @@ describe('ReactDebugFiberPerf', () => {
 
   it('warns if an in-progress update is interrupted', () => {
     function Foo() {
+      ReactNoop.yield('Foo');
       return <span />;
     }
 
     ReactNoop.render(<Foo />);
-    ReactNoop.flushUnitsOfWork(2);
+    ReactNoop.flushNextYield();
     ReactNoop.flushSync(() => {
       ReactNoop.render(<Foo />);
     });

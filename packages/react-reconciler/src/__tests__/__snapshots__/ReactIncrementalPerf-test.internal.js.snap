@@ -211,25 +211,33 @@ exports[`ReactDebugFiberPerf measures a simple reconciliation 1`] = `
 exports[`ReactDebugFiberPerf measures deferred work in chunks 1`] = `
 "⚛ (Waiting for async callback... will force flush in 5250 ms)
 
-// Start mounting Parent and A
+// Start rendering through B
+⚛ (React Tree Reconciliation: Yielded)
+  ⚛ Parent [mount]
+    ⚛ A [mount]
+
+⚛ (Waiting for async callback... will force flush in 5250 ms)
+
 ⚛ (React Tree Reconciliation: Yielded)
   ⚛ Parent [mount]
     ⚛ A [mount]
       ⚛ Child [mount]
+    ⚛ B [mount]
 
 ⚛ (Waiting for async callback... will force flush in 5250 ms)
 
-// Mount B just a little (but not enough to memoize)
+// Complete the rest
 ⚛ (React Tree Reconciliation: Yielded)
   ⚛ Parent [mount]
     ⚛ B [mount]
+      ⚛ Child [mount]
+    ⚛ C [mount]
 
 ⚛ (Waiting for async callback... will force flush in 5250 ms)
 
-// Complete B and Parent
 ⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Parent [mount]
-    ⚛ B [mount]
+    ⚛ C [mount]
       ⚛ Child [mount]
 
 ⚛ (Committing Changes)
@@ -396,20 +404,6 @@ exports[`ReactDebugFiberPerf supports Suspense and lazy 2`] = `
 "
 `;
 
-exports[`ReactDebugFiberPerf supports portals 1`] = `
-"⚛ (Waiting for async callback... will force flush in 5250 ms)
-
-⚛ (React Tree Reconciliation: Completed Root)
-  ⚛ Parent [mount]
-    ⚛ Child [mount]
-
-⚛ (Committing Changes)
-  ⚛ (Committing Snapshot Effects: 0 Total)
-  ⚛ (Committing Host Effects: 2 Total)
-  ⚛ (Calling Lifecycle Methods: 0 Total)
-"
-`;
-
 exports[`ReactDebugFiberPerf supports memo 1`] = `
 "⚛ (Waiting for async callback... will force flush in 5250 ms)
 
@@ -420,6 +414,20 @@ exports[`ReactDebugFiberPerf supports memo 1`] = `
 ⚛ (Committing Changes)
   ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 1 Total)
+  ⚛ (Calling Lifecycle Methods: 0 Total)
+"
+`;
+
+exports[`ReactDebugFiberPerf supports portals 1`] = `
+"⚛ (Waiting for async callback... will force flush in 5250 ms)
+
+⚛ (React Tree Reconciliation: Completed Root)
+  ⚛ Parent [mount]
+    ⚛ Child [mount]
+
+⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
+  ⚛ (Committing Host Effects: 2 Total)
   ⚛ (Calling Lifecycle Methods: 0 Total)
 "
 `;

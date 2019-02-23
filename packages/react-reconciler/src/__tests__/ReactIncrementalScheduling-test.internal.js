@@ -31,7 +31,7 @@ describe('ReactIncrementalScheduling', () => {
     ReactNoop.render(<span prop="1" />);
     expect(ReactNoop.getChildren()).toEqual([]);
 
-    ReactNoop.flushDeferredPri();
+    ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([span('1')]);
   });
 
@@ -86,71 +86,99 @@ describe('ReactIncrementalScheduling', () => {
   });
 
   it('works on deferred roots in the order they were scheduled', () => {
-    ReactNoop.renderToRootWithID(<span prop="a:1" />, 'a');
-    ReactNoop.renderToRootWithID(<span prop="b:1" />, 'b');
-    ReactNoop.renderToRootWithID(<span prop="c:1" />, 'c');
+    const {useEffect} = React;
+    function Text({text}) {
+      useEffect(
+        () => {
+          ReactNoop.yield(text);
+        },
+        [text],
+      );
+      return text;
+    }
+
+    ReactNoop.act(() => {
+      ReactNoop.renderToRootWithID(<Text text="a:1" />, 'a');
+      ReactNoop.renderToRootWithID(<Text text="b:1" />, 'b');
+      ReactNoop.renderToRootWithID(<Text text="c:1" />, 'c');
+    });
     ReactNoop.flush();
-    expect(ReactNoop.getChildren('a')).toEqual([span('a:1')]);
-    expect(ReactNoop.getChildren('b')).toEqual([span('b:1')]);
-    expect(ReactNoop.getChildren('c')).toEqual([span('c:1')]);
+
+    expect(ReactNoop.getChildrenAsJSX('a')).toEqual('a:1');
+    expect(ReactNoop.getChildrenAsJSX('b')).toEqual('b:1');
+    expect(ReactNoop.getChildrenAsJSX('c')).toEqual('c:1');
 
     // Schedule deferred work in the reverse order
-    ReactNoop.renderToRootWithID(<span prop="c:2" />, 'c');
-    ReactNoop.renderToRootWithID(<span prop="b:2" />, 'b');
+    ReactNoop.act(() => {
+      ReactNoop.renderToRootWithID(<Text text="c:2" />, 'c');
+      ReactNoop.renderToRootWithID(<Text text="b:2" />, 'b');
+    });
     // Ensure it starts in the order it was scheduled
-    ReactNoop.flushDeferredPri(15 + 5);
-    expect(ReactNoop.getChildren('a')).toEqual([span('a:1')]);
-    expect(ReactNoop.getChildren('b')).toEqual([span('b:1')]);
-    expect(ReactNoop.getChildren('c')).toEqual([span('c:2')]);
+    ReactNoop.flushThrough(['c:2']);
+
+    expect(ReactNoop.getChildrenAsJSX('a')).toEqual('a:1');
+    expect(ReactNoop.getChildrenAsJSX('b')).toEqual('b:1');
+    expect(ReactNoop.getChildrenAsJSX('c')).toEqual('c:2');
     // Schedule last bit of work, it will get processed the last
-    ReactNoop.renderToRootWithID(<span prop="a:2" />, 'a');
+    ReactNoop.act(() => {
+      ReactNoop.renderToRootWithID(<Text text="a:2" />, 'a');
+    });
     // Keep performing work in the order it was scheduled
-    ReactNoop.flushDeferredPri(15 + 5);
-    expect(ReactNoop.getChildren('a')).toEqual([span('a:1')]);
-    expect(ReactNoop.getChildren('b')).toEqual([span('b:2')]);
-    expect(ReactNoop.getChildren('c')).toEqual([span('c:2')]);
-    ReactNoop.flushDeferredPri(15 + 5);
-    expect(ReactNoop.getChildren('a')).toEqual([span('a:2')]);
-    expect(ReactNoop.getChildren('b')).toEqual([span('b:2')]);
-    expect(ReactNoop.getChildren('c')).toEqual([span('c:2')]);
+    ReactNoop.flushThrough(['b:2']);
+    expect(ReactNoop.getChildrenAsJSX('a')).toEqual('a:1');
+    expect(ReactNoop.getChildrenAsJSX('b')).toEqual('b:2');
+    expect(ReactNoop.getChildrenAsJSX('c')).toEqual('c:2');
+
+    ReactNoop.flushThrough(['a:2']);
+    expect(ReactNoop.getChildrenAsJSX('a')).toEqual('a:2');
+    expect(ReactNoop.getChildrenAsJSX('b')).toEqual('b:2');
+    expect(ReactNoop.getChildrenAsJSX('c')).toEqual('c:2');
   });
 
   it('schedules sync updates when inside componentDidMount/Update', () => {
     let instance;
-    let ops = [];
 
     class Foo extends React.Component {
       state = {tick: 0};
 
       componentDidMount() {
-        ops.push('componentDidMount (before setState): ' + this.state.tick);
+        ReactNoop.yield(
+          'componentDidMount (before setState): ' + this.state.tick,
+        );
         this.setState({tick: 1});
         // We're in a batch. Update hasn't flushed yet.
-        ops.push('componentDidMount (after setState): ' + this.state.tick);
+        ReactNoop.yield(
+          'componentDidMount (after setState): ' + this.state.tick,
+        );
       }
 
       componentDidUpdate() {
-        ops.push('componentDidUpdate: ' + this.state.tick);
+        ReactNoop.yield('componentDidUpdate: ' + this.state.tick);
         if (this.state.tick === 2) {
-          ops.push('componentDidUpdate (before setState): ' + this.state.tick);
+          ReactNoop.yield(
+            'componentDidUpdate (before setState): ' + this.state.tick,
+          );
           this.setState({tick: 3});
-          ops.push('componentDidUpdate (after setState): ' + this.state.tick);
+          ReactNoop.yield(
+            'componentDidUpdate (after setState): ' + this.state.tick,
+          );
           // We're in a batch. Update hasn't flushed yet.
         }
       }
 
       render() {
-        ops.push('render: ' + this.state.tick);
+        ReactNoop.yield('render: ' + this.state.tick);
         instance = this;
         return <span prop={this.state.tick} />;
       }
     }
 
     ReactNoop.render(<Foo />);
+    // Render without committing
+    ReactNoop.flushThrough(['render: 0']);
 
-    ReactNoop.flushDeferredPri(20 + 5);
-    expect(ops).toEqual([
-      'render: 0',
+    // Do one more unit of work to commit
+    expect(ReactNoop.flushNextYield()).toEqual([
       'componentDidMount (before setState): 0',
       'componentDidMount (after setState): 0',
       // If the setState inside componentDidMount were deferred, there would be
@@ -159,12 +187,9 @@ describe('ReactIncrementalScheduling', () => {
       'componentDidUpdate: 1',
     ]);
 
-    ops = [];
     instance.setState({tick: 2});
-    ReactNoop.flushDeferredPri(20 + 5);
-
-    expect(ops).toEqual([
-      'render: 2',
+    ReactNoop.flushThrough(['render: 2']);
+    expect(ReactNoop.flushNextYield()).toEqual([
       'componentDidUpdate: 2',
       'componentDidUpdate (before setState): 2',
       'componentDidUpdate (after setState): 2',
@@ -254,17 +279,18 @@ describe('ReactIncrementalScheduling', () => {
         });
       }
       render() {
+        ReactNoop.yield('Foo');
         return <span prop={this.state.step} />;
       }
     }
     ReactNoop.render(<Foo />);
     // This should be just enough to complete all the work, but not enough to
     // commit it.
-    ReactNoop.flushDeferredPri(20);
+    ReactNoop.flushThrough(['Foo']);
     expect(ReactNoop.getChildren()).toEqual([]);
 
     // Do one more unit of work.
-    ReactNoop.flushDeferredPri(10);
+    ReactNoop.flushNextYield();
     // The updates should all be flushed with Task priority
     expect(ReactNoop.getChildren()).toEqual([span(5)]);
   });
