@@ -341,7 +341,7 @@ export function findHostInstanceWithNoPortals(
   return hostFiber.stateNode;
 }
 
-let overrideHook = null;
+let overrideHookState = null;
 let overrideProps = null;
 
 if (__DEV__) {
@@ -370,7 +370,7 @@ if (__DEV__) {
   };
 
   // Support DevTools editable values for useState and useReducer.
-  overrideHook = (
+  overrideHookState = (
     fiber: Fiber,
     index: number,
     path: Array<string | number>,
@@ -407,7 +407,7 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
 
   return injectInternals({
     ...devToolsConfig,
-    overrideHook,
+    overrideHookState,
     overrideProps,
     currentDispatcherRef: ReactCurrentDispatcher,
     findHostInstanceByFiber(fiber: Fiber): Instance | TextInstance | null {
