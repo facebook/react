@@ -23,20 +23,21 @@ const main = async buildId => {
     .toString()
     .trim()
     .substr(0, 7);
-  const date = new Date();
 
-  writeFileSync(
-    join(buildPath, 'index.html'),
-    `
-    <html>
-      <body>
-        <h1>${date.toLocaleDateString()} – ${date.toLocaleTimeString()}</h1>
-        <h2>Source <a href="http://github.com/bvaughn/react-devtools-experimental/commit/${commit}">${commit}</a></h2>
-        <a href="packed.zip">packed.zip</a>
-      </body>
-    </html>
-  `
-  );
+  let date = new Date();
+  date = `${date.toLocaleDateString()} – ${date.toLocaleTimeString()}`;
+
+  const installationInstructions =
+    buildId === 'chrome'
+      ? readFileSync(join(__dirname, 'deploy.chrome.html'))
+      : readFileSync(join(__dirname, 'deploy.firefox.html'));
+
+  let html = readFileSync(join(__dirname, 'deploy.html')).toString();
+  html = html.replace(/%commit%/g, commit);
+  html = html.replace(/%date%/g, date);
+  html = html.replace(/%installation%/, installationInstructions);
+
+  writeFileSync(join(buildPath, 'index.html'), html);
 
   await exec(`now deploy && now alias ${alias}`, {
     cwd: buildPath,
