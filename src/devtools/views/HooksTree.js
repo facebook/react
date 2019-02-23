@@ -144,7 +144,7 @@ function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
     if (canEditHooks && isEditable) {
       overrideValueFn = (path: Array<string | number>, value: any) => {
         const rendererID = store.getRendererIDForElement(id);
-        bridge.send('overrideHook', {
+        bridge.send('overrideHookState', {
           id,
           index,
           path,

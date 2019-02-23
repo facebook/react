@@ -48,7 +48,7 @@ export default class Agent extends EventEmitter {
     bridge.addListener('highlightElementInDOM', this.highlightElementInDOM);
     bridge.addListener('inspectElement', this.inspectElement);
     bridge.addListener('overrideContext', this.overrideContext);
-    bridge.addListener('overrideHook', this.overrideHook);
+    bridge.addListener('overrideHookState', this.overrideHookState);
     bridge.addListener('overrideProps', this.overrideProps);
     bridge.addListener('overrideState', this.overrideState);
     bridge.addListener('selectElement', this.selectElement);
@@ -132,7 +132,7 @@ export default class Agent extends EventEmitter {
     }
   };
 
-  overrideHook = ({
+  overrideHookState = ({
     id,
     index,
     path,

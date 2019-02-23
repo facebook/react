@@ -35,7 +35,7 @@ export type ReactRenderer = {
   bundleType: BundleType,
 
   // 16.9+
-  overrideHook?: ?(
+  overrideHookState?: ?(
     fiber: Object,
     index: number,
     path: Array<string | number>,

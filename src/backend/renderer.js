@@ -194,7 +194,7 @@ export function attach(
     DEPRECATED_PLACEHOLDER_SYMBOL_STRING,
   } = ReactSymbols;
 
-  const { overrideHook, overrideProps } = renderer;
+  const { overrideHookState, overrideProps } = renderer;
 
   const debug = (name: string, fiber: Fiber, parentFiber: ?Fiber): void => {
     if (__DEBUG__) {
@@ -1180,7 +1180,7 @@ export function attach(
       id,
 
       // Does the current renderer support editable hooks?
-      canEditHooks: typeof overrideHook === 'function',
+      canEditHooks: typeof overrideHookState === 'function',
 
       // Does the current renderer support editable function props?
       canEditFunctionProps: typeof overrideProps === 'function',
@@ -1215,8 +1215,8 @@ export function attach(
   ) {
     const fiber = findCurrentFiberUsingSlowPath(idToFiberMap.get(id));
     if (fiber !== null) {
-      if (typeof overrideHook === 'function') {
-        overrideHook(fiber, index, path, value);
+      if (typeof overrideHookState === 'function') {
+        overrideHookState(fiber, index, path, value);
       }
     }
   }
