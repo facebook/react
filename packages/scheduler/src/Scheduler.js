@@ -94,7 +94,7 @@ function flushFirstCallback() {
   currentExpirationTime = expirationTime;
   var continuationCallback;
   try {
-    continuationCallback = callback();
+    continuationCallback = callback(currentDidTimeout);
   } finally {
     currentPriorityLevel = previousPriorityLevel;
     currentExpirationTime = previousExpirationTime;

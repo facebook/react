@@ -540,31 +540,37 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   let unitsRemaining;
 
   function shouldYield() {
+    // Check if we already yielded
+    if (didYield || yieldedValues !== null) {
+      return true;
+    }
+
+    // If there are no remaining units of work, and we haven't timed out, then
+    // we should yield.
     if (
-      scheduledCallbackTimeout === -1 ||
-      elapsedTimeInMs > scheduledCallbackTimeout
+      unitsRemaining-- <= 0 &&
+      (scheduledCallbackTimeout === -1 ||
+        elapsedTimeInMs < scheduledCallbackTimeout)
     ) {
-      return false;
-    } else {
-      if (didYield || yieldedValues !== null) {
-        return true;
-      }
-      if (unitsRemaining-- > 0) {
-        return false;
-      }
       didYield = true;
       return true;
     }
+
+    // Otherwise, keep working.
+    return false;
   }
 
   function* flushUnitsOfWork(n: number): Generator<Array<mixed>, void, void> {
-    unitsRemaining = n + 1;
+    unitsRemaining = n;
     didYield = false;
     try {
       while (!didYield && scheduledCallback !== null) {
         let cb = scheduledCallback;
         scheduledCallback = null;
-        cb();
+        const didTimeout =
+          scheduledCallbackTimeout !== -1 &&
+          scheduledCallbackTimeout < elapsedTimeInMs;
+        cb(didTimeout);
         if (yieldedValues !== null) {
           const values = yieldedValues;
           yieldedValues = null;

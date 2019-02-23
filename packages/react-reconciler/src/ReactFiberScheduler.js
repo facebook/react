@@ -2219,9 +2219,9 @@ function shouldYieldToRenderer() {
   return false;
 }
 
-function performAsyncWork() {
+function performAsyncWork(didTimeout) {
   try {
-    if (!shouldYieldToRenderer()) {
+    if (didTimeout) {
       // The callback timed out. That means at least one update has expired.
       // Iterate through the root schedule. If they contain expired work, set
       // the next render expiration time to the current time. This has the effect

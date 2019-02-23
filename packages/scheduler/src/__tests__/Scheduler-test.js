@@ -246,26 +246,48 @@ describe('Scheduler', () => {
   });
 
   it('expires work', () => {
-    scheduleCallback(() => doWork('A', 100));
+    scheduleCallback(didTimeout =>
+      doWork(`A (did timeout: ${didTimeout})`, 100),
+    );
     runWithPriority(UserBlockingPriority, () => {
-      scheduleCallback(() => doWork('B', 100));
+      scheduleCallback(didTimeout =>
+        doWork(`B (did timeout: ${didTimeout})`, 100),
+      );
     });
-    scheduleCallback(() => doWork('C', 100));
     runWithPriority(UserBlockingPriority, () => {
-      scheduleCallback(() => doWork('D', 100));
+      scheduleCallback(didTimeout =>
+        doWork(`C (did timeout: ${didTimeout})`, 100),
+      );
     });
 
     // Advance time, but not by enough to expire any work
     advanceTime(249);
     expect(clearYieldedValues()).toEqual([]);
 
-    // Advance by just a bit more to expire the high pri callbacks
-    advanceTime(1);
-    expect(clearYieldedValues()).toEqual(['B', 'D']);
+    // Schedule a few more callbacks
+    scheduleCallback(didTimeout =>
+      doWork(`D (did timeout: ${didTimeout})`, 100),
+    );
+    scheduleCallback(didTimeout =>
+      doWork(`E (did timeout: ${didTimeout})`, 100),
+    );
 
-    // Expire the rest
-    advanceTime(10000);
-    expect(clearYieldedValues()).toEqual(['A', 'C']);
+    // Advance by just a bit more to expire the user blocking callbacks
+    advanceTime(1);
+    expect(clearYieldedValues()).toEqual([
+      'B (did timeout: true)',
+      'C (did timeout: true)',
+    ]);
+
+    // Expire A
+    advanceTime(4600);
+    expect(clearYieldedValues()).toEqual(['A (did timeout: true)']);
+
+    // Flush the rest without expiring
+    expect(flushWork()).toEqual([
+      'D (did timeout: false)',
+      'E (did timeout: false)',
+    ]);
   });
 
   it('has a default expiration of ~5 seconds', () => {
