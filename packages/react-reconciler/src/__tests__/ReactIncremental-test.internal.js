@@ -39,10 +39,8 @@ describe('ReactIncremental', () => {
   });
 
   it('should render a simple component, in steps if needed', () => {
-    let renderCallbackCalled = false;
-    let barCalled = false;
     function Bar() {
-      barCalled = true;
+      ReactNoop.yield('Bar');
       return (
         <span>
           <div>Hello World</div>
@@ -50,26 +48,17 @@ describe('ReactIncremental', () => {
       );
     }
 
-    let fooCalled = false;
     function Foo() {
-      fooCalled = true;
+      ReactNoop.yield('Foo');
       return [<Bar key="a" isBar={true} />, <Bar key="b" isBar={true} />];
     }
 
-    ReactNoop.render(<Foo />, () => (renderCallbackCalled = true));
-    expect(fooCalled).toBe(false);
-    expect(barCalled).toBe(false);
-    expect(renderCallbackCalled).toBe(false);
+    ReactNoop.render(<Foo />, () => ReactNoop.yield('callback'));
     // Do one step of work.
-    ReactNoop.flushDeferredPri(7 + 5);
-    expect(fooCalled).toBe(true);
-    expect(barCalled).toBe(false);
-    expect(renderCallbackCalled).toBe(false);
+    expect(ReactNoop.flushNextYield()).toEqual(['Foo']);
+
     // Do the rest of the work.
-    ReactNoop.flushDeferredPri(50);
-    expect(fooCalled).toBe(true);
-    expect(barCalled).toBe(true);
-    expect(renderCallbackCalled).toBe(true);
+    expect(ReactNoop.flush()).toEqual(['Bar', 'Bar', 'callback']);
   });
 
   it('updates a previous render', () => {
@@ -140,15 +129,13 @@ describe('ReactIncremental', () => {
   });
 
   it('can cancel partially rendered work and restart', () => {
-    let ops = [];
-
     function Bar(props) {
-      ops.push('Bar');
+      ReactNoop.yield('Bar');
       return <div>{props.children}</div>;
     }
 
     function Foo(props) {
-      ops.push('Foo');
+      ReactNoop.yield('Foo');
       return (
         <div>
           <Bar>{props.text}</Bar>
@@ -161,34 +148,22 @@ describe('ReactIncremental', () => {
     ReactNoop.render(<Foo text="foo" />);
     ReactNoop.flush();
 
-    ops = [];
-
     ReactNoop.render(<Foo text="bar" />);
     // Flush part of the work
-    ReactNoop.flushDeferredPri(20 + 5);
-
-    expect(ops).toEqual(['Foo', 'Bar']);
-
-    ops = [];
+    ReactNoop.flushThrough(['Foo', 'Bar']);
 
     // This will abort the previous work and restart
     ReactNoop.flushSync(() => ReactNoop.render(null));
     ReactNoop.render(<Foo text="baz" />);
-    ReactNoop.clearYields();
 
     // Flush part of the new work
-    ReactNoop.flushDeferredPri(20 + 5);
-
-    expect(ops).toEqual(['Foo', 'Bar']);
+    ReactNoop.flushThrough(['Foo', 'Bar']);
 
     // Flush the rest of the work which now includes the low priority
-    ReactNoop.flush(20);
-
-    expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
+    expect(ReactNoop.flush()).toEqual(['Bar']);
   });
 
   it('should call callbacks even if updates are aborted', () => {
-    const ops = [];
     let inst;
 
     class Foo extends React.Component {
@@ -215,32 +190,27 @@ describe('ReactIncremental', () => {
 
     inst.setState(
       () => {
-        ops.push('setState1');
+        ReactNoop.yield('setState1');
         return {text: 'bar'};
       },
-      () => ops.push('callback1'),
+      () => ReactNoop.yield('callback1'),
     );
 
     // Flush part of the work
-    ReactNoop.flushDeferredPri(20 + 5);
-
-    expect(ops).toEqual(['setState1']);
+    ReactNoop.flushThrough(['setState1']);
 
     // This will abort the previous work and restart
     ReactNoop.flushSync(() => ReactNoop.render(<Foo />));
     inst.setState(
       () => {
-        ops.push('setState2');
+        ReactNoop.yield('setState2');
         return {text2: 'baz'};
       },
-      () => ops.push('callback2'),
+      () => ReactNoop.yield('callback2'),
     );
 
     // Flush the rest of the work which now includes the low priority
-    ReactNoop.flush();
-
-    expect(ops).toEqual([
-      'setState1',
+    expect(ReactNoop.flush()).toEqual([
       'setState1',
       'setState2',
       'callback1',
@@ -250,20 +220,18 @@ describe('ReactIncremental', () => {
   });
 
   it('can deprioritize unfinished work and resume it later', () => {
-    let ops = [];
-
     function Bar(props) {
-      ops.push('Bar');
+      ReactNoop.yield('Bar');
       return <div>{props.children}</div>;
     }
 
     function Middle(props) {
-      ops.push('Middle');
+      ReactNoop.yield('Middle');
       return <span>{props.children}</span>;
     }
 
     function Foo(props) {
-      ops.push('Foo');
+      ReactNoop.yield('Foo');
       return (
         <div>
           <Bar>{props.text}</Bar>
@@ -280,25 +248,20 @@ describe('ReactIncremental', () => {
 
     // Init
     ReactNoop.render(<Foo text="foo" />);
-    ReactNoop.flush();
-
-    expect(ops).toEqual(['Foo', 'Bar', 'Bar', 'Middle', 'Middle']);
-
-    ops = [];
+    expect(ReactNoop.flush()).toEqual([
+      'Foo',
+      'Bar',
+      'Bar',
+      'Middle',
+      'Middle',
+    ]);
 
     // Render part of the work. This should be enough to flush everything except
     // the middle which has lower priority.
     ReactNoop.render(<Foo text="bar" />);
-    ReactNoop.flushDeferredPri(40);
-
-    expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
-
-    ops = [];
-
+    ReactNoop.flushThrough(['Foo', 'Bar', 'Bar']);
     // Flush only the remaining work
-    ReactNoop.flush();
-
-    expect(ops).toEqual(['Middle', 'Middle']);
+    expect(ReactNoop.flush()).toEqual(['Middle', 'Middle']);
   });
 
   it('can deprioritize a tree from without dropping work', () => {
@@ -1844,8 +1807,6 @@ describe('ReactIncremental', () => {
   });
 
   it('merges and masks context', () => {
-    const ops = [];
-
     class Intl extends React.Component {
       static childContextTypes = {
         locale: PropTypes.string,
@@ -1856,7 +1817,7 @@ describe('ReactIncremental', () => {
         };
       }
       render() {
-        ops.push('Intl ' + JSON.stringify(this.context));
+        ReactNoop.yield('Intl ' + JSON.stringify(this.context));
         return this.props.children;
       }
     }
@@ -1871,7 +1832,7 @@ describe('ReactIncremental', () => {
         };
       }
       render() {
-        ops.push('Router ' + JSON.stringify(this.context));
+        ReactNoop.yield('Router ' + JSON.stringify(this.context));
         return this.props.children;
       }
     }
@@ -1881,7 +1842,7 @@ describe('ReactIncremental', () => {
         locale: PropTypes.string,
       };
       render() {
-        ops.push('ShowLocale ' + JSON.stringify(this.context));
+        ReactNoop.yield('ShowLocale ' + JSON.stringify(this.context));
         return this.context.locale;
       }
     }
@@ -1891,13 +1852,13 @@ describe('ReactIncremental', () => {
         route: PropTypes.string,
       };
       render() {
-        ops.push('ShowRoute ' + JSON.stringify(this.context));
+        ReactNoop.yield('ShowRoute ' + JSON.stringify(this.context));
         return this.context.route;
       }
     }
 
     function ShowBoth(props, context) {
-      ops.push('ShowBoth ' + JSON.stringify(context));
+      ReactNoop.yield('ShowBoth ' + JSON.stringify(context));
       return `${context.route} in ${context.locale}`;
     }
     ShowBoth.contextTypes = {
@@ -1907,14 +1868,14 @@ describe('ReactIncremental', () => {
 
     class ShowNeither extends React.Component {
       render() {
-        ops.push('ShowNeither ' + JSON.stringify(this.context));
+        ReactNoop.yield('ShowNeither ' + JSON.stringify(this.context));
         return null;
       }
     }
 
     class Indirection extends React.Component {
       render() {
-        ops.push('Indirection ' + JSON.stringify(this.context));
+        ReactNoop.yield('Indirection ' + JSON.stringify(this.context));
         return [
           <ShowLocale key="a" />,
           <ShowRoute key="b" />,
@@ -1927,7 +1888,6 @@ describe('ReactIncremental', () => {
       }
     }
 
-    ops.length = 0;
     ReactNoop.render(
       <Intl locale="fr">
         <ShowLocale />
@@ -1936,18 +1896,18 @@ describe('ReactIncremental', () => {
         </div>
       </Intl>,
     );
-    expect(ReactNoop.flush).toWarnDev(
+    expect(() =>
+      expect(ReactNoop.flush()).toEqual([
+        'Intl {}',
+        'ShowLocale {"locale":"fr"}',
+        'ShowBoth {"locale":"fr"}',
+      ]),
+    ).toWarnDev(
       'Legacy context API has been detected within a strict-mode tree: \n\n' +
         'Please update the following components: Intl, ShowBoth, ShowLocale',
       {withoutStack: true},
     );
-    expect(ops).toEqual([
-      'Intl {}',
-      'ShowLocale {"locale":"fr"}',
-      'ShowBoth {"locale":"fr"}',
-    ]);
 
-    ops.length = 0;
     ReactNoop.render(
       <Intl locale="de">
         <ShowLocale />
@@ -1956,14 +1916,12 @@ describe('ReactIncremental', () => {
         </div>
       </Intl>,
     );
-    ReactNoop.flush();
-    expect(ops).toEqual([
+    expect(ReactNoop.flush()).toEqual([
       'Intl {}',
       'ShowLocale {"locale":"de"}',
       'ShowBoth {"locale":"de"}',
     ]);
 
-    ops.length = 0;
     ReactNoop.render(
       <Intl locale="sv">
         <ShowLocale />
@@ -1972,10 +1930,8 @@ describe('ReactIncremental', () => {
         </div>
       </Intl>,
     );
-    ReactNoop.flushDeferredPri(15);
-    expect(ops).toEqual(['Intl {}']);
+    ReactNoop.flushThrough(['Intl {}']);
 
-    ops.length = 0;
     ReactNoop.render(
       <Intl locale="en">
         <ShowLocale />
@@ -1985,26 +1941,27 @@ describe('ReactIncremental', () => {
         <ShowBoth />
       </Intl>,
     );
-    expect(ReactNoop.flush).toWarnDev(
+    expect(() =>
+      expect(ReactNoop.flush()).toEqual([
+        'ShowLocale {"locale":"sv"}',
+        'ShowBoth {"locale":"sv"}',
+        'Intl {}',
+        'ShowLocale {"locale":"en"}',
+        'Router {}',
+        'Indirection {}',
+        'ShowLocale {"locale":"en"}',
+        'ShowRoute {"route":"/about"}',
+        'ShowNeither {}',
+        'Intl {}',
+        'ShowBoth {"locale":"ru","route":"/about"}',
+        'ShowBoth {"locale":"en","route":"/about"}',
+        'ShowBoth {"locale":"en"}',
+      ]),
+    ).toWarnDev(
       'Legacy context API has been detected within a strict-mode tree: \n\n' +
         'Please update the following components: Router, ShowRoute',
       {withoutStack: true},
     );
-    expect(ops).toEqual([
-      'ShowLocale {"locale":"sv"}',
-      'ShowBoth {"locale":"sv"}',
-      'Intl {}',
-      'ShowLocale {"locale":"en"}',
-      'Router {}',
-      'Indirection {}',
-      'ShowLocale {"locale":"en"}',
-      'ShowRoute {"route":"/about"}',
-      'ShowNeither {}',
-      'Intl {}',
-      'ShowBoth {"locale":"ru","route":"/about"}',
-      'ShowBoth {"locale":"en","route":"/about"}',
-      'ShowBoth {"locale":"en"}',
-    ]);
   });
 
   it('does not leak own context into context provider', () => {
@@ -2080,8 +2037,6 @@ describe('ReactIncremental', () => {
   });
 
   it('provides context when reusing work', () => {
-    const ops = [];
-
     class Intl extends React.Component {
       static childContextTypes = {
         locale: PropTypes.string,
@@ -2092,7 +2047,7 @@ describe('ReactIncremental', () => {
         };
       }
       render() {
-        ops.push('Intl ' + JSON.stringify(this.context));
+        ReactNoop.yield('Intl ' + JSON.stringify(this.context));
         return this.props.children;
       }
     }
@@ -2102,12 +2057,11 @@ describe('ReactIncremental', () => {
         locale: PropTypes.string,
       };
       render() {
-        ops.push('ShowLocale ' + JSON.stringify(this.context));
+        ReactNoop.yield('ShowLocale ' + JSON.stringify(this.context));
         return this.context.locale;
       }
     }
 
-    ops.length = 0;
     ReactNoop.render(
       <Intl locale="fr">
         <ShowLocale />
@@ -2120,24 +2074,23 @@ describe('ReactIncremental', () => {
         <ShowLocale />
       </Intl>,
     );
-    ReactNoop.flushDeferredPri(40);
-    expect(ops).toEqual([
+    ReactNoop.flushThrough([
       'Intl {}',
       'ShowLocale {"locale":"fr"}',
       'ShowLocale {"locale":"fr"}',
     ]);
 
-    ops.length = 0;
-    expect(ReactNoop.flush).toWarnDev(
+    expect(() =>
+      expect(ReactNoop.flush()).toEqual([
+        'ShowLocale {"locale":"fr"}',
+        'Intl {}',
+        'ShowLocale {"locale":"ru"}',
+      ]),
+    ).toWarnDev(
       'Legacy context API has been detected within a strict-mode tree: \n\n' +
         'Please update the following components: Intl, ShowLocale',
       {withoutStack: true},
     );
-    expect(ops).toEqual([
-      'ShowLocale {"locale":"fr"}',
-      'Intl {}',
-      'ShowLocale {"locale":"ru"}',
-    ]);
   });
 
   it('reads context when setState is below the provider', () => {
