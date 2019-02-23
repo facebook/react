@@ -32,6 +32,7 @@ describe('ReactIncrementalUpdates', () => {
     class Foo extends React.Component {
       state = {};
       componentDidMount() {
+        ReactNoop.yield('commit');
         ReactNoop.deferredUpdates(() => {
           // Has low priority
           this.setState({b: 'b'});
@@ -47,7 +48,7 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     ReactNoop.render(<Foo />);
-    ReactNoop.flushDeferredPri(25);
+    ReactNoop.flushThrough(['commit']);
     expect(state).toEqual({a: 'a'});
     ReactNoop.flush();
     expect(state).toEqual({a: 'a', b: 'b', c: 'c'});

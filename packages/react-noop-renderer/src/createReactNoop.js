@@ -747,36 +747,27 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return NoopRenderer.findHostInstance(component);
     },
 
-    flushDeferredPri(timeout: number = Infinity): Array<mixed> {
-      // The legacy version of this function decremented the timeout before
-      // returning the new time.
-      // TODO: Convert tests to use flushUnitsOfWork or flushAndYield instead.
-      const n = timeout / 5 - 1;
-
-      let values = [];
+    flush(): Array<mixed> {
+      let values = yieldedValues || [];
+      yieldedValues = null;
       // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (const value of flushUnitsOfWork(n)) {
+      for (const value of flushUnitsOfWork(Infinity)) {
         values.push(...value);
       }
       return values;
     },
 
-    flush(): Array<mixed> {
-      return ReactNoop.flushUnitsOfWork(Infinity);
-    },
-
-    flushAndYield(
-      unitsOfWork: number = Infinity,
-    ): Generator<Array<mixed>, void, void> {
-      return flushUnitsOfWork(unitsOfWork);
-    },
-
-    flushUnitsOfWork(n: number): Array<mixed> {
+    // TODO: Should only be used via a Jest plugin (like we do with the
+    // test renderer).
+    unstable_flushNumberOfYields(n: number): Array<mixed> {
       let values = yieldedValues || [];
       yieldedValues = null;
       // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (const value of flushUnitsOfWork(n)) {
+      for (const value of flushUnitsOfWork(Infinity)) {
         values.push(...value);
+        if (values.length >= n) {
+          break;
+        }
       }
       return values;
     },
@@ -847,7 +838,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     flushExpired(): Array<mixed> {
-      return ReactNoop.flushUnitsOfWork(0);
+      let values = yieldedValues || [];
+      yieldedValues = null;
+      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+      for (const value of flushUnitsOfWork(0)) {
+        values.push(...value);
+      }
+      return values;
     },
 
     yield(value: mixed) {
