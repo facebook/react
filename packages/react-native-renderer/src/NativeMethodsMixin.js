@@ -29,6 +29,8 @@ import {
 
 import warningWithoutStack from 'shared/warningWithoutStack';
 
+import {warnAboutDeprecatedSetNativeProps} from 'shared/ReactFeatureFlags';
+
 export default function(
   findNodeHandle: any => ?number,
   findHostInstance: any => any,
@@ -124,13 +126,15 @@ export default function(
      */
     setNativeProps: function(nativeProps: Object) {
       if (__DEV__) {
-        warningWithoutStack(
-          false,
-          'Warning: Calling ref.setNativeProps(nativeProps) ' +
-            'is deprecated and will be removed in a future release. ' +
-            'Use the setNativeProps export from the react-native package instead.' +
-            "\n\timport {setNativeProps} from 'react-native';\n\tsetNativeProps(ref, nativeProps);\n",
-        );
+        if (warnAboutDeprecatedSetNativeProps) {
+          warningWithoutStack(
+            false,
+            'Warning: Calling ref.setNativeProps(nativeProps) ' +
+              'is deprecated and will be removed in a future release. ' +
+              'Use the setNativeProps export from the react-native package instead.' +
+              "\n\timport {setNativeProps} from 'react-native';\n\tsetNativeProps(ref, nativeProps);\n",
+          );
+        }
       }
       // Class components don't have viewConfig -> validateAttributes.
       // Nor does it make sense to set native props on a non-native component.

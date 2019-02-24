@@ -11,6 +11,7 @@
 'use strict';
 
 let React;
+let ReactFeatureFlags;
 let StrictMode;
 let ReactNative;
 let createReactClass;
@@ -30,6 +31,8 @@ describe('ReactNative', () => {
 
     React = require('react');
     StrictMode = React.StrictMode;
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.warnAboutDeprecatedSetNativeProps = true;
     ReactNative = require('react-native-renderer');
     UIManager = require('UIManager');
     createReactClass = require('create-react-class/factory')(
