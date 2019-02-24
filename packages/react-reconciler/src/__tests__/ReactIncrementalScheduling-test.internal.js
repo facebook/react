@@ -243,10 +243,14 @@ describe('ReactIncrementalScheduling', () => {
       ReactNoop.render(<Foo />);
     });
     // The cDM update should not have flushed yet because it has async priority.
+    expect(ReactNoop.clearYields()).toEqual([
+      'render: 0',
+      'componentDidMount (before setState): 0',
+      'componentDidMount (after setState): 0',
+    ]);
     expect(ReactNoop.getChildren()).toEqual([span(0)]);
 
     // Now flush the cDM update.
-    ReactNoop.clearYields();
     expect(ReactNoop.flush()).toEqual(['render: 1', 'componentDidUpdate: 1']);
     expect(ReactNoop.getChildren()).toEqual([span(1)]);
 

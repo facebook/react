@@ -1254,6 +1254,7 @@ describe('Profiler', () => {
 
     ReactNoop.advanceTime(200);
 
+    expect(ReactNoop.clearYields()).toEqual(['Parent:componentDidMount:one']);
     ReactNoop.flush();
 
     expect(ReactNoop.getRoot('two').current.actualDuration).toBe(14);
@@ -2273,10 +2274,8 @@ describe('Profiler', () => {
 
         // Once the promise resolves, we render the suspended view
         await awaitableAdvanceTimers(10000);
-        expect(ReactNoop.flush()).toEqual([
-          'Promise resolved [Async]',
-          'AsyncText [Async]',
-        ]);
+        expect(ReactNoop.clearYields()).toEqual(['Promise resolved [Async]']);
+        expect(ReactNoop.flush()).toEqual(['AsyncText [Async]']);
         expect(ReactNoop.getChildrenAsJSX()).toEqual('AsyncSync');
         expect(onRender).toHaveBeenCalledTimes(3);
 

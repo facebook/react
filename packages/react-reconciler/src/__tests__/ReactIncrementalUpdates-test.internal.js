@@ -173,12 +173,12 @@ describe('ReactIncrementalUpdates', () => {
     instance.setState(createUpdate('g'));
 
     // The sync updates should have flushed, but not the async ones
+    expect(ReactNoop.clearYields()).toEqual(['e', 'f']);
     expect(ReactNoop.getChildren()).toEqual([span('ef')]);
 
     // Now flush the remaining work. Even though e and f were already processed,
     // they should be processed again, to ensure that the terminal state
     // is deterministic.
-    ReactNoop.clearYields();
     expect(ReactNoop.flush()).toEqual([
       'a',
       'b',
@@ -247,12 +247,12 @@ describe('ReactIncrementalUpdates', () => {
 
     // The sync updates should have flushed, but not the async ones. Update d
     // was dropped and replaced by e.
+    expect(ReactNoop.clearYields()).toEqual(['e', 'f']);
     expect(ReactNoop.getChildren()).toEqual([span('f')]);
 
     // Now flush the remaining work. Even though e and f were already processed,
     // they should be processed again, to ensure that the terminal state
     // is deterministic.
-    ReactNoop.clearYields();
     expect(ReactNoop.flush()).toEqual([
       'a',
       'b',

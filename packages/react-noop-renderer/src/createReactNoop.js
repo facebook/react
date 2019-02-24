@@ -22,6 +22,7 @@ import {createPortal} from 'shared/ReactPortal';
 import expect from 'expect';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import invariant from 'shared/invariant';
 
 // for .act's return value
 type Thenable = {
@@ -534,53 +535,79 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   const roots = new Map();
   const DEFAULT_ROOT_ID = '<default>';
 
-  let yieldedValues = null;
-
-  let didYield;
-  let unitsRemaining;
+  let yieldedValues: Array<mixed> = [];
+  let didStop: boolean = false;
+  let expectedNumberOfYields: number = -1;
 
   function shouldYield() {
-    // Check if we already yielded
-    if (didYield || yieldedValues !== null) {
-      return true;
-    }
-
-    // If there are no remaining units of work, and we haven't timed out, then
-    // we should yield.
     if (
-      unitsRemaining-- <= 0 &&
+      expectedNumberOfYields !== -1 &&
+      yieldedValues.length >= expectedNumberOfYields &&
       (scheduledCallbackTimeout === -1 ||
         elapsedTimeInMs < scheduledCallbackTimeout)
     ) {
-      didYield = true;
+      // We yielded at least as many values as expected. Stop rendering.
+      didStop = true;
       return true;
     }
-
-    // Otherwise, keep working.
+    // Keep rendering.
     return false;
   }
 
-  function* flushUnitsOfWork(n: number): Generator<Array<mixed>, void, void> {
-    unitsRemaining = n;
-    didYield = false;
+  function flushAll(): Array<mixed> {
+    assertYieldsWereCleared();
+    yieldedValues = [];
+    while (scheduledCallback !== null) {
+      const cb = scheduledCallback;
+      scheduledCallback = null;
+      const didTimeout =
+        scheduledCallbackTimeout !== -1 &&
+        scheduledCallbackTimeout < elapsedTimeInMs;
+      cb(didTimeout);
+    }
+    const values = yieldedValues;
+    yieldedValues = [];
+    return values;
+  }
+
+  function flushNumberOfYields(count: number): Array<mixed> {
+    assertYieldsWereCleared();
+    expectedNumberOfYields = count;
+    didStop = false;
+    yieldedValues = [];
     try {
-      while (!didYield && scheduledCallback !== null) {
-        let cb = scheduledCallback;
+      while (scheduledCallback !== null && !didStop) {
+        const cb = scheduledCallback;
         scheduledCallback = null;
         const didTimeout =
           scheduledCallbackTimeout !== -1 &&
           scheduledCallbackTimeout < elapsedTimeInMs;
         cb(didTimeout);
-        if (yieldedValues !== null) {
-          const values = yieldedValues;
-          yieldedValues = null;
-          yield values;
-        }
       }
+      return yieldedValues;
     } finally {
-      unitsRemaining = -1;
-      didYield = false;
+      expectedNumberOfYields = -1;
+      didStop = false;
+      yieldedValues = [];
     }
+  }
+
+  function yieldValue(value: mixed): void {
+    yieldedValues.push(value);
+  }
+
+  function clearYields(): Array<mixed> {
+    const values = yieldedValues;
+    yieldedValues = [];
+    return values;
+  }
+
+  function assertYieldsWereCleared() {
+    invariant(
+      yieldedValues.length === 0,
+      'Log of yielded values is not empty. ' +
+        'Call ReactNoop.clearYields(...) first.',
+    );
   }
 
   function childToJSX(child, text) {
@@ -638,6 +665,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   const ReactNoop = {
     getChildren(rootID: string = DEFAULT_ROOT_ID) {
+      assertYieldsWereCleared();
       const container = rootContainers.get(rootID);
       if (container) {
         return container.children;
@@ -747,53 +775,19 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return NoopRenderer.findHostInstance(component);
     },
 
-    flush(): Array<mixed> {
-      let values = yieldedValues || [];
-      yieldedValues = null;
-      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (const value of flushUnitsOfWork(Infinity)) {
-        values.push(...value);
-      }
-      return values;
-    },
+    flush: flushAll,
 
     // TODO: Should only be used via a Jest plugin (like we do with the
     // test renderer).
-    unstable_flushNumberOfYields(n: number): Array<mixed> {
-      let values = yieldedValues || [];
-      yieldedValues = null;
-      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (const value of flushUnitsOfWork(Infinity)) {
-        values.push(...value);
-        if (values.length >= n) {
-          break;
-        }
-      }
-      return values;
-    },
+    unstable_flushNumberOfYields: flushNumberOfYields,
 
     flushThrough(expected: Array<mixed>): void {
-      let actual = [];
-      if (expected.length !== 0) {
-        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-        for (const value of flushUnitsOfWork(Infinity)) {
-          actual.push(...value);
-          if (actual.length >= expected.length) {
-            break;
-          }
-        }
-      }
+      const actual = flushNumberOfYields(expected.length);
       expect(actual).toEqual(expected);
     },
 
     flushNextYield(): Array<mixed> {
-      let actual = null;
-      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (const value of flushUnitsOfWork(Infinity)) {
-        actual = value;
-        break;
-      }
-      return actual !== null ? actual : [];
+      return flushNumberOfYields(1);
     },
 
     flushWithHostCounters(
@@ -838,28 +832,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     flushExpired(): Array<mixed> {
-      let values = yieldedValues || [];
-      yieldedValues = null;
-      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (const value of flushUnitsOfWork(0)) {
-        values.push(...value);
-      }
-      return values;
+      return flushNumberOfYields(0);
     },
 
-    yield(value: mixed) {
-      if (yieldedValues === null) {
-        yieldedValues = [value];
-      } else {
-        yieldedValues.push(value);
-      }
-    },
+    yield: yieldValue,
 
-    clearYields() {
-      const values = yieldedValues;
-      yieldedValues = null;
-      return values;
-    },
+    clearYields,
 
     hasScheduledCallback() {
       return !!scheduledCallback;

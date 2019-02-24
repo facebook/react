@@ -215,28 +215,16 @@ exports[`ReactDebugFiberPerf measures deferred work in chunks 1`] = `
 ⚛ (React Tree Reconciliation: Yielded)
   ⚛ Parent [mount]
     ⚛ A [mount]
-
-⚛ (Waiting for async callback... will force flush in 5250 ms)
-
-⚛ (React Tree Reconciliation: Yielded)
-  ⚛ Parent [mount]
-    ⚛ A [mount]
       ⚛ Child [mount]
     ⚛ B [mount]
 
 ⚛ (Waiting for async callback... will force flush in 5250 ms)
 
 // Complete the rest
-⚛ (React Tree Reconciliation: Yielded)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Parent [mount]
     ⚛ B [mount]
       ⚛ Child [mount]
-    ⚛ C [mount]
-
-⚛ (Waiting for async callback... will force flush in 5250 ms)
-
-⚛ (React Tree Reconciliation: Completed Root)
-  ⚛ Parent [mount]
     ⚛ C [mount]
       ⚛ Child [mount]
 

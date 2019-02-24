@@ -88,7 +88,7 @@ describe('ReactExpiration', () => {
     // haven't entered an idle callback, the scheduler must assume that we're
     // inside the same event.
     ReactNoop.advanceTime(2000);
-    expect(ReactNoop.clearYields()).toEqual(null);
+    expect(ReactNoop.clearYields()).toEqual([]);
     expect(ReactNoop.getChildren()).toEqual([span('B')]);
     // Schedule another update.
     ReactNoop.render(<Text text="B" />);
@@ -142,7 +142,7 @@ describe('ReactExpiration', () => {
       // haven't entered an idle callback, the scheduler must assume that we're
       // inside the same event.
       ReactNoop.advanceTime(2000);
-      expect(ReactNoop.clearYields()).toEqual(null);
+      expect(ReactNoop.clearYields()).toEqual([]);
       expect(ReactNoop.getChildren()).toEqual([span('B')]);
 
       // Perform some synchronous work. Again, the scheduler must assume we're

@@ -126,13 +126,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Flush the promise completely
     await advanceTimers(50);
     // Renders successfully
-    expect(ReactNoop.flush()).toEqual([
-      'Promise resolved [A]',
-      'Foo',
-      'Bar',
-      'A',
-      'B',
-    ]);
+    expect(ReactNoop.clearYields()).toEqual(['Promise resolved [A]']);
+    expect(ReactNoop.flush()).toEqual(['Foo', 'Bar', 'A', 'B']);
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('B')]);
   });
 
@@ -172,7 +167,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ReactNoop.expire(1000);
     await advanceTimers(1000);
 
-    expect(ReactNoop.flush()).toEqual(['Promise resolved [A]', 'A']);
+    expect(ReactNoop.clearYields()).toEqual(['Promise resolved [A]']);
+    expect(ReactNoop.flush()).toEqual(['A']);
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('Loading B...')]);
 
     // Advance time by enough that the second Suspense's promise resolves
@@ -180,7 +176,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ReactNoop.expire(1000);
     await advanceTimers(1000);
 
-    expect(ReactNoop.flush()).toEqual(['Promise resolved [B]', 'B']);
+    expect(ReactNoop.clearYields()).toEqual(['Promise resolved [B]']);
+    expect(ReactNoop.flush()).toEqual(['B']);
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('B')]);
   });
 
@@ -207,13 +204,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Wait for data to resolve
     await advanceTimers(100);
     // Renders successfully
-    expect(ReactNoop.flush()).toEqual([
-      'Promise resolved [B]',
-      'A',
-      'B',
-      'C',
-      'D',
-    ]);
+    expect(ReactNoop.clearYields()).toEqual(['Promise resolved [B]']);
+    expect(ReactNoop.flush()).toEqual(['A', 'B', 'C', 'D']);
     expect(ReactNoop.getChildren()).toEqual([
       span('A'),
       span('B'),
@@ -259,8 +251,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await advanceTimers(1000);
     textResourceShouldFail = false;
 
+    expect(ReactNoop.clearYields()).toEqual(['Promise rejected [Result]']);
+
     expect(ReactNoop.flush()).toEqual([
-      'Promise rejected [Result]',
       'Error! [Result]',
 
       // React retries one more time
@@ -316,8 +309,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await advanceTimers(1000);
     textResourceShouldFail = false;
 
+    expect(ReactNoop.clearYields()).toEqual(['Promise rejected [Result]']);
     expect(ReactNoop.flush()).toEqual([
-      'Promise rejected [Result]',
       'Error! [Result]',
 
       // React retries one more time
@@ -346,6 +339,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ReactNoop.render(<App highPri="A" lowPri="1" />);
     ReactNoop.flush();
     await advanceTimers(0);
+    expect(ReactNoop.clearYields()).toEqual(['Promise resolved [1]']);
     ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('1')]);
 
@@ -363,12 +357,12 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ReactNoop.flushSync(() => {
       ReactNoop.render(<App highPri="B" lowPri="1" />);
     });
-    expect(ReactNoop.flush()).toEqual(['B', '1']);
+    expect(ReactNoop.clearYields()).toEqual(['B', '1']);
     expect(ReactNoop.getChildren()).toEqual([span('B'), span('1')]);
 
     // Unblock the low-pri text and finish
     await advanceTimers(0);
-    expect(ReactNoop.flush()).toEqual(['Promise resolved [2]']);
+    expect(ReactNoop.clearYields()).toEqual(['Promise resolved [2]']);
     expect(ReactNoop.getChildren()).toEqual([span('B'), span('1')]);
   });
 
@@ -393,7 +387,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([]);
 
     await advanceTimers(0);
-    expect(ReactNoop.flush()).toEqual(['Promise resolved [A]', 'A', 'B']);
+    expect(ReactNoop.clearYields()).toEqual(['Promise resolved [A]']);
+    expect(ReactNoop.flush()).toEqual(['A', 'B']);
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('B')]);
   });
 
@@ -460,7 +455,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     // Once the promise resolves, we render the suspended view
     await advanceTimers(10000);
-    expect(ReactNoop.flush()).toEqual(['Promise resolved [Async]', 'Async']);
+    expect(ReactNoop.clearYields()).toEqual(['Promise resolved [Async]']);
+    expect(ReactNoop.flush()).toEqual(['Async']);
     expect(ReactNoop.getChildren()).toEqual([span('Async'), span('Sync')]);
   });
 
@@ -509,8 +505,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // timed out at 1.5 seconds. So, 2 seconds have elapsed since the
     // placeholder timed out. That means we still haven't reached the 2.5 second
     // threshold of the inner placeholder.
-    expect(ReactNoop.flush()).toEqual([
+    expect(ReactNoop.clearYields()).toEqual([
       'Promise resolved [Outer content]',
+    ]);
+    expect(ReactNoop.flush()).toEqual([
       'Outer content',
       'Suspend! [Inner content]',
       'Loading inner...',
@@ -535,10 +533,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Finally, flush the inner promise. We should see the complete screen.
     ReactNoop.expire(1000);
     await advanceTimers(1000);
-    expect(ReactNoop.flush()).toEqual([
+    expect(ReactNoop.clearYields()).toEqual([
       'Promise resolved [Inner content]',
-      'Inner content',
     ]);
+    expect(ReactNoop.flush()).toEqual(['Inner content']);
     expect(ReactNoop.getChildren()).toEqual([
       span('Sync'),
       span('Outer content'),
@@ -571,7 +569,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     // Once the promise resolves, we render the suspended view
     await advanceTimers(0);
-    expect(ReactNoop.flush()).toEqual(['Promise resolved [Async]', 'Async']);
+    expect(ReactNoop.clearYields()).toEqual(['Promise resolved [Async]']);
+    expect(ReactNoop.flush()).toEqual(['Async']);
     expect(ReactNoop.getChildren()).toEqual([span('Async'), span('Sync')]);
   });
 
@@ -628,7 +627,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     // Once the promise resolves, we render the suspended view
     await advanceTimers(1000);
-    expect(ReactNoop.flush()).toEqual(['Promise resolved [Async]', 'Async']);
+    expect(ReactNoop.clearYields()).toEqual(['Promise resolved [Async]']);
+    expect(ReactNoop.flush()).toEqual(['Async']);
     expect(ReactNoop.getChildren()).toEqual([span('Async'), span('Sync')]);
   });
 
@@ -672,12 +672,11 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     await advanceTimers(100);
 
-    expect(ReactNoop.flush()).toEqual([
+    expect(ReactNoop.clearYields()).toEqual([
       'Promise resolved [A]',
       'Promise resolved [B]',
-      'A',
-      'B',
     ]);
+    expect(ReactNoop.flush()).toEqual(['A', 'B']);
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('B')]);
   });
 
@@ -701,7 +700,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Resolve the promise
     await advanceTimers(1);
     // We can now resume rendering
-    expect(ReactNoop.flush()).toEqual(['Promise resolved [Async]', 'Async']);
+    expect(ReactNoop.clearYields()).toEqual(['Promise resolved [Async]']);
+    expect(ReactNoop.flush()).toEqual(['Async']);
     expect(ReactNoop.getChildren()).toEqual([span('Async')]);
   });
 
@@ -747,10 +747,12 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     await advanceTimers(10000);
     // Flush the remaining work.
-    expect(ReactNoop.flush()).toEqual([
+    expect(ReactNoop.clearYields()).toEqual([
       'Promise resolved [A]',
       'Promise resolved [B]',
     ]);
+    // Nothing else to render.
+    expect(ReactNoop.flush()).toEqual([]);
     expect(ReactNoop.getChildren()).toEqual([span('C')]);
   });
 
@@ -863,8 +865,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       ]);
       expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
 
+      ReactNoop.expire(100);
       await advanceTimers(100);
-      expect(ReactNoop.expire(100)).toEqual([
+      expect(ReactNoop.clearYields()).toEqual([
         'Promise resolved [Result]',
         'Result',
       ]);
@@ -945,7 +948,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       );
 
       await advanceTimers(100);
-      expect(ReactNoop.flush()).toEqual([
+      expect(ReactNoop.clearYields()).toEqual([
         'Promise resolved [Step: 2]',
         'Step: 2',
       ]);
@@ -1289,8 +1292,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         </React.Fragment>,
       );
 
+      ReactNoop.expire(1000);
       await advanceTimers(1000);
-      expect(ReactNoop.expire(1000)).toEqual(['Promise resolved [B]', 'B']);
+      expect(ReactNoop.clearYields()).toEqual(['Promise resolved [B]', 'B']);
 
       expect(ReactNoop.getChildrenAsJSX()).toEqual(
         <React.Fragment>
@@ -1377,8 +1381,16 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       }
 
       ReactNoop.renderLegacySyncRoot(<Demo />);
+
+      expect(ReactNoop.clearYields()).toEqual([
+        'Suspend! [Hi]',
+        'Loading...',
+        // Re-render due to lifecycle update
+        'Loading...',
+      ]);
       expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
       await advanceTimers(100);
+      expect(ReactNoop.clearYields()).toEqual(['Promise resolved [Hi]', 'Hi']);
       expect(ReactNoop.getChildren()).toEqual([span('Hi')]);
     });
 

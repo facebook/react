@@ -652,6 +652,7 @@ describe('ReactDebugFiberPerf', () => {
     ReactNoop.flushSync(() => {
       ReactNoop.render(<Foo />);
     });
+    expect(ReactNoop.clearYields()).toEqual(['Foo']);
     ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();
   });

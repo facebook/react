@@ -615,6 +615,8 @@ describe('ReactIncrementalErrorHandling', () => {
       ReactNoop.flush();
     }).toThrow('Hello');
     expect(ReactNoop.clearYields()).toEqual([
+      'BrokenRender',
+
       // React retries one more time
       'RethrowErrorBoundary render',
       'BrokenRender',
