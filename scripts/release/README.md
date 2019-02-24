@@ -72,7 +72,7 @@ git checkout -b 16.8.3 v16.8.2
 Next cherry pick any changes from master that you want to include in the release:
 
 ```sh
-it cherry-pick <commit-hash>
+git cherry-pick <commit-hash>
 ```
 
 Once you have cherry picked all of the commits you want to include in the release, push your feature branch and create a Pull Request (so that Circle CI will create a canary):
