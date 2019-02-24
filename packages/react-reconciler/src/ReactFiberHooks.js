@@ -524,10 +524,7 @@ function mountContext<T>(
   context: ReactContext<T>,
   observedBits: void | number | boolean,
 ): T {
-  if (__DEV__) {
-    // If this DEV conditional is ever removed, update ReactDebugHooks useContext too.
-    mountWorkInProgressHook();
-  }
+  mountWorkInProgressHook();
   return readContext(context, observedBits);
 }
 
@@ -535,10 +532,7 @@ function updateContext<T>(
   context: ReactContext<T>,
   observedBits: void | number | boolean,
 ): T {
-  if (__DEV__) {
-    // If this DEV conditional is ever removed, update ReactDebugHooks useContext too.
-    updateWorkInProgressHook();
-  }
+  updateWorkInProgressHook();
   return readContext(context, observedBits);
 }
 
@@ -1156,7 +1150,7 @@ const HooksDispatcherOnMount: Dispatcher = {
   readContext,
 
   useCallback: mountCallback,
-  useContext: readContext,
+  useContext: mountContext,
   useEffect: mountEffect,
   useImperativeHandle: mountImperativeHandle,
   useLayoutEffect: mountLayoutEffect,
@@ -1171,7 +1165,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   readContext,
 
   useCallback: updateCallback,
-  useContext: readContext,
+  useContext: updateContext,
   useEffect: updateEffect,
   useImperativeHandle: updateImperativeHandle,
   useLayoutEffect: updateLayoutEffect,

@@ -431,27 +431,38 @@ describe('ReactHooksInspectionIntegration', () => {
   // This test case is based on an open source bug report:
   // facebookincubator/redux-react-hook/issues/34#issuecomment-466693787
   it('should properly advance the current hook for useContext', () => {
-    const MyContext = React.createContext(123);
+    const MyContext = React.createContext(1);
 
-    let hasInitializedState = false;
-    const initializeStateOnce = () => {
-      if (hasInitializedState) {
-        throw Error(
-          'State initialization function should only be called once.',
-        );
-      }
-      hasInitializedState = true;
-      return {foo: 'abc'};
-    };
+    let incrementCount;
 
     function Foo(props) {
-      React.useContext(MyContext);
-      const [data] = React.useState(initializeStateOnce);
-      return <div>foo: {data.foo}</div>;
+      const context = React.useContext(MyContext);
+      const [data, setData] = React.useState({count: context});
+
+      incrementCount = () => setData(({count}) => ({count: count + 1}));
+
+      return <div>count: {data.count}</div>;
     }
 
     const renderer = ReactTestRenderer.create(<Foo />);
+    expect(renderer.toJSON()).toEqual({
+      type: 'div',
+      props: {},
+      children: ['count: ', '1'],
+    });
+
+    act(incrementCount);
+    expect(renderer.toJSON()).toEqual({
+      type: 'div',
+      props: {},
+      children: ['count: ', '2'],
+    });
+
     const childFiber = renderer.root._currentFiber();
-    ReactDebugTools.inspectHooksOfFiber(childFiber);
+    const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    expect(tree).toEqual([
+      {name: 'Context', value: 1, subHooks: []},
+      {name: 'State', value: {count: 2}, subHooks: []},
+    ]);
   });
 });
