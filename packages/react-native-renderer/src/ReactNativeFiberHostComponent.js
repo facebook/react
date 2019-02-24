@@ -27,7 +27,6 @@ import {
 } from './NativeMethodsMixinUtils';
 
 import warningWithoutStack from 'shared/warningWithoutStack';
-
 import {warnAboutDeprecatedSetNativeProps} from 'shared/ReactFeatureFlags';
 
 /**
