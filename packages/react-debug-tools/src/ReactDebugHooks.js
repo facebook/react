@@ -93,6 +93,10 @@ function useContext<T>(
   context: ReactContext<T>,
   observedBits: void | number | boolean,
 ): T {
+  if (__DEV__) {
+    // ReactFiberHooks only adds context to the hooks list in DEV.
+    nextHook();
+  }
   hookLog.push({
     primitive: 'Context',
     stackError: new Error(),

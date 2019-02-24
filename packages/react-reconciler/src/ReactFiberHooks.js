@@ -525,6 +525,7 @@ function mountContext<T>(
   observedBits: void | number | boolean,
 ): T {
   if (__DEV__) {
+    // If this DEV conditional is ever removed, update ReactDebugHooks useContext too.
     mountWorkInProgressHook();
   }
   return readContext(context, observedBits);
@@ -535,6 +536,7 @@ function updateContext<T>(
   observedBits: void | number | boolean,
 ): T {
   if (__DEV__) {
+    // If this DEV conditional is ever removed, update ReactDebugHooks useContext too.
     updateWorkInProgressHook();
   }
   return readContext(context, observedBits);

@@ -427,4 +427,31 @@ describe('ReactHooksInspectionIntegration', () => {
     expect(setterCalls[0]).not.toBe(initial);
     expect(setterCalls[1]).toBe(initial);
   });
+
+  // This test case is based on an open source bug report:
+  // facebookincubator/redux-react-hook/issues/34#issuecomment-466693787
+  it('should properly advance the current hook for useContext', () => {
+    const MyContext = React.createContext(123);
+
+    let hasInitializedState = false;
+    const initializeStateOnce = () => {
+      if (hasInitializedState) {
+        throw Error(
+          'State initialization function should only be called once.',
+        );
+      }
+      hasInitializedState = true;
+      return {foo: 'abc'};
+    };
+
+    function Foo(props) {
+      React.useContext(MyContext);
+      const [data] = React.useState(initializeStateOnce);
+      return <div>foo: {data.foo}</div>;
+    }
+
+    const renderer = ReactTestRenderer.create(<Foo />);
+    const childFiber = renderer.root._currentFiber();
+    ReactDebugTools.inspectHooksOfFiber(childFiber);
+  });
 });
