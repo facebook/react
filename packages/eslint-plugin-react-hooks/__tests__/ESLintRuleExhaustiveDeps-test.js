@@ -496,9 +496,7 @@ const tests = {
       `,
     },
     {
-      // Valid because we assign ref.current
-      // ourselves. Therefore it's likely not
-      // a ref managed by React.
+      // Valid because the ref is captured.
       code: `
         function useMyThing(myRef) {
           const myRef = useRef();
