@@ -22,7 +22,6 @@ import {createPortal} from 'shared/ReactPortal';
 import expect from 'expect';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import invariant from 'shared/invariant';
 
 // for .act's return value
 type Thenable = {
@@ -555,7 +554,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   }
 
   function flushAll(): Array<mixed> {
-    assertYieldsWereCleared();
     yieldedValues = [];
     while (scheduledCallback !== null) {
       const cb = scheduledCallback;
@@ -571,7 +569,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   }
 
   function flushNumberOfYields(count: number): Array<mixed> {
-    assertYieldsWereCleared();
     expectedNumberOfYields = count;
     didStop = false;
     yieldedValues = [];
@@ -600,14 +597,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     const values = yieldedValues;
     yieldedValues = [];
     return values;
-  }
-
-  function assertYieldsWereCleared() {
-    invariant(
-      yieldedValues.length === 0,
-      'Log of yielded values is not empty. ' +
-        'Call ReactNoop.clearYields(...) first.',
-    );
   }
 
   function childToJSX(child, text) {
@@ -665,7 +654,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   const ReactNoop = {
     getChildren(rootID: string = DEFAULT_ROOT_ID) {
-      assertYieldsWereCleared();
       const container = rootContainers.get(rootID);
       if (container) {
         return container.children;
@@ -775,16 +763,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return NoopRenderer.findHostInstance(component);
     },
 
-    flush: flushAll,
-
     // TODO: Should only be used via a Jest plugin (like we do with the
     // test renderer).
+    unstable_flushWithoutYielding: flushAll,
     unstable_flushNumberOfYields: flushNumberOfYields,
-
-    flushThrough(expected: Array<mixed>): void {
-      const actual = flushNumberOfYields(expected.length);
-      expect(actual).toEqual(expected);
-    },
+    unstable_clearYields: clearYields,
 
     flushNextYield(): Array<mixed> {
       return flushNumberOfYields(1);
@@ -805,7 +788,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       hostUpdateCounter = 0;
       hostCloneCounter = 0;
       try {
-        ReactNoop.flush();
+        flushAll();
         return useMutation
           ? {
               hostDiffCounter,
@@ -836,8 +819,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     yield: yieldValue,
-
-    clearYields,
 
     hasScheduledCallback() {
       return !!scheduledCallback;
@@ -1016,7 +997,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         _next: null,
       };
       root.firstBatch = batch;
-      const actual = ReactNoop.flush();
+      const actual = flushAll();
       expect(actual).toEqual(expectedFlush);
       return (expectedCommit: Array<mixed>) => {
         batch._defer = false;

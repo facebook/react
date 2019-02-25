@@ -385,7 +385,7 @@ describe('ReactART', () => {
       </CurrentRendererContext.Provider>,
     );
 
-    ReactNoop.flushThrough(['A']);
+    expect(ReactNoop).toFlushAndYieldThrough(['A']);
 
     ReactDOM.render(
       <Surface>
@@ -400,7 +400,7 @@ describe('ReactART', () => {
     expect(ops).toEqual([null, 'ART']);
 
     ops = [];
-    expect(ReactNoop.flush()).toEqual(['B', 'C']);
+    expect(ReactNoop).toFlushAndYield(['B', 'C']);
 
     expect(ops).toEqual(['Test']);
   });

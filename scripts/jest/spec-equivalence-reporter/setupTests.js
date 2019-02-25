@@ -45,17 +45,10 @@ global.spyOnProd = function(...args) {
   }
 };
 
-const JestReact = require('jest-react');
 expect.extend({
   ...require('../matchers/interactionTracing'),
   ...require('../matchers/toWarnDev'),
-
-  toFlushWithoutYielding: JestReact.unstable_toFlushWithoutYielding,
-  toFlushAndYield: JestReact.unstable_toFlushAndYield,
-  toFlushAndYieldThrough: JestReact.unstable_toFlushAndYieldThrough,
-  toHaveYielded: JestReact.unstable_toHaveYielded,
-  toFlushAndThrow: JestReact.unstable_toFlushAndThrow,
-  toMatchRenderedOutput: JestReact.unstable_toMatchRenderedOutput,
+  ...require('../matchers/reactTestMatchers'),
 });
 
 beforeEach(() => (numExpectations = 0));
