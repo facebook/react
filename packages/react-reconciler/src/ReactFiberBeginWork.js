@@ -1631,6 +1631,42 @@ function updateSuspenseComponent(
   return next;
 }
 
+function retrySuspenseComponentWithoutHydrating(
+  current: Fiber,
+  workInProgress: Fiber,
+  renderExpirationTime: ExpirationTime,
+) {
+  // Detach from the current dehydrated boundary.
+  current.alternate = null;
+  workInProgress.alternate = null;
+
+  // Insert a deletion in the effect list.
+  let returnFiber = workInProgress.return;
+  invariant(
+    returnFiber !== null,
+    'Suspense boundaries are never on the root. ' +
+      'This is probably a bug in React.',
+  );
+  const last = returnFiber.lastEffect;
+  if (last !== null) {
+    last.nextEffect = current;
+    returnFiber.lastEffect = current;
+  } else {
+    returnFiber.firstEffect = returnFiber.lastEffect = current;
+  }
+  current.nextEffect = null;
+  current.effectTag = Deletion;
+
+  // Upgrade this work in progress to a real Suspense component.
+  workInProgress.tag = SuspenseComponent;
+  workInProgress.stateNode = null;
+  workInProgress.memoizedState = null;
+  // This is now an insertion.
+  workInProgress.effectTag |= Placement;
+  // Retry as a real Suspense component.
+  return updateSuspenseComponent(null, workInProgress, renderExpirationTime);
+}
+
 function updateDehydratedSuspenseComponent(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -1648,55 +1684,32 @@ function updateDehydratedSuspenseComponent(
     workInProgress.child = null;
     return null;
   }
+  const suspenseInstance = (current.stateNode: SuspenseInstance);
+  if (isSuspenseInstanceFallback(suspenseInstance)) {
+    // This boundary is in a permanent fallback state. In this case, we'll never
+    // get an update and we'll never be able to hydrate the final content. Let's just try the
+    // client side render instead.
+    return retrySuspenseComponentWithoutHydrating(
+      current,
+      workInProgress,
+      renderExpirationTime,
+    );
+  }
   // We use childExpirationTime to indicate that a child might depend on context, so if
   // any context has changed, we need to treat is as if the input might have changed.
   const hasContextChanged = current.childExpirationTime >= renderExpirationTime;
-  const suspenseInstance = (current.stateNode: SuspenseInstance);
-  if (
-    didReceiveUpdate ||
-    hasContextChanged ||
-    isSuspenseInstanceFallback(suspenseInstance)
-  ) {
+  if (didReceiveUpdate || hasContextChanged) {
     // This boundary has changed since the first render. This means that we are now unable to
     // hydrate it. We might still be able to hydrate it using an earlier expiration time but
     // during this render we can't. Instead, we're going to delete the whole subtree and
     // instead inject a new real Suspense boundary to take its place, which may render content
     // or fallback. The real Suspense boundary will suspend for a while so we have some time
     // to ensure it can produce real content, but all state and pending events will be lost.
-
-    // Alternatively, this boundary is in a permanent fallback state. In this case, we'll never
-    // get an update and we'll never be able to hydrate the final content. Let's just try the
-    // client side render instead.
-
-    // Detach from the current dehydrated boundary.
-    current.alternate = null;
-    workInProgress.alternate = null;
-
-    // Insert a deletion in the effect list.
-    let returnFiber = workInProgress.return;
-    invariant(
-      returnFiber !== null,
-      'Suspense boundaries are never on the root. ' +
-        'This is probably a bug in React.',
+    return retrySuspenseComponentWithoutHydrating(
+      current,
+      workInProgress,
+      renderExpirationTime,
     );
-    const last = returnFiber.lastEffect;
-    if (last !== null) {
-      last.nextEffect = current;
-      returnFiber.lastEffect = current;
-    } else {
-      returnFiber.firstEffect = returnFiber.lastEffect = current;
-    }
-    current.nextEffect = null;
-    current.effectTag = Deletion;
-
-    // Upgrade this work in progress to a real Suspense component.
-    workInProgress.tag = SuspenseComponent;
-    workInProgress.stateNode = null;
-    workInProgress.memoizedState = null;
-    // This is now an insertion.
-    workInProgress.effectTag |= Placement;
-    // Retry as a real Suspense component.
-    return updateSuspenseComponent(null, workInProgress, renderExpirationTime);
   } else if (isSuspenseInstancePending(suspenseInstance)) {
     // This component is still pending more data from the server, so we can't hydrate its
     // content. We treat it as if this component suspended itself. It might seem as if
