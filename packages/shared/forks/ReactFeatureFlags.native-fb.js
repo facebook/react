@@ -13,7 +13,9 @@ import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.native-fb';
 
 // Re-export dynamic flags from the fbsource version.
-export const {debugRenderPhaseSideEffects} = require('ReactFeatureFlags');
+export const {
+  debugRenderPhaseSideEffects,
+} = require('ReactFeatureFlags');
 
 // The rest of the flags are static for better dead code elimination.
 export const enableUserTimingAPI = __DEV__;
@@ -27,7 +29,7 @@ export const debugRenderPhaseSideEffectsForStrictMode = true;
 export const disableInputAttributeSyncing = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const warnAboutDeprecatedLifecycles = true;
-export const warnAboutDeprecatedSetNativeProps = false;
+export const warnAboutDeprecatedSetNativeProps = true;
 
 // Only used in www builds.
 export function addUserTimingListener() {
