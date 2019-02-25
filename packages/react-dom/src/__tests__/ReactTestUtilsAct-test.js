@@ -306,4 +306,3 @@ describe('act', () => {
   });
 });
 
-// todo - errors are caught as expected
