@@ -1927,8 +1927,8 @@ const tests = {
         }
       `,
       errors: [
-        `Accessing 'myRef.current' during ` +
-          `the effect cleanup is likely a mistake because by this time React ` +
+        `Accessing 'myRef.current' during the effect cleanup ` +
+          `will likely read a different ref value because by this time React ` +
           `has already updated the ref. If this ref is managed by React, store ` +
           `'myRef.current' in a variable inside ` +
           `the effect itself and refer to that variable from the cleanup function.`,
@@ -1954,8 +1954,8 @@ const tests = {
         }
       `,
       errors: [
-        `Accessing 'myRef.current' during ` +
-          `the effect cleanup is likely a mistake because by this time React ` +
+        `Accessing 'myRef.current' during the effect cleanup ` +
+          `will likely read a different ref value because by this time React ` +
           `has already updated the ref. If this ref is managed by React, store ` +
           `'myRef.current' in a variable inside ` +
           `the effect itself and refer to that variable from the cleanup function.`,
@@ -1993,8 +1993,8 @@ const tests = {
         }
       `,
       errors: [
-        `Accessing 'myRef.current' during ` +
-          `the effect cleanup is likely a mistake because by this time React ` +
+        `Accessing 'myRef.current' during the effect cleanup ` +
+          `will likely read a different ref value because by this time React ` +
           `has already updated the ref. If this ref is managed by React, store ` +
           `'myRef.current' in a variable inside ` +
           `the effect itself and refer to that variable from the cleanup function.`,
@@ -2032,8 +2032,8 @@ const tests = {
         }
       `,
       errors: [
-        `Accessing 'myRef.current' during ` +
-          `the effect cleanup is likely a mistake because by this time React ` +
+        `Accessing 'myRef.current' during the effect cleanup ` +
+          `will likely read a different ref value because by this time React ` +
           `has already updated the ref. If this ref is managed by React, store ` +
           `'myRef.current' in a variable inside ` +
           `the effect itself and refer to that variable from the cleanup function.`,
