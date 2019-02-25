@@ -6,10 +6,11 @@ import React, {
   lazy,
   memo,
   Component,
-  ConcurrentMode,
+  // $FlowFixMe Flow thinks ConcurrentMode is stable
+  unstable_ConcurrentMode as ConcurrentMode,
   Fragment,
   // $FlowFixMe Flow doesn't know about the Profiler import yet
-  Profiler,
+  unstable_Profiler as Profiler,
   StrictMode,
   Suspense,
 } from 'react';

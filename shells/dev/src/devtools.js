@@ -2,7 +2,7 @@
 
 import { createElement } from 'react';
 // $FlowFixMe Flow does not yet know about createRoot()
-import { createRoot } from 'react-dom';
+import { unstable_createRoot as createRoot } from 'react-dom';
 import Bridge from 'src/bridge';
 import { installHook } from 'src/hook';
 import { initDevTools } from 'src/devtools';
