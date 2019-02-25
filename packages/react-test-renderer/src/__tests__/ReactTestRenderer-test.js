@@ -17,14 +17,6 @@ const React = require('react');
 const ReactCache = require('react-cache');
 const ReactTestRenderer = require('react-test-renderer');
 
-function sleep(period) {
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve(true);
-    }, period);
-  });
-}
-
 describe('ReactTestRenderer', () => {
   it('should warn if used to render a ReactDOM portal', () => {
     const container = document.createElement('div');
@@ -38,32 +30,62 @@ describe('ReactTestRenderer', () => {
   });
 
   describe('act', () => {
-    it('should work', () => {
-      function App() {
+    it('can use .act() to flush effects', () => {
+      function App(props) {
         let [ctr, setCtr] = React.useState(0);
         React.useEffect(() => {
+          props.callback();
           setCtr(1);
         });
         return ctr;
       }
+      let called = false;
       let root;
       ReactTestRenderer.act(() => {
-        root = ReactTestRenderer.create(<App />);
+        root = ReactTestRenderer.create(
+          <App
+            callback={() => {
+              called = true;
+            }}
+          />,
+        );
       });
+
+      expect(called).toBe(true);
       expect(root.toJSON()).toEqual('1');
     });
+
+    it("warns if you don't use .act", () => {
+      let setCtr;
+      function App(props) {
+        let [ctr, _setCtr] = React.useState(0);
+        setCtr = _setCtr;
+        return ctr;
+      }
+
+      ReactTestRenderer.create(<App />);
+
+      expect(() => {
+        setCtr(1);
+      }).toWarnDev([
+        'An update to App inside a test was not wrapped in act(...)',
+      ]);
+    });
+
     describe('async', () => {
       beforeEach(() => {
         jest.useRealTimers();
       });
+
       afterEach(() => {
         jest.useFakeTimers();
       });
-      it('should work async too', async () => {
+
+      it('should work with async/await', async () => {
         function App() {
           let [ctr, setCtr] = React.useState(0);
           async function someAsyncFunction() {
-            await sleep(100);
+            await null;
             setCtr(1);
           }
           React.useEffect(() => {
@@ -73,12 +95,27 @@ describe('ReactTestRenderer', () => {
         }
         let root;
         await ReactTestRenderer.act(async () => {
-          // todo - I don't understand why a nested async act call
-          // flushes the effect correctly
-          await ReactTestRenderer.act(async () => {
+          // this test will fail
+          // claiming to only fire the effect after this act call has exited
+
+          // an odd situation
+          // the sync version of act flushes the effect,
+          // but the promise is left hanging until the top level
+          // one resolves (even if you await a timer or so)
+          ReactTestRenderer.act(() => {
             root = ReactTestRenderer.create(<App />);
           });
-          await sleep(200);
+          await null;
+
+          // the first workaround is to use the async version, which oddly works
+
+          // another workaround is to do this -
+          // await null
+          // ReactTestRenderer.act(() => {});
+
+          // this same test passes fine with the TestUtils sync version
+          // or the async version of TestRenderer.act(...)
+          // smells like something to do with our test setup
         });
         expect(root.toJSON()).toEqual('1');
       });

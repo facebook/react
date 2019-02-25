@@ -872,7 +872,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       // note: keep these warning messages in sync with
       // ReactTestRenderer.js and ReactTestUtils.js
       const result = NoopRenderer.actedUpdates(callback);
-      if (result && result.then) {
+      if (
+        result !== null &&
+        typeof result === 'object' &&
+        typeof result.then === 'function'
+      ) {
         let called = false;
         if (__DEV__) {
           setTimeout(() => {
@@ -888,11 +892,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           }, 0);
         }
         return {
-          then(successFn: (*) => *, errorFn: (*) => *) {
+          then(successFn: () => mixed, errorFn: () => mixed) {
             called = true;
             return result.then(() => {
               ReactNoop.flushPassiveEffects();
-              successFn();
+              return successFn();
             }, errorFn);
           },
         };

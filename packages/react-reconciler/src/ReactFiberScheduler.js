@@ -1844,23 +1844,40 @@ export function actedUpdates(callback: () => void | Promise<void>) {
     actingUpdatesScopeDepth++;
   }
 
-  const result = batchedUpdates(callback);
-  if (result && result.then) {
-    // saving a few bytes without the typeof === 'function' check
-    return result.then(() => {
-      if (__DEV__) {
-        if (actingUpdatesScopeDepth - 1 > previousActingUpdatesScopeDepth) {
-          // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
-          warningWithoutStack(
-            null,
-            'You seem to have interleaved multiple act() calls, this is not supported. ' +
-              'Be sure to await previous sibling act calls before making a new one. ',
-            // todo - a better warning here. open to suggestions.
-          );
-        }
-        actingUpdatesScopeDepth--;
+  function warnIfScopeDepthMismatch() {
+    if (__DEV__) {
+      if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
+        // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
+        warningWithoutStack(
+          null,
+          'You seem to have overlapping act() calls, this is not supported. ' +
+            'Be sure to await previous act() calls before making a new one. ',
+        );
       }
-    });
+    }
+  }
+
+  const result = batchedUpdates(callback);
+  if (
+    result !== null &&
+    typeof result === 'object' &&
+    typeof result.then === 'function'
+  ) {
+    return result.then(
+      () => {
+        if (__DEV__) {
+          actingUpdatesScopeDepth--;
+          warnIfScopeDepthMismatch();
+        }
+      },
+      error => {
+        if (__DEV__) {
+          actingUpdatesScopeDepth--;
+          warnIfScopeDepthMismatch();
+        }
+        throw error;
+      },
+    );
   } else {
     if (__DEV__) {
       if (result !== undefined) {
@@ -1872,7 +1889,7 @@ export function actedUpdates(callback: () => void | Promise<void>) {
         );
       }
       actingUpdatesScopeDepth--;
-      // todo - this needs a warning too
+      warnIfScopeDepthMismatch();
     }
   }
 }

@@ -32,31 +32,25 @@ describe('act', () => {
   });
 
   describe('sync', () => {
-    it('can use act to batch effects', () => {
+    it('can use act to flush effects', () => {
       function App(props) {
         React.useEffect(props.callback);
         return null;
       }
-      const container = document.createElement('div');
-      document.body.appendChild(container);
 
-      try {
-        let called = false;
-        act(() => {
-          ReactDOM.render(
-            <App
-              callback={() => {
-                called = true;
-              }}
-            />,
-            container,
-          );
-        });
+      let called = false;
+      act(() => {
+        ReactDOM.render(
+          <App
+            callback={() => {
+              called = true;
+            }}
+          />,
+          document.createElement('div'),
+        );
+      });
 
-        expect(called).toBe(true);
-      } finally {
-        document.body.removeChild(container);
-      }
+      expect(called).toBe(true);
     });
 
     it('flushes effects on every call', () => {
@@ -67,12 +61,13 @@ describe('act', () => {
         });
         return (
           <button id="button" onClick={() => setCtr(x => x + 1)}>
-            click me!
+            {ctr}
           </button>
         );
       }
 
       const container = document.createElement('div');
+      // attach to body so events works
       document.body.appendChild(container);
       let calledCtr = 0;
       act(() => {
@@ -100,39 +95,16 @@ describe('act', () => {
       expect(calledCtr).toBe(4);
       act(click);
       expect(calledCtr).toBe(5);
+      expect(button.innerHTML).toBe('5');
 
-      document.body.removeChild(container);
-    });
-
-    it('can use act to batch effects on updates too', () => {
-      function App() {
-        let [ctr, setCtr] = React.useState(0);
-        return (
-          <button id="button" onClick={() => setCtr(x => x + 1)}>
-            {ctr}
-          </button>
-        );
-      }
-      const container = document.createElement('div');
-      document.body.appendChild(container);
-      let button;
-      act(() => {
-        ReactDOM.render(<App />, container);
-      });
-      button = document.getElementById('button');
-      expect(button.innerHTML).toBe('0');
-      act(() => {
-        button.dispatchEvent(new MouseEvent('click', {bubbles: true}));
-      });
-      expect(button.innerHTML).toBe('1');
       document.body.removeChild(container);
     });
 
     it('detects setState being called outside of act(...)', () => {
-      let setValueRef = null;
+      let setValue = null;
       function App() {
-        let [value, setValue] = React.useState(0);
-        setValueRef = setValue;
+        let [value, _setValue] = React.useState(0);
+        setValue = _setValue;
         return (
           <button id="button" onClick={() => setValue(2)}>
             {value}
@@ -148,7 +120,7 @@ describe('act', () => {
         button.dispatchEvent(new MouseEvent('click', {bubbles: true}));
       });
       expect(button.innerHTML).toBe('2');
-      expect(() => setValueRef(1)).toWarnDev([
+      expect(() => setValue(1)).toWarnDev([
         'An update to App inside a test was not wrapped in act(...).',
       ]);
       document.body.removeChild(container);
@@ -174,9 +146,9 @@ describe('act', () => {
         const container = document.createElement('div');
 
         act(() => {
-          act(() => {
-            ReactDOM.render(<App />, container);
-          });
+          ReactDOM.render(<App />, container);
+        });
+        act(() => {
           jest.runAllTimers();
         });
 
@@ -208,8 +180,8 @@ describe('act', () => {
       );
     });
   });
-  describe('async', () => {
-    it('does the async stuff', async () => {
+  describe('asynchronous tests', () => {
+    it('can handle timers', async () => {
       function App() {
         let [ctr, setCtr] = React.useState(0);
         function doSomething() {
@@ -252,7 +224,7 @@ describe('act', () => {
         act(() => {
           ReactDOM.render(<App />, el);
         });
-        await sleep(100);
+        // pending promises will close before this ends
       });
       expect(el.innerHTML).toEqual('1');
     });
@@ -267,8 +239,9 @@ describe('act', () => {
       }
     });
 
-    it('it warns if you try to interleave multiple act calls', async () => {
+    it('warns if you try to interleave multiple act calls', async () => {
       spyOnDevAndProd(console, 'error');
+      // let's try to cheat and spin off a 'thread' with an act call
       (async () => {
         await act(async () => {
           await sleep(200);
@@ -279,7 +252,7 @@ describe('act', () => {
         await sleep(500);
       });
 
-      await sleep(1000);
+      await sleep(600);
       if (__DEV__) {
         expect(console.error).toHaveBeenCalledTimes(1);
       }
@@ -310,9 +283,25 @@ describe('act', () => {
         expect(div.innerHTML).toBe('0');
         expect(ctr).toBe(1);
       });
+      // this may seem odd, but it matches user behaviour -
+      // a flash of "0" followed by "1"
 
       expect(div.innerHTML).toBe('1');
       expect(ctr).toBe(2);
+    });
+
+    it('propagates errors', async () => {
+      let err;
+      try {
+        await act(async () => {
+          throw new Error('some error');
+        });
+      } catch (_err) {
+        err = _err;
+      } finally {
+        expect(err instanceof Error).toBe(true);
+        expect(err.message).toBe('some error');
+      }
     });
   });
 });

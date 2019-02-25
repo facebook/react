@@ -407,14 +407,18 @@ const ReactTestUtils = {
     // note: keep these warning messages in sync with
     // createReactNoop.js and ReactTestRenderer.js
     const result = actedUpdates(callback);
-    if (result && result.then) {
+    if (
+      result !== null &&
+      typeof result === 'object' &&
+      typeof result.then === 'function'
+    ) {
       let called = false;
       if (__DEV__) {
         setTimeout(() => {
           if (!called) {
             warningWithoutStack(
               null,
-              'You called act() without awaiting its result. ' +
+              'You called act(async () => ...) without await. ' +
                 'This could lead to unexpected testing behaviour, interleaving multiple act ' +
                 'calls and mixing their scopes. You should - await act(async () => ...);',
               // todo - a better warning here. open to suggestions.
@@ -427,7 +431,7 @@ const ReactTestUtils = {
           called = true;
           return result.then(() => {
             ReactDOM.render(<div />, actContainerElement);
-            successFn();
+            return successFn();
           }, errorFn);
         },
       };

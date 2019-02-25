@@ -1022,57 +1022,19 @@ describe('ReactTestRenderer', () => {
     ReactTestRenderer.create(<App />);
   });
 
-  describe('act', () => {
-    it('can use .act() to batch updates and effects', () => {
-      function App(props) {
-        React.useEffect(() => {
-          props.callback();
-        });
-        return null;
-      }
-      let called = false;
-      ReactTestRenderer.act(() => {
-        ReactTestRenderer.create(
-          <App
-            callback={() => {
-              called = true;
-            }}
-          />,
-        );
-      });
-
-      expect(called).toBe(true);
-    });
-    it("warns if you don't use .act", () => {
-      let setCtr;
-      function App(props) {
-        let [ctr, _setCtr] = React.useState(0);
-        setCtr = _setCtr;
-        return ctr;
-      }
-
-      ReactTestRenderer.create(<App />);
-
-      expect(() => {
-        setCtr(1);
-      }).toWarnDev([
-        'An update to App inside a test was not wrapped in act(...)',
-      ]);
-    });
-
-    it('warns and throws if you use TestUtils.act instead of TestRenderer.act in node', () => {
-      // we warn when you try to load 2 renderers in the same 'scope'
-      // so as suggested, we call resetModules() to carry on with the test
-      jest.resetModules();
-      const {act} = require('react-dom/test-utils');
-      expect(() => {
-        expect(() => act(() => {})).toThrow('document is not defined');
-      }).toWarnDev(
-        [
-          'It looks like you called ReactTestUtils.act(...) in a non-browser environment',
-        ],
-        {withoutStack: 1},
-      );
-    });
+  // we run this test here because we need a dom-less scope
+  it('warns and throws if you use TestUtils.act instead of TestRenderer.act in node', () => {
+    // we warn when you try to load 2 renderers in the same 'scope'
+    // so as suggested, we call resetModules() to carry on with the test
+    jest.resetModules();
+    const {act} = require('react-dom/test-utils');
+    expect(() => {
+      expect(() => act(() => {})).toThrow('document is not defined');
+    }).toWarnDev(
+      [
+        'It looks like you called ReactTestUtils.act(...) in a non-browser environment',
+      ],
+      {withoutStack: 1},
+    );
   });
 });
