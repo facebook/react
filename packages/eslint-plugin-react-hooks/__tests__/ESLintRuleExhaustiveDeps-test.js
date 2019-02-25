@@ -446,6 +446,120 @@ const tests = {
         }
       `,
     },
+    {
+      // Valid because we assign ref.current
+      // ourselves. Therefore it's likely not
+      // a ref managed by React.
+      code: `
+        function MyComponent() {
+          const myRef = useRef();
+          useEffect(() => {
+            const handleMove = () => {};
+            myRef.current = 42;
+            return () => {
+              console.log(myRef.current.toString())
+            };
+          }, []);
+          return <div />;
+        }
+      `,
+    },
+    {
+      // Valid because we assign ref.current
+      // ourselves. Therefore it's likely not
+      // a ref managed by React.
+      code: `
+        function useMyThing(myRef) {
+          useEffect(() => {
+            const handleMove = () => {};
+            myRef.current = 42;
+            return () => {
+              console.log(myRef.current.toString())
+            };
+          }, [myRef]);
+        }
+      `,
+    },
+    {
+      // Valid because the ref is captured.
+      code: `
+        function MyComponent() {
+          const myRef = useRef();
+          useEffect(() => {
+            const handleMove = () => {};
+            const node = myRef.current;
+            node.addEventListener('mousemove', handleMove);
+            return () => node.removeEventListener('mousemove', handleMove);
+          }, []);
+          return <div ref={myRef} />;
+        }
+      `,
+    },
+    {
+      // Valid because the ref is captured.
+      code: `
+        function useMyThing(myRef) {
+          const myRef = useRef();
+          useEffect(() => {
+            const handleMove = () => {};
+            const node = myRef.current;
+            node.addEventListener('mousemove', handleMove);
+            return () => node.removeEventListener('mousemove', handleMove);
+          }, [myRef]);
+          return <div ref={myRef} />;
+        }
+      `,
+    },
+    {
+      // Valid because it's not an effect.
+      code: `
+        function useMyThing(myRef) {
+          useCallback(() => {
+            const handleMouse = () => {};
+            myRef.current.addEventListener('mousemove', handleMouse);
+            myRef.current.addEventListener('mousein', handleMouse);
+            return function() {
+              setTimeout(() => {
+                myRef.current.removeEventListener('mousemove', handleMouse);
+                myRef.current.removeEventListener('mousein', handleMouse);
+              });
+            }
+          }, [myRef]);
+        }
+      `,
+    },
+    {
+      // Valid because we read ref.current in a function that isn't cleanup.
+      code: `
+        function useMyThing() {
+          const myRef = useRef();
+          useEffect(() => {
+            const handleMove = () => {
+              console.log(myRef.current)
+            };
+            window.addEventListener('mousemove', handleMove);
+            return () => window.removeEventListener('mousemove', handleMove);
+          }, []);
+          return <div ref={myRef} />;
+        }
+      `,
+    },
+    {
+      // Valid because we read ref.current in a function that isn't cleanup.
+      code: `
+        function useMyThing() {
+          const myRef = useRef();
+          useEffect(() => {
+            const handleMove = () => {
+              return () => window.removeEventListener('mousemove', handleMove);
+            };
+            window.addEventListener('mousemove', handleMove);
+            return () => {};
+          }, []);
+          return <div ref={myRef} />;
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -777,6 +891,53 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'history.foo'. " +
           'Either include it or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+        function MyComponent({ foo, bar, baz }) {
+          useEffect(() => {
+            console.log(foo, bar, baz);
+          }, ['foo', 'bar']);
+        }
+      `,
+      output: `
+        function MyComponent({ foo, bar, baz }) {
+          useEffect(() => {
+            console.log(foo, bar, baz);
+          }, [bar, baz, foo]);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has missing dependencies: 'bar', 'baz', and 'foo'. " +
+          'Either include them or remove the dependency array.',
+        "The 'foo' string literal is not a valid dependency because it never changes. " +
+          'Did you mean to include foo in the array instead?',
+        "The 'bar' string literal is not a valid dependency because it never changes. " +
+          'Did you mean to include bar in the array instead?',
+      ],
+    },
+    {
+      code: `
+        function MyComponent({ foo, bar, baz }) {
+          useEffect(() => {
+            console.log(foo, bar, baz);
+          }, [42, false, null]);
+        }
+      `,
+      output: `
+        function MyComponent({ foo, bar, baz }) {
+          useEffect(() => {
+            console.log(foo, bar, baz);
+          }, [bar, baz, foo]);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has missing dependencies: 'bar', 'baz', and 'foo'. " +
+          'Either include them or remove the dependency array.',
+        "The '42' literal is not a valid dependency because it never changes. You can safely remove it.",
+        "The 'false' literal is not a valid dependency because it never changes. You can safely remove it.",
+        "The 'null' literal is not a valid dependency because it never changes. You can safely remove it.",
       ],
     },
     {
@@ -1740,6 +1901,142 @@ const tests = {
           `If it's only needed by this Hook, move the variable inside it. ` +
           `Alternatively, declare a ref with the useRef Hook, ` +
           `and keep the mutable value in its 'current' property.`,
+      ],
+    },
+    {
+      code: `
+        function MyComponent() {
+          const myRef = useRef();
+          useEffect(() => {
+            const handleMove = () => {};
+            myRef.current.addEventListener('mousemove', handleMove);
+            return () => myRef.current.removeEventListener('mousemove', handleMove);
+          }, []);
+          return <div ref={myRef} />;
+        }
+      `,
+      output: `
+        function MyComponent() {
+          const myRef = useRef();
+          useEffect(() => {
+            const handleMove = () => {};
+            myRef.current.addEventListener('mousemove', handleMove);
+            return () => myRef.current.removeEventListener('mousemove', handleMove);
+          }, []);
+          return <div ref={myRef} />;
+        }
+      `,
+      errors: [
+        `Accessing 'myRef.current' during the effect cleanup ` +
+          `will likely read a different ref value because by this time React ` +
+          `has already updated the ref. If this ref is managed by React, store ` +
+          `'myRef.current' in a variable inside ` +
+          `the effect itself and refer to that variable from the cleanup function.`,
+      ],
+    },
+    {
+      code: `
+        function useMyThing(myRef) {
+          useEffect(() => {
+            const handleMove = () => {};
+            myRef.current.addEventListener('mousemove', handleMove);
+            return () => myRef.current.removeEventListener('mousemove', handleMove);
+          }, [myRef]);
+        }
+      `,
+      output: `
+        function useMyThing(myRef) {
+          useEffect(() => {
+            const handleMove = () => {};
+            myRef.current.addEventListener('mousemove', handleMove);
+            return () => myRef.current.removeEventListener('mousemove', handleMove);
+          }, [myRef]);
+        }
+      `,
+      errors: [
+        `Accessing 'myRef.current' during the effect cleanup ` +
+          `will likely read a different ref value because by this time React ` +
+          `has already updated the ref. If this ref is managed by React, store ` +
+          `'myRef.current' in a variable inside ` +
+          `the effect itself and refer to that variable from the cleanup function.`,
+      ],
+    },
+    {
+      code: `
+        function useMyThing(myRef) {
+          useEffect(() => {
+            const handleMouse = () => {};
+            myRef.current.addEventListener('mousemove', handleMouse);
+            myRef.current.addEventListener('mousein', handleMouse);
+            return function() {
+              setTimeout(() => {
+                myRef.current.removeEventListener('mousemove', handleMouse);
+                myRef.current.removeEventListener('mousein', handleMouse);
+              });
+            }
+          }, [myRef]);
+        }
+      `,
+      output: `
+        function useMyThing(myRef) {
+          useEffect(() => {
+            const handleMouse = () => {};
+            myRef.current.addEventListener('mousemove', handleMouse);
+            myRef.current.addEventListener('mousein', handleMouse);
+            return function() {
+              setTimeout(() => {
+                myRef.current.removeEventListener('mousemove', handleMouse);
+                myRef.current.removeEventListener('mousein', handleMouse);
+              });
+            }
+          }, [myRef]);
+        }
+      `,
+      errors: [
+        `Accessing 'myRef.current' during the effect cleanup ` +
+          `will likely read a different ref value because by this time React ` +
+          `has already updated the ref. If this ref is managed by React, store ` +
+          `'myRef.current' in a variable inside ` +
+          `the effect itself and refer to that variable from the cleanup function.`,
+      ],
+    },
+    {
+      code: `
+        function useMyThing(myRef, active) {
+          useEffect(() => {
+            const handleMove = () => {};
+            if (active) {
+              myRef.current.addEventListener('mousemove', handleMove);
+              return function() {
+                setTimeout(() => {
+                  myRef.current.removeEventListener('mousemove', handleMove);
+                });
+              }
+            }
+          }, [myRef, active]);
+        }
+      `,
+      output: `
+        function useMyThing(myRef, active) {
+          useEffect(() => {
+            const handleMove = () => {};
+            if (active) {
+              myRef.current.addEventListener('mousemove', handleMove);
+              return function() {
+                setTimeout(() => {
+                  myRef.current.removeEventListener('mousemove', handleMove);
+                });
+              }
+            }
+          }, [myRef, active]);
+        }
+      `,
+      errors: [
+        `Accessing 'myRef.current' during the effect cleanup ` +
+          `will likely read a different ref value because by this time React ` +
+          `has already updated the ref. If this ref is managed by React, store ` +
+          `'myRef.current' in a variable inside ` +
+          `the effect itself and refer to that variable from the cleanup function.`,
       ],
     },
   ],

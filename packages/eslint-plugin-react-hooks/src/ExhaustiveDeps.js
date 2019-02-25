@@ -9,62 +9,6 @@
 
 'use strict';
 
-// const [state, setState] = useState() / React.useState()
-//               ^^^ true for this reference
-// const [state, dispatch] = useReducer() / React.useReducer()
-//               ^^^ true for this reference
-// const ref = useRef()
-//       ^^ true for this reference
-// False for everything else.
-function isDefinitelyStaticDependency(reference) {
-  // This function is written defensively because I'm not sure about corner cases.
-  // TODO: we can strengthen this if we're sure about the types.
-  const resolved = reference.resolved;
-  if (resolved == null || !Array.isArray(resolved.defs)) {
-    return false;
-  }
-  const def = resolved.defs[0];
-  if (def == null || def.node.init == null) {
-    return false;
-  }
-  // Look for `let stuff = SomeHook();`
-  const init = def.node.init;
-  if (init.callee == null) {
-    return false;
-  }
-  let callee = init.callee;
-  // Step into `= React.something` initializer.
-  if (
-    callee.type === 'MemberExpression' &&
-    callee.object.name === 'React' &&
-    callee.property != null &&
-    !callee.computed
-  ) {
-    callee = callee.property;
-  }
-  if (callee.type !== 'Identifier') {
-    return;
-  }
-  const id = def.node.id;
-  if (callee.name === 'useRef' && id.type === 'Identifier') {
-    // useRef() return value is static.
-    return true;
-  } else if (callee.name === 'useState' || callee.name === 'useReducer') {
-    // Only consider second value in initializing tuple static.
-    if (
-      id.type === 'ArrayPattern' &&
-      id.elements.length === 2 &&
-      Array.isArray(reference.resolved.identifiers) &&
-      // Is second tuple value the same reference we're checking?
-      id.elements[1] === reference.resolved.identifiers[0]
-    ) {
-      return true;
-    }
-  }
-  // By default assume it's dynamic.
-  return false;
-}
-
 export default {
   meta: {
     fixable: 'code',
@@ -118,6 +62,8 @@ export default {
 
       // Get the reactive hook node.
       const reactiveHook = node.parent.callee;
+      const reactiveHookName = getNodeWithoutReactNamespace(reactiveHook).name;
+      const isEffect = reactiveHookName.endsWith('Effect');
 
       // Get the declared dependencies for this reactive hook. If there is no
       // second argument then the reactive callback will re-run on every render.
@@ -157,6 +103,26 @@ export default {
         }
       }
 
+      // These are usually mistaken. Collect them.
+      const currentRefsInEffectCleanup = new Map();
+
+      // Is this reference inside a cleanup function for this effect node?
+      // We can check by traversing scopes upwards  from the reference, and checking
+      // if the last "return () => " we encounter is located directly inside the effect.
+      function isInsideEffectCleanup(reference) {
+        let curScope = reference.from;
+        let isInReturnedFunction = false;
+        while (curScope.block !== node) {
+          if (curScope.type === 'function') {
+            isInReturnedFunction =
+              curScope.block.parent != null &&
+              curScope.block.parent.type === 'ReturnStatement';
+          }
+          curScope = curScope.upper;
+        }
+        return isInReturnedFunction;
+      }
+
       // Get dependencies from all our resolved references in pure scopes.
       // Key is dependency string, value is whether it's static.
       const dependencies = new Map();
@@ -172,15 +138,34 @@ export default {
           if (!pureScopes.has(reference.resolved.scope)) {
             continue;
           }
+
           // Narrow the scope of a dependency if it is, say, a member expression.
           // Then normalize the narrowed dependency.
-
           const referenceNode = fastFindReferenceWithParent(
             node,
             reference.identifier,
           );
           const dependencyNode = getDependency(referenceNode);
           const dependency = toPropertyAccessString(dependencyNode);
+
+          // Accessing ref.current inside effect cleanup is bad.
+          if (
+            // We're in an effect...
+            isEffect &&
+            // ... and this look like accessing .current...
+            dependencyNode.type === 'Identifier' &&
+            dependencyNode.parent.type === 'MemberExpression' &&
+            !dependencyNode.parent.computed &&
+            dependencyNode.parent.property.type === 'Identifier' &&
+            dependencyNode.parent.property.name === 'current' &&
+            // ...in a cleanup function or below...
+            isInsideEffectCleanup(reference)
+          ) {
+            currentRefsInEffectCleanup.set(dependency, {
+              reference,
+              dependencyNode,
+            });
+          }
 
           // Add the dependency to a map so we can make sure it is referenced
           // again in our dependencies array. Remember whether it's static.
@@ -196,6 +181,47 @@ export default {
           gatherDependenciesRecursively(childScope);
         }
       }
+
+      // Warn about accessing .current in cleanup effects.
+      currentRefsInEffectCleanup.forEach(
+        ({reference, dependencyNode}, dependency) => {
+          const references = reference.resolved.references;
+          // Is React managing this ref or us?
+          // Let's see if we can find a .current assignment.
+          let foundCurrentAssignment = false;
+          for (let i = 0; i < references.length; i++) {
+            const {identifier} = references[i];
+            const {parent} = identifier;
+            if (
+              parent != null &&
+              // ref.current
+              parent.type === 'MemberExpression' &&
+              !parent.computed &&
+              parent.property.type === 'Identifier' &&
+              parent.property.name === 'current' &&
+              // ref.current = <something>
+              parent.parent.type === 'AssignmentExpression' &&
+              parent.parent.left === parent
+            ) {
+              foundCurrentAssignment = true;
+              break;
+            }
+          }
+          // We only want to warn about React-managed refs.
+          if (foundCurrentAssignment) {
+            return;
+          }
+          context.report({
+            node: dependencyNode.parent.property,
+            message:
+              `Accessing '${dependency}.current' during the effect cleanup ` +
+              `will likely read a different ref value because by this time React ` +
+              `has already updated the ref. If this ref is managed by React, store ` +
+              `'${dependency}.current' in a variable inside ` +
+              `the effect itself and refer to that variable from the cleanup function.`,
+          });
+        },
+      );
 
       const declaredDependencies = [];
       if (declaredDependenciesNode.type !== 'ArrayExpression') {
@@ -234,13 +260,39 @@ export default {
             declaredDependency = toPropertyAccessString(declaredDependencyNode);
           } catch (error) {
             if (/Unsupported node type/.test(error.message)) {
-              context.report({
-                node: declaredDependencyNode,
-                message:
-                  `React Hook ${context.getSource(reactiveHook)} has a ` +
-                  `complex expression in the dependency array. ` +
-                  'Extract it to a separate variable so it can be statically checked.',
-              });
+              if (declaredDependencyNode.type === 'Literal') {
+                if (typeof declaredDependencyNode.value === 'string') {
+                  context.report({
+                    node: declaredDependencyNode,
+                    message:
+                      `The ${
+                        declaredDependencyNode.raw
+                      } string literal is not a valid dependency ` +
+                      `because it never changes. Did you mean to ` +
+                      `include ${
+                        declaredDependencyNode.value
+                      } in the array instead?`,
+                  });
+                } else {
+                  context.report({
+                    node: declaredDependencyNode,
+                    message:
+                      `The '${
+                        declaredDependencyNode.raw
+                      }' literal is not a valid dependency ` +
+                      'because it never changes. You can safely remove it.',
+                  });
+                }
+              } else {
+                context.report({
+                  node: declaredDependencyNode,
+                  message:
+                    `React Hook ${context.getSource(reactiveHook)} has a ` +
+                    `complex expression in the dependency array. ` +
+                    'Extract it to a separate variable so it can be statically checked.',
+                });
+              }
+
               return;
             } else {
               throw error;
@@ -456,13 +508,7 @@ function toPropertyAccessString(node) {
   }
 }
 
-// What's the index of callback that needs to be analyzed for a given Hook?
-// -1 if it's not a Hook we care about (e.g. useState).
-// 0 for useEffect/useMemo/useCallback(fn).
-// 1 for useImperativeHandle(ref, fn).
-// For additionally configured Hooks, assume that they're like useEffect (0).
-function getReactiveHookCallbackIndex(node, options) {
-  let isOnReactObject = false;
+function getNodeWithoutReactNamespace(node, options) {
   if (
     node.type === 'MemberExpression' &&
     node.object.type === 'Identifier' &&
@@ -470,11 +516,20 @@ function getReactiveHookCallbackIndex(node, options) {
     node.property.type === 'Identifier' &&
     !node.computed
   ) {
-    node = node.property;
-    isOnReactObject = true;
+    return node.property;
   }
+  return node;
+}
+
+// What's the index of callback that needs to be analyzed for a given Hook?
+// -1 if it's not a Hook we care about (e.g. useState).
+// 0 for useEffect/useMemo/useCallback(fn).
+// 1 for useImperativeHandle(ref, fn).
+// For additionally configured Hooks, assume that they're like useEffect (0).
+function getReactiveHookCallbackIndex(calleeNode, options) {
+  let node = getNodeWithoutReactNamespace(calleeNode);
   if (node.type !== 'Identifier') {
-    return;
+    return null;
   }
   switch (node.name) {
     case 'useEffect':
@@ -487,7 +542,7 @@ function getReactiveHookCallbackIndex(node, options) {
       // useImperativeHandle(ref, fn)
       return 1;
     default:
-      if (!isOnReactObject && options && options.additionalHooks) {
+      if (node === calleeNode && options && options.additionalHooks) {
         // Allow the user to provide a regular expression which enables the lint to
         // target custom reactive hooks.
         let name;
@@ -505,6 +560,62 @@ function getReactiveHookCallbackIndex(node, options) {
         return -1;
       }
   }
+}
+
+// const [state, setState] = useState() / React.useState()
+//               ^^^ true for this reference
+// const [state, dispatch] = useReducer() / React.useReducer()
+//               ^^^ true for this reference
+// const ref = useRef()
+//       ^^^ true for this reference
+// False for everything else.
+function isDefinitelyStaticDependency(reference) {
+  // This function is written defensively because I'm not sure about corner cases.
+  // TODO: we can strengthen this if we're sure about the types.
+  const resolved = reference.resolved;
+  if (resolved == null || !Array.isArray(resolved.defs)) {
+    return false;
+  }
+  const def = resolved.defs[0];
+  if (def == null || def.node.init == null) {
+    return false;
+  }
+  // Look for `let stuff = SomeHook();`
+  const init = def.node.init;
+  if (init.callee == null) {
+    return false;
+  }
+  let callee = init.callee;
+  // Step into `= React.something` initializer.
+  if (
+    callee.type === 'MemberExpression' &&
+    callee.object.name === 'React' &&
+    callee.property != null &&
+    !callee.computed
+  ) {
+    callee = callee.property;
+  }
+  if (callee.type !== 'Identifier') {
+    return false;
+  }
+  const id = def.node.id;
+  if (callee.name === 'useRef' && id.type === 'Identifier') {
+    // useRef() return value is static.
+    return true;
+  } else if (callee.name === 'useState' || callee.name === 'useReducer') {
+    // Only consider second value in initializing tuple static.
+    if (
+      id.type === 'ArrayPattern' &&
+      id.elements.length === 2 &&
+      Array.isArray(reference.resolved.identifiers) &&
+      // Is second tuple value the same reference we're checking?
+      id.elements[1] === reference.resolved.identifiers[0]
+    ) {
+      return true;
+    }
+  }
+  // By default assume it's dynamic.
+  return false;
 }
 
 /**
