@@ -18,6 +18,7 @@ export const {
   warnAboutDeprecatedLifecycles,
   disableInputAttributeSyncing,
   warnAboutShorthandPropertyCollision,
+  warnAboutDeprecatedSetNativeProps,
 } = require('ReactFeatureFlags');
 
 // In www, we have experimental support for gathering data

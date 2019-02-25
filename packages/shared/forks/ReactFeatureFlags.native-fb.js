@@ -27,6 +27,7 @@ export const debugRenderPhaseSideEffectsForStrictMode = true;
 export const disableInputAttributeSyncing = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const warnAboutDeprecatedLifecycles = true;
+export const warnAboutDeprecatedSetNativeProps = true;
 
 // Only used in www builds.
 export function addUserTimingListener() {
