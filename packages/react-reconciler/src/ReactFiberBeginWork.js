@@ -84,7 +84,11 @@ import {
 import {
   shouldSetTextContent,
   shouldDeprioritizeSubtree,
+  isSuspenseInstancePending,
+  isSuspenseInstanceFallback,
+  registerSuspenseInstanceRetry,
 } from './ReactFiberHostConfig';
+import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {pushHostContext, pushHostContainer} from './ReactFiberHostContext';
 import {
   pushProvider,
@@ -129,6 +133,7 @@ import {
   createWorkInProgress,
   isSimpleFunctionComponent,
 } from './ReactFiber';
+import {retryTimedOutBoundary} from './ReactFiberScheduler';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -1637,16 +1642,31 @@ function updateDehydratedSuspenseComponent(
     workInProgress.expirationTime = Never;
     return null;
   }
+  if ((workInProgress.effectTag & DidCapture) !== NoEffect) {
+    // Something suspended. Leave the existing children in place.
+    // TODO: In non-concurrent mode, should we commit the nodes we have hydrated so far?
+    workInProgress.child = null;
+    return null;
+  }
   // We use childExpirationTime to indicate that a child might depend on context, so if
   // any context has changed, we need to treat is as if the input might have changed.
   const hasContextChanged = current.childExpirationTime >= renderExpirationTime;
-  if (didReceiveUpdate || hasContextChanged) {
+  const suspenseInstance = (current.stateNode: SuspenseInstance);
+  if (
+    didReceiveUpdate ||
+    hasContextChanged ||
+    isSuspenseInstanceFallback(suspenseInstance)
+  ) {
     // This boundary has changed since the first render. This means that we are now unable to
     // hydrate it. We might still be able to hydrate it using an earlier expiration time but
     // during this render we can't. Instead, we're going to delete the whole subtree and
     // instead inject a new real Suspense boundary to take its place, which may render content
     // or fallback. The real Suspense boundary will suspend for a while so we have some time
     // to ensure it can produce real content, but all state and pending events will be lost.
+
+    // Alternatively, this boundary is in a permanent fallback state. In this case, we'll never
+    // get an update and we'll never be able to hydrate the final content. Let's just try the
+    // client side render instead.
 
     // Detach from the current dehydrated boundary.
     current.alternate = null;
@@ -1677,8 +1697,26 @@ function updateDehydratedSuspenseComponent(
     workInProgress.effectTag |= Placement;
     // Retry as a real Suspense component.
     return updateSuspenseComponent(null, workInProgress, renderExpirationTime);
-  }
-  if ((workInProgress.effectTag & DidCapture) === NoEffect) {
+  } else if (isSuspenseInstancePending(suspenseInstance)) {
+    // This component is still pending more data from the server, so we can't hydrate its
+    // content. We treat it as if this component suspended itself. It might seem as if
+    // we could just try to render it client-side instead. However, this will perform a
+    // lot of unnecessary work and is unlikely to complete since it often will suspend
+    // on missing data anyway. Additionally, the server might be able to render more
+    // than we can on the client yet. In that case we'd end up with more fallback states
+    // on the client than if we just leave it alone. If the server times out or errors
+    // these should update this boundary to the permanent Fallback state instead.
+    // Mark it as having captured (i.e. suspended).
+    workInProgress.effectTag |= DidCapture;
+    // Leave the children in place. I.e. empty.
+    workInProgress.child = null;
+    // Register a callback to retry this boundary once the server has sent the result.
+    registerSuspenseInstanceRetry(
+      suspenseInstance,
+      retryTimedOutBoundary.bind(null, current),
+    );
+    return null;
+  } else {
     // This is the first attempt.
     reenterHydrationStateFromDehydratedSuspenseInstance(workInProgress);
     const nextProps = workInProgress.pendingProps;
@@ -1690,11 +1728,6 @@ function updateDehydratedSuspenseComponent(
       renderExpirationTime,
     );
     return workInProgress.child;
-  } else {
-    // Something suspended. Leave the existing children in place.
-    // TODO: In non-concurrent mode, should we commit the nodes we have hydrated so far?
-    workInProgress.child = null;
-    return null;
   }
 }
 

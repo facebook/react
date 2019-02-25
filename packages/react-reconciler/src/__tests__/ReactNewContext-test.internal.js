@@ -1691,6 +1691,7 @@ describe('ReactNewContext', () => {
           return false;
         }
         render() {
+          ReactNoop.yield();
           if (this.props.depth >= this.props.maxDepth) {
             return null;
           }
@@ -1771,7 +1772,7 @@ describe('ReactNewContext', () => {
               ReactNoop.flush();
               break;
             case FLUSH:
-              ReactNoop.flushUnitsOfWork(action.unitsOfWork);
+              ReactNoop.unstable_flushNumberOfYields(action.unitsOfWork);
               break;
             case UPDATE:
               finalExpectedValues = {

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -454,7 +454,9 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       // Test that it works on update, too. This time the log is a bit different
       // because we started with reducerB instead of reducerA.
-      counter.current.dispatch('reset');
+      ReactNoop.act(() => {
+        counter.current.dispatch('reset');
+      });
       ReactNoop.render(<Counter ref={counter} />);
       expect(ReactNoop.flush()).toEqual([
         'Render: 0',

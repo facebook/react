@@ -835,6 +835,7 @@ class ReactDOMServerRenderer {
                 'suspense fallback not found, something is broken',
               );
               this.stack.push(fallbackFrame);
+              out[this.suspenseDepth] += '<!--$!-->';
               // Skip flushing output since we're switching to the fallback
               continue;
             } else {
@@ -996,8 +997,7 @@ class ReactDOMServerRenderer {
               children: fallbackChildren,
               childIndex: 0,
               context: context,
-              footer: '',
-              out: '',
+              footer: '<!--/$-->',
             };
             const frame: Frame = {
               fallbackFrame,

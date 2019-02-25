@@ -94,7 +94,7 @@ import {
 import {
   captureCommitPhaseError,
   requestCurrentTime,
-  retryTimedOutBoundary,
+  resolveRetryThenable,
 } from './ReactFiberScheduler';
 import {
   NoEffect as NoHookEffect,
@@ -1232,7 +1232,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
         }
         thenables.forEach(thenable => {
           // Memoize using the boundary fiber to prevent redundant listeners.
-          let retry = retryTimedOutBoundary.bind(null, finishedWork, thenable);
+          let retry = resolveRetryThenable.bind(null, finishedWork, thenable);
           if (enableSchedulerTracing) {
             retry = Schedule_tracing_wrap(retry);
           }

@@ -48,7 +48,7 @@ const run = async () => {
     await addBuildInfoJSON(params);
     await buildArtifacts(params);
     await npmPackAndUnpack(params);
-    await printPrereleaseSummary(params);
+    await printPrereleaseSummary(params, false);
   } catch (error) {
     handleError(error);
   }
