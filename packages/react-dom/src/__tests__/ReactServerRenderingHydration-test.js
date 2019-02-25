@@ -442,4 +442,52 @@ describe('ReactDOMServerHydration', () => {
       '<div>Enable JavaScript to run this app.</div>',
     );
   });
+
+  it('should be able to use lazy components after hydrating', async () => {
+    const Lazy = React.lazy(
+      () =>
+        new Promise(resolve => {
+          setTimeout(
+            () =>
+              resolve({
+                default: function World() {
+                  return 'world';
+                },
+              }),
+            1000,
+          );
+        }),
+    );
+    class HelloWorld extends React.Component {
+      state = {isClient: false};
+      componentDidMount() {
+        this.setState({
+          isClient: true,
+        });
+      }
+      render() {
+        return (
+          <div>
+            Hello{' '}
+            {this.state.isClient && (
+              <React.Suspense fallback="loading">
+                <Lazy />
+              </React.Suspense>
+            )}
+          </div>
+        );
+      }
+    }
+
+    const element = document.createElement('div');
+    element.innerHTML = ReactDOMServer.renderToString(<HelloWorld />);
+    expect(element.textContent).toBe('Hello ');
+
+    ReactDOM.hydrate(<HelloWorld />, element);
+    expect(element.textContent).toBe('Hello loading');
+
+    jest.runAllTimers();
+    await Promise.resolve();
+    expect(element.textContent).toBe('Hello world');
+  });
 });

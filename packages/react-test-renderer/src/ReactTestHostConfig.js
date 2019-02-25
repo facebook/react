@@ -8,7 +8,12 @@
  */
 
 import warning from 'shared/warning';
-import * as TestRendererScheduling from './ReactTestRendererScheduling';
+import {
+  nowImplementation as TestRendererSchedulingNowImplementation,
+  scheduleDeferredCallback as TestRendererSchedulingScheduleDeferredCallback,
+  cancelDeferredCallback as TestRendererSchedulingCancelDeferredCallback,
+  shouldYield as TestRendererSchedulingShouldYield,
+} from './ReactTestRendererScheduling';
 
 export type Type = string;
 export type Props = Object;
@@ -20,12 +25,14 @@ export type Container = {|
 export type Instance = {|
   type: string,
   props: Object,
+  isHidden: boolean,
   children: Array<Instance | TextInstance>,
   rootContainerInstance: Container,
   tag: 'INSTANCE',
 |};
 export type TextInstance = {|
   text: string,
+  isHidden: boolean,
   tag: 'TEXT',
 |};
 export type HydratableInstance = Instance | TextInstance;
@@ -132,6 +139,7 @@ export function createInstance(
   return {
     type,
     props,
+    isHidden: false,
     children: [],
     rootContainerInstance,
     tag: 'INSTANCE',
@@ -186,6 +194,7 @@ export function createTextInstance(
 ): TextInstance {
   return {
     text,
+    isHidden: false,
     tag: 'TEXT',
   };
 }
@@ -193,15 +202,16 @@ export function createTextInstance(
 export const isPrimaryRenderer = false;
 // This approach enables `now` to be mocked by tests,
 // Even after the reconciler has initialized and read host config values.
-export const now = () => TestRendererScheduling.nowImplementation();
-export const scheduleDeferredCallback =
-  TestRendererScheduling.scheduleDeferredCallback;
-export const cancelDeferredCallback =
-  TestRendererScheduling.cancelDeferredCallback;
+export const now = () => TestRendererSchedulingNowImplementation();
+export const scheduleDeferredCallback = TestRendererSchedulingScheduleDeferredCallback;
+export const cancelDeferredCallback = TestRendererSchedulingCancelDeferredCallback;
+export const shouldYield = TestRendererSchedulingShouldYield;
 
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
 export const noTimeout = -1;
+export const schedulePassiveEffects = scheduleDeferredCallback;
+export const cancelPassiveEffects = cancelDeferredCallback;
 
 // -------------------
 //     Mutation
@@ -245,3 +255,22 @@ export function resetTextContent(testElement: Instance): void {
 export const appendChildToContainer = appendChild;
 export const insertInContainerBefore = insertBefore;
 export const removeChildFromContainer = removeChild;
+
+export function hideInstance(instance: Instance): void {
+  instance.isHidden = true;
+}
+
+export function hideTextInstance(textInstance: TextInstance): void {
+  textInstance.isHidden = true;
+}
+
+export function unhideInstance(instance: Instance, props: Props): void {
+  instance.isHidden = false;
+}
+
+export function unhideTextInstance(
+  textInstance: TextInstance,
+  text: string,
+): void {
+  textInstance.isHidden = false;
+}

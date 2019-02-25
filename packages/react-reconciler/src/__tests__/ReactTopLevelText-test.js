@@ -26,13 +26,13 @@ describe('ReactTopLevelText', () => {
     const Text = ({value}) => value;
     ReactNoop.render(<Text value="foo" />);
     ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([{text: 'foo'}]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual('foo');
   });
 
   it('should render a component returning numbers directly from render', () => {
     const Text = ({value}) => value;
     ReactNoop.render(<Text value={10} />);
     ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([{text: '10'}]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual('10');
   });
 });

@@ -13,15 +13,12 @@ let React;
 let ReactFeatureFlags;
 let ReactDOM;
 let SchedulerTracing;
-let SimpleCacheProvider;
+let ReactCache;
 
 function initEnvForAsyncTesting() {
   // Boilerplate copied from ReactDOMRoot-test
   // TODO pull this into helper method, reduce repetition.
-  const originalDateNow = Date.now;
-  global.Date.now = function() {
-    return originalDateNow();
-  };
+  // TODO remove `requestAnimationFrame` when upgrading to Jest 24 with Lolex
   global.requestAnimationFrame = function(cb) {
     return setTimeout(() => {
       cb(Date.now());
@@ -50,17 +47,15 @@ function loadModules() {
   ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
   ReactFeatureFlags.enableProfilerTimer = true;
   ReactFeatureFlags.enableSchedulerTracing = true;
-  ReactFeatureFlags.enableSuspense = true;
 
   React = require('react');
   SchedulerTracing = require('scheduler/tracing');
   ReactDOM = require('react-dom');
-  SimpleCacheProvider = require('simple-cache-provider');
+  ReactCache = require('react-cache');
 }
 
 describe('ProfilerDOM', () => {
   let TextResource;
-  let cache;
   let resourcePromise;
   let onInteractionScheduledWorkCompleted;
   let onInteractionTraced;
@@ -82,11 +77,9 @@ describe('ProfilerDOM', () => {
       onWorkStopped: () => {},
     });
 
-    cache = SimpleCacheProvider.createCache(() => {});
-
     resourcePromise = null;
 
-    TextResource = SimpleCacheProvider.createResource(([text, ms = 0]) => {
+    TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
       resourcePromise = new Promise(
         SchedulerTracing.unstable_wrap((resolve, reject) => {
           setTimeout(
@@ -102,7 +95,7 @@ describe('ProfilerDOM', () => {
   });
 
   const AsyncText = ({ms, text}) => {
-    TextResource.read(cache, [text, ms]);
+    TextResource.read([text, ms]);
     return text;
   };
 
@@ -120,9 +113,9 @@ describe('ProfilerDOM', () => {
       const root = ReactDOM.unstable_createRoot(element);
       batch = root.createBatch();
       batch.render(
-        <React.Placeholder delayMS={100} fallback={<Text text="Loading..." />}>
+        <React.Suspense maxDuration={100} fallback={<Text text="Loading..." />}>
           <AsyncText text="Text" ms={200} />
-        </React.Placeholder>,
+        </React.Suspense>,
       );
       batch.then(
         SchedulerTracing.unstable_wrap(() => {
@@ -144,7 +137,7 @@ describe('ProfilerDOM', () => {
 
               // Evaluate in an unwrapped callback,
               // Because trace/wrap won't decrement the count within the wrapped callback.
-              setImmediate(() => {
+              Promise.resolve().then(() => {
                 expect(onInteractionTraced).toHaveBeenCalledTimes(1);
                 expect(
                   onInteractionScheduledWorkCompleted,

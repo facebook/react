@@ -11,18 +11,13 @@ import type {Fiber} from './ReactFiber';
 import type {StackCursor} from './ReactFiberStack';
 
 import {isFiberMounted} from 'react-reconciler/reflection';
-import {
-  ClassComponent,
-  HostRoot,
-  ClassComponentLazy,
-} from 'shared/ReactWorkTags';
+import {ClassComponent, HostRoot} from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import checkPropTypes from 'prop-types/checkPropTypes';
-import {getResultFromResolvedThenable} from 'shared/ReactLazyComponent';
 
-import * as ReactCurrentFiber from './ReactCurrentFiber';
+import {setCurrentPhase, getCurrentFiberStackInDev} from './ReactCurrentFiber';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {createCursor, push, pop} from './ReactFiberStack';
 
@@ -104,7 +99,7 @@ function getMaskedContext(
       context,
       'context',
       name,
-      ReactCurrentFiber.getCurrentFiberStackInDev,
+      getCurrentFiberStackInDev,
     );
   }
 
@@ -182,13 +177,13 @@ function processChildContext(
 
   let childContext;
   if (__DEV__) {
-    ReactCurrentFiber.setCurrentPhase('getChildContext');
+    setCurrentPhase('getChildContext');
   }
   startPhaseTimer(fiber, 'getChildContext');
   childContext = instance.getChildContext();
   stopPhaseTimer();
   if (__DEV__) {
-    ReactCurrentFiber.setCurrentPhase(null);
+    setCurrentPhase(null);
   }
   for (let contextKey in childContext) {
     invariant(
@@ -210,7 +205,7 @@ function processChildContext(
       // context from the parent component instance. The stack will be missing
       // because it's outside of the reconciliation, and so the pointer has not
       // been set. This is rare and doesn't matter. We'll also remove that API.
-      ReactCurrentFiber.getCurrentFiberStackInDev,
+      getCurrentFiberStackInDev,
     );
   }
 
@@ -279,8 +274,7 @@ function findCurrentUnmaskedContext(fiber: Fiber): Object {
   // Currently this is only used with renderSubtreeIntoContainer; not sure if it
   // makes sense elsewhere
   invariant(
-    isFiberMounted(fiber) &&
-      (fiber.tag === ClassComponent || fiber.tag === ClassComponentLazy),
+    isFiberMounted(fiber) && fiber.tag === ClassComponent,
     'Expected subtree parent to be a mounted class component. ' +
       'This error is likely caused by a bug in React. Please file an issue.',
   );
@@ -292,13 +286,6 @@ function findCurrentUnmaskedContext(fiber: Fiber): Object {
         return node.stateNode.context;
       case ClassComponent: {
         const Component = node.type;
-        if (isContextProvider(Component)) {
-          return node.stateNode.__reactInternalMemoizedMergedChildContext;
-        }
-        break;
-      }
-      case ClassComponentLazy: {
-        const Component = getResultFromResolvedThenable(node.type);
         if (isContextProvider(Component)) {
           return node.stateNode.__reactInternalMemoizedMergedChildContext;
         }

@@ -7,17 +7,16 @@
  * @flow
  */
 
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {Fiber} from './ReactFiber';
 
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
-import * as ReactInstanceMap from 'shared/ReactInstanceMap';
+import {get as getInstance} from 'shared/ReactInstanceMap';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
 import {
   ClassComponent,
-  ClassComponentLazy,
   HostComponent,
   HostRoot,
   HostPortal,
@@ -67,10 +66,7 @@ export function isFiberMounted(fiber: Fiber): boolean {
 export function isMounted(component: React$Component<any, any>): boolean {
   if (__DEV__) {
     const owner = (ReactCurrentOwner.current: any);
-    if (
-      owner !== null &&
-      (owner.tag === ClassComponent || owner.tag === ClassComponentLazy)
-    ) {
+    if (owner !== null && owner.tag === ClassComponent) {
       const ownerFiber: Fiber = owner;
       const instance = ownerFiber.stateNode;
       warningWithoutStack(
@@ -86,7 +82,7 @@ export function isMounted(component: React$Component<any, any>): boolean {
     }
   }
 
-  const fiber: ?Fiber = ReactInstanceMap.get(component);
+  const fiber: ?Fiber = getInstance(component);
   if (!fiber) {
     return false;
   }

@@ -5,9 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import {
+  unstable_scheduleCallback as scheduleDeferredCallback,
+  unstable_cancelCallback as cancelDeferredCallback,
+} from 'scheduler';
 export {
   unstable_now as now,
   unstable_scheduleCallback as scheduleDeferredCallback,
+  unstable_shouldYield as shouldYield,
   unstable_cancelCallback as cancelDeferredCallback,
 } from 'scheduler';
 import Transform from 'art/core/transform';
@@ -336,6 +341,8 @@ export function getChildHostContext() {
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
 export const noTimeout = -1;
+export const schedulePassiveEffects = scheduleDeferredCallback;
+export const cancelPassiveEffects = cancelDeferredCallback;
 
 export function shouldSetTextContent(type, props) {
   return (
@@ -404,4 +411,22 @@ export function commitUpdate(
   newProps,
 ) {
   instance._applyProps(instance, newProps, oldProps);
+}
+
+export function hideInstance(instance) {
+  instance.hide();
+}
+
+export function hideTextInstance(textInstance) {
+  // Noop
+}
+
+export function unhideInstance(instance, props) {
+  if (props.visible == null || props.visible) {
+    instance.show();
+  }
+}
+
+export function unhideTextInstance(textInstance, text): void {
+  // Noop
 }

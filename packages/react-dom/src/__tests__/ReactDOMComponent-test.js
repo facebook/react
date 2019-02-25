@@ -2659,4 +2659,44 @@ describe('ReactDOMComponent', () => {
       document.body.removeChild(container);
     }
   });
+
+  describe('iOS Tap Highlight', () => {
+    it('adds onclick handler to elements with onClick prop', () => {
+      const container = document.createElement('div');
+
+      const elementRef = React.createRef();
+      function Component() {
+        return <div ref={elementRef} onClick={() => {}} />;
+      }
+
+      ReactDOM.render(<Component />, container);
+      expect(typeof elementRef.current.onclick).toBe('function');
+    });
+
+    it('adds onclick handler to a portal root', () => {
+      const container = document.createElement('div');
+      const portalContainer = document.createElement('div');
+
+      function Component() {
+        return ReactDOM.createPortal(
+          <div onClick={() => {}} />,
+          portalContainer,
+        );
+      }
+
+      ReactDOM.render(<Component />, container);
+      expect(typeof portalContainer.onclick).toBe('function');
+    });
+
+    it('does not add onclick handler to the React root', () => {
+      const container = document.createElement('div');
+
+      function Component() {
+        return <div onClick={() => {}} />;
+      }
+
+      ReactDOM.render(<Component />, container);
+      expect(typeof container.onclick).not.toBe('function');
+    });
+  });
 });

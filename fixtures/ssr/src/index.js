@@ -1,6 +1,7 @@
 import React from 'react';
-import {hydrate} from 'react-dom';
+import {unstable_createRoot} from 'react-dom';
 
 import App from './components/App';
 
-hydrate(<App assets={window.assetManifest} />, document);
+let root = unstable_createRoot(document, {hydrate: true});
+root.render(<App assets={window.assetManifest} />);

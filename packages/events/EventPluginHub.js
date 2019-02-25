@@ -37,26 +37,19 @@ let eventQueue: ?(Array<ReactSyntheticEvent> | ReactSyntheticEvent) = null;
  * Dispatches an event and releases it back into the pool, unless persistent.
  *
  * @param {?object} event Synthetic event to be dispatched.
- * @param {boolean} simulated If the event is simulated (changes exn behavior)
  * @private
  */
-const executeDispatchesAndRelease = function(
-  event: ReactSyntheticEvent,
-  simulated: boolean,
-) {
+const executeDispatchesAndRelease = function(event: ReactSyntheticEvent) {
   if (event) {
-    executeDispatchesInOrder(event, simulated);
+    executeDispatchesInOrder(event);
 
     if (!event.isPersistent()) {
       event.constructor.release(event);
     }
   }
 };
-const executeDispatchesAndReleaseSimulated = function(e) {
-  return executeDispatchesAndRelease(e, true);
-};
 const executeDispatchesAndReleaseTopLevel = function(e) {
-  return executeDispatchesAndRelease(e, false);
+  return executeDispatchesAndRelease(e);
 };
 
 function isInteractive(tag) {
@@ -192,7 +185,6 @@ function extractEvents(
 
 export function runEventsInBatch(
   events: Array<ReactSyntheticEvent> | ReactSyntheticEvent | null,
-  simulated: boolean,
 ) {
   if (events !== null) {
     eventQueue = accumulateInto(eventQueue, events);
@@ -207,17 +199,7 @@ export function runEventsInBatch(
     return;
   }
 
-  if (simulated) {
-    forEachAccumulated(
-      processingEventQueue,
-      executeDispatchesAndReleaseSimulated,
-    );
-  } else {
-    forEachAccumulated(
-      processingEventQueue,
-      executeDispatchesAndReleaseTopLevel,
-    );
-  }
+  forEachAccumulated(processingEventQueue, executeDispatchesAndReleaseTopLevel);
   invariant(
     !eventQueue,
     'processEventQueue(): Additional events were enqueued while processing ' +
@@ -239,5 +221,5 @@ export function runExtractedEventsInBatch(
     nativeEvent,
     nativeEventTarget,
   );
-  runEventsInBatch(events, false);
+  runEventsInBatch(events);
 }

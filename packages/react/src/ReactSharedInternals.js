@@ -8,11 +8,21 @@
 import assign from 'object-assign';
 import {
   unstable_cancelCallback,
+  unstable_shouldYield,
   unstable_now,
   unstable_scheduleCallback,
   unstable_runWithPriority,
+  unstable_next,
+  unstable_getFirstCallbackNode,
+  unstable_pauseExecution,
+  unstable_continueExecution,
   unstable_wrapCallback,
   unstable_getCurrentPriorityLevel,
+  unstable_IdlePriority,
+  unstable_ImmediatePriority,
+  unstable_LowPriority,
+  unstable_NormalPriority,
+  unstable_UserBlockingPriority,
 } from 'scheduler';
 import {
   __interactionsRef,
@@ -25,10 +35,12 @@ import {
   unstable_unsubscribe,
   unstable_wrap,
 } from 'scheduler/tracing';
+import ReactCurrentDispatcher from './ReactCurrentDispatcher';
 import ReactCurrentOwner from './ReactCurrentOwner';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 
 const ReactSharedInternals = {
+  ReactCurrentDispatcher,
   ReactCurrentOwner,
   // Used by renderers to avoid bundling object-assign twice in UMD bundles:
   assign,
@@ -43,11 +55,21 @@ if (__UMD__) {
   Object.assign(ReactSharedInternals, {
     Scheduler: {
       unstable_cancelCallback,
+      unstable_shouldYield,
       unstable_now,
       unstable_scheduleCallback,
       unstable_runWithPriority,
+      unstable_next,
       unstable_wrapCallback,
+      unstable_getFirstCallbackNode,
+      unstable_pauseExecution,
+      unstable_continueExecution,
       unstable_getCurrentPriorityLevel,
+      unstable_IdlePriority,
+      unstable_ImmediatePriority,
+      unstable_LowPriority,
+      unstable_NormalPriority,
+      unstable_UserBlockingPriority,
     },
     SchedulerTracing: {
       __interactionsRef,

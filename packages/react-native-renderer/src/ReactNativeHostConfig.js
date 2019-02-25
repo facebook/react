@@ -15,15 +15,20 @@ import invariant from 'shared/invariant';
 import UIManager from 'UIManager';
 import deepFreezeAndThrowOnMutationInDev from 'deepFreezeAndThrowOnMutationInDev';
 
-import * as ReactNativeViewConfigRegistry from 'ReactNativeViewConfigRegistry';
-import * as ReactNativeAttributePayload from './ReactNativeAttributePayload';
+import {get as getViewConfigForType} from 'ReactNativeViewConfigRegistry';
+import {create, diff} from './ReactNativeAttributePayload';
 import {
   precacheFiberNode,
   uncacheFiberNode,
   updateFiberProps,
 } from './ReactNativeComponentTree';
 import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
-import * as ReactNativeFrameScheduling from './ReactNativeFrameScheduling';
+import {
+  now as ReactNativeFrameSchedulingNow,
+  cancelDeferredCallback as ReactNativeFrameSchedulingCancelDeferredCallback,
+  scheduleDeferredCallback as ReactNativeFrameSchedulingScheduleDeferredCallback,
+  shouldYield as ReactNativeFrameSchedulingShouldYield,
+} from './ReactNativeFrameScheduling';
 
 export type Type = string;
 export type Props = Object;
@@ -92,7 +97,7 @@ export function createInstance(
   internalInstanceHandle: Object,
 ): Instance {
   const tag = allocateTag();
-  const viewConfig = ReactNativeViewConfigRegistry.get(type);
+  const viewConfig = getViewConfigForType(type);
 
   if (__DEV__) {
     for (const key in viewConfig.validAttributes) {
@@ -107,10 +112,7 @@ export function createInstance(
     'Nesting of <View> within <Text> is not currently supported.',
   );
 
-  const updatePayload = ReactNativeAttributePayload.create(
-    props,
-    viewConfig.validAttributes,
-  );
+  const updatePayload = create(props, viewConfig.validAttributes);
 
   UIManager.createView(
     tag, // reactTag
@@ -232,16 +234,17 @@ export function resetAfterCommit(containerInfo: Container): void {
   // Noop
 }
 
-export const now = ReactNativeFrameScheduling.now;
+export const now = ReactNativeFrameSchedulingNow;
 export const isPrimaryRenderer = true;
-export const scheduleDeferredCallback =
-  ReactNativeFrameScheduling.scheduleDeferredCallback;
-export const cancelDeferredCallback =
-  ReactNativeFrameScheduling.cancelDeferredCallback;
+export const scheduleDeferredCallback = ReactNativeFrameSchedulingScheduleDeferredCallback;
+export const cancelDeferredCallback = ReactNativeFrameSchedulingCancelDeferredCallback;
+export const shouldYield = ReactNativeFrameSchedulingShouldYield;
 
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
 export const noTimeout = -1;
+export const schedulePassiveEffects = scheduleDeferredCallback;
+export const cancelPassiveEffects = cancelDeferredCallback;
 
 export function shouldDeprioritizeSubtree(type: string, props: Props): boolean {
   return false;
@@ -341,11 +344,7 @@ export function commitUpdate(
 
   updateFiberProps(instance._nativeTag, newProps);
 
-  const updatePayload = ReactNativeAttributePayload.diff(
-    oldProps,
-    newProps,
-    viewConfig.validAttributes,
-  );
+  const updatePayload = diff(oldProps, newProps, viewConfig.validAttributes);
 
   // Avoid the overhead of bridge calls if there's no update.
   // This is an expensive no-op for Android, and causes an unnecessary
@@ -450,4 +449,42 @@ export function removeChildFromContainer(
 
 export function resetTextContent(instance: Instance): void {
   // Noop
+}
+
+export function hideInstance(instance: Instance): void {
+  const viewConfig = instance.viewConfig;
+  const updatePayload = create(
+    {style: {display: 'none'}},
+    viewConfig.validAttributes,
+  );
+  UIManager.updateView(
+    instance._nativeTag,
+    viewConfig.uiViewClassName,
+    updatePayload,
+  );
+}
+
+export function hideTextInstance(textInstance: TextInstance): void {
+  throw new Error('Not yet implemented.');
+}
+
+export function unhideInstance(instance: Instance, props: Props): void {
+  const viewConfig = instance.viewConfig;
+  const updatePayload = diff(
+    {...props, style: [props.style, {display: 'none'}]},
+    props,
+    viewConfig.validAttributes,
+  );
+  UIManager.updateView(
+    instance._nativeTag,
+    viewConfig.uiViewClassName,
+    updatePayload,
+  );
+}
+
+export function unhideTextInstance(
+  textInstance: TextInstance,
+  text: string,
+): void {
+  throw new Error('Not yet implemented.');
 }

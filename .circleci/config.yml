@@ -40,3 +40,9 @@ jobs:
           key: v1-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}
           paths:
             - node_modules
+
+      - store_artifacts:
+          path: ./node_modules.tgz
+
+      - store_artifacts:
+          path: ./scripts/error-codes/codes.json

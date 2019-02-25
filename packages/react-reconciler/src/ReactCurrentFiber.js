@@ -7,34 +7,34 @@
  * @flow
  */
 
+import type {Fiber} from './ReactFiber';
+
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
-  IndeterminateComponent,
-  FunctionalComponent,
-  FunctionalComponentLazy,
-  ClassComponent,
-  ClassComponentLazy,
-  HostComponent,
-  Mode,
+  HostRoot,
+  HostPortal,
+  HostText,
+  Fragment,
+  ContextProvider,
+  ContextConsumer,
 } from 'shared/ReactWorkTags';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import getComponentName from 'shared/getComponentName';
 
 const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 
-import type {Fiber} from './ReactFiber';
-
 type LifeCyclePhase = 'render' | 'getChildContext';
 
 function describeFiber(fiber: Fiber): string {
   switch (fiber.tag) {
-    case IndeterminateComponent:
-    case FunctionalComponent:
-    case FunctionalComponentLazy:
-    case ClassComponent:
-    case ClassComponentLazy:
-    case HostComponent:
-    case Mode:
+    case HostRoot:
+    case HostPortal:
+    case HostText:
+    case Fragment:
+    case ContextProvider:
+    case ContextConsumer:
+      return '';
+    default:
       const owner = fiber._debugOwner;
       const source = fiber._debugSource;
       const name = getComponentName(fiber.type);
@@ -43,8 +43,6 @@ function describeFiber(fiber: Fiber): string {
         ownerName = getComponentName(owner.type);
       }
       return describeComponentFrame(name, source, ownerName);
-    default:
-      return '';
   }
 }
 

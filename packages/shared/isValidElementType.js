@@ -15,8 +15,9 @@ import {
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_STRICT_MODE_TYPE,
-  REACT_PLACEHOLDER_TYPE,
-  REACT_PURE_TYPE,
+  REACT_SUSPENSE_TYPE,
+  REACT_MEMO_TYPE,
+  REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
 
 export default function isValidElementType(type: mixed) {
@@ -28,11 +29,11 @@ export default function isValidElementType(type: mixed) {
     type === REACT_CONCURRENT_MODE_TYPE ||
     type === REACT_PROFILER_TYPE ||
     type === REACT_STRICT_MODE_TYPE ||
-    type === REACT_PLACEHOLDER_TYPE ||
+    type === REACT_SUSPENSE_TYPE ||
     (typeof type === 'object' &&
       type !== null &&
-      (typeof type.then === 'function' ||
-        type.$$typeof === REACT_PURE_TYPE ||
+      (type.$$typeof === REACT_LAZY_TYPE ||
+        type.$$typeof === REACT_MEMO_TYPE ||
         type.$$typeof === REACT_PROVIDER_TYPE ||
         type.$$typeof === REACT_CONTEXT_TYPE ||
         type.$$typeof === REACT_FORWARD_REF_TYPE))

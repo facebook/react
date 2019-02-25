@@ -60,11 +60,10 @@ if (__DEV__) {
 /**
  * Dispatch the event to the listener.
  * @param {SyntheticEvent} event SyntheticEvent to handle
- * @param {boolean} simulated If the event is simulated (changes exn behavior)
  * @param {function} listener Application-level callback
  * @param {*} inst Internal component instance
  */
-function executeDispatch(event, simulated, listener, inst) {
+function executeDispatch(event, listener, inst) {
   const type = event.type || 'unknown-event';
   event.currentTarget = getNodeFromInstance(inst);
   invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
@@ -74,7 +73,7 @@ function executeDispatch(event, simulated, listener, inst) {
 /**
  * Standard/simple iteration through an event's collected dispatches.
  */
-export function executeDispatchesInOrder(event, simulated) {
+export function executeDispatchesInOrder(event) {
   const dispatchListeners = event._dispatchListeners;
   const dispatchInstances = event._dispatchInstances;
   if (__DEV__) {
@@ -86,15 +85,10 @@ export function executeDispatchesInOrder(event, simulated) {
         break;
       }
       // Listeners and Instances are two parallel arrays that are always in sync.
-      executeDispatch(
-        event,
-        simulated,
-        dispatchListeners[i],
-        dispatchInstances[i],
-      );
+      executeDispatch(event, dispatchListeners[i], dispatchInstances[i]);
     }
   } else if (dispatchListeners) {
-    executeDispatch(event, simulated, dispatchListeners, dispatchInstances);
+    executeDispatch(event, dispatchListeners, dispatchInstances);
   }
   event._dispatchListeners = null;
   event._dispatchInstances = null;

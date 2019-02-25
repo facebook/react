@@ -15,7 +15,7 @@ import invariant from 'shared/invariant';
 const ReactFiberErrorDialogWWW = require('ReactFiberErrorDialog');
 invariant(
   typeof ReactFiberErrorDialogWWW.showErrorDialog === 'function',
-  'Expected ReactFiberErrorDialog.showErrorDialog to existbe a function.',
+  'Expected ReactFiberErrorDialog.showErrorDialog to be a function.',
 );
 
 export function showErrorDialog(capturedError: CapturedError): boolean {

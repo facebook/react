@@ -11,15 +11,19 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 import type {Instance, TextInstance} from './ReactTestHostConfig';
 
-import * as TestRenderer from 'react-reconciler/inline.test';
-import {batchedUpdates} from 'events/ReactGenericBatching';
+import {
+  getPublicRootInstance,
+  createContainer,
+  updateContainer,
+  flushSync,
+  injectIntoDevTools,
+  batchedUpdates,
+} from 'react-reconciler/inline.test';
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
 import {
   Fragment,
-  FunctionalComponent,
-  FunctionalComponentLazy,
+  FunctionComponent,
   ClassComponent,
-  ClassComponentLazy,
   HostComponent,
   HostPortal,
   HostText,
@@ -29,15 +33,22 @@ import {
   Mode,
   ForwardRef,
   Profiler,
-  ForwardRefLazy,
-  PureComponent,
-  PureComponentLazy,
+  MemoComponent,
+  SimpleMemoComponent,
+  IncompleteClassComponent,
 } from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 import ReactVersion from 'shared/ReactVersion';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
-import * as ReactTestHostConfig from './ReactTestHostConfig';
-import * as TestRendererScheduling from './ReactTestRendererScheduling';
+import {getPublicInstance} from './ReactTestHostConfig';
+import {
+  flushAll,
+  flushNumberOfYields,
+  clearYields,
+  setNowImplementation,
+  yieldValue,
+} from './ReactTestRendererScheduling';
 
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
@@ -60,17 +71,28 @@ type FindOptions = $Shape<{
 
 export type Predicate = (node: ReactTestInstance) => ?boolean;
 
+// for .act's return value
+type Thenable = {
+  then(resolve: () => mixed, reject?: () => mixed): mixed,
+};
+
 const defaultTestOptions = {
   createNodeMock: function() {
     return null;
   },
 };
 
-function toJSON(inst: Instance | TextInstance): ReactTestRendererNode {
+function toJSON(inst: Instance | TextInstance): ReactTestRendererNode | null {
+  if (inst.isHidden) {
+    // Omit timed out children from output entirely. This seems like the least
+    // surprising behavior. We could perhaps add a separate API that includes
+    // them, if it turns out people need it.
+    return null;
+  }
   switch (inst.tag) {
     case 'TEXT':
       return inst.text;
-    case 'INSTANCE':
+    case 'INSTANCE': {
       /* eslint-disable no-unused-vars */
       // We don't include the `children` prop in JSON.
       // Instead, we will include the actual rendered children.
@@ -78,7 +100,16 @@ function toJSON(inst: Instance | TextInstance): ReactTestRendererNode {
       /* eslint-enable */
       let renderedChildren = null;
       if (inst.children && inst.children.length) {
-        renderedChildren = inst.children.map(toJSON);
+        for (let i = 0; i < inst.children.length; i++) {
+          const renderedChild = toJSON(inst.children[i]);
+          if (renderedChild !== null) {
+            if (renderedChildren === null) {
+              renderedChildren = [renderedChild];
+            } else {
+              renderedChildren.push(renderedChild);
+            }
+          }
+        }
       }
       const json: ReactTestRendererJSON = {
         type: inst.type,
@@ -89,6 +120,7 @@ function toJSON(inst: Instance | TextInstance): ReactTestRendererNode {
         value: Symbol.for('react.test.json'),
       });
       return json;
+    }
     default:
       throw new Error(`Unexpected node type in toJSON: ${inst.tag}`);
   }
@@ -153,18 +185,8 @@ function toTree(node: ?Fiber) {
         instance: node.stateNode,
         rendered: childrenToTree(node.child),
       };
-    case ClassComponentLazy: {
-      const thenable = node.type;
-      const type = thenable._reactResult;
-      return {
-        nodeType: 'component',
-        type,
-        props: {...node.memoizedProps},
-        instance: node.stateNode,
-        rendered: childrenToTree(node.child),
-      };
-    }
-    case FunctionalComponent:
+    case FunctionComponent:
+    case SimpleMemoComponent:
       return {
         nodeType: 'component',
         type: node.type,
@@ -172,17 +194,6 @@ function toTree(node: ?Fiber) {
         instance: null,
         rendered: childrenToTree(node.child),
       };
-    case FunctionalComponentLazy: {
-      const thenable = node.type;
-      const type = thenable._reactResult;
-      return {
-        nodeType: 'component',
-        type: type,
-        props: {...node.memoizedProps},
-        instance: node.stateNode,
-        rendered: childrenToTree(node.child),
-      };
-    }
     case HostComponent: {
       return {
         nodeType: 'host',
@@ -200,9 +211,8 @@ function toTree(node: ?Fiber) {
     case Mode:
     case Profiler:
     case ForwardRef:
-    case ForwardRefLazy:
-    case PureComponent:
-    case PureComponentLazy:
+    case MemoComponent:
+    case IncompleteClassComponent:
       return childrenToTree(node.child);
     default:
       invariant(
@@ -214,15 +224,12 @@ function toTree(node: ?Fiber) {
 }
 
 const validWrapperTypes = new Set([
-  FunctionalComponent,
-  FunctionalComponentLazy,
+  FunctionComponent,
   ClassComponent,
-  ClassComponentLazy,
   HostComponent,
   ForwardRef,
-  ForwardRefLazy,
-  PureComponent,
-  PureComponentLazy,
+  MemoComponent,
+  SimpleMemoComponent,
   // Normally skipped, but used when there's more than one root child.
   HostRoot,
 ]);
@@ -288,7 +295,7 @@ class ReactTestInstance {
 
   get instance() {
     if (this._fiber.tag === HostComponent) {
-      return ReactTestHostConfig.getPublicInstance(this._fiber.stateNode);
+      return getPublicInstance(this._fiber.stateNode);
     } else {
       return this._fiber.stateNode;
     }
@@ -439,13 +446,13 @@ const ReactTestRendererFiber = {
       createNodeMock,
       tag: 'CONTAINER',
     };
-    let root: FiberRoot | null = TestRenderer.createContainer(
+    let root: FiberRoot | null = createContainer(
       container,
       isConcurrent,
       false,
     );
     invariant(root != null, 'something went wrong');
-    TestRenderer.updateContainer(element, root, null, null);
+    updateContainer(element, root, null, null);
 
     const entry = {
       root: undefined, // makes flow happy
@@ -460,7 +467,29 @@ const ReactTestRendererFiber = {
         if (container.children.length === 1) {
           return toJSON(container.children[0]);
         }
-        return container.children.map(toJSON);
+        if (
+          container.children.length === 2 &&
+          container.children[0].isHidden === true &&
+          container.children[1].isHidden === false
+        ) {
+          // Omit timed out children from output entirely, including the fact that we
+          // temporarily wrap fallback and timed out children in an array.
+          return toJSON(container.children[1]);
+        }
+        let renderedChildren = null;
+        if (container.children && container.children.length) {
+          for (let i = 0; i < container.children.length; i++) {
+            const renderedChild = toJSON(container.children[i]);
+            if (renderedChild !== null) {
+              if (renderedChildren === null) {
+                renderedChildren = [renderedChild];
+              } else {
+                renderedChildren.push(renderedChild);
+              }
+            }
+          }
+        }
+        return renderedChildren;
       },
       toTree() {
         if (root == null || root.current == null) {
@@ -472,13 +501,13 @@ const ReactTestRendererFiber = {
         if (root == null || root.current == null) {
           return;
         }
-        TestRenderer.updateContainer(newElement, root, null, null);
+        updateContainer(newElement, root, null, null);
       },
       unmount() {
         if (root == null || root.current == null) {
           return;
         }
-        TestRenderer.updateContainer(null, root, null, null);
+        updateContainer(null, root, null, null);
         container = null;
         root = null;
       },
@@ -486,16 +515,16 @@ const ReactTestRendererFiber = {
         if (root == null || root.current == null) {
           return null;
         }
-        return TestRenderer.getPublicRootInstance(root);
+        return getPublicRootInstance(root);
       },
 
-      unstable_flushAll: TestRendererScheduling.flushAll,
+      unstable_flushAll: flushAll,
       unstable_flushSync<T>(fn: () => T): T {
-        TestRendererScheduling.clearYields();
-        return TestRenderer.flushSync(fn);
+        clearYields();
+        return flushSync(fn);
       },
-      unstable_flushNumberOfYields: TestRendererScheduling.flushNumberOfYields,
-      unstable_clearYields: TestRendererScheduling.clearYields,
+      unstable_flushNumberOfYields: flushNumberOfYields,
+      unstable_clearYields: clearYields,
     };
 
     Object.defineProperty(
@@ -526,15 +555,68 @@ const ReactTestRendererFiber = {
     return entry;
   },
 
-  unstable_yield: TestRendererScheduling.yieldValue,
-  unstable_clearYields: TestRendererScheduling.clearYields,
+  unstable_yield: yieldValue,
+  unstable_clearYields: clearYields,
 
   /* eslint-disable camelcase */
   unstable_batchedUpdates: batchedUpdates,
   /* eslint-enable camelcase */
 
-  unstable_setNowImplementation: TestRendererScheduling.setNowImplementation,
+  unstable_setNowImplementation: setNowImplementation,
+
+  act(callback: () => void): Thenable {
+    // note: keep these warning messages in sync with
+    // createNoop.js and ReactTestUtils.js
+    let result = batchedUpdates(callback);
+    if (__DEV__) {
+      if (result !== undefined) {
+        let addendum;
+        if (result !== null && typeof result.then === 'function') {
+          addendum =
+            "\n\nIt looks like you wrote TestRenderer.act(async () => ...) or returned a Promise from it's callback. " +
+            'Putting asynchronous logic inside TestRenderer.act(...) is not supported.\n';
+        } else {
+          addendum = ' You returned: ' + result;
+        }
+        warningWithoutStack(
+          false,
+          'The callback passed to TestRenderer.act(...) function must not return anything.%s',
+          addendum,
+        );
+      }
+    }
+    flushPassiveEffects();
+    // we want the user to not expect a return,
+    // but we want to warn if they use it like they can await on it.
+    return {
+      then() {
+        if (__DEV__) {
+          warningWithoutStack(
+            false,
+            'Do not await the result of calling TestRenderer.act(...), it is not a Promise.',
+          );
+        }
+      },
+    };
+  },
 };
+
+// root used to flush effects during .act() calls
+const actRoot = createContainer(
+  {
+    children: [],
+    createNodeMock: defaultTestOptions.createNodeMock,
+    tag: 'CONTAINER',
+  },
+  true,
+  false,
+);
+
+function flushPassiveEffects() {
+  // Trick to flush passive effects without exposing an internal API:
+  // Create a throwaway root and schedule a dummy update on it.
+  updateContainer(null, actRoot, null, null);
+}
 
 const fiberToWrapper = new WeakMap();
 function wrapFiber(fiber: Fiber): ReactTestInstance {
@@ -550,7 +632,7 @@ function wrapFiber(fiber: Fiber): ReactTestInstance {
 }
 
 // Enable ReactTestRenderer to be used to test DevTools integration.
-TestRenderer.injectIntoDevTools({
+injectIntoDevTools({
   findFiberByHostInstance: (() => {
     throw new Error('TestRenderer does not support findFiberByHostInstance()');
   }: any),

@@ -48,7 +48,7 @@
         <div id="test-2"></div>
     </li>
     <li>
-      <p>Schedules callbacks in correct order when they use scheduleWork to schedule themselves</p>
+      <p>Schedules callbacks in correct order when they use scheduleCallback to schedule themselves</p>
       <button onClick="runTestThree()">Run Test 3</button>
       <div><b>Expected:</b></div>
       <div id="test-3-expected">
@@ -90,15 +90,33 @@
       </div>
       <div> If the counter advanced while you were away from this tab, it's correct.</div>
     </li>
+    <li>
+      <p>Can pause execution, dump scheduled callbacks, and continue where it left off</p>
+      <button onClick="runTestEight()">Run Test 8</button>
+      <div><b>Click the button above, press "continue" to finish the test after it pauses:</b></div>
+      <button onClick="continueTestEight()">continue</button>
+      <div><b>Expected:</b></div>
+      <div id="test-8-expected">
+      </div>
+      <div> -------------------------------------------------</div>
+      <div> If the test didn't progress until you hit "continue" and </div>
+      <div> you see the same above and below afterwards it's correct.
+        <div> -------------------------------------------------</div>
+        <div><b>Actual:</b></div>
+        <div id="test-8"></div>
+    </li>
   </ol>
-  <script src="../../build/dist/react.development.js"></script>
+  <script src="../../build/node_modules/react/umd/react.development.js"></script>
   <script src="../../build/node_modules/scheduler/umd/scheduler.development.js"></script>
   <script src="https://unpkg.com/babel-standalone@6/babel.js"></script>
   <script type="text/babel">
 const {
   unstable_scheduleCallback: scheduleCallback,
   unstable_cancelCallback: cancelCallback,
-  unstable_now: now
+  unstable_now: now,
+  unstable_getFirstCallbackNode: getFirstCallbackNode,
+  unstable_pauseExecution: pauseExecution,
+  unstable_continueExecution: continueExecution,
 } = Scheduler;
 function displayTestResult(testNumber) {
   const expectationNode = document.getElementById('test-' + testNumber + '-expected');
@@ -215,6 +233,16 @@ const expectedResults = [
   [
     // ... TODO
   ],
+  [],
+  [],
+  // Test 8
+  [
+    'Queue size: 0.',
+    'Pausing... press continue to resume.',
+    'Queue size: 2.',
+    'Finishing...',
+    'Done!',
+  ],
 ];
 function runTestOne() {
   // Test 1
@@ -225,7 +253,7 @@ function runTestOne() {
   const cb1 = (x) => {
     updateTestResult(1, 'cb1 called with argument of ' + JSON.stringify(x));
   }
-  scheduleWork(cb1);
+  scheduleCallback(cb1);
   updateTestResult(1, 'scheduled Cb1');
   logWhenFramesStart(1, () => {
     displayTestResult(1);
@@ -243,9 +271,9 @@ function runTestTwo() {
   const cbB = (x) => {
     updateTestResult(2, 'cbB called with argument of ' + JSON.stringify(x));
   }
-  scheduleWork(cbA);
+  scheduleCallback(cbA);
   updateTestResult(2, 'scheduled CbA');
-  scheduleWork(cbB);
+  scheduleCallback(cbB);
   updateTestResult(2, 'scheduled CbB');
   logWhenFramesStart(2, () => {
     displayTestResult(2);
@@ -255,12 +283,12 @@ function runTestTwo() {
 
 function runTestThree() {
   // Test 3
-  // Schedules callbacks in correct order when they use scheduleWork to schedule themselves
+  // Schedules callbacks in correct order when they use scheduleCallback to schedule themselves
   clearTestResult(3);
   let callbackAIterations = 0;
   const cbA = (x) => {
     if (callbackAIterations < 1) {
-      scheduleWork(cbA);
+      scheduleCallback(cbA);
       updateTestResult(3, 'scheduled CbA again');
     }
     updateTestResult(3, 'cbA' + callbackAIterations + ' called with argument of ' + JSON.stringify(x));
@@ -269,9 +297,9 @@ function runTestThree() {
   const cbB = (x) => {
     updateTestResult(3, 'cbB called with argument of ' + JSON.stringify(x));
   }
-  scheduleWork(cbA);
+  scheduleCallback(cbA);
   updateTestResult(3, 'scheduled CbA');
-  scheduleWork(cbB);
+  scheduleCallback(cbB);
   updateTestResult(3, 'scheduled CbB');
   logWhenFramesStart(3, () => {
     displayTestResult(3);
@@ -305,13 +333,13 @@ function runTestFour() {
   const cbD = (x) => {
     updateTestResult(4, 'cbD called with argument of ' + JSON.stringify(x));
   }
-  scheduleWork(cbA); // won't time out
+  scheduleCallback(cbA); // won't time out
   updateTestResult(4, 'scheduled cbA');
-  scheduleWork(cbB, {timeout: 100}); // times out later
+  scheduleCallback(cbB, {timeout: 100}); // times out later
   updateTestResult(4, 'scheduled cbB');
-  scheduleWork(cbC, {timeout: 1}); // will time out fast
+  scheduleCallback(cbC, {timeout: 1}); // will time out fast
   updateTestResult(4, 'scheduled cbC');
-  scheduleWork(cbD); // won't time out
+  scheduleCallback(cbD); // won't time out
   updateTestResult(4, 'scheduled cbD');
 
   // should have run in order of C, A, B, D
@@ -390,15 +418,15 @@ function runTestFive() {
         });
       });
     });
-    scheduleWork(cbA);
+    scheduleCallback(cbA);
     console.log('scheduled cbA');
-    scheduleWork(cbB); // will throw error
+    scheduleCallback(cbB); // will throw error
     console.log('scheduled cbB');
-    scheduleWork(cbC);
+    scheduleCallback(cbC);
     console.log('scheduled cbC');
-    scheduleWork(cbD); // will throw error
+    scheduleCallback(cbD); // will throw error
     console.log('scheduled cbD');
-    scheduleWork(cbE);
+    scheduleCallback(cbE);
     console.log('scheduled cbE');
   };
 }
@@ -468,15 +496,15 @@ function runTestSix() {
         });
       });
     });
-    scheduleWork(cbA);
+    scheduleCallback(cbA);
     console.log('scheduled cbA');
-    scheduleWork(cbB); // will throw error
+    scheduleCallback(cbB); // will throw error
     console.log('scheduled cbB');
-    scheduleWork(cbC, {timeout: 1});
+    scheduleCallback(cbC, {timeout: 1});
     console.log('scheduled cbC');
-    scheduleWork(cbD, {timeout: 1}); // will throw error
+    scheduleCallback(cbD, {timeout: 1}); // will throw error
     console.log('scheduled cbD');
-    scheduleWork(cbE, {timeout: 1});
+    scheduleCallback(cbE, {timeout: 1});
     console.log('scheduled cbE');
   };
 }
@@ -492,10 +520,55 @@ function runTestSeven() {
     counter++;
     counterNode.innerHTML = counter;
     waitForTimeToPass(100);
-    scheduleWork(incrementCounterAndScheduleNextCallback);
+    scheduleCallback(incrementCounterAndScheduleNextCallback);
   }
-  scheduleWork(incrementCounterAndScheduleNextCallback);
+  scheduleCallback(incrementCounterAndScheduleNextCallback);
 }
+
+function runTestEight() {
+  // Test 8
+  // Pauses execution, dumps the queue, and continues execution
+  clearTestResult(8);
+
+  function countNodesInStack(firstCallbackNode) {
+    var node = firstCallbackNode;
+    var count = 0;
+    if (node !== null) {
+      do {
+        count = count + 1;
+        node = node.next;
+      } while (node !== firstCallbackNode);
+    }
+    return count;
+  }
+
+  scheduleCallback(() => {
+
+    // size should be 0
+    updateTestResult(8, `Queue size: ${countNodesInStack(getFirstCallbackNode())}.`);
+    updateTestResult(8, 'Pausing... press continue to resume.');
+    pauseExecution();
+
+    scheduleCallback(function () {
+      updateTestResult(8, 'Finishing...');
+      displayTestResult(8);
+    })
+    scheduleCallback(function () {
+      updateTestResult(8, 'Done!');
+      displayTestResult(8);
+      checkTestResult(8);
+    })
+
+    // new size should be 2 now
+    updateTestResult(8, `Queue size: ${countNodesInStack(getFirstCallbackNode())}.`);
+    displayTestResult(8);
+  });
+}
+
+function continueTestEight() {
+  continueExecution();
+}
+
     </script type="text/babel">
   </body>
 </html>

@@ -12,17 +12,13 @@ import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.www';
 
 // Re-export dynamic flags from the www version.
 export const {
-  enableSuspense,
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
-  enableSuspenseServerRenderer,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   warnAboutDeprecatedLifecycles,
   disableInputAttributeSyncing,
+  warnAboutShorthandPropertyCollision,
 } = require('ReactFeatureFlags');
-
-// The rest of the flags are static for better dead code elimination.
-export const warnAboutLegacyContextAPI = __DEV__;
 
 // In www, we have experimental support for gathering data
 // from User Timing API calls in production. By default, we
@@ -34,6 +30,11 @@ export let enableUserTimingAPI = __DEV__;
 
 export const enableProfilerTimer = __PROFILE__;
 export const enableSchedulerTracing = __PROFILE__;
+export const enableSchedulerDebugging = true;
+
+export const enableStableConcurrentModeAPIs = false;
+
+export const enableSuspenseServerRenderer = true;
 
 let refCount = 0;
 export function addUserTimingListener() {

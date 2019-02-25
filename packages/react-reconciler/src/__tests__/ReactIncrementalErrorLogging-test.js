@@ -50,7 +50,7 @@ describe('ReactIncrementalErrorLogging', () => {
         </span>
       </div>,
     );
-    expect(ReactNoop.flushDeferredPri).toThrowError('constructor error');
+    expect(() => ReactNoop.flush()).toThrowError('constructor error');
     expect(console.error).toHaveBeenCalledTimes(1);
     expect(console.error).toHaveBeenCalledWith(
       __DEV__
@@ -86,7 +86,7 @@ describe('ReactIncrementalErrorLogging', () => {
         </span>
       </div>,
     );
-    expect(ReactNoop.flushDeferredPri).toThrowError('componentDidMount error');
+    expect(() => ReactNoop.flush()).toThrowError('componentDidMount error');
     expect(console.error).toHaveBeenCalledTimes(1);
     expect(console.error).toHaveBeenCalledWith(
       __DEV__
@@ -125,7 +125,7 @@ describe('ReactIncrementalErrorLogging', () => {
         </span>
       </div>,
     );
-    expect(ReactNoop.flushDeferredPri).toThrow('render error');
+    expect(() => ReactNoop.flush()).toThrow('render error');
     expect(logCapturedErrorCalls.length).toBe(1);
     expect(logCapturedErrorCalls[0]).toEqual(
       __DEV__

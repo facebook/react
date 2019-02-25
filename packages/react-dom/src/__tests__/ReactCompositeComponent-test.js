@@ -332,7 +332,7 @@ describe('ReactCompositeComponent', () => {
     ReactDOM.unmountComponentAtNode(container);
 
     expect(() => instance.forceUpdate()).toWarnDev(
-      "Warning: Can't call setState (or forceUpdate) on an unmounted " +
+      "Warning: Can't perform a React state update on an unmounted " +
         'component. This is a no-op, but it indicates a memory leak in your ' +
         'application. To fix, cancel all subscriptions and asynchronous ' +
         'tasks in the componentWillUnmount method.\n' +
@@ -379,7 +379,7 @@ describe('ReactCompositeComponent', () => {
     expect(() => {
       instance.setState({value: 2});
     }).toWarnDev(
-      "Warning: Can't call setState (or forceUpdate) on an unmounted " +
+      "Warning: Can't perform a React state update on an unmounted " +
         'component. This is a no-op, but it indicates a memory leak in your ' +
         'application. To fix, cancel all subscriptions and asynchronous ' +
         'tasks in the componentWillUnmount method.\n' +
@@ -1740,6 +1740,25 @@ describe('ReactCompositeComponent', () => {
           'did you accidentally return an object from the constructor?',
       ],
       {withoutStack: true},
+    );
+  });
+
+  it('should warn about reassigning this.props while rendering', () => {
+    class Bad extends React.Component {
+      componentDidMount() {}
+      componentDidUpdate() {}
+      render() {
+        this.props = {...this.props};
+        return null;
+      }
+    }
+
+    const container = document.createElement('div');
+    expect(() => {
+      ReactDOM.render(<Bad />, container);
+    }).toWarnDev(
+      'It looks like Bad is reassigning its own `this.props` while rendering. ' +
+        'This is not supported and can lead to confusing bugs.',
     );
   });
 

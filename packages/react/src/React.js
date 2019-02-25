@@ -11,9 +11,8 @@ import {
   REACT_FRAGMENT_TYPE,
   REACT_PROFILER_TYPE,
   REACT_STRICT_MODE_TYPE,
-  REACT_PLACEHOLDER_TYPE,
+  REACT_SUSPENSE_TYPE,
 } from 'shared/ReactSymbols';
-import {enableSuspense} from 'shared/ReactFeatureFlags';
 
 import {Component, PureComponent} from './ReactBaseClasses';
 import {createRef} from './ReactCreateRef';
@@ -27,13 +26,26 @@ import {
 import {createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
 import forwardRef from './forwardRef';
-import pure from './pure';
+import memo from './memo';
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useImperativeHandle,
+  useDebugValue,
+  useLayoutEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from './ReactHooks';
 import {
   createElementWithValidation,
   createFactoryWithValidation,
   cloneElementWithValidation,
 } from './ReactElementValidator';
 import ReactSharedInternals from './ReactSharedInternals';
+import {enableStableConcurrentModeAPIs} from 'shared/ReactFeatureFlags';
 
 const React = {
   Children: {
@@ -50,12 +62,23 @@ const React = {
 
   createContext,
   forwardRef,
-  pure,
+  lazy,
+  memo,
+
+  useCallback,
+  useContext,
+  useEffect,
+  useImperativeHandle,
+  useDebugValue,
+  useLayoutEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
 
   Fragment: REACT_FRAGMENT_TYPE,
   StrictMode: REACT_STRICT_MODE_TYPE,
-  unstable_ConcurrentMode: REACT_CONCURRENT_MODE_TYPE,
-  unstable_Profiler: REACT_PROFILER_TYPE,
+  Suspense: REACT_SUSPENSE_TYPE,
 
   createElement: __DEV__ ? createElementWithValidation : createElement,
   cloneElement: __DEV__ ? cloneElementWithValidation : cloneElement,
@@ -64,12 +87,22 @@ const React = {
 
   version: ReactVersion,
 
+  unstable_ConcurrentMode: REACT_CONCURRENT_MODE_TYPE,
+  unstable_Profiler: REACT_PROFILER_TYPE,
+
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactSharedInternals,
 };
 
-if (enableSuspense) {
-  React.Placeholder = REACT_PLACEHOLDER_TYPE;
-  React.lazy = lazy;
+// Note: some APIs are added with feature flags.
+// Make sure that stable builds for open source
+// don't modify the React object to avoid deopts.
+// Also let's not expose their names in stable builds.
+
+if (enableStableConcurrentModeAPIs) {
+  React.ConcurrentMode = REACT_CONCURRENT_MODE_TYPE;
+  React.Profiler = REACT_PROFILER_TYPE;
+  React.unstable_ConcurrentMode = undefined;
+  React.unstable_Profiler = undefined;
 }
 
 export default React;

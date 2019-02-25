@@ -24,7 +24,7 @@ describe('ReactIncrementalTriangle', () => {
   });
 
   function span(prop) {
-    return {type: 'span', children: [], prop};
+    return {type: 'span', children: [], prop, hidden: false};
   }
 
   const FLUSH = 'FLUSH';
@@ -189,6 +189,7 @@ describe('ReactIncrementalTriangle', () => {
           leafTriangles.push(this);
         }
         this.state = {isActive: false};
+        this.child = React.createRef(null);
       }
       activate() {
         this.setState({isActive: true});
@@ -202,6 +203,14 @@ describe('ReactIncrementalTriangle', () => {
           this.props.activeDepth !== nextProps.activeDepth ||
           this.state.isActive !== nextState.isActive
         );
+      }
+      componentDidUpdate() {
+        if (this.child.current !== null) {
+          const {prop: currentCounter} = JSON.parse(this.child.current.prop);
+          if (this.props.counter !== currentCounter) {
+            throw new Error('Incorrect props in lifecycle');
+          }
+        }
       }
       render() {
         if (yieldAfterEachRender) {
@@ -228,7 +237,7 @@ describe('ReactIncrementalTriangle', () => {
                       activeDepthProp,
                       activeDepthContext,
                     });
-                    return <span prop={output} />;
+                    return <span ref={this.child} prop={output} />;
                   }
 
                   return (
@@ -376,7 +385,7 @@ describe('ReactIncrementalTriangle', () => {
         ReactNoop.flushSync(() => {
           switch (action.type) {
             case FLUSH:
-              ReactNoop.flushUnitsOfWork(action.unitsOfWork);
+              ReactNoop.unstable_flushNumberOfYields(action.unitsOfWork);
               break;
             case FLUSH_ALL:
               ReactNoop.flush();

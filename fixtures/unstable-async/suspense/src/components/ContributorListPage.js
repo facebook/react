@@ -1,10 +1,11 @@
 import React, {Fragment} from 'react';
-import {createResource} from 'simple-cache-provider';
-import {cache} from '../cache';
+import {unstable_createResource} from 'react-cache';
 import Spinner from './Spinner';
 import {fetchCoreContributorListJSON} from '../api';
 
-const ContributorListResource = createResource(fetchCoreContributorListJSON);
+const ContributorListResource = unstable_createResource(
+  fetchCoreContributorListJSON
+);
 
 const ContributorListPage = ({loadingId, onUserClick}) => (
   <Fragment>
@@ -17,7 +18,7 @@ const ContributorListPage = ({loadingId, onUserClick}) => (
         padding: 0,
         margin: 0,
       }}>
-      {ContributorListResource.read(cache).map(user => (
+      {ContributorListResource.read().map(user => (
         <ContributorListItem
           key={user.id}
           onClick={() => onUserClick(user.id)}

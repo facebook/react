@@ -28,11 +28,11 @@ describe('ReactIncrementalErrorHandling', () => {
 
   function div(...children) {
     children = children.map(c => (typeof c === 'string' ? {text: c} : c));
-    return {type: 'div', children, prop: undefined};
+    return {type: 'div', children, prop: undefined, hidden: false};
   }
 
   function span(prop) {
-    return {type: 'span', children: [], prop};
+    return {type: 'span', children: [], prop, hidden: false};
   }
 
   function normalizeCodeLocInfo(str) {
@@ -85,7 +85,7 @@ describe('ReactIncrementalErrorHandling', () => {
       </ErrorBoundary>,
     );
 
-    // Start rendering asynchronsouly
+    // Start rendering asynchronously
     ReactNoop.flushThrough([
       'ErrorBoundary (try)',
       'Indirection',
@@ -178,7 +178,7 @@ describe('ReactIncrementalErrorHandling', () => {
       </ErrorBoundary>,
     );
 
-    // Start rendering asynchronsouly
+    // Start rendering asynchronously
     ReactNoop.flushThrough([
       'ErrorBoundary (try)',
       'Indirection',
@@ -276,7 +276,7 @@ describe('ReactIncrementalErrorHandling', () => {
     // Schedule a low priority update to hide the child
     parent.current.setState({hideChild: true});
 
-    // Before the low priority update is flushed, synchronsouly trigger an
+    // Before the low priority update is flushed, synchronously trigger an
     // error in the child.
     ReactNoop.flushSync(() => {
       ReactNoop.render(<Parent ref={parent} childIsBroken={true} />);
@@ -318,7 +318,7 @@ describe('ReactIncrementalErrorHandling', () => {
       );
     }
 
-    ReactNoop.render(<Parent />);
+    ReactNoop.render(<Parent />, () => ReactNoop.yield('commit'));
 
     // Render the bad component asynchronously
     ReactNoop.flushThrough(['Parent', 'BadRender']);
@@ -326,10 +326,9 @@ describe('ReactIncrementalErrorHandling', () => {
     // Finish the rest of the async work
     ReactNoop.flushThrough(['Sibling']);
 
-    // Rendering two more units of work should be enough to trigger the retry
-    // and synchronously throw an error.
+    // React retries once, synchronously, before throwing.
     ops = [];
-    expect(() => ReactNoop.flushUnitsOfWork(2)).toThrow('oops');
+    expect(() => ReactNoop.flushNextYield()).toThrow('oops');
     expect(ops).toEqual(['Parent', 'BadRender', 'Sibling']);
   });
 
@@ -409,7 +408,7 @@ describe('ReactIncrementalErrorHandling', () => {
         <BrokenRender />
       </ErrorBoundary>,
     );
-    ReactNoop.flushDeferredPri();
+    ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: Hello.')]);
   });
 
@@ -588,20 +587,19 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('propagates an error from a noop error boundary during partial deferred mounting', () => {
-    const ops = [];
     class RethrowErrorBoundary extends React.Component {
       componentDidCatch(error) {
-        ops.push('RethrowErrorBoundary componentDidCatch');
+        ReactNoop.yield('RethrowErrorBoundary componentDidCatch');
         throw error;
       }
       render() {
-        ops.push('RethrowErrorBoundary render');
+        ReactNoop.yield('RethrowErrorBoundary render');
         return this.props.children;
       }
     }
 
     function BrokenRender() {
-      ops.push('BrokenRender');
+      ReactNoop.yield('BrokenRender');
       throw new Error('Hello');
     }
 
@@ -611,16 +609,12 @@ describe('ReactIncrementalErrorHandling', () => {
       </RethrowErrorBoundary>,
     );
 
-    ReactNoop.flushDeferredPri(15);
-    expect(ops).toEqual(['RethrowErrorBoundary render']);
+    ReactNoop.flushThrough(['RethrowErrorBoundary render']);
 
-    ops.length = 0;
     expect(() => {
       ReactNoop.flush();
     }).toThrow('Hello');
-    expect(ops).toEqual([
-      'BrokenRender',
-
+    expect(ReactNoop.clearYields()).toEqual([
       // React retries one more time
       'RethrowErrorBoundary render',
       'BrokenRender',
@@ -1092,7 +1086,11 @@ describe('ReactIncrementalErrorHandling', () => {
         <Connector />
       </Provider>,
     );
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'Please update the following components: Connector, Provider',
+      {withoutStack: true},
+    );
 
     // If the context stack does not unwind, span will get 'abcde'
     expect(ReactNoop.getChildren()).toEqual([span('a')]);
@@ -1522,7 +1520,7 @@ describe('ReactIncrementalErrorHandling', () => {
         <BrokenRender />
       </ErrorBoundary>,
     );
-    ReactNoop.flushDeferredPri();
+    ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([
       span(
         'Caught an error:\n' +
@@ -1558,7 +1556,7 @@ describe('ReactIncrementalErrorHandling', () => {
         <BrokenRender />
       </ErrorBoundary>,
     );
-    ReactNoop.flushDeferredPri();
+    ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: Hello')]);
   });
 
@@ -1581,6 +1579,12 @@ describe('ReactIncrementalErrorHandling', () => {
     };
 
     ReactNoop.render(<Provider />);
-    expect(() => ReactNoop.flush()).toThrow('Oops!');
+    expect(() => {
+      expect(() => ReactNoop.flush()).toThrow('Oops!');
+    }).toWarnDev(
+      'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'Please update the following components: Provider',
+      {withoutStack: true},
+    );
   });
 });

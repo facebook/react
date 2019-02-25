@@ -12,12 +12,15 @@
 
 let React;
 let ReactFabric;
+let createReactClass;
 let createReactNativeComponentClass;
 let UIManager;
 let FabricUIManager;
+let StrictMode;
+let NativeMethodsMixin;
 
 jest.mock('shared/ReactFeatureFlags', () =>
-  require('shared/forks/ReactFeatureFlags.native-fabric-oss'),
+  require('shared/forks/ReactFeatureFlags.native-oss'),
 );
 
 describe('ReactFabric', () => {
@@ -25,11 +28,20 @@ describe('ReactFabric', () => {
     jest.resetModules();
 
     React = require('react');
+    StrictMode = React.StrictMode;
     ReactFabric = require('react-native-renderer/fabric');
     FabricUIManager = require('FabricUIManager');
     UIManager = require('UIManager');
+    createReactClass = require('create-react-class/factory')(
+      React.Component,
+      React.isValidElement,
+      new React.Component().updater,
+    );
     createReactNativeComponentClass = require('ReactNativeViewConfigRegistry')
       .register;
+    NativeMethodsMixin =
+      ReactFabric.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .NativeMethodsMixin;
   });
 
   it('should be able to create and render a native component', () => {
@@ -155,7 +167,7 @@ describe('ReactFabric', () => {
     expect(FabricUIManager.__dumpHierarchyForJestTestsOnly()).toMatchSnapshot();
   });
 
-  it('should not call UIManager.updateView from setNativeProps for properties that have not changed', () => {
+  it('should not call UIManager.updateView from ref.setNativeProps for properties that have not changed', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
       uiViewClassName: 'RCTView',
@@ -167,7 +179,14 @@ describe('ReactFabric', () => {
       }
     }
 
-    [View, Subclass].forEach(Component => {
+    const CreateClass = createReactClass({
+      mixins: [NativeMethodsMixin],
+      render: () => {
+        return <View />;
+      },
+    });
+
+    [View, Subclass, CreateClass].forEach(Component => {
       UIManager.updateView.mockReset();
 
       let viewRef;
@@ -187,6 +206,95 @@ describe('ReactFabric', () => {
 
       viewRef.setNativeProps({foo: 'baz'});
       expect(UIManager.updateView).toHaveBeenCalledTimes(1);
+      expect(UIManager.updateView).toHaveBeenCalledWith(
+        expect.any(Number),
+        'RCTView',
+        {foo: 'baz'},
+      );
+    });
+  });
+
+  it('should be able to setNativeProps on native refs', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    UIManager.updateView.mockReset();
+
+    let viewRef;
+    ReactFabric.render(
+      <View
+        foo="bar"
+        ref={ref => {
+          viewRef = ref;
+        }}
+      />,
+      11,
+    );
+
+    expect(UIManager.updateView).not.toBeCalled();
+    ReactFabric.setNativeProps(viewRef, {foo: 'baz'});
+    expect(UIManager.updateView).toHaveBeenCalledTimes(1);
+    expect(UIManager.updateView).toHaveBeenCalledWith(
+      expect.any(Number),
+      'RCTView',
+      {foo: 'baz'},
+    );
+  });
+
+  it('should warn and no-op if calling setNativeProps on non native refs', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    class BasicClass extends React.Component {
+      render() {
+        return <React.Fragment />;
+      }
+    }
+
+    class Subclass extends ReactFabric.NativeComponent {
+      render() {
+        return <View />;
+      }
+    }
+
+    const CreateClass = createReactClass({
+      mixins: [NativeMethodsMixin],
+      render: () => {
+        return <View />;
+      },
+    });
+
+    [BasicClass, Subclass, CreateClass].forEach(Component => {
+      UIManager.updateView.mockReset();
+
+      let viewRef;
+      ReactFabric.render(
+        <Component
+          foo="bar"
+          ref={ref => {
+            viewRef = ref;
+          }}
+        />,
+        11,
+      );
+
+      expect(UIManager.updateView).not.toBeCalled();
+      expect(() => {
+        ReactFabric.setNativeProps(viewRef, {foo: 'baz'});
+      }).toWarnDev(
+        [
+          "Warning: setNativeProps was called with a ref that isn't a " +
+            'native component. Use React.forwardRef to get access ' +
+            'to the underlying native component',
+        ],
+        {withoutStack: true},
+      );
+
+      expect(UIManager.updateView).not.toBeCalled();
     });
   });
 
@@ -435,5 +543,80 @@ describe('ReactFabric', () => {
     // props even though the actual scheduling of the event could have happened earlier.
     // This could change in the future.
     expect(touchStart2).toBeCalled();
+  });
+
+  it('findNodeHandle should warn if used to find a host component inside StrictMode', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    let parent = undefined;
+    let child = undefined;
+
+    class ContainsStrictModeChild extends React.Component {
+      render() {
+        return (
+          <StrictMode>
+            <View ref={n => (child = n)} />
+          </StrictMode>
+        );
+      }
+    }
+
+    ReactFabric.render(<ContainsStrictModeChild ref={n => (parent = n)} />, 11);
+
+    let match;
+    expect(() => (match = ReactFabric.findNodeHandle(parent))).toWarnDev([
+      'Warning: findNodeHandle is deprecated in StrictMode. ' +
+        'findNodeHandle was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
+        'Instead, add a ref directly to the element you want to reference.' +
+        '\n' +
+        '\n    in RCTView (at **)' +
+        '\n    in StrictMode (at **)' +
+        '\n    in ContainsStrictModeChild (at **)' +
+        '\n' +
+        '\nLearn more about using refs safely here:' +
+        '\nhttps://fb.me/react-strict-mode-find-node',
+    ]);
+    expect(match).toBe(child._nativeTag);
+  });
+
+  it('findNodeHandle should warn if passed a component that is inside StrictMode', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    let parent = undefined;
+    let child = undefined;
+
+    class IsInStrictMode extends React.Component {
+      render() {
+        return <View ref={n => (child = n)} />;
+      }
+    }
+
+    ReactFabric.render(
+      <StrictMode>
+        <IsInStrictMode ref={n => (parent = n)} />
+      </StrictMode>,
+      11,
+    );
+
+    let match;
+    expect(() => (match = ReactFabric.findNodeHandle(parent))).toWarnDev([
+      'Warning: findNodeHandle is deprecated in StrictMode. ' +
+        'findNodeHandle was passed an instance of IsInStrictMode which is inside StrictMode. ' +
+        'Instead, add a ref directly to the element you want to reference.' +
+        '\n' +
+        '\n    in RCTView (at **)' +
+        '\n    in IsInStrictMode (at **)' +
+        '\n    in StrictMode (at **)' +
+        '\n' +
+        '\nLearn more about using refs safely here:' +
+        '\nhttps://fb.me/react-strict-mode-find-node',
+    ]);
+    expect(match).toBe(child._nativeTag);
   });
 });

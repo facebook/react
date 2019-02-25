@@ -7,12 +7,9 @@
  * @flow
  */
 
+import type {ThreadID} from './ReactThreadIDAllocator';
 import type {ReactElement} from 'shared/ReactElementType';
-import type {
-  ReactProvider,
-  ReactConsumer,
-  ReactContext,
-} from 'shared/ReactTypes';
+import type {ReactProvider, ReactContext} from 'shared/ReactTypes';
 
 import React from 'react';
 import invariant from 'shared/invariant';
@@ -20,7 +17,6 @@ import getComponentName from 'shared/getComponentName';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import checkPropTypes from 'prop-types/checkPropTypes';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -33,19 +29,34 @@ import {
   REACT_FRAGMENT_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_CONCURRENT_MODE_TYPE,
-  REACT_PLACEHOLDER_TYPE,
+  REACT_SUSPENSE_TYPE,
   REACT_PORTAL_TYPE,
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
+  REACT_LAZY_TYPE,
+  REACT_MEMO_TYPE,
 } from 'shared/ReactSymbols';
 
+import {
+  emptyObject,
+  processContext,
+  validateContextBounds,
+} from './ReactPartialRendererContext';
+import {allocThreadID, freeThreadID} from './ReactThreadIDAllocator';
 import {
   createMarkupForCustomAttribute,
   createMarkupForProperty,
   createMarkupForRoot,
 } from './DOMMarkupOperations';
 import escapeTextForBrowser from './escapeTextForBrowser';
+import {
+  prepareToUseHooks,
+  finishHooks,
+  Dispatcher,
+  currentThreadID,
+  setCurrentThreadID,
+} from './ReactPartialRendererHooks';
 import {
   Namespaces,
   getIntrinsicNamespace,
@@ -74,6 +85,7 @@ const toArray = ((React.Children.toArray: any): toArrayType);
 // Each stack is an array of frames which may contain nested stacks of elements.
 let currentDebugStacks = [];
 
+let ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 let ReactDebugCurrentFrame;
 let prevGetCurrentStackImpl = null;
 let getCurrentServerStackImpl = () => '';
@@ -83,6 +95,7 @@ let validatePropertiesInDevelopment = (type, props) => {};
 let pushCurrentDebugStack = (stack: Array<Frame>) => {};
 let pushElementToDebugStack = (element: ReactElement) => {};
 let popCurrentDebugStack = () => {};
+let hasWarnedAboutUsingContextAsConsumer = false;
 
 if (__DEV__) {
   ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
@@ -316,45 +329,6 @@ function flattenOptionChildren(children: mixed): ?string {
   return content;
 }
 
-const emptyObject = {};
-if (__DEV__) {
-  Object.freeze(emptyObject);
-}
-
-function maskContext(type, context) {
-  const contextTypes = type.contextTypes;
-  if (!contextTypes) {
-    return emptyObject;
-  }
-  const maskedContext = {};
-  for (const contextName in contextTypes) {
-    maskedContext[contextName] = context[contextName];
-  }
-  return maskedContext;
-}
-
-function checkContextTypes(typeSpecs, values, location: string) {
-  if (__DEV__) {
-    checkPropTypes(
-      typeSpecs,
-      values,
-      location,
-      'Component',
-      getCurrentServerStackImpl,
-    );
-  }
-}
-
-function processContext(type, context) {
-  const maskedContext = maskContext(type, context);
-  if (__DEV__) {
-    if (type.contextTypes) {
-      checkContextTypes(type.contextTypes, maskedContext, 'context');
-    }
-  }
-  return maskedContext;
-}
-
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 const STYLE = 'style';
 const RESERVED_PROPS = {
@@ -425,6 +399,7 @@ function validateRenderResult(child, type) {
 function resolve(
   child: mixed,
   context: Object,
+  threadID: ThreadID,
 ): {|
   child: mixed,
   context: Object,
@@ -444,7 +419,7 @@ function resolve(
 
   // Extra closure so queue and replace can be captured properly
   function processChild(element, Component) {
-    let publicContext = processContext(Component, context);
+    let publicContext = processContext(Component, context, threadID);
 
     let queue = [];
     let replace = false;
@@ -540,7 +515,11 @@ function resolve(
           }
         }
       }
+      const componentIdentity = {};
+      prepareToUseHooks(componentIdentity);
       inst = Component(element.props, publicContext, updater);
+      inst = finishHooks(Component, element.props, inst, publicContext);
+
       if (inst == null || inst.render == null) {
         child = inst;
         validateRenderResult(child, Component);
@@ -675,6 +654,7 @@ type Frame = {
   type: mixed,
   domNamespace: string,
   children: FlatReactChildren,
+  fallbackFrame?: Frame,
   childIndex: number,
   context: Object,
   footer: string,
@@ -685,12 +665,14 @@ type FrameDev = Frame & {
 };
 
 class ReactDOMServerRenderer {
+  threadID: ThreadID;
   stack: Array<Frame>;
   exhausted: boolean;
   // TODO: type this more strictly:
   currentSelectValue: any;
   previousWasTextNode: boolean;
   makeStaticMarkup: boolean;
+  suspenseDepth: number;
 
   contextIndex: number;
   contextStack: Array<ReactContext<any>>;
@@ -713,11 +695,13 @@ class ReactDOMServerRenderer {
     if (__DEV__) {
       ((topFrame: any): FrameDev).debugElementStack = [];
     }
+    this.threadID = allocThreadID();
     this.stack = [topFrame];
     this.exhausted = false;
     this.currentSelectValue = null;
     this.previousWasTextNode = false;
     this.makeStaticMarkup = makeStaticMarkup;
+    this.suspenseDepth = 0;
 
     // Context (new API)
     this.contextIndex = -1;
@@ -725,6 +709,14 @@ class ReactDOMServerRenderer {
     this.contextValueStack = [];
     if (__DEV__) {
       this.contextProviderStack = [];
+    }
+  }
+
+  destroy() {
+    if (!this.exhausted) {
+      this.exhausted = true;
+      this.clearProviders();
+      freeThreadID(this.threadID);
     }
   }
 
@@ -741,7 +733,9 @@ class ReactDOMServerRenderer {
   pushProvider<T>(provider: ReactProvider<T>): void {
     const index = ++this.contextIndex;
     const context: ReactContext<any> = provider.type._context;
-    const previousValue = context._currentValue;
+    const threadID = this.threadID;
+    validateContextBounds(context, threadID);
+    const previousValue = context[threadID];
 
     // Remember which value to restore this context to on our way up.
     this.contextStack[index] = context;
@@ -752,7 +746,7 @@ class ReactDOMServerRenderer {
     }
 
     // Mutate the current value.
-    context._currentValue = provider.props.value;
+    context[threadID] = provider.props.value;
   }
 
   popProvider<T>(provider: ReactProvider<T>): void {
@@ -778,7 +772,18 @@ class ReactDOMServerRenderer {
     this.contextIndex--;
 
     // Restore to the previous value we stored as we were walking down.
-    context._currentValue = previousValue;
+    // We've already verified that this context has been expanded to accommodate
+    // this thread id, so we don't need to do it again.
+    context[this.threadID] = previousValue;
+  }
+
+  clearProviders(): void {
+    // Restore any remaining providers on the stack to previous values
+    for (let index = this.contextIndex; index >= 0; index--) {
+      const context: ReactContext<any> = this.contextStack[index];
+      const previousValue = this.contextValueStack[index];
+      context[this.threadID] = previousValue;
+    }
   }
 
   read(bytes: number): string | null {
@@ -786,49 +791,93 @@ class ReactDOMServerRenderer {
       return null;
     }
 
-    let out = '';
-    while (out.length < bytes) {
-      if (this.stack.length === 0) {
-        this.exhausted = true;
-        break;
-      }
-      const frame: Frame = this.stack[this.stack.length - 1];
-      if (frame.childIndex >= frame.children.length) {
-        const footer = frame.footer;
-        out += footer;
-        if (footer !== '') {
-          this.previousWasTextNode = false;
+    const prevThreadID = currentThreadID;
+    setCurrentThreadID(this.threadID);
+    const prevDispatcher = ReactCurrentDispatcher.current;
+    ReactCurrentDispatcher.current = Dispatcher;
+    try {
+      // Markup generated within <Suspense> ends up buffered until we know
+      // nothing in that boundary suspended
+      let out = [''];
+      let suspended = false;
+      while (out[0].length < bytes) {
+        if (this.stack.length === 0) {
+          this.exhausted = true;
+          freeThreadID(this.threadID);
+          break;
         }
-        this.stack.pop();
-        if (frame.type === 'select') {
-          this.currentSelectValue = null;
-        } else if (
-          frame.type != null &&
-          frame.type.type != null &&
-          frame.type.type.$$typeof === REACT_PROVIDER_TYPE
-        ) {
-          const provider: ReactProvider<any> = (frame.type: any);
-          this.popProvider(provider);
+        const frame: Frame = this.stack[this.stack.length - 1];
+        if (suspended || frame.childIndex >= frame.children.length) {
+          const footer = frame.footer;
+          if (footer !== '') {
+            this.previousWasTextNode = false;
+          }
+          this.stack.pop();
+          if (frame.type === 'select') {
+            this.currentSelectValue = null;
+          } else if (
+            frame.type != null &&
+            frame.type.type != null &&
+            frame.type.type.$$typeof === REACT_PROVIDER_TYPE
+          ) {
+            const provider: ReactProvider<any> = (frame.type: any);
+            this.popProvider(provider);
+          } else if (frame.type === REACT_SUSPENSE_TYPE) {
+            this.suspenseDepth--;
+            const buffered = out.pop();
+
+            if (suspended) {
+              suspended = false;
+              // If rendering was suspended at this boundary, render the fallbackFrame
+              const fallbackFrame = frame.fallbackFrame;
+              invariant(
+                fallbackFrame,
+                'suspense fallback not found, something is broken',
+              );
+              this.stack.push(fallbackFrame);
+              out[this.suspenseDepth] += '<!--$!-->';
+              // Skip flushing output since we're switching to the fallback
+              continue;
+            } else {
+              out[this.suspenseDepth] += buffered;
+            }
+          }
+
+          // Flush output
+          out[this.suspenseDepth] += footer;
+          continue;
         }
-        continue;
-      }
-      const child = frame.children[frame.childIndex++];
-      if (__DEV__) {
-        pushCurrentDebugStack(this.stack);
-        // We're starting work on this frame, so reset its inner stack.
-        ((frame: any): FrameDev).debugElementStack.length = 0;
+        const child = frame.children[frame.childIndex++];
+
+        let outBuffer = '';
+        if (__DEV__) {
+          pushCurrentDebugStack(this.stack);
+          // We're starting work on this frame, so reset its inner stack.
+          ((frame: any): FrameDev).debugElementStack.length = 0;
+        }
         try {
-          // Be careful! Make sure this matches the PROD path below.
-          out += this.render(child, frame.context, frame.domNamespace);
+          outBuffer += this.render(child, frame.context, frame.domNamespace);
+        } catch (err) {
+          if (enableSuspenseServerRenderer && typeof err.then === 'function') {
+            suspended = true;
+          } else {
+            throw err;
+          }
         } finally {
-          popCurrentDebugStack();
+          if (__DEV__) {
+            popCurrentDebugStack();
+          }
         }
-      } else {
-        // Be careful! Make sure this matches the DEV path above.
-        out += this.render(child, frame.context, frame.domNamespace);
+        if (out.length <= this.suspenseDepth) {
+          out.push('');
+        }
+        out[this.suspenseDepth] += outBuffer;
       }
+      return out[0];
+    } finally {
+      ReactCurrentDispatcher.current = prevDispatcher;
+      setCurrentThreadID(prevThreadID);
     }
-    return out;
   }
 
   render(
@@ -851,7 +900,7 @@ class ReactDOMServerRenderer {
       return escapeTextForBrowser(text);
     } else {
       let nextChild;
-      ({child: nextChild, context} = resolve(child, context));
+      ({child: nextChild, context} = resolve(child, context, this.threadID));
       if (nextChild === null || nextChild === false) {
         return '';
       } else if (!React.isValidElement(nextChild)) {
@@ -916,12 +965,79 @@ class ReactDOMServerRenderer {
           this.stack.push(frame);
           return '';
         }
-        case REACT_PLACEHOLDER_TYPE: {
+        case REACT_SUSPENSE_TYPE: {
           if (enableSuspenseServerRenderer) {
+            const fallback = ((nextChild: any): ReactElement).props.fallback;
+            if (fallback === undefined) {
+              // If there is no fallback, then this just behaves as a fragment.
+              const nextChildren = toArray(
+                ((nextChild: any): ReactElement).props.children,
+              );
+              const frame: Frame = {
+                type: null,
+                domNamespace: parentNamespace,
+                children: nextChildren,
+                childIndex: 0,
+                context: context,
+                footer: '',
+              };
+              if (__DEV__) {
+                ((frame: any): FrameDev).debugElementStack = [];
+              }
+              this.stack.push(frame);
+              return '';
+            }
+            const fallbackChildren = toArray(fallback);
             const nextChildren = toArray(
-              // Always use the fallback when synchronously rendering to string.
-              ((nextChild: any): ReactElement).props.fallback,
+              ((nextChild: any): ReactElement).props.children,
             );
+            const fallbackFrame: Frame = {
+              type: null,
+              domNamespace: parentNamespace,
+              children: fallbackChildren,
+              childIndex: 0,
+              context: context,
+              footer: '<!--/$-->',
+            };
+            const frame: Frame = {
+              fallbackFrame,
+              type: REACT_SUSPENSE_TYPE,
+              domNamespace: parentNamespace,
+              children: nextChildren,
+              childIndex: 0,
+              context: context,
+              footer: '<!--/$-->',
+            };
+            if (__DEV__) {
+              ((frame: any): FrameDev).debugElementStack = [];
+              ((fallbackFrame: any): FrameDev).debugElementStack = [];
+            }
+            this.stack.push(frame);
+            this.suspenseDepth++;
+            return '<!--$-->';
+          } else {
+            invariant(false, 'ReactDOMServer does not yet support Suspense.');
+          }
+        }
+        // eslint-disable-next-line-no-fallthrough
+        default:
+          break;
+      }
+      if (typeof elementType === 'object' && elementType !== null) {
+        switch (elementType.$$typeof) {
+          case REACT_FORWARD_REF_TYPE: {
+            const element: ReactElement = ((nextChild: any): ReactElement);
+            let nextChildren;
+            const componentIdentity = {};
+            prepareToUseHooks(componentIdentity);
+            nextChildren = elementType.render(element.props, element.ref);
+            nextChildren = finishHooks(
+              elementType.render,
+              element.props,
+              nextChildren,
+              element.ref,
+            );
+            nextChildren = toArray(nextChildren);
             const frame: Frame = {
               type: null,
               domNamespace: parentNamespace,
@@ -936,18 +1052,14 @@ class ReactDOMServerRenderer {
             this.stack.push(frame);
             return '';
           }
-        }
-        // eslint-disable-next-line-no-fallthrough
-        default:
-          break;
-      }
-      if (typeof elementType === 'object' && elementType !== null) {
-        switch (elementType.$$typeof) {
-          case REACT_FORWARD_REF_TYPE: {
+          case REACT_MEMO_TYPE: {
             const element: ReactElement = ((nextChild: any): ReactElement);
-            const nextChildren = toArray(
-              elementType.render(element.props, element.ref),
-            );
+            let nextChildren = [
+              React.createElement(
+                elementType.type,
+                Object.assign({ref: element.ref}, element.props),
+              ),
+            ];
             const frame: Frame = {
               type: null,
               domNamespace: parentNamespace,
@@ -984,9 +1096,37 @@ class ReactDOMServerRenderer {
             return '';
           }
           case REACT_CONTEXT_TYPE: {
-            const consumer: ReactConsumer<any> = (nextChild: any);
-            const nextProps: any = consumer.props;
-            const nextValue = consumer.type._currentValue;
+            let reactContext = (nextChild: any).type;
+            // The logic below for Context differs depending on PROD or DEV mode. In
+            // DEV mode, we create a separate object for Context.Consumer that acts
+            // like a proxy to Context. This proxy object adds unnecessary code in PROD
+            // so we use the old behaviour (Context.Consumer references Context) to
+            // reduce size and overhead. The separate object references context via
+            // a property called "_context", which also gives us the ability to check
+            // in DEV mode if this property exists or not and warn if it does not.
+            if (__DEV__) {
+              if ((reactContext: any)._context === undefined) {
+                // This may be because it's a Context (rather than a Consumer).
+                // Or it may be because it's older React where they're the same thing.
+                // We only want to warn if we're sure it's a new React.
+                if (reactContext !== reactContext.Consumer) {
+                  if (!hasWarnedAboutUsingContextAsConsumer) {
+                    hasWarnedAboutUsingContextAsConsumer = true;
+                    warning(
+                      false,
+                      'Rendering <Context> directly is not supported and will be removed in ' +
+                        'a future major release. Did you mean to render <Context.Consumer> instead?',
+                    );
+                  }
+                }
+              } else {
+                reactContext = (reactContext: any)._context;
+              }
+            }
+            const nextProps: any = (nextChild: any).props;
+            const threadID = this.threadID;
+            validateContextBounds(reactContext, threadID);
+            const nextValue = reactContext[threadID];
 
             const nextChildren = toArray(nextProps.children(nextValue));
             const frame: Frame = {
@@ -1003,8 +1143,11 @@ class ReactDOMServerRenderer {
             this.stack.push(frame);
             return '';
           }
-          default:
-            break;
+          case REACT_LAZY_TYPE:
+            invariant(
+              false,
+              'ReactDOMServer does not yet support lazy-loaded components.',
+            );
         }
       }
 

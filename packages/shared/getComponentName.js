@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Thenable} from 'shared/ReactLazyComponent';
+import type {LazyComponent} from 'shared/ReactLazyComponent';
 
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {
@@ -16,12 +16,26 @@ import {
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_PORTAL_TYPE,
+  REACT_MEMO_TYPE,
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_STRICT_MODE_TYPE,
-  REACT_PLACEHOLDER_TYPE,
+  REACT_SUSPENSE_TYPE,
+  REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
-import {refineResolvedThenable} from 'shared/ReactLazyComponent';
+import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
+
+function getWrappedName(
+  outerType: mixed,
+  innerType: any,
+  wrapperName: string,
+): string {
+  const functionName = innerType.displayName || innerType.name || '';
+  return (
+    (outerType: any).displayName ||
+    (functionName !== '' ? `${wrapperName}(${functionName})` : wrapperName)
+  );
+}
 
 function getComponentName(type: mixed): string | null {
   if (type == null) {
@@ -54,8 +68,8 @@ function getComponentName(type: mixed): string | null {
       return `Profiler`;
     case REACT_STRICT_MODE_TYPE:
       return 'StrictMode';
-    case REACT_PLACEHOLDER_TYPE:
-      return 'Placeholder';
+    case REACT_SUSPENSE_TYPE:
+      return 'Suspense';
   }
   if (typeof type === 'object') {
     switch (type.$$typeof) {
@@ -64,18 +78,15 @@ function getComponentName(type: mixed): string | null {
       case REACT_PROVIDER_TYPE:
         return 'Context.Provider';
       case REACT_FORWARD_REF_TYPE:
-        const renderFn = (type.render: any);
-        const functionName = renderFn.displayName || renderFn.name || '';
-        return (
-          (type: any).displayName ||
-          (functionName !== '' ? `ForwardRef(${functionName})` : 'ForwardRef')
-        );
-    }
-    if (typeof type.then === 'function') {
-      const thenable: Thenable<mixed> = (type: any);
-      const resolvedThenable = refineResolvedThenable(thenable);
-      if (resolvedThenable) {
-        return getComponentName(resolvedThenable);
+        return getWrappedName(type, type.render, 'ForwardRef');
+      case REACT_MEMO_TYPE:
+        return getComponentName(type.type);
+      case REACT_LAZY_TYPE: {
+        const thenable: LazyComponent<mixed> = (type: any);
+        const resolvedThenable = refineResolvedLazyComponent(thenable);
+        if (resolvedThenable) {
+          return getComponentName(resolvedThenable);
+        }
       }
     }
   }

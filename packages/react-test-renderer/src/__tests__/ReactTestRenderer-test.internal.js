@@ -281,8 +281,10 @@ describe('ReactTestRenderer', () => {
     }
     ReactTestRenderer.create(<Baz />);
     expect(() => ReactTestRenderer.create(<Foo />)).toWarnDev(
-      'Warning: Stateless function components cannot be given refs. Attempts ' +
-        'to access this ref will fail.\n\nCheck the render method of `Foo`.\n' +
+      'Warning: Function components cannot be given refs. Attempts ' +
+        'to access this ref will fail. ' +
+        'Did you mean to use React.forwardRef()?\n\n' +
+        'Check the render method of `Foo`.\n' +
         '    in Bar (at **)\n' +
         '    in Foo (at **)',
     );
@@ -1018,5 +1020,42 @@ describe('ReactTestRenderer', () => {
     ReactNoop.render(<App />);
     ReactNoop.flush();
     ReactTestRenderer.create(<App />);
+  });
+
+  describe('act', () => {
+    it('can use .act() to batch updates and effects', () => {
+      function App(props) {
+        React.useEffect(() => {
+          props.callback();
+        });
+        return null;
+      }
+      let called = false;
+      ReactTestRenderer.act(() => {
+        ReactTestRenderer.create(
+          <App
+            callback={() => {
+              called = true;
+            }}
+          />,
+        );
+      });
+
+      expect(called).toBe(true);
+    });
+    it('warns and throws if you use TestUtils.act instead of TestRenderer.act in node', () => {
+      // we warn when you try to load 2 renderers in the same 'scope'
+      // so as suggested, we call resetModules() to carry on with the test
+      jest.resetModules();
+      const {act} = require('react-dom/test-utils');
+      expect(() => {
+        expect(() => act(() => {})).toThrow('document is not defined');
+      }).toWarnDev(
+        [
+          'It looks like you called TestUtils.act(...) in a non-browser environment',
+        ],
+        {withoutStack: 1},
+      );
+    });
   });
 });

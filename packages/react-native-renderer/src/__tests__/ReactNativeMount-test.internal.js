@@ -11,19 +11,31 @@
 'use strict';
 
 let React;
+let StrictMode;
 let ReactNative;
+let createReactClass;
 let createReactNativeComponentClass;
 let UIManager;
+let NativeMethodsMixin;
 
 describe('ReactNative', () => {
   beforeEach(() => {
     jest.resetModules();
 
     React = require('react');
+    StrictMode = React.StrictMode;
     ReactNative = require('react-native-renderer');
     UIManager = require('UIManager');
+    createReactClass = require('create-react-class/factory')(
+      React.Component,
+      React.isValidElement,
+      new React.Component().updater,
+    );
     createReactNativeComponentClass = require('ReactNativeViewConfigRegistry')
       .register;
+    NativeMethodsMixin =
+      ReactNative.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .NativeMethodsMixin;
   });
 
   it('should be able to create and render a native component', () => {
@@ -98,7 +110,14 @@ describe('ReactNative', () => {
       }
     }
 
-    [View, Subclass].forEach(Component => {
+    const CreateClass = createReactClass({
+      mixins: [NativeMethodsMixin],
+      render: () => {
+        return <View />;
+      },
+    });
+
+    [View, Subclass, CreateClass].forEach(Component => {
       UIManager.updateView.mockReset();
 
       let viewRef;
@@ -118,6 +137,95 @@ describe('ReactNative', () => {
 
       viewRef.setNativeProps({foo: 'baz'});
       expect(UIManager.updateView).toHaveBeenCalledTimes(1);
+      expect(UIManager.updateView).toHaveBeenCalledWith(
+        expect.any(Number),
+        'RCTView',
+        {foo: 'baz'},
+      );
+    });
+  });
+
+  it('should be able to setNativeProps on native refs', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    UIManager.updateView.mockReset();
+
+    let viewRef;
+    ReactNative.render(
+      <View
+        foo="bar"
+        ref={ref => {
+          viewRef = ref;
+        }}
+      />,
+      11,
+    );
+
+    expect(UIManager.updateView).not.toBeCalled();
+    ReactNative.setNativeProps(viewRef, {foo: 'baz'});
+    expect(UIManager.updateView).toHaveBeenCalledTimes(1);
+    expect(UIManager.updateView).toHaveBeenCalledWith(
+      expect.any(Number),
+      'RCTView',
+      {foo: 'baz'},
+    );
+  });
+
+  it('should warn and no-op if calling setNativeProps on non native refs', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    class BasicClass extends React.Component {
+      render() {
+        return <React.Fragment />;
+      }
+    }
+
+    class Subclass extends ReactNative.NativeComponent {
+      render() {
+        return <View />;
+      }
+    }
+
+    const CreateClass = createReactClass({
+      mixins: [NativeMethodsMixin],
+      render: () => {
+        return <View />;
+      },
+    });
+
+    [BasicClass, Subclass, CreateClass].forEach(Component => {
+      UIManager.updateView.mockReset();
+
+      let viewRef;
+      ReactNative.render(
+        <Component
+          foo="bar"
+          ref={ref => {
+            viewRef = ref;
+          }}
+        />,
+        11,
+      );
+
+      expect(UIManager.updateView).not.toBeCalled();
+      expect(() => {
+        ReactNative.setNativeProps(viewRef, {foo: 'baz'});
+      }).toWarnDev(
+        [
+          "Warning: setNativeProps was called with a ref that isn't a " +
+            'native component. Use React.forwardRef to get access ' +
+            'to the underlying native component',
+        ],
+        {withoutStack: true},
+      );
+
+      expect(UIManager.updateView).not.toBeCalled();
     });
   });
 
@@ -257,5 +365,80 @@ describe('ReactNative', () => {
       </Text>,
       11,
     );
+  });
+
+  it('findNodeHandle should warn if used to find a host component inside StrictMode', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    let parent = undefined;
+    let child = undefined;
+
+    class ContainsStrictModeChild extends React.Component {
+      render() {
+        return (
+          <StrictMode>
+            <View ref={n => (child = n)} />
+          </StrictMode>
+        );
+      }
+    }
+
+    ReactNative.render(<ContainsStrictModeChild ref={n => (parent = n)} />, 11);
+
+    let match;
+    expect(() => (match = ReactNative.findNodeHandle(parent))).toWarnDev([
+      'Warning: findNodeHandle is deprecated in StrictMode. ' +
+        'findNodeHandle was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
+        'Instead, add a ref directly to the element you want to reference.' +
+        '\n' +
+        '\n    in RCTView (at **)' +
+        '\n    in StrictMode (at **)' +
+        '\n    in ContainsStrictModeChild (at **)' +
+        '\n' +
+        '\nLearn more about using refs safely here:' +
+        '\nhttps://fb.me/react-strict-mode-find-node',
+    ]);
+    expect(match).toBe(child._nativeTag);
+  });
+
+  it('findNodeHandle should warn if passed a component that is inside StrictMode', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    let parent = undefined;
+    let child = undefined;
+
+    class IsInStrictMode extends React.Component {
+      render() {
+        return <View ref={n => (child = n)} />;
+      }
+    }
+
+    ReactNative.render(
+      <StrictMode>
+        <IsInStrictMode ref={n => (parent = n)} />
+      </StrictMode>,
+      11,
+    );
+
+    let match;
+    expect(() => (match = ReactNative.findNodeHandle(parent))).toWarnDev([
+      'Warning: findNodeHandle is deprecated in StrictMode. ' +
+        'findNodeHandle was passed an instance of IsInStrictMode which is inside StrictMode. ' +
+        'Instead, add a ref directly to the element you want to reference.' +
+        '\n' +
+        '\n    in RCTView (at **)' +
+        '\n    in IsInStrictMode (at **)' +
+        '\n    in StrictMode (at **)' +
+        '\n' +
+        '\nLearn more about using refs safely here:' +
+        '\nhttps://fb.me/react-strict-mode-find-node',
+    ]);
+    expect(match).toBe(child._nativeTag);
   });
 });

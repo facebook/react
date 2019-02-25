@@ -20,17 +20,19 @@ describe('ReactFragment', () => {
     ReactNoop = require('react-noop-renderer');
   });
 
-  function span(prop) {
-    return {type: 'span', children: [], prop};
-  }
-
-  function text(val) {
-    return {text: val};
-  }
-
   function div(...children) {
-    children = children.map(c => (typeof c === 'string' ? {text: c} : c));
-    return {type: 'div', children, prop: undefined};
+    children = children.map(
+      c => (typeof c === 'string' ? {text: c, hidden: false} : c),
+    );
+    return {type: 'div', children, prop: undefined, hidden: false};
+  }
+
+  function span(prop) {
+    return {type: 'span', children: [], prop, hidden: false};
+  }
+
+  function text(t) {
+    return {text: t, hidden: false};
   }
 
   it('should render a single child via noop renderer', () => {
@@ -707,7 +709,7 @@ describe('ReactFragment', () => {
 
     ReactNoop.render(<Foo condition={false} />);
     expect(ReactNoop.flush).toWarnDev(
-      'Each child in an array or iterator should have a unique "key" prop.',
+      'Each child in a list should have a unique "key" prop.',
     );
 
     expect(ops).toEqual([]);
@@ -751,12 +753,12 @@ describe('ReactFragment', () => {
 
     ReactNoop.render(<Foo condition={true} />);
     expect(ReactNoop.flush).toWarnDev(
-      'Each child in an array or iterator should have a unique "key" prop.',
+      'Each child in a list should have a unique "key" prop.',
     );
 
     ReactNoop.render(<Foo condition={false} />);
     expect(ReactNoop.flush).toWarnDev(
-      'Each child in an array or iterator should have a unique "key" prop.',
+      'Each child in a list should have a unique "key" prop.',
     );
 
     expect(ops).toEqual(['Update Stateful']);
@@ -764,7 +766,7 @@ describe('ReactFragment', () => {
 
     ReactNoop.render(<Foo condition={true} />);
     expect(ReactNoop.flush).toWarnDev(
-      'Each child in an array or iterator should have a unique "key" prop.',
+      'Each child in a list should have a unique "key" prop.',
     );
 
     expect(ops).toEqual(['Update Stateful', 'Update Stateful']);

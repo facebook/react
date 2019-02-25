@@ -12,6 +12,7 @@
 let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 let React = require('react');
+let useContext;
 let ReactNoop;
 let gen;
 
@@ -21,14 +22,10 @@ describe('ReactNewContext', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     React = require('react');
+    useContext = React.useContext;
     ReactNoop = require('react-noop-renderer');
     gen = require('random-seed');
   });
-
-  // function div(...children) {
-  //   children = children.map(c => (typeof c === 'string' ? {text: c} : c));
-  //   return {type: 'div', children, prop: undefined};
-  // }
 
   function Text(props) {
     ReactNoop.yield(props.text);
@@ -36,29 +33,88 @@ describe('ReactNewContext', () => {
   }
 
   function span(prop) {
-    return {type: 'span', children: [], prop};
+    return {type: 'span', children: [], prop, hidden: false};
+  }
+
+  function readContext(Context, observedBits) {
+    const dispatcher =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .ReactCurrentDispatcher.current;
+    return dispatcher.readContext(Context, observedBits);
   }
 
   // We have several ways of reading from context. sharedContextTests runs
   // a suite of tests for a given context consumer implementation.
   sharedContextTests('Context.Consumer', Context => Context.Consumer);
   sharedContextTests(
-    'Context.unstable_read inside functional component',
+    'useContext inside function component',
     Context =>
       function Consumer(props) {
         const observedBits = props.unstable_observedBits;
-        const contextValue = Context.unstable_read(observedBits);
+        let contextValue;
+        expect(() => {
+          contextValue = useContext(Context, observedBits);
+        }).toWarnDev(
+          observedBits !== undefined
+            ? 'useContext() second argument is reserved for future use in React. ' +
+              `Passing it is not supported. You passed: ${observedBits}.`
+            : [],
+        );
         const render = props.children;
         return render(contextValue);
       },
   );
+  sharedContextTests('useContext inside forwardRef component', Context =>
+    React.forwardRef(function Consumer(props, ref) {
+      const observedBits = props.unstable_observedBits;
+      let contextValue;
+      expect(() => {
+        contextValue = useContext(Context, observedBits);
+      }).toWarnDev(
+        observedBits !== undefined
+          ? 'useContext() second argument is reserved for future use in React. ' +
+            `Passing it is not supported. You passed: ${observedBits}.`
+          : [],
+      );
+      const render = props.children;
+      return render(contextValue);
+    }),
+  );
+  sharedContextTests('useContext inside memoized function component', Context =>
+    React.memo(function Consumer(props) {
+      const observedBits = props.unstable_observedBits;
+      let contextValue;
+      expect(() => {
+        contextValue = useContext(Context, observedBits);
+      }).toWarnDev(
+        observedBits !== undefined
+          ? 'useContext() second argument is reserved for future use in React. ' +
+            `Passing it is not supported. You passed: ${observedBits}.`
+          : [],
+      );
+      const render = props.children;
+      return render(contextValue);
+    }),
+  );
   sharedContextTests(
-    'Context.unstable_read inside class component',
+    'readContext(Context) inside class component',
     Context =>
       class Consumer extends React.Component {
         render() {
           const observedBits = this.props.unstable_observedBits;
-          const contextValue = Context.unstable_read(observedBits);
+          const contextValue = readContext(Context, observedBits);
+          const render = this.props.children;
+          return render(contextValue);
+        }
+      },
+  );
+  sharedContextTests(
+    'readContext(Context) inside pure class component',
+    Context =>
+      class Consumer extends React.PureComponent {
+        render() {
+          const observedBits = this.props.unstable_observedBits;
+          const contextValue = readContext(Context, observedBits);
           const render = this.props.children;
           return render(contextValue);
         }
@@ -850,45 +906,35 @@ describe('ReactNewContext', () => {
         expect(ReactNoop.getChildren()).toEqual([span(2), span(2)]);
       });
 
-      // Context consumer bails out on propagating "deep" updates when `value` hasn't changed.
-      // However, it doesn't bail out from rendering if the component above it re-rendered anyway.
-      // If we bailed out on referential equality, it would be confusing that you
-      // can call this.setState(), but an autobound render callback "blocked" the update.
-      // https://github.com/facebook/react/pull/12470#issuecomment-376917711
-      it('consumer does not bail out if there were no bailouts above it', () => {
-        const Context = React.createContext(0);
+      it("context consumer doesn't bail out inside hidden subtree", () => {
+        const Context = React.createContext('dark');
         const Consumer = getConsumer(Context);
 
-        class App extends React.Component {
-          state = {
-            text: 'hello',
-          };
-
-          renderConsumer = context => {
-            ReactNoop.yield('App#renderConsumer');
-            return <span prop={this.state.text} />;
-          };
-
-          render() {
-            ReactNoop.yield('App');
-            return (
-              <Context.Provider value={this.props.value}>
-                <Consumer>{this.renderConsumer}</Consumer>
-              </Context.Provider>
-            );
-          }
+        function App({theme}) {
+          return (
+            <Context.Provider value={theme}>
+              <div hidden={true}>
+                <Consumer>{value => <Text text={value} />}</Consumer>
+              </div>
+            </Context.Provider>
+          );
         }
 
-        // Initial mount
-        let inst;
-        ReactNoop.render(<App value={1} ref={ref => (inst = ref)} />);
-        expect(ReactNoop.flush()).toEqual(['App', 'App#renderConsumer']);
-        expect(ReactNoop.getChildren()).toEqual([span('hello')]);
+        ReactNoop.render(<App theme="dark" />);
+        expect(ReactNoop.flush()).toEqual(['dark']);
+        expect(ReactNoop.getChildrenAsJSX()).toEqual(
+          <div hidden={true}>
+            <span prop="dark" />
+          </div>,
+        );
 
-        // Update
-        inst.setState({text: 'goodbye'});
-        expect(ReactNoop.flush()).toEqual(['App', 'App#renderConsumer']);
-        expect(ReactNoop.getChildren()).toEqual([span('goodbye')]);
+        ReactNoop.render(<App theme="light" />);
+        expect(ReactNoop.flush()).toEqual(['light']);
+        expect(ReactNoop.getChildrenAsJSX()).toEqual(
+          <div hidden={true}>
+            <span prop="light" />
+          </div>,
+        );
       });
 
       // This is a regression case for https://github.com/facebook/react/issues/12389.
@@ -1144,7 +1190,13 @@ describe('ReactNewContext', () => {
           </App>
         </LegacyProvider>,
       );
-      expect(ReactNoop.flush()).toEqual(['LegacyProvider', 'App', 'Child']);
+      expect(() => {
+        expect(ReactNoop.flush()).toEqual(['LegacyProvider', 'App', 'Child']);
+      }).toWarnDev(
+        'Legacy context API has been detected within a strict-mode tree: \n\n' +
+          'Please update the following components: LegacyProvider',
+        {withoutStack: true},
+      );
       expect(ReactNoop.getChildren()).toEqual([span('Child')]);
 
       // Update App with same value (should bail out)
@@ -1184,12 +1236,12 @@ describe('ReactNewContext', () => {
 
       function FooAndBar() {
         return (
-          <FooContext>
+          <FooContext.Consumer>
             {foo => {
-              const bar = BarContext.unstable_read();
+              const bar = readContext(BarContext);
               return <Text text={`Foo: ${foo}, Bar: ${bar}`} />;
             }}
-          </FooContext>
+          </FooContext.Consumer>
         );
       }
 
@@ -1228,10 +1280,51 @@ describe('ReactNewContext', () => {
       expect(ReactNoop.flush()).toEqual(['Foo: 2, Bar: 2']);
       expect(ReactNoop.getChildren()).toEqual([span('Foo: 2, Bar: 2')]);
     });
+
+    // Context consumer bails out on propagating "deep" updates when `value` hasn't changed.
+    // However, it doesn't bail out from rendering if the component above it re-rendered anyway.
+    // If we bailed out on referential equality, it would be confusing that you
+    // can call this.setState(), but an autobound render callback "blocked" the update.
+    // https://github.com/facebook/react/pull/12470#issuecomment-376917711
+    it('consumer does not bail out if there were no bailouts above it', () => {
+      const Context = React.createContext(0);
+      const Consumer = Context.Consumer;
+
+      class App extends React.Component {
+        state = {
+          text: 'hello',
+        };
+
+        renderConsumer = context => {
+          ReactNoop.yield('App#renderConsumer');
+          return <span prop={this.state.text} />;
+        };
+
+        render() {
+          ReactNoop.yield('App');
+          return (
+            <Context.Provider value={this.props.value}>
+              <Consumer>{this.renderConsumer}</Consumer>
+            </Context.Provider>
+          );
+        }
+      }
+
+      // Initial mount
+      let inst;
+      ReactNoop.render(<App value={1} ref={ref => (inst = ref)} />);
+      expect(ReactNoop.flush()).toEqual(['App', 'App#renderConsumer']);
+      expect(ReactNoop.getChildren()).toEqual([span('hello')]);
+
+      // Update
+      inst.setState({text: 'goodbye'});
+      expect(ReactNoop.flush()).toEqual(['App', 'App#renderConsumer']);
+      expect(ReactNoop.getChildren()).toEqual([span('goodbye')]);
+    });
   });
 
-  describe('unstable_readContext', () => {
-    it('can use the same context multiple times in the same function', () => {
+  describe('readContext', () => {
+    it('can read the same context multiple times in the same function', () => {
       const Context = React.createContext({foo: 0, bar: 0, baz: 0}, (a, b) => {
         let result = 0;
         if (a.foo !== b.foo) {
@@ -1256,13 +1349,13 @@ describe('ReactNewContext', () => {
       }
 
       function FooAndBar() {
-        const {foo} = Context.unstable_read(0b001);
-        const {bar} = Context.unstable_read(0b010);
+        const {foo} = readContext(Context, 0b001);
+        const {bar} = readContext(Context, 0b010);
         return <Text text={`Foo: ${foo}, Bar: ${bar}`} />;
       }
 
       function Baz() {
-        const {baz} = Context.unstable_read(0b100);
+        const {baz} = readContext(Context, 0b100);
         return <Text text={'Baz: ' + baz} />;
       }
 
@@ -1320,6 +1413,180 @@ describe('ReactNewContext', () => {
         span('Foo: 2, Bar: 2'),
         span('Baz: 2'),
       ]);
+    });
+
+    // Context consumer bails out on propagating "deep" updates when `value` hasn't changed.
+    // However, it doesn't bail out from rendering if the component above it re-rendered anyway.
+    // If we bailed out on referential equality, it would be confusing that you
+    // can call this.setState(), but an autobound render callback "blocked" the update.
+    // https://github.com/facebook/react/pull/12470#issuecomment-376917711
+    it('does not bail out if there were no bailouts above it', () => {
+      const Context = React.createContext(0);
+
+      class Consumer extends React.Component {
+        render() {
+          const contextValue = readContext(Context);
+          return this.props.children(contextValue);
+        }
+      }
+
+      class App extends React.Component {
+        state = {
+          text: 'hello',
+        };
+
+        renderConsumer = context => {
+          ReactNoop.yield('App#renderConsumer');
+          return <span prop={this.state.text} />;
+        };
+
+        render() {
+          ReactNoop.yield('App');
+          return (
+            <Context.Provider value={this.props.value}>
+              <Consumer>{this.renderConsumer}</Consumer>
+            </Context.Provider>
+          );
+        }
+      }
+
+      // Initial mount
+      let inst;
+      ReactNoop.render(<App value={1} ref={ref => (inst = ref)} />);
+      expect(ReactNoop.flush()).toEqual(['App', 'App#renderConsumer']);
+      expect(ReactNoop.getChildren()).toEqual([span('hello')]);
+
+      // Update
+      inst.setState({text: 'goodbye'});
+      expect(ReactNoop.flush()).toEqual(['App', 'App#renderConsumer']);
+      expect(ReactNoop.getChildren()).toEqual([span('goodbye')]);
+    });
+
+    it('warns when reading context inside render phase class setState updater', () => {
+      const ThemeContext = React.createContext('light');
+
+      class Cls extends React.Component {
+        state = {};
+        render() {
+          this.setState(() => {
+            readContext(ThemeContext);
+          });
+          return null;
+        }
+      }
+
+      ReactNoop.render(<Cls />);
+      expect(ReactNoop.flush).toWarnDev(
+        [
+          'Context can only be read while React is rendering',
+          'Cannot update during an existing state transition',
+        ],
+        {
+          withoutStack: 1,
+        },
+      );
+    });
+  });
+
+  describe('useContext', () => {
+    it('warns on array.map(useContext)', () => {
+      const Context = React.createContext(0);
+      function Foo() {
+        return [Context].map(useContext);
+      }
+      ReactNoop.render(<Foo />);
+      expect(ReactNoop.flush).toWarnDev(
+        'useContext() second argument is reserved for future ' +
+          'use in React. Passing it is not supported. ' +
+          'You passed: 0.\n\n' +
+          'Did you call array.map(useContext)? ' +
+          'Calling Hooks inside a loop is not supported. ' +
+          'Learn more at https://fb.me/rules-of-hooks',
+      );
+    });
+
+    it('throws when used in a class component', () => {
+      const Context = React.createContext(0);
+      class Foo extends React.Component {
+        render() {
+          return useContext(Context);
+        }
+      }
+      ReactNoop.render(<Foo />);
+      expect(ReactNoop.flush).toThrow(
+        'Hooks can only be called inside the body of a function component.',
+      );
+    });
+
+    it('warns when passed a consumer', () => {
+      const Context = React.createContext(0);
+      function Foo() {
+        return useContext(Context.Consumer);
+      }
+      ReactNoop.render(<Foo />);
+      expect(ReactNoop.flush).toWarnDev(
+        'Calling useContext(Context.Consumer) is not supported, may cause bugs, ' +
+          'and will be removed in a future major release. ' +
+          'Did you mean to call useContext(Context) instead?',
+      );
+    });
+
+    it('warns when passed a provider', () => {
+      const Context = React.createContext(0);
+      function Foo() {
+        useContext(Context.Provider);
+        return null;
+      }
+      ReactNoop.render(<Foo />);
+      expect(ReactNoop.flush).toWarnDev(
+        'Calling useContext(Context.Provider) is not supported. ' +
+          'Did you mean to call useContext(Context) instead?',
+      );
+    });
+
+    // Context consumer bails out on propagating "deep" updates when `value` hasn't changed.
+    // However, it doesn't bail out from rendering if the component above it re-rendered anyway.
+    // If we bailed out on referential equality, it would be confusing that you
+    // can call this.setState(), but an autobound render callback "blocked" the update.
+    // https://github.com/facebook/react/pull/12470#issuecomment-376917711
+    it('does not bail out if there were no bailouts above it', () => {
+      const Context = React.createContext(0);
+
+      function Consumer({children}) {
+        const contextValue = useContext(Context);
+        return children(contextValue);
+      }
+
+      class App extends React.Component {
+        state = {
+          text: 'hello',
+        };
+
+        renderConsumer = context => {
+          ReactNoop.yield('App#renderConsumer');
+          return <span prop={this.state.text} />;
+        };
+
+        render() {
+          ReactNoop.yield('App');
+          return (
+            <Context.Provider value={this.props.value}>
+              <Consumer>{this.renderConsumer}</Consumer>
+            </Context.Provider>
+          );
+        }
+      }
+
+      // Initial mount
+      let inst;
+      ReactNoop.render(<App value={1} ref={ref => (inst = ref)} />);
+      expect(ReactNoop.flush()).toEqual(['App', 'App#renderConsumer']);
+      expect(ReactNoop.getChildren()).toEqual([span('hello')]);
+
+      // Update
+      inst.setState({text: 'goodbye'});
+      expect(ReactNoop.flush()).toEqual(['App', 'App#renderConsumer']);
+      expect(ReactNoop.getChildren()).toEqual([span('goodbye')]);
     });
   });
 
@@ -1424,6 +1691,7 @@ describe('ReactNewContext', () => {
           return false;
         }
         render() {
+          ReactNoop.yield();
           if (this.props.depth >= this.props.maxDepth) {
             return null;
           }
@@ -1504,7 +1772,7 @@ describe('ReactNewContext', () => {
               ReactNoop.flush();
               break;
             case FLUSH:
-              ReactNoop.flushUnitsOfWork(action.unitsOfWork);
+              ReactNoop.unstable_flushNumberOfYields(action.unitsOfWork);
               break;
             case UPDATE:
               finalExpectedValues = {
@@ -1551,5 +1819,101 @@ Context fuzz tester error! Copy and paste the following line into the test suite
         }
       }
     });
+  });
+
+  it('should warn with an error message when using context as a consumer in DEV', () => {
+    const BarContext = React.createContext({value: 'bar-initial'});
+    const BarConsumer = BarContext;
+
+    function Component() {
+      return (
+        <React.Fragment>
+          <BarContext.Provider value={{value: 'bar-updated'}}>
+            <BarConsumer>
+              {({value}) => <div actual={value} expected="bar-updated" />}
+            </BarConsumer>
+          </BarContext.Provider>
+        </React.Fragment>
+      );
+    }
+
+    expect(() => {
+      ReactNoop.render(<Component />);
+      ReactNoop.flush();
+    }).toWarnDev(
+      'Rendering <Context> directly is not supported and will be removed in ' +
+        'a future major release. Did you mean to render <Context.Consumer> instead?',
+    );
+  });
+
+  // False positive regression test.
+  it('should not warn when using Consumer from React < 16.6 with newer renderer', () => {
+    const BarContext = React.createContext({value: 'bar-initial'});
+    // React 16.5 and earlier didn't have a separate object.
+    BarContext.Consumer = BarContext;
+
+    function Component() {
+      return (
+        <React.Fragment>
+          <BarContext.Provider value={{value: 'bar-updated'}}>
+            <BarContext.Consumer>
+              {({value}) => <div actual={value} expected="bar-updated" />}
+            </BarContext.Consumer>
+          </BarContext.Provider>
+        </React.Fragment>
+      );
+    }
+
+    ReactNoop.render(<Component />);
+    ReactNoop.flush();
+  });
+
+  it('should warn with an error message when using nested context consumers in DEV', () => {
+    const BarContext = React.createContext({value: 'bar-initial'});
+    const BarConsumer = BarContext;
+
+    function Component() {
+      return (
+        <React.Fragment>
+          <BarContext.Provider value={{value: 'bar-updated'}}>
+            <BarConsumer.Consumer.Consumer>
+              {({value}) => <div actual={value} expected="bar-updated" />}
+            </BarConsumer.Consumer.Consumer>
+          </BarContext.Provider>
+        </React.Fragment>
+      );
+    }
+
+    expect(() => {
+      ReactNoop.render(<Component />);
+      ReactNoop.flush();
+    }).toWarnDev(
+      'Rendering <Context.Consumer.Consumer> is not supported and will be removed in ' +
+        'a future major release. Did you mean to render <Context.Consumer> instead?',
+    );
+  });
+
+  it('should warn with an error message when using Context.Consumer.Provider DEV', () => {
+    const BarContext = React.createContext({value: 'bar-initial'});
+
+    function Component() {
+      return (
+        <React.Fragment>
+          <BarContext.Consumer.Provider value={{value: 'bar-updated'}}>
+            <BarContext.Consumer>
+              {({value}) => <div actual={value} expected="bar-updated" />}
+            </BarContext.Consumer>
+          </BarContext.Consumer.Provider>
+        </React.Fragment>
+      );
+    }
+
+    expect(() => {
+      ReactNoop.render(<Component />);
+      ReactNoop.flush();
+    }).toWarnDev(
+      'Rendering <Context.Consumer.Provider> is not supported and will be removed in ' +
+        'a future major release. Did you mean to render <Context.Provider> instead?',
+    );
   });
 });

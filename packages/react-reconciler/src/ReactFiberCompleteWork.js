@@ -17,13 +17,12 @@ import type {
   Container,
   ChildSet,
 } from './ReactFiberHostConfig';
+import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import {
   IndeterminateComponent,
-  FunctionalComponent,
-  FunctionalComponentLazy,
+  FunctionComponent,
   ClassComponent,
-  ClassComponentLazy,
   HostRoot,
   HostComponent,
   HostText,
@@ -34,24 +33,35 @@ import {
   Fragment,
   Mode,
   Profiler,
-  PlaceholderComponent,
-  ForwardRefLazy,
-  PureComponent,
-  PureComponentLazy,
+  SuspenseComponent,
+  DehydratedSuspenseComponent,
+  MemoComponent,
+  SimpleMemoComponent,
+  LazyComponent,
+  IncompleteClassComponent,
 } from 'shared/ReactWorkTags';
-import {Placement, Ref, Update} from 'shared/ReactSideEffectTags';
+import {
+  Placement,
+  Ref,
+  Update,
+  NoEffect,
+  DidCapture,
+  Deletion,
+} from 'shared/ReactSideEffectTags';
 import invariant from 'shared/invariant';
-import {getResultFromResolvedThenable} from 'shared/ReactLazyComponent';
 
 import {
   createInstance,
   createTextInstance,
+  createHiddenTextInstance,
   appendInitialChild,
   finalizeInitialChildren,
   prepareUpdate,
   supportsMutation,
   supportsPersistence,
   cloneInstance,
+  cloneHiddenInstance,
+  cloneUnhiddenInstance,
   createContainerChildSet,
   appendChildToContainerChildSet,
   finalizeContainerChildren,
@@ -71,8 +81,10 @@ import {popProvider} from './ReactFiberNewContext';
 import {
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,
+  skipPastDehydratedSuspenseInstance,
   popHydrationState,
 } from './ReactFiberHydrationContext';
+import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -84,41 +96,47 @@ function markRef(workInProgress: Fiber) {
   workInProgress.effectTag |= Ref;
 }
 
-function appendAllChildren(parent: Instance, workInProgress: Fiber) {
-  // We only have the top Fiber that was created but we need recurse down its
-  // children to find all the terminal nodes.
-  let node = workInProgress.child;
-  while (node !== null) {
-    if (node.tag === HostComponent || node.tag === HostText) {
-      appendInitialChild(parent, node.stateNode);
-    } else if (node.tag === HostPortal) {
-      // If we have a portal child, then we don't want to traverse
-      // down its children. Instead, we'll get insertions from each child in
-      // the portal directly.
-    } else if (node.child !== null) {
-      node.child.return = node;
-      node = node.child;
-      continue;
-    }
-    if (node === workInProgress) {
-      return;
-    }
-    while (node.sibling === null) {
-      if (node.return === null || node.return === workInProgress) {
-        return;
-      }
-      node = node.return;
-    }
-    node.sibling.return = node.return;
-    node = node.sibling;
-  }
-}
-
+let appendAllChildren;
 let updateHostContainer;
 let updateHostComponent;
 let updateHostText;
 if (supportsMutation) {
   // Mutation mode
+
+  appendAllChildren = function(
+    parent: Instance,
+    workInProgress: Fiber,
+    needsVisibilityToggle: boolean,
+    isHidden: boolean,
+  ) {
+    // We only have the top Fiber that was created but we need recurse down its
+    // children to find all the terminal nodes.
+    let node = workInProgress.child;
+    while (node !== null) {
+      if (node.tag === HostComponent || node.tag === HostText) {
+        appendInitialChild(parent, node.stateNode);
+      } else if (node.tag === HostPortal) {
+        // If we have a portal child, then we don't want to traverse
+        // down its children. Instead, we'll get insertions from each child in
+        // the portal directly.
+      } else if (node.child !== null) {
+        node.child.return = node;
+        node = node.child;
+        continue;
+      }
+      if (node === workInProgress) {
+        return;
+      }
+      while (node.sibling === null) {
+        if (node.return === null || node.return === workInProgress) {
+          return;
+        }
+        node = node.return;
+      }
+      node.sibling.return = node.return;
+      node = node.sibling;
+    }
+  };
 
   updateHostContainer = function(workInProgress: Fiber) {
     // Noop
@@ -178,26 +196,202 @@ if (supportsMutation) {
 } else if (supportsPersistence) {
   // Persistent host tree mode
 
-  // An unfortunate fork of appendAllChildren because we have two different parent types.
-  const appendAllChildrenToContainer = function(
-    containerChildSet: ChildSet,
+  appendAllChildren = function(
+    parent: Instance,
     workInProgress: Fiber,
+    needsVisibilityToggle: boolean,
+    isHidden: boolean,
   ) {
     // We only have the top Fiber that was created but we need recurse down its
     // children to find all the terminal nodes.
     let node = workInProgress.child;
     while (node !== null) {
-      if (node.tag === HostComponent || node.tag === HostText) {
-        appendChildToContainerChildSet(containerChildSet, node.stateNode);
+      // eslint-disable-next-line no-labels
+      branches: if (node.tag === HostComponent) {
+        let instance = node.stateNode;
+        if (needsVisibilityToggle) {
+          const props = node.memoizedProps;
+          const type = node.type;
+          if (isHidden) {
+            // This child is inside a timed out tree. Hide it.
+            instance = cloneHiddenInstance(instance, type, props, node);
+          } else {
+            // This child was previously inside a timed out tree. If it was not
+            // updated during this render, it may need to be unhidden. Clone
+            // again to be sure.
+            instance = cloneUnhiddenInstance(instance, type, props, node);
+          }
+          node.stateNode = instance;
+        }
+        appendInitialChild(parent, instance);
+      } else if (node.tag === HostText) {
+        let instance = node.stateNode;
+        if (needsVisibilityToggle) {
+          const text = node.memoizedProps;
+          const rootContainerInstance = getRootHostContainer();
+          const currentHostContext = getHostContext();
+          if (isHidden) {
+            instance = createHiddenTextInstance(
+              text,
+              rootContainerInstance,
+              currentHostContext,
+              workInProgress,
+            );
+          } else {
+            instance = createTextInstance(
+              text,
+              rootContainerInstance,
+              currentHostContext,
+              workInProgress,
+            );
+          }
+          node.stateNode = instance;
+        }
+        appendInitialChild(parent, instance);
       } else if (node.tag === HostPortal) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
         // the portal directly.
+      } else if (node.tag === SuspenseComponent) {
+        const current = node.alternate;
+        if (current !== null) {
+          const oldState: SuspenseState = current.memoizedState;
+          const newState: SuspenseState = node.memoizedState;
+          const oldIsHidden = oldState !== null;
+          const newIsHidden = newState !== null;
+          if (oldIsHidden !== newIsHidden) {
+            // The placeholder either just timed out or switched back to the normal
+            // children after having previously timed out. Toggle the visibility of
+            // the direct host children.
+            const primaryChildParent = newIsHidden ? node.child : node;
+            if (primaryChildParent !== null) {
+              appendAllChildren(parent, primaryChildParent, true, newIsHidden);
+            }
+            // eslint-disable-next-line no-labels
+            break branches;
+          }
+        }
+        if (node.child !== null) {
+          // Continue traversing like normal
+          node.child.return = node;
+          node = node.child;
+          continue;
+        }
       } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
         continue;
       }
+      // $FlowFixMe This is correct but Flow is confused by the labeled break.
+      node = (node: Fiber);
+      if (node === workInProgress) {
+        return;
+      }
+      while (node.sibling === null) {
+        if (node.return === null || node.return === workInProgress) {
+          return;
+        }
+        node = node.return;
+      }
+      node.sibling.return = node.return;
+      node = node.sibling;
+    }
+  };
+
+  // An unfortunate fork of appendAllChildren because we have two different parent types.
+  const appendAllChildrenToContainer = function(
+    containerChildSet: ChildSet,
+    workInProgress: Fiber,
+    needsVisibilityToggle: boolean,
+    isHidden: boolean,
+  ) {
+    // We only have the top Fiber that was created but we need recurse down its
+    // children to find all the terminal nodes.
+    let node = workInProgress.child;
+    while (node !== null) {
+      // eslint-disable-next-line no-labels
+      branches: if (node.tag === HostComponent) {
+        let instance = node.stateNode;
+        if (needsVisibilityToggle) {
+          const props = node.memoizedProps;
+          const type = node.type;
+          if (isHidden) {
+            // This child is inside a timed out tree. Hide it.
+            instance = cloneHiddenInstance(instance, type, props, node);
+          } else {
+            // This child was previously inside a timed out tree. If it was not
+            // updated during this render, it may need to be unhidden. Clone
+            // again to be sure.
+            instance = cloneUnhiddenInstance(instance, type, props, node);
+          }
+          node.stateNode = instance;
+        }
+        appendChildToContainerChildSet(containerChildSet, instance);
+      } else if (node.tag === HostText) {
+        let instance = node.stateNode;
+        if (needsVisibilityToggle) {
+          const text = node.memoizedProps;
+          const rootContainerInstance = getRootHostContainer();
+          const currentHostContext = getHostContext();
+          if (isHidden) {
+            instance = createHiddenTextInstance(
+              text,
+              rootContainerInstance,
+              currentHostContext,
+              workInProgress,
+            );
+          } else {
+            instance = createTextInstance(
+              text,
+              rootContainerInstance,
+              currentHostContext,
+              workInProgress,
+            );
+          }
+          node.stateNode = instance;
+        }
+        appendChildToContainerChildSet(containerChildSet, instance);
+      } else if (node.tag === HostPortal) {
+        // If we have a portal child, then we don't want to traverse
+        // down its children. Instead, we'll get insertions from each child in
+        // the portal directly.
+      } else if (node.tag === SuspenseComponent) {
+        const current = node.alternate;
+        if (current !== null) {
+          const oldState: SuspenseState = current.memoizedState;
+          const newState: SuspenseState = node.memoizedState;
+          const oldIsHidden = oldState !== null;
+          const newIsHidden = newState !== null;
+          if (oldIsHidden !== newIsHidden) {
+            // The placeholder either just timed out or switched back to the normal
+            // children after having previously timed out. Toggle the visibility of
+            // the direct host children.
+            const primaryChildParent = newIsHidden ? node.child : node;
+            if (primaryChildParent !== null) {
+              appendAllChildrenToContainer(
+                containerChildSet,
+                primaryChildParent,
+                true,
+                newIsHidden,
+              );
+            }
+            // eslint-disable-next-line no-labels
+            break branches;
+          }
+        }
+        if (node.child !== null) {
+          // Continue traversing like normal
+          node.child.return = node;
+          node = node.child;
+          continue;
+        }
+      } else if (node.child !== null) {
+        node.child.return = node;
+        node = node.child;
+        continue;
+      }
+      // $FlowFixMe This is correct but Flow is confused by the labeled break.
+      node = (node: Fiber);
       if (node === workInProgress) {
         return;
       }
@@ -224,7 +418,7 @@ if (supportsMutation) {
       const container = portalOrRoot.containerInfo;
       let newChildSet = createContainerChildSet(container);
       // If children might have changed, we have to add them all to the set.
-      appendAllChildrenToContainer(newChildSet, workInProgress);
+      appendAllChildrenToContainer(newChildSet, workInProgress, false, false);
       portalOrRoot.pendingChildren = newChildSet;
       // Schedule an update on the container to swap out the container.
       markUpdate(workInProgress);
@@ -297,7 +491,7 @@ if (supportsMutation) {
       markUpdate(workInProgress);
     } else {
       // If children might have changed, we have to add them all to the set.
-      appendAllChildren(newInstance, workInProgress);
+      appendAllChildren(newInstance, workInProgress, false, false);
     }
   };
   updateHostText = function(
@@ -353,18 +547,15 @@ function completeWork(
   const newProps = workInProgress.pendingProps;
 
   switch (workInProgress.tag) {
-    case FunctionalComponent:
-    case FunctionalComponentLazy:
+    case IndeterminateComponent:
+      break;
+    case LazyComponent:
+      break;
+    case SimpleMemoComponent:
+    case FunctionComponent:
       break;
     case ClassComponent: {
       const Component = workInProgress.type;
-      if (isLegacyContextProvider(Component)) {
-        popLegacyContext(workInProgress);
-      }
-      break;
-    }
-    case ClassComponentLazy: {
-      const Component = getResultFromResolvedThenable(workInProgress.type);
       if (isLegacyContextProvider(Component)) {
         popLegacyContext(workInProgress);
       }
@@ -445,7 +636,7 @@ function completeWork(
             workInProgress,
           );
 
-          appendAllChildren(instance, workInProgress);
+          appendAllChildren(instance, workInProgress, false, false);
 
           // Certain renderers require commit-time effects for initial mount.
           // (eg DOM renderer supports auto-focus for certain elements).
@@ -506,10 +697,52 @@ function completeWork(
       break;
     }
     case ForwardRef:
-    case ForwardRefLazy:
       break;
-    case PlaceholderComponent:
+    case SuspenseComponent: {
+      const nextState = workInProgress.memoizedState;
+      if ((workInProgress.effectTag & DidCapture) !== NoEffect) {
+        // Something suspended. Re-render with the fallback children.
+        workInProgress.expirationTime = renderExpirationTime;
+        // Do not reset the effect list.
+        return workInProgress;
+      }
+
+      const nextDidTimeout = nextState !== null;
+      const prevDidTimeout = current !== null && current.memoizedState !== null;
+
+      if (current === null) {
+        // In cases where we didn't find a suitable hydration boundary we never
+        // downgraded this to a DehydratedSuspenseComponent, but we still need to
+        // pop the hydration state since we might be inside the insertion tree.
+        popHydrationState(workInProgress);
+      } else if (!nextDidTimeout && prevDidTimeout) {
+        // We just switched from the fallback to the normal children. Delete
+        // the fallback.
+        // TODO: Would it be better to store the fallback fragment on
+        // the stateNode during the begin phase?
+        const currentFallbackChild: Fiber | null = (current.child: any).sibling;
+        if (currentFallbackChild !== null) {
+          // Deletions go at the beginning of the return fiber's effect list
+          const first = workInProgress.firstEffect;
+          if (first !== null) {
+            workInProgress.firstEffect = currentFallbackChild;
+            currentFallbackChild.nextEffect = first;
+          } else {
+            workInProgress.firstEffect = workInProgress.lastEffect = currentFallbackChild;
+            currentFallbackChild.nextEffect = null;
+          }
+          currentFallbackChild.effectTag = Deletion;
+        }
+      }
+
+      if (nextDidTimeout || prevDidTimeout) {
+        // If the children are hidden, or if they were previous hidden, schedule
+        // an effect to toggle their visibility. This is also used to attach a
+        // retry listener to the promise.
+        workInProgress.effectTag |= Update;
+      }
       break;
+    }
     case Fragment:
       break;
     case Mode:
@@ -526,18 +759,40 @@ function completeWork(
       break;
     case ContextConsumer:
       break;
-    case PureComponent:
-    case PureComponentLazy:
+    case MemoComponent:
       break;
-    // Error cases
-    case IndeterminateComponent:
-      invariant(
-        false,
-        'An indeterminate component should have become determinate before ' +
-          'completing. This error is likely caused by a bug in React. Please ' +
-          'file an issue.',
-      );
-    // eslint-disable-next-line no-fallthrough
+    case IncompleteClassComponent: {
+      // Same as class component case. I put it down here so that the tags are
+      // sequential to ensure this switch is compiled to a jump table.
+      const Component = workInProgress.type;
+      if (isLegacyContextProvider(Component)) {
+        popLegacyContext(workInProgress);
+      }
+      break;
+    }
+    case DehydratedSuspenseComponent: {
+      if (enableSuspenseServerRenderer) {
+        if (current === null) {
+          let wasHydrated = popHydrationState(workInProgress);
+          invariant(
+            wasHydrated,
+            'A dehydrated suspense component was completed without a hydrated node. ' +
+              'This is probably a bug in React.',
+          );
+          skipPastDehydratedSuspenseInstance(workInProgress);
+        } else if ((workInProgress.effectTag & DidCapture) === NoEffect) {
+          // This boundary did not suspend so it's now hydrated.
+          // To handle any future suspense cases, we're going to now upgrade it
+          // to a Suspense component. We detach it from the existing current fiber.
+          current.alternate = null;
+          workInProgress.alternate = null;
+          workInProgress.tag = SuspenseComponent;
+          workInProgress.memoizedState = null;
+          workInProgress.stateNode = null;
+        }
+      }
+      break;
+    }
     default:
       invariant(
         false,

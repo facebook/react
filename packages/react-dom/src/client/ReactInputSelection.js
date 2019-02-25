@@ -7,7 +7,7 @@
 
 import getActiveElement from './getActiveElement';
 
-import * as ReactDOMSelection from './ReactDOMSelection';
+import {getOffsets, setOffsets} from './ReactDOMSelection';
 import {ELEMENT_NODE, TEXT_NODE} from '../shared/HTMLNodeType';
 
 function isTextNode(node) {
@@ -152,7 +152,7 @@ export function getSelection(input) {
     };
   } else {
     // Content editable or old IE textarea.
-    selection = ReactDOMSelection.getOffsets(input);
+    selection = getOffsets(input);
   }
 
   return selection || {start: 0, end: 0};
@@ -174,6 +174,6 @@ export function setSelection(input, offsets) {
     input.selectionStart = start;
     input.selectionEnd = Math.min(end, input.value.length);
   } else {
-    ReactDOMSelection.setOffsets(input, offsets);
+    setOffsets(input, offsets);
   }
 }

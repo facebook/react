@@ -822,8 +822,6 @@ describe('ReactStrictMode', () => {
       React = require('react');
       ReactTestRenderer = require('react-test-renderer');
       PropTypes = require('prop-types');
-      ReactFeatureFlags = require('shared/ReactFeatureFlags');
-      ReactFeatureFlags.warnAboutLegacyContextAPI = true;
     });
 
     it('should warn if the legacy context API have been used in strict mode', () => {

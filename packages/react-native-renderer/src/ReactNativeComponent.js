@@ -21,7 +21,7 @@ import React from 'react';
 import TextInputState from 'TextInputState';
 import UIManager from 'UIManager';
 
-import * as ReactNativeAttributePayload from './ReactNativeAttributePayload';
+import {create} from './ReactNativeAttributePayload';
 import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';
 
 export default function(
@@ -153,20 +153,19 @@ export default function(
         return;
       }
 
+      const nativeTag =
+        maybeInstance._nativeTag || maybeInstance.canonical._nativeTag;
       const viewConfig: ReactNativeBaseComponentViewConfig<> =
         maybeInstance.viewConfig || maybeInstance.canonical.viewConfig;
 
-      const updatePayload = ReactNativeAttributePayload.create(
-        nativeProps,
-        viewConfig.validAttributes,
-      );
+      const updatePayload = create(nativeProps, viewConfig.validAttributes);
 
       // Avoid the overhead of bridge calls if there's no update.
       // This is an expensive no-op for Android, and causes an unnecessary
       // view invalidation for certain components (eg RCTTextInput) on iOS.
       if (updatePayload != null) {
         UIManager.updateView(
-          maybeInstance._nativeTag,
+          nativeTag,
           viewConfig.uiViewClassName,
           updatePayload,
         );

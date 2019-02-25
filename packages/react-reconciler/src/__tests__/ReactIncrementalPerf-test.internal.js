@@ -117,6 +117,7 @@ describe('ReactDebugFiberPerf', () => {
     require('shared/ReactFeatureFlags').enableUserTimingAPI = true;
     require('shared/ReactFeatureFlags').enableProfilerTimer = false;
     require('shared/ReactFeatureFlags').replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
+    require('shared/ReactFeatureFlags').debugRenderPhaseSideEffectsForStrictMode = false;
 
     // Import after the polyfill is set up:
     React = require('react');
@@ -357,12 +358,16 @@ describe('ReactDebugFiberPerf', () => {
     ReactNoop.render(<AllLifecycles />);
     addComment('Mount');
     expect(ReactNoop.flush).toWarnDev(
-      'componentWillMount: Please update the following components ' +
-        'to use componentDidMount instead: AllLifecycles' +
-        '\n\ncomponentWillReceiveProps: Please update the following components ' +
-        'to use static getDerivedStateFromProps instead: AllLifecycles' +
-        '\n\ncomponentWillUpdate: Please update the following components ' +
-        'to use componentDidUpdate instead: AllLifecycles',
+      [
+        'componentWillMount: Please update the following components ' +
+          'to use componentDidMount instead: AllLifecycles' +
+          '\n\ncomponentWillReceiveProps: Please update the following components ' +
+          'to use static getDerivedStateFromProps instead: AllLifecycles' +
+          '\n\ncomponentWillUpdate: Please update the following components ' +
+          'to use componentDidUpdate instead: AllLifecycles',
+        'Legacy context API has been detected within a strict-mode tree: \n\n' +
+          'Please update the following components: AllLifecycles',
+      ],
       {withoutStack: true},
     );
     ReactNoop.render(<AllLifecycles />);
@@ -393,12 +398,21 @@ describe('ReactDebugFiberPerf', () => {
   it('measures deferred work in chunks', () => {
     class A extends React.Component {
       render() {
+        ReactNoop.yield('A');
         return <div>{this.props.children}</div>;
       }
     }
 
     class B extends React.Component {
       render() {
+        ReactNoop.yield('B');
+        return <div>{this.props.children}</div>;
+      }
+    }
+
+    class C extends React.Component {
+      render() {
+        ReactNoop.yield('C');
         return <div>{this.props.children}</div>;
       }
     }
@@ -411,14 +425,15 @@ describe('ReactDebugFiberPerf', () => {
         <B>
           <Child />
         </B>
+        <C>
+          <Child />
+        </C>
       </Parent>,
     );
-    addComment('Start mounting Parent and A');
-    ReactNoop.flushDeferredPri(40);
-    addComment('Mount B just a little (but not enough to memoize)');
-    ReactNoop.flushDeferredPri(10);
-    addComment('Complete B and Parent');
-    ReactNoop.flushDeferredPri();
+    addComment('Start rendering through B');
+    ReactNoop.flushThrough(['A', 'B']);
+    addComment('Complete the rest');
+    ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();
   });
 
@@ -551,6 +566,65 @@ describe('ReactDebugFiberPerf', () => {
     expect(getFlameChart()).toMatchSnapshot();
   });
 
+  it('supports memo', () => {
+    const MemoFoo = React.memo(function Foo() {
+      return <div />;
+    });
+    ReactNoop.render(
+      <Parent>
+        <MemoFoo />
+      </Parent>,
+    );
+    ReactNoop.flush();
+    expect(getFlameChart()).toMatchSnapshot();
+  });
+
+  it('supports Suspense and lazy', async () => {
+    function Spinner() {
+      return <span />;
+    }
+
+    function fakeImport(result) {
+      return {default: result};
+    }
+
+    let resolve;
+    const LazyFoo = React.lazy(
+      () =>
+        new Promise(r => {
+          resolve = r;
+        }),
+    );
+
+    ReactNoop.render(
+      <Parent>
+        <React.Suspense fallback={<Spinner />}>
+          <LazyFoo />
+        </React.Suspense>
+      </Parent>,
+    );
+    ReactNoop.flush();
+    expect(getFlameChart()).toMatchSnapshot();
+
+    resolve(
+      fakeImport(function Foo() {
+        return <div />;
+      }),
+    );
+
+    await Promise.resolve();
+
+    ReactNoop.render(
+      <Parent>
+        <React.Suspense>
+          <LazyFoo />
+        </React.Suspense>
+      </Parent>,
+    );
+    ReactNoop.flush();
+    expect(getFlameChart()).toMatchSnapshot();
+  });
+
   it('does not schedule an extra callback if setState is called during a synchronous commit phase', () => {
     class Component extends React.Component {
       state = {step: 1};
@@ -569,11 +643,12 @@ describe('ReactDebugFiberPerf', () => {
 
   it('warns if an in-progress update is interrupted', () => {
     function Foo() {
+      ReactNoop.yield('Foo');
       return <span />;
     }
 
     ReactNoop.render(<Foo />);
-    ReactNoop.flushUnitsOfWork(2);
+    ReactNoop.flushNextYield();
     ReactNoop.flushSync(() => {
       ReactNoop.render(<Foo />);
     });

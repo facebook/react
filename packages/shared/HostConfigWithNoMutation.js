@@ -33,3 +33,7 @@ export const insertInContainerBefore = shim;
 export const removeChild = shim;
 export const removeChildFromContainer = shim;
 export const resetTextContent = shim;
+export const hideInstance = shim;
+export const hideTextInstance = shim;
+export const unhideInstance = shim;
+export const unhideTextInstance = shim;

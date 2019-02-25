@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html style="width: 100%; height: 100%; overflow: hidden">
+  <head>
+    <meta charset="utf-8">
+    <title>Fizz Example</title>
+  </head>
+  <body>
+    <h1>Fizz Example</h1>
+    <div id="container">
+      <p>
+        To install React, follow the instructions on
+        <a href="https://github.com/facebook/react/">GitHub</a>.
+      </p>
+      <p>
+        If you can see this, React is <strong>not</strong> working right.
+        If you checked out the source from GitHub make sure to run <code>npm run build</code>.
+      </p>
+    </div>
+    <script src="../../build/dist/react.development.js"></script>
+    <script src="../../build/dist/react-dom-unstable-fizz.browser.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.js"></script>
+    <script type="text/babel">
+      let stream = ReactDOMFizzServer.renderToReadableStream(<body>Success</body>);
+      let response = new Response(stream, {
+        headers: {'Content-Type': 'text/html'},
+      });
+      display(response);
+
+      async function display(responseToDisplay) {
+        let blob = await responseToDisplay.blob();
+        let url = URL.createObjectURL(blob);
+        let iframe = document.createElement('iframe');
+        iframe.src = url;
+        let container = document.getElementById('container');
+        container.innerHTML = '';
+        container.appendChild(iframe);
+      }
+    </script>
+  </body>
+</html>

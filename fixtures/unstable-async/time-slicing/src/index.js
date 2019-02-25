@@ -124,7 +124,7 @@ class App extends PureComponent {
         <div className="rendering">
           {this.renderOption('sync', 'Synchronous')}
           {this.renderOption('debounced', 'Debounced')}
-          {this.renderOption('async', 'Asynchronous')}
+          {this.renderOption('async', 'Concurrent')}
         </div>
         <input
           className={'input ' + this.state.strategy}

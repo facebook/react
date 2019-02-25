@@ -9,7 +9,7 @@ This package allows you to test arbitrary values and see if they're a particular
 yarn add react-is
 
 # NPM
-npm install react-is --save
+npm install react-is
 ```
 
 ## Usage
@@ -17,6 +17,7 @@ npm install react-is --save
 ### Determining if a Component is Valid
 
 ```js
+import React from "react";
 import * as ReactIs from "react-is";
 
 class ClassComponent extends React.Component {

@@ -12,23 +12,33 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 
 import './ReactFabricInjection';
 
-import * as ReactFabricRenderer from 'react-reconciler/inline.fabric';
+import {
+  findHostInstance,
+  findHostInstanceWithWarning,
+  batchedUpdates as batchedUpdatesImpl,
+  interactiveUpdates,
+  flushInteractiveUpdates,
+  createContainer,
+  updateContainer,
+  injectIntoDevTools,
+  getPublicRootInstance,
+} from 'react-reconciler/inline.fabric';
 
-import * as ReactPortal from 'shared/ReactPortal';
-import * as ReactGenericBatching from 'events/ReactGenericBatching';
+import {createPortal} from 'shared/ReactPortal';
+import {setBatchingImplementation} from 'events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';
 
 import NativeMethodsMixin from './NativeMethodsMixin';
 import ReactNativeComponent from './ReactNativeComponent';
-import * as ReactFabricComponentTree from './ReactFabricComponentTree';
+import {getClosestInstanceFromNode} from './ReactFabricComponentTree';
 import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
+import {setNativeProps} from './ReactNativeRendererSharedExports';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-const findHostInstance = ReactFabricRenderer.findHostInstance;
 
 function findNodeHandle(componentOrHandle: any): ?number {
   if (__DEV__) {
@@ -60,7 +70,16 @@ function findNodeHandle(componentOrHandle: any): ?number {
   if (componentOrHandle.canonical && componentOrHandle.canonical._nativeTag) {
     return componentOrHandle.canonical._nativeTag;
   }
-  const hostInstance = findHostInstance(componentOrHandle);
+  let hostInstance;
+  if (__DEV__) {
+    hostInstance = findHostInstanceWithWarning(
+      componentOrHandle,
+      'findNodeHandle',
+    );
+  } else {
+    hostInstance = findHostInstance(componentOrHandle);
+  }
+
   if (hostInstance == null) {
     return hostInstance;
   }
@@ -73,10 +92,10 @@ function findNodeHandle(componentOrHandle: any): ?number {
   return hostInstance._nativeTag;
 }
 
-ReactGenericBatching.setBatchingImplementation(
-  ReactFabricRenderer.batchedUpdates,
-  ReactFabricRenderer.interactiveUpdates,
-  ReactFabricRenderer.flushInteractiveUpdates,
+setBatchingImplementation(
+  batchedUpdatesImpl,
+  interactiveUpdates,
+  flushInteractiveUpdates,
 );
 
 const roots = new Map();
@@ -86,25 +105,27 @@ const ReactFabric: ReactFabricType = {
 
   findNodeHandle,
 
+  setNativeProps,
+
   render(element: React$Element<any>, containerTag: any, callback: ?Function) {
     let root = roots.get(containerTag);
 
     if (!root) {
       // TODO (bvaughn): If we decide to keep the wrapper component,
       // We could create a wrapper for containerTag as well to reduce special casing.
-      root = ReactFabricRenderer.createContainer(containerTag, false, false);
+      root = createContainer(containerTag, false, false);
       roots.set(containerTag, root);
     }
-    ReactFabricRenderer.updateContainer(element, root, null, callback);
+    updateContainer(element, root, null, callback);
 
-    return ReactFabricRenderer.getPublicRootInstance(root);
+    return getPublicRootInstance(root);
   },
 
   unmountComponentAtNode(containerTag: number) {
     const root = roots.get(containerTag);
     if (root) {
       // TODO: Is it safe to reset this now or should I wait since this unmount could be deferred?
-      ReactFabricRenderer.updateContainer(null, root, null, () => {
+      updateContainer(null, root, null, () => {
         roots.delete(containerTag);
       });
     }
@@ -115,7 +136,7 @@ const ReactFabric: ReactFabricType = {
     containerTag: number,
     key: ?string = null,
   ) {
-    return ReactPortal.createPortal(children, containerTag, null, key);
+    return createPortal(children, containerTag, null, key);
   },
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
@@ -124,8 +145,8 @@ const ReactFabric: ReactFabricType = {
   },
 };
 
-ReactFabricRenderer.injectIntoDevTools({
-  findFiberByHostInstance: ReactFabricComponentTree.getClosestInstanceFromNode,
+injectIntoDevTools({
+  findFiberByHostInstance: getClosestInstanceFromNode,
   getInspectorDataForViewTag: getInspectorDataForViewTag,
   bundleType: __DEV__ ? 1 : 0,
   version: ReactVersion,

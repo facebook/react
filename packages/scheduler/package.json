@@ -1,9 +1,13 @@
 {
   "name": "scheduler",
-  "version": "0.9.0",
+  "version": "0.13.3",
   "description": "Cooperative scheduler for the browser environment.",
   "main": "index.js",
-  "repository": "facebook/react",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "packages/scheduler"
+  },
   "license": "MIT",
   "keywords": [
     "react"
@@ -13,15 +17,22 @@
   },
   "homepage": "https://reactjs.org/",
   "dependencies": {
+    "loose-envify": "^1.1.0",
     "object-assign": "^4.1.1"
   },
   "files": [
     "LICENSE",
     "README.md",
+    "build-info.json",
     "index.js",
     "tracing.js",
     "tracing-profiling.js",
     "cjs/",
     "umd/"
-  ]
+  ],
+  "browserify": {
+    "transform": [
+      "loose-envify"
+    ]
+  }
 }

@@ -50,8 +50,9 @@ describe('SchedulerDOM', () => {
   function runRAFCallbacks() {
     startOfLatestFrame += frameSize;
     currentTime = startOfLatestFrame;
-    rAFCallbacks.forEach(cb => cb());
+    const cbs = rAFCallbacks;
     rAFCallbacks = [];
+    cbs.forEach(cb => cb());
   }
   function advanceOneFrame(config: FrameTimeoutConfigType = {}) {
     runRAFCallbacks();
@@ -59,41 +60,38 @@ describe('SchedulerDOM', () => {
   }
 
   let frameSize = 33;
-  let startOfLatestFrame = Date.now();
-  let currentTime = Date.now();
+  let startOfLatestFrame = 0;
+  let currentTime = 0;
 
   beforeEach(() => {
-    // TODO pull this into helper method, reduce repetition.
-    // mock the browser APIs which are used in schedule:
-    // - requestAnimationFrame should pass the DOMHighResTimeStamp argument
-    // - calling 'window.postMessage' should actually fire postmessage handlers
-    // - Date.now should return the correct thing
-    // - test with native performance.now()
     delete global.performance;
     global.requestAnimationFrame = function(cb) {
       return rAFCallbacks.push(() => {
         cb(startOfLatestFrame);
       });
     };
-    const originalAddEventListener = global.addEventListener;
-    postMessageCallback = null;
     postMessageEvents = [];
     postMessageErrors = [];
-    global.addEventListener = function(eventName, callback, useCapture) {
-      if (eventName === 'message') {
-        postMessageCallback = callback;
-      } else {
-        originalAddEventListener(eventName, callback, useCapture);
-      }
+    const port1 = {};
+    const port2 = {
+      postMessage(messageKey) {
+        const postMessageEvent = {source: port2, data: messageKey};
+        postMessageEvents.push(postMessageEvent);
+      },
     };
-    global.postMessage = function(messageKey, targetOrigin) {
-      const postMessageEvent = {source: window, data: messageKey};
-      postMessageEvents.push(postMessageEvent);
+    global.MessageChannel = function MessageChannel() {
+      this.port1 = port1;
+      this.port2 = port2;
     };
+    postMessageCallback = () => port1.onmessage();
     global.Date.now = function() {
       return currentTime;
     };
     jest.resetModules();
+
+    const JestMockScheduler = require('jest-mock-scheduler');
+    JestMockScheduler.mockRestore();
+
     Scheduler = require('scheduler');
   });
 
@@ -104,9 +102,25 @@ describe('SchedulerDOM', () => {
       scheduleCallback(cb);
       advanceOneFrame({timeLeftInFrame: 15});
       expect(cb).toHaveBeenCalledTimes(1);
-      // should not have timed out and should include a timeRemaining method
-      expect(cb.mock.calls[0][0].didTimeout).toBe(false);
-      expect(typeof cb.mock.calls[0][0].timeRemaining()).toBe('number');
+    });
+
+    it('inserts its rAF callback as early into the queue as possible', () => {
+      const {unstable_scheduleCallback: scheduleCallback} = Scheduler;
+      const log = [];
+      const useRAFCallback = () => {
+        log.push('userRAFCallback');
+      };
+      scheduleCallback(() => {
+        // Call rAF while idle work is being flushed.
+        requestAnimationFrame(useRAFCallback);
+      });
+      advanceOneFrame({timeLeftInFrame: 1});
+      // There should be two callbacks: the one scheduled by Scheduler at the
+      // beginning of the frame, and the one scheduled later during that frame.
+      expect(rAFCallbacks.length).toBe(2);
+      // The user callback should be the second callback.
+      rAFCallbacks[1]();
+      expect(log).toEqual(['userRAFCallback']);
     });
 
     describe('with multiple callbacks', () => {
@@ -124,19 +138,9 @@ describe('SchedulerDOM', () => {
         // after a delay, calls as many callbacks as it has time for
         advanceOneFrame({timeLeftInFrame: 15});
         expect(callbackLog).toEqual(['A', 'B']);
-        // callbackA should not have timed out and should include a timeRemaining method
-        expect(callbackA.mock.calls[0][0].didTimeout).toBe(false);
-        expect(typeof callbackA.mock.calls[0][0].timeRemaining()).toBe(
-          'number',
-        );
-        // callbackA should not have timed out and should include a timeRemaining method
-        expect(callbackB.mock.calls[0][0].didTimeout).toBe(false);
-        expect(typeof callbackB.mock.calls[0][0].timeRemaining()).toBe(
-          'number',
-        );
       });
 
-      it("accepts callbacks betweeen animationFrame and postMessage and doesn't stall", () => {
+      it("accepts callbacks between animationFrame and postMessage and doesn't stall", () => {
         const {unstable_scheduleCallback: scheduleCallback} = Scheduler;
         const callbackLog = [];
         const callbackA = jest.fn(() => callbackLog.push('A'));

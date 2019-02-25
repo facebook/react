@@ -153,6 +153,14 @@ export function getModernOffsetsFromPoints(
 export function setOffsets(node, offsets) {
   const doc = node.ownerDocument || document;
   const win = (doc && doc.defaultView) || window;
+
+  // Edge fails with "Object expected" in some scenarios.
+  // (For instance: TinyMCE editor used in a list component that supports pasting to add more,
+  // fails when pasting 100+ items)
+  if (!win.getSelection) {
+    return;
+  }
+
   const selection = win.getSelection();
   const length = node.textContent.length;
   let start = Math.min(offsets.start, length);

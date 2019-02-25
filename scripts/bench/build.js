@@ -104,7 +104,7 @@ async function buildBenchmarkBundlesFromGitRepo(
 async function buildReactBundles(reactPath = getDefaultReactPath(), skipBuild) {
   if (!skipBuild) {
     await executeCommand(
-      `cd ${reactPath} && yarn && yarn build core,dom-client --type=UMD_PROD`
+      `cd ${reactPath} && yarn && yarn build react/index,react-dom/index --type=UMD_PROD`
     );
   }
 }

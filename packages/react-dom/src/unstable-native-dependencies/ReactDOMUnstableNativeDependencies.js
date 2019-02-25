@@ -6,7 +6,7 @@
  */
 
 import ReactDOM from 'react-dom';
-import * as EventPluginUtils from 'events/EventPluginUtils';
+import {setComponentTree} from 'events/EventPluginUtils';
 import ResponderEventPlugin from 'events/ResponderEventPlugin';
 import ResponderTouchHistoryStore from 'events/ResponderTouchHistoryStore';
 
@@ -19,7 +19,7 @@ const [
   injectEventPluginsByName,
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
 
-EventPluginUtils.setComponentTree(
+setComponentTree(
   getFiberCurrentPropsFromNode,
   getInstanceFromNode,
   getNodeFromInstance,

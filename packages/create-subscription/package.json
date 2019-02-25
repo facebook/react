@@ -1,11 +1,16 @@
 {
   "name": "create-subscription",
   "description": "utility for subscribing to external data sources inside React components",
-  "version": "16.5.2",
-  "repository": "facebook/react",
+  "version": "16.8.3",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "packages/create-subscription"
+  },
   "files": [
     "LICENSE",
     "README.md",
+    "build-info.json",
     "index.js",
     "cjs/"
   ],
