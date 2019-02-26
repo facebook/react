@@ -1739,8 +1739,20 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       ReactNoop.render(<App loadC={true} />);
       expect(() => {
-        expect(ReactNoop).toFlushAndYield(['A: 2, B: 3, C: 0']);
-      }).toThrow('Rendered more hooks than during the previous render');
+        expect(() => {
+          expect(ReactNoop).toFlushAndYield(['A: 2, B: 3, C: 0']);
+        }).toThrow('Rendered more hooks than during the previous render');
+      }).toWarnDev([
+        'Warning: React has detected a change in the order of Hooks called by App. ' +
+          'This will lead to bugs and errors if not fixed. For more information, ' +
+          'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+          '   Previous render            Next render\n' +
+          '   ------------------------------------------------------\n' +
+          '1. useState                   useState\n' +
+          '2. useState                   useState\n' +
+          '3. undefined                  useState\n' +
+          '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n',
+      ]);
 
       // Uncomment if/when we support this again
       // expect(ReactNoop.getChildren()).toEqual([span('A: 2, B: 3, C: 0')]);
@@ -1818,8 +1830,19 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       ReactNoop.render(<App showMore={true} />);
       expect(() => {
-        expect(ReactNoop).toFlushAndYield([]);
-      }).toThrow('Rendered more hooks than during the previous render');
+        expect(() => {
+          expect(ReactNoop).toFlushAndYield([]);
+        }).toThrow('Rendered more hooks than during the previous render');
+      }).toWarnDev([
+        'Warning: React has detected a change in the order of Hooks called by App. ' +
+          'This will lead to bugs and errors if not fixed. For more information, ' +
+          'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+          '   Previous render            Next render\n' +
+          '   ------------------------------------------------------\n' +
+          '1. useEffect                  useEffect\n' +
+          '2. undefined                  useEffect\n' +
+          '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n',
+      ]);
 
       // Uncomment if/when we support this again
       // ReactNoop.flushPassiveEffects();

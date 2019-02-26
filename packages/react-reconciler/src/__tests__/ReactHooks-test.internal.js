@@ -984,8 +984,6 @@ describe('ReactHooks', () => {
   it('warns when calling hooks inside useReducer', () => {
     const {useReducer, useState, useRef} = React;
 
-    spyOnDev(console, 'error');
-
     function App() {
       const [value, dispatch] = useReducer((state, action) => {
         useRef(0);
@@ -997,16 +995,23 @@ describe('ReactHooks', () => {
       useState();
       return value;
     }
-    expect(() => {
-      ReactTestRenderer.create(<App />);
-    }).toThrow('Rendered more hooks than during the previous render.');
 
-    if (__DEV__) {
-      expect(console.error).toHaveBeenCalledTimes(3);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
-      );
-    }
+    expect(() => {
+      expect(() => {
+        ReactTestRenderer.create(<App />);
+      }).toThrow('Rendered more hooks than during the previous render.');
+    }).toWarnDev([
+      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
+      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
+      'Warning: React has detected a change in the order of Hooks called by App. ' +
+        'This will lead to bugs and errors if not fixed. For more information, ' +
+        'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+        '   Previous render            Next render\n' +
+        '   ------------------------------------------------------\n' +
+        '1. useReducer                 useReducer\n' +
+        '2. useState                   useRef\n' +
+        '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n',
+    ]);
   });
 
   it("warns when calling hooks inside useState's initialize function", () => {
@@ -1337,74 +1342,261 @@ describe('ReactHooks', () => {
     expect(useMemoCount).toBe(__DEV__ ? 2 : 1); // Has Hooks
   });
 
-  it('warns on using differently ordered hooks on subsequent renders', () => {
-    const {useState, useReducer, useRef} = React;
-    function useCustomHook() {
-      return useState(0);
-    }
-    function App(props) {
-      /* eslint-disable no-unused-vars */
-      if (props.flip) {
-        useCustomHook(0);
-        useReducer((s, a) => a, 0);
-      } else {
-        useReducer((s, a) => a, 0);
-        useCustomHook(0);
-      }
-      // This should not appear in the warning message because it occurs after
-      // the first mismatch
-      const ref = useRef(null);
-      return null;
-      /* eslint-enable no-unused-vars */
-    }
-    let root = ReactTestRenderer.create(<App flip={false} />);
-    expect(() => {
-      root.update(<App flip={true} />);
-    }).toWarnDev([
-      'Warning: React has detected a change in the order of Hooks called by App. ' +
-        'This will lead to bugs and errors if not fixed. For more information, ' +
-        'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
-        '   Previous render    Next render\n' +
-        '   -------------------------------\n' +
-        '1. useReducer         useState\n' +
-        '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n' +
-        '    in App (at **)',
-    ]);
+  describe('hook ordering', () => {
+    const useCallbackHelper = () => React.useCallback(() => {}, []);
+    const useContextHelper = () => React.useContext(React.createContext());
+    const useDebugValueHelper = () => React.useDebugValue('abc');
+    const useEffectHelper = () => React.useEffect(() => () => {}, []);
+    const useImperativeHandleHelper = () => {
+      React.useImperativeHandle({current: null}, () => ({}), []);
+    };
+    const useLayoutEffectHelper = () =>
+      React.useLayoutEffect(() => () => {}, []);
+    const useMemoHelper = () => React.useMemo(() => 123, []);
+    const useReducerHelper = () => React.useReducer((s, a) => a, 0);
+    const useRefHelper = () => React.useRef(null);
+    const useStateHelper = () => React.useState(0);
 
-    // further warnings for this component are silenced
-    root.update(<App flip={false} />);
-  });
+    // We don't include useImperativeHandleHelper in this set,
+    // because it generates an additional warning about the inputs length changing.
+    // We test it below with its own test.
+    let orderedHooks = [
+      useCallbackHelper,
+      useContextHelper,
+      useDebugValueHelper,
+      useEffectHelper,
+      useLayoutEffectHelper,
+      useMemoHelper,
+      useReducerHelper,
+      useRefHelper,
+      useStateHelper,
+    ];
 
-  it('detects a bad hook order even if the component throws', () => {
-    const {useState, useReducer} = React;
-    function useCustomHook() {
-      useState(0);
-    }
-    function App(props) {
-      /* eslint-disable no-unused-vars */
-      if (props.flip) {
-        useCustomHook();
-        useReducer((s, a) => a, 0);
-        throw new Error('custom error');
-      } else {
-        useReducer((s, a) => a, 0);
-        useCustomHook();
+    const formatHookNamesToMatchErrorMessage = (hookNameA, hookNameB) => {
+      return `use${hookNameA}${' '.repeat(24 - hookNameA.length)}${
+        hookNameB ? `use${hookNameB}` : undefined
+      }`;
+    };
+
+    orderedHooks.forEach((firstHelper, index) => {
+      const secondHelper =
+        index > 0
+          ? orderedHooks[index - 1]
+          : orderedHooks[orderedHooks.length - 1];
+
+      const hookNameA = firstHelper.name
+        .replace('use', '')
+        .replace('Helper', '');
+      const hookNameB = secondHelper.name
+        .replace('use', '')
+        .replace('Helper', '');
+
+      it(`warns on using differently ordered hooks (${hookNameA}, ${hookNameB}) on subsequent renders`, () => {
+        function App(props) {
+          /* eslint-disable no-unused-vars */
+          if (props.update) {
+            secondHelper();
+            firstHelper();
+          } else {
+            firstHelper();
+            secondHelper();
+          }
+          // This should not appear in the warning message because it occurs after the first mismatch
+          useRefHelper();
+          return null;
+          /* eslint-enable no-unused-vars */
+        }
+        let root = ReactTestRenderer.create(<App update={false} />);
+        expect(() => {
+          try {
+            root.update(<App update={true} />);
+          } catch (error) {
+            // Swapping certain types of hooks will cause runtime errors.
+            // This is okay as far as this test is concerned.
+            // We just want to verify that warnings are always logged.
+          }
+        }).toWarnDev([
+          'Warning: React has detected a change in the order of Hooks called by App. ' +
+            'This will lead to bugs and errors if not fixed. For more information, ' +
+            'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+            '   Previous render            Next render\n' +
+            '   ------------------------------------------------------\n' +
+            `1. ${formatHookNamesToMatchErrorMessage(hookNameA, hookNameB)}\n` +
+            '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n' +
+            '    in App (at **)',
+        ]);
+
+        // further warnings for this component are silenced
+        try {
+          root.update(<App update={false} />);
+        } catch (error) {
+          // Swapping certain types of hooks will cause runtime errors.
+          // This is okay as far as this test is concerned.
+          // We just want to verify that warnings are always logged.
+        }
+      });
+
+      it(`warns when more hooks (${(hookNameA,
+      hookNameB)}) are used during update than mount`, () => {
+        function App(props) {
+          /* eslint-disable no-unused-vars */
+          if (props.update) {
+            firstHelper();
+            secondHelper();
+          } else {
+            firstHelper();
+          }
+          return null;
+          /* eslint-enable no-unused-vars */
+        }
+        let root = ReactTestRenderer.create(<App update={false} />);
+        expect(() => {
+          try {
+            root.update(<App update={true} />);
+          } catch (error) {
+            // Swapping certain types of hooks will cause runtime errors.
+            // This is okay as far as this test is concerned.
+            // We just want to verify that warnings are always logged.
+          }
+        }).toWarnDev([
+          'Warning: React has detected a change in the order of Hooks called by App. ' +
+            'This will lead to bugs and errors if not fixed. For more information, ' +
+            'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+            '   Previous render            Next render\n' +
+            '   ------------------------------------------------------\n' +
+            `1. ${formatHookNamesToMatchErrorMessage(hookNameA, hookNameA)}\n` +
+            `2. undefined                  use${hookNameB}\n` +
+            '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n' +
+            '    in App (at **)',
+        ]);
+      });
+    });
+
+    // We don't include useContext or useDebugValue in this set,
+    // because they aren't added to the hooks list and so won't throw.
+    let hooksInList = [
+      useCallbackHelper,
+      useEffectHelper,
+      useImperativeHandleHelper,
+      useLayoutEffectHelper,
+      useMemoHelper,
+      useReducerHelper,
+      useRefHelper,
+      useStateHelper,
+    ];
+
+    hooksInList.forEach((firstHelper, index) => {
+      const secondHelper =
+        index > 0
+          ? hooksInList[index - 1]
+          : hooksInList[hooksInList.length - 1];
+
+      const hookNameA = firstHelper.name
+        .replace('use', '')
+        .replace('Helper', '');
+      const hookNameB = secondHelper.name
+        .replace('use', '')
+        .replace('Helper', '');
+
+      it(`warns when fewer hooks (${(hookNameA,
+      hookNameB)}) are used during update than mount`, () => {
+        function App(props) {
+          /* eslint-disable no-unused-vars */
+          if (props.update) {
+            firstHelper();
+          } else {
+            firstHelper();
+            secondHelper();
+          }
+          return null;
+          /* eslint-enable no-unused-vars */
+        }
+        let root = ReactTestRenderer.create(<App update={false} />);
+        expect(() => {
+          root.update(<App update={true} />);
+        }).toThrow('Rendered fewer hooks than expected.');
+      });
+    });
+
+    it(
+      'warns on using differently ordered hooks ' +
+        '(useImperativeHandleHelper, useMemoHelper) on subsequent renders',
+      () => {
+        function App(props) {
+          /* eslint-disable no-unused-vars */
+          if (props.update) {
+            useMemoHelper();
+            useImperativeHandleHelper();
+          } else {
+            useImperativeHandleHelper();
+            useMemoHelper();
+          }
+          // This should not appear in the warning message because it occurs after the first mismatch
+          useRefHelper();
+          return null;
+          /* eslint-enable no-unused-vars */
+        }
+        let root = ReactTestRenderer.create(<App update={false} />);
+        expect(() => {
+          try {
+            root.update(<App update={true} />);
+          } catch (error) {
+            // Swapping certain types of hooks will cause runtime errors.
+            // This is okay as far as this test is concerned.
+            // We just want to verify that warnings are always logged.
+          }
+        }).toWarnDev([
+          'Warning: React has detected a change in the order of Hooks called by App. ' +
+            'This will lead to bugs and errors if not fixed. For more information, ' +
+            'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+            '   Previous render            Next render\n' +
+            '   ------------------------------------------------------\n' +
+            `1. ${formatHookNamesToMatchErrorMessage(
+              'ImperativeHandle',
+              'Memo',
+            )}\n` +
+            '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n' +
+            '    in App (at **)',
+        ]);
+
+        // further warnings for this component are silenced
+        root.update(<App update={false} />);
+      },
+    );
+
+    it('detects a bad hook order even if the component throws', () => {
+      const {useState, useReducer} = React;
+      function useCustomHook() {
+        useState(0);
       }
-      return null;
-      /* eslint-enable no-unused-vars */
-    }
-    let root = ReactTestRenderer.create(<App flip={false} />);
-    expect(() => {
-      expect(() => root.update(<App flip={true} />)).toThrow('custom error');
-    }).toWarnDev([
-      'Warning: React has detected a change in the order of Hooks called by App. ' +
-        'This will lead to bugs and errors if not fixed. For more information, ' +
-        'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
-        '   Previous render    Next render\n' +
-        '   -------------------------------\n' +
-        '1. useReducer         useState\n' +
-        '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^',
-    ]);
+      function App(props) {
+        /* eslint-disable no-unused-vars */
+        if (props.update) {
+          useCustomHook();
+          useReducer((s, a) => a, 0);
+          throw new Error('custom error');
+        } else {
+          useReducer((s, a) => a, 0);
+          useCustomHook();
+        }
+        return null;
+        /* eslint-enable no-unused-vars */
+      }
+      let root = ReactTestRenderer.create(<App update={false} />);
+      expect(() => {
+        expect(() => root.update(<App update={true} />)).toThrow(
+          'custom error',
+        );
+      }).toWarnDev([
+        'Warning: React has detected a change in the order of Hooks called by App. ' +
+          'This will lead to bugs and errors if not fixed. For more information, ' +
+          'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+          '   Previous render            Next render\n' +
+          '   ------------------------------------------------------\n' +
+          '1. useReducer                 useState\n' +
+          '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n',
+      ]);
+    });
   });
 
   // Regression test for #14674
