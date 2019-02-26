@@ -34,7 +34,7 @@ const tests = {
     {
       code: `
       function MyComponent() {
-        const local = 42;
+        const local = {};
         useEffect(() => {
           console.log(local);
         });
@@ -45,7 +45,7 @@ const tests = {
       code: `
       function MyComponent() {
         useEffect(() => {
-          const local = 42;
+          const local = {};
           console.log(local);
         }, []);
       }
@@ -54,7 +54,7 @@ const tests = {
     {
       code: `
       function MyComponent() {
-        const local = 42;
+        const local = {};
         useEffect(() => {
           console.log(local);
         }, [local]);
@@ -78,9 +78,9 @@ const tests = {
     {
       code: `
       function MyComponent() {
-        const local1 = 42;
+        const local1 = {};
         {
-          const local2 = 42;
+          const local2 = {};
           useEffect(() => {
             console.log(local1);
             console.log(local2);
@@ -92,9 +92,9 @@ const tests = {
     {
       code: `
       function MyComponent() {
-        const local1 = 42;
+        const local1 = {};
         {
-          const local2 = 42;
+          const local2 = {};
           useEffect(() => {
             console.log(local1);
             console.log(local2);
@@ -106,9 +106,9 @@ const tests = {
     {
       code: `
       function MyComponent() {
-        const local1 = 42;
+        const local1 = {};
         function MyNestedComponent() {
-          const local2 = 42;
+          const local2 = {};
           useEffect(() => {
             console.log(local1);
             console.log(local2);
@@ -120,7 +120,7 @@ const tests = {
     {
       code: `
       function MyComponent() {
-        const local = 42;
+        const local = {};
         useEffect(() => {
           console.log(local);
           console.log(local);
@@ -140,7 +140,7 @@ const tests = {
     {
       code: `
       function MyComponent() {
-        const local = 42;
+        const local = {};
         useEffect(() => {
           console.log(local);
         }, [,,,local,,,]);
@@ -214,7 +214,7 @@ const tests = {
       // TODO: we might want to forbid dot-access in deps.
       code: `
       function MyComponent(props) {
-        const local = 42;
+        const local = {};
         useEffect(() => {
           console.log(props.foo);
           console.log(props.bar);
@@ -228,7 +228,7 @@ const tests = {
       // is extraneous because we already have "props".
       code: `
         function MyComponent(props) {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(props.foo);
             console.log(props.bar);
@@ -260,7 +260,7 @@ const tests = {
     {
       code: `
       // Valid because we don't care about hooks outside of components.
-      const local = 42;
+      const local = {};
       useEffect(() => {
         console.log(local);
       }, []);
@@ -269,9 +269,9 @@ const tests = {
     {
       code: `
       // Valid because we don't care about hooks outside of components.
-      const local1 = 42;
+      const local1 = {};
       {
-        const local2 = 42;
+        const local2 = {};
         useEffect(() => {
           console.log(local1);
           console.log(local2);
@@ -455,7 +455,7 @@ const tests = {
           const myRef = useRef();
           useEffect(() => {
             const handleMove = () => {};
-            myRef.current = 42;
+            myRef.current = {};
             return () => {
               console.log(myRef.current.toString())
             };
@@ -472,7 +472,7 @@ const tests = {
         function useMyThing(myRef) {
           useEffect(() => {
             const handleMove = () => {};
-            myRef.current = 42;
+            myRef.current = {};
             return () => {
               console.log(myRef.current.toString())
             };
@@ -560,12 +560,42 @@ const tests = {
         }
       `,
     },
+    {
+      // Valid because it's a primitive constant
+      code: `
+      function MyComponent() {
+        const local1 = 42;
+        const local2 = '42';
+        const local3 = null;
+        useEffect(() => {
+          console.log(local1);
+          console.log(local2);
+          console.log(local3);
+        }, []);
+      }
+    `,
+    },
+    {
+      // It's not a mistake to specify constant values though.
+      code: `
+      function MyComponent() {
+        const local1 = 42;
+        const local2 = '42';
+        const local3 = null;
+        useEffect(() => {
+          console.log(local1);
+          console.log(local2);
+          console.log(local3);
+        }, [local1, local2, local3]);
+      }
+    `,
+    },
   ],
   invalid: [
     {
       code: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
           }, []);
@@ -573,7 +603,55 @@ const tests = {
       `,
       output: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
+          useEffect(() => {
+            console.log(local);
+          }, [local]);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has a missing dependency: 'local'. " +
+          'Either include it or remove the dependency array.',
+      ],
+    },
+    {
+      // Note: we *could* detect it's a primitive and never assigned
+      // even though it's not a constant -- but we currently don't.
+      // So this is an error.
+      code: `
+        function MyComponent() {
+          let local = 42;
+          useEffect(() => {
+            console.log(local);
+          }, []);
+        }
+      `,
+      output: `
+        function MyComponent() {
+          let local = 42;
+          useEffect(() => {
+            console.log(local);
+          }, [local]);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has a missing dependency: 'local'. " +
+          'Either include it or remove the dependency array.',
+      ],
+    },
+    {
+      // Regexes are literals but potentially stateful.
+      code: `
+        function MyComponent() {
+          const local = /foo/;
+          useEffect(() => {
+            console.log(local);
+          }, []);
+        }
+      `,
+      output: `
+        function MyComponent() {
+          const local = /foo/;
           useEffect(() => {
             console.log(local);
           }, [local]);
@@ -588,7 +666,7 @@ const tests = {
       code: `
         // Regression test
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             if (true) {
               console.log(local);
@@ -599,7 +677,7 @@ const tests = {
       output: `
         // Regression test
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             if (true) {
               console.log(local);
@@ -616,7 +694,7 @@ const tests = {
       code: `
         // Regression test
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             try {
               console.log(local);
@@ -627,7 +705,7 @@ const tests = {
       output: `
         // Regression test
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             try {
               console.log(local);
@@ -644,7 +722,7 @@ const tests = {
       code: `
         // Regression test
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             function inner() {
               console.log(local);
@@ -656,7 +734,7 @@ const tests = {
       output: `
         // Regression test
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             function inner() {
               console.log(local);
@@ -673,9 +751,9 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          const local1 = 42;
+          const local1 = {};
           {
-            const local2 = 42;
+            const local2 = {};
             useEffect(() => {
               console.log(local1);
               console.log(local2);
@@ -685,9 +763,9 @@ const tests = {
       `,
       output: `
         function MyComponent() {
-          const local1 = 42;
+          const local1 = {};
           {
-            const local2 = 42;
+            const local2 = {};
             useEffect(() => {
               console.log(local1);
               console.log(local2);
@@ -703,8 +781,8 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          const local1 = 42;
-          const local2 = 42;
+          const local1 = {};
+          const local2 = {};
           useEffect(() => {
             console.log(local1);
             console.log(local2);
@@ -713,8 +791,8 @@ const tests = {
       `,
       output: `
         function MyComponent() {
-          const local1 = 42;
-          const local2 = 42;
+          const local1 = {};
+          const local2 = {};
           useEffect(() => {
             console.log(local1);
             console.log(local2);
@@ -729,8 +807,8 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          const local1 = 42;
-          const local2 = 42;
+          const local1 = {};
+          const local2 = {};
           useEffect(() => {
             console.log(local1);
           }, [local1, local2]);
@@ -738,8 +816,8 @@ const tests = {
       `,
       output: `
         function MyComponent() {
-          const local1 = 42;
-          const local2 = 42;
+          const local1 = {};
+          const local2 = {};
           useEffect(() => {
             console.log(local1);
           }, [local1]);
@@ -755,9 +833,9 @@ const tests = {
       // Maybe it should not consider local1 unused despite component nesting?
       code: `
         function MyComponent() {
-          const local1 = 42;
+          const local1 = {};
           function MyNestedComponent() {
-            const local2 = 42;
+            const local2 = {};
             useEffect(() => {
               console.log(local1);
               console.log(local2);
@@ -767,9 +845,9 @@ const tests = {
       `,
       output: `
         function MyComponent() {
-          const local1 = 42;
+          const local1 = {};
           function MyNestedComponent() {
-            const local2 = 42;
+            const local2 = {};
             useEffect(() => {
               console.log(local1);
               console.log(local2);
@@ -786,7 +864,7 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
             console.log(local);
@@ -795,7 +873,7 @@ const tests = {
       `,
       output: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
             console.log(local);
@@ -810,7 +888,7 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
             console.log(local);
@@ -819,7 +897,7 @@ const tests = {
       `,
       output: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
             console.log(local);
@@ -962,7 +1040,7 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           const dependencies = [local];
           useEffect(() => {
             console.log(local);
@@ -972,7 +1050,7 @@ const tests = {
       // TODO: should this autofix or bail out?
       output: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           const dependencies = [local];
           useEffect(() => {
             console.log(local);
@@ -990,7 +1068,7 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           const dependencies = [local];
           useEffect(() => {
             console.log(local);
@@ -1000,7 +1078,7 @@ const tests = {
       // TODO: should this autofix or bail out?
       output: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           const dependencies = [local];
           useEffect(() => {
             console.log(local);
@@ -1018,7 +1096,7 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
           }, [local, ...dependencies]);
@@ -1026,7 +1104,7 @@ const tests = {
       `,
       output: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
           }, [local, ...dependencies]);
@@ -1041,7 +1119,7 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
           }, [computeCacheKey(local)]);
@@ -1051,7 +1129,7 @@ const tests = {
       // Maybe bail out?
       output: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
           }, [local]);
@@ -1177,7 +1255,7 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
           }, [local, local]);
@@ -1185,7 +1263,7 @@ const tests = {
       `,
       output: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
           }, [local]);
@@ -1199,18 +1277,18 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          const local1 = 42;
+          const local1 = {};
           useEffect(() => {
-            const local1 = 42;
+            const local1 = {};
             console.log(local1);
           }, [local1]);
         }
       `,
       output: `
         function MyComponent() {
-          const local1 = 42;
+          const local1 = {};
           useEffect(() => {
-            const local1 = 42;
+            const local1 = {};
             console.log(local1);
           }, []);
         }
@@ -1223,13 +1301,13 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          const local1 = 42;
+          const local1 = {};
           useEffect(() => {}, [local1]);
         }
       `,
       output: `
         function MyComponent() {
-          const local1 = 42;
+          const local1 = {};
           useEffect(() => {}, []);
         }
       `,
@@ -1356,7 +1434,7 @@ const tests = {
     {
       code: `
         function MyComponent(props) {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(props.foo);
             console.log(props.bar);
@@ -1368,7 +1446,7 @@ const tests = {
       // Should it capture by default?
       output: `
         function MyComponent(props) {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(props.foo);
             console.log(props.bar);
@@ -1384,7 +1462,7 @@ const tests = {
     {
       code: `
         function MyComponent(props) {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(props.foo);
             console.log(props.bar);
@@ -1394,7 +1472,7 @@ const tests = {
       `,
       output: `
         function MyComponent(props) {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(props.foo);
             console.log(props.bar);
@@ -1519,7 +1597,7 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
           }, [a ? local : b]);
@@ -1528,7 +1606,7 @@ const tests = {
       // TODO: should we bail out instead?
       output: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
           }, [local]);
@@ -1544,7 +1622,7 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
           }, [a && local]);
@@ -1553,7 +1631,7 @@ const tests = {
       // TODO: should we bail out instead?
       output: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
           }, [local]);
@@ -1572,7 +1650,7 @@ const tests = {
           const ref = useRef();
           const [state, setState] = useState();
           useEffect(() => {
-            ref.current = 42;
+            ref.current = {};
             setState(state + 1);
           }, []);
         }
@@ -1582,7 +1660,7 @@ const tests = {
           const ref = useRef();
           const [state, setState] = useState();
           useEffect(() => {
-            ref.current = 42;
+            ref.current = {};
             setState(state + 1);
           }, [state]);
         }
@@ -1598,7 +1676,7 @@ const tests = {
           const ref = useRef();
           const [state, setState] = useState();
           useEffect(() => {
-            ref.current = 42;
+            ref.current = {};
             setState(state + 1);
           }, [ref]);
         }
@@ -1611,7 +1689,7 @@ const tests = {
           const ref = useRef();
           const [state, setState] = useState();
           useEffect(() => {
-            ref.current = 42;
+            ref.current = {};
             setState(state + 1);
           }, [ref, state]);
         }
@@ -1789,7 +1867,7 @@ const tests = {
           let value3;
           let asyncValue;
           useEffect(() => {
-            value = 42;
+            value = {};
             value2 = 100;
             value = 43;
             console.log(value2);
@@ -1810,7 +1888,7 @@ const tests = {
           let value3;
           let asyncValue;
           useEffect(() => {
-            value = 42;
+            value = {};
             value2 = 100;
             value = 43;
             console.log(value2);
@@ -1850,7 +1928,7 @@ const tests = {
           let value3;
           let asyncValue;
           useEffect(() => {
-            value = 42;
+            value = {};
             value2 = 100;
             value = 43;
             console.log(value2);
@@ -1871,7 +1949,7 @@ const tests = {
           let value3;
           let asyncValue;
           useEffect(() => {
-            value = 42;
+            value = {};
             value2 = 100;
             value = 43;
             console.log(value2);
@@ -2037,6 +2115,41 @@ const tests = {
           `has already updated the ref. If this ref is managed by React, store ` +
           `'myRef.current' in a variable inside ` +
           `the effect itself and refer to that variable from the cleanup function.`,
+      ],
+    },
+    {
+      // Autofix ignores constant primitives (leaving the ones that are there).
+      code: `
+      function MyComponent() {
+        const local1 = 42;
+        const local2 = '42';
+        const local3 = null;
+        const local4 = {};
+        useEffect(() => {
+          console.log(local1);
+          console.log(local2);
+          console.log(local3);
+          console.log(local4);
+        }, [local1, local3]);
+      }
+    `,
+      output: `
+      function MyComponent() {
+        const local1 = 42;
+        const local2 = '42';
+        const local3 = null;
+        const local4 = {};
+        useEffect(() => {
+          console.log(local1);
+          console.log(local2);
+          console.log(local3);
+          console.log(local4);
+        }, [local1, local3, local4]);
+      }
+    `,
+      errors: [
+        "React Hook useEffect has a missing dependency: 'local4'. " +
+          'Either include it or remove the dependency array.',
       ],
     },
   ],

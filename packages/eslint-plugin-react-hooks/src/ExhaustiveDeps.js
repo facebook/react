@@ -577,12 +577,33 @@ function isDefinitelyStaticDependency(reference) {
     return false;
   }
   const def = resolved.defs[0];
-  if (def == null || def.node.init == null) {
+  if (def == null) {
     return false;
   }
-  // Look for `let stuff = SomeHook();`
+  // Look for `let stuff = ...`
+  if (def.node.type !== 'VariableDeclarator') {
+    return false;
+  }
   const init = def.node.init;
-  if (init.callee == null) {
+  if (init == null) {
+    return false;
+  }
+  // Detect primitive constants
+  // const foo = 42
+  const declaration = def.node.parent;
+  if (
+    declaration.kind === 'const' &&
+    init.type === 'Literal' &&
+    (typeof init.value === 'string' ||
+      typeof init.value === 'number' ||
+      init.value === null)
+  ) {
+    // Definitely static
+    return true;
+  }
+  // Detect known Hook calls
+  // const [_, setState] = useState()
+  if (init.type !== 'CallExpression') {
     return false;
   }
   let callee = init.callee;
