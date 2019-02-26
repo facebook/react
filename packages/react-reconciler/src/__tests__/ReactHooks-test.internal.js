@@ -984,8 +984,6 @@ describe('ReactHooks', () => {
   it('warns when calling hooks inside useReducer', () => {
     const {useReducer, useState, useRef} = React;
 
-    spyOnDev(console, 'error');
-
     function App() {
       const [value, dispatch] = useReducer((state, action) => {
         useRef(0);
@@ -997,16 +995,23 @@ describe('ReactHooks', () => {
       useState();
       return value;
     }
-    expect(() => {
-      ReactTestRenderer.create(<App />);
-    }).toThrow('Rendered more hooks than during the previous render.');
 
-    if (__DEV__) {
-      expect(console.error).toHaveBeenCalledTimes(4);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
-      );
-    }
+    expect(() => {
+      expect(() => {
+        ReactTestRenderer.create(<App />);
+      }).toThrow('Rendered more hooks than during the previous render.');
+    }).toWarnDev([
+      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
+      'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
+      'Warning: React has detected a change in the order of Hooks called by App. ' +
+        'This will lead to bugs and errors if not fixed. For more information, ' +
+        'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+        '   Previous render            Next render\n' +
+        '   ------------------------------------------------------\n' +
+        '1. useReducer                 useReducer\n' +
+        '2. useState                   useRef\n' +
+        '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n',
+    ]);
   });
 
   it("warns when calling hooks inside useState's initialize function", () => {
