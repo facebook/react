@@ -534,53 +534,69 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   const roots = new Map();
   const DEFAULT_ROOT_ID = '<default>';
 
-  let yieldedValues = null;
-
-  let didYield;
-  let unitsRemaining;
+  let yieldedValues: Array<mixed> = [];
+  let didStop: boolean = false;
+  let expectedNumberOfYields: number = -1;
 
   function shouldYield() {
-    // Check if we already yielded
-    if (didYield || yieldedValues !== null) {
-      return true;
-    }
-
-    // If there are no remaining units of work, and we haven't timed out, then
-    // we should yield.
     if (
-      unitsRemaining-- <= 0 &&
+      expectedNumberOfYields !== -1 &&
+      yieldedValues.length >= expectedNumberOfYields &&
       (scheduledCallbackTimeout === -1 ||
         elapsedTimeInMs < scheduledCallbackTimeout)
     ) {
-      didYield = true;
+      // We yielded at least as many values as expected. Stop rendering.
+      didStop = true;
       return true;
     }
-
-    // Otherwise, keep working.
+    // Keep rendering.
     return false;
   }
 
-  function* flushUnitsOfWork(n: number): Generator<Array<mixed>, void, void> {
-    unitsRemaining = n;
-    didYield = false;
+  function flushAll(): Array<mixed> {
+    yieldedValues = [];
+    while (scheduledCallback !== null) {
+      const cb = scheduledCallback;
+      scheduledCallback = null;
+      const didTimeout =
+        scheduledCallbackTimeout !== -1 &&
+        scheduledCallbackTimeout < elapsedTimeInMs;
+      cb(didTimeout);
+    }
+    const values = yieldedValues;
+    yieldedValues = [];
+    return values;
+  }
+
+  function flushNumberOfYields(count: number): Array<mixed> {
+    expectedNumberOfYields = count;
+    didStop = false;
+    yieldedValues = [];
     try {
-      while (!didYield && scheduledCallback !== null) {
-        let cb = scheduledCallback;
+      while (scheduledCallback !== null && !didStop) {
+        const cb = scheduledCallback;
         scheduledCallback = null;
         const didTimeout =
           scheduledCallbackTimeout !== -1 &&
           scheduledCallbackTimeout < elapsedTimeInMs;
         cb(didTimeout);
-        if (yieldedValues !== null) {
-          const values = yieldedValues;
-          yieldedValues = null;
-          yield values;
-        }
       }
+      return yieldedValues;
     } finally {
-      unitsRemaining = -1;
-      didYield = false;
+      expectedNumberOfYields = -1;
+      didStop = false;
+      yieldedValues = [];
     }
+  }
+
+  function yieldValue(value: mixed): void {
+    yieldedValues.push(value);
+  }
+
+  function clearYields(): Array<mixed> {
+    const values = yieldedValues;
+    yieldedValues = [];
+    return values;
   }
 
   function childToJSX(child, text) {
@@ -747,53 +763,14 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return NoopRenderer.findHostInstance(component);
     },
 
-    flush(): Array<mixed> {
-      let values = yieldedValues || [];
-      yieldedValues = null;
-      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (const value of flushUnitsOfWork(Infinity)) {
-        values.push(...value);
-      }
-      return values;
-    },
-
     // TODO: Should only be used via a Jest plugin (like we do with the
     // test renderer).
-    unstable_flushNumberOfYields(n: number): Array<mixed> {
-      let values = yieldedValues || [];
-      yieldedValues = null;
-      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (const value of flushUnitsOfWork(Infinity)) {
-        values.push(...value);
-        if (values.length >= n) {
-          break;
-        }
-      }
-      return values;
-    },
-
-    flushThrough(expected: Array<mixed>): void {
-      let actual = [];
-      if (expected.length !== 0) {
-        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-        for (const value of flushUnitsOfWork(Infinity)) {
-          actual.push(...value);
-          if (actual.length >= expected.length) {
-            break;
-          }
-        }
-      }
-      expect(actual).toEqual(expected);
-    },
+    unstable_flushWithoutYielding: flushAll,
+    unstable_flushNumberOfYields: flushNumberOfYields,
+    unstable_clearYields: clearYields,
 
     flushNextYield(): Array<mixed> {
-      let actual = null;
-      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (const value of flushUnitsOfWork(Infinity)) {
-        actual = value;
-        break;
-      }
-      return actual !== null ? actual : [];
+      return flushNumberOfYields(1);
     },
 
     flushWithHostCounters(
@@ -811,7 +788,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       hostUpdateCounter = 0;
       hostCloneCounter = 0;
       try {
-        ReactNoop.flush();
+        flushAll();
         return useMutation
           ? {
               hostDiffCounter,
@@ -838,28 +815,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     flushExpired(): Array<mixed> {
-      let values = yieldedValues || [];
-      yieldedValues = null;
-      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (const value of flushUnitsOfWork(0)) {
-        values.push(...value);
-      }
-      return values;
+      return flushNumberOfYields(0);
     },
 
-    yield(value: mixed) {
-      if (yieldedValues === null) {
-        yieldedValues = [value];
-      } else {
-        yieldedValues.push(value);
-      }
-    },
-
-    clearYields() {
-      const values = yieldedValues;
-      yieldedValues = null;
-      return values;
-    },
+    yield: yieldValue,
 
     hasScheduledCallback() {
       return !!scheduledCallback;
@@ -1038,7 +997,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         _next: null,
       };
       root.firstBatch = batch;
-      const actual = ReactNoop.flush();
+      const actual = flushAll();
       expect(actual).toEqual(expectedFlush);
       return (expectedCommit: Array<mixed>) => {
         batch._defer = false;

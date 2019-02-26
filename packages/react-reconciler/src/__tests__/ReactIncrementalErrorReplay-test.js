@@ -22,7 +22,7 @@ describe('ReactIncrementalErrorReplay', () => {
 
   it('should fail gracefully on error in the host environment', () => {
     ReactNoop.render(<errorInBeginPhase />);
-    expect(() => ReactNoop.flush()).toThrow('Error in host config.');
+    expect(ReactNoop).toFlushAndThrow('Error in host config.');
   });
 
   it("should ignore error if it doesn't throw on retry", () => {
@@ -43,6 +43,6 @@ describe('ReactIncrementalErrorReplay', () => {
       }
     }
     ReactNoop.render(<App />);
-    expect(() => ReactNoop.flush()).not.toThrow();
+    expect(ReactNoop).toFlushWithoutYielding();
   });
 });
