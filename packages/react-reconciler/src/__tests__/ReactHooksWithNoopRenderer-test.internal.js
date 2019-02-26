@@ -31,7 +31,7 @@ let act;
 // These tests use React Noop Renderer. All new tests should use React Test
 // Renderer and go in ReactHooks-test; plan is gradually migrate the noop tests
 // to that file.
-describe('ReactHooksWithNoopRenderer', () => {
+describe('ReactHooksWithNoopRenderer', async () => {
   beforeEach(() => {
     jest.resetModules();
 
@@ -63,7 +63,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     return <span prop={props.text} />;
   }
 
-  it('resumes after an interruption', () => {
+  it('resumes after an interruption', async () => {
     function Counter(props, ref) {
       const [count, updateCount] = useState(0);
       useImperativeHandle(ref, () => ({updateCount}));
@@ -78,23 +78,25 @@ describe('ReactHooksWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
     // Schedule some updates
-    act(() => {
-      counter.current.updateCount(1);
-      counter.current.updateCount(count => count + 10);
-    });
+    await act(async () => {
+      await act(() => {
+        counter.current.updateCount(1);
+        counter.current.updateCount(count => count + 10);
+      });
 
-    // Partially flush without committing
-    expect(ReactNoop).toFlushAndYieldThrough(['Count: 11']);
-    expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+      // Partially flush without committing
+      expect(ReactNoop).toFlushAndYieldThrough(['Count: 11']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
-    // Interrupt with a high priority update
-    ReactNoop.flushSync(() => {
-      ReactNoop.render(<Counter label="Total" />);
+      // Interrupt with a high priority update
+      ReactNoop.flushSync(() => {
+        ReactNoop.render(<Counter label="Total" />);
+      });
+      expect(ReactNoop).toHaveYielded(['Total: 0']);
     });
-    expect(ReactNoop).toHaveYielded(['Total: 0']);
 
     // Resume rendering
-    expect(ReactNoop).toFlushAndYield(['Total: 11']);
+    expect(ReactNoop).toHaveYielded(['Total: 11']);
     expect(ReactNoop.getChildren()).toEqual([span('Total: 11')]);
   });
 
@@ -150,7 +152,7 @@ describe('ReactHooksWithNoopRenderer', () => {
   });
 
   describe('useState', () => {
-    it('simple mount and update', () => {
+    it('simple mount and update', async () => {
       function Counter(props, ref) {
         const [count, updateCount] = useState(0);
         useImperativeHandle(ref, () => ({updateCount}));
@@ -162,16 +164,16 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toFlushAndYield(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
-      act(() => counter.current.updateCount(1));
-      expect(ReactNoop).toFlushAndYield(['Count: 1']);
+      await act(() => counter.current.updateCount(1));
+      expect(ReactNoop).toHaveYielded(['Count: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
 
-      act(() => counter.current.updateCount(count => count + 10));
-      expect(ReactNoop).toFlushAndYield(['Count: 11']);
+      await act(() => counter.current.updateCount(count => count + 10));
+      expect(ReactNoop).toHaveYielded(['Count: 11']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 11')]);
     });
 
-    it('lazy state initializer', () => {
+    it('lazy state initializer', async () => {
       function Counter(props, ref) {
         const [count, updateCount] = useState(() => {
           ReactNoop.yield('getInitialState');
@@ -186,12 +188,12 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toFlushAndYield(['getInitialState', 'Count: 42']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 42')]);
 
-      act(() => counter.current.updateCount(7));
-      expect(ReactNoop).toFlushAndYield(['Count: 7']);
+      await act(() => counter.current.updateCount(7));
+      expect(ReactNoop).toHaveYielded(['Count: 7']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 7')]);
     });
 
-    it('multiple states', () => {
+    it('multiple states', async () => {
       function Counter(props, ref) {
         const [count, updateCount] = useState(0);
         const [label, updateLabel] = useState('Count');
@@ -204,14 +206,14 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toFlushAndYield(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
-      act(() => counter.current.updateCount(7));
-      expect(ReactNoop).toFlushAndYield(['Count: 7']);
+      await act(() => counter.current.updateCount(7));
+      expect(ReactNoop).toHaveYielded(['Count: 7']);
 
-      act(() => counter.current.updateLabel('Total'));
-      expect(ReactNoop).toFlushAndYield(['Total: 7']);
+      await act(() => counter.current.updateLabel('Total'));
+      expect(ReactNoop).toHaveYielded(['Total: 7']);
     });
 
-    it('returns the same updater function every time', () => {
+    it('returns the same updater function every time', async () => {
       let updaters = [];
       function Counter() {
         const [count, updateCount] = useState(0);
@@ -222,18 +224,18 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toFlushAndYield(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
-      act(() => updaters[0](1));
-      expect(ReactNoop).toFlushAndYield(['Count: 1']);
+      await act(() => updaters[0](1));
+      expect(ReactNoop).toHaveYielded(['Count: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
 
-      act(() => updaters[0](count => count + 10));
-      expect(ReactNoop).toFlushAndYield(['Count: 11']);
+      await act(() => updaters[0](count => count + 10));
+      expect(ReactNoop).toHaveYielded(['Count: 11']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 11')]);
 
       expect(updaters).toEqual([updaters[0], updaters[0], updaters[0]]);
     });
 
-    it('warns on set after unmount', () => {
+    it('warns on set after unmount', async () => {
       let _updateCount;
       function Counter(props, ref) {
         const [, updateCount] = useState(0);
@@ -245,7 +247,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toFlushWithoutYielding();
       ReactNoop.render(null);
       expect(ReactNoop).toFlushWithoutYielding();
-      expect(() => act(() => _updateCount(1))).toWarnDev(
+      expect(async () => await act(() => _updateCount(1))).toWarnDev(
         "Warning: Can't perform a React state update on an unmounted " +
           'component. This is a no-op, but it indicates a memory leak in your ' +
           'application. To fix, cancel all subscriptions and asynchronous ' +
@@ -254,7 +256,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       );
     });
 
-    it('works with memo', () => {
+    it('works with memo', async () => {
       let _updateCount;
       function Counter(props) {
         const [count, updateCount] = useState(0);
@@ -271,14 +273,14 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toFlushAndYield([]);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
-      act(() => _updateCount(1));
-      expect(ReactNoop).toFlushAndYield(['Count: 1']);
+      await act(() => _updateCount(1));
+      expect(ReactNoop).toHaveYielded(['Count: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
     });
   });
 
-  describe('updates during the render phase', () => {
-    it('restarts the render function and applies the new updates on top', () => {
+  describe('updates during the render phase', async () => {
+    it('restarts the render function and applies the new updates on top', async () => {
       function ScrollView({row: newRow}) {
         let [isScrollingDown, setIsScrollingDown] = useState(false);
         let [row, setRow] = useState(null);
@@ -317,7 +319,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Scrolling down: false')]);
     });
 
-    it('keeps restarting until there are no more new updates', () => {
+    it('keeps restarting until there are no more new updates', async () => {
       function Counter({row: newRow}) {
         let [count, setCount] = useState(0);
         if (count < 3) {
@@ -338,7 +340,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span(3)]);
     });
 
-    it('updates multiple times within same render function', () => {
+    it('updates multiple times within same render function', async () => {
       function Counter({row: newRow}) {
         let [count, setCount] = useState(0);
         if (count < 12) {
@@ -363,7 +365,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span(12)]);
     });
 
-    it('throws after too many iterations', () => {
+    it('throws after too many iterations', async () => {
       function Counter({row: newRow}) {
         let [count, setCount] = useState(0);
         setCount(count + 1);
@@ -377,7 +379,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       );
     });
 
-    it('works with useReducer', () => {
+    it('works with useReducer', async () => {
       function reducer(state, action) {
         return action === 'increment' ? state + 1 : state;
       }
@@ -401,7 +403,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span(3)]);
     });
 
-    it('uses reducer passed at time of render, not time of dispatch', () => {
+    it('uses reducer passed at time of render, not time of dispatch', async () => {
       // This test is a bit contrived but it demonstrates a subtle edge case.
 
       // Reducer A increments by 1. Reducer B increments by 10.
@@ -454,11 +456,11 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       // Test that it works on update, too. This time the log is a bit different
       // because we started with reducerB instead of reducerA.
-      ReactNoop.act(() => {
+      await ReactNoop.act(() => {
         counter.current.dispatch('reset');
+        ReactNoop.render(<Counter ref={counter} />);
       });
-      ReactNoop.render(<Counter ref={counter} />);
-      expect(ReactNoop).toFlushAndYield([
+      expect(ReactNoop).toHaveYielded([
         'Render: 0',
         'Render: 1',
         'Render: 11',
@@ -470,8 +472,8 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
   });
 
-  describe('useReducer', () => {
-    it('simple mount and update', () => {
+  describe('useReducer', async () => {
+    it('simple mount and update', async () => {
       const INCREMENT = 'INCREMENT';
       const DECREMENT = 'DECREMENT';
 
@@ -497,20 +499,20 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toFlushAndYield(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
-      act(() => counter.current.dispatch(INCREMENT));
-      expect(ReactNoop).toFlushAndYield(['Count: 1']);
+      await act(() => counter.current.dispatch(INCREMENT));
+      expect(ReactNoop).toHaveYielded(['Count: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
-      act(() => {
+      await act(() => {
         counter.current.dispatch(DECREMENT);
         counter.current.dispatch(DECREMENT);
         counter.current.dispatch(DECREMENT);
       });
 
-      expect(ReactNoop).toFlushAndYield(['Count: -2']);
+      expect(ReactNoop).toHaveYielded(['Count: -2']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: -2')]);
     });
 
-    it('lazy init', () => {
+    it('lazy init', async () => {
       const INCREMENT = 'INCREMENT';
       const DECREMENT = 'DECREMENT';
 
@@ -539,22 +541,22 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toFlushAndYield(['Init', 'Count: 10']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 10')]);
 
-      act(() => counter.current.dispatch(INCREMENT));
-      expect(ReactNoop).toFlushAndYield(['Count: 11']);
+      await act(() => counter.current.dispatch(INCREMENT));
+      expect(ReactNoop).toHaveYielded(['Count: 11']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 11')]);
 
-      act(() => {
+      await act(() => {
         counter.current.dispatch(DECREMENT);
         counter.current.dispatch(DECREMENT);
         counter.current.dispatch(DECREMENT);
       });
 
-      expect(ReactNoop).toFlushAndYield(['Count: 8']);
+      expect(ReactNoop).toHaveYielded(['Count: 8']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 8')]);
     });
 
     // Regression test for https://github.com/facebook/react/issues/14360
-    it('handles dispatches with mixed priorities', () => {
+    it('handles dispatches with mixed priorities', async () => {
       const INCREMENT = 'INCREMENT';
 
       function reducer(state, action) {
@@ -574,25 +576,23 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toFlushAndYield(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
-      act(() => {
+      await act(() => {
         counter.current.dispatch(INCREMENT);
         counter.current.dispatch(INCREMENT);
         counter.current.dispatch(INCREMENT);
+
+        ReactNoop.flushSync(() => {
+          counter.current.dispatch(INCREMENT);
+        });
       });
 
-      ReactNoop.flushSync(() => {
-        counter.current.dispatch(INCREMENT);
-      });
-      expect(ReactNoop).toHaveYielded(['Count: 1']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
-
-      expect(ReactNoop).toFlushAndYield(['Count: 4']);
+      expect(ReactNoop).toHaveYielded(['Count: 1', 'Count: 4']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 4')]);
     });
   });
 
-  describe('useEffect', () => {
-    it('simple mount and update', () => {
+  describe('useEffect', async () => {
+    it('simple mount and update', async () => {
       function Counter(props) {
         useEffect(() => {
           ReactNoop.yield(`Did commit [${props.count}]`);
@@ -613,7 +613,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toHaveYielded(['Did commit [1]']);
     });
 
-    it('flushes passive effects even with sibling deletions', () => {
+    it('flushes passive effects even with sibling deletions', async () => {
       function LayoutEffect(props) {
         useLayoutEffect(() => {
           ReactNoop.yield(`Layout effect`);
@@ -646,7 +646,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toHaveYielded([]);
     });
 
-    it('flushes passive effects even if siblings schedule an update', () => {
+    it('flushes passive effects even if siblings schedule an update', async () => {
       function PassiveEffect(props) {
         useEffect(() => {
           ReactNoop.yield('Passive effect');
@@ -667,7 +667,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       ReactNoop.render([<PassiveEffect key="p" />, <LayoutEffect key="l" />]);
 
-      act(() => {
+      await act(() => {
         expect(ReactNoop).toFlushAndYield([
           'Passive',
           'Layout',
@@ -684,7 +684,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
     });
 
-    it('flushes passive effects even if siblings schedule a new root', () => {
+    it('flushes passive effects even if siblings schedule a new root', async () => {
       function PassiveEffect(props) {
         useEffect(() => {
           ReactNoop.yield('Passive effect');
@@ -753,7 +753,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       },
     );
 
-    it('updates have async priority', () => {
+    it('updates have async priority', async () => {
       function Counter(props) {
         const [count, updateCount] = useState('(empty)');
         useEffect(
@@ -780,7 +780,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toFlushAndYield(['Count: 1']);
     });
 
-    it('updates have async priority even if effects are flushed early', () => {
+    it('updates have async priority even if effects are flushed early', async () => {
       function Counter(props) {
         const [count, updateCount] = useState('(empty)');
         useEffect(
@@ -814,7 +814,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
     });
 
-    it('flushes serial effects before enqueueing work', () => {
+    it('flushes serial effects before enqueueing work', async () => {
       let _updateCount;
       function Counter(props) {
         const [count, updateCount] = useState(0);
@@ -832,13 +832,15 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       // Enqueuing this update forces the passive effect to be flushed --
       // updateCount(1) happens first, so 2 wins.
-      act(() => _updateCount(2));
-      expect(ReactNoop).toHaveYielded(['Will set count to 1']);
-      expect(ReactNoop).toFlushAndYield(['Count: 2']);
+      await act(() => {
+        _updateCount(2);
+        expect(ReactNoop).toHaveYielded(['Will set count to 1']);
+      });
+      expect(ReactNoop).toHaveYielded(['Count: 2']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 2')]);
     });
 
-    it('flushes serial effects before enqueueing work (with tracing)', () => {
+    it('flushes serial effects before enqueueing work (with tracing)', async () => {
       const onInteractionScheduledWorkCompleted = jest.fn();
       const onWorkCanceled = jest.fn();
       SchedulerTracing.unstable_subscribe({
@@ -879,9 +881,11 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       // Enqueuing this update forces the passive effect to be flushed --
       // updateCount(1) happens first, so 2 wins.
-      act(() => _updateCount(2));
-      expect(ReactNoop).toHaveYielded(['Will set count to 1']);
-      expect(ReactNoop).toFlushAndYield(['Count: 2']);
+      await act(() => {
+        _updateCount(2);
+        expect(ReactNoop).toHaveYielded(['Will set count to 1']);
+      });
+      expect(ReactNoop).toHaveYielded(['Count: 2']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 2')]);
 
       expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
@@ -922,7 +926,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       },
     );
 
-    it('flushSync is not allowed', () => {
+    it('flushSync is not allowed', async () => {
       function Counter(props) {
         const [count, updateCount] = useState('(empty)');
         useEffect(
@@ -945,7 +949,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       }).toThrow('flushSync was called from inside a lifecycle method');
     });
 
-    it('unmounts previous effect', () => {
+    it('unmounts previous effect', async () => {
       function Counter(props) {
         useEffect(() => {
           ReactNoop.yield(`Did create [${props.count}]`);
@@ -968,7 +972,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toHaveYielded(['Did destroy [0]', 'Did create [1]']);
     });
 
-    it('unmounts on deletion', () => {
+    it('unmounts on deletion', async () => {
       function Counter(props) {
         useEffect(() => {
           ReactNoop.yield(`Did create [${props.count}]`);
@@ -989,7 +993,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([]);
     });
 
-    it('unmounts on deletion after skipped effect', () => {
+    it('unmounts on deletion after skipped effect', async () => {
       function Counter(props) {
         useEffect(() => {
           ReactNoop.yield(`Did create [${props.count}]`);
@@ -1016,7 +1020,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([]);
     });
 
-    it('always fires effects if no dependencies are provided', () => {
+    it('always fires effects if no dependencies are provided', async () => {
       function effect() {
         ReactNoop.yield(`Did create`);
         return () => {
@@ -1044,7 +1048,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([]);
     });
 
-    it('skips effect if inputs have not changed', () => {
+    it('skips effect if inputs have not changed', async () => {
       function Counter(props) {
         const text = `${props.label}: ${props.count}`;
         useEffect(
@@ -1092,7 +1096,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
     });
 
-    it('multiple effects', () => {
+    it('multiple effects', async () => {
       function Counter(props) {
         useEffect(() => {
           ReactNoop.yield(`Did commit 1 [${props.count}]`);
@@ -1115,7 +1119,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toHaveYielded(['Did commit 1 [1]', 'Did commit 2 [1]']);
     });
 
-    it('unmounts all previous effects before creating any new ones', () => {
+    it('unmounts all previous effects before creating any new ones', async () => {
       function Counter(props) {
         useEffect(() => {
           ReactNoop.yield(`Mount A [${props.count}]`);
@@ -1149,7 +1153,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
     });
 
-    it('handles errors on mount', () => {
+    it('handles errors on mount', async () => {
       function Counter(props) {
         useEffect(() => {
           ReactNoop.yield(`Mount A [${props.count}]`);
@@ -1182,7 +1186,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([]);
     });
 
-    it('handles errors on update', () => {
+    it('handles errors on update', async () => {
       function Counter(props) {
         useEffect(() => {
           ReactNoop.yield(`Mount A [${props.count}]`);
@@ -1225,7 +1229,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([]);
     });
 
-    it('handles errors on unmount', () => {
+    it('handles errors on unmount', async () => {
       function Counter(props) {
         useEffect(() => {
           ReactNoop.yield(`Mount A [${props.count}]`);
@@ -1263,7 +1267,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([]);
     });
 
-    it('works with memo', () => {
+    it('works with memo', async () => {
       function Counter({count}) {
         useLayoutEffect(() => {
           ReactNoop.yield('Mount: ' + count);
@@ -1287,8 +1291,8 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
   });
 
-  describe('useLayoutEffect', () => {
-    it('fires layout effects after the host has been mutated', () => {
+  describe('useLayoutEffect', async () => {
+    it('fires layout effects after the host has been mutated', async () => {
       function getCommittedText() {
         const yields = ReactNoop.unstable_clearYields();
         const children = ReactNoop.getChildren();
@@ -1315,7 +1319,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span(1)]);
     });
 
-    it('force flushes passive effects before firing new layout effects', () => {
+    it('force flushes passive effects before firing new layout effects', async () => {
       let committedText = '(empty)';
 
       function Counter(props) {
@@ -1358,8 +1362,8 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
   });
 
-  describe('useCallback', () => {
-    it('memoizes callback by comparing inputs', () => {
+  describe('useCallback', async () => {
+    it('memoizes callback by comparing inputs', async () => {
       class IncrementButton extends React.PureComponent {
         increment = () => {
           this.props.increment();
@@ -1390,8 +1394,8 @@ describe('ReactHooksWithNoopRenderer', () => {
         span('Count: 0'),
       ]);
 
-      act(button.current.increment);
-      expect(ReactNoop).toFlushAndYield([
+      await act(button.current.increment);
+      expect(ReactNoop).toHaveYielded([
         // Button should not re-render, because its props haven't changed
         // 'Increment',
         'Count: 1',
@@ -1414,8 +1418,8 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
 
       // Callback should have updated
-      act(button.current.increment);
-      expect(ReactNoop).toFlushAndYield(['Count: 11']);
+      await act(button.current.increment);
+      expect(ReactNoop).toHaveYielded(['Count: 11']);
       expect(ReactNoop.getChildren()).toEqual([
         span('Increment'),
         span('Count: 11'),
@@ -1423,8 +1427,8 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
   });
 
-  describe('useMemo', () => {
-    it('memoizes value by comparing to previous inputs', () => {
+  describe('useMemo', async () => {
+    it('memoizes value by comparing to previous inputs', async () => {
       function CapitalizedText(props) {
         const text = props.text;
         const capitalizedText = useMemo(
@@ -1454,7 +1458,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('GOODBYE')]);
     });
 
-    it('always re-computes if no inputs are provided', () => {
+    it('always re-computes if no inputs are provided', async () => {
       function LazyCompute(props) {
         const computed = useMemo(props.compute);
         return <Text text={computed} />;
@@ -1483,7 +1487,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toFlushAndYield(['compute B', 'B']);
     });
 
-    it('should not invoke memoized function during re-renders unless inputs change', () => {
+    it('should not invoke memoized function during re-renders unless inputs change', async () => {
       function LazyCompute(props) {
         const computed = useMemo(() => props.compute(props.input), [
           props.input,
@@ -1511,8 +1515,8 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
   });
 
-  describe('useRef', () => {
-    it('creates a ref object initialized with the provided value', () => {
+  describe('useRef', async () => {
+    it('creates a ref object initialized with the provided value', async () => {
       jest.useFakeTimers();
 
       function useDebouncedCallback(callback, ms, inputs) {
@@ -1569,7 +1573,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop).toHaveYielded(['ping: 6']);
     });
 
-    it('should return the same ref during re-renders', () => {
+    it('should return the same ref during re-renders', async () => {
       function Counter() {
         const ref = useRef('val');
         const [count, setCount] = useState(0);
@@ -1594,8 +1598,8 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
   });
 
-  describe('useImperativeHandle', () => {
-    it('does not update when deps are the same', () => {
+  describe('useImperativeHandle', async () => {
+    it('does not update when deps are the same', async () => {
       const INCREMENT = 'INCREMENT';
 
       function reducer(state, action) {
@@ -1615,17 +1619,17 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
       expect(counter.current.count).toBe(0);
 
-      act(() => {
+      await act(() => {
         counter.current.dispatch(INCREMENT);
       });
-      expect(ReactNoop).toFlushAndYield(['Count: 1']);
+      expect(ReactNoop).toHaveYielded(['Count: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
       // Intentionally not updated because of [] deps:
       expect(counter.current.count).toBe(0);
     });
 
     // Regression test for https://github.com/facebook/react/issues/14782
-    it('automatically updates when deps are not specified', () => {
+    it('automatically updates when deps are not specified', async () => {
       const INCREMENT = 'INCREMENT';
 
       function reducer(state, action) {
@@ -1645,15 +1649,15 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
       expect(counter.current.count).toBe(0);
 
-      act(() => {
+      await act(() => {
         counter.current.dispatch(INCREMENT);
       });
-      expect(ReactNoop).toFlushAndYield(['Count: 1']);
+      expect(ReactNoop).toHaveYielded(['Count: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
       expect(counter.current.count).toBe(1);
     });
 
-    it('updates when deps are different', () => {
+    it('updates when deps are different', async () => {
       const INCREMENT = 'INCREMENT';
 
       function reducer(state, action) {
@@ -1682,10 +1686,10 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(counter.current.count).toBe(0);
       expect(totalRefUpdates).toBe(1);
 
-      act(() => {
+      await act(() => {
         counter.current.dispatch(INCREMENT);
       });
-      expect(ReactNoop).toFlushAndYield(['Count: 1']);
+      expect(ReactNoop).toHaveYielded(['Count: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
       expect(counter.current.count).toBe(1);
       expect(totalRefUpdates).toBe(2);
@@ -1699,8 +1703,8 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
   });
 
-  describe('progressive enhancement (not supported)', () => {
-    it('mount additional state', () => {
+  describe('progressive enhancement (not supported)', async () => {
+    it('mount additional state', async () => {
       let updateA;
       let updateB;
       // let updateC;
@@ -1727,12 +1731,12 @@ describe('ReactHooksWithNoopRenderer', () => {
         span('A: 0, B: 0, C: [not loaded]'),
       ]);
 
-      act(() => {
+      await act(() => {
         updateA(2);
         updateB(3);
       });
 
-      expect(ReactNoop).toFlushAndYield(['A: 2, B: 3, C: [not loaded]']);
+      expect(ReactNoop).toHaveYielded(['A: 2, B: 3, C: [not loaded]']);
       expect(ReactNoop.getChildren()).toEqual([
         span('A: 2, B: 3, C: [not loaded]'),
       ]);
@@ -1750,7 +1754,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       // expect(ReactNoop.getChildren()).toEqual([span('A: 2, B: 3, C: 4')]);
     });
 
-    it('unmount state', () => {
+    it('unmount state', async () => {
       let updateA;
       let updateB;
       let updateC;
@@ -1776,12 +1780,12 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.render(<App loadC={true} />);
       expect(ReactNoop).toFlushAndYield(['A: 0, B: 0, C: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('A: 0, B: 0, C: 0')]);
-      act(() => {
+      await act(() => {
         updateA(2);
         updateB(3);
         updateC(4);
       });
-      expect(ReactNoop).toFlushAndYield(['A: 2, B: 3, C: 4']);
+      expect(ReactNoop).toHaveYielded(['A: 2, B: 3, C: 4']);
       expect(ReactNoop.getChildren()).toEqual([span('A: 2, B: 3, C: 4')]);
       ReactNoop.render(<App loadC={false} />);
       expect(ReactNoop).toFlushAndThrow(
@@ -1790,7 +1794,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       );
     });
 
-    it('unmount effects', () => {
+    it('unmount effects', async () => {
       function App(props) {
         useEffect(() => {
           ReactNoop.yield('Mount A');

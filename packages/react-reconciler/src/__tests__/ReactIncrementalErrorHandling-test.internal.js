@@ -114,7 +114,8 @@ describe('ReactIncrementalErrorHandling', () => {
 
     // Instead, it will try rendering one more time, synchronously, in case that
     // happens to fix the error.
-    expect(ReactNoop.flushNextYield()).toEqual([
+    ReactNoop.flushNextYield();
+    expect(ReactNoop).toHaveYielded([
       'ErrorBoundary (try)',
       'Indirection',
       'Indirection',

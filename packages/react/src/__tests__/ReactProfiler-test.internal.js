@@ -2256,7 +2256,7 @@ describe('Profiler', () => {
         await awaitableAdvanceTimers(10000);
         // No additional rendering work is required, since we already prepared
         // the placeholder.
-        expect(ReactNoop.flushExpired()).toEqual([]);
+        ReactNoop.flushExpired();
         // Should have committed the placeholder.
         expect(ReactNoop.getChildrenAsJSX()).toEqual('Loading...Sync');
         expect(onRender).toHaveBeenCalledTimes(1);

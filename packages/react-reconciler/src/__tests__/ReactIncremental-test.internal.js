@@ -55,7 +55,7 @@ describe('ReactIncremental', () => {
 
     ReactNoop.render(<Foo />, () => ReactNoop.yield('callback'));
     // Do one step of work.
-    expect(ReactNoop.flushNextYield()).toEqual(['Foo']);
+    expect(ReactNoop).toFlushAndYieldThrough(['Foo']);
 
     // Do the rest of the work.
     expect(ReactNoop).toFlushAndYield(['Bar', 'Bar', 'callback']);

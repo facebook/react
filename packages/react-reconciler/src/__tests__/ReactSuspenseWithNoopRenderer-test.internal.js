@@ -449,7 +449,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await advanceTimers(10000);
     // No additional rendering work is required, since we already prepared
     // the placeholder.
-    expect(ReactNoop.flushExpired()).toEqual([]);
+    ReactNoop.flushExpired();
     // Should have committed the placeholder.
     expect(ReactNoop.getChildren()).toEqual([span('Loading...'), span('Sync')]);
 
@@ -634,9 +634,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         <AsyncText text="Async" ms={3000} />
       </Suspense>,
     );
-    expect(ReactNoop.flushNextYield()).toEqual(['Suspend! [Async]']);
+    ReactNoop.flushNextYield();
+    expect(ReactNoop).toHaveYielded(['Suspend! [Async]']);
     await advanceTimers(1500);
-    expect(ReactNoop.expire(1500)).toEqual([]);
+    ReactNoop.expire(1500);
     // Before we have a chance to flush, the promise resolves.
     await advanceTimers(2000);
     expect(ReactNoop).toHaveYielded(['Promise resolved [Async]']);
@@ -659,7 +660,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         <AsyncText text="B" ms={100} />
       </Suspense>,
     );
-    expect(ReactNoop.expire(10000)).toEqual([
+    ReactNoop.expire(10000);
+    expect(ReactNoop).toHaveYielded([
       'Suspend! [A]',
       'Suspend! [B]',
       'Loading...',
@@ -920,7 +922,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       );
 
       // Suspend during an async render.
-      expect(ReactNoop.flushNextYield()).toEqual(['Suspend! [Step: 2]']);
+      ReactNoop.flushNextYield();
+      expect(ReactNoop).toHaveYielded(['Suspend! [Step: 2]']);
       expect(ReactNoop).toFlushAndYield([
         'Loading (1)',
         'Loading (2)',
@@ -1037,7 +1040,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         expect(ReactNoop).toFlushAndYieldThrough(['Before']);
 
         // Now render the next child, which suspends
-        expect(ReactNoop.flushNextYield()).toEqual([
+        ReactNoop.flushNextYield();
+        expect(ReactNoop).toHaveYielded([
           // This child suspends
           'Suspend! [Async: 2]',
         ]);
@@ -1172,7 +1176,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         expect(ReactNoop).toFlushAndYieldThrough(['Before']);
 
         // Now render the next child, which suspends
-        expect(ReactNoop.flushNextYield()).toEqual([
+        ReactNoop.flushNextYield();
+        expect(ReactNoop).toHaveYielded([
           // This child suspends
           'Suspend! [Async: 2]',
         ]);

@@ -37,7 +37,8 @@ function toFlushAndYield(ReactNoop, expectedYields) {
     return JestReact.unstable_toFlushAndYield(ReactNoop, expectedYields);
   }
   assertYieldsWereCleared(ReactNoop);
-  const actualYields = ReactNoop.unstable_flushWithoutYielding();
+  ReactNoop.unstable_flushWithoutYielding();
+  const actualYields = ReactNoop.unstable_clearYields();
   return captureAssertion(() => {
     expect(actualYields).toEqual(expectedYields);
   });
@@ -48,9 +49,8 @@ function toFlushAndYieldThrough(ReactNoop, expectedYields) {
     return JestReact.unstable_toFlushAndYieldThrough(ReactNoop, expectedYields);
   }
   assertYieldsWereCleared(ReactNoop);
-  const actualYields = ReactNoop.unstable_flushNumberOfYields(
-    expectedYields.length
-  );
+  ReactNoop.unstable_flushNumberOfYields(expectedYields.length);
+  const actualYields = ReactNoop.unstable_clearYields();
   return captureAssertion(() => {
     expect(actualYields).toEqual(expectedYields);
   });

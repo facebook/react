@@ -67,7 +67,7 @@ describe('ReactExpiration', () => {
     // work signals to the renderer that the event has ended.
     ReactNoop.advanceTime(2000);
     // Don't advance time by enough to expire the first update.
-    expect(ReactNoop.flushExpired()).toEqual([]);
+    ReactNoop.flushExpired();
     expect(ReactNoop.getChildren()).toEqual([]);
     // Schedule another update.
     ReactNoop.render(<Text text="B" />);
@@ -121,7 +121,7 @@ describe('ReactExpiration', () => {
       // work signals to the renderer that the event has ended.
       ReactNoop.advanceTime(2000);
       // Don't advance time by enough to expire the first update.
-      expect(ReactNoop.flushExpired()).toEqual([]);
+      ReactNoop.flushExpired();
       expect(ReactNoop.getChildren()).toEqual([]);
       // Schedule another update.
       ReactNoop.render(<Text text="B" />);

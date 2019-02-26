@@ -538,6 +538,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   let didStop: boolean = false;
   let expectedNumberOfYields: number = -1;
 
+  let actDepth = 0;
+
   function shouldYield() {
     if (
       expectedNumberOfYields !== -1 &&
@@ -553,8 +555,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     return false;
   }
 
-  function flushAll(): Array<mixed> {
-    yieldedValues = [];
+  function flushAll() {
     while (scheduledCallback !== null) {
       const cb = scheduledCallback;
       scheduledCallback = null;
@@ -563,15 +564,14 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         scheduledCallbackTimeout < elapsedTimeInMs;
       cb(didTimeout);
     }
-    const values = yieldedValues;
-    yieldedValues = [];
-    return values;
   }
 
-  function flushNumberOfYields(count: number): Array<mixed> {
-    expectedNumberOfYields = count;
+  function flushNumberOfYields(count: number) {
+    if (expectedNumberOfYields !== -1) {
+      throw new Error('Cannot nest flushNumberOfYields');
+    }
+    expectedNumberOfYields = yieldedValues.length + count;
     didStop = false;
-    yieldedValues = [];
     try {
       while (scheduledCallback !== null && !didStop) {
         const cb = scheduledCallback;
@@ -581,11 +581,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           scheduledCallbackTimeout < elapsedTimeInMs;
         cb(didTimeout);
       }
-      return yieldedValues;
     } finally {
       expectedNumberOfYields = -1;
       didStop = false;
-      yieldedValues = [];
     }
   }
 
@@ -769,7 +767,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     unstable_flushNumberOfYields: flushNumberOfYields,
     unstable_clearYields: clearYields,
 
-    flushNextYield(): Array<mixed> {
+    flushNextYield(): void {
       return flushNumberOfYields(1);
     },
 
@@ -805,17 +803,17 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       }
     },
 
-    expire(ms: number): Array<mixed> {
+    expire(ms: number): void {
       ReactNoop.advanceTime(ms);
-      return ReactNoop.flushExpired();
+      ReactNoop.flushExpired();
     },
 
     advanceTime(ms: number): void {
       elapsedTimeInMs += ms;
     },
 
-    flushExpired(): Array<mixed> {
-      return flushNumberOfYields(0);
+    flushExpired(): void {
+      flushNumberOfYields(0);
     },
 
     yield: yieldValue,
@@ -832,38 +830,52 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     interactiveUpdates: NoopRenderer.interactiveUpdates,
 
-    // maybe this should exist only in the test file
     act(callback: () => void): Thenable {
-      // note: keep these warning messages in sync with
-      // ReactTestRenderer.js and ReactTestUtils.js
-      let result = NoopRenderer.batchedUpdates(callback);
+      actDepth++;
+
+      const result = NoopRenderer.batchedUpdates(callback);
+
+      let didAwait = false;
+
       if (__DEV__) {
-        if (result !== undefined) {
-          let addendum;
-          if (result !== null && typeof result.then === 'function') {
-            addendum =
-              "\n\nIt looks like you wrote ReactNoop.act(async () => ...) or returned a Promise from it's callback. " +
-              'Putting asynchronous logic inside ReactNoop.act(...) is not supported.\n';
-          } else {
-            addendum = ' You returned: ' + result;
-          }
-          warningWithoutStack(
-            false,
-            'The callback passed to ReactNoop.act(...) function must not return anything.%s',
-            addendum,
-          );
-        }
-      }
-      ReactNoop.flushPassiveEffects();
-      // we want the user to not expect a return,
-      // but we want to warn if they use it like they can await on it.
-      return {
-        then() {
-          if (__DEV__) {
+        Promise.resolve()
+          .then(() => {})
+          .then(() => {
             warningWithoutStack(
-              false,
-              'Do not await the result of calling ReactNoop.act(...), it is not a Promise.',
+              didAwait,
+              'You called act() without awaiting its result.',
             );
+          });
+      }
+
+      return {
+        then(resolve, reject) {
+          if (didAwait) {
+            return;
+          }
+          didAwait = true;
+          if (
+            result !== undefined &&
+            result !== null &&
+            typeof result.then === 'function'
+          ) {
+            result.then(() => {
+              actDepth--;
+              if (actDepth === 0) {
+                // TODO: Should keep flushing until queue is empty
+                ReactNoop.unstable_flushWithoutYielding();
+                ReactNoop.flushPassiveEffects();
+              }
+              resolve();
+            }, reject);
+          } else {
+            actDepth--;
+            if (actDepth === 0) {
+              // TODO: Should keep flushing until queue is empty
+              ReactNoop.unstable_flushWithoutYielding();
+              ReactNoop.flushPassiveEffects();
+            }
+            resolve();
           }
         },
       };
@@ -997,7 +1009,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         _next: null,
       };
       root.firstBatch = batch;
-      const actual = flushAll();
+      flushAll();
+      const actual = clearYields();
       expect(actual).toEqual(expectedFlush);
       return (expectedCommit: Array<mixed>) => {
         batch._defer = false;

@@ -640,6 +640,7 @@ describe('ReactIncrementalSideEffects', () => {
     // Now let's commit. We already had a commit that was pending, which will
     // render 2.
     ReactNoop.flushNextYield();
+    expect(ReactNoop).toHaveYielded(['Foo']);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={2} />);
     // If we flush the rest of the work, we should get another commit that
     // renders 3. If it renders 2 again, that means an update was dropped.

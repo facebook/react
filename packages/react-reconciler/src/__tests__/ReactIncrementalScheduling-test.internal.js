@@ -85,7 +85,7 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop).toMatchRenderedOutput(<span prop={5} />);
   });
 
-  it('works on deferred roots in the order they were scheduled', () => {
+  it('works on deferred roots in the order they were scheduled', async () => {
     const {useEffect} = React;
     function Text({text}) {
       useEffect(
@@ -97,39 +97,39 @@ describe('ReactIncrementalScheduling', () => {
       return text;
     }
 
-    ReactNoop.act(() => {
+    await ReactNoop.act(() => {
       ReactNoop.renderToRootWithID(<Text text="a:1" />, 'a');
       ReactNoop.renderToRootWithID(<Text text="b:1" />, 'b');
       ReactNoop.renderToRootWithID(<Text text="c:1" />, 'c');
     });
-    expect(ReactNoop).toFlushAndYield(['a:1', 'b:1', 'c:1']);
+    expect(ReactNoop).toHaveYielded(['a:1', 'b:1', 'c:1']);
 
     expect(ReactNoop.getChildrenAsJSX('a')).toEqual('a:1');
     expect(ReactNoop.getChildrenAsJSX('b')).toEqual('b:1');
     expect(ReactNoop.getChildrenAsJSX('c')).toEqual('c:1');
 
     // Schedule deferred work in the reverse order
-    ReactNoop.act(() => {
+    await ReactNoop.act(() => {
       ReactNoop.renderToRootWithID(<Text text="c:2" />, 'c');
       ReactNoop.renderToRootWithID(<Text text="b:2" />, 'b');
-    });
-    // Ensure it starts in the order it was scheduled
-    expect(ReactNoop).toFlushAndYieldThrough(['c:2']);
 
-    expect(ReactNoop.getChildrenAsJSX('a')).toEqual('a:1');
-    expect(ReactNoop.getChildrenAsJSX('b')).toEqual('b:1');
-    expect(ReactNoop.getChildrenAsJSX('c')).toEqual('c:2');
-    // Schedule last bit of work, it will get processed the last
-    ReactNoop.act(() => {
+      // Ensure it starts in the order it was scheduled
+      expect(ReactNoop).toFlushAndYieldThrough(['c:2']);
+
+      expect(ReactNoop.getChildrenAsJSX('a')).toEqual('a:1');
+      expect(ReactNoop.getChildrenAsJSX('b')).toEqual('b:1');
+      expect(ReactNoop.getChildrenAsJSX('c')).toEqual('c:2');
+
+      // Schedule last bit of work, it will get processed the last
       ReactNoop.renderToRootWithID(<Text text="a:2" />, 'a');
-    });
-    // Keep performing work in the order it was scheduled
-    expect(ReactNoop).toFlushAndYieldThrough(['b:2']);
-    expect(ReactNoop.getChildrenAsJSX('a')).toEqual('a:1');
-    expect(ReactNoop.getChildrenAsJSX('b')).toEqual('b:2');
-    expect(ReactNoop.getChildrenAsJSX('c')).toEqual('c:2');
 
-    expect(ReactNoop).toFlushAndYieldThrough(['a:2']);
+      // Keep performing work in the order it was scheduled
+      expect(ReactNoop).toFlushAndYieldThrough(['b:2']);
+      expect(ReactNoop.getChildrenAsJSX('a')).toEqual('a:1');
+      expect(ReactNoop.getChildrenAsJSX('b')).toEqual('b:2');
+      expect(ReactNoop.getChildrenAsJSX('c')).toEqual('c:2');
+    });
+
     expect(ReactNoop.getChildrenAsJSX('a')).toEqual('a:2');
     expect(ReactNoop.getChildrenAsJSX('b')).toEqual('b:2');
     expect(ReactNoop.getChildrenAsJSX('c')).toEqual('c:2');
@@ -178,7 +178,8 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop).toFlushAndYieldThrough(['render: 0']);
 
     // Do one more unit of work to commit
-    expect(ReactNoop.flushNextYield()).toEqual([
+    ReactNoop.flushNextYield();
+    expect(ReactNoop).toHaveYielded([
       'componentDidMount (before setState): 0',
       'componentDidMount (after setState): 0',
       // If the setState inside componentDidMount were deferred, there would be
@@ -189,7 +190,8 @@ describe('ReactIncrementalScheduling', () => {
 
     instance.setState({tick: 2});
     expect(ReactNoop).toFlushAndYieldThrough(['render: 2']);
-    expect(ReactNoop.flushNextYield()).toEqual([
+    ReactNoop.flushNextYield();
+    expect(ReactNoop).toHaveYielded([
       'componentDidUpdate: 2',
       'componentDidUpdate (before setState): 2',
       'componentDidUpdate (after setState): 2',
@@ -296,6 +298,7 @@ describe('ReactIncrementalScheduling', () => {
     // Do one more unit of work.
     ReactNoop.flushNextYield();
     // The updates should all be flushed with Task priority
+    expect(ReactNoop).toHaveYielded(['Foo', 'Foo', 'Foo', 'Foo']);
     expect(ReactNoop).toMatchRenderedOutput(<span prop={5} />);
   });
 
