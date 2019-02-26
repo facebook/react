@@ -1101,7 +1101,7 @@ describe('Profiler', () => {
                     <errorInCompletePhase>hi</errorInCompletePhase>
                   </React.unstable_Profiler>,
                 );
-                expect(ReactNoop.flush).toThrow('Error in host config.');
+                expect(ReactNoop).toFlushAndThrow('Error in host config.');
 
                 // A similar case we've seen caused by an invariant in ReactDOM.
                 // It didn't reproduce without a host component inside.
@@ -1112,7 +1112,7 @@ describe('Profiler', () => {
                     </errorInCompletePhase>
                   </React.unstable_Profiler>,
                 );
-                expect(ReactNoop.flush).toThrow('Error in host config.');
+                expect(ReactNoop).toFlushAndThrow('Error in host config.');
 
                 // So long as the profiler timer's fiber stack is reset correctly,
                 // Subsequent renders should not error.
@@ -1121,7 +1121,7 @@ describe('Profiler', () => {
                     <span>hi</span>
                   </React.unstable_Profiler>,
                 );
-                ReactNoop.flush();
+                expect(ReactNoop).toFlushWithoutYielding();
               });
             });
           },
@@ -1242,7 +1242,7 @@ describe('Profiler', () => {
 
     // Process some async work, but yield before committing it.
     ReactNoop.renderToRootWithID(<Parent duration={7} id="two" />, 'two');
-    ReactNoop.flushThrough(['Child:render:two']);
+    expect(ReactNoop).toFlushAndYieldThrough(['Child:render:two']);
 
     ReactNoop.advanceTime(150);
 
@@ -1254,7 +1254,11 @@ describe('Profiler', () => {
 
     ReactNoop.advanceTime(200);
 
-    ReactNoop.flush();
+    expect(ReactNoop).toHaveYielded(['Parent:componentDidMount:one']);
+    expect(ReactNoop).toFlushAndYield([
+      'Child:render:two',
+      'Parent:componentDidMount:two',
+    ]);
 
     expect(ReactNoop.getRoot('two').current.actualDuration).toBe(14);
   });
@@ -2236,7 +2240,7 @@ describe('Profiler', () => {
         expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
         expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
 
-        expect(ReactNoop.flush()).toEqual([
+        expect(ReactNoop).toFlushAndYield([
           'Suspend [Async]',
           'Text [Loading...]',
           'Text [Sync]',
@@ -2268,15 +2272,13 @@ describe('Profiler', () => {
 
         // An unrelated update in the middle shouldn't affect things...
         monkey.current.forceUpdate();
-        expect(ReactNoop.flush()).toEqual(['Monkey']);
+        expect(ReactNoop).toFlushAndYield(['Monkey']);
         expect(onRender).toHaveBeenCalledTimes(2);
 
         // Once the promise resolves, we render the suspended view
         await awaitableAdvanceTimers(10000);
-        expect(ReactNoop.flush()).toEqual([
-          'Promise resolved [Async]',
-          'AsyncText [Async]',
-        ]);
+        expect(ReactNoop).toHaveYielded(['Promise resolved [Async]']);
+        expect(ReactNoop).toFlushAndYield(['AsyncText [Async]']);
         expect(ReactNoop.getChildrenAsJSX()).toEqual('AsyncSync');
         expect(onRender).toHaveBeenCalledTimes(3);
 

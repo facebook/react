@@ -73,7 +73,7 @@ describe('ReactExpiration', () => {
     ReactNoop.render(<Text text="B" />);
     // The updates should flush in separate batches, since sufficient time
     // passed in between them *and* they occurred in separate events.
-    expect(ReactNoop.flush()).toEqual([
+    expect(ReactNoop).toFlushAndYield([
       'A [render]',
       'A [commit]',
       'B [render]',
@@ -88,13 +88,13 @@ describe('ReactExpiration', () => {
     // haven't entered an idle callback, the scheduler must assume that we're
     // inside the same event.
     ReactNoop.advanceTime(2000);
-    expect(ReactNoop.clearYields()).toEqual(null);
+    expect(ReactNoop).toHaveYielded([]);
     expect(ReactNoop.getChildren()).toEqual([span('B')]);
     // Schedule another update.
     ReactNoop.render(<Text text="B" />);
     // The updates should flush in the same batch, since as far as the scheduler
     // knows, they may have occurred inside the same event.
-    expect(ReactNoop.flush()).toEqual(['B [render]', 'B [commit]']);
+    expect(ReactNoop).toFlushAndYield(['B [render]', 'B [commit]']);
   });
 
   it(
@@ -127,7 +127,7 @@ describe('ReactExpiration', () => {
       ReactNoop.render(<Text text="B" />);
       // The updates should flush in separate batches, since sufficient time
       // passed in between them *and* they occurred in separate events.
-      expect(ReactNoop.flush()).toEqual([
+      expect(ReactNoop).toFlushAndYield([
         'A [render]',
         'A [commit]',
         'B [render]',
@@ -142,7 +142,7 @@ describe('ReactExpiration', () => {
       // haven't entered an idle callback, the scheduler must assume that we're
       // inside the same event.
       ReactNoop.advanceTime(2000);
-      expect(ReactNoop.clearYields()).toEqual(null);
+      expect(ReactNoop).toHaveYielded([]);
       expect(ReactNoop.getChildren()).toEqual([span('B')]);
 
       // Perform some synchronous work. Again, the scheduler must assume we're
@@ -156,7 +156,7 @@ describe('ReactExpiration', () => {
       ReactNoop.render(<Text text="B" />);
       // The updates should flush in the same batch, since as far as the scheduler
       // knows, they may have occurred inside the same event.
-      expect(ReactNoop.flush()).toEqual(['B [render]', 'B [commit]']);
+      expect(ReactNoop).toFlushAndYield(['B [render]', 'B [commit]']);
     },
   );
 
@@ -191,7 +191,7 @@ describe('ReactExpiration', () => {
 
     // Initial mount
     ReactNoop.render(<App />);
-    expect(ReactNoop.flush()).toEqual([
+    expect(ReactNoop).toFlushAndYield([
       'initial [A] [render]',
       'initial [B] [render]',
       'initial [C] [render]',
@@ -204,12 +204,18 @@ describe('ReactExpiration', () => {
 
     // Partial update
     subscribers.forEach(s => s.setState({text: '1'}));
-    ReactNoop.flushThrough(['1 [A] [render]', '1 [B] [render]']);
+    expect(ReactNoop).toFlushAndYieldThrough([
+      '1 [A] [render]',
+      '1 [B] [render]',
+    ]);
 
     // Before the update can finish, update again. Even though no time has
     // advanced, this update should be given a different expiration time than
     // the currently rendering one. So, C and D should render with 1, not 2.
     subscribers.forEach(s => s.setState({text: '2'}));
-    ReactNoop.flushThrough(['1 [C] [render]', '1 [D] [render]']);
+    expect(ReactNoop).toFlushAndYieldThrough([
+      '1 [C] [render]',
+      '1 [D] [render]',
+    ]);
   });
 });

@@ -66,12 +66,12 @@ describe('ReactPersistent', () => {
     }
 
     render(<Foo text="Hello" />);
-    ReactNoopPersistent.flush();
+    expect(ReactNoopPersistent).toFlushWithoutYielding();
     const originalChildren = getChildren();
     expect(originalChildren).toEqual([div(span())]);
 
     render(<Foo text="World" />);
-    ReactNoopPersistent.flush();
+    expect(ReactNoopPersistent).toFlushWithoutYielding();
     const newChildren = getChildren();
     expect(newChildren).toEqual([div(span(), span())]);
 
@@ -100,12 +100,12 @@ describe('ReactPersistent', () => {
     }
 
     render(<Foo text="Hello" />);
-    ReactNoopPersistent.flush();
+    expect(ReactNoopPersistent).toFlushWithoutYielding();
     const originalChildren = getChildren();
     expect(originalChildren).toEqual([div(span('Hello'))]);
 
     render(<Foo text="World" />);
-    ReactNoopPersistent.flush();
+    expect(ReactNoopPersistent).toFlushWithoutYielding();
     const newChildren = getChildren();
     expect(newChildren).toEqual([div(span('Hello'), span('World'))]);
 
@@ -126,12 +126,12 @@ describe('ReactPersistent', () => {
     }
 
     render(<Foo text="Hello" />);
-    ReactNoopPersistent.flush();
+    expect(ReactNoopPersistent).toFlushWithoutYielding();
     const originalChildren = getChildren();
     expect(originalChildren).toEqual([div('Hello', span())]);
 
     render(<Foo text="World" />);
-    ReactNoopPersistent.flush();
+    expect(ReactNoopPersistent).toFlushWithoutYielding();
     const newChildren = getChildren();
     expect(newChildren).toEqual([div('World', span())]);
 
@@ -167,7 +167,7 @@ describe('ReactPersistent', () => {
     const portalContainer = {rootID: 'persistent-portal-test', children: []};
     const emptyPortalChildSet = portalContainer.children;
     render(<Parent>{createPortal(<Child />, portalContainer, null)}</Parent>);
-    ReactNoopPersistent.flush();
+    expect(ReactNoopPersistent).toFlushWithoutYielding();
 
     expect(emptyPortalChildSet).toEqual([]);
 
@@ -181,7 +181,7 @@ describe('ReactPersistent', () => {
         {createPortal(<Child>Hello {'World'}</Child>, portalContainer, null)}
       </Parent>,
     );
-    ReactNoopPersistent.flush();
+    expect(ReactNoopPersistent).toFlushWithoutYielding();
 
     const newChildren = getChildren();
     expect(newChildren).toEqual([div()]);
@@ -198,7 +198,7 @@ describe('ReactPersistent', () => {
 
     // Deleting the Portal, should clear its children
     render(<Parent />);
-    ReactNoopPersistent.flush();
+    expect(ReactNoopPersistent).toFlushWithoutYielding();
 
     const clearedPortalChildren = portalContainer.children;
     expect(clearedPortalChildren).toEqual([]);

@@ -1018,7 +1018,7 @@ describe('ReactTestRenderer', () => {
       </Context.Provider>
     );
     ReactNoop.render(<App />);
-    ReactNoop.flush();
+    expect(ReactNoop).toFlushWithoutYielding();
     ReactTestRenderer.create(<App />);
   });
 

@@ -40,7 +40,7 @@ describe('forwardRef', () => {
     ));
 
     ReactNoop.render(<RefForwardingComponent value={123} />);
-    expect(ReactNoop.flush()).toEqual([123]);
+    expect(ReactNoop).toFlushAndYield([123]);
   });
 
   it('should forward a ref for a single child', () => {
@@ -62,7 +62,7 @@ describe('forwardRef', () => {
     const ref = React.createRef();
 
     ReactNoop.render(<RefForwardingComponent ref={ref} value={123} />);
-    expect(ReactNoop.flush()).toEqual([123]);
+    expect(ReactNoop).toFlushAndYield([123]);
     expect(ref.current instanceof Child).toBe(true);
   });
 
@@ -91,7 +91,7 @@ describe('forwardRef', () => {
         <div />
       </div>,
     );
-    expect(ReactNoop.flush()).toEqual([123]);
+    expect(ReactNoop).toFlushAndYield([123]);
     expect(ref.current instanceof Child).toBe(true);
   });
 
@@ -123,11 +123,11 @@ describe('forwardRef', () => {
     };
 
     ReactNoop.render(<RefForwardingComponent ref={setRef} value={123} />);
-    expect(ReactNoop.flush()).toEqual([123]);
+    expect(ReactNoop).toFlushAndYield([123]);
     expect(ref instanceof Child).toBe(true);
     expect(setRefCount).toBe(1);
     ReactNoop.render(<RefForwardingComponent ref={setRef} value={456} />);
-    expect(ReactNoop.flush()).toEqual([456]);
+    expect(ReactNoop).toFlushAndYield([456]);
     expect(ref instanceof Child).toBe(true);
     expect(setRefCount).toBe(1);
   });
@@ -172,7 +172,7 @@ describe('forwardRef', () => {
         <RefForwardingComponent ref={ref} />
       </ErrorBoundary>,
     );
-    expect(ReactNoop.flush()).toEqual([
+    expect(ReactNoop).toFlushAndYield([
       'ErrorBoundary.render: try',
       'Wrapper',
       'BadRender throw',
@@ -216,9 +216,9 @@ describe('forwardRef', () => {
     }
 
     ReactNoop.render(<App />);
-    expect(ReactNoop.flush()).toEqual(['App', 'Forward', 'Middle', 'Inner']);
+    expect(ReactNoop).toFlushAndYield(['App', 'Forward', 'Middle', 'Inner']);
 
     inst.setState({});
-    expect(ReactNoop.flush()).toEqual(['Inner']);
+    expect(ReactNoop).toFlushAndYield(['Inner']);
   });
 });

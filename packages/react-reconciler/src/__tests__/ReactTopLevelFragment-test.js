@@ -27,7 +27,7 @@ describe('ReactTopLevelFragment', function() {
       return [<div key="a">Hello</div>, <div key="b">World</div>];
     }
     ReactNoop.render(<Fragment />);
-    ReactNoop.flush();
+    expect(ReactNoop).toFlushWithoutYielding();
   });
 
   it('should preserve state when switching from a single child', function() {
@@ -48,14 +48,14 @@ describe('ReactTopLevelFragment', function() {
       );
     }
     ReactNoop.render(<Fragment />);
-    ReactNoop.flush();
+    expect(ReactNoop).toFlushWithoutYielding();
 
     const instanceA = instance;
 
     expect(instanceA).not.toBe(null);
 
     ReactNoop.render(<Fragment condition={true} />);
-    ReactNoop.flush();
+    expect(ReactNoop).toFlushWithoutYielding();
 
     const instanceB = instance;
 
@@ -80,14 +80,14 @@ describe('ReactTopLevelFragment', function() {
       );
     }
     ReactNoop.render(<Fragment />);
-    ReactNoop.flush();
+    expect(ReactNoop).toFlushWithoutYielding();
 
     const instanceA = instance;
 
     expect(instanceA).not.toBe(null);
 
     ReactNoop.render(<Fragment condition={true} />);
-    ReactNoop.flush();
+    expect(ReactNoop).toFlushWithoutYielding();
 
     const instanceB = instance;
 
@@ -110,21 +110,21 @@ describe('ReactTopLevelFragment', function() {
         : [<div key="b">Hello</div>, <Stateful key="a" />];
     }
     ReactNoop.render(<Fragment />);
-    ReactNoop.flush();
+    expect(ReactNoop).toFlushWithoutYielding();
 
     const instanceA = instance;
 
     expect(instanceA).not.toBe(null);
 
     ReactNoop.render(<Fragment condition={true} />);
-    ReactNoop.flush();
+    expect(ReactNoop).toFlushWithoutYielding();
 
     const instanceB = instance;
 
     expect(instanceB).toBe(instanceA);
 
     ReactNoop.render(<Fragment condition={false} />);
-    ReactNoop.flush();
+    expect(ReactNoop).toFlushWithoutYielding();
 
     const instanceC = instance;
 
@@ -147,14 +147,14 @@ describe('ReactTopLevelFragment', function() {
         : [[<Stateful key="a" />, <div key="b">World</div>], <div key="c" />];
     }
     ReactNoop.render(<Fragment />);
-    ReactNoop.flush();
+    expect(ReactNoop).toFlushWithoutYielding();
 
     const instanceA = instance;
 
     expect(instanceA).not.toBe(null);
 
     ReactNoop.render(<Fragment condition={true} />);
-    ReactNoop.flush();
+    expect(ReactNoop).toFlushWithoutYielding();
 
     const instanceB = instance;
 
