@@ -182,22 +182,25 @@ let currentHookNameInDev: ?HookType = null;
 // The list stores the order of hooks used during the initial render (mount).
 // Subsequent renders (updates) reference this list.
 let hookTypesDev: Array<HookType> | null = null;
+let hookTypesUpdateIndexDev: number = -1;
 
-// In DEV, this index is used to compare the order of hooks between update and mount.
-// The index is null during mount (to distinguish between mount and update).
-let hookTypesUpdateIndexDev: number | null = null;
-
-function checkHookTypesDev() {
+function mountHookTypesDev() {
   if (__DEV__) {
     const hookName = ((currentHookNameInDev: any): HookType);
 
-    if (hookTypesUpdateIndexDev === null) {
-      if (hookTypesDev === null) {
-        hookTypesDev = [hookName];
-      } else {
-        hookTypesDev.push(hookName);
-      }
-    } else if (hookTypesDev !== null) {
+    if (hookTypesDev === null) {
+      hookTypesDev = [hookName];
+    } else {
+      hookTypesDev.push(hookName);
+    }
+  }
+}
+
+function updateHookTypesDev() {
+  if (__DEV__) {
+    const hookName = ((currentHookNameInDev: any): HookType);
+
+    if (hookTypesDev !== null) {
       hookTypesUpdateIndexDev++;
       if (hookTypesDev[hookTypesUpdateIndexDev] !== hookName) {
         warnOnHookMismatchInDev(hookName);
@@ -323,7 +326,7 @@ export function renderWithHooks(
       current !== null
         ? ((current._debugHookTypes: any): Array<HookType>)
         : null;
-    hookTypesUpdateIndexDev = hookTypesDev === null ? null : -1;
+    hookTypesUpdateIndexDev = -1;
   }
 
   // The following should have already been reset
@@ -342,16 +345,22 @@ export function renderWithHooks(
   // Currently we will identify the update render as a mount because nextCurrentHook === null.
   // This is tricky because it's valid for certain types of components (e.g. React.lazy)
 
-  // This check is only accurate if at least one stateful hook is used.
+  // Using nextCurrentHook to differentiate between mount/update only works if at least one stateful hook is used.
   // Non-stateful hooks (e.g. context) don't get added to memoizedState,
   // so nextCurrentHook would be null during updates and mounts.
-  // We could use hookTypesDev to check this more reliably in DEV mode,
-  // but that might cause a potentially significant difference in behavior between DEV and prod.
   if (__DEV__) {
-    ReactCurrentDispatcher.current =
-      nextCurrentHook === null
-        ? HooksDispatcherOnMountInDEV
-        : HooksDispatcherOnUpdateInDEV;
+    if (nextCurrentHook !== null) {
+      ReactCurrentDispatcher.current = HooksDispatcherOnUpdateInDEV;
+    } else if (hookTypesDev !== null) {
+      // This dispatcher handles an edge case where a component is updating,
+      // but no stateful hooks have been used.
+      // We want to match the production code behavior (which will use HooksDispatcherOnMount),
+      // but with the extra DEV validation to ensure hooks ordering hasn't changed.
+      // This dispatcher does that.
+      ReactCurrentDispatcher.current = HooksDispatcherOnMountWithHookTypesInDEV;
+    } else {
+      ReactCurrentDispatcher.current = HooksDispatcherOnMountInDEV;
+    }
   } else {
     ReactCurrentDispatcher.current =
       nextCurrentHook === null
@@ -376,7 +385,7 @@ export function renderWithHooks(
 
       if (__DEV__) {
         // Also validate hook order for cascading updates.
-        hookTypesUpdateIndexDev = hookTypesDev === null ? null : -1;
+        hookTypesUpdateIndexDev = -1;
       }
 
       ReactCurrentDispatcher.current = __DEV__
@@ -422,7 +431,7 @@ export function renderWithHooks(
   if (__DEV__) {
     currentHookNameInDev = null;
     hookTypesDev = null;
-    hookTypesUpdateIndexDev = null;
+    hookTypesUpdateIndexDev = -1;
   }
 
   remainingExpirationTime = NoWork;
@@ -474,7 +483,7 @@ export function resetHooks(): void {
 
   if (__DEV__) {
     hookTypesDev = null;
-    hookTypesUpdateIndexDev = null;
+    hookTypesUpdateIndexDev = -1;
 
     currentHookNameInDev = null;
   }
@@ -1203,6 +1212,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
 };
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
+let HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher | null = null;
 let HooksDispatcherOnUpdateInDEV: Dispatcher | null = null;
 let InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher | null = null;
 let InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher | null = null;
@@ -1238,7 +1248,7 @@ if (__DEV__) {
 
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
-      checkHookTypesDev();
+      mountHookTypesDev();
       return mountCallback(callback, deps);
     },
     useContext<T>(
@@ -1246,7 +1256,7 @@ if (__DEV__) {
       observedBits: void | number | boolean,
     ): T {
       currentHookNameInDev = 'useContext';
-      checkHookTypesDev();
+      mountHookTypesDev();
       return readContext(context, observedBits);
     },
     useEffect(
@@ -1254,7 +1264,7 @@ if (__DEV__) {
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useEffect';
-      checkHookTypesDev();
+      mountHookTypesDev();
       return mountEffect(create, deps);
     },
     useImperativeHandle<T>(
@@ -1263,7 +1273,7 @@ if (__DEV__) {
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useImperativeHandle';
-      checkHookTypesDev();
+      mountHookTypesDev();
       return mountImperativeHandle(ref, create, deps);
     },
     useLayoutEffect(
@@ -1271,12 +1281,12 @@ if (__DEV__) {
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
-      checkHookTypesDev();
+      mountHookTypesDev();
       return mountLayoutEffect(create, deps);
     },
     useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useMemo';
-      checkHookTypesDev();
+      mountHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
       try {
@@ -1291,7 +1301,7 @@ if (__DEV__) {
       init?: I => S,
     ): [S, Dispatch<A>] {
       currentHookNameInDev = 'useReducer';
-      checkHookTypesDev();
+      mountHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
       try {
@@ -1302,14 +1312,14 @@ if (__DEV__) {
     },
     useRef<T>(initialValue: T): {current: T} {
       currentHookNameInDev = 'useRef';
-      checkHookTypesDev();
+      mountHookTypesDev();
       return mountRef(initialValue);
     },
     useState<S>(
       initialState: (() => S) | S,
     ): [S, Dispatch<BasicStateAction<S>>] {
       currentHookNameInDev = 'useState';
-      checkHookTypesDev();
+      mountHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
       try {
@@ -1320,7 +1330,104 @@ if (__DEV__) {
     },
     useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
       currentHookNameInDev = 'useDebugValue';
-      checkHookTypesDev();
+      mountHookTypesDev();
+      return mountDebugValue(value, formatterFn);
+    },
+  };
+
+  HooksDispatcherOnMountWithHookTypesInDEV = {
+    readContext<T>(
+      context: ReactContext<T>,
+      observedBits: void | number | boolean,
+    ): T {
+      return readContext(context, observedBits);
+    },
+
+    useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
+      currentHookNameInDev = 'useCallback';
+      updateHookTypesDev();
+      return mountCallback(callback, deps);
+    },
+    useContext<T>(
+      context: ReactContext<T>,
+      observedBits: void | number | boolean,
+    ): T {
+      currentHookNameInDev = 'useContext';
+      updateHookTypesDev();
+      return readContext(context, observedBits);
+    },
+    useEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useEffect';
+      updateHookTypesDev();
+      return mountEffect(create, deps);
+    },
+    useImperativeHandle<T>(
+      ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
+      create: () => T,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useImperativeHandle';
+      updateHookTypesDev();
+      return mountImperativeHandle(ref, create, deps);
+    },
+    useLayoutEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useLayoutEffect';
+      updateHookTypesDev();
+      return mountLayoutEffect(create, deps);
+    },
+    useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
+      currentHookNameInDev = 'useMemo';
+      updateHookTypesDev();
+      const prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
+      try {
+        return mountMemo(create, deps);
+      } finally {
+        ReactCurrentDispatcher.current = prevDispatcher;
+      }
+    },
+    useReducer<S, I, A>(
+      reducer: (S, A) => S,
+      initialArg: I,
+      init?: I => S,
+    ): [S, Dispatch<A>] {
+      currentHookNameInDev = 'useReducer';
+      updateHookTypesDev();
+      const prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
+      try {
+        return mountReducer(reducer, initialArg, init);
+      } finally {
+        ReactCurrentDispatcher.current = prevDispatcher;
+      }
+    },
+    useRef<T>(initialValue: T): {current: T} {
+      currentHookNameInDev = 'useRef';
+      updateHookTypesDev();
+      return mountRef(initialValue);
+    },
+    useState<S>(
+      initialState: (() => S) | S,
+    ): [S, Dispatch<BasicStateAction<S>>] {
+      currentHookNameInDev = 'useState';
+      updateHookTypesDev();
+      const prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
+      try {
+        return mountState(initialState);
+      } finally {
+        ReactCurrentDispatcher.current = prevDispatcher;
+      }
+    },
+    useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
+      currentHookNameInDev = 'useDebugValue';
+      updateHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
   };
@@ -1335,7 +1442,7 @@ if (__DEV__) {
 
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
-      checkHookTypesDev();
+      updateHookTypesDev();
       return updateCallback(callback, deps);
     },
     useContext<T>(
@@ -1343,7 +1450,7 @@ if (__DEV__) {
       observedBits: void | number | boolean,
     ): T {
       currentHookNameInDev = 'useContext';
-      checkHookTypesDev();
+      updateHookTypesDev();
       return readContext(context, observedBits);
     },
     useEffect(
@@ -1351,7 +1458,7 @@ if (__DEV__) {
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useEffect';
-      checkHookTypesDev();
+      updateHookTypesDev();
       return updateEffect(create, deps);
     },
     useImperativeHandle<T>(
@@ -1360,7 +1467,7 @@ if (__DEV__) {
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useImperativeHandle';
-      checkHookTypesDev();
+      updateHookTypesDev();
       return updateImperativeHandle(ref, create, deps);
     },
     useLayoutEffect(
@@ -1368,12 +1475,12 @@ if (__DEV__) {
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
-      checkHookTypesDev();
+      updateHookTypesDev();
       return updateLayoutEffect(create, deps);
     },
     useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useMemo';
-      checkHookTypesDev();
+      updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
@@ -1388,7 +1495,7 @@ if (__DEV__) {
       init?: I => S,
     ): [S, Dispatch<A>] {
       currentHookNameInDev = 'useReducer';
-      checkHookTypesDev();
+      updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
@@ -1399,14 +1506,14 @@ if (__DEV__) {
     },
     useRef<T>(initialValue: T): {current: T} {
       currentHookNameInDev = 'useRef';
-      checkHookTypesDev();
+      updateHookTypesDev();
       return updateRef(initialValue);
     },
     useState<S>(
       initialState: (() => S) | S,
     ): [S, Dispatch<BasicStateAction<S>>] {
       currentHookNameInDev = 'useState';
-      checkHookTypesDev();
+      updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
@@ -1417,7 +1524,7 @@ if (__DEV__) {
     },
     useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
       currentHookNameInDev = 'useDebugValue';
-      checkHookTypesDev();
+      updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
   };
@@ -1434,7 +1541,7 @@ if (__DEV__) {
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
       warnInvalidHookAccess();
-      checkHookTypesDev();
+      mountHookTypesDev();
       return mountCallback(callback, deps);
     },
     useContext<T>(
@@ -1443,7 +1550,7 @@ if (__DEV__) {
     ): T {
       currentHookNameInDev = 'useContext';
       warnInvalidHookAccess();
-      checkHookTypesDev();
+      mountHookTypesDev();
       return readContext(context, observedBits);
     },
     useEffect(
@@ -1452,7 +1559,7 @@ if (__DEV__) {
     ): void {
       currentHookNameInDev = 'useEffect';
       warnInvalidHookAccess();
-      checkHookTypesDev();
+      mountHookTypesDev();
       return mountEffect(create, deps);
     },
     useImperativeHandle<T>(
@@ -1462,7 +1569,7 @@ if (__DEV__) {
     ): void {
       currentHookNameInDev = 'useImperativeHandle';
       warnInvalidHookAccess();
-      checkHookTypesDev();
+      mountHookTypesDev();
       return mountImperativeHandle(ref, create, deps);
     },
     useLayoutEffect(
@@ -1471,13 +1578,13 @@ if (__DEV__) {
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
       warnInvalidHookAccess();
-      checkHookTypesDev();
+      mountHookTypesDev();
       return mountLayoutEffect(create, deps);
     },
     useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useMemo';
       warnInvalidHookAccess();
-      checkHookTypesDev();
+      mountHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
       try {
@@ -1493,7 +1600,7 @@ if (__DEV__) {
     ): [S, Dispatch<A>] {
       currentHookNameInDev = 'useReducer';
       warnInvalidHookAccess();
-      checkHookTypesDev();
+      mountHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
       try {
@@ -1505,7 +1612,7 @@ if (__DEV__) {
     useRef<T>(initialValue: T): {current: T} {
       currentHookNameInDev = 'useRef';
       warnInvalidHookAccess();
-      checkHookTypesDev();
+      mountHookTypesDev();
       return mountRef(initialValue);
     },
     useState<S>(
@@ -1513,7 +1620,7 @@ if (__DEV__) {
     ): [S, Dispatch<BasicStateAction<S>>] {
       currentHookNameInDev = 'useState';
       warnInvalidHookAccess();
-      checkHookTypesDev();
+      mountHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
       try {
@@ -1525,7 +1632,7 @@ if (__DEV__) {
     useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
       currentHookNameInDev = 'useDebugValue';
       warnInvalidHookAccess();
-      checkHookTypesDev();
+      mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
   };
@@ -1542,7 +1649,7 @@ if (__DEV__) {
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
       warnInvalidHookAccess();
-      checkHookTypesDev();
+      updateHookTypesDev();
       return updateCallback(callback, deps);
     },
     useContext<T>(
@@ -1551,7 +1658,7 @@ if (__DEV__) {
     ): T {
       currentHookNameInDev = 'useContext';
       warnInvalidHookAccess();
-      checkHookTypesDev();
+      updateHookTypesDev();
       return readContext(context, observedBits);
     },
     useEffect(
@@ -1560,7 +1667,7 @@ if (__DEV__) {
     ): void {
       currentHookNameInDev = 'useEffect';
       warnInvalidHookAccess();
-      checkHookTypesDev();
+      updateHookTypesDev();
       return updateEffect(create, deps);
     },
     useImperativeHandle<T>(
@@ -1570,7 +1677,7 @@ if (__DEV__) {
     ): void {
       currentHookNameInDev = 'useImperativeHandle';
       warnInvalidHookAccess();
-      checkHookTypesDev();
+      updateHookTypesDev();
       return updateImperativeHandle(ref, create, deps);
     },
     useLayoutEffect(
@@ -1579,13 +1686,13 @@ if (__DEV__) {
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
       warnInvalidHookAccess();
-      checkHookTypesDev();
+      updateHookTypesDev();
       return updateLayoutEffect(create, deps);
     },
     useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useMemo';
       warnInvalidHookAccess();
-      checkHookTypesDev();
+      updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
@@ -1601,7 +1708,7 @@ if (__DEV__) {
     ): [S, Dispatch<A>] {
       currentHookNameInDev = 'useReducer';
       warnInvalidHookAccess();
-      checkHookTypesDev();
+      updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
@@ -1613,7 +1720,7 @@ if (__DEV__) {
     useRef<T>(initialValue: T): {current: T} {
       currentHookNameInDev = 'useRef';
       warnInvalidHookAccess();
-      checkHookTypesDev();
+      updateHookTypesDev();
       return updateRef(initialValue);
     },
     useState<S>(
@@ -1621,7 +1728,7 @@ if (__DEV__) {
     ): [S, Dispatch<BasicStateAction<S>>] {
       currentHookNameInDev = 'useState';
       warnInvalidHookAccess();
-      checkHookTypesDev();
+      updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
@@ -1633,7 +1740,7 @@ if (__DEV__) {
     useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
       currentHookNameInDev = 'useDebugValue';
       warnInvalidHookAccess();
-      checkHookTypesDev();
+      updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
   };
