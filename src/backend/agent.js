@@ -177,17 +177,17 @@ export default class Agent extends EventEmitter {
   };
 
   startInspectingDOM = () => {
-    window.addEventListener('click', this._onClick);
-    window.addEventListener('mousedown', this._onMouseDown);
-    window.addEventListener('mouseover', this._onMouseOver);
+    window.addEventListener('click', this._onClick, true);
+    window.addEventListener('mousedown', this._onMouseDown, true);
+    window.addEventListener('mouseover', this._onMouseOver, true);
   };
 
   stopInspectingDOM = () => {
     hideOverlay();
 
-    window.removeEventListener('click', this._onClick);
-    window.removeEventListener('mousedown', this._onMouseDown);
-    window.removeEventListener('mouseover', this._onMouseOver);
+    window.removeEventListener('click', this._onClick, true);
+    window.removeEventListener('mousedown', this._onMouseDown, true);
+    window.removeEventListener('mouseover', this._onMouseOver, true);
   };
 
   viewElementSource = ({ id, rendererID }: InspectSelectParams) => {
