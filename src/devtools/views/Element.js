@@ -1,6 +1,6 @@
 // @flow
 
-import React, { Fragment, useCallback, useContext, useMemo } from 'react';
+import React, { Fragment, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import { ElementTypeClass, ElementTypeFunction } from 'src/devtools/types';
 import { createRegExp } from './utils';
 import { TreeContext } from './TreeContext';
@@ -32,6 +32,16 @@ export default function ElementView({ index, style }: Props) {
       selectOwner(id);
     }
   }, [id, selectOwner]);
+
+  const ref = useRef();
+
+  useEffect(() => {
+    if (isSelected) {
+      if (ref.current !== null) {
+        ref.current.scrollIntoView();
+      }
+    }
+  }, [isSelected]);
 
   // TODO Add click and key handlers for toggling element open/close state.
 
@@ -70,7 +80,7 @@ export default function ElementView({ index, style }: Props) {
         paddingLeft: `${(depth - baseDepth) * 0.75 + 0.25}rem`,
       }}
     >
-      <span className={styles.Component}>
+      <span className={styles.Component} ref={ref}>
         <DisplayName displayName={displayName} id={((id: any): number)} />
         {key && (
           <Fragment>
