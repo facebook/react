@@ -14,6 +14,7 @@ let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 let React = require('react');
 let useContext;
 let ReactNoop;
+let Scheduler;
 let gen;
 
 describe('ReactNewContext', () => {
@@ -24,6 +25,7 @@ describe('ReactNewContext', () => {
     React = require('react');
     useContext = React.useContext;
     ReactNoop = require('react-noop-renderer');
+    Scheduler = require('scheduler');
     gen = require('random-seed');
   });
 
@@ -1769,10 +1771,10 @@ describe('ReactNewContext', () => {
         actions.forEach(action => {
           switch (action.type) {
             case FLUSH_ALL:
-              ReactNoop.unstable_flushWithoutYielding();
+              Scheduler.unstable_flushWithoutYielding();
               break;
             case FLUSH:
-              ReactNoop.unstable_flushNumberOfYields(action.unitsOfWork);
+              Scheduler.unstable_flushNumberOfYields(action.unitsOfWork);
               break;
             case UPDATE:
               finalExpectedValues = {
@@ -1787,7 +1789,7 @@ describe('ReactNewContext', () => {
           assertConsistentTree();
         });
 
-        ReactNoop.unstable_flushWithoutYielding();
+        Scheduler.unstable_flushWithoutYielding();
         assertConsistentTree(finalExpectedValues);
       }
 

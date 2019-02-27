@@ -2,6 +2,7 @@ let React;
 let ReactFeatureFlags;
 let Fragment;
 let ReactNoop;
+let Scheduler;
 let ReactCache;
 let Suspense;
 let StrictMode;
@@ -22,6 +23,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     React = require('react');
     Fragment = React.Fragment;
     ReactNoop = require('react-noop-renderer');
+    Scheduler = require('scheduler');
     ReactCache = require('react-cache');
     Suspense = React.Suspense;
     StrictMode = React.StrictMode;
@@ -449,7 +451,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await advanceTimers(10000);
     // No additional rendering work is required, since we already prepared
     // the placeholder.
-    expect(ReactNoop.flushExpired()).toEqual([]);
+    expect(Scheduler).toHaveYielded([]);
     // Should have committed the placeholder.
     expect(ReactNoop.getChildren()).toEqual([span('Loading...'), span('Sync')]);
 
@@ -636,7 +638,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
     expect(ReactNoop.flushNextYield()).toEqual(['Suspend! [Async]']);
     await advanceTimers(1500);
-    expect(ReactNoop.expire(1500)).toEqual([]);
+    expect(Scheduler).toHaveYielded([]);
     // Before we have a chance to flush, the promise resolves.
     await advanceTimers(2000);
     expect(ReactNoop).toHaveYielded(['Promise resolved [Async]']);
@@ -659,7 +661,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         <AsyncText text="B" ms={100} />
       </Suspense>,
     );
-    expect(ReactNoop.expire(10000)).toEqual([
+    Scheduler.advanceTime(10000);
+    expect(Scheduler).toHaveYielded([
       'Suspend! [A]',
       'Suspend! [B]',
       'Loading...',
@@ -780,17 +783,17 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     jest.advanceTimersByTime(1000);
     ReactNoop.render(<Foo text="goodbye" />);
 
-    ReactNoop.advanceTime(10000);
+    Scheduler.advanceTime(10000);
     jest.advanceTimersByTime(10000);
 
-    expect(ReactNoop).toFlushAndYield([
+    expect(ReactNoop).toHaveYielded([
       'Suspend! [goodbye]',
       'Loading...',
       'Commit: goodbye',
     ]);
     expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
 
-    ReactNoop.advanceTime(20000);
+    Scheduler.advanceTime(20000);
     await advanceTimers(20000);
     expect(ReactNoop).toHaveYielded(['Promise resolved [goodbye]']);
     expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);

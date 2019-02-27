@@ -361,37 +361,4 @@ describe('ReactIncrementalScheduling', () => {
       'componentDidUpdate: 2',
     ]);
   });
-
-  it('updates do not schedule a new callback if already inside a callback', () => {
-    class Foo extends React.Component {
-      state = {foo: 'foo'};
-      UNSAFE_componentWillReceiveProps() {
-        ReactNoop.yield(
-          'has callback before setState: ' + ReactNoop.hasScheduledCallback(),
-        );
-        this.setState({foo: 'baz'});
-        ReactNoop.yield(
-          'has callback after setState: ' + ReactNoop.hasScheduledCallback(),
-        );
-      }
-      render() {
-        return null;
-      }
-    }
-
-    ReactNoop.render(<Foo step={1} />);
-    expect(() => {
-      expect(ReactNoop).toFlushWithoutYielding();
-    }).toWarnDev(
-      'componentWillReceiveProps: Please update the following components ' +
-        'to use static getDerivedStateFromProps instead: Foo',
-      {withoutStack: true},
-    );
-
-    ReactNoop.render(<Foo step={2} />);
-    expect(ReactNoop).toFlushAndYield([
-      'has callback before setState: false',
-      'has callback after setState: false',
-    ]);
-  });
 });
