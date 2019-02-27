@@ -13,33 +13,8 @@ let React;
 let ReactFeatureFlags;
 let ReactDOM;
 let SchedulerTracing;
+let Scheduler;
 let ReactCache;
-
-function initEnvForAsyncTesting() {
-  // Boilerplate copied from ReactDOMRoot-test
-  // TODO pull this into helper method, reduce repetition.
-  // TODO remove `requestAnimationFrame` when upgrading to Jest 24 with Lolex
-  global.requestAnimationFrame = function(cb) {
-    return setTimeout(() => {
-      cb(Date.now());
-    });
-  };
-  const originalAddEventListener = global.addEventListener;
-  let postMessageCallback;
-  global.addEventListener = function(eventName, callback, useCapture) {
-    if (eventName === 'message') {
-      postMessageCallback = callback;
-    } else {
-      originalAddEventListener(eventName, callback, useCapture);
-    }
-  };
-  global.postMessage = function(messageKey, targetOrigin) {
-    const postMessageEvent = {source: window, data: messageKey};
-    if (postMessageCallback) {
-      postMessageCallback(postMessageEvent);
-    }
-  };
-}
 
 function loadModules() {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
@@ -51,6 +26,7 @@ function loadModules() {
   React = require('react');
   SchedulerTracing = require('scheduler/tracing');
   ReactDOM = require('react-dom');
+  Scheduler = require('scheduler');
   ReactCache = require('react-cache');
 }
 
@@ -61,7 +37,6 @@ describe('ProfilerDOM', () => {
   let onInteractionTraced;
 
   beforeEach(() => {
-    initEnvForAsyncTesting();
     loadModules();
 
     onInteractionScheduledWorkCompleted = jest.fn();
@@ -114,7 +89,7 @@ describe('ProfilerDOM', () => {
       batch = root.createBatch();
       batch.render(
         <React.Suspense maxDuration={100} fallback={<Text text="Loading..." />}>
-          <AsyncText text="Text" ms={200} />
+          <AsyncText text="Text" ms={2000} />
         </React.Suspense>,
       );
       batch.then(
@@ -125,9 +100,12 @@ describe('ProfilerDOM', () => {
           expect(onInteractionTraced).toHaveBeenCalledTimes(1);
           expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
 
+          jest.runAllTimers();
+
           resourcePromise.then(
             SchedulerTracing.unstable_wrap(() => {
               jest.runAllTimers();
+              Scheduler.flushAll();
 
               expect(element.textContent).toBe('Text');
               expect(onInteractionTraced).toHaveBeenCalledTimes(1);
@@ -154,6 +132,8 @@ describe('ProfilerDOM', () => {
           );
         }),
       );
+
+      Scheduler.flushAll();
     });
 
     expect(onInteractionTraced).toHaveBeenCalledTimes(1);
@@ -161,7 +141,7 @@ describe('ProfilerDOM', () => {
       interaction,
     );
     expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-
-    jest.runAllTimers();
+    Scheduler.flushAll();
+    jest.advanceTimersByTime(500);
   });
 });
