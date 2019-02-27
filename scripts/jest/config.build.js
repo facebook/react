@@ -31,12 +31,20 @@ moduleNameMapper[
 
 // Map packages to bundles
 packages.forEach(name => {
-  // Root entry point
-  moduleNameMapper[`^${name}$`] = `<rootDir>/build/node_modules/${name}`;
-  // Named entry points
-  moduleNameMapper[
-    `^${name}/(.*)$`
-  ] = `<rootDir>/build/node_modules/${name}/$1`;
+  if (name === 'scheduler') {
+    // Scheduler is a special case because we mock it by default, but unmock
+    // for specific modules.
+    moduleNameMapper['^scheduler$'] = `<rootDir>/build/node_modules/scheduler`;
+    moduleNameMapper['^scheduler/tracing$'] =
+      '<rootDir>/build/node_modules/scheduler/tracing';
+  } else {
+    // Root entry point
+    moduleNameMapper[`^${name}$`] = `<rootDir>/build/node_modules/${name}`;
+    // Named entry points
+    moduleNameMapper[
+      `^${name}/(.*)$`
+    ] = `<rootDir>/build/node_modules/${name}/$1`;
+  }
 });
 
 module.exports = Object.assign({}, baseConfig, {
@@ -46,4 +54,8 @@ module.exports = Object.assign({}, baseConfig, {
   testPathIgnorePatterns: ['/node_modules/', '-test.internal.js$'],
   // Exclude the build output from transforms
   transformIgnorePatterns: ['/node_modules/', '<rootDir>/build/'],
+  setupFiles: [
+    ...baseConfig.setupFiles,
+    require.resolve('./setupTests.build.js'),
+  ],
 });
