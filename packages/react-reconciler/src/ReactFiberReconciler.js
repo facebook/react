@@ -383,9 +383,18 @@ if (__DEV__) {
     }
     if (currentHook !== null) {
       flushPassiveEffects();
+
       const newState = copyWithSet(currentHook.memoizedState, path, value);
       currentHook.memoizedState = newState;
       currentHook.baseState = newState;
+
+      // We aren't actually adding an update to the queue,
+      // because there is no update we can add for useReducer hooks that won't trigger an error.
+      // (There's no appropriate action type for DevTools overrides.)
+      // As a result though, React will see the scheduled update as a noop and bailout.
+      // Shallow cloning props works as a workaround for now to bypass the bailout check.
+      fiber.memoizedProps = {...fiber.memoizedProps};
+
       scheduleWork(fiber, Sync);
     }
   };
