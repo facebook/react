@@ -169,7 +169,11 @@ const forks = Object.freeze({
   },
 
   'scheduler/src/SchedulerHostConfig': (bundleType, entry, dependencies) => {
-    if (entry === 'scheduler/unstable_mock') {
+    if (
+      entry === 'scheduler/unstable_mock' ||
+      entry === 'react-noop-renderer' ||
+      entry === 'react-noop-renderer/persistent'
+    ) {
       return 'scheduler/src/forks/SchedulerHostConfig.mock';
     }
     return 'scheduler/src/forks/SchedulerHostConfig.default';
