@@ -4,10 +4,13 @@
 
 import { createElement } from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
+import DeeplyNestedComponents from './DeeplyNestedComponents';
 import EditableProps from './EditableProps';
 import ElementTypes from './ElementTypes';
 import InspectableElements from './InspectableElements';
 import ToDoList from './ToDoList';
+
+import './styles.css';
 
 const containers = [];
 
@@ -26,6 +29,7 @@ function mountTestApp() {
   mountHelper(InspectableElements);
   mountHelper(ElementTypes);
   mountHelper(EditableProps);
+  mountHelper(DeeplyNestedComponents);
 }
 
 function unmountTestApp() {

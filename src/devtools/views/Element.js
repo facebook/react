@@ -1,6 +1,13 @@
 // @flow
 
-import React, { Fragment, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
+import React, {
+  Fragment,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react';
 import { ElementTypeClass, ElementTypeFunction } from 'src/devtools/types';
 import { createRegExp } from './utils';
 import { TreeContext } from './TreeContext';
@@ -26,6 +33,7 @@ export default function ElementView({ index, style }: Props) {
   const element = getElementAtIndex(index);
 
   const id = element === null ? null : element.id;
+  const isSelected = selectedElementID === id;
 
   const handleDoubleClick = useCallback(() => {
     if (id !== null) {
@@ -33,7 +41,7 @@ export default function ElementView({ index, style }: Props) {
     }
   }, [id, selectOwner]);
 
-  const ref = useRef();
+  const ref = useRef<HTMLSpanElement | null>(null);
 
   useEffect(() => {
     if (isSelected) {
@@ -64,7 +72,6 @@ export default function ElementView({ index, style }: Props) {
 
   const { depth, displayName, key, type } = ((element: any): Element);
 
-  const isSelected = selectedElementID === id;
   const showDollarR =
     isSelected && (type === ElementTypeClass || type === ElementTypeFunction);
 

@@ -1,17 +1,3 @@
-.App {
-  /* GitHub.com frontend fonts */
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial,
-    sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol;
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.Header {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-}
-
 .Input {
   font-size: 1rem;
   padding: 0.25rem;
