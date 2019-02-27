@@ -31,20 +31,12 @@ moduleNameMapper[
 
 // Map packages to bundles
 packages.forEach(name => {
-  if (name === 'scheduler') {
-    // Scheduler is a special case because we mock it by default, but unmock
-    // for specific modules.
-    moduleNameMapper['^scheduler$'] = `<rootDir>/build/node_modules/scheduler`;
-    moduleNameMapper['^scheduler/tracing$'] =
-      '<rootDir>/build/node_modules/scheduler/tracing';
-  } else {
-    // Root entry point
-    moduleNameMapper[`^${name}$`] = `<rootDir>/build/node_modules/${name}`;
-    // Named entry points
-    moduleNameMapper[
-      `^${name}/(.*)$`
-    ] = `<rootDir>/build/node_modules/${name}/$1`;
-  }
+  // Root entry point
+  moduleNameMapper[`^${name}$`] = `<rootDir>/build/node_modules/${name}`;
+  // Named entry points
+  moduleNameMapper[
+    `^${name}\/([^\/]+)$`
+  ] = `<rootDir>/build/node_modules/${name}/$1`;
 });
 
 module.exports = Object.assign({}, baseConfig, {
