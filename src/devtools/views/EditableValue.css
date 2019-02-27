@@ -1,12 +1,16 @@
-.ValueInputLabel {
+.CheckboxLabel {
   flex: 1 1 100%;
   display: flex;
 }
-.ValueInputLabel:focus-within {
+.CheckboxLabel:focus-within {
   background-color: var(--color-button-background-focus);
 }
 
-.ValueInput {
+.Checkbox:focus {
+  outline: none;
+}
+
+.Input {
   flex: 1 1;
   background: none;
   border: 1px solid transparent;
@@ -15,11 +19,11 @@
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-monospace-normal);
 }
-
-.ValueInput:focus {
+.Input:focus {
   background-color: var(--color-button-background-focus);
   outline: none;
 }
+
 .ResetButton {
   flex: 0 0 auto;
   padding: 0 0.5rem;

@@ -88,17 +88,28 @@ export default function EditableValue({
 
   return (
     <Fragment>
-      <label className={styles.ValueInputLabel}>
+      {dataType === 'boolean' && (
+        <label className={styles.CheckboxLabel}>
+          <input
+            checked={inputValue}
+            className={styles.Checkbox}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            ref={inputRef}
+            type={type}
+          />
+        </label>
+      )}
+      {dataType !== 'boolean' && (
         <input
-          checked={dataType === 'boolean' ? inputValue : undefined}
-          className={styles.ValueInput}
+          className={styles.Input}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           ref={inputRef}
           type={type}
-          value={dataType === 'boolean' ? undefined : inputValue}
+          value={inputValue}
         />
-      </label>
+      )}
       {hasPendingChanges && dataType !== 'boolean' && (
         <Button
           className={styles.ResetButton}
