@@ -40,8 +40,20 @@ describe('ReactHooksInspectionIntegration', () => {
     let childFiber = renderer.root.findByType(Foo)._currentFiber();
     let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
     expect(tree).toEqual([
-      {isEditable: true, index: 0, name: 'State', value: 'hello', subHooks: []},
-      {isEditable: true, index: 1, name: 'State', value: 'world', subHooks: []},
+      {
+        isStateEditable: true,
+        index: 0,
+        name: 'State',
+        value: 'hello',
+        subHooks: [],
+      },
+      {
+        isStateEditable: true,
+        index: 1,
+        name: 'State',
+        value: 'world',
+        subHooks: [],
+      },
     ]);
 
     let {
@@ -55,8 +67,20 @@ describe('ReactHooksInspectionIntegration', () => {
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
 
     expect(tree).toEqual([
-      {isEditable: true, index: 0, name: 'State', value: 'Hi', subHooks: []},
-      {isEditable: true, index: 1, name: 'State', value: 'world', subHooks: []},
+      {
+        isStateEditable: true,
+        index: 0,
+        name: 'State',
+        value: 'Hi',
+        subHooks: [],
+      },
+      {
+        isStateEditable: true,
+        index: 1,
+        name: 'State',
+        value: 'world',
+        subHooks: [],
+      },
     ]);
 
     act(() => setStateB('world!'));
@@ -65,9 +89,15 @@ describe('ReactHooksInspectionIntegration', () => {
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
 
     expect(tree).toEqual([
-      {isEditable: true, index: 0, name: 'State', value: 'Hi', subHooks: []},
       {
-        isEditable: true,
+        isStateEditable: true,
+        index: 0,
+        name: 'State',
+        value: 'Hi',
+        subHooks: [],
+      },
+      {
+        isStateEditable: true,
         index: 1,
         name: 'State',
         value: 'world!',
@@ -122,33 +152,51 @@ describe('ReactHooksInspectionIntegration', () => {
 
     let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
     expect(tree).toEqual([
-      {isEditable: true, index: 0, name: 'State', value: 'a', subHooks: []},
-      {isEditable: true, index: 1, name: 'Reducer', value: 'b', subHooks: []},
-      {isEditable: false, index: 2, name: 'Ref', value: 'c', subHooks: []},
       {
-        isEditable: false,
+        isStateEditable: true,
+        index: 0,
+        name: 'State',
+        value: 'a',
+        subHooks: [],
+      },
+      {
+        isStateEditable: true,
+        index: 1,
+        name: 'Reducer',
+        value: 'b',
+        subHooks: [],
+      },
+      {isStateEditable: false, index: 2, name: 'Ref', value: 'c', subHooks: []},
+      {
+        isStateEditable: false,
         index: 3,
         name: 'LayoutEffect',
         value: effect,
         subHooks: [],
       },
       {
-        isEditable: false,
+        isStateEditable: false,
         index: 4,
         name: 'Effect',
         value: effect,
         subHooks: [],
       },
       {
-        isEditable: false,
+        isStateEditable: false,
         index: 5,
         name: 'ImperativeHandle',
         value: outsideRef.current,
         subHooks: [],
       },
-      {isEditable: false, index: 6, name: 'Memo', value: 'ab', subHooks: []},
       {
-        isEditable: false,
+        isStateEditable: false,
+        index: 6,
+        name: 'Memo',
+        value: 'ab',
+        subHooks: [],
+      },
+      {
+        isStateEditable: false,
         index: 7,
         name: 'Callback',
         value: updateStates,
@@ -162,33 +210,51 @@ describe('ReactHooksInspectionIntegration', () => {
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
 
     expect(tree).toEqual([
-      {isEditable: true, index: 0, name: 'State', value: 'A', subHooks: []},
-      {isEditable: true, index: 1, name: 'Reducer', value: 'B', subHooks: []},
-      {isEditable: false, index: 2, name: 'Ref', value: 'C', subHooks: []},
       {
-        isEditable: false,
+        isStateEditable: true,
+        index: 0,
+        name: 'State',
+        value: 'A',
+        subHooks: [],
+      },
+      {
+        isStateEditable: true,
+        index: 1,
+        name: 'Reducer',
+        value: 'B',
+        subHooks: [],
+      },
+      {isStateEditable: false, index: 2, name: 'Ref', value: 'C', subHooks: []},
+      {
+        isStateEditable: false,
         index: 3,
         name: 'LayoutEffect',
         value: effect,
         subHooks: [],
       },
       {
-        isEditable: false,
+        isStateEditable: false,
         index: 4,
         name: 'Effect',
         value: effect,
         subHooks: [],
       },
       {
-        isEditable: false,
+        isStateEditable: false,
         index: 5,
         name: 'ImperativeHandle',
         value: outsideRef.current,
         subHooks: [],
       },
-      {isEditable: false, index: 6, name: 'Memo', value: 'Ab', subHooks: []},
       {
-        isEditable: false,
+        isStateEditable: false,
+        index: 6,
+        name: 'Memo',
+        value: 'Ab',
+        subHooks: [],
+      },
+      {
+        isStateEditable: false,
         index: 7,
         name: 'Callback',
         value: updateStates,
@@ -212,7 +278,7 @@ describe('ReactHooksInspectionIntegration', () => {
     let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
     expect(tree).toEqual([
       {
-        isEditable: false,
+        isStateEditable: false,
         index: 0,
         name: 'Context',
         value: 'contextual',
@@ -234,7 +300,7 @@ describe('ReactHooksInspectionIntegration', () => {
     let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
     expect(tree).toEqual([
       {
-        isEditable: false,
+        isStateEditable: false,
         index: 0,
         name: 'ImperativeHandle',
         value: obj,
@@ -254,7 +320,13 @@ describe('ReactHooksInspectionIntegration', () => {
     let childFiber = renderer.root.findByType(InnerFoo)._currentFiber();
     let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
     expect(tree).toEqual([
-      {isEditable: true, index: 0, name: 'State', value: 'hello', subHooks: []},
+      {
+        isStateEditable: true,
+        index: 0,
+        name: 'State',
+        value: 'hello',
+        subHooks: [],
+      },
     ]);
   });
 
@@ -272,13 +344,13 @@ describe('ReactHooksInspectionIntegration', () => {
     let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
     expect(tree).toEqual([
       {
-        isEditable: false,
+        isStateEditable: false,
         index: -1,
         name: 'Custom',
         value: undefined,
         subHooks: [
           {
-            isEditable: true,
+            isStateEditable: true,
             index: 0,
             name: 'State',
             value: 'hello',
@@ -312,13 +384,13 @@ describe('ReactHooksInspectionIntegration', () => {
       let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
       expect(tree).toEqual([
         {
-          isEditable: false,
+          isStateEditable: false,
           index: -1,
           name: 'LabeledValue',
           value: __DEV__ ? 'custom label a' : undefined,
           subHooks: [
             {
-              isEditable: true,
+              isStateEditable: true,
               index: 0,
               name: 'State',
               value: 'a',
@@ -327,20 +399,20 @@ describe('ReactHooksInspectionIntegration', () => {
           ],
         },
         {
-          isEditable: true,
+          isStateEditable: true,
           index: 1,
           name: 'State',
           value: 'b',
           subHooks: [],
         },
         {
-          isEditable: false,
+          isStateEditable: false,
           index: -1,
           name: 'Anonymous',
           value: undefined,
           subHooks: [
             {
-              isEditable: true,
+              isStateEditable: true,
               index: 2,
               name: 'State',
               value: 'c',
@@ -349,13 +421,13 @@ describe('ReactHooksInspectionIntegration', () => {
           ],
         },
         {
-          isEditable: false,
+          isStateEditable: false,
           index: -1,
           name: 'LabeledValue',
           value: __DEV__ ? 'custom label d' : undefined,
           subHooks: [
             {
-              isEditable: true,
+              isStateEditable: true,
               index: 3,
               name: 'State',
               value: 'd',
@@ -384,19 +456,19 @@ describe('ReactHooksInspectionIntegration', () => {
       let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
       expect(tree).toEqual([
         {
-          isEditable: false,
+          isStateEditable: false,
           index: -1,
           name: 'Outer',
           value: __DEV__ ? 'outer' : undefined,
           subHooks: [
             {
-              isEditable: false,
+              isStateEditable: false,
               index: -1,
               name: 'Inner',
               value: __DEV__ ? 'inner' : undefined,
               subHooks: [
                 {
-                  isEditable: true,
+                  isStateEditable: true,
                   index: 0,
                   name: 'State',
                   value: 0,
@@ -431,30 +503,48 @@ describe('ReactHooksInspectionIntegration', () => {
       let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
       expect(tree).toEqual([
         {
-          isEditable: false,
+          isStateEditable: false,
           index: -1,
           name: 'SingleLabelCustom',
           value: __DEV__ ? 'single one' : undefined,
           subHooks: [
-            {isEditable: true, index: 0, name: 'State', value: 0, subHooks: []},
+            {
+              isStateEditable: true,
+              index: 0,
+              name: 'State',
+              value: 0,
+              subHooks: [],
+            },
           ],
         },
         {
-          isEditable: false,
+          isStateEditable: false,
           index: -1,
           name: 'MultiLabelCustom',
           value: __DEV__ ? ['one', 'two', 'three'] : undefined,
           subHooks: [
-            {isEditable: true, index: 1, name: 'State', value: 0, subHooks: []},
+            {
+              isStateEditable: true,
+              index: 1,
+              name: 'State',
+              value: 0,
+              subHooks: [],
+            },
           ],
         },
         {
-          isEditable: false,
+          isStateEditable: false,
           index: -1,
           name: 'SingleLabelCustom',
           value: __DEV__ ? 'single two' : undefined,
           subHooks: [
-            {isEditable: true, index: 2, name: 'State', value: 0, subHooks: []},
+            {
+              isStateEditable: true,
+              index: 2,
+              name: 'State',
+              value: 0,
+              subHooks: [],
+            },
           ],
         },
       ]);
@@ -485,12 +575,18 @@ describe('ReactHooksInspectionIntegration', () => {
       let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
       expect(tree).toEqual([
         {
-          isEditable: false,
+          isStateEditable: false,
           index: -1,
           name: 'Custom',
           value: __DEV__ ? 'bar:123' : undefined,
           subHooks: [
-            {isEditable: true, index: 0, name: 'State', subHooks: [], value: 0},
+            {
+              isStateEditable: true,
+              index: 0,
+              name: 'State',
+              subHooks: [],
+              value: 0,
+            },
           ],
         },
       ]);
@@ -525,7 +621,13 @@ describe('ReactHooksInspectionIntegration', () => {
     let childFiber = renderer.root._currentFiber();
     let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
     expect(tree).toEqual([
-      {isEditable: true, index: 0, name: 'State', value: 'def', subHooks: []},
+      {
+        isStateEditable: true,
+        index: 0,
+        name: 'State',
+        value: 'def',
+        subHooks: [],
+      },
     ]);
   });
 
@@ -597,8 +699,20 @@ describe('ReactHooksInspectionIntegration', () => {
     const childFiber = renderer.root._currentFiber();
     const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
     expect(tree).toEqual([
-      {name: 'Context', value: 1, subHooks: []},
-      {name: 'State', value: {count: 2}, subHooks: []},
+      {
+        isStateEditable: false,
+        index: 0,
+        name: 'Context',
+        value: 1,
+        subHooks: [],
+      },
+      {
+        isStateEditable: true,
+        index: 1,
+        name: 'State',
+        value: {count: 2},
+        subHooks: [],
+      },
     ]);
   });
 });

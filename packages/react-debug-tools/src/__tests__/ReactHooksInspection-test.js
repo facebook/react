@@ -28,7 +28,7 @@ describe('ReactHooksInspection', () => {
     let tree = ReactDebugTools.inspectHooks(Foo, {});
     expect(tree).toEqual([
       {
-        isEditable: true,
+        isStateEditable: true,
         index: 0,
         name: 'State',
         value: 'hello world',
@@ -50,13 +50,13 @@ describe('ReactHooksInspection', () => {
     let tree = ReactDebugTools.inspectHooks(Foo, {});
     expect(tree).toEqual([
       {
-        isEditable: false,
+        isStateEditable: false,
         index: -1,
         name: 'Custom',
         value: __DEV__ ? 'custom hook label' : undefined,
         subHooks: [
           {
-            isEditable: true,
+            isStateEditable: true,
             index: 0,
             name: 'State',
             value: 'hello world',
@@ -86,20 +86,20 @@ describe('ReactHooksInspection', () => {
     let tree = ReactDebugTools.inspectHooks(Foo, {});
     expect(tree).toEqual([
       {
-        isEditable: false,
+        isStateEditable: false,
         index: -1,
         name: 'Custom',
         value: undefined,
         subHooks: [
           {
-            isEditable: true,
+            isStateEditable: true,
             index: 0,
             name: 'State',
             subHooks: [],
             value: 'hello',
           },
           {
-            isEditable: false,
+            isStateEditable: false,
             index: 1,
             name: 'Effect',
             subHooks: [],
@@ -108,20 +108,20 @@ describe('ReactHooksInspection', () => {
         ],
       },
       {
-        isEditable: false,
+        isStateEditable: false,
         index: -1,
         name: 'Custom',
         value: undefined,
         subHooks: [
           {
-            isEditable: true,
+            isStateEditable: true,
             index: 2,
             name: 'State',
             value: 'world',
             subHooks: [],
           },
           {
-            isEditable: false,
+            isStateEditable: false,
             index: 3,
             name: 'Effect',
             value: effect,
@@ -161,26 +161,26 @@ describe('ReactHooksInspection', () => {
     let tree = ReactDebugTools.inspectHooks(Foo, {});
     expect(tree).toEqual([
       {
-        isEditable: false,
+        isStateEditable: false,
         index: -1,
         name: 'Bar',
         value: undefined,
         subHooks: [
           {
-            isEditable: false,
+            isStateEditable: false,
             index: -1,
             name: 'Custom',
             value: undefined,
             subHooks: [
               {
-                isEditable: true,
+                isStateEditable: true,
                 index: 0,
                 name: 'Reducer',
                 value: 'hello',
                 subHooks: [],
               },
               {
-                isEditable: false,
+                isStateEditable: false,
                 index: 1,
                 name: 'Effect',
                 value: effect,
@@ -189,7 +189,7 @@ describe('ReactHooksInspection', () => {
             ],
           },
           {
-            isEditable: false,
+            isStateEditable: false,
             index: 2,
             name: 'LayoutEffect',
             value: effect,
@@ -198,32 +198,32 @@ describe('ReactHooksInspection', () => {
         ],
       },
       {
-        isEditable: false,
+        isStateEditable: false,
         index: -1,
         name: 'Baz',
         value: undefined,
         subHooks: [
           {
-            isEditable: false,
+            isStateEditable: false,
             index: 3,
             name: 'LayoutEffect',
             value: effect,
             subHooks: [],
           },
           {
-            isEditable: false,
+            isStateEditable: false,
             index: -1,
             name: 'Custom',
             subHooks: [
               {
-                isEditable: true,
+                isStateEditable: true,
                 index: 4,
                 name: 'Reducer',
                 subHooks: [],
                 value: 'world',
               },
               {
-                isEditable: false,
+                isStateEditable: false,
                 index: 5,
                 name: 'Effect',
                 subHooks: [],
@@ -246,7 +246,7 @@ describe('ReactHooksInspection', () => {
     let tree = ReactDebugTools.inspectHooks(Foo, {});
     expect(tree).toEqual([
       {
-        isEditable: false,
+        isStateEditable: false,
         index: 0,
         name: 'Context',
         value: 'default',
@@ -310,12 +310,18 @@ describe('ReactHooksInspection', () => {
       let tree = ReactDebugTools.inspectHooks(Foo, {});
       expect(tree).toEqual([
         {
-          isEditable: false,
+          isStateEditable: false,
           index: -1,
           name: 'Custom',
           value: __DEV__ ? 'bar:123' : undefined,
           subHooks: [
-            {isEditable: true, index: 0, name: 'State', subHooks: [], value: 0},
+            {
+              isStateEditable: true,
+              index: 0,
+              name: 'State',
+              subHooks: [],
+              value: 0,
+            },
           ],
         },
       ]);
