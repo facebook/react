@@ -453,21 +453,21 @@ const bundles = [
     externals: [],
   },
 
+  /******* React Scheduler Mock (experimental) *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'scheduler/unstable_mock',
+    global: 'SchedulerMock',
+    externals: [],
+  },
+
   /******* Jest React (experimental) *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
     moduleType: ISOMORPHIC,
     entry: 'jest-react',
     global: 'JestReact',
-    externals: [],
-  },
-
-  /******* Jest Scheduler (experimental) *******/
-  {
-    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
-    moduleType: ISOMORPHIC,
-    entry: 'jest-mock-scheduler',
-    global: 'JestMockScheduler',
     externals: [],
   },
 

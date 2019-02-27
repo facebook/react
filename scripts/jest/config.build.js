@@ -35,7 +35,7 @@ packages.forEach(name => {
   moduleNameMapper[`^${name}$`] = `<rootDir>/build/node_modules/${name}`;
   // Named entry points
   moduleNameMapper[
-    `^${name}/(.*)$`
+    `^${name}\/([^\/]+)$`
   ] = `<rootDir>/build/node_modules/${name}/$1`;
 });
 
@@ -46,4 +46,8 @@ module.exports = Object.assign({}, baseConfig, {
   testPathIgnorePatterns: ['/node_modules/', '-test.internal.js$'],
   // Exclude the build output from transforms
   transformIgnorePatterns: ['/node_modules/', '<rootDir>/build/'],
+  setupFiles: [
+    ...baseConfig.setupFiles,
+    require.resolve('./setupTests.build.js'),
+  ],
 });

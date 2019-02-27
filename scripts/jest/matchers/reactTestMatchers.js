@@ -1,6 +1,7 @@
 'use strict';
 
 const JestReact = require('jest-react');
+const SchedulerMatchers = require('./schedulerTestMatchers');
 
 function captureAssertion(fn) {
   // Trick to use a Jest matcher inside another Jest matcher. `fn` contains an
@@ -18,6 +19,10 @@ function captureAssertion(fn) {
   return {pass: true};
 }
 
+function isScheduler(obj) {
+  return typeof obj.unstable_scheduleCallback === 'function';
+}
+
 function isReactNoop(obj) {
   return typeof obj.hasScheduledCallback === 'function';
 }
@@ -33,6 +38,9 @@ function assertYieldsWereCleared(ReactNoop) {
 }
 
 function toFlushAndYield(ReactNoop, expectedYields) {
+  if (isScheduler(ReactNoop)) {
+    return SchedulerMatchers.toFlushAndYield(ReactNoop, expectedYields);
+  }
   if (!isReactNoop(ReactNoop)) {
     return JestReact.unstable_toFlushAndYield(ReactNoop, expectedYields);
   }
@@ -44,6 +52,9 @@ function toFlushAndYield(ReactNoop, expectedYields) {
 }
 
 function toFlushAndYieldThrough(ReactNoop, expectedYields) {
+  if (isScheduler(ReactNoop)) {
+    return SchedulerMatchers.toFlushAndYieldThrough(ReactNoop, expectedYields);
+  }
   if (!isReactNoop(ReactNoop)) {
     return JestReact.unstable_toFlushAndYieldThrough(ReactNoop, expectedYields);
   }
@@ -57,6 +68,9 @@ function toFlushAndYieldThrough(ReactNoop, expectedYields) {
 }
 
 function toFlushWithoutYielding(ReactNoop) {
+  if (isScheduler(ReactNoop)) {
+    return SchedulerMatchers.toFlushWithoutYielding(ReactNoop);
+  }
   if (!isReactNoop(ReactNoop)) {
     return JestReact.unstable_toFlushWithoutYielding(ReactNoop);
   }
@@ -64,6 +78,9 @@ function toFlushWithoutYielding(ReactNoop) {
 }
 
 function toHaveYielded(ReactNoop, expectedYields) {
+  if (isScheduler(ReactNoop)) {
+    return SchedulerMatchers.toHaveYielded(ReactNoop, expectedYields);
+  }
   if (!isReactNoop(ReactNoop)) {
     return JestReact.unstable_toHaveYielded(ReactNoop, expectedYields);
   }
@@ -74,6 +91,9 @@ function toHaveYielded(ReactNoop, expectedYields) {
 }
 
 function toFlushAndThrow(ReactNoop, ...rest) {
+  if (isScheduler(ReactNoop)) {
+    return SchedulerMatchers.toFlushAndThrow(ReactNoop, ...rest);
+  }
   if (!isReactNoop(ReactNoop)) {
     return JestReact.unstable_toFlushAndThrow(ReactNoop, ...rest);
   }

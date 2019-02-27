@@ -14,6 +14,13 @@ describe('Scheduling UMD bundle', () => {
     global.__UMD__ = true;
 
     jest.resetModules();
+
+    jest.mock('scheduler', () => require.requireActual('scheduler'));
+    jest.mock('scheduler/src/SchedulerHostConfig', () =>
+      require.requireActual(
+        'scheduler/src/forks/SchedulerHostConfig.default.js',
+      ),
+    );
   });
 
   function filterPrivateKeys(name) {

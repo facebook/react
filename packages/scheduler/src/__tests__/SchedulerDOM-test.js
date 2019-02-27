@@ -89,8 +89,13 @@ describe('SchedulerDOM', () => {
     };
     jest.resetModules();
 
-    const JestMockScheduler = require('jest-mock-scheduler');
-    JestMockScheduler.mockRestore();
+    // Un-mock scheduler
+    jest.mock('scheduler', () => require.requireActual('scheduler'));
+    jest.mock('scheduler/src/SchedulerHostConfig', () =>
+      require.requireActual(
+        'scheduler/src/forks/SchedulerHostConfig.default.js',
+      ),
+    );
 
     Scheduler = require('scheduler');
   });
