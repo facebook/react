@@ -81,15 +81,14 @@ export default function SelectedElement(_: Props) {
         >
           <ButtonIcon type="view-dom" />
         </Button>
-        {canViewSource && (
-          <Button
-            className={styles.IconButton}
-            onClick={viewSource}
-            title="View source for this element"
-          >
-            <ButtonIcon type="view-source" />
-          </Button>
-        )}
+        <Button
+          className={styles.IconButton}
+          disabled={!canViewSource}
+          onClick={viewSource}
+          title="View source for this element"
+        >
+          <ButtonIcon type="view-source" />
+        </Button>
       </div>
 
       {inspectedElement === null && (
