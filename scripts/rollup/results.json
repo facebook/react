@@ -676,15 +676,15 @@
       "filename": "scheduler.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "scheduler",
-      "size": 23870,
-      "gzip": 6174
+      "size": 23505,
+      "gzip": 6019
     },
     {
       "filename": "scheduler.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "scheduler",
-      "size": 5000,
-      "gzip": 1883
+      "size": 4888,
+      "gzip": 1819
     },
     {
       "filename": "SimpleCacheProvider-dev.js",
@@ -739,15 +739,15 @@
       "filename": "Scheduler-dev.js",
       "bundleType": "FB_WWW_DEV",
       "packageName": "scheduler",
-      "size": 24123,
-      "gzip": 6223
+      "size": 23758,
+      "gzip": 6067
     },
     {
       "filename": "Scheduler-prod.js",
       "bundleType": "FB_WWW_PROD",
       "packageName": "scheduler",
-      "size": 14327,
-      "gzip": 2953
+      "size": 14025,
+      "gzip": 2841
     },
     {
       "filename": "react.profiling.min.js",
@@ -802,8 +802,8 @@
       "filename": "scheduler-tracing.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "scheduler",
-      "size": 10554,
-      "gzip": 2432
+      "size": 10737,
+      "gzip": 2535
     },
     {
       "filename": "scheduler-tracing.production.min.js",
@@ -823,8 +823,8 @@
       "filename": "SchedulerTracing-dev.js",
       "bundleType": "FB_WWW_DEV",
       "packageName": "scheduler",
-      "size": 10121,
-      "gzip": 2117
+      "size": 10207,
+      "gzip": 2134
     },
     {
       "filename": "SchedulerTracing-prod.js",
@@ -1119,6 +1119,34 @@
       "packageName": "jest-mock-scheduler",
       "size": 1085,
       "gzip": 532
+    },
+    {
+      "filename": "scheduler-unstable_mock.development.js",
+      "bundleType": "NODE_DEV",
+      "packageName": "scheduler",
+      "size": 17926,
+      "gzip": 4128
+    },
+    {
+      "filename": "scheduler-unstable_mock.production.min.js",
+      "bundleType": "NODE_PROD",
+      "packageName": "scheduler",
+      "size": 4173,
+      "gzip": 1606
+    },
+    {
+      "filename": "SchedulerMock-dev.js",
+      "bundleType": "FB_WWW_DEV",
+      "packageName": "scheduler",
+      "size": 18170,
+      "gzip": 4175
+    },
+    {
+      "filename": "SchedulerMock-prod.js",
+      "bundleType": "FB_WWW_PROD",
+      "packageName": "scheduler",
+      "size": 12088,
+      "gzip": 2473
     }
   ]
 }

@@ -49,8 +49,6 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     ...require('./matchers/reactTestMatchers'),
   });
 
-  require('jest-mock-scheduler');
-
   // We have a Babel transform that inserts guards against infinite loops.
   // If a loop runs for too many iterations, we throw an error and set this
   // global variable. The global lets us detect an infinite loop even if

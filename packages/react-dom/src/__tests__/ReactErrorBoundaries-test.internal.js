@@ -13,6 +13,7 @@ let PropTypes;
 let React;
 let ReactDOM;
 let ReactFeatureFlags;
+let Scheduler;
 
 describe('ReactErrorBoundaries', () => {
   let log;
@@ -44,6 +45,7 @@ describe('ReactErrorBoundaries', () => {
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     ReactDOM = require('react-dom');
     React = require('react');
+    Scheduler = require('scheduler');
 
     log = [];
 
@@ -1839,9 +1841,8 @@ describe('ReactErrorBoundaries', () => {
     expect(container.firstChild.textContent).toBe('Initial value');
     log.length = 0;
 
-    jest.runAllTimers();
-
     // Flush passive effects and handle the error
+    Scheduler.flushAll();
     expect(log).toEqual([
       'BrokenUseEffect useEffect [!]',
       // Handle the error

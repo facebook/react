@@ -11,6 +11,7 @@
 
 let React;
 let ReactDOM;
+let Scheduler;
 
 describe('ReactDOMHooks', () => {
   let container;
@@ -20,6 +21,7 @@ describe('ReactDOMHooks', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
+    Scheduler = require('scheduler');
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -55,7 +57,7 @@ describe('ReactDOMHooks', () => {
     expect(container.textContent).toBe('1');
     expect(container2.textContent).toBe('');
     expect(container3.textContent).toBe('');
-    jest.runAllTimers();
+    Scheduler.flushAll();
     expect(container.textContent).toBe('1');
     expect(container2.textContent).toBe('2');
     expect(container3.textContent).toBe('3');
@@ -64,7 +66,7 @@ describe('ReactDOMHooks', () => {
     expect(container.textContent).toBe('2');
     expect(container2.textContent).toBe('2'); // Not flushed yet
     expect(container3.textContent).toBe('3'); // Not flushed yet
-    jest.runAllTimers();
+    Scheduler.flushAll();
     expect(container.textContent).toBe('2');
     expect(container2.textContent).toBe('4');
     expect(container3.textContent).toBe('6');
@@ -166,14 +168,14 @@ describe('ReactDOMHooks', () => {
       </React.unstable_ConcurrentMode>,
     );
 
-    jest.runAllTimers();
+    Scheduler.flushAll();
 
     inputRef.current.value = 'abc';
     inputRef.current.dispatchEvent(
       new Event('input', {bubbles: true, cancelable: true}),
     );
 
-    jest.runAllTimers();
+    Scheduler.flushAll();
 
     expect(labelRef.current.innerHTML).toBe('abc');
   });

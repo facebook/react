@@ -19,10 +19,17 @@ describe('SchedulerNoDOM', () => {
   // implementation using setTimeout. This only meant to be used for testing
   // purposes, like with jest's fake timer API.
   beforeEach(() => {
-    jest.useFakeTimers();
     jest.resetModules();
-    // Delete addEventListener to force us into the fallback mode.
-    window.addEventListener = undefined;
+    jest.useFakeTimers();
+
+    // Un-mock scheduler
+    jest.mock('scheduler', () => require.requireActual('scheduler'));
+    jest.mock('scheduler/src/SchedulerHostConfig', () =>
+      require.requireActual(
+        'scheduler/src/forks/SchedulerHostConfig.default.js',
+      ),
+    );
+
     const Scheduler = require('scheduler');
     scheduleCallback = Scheduler.unstable_scheduleCallback;
     runWithPriority = Scheduler.unstable_runWithPriority;
@@ -67,36 +74,6 @@ describe('SchedulerNoDOM', () => {
     expect(log).toEqual([]);
     jest.runAllTimers();
     expect(log).toEqual(['C', 'D', 'A', 'B']);
-  });
-
-  it('advanceTimersByTime expires callbacks incrementally', () => {
-    let log = [];
-
-    scheduleCallback(() => {
-      log.push('A');
-    });
-    scheduleCallback(() => {
-      log.push('B');
-    });
-    runWithPriority(UserBlockingPriority, () => {
-      scheduleCallback(() => {
-        log.push('C');
-      });
-      scheduleCallback(() => {
-        log.push('D');
-      });
-    });
-
-    expect(log).toEqual([]);
-    jest.advanceTimersByTime(249);
-    expect(log).toEqual([]);
-    jest.advanceTimersByTime(1);
-    expect(log).toEqual(['C', 'D']);
-
-    log = [];
-
-    jest.runAllTimers();
-    expect(log).toEqual(['A', 'B']);
   });
 
   it('calls immediate callbacks immediately', () => {
