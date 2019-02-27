@@ -28,6 +28,7 @@ export default function Tree(props: Props) {
     ownerStack,
     selectedElementIndex,
     selectNextElementInTree,
+    selectParentElementInTree,
     selectPreviousElementInTree,
   } = useContext(TreeContext);
   const listRef = useRef<FixedSizeList<any> | null>(null);
@@ -51,6 +52,14 @@ export default function Tree(props: Props) {
           selectNextElementInTree();
           event.preventDefault();
           break;
+        case 'ArrowLeft':
+          console.log('LEFT');
+          selectParentElementInTree();
+          break;
+        case 'ArrowRight':
+          selectNextElementInTree();
+          event.preventDefault();
+          break;
         case 'ArrowUp':
           selectPreviousElementInTree();
           event.preventDefault();
@@ -63,7 +72,11 @@ export default function Tree(props: Props) {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [selectNextElementInTree, selectPreviousElementInTree]);
+  }, [
+    selectNextElementInTree,
+    selectParentElementInTree,
+    selectPreviousElementInTree,
+  ]);
 
   // Let react-window know to re-render any time the underlying tree data changes.
   // This includes the owner context, since it controls a filtered view of the tree.

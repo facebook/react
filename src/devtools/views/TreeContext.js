@@ -41,6 +41,7 @@ type Context = {|
   selectElementAtIndex(index: number): void,
   selectElementByID(id: number | null): void,
   selectNextElementInTree(): void,
+  selectParentElementInTree(): void,
   selectPreviousElementInTree(): void,
 
   // Search
@@ -91,6 +92,7 @@ type Action = {|
     | 'SELECT_ELEMENT_AT_INDEX'
     | 'SELECT_ELEMENT_BY_ID'
     | 'SELECT_NEXT_ELEMENT_IN_TREE'
+    | 'SELECT_PARENT_ELEMENT_IN_TREE'
     | 'SELECT_PREVIOUS_ELEMENT_IN_TREE'
     | 'SELECT_OWNER'
     | 'SET_SEARCH_TEXT',
@@ -136,6 +138,17 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
           selectedElementIndex + 1 < numElements
         ) {
           selectedElementIndex++;
+        }
+        break;
+      case 'SELECT_PARENT_ELEMENT_IN_TREE':
+        if (selectedElementIndex !== null) {
+          const selectedElement = store.getElementAtIndex(
+            ((selectedElementIndex: any): number)
+          );
+          if (selectedElement !== null && selectedElement.parentID !== null) {
+            selectedElementIndex =
+              store.getIndexOfElementID(selectedElement.parentID) || 0;
+          }
         }
         break;
       case 'SELECT_PREVIOUS_ELEMENT_IN_TREE':
@@ -502,6 +515,7 @@ function TreeContextController({ children, viewElementSource }: Props) {
         case 'SELECT_ELEMENT_AT_INDEX':
         case 'SELECT_ELEMENT_BY_ID':
         case 'SELECT_NEXT_ELEMENT_IN_TREE':
+        case 'SELECT_PARENT_ELEMENT_IN_TREE':
         case 'SELECT_PREVIOUS_ELEMENT_IN_TREE':
         case 'SELECT_OWNER':
         case 'SET_SEARCH_TEXT':
@@ -572,6 +586,10 @@ function TreeContextController({ children, viewElementSource }: Props) {
     () => dispatch({ type: 'SELECT_NEXT_ELEMENT_IN_TREE' }),
     [dispatch]
   );
+  const selectParentElementInTree = useCallback(
+    () => dispatch({ type: 'SELECT_PARENT_ELEMENT_IN_TREE' }),
+    [dispatch]
+  );
   const selectPreviousElementInTree = useCallback(
     () => dispatch({ type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE' }),
     [dispatch]
@@ -592,6 +610,7 @@ function TreeContextController({ children, viewElementSource }: Props) {
       selectElementByID,
       selectElementAtIndex,
       selectNextElementInTree,
+      selectParentElementInTree,
       selectPreviousElementInTree,
 
       // Search
@@ -619,6 +638,7 @@ function TreeContextController({ children, viewElementSource }: Props) {
       selectElementAtIndex,
       selectElementByID,
       selectNextElementInTree,
+      selectParentElementInTree,
       selectOwner,
       selectPreviousElementInTree,
       setSearchText,

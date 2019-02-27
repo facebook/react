@@ -118,7 +118,7 @@ export default class Store extends EventEmitter {
       }
     }
 
-    return ((currentElement: any): Element);
+    return ((currentElement: any): Element) || null;
   }
 
   getElementIDAtIndex(index: number): number | null {
@@ -141,7 +141,7 @@ export default class Store extends EventEmitter {
   getIndexOfElementID(id: number): number | null {
     const element = this.getElementByID(id);
 
-    if (element === null) {
+    if (element === null || element.parentID === 0) {
       return null;
     }
 
