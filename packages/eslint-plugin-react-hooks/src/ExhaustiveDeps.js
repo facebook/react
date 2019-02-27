@@ -330,8 +330,18 @@ export default {
             duplicateDependencies.add(key);
           }
         } else {
-          // Unnecessary dependency. Do nothing.
-          unnecessaryDependencies.add(key);
+          if (isEffect && !key.endsWith('.current')) {
+            // Effects may have extra "unnecessary" deps.
+            // Such as resetting scroll when ID changes.
+            // The exception is ref.current which is always wrong.
+            // Consider them legit.
+            if (suggestedDependencies.indexOf(key) === -1) {
+              suggestedDependencies.push(key);
+            }
+          } else {
+            // Unnecessary dependency. Remember to report it.
+            unnecessaryDependencies.add(key);
+          }
         }
       });
 
