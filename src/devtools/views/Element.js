@@ -46,14 +46,18 @@ export default function ElementView({ index, style }: Props) {
   useEffect(() => {
     if (isSelected) {
       if (ref.current !== null) {
-        ref.current.scrollIntoView();
+        ref.current.scrollIntoView({
+          behavior: 'auto',
+          block: 'nearest',
+          inline: 'nearest',
+        });
       }
     }
   }, [isSelected]);
 
   // TODO Add click and key handlers for toggling element open/close state.
 
-  const handleClick = useCallback(
+  const handleMouseDown = useCallback(
     ({ metaKey }) => {
       if (id !== null) {
         selectElementByID(metaKey ? null : id);
@@ -80,7 +84,7 @@ export default function ElementView({ index, style }: Props) {
   return (
     <div
       className={isSelected ? styles.SelectedElement : styles.Element}
-      onClick={handleClick}
+      onMouseDown={handleMouseDown}
       onDoubleClick={handleDoubleClick}
       style={{
         ...style, // "style" comes from react-window

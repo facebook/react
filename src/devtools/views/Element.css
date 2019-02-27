@@ -2,7 +2,6 @@
 .SelectedElement {
   width: 100%;
   border-radius: 0.25em;
-  cursor: pointer;
   position: relative;
   white-space: nowrap;
   line-height: var(--line-height-data);
