@@ -95,7 +95,7 @@ const tests = {
         const local1 = {};
         {
           const local2 = {};
-          useEffect(() => {
+          useCallback(() => {
             console.log(local1);
             console.log(local2);
           }, [local1, local2]);
@@ -109,7 +109,7 @@ const tests = {
         const local1 = {};
         function MyNestedComponent() {
           const local2 = {};
-          useEffect(() => {
+          useCallback(() => {
             console.log(local1);
             console.log(local2);
           }, [local2]);
@@ -590,6 +590,17 @@ const tests = {
       }
     `,
     },
+    {
+      // Valid even though activeTab is "unused".
+      // We allow that in effects, but not callbacks or memo.
+      code: `
+        function Foo({ activeTab }) {
+          useEffect(() => {
+            window.scrollTo(0, 0);
+          }, [activeTab]);
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -809,7 +820,7 @@ const tests = {
         function MyComponent() {
           const local1 = {};
           const local2 = {};
-          useEffect(() => {
+          useMemo(() => {
             console.log(local1);
           }, [local1, local2]);
         }
@@ -818,13 +829,13 @@ const tests = {
         function MyComponent() {
           const local1 = {};
           const local2 = {};
-          useEffect(() => {
+          useMemo(() => {
             console.log(local1);
           }, [local1]);
         }
       `,
       errors: [
-        "React Hook useEffect has an unnecessary dependency: 'local2'. " +
+        "React Hook useMemo has an unnecessary dependency: 'local2'. " +
           'Either exclude it or remove the dependency array.',
       ],
     },
@@ -836,7 +847,7 @@ const tests = {
           const local1 = {};
           function MyNestedComponent() {
             const local2 = {};
-            useEffect(() => {
+            useCallback(() => {
               console.log(local1);
               console.log(local2);
             }, [local1]);
@@ -848,7 +859,7 @@ const tests = {
           const local1 = {};
           function MyNestedComponent() {
             const local2 = {};
-            useEffect(() => {
+            useCallback(() => {
               console.log(local1);
               console.log(local2);
             }, [local2]);
@@ -857,7 +868,7 @@ const tests = {
       `,
       errors: [
         // Focus on the more important part first (missing dep)
-        "React Hook useEffect has a missing dependency: 'local2'. " +
+        "React Hook useCallback has a missing dependency: 'local2'. " +
           'Either include it or remove the dependency array.',
       ],
     },
@@ -912,16 +923,16 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          useEffect(() => {}, [local]);
+          useCallback(() => {}, [local]);
         }
       `,
       output: `
         function MyComponent() {
-          useEffect(() => {}, []);
+          useCallback(() => {}, []);
         }
       `,
       errors: [
-        "React Hook useEffect has an unnecessary dependency: 'local'. " +
+        "React Hook useCallback has an unnecessary dependency: 'local'. " +
           'Either exclude it or remove the dependency array.',
       ],
     },
@@ -1229,7 +1240,6 @@ const tests = {
       ],
     },
     {
-      // TODO: need to think more about this case.
       code: `
         function MyComponent() {
           const local = {id: 42};
@@ -1238,13 +1248,14 @@ const tests = {
           }, [local.id]);
         }
       `,
-      // TODO: this may not be a good idea.
+      // TODO: autofix should be smart enough
+      // to remove local.id from the list.
       output: `
         function MyComponent() {
           const local = {id: 42};
           useEffect(() => {
             console.log(local);
-          }, [local]);
+          }, [local, local.id]);
         }
       `,
       errors: [
@@ -1278,7 +1289,7 @@ const tests = {
       code: `
         function MyComponent() {
           const local1 = {};
-          useEffect(() => {
+          useCallback(() => {
             const local1 = {};
             console.log(local1);
           }, [local1]);
@@ -1287,14 +1298,14 @@ const tests = {
       output: `
         function MyComponent() {
           const local1 = {};
-          useEffect(() => {
+          useCallback(() => {
             const local1 = {};
             console.log(local1);
           }, []);
         }
       `,
       errors: [
-        "React Hook useEffect has an unnecessary dependency: 'local1'. " +
+        "React Hook useCallback has an unnecessary dependency: 'local1'. " +
           'Either exclude it or remove the dependency array.',
       ],
     },
@@ -1302,17 +1313,17 @@ const tests = {
       code: `
         function MyComponent() {
           const local1 = {};
-          useEffect(() => {}, [local1]);
+          useCallback(() => {}, [local1]);
         }
       `,
       output: `
         function MyComponent() {
           const local1 = {};
-          useEffect(() => {}, []);
+          useCallback(() => {}, []);
         }
       `,
       errors: [
-        "React Hook useEffect has an unnecessary dependency: 'local1'. " +
+        "React Hook useCallback has an unnecessary dependency: 'local1'. " +
           'Either exclude it or remove the dependency array.',
       ],
     },
@@ -1782,6 +1793,62 @@ const tests = {
         "React Hook useEffect has an unnecessary dependency: 'ref.current'. " +
           'Either exclude it or remove the dependency array. ' +
           "Mutable values like 'ref.current' aren't valid dependencies " +
+          "because their mutation doesn't re-render the component.",
+      ],
+    },
+    {
+      code: `
+        function MyComponent({ activeTab }) {
+          const ref1 = useRef();
+          const ref2 = useRef();
+          useEffect(() => {
+            ref1.current.scrollTop = 0;
+            ref2.current.scrollTop = 0;
+          }, [ref1.current, ref2.current, activeTab]);
+        }
+      `,
+      output: `
+        function MyComponent({ activeTab }) {
+          const ref1 = useRef();
+          const ref2 = useRef();
+          useEffect(() => {
+            ref1.current.scrollTop = 0;
+            ref2.current.scrollTop = 0;
+          }, [activeTab]);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has unnecessary dependencies: 'ref1.current' and 'ref2.current'. " +
+          'Either exclude them or remove the dependency array. ' +
+          "Mutable values like 'ref1.current' aren't valid dependencies " +
+          "because their mutation doesn't re-render the component.",
+      ],
+    },
+    {
+      code: `
+        function MyComponent({ activeTab, initY }) {
+          const ref1 = useRef();
+          const ref2 = useRef();
+          const fn = useCallback(() => {
+            ref1.current.scrollTop = initY;
+            ref2.current.scrollTop = initY;
+          }, [ref1.current, ref2.current, activeTab, initY]);
+        }
+      `,
+      output: `
+        function MyComponent({ activeTab, initY }) {
+          const ref1 = useRef();
+          const ref2 = useRef();
+          const fn = useCallback(() => {
+            ref1.current.scrollTop = initY;
+            ref2.current.scrollTop = initY;
+          }, [initY]);
+        }
+      `,
+      errors: [
+        "React Hook useCallback has unnecessary dependencies: 'activeTab', 'ref1.current', and 'ref2.current'. " +
+          'Either exclude them or remove the dependency array. ' +
+          "Mutable values like 'ref1.current' aren't valid dependencies " +
           "because their mutation doesn't re-render the component.",
       ],
     },
