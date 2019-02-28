@@ -258,7 +258,6 @@ describe('Profiler', () => {
         expect(callback).toHaveBeenCalledTimes(1);
       });
 
-      // TODO: Figure out how to write this without dependency injection
       it('does not record times for components outside of Profiler tree', () => {
         // Mock the Scheduler module so we can track how many times the current
         // time is read
@@ -276,8 +275,8 @@ describe('Profiler', () => {
         });
 
         jest.resetModules();
-        Scheduler = require('scheduler');
-        ReactTestRenderer = require('react-test-renderer');
+
+        loadModules({enableSchedulerTracing});
 
         // Clear yields in case the current time is read during initialization.
         Scheduler.unstable_clearYields();
