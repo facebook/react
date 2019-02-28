@@ -50,9 +50,9 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     ReactNoop.render(<Foo />);
-    expect(ReactNoop).toFlushAndYieldThrough(['commit']);
+    expect(Scheduler).toFlushAndYieldThrough(['commit']);
     expect(state).toEqual({a: 'a'});
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
     expect(state).toEqual({a: 'a', b: 'b', c: 'c'});
   });
 
@@ -73,7 +73,7 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     ReactNoop.render(<Foo />);
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
     expect(state).toEqual({a: 'a', b: 'b', c: 'c'});
   });
 
@@ -96,7 +96,7 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     ReactNoop.render(<Foo />);
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
 
     ReactNoop.flushSync(() => {
       ReactNoop.deferredUpdates(() => {
@@ -123,7 +123,7 @@ describe('ReactIncrementalUpdates', () => {
 
     ops = [];
 
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
     // Now the rest of the updates are flushed, including the replaceState.
     expect(instance.state).toEqual({c: 'c', d: 'd'});
     expect(ops).toEqual(['render', 'componentDidUpdate']);
@@ -146,7 +146,7 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     ReactNoop.render(<Foo />);
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
 
     function createUpdate(letter) {
       return () => {
@@ -163,7 +163,7 @@ describe('ReactIncrementalUpdates', () => {
     instance.setState(createUpdate('c'));
 
     // Begin the updates but don't flush them yet
-    expect(ReactNoop).toFlushAndYieldThrough(['a', 'b', 'c']);
+    expect(Scheduler).toFlushAndYieldThrough(['a', 'b', 'c']);
     expect(ReactNoop.getChildren()).toEqual([span('')]);
 
     // Schedule some more updates at different priorities
@@ -175,13 +175,13 @@ describe('ReactIncrementalUpdates', () => {
     instance.setState(createUpdate('g'));
 
     // The sync updates should have flushed, but not the async ones
-    expect(ReactNoop).toHaveYielded(['e', 'f']);
+    expect(Scheduler).toHaveYielded(['e', 'f']);
     expect(ReactNoop.getChildren()).toEqual([span('ef')]);
 
     // Now flush the remaining work. Even though e and f were already processed,
     // they should be processed again, to ensure that the terminal state
     // is deterministic.
-    expect(ReactNoop).toFlushAndYield([
+    expect(Scheduler).toFlushAndYield([
       'a',
       'b',
       'c',
@@ -217,7 +217,7 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     ReactNoop.render(<Foo />);
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
 
     function createUpdate(letter) {
       return () => {
@@ -234,7 +234,7 @@ describe('ReactIncrementalUpdates', () => {
     instance.setState(createUpdate('c'));
 
     // Begin the updates but don't flush them yet
-    expect(ReactNoop).toFlushAndYieldThrough(['a', 'b', 'c']);
+    expect(Scheduler).toFlushAndYieldThrough(['a', 'b', 'c']);
     expect(ReactNoop.getChildren()).toEqual([span('')]);
 
     // Schedule some more updates at different priorities{
@@ -249,13 +249,13 @@ describe('ReactIncrementalUpdates', () => {
 
     // The sync updates should have flushed, but not the async ones. Update d
     // was dropped and replaced by e.
-    expect(ReactNoop).toHaveYielded(['e', 'f']);
+    expect(Scheduler).toHaveYielded(['e', 'f']);
     expect(ReactNoop.getChildren()).toEqual([span('f')]);
 
     // Now flush the remaining work. Even though e and f were already processed,
     // they should be processed again, to ensure that the terminal state
     // is deterministic.
-    expect(ReactNoop).toFlushAndYield([
+    expect(Scheduler).toFlushAndYield([
       'a',
       'b',
       'c',
@@ -284,7 +284,7 @@ describe('ReactIncrementalUpdates', () => {
       }
     }
     ReactNoop.render(<Foo />);
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
 
     instance.setState({a: 'a'});
     instance.setState({b: 'b'});
@@ -293,7 +293,7 @@ describe('ReactIncrementalUpdates', () => {
     instance.updater.enqueueReplaceState(instance, previousState => ({
       previousState,
     }));
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
     expect(instance.state).toEqual({previousState: {a: 'a', b: 'b'}});
   });
 
@@ -317,7 +317,7 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     ReactNoop.render(<Foo />);
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
     expect(ops).toEqual([
       'render',
       'did mount',
@@ -345,7 +345,7 @@ describe('ReactIncrementalUpdates', () => {
       }
     }
     ReactNoop.render(<Foo />);
-    expect(() => expect(ReactNoop).toFlushWithoutYielding()).toWarnDev(
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
       'componentWillReceiveProps: Please update the following components ' +
         'to use static getDerivedStateFromProps instead: Foo',
       {withoutStack: true},
@@ -376,7 +376,7 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     ReactNoop.render(<Foo />);
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
 
     instance.setState(function a() {
       ops.push('setState updater');
@@ -384,7 +384,7 @@ describe('ReactIncrementalUpdates', () => {
       return {a: 'a'};
     });
 
-    expect(() => expect(ReactNoop).toFlushWithoutYielding()).toWarnDev(
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
       'An update (setState, replaceState, or forceUpdate) was scheduled ' +
         'from inside an update function. Update functions should be pure, ' +
         'with zero side-effects. Consider using componentDidUpdate or a ' +
@@ -406,7 +406,7 @@ describe('ReactIncrementalUpdates', () => {
       this.setState({a: 'a'});
       return {b: 'b'};
     });
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
   });
 
   it('getDerivedStateFromProps should update base state of updateQueue (based on product bug)', () => {
@@ -478,22 +478,22 @@ describe('ReactIncrementalUpdates', () => {
     // updates in separate batches are all flushed in the same callback
     ReactNoop.render(<App label="" />);
     Scheduler.advanceTime(1000);
-    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
     interrupt();
 
     ReactNoop.render(<App label="he" />);
     Scheduler.advanceTime(1000);
-    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
     interrupt();
 
     ReactNoop.render(<App label="hell" />);
     Scheduler.advanceTime(1000);
-    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
     interrupt();
 
     ReactNoop.render(<App label="hello" />);
     Scheduler.advanceTime(1000);
-    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
     interrupt();
 
     // Each update flushes in a separate commit.
@@ -502,7 +502,7 @@ describe('ReactIncrementalUpdates', () => {
     // implementation detail. The important part of this unit test is what
     // happens when they expire, in which case they really should be batched to
     // avoid blocking the main thread for a long time.
-    expect(ReactNoop).toFlushAndYield([
+    expect(Scheduler).toFlushAndYield([
       'Render: ',
       'Commit: ',
       'Render: he',
@@ -517,29 +517,29 @@ describe('ReactIncrementalUpdates', () => {
     // instead of flushing them normally.
     ReactNoop.render(<App label="" />);
     Scheduler.advanceTime(1000);
-    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
     interrupt();
 
     ReactNoop.render(<App label="go" />);
     Scheduler.advanceTime(1000);
-    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
     interrupt();
 
     ReactNoop.render(<App label="good" />);
     Scheduler.advanceTime(1000);
-    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
     interrupt();
 
     ReactNoop.render(<App label="goodbye" />);
     Scheduler.advanceTime(1000);
-    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
     interrupt();
 
     // All the updates should render and commit in a single batch.
     Scheduler.advanceTime(10000);
-    expect(ReactNoop).toHaveYielded(['Render: goodbye']);
+    expect(Scheduler).toHaveYielded(['Render: goodbye']);
     // Passive effect
-    expect(ReactNoop).toFlushAndYield(['Commit: goodbye']);
+    expect(Scheduler).toFlushAndYield(['Commit: goodbye']);
   });
 
   it('flushes all expired updates in a single batch across multiple roots', () => {
@@ -565,25 +565,25 @@ describe('ReactIncrementalUpdates', () => {
     ReactNoop.renderToRootWithID(<App label="" />, 'a');
     ReactNoop.renderToRootWithID(<App label="" />, 'b');
     Scheduler.advanceTime(1000);
-    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
     interrupt();
 
     ReactNoop.renderToRootWithID(<App label="he" />, 'a');
     ReactNoop.renderToRootWithID(<App label="he" />, 'b');
     Scheduler.advanceTime(1000);
-    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
     interrupt();
 
     ReactNoop.renderToRootWithID(<App label="hell" />, 'a');
     ReactNoop.renderToRootWithID(<App label="hell" />, 'b');
     Scheduler.advanceTime(1000);
-    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
     interrupt();
 
     ReactNoop.renderToRootWithID(<App label="hello" />, 'a');
     ReactNoop.renderToRootWithID(<App label="hello" />, 'b');
     Scheduler.advanceTime(1000);
-    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
     interrupt();
 
     // Each update flushes in a separate commit.
@@ -592,7 +592,7 @@ describe('ReactIncrementalUpdates', () => {
     // implementation detail. The important part of this unit test is what
     // happens when they expire, in which case they really should be batched to
     // avoid blocking the main thread for a long time.
-    expect(ReactNoop).toFlushAndYield([
+    expect(Scheduler).toFlushAndYield([
       'Render: ',
       'Commit: ',
       'Render: ',
@@ -616,35 +616,35 @@ describe('ReactIncrementalUpdates', () => {
     ReactNoop.renderToRootWithID(<App label="" />, 'a');
     ReactNoop.renderToRootWithID(<App label="" />, 'b');
     Scheduler.advanceTime(1000);
-    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
     interrupt();
 
     ReactNoop.renderToRootWithID(<App label="go" />, 'a');
     ReactNoop.renderToRootWithID(<App label="go" />, 'b');
     Scheduler.advanceTime(1000);
-    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
     interrupt();
 
     ReactNoop.renderToRootWithID(<App label="good" />, 'a');
     ReactNoop.renderToRootWithID(<App label="good" />, 'b');
     Scheduler.advanceTime(1000);
-    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
     interrupt();
 
     ReactNoop.renderToRootWithID(<App label="goodbye" />, 'a');
     ReactNoop.renderToRootWithID(<App label="goodbye" />, 'b');
     Scheduler.advanceTime(1000);
-    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
     interrupt();
 
     // All the updates should render and commit in a single batch.
     Scheduler.advanceTime(10000);
-    expect(ReactNoop).toHaveYielded([
+    expect(Scheduler).toHaveYielded([
       'Render: goodbye',
       'Commit: goodbye',
       'Render: goodbye',
     ]);
     // Passive effect
-    expect(ReactNoop).toFlushAndYield(['Commit: goodbye']);
+    expect(Scheduler).toFlushAndYield(['Commit: goodbye']);
   });
 });

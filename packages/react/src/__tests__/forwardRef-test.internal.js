@@ -13,6 +13,7 @@ describe('forwardRef', () => {
   let React;
   let ReactFeatureFlags;
   let ReactNoop;
+  let Scheduler;
 
   beforeEach(() => {
     jest.resetModules();
@@ -21,6 +22,7 @@ describe('forwardRef', () => {
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
+    Scheduler = require('scheduler');
   });
 
   it('should work without a ref to be forwarded', () => {
@@ -40,7 +42,7 @@ describe('forwardRef', () => {
     ));
 
     ReactNoop.render(<RefForwardingComponent value={123} />);
-    expect(ReactNoop).toFlushAndYield([123]);
+    expect(Scheduler).toFlushAndYield([123]);
   });
 
   it('should forward a ref for a single child', () => {
@@ -62,7 +64,7 @@ describe('forwardRef', () => {
     const ref = React.createRef();
 
     ReactNoop.render(<RefForwardingComponent ref={ref} value={123} />);
-    expect(ReactNoop).toFlushAndYield([123]);
+    expect(Scheduler).toFlushAndYield([123]);
     expect(ref.current instanceof Child).toBe(true);
   });
 
@@ -91,7 +93,7 @@ describe('forwardRef', () => {
         <div />
       </div>,
     );
-    expect(ReactNoop).toFlushAndYield([123]);
+    expect(Scheduler).toFlushAndYield([123]);
     expect(ref.current instanceof Child).toBe(true);
   });
 
@@ -123,11 +125,11 @@ describe('forwardRef', () => {
     };
 
     ReactNoop.render(<RefForwardingComponent ref={setRef} value={123} />);
-    expect(ReactNoop).toFlushAndYield([123]);
+    expect(Scheduler).toFlushAndYield([123]);
     expect(ref instanceof Child).toBe(true);
     expect(setRefCount).toBe(1);
     ReactNoop.render(<RefForwardingComponent ref={setRef} value={456} />);
-    expect(ReactNoop).toFlushAndYield([456]);
+    expect(Scheduler).toFlushAndYield([456]);
     expect(ref instanceof Child).toBe(true);
     expect(setRefCount).toBe(1);
   });
@@ -172,7 +174,7 @@ describe('forwardRef', () => {
         <RefForwardingComponent ref={ref} />
       </ErrorBoundary>,
     );
-    expect(ReactNoop).toFlushAndYield([
+    expect(Scheduler).toFlushAndYield([
       'ErrorBoundary.render: try',
       'Wrapper',
       'BadRender throw',
@@ -216,9 +218,9 @@ describe('forwardRef', () => {
     }
 
     ReactNoop.render(<App />);
-    expect(ReactNoop).toFlushAndYield(['App', 'Forward', 'Middle', 'Inner']);
+    expect(Scheduler).toFlushAndYield(['App', 'Forward', 'Middle', 'Inner']);
 
     inst.setState({});
-    expect(ReactNoop).toFlushAndYield(['Inner']);
+    expect(Scheduler).toFlushAndYield(['Inner']);
   });
 });

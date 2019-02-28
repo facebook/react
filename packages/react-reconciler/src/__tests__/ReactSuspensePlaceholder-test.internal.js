@@ -138,13 +138,18 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
         unstable_isConcurrent: true,
       });
 
-      expect(root).toFlushAndYield(['A', 'Suspend! [B]', 'C', 'Loading...']);
+      expect(Scheduler).toFlushAndYield([
+        'A',
+        'Suspend! [B]',
+        'C',
+        'Loading...',
+      ]);
       expect(root).toMatchRenderedOutput(null);
 
       jest.advanceTimersByTime(1000);
-      expect(ReactTestRenderer).toHaveYielded(['Promise resolved [B]']);
+      expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
 
-      expect(root).toFlushAndYield(['A', 'B', 'C']);
+      expect(Scheduler).toFlushAndYield(['A', 'B', 'C']);
 
       expect(root).toMatchRenderedOutput(
         <React.Fragment>
@@ -156,17 +161,17 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
 
       // Update
       root.update(<App middleText="B2" />);
-      expect(root).toFlushAndYield(['Suspend! [B2]', 'C', 'Loading...']);
+      expect(Scheduler).toFlushAndYield(['Suspend! [B2]', 'C', 'Loading...']);
 
       // Time out the update
       jest.advanceTimersByTime(750);
-      expect(root).toFlushAndYield([]);
+      expect(Scheduler).toFlushAndYield([]);
       expect(root).toMatchRenderedOutput('Loading...');
 
       // Resolve the promise
       jest.advanceTimersByTime(1000);
-      expect(ReactTestRenderer).toHaveYielded(['Promise resolved [B2]']);
-      expect(root).toFlushAndYield(['B2', 'C']);
+      expect(Scheduler).toHaveYielded(['Promise resolved [B2]']);
+      expect(Scheduler).toFlushAndYield(['B2', 'C']);
 
       // Render the final update. A should still be hidden, because it was
       // given a `hidden` prop.
@@ -195,27 +200,37 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
         unstable_isConcurrent: true,
       });
 
-      expect(root).toFlushAndYield(['A', 'Suspend! [B]', 'C', 'Loading...']);
+      expect(Scheduler).toFlushAndYield([
+        'A',
+        'Suspend! [B]',
+        'C',
+        'Loading...',
+      ]);
 
       expect(root).toMatchRenderedOutput(null);
 
       jest.advanceTimersByTime(1000);
-      expect(ReactTestRenderer).toHaveYielded(['Promise resolved [B]']);
-      expect(root).toFlushAndYield(['A', 'B', 'C']);
+      expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
+      expect(Scheduler).toFlushAndYield(['A', 'B', 'C']);
       expect(root).toMatchRenderedOutput('ABC');
 
       // Update
       root.update(<App middleText="B2" />);
-      expect(root).toFlushAndYield(['A', 'Suspend! [B2]', 'C', 'Loading...']);
+      expect(Scheduler).toFlushAndYield([
+        'A',
+        'Suspend! [B2]',
+        'C',
+        'Loading...',
+      ]);
       // Time out the update
       jest.advanceTimersByTime(750);
-      expect(root).toFlushAndYield([]);
+      expect(Scheduler).toFlushAndYield([]);
       expect(root).toMatchRenderedOutput('Loading...');
 
       // Resolve the promise
       jest.advanceTimersByTime(1000);
-      expect(ReactTestRenderer).toHaveYielded(['Promise resolved [B2]']);
-      expect(root).toFlushAndYield(['A', 'B2', 'C']);
+      expect(Scheduler).toHaveYielded(['Promise resolved [B2]']);
+      expect(Scheduler).toFlushAndYield(['A', 'B2', 'C']);
 
       // Render the final update. A should still be hidden, because it was
       // given a `hidden` prop.
@@ -284,7 +299,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
             unstable_isConcurrent: true,
           });
 
-          expect(root).toFlushAndYield([
+          expect(Scheduler).toFlushAndYield([
             'App',
             'Suspending',
             'Suspend! [Loaded]',
@@ -306,10 +321,8 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
 
           // Resolve the pending promise.
           jest.advanceTimersByTime(250);
-          expect(ReactTestRenderer).toHaveYielded([
-            'Promise resolved [Loaded]',
-          ]);
-          expect(root).toFlushAndYield(['Suspending', 'Loaded', 'Text']);
+          expect(Scheduler).toHaveYielded(['Promise resolved [Loaded]']);
+          expect(Scheduler).toFlushAndYield(['Suspending', 'Loaded', 'Text']);
           expect(root).toMatchRenderedOutput('LoadedText');
           expect(onRender).toHaveBeenCalledTimes(2);
 
@@ -375,7 +388,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
             },
           );
 
-          expect(root).toFlushAndYield(['App', 'Text']);
+          expect(Scheduler).toFlushAndYield(['App', 'Text']);
           expect(root).toMatchRenderedOutput('Text');
           expect(onRender).toHaveBeenCalledTimes(1);
 
@@ -385,7 +398,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
           expect(onRender.mock.calls[0][3]).toBe(5);
 
           root.update(<App shouldSuspend={true} textRenderDuration={5} />);
-          expect(root).toFlushAndYield([
+          expect(Scheduler).toFlushAndYield([
             'App',
             'Suspending',
             'Suspend! [Loaded]',
@@ -411,7 +424,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
           root.update(
             <App shouldSuspend={true} text="New" textRenderDuration={6} />,
           );
-          expect(root).toFlushAndYield([
+          expect(Scheduler).toFlushAndYield([
             'App',
             'Suspending',
             'Suspend! [Loaded]',
@@ -423,10 +436,13 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
 
           // Resolve the pending promise.
           jest.advanceTimersByTime(250);
-          expect(ReactTestRenderer).toHaveYielded([
-            'Promise resolved [Loaded]',
+          expect(Scheduler).toHaveYielded(['Promise resolved [Loaded]']);
+          expect(Scheduler).toFlushAndYield([
+            'App',
+            'Suspending',
+            'Loaded',
+            'New',
           ]);
-          expect(root).toFlushAndYield(['App', 'Suspending', 'Loaded', 'New']);
           expect(onRender).toHaveBeenCalledTimes(3);
 
           // When the suspending data is resolved and our final UI is rendered,

@@ -74,7 +74,7 @@ describe('ReactExpiration', () => {
     // Advance the timer.
     Scheduler.advanceTime(2000);
     // Partially flush the the first update, then interrupt it.
-    expect(ReactNoop).toFlushAndYieldThrough(['A [render]']);
+    expect(Scheduler).toFlushAndYieldThrough(['A [render]']);
     interrupt();
 
     // Don't advance time by enough to expire the first update.
@@ -89,7 +89,7 @@ describe('ReactExpiration', () => {
     // batch these two updates together. The fact that they aren't batched
     // is an implementation detail. The important part of this unit test is that
     // they are batched if it's possible that they happened in the same event.
-    expect(ReactNoop).toFlushAndYield([
+    expect(Scheduler).toFlushAndYield([
       'A [render]',
       'A [commit]',
       'B [render]',
@@ -101,13 +101,13 @@ describe('ReactExpiration', () => {
     // between the two updates.
     ReactNoop.render(<Text text="A" />);
     Scheduler.advanceTime(2000);
-    expect(ReactNoop).toHaveYielded([]);
+    expect(Scheduler).toHaveYielded([]);
     expect(ReactNoop.getChildren()).toEqual([span('B')]);
     // Schedule another update.
     ReactNoop.render(<Text text="B" />);
     // The updates should flush in the same batch, since as far as the scheduler
     // knows, they may have occurred inside the same event.
-    expect(ReactNoop).toFlushAndYield(['B [render]', 'B [commit]']);
+    expect(Scheduler).toFlushAndYield(['B [render]', 'B [commit]']);
   });
 
   it(
@@ -139,7 +139,7 @@ describe('ReactExpiration', () => {
       // Advance the timer.
       Scheduler.advanceTime(2000);
       // Partially flush the the first update, then interrupt it.
-      expect(ReactNoop).toFlushAndYieldThrough(['A [render]']);
+      expect(Scheduler).toFlushAndYieldThrough(['A [render]']);
       interrupt();
 
       // Don't advance time by enough to expire the first update.
@@ -154,7 +154,7 @@ describe('ReactExpiration', () => {
       // batch these two updates together. The fact that they aren't batched
       // is an implementation detail. The important part of this unit test is that
       // they are batched if it's possible that they happened in the same event.
-      expect(ReactNoop).toFlushAndYield([
+      expect(Scheduler).toFlushAndYield([
         'A [render]',
         'A [commit]',
         'B [render]',
@@ -166,7 +166,7 @@ describe('ReactExpiration', () => {
       // between the two updates.
       ReactNoop.render(<Text text="A" />);
       Scheduler.advanceTime(2000);
-      expect(ReactNoop).toHaveYielded([]);
+      expect(Scheduler).toHaveYielded([]);
       expect(ReactNoop.getChildren()).toEqual([span('B')]);
 
       // Perform some synchronous work. The scheduler must assume we're inside
@@ -177,7 +177,7 @@ describe('ReactExpiration', () => {
       ReactNoop.render(<Text text="B" />);
       // The updates should flush in the same batch, since as far as the scheduler
       // knows, they may have occurred inside the same event.
-      expect(ReactNoop).toFlushAndYield(['B [render]', 'B [commit]']);
+      expect(Scheduler).toFlushAndYield(['B [render]', 'B [commit]']);
     },
   );
 
@@ -212,7 +212,7 @@ describe('ReactExpiration', () => {
 
     // Initial mount
     ReactNoop.render(<App />);
-    expect(ReactNoop).toFlushAndYield([
+    expect(Scheduler).toFlushAndYield([
       'initial [A] [render]',
       'initial [B] [render]',
       'initial [C] [render]',
@@ -225,7 +225,7 @@ describe('ReactExpiration', () => {
 
     // Partial update
     subscribers.forEach(s => s.setState({text: '1'}));
-    expect(ReactNoop).toFlushAndYieldThrough([
+    expect(Scheduler).toFlushAndYieldThrough([
       '1 [A] [render]',
       '1 [B] [render]',
     ]);
@@ -234,7 +234,7 @@ describe('ReactExpiration', () => {
     // advanced, this update should be given a different expiration time than
     // the currently rendering one. So, C and D should render with 1, not 2.
     subscribers.forEach(s => s.setState({text: '2'}));
-    expect(ReactNoop).toFlushAndYieldThrough([
+    expect(Scheduler).toFlushAndYieldThrough([
       '1 [C] [render]',
       '1 [D] [render]',
     ]);

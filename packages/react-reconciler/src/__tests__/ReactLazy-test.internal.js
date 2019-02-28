@@ -45,12 +45,12 @@ describe('ReactLazy', () => {
       },
     );
 
-    expect(root).toFlushAndYield(['Loading...']);
+    expect(Scheduler).toFlushAndYield(['Loading...']);
     expect(root).toMatchRenderedOutput(null);
 
     await Promise.resolve();
 
-    expect(root).toFlushAndYield(['Hi']);
+    expect(Scheduler).toFlushAndYield(['Hi']);
     expect(root).toMatchRenderedOutput('Hi');
 
     // Should not suspend on update
@@ -59,7 +59,7 @@ describe('ReactLazy', () => {
         <LazyText text="Hi again" />
       </Suspense>,
     );
-    expect(root).toFlushAndYield(['Hi again']);
+    expect(Scheduler).toFlushAndYield(['Hi again']);
     expect(root).toMatchRenderedOutput('Hi again');
   });
 
@@ -76,7 +76,7 @@ describe('ReactLazy', () => {
       </Suspense>,
     );
 
-    expect(ReactTestRenderer).toHaveYielded(['Hi']);
+    expect(Scheduler).toHaveYielded(['Hi']);
     expect(root).toMatchRenderedOutput('Hi');
   });
 
@@ -106,7 +106,7 @@ describe('ReactLazy', () => {
         </Suspense>
       </ErrorBoundary>,
     );
-    expect(ReactTestRenderer).toHaveYielded([]);
+    expect(Scheduler).toHaveYielded([]);
     expect(root).toMatchRenderedOutput('Error: oh no');
   });
 
@@ -135,19 +135,19 @@ describe('ReactLazy', () => {
       },
     );
 
-    expect(root).toFlushAndYield(['Loading...']);
+    expect(Scheduler).toFlushAndYield(['Loading...']);
     expect(root).toMatchRenderedOutput(null);
 
     jest.advanceTimersByTime(1000);
     await promiseForFoo;
 
-    expect(root).toFlushAndYield(['Foo', 'Loading...']);
+    expect(Scheduler).toFlushAndYield(['Foo', 'Loading...']);
     expect(root).toMatchRenderedOutput(null);
 
     jest.advanceTimersByTime(1000);
     await promiseForBar;
 
-    expect(root).toFlushAndYield(['Foo', 'Bar']);
+    expect(Scheduler).toFlushAndYield(['Foo', 'Bar']);
     expect(root).toMatchRenderedOutput('FooBar');
   });
 
@@ -164,7 +164,7 @@ describe('ReactLazy', () => {
         unstable_isConcurrent: true,
       },
     );
-    expect(root).toFlushAndYield(['Loading...']);
+    expect(Scheduler).toFlushAndYield(['Loading...']);
     expect(root).toMatchRenderedOutput(null);
 
     await Promise.resolve();
@@ -175,7 +175,7 @@ describe('ReactLazy', () => {
         'Expected the result of a dynamic import() call',
       );
     }
-    expect(root).toFlushAndThrow('Element type is invalid');
+    expect(Scheduler).toFlushAndThrow('Element type is invalid');
   });
 
   it('throws if promise rejects', async () => {
@@ -192,14 +192,14 @@ describe('ReactLazy', () => {
       },
     );
 
-    expect(root).toFlushAndYield(['Loading...']);
+    expect(Scheduler).toFlushAndYield(['Loading...']);
     expect(root).toMatchRenderedOutput(null);
 
     try {
       await Promise.resolve();
     } catch (e) {}
 
-    expect(root).toFlushAndThrow('Bad network');
+    expect(Scheduler).toFlushAndThrow('Bad network');
   });
 
   it('mount and reorder', async () => {
@@ -238,18 +238,28 @@ describe('ReactLazy', () => {
       unstable_isConcurrent: true,
     });
 
-    expect(root).toFlushAndYield(['Loading...']);
+    expect(Scheduler).toFlushAndYield(['Loading...']);
     expect(root).toMatchRenderedOutput(null);
 
     await LazyChildA;
     await LazyChildB;
 
-    expect(root).toFlushAndYield(['A', 'B', 'Did mount: A', 'Did mount: B']);
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      'B',
+      'Did mount: A',
+      'Did mount: B',
+    ]);
     expect(root).toMatchRenderedOutput('AB');
 
     // Swap the position of A and B
     root.update(<Parent swap={true} />);
-    expect(root).toFlushAndYield(['B', 'A', 'Did update: B', 'Did update: A']);
+    expect(Scheduler).toFlushAndYield([
+      'B',
+      'A',
+      'Did update: B',
+      'Did update: A',
+    ]);
     expect(root).toMatchRenderedOutput('BA');
   });
 
@@ -269,12 +279,12 @@ describe('ReactLazy', () => {
       },
     );
 
-    expect(root).toFlushAndYield(['Loading...']);
+    expect(Scheduler).toFlushAndYield(['Loading...']);
     expect(root).toMatchRenderedOutput(null);
 
     await Promise.resolve();
 
-    expect(root).toFlushAndYield(['Hi']);
+    expect(Scheduler).toFlushAndYield(['Hi']);
     expect(root).toMatchRenderedOutput('Hi');
 
     T.defaultProps = {text: 'Hi again'};
@@ -283,7 +293,7 @@ describe('ReactLazy', () => {
         <LazyText />
       </Suspense>,
     );
-    expect(root).toFlushAndYield(['Hi again']);
+    expect(Scheduler).toFlushAndYield(['Hi again']);
     expect(root).toMatchRenderedOutput('Hi again');
   });
 
@@ -319,17 +329,17 @@ describe('ReactLazy', () => {
         unstable_isConcurrent: true,
       },
     );
-    expect(root).toFlushAndYield(['Loading...']);
+    expect(Scheduler).toFlushAndYield(['Loading...']);
     expect(root).toMatchRenderedOutput(null);
 
     await Promise.resolve();
 
-    expect(root).toFlushAndYield(['Lazy', 'Sibling', 'A']);
+    expect(Scheduler).toFlushAndYield(['Lazy', 'Sibling', 'A']);
     expect(root).toMatchRenderedOutput('SiblingA');
 
     // Lazy should not re-render
     stateful.current.setState({text: 'B'});
-    expect(root).toFlushAndYield(['B']);
+    expect(Scheduler).toFlushAndYield(['B']);
     expect(root).toMatchRenderedOutput('SiblingB');
   });
 
@@ -392,12 +402,12 @@ describe('ReactLazy', () => {
       },
     );
 
-    expect(root).toFlushAndYield(['Loading...']);
+    expect(Scheduler).toFlushAndYield(['Loading...']);
     expect(root).toMatchRenderedOutput(null);
 
     await Promise.resolve();
 
-    expect(root).toFlushAndYield([
+    expect(Scheduler).toFlushAndYield([
       'constructor: A',
       'getDerivedStateFromProps: A',
       'A1',
@@ -409,7 +419,7 @@ describe('ReactLazy', () => {
         <LazyClass num={2} />
       </Suspense>,
     );
-    expect(root).toFlushAndYield([
+    expect(Scheduler).toFlushAndYield([
       'getDerivedStateFromProps: A',
       'shouldComponentUpdate: A -> A',
       'A2',
@@ -423,7 +433,7 @@ describe('ReactLazy', () => {
         <LazyClass num={3} />
       </Suspense>,
     );
-    expect(root).toFlushAndYield([
+    expect(Scheduler).toFlushAndYield([
       'getDerivedStateFromProps: A',
       'shouldComponentUpdate: A -> A',
       'A3',
@@ -469,8 +479,8 @@ describe('ReactLazy', () => {
       </Suspense>,
     );
 
-    expect(ReactTestRenderer).toHaveYielded(['Loading...']);
-    expect(root).toFlushAndYield([]);
+    expect(Scheduler).toHaveYielded(['Loading...']);
+    expect(Scheduler).toFlushAndYield([]);
     expect(root).toMatchRenderedOutput('Loading...');
 
     await Promise.resolve();
@@ -480,14 +490,14 @@ describe('ReactLazy', () => {
         <LazyClass num={2} />
       </Suspense>,
     );
-    expect(ReactTestRenderer).toHaveYielded([
+    expect(Scheduler).toHaveYielded([
       'UNSAFE_componentWillMount: A',
       'A1',
       'UNSAFE_componentWillReceiveProps: A -> A',
       'UNSAFE_componentWillUpdate: A -> A',
       'A2',
     ]);
-    expect(root).toFlushAndYield([]);
+    expect(Scheduler).toFlushAndYield([]);
     expect(root).toMatchRenderedOutput('A2');
 
     root.update(
@@ -495,12 +505,12 @@ describe('ReactLazy', () => {
         <LazyClass num={3} />
       </Suspense>,
     );
-    expect(ReactTestRenderer).toHaveYielded([
+    expect(Scheduler).toHaveYielded([
       'UNSAFE_componentWillReceiveProps: A -> A',
       'UNSAFE_componentWillUpdate: A -> A',
       'A3',
     ]);
-    expect(root).toFlushAndYield([]);
+    expect(Scheduler).toFlushAndYield([]);
     expect(root).toMatchRenderedOutput('A3');
   });
 
@@ -529,11 +539,11 @@ describe('ReactLazy', () => {
       },
     );
 
-    expect(root).toFlushAndYield(['Loading...']);
+    expect(Scheduler).toFlushAndYield(['Loading...']);
     expect(root).toMatchRenderedOutput(null);
 
     await Promise.resolve();
-    expect(root).toFlushAndYield(['Hi Bye']);
+    expect(Scheduler).toFlushAndYield(['Hi Bye']);
     expect(root).toMatchRenderedOutput('Hi Bye');
 
     root.update(
@@ -541,7 +551,7 @@ describe('ReactLazy', () => {
         <LazyText outer="World" />
       </Suspense>,
     );
-    expect(root).toFlushAndYield(['Hi World']);
+    expect(Scheduler).toFlushAndYield(['Hi World']);
     expect(root).toMatchRenderedOutput('Hi World');
 
     root.update(
@@ -549,7 +559,7 @@ describe('ReactLazy', () => {
         <LazyText inner="Friends" />
       </Suspense>,
     );
-    expect(root).toFlushAndYield(['Friends Bye']);
+    expect(Scheduler).toFlushAndYield(['Friends Bye']);
     expect(root).toMatchRenderedOutput('Friends Bye');
   });
 
@@ -565,7 +575,7 @@ describe('ReactLazy', () => {
       },
     );
 
-    expect(root).toFlushAndYield(['Loading...']);
+    expect(Scheduler).toFlushAndYield(['Loading...']);
     expect(root).toMatchRenderedOutput(null);
 
     await Promise.resolve();
@@ -593,7 +603,7 @@ describe('ReactLazy', () => {
       },
     );
 
-    expect(root).toFlushAndYield(['Loading...']);
+    expect(Scheduler).toFlushAndYield(['Loading...']);
     expect(root).toMatchRenderedOutput(null);
 
     await Promise.resolve();
@@ -643,7 +653,7 @@ describe('ReactLazy', () => {
       },
     );
 
-    expect(root).toFlushAndYield(['Loading...']);
+    expect(Scheduler).toFlushAndYield(['Loading...']);
     expect(root).toMatchRenderedOutput(null);
 
     // Mount
@@ -829,7 +839,7 @@ describe('ReactLazy', () => {
       },
     );
 
-    expect(root).toFlushAndYield(['Loading...']);
+    expect(Scheduler).toFlushAndYield(['Loading...']);
     expect(root).toMatchRenderedOutput(null);
 
     // Mount
@@ -871,13 +881,13 @@ describe('ReactLazy', () => {
       },
     );
 
-    expect(root).toFlushAndYield(['Started loading', 'Loading...']);
+    expect(Scheduler).toFlushAndYield(['Started loading', 'Loading...']);
     expect(root).toMatchRenderedOutput(null);
 
     await Promise.resolve();
 
     expect(() => {
-      expect(root).toFlushAndYield(['A', 'B']);
+      expect(Scheduler).toFlushAndYield(['A', 'B']);
     }).toWarnDev('    in Text (at **)\n' + '    in Foo (at **)');
     expect(root).toMatchRenderedOutput(<div>AB</div>);
   });
@@ -917,13 +927,13 @@ describe('ReactLazy', () => {
       },
     );
 
-    expect(root).toFlushAndYield(['Loading...']);
+    expect(Scheduler).toFlushAndYield(['Loading...']);
     expect(root).toMatchRenderedOutput(null);
     expect(ref.current).toBe(null);
 
     await Promise.resolve();
 
-    expect(root).toFlushAndYield(['Foo', 'forwardRef', 'Bar']);
+    expect(Scheduler).toFlushAndYield(['Foo', 'forwardRef', 'Bar']);
     expect(root).toMatchRenderedOutput('FooBar');
     expect(ref.current).not.toBe(null);
   });
@@ -945,7 +955,7 @@ describe('ReactLazy', () => {
         unstable_isConcurrent: true,
       },
     );
-    expect(root).toFlushAndYield(['Loading...']);
+    expect(Scheduler).toFlushAndYield(['Loading...']);
     expect(root).toMatchRenderedOutput(null);
 
     // Mount
@@ -1029,7 +1039,7 @@ describe('ReactLazy', () => {
         unstable_isConcurrent: true,
       },
     );
-    expect(root).toFlushAndYield(['Loading...']);
+    expect(Scheduler).toFlushAndYield(['Loading...']);
     expect(root).toMatchRenderedOutput(null);
 
     // Mount
@@ -1072,11 +1082,11 @@ describe('ReactLazy', () => {
       },
     );
 
-    expect(root).toFlushAndYield(['Loading...']);
+    expect(Scheduler).toFlushAndYield(['Loading...']);
     expect(root).toMatchRenderedOutput(null);
     await Promise.resolve();
     expect(() => {
-      expect(root).toFlushAndYield([]);
+      expect(Scheduler).toFlushAndYield([]);
     }).toWarnDev('Function components cannot be given refs');
   });
 });

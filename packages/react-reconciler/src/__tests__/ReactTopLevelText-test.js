@@ -12,6 +12,7 @@
 
 let React;
 let ReactNoop;
+let Scheduler;
 
 // This is a new feature in Fiber so I put it in its own test file. It could
 // probably move to one of the other test files once it is official.
@@ -20,19 +21,20 @@ describe('ReactTopLevelText', () => {
     jest.resetModules();
     React = require('react');
     ReactNoop = require('react-noop-renderer');
+    Scheduler = require('scheduler');
   });
 
   it('should render a component returning strings directly from render', () => {
     const Text = ({value}) => value;
     ReactNoop.render(<Text value="foo" />);
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
     expect(ReactNoop).toMatchRenderedOutput('foo');
   });
 
   it('should render a component returning numbers directly from render', () => {
     const Text = ({value}) => value;
     ReactNoop.render(<Text value={10} />);
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
     expect(ReactNoop).toMatchRenderedOutput('10');
   });
 });
