@@ -26,7 +26,8 @@ function captureAssertion(fn) {
 }
 
 function assertYieldsWereCleared(root) {
-  const actualYields = root.unstable_clearYields();
+  const Scheduler = root._Scheduler;
+  const actualYields = Scheduler.unstable_clearYields();
   invariant(
     actualYields.length === 0,
     'Log of yielded values is not empty. ' +

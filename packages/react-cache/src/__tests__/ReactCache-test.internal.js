@@ -14,54 +14,14 @@ let createResource;
 let React;
 let ReactFeatureFlags;
 let ReactTestRenderer;
+let Scheduler;
 let Suspense;
 let TextResource;
 let textResourceShouldFail;
-let flushScheduledWork;
-let evictLRU;
 
 describe('ReactCache', () => {
   beforeEach(() => {
     jest.resetModules();
-
-    let currentPriorityLevel = 3;
-
-    jest.mock('scheduler', () => {
-      let callbacks = [];
-      return {
-        unstable_scheduleCallback(callback) {
-          const callbackIndex = callbacks.length;
-          callbacks.push(callback);
-          return {callbackIndex};
-        },
-        flushScheduledWork() {
-          while (callbacks.length) {
-            const callback = callbacks.pop();
-            callback();
-          }
-        },
-
-        unstable_ImmediatePriority: 1,
-        unstable_UserBlockingPriority: 2,
-        unstable_NormalPriority: 3,
-        unstable_LowPriority: 4,
-        unstable_IdlePriority: 5,
-
-        unstable_runWithPriority(priorityLevel, fn) {
-          const prevPriorityLevel = currentPriorityLevel;
-          currentPriorityLevel = priorityLevel;
-          try {
-            return fn();
-          } finally {
-            currentPriorityLevel = prevPriorityLevel;
-          }
-        },
-
-        unstable_getCurrentPriorityLevel() {
-          return currentPriorityLevel;
-        },
-      };
-    });
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
@@ -71,8 +31,7 @@ describe('ReactCache', () => {
     ReactCache = require('react-cache');
     createResource = ReactCache.unstable_createResource;
     ReactTestRenderer = require('react-test-renderer');
-    flushScheduledWork = require('scheduler').flushScheduledWork;
-    evictLRU = flushScheduledWork;
+    Scheduler = require('scheduler');
 
     TextResource = createResource(([text, ms = 0]) => {
       let listeners = null;
@@ -86,16 +45,12 @@ describe('ReactCache', () => {
                 listeners = [{resolve, reject}];
                 setTimeout(() => {
                   if (textResourceShouldFail) {
-                    ReactTestRenderer.unstable_yield(
-                      `Promise rejected [${text}]`,
-                    );
+                    Scheduler.yieldValue(`Promise rejected [${text}]`);
                     status = 'rejected';
                     value = new Error('Failed to load: ' + text);
                     listeners.forEach(listener => listener.reject(value));
                   } else {
-                    ReactTestRenderer.unstable_yield(
-                      `Promise resolved [${text}]`,
-                    );
+                    Scheduler.yieldValue(`Promise resolved [${text}]`);
                     status = 'resolved';
                     value = text;
                     listeners.forEach(listener => listener.resolve(value));
@@ -123,7 +78,7 @@ describe('ReactCache', () => {
   });
 
   function Text(props) {
-    ReactTestRenderer.unstable_yield(props.text);
+    Scheduler.yieldValue(props.text);
     return props.text;
   }
 
@@ -131,13 +86,13 @@ describe('ReactCache', () => {
     const text = props.text;
     try {
       TextResource.read([props.text, props.ms]);
-      ReactTestRenderer.unstable_yield(text);
+      Scheduler.yieldValue(text);
       return text;
     } catch (promise) {
       if (typeof promise.then === 'function') {
-        ReactTestRenderer.unstable_yield(`Suspend! [${text}]`);
+        Scheduler.yieldValue(`Suspend! [${text}]`);
       } else {
-        ReactTestRenderer.unstable_yield(`Error! [${text}]`);
+        Scheduler.yieldValue(`Error! [${text}]`);
       }
       throw promise;
     }
@@ -201,7 +156,7 @@ describe('ReactCache', () => {
     });
 
     function App() {
-      ReactTestRenderer.unstable_yield('App');
+      Scheduler.yieldValue('App');
       return BadTextResource.read(['Hi', 100]);
     }
 
@@ -284,9 +239,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('145');
 
     // We've now rendered values 1, 2, 3, 4, 5, over our limit of 3. The least
-    // recently used values are 2 and 3. They will be evicted during the
-    // next sweep.
-    evictLRU();
+    // recently used values are 2 and 3. They should have been evicted.
 
     root.update(
       <Suspense fallback={<Text text="Loading..." />}>
@@ -368,13 +321,13 @@ describe('ReactCache', () => {
       const text = props.text;
       try {
         const actualText = BadTextResource.read([props.text, props.ms]);
-        ReactTestRenderer.unstable_yield(actualText);
+        Scheduler.yieldValue(actualText);
         return actualText;
       } catch (promise) {
         if (typeof promise.then === 'function') {
-          ReactTestRenderer.unstable_yield(`Suspend! [${text}]`);
+          Scheduler.yieldValue(`Suspend! [${text}]`);
         } else {
-          ReactTestRenderer.unstable_yield(`Error! [${text}]`);
+          Scheduler.yieldValue(`Error! [${text}]`);
         }
         throw promise;
       }
