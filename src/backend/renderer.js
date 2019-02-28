@@ -547,11 +547,10 @@ export function attach(
     const id = getFiberID(getPrimaryFiber(fiber));
 
     if (isRoot) {
-      const operation = new Uint32Array(4);
+      const operation = new Uint32Array(3);
       operation[0] = TREE_OPERATION_ADD;
       operation[1] = id;
       operation[2] = ElementTypeRoot;
-      operation[3] = 0; // Identifies this fiber as a root
       addOperation(operation);
     } else {
       const { displayName, key, type } = getDataForFiber(fiber);

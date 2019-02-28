@@ -6,6 +6,7 @@ import {
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_RESET_CHILDREN,
 } from '../constants';
+import { ElementTypeRoot } from './types';
 import { utfDecodeString } from '../utils';
 import { __DEBUG__ } from '../constants';
 
@@ -233,11 +234,10 @@ export default class Store extends EventEmitter {
         case TREE_OPERATION_ADD:
           id = ((operations[i + 1]: any): number);
           type = ((operations[i + 2]: any): ElementType);
-          parentID = ((operations[i + 3]: any): number);
 
-          i = i + 4;
+          i = i + 3;
 
-          if (parentID === 0) {
+          if (type === ElementTypeRoot) {
             debug('Add', `new root fiber ${id}`);
 
             if (this._idToElement.has(id)) {
@@ -263,6 +263,9 @@ export default class Store extends EventEmitter {
               haveRootsChanged = true;
             }
           } else {
+            parentID = ((operations[i]: any): number);
+            i++;
+
             ownerID = ((operations[i]: any): number);
             i++;
 
