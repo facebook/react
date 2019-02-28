@@ -587,13 +587,11 @@ const ReactTestRendererFiber = {
         then(successFn: () => mixed, errorFn: () => mixed) {
           called = true;
           return result.then(() => {
-            flushPassiveEffects();
             return successFn();
           }, errorFn);
         },
       };
     } else {
-      flushPassiveEffects();
       return {
         then() {
           if (__DEV__) {

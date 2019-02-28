@@ -1869,6 +1869,9 @@ export function actedUpdates(callback: () => void | Promise<void>) {
           actingUpdatesScopeDepth--;
           warnIfScopeDepthMismatch();
         }
+        while (passiveEffectCallback !== null) {
+          flushPassiveEffects();
+        }
       },
       error => {
         if (__DEV__) {
@@ -1890,6 +1893,9 @@ export function actedUpdates(callback: () => void | Promise<void>) {
       }
       actingUpdatesScopeDepth--;
       warnIfScopeDepthMismatch();
+    }
+    while (passiveEffectCallback !== null) {
+      flushPassiveEffects();
     }
   }
 }

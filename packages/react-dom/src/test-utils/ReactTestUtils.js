@@ -430,13 +430,11 @@ const ReactTestUtils = {
         then(successFn, errorFn) {
           called = true;
           return result.then(() => {
-            ReactDOM.render(<div />, actContainerElement);
             return successFn();
           }, errorFn);
         },
       };
     } else {
-      ReactDOM.render(<div />, actContainerElement);
       return {
         then() {
           if (__DEV__) {

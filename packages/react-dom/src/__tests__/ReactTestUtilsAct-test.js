@@ -100,6 +100,25 @@ describe('act', () => {
       document.body.removeChild(container);
     });
 
+    it('should flush effects recursively', () => {
+      function App() {
+        let [ctr, setCtr] = React.useState(0);
+        React.useEffect(() => {
+          if (ctr < 5) {
+            setCtr(x => x + 1);
+          }
+        });
+        return ctr;
+      }
+
+      const container = document.createElement('div');
+      act(() => {
+        ReactDOM.render(<App />, container);
+      });
+
+      expect(container.innerHTML).toBe('5');
+    });
+
     it('detects setState being called outside of act(...)', () => {
       let setValue = null;
       function App() {
@@ -305,5 +324,3 @@ describe('act', () => {
     });
   });
 });
-
-// todo - errors are caught as expected

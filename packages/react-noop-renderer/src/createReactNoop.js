@@ -895,6 +895,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           then(successFn: () => mixed, errorFn: () => mixed) {
             called = true;
             return result.then(() => {
+              // annoyingly, scheduler.flushPassiveEffects doesn't actually flush effects
+              // for the no op renderer (by design?)
+              // so we use the 'hack' version here too
               ReactNoop.flushPassiveEffects();
               return successFn();
             }, errorFn);
