@@ -172,7 +172,8 @@ const forks = Object.freeze({
     if (
       entry === 'scheduler/unstable_mock' ||
       entry === 'react-noop-renderer' ||
-      entry === 'react-noop-renderer/persistent'
+      entry === 'react-noop-renderer/persistent' ||
+      entry === 'react-test-renderer'
     ) {
       return 'scheduler/src/forks/SchedulerHostConfig.mock';
     }
