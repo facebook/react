@@ -37,7 +37,7 @@ export type ReactRenderer = {
   // 16.9+
   overrideHookState?: ?(
     fiber: Object,
-    index: number,
+    id: number,
     path: Array<string | number>,
     value: any
   ) => void,
