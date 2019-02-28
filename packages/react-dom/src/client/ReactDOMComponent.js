@@ -411,6 +411,10 @@ export function createElement(
         if (props.multiple) {
           node.multiple = true;
         } else if (props.size) {
+          // Setting a size greater than 1 causes a select to behave like `multiple=true`, where
+          // it is possible that no option is selected.
+          //
+          // This is only necessary when a select in "single selection mode".
           node.size = props.size;
         }
       }

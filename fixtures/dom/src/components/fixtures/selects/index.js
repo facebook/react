@@ -205,9 +205,10 @@ class SelectFixture extends React.Component {
 
         <TestCase
           title="A select with the size attribute should not set first option as selected"
-          relatedIssues="14239">
+          relatedIssues="14239"
+          introducedIn="16.0.0">
           <TestCase.ExpectedResult>
-            First option should not be set
+            No options should be selected.
           </TestCase.ExpectedResult>
 
           <div className="test-fixture">
@@ -217,6 +218,17 @@ class SelectFixture extends React.Component {
               <option>2</option>
             </select>
           </div>
+
+          <p className="footnote">
+            <b>Notes:</b> This happens if <code>size</code> is assigned after
+            options are selected. The select element picks the first item by
+            default, then it is expanded to show more options when{' '}
+            <code>size</code> is assigned, preserving the default selection.
+          </p>
+          <p className="footnote">
+            This was introduced in React 16.0.0 when options were added before
+            select attribute assignment.
+          </p>
         </TestCase>
       </FixtureSet>
     );
