@@ -25,6 +25,7 @@ const knownGlobals = Object.freeze({
   'react-dom': 'ReactDOM',
   scheduler: 'Scheduler',
   'scheduler/tracing': 'SchedulerTracing',
+  'scheduler/unstable_mock': 'SchedulerMock',
 });
 
 // Given ['react'] in bundle externals, returns { 'react': 'React' }.
