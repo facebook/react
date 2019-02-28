@@ -13,6 +13,7 @@
 describe('ReactDebugFiberPerf', () => {
   let React;
   let ReactNoop;
+  let Scheduler;
   let PropTypes;
 
   let root;
@@ -122,6 +123,7 @@ describe('ReactDebugFiberPerf', () => {
     // Import after the polyfill is set up:
     React = require('react');
     ReactNoop = require('react-noop-renderer');
+    Scheduler = require('scheduler');
     PropTypes = require('prop-types');
   });
 
@@ -144,7 +146,7 @@ describe('ReactDebugFiberPerf', () => {
       </Parent>,
     );
     addComment('Mount');
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
 
     ReactNoop.render(
       <Parent>
@@ -152,11 +154,11 @@ describe('ReactDebugFiberPerf', () => {
       </Parent>,
     );
     addComment('Update');
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
 
     ReactNoop.render(null);
     addComment('Unmount');
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(getFlameChart()).toMatchSnapshot();
   });
@@ -182,7 +184,7 @@ describe('ReactDebugFiberPerf', () => {
       </Parent>,
     );
     addComment('Mount');
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(getFlameChart()).toMatchSnapshot();
   });
@@ -200,7 +202,7 @@ describe('ReactDebugFiberPerf', () => {
       </React.unstable_Profiler>,
     );
     addComment('Mount');
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(getFlameChart()).toMatchSnapshot();
   });
@@ -216,7 +218,7 @@ describe('ReactDebugFiberPerf', () => {
       </Provider>,
     );
     addComment('Mount');
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(getFlameChart()).toMatchSnapshot();
   });
@@ -248,13 +250,13 @@ describe('ReactDebugFiberPerf', () => {
         </Parent>
       </Parent>,
     );
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
     resetFlamechart();
 
     a.setState({});
     b.setState({});
     addComment('Should include just A and B, no Parents');
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
     expect(getFlameChart()).toMatchSnapshot();
   });
 
@@ -274,7 +276,7 @@ describe('ReactDebugFiberPerf', () => {
       </Parent>,
     );
     addComment('Should print a warning');
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
     expect(getFlameChart()).toMatchSnapshot();
   });
 
@@ -291,7 +293,7 @@ describe('ReactDebugFiberPerf', () => {
 
     ReactNoop.renderToRootWithID(<Cascading />, 'a');
     addComment('Rendering the first root');
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
     expect(getFlameChart()).toMatchSnapshot();
   });
 
@@ -314,7 +316,7 @@ describe('ReactDebugFiberPerf', () => {
       </Parent>,
     );
     addComment('Should not print a warning');
-    expect(() => expect(ReactNoop).toFlushWithoutYielding()).toWarnDev(
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
       [
         'componentWillMount: Please update the following components ' +
           'to use componentDidMount instead: NotCascading' +
@@ -329,7 +331,7 @@ describe('ReactDebugFiberPerf', () => {
       </Parent>,
     );
     addComment('Should not print a warning');
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
     expect(getFlameChart()).toMatchSnapshot();
   });
 
@@ -356,7 +358,7 @@ describe('ReactDebugFiberPerf', () => {
     }
     ReactNoop.render(<AllLifecycles />);
     addComment('Mount');
-    expect(() => expect(ReactNoop).toFlushWithoutYielding()).toWarnDev(
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
       [
         'componentWillMount: Please update the following components ' +
           'to use componentDidMount instead: AllLifecycles' +
@@ -371,10 +373,10 @@ describe('ReactDebugFiberPerf', () => {
     );
     ReactNoop.render(<AllLifecycles />);
     addComment('Update');
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
     ReactNoop.render(null);
     addComment('Unmount');
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
     expect(getFlameChart()).toMatchSnapshot();
   });
 
@@ -390,7 +392,7 @@ describe('ReactDebugFiberPerf', () => {
       );
     });
     addComment('Flush the child');
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
     expect(getFlameChart()).toMatchSnapshot();
   });
 
@@ -430,9 +432,9 @@ describe('ReactDebugFiberPerf', () => {
       </Parent>,
     );
     addComment('Start rendering through B');
-    expect(ReactNoop).toFlushAndYieldThrough(['A', 'B']);
+    expect(Scheduler).toFlushAndYieldThrough(['A', 'B']);
     addComment('Complete the rest');
-    expect(ReactNoop).toFlushAndYield(['C']);
+    expect(Scheduler).toFlushAndYield(['C']);
     expect(getFlameChart()).toMatchSnapshot();
   });
 
@@ -448,7 +450,7 @@ describe('ReactDebugFiberPerf', () => {
     );
     try {
       addComment('Will fatal');
-      expect(ReactNoop).toFlushWithoutYielding();
+      expect(Scheduler).toFlushWithoutYielding();
     } catch (err) {
       expect(err.message).toBe('Game over');
     }
@@ -458,7 +460,7 @@ describe('ReactDebugFiberPerf', () => {
       </Parent>,
     );
     addComment('Will reconcile from a clean state');
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
     expect(getFlameChart()).toMatchSnapshot();
   });
 
@@ -494,7 +496,7 @@ describe('ReactDebugFiberPerf', () => {
       </Parent>,
     );
     addComment('Stop on Baddie and restart from Boundary');
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
     expect(getFlameChart()).toMatchSnapshot();
   });
 
@@ -525,7 +527,7 @@ describe('ReactDebugFiberPerf', () => {
         <B />
       </Parent>,
     );
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
     resetFlamechart();
 
     ReactNoop.render(
@@ -537,7 +539,7 @@ describe('ReactDebugFiberPerf', () => {
       </Parent>,
     );
     addComment('The commit phase should mention A and B just once');
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
     ReactNoop.render(
       <Parent>
         <A />
@@ -548,7 +550,7 @@ describe('ReactDebugFiberPerf', () => {
     );
     addComment("Because of deduplication, we don't know B was cascading,");
     addComment('but we should still see the warning for the commit phase.');
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
     expect(getFlameChart()).toMatchSnapshot();
   });
 
@@ -561,7 +563,7 @@ describe('ReactDebugFiberPerf', () => {
         {ReactNoop.createPortal(<Child />, portalContainer, null)}
       </Parent>,
     );
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
     expect(getFlameChart()).toMatchSnapshot();
   });
 
@@ -574,7 +576,7 @@ describe('ReactDebugFiberPerf', () => {
         <MemoFoo />
       </Parent>,
     );
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
     expect(getFlameChart()).toMatchSnapshot();
   });
 
@@ -602,7 +604,7 @@ describe('ReactDebugFiberPerf', () => {
         </React.Suspense>
       </Parent>,
     );
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
     expect(getFlameChart()).toMatchSnapshot();
 
     resolve(
@@ -620,7 +622,7 @@ describe('ReactDebugFiberPerf', () => {
         </React.Suspense>
       </Parent>,
     );
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
     expect(getFlameChart()).toMatchSnapshot();
   });
 
@@ -651,8 +653,8 @@ describe('ReactDebugFiberPerf', () => {
     ReactNoop.flushSync(() => {
       ReactNoop.render(<Foo />);
     });
-    expect(ReactNoop).toHaveYielded(['Foo']);
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toHaveYielded(['Foo']);
+    expect(Scheduler).toFlushWithoutYielding();
     expect(getFlameChart()).toMatchSnapshot();
   });
 
@@ -663,7 +665,7 @@ describe('ReactDebugFiberPerf', () => {
 
     ReactNoop.render(<Foo />);
     ReactNoop.expire(6000);
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
     expect(getFlameChart()).toMatchSnapshot();
   });
 });

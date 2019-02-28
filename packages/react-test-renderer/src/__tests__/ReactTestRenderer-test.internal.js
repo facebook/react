@@ -19,6 +19,7 @@ const prettyFormat = require('pretty-format');
 // Isolate noop renderer
 jest.resetModules();
 const ReactNoop = require('react-noop-renderer');
+const Scheduler = require('scheduler');
 
 // Kind of hacky, but we nullify all the instances to test the tree structure
 // with jasmine's deep equality function, and test the instances separate. We
@@ -1018,7 +1019,7 @@ describe('ReactTestRenderer', () => {
       </Context.Provider>
     );
     ReactNoop.render(<App />);
-    expect(ReactNoop).toFlushWithoutYielding();
+    expect(Scheduler).toFlushWithoutYielding();
     ReactTestRenderer.create(<App />);
   });
 
