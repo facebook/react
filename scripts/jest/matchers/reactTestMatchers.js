@@ -19,16 +19,18 @@ function captureAssertion(fn) {
   return {pass: true};
 }
 
-function isScheduler(obj) {
-  return typeof obj.unstable_scheduleCallback === 'function';
+function resolveScheduler(obj) {
+  if (obj._Scheduler !== undefined) {
+    return obj._Scheduler;
+  }
+  if (typeof obj.unstable_scheduleCallback === 'function') {
+    return obj;
+  }
+  return null;
 }
 
-function isReactNoop(obj) {
-  return typeof obj.hasScheduledCallback === 'function';
-}
-
-function assertYieldsWereCleared(ReactNoop) {
-  const actualYields = ReactNoop.unstable_clearYields();
+function assertYieldsWereCleared(Scheduler) {
+  const actualYields = Scheduler.unstable_clearYields();
   if (actualYields.length !== 0) {
     throw new Error(
       'Log of yielded values is not empty. ' +
@@ -38,81 +40,54 @@ function assertYieldsWereCleared(ReactNoop) {
 }
 
 function toFlushAndYield(ReactNoop, expectedYields) {
-  if (isScheduler(ReactNoop)) {
-    return SchedulerMatchers.toFlushAndYield(ReactNoop, expectedYields);
-  }
-  if (!isReactNoop(ReactNoop)) {
+  const Scheduler = resolveScheduler(ReactNoop);
+  if (Scheduler === null) {
     return JestReact.unstable_toFlushAndYield(ReactNoop, expectedYields);
   }
-  assertYieldsWereCleared(ReactNoop);
-  const actualYields = ReactNoop.unstable_flushWithoutYielding();
-  return captureAssertion(() => {
-    expect(actualYields).toEqual(expectedYields);
-  });
+  return SchedulerMatchers.toFlushAndYield(Scheduler, expectedYields);
 }
 
 function toFlushAndYieldThrough(ReactNoop, expectedYields) {
-  if (isScheduler(ReactNoop)) {
-    return SchedulerMatchers.toFlushAndYieldThrough(ReactNoop, expectedYields);
-  }
-  if (!isReactNoop(ReactNoop)) {
+  const Scheduler = resolveScheduler(ReactNoop);
+  if (Scheduler === null) {
     return JestReact.unstable_toFlushAndYieldThrough(ReactNoop, expectedYields);
   }
-  assertYieldsWereCleared(ReactNoop);
-  const actualYields = ReactNoop.unstable_flushNumberOfYields(
-    expectedYields.length
-  );
-  return captureAssertion(() => {
-    expect(actualYields).toEqual(expectedYields);
-  });
+  return SchedulerMatchers.toFlushAndYieldThrough(Scheduler, expectedYields);
 }
 
 function toFlushWithoutYielding(ReactNoop) {
-  if (isScheduler(ReactNoop)) {
-    return SchedulerMatchers.toFlushWithoutYielding(ReactNoop);
-  }
-  if (!isReactNoop(ReactNoop)) {
+  const Scheduler = resolveScheduler(ReactNoop);
+  if (Scheduler === null) {
     return JestReact.unstable_toFlushWithoutYielding(ReactNoop);
   }
-  return toFlushAndYield(ReactNoop, []);
+  return SchedulerMatchers.toFlushWithoutYielding(Scheduler);
 }
 
 function toHaveYielded(ReactNoop, expectedYields) {
-  if (isScheduler(ReactNoop)) {
-    return SchedulerMatchers.toHaveYielded(ReactNoop, expectedYields);
-  }
-  if (!isReactNoop(ReactNoop)) {
+  const Scheduler = resolveScheduler(ReactNoop);
+  if (Scheduler === null) {
     return JestReact.unstable_toHaveYielded(ReactNoop, expectedYields);
   }
-  return captureAssertion(() => {
-    const actualYields = ReactNoop.unstable_clearYields();
-    expect(actualYields).toEqual(expectedYields);
-  });
+  return SchedulerMatchers.toHaveYielded(Scheduler, expectedYields);
 }
 
 function toFlushAndThrow(ReactNoop, ...rest) {
-  if (isScheduler(ReactNoop)) {
-    return SchedulerMatchers.toFlushAndThrow(ReactNoop, ...rest);
-  }
-  if (!isReactNoop(ReactNoop)) {
+  const Scheduler = resolveScheduler(ReactNoop);
+  if (Scheduler === null) {
     return JestReact.unstable_toFlushAndThrow(ReactNoop, ...rest);
   }
-  assertYieldsWereCleared(ReactNoop);
-  return captureAssertion(() => {
-    expect(() => {
-      ReactNoop.unstable_flushWithoutYielding();
-    }).toThrow(...rest);
-  });
+  return SchedulerMatchers.toFlushAndThrow(Scheduler, ...rest);
 }
 
 function toMatchRenderedOutput(ReactNoop, expectedJSX) {
-  if (!isReactNoop(ReactNoop)) {
-    return JestReact.unstable_toMatchRenderedOutput(ReactNoop, expectedJSX);
+  if (typeof ReactNoop.getChildrenAsJSX === 'function') {
+    const Scheduler = ReactNoop._Scheduler;
+    assertYieldsWereCleared(Scheduler);
+    return captureAssertion(() => {
+      expect(ReactNoop.getChildrenAsJSX()).toEqual(expectedJSX);
+    });
   }
-  assertYieldsWereCleared(ReactNoop);
-  return captureAssertion(() => {
-    expect(ReactNoop.getChildrenAsJSX()).toEqual(expectedJSX);
-  });
+  return JestReact.unstable_toMatchRenderedOutput(ReactNoop, expectedJSX);
 }
 
 module.exports = {

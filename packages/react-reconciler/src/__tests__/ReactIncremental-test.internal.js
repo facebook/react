@@ -2862,9 +2862,7 @@ describe('ReactIncremental', () => {
     expect(ReactNoop).toFlushAndYieldThrough(['Parent: 1']);
 
     // Interrupt at higher priority
-    expect(
-      ReactNoop.flushSync(() => ReactNoop.render(<Parent step={2} />)),
-    ).toEqual(['Parent: 2', 'Child: 2']);
+    ReactNoop.flushSync(() => ReactNoop.render(<Parent step={2} />));
     expect(ReactNoop).toHaveYielded(['Parent: 2', 'Child: 2']);
 
     expect(ReactNoop).toFlushAndYield([]);

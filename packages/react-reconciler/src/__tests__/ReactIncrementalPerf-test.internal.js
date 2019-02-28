@@ -283,7 +283,6 @@ describe('ReactDebugFiberPerf', () => {
       componentDidMount() {
         ReactNoop.renderToRootWithID(<Child />, 'b');
         addComment('Scheduling another root from componentDidMount');
-        expect(ReactNoop).toFlushWithoutYielding();
       }
       render() {
         return <div>{this.props.children}</div>;
