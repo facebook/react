@@ -70,8 +70,8 @@ export function serializeHooksForCopy(hooks: HooksTree | null): string {
     const current = queue.pop();
 
     // These aren't meaningful
-    delete current.isEditable;
-    delete current.index;
+    delete current.id;
+    delete current.isStateEditable;
 
     if (current.subHooks.length > 0) {
       queue.push(...current.subHooks);

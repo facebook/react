@@ -100,8 +100,8 @@ export type DevToolsHook = {
 };
 
 export type HooksNode = {
-  index: number,
-  isEditable: boolean,
+  id: number,
+  isStateEditable: boolean,
   name: string,
   value: mixed,
   subHooks: Array<HooksNode>,
