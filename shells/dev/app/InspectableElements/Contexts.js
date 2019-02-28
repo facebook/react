@@ -13,6 +13,8 @@ const contextData = {
   object: { outer: { inner: {} } },
   string: 'abc',
   symbol: Symbol.for('symbol'),
+  null: null,
+  undefined: undefined,
 };
 
 class LegacyContextProvider extends Component<any> {
@@ -24,6 +26,8 @@ class LegacyContextProvider extends Component<any> {
     object: PropTypes.object,
     string: PropTypes.string,
     symbol: PropTypes.symbol,
+    null: PropTypes.any,
+    undefined: PropTypes.any,
   };
 
   getChildContext() {
@@ -44,6 +48,8 @@ class LegacyContextConsumer extends Component<any> {
     object: PropTypes.object,
     string: PropTypes.string,
     symbol: PropTypes.symbol,
+    null: PropTypes.any,
+    undefined: PropTypes.any,
   };
 
   render() {

@@ -86,6 +86,15 @@ export default function EditableValue({
     inputValue = editableValue == null ? '' : editableValue;
   }
 
+  let placeholder = '';
+  if (value === null) {
+    placeholder = '(null)';
+  } else if (value === undefined) {
+    placeholder = '(undefined)';
+  } else if (dataType === 'string') {
+    placeholder = '(string)';
+  }
+
   return (
     <Fragment>
       {dataType === 'boolean' && (
@@ -105,6 +114,7 @@ export default function EditableValue({
           className={styles.Input}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
+          placeholder={placeholder}
           ref={inputRef}
           type={type}
           value={inputValue}
