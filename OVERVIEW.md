@@ -83,8 +83,8 @@ For example:
   3,  // re-order operation
   15, // fiber id
   2,  // number of children
-  35, // first chlid id
-  21, // second chlid id
+  35, // first child id
+  21, // second child id
 ]
 ```
 
