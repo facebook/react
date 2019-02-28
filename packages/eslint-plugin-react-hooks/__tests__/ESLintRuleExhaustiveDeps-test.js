@@ -224,8 +224,6 @@ const tests = {
     `,
     },
     {
-      // TODO: we might want to warn "props.foo"
-      // is extraneous because we already have "props".
       code: `
         function MyComponent(props) {
           const local = {};
@@ -598,6 +596,24 @@ const tests = {
           useEffect(() => {
             window.scrollTo(0, 0);
           }, [activeTab]);
+        }
+      `,
+    },
+    {
+      code: `
+        function MyComponent(props) {
+          const fn = useCallback(() => {
+            console.log(props.foo.bar.baz);
+          }, [props]);
+          const fn2 = useCallback(() => {
+            console.log(props.foo.bar.baz);
+          }, [props.foo]);
+          const fn3 = useCallback(() => {
+            console.log(props.foo.bar.baz);
+          }, [props.foo.bar]);
+          const fn4 = useCallback(() => {
+            console.log(props.foo.bar.baz);
+          }, [props.foo.bar.baz]);
         }
       `,
     },
@@ -1248,8 +1264,6 @@ const tests = {
           }, [local.id]);
         }
       `,
-      // TODO: autofix should be smart enough
-      // to remove local.id from the list.
       output: `
         function MyComponent() {
           const local = {id: 42};
@@ -1260,6 +1274,156 @@ const tests = {
       `,
       errors: [
         "React Hook useEffect has a missing dependency: 'local'. " +
+          'Either include it or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+        function MyComponent() {
+          const local = {id: 42};
+          const fn = useCallback(() => {
+            console.log(local);
+          }, [local.id]);
+        }
+      `,
+      output: `
+        function MyComponent() {
+          const local = {id: 42};
+          const fn = useCallback(() => {
+            console.log(local);
+          }, [local]);
+        }
+      `,
+      errors: [
+        "React Hook useCallback has a missing dependency: 'local'. " +
+          'Either include it or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
+          const fn = useCallback(() => {
+            console.log(props.foo.bar.baz);
+          }, []);
+        }
+      `,
+      output: `
+        function MyComponent(props) {
+          const fn = useCallback(() => {
+            console.log(props.foo.bar.baz);
+          }, [props.foo.bar.baz]);
+        }
+      `,
+      errors: [
+        "React Hook useCallback has a missing dependency: 'props.foo.bar.baz'. " +
+          'Either include it or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
+          let color = {}
+          const fn = useCallback(() => {
+            console.log(props.foo.bar.baz);
+            console.log(color);
+          }, [props.foo, props.foo.bar.baz]);
+        }
+      `,
+      output: `
+        function MyComponent(props) {
+          let color = {}
+          const fn = useCallback(() => {
+            console.log(props.foo.bar.baz);
+            console.log(color);
+          }, [color, props.foo.bar.baz]);
+        }
+      `,
+      errors: [
+        "React Hook useCallback has a missing dependency: 'color'. " +
+          'Either include it or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
+          const fn = useCallback(() => {
+            console.log(props.foo.bar.baz);
+          }, [props.foo.bar.baz, props.foo]);
+        }
+      `,
+      output: `
+        function MyComponent(props) {
+          const fn = useCallback(() => {
+            console.log(props.foo.bar.baz);
+          }, [props.foo]);
+        }
+      `,
+      errors: [
+        "React Hook useCallback has an unnecessary dependency: 'props.foo.bar.baz'. " +
+          'Either exclude it or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
+          const fn = useCallback(() => {
+            console.log(props.foo.bar.baz);
+            console.log(props.foo.fizz.bizz);
+          }, []);
+        }
+      `,
+      output: `
+        function MyComponent(props) {
+          const fn = useCallback(() => {
+            console.log(props.foo.bar.baz);
+            console.log(props.foo.fizz.bizz);
+          }, [props.foo.bar.baz, props.foo.fizz.bizz]);
+        }
+      `,
+      errors: [
+        "React Hook useCallback has missing dependencies: 'props.foo.bar.baz' and 'props.foo.fizz.bizz'. " +
+          'Either include them or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
+          const fn = useCallback(() => {
+            console.log(props.foo.bar);
+          }, [props.foo.bar.baz]);
+        }
+      `,
+      output: `
+        function MyComponent(props) {
+          const fn = useCallback(() => {
+            console.log(props.foo.bar);
+          }, [props.foo.bar]);
+        }
+      `,
+      errors: [
+        "React Hook useCallback has a missing dependency: 'props.foo.bar'. " +
+          'Either include it or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
+          const fn = useCallback(() => {
+            console.log(props);
+            console.log(props.hello);
+          }, [props.foo.bar.baz]);
+        }
+      `,
+      output: `
+        function MyComponent(props) {
+          const fn = useCallback(() => {
+            console.log(props);
+            console.log(props.hello);
+          }, [props]);
+        }
+      `,
+      errors: [
+        "React Hook useCallback has a missing dependency: 'props'. " +
           'Either include it or remove the dependency array.',
       ],
     },
@@ -1910,20 +2074,18 @@ const tests = {
           }, []);
         }
       `,
-      // TODO: [props.onChange] is superfluous. Fix to just [props.onChange].
       output: `
         function MyComponent(props) {
           useEffect(() => {
             if (props.onChange) {
               props.onChange();
             }
-          }, [props, props.onChange]);
+          }, [props]);
         }
       `,
       errors: [
-        // TODO: reporting props separately is superfluous. Fix to just props.onChange.
-        "React Hook useEffect has missing dependencies: 'props' and 'props.onChange'. " +
-          'Either include them or remove the dependency array.',
+        "React Hook useEffect has a missing dependency: 'props'. " +
+          'Either include it or remove the dependency array.',
       ],
     },
     {
