@@ -89,6 +89,8 @@ export default function ElementView({ index, style }: Props) {
       style={{
         ...style, // "style" comes from react-window
         paddingLeft: `${(depth - baseDepth) * 0.75 + 0.25}rem`,
+        width: undefined,
+        minWidth: '100%',
       }}
     >
       <span className={styles.Component} ref={ref}>

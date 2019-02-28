@@ -1,6 +1,5 @@
 .Element,
 .SelectedElement {
-  width: 100%;
   border-radius: 0.25em;
   position: relative;
   white-space: nowrap;
