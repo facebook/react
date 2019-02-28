@@ -12,12 +12,14 @@
 
 let React;
 let ReactTestRenderer;
+let Scheduler;
 
 describe('ReactTestRendererAsync', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
+    Scheduler = require('scheduler');
   });
 
   it('flushAll flushes all work', () => {
@@ -46,7 +48,7 @@ describe('ReactTestRendererAsync', () => {
 
   it('flushAll returns array of yielded values', () => {
     function Child(props) {
-      ReactTestRenderer.unstable_yield(props.children);
+      Scheduler.yieldValue(props.children);
       return props.children;
     }
     function Parent(props) {
@@ -72,7 +74,7 @@ describe('ReactTestRendererAsync', () => {
 
   it('flushThrough flushes until the expected values is yielded', () => {
     function Child(props) {
-      ReactTestRenderer.unstable_yield(props.children);
+      Scheduler.yieldValue(props.children);
       return props.children;
     }
     function Parent(props) {
@@ -100,7 +102,7 @@ describe('ReactTestRendererAsync', () => {
 
   it('supports high priority interruptions', () => {
     function Child(props) {
-      ReactTestRenderer.unstable_yield(props.children);
+      Scheduler.yieldValue(props.children);
       return props.children;
     }
 
@@ -141,7 +143,7 @@ describe('ReactTestRendererAsync', () => {
   describe('Jest matchers', () => {
     it('toFlushAndYieldThrough', () => {
       const Yield = ({id}) => {
-        ReactTestRenderer.unstable_yield(id);
+        Scheduler.yieldValue(id);
         return id;
       };
 
@@ -163,7 +165,7 @@ describe('ReactTestRendererAsync', () => {
 
     it('toFlushAndYield', () => {
       const Yield = ({id}) => {
-        ReactTestRenderer.unstable_yield(id);
+        Scheduler.yieldValue(id);
         return id;
       };
 
@@ -197,7 +199,7 @@ describe('ReactTestRendererAsync', () => {
 
     it('toFlushAndThrow', () => {
       const Yield = ({id}) => {
-        ReactTestRenderer.unstable_yield(id);
+        Scheduler.yieldValue(id);
         return id;
       };
 
@@ -254,7 +256,7 @@ describe('ReactTestRendererAsync', () => {
 
   it('toHaveYielded', () => {
     const Yield = ({id}) => {
-      ReactTestRenderer.unstable_yield(id);
+      Scheduler.yieldValue(id);
       return id;
     };
 
@@ -278,7 +280,7 @@ describe('ReactTestRendererAsync', () => {
     const renderer = ReactTestRenderer.create(<div />, {
       unstable_isConcurrent: true,
     });
-    ReactTestRenderer.unstable_yield('Something');
+    Scheduler.yieldValue('Something');
     expect(() => expect(renderer).toFlushWithoutYielding()).toThrow(
       'Log of yielded values is not empty.',
     );

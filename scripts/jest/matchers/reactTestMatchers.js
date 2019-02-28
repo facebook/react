@@ -23,10 +23,7 @@ function resolveScheduler(obj) {
   if (obj._Scheduler !== undefined) {
     return obj._Scheduler;
   }
-  if (typeof obj.unstable_scheduleCallback === 'function') {
-    return obj;
-  }
-  return null;
+  return obj;
 }
 
 function assertYieldsWereCleared(Scheduler) {
@@ -34,48 +31,33 @@ function assertYieldsWereCleared(Scheduler) {
   if (actualYields.length !== 0) {
     throw new Error(
       'Log of yielded values is not empty. ' +
-        'Call expect(ReactNoop).toHaveYielded(...) first.'
+        'Call expect(Scheduler).toHaveYielded(...) first.'
     );
   }
 }
 
 function toFlushAndYield(ReactNoop, expectedYields) {
   const Scheduler = resolveScheduler(ReactNoop);
-  if (Scheduler === null) {
-    return JestReact.unstable_toFlushAndYield(ReactNoop, expectedYields);
-  }
   return SchedulerMatchers.toFlushAndYield(Scheduler, expectedYields);
 }
 
 function toFlushAndYieldThrough(ReactNoop, expectedYields) {
   const Scheduler = resolveScheduler(ReactNoop);
-  if (Scheduler === null) {
-    return JestReact.unstable_toFlushAndYieldThrough(ReactNoop, expectedYields);
-  }
   return SchedulerMatchers.toFlushAndYieldThrough(Scheduler, expectedYields);
 }
 
 function toFlushWithoutYielding(ReactNoop) {
   const Scheduler = resolveScheduler(ReactNoop);
-  if (Scheduler === null) {
-    return JestReact.unstable_toFlushWithoutYielding(ReactNoop);
-  }
   return SchedulerMatchers.toFlushWithoutYielding(Scheduler);
 }
 
 function toHaveYielded(ReactNoop, expectedYields) {
   const Scheduler = resolveScheduler(ReactNoop);
-  if (Scheduler === null) {
-    return JestReact.unstable_toHaveYielded(ReactNoop, expectedYields);
-  }
   return SchedulerMatchers.toHaveYielded(Scheduler, expectedYields);
 }
 
 function toFlushAndThrow(ReactNoop, ...rest) {
   const Scheduler = resolveScheduler(ReactNoop);
-  if (Scheduler === null) {
-    return JestReact.unstable_toFlushAndThrow(ReactNoop, ...rest);
-  }
   return SchedulerMatchers.toFlushAndThrow(Scheduler, ...rest);
 }
 

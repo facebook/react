@@ -7,13 +7,8 @@
  * @flow
  */
 
+import * as Scheduler from 'scheduler/unstable_mock';
 import warning from 'shared/warning';
-import {
-  nowImplementation as TestRendererSchedulingNowImplementation,
-  scheduleDeferredCallback as TestRendererSchedulingScheduleDeferredCallback,
-  cancelDeferredCallback as TestRendererSchedulingCancelDeferredCallback,
-  shouldYield as TestRendererSchedulingShouldYield,
-} from './ReactTestRendererScheduling';
 
 export type Type = string;
 export type Props = Object;
@@ -202,16 +197,16 @@ export function createTextInstance(
 export const isPrimaryRenderer = false;
 // This approach enables `now` to be mocked by tests,
 // Even after the reconciler has initialized and read host config values.
-export const now = () => TestRendererSchedulingNowImplementation();
-export const scheduleDeferredCallback = TestRendererSchedulingScheduleDeferredCallback;
-export const cancelDeferredCallback = TestRendererSchedulingCancelDeferredCallback;
-export const shouldYield = TestRendererSchedulingShouldYield;
+export const now = Scheduler.unstable_now;
+export const scheduleDeferredCallback = Scheduler.unstable_scheduleCallback;
+export const cancelDeferredCallback = Scheduler.unstable_cancelCallback;
+export const shouldYield = Scheduler.unstable_shouldYield;
 
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
 export const noTimeout = -1;
-export const schedulePassiveEffects = scheduleDeferredCallback;
-export const cancelPassiveEffects = cancelDeferredCallback;
+export const schedulePassiveEffects = Scheduler.unstable_scheduleCallback;
+export const cancelPassiveEffects = Scheduler.unstable_cancelCallback;
 
 // -------------------
 //     Mutation

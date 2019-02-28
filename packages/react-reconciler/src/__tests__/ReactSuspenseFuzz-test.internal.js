@@ -1,6 +1,7 @@
 let React;
 let Suspense;
 let ReactTestRenderer;
+let Scheduler;
 let ReactFeatureFlags;
 let Random;
 
@@ -26,6 +27,7 @@ describe('ReactSuspenseFuzz', () => {
     React = require('react');
     Suspense = React.Suspense;
     ReactTestRenderer = require('react-test-renderer');
+    Scheduler = require('scheduler');
     Random = require('random-seed');
   });
 
@@ -55,7 +57,7 @@ describe('ReactSuspenseFuzz', () => {
               };
               const timeoutID = setTimeout(() => {
                 pendingTasks.delete(task);
-                ReactTestRenderer.unstable_yield(task.label);
+                Scheduler.yieldValue(task.label);
                 setStep(i + 1);
               }, remountAfter);
               pendingTasks.add(task);
@@ -88,7 +90,7 @@ describe('ReactSuspenseFuzz', () => {
               };
               const timeoutID = setTimeout(() => {
                 pendingTasks.delete(task);
-                ReactTestRenderer.unstable_yield(task.label);
+                Scheduler.yieldValue(task.label);
                 setStep([i + 1, suspendFor]);
               }, beginAfter);
               pendingTasks.add(task);
@@ -120,24 +122,24 @@ describe('ReactSuspenseFuzz', () => {
               setTimeout(() => {
                 cache.set(fullText, fullText);
                 pendingTasks.delete(task);
-                ReactTestRenderer.unstable_yield(task.label);
+                Scheduler.yieldValue(task.label);
                 resolve();
               }, delay);
             },
           };
           cache.set(fullText, thenable);
-          ReactTestRenderer.unstable_yield(`Suspended! [${fullText}]`);
+          Scheduler.yieldValue(`Suspended! [${fullText}]`);
           throw thenable;
         } else if (typeof resolvedText.then === 'function') {
           const thenable = resolvedText;
-          ReactTestRenderer.unstable_yield(`Suspended! [${fullText}]`);
+          Scheduler.yieldValue(`Suspended! [${fullText}]`);
           throw thenable;
         }
       } else {
         resolvedText = fullText;
       }
 
-      ReactTestRenderer.unstable_yield(resolvedText);
+      Scheduler.yieldValue(resolvedText);
       return resolvedText;
     }
 
@@ -151,7 +153,7 @@ describe('ReactSuspenseFuzz', () => {
           {children}
         </ShouldSuspendContext.Provider>,
       );
-      root.unstable_flushAll();
+      Scheduler.unstable_flushWithoutYielding();
 
       let elapsedTime = 0;
       while (pendingTasks && pendingTasks.size > 0) {
@@ -159,7 +161,7 @@ describe('ReactSuspenseFuzz', () => {
           throw new Error('Something did not resolve properly.');
         }
         ReactTestRenderer.act(() => jest.advanceTimersByTime(1000));
-        root.unstable_flushAll();
+        Scheduler.unstable_flushWithoutYielding();
       }
 
       return root.toJSON();
@@ -189,9 +191,7 @@ describe('ReactSuspenseFuzz', () => {
       const concurrentOutput = renderToRoot(concurrentRoot, children);
       expect(concurrentOutput).toEqual(expectedOutput);
       concurrentRoot.unmount();
-      concurrentRoot.unstable_flushAll();
-
-      ReactTestRenderer.unstable_clearYields();
+      Scheduler.unstable_flushWithoutYielding();
     }
 
     function pickRandomWeighted(rand, options) {
