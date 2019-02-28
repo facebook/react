@@ -13,6 +13,7 @@
 let React;
 let ReactFeatureFlags;
 let ReactNoop;
+let Scheduler;
 
 describe('ReactIncrementalUpdates', () => {
   beforeEach(() => {
@@ -21,6 +22,7 @@ describe('ReactIncrementalUpdates', () => {
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
+    Scheduler = require('scheduler');
   });
 
   function span(prop) {
@@ -456,33 +458,50 @@ describe('ReactIncrementalUpdates', () => {
   });
 
   it('flushes all expired updates in a single batch', () => {
-    class Foo extends React.Component {
-      componentDidUpdate() {
-        ReactNoop.yield('Commit: ' + this.props.prop);
-      }
-      componentDidMount() {
-        ReactNoop.yield('Commit: ' + this.props.prop);
-      }
-      render() {
-        ReactNoop.yield('Render: ' + this.props.prop);
-        return <span prop={this.props.prop} />;
-      }
+    const {useEffect} = React;
+
+    function App({label}) {
+      ReactNoop.yield('Render: ' + label);
+      useEffect(() => {
+        ReactNoop.yield('Commit: ' + label);
+      });
+      return label;
+    }
+
+    function interrupt() {
+      ReactNoop.flushSync(() => {
+        ReactNoop.renderToRootWithID(null, 'other-root');
+      });
     }
 
     // First, as a sanity check, assert what happens when four low pri
     // updates in separate batches are all flushed in the same callback
-    ReactNoop.render(<Foo prop="" />);
-    ReactNoop.expire(1000);
-    jest.advanceTimersByTime(1000);
-    ReactNoop.render(<Foo prop="he" />);
-    ReactNoop.expire(1000);
-    jest.advanceTimersByTime(1000);
-    ReactNoop.render(<Foo prop="hell" />);
-    ReactNoop.expire(1000);
-    jest.advanceTimersByTime(1000);
-    ReactNoop.render(<Foo prop="hello" />);
+    ReactNoop.render(<App label="" />);
+    Scheduler.advanceTime(1000);
+    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    interrupt();
 
-    // There should be a separate render and commit for each update
+    ReactNoop.render(<App label="he" />);
+    Scheduler.advanceTime(1000);
+    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    interrupt();
+
+    ReactNoop.render(<App label="hell" />);
+    Scheduler.advanceTime(1000);
+    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    interrupt();
+
+    ReactNoop.render(<App label="hello" />);
+    Scheduler.advanceTime(1000);
+    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    interrupt();
+
+    // Each update flushes in a separate commit.
+    // Note: This isn't necessarily the ideal behavior. It might be better to
+    // batch all of these updates together. The fact that they don't is an
+    // implementation detail. The important part of this unit test is what
+    // happens when they expire, in which case they really should be batched to
+    // avoid blocking the main thread for a long time.
     expect(ReactNoop).toFlushAndYield([
       'Render: ',
       'Commit: ',
@@ -493,65 +512,86 @@ describe('ReactIncrementalUpdates', () => {
       'Render: hello',
       'Commit: hello',
     ]);
-    expect(ReactNoop.getChildren()).toEqual([span('hello')]);
 
-    // Now do the same thing, except this time expire all the updates
-    // before flushing them.
-    ReactNoop.render(<Foo prop="" />);
-    ReactNoop.expire(1000);
-    jest.advanceTimersByTime(1000);
-    ReactNoop.render(<Foo prop="go" />);
-    ReactNoop.expire(1000);
-    jest.advanceTimersByTime(1000);
-    ReactNoop.render(<Foo prop="good" />);
-    ReactNoop.expire(1000);
-    jest.advanceTimersByTime(1000);
-    ReactNoop.render(<Foo prop="goodbye" />);
+    // Now do the same thing over again, but this time, expire all the updates
+    // instead of flushing them normally.
+    ReactNoop.render(<App label="" />);
+    Scheduler.advanceTime(1000);
+    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    interrupt();
 
-    ReactNoop.advanceTime(10000);
-    jest.advanceTimersByTime(10000);
+    ReactNoop.render(<App label="go" />);
+    Scheduler.advanceTime(1000);
+    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    interrupt();
+
+    ReactNoop.render(<App label="good" />);
+    Scheduler.advanceTime(1000);
+    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    interrupt();
+
+    ReactNoop.render(<App label="goodbye" />);
+    Scheduler.advanceTime(1000);
+    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    interrupt();
 
     // All the updates should render and commit in a single batch.
-    expect(ReactNoop).toFlushAndYield(['Render: goodbye', 'Commit: goodbye']);
-    expect(ReactNoop.getChildren()).toEqual([span('goodbye')]);
+    Scheduler.advanceTime(10000);
+    expect(ReactNoop).toHaveYielded(['Render: goodbye']);
+    // Passive effect
+    expect(ReactNoop).toFlushAndYield(['Commit: goodbye']);
   });
 
   it('flushes all expired updates in a single batch across multiple roots', () => {
     // Same as previous test, but with two roots.
-    class Foo extends React.Component {
-      componentDidUpdate() {
-        ReactNoop.yield('Commit: ' + this.props.prop);
-      }
-      componentDidMount() {
-        ReactNoop.yield('Commit: ' + this.props.prop);
-      }
-      render() {
-        ReactNoop.yield('Render: ' + this.props.prop);
-        return <span prop={this.props.prop} />;
-      }
+    const {useEffect} = React;
+
+    function App({label}) {
+      ReactNoop.yield('Render: ' + label);
+      useEffect(() => {
+        ReactNoop.yield('Commit: ' + label);
+      });
+      return label;
+    }
+
+    function interrupt() {
+      ReactNoop.flushSync(() => {
+        ReactNoop.renderToRootWithID(null, 'other-root');
+      });
     }
 
     // First, as a sanity check, assert what happens when four low pri
     // updates in separate batches are all flushed in the same callback
-    ReactNoop.renderToRootWithID(<Foo prop="" />, 'a');
-    ReactNoop.renderToRootWithID(<Foo prop="" />, 'b');
+    ReactNoop.renderToRootWithID(<App label="" />, 'a');
+    ReactNoop.renderToRootWithID(<App label="" />, 'b');
+    Scheduler.advanceTime(1000);
+    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    interrupt();
 
-    ReactNoop.expire(1000);
-    jest.advanceTimersByTime(1000);
-    ReactNoop.renderToRootWithID(<Foo prop="he" />, 'a');
-    ReactNoop.renderToRootWithID(<Foo prop="he" />, 'b');
+    ReactNoop.renderToRootWithID(<App label="he" />, 'a');
+    ReactNoop.renderToRootWithID(<App label="he" />, 'b');
+    Scheduler.advanceTime(1000);
+    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    interrupt();
 
-    ReactNoop.expire(1000);
-    jest.advanceTimersByTime(1000);
-    ReactNoop.renderToRootWithID(<Foo prop="hell" />, 'a');
-    ReactNoop.renderToRootWithID(<Foo prop="hell" />, 'b');
+    ReactNoop.renderToRootWithID(<App label="hell" />, 'a');
+    ReactNoop.renderToRootWithID(<App label="hell" />, 'b');
+    Scheduler.advanceTime(1000);
+    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    interrupt();
 
-    ReactNoop.expire(1000);
-    jest.advanceTimersByTime(1000);
-    ReactNoop.renderToRootWithID(<Foo prop="hello" />, 'a');
-    ReactNoop.renderToRootWithID(<Foo prop="hello" />, 'b');
+    ReactNoop.renderToRootWithID(<App label="hello" />, 'a');
+    ReactNoop.renderToRootWithID(<App label="hello" />, 'b');
+    Scheduler.advanceTime(1000);
+    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    interrupt();
 
-    // There should be a separate render and commit for each update
+    // Each update flushes in a separate commit.
+    // Note: This isn't necessarily the ideal behavior. It might be better to
+    // batch all of these updates together. The fact that they don't is an
+    // implementation detail. The important part of this unit test is what
+    // happens when they expire, in which case they really should be batched to
+    // avoid blocking the main thread for a long time.
     expect(ReactNoop).toFlushAndYield([
       'Render: ',
       'Commit: ',
@@ -570,37 +610,41 @@ describe('ReactIncrementalUpdates', () => {
       'Render: hello',
       'Commit: hello',
     ]);
-    expect(ReactNoop.getChildren('a')).toEqual([span('hello')]);
-    expect(ReactNoop.getChildren('b')).toEqual([span('hello')]);
 
-    // Now do the same thing, except this time expire all the updates
-    // before flushing them.
-    ReactNoop.renderToRootWithID(<Foo prop="" />, 'a');
-    ReactNoop.renderToRootWithID(<Foo prop="" />, 'b');
-    ReactNoop.expire(1000);
-    jest.advanceTimersByTime(1000);
-    ReactNoop.renderToRootWithID(<Foo prop="go" />, 'a');
-    ReactNoop.renderToRootWithID(<Foo prop="go" />, 'b');
-    ReactNoop.expire(1000);
-    jest.advanceTimersByTime(1000);
-    ReactNoop.renderToRootWithID(<Foo prop="good" />, 'a');
-    ReactNoop.renderToRootWithID(<Foo prop="good" />, 'b');
-    ReactNoop.expire(1000);
-    jest.advanceTimersByTime(1000);
-    ReactNoop.renderToRootWithID(<Foo prop="goodbye" />, 'a');
-    ReactNoop.renderToRootWithID(<Foo prop="goodbye" />, 'b');
+    // Now do the same thing over again, but this time, expire all the updates
+    // instead of flushing them normally.
+    ReactNoop.renderToRootWithID(<App label="" />, 'a');
+    ReactNoop.renderToRootWithID(<App label="" />, 'b');
+    Scheduler.advanceTime(1000);
+    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    interrupt();
 
-    ReactNoop.advanceTime(10000);
-    jest.advanceTimersByTime(10000);
+    ReactNoop.renderToRootWithID(<App label="go" />, 'a');
+    ReactNoop.renderToRootWithID(<App label="go" />, 'b');
+    Scheduler.advanceTime(1000);
+    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    interrupt();
+
+    ReactNoop.renderToRootWithID(<App label="good" />, 'a');
+    ReactNoop.renderToRootWithID(<App label="good" />, 'b');
+    Scheduler.advanceTime(1000);
+    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    interrupt();
+
+    ReactNoop.renderToRootWithID(<App label="goodbye" />, 'a');
+    ReactNoop.renderToRootWithID(<App label="goodbye" />, 'b');
+    Scheduler.advanceTime(1000);
+    expect(ReactNoop).toFlushAndYieldThrough(['Render: ']);
+    interrupt();
 
     // All the updates should render and commit in a single batch.
-    expect(ReactNoop).toFlushAndYield([
+    Scheduler.advanceTime(10000);
+    expect(ReactNoop).toHaveYielded([
       'Render: goodbye',
       'Commit: goodbye',
       'Render: goodbye',
-      'Commit: goodbye',
     ]);
-    expect(ReactNoop.getChildren('a')).toEqual([span('goodbye')]);
-    expect(ReactNoop.getChildren('b')).toEqual([span('goodbye')]);
+    // Passive effect
+    expect(ReactNoop).toFlushAndYield(['Commit: goodbye']);
   });
 });

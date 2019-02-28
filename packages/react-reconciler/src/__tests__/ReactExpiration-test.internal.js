@@ -12,6 +12,7 @@
 let React;
 let ReactFeatureFlags;
 let ReactNoop;
+let Scheduler;
 
 describe('ReactExpiration', () => {
   beforeEach(() => {
@@ -20,6 +21,7 @@ describe('ReactExpiration', () => {
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
+    Scheduler = require('scheduler');
   });
 
   function span(prop) {
@@ -60,19 +62,33 @@ describe('ReactExpiration', () => {
       }
     }
 
+    function interrupt() {
+      ReactNoop.flushSync(() => {
+        ReactNoop.renderToRootWithID(null, 'other-root');
+      });
+    }
+
     // First, show what happens for updates in two separate events.
     // Schedule an update.
     ReactNoop.render(<Text text="A" />);
-    // Advance the timer and flush any work that expired. Flushing the expired
-    // work signals to the renderer that the event has ended.
-    ReactNoop.advanceTime(2000);
+    // Advance the timer.
+    Scheduler.advanceTime(2000);
+    // Partially flush the the first update, then interrupt it.
+    expect(ReactNoop).toFlushAndYieldThrough(['A [render]']);
+    interrupt();
+
     // Don't advance time by enough to expire the first update.
-    expect(ReactNoop.flushExpired()).toEqual([]);
+    expect(Scheduler).toHaveYielded([]);
     expect(ReactNoop.getChildren()).toEqual([]);
+
     // Schedule another update.
     ReactNoop.render(<Text text="B" />);
     // The updates should flush in separate batches, since sufficient time
     // passed in between them *and* they occurred in separate events.
+    // Note: This isn't necessarily the ideal behavior. It might be better to
+    // batch these two updates together. The fact that they aren't batched
+    // is an implementation detail. The important part of this unit test is that
+    // they are batched if it's possible that they happened in the same event.
     expect(ReactNoop).toFlushAndYield([
       'A [render]',
       'A [commit]',
@@ -84,10 +100,7 @@ describe('ReactExpiration', () => {
     // Now do the same thing again, except this time don't flush any work in
     // between the two updates.
     ReactNoop.render(<Text text="A" />);
-    // Advance the timer, but don't flush the expired work. Because we still
-    // haven't entered an idle callback, the scheduler must assume that we're
-    // inside the same event.
-    ReactNoop.advanceTime(2000);
+    Scheduler.advanceTime(2000);
     expect(ReactNoop).toHaveYielded([]);
     expect(ReactNoop.getChildren()).toEqual([span('B')]);
     // Schedule another update.
@@ -114,19 +127,33 @@ describe('ReactExpiration', () => {
         }
       }
 
+      function interrupt() {
+        ReactNoop.flushSync(() => {
+          ReactNoop.renderToRootWithID(null, 'other-root');
+        });
+      }
+
       // First, show what happens for updates in two separate events.
       // Schedule an update.
       ReactNoop.render(<Text text="A" />);
-      // Advance the timer and flush any work that expired. Flushing the expired
-      // work signals to the renderer that the event has ended.
-      ReactNoop.advanceTime(2000);
+      // Advance the timer.
+      Scheduler.advanceTime(2000);
+      // Partially flush the the first update, then interrupt it.
+      expect(ReactNoop).toFlushAndYieldThrough(['A [render]']);
+      interrupt();
+
       // Don't advance time by enough to expire the first update.
-      expect(ReactNoop.flushExpired()).toEqual([]);
+      expect(Scheduler).toHaveYielded([]);
       expect(ReactNoop.getChildren()).toEqual([]);
+
       // Schedule another update.
       ReactNoop.render(<Text text="B" />);
       // The updates should flush in separate batches, since sufficient time
       // passed in between them *and* they occurred in separate events.
+      // Note: This isn't necessarily the ideal behavior. It might be better to
+      // batch these two updates together. The fact that they aren't batched
+      // is an implementation detail. The important part of this unit test is that
+      // they are batched if it's possible that they happened in the same event.
       expect(ReactNoop).toFlushAndYield([
         'A [render]',
         'A [commit]',
@@ -138,21 +165,15 @@ describe('ReactExpiration', () => {
       // Now do the same thing again, except this time don't flush any work in
       // between the two updates.
       ReactNoop.render(<Text text="A" />);
-      // Advance the timer, but don't flush the expired work. Because we still
-      // haven't entered an idle callback, the scheduler must assume that we're
-      // inside the same event.
-      ReactNoop.advanceTime(2000);
+      Scheduler.advanceTime(2000);
       expect(ReactNoop).toHaveYielded([]);
       expect(ReactNoop.getChildren()).toEqual([span('B')]);
 
-      // Perform some synchronous work. Again, the scheduler must assume we're
-      // inside the same event.
-      ReactNoop.flushSync(() => {
-        ReactNoop.renderToRootWithID('1', 'second-root');
-      });
+      // Perform some synchronous work. The scheduler must assume we're inside
+      // the same event.
+      interrupt();
 
-      // Even though React flushed a sync update, it should not have updated the
-      // current time. Schedule another update.
+      // Schedule another update.
       ReactNoop.render(<Text text="B" />);
       // The updates should flush in the same batch, since as far as the scheduler
       // knows, they may have occurred inside the same event.

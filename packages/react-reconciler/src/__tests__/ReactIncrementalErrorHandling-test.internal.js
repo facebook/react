@@ -14,6 +14,7 @@ let PropTypes;
 let ReactFeatureFlags;
 let React;
 let ReactNoop;
+let Scheduler;
 
 describe('ReactIncrementalErrorHandling', () => {
   beforeEach(() => {
@@ -24,6 +25,7 @@ describe('ReactIncrementalErrorHandling', () => {
     PropTypes = require('prop-types');
     React = require('react');
     ReactNoop = require('react-noop-renderer');
+    Scheduler = require('scheduler');
   });
 
   function div(...children) {
@@ -226,8 +228,18 @@ describe('ReactIncrementalErrorHandling', () => {
       ReactNoop.yield('commit');
     }
 
+    function interrupt() {
+      ReactNoop.flushSync(() => {
+        ReactNoop.renderToRootWithID(null, 'other-root');
+      });
+    }
+
     ReactNoop.render(<App isBroken={true} />, onCommit);
-    ReactNoop.expire(2000);
+    Scheduler.advanceTime(1000);
+    expect(ReactNoop).toFlushAndYieldThrough(['error']);
+    interrupt();
+
+    // This update is in a separate batch
     ReactNoop.render(<App isBroken={false} />, onCommit);
 
     expect(ReactNoop).toFlushAndYield([

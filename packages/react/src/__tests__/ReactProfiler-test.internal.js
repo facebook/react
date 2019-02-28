@@ -13,6 +13,7 @@
 let React;
 let ReactFeatureFlags;
 let ReactNoop;
+let Scheduler;
 let ReactCache;
 let ReactTestRenderer;
 let advanceTimeBy;
@@ -44,6 +45,7 @@ function loadModules({
   ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = replayFailedUnitOfWorkWithInvokeGuardedCallback;
 
   React = require('react');
+  Scheduler = require('scheduler');
   SchedulerTracing = require('scheduler/tracing');
   ReactCache = require('react-cache');
 
@@ -1205,7 +1207,7 @@ describe('Profiler', () => {
     loadModules({useNoopRenderer: true});
 
     const Child = ({duration, id}) => {
-      ReactNoop.advanceTime(duration);
+      Scheduler.advanceTime(duration);
       ReactNoop.yield(`Child:render:${id}`);
       return null;
     };
@@ -1225,7 +1227,7 @@ describe('Profiler', () => {
       }
     }
 
-    ReactNoop.advanceTime(50);
+    Scheduler.advanceTime(50);
 
     ReactNoop.renderToRootWithID(<Parent duration={3} id="one" />, 'one');
 
@@ -1238,13 +1240,13 @@ describe('Profiler', () => {
 
     expect(ReactNoop.getRoot('one').current.actualDuration).toBe(0);
 
-    ReactNoop.advanceTime(100);
+    Scheduler.advanceTime(100);
 
     // Process some async work, but yield before committing it.
     ReactNoop.renderToRootWithID(<Parent duration={7} id="two" />, 'two');
     expect(ReactNoop).toFlushAndYieldThrough(['Child:render:two']);
 
-    ReactNoop.advanceTime(150);
+    Scheduler.advanceTime(150);
 
     // Commit the previously paused, batched work.
     commitFirstRender(['Parent:componentDidMount:one']);
@@ -1252,9 +1254,8 @@ describe('Profiler', () => {
     expect(ReactNoop.getRoot('one').current.actualDuration).toBe(6);
     expect(ReactNoop.getRoot('two').current.actualDuration).toBe(0);
 
-    ReactNoop.advanceTime(200);
+    Scheduler.advanceTime(200);
 
-    expect(ReactNoop).toHaveYielded(['Parent:componentDidMount:one']);
     expect(ReactNoop).toFlushAndYield([
       'Child:render:two',
       'Parent:componentDidMount:two',
@@ -2256,7 +2257,7 @@ describe('Profiler', () => {
         await awaitableAdvanceTimers(10000);
         // No additional rendering work is required, since we already prepared
         // the placeholder.
-        expect(ReactNoop.flushExpired()).toEqual([]);
+        expect(Scheduler).toHaveYielded([]);
         // Should have committed the placeholder.
         expect(ReactNoop.getChildrenAsJSX()).toEqual('Loading...Sync');
         expect(onRender).toHaveBeenCalledTimes(1);
