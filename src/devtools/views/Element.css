@@ -1,7 +1,6 @@
 .Element,
 .SelectedElement {
   border-radius: 0.25em;
-  position: relative;
   white-space: nowrap;
   line-height: var(--line-height-data);
   display: flex;
