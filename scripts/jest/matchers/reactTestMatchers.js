@@ -19,13 +19,6 @@ function captureAssertion(fn) {
   return {pass: true};
 }
 
-function resolveScheduler(obj) {
-  if (obj._Scheduler !== undefined) {
-    return obj._Scheduler;
-  }
-  return obj;
-}
-
 function assertYieldsWereCleared(Scheduler) {
   const actualYields = Scheduler.unstable_clearYields();
   if (actualYields.length !== 0) {
@@ -34,31 +27,6 @@ function assertYieldsWereCleared(Scheduler) {
         'Call expect(Scheduler).toHaveYielded(...) first.'
     );
   }
-}
-
-function toFlushAndYield(ReactNoop, expectedYields) {
-  const Scheduler = resolveScheduler(ReactNoop);
-  return SchedulerMatchers.toFlushAndYield(Scheduler, expectedYields);
-}
-
-function toFlushAndYieldThrough(ReactNoop, expectedYields) {
-  const Scheduler = resolveScheduler(ReactNoop);
-  return SchedulerMatchers.toFlushAndYieldThrough(Scheduler, expectedYields);
-}
-
-function toFlushWithoutYielding(ReactNoop) {
-  const Scheduler = resolveScheduler(ReactNoop);
-  return SchedulerMatchers.toFlushWithoutYielding(Scheduler);
-}
-
-function toHaveYielded(ReactNoop, expectedYields) {
-  const Scheduler = resolveScheduler(ReactNoop);
-  return SchedulerMatchers.toHaveYielded(Scheduler, expectedYields);
-}
-
-function toFlushAndThrow(ReactNoop, ...rest) {
-  const Scheduler = resolveScheduler(ReactNoop);
-  return SchedulerMatchers.toFlushAndThrow(Scheduler, ...rest);
 }
 
 function toMatchRenderedOutput(ReactNoop, expectedJSX) {
@@ -73,10 +41,6 @@ function toMatchRenderedOutput(ReactNoop, expectedJSX) {
 }
 
 module.exports = {
-  toFlushAndYield,
-  toFlushAndYieldThrough,
-  toFlushWithoutYielding,
-  toHaveYielded,
-  toFlushAndThrow,
+  ...SchedulerMatchers,
   toMatchRenderedOutput,
 };
