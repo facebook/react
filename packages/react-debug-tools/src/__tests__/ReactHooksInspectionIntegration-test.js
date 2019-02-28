@@ -42,14 +42,14 @@ describe('ReactHooksInspectionIntegration', () => {
     expect(tree).toEqual([
       {
         isStateEditable: true,
-        index: 0,
+        id: 0,
         name: 'State',
         value: 'hello',
         subHooks: [],
       },
       {
         isStateEditable: true,
-        index: 1,
+        id: 1,
         name: 'State',
         value: 'world',
         subHooks: [],
@@ -69,14 +69,14 @@ describe('ReactHooksInspectionIntegration', () => {
     expect(tree).toEqual([
       {
         isStateEditable: true,
-        index: 0,
+        id: 0,
         name: 'State',
         value: 'Hi',
         subHooks: [],
       },
       {
         isStateEditable: true,
-        index: 1,
+        id: 1,
         name: 'State',
         value: 'world',
         subHooks: [],
@@ -91,14 +91,14 @@ describe('ReactHooksInspectionIntegration', () => {
     expect(tree).toEqual([
       {
         isStateEditable: true,
-        index: 0,
+        id: 0,
         name: 'State',
         value: 'Hi',
         subHooks: [],
       },
       {
         isStateEditable: true,
-        index: 1,
+        id: 1,
         name: 'State',
         value: 'world!',
         subHooks: [],
@@ -154,50 +154,50 @@ describe('ReactHooksInspectionIntegration', () => {
     expect(tree).toEqual([
       {
         isStateEditable: true,
-        index: 0,
+        id: 0,
         name: 'State',
         value: 'a',
         subHooks: [],
       },
       {
         isStateEditable: true,
-        index: 1,
+        id: 1,
         name: 'Reducer',
         value: 'b',
         subHooks: [],
       },
-      {isStateEditable: false, index: 2, name: 'Ref', value: 'c', subHooks: []},
+      {isStateEditable: false, id: 2, name: 'Ref', value: 'c', subHooks: []},
       {
         isStateEditable: false,
-        index: 3,
+        id: 3,
         name: 'LayoutEffect',
         value: effect,
         subHooks: [],
       },
       {
         isStateEditable: false,
-        index: 4,
+        id: 4,
         name: 'Effect',
         value: effect,
         subHooks: [],
       },
       {
         isStateEditable: false,
-        index: 5,
+        id: 5,
         name: 'ImperativeHandle',
         value: outsideRef.current,
         subHooks: [],
       },
       {
         isStateEditable: false,
-        index: 6,
+        id: 6,
         name: 'Memo',
         value: 'ab',
         subHooks: [],
       },
       {
         isStateEditable: false,
-        index: 7,
+        id: 7,
         name: 'Callback',
         value: updateStates,
         subHooks: [],
@@ -212,50 +212,50 @@ describe('ReactHooksInspectionIntegration', () => {
     expect(tree).toEqual([
       {
         isStateEditable: true,
-        index: 0,
+        id: 0,
         name: 'State',
         value: 'A',
         subHooks: [],
       },
       {
         isStateEditable: true,
-        index: 1,
+        id: 1,
         name: 'Reducer',
         value: 'B',
         subHooks: [],
       },
-      {isStateEditable: false, index: 2, name: 'Ref', value: 'C', subHooks: []},
+      {isStateEditable: false, id: 2, name: 'Ref', value: 'C', subHooks: []},
       {
         isStateEditable: false,
-        index: 3,
+        id: 3,
         name: 'LayoutEffect',
         value: effect,
         subHooks: [],
       },
       {
         isStateEditable: false,
-        index: 4,
+        id: 4,
         name: 'Effect',
         value: effect,
         subHooks: [],
       },
       {
         isStateEditable: false,
-        index: 5,
+        id: 5,
         name: 'ImperativeHandle',
         value: outsideRef.current,
         subHooks: [],
       },
       {
         isStateEditable: false,
-        index: 6,
+        id: 6,
         name: 'Memo',
         value: 'Ab',
         subHooks: [],
       },
       {
         isStateEditable: false,
-        index: 7,
+        id: 7,
         name: 'Callback',
         value: updateStates,
         subHooks: [],
@@ -279,7 +279,7 @@ describe('ReactHooksInspectionIntegration', () => {
     expect(tree).toEqual([
       {
         isStateEditable: false,
-        index: 0,
+        id: null,
         name: 'Context',
         value: 'contextual',
         subHooks: [],
@@ -301,7 +301,7 @@ describe('ReactHooksInspectionIntegration', () => {
     expect(tree).toEqual([
       {
         isStateEditable: false,
-        index: 0,
+        id: 0,
         name: 'ImperativeHandle',
         value: obj,
         subHooks: [],
@@ -322,7 +322,7 @@ describe('ReactHooksInspectionIntegration', () => {
     expect(tree).toEqual([
       {
         isStateEditable: true,
-        index: 0,
+        id: 0,
         name: 'State',
         value: 'hello',
         subHooks: [],
@@ -345,13 +345,13 @@ describe('ReactHooksInspectionIntegration', () => {
     expect(tree).toEqual([
       {
         isStateEditable: false,
-        index: -1,
+        id: null,
         name: 'Custom',
         value: undefined,
         subHooks: [
           {
             isStateEditable: true,
-            index: 0,
+            id: 0,
             name: 'State',
             value: 'hello',
             subHooks: [],
@@ -385,13 +385,13 @@ describe('ReactHooksInspectionIntegration', () => {
       expect(tree).toEqual([
         {
           isStateEditable: false,
-          index: -1,
+          id: null,
           name: 'LabeledValue',
           value: __DEV__ ? 'custom label a' : undefined,
           subHooks: [
             {
               isStateEditable: true,
-              index: 0,
+              id: 0,
               name: 'State',
               value: 'a',
               subHooks: [],
@@ -400,20 +400,20 @@ describe('ReactHooksInspectionIntegration', () => {
         },
         {
           isStateEditable: true,
-          index: 1,
+          id: 1,
           name: 'State',
           value: 'b',
           subHooks: [],
         },
         {
           isStateEditable: false,
-          index: -1,
+          id: null,
           name: 'Anonymous',
           value: undefined,
           subHooks: [
             {
               isStateEditable: true,
-              index: 2,
+              id: 2,
               name: 'State',
               value: 'c',
               subHooks: [],
@@ -422,13 +422,13 @@ describe('ReactHooksInspectionIntegration', () => {
         },
         {
           isStateEditable: false,
-          index: -1,
+          id: null,
           name: 'LabeledValue',
           value: __DEV__ ? 'custom label d' : undefined,
           subHooks: [
             {
               isStateEditable: true,
-              index: 3,
+              id: 3,
               name: 'State',
               value: 'd',
               subHooks: [],
@@ -457,19 +457,19 @@ describe('ReactHooksInspectionIntegration', () => {
       expect(tree).toEqual([
         {
           isStateEditable: false,
-          index: -1,
+          id: null,
           name: 'Outer',
           value: __DEV__ ? 'outer' : undefined,
           subHooks: [
             {
               isStateEditable: false,
-              index: -1,
+              id: null,
               name: 'Inner',
               value: __DEV__ ? 'inner' : undefined,
               subHooks: [
                 {
                   isStateEditable: true,
-                  index: 0,
+                  id: 0,
                   name: 'State',
                   value: 0,
                   subHooks: [],
@@ -504,13 +504,13 @@ describe('ReactHooksInspectionIntegration', () => {
       expect(tree).toEqual([
         {
           isStateEditable: false,
-          index: -1,
+          id: null,
           name: 'SingleLabelCustom',
           value: __DEV__ ? 'single one' : undefined,
           subHooks: [
             {
               isStateEditable: true,
-              index: 0,
+              id: 0,
               name: 'State',
               value: 0,
               subHooks: [],
@@ -519,13 +519,13 @@ describe('ReactHooksInspectionIntegration', () => {
         },
         {
           isStateEditable: false,
-          index: -1,
+          id: null,
           name: 'MultiLabelCustom',
           value: __DEV__ ? ['one', 'two', 'three'] : undefined,
           subHooks: [
             {
               isStateEditable: true,
-              index: 1,
+              id: 1,
               name: 'State',
               value: 0,
               subHooks: [],
@@ -534,13 +534,13 @@ describe('ReactHooksInspectionIntegration', () => {
         },
         {
           isStateEditable: false,
-          index: -1,
+          id: null,
           name: 'SingleLabelCustom',
           value: __DEV__ ? 'single two' : undefined,
           subHooks: [
             {
               isStateEditable: true,
-              index: 2,
+              id: 2,
               name: 'State',
               value: 0,
               subHooks: [],
@@ -576,13 +576,13 @@ describe('ReactHooksInspectionIntegration', () => {
       expect(tree).toEqual([
         {
           isStateEditable: false,
-          index: -1,
+          id: null,
           name: 'Custom',
           value: __DEV__ ? 'bar:123' : undefined,
           subHooks: [
             {
               isStateEditable: true,
-              index: 0,
+              id: 0,
               name: 'State',
               subHooks: [],
               value: 0,
@@ -623,7 +623,7 @@ describe('ReactHooksInspectionIntegration', () => {
     expect(tree).toEqual([
       {
         isStateEditable: true,
-        index: 0,
+        id: 0,
         name: 'State',
         value: 'def',
         subHooks: [],
@@ -701,14 +701,14 @@ describe('ReactHooksInspectionIntegration', () => {
     expect(tree).toEqual([
       {
         isStateEditable: false,
-        index: 0,
+        id: null,
         name: 'Context',
         value: 1,
         subHooks: [],
       },
       {
         isStateEditable: true,
-        index: 1,
+        id: 0,
         name: 'State',
         value: {count: 2},
         subHooks: [],

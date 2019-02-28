@@ -372,14 +372,16 @@ if (__DEV__) {
   // Support DevTools editable values for useState and useReducer.
   overrideHookState = (
     fiber: Fiber,
-    index: number,
+    id: number,
     path: Array<string | number>,
     value: any,
   ) => {
+    // For now, the "id" of stateful hooks is just the stateful hook index.
+    // This may change in the future with e.g. nested hooks.
     let currentHook = fiber.memoizedState;
-    while (currentHook !== null && index > 0) {
+    while (currentHook !== null && id > 0) {
       currentHook = currentHook.next;
-      index--;
+      id--;
     }
     if (currentHook !== null) {
       flushPassiveEffects();

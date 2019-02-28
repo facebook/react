@@ -29,7 +29,7 @@ describe('ReactHooksInspection', () => {
     expect(tree).toEqual([
       {
         isStateEditable: true,
-        index: 0,
+        id: 0,
         name: 'State',
         value: 'hello world',
         subHooks: [],
@@ -51,13 +51,13 @@ describe('ReactHooksInspection', () => {
     expect(tree).toEqual([
       {
         isStateEditable: false,
-        index: -1,
+        id: null,
         name: 'Custom',
         value: __DEV__ ? 'custom hook label' : undefined,
         subHooks: [
           {
             isStateEditable: true,
-            index: 0,
+            id: 0,
             name: 'State',
             value: 'hello world',
             subHooks: [],
@@ -87,20 +87,20 @@ describe('ReactHooksInspection', () => {
     expect(tree).toEqual([
       {
         isStateEditable: false,
-        index: -1,
+        id: null,
         name: 'Custom',
         value: undefined,
         subHooks: [
           {
             isStateEditable: true,
-            index: 0,
+            id: 0,
             name: 'State',
             subHooks: [],
             value: 'hello',
           },
           {
             isStateEditable: false,
-            index: 1,
+            id: 1,
             name: 'Effect',
             subHooks: [],
             value: effect,
@@ -109,20 +109,20 @@ describe('ReactHooksInspection', () => {
       },
       {
         isStateEditable: false,
-        index: -1,
+        id: null,
         name: 'Custom',
         value: undefined,
         subHooks: [
           {
             isStateEditable: true,
-            index: 2,
+            id: 2,
             name: 'State',
             value: 'world',
             subHooks: [],
           },
           {
             isStateEditable: false,
-            index: 3,
+            id: 3,
             name: 'Effect',
             value: effect,
             subHooks: [],
@@ -162,26 +162,26 @@ describe('ReactHooksInspection', () => {
     expect(tree).toEqual([
       {
         isStateEditable: false,
-        index: -1,
+        id: null,
         name: 'Bar',
         value: undefined,
         subHooks: [
           {
             isStateEditable: false,
-            index: -1,
+            id: null,
             name: 'Custom',
             value: undefined,
             subHooks: [
               {
                 isStateEditable: true,
-                index: 0,
+                id: 0,
                 name: 'Reducer',
                 value: 'hello',
                 subHooks: [],
               },
               {
                 isStateEditable: false,
-                index: 1,
+                id: 1,
                 name: 'Effect',
                 value: effect,
                 subHooks: [],
@@ -190,7 +190,7 @@ describe('ReactHooksInspection', () => {
           },
           {
             isStateEditable: false,
-            index: 2,
+            id: 2,
             name: 'LayoutEffect',
             value: effect,
             subHooks: [],
@@ -199,32 +199,32 @@ describe('ReactHooksInspection', () => {
       },
       {
         isStateEditable: false,
-        index: -1,
+        id: null,
         name: 'Baz',
         value: undefined,
         subHooks: [
           {
             isStateEditable: false,
-            index: 3,
+            id: 3,
             name: 'LayoutEffect',
             value: effect,
             subHooks: [],
           },
           {
             isStateEditable: false,
-            index: -1,
+            id: null,
             name: 'Custom',
             subHooks: [
               {
                 isStateEditable: true,
-                index: 4,
+                id: 4,
                 name: 'Reducer',
                 subHooks: [],
                 value: 'world',
               },
               {
                 isStateEditable: false,
-                index: 5,
+                id: 5,
                 name: 'Effect',
                 subHooks: [],
                 value: effect,
@@ -247,7 +247,7 @@ describe('ReactHooksInspection', () => {
     expect(tree).toEqual([
       {
         isStateEditable: false,
-        index: 0,
+        id: null,
         name: 'Context',
         value: 'default',
         subHooks: [],
@@ -311,13 +311,13 @@ describe('ReactHooksInspection', () => {
       expect(tree).toEqual([
         {
           isStateEditable: false,
-          index: -1,
+          id: null,
           name: 'Custom',
           value: __DEV__ ? 'bar:123' : undefined,
           subHooks: [
             {
               isStateEditable: true,
-              index: 0,
+              id: 0,
               name: 'State',
               subHooks: [],
               value: 0,
