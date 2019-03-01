@@ -88,9 +88,18 @@ export default function ElementView({ index, style }: Props) {
       onDoubleClick={handleDoubleClick}
       style={{
         ...style, // "style" comes from react-window
+
+        // Left padding presents the appearance of a nested tree structure.
         paddingLeft: `${(depth - baseDepth) * 0.75 + 0.25}rem`,
+
+        // These style overrides enable the background color to fill the full visible width,
+        // when combined with the CSS tweaks in Tree.
+        // A lot of options were considered; this seemed the one that requires the least code.
+        // See https://github.com/bvaughn/react-devtools-experimental/issues/9
         width: undefined,
         minWidth: '100%',
+        position: 'relative',
+        marginBottom: `-${style.height}px`,
       }}
     >
       <span className={styles.Component} ref={ref}>

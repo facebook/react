@@ -101,6 +101,7 @@ export default function Tree(props: Props) {
             <FixedSizeList
               className={styles.List}
               height={height}
+              innerElementType={innerElementType}
               itemCount={numElements}
               itemData={itemData}
               itemSize={lineHeight}
@@ -115,3 +116,19 @@ export default function Tree(props: Props) {
     </div>
   );
 }
+
+// This style override enables the background color to fill the full visible width,
+// when combined with the CSS tweaks in Element.
+// A lot of options were considered; this seemed the one that requires the least code.
+// See https://github.com/bvaughn/react-devtools-experimental/issues/9
+const innerElementType = ({ style, ...rest }) => (
+  <div
+    style={{
+      ...style,
+      display: 'inline-block',
+      minWidth: '100%',
+      width: undefined,
+    }}
+    {...rest}
+  />
+);
