@@ -12,6 +12,11 @@ import type {Batch, FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {Interaction} from 'scheduler/src/Tracing';
 
+// Intentionally not named imports because Rollup would use dynamic dispatch for
+// CommonJS interop named imports.
+// TODO: We're not using this import anymore, but I've left this here so we
+// don't accidentally use named imports when we add it back.
+// import * as Scheduler from 'scheduler';
 import {
   __interactionsRef,
   __subscriberRef,
