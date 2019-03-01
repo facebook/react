@@ -1,8 +1,9 @@
 jest.useRealTimers();
 const React = require('react');
 const ReactNoop = require('react-noop-renderer');
+const Scheduler = require('scheduler');
 
-describe('act', () => {
+describe('ReactNoop.act()', () => {
   it('can use act to flush effects', async () => {
     function App(props) {
       React.useEffect(props.callback);
@@ -19,7 +20,7 @@ describe('act', () => {
         />
       );
     });
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
     expect(called).toBe(true);
   });
 
@@ -42,9 +43,10 @@ describe('act', () => {
         ReactNoop.render(<App />);
       });
       await null;
-      expect(ReactNoop.flush()).toEqual(['stage 1']);
+      expect(Scheduler).toFlushAndYield(['stage 1']);
     });
-    expect(ReactNoop.flush()).toEqual(['stage 2']);
+    expect(Scheduler).toHaveYielded(['stage 2']);
+    expect(Scheduler).toFlushWithoutYielding();
     expect(ReactNoop.getChildren()).toEqual([{text: '1', hidden: false}]);
   });
 });

@@ -22,7 +22,7 @@ function sleep(period) {
   });
 }
 
-describe('act', () => {
+describe('ReactTestUtils.act()', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
@@ -225,7 +225,7 @@ describe('act', () => {
       });
     });
 
-    it('can handle async await', async () => {
+    it('can handle async/await', async () => {
       function App() {
         let [ctr, setCtr] = React.useState(0);
         async function someAsyncFunction() {

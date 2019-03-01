@@ -1865,12 +1865,12 @@ export function actedUpdates(callback: () => void | Promise<void>) {
   ) {
     return result.then(
       () => {
+        while (passiveEffectCallback !== null) {
+          flushPassiveEffects();
+        }
         if (__DEV__) {
           actingUpdatesScopeDepth--;
           warnIfScopeDepthMismatch();
-        }
-        while (passiveEffectCallback !== null) {
-          flushPassiveEffects();
         }
       },
       error => {
@@ -1882,6 +1882,9 @@ export function actedUpdates(callback: () => void | Promise<void>) {
       },
     );
   } else {
+    while (passiveEffectCallback !== null) {
+      flushPassiveEffects();
+    }
     if (__DEV__) {
       if (result !== undefined) {
         warningWithoutStack(
@@ -1893,9 +1896,6 @@ export function actedUpdates(callback: () => void | Promise<void>) {
       }
       actingUpdatesScopeDepth--;
       warnIfScopeDepthMismatch();
-    }
-    while (passiveEffectCallback !== null) {
-      flushPassiveEffects();
     }
   }
 }

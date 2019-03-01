@@ -421,7 +421,6 @@ const ReactTestUtils = {
               'You called act(async () => ...) without await. ' +
                 'This could lead to unexpected testing behaviour, interleaving multiple act ' +
                 'calls and mixing their scopes. You should - await act(async () => ...);',
-              // todo - a better warning here. open to suggestions.
             );
           }
         }, 0);
