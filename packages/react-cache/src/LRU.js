@@ -7,7 +7,11 @@
  * @flow
  */
 
-import {unstable_scheduleCallback as scheduleCallback} from 'scheduler';
+import * as Scheduler from 'scheduler';
+
+// Intentionally not named imports because Rollup would
+// use dynamic dispatch for CommonJS interop named imports.
+const {unstable_scheduleCallback: scheduleCallback} = Scheduler;
 
 type Entry<T> = {|
   value: T,

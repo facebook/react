@@ -17,16 +17,7 @@ import {
   __subscriberRef,
   unstable_wrap as Scheduler_tracing_wrap,
 } from 'scheduler/tracing';
-import {
-  unstable_next as Scheduler_next,
-  unstable_getCurrentPriorityLevel as getCurrentPriorityLevel,
-  unstable_runWithPriority as runWithPriority,
-  unstable_ImmediatePriority as ImmediatePriority,
-  unstable_UserBlockingPriority as UserBlockingPriority,
-  unstable_NormalPriority as NormalPriority,
-  unstable_LowPriority as LowPriority,
-  unstable_IdlePriority as IdlePriority,
-} from 'scheduler';
+import * as Scheduler from 'scheduler';
 import {
   invokeGuardedCallback,
   hasCaughtError,
@@ -180,6 +171,19 @@ import {ContextOnlyDispatcher} from './ReactFiberHooks';
 export type Thenable = {
   then(resolve: () => mixed, reject?: () => mixed): mixed,
 };
+
+// Intentionally not named imports because Rollup would
+// use dynamic dispatch for CommonJS interop named imports.
+const {
+  unstable_next: Scheduler_next,
+  unstable_getCurrentPriorityLevel: getCurrentPriorityLevel,
+  unstable_runWithPriority: runWithPriority,
+  unstable_ImmediatePriority: ImmediatePriority,
+  unstable_UserBlockingPriority: UserBlockingPriority,
+  unstable_NormalPriority: NormalPriority,
+  unstable_LowPriority: LowPriority,
+  unstable_IdlePriority: IdlePriority,
+} = Scheduler;
 
 const {ReactCurrentDispatcher, ReactCurrentOwner} = ReactSharedInternals;
 

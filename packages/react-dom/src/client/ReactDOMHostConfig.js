@@ -7,6 +7,8 @@
  * @flow
  */
 
+import * as Scheduler from 'scheduler';
+
 import {precacheFiberNode, updateFiberProps} from './ReactDOMComponentTree';
 import {
   createElement,
@@ -70,17 +72,18 @@ export type ChildSet = void; // Unused
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 
-import {
-  unstable_scheduleCallback as scheduleDeferredCallback,
-  unstable_cancelCallback as cancelDeferredCallback,
-} from 'scheduler';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
-export {
-  unstable_now as now,
-  unstable_scheduleCallback as scheduleDeferredCallback,
-  unstable_shouldYield as shouldYield,
-  unstable_cancelCallback as cancelDeferredCallback,
-} from 'scheduler';
+
+// Intentionally not named imports because Rollup would
+// use dynamic dispatch for CommonJS interop named imports.
+const {
+  unstable_now: now,
+  unstable_scheduleCallback: scheduleDeferredCallback,
+  unstable_shouldYield: shouldYield,
+  unstable_cancelCallback: cancelDeferredCallback,
+} = Scheduler;
+
+export {now, scheduleDeferredCallback, shouldYield, cancelDeferredCallback};
 
 let SUPPRESS_HYDRATION_WARNING;
 if (__DEV__) {
