@@ -306,77 +306,75 @@ export default {
         });
       }
 
-      // TODO: we can do a pass at this code and pick more appropriate
-      // data structures to avoid nested loops if we can.
-      let suggestedDependencies = [];
-      let duplicateDependencies = new Set();
-      let unnecessaryDependencies = new Set();
-      let missingDependencies = new Set();
-      let actualDependencies = Array.from(dependencies.keys());
+      // Warn about assigning to variables in the outer scope.
+      // Those are usually bugs.
       let foundStaleAssignments = false;
-
-      function satisfies(actualDep, dep) {
-        return actualDep === dep || actualDep.startsWith(dep + '.');
+      function reportStaleAssignment(writeExpr, key) {
+        foundStaleAssignments = true;
+        context.report({
+          node: writeExpr,
+          message:
+            `Assignments to the '${key}' variable from inside a React ${context.getSource(
+              reactiveHook,
+            )} Hook ` +
+            `will not persist between re-renders. ` +
+            `If it's only needed by this Hook, move the variable inside it. ` +
+            `Alternatively, declare a ref with the useRef Hook, ` +
+            `and keep the mutable value in its 'current' property.`,
+        });
       }
 
-      // First, ensure what user specified makes sense.
-      declaredDependencies.forEach(({key}) => {
-        if (actualDependencies.some(actualDep => satisfies(actualDep, key))) {
-          // Legit dependency.
-          if (suggestedDependencies.indexOf(key) === -1) {
-            suggestedDependencies.push(key);
-          } else {
-            // Duplicate. Do nothing.
-            duplicateDependencies.add(key);
-          }
-        } else {
-          if (isEffect && !key.endsWith('.current')) {
-            // Effects may have extra "unnecessary" deps.
-            // Such as resetting scroll when ID changes.
-            // The exception is ref.current which is always wrong.
-            // Consider them legit.
-            if (suggestedDependencies.indexOf(key) === -1) {
-              suggestedDependencies.push(key);
-            }
-          } else {
-            // Unnecessary dependency. Remember to report it.
-            unnecessaryDependencies.add(key);
-          }
-        }
-      });
-
-      // Then fill in the missing ones.
+      // Remember which deps are optional and report bad usage first.
+      const optionalDependencies = new Set();
       dependencies.forEach(({isStatic, reference}, key) => {
-        if (reference.writeExpr) {
-          foundStaleAssignments = true;
-          context.report({
-            node: reference.writeExpr,
-            message:
-              `Assignments to the '${key}' variable from inside a React ${context.getSource(
-                reactiveHook,
-              )} Hook ` +
-              `will not persist between re-renders. ` +
-              `If it's only needed by this Hook, move the variable inside it. ` +
-              `Alternatively, declare a ref with the useRef Hook, ` +
-              `and keep the mutable value in its 'current' property.`,
-          });
+        if (isStatic) {
+          optionalDependencies.add(key);
         }
-
-        if (
-          !suggestedDependencies.some(suggestedDep =>
-            satisfies(key, suggestedDep),
-          )
-        ) {
-          if (!isStatic) {
-            // Legit missing.
-            suggestedDependencies.push(key);
-            missingDependencies.add(key);
-          }
-        } else {
-          // Already did that. Do nothing.
+        if (reference.writeExpr) {
+          reportStaleAssignment(reference.writeExpr, key);
         }
       });
+      if (foundStaleAssignments) {
+        // The intent isn't clear so we'll wait until you fix those first.
+        return;
+      }
 
+      let {
+        suggestedDependencies,
+        unnecessaryDependencies,
+        missingDependencies,
+        duplicateDependencies,
+      } = collectRecommendations({
+        dependencies,
+        declaredDependencies,
+        optionalDependencies,
+        isEffect,
+      });
+
+      const problemCount =
+        duplicateDependencies.size +
+        missingDependencies.size +
+        unnecessaryDependencies.size;
+      if (problemCount === 0) {
+        return;
+      }
+
+      // If we're going to report a missing dependency,
+      // we might as well recalculate the list ignoring
+      // the currently specified deps. This can result
+      // in some extra deduplication. We can't do this
+      // for effects though because those have legit
+      // use cases for over-specifying deps.
+      if (!isEffect && missingDependencies.size > 0) {
+        suggestedDependencies = collectRecommendations({
+          dependencies,
+          declaredDependencies: [], // Pretend we don't know
+          optionalDependencies,
+          isEffect,
+        }).suggestedDependencies;
+      }
+
+      // Alphabetize the suggestions, but only if deps were already alphabetized.
       function areDeclaredDepsAlphabetized() {
         if (declaredDependencies.length === 0) {
           return true;
@@ -385,24 +383,8 @@ export default {
         const sortedDeclaredDepKeys = declaredDepKeys.slice().sort();
         return declaredDepKeys.join(',') === sortedDeclaredDepKeys.join(',');
       }
-
       if (areDeclaredDepsAlphabetized()) {
-        // Alphabetize the autofix, but only if deps were already alphabetized.
         suggestedDependencies.sort();
-      }
-
-      const problemCount =
-        duplicateDependencies.size +
-        missingDependencies.size +
-        unnecessaryDependencies.size;
-
-      if (problemCount === 0) {
-        return;
-      }
-
-      if (foundStaleAssignments) {
-        // The intent isn't clear so we'll wait until you fix those first.
-        return;
       }
 
       function getWarningMessage(deps, singlePrefix, label, fixVerb) {
@@ -475,11 +457,167 @@ export default {
   },
 };
 
+// The meat of the logic.
+function collectRecommendations({
+  dependencies,
+  declaredDependencies,
+  optionalDependencies,
+  isEffect,
+}) {
+  // Our primary data structure.
+  // It is a logical representation of property chains:
+  // `props` -> `props.foo` -> `props.foo.bar` -> `props.foo.bar.baz`
+  //         -> `props.lol`
+  //         -> `props.huh` -> `props.huh.okay`
+  //         -> `props.wow`
+  // We'll use it to mark nodes that are *used* by the programmer,
+  // and the nodes that were *declared* as deps. Then we will
+  // traverse it to learn which deps are missing or unnecessary.
+  const depTree = createDepTree();
+  function createDepTree() {
+    return {
+      isRequired: false, // True if used in code
+      isSatisfiedRecursively: false, // True if specified in deps
+      hasRequiredNodesBelow: false, // True if something deeper is used by code
+      children: new Map(), // Nodes for properties
+    };
+  }
+
+  // Mark all required nodes first.
+  // Imagine exclamation marks next to each used deep property.
+  dependencies.forEach((_, key) => {
+    const node = getOrCreateNodeByPath(depTree, key);
+    node.isRequired = true;
+    markAllParentsByPath(depTree, key, parent => {
+      parent.hasRequiredNodesBelow = true;
+    });
+  });
+
+  // Mark all satisfied nodes.
+  // Imagine checkmarks next to each declared dependency.
+  declaredDependencies.forEach(({key}) => {
+    const node = getOrCreateNodeByPath(depTree, key);
+    node.isSatisfiedRecursively = true;
+  });
+  optionalDependencies.forEach(key => {
+    const node = getOrCreateNodeByPath(depTree, key);
+    node.isSatisfiedRecursively = true;
+  });
+
+  // Tree manipulation helpers.
+  function getOrCreateNodeByPath(rootNode, path) {
+    let keys = path.split('.');
+    let node = rootNode;
+    for (let key of keys) {
+      let child = node.children.get(key);
+      if (!child) {
+        child = createDepTree();
+        node.children.set(key, child);
+      }
+      node = child;
+    }
+    return node;
+  }
+  function markAllParentsByPath(rootNode, path, fn) {
+    let keys = path.split('.');
+    let node = rootNode;
+    for (let key of keys) {
+      let child = node.children.get(key);
+      if (!child) {
+        return;
+      }
+      fn(child);
+      node = child;
+    }
+  }
+
+  // Now we can learn which dependencies are missing or necessary.
+  let missingDependencies = new Set();
+  let satisfyingDependencies = new Set();
+  scanTreeRecursively(
+    depTree,
+    missingDependencies,
+    satisfyingDependencies,
+    key => key,
+  );
+  function scanTreeRecursively(node, missingPaths, satisfyingPaths, keyToPath) {
+    node.children.forEach((child, key) => {
+      const path = keyToPath(key);
+      if (child.isSatisfiedRecursively) {
+        if (child.hasRequiredNodesBelow) {
+          // Remember this dep actually satisfied something.
+          satisfyingPaths.add(path);
+        }
+        // It doesn't matter if there's something deeper.
+        // It would be transitively satisfied since we assume immutability.
+        // `props.foo` is enough if you read `props.foo.id`.
+        return;
+      }
+      if (child.isRequired) {
+        // Remember that no declared deps satisfied this node.
+        missingPaths.add(path);
+        // If we got here, nothing in its subtree was satisfied.
+        // No need to search further.
+        return;
+      }
+      scanTreeRecursively(
+        child,
+        missingPaths,
+        satisfyingPaths,
+        childKey => path + '.' + childKey,
+      );
+    });
+  }
+
+  // Collect suggestions in the order they were originally specified.
+  let suggestedDependencies = [];
+  let unnecessaryDependencies = new Set();
+  let duplicateDependencies = new Set();
+  declaredDependencies.forEach(({key}) => {
+    // Does this declared dep satsify a real need?
+    if (satisfyingDependencies.has(key)) {
+      if (suggestedDependencies.indexOf(key) === -1) {
+        // Good one.
+        suggestedDependencies.push(key);
+      } else {
+        // Duplicate.
+        duplicateDependencies.add(key);
+      }
+    } else {
+      if (isEffect && !key.endsWith('.current')) {
+        // Effects are allowed extra "unnecessary" deps.
+        // Such as resetting scroll when ID changes.
+        // Consider them legit.
+        // The exception is ref.current which is always wrong.
+        if (suggestedDependencies.indexOf(key) === -1) {
+          suggestedDependencies.push(key);
+        }
+      } else {
+        // It's definitely not needed.
+        unnecessaryDependencies.add(key);
+      }
+    }
+  });
+
+  // Then add the missing ones at the end.
+  missingDependencies.forEach(key => {
+    suggestedDependencies.push(key);
+  });
+
+  return {
+    suggestedDependencies,
+    unnecessaryDependencies,
+    duplicateDependencies,
+    missingDependencies,
+  };
+}
+
 /**
  * Assuming () means the passed/returned node:
  * (props) => (props)
  * props.(foo) => (props.foo)
- * props.foo.(bar) => (props.foo).bar
+ * props.foo.(bar) => (props).foo.bar
+ * props.foo.bar.(baz) => (props).foo.bar.baz
  */
 function getDependency(node) {
   if (
@@ -493,7 +631,7 @@ function getDependency(node) {
       node.parent.parent.callee === node.parent
     )
   ) {
-    return node.parent;
+    return getDependency(node.parent);
   } else {
     return node;
   }
