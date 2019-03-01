@@ -33,33 +33,33 @@ const tests = {
   valid: [
     {
       code: `
-      function MyComponent() {
-        const local = {};
-        useEffect(() => {
-          console.log(local);
-        });
-      }
-    `,
-    },
-    {
-      code: `
-      function MyComponent() {
-        useEffect(() => {
+        function MyComponent() {
           const local = {};
-          console.log(local);
-        }, []);
-      }
-    `,
+          useEffect(() => {
+            console.log(local);
+          });
+        }
+      `,
     },
     {
       code: `
-      function MyComponent() {
-        const local = {};
-        useEffect(() => {
-          console.log(local);
-        }, [local]);
-      }
-    `,
+        function MyComponent() {
+          useEffect(() => {
+            const local = {};
+            console.log(local);
+          }, []);
+        }
+      `,
+    },
+    {
+      code: `
+        function MyComponent() {
+          const local = {};
+          useEffect(() => {
+            console.log(local);
+          }, [local]);
+        }
+      `,
     },
     {
       // OK because `props` wasn't defined.
@@ -68,160 +68,144 @@ const tests = {
       // a component-level variable. Ignore it until it
       //  gets defined (a different rule would flag it anyway).
       code: `
-      function MyComponent() {
-        useEffect(() => {
-          console.log(props.foo);
-        }, []);
-      }
-    `,
-    },
-    {
-      code: `
-      function MyComponent() {
-        const local1 = {};
-        {
-          const local2 = {};
+        function MyComponent() {
           useEffect(() => {
-            console.log(local1);
-            console.log(local2);
-          });
+            console.log(props.foo);
+          }, []);
         }
-      }
-    `,
+      `,
     },
     {
       code: `
-      function MyComponent() {
-        const local1 = {};
-        {
-          const local2 = {};
-          useCallback(() => {
-            console.log(local1);
-            console.log(local2);
-          }, [local1, local2]);
+        function MyComponent() {
+          const local1 = {};
+          {
+            const local2 = {};
+            useEffect(() => {
+              console.log(local1);
+              console.log(local2);
+            });
+          }
         }
-      }
-    `,
+      `,
     },
     {
       code: `
-      function MyComponent() {
-        const local1 = {};
-        function MyNestedComponent() {
-          const local2 = {};
-          useCallback(() => {
-            console.log(local1);
-            console.log(local2);
-          }, [local2]);
+        function MyComponent() {
+          const local1 = {};
+          {
+            const local2 = {};
+            useCallback(() => {
+              console.log(local1);
+              console.log(local2);
+            }, [local1, local2]);
+          }
         }
-      }
-    `,
+      `,
     },
     {
       code: `
-      function MyComponent() {
-        const local = {};
-        useEffect(() => {
-          console.log(local);
-          console.log(local);
-        }, [local]);
-      }
-    `,
+        function MyComponent() {
+          const local1 = {};
+          function MyNestedComponent() {
+            const local2 = {};
+            useCallback(() => {
+              console.log(local1);
+              console.log(local2);
+            }, [local2]);
+          }
+        }
+      `,
     },
     {
       code: `
-      function MyComponent() {
-        useEffect(() => {
-          console.log(unresolved);
-        }, []);
-      }
-    `,
+        function MyComponent() {
+          const local = {};
+          useEffect(() => {
+            console.log(local);
+            console.log(local);
+          }, [local]);
+        }
+      `,
     },
     {
       code: `
-      function MyComponent() {
-        const local = {};
-        useEffect(() => {
-          console.log(local);
-        }, [,,,local,,,]);
-      }
-    `,
+        function MyComponent() {
+          useEffect(() => {
+            console.log(unresolved);
+          }, []);
+        }
+      `,
     },
     {
       code: `
+        function MyComponent() {
+          const local = {};
+          useEffect(() => {
+            console.log(local);
+          }, [,,,local,,,]);
+        }
+      `,
+    },
+    {
       // Regression test
-      function MyComponent({ foo }) {
-        useEffect(() => {
-          console.log(foo.length);
-        }, [foo]);
-      }
-    `,
+      code: `
+        function MyComponent({ foo }) {
+          useEffect(() => {
+            console.log(foo.length);
+          }, [foo]);
+        }
+      `,
     },
     {
-      code: `
       // Regression test
-      function MyComponent({ foo }) {
-        useEffect(() => {
-          console.log(foo.length);
-          console.log(foo.slice(0));
-        }, [foo]);
-      }
-    `,
+      code: `
+        function MyComponent({ foo }) {
+          useEffect(() => {
+            console.log(foo.length);
+            console.log(foo.slice(0));
+          }, [foo]);
+        }
+      `,
     },
     {
-      code: `
       // Regression test
-      function MyComponent({ history }) {
-        useEffect(() => {
-          return history.listen();
-        }, [history]);
-      }
-    `,
+      code: `
+        function MyComponent({ history }) {
+          useEffect(() => {
+            return history.listen();
+          }, [history]);
+        }
+      `,
     },
     {
-      // TODO: we might want to forbid dot-access in deps.
       code: `
-      function MyComponent(props) {
-        useEffect(() => {
-          console.log(props.foo);
-        }, [props.foo]);
-      }
-    `,
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.foo);
+          }, [props.foo]);
+        }
+      `,
     },
     {
-      // TODO: we might want to forbid dot-access in deps.
       code: `
-      function MyComponent(props) {
-        useEffect(() => {
-          console.log(props.foo);
-          console.log(props.bar);
-        }, [props.bar, props.foo]);
-      }
-    `,
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.foo);
+            console.log(props.bar);
+          }, [props.bar, props.foo]);
+        }
+      `,
     },
     {
-      // TODO: we might want to forbid dot-access in deps.
       code: `
-      function MyComponent(props) {
-        useEffect(() => {
-          console.log(props.foo);
-          console.log(props.bar);
-        }, [props.foo, props.bar]);
-      }
-    `,
-    },
-    {
-      // TODO: we might want to forbid dot-access in deps.
-      code: `
-      function MyComponent(props) {
-        const local = {};
-        useEffect(() => {
-          console.log(props.foo);
-          console.log(props.bar);
-          console.log(local);
-        }, [props.foo, props.bar, local]);
-      }
-    `,
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.foo);
+            console.log(props.bar);
+          }, [props.foo, props.bar]);
+        }
+      `,
     },
     {
       code: `
@@ -230,7 +214,28 @@ const tests = {
           useEffect(() => {
             console.log(props.foo);
             console.log(props.bar);
+            console.log(local);
+          }, [props.foo, props.bar, local]);
+        }
+      `,
+    },
+    {
+      // [props, props.foo] is technically unnecessary ('props' covers 'props.foo').
+      // However, it's valid for effects to over-specify their deps.
+      // So we don't warn about this. We *would* warn about useMemo/useCallback.
+      code: `
+        function MyComponent(props) {
+          const local = {};
+          useEffect(() => {
+            console.log(props.foo);
+            console.log(props.bar);
           }, [props, props.foo]);
+
+          let color = {}
+          useEffect(() => {
+            console.log(props.foo.bar.baz);
+            console.log(color);
+          }, [props.foo, props.foo.bar.baz, color]);
         }
       `,
     },
@@ -245,7 +250,6 @@ const tests = {
       options: [{additionalHooks: 'useCustomEffect'}],
     },
     {
-      // TODO: we might want to forbid dot-access in deps.
       code: `
         function MyComponent(props) {
           useCustomEffect(() => {
@@ -256,46 +260,46 @@ const tests = {
       options: [{additionalHooks: 'useCustomEffect'}],
     },
     {
-      code: `
       // Valid because we don't care about hooks outside of components.
-      const local = {};
-      useEffect(() => {
-        console.log(local);
-      }, []);
-    `,
+      code: `
+        const local = {};
+        useEffect(() => {
+          console.log(local);
+        }, []);
+      `,
     },
     {
-      code: `
       // Valid because we don't care about hooks outside of components.
-      const local1 = {};
-      {
-        const local2 = {};
-        useEffect(() => {
-          console.log(local1);
-          console.log(local2);
-        }, []);
-      }
-    `,
+      code: `
+        const local1 = {};
+        {
+          const local2 = {};
+          useEffect(() => {
+            console.log(local1);
+            console.log(local2);
+          }, []);
+        }
+      `,
     },
     {
       code: `
-      function MyComponent() {
-        const ref = useRef();
-        useEffect(() => {
-          console.log(ref.current);
-        }, [ref]);
-      }
-    `,
+        function MyComponent() {
+          const ref = useRef();
+          useEffect(() => {
+            console.log(ref.current);
+          }, [ref]);
+        }
+      `,
     },
     {
       code: `
-      function MyComponent() {
-        const ref = useRef();
-        useEffect(() => {
-          console.log(ref.current);
-        }, []);
-      }
-    `,
+        function MyComponent() {
+          const ref = useRef();
+          useEffect(() => {
+            console.log(ref.current);
+          }, []);
+        }
+      `,
     },
     {
       code: `
@@ -559,38 +563,56 @@ const tests = {
       `,
     },
     {
-      // Valid because it's a primitive constant
+      // Valid because it's a primitive constant.
       code: `
-      function MyComponent() {
-        const local1 = 42;
-        const local2 = '42';
-        const local3 = null;
-        useEffect(() => {
-          console.log(local1);
-          console.log(local2);
-          console.log(local3);
-        }, []);
-      }
-    `,
+        function MyComponent() {
+          const local1 = 42;
+          const local2 = '42';
+          const local3 = null;
+          useEffect(() => {
+            console.log(local1);
+            console.log(local2);
+            console.log(local3);
+          }, []);
+        }
+      `,
     },
     {
       // It's not a mistake to specify constant values though.
       code: `
-      function MyComponent() {
-        const local1 = 42;
-        const local2 = '42';
-        const local3 = null;
-        useEffect(() => {
-          console.log(local1);
-          console.log(local2);
-          console.log(local3);
-        }, [local1, local2, local3]);
-      }
-    `,
+        function MyComponent() {
+          const local1 = 42;
+          const local2 = '42';
+          const local3 = null;
+          useEffect(() => {
+            console.log(local1);
+            console.log(local2);
+            console.log(local3);
+          }, [local1, local2, local3]);
+        }
+      `,
+    },
+    {
+      // It is valid for effects to over-specify their deps.
+      // TODO: maybe only allow local ones, and disallow this example.
+      code: `
+        function MyComponent() {
+          useEffect(() => {}, [window]);
+        }
+      `,
+    },
+    {
+      // It is valid for effects to over-specify their deps.
+      code: `
+        function MyComponent(props) {
+          const local = props.local;
+          useEffect(() => {}, [local]);
+        }
+      `,
     },
     {
       // Valid even though activeTab is "unused".
-      // We allow that in effects, but not callbacks or memo.
+      // We allow over-specifying deps for effects, but not callbacks or memo.
       code: `
         function Foo({ activeTab }) {
           useEffect(() => {
@@ -600,6 +622,28 @@ const tests = {
       `,
     },
     {
+      // It is valid to specify broader effect deps than strictly necessary.
+      // Don't warn for this.
+      code: `
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.foo.bar.baz);
+          }, [props]);
+          useEffect(() => {
+            console.log(props.foo.bar.baz);
+          }, [props.foo]);
+          useEffect(() => {
+            console.log(props.foo.bar.baz);
+          }, [props.foo.bar]);
+          useEffect(() => {
+            console.log(props.foo.bar.baz);
+          }, [props.foo.bar.baz]);
+        }
+      `,
+    },
+    {
+      // It is *also* valid to specify broader memo/callback deps than strictly necessary.
+      // Don't warn for this either.
       code: `
         function MyComponent(props) {
           const fn = useCallback(() => {
@@ -608,10 +652,10 @@ const tests = {
           const fn2 = useCallback(() => {
             console.log(props.foo.bar.baz);
           }, [props.foo]);
-          const fn3 = useCallback(() => {
+          const fn3 = useMemo(() => {
             console.log(props.foo.bar.baz);
           }, [props.foo.bar]);
-          const fn4 = useCallback(() => {
+          const fn4 = useMemo(() => {
             console.log(props.foo.bar.baz);
           }, [props.foo.bar.baz]);
         }
@@ -690,8 +734,8 @@ const tests = {
       ],
     },
     {
+      // Regression test
       code: `
-        // Regression test
         function MyComponent() {
           const local = {};
           useEffect(() => {
@@ -702,7 +746,6 @@ const tests = {
         }
       `,
       output: `
-        // Regression test
         function MyComponent() {
           const local = {};
           useEffect(() => {
@@ -718,8 +761,8 @@ const tests = {
       ],
     },
     {
+      // Regression test
       code: `
-        // Regression test
         function MyComponent() {
           const local = {};
           useEffect(() => {
@@ -730,7 +773,6 @@ const tests = {
         }
       `,
       output: `
-        // Regression test
         function MyComponent() {
           const local = {};
           useEffect(() => {
@@ -746,8 +788,8 @@ const tests = {
       ],
     },
     {
+      // Regression test
       code: `
-        // Regression test
         function MyComponent() {
           const local = {};
           useEffect(() => {
@@ -759,7 +801,6 @@ const tests = {
         }
       `,
       output: `
-        // Regression test
         function MyComponent() {
           const local = {};
           useEffect(() => {
@@ -939,11 +980,31 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          useCallback(() => {}, [local]);
+          useCallback(() => {}, [window]);
         }
       `,
       output: `
         function MyComponent() {
+          useCallback(() => {}, []);
+        }
+      `,
+      errors: [
+        "React Hook useCallback has an unnecessary dependency: 'window'. " +
+          'Either exclude it or remove the dependency array.',
+      ],
+    },
+    {
+      // It is not valid for useCallback to specify extraneous deps
+      // because it doesn't serve as a side effect trigger unlike useEffect.
+      code: `
+        function MyComponent(props) {
+          let local = props.foo;
+          useCallback(() => {}, [local]);
+        }
+      `,
+      output: `
+        function MyComponent(props) {
+          let local = props.foo;
           useCallback(() => {}, []);
         }
       `,
@@ -954,18 +1015,18 @@ const tests = {
     },
     {
       code: `
-      function MyComponent({ history }) {
-        useEffect(() => {
-          return history.listen();
-        }, []);
-      }
+        function MyComponent({ history }) {
+          useEffect(() => {
+            return history.listen();
+          }, []);
+        }
       `,
       output: `
-      function MyComponent({ history }) {
-        useEffect(() => {
-          return history.listen();
-        }, [history]);
-      }
+        function MyComponent({ history }) {
+          useEffect(() => {
+            return history.listen();
+          }, [history]);
+        }
       `,
       errors: [
         "React Hook useEffect has a missing dependency: 'history'. " +
@@ -974,24 +1035,24 @@ const tests = {
     },
     {
       code: `
-      function MyComponent({ history }) {
-        useEffect(() => {
-          return [
-            history.foo.bar[2].dobedo.listen(),
-            history.foo.bar().dobedo.listen[2]
-          ];
-        }, []);
-      }
+        function MyComponent({ history }) {
+          useEffect(() => {
+            return [
+              history.foo.bar[2].dobedo.listen(),
+              history.foo.bar().dobedo.listen[2]
+            ];
+          }, []);
+        }
       `,
       output: `
-      function MyComponent({ history }) {
-        useEffect(() => {
-          return [
-            history.foo.bar[2].dobedo.listen(),
-            history.foo.bar().dobedo.listen[2]
-          ];
-        }, [history.foo]);
-      }
+        function MyComponent({ history }) {
+          useEffect(() => {
+            return [
+              history.foo.bar[2].dobedo.listen(),
+              history.foo.bar().dobedo.listen[2]
+            ];
+          }, [history.foo]);
+        }
       `,
       errors: [
         "React Hook useEffect has a missing dependency: 'history.foo'. " +
@@ -1256,6 +1317,62 @@ const tests = {
       ],
     },
     {
+      // It is not valid for useCallback to specify extraneous deps
+      // because it doesn't serve as a side effect trigger unlike useEffect.
+      // However, we generally allow specifying *broader* deps as escape hatch.
+      // So while [props, props.foo] is unnecessary, 'props' wins here as the
+      // broader one, and this is why 'props.foo' is reported as unnecessary.
+      code: `
+        function MyComponent(props) {
+          const local = {};
+          useCallback(() => {
+            console.log(props.foo);
+            console.log(props.bar);
+          }, [props, props.foo]);
+        }
+      `,
+      output: `
+        function MyComponent(props) {
+          const local = {};
+          useCallback(() => {
+            console.log(props.foo);
+            console.log(props.bar);
+          }, [props]);
+        }
+      `,
+      errors: [
+        "React Hook useCallback has an unnecessary dependency: 'props.foo'. " +
+          'Either exclude it or remove the dependency array.',
+      ],
+    },
+    {
+      // Since we don't have 'props' in the list, we'll suggest narrow dependencies.
+      code: `
+        function MyComponent(props) {
+          const local = {};
+          useCallback(() => {
+            console.log(props.foo);
+            console.log(props.bar);
+          }, []);
+        }
+      `,
+      output: `
+        function MyComponent(props) {
+          const local = {};
+          useCallback(() => {
+            console.log(props.foo);
+            console.log(props.bar);
+          }, [props.bar, props.foo]);
+        }
+      `,
+      errors: [
+        "React Hook useCallback has missing dependencies: 'props.bar' and 'props.foo'. " +
+          'Either include them or remove the dependency array.',
+      ],
+    },
+    {
+      // Effects are allowed to over-specify deps. We'll complain about missing
+      // 'local', but we won't remove the already-specified 'local.id' from your list.
       code: `
         function MyComponent() {
           const local = {id: 42};
@@ -1278,6 +1395,8 @@ const tests = {
       ],
     },
     {
+      // Callbacks are not allowed to over-specify deps. So we'll complain about missing
+      // 'local' and we will also *remove* 'local.id' from your list.
       code: `
         function MyComponent() {
           const local = {id: 42};
@@ -1297,6 +1416,30 @@ const tests = {
       errors: [
         "React Hook useCallback has a missing dependency: 'local'. " +
           'Either include it or remove the dependency array.',
+      ],
+    },
+    {
+      // Callbacks are not allowed to over-specify deps. So we'll complain about
+      // the unnecessary 'local.id'.
+      code: `
+        function MyComponent() {
+          const local = {id: 42};
+          const fn = useCallback(() => {
+            console.log(local);
+          }, [local.id, local]);
+        }
+      `,
+      output: `
+        function MyComponent() {
+          const local = {id: 42};
+          const fn = useCallback(() => {
+            console.log(local);
+          }, [local]);
+        }
+      `,
+      errors: [
+        "React Hook useCallback has an unnecessary dependency: 'local.id'. " +
+          'Either exclude it or remove the dependency array.',
       ],
     },
     {
@@ -1344,6 +1487,11 @@ const tests = {
       ],
     },
     {
+      // Callbacks are not allowed to over-specify deps. So one of these is extra.
+      // However, it *is* allowed to specify broader deps then strictly necessary.
+      // So in this case we ask you to remove 'props.foo.bar.baz' because 'props.foo'
+      // already covers it, and having both is unnecessary.
+      // TODO: maybe consider suggesting a narrower one by default in these cases.
       code: `
         function MyComponent(props) {
           const fn = useCallback(() => {
@@ -1386,6 +1534,12 @@ const tests = {
       ],
     },
     {
+      // Normally we allow specifying deps too broadly.
+      // So we'd be okay if 'props.foo.bar' was there rather than 'props.foo.bar.baz'.
+      // However, 'props.foo.bar.baz' is missing. So we know there is a mistake.
+      // When we're sure there is a mistake, for callbacks we will rebuild the list
+      // from scratch. This will set the user on a better path by default.
+      // This is why we end up with just 'props.foo.bar', and not them both.
       code: `
         function MyComponent(props) {
           const fn = useCallback(() => {
@@ -1499,8 +1653,6 @@ const tests = {
           }, []);
         }
       `,
-      // TODO: we need to think about ideal output here.
-      // Should it capture by default?
       output: `
         function MyComponent(props) {
           useEffect(() => {
@@ -1522,8 +1674,6 @@ const tests = {
           }, []);
         }
       `,
-      // TODO: we need to think about ideal output here.
-      // Should it capture by default?
       output: `
         function MyComponent(props) {
           useEffect(() => {
@@ -1617,8 +1767,6 @@ const tests = {
           }, []);
         }
       `,
-      // TODO: we need to think about ideal output here.
-      // Should it capture by default?
       output: `
         function MyComponent(props) {
           const local = {};
@@ -2084,6 +2232,7 @@ const tests = {
         }
       `,
       errors: [
+        // TODO: make this message clearer since it's not obvious why.
         "React Hook useEffect has a missing dependency: 'props'. " +
           'Either include it or remove the dependency array.',
       ],
