@@ -2314,6 +2314,60 @@ const tests = {
     {
       code: `
         function MyComponent(props) {
+          const [skillsCount] = useState();
+          useEffect(() => {
+            if (skillsCount === 0 && !props.isEditMode) {
+              props.toggleEditMode();
+            }
+          }, [skillsCount, props.isEditMode, props.toggleEditMode]);
+        }
+      `,
+      output: `
+        function MyComponent(props) {
+          const [skillsCount] = useState();
+          useEffect(() => {
+            if (skillsCount === 0 && !props.isEditMode) {
+              props.toggleEditMode();
+            }
+          }, [skillsCount, props.isEditMode, props.toggleEditMode, props]);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has a missing dependency: 'props'. " +
+          'Either include it or remove the dependency array. ' +
+          'Alternatively, destructure the necessary props outside the callback.',
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
+          const [skillsCount] = useState();
+          useEffect(() => {
+            if (skillsCount === 0 && !props.isEditMode) {
+              props.toggleEditMode();
+            }
+          }, []);
+        }
+      `,
+      output: `
+        function MyComponent(props) {
+          const [skillsCount] = useState();
+          useEffect(() => {
+            if (skillsCount === 0 && !props.isEditMode) {
+              props.toggleEditMode();
+            }
+          }, [props, skillsCount]);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has missing dependencies: 'props' and 'skillsCount'. " +
+          'Either include them or remove the dependency array. ' +
+          'Alternatively, destructure the necessary props outside the callback.',
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
           useEffect(() => {
             externalCall(props);
             props.onChange();
