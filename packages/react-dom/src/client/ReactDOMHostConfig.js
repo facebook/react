@@ -310,8 +310,6 @@ export const scheduleTimeout =
 export const cancelTimeout =
   typeof clearTimeout === 'function' ? clearTimeout : (undefined: any);
 export const noTimeout = -1;
-export const schedulePassiveEffects = scheduleDeferredCallback;
-export const cancelPassiveEffects = cancelDeferredCallback;
 
 // -------------------
 //     Mutation
