@@ -18,6 +18,7 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
+import * as Scheduler from 'scheduler/unstable_mock';
 import {createPortal} from 'shared/ReactPortal';
 import expect from 'expect';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
@@ -46,9 +47,6 @@ if (__DEV__) {
 }
 
 function createReactNoop(reconciler: Function, useMutation: boolean) {
-  let scheduledCallback = null;
-  let scheduledCallbackTimeout = -1;
-  let scheduledPassiveCallback = null;
   let instanceCounter = 0;
   let hostDiffCounter = 0;
   let hostUpdateCounter = 0;
@@ -213,8 +211,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     );
   }
 
-  let elapsedTimeInMs = 0;
-
   const sharedHostConfig = {
     getRootHostContext() {
       return NO_CONTEXT;
@@ -303,66 +299,23 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return inst;
     },
 
-    scheduleDeferredCallback(callback, options) {
-      if (scheduledCallback) {
-        throw new Error(
-          'Scheduling a callback twice is excessive. Instead, keep track of ' +
-            'whether the callback has already been scheduled.',
-        );
-      }
-      scheduledCallback = callback;
-      if (
-        typeof options === 'object' &&
-        options !== null &&
-        typeof options.timeout === 'number'
-      ) {
-        const newTimeout = options.timeout;
-        if (
-          scheduledCallbackTimeout === -1 ||
-          scheduledCallbackTimeout > newTimeout
-        ) {
-          scheduledCallbackTimeout = elapsedTimeInMs + newTimeout;
-        }
-      }
-      return 0;
-    },
+    scheduleDeferredCallback: Scheduler.unstable_scheduleCallback,
+    cancelDeferredCallback: Scheduler.unstable_cancelCallback,
 
-    cancelDeferredCallback() {
-      if (scheduledCallback === null) {
-        throw new Error('No callback is scheduled.');
-      }
-      scheduledCallback = null;
-      scheduledCallbackTimeout = -1;
-    },
-
-    shouldYield,
+    shouldYield: Scheduler.unstable_shouldYield,
 
     scheduleTimeout: setTimeout,
     cancelTimeout: clearTimeout,
     noTimeout: -1,
-    schedulePassiveEffects(callback) {
-      if (scheduledCallback) {
-        throw new Error(
-          'Scheduling a callback twice is excessive. Instead, keep track of ' +
-            'whether the callback has already been scheduled.',
-        );
-      }
-      scheduledPassiveCallback = callback;
-    },
-    cancelPassiveEffects() {
-      if (scheduledPassiveCallback === null) {
-        throw new Error('No passive effects callback is scheduled.');
-      }
-      scheduledPassiveCallback = null;
-    },
+
+    schedulePassiveEffects: Scheduler.unstable_scheduleCallback,
+    cancelPassiveEffects: Scheduler.unstable_cancelCallback,
 
     prepareForCommit(): void {},
 
     resetAfterCommit(): void {},
 
-    now(): number {
-      return elapsedTimeInMs;
-    },
+    now: Scheduler.unstable_now,
 
     isPrimaryRenderer: true,
     supportsHydration: false,
@@ -529,55 +482,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   const roots = new Map();
   const DEFAULT_ROOT_ID = '<default>';
 
-  let yieldedValues = null;
-
-  let didYield;
-  let unitsRemaining;
-
-  function shouldYield() {
-    // Check if we already yielded
-    if (didYield || yieldedValues !== null) {
-      return true;
-    }
-
-    // If there are no remaining units of work, and we haven't timed out, then
-    // we should yield.
-    if (
-      unitsRemaining-- <= 0 &&
-      (scheduledCallbackTimeout === -1 ||
-        elapsedTimeInMs < scheduledCallbackTimeout)
-    ) {
-      didYield = true;
-      return true;
-    }
-
-    // Otherwise, keep working.
-    return false;
-  }
-
-  function* flushUnitsOfWork(n: number): Generator<Array<mixed>, void, void> {
-    unitsRemaining = n;
-    didYield = false;
-    try {
-      while (!didYield && scheduledCallback !== null) {
-        let cb = scheduledCallback;
-        scheduledCallback = null;
-        const didTimeout =
-          scheduledCallbackTimeout !== -1 &&
-          scheduledCallbackTimeout < elapsedTimeInMs;
-        cb(didTimeout);
-        if (yieldedValues !== null) {
-          const values = yieldedValues;
-          yieldedValues = null;
-          yield values;
-        }
-      }
-    } finally {
-      unitsRemaining = -1;
-      didYield = false;
-    }
-  }
-
   function childToJSX(child, text) {
     if (text !== null) {
       return text;
@@ -632,6 +536,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   }
 
   const ReactNoop = {
+    _Scheduler: Scheduler,
+
     getChildren(rootID: string = DEFAULT_ROOT_ID) {
       const container = rootContainers.get(rootID);
       if (container) {
@@ -742,53 +648,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return NoopRenderer.findHostInstance(component);
     },
 
-    flush(): Array<mixed> {
-      let values = yieldedValues || [];
-      yieldedValues = null;
-      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (const value of flushUnitsOfWork(Infinity)) {
-        values.push(...value);
-      }
-      return values;
-    },
-
-    // TODO: Should only be used via a Jest plugin (like we do with the
-    // test renderer).
-    unstable_flushNumberOfYields(n: number): Array<mixed> {
-      let values = yieldedValues || [];
-      yieldedValues = null;
-      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (const value of flushUnitsOfWork(Infinity)) {
-        values.push(...value);
-        if (values.length >= n) {
-          break;
-        }
-      }
-      return values;
-    },
-
-    flushThrough(expected: Array<mixed>): void {
-      let actual = [];
-      if (expected.length !== 0) {
-        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-        for (const value of flushUnitsOfWork(Infinity)) {
-          actual.push(...value);
-          if (actual.length >= expected.length) {
-            break;
-          }
-        }
-      }
-      expect(actual).toEqual(expected);
-    },
-
     flushNextYield(): Array<mixed> {
-      let actual = null;
-      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (const value of flushUnitsOfWork(Infinity)) {
-        actual = value;
-        break;
-      }
-      return actual !== null ? actual : [];
+      Scheduler.unstable_flushNumberOfYields(1);
+      return Scheduler.unstable_clearYields();
     },
 
     flushWithHostCounters(
@@ -806,7 +668,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       hostUpdateCounter = 0;
       hostCloneCounter = 0;
       try {
-        ReactNoop.flush();
+        Scheduler.flushAll();
         return useMutation
           ? {
               hostDiffCounter,
@@ -823,42 +685,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       }
     },
 
-    expire(ms: number): Array<mixed> {
-      ReactNoop.advanceTime(ms);
-      return ReactNoop.flushExpired();
-    },
-
-    advanceTime(ms: number): void {
-      elapsedTimeInMs += ms;
-    },
+    expire: Scheduler.advanceTime,
 
     flushExpired(): Array<mixed> {
-      let values = yieldedValues || [];
-      yieldedValues = null;
-      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (const value of flushUnitsOfWork(0)) {
-        values.push(...value);
-      }
-      return values;
+      return Scheduler.unstable_flushExpired();
     },
 
-    yield(value: mixed) {
-      if (yieldedValues === null) {
-        yieldedValues = [value];
-      } else {
-        yieldedValues.push(value);
-      }
-    },
-
-    clearYields() {
-      const values = yieldedValues;
-      yieldedValues = null;
-      return values;
-    },
-
-    hasScheduledCallback() {
-      return !!scheduledCallback;
-    },
+    yield: Scheduler.yieldValue,
 
     batchedUpdates: NoopRenderer.batchedUpdates,
 
@@ -920,9 +753,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     flushSync(fn: () => mixed) {
-      yieldedValues = [];
       NoopRenderer.flushSync(fn);
-      return yieldedValues;
     },
 
     flushPassiveEffects() {
@@ -1047,12 +878,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         _next: null,
       };
       root.firstBatch = batch;
-      const actual = ReactNoop.flush();
+      Scheduler.unstable_flushWithoutYielding();
+      const actual = Scheduler.unstable_clearYields();
       expect(actual).toEqual(expectedFlush);
       return (expectedCommit: Array<mixed>) => {
         batch._defer = false;
         NoopRenderer.flushRoot(root, expiration);
-        expect(yieldedValues).toEqual(expectedCommit);
+        expect(Scheduler.unstable_clearYields()).toEqual(expectedCommit);
       };
     },
 

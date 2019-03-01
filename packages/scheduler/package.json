@@ -27,6 +27,7 @@
     "index.js",
     "tracing.js",
     "tracing-profiling.js",
+    "unstable_mock.js",
     "cjs/",
     "umd/"
   ],

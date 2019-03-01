@@ -19,11 +19,10 @@ runPlaceholderTests('ReactSuspensePlaceholder (persistence)', () =>
 );
 
 function runPlaceholderTests(suiteLabel, loadReactNoop) {
-  let advanceTimeBy;
-  let mockNow;
   let Profiler;
   let React;
   let ReactTestRenderer;
+  let Scheduler;
   let ReactFeatureFlags;
   let ReactCache;
   let Suspense;
@@ -34,20 +33,13 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
     beforeEach(() => {
       jest.resetModules();
 
-      let currentTime = 0;
-      mockNow = jest.fn().mockImplementation(() => currentTime);
-      global.Date.now = mockNow;
-      advanceTimeBy = amount => {
-        currentTime += amount;
-      };
-
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
       ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
       ReactFeatureFlags.enableProfilerTimer = true;
       ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
       React = require('react');
       ReactTestRenderer = require('react-test-renderer');
-      ReactTestRenderer.unstable_setNowImplementation(mockNow);
+      Scheduler = require('scheduler');
       ReactCache = require('react-cache');
 
       Profiler = React.unstable_Profiler;
@@ -65,16 +57,12 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
                   listeners = [{resolve, reject}];
                   setTimeout(() => {
                     if (textResourceShouldFail) {
-                      ReactTestRenderer.unstable_yield(
-                        `Promise rejected [${text}]`,
-                      );
+                      Scheduler.yieldValue(`Promise rejected [${text}]`);
                       status = 'rejected';
                       value = new Error('Failed to load: ' + text);
                       listeners.forEach(listener => listener.reject(value));
                     } else {
-                      ReactTestRenderer.unstable_yield(
-                        `Promise resolved [${text}]`,
-                      );
+                      Scheduler.yieldValue(`Promise resolved [${text}]`);
                       status = 'resolved';
                       value = text;
                       listeners.forEach(listener => listener.resolve(value));
@@ -101,22 +89,22 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
     });
 
     function Text({fakeRenderDuration = 0, text = 'Text'}) {
-      advanceTimeBy(fakeRenderDuration);
-      ReactTestRenderer.unstable_yield(text);
+      Scheduler.advanceTime(fakeRenderDuration);
+      Scheduler.yieldValue(text);
       return text;
     }
 
     function AsyncText({fakeRenderDuration = 0, ms, text}) {
-      advanceTimeBy(fakeRenderDuration);
+      Scheduler.advanceTime(fakeRenderDuration);
       try {
         TextResource.read([text, ms]);
-        ReactTestRenderer.unstable_yield(text);
+        Scheduler.yieldValue(text);
         return text;
       } catch (promise) {
         if (typeof promise.then === 'function') {
-          ReactTestRenderer.unstable_yield(`Suspend! [${text}]`);
+          Scheduler.yieldValue(`Suspend! [${text}]`);
         } else {
-          ReactTestRenderer.unstable_yield(`Error! [${text}]`);
+          Scheduler.yieldValue(`Error! [${text}]`);
         }
         throw promise;
       }
@@ -126,7 +114,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
       class HiddenText extends React.PureComponent {
         render() {
           const text = this.props.text;
-          ReactTestRenderer.unstable_yield(text);
+          Scheduler.yieldValue(text);
           return <span hidden={true}>{text}</span>;
         }
       }
@@ -150,13 +138,18 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
         unstable_isConcurrent: true,
       });
 
-      expect(root).toFlushAndYield(['A', 'Suspend! [B]', 'C', 'Loading...']);
+      expect(Scheduler).toFlushAndYield([
+        'A',
+        'Suspend! [B]',
+        'C',
+        'Loading...',
+      ]);
       expect(root).toMatchRenderedOutput(null);
 
       jest.advanceTimersByTime(1000);
-      expect(ReactTestRenderer).toHaveYielded(['Promise resolved [B]']);
+      expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
 
-      expect(root).toFlushAndYield(['A', 'B', 'C']);
+      expect(Scheduler).toFlushAndYield(['A', 'B', 'C']);
 
       expect(root).toMatchRenderedOutput(
         <React.Fragment>
@@ -168,17 +161,17 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
 
       // Update
       root.update(<App middleText="B2" />);
-      expect(root).toFlushAndYield(['Suspend! [B2]', 'C', 'Loading...']);
+      expect(Scheduler).toFlushAndYield(['Suspend! [B2]', 'C', 'Loading...']);
 
       // Time out the update
       jest.advanceTimersByTime(750);
-      expect(root).toFlushAndYield([]);
+      expect(Scheduler).toFlushAndYield([]);
       expect(root).toMatchRenderedOutput('Loading...');
 
       // Resolve the promise
       jest.advanceTimersByTime(1000);
-      expect(ReactTestRenderer).toHaveYielded(['Promise resolved [B2]']);
-      expect(root).toFlushAndYield(['B2', 'C']);
+      expect(Scheduler).toHaveYielded(['Promise resolved [B2]']);
+      expect(Scheduler).toFlushAndYield(['B2', 'C']);
 
       // Render the final update. A should still be hidden, because it was
       // given a `hidden` prop.
@@ -207,27 +200,37 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
         unstable_isConcurrent: true,
       });
 
-      expect(root).toFlushAndYield(['A', 'Suspend! [B]', 'C', 'Loading...']);
+      expect(Scheduler).toFlushAndYield([
+        'A',
+        'Suspend! [B]',
+        'C',
+        'Loading...',
+      ]);
 
       expect(root).toMatchRenderedOutput(null);
 
       jest.advanceTimersByTime(1000);
-      expect(ReactTestRenderer).toHaveYielded(['Promise resolved [B]']);
-      expect(root).toFlushAndYield(['A', 'B', 'C']);
+      expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
+      expect(Scheduler).toFlushAndYield(['A', 'B', 'C']);
       expect(root).toMatchRenderedOutput('ABC');
 
       // Update
       root.update(<App middleText="B2" />);
-      expect(root).toFlushAndYield(['A', 'Suspend! [B2]', 'C', 'Loading...']);
+      expect(Scheduler).toFlushAndYield([
+        'A',
+        'Suspend! [B2]',
+        'C',
+        'Loading...',
+      ]);
       // Time out the update
       jest.advanceTimersByTime(750);
-      expect(root).toFlushAndYield([]);
+      expect(Scheduler).toFlushAndYield([]);
       expect(root).toMatchRenderedOutput('Loading...');
 
       // Resolve the promise
       jest.advanceTimersByTime(1000);
-      expect(ReactTestRenderer).toHaveYielded(['Promise resolved [B2]']);
-      expect(root).toFlushAndYield(['A', 'B2', 'C']);
+      expect(Scheduler).toHaveYielded(['Promise resolved [B2]']);
+      expect(Scheduler).toFlushAndYield(['A', 'B2', 'C']);
 
       // Render the final update. A should still be hidden, because it was
       // given a `hidden` prop.
@@ -243,19 +246,19 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
         onRender = jest.fn();
 
         const Fallback = () => {
-          ReactTestRenderer.unstable_yield('Fallback');
-          advanceTimeBy(10);
+          Scheduler.yieldValue('Fallback');
+          Scheduler.advanceTime(10);
           return 'Loading...';
         };
 
         const Suspending = () => {
-          ReactTestRenderer.unstable_yield('Suspending');
-          advanceTimeBy(2);
+          Scheduler.yieldValue('Suspending');
+          Scheduler.advanceTime(2);
           return <AsyncText ms={1000} text="Loaded" fakeRenderDuration={1} />;
         };
 
         App = ({shouldSuspend, text = 'Text', textRenderDuration = 5}) => {
-          ReactTestRenderer.unstable_yield('App');
+          Scheduler.yieldValue('App');
           return (
             <Profiler id="root" onRender={onRender}>
               <Suspense maxDuration={500} fallback={<Fallback />}>
@@ -296,7 +299,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
             unstable_isConcurrent: true,
           });
 
-          expect(root).toFlushAndYield([
+          expect(Scheduler).toFlushAndYield([
             'App',
             'Suspending',
             'Suspend! [Loaded]',
@@ -318,10 +321,8 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
 
           // Resolve the pending promise.
           jest.advanceTimersByTime(250);
-          expect(ReactTestRenderer).toHaveYielded([
-            'Promise resolved [Loaded]',
-          ]);
-          expect(root).toFlushAndYield(['Suspending', 'Loaded', 'Text']);
+          expect(Scheduler).toHaveYielded(['Promise resolved [Loaded]']);
+          expect(Scheduler).toFlushAndYield(['Suspending', 'Loaded', 'Text']);
           expect(root).toMatchRenderedOutput('LoadedText');
           expect(onRender).toHaveBeenCalledTimes(2);
 
@@ -387,7 +388,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
             },
           );
 
-          expect(root).toFlushAndYield(['App', 'Text']);
+          expect(Scheduler).toFlushAndYield(['App', 'Text']);
           expect(root).toMatchRenderedOutput('Text');
           expect(onRender).toHaveBeenCalledTimes(1);
 
@@ -397,7 +398,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
           expect(onRender.mock.calls[0][3]).toBe(5);
 
           root.update(<App shouldSuspend={true} textRenderDuration={5} />);
-          expect(root).toFlushAndYield([
+          expect(Scheduler).toFlushAndYield([
             'App',
             'Suspending',
             'Suspend! [Loaded]',
@@ -423,7 +424,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
           root.update(
             <App shouldSuspend={true} text="New" textRenderDuration={6} />,
           );
-          expect(root).toFlushAndYield([
+          expect(Scheduler).toFlushAndYield([
             'App',
             'Suspending',
             'Suspend! [Loaded]',
@@ -435,10 +436,13 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
 
           // Resolve the pending promise.
           jest.advanceTimersByTime(250);
-          expect(ReactTestRenderer).toHaveYielded([
-            'Promise resolved [Loaded]',
+          expect(Scheduler).toHaveYielded(['Promise resolved [Loaded]']);
+          expect(Scheduler).toFlushAndYield([
+            'App',
+            'Suspending',
+            'Loaded',
+            'New',
           ]);
-          expect(root).toFlushAndYield(['App', 'Suspending', 'Loaded', 'New']);
           expect(onRender).toHaveBeenCalledTimes(3);
 
           // When the suspending data is resolved and our final UI is rendered,

@@ -34,7 +34,7 @@ const tests = {
     {
       code: `
       function MyComponent() {
-        const local = 42;
+        const local = {};
         useEffect(() => {
           console.log(local);
         });
@@ -45,7 +45,7 @@ const tests = {
       code: `
       function MyComponent() {
         useEffect(() => {
-          const local = 42;
+          const local = {};
           console.log(local);
         }, []);
       }
@@ -54,7 +54,7 @@ const tests = {
     {
       code: `
       function MyComponent() {
-        const local = 42;
+        const local = {};
         useEffect(() => {
           console.log(local);
         }, [local]);
@@ -78,9 +78,9 @@ const tests = {
     {
       code: `
       function MyComponent() {
-        const local1 = 42;
+        const local1 = {};
         {
-          const local2 = 42;
+          const local2 = {};
           useEffect(() => {
             console.log(local1);
             console.log(local2);
@@ -92,10 +92,10 @@ const tests = {
     {
       code: `
       function MyComponent() {
-        const local1 = 42;
+        const local1 = {};
         {
-          const local2 = 42;
-          useEffect(() => {
+          const local2 = {};
+          useCallback(() => {
             console.log(local1);
             console.log(local2);
           }, [local1, local2]);
@@ -106,10 +106,10 @@ const tests = {
     {
       code: `
       function MyComponent() {
-        const local1 = 42;
+        const local1 = {};
         function MyNestedComponent() {
-          const local2 = 42;
-          useEffect(() => {
+          const local2 = {};
+          useCallback(() => {
             console.log(local1);
             console.log(local2);
           }, [local2]);
@@ -120,7 +120,7 @@ const tests = {
     {
       code: `
       function MyComponent() {
-        const local = 42;
+        const local = {};
         useEffect(() => {
           console.log(local);
           console.log(local);
@@ -140,7 +140,7 @@ const tests = {
     {
       code: `
       function MyComponent() {
-        const local = 42;
+        const local = {};
         useEffect(() => {
           console.log(local);
         }, [,,,local,,,]);
@@ -214,7 +214,7 @@ const tests = {
       // TODO: we might want to forbid dot-access in deps.
       code: `
       function MyComponent(props) {
-        const local = 42;
+        const local = {};
         useEffect(() => {
           console.log(props.foo);
           console.log(props.bar);
@@ -228,7 +228,7 @@ const tests = {
       // is extraneous because we already have "props".
       code: `
         function MyComponent(props) {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(props.foo);
             console.log(props.bar);
@@ -260,7 +260,7 @@ const tests = {
     {
       code: `
       // Valid because we don't care about hooks outside of components.
-      const local = 42;
+      const local = {};
       useEffect(() => {
         console.log(local);
       }, []);
@@ -269,9 +269,9 @@ const tests = {
     {
       code: `
       // Valid because we don't care about hooks outside of components.
-      const local1 = 42;
+      const local1 = {};
       {
-        const local2 = 42;
+        const local2 = {};
         useEffect(() => {
           console.log(local1);
           console.log(local2);
@@ -446,12 +446,167 @@ const tests = {
         }
       `,
     },
+    {
+      // Valid because we assign ref.current
+      // ourselves. Therefore it's likely not
+      // a ref managed by React.
+      code: `
+        function MyComponent() {
+          const myRef = useRef();
+          useEffect(() => {
+            const handleMove = () => {};
+            myRef.current = {};
+            return () => {
+              console.log(myRef.current.toString())
+            };
+          }, []);
+          return <div />;
+        }
+      `,
+    },
+    {
+      // Valid because we assign ref.current
+      // ourselves. Therefore it's likely not
+      // a ref managed by React.
+      code: `
+        function useMyThing(myRef) {
+          useEffect(() => {
+            const handleMove = () => {};
+            myRef.current = {};
+            return () => {
+              console.log(myRef.current.toString())
+            };
+          }, [myRef]);
+        }
+      `,
+    },
+    {
+      // Valid because the ref is captured.
+      code: `
+        function MyComponent() {
+          const myRef = useRef();
+          useEffect(() => {
+            const handleMove = () => {};
+            const node = myRef.current;
+            node.addEventListener('mousemove', handleMove);
+            return () => node.removeEventListener('mousemove', handleMove);
+          }, []);
+          return <div ref={myRef} />;
+        }
+      `,
+    },
+    {
+      // Valid because the ref is captured.
+      code: `
+        function useMyThing(myRef) {
+          const myRef = useRef();
+          useEffect(() => {
+            const handleMove = () => {};
+            const node = myRef.current;
+            node.addEventListener('mousemove', handleMove);
+            return () => node.removeEventListener('mousemove', handleMove);
+          }, [myRef]);
+          return <div ref={myRef} />;
+        }
+      `,
+    },
+    {
+      // Valid because it's not an effect.
+      code: `
+        function useMyThing(myRef) {
+          useCallback(() => {
+            const handleMouse = () => {};
+            myRef.current.addEventListener('mousemove', handleMouse);
+            myRef.current.addEventListener('mousein', handleMouse);
+            return function() {
+              setTimeout(() => {
+                myRef.current.removeEventListener('mousemove', handleMouse);
+                myRef.current.removeEventListener('mousein', handleMouse);
+              });
+            }
+          }, [myRef]);
+        }
+      `,
+    },
+    {
+      // Valid because we read ref.current in a function that isn't cleanup.
+      code: `
+        function useMyThing() {
+          const myRef = useRef();
+          useEffect(() => {
+            const handleMove = () => {
+              console.log(myRef.current)
+            };
+            window.addEventListener('mousemove', handleMove);
+            return () => window.removeEventListener('mousemove', handleMove);
+          }, []);
+          return <div ref={myRef} />;
+        }
+      `,
+    },
+    {
+      // Valid because we read ref.current in a function that isn't cleanup.
+      code: `
+        function useMyThing() {
+          const myRef = useRef();
+          useEffect(() => {
+            const handleMove = () => {
+              return () => window.removeEventListener('mousemove', handleMove);
+            };
+            window.addEventListener('mousemove', handleMove);
+            return () => {};
+          }, []);
+          return <div ref={myRef} />;
+        }
+      `,
+    },
+    {
+      // Valid because it's a primitive constant
+      code: `
+      function MyComponent() {
+        const local1 = 42;
+        const local2 = '42';
+        const local3 = null;
+        useEffect(() => {
+          console.log(local1);
+          console.log(local2);
+          console.log(local3);
+        }, []);
+      }
+    `,
+    },
+    {
+      // It's not a mistake to specify constant values though.
+      code: `
+      function MyComponent() {
+        const local1 = 42;
+        const local2 = '42';
+        const local3 = null;
+        useEffect(() => {
+          console.log(local1);
+          console.log(local2);
+          console.log(local3);
+        }, [local1, local2, local3]);
+      }
+    `,
+    },
+    {
+      // Valid even though activeTab is "unused".
+      // We allow that in effects, but not callbacks or memo.
+      code: `
+        function Foo({ activeTab }) {
+          useEffect(() => {
+            window.scrollTo(0, 0);
+          }, [activeTab]);
+        }
+      `,
+    },
   ],
   invalid: [
     {
       code: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
           }, []);
@@ -459,7 +614,55 @@ const tests = {
       `,
       output: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
+          useEffect(() => {
+            console.log(local);
+          }, [local]);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has a missing dependency: 'local'. " +
+          'Either include it or remove the dependency array.',
+      ],
+    },
+    {
+      // Note: we *could* detect it's a primitive and never assigned
+      // even though it's not a constant -- but we currently don't.
+      // So this is an error.
+      code: `
+        function MyComponent() {
+          let local = 42;
+          useEffect(() => {
+            console.log(local);
+          }, []);
+        }
+      `,
+      output: `
+        function MyComponent() {
+          let local = 42;
+          useEffect(() => {
+            console.log(local);
+          }, [local]);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has a missing dependency: 'local'. " +
+          'Either include it or remove the dependency array.',
+      ],
+    },
+    {
+      // Regexes are literals but potentially stateful.
+      code: `
+        function MyComponent() {
+          const local = /foo/;
+          useEffect(() => {
+            console.log(local);
+          }, []);
+        }
+      `,
+      output: `
+        function MyComponent() {
+          const local = /foo/;
           useEffect(() => {
             console.log(local);
           }, [local]);
@@ -474,7 +677,7 @@ const tests = {
       code: `
         // Regression test
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             if (true) {
               console.log(local);
@@ -485,7 +688,7 @@ const tests = {
       output: `
         // Regression test
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             if (true) {
               console.log(local);
@@ -502,7 +705,7 @@ const tests = {
       code: `
         // Regression test
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             try {
               console.log(local);
@@ -513,7 +716,7 @@ const tests = {
       output: `
         // Regression test
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             try {
               console.log(local);
@@ -530,7 +733,7 @@ const tests = {
       code: `
         // Regression test
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             function inner() {
               console.log(local);
@@ -542,7 +745,7 @@ const tests = {
       output: `
         // Regression test
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             function inner() {
               console.log(local);
@@ -559,9 +762,9 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          const local1 = 42;
+          const local1 = {};
           {
-            const local2 = 42;
+            const local2 = {};
             useEffect(() => {
               console.log(local1);
               console.log(local2);
@@ -571,9 +774,9 @@ const tests = {
       `,
       output: `
         function MyComponent() {
-          const local1 = 42;
+          const local1 = {};
           {
-            const local2 = 42;
+            const local2 = {};
             useEffect(() => {
               console.log(local1);
               console.log(local2);
@@ -589,8 +792,8 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          const local1 = 42;
-          const local2 = 42;
+          const local1 = {};
+          const local2 = {};
           useEffect(() => {
             console.log(local1);
             console.log(local2);
@@ -599,8 +802,8 @@ const tests = {
       `,
       output: `
         function MyComponent() {
-          const local1 = 42;
-          const local2 = 42;
+          const local1 = {};
+          const local2 = {};
           useEffect(() => {
             console.log(local1);
             console.log(local2);
@@ -615,24 +818,24 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          const local1 = 42;
-          const local2 = 42;
-          useEffect(() => {
+          const local1 = {};
+          const local2 = {};
+          useMemo(() => {
             console.log(local1);
           }, [local1, local2]);
         }
       `,
       output: `
         function MyComponent() {
-          const local1 = 42;
-          const local2 = 42;
-          useEffect(() => {
+          const local1 = {};
+          const local2 = {};
+          useMemo(() => {
             console.log(local1);
           }, [local1]);
         }
       `,
       errors: [
-        "React Hook useEffect has an unnecessary dependency: 'local2'. " +
+        "React Hook useMemo has an unnecessary dependency: 'local2'. " +
           'Either exclude it or remove the dependency array.',
       ],
     },
@@ -641,10 +844,10 @@ const tests = {
       // Maybe it should not consider local1 unused despite component nesting?
       code: `
         function MyComponent() {
-          const local1 = 42;
+          const local1 = {};
           function MyNestedComponent() {
-            const local2 = 42;
-            useEffect(() => {
+            const local2 = {};
+            useCallback(() => {
               console.log(local1);
               console.log(local2);
             }, [local1]);
@@ -653,10 +856,10 @@ const tests = {
       `,
       output: `
         function MyComponent() {
-          const local1 = 42;
+          const local1 = {};
           function MyNestedComponent() {
-            const local2 = 42;
-            useEffect(() => {
+            const local2 = {};
+            useCallback(() => {
               console.log(local1);
               console.log(local2);
             }, [local2]);
@@ -665,14 +868,14 @@ const tests = {
       `,
       errors: [
         // Focus on the more important part first (missing dep)
-        "React Hook useEffect has a missing dependency: 'local2'. " +
+        "React Hook useCallback has a missing dependency: 'local2'. " +
           'Either include it or remove the dependency array.',
       ],
     },
     {
       code: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
             console.log(local);
@@ -681,7 +884,7 @@ const tests = {
       `,
       output: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
             console.log(local);
@@ -696,7 +899,7 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
             console.log(local);
@@ -705,7 +908,7 @@ const tests = {
       `,
       output: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
             console.log(local);
@@ -720,16 +923,16 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          useEffect(() => {}, [local]);
+          useCallback(() => {}, [local]);
         }
       `,
       output: `
         function MyComponent() {
-          useEffect(() => {}, []);
+          useCallback(() => {}, []);
         }
       `,
       errors: [
-        "React Hook useEffect has an unnecessary dependency: 'local'. " +
+        "React Hook useCallback has an unnecessary dependency: 'local'. " +
           'Either exclude it or remove the dependency array.',
       ],
     },
@@ -781,6 +984,53 @@ const tests = {
     },
     {
       code: `
+        function MyComponent({ foo, bar, baz }) {
+          useEffect(() => {
+            console.log(foo, bar, baz);
+          }, ['foo', 'bar']);
+        }
+      `,
+      output: `
+        function MyComponent({ foo, bar, baz }) {
+          useEffect(() => {
+            console.log(foo, bar, baz);
+          }, [bar, baz, foo]);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has missing dependencies: 'bar', 'baz', and 'foo'. " +
+          'Either include them or remove the dependency array.',
+        "The 'foo' string literal is not a valid dependency because it never changes. " +
+          'Did you mean to include foo in the array instead?',
+        "The 'bar' string literal is not a valid dependency because it never changes. " +
+          'Did you mean to include bar in the array instead?',
+      ],
+    },
+    {
+      code: `
+        function MyComponent({ foo, bar, baz }) {
+          useEffect(() => {
+            console.log(foo, bar, baz);
+          }, [42, false, null]);
+        }
+      `,
+      output: `
+        function MyComponent({ foo, bar, baz }) {
+          useEffect(() => {
+            console.log(foo, bar, baz);
+          }, [bar, baz, foo]);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has missing dependencies: 'bar', 'baz', and 'foo'. " +
+          'Either include them or remove the dependency array.',
+        "The '42' literal is not a valid dependency because it never changes. You can safely remove it.",
+        "The 'false' literal is not a valid dependency because it never changes. You can safely remove it.",
+        "The 'null' literal is not a valid dependency because it never changes. You can safely remove it.",
+      ],
+    },
+    {
+      code: `
         function MyComponent() {
           const dependencies = [];
           useEffect(() => {}, dependencies);
@@ -801,7 +1051,7 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           const dependencies = [local];
           useEffect(() => {
             console.log(local);
@@ -811,7 +1061,7 @@ const tests = {
       // TODO: should this autofix or bail out?
       output: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           const dependencies = [local];
           useEffect(() => {
             console.log(local);
@@ -829,7 +1079,7 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           const dependencies = [local];
           useEffect(() => {
             console.log(local);
@@ -839,7 +1089,7 @@ const tests = {
       // TODO: should this autofix or bail out?
       output: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           const dependencies = [local];
           useEffect(() => {
             console.log(local);
@@ -857,7 +1107,7 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
           }, [local, ...dependencies]);
@@ -865,7 +1115,7 @@ const tests = {
       `,
       output: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
           }, [local, ...dependencies]);
@@ -880,7 +1130,7 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
           }, [computeCacheKey(local)]);
@@ -890,7 +1140,7 @@ const tests = {
       // Maybe bail out?
       output: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
           }, [local]);
@@ -990,7 +1240,6 @@ const tests = {
       ],
     },
     {
-      // TODO: need to think more about this case.
       code: `
         function MyComponent() {
           const local = {id: 42};
@@ -999,13 +1248,14 @@ const tests = {
           }, [local.id]);
         }
       `,
-      // TODO: this may not be a good idea.
+      // TODO: autofix should be smart enough
+      // to remove local.id from the list.
       output: `
         function MyComponent() {
           const local = {id: 42};
           useEffect(() => {
             console.log(local);
-          }, [local]);
+          }, [local, local.id]);
         }
       `,
       errors: [
@@ -1016,7 +1266,7 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
           }, [local, local]);
@@ -1024,7 +1274,7 @@ const tests = {
       `,
       output: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
           }, [local]);
@@ -1038,42 +1288,42 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          const local1 = 42;
-          useEffect(() => {
-            const local1 = 42;
+          const local1 = {};
+          useCallback(() => {
+            const local1 = {};
             console.log(local1);
           }, [local1]);
         }
       `,
       output: `
         function MyComponent() {
-          const local1 = 42;
-          useEffect(() => {
-            const local1 = 42;
+          const local1 = {};
+          useCallback(() => {
+            const local1 = {};
             console.log(local1);
           }, []);
         }
       `,
       errors: [
-        "React Hook useEffect has an unnecessary dependency: 'local1'. " +
+        "React Hook useCallback has an unnecessary dependency: 'local1'. " +
           'Either exclude it or remove the dependency array.',
       ],
     },
     {
       code: `
         function MyComponent() {
-          const local1 = 42;
-          useEffect(() => {}, [local1]);
+          const local1 = {};
+          useCallback(() => {}, [local1]);
         }
       `,
       output: `
         function MyComponent() {
-          const local1 = 42;
-          useEffect(() => {}, []);
+          const local1 = {};
+          useCallback(() => {}, []);
         }
       `,
       errors: [
-        "React Hook useEffect has an unnecessary dependency: 'local1'. " +
+        "React Hook useCallback has an unnecessary dependency: 'local1'. " +
           'Either exclude it or remove the dependency array.',
       ],
     },
@@ -1195,7 +1445,7 @@ const tests = {
     {
       code: `
         function MyComponent(props) {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(props.foo);
             console.log(props.bar);
@@ -1207,7 +1457,7 @@ const tests = {
       // Should it capture by default?
       output: `
         function MyComponent(props) {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(props.foo);
             console.log(props.bar);
@@ -1223,7 +1473,7 @@ const tests = {
     {
       code: `
         function MyComponent(props) {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(props.foo);
             console.log(props.bar);
@@ -1233,7 +1483,7 @@ const tests = {
       `,
       output: `
         function MyComponent(props) {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(props.foo);
             console.log(props.bar);
@@ -1358,7 +1608,7 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
           }, [a ? local : b]);
@@ -1367,7 +1617,7 @@ const tests = {
       // TODO: should we bail out instead?
       output: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
           }, [local]);
@@ -1383,7 +1633,7 @@ const tests = {
     {
       code: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
           }, [a && local]);
@@ -1392,7 +1642,7 @@ const tests = {
       // TODO: should we bail out instead?
       output: `
         function MyComponent() {
-          const local = 42;
+          const local = {};
           useEffect(() => {
             console.log(local);
           }, [local]);
@@ -1411,7 +1661,7 @@ const tests = {
           const ref = useRef();
           const [state, setState] = useState();
           useEffect(() => {
-            ref.current = 42;
+            ref.current = {};
             setState(state + 1);
           }, []);
         }
@@ -1421,7 +1671,7 @@ const tests = {
           const ref = useRef();
           const [state, setState] = useState();
           useEffect(() => {
-            ref.current = 42;
+            ref.current = {};
             setState(state + 1);
           }, [state]);
         }
@@ -1437,7 +1687,7 @@ const tests = {
           const ref = useRef();
           const [state, setState] = useState();
           useEffect(() => {
-            ref.current = 42;
+            ref.current = {};
             setState(state + 1);
           }, [ref]);
         }
@@ -1450,7 +1700,7 @@ const tests = {
           const ref = useRef();
           const [state, setState] = useState();
           useEffect(() => {
-            ref.current = 42;
+            ref.current = {};
             setState(state + 1);
           }, [ref, state]);
         }
@@ -1548,6 +1798,62 @@ const tests = {
     },
     {
       code: `
+        function MyComponent({ activeTab }) {
+          const ref1 = useRef();
+          const ref2 = useRef();
+          useEffect(() => {
+            ref1.current.scrollTop = 0;
+            ref2.current.scrollTop = 0;
+          }, [ref1.current, ref2.current, activeTab]);
+        }
+      `,
+      output: `
+        function MyComponent({ activeTab }) {
+          const ref1 = useRef();
+          const ref2 = useRef();
+          useEffect(() => {
+            ref1.current.scrollTop = 0;
+            ref2.current.scrollTop = 0;
+          }, [activeTab]);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has unnecessary dependencies: 'ref1.current' and 'ref2.current'. " +
+          'Either exclude them or remove the dependency array. ' +
+          "Mutable values like 'ref1.current' aren't valid dependencies " +
+          "because their mutation doesn't re-render the component.",
+      ],
+    },
+    {
+      code: `
+        function MyComponent({ activeTab, initY }) {
+          const ref1 = useRef();
+          const ref2 = useRef();
+          const fn = useCallback(() => {
+            ref1.current.scrollTop = initY;
+            ref2.current.scrollTop = initY;
+          }, [ref1.current, ref2.current, activeTab, initY]);
+        }
+      `,
+      output: `
+        function MyComponent({ activeTab, initY }) {
+          const ref1 = useRef();
+          const ref2 = useRef();
+          const fn = useCallback(() => {
+            ref1.current.scrollTop = initY;
+            ref2.current.scrollTop = initY;
+          }, [initY]);
+        }
+      `,
+      errors: [
+        "React Hook useCallback has unnecessary dependencies: 'activeTab', 'ref1.current', and 'ref2.current'. " +
+          'Either exclude them or remove the dependency array. ' +
+          "Mutable values like 'ref1.current' aren't valid dependencies " +
+          "because their mutation doesn't re-render the component.",
+      ],
+    },
+    {
+      code: `
         function MyComponent() {
           const ref = useRef();
           useEffect(() => {
@@ -1628,7 +1934,7 @@ const tests = {
           let value3;
           let asyncValue;
           useEffect(() => {
-            value = 42;
+            value = {};
             value2 = 100;
             value = 43;
             console.log(value2);
@@ -1649,7 +1955,7 @@ const tests = {
           let value3;
           let asyncValue;
           useEffect(() => {
-            value = 42;
+            value = {};
             value2 = 100;
             value = 43;
             console.log(value2);
@@ -1689,7 +1995,7 @@ const tests = {
           let value3;
           let asyncValue;
           useEffect(() => {
-            value = 42;
+            value = {};
             value2 = 100;
             value = 43;
             console.log(value2);
@@ -1710,7 +2016,7 @@ const tests = {
           let value3;
           let asyncValue;
           useEffect(() => {
-            value = 42;
+            value = {};
             value2 = 100;
             value = 43;
             console.log(value2);
@@ -1740,6 +2046,177 @@ const tests = {
           `If it's only needed by this Hook, move the variable inside it. ` +
           `Alternatively, declare a ref with the useRef Hook, ` +
           `and keep the mutable value in its 'current' property.`,
+      ],
+    },
+    {
+      code: `
+        function MyComponent() {
+          const myRef = useRef();
+          useEffect(() => {
+            const handleMove = () => {};
+            myRef.current.addEventListener('mousemove', handleMove);
+            return () => myRef.current.removeEventListener('mousemove', handleMove);
+          }, []);
+          return <div ref={myRef} />;
+        }
+      `,
+      output: `
+        function MyComponent() {
+          const myRef = useRef();
+          useEffect(() => {
+            const handleMove = () => {};
+            myRef.current.addEventListener('mousemove', handleMove);
+            return () => myRef.current.removeEventListener('mousemove', handleMove);
+          }, []);
+          return <div ref={myRef} />;
+        }
+      `,
+      errors: [
+        `Accessing 'myRef.current' during the effect cleanup ` +
+          `will likely read a different ref value because by this time React ` +
+          `has already updated the ref. If this ref is managed by React, store ` +
+          `'myRef.current' in a variable inside ` +
+          `the effect itself and refer to that variable from the cleanup function.`,
+      ],
+    },
+    {
+      code: `
+        function useMyThing(myRef) {
+          useEffect(() => {
+            const handleMove = () => {};
+            myRef.current.addEventListener('mousemove', handleMove);
+            return () => myRef.current.removeEventListener('mousemove', handleMove);
+          }, [myRef]);
+        }
+      `,
+      output: `
+        function useMyThing(myRef) {
+          useEffect(() => {
+            const handleMove = () => {};
+            myRef.current.addEventListener('mousemove', handleMove);
+            return () => myRef.current.removeEventListener('mousemove', handleMove);
+          }, [myRef]);
+        }
+      `,
+      errors: [
+        `Accessing 'myRef.current' during the effect cleanup ` +
+          `will likely read a different ref value because by this time React ` +
+          `has already updated the ref. If this ref is managed by React, store ` +
+          `'myRef.current' in a variable inside ` +
+          `the effect itself and refer to that variable from the cleanup function.`,
+      ],
+    },
+    {
+      code: `
+        function useMyThing(myRef) {
+          useEffect(() => {
+            const handleMouse = () => {};
+            myRef.current.addEventListener('mousemove', handleMouse);
+            myRef.current.addEventListener('mousein', handleMouse);
+            return function() {
+              setTimeout(() => {
+                myRef.current.removeEventListener('mousemove', handleMouse);
+                myRef.current.removeEventListener('mousein', handleMouse);
+              });
+            }
+          }, [myRef]);
+        }
+      `,
+      output: `
+        function useMyThing(myRef) {
+          useEffect(() => {
+            const handleMouse = () => {};
+            myRef.current.addEventListener('mousemove', handleMouse);
+            myRef.current.addEventListener('mousein', handleMouse);
+            return function() {
+              setTimeout(() => {
+                myRef.current.removeEventListener('mousemove', handleMouse);
+                myRef.current.removeEventListener('mousein', handleMouse);
+              });
+            }
+          }, [myRef]);
+        }
+      `,
+      errors: [
+        `Accessing 'myRef.current' during the effect cleanup ` +
+          `will likely read a different ref value because by this time React ` +
+          `has already updated the ref. If this ref is managed by React, store ` +
+          `'myRef.current' in a variable inside ` +
+          `the effect itself and refer to that variable from the cleanup function.`,
+      ],
+    },
+    {
+      code: `
+        function useMyThing(myRef, active) {
+          useEffect(() => {
+            const handleMove = () => {};
+            if (active) {
+              myRef.current.addEventListener('mousemove', handleMove);
+              return function() {
+                setTimeout(() => {
+                  myRef.current.removeEventListener('mousemove', handleMove);
+                });
+              }
+            }
+          }, [myRef, active]);
+        }
+      `,
+      output: `
+        function useMyThing(myRef, active) {
+          useEffect(() => {
+            const handleMove = () => {};
+            if (active) {
+              myRef.current.addEventListener('mousemove', handleMove);
+              return function() {
+                setTimeout(() => {
+                  myRef.current.removeEventListener('mousemove', handleMove);
+                });
+              }
+            }
+          }, [myRef, active]);
+        }
+      `,
+      errors: [
+        `Accessing 'myRef.current' during the effect cleanup ` +
+          `will likely read a different ref value because by this time React ` +
+          `has already updated the ref. If this ref is managed by React, store ` +
+          `'myRef.current' in a variable inside ` +
+          `the effect itself and refer to that variable from the cleanup function.`,
+      ],
+    },
+    {
+      // Autofix ignores constant primitives (leaving the ones that are there).
+      code: `
+      function MyComponent() {
+        const local1 = 42;
+        const local2 = '42';
+        const local3 = null;
+        const local4 = {};
+        useEffect(() => {
+          console.log(local1);
+          console.log(local2);
+          console.log(local3);
+          console.log(local4);
+        }, [local1, local3]);
+      }
+    `,
+      output: `
+      function MyComponent() {
+        const local1 = 42;
+        const local2 = '42';
+        const local3 = null;
+        const local4 = {};
+        useEffect(() => {
+          console.log(local1);
+          console.log(local2);
+          console.log(local3);
+          console.log(local4);
+        }, [local1, local3, local4]);
+      }
+    `,
+      errors: [
+        "React Hook useEffect has a missing dependency: 'local4'. " +
+          'Either include it or remove the dependency array.',
       ],
     },
   ],

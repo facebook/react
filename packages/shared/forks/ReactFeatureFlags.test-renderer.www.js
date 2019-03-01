@@ -22,6 +22,7 @@ export const enableSchedulerTracing = false;
 export const enableSuspenseServerRenderer = false;
 export const enableStableConcurrentModeAPIs = false;
 export const enableSchedulerDebugging = false;
+export const warnAboutDeprecatedSetNativeProps = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

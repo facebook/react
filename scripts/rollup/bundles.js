@@ -281,7 +281,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-test-renderer',
     global: 'ReactTestRenderer',
-    externals: ['react'],
+    externals: ['react', 'scheduler', 'scheduler/unstable_mock'],
   },
 
   {
@@ -289,7 +289,7 @@ const bundles = [
     moduleType: NON_FIBER_RENDERER,
     entry: 'react-test-renderer/shallow',
     global: 'ReactShallowRenderer',
-    externals: ['react'],
+    externals: ['react', 'scheduler', 'scheduler/unstable_mock'],
   },
 
   /******* React Noop Renderer (used for tests) *******/
@@ -298,20 +298,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-noop-renderer',
     global: 'ReactNoopRenderer',
-    externals: ['react', 'expect'],
-    // React Noop uses generators. However GCC currently
-    // breaks when we attempt to use them in the output.
-    // So we precompile them with regenerator, and include
-    // it as a runtime dependency of React Noop. In practice
-    // this isn't an issue because React Noop is only used
-    // in our tests. We wouldn't want to do this for any
-    // public package though.
-    babel: opts =>
-      Object.assign({}, opts, {
-        plugins: opts.plugins.concat([
-          require.resolve('babel-plugin-transform-regenerator'),
-        ]),
-      }),
+    externals: ['react', 'scheduler', 'scheduler/unstable_mock', 'expect'],
   },
 
   /******* React Noop Persistent Renderer (used for tests) *******/
@@ -320,20 +307,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-noop-renderer/persistent',
     global: 'ReactNoopRendererPersistent',
-    externals: ['react', 'expect'],
-    // React Noop uses generators. However GCC currently
-    // breaks when we attempt to use them in the output.
-    // So we precompile them with regenerator, and include
-    // it as a runtime dependency of React Noop. In practice
-    // this isn't an issue because React Noop is only used
-    // in our tests. We wouldn't want to do this for any
-    // public package though.
-    babel: opts =>
-      Object.assign({}, opts, {
-        plugins: opts.plugins.concat([
-          require.resolve('babel-plugin-transform-regenerator'),
-        ]),
-      }),
+    externals: ['react', 'scheduler', 'expect'],
   },
 
   /******* React Noop Server Renderer (used for tests) *******/
@@ -342,20 +316,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-noop-renderer/server',
     global: 'ReactNoopRendererServer',
-    externals: ['react', 'expect'],
-    // React Noop uses generators. However GCC currently
-    // breaks when we attempt to use them in the output.
-    // So we precompile them with regenerator, and include
-    // it as a runtime dependency of React Noop. In practice
-    // this isn't an issue because React Noop is only used
-    // in our tests. We wouldn't want to do this for any
-    // public package though.
-    babel: opts =>
-      Object.assign({}, opts, {
-        plugins: opts.plugins.concat([
-          require.resolve('babel-plugin-transform-regenerator'),
-        ]),
-      }),
+    externals: ['react', 'scheduler', 'expect'],
   },
 
   /******* React Reconciler *******/
@@ -453,21 +414,21 @@ const bundles = [
     externals: [],
   },
 
+  /******* React Scheduler Mock (experimental) *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'scheduler/unstable_mock',
+    global: 'SchedulerMock',
+    externals: [],
+  },
+
   /******* Jest React (experimental) *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
     moduleType: ISOMORPHIC,
     entry: 'jest-react',
     global: 'JestReact',
-    externals: [],
-  },
-
-  /******* Jest Scheduler (experimental) *******/
-  {
-    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
-    moduleType: ISOMORPHIC,
-    entry: 'jest-mock-scheduler',
-    global: 'JestMockScheduler',
     externals: [],
   },
 
