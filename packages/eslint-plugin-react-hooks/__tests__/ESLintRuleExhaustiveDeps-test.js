@@ -2391,6 +2391,29 @@ const tests = {
     {
       code: `
         function MyComponent(props) {
+          useEffect(() => {
+            props.onChange();
+            externalCall(props);
+          }, []);
+        }
+      `,
+      output: `
+        function MyComponent(props) {
+          useEffect(() => {
+            props.onChange();
+            externalCall(props);
+          }, [props]);
+        }
+      `,
+      // Don't suggest to destructure props here since you can't.
+      errors: [
+        "React Hook useEffect has a missing dependency: 'props'. " +
+          'Either include it or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
           let value;
           let value2;
           let value3;

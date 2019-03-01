@@ -464,7 +464,10 @@ export default {
         let isPropsOnlyUsedInMembers = true;
         for (let i = 0; i < refs.length; i++) {
           const ref = refs[i];
-          const id = ref.identifier;
+          const id = fastFindReferenceWithParent(
+            componentScope.block,
+            ref.identifier,
+          );
           if (!id) {
             isPropsOnlyUsedInMembers = false;
             break;
@@ -478,11 +481,11 @@ export default {
             isPropsOnlyUsedInMembers = false;
             break;
           }
-          if (isPropsOnlyUsedInMembers) {
-            extraWarning =
-              ' Alternatively, destructure the necessary props ' +
-              'outside the callback.';
-          }
+        }
+        if (isPropsOnlyUsedInMembers) {
+          extraWarning =
+            ' Alternatively, destructure the necessary props ' +
+            'outside the callback.';
         }
       }
 
