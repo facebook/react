@@ -449,6 +449,46 @@ export default {
         }
       }
 
+      // `props.foo()` marks `props` as a dependency because it has
+      // a `this` value. This warning can be confusing.
+      // So if we're going to show it, append a clarification.
+      if (!extraWarning && missingDependencies.has('props')) {
+        let propDep = dependencies.get('props');
+        if (propDep == null) {
+          return;
+        }
+        const refs = propDep.reference.resolved.references;
+        if (!Array.isArray(refs)) {
+          return;
+        }
+        let isPropsOnlyUsedInMembers = true;
+        for (let i = 0; i < refs.length; i++) {
+          const ref = refs[i];
+          const id = fastFindReferenceWithParent(
+            componentScope.block,
+            ref.identifier,
+          );
+          if (!id) {
+            isPropsOnlyUsedInMembers = false;
+            break;
+          }
+          const parent = id.parent;
+          if (parent == null) {
+            isPropsOnlyUsedInMembers = false;
+            break;
+          }
+          if (parent.type !== 'MemberExpression') {
+            isPropsOnlyUsedInMembers = false;
+            break;
+          }
+        }
+        if (isPropsOnlyUsedInMembers) {
+          extraWarning =
+            ' Alternatively, destructure the necessary props ' +
+            'outside the callback.';
+        }
+      }
+
       context.report({
         node: declaredDependenciesNode,
         message:
