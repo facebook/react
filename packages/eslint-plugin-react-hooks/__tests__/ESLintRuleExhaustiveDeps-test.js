@@ -594,15 +594,6 @@ const tests = {
     },
     {
       // It is valid for effects to over-specify their deps.
-      // TODO: maybe only allow local ones, and disallow this example.
-      code: `
-        function MyComponent() {
-          useEffect(() => {}, [window]);
-        }
-      `,
-    },
-    {
-      // It is valid for effects to over-specify their deps.
       code: `
         function MyComponent(props) {
           const local = props.local;
@@ -897,8 +888,6 @@ const tests = {
       ],
     },
     {
-      // TODO: this case is weird.
-      // Maybe it should not consider local1 unused despite component nesting?
       code: `
         function MyComponent() {
           const local1 = {};
@@ -924,9 +913,10 @@ const tests = {
         }
       `,
       errors: [
-        // Focus on the more important part first (missing dep)
         "React Hook useCallback has a missing dependency: 'local2'. " +
-          'Either include it or remove the dependency array.',
+          'Either include it or remove the dependency array. ' +
+          "Values like 'local1' aren't valid dependencies " +
+          "because their mutation doesn't re-render the component.",
       ],
     },
     {
@@ -990,7 +980,9 @@ const tests = {
       `,
       errors: [
         "React Hook useCallback has an unnecessary dependency: 'window'. " +
-          'Either exclude it or remove the dependency array.',
+          'Either exclude it or remove the dependency array. ' +
+          "Values like 'window' aren't valid dependencies " +
+          "because their mutation doesn't re-render the component.",
       ],
     },
     {
@@ -2528,6 +2520,160 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'local4'. " +
           'Either include it or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+        function MyComponent() {
+          useEffect(() => {
+            window.scrollTo(0, 0);
+          }, [window]);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has an unnecessary dependency: 'window'. " +
+          'Either exclude it or remove the dependency array. ' +
+          "Values like 'window' aren't valid dependencies " +
+          "because their mutation doesn't re-render the component.",
+      ],
+    },
+    {
+      code: `
+        import MutableStore from 'store';
+
+        function MyComponent() {
+          useEffect(() => {
+            console.log(MutableStore.hello);
+          }, [MutableStore.hello]);
+        }
+      `,
+      output: `
+        import MutableStore from 'store';
+
+        function MyComponent() {
+          useEffect(() => {
+            console.log(MutableStore.hello);
+          }, []);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has an unnecessary dependency: 'MutableStore.hello'. " +
+          'Either exclude it or remove the dependency array. ' +
+          "Values like 'MutableStore.hello' aren't valid dependencies " +
+          "because their mutation doesn't re-render the component.",
+      ],
+    },
+    {
+      code: `
+        import MutableStore from 'store';
+        let z = {};
+
+        function MyComponent(props) {
+          let x = props.foo;
+          {
+            let y = props.bar;
+            useEffect(() => {
+              console.log(MutableStore.hello.world, props.foo, x, y, z, global.stuff);
+            }, [MutableStore.hello.world, props.foo, x, y, z, global.stuff]);
+          }
+        }
+      `,
+      output: `
+        import MutableStore from 'store';
+        let z = {};
+
+        function MyComponent(props) {
+          let x = props.foo;
+          {
+            let y = props.bar;
+            useEffect(() => {
+              console.log(MutableStore.hello.world, props.foo, x, y, z, global.stuff);
+            }, [props.foo, x, y]);
+          }
+        }
+      `,
+      errors: [
+        'React Hook useEffect has unnecessary dependencies: ' +
+          "'MutableStore.hello.world', 'global.stuff', and 'z'. " +
+          'Either exclude them or remove the dependency array. ' +
+          "Values like 'MutableStore.hello.world' aren't valid dependencies " +
+          "because their mutation doesn't re-render the component.",
+      ],
+    },
+    {
+      code: `
+        import MutableStore from 'store';
+        let z = {};
+
+        function MyComponent(props) {
+          let x = props.foo;
+          {
+            let y = props.bar;
+            useEffect(() => {
+              // nothing
+            }, [MutableStore.hello.world, props.foo, x, y, z, global.stuff]);
+          }
+        }
+      `,
+      // The output should contain the ones that are inside a component
+      // since there are legit reasons to over-specify them for effects.
+      output: `
+        import MutableStore from 'store';
+        let z = {};
+
+        function MyComponent(props) {
+          let x = props.foo;
+          {
+            let y = props.bar;
+            useEffect(() => {
+              // nothing
+            }, [props.foo, x, y]);
+          }
+        }
+      `,
+      errors: [
+        'React Hook useEffect has unnecessary dependencies: ' +
+          "'MutableStore.hello.world', 'global.stuff', and 'z'. " +
+          'Either exclude them or remove the dependency array. ' +
+          "Values like 'MutableStore.hello.world' aren't valid dependencies " +
+          "because their mutation doesn't re-render the component.",
+      ],
+    },
+    {
+      code: `
+        import MutableStore from 'store';
+        let z = {};
+
+        function MyComponent(props) {
+          let x = props.foo;
+          {
+            let y = props.bar;
+            const fn = useCallback(() => {
+              // nothing
+            }, [MutableStore.hello.world, props.foo, x, y, z, global.stuff]);
+          }
+        }
+      `,
+      output: `
+        import MutableStore from 'store';
+        let z = {};
+
+        function MyComponent(props) {
+          let x = props.foo;
+          {
+            let y = props.bar;
+            const fn = useCallback(() => {
+              // nothing
+            }, []);
+          }
+        }
+      `,
+      errors: [
+        'React Hook useCallback has unnecessary dependencies: ' +
+          "'MutableStore.hello.world', 'global.stuff', 'props.foo', 'x', 'y', and 'z'. " +
+          'Either exclude them or remove the dependency array. ' +
+          "Values like 'MutableStore.hello.world' aren't valid dependencies " +
+          "because their mutation doesn't re-render the component.",
       ],
     },
   ],

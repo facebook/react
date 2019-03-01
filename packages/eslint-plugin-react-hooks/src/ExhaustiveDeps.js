@@ -86,6 +86,7 @@ export default {
       // scope. We can't enforce this in a lint so we trust that all variables
       // declared outside of pure scope are indeed frozen.
       const pureScopes = new Set();
+      let componentScope = null;
       {
         let currentScope = scope.upper;
         while (currentScope) {
@@ -101,6 +102,7 @@ export default {
         if (!currentScope) {
           return;
         }
+        componentScope = currentScope;
       }
 
       // These are usually mistaken. Collect them.
@@ -224,6 +226,7 @@ export default {
       );
 
       const declaredDependencies = [];
+      const externalDependencies = new Set();
       if (declaredDependenciesNode.type !== 'ArrayExpression') {
         // If the declared dependencies are not an array expression then we
         // can't verify that the user provided the correct dependencies. Tell
@@ -298,11 +301,24 @@ export default {
               throw error;
             }
           }
+
+          let maybeID = declaredDependencyNode;
+          while (maybeID.type === 'MemberExpression') {
+            maybeID = maybeID.object;
+          }
+          const isDeclaredInComponent = !componentScope.through.some(
+            ref => ref.identifier === maybeID,
+          );
+
           // Add the dependency to our declared dependency map.
           declaredDependencies.push({
             key: declaredDependency,
             node: declaredDependencyNode,
           });
+
+          if (!isDeclaredInComponent) {
+            externalDependencies.add(declaredDependency);
+          }
         });
       }
 
@@ -348,6 +364,7 @@ export default {
         dependencies,
         declaredDependencies,
         optionalDependencies,
+        externalDependencies,
         isEffect,
       });
 
@@ -370,6 +387,7 @@ export default {
           dependencies,
           declaredDependencies: [], // Pretend we don't know
           optionalDependencies,
+          externalDependencies,
           isEffect,
         }).suggestedDependencies;
       }
@@ -423,6 +441,11 @@ export default {
           extraWarning =
             ` Mutable values like '${badRef}' aren't valid dependencies ` +
             "because their mutation doesn't re-render the component.";
+        } else if (externalDependencies.size > 0) {
+          const dep = Array.from(externalDependencies)[0];
+          extraWarning =
+            ` Values like '${dep}' aren't valid dependencies ` +
+            `because their mutation doesn't re-render the component.`;
         }
       }
 
@@ -462,6 +485,7 @@ function collectRecommendations({
   dependencies,
   declaredDependencies,
   optionalDependencies,
+  externalDependencies,
   isEffect,
 }) {
   // Our primary data structure.
@@ -584,7 +608,11 @@ function collectRecommendations({
         duplicateDependencies.add(key);
       }
     } else {
-      if (isEffect && !key.endsWith('.current')) {
+      if (
+        isEffect &&
+        !key.endsWith('.current') &&
+        !externalDependencies.has(key)
+      ) {
         // Effects are allowed extra "unnecessary" deps.
         // Such as resetting scroll when ID changes.
         // Consider them legit.
