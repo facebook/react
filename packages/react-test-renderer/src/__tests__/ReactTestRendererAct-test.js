@@ -4,10 +4,6 @@ let React;
 let ReactTestRenderer;
 let act;
 
-function sleep(period) {
-  return new Promise(resolve => setTimeout(resolve, period));
-}
-
 describe('ReactTestRenderer.act()', () => {
   beforeEach(() => {
     jest.resetModules();

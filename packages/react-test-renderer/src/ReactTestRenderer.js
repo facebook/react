@@ -595,23 +595,6 @@ const ReactTestRendererFiber = {
   },
 };
 
-// root used to flush effects during .act() calls
-const actRoot = createContainer(
-  {
-    children: [],
-    createNodeMock: defaultTestOptions.createNodeMock,
-    tag: 'CONTAINER',
-  },
-  true,
-  false,
-);
-
-function flushPassiveEffects() {
-  // Trick to flush passive effects without exposing an internal API:
-  // Create a throwaway root and schedule a dummy update on it.
-  updateContainer(null, actRoot, null, null);
-}
-
 const fiberToWrapper = new WeakMap();
 function wrapFiber(fiber: Fiber): ReactTestInstance {
   let wrapper = fiberToWrapper.get(fiber);

@@ -1,3 +1,14 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @jest-environment node
+ */
+
+// sanity tests for ReactNoop.act()
+
 jest.useRealTimers();
 const React = require('react');
 const ReactNoop = require('react-noop-renderer');
@@ -17,7 +28,7 @@ describe('ReactNoop.act()', () => {
           callback={() => {
             called = true;
           }}
-        />
+        />,
       );
     });
     expect(Scheduler).toFlushWithoutYielding();
