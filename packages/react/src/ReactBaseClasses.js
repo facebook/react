@@ -116,9 +116,7 @@ if (__DEV__) {
     });
   };
   for (const fnName in deprecatedAPIs) {
-    if (deprecatedAPIs.hasOwnProperty(fnName)) {
-      defineDeprecationWarning(fnName, deprecatedAPIs[fnName]);
-    }
+    defineDeprecationWarning(fnName, deprecatedAPIs[fnName]);
   }
 }
 
