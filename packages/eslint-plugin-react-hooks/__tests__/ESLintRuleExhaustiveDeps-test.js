@@ -652,6 +652,206 @@ const tests = {
         }
       `,
     },
+    {
+      code: `
+        function MyComponent(props) {
+          function handleNext1() {
+            console.log('hello');
+          }
+          const handleNext2 = () => {
+            console.log('hello');
+          };
+          let handleNext3 = function() {
+            console.log('hello');
+          };
+          useEffect(() => {
+            return Store.subscribe(handleNext1);
+          }, [handleNext1]);
+          useLayoutEffect(() => {
+            return Store.subscribe(handleNext2);
+          }, [handleNext2]);
+          useMemo(() => {
+            return Store.subscribe(handleNext3);
+          }, [handleNext3]);
+        }
+      `,
+    },
+    {
+      // Declaring handleNext is optional because
+      // it doesn't use anything in the function scope.
+      code: `
+        function MyComponent(props) {
+          function handleNext1() {
+            console.log('hello');
+          }
+          const handleNext2 = () => {
+            console.log('hello');
+          };
+          let handleNext3 = function() {
+            console.log('hello');
+          };
+          useEffect(() => {
+            return Store.subscribe(handleNext1);
+          }, []);
+          useLayoutEffect(() => {
+            return Store.subscribe(handleNext2);
+          }, []);
+          useMemo(() => {
+            return Store.subscribe(handleNext3);
+          }, []);
+        }
+      `,
+    },
+    {
+      // Declaring handleNext is optional because
+      // it doesn't use anything in the function scope.
+      code: `
+        function MyComponent(props) {
+          function handleNext() {
+            console.log('hello');
+          }
+          useEffect(() => {
+            return Store.subscribe(handleNext);
+          }, []);
+          useLayoutEffect(() => {
+            return Store.subscribe(handleNext);
+          }, []);
+          useMemo(() => {
+            return Store.subscribe(handleNext);
+          }, []);
+        }
+      `,
+    },
+    {
+      // Declaring handleNext is optional because
+      // everything they use is fully static.
+      code: `
+        function MyComponent(props) {
+          let [, setState] = useState();
+          let [, dispatch] = React.useReducer();
+
+          function handleNext1(value) {
+            let value2 = value * 100;
+            setState(value2);
+            console.log('hello');
+          }
+          const handleNext2 = (value) => {
+            setState(foo(value));
+            console.log('hello');
+          };
+          let handleNext3 = function(value) {
+            console.log(value);
+            dispatch({ type: 'x', value });
+          };
+          useEffect(() => {
+            return Store.subscribe(handleNext1);
+          }, []);
+          useLayoutEffect(() => {
+            return Store.subscribe(handleNext2);
+          }, []);
+          useMemo(() => {
+            return Store.subscribe(handleNext3);
+          }, []);
+        }
+      `,
+    },
+    {
+      code: `
+        function useInterval(callback, delay) {
+          const savedCallback = useRef();
+          useEffect(() => {
+            savedCallback.current = callback;
+          });
+          useEffect(() => {
+            function tick() {
+              savedCallback.current();
+            }
+            if (delay !== null) {
+              let id = setInterval(tick, delay);
+              return () => clearInterval(id);
+            }
+          }, [delay]);
+        }
+      `,
+    },
+    {
+      code: `
+        function Counter() {
+          const [count, setCount] = useState(0);
+
+          useEffect(() => {
+            let id = setInterval(() => {
+              setCount(c => c + 1);
+            }, 1000);
+            return () => clearInterval(id);
+          }, []);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+    },
+    {
+      code: `
+        function Counter() {
+          const [count, setCount] = useState(0);
+
+          function tick() {
+            setCount(c => c + 1);
+          }
+
+          useEffect(() => {
+            let id = setInterval(() => {
+              tick();
+            }, 1000);
+            return () => clearInterval(id);
+          }, []);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+    },
+    {
+      code: `
+        function Counter() {
+          const [count, dispatch] = useReducer((state, action) => {
+            if (action === 'inc') {
+              return state + 1;
+            }
+          }, 0);
+
+          useEffect(() => {
+            let id = setInterval(() => {
+              dispatch('inc');
+            }, 1000);
+            return () => clearInterval(id);
+          }, []);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+    },
+    {
+      code: `
+        function Counter() {
+          const [count, dispatch] = useReducer((state, action) => {
+            if (action === 'inc') {
+              return state + 1;
+            }
+          }, 0);
+
+          const tick = () => {
+            dispatch('inc');
+          };
+
+          useEffect(() => {
+            let id = setInterval(tick, 1000);
+            return () => clearInterval(id);
+          }, []);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -2856,6 +3056,313 @@ const tests = {
           'Either exclude them or remove the dependency array. ' +
           "Values like 'MutableStore.hello.world' aren't valid dependencies " +
           "because their mutation doesn't re-render the component.",
+      ],
+    },
+    {
+      // Every almost-static function is tainted by a dynamic value.
+      code: `
+        function MyComponent(props) {
+          let [, setState] = useState();
+          let [, dispatch] = React.useReducer();
+          let taint = props.foo;
+
+          function handleNext1(value) {
+            let value2 = value * taint;
+            setState(value2);
+            console.log('hello');
+          }
+          const handleNext2 = (value) => {
+            setState(taint(value));
+            console.log('hello');
+          };
+          let handleNext3 = function(value) {
+            setTimeout(() => console.log(taint));
+            dispatch({ type: 'x', value });
+          };
+          useEffect(() => {
+            return Store.subscribe(handleNext1);
+          }, []);
+          useLayoutEffect(() => {
+            return Store.subscribe(handleNext2);
+          }, []);
+          useMemo(() => {
+            return Store.subscribe(handleNext3);
+          }, []);
+        }
+      `,
+      output: `
+        function MyComponent(props) {
+          let [, setState] = useState();
+          let [, dispatch] = React.useReducer();
+          let taint = props.foo;
+
+          function handleNext1(value) {
+            let value2 = value * taint;
+            setState(value2);
+            console.log('hello');
+          }
+          const handleNext2 = (value) => {
+            setState(taint(value));
+            console.log('hello');
+          };
+          let handleNext3 = function(value) {
+            setTimeout(() => console.log(taint));
+            dispatch({ type: 'x', value });
+          };
+          useEffect(() => {
+            return Store.subscribe(handleNext1);
+          }, [handleNext1]);
+          useLayoutEffect(() => {
+            return Store.subscribe(handleNext2);
+          }, [handleNext2]);
+          useMemo(() => {
+            return Store.subscribe(handleNext3);
+          }, [handleNext3]);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has a missing dependency: 'handleNext1'. " +
+          'Either include it or remove the dependency array.',
+        "React Hook useLayoutEffect has a missing dependency: 'handleNext2'. " +
+          'Either include it or remove the dependency array.',
+        "React Hook useMemo has a missing dependency: 'handleNext3'. " +
+          'Either include it or remove the dependency array.',
+      ],
+    },
+    {
+      // Regression test
+      code: `
+        function MyComponent(props) {
+          let [, setState] = useState();
+          let [, dispatch] = React.useReducer();
+          let taint = props.foo;
+
+          // Shouldn't affect anything
+          function handleChange() {}
+
+          function handleNext1(value) {
+            let value2 = value * taint;
+            setState(value2);
+            console.log('hello');
+          }
+          const handleNext2 = (value) => {
+            setState(taint(value));
+            console.log('hello');
+          };
+          let handleNext3 = function(value) {
+            console.log(taint);
+            dispatch({ type: 'x', value });
+          };
+          useEffect(() => {
+            return Store.subscribe(handleNext1);
+          }, []);
+          useLayoutEffect(() => {
+            return Store.subscribe(handleNext2);
+          }, []);
+          useMemo(() => {
+            return Store.subscribe(handleNext3);
+          }, []);
+        }
+      `,
+      output: `
+        function MyComponent(props) {
+          let [, setState] = useState();
+          let [, dispatch] = React.useReducer();
+          let taint = props.foo;
+
+          // Shouldn't affect anything
+          function handleChange() {}
+
+          function handleNext1(value) {
+            let value2 = value * taint;
+            setState(value2);
+            console.log('hello');
+          }
+          const handleNext2 = (value) => {
+            setState(taint(value));
+            console.log('hello');
+          };
+          let handleNext3 = function(value) {
+            console.log(taint);
+            dispatch({ type: 'x', value });
+          };
+          useEffect(() => {
+            return Store.subscribe(handleNext1);
+          }, [handleNext1]);
+          useLayoutEffect(() => {
+            return Store.subscribe(handleNext2);
+          }, [handleNext2]);
+          useMemo(() => {
+            return Store.subscribe(handleNext3);
+          }, [handleNext3]);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has a missing dependency: 'handleNext1'. " +
+          'Either include it or remove the dependency array.',
+        "React Hook useLayoutEffect has a missing dependency: 'handleNext2'. " +
+          'Either include it or remove the dependency array.',
+        "React Hook useMemo has a missing dependency: 'handleNext3'. " +
+          'Either include it or remove the dependency array.',
+      ],
+    },
+    {
+      // Regression test
+      code: `
+        function MyComponent(props) {
+          let [, setState] = useState();
+          let [, dispatch] = React.useReducer();
+          let taint = props.foo;
+
+          // Shouldn't affect anything
+          const handleChange = () => {};
+
+          function handleNext1(value) {
+            let value2 = value * taint;
+            setState(value2);
+            console.log('hello');
+          }
+          const handleNext2 = (value) => {
+            setState(taint(value));
+            console.log('hello');
+          };
+          let handleNext3 = function(value) {
+            console.log(taint);
+            dispatch({ type: 'x', value });
+          };
+          useEffect(() => {
+            return Store.subscribe(handleNext1);
+          }, []);
+          useLayoutEffect(() => {
+            return Store.subscribe(handleNext2);
+          }, []);
+          useMemo(() => {
+            return Store.subscribe(handleNext3);
+          }, []);
+        }
+      `,
+      output: `
+        function MyComponent(props) {
+          let [, setState] = useState();
+          let [, dispatch] = React.useReducer();
+          let taint = props.foo;
+
+          // Shouldn't affect anything
+          const handleChange = () => {};
+
+          function handleNext1(value) {
+            let value2 = value * taint;
+            setState(value2);
+            console.log('hello');
+          }
+          const handleNext2 = (value) => {
+            setState(taint(value));
+            console.log('hello');
+          };
+          let handleNext3 = function(value) {
+            console.log(taint);
+            dispatch({ type: 'x', value });
+          };
+          useEffect(() => {
+            return Store.subscribe(handleNext1);
+          }, [handleNext1]);
+          useLayoutEffect(() => {
+            return Store.subscribe(handleNext2);
+          }, [handleNext2]);
+          useMemo(() => {
+            return Store.subscribe(handleNext3);
+          }, [handleNext3]);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has a missing dependency: 'handleNext1'. " +
+          'Either include it or remove the dependency array.',
+        "React Hook useLayoutEffect has a missing dependency: 'handleNext2'. " +
+          'Either include it or remove the dependency array.',
+        "React Hook useMemo has a missing dependency: 'handleNext3'. " +
+          'Either include it or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+        function Counter() {
+          let [count, setCount] = useState(0);
+
+          useEffect(() => {
+            let id = setInterval(() => {
+              setCount(count + 1);
+            }, 1000);
+            return () => clearInterval(id);
+          }, []);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+      output: `
+        function Counter() {
+          let [count, setCount] = useState(0);
+
+          useEffect(() => {
+            let id = setInterval(() => {
+              setCount(count + 1);
+            }, 1000);
+            return () => clearInterval(id);
+          }, [count]);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+      // TODO: ideally this should suggest useState updater form
+      // since this code doesn't actually work.
+      errors: [
+        "React Hook useEffect has a missing dependency: 'count'. " +
+          'Either include it or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+        function Counter() {
+          const [count, setCount] = useState(0);
+
+          function tick() {
+            setCount(count + 1);
+          }
+
+          useEffect(() => {
+            let id = setInterval(() => {
+              tick();
+            }, 1000);
+            return () => clearInterval(id);
+          }, []);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+      output: `
+        function Counter() {
+          const [count, setCount] = useState(0);
+
+          function tick() {
+            setCount(count + 1);
+          }
+
+          useEffect(() => {
+            let id = setInterval(() => {
+              tick();
+            }, 1000);
+            return () => clearInterval(id);
+          }, [tick]);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+      // TODO: ideally this should suggest useState updater form
+      // since this code doesn't actually work. The autofix could
+      // at least avoid suggesting 'tick' since it's obviously
+      // always different, and thus useless.
+      errors: [
+        "React Hook useEffect has a missing dependency: 'tick'. " +
+          'Either include it or remove the dependency array.',
       ],
     },
   ],
