@@ -238,7 +238,7 @@ export default {
           return false;
         }
         // Does this function capture any values
-        // that are either in pure scopes (aka render)?
+        // that are in pure scopes (aka render)?
         for (i = 0; i < fnScope.through.length; i++) {
           const ref = fnScope.through[i];
           if (ref.resolved == null) {
@@ -253,6 +253,8 @@ export default {
             return false;
           }
         }
+        // If we got here, this function doesn't capture anything
+        // from render--or everything it captures is known static.
         return true;
       }
 
