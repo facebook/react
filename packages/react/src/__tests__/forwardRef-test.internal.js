@@ -28,7 +28,7 @@ describe('forwardRef', () => {
   it('should work without a ref to be forwarded', () => {
     class Child extends React.Component {
       render() {
-        ReactNoop.yield(this.props.value);
+        Scheduler.yieldValue(this.props.value);
         return null;
       }
     }
@@ -48,7 +48,7 @@ describe('forwardRef', () => {
   it('should forward a ref for a single child', () => {
     class Child extends React.Component {
       render() {
-        ReactNoop.yield(this.props.value);
+        Scheduler.yieldValue(this.props.value);
         return null;
       }
     }
@@ -71,7 +71,7 @@ describe('forwardRef', () => {
   it('should forward a ref for multiple children', () => {
     class Child extends React.Component {
       render() {
-        ReactNoop.yield(this.props.value);
+        Scheduler.yieldValue(this.props.value);
         return null;
       }
     }
@@ -103,7 +103,7 @@ describe('forwardRef', () => {
         super(props);
       }
       render() {
-        ReactNoop.yield(this.props.value);
+        Scheduler.yieldValue(this.props.value);
         return null;
       }
     }
@@ -138,28 +138,28 @@ describe('forwardRef', () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
       componentDidCatch(error) {
-        ReactNoop.yield('ErrorBoundary.componentDidCatch');
+        Scheduler.yieldValue('ErrorBoundary.componentDidCatch');
         this.setState({error});
       }
       render() {
         if (this.state.error) {
-          ReactNoop.yield('ErrorBoundary.render: catch');
+          Scheduler.yieldValue('ErrorBoundary.render: catch');
           return null;
         }
-        ReactNoop.yield('ErrorBoundary.render: try');
+        Scheduler.yieldValue('ErrorBoundary.render: try');
         return this.props.children;
       }
     }
 
     class BadRender extends React.Component {
       render() {
-        ReactNoop.yield('BadRender throw');
+        Scheduler.yieldValue('BadRender throw');
         throw new Error('oops!');
       }
     }
 
     function Wrapper(props) {
-      ReactNoop.yield('Wrapper');
+      Scheduler.yieldValue('Wrapper');
       return <BadRender {...props} ref={props.forwardedRef} />;
     }
 
@@ -196,24 +196,24 @@ describe('forwardRef', () => {
 
     class Inner extends React.Component {
       render() {
-        ReactNoop.yield('Inner');
+        Scheduler.yieldValue('Inner');
         inst = this;
         return <div ref={this.props.forwardedRef} />;
       }
     }
 
     function Middle(props) {
-      ReactNoop.yield('Middle');
+      Scheduler.yieldValue('Middle');
       return <Inner {...props} />;
     }
 
     const Forward = React.forwardRef((props, ref) => {
-      ReactNoop.yield('Forward');
+      Scheduler.yieldValue('Forward');
       return <Middle {...props} forwardedRef={ref} />;
     });
 
     function App() {
-      ReactNoop.yield('App');
+      Scheduler.yieldValue('App');
       return <Forward />;
     }
 

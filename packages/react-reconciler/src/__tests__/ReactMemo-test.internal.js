@@ -36,7 +36,7 @@ describe('memo', () => {
   }
 
   function Text(props) {
-    ReactNoop.yield(props.text);
+    Scheduler.yieldValue(props.text);
     return <span prop={props.text} />;
   }
 
@@ -184,7 +184,7 @@ describe('memo', () => {
           return <Text text={count} />;
         }
         Counter = memo(Counter, (oldProps, newProps) => {
-          ReactNoop.yield(
+          Scheduler.yieldValue(
             `Old count: ${oldProps.count}, New count: ${newProps.count}`,
           );
           return oldProps.count === newProps.count;

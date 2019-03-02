@@ -696,8 +696,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return Scheduler.unstable_flushExpired();
     },
 
-    yield: Scheduler.yieldValue,
-
     batchedUpdates: NoopRenderer.batchedUpdates,
 
     deferredUpdates: NoopRenderer.deferredUpdates,

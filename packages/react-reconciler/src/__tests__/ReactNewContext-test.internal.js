@@ -30,7 +30,7 @@ describe('ReactNewContext', () => {
   });
 
   function Text(props) {
-    ReactNoop.yield(props.text);
+    Scheduler.yieldValue(props.text);
     return <span prop={props.text} />;
   }
 
@@ -160,7 +160,7 @@ describe('ReactNewContext', () => {
         const ContextConsumer = getConsumer(Context);
 
         function Provider(props) {
-          ReactNoop.yield('Provider');
+          Scheduler.yieldValue('Provider');
           return (
             <Context.Provider value={props.value}>
               {props.children}
@@ -169,11 +169,11 @@ describe('ReactNewContext', () => {
         }
 
         function Consumer(props) {
-          ReactNoop.yield('Consumer');
+          Scheduler.yieldValue('Consumer');
           return (
             <ContextConsumer>
               {value => {
-                ReactNoop.yield('Consumer render prop');
+                Scheduler.yieldValue('Consumer render prop');
                 return <span prop={'Result: ' + value} />;
               }}
             </ContextConsumer>
@@ -185,13 +185,13 @@ describe('ReactNewContext', () => {
             return false;
           }
           render() {
-            ReactNoop.yield('Indirection');
+            Scheduler.yieldValue('Indirection');
             return this.props.children;
           }
         }
 
         function App(props) {
-          ReactNoop.yield('App');
+          Scheduler.yieldValue('App');
           return (
             <Provider value={props.value}>
               <Indirection>
@@ -229,7 +229,7 @@ describe('ReactNewContext', () => {
         const ContextConsumer = getConsumer(Context);
 
         function Provider(props) {
-          ReactNoop.yield('Provider');
+          Scheduler.yieldValue('Provider');
           return (
             <Context.Provider value={props.value}>
               {props.children}
@@ -238,11 +238,11 @@ describe('ReactNewContext', () => {
         }
 
         function Consumer(props) {
-          ReactNoop.yield('Consumer');
+          Scheduler.yieldValue('Consumer');
           return (
             <ContextConsumer>
               {value => {
-                ReactNoop.yield('Consumer render prop');
+                Scheduler.yieldValue('Consumer render prop');
                 return <span prop={'Result: ' + value} />;
               }}
             </ContextConsumer>
@@ -254,13 +254,13 @@ describe('ReactNewContext', () => {
             return false;
           }
           render() {
-            ReactNoop.yield('Indirection');
+            Scheduler.yieldValue('Indirection');
             return this.props.children;
           }
         }
 
         function App(props) {
-          ReactNoop.yield('App');
+          Scheduler.yieldValue('App');
           return (
             <Provider value={props.value}>
               <Indirection>
@@ -463,7 +463,7 @@ describe('ReactNewContext', () => {
         const ContextConsumer = getConsumer(Context);
 
         function Provider(props) {
-          ReactNoop.yield('Provider');
+          Scheduler.yieldValue('Provider');
           return (
             <Context.Provider value={props.value}>
               {props.children}
@@ -472,11 +472,11 @@ describe('ReactNewContext', () => {
         }
 
         function Consumer(props) {
-          ReactNoop.yield('Consumer');
+          Scheduler.yieldValue('Consumer');
           return (
             <ContextConsumer>
               {value => {
-                ReactNoop.yield('Consumer render prop');
+                Scheduler.yieldValue('Consumer render prop');
                 return <span prop={'Result: ' + value} />;
               }}
             </ContextConsumer>
@@ -488,13 +488,13 @@ describe('ReactNewContext', () => {
             return false;
           }
           render() {
-            ReactNoop.yield('Indirection');
+            Scheduler.yieldValue('Indirection');
             return this.props.children;
           }
         }
 
         function App(props) {
-          ReactNoop.yield('App');
+          Scheduler.yieldValue('App');
           return (
             <Provider value={props.value}>
               <Indirection>
@@ -605,7 +605,7 @@ describe('ReactNewContext', () => {
           return (
             <Consumer unstable_observedBits={0b01}>
               {value => {
-                ReactNoop.yield('Foo');
+                Scheduler.yieldValue('Foo');
                 return <span prop={'Foo: ' + value.foo} />;
               }}
             </Consumer>
@@ -616,7 +616,7 @@ describe('ReactNewContext', () => {
           return (
             <Consumer unstable_observedBits={0b10}>
               {value => {
-                ReactNoop.yield('Bar');
+                Scheduler.yieldValue('Bar');
                 return <span prop={'Bar: ' + value.bar} />;
               }}
             </Consumer>
@@ -704,7 +704,7 @@ describe('ReactNewContext', () => {
           return (
             <Consumer unstable_observedBits={0b01}>
               {value => {
-                ReactNoop.yield('Foo');
+                Scheduler.yieldValue('Foo');
                 return (
                   <React.Fragment>
                     <span prop={'Foo: ' + value.foo} />
@@ -720,7 +720,7 @@ describe('ReactNewContext', () => {
           return (
             <Consumer unstable_observedBits={0b10}>
               {value => {
-                ReactNoop.yield('Bar');
+                Scheduler.yieldValue('Bar');
                 return (
                   <React.Fragment>
                     <span prop={'Bar: ' + value.bar} />
@@ -808,7 +808,7 @@ describe('ReactNewContext', () => {
         class Child extends React.Component {
           state = {step: 0};
           render() {
-            ReactNoop.yield('Child');
+            Scheduler.yieldValue('Child');
             return (
               <span
                 prop={`Context: ${this.props.context}, Step: ${
@@ -824,7 +824,7 @@ describe('ReactNewContext', () => {
             <Context.Provider value={props.value}>
               <Consumer>
                 {value => {
-                  ReactNoop.yield('Consumer render prop');
+                  Scheduler.yieldValue('Consumer render prop');
                   return <Child ref={inst => (child = inst)} context={value} />;
                 }}
               </Consumer>
@@ -847,24 +847,24 @@ describe('ReactNewContext', () => {
         const Consumer = getConsumer(Context);
 
         function renderChildValue(value) {
-          ReactNoop.yield('Consumer');
+          Scheduler.yieldValue('Consumer');
           return <span prop={value} />;
         }
 
         function ChildWithInlineRenderCallback() {
-          ReactNoop.yield('ChildWithInlineRenderCallback');
+          Scheduler.yieldValue('ChildWithInlineRenderCallback');
           // Note: we are intentionally passing an inline arrow. Don't refactor.
           return <Consumer>{value => renderChildValue(value)}</Consumer>;
         }
 
         function ChildWithCachedRenderCallback() {
-          ReactNoop.yield('ChildWithCachedRenderCallback');
+          Scheduler.yieldValue('ChildWithCachedRenderCallback');
           return <Consumer>{renderChildValue}</Consumer>;
         }
 
         class PureIndirection extends React.PureComponent {
           render() {
-            ReactNoop.yield('PureIndirection');
+            Scheduler.yieldValue('PureIndirection');
             return (
               <React.Fragment>
                 <ChildWithInlineRenderCallback />
@@ -876,7 +876,7 @@ describe('ReactNewContext', () => {
 
         class App extends React.Component {
           render() {
-            ReactNoop.yield('App');
+            Scheduler.yieldValue('App');
             return (
               <Context.Provider value={this.props.value}>
                 <PureIndirection />
@@ -988,7 +988,7 @@ describe('ReactNewContext', () => {
           };
 
           render() {
-            ReactNoop.yield('App');
+            Scheduler.yieldValue('App');
             return (
               <Context.Provider value={this.state.step}>
                 <StaticContent />
@@ -1016,7 +1016,7 @@ describe('ReactNewContext', () => {
             return (
               <ContextConsumer>
                 {value => {
-                  ReactNoop.yield('Consumer');
+                  Scheduler.yieldValue('Consumer');
                   return <span prop={value} />;
                 }}
               </ContextConsumer>
@@ -1079,7 +1079,7 @@ describe('ReactNewContext', () => {
       const Context = React.createContext(0);
 
       function Foo(props) {
-        ReactNoop.yield('Foo');
+        Scheduler.yieldValue('Foo');
         return null;
       }
 
@@ -1119,14 +1119,14 @@ describe('ReactNewContext', () => {
       const Context = React.createContext(0);
 
       function Child() {
-        ReactNoop.yield('Child');
+        Scheduler.yieldValue('Child');
         return <span prop="Child" />;
       }
 
       const children = <Child />;
 
       function App(props) {
-        ReactNoop.yield('App');
+        Scheduler.yieldValue('App');
         return (
           <Context.Provider value={props.value}>{children}</Context.Provider>
         );
@@ -1150,7 +1150,7 @@ describe('ReactNewContext', () => {
       const Context = React.createContext(0);
 
       function Child() {
-        ReactNoop.yield('Child');
+        Scheduler.yieldValue('Child');
         return <span prop="Child" />;
       }
 
@@ -1165,7 +1165,7 @@ describe('ReactNewContext', () => {
           return {legacyValue: this.state.legacyValue};
         }
         render() {
-          ReactNoop.yield('LegacyProvider');
+          Scheduler.yieldValue('LegacyProvider');
           return this.props.children;
         }
       }
@@ -1173,7 +1173,7 @@ describe('ReactNewContext', () => {
       class App extends React.Component {
         state = {value: 1};
         render() {
-          ReactNoop.yield('App');
+          Scheduler.yieldValue('App');
           return (
             <Context.Provider value={this.state.value}>
               {this.props.children}
@@ -1299,12 +1299,12 @@ describe('ReactNewContext', () => {
         };
 
         renderConsumer = context => {
-          ReactNoop.yield('App#renderConsumer');
+          Scheduler.yieldValue('App#renderConsumer');
           return <span prop={this.state.text} />;
         };
 
         render() {
-          ReactNoop.yield('App');
+          Scheduler.yieldValue('App');
           return (
             <Context.Provider value={this.props.value}>
               <Consumer>{this.renderConsumer}</Consumer>
@@ -1439,12 +1439,12 @@ describe('ReactNewContext', () => {
         };
 
         renderConsumer = context => {
-          ReactNoop.yield('App#renderConsumer');
+          Scheduler.yieldValue('App#renderConsumer');
           return <span prop={this.state.text} />;
         };
 
         render() {
-          ReactNoop.yield('App');
+          Scheduler.yieldValue('App');
           return (
             <Context.Provider value={this.props.value}>
               <Consumer>{this.renderConsumer}</Consumer>
@@ -1566,12 +1566,12 @@ describe('ReactNewContext', () => {
         };
 
         renderConsumer = context => {
-          ReactNoop.yield('App#renderConsumer');
+          Scheduler.yieldValue('App#renderConsumer');
           return <span prop={this.state.text} />;
         };
 
         render() {
-          ReactNoop.yield('App');
+          Scheduler.yieldValue('App');
           return (
             <Context.Provider value={this.props.value}>
               <Consumer>{this.renderConsumer}</Consumer>
@@ -1694,7 +1694,7 @@ describe('ReactNewContext', () => {
           return false;
         }
         render() {
-          ReactNoop.yield();
+          Scheduler.yieldValue();
           if (this.props.depth >= this.props.maxDepth) {
             return null;
           }
