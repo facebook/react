@@ -36,14 +36,21 @@ const run = async ({cwd, packages, tags}) => {
 
   // Update the shared React version source file.
   const sourceReactVersionPath = join(cwd, 'packages/shared/ReactVersion.js');
-  const {version} = await readJson(
+  const {version: reactVersion} = await readJson(
     join(nodeModulesPath, 'react', 'package.json')
   );
   const sourceReactVersion = readFileSync(
     sourceReactVersionPath,
     'utf8'
-  ).replace(/module\.exports = '[^']+';/, `module.exports = '${version}';`);
+  ).replace(/module\.exports = '[^']+';/, `module.exports = '${reactVersion}';`);
   writeFileSync(sourceReactVersionPath, sourceReactVersion);
+
+  // Update root package version same as React version.
+  const rootPackageJSONPath = join(cwd, 'package.json');
+  const rootPackageJSON = await readJson(rootPackageJSONPath);
+  rootPackageJSON.version = reactVersion;
+
+  await writeJson(rootPackageJSONPath, rootPackageJSON, {spaces: 2});
 };
 
 module.exports = run;
