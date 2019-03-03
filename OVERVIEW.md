@@ -110,9 +110,9 @@ The frontend stores its information about the tree in a map of id to objects wit
 * depth: `number` <sup>1</sup>
 * weight: `number` <sup>2</sup>
 
-<sup>1</sup> The `weight` of an element is the number of elements (including itself) below it in the tree. We cache this property so that we can quickly determine the total number of Elements as well as to find the Nth element within that set. (This enables us to use windowing.) This value needs to be adjusted each time elements are added or removed from the tree, but we amortize this over time to avoid any big performance hits when rendering the tree.
+<sup>1</sup> The `depth` value determines how much padding/indentation to use for the element when rendering it in the Elements panel. (This preserves the appearance of a nested tree, even though the view is a flat list.)
 
-The `depth` value determines how much padding/indentation to use for the element when rendering it in the Elements panel. (This preserves the appearance of a nested tree, even though the view is a flat list.)
+<sup>2</sup> The `weight` of an element is the number of elements (including itself) below it in the tree. We cache this property so that we can quickly determine the total number of Elements as well as to find the Nth element within that set. (This enables us to use windowing.) This value needs to be adjusted each time elements are added or removed from the tree, but we amortize this over time to avoid any big performance hits when rendering the tree.
 
 ### Finding the element at index N
 
