@@ -111,8 +111,8 @@ export default {
       // Is this reference inside a cleanup function for this effect node?
       // We can check by traversing scopes upwards  from the reference, and checking
       // if the last "return () => " we encounter is located directly inside the effect.
-      function isInsideEffectCleanup(reference) {
-        let curScope = reference.from;
+      function isInsideEffectCleanup({from}) {
+        let curScope = from;
         let isInReturnedFunction = false;
         while (curScope.block !== node) {
           if (curScope.type === 'function') {
@@ -130,8 +130,8 @@ export default {
       const dependencies = new Map();
       gatherDependenciesRecursively(scope);
 
-      function gatherDependenciesRecursively(currentScope) {
-        for (const reference of currentScope.references) {
+      function gatherDependenciesRecursively({references, childScopes}) {
+        for (const reference of references) {
           // If this reference is not resolved or it is not declared in a pure
           // scope then we don't care about this reference.
           if (!reference.resolved) {
@@ -179,7 +179,7 @@ export default {
             });
           }
         }
-        for (const childScope of currentScope.childScopes) {
+        for (const childScope of childScopes) {
           gatherDependenciesRecursively(childScope);
         }
       }
@@ -307,7 +307,7 @@ export default {
             maybeID = maybeID.object;
           }
           const isDeclaredInComponent = !componentScope.through.some(
-            ref => ref.identifier === maybeID,
+            ({identifier}) => identifier === maybeID,
           );
 
           // Add the dependency to our declared dependency map.
@@ -397,7 +397,7 @@ export default {
         if (declaredDependencies.length === 0) {
           return true;
         }
-        const declaredDepKeys = declaredDependencies.map(dep => dep.key);
+        const declaredDepKeys = declaredDependencies.map(({key}) => key);
         const sortedDeclaredDepKeys = declaredDepKeys.slice().sort();
         return declaredDepKeys.join(',') === sortedDeclaredDepKeys.join(',');
       }
@@ -462,8 +462,8 @@ export default {
           return;
         }
         let isPropsOnlyUsedInMembers = true;
-        for (let i = 0; i < refs.length; i++) {
-          const ref = refs[i];
+
+        for (const ref of refs) {
           const id = fastFindReferenceWithParent(
             componentScope.block,
             ref.identifier,
@@ -482,6 +482,7 @@ export default {
             break;
           }
         }
+
         if (isPropsOnlyUsedInMembers) {
           extraWarning =
             ' Alternatively, destructure the necessary props ' +
@@ -604,8 +605,8 @@ function collectRecommendations({
     satisfyingDependencies,
     key => key,
   );
-  function scanTreeRecursively(node, missingPaths, satisfyingPaths, keyToPath) {
-    node.children.forEach((child, key) => {
+  function scanTreeRecursively({children}, missingPaths, satisfyingPaths, keyToPath) {
+    children.forEach((child, key) => {
       const path = keyToPath(key);
       if (child.isSatisfiedRecursively) {
         if (child.hasRequiredNodesBelow) {
@@ -640,7 +641,7 @@ function collectRecommendations({
   declaredDependencies.forEach(({key}) => {
     // Does this declared dep satsify a real need?
     if (satisfyingDependencies.has(key)) {
-      if (suggestedDependencies.indexOf(key) === -1) {
+      if (!suggestedDependencies.includes(key)) {
         // Good one.
         suggestedDependencies.push(key);
       } else {
@@ -657,7 +658,7 @@ function collectRecommendations({
         // Such as resetting scroll when ID changes.
         // Consider them legit.
         // The exception is ref.current which is always wrong.
-        if (suggestedDependencies.indexOf(key) === -1) {
+        if (!suggestedDependencies.includes(key)) {
           suggestedDependencies.push(key);
         }
       } else {
