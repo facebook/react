@@ -7,22 +7,22 @@
 
 /* eslint-disable no-for-of-loops/no-for-of-loops */
 
-"use strict";
+'use strict';
 
 export default {
   meta: {
-    fixable: "code",
+    fixable: 'code',
     schema: [
       {
-        type: "object",
+        type: 'object',
         additionalProperties: false,
         properties: {
           additionalHooks: {
-            type: "string"
-          }
-        }
-      }
-    ]
+            type: 'string',
+          },
+        },
+      },
+    ],
   },
   create(context) {
     // Parse the `additionalHooks` regex.
@@ -32,11 +32,11 @@ export default {
       context.options[0].additionalHooks
         ? new RegExp(context.options[0].additionalHooks)
         : undefined;
-    const options = { additionalHooks };
+    const options = {additionalHooks};
 
     return {
       FunctionExpression: visitFunctionExpression,
-      ArrowFunctionExpression: visitFunctionExpression
+      ArrowFunctionExpression: visitFunctionExpression,
     };
 
     /**
@@ -45,16 +45,16 @@ export default {
     function visitFunctionExpression(node) {
       // We only want to lint nodes which are reactive hook callbacks.
       if (
-        (node.type !== "FunctionExpression" &&
-          node.type !== "ArrowFunctionExpression") ||
-        node.parent.type !== "CallExpression"
+        (node.type !== 'FunctionExpression' &&
+          node.type !== 'ArrowFunctionExpression') ||
+        node.parent.type !== 'CallExpression'
       ) {
         return;
       }
 
       const callbackIndex = getReactiveHookCallbackIndex(
         node.parent.callee,
-        options
+        options,
       );
       if (node.parent.arguments[callbackIndex] !== node) {
         return;
@@ -63,7 +63,7 @@ export default {
       // Get the reactive hook node.
       const reactiveHook = node.parent.callee;
       const reactiveHookName = getNodeWithoutReactNamespace(reactiveHook).name;
-      const isEffect = reactiveHookName.endsWith("Effect");
+      const isEffect = reactiveHookName.endsWith('Effect');
 
       // Get the declared dependencies for this reactive hook. If there is no
       // second argument then the reactive callback will re-run on every render.
@@ -91,7 +91,7 @@ export default {
         let currentScope = scope.upper;
         while (currentScope) {
           pureScopes.add(currentScope);
-          if (currentScope.type === "function") {
+          if (currentScope.type === 'function') {
             break;
           }
           currentScope = currentScope.upper;
@@ -111,14 +111,14 @@ export default {
       // Is this reference inside a cleanup function for this effect node?
       // We can check by traversing scopes upwards  from the reference, and checking
       // if the last "return () => " we encounter is located directly inside the effect.
-      function isInsideEffectCleanup({ from }) {
+      function isInsideEffectCleanup({from}) {
         let curScope = from;
         let isInReturnedFunction = false;
         while (curScope.block !== node) {
-          if (curScope.type === "function") {
+          if (curScope.type === 'function') {
             isInReturnedFunction =
               curScope.block.parent != null &&
-              curScope.block.parent.type === "ReturnStatement";
+              curScope.block.parent.type === 'ReturnStatement';
           }
           curScope = curScope.upper;
         }
@@ -130,7 +130,7 @@ export default {
       const dependencies = new Map();
       gatherDependenciesRecursively(scope);
 
-      function gatherDependenciesRecursively({ references, childScopes }) {
+      function gatherDependenciesRecursively({references, childScopes}) {
         for (const reference of references) {
           // If this reference is not resolved or it is not declared in a pure
           // scope then we don't care about this reference.
@@ -145,7 +145,7 @@ export default {
           // Then normalize the narrowed dependency.
           const referenceNode = fastFindReferenceWithParent(
             node,
-            reference.identifier
+            reference.identifier,
           );
           const dependencyNode = getDependency(referenceNode);
           const dependency = toPropertyAccessString(dependencyNode);
@@ -155,17 +155,17 @@ export default {
             // We're in an effect...
             isEffect &&
             // ... and this look like accessing .current...
-            dependencyNode.type === "Identifier" &&
-            dependencyNode.parent.type === "MemberExpression" &&
+            dependencyNode.type === 'Identifier' &&
+            dependencyNode.parent.type === 'MemberExpression' &&
             !dependencyNode.parent.computed &&
-            dependencyNode.parent.property.type === "Identifier" &&
-            dependencyNode.parent.property.name === "current" &&
+            dependencyNode.parent.property.type === 'Identifier' &&
+            dependencyNode.parent.property.name === 'current' &&
             // ...in a cleanup function or below...
             isInsideEffectCleanup(reference)
           ) {
             currentRefsInEffectCleanup.set(dependency, {
               reference,
-              dependencyNode
+              dependencyNode,
             });
           }
 
@@ -175,7 +175,7 @@ export default {
             const isStatic = isDefinitelyStaticDependency(reference);
             dependencies.set(dependency, {
               isStatic,
-              reference
+              reference,
             });
           }
         }
@@ -186,23 +186,23 @@ export default {
 
       // Warn about accessing .current in cleanup effects.
       currentRefsInEffectCleanup.forEach(
-        ({ reference, dependencyNode }, dependency) => {
+        ({reference, dependencyNode}, dependency) => {
           const references = reference.resolved.references;
           // Is React managing this ref or us?
           // Let's see if we can find a .current assignment.
           let foundCurrentAssignment = false;
           for (let i = 0; i < references.length; i++) {
-            const { identifier } = references[i];
-            const { parent } = identifier;
+            const {identifier} = references[i];
+            const {parent} = identifier;
             if (
               parent != null &&
               // ref.current
-              parent.type === "MemberExpression" &&
+              parent.type === 'MemberExpression' &&
               !parent.computed &&
-              parent.property.type === "Identifier" &&
-              parent.property.name === "current" &&
+              parent.property.type === 'Identifier' &&
+              parent.property.name === 'current' &&
               // ref.current = <something>
-              parent.parent.type === "AssignmentExpression" &&
+              parent.parent.type === 'AssignmentExpression' &&
               parent.parent.left === parent
             ) {
               foundCurrentAssignment = true;
@@ -220,14 +220,14 @@ export default {
               `will likely read a different ref value because by this time React ` +
               `has already updated the ref. If this ref is managed by React, store ` +
               `'${dependency}.current' in a variable inside ` +
-              `the effect itself and refer to that variable from the cleanup function.`
+              `the effect itself and refer to that variable from the cleanup function.`,
           });
-        }
+        },
       );
 
       const declaredDependencies = [];
       const externalDependencies = new Set();
-      if (declaredDependenciesNode.type !== "ArrayExpression") {
+      if (declaredDependenciesNode.type !== 'ArrayExpression') {
         // If the declared dependencies are not an array expression then we
         // can't verify that the user provided the correct dependencies. Tell
         // the user this in an error.
@@ -236,7 +236,7 @@ export default {
           message:
             `React Hook ${context.getSource(reactiveHook)} has a second ` +
             "argument which is not an array literal. This means we can't " +
-            "statically verify whether you've passed the correct dependencies."
+            "statically verify whether you've passed the correct dependencies.",
         });
       } else {
         declaredDependenciesNode.elements.forEach(declaredDependencyNode => {
@@ -245,14 +245,14 @@ export default {
             return;
           }
           // If we see a spread element then add a special warning.
-          if (declaredDependencyNode.type === "SpreadElement") {
+          if (declaredDependencyNode.type === 'SpreadElement') {
             context.report({
               node: declaredDependencyNode,
               message:
                 `React Hook ${context.getSource(reactiveHook)} has a spread ` +
                 "element in its dependency array. This means we can't " +
                 "statically verify whether you've passed the " +
-                "correct dependencies."
+                'correct dependencies.',
             });
             return;
           }
@@ -263,8 +263,8 @@ export default {
             declaredDependency = toPropertyAccessString(declaredDependencyNode);
           } catch (error) {
             if (/Unsupported node type/.test(error.message)) {
-              if (declaredDependencyNode.type === "Literal") {
-                if (typeof declaredDependencyNode.value === "string") {
+              if (declaredDependencyNode.type === 'Literal') {
+                if (typeof declaredDependencyNode.value === 'string') {
                   context.report({
                     node: declaredDependencyNode,
                     message:
@@ -274,7 +274,7 @@ export default {
                       `because it never changes. Did you mean to ` +
                       `include ${
                         declaredDependencyNode.value
-                      } in the array instead?`
+                      } in the array instead?`,
                   });
                 } else {
                   context.report({
@@ -283,7 +283,7 @@ export default {
                       `The '${
                         declaredDependencyNode.raw
                       }' literal is not a valid dependency ` +
-                      "because it never changes. You can safely remove it."
+                      'because it never changes. You can safely remove it.',
                   });
                 }
               } else {
@@ -292,7 +292,7 @@ export default {
                   message:
                     `React Hook ${context.getSource(reactiveHook)} has a ` +
                     `complex expression in the dependency array. ` +
-                    "Extract it to a separate variable so it can be statically checked."
+                    'Extract it to a separate variable so it can be statically checked.',
                 });
               }
 
@@ -303,17 +303,17 @@ export default {
           }
 
           let maybeID = declaredDependencyNode;
-          while (maybeID.type === "MemberExpression") {
+          while (maybeID.type === 'MemberExpression') {
             maybeID = maybeID.object;
           }
           const isDeclaredInComponent = !componentScope.through.some(
-            ({ identifier }) => identifier === maybeID
+            ({identifier}) => identifier === maybeID,
           );
 
           // Add the dependency to our declared dependency map.
           declaredDependencies.push({
             key: declaredDependency,
-            node: declaredDependencyNode
+            node: declaredDependencyNode,
           });
 
           if (!isDeclaredInComponent) {
@@ -331,18 +331,18 @@ export default {
           node: writeExpr,
           message:
             `Assignments to the '${key}' variable from inside a React ${context.getSource(
-              reactiveHook
+              reactiveHook,
             )} Hook ` +
             `will not persist between re-renders. ` +
             `If it's only needed by this Hook, move the variable inside it. ` +
             `Alternatively, declare a ref with the useRef Hook, ` +
-            `and keep the mutable value in its 'current' property.`
+            `and keep the mutable value in its 'current' property.`,
         });
       }
 
       // Remember which deps are optional and report bad usage first.
       const optionalDependencies = new Set();
-      dependencies.forEach(({ isStatic, reference }, key) => {
+      dependencies.forEach(({isStatic, reference}, key) => {
         if (isStatic) {
           optionalDependencies.add(key);
         }
@@ -359,13 +359,13 @@ export default {
         suggestedDependencies,
         unnecessaryDependencies,
         missingDependencies,
-        duplicateDependencies
+        duplicateDependencies,
       } = collectRecommendations({
         dependencies,
         declaredDependencies,
         optionalDependencies,
         externalDependencies,
-        isEffect
+        isEffect,
       });
 
       const problemCount =
@@ -388,7 +388,7 @@ export default {
           declaredDependencies: [], // Pretend we don't know
           optionalDependencies,
           externalDependencies,
-          isEffect
+          isEffect,
         }).suggestedDependencies;
       }
 
@@ -397,9 +397,9 @@ export default {
         if (declaredDependencies.length === 0) {
           return true;
         }
-        const declaredDepKeys = declaredDependencies.map(({ key }) => key);
+        const declaredDepKeys = declaredDependencies.map(({key}) => key);
         const sortedDeclaredDepKeys = declaredDepKeys.slice().sort();
-        return declaredDepKeys.join(",") === sortedDeclaredDepKeys.join(",");
+        return declaredDepKeys.join(',') === sortedDeclaredDepKeys.join(',');
       }
       if (areDeclaredDepsAlphabetized()) {
         suggestedDependencies.sort();
@@ -410,30 +410,30 @@ export default {
           return null;
         }
         return (
-          (deps.size > 1 ? "" : singlePrefix + " ") +
+          (deps.size > 1 ? '' : singlePrefix + ' ') +
           label +
-          " " +
-          (deps.size > 1 ? "dependencies" : "dependency") +
-          ": " +
+          ' ' +
+          (deps.size > 1 ? 'dependencies' : 'dependency') +
+          ': ' +
           joinEnglish(
             Array.from(deps)
               .sort()
-              .map(name => "'" + name + "'")
+              .map(name => "'" + name + "'"),
           ) +
           `. Either ${fixVerb} ${
-            deps.size > 1 ? "them" : "it"
+            deps.size > 1 ? 'them' : 'it'
           } or remove the dependency array.`
         );
       }
 
-      let extraWarning = "";
+      let extraWarning = '';
       if (unnecessaryDependencies.size > 0) {
         let badRef = null;
         Array.from(unnecessaryDependencies.keys()).forEach(key => {
           if (badRef !== null) {
             return;
           }
-          if (key.endsWith(".current")) {
+          if (key.endsWith('.current')) {
             badRef = key;
           }
         });
@@ -452,8 +452,8 @@ export default {
       // `props.foo()` marks `props` as a dependency because it has
       // a `this` value. This warning can be confusing.
       // So if we're going to show it, append a clarification.
-      if (!extraWarning && missingDependencies.has("props")) {
-        let propDep = dependencies.get("props");
+      if (!extraWarning && missingDependencies.has('props')) {
+        let propDep = dependencies.get('props');
         if (propDep == null) {
           return;
         }
@@ -466,7 +466,7 @@ export default {
         for (const ref of refs) {
           const id = fastFindReferenceWithParent(
             componentScope.block,
-            ref.identifier
+            ref.identifier,
           );
           if (!id) {
             isPropsOnlyUsedInMembers = false;
@@ -477,7 +477,7 @@ export default {
             isPropsOnlyUsedInMembers = false;
             break;
           }
-          if (parent.type !== "MemberExpression") {
+          if (parent.type !== 'MemberExpression') {
             isPropsOnlyUsedInMembers = false;
             break;
           }
@@ -485,8 +485,8 @@ export default {
 
         if (isPropsOnlyUsedInMembers) {
           extraWarning =
-            " Alternatively, destructure the necessary props " +
-            "outside the callback.";
+            ' Alternatively, destructure the necessary props ' +
+            'outside the callback.';
         }
       }
 
@@ -495,30 +495,30 @@ export default {
         message:
           `React Hook ${context.getSource(reactiveHook)} has ` +
           // To avoid a long message, show the next actionable item.
-          (getWarningMessage(missingDependencies, "a", "missing", "include") ||
+          (getWarningMessage(missingDependencies, 'a', 'missing', 'include') ||
             getWarningMessage(
               unnecessaryDependencies,
-              "an",
-              "unnecessary",
-              "exclude"
+              'an',
+              'unnecessary',
+              'exclude',
             ) ||
             getWarningMessage(
               duplicateDependencies,
-              "a",
-              "duplicate",
-              "omit"
+              'a',
+              'duplicate',
+              'omit',
             )) +
           extraWarning,
         fix(fixer) {
           // TODO: consider preserving the comments or formatting?
           return fixer.replaceText(
             declaredDependenciesNode,
-            `[${suggestedDependencies.join(", ")}]`
+            `[${suggestedDependencies.join(', ')}]`,
           );
-        }
+        },
       });
     }
-  }
+  },
 };
 
 // The meat of the logic.
@@ -527,7 +527,7 @@ function collectRecommendations({
   declaredDependencies,
   optionalDependencies,
   externalDependencies,
-  isEffect
+  isEffect,
 }) {
   // Our primary data structure.
   // It is a logical representation of property chains:
@@ -544,7 +544,7 @@ function collectRecommendations({
       isRequired: false, // True if used in code
       isSatisfiedRecursively: false, // True if specified in deps
       hasRequiredNodesBelow: false, // True if something deeper is used by code
-      children: new Map() // Nodes for properties
+      children: new Map(), // Nodes for properties
     };
   }
 
@@ -560,7 +560,7 @@ function collectRecommendations({
 
   // Mark all satisfied nodes.
   // Imagine checkmarks next to each declared dependency.
-  declaredDependencies.forEach(({ key }) => {
+  declaredDependencies.forEach(({key}) => {
     const node = getOrCreateNodeByPath(depTree, key);
     node.isSatisfiedRecursively = true;
   });
@@ -571,7 +571,7 @@ function collectRecommendations({
 
   // Tree manipulation helpers.
   function getOrCreateNodeByPath(rootNode, path) {
-    let keys = path.split(".");
+    let keys = path.split('.');
     let node = rootNode;
     for (let key of keys) {
       let child = node.children.get(key);
@@ -584,7 +584,7 @@ function collectRecommendations({
     return node;
   }
   function markAllParentsByPath(rootNode, path, fn) {
-    let keys = path.split(".");
+    let keys = path.split('.');
     let node = rootNode;
     for (let key of keys) {
       let child = node.children.get(key);
@@ -603,14 +603,9 @@ function collectRecommendations({
     depTree,
     missingDependencies,
     satisfyingDependencies,
-    key => key
+    key => key,
   );
-  function scanTreeRecursively(
-    { children },
-    missingPaths,
-    satisfyingPaths,
-    keyToPath
-  ) {
+  function scanTreeRecursively({children}, missingPaths, satisfyingPaths, keyToPath) {
     children.forEach((child, key) => {
       const path = keyToPath(key);
       if (child.isSatisfiedRecursively) {
@@ -634,7 +629,7 @@ function collectRecommendations({
         child,
         missingPaths,
         satisfyingPaths,
-        childKey => path + "." + childKey
+        childKey => path + '.' + childKey,
       );
     });
   }
@@ -643,7 +638,7 @@ function collectRecommendations({
   let suggestedDependencies = [];
   let unnecessaryDependencies = new Set();
   let duplicateDependencies = new Set();
-  declaredDependencies.forEach(({ key }) => {
+  declaredDependencies.forEach(({key}) => {
     // Does this declared dep satsify a real need?
     if (satisfyingDependencies.has(key)) {
       if (!suggestedDependencies.includes(key)) {
@@ -656,7 +651,7 @@ function collectRecommendations({
     } else {
       if (
         isEffect &&
-        !key.endsWith(".current") &&
+        !key.endsWith('.current') &&
         !externalDependencies.has(key)
       ) {
         // Effects are allowed extra "unnecessary" deps.
@@ -682,7 +677,7 @@ function collectRecommendations({
     suggestedDependencies,
     unnecessaryDependencies,
     duplicateDependencies,
-    missingDependencies
+    missingDependencies,
   };
 }
 
@@ -695,13 +690,13 @@ function collectRecommendations({
  */
 function getDependency(node) {
   if (
-    node.parent.type === "MemberExpression" &&
+    node.parent.type === 'MemberExpression' &&
     node.parent.object === node &&
-    node.parent.property.name !== "current" &&
+    node.parent.property.name !== 'current' &&
     !node.parent.computed &&
     !(
       node.parent.parent != null &&
-      node.parent.parent.type === "CallExpression" &&
+      node.parent.parent.type === 'CallExpression' &&
       node.parent.parent.callee === node.parent
     )
   ) {
@@ -719,9 +714,9 @@ function getDependency(node) {
  * Otherwise throw.
  */
 function toPropertyAccessString(node) {
-  if (node.type === "Identifier") {
+  if (node.type === 'Identifier') {
     return node.name;
-  } else if (node.type === "MemberExpression" && !node.computed) {
+  } else if (node.type === 'MemberExpression' && !node.computed) {
     const object = toPropertyAccessString(node.object);
     const property = toPropertyAccessString(node.property);
     return `${object}.${property}`;
@@ -732,10 +727,10 @@ function toPropertyAccessString(node) {
 
 function getNodeWithoutReactNamespace(node, options) {
   if (
-    node.type === "MemberExpression" &&
-    node.object.type === "Identifier" &&
-    node.object.name === "React" &&
-    node.property.type === "Identifier" &&
+    node.type === 'MemberExpression' &&
+    node.object.type === 'Identifier' &&
+    node.object.name === 'React' &&
+    node.property.type === 'Identifier' &&
     !node.computed
   ) {
     return node.property;
@@ -750,17 +745,17 @@ function getNodeWithoutReactNamespace(node, options) {
 // For additionally configured Hooks, assume that they're like useEffect (0).
 function getReactiveHookCallbackIndex(calleeNode, options) {
   let node = getNodeWithoutReactNamespace(calleeNode);
-  if (node.type !== "Identifier") {
+  if (node.type !== 'Identifier') {
     return null;
   }
   switch (node.name) {
-    case "useEffect":
-    case "useLayoutEffect":
-    case "useCallback":
-    case "useMemo":
+    case 'useEffect':
+    case 'useLayoutEffect':
+    case 'useCallback':
+    case 'useMemo':
       // useEffect(fn)
       return 0;
-    case "useImperativeHandle":
+    case 'useImperativeHandle':
       // useImperativeHandle(ref, fn)
       return 1;
     default:
@@ -803,7 +798,7 @@ function isDefinitelyStaticDependency(reference) {
     return false;
   }
   // Look for `let stuff = ...`
-  if (def.node.type !== "VariableDeclarator") {
+  if (def.node.type !== 'VariableDeclarator') {
     return false;
   }
   const init = def.node.init;
@@ -814,10 +809,10 @@ function isDefinitelyStaticDependency(reference) {
   // const foo = 42
   const declaration = def.node.parent;
   if (
-    declaration.kind === "const" &&
-    init.type === "Literal" &&
-    (typeof init.value === "string" ||
-      typeof init.value === "number" ||
+    declaration.kind === 'const' &&
+    init.type === 'Literal' &&
+    (typeof init.value === 'string' ||
+      typeof init.value === 'number' ||
       init.value === null)
   ) {
     // Definitely static
@@ -825,30 +820,30 @@ function isDefinitelyStaticDependency(reference) {
   }
   // Detect known Hook calls
   // const [_, setState] = useState()
-  if (init.type !== "CallExpression") {
+  if (init.type !== 'CallExpression') {
     return false;
   }
   let callee = init.callee;
   // Step into `= React.something` initializer.
   if (
-    callee.type === "MemberExpression" &&
-    callee.object.name === "React" &&
+    callee.type === 'MemberExpression' &&
+    callee.object.name === 'React' &&
     callee.property != null &&
     !callee.computed
   ) {
     callee = callee.property;
   }
-  if (callee.type !== "Identifier") {
+  if (callee.type !== 'Identifier') {
     return false;
   }
   const id = def.node.id;
-  if (callee.name === "useRef" && id.type === "Identifier") {
+  if (callee.name === 'useRef' && id.type === 'Identifier') {
     // useRef() return value is static.
     return true;
-  } else if (callee.name === "useState" || callee.name === "useReducer") {
+  } else if (callee.name === 'useState' || callee.name === 'useReducer') {
     // Only consider second value in initializing tuple static.
     if (
-      id.type === "ArrayPattern" &&
+      id.type === 'ArrayPattern' &&
       id.elements.length === 2 &&
       Array.isArray(reference.resolved.identifiers) &&
       // Is second tuple value the same reference we're checking?
@@ -887,7 +882,7 @@ function fastFindReferenceWithParent(start, target) {
     }
 
     for (let [key, value] of Object.entries(item)) {
-      if (key === "parent") {
+      if (key === 'parent') {
         continue;
       }
       if (isNodeLike(value)) {
@@ -908,15 +903,15 @@ function fastFindReferenceWithParent(start, target) {
 }
 
 function joinEnglish(arr) {
-  let s = "";
+  let s = '';
   for (let i = 0; i < arr.length; i++) {
     s += arr[i];
     if (i === 0 && arr.length === 2) {
-      s += " and ";
+      s += ' and ';
     } else if (i === arr.length - 2 && arr.length > 2) {
-      s += ", and ";
+      s += ', and ';
     } else if (i < arr.length - 1) {
-      s += ", ";
+      s += ', ';
     }
   }
   return s;
@@ -924,16 +919,16 @@ function joinEnglish(arr) {
 
 function isNodeLike(val) {
   return (
-    typeof val === "object" &&
+    typeof val === 'object' &&
     val !== null &&
     !Array.isArray(val) &&
-    typeof val.type === "string"
+    typeof val.type === 'string'
   );
 }
 
 function isSameIdentifier(a, b) {
   return (
-    a.type === "Identifier" &&
+    a.type === 'Identifier' &&
     a.name === b.name &&
     a.range[0] === b.range[0] &&
     a.range[1] === b.range[1]
