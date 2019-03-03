@@ -46,9 +46,9 @@ function isHook(node) {
  * are valid component names for instance.
  */
 
-function isComponentName(node) {
-  if (node.type === 'Identifier') {
-    return !/^[a-z]/.test(node.name);
+function isComponentName({type, name}) {
+  if (type === 'Identifier') {
+    return !/^[a-z]/.test(name);
   } else {
     return false;
   }
@@ -83,7 +83,7 @@ export default {
       //
       // Everything is ok if all React Hooks are both reachable from the initial
       // segment and reachable from every final segment.
-      onCodePathEnd(codePath, codePathNode) {
+      onCodePathEnd({thrownSegments, initialSegment, finalSegments}, codePathNode) {
         const reactHooksMap = codePathReactHooksMapStack.pop();
         if (reactHooksMap.size === 0) {
           return;
@@ -139,7 +139,7 @@ export default {
 
           // Compute `paths` and cache it. Guarding against cycles.
           cache.set(segment.id, null);
-          if (codePath.thrownSegments.includes(segment)) {
+          if (thrownSegments.includes(segment)) {
             paths = 0;
           } else if (segment.prevSegments.length === 0) {
             paths = 1;
@@ -208,7 +208,7 @@ export default {
 
           // Compute `paths` and cache it. Guarding against cycles.
           cache.set(segment.id, null);
-          if (codePath.thrownSegments.includes(segment)) {
+          if (thrownSegments.includes(segment)) {
             paths = 0;
           } else if (segment.nextSegments.length === 0) {
             paths = 1;
@@ -245,9 +245,9 @@ export default {
          * so we would return that.
          */
 
-        function shortestPathLengthToStart(segment) {
+        function shortestPathLengthToStart({id, prevSegments}) {
           const {cache} = shortestPathLengthToStart;
-          let length = cache.get(segment.id);
+          let length = cache.get(id);
 
           // If `length` is null then we found a cycle! Return infinity since
           // the shortest path is definitely not the one where we looped.
@@ -261,12 +261,12 @@ export default {
           }
 
           // Compute `length` and cache it. Guarding against cycles.
-          cache.set(segment.id, null);
-          if (segment.prevSegments.length === 0) {
+          cache.set(id, null);
+          if (prevSegments.length === 0) {
             length = 1;
           } else {
             length = Infinity;
-            for (const prevSegment of segment.prevSegments) {
+            for (const prevSegment of prevSegments) {
               const prevLength = shortestPathLengthToStart(prevSegment);
               if (prevLength < length) {
                 length = prevLength;
@@ -274,7 +274,7 @@ export default {
             }
             length += 1;
           }
-          cache.set(segment.id, length);
+          cache.set(id, length);
           return length;
         }
 
@@ -284,7 +284,7 @@ export default {
 
         // Count all code paths to the end of our component/hook. Also primes
         // the `countPathsToEnd` cache.
-        const allPathsFromStartToEnd = countPathsToEnd(codePath.initialSegment);
+        const allPathsFromStartToEnd = countPathsToEnd(initialSegment);
 
         // Gets the function name for our code path. If the function name is
         // `undefined` then we know either that we have an anonymous function
@@ -307,7 +307,7 @@ export default {
         // cache. We expect all reachable final segments to have a cache entry
         // after calling `visitSegment()`.
         let shortestFinalPathLength = Infinity;
-        for (const finalSegment of codePath.finalSegments) {
+        for (const finalSegment of finalSegments) {
           if (!finalSegment.reachable) {
             continue;
           }
@@ -457,8 +457,8 @@ export default {
       // `CallExpression`s and check that _every use_ of a hook name is valid.
       // But that gets complicated and enters type-system territory, so we're
       // only being strict about hook calls for now.
-      CallExpression(node) {
-        if (isHook(node.callee)) {
+      CallExpression({callee}) {
+        if (isHook(callee)) {
           // Add the hook node to a map keyed by the code path segment. We will
           // do full code path analysis at the end of our code path.
           const reactHooksMap = last(codePathReactHooksMapStack);
@@ -468,7 +468,7 @@ export default {
             reactHooks = [];
             reactHooksMap.set(codePathSegment, reactHooks);
           }
-          reactHooks.push(node.callee);
+          reactHooks.push(callee);
         }
       },
     };
