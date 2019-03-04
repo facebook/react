@@ -216,7 +216,7 @@ describe('ReactIncrementalTriangle', () => {
       }
       render() {
         if (yieldAfterEachRender) {
-          ReactNoop.yield(this);
+          Scheduler.yieldValue(this);
         }
         const {counter, remainingDepth} = this.props;
         return (

@@ -51,13 +51,13 @@ describe('ReactExpiration', () => {
   it('two updates of like priority in the same event always flush within the same batch', () => {
     class Text extends React.Component {
       componentDidMount() {
-        ReactNoop.yield(`${this.props.text} [commit]`);
+        Scheduler.yieldValue(`${this.props.text} [commit]`);
       }
       componentDidUpdate() {
-        ReactNoop.yield(`${this.props.text} [commit]`);
+        Scheduler.yieldValue(`${this.props.text} [commit]`);
       }
       render() {
-        ReactNoop.yield(`${this.props.text} [render]`);
+        Scheduler.yieldValue(`${this.props.text} [render]`);
         return <span prop={this.props.text} />;
       }
     }
@@ -116,13 +116,13 @@ describe('ReactExpiration', () => {
     () => {
       class Text extends React.Component {
         componentDidMount() {
-          ReactNoop.yield(`${this.props.text} [commit]`);
+          Scheduler.yieldValue(`${this.props.text} [commit]`);
         }
         componentDidUpdate() {
-          ReactNoop.yield(`${this.props.text} [commit]`);
+          Scheduler.yieldValue(`${this.props.text} [commit]`);
         }
         render() {
-          ReactNoop.yield(`${this.props.text} [render]`);
+          Scheduler.yieldValue(`${this.props.text} [render]`);
           return <span prop={this.props.text} />;
         }
       }
@@ -188,13 +188,13 @@ describe('ReactExpiration', () => {
       state = {text: store.text};
       componentDidMount() {
         subscribers.push(this);
-        ReactNoop.yield(`${this.state.text} [${this.props.label}] [commit]`);
+        Scheduler.yieldValue(`${this.state.text} [${this.props.label}] [commit]`);
       }
       componentDidUpdate() {
-        ReactNoop.yield(`${this.state.text} [${this.props.label}] [commit]`);
+        Scheduler.yieldValue(`${this.state.text} [${this.props.label}] [commit]`);
       }
       render() {
-        ReactNoop.yield(`${this.state.text} [${this.props.label}] [render]`);
+        Scheduler.yieldValue(`${this.state.text} [${this.props.label}] [render]`);
         return <span prop={this.state.text} />;
       }
     }

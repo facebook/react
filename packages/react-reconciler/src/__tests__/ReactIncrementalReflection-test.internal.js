@@ -47,10 +47,10 @@ describe('ReactIncrementalReflection', () => {
       }
       UNSAFE_componentWillMount() {
         instances.push(this);
-        ReactNoop.yield('componentWillMount: ' + this._isMounted());
+        Scheduler.yieldValue('componentWillMount: ' + this._isMounted());
       }
       componentDidMount() {
-        ReactNoop.yield('componentDidMount: ' + this._isMounted());
+        Scheduler.yieldValue('componentDidMount: ' + this._isMounted());
       }
       render() {
         return <span />;
@@ -91,16 +91,16 @@ describe('ReactIncrementalReflection', () => {
         instances.push(this);
       }
       componentWillUnmount() {
-        ReactNoop.yield('componentWillUnmount: ' + this._isMounted());
+        Scheduler.yieldValue('componentWillUnmount: ' + this._isMounted());
       }
       render() {
-        ReactNoop.yield('Component');
+        Scheduler.yieldValue('Component');
         return <span />;
       }
     }
 
     function Other() {
-      ReactNoop.yield('Other');
+      Scheduler.yieldValue('Other');
       return <span />;
     }
 
@@ -149,22 +149,22 @@ describe('ReactIncrementalReflection', () => {
     class Component extends React.Component {
       UNSAFE_componentWillMount() {
         classInstance = this;
-        ReactNoop.yield(['componentWillMount', findInstance(this)]);
+        Scheduler.yieldValue(['componentWillMount', findInstance(this)]);
       }
       componentDidMount() {
-        ReactNoop.yield(['componentDidMount', findInstance(this)]);
+        Scheduler.yieldValue(['componentDidMount', findInstance(this)]);
       }
       UNSAFE_componentWillUpdate() {
-        ReactNoop.yield(['componentWillUpdate', findInstance(this)]);
+        Scheduler.yieldValue(['componentWillUpdate', findInstance(this)]);
       }
       componentDidUpdate() {
-        ReactNoop.yield(['componentDidUpdate', findInstance(this)]);
+        Scheduler.yieldValue(['componentDidUpdate', findInstance(this)]);
       }
       componentWillUnmount() {
-        ReactNoop.yield(['componentWillUnmount', findInstance(this)]);
+        Scheduler.yieldValue(['componentWillUnmount', findInstance(this)]);
       }
       render() {
-        ReactNoop.yield('render');
+        Scheduler.yieldValue('render');
         return this.props.step < 2 ? (
           <span ref={ref => (this.span = ref)} />
         ) : this.props.step === 2 ? (
@@ -177,7 +177,7 @@ describe('ReactIncrementalReflection', () => {
 
     function Sibling() {
       // Sibling is used to assert that we've rendered past the first component.
-      ReactNoop.yield('render sibling');
+      Scheduler.yieldValue('render sibling');
       return <span />;
     }
 

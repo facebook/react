@@ -399,21 +399,21 @@ describe('ReactDebugFiberPerf', () => {
   it('measures deferred work in chunks', () => {
     class A extends React.Component {
       render() {
-        ReactNoop.yield('A');
+        Scheduler.yieldValue('A');
         return <div>{this.props.children}</div>;
       }
     }
 
     class B extends React.Component {
       render() {
-        ReactNoop.yield('B');
+        Scheduler.yieldValue('B');
         return <div>{this.props.children}</div>;
       }
     }
 
     class C extends React.Component {
       render() {
-        ReactNoop.yield('C');
+        Scheduler.yieldValue('C');
         return <div>{this.props.children}</div>;
       }
     }
@@ -644,7 +644,7 @@ describe('ReactDebugFiberPerf', () => {
 
   it('warns if an in-progress update is interrupted', () => {
     function Foo() {
-      ReactNoop.yield('Foo');
+      Scheduler.yieldValue('Foo');
       return <span />;
     }
 
