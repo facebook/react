@@ -560,6 +560,7 @@ const ReactTestRendererFiber = {
     ) {
       let called = false;
       if (__DEV__) {
+        // eslint-disable-next-line no-undef
         Promise.resolve()
           .then(() => {})
           .then(() => {
