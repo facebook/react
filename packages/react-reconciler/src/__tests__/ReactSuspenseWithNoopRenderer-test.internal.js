@@ -33,10 +33,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       return new Promise((resolve, reject) =>
         setTimeout(() => {
           if (textResourceShouldFail) {
-            ReactNoop.yield(`Promise rejected [${text}]`);
+            Scheduler.yieldValue(`Promise rejected [${text}]`);
             reject(new Error('Failed to load: ' + text));
           } else {
-            ReactNoop.yield(`Promise resolved [${text}]`);
+            Scheduler.yieldValue(`Promise resolved [${text}]`);
             resolve(text);
           }
         }, ms),
@@ -69,7 +69,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   }
 
   function Text(props) {
-    ReactNoop.yield(props.text);
+    Scheduler.yieldValue(props.text);
     return <span prop={props.text} ref={props.hostRef} />;
   }
 
@@ -77,13 +77,13 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     const text = props.text;
     try {
       TextResource.read([props.text, props.ms]);
-      ReactNoop.yield(text);
+      Scheduler.yieldValue(text);
       return <span prop={text} />;
     } catch (promise) {
       if (typeof promise.then === 'function') {
-        ReactNoop.yield(`Suspend! [${text}]`);
+        Scheduler.yieldValue(`Suspend! [${text}]`);
       } else {
-        ReactNoop.yield(`Error! [${text}]`);
+        Scheduler.yieldValue(`Error! [${text}]`);
       }
       throw promise;
     }
@@ -91,12 +91,12 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
   it('suspends rendering and continues later', async () => {
     function Bar(props) {
-      ReactNoop.yield('Bar');
+      Scheduler.yieldValue('Bar');
       return props.children;
     }
 
     function Foo() {
-      ReactNoop.yield('Foo');
+      Scheduler.yieldValue('Foo');
       return (
         <Suspense fallback={<Text text="Loading..." />}>
           <Bar>
@@ -758,10 +758,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   it('flushes all expired updates in a single batch', async () => {
     class Foo extends React.Component {
       componentDidUpdate() {
-        ReactNoop.yield('Commit: ' + this.props.text);
+        Scheduler.yieldValue('Commit: ' + this.props.text);
       }
       componentDidMount() {
-        ReactNoop.yield('Commit: ' + this.props.text);
+        Scheduler.yieldValue('Commit: ' + this.props.text);
       }
       render() {
         return (
@@ -919,7 +919,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
       // Update. This starts out asynchronously.
       text.current.setState({step: 2}, () =>
-        ReactNoop.yield('Update did commit'),
+        Scheduler.yieldValue('Update did commit'),
       );
 
       // Suspend during an async render.
@@ -1001,7 +1001,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
         // Initial mount
         ReactNoop.renderLegacySyncRoot(<App />, () =>
-          ReactNoop.yield('Did mount'),
+          Scheduler.yieldValue('Did mount'),
         );
         await advanceTimers(100);
         expect(Scheduler).toHaveYielded([
@@ -1030,10 +1030,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
         // Update. This starts out asynchronously.
         text1.current.setState({text: 'Async: 2'}, () =>
-          ReactNoop.yield('Update 1 did commit'),
+          Scheduler.yieldValue('Update 1 did commit'),
         );
         text2.current.setState({text: 'Sync: 2'}, () =>
-          ReactNoop.yield('Update 2 did commit'),
+          Scheduler.yieldValue('Update 2 did commit'),
         );
 
         // Start rendering asynchronously
@@ -1136,7 +1136,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
         // Initial mount
         ReactNoop.renderLegacySyncRoot(<App />, () =>
-          ReactNoop.yield('Did mount'),
+          Scheduler.yieldValue('Did mount'),
         );
         await advanceTimers(100);
         expect(Scheduler).toHaveYielded([
@@ -1165,10 +1165,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
         // Update. This starts out asynchronously.
         text1.current.setState({text: 'Async: 2'}, () =>
-          ReactNoop.yield('Update 1 did commit'),
+          Scheduler.yieldValue('Update 1 did commit'),
         );
         text2.current.setState({text: 'Sync: 2'}, () =>
-          ReactNoop.yield('Update 2 did commit'),
+          Scheduler.yieldValue('Update 2 did commit'),
         );
 
         // Start rendering asynchronously
@@ -1226,10 +1226,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     it('does not re-render siblings in loose mode', async () => {
       class TextWithLifecycle extends React.Component {
         componentDidMount() {
-          ReactNoop.yield(`Mount [${this.props.text}]`);
+          Scheduler.yieldValue(`Mount [${this.props.text}]`);
         }
         componentDidUpdate() {
-          ReactNoop.yield(`Update [${this.props.text}]`);
+          Scheduler.yieldValue(`Update [${this.props.text}]`);
         }
         render() {
           return <Text {...this.props} />;
@@ -1238,10 +1238,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
       class AsyncTextWithLifecycle extends React.Component {
         componentDidMount() {
-          ReactNoop.yield(`Mount [${this.props.text}]`);
+          Scheduler.yieldValue(`Mount [${this.props.text}]`);
         }
         componentDidUpdate() {
-          ReactNoop.yield(`Update [${this.props.text}]`);
+          Scheduler.yieldValue(`Update [${this.props.text}]`);
         }
         render() {
           return <AsyncText {...this.props} />;
@@ -1261,7 +1261,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       }
 
       ReactNoop.renderLegacySyncRoot(<App />, () =>
-        ReactNoop.yield('Commit root'),
+        Scheduler.yieldValue('Commit root'),
       );
       expect(Scheduler).toHaveYielded([
         'A',
@@ -1303,24 +1303,24 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         constructor(props) {
           super(props);
           const text = props.text;
-          ReactNoop.yield('constructor');
+          Scheduler.yieldValue('constructor');
           try {
             TextResource.read([props.text, props.ms]);
             this.state = {text};
           } catch (promise) {
             if (typeof promise.then === 'function') {
-              ReactNoop.yield(`Suspend! [${text}]`);
+              Scheduler.yieldValue(`Suspend! [${text}]`);
             } else {
-              ReactNoop.yield(`Error! [${text}]`);
+              Scheduler.yieldValue(`Error! [${text}]`);
             }
             throw promise;
           }
         }
         componentDidMount() {
-          ReactNoop.yield('componentDidMount');
+          Scheduler.yieldValue('componentDidMount');
         }
         render() {
-          ReactNoop.yield(this.state.text);
+          Scheduler.yieldValue(this.state.text);
           return <span prop={this.state.text} />;
         }
       }
@@ -1394,7 +1394,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         const child = useRef(null);
 
         useLayoutEffect(() => {
-          ReactNoop.yield('Child is hidden: ' + child.current.hidden);
+          Scheduler.yieldValue('Child is hidden: ' + child.current.hidden);
         });
 
         return (
@@ -1430,13 +1430,13 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   it('does not call lifecycles of a suspended component', async () => {
     class TextWithLifecycle extends React.Component {
       componentDidMount() {
-        ReactNoop.yield(`Mount [${this.props.text}]`);
+        Scheduler.yieldValue(`Mount [${this.props.text}]`);
       }
       componentDidUpdate() {
-        ReactNoop.yield(`Update [${this.props.text}]`);
+        Scheduler.yieldValue(`Update [${this.props.text}]`);
       }
       componentWillUnmount() {
-        ReactNoop.yield(`Unmount [${this.props.text}]`);
+        Scheduler.yieldValue(`Unmount [${this.props.text}]`);
       }
       render() {
         return <Text {...this.props} />;
@@ -1445,26 +1445,26 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     class AsyncTextWithLifecycle extends React.Component {
       componentDidMount() {
-        ReactNoop.yield(`Mount [${this.props.text}]`);
+        Scheduler.yieldValue(`Mount [${this.props.text}]`);
       }
       componentDidUpdate() {
-        ReactNoop.yield(`Update [${this.props.text}]`);
+        Scheduler.yieldValue(`Update [${this.props.text}]`);
       }
       componentWillUnmount() {
-        ReactNoop.yield(`Unmount [${this.props.text}]`);
+        Scheduler.yieldValue(`Unmount [${this.props.text}]`);
       }
       render() {
         const text = this.props.text;
         const ms = this.props.ms;
         try {
           TextResource.read([text, ms]);
-          ReactNoop.yield(text);
+          Scheduler.yieldValue(text);
           return <span prop={text} />;
         } catch (promise) {
           if (typeof promise.then === 'function') {
-            ReactNoop.yield(`Suspend! [${text}]`);
+            Scheduler.yieldValue(`Suspend! [${text}]`);
           } else {
-            ReactNoop.yield(`Error! [${text}]`);
+            Scheduler.yieldValue(`Error! [${text}]`);
           }
           throw promise;
         }
@@ -1484,7 +1484,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
 
     ReactNoop.renderLegacySyncRoot(<App />, () =>
-      ReactNoop.yield('Commit root'),
+      Scheduler.yieldValue('Commit root'),
     );
     expect(Scheduler).toHaveYielded([
       'A',

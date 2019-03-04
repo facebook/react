@@ -1208,13 +1208,13 @@ describe('Profiler', () => {
 
     const Child = ({duration, id}) => {
       Scheduler.advanceTime(duration);
-      ReactNoop.yield(`Child:render:${id}`);
+      Scheduler.yieldValue(`Child:render:${id}`);
       return null;
     };
 
     class Parent extends React.Component {
       componentDidMount() {
-        ReactNoop.yield(`Parent:componentDidMount:${this.props.id}`);
+        Scheduler.yieldValue(`Parent:componentDidMount:${this.props.id}`);
       }
       render() {
         const {duration, id} = this.props;
@@ -2261,7 +2261,7 @@ describe('Profiler', () => {
         const monkey = React.createRef();
         class Monkey extends React.Component {
           render() {
-            ReactNoop.yield('Monkey');
+            Scheduler.yieldValue('Monkey');
             return null;
           }
         }

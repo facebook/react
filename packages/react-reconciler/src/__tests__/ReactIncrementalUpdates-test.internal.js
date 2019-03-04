@@ -34,7 +34,7 @@ describe('ReactIncrementalUpdates', () => {
     class Foo extends React.Component {
       state = {};
       componentDidMount() {
-        ReactNoop.yield('commit');
+        Scheduler.yieldValue('commit');
         ReactNoop.deferredUpdates(() => {
           // Has low priority
           this.setState({b: 'b'});
@@ -150,7 +150,7 @@ describe('ReactIncrementalUpdates', () => {
 
     function createUpdate(letter) {
       return () => {
-        ReactNoop.yield(letter);
+        Scheduler.yieldValue(letter);
         return {
           [letter]: letter,
         };
@@ -221,7 +221,7 @@ describe('ReactIncrementalUpdates', () => {
 
     function createUpdate(letter) {
       return () => {
-        ReactNoop.yield(letter);
+        Scheduler.yieldValue(letter);
         return {
           [letter]: letter,
         };
@@ -461,9 +461,9 @@ describe('ReactIncrementalUpdates', () => {
     const {useEffect} = React;
 
     function App({label}) {
-      ReactNoop.yield('Render: ' + label);
+      Scheduler.yieldValue('Render: ' + label);
       useEffect(() => {
-        ReactNoop.yield('Commit: ' + label);
+        Scheduler.yieldValue('Commit: ' + label);
       });
       return label;
     }
@@ -547,9 +547,9 @@ describe('ReactIncrementalUpdates', () => {
     const {useEffect} = React;
 
     function App({label}) {
-      ReactNoop.yield('Render: ' + label);
+      Scheduler.yieldValue('Render: ' + label);
       useEffect(() => {
-        ReactNoop.yield('Commit: ' + label);
+        Scheduler.yieldValue('Commit: ' + label);
       });
       return label;
     }

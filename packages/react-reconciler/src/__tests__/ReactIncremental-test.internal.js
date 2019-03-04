@@ -42,7 +42,7 @@ describe('ReactIncremental', () => {
 
   it('should render a simple component, in steps if needed', () => {
     function Bar() {
-      ReactNoop.yield('Bar');
+      Scheduler.yieldValue('Bar');
       return (
         <span>
           <div>Hello World</div>
@@ -51,11 +51,11 @@ describe('ReactIncremental', () => {
     }
 
     function Foo() {
-      ReactNoop.yield('Foo');
+      Scheduler.yieldValue('Foo');
       return [<Bar key="a" isBar={true} />, <Bar key="b" isBar={true} />];
     }
 
-    ReactNoop.render(<Foo />, () => ReactNoop.yield('callback'));
+    ReactNoop.render(<Foo />, () => Scheduler.yieldValue('callback'));
     // Do one step of work.
     expect(ReactNoop.flushNextYield()).toEqual(['Foo']);
 
@@ -132,12 +132,12 @@ describe('ReactIncremental', () => {
 
   it('can cancel partially rendered work and restart', () => {
     function Bar(props) {
-      ReactNoop.yield('Bar');
+      Scheduler.yieldValue('Bar');
       return <div>{props.children}</div>;
     }
 
     function Foo(props) {
-      ReactNoop.yield('Foo');
+      Scheduler.yieldValue('Foo');
       return (
         <div>
           <Bar>{props.text}</Bar>
@@ -192,10 +192,10 @@ describe('ReactIncremental', () => {
 
     inst.setState(
       () => {
-        ReactNoop.yield('setState1');
+        Scheduler.yieldValue('setState1');
         return {text: 'bar'};
       },
-      () => ReactNoop.yield('callback1'),
+      () => Scheduler.yieldValue('callback1'),
     );
 
     // Flush part of the work
@@ -205,10 +205,10 @@ describe('ReactIncremental', () => {
     ReactNoop.flushSync(() => ReactNoop.render(<Foo />));
     inst.setState(
       () => {
-        ReactNoop.yield('setState2');
+        Scheduler.yieldValue('setState2');
         return {text2: 'baz'};
       },
-      () => ReactNoop.yield('callback2'),
+      () => Scheduler.yieldValue('callback2'),
     );
 
     // Flush the rest of the work which now includes the low priority
@@ -223,17 +223,17 @@ describe('ReactIncremental', () => {
 
   it('can deprioritize unfinished work and resume it later', () => {
     function Bar(props) {
-      ReactNoop.yield('Bar');
+      Scheduler.yieldValue('Bar');
       return <div>{props.children}</div>;
     }
 
     function Middle(props) {
-      ReactNoop.yield('Middle');
+      Scheduler.yieldValue('Middle');
       return <span>{props.children}</span>;
     }
 
     function Foo(props) {
-      ReactNoop.yield('Foo');
+      Scheduler.yieldValue('Foo');
       return (
         <div>
           <Bar>{props.text}</Bar>
@@ -1086,7 +1086,7 @@ describe('ReactIncremental', () => {
     class Foo extends React.PureComponent {
       render() {
         const msg = `A: ${a}, B: ${this.props.b}`;
-        ReactNoop.yield(msg);
+        Scheduler.yieldValue(msg);
         return msg;
       }
     }
@@ -1456,18 +1456,18 @@ describe('ReactIncremental', () => {
     class Parent extends React.Component {
       state = {parentRenders: 0};
       static getDerivedStateFromProps(props, prevState) {
-        ReactNoop.yield('getDerivedStateFromProps');
+        Scheduler.yieldValue('getDerivedStateFromProps');
         return prevState.parentRenders + 1;
       }
       render() {
-        ReactNoop.yield('Parent');
+        Scheduler.yieldValue('Parent');
         return <Child parentRenders={this.state.parentRenders} ref={child} />;
       }
     }
 
     class Child extends React.Component {
       render() {
-        ReactNoop.yield('Child');
+        Scheduler.yieldValue('Child');
         return this.props.parentRenders;
       }
     }
@@ -1819,7 +1819,7 @@ describe('ReactIncremental', () => {
         };
       }
       render() {
-        ReactNoop.yield('Intl ' + JSON.stringify(this.context));
+        Scheduler.yieldValue('Intl ' + JSON.stringify(this.context));
         return this.props.children;
       }
     }
@@ -1834,7 +1834,7 @@ describe('ReactIncremental', () => {
         };
       }
       render() {
-        ReactNoop.yield('Router ' + JSON.stringify(this.context));
+        Scheduler.yieldValue('Router ' + JSON.stringify(this.context));
         return this.props.children;
       }
     }
@@ -1844,7 +1844,7 @@ describe('ReactIncremental', () => {
         locale: PropTypes.string,
       };
       render() {
-        ReactNoop.yield('ShowLocale ' + JSON.stringify(this.context));
+        Scheduler.yieldValue('ShowLocale ' + JSON.stringify(this.context));
         return this.context.locale;
       }
     }
@@ -1854,13 +1854,13 @@ describe('ReactIncremental', () => {
         route: PropTypes.string,
       };
       render() {
-        ReactNoop.yield('ShowRoute ' + JSON.stringify(this.context));
+        Scheduler.yieldValue('ShowRoute ' + JSON.stringify(this.context));
         return this.context.route;
       }
     }
 
     function ShowBoth(props, context) {
-      ReactNoop.yield('ShowBoth ' + JSON.stringify(context));
+      Scheduler.yieldValue('ShowBoth ' + JSON.stringify(context));
       return `${context.route} in ${context.locale}`;
     }
     ShowBoth.contextTypes = {
@@ -1870,14 +1870,14 @@ describe('ReactIncremental', () => {
 
     class ShowNeither extends React.Component {
       render() {
-        ReactNoop.yield('ShowNeither ' + JSON.stringify(this.context));
+        Scheduler.yieldValue('ShowNeither ' + JSON.stringify(this.context));
         return null;
       }
     }
 
     class Indirection extends React.Component {
       render() {
-        ReactNoop.yield('Indirection ' + JSON.stringify(this.context));
+        Scheduler.yieldValue('Indirection ' + JSON.stringify(this.context));
         return [
           <ShowLocale key="a" />,
           <ShowRoute key="b" />,
@@ -2049,7 +2049,7 @@ describe('ReactIncremental', () => {
         };
       }
       render() {
-        ReactNoop.yield('Intl ' + JSON.stringify(this.context));
+        Scheduler.yieldValue('Intl ' + JSON.stringify(this.context));
         return this.props.children;
       }
     }
@@ -2059,7 +2059,7 @@ describe('ReactIncremental', () => {
         locale: PropTypes.string,
       };
       render() {
-        ReactNoop.yield('ShowLocale ' + JSON.stringify(this.context));
+        Scheduler.yieldValue('ShowLocale ' + JSON.stringify(this.context));
         return this.context.locale;
       }
     }
@@ -2810,12 +2810,12 @@ describe('ReactIncremental', () => {
 
   it('does not interrupt for update at same priority', () => {
     function Parent(props) {
-      ReactNoop.yield('Parent: ' + props.step);
+      Scheduler.yieldValue('Parent: ' + props.step);
       return <Child step={props.step} />;
     }
 
     function Child(props) {
-      ReactNoop.yield('Child: ' + props.step);
+      Scheduler.yieldValue('Child: ' + props.step);
       return null;
     }
 
@@ -2830,12 +2830,12 @@ describe('ReactIncremental', () => {
 
   it('does not interrupt for update at lower priority', () => {
     function Parent(props) {
-      ReactNoop.yield('Parent: ' + props.step);
+      Scheduler.yieldValue('Parent: ' + props.step);
       return <Child step={props.step} />;
     }
 
     function Child(props) {
-      ReactNoop.yield('Child: ' + props.step);
+      Scheduler.yieldValue('Child: ' + props.step);
       return null;
     }
 
@@ -2851,12 +2851,12 @@ describe('ReactIncremental', () => {
 
   it('does interrupt for update at higher priority', () => {
     function Parent(props) {
-      ReactNoop.yield('Parent: ' + props.step);
+      Scheduler.yieldValue('Parent: ' + props.step);
       return <Child step={props.step} />;
     }
 
     function Child(props) {
-      ReactNoop.yield('Child: ' + props.step);
+      Scheduler.yieldValue('Child: ' + props.step);
       return null;
     }
 

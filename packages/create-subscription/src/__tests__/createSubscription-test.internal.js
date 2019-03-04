@@ -60,7 +60,7 @@ describe('createSubscription', () => {
     ReactNoop.render(
       <Subscription source={observable}>
         {(value = 'default') => {
-          ReactNoop.yield(value);
+          Scheduler.yieldValue(value);
           return null;
         }}
       </Subscription>,
@@ -97,7 +97,7 @@ describe('createSubscription', () => {
     });
 
     function render(value = 'default') {
-      ReactNoop.yield(value);
+      Scheduler.yieldValue(value);
       return null;
     }
 
@@ -126,9 +126,9 @@ describe('createSubscription', () => {
 
       function render(hasLoaded) {
         if (hasLoaded === undefined) {
-          ReactNoop.yield('loading');
+          Scheduler.yieldValue('loading');
         } else {
-          ReactNoop.yield(hasLoaded ? 'finished' : 'failed');
+          Scheduler.yieldValue(hasLoaded ? 'finished' : 'failed');
         }
         return null;
       }
@@ -169,7 +169,7 @@ describe('createSubscription', () => {
       });
 
       function render(value = 'default') {
-        ReactNoop.yield(value);
+        Scheduler.yieldValue(value);
         return null;
       }
 
@@ -203,7 +203,7 @@ describe('createSubscription', () => {
       });
 
       function render(hasLoaded) {
-        ReactNoop.yield('rendered');
+        Scheduler.yieldValue('rendered');
         return null;
       }
 
@@ -235,7 +235,7 @@ describe('createSubscription', () => {
     });
 
     function render(value = 'default') {
-      ReactNoop.yield(value);
+      Scheduler.yieldValue(value);
       return null;
     }
 
@@ -268,7 +268,7 @@ describe('createSubscription', () => {
     const log = [];
 
     function Child({value}) {
-      ReactNoop.yield('Child: ' + value);
+      Scheduler.yieldValue('Child: ' + value);
       return null;
     }
 
@@ -305,7 +305,7 @@ describe('createSubscription', () => {
         return (
           <Subscription source={this.state.observed}>
             {(value = 'default') => {
-              ReactNoop.yield('Subscriber: ' + value);
+              Scheduler.yieldValue('Subscriber: ' + value);
               return <Child value={value} />;
             }}
           </Subscription>
@@ -355,7 +355,7 @@ describe('createSubscription', () => {
     const log = [];
 
     function Child({value}) {
-      ReactNoop.yield('Child: ' + value);
+      Scheduler.yieldValue('Child: ' + value);
       return null;
     }
 
@@ -392,7 +392,7 @@ describe('createSubscription', () => {
         return (
           <Subscription source={this.state.observed}>
             {(value = 'default') => {
-              ReactNoop.yield('Subscriber: ' + value);
+              Scheduler.yieldValue('Subscriber: ' + value);
               return <Child value={value} />;
             }}
           </Subscription>
