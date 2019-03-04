@@ -17,22 +17,22 @@ describe('ReactTestRenderer.act()', () => {
       React.useEffect(() => {
         props.callback();
         setCtr(1);
-      });
+      }, []);
       return ctr;
     }
-    let called = false;
+    let calledLog = [];
     let root;
     act(() => {
       root = ReactTestRenderer.create(
         <App
           callback={() => {
-            called = true;
+            calledLog.push(calledLog.length);
           }}
         />,
       );
     });
 
-    expect(called).toBe(true);
+    expect(calledLog).toEqual([0]);
     expect(root.toJSON()).toEqual('1');
   });
 
@@ -69,37 +69,15 @@ describe('ReactTestRenderer.act()', () => {
       let root;
       ReactTestRenderer.act(() => {
         root = ReactTestRenderer.create(<App />);
+        Promise.resolve();
       });
-      // using this 'workaround' because it looks like this is how
-      // we're ticking over time in the other TestRenderer tests
+      // The TestRenderer needs a micro task before it advances
+      // but we can catch it with act()
       await act(async () => {
         await Promise.resolve();
       });
 
       expect(root.toJSON()).toEqual('1');
-
-      // await ReactTestRenderer.act(async () => {
-      //   // this test will fail
-      //   // claiming to only fire the effect after this act call has exited
-
-      //   // an odd situation
-      //   // the sync version of act does not call the effect
-      //   ReactTestRenderer.act(() => {
-      //     root = ReactTestRenderer.create(<App />);
-      //   });
-
-      //   // the first workaround is to use the async version, which oddly works
-
-      //   // another workaround is to do this -
-      //   // await null
-      //   // ReactTestRenderer.act(() => {});
-
-      // // the third workaround is the one up ^ there, which we use to pass this test
-
-      //   // this same test passes fine with the TestUtils sync version
-      //   // or the async version of TestRenderer.act(...)
-      // });
-      // expect(root.toJSON()).toEqual('1');
     });
   });
 });

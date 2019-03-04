@@ -38,19 +38,19 @@ describe('ReactTestUtils.act()', () => {
         return null;
       }
 
-      let called = false;
+      let calledLog = [];
       act(() => {
         ReactDOM.render(
           <App
             callback={() => {
-              called = true;
+              calledLog.push(calledLog.length);
             }}
           />,
           document.createElement('div'),
         );
       });
 
-      expect(called).toBe(true);
+      expect(calledLog).toEqual([0]);
     });
 
     it('flushes effects on every call', () => {
@@ -69,12 +69,12 @@ describe('ReactTestUtils.act()', () => {
       const container = document.createElement('div');
       // attach to body so events works
       document.body.appendChild(container);
-      let calledCtr = 0;
+      let calledCounter = 0;
       act(() => {
         ReactDOM.render(
           <App
             callback={val => {
-              calledCtr = val;
+              calledCounter = val;
             }}
           />,
           container,
@@ -90,11 +90,11 @@ describe('ReactTestUtils.act()', () => {
         click();
         click();
       });
-      expect(calledCtr).toBe(3);
+      expect(calledCounter).toBe(3);
       act(click);
-      expect(calledCtr).toBe(4);
+      expect(calledCounter).toBe(4);
       act(click);
-      expect(calledCtr).toBe(5);
+      expect(calledCounter).toBe(5);
       expect(button.innerHTML).toBe('5');
 
       document.body.removeChild(container);
@@ -254,7 +254,10 @@ describe('ReactTestUtils.act()', () => {
       // it's annoying that we have to wait a tick before this warning comes in
       await sleep(0);
       if (__DEV__) {
-        expect(console.error).toHaveBeenCalledTimes(1);
+        expect(console.error.calls.count()).toEqual(1);
+        expect(console.error.calls.argsFor(0)[0]).toMatch(
+          'You called act(async () => ...) without await.',
+        );
       }
     });
 

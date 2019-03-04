@@ -712,31 +712,28 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       ) {
         let called = false;
         if (__DEV__) {
-          setTimeout(() => {
-            if (!called) {
-              warningWithoutStack(
-                null,
-                'You called act() without awaiting its result. ' +
-                  'This could lead to unexpected testing behaviour, interleaving multiple act ' +
-                  'calls and mixing their scopes. You should - await act(async () => ...);',
-              );
-            }
-          }, 0);
+          Promise.resolve()
+            .then(() => {})
+            .then(() => {
+              if (!called) {
+                warningWithoutStack(
+                  null,
+                  'You called act() without awaiting its result. ' +
+                    'This could lead to unexpected testing behaviour, interleaving multiple act ' +
+                    'calls and mixing their scopes. You should - await act(async () => ...);',
+                );
+              }
+            });
         }
         return {
           then(successFn: () => mixed, errorFn: () => mixed) {
             called = true;
             return result.then(() => {
-              // annoyingly, scheduler.flushPassiveEffects doesn't actually flush effects
-              // for the no op renderer (by design?)
-              // so we use the 'hack' version here too
-              ReactNoop.flushPassiveEffects();
               return successFn();
             }, errorFn);
           },
         };
       } else {
-        ReactNoop.flushPassiveEffects();
         return {
           then() {
             if (__DEV__) {

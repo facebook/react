@@ -21,18 +21,18 @@ describe('ReactNoop.act()', () => {
       return null;
     }
 
-    let called = false;
+    let calledLog = [];
     ReactNoop.act(() => {
       ReactNoop.render(
         <App
           callback={() => {
-            called = true;
+            calledLog.push(calledLog.length);
           }}
         />,
       );
     });
     expect(Scheduler).toFlushWithoutYielding();
-    expect(called).toBe(true);
+    expect(calledLog).toEqual([0]);
   });
 
   it('should work with async/await', async () => {

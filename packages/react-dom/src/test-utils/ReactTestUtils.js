@@ -414,16 +414,18 @@ const ReactTestUtils = {
     ) {
       let called = false;
       if (__DEV__) {
-        setTimeout(() => {
-          if (!called) {
-            warningWithoutStack(
-              null,
-              'You called act(async () => ...) without await. ' +
-                'This could lead to unexpected testing behaviour, interleaving multiple act ' +
-                'calls and mixing their scopes. You should - await act(async () => ...);',
-            );
-          }
-        }, 0);
+        Promise.resolve()
+          .then(() => {})
+          .then(() => {
+            if (!called) {
+              warningWithoutStack(
+                null,
+                'You called act(async () => ...) without await. ' +
+                  'This could lead to unexpected testing behaviour, interleaving multiple act ' +
+                  'calls and mixing their scopes. You should - await act(async () => ...);',
+              );
+            }
+          });
       }
       return {
         then(successFn, errorFn) {
