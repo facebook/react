@@ -188,13 +188,19 @@ describe('ReactExpiration', () => {
       state = {text: store.text};
       componentDidMount() {
         subscribers.push(this);
-        Scheduler.yieldValue(`${this.state.text} [${this.props.label}] [commit]`);
+        Scheduler.yieldValue(
+          `${this.state.text} [${this.props.label}] [commit]`,
+        );
       }
       componentDidUpdate() {
-        Scheduler.yieldValue(`${this.state.text} [${this.props.label}] [commit]`);
+        Scheduler.yieldValue(
+          `${this.state.text} [${this.props.label}] [commit]`,
+        );
       }
       render() {
-        Scheduler.yieldValue(`${this.state.text} [${this.props.label}] [render]`);
+        Scheduler.yieldValue(
+          `${this.state.text} [${this.props.label}] [render]`,
+        );
         return <span prop={this.state.text} />;
       }
     }
