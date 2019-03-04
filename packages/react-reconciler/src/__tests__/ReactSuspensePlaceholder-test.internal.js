@@ -21,7 +21,7 @@ runPlaceholderTests('ReactSuspensePlaceholder (persistence)', () =>
 function runPlaceholderTests(suiteLabel, loadReactNoop) {
   let Profiler;
   let React;
-  let ReactTestRenderer;
+  let ReactNoop;
   let Scheduler;
   let ReactFeatureFlags;
   let ReactCache;
@@ -38,7 +38,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
       ReactFeatureFlags.enableProfilerTimer = true;
       ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
       React = require('react');
-      ReactTestRenderer = require('react-test-renderer');
+      ReactNoop = require('react-noop-renderer');
       Scheduler = require('scheduler');
       ReactCache = require('react-cache');
 
@@ -134,9 +134,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
       }
 
       // Initial mount
-      const root = ReactTestRenderer.create(<App middleText="B" />, {
-        unstable_isConcurrent: true,
-      });
+      ReactNoop.render(<App middleText="B" />);
 
       expect(Scheduler).toFlushAndYield([
         'A',
@@ -144,14 +142,14 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
         'C',
         'Loading...',
       ]);
-      expect(root).toMatchRenderedOutput(null);
+      expect(ReactNoop).toMatchRenderedOutput(null);
 
       jest.advanceTimersByTime(1000);
       expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
 
       expect(Scheduler).toFlushAndYield(['A', 'B', 'C']);
 
-      expect(root).toMatchRenderedOutput(
+      expect(ReactNoop).toMatchRenderedOutput(
         <React.Fragment>
           <span hidden={true}>A</span>
           <span>B</span>
@@ -160,13 +158,20 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
       );
 
       // Update
-      root.update(<App middleText="B2" />);
+      ReactNoop.render(<App middleText="B2" />);
       expect(Scheduler).toFlushAndYield(['Suspend! [B2]', 'C', 'Loading...']);
 
       // Time out the update
       jest.advanceTimersByTime(750);
       expect(Scheduler).toFlushAndYield([]);
-      expect(root).toMatchRenderedOutput('Loading...');
+      expect(ReactNoop).toMatchRenderedOutput(
+        <React.Fragment>
+          <span hidden={true}>A</span>
+          <span hidden={true}>B</span>
+          <span hidden={true}>C</span>
+          Loading...
+        </React.Fragment>,
+      );
 
       // Resolve the promise
       jest.advanceTimersByTime(1000);
@@ -175,7 +180,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
 
       // Render the final update. A should still be hidden, because it was
       // given a `hidden` prop.
-      expect(root).toMatchRenderedOutput(
+      expect(ReactNoop).toMatchRenderedOutput(
         <React.Fragment>
           <span hidden={true}>A</span>
           <span>B2</span>
@@ -196,9 +201,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
       }
 
       // Initial mount
-      const root = ReactTestRenderer.create(<App middleText="B" />, {
-        unstable_isConcurrent: true,
-      });
+      ReactNoop.render(<App middleText="B" />);
 
       expect(Scheduler).toFlushAndYield([
         'A',
@@ -207,15 +210,15 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
         'Loading...',
       ]);
 
-      expect(root).toMatchRenderedOutput(null);
+      expect(ReactNoop).toMatchRenderedOutput(null);
 
       jest.advanceTimersByTime(1000);
       expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
       expect(Scheduler).toFlushAndYield(['A', 'B', 'C']);
-      expect(root).toMatchRenderedOutput('ABC');
+      expect(ReactNoop).toMatchRenderedOutput('ABC');
 
       // Update
-      root.update(<App middleText="B2" />);
+      ReactNoop.render(<App middleText="B2" />);
       expect(Scheduler).toFlushAndYield([
         'A',
         'Suspend! [B2]',
@@ -225,7 +228,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
       // Time out the update
       jest.advanceTimersByTime(750);
       expect(Scheduler).toFlushAndYield([]);
-      expect(root).toMatchRenderedOutput('Loading...');
+      expect(ReactNoop).toMatchRenderedOutput('Loading...');
 
       // Resolve the promise
       jest.advanceTimersByTime(1000);
@@ -234,7 +237,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
 
       // Render the final update. A should still be hidden, because it was
       // given a `hidden` prop.
-      expect(root).toMatchRenderedOutput('AB2C');
+      expect(ReactNoop).toMatchRenderedOutput('AB2C');
     });
 
     describe('profiler durations', () => {
@@ -272,8 +275,15 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
 
       describe('when suspending during mount', () => {
         it('properly accounts for base durations when a suspended times out in a sync tree', () => {
-          const root = ReactTestRenderer.create(<App shouldSuspend={true} />);
-          expect(root.toJSON()).toEqual('Loading...');
+          ReactNoop.renderLegacySyncRoot(<App shouldSuspend={true} />);
+          expect(Scheduler).toHaveYielded([
+            'App',
+            'Suspending',
+            'Suspend! [Loaded]',
+            'Text',
+            'Fallback',
+          ]);
+          expect(ReactNoop).toMatchRenderedOutput('Loading...');
           expect(onRender).toHaveBeenCalledTimes(1);
 
           // Initial mount only shows the "Loading..." Fallback.
@@ -284,7 +294,11 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
 
           jest.advanceTimersByTime(1000);
 
-          expect(root.toJSON()).toEqual(['Loaded', 'Text']);
+          expect(Scheduler).toHaveYielded([
+            'Promise resolved [Loaded]',
+            'Loaded',
+          ]);
+          expect(ReactNoop).toMatchRenderedOutput('LoadedText');
           expect(onRender).toHaveBeenCalledTimes(2);
 
           // When the suspending data is resolved and our final UI is rendered,
@@ -295,9 +309,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
         });
 
         it('properly accounts for base durations when a suspended times out in a concurrent tree', () => {
-          const root = ReactTestRenderer.create(<App shouldSuspend={true} />, {
-            unstable_isConcurrent: true,
-          });
+          ReactNoop.render(<App shouldSuspend={true} />);
 
           expect(Scheduler).toFlushAndYield([
             'App',
@@ -306,11 +318,11 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
             'Text',
             'Fallback',
           ]);
-          expect(root).toMatchRenderedOutput(null);
+          expect(ReactNoop).toMatchRenderedOutput(null);
 
           // Show the fallback UI.
           jest.advanceTimersByTime(750);
-          expect(root).toMatchRenderedOutput('Loading...');
+          expect(ReactNoop).toMatchRenderedOutput('Loading...');
           expect(onRender).toHaveBeenCalledTimes(1);
 
           // Initial mount only shows the "Loading..." Fallback.
@@ -323,7 +335,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
           jest.advanceTimersByTime(250);
           expect(Scheduler).toHaveYielded(['Promise resolved [Loaded]']);
           expect(Scheduler).toFlushAndYield(['Suspending', 'Loaded', 'Text']);
-          expect(root).toMatchRenderedOutput('LoadedText');
+          expect(ReactNoop).toMatchRenderedOutput('LoadedText');
           expect(onRender).toHaveBeenCalledTimes(2);
 
           // When the suspending data is resolved and our final UI is rendered,
@@ -335,10 +347,11 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
 
       describe('when suspending during update', () => {
         it('properly accounts for base durations when a suspended times out in a sync tree', () => {
-          const root = ReactTestRenderer.create(
+          ReactNoop.renderLegacySyncRoot(
             <App shouldSuspend={false} textRenderDuration={5} />,
           );
-          expect(root.toJSON()).toEqual('Text');
+          expect(Scheduler).toHaveYielded(['App', 'Text']);
+          expect(ReactNoop).toMatchRenderedOutput('Text');
           expect(onRender).toHaveBeenCalledTimes(1);
 
           // Initial mount only shows the "Text" text.
@@ -346,8 +359,15 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
           expect(onRender.mock.calls[0][2]).toBe(5);
           expect(onRender.mock.calls[0][3]).toBe(5);
 
-          root.update(<App shouldSuspend={true} textRenderDuration={5} />);
-          expect(root.toJSON()).toEqual('Loading...');
+          ReactNoop.render(<App shouldSuspend={true} textRenderDuration={5} />);
+          expect(Scheduler).toHaveYielded([
+            'App',
+            'Suspending',
+            'Suspend! [Loaded]',
+            'Text',
+            'Fallback',
+          ]);
+          expect(ReactNoop).toMatchRenderedOutput('Loading...');
           expect(onRender).toHaveBeenCalledTimes(2);
 
           // The suspense update should only show the "Loading..." Fallback.
@@ -356,10 +376,17 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
           expect(onRender.mock.calls[1][2]).toBe(18);
           expect(onRender.mock.calls[1][3]).toBe(18);
 
-          root.update(
+          ReactNoop.renderLegacySyncRoot(
             <App shouldSuspend={true} text="New" textRenderDuration={6} />,
           );
-          expect(root.toJSON()).toEqual('Loading...');
+          expect(Scheduler).toHaveYielded([
+            'App',
+            'Suspending',
+            'Suspend! [Loaded]',
+            'New',
+            'Fallback',
+          ]);
+          expect(ReactNoop).toMatchRenderedOutput('Loading...');
           expect(onRender).toHaveBeenCalledTimes(3);
 
           // If we force another update while still timed out,
@@ -370,7 +397,11 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
 
           jest.advanceTimersByTime(1000);
 
-          expect(root.toJSON()).toEqual(['Loaded', 'New']);
+          expect(Scheduler).toHaveYielded([
+            'Promise resolved [Loaded]',
+            'Loaded',
+          ]);
+          expect(ReactNoop).toMatchRenderedOutput('LoadedNew');
           expect(onRender).toHaveBeenCalledTimes(4);
 
           // When the suspending data is resolved and our final UI is rendered,
@@ -381,15 +412,12 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
         });
 
         it('properly accounts for base durations when a suspended times out in a concurrent tree', () => {
-          const root = ReactTestRenderer.create(
+          ReactNoop.render(
             <App shouldSuspend={false} textRenderDuration={5} />,
-            {
-              unstable_isConcurrent: true,
-            },
           );
 
           expect(Scheduler).toFlushAndYield(['App', 'Text']);
-          expect(root).toMatchRenderedOutput('Text');
+          expect(ReactNoop).toMatchRenderedOutput('Text');
           expect(onRender).toHaveBeenCalledTimes(1);
 
           // Initial mount only shows the "Text" text.
@@ -397,7 +425,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
           expect(onRender.mock.calls[0][2]).toBe(5);
           expect(onRender.mock.calls[0][3]).toBe(5);
 
-          root.update(<App shouldSuspend={true} textRenderDuration={5} />);
+          ReactNoop.render(<App shouldSuspend={true} textRenderDuration={5} />);
           expect(Scheduler).toFlushAndYield([
             'App',
             'Suspending',
@@ -405,11 +433,11 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
             'Text',
             'Fallback',
           ]);
-          expect(root).toMatchRenderedOutput('Text');
+          expect(ReactNoop).toMatchRenderedOutput('Text');
 
           // Show the fallback UI.
           jest.advanceTimersByTime(750);
-          expect(root).toMatchRenderedOutput('Loading...');
+          expect(ReactNoop).toMatchRenderedOutput('Loading...');
           expect(onRender).toHaveBeenCalledTimes(2);
 
           // The suspense update should only show the "Loading..." Fallback.
@@ -421,7 +449,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
           expect(onRender.mock.calls[1][3]).toBe(15);
 
           // Update again while timed out.
-          root.update(
+          ReactNoop.render(
             <App shouldSuspend={true} text="New" textRenderDuration={6} />,
           );
           expect(Scheduler).toFlushAndYield([
@@ -431,7 +459,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
             'New',
             'Fallback',
           ]);
-          expect(root).toMatchRenderedOutput('Loading...');
+          expect(ReactNoop).toMatchRenderedOutput('Loading...');
           expect(onRender).toHaveBeenCalledTimes(2);
 
           // Resolve the pending promise.
