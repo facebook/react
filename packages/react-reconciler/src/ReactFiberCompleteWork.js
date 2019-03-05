@@ -16,6 +16,7 @@ import type {
   Props,
   Container,
   ChildSet,
+  HostContext,
 } from './ReactFiberHostConfig';
 
 import {
@@ -50,6 +51,7 @@ import {
 import invariant from 'shared/invariant';
 
 import {
+  getRootHostContext,
   createInstance,
   createTextInstance,
   createHiddenTextInstance,
@@ -105,6 +107,8 @@ if (supportsMutation) {
   appendAllChildren = function(
     parent: Instance,
     workInProgress: Fiber,
+    rootContainerInstance: Container,
+    childHostContext: HostContext,
     needsVisibilityToggle: boolean,
     isHidden: boolean,
   ) {
@@ -137,7 +141,11 @@ if (supportsMutation) {
     }
   };
 
-  updateHostContainer = function(workInProgress: Fiber) {
+  updateHostContainer = function(
+    workInProgress: Fiber,
+    rootContainerInstance: Container,
+    childHostContext: HostContext,
+  ) {
     // Noop
   };
   updateHostComponent = function(
@@ -146,6 +154,7 @@ if (supportsMutation) {
     type: Type,
     newProps: Props,
     rootContainerInstance: Container,
+    childHostContext: HostContext,
   ) {
     // If we have an alternate, that means this is an update and we need to
     // schedule a side-effect to do the updates.
@@ -198,6 +207,8 @@ if (supportsMutation) {
   appendAllChildren = function(
     parent: Instance,
     workInProgress: Fiber,
+    rootContainerInstance: Container,
+    childHostContext: HostContext,
     needsVisibilityToggle: boolean,
     isHidden: boolean,
   ) {
@@ -227,20 +238,18 @@ if (supportsMutation) {
         let instance = node.stateNode;
         if (needsVisibilityToggle) {
           const text = node.memoizedProps;
-          const rootContainerInstance = getRootHostContainer();
-          const currentHostContext = getHostContext();
           if (isHidden) {
             instance = createHiddenTextInstance(
               text,
               rootContainerInstance,
-              currentHostContext,
+              childHostContext,
               workInProgress,
             );
           } else {
             instance = createTextInstance(
               text,
               rootContainerInstance,
-              currentHostContext,
+              childHostContext,
               workInProgress,
             );
           }
@@ -258,13 +267,27 @@ if (supportsMutation) {
           if (newIsHidden) {
             const primaryChildParent = node.child;
             if (primaryChildParent !== null) {
-              appendAllChildren(parent, primaryChildParent, true, newIsHidden);
+              appendAllChildren(
+                parent,
+                primaryChildParent,
+                rootContainerInstance,
+                childHostContext,
+                true,
+                newIsHidden,
+              );
               node = primaryChildParent.sibling;
               continue;
             }
           } else {
             const primaryChildParent = node;
-            appendAllChildren(parent, primaryChildParent, true, newIsHidden);
+            appendAllChildren(
+              parent,
+              primaryChildParent,
+              rootContainerInstance,
+              childHostContext,
+              true,
+              newIsHidden,
+            );
             // eslint-disable-next-line no-labels
             break branches;
           }
@@ -300,6 +323,8 @@ if (supportsMutation) {
   const appendAllChildrenToContainer = function(
     containerChildSet: ChildSet,
     workInProgress: Fiber,
+    rootContainerInstance: Container,
+    rootHostContext: HostContext,
     needsVisibilityToggle: boolean,
     isHidden: boolean,
   ) {
@@ -329,20 +354,18 @@ if (supportsMutation) {
         let instance = node.stateNode;
         if (needsVisibilityToggle) {
           const text = node.memoizedProps;
-          const rootContainerInstance = getRootHostContainer();
-          const currentHostContext = getHostContext();
           if (isHidden) {
             instance = createHiddenTextInstance(
               text,
               rootContainerInstance,
-              currentHostContext,
+              rootHostContext,
               workInProgress,
             );
           } else {
             instance = createTextInstance(
               text,
               rootContainerInstance,
-              currentHostContext,
+              rootHostContext,
               workInProgress,
             );
           }
@@ -363,6 +386,8 @@ if (supportsMutation) {
               appendAllChildrenToContainer(
                 containerChildSet,
                 primaryChildParent,
+                rootContainerInstance,
+                rootHostContext,
                 true,
                 newIsHidden,
               );
@@ -374,6 +399,8 @@ if (supportsMutation) {
             appendAllChildrenToContainer(
               containerChildSet,
               primaryChildParent,
+              rootContainerInstance,
+              rootHostContext,
               true,
               newIsHidden,
             );
@@ -407,7 +434,11 @@ if (supportsMutation) {
       node = node.sibling;
     }
   };
-  updateHostContainer = function(workInProgress: Fiber) {
+  updateHostContainer = function(
+    workInProgress: Fiber,
+    rootContainerInstance: Container,
+    rootHostContext: HostContext,
+  ) {
     const portalOrRoot: {
       containerInfo: Container,
       pendingChildren: ChildSet,
@@ -420,7 +451,14 @@ if (supportsMutation) {
       const container = portalOrRoot.containerInfo;
       let newChildSet = createContainerChildSet(container);
       // If children might have changed, we have to add them all to the set.
-      appendAllChildrenToContainer(newChildSet, workInProgress, false, false);
+      appendAllChildrenToContainer(
+        newChildSet,
+        workInProgress,
+        rootContainerInstance,
+        rootHostContext,
+        false,
+        false,
+      );
       portalOrRoot.pendingChildren = newChildSet;
       // Schedule an update on the container to swap out the container.
       markUpdate(workInProgress);
@@ -433,6 +471,7 @@ if (supportsMutation) {
     type: Type,
     newProps: Props,
     rootContainerInstance: Container,
+    childHostContext: HostContext,
   ) {
     const currentInstance = current.stateNode;
     const oldProps = current.memoizedProps;
@@ -493,7 +532,14 @@ if (supportsMutation) {
       markUpdate(workInProgress);
     } else {
       // If children might have changed, we have to add them all to the set.
-      appendAllChildren(newInstance, workInProgress, false, false);
+      appendAllChildren(
+        newInstance,
+        workInProgress,
+        rootContainerInstance,
+        childHostContext,
+        false,
+        false,
+      );
     }
   };
   updateHostText = function(
@@ -519,7 +565,11 @@ if (supportsMutation) {
   };
 } else {
   // No host operations
-  updateHostContainer = function(workInProgress: Fiber) {
+  updateHostContainer = function(
+    workInProgress: Fiber,
+    rootContainerInstance: Container,
+    hostContext: HostContext,
+  ) {
     // Noop
   };
   updateHostComponent = function(
@@ -528,6 +578,7 @@ if (supportsMutation) {
     type: Type,
     newProps: Props,
     rootContainerInstance: Container,
+    childHostContext: HostContext,
   ) {
     // Noop
   };
@@ -564,10 +615,6 @@ function completeWork(
       break;
     }
     case HostRoot: {
-      // In persistent mode, updateHostContainer may need to create new
-      // instances, so this needs to happen before we push/pop the contexts.
-      updateHostContainer(workInProgress);
-
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
       const fiberRoot = (workInProgress.stateNode: FiberRoot);
@@ -583,11 +630,19 @@ function completeWork(
         // TODO: Delete this when we delete isMounted and findDOMNode.
         workInProgress.effectTag &= ~Placement;
       }
+      const rootContainerInstance = fiberRoot.containerInfo;
+      const rootHostContext = getRootHostContext(rootContainerInstance);
+      updateHostContainer(
+        workInProgress,
+        rootContainerInstance,
+        rootHostContext,
+      );
       break;
     }
     case HostComponent: {
-      popHostContext(workInProgress);
       const rootContainerInstance = getRootHostContainer();
+      const childHostContext = getHostContext();
+      popHostContext(workInProgress);
       const type = workInProgress.type;
       if (current !== null && workInProgress.stateNode != null) {
         updateHostComponent(
@@ -596,6 +651,7 @@ function completeWork(
           type,
           newProps,
           rootContainerInstance,
+          childHostContext,
         );
 
         if (current.ref !== workInProgress.ref) {
@@ -641,7 +697,14 @@ function completeWork(
             workInProgress,
           );
 
-          appendAllChildren(instance, workInProgress, false, false);
+          appendAllChildren(
+            instance,
+            workInProgress,
+            rootContainerInstance,
+            childHostContext,
+            false,
+            false,
+          );
 
           // Certain renderers require commit-time effects for initial mount.
           // (eg DOM renderer supports auto-focus for certain elements).
@@ -755,8 +818,14 @@ function completeWork(
     case Profiler:
       break;
     case HostPortal:
+      const rootContainerInstance = getRootHostContainer();
+      const childHostContext = getHostContext();
       popHostContainer(workInProgress);
-      updateHostContainer(workInProgress);
+      updateHostContainer(
+        workInProgress,
+        rootContainerInstance,
+        childHostContext,
+      );
       break;
     case ContextProvider:
       // Pop provider fiber

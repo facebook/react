@@ -237,6 +237,63 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
       expect(ReactNoop).toMatchRenderedOutput('AB2C');
     });
 
+    it('preserves host context for text nodes', () => {
+      function App(props) {
+        return (
+          // uppercase is a special type that causes React Noop to render child
+          // text nodes as uppercase.
+          <uppercase>
+            <Suspense maxDuration={500} fallback={<Text text="Loading..." />}>
+              <Text text="a" />
+              <AsyncText ms={1000} text={props.middleText} />
+              <Text text="c" />
+            </Suspense>
+          </uppercase>
+        );
+      }
+
+      // Initial mount
+      ReactNoop.render(<App middleText="b" />);
+
+      expect(Scheduler).toFlushAndYield([
+        'a',
+        'Suspend! [b]',
+        'c',
+        'Loading...',
+      ]);
+
+      expect(ReactNoop).toMatchRenderedOutput(null);
+
+      jest.advanceTimersByTime(1000);
+      expect(Scheduler).toHaveYielded(['Promise resolved [b]']);
+      expect(Scheduler).toFlushAndYield(['a', 'b', 'c']);
+      expect(ReactNoop).toMatchRenderedOutput(<uppercase>ABC</uppercase>);
+
+      // Update
+      ReactNoop.render(<App middleText="b2" />);
+      expect(Scheduler).toFlushAndYield([
+        'a',
+        'Suspend! [b2]',
+        'c',
+        'Loading...',
+      ]);
+      // Time out the update
+      jest.advanceTimersByTime(750);
+      expect(Scheduler).toFlushAndYield([]);
+      expect(ReactNoop).toMatchRenderedOutput(
+        <uppercase>LOADING...</uppercase>,
+      );
+
+      // Resolve the promise
+      jest.advanceTimersByTime(1000);
+      expect(Scheduler).toHaveYielded(['Promise resolved [b2]']);
+      expect(Scheduler).toFlushAndYield(['a', 'b2', 'c']);
+
+      // Render the final update. A should still be hidden, because it was
+      // given a `hidden` prop.
+      expect(ReactNoop).toMatchRenderedOutput(<uppercase>AB2C</uppercase>);
+    });
+
     describe('profiler durations', () => {
       let App;
       let onRender;
