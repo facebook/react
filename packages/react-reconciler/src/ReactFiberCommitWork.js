@@ -1174,7 +1174,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
             newInstance => {
               // Some hosts cannot mutate instances, in that case the reconciler can
               // call this method in order to signal that it has created a new instance.
-              [finishedWork, current$$1].forEach(fiber => {
+              [finishedWork, current].forEach(fiber => {
                 if (fiber !== null) {
                   fiber.stateNode = newInstance;
                   if (fiber.ref) {
