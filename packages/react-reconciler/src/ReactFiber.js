@@ -15,6 +15,7 @@ import type {SideEffectTag} from 'shared/ReactSideEffectTags';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {UpdateQueue} from './ReactUpdateQueue';
 import type {ContextDependencyList} from './ReactFiberNewContext';
+import type {HookType} from './ReactFiberHooks';
 
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
@@ -204,6 +205,9 @@ export type Fiber = {|
   _debugSource?: Source | null,
   _debugOwner?: Fiber | null,
   _debugIsCurrentlyTiming?: boolean,
+
+  // Used to verify that the order of hooks does not change between renders.
+  _debugHookTypes?: Array<HookType> | null,
 |};
 
 let debugCounter;
@@ -285,6 +289,7 @@ function FiberNode(
     this._debugSource = null;
     this._debugOwner = null;
     this._debugIsCurrentlyTiming = false;
+    this._debugHookTypes = null;
     if (!hasBadMapPolyfill && typeof Object.preventExtensions === 'function') {
       Object.preventExtensions(this);
     }
@@ -370,6 +375,7 @@ export function createWorkInProgress(
       workInProgress._debugID = current._debugID;
       workInProgress._debugSource = current._debugSource;
       workInProgress._debugOwner = current._debugOwner;
+      workInProgress._debugHookTypes = current._debugHookTypes;
     }
 
     workInProgress.alternate = current;
@@ -723,5 +729,6 @@ export function assignFiberPropertiesInDEV(
   target._debugSource = source._debugSource;
   target._debugOwner = source._debugOwner;
   target._debugIsCurrentlyTiming = source._debugIsCurrentlyTiming;
+  target._debugHookTypes = source._debugHookTypes;
   return target;
 }

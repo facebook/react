@@ -427,4 +427,42 @@ describe('ReactHooksInspectionIntegration', () => {
     expect(setterCalls[0]).not.toBe(initial);
     expect(setterCalls[1]).toBe(initial);
   });
+
+  // This test case is based on an open source bug report:
+  // facebookincubator/redux-react-hook/issues/34#issuecomment-466693787
+  it('should properly advance the current hook for useContext', () => {
+    const MyContext = React.createContext(1);
+
+    let incrementCount;
+
+    function Foo(props) {
+      const context = React.useContext(MyContext);
+      const [data, setData] = React.useState({count: context});
+
+      incrementCount = () => setData(({count}) => ({count: count + 1}));
+
+      return <div>count: {data.count}</div>;
+    }
+
+    const renderer = ReactTestRenderer.create(<Foo />);
+    expect(renderer.toJSON()).toEqual({
+      type: 'div',
+      props: {},
+      children: ['count: ', '1'],
+    });
+
+    act(incrementCount);
+    expect(renderer.toJSON()).toEqual({
+      type: 'div',
+      props: {},
+      children: ['count: ', '2'],
+    });
+
+    const childFiber = renderer.root._currentFiber();
+    const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    expect(tree).toEqual([
+      {name: 'Context', value: 1, subHooks: []},
+      {name: 'State', value: {count: 2}, subHooks: []},
+    ]);
+  });
 });
