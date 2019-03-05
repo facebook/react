@@ -209,6 +209,22 @@ function updateHookTypesDev() {
   }
 }
 
+function checkDepsAreArrayDev(deps: mixed) {
+  if (__DEV__) {
+    if (deps !== undefined && deps !== null && !Array.isArray(deps)) {
+      // Verify deps, but only on mount to avoid extra checks.
+      // It's unlikely their type would change as usually you define them inline.
+      warning(
+        false,
+        '%s received a final argument that is not an array (instead, received `%s`). When ' +
+          'specified, the final argument must be an array.',
+        currentHookNameInDev,
+        typeof deps,
+      );
+    }
+  }
+}
+
 function warnOnHookMismatchInDev(currentHookName: HookType) {
   if (__DEV__) {
     const componentName = getComponentName(
@@ -1249,6 +1265,7 @@ if (__DEV__) {
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
       mountHookTypesDev();
+      checkDepsAreArrayDev(deps);
       return mountCallback(callback, deps);
     },
     useContext<T>(
@@ -1265,6 +1282,7 @@ if (__DEV__) {
     ): void {
       currentHookNameInDev = 'useEffect';
       mountHookTypesDev();
+      checkDepsAreArrayDev(deps);
       return mountEffect(create, deps);
     },
     useImperativeHandle<T>(
@@ -1274,6 +1292,7 @@ if (__DEV__) {
     ): void {
       currentHookNameInDev = 'useImperativeHandle';
       mountHookTypesDev();
+      checkDepsAreArrayDev(deps);
       return mountImperativeHandle(ref, create, deps);
     },
     useLayoutEffect(
@@ -1282,11 +1301,13 @@ if (__DEV__) {
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
       mountHookTypesDev();
+      checkDepsAreArrayDev(deps);
       return mountLayoutEffect(create, deps);
     },
     useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useMemo';
       mountHookTypesDev();
+      checkDepsAreArrayDev(deps);
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
       try {
