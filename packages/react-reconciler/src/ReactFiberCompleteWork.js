@@ -253,20 +253,17 @@ if (supportsMutation) {
         // down its children. Instead, we'll get insertions from each child in
         // the portal directly.
       } else if (node.tag === SuspenseComponent) {
-        const current = node.alternate;
-        if (current !== null) {
-          const oldState: SuspenseState = current.memoizedState;
-          const newState: SuspenseState = node.memoizedState;
-          const oldIsHidden = oldState !== null;
-          const newIsHidden = newState !== null;
-          if (oldIsHidden !== newIsHidden) {
-            // The placeholder either just timed out or switched back to the normal
-            // children after having previously timed out. Toggle the visibility of
-            // the direct host children.
-            const primaryChildParent = newIsHidden ? node.child : node;
-            if (primaryChildParent !== null) {
-              appendAllChildren(parent, primaryChildParent, true, newIsHidden);
-            }
+        if ((node.effectTag & Update) !== NoEffect) {
+          // Need to toggle the visibility of the primary children.
+          const newIsHidden = node.memoizedState !== null;
+          if (newIsHidden) {
+            const primaryChildParent = node.child;
+            appendAllChildren(parent, primaryChildParent, true, newIsHidden);
+            node = primaryChildParent.sibling;
+            continue;
+          } else {
+            const primaryChildParent = node;
+            appendAllChildren(parent, primaryChildParent, true, newIsHidden);
             // eslint-disable-next-line no-labels
             break branches;
           }
@@ -356,25 +353,27 @@ if (supportsMutation) {
         // down its children. Instead, we'll get insertions from each child in
         // the portal directly.
       } else if (node.tag === SuspenseComponent) {
-        const current = node.alternate;
-        if (current !== null) {
-          const oldState: SuspenseState = current.memoizedState;
-          const newState: SuspenseState = node.memoizedState;
-          const oldIsHidden = oldState !== null;
-          const newIsHidden = newState !== null;
-          if (oldIsHidden !== newIsHidden) {
-            // The placeholder either just timed out or switched back to the normal
-            // children after having previously timed out. Toggle the visibility of
-            // the direct host children.
-            const primaryChildParent = newIsHidden ? node.child : node;
-            if (primaryChildParent !== null) {
-              appendAllChildrenToContainer(
-                containerChildSet,
-                primaryChildParent,
-                true,
-                newIsHidden,
-              );
-            }
+        if ((node.effectTag & Update) !== NoEffect) {
+          // Need to toggle the visibility of the primary children.
+          const newIsHidden = node.memoizedState !== null;
+          if (newIsHidden) {
+            const primaryChildParent = node.child;
+            appendAllChildrenToContainer(
+              containerChildSet,
+              primaryChildParent,
+              true,
+              newIsHidden,
+            );
+            node = primaryChildParent.sibling;
+            continue;
+          } else {
+            const primaryChildParent = node;
+            appendAllChildrenToContainer(
+              containerChildSet,
+              primaryChildParent,
+              true,
+              newIsHidden,
+            );
             // eslint-disable-next-line no-labels
             break branches;
           }
@@ -562,6 +561,10 @@ function completeWork(
       break;
     }
     case HostRoot: {
+      // In persistent mode, updateHostContainer may need to create new
+      // instances, so this needs to happen before we push/pop the contexts.
+      updateHostContainer(workInProgress);
+
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
       const fiberRoot = (workInProgress.stateNode: FiberRoot);
@@ -577,7 +580,6 @@ function completeWork(
         // TODO: Delete this when we delete isMounted and findDOMNode.
         workInProgress.effectTag &= ~Placement;
       }
-      updateHostContainer(workInProgress);
       break;
     }
     case HostComponent: {

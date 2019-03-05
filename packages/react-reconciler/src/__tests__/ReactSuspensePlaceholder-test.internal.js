@@ -8,12 +8,9 @@
  * @jest-environment node
  */
 
-// TODO: This does nothing since it was migrated from noop renderer to test
-// renderer! Switch back to noop renderer, or add persistent mode to test
-// renderer, or merge the two renderers into one somehow.
-// runPlaceholderTests('ReactSuspensePlaceholder (mutation)', () =>
-//   require('react-noop-renderer'),
-// );
+runPlaceholderTests('ReactSuspensePlaceholder (mutation)', () =>
+  require('react-noop-renderer'),
+);
 runPlaceholderTests('ReactSuspensePlaceholder (persistence)', () =>
   require('react-noop-renderer/persistent'),
 );
@@ -38,7 +35,7 @@ function runPlaceholderTests(suiteLabel, loadReactNoop) {
       ReactFeatureFlags.enableProfilerTimer = true;
       ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
       React = require('react');
-      ReactNoop = require('react-noop-renderer');
+      ReactNoop = loadReactNoop();
       Scheduler = require('scheduler');
       ReactCache = require('react-cache');
 
