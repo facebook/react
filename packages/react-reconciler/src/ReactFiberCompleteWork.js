@@ -17,7 +17,6 @@ import type {
   Container,
   ChildSet,
 } from './ReactFiberHostConfig';
-import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import {
   IndeterminateComponent,
@@ -258,9 +257,11 @@ if (supportsMutation) {
           const newIsHidden = node.memoizedState !== null;
           if (newIsHidden) {
             const primaryChildParent = node.child;
-            appendAllChildren(parent, primaryChildParent, true, newIsHidden);
-            node = primaryChildParent.sibling;
-            continue;
+            if (primaryChildParent !== null) {
+              appendAllChildren(parent, primaryChildParent, true, newIsHidden);
+              node = primaryChildParent.sibling;
+              continue;
+            }
           } else {
             const primaryChildParent = node;
             appendAllChildren(parent, primaryChildParent, true, newIsHidden);
@@ -358,14 +359,16 @@ if (supportsMutation) {
           const newIsHidden = node.memoizedState !== null;
           if (newIsHidden) {
             const primaryChildParent = node.child;
-            appendAllChildrenToContainer(
-              containerChildSet,
-              primaryChildParent,
-              true,
-              newIsHidden,
-            );
-            node = primaryChildParent.sibling;
-            continue;
+            if (primaryChildParent !== null) {
+              appendAllChildrenToContainer(
+                containerChildSet,
+                primaryChildParent,
+                true,
+                newIsHidden,
+              );
+              node = primaryChildParent.sibling;
+              continue;
+            }
           } else {
             const primaryChildParent = node;
             appendAllChildrenToContainer(
