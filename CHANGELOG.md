@@ -6,6 +6,12 @@
   </summary>
 </details>
 
+## 16.8.4 (March 5, 2019)
+
+### React DOM and other renderers
+
+- Fix a bug where DevTools caused a runtime error when inspecting a component that used a `useContext` hook. ([@bvaughn](https://github.com/bvaughn) in [#14940](https://github.com/facebook/react/pull/14940))
+
 ## 16.8.3 (February 21, 2019)
 
 ### React DOM
