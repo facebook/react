@@ -1,4 +1,4 @@
-import {useEffect, useReducer, useState} from 'react';
+import {useEffect, useState} from 'react';
 
 export function useSubscription({
   // This is the thing being subscribed to (e.g. an observable, event dispatcher, etc).
@@ -39,25 +39,35 @@ export function useSubscription({
   // (Learn more at https://codesandbox.io/s/k0yvr5970o)
   useEffect(
     () => {
+      let didUnsubscribe = false;
+
       const checkForUpdates = () => {
-        setState(state => {
+        // It's possible that this callback will be invoked even after being unsubscribed,
+        // if it's removed as a result of an event/update from the source.
+        // In this case, React will log a DEV warning about an update from an unmounted component.
+        // We can avoid triggering that warning with this check.
+        if (didUnsubscribe) {
+          return;
+        }
+
+        setState(prevState => {
           // Ignore values from stale sources!
           // Since we subscribe an unsubscribe in a passive effect,
           // it's possible that this callback will be invoked for a stale (previous) source.
           // This check avoids scheduling an update for htat stale source.
-          if (state.source !== source) {
-            return state;
+          if (prevState.source !== source) {
+            return prevState;
           }
 
           // Some subscription sources will auto-invoke the handler, even if the value hasn't changed.
           // If the value hasn't changed, no update is needed.
           // Return state as-is so React can bail out and avoid an unnecessary render.
           const value = getCurrentValue(source);
-          if (state.value === value) {
-            return state;
+          if (prevState.value === value) {
+            return prevState;
           }
 
-          return { ...state, value };
+          return {...prevState, value};
         });
       };
       const unsubscribe = subscribe(source, checkForUpdates);
@@ -67,7 +77,10 @@ export function useSubscription({
       // Check for this and schedule an update if work has occurred.
       checkForUpdates();
 
-      return () => unsubscribe();
+      return () => {
+        didUnsubscribe = true;
+        unsubscribe();
+      };
     },
     [getCurrentValue, source, subscribe],
   );

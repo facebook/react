@@ -354,4 +354,57 @@ describe('useSubscription', () => {
       'Parent.componentDidUpdate',
     ]);
   });
+
+  it('should guard against updates that happen after unmounting', () => {
+    const Subscription = createSubscription({
+      getCurrentValue: source => source.getValue(),
+      subscribe: (source, callback) => {
+        return source.subscribe(callback);
+      },
+    });
+
+    const eventHandler = {
+      _callbacks: [],
+      _value: true,
+      change(value) {
+        eventHandler._value = value;
+        const _callbacks = eventHandler._callbacks.slice(0);
+        _callbacks.forEach(callback => callback(value));
+      },
+      getValue() {
+        return eventHandler._value;
+      },
+      subscribe(callback) {
+        eventHandler._callbacks.push(callback);
+        return () => {
+          eventHandler._callbacks.splice(
+            eventHandler._callbacks.indexOf(callback),
+            1,
+          );
+        };
+      },
+    };
+
+    eventHandler.subscribe(value => {
+      if (value === false) {
+        renderer.unmount();
+        expect(Scheduler).toFlushAndYield([]);
+      }
+    });
+
+    const renderer = ReactTestRenderer.create(
+      <Subscription source={eventHandler}>
+        {({value}) => {
+          Scheduler.yieldValue(value);
+          return null;
+        }}
+      </Subscription>,
+      {unstable_isConcurrent: true},
+    );
+
+    expect(Scheduler).toFlushAndYield([true]);
+
+    // This event should unmount
+    eventHandler.change(false);
+  });
 });
