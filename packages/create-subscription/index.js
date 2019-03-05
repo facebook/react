@@ -10,3 +10,4 @@
 'use strict';
 
 export * from './src/createSubscription';
+export * from './src/useSubscription';
