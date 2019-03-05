@@ -34,6 +34,22 @@ export default {
         : undefined;
     const options = {additionalHooks};
 
+    // Should be shared between visitors.
+    let staticKnownValueCache = new WeakMap();
+    let functionWithoutCapturedValueCache = new WeakMap();
+    function memoizeWithWeakMap(fn, map) {
+      return function(arg) {
+        if (map.has(arg)) {
+          // to verify cache hits:
+          // console.log(arg.name)
+          return map.get(arg);
+        }
+        const result = fn(arg);
+        map.set(arg, result);
+        return result;
+      };
+    }
+
     return {
       FunctionExpression: visitFunctionExpression,
       ArrowFunctionExpression: visitFunctionExpression,
@@ -105,6 +121,153 @@ export default {
         componentScope = currentScope;
       }
 
+      // Next we'll define a few helpers that helps us
+      // tell if some values don't have to be declared as deps.
+
+      // Some are known to be static based on Hook calls.
+      // const [state, setState] = useState() / React.useState()
+      //               ^^^ true for this reference
+      // const [state, dispatch] = useReducer() / React.useReducer()
+      //               ^^^ true for this reference
+      // const ref = useRef()
+      //       ^^^ true for this reference
+      // False for everything else.
+      function isStaticKnownHookValue(resolved) {
+        if (!Array.isArray(resolved.defs)) {
+          return false;
+        }
+        const def = resolved.defs[0];
+        if (def == null) {
+          return false;
+        }
+        // Look for `let stuff = ...`
+        if (def.node.type !== 'VariableDeclarator') {
+          return false;
+        }
+        const init = def.node.init;
+        if (init == null) {
+          return false;
+        }
+        // Detect primitive constants
+        // const foo = 42
+        const declaration = def.node.parent;
+        if (
+          declaration.kind === 'const' &&
+          init.type === 'Literal' &&
+          (typeof init.value === 'string' ||
+            typeof init.value === 'number' ||
+            init.value === null)
+        ) {
+          // Definitely static
+          return true;
+        }
+        // Detect known Hook calls
+        // const [_, setState] = useState()
+        if (init.type !== 'CallExpression') {
+          return false;
+        }
+        let callee = init.callee;
+        // Step into `= React.something` initializer.
+        if (
+          callee.type === 'MemberExpression' &&
+          callee.object.name === 'React' &&
+          callee.property != null &&
+          !callee.computed
+        ) {
+          callee = callee.property;
+        }
+        if (callee.type !== 'Identifier') {
+          return false;
+        }
+        const id = def.node.id;
+        if (callee.name === 'useRef' && id.type === 'Identifier') {
+          // useRef() return value is static.
+          return true;
+        } else if (callee.name === 'useState' || callee.name === 'useReducer') {
+          // Only consider second value in initializing tuple static.
+          if (
+            id.type === 'ArrayPattern' &&
+            id.elements.length === 2 &&
+            Array.isArray(resolved.identifiers) &&
+            // Is second tuple value the same reference we're checking?
+            id.elements[1] === resolved.identifiers[0]
+          ) {
+            return true;
+          }
+        }
+        // By default assume it's dynamic.
+        return false;
+      }
+
+      // Some are just functions that don't reference anything dynamic.
+      function isFunctionWithoutCapturedValues(resolved) {
+        if (!Array.isArray(resolved.defs)) {
+          return false;
+        }
+        const def = resolved.defs[0];
+        if (def == null) {
+          return false;
+        }
+        if (def.node == null || def.node.id == null) {
+          return false;
+        }
+        // Search the direct component subscopes for
+        // top-level function definitions matching this reference.
+        const fnNode = def.node;
+        let childScopes = componentScope.childScopes;
+        let fnScope = null;
+        let i;
+        for (i = 0; i < childScopes.length; i++) {
+          let childScope = childScopes[i];
+          let childScopeBlock = childScope.block;
+          if (
+            // function handleChange() {}
+            (fnNode.type === 'FunctionDeclaration' &&
+              childScopeBlock === fnNode) ||
+            // const handleChange = () => {}
+            // const handleChange = function() {}
+            (fnNode.type === 'VariableDeclarator' &&
+              childScopeBlock.parent === fnNode)
+          ) {
+            // Found it!
+            fnScope = childScope;
+            break;
+          }
+        }
+        if (fnScope == null) {
+          return false;
+        }
+        // Does this function capture any values
+        // that are in pure scopes (aka render)?
+        for (i = 0; i < fnScope.through.length; i++) {
+          const ref = fnScope.through[i];
+          if (ref.resolved == null) {
+            continue;
+          }
+          if (
+            pureScopes.has(ref.resolved.scope) &&
+            // Static values are fine though,
+            // although we won't check functions deeper.
+            !memoizedIsStaticKnownHookValue(ref.resolved)
+          ) {
+            return false;
+          }
+        }
+        // If we got here, this function doesn't capture anything
+        // from render--or everything it captures is known static.
+        return true;
+      }
+
+      // Remember such values. Avoid re-running extra checks on them.
+      const memoizedIsStaticKnownHookValue = memoizeWithWeakMap(
+        isStaticKnownHookValue,
+        staticKnownValueCache,
+      );
+      const memoizedIsFunctionWithoutCapturedValues = memoizeWithWeakMap(
+        isFunctionWithoutCapturedValues,
+        functionWithoutCapturedValueCache,
+      );
+
       // These are usually mistaken. Collect them.
       const currentRefsInEffectCleanup = new Map();
 
@@ -172,7 +335,10 @@ export default {
           // Add the dependency to a map so we can make sure it is referenced
           // again in our dependencies array. Remember whether it's static.
           if (!dependencies.has(dependency)) {
-            const isStatic = isDefinitelyStaticDependency(reference);
+            const resolved = reference.resolved;
+            const isStatic =
+              memoizedIsStaticKnownHookValue(resolved) ||
+              memoizedIsFunctionWithoutCapturedValues(resolved);
             dependencies.set(dependency, {
               isStatic,
               reference,
@@ -776,83 +942,6 @@ function getReactiveHookCallbackIndex(calleeNode, options) {
         return -1;
       }
   }
-}
-
-// const [state, setState] = useState() / React.useState()
-//               ^^^ true for this reference
-// const [state, dispatch] = useReducer() / React.useReducer()
-//               ^^^ true for this reference
-// const ref = useRef()
-//       ^^^ true for this reference
-// False for everything else.
-function isDefinitelyStaticDependency(reference) {
-  // This function is written defensively because I'm not sure about corner cases.
-  // TODO: we can strengthen this if we're sure about the types.
-  const resolved = reference.resolved;
-  if (resolved == null || !Array.isArray(resolved.defs)) {
-    return false;
-  }
-  const def = resolved.defs[0];
-  if (def == null) {
-    return false;
-  }
-  // Look for `let stuff = ...`
-  if (def.node.type !== 'VariableDeclarator') {
-    return false;
-  }
-  const init = def.node.init;
-  if (init == null) {
-    return false;
-  }
-  // Detect primitive constants
-  // const foo = 42
-  const declaration = def.node.parent;
-  if (
-    declaration.kind === 'const' &&
-    init.type === 'Literal' &&
-    (typeof init.value === 'string' ||
-      typeof init.value === 'number' ||
-      init.value === null)
-  ) {
-    // Definitely static
-    return true;
-  }
-  // Detect known Hook calls
-  // const [_, setState] = useState()
-  if (init.type !== 'CallExpression') {
-    return false;
-  }
-  let callee = init.callee;
-  // Step into `= React.something` initializer.
-  if (
-    callee.type === 'MemberExpression' &&
-    callee.object.name === 'React' &&
-    callee.property != null &&
-    !callee.computed
-  ) {
-    callee = callee.property;
-  }
-  if (callee.type !== 'Identifier') {
-    return false;
-  }
-  const id = def.node.id;
-  if (callee.name === 'useRef' && id.type === 'Identifier') {
-    // useRef() return value is static.
-    return true;
-  } else if (callee.name === 'useState' || callee.name === 'useReducer') {
-    // Only consider second value in initializing tuple static.
-    if (
-      id.type === 'ArrayPattern' &&
-      id.elements.length === 2 &&
-      Array.isArray(reference.resolved.identifiers) &&
-      // Is second tuple value the same reference we're checking?
-      id.elements[1] === reference.resolved.identifiers[0]
-    ) {
-      return true;
-    }
-  }
-  // By default assume it's dynamic.
-  return false;
 }
 
 /**
