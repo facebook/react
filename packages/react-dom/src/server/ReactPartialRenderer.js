@@ -673,6 +673,7 @@ class ReactDOMServerRenderer {
   previousWasTextNode: boolean;
   makeStaticMarkup: boolean;
   suspenseDepth: number;
+  domRootIndex: number;
 
   contextIndex: number;
   contextStack: Array<ReactContext<any>>;
@@ -702,6 +703,7 @@ class ReactDOMServerRenderer {
     this.previousWasTextNode = false;
     this.makeStaticMarkup = makeStaticMarkup;
     this.suspenseDepth = 0;
+    this.domRootIndex = 0;
 
     // Context (new API)
     this.contextIndex = -1;
@@ -811,6 +813,9 @@ class ReactDOMServerRenderer {
           const footer = frame.footer;
           if (footer !== '') {
             this.previousWasTextNode = false;
+          }
+          if (this.stack.length === this.domRootIndex) {
+            this.domRootIndex = 0;
           }
           this.stack.pop();
           if (frame.type === 'select') {
@@ -1419,7 +1424,7 @@ class ReactDOMServerRenderer {
       props,
       namespace,
       this.makeStaticMarkup,
-      this.stack.length === 1,
+      this.domRootIndex === 0,
     );
     let footer = '';
     if (omittedCloseTags.hasOwnProperty(tag)) {
@@ -1462,6 +1467,9 @@ class ReactDOMServerRenderer {
     }
     this.stack.push(frame);
     this.previousWasTextNode = false;
+    if (this.domRootIndex === 0) {
+      this.domRootIndex = this.stack.length;
+    }
     return out;
   }
 }

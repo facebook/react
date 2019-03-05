@@ -421,8 +421,12 @@ describe('ReactDOMServerIntegration', () => {
       streamAmy._read(20);
       streamBob._read(20);
 
-      expect(streamAmy.read()).toBe('<header>Amy</header><footer>Amy</footer>');
-      expect(streamBob.read()).toBe('<header>Bob</header><footer>Bob</footer>');
+      expect(streamAmy.read()).toBe(
+        '<header data-reactroot="">Amy</header><footer data-reactroot="">Amy</footer>',
+      );
+      expect(streamBob.read()).toBe(
+        '<header data-reactroot="">Bob</header><footer data-reactroot="">Bob</footer>',
+      );
     });
 
     it('does not pollute parallel node streams when many are used', () => {
@@ -478,7 +482,11 @@ describe('ReactDOMServerIntegration', () => {
       // Assert that all stream rendered the expected output.
       for (let i = 0; i < streamCount; i++) {
         expect(streams[i].read()).toBe(
-          '<header>' + i + '</header><footer>' + i + '</footer>',
+          '<header data-reactroot="">' +
+            i +
+            '</header><footer data-reactroot="">' +
+            i +
+            '</footer>',
         );
       }
     });
