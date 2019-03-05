@@ -179,6 +179,16 @@ const tests = {
       `,
     },
     {
+      // Valid because they have meaning without deps.
+      code: `
+        function MyComponent(props) {
+          useEffect(() => {});
+          useLayoutEffect(() => {});
+          useImperativeHandle(props.innerRef, () => {});
+        }
+      `,
+    },
+    {
       code: `
         function MyComponent(props) {
           useEffect(() => {
@@ -922,6 +932,26 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'local'. " +
           'Either include it or remove the dependency array.',
+      ],
+    },
+    {
+      // Invalid because they don't have a meaning without deps.
+      code: `
+        function MyComponent(props) {
+          const value = useMemo(() => { return 2*2; });
+          const fn = useCallback(() => { alert('foo'); });
+        }
+      `,
+      // We don't know what you meant.
+      output: `
+        function MyComponent(props) {
+          const value = useMemo(() => { return 2*2; });
+          const fn = useCallback(() => { alert('foo'); });
+        }
+      `,
+      errors: [
+        "React Hook useMemo doesn't serve any purpose without a dependency array as a second argument.",
+        "React Hook useCallback doesn't serve any purpose without a dependency array as a second argument.",
       ],
     },
     {
