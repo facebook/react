@@ -1,0 +1,24 @@
+{
+  "private": true,
+  "name": "react-hooks",
+  "description": "Reusable hooks",
+  "version": "16.8.3",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "packages/react-hooks"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "build-info.json",
+    "index.js",
+    "cjs/"
+  ],
+  "peerDependencies": {
+    "react": "^16.3.0"
+  },
+  "devDependencies": {
+    "rxjs": "^5.5.6"
+  }
+}

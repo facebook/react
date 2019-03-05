@@ -22,7 +22,7 @@ describe('useSubscription', () => {
     jest.resetModules();
     jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 
-    useSubscription = require('create-subscription').useSubscription;
+    useSubscription = require('react-hooks').useSubscription;
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
