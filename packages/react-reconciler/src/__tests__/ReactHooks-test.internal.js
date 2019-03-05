@@ -642,6 +642,7 @@ describe('ReactHooks', () => {
       useCallback(() => {}, props.deps);
       return null;
     }
+
     expect(() => {
       ReactTestRenderer.create(<App deps={'hello'} />);
     }).toWarnDev([
@@ -697,22 +698,6 @@ describe('ReactHooks', () => {
       'Warning: useImperativeHandle received a final argument that is not an array (instead, received `string`). ' +
         'When specified, the final argument must be an array.',
     ]);
-    expect(() => {
-      expect(() => {
-        ReactTestRenderer.create(<App deps={100500} />);
-      }).toWarnDev([
-        'Warning: useImperativeHandle received a final argument that is not an array (instead, received `number`). ' +
-          'When specified, the final argument must be an array.',
-      ]);
-    }).toThrow('deps.concat is not a function');
-    expect(() => {
-      expect(() => {
-        ReactTestRenderer.create(<App deps={{}} />);
-      }).toWarnDev([
-        'Warning: useImperativeHandle received a final argument that is not an array (instead, received `object`). ' +
-          'When specified, the final argument must be an array.',
-      ]);
-    }).toThrow('deps.concat is not a function');
     ReactTestRenderer.create(<App deps={[]} />);
     ReactTestRenderer.create(<App deps={null} />);
     ReactTestRenderer.create(<App deps={undefined} />);
