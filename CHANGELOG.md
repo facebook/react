@@ -16,7 +16,7 @@
 ### React DOM Server
 * Unwind the context stack when a stream is destroyed without completing, to prevent incorrect values during a subsequent render. ([@overlookmotel](https://github.com/overlookmotel) in [#14706](https://github.com/facebook/react/pull/14706/))
 
-## ESLint Plugin for React Hooks
+### ESLint Plugin for React Hooks
 
 * Add a new recommended `exhaustive-deps` rule. ([@gaearon](https://github.com/gaearon) in [#14636](https://github.com/facebook/react/pull/14636))
 
