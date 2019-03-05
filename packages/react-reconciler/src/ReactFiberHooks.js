@@ -1265,6 +1265,17 @@ if (__DEV__) {
     ): void {
       currentHookNameInDev = 'useEffect';
       mountHookTypesDev();
+      if (deps !== undefined && deps !== null && !Array.isArray(deps)) {
+        // Verify deps, but only on mount to avoid extra checks.
+        // It's unlikely their type would change as usually you define them inline.
+        warning(
+          false,
+          '%s received a final argument that is not an array (instead, received `%s`). When ' +
+            'specified, the final argument must be an array.',
+          currentHookNameInDev,
+          typeof deps,
+        );
+      }
       return mountEffect(create, deps);
     },
     useImperativeHandle<T>(

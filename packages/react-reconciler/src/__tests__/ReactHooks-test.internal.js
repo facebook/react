@@ -632,6 +632,36 @@ describe('ReactHooks', () => {
     ]);
   });
 
+  it('warns if deps is not an array', () => {
+    const {useEffect} = React;
+
+    function App(props) {
+      useEffect(() => {}, props.deps);
+      return null;
+    }
+    expect(() => {
+      ReactTestRenderer.create(<App deps={'hello'} />);
+    }).toWarnDev([
+      'Warning: useEffect received a final argument that is not an array (instead, received `string`). ' +
+        'When specified, the final argument must be an array.',
+    ]);
+    expect(() => {
+      ReactTestRenderer.create(<App deps={100500} />);
+    }).toWarnDev([
+      'Warning: useEffect received a final argument that is not an array (instead, received `number`). ' +
+        'When specified, the final argument must be an array.',
+    ]);
+    expect(() => {
+      ReactTestRenderer.create(<App deps={{}} />);
+    }).toWarnDev([
+      'Warning: useEffect received a final argument that is not an array (instead, received `object`). ' +
+        'When specified, the final argument must be an array.',
+    ]);
+    ReactTestRenderer.create(<App deps={[]} />);
+    ReactTestRenderer.create(<App deps={null} />);
+    ReactTestRenderer.create(<App deps={undefined} />);
+  });
+
   it('assumes useEffect clean-up function is either a function or undefined', () => {
     const {useLayoutEffect} = React;
 
