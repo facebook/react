@@ -378,7 +378,7 @@ function getPlugins(
     shouldStayReadable && prettier({parser: 'babylon'}),
     // License and haste headers, top-level `if` blocks.
     {
-      transformBundle(source) {
+      renderChunk(source) {
         return Wrappers.wrapBundle(
           source,
           bundleType,
@@ -502,11 +502,6 @@ async function createBundle(bundle, bundleType) {
       bundle.moduleType,
       pureExternalModules
     ),
-    // We can't use getters in www.
-    legacy:
-      bundleType === FB_WWW_DEV ||
-      bundleType === FB_WWW_PROD ||
-      bundleType === FB_WWW_PROFILING,
   };
   const [mainOutputPath, ...otherOutputPaths] = Packaging.getBundleOutputPaths(
     bundleType,
@@ -559,7 +554,10 @@ function handleRollupWarning(warning) {
     return;
   }
 
-  if (typeof warning.code === 'string') {
+  if (
+    typeof warning.code === 'string' &&
+    warning.code !== 'CIRCULAR_DEPENDENCY'
+  ) {
     // This is a warning coming from Rollup itself.
     // These tend to be important (e.g. clashes in namespaced exports)
     // so we'll fail the build on any of them.
