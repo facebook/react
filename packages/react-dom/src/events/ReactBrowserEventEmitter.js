@@ -93,10 +93,15 @@ const elementListeningObjects:
       ElementListeningObject,
     > = new PossiblyWeakMap();
 
-// We store legacy events we listen where we don't use
-// passive/non-passive options on the event listener.
-// For event listeners that are passive/non-passive, we store
-// them in nonLegacy so they do not conflict.
+// This object will contain both legacy and non legacy events.
+// In the case of legacy events, we register an event listener
+// without passing an object with { passive, capture } etc to
+// third argument of the addEventListener call (we use a boolean).
+// For non legacy events, we register an event listener with
+// an object (third argument) with the passive property. We also
+// double listen for the event on the element, as we need to check
+// both paths (where passive is both true and false) so we can
+// handle logic in either case.
 export type ElementListeningObject = {
   legacy: Set<DOMTopLevelEventType>,
   nonLegacy: Set<DOMTopLevelEventType>,
