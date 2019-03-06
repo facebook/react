@@ -16,6 +16,7 @@ export const {
   debugRenderPhaseSideEffectsForStrictMode,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   warnAboutDeprecatedLifecycles,
+  disableJavaScriptURLs,
   disableInputAttributeSyncing,
   warnAboutShorthandPropertyCollision,
   warnAboutDeprecatedSetNativeProps,

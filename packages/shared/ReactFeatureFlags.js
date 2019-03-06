@@ -42,6 +42,9 @@ export function addUserTimingListener() {
   throw new Error('Not implemented.');
 }
 
+// Disable javascript: URL strings in href for XSS protection.
+export const disableJavaScriptURLs = false;
+
 // React Fire: prevent the value and checked attributes from syncing
 // with their related DOM properties
 export const disableInputAttributeSyncing = false;

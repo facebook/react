@@ -15,6 +15,7 @@ import {
   BOOLEAN,
   OVERLOADED_BOOLEAN,
 } from '../shared/DOMProperty';
+import sanitizeURL from '../shared/sanitizeURL';
 
 import type {PropertyInfo} from '../shared/DOMProperty';
 
@@ -164,6 +165,9 @@ export function setValueForProperty(
       // `setAttribute` with objects becomes only `[object]` in IE8/9,
       // ('' + value) makes it output the correct toString()-value.
       attributeValue = '' + (value: any);
+      if (propertyInfo.sanitizeURL) {
+        sanitizeURL(attributeValue);
+      }
     }
     if (attributeNamespace) {
       node.setAttributeNS(attributeNamespace, attributeName, attributeValue);

@@ -20,6 +20,7 @@ export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const enableProfilerTimer = __PROFILE__;
 export const enableSchedulerTracing = __PROFILE__;
 export const enableSuspenseServerRenderer = false;
+export const disableJavaScriptURLs = false;
 export const disableInputAttributeSyncing = false;
 export const enableStableConcurrentModeAPIs = false;
 export const warnAboutShorthandPropertyCollision = false;
