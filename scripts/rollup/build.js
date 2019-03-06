@@ -30,7 +30,9 @@ let loggedErrors = new Set();
 process.on('unhandledRejection', err => {
   if (loggedErrors.has(err)) {
     // No need to print it twice.
-    console.error('React build has been explicitly stopped due to errors in promises');
+    console.error(
+      'React build has been explicitly stopped due to errors in promises'
+    );
     process.exit(1);
   }
   throw err;
@@ -567,7 +569,9 @@ function handleRollupWarning(warning) {
     console.error();
     console.error(warning.message || warning);
     console.error();
-    console.error('React build has been explicitly stopped due to Rollup warnings');
+    console.error(
+      'React build has been explicitly stopped due to Rollup warnings'
+    );
     process.exit(1);
   } else {
     // The warning is from one of the plugins.
