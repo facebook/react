@@ -85,10 +85,11 @@ import isEventSupported from './isEventSupported';
  *    React Core     .  General Purpose Event Plugin System
  */
 
-const elementListeningObjects: WeakMap<
+const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
+const elementListeningObjects: WeakMap|Map<
   Document | Element | Node,
   ElementListeningObject,
-> = new WeakMap();
+> = new PossiblyWeakMap();
 
 // We store legacy events we listen where we don't use
 // passive/non-passive options on the event listener.
