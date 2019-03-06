@@ -1,8 +1,8 @@
 // @flow
 
 import React, { Fragment, useCallback, useRef, useState } from 'react';
-import Button from './Button';
-import ButtonIcon from './ButtonIcon';
+import Button from '../Button';
+import ButtonIcon from '../ButtonIcon';
 import styles from './EditableValue.css';
 
 type OverrideValueFn = (path: Array<string | number>, value: any) => void;

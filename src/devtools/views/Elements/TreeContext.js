@@ -25,9 +25,9 @@ import React, {
   useMemo,
   useReducer,
 } from 'react';
-import { createRegExp } from './utils';
-import { BridgeContext, StoreContext } from './context';
-import Store from '../store';
+import { createRegExp } from '../utils';
+import { BridgeContext, StoreContext } from '../context';
+import Store from '../../store';
 
 import type { Element } from 'src/devtools/types';
 

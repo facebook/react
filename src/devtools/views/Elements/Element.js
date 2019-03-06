@@ -9,10 +9,10 @@ import React, {
   useRef,
 } from 'react';
 import { ElementTypeClass, ElementTypeFunction } from 'src/devtools/types';
-import { createRegExp } from './utils';
+import { createRegExp } from '../utils';
 import { TreeContext } from './TreeContext';
 
-import type { Element } from '../types';
+import type { Element } from '../../types';
 
 import styles from './Element.css';
 

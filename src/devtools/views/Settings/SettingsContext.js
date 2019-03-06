@@ -1,9 +1,9 @@
 // @flow
 
 import React, { createContext, useLayoutEffect, useMemo } from 'react';
-import { useLocalStorage } from './hooks';
+import { useLocalStorage } from '../hooks';
 
-import type { BrowserTheme } from './DevTools';
+import type { BrowserTheme } from '../DevTools';
 
 export type DisplayDensity = 'compact' | 'comfortable';
 export type Theme = 'auto' | 'light' | 'dark';

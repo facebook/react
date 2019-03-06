@@ -3,12 +3,12 @@
 import React, { useState } from 'react';
 import Store from '../store';
 import { BridgeContext, StoreContext } from './context';
-import Elements from './Elements';
-import Profiler from './Profiler';
-import Settings from './Settings';
+import Elements from './Elements/Elements';
+import Profiler from './Profiler/Profiler';
+import Settings from './Settings/Settings';
 import TabBar from './TabBar';
-import { SettingsContextController } from './SettingsContext';
-import { TreeContextController } from './TreeContext';
+import { SettingsContextController } from './Settings/SettingsContext';
+import { TreeContextController } from './Elements/TreeContext';
 
 import styles from './DevTools.css';
 

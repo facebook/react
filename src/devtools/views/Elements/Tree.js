@@ -10,7 +10,7 @@ import React, {
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList } from 'react-window';
 import { TreeContext } from './TreeContext';
-import { SettingsContext } from './SettingsContext';
+import { SettingsContext } from '../Settings/SettingsContext';
 import Element from './Element';
 import InspectHostNodesToggle from './InspectHostNodesToggle';
 import OwnersStack from './OwnersStack';

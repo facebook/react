@@ -1,12 +1,12 @@
 // @flow
 
 import React, { useCallback, useContext } from 'react';
-import Button from './Button';
-import ButtonIcon from './ButtonIcon';
+import Button from '../Button';
+import ButtonIcon from '../ButtonIcon';
 import { TreeContext } from './TreeContext';
-import { StoreContext } from './context';
+import { StoreContext } from '../context';
 
-import type { Element } from '../types';
+import type { Element } from '../../types';
 
 import styles from './OwnersStack.css';
 

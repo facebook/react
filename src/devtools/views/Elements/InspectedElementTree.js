@@ -2,10 +2,10 @@
 
 import { copy } from 'clipboard-js';
 import React, { useCallback } from 'react';
-import Button from './Button';
-import ButtonIcon from './ButtonIcon';
+import Button from '../Button';
+import ButtonIcon from '../ButtonIcon';
 import KeyValue from './KeyValue';
-import { serializeDataForCopy } from './utils';
+import { serializeDataForCopy } from '../utils';
 import styles from './InspectedElementTree.css';
 
 type OverrideValueFn = (path: Array<string | number>, value: any) => void;

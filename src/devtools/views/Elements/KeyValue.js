@@ -2,8 +2,8 @@
 
 import React from 'react';
 import EditableValue from './EditableValue';
-import { getMetaValueLabel } from './utils';
-import { meta } from '../../hydration';
+import { getMetaValueLabel } from '../utils';
+import { meta } from '../../../hydration';
 import styles from './KeyValue.css';
 
 type OverrideValueFn = (path: Array<string | number>, value: any) => void;

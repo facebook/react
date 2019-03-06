@@ -8,16 +8,16 @@ import React, {
   useState,
 } from 'react';
 import { TreeContext } from './TreeContext';
-import { BridgeContext, StoreContext } from './context';
-import Button from './Button';
-import ButtonIcon from './ButtonIcon';
+import { BridgeContext, StoreContext } from '../context';
+import Button from '../Button';
+import ButtonIcon from '../ButtonIcon';
 import HooksTree from './HooksTree';
 import InspectedElementTree from './InspectedElementTree';
 import { hydrate } from 'src/hydration';
 import styles from './SelectedElement.css';
-import { ElementTypeClass, ElementTypeFunction } from '../types';
+import { ElementTypeClass, ElementTypeFunction } from '../../types';
 
-import type { InspectedElement } from '../types';
+import type { InspectedElement } from '../../types';
 import type { DehydratedData, Element } from 'src/devtools/types';
 
 export type Props = {||};

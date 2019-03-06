@@ -2,9 +2,9 @@
 
 import React, { useCallback, useContext, useEffect, useRef } from 'react';
 import { TreeContext } from './TreeContext';
-import Button from './Button';
-import ButtonIcon from './ButtonIcon';
-import Icon from './Icon';
+import Button from '../Button';
+import ButtonIcon from '../ButtonIcon';
+import Icon from '../Icon';
 
 import styles from './SearchInput.css';
 

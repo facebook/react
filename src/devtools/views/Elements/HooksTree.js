@@ -2,12 +2,12 @@
 
 import { copy } from 'clipboard-js';
 import React, { useCallback, useContext } from 'react';
-import { BridgeContext, StoreContext } from './context';
-import Button from './Button';
-import ButtonIcon from './ButtonIcon';
+import { BridgeContext, StoreContext } from '../context';
+import Button from '../Button';
+import ButtonIcon from '../ButtonIcon';
 import EditableValue from './EditableValue';
 import KeyValue from './KeyValue';
-import { serializeHooksForCopy } from './utils';
+import { serializeHooksForCopy } from '../utils';
 import styles from './HooksTree.css';
 
 import type { HooksNode, HooksTree } from 'src/backend/types';

@@ -1,9 +1,9 @@
 // @flow
 
 import React, { useCallback, useContext, useEffect, useState } from 'react';
-import { BridgeContext } from './context';
-import Toggle from './Toggle';
-import ButtonIcon from './ButtonIcon';
+import { BridgeContext } from '../context';
+import Toggle from '../Toggle';
+import ButtonIcon from '../ButtonIcon';
 
 export default function InspectHostNodesToggle() {
   const [isInspecting, setIsInspecting] = useState(false);
