@@ -37,7 +37,6 @@
     "babylon": "6.18.0",
     "chalk": "^1.1.3",
     "cli-table": "^0.3.1",
-    "coffee-script": "^1.8.0",
     "core-js": "^2.2.1",
     "coveralls": "^2.11.6",
     "create-react-class": "^15.6.3",
@@ -83,7 +82,6 @@
     "targz": "^1.0.1",
     "through2": "^2.0.0",
     "tmp": "~0.0.28",
-    "typescript": "~1.8.10",
     "@mattiasbuelens/web-streams-polyfill": "0.1.0"
   },
   "devEngines": {
