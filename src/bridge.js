@@ -23,7 +23,7 @@ export default class Bridge extends EventEmitter {
     this._wall = wall;
 
     wall.listen((message: Message) => {
-      this._emit(message);
+      this.emit(message.event, message.payload);
     });
   }
 
@@ -40,12 +40,12 @@ export default class Bridge extends EventEmitter {
       if (now - time > BATCH_DURATION) {
         this._flush();
       } else {
-        this._timeoutID = setTimeout(() => this._flush(), BATCH_DURATION);
+        this._timeoutID = setTimeout(this._flush, BATCH_DURATION);
       }
     }
   }
 
-  _flush() {
+  _flush = () => {
     while (this._messageQueue.length) {
       this._wall.send.apply(this._wall, this._messageQueue.splice(0, 3));
     }
@@ -57,9 +57,5 @@ export default class Bridge extends EventEmitter {
 
     this._messageQueue = [];
     this._time = null;
-  }
-
-  _emit(message: Message) {
-    this.emit(message.event, message.payload);
-  }
+  };
 }

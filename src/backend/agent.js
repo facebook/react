@@ -202,9 +202,27 @@ export default class Agent extends EventEmitter {
   onHookOperations = (operations: Uint32Array) => {
     debug('onHookOperations', operations);
 
-    // TODO The chrome.runtime does not currently support transferables; it forces JSON serialization.
+    // TODO:
+    // The chrome.runtime does not currently support transferables; it forces JSON serialization.
+    // See bug https://bugs.chromium.org/p/chromium/issues/detail?id=927134
+    //
+    // Regarding transferables, the postMessage doc states:
+    // If the ownership of an object is transferred, it becomes unusable (neutered)
+    // in the context it was sent from and becomes available only to the worker it was sent to.
+    //
+    // Even though Chrome is eventually JSON serializing the array buffer,
+    // using the transferable approach also sometimes causes it to throw:
+    //   DOMException: Failed to execute 'postMessage' on 'Window': ArrayBuffer at index 0 is already neutered.
+    //
+    // See bug https://github.com/bvaughn/react-devtools-experimental/issues/25
+    //
     // The Store has a fallback in place that parses the message as JSON if the type isn't an array.
-    this._bridge.send('operations', operations, [operations.buffer]);
+    // For now the simplest fix seems to be to not transfer the array.
+    // This will negatively impact performance on Firefox so it's unfortunate,
+    // but until we're able to fix the Chrome error mentioned above, it seems necessary.
+    //
+    // this._bridge.send('operations', operations, [operations.buffer]);
+    this._bridge.send('operations', operations);
   };
 
   _onClick = (event: MouseEvent) => {
