@@ -27,6 +27,14 @@ const {isInteractiveTopLevelEventType} = SimpleEventPlugin;
 const CALLBACK_BOOKKEEPING_POOL_SIZE = 10;
 const callbackBookkeepingPool = [];
 
+type BookKeepingInstance = {
+  topLevelType: DOMTopLevelEventType | null,
+  nativeEvent: AnyNativeEvent | null,
+  targetInst: Fiber | null,
+  ancestors: Array<Fiber | null>,
+  passive: null | boolean,
+};
+
 /**
  * Find the deepest React component completely containing the root of the
  * passed-in instance (for use when entire React trees are nested within each
@@ -48,17 +56,11 @@ function findRootContainerNode(inst) {
 
 // Used to store ancestor hierarchy in top level callback
 function getTopLevelCallbackBookKeeping(
-  topLevelType: ?DOMTopLevelEventType,
-  nativeEvent: ?AnyNativeEvent,
+  topLevelType: DOMTopLevelEventType,
+  nativeEvent: AnyNativeEvent,
   targetInst: Fiber | null,
   passive: null | boolean,
-): {
-  topLevelType: ?DOMTopLevelEventType,
-  nativeEvent: ?AnyNativeEvent,
-  targetInst: Fiber | null,
-  ancestors: Array<Fiber>,
-  passive: null | boolean,
-} {
+): BookKeepingInstance {
   if (callbackBookkeepingPool.length) {
     const instance = callbackBookkeepingPool.pop();
     instance.topLevelType = topLevelType;
@@ -76,7 +78,9 @@ function getTopLevelCallbackBookKeeping(
   };
 }
 
-function releaseTopLevelCallbackBookKeeping(instance) {
+function releaseTopLevelCallbackBookKeeping(
+  instance: BookKeepingInstance,
+): void {
   instance.topLevelType = null;
   instance.nativeEvent = null;
   instance.targetInst = null;
@@ -87,7 +91,7 @@ function releaseTopLevelCallbackBookKeeping(instance) {
   }
 }
 
-function handleTopLevel(bookKeeping) {
+function handleTopLevel(bookKeeping: BookKeepingInstance) {
   let targetInst = bookKeeping.targetInst;
 
   // Loop through the hierarchy, in case there's any nested components.
@@ -97,7 +101,8 @@ function handleTopLevel(bookKeeping) {
   let ancestor = targetInst;
   do {
     if (!ancestor) {
-      bookKeeping.ancestors.push(ancestor);
+      const ancestors = bookKeeping.ancestors;
+      ((ancestors: any): Array<Fiber | null>).push(ancestor);
       break;
     }
     const root = findRootContainerNode(ancestor);
@@ -111,9 +116,9 @@ function handleTopLevel(bookKeeping) {
   for (let i = 0; i < bookKeeping.ancestors.length; i++) {
     targetInst = bookKeeping.ancestors[i];
     runExtractedEventsInBatch(
-      bookKeeping.topLevelType,
+      ((bookKeeping.topLevelType: any): DOMTopLevelEventType),
       targetInst,
-      bookKeeping.nativeEvent,
+      ((bookKeeping.nativeEvent: any): AnyNativeEvent),
       getEventTarget(bookKeeping.nativeEvent),
       bookKeeping.passive,
     );
