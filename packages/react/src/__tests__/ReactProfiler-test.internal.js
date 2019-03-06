@@ -261,7 +261,7 @@ describe('Profiler', () => {
       it('does not record times for components outside of Profiler tree', () => {
         // Mock the Scheduler module so we can track how many times the current
         // time is read
-        jest.mock('scheduler/unstable_mock', obj => {
+        jest.mock('scheduler', obj => {
           const ActualScheduler = require.requireActual(
             'scheduler/unstable_mock',
           );
@@ -300,8 +300,10 @@ describe('Profiler', () => {
           'read current time',
         ]);
 
-        // Remove mock
-        jest.unmock('scheduler/unstable_mock');
+        // Restore original mock
+        jest.mock('scheduler', () =>
+          require.requireActual('scheduler/unstable_mock'),
+        );
       });
 
       it('logs render times for both mount and update', () => {

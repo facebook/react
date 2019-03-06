@@ -197,18 +197,10 @@ export function createTextInstance(
 }
 
 export const isPrimaryRenderer = false;
-// This approach enables `now` to be mocked by tests,
-// Even after the reconciler has initialized and read host config values.
-export const now = Scheduler.unstable_now;
-export const scheduleDeferredCallback = Scheduler.unstable_scheduleCallback;
-export const cancelDeferredCallback = Scheduler.unstable_cancelCallback;
-export const shouldYield = Scheduler.unstable_shouldYield;
 
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
 export const noTimeout = -1;
-export const schedulePassiveEffects = Scheduler.unstable_scheduleCallback;
-export const cancelPassiveEffects = Scheduler.unstable_cancelCallback;
 
 // -------------------
 //     Mutation

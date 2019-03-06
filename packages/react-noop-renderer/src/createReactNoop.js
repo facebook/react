@@ -304,17 +304,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return inst;
     },
 
-    scheduleDeferredCallback: Scheduler.unstable_scheduleCallback,
-    cancelDeferredCallback: Scheduler.unstable_cancelCallback,
-
-    shouldYield: Scheduler.unstable_shouldYield,
-
     scheduleTimeout: setTimeout,
     cancelTimeout: clearTimeout,
     noTimeout: -1,
-
-    schedulePassiveEffects: Scheduler.unstable_scheduleCallback,
-    cancelPassiveEffects: Scheduler.unstable_cancelCallback,
 
     prepareForCommit(): void {},
 
