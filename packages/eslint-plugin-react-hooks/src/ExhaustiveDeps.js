@@ -87,6 +87,18 @@ export default {
       const depsIndex = callbackIndex + 1;
       const declaredDependenciesNode = node.parent.arguments[depsIndex];
       if (!declaredDependenciesNode) {
+        // These are only used for optimization.
+        if (
+          reactiveHookName === 'useMemo' ||
+          reactiveHookName === 'useCallback'
+        ) {
+          context.report({
+            node: node,
+            message:
+              `React Hook ${reactiveHookName} doesn't serve any purpose ` +
+              `without a dependency array as a second argument.`,
+          });
+        }
         return;
       }
 
