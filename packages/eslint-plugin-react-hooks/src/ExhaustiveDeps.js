@@ -93,10 +93,12 @@ export default {
           reactiveHookName === 'useCallback'
         ) {
           context.report({
-            node: node,
+            node: node.parent.callee,
             message:
               `React Hook ${reactiveHookName} doesn't serve any purpose ` +
-              `without a dependency array as a second argument.`,
+              `without a dependency array. To enable ` +
+              `this optimization, pass an array of values used by the ` +
+              `inner function as the second argument to ${reactiveHookName}.`,
           });
         }
         return;

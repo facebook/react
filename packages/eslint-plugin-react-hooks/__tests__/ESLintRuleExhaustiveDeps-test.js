@@ -926,8 +926,12 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useMemo doesn't serve any purpose without a dependency array as a second argument.",
-        "React Hook useCallback doesn't serve any purpose without a dependency array as a second argument.",
+        "React Hook useMemo doesn't serve any purpose without a dependency array. " +
+          'To enable this optimization, pass an array of values used by the inner ' +
+          'function as the second argument to useMemo.',
+        "React Hook useCallback doesn't serve any purpose without a dependency array. " +
+          'To enable this optimization, pass an array of values used by the inner ' +
+          'function as the second argument to useCallback.',
       ],
     },
     {
