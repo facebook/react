@@ -39,9 +39,9 @@ describe('ReactNoop.act()', () => {
     function App() {
       let [ctr, setCtr] = React.useState(0);
       async function someAsyncFunction() {
-        ReactNoop.yield('stage 1');
+        Scheduler.yieldValue('stage 1');
         await null;
-        ReactNoop.yield('stage 2');
+        Scheduler.yieldValue('stage 2');
         setCtr(1);
       }
       React.useEffect(() => {

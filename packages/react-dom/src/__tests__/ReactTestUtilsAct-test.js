@@ -173,6 +173,28 @@ describe('ReactTestUtils.act()', () => {
 
         expect(container.innerHTML).toBe('1');
       });
+      it('can use the async version to catch microtasks', async () => {
+        function App() {
+          let [toggle, setToggle] = React.useState(0);
+          React.useEffect(() => {
+            // just like the previous test, except we
+            // use a promise and schedule the update
+            // after it resolves
+            sleep(200).then(() => setToggle(1));
+          }, []);
+          return toggle;
+        }
+        const container = document.createElement('div');
+
+        act(() => {
+          ReactDOM.render(<App />, container);
+        });
+        await act(async () => {
+          jest.runAllTimers();
+        });
+
+        expect(container.innerHTML).toBe('1');
+      });
     });
 
     it('warns if you return a value inside act', () => {
@@ -206,7 +228,7 @@ describe('ReactTestUtils.act()', () => {
         function doSomething() {
           setTimeout(() => {
             setCtr(1);
-          }, 200);
+          }, 50);
         }
 
         React.useEffect(() => {
@@ -220,10 +242,12 @@ describe('ReactTestUtils.act()', () => {
           ReactDOM.render(<App />, el);
         });
 
-        await sleep(500);
+        await sleep(100);
         expect(el.innerHTML).toBe('1');
       });
     });
+
+    it('catches microtasks', () => {});
 
     it('can handle async/await', async () => {
       function App() {
@@ -266,15 +290,15 @@ describe('ReactTestUtils.act()', () => {
       // let's try to cheat and spin off a 'thread' with an act call
       (async () => {
         await act(async () => {
-          await sleep(200);
+          await sleep(50);
         });
       })();
 
       await act(async () => {
-        await sleep(500);
+        await sleep(100);
       });
 
-      await sleep(600);
+      await sleep(150);
       if (__DEV__) {
         expect(console.error).toHaveBeenCalledTimes(1);
       }
