@@ -8,6 +8,7 @@
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
+import {disableJavaScriptURLs} from 'shared/ReactFeatureFlags';
 
 let ReactDebugCurrentFrame = null;
 if (__DEV__) {
@@ -18,11 +19,20 @@ if (__DEV__) {
 let isJavaScriptProtocol = /^\s*javascript\:/i;
 
 function sanitizeURL(url: string) {
-  invariant(
-    !isJavaScriptProtocol.test(url),
-    'XSS.%s',
-    __DEV__ ? ReactDebugCurrentFrame.getStackAddendum() : '',
-  );
+  if (disableJavaScriptURLs) {
+    invariant(
+      !isJavaScriptProtocol.test(url),
+      'React has blocked a javascript: URL as a security precaution.%s',
+      __DEV__ ? ReactDebugCurrentFrame.getStackAddendum() : '',
+    );
+  } else if (__DEV__) {
+    warning(
+      !isJavaScriptProtocol.test(url),
+      'A future version of React will block javascript: URLs as a security precaution. ' +
+        'Use event handlers instead if you can. If you need to generate unsafe HTML try ' +
+        'using dangerouslySetInnerHTML instead.',
+    );
+  }
 }
 
 export default sanitizeURL;
