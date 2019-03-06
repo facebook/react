@@ -93,10 +93,12 @@ export default {
           reactiveHookName === 'useCallback'
         ) {
           context.report({
-            node: node,
+            node: node.parent.callee,
             message:
               `React Hook ${reactiveHookName} doesn't serve any purpose ` +
-              `without a dependency array as a second argument.`,
+              `without a dependency array. To enable ` +
+              `this optimization, pass an array of values used by the ` +
+              `inner function as the second argument to ${reactiveHookName}.`,
           });
         }
         return;
@@ -550,7 +552,57 @@ export default {
         duplicateDependencies.size +
         missingDependencies.size +
         unnecessaryDependencies.size;
+
       if (problemCount === 0) {
+        // If nothing else to report, check if some callbacks
+        // are bare and would invalidate on every render.
+        const bareFunctions = scanForDeclaredBareFunctions({
+          declaredDependencies,
+          declaredDependenciesNode,
+          componentScope,
+          scope,
+        });
+        bareFunctions.forEach(({fn, suggestUseCallback}) => {
+          let message =
+            `The '${fn.name.name}' function makes the dependencies of ` +
+            `${reactiveHookName} Hook (at line ${
+              declaredDependenciesNode.loc.start.line
+            }) ` +
+            `change on every render.`;
+          if (suggestUseCallback) {
+            message +=
+              ` To fix this, ` +
+              `wrap the '${
+                fn.name.name
+              }' definition into its own useCallback() Hook.`;
+          } else {
+            message +=
+              ` To fix this, move the '${fn.name.name}' function ` +
+              `inside the ${reactiveHookName} callback. Alternatively, ` +
+              `wrap the '${
+                fn.name.name
+              }' definition into its own useCallback() Hook.`;
+          }
+          context.report({
+            node: fn.node,
+            message,
+            fix(fixer) {
+              // Only handle the simple case: arrow functions.
+              // Wrapping function declarations can mess up hoisting.
+              if (suggestUseCallback && fn.type === 'Variable') {
+                return [
+                  // TODO: also add an import?
+                  fixer.insertTextBefore(fn.node.init, 'useCallback('),
+                  // TODO: ideally we'd gather deps here but it would
+                  // require restructuring the rule code. For now,
+                  // this is fine. Note we're intentionally not adding
+                  // [] because that changes semantics.
+                  fixer.insertTextAfter(fn.node.init, ')'),
+                ];
+              }
+            },
+          });
+        });
         return;
       }
 
@@ -856,6 +908,83 @@ function collectRecommendations({
     duplicateDependencies,
     missingDependencies,
   };
+}
+
+// Finds functions declared as dependencies
+// that would invalidate on every render.
+function scanForDeclaredBareFunctions({
+  declaredDependencies,
+  declaredDependenciesNode,
+  componentScope,
+  scope,
+}) {
+  const bareFunctions = declaredDependencies
+    .map(({key}) => {
+      const fnRef = componentScope.set.get(key);
+      if (fnRef == null) {
+        return null;
+      }
+      let fnNode = fnRef.defs[0];
+      if (fnNode == null) {
+        return null;
+      }
+      // const handleChange = function () {}
+      // const handleChange = () => {}
+      if (
+        fnNode.type === 'Variable' &&
+        fnNode.node.type === 'VariableDeclarator' &&
+        fnNode.node.init != null &&
+        (fnNode.node.init.type === 'ArrowFunctionExpression' ||
+          fnNode.node.init.type === 'FunctionExpression')
+      ) {
+        return fnRef;
+      }
+      // function handleChange() {}
+      if (
+        fnNode.type === 'FunctionName' &&
+        fnNode.node.type === 'FunctionDeclaration'
+      ) {
+        return fnRef;
+      }
+      return null;
+    })
+    .filter(Boolean);
+
+  function isUsedOutsideOfHook(fnRef) {
+    let foundWriteExpr = false;
+    for (let i = 0; i < fnRef.references.length; i++) {
+      const reference = fnRef.references[i];
+      if (reference.writeExpr) {
+        if (foundWriteExpr) {
+          // Two writes to the same function.
+          return true;
+        } else {
+          // Ignore first write as it's not usage.
+          foundWriteExpr = true;
+          continue;
+        }
+      }
+      let currentScope = reference.from;
+      while (currentScope !== scope && currentScope != null) {
+        currentScope = currentScope.upper;
+      }
+      if (currentScope !== scope) {
+        // This reference is outside the Hook callback.
+        // It can only be legit if it's the deps array.
+        if (isAncestorNodeOf(declaredDependenciesNode, reference.identifier)) {
+          continue;
+        } else {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  return bareFunctions.map(fnRef => ({
+    fn: fnRef.defs[0],
+    suggestUseCallback: isUsedOutsideOfHook(fnRef),
+  }));
 }
 
 /**
