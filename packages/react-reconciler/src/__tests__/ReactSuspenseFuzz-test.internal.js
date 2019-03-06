@@ -1,6 +1,6 @@
 let React;
 let Suspense;
-let ReactTestRenderer;
+let ReactNoop;
 let Scheduler;
 let ReactFeatureFlags;
 let Random;
@@ -26,7 +26,7 @@ describe('ReactSuspenseFuzz', () => {
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     React = require('react');
     Suspense = React.Suspense;
-    ReactTestRenderer = require('react-test-renderer');
+    ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     Random = require('random-seed');
   });
@@ -143,28 +143,16 @@ describe('ReactSuspenseFuzz', () => {
       return resolvedText;
     }
 
-    function renderToRoot(
-      root,
-      children,
-      {shouldSuspend} = {shouldSuspend: true},
-    ) {
-      root.update(
-        <ShouldSuspendContext.Provider value={shouldSuspend}>
-          {children}
-        </ShouldSuspendContext.Provider>,
-      );
+    function resolveAllTasks() {
       Scheduler.unstable_flushWithoutYielding();
-
       let elapsedTime = 0;
       while (pendingTasks && pendingTasks.size > 0) {
         if ((elapsedTime += 1000) > 1000000) {
           throw new Error('Something did not resolve properly.');
         }
-        ReactTestRenderer.act(() => jest.advanceTimersByTime(1000));
+        ReactNoop.act(() => jest.advanceTimersByTime(1000));
         Scheduler.unstable_flushWithoutYielding();
       }
-
-      return root.toJSON();
     }
 
     function testResolvedOutput(unwrappedChildren) {
@@ -172,25 +160,32 @@ describe('ReactSuspenseFuzz', () => {
         <Suspense fallback="Loading...">{unwrappedChildren}</Suspense>
       );
 
-      const expectedRoot = ReactTestRenderer.create(null);
-      const expectedOutput = renderToRoot(expectedRoot, children, {
-        shouldSuspend: false,
-      });
-      expectedRoot.unmount();
+      resetCache();
+      ReactNoop.renderToRootWithID(
+        <ShouldSuspendContext.Provider value={false}>
+          {children}
+        </ShouldSuspendContext.Provider>,
+        'expected',
+      );
+      resolveAllTasks();
+      const expectedOutput = ReactNoop.getChildrenAsJSX('expected');
+      ReactNoop.renderToRootWithID(null, 'expected');
+      Scheduler.unstable_flushWithoutYielding();
 
       resetCache();
-      const syncRoot = ReactTestRenderer.create(null);
-      const syncOutput = renderToRoot(syncRoot, children);
+      ReactNoop.renderLegacySyncRoot(children);
+      resolveAllTasks();
+      const syncOutput = ReactNoop.getChildrenAsJSX();
       expect(syncOutput).toEqual(expectedOutput);
-      syncRoot.unmount();
+      ReactNoop.renderLegacySyncRoot(null);
 
       resetCache();
-      const concurrentRoot = ReactTestRenderer.create(null, {
-        unstable_isConcurrent: true,
-      });
-      const concurrentOutput = renderToRoot(concurrentRoot, children);
+      ReactNoop.renderToRootWithID(children, 'concurrent');
+      Scheduler.unstable_flushWithoutYielding();
+      resolveAllTasks();
+      const concurrentOutput = ReactNoop.getChildrenAsJSX('concurrent');
       expect(concurrentOutput).toEqual(expectedOutput);
-      concurrentRoot.unmount();
+      ReactNoop.renderToRootWithID(null, 'concurrent');
       Scheduler.unstable_flushWithoutYielding();
     }
 
