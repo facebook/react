@@ -30,6 +30,7 @@ export function dispatchEvent(
       targetFiber,
       nativeEvent,
       nativeEvent.target,
+      null,
     );
   });
   // React Native doesn't use ReactControlledComponent but if it did, here's

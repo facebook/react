@@ -163,6 +163,7 @@ function extractEvents(
   targetInst: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: EventTarget,
+  passive: null | boolean,
 ): Array<ReactSyntheticEvent> | ReactSyntheticEvent | null {
   let events = null;
   for (let i = 0; i < plugins.length; i++) {
@@ -174,6 +175,7 @@ function extractEvents(
         targetInst,
         nativeEvent,
         nativeEventTarget,
+        passive,
       );
       if (extractedEvents) {
         events = accumulateInto(events, extractedEvents);
@@ -214,12 +216,14 @@ export function runExtractedEventsInBatch(
   targetInst: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: EventTarget,
+  passive: null | boolean,
 ) {
   const events = extractEvents(
     topLevelType,
     targetInst,
     nativeEvent,
     nativeEventTarget,
+    passive,
   );
   runEventsInBatch(events);
 }

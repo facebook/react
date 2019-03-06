@@ -16,16 +16,26 @@ export function addEventBubbleListener(
   element: Element,
   eventType: string,
   listener: Function,
+  isPassive: boolean | null,
 ): void {
-  EventListenerWWW.listen(element, eventType, listener);
+  if (isPassive === null) {
+    EventListenerWWW.listen(element, eventType, listener);
+  } else {
+    EventListenerWWW.listen(element, eventType, listener, isPassive);
+  }
 }
 
 export function addEventCaptureListener(
   element: Element,
   eventType: string,
   listener: Function,
+  isPassive: boolean | null,
 ): void {
-  EventListenerWWW.capture(element, eventType, listener);
+  if (isPassive === null) {
+    EventListenerWWW.capture(element, eventType, listener);
+  } else {
+    EventListenerWWW.capture(element, eventType, listener, isPassive);
+  }
 }
 
 // Flow magic to verify the exports of this file match the original version.

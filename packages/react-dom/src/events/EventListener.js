@@ -8,17 +8,33 @@
  */
 
 export function addEventBubbleListener(
-  element: Document | Element,
+  element: Document | Element | Node,
   eventType: string,
   listener: Function,
+  isPassive: boolean | null,
 ): void {
-  element.addEventListener(eventType, listener, false);
+  if (isPassive === null) {
+    element.addEventListener(eventType, listener, false);
+  } else {
+    element.addEventListener(eventType, listener, {
+      passive: isPassive,
+      capture: false,
+    });
+  }
 }
 
 export function addEventCaptureListener(
-  element: Document | Element,
+  element: Document | Element | Node,
   eventType: string,
   listener: Function,
+  isPassive: boolean | null,
 ): void {
-  element.addEventListener(eventType, listener, true);
+  if (isPassive === null) {
+    element.addEventListener(eventType, listener, true);
+  } else {
+    element.addEventListener(eventType, listener, {
+      passive: isPassive,
+      capture: true,
+    });
+  }
 }

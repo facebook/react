@@ -253,14 +253,17 @@ if (__DEV__) {
   };
 }
 
-function ensureListeningTo(rootContainerElement, registrationName) {
+function ensureListeningTo(
+  rootContainerElement: Element | Node,
+  registrationName: string,
+): void {
   const isDocumentOrFragment =
     rootContainerElement.nodeType === DOCUMENT_NODE ||
     rootContainerElement.nodeType === DOCUMENT_FRAGMENT_NODE;
   const doc = isDocumentOrFragment
     ? rootContainerElement
     : rootContainerElement.ownerDocument;
-  listenTo(registrationName, doc);
+  listenTo(registrationName, doc, true /* isLegacy */);
 }
 
 function getOwnerDocumentFromRootContainer(
@@ -494,41 +497,41 @@ export function setInitialProperties(
   switch (tag) {
     case 'iframe':
     case 'object':
-      trapBubbledEvent(TOP_LOAD, domElement);
+      trapBubbledEvent(TOP_LOAD, domElement, true);
       props = rawProps;
       break;
     case 'video':
     case 'audio':
       // Create listener for each media event
       for (let i = 0; i < mediaEventTypes.length; i++) {
-        trapBubbledEvent(mediaEventTypes[i], domElement);
+        trapBubbledEvent(mediaEventTypes[i], domElement, true);
       }
       props = rawProps;
       break;
     case 'source':
-      trapBubbledEvent(TOP_ERROR, domElement);
+      trapBubbledEvent(TOP_ERROR, domElement, true);
       props = rawProps;
       break;
     case 'img':
     case 'image':
     case 'link':
-      trapBubbledEvent(TOP_ERROR, domElement);
-      trapBubbledEvent(TOP_LOAD, domElement);
+      trapBubbledEvent(TOP_ERROR, domElement, true);
+      trapBubbledEvent(TOP_LOAD, domElement, true);
       props = rawProps;
       break;
     case 'form':
-      trapBubbledEvent(TOP_RESET, domElement);
-      trapBubbledEvent(TOP_SUBMIT, domElement);
+      trapBubbledEvent(TOP_RESET, domElement, true);
+      trapBubbledEvent(TOP_SUBMIT, domElement, true);
       props = rawProps;
       break;
     case 'details':
-      trapBubbledEvent(TOP_TOGGLE, domElement);
+      trapBubbledEvent(TOP_TOGGLE, domElement, true);
       props = rawProps;
       break;
     case 'input':
       ReactDOMInputInitWrapperState(domElement, rawProps);
       props = ReactDOMInputGetHostProps(domElement, rawProps);
-      trapBubbledEvent(TOP_INVALID, domElement);
+      trapBubbledEvent(TOP_INVALID, domElement, true);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');
@@ -540,7 +543,7 @@ export function setInitialProperties(
     case 'select':
       ReactDOMSelectInitWrapperState(domElement, rawProps);
       props = ReactDOMSelectGetHostProps(domElement, rawProps);
-      trapBubbledEvent(TOP_INVALID, domElement);
+      trapBubbledEvent(TOP_INVALID, domElement, true);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');
@@ -548,7 +551,7 @@ export function setInitialProperties(
     case 'textarea':
       ReactDOMTextareaInitWrapperState(domElement, rawProps);
       props = ReactDOMTextareaGetHostProps(domElement, rawProps);
-      trapBubbledEvent(TOP_INVALID, domElement);
+      trapBubbledEvent(TOP_INVALID, domElement, true);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');
@@ -888,34 +891,34 @@ export function diffHydratedProperties(
   switch (tag) {
     case 'iframe':
     case 'object':
-      trapBubbledEvent(TOP_LOAD, domElement);
+      trapBubbledEvent(TOP_LOAD, domElement, true);
       break;
     case 'video':
     case 'audio':
       // Create listener for each media event
       for (let i = 0; i < mediaEventTypes.length; i++) {
-        trapBubbledEvent(mediaEventTypes[i], domElement);
+        trapBubbledEvent(mediaEventTypes[i], domElement, true);
       }
       break;
     case 'source':
-      trapBubbledEvent(TOP_ERROR, domElement);
+      trapBubbledEvent(TOP_ERROR, domElement, true);
       break;
     case 'img':
     case 'image':
     case 'link':
-      trapBubbledEvent(TOP_ERROR, domElement);
-      trapBubbledEvent(TOP_LOAD, domElement);
+      trapBubbledEvent(TOP_ERROR, domElement, true);
+      trapBubbledEvent(TOP_LOAD, domElement, true);
       break;
     case 'form':
-      trapBubbledEvent(TOP_RESET, domElement);
-      trapBubbledEvent(TOP_SUBMIT, domElement);
+      trapBubbledEvent(TOP_RESET, domElement, true);
+      trapBubbledEvent(TOP_SUBMIT, domElement, true);
       break;
     case 'details':
-      trapBubbledEvent(TOP_TOGGLE, domElement);
+      trapBubbledEvent(TOP_TOGGLE, domElement, true);
       break;
     case 'input':
       ReactDOMInputInitWrapperState(domElement, rawProps);
-      trapBubbledEvent(TOP_INVALID, domElement);
+      trapBubbledEvent(TOP_INVALID, domElement, true);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');
@@ -925,14 +928,14 @@ export function diffHydratedProperties(
       break;
     case 'select':
       ReactDOMSelectInitWrapperState(domElement, rawProps);
-      trapBubbledEvent(TOP_INVALID, domElement);
+      trapBubbledEvent(TOP_INVALID, domElement, true);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');
       break;
     case 'textarea':
       ReactDOMTextareaInitWrapperState(domElement, rawProps);
-      trapBubbledEvent(TOP_INVALID, domElement);
+      trapBubbledEvent(TOP_INVALID, domElement, true);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');

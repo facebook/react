@@ -48,20 +48,23 @@ function findRootContainerNode(inst) {
 
 // Used to store ancestor hierarchy in top level callback
 function getTopLevelCallbackBookKeeping(
-  topLevelType,
-  nativeEvent,
-  targetInst,
+  topLevelType: ?DOMTopLevelEventType,
+  nativeEvent: ?AnyNativeEvent,
+  targetInst: Fiber | null,
+  passive: null | boolean,
 ): {
   topLevelType: ?DOMTopLevelEventType,
   nativeEvent: ?AnyNativeEvent,
   targetInst: Fiber | null,
   ancestors: Array<Fiber>,
+  passive: null | boolean,
 } {
   if (callbackBookkeepingPool.length) {
     const instance = callbackBookkeepingPool.pop();
     instance.topLevelType = topLevelType;
     instance.nativeEvent = nativeEvent;
     instance.targetInst = targetInst;
+    instance.passive = passive;
     return instance;
   }
   return {
@@ -69,6 +72,7 @@ function getTopLevelCallbackBookKeeping(
     nativeEvent,
     targetInst,
     ancestors: [],
+    passive,
   };
 }
 
@@ -77,6 +81,7 @@ function releaseTopLevelCallbackBookKeeping(instance) {
   instance.nativeEvent = null;
   instance.targetInst = null;
   instance.ancestors.length = 0;
+  instance.passive = null;
   if (callbackBookkeepingPool.length < CALLBACK_BOOKKEEPING_POOL_SIZE) {
     callbackBookkeepingPool.push(instance);
   }
@@ -110,6 +115,7 @@ function handleTopLevel(bookKeeping) {
       targetInst,
       bookKeeping.nativeEvent,
       getEventTarget(bookKeeping.nativeEvent),
+      bookKeeping.passive,
     );
   }
 }
@@ -125,70 +131,66 @@ export function isEnabled() {
   return _enabled;
 }
 
-/**
- * Traps top-level events by using event bubbling.
- *
- * @param {number} topLevelType Number from `TopLevelEventTypes`.
- * @param {object} element Element on which to attach listener.
- * @return {?object} An object with a remove function which will forcefully
- *                  remove the listener.
- * @internal
- */
 export function trapBubbledEvent(
   topLevelType: DOMTopLevelEventType,
-  element: Document | Element,
-) {
-  if (!element) {
-    return null;
-  }
+  element: Document | Element | Node,
+  isLegacy: boolean,
+): void {
   const dispatch = isInteractiveTopLevelEventType(topLevelType)
     ? dispatchInteractiveEvent
     : dispatchEvent;
+  const rawEventName = getRawEventName(topLevelType);
 
-  addEventBubbleListener(
-    element,
-    getRawEventName(topLevelType),
+  if (isLegacy) {
     // Check if interactive and wrap in interactiveUpdates
-    dispatch.bind(null, topLevelType),
-  );
+    const listener = dispatch.bind(null, topLevelType, null);
+    // We don't listen for passive/non-passive
+    addEventBubbleListener(element, rawEventName, listener, null);
+  } else {
+    // Check if interactive and wrap in interactiveUpdates
+    const passiveListener = dispatch.bind(null, topLevelType, true);
+    const activeListener = dispatch.bind(null, topLevelType, false);
+    // We listen to the same event for both passive/non-passive
+    addEventBubbleListener(element, rawEventName, passiveListener, true);
+    addEventBubbleListener(element, rawEventName, activeListener, false);
+  }
 }
 
-/**
- * Traps a top-level event by using event capturing.
- *
- * @param {number} topLevelType Number from `TopLevelEventTypes`.
- * @param {object} element Element on which to attach listener.
- * @return {?object} An object with a remove function which will forcefully
- *                  remove the listener.
- * @internal
- */
 export function trapCapturedEvent(
   topLevelType: DOMTopLevelEventType,
-  element: Document | Element,
-) {
-  if (!element) {
-    return null;
-  }
+  element: Document | Element | Node,
+  isLegacy: boolean,
+): void {
   const dispatch = isInteractiveTopLevelEventType(topLevelType)
     ? dispatchInteractiveEvent
     : dispatchEvent;
+  const rawEventName = getRawEventName(topLevelType);
 
-  addEventCaptureListener(
-    element,
-    getRawEventName(topLevelType),
+  if (isLegacy) {
     // Check if interactive and wrap in interactiveUpdates
-    dispatch.bind(null, topLevelType),
-  );
+    const listener = dispatch.bind(null, topLevelType, null);
+    // We don't listen for passive/non-passive
+    addEventCaptureListener(element, rawEventName, listener, null);
+  } else {
+    // Check if interactive and wrap in interactiveUpdates
+    const passiveListener = dispatch.bind(null, topLevelType, true);
+    const activeListener = dispatch.bind(null, topLevelType, false);
+    // We listen to the same event for both passive/non-passive
+    addEventCaptureListener(element, rawEventName, passiveListener, true);
+    addEventCaptureListener(element, rawEventName, activeListener, false);
+  }
 }
 
-function dispatchInteractiveEvent(topLevelType, nativeEvent) {
-  interactiveUpdates(dispatchEvent, topLevelType, nativeEvent);
+function dispatchInteractiveEvent(topLevelType, isPassiveEvent, nativeEvent) {
+  interactiveUpdates(dispatchEvent, topLevelType, isPassiveEvent, nativeEvent);
 }
 
 export function dispatchEvent(
   topLevelType: DOMTopLevelEventType,
+  // passive will be `null` for legacy events
+  passive: null | boolean,
   nativeEvent: AnyNativeEvent,
-) {
+): void {
   if (!_enabled) {
     return;
   }
@@ -211,6 +213,7 @@ export function dispatchEvent(
     topLevelType,
     nativeEvent,
     targetInst,
+    passive,
   );
 
   try {

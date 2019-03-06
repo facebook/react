@@ -169,7 +169,7 @@ const SelectEventPlugin = {
     const doc = getEventTargetDocument(nativeEventTarget);
     // Track whether all listeners exists for this plugin. If none exist, we do
     // not extract events. See #3639.
-    if (!doc || !isListeningToAllDependencies('onSelect', doc)) {
+    if (!doc || !isListeningToAllDependencies('onSelect', doc, true)) {
       return null;
     }
 

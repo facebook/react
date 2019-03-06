@@ -8,6 +8,7 @@
  */
 
 import {registrationNameDependencies} from 'events/EventPluginRegistry';
+import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 import {
   TOP_BLUR,
   TOP_CANCEL,
@@ -84,22 +85,39 @@ import isEventSupported from './isEventSupported';
  *    React Core     .  General Purpose Event Plugin System
  */
 
-const alreadyListeningTo = {};
-let reactTopListenersCounter = 0;
+const elementListeningObjects: WeakMap<
+  Document | Element | Node,
+  ElementListeningObject,
+> = new WeakMap();
 
-/**
- * To ensure no conflicts with other potential React instances on the page
- */
-const topListenersIDKey = '_reactListenersID' + ('' + Math.random()).slice(2);
+// We store legacy events we listen where we don't use
+// passive/non-passive options on the event listener.
+// For event listeners that are passive/non-passive, we store
+// them in nonLegacy so they do not conflict.
+export type ElementListeningObject = {
+  legacy: Set<DOMTopLevelEventType>,
+  nonLegacy: Set<DOMTopLevelEventType>,
+};
 
-function getListeningForDocument(mountAt: any) {
-  // In IE8, `mountAt` is a host object and doesn't have `hasOwnProperty`
-  // directly.
-  if (!Object.prototype.hasOwnProperty.call(mountAt, topListenersIDKey)) {
-    mountAt[topListenersIDKey] = reactTopListenersCounter++;
-    alreadyListeningTo[mountAt[topListenersIDKey]] = {};
+function createElementListeningObject(): ElementListeningObject {
+  return {
+    legacy: new Set(),
+    nonLegacy: new Set(),
+  };
+}
+
+function getListeningSetForElement(
+  element: Document | Element | Node,
+  isLegacy: boolean,
+): Set<DOMTopLevelEventType> {
+  if (!elementListeningObjects.has(element)) {
+    elementListeningObjects.set(element, createElementListeningObject());
   }
-  return alreadyListeningTo[mountAt[topListenersIDKey]];
+  const listeningObject = ((elementListeningObjects.get(
+    element,
+  ): any): ElementListeningObject);
+  const listeningKey = isLegacy ? 'legacy' : 'nonLegacy';
+  return listeningObject[listeningKey];
 }
 
 /**
@@ -125,62 +143,74 @@ function getListeningForDocument(mountAt: any) {
  */
 export function listenTo(
   registrationName: string,
-  mountAt: Document | Element,
-) {
-  const isListening = getListeningForDocument(mountAt);
+  mountAt: Document | Element | Node,
+  isLegacy: boolean,
+): void {
+  const listeningSet = getListeningSetForElement(mountAt, isLegacy);
   const dependencies = registrationNameDependencies[registrationName];
 
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];
-    if (!(isListening.hasOwnProperty(dependency) && isListening[dependency])) {
-      switch (dependency) {
-        case TOP_SCROLL:
-          trapCapturedEvent(TOP_SCROLL, mountAt);
-          break;
-        case TOP_FOCUS:
-        case TOP_BLUR:
-          trapCapturedEvent(TOP_FOCUS, mountAt);
-          trapCapturedEvent(TOP_BLUR, mountAt);
-          // We set the flag for a single dependency later in this function,
-          // but this ensures we mark both as attached rather than just one.
-          isListening[TOP_BLUR] = true;
-          isListening[TOP_FOCUS] = true;
-          break;
-        case TOP_CANCEL:
-        case TOP_CLOSE:
-          if (isEventSupported(getRawEventName(dependency))) {
-            trapCapturedEvent(dependency, mountAt);
-          }
-          break;
-        case TOP_INVALID:
-        case TOP_SUBMIT:
-        case TOP_RESET:
-          // We listen to them on the target DOM elements.
-          // Some of them bubble so we don't want them to fire twice.
-          break;
-        default:
-          // By default, listen on the top level to all non-media events.
-          // Media events don't bubble so adding the listener wouldn't do anything.
-          const isMediaEvent = mediaEventTypes.indexOf(dependency) !== -1;
-          if (!isMediaEvent) {
-            trapBubbledEvent(dependency, mountAt);
-          }
-          break;
-      }
-      isListening[dependency] = true;
+    listenToDependency(dependency, listeningSet, mountAt, isLegacy);
+  }
+}
+
+function listenToDependency(
+  dependency: DOMTopLevelEventType,
+  listeningSet: Set<DOMTopLevelEventType>,
+  mountAt: Document | Element | Node,
+  isLegacy: boolean,
+): void {
+  if (!listeningSet.has(dependency)) {
+    switch (dependency) {
+      case TOP_SCROLL:
+        trapCapturedEvent(TOP_SCROLL, mountAt, isLegacy);
+        break;
+      case TOP_FOCUS:
+      case TOP_BLUR:
+        trapCapturedEvent(TOP_FOCUS, mountAt, isLegacy);
+        trapCapturedEvent(TOP_BLUR, mountAt, isLegacy);
+        // We set the flag for a single dependency later in this function,
+        // but this ensures we mark both as attached rather than just one.
+        listeningSet.add(TOP_BLUR);
+        listeningSet.add(TOP_FOCUS);
+        break;
+      case TOP_CANCEL:
+      case TOP_CLOSE:
+        if (isEventSupported(getRawEventName(dependency))) {
+          trapCapturedEvent(dependency, mountAt, isLegacy);
+        }
+        break;
+      case TOP_INVALID:
+      case TOP_SUBMIT:
+      case TOP_RESET:
+        // We listen to them on the target DOM elements.
+        // Some of them bubble so we don't want them to fire twice.
+        break;
+      default:
+        // By default, listen on the top level to all non-media events.
+        // Media events don't bubble so adding the listener wouldn't do anything.
+        const isMediaEvent = mediaEventTypes.indexOf(dependency) !== -1;
+        if (!isMediaEvent) {
+          trapBubbledEvent(dependency, mountAt, isLegacy);
+        }
+        break;
     }
+    listeningSet.add(dependency);
   }
 }
 
 export function isListeningToAllDependencies(
   registrationName: string,
   mountAt: Document | Element,
-) {
-  const isListening = getListeningForDocument(mountAt);
+  isLegacy: boolean,
+): boolean {
+  const listeningSet = getListeningSetForElement(mountAt, isLegacy);
   const dependencies = registrationNameDependencies[registrationName];
+
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];
-    if (!(isListening.hasOwnProperty(dependency) && isListening[dependency])) {
+    if (!listeningSet.has(dependency)) {
       return false;
     }
   }

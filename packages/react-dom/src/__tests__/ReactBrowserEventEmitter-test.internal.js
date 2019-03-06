@@ -331,15 +331,15 @@ describe('ReactBrowserEventEmitter', () => {
 
   it('should listen to events only once', () => {
     spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
-    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
-    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
+    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document, true);
+    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document, true);
     expect(EventTarget.prototype.addEventListener).toHaveBeenCalledTimes(1);
   });
 
   it('should work with event plugins without dependencies', () => {
     spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
 
-    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
+    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document, true);
 
     expect(EventTarget.prototype.addEventListener.calls.argsFor(0)[0]).toBe(
       'click',
@@ -349,7 +349,7 @@ describe('ReactBrowserEventEmitter', () => {
   it('should work with event plugins with dependencies', () => {
     spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
 
-    ReactBrowserEventEmitter.listenTo(ON_CHANGE_KEY, document);
+    ReactBrowserEventEmitter.listenTo(ON_CHANGE_KEY, document, true);
 
     const setEventListeners = [];
     const listenCalls = EventTarget.prototype.addEventListener.calls.allArgs();
