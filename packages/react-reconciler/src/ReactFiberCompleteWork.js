@@ -59,9 +59,7 @@ import {
   supportsPersistence,
   cloneInstance,
   cloneHiddenInstance,
-  cloneUnhiddenInstance,
   cloneHiddenTextInstance,
-  cloneUnhiddenTextInstance,
   createContainerChildSet,
   appendChildToContainerChildSet,
   finalizeContainerChildren,
@@ -209,31 +207,19 @@ if (supportsMutation) {
       // eslint-disable-next-line no-labels
       branches: if (node.tag === HostComponent) {
         let instance = node.stateNode;
-        if (needsVisibilityToggle) {
+        if (needsVisibilityToggle && isHidden) {
+          // This child is inside a timed out tree. Hide it.
           const props = node.memoizedProps;
           const type = node.type;
-          if (isHidden) {
-            // This child is inside a timed out tree. Hide it.
-            instance = cloneHiddenInstance(instance, type, props, node);
-          } else {
-            // This child was previously inside a timed out tree. If it was not
-            // updated during this render, it may need to be unhidden. Clone
-            // again to be sure.
-            instance = cloneUnhiddenInstance(instance, type, props, node);
-          }
-          node.stateNode = instance;
+          instance = cloneHiddenInstance(instance, type, props, node);
         }
         appendInitialChild(parent, instance);
       } else if (node.tag === HostText) {
         let instance = node.stateNode;
-        if (needsVisibilityToggle) {
+        if (needsVisibilityToggle && isHidden) {
+          // This child is inside a timed out tree. Hide it.
           const text = node.memoizedProps;
-          if (isHidden) {
-            instance = cloneHiddenTextInstance(instance, text, node);
-          } else {
-            instance = cloneUnhiddenTextInstance(instance, text, node);
-          }
-          node.stateNode = instance;
+          instance = cloneHiddenTextInstance(instance, text, node);
         }
         appendInitialChild(parent, instance);
       } else if (node.tag === HostPortal) {
@@ -247,15 +233,22 @@ if (supportsMutation) {
           if (newIsHidden) {
             const primaryChildParent = node.child;
             if (primaryChildParent !== null) {
-              appendAllChildren(parent, primaryChildParent, true, newIsHidden);
-              node = primaryChildParent.sibling;
-              continue;
+              if (primaryChildParent.child !== null) {
+                primaryChildParent.child.return = primaryChildParent;
+                appendAllChildren(
+                  parent,
+                  primaryChildParent,
+                  true,
+                  newIsHidden,
+                );
+              }
+              const fallbackChildParent = primaryChildParent.sibling;
+              if (fallbackChildParent !== null) {
+                fallbackChildParent.return = node;
+                node = fallbackChildParent;
+                continue;
+              }
             }
-          } else {
-            const primaryChildParent = node;
-            appendAllChildren(parent, primaryChildParent, true, newIsHidden);
-            // eslint-disable-next-line no-labels
-            break branches;
           }
         }
         if (node.child !== null) {
@@ -299,31 +292,19 @@ if (supportsMutation) {
       // eslint-disable-next-line no-labels
       branches: if (node.tag === HostComponent) {
         let instance = node.stateNode;
-        if (needsVisibilityToggle) {
+        if (needsVisibilityToggle && isHidden) {
+          // This child is inside a timed out tree. Hide it.
           const props = node.memoizedProps;
           const type = node.type;
-          if (isHidden) {
-            // This child is inside a timed out tree. Hide it.
-            instance = cloneHiddenInstance(instance, type, props, node);
-          } else {
-            // This child was previously inside a timed out tree. If it was not
-            // updated during this render, it may need to be unhidden. Clone
-            // again to be sure.
-            instance = cloneUnhiddenInstance(instance, type, props, node);
-          }
-          node.stateNode = instance;
+          instance = cloneHiddenInstance(instance, type, props, node);
         }
         appendChildToContainerChildSet(containerChildSet, instance);
       } else if (node.tag === HostText) {
         let instance = node.stateNode;
-        if (needsVisibilityToggle) {
+        if (needsVisibilityToggle && isHidden) {
+          // This child is inside a timed out tree. Hide it.
           const text = node.memoizedProps;
-          if (isHidden) {
-            instance = cloneHiddenTextInstance(instance, text, node);
-          } else {
-            instance = cloneUnhiddenTextInstance(instance, text, node);
-          }
-          node.stateNode = instance;
+          instance = cloneHiddenTextInstance(instance, text, node);
         }
         appendChildToContainerChildSet(containerChildSet, instance);
       } else if (node.tag === HostPortal) {
@@ -337,25 +318,22 @@ if (supportsMutation) {
           if (newIsHidden) {
             const primaryChildParent = node.child;
             if (primaryChildParent !== null) {
-              appendAllChildrenToContainer(
-                containerChildSet,
-                primaryChildParent,
-                true,
-                newIsHidden,
-              );
-              node = primaryChildParent.sibling;
-              continue;
+              if (primaryChildParent.child !== null) {
+                primaryChildParent.child.return = primaryChildParent;
+                appendAllChildrenToContainer(
+                  containerChildSet,
+                  primaryChildParent,
+                  true,
+                  newIsHidden,
+                );
+              }
+              const fallbackChildParent = primaryChildParent.sibling;
+              if (fallbackChildParent !== null) {
+                fallbackChildParent.return = node;
+                node = fallbackChildParent;
+                continue;
+              }
             }
-          } else {
-            const primaryChildParent = node;
-            appendAllChildrenToContainer(
-              containerChildSet,
-              primaryChildParent,
-              true,
-              newIsHidden,
-            );
-            // eslint-disable-next-line no-labels
-            break branches;
           }
         }
         if (node.child !== null) {
@@ -714,11 +692,23 @@ function completeWork(
         }
       }
 
-      if (nextDidTimeout || prevDidTimeout) {
-        // If the children are hidden, or if they were previous hidden, schedule
-        // an effect to toggle their visibility. This is also used to attach a
-        // retry listener to the promise.
-        workInProgress.effectTag |= Update;
+      if (supportsPersistence) {
+        if (nextDidTimeout) {
+          // If this boundary just timed out, schedule an effect to attach a
+          // retry listener to the proimse. This flag is also used to hide the
+          // primary children.
+          workInProgress.effectTag |= Update;
+        }
+      }
+      if (supportsMutation) {
+        if (nextDidTimeout || prevDidTimeout) {
+          // If this boundary just timed out, schedule an effect to attach a
+          // retry listener to the proimse. This flag is also used to hide the
+          // primary children. In mutation mode, we also need the flag to
+          // *unhide* children that were previously hidden, so check if the
+          // is currently timed out, too.
+          workInProgress.effectTag |= Update;
+        }
       }
       break;
     }

@@ -486,26 +486,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           return clone;
         },
 
-        cloneUnhiddenInstance(
-          instance: Instance,
-          type: string,
-          props: Props,
-          internalInstanceHandle: Object,
-        ): Instance {
-          const clone = cloneInstance(
-            instance,
-            null,
-            type,
-            props,
-            props,
-            internalInstanceHandle,
-            true,
-            null,
-          );
-          clone.hidden = props.hidden === true;
-          return clone;
-        },
-
         cloneHiddenTextInstance(
           instance: TextInstance,
           text: string,
@@ -515,29 +495,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
             text: instance.text,
             id: instanceCounter++,
             hidden: true,
-            context: instance.context,
-          };
-          // Hide from unit tests
-          Object.defineProperty(clone, 'id', {
-            value: clone.id,
-            enumerable: false,
-          });
-          Object.defineProperty(clone, 'context', {
-            value: clone.context,
-            enumerable: false,
-          });
-          return clone;
-        },
-
-        cloneUnhiddenTextInstance(
-          instance: TextInstance,
-          text: string,
-          internalInstanceHandle: Object,
-        ): TextInstance {
-          const clone = {
-            text: instance.text,
-            id: instanceCounter++,
-            hidden: false,
             context: instance.context,
           };
           // Hide from unit tests

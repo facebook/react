@@ -387,34 +387,7 @@ export function cloneHiddenInstance(
   };
 }
 
-export function cloneUnhiddenInstance(
-  instance: Instance,
-  type: string,
-  props: Props,
-  internalInstanceHandle: Object,
-): Instance {
-  const viewConfig = instance.canonical.viewConfig;
-  const node = instance.node;
-  const updatePayload = diff(
-    {...props, style: [props.style, {display: 'none'}]},
-    props,
-    viewConfig.validAttributes,
-  );
-  return {
-    node: cloneNodeWithNewProps(node, updatePayload),
-    canonical: instance.canonical,
-  };
-}
-
 export function cloneHiddenTextInstance(
-  instance: Instance,
-  text: string,
-  internalInstanceHandle: Object,
-): TextInstance {
-  throw new Error('Not yet implemented.');
-}
-
-export function cloneUnhiddenTextInstance(
   instance: Instance,
   text: string,
   internalInstanceHandle: Object,
