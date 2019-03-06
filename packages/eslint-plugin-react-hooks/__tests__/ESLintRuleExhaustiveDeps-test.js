@@ -313,7 +313,7 @@ const tests = {
     },
     {
       code: `
-        function MyComponent({ maybeRef2 }) {
+        function MyComponent({ maybeRef2, foo }) {
           const definitelyRef1 = useRef();
           const definitelyRef2 = useRef();
           const maybeRef1 = useSomeOtherRefyThing();
@@ -323,8 +323,8 @@ const tests = {
           const [state4, dispatch2] = React.useReducer();
           const [state5, maybeSetState] = useFunnyState();
           const [state6, maybeDispatch] = useFunnyReducer();
-          function mySetState() {}
-          function myDispatch() {}
+          const mySetState = useCallback(() => {}, []);
+          let myDispatch = useCallback(() => {}, []);
 
           useEffect(() => {
             // Known to be static
@@ -380,8 +380,8 @@ const tests = {
           const [state5, maybeSetState] = useFunnyState();
           const [state6, maybeDispatch] = useFunnyReducer();
 
-          function mySetState() {}
-          function myDispatch() {}
+          const mySetState = useCallback(() => {}, []);
+          let myDispatch = useCallback(() => {}, []);
 
           useEffect(() => {
             // Known to be static
@@ -663,30 +663,6 @@ const tests = {
       `,
     },
     {
-      code: `
-        function MyComponent(props) {
-          function handleNext1() {
-            console.log('hello');
-          }
-          const handleNext2 = () => {
-            console.log('hello');
-          };
-          let handleNext3 = function() {
-            console.log('hello');
-          };
-          useEffect(() => {
-            return Store.subscribe(handleNext1);
-          }, [handleNext1]);
-          useLayoutEffect(() => {
-            return Store.subscribe(handleNext2);
-          }, [handleNext2]);
-          useMemo(() => {
-            return Store.subscribe(handleNext3);
-          }, [handleNext3]);
-        }
-      `,
-    },
-    {
       // Declaring handleNext is optional because
       // it doesn't use anything in the function scope.
       code: `
@@ -950,8 +926,12 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useMemo doesn't serve any purpose without a dependency array as a second argument.",
-        "React Hook useCallback doesn't serve any purpose without a dependency array as a second argument.",
+        "React Hook useMemo doesn't serve any purpose without a dependency array. " +
+          'To enable this optimization, pass an array of values used by the inner ' +
+          'function as the second argument to useMemo.',
+        "React Hook useCallback doesn't serve any purpose without a dependency array. " +
+          'To enable this optimization, pass an array of values used by the inner ' +
+          'function as the second argument to useCallback.',
       ],
     },
     {
@@ -3311,6 +3291,443 @@ const tests = {
           'Either include it or remove the dependency array.',
         "React Hook useMemo has a missing dependency: 'handleNext3'. " +
           'Either include it or remove the dependency array.',
+      ],
+    },
+    {
+      // Even if the function only references static values,
+      // once you specify it in deps, it will invalidate them.
+      code: `
+        function MyComponent(props) {
+          let [, setState] = useState();
+
+          function handleNext(value) {
+            setState(value);
+          }
+
+          useEffect(() => {
+            return Store.subscribe(handleNext);
+          }, [handleNext]);
+        }
+      `,
+      // Not gonna autofix a function definition
+      // because it's not always safe due to hoisting.
+      output: `
+        function MyComponent(props) {
+          let [, setState] = useState();
+
+          function handleNext(value) {
+            setState(value);
+          }
+
+          useEffect(() => {
+            return Store.subscribe(handleNext);
+          }, [handleNext]);
+        }
+      `,
+      errors: [
+        `The 'handleNext' function makes the dependencies of ` +
+          `useEffect Hook (at line 11) change on every render. ` +
+          `To fix this, move the 'handleNext' function ` +
+          `inside the useEffect callback. Alternatively, ` +
+          `wrap the 'handleNext' definition into its own useCallback() Hook.`,
+      ],
+    },
+    {
+      // Even if the function only references static values,
+      // once you specify it in deps, it will invalidate them.
+      code: `
+        function MyComponent(props) {
+          let [, setState] = useState();
+
+          const handleNext = (value) => {
+            setState(value);
+          };
+
+          useEffect(() => {
+            return Store.subscribe(handleNext);
+          }, [handleNext]);
+        }
+      `,
+      // We don't autofix moving (too invasive). But that's the suggested fix
+      // when only effect uses this function. Otherwise, we'd useCallback.
+      output: `
+        function MyComponent(props) {
+          let [, setState] = useState();
+
+          const handleNext = (value) => {
+            setState(value);
+          };
+
+          useEffect(() => {
+            return Store.subscribe(handleNext);
+          }, [handleNext]);
+        }
+      `,
+      errors: [
+        `The 'handleNext' function makes the dependencies of ` +
+          `useEffect Hook (at line 11) change on every render. ` +
+          `To fix this, move the 'handleNext' function ` +
+          `inside the useEffect callback. Alternatively, ` +
+          `wrap the 'handleNext' definition into its own useCallback() Hook.`,
+      ],
+    },
+    {
+      // Even if the function only references static values,
+      // once you specify it in deps, it will invalidate them.
+      // However, we can't suggest moving handleNext into the
+      // effect because it is *also* used outside of it.
+      // So our suggestion is useCallback().
+      code: `
+        function MyComponent(props) {
+          let [, setState] = useState();
+
+          const handleNext = (value) => {
+            setState(value);
+          };
+
+          useEffect(() => {
+            return Store.subscribe(handleNext);
+          }, [handleNext]);
+
+          return <div onClick={handleNext} />;
+        }
+      `,
+      // We autofix this one with useCallback since it's
+      // the easy fix and you can't just move it into effect.
+      output: `
+        function MyComponent(props) {
+          let [, setState] = useState();
+
+          const handleNext = useCallback((value) => {
+            setState(value);
+          });
+
+          useEffect(() => {
+            return Store.subscribe(handleNext);
+          }, [handleNext]);
+
+          return <div onClick={handleNext} />;
+        }
+      `,
+      errors: [
+        `The 'handleNext' function makes the dependencies of ` +
+          `useEffect Hook (at line 11) change on every render. ` +
+          `To fix this, wrap the 'handleNext' definition into its own useCallback() Hook.`,
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
+          function handleNext1() {
+            console.log('hello');
+          }
+          const handleNext2 = () => {
+            console.log('hello');
+          };
+          let handleNext3 = function() {
+            console.log('hello');
+          };
+          useEffect(() => {
+            return Store.subscribe(handleNext1);
+          }, [handleNext1]);
+          useLayoutEffect(() => {
+            return Store.subscribe(handleNext2);
+          }, [handleNext2]);
+          useMemo(() => {
+            return Store.subscribe(handleNext3);
+          }, [handleNext3]);
+        }
+      `,
+      // Autofix doesn't wrap into useCallback here
+      // because they are only referenced by effect itself.
+      output: `
+        function MyComponent(props) {
+          function handleNext1() {
+            console.log('hello');
+          }
+          const handleNext2 = () => {
+            console.log('hello');
+          };
+          let handleNext3 = function() {
+            console.log('hello');
+          };
+          useEffect(() => {
+            return Store.subscribe(handleNext1);
+          }, [handleNext1]);
+          useLayoutEffect(() => {
+            return Store.subscribe(handleNext2);
+          }, [handleNext2]);
+          useMemo(() => {
+            return Store.subscribe(handleNext3);
+          }, [handleNext3]);
+        }
+      `,
+      errors: [
+        "The 'handleNext1' function makes the dependencies of useEffect Hook " +
+          "(at line 14) change on every render. To fix this, move the 'handleNext1' " +
+          'function inside the useEffect callback. Alternatively, wrap the ' +
+          "'handleNext1' definition into its own useCallback() Hook.",
+        "The 'handleNext2' function makes the dependencies of useLayoutEffect Hook " +
+          "(at line 17) change on every render. To fix this, move the 'handleNext2' " +
+          'function inside the useLayoutEffect callback. Alternatively, wrap the ' +
+          "'handleNext2' definition into its own useCallback() Hook.",
+        "The 'handleNext3' function makes the dependencies of useMemo Hook " +
+          "(at line 20) change on every render. To fix this, move the 'handleNext3' " +
+          'function inside the useMemo callback. Alternatively, wrap the ' +
+          "'handleNext3' definition into its own useCallback() Hook.",
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
+          function handleNext1() {
+            console.log('hello');
+          }
+          const handleNext2 = () => {
+            console.log('hello');
+          };
+          let handleNext3 = function() {
+            console.log('hello');
+          };
+          useEffect(() => {
+            handleNext1();
+            return Store.subscribe(() => handleNext1());
+          }, [handleNext1]);
+          useLayoutEffect(() => {
+            handleNext2();
+            return Store.subscribe(() => handleNext2());
+          }, [handleNext2]);
+          useMemo(() => {
+            handleNext3();
+            return Store.subscribe(() => handleNext3());
+          }, [handleNext3]);
+        }
+      `,
+      // Autofix doesn't wrap into useCallback here
+      // because they are only referenced by effect itself.
+      output: `
+        function MyComponent(props) {
+          function handleNext1() {
+            console.log('hello');
+          }
+          const handleNext2 = () => {
+            console.log('hello');
+          };
+          let handleNext3 = function() {
+            console.log('hello');
+          };
+          useEffect(() => {
+            handleNext1();
+            return Store.subscribe(() => handleNext1());
+          }, [handleNext1]);
+          useLayoutEffect(() => {
+            handleNext2();
+            return Store.subscribe(() => handleNext2());
+          }, [handleNext2]);
+          useMemo(() => {
+            handleNext3();
+            return Store.subscribe(() => handleNext3());
+          }, [handleNext3]);
+        }
+      `,
+      errors: [
+        "The 'handleNext1' function makes the dependencies of useEffect Hook " +
+          "(at line 15) change on every render. To fix this, move the 'handleNext1' " +
+          'function inside the useEffect callback. Alternatively, wrap the ' +
+          "'handleNext1' definition into its own useCallback() Hook.",
+        "The 'handleNext2' function makes the dependencies of useLayoutEffect Hook " +
+          "(at line 19) change on every render. To fix this, move the 'handleNext2' " +
+          'function inside the useLayoutEffect callback. Alternatively, wrap the ' +
+          "'handleNext2' definition into its own useCallback() Hook.",
+        "The 'handleNext3' function makes the dependencies of useMemo Hook " +
+          "(at line 23) change on every render. To fix this, move the 'handleNext3' " +
+          'function inside the useMemo callback. Alternatively, wrap the ' +
+          "'handleNext3' definition into its own useCallback() Hook.",
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
+          function handleNext1() {
+            console.log('hello');
+          }
+          const handleNext2 = () => {
+            console.log('hello');
+          };
+          let handleNext3 = function() {
+            console.log('hello');
+          };
+          useEffect(() => {
+            handleNext1();
+            return Store.subscribe(() => handleNext1());
+          }, [handleNext1]);
+          useLayoutEffect(() => {
+            handleNext2();
+            return Store.subscribe(() => handleNext2());
+          }, [handleNext2]);
+          useMemo(() => {
+            handleNext3();
+            return Store.subscribe(() => handleNext3());
+          }, [handleNext3]);
+          return (
+            <div
+              onClick={() => {
+                handleNext1();
+                setTimeout(handleNext2);
+                setTimeout(() => {
+                  handleNext3();
+                });
+              }}
+            />
+          );
+        }
+      `,
+      // Autofix wraps into useCallback where possible (variables only)
+      // because they are only referenced outside the effect.
+      output: `
+        function MyComponent(props) {
+          function handleNext1() {
+            console.log('hello');
+          }
+          const handleNext2 = useCallback(() => {
+            console.log('hello');
+          });
+          let handleNext3 = useCallback(function() {
+            console.log('hello');
+          });
+          useEffect(() => {
+            handleNext1();
+            return Store.subscribe(() => handleNext1());
+          }, [handleNext1]);
+          useLayoutEffect(() => {
+            handleNext2();
+            return Store.subscribe(() => handleNext2());
+          }, [handleNext2]);
+          useMemo(() => {
+            handleNext3();
+            return Store.subscribe(() => handleNext3());
+          }, [handleNext3]);
+          return (
+            <div
+              onClick={() => {
+                handleNext1();
+                setTimeout(handleNext2);
+                setTimeout(() => {
+                  handleNext3();
+                });
+              }}
+            />
+          );
+        }
+      `,
+      errors: [
+        "The 'handleNext1' function makes the dependencies of useEffect Hook " +
+          '(at line 15) change on every render. To fix this, wrap the ' +
+          "'handleNext1' definition into its own useCallback() Hook.",
+        "The 'handleNext2' function makes the dependencies of useLayoutEffect Hook " +
+          '(at line 19) change on every render. To fix this, wrap the ' +
+          "'handleNext2' definition into its own useCallback() Hook.",
+        "The 'handleNext3' function makes the dependencies of useMemo Hook " +
+          '(at line 23) change on every render. To fix this, wrap the ' +
+          "'handleNext3' definition into its own useCallback() Hook.",
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
+          const handleNext1 = () => {
+            console.log('hello');
+          };
+          function handleNext2() {
+            console.log('hello');
+          }
+          useEffect(() => {
+            return Store.subscribe(handleNext1);
+            return Store.subscribe(handleNext2);
+          }, [handleNext1, handleNext2]);
+          useEffect(() => {
+            return Store.subscribe(handleNext1);
+            return Store.subscribe(handleNext2);
+          }, [handleNext1, handleNext2]);
+        }
+      `,
+      // Normally we'd suggest moving handleNext inside an
+      // effect. But it's used by more than one. So we
+      // suggest useCallback() and use it for the autofix
+      // where possible (variable but not declaration).
+      output: `
+        function MyComponent(props) {
+          const handleNext1 = useCallback(() => {
+            console.log('hello');
+          });
+          function handleNext2() {
+            console.log('hello');
+          }
+          useEffect(() => {
+            return Store.subscribe(handleNext1);
+            return Store.subscribe(handleNext2);
+          }, [handleNext1, handleNext2]);
+          useEffect(() => {
+            return Store.subscribe(handleNext1);
+            return Store.subscribe(handleNext2);
+          }, [handleNext1, handleNext2]);
+        }
+      `,
+      // TODO: we could coalesce messages for the same function if it affects multiple Hooks.
+      errors: [
+        "The 'handleNext1' function makes the dependencies of useEffect Hook " +
+          '(at line 12) change on every render. To fix this, wrap the ' +
+          "'handleNext1' definition into its own useCallback() Hook.",
+        "The 'handleNext1' function makes the dependencies of useEffect Hook " +
+          '(at line 16) change on every render. To fix this, wrap the ' +
+          "'handleNext1' definition into its own useCallback() Hook.",
+        "The 'handleNext2' function makes the dependencies of useEffect Hook " +
+          '(at line 12) change on every render. To fix this, wrap the ' +
+          "'handleNext2' definition into its own useCallback() Hook.",
+        "The 'handleNext2' function makes the dependencies of useEffect Hook " +
+          '(at line 16) change on every render. To fix this, wrap the ' +
+          "'handleNext2' definition into its own useCallback() Hook.",
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
+          let [, setState] = useState();
+          let taint = props.foo;
+
+          function handleNext(value) {
+            let value2 = value * taint;
+            setState(value2);
+            console.log('hello');
+          }
+
+          useEffect(() => {
+            return Store.subscribe(handleNext);
+          }, [handleNext]);
+        }
+      `,
+      output: `
+        function MyComponent(props) {
+          let [, setState] = useState();
+          let taint = props.foo;
+
+          function handleNext(value) {
+            let value2 = value * taint;
+            setState(value2);
+            console.log('hello');
+          }
+
+          useEffect(() => {
+            return Store.subscribe(handleNext);
+          }, [handleNext]);
+        }
+      `,
+      errors: [
+        `The 'handleNext' function makes the dependencies of ` +
+          `useEffect Hook (at line 14) change on every render. ` +
+          `To fix this, move the 'handleNext' function inside ` +
+          `the useEffect callback. Alternatively, wrap the ` +
+          `'handleNext' definition into its own useCallback() Hook.`,
       ],
     },
     {
