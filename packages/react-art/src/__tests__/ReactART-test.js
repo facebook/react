@@ -359,7 +359,7 @@ describe('ReactART', () => {
     const CurrentRendererContext = React.createContext(null);
 
     function Yield(props) {
-      ReactNoop.yield(props.value);
+      Scheduler.yieldValue(props.value);
       return null;
     }
 

@@ -34,6 +34,22 @@ export default {
         : undefined;
     const options = {additionalHooks};
 
+    // Should be shared between visitors.
+    let staticKnownValueCache = new WeakMap();
+    let functionWithoutCapturedValueCache = new WeakMap();
+    function memoizeWithWeakMap(fn, map) {
+      return function(arg) {
+        if (map.has(arg)) {
+          // to verify cache hits:
+          // console.log(arg.name)
+          return map.get(arg);
+        }
+        const result = fn(arg);
+        map.set(arg, result);
+        return result;
+      };
+    }
+
     return {
       FunctionExpression: visitFunctionExpression,
       ArrowFunctionExpression: visitFunctionExpression,
@@ -86,6 +102,7 @@ export default {
       // scope. We can't enforce this in a lint so we trust that all variables
       // declared outside of pure scope are indeed frozen.
       const pureScopes = new Set();
+      let componentScope = null;
       {
         let currentScope = scope.upper;
         while (currentScope) {
@@ -101,7 +118,155 @@ export default {
         if (!currentScope) {
           return;
         }
+        componentScope = currentScope;
       }
+
+      // Next we'll define a few helpers that helps us
+      // tell if some values don't have to be declared as deps.
+
+      // Some are known to be static based on Hook calls.
+      // const [state, setState] = useState() / React.useState()
+      //               ^^^ true for this reference
+      // const [state, dispatch] = useReducer() / React.useReducer()
+      //               ^^^ true for this reference
+      // const ref = useRef()
+      //       ^^^ true for this reference
+      // False for everything else.
+      function isStaticKnownHookValue(resolved) {
+        if (!Array.isArray(resolved.defs)) {
+          return false;
+        }
+        const def = resolved.defs[0];
+        if (def == null) {
+          return false;
+        }
+        // Look for `let stuff = ...`
+        if (def.node.type !== 'VariableDeclarator') {
+          return false;
+        }
+        const init = def.node.init;
+        if (init == null) {
+          return false;
+        }
+        // Detect primitive constants
+        // const foo = 42
+        const declaration = def.node.parent;
+        if (
+          declaration.kind === 'const' &&
+          init.type === 'Literal' &&
+          (typeof init.value === 'string' ||
+            typeof init.value === 'number' ||
+            init.value === null)
+        ) {
+          // Definitely static
+          return true;
+        }
+        // Detect known Hook calls
+        // const [_, setState] = useState()
+        if (init.type !== 'CallExpression') {
+          return false;
+        }
+        let callee = init.callee;
+        // Step into `= React.something` initializer.
+        if (
+          callee.type === 'MemberExpression' &&
+          callee.object.name === 'React' &&
+          callee.property != null &&
+          !callee.computed
+        ) {
+          callee = callee.property;
+        }
+        if (callee.type !== 'Identifier') {
+          return false;
+        }
+        const id = def.node.id;
+        if (callee.name === 'useRef' && id.type === 'Identifier') {
+          // useRef() return value is static.
+          return true;
+        } else if (callee.name === 'useState' || callee.name === 'useReducer') {
+          // Only consider second value in initializing tuple static.
+          if (
+            id.type === 'ArrayPattern' &&
+            id.elements.length === 2 &&
+            Array.isArray(resolved.identifiers) &&
+            // Is second tuple value the same reference we're checking?
+            id.elements[1] === resolved.identifiers[0]
+          ) {
+            return true;
+          }
+        }
+        // By default assume it's dynamic.
+        return false;
+      }
+
+      // Some are just functions that don't reference anything dynamic.
+      function isFunctionWithoutCapturedValues(resolved) {
+        if (!Array.isArray(resolved.defs)) {
+          return false;
+        }
+        const def = resolved.defs[0];
+        if (def == null) {
+          return false;
+        }
+        if (def.node == null || def.node.id == null) {
+          return false;
+        }
+        // Search the direct component subscopes for
+        // top-level function definitions matching this reference.
+        const fnNode = def.node;
+        let childScopes = componentScope.childScopes;
+        let fnScope = null;
+        let i;
+        for (i = 0; i < childScopes.length; i++) {
+          let childScope = childScopes[i];
+          let childScopeBlock = childScope.block;
+          if (
+            // function handleChange() {}
+            (fnNode.type === 'FunctionDeclaration' &&
+              childScopeBlock === fnNode) ||
+            // const handleChange = () => {}
+            // const handleChange = function() {}
+            (fnNode.type === 'VariableDeclarator' &&
+              childScopeBlock.parent === fnNode)
+          ) {
+            // Found it!
+            fnScope = childScope;
+            break;
+          }
+        }
+        if (fnScope == null) {
+          return false;
+        }
+        // Does this function capture any values
+        // that are in pure scopes (aka render)?
+        for (i = 0; i < fnScope.through.length; i++) {
+          const ref = fnScope.through[i];
+          if (ref.resolved == null) {
+            continue;
+          }
+          if (
+            pureScopes.has(ref.resolved.scope) &&
+            // Static values are fine though,
+            // although we won't check functions deeper.
+            !memoizedIsStaticKnownHookValue(ref.resolved)
+          ) {
+            return false;
+          }
+        }
+        // If we got here, this function doesn't capture anything
+        // from render--or everything it captures is known static.
+        return true;
+      }
+
+      // Remember such values. Avoid re-running extra checks on them.
+      const memoizedIsStaticKnownHookValue = memoizeWithWeakMap(
+        isStaticKnownHookValue,
+        staticKnownValueCache,
+      );
+      const memoizedIsFunctionWithoutCapturedValues = memoizeWithWeakMap(
+        isFunctionWithoutCapturedValues,
+        functionWithoutCapturedValueCache,
+      );
 
       // These are usually mistaken. Collect them.
       const currentRefsInEffectCleanup = new Map();
@@ -170,7 +335,10 @@ export default {
           // Add the dependency to a map so we can make sure it is referenced
           // again in our dependencies array. Remember whether it's static.
           if (!dependencies.has(dependency)) {
-            const isStatic = isDefinitelyStaticDependency(reference);
+            const resolved = reference.resolved;
+            const isStatic =
+              memoizedIsStaticKnownHookValue(resolved) ||
+              memoizedIsFunctionWithoutCapturedValues(resolved);
             dependencies.set(dependency, {
               isStatic,
               reference,
@@ -224,6 +392,7 @@ export default {
       );
 
       const declaredDependencies = [];
+      const externalDependencies = new Set();
       if (declaredDependenciesNode.type !== 'ArrayExpression') {
         // If the declared dependencies are not an array expression then we
         // can't verify that the user provided the correct dependencies. Tell
@@ -298,85 +467,98 @@ export default {
               throw error;
             }
           }
+
+          let maybeID = declaredDependencyNode;
+          while (maybeID.type === 'MemberExpression') {
+            maybeID = maybeID.object;
+          }
+          const isDeclaredInComponent = !componentScope.through.some(
+            ref => ref.identifier === maybeID,
+          );
+
           // Add the dependency to our declared dependency map.
           declaredDependencies.push({
             key: declaredDependency,
             node: declaredDependencyNode,
           });
+
+          if (!isDeclaredInComponent) {
+            externalDependencies.add(declaredDependency);
+          }
         });
       }
 
-      // TODO: we can do a pass at this code and pick more appropriate
-      // data structures to avoid nested loops if we can.
-      let suggestedDependencies = [];
-      let duplicateDependencies = new Set();
-      let unnecessaryDependencies = new Set();
-      let missingDependencies = new Set();
-      let actualDependencies = Array.from(dependencies.keys());
+      // Warn about assigning to variables in the outer scope.
+      // Those are usually bugs.
       let foundStaleAssignments = false;
-
-      function satisfies(actualDep, dep) {
-        return actualDep === dep || actualDep.startsWith(dep + '.');
+      function reportStaleAssignment(writeExpr, key) {
+        foundStaleAssignments = true;
+        context.report({
+          node: writeExpr,
+          message:
+            `Assignments to the '${key}' variable from inside a React ${context.getSource(
+              reactiveHook,
+            )} Hook ` +
+            `will not persist between re-renders. ` +
+            `If it's only needed by this Hook, move the variable inside it. ` +
+            `Alternatively, declare a ref with the useRef Hook, ` +
+            `and keep the mutable value in its 'current' property.`,
+        });
       }
 
-      // First, ensure what user specified makes sense.
-      declaredDependencies.forEach(({key}) => {
-        if (actualDependencies.some(actualDep => satisfies(actualDep, key))) {
-          // Legit dependency.
-          if (suggestedDependencies.indexOf(key) === -1) {
-            suggestedDependencies.push(key);
-          } else {
-            // Duplicate. Do nothing.
-            duplicateDependencies.add(key);
-          }
-        } else {
-          if (isEffect && !key.endsWith('.current')) {
-            // Effects may have extra "unnecessary" deps.
-            // Such as resetting scroll when ID changes.
-            // The exception is ref.current which is always wrong.
-            // Consider them legit.
-            if (suggestedDependencies.indexOf(key) === -1) {
-              suggestedDependencies.push(key);
-            }
-          } else {
-            // Unnecessary dependency. Remember to report it.
-            unnecessaryDependencies.add(key);
-          }
-        }
-      });
-
-      // Then fill in the missing ones.
+      // Remember which deps are optional and report bad usage first.
+      const optionalDependencies = new Set();
       dependencies.forEach(({isStatic, reference}, key) => {
-        if (reference.writeExpr) {
-          foundStaleAssignments = true;
-          context.report({
-            node: reference.writeExpr,
-            message:
-              `Assignments to the '${key}' variable from inside a React ${context.getSource(
-                reactiveHook,
-              )} Hook ` +
-              `will not persist between re-renders. ` +
-              `If it's only needed by this Hook, move the variable inside it. ` +
-              `Alternatively, declare a ref with the useRef Hook, ` +
-              `and keep the mutable value in its 'current' property.`,
-          });
+        if (isStatic) {
+          optionalDependencies.add(key);
         }
-
-        if (
-          !suggestedDependencies.some(suggestedDep =>
-            satisfies(key, suggestedDep),
-          )
-        ) {
-          if (!isStatic) {
-            // Legit missing.
-            suggestedDependencies.push(key);
-            missingDependencies.add(key);
-          }
-        } else {
-          // Already did that. Do nothing.
+        if (reference.writeExpr) {
+          reportStaleAssignment(reference.writeExpr, key);
         }
       });
+      if (foundStaleAssignments) {
+        // The intent isn't clear so we'll wait until you fix those first.
+        return;
+      }
 
+      let {
+        suggestedDependencies,
+        unnecessaryDependencies,
+        missingDependencies,
+        duplicateDependencies,
+      } = collectRecommendations({
+        dependencies,
+        declaredDependencies,
+        optionalDependencies,
+        externalDependencies,
+        isEffect,
+      });
+
+      const problemCount =
+        duplicateDependencies.size +
+        missingDependencies.size +
+        unnecessaryDependencies.size;
+      if (problemCount === 0) {
+        return;
+      }
+
+      // If we're going to report a missing dependency,
+      // we might as well recalculate the list ignoring
+      // the currently specified deps. This can result
+      // in some extra deduplication. We can't do this
+      // for effects though because those have legit
+      // use cases for over-specifying deps.
+      if (!isEffect && missingDependencies.size > 0) {
+        suggestedDependencies = collectRecommendations({
+          dependencies,
+          declaredDependencies: [], // Pretend we don't know
+          optionalDependencies,
+          externalDependencies,
+          isEffect,
+        }).suggestedDependencies;
+      }
+
+      // Alphabetize the suggestions, but only if deps were already alphabetized.
       function areDeclaredDepsAlphabetized() {
         if (declaredDependencies.length === 0) {
           return true;
@@ -385,24 +567,8 @@ export default {
         const sortedDeclaredDepKeys = declaredDepKeys.slice().sort();
         return declaredDepKeys.join(',') === sortedDeclaredDepKeys.join(',');
       }
-
       if (areDeclaredDepsAlphabetized()) {
-        // Alphabetize the autofix, but only if deps were already alphabetized.
         suggestedDependencies.sort();
-      }
-
-      const problemCount =
-        duplicateDependencies.size +
-        missingDependencies.size +
-        unnecessaryDependencies.size;
-
-      if (problemCount === 0) {
-        return;
-      }
-
-      if (foundStaleAssignments) {
-        // The intent isn't clear so we'll wait until you fix those first.
-        return;
       }
 
       function getWarningMessage(deps, singlePrefix, label, fixVerb) {
@@ -441,6 +607,51 @@ export default {
           extraWarning =
             ` Mutable values like '${badRef}' aren't valid dependencies ` +
             "because their mutation doesn't re-render the component.";
+        } else if (externalDependencies.size > 0) {
+          const dep = Array.from(externalDependencies)[0];
+          extraWarning =
+            ` Values like '${dep}' aren't valid dependencies ` +
+            `because their mutation doesn't re-render the component.`;
+        }
+      }
+
+      // `props.foo()` marks `props` as a dependency because it has
+      // a `this` value. This warning can be confusing.
+      // So if we're going to show it, append a clarification.
+      if (!extraWarning && missingDependencies.has('props')) {
+        let propDep = dependencies.get('props');
+        if (propDep == null) {
+          return;
+        }
+        const refs = propDep.reference.resolved.references;
+        if (!Array.isArray(refs)) {
+          return;
+        }
+        let isPropsOnlyUsedInMembers = true;
+        for (let i = 0; i < refs.length; i++) {
+          const ref = refs[i];
+          const id = fastFindReferenceWithParent(
+            componentScope.block,
+            ref.identifier,
+          );
+          if (!id) {
+            isPropsOnlyUsedInMembers = false;
+            break;
+          }
+          const parent = id.parent;
+          if (parent == null) {
+            isPropsOnlyUsedInMembers = false;
+            break;
+          }
+          if (parent.type !== 'MemberExpression') {
+            isPropsOnlyUsedInMembers = false;
+            break;
+          }
+        }
+        if (isPropsOnlyUsedInMembers) {
+          extraWarning =
+            ' Alternatively, destructure the necessary props ' +
+            'outside the callback.';
         }
       }
 
@@ -475,11 +686,172 @@ export default {
   },
 };
 
+// The meat of the logic.
+function collectRecommendations({
+  dependencies,
+  declaredDependencies,
+  optionalDependencies,
+  externalDependencies,
+  isEffect,
+}) {
+  // Our primary data structure.
+  // It is a logical representation of property chains:
+  // `props` -> `props.foo` -> `props.foo.bar` -> `props.foo.bar.baz`
+  //         -> `props.lol`
+  //         -> `props.huh` -> `props.huh.okay`
+  //         -> `props.wow`
+  // We'll use it to mark nodes that are *used* by the programmer,
+  // and the nodes that were *declared* as deps. Then we will
+  // traverse it to learn which deps are missing or unnecessary.
+  const depTree = createDepTree();
+  function createDepTree() {
+    return {
+      isRequired: false, // True if used in code
+      isSatisfiedRecursively: false, // True if specified in deps
+      hasRequiredNodesBelow: false, // True if something deeper is used by code
+      children: new Map(), // Nodes for properties
+    };
+  }
+
+  // Mark all required nodes first.
+  // Imagine exclamation marks next to each used deep property.
+  dependencies.forEach((_, key) => {
+    const node = getOrCreateNodeByPath(depTree, key);
+    node.isRequired = true;
+    markAllParentsByPath(depTree, key, parent => {
+      parent.hasRequiredNodesBelow = true;
+    });
+  });
+
+  // Mark all satisfied nodes.
+  // Imagine checkmarks next to each declared dependency.
+  declaredDependencies.forEach(({key}) => {
+    const node = getOrCreateNodeByPath(depTree, key);
+    node.isSatisfiedRecursively = true;
+  });
+  optionalDependencies.forEach(key => {
+    const node = getOrCreateNodeByPath(depTree, key);
+    node.isSatisfiedRecursively = true;
+  });
+
+  // Tree manipulation helpers.
+  function getOrCreateNodeByPath(rootNode, path) {
+    let keys = path.split('.');
+    let node = rootNode;
+    for (let key of keys) {
+      let child = node.children.get(key);
+      if (!child) {
+        child = createDepTree();
+        node.children.set(key, child);
+      }
+      node = child;
+    }
+    return node;
+  }
+  function markAllParentsByPath(rootNode, path, fn) {
+    let keys = path.split('.');
+    let node = rootNode;
+    for (let key of keys) {
+      let child = node.children.get(key);
+      if (!child) {
+        return;
+      }
+      fn(child);
+      node = child;
+    }
+  }
+
+  // Now we can learn which dependencies are missing or necessary.
+  let missingDependencies = new Set();
+  let satisfyingDependencies = new Set();
+  scanTreeRecursively(
+    depTree,
+    missingDependencies,
+    satisfyingDependencies,
+    key => key,
+  );
+  function scanTreeRecursively(node, missingPaths, satisfyingPaths, keyToPath) {
+    node.children.forEach((child, key) => {
+      const path = keyToPath(key);
+      if (child.isSatisfiedRecursively) {
+        if (child.hasRequiredNodesBelow) {
+          // Remember this dep actually satisfied something.
+          satisfyingPaths.add(path);
+        }
+        // It doesn't matter if there's something deeper.
+        // It would be transitively satisfied since we assume immutability.
+        // `props.foo` is enough if you read `props.foo.id`.
+        return;
+      }
+      if (child.isRequired) {
+        // Remember that no declared deps satisfied this node.
+        missingPaths.add(path);
+        // If we got here, nothing in its subtree was satisfied.
+        // No need to search further.
+        return;
+      }
+      scanTreeRecursively(
+        child,
+        missingPaths,
+        satisfyingPaths,
+        childKey => path + '.' + childKey,
+      );
+    });
+  }
+
+  // Collect suggestions in the order they were originally specified.
+  let suggestedDependencies = [];
+  let unnecessaryDependencies = new Set();
+  let duplicateDependencies = new Set();
+  declaredDependencies.forEach(({key}) => {
+    // Does this declared dep satsify a real need?
+    if (satisfyingDependencies.has(key)) {
+      if (suggestedDependencies.indexOf(key) === -1) {
+        // Good one.
+        suggestedDependencies.push(key);
+      } else {
+        // Duplicate.
+        duplicateDependencies.add(key);
+      }
+    } else {
+      if (
+        isEffect &&
+        !key.endsWith('.current') &&
+        !externalDependencies.has(key)
+      ) {
+        // Effects are allowed extra "unnecessary" deps.
+        // Such as resetting scroll when ID changes.
+        // Consider them legit.
+        // The exception is ref.current which is always wrong.
+        if (suggestedDependencies.indexOf(key) === -1) {
+          suggestedDependencies.push(key);
+        }
+      } else {
+        // It's definitely not needed.
+        unnecessaryDependencies.add(key);
+      }
+    }
+  });
+
+  // Then add the missing ones at the end.
+  missingDependencies.forEach(key => {
+    suggestedDependencies.push(key);
+  });
+
+  return {
+    suggestedDependencies,
+    unnecessaryDependencies,
+    duplicateDependencies,
+    missingDependencies,
+  };
+}
+
 /**
  * Assuming () means the passed/returned node:
  * (props) => (props)
  * props.(foo) => (props.foo)
- * props.foo.(bar) => (props.foo).bar
+ * props.foo.(bar) => (props).foo.bar
+ * props.foo.bar.(baz) => (props).foo.bar.baz
  */
 function getDependency(node) {
   if (
@@ -493,7 +865,7 @@ function getDependency(node) {
       node.parent.parent.callee === node.parent
     )
   ) {
-    return node.parent;
+    return getDependency(node.parent);
   } else {
     return node;
   }
@@ -570,83 +942,6 @@ function getReactiveHookCallbackIndex(calleeNode, options) {
         return -1;
       }
   }
-}
-
-// const [state, setState] = useState() / React.useState()
-//               ^^^ true for this reference
-// const [state, dispatch] = useReducer() / React.useReducer()
-//               ^^^ true for this reference
-// const ref = useRef()
-//       ^^^ true for this reference
-// False for everything else.
-function isDefinitelyStaticDependency(reference) {
-  // This function is written defensively because I'm not sure about corner cases.
-  // TODO: we can strengthen this if we're sure about the types.
-  const resolved = reference.resolved;
-  if (resolved == null || !Array.isArray(resolved.defs)) {
-    return false;
-  }
-  const def = resolved.defs[0];
-  if (def == null) {
-    return false;
-  }
-  // Look for `let stuff = ...`
-  if (def.node.type !== 'VariableDeclarator') {
-    return false;
-  }
-  const init = def.node.init;
-  if (init == null) {
-    return false;
-  }
-  // Detect primitive constants
-  // const foo = 42
-  const declaration = def.node.parent;
-  if (
-    declaration.kind === 'const' &&
-    init.type === 'Literal' &&
-    (typeof init.value === 'string' ||
-      typeof init.value === 'number' ||
-      init.value === null)
-  ) {
-    // Definitely static
-    return true;
-  }
-  // Detect known Hook calls
-  // const [_, setState] = useState()
-  if (init.type !== 'CallExpression') {
-    return false;
-  }
-  let callee = init.callee;
-  // Step into `= React.something` initializer.
-  if (
-    callee.type === 'MemberExpression' &&
-    callee.object.name === 'React' &&
-    callee.property != null &&
-    !callee.computed
-  ) {
-    callee = callee.property;
-  }
-  if (callee.type !== 'Identifier') {
-    return false;
-  }
-  const id = def.node.id;
-  if (callee.name === 'useRef' && id.type === 'Identifier') {
-    // useRef() return value is static.
-    return true;
-  } else if (callee.name === 'useState' || callee.name === 'useReducer') {
-    // Only consider second value in initializing tuple static.
-    if (
-      id.type === 'ArrayPattern' &&
-      id.elements.length === 2 &&
-      Array.isArray(reference.resolved.identifiers) &&
-      // Is second tuple value the same reference we're checking?
-      id.elements[1] === reference.resolved.identifiers[0]
-    ) {
-      return true;
-    }
-  }
-  // By default assume it's dynamic.
-  return false;
 }
 
 /**

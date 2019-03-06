@@ -6,6 +6,12 @@
   </summary>
 </details>
 
+## 16.8.4 (March 5, 2019)
+
+### React DOM and other renderers
+
+- Fix a bug where DevTools caused a runtime error when inspecting a component that used a `useContext` hook. ([@bvaughn](https://github.com/bvaughn) in [#14940](https://github.com/facebook/react/pull/14940))
+
 ## 16.8.3 (February 21, 2019)
 
 ### React DOM
@@ -16,7 +22,7 @@
 ### React DOM Server
 * Unwind the context stack when a stream is destroyed without completing, to prevent incorrect values during a subsequent render. ([@overlookmotel](https://github.com/overlookmotel) in [#14706](https://github.com/facebook/react/pull/14706/))
 
-## ESLint Plugin for React Hooks
+### ESLint Plugin for React Hooks
 
 * Add a new recommended `exhaustive-deps` rule. ([@gaearon](https://github.com/gaearon) in [#14636](https://github.com/facebook/react/pull/14636))
 
