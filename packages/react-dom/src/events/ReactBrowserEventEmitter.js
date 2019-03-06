@@ -86,10 +86,12 @@ import isEventSupported from './isEventSupported';
  */
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
-const elementListeningObjects: WeakMap|Map<
-  Document | Element | Node,
-  ElementListeningObject,
-> = new PossiblyWeakMap();
+const elementListeningObjects:
+  | WeakMap
+  | Map<
+      Document | Element | Node,
+      ElementListeningObject,
+    > = new PossiblyWeakMap();
 
 // We store legacy events we listen where we don't use
 // passive/non-passive options on the event listener.
