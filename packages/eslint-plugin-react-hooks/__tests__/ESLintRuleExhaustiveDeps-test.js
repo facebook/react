@@ -949,6 +949,29 @@ const tests = {
         }
       `,
     },
+    {
+      code: `
+        function App() {
+          const [query, setQuery] = useState('react');
+          const [state, setState] = useState(null);
+          useEffect(() => {
+            let ignore = false;
+            fetchSomething();
+            async function fetchSomething() {
+              const result = await (await fetch('http://hn.algolia.com/api/v1/search?query=' + query)).json();
+              if (!ignore) setState(result);
+            }
+            return () => { ignore = true; };
+          }, [query]);
+          return (
+            <>
+              <input value={query} onChange={e => setQuery(e.target.value)} />
+              {JSON.stringify(state)}
+            </>
+          );
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -2304,7 +2327,7 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'state'. " +
           'Either include it or remove the dependency array. ' +
-          `You can also write 'setState(state => ...)' ` +
+          `You can also write 'setState(s => ...)' ` +
           `if you only use 'state' for the 'setState' call.`,
       ],
     },
@@ -2335,7 +2358,7 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'state'. " +
           'Either include it or remove the dependency array. ' +
-          `You can also write 'setState(state => ...)' ` +
+          `You can also write 'setState(s => ...)' ` +
           `if you only use 'state' for the 'setState' call.`,
       ],
     },
@@ -3933,7 +3956,7 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'count'. " +
           'Either include it or remove the dependency array. ' +
-          `You can also write 'setCount(count => ...)' if you ` +
+          `You can also write 'setCount(c => ...)' if you ` +
           `only use 'count' for the 'setCount' call.`,
       ],
     },
@@ -3971,7 +3994,7 @@ const tests = {
       errors: [
         "React Hook useEffect has missing dependencies: 'count' and 'increment'. " +
           'Either include them or remove the dependency array. ' +
-          `You can also write 'setCount(count => ...)' if you ` +
+          `You can also write 'setCount(c => ...)' if you ` +
           `only use 'count' for the 'setCount' call.`,
       ],
     },
@@ -4377,6 +4400,35 @@ const tests = {
       errors: [
         `React Hook useEffect has an unnecessary dependency: 'fetchData'. ` +
           `Either exclude it or remove the dependency array.`,
+      ],
+    },
+    {
+      code: `
+        function Thing() {
+          useEffect(async () => {}, []);
+        }
+      `,
+      output: `
+        function Thing() {
+          useEffect(async () => {}, []);
+        }
+      `,
+      errors: [
+        `Effect callbacks are synchronous to prevent race conditions. ` +
+          `Put the async function inside:\n\n` +
+          `useEffect(() => {\n` +
+          `  let ignore = false;\n` +
+          `  fetchSomething();\n` +
+          `\n` +
+          `  async function fetchSomething() {\n` +
+          `    const result = await ...\n` +
+          `    if (!ignore) setState(result);\n` +
+          `  }\n` +
+          `\n` +
+          `  return () => { ignore = true; };\n` +
+          `}, []);\n` +
+          `\n` +
+          `This lets you handle multiple requests without bugs.`,
       ],
     },
   ],
