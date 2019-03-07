@@ -583,5 +583,76 @@ describe('ReactDOMServerIntegration', () => {
         ),
       ).toBe('default');
     });
+
+    // Regression tests for https://github.com/facebook/react/issues/15012
+    describe('creates markup with data-reactroot="" attribute', () => {
+      it('within provider', () => {
+        const App = () => (
+          <Context.Provider value="foo">
+            <div>
+              <div>Hello</div>
+            </div>
+          </Context.Provider>
+        );
+
+        expect(ReactDOMServer.renderToString(<App />)).toBe(
+          '<div data-reactroot=""><div>Hello</div></div>',
+        );
+      });
+
+      it('within nested providers', () => {
+        const App = () => (
+          <Context.Provider value="foo">
+            <Context.Provider value="bar">
+              <div>
+                <div>Hello</div>
+              </div>
+            </Context.Provider>
+          </Context.Provider>
+        );
+
+        expect(ReactDOMServer.renderToString(<App />)).toBe(
+          '<div data-reactroot=""><div>Hello</div></div>',
+        );
+      });
+
+      it('with multiple DOM roots', () => {
+        const App = () => (
+          <Context.Provider value="foo">
+            <div>
+              <div>One</div>
+            </div>
+            <div>
+              <div>Two</div>
+            </div>
+          </Context.Provider>
+        );
+
+        expect(ReactDOMServer.renderToString(<App />)).toBe(
+          '<div data-reactroot=""><div>One</div></div><div data-reactroot=""><div>Two</div></div>',
+        );
+      });
+
+      it('with multiple DOM roots in multiple providers', () => {
+        const App = () => (
+          <Context.Provider value="foo">
+            <Context.Provider value="bar">
+              <div>
+                <div>One</div>
+              </div>
+            </Context.Provider>
+            <Context.Provider value="qux">
+              <div>
+                <div>Two</div>
+              </div>
+            </Context.Provider>
+          </Context.Provider>
+        );
+
+        expect(ReactDOMServer.renderToString(<App />)).toBe(
+          '<div data-reactroot=""><div>One</div></div><div data-reactroot=""><div>Two</div></div>',
+        );
+      });
+    });
   });
 });

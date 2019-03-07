@@ -102,5 +102,76 @@ describe('ReactDOMServerIntegration', () => {
     itRenders('an empty fragment', async render => {
       expect(await render(<React.Fragment />)).toBe(null);
     });
+
+    // Regression tests for https://github.com/facebook/react/issues/15012
+    describe('creates markup with data-reactroot="" attribute', () => {
+      it('within fragment', () => {
+        const App = () => (
+          <React.Fragment>
+            <div>
+              <div>Hello</div>
+            </div>
+          </React.Fragment>
+        );
+
+        expect(ReactDOMServer.renderToString(<App />)).toBe(
+          '<div data-reactroot=""><div>Hello</div></div>',
+        );
+      });
+
+      it('within nested fragments', () => {
+        const App = () => (
+          <React.Fragment>
+            <React.Fragment>
+              <div>
+                <div>Hello</div>
+              </div>
+            </React.Fragment>
+          </React.Fragment>
+        );
+
+        expect(ReactDOMServer.renderToString(<App />)).toBe(
+          '<div data-reactroot=""><div>Hello</div></div>',
+        );
+      });
+
+      it('with multiple DOM roots', () => {
+        const App = () => (
+          <React.Fragment>
+            <div>
+              <div>One</div>
+            </div>
+            <div>
+              <div>Two</div>
+            </div>
+          </React.Fragment>
+        );
+
+        expect(ReactDOMServer.renderToString(<App />)).toBe(
+          '<div data-reactroot=""><div>One</div></div><div data-reactroot=""><div>Two</div></div>',
+        );
+      });
+
+      it('with multiple DOM roots in multiple fragments', () => {
+        const App = () => (
+          <React.Fragment>
+            <React.Fragment>
+              <div>
+                <div>One</div>
+              </div>
+            </React.Fragment>
+            <React.Fragment>
+              <div>
+                <div>Two</div>
+              </div>
+            </React.Fragment>
+          </React.Fragment>
+        );
+
+        expect(ReactDOMServer.renderToString(<App />)).toBe(
+          '<div data-reactroot=""><div>One</div></div><div data-reactroot=""><div>Two</div></div>',
+        );
+      });
+    });
   });
 });
