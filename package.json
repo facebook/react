@@ -73,7 +73,7 @@
     "react-lifecycles-compat": "^3.0.2",
     "rimraf": "^2.6.1",
     "rollup": "^1.4.1",
-    "rollup-plugin-babel": "^3.0.1",
+    "rollup-plugin-babel": "^3.0.7",
     "rollup-plugin-commonjs": "^9.2.1",
     "rollup-plugin-node-resolve": "^2.1.1",
     "rollup-plugin-prettier": "^0.6.0",

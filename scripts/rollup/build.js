@@ -2,6 +2,7 @@
 
 const {rollup} = require('rollup');
 const babel = require('rollup-plugin-babel');
+const babelCore = require('babel-core');
 const closure = require('./plugins/closure-plugin');
 const commonjs = require('rollup-plugin-commonjs');
 const prettier = require('rollup-plugin-prettier');
@@ -357,6 +358,23 @@ function getPlugins(
     }),
     // We still need CommonJS for external deps like object-assign.
     commonjs(),
+    isFBBundle && {
+      renderChunk(source) {
+        // Run a final Babel pass after Rollup bundle.
+        const babelOptions = {
+          ast: false,
+          babelrc: false,
+          compact: false,
+          plugins: [
+            // This is needed because Rollup outputs getters, but we can't use
+            // getters in www.
+            require('../babel/remove-getters'),
+          ],
+        };
+        const result = babelCore.transform(source, babelOptions);
+        return result.code;
+      },
+    },
     // Apply dead code elimination and/or minification.
     isProduction &&
       closure(
