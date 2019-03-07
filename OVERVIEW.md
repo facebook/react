@@ -165,207 +165,157 @@ while (index !== currentWeight) {
 
 ## Profiler
 
-The Profiler UI is a powerful tool for identifying and fixing performance problems. The primary goal of the new profiler is to minimize the impact of running it (so that it doesn't interfere with the application beign profiled). This can be accomplished by:
+The Profiler UI is a powerful tool for identifying and fixing performance problems. The primary goal of the new profiler is to minimize its impact (CPU usage) while profiling is active. This can be accomplished by:
 * Minimizing bridge traffic.
-* Efficiently serializing bridge messages.
+* Making expensive computations lazy.
 
-All profiling information is stored on the backend. The backend push-notifies the frontend of when profiling starts ("_profilingStarted_") and stops ("_profilingStopped_"). All other profiling information is lazy and must be requested by the backend.
+Profiling information is stored on the backend. The backend push-notifies the frontend of when profiling starts ("_profilingStarted_") and stops ("_profilingStopped_").
+
+When profiling begins, the frontend takes a snapshot/copy of each root. This snapshot includes the id, name, key, and child IDs for each node in the tree. (This information is already present on the frontend, so it does not require any additional bridge traffic.) While profiling is active, each time React commits– the frontend also stores a copy of the "_operations_" message (described above). Once profiling has finished, the frontend can use the original snapshot along with each of the stored "_operations_" messages to reconstruct the tree for each of the profiled commits.
+
+While profiling is in progress, the backend also stores some information <sup>1</sup> about each commit:
+* Commit time and duration
+* Which elements were rendered during that commit.
+* Which interactions (if any) were part of the commit.
+
+This information is kept on the backend until requested by the frontend (as described below).
+
+<sup>1</sup> In the future, the backend may also store additional metadata (e.g. which props/states changed between rendered for a given component).
 
 ### Profiling summary
 
-When the user opens the profiling tab, the frontend asks the backend if it has any profiling data for the currently-selected root. This is done by sending a "_profileSummary_" message with an id that identifies the root.
+The profiling tab shows information for the currently-selected React root. When profiling completes (or when a new root is selected) the frontend first checks to see if there is any profiling data for the selected root. (Has it cached any "_operations_"?)
 
-The response is a typed array summarizing the profiling session for that. It consists of the following values:
+If so, then it sends a "_profileSummary_" message with an id that identifies the root. The backend then returns the following information:
 
-1. root id
-1. number of interactions for the root in this profiling session
-1. number of commits for the root in this profiling session
-
-Followed by a series of tuples for each commit:
-
-1. timestamp (relative to when profiling was started)
-1. duration of commit
+* root id (to match request and response)
+* number of interactions that were traced for this root
+* the commits (each consisting of a timestamp and duration) that were profiled for the root
 
 This is the minimal information required to render the main Profiler interface. 
 
-Here is an example profiler summary:
+Here is an example profile summary:
 ```js
-[
-  1,   // root id
-  0,   // no interactions were logged during this session
-  3,   // number of commits
-  210, // first commit started 210ms after profiling began
-  10,  // and took 10ms
-  284, // second commit started 284ms after profiling began
-  13,  // and took 13ms
-  303, // third commit started 303ms after profiling began
-  5,   // and took 5ms
+{
+  rootID: 1,
+  interactionCount: 2,
+  commits: [
+    [
+      210, // first commit started 210ms after profiling began
+      10,  // and took 10ms
+    ],
+    [
+      284, // second commit started 284ms after profiling began
+      13,  // and took 13ms
+    ]
+    [
+      303, // third commit started 303ms after profiling began
+      5,   // and took 5ms
+    ]
+  ]
 ]
 ```
 
-Additional information (e.g. which components were part of a specific commit, which interactions were logged) must be lazily requested by the frontend as a user interacts with the Profiler UI.
+Additional information (e.g. which components were part of a specific commit, which interactions were logged) are lazily requested by the frontend as a user interacts with the Profiler UI.
 
 ### Commit details
 
-When a particular commit is selected, the frontend polls the backend for the information necessary to display the ["flame chart"](https://reactjs.org/blog/2018/09/10/introducing-the-react-profiler.html#flame-chart) and ["ranked chart"](https://reactjs.org/blog/2018/09/10/introducing-the-react-profiler.html#ranked-chart) views. This information includes the time and duration of the commit, any interactions that were part of the commit, and a tree representing the state of the React application as of that commit.
+When a commit is selected in the profiling view, the frontend needs to reconstruct the tree at that point in time using the snapshot and the "_operations_" it has cached.
 
-The frontend sends a "_profileCommitDetails_" message specifying which root and commit (index) it is interested in.  The backend sends a response to fill in missing details about the commit.
+In addition to this, it also needs to ask the backend for some additional information needed to display the ["flame chart"](https://reactjs.org/blog/2018/09/10/introducing-the-react-profiler.html#flame-chart) and ["ranked chart"](https://reactjs.org/blog/2018/09/10/introducing-the-react-profiler.html#ranked-chart) views. The frontend sends a "_profileCommitDetails_" message specifying which root and commit (index) it is interested in. The backend sends a response to fill in missing details about the commit:
 
-The response always beginning with 3 values:
+* root id and commit index (to match request and response)
+* which elements were rendered during the commit and how long did they take
+* which interactions were part of the commit
 
-1. root id
-1. commit index (which commit this describes)
-1. number of interactions
-
-Next is a series of interactions (depending on the number specified previously) consisting of:
-
-1. interaction id
-1. timestamp (when the interaction was traced relative to when profiling started)
-1. UTF encoded interaction display name size
-   * (followed by this number of encoded values)
-
-Finally a flattened representation of the React tree as of this commit operation:
-
-1. element id
-1. parent id
-1. base duration
-1. self duration
-1. actual duration
-1. UTF encoded display name size
-   * (followed by this number of encoded values)
-
-Here is an example commit containing two interactions and a tree of three React components:
+Here is an example commit in which two elements were rendered and one interaction was traced:
 
 ```js
-[
-  1,   // root id
-  0,   // commit index (the first commit)
-  2,   // the number of interactions (represented below)
+{
+  rootID: 1,
+  commitIndex: 0,
+  
+  // Map of interaction ID to interaction.
+  interactions: {
+    1: {
+      timestamp: 4,
+      name: "Foo"
+    },
+    2: {
+      timestamp: 4,
+      name: "Bar"
+    }
+  },
 
-  1,   // first interaction id
-  4,   // time when interaction was first traced
-  3,   // encoded interaction name size
-  70,  // "F"
-  111, // "o"
-  111, // "o"
-
-  1,   // second interaction id
-  5,   // time when interaction was first traced
-  3,   // encoded interaction name size
-  66,  // "B"
-  97,  // "a"
-  114, // "r"
-
-  1,   // root fiber id
- -1,   // parent id (signifies the fiber is a root)
-  15,  // base duration
-  4,   // self duration
-  15,  // actual duration
-  4,   // UTF encoded display name size
-  76,  // "L"
-  105, // "i"
-  115, // "s"
-  116, // "t"
-
-  2,   // fiber id
-  1,   // parent id
-  11,  // base duration
-  8,   // self duration
-  11,  // actual duration
-  4,   // UTF encoded display name size
-  73,  // "I"
-  116, // "t"
-  101, // "e"
-  109, // "m"
-
-  2,   // fiber id
-  1,   // parent id
-  8,   // base duration
-  0,   // self duration
-  0,   // actual duration (this component didn't render during this commit)
-  4,   // UTF encoded display name size
-  73,  // "I"
-  116, // "t"
-  101, // "e"
-  109, // "m"
-]
+  // Map of element ID to render durations (ms).
+  // Elements not in this map were not rendered during the commit.
+  nodes: {
+    1: {,
+      baseDuration: 15,
+      selfDuration: 4,
+      actualDuration: 15
+    },
+    2: {
+      baseDuration: 11,
+      selfDuration: 8,
+      actualDuration: 11
+    }
+  }
+}
 ```
 
 ### Component commits
 
-When a particular component (fiber) is selected, the frontend polls the backend for the aggregate data required to render the ["component chart"](https://reactjs.org/blog/2018/09/10/introducing-the-react-profiler.html#component-chart) view. This information includes each time the component rendered and how long it took.
+When a particular component (fiber) is selected, the frontend polls the backend for the aggregate data required to render the ["component chart"](https://reactjs.org/blog/2018/09/10/introducing-the-react-profiler.html#component-chart) view. The frontend sends a "_profileComponentDetails_" message specifying which root and component (id) it is interested in. The backend sends a response that includes:
 
-The frontend sends a "_profileComponentDetails_" message specifying which root and commit number it is interested in. The backend sends a response that is serialized in a similar fashion as the Elements tree (above).
+* root and component ids (to match request and response)
+* which commits was the component rendered in and how long did each take
 
-The response consists of the following values:
-
-1. root id
-1. fiber id
-1. UTF encoded display name size
-   * (followed by this number of encoded values)
-
-Followed by a series of tuples for each time the fiber was committed. The tuples consist of:
-
-1. commit index
-1. duration of time spent rendering the component in this commit
-
-Here is an example of a fiber that committed twice during a profiling session:
+Here is an example of a component that committed twice during a profiling session:
 
 ```js
-[
-  1,   // root id
-  2,   // fiber id
-  4,   // UTF encoded display name size
-  73,  // "I"
-  116, // "t"
-  101, // "e"
-  109, // "m"
+{
+  rootID: 1,
+  id: 2,
 
-  0,   // commit index 0
-  11,  // actual duration for this fiber in commit 0
-
-  3,   // commit index 3
-  7,   // actual duration for this fiber in commit 3
-]
+  // Map of commit index to render duration (ms)
+  commits: {
+    0: 11,
+    3: 7
+  }
+}
 ```
 
 ### Interactions
 
-The [Interactions chart](https://reactjs.org/blog/2018/09/10/introducing-the-react-profiler.html#interactions) shows a time series for every interaction that was traced in the recent profiler session. The frontend sends a "_profileInteractions_" message specifying which root it would like interaction data for. The backend sends a typed array as a response.
+The [Interactions chart](https://reactjs.org/blog/2018/09/10/introducing-the-react-profiler.html#interactions) shows a time series for every interaction that was traced in the recent profiler session. The frontend sends a "_profileInteractions_" message specifying which root it would like interaction data for. The backend sends the following response:
 
-The response always begins with an id that identifies which root the interactions are associated with:
-
-1. root id
-
-Next is a series of interactions, consisting of:
-
-1. interaction id
-1. UTF encoded display name size
-   * (followed by this number of encoded values)
-1. Number of commits this interaction was associated with
-   * (followed by the index of each commit)
+* root id (to match request and response)
+* interaction metadata
 
 Here is an example of a profiling session consisting of two interactions:
 
 ```js
-[
-  1,   // root id
+{
+  rootID: 1,
 
-  1,   // first interaction id
-  3,   // encoded interaction name size
-  70,  // "F"
-  111, // "o"
-  111, // "o"
-  2,   // number of commits this interaction was associated with
-  0,   // index of first commit
-  3,   // index of second commit
-
-  1,   // second interaction id
-  3,   // encoded interaction name size
-  66,  // "B"
-  97,  // "a"
-  114, // "r"
-  1,   // number of commits this interaction was associated with
-  0,   // index of first commit
-]
+  // Map of ID to interaction:
+  interactions: {
+    1: {
+      name: "Foo",
+      commits: [
+        0, // index of first commit
+        3  // index of second commit
+      ]
+    },
+    2: {
+      name: "Bar",
+      commits: [
+        0  // index of first commit
+      ]
+    }
+  }
+}
 ```
+
+The backend does not need to resend the timestamp for each of the commits because that was already sent as part of the "_profileSummary_" message.
