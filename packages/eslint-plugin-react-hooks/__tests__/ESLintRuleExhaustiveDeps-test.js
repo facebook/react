@@ -1236,7 +1236,7 @@ const tests = {
       errors: [
         "React Hook useCallback has a missing dependency: 'local2'. " +
           'Either include it or remove the dependency array. ' +
-          "Values like 'local1' aren't valid dependencies " +
+          "Outer scope values like 'local1' aren't valid dependencies " +
           "because their mutation doesn't re-render the component.",
       ],
     },
@@ -1302,7 +1302,7 @@ const tests = {
       errors: [
         "React Hook useCallback has an unnecessary dependency: 'window'. " +
           'Either exclude it or remove the dependency array. ' +
-          "Values like 'window' aren't valid dependencies " +
+          "Outer scope values like 'window' aren't valid dependencies " +
           "because their mutation doesn't re-render the component.",
       ],
     },
@@ -2304,9 +2304,8 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'state'. " +
           'Either include it or remove the dependency array. ' +
-          `If 'state' is only necessary for calculating the next state, ` +
-          `consider refactoring to the setState(state => ...) form which ` +
-          `doesn't need to depend on the state from outside.`,
+          `You can also write 'setState(state => ...)' ` +
+          `if you only use 'state' for the 'setState' call.`,
       ],
     },
     {
@@ -2336,9 +2335,8 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'state'. " +
           'Either include it or remove the dependency array. ' +
-          `If 'state' is only necessary for calculating the next state, ` +
-          `consider refactoring to the setState(state => ...) form which ` +
-          `doesn't need to depend on the state from outside.`,
+          `You can also write 'setState(state => ...)' ` +
+          `if you only use 'state' for the 'setState' call.`,
       ],
     },
     {
@@ -3066,7 +3064,7 @@ const tests = {
       errors: [
         "React Hook useEffect has an unnecessary dependency: 'window'. " +
           'Either exclude it or remove the dependency array. ' +
-          "Values like 'window' aren't valid dependencies " +
+          "Outer scope values like 'window' aren't valid dependencies " +
           "because their mutation doesn't re-render the component.",
       ],
     },
@@ -3092,7 +3090,7 @@ const tests = {
       errors: [
         "React Hook useEffect has an unnecessary dependency: 'MutableStore.hello'. " +
           'Either exclude it or remove the dependency array. ' +
-          "Values like 'MutableStore.hello' aren't valid dependencies " +
+          "Outer scope values like 'MutableStore.hello' aren't valid dependencies " +
           "because their mutation doesn't re-render the component.",
       ],
     },
@@ -3129,7 +3127,7 @@ const tests = {
         'React Hook useEffect has unnecessary dependencies: ' +
           "'MutableStore.hello.world', 'global.stuff', and 'z'. " +
           'Either exclude them or remove the dependency array. ' +
-          "Values like 'MutableStore.hello.world' aren't valid dependencies " +
+          "Outer scope values like 'MutableStore.hello.world' aren't valid dependencies " +
           "because their mutation doesn't re-render the component.",
       ],
     },
@@ -3168,7 +3166,7 @@ const tests = {
         'React Hook useEffect has unnecessary dependencies: ' +
           "'MutableStore.hello.world', 'global.stuff', and 'z'. " +
           'Either exclude them or remove the dependency array. ' +
-          "Values like 'MutableStore.hello.world' aren't valid dependencies " +
+          "Outer scope values like 'MutableStore.hello.world' aren't valid dependencies " +
           "because their mutation doesn't re-render the component.",
       ],
     },
@@ -3205,7 +3203,7 @@ const tests = {
         'React Hook useCallback has unnecessary dependencies: ' +
           "'MutableStore.hello.world', 'global.stuff', 'props.foo', 'x', 'y', and 'z'. " +
           'Either exclude them or remove the dependency array. ' +
-          "Values like 'MutableStore.hello.world' aren't valid dependencies " +
+          "Outer scope values like 'MutableStore.hello.world' aren't valid dependencies " +
           "because their mutation doesn't re-render the component.",
       ],
     },
@@ -3468,8 +3466,7 @@ const tests = {
       errors: [
         `The 'handleNext' function makes the dependencies of ` +
           `useEffect Hook (at line 11) change on every render. ` +
-          `To fix this, move the 'handleNext' function ` +
-          `inside the useEffect callback (at line 9). Alternatively, ` +
+          `Move it inside the useEffect callback. Alternatively, ` +
           `wrap the 'handleNext' definition into its own useCallback() Hook.`,
       ],
     },
@@ -3507,8 +3504,7 @@ const tests = {
       errors: [
         `The 'handleNext' function makes the dependencies of ` +
           `useEffect Hook (at line 11) change on every render. ` +
-          `To fix this, move the 'handleNext' function ` +
-          `inside the useEffect callback (at line 9). Alternatively, ` +
+          `Move it inside the useEffect callback. Alternatively, ` +
           `wrap the 'handleNext' definition into its own useCallback() Hook.`,
       ],
     },
@@ -3605,17 +3601,14 @@ const tests = {
       `,
       errors: [
         "The 'handleNext1' function makes the dependencies of useEffect Hook " +
-          "(at line 14) change on every render. To fix this, move the 'handleNext1' " +
-          'function inside the useEffect callback (at line 12). Alternatively, wrap the ' +
-          "'handleNext1' definition into its own useCallback() Hook.",
+          '(at line 14) change on every render. Move it inside the useEffect callback. ' +
+          "Alternatively, wrap the 'handleNext1' definition into its own useCallback() Hook.",
         "The 'handleNext2' function makes the dependencies of useLayoutEffect Hook " +
-          "(at line 17) change on every render. To fix this, move the 'handleNext2' " +
-          'function inside the useLayoutEffect callback (at line 15). Alternatively, wrap the ' +
-          "'handleNext2' definition into its own useCallback() Hook.",
+          '(at line 17) change on every render. Move it inside the useLayoutEffect callback. ' +
+          "Alternatively, wrap the 'handleNext2' definition into its own useCallback() Hook.",
         "The 'handleNext3' function makes the dependencies of useMemo Hook " +
-          "(at line 20) change on every render. To fix this, move the 'handleNext3' " +
-          'function inside the useMemo callback (at line 18). Alternatively, wrap the ' +
-          "'handleNext3' definition into its own useCallback() Hook.",
+          '(at line 20) change on every render. Move it inside the useMemo callback. ' +
+          "Alternatively, wrap the 'handleNext3' definition into its own useCallback() Hook.",
       ],
     },
     {
@@ -3673,17 +3666,14 @@ const tests = {
       `,
       errors: [
         "The 'handleNext1' function makes the dependencies of useEffect Hook " +
-          "(at line 15) change on every render. To fix this, move the 'handleNext1' " +
-          'function inside the useEffect callback (at line 12). Alternatively, wrap the ' +
-          "'handleNext1' definition into its own useCallback() Hook.",
+          '(at line 15) change on every render. Move it inside the useEffect callback. ' +
+          "Alternatively, wrap the 'handleNext1' definition into its own useCallback() Hook.",
         "The 'handleNext2' function makes the dependencies of useLayoutEffect Hook " +
-          "(at line 19) change on every render. To fix this, move the 'handleNext2' " +
-          'function inside the useLayoutEffect callback (at line 16). Alternatively, wrap the ' +
-          "'handleNext2' definition into its own useCallback() Hook.",
+          '(at line 19) change on every render. Move it inside the useLayoutEffect callback. ' +
+          "Alternatively, wrap the 'handleNext2' definition into its own useCallback() Hook.",
         "The 'handleNext3' function makes the dependencies of useMemo Hook " +
-          "(at line 23) change on every render. To fix this, move the 'handleNext3' " +
-          'function inside the useMemo callback (at line 20). Alternatively, wrap the ' +
-          "'handleNext3' definition into its own useCallback() Hook.",
+          '(at line 23) change on every render. Move it inside the useMemo callback. ' +
+          "Alternatively, wrap the 'handleNext3' definition into its own useCallback() Hook.",
       ],
     },
     {
@@ -3907,8 +3897,7 @@ const tests = {
       errors: [
         `The 'handleNext' function makes the dependencies of ` +
           `useEffect Hook (at line 14) change on every render. ` +
-          `To fix this, move the 'handleNext' function inside ` +
-          `the useEffect callback (at line 12). Alternatively, wrap the ` +
+          `Move it inside the useEffect callback. Alternatively, wrap the ` +
           `'handleNext' definition into its own useCallback() Hook.`,
       ],
     },
@@ -3944,9 +3933,8 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'count'. " +
           'Either include it or remove the dependency array. ' +
-          `If 'count' is only necessary for calculating the next state, ` +
-          `consider refactoring to the setCount(count => ...) form which ` +
-          `doesn't need to depend on the state from outside.`,
+          `You can also write 'setCount(count => ...)' if you ` +
+          `only use 'count' for the 'setCount' call.`,
       ],
     },
     {
@@ -3983,9 +3971,8 @@ const tests = {
       errors: [
         "React Hook useEffect has missing dependencies: 'count' and 'increment'. " +
           'Either include them or remove the dependency array. ' +
-          `If 'count' is only necessary for calculating the next state, ` +
-          `consider refactoring to the setCount(count => ...) form which ` +
-          `doesn't need to depend on the state from outside.`,
+          `You can also write 'setCount(count => ...)' if you ` +
+          `only use 'count' for the 'setCount' call.`,
       ],
     },
     {
@@ -4022,9 +4009,8 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'increment'. " +
           'Either include it or remove the dependency array. ' +
-          `If 'increment' is only necessary for calculating the next state, ` +
-          `consider refactoring to the useReducer Hook. This ` +
-          `lets you move the calculation of next state outside the effect.`,
+          `You can also replace multiple useState variables with useReducer ` +
+          `if 'setCount' needs the current value of 'increment'.`,
       ],
     },
     {
@@ -4150,8 +4136,7 @@ const tests = {
       `,
       errors: [
         `The 'increment' function makes the dependencies of useEffect Hook ` +
-          `(at line 14) change on every render. To fix this, move the ` +
-          `'increment' function inside the useEffect callback (at line 9). ` +
+          `(at line 14) change on every render. Move it inside the useEffect callback. ` +
           `Alternatively, wrap the \'increment\' definition into its own ` +
           `useCallback() Hook.`,
       ],
@@ -4188,11 +4173,8 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'increment'. " +
           'Either include it or remove the dependency array. ' +
-          `If 'increment' is only necessary for calculating the next state, ` +
-          `consider refactoring to the useReducer Hook. This lets you move ` +
-          `the calculation of next state outside the effect. ` +
-          `You can then read 'increment' from the reducer ` +
-          `by putting it directly in your component.`,
+          'You can also replace useState with an inline useReducer ' +
+          `if 'setCount' needs the current value of 'increment'.`,
       ],
     },
     {
@@ -4371,6 +4353,30 @@ const tests = {
           `Either include it or remove the dependency array. ` +
           `If specifying 'fetchPodcasts' makes the dependencies change too often, ` +
           `find the parent component that defines it and wrap that definition in useCallback.`,
+      ],
+    },
+    {
+      // The mistake here is that it was moved inside the effect
+      // so it can't be referenced in the deps array.
+      code: `
+        function Thing() {
+          useEffect(() => {
+            const fetchData = async () => {};
+            fetchData();
+          }, [fetchData]);
+        }
+      `,
+      output: `
+        function Thing() {
+          useEffect(() => {
+            const fetchData = async () => {};
+            fetchData();
+          }, []);
+        }
+      `,
+      errors: [
+        `React Hook useEffect has an unnecessary dependency: 'fetchData'. ` +
+          `Either exclude it or remove the dependency array.`,
       ],
     },
   ],

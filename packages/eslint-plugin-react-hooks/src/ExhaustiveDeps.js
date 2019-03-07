@@ -617,10 +617,7 @@ export default {
               }' definition into its own useCallback() Hook.`;
           } else {
             message +=
-              ` To fix this, move the '${fn.name.name}' function ` +
-              `inside the ${reactiveHookName} callback (at line ${
-                node.loc.start.line
-              }). ` +
+              ` Move it inside the ${reactiveHookName} callback. ` +
               `Alternatively, wrap the '${
                 fn.name.name
               }' definition into its own useCallback() Hook.`;
@@ -715,9 +712,13 @@ export default {
             "because their mutation doesn't re-render the component.";
         } else if (externalDependencies.size > 0) {
           const dep = Array.from(externalDependencies)[0];
-          extraWarning =
-            ` Values like '${dep}' aren't valid dependencies ` +
-            `because their mutation doesn't re-render the component.`;
+          // Don't show this warning for things that likely just got moved *inside* the callback
+          // because in that case they're clearly not referring to globals.
+          if (!scope.set.has(dep)) {
+            extraWarning =
+              ` Outer scope values like '${dep}' aren't valid dependencies ` +
+              `because their mutation doesn't re-render the component.`;
+          }
         }
       }
 
@@ -874,36 +875,30 @@ export default {
           }
         });
         if (setStateRecommendation !== null) {
-          let suggestion;
           switch (setStateRecommendation.form) {
             case 'reducer':
-              suggestion =
-                'useReducer Hook. This lets you move the calculation ' +
-                'of next state outside the effect.';
+              extraWarning =
+                ` You can also replace multiple useState variables with useReducer ` +
+                `if '${setStateRecommendation.setter}' needs the ` +
+                `current value of '${setStateRecommendation.missingDep}'.`;
               break;
             case 'inlineReducer':
-              suggestion =
-                'useReducer Hook. This lets you move the calculation ' +
-                'of next state outside the effect. You can then ' +
-                `read '${
-                  setStateRecommendation.missingDep
-                }' from the reducer ` +
-                `by putting it directly in your component.`;
+              extraWarning =
+                ` You can also replace useState with an inline useReducer ` +
+                `if '${setStateRecommendation.setter}' needs the ` +
+                `current value of '${setStateRecommendation.missingDep}'.`;
               break;
             case 'updater':
-              suggestion =
-                `${setStateRecommendation.setter}(${
+              extraWarning =
+                ` You can also write '${setStateRecommendation.setter}(${
                   setStateRecommendation.missingDep
-                } => ...) form ` +
-                `which doesn't need to depend on the state from outside.`;
+                } => ...)' if you only use '${
+                  setStateRecommendation.missingDep
+                }'` + ` for the '${setStateRecommendation.setter}' call.`;
               break;
             default:
               throw new Error('Unknown case.');
           }
-          extraWarning =
-            ` If '${setStateRecommendation.missingDep}'` +
-            ` is only necessary for calculating the next state, ` +
-            `consider refactoring to the ${suggestion}`;
         }
       }
 
