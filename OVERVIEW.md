@@ -192,7 +192,7 @@ If so, then it sends a "_profileSummary_" message with an id that identifies the
 * number of interactions that were traced for this root
 * the commits (each consisting of a timestamp and duration) that were profiled for the root
 
-This is the minimal information required to render the main Profiler interface. 
+This is the minimal information required to render the main ["commit selector"](https://reactjs.org/blog/2018/09/10/introducing-the-react-profiler.html#browsing-commits). 
 
 Here is an example profile summary:
 ```js
@@ -225,7 +225,7 @@ When a commit is selected in the profiling view, the frontend needs to reconstru
 In addition to this, it also needs to ask the backend for some additional information needed to display the ["flame chart"](https://reactjs.org/blog/2018/09/10/introducing-the-react-profiler.html#flame-chart) and ["ranked chart"](https://reactjs.org/blog/2018/09/10/introducing-the-react-profiler.html#ranked-chart) views. The frontend sends a "_profileCommitDetails_" message specifying which root and commit (index) it is interested in. The backend sends a response to fill in missing details about the commit:
 
 * root id and commit index (to match request and response)
-* which elements were rendered during the commit and how long did they take
+* which elements were rendered during the commit <sup>1</sup> and how long did they take
 * which interactions were part of the commit
 
 Here is an example commit in which two elements were rendered and one interaction was traced:
@@ -234,28 +234,27 @@ Here is an example commit in which two elements were rendered and one interactio
 {
   rootID: 1,
   commitIndex: 0,
-  
-  // Map of interaction ID to interaction.
-  interactions: {
-    1: {
+  interactions: [
+    {
+      id: 1,
       timestamp: 4,
       name: "Foo"
     },
-    2: {
+    {
+      id: 2,
       timestamp: 4,
       name: "Bar"
     }
-  },
-
-  // Map of element ID to render durations (ms).
-  // Elements not in this map were not rendered during the commit.
-  nodes: {
-    1: {,
+  ],
+  nodes: [
+    {
+      id: 1,
       baseDuration: 15,
       selfDuration: 4,
       actualDuration: 15
     },
-    2: {
+    {
+      id: 2,
       baseDuration: 11,
       selfDuration: 8,
       actualDuration: 11
@@ -263,6 +262,8 @@ Here is an example commit in which two elements were rendered and one interactio
   }
 }
 ```
+
+<sup>1</sup> Elements in the tree that are not explicitly included in the above response were not rendered during the current commit.
 
 ### Component commits
 
@@ -278,11 +279,17 @@ Here is an example of a component that committed twice during a profiling sessio
   rootID: 1,
   id: 2,
 
-  // Map of commit index to render duration (ms)
-  commits: {
-    0: 11,
-    3: 7
-  }
+  // Tuples of commit index and render duration (ms)
+  commits: [
+    [
+      0,  // index of first
+      11  // duration (ms)
+    ],
+    [
+      2,  // index of second commit
+      7   // duration (ms)
+    ]
+  ]
 }
 ```
 
@@ -298,23 +305,23 @@ Here is an example of a profiling session consisting of two interactions:
 ```js
 {
   rootID: 1,
-
-  // Map of ID to interaction:
-  interactions: {
-    1: {
+  interactions: [
+    {
+      id: 1,
       name: "Foo",
       commits: [
         0, // index of first commit
-        3  // index of second commit
+        2  // index of second commit
       ]
     },
-    2: {
+    {
+      id: 2,
       name: "Bar",
       commits: [
         0  // index of first commit
       ]
     }
-  }
+  ]
 }
 ```
 
