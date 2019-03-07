@@ -167,9 +167,13 @@ while (index !== currentWeight) {
 
 All profiling information is stored on the backend while profiling is in progress. (Avoiding sending traffic across the bridge reduces the performance overhead of running the profiler.)
 
+The backend push-notifies the frontend of when profiling starts ("_profilingStarted_") and stops ("_profilingStopped_"). All other profiling information is lazy and must be requested by the backend.
+
 ### Profiling summary
 
-Upon completion, a "_profileSummary_" message is sent across the bridge. This message is a typed array summarizing the profiling session. It contains a repeating sequence of values (per root):
+When the user opens the profiling tab, the frontend asks the backend if it has any profiling data for the currently-selected root. This is done by sending a "_profileSummary_" message with an id that identifies the root.
+
+The response is a typed array summarizing the profiling session for that. It consists of the following values:
 
 1. root id
 1. number of interactions for the root in this profiling session
@@ -182,7 +186,7 @@ Followed by a series of tuples for each commit:
 
 This is the minimal information required to render the main Profiler interface. 
 
-For example, an application with two React roots might send a summary like this:
+Here is an example profiler summary:
 ```js
 [
   1,   // root id
@@ -194,18 +198,10 @@ For example, an application with two React roots might send a summary like this:
   13,  // and took 13ms
   303, // third commit started 303ms after profiling began
   5,   // and took 5ms
-
-  63,  // root id
-  1,   // one interaction was logged during this session
-  2,   // number of commits
-  513, // first commit started 513ms after profiling began
-  8,   // first commit took 8ms
-  711, // second commit started 711ms after profiling began
-  22,  // second commit took 22ms
 ]
 ```
 
-Additional information (e.g. which components were part of a specific commit, which interactions were logged) is lazily requested by the frontend as a user interacts with the profiling data.
+Additional information (e.g. which components were part of a specific commit, which interactions were logged) must be lazily requested by the frontend as a user interacts with the Profiler UI.
 
 ### Commit details
 
