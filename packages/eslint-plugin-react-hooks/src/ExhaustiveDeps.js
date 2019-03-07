@@ -106,6 +106,28 @@ export default {
         return;
       }
 
+      if (isEffect && node.async) {
+        context.report({
+          node: node,
+          message:
+            `Effect callbacks are synchronous to prevent race conditions. ` +
+            `Put the async function inside:\n\n` +
+            `useEffect(() => {\n` +
+            `  let ignore = false;\n` +
+            `  fetchSomething();\n` +
+            `\n` +
+            `  async function fetchSomething() {\n` +
+            `    const result = await ...\n` +
+            `    if (!ignore) setState(result);\n` +
+            `  }\n` +
+            `\n` +
+            `  return () => { ignore = true; };\n` +
+            `}, []);\n` +
+            `\n` +
+            `This lets you handle multiple requests without bugs.`,
+        });
+      }
+
       // Get the current scope.
       const scope = context.getScope();
 
@@ -890,9 +912,12 @@ export default {
               break;
             case 'updater':
               extraWarning =
-                ` You can also write '${setStateRecommendation.setter}(${
-                  setStateRecommendation.missingDep
-                } => ...)' if you only use '${
+                ` You can also write '${
+                  setStateRecommendation.setter
+                }(${setStateRecommendation.missingDep.substring(
+                  0,
+                  1,
+                )} => ...)' if you only use '${
                   setStateRecommendation.missingDep
                 }'` + ` for the '${setStateRecommendation.setter}' call.`;
               break;
