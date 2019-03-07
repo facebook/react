@@ -2447,7 +2447,9 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'props'. " +
           'Either include it or remove the dependency array. ' +
-          'Alternatively, destructure the necessary props outside the callback.',
+          `However, the preferred fix is to destructure the 'props' ` +
+          `object outside of the useEffect call and refer to specific ` +
+          `props directly by their names.`,
       ],
     },
     {
@@ -2478,7 +2480,9 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'props'. " +
           'Either include it or remove the dependency array. ' +
-          'Alternatively, destructure the necessary props outside the callback.',
+          `However, the preferred fix is to destructure the 'props' ` +
+          `object outside of the useEffect call and refer to specific ` +
+          `props directly by their names.`,
       ],
     },
     {
@@ -2529,7 +2533,9 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'props'. " +
           'Either include it or remove the dependency array. ' +
-          'Alternatively, destructure the necessary props outside the callback.',
+          `However, the preferred fix is to destructure the 'props' ` +
+          `object outside of the useEffect call and refer to specific ` +
+          `props directly by their names.`,
       ],
     },
     {
@@ -2556,7 +2562,9 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'props'. " +
           'Either include it or remove the dependency array. ' +
-          'Alternatively, destructure the necessary props outside the callback.',
+          `However, the preferred fix is to destructure the 'props' ` +
+          `object outside of the useEffect call and refer to specific ` +
+          `props directly by their names.`,
       ],
     },
     {
@@ -2583,7 +2591,9 @@ const tests = {
       errors: [
         "React Hook useEffect has missing dependencies: 'props' and 'skillsCount'. " +
           'Either include them or remove the dependency array. ' +
-          'Alternatively, destructure the necessary props outside the callback.',
+          `However, the preferred fix is to destructure the 'props' ` +
+          `object outside of the useEffect call and refer to specific ` +
+          `props directly by their names.`,
       ],
     },
     {

@@ -724,8 +724,9 @@ export default {
         }
         if (isPropsOnlyUsedInMembers) {
           extraWarning =
-            ' Alternatively, destructure the necessary props ' +
-            'outside the callback.';
+            ` However, the preferred fix is to destructure the 'props' ` +
+            `object outside of the ${reactiveHookName} call and ` +
+            `refer to specific props directly by their names.`;
         }
       }
 
