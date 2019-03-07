@@ -165,9 +165,11 @@ while (index !== currentWeight) {
 
 ## Profiler
 
-All profiling information is stored on the backend while profiling is in progress. (Avoiding sending traffic across the bridge reduces the performance overhead of running the profiler.)
+The Profiler UI is a powerful tool for identifying and fixing performance problems. The primary goal of the new profiler is to minimize the impact of running it (so that it doesn't interfere with the application beign profiled). This can be accomplished by:
+* Minimizing bridge traffic.
+* Efficiently serializing bridge messages.
 
-The backend push-notifies the frontend of when profiling starts ("_profilingStarted_") and stops ("_profilingStopped_"). All other profiling information is lazy and must be requested by the backend.
+All profiling information is stored on the backend. The backend push-notifies the frontend of when profiling starts ("_profilingStarted_") and stops ("_profilingStopped_"). All other profiling information is lazy and must be requested by the backend.
 
 ### Profiling summary
 
