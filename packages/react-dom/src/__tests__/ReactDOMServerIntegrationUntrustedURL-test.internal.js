@@ -31,6 +31,27 @@ function runTests(itRenders, itRejects) {
     expect(e.href).toBe('javascript:notfine');
   });
 
+  itRejects('a javascript protocol with leading spaces', async render => {
+    const e = await render(
+      <a href={'  \t \u0000\u001F\u0003javascript\n: notfine'}>p0wned</a>,
+      1,
+    );
+    // We use an approximate comparison here because JSDOM might not parse
+    // \u0000 in HTML properly.
+    expect(e.href).toContain('notfine');
+  });
+
+  itRejects(
+    'a javascript protocol with intermediate new lines and mixed casing',
+    async render => {
+      const e = await render(
+        <a href={'\t\r\n Jav\rasCr\r\niP\t\n\rt\n:notfine'}>p0wned</a>,
+        1,
+      );
+      expect(e.href).toBe('javascript:notfine');
+    },
+  );
+
   itRejects('a javascript protocol area href', async render => {
     const e = await render(
       <map>
