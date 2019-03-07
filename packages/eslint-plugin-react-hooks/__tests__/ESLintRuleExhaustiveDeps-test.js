@@ -874,6 +874,81 @@ const tests = {
         }
       `,
     },
+    {
+      code: `
+        function Counter() {
+          let [count, setCount] = useState(0);
+
+          function increment(x) {
+            return x + 1;
+          }
+
+          useEffect(() => {
+            let id = setInterval(() => {
+              setCount(increment);
+            }, 1000);
+            return () => clearInterval(id);
+          }, []);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+    },
+    {
+      code: `
+        function Counter() {
+          let [count, setCount] = useState(0);
+
+          function increment(x) {
+            return x + 1;
+          }
+
+          useEffect(() => {
+            let id = setInterval(() => {
+              setCount(count => increment(count));
+            }, 1000);
+            return () => clearInterval(id);
+          }, []);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+    },
+    {
+      code: `
+        import increment from './increment';
+        function Counter() {
+          let [count, setCount] = useState(0);
+
+          useEffect(() => {
+            let id = setInterval(() => {
+              setCount(count => count + increment);
+            }, 1000);
+            return () => clearInterval(id);
+          }, []);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+    },
+    {
+      code: `
+        function withStuff(increment) {
+          return function Counter() {
+            let [count, setCount] = useState(0);
+
+            useEffect(() => {
+              let id = setInterval(() => {
+                setCount(count => count + increment);
+              }, 1000);
+              return () => clearInterval(id);
+            }, []);
+
+            return <h1>{count}</h1>;
+          }
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -2228,7 +2303,10 @@ const tests = {
       `,
       errors: [
         "React Hook useEffect has a missing dependency: 'state'. " +
-          'Either include it or remove the dependency array.',
+          'Either include it or remove the dependency array. ' +
+          `If 'state' is only necessary for calculating the next state, ` +
+          `consider refactoring to the setState(state => ...) form which ` +
+          `doesn't need to depend on the state from outside.`,
       ],
     },
     {
@@ -2257,7 +2335,10 @@ const tests = {
       `,
       errors: [
         "React Hook useEffect has a missing dependency: 'state'. " +
-          'Either include it or remove the dependency array.',
+          'Either include it or remove the dependency array. ' +
+          `If 'state' is only necessary for calculating the next state, ` +
+          `consider refactoring to the setState(state => ...) form which ` +
+          `doesn't need to depend on the state from outside.`,
       ],
     },
     {
@@ -3860,11 +3941,258 @@ const tests = {
           return <h1>{count}</h1>;
         }
       `,
-      // TODO: ideally this should suggest useState updater form
-      // since this code doesn't actually work.
       errors: [
         "React Hook useEffect has a missing dependency: 'count'. " +
+          'Either include it or remove the dependency array. ' +
+          `If 'count' is only necessary for calculating the next state, ` +
+          `consider refactoring to the setCount(count => ...) form which ` +
+          `doesn't need to depend on the state from outside.`,
+      ],
+    },
+    {
+      code: `
+        function Counter() {
+          let [count, setCount] = useState(0);
+          let [increment, setIncrement] = useState(0);
+
+          useEffect(() => {
+            let id = setInterval(() => {
+              setCount(count + increment);
+            }, 1000);
+            return () => clearInterval(id);
+          }, []);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+      output: `
+        function Counter() {
+          let [count, setCount] = useState(0);
+          let [increment, setIncrement] = useState(0);
+
+          useEffect(() => {
+            let id = setInterval(() => {
+              setCount(count + increment);
+            }, 1000);
+            return () => clearInterval(id);
+          }, [count, increment]);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+      errors: [
+        "React Hook useEffect has missing dependencies: 'count' and 'increment'. " +
+          'Either include them or remove the dependency array. ' +
+          `If 'count' is only necessary for calculating the next state, ` +
+          `consider refactoring to the setCount(count => ...) form which ` +
+          `doesn't need to depend on the state from outside.`,
+      ],
+    },
+    {
+      code: `
+        function Counter() {
+          let [count, setCount] = useState(0);
+          let [increment, setIncrement] = useState(0);
+
+          useEffect(() => {
+            let id = setInterval(() => {
+              setCount(count => count + increment);
+            }, 1000);
+            return () => clearInterval(id);
+          }, []);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+      output: `
+        function Counter() {
+          let [count, setCount] = useState(0);
+          let [increment, setIncrement] = useState(0);
+
+          useEffect(() => {
+            let id = setInterval(() => {
+              setCount(count => count + increment);
+            }, 1000);
+            return () => clearInterval(id);
+          }, [increment]);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+      errors: [
+        "React Hook useEffect has a missing dependency: 'increment'. " +
+          'Either include it or remove the dependency array. ' +
+          `If 'increment' is only necessary for calculating the next state, ` +
+          `consider refactoring to the useReducer Hook. This ` +
+          `lets you move the calculation of next state outside the effect.`,
+      ],
+    },
+    {
+      code: `
+        function Counter() {
+          let [count, setCount] = useState(0);
+          let increment = useCustomHook();
+
+          useEffect(() => {
+            let id = setInterval(() => {
+              setCount(count => count + increment);
+            }, 1000);
+            return () => clearInterval(id);
+          }, []);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+      output: `
+        function Counter() {
+          let [count, setCount] = useState(0);
+          let increment = useCustomHook();
+
+          useEffect(() => {
+            let id = setInterval(() => {
+              setCount(count => count + increment);
+            }, 1000);
+            return () => clearInterval(id);
+          }, [increment]);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+      // This intentionally doesn't show the reducer message
+      // because we don't know if it's safe for it to close over a value.
+      // We only show it for state variables (and possibly props).
+      errors: [
+        "React Hook useEffect has a missing dependency: 'increment'. " +
           'Either include it or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+        function Counter({ step }) {
+          let [count, setCount] = useState(0);
+
+          function increment(x) {
+            return x + step;
+          }
+
+          useEffect(() => {
+            let id = setInterval(() => {
+              setCount(count => increment(count));
+            }, 1000);
+            return () => clearInterval(id);
+          }, []);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+      output: `
+        function Counter({ step }) {
+          let [count, setCount] = useState(0);
+
+          function increment(x) {
+            return x + step;
+          }
+
+          useEffect(() => {
+            let id = setInterval(() => {
+              setCount(count => increment(count));
+            }, 1000);
+            return () => clearInterval(id);
+          }, [increment]);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+      // This intentionally doesn't show the reducer message
+      // because we don't know if it's safe for it to close over a value.
+      // We only show it for state variables (and possibly props).
+      errors: [
+        "React Hook useEffect has a missing dependency: 'increment'. " +
+          'Either include it or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+        function Counter({ step }) {
+          let [count, setCount] = useState(0);
+
+          function increment(x) {
+            return x + step;
+          }
+
+          useEffect(() => {
+            let id = setInterval(() => {
+              setCount(count => increment(count));
+            }, 1000);
+            return () => clearInterval(id);
+          }, [increment]);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+      output: `
+        function Counter({ step }) {
+          let [count, setCount] = useState(0);
+
+          function increment(x) {
+            return x + step;
+          }
+
+          useEffect(() => {
+            let id = setInterval(() => {
+              setCount(count => increment(count));
+            }, 1000);
+            return () => clearInterval(id);
+          }, [increment]);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+      errors: [
+        `The 'increment' function makes the dependencies of useEffect Hook ` +
+          `(at line 14) change on every render. To fix this, move the ` +
+          `'increment' function inside the useEffect callback (at line 9). ` +
+          `Alternatively, wrap the \'increment\' definition into its own ` +
+          `useCallback() Hook.`,
+      ],
+    },
+    {
+      code: `
+        function Counter({ increment }) {
+          let [count, setCount] = useState(0);
+
+          useEffect(() => {
+            let id = setInterval(() => {
+              setCount(count => count + increment);
+            }, 1000);
+            return () => clearInterval(id);
+          }, []);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+      output: `
+        function Counter({ increment }) {
+          let [count, setCount] = useState(0);
+
+          useEffect(() => {
+            let id = setInterval(() => {
+              setCount(count => count + increment);
+            }, 1000);
+            return () => clearInterval(id);
+          }, [increment]);
+
+          return <h1>{count}</h1>;
+        }
+      `,
+      errors: [
+        "React Hook useEffect has a missing dependency: 'increment'. " +
+          'Either include it or remove the dependency array. ' +
+          `If 'increment' is only necessary for calculating the next state, ` +
+          `consider refactoring to the useReducer Hook. This lets you move ` +
+          `the calculation of next state outside the effect. ` +
+          `You can then read 'increment' from the reducer ` +
+          `by putting it directly in your component.`,
       ],
     },
     {

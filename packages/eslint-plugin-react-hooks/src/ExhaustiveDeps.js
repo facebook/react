@@ -35,6 +35,8 @@ export default {
     const options = {additionalHooks};
 
     // Should be shared between visitors.
+    let setStateCallSites = new WeakMap();
+    let stateVariables = new WeakSet();
     let staticKnownValueCache = new WeakMap();
     let functionWithoutCapturedValueCache = new WeakMap();
     function memoizeWithWeakMap(fn, map) {
@@ -204,19 +206,40 @@ export default {
           return false;
         }
         const id = def.node.id;
-        if (callee.name === 'useRef' && id.type === 'Identifier') {
+        const {name} = callee;
+        if (name === 'useRef' && id.type === 'Identifier') {
           // useRef() return value is static.
           return true;
-        } else if (callee.name === 'useState' || callee.name === 'useReducer') {
+        } else if (name === 'useState' || name === 'useReducer') {
           // Only consider second value in initializing tuple static.
           if (
             id.type === 'ArrayPattern' &&
             id.elements.length === 2 &&
-            Array.isArray(resolved.identifiers) &&
-            // Is second tuple value the same reference we're checking?
-            id.elements[1] === resolved.identifiers[0]
+            Array.isArray(resolved.identifiers)
           ) {
-            return true;
+            // Is second tuple value the same reference we're checking?
+            if (id.elements[1] === resolved.identifiers[0]) {
+              if (name === 'useState') {
+                const references = resolved.references;
+                for (let i = 0; i < references.length; i++) {
+                  setStateCallSites.set(
+                    references[i].identifier,
+                    id.elements[0],
+                  );
+                }
+              }
+              // Setter is static.
+              return true;
+            } else if (id.elements[0] === resolved.identifiers[0]) {
+              if (name === 'useState') {
+                const references = resolved.references;
+                for (let i = 0; i < references.length; i++) {
+                  stateVariables.add(references[i].identifier);
+                }
+              }
+              // State variable itself is dynamic.
+              return false;
+            }
           }
         }
         // By default assume it's dynamic.
@@ -787,6 +810,100 @@ export default {
             ` makes the dependencies change too often, ` +
             `find the parent component that defines it ` +
             `and wrap that definition in useCallback.`;
+        }
+      }
+
+      if (!extraWarning && missingDependencies.size > 0) {
+        let setStateRecommendation = null;
+        missingDependencies.forEach(missingDep => {
+          if (setStateRecommendation !== null) {
+            return;
+          }
+          const usedDep = dependencies.get(missingDep);
+          const references = usedDep.references;
+          let id;
+          let maybeCall;
+          for (let i = 0; i < references.length; i++) {
+            id = references[i].identifier;
+            maybeCall = id.parent;
+            // Try to see if we have setState(someExpr(missingDep)).
+            while (maybeCall != null && maybeCall !== componentScope.block) {
+              if (maybeCall.type === 'CallExpression') {
+                const correspondingStateVariable = setStateCallSites.get(
+                  maybeCall.callee,
+                );
+                if (correspondingStateVariable != null) {
+                  if (correspondingStateVariable.name === missingDep) {
+                    // setCount(count + 1)
+                    setStateRecommendation = {
+                      missingDep,
+                      setter: maybeCall.callee.name,
+                      form: 'updater',
+                    };
+                  } else if (stateVariables.has(id)) {
+                    // setCount(count + increment)
+                    setStateRecommendation = {
+                      missingDep,
+                      setter: maybeCall.callee.name,
+                      form: 'reducer',
+                    };
+                  } else {
+                    const resolved = references[i].resolved;
+                    if (resolved != null) {
+                      // If it's a parameter *and* a missing dep,
+                      // it must be a prop or something inside a prop.
+                      // Therefore, recommend an inline reducer.
+                      const def = resolved.defs[0];
+                      if (def != null && def.type === 'Parameter') {
+                        setStateRecommendation = {
+                          missingDep,
+                          setter: maybeCall.callee.name,
+                          form: 'inlineReducer',
+                        };
+                      }
+                    }
+                  }
+                  break;
+                }
+              }
+              maybeCall = maybeCall.parent;
+            }
+            if (setStateRecommendation !== null) {
+              break;
+            }
+          }
+        });
+        if (setStateRecommendation !== null) {
+          let suggestion;
+          switch (setStateRecommendation.form) {
+            case 'reducer':
+              suggestion =
+                'useReducer Hook. This lets you move the calculation ' +
+                'of next state outside the effect.';
+              break;
+            case 'inlineReducer':
+              suggestion =
+                'useReducer Hook. This lets you move the calculation ' +
+                'of next state outside the effect. You can then ' +
+                `read '${
+                  setStateRecommendation.missingDep
+                }' from the reducer ` +
+                `by putting it directly in your component.`;
+              break;
+            case 'updater':
+              suggestion =
+                `${setStateRecommendation.setter}(${
+                  setStateRecommendation.missingDep
+                } => ...) form ` +
+                `which doesn't need to depend on the state from outside.`;
+              break;
+            default:
+              throw new Error('Unknown case.');
+          }
+          extraWarning =
+            ` If '${setStateRecommendation.missingDep}'` +
+            ` is only necessary for calculating the next state, ` +
+            `consider refactoring to the ${suggestion}`;
         }
       }
 
