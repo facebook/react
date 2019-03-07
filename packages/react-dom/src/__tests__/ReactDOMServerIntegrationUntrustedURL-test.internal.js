@@ -17,7 +17,7 @@ let React;
 let ReactDOM;
 let ReactDOMServer;
 
-function runTests(itRenders, itRejects) {
+function runTests(itRenders, itRejects, expectToReject) {
   itRenders('a http link with the word javascript in it', async render => {
     const e = await render(
       <a href="http://javascript:0/thisisfine">Click me</a>,
@@ -122,6 +122,14 @@ function runTests(itRenders, itRejects) {
       ).toBe('javascript:notfine');
     },
   );
+
+  it('rejects a javascript protocol href if it is added during an update', () => {
+    let container = document.createElement('div');
+    ReactDOM.render(<a href="thisisfine">click me</a>, container);
+    expectToReject(() => {
+      ReactDOM.render(<a href="javascript:notfine">click me</a>, container);
+    });
+  });
 }
 
 describe('ReactDOMServerIntegration - Untrusted URLs', () => {
@@ -144,7 +152,14 @@ describe('ReactDOMServerIntegration - Untrusted URLs', () => {
     resetModules();
   });
 
-  runTests(itRenders, itRenders);
+  runTests(itRenders, itRenders, fn =>
+    expect(fn).toWarnDev(
+      'Warning: A future version of React will block javascript: URLs as a security precaution. ' +
+        'Use event handlers instead if you can. If you need to generate unsafe HTML try using ' +
+        'dangerouslySetInnerHTML instead.\n' +
+        '    in a (at **)',
+    ),
+  );
 });
 
 describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', () => {
@@ -174,7 +189,20 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
     resetModules();
   });
 
-  runTests(itRenders, (message, test) =>
-    itThrowsWhenRendering(message, test, 'blocked a javascript: URL'),
+  runTests(
+    itRenders,
+    (message, test) =>
+      itThrowsWhenRendering(message, test, 'blocked a javascript: URL'),
+    fn => {
+      let msg;
+      try {
+        fn();
+      } catch (x) {
+        msg = x.message;
+      }
+      expect(msg).toContain(
+        'React has blocked a javascript: URL as a security precaution.',
+      );
+    },
   );
 });
