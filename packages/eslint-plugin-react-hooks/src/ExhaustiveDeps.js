@@ -890,9 +890,12 @@ export default {
               break;
             case 'updater':
               extraWarning =
-                ` You can also write '${setStateRecommendation.setter}(${
-                  setStateRecommendation.missingDep
-                } => ...)' if you only use '${
+                ` You can also write '${
+                  setStateRecommendation.setter
+                }(${setStateRecommendation.missingDep.substring(
+                  0,
+                  1,
+                )} => ...)' if you only use '${
                   setStateRecommendation.missingDep
                 }'` + ` for the '${setStateRecommendation.setter}' call.`;
               break;

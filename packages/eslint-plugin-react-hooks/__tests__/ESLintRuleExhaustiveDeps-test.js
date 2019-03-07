@@ -2304,7 +2304,7 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'state'. " +
           'Either include it or remove the dependency array. ' +
-          `You can also write 'setState(state => ...)' ` +
+          `You can also write 'setState(s => ...)' ` +
           `if you only use 'state' for the 'setState' call.`,
       ],
     },
@@ -2335,7 +2335,7 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'state'. " +
           'Either include it or remove the dependency array. ' +
-          `You can also write 'setState(state => ...)' ` +
+          `You can also write 'setState(s => ...)' ` +
           `if you only use 'state' for the 'setState' call.`,
       ],
     },
@@ -3933,7 +3933,7 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'count'. " +
           'Either include it or remove the dependency array. ' +
-          `You can also write 'setCount(count => ...)' if you ` +
+          `You can also write 'setCount(c => ...)' if you ` +
           `only use 'count' for the 'setCount' call.`,
       ],
     },
@@ -3971,7 +3971,7 @@ const tests = {
       errors: [
         "React Hook useEffect has missing dependencies: 'count' and 'increment'. " +
           'Either include them or remove the dependency array. ' +
-          `You can also write 'setCount(count => ...)' if you ` +
+          `You can also write 'setCount(c => ...)' if you ` +
           `only use 'count' for the 'setCount' call.`,
       ],
     },
