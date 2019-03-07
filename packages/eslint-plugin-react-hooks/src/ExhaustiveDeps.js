@@ -588,8 +588,10 @@ export default {
           } else {
             message +=
               ` To fix this, move the '${fn.name.name}' function ` +
-              `inside the ${reactiveHookName} callback. Alternatively, ` +
-              `wrap the '${
+              `inside the ${reactiveHookName} callback (at line ${
+                node.loc.start.line
+              }). ` +
+              `Alternatively, wrap the '${
                 fn.name.name
               }' definition into its own useCallback() Hook.`;
           }

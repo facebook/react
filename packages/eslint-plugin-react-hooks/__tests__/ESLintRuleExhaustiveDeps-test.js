@@ -3349,7 +3349,7 @@ const tests = {
         `The 'handleNext' function makes the dependencies of ` +
           `useEffect Hook (at line 11) change on every render. ` +
           `To fix this, move the 'handleNext' function ` +
-          `inside the useEffect callback. Alternatively, ` +
+          `inside the useEffect callback (at line 9). Alternatively, ` +
           `wrap the 'handleNext' definition into its own useCallback() Hook.`,
       ],
     },
@@ -3388,7 +3388,7 @@ const tests = {
         `The 'handleNext' function makes the dependencies of ` +
           `useEffect Hook (at line 11) change on every render. ` +
           `To fix this, move the 'handleNext' function ` +
-          `inside the useEffect callback. Alternatively, ` +
+          `inside the useEffect callback (at line 9). Alternatively, ` +
           `wrap the 'handleNext' definition into its own useCallback() Hook.`,
       ],
     },
@@ -3486,15 +3486,15 @@ const tests = {
       errors: [
         "The 'handleNext1' function makes the dependencies of useEffect Hook " +
           "(at line 14) change on every render. To fix this, move the 'handleNext1' " +
-          'function inside the useEffect callback. Alternatively, wrap the ' +
+          'function inside the useEffect callback (at line 12). Alternatively, wrap the ' +
           "'handleNext1' definition into its own useCallback() Hook.",
         "The 'handleNext2' function makes the dependencies of useLayoutEffect Hook " +
           "(at line 17) change on every render. To fix this, move the 'handleNext2' " +
-          'function inside the useLayoutEffect callback. Alternatively, wrap the ' +
+          'function inside the useLayoutEffect callback (at line 15). Alternatively, wrap the ' +
           "'handleNext2' definition into its own useCallback() Hook.",
         "The 'handleNext3' function makes the dependencies of useMemo Hook " +
           "(at line 20) change on every render. To fix this, move the 'handleNext3' " +
-          'function inside the useMemo callback. Alternatively, wrap the ' +
+          'function inside the useMemo callback (at line 18). Alternatively, wrap the ' +
           "'handleNext3' definition into its own useCallback() Hook.",
       ],
     },
@@ -3554,15 +3554,15 @@ const tests = {
       errors: [
         "The 'handleNext1' function makes the dependencies of useEffect Hook " +
           "(at line 15) change on every render. To fix this, move the 'handleNext1' " +
-          'function inside the useEffect callback. Alternatively, wrap the ' +
+          'function inside the useEffect callback (at line 12). Alternatively, wrap the ' +
           "'handleNext1' definition into its own useCallback() Hook.",
         "The 'handleNext2' function makes the dependencies of useLayoutEffect Hook " +
           "(at line 19) change on every render. To fix this, move the 'handleNext2' " +
-          'function inside the useLayoutEffect callback. Alternatively, wrap the ' +
+          'function inside the useLayoutEffect callback (at line 16). Alternatively, wrap the ' +
           "'handleNext2' definition into its own useCallback() Hook.",
         "The 'handleNext3' function makes the dependencies of useMemo Hook " +
           "(at line 23) change on every render. To fix this, move the 'handleNext3' " +
-          'function inside the useMemo callback. Alternatively, wrap the ' +
+          'function inside the useMemo callback (at line 20). Alternatively, wrap the ' +
           "'handleNext3' definition into its own useCallback() Hook.",
       ],
     },
@@ -3747,7 +3747,7 @@ const tests = {
         `The 'handleNext' function makes the dependencies of ` +
           `useEffect Hook (at line 14) change on every render. ` +
           `To fix this, move the 'handleNext' function inside ` +
-          `the useEffect callback. Alternatively, wrap the ` +
+          `the useEffect callback (at line 12). Alternatively, wrap the ` +
           `'handleNext' definition into its own useCallback() Hook.`,
       ],
     },
