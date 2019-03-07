@@ -732,6 +732,48 @@ export default {
         }
       }
 
+      if (!extraWarning && missingDependencies.size > 0) {
+        // See if the user is trying to avoid specifying a callable prop.
+        // This usually means they're unaware of useCallback.
+        let missingCallbackDep = null;
+        missingDependencies.forEach(missingDep => {
+          if (missingCallbackDep) {
+            return;
+          }
+          // Is this a variable from top scope?
+          const topScopeRef = componentScope.set.get(missingDep);
+          const usedDep = dependencies.get(missingDep);
+          if (usedDep.reference.resolved !== topScopeRef) {
+            return;
+          }
+          // Was it called?
+          const id = usedDep.reference.identifier;
+          if (
+            id == null ||
+            id.parent == null ||
+            id.parent.type !== 'CallExpression' ||
+            id.parent.callee !== id
+          ) {
+            return;
+          }
+          // Is this a destructured prop?
+          const def = topScopeRef.defs[0];
+          if (def == null || def.name == null || def.type !== 'Parameter') {
+            return;
+          }
+          if (isAncestorNodeOf(componentScope.block.params[0], def.name)) {
+            missingCallbackDep = missingDep;
+          }
+        });
+        if (missingCallbackDep !== null) {
+          extraWarning =
+            ` If specifying '${missingCallbackDep}'` +
+            ` makes the dependencies change too often, ` +
+            `find the parent component that defines it ` +
+            `and wrap that definition in useCallback.`;
+        }
+      }
+
       context.report({
         node: declaredDependenciesNode,
         message:

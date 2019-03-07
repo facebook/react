@@ -3859,6 +3859,54 @@ const tests = {
           `Either include it or remove the dependency array.`,
       ],
     },
+    {
+      code: `
+        function Podcasts({ fetchPodcasts, id }) {
+          let [podcasts, setPodcasts] = useState(null);
+          useEffect(() => {
+            fetchPodcasts(id).then(setPodcasts);
+          }, [id]);
+        }
+      `,
+      output: `
+        function Podcasts({ fetchPodcasts, id }) {
+          let [podcasts, setPodcasts] = useState(null);
+          useEffect(() => {
+            fetchPodcasts(id).then(setPodcasts);
+          }, [fetchPodcasts, id]);
+        }
+      `,
+      errors: [
+        `React Hook useEffect has a missing dependency: 'fetchPodcasts'. ` +
+          `Either include it or remove the dependency array. ` +
+          `If specifying 'fetchPodcasts' makes the dependencies change too often, ` +
+          `find the parent component that defines it and wrap that definition in useCallback.`,
+      ],
+    },
+    {
+      code: `
+        function Podcasts({ api: { fetchPodcasts }, id }) {
+          let [podcasts, setPodcasts] = useState(null);
+          useEffect(() => {
+            fetchPodcasts(id).then(setPodcasts);
+          }, [id]);
+        }
+      `,
+      output: `
+        function Podcasts({ api: { fetchPodcasts }, id }) {
+          let [podcasts, setPodcasts] = useState(null);
+          useEffect(() => {
+            fetchPodcasts(id).then(setPodcasts);
+          }, [fetchPodcasts, id]);
+        }
+      `,
+      errors: [
+        `React Hook useEffect has a missing dependency: 'fetchPodcasts'. ` +
+          `Either include it or remove the dependency array. ` +
+          `If specifying 'fetchPodcasts' makes the dependencies change too often, ` +
+          `find the parent component that defines it and wrap that definition in useCallback.`,
+      ],
+    },
   ],
 };
 
