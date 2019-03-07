@@ -51,14 +51,9 @@ export const shouldSetTextContent = $$$hostConfig.shouldSetTextContent;
 export const shouldDeprioritizeSubtree =
   $$$hostConfig.shouldDeprioritizeSubtree;
 export const createTextInstance = $$$hostConfig.createTextInstance;
-export const scheduleDeferredCallback = $$$hostConfig.scheduleDeferredCallback;
-export const cancelDeferredCallback = $$$hostConfig.cancelDeferredCallback;
-export const shouldYield = $$$hostConfig.shouldYield;
 export const scheduleTimeout = $$$hostConfig.setTimeout;
 export const cancelTimeout = $$$hostConfig.clearTimeout;
 export const noTimeout = $$$hostConfig.noTimeout;
-export const schedulePassiveEffects = $$$hostConfig.schedulePassiveEffects;
-export const cancelPassiveEffects = $$$hostConfig.cancelPassiveEffects;
 export const now = $$$hostConfig.now;
 export const isPrimaryRenderer = $$$hostConfig.isPrimaryRenderer;
 export const supportsMutation = $$$hostConfig.supportsMutation;
