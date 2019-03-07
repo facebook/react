@@ -164,7 +164,17 @@ export default {
         }
         // Detect primitive constants
         // const foo = 42
-        const declaration = def.node.parent;
+        let declaration = def.node.parent;
+        if (declaration == null) {
+          // This might happen if variable is declared after the callback.
+          // In that case ESLint won't set up .parent refs.
+          // So we'll set them up manually.
+          fastFindReferenceWithParent(componentScope.block, def.node.id);
+          declaration = def.node.parent;
+          if (declaration == null) {
+            return false;
+          }
+        }
         if (
           declaration.kind === 'const' &&
           init.type === 'Literal' &&
