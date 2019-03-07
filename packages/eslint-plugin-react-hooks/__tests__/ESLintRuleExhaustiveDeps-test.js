@@ -849,6 +849,31 @@ const tests = {
         }
       `,
     },
+    {
+      code: `
+        function withFetch(fetchPodcasts) {
+          return function Podcasts({ id }) {
+            let [podcasts, setPodcasts] = useState(null);
+            useEffect(() => {
+              fetchPodcasts(id).then(setPodcasts);
+            }, [id]);
+          }
+        }
+      `,
+    },
+    {
+      code: `
+        function Podcasts({ id }) {
+          let [podcasts, setPodcasts] = useState(null);
+          useEffect(() => {
+            function doFetch({ fetchPodcasts }) {
+              fetchPodcasts(id).then(setPodcasts);
+            }
+            doFetch({ fetchPodcasts: API.fetchPodcasts });
+          }, [id]);
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -3713,6 +3738,47 @@ const tests = {
     {
       code: `
         function MyComponent(props) {
+          let handleNext = () => {
+            console.log('hello');
+          };
+          if (props.foo) {
+            handleNext = () => {
+              console.log('hello');
+            };
+          }
+          useEffect(() => {
+            return Store.subscribe(handleNext);
+          }, [handleNext]);
+        }
+      `,
+      // Normally we'd suggest moving handleNext inside an
+      // effect. But it's used more than once.
+      // TODO: our autofix here isn't quite sufficient because
+      // it only wraps the first definition. But seems ok.
+      output: `
+        function MyComponent(props) {
+          let handleNext = useCallback(() => {
+            console.log('hello');
+          });
+          if (props.foo) {
+            handleNext = () => {
+              console.log('hello');
+            };
+          }
+          useEffect(() => {
+            return Store.subscribe(handleNext);
+          }, [handleNext]);
+        }
+      `,
+      errors: [
+        "The 'handleNext' function makes the dependencies of useEffect Hook " +
+          '(at line 13) change on every render. To fix this, wrap the ' +
+          "'handleNext' definition into its own useCallback() Hook.",
+      ],
+    },
+    {
+      code: `
+        function MyComponent(props) {
           let [, setState] = useState();
           let taint = props.foo;
 
@@ -3903,6 +3969,38 @@ const tests = {
       errors: [
         `React Hook useEffect has a missing dependency: 'fetchPodcasts'. ` +
           `Either include it or remove the dependency array. ` +
+          `If specifying 'fetchPodcasts' makes the dependencies change too often, ` +
+          `find the parent component that defines it and wrap that definition in useCallback.`,
+      ],
+    },
+    {
+      code: `
+        function Podcasts({ fetchPodcasts, fetchPodcasts2, id }) {
+          let [podcasts, setPodcasts] = useState(null);
+          useEffect(() => {
+            setTimeout(() => {
+              console.log(id);
+              fetchPodcasts(id).then(setPodcasts);
+              fetchPodcasts2(id).then(setPodcasts);
+            });
+          }, [id]);
+        }
+      `,
+      output: `
+        function Podcasts({ fetchPodcasts, fetchPodcasts2, id }) {
+          let [podcasts, setPodcasts] = useState(null);
+          useEffect(() => {
+            setTimeout(() => {
+              console.log(id);
+              fetchPodcasts(id).then(setPodcasts);
+              fetchPodcasts2(id).then(setPodcasts);
+            });
+          }, [fetchPodcasts, fetchPodcasts2, id]);
+        }
+      `,
+      errors: [
+        `React Hook useEffect has missing dependencies: 'fetchPodcasts' and 'fetchPodcasts2'. ` +
+          `Either include them or remove the dependency array. ` +
           `If specifying 'fetchPodcasts' makes the dependencies change too often, ` +
           `find the parent component that defines it and wrap that definition in useCallback.`,
       ],

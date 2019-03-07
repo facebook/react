@@ -761,9 +761,10 @@ export default {
           if (def == null || def.name == null || def.type !== 'Parameter') {
             return;
           }
-          if (isAncestorNodeOf(componentScope.block.params[0], def.name)) {
-            missingCallbackDep = missingDep;
-          }
+          // If it's missing (i.e. in component scope) *and* it's a parameter
+          // then it is definitely coming from props destructuring.
+          // (It could also be props itself but we wouldn't be calling it then.)
+          missingCallbackDep = missingDep;
         });
         if (missingCallbackDep !== null) {
           extraWarning =
@@ -1026,9 +1027,7 @@ function scanForDeclaredBareFunctions({
       if (currentScope !== scope) {
         // This reference is outside the Hook callback.
         // It can only be legit if it's the deps array.
-        if (isAncestorNodeOf(declaredDependenciesNode, reference.identifier)) {
-          continue;
-        } else {
+        if (!isAncestorNodeOf(declaredDependenciesNode, reference.identifier)) {
           return true;
         }
       }
