@@ -838,6 +838,17 @@ const tests = {
         }
       `,
     },
+    {
+      // Regression test for a crash
+      code: `
+        function Podcasts() {
+          useEffect(() => {
+            setPodcasts([]);
+          }, []);
+          let [podcasts, setPodcasts] = useState(null);
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -3810,6 +3821,32 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'tick'. " +
           'Either include it or remove the dependency array.',
+      ],
+    },
+    {
+      // Regression test for a crash
+      code: `
+        function Podcasts() {
+          useEffect(() => {
+            alert(podcasts);
+          }, []);
+          let [podcasts, setPodcasts] = useState(null);
+        }
+      `,
+      // Note: this autofix is shady because
+      // the variable is used before declaration.
+      // TODO: Maybe we can catch those fixes and not autofix.
+      output: `
+        function Podcasts() {
+          useEffect(() => {
+            alert(podcasts);
+          }, [podcasts]);
+          let [podcasts, setPodcasts] = useState(null);
+        }
+      `,
+      errors: [
+        `React Hook useEffect has a missing dependency: 'podcasts'. ` +
+          `Either include it or remove the dependency array.`,
       ],
     },
   ],
