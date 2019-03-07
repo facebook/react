@@ -51,12 +51,16 @@ describe('useSubscription', () => {
 
   // Mimic createSubscription API to simplify testing
   function createSubscription({getCurrentValue, subscribe}) {
+    function DefaultChild({value = 'default'}) {
+      Scheduler.yieldValue(value);
+      return null;
+    }
+
     return function Subscription({children, source}) {
       const value = useSubscription(
         React.useMemo(() => ({source, getCurrentValue, subscribe}), [source]),
       );
-
-      return React.createElement(children, {value});
+      return React.createElement(children || DefaultChild, {value});
     };
   }
 
@@ -71,12 +75,7 @@ describe('useSubscription', () => {
 
     const observable = createBehaviorSubject();
     const renderer = ReactTestRenderer.create(
-      <Subscription source={observable}>
-        {({value = 'default'}) => {
-          Scheduler.yieldValue(value);
-          return null;
-        }}
-      </Subscription>,
+      <Subscription source={observable} />,
       {unstable_isConcurrent: true},
     );
 
@@ -110,14 +109,9 @@ describe('useSubscription', () => {
       },
     });
 
-    function render({value = 'default'}) {
-      Scheduler.yieldValue(value);
-      return null;
-    }
-
     let observable = createReplaySubject('initial');
     const renderer = ReactTestRenderer.create(
-      <Subscription source={observable}>{render}</Subscription>,
+      <Subscription source={observable} />,
       {unstable_isConcurrent: true},
     );
     expect(Scheduler).toFlushAndYield(['initial']);
@@ -128,7 +122,7 @@ describe('useSubscription', () => {
 
     // Unsetting the subscriber prop should reset subscribed values
     observable = createReplaySubject(undefined);
-    renderer.update(<Subscription source={observable}>{render}</Subscription>);
+    renderer.update(<Subscription source={observable} />);
     expect(Scheduler).toFlushAndYield(['default']);
   });
 
@@ -141,16 +135,11 @@ describe('useSubscription', () => {
       },
     });
 
-    function render({value = 'default'}) {
-      Scheduler.yieldValue(value);
-      return null;
-    }
-
     const observableA = createBehaviorSubject('a-0');
     const observableB = createBehaviorSubject('b-0');
 
     const renderer = ReactTestRenderer.create(
-      <Subscription source={observableA}>{render}</Subscription>,
+      <Subscription source={observableA} />,
       {unstable_isConcurrent: true},
     );
 
@@ -158,7 +147,7 @@ describe('useSubscription', () => {
     expect(Scheduler).toFlushAndYield(['a-0']);
 
     // Unsetting the subscriber prop should reset subscribed values
-    renderer.update(<Subscription source={observableB}>{render}</Subscription>);
+    renderer.update(<Subscription source={observableB} />);
     expect(Scheduler).toFlushAndYield(['b-0']);
 
     // Updates to the old subscribable should not re-render the child component

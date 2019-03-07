@@ -1,6 +1,21 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
+
 import {useEffect, useState} from 'react';
 
-export function useSubscription({
+// Hook used for safely managing subscriptions in concurrent mode.
+//
+// In order to avoid removing and re-adding subscriptions each time this hook is called,
+// the parameters passed to this hook should be memoized in some way–
+// either by wrapping the entire params object with useMemo()
+// or by wrapping the individual callbacks with useCallback().
+export function useSubscription<Value, Source>({
   // This is the thing being subscribed to (e.g. an observable, event dispatcher, etc).
   source,
 
@@ -10,7 +25,11 @@ export function useSubscription({
   // This function is passed an event handler to attach to the subscription source.
   // It should return an unsubscribe function that removes the handler.
   subscribe,
-}) {
+}: {|
+  source: Source,
+  getCurrentValue: (source: Source) => Value,
+  subscribe: (source: Source, callback: Function) => () => void,
+|}) {
   // Read the current value from our subscription source.
   // When this value changes, we'll schedule an update with React.
   // It's important to also store the source itself so that we can check for staleness.
