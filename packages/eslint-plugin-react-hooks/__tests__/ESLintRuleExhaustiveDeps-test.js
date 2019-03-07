@@ -2673,11 +2673,15 @@ const tests = {
           let value;
           let value2;
           let value3;
+          let value4;
           let asyncValue;
           useEffect(() => {
-            value = {};
+            if (value4) {
+              value = {};
+            }
             value2 = 100;
             value = 43;
+            value4 = true;
             console.log(value2);
             console.log(value3);
             setTimeout(() => {
@@ -2694,11 +2698,15 @@ const tests = {
           let value;
           let value2;
           let value3;
+          let value4;
           let asyncValue;
           useEffect(() => {
-            value = {};
+            if (value4) {
+              value = {};
+            }
             value2 = 100;
             value = 43;
+            value4 = true;
             console.log(value2);
             console.log(value3);
             setTimeout(() => {
@@ -2708,14 +2716,20 @@ const tests = {
         }
       `,
       errors: [
+        // value2
+        `Assignments to the 'value2' variable from inside a React useEffect Hook ` +
+          `will not persist between re-renders. ` +
+          `If it's only needed by this Hook, move the variable inside it. ` +
+          `Alternatively, declare a ref with the useRef Hook, ` +
+          `and keep the mutable value in its 'current' property.`,
         // value
         `Assignments to the 'value' variable from inside a React useEffect Hook ` +
           `will not persist between re-renders. ` +
           `If it's only needed by this Hook, move the variable inside it. ` +
           `Alternatively, declare a ref with the useRef Hook, ` +
           `and keep the mutable value in its 'current' property.`,
-        // value2
-        `Assignments to the 'value2' variable from inside a React useEffect Hook ` +
+        // value4
+        `Assignments to the 'value4' variable from inside a React useEffect Hook ` +
           `will not persist between re-renders. ` +
           `If it's only needed by this Hook, move the variable inside it. ` +
           `Alternatively, declare a ref with the useRef Hook, ` +
@@ -4001,6 +4015,32 @@ const tests = {
       errors: [
         `React Hook useEffect has missing dependencies: 'fetchPodcasts' and 'fetchPodcasts2'. ` +
           `Either include them or remove the dependency array. ` +
+          `If specifying 'fetchPodcasts' makes the dependencies change too often, ` +
+          `find the parent component that defines it and wrap that definition in useCallback.`,
+      ],
+    },
+    {
+      code: `
+        function Podcasts({ fetchPodcasts, id }) {
+          let [podcasts, setPodcasts] = useState(null);
+          useEffect(() => {
+            console.log(fetchPodcasts);
+            fetchPodcasts(id).then(setPodcasts);
+          }, [id]);
+        }
+      `,
+      output: `
+        function Podcasts({ fetchPodcasts, id }) {
+          let [podcasts, setPodcasts] = useState(null);
+          useEffect(() => {
+            console.log(fetchPodcasts);
+            fetchPodcasts(id).then(setPodcasts);
+          }, [fetchPodcasts, id]);
+        }
+      `,
+      errors: [
+        `React Hook useEffect has a missing dependency: 'fetchPodcasts'. ` +
+          `Either include it or remove the dependency array. ` +
           `If specifying 'fetchPodcasts' makes the dependencies change too often, ` +
           `find the parent component that defines it and wrap that definition in useCallback.`,
       ],

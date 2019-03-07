@@ -365,8 +365,10 @@ export default {
               memoizedIsFunctionWithoutCapturedValues(resolved);
             dependencies.set(dependency, {
               isStatic,
-              reference,
+              references: [reference],
             });
+          } else {
+            dependencies.get(dependency).references.push(reference);
           }
         }
         for (const childScope of currentScope.childScopes) {
@@ -514,9 +516,12 @@ export default {
 
       // Warn about assigning to variables in the outer scope.
       // Those are usually bugs.
-      let foundStaleAssignments = false;
+      let staleAssignments = new Set();
       function reportStaleAssignment(writeExpr, key) {
-        foundStaleAssignments = true;
+        if (staleAssignments.has(key)) {
+          return;
+        }
+        staleAssignments.add(key);
         context.report({
           node: writeExpr,
           message:
@@ -532,15 +537,17 @@ export default {
 
       // Remember which deps are optional and report bad usage first.
       const optionalDependencies = new Set();
-      dependencies.forEach(({isStatic, reference}, key) => {
+      dependencies.forEach(({isStatic, references}, key) => {
         if (isStatic) {
           optionalDependencies.add(key);
         }
-        if (reference.writeExpr) {
-          reportStaleAssignment(reference.writeExpr, key);
-        }
+        references.forEach(reference => {
+          if (reference.writeExpr) {
+            reportStaleAssignment(reference.writeExpr, key);
+          }
+        });
       });
-      if (foundStaleAssignments) {
+      if (staleAssignments.size > 0) {
         // The intent isn't clear so we'll wait until you fix those first.
         return;
       }
@@ -699,7 +706,7 @@ export default {
         if (propDep == null) {
           return;
         }
-        const refs = propDep.reference.resolved.references;
+        const refs = propDep.references;
         if (!Array.isArray(refs)) {
           return;
         }
@@ -743,22 +750,30 @@ export default {
           // Is this a variable from top scope?
           const topScopeRef = componentScope.set.get(missingDep);
           const usedDep = dependencies.get(missingDep);
-          if (usedDep.reference.resolved !== topScopeRef) {
-            return;
-          }
-          // Was it called?
-          const id = usedDep.reference.identifier;
-          if (
-            id == null ||
-            id.parent == null ||
-            id.parent.type !== 'CallExpression' ||
-            id.parent.callee !== id
-          ) {
+          if (usedDep.references[0].resolved !== topScopeRef) {
             return;
           }
           // Is this a destructured prop?
           const def = topScopeRef.defs[0];
           if (def == null || def.name == null || def.type !== 'Parameter') {
+            return;
+          }
+          // Was it called in at least one case? Then it's a function.
+          let isFunctionCall = false;
+          let id;
+          for (let i = 0; i < usedDep.references.length; i++) {
+            id = usedDep.references[i].identifier;
+            if (
+              id != null &&
+              id.parent != null &&
+              id.parent.type === 'CallExpression' &&
+              id.parent.callee === id
+            ) {
+              isFunctionCall = true;
+              break;
+            }
+          }
+          if (!isFunctionCall) {
             return;
           }
           // If it's missing (i.e. in component scope) *and* it's a parameter
