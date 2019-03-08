@@ -35,6 +35,8 @@ export default {
     const options = {additionalHooks};
 
     // Should be shared between visitors.
+    let setStateCallSites = new WeakMap();
+    let stateVariables = new WeakSet();
     let staticKnownValueCache = new WeakMap();
     let functionWithoutCapturedValueCache = new WeakMap();
     function memoizeWithWeakMap(fn, map) {
@@ -87,7 +89,43 @@ export default {
       const depsIndex = callbackIndex + 1;
       const declaredDependenciesNode = node.parent.arguments[depsIndex];
       if (!declaredDependenciesNode) {
+        // These are only used for optimization.
+        if (
+          reactiveHookName === 'useMemo' ||
+          reactiveHookName === 'useCallback'
+        ) {
+          context.report({
+            node: node.parent.callee,
+            message:
+              `React Hook ${reactiveHookName} doesn't serve any purpose ` +
+              `without a dependency array. To enable ` +
+              `this optimization, pass an array of values used by the ` +
+              `inner function as the second argument to ${reactiveHookName}.`,
+          });
+        }
         return;
+      }
+
+      if (isEffect && node.async) {
+        context.report({
+          node: node,
+          message:
+            `Effect callbacks are synchronous to prevent race conditions. ` +
+            `Put the async function inside:\n\n` +
+            `useEffect(() => {\n` +
+            `  let ignore = false;\n` +
+            `  fetchSomething();\n` +
+            `\n` +
+            `  async function fetchSomething() {\n` +
+            `    const result = await ...\n` +
+            `    if (!ignore) setState(result);\n` +
+            `  }\n` +
+            `\n` +
+            `  return () => { ignore = true; };\n` +
+            `}, []);\n` +
+            `\n` +
+            `This lets you handle multiple requests without bugs.`,
+        });
       }
 
       // Get the current scope.
@@ -150,7 +188,17 @@ export default {
         }
         // Detect primitive constants
         // const foo = 42
-        const declaration = def.node.parent;
+        let declaration = def.node.parent;
+        if (declaration == null) {
+          // This might happen if variable is declared after the callback.
+          // In that case ESLint won't set up .parent refs.
+          // So we'll set them up manually.
+          fastFindReferenceWithParent(componentScope.block, def.node.id);
+          declaration = def.node.parent;
+          if (declaration == null) {
+            return false;
+          }
+        }
         if (
           declaration.kind === 'const' &&
           init.type === 'Literal' &&
@@ -180,19 +228,40 @@ export default {
           return false;
         }
         const id = def.node.id;
-        if (callee.name === 'useRef' && id.type === 'Identifier') {
+        const {name} = callee;
+        if (name === 'useRef' && id.type === 'Identifier') {
           // useRef() return value is static.
           return true;
-        } else if (callee.name === 'useState' || callee.name === 'useReducer') {
+        } else if (name === 'useState' || name === 'useReducer') {
           // Only consider second value in initializing tuple static.
           if (
             id.type === 'ArrayPattern' &&
             id.elements.length === 2 &&
-            Array.isArray(resolved.identifiers) &&
-            // Is second tuple value the same reference we're checking?
-            id.elements[1] === resolved.identifiers[0]
+            Array.isArray(resolved.identifiers)
           ) {
-            return true;
+            // Is second tuple value the same reference we're checking?
+            if (id.elements[1] === resolved.identifiers[0]) {
+              if (name === 'useState') {
+                const references = resolved.references;
+                for (let i = 0; i < references.length; i++) {
+                  setStateCallSites.set(
+                    references[i].identifier,
+                    id.elements[0],
+                  );
+                }
+              }
+              // Setter is static.
+              return true;
+            } else if (id.elements[0] === resolved.identifiers[0]) {
+              if (name === 'useState') {
+                const references = resolved.references;
+                for (let i = 0; i < references.length; i++) {
+                  stateVariables.add(references[i].identifier);
+                }
+              }
+              // State variable itself is dynamic.
+              return false;
+            }
           }
         }
         // By default assume it's dynamic.
@@ -341,8 +410,10 @@ export default {
               memoizedIsFunctionWithoutCapturedValues(resolved);
             dependencies.set(dependency, {
               isStatic,
-              reference,
+              references: [reference],
             });
+          } else {
+            dependencies.get(dependency).references.push(reference);
           }
         }
         for (const childScope of currentScope.childScopes) {
@@ -490,9 +561,12 @@ export default {
 
       // Warn about assigning to variables in the outer scope.
       // Those are usually bugs.
-      let foundStaleAssignments = false;
+      let staleAssignments = new Set();
       function reportStaleAssignment(writeExpr, key) {
-        foundStaleAssignments = true;
+        if (staleAssignments.has(key)) {
+          return;
+        }
+        staleAssignments.add(key);
         context.report({
           node: writeExpr,
           message:
@@ -508,15 +582,17 @@ export default {
 
       // Remember which deps are optional and report bad usage first.
       const optionalDependencies = new Set();
-      dependencies.forEach(({isStatic, reference}, key) => {
+      dependencies.forEach(({isStatic, references}, key) => {
         if (isStatic) {
           optionalDependencies.add(key);
         }
-        if (reference.writeExpr) {
-          reportStaleAssignment(reference.writeExpr, key);
-        }
+        references.forEach(reference => {
+          if (reference.writeExpr) {
+            reportStaleAssignment(reference.writeExpr, key);
+          }
+        });
       });
-      if (foundStaleAssignments) {
+      if (staleAssignments.size > 0) {
         // The intent isn't clear so we'll wait until you fix those first.
         return;
       }
@@ -538,7 +614,56 @@ export default {
         duplicateDependencies.size +
         missingDependencies.size +
         unnecessaryDependencies.size;
+
       if (problemCount === 0) {
+        // If nothing else to report, check if some callbacks
+        // are bare and would invalidate on every render.
+        const bareFunctions = scanForDeclaredBareFunctions({
+          declaredDependencies,
+          declaredDependenciesNode,
+          componentScope,
+          scope,
+        });
+        bareFunctions.forEach(({fn, suggestUseCallback}) => {
+          let message =
+            `The '${fn.name.name}' function makes the dependencies of ` +
+            `${reactiveHookName} Hook (at line ${
+              declaredDependenciesNode.loc.start.line
+            }) ` +
+            `change on every render.`;
+          if (suggestUseCallback) {
+            message +=
+              ` To fix this, ` +
+              `wrap the '${
+                fn.name.name
+              }' definition into its own useCallback() Hook.`;
+          } else {
+            message +=
+              ` Move it inside the ${reactiveHookName} callback. ` +
+              `Alternatively, wrap the '${
+                fn.name.name
+              }' definition into its own useCallback() Hook.`;
+          }
+          context.report({
+            node: fn.node,
+            message,
+            fix(fixer) {
+              // Only handle the simple case: arrow functions.
+              // Wrapping function declarations can mess up hoisting.
+              if (suggestUseCallback && fn.type === 'Variable') {
+                return [
+                  // TODO: also add an import?
+                  fixer.insertTextBefore(fn.node.init, 'useCallback('),
+                  // TODO: ideally we'd gather deps here but it would
+                  // require restructuring the rule code. For now,
+                  // this is fine. Note we're intentionally not adding
+                  // [] because that changes semantics.
+                  fixer.insertTextAfter(fn.node.init, ')'),
+                ];
+              }
+            },
+          });
+        });
         return;
       }
 
@@ -609,9 +734,13 @@ export default {
             "because their mutation doesn't re-render the component.";
         } else if (externalDependencies.size > 0) {
           const dep = Array.from(externalDependencies)[0];
-          extraWarning =
-            ` Values like '${dep}' aren't valid dependencies ` +
-            `because their mutation doesn't re-render the component.`;
+          // Don't show this warning for things that likely just got moved *inside* the callback
+          // because in that case they're clearly not referring to globals.
+          if (!scope.set.has(dep)) {
+            extraWarning =
+              ` Outer scope values like '${dep}' aren't valid dependencies ` +
+              `because their mutation doesn't re-render the component.`;
+          }
         }
       }
 
@@ -623,7 +752,7 @@ export default {
         if (propDep == null) {
           return;
         }
-        const refs = propDep.reference.resolved.references;
+        const refs = propDep.references;
         if (!Array.isArray(refs)) {
           return;
         }
@@ -650,8 +779,151 @@ export default {
         }
         if (isPropsOnlyUsedInMembers) {
           extraWarning =
-            ' Alternatively, destructure the necessary props ' +
-            'outside the callback.';
+            ` However, the preferred fix is to destructure the 'props' ` +
+            `object outside of the ${reactiveHookName} call and ` +
+            `refer to specific props directly by their names.`;
+        }
+      }
+
+      if (!extraWarning && missingDependencies.size > 0) {
+        // See if the user is trying to avoid specifying a callable prop.
+        // This usually means they're unaware of useCallback.
+        let missingCallbackDep = null;
+        missingDependencies.forEach(missingDep => {
+          if (missingCallbackDep) {
+            return;
+          }
+          // Is this a variable from top scope?
+          const topScopeRef = componentScope.set.get(missingDep);
+          const usedDep = dependencies.get(missingDep);
+          if (usedDep.references[0].resolved !== topScopeRef) {
+            return;
+          }
+          // Is this a destructured prop?
+          const def = topScopeRef.defs[0];
+          if (def == null || def.name == null || def.type !== 'Parameter') {
+            return;
+          }
+          // Was it called in at least one case? Then it's a function.
+          let isFunctionCall = false;
+          let id;
+          for (let i = 0; i < usedDep.references.length; i++) {
+            id = usedDep.references[i].identifier;
+            if (
+              id != null &&
+              id.parent != null &&
+              id.parent.type === 'CallExpression' &&
+              id.parent.callee === id
+            ) {
+              isFunctionCall = true;
+              break;
+            }
+          }
+          if (!isFunctionCall) {
+            return;
+          }
+          // If it's missing (i.e. in component scope) *and* it's a parameter
+          // then it is definitely coming from props destructuring.
+          // (It could also be props itself but we wouldn't be calling it then.)
+          missingCallbackDep = missingDep;
+        });
+        if (missingCallbackDep !== null) {
+          extraWarning =
+            ` If specifying '${missingCallbackDep}'` +
+            ` makes the dependencies change too often, ` +
+            `find the parent component that defines it ` +
+            `and wrap that definition in useCallback.`;
+        }
+      }
+
+      if (!extraWarning && missingDependencies.size > 0) {
+        let setStateRecommendation = null;
+        missingDependencies.forEach(missingDep => {
+          if (setStateRecommendation !== null) {
+            return;
+          }
+          const usedDep = dependencies.get(missingDep);
+          const references = usedDep.references;
+          let id;
+          let maybeCall;
+          for (let i = 0; i < references.length; i++) {
+            id = references[i].identifier;
+            maybeCall = id.parent;
+            // Try to see if we have setState(someExpr(missingDep)).
+            while (maybeCall != null && maybeCall !== componentScope.block) {
+              if (maybeCall.type === 'CallExpression') {
+                const correspondingStateVariable = setStateCallSites.get(
+                  maybeCall.callee,
+                );
+                if (correspondingStateVariable != null) {
+                  if (correspondingStateVariable.name === missingDep) {
+                    // setCount(count + 1)
+                    setStateRecommendation = {
+                      missingDep,
+                      setter: maybeCall.callee.name,
+                      form: 'updater',
+                    };
+                  } else if (stateVariables.has(id)) {
+                    // setCount(count + increment)
+                    setStateRecommendation = {
+                      missingDep,
+                      setter: maybeCall.callee.name,
+                      form: 'reducer',
+                    };
+                  } else {
+                    const resolved = references[i].resolved;
+                    if (resolved != null) {
+                      // If it's a parameter *and* a missing dep,
+                      // it must be a prop or something inside a prop.
+                      // Therefore, recommend an inline reducer.
+                      const def = resolved.defs[0];
+                      if (def != null && def.type === 'Parameter') {
+                        setStateRecommendation = {
+                          missingDep,
+                          setter: maybeCall.callee.name,
+                          form: 'inlineReducer',
+                        };
+                      }
+                    }
+                  }
+                  break;
+                }
+              }
+              maybeCall = maybeCall.parent;
+            }
+            if (setStateRecommendation !== null) {
+              break;
+            }
+          }
+        });
+        if (setStateRecommendation !== null) {
+          switch (setStateRecommendation.form) {
+            case 'reducer':
+              extraWarning =
+                ` You can also replace multiple useState variables with useReducer ` +
+                `if '${setStateRecommendation.setter}' needs the ` +
+                `current value of '${setStateRecommendation.missingDep}'.`;
+              break;
+            case 'inlineReducer':
+              extraWarning =
+                ` You can also replace useState with an inline useReducer ` +
+                `if '${setStateRecommendation.setter}' needs the ` +
+                `current value of '${setStateRecommendation.missingDep}'.`;
+              break;
+            case 'updater':
+              extraWarning =
+                ` You can also write '${
+                  setStateRecommendation.setter
+                }(${setStateRecommendation.missingDep.substring(
+                  0,
+                  1,
+                )} => ...)' if you only use '${
+                  setStateRecommendation.missingDep
+                }'` + ` for the '${setStateRecommendation.setter}' call.`;
+              break;
+            default:
+              throw new Error('Unknown case.');
+          }
         }
       }
 
@@ -844,6 +1116,81 @@ function collectRecommendations({
     duplicateDependencies,
     missingDependencies,
   };
+}
+
+// Finds functions declared as dependencies
+// that would invalidate on every render.
+function scanForDeclaredBareFunctions({
+  declaredDependencies,
+  declaredDependenciesNode,
+  componentScope,
+  scope,
+}) {
+  const bareFunctions = declaredDependencies
+    .map(({key}) => {
+      const fnRef = componentScope.set.get(key);
+      if (fnRef == null) {
+        return null;
+      }
+      let fnNode = fnRef.defs[0];
+      if (fnNode == null) {
+        return null;
+      }
+      // const handleChange = function () {}
+      // const handleChange = () => {}
+      if (
+        fnNode.type === 'Variable' &&
+        fnNode.node.type === 'VariableDeclarator' &&
+        fnNode.node.init != null &&
+        (fnNode.node.init.type === 'ArrowFunctionExpression' ||
+          fnNode.node.init.type === 'FunctionExpression')
+      ) {
+        return fnRef;
+      }
+      // function handleChange() {}
+      if (
+        fnNode.type === 'FunctionName' &&
+        fnNode.node.type === 'FunctionDeclaration'
+      ) {
+        return fnRef;
+      }
+      return null;
+    })
+    .filter(Boolean);
+
+  function isUsedOutsideOfHook(fnRef) {
+    let foundWriteExpr = false;
+    for (let i = 0; i < fnRef.references.length; i++) {
+      const reference = fnRef.references[i];
+      if (reference.writeExpr) {
+        if (foundWriteExpr) {
+          // Two writes to the same function.
+          return true;
+        } else {
+          // Ignore first write as it's not usage.
+          foundWriteExpr = true;
+          continue;
+        }
+      }
+      let currentScope = reference.from;
+      while (currentScope !== scope && currentScope != null) {
+        currentScope = currentScope.upper;
+      }
+      if (currentScope !== scope) {
+        // This reference is outside the Hook callback.
+        // It can only be legit if it's the deps array.
+        if (!isAncestorNodeOf(declaredDependenciesNode, reference.identifier)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  return bareFunctions.map(fnRef => ({
+    fn: fnRef.defs[0],
+    suggestUseCallback: isUsedOutsideOfHook(fnRef),
+  }));
 }
 
 /**
