@@ -710,7 +710,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       ) {
         let called = false;
         if (__DEV__) {
-          if (typeof Promise !== 'undefined') {
+          if (typeof global.Promise !== 'undefined') {
             // eslint-disable-next-line no-undef
             Promise.resolve()
               .then(() => {})

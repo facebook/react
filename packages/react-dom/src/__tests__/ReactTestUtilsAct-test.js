@@ -247,8 +247,6 @@ describe('ReactTestUtils.act()', () => {
       });
     });
 
-    it('catches microtasks', () => {});
-
     it('can handle async/await', async () => {
       function App() {
         let [ctr, setCtr] = React.useState(0);
