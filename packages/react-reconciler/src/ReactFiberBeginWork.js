@@ -1632,12 +1632,28 @@ function updateSuspenseComponent(
 }
 
 function retrySuspenseComponentWithoutHydrating(
-  current: Fiber,
+  current: Fiber | null,
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ) {
+  let fiberToDelete = current;
+  if (fiberToDelete === null) {
+    // We're going to delete the dehydrated boundary but we don't have a
+    // current. To be able to insert something in the deletion list we
+    // to create one. That's because our workInProgress is going to be
+    // upgraded so we can't use that one.
+    fiberToDelete = createWorkInProgress(
+      workInProgress,
+      workInProgress.pendingProps,
+      renderExpirationTime,
+    );
+    fiberToDelete.return = workInProgress.return;
+  } else {
+    // This is now an insertion.
+    workInProgress.effectTag |= Placement;
+  }
   // Detach from the current dehydrated boundary.
-  current.alternate = null;
+  fiberToDelete.alternate = null;
   workInProgress.alternate = null;
 
   // Insert a deletion in the effect list.
@@ -1649,20 +1665,18 @@ function retrySuspenseComponentWithoutHydrating(
   );
   const last = returnFiber.lastEffect;
   if (last !== null) {
-    last.nextEffect = current;
-    returnFiber.lastEffect = current;
+    last.nextEffect = fiberToDelete;
+    returnFiber.lastEffect = fiberToDelete;
   } else {
-    returnFiber.firstEffect = returnFiber.lastEffect = current;
+    returnFiber.firstEffect = returnFiber.lastEffect = fiberToDelete;
   }
-  current.nextEffect = null;
-  current.effectTag = Deletion;
+  fiberToDelete.nextEffect = null;
+  fiberToDelete.effectTag = Deletion;
 
   // Upgrade this work in progress to a real Suspense component.
   workInProgress.tag = SuspenseComponent;
   workInProgress.stateNode = null;
   workInProgress.memoizedState = null;
-  // This is now an insertion.
-  workInProgress.effectTag |= Placement;
   // Retry as a real Suspense component.
   return updateSuspenseComponent(null, workInProgress, renderExpirationTime);
 }
@@ -1672,6 +1686,17 @@ function updateDehydratedSuspenseComponent(
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ) {
+  const suspenseInstance = (workInProgress.stateNode: SuspenseInstance);
+  if (isSuspenseInstanceFallback(suspenseInstance)) {
+    // This boundary is in a permanent fallback state. In this case, we'll never
+    // get an update and we'll never be able to hydrate the final content. Let's just try the
+    // client side render instead.
+    return retrySuspenseComponentWithoutHydrating(
+      current,
+      workInProgress,
+      renderExpirationTime,
+    );
+  }
   if (current === null) {
     // During the first pass, we'll bail out and not drill into the children.
     // Instead, we'll leave the content in place and try to hydrate it later.
@@ -1683,17 +1708,6 @@ function updateDehydratedSuspenseComponent(
     // TODO: In non-concurrent mode, should we commit the nodes we have hydrated so far?
     workInProgress.child = null;
     return null;
-  }
-  const suspenseInstance = (current.stateNode: SuspenseInstance);
-  if (isSuspenseInstanceFallback(suspenseInstance)) {
-    // This boundary is in a permanent fallback state. In this case, we'll never
-    // get an update and we'll never be able to hydrate the final content. Let's just try the
-    // client side render instead.
-    return retrySuspenseComponentWithoutHydrating(
-      current,
-      workInProgress,
-      renderExpirationTime,
-    );
   }
   // We use childExpirationTime to indicate that a child might depend on context, so if
   // any context has changed, we need to treat is as if the input might have changed.
