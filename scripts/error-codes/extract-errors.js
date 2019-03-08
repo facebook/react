@@ -71,35 +71,41 @@ module.exports = function(opts) {
     const ast = babylon.parse(source, babylonOptions);
 
     traverse(ast, {
-      CallExpression: {
-        exit(astPath) {
-          if (astPath.get('callee').isIdentifier({name: 'invariant'})) {
-            const node = astPath.node;
+      CallExpression(astPath) {
+        if (astPath.get('callee').isIdentifier({name: 'invariant'})) {
+          CallOrNewExpression(astPath);
+          return;
+        }
+        if (astPath.get('callee').isIdentifier({name: 'invariant'})) {
+          const node = astPath.node;
 
-            // error messages can be concatenated (`+`) at runtime, so here's a
-            // trivial partial evaluator that interprets the literal value
-            const errorMsgLiteral = evalStringConcat(node.arguments[1]);
-            addToErrorMap(errorMsgLiteral);
-          }
-        },
+          // error messages can be concatenated (`+`) at runtime, so here's a
+          // trivial partial evaluator that interprets the literal value
+          const errorMsgLiteral = evalStringConcat(node.arguments[1]);
+          addToErrorMap(errorMsgLiteral);
+        }
       },
       NewExpression(astPath) {
         if (astPath.get('callee').isIdentifier({name: 'Error'})) {
-          const node = astPath.node;
-          try {
-            const errorMsgLiteral = evalStringAndTemplateConcat(
-              node.arguments[0],
-              []
-            );
-            addToErrorMap(errorMsgLiteral);
-          } catch (e) {
-            // We use a lint rule to enforce that error messages are written in
-            // a format that can be minified. If they aren't, assume this is
-            // intentional and skip over it gracefully.
-          }
+          CallOrNewExpression(astPath);
         }
       },
     });
+  }
+
+  function CallOrNewExpression(astPath) {
+    const node = astPath.node;
+    try {
+      const errorMsgLiteral = evalStringAndTemplateConcat(
+        node.arguments[0],
+        []
+      );
+      addToErrorMap(errorMsgLiteral);
+    } catch (e) {
+      // We use a lint rule to enforce that error messages are written in
+      // a format that can be minified. If they aren't, assume this is
+      // intentional and skip over it gracefully.
+    }
   }
 
   function addToErrorMap(errorMsgLiteral) {

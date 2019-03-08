@@ -24,6 +24,10 @@ ruleTester.run('eslint-rules/static-error-messages', rule, {
     "new Error('what')",
     "new Error('what did you do ' + 'andrew')",
     'new Error(`what did you do ${name}`)',
+    'Error()',
+    "Error('what')",
+    "Error('what did you do ' + 'andrew')",
+    'Error(`what did you do ${name}`)',
   ],
   invalid: [
     {
@@ -48,6 +52,34 @@ ruleTester.run('eslint-rules/static-error-messages', rule, {
     },
     {
       code: 'new Error(clown, town)',
+      errors: [
+        {
+          message: 'Too many arguments passed to Error.',
+        },
+      ],
+    },
+    {
+      code: 'Error(what)',
+      errors: [
+        {
+          message:
+            'Error messages should be composed only of string literals. Use ' +
+            'a template literal to interpolate dynamic values.',
+        },
+      ],
+    },
+    {
+      code: "Error('what did you do ' + name)",
+      errors: [
+        {
+          message:
+            'Error messages should be composed only of string literals. Use ' +
+            'a template literal to interpolate dynamic values.',
+        },
+      ],
+    },
+    {
+      code: 'Error(clown, town)',
       errors: [
         {
           message: 'Too many arguments passed to Error.',

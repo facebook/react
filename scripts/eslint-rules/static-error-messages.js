@@ -28,29 +28,32 @@ function isStringOrTemplateConcatenation(node) {
 }
 
 module.exports = function(context) {
-  return {
-    NewExpression(node) {
-      if (node.callee.name === 'Error') {
-        if (node.arguments.length === 0) {
-          return;
-        }
-        if (node.arguments.length !== 1) {
-          context.report(
-            node,
-            'Too many arguments passed to ' + node.callee.name + '.'
-          );
-          return;
-        }
-        const messageNode = node.arguments[0];
-        if (!isStringOrTemplateConcatenation(messageNode)) {
-          context.report(
-            node,
-            'Error messages should be composed only of string literals. Use ' +
-              'a template literal to interpolate dynamic values.'
-          );
-        }
+  function CallOrNewExpression(node) {
+    if (node.callee.name === 'Error') {
+      if (node.arguments.length === 0) {
+        return;
       }
-    },
+      if (node.arguments.length !== 1) {
+        context.report(
+          node,
+          'Too many arguments passed to ' + node.callee.name + '.'
+        );
+        return;
+      }
+      const messageNode = node.arguments[0];
+      if (!isStringOrTemplateConcatenation(messageNode)) {
+        context.report(
+          node,
+          'Error messages should be composed only of string literals. Use ' +
+            'a template literal to interpolate dynamic values.'
+        );
+      }
+    }
+  }
+
+  return {
+    NewExpression: CallOrNewExpression,
+    CallExpression: CallOrNewExpression,
   };
 };
 

@@ -106,4 +106,37 @@ new Error('Expected a component class, ' + \`got \${foo}.\`);
 `)
     ).toMatchSnapshot();
   });
+
+  it('should replace error constructors (no new)', () => {
+    expect(
+      transform(`
+Error('Do not override existing functions.');
+`)
+    ).toMatchSnapshot();
+  });
+
+  it('should replace error constructors with args (no new)', () => {
+    expect(
+      transform(`
+Error(\`Expected \${foo} target to be an array; got \${bar}\`);
+`)
+    ).toMatchSnapshot();
+  });
+
+  it('should support error constructors with a concatenated template string and args (no new)', () => {
+    expect(
+      transform(`
+Error('Expected a component class, ' + \`got \${foo}.\`);
+`)
+    ).toMatchSnapshot();
+  });
+
+  it('should not touch other calls or new expressions', () => {
+    expect(
+      transform(`
+new NotAnError();
+NotAnError();
+`)
+    ).toMatchSnapshot();
+  });
 });

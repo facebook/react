@@ -22,6 +22,12 @@ import invariant from 'shared/invariant';
 })();"
 `;
 
+exports[`error transform should not touch other calls or new expressions 1`] = `
+"
+new NotAnError();
+NotAnError();"
+`;
+
 exports[`error transform should only add \`ReactError\` and \`ReactErrorProd\` once each 1`] = `
 "import _ReactErrorProd from 'shared/ReactErrorProd';
 import _ReactError from 'shared/ReactError';
@@ -47,11 +53,25 @@ import invariant from 'shared/invariant';
 })();"
 `;
 
+exports[`error transform should replace error constructors (no new) 1`] = `
+"import _ReactErrorProd from 'shared/ReactErrorProd';
+import _ReactError from 'shared/ReactError';
+
+__DEV__ ? _ReactError('Do not override existing functions.') : _ReactErrorProd(16);"
+`;
+
 exports[`error transform should replace error constructors 1`] = `
 "import _ReactErrorProd from 'shared/ReactErrorProd';
 import _ReactError from 'shared/ReactError';
 
 __DEV__ ? _ReactError('Do not override existing functions.') : _ReactErrorProd(16);"
+`;
+
+exports[`error transform should replace error constructors with args (no new) 1`] = `
+"import _ReactErrorProd from \\"shared/ReactErrorProd\\";
+import _ReactError from \\"shared/ReactError\\";
+
+__DEV__ ? _ReactError(\`Expected \${foo} target to be an array; got \${bar}\`) : _ReactErrorProd(7, foo, bar);"
 `;
 
 exports[`error transform should replace error constructors with args 1`] = `
@@ -75,6 +95,12 @@ import invariant from 'shared/invariant';
     }
   }
 })();"
+`;
+
+exports[`error transform should support error constructors with a concatenated template string and args (no new) 1`] = `
+"import _ReactError from 'shared/ReactError';
+
+_ReactError('Expected a component class, ' + \`got \${foo}.\`);"
 `;
 
 exports[`error transform should support error constructors with a concatenated template string and args 1`] = `
