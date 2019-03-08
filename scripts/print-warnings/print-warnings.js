@@ -12,7 +12,7 @@ const through = require('through2');
 const traverse = require('babel-traverse').default;
 const gs = require('glob-stream');
 
-const evalToString = require('../shared/evalToString');
+const {evalStringConcat} = require('../shared/evalStringConcat');
 
 const babylonOptions = {
   sourceType: 'module',
@@ -52,7 +52,7 @@ function transform(file, enc, cb) {
 
             // warning messages can be concatenated (`+`) at runtime, so here's
             // a trivial partial evaluator that interprets the literal value
-            const warningMsgLiteral = evalToString(node.arguments[1]);
+            const warningMsgLiteral = evalStringConcat(node.arguments[1]);
             warnings.add(JSON.stringify(warningMsgLiteral));
           }
         },

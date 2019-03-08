@@ -82,4 +82,28 @@ invariant(condition, 'What\\'s up?');
 `)
     ).toMatchSnapshot();
   });
+
+  it('should replace error constructors', () => {
+    expect(
+      transform(`
+new Error('Do not override existing functions.');
+`)
+    ).toMatchSnapshot();
+  });
+
+  it('should replace error constructors with args', () => {
+    expect(
+      transform(`
+new Error(\`Expected \${foo} target to be an array; got \${bar}\`);
+`)
+    ).toMatchSnapshot();
+  });
+
+  it('should support error constructors with a concatenated template string and args', () => {
+    expect(
+      transform(`
+new Error('Expected a component class, ' + \`got \${foo}.\`);
+`)
+    ).toMatchSnapshot();
+  });
 });

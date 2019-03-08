@@ -10,8 +10,11 @@ const babylon = require('babylon');
 const fs = require('fs');
 const path = require('path');
 const traverse = require('babel-traverse').default;
-const evalToString = require('../shared/evalToString');
 const invertObject = require('./invertObject');
+const {
+  evalStringConcat,
+  evalStringAndTemplateConcat,
+} = require('../shared/evalStringConcat');
 
 const babylonOptions = {
   sourceType: 'module',
@@ -75,10 +78,27 @@ module.exports = function(opts) {
 
             // error messages can be concatenated (`+`) at runtime, so here's a
             // trivial partial evaluator that interprets the literal value
-            const errorMsgLiteral = evalToString(node.arguments[1]);
+            const errorMsgLiteral = evalStringConcat(node.arguments[1]);
             addToErrorMap(errorMsgLiteral);
           }
         },
+      },
+      NewExpression(astPath) {
+        if (astPath.get('callee').isIdentifier({name: 'Error'})) {
+          const node = astPath.node;
+          try {
+            const errorMsgLiteral = evalStringAndTemplateConcat(
+              node.arguments[0],
+              []
+            );
+            addToErrorMap(errorMsgLiteral);
+          } catch (e) {
+            // We use a lint rule to enforce that error messages are written in
+            // a format that can be minified. If they aren't, assume this is
+            // intentional and skip over it gracefully.
+            // TODO: Write this lint rule.
+          }
+        }
       },
     });
   }
