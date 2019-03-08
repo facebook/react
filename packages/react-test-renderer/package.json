@@ -20,7 +20,7 @@
   "homepage": "https://reactjs.org/",
   "dependencies": {
     "object-assign": "^4.1.1",
-    "prop-types": "^15.6.2",
+    "prop-types": "^15.7.2",
     "react-is": "^16.8.4",
     "scheduler": "^0.13.4"
   },

@@ -68,7 +68,7 @@
     "ncp": "^2.0.0",
     "object-assign": "^4.1.1",
     "prettier": "1.13.7",
-    "prop-types": "^15.6.2",
+    "prop-types": "^15.7.2",
     "random-seed": "^0.3.0",
     "react-lifecycles-compat": "^3.0.2",
     "rimraf": "^2.6.1",

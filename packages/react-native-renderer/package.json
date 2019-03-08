@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "object-assign": "^4.1.1",
-    "prop-types": "^15.6.2",
+    "prop-types": "^15.7.2",
     "scheduler": "^0.11.0"
   },
   "peerDependencies": {
