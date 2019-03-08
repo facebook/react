@@ -167,7 +167,6 @@ module.exports = function(babel) {
           // We use a lint rule to enforce that error messages are written in
           // a format that can be minified. If they aren't, assume this is
           // intentional and skip over it gracefully.
-          // TODO: Write this lint rule.
           return;
         }
 
@@ -195,7 +194,6 @@ module.exports = function(babel) {
           // There is no error code for this message. We use a lint rule to
           // enforce that messages can be minified, so assume this is
           // intentional and exit gracefully.
-          // TODO: Write this lint rule.
           //
           // Outputs:
           //   ReactError(`A ${adj} message that contains ${noun}`);

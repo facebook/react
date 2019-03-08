@@ -32,6 +32,7 @@ if (__DEV__) {
       // --- Welcome to debugging React ---
       // This error was thrown as a convenience so that you can use this stack
       // to find the callsite that caused this warning to fire.
+      // eslint-disable-next-line react-internal/static-error-messages
       throw new Error(message);
     } catch (x) {}
   };

@@ -96,7 +96,6 @@ module.exports = function(opts) {
             // We use a lint rule to enforce that error messages are written in
             // a format that can be minified. If they aren't, assume this is
             // intentional and skip over it gracefully.
-            // TODO: Write this lint rule.
           }
         }
       },

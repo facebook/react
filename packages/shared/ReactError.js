@@ -11,6 +11,7 @@
 // build, and in production they will be minified.
 
 function ReactError(message) {
+  // eslint-disable-next-line react-internal/static-error-messages
   const error = new Error(message);
   error.name = 'Invariant Violation';
   return error;

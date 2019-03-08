@@ -46,6 +46,7 @@ if (__DEV__) {
       let argIndex = 0;
       const message =
         'Warning: ' + format.replace(/%s/g, () => args[argIndex++]);
+      // eslint-disable-next-line react-internal/static-error-messages
       throw new Error(message);
     } catch (x) {}
   };

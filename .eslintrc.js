@@ -89,6 +89,9 @@ module.exports = {
     'react-internal/no-primitive-constructors': ERROR,
     'react-internal/no-to-warn-dev-within-to-throw': ERROR,
     'react-internal/warning-and-invariant-args': ERROR,
+
+    // TODO: Enable this once we have a way to opt out of error extraction.
+    'react-internal/static-error-messages': OFF,
   },
 
   overrides: [
@@ -124,8 +127,15 @@ module.exports = {
       rules: {
         // https://github.com/jest-community/eslint-plugin-jest
         'jest/no-focused-tests': ERROR,
-      }
-    }
+      },
+    },
+
+    {
+      files: ['scripts/**/*.js'],
+      rules: {
+        'react-internal/static-error-messages': OFF,
+      },
+    },
   ],
 
   globals: {
