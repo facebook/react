@@ -410,10 +410,17 @@ export function cloneUnhiddenInstance(
   };
 }
 
-export function createHiddenTextInstance(
+export function cloneHiddenTextInstance(
+  instance: Instance,
   text: string,
-  rootContainerInstance: Container,
-  hostContext: HostContext,
+  internalInstanceHandle: Object,
+): TextInstance {
+  throw new Error('Not yet implemented.');
+}
+
+export function cloneUnhiddenTextInstance(
+  instance: Instance,
+  text: string,
   internalInstanceHandle: Object,
 ): TextInstance {
   throw new Error('Not yet implemented.');
