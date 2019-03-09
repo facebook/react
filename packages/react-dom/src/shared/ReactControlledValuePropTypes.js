@@ -38,6 +38,7 @@ if (__DEV__) {
       ) {
         return null;
       }
+      // extract-errors/skip
       return new Error(
         'You provided a `value` prop to a form field without an ' +
           '`onChange` handler. This will render a read-only field. If ' +
@@ -54,6 +55,7 @@ if (__DEV__) {
       ) {
         return null;
       }
+      // extract-errors/skip
       return new Error(
         'You provided a `checked` prop to a form field without an ' +
           '`onChange` handler. This will render a read-only field. If ' +

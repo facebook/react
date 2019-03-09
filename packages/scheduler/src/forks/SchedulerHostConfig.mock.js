@@ -49,6 +49,7 @@ export function getCurrentTime(): number {
 
 export function reset() {
   if (isFlushing) {
+    // extract-errors/skip
     throw new Error('Cannot reset while already flushing work.');
   }
   currentTime = 0;
@@ -63,6 +64,7 @@ export function reset() {
 // Should only be used via an assertion helper that inspects the yielded values.
 export function unstable_flushNumberOfYields(count: number): void {
   if (isFlushing) {
+    // extract-errors/skip
     throw new Error('Already flushing work.');
   }
   expectedNumberOfYields = count;
@@ -85,6 +87,7 @@ export function unstable_flushNumberOfYields(count: number): void {
 
 export function unstable_flushExpired() {
   if (isFlushing) {
+    // extract-errors/skip
     throw new Error('Already flushing work.');
   }
   if (scheduledCallback !== null) {
@@ -101,6 +104,7 @@ export function unstable_flushExpired() {
 
 export function unstable_flushWithoutYielding(): void {
   if (isFlushing) {
+    // extract-errors/skip
     throw new Error('Already flushing work.');
   }
   isFlushing = true;
@@ -131,6 +135,7 @@ export function unstable_clearYields(): Array<mixed> {
 
 export function flushAll(): void {
   if (yieldedValues !== null) {
+    // extract-errors/skip
     throw new Error(
       'Log is not empty. Assert on the log of yielded values before ' +
         'flushing additional work.',
@@ -138,6 +143,7 @@ export function flushAll(): void {
   }
   unstable_flushWithoutYielding();
   if (yieldedValues !== null) {
+    // extract-errors/skip
     throw new Error(
       'While flushing work, something yielded a value. Use an ' +
         'assertion helper to assert on the log of yielded values, e.g. ' +

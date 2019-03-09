@@ -269,6 +269,7 @@ const ReactTestUtils = {
       className,
     );
     if (all.length !== 1) {
+      // extract-errors/skip
       throw new Error(
         'Did not find exactly one match (found: ' +
           all.length +
@@ -305,6 +306,7 @@ const ReactTestUtils = {
     validateClassInstance(root, 'findRenderedDOMComponentWithTag');
     const all = ReactTestUtils.scryRenderedDOMComponentsWithTag(root, tagName);
     if (all.length !== 1) {
+      // extract-errors/skip
       throw new Error(
         'Did not find exactly one match (found: ' +
           all.length +
@@ -340,6 +342,7 @@ const ReactTestUtils = {
       componentType,
     );
     if (all.length !== 1) {
+      // extract-errors/skip
       throw new Error(
         'Did not find exactly one match (found: ' +
           all.length +

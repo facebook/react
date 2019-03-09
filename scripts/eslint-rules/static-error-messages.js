@@ -42,6 +42,19 @@ module.exports = function(context) {
       }
       const messageNode = node.arguments[0];
       if (!isStringOrTemplateConcatenation(messageNode)) {
+        let parent = node.parent;
+        while (parent != null) {
+          const statementParent = parent;
+          const leadingComments = context.getComments(statementParent).leading;
+          for (let i = 0; i < leadingComments.length; i++) {
+            const comment = leadingComments[i];
+            if (comment.value.trim() === 'extract-errors/skip') {
+              // Skip this error message
+              return;
+            }
+          }
+          parent = parent.parent;
+        }
         context.report(
           node,
           'Error messages should be composed only of string literals. Use ' +

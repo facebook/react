@@ -89,9 +89,7 @@ module.exports = {
     'react-internal/no-primitive-constructors': ERROR,
     'react-internal/no-to-warn-dev-within-to-throw': ERROR,
     'react-internal/warning-and-invariant-args': ERROR,
-
-    // TODO: Enable this once we have a way to opt out of error extraction.
-    'react-internal/static-error-messages': OFF,
+    'react-internal/static-error-messages': ERROR,
   },
 
   overrides: [
@@ -131,7 +129,7 @@ module.exports = {
     },
 
     {
-      files: ['scripts/**/*.js'],
+      files: ['scripts/**/*.js', '**/__tests__/*.js'],
       rules: {
         'react-internal/static-error-messages': OFF,
       },

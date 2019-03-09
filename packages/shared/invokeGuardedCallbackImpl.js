@@ -186,6 +186,7 @@ if (__DEV__) {
       if (didError) {
         if (!didSetError) {
           // The callback errored, but the error event never fired.
+          // extract-errors/skip
           error = new Error(
             'An error was thrown inside one of your components, but React ' +
               "doesn't know what it was. This is likely due to browser " +
@@ -197,6 +198,7 @@ if (__DEV__) {
               'actually an issue with React, please file an issue.',
           );
         } else if (isCrossOriginError) {
+          // extract-errors/skip
           error = new Error(
             "A cross-origin error was thrown. React doesn't have access to " +
               'the actual error object in development. ' +

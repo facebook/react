@@ -95,6 +95,18 @@ module.exports = function(opts) {
 
   function CallOrNewExpression(astPath) {
     const node = astPath.node;
+
+    const leadingComments = astPath.getStatementParent().node.leadingComments;
+    if (leadingComments != null) {
+      for (let i = 0; i < leadingComments.length; i++) {
+        const comment = leadingComments[i];
+        if (comment.value.trim() === 'extract-errors/skip') {
+          // Skip this error message
+          return;
+        }
+      }
+    }
+
     try {
       const errorMsgLiteral = evalStringAndTemplateConcat(
         node.arguments[0],

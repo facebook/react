@@ -32,13 +32,14 @@ if (__DEV__) {
       // --- Welcome to debugging React ---
       // This error was thrown as a convenience so that you can use this stack
       // to find the callsite that caused this warning to fire.
-      // eslint-disable-next-line react-internal/static-error-messages
+      // extract-errors/skip
       throw new Error(message);
     } catch (x) {}
   };
 
   lowPriorityWarning = function(condition, format, ...args) {
     if (format === undefined) {
+      // extract-errors/skip
       throw new Error(
         '`lowPriorityWarning(condition, format, ...args)` requires a warning ' +
           'message argument',

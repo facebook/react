@@ -111,6 +111,7 @@ function toJSON(inst: Instance | TextInstance): ReactTestRendererNode | null {
       return json;
     }
     default:
+      // extract-errors/skip
       throw new Error(`Unexpected node type in toJSON: ${inst.tag}`);
   }
 }
@@ -406,6 +407,7 @@ function expectOne(
       ? 'No instances found '
       : `Expected 1 but found ${all.length} instances `;
 
+  // extract-errors/skip
   throw new Error(prefix + message);
 }
 
@@ -524,10 +526,12 @@ const ReactTestRendererFiber = {
         enumerable: true,
         get: function() {
           if (root === null) {
+            // extract-errors/skip
             throw new Error("Can't access .root on unmounted test renderer");
           }
           const children = getChildren(root.current);
           if (children.length === 0) {
+            // extract-errors/skip
             throw new Error("Can't access .root on unmounted test renderer");
           } else if (children.length === 1) {
             // Normally, we skip the root and just give you the child.
@@ -566,6 +570,7 @@ function wrapFiber(fiber: Fiber): ReactTestInstance {
 // Enable ReactTestRenderer to be used to test DevTools integration.
 injectIntoDevTools({
   findFiberByHostInstance: (() => {
+    // extract-errors/skip
     throw new Error('TestRenderer does not support findFiberByHostInstance()');
   }: any),
   bundleType: __DEV__ ? 1 : 0,

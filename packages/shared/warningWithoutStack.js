@@ -17,6 +17,7 @@ let warningWithoutStack = () => {};
 if (__DEV__) {
   warningWithoutStack = function(condition, format, ...args) {
     if (format === undefined) {
+      // extract-errors/skip
       throw new Error(
         '`warningWithoutStack(condition, format, ...args)` requires a warning ' +
           'message argument',
@@ -24,6 +25,7 @@ if (__DEV__) {
     }
     if (args.length > 8) {
       // Check before the condition to catch violations early.
+      // extract-errors/skip
       throw new Error(
         'warningWithoutStack() currently supports at most 8 arguments.',
       );
@@ -46,7 +48,7 @@ if (__DEV__) {
       let argIndex = 0;
       const message =
         'Warning: ' + format.replace(/%s/g, () => args[argIndex++]);
-      // eslint-disable-next-line react-internal/static-error-messages
+      // extract-errors/skip
       throw new Error(message);
     } catch (x) {}
   };

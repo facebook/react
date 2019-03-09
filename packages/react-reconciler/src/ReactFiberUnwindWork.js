@@ -373,14 +373,17 @@ function throwException(
       workInProgress = workInProgress.return;
     } while (workInProgress !== null);
     // No boundary was found. Fallthrough to error mode.
-    // TODO: Use invariant so the message is stripped in prod?
+
+    // TODO: The stack should be provided as a dev warning, but not an error, so
+    // it doesn't add to the production build.
+    const componentName =
+      getComponentName(sourceFiber.type) || 'A React component';
+    const componentStack = getStackByFiberInDevAndProd(sourceFiber);
     value = new Error(
-      (getComponentName(sourceFiber.type) || 'A React component') +
-        ' suspended while rendering, but no fallback UI was specified.\n' +
-        '\n' +
+      `${componentName} suspended while rendering, but no fallback UI ` +
+        'was specified.\n\n' +
         'Add a <Suspense fallback=...> component higher in the tree to ' +
-        'provide a loading indicator or placeholder to display.' +
-        getStackByFiberInDevAndProd(sourceFiber),
+        `provide a loading indicator or placeholder to display.${componentStack}`,
     );
   }
 

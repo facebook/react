@@ -15,12 +15,12 @@ function ReactErrorProd(code) {
   for (let i = 1; i < arguments.length; i++) {
     url += '&args[]=' + encodeURIComponent(arguments[i]);
   }
-
-  const msg =
+  // extract-errors/skip
+  return new Error(
     `Minified React error #${code}; visit ${url} for the full message or ` +
-    'use the non-minified dev environment for full errors and additional ' +
-    'helpful warnings. ';
-  return new Error(msg);
+      'use the non-minified dev environment for full errors and additional ' +
+      'helpful warnings. ',
+  );
 }
 
 export default ReactErrorProd;
