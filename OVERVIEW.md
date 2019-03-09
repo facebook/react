@@ -20,11 +20,12 @@ We only send the following bits of information: element type, id, parent id, own
 
 #### Adding a root node
 
-Adding a root to the tree requires sending 3 numbers:
+Adding a root to the tree requires sending 4 numbers:
 
 1. add operation constant (`1`)
 1. fiber id
 1. element type constant (`8 === ElementTypeRoot`)
+1. profiling flag
 
 For example, adding a root fiber with an id of 1:
 ```js
@@ -32,6 +33,7 @@ For example, adding a root fiber with an id of 1:
   1, // add operation
   1, // fiber id
   8, // ElementTypeRoot
+  1, // this root's renderer supports profiling
 ]
 ```
 
@@ -169,7 +171,7 @@ The Profiler UI is a powerful tool for identifying and fixing performance proble
 * Minimizing bridge traffic.
 * Making expensive computations lazy.
 
-Profiling information is stored on the backend. The backend push-notifies the frontend of when profiling starts ("_profilingStarted_") and stops ("_profilingStopped_").
+Profiling information is stored on the backend. The backend push-notifies the frontend of when profiling starts or stops by sending a "_profilingStatus_" message. (The frontend also asks for the current status after mounting by sending a "_getProfilingStatus_" message.)
 
 When profiling begins, the frontend takes a snapshot/copy of each root. This snapshot includes the id, name, key, and child IDs for each node in the tree. (This information is already present on the frontend, so it does not require any additional bridge traffic.) While profiling is active, each time React commits– the frontend also stores a copy of the "_operations_" message (described above). Once profiling has finished, the frontend can use the original snapshot along with each of the stored "_operations_" messages to reconstruct the tree for each of the profiled commits.
 
@@ -191,6 +193,7 @@ If so, then it sends a "_profileSummary_" message with an id that identifies the
 * root id (to match request and response)
 * number of interactions that were traced for this root
 * the commits (each consisting of a timestamp and duration) that were profiled for the root
+* tree base durations as of when profiling started
 
 This is the minimal information required to render the main ["commit selector"](https://reactjs.org/blog/2018/09/10/introducing-the-react-profiler.html#browsing-commits). 
 
@@ -199,19 +202,29 @@ Here is an example profile summary:
 {
   rootID: 1,
   interactionCount: 2,
+
+  // Tuples of commit time (relative to when profiling started) and duration
   commits: [
-    [
-      210, // first commit started 210ms after profiling began
-      10,  // and took 10ms
-    ],
-    [
-      284, // second commit started 284ms after profiling began
-      13,  // and took 13ms
-    ]
-    [
-      303, // third commit started 303ms after profiling began
-      5,   // and took 5ms
-    ]
+    210, // first commit started 210ms after profiling began
+    10,  // and took 10ms
+
+    284, // second commit started 284ms after profiling began
+    13,  // and took 13ms
+
+    303, // third commit started 303ms after profiling began
+    5,   // and took 5ms
+  ],
+
+  // Tuples of fiber id and initial tree base duration
+  treeBaseDuration: [
+    1,  // fiber id
+    11, // tree base duration when profiling started
+
+    2,  // fiber id
+    12, // tree base duration when profiling started
+
+    3,  // fiber id
+    8,  // tree base duration when profiling started
   ]
 ]
 ```
@@ -281,14 +294,11 @@ Here is an example of a component that committed twice during a profiling sessio
 
   // Tuples of commit index and render duration (ms)
   commits: [
-    [
-      0,  // index of first
-      11  // duration (ms)
-    ],
-    [
-      2,  // index of second commit
-      7   // duration (ms)
-    ]
+    0,  // index of first
+    11  // duration (ms)
+
+    2,  // index of second commit
+    7   // duration (ms)
   ]
 }
 ```
