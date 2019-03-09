@@ -4,7 +4,6 @@
     "packages/*"
   ],
   "devDependencies": {
-    "@mattiasbuelens/web-streams-polyfill": "0.1.0",
     "art": "^0.10.1",
     "babel-cli": "^6.6.5",
     "babel-code-frame": "^6.26.0",
@@ -81,11 +80,11 @@
     "rollup-plugin-replace": "^2.0.0",
     "rollup-plugin-strip-banner": "^0.2.0",
     "semver": "^5.5.0",
-    "shelljs": "^0.8.3",
     "targz": "^1.0.1",
     "through2": "^2.0.0",
     "tmp": "~0.0.28",
-    "typescript": "~1.8.10"
+    "typescript": "~1.8.10",
+    "@mattiasbuelens/web-streams-polyfill": "0.1.0"
   },
   "devEngines": {
     "node": "8.x || 9.x || 10.x || 11.x"
