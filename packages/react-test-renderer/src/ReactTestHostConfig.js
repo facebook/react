@@ -9,7 +9,6 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
-import * as Scheduler from 'scheduler/unstable_mock';
 import warning from 'shared/warning';
 
 export type Type = string;

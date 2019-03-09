@@ -240,10 +240,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     getChildHostContext(
       parentHostContext: HostContext,
-      type: string,
+      fiber: Fiber,
       rootcontainerInstance: Container,
     ) {
-      if (type === 'uppercase') {
+      if (fiber.type === 'uppercase') {
         return UPPERCASE_CONTEXT;
       }
       return NO_CONTEXT;
