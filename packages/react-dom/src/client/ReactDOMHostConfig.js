@@ -10,7 +10,6 @@
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 import * as Scheduler from 'scheduler';
-
 import {precacheFiberNode, updateFiberProps} from './ReactDOMComponentTree';
 import {
   createElement,
