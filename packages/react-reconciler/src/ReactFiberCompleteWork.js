@@ -17,7 +17,6 @@ import type {
   Container,
   ChildSet,
 } from './ReactFiberHostConfig';
-import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import {
   IndeterminateComponent,
@@ -53,7 +52,6 @@ import invariant from 'shared/invariant';
 import {
   createInstance,
   createTextInstance,
-  createHiddenTextInstance,
   appendInitialChild,
   finalizeInitialChildren,
   prepareUpdate,
@@ -62,6 +60,8 @@ import {
   cloneInstance,
   cloneHiddenInstance,
   cloneUnhiddenInstance,
+  cloneHiddenTextInstance,
+  cloneUnhiddenTextInstance,
   createContainerChildSet,
   appendChildToContainerChildSet,
   finalizeContainerChildren,
@@ -228,22 +228,10 @@ if (supportsMutation) {
         let instance = node.stateNode;
         if (needsVisibilityToggle) {
           const text = node.memoizedProps;
-          const rootContainerInstance = getRootHostContainer();
-          const currentHostContext = getHostContext();
           if (isHidden) {
-            instance = createHiddenTextInstance(
-              text,
-              rootContainerInstance,
-              currentHostContext,
-              workInProgress,
-            );
+            instance = cloneHiddenTextInstance(instance, text, node);
           } else {
-            instance = createTextInstance(
-              text,
-              rootContainerInstance,
-              currentHostContext,
-              workInProgress,
-            );
+            instance = cloneUnhiddenTextInstance(instance, text, node);
           }
           node.stateNode = instance;
         }
@@ -253,20 +241,19 @@ if (supportsMutation) {
         // down its children. Instead, we'll get insertions from each child in
         // the portal directly.
       } else if (node.tag === SuspenseComponent) {
-        const current = node.alternate;
-        if (current !== null) {
-          const oldState: SuspenseState = current.memoizedState;
-          const newState: SuspenseState = node.memoizedState;
-          const oldIsHidden = oldState !== null;
-          const newIsHidden = newState !== null;
-          if (oldIsHidden !== newIsHidden) {
-            // The placeholder either just timed out or switched back to the normal
-            // children after having previously timed out. Toggle the visibility of
-            // the direct host children.
-            const primaryChildParent = newIsHidden ? node.child : node;
+        if ((node.effectTag & Update) !== NoEffect) {
+          // Need to toggle the visibility of the primary children.
+          const newIsHidden = node.memoizedState !== null;
+          if (newIsHidden) {
+            const primaryChildParent = node.child;
             if (primaryChildParent !== null) {
               appendAllChildren(parent, primaryChildParent, true, newIsHidden);
+              node = primaryChildParent.sibling;
+              continue;
             }
+          } else {
+            const primaryChildParent = node;
+            appendAllChildren(parent, primaryChildParent, true, newIsHidden);
             // eslint-disable-next-line no-labels
             break branches;
           }
@@ -331,22 +318,10 @@ if (supportsMutation) {
         let instance = node.stateNode;
         if (needsVisibilityToggle) {
           const text = node.memoizedProps;
-          const rootContainerInstance = getRootHostContainer();
-          const currentHostContext = getHostContext();
           if (isHidden) {
-            instance = createHiddenTextInstance(
-              text,
-              rootContainerInstance,
-              currentHostContext,
-              workInProgress,
-            );
+            instance = cloneHiddenTextInstance(instance, text, node);
           } else {
-            instance = createTextInstance(
-              text,
-              rootContainerInstance,
-              currentHostContext,
-              workInProgress,
-            );
+            instance = cloneUnhiddenTextInstance(instance, text, node);
           }
           node.stateNode = instance;
         }
@@ -356,17 +331,11 @@ if (supportsMutation) {
         // down its children. Instead, we'll get insertions from each child in
         // the portal directly.
       } else if (node.tag === SuspenseComponent) {
-        const current = node.alternate;
-        if (current !== null) {
-          const oldState: SuspenseState = current.memoizedState;
-          const newState: SuspenseState = node.memoizedState;
-          const oldIsHidden = oldState !== null;
-          const newIsHidden = newState !== null;
-          if (oldIsHidden !== newIsHidden) {
-            // The placeholder either just timed out or switched back to the normal
-            // children after having previously timed out. Toggle the visibility of
-            // the direct host children.
-            const primaryChildParent = newIsHidden ? node.child : node;
+        if ((node.effectTag & Update) !== NoEffect) {
+          // Need to toggle the visibility of the primary children.
+          const newIsHidden = node.memoizedState !== null;
+          if (newIsHidden) {
+            const primaryChildParent = node.child;
             if (primaryChildParent !== null) {
               appendAllChildrenToContainer(
                 containerChildSet,
@@ -374,7 +343,17 @@ if (supportsMutation) {
                 true,
                 newIsHidden,
               );
+              node = primaryChildParent.sibling;
+              continue;
             }
+          } else {
+            const primaryChildParent = node;
+            appendAllChildrenToContainer(
+              containerChildSet,
+              primaryChildParent,
+              true,
+              newIsHidden,
+            );
             // eslint-disable-next-line no-labels
             break branches;
           }
