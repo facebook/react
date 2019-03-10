@@ -17,6 +17,7 @@ const bundleTypes = {
   RN_FB_PROD: 'RN_FB_PROD',
   RN_FB_PROFILING: 'RN_FB_PROFILING',
 };
+deepFreeze(bundleTypes);
 
 const {
   UMD_DEV,
@@ -43,9 +44,10 @@ const moduleTypes = {
   RECONCILER: 'RECONCILER',
   NON_FIBER_RENDERER: 'NON_FIBER_RENDERER',
 };
+deepFreeze(moduleTypes);
 
-// React
 const {
+  // React
   ISOMORPHIC,
   // Individual renderers. They bundle the reconciler. (e.g. ReactDOM)
   RENDERER,
