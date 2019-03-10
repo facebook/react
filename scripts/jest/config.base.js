@@ -9,7 +9,12 @@ module.exports = {
     '<rootDir>/scripts/bench/',
   ],
   transform: {
-    '.*': require.resolve('./preprocessor.js'),
+    'packages/((?!__tests__).)*\\.js$': require.resolve(
+      './preprocessorForSourceFiles.js'
+    ),
+    '__tests__.*\\.js$': require.resolve('./preprocessorForTestFiles.js'),
+    '\\.coffee$': require.resolve('./preprocessorForCoffeeScript.js'),
+    '\\.ts$': require.resolve('./preprocessorForTypeScript.js'),
   },
   setupFiles: [require.resolve('./setupEnvironment.js')],
   setupTestFrameworkScriptFile: require.resolve('./setupTests.js'),

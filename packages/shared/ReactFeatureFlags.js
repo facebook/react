@@ -38,9 +38,7 @@ export const enableSuspenseServerRenderer = false; // TODO: __DEV__? Here it mig
 export const enableSchedulerDebugging = false;
 
 // Only used in www builds.
-export function addUserTimingListener() {
-  throw new Error('Not implemented.');
-}
+export function addUserTimingListener() {}
 
 // Disable javascript: URL strings in href for XSS protection.
 export const disableJavaScriptURLs = false;
