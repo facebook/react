@@ -1,6 +1,6 @@
 // @flow
 
-import { useCallback, useLayoutEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 
 // Forked from https://usehooks.com/useLocalStorage/
 export function useLocalStorage<T>(
@@ -51,4 +51,35 @@ export function useLocalStorage<T>(
   }, [getValueFromLocalStorage, key, storedValue, setValue]);
 
   return [storedValue, setValue];
+}
+
+export function useModalDismissSignal(
+  modalRef: React$Ref<any>,
+  dismissCallback: Function
+): void {
+  useEffect(() => {
+    const handleKeyDown = ({ key }: any) => {
+      if (key === 'Escape') {
+        dismissCallback();
+      }
+    };
+
+    const handleMouseOrTouch = ({ target }: any) => {
+      // $FlowFixMe
+      if (modalRef.current !== null && !modalRef.current.contains(target)) {
+        dismissCallback();
+      }
+    };
+
+    const body = ((document.body: any): HTMLBodyElement);
+    body.addEventListener('keydown', handleKeyDown);
+    body.addEventListener('mousedown', handleMouseOrTouch);
+    body.addEventListener('touchstart', handleMouseOrTouch);
+
+    return () => {
+      body.removeEventListener('keydown', handleKeyDown);
+      body.removeEventListener('mousedown', handleMouseOrTouch);
+      body.removeEventListener('touchstart', handleMouseOrTouch);
+    };
+  }, [modalRef, dismissCallback]);
 }

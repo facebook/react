@@ -1,0 +1,31 @@
+.Background {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-modal-background);
+}
+
+.Modal {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: inline-block;
+  background-color: var(--color-background);
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.25rem;
+}
+
+.Input {
+  width: 40px;
+  background: none;
+  border: 1px solid transparent;
+  color: var(--color-attribute-editable-value);
+  border-radius: 0.125rem;
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-normal);
+}
+.Input:focus {
+  background-color: var(--color-button-background-focus);
+  outline: none;
+}

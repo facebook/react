@@ -23,6 +23,7 @@
   --light-color-dimmest: #eff0f1;
   --light-color-jsx-arrow-brackets: #333333;
   --light-color-jsx-arrow-brackets-inverted: rgba(255, 255, 255, 0.7);
+  --light-color-modal-background: rgba(255, 255, 255, 0.25);
   --light-color-record-active: #fc3a4b;
   --light-color-record-hover: #000000;
   --light-color-record-inactive: #cfd1d5;
@@ -52,6 +53,7 @@
   --dark-color-dimmest: #4f5766;
   --dark-color-jsx-arrow-brackets: #777d88;
   --dark-color-jsx-arrow-brackets-inverted: rgba(255, 255, 255, 0.7);
+  --dark-color-modal-background: rgba(0, 0, 0, 0.25);
   --dark-color-record-active: #fc3a4b;
   --dark-color-record-hover: #ffffff;
   --dark-color-record-inactive: #777d88;

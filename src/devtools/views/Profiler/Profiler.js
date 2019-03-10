@@ -1,10 +1,11 @@
 // @flow
 
-import React, { useContext, useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 import { ProfilerContext, ProfilerContextController } from './ProfilerContext';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import TabBar from '../TabBar';
+import FilterModal from './FilterModal';
 import RecordToggle from './RecordToggle';
 
 import styles from './Profiler.css';
@@ -22,6 +23,10 @@ export default function ProfilerOuter(_: Props) {
 function ProfilerInner(_: Props) {
   const { hasProfilingData, isProfiling } = useContext(ProfilerContext);
   const [tab, setTab] = useState('flame-chart');
+  const [isFilterModalShowing, setIsFilterModalShowing] = useState(false);
+
+  const showFilterModal = useCallback(() => setIsFilterModalShowing(true));
+  const dismissFilterModal = useCallback(() => setIsFilterModalShowing(false));
 
   let view = null;
   if (isProfiling) {
@@ -52,12 +57,16 @@ function ProfilerInner(_: Props) {
           tabs={tabs}
         />
         <div className={styles.Spacer} />
-        <Button disabled title="Filter commits by duration">
-          {/* TODO (profiling) Wire up filter button */}
+        <Button onClick={showFilterModal} title="Filter commits by duration">
           <ButtonIcon type="filter" />
         </Button>
       </div>
-      <div className={styles.Content}>{view}</div>
+      <div className={styles.Content}>
+        {view}
+        {isFilterModalShowing && (
+          <FilterModal dismissModal={dismissFilterModal} />
+        )}
+      </div>
     </div>
   );
 }
@@ -77,13 +86,11 @@ const NoProfilingData = () => (
   </div>
 );
 
-const RecortdingInProgress = () => {
-  return (
-    <div className={styles.Column}>
-      <div className={styles.Header}>Profiling is in progress...</div>
-      <div className={styles.Row}>
-        Click the record button <RecordToggle /> to stop recording.
-      </div>
+const RecortdingInProgress = () => (
+  <div className={styles.Column}>
+    <div className={styles.Header}>Profiling is in progress...</div>
+    <div className={styles.Row}>
+      Click the record button <RecordToggle /> to stop recording.
     </div>
-  );
-};
+  </div>
+);
