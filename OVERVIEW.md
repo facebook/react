@@ -175,7 +175,7 @@ Profiling information is stored on the backend. The backend push-notifies the fr
 
 When profiling begins, the frontend takes a snapshot/copy of each root. This snapshot includes the id, name, key, and child IDs for each node in the tree. (This information is already present on the frontend, so it does not require any additional bridge traffic.) While profiling is active, each time React commits– the frontend also stores a copy of the "_operations_" message (described above). Once profiling has finished, the frontend can use the original snapshot along with each of the stored "_operations_" messages to reconstruct the tree for each of the profiled commits.
 
-While profiling is in progress, the backend also stores some information <sup>1</sup> about each commit:
+When profiling begins, the backend records the base durations of each fiber currently in the tree. While profiling is in progress, the backend also stores some information <sup>1</sup> about each commit:
 * Commit time and duration
 * Which elements were rendered during that commit.
 * Which interactions (if any) were part of the commit.

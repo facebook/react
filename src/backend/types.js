@@ -1,6 +1,7 @@
 // @flow
 
-import type { ElementType, InspectedElement } from 'src/devtools/types';
+import type { ElementType } from 'src/devtools/types';
+import type { InspectedElement } from 'src/devtools/views/elements/types';
 
 type BundleType =
   | 0 // PROD
@@ -75,6 +76,8 @@ export type RendererInterface = {
   ) => void,
   setInProps: (id: number, path: Array<string | number>, value: any) => void,
   setInState: (id: number, path: Array<string | number>, value: any) => void,
+  startProfiling: () => void,
+  stopProfiling: () => void,
   walkTree: () => void,
 };
 

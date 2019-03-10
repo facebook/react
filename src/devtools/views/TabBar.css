@@ -1,45 +1,34 @@
-.TabBar {
-  display: flex;
-  align-items: center;
-  padding: 0 0.5rem;
-  background-color: var(--color-background);
-  color: var(--color-button);
-  border-top: 1px solid var(--color-border);
-  font-family: var(--font-family-sans);
-  font-size: var(--font-size-sans-large);
-}
-
-.DevToolsVersion:before {
-  content: 'DevTools ';
-}
-
-.Tabs {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-end;
-  overflow-x: auto;
-}
-
+.Tab,
 .TabCurrent,
-.Tab {
+.TabDisabled {
   display: flex;
   align-items: center;
-  padding: 0.5rem 1rem;
   cursor: pointer;
   border-top: 3px solid transparent;
   border-bottom: 3px solid transparent;
   cursor: pointer;
   user-select: none;
+  color: var(--color-text-color);
 }
-.TabCurrent:hover,
-.Tab:hover {
+.Tab:hover,
+.TabCurrent:hover {
   background-color: var(--color-tree-node-hover);
 }
 
 .TabCurrent {
   border-bottom: 3px solid var(--color-tree-node-selected);
+}
+
+.TabDisabled {
+  color: var(--color-dim);
+  cursor: default;
+}
+
+.TabSizeLarge {
+  padding: 0.5rem 1rem;
+}
+.TabSizeSmall {
+  padding: 0.25rem 0.5rem;
 }
 
 .Input {
@@ -48,27 +37,36 @@
   opacity: 0;
 }
 
-.Icon {
+.IconSizeLarge,
+.IconSizeSmall {
   margin-right: 0.5rem;
+  color: var(--color-button);
+}
+
+.IconDisabled {
+  color: var(--color-dim);
+}
+
+.IconSizeLarge {
   width: 1.5rem;
   height: 1.5rem;
+}
+
+.IconSizeSmall {
+  width: 1rem;
+  height: 1rem;
 }
 
 .TabLabel {
 }
 
 @media screen and (max-width: 600px) {
-  .Icon {
+  .IconSizeLarge,
+  .IconSizeSmall {
     margin-right: 0;
   }
 
   .TabLabel {
     display: none;
-  }
-}
-
-@media screen and (max-width: 350px) {
-  .DevToolsVersion:before {
-    content: '';
   }
 }

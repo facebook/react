@@ -10,7 +10,8 @@ import { ElementTypeRoot } from './types';
 import { utfDecodeString } from '../utils';
 import { __DEBUG__ } from '../constants';
 
-import type { Element, ElementType } from './types';
+import type { ElementType } from './types';
+import type { Element } from './views/elements/types';
 import type { Bridge } from '../types';
 
 const debug = (methodName, ...args) => {
@@ -23,6 +24,10 @@ const debug = (methodName, ...args) => {
     );
   }
 };
+
+export type Capabilities = {|
+  supportsProfiling: boolean,
+|};
 
 /**
  * The store is the single source of truth for updates from the backend.
@@ -47,8 +52,12 @@ export default class Store extends EventEmitter {
   // Passive effects will check it for changes between render and mount.
   _roots: $ReadOnlyArray<number> = [];
 
+  _rootIDToCapabilities: Map<number, Capabilities> = new Map();
+
   // Renderer ID is needed to support inspection fiber props, state, and hooks.
   _rootIDToRendererID: Map<number, number> = new Map();
+
+  _supportsProfiling: boolean = false;
 
   constructor(bridge: Bridge) {
     super();
@@ -70,6 +79,10 @@ export default class Store extends EventEmitter {
 
   get roots(): $ReadOnlyArray<number> {
     return this._roots;
+  }
+
+  get supportsProfiling(): boolean {
+    return this._supportsProfiling;
   }
 
   getElementAtIndex(index: number): Element | null {
@@ -245,8 +258,12 @@ export default class Store extends EventEmitter {
               // For now, we avoid adding it to the tree twice by checking if it's already been mounted.
               // Maybe in the future we'll revisit this.
             } else {
+              const supportsProfiling = operations[i] > 0;
+              i++;
+
               this._roots = this._roots.concat(id);
               this._rootIDToRendererID.set(id, rendererID);
+              this._rootIDToCapabilities.set(id, { supportsProfiling });
 
               this._idToElement.set(id, {
                 children: [],
@@ -341,6 +358,9 @@ export default class Store extends EventEmitter {
 
             this._roots = this._roots.filter(rootID => rootID !== id);
             this._rootIDToRendererID.delete(id);
+            this._rootIDToCapabilities.delete(id);
+
+            haveRootsChanged = true;
           } else {
             debug('Remove', `fiber ${id} from parent ${parentID}`);
 
@@ -399,6 +419,13 @@ export default class Store extends EventEmitter {
     this._revision++;
 
     if (haveRootsChanged) {
+      this._supportsProfiling = false;
+      this._rootIDToCapabilities.forEach(({ supportsProfiling }) => {
+        if (supportsProfiling) {
+          this._supportsProfiling = true;
+        }
+      });
+
       this.emit('roots');
     }
 

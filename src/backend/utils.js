@@ -2,7 +2,7 @@
 
 import { dehydrate } from '../hydration';
 
-import type { DehydratedData } from 'src/devtools/types';
+import type { DehydratedData } from 'src/devtools/views/elements/types';
 
 export function cleanForBridge(data: Object | null): DehydratedData | null {
   if (data !== null) {

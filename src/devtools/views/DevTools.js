@@ -1,6 +1,6 @@
 // @flow
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Store from '../store';
 import { BridgeContext, StoreContext } from './context';
 import Elements from './Elements/Elements';
@@ -9,6 +9,7 @@ import Settings from './Settings/Settings';
 import TabBar from './TabBar';
 import { SettingsContextController } from './Settings/SettingsContext';
 import { TreeContextController } from './Elements/TreeContext';
+import ReactLogo from './ReactLogo';
 
 import styles from './DevTools.css';
 
@@ -30,6 +31,28 @@ export type Props = {|
   viewElementSource?: ?Function,
 |};
 
+const elementTab = {
+  id: ('elements': TabID),
+  icon: 'elements',
+  label: 'Elements',
+  title: 'React Elements',
+};
+const profilerTab = {
+  id: ('profiler': TabID),
+  icon: 'profiler',
+  label: 'Profiler',
+  title: 'React Profiler',
+};
+const settingsTab = {
+  id: ('settings': TabID),
+  icon: 'settings',
+  label: 'Settings',
+  title: 'React Settings',
+};
+
+const tabsWithProfiler = [elementTab, profilerTab, settingsTab];
+const tabsWithoutProfiler = [elementTab, settingsTab];
+
 export default function DevTools({
   bridge,
   browserName,
@@ -40,6 +63,27 @@ export default function DevTools({
   viewElementSource = null,
 }: Props) {
   const [tab, setTab] = useState(defaultTab);
+  const [supportsProfiling, setSupportsProfiling] = useState(
+    store.supportsProfiling
+  );
+
+  // Show/hide the "Profiler" button depending on if profiling is supported.
+  useEffect(() => {
+    if (supportsProfiling !== store.supportsProfiling) {
+      setSupportsProfiling(store.supportsProfiling);
+    }
+
+    const handleRoots = () => {
+      if (supportsProfiling !== store.supportsProfiling) {
+        setSupportsProfiling(store.supportsProfiling);
+      }
+    };
+
+    store.addListener('roots', handleRoots);
+    return () => {
+      store.removeListener('roots', handleRoots);
+    };
+  }, [store, supportsProfiling]);
 
   let tabElement;
   switch (tab) {
@@ -63,7 +107,20 @@ export default function DevTools({
             <div className={styles.DevTools}>
               {showTabBar && (
                 <div className={styles.TabBar}>
-                  <TabBar currentTab={tab} selectTab={setTab} />
+                  <ReactLogo />
+                  <span className={styles.DevToolsVersion}>
+                    {process.env.DEVTOOLS_VERSION}
+                  </span>
+                  <div className={styles.Spacer} />
+                  <TabBar
+                    currentTab={tab}
+                    id="DevTools"
+                    selectTab={setTab}
+                    size="large"
+                    tabs={
+                      supportsProfiling ? tabsWithProfiler : tabsWithoutProfiler
+                    }
+                  />
                 </div>
               )}
               <div className={styles.TabContent}>{tabElement}</div>

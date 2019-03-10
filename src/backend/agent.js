@@ -40,11 +40,13 @@ type SetInParams = {|
 
 export default class Agent extends EventEmitter {
   _bridge: Bridge = ((null: any): Bridge);
+  _isProfiling: boolean = false;
   _rendererInterfaces: { [key: RendererID]: RendererInterface } = {};
 
   addBridge(bridge: Bridge) {
     this._bridge = bridge;
 
+    bridge.addListener('getProfilingStatus', this.getProfilingStatus);
     bridge.addListener('highlightElementInDOM', this.highlightElementInDOM);
     bridge.addListener('inspectElement', this.inspectElement);
     bridge.addListener('overrideContext', this.overrideContext);
@@ -53,7 +55,9 @@ export default class Agent extends EventEmitter {
     bridge.addListener('overrideState', this.overrideState);
     bridge.addListener('selectElement', this.selectElement);
     bridge.addListener('startInspectingDOM', this.startInspectingDOM);
+    bridge.addListener('startProfiling', this.startProfiling);
     bridge.addListener('stopInspectingDOM', this.stopInspectingDOM);
+    bridge.addListener('stopProfiling', this.stopProfiling);
     bridge.addListener('shutdown', this.shutdown);
     bridge.addListener('viewElementSource', this.viewElementSource);
   }
@@ -62,13 +66,18 @@ export default class Agent extends EventEmitter {
     for (let rendererID in this._rendererInterfaces) {
       // A renderer will throw if it can't find a fiber for the specified node.
       try {
-        // $FlowFixMe
-        const renderer = this._rendererInterfaces[rendererID];
+        const renderer = ((this._rendererInterfaces[
+          (rendererID: any)
+        ]: any): RendererInterface);
         return renderer.getFiberIDFromNative(node, true);
       } catch (e) {}
     }
     return null;
   }
+
+  getProfilingStatus = () => {
+    this._bridge.send('profilingStatus', this._isProfiling);
+  };
 
   highlightElementInDOM = ({
     displayName,
@@ -182,12 +191,34 @@ export default class Agent extends EventEmitter {
     window.addEventListener('mouseover', this._onMouseOver, true);
   };
 
+  startProfiling = () => {
+    this._isProfiling = true;
+    for (let rendererID in this._rendererInterfaces) {
+      const renderer = ((this._rendererInterfaces[
+        (rendererID: any)
+      ]: any): RendererInterface);
+      renderer.startProfiling();
+    }
+    this._bridge.send('profilingStatus', this._isProfiling);
+  };
+
   stopInspectingDOM = () => {
     hideOverlay();
 
     window.removeEventListener('click', this._onClick, true);
     window.removeEventListener('mousedown', this._onMouseDown, true);
     window.removeEventListener('mouseover', this._onMouseOver, true);
+  };
+
+  stopProfiling = () => {
+    this._isProfiling = false;
+    for (let rendererID in this._rendererInterfaces) {
+      const renderer = ((this._rendererInterfaces[
+        (rendererID: any)
+      ]: any): RendererInterface);
+      renderer.startProfiling();
+    }
+    this._bridge.send('profilingStatus', this._isProfiling);
   };
 
   viewElementSource = ({ id, rendererID }: InspectSelectParams) => {

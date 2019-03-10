@@ -2,11 +2,62 @@
   width: 100%;
   height: 100%;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  border-top: 1px solid var(--color-border);
+  flex-direction: column;
   font-family: var(--font-family-sans);
   font-size: var(--font-size-sans-normal);
   background-color: var(--color-background);
   color: var(--color-text-color);
+}
+
+.Content {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.Column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.Row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.Header {
+  font-size: var(--font-size-sans-large);
+  margin-bottom: 0.5rem;
+}
+
+.Toolbar {
+  padding: 0 0.5rem;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-button);
+}
+
+.VRule {
+  height: 20px;
+  width: 1px;
+  background-color: var(--color-border);
+  margin: 0 0.25rem;
+}
+
+.Spacer {
+  flex: 1;
+}
+
+.StopRecordingButton {
+  font-size: var(--font-size-sans-large);
+  padding: 0.5rem;
 }

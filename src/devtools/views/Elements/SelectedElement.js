@@ -17,8 +17,8 @@ import { hydrate } from 'src/hydration';
 import styles from './SelectedElement.css';
 import { ElementTypeClass, ElementTypeFunction } from '../../types';
 
-import type { InspectedElement } from '../../types';
-import type { DehydratedData, Element } from 'src/devtools/types';
+import type { InspectedElement } from './types';
+import type { DehydratedData, Element } from './types';
 
 export type Props = {||};
 

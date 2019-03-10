@@ -141,6 +141,9 @@ function updateThemeVariables(theme: Theme): void {
   updateStyleHelper(theme, 'color-dimmest');
   updateStyleHelper(theme, 'color-jsx-arrow-brackets');
   updateStyleHelper(theme, 'color-jsx-arrow-brackets-inverted');
+  updateStyleHelper(theme, 'color-record-active');
+  updateStyleHelper(theme, 'color-record-hover');
+  updateStyleHelper(theme, 'color-record-inactive');
   updateStyleHelper(theme, 'color-tree-node-selected');
   updateStyleHelper(theme, 'color-tree-node-hover');
   updateStyleHelper(theme, 'color-search-match');

@@ -1,77 +1,90 @@
 // @flow
 
-import React, { useCallback } from 'react';
+import React, { Fragment, useCallback } from 'react';
 import Icon from './Icon';
-import ReactLogo from './ReactLogo';
 
 import styles from './TabBar.css';
 
-import type { TabID } from './DevTools';
+import type { IconType } from './Icon';
 
-export type Props = {|
-  currentTab: TabID,
-  selectTab: (tabID: TabID) => void,
+type TabInfo = {|
+  icon: IconType,
+  id: string,
+  label: string,
+  title?: string,
 |};
 
-export default function TabBar({ currentTab, selectTab }: Props) {
+export type Props = {|
+  currentTab: any,
+  disabled?: boolean,
+  id: string,
+  selectTab: (tabID: any) => void,
+  size: 'large' | 'small',
+  tabs: Array<TabInfo>,
+|};
+
+export default function TabBar({
+  currentTab,
+  disabled = false,
+  id: groupName,
+  selectTab,
+  size,
+  tabs,
+}: Props) {
+  if (!tabs.some(tab => tab.id === currentTab)) {
+    selectTab(tabs[0].id);
+  }
+
   const onChange = useCallback(
     ({ currentTarget }) => selectTab(currentTarget.value),
     [selectTab]
   );
 
+  const handleKeyDown = useCallback(event => {
+    switch (event.key) {
+      case 'ArrowDown':
+      case 'ArrowLeft':
+      case 'ArrowRight':
+      case 'ArrowUp':
+        event.stopPropagation();
+        break;
+      default:
+        break;
+    }
+  }, []);
+
+  const tabClassName =
+    size === 'large' ? styles.TabSizeLarge : styles.TabSizeSmall;
+
   return (
-    <div className={styles.TabBar}>
-      <ReactLogo />
-      <span className={styles.DevToolsVersion}>
-        {process.env.DEVTOOLS_VERSION}
-      </span>
-      <div className={styles.Tabs}>
+    <Fragment>
+      {tabs.map(({ icon, id, label, title }) => (
         <label
-          className={currentTab === 'elements' ? styles.TabCurrent : styles.Tab}
-          title="React Elements"
+          className={`${tabClassName} ${
+            disabled ? styles.TabDisabled : styles.Tab
+          } ${!disabled && currentTab === id ? styles.TabCurrent : ''}`}
+          key={id}
+          onKeyDown={handleKeyDown}
+          title={title || label}
         >
           <input
             type="radio"
-            name="TabBar-tab"
             className={styles.Input}
-            checked={currentTab === 'elements'}
-            value="elements"
+            checked={currentTab === id}
+            disabled={disabled}
+            name={groupName}
+            value={id}
             onChange={onChange}
           />
-          <Icon className={styles.Icon} type="elements" />
-          <span className={styles.TabLabel}>Elements</span>
-        </label>
-        <label
-          className={currentTab === 'profiler' ? styles.TabCurrent : styles.Tab}
-          title="React Profiler"
-        >
-          <input
-            type="radio"
-            name="TabBar-tab"
-            className={styles.Input}
-            checked={currentTab === 'profiler'}
-            value="profiler"
-            onChange={onChange}
+          <Icon
+            className={`${disabled ? styles.IconDisabled : ''} ${
+              size === 'large' ? styles.IconSizeLarge : styles.IconSizeSmall
+            }`}
+            type={icon}
           />
-          <Icon className={styles.Icon} type="profiler" />
-          <span className={styles.TabLabel}>Profiler</span>
+          <span className={styles.TabLabel}>{label}</span>
         </label>
-        <label
-          className={currentTab === 'settings' ? styles.TabCurrent : styles.Tab}
-          title="React Settings"
-        >
-          <input
-            type="radio"
-            name="TabBar-tab"
-            className={styles.Input}
-            checked={currentTab === 'settings'}
-            value="settings"
-            onChange={onChange}
-          />
-          <Icon className={styles.Icon} type="settings" />
-          <span className={styles.TabLabel}>Settings</span>
-        </label>
-      </div>
-    </div>
+      ))}
+    </Fragment>
   );
 }
