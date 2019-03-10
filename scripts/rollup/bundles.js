@@ -17,7 +17,6 @@ const bundleTypes = {
   RN_FB_PROD: 'RN_FB_PROD',
   RN_FB_PROFILING: 'RN_FB_PROFILING',
 };
-deepFreeze(bundleTypes);
 
 const {
   UMD_DEV,
@@ -38,24 +37,23 @@ const {
 } = bundleTypes;
 
 const moduleTypes = {
+  // React
   ISOMORPHIC: 'ISOMORPHIC',
+  // Individual renderers. They bundle the reconciler. (e.g. ReactDOM)
   RENDERER: 'RENDERER',
+  // Helper packages that access specific renderer's internals. (e.g. TestUtils)
   RENDERER_UTILS: 'RENDERER_UTILS',
+  // Standalone reconciler for third-party renderers.
   RECONCILER: 'RECONCILER',
+  // Non-Fiber implementations like SSR and Shallow renderers.
   NON_FIBER_RENDERER: 'NON_FIBER_RENDERER',
 };
-deepFreeze(moduleTypes);
 
 const {
-  // React
   ISOMORPHIC,
-  // Individual renderers. They bundle the reconciler. (e.g. ReactDOM)
   RENDERER,
-  // Helper packages that access specific renderer's internals. (e.g. TestUtils)
   RENDERER_UTILS,
-  // Standalone reconciler for third-party renderers.
   RECONCILER,
-  // Non-Fiber implementations like SSR and Shallow renderers.
   NON_FIBER_RENDERER,
 } = moduleTypes;
 
@@ -479,6 +477,8 @@ function deepFreeze(o) {
 
 // Don't accidentally mutate config as part of the build
 deepFreeze(bundles);
+deepFreeze(bundleTypes);
+deepFreeze(moduleTypes);
 
 module.exports = {
   bundleTypes,
