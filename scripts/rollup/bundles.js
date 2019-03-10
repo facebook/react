@@ -48,7 +48,7 @@ const moduleTypes = {
 const {
   ISOMORPHIC,
   // Individual renderers. They bundle the reconciler. (e.g. ReactDOM)
-  RENDERER = moduleTypes,
+  RENDERER,
   // Helper packages that access specific renderer's internals. (e.g. TestUtils)
   RENDERER_UTILS,
   // Standalone reconciler for third-party renderers.
