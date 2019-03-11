@@ -12,7 +12,7 @@ module.exports = Object.assign({}, baseConfig, {
   ],
   setupFiles: [
     ...baseConfig.setupFiles,
-    require.resolve('./setupPersistent.js'),
+    require.resolve('./setupTests.persistent.js'),
     require.resolve('./setupHostConfigs.js'),
   ],
 });
