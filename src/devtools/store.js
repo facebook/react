@@ -25,6 +25,13 @@ const debug = (methodName, ...args) => {
   }
 };
 
+type ProfilingSnapshotNode = {|
+  id: number,
+  children: Array<number>,
+  displayName: string | null,
+  key: number | string | null,
+|};
+
 export type Capabilities = {|
   supportsProfiling: boolean,
 |};
@@ -40,9 +47,23 @@ export default class Store extends EventEmitter {
   // Elements are mutable (for now) to avoid excessive cloning during tree updates.
   _idToElement: Map<number, Element> = new Map();
 
+  // When profiling is in progress, operations are stored so that we can later reconstruct past commit trees.
+  _isProfiling: boolean = false;
+
   // Total number of visible elements (within all roots).
   // Used for windowing purposes.
   _numElements: number = 0;
+
+  // List of tree mutation that occur during profiling.
+  // Once profiling is finished, these mutations can be used, along with the initial tree snapshots,
+  // to reconstruct the state of each root for each commit.
+  _profilingOperations: Map<number, Array<Uint32Array>> = new Map();
+
+  // Snapshot of the state of the main Store (including all roots) when profiling started.
+  // Once profiling is finished, this snapshot can be used along with "operations" messages emitted during profiling,
+  // to reconstruct the state of each root for each commit.
+  // It's okay to use a single root to store this information because node IDs are unique across all roots.
+  _profilingSnapshot: Map<number, ProfilingSnapshotNode> = new Map();
 
   // Incremented each time the store is mutated.
   // This enables a passive effect to detect a mutation between render and commit phase.
@@ -65,8 +86,13 @@ export default class Store extends EventEmitter {
     debug('constructor', 'subscribing to Bridge');
 
     this._bridge = bridge;
-    this._bridge.addListener('operations', this.onBridgeOperations);
-    this._bridge.addListener('shutdown', this.onBridgeShutdown);
+    bridge.addListener('operations', this.onBridgeOperations);
+    bridge.addListener('profilingStatus', this.onProfilingStatus);
+    bridge.addListener('shutdown', this.onBridgeShutdown);
+
+    // It's possible that profiling has already started (e.g. "reload and start profiling")
+    // so the frontend needs to ask the backend for its status after mounting.
+    bridge.send('getProfilingStatus');
   }
 
   get numElements(): number {
@@ -216,6 +242,20 @@ export default class Store extends EventEmitter {
     return null;
   }
 
+  _takeProfilingSnapshotRecursive = (id: number) => {
+    const element = this.getElementByID(id);
+    if (element !== null) {
+      this._profilingSnapshot.set(id, {
+        id,
+        children: element.children.slice(0),
+        displayName: element.displayName,
+        key: element.key,
+      });
+
+      element.children.forEach(this._takeProfilingSnapshotRecursive);
+    }
+  };
+
   onBridgeOperations = (operations: Uint32Array) => {
     if (!(operations instanceof Uint32Array)) {
       // $FlowFixMe TODO HACK Temporary workaround for the fact that Chrome is not transferring the typed array.
@@ -227,6 +267,15 @@ export default class Store extends EventEmitter {
     let haveRootsChanged = false;
 
     const rendererID = operations[0];
+
+    if (this._isProfiling) {
+      const profilingOperations = this._profilingOperations.get(rendererID);
+      if (profilingOperations == null) {
+        this._profilingOperations.set(rendererID, [operations]);
+      } else {
+        profilingOperations.push(operations);
+      }
+    }
 
     let addedElementIDs: Uint32Array = new Uint32Array(0);
     let removedElementIDs: Uint32Array = new Uint32Array(0);
@@ -432,10 +481,21 @@ export default class Store extends EventEmitter {
     this.emit('mutated', [addedElementIDs, removedElementIDs]);
   };
 
+  onProfilingStatus = (isProfiling: boolean) => {
+    this._isProfiling = isProfiling;
+
+    if (isProfiling) {
+      this._profilingSnapshot = new Map();
+
+      this.roots.forEach(this._takeProfilingSnapshotRecursive);
+    }
+  };
+
   onBridgeShutdown = () => {
     debug('onBridgeShutdown', 'unsubscribing from Bridge');
 
     this._bridge.removeListener('operations', this.onBridgeOperations);
+    this._bridge.removeListener('profilingStatus', this.onProfilingStatus);
     this._bridge.removeListener('shutdown', this.onBridgeShutdown);
   };
 
