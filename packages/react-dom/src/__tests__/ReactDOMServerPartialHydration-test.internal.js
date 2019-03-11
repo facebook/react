@@ -703,6 +703,126 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
   });
 
+  it('replaces the fallback within the maxDuration if there is a nested suspense', async () => {
+    let suspend = false;
+    let promise = new Promise(resolvePromise => {});
+    let ref = React.createRef();
+
+    function Child() {
+      if (suspend) {
+        throw promise;
+      } else {
+        return 'Hello';
+      }
+    }
+
+    function InnerChild() {
+      // Always suspends indefinitely
+      throw promise;
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading..." maxDuration={100}>
+            <span ref={ref}>
+              <Child />
+            </span>
+            <Suspense fallback={null}>
+              <InnerChild />
+            </Suspense>
+          </Suspense>
+        </div>
+      );
+    }
+
+    // First we render the final HTML. With the streaming renderer
+    // this may have suspense points on the server but here we want
+    // to test the completed HTML. Don't suspend on the server.
+    suspend = true;
+    let finalHTML = ReactDOMServer.renderToString(<App />);
+    let container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    expect(container.getElementsByTagName('span').length).toBe(0);
+
+    // On the client we have the data available quickly for some reason.
+    suspend = false;
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    root.render(<App />);
+    Scheduler.flushAll();
+    // This will have exceeded the maxDuration so we should timeout.
+    jest.advanceTimersByTime(500);
+    // The boundary should longer be suspended for the middle content
+    // even though the inner boundary is still suspended.
+
+    expect(container.textContent).toBe('Hello');
+
+    let span = container.getElementsByTagName('span')[0];
+    expect(ref.current).toBe(span);
+  });
+
+  it('replaces the fallback within the maxDuration if there is a nested suspense in a nested suspense', async () => {
+    let suspend = false;
+    let promise = new Promise(resolvePromise => {});
+    let ref = React.createRef();
+
+    function Child() {
+      if (suspend) {
+        throw promise;
+      } else {
+        return 'Hello';
+      }
+    }
+
+    function InnerChild() {
+      // Always suspends indefinitely
+      throw promise;
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Another layer">
+            <Suspense fallback="Loading..." maxDuration={100}>
+              <span ref={ref}>
+                <Child />
+              </span>
+              <Suspense fallback={null}>
+                <InnerChild />
+              </Suspense>
+            </Suspense>
+          </Suspense>
+        </div>
+      );
+    }
+
+    // First we render the final HTML. With the streaming renderer
+    // this may have suspense points on the server but here we want
+    // to test the completed HTML. Don't suspend on the server.
+    suspend = true;
+    let finalHTML = ReactDOMServer.renderToString(<App />);
+    let container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    expect(container.getElementsByTagName('span').length).toBe(0);
+
+    // On the client we have the data available quickly for some reason.
+    suspend = false;
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    root.render(<App />);
+    Scheduler.flushAll();
+    // This will have exceeded the maxDuration so we should timeout.
+    jest.advanceTimersByTime(500);
+    // The boundary should longer be suspended for the middle content
+    // even though the inner boundary is still suspended.
+
+    expect(container.textContent).toBe('Hello');
+
+    let span = container.getElementsByTagName('span')[0];
+    expect(ref.current).toBe(span);
+  });
+
   it('waits for pending content to come in from the server and then hydrates it', async () => {
     let suspend = false;
     let promise = new Promise(resolvePromise => {});
