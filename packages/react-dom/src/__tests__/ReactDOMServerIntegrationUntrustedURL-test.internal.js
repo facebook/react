@@ -226,13 +226,18 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
 
   itRenders('only the first invocation of toString', async render => {
     let expectedToStringCalls = 1;
-    if (
-      render === clientRenderOnBadMarkup ||
-      render === clientRenderOnServerString
-    ) {
-      // The hydration calls it one extra time.
+    if (render === clientRenderOnBadMarkup) {
+      // It gets called once on the server and once on the client
+      // which happens to share the same object in our test runner.
       expectedToStringCalls = 2;
     }
+    if (render === clientRenderOnServerString && __DEV__) {
+      // The hydration validation calls it one extra time.
+      // TODO: It would be good if we only called toString once for
+      // consistency but the code structure makes that hard right now.
+      expectedToStringCalls = 2;
+    }
+
     let toStringCalls = 0;
     let firstIsSafe = {
       toString() {
