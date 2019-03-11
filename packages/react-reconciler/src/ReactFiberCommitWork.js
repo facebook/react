@@ -1131,6 +1131,13 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
         commitHookEffectList(UnmountMutation, MountMutation, finishedWork);
         return;
       }
+      case Profiler: {
+        return;
+      }
+      case SuspenseComponent: {
+        commitSuspenseComponent(finishedWork);
+        return;
+      }
     }
 
     commitContainer(finishedWork);
@@ -1199,50 +1206,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       return;
     }
     case SuspenseComponent: {
-      let newState: SuspenseState | null = finishedWork.memoizedState;
-
-      let newDidTimeout;
-      let primaryChildParent = finishedWork;
-      if (newState === null) {
-        newDidTimeout = false;
-      } else {
-        newDidTimeout = true;
-        primaryChildParent = finishedWork.child;
-        if (newState.timedOutAt === NoWork) {
-          // If the children had not already timed out, record the time.
-          // This is used to compute the elapsed time during subsequent
-          // attempts to render the children.
-          newState.timedOutAt = requestCurrentTime();
-        }
-      }
-
-      if (primaryChildParent !== null) {
-        hideOrUnhideAllChildren(primaryChildParent, newDidTimeout);
-      }
-
-      // If this boundary just timed out, then it will have a set of thenables.
-      // For each thenable, attach a listener so that when it resolves, React
-      // attempts to re-render the boundary in the primary (pre-timeout) state.
-      const thenables: Set<Thenable> | null = (finishedWork.updateQueue: any);
-      if (thenables !== null) {
-        finishedWork.updateQueue = null;
-        let retryCache = finishedWork.stateNode;
-        if (retryCache === null) {
-          retryCache = finishedWork.stateNode = new PossiblyWeakSet();
-        }
-        thenables.forEach(thenable => {
-          // Memoize using the boundary fiber to prevent redundant listeners.
-          let retry = resolveRetryThenable.bind(null, finishedWork, thenable);
-          if (enableSchedulerTracing) {
-            retry = Schedule_tracing_wrap(retry);
-          }
-          if (!retryCache.has(thenable)) {
-            retryCache.add(thenable);
-            thenable.then(retry, retry);
-          }
-        });
-      }
-
+      commitSuspenseComponent(finishedWork);
       return;
     }
     case IncompleteClassComponent: {
@@ -1255,6 +1219,52 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
           'likely caused by a bug in React. Please file an issue.',
       );
     }
+  }
+}
+
+function commitSuspenseComponent(finishedWork: Fiber) {
+  let newState: SuspenseState | null = finishedWork.memoizedState;
+
+  let newDidTimeout;
+  let primaryChildParent = finishedWork;
+  if (newState === null) {
+    newDidTimeout = false;
+  } else {
+    newDidTimeout = true;
+    primaryChildParent = finishedWork.child;
+    if (newState.timedOutAt === NoWork) {
+      // If the children had not already timed out, record the time.
+      // This is used to compute the elapsed time during subsequent
+      // attempts to render the children.
+      newState.timedOutAt = requestCurrentTime();
+    }
+  }
+
+  if (supportsMutation && primaryChildParent !== null) {
+    hideOrUnhideAllChildren(primaryChildParent, newDidTimeout);
+  }
+
+  // If this boundary just timed out, then it will have a set of thenables.
+  // For each thenable, attach a listener so that when it resolves, React
+  // attempts to re-render the boundary in the primary (pre-timeout) state.
+  const thenables: Set<Thenable> | null = (finishedWork.updateQueue: any);
+  if (thenables !== null) {
+    finishedWork.updateQueue = null;
+    let retryCache = finishedWork.stateNode;
+    if (retryCache === null) {
+      retryCache = finishedWork.stateNode = new PossiblyWeakSet();
+    }
+    thenables.forEach(thenable => {
+      // Memoize using the boundary fiber to prevent redundant listeners.
+      let retry = resolveRetryThenable.bind(null, finishedWork, thenable);
+      if (enableSchedulerTracing) {
+        retry = Schedule_tracing_wrap(retry);
+      }
+      if (!retryCache.has(thenable)) {
+        retryCache.add(thenable);
+        thenable.then(retry, retry);
+      }
+    });
   }
 }
 

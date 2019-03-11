@@ -36,10 +36,18 @@ type Instance = {|
   text: string | null,
   prop: any,
   hidden: boolean,
+  context: HostContext,
 |};
-type TextInstance = {|text: string, id: number, hidden: boolean|};
+type TextInstance = {|
+  text: string,
+  id: number,
+  hidden: boolean,
+  context: HostContext,
+|};
+type HostContext = Object;
 
 const NO_CONTEXT = {};
+const UPPERCASE_CONTEXT = {};
 const UPDATE_SIGNAL = {};
 if (__DEV__) {
   Object.freeze(NO_CONTEXT);
@@ -185,10 +193,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       type: type,
       children: keepChildren ? instance.children : [],
       text: shouldSetTextContent(type, newProps)
-        ? (newProps.children: any) + ''
+        ? computeText((newProps.children: any) + '', instance.context)
         : null,
       prop: newProps.prop,
       hidden: newProps.hidden === true,
+      context: instance.context,
     };
     Object.defineProperty(clone, 'id', {
       value: clone.id,
@@ -196,6 +205,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     });
     Object.defineProperty(clone, 'text', {
       value: clone.text,
+      enumerable: false,
+    });
+    Object.defineProperty(clone, 'context', {
+      value: clone.context,
       enumerable: false,
     });
     hostCloneCounter++;
@@ -211,12 +224,23 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     );
   }
 
+  function computeText(rawText, hostContext) {
+    return hostContext === UPPERCASE_CONTEXT ? rawText.toUpperCase() : rawText;
+  }
+
   const sharedHostConfig = {
     getRootHostContext() {
       return NO_CONTEXT;
     },
 
-    getChildHostContext() {
+    getChildHostContext(
+      parentHostContext: HostContext,
+      type: string,
+      rootcontainerInstance: Container,
+    ) {
+      if (type === 'uppercase') {
+        return UPPERCASE_CONTEXT;
+      }
       return NO_CONTEXT;
     },
 
@@ -224,7 +248,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return instance;
     },
 
-    createInstance(type: string, props: Props): Instance {
+    createInstance(
+      type: string,
+      props: Props,
+      rootContainerInstance: Container,
+      hostContext: HostContext,
+    ): Instance {
       if (type === 'errorInCompletePhase') {
         throw new Error('Error in host config.');
       }
@@ -233,15 +262,20 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         type: type,
         children: [],
         text: shouldSetTextContent(type, props)
-          ? (props.children: any) + ''
+          ? computeText((props.children: any) + '', hostContext)
           : null,
         prop: props.prop,
         hidden: props.hidden === true,
+        context: hostContext,
       };
       // Hide from unit tests
       Object.defineProperty(inst, 'id', {value: inst.id, enumerable: false});
       Object.defineProperty(inst, 'text', {
         value: inst.text,
+        enumerable: false,
+      });
+      Object.defineProperty(inst, 'context', {
+        value: inst.context,
         enumerable: false,
       });
       return inst;
@@ -293,9 +327,21 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       hostContext: Object,
       internalInstanceHandle: Object,
     ): TextInstance {
-      const inst = {text: text, id: instanceCounter++, hidden: false};
+      if (hostContext === UPPERCASE_CONTEXT) {
+        text = text.toUpperCase();
+      }
+      const inst = {
+        text: text,
+        id: instanceCounter++,
+        hidden: false,
+        context: hostContext,
+      };
       // Hide from unit tests
       Object.defineProperty(inst, 'id', {value: inst.id, enumerable: false});
+      Object.defineProperty(inst, 'context', {
+        value: inst.context,
+        enumerable: false,
+      });
       return inst;
     },
 
@@ -338,7 +384,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           instance.prop = newProps.prop;
           instance.hidden = newProps.hidden === true;
           if (shouldSetTextContent(type, newProps)) {
-            instance.text = (newProps.children: any) + '';
+            instance.text = computeText(
+              (newProps.children: any) + '',
+              instance.context,
+            );
           }
         },
 
@@ -348,7 +397,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           newText: string,
         ): void {
           hostUpdateCounter++;
-          textInstance.text = newText;
+          textInstance.text = computeText(newText, textInstance.context);
         },
 
         appendChild,
@@ -448,23 +497,54 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
             true,
             null,
           );
-          clone.hidden = props.hidden;
+          clone.hidden = props.hidden === true;
           return clone;
         },
 
-        createHiddenTextInstance(
+        cloneHiddenTextInstance(
+          instance: TextInstance,
           text: string,
-          rootContainerInstance: Container,
-          hostContext: Object,
           internalInstanceHandle: Object,
         ): TextInstance {
-          const inst = {text: text, id: instanceCounter++, hidden: true};
+          const clone = {
+            text: instance.text,
+            id: instanceCounter++,
+            hidden: true,
+            context: instance.context,
+          };
           // Hide from unit tests
-          Object.defineProperty(inst, 'id', {
-            value: inst.id,
+          Object.defineProperty(clone, 'id', {
+            value: clone.id,
             enumerable: false,
           });
-          return inst;
+          Object.defineProperty(clone, 'context', {
+            value: clone.context,
+            enumerable: false,
+          });
+          return clone;
+        },
+
+        cloneUnhiddenTextInstance(
+          instance: TextInstance,
+          text: string,
+          internalInstanceHandle: Object,
+        ): TextInstance {
+          const clone = {
+            text: instance.text,
+            id: instanceCounter++,
+            hidden: false,
+            context: instance.context,
+          };
+          // Hide from unit tests
+          Object.defineProperty(clone, 'id', {
+            value: clone.id,
+            enumerable: false,
+          });
+          Object.defineProperty(clone, 'context', {
+            value: clone.context,
+            enumerable: false,
+          });
+          return clone;
         },
       };
 
