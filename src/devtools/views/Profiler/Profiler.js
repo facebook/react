@@ -29,6 +29,9 @@ function ProfilerInner(_: Props) {
   const showFilterModal = useCallback(() => setIsFilterModalShowing(true));
   const dismissFilterModal = useCallback(() => setIsFilterModalShowing(false));
 
+  // TODO (profiling) Maybe a smarter check here
+  const showProfilingData = !isProfiling && hasProfilingData;
+
   let view = null;
   if (isProfiling) {
     view = <RecortdingInProgress />;
@@ -42,38 +45,51 @@ function ProfilerInner(_: Props) {
 
   return (
     <div className={styles.Profiler}>
-      <div className={styles.Toolbar}>
-        <RecordToggle />
-        <Button disabled title="Reload and start profiling">
-          {/* TODO (profiling) Wire up reload button */}
-          <ButtonIcon type="reload" />
-        </Button>
-        <div className={styles.VRule} />
-        <TabBar
-          currentTab={tab}
-          disabled={isProfiling || !hasProfilingData}
-          id="Profiler"
-          selectTab={setTab}
-          size="small"
-          tabs={tabs}
-        />
-        <div className={styles.Spacer} />
-        <Button onClick={showFilterModal} title="Filter commits by duration">
-          <ButtonIcon type="filter" />
-        </Button>
-        {hasProfilingData && (
-          <Fragment>
-            <div className={styles.VRule} />
-            <SnapshotSelector />
-          </Fragment>
-        )}
+      <div className={styles.LeftColumn}>
+        <div className={styles.Toolbar}>
+          <RecordToggle />
+          <Button disabled title="Reload and start profiling">
+            {/* TODO (profiling) Wire up reload button */}
+            <ButtonIcon type="reload" />
+          </Button>
+          <div className={styles.VRule} />
+          <TabBar
+            currentTab={tab}
+            disabled={!showProfilingData}
+            id="Profiler"
+            selectTab={setTab}
+            size="small"
+            tabs={tabs}
+          />
+          <div className={styles.Spacer} />
+          <Button onClick={showFilterModal} title="Filter commits by duration">
+            <ButtonIcon type="filter" />
+          </Button>
+          {showProfilingData && (
+            <Fragment>
+              <div className={styles.VRule} />
+              <SnapshotSelector />
+            </Fragment>
+          )}
+        </div>
+        <div className={styles.Content}>
+          {view}
+          {isFilterModalShowing && ( // TODO (profiler) Position when snapshot graph is open
+            <FilterModal dismissModal={dismissFilterModal} />
+          )}
+        </div>
       </div>
-      <div className={styles.Content}>
-        {view}
-        {isFilterModalShowing && (
-          <FilterModal dismissModal={dismissFilterModal} />
-        )}
-      </div>
+      {showProfilingData && (
+        <div className={styles.RightColumn}>
+          {/* TODO (profiler) Dynamic information */}
+          <div className={styles.Toolbar}>Commit information</div>
+          <div className={styles.InspectedProperties}>
+            Committed at: 0.8s <br />
+            <br />
+            Render duration: 2.1ms
+          </div>
+        </div>
+      )}
     </div>
   );
 }
