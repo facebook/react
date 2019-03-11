@@ -40,7 +40,7 @@ export function getValueForProperty(
         // If we haven't fully disabled javascript: URLs, and if
         // the hydration is successful of a javascript: URL, we
         // still want to warn on the client.
-        sanitizeURL(expected);
+        sanitizeURL('' + (expected: any));
       }
 
       const attributeName = propertyInfo.attributeName;

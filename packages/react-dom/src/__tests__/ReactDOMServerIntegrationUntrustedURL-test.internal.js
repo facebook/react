@@ -183,6 +183,8 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
     resetModules,
     itRenders,
     itThrowsWhenRendering,
+    clientRenderOnBadMarkup,
+    clientRenderOnServerString,
   } = ReactDOMServerIntegrationUtils(initModules);
 
   beforeEach(() => {
@@ -205,4 +207,31 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
       );
     },
   );
+
+  itRenders('only the first invocation of toString', async render => {
+    let expectedToStringCalls = 1;
+    if (
+      render === clientRenderOnBadMarkup ||
+      render === clientRenderOnServerString
+    ) {
+      // The hydration calls it one extra time.
+      expectedToStringCalls = 2;
+    }
+    let toStringCalls = 0;
+    let firstIsSafe = {
+      toString() {
+        // This tries to avoid the validation by pretending to be safe
+        // the first times it is called and then becomes dangerous.
+        toStringCalls++;
+        if (toStringCalls <= expectedToStringCalls) {
+          return 'https://fb.me/';
+        }
+        return 'javascript:notfine';
+      },
+    };
+
+    const e = await render(<a href={firstIsSafe} />);
+    expect(toStringCalls).toBe(expectedToStringCalls);
+    expect(e.href).toBe('https://fb.me/');
+  });
 });

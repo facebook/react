@@ -357,6 +357,7 @@ module.exports = function(initModules) {
     asyncReactDOMRender,
     serverRender,
     clientCleanRender,
+    clientRenderOnBadMarkup,
     clientRenderOnServerString,
     renderIntoDom,
     streamRender,
