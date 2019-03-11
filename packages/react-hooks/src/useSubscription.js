@@ -29,7 +29,7 @@ export function useSubscription<Value, Source>({
   source: Source,
   getCurrentValue: (source: Source) => Value,
   subscribe: (source: Source, callback: Function) => () => void,
-|}) {
+|}): Value {
   // Read the current value from our subscription source.
   // When this value changes, we'll schedule an update with React.
   // It's important to also store the source itself so that we can check for staleness.
