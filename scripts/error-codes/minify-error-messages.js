@@ -65,7 +65,7 @@ module.exports = function(babel) {
           );
           const errorMap = invertObject(existingErrorMap);
 
-          const prodErrorId = errorMap[errorMsgLiteral];
+          let prodErrorId = errorMap[errorMsgLiteral];
           if (prodErrorId === undefined) {
             // There is no error code for this message. We use a lint rule to
             // enforce that messages can be minified, so assume this is
@@ -83,6 +83,7 @@ module.exports = function(babel) {
             );
             return;
           }
+          prodErrorId = parseInt(prodErrorId, 10);
 
           // Import ReactErrorProd
           const reactErrorProdIdentfier = file.addImport(
@@ -97,7 +98,7 @@ module.exports = function(babel) {
             t.callExpression(
               reactErrorProdIdentfier,
               [
-                t.stringLiteral(prodErrorId),
+                t.numericLiteral(prodErrorId),
                 errorMsgExpressions.length > 0
                   ? t.arrayExpression(errorMsgExpressions)
                   : undefined,
