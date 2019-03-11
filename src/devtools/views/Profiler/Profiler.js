@@ -1,12 +1,13 @@
 // @flow
 
-import React, { useCallback, useContext, useState } from 'react';
+import React, { Fragment, useCallback, useContext, useState } from 'react';
 import { ProfilerContext, ProfilerContextController } from './ProfilerContext';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import TabBar from '../TabBar';
 import FilterModal from './FilterModal';
 import RecordToggle from './RecordToggle';
+import SnapshotSelector from './SnapshotSelector';
 
 import styles from './Profiler.css';
 
@@ -60,6 +61,12 @@ function ProfilerInner(_: Props) {
         <Button onClick={showFilterModal} title="Filter commits by duration">
           <ButtonIcon type="filter" />
         </Button>
+        {hasProfilingData && (
+          <Fragment>
+            <div className={styles.VRule} />
+            <SnapshotSelector />
+          </Fragment>
+        )}
       </div>
       <div className={styles.Content}>
         {view}
@@ -72,9 +79,24 @@ function ProfilerInner(_: Props) {
 }
 
 const tabs = [
-  { id: 'flame-chart', icon: 'flame-chart', label: 'Flamegraph' },
-  { id: 'ranked-chart', icon: 'ranked-chart', label: 'Ranked' },
-  { id: 'interactions', icon: 'interactions', label: 'Interactions' },
+  {
+    id: 'flame-chart',
+    icon: 'flame-chart',
+    label: 'Flamegraph',
+    title: 'Flamegraph chart',
+  },
+  {
+    id: 'ranked-chart',
+    icon: 'ranked-chart',
+    label: 'Ranked',
+    title: 'Ranked chart',
+  },
+  {
+    id: 'interactions',
+    icon: 'interactions',
+    label: 'Interactions',
+    title: 'Profiled interactions',
+  },
 ];
 
 const NoProfilingData = () => (

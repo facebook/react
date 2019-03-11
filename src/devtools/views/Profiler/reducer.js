@@ -52,6 +52,8 @@ type Action =
   | SEND_START_PROFILING_ACTION
   | SEND_STOP_PROFILING_ACTION;
 
+// TODO (profiling) Lift this state up so it's shared between tabs.
+
 export default function reducer(state: State, action: Action): State {
   const { type } = action;
   switch (type) {

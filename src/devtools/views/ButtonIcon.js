@@ -10,6 +10,8 @@ export type IconType =
   | 'down'
   | 'filter'
   | 'more'
+  | 'next'
+  | 'previous'
   | 'record'
   | 'reload'
   | 'search'
@@ -42,6 +44,12 @@ export default function ButtonIcon({ type }: Props) {
       break;
     case 'more':
       pathData = PATH_MORE;
+      break;
+    case 'next':
+      pathData = PATH_NEXT;
+      break;
+    case 'previous':
+      pathData = PATH_PREVIOUS;
       break;
     case 'record':
       pathData = PATH_RECORD;
@@ -107,6 +115,11 @@ const PATH_MORE = `
   0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm5 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5
   1.5.67 1.5 1.5-.67 1.5-1.5 1.5z
 `;
+
+const PATH_NEXT = 'M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z';
+
+const PATH_PREVIOUS =
+  'M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z';
 
 const PATH_RECORD = 'M4,12a8,8 0 1,0 16,0a8,8 0 1,0 -16,0';
 

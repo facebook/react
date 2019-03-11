@@ -1,0 +1,14 @@
+.SnapshotSelector {
+  display: flex;
+  align-items: center;
+  color: var(--color-text-color);
+  margin-left: 0.5rem;
+}
+
+.Button {
+  margin-left: 0.25rem;
+}
+
+.Commits {
+  margin-left: 0.25rem;
+}
