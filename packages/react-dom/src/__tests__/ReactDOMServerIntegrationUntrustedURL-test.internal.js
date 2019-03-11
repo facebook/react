@@ -27,8 +27,16 @@ function runTests(itRenders, itRejectsRendering, expectToReject) {
   });
 
   itRejectsRendering('a javascript protocol href', async render => {
-    const e = await render(<a href="javascript:notfine">p0wned</a>, 1);
-    expect(e.href).toBe('javascript:notfine');
+    // Only the first one warns. The second warning is deduped.
+    const e = await render(
+      <div>
+        <a href="javascript:notfine">p0wned</a>
+        <a href="javascript:notfineagain">p0wned again</a>
+      </div>,
+      1,
+    );
+    expect(e.firstChild.href).toBe('javascript:notfine');
+    expect(e.lastChild.href).toBe('javascript:notfineagain');
   });
 
   itRejectsRendering(
@@ -162,7 +170,7 @@ describe('ReactDOMServerIntegration - Untrusted URLs', () => {
     expect(fn).toWarnDev(
       'Warning: A future version of React will block javascript: URLs as a security precaution. ' +
         'Use event handlers instead if you can. If you need to generate unsafe HTML try using ' +
-        'dangerouslySetInnerHTML instead.\n' +
+        'dangerouslySetInnerHTML instead. React was passed "javascript:notfine".\n' +
         '    in a (at **)',
     ),
   );

@@ -29,6 +29,8 @@ if (__DEV__) {
 /* eslint-disable max-len */
 const isJavaScriptProtocol = /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[\r\n\t]*s[\r\n\t]*c[\r\n\t]*r[\r\n\t]*i[\r\n\t]*p[\r\n\t]*t[\r\n\t]*\:/i;
 
+let didWarn = false;
+
 function sanitizeURL(url: string) {
   if (disableJavaScriptURLs) {
     invariant(
@@ -36,12 +38,14 @@ function sanitizeURL(url: string) {
       'React has blocked a javascript: URL as a security precaution.%s',
       __DEV__ ? ReactDebugCurrentFrame.getStackAddendum() : '',
     );
-  } else if (__DEV__) {
+  } else if (__DEV__ && !didWarn && isJavaScriptProtocol.test(url)) {
+    didWarn = true;
     warning(
-      !isJavaScriptProtocol.test(url),
+      false,
       'A future version of React will block javascript: URLs as a security precaution. ' +
         'Use event handlers instead if you can. If you need to generate unsafe HTML try ' +
-        'using dangerouslySetInnerHTML instead.',
+        'using dangerouslySetInnerHTML instead. React was passed %s.',
+      JSON.stringify(url),
     );
   }
 }
