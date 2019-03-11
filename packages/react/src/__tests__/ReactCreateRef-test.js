@@ -57,4 +57,53 @@ describe('ReactCreateRef', () => {
         '    in Wrapper (at **)',
     );
   });
+
+  it('allows createRef in component constructors', () => {
+    class Component extends React.Component {
+      ref = React.createRef();
+      render() {
+        return <div>Oh yes!</div>;
+      }
+    }
+
+    const renderer = ReactTestRenderer.create(<Component />);
+
+    expect(renderer.toJSON()).toEqual({
+      type: 'div',
+      props: {},
+      children: ['Oh yes!'],
+    });
+  });
+
+  it('should warn in dev if used within a function component', () => {
+    function Component() {
+      React.createRef();
+      return <div>Oh no!</div>;
+    }
+
+    function Wrapper(props) {
+      return props.children;
+    }
+
+    let renderer;
+    expect(() => {
+      renderer = ReactTestRenderer.create(
+        <Wrapper>
+          <Component />
+        </Wrapper>,
+      );
+    }).toWarnDev(
+      'Warning: Component is a function component but called ' +
+        'React.createRef(). This will create a new ref on every render ' +
+        'instead of reusing it. Did you mean to use React.useRef() instead?\n' +
+        '    in Component (at **)\n' +
+        '    in Wrapper (at **)',
+    );
+
+    expect(renderer.toJSON()).toEqual({
+      type: 'div',
+      props: {},
+      children: ['Oh no!'],
+    });
+  });
 });

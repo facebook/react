@@ -1182,20 +1182,37 @@ function dispatchAction<S, A>(
   }
 }
 
-export const ContextOnlyDispatcher: Dispatcher = {
-  readContext,
+export const ContextOnlyDispatcher: Dispatcher = __DEV__
+  ? {
+      readContext,
 
-  useCallback: throwInvalidHookError,
-  useContext: throwInvalidHookError,
-  useEffect: throwInvalidHookError,
-  useImperativeHandle: throwInvalidHookError,
-  useLayoutEffect: throwInvalidHookError,
-  useMemo: throwInvalidHookError,
-  useReducer: throwInvalidHookError,
-  useRef: throwInvalidHookError,
-  useState: throwInvalidHookError,
-  useDebugValue: throwInvalidHookError,
-};
+      useCallback: throwInvalidHookError,
+      useContext: throwInvalidHookError,
+      useEffect: throwInvalidHookError,
+      useImperativeHandle: throwInvalidHookError,
+      useLayoutEffect: throwInvalidHookError,
+      useMemo: throwInvalidHookError,
+      useReducer: throwInvalidHookError,
+      useRef: throwInvalidHookError,
+      useState: throwInvalidHookError,
+      useDebugValue: throwInvalidHookError,
+
+      _isContextOnlyDispatcherDEV: true,
+    }
+  : {
+      readContext,
+
+      useCallback: throwInvalidHookError,
+      useContext: throwInvalidHookError,
+      useEffect: throwInvalidHookError,
+      useImperativeHandle: throwInvalidHookError,
+      useLayoutEffect: throwInvalidHookError,
+      useMemo: throwInvalidHookError,
+      useReducer: throwInvalidHookError,
+      useRef: throwInvalidHookError,
+      useState: throwInvalidHookError,
+      useDebugValue: throwInvalidHookError,
+    };
 
 const HooksDispatcherOnMount: Dispatcher = {
   readContext,
