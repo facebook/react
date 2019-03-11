@@ -17,7 +17,7 @@ let React;
 let ReactDOM;
 let ReactDOMServer;
 
-function runTests(itRenders, itRejects, expectToReject) {
+function runTests(itRenders, itRejectsRendering, expectToReject) {
   itRenders('a http link with the word javascript in it', async render => {
     const e = await render(
       <a href="http://javascript:0/thisisfine">Click me</a>,
@@ -26,22 +26,25 @@ function runTests(itRenders, itRejects, expectToReject) {
     expect(e.href).toBe('http://javascript:0/thisisfine');
   });
 
-  itRejects('a javascript protocol href', async render => {
+  itRejectsRendering('a javascript protocol href', async render => {
     const e = await render(<a href="javascript:notfine">p0wned</a>, 1);
     expect(e.href).toBe('javascript:notfine');
   });
 
-  itRejects('a javascript protocol with leading spaces', async render => {
-    const e = await render(
-      <a href={'  \t \u0000\u001F\u0003javascript\n: notfine'}>p0wned</a>,
-      1,
-    );
-    // We use an approximate comparison here because JSDOM might not parse
-    // \u0000 in HTML properly.
-    expect(e.href).toContain('notfine');
-  });
+  itRejectsRendering(
+    'a javascript protocol with leading spaces',
+    async render => {
+      const e = await render(
+        <a href={'  \t \u0000\u001F\u0003javascript\n: notfine'}>p0wned</a>,
+        1,
+      );
+      // We use an approximate comparison here because JSDOM might not parse
+      // \u0000 in HTML properly.
+      expect(e.href).toContain('notfine');
+    },
+  );
 
-  itRejects(
+  itRejectsRendering(
     'a javascript protocol with intermediate new lines and mixed casing',
     async render => {
       const e = await render(
@@ -52,7 +55,7 @@ function runTests(itRenders, itRejects, expectToReject) {
     },
   );
 
-  itRejects('a javascript protocol area href', async render => {
+  itRejectsRendering('a javascript protocol area href', async render => {
     const e = await render(
       <map>
         <area href="javascript:notfine" />
@@ -62,17 +65,20 @@ function runTests(itRenders, itRejects, expectToReject) {
     expect(e.firstChild.href).toBe('javascript:notfine');
   });
 
-  itRejects('a javascript protocol form action', async render => {
+  itRejectsRendering('a javascript protocol form action', async render => {
     const e = await render(<form action="javascript:notfine">p0wned</form>, 1);
     expect(e.action).toBe('javascript:notfine');
   });
 
-  itRejects('a javascript protocol button formAction', async render => {
-    const e = await render(<input formAction="javascript:notfine" />, 1);
-    expect(e.getAttribute('formAction')).toBe('javascript:notfine');
-  });
+  itRejectsRendering(
+    'a javascript protocol button formAction',
+    async render => {
+      const e = await render(<input formAction="javascript:notfine" />, 1);
+      expect(e.getAttribute('formAction')).toBe('javascript:notfine');
+    },
+  );
 
-  itRejects('a javascript protocol input formAction', async render => {
+  itRejectsRendering('a javascript protocol input formAction', async render => {
     const e = await render(
       <button formAction="javascript:notfine">p0wned</button>,
       1,
@@ -80,12 +86,12 @@ function runTests(itRenders, itRejects, expectToReject) {
     expect(e.getAttribute('formAction')).toBe('javascript:notfine');
   });
 
-  itRejects('a javascript protocol iframe src', async render => {
+  itRejectsRendering('a javascript protocol iframe src', async render => {
     const e = await render(<iframe src="javascript:notfine" />, 1);
     expect(e.src).toBe('javascript:notfine');
   });
 
-  itRejects('a javascript protocol frame src', async render => {
+  itRejectsRendering('a javascript protocol frame src', async render => {
     const e = await render(
       <html>
         <head />
@@ -98,7 +104,7 @@ function runTests(itRenders, itRejects, expectToReject) {
     expect(e.lastChild.firstChild.src).toBe('javascript:notfine');
   });
 
-  itRejects('a javascript protocol in an SVG link', async render => {
+  itRejectsRendering('a javascript protocol in an SVG link', async render => {
     const e = await render(
       <svg>
         <a href="javascript:notfine" />
@@ -108,7 +114,7 @@ function runTests(itRenders, itRejects, expectToReject) {
     expect(e.firstChild.getAttribute('href')).toBe('javascript:notfine');
   });
 
-  itRejects(
+  itRejectsRendering(
     'a javascript protocol in an SVG link with a namespace',
     async render => {
       const e = await render(
