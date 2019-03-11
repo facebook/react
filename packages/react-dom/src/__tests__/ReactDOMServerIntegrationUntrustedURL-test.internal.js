@@ -201,6 +201,18 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
     clientRenderOnServerString,
   } = ReactDOMServerIntegrationUtils(initModules);
 
+  const expectToReject = fn => {
+    let msg;
+    try {
+      fn();
+    } catch (x) {
+      msg = x.message;
+    }
+    expect(msg).toContain(
+      'React has blocked a javascript: URL as a security precaution.',
+    );
+  };
+
   beforeEach(() => {
     resetModules();
   });
@@ -209,17 +221,7 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
     itRenders,
     (message, test) =>
       itThrowsWhenRendering(message, test, 'blocked a javascript: URL'),
-    fn => {
-      let msg;
-      try {
-        fn();
-      } catch (x) {
-        msg = x.message;
-      }
-      expect(msg).toContain(
-        'React has blocked a javascript: URL as a security precaution.',
-      );
-    },
+    expectToReject,
   );
 
   itRenders('only the first invocation of toString', async render => {
@@ -247,5 +249,18 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
     const e = await render(<a href={firstIsSafe} />);
     expect(toStringCalls).toBe(expectedToStringCalls);
     expect(e.href).toBe('https://fb.me/');
+  });
+
+  it('rejects a javascript protocol href if it is added during an update twice', () => {
+    let container = document.createElement('div');
+    ReactDOM.render(<a href="thisisfine">click me</a>, container);
+    expectToReject(() => {
+      ReactDOM.render(<a href="javascript:notfine">click me</a>, container);
+    });
+    // The second update ensures that a global flag hasn't been added to the regex
+    // which would fail to match the second time it is called.
+    expectToReject(() => {
+      ReactDOM.render(<a href="javascript:notfine">click me</a>, container);
+    });
   });
 });
