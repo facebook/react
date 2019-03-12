@@ -15,9 +15,7 @@ import type {
   ReactNativeBaseComponentViewConfig,
 } from './ReactNativeTypes';
 
-import {
-  mountSafeCallback_NOT_REALLY_SAFE,
-} from './NativeMethodsMixinUtils';
+import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';
 import {create, diff} from './ReactNativeAttributePayload';
 import {get as getViewConfigForType} from 'ReactNativeViewConfigRegistry';
 
@@ -133,12 +131,10 @@ class ReactFabricHostComponent {
   }
 
   setNativeProps(nativeProps: Object) {
-    if (__DEV__) {
-      warningWithoutStack(
-        false,
-        'Warning: setNativeProps is not currently supported in Fabric',
-      );
-    }
+    warningWithoutStack(
+      false,
+      'Warning: setNativeProps is not currently supported in Fabric',
+    );
 
     return;
   }

@@ -105,12 +105,10 @@ const ReactFabric: ReactFabricType = {
   findNodeHandle,
 
   setNativeProps(handle: any, nativeProps: Object) {
-    if (__DEV__) {
-      warningWithoutStack(
-        false,
-        'Warning: setNativeProps is not currently supported in Fabric',
-      );
-    }
+    warningWithoutStack(
+      false,
+      'Warning: setNativeProps is not currently supported in Fabric',
+    );
 
     return;
   },
