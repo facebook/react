@@ -972,6 +972,16 @@ const tests = {
         }
       `,
     },
+    {
+      code: `
+        const ref = React.createRef();
+        function Thing() {
+          useEffect(() => {
+            console.log(ref.current);
+          }, []);
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -4429,6 +4439,72 @@ const tests = {
           `}, []);\n` +
           `\n` +
           `This lets you handle multiple requests without bugs.`,
+      ],
+    },
+    {
+      code: `
+        function Thing() {
+          const ref = React.createRef();
+          useEffect(() => {
+            console.log(ref.current);
+          }, [ref]);
+        }
+      `,
+      errors: [
+        `React Hook useEffect has a dependency that was created by ` +
+          `creatRef(). This will create a new ref object on every re-render ` +
+          `so that the hook will always need to re-run. Did you mean to use ` +
+          `useRef() instead?`,
+      ],
+    },
+    {
+      code: `
+        function Thing() {
+          const ref = React.createRef();
+          useEffect(() => {
+            console.log(ref.current);
+          }, []);
+        }
+      `,
+      errors: [
+        `React Hook useEffect has a dependency that was created by ` +
+          `creatRef(). This will create a new ref object on every re-render ` +
+          `so that the hook will always need to re-run. Did you mean to use ` +
+          `useRef() instead?`,
+      ],
+    },
+    {
+      code: `
+        function Thing() {
+          const ref1 = React.createRef();
+          const ref2 = React.createRef();
+          useEffect(() => {
+            console.log(ref1.current);
+            console.log(ref2.current);
+          }, []);
+        }
+      `,
+      errors: [
+        `React Hook useEffect has dependencies that were created by ` +
+          `creatRef(). This will create a new ref object on every re-render ` +
+          `so that the hook will always need to re-run. Did you mean to use ` +
+          `useRef() instead?`,
+      ],
+    },
+    {
+      code: `
+        const ref = React.createRef();
+        function Thing() {
+          useEffect(() => {
+            console.log(ref.current);
+          }, [ref]);
+        }
+      `,
+      errors: [
+        "React Hook useEffect has an unnecessary dependency: 'ref'. " +
+          'Either exclude it or remove the dependency array. ' +
+          "Outer scope values like 'ref' aren't valid dependencies " +
+          "because their mutation doesn't re-render the component.",
       ],
     },
   ],

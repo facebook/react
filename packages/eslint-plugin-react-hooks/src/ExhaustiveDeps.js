@@ -39,6 +39,7 @@ export default {
     let stateVariables = new WeakSet();
     let staticKnownValueCache = new WeakMap();
     let functionWithoutCapturedValueCache = new WeakMap();
+    let createRefValueCache = new WeakMap();
     function memoizeWithWeakMap(fn, map) {
       return function(arg) {
         if (map.has(arg)) {
@@ -327,6 +328,52 @@ export default {
         return true;
       }
 
+      // Or perhaps createRef was used instead of useRef
+      function isCreateRefValue(resolved) {
+        if (!Array.isArray(resolved.defs)) {
+          return false;
+        }
+        const def = resolved.defs[0];
+        if (def == null) {
+          return false;
+        }
+        // Look for `let stuff = ...`
+        if (def.node.type !== 'VariableDeclarator') {
+          return false;
+        }
+        const init = def.node.init;
+        if (init == null) {
+          return false;
+        }
+
+        // Detect function calls
+        if (init.type !== 'CallExpression') {
+          return false;
+        }
+
+        let callee = init.callee;
+        // Step into `= React.something` initializer.
+        if (
+          callee.type === 'MemberExpression' &&
+          callee.object.name === 'React' &&
+          callee.property != null &&
+          !callee.computed
+        ) {
+          callee = callee.property;
+        }
+        if (callee.type !== 'Identifier') {
+          return false;
+        }
+        const id = def.node.id;
+        const {name} = callee;
+        // Return true when createRef is used
+        if (name === 'createRef' && id.type === 'Identifier') {
+          return true;
+        }
+
+        return false;
+      }
+
       // Remember such values. Avoid re-running extra checks on them.
       const memoizedIsStaticKnownHookValue = memoizeWithWeakMap(
         isStaticKnownHookValue,
@@ -335,6 +382,10 @@ export default {
       const memoizedIsFunctionWithoutCapturedValues = memoizeWithWeakMap(
         isFunctionWithoutCapturedValues,
         functionWithoutCapturedValueCache,
+      );
+      const memoizedIsCreateRefValue = memoizeWithWeakMap(
+        isCreateRefValue,
+        createRefValueCache,
       );
 
       // These are usually mistaken. Collect them.
@@ -408,8 +459,11 @@ export default {
             const isStatic =
               memoizedIsStaticKnownHookValue(resolved) ||
               memoizedIsFunctionWithoutCapturedValues(resolved);
+            const isCreateRef = memoizedIsCreateRefValue(resolved);
+
             dependencies.set(dependency, {
               isStatic,
+              isCreateRef,
               references: [reference],
             });
           } else {
@@ -582,9 +636,14 @@ export default {
 
       // Remember which deps are optional and report bad usage first.
       const optionalDependencies = new Set();
-      dependencies.forEach(({isStatic, references}, key) => {
+      // Remember which deps come from createRef()
+      const createRefDependencies = new Set();
+      dependencies.forEach(({isStatic, references, isCreateRef}, key) => {
         if (isStatic) {
           optionalDependencies.add(key);
+        }
+        if (isCreateRef) {
+          createRefDependencies.add(key);
         }
         references.forEach(reference => {
           if (reference.writeExpr) {
@@ -602,10 +661,12 @@ export default {
         unnecessaryDependencies,
         missingDependencies,
         duplicateDependencies,
+        createRefWarningDependencies,
       } = collectRecommendations({
         dependencies,
         declaredDependencies,
         optionalDependencies,
+        createRefDependencies,
         externalDependencies,
         isEffect,
       });
@@ -613,7 +674,8 @@ export default {
       const problemCount =
         duplicateDependencies.size +
         missingDependencies.size +
-        unnecessaryDependencies.size;
+        unnecessaryDependencies.size +
+        createRefWarningDependencies.size;
 
       if (problemCount === 0) {
         // If nothing else to report, check if some callbacks
@@ -678,6 +740,7 @@ export default {
           dependencies,
           declaredDependencies: [], // Pretend we don't know
           optionalDependencies,
+          createRefDependencies,
           externalDependencies,
           isEffect,
         }).suggestedDependencies;
@@ -714,6 +777,20 @@ export default {
           `. Either ${fixVerb} ${
             deps.size > 1 ? 'them' : 'it'
           } or remove the dependency array.`
+        );
+      }
+
+      function getWarningMessageForCreateRef(deps) {
+        if (deps.size === 0) {
+          return null;
+        }
+
+        return (
+          `${deps.size > 1 ? 'dependencies' : 'a dependency'} that ` +
+          `${deps.size > 1 ? 'were' : 'was'} ` +
+          'created by creatRef(). This will create a new ref object on ' +
+          'every re-render so that the hook will always need to re-run. Did ' +
+          'you mean to use useRef() instead?'
         );
       }
 
@@ -944,7 +1021,8 @@ export default {
               'a',
               'duplicate',
               'omit',
-            )) +
+            ) ||
+            getWarningMessageForCreateRef(createRefWarningDependencies)) +
           extraWarning,
         fix(fixer) {
           // TODO: consider preserving the comments or formatting?
@@ -963,6 +1041,7 @@ function collectRecommendations({
   dependencies,
   declaredDependencies,
   optionalDependencies,
+  createRefDependencies,
   externalDependencies,
   isEffect,
 }) {
@@ -1005,6 +1084,13 @@ function collectRecommendations({
     const node = getOrCreateNodeByPath(depTree, key);
     node.isSatisfiedRecursively = true;
   });
+  // We treat createRef refs the same as useRef refs since they might mutate
+  // outside of render scope and we show a different warning anyway.
+  createRefDependencies.forEach(key => {
+    const node = getOrCreateNodeByPath(depTree, key);
+    node.isSatisfiedRecursively = true;
+    node.isCreatedByCreateRef = true;
+  });
 
   // Tree manipulation helpers.
   function getOrCreateNodeByPath(rootNode, path) {
@@ -1036,6 +1122,7 @@ function collectRecommendations({
   // Now we can learn which dependencies are missing or necessary.
   let missingDependencies = new Set();
   let satisfyingDependencies = new Set();
+  let createRefWarningDependencies = new Set();
   scanTreeRecursively(
     depTree,
     missingDependencies,
@@ -1049,6 +1136,10 @@ function collectRecommendations({
         if (child.hasRequiredNodesBelow) {
           // Remember this dep actually satisfied something.
           satisfyingPaths.add(path);
+
+          if (child.isCreatedByCreateRef) {
+            createRefWarningDependencies.add(path);
+          }
         }
         // It doesn't matter if there's something deeper.
         // It would be transitively satisfied since we assume immutability.
@@ -1115,6 +1206,7 @@ function collectRecommendations({
     unnecessaryDependencies,
     duplicateDependencies,
     missingDependencies,
+    createRefWarningDependencies,
   };
 }
 
