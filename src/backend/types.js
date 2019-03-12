@@ -54,6 +54,13 @@ export type ReactRenderer = {
   currentDispatcherRef?: {| current: null | Dispatcher |},
 };
 
+export type ProfilingSummary = {|
+  commits: Array<number>,
+  initialTreeBaseDurations: Array<number>,
+  interactionCount: number,
+  rootID: number,
+|};
+
 export type RendererInterface = {
   cleanup: () => void,
   getNativeFromReactElement?: ?(component: Fiber) => ?NativeType,
@@ -61,6 +68,7 @@ export type RendererInterface = {
     component: NativeType,
     findNearestUnfilteredAncestor?: boolean
   ) => number | null,
+  getProfilingSummary: (rootID: number) => ProfilingSummary,
   handleCommitFiberRoot: (fiber: Object) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,
   inspectElement: (id: number) => InspectedElement | null,

@@ -83,3 +83,59 @@ export function useModalDismissSignal(
     };
   }, [modalRef, dismissCallback]);
 }
+
+// Copied from https://github.com/facebook/react/pull/15022
+export function useSubscription<Value, Source>({
+  source,
+  getCurrentValue,
+  subscribe,
+}: {|
+  source: Source,
+  getCurrentValue: (source: Source) => Value,
+  subscribe: (source: Source, callback: Function) => () => void,
+|}): Value {
+  const [state, setState] = useState({
+    source,
+    value: getCurrentValue(source),
+  });
+
+  if (state.source !== source) {
+    setState({
+      source,
+      value: getCurrentValue(source),
+    });
+  }
+
+  useEffect(() => {
+    let didUnsubscribe = false;
+
+    const checkForUpdates = () => {
+      if (didUnsubscribe) {
+        return;
+      }
+
+      setState(prevState => {
+        if (prevState.source !== source) {
+          return prevState;
+        }
+
+        const value = getCurrentValue(source);
+        if (prevState.value === value) {
+          return prevState;
+        }
+
+        return { ...prevState, value };
+      });
+    };
+    const unsubscribe = subscribe(source, checkForUpdates);
+
+    checkForUpdates();
+
+    return () => {
+      didUnsubscribe = true;
+      unsubscribe();
+    };
+  }, [getCurrentValue, source, subscribe]);
+
+  return state.value;
+}

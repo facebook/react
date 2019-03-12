@@ -9,6 +9,7 @@ import {
 import { ElementTypeRoot } from './types';
 import { utfDecodeString } from '../utils';
 import { __DEBUG__ } from '../constants';
+import ProfilingCache from './ProfilingCache';
 
 import type { ElementType } from './types';
 import type { Element } from './views/elements/types';
@@ -47,6 +48,7 @@ export default class Store extends EventEmitter {
   // Elements are mutable (for now) to avoid excessive cloning during tree updates.
   _idToElement: Map<number, Element> = new Map();
 
+  // The backend is currently profiling.
   // When profiling is in progress, operations are stored so that we can later reconstruct past commit trees.
   _isProfiling: boolean = false;
 
@@ -54,7 +56,10 @@ export default class Store extends EventEmitter {
   // Used for windowing purposes.
   _numElements: number = 0;
 
-  // List of tree mutation that occur during profiling.
+  // Suspense cache for reading profilign data.
+  _profilingCache: ProfilingCache;
+
+  // Map of root (id) to a list of tree mutation that occur during profiling.
   // Once profiling is finished, these mutations can be used, along with the initial tree snapshots,
   // to reconstruct the state of each root for each commit.
   _profilingOperations: Map<number, Array<Uint32Array>> = new Map();
@@ -93,10 +98,25 @@ export default class Store extends EventEmitter {
     // It's possible that profiling has already started (e.g. "reload and start profiling")
     // so the frontend needs to ask the backend for its status after mounting.
     bridge.send('getProfilingStatus');
+
+    this._profilingCache = new ProfilingCache(bridge, this);
+  }
+
+  // Profiling data has been recorded for at least one root.
+  get hasProfilingData(): boolean {
+    return this._profilingOperations.size > 0;
+  }
+
+  get isProfiling(): boolean {
+    return this._isProfiling;
   }
 
   get numElements(): number {
     return this._numElements;
+  }
+
+  get profilingCache(): ProfilingCache {
+    return this._profilingCache;
   }
 
   get revision(): number {
@@ -242,6 +262,30 @@ export default class Store extends EventEmitter {
     return null;
   }
 
+  getRootIDForElement(id: number): number | null {
+    let current = this._idToElement.get(id);
+    while (current != null) {
+      if (current.parentID === 0) {
+        return current.id;
+      } else {
+        current = this._idToElement.get(current.parentID);
+      }
+    }
+    return null;
+  }
+
+  startProfiling(): void {
+    this._bridge.send('startProfiling');
+    this._isProfiling = false;
+    this.emit('isProfiling');
+  }
+
+  stopProfiling(): void {
+    this._bridge.send('stopProfiling');
+    this._isProfiling = false;
+    this.emit('isProfiling');
+  }
+
   _takeProfilingSnapshotRecursive = (id: number) => {
     const element = this.getElementByID(id);
     if (element !== null) {
@@ -267,11 +311,12 @@ export default class Store extends EventEmitter {
     let haveRootsChanged = false;
 
     const rendererID = operations[0];
+    const rootID = operations[1];
 
     if (this._isProfiling) {
-      const profilingOperations = this._profilingOperations.get(rendererID);
+      const profilingOperations = this._profilingOperations.get(rootID);
       if (profilingOperations == null) {
-        this._profilingOperations.set(rendererID, [operations]);
+        this._profilingOperations.set(rootID, [operations]);
       } else {
         profilingOperations.push(operations);
       }
@@ -280,7 +325,7 @@ export default class Store extends EventEmitter {
     let addedElementIDs: Uint32Array = new Uint32Array(0);
     let removedElementIDs: Uint32Array = new Uint32Array(0);
 
-    let i = 1;
+    let i = 2;
     while (i < operations.length) {
       let id: number = ((null: any): number);
       let element: Element = ((null: any): Element);
@@ -482,12 +527,15 @@ export default class Store extends EventEmitter {
   };
 
   onProfilingStatus = (isProfiling: boolean) => {
-    this._isProfiling = isProfiling;
-
     if (isProfiling) {
+      this._profilingOperations = new Map();
       this._profilingSnapshot = new Map();
-
       this.roots.forEach(this._takeProfilingSnapshotRecursive);
+    }
+
+    if (this._isProfiling !== isProfiling) {
+      this._isProfiling = isProfiling;
+      this.emit('isProfiling');
     }
   };
 

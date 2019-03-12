@@ -47,6 +47,7 @@ export default class Agent extends EventEmitter {
     this._bridge = bridge;
 
     bridge.addListener('getProfilingStatus', this.getProfilingStatus);
+    bridge.addListener('getProfilingSummary', this.getProfilingSummary);
     bridge.addListener('highlightElementInDOM', this.highlightElementInDOM);
     bridge.addListener('inspectElement', this.inspectElement);
     bridge.addListener('overrideContext', this.overrideContext);
@@ -77,6 +78,24 @@ export default class Agent extends EventEmitter {
 
   getProfilingStatus = () => {
     this._bridge.send('profilingStatus', this._isProfiling);
+  };
+
+  getProfilingSummary = ({
+    rendererID,
+    rootID,
+  }: {
+    rendererID: number,
+    rootID: number,
+  }) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}"`);
+    } else {
+      this._bridge.send(
+        'profilingSummary',
+        renderer.getProfilingSummary(rootID)
+      );
+    }
   };
 
   highlightElementInDOM = ({
@@ -216,7 +235,7 @@ export default class Agent extends EventEmitter {
       const renderer = ((this._rendererInterfaces[
         (rendererID: any)
       ]: any): RendererInterface);
-      renderer.startProfiling();
+      renderer.stopProfiling();
     }
     this._bridge.send('profilingStatus', this._isProfiling);
   };

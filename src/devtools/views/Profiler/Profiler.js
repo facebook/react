@@ -1,6 +1,6 @@
 // @flow
 
-import React, { Fragment, useCallback, useContext, useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 import { ProfilerContext, ProfilerContextController } from './ProfilerContext';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
@@ -23,14 +23,14 @@ export default function ProfilerOuter(_: Props) {
 
 function ProfilerInner(_: Props) {
   const { hasProfilingData, isProfiling } = useContext(ProfilerContext);
+
+  const showProfilingControls = !isProfiling && hasProfilingData;
+
   const [tab, setTab] = useState('flame-chart');
   const [isFilterModalShowing, setIsFilterModalShowing] = useState(false);
 
   const showFilterModal = useCallback(() => setIsFilterModalShowing(true));
   const dismissFilterModal = useCallback(() => setIsFilterModalShowing(false));
-
-  // TODO (profiling) Maybe a smarter check here
-  const showProfilingData = !isProfiling && hasProfilingData;
 
   let view = null;
   if (isProfiling) {
@@ -55,7 +55,7 @@ function ProfilerInner(_: Props) {
           <div className={styles.VRule} />
           <TabBar
             currentTab={tab}
-            disabled={!showProfilingData}
+            disabled={!showProfilingControls}
             id="Profiler"
             selectTab={setTab}
             size="small"
@@ -65,12 +65,7 @@ function ProfilerInner(_: Props) {
           <Button onClick={showFilterModal} title="Filter commits by duration">
             <ButtonIcon type="filter" />
           </Button>
-          {showProfilingData && (
-            <Fragment>
-              <div className={styles.VRule} />
-              <SnapshotSelector />
-            </Fragment>
-          )}
+          {showProfilingControls && <SnapshotSelector />}
         </div>
         <div className={styles.Content}>
           {view}
@@ -79,15 +74,11 @@ function ProfilerInner(_: Props) {
           )}
         </div>
       </div>
-      {showProfilingData && (
+      {showProfilingControls && (
         <div className={styles.RightColumn}>
           {/* TODO (profiler) Dynamic information */}
           <div className={styles.Toolbar}>Commit information</div>
-          <div className={styles.InspectedProperties}>
-            Committed at: 0.8s <br />
-            <br />
-            Render duration: 2.1ms
-          </div>
+          <div className={styles.InspectedProperties} />
         </div>
       )}
     </div>

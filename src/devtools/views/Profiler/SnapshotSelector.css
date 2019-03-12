@@ -12,3 +12,10 @@
 .Commits {
   margin-left: 0.25rem;
 }
+
+.VRule {
+  height: 20px;
+  width: 1px;
+  background-color: var(--color-border);
+  margin: 0 0.25rem;
+}

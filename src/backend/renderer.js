@@ -26,9 +26,10 @@ import { inspectHooksOfFiber } from './ReactDebugHooks';
 import type {
   DevToolsHook,
   Fiber,
-  Interaction,
-  ReactRenderer,
   FiberData,
+  Interaction,
+  ProfilingSummary,
+  ReactRenderer,
   RendererInterface,
 } from './types';
 import type { InspectedElement } from 'src/devtools/views/elements/types';
@@ -466,6 +467,13 @@ export function attach(
   // and use a slow path to find each of the current Fibers.
   const idToTreeBaseDurationMap: Map<number, number> = new Map();
 
+  // When profiling is supported, we store the latest tree base durations for each Fiber.
+  // This map enables us to filter these times by root when sending them to the frontend.
+  const idToRootMap: Map<number, number> = new Map();
+
+  // When a mount or update is in progress, this value tracks the root that is being operated on.
+  let currentRootID: number = -1;
+
   function getFiberID(primaryFiber: Fiber): number {
     if (!fiberToIDMap.has(primaryFiber)) {
       const id = getUID();
@@ -543,8 +551,9 @@ export function attach(
     // Identify which renderer this update is coming from.
     // This enables roots to be mapped to renderers,
     // Which in turn enables fiber props, states, and hooks to be inspected.
-    const idArray = new Uint32Array(1);
+    const idArray = new Uint32Array(2);
     idArray[0] = rendererID;
+    idArray[1] = getFiberID(getPrimaryFiber(root.current));
     addOperation(idArray, true);
 
     // Let the frontend know about tree operations.
@@ -560,6 +569,7 @@ export function attach(
 
     const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
     if (isProfilingSupported) {
+      idToRootMap.set(id, currentRootID);
       idToTreeBaseDurationMap.set(id, fiber.treeBaseDuration);
     }
 
@@ -636,8 +646,13 @@ export function attach(
     }
     fiberToIDMap.delete(primaryFiber);
     idToFiberMap.delete(id);
-    idToTreeBaseDurationMap.delete(primaryFiber);
     primaryFibers.delete(primaryFiber);
+
+    const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
+    if (isProfilingSupported) {
+      idToRootMap.delete(id);
+      idToTreeBaseDurationMap.delete(id);
+    }
   }
 
   function mountFiber(fiber: Fiber, parentFiber: Fiber | null) {
@@ -672,13 +687,16 @@ export function attach(
 
         if (fiber.actualDuration > 0) {
           // If profiling is active, store durations for elements that were rendered during the commit.
-          ((currentCommitProfilingMetadata: any): CommitProfilingData).committedFibers.push(
-            {
-              id,
-              actualDuration: fiber.actualDuration,
-              selfDuration: fiber.selfDuration,
-              treeBaseDuration: fiber.treeBaseDuration,
-            }
+          const metadata = ((currentCommitProfilingMetadata: any): CommitProfilingData);
+          metadata.committedFibers.push({
+            id,
+            actualDuration: fiber.actualDuration,
+            selfDuration: fiber.selfDuration,
+            treeBaseDuration: fiber.treeBaseDuration,
+          });
+          metadata.maxActualDuration = Math.max(
+            metadata.maxActualDuration,
+            fiber.actualDuration
           );
         }
       }
@@ -819,8 +837,10 @@ export function attach(
   function walkTree() {
     // Hydrate all the roots for the first time.
     hook.getFiberRoots(rendererID).forEach(root => {
+      currentRootID = getFiberID(getPrimaryFiber(root.current));
       mountFiber(root.current, null);
       flushPendingEvents(root);
+      currentRootID = -1;
     });
   }
 
@@ -835,6 +855,8 @@ export function attach(
     const current = root.current;
     const alternate = current.alternate;
 
+    currentRootID = getFiberID(getPrimaryFiber(current));
+
     if (isProfiling) {
       // If profiling is active, store commit time and duration, and the current interactions.
       // The frontend may request this information after profiling has stopped.
@@ -847,6 +869,7 @@ export function attach(
             timestamp: timestamp - profilingStartTime,
           })
         ),
+        maxActualDuration: 0,
       };
     }
 
@@ -873,13 +896,25 @@ export function attach(
     }
 
     if (isProfiling) {
-      ((commitProfilingMetadata: any): Array<CommitProfilingData>).push(
-        ((currentCommitProfilingMetadata: any): CommitProfilingData)
+      const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
+        currentRootID
       );
+      if (commitProfilingMetadata != null) {
+        commitProfilingMetadata.push(
+          ((currentCommitProfilingMetadata: any): CommitProfilingData)
+        );
+      } else {
+        ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).set(
+          currentRootID,
+          [((currentCommitProfilingMetadata: any): CommitProfilingData)]
+        );
+      }
     }
 
     // We're done here.
     flushPendingEvents(root);
+
+    currentRootID = -1;
   }
 
   // The naming is confusing.
@@ -1333,24 +1368,55 @@ export function attach(
     committedFibers: Array<CommittedFiber>,
     commitTime: number,
     interactions: Array<Interaction>,
+    maxActualDuration: number,
   |};
 
-  let commitProfilingMetadata: Array<CommitProfilingData> | null = null;
+  type CommitProfilingMetadataMap = Map<number, Array<CommitProfilingData>>;
+
   let currentCommitProfilingMetadata: CommitProfilingData | null = null;
-  let initialTreeBaseDurations: Array<number> | null = null;
+  let initialTreeBaseDurationsMap: Map<number, number> | null = null;
   let isProfiling: boolean = false;
   let profilingStartTime: number = 0;
+  let rootToCommitProfilingMetadataMap: CommitProfilingMetadataMap | null = null;
+
+  function getProfilingSummary(rootID: number): ProfilingSummary {
+    const interactions = new Set();
+    const commits = [];
+
+    const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
+      rootID
+    );
+    if (commitProfilingMetadata != null) {
+      commitProfilingMetadata.forEach(metadata => {
+        commits.push(metadata.commitTime, metadata.maxActualDuration);
+        metadata.interactions.forEach(({ name, timestamp }) => {
+          interactions.add(`${timestamp}:${name}`);
+        });
+      });
+    }
+
+    const initialTreeBaseDurations = [];
+    ((initialTreeBaseDurationsMap: any): Map<number, number>).forEach(
+      (treeBaseDuration, id) => {
+        if (idToRootMap.get(id) === rootID) {
+          initialTreeBaseDurations.push(id, treeBaseDuration);
+        }
+      }
+    );
+
+    return {
+      commits,
+      initialTreeBaseDurations,
+      interactionCount: interactions.size,
+      rootID,
+    };
+  }
 
   function startProfiling() {
-    commitProfilingMetadata = [];
-    initialTreeBaseDurations = [];
+    initialTreeBaseDurationsMap = new Map(idToTreeBaseDurationMap);
     isProfiling = true;
     profilingStartTime = performance.now();
-
-    // Save initial treeBaseDurations; we'll need to send them later.
-    idToTreeBaseDurationMap.forEach((treeBaseDuration: number, id: number) => {
-      initialTreeBaseDurations = [id, treeBaseDuration];
-    });
+    rootToCommitProfilingMetadataMap = new Map();
   }
 
   function stopProfiling() {
@@ -1361,6 +1427,7 @@ export function attach(
     cleanup,
     getFiberIDFromNative,
     getNativeFromReactElement,
+    getProfilingSummary,
     handleCommitFiberRoot,
     handleCommitFiberUnmount,
     inspectElement,

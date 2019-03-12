@@ -14,7 +14,7 @@ The old DevTools also rendered the entire application tree in the form of a larg
 
 Every React commit that changes the tree in a way DevTools cares about results in an "_operations_" message being sent across the bridge. These messages are lightweight patches that describe the changes that were made. (We don't resend the full tree structure like in legacy DevTools.)
 
-The payload for each message is a typed array. The first entry is a number identifying which renderer the update belongs to (for multi-root support). The rest of the array depends on the operations being made to the tree.
+The payload for each message is a typed array. The first two entries are numbers that identify which renderer and root the update belongs to (for multi-root support). The rest of the array depends on the operations being made to the tree.
 
 We only send the following bits of information: element type, id, parent id, owner id, name, and key. Additional information (e.g. props, state) requires a separate "_inspectElement_" message.
 
@@ -188,7 +188,7 @@ This information is kept on the backend until requested by the frontend (as desc
 
 The profiling tab shows information for the currently-selected React root. When profiling completes (or when a new root is selected) the frontend first checks to see if there is any profiling data for the selected root. (Has it cached any "_operations_"?)
 
-If so, then it sends a "_profileSummary_" message with an id that identifies the root. The backend then returns the following information:
+If so, then it sends a "_getProfilingSummary_" message with an id that identifies the root. The backend then returns a "_profilingSummary_" message with the following information:
 
 * root id (to match request and response)
 * number of interactions that were traced for this root
@@ -216,7 +216,7 @@ Here is an example profile summary:
   ],
 
   // Tuples of fiber id and initial tree base duration
-  treeBaseDuration: [
+  initialTreeBaseDurations: [
     1,  // fiber id
     11, // tree base duration when profiling started
 
@@ -335,4 +335,4 @@ Here is an example of a profiling session consisting of two interactions:
 }
 ```
 
-The backend does not need to resend the timestamp for each of the commits because that was already sent as part of the "_profileSummary_" message.
+The backend does not need to resend the timestamp for each of the commits because that was already sent as part of the "_profilingSummary_" message.
