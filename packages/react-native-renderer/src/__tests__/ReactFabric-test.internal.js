@@ -20,11 +20,8 @@ let FabricUIManager;
 let StrictMode;
 let NativeMethodsMixin;
 
-const SET_NATIVE_PROPS_DEPRECATION_MESSAGE =
-  'Warning: Calling ref.setNativeProps(nativeProps) ' +
-  'is deprecated and will be removed in a future release. ' +
-  'Use the setNativeProps export from the react-native package instead.' +
-  "\n\timport {setNativeProps} from 'react-native';\n\tsetNativeProps(ref, nativeProps);\n";
+const SET_NATIVE_PROPS_NOT_SUPPORTED_MESSAGE =
+  'Warning: setNativeProps is not currently supported in Fabric';
 
 jest.mock('shared/ReactFeatureFlags', () =>
   require('shared/forks/ReactFeatureFlags.native-oss'),
@@ -176,7 +173,7 @@ describe('ReactFabric', () => {
     expect(FabricUIManager.__dumpHierarchyForJestTestsOnly()).toMatchSnapshot();
   });
 
-  it('should not call UIManager.updateView from ref.setNativeProps for properties that have not changed', () => {
+  it('should not call UIManager.updateView from ref.setNativeProps', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
       uiViewClassName: 'RCTView',
@@ -212,7 +209,7 @@ describe('ReactFabric', () => {
 
       expect(() => {
         viewRef.setNativeProps({});
-      }).toWarnDev([SET_NATIVE_PROPS_DEPRECATION_MESSAGE], {
+      }).toWarnDev([SET_NATIVE_PROPS_NOT_SUPPORTED_MESSAGE], {
         withoutStack: true,
       });
 
@@ -220,19 +217,14 @@ describe('ReactFabric', () => {
 
       expect(() => {
         viewRef.setNativeProps({foo: 'baz'});
-      }).toWarnDev([SET_NATIVE_PROPS_DEPRECATION_MESSAGE], {
+      }).toWarnDev([SET_NATIVE_PROPS_NOT_SUPPORTED_MESSAGE], {
         withoutStack: true,
       });
-      expect(UIManager.updateView).toHaveBeenCalledTimes(1);
-      expect(UIManager.updateView).toHaveBeenCalledWith(
-        expect.any(Number),
-        'RCTView',
-        {foo: 'baz'},
-      );
+      expect(UIManager.updateView).not.toBeCalled();
     });
   });
 
-  it('should be able to setNativeProps on native refs', () => {
+  it('setNativeProps on native refs should no-op', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
       uiViewClassName: 'RCTView',
@@ -252,13 +244,12 @@ describe('ReactFabric', () => {
     );
 
     expect(UIManager.updateView).not.toBeCalled();
-    ReactFabric.setNativeProps(viewRef, {foo: 'baz'});
-    expect(UIManager.updateView).toHaveBeenCalledTimes(1);
-    expect(UIManager.updateView).toHaveBeenCalledWith(
-      expect.any(Number),
-      'RCTView',
-      {foo: 'baz'},
-    );
+    expect(() => {
+      ReactFabric.setNativeProps(viewRef, {foo: 'baz'});
+    }).toWarnDev([SET_NATIVE_PROPS_NOT_SUPPORTED_MESSAGE], {
+      withoutStack: true,
+    });
+    expect(UIManager.updateView).not.toBeCalled();
   });
 
   it('should warn and no-op if calling setNativeProps on non native refs', () => {
@@ -303,14 +294,9 @@ describe('ReactFabric', () => {
       expect(UIManager.updateView).not.toBeCalled();
       expect(() => {
         ReactFabric.setNativeProps(viewRef, {foo: 'baz'});
-      }).toWarnDev(
-        [
-          "Warning: setNativeProps was called with a ref that isn't a " +
-            'native component. Use React.forwardRef to get access ' +
-            'to the underlying native component',
-        ],
-        {withoutStack: true},
-      );
+      }).toWarnDev([SET_NATIVE_PROPS_NOT_SUPPORTED_MESSAGE], {
+        withoutStack: true,
+      });
 
       expect(UIManager.updateView).not.toBeCalled();
     });
