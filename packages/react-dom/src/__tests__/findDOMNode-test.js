@@ -157,4 +157,34 @@ describe('findDOMNode', () => {
     ]);
     expect(match).toBe(child);
   });
+
+  it('findDOMNode should not warn if passed a host component inside StrictMode', () => {
+    let child = undefined;
+
+    class IsInStrictMode extends React.Component {
+      render() {
+        const {as: Component} = this.props;
+        return <Component ref={n => (child = n)} />;
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(
+      <StrictMode>
+        <IsInStrictMode as="span" />
+      </StrictMode>,
+    );
+
+    expect(() => ReactDOM.findDOMNode(child)).not.toWarnDev([
+      'Warning: findDOMNode is deprecated in StrictMode. ' +
+        'findDOMNode was passed an instance of span which is inside StrictMode. ' +
+        'Instead, add a ref directly to the element you want to reference.' +
+        '\n' +
+        '\n    in span (at **)' +
+        '\n    in IsInStrictMode (at **)' +
+        '\n    in StrictMode (at **)' +
+        '\n' +
+        '\nLearn more about using refs safely here:' +
+        '\nhttps://fb.me/react-strict-mode-find-node',
+    ]);
+  });
 });
