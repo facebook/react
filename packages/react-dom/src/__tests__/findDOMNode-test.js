@@ -174,6 +174,9 @@ describe('findDOMNode', () => {
       </StrictMode>,
     );
 
-    expect(() => ReactDOM.findDOMNode(child)).not.toWarnDev(['**']);
+    // outside of dev toWarnDev would always pass which means negating it would always fail
+    if (__DEV__) {
+      expect(() => ReactDOM.findDOMNode(child)).not.toWarnDev(['**']);
+    }
   });
 });
