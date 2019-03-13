@@ -100,7 +100,7 @@ export default {
             message:
               `React Hook ${reactiveHookName} does nothing when called with ` +
               `only one argument. Did you forget to pass an array of ` +
-              `dependencies?.`,
+              `dependencies?`,
           });
         }
         return;
@@ -455,7 +455,7 @@ export default {
             message:
               `The ref value '${dependency}.current' will likely have ` +
               `changed by the time this effect cleanup function runs. If ` +
-              `this ref points to a component rendered by React, copy ` +
+              `this ref points to a node rendered by React, copy ` +
               `'${dependency}.current' to a variable inside the effect, and ` +
               `use that variable in the cleanup function.`,
           });
@@ -502,14 +502,28 @@ export default {
           } catch (error) {
             if (/Unsupported node type/.test(error.message)) {
               if (declaredDependencyNode.type === 'Literal') {
-                context.report({
-                  node: declaredDependencyNode,
-                  message:
-                    `The '${
-                      declaredDependencyNode.raw
-                    }' literal is not a valid dependency ` +
-                    'because it never changes. You can safely remove it.',
-                });
+                if (dependencies.has(declaredDependencyNode.value)) {
+                  context.report({
+                    node: declaredDependencyNode,
+                    message:
+                      `The ${
+                        declaredDependencyNode.raw
+                      } literal is not a valid dependency ` +
+                      `because it never changes. ` +
+                      `Did you mean to include ${
+                        declaredDependencyNode.value
+                      } in the array instead?`,
+                  });
+                } else {
+                  context.report({
+                    node: declaredDependencyNode,
+                    message:
+                      `The ${
+                        declaredDependencyNode.raw
+                      } literal is not a valid dependency ` +
+                      'because it never changes. You can safely remove it.',
+                  });
+                }
               } else {
                 context.report({
                   node: declaredDependencyNode,
