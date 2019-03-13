@@ -147,7 +147,14 @@ export function trapBubbledEvent(
     : dispatchEvent;
   const rawEventName = getRawEventName(topLevelType);
 
-  trapEvent(element, topLevelType, dispatch, rawEventName, isLegacy);
+  trapEvent(
+    addEventBubbleListener,
+    element,
+    topLevelType,
+    dispatch,
+    rawEventName,
+    isLegacy,
+  );
 }
 
 export function trapCapturedEvent(
@@ -160,40 +167,64 @@ export function trapCapturedEvent(
     : dispatchEvent;
   const rawEventName = getRawEventName(topLevelType);
 
-  trapEvent(element, topLevelType, dispatch, rawEventName, isLegacy);
+  trapEvent(
+    addEventCaptureListener,
+    element,
+    topLevelType,
+    dispatch,
+    rawEventName,
+    isLegacy,
+  );
+}
+
+type Dispatcher = (
+  topLevelType: DOMTopLevelEventType,
+  passive: null | boolean,
+  nativeEvent: AnyNativeEvent,
+) => void;
+
+// A helper function to remove bytes
+function bindDispatch(
+  dispatch: Dispatcher,
+  topLevelType: DOMTopLevelEventType,
+  passive: null | boolean,
+) {
+  return dispatch.bind(null, topLevelType, passive);
 }
 
 function trapEvent(
+  eventListener: (
+    element: Document | Element | Node,
+    eventName: string,
+    listener: (event: AnyNativeEvent) => void,
+    passive: boolean | null,
+  ) => void,
   element: Document | Element | Node,
   topLevelType: DOMTopLevelEventType,
-  dispatch: (
-    topLevelType: DOMTopLevelEventType,
-    passive: null | boolean,
-    nativeEvent: AnyNativeEvent,
-  ) => void,
+  dispatch: Dispatcher,
   rawEventName: string,
   isLegacy: boolean,
 ) {
   if (isLegacy) {
     // Check if interactive and wrap in interactiveUpdates
-    const listener = dispatch.bind(null, topLevelType, null);
+    const listener = bindDispatch(dispatch, topLevelType, null);
     // We don't listen for passive/non-passive
-    addEventCaptureListener(element, rawEventName, listener, null);
+    eventListener(element, rawEventName, listener, null);
   } else {
     if (passiveBrowserEventsSupported) {
       // Check if interactive and wrap in interactiveUpdates
-      const activeListener = dispatch.bind(null, topLevelType, false);
-      const passiveListener = dispatch.bind(null, topLevelType, true);
+      const activeListener = bindDispatch(dispatch, topLevelType, false);
+      const passiveListener = bindDispatch(dispatch, topLevelType, true);
       // We listen to the same event for both passive/non-passive
-      addEventCaptureListener(element, rawEventName, passiveListener, true);
-      addEventCaptureListener(element, rawEventName, activeListener, false);
+      eventListener(element, rawEventName, passiveListener, true);
+      eventListener(element, rawEventName, activeListener, false);
     } else {
-      const fallbackListener = dispatch.bind(null, topLevelType, null);
+      const fallbackListener = bindDispatch(dispatch, topLevelType, null);
       // We fallback if we can't use passive events to only using active behaviour,
       // except we pass through "false" as the passive flag to the dispatch function.
       // This ensures that legacy plugins do not incorrectly operate on the fired event
       // (they will only operate when "null" is on the passive flag).
-      addEventCaptureListener(element, rawEventName, fallbackListener, false);
+      eventListener(element, rawEventName, fallbackListener, false);
     }
   }
 }
