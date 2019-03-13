@@ -363,7 +363,7 @@ describe('ReactDOMSelect', () => {
   });
 
   it('does not select an item when size is initially set to greater than 1', () => {
-    let stub = (
+    const stub = (
       <select size="2">
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
