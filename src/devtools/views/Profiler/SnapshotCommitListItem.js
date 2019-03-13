@@ -4,6 +4,8 @@ import React, { memo, useCallback } from 'react';
 import { areEqual } from 'react-window';
 import { getGradientColor, formatDuration, formatTime } from './utils';
 
+import styles from './SnapshotCommitListItem.css';
+
 import type { ItemData } from './SnapshotCommitList';
 
 type Props = {
@@ -40,34 +42,26 @@ function SnapshotCommitListItem({ data: itemData, index, style }: Props) {
 
   return (
     <div
+      className={styles.Outer}
       onClick={handleClick}
       onMouseEnter={isMouseDown ? handleClick : null}
       style={{
         ...style,
         width,
-        userSelect: 'none',
-        cursor: 'pointer',
         borderBottom: isSelected
           ? '3px solid var(--color-tree-node-selected)'
-          : '3px solid transparent',
-        paddingTop: 4,
-        paddingBottom: 1,
-        display: 'flex',
-        alignItems: 'flex-end',
+          : undefined,
       }}
       title={`Duration ${formatDuration(commitDuration)}ms at ${formatTime(
         commitTime
       )}s`}
     >
       <div
+        className={styles.Inner}
         style={{
-          width,
           height: `${Math.round(percentage * 100)}%`,
-          minHeight: 5,
           backgroundColor:
-            percentage === 0
-              ? 'var(--color-commit-did-not-render)'
-              : getGradientColor(percentage),
+            percentage > 0 ? getGradientColor(percentage) : undefined,
         }}
       />
     </div>

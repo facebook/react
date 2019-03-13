@@ -82,7 +82,13 @@ export default function TabBar({
             }`}
             type={icon}
           />
-          <span className={styles.TabLabel}>{label}</span>
+          <span
+            className={
+              size === 'large' ? styles.TabLabelLarge : styles.TabLabelSmall
+            }
+          >
+            {label}
+          </span>
         </label>
       ))}
     </Fragment>

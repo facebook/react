@@ -58,7 +58,14 @@
   height: 1rem;
 }
 
-.TabLabel {
+.TabLabelLarge,
+.TabLabelSmall {
+}
+
+@media screen and (max-width: 900px) {
+  .TabLabelSmall {
+    display: none;
+  }
 }
 
 @media screen and (max-width: 600px) {
@@ -67,7 +74,7 @@
     margin-right: 0;
   }
 
-  .TabLabel {
+  .TabLabelLarge {
     display: none;
   }
 }

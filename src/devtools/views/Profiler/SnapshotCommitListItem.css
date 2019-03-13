@@ -1,0 +1,15 @@
+.Outer {
+  user-select: none;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  padding-top: 4px;
+  padding-bottom: 1px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.Inner {
+  width: 100%;
+  min-height: 5px;
+  background-color: var(--color-commit-did-not-render);
+}

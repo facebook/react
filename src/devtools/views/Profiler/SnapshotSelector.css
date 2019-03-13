@@ -12,8 +12,9 @@
 }
 
 .Commits {
-  flex: 1 1 150px;
+  flex: 1 1 auto;
   height: 2.25rem;
+  min-width: 50px;
   margin-left: 0.25rem;
 }
 
@@ -25,5 +26,6 @@
 }
 
 .Number {
+  white-space: nowrap;
   font-family: var(--font-family-monospace);
 }
