@@ -94,13 +94,13 @@ export default {
           reactiveHookName === 'useMemo' ||
           reactiveHookName === 'useCallback'
         ) {
+          // TODO: Can this have an autofix?
           context.report({
             node: node.parent.callee,
             message:
-              `React Hook ${reactiveHookName} doesn't serve any purpose ` +
-              `without a dependency array. To enable ` +
-              `this optimization, pass an array of values used by the ` +
-              `inner function as the second argument to ${reactiveHookName}.`,
+              `React Hook ${reactiveHookName} does nothing when called with ` +
+              `only one argument. Did you forget to pass an array of ` +
+              `dependencies?`,
           });
         }
         return;
@@ -122,7 +122,7 @@ export default {
             `  }\n` +
             `\n` +
             `  return () => { ignore = true; };\n` +
-            `}, []);\n` +
+            `}, ...);\n` +
             `\n` +
             `This lets you handle multiple requests without bugs.`,
         });
@@ -453,11 +453,11 @@ export default {
           context.report({
             node: dependencyNode.parent.property,
             message:
-              `Accessing '${dependency}.current' during the effect cleanup ` +
-              `will likely read a different ref value because by this time React ` +
-              `has already updated the ref. If this ref is managed by React, store ` +
-              `'${dependency}.current' in a variable inside ` +
-              `the effect itself and refer to that variable from the cleanup function.`,
+              `The ref value '${dependency}.current' will likely have ` +
+              `changed by the time this effect cleanup function runs. If ` +
+              `this ref points to a node rendered by React, copy ` +
+              `'${dependency}.current' to a variable inside the effect, and ` +
+              `use that variable in the cleanup function.`,
           });
         },
       );
@@ -471,9 +471,10 @@ export default {
         context.report({
           node: declaredDependenciesNode,
           message:
-            `React Hook ${context.getSource(reactiveHook)} has a second ` +
-            "argument which is not an array literal. This means we can't " +
-            "statically verify whether you've passed the correct dependencies.",
+            `React Hook ${context.getSource(reactiveHook)} was passed a ` +
+            'dependency list that is not an array literal. This means we ' +
+            "can't statically verify whether you've passed the correct " +
+            'dependencies.',
         });
       } else {
         declaredDependenciesNode.elements.forEach(declaredDependencyNode => {
@@ -501,15 +502,15 @@ export default {
           } catch (error) {
             if (/Unsupported node type/.test(error.message)) {
               if (declaredDependencyNode.type === 'Literal') {
-                if (typeof declaredDependencyNode.value === 'string') {
+                if (dependencies.has(declaredDependencyNode.value)) {
                   context.report({
                     node: declaredDependencyNode,
                     message:
                       `The ${
                         declaredDependencyNode.raw
-                      } string literal is not a valid dependency ` +
-                      `because it never changes. Did you mean to ` +
-                      `include ${
+                      } literal is not a valid dependency ` +
+                      `because it never changes. ` +
+                      `Did you mean to include ${
                         declaredDependencyNode.value
                       } in the array instead?`,
                   });
@@ -517,9 +518,9 @@ export default {
                   context.report({
                     node: declaredDependencyNode,
                     message:
-                      `The '${
+                      `The ${
                         declaredDependencyNode.raw
-                      }' literal is not a valid dependency ` +
+                      } literal is not a valid dependency ` +
                       'because it never changes. You can safely remove it.',
                   });
                 }
@@ -570,13 +571,12 @@ export default {
         context.report({
           node: writeExpr,
           message:
-            `Assignments to the '${key}' variable from inside a React ${context.getSource(
-              reactiveHook,
-            )} Hook ` +
-            `will not persist between re-renders. ` +
-            `If it's only needed by this Hook, move the variable inside it. ` +
-            `Alternatively, declare a ref with the useRef Hook, ` +
-            `and keep the mutable value in its 'current' property.`,
+            `Assignments to the '${key}' variable from inside React Hook ` +
+            `${context.getSource(reactiveHook)} will be lost after each ` +
+            `render. To preserve the value over time, store it in a useRef ` +
+            `Hook and keep the mutable value in the '.current' property. ` +
+            `Otherwise, you can move this variable directly inside ` +
+            `${context.getSource(reactiveHook)}.`,
         });
       }
 
@@ -644,7 +644,10 @@ export default {
                 fn.name.name
               }' definition into its own useCallback() Hook.`;
           }
+          // TODO: What if the function needs to change on every render anyway?
+          // Should we suggest removing effect deps as an appropriate fix too?
           context.report({
+            // TODO: Why not report this at the dependency site?
             node: fn.node,
             message,
             fix(fixer) {
@@ -654,10 +657,10 @@ export default {
                 return [
                   // TODO: also add an import?
                   fixer.insertTextBefore(fn.node.init, 'useCallback('),
-                  // TODO: ideally we'd gather deps here but it would
-                  // require restructuring the rule code. For now,
-                  // this is fine. Note we're intentionally not adding
-                  // [] because that changes semantics.
+                  // TODO: ideally we'd gather deps here but it would require
+                  // restructuring the rule code. This will cause a new lint
+                  // error to appear immediately for useCallback. Note we're
+                  // not adding [] because would that changes semantics.
                   fixer.insertTextAfter(fn.node.init, ')'),
                 ];
               }
@@ -731,7 +734,7 @@ export default {
         if (badRef !== null) {
           extraWarning =
             ` Mutable values like '${badRef}' aren't valid dependencies ` +
-            "because their mutation doesn't re-render the component.";
+            "because mutating them doesn't re-render the component.";
         } else if (externalDependencies.size > 0) {
           const dep = Array.from(externalDependencies)[0];
           // Don't show this warning for things that likely just got moved *inside* the callback
@@ -739,7 +742,7 @@ export default {
           if (!scope.set.has(dep)) {
             extraWarning =
               ` Outer scope values like '${dep}' aren't valid dependencies ` +
-              `because their mutation doesn't re-render the component.`;
+              `because mutating them doesn't re-render the component.`;
           }
         }
       }
@@ -779,9 +782,10 @@ export default {
         }
         if (isPropsOnlyUsedInMembers) {
           extraWarning =
-            ` However, the preferred fix is to destructure the 'props' ` +
-            `object outside of the ${reactiveHookName} call and ` +
-            `refer to specific props directly by their names.`;
+            ` However, 'props' will change when *any* prop changes, so the ` +
+            `preferred fix is to destructure the 'props' object outside of ` +
+            `the ${reactiveHookName} call and refer to those specific props ` +
+            `inside ${context.getSource(reactiveHook)}.`;
         }
       }
 
@@ -829,8 +833,7 @@ export default {
         });
         if (missingCallbackDep !== null) {
           extraWarning =
-            ` If specifying '${missingCallbackDep}'` +
-            ` makes the dependencies change too often, ` +
+            ` If '${missingCallbackDep}' changes too often, ` +
             `find the parent component that defines it ` +
             `and wrap that definition in useCallback.`;
         }
@@ -906,20 +909,21 @@ export default {
               break;
             case 'inlineReducer':
               extraWarning =
-                ` You can also replace useState with an inline useReducer ` +
-                `if '${setStateRecommendation.setter}' needs the ` +
-                `current value of '${setStateRecommendation.missingDep}'.`;
+                ` If '${setStateRecommendation.setter}' needs the ` +
+                `current value of '${setStateRecommendation.missingDep}', ` +
+                `you can also switch to useReducer instead of useState and ` +
+                `read '${setStateRecommendation.missingDep}' in the reducer.`;
               break;
             case 'updater':
               extraWarning =
-                ` You can also write '${
+                ` You can also do a functional update '${
                   setStateRecommendation.setter
                 }(${setStateRecommendation.missingDep.substring(
                   0,
                   1,
-                )} => ...)' if you only use '${
+                )} => ...)' if you only need '${
                   setStateRecommendation.missingDep
-                }'` + ` for the '${setStateRecommendation.setter}' call.`;
+                }'` + ` in the '${setStateRecommendation.setter}' call.`;
               break;
             default:
               throw new Error('Unknown case.');
