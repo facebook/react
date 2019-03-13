@@ -123,13 +123,19 @@ function handleTopLevel(bookKeeping: BookKeepingInstance) {
 
   for (let i = 0; i < bookKeeping.ancestors.length; i++) {
     targetInst = bookKeeping.ancestors[i];
-    runExtractedEventsInBatch(
-      ((bookKeeping.topLevelType: any): DOMTopLevelEventType),
-      targetInst,
-      ((bookKeeping.nativeEvent: any): AnyNativeEvent),
-      getEventTarget(bookKeeping.nativeEvent),
-      ((bookKeeping.listenerType: any): ListenerType),
-    );
+    // For events that don't use the new passive event type system,
+    // we use the current event plugin hub for extracting and
+    // dispatching events. For future experimental APIs, we'll
+    // likely use an alternative system without the abstraction
+    // costs of a full plugin even system.
+    if (bookKeeping.listenerType === PASSIVE_DISABLED) {
+      runExtractedEventsInBatch(
+        ((bookKeeping.topLevelType: any): DOMTopLevelEventType),
+        targetInst,
+        ((bookKeeping.nativeEvent: any): AnyNativeEvent),
+        getEventTarget(bookKeeping.nativeEvent),
+      );
+    }
   }
 }
 

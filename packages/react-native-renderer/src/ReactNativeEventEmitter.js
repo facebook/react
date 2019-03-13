@@ -16,7 +16,6 @@ import {getInstanceFromNode} from './ReactNativeComponentTree';
 
 import type {AnyNativeEvent} from 'events/PluginModuleType';
 import type {TopLevelType} from 'events/TopLevelEventTypes';
-import {PASSIVE_DISABLED} from 'events/ListenerTypes';
 
 export {getListener, registrationNameModules as registrationNames};
 
@@ -101,7 +100,6 @@ function _receiveRootNodeIDEvent(
       inst,
       nativeEvent,
       nativeEvent.target,
-      PASSIVE_DISABLED,
     );
   });
   // React Native doesn't use ReactControlledComponent but if it did, here's
