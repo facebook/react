@@ -170,6 +170,14 @@ function extractEvents(
     // Not every plugin in the ordering may be loaded at runtime.
     const possiblePlugin: PluginModule<AnyNativeEvent> = plugins[i];
     if (possiblePlugin) {
+      // Check if the plugin supports legacy or non legacy events
+      // based on the passive flag being null or a boolean
+      if (
+        (possiblePlugin.isLegacy && passive !== null) ||
+        (!possiblePlugin.isLegacy && passive === null)
+      ) {
+        continue;
+      }
       const extractedEvents = possiblePlugin.extractEvents(
         topLevelType,
         targetInst,

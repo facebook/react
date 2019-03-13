@@ -258,6 +258,8 @@ function handleControlledInputBlur(node) {
 const ChangeEventPlugin = {
   eventTypes: eventTypes,
 
+  isLegacy: true,
+
   _isInputEventSupported: isInputEventSupported,
 
   extractEvents: function(

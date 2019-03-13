@@ -42,6 +42,8 @@ const eventTypes = {
 const EnterLeaveEventPlugin = {
   eventTypes: eventTypes,
 
+  isLegacy: true,
+
   /**
    * For almost every interaction we care about, there will be both a top-level
    * `mouseover` and `mouseout` event that occurs. Only use `mouseout` so that

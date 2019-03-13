@@ -118,12 +118,11 @@ function getListeningSetForElement(
   element: Document | Element | Node,
   isLegacy: boolean,
 ): Set<DOMTopLevelEventType> {
-  if (!elementListeningObjects.has(element)) {
-    elementListeningObjects.set(element, createElementListeningObject());
+  let listeningObject = elementListeningObjects.get(element);
+  if (listeningObject === undefined) {
+    listeningObject = createElementListeningObject();
+    elementListeningObjects.set(element, listeningObject);
   }
-  const listeningObject = ((elementListeningObjects.get(
-    element,
-  ): any): ElementListeningObject);
   const listeningKey = isLegacy ? 'legacy' : 'nonLegacy';
   return listeningObject[listeningKey];
 }

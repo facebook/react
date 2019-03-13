@@ -206,6 +206,8 @@ const SimpleEventPlugin: PluginModule<MouseEvent> & {
 } = {
   eventTypes: eventTypes,
 
+  isLegacy: true,
+
   isInteractiveTopLevelEventType(topLevelType: TopLevelType): boolean {
     const config = topLevelEventsToDispatchConfig[topLevelType];
     return config !== undefined && config.isInteractive === true;

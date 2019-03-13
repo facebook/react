@@ -160,6 +160,8 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
 const SelectEventPlugin = {
   eventTypes: eventTypes,
 
+  isLegacy: true,
+
   extractEvents: function(
     topLevelType,
     targetInst,

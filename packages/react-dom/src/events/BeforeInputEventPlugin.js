@@ -462,6 +462,8 @@ function extractBeforeInputEvent(
 const BeforeInputEventPlugin = {
   eventTypes: eventTypes,
 
+  isLegacy: true,
+
   extractEvents: function(
     topLevelType,
     targetInst,
