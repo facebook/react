@@ -230,7 +230,14 @@ function trapEvent(
         topLevelType,
         PASSIVE_TRUE,
       );
-      // We listen to the same event for both passive/non-passive
+      // We listen to the same event for both passive true/passive false.
+      // We do this so future event experiments can handle conditional logic.
+      // For example, we might want to support some derivative of both
+      // onMouseMovePassive and onMouseMoveActive, where the underlying logic
+      // is forked conditionally, depending on the event handler being
+      // passive or not. Furthermore, given we generally always listen to
+      // events on the root, we have have to anticipate that this might
+      // occur and listen to both ahead of time.
       eventListener(element, rawEventName, passiveListener, PASSIVE_FALSE);
       eventListener(element, rawEventName, activeListener, PASSIVE_TRUE);
     } else {
