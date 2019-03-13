@@ -21,6 +21,7 @@ import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 import SimpleEventPlugin from './SimpleEventPlugin';
 import {getRawEventName} from './DOMTopLevelEventTypes';
+import {passiveBrowserEventsSupported} from './checkPassiveEvents';
 
 const {isInteractiveTopLevelEventType} = SimpleEventPlugin;
 
@@ -146,19 +147,7 @@ export function trapBubbledEvent(
     : dispatchEvent;
   const rawEventName = getRawEventName(topLevelType);
 
-  if (isLegacy) {
-    // Check if interactive and wrap in interactiveUpdates
-    const listener = dispatch.bind(null, topLevelType, null);
-    // We don't listen for passive/non-passive
-    addEventBubbleListener(element, rawEventName, listener, null);
-  } else {
-    // Check if interactive and wrap in interactiveUpdates
-    const passiveListener = dispatch.bind(null, topLevelType, true);
-    const activeListener = dispatch.bind(null, topLevelType, false);
-    // We listen to the same event for both passive/non-passive
-    addEventBubbleListener(element, rawEventName, passiveListener, true);
-    addEventBubbleListener(element, rawEventName, activeListener, false);
-  }
+  trapEvent(element, topLevelType, dispatch, rawEventName, isLegacy);
 }
 
 export function trapCapturedEvent(
@@ -171,18 +160,41 @@ export function trapCapturedEvent(
     : dispatchEvent;
   const rawEventName = getRawEventName(topLevelType);
 
+  trapEvent(element, topLevelType, dispatch, rawEventName, isLegacy);
+}
+
+function trapEvent(
+  element: Document | Element | Node,
+  topLevelType: DOMTopLevelEventType,
+  dispatch: (
+    topLevelType: DOMTopLevelEventType,
+    passive: null | boolean,
+    nativeEvent: AnyNativeEvent,
+  ) => void,
+  rawEventName: string,
+  isLegacy: boolean,
+) {
   if (isLegacy) {
     // Check if interactive and wrap in interactiveUpdates
     const listener = dispatch.bind(null, topLevelType, null);
     // We don't listen for passive/non-passive
     addEventCaptureListener(element, rawEventName, listener, null);
   } else {
-    // Check if interactive and wrap in interactiveUpdates
-    const passiveListener = dispatch.bind(null, topLevelType, true);
-    const activeListener = dispatch.bind(null, topLevelType, false);
-    // We listen to the same event for both passive/non-passive
-    addEventCaptureListener(element, rawEventName, passiveListener, true);
-    addEventCaptureListener(element, rawEventName, activeListener, false);
+    if (passiveBrowserEventsSupported) {
+      // Check if interactive and wrap in interactiveUpdates
+      const activeListener = dispatch.bind(null, topLevelType, false);
+      const passiveListener = dispatch.bind(null, topLevelType, true);
+      // We listen to the same event for both passive/non-passive
+      addEventCaptureListener(element, rawEventName, passiveListener, true);
+      addEventCaptureListener(element, rawEventName, activeListener, false);
+    } else {
+      const fallbackListener = dispatch.bind(null, topLevelType, null);
+      // We fallback if we can't use passive events to only using active behaviour,
+      // except we pass through "false" as the passive flag to the dispatch function.
+      // This ensures that legacy plugins do not incorrectly operate on the fired event
+      // (they will only operate when "null" is on the passive flag).
+      addEventCaptureListener(element, rawEventName, fallbackListener, false);
+    }
   }
 }
 
