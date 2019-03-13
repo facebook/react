@@ -1830,6 +1830,17 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
 // actedUpdates() calls, and test on it for when to warn
 let actingUpdatesScopeDepth = 0;
 
+// we 'wait' for queued microtasks to resolve (after flushing effects)
+// using either setImmediate when available, or postMessage
+const nextTick =
+  typeof setImmediate !== 'undefined'
+    ? setImmediate
+    : callback => {
+        const channel = new MessageChannel();
+        channel.port1.onmessage = callback;
+        channel.port2.postMessage(undefined);
+      };
+
 export function actedUpdates(callback: () => void | Promise<void>) {
   let previousActingUpdatesScopeDepth;
   if (__DEV__) {
@@ -1849,10 +1860,12 @@ export function actedUpdates(callback: () => void | Promise<void>) {
       }
     }
   }
+
   function flushEffectsAndMicroTasks() {
+    // eslint-disable-next-line no-undef
     return new Promise((resolve, reject) => {
       flushPassiveEffects();
-      setImmediate(() => {
+      nextTick(() => {
         if (passiveEffectCallback !== null) {
           flushEffectsAndMicroTasks().then(resolve, reject);
         } else {
