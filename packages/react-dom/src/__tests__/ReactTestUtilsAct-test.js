@@ -251,6 +251,9 @@ describe('ReactTestUtils.act()', () => {
       function App() {
         let [ctr, setCtr] = React.useState(0);
         async function someAsyncFunction() {
+          // queue a bunch of promises to be sure they all flush
+          await null;
+          await null;
           await null;
           setCtr(1);
         }
@@ -346,6 +349,30 @@ describe('ReactTestUtils.act()', () => {
         expect(err instanceof Error).toBe(true);
         expect(err.message).toBe('some error');
       }
+    });
+    it('can handle cascading promises', async () => {
+      // this component triggers an effect, that waits a tick,
+      // then sets state. repeats this 5 times.
+      function App() {
+        let [state, setState] = React.useState(0);
+        async function ticker() {
+          await null;
+          setState(x => x + 1);
+        }
+        React.useEffect(
+          () => {
+            ticker();
+          },
+          [Math.min(state, 4)],
+        );
+        return state;
+      }
+      const el = document.createElement('div');
+      await act(async () => {
+        ReactDOM.render(<App />, el);
+      });
+      // all 5 ticks present and accounted for
+      expect(el.innerHTML).toBe('5');
     });
   });
 });

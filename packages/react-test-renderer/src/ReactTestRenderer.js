@@ -560,21 +560,19 @@ const ReactTestRendererFiber = {
     ) {
       let called = false;
       if (__DEV__) {
-        if (typeof global.Promise !== 'undefined') {
-          // eslint-disable-next-line no-undef
-          Promise.resolve()
-            .then(() => {})
-            .then(() => {
-              if (!called) {
-                warningWithoutStack(
-                  null,
-                  'You called act() without awaiting its result. ' +
-                    'This could lead to unexpected testing behaviour, interleaving multiple act ' +
-                    'calls and mixing their scopes. You should - await act(async () => ...);',
-                );
-              }
-            });
-        }
+        // eslint-disable-next-line no-undef
+        Promise.resolve()
+          .then(() => {})
+          .then(() => {
+            if (!called) {
+              warningWithoutStack(
+                null,
+                'You called act() without awaiting its result. ' +
+                  'This could lead to unexpected testing behaviour, interleaving multiple act ' +
+                  'calls and mixing their scopes. You should - await act(async () => ...);',
+              );
+            }
+          });
       }
       return {
         then(successFn: () => mixed, errorFn: () => mixed) {

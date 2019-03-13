@@ -1849,6 +1849,18 @@ export function actedUpdates(callback: () => void | Promise<void>) {
       }
     }
   }
+  function flushEffectsAndMicroTasks() {
+    return new Promise((resolve, reject) => {
+      flushPassiveEffects();
+      setImmediate(() => {
+        if (passiveEffectCallback !== null) {
+          flushEffectsAndMicroTasks().then(resolve, reject);
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
 
   const result = batchedUpdates(callback);
   if (
@@ -1858,13 +1870,12 @@ export function actedUpdates(callback: () => void | Promise<void>) {
   ) {
     return result.then(
       () => {
-        while (passiveEffectCallback !== null) {
-          flushPassiveEffects();
-        }
-        if (__DEV__) {
-          actingUpdatesScopeDepth--;
-          warnIfScopeDepthMismatch();
-        }
+        return flushEffectsAndMicroTasks().then(() => {
+          if (__DEV__) {
+            actingUpdatesScopeDepth--;
+            warnIfScopeDepthMismatch();
+          }
+        });
       },
       error => {
         if (__DEV__) {
