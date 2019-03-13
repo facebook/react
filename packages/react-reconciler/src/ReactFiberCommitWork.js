@@ -346,22 +346,23 @@ function commitHookEffectList(
             } else if (typeof destroy.then === 'function') {
               addendum =
                 '\n\nIt looks like you wrote useEffect(async () => ...) or returned a Promise. ' +
-                'Instead, you may write an async function separately ' +
-                'and then call it from inside the effect:\n\n' +
-                'async function fetchComment(commentId) {\n' +
-                '  // You can await here\n' +
-                '}\n\n' +
+                'Instead, write the async function inside your effect ' +
+                'and call it immediately:\n\n' +
                 'useEffect(() => {\n' +
-                '  fetchComment(commentId);\n' +
-                '}, [commentId]);\n\n' +
-                'In the future, React will provide a more idiomatic solution for data fetching ' +
-                "that doesn't involve writing effects manually.";
+                '  async function fetchData() {\n' +
+                '    // You can await here\n' +
+                '    const response = await MyAPI.getData(someId);\n' +
+                '    // ...\n' +
+                '  }\n' +
+                '  fetchData();\n' +
+                '}, [someId]);\n\n' +
+                'Learn more about data fetching with Hooks: https://fb.me/react-hooks-data-fetching';
             } else {
               addendum = ' You returned: ' + destroy;
             }
             warningWithoutStack(
               false,
-              'An Effect function must not return anything besides a function, ' +
+              'An effect function must not return anything besides a function, ' +
                 'which is used for clean-up.%s%s',
               addendum,
               getStackByFiberInDevAndProd(finishedWork),
