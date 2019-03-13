@@ -645,20 +645,20 @@ describe('ReactHooks', () => {
 
     const root1 = ReactTestRenderer.create(null);
     expect(() => root1.update(<App return={17} />)).toWarnDev([
-      'Warning: An Effect function must not return anything besides a ' +
+      'Warning: An effect function must not return anything besides a ' +
         'function, which is used for clean-up. You returned: 17',
     ]);
 
     const root2 = ReactTestRenderer.create(null);
     expect(() => root2.update(<App return={null} />)).toWarnDev([
-      'Warning: An Effect function must not return anything besides a ' +
+      'Warning: An effect function must not return anything besides a ' +
         'function, which is used for clean-up. You returned null. If your ' +
         'effect does not require clean up, return undefined (or nothing).',
     ]);
 
     const root3 = ReactTestRenderer.create(null);
     expect(() => root3.update(<App return={Promise.resolve()} />)).toWarnDev([
-      'Warning: An Effect function must not return anything besides a ' +
+      'Warning: An effect function must not return anything besides a ' +
         'function, which is used for clean-up.\n\n' +
         'It looks like you wrote useEffect(async () => ...) or returned a Promise.',
     ]);
