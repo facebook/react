@@ -54,7 +54,7 @@ export function useLocalStorage<T>(
 }
 
 export function useModalDismissSignal(
-  modalRef: React$Ref<any>,
+  modalRef: { current: HTMLDivElement | null },
   dismissCallback: Function
 ): void {
   useEffect(() => {

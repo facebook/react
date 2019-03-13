@@ -5,6 +5,7 @@ import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import { StoreContext } from '../context';
 import { ProfilerContext } from './ProfilerContext';
+import SnapshotCommitList from './SnapshotCommitList';
 
 import styles from './SnapshotSelector.css';
 
@@ -34,7 +35,7 @@ function SnapshotSelector(_: Props) {
     rootID: ((rootID: any): number),
   });
 
-  const numCommits = profilingSummary.commits.length / 2;
+  const numCommits = profilingSummary.commitDurations.length;
 
   if (numCommits === 0) {
     return null;
@@ -51,7 +52,10 @@ function SnapshotSelector(_: Props) {
     <Fragment>
       <div className={styles.VRule} />
       <div className={styles.SnapshotSelector}>
-        {commitIndex + 1} / {numCommits}
+        <span className={styles.Number}>
+          {`${commitIndex + 1}`.padStart(`${numCommits}`.length, '0')} /{' '}
+          {numCommits}
+        </span>
         <Button
           className={styles.Button}
           disabled={commitIndex <= 0}
@@ -60,7 +64,13 @@ function SnapshotSelector(_: Props) {
           <ButtonIcon type="previous" />
         </Button>
         <div className={styles.Commits}>
-          [] {/* TODO (profiling) Add FixedSizeList selector */}
+          <SnapshotCommitList
+            profilingSummary={profilingSummary}
+            selectedCommitIndex={commitIndex}
+            setCommitIndex={setCommitIndex}
+            viewNextCommit={viewNextCommit}
+            viewPrevCommit={viewPrevCommit}
+          />
         </div>
         <Button
           className={styles.Button}

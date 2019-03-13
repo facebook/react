@@ -8,7 +8,7 @@ import type { Bridge } from '../types';
 import type { ProfilingSummary as ProfilingSummaryBackend } from 'src/backend/types';
 import type { ProfilingSummary as ProfilingSummaryFrontend } from 'src/devtools/views/Profiler/types';
 
-type AAA = {|
+type RendererAndRootID = {|
   rootID: number,
   rendererID: number,
 |};
@@ -19,18 +19,17 @@ export default class ProfilingCache {
     (profilingSummary: ProfilingSummaryFrontend) => void
   > = new Map();
 
-  ProfilingSummary: Resource<AAA, ProfilingSummaryFrontend>;
-
-  // TODO (profiling) renderer + root
+  ProfilingSummary: Resource<RendererAndRootID, ProfilingSummaryFrontend>;
 
   constructor(bridge: Bridge, store: Store) {
     this.ProfilingSummary = createResource(
-      ({ rendererID, rootID }: AAA) => {
+      ({ rendererID, rootID }: RendererAndRootID) => {
         return new Promise(resolve => {
           if (!store._profilingOperations.has(rootID)) {
             // If no profiling data was recorded for this root, skip the round trip.
             resolve({
-              commits: [],
+              commitDurations: [],
+              commitTimes: [],
               initialTreeBaseDurations: new Map(),
               interactionCount: 0,
             });
@@ -40,7 +39,7 @@ export default class ProfilingCache {
           }
         });
       },
-      ({ rendererID, rootID }: AAA) => rootID
+      ({ rendererID, rootID }: RendererAndRootID) => rootID
     );
 
     bridge.addListener('profilingSummary', this.onProfileSummary);
@@ -52,7 +51,8 @@ export default class ProfilingCache {
   }
 
   onProfileSummary = ({
-    commits,
+    commitDurations,
+    commitTimes,
     initialTreeBaseDurations,
     interactionCount,
     rootID,
@@ -68,7 +68,8 @@ export default class ProfilingCache {
       }
 
       resolve({
-        commits,
+        commitDurations,
+        commitTimes,
         initialTreeBaseDurations: initialTreeBaseDurationsMap,
         interactionCount,
       });

@@ -275,6 +275,9 @@ export default class Store extends EventEmitter {
   }
 
   startProfiling(): void {
+    // Invalidate suspense cache if profiling data is being (re-)recorded.
+    this._profilingCache.invalidate();
+
     this._bridge.send('startProfiling');
     this._isProfiling = false;
     this.emit('isProfiling');

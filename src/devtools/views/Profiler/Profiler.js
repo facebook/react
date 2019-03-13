@@ -69,7 +69,7 @@ function ProfilerInner(_: Props) {
         </div>
         <div className={styles.Content}>
           {view}
-          {isFilterModalShowing && ( // TODO (profiler) Position when snapshot graph is open
+          {isFilterModalShowing && (
             <FilterModal dismissModal={dismissFilterModal} />
           )}
         </div>

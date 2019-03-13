@@ -134,6 +134,17 @@ function updateThemeVariables(theme: Theme): void {
   updateStyleHelper(theme, 'color-button-disabled');
   updateStyleHelper(theme, 'color-button-focus');
   updateStyleHelper(theme, 'color-button-hover');
+  updateStyleHelper(theme, 'color-commit-did-not-render');
+  updateStyleHelper(theme, 'color-commit-gradient-0');
+  updateStyleHelper(theme, 'color-commit-gradient-1');
+  updateStyleHelper(theme, 'color-commit-gradient-2');
+  updateStyleHelper(theme, 'color-commit-gradient-3');
+  updateStyleHelper(theme, 'color-commit-gradient-4');
+  updateStyleHelper(theme, 'color-commit-gradient-5');
+  updateStyleHelper(theme, 'color-commit-gradient-6');
+  updateStyleHelper(theme, 'color-commit-gradient-7');
+  updateStyleHelper(theme, 'color-commit-gradient-8');
+  updateStyleHelper(theme, 'color-commit-gradient-9');
   updateStyleHelper(theme, 'color-component-name');
   updateStyleHelper(theme, 'color-component-name-inverted');
   updateStyleHelper(theme, 'color-dim');

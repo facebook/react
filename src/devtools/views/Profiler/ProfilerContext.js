@@ -88,6 +88,12 @@ function ProfilerContextController({ children }: Props) {
     setCommitIndex(0);
   }
 
+  const [prevIsProfiling, setPrevIsProfiling] = useState(isProfiling);
+  if (prevIsProfiling !== isProfiling) {
+    setPrevIsProfiling(isProfiling);
+    setCommitIndex(0);
+  }
+
   const value = useMemo(
     () => ({
       commitIndex,

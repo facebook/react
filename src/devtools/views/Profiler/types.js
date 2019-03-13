@@ -29,8 +29,11 @@ export type CommitDetails = {|
 |};
 
 export type ProfilingSummary = {|
-  // Tuples of commit time (relative to when profiling started) and duration
-  commits: Array<number>,
+  // Commit durations
+  commitDurations: Array<number>,
+
+  // Commit times (relative to when profiling started)
+  commitTimes: Array<number>,
 
   // Map of fiber id to (initial) tree base duration
   initialTreeBaseDurations: Map<number, number>,

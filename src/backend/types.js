@@ -55,7 +55,8 @@ export type ReactRenderer = {
 };
 
 export type ProfilingSummary = {|
-  commits: Array<number>,
+  commitDurations: Array<number>,
+  commitTimes: Array<number>,
   initialTreeBaseDurations: Array<number>,
   interactionCount: number,
   rootID: number,

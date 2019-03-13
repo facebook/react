@@ -203,16 +203,18 @@ Here is an example profile summary:
   rootID: 1,
   interactionCount: 2,
 
-  // Tuples of commit time (relative to when profiling started) and duration
-  commits: [
+  // Commit durations
+  commitDurations: [
+    10,  // first commit took 10ms
+    13,  // second commit took 13ms
+    5,   // third commit took 5ms
+  ]
+
+  // Commit times (relative to when profiling started)
+  commitTimes: [
     210, // first commit started 210ms after profiling began
-    10,  // and took 10ms
-
     284, // second commit started 284ms after profiling began
-    13,  // and took 13ms
-
     303, // third commit started 303ms after profiling began
-    5,   // and took 5ms
   ],
 
   // Tuples of fiber id and initial tree base duration

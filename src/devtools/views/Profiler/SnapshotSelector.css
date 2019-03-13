@@ -1,5 +1,7 @@
 .SnapshotSelector {
+  flex: 1 1 auto;
   display: flex;
+  flex-direction: row;
   align-items: center;
   color: var(--color-text-color);
   margin-left: 0.5rem;
@@ -10,6 +12,8 @@
 }
 
 .Commits {
+  flex: 1 1 150px;
+  height: 2.25rem;
   margin-left: 0.25rem;
 }
 
@@ -18,4 +22,8 @@
   width: 1px;
   background-color: var(--color-border);
   margin: 0 0.25rem;
+}
+
+.Number {
+  font-family: var(--font-family-monospace);
 }

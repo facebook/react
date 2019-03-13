@@ -1381,14 +1381,16 @@ export function attach(
 
   function getProfilingSummary(rootID: number): ProfilingSummary {
     const interactions = new Set();
-    const commits = [];
+    const commitDurations = [];
+    const commitTimes = [];
 
     const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
       rootID
     );
     if (commitProfilingMetadata != null) {
       commitProfilingMetadata.forEach(metadata => {
-        commits.push(metadata.commitTime, metadata.maxActualDuration);
+        commitDurations.push(metadata.maxActualDuration);
+        commitTimes.push(metadata.commitTime);
         metadata.interactions.forEach(({ name, timestamp }) => {
           interactions.add(`${timestamp}:${name}`);
         });
@@ -1405,7 +1407,8 @@ export function attach(
     );
 
     return {
-      commits,
+      commitDurations,
+      commitTimes,
       initialTreeBaseDurations,
       interactionCount: interactions.size,
       rootID,
