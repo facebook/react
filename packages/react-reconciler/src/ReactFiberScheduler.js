@@ -1841,6 +1841,20 @@ const nextTick =
         channel.port2.postMessage(undefined);
       };
 
+function flushEffectsAndMicroTasks() {
+  // eslint-disable-next-line no-undef
+  return new Promise((resolve, reject) => {
+    flushPassiveEffects();
+    nextTick(() => {
+      if (passiveEffectCallback !== null) {
+        flushEffectsAndMicroTasks().then(resolve, reject);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
 export function actedUpdates(callback: () => void | Promise<void>) {
   let previousActingUpdatesScopeDepth;
   if (__DEV__) {
@@ -1859,20 +1873,6 @@ export function actedUpdates(callback: () => void | Promise<void>) {
         );
       }
     }
-  }
-
-  function flushEffectsAndMicroTasks() {
-    // eslint-disable-next-line no-undef
-    return new Promise((resolve, reject) => {
-      flushPassiveEffects();
-      nextTick(() => {
-        if (passiveEffectCallback !== null) {
-          flushEffectsAndMicroTasks().then(resolve, reject);
-        } else {
-          resolve();
-        }
-      });
-    });
   }
 
   const result = batchedUpdates(callback);
