@@ -15,6 +15,7 @@ import {batchedUpdates} from 'events/ReactGenericBatching';
 
 import type {AnyNativeEvent} from 'events/PluginModuleType';
 import type {TopLevelType} from 'events/TopLevelEventTypes';
+import {PASSIVE_DISABLED} from 'events/ListenerTypes';
 
 export {getListener, registrationNameModules as registrationNames};
 
@@ -30,7 +31,7 @@ export function dispatchEvent(
       targetFiber,
       nativeEvent,
       nativeEvent.target,
-      null,
+      PASSIVE_DISABLED,
     );
   });
   // React Native doesn't use ReactControlledComponent but if it did, here's

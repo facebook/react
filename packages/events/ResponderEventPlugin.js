@@ -497,8 +497,6 @@ const ResponderEventPlugin = {
 
   eventTypes: eventTypes,
 
-  isLegacy: true,
-
   /**
    * We must be resilient to `targetInst` being `null` on `touchMove` or
    * `touchEnd`. On certain platforms, this means that a native scroll has

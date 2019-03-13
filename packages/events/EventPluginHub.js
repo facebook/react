@@ -27,6 +27,8 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {AnyNativeEvent} from './PluginModuleType';
 import type {TopLevelType} from './TopLevelEventTypes';
 
+import {type ListenerType, PASSIVE_DISABLED} from 'events/ListenerTypes';
+
 /**
  * Internal queue of events that have accumulated their dispatches and are
  * waiting to have their dispatches executed.
@@ -163,33 +165,31 @@ function extractEvents(
   targetInst: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: EventTarget,
-  passive: null | boolean,
+  listenerType: ListenerType,
 ): Array<ReactSyntheticEvent> | ReactSyntheticEvent | null {
   let events = null;
-  for (let i = 0; i < plugins.length; i++) {
-    // Not every plugin in the ordering may be loaded at runtime.
-    const possiblePlugin: PluginModule<AnyNativeEvent> = plugins[i];
-    if (possiblePlugin) {
-      // Check if the plugin supports legacy or non legacy events
-      // based on the passive flag being null or a boolean
-      if (
-        (possiblePlugin.isLegacy && passive !== null) ||
-        (!possiblePlugin.isLegacy && passive === null)
-      ) {
-        continue;
-      }
-      const extractedEvents = possiblePlugin.extractEvents(
-        topLevelType,
-        targetInst,
-        nativeEvent,
-        nativeEventTarget,
-        passive,
-      );
-      if (extractedEvents) {
-        events = accumulateInto(events, extractedEvents);
+  // For events that don't use the new passive event type system,
+  // we continue to use event plugins. This will get updated once
+  // we add plugins or adapters that make use of the passive event
+  // system.
+  if (listenerType === PASSIVE_DISABLED) {
+    for (let i = 0; i < plugins.length; i++) {
+      // Not every plugin in the ordering may be loaded at runtime.
+      const possiblePlugin: PluginModule<AnyNativeEvent> = plugins[i];
+      if (possiblePlugin) {
+        const extractedEvents = possiblePlugin.extractEvents(
+          topLevelType,
+          targetInst,
+          nativeEvent,
+          nativeEventTarget,
+        );
+        if (extractedEvents) {
+          events = accumulateInto(events, extractedEvents);
+        }
       }
     }
   }
+
   return events;
 }
 
@@ -224,14 +224,14 @@ export function runExtractedEventsInBatch(
   targetInst: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: EventTarget,
-  passive: null | boolean,
+  listenerType: ListenerType,
 ) {
   const events = extractEvents(
     topLevelType,
     targetInst,
     nativeEvent,
     nativeEventTarget,
-    passive,
+    listenerType,
   );
   runEventsInBatch(events);
 }

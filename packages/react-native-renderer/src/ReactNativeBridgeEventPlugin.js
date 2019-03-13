@@ -24,8 +24,6 @@ import invariant from 'shared/invariant';
 const ReactNativeBridgeEventPlugin = {
   eventTypes: eventTypes,
 
-  isLegacy: true,
-
   /**
    * @see {EventPluginHub.extractEvents}
    */

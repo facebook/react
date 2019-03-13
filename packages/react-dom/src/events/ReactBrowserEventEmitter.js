@@ -123,8 +123,7 @@ function getListeningSetForElement(
     listeningObject = createElementListeningObject();
     elementListeningObjects.set(element, listeningObject);
   }
-  const listeningKey = isLegacy ? 'legacy' : 'nonLegacy';
-  return listeningObject[listeningKey];
+  return isLegacy ? listeningObject.legacy : listeningObject.nonLegacy;
 }
 
 /**

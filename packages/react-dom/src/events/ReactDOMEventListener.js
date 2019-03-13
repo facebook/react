@@ -15,6 +15,13 @@ import {batchedUpdates, interactiveUpdates} from 'events/ReactGenericBatching';
 import {runExtractedEventsInBatch} from 'events/EventPluginHub';
 import {isFiberMounted} from 'react-reconciler/reflection';
 import {HostRoot} from 'shared/ReactWorkTags';
+import {
+  type ListenerType,
+  PASSIVE_DISABLED,
+  PASSIVE_FALLBACK,
+  PASSIVE_TRUE,
+  PASSIVE_FALSE,
+} from 'events/ListenerTypes';
 
 import {addEventBubbleListener, addEventCaptureListener} from './EventListener';
 import getEventTarget from './getEventTarget';
@@ -33,7 +40,7 @@ type BookKeepingInstance = {
   nativeEvent: AnyNativeEvent | null,
   targetInst: Fiber | null,
   ancestors: Array<Fiber | null>,
-  passive: null | boolean,
+  listenerType: null | ListenerType,
 };
 
 /**
@@ -60,14 +67,14 @@ function getTopLevelCallbackBookKeeping(
   topLevelType: DOMTopLevelEventType,
   nativeEvent: AnyNativeEvent,
   targetInst: Fiber | null,
-  passive: null | boolean,
+  listenerType: ListenerType,
 ): BookKeepingInstance {
   if (callbackBookkeepingPool.length) {
     const instance = callbackBookkeepingPool.pop();
     instance.topLevelType = topLevelType;
     instance.nativeEvent = nativeEvent;
     instance.targetInst = targetInst;
-    instance.passive = passive;
+    instance.listenerType = listenerType;
     return instance;
   }
   return {
@@ -75,7 +82,7 @@ function getTopLevelCallbackBookKeeping(
     nativeEvent,
     targetInst,
     ancestors: [],
-    passive,
+    listenerType,
   };
 }
 
@@ -86,7 +93,7 @@ function releaseTopLevelCallbackBookKeeping(
   instance.nativeEvent = null;
   instance.targetInst = null;
   instance.ancestors.length = 0;
-  instance.passive = null;
+  instance.listenerType = null;
   if (callbackBookkeepingPool.length < CALLBACK_BOOKKEEPING_POOL_SIZE) {
     callbackBookkeepingPool.push(instance);
   }
@@ -121,7 +128,7 @@ function handleTopLevel(bookKeeping: BookKeepingInstance) {
       targetInst,
       ((bookKeeping.nativeEvent: any): AnyNativeEvent),
       getEventTarget(bookKeeping.nativeEvent),
-      bookKeeping.passive,
+      ((bookKeeping.listenerType: any): ListenerType),
     );
   }
 }
@@ -179,7 +186,7 @@ export function trapCapturedEvent(
 
 type Dispatcher = (
   topLevelType: DOMTopLevelEventType,
-  passive: null | boolean,
+  listenerType: ListenerType,
   nativeEvent: AnyNativeEvent,
 ) => void;
 
@@ -187,9 +194,9 @@ type Dispatcher = (
 function bindDispatch(
   dispatch: Dispatcher,
   topLevelType: DOMTopLevelEventType,
-  passive: null | boolean,
+  listenerType: ListenerType,
 ) {
-  return dispatch.bind(null, topLevelType, passive);
+  return dispatch.bind(null, topLevelType, listenerType);
 }
 
 function trapEvent(
@@ -197,7 +204,7 @@ function trapEvent(
     element: Document | Element | Node,
     eventName: string,
     listener: (event: AnyNativeEvent) => void,
-    passive: boolean | null,
+    listenerType: ListenerType,
   ) => void,
   element: Document | Element | Node,
   topLevelType: DOMTopLevelEventType,
@@ -207,36 +214,43 @@ function trapEvent(
 ) {
   if (isLegacy) {
     // Check if interactive and wrap in interactiveUpdates
-    const listener = bindDispatch(dispatch, topLevelType, null);
+    const listener = bindDispatch(dispatch, topLevelType, PASSIVE_DISABLED);
     // We don't listen for passive/non-passive
-    eventListener(element, rawEventName, listener, null);
+    eventListener(element, rawEventName, listener, PASSIVE_DISABLED);
   } else {
     if (passiveBrowserEventsSupported) {
       // Check if interactive and wrap in interactiveUpdates
-      const activeListener = bindDispatch(dispatch, topLevelType, false);
-      const passiveListener = bindDispatch(dispatch, topLevelType, true);
+      const activeListener = bindDispatch(
+        dispatch,
+        topLevelType,
+        PASSIVE_FALSE,
+      );
+      const passiveListener = bindDispatch(
+        dispatch,
+        topLevelType,
+        PASSIVE_TRUE,
+      );
       // We listen to the same event for both passive/non-passive
-      eventListener(element, rawEventName, passiveListener, true);
-      eventListener(element, rawEventName, activeListener, false);
+      eventListener(element, rawEventName, passiveListener, PASSIVE_FALSE);
+      eventListener(element, rawEventName, activeListener, PASSIVE_TRUE);
     } else {
-      const fallbackListener = bindDispatch(dispatch, topLevelType, null);
-      // We fallback if we can't use passive events to only using active behaviour,
-      // except we pass through "false" as the passive flag to the dispatch function.
-      // This ensures that legacy plugins do not incorrectly operate on the fired event
-      // (they will only operate when "null" is on the passive flag).
-      eventListener(element, rawEventName, fallbackListener, false);
+      const fallbackListener = bindDispatch(
+        dispatch,
+        topLevelType,
+        PASSIVE_FALLBACK,
+      );
+      eventListener(element, rawEventName, fallbackListener, PASSIVE_FALLBACK);
     }
   }
 }
 
-function dispatchInteractiveEvent(topLevelType, isPassiveEvent, nativeEvent) {
-  interactiveUpdates(dispatchEvent, topLevelType, isPassiveEvent, nativeEvent);
+function dispatchInteractiveEvent(topLevelType, listenerType, nativeEvent) {
+  interactiveUpdates(dispatchEvent, topLevelType, listenerType, nativeEvent);
 }
 
 export function dispatchEvent(
   topLevelType: DOMTopLevelEventType,
-  // passive will be `null` for legacy events
-  passive: null | boolean,
+  listenerType: ListenerType,
   nativeEvent: AnyNativeEvent,
 ): void {
   if (!_enabled) {
@@ -261,7 +275,7 @@ export function dispatchEvent(
     topLevelType,
     nativeEvent,
     targetInst,
-    passive,
+    listenerType,
   );
 
   try {

@@ -22,7 +22,6 @@ export type PluginName = string;
 
 export type PluginModule<NativeEvent> = {
   eventTypes: EventTypes,
-  isLegacy: boolean,
   extractEvents: (
     topLevelType: TopLevelType,
     targetInst: null | Fiber,
