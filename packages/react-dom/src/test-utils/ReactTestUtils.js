@@ -21,7 +21,7 @@ import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 import * as DOMTopLevelEventTypes from '../events/DOMTopLevelEventTypes';
-import {PASSIVE_DISABLED} from 'events/ListenerTypes';
+import {PLUGIN_EVENT_SYSTEM} from 'events/EventSystemFlags';
 
 // for .act's return value
 type Thenable = {
@@ -64,7 +64,7 @@ let hasWarnedAboutDeprecatedMockComponent = false;
  */
 function simulateNativeEventOnNode(topLevelType, node, fakeNativeEvent) {
   fakeNativeEvent.target = node;
-  dispatchEvent(topLevelType, PASSIVE_DISABLED, fakeNativeEvent);
+  dispatchEvent(topLevelType, PLUGIN_EVENT_SYSTEM, fakeNativeEvent);
 }
 
 /**

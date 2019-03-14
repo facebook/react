@@ -7,13 +7,6 @@
  * @flow
  */
 
-import {
-  type ListenerType,
-  PASSIVE_DISABLED,
-  PASSIVE_FALLBACK,
-  PASSIVE_TRUE,
-} from 'events/ListenerTypes';
-
 const EventListenerWWW = require('EventListener');
 
 import typeof * as EventListenerType from '../EventListener';
@@ -23,36 +16,18 @@ export function addEventBubbleListener(
   element: Element,
   eventType: string,
   listener: Function,
-  listenerType: ListenerType,
+  passive?: boolean,
 ): void {
-  if (listenerType === PASSIVE_DISABLED || listenerType === PASSIVE_FALLBACK) {
-    EventListenerWWW.listen(element, eventType, listener);
-  } else {
-    EventListenerWWW.listen(
-      element,
-      eventType,
-      listener,
-      listenerType === PASSIVE_TRUE,
-    );
-  }
+  EventListenerWWW.listen(element, eventType, listener, passive);
 }
 
 export function addEventCaptureListener(
   element: Element,
   eventType: string,
   listener: Function,
-  listenerType: ListenerType,
+  passive?: boolean,
 ): void {
-  if (listenerType === PASSIVE_DISABLED || listenerType === PASSIVE_FALLBACK) {
-    EventListenerWWW.capture(element, eventType, listener);
-  } else {
-    EventListenerWWW.capture(
-      element,
-      eventType,
-      listener,
-      listenerType === PASSIVE_TRUE,
-    );
-  }
+  EventListenerWWW.capture(element, eventType, listener, passive);
 }
 
 // Flow magic to verify the exports of this file match the original version.

@@ -16,12 +16,13 @@ import {runExtractedEventsInBatch} from 'events/EventPluginHub';
 import {isFiberMounted} from 'react-reconciler/reflection';
 import {HostRoot} from 'shared/ReactWorkTags';
 import {
-  type ListenerType,
-  PASSIVE_DISABLED,
-  PASSIVE_FALLBACK,
-  PASSIVE_TRUE,
-  PASSIVE_FALSE,
-} from 'events/ListenerTypes';
+  type EventSystemFlags,
+  PLUGIN_EVENT_SYSTEM,
+  RESPONDER_EVENT_SYSTEM,
+  IS_PASSIVE,
+  IS_ACTIVE,
+  PASSIVE_NOT_SUPPORTED,
+} from 'events/EventSystemFlags';
 
 import {addEventBubbleListener, addEventCaptureListener} from './EventListener';
 import getEventTarget from './getEventTarget';
@@ -40,7 +41,7 @@ type BookKeepingInstance = {
   nativeEvent: AnyNativeEvent | null,
   targetInst: Fiber | null,
   ancestors: Array<Fiber | null>,
-  listenerType: null | ListenerType,
+  eventSystemFlags: EventSystemFlags,
 };
 
 /**
@@ -67,14 +68,14 @@ function getTopLevelCallbackBookKeeping(
   topLevelType: DOMTopLevelEventType,
   nativeEvent: AnyNativeEvent,
   targetInst: Fiber | null,
-  listenerType: ListenerType,
+  eventSystemFlags: EventSystemFlags,
 ): BookKeepingInstance {
   if (callbackBookkeepingPool.length) {
     const instance = callbackBookkeepingPool.pop();
     instance.topLevelType = topLevelType;
     instance.nativeEvent = nativeEvent;
     instance.targetInst = targetInst;
-    instance.listenerType = listenerType;
+    instance.eventSystemFlags = eventSystemFlags;
     return instance;
   }
   return {
@@ -82,7 +83,7 @@ function getTopLevelCallbackBookKeeping(
     nativeEvent,
     targetInst,
     ancestors: [],
-    listenerType,
+    eventSystemFlags,
   };
 }
 
@@ -93,7 +94,7 @@ function releaseTopLevelCallbackBookKeeping(
   instance.nativeEvent = null;
   instance.targetInst = null;
   instance.ancestors.length = 0;
-  instance.listenerType = null;
+  instance.eventSystemFlags = 0;
   if (callbackBookkeepingPool.length < CALLBACK_BOOKKEEPING_POOL_SIZE) {
     callbackBookkeepingPool.push(instance);
   }
@@ -123,18 +124,16 @@ function handleTopLevel(bookKeeping: BookKeepingInstance) {
 
   for (let i = 0; i < bookKeeping.ancestors.length; i++) {
     targetInst = bookKeeping.ancestors[i];
-    // For events that don't use the new passive event type system,
-    // we use the current event plugin hub for extracting and
-    // dispatching events. For future experimental APIs, we'll
-    // likely use an alternative system without the abstraction
-    // costs of a full plugin even system.
-    if (bookKeeping.listenerType === PASSIVE_DISABLED) {
+    if (bookKeeping.eventSystemFlags === PLUGIN_EVENT_SYSTEM) {
       runExtractedEventsInBatch(
         ((bookKeeping.topLevelType: any): DOMTopLevelEventType),
         targetInst,
         ((bookKeeping.nativeEvent: any): AnyNativeEvent),
         getEventTarget(bookKeeping.nativeEvent),
       );
+    } else {
+      // RESPONDER_EVENT_SYSTEM
+      // TODO: Add implementation
     }
   }
 }
@@ -153,117 +152,83 @@ export function isEnabled() {
 export function trapBubbledEvent(
   topLevelType: DOMTopLevelEventType,
   element: Document | Element | Node,
-  isLegacy: boolean,
 ): void {
-  const dispatch = isInteractiveTopLevelEventType(topLevelType)
-    ? dispatchInteractiveEvent
-    : dispatchEvent;
-  const rawEventName = getRawEventName(topLevelType);
-
-  trapEvent(
-    addEventBubbleListener,
-    element,
-    topLevelType,
-    dispatch,
-    rawEventName,
-    isLegacy,
-  );
+  trapEventForPluginEventSystem(element, topLevelType, false);
 }
 
 export function trapCapturedEvent(
   topLevelType: DOMTopLevelEventType,
   element: Document | Element | Node,
-  isLegacy: boolean,
+): void {
+  trapEventForPluginEventSystem(element, topLevelType, true);
+}
+
+export function trapEventForResponderEventSystem(
+  element: Document | Element | Node,
+  topLevelType: DOMTopLevelEventType,
+  capture: boolean,
+  passive: boolean,
 ): void {
   const dispatch = isInteractiveTopLevelEventType(topLevelType)
     ? dispatchInteractiveEvent
     : dispatchEvent;
   const rawEventName = getRawEventName(topLevelType);
+  let eventFlags = RESPONDER_EVENT_SYSTEM;
 
-  trapEvent(
-    addEventCaptureListener,
-    element,
-    topLevelType,
-    dispatch,
-    rawEventName,
-    isLegacy,
-  );
-}
-
-type Dispatcher = (
-  topLevelType: DOMTopLevelEventType,
-  listenerType: ListenerType,
-  nativeEvent: AnyNativeEvent,
-) => void;
-
-// A helper function to remove bytes
-function bindDispatch(
-  dispatch: Dispatcher,
-  topLevelType: DOMTopLevelEventType,
-  listenerType: ListenerType,
-) {
-  return dispatch.bind(null, topLevelType, listenerType);
-}
-
-function trapEvent(
-  eventListener: (
-    element: Document | Element | Node,
-    eventName: string,
-    listener: (event: AnyNativeEvent) => void,
-    listenerType: ListenerType,
-  ) => void,
-  element: Document | Element | Node,
-  topLevelType: DOMTopLevelEventType,
-  dispatch: Dispatcher,
-  rawEventName: string,
-  isLegacy: boolean,
-) {
-  if (isLegacy) {
-    // Check if interactive and wrap in interactiveUpdates
-    const listener = bindDispatch(dispatch, topLevelType, PASSIVE_DISABLED);
-    // We don't listen for passive/non-passive
-    eventListener(element, rawEventName, listener, PASSIVE_DISABLED);
-  } else {
+  // If passive option is not supported, then the event will be
+  // active and not passive, but we flag it as using not being
+  // supported too. This way the responder event plugins know,
+  // and can provide polyfills if needed.
+  if (passive) {
     if (passiveBrowserEventsSupported) {
-      // Check if interactive and wrap in interactiveUpdates
-      const activeListener = bindDispatch(
-        dispatch,
-        topLevelType,
-        PASSIVE_FALSE,
-      );
-      const passiveListener = bindDispatch(
-        dispatch,
-        topLevelType,
-        PASSIVE_TRUE,
-      );
-      // We listen to the same event for both passive true/passive false.
-      // We do this so future event experiments can handle conditional logic.
-      // For example, we might want to support some derivative of both
-      // onMouseMovePassive and onMouseMoveActive, where the underlying logic
-      // is forked conditionally, depending on the event handler being
-      // passive or not. Furthermore, given we generally always listen to
-      // events on the root, we have have to anticipate that this might
-      // occur and listen to both ahead of time.
-      eventListener(element, rawEventName, passiveListener, PASSIVE_TRUE);
-      eventListener(element, rawEventName, activeListener, PASSIVE_FALSE);
+      eventFlags |= IS_ACTIVE;
+      eventFlags |= PASSIVE_NOT_SUPPORTED;
+      passive = false;
     } else {
-      const fallbackListener = bindDispatch(
-        dispatch,
-        topLevelType,
-        PASSIVE_FALLBACK,
-      );
-      eventListener(element, rawEventName, fallbackListener, PASSIVE_FALLBACK);
+      eventFlags |= IS_PASSIVE;
     }
+  } else {
+    eventFlags |= IS_ACTIVE;
+  }
+  // Check if interactive and wrap in interactiveUpdates
+  const listener = dispatch.bind(null, topLevelType, eventFlags);
+  if (capture) {
+    addEventCaptureListener(element, rawEventName, listener, passive);
+  } else {
+    addEventBubbleListener(element, rawEventName, listener, passive);
   }
 }
 
-function dispatchInteractiveEvent(topLevelType, listenerType, nativeEvent) {
-  interactiveUpdates(dispatchEvent, topLevelType, listenerType, nativeEvent);
+function trapEventForPluginEventSystem(
+  element: Document | Element | Node,
+  topLevelType: DOMTopLevelEventType,
+  capture: boolean,
+): void {
+  const dispatch = isInteractiveTopLevelEventType(topLevelType)
+    ? dispatchInteractiveEvent
+    : dispatchEvent;
+  const rawEventName = getRawEventName(topLevelType);
+  // Check if interactive and wrap in interactiveUpdates
+  const listener = dispatch.bind(null, topLevelType, PLUGIN_EVENT_SYSTEM);
+  if (capture) {
+    addEventCaptureListener(element, rawEventName, listener);
+  } else {
+    addEventBubbleListener(element, rawEventName, listener);
+  }
+}
+
+function dispatchInteractiveEvent(topLevelType, eventSystemFlags, nativeEvent) {
+  interactiveUpdates(
+    dispatchEvent,
+    topLevelType,
+    eventSystemFlags,
+    nativeEvent,
+  );
 }
 
 export function dispatchEvent(
   topLevelType: DOMTopLevelEventType,
-  listenerType: ListenerType,
+  eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent,
 ): void {
   if (!_enabled) {
@@ -288,7 +253,7 @@ export function dispatchEvent(
     topLevelType,
     nativeEvent,
     targetInst,
-    listenerType,
+    eventSystemFlags,
   );
 
   try {

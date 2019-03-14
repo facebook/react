@@ -86,44 +86,22 @@ import isEventSupported from './isEventSupported';
  */
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
-const elementListeningObjects:
+const elementListeningSets:
   | WeakMap
   | Map<
       Document | Element | Node,
-      ElementListeningObject,
+      Set<DOMTopLevelEventType>,
     > = new PossiblyWeakMap();
-
-// This object will contain both legacy and non legacy events.
-// In the case of legacy events, we register an event listener
-// without passing an object with { passive, capture } etc to
-// third argument of the addEventListener call (we use a boolean).
-// For non legacy events, we register an event listener with
-// an object (third argument) with the passive property. We also
-// double listen for the event on the element, as we need to check
-// both paths (where passive is both true and false) so we can
-// handle logic in either case.
-export type ElementListeningObject = {
-  legacy: Set<DOMTopLevelEventType>,
-  nonLegacy: Set<DOMTopLevelEventType>,
-};
-
-function createElementListeningObject(): ElementListeningObject {
-  return {
-    legacy: new Set(),
-    nonLegacy: new Set(),
-  };
-}
 
 function getListeningSetForElement(
   element: Document | Element | Node,
-  isLegacy: boolean,
 ): Set<DOMTopLevelEventType> {
-  let listeningObject = elementListeningObjects.get(element);
-  if (listeningObject === undefined) {
-    listeningObject = createElementListeningObject();
-    elementListeningObjects.set(element, listeningObject);
+  let listeningSet = elementListeningSets.get(element);
+  if (listeningSet === undefined) {
+    listeningSet = new Set();
+    elementListeningSets.set(element, listeningSet);
   }
-  return isLegacy ? listeningObject.legacy : listeningObject.nonLegacy;
+  return listeningSet;
 }
 
 /**
@@ -150,68 +128,57 @@ function getListeningSetForElement(
 export function listenTo(
   registrationName: string,
   mountAt: Document | Element | Node,
-  isLegacy: boolean,
 ): void {
-  const listeningSet = getListeningSetForElement(mountAt, isLegacy);
+  const listeningSet = getListeningSetForElement(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
 
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];
-    listenToDependency(dependency, listeningSet, mountAt, isLegacy);
-  }
-}
-
-function listenToDependency(
-  dependency: DOMTopLevelEventType,
-  listeningSet: Set<DOMTopLevelEventType>,
-  mountAt: Document | Element | Node,
-  isLegacy: boolean,
-): void {
-  if (!listeningSet.has(dependency)) {
-    switch (dependency) {
-      case TOP_SCROLL:
-        trapCapturedEvent(TOP_SCROLL, mountAt, isLegacy);
-        break;
-      case TOP_FOCUS:
-      case TOP_BLUR:
-        trapCapturedEvent(TOP_FOCUS, mountAt, isLegacy);
-        trapCapturedEvent(TOP_BLUR, mountAt, isLegacy);
-        // We set the flag for a single dependency later in this function,
-        // but this ensures we mark both as attached rather than just one.
-        listeningSet.add(TOP_BLUR);
-        listeningSet.add(TOP_FOCUS);
-        break;
-      case TOP_CANCEL:
-      case TOP_CLOSE:
-        if (isEventSupported(getRawEventName(dependency))) {
-          trapCapturedEvent(dependency, mountAt, isLegacy);
-        }
-        break;
-      case TOP_INVALID:
-      case TOP_SUBMIT:
-      case TOP_RESET:
-        // We listen to them on the target DOM elements.
-        // Some of them bubble so we don't want them to fire twice.
-        break;
-      default:
-        // By default, listen on the top level to all non-media events.
-        // Media events don't bubble so adding the listener wouldn't do anything.
-        const isMediaEvent = mediaEventTypes.indexOf(dependency) !== -1;
-        if (!isMediaEvent) {
-          trapBubbledEvent(dependency, mountAt, isLegacy);
-        }
-        break;
+    if (!listeningSet.has(dependency)) {
+      switch (dependency) {
+        case TOP_SCROLL:
+          trapCapturedEvent(TOP_SCROLL, mountAt);
+          break;
+        case TOP_FOCUS:
+        case TOP_BLUR:
+          trapCapturedEvent(TOP_FOCUS, mountAt);
+          trapCapturedEvent(TOP_BLUR, mountAt);
+          // We set the flag for a single dependency later in this function,
+          // but this ensures we mark both as attached rather than just one.
+          listeningSet.add(TOP_BLUR);
+          listeningSet.add(TOP_FOCUS);
+          break;
+        case TOP_CANCEL:
+        case TOP_CLOSE:
+          if (isEventSupported(getRawEventName(dependency))) {
+            trapCapturedEvent(dependency, mountAt);
+          }
+          break;
+        case TOP_INVALID:
+        case TOP_SUBMIT:
+        case TOP_RESET:
+          // We listen to them on the target DOM elements.
+          // Some of them bubble so we don't want them to fire twice.
+          break;
+        default:
+          // By default, listen on the top level to all non-media events.
+          // Media events don't bubble so adding the listener wouldn't do anything.
+          const isMediaEvent = mediaEventTypes.indexOf(dependency) !== -1;
+          if (!isMediaEvent) {
+            trapBubbledEvent(dependency, mountAt);
+          }
+          break;
+      }
+      listeningSet.add(dependency);
     }
-    listeningSet.add(dependency);
   }
 }
 
 export function isListeningToAllDependencies(
   registrationName: string,
   mountAt: Document | Element,
-  isLegacy: boolean,
 ): boolean {
-  const listeningSet = getListeningSetForElement(mountAt, isLegacy);
+  const listeningSet = getListeningSetForElement(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
 
   for (let i = 0; i < dependencies.length; i++) {

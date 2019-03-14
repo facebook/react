@@ -7,24 +7,17 @@
  * @flow
  */
 
-import {
-  type ListenerType,
-  PASSIVE_DISABLED,
-  PASSIVE_FALLBACK,
-  PASSIVE_TRUE,
-} from 'events/ListenerTypes';
-
 export function addEventBubbleListener(
   element: Document | Element | Node,
   eventType: string,
   listener: Function,
-  listenerType: ListenerType,
+  passive?: boolean,
 ): void {
-  if (listenerType === PASSIVE_DISABLED || listenerType === PASSIVE_FALLBACK) {
+  if (passive === undefined) {
     element.addEventListener(eventType, listener, false);
   } else {
     element.addEventListener(eventType, listener, {
-      passive: listenerType === PASSIVE_TRUE,
+      passive,
       capture: false,
     });
   }
@@ -34,13 +27,13 @@ export function addEventCaptureListener(
   element: Document | Element | Node,
   eventType: string,
   listener: Function,
-  listenerType: ListenerType,
+  passive?: boolean,
 ): void {
-  if (listenerType === PASSIVE_DISABLED || listenerType === PASSIVE_FALLBACK) {
+  if (passive === undefined) {
     element.addEventListener(eventType, listener, true);
   } else {
     element.addEventListener(eventType, listener, {
-      passive: listenerType === PASSIVE_TRUE,
+      passive,
       capture: true,
     });
   }
