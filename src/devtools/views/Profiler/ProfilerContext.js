@@ -10,15 +10,20 @@ import React, {
 import { useSubscription } from '../hooks';
 import { TreeContext } from 'src/devtools/views/Elements/TreeContext';
 import { StoreContext } from '../context';
+import { useLocalStorage } from '../hooks';
 import Store from '../../store';
 
 type Context = {|
   commitIndex: number,
   hasProfilingData: boolean,
+  isMinCommitDurationEnabled: boolean,
   isProfiling: boolean,
+  minCommitDuration: number,
   rendererID: number | null,
   rootID: number | null,
   setCommitIndex: (value: number) => void,
+  setMinCommitDuration: (value: number) => void,
+  setIsMinCommitDurationEnabled: (value: boolean) => void,
   startProfiling(value: boolean): void,
   stopProfiling(value: boolean): void,
 |};
@@ -94,13 +99,26 @@ function ProfilerContextController({ children }: Props) {
     setCommitIndex(0);
   }
 
+  const [
+    isMinCommitDurationEnabled,
+    setIsMinCommitDurationEnabled,
+  ] = useLocalStorage<boolean>('isMinCommitDurationEnabled', false);
+  const [minCommitDuration, setMinCommitDuration] = useLocalStorage<number>(
+    'minCommitDuration',
+    0
+  );
+
   const value = useMemo(
     () => ({
       commitIndex,
       hasProfilingData,
+      isMinCommitDurationEnabled,
       isProfiling,
+      minCommitDuration,
       rendererID,
       rootID,
+      setMinCommitDuration,
+      setIsMinCommitDurationEnabled,
       setCommitIndex,
       startProfiling,
       stopProfiling,
@@ -108,9 +126,13 @@ function ProfilerContextController({ children }: Props) {
     [
       commitIndex,
       hasProfilingData,
+      isMinCommitDurationEnabled,
       isProfiling,
+      minCommitDuration,
       rendererID,
       rootID,
+      setMinCommitDuration,
+      setIsMinCommitDurationEnabled,
       setCommitIndex,
       startProfiling,
       stopProfiling,

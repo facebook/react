@@ -12,8 +12,6 @@ import { FixedSizeList } from 'react-window';
 import SnapshotCommitListItem from './SnapshotCommitListItem';
 import { minBarWidth } from './constants';
 
-import type { ProfilingSummary } from './types';
-
 export type ItemData = {|
   commitDurations: Array<number>,
   commitTimes: Array<number>,
@@ -24,7 +22,8 @@ export type ItemData = {|
 |};
 
 type Props = {|
-  profilingSummary: ProfilingSummary,
+  commitDurations: Array<number>,
+  commitTimes: Array<number>,
   selectedCommitIndex: number,
   setCommitIndex: (index: number) => void,
   viewNextCommit: () => void,
@@ -41,7 +40,8 @@ export default function SnapshotCommitList(props: Props) {
 
 type ListProps = {|
   height: number,
-  profilingSummary: ProfilingSummary,
+  commitDurations: Array<number>,
+  commitTimes: Array<number>,
   selectedCommitIndex: number,
   setCommitIndex: (index: number) => void,
   viewNextCommit: () => void,
@@ -51,7 +51,8 @@ type ListProps = {|
 
 function List({
   height,
-  profilingSummary,
+  commitDurations,
+  commitTimes,
   selectedCommitIndex,
   setCommitIndex,
   viewNextCommit,
@@ -85,8 +86,6 @@ function List({
       window.removeEventListener('mouseup', handleMouseUp);
     };
   }, [handleMouseUp]);
-
-  const { commitDurations, commitTimes } = profilingSummary;
 
   const itemSize = useMemo(
     () => Math.max(minBarWidth, width / commitDurations.length),

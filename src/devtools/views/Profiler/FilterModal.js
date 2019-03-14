@@ -1,7 +1,8 @@
 // @flow
 
-import React, { useCallback, useEffect, useRef } from 'react';
-import { useLocalStorage, useModalDismissSignal } from '../hooks';
+import React, { useCallback, useContext, useEffect, useRef } from 'react';
+import { useModalDismissSignal } from '../hooks';
+import { ProfilerContext } from './ProfilerContext';
 
 import styles from './FilterModal.css';
 
@@ -10,33 +11,33 @@ type Props = {|
 |};
 
 export default function FilterModal({ dismissModal }: Props) {
-  const [isEnabled, setIsEnabled] = useLocalStorage<boolean>(
-    'minCommitDurationFilterEnabled',
-    false
-  );
-  const [value, setValue] = useLocalStorage<number>(
-    'minCommitDurationFilter',
-    0
-  );
+  const {
+    isMinCommitDurationEnabled,
+    minCommitDuration,
+    setMinCommitDuration,
+    setIsMinCommitDurationEnabled,
+  } = useContext(ProfilerContext);
 
   const handleNumberChange = useCallback(
     ({ currentTarget }) => {
       const newValue = parseInt(currentTarget.value, 10);
-      setValue(Number.isNaN(newValue) || newValue <= 0 ? 0 : newValue);
+      setMinCommitDuration(
+        Number.isNaN(newValue) || newValue <= 0 ? 0 : newValue
+      );
     },
-    [setValue]
+    [setMinCommitDuration]
   );
 
   const handleEnabledChange = useCallback(
     ({ currentTarget }) => {
-      setIsEnabled(currentTarget.checked);
+      setIsMinCommitDurationEnabled(currentTarget.checked);
       if (currentTarget.checked) {
         if (inputRef.current !== null) {
           inputRef.current.focus();
         }
       }
     },
-    [setIsEnabled]
+    [setIsMinCommitDurationEnabled]
   );
 
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -55,7 +56,7 @@ export default function FilterModal({ dismissModal }: Props) {
       <div className={styles.Modal} ref={modalRef}>
         <label>
           <input
-            checked={isEnabled}
+            checked={isMinCommitDurationEnabled}
             onChange={handleEnabledChange}
             type="checkbox"
           />{' '}
@@ -66,7 +67,7 @@ export default function FilterModal({ dismissModal }: Props) {
           onChange={handleNumberChange}
           ref={inputRef}
           type="number"
-          value={value}
+          value={minCommitDuration}
         />{' '}
         (ms)
       </div>

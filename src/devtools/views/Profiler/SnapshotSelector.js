@@ -21,25 +21,46 @@ export default function SnapshotSelectorSuspense(_: Props) {
 
 function SnapshotSelector(_: Props) {
   const { profilingCache } = useContext(StoreContext);
-  const { commitIndex, rendererID, rootID, setCommitIndex } = useContext(
-    ProfilerContext
-  );
+  const {
+    commitIndex,
+    isMinCommitDurationEnabled,
+    minCommitDuration,
+    rendererID,
+    rootID,
+    setCommitIndex,
+  } = useContext(ProfilerContext);
 
   if (rendererID === null || rootID === null) {
     return null;
   }
 
-  // TODO (profiling) Parse the summary into something easier for the views to work with
-  const profilingSummary = profilingCache.ProfilingSummary.read({
-    rendererID: ((rendererID: any): number),
-    rootID: ((rootID: any): number),
-  });
+  const { commitDurations, commitTimes } = profilingCache.ProfilingSummary.read(
+    {
+      rendererID: ((rendererID: any): number),
+      rootID: ((rootID: any): number),
+    }
+  );
 
-  const numCommits = profilingSummary.commitDurations.length;
-
-  if (numCommits === 0) {
-    return null;
+  // TODO (profiling) This is not sufficient; index here doesn't map to a meaningful index in the profiling data.
+  let filteredCommitDurations = commitDurations;
+  let filteredCommitTimes = commitTimes;
+  if (isMinCommitDurationEnabled) {
+    filteredCommitDurations = [];
+    filteredCommitTimes = [];
+    for (let i = 0; i < commitDurations.length; i++) {
+      if (commitDurations[i] >= minCommitDuration) {
+        filteredCommitDurations.push(commitDurations[i]);
+        filteredCommitTimes.push(commitTimes[i]);
+      }
+    }
   }
+
+  const numCommits = filteredCommitDurations.length;
+  const currentCommitNumber = `${
+    numCommits > 0 ? commitIndex + 1 : '-'
+  }`.padStart(`${numCommits}`.length, '0');
+
+  // TODO (profiler) We need to guard commit index and share filterd statuses in a better way.
 
   const viewNextCommit = () => {
     setCommitIndex(Math.min(commitIndex + 1, numCommits - 1));
@@ -53,24 +74,29 @@ function SnapshotSelector(_: Props) {
       <div className={styles.VRule} />
       <div className={styles.SnapshotSelector}>
         <span className={styles.Number}>
-          {`${commitIndex + 1}`.padStart(`${numCommits}`.length, '0')} /{' '}
-          {numCommits}
+          {currentCommitNumber} / {numCommits}
         </span>
         <Button
           className={styles.Button}
-          disabled={commitIndex <= 0}
+          disabled={numCommits === 0 || commitIndex <= 0}
           onClick={viewPrevCommit}
         >
           <ButtonIcon type="previous" />
         </Button>
         <div className={styles.Commits}>
-          <SnapshotCommitList
-            profilingSummary={profilingSummary}
-            selectedCommitIndex={commitIndex}
-            setCommitIndex={setCommitIndex}
-            viewNextCommit={viewNextCommit}
-            viewPrevCommit={viewPrevCommit}
-          />
+          {numCommits > 0 && (
+            <SnapshotCommitList
+              commitDurations={filteredCommitDurations}
+              commitTimes={filteredCommitTimes}
+              selectedCommitIndex={commitIndex}
+              setCommitIndex={setCommitIndex}
+              viewNextCommit={viewNextCommit}
+              viewPrevCommit={viewPrevCommit}
+            />
+          )}
+          {numCommits === 0 && (
+            <div className={styles.NoCommits}>No commits</div>
+          )}
         </div>
         <Button
           className={styles.Button}
