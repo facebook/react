@@ -85,7 +85,10 @@ import {
   skipPastDehydratedSuspenseInstance,
   popHydrationState,
 } from './ReactFiberHydrationContext';
-import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
+import {
+  enableSuspenseServerRenderer,
+  enableEventAPI,
+} from 'shared/ReactFeatureFlags';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -766,13 +769,17 @@ function completeWork(
       break;
     }
     case EventComponent: {
-      const rootContainerInstance = getRootHostContainer();
-      const responder = workInProgress.type.responder;
-      handleEventComponent(responder, rootContainerInstance, workInProgress);
+      if (enableEventAPI) {
+        const rootContainerInstance = getRootHostContainer();
+        const responder = workInProgress.type.responder;
+        handleEventComponent(responder, rootContainerInstance, workInProgress);
+      }
       break;
     }
     case EventTarget: {
-      markUpdate(workInProgress);
+      if (enableEventAPI) {
+        markUpdate(workInProgress);
+      }
       break;
     }
     default:

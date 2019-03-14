@@ -28,6 +28,7 @@ import {
   enableSchedulerTracing,
   enableProfilerTimer,
   enableSuspenseServerRenderer,
+  enableEventAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -1217,9 +1218,11 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       return;
     }
     case EventTarget: {
-      const newProps = finishedWork.memoizedProps;
-      const type = finishedWork.type.type;
-      handleEventTarget(type, newProps, finishedWork);
+      if (enableEventAPI) {
+        const newProps = finishedWork.memoizedProps;
+        const type = finishedWork.type.type;
+        handleEventTarget(type, newProps, finishedWork);
+      }
       return;
     }
     default: {

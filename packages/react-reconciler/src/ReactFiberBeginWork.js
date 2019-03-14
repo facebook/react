@@ -35,6 +35,8 @@ import {
   SimpleMemoComponent,
   LazyComponent,
   IncompleteClassComponent,
+  EventComponent,
+  EventTarget,
 } from 'shared/ReactWorkTags';
 import {
   NoEffect,
@@ -52,6 +54,7 @@ import {
   debugRenderPhaseSideEffectsForStrictMode,
   enableProfilerTimer,
   enableSuspenseServerRenderer,
+  enableEventAPI,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
@@ -1923,6 +1926,70 @@ function updateContextConsumer(
   return workInProgress.child;
 }
 
+function updateEventComponent(current, workInProgress, renderExpirationTime) {
+  const nextProps = workInProgress.pendingProps;
+  let nextChildren = nextProps.children;
+
+  reconcileChildren(
+    current,
+    workInProgress,
+    nextChildren,
+    renderExpirationTime,
+  );
+  if (__DEV__) {
+    // Check event node has any text nodes as direct nodes and warn
+    let child = workInProgress.child;
+    while (child !== null) {
+      if (child.tag === HostText) {
+        warningWithoutStack(
+          false,
+          'React event components cannot have text nodes as direct children',
+        );
+      }
+      child = child.sibling;
+    }
+  }
+  return workInProgress.child;
+}
+
+function updateEventTarget(current, workInProgress, renderExpirationTime) {
+  const nextProps = workInProgress.pendingProps;
+  let nextChildren = nextProps.children;
+
+  reconcileChildren(
+    current,
+    workInProgress,
+    nextChildren,
+    renderExpirationTime,
+  );
+  const parent = workInProgress.return;
+  invariant(
+    parent !== null && parent.tag === Event,
+    'Event target components must be direct child of event components',
+  );
+  // These invariants only occur in DEV to reduce overhead in production
+  if (__DEV__ && nextProps.type === 'touch-hit') {
+    let childrenCount = 0;
+    let child = workInProgress.child;
+    while (child !== null) {
+      if (child.tag === HostText) {
+        childrenCount++;
+        invariant(
+          false,
+          '<TouchHitTarget> cannot have text nodes as direct children',
+        );
+      } else if (child.tag === HostComponent) {
+        childrenCount++;
+      }
+      child = child.sibling;
+    }
+    if (childrenCount !== 1) {
+      invariant(false, '<TouchHitTarget> must only have a single child.');
+    }
+  }
+  return workInProgress.child;
+}
+
 export function markWorkInProgressReceivedUpdate() {
   didReceiveUpdate = true;
 }
@@ -2236,6 +2303,22 @@ function beginWork(
           workInProgress,
           renderExpirationTime,
         );
+      }
+      break;
+    }
+    case EventComponent: {
+      if (enableEventAPI) {
+        return updateEventComponent(
+          current,
+          workInProgress,
+          renderExpirationTime,
+        );
+      }
+      break;
+    }
+    case EventTarget: {
+      if (enableEventAPI) {
+        return updateEventTarget(current, workInProgress, renderExpirationTime);
       }
       break;
     }
