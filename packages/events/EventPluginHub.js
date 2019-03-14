@@ -165,7 +165,6 @@ function extractEvents(
   nativeEventTarget: EventTarget,
 ): Array<ReactSyntheticEvent> | ReactSyntheticEvent | null {
   let events = null;
-
   for (let i = 0; i < plugins.length; i++) {
     // Not every plugin in the ordering may be loaded at runtime.
     const possiblePlugin: PluginModule<AnyNativeEvent> = plugins[i];
