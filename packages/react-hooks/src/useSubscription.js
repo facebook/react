@@ -15,35 +15,36 @@ import {useEffect, useState} from 'react';
 // the parameters passed to this hook should be memoized in some way–
 // either by wrapping the entire params object with useMemo()
 // or by wrapping the individual callbacks with useCallback().
-export function useSubscription<Value, Source>({
-  // This is the thing being subscribed to (e.g. an observable, event dispatcher, etc).
-  source,
-
-  // (Synchronously) returns the current value of our subscription source.
+export function useSubscription<Value>({
+  // (Synchronously) returns the current value of our subscription.
   getCurrentValue,
 
-  // This function is passed an event handler to attach to the subscription source.
+  // This function is passed an event handler to attach to the subscription.
   // It should return an unsubscribe function that removes the handler.
   subscribe,
 }: {|
-  source: Source,
-  getCurrentValue: (source: Source) => Value,
-  subscribe: (source: Source, callback: Function) => () => void,
+  getCurrentValue: () => Value,
+  subscribe: (callback: Function) => () => void,
 |}): Value {
-  // Read the current value from our subscription source.
+  // Read the current value from our subscription.
   // When this value changes, we'll schedule an update with React.
-  // It's important to also store the source itself so that we can check for staleness.
+  // It's important to also store the hook params so that we can check for staleness.
   // (See the comment in checkForUpdates() below for more info.)
   const [state, setState] = useState({
-    source,
-    value: getCurrentValue(source),
+    getCurrentValue,
+    subscribe,
+    value: getCurrentValue(),
   });
 
-  // If the source has changed since our last render, schedule an update with its current value.
-  if (state.source !== source) {
+  // If parameters have changed since our last render, schedule an update with its current value.
+  if (
+    state.getCurrentValue !== getCurrentValue ||
+    state.subscribe !== subscribe
+  ) {
     setState({
-      source,
-      value: getCurrentValue(source),
+      getCurrentValue,
+      subscribe,
+      value: getCurrentValue(),
     });
   }
 
@@ -62,7 +63,7 @@ export function useSubscription<Value, Source>({
 
       const checkForUpdates = () => {
         // It's possible that this callback will be invoked even after being unsubscribed,
-        // if it's removed as a result of an event/update from the source.
+        // if it's removed as a result of a subscription event/update.
         // In this case, React will log a DEV warning about an update from an unmounted component.
         // We can avoid triggering that warning with this check.
         if (didUnsubscribe) {
@@ -72,16 +73,19 @@ export function useSubscription<Value, Source>({
         setState(prevState => {
           // Ignore values from stale sources!
           // Since we subscribe an unsubscribe in a passive effect,
-          // it's possible that this callback will be invoked for a stale (previous) source.
-          // This check avoids scheduling an update for htat stale source.
-          if (prevState.source !== source) {
+          // it's possible that this callback will be invoked for a stale (previous) subscription.
+          // This check avoids scheduling an update for that stale subscription.
+          if (
+            prevState.getCurrentValue !== getCurrentValue ||
+            prevState.subscribe !== subscribe
+          ) {
             return prevState;
           }
 
-          // Some subscription sources will auto-invoke the handler, even if the value hasn't changed.
+          // Some subscriptions will auto-invoke the handler, even if the value hasn't changed.
           // If the value hasn't changed, no update is needed.
           // Return state as-is so React can bail out and avoid an unnecessary render.
-          const value = getCurrentValue(source);
+          const value = getCurrentValue();
           if (prevState.value === value) {
             return prevState;
           }
@@ -89,7 +93,7 @@ export function useSubscription<Value, Source>({
           return {...prevState, value};
         });
       };
-      const unsubscribe = subscribe(source, checkForUpdates);
+      const unsubscribe = subscribe(checkForUpdates);
 
       // Because we're subscribing in a passive effect,
       // it's possible that an update has occurred between render and our effect handler.
@@ -101,7 +105,7 @@ export function useSubscription<Value, Source>({
         unsubscribe();
       };
     },
-    [getCurrentValue, source, subscribe],
+    [getCurrentValue, subscribe],
   );
 
   // Return the current value for our caller to use while rendering.

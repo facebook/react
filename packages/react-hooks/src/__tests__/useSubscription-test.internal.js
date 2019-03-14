@@ -49,29 +49,27 @@ describe('useSubscription', () => {
     return replaySubject;
   }
 
-  // Mimic createSubscription API to simplify testing
-  function createSubscription({getCurrentValue, subscribe}) {
-    function DefaultChild({value = 'default'}) {
+  it('supports basic subscription pattern', () => {
+    function Child({value = 'default'}) {
       Scheduler.yieldValue(value);
       return null;
     }
 
-    return function Subscription({children, source}) {
+    function Subscription({source}) {
       const value = useSubscription(
-        React.useMemo(() => ({source, getCurrentValue, subscribe}), [source]),
+        React.useMemo(
+          () => ({
+            getCurrentValue: () => source.getValue(),
+            subscribe: callback => {
+              const subscription = source.subscribe(callback);
+              return () => subscription.unsubscribe();
+            },
+          }),
+          [source],
+        ),
       );
-      return React.createElement(children || DefaultChild, {value});
-    };
-  }
-
-  it('supports basic subscription pattern', () => {
-    const Subscription = createSubscription({
-      getCurrentValue: source => source.getValue(),
-      subscribe: (source, callback) => {
-        const subscription = source.subscribe(callback);
-        return () => subscription.unsubscribe();
-      },
-    });
+      return <Child value={value} />;
+    }
 
     const observable = createBehaviorSubject();
     const renderer = ReactTestRenderer.create(
@@ -93,21 +91,34 @@ describe('useSubscription', () => {
   });
 
   it('should support observable types like RxJS ReplaySubject', () => {
-    const Subscription = createSubscription({
-      getCurrentValue: source => {
-        let currentValue;
-        source
-          .subscribe(value => {
-            currentValue = value;
-          })
-          .unsubscribe();
-        return currentValue;
-      },
-      subscribe: (source, callback) => {
-        const subscription = source.subscribe(callback);
-        return () => subscription.unsubscribe;
-      },
-    });
+    function Child({value = 'default'}) {
+      Scheduler.yieldValue(value);
+      return null;
+    }
+
+    function Subscription({source}) {
+      const value = useSubscription(
+        React.useMemo(
+          () => ({
+            getCurrentValue: () => {
+              let currentValue;
+              source
+                .subscribe(tempValue => {
+                  currentValue = tempValue;
+                })
+                .unsubscribe();
+              return currentValue;
+            },
+            subscribe: callback => {
+              const subscription = source.subscribe(callback);
+              return () => subscription.unsubscribe();
+            },
+          }),
+          [source],
+        ),
+      );
+      return <Child value={value} />;
+    }
 
     let observable = createReplaySubject('initial');
     const renderer = ReactTestRenderer.create(
@@ -127,13 +138,26 @@ describe('useSubscription', () => {
   });
 
   it('should unsubscribe from old subscribables and subscribe to new subscribables when props change', () => {
-    const Subscription = createSubscription({
-      getCurrentValue: source => source.getValue(),
-      subscribe: (source, callback) => {
-        const subscription = source.subscribe(callback);
-        return () => subscription.unsubscribe();
-      },
-    });
+    function Child({value = 'default'}) {
+      Scheduler.yieldValue(value);
+      return null;
+    }
+
+    function Subscription({source}) {
+      const value = useSubscription(
+        React.useMemo(
+          () => ({
+            getCurrentValue: () => source.getValue(),
+            subscribe: callback => {
+              const subscription = source.subscribe(callback);
+              return () => subscription.unsubscribe();
+            },
+          }),
+          [source],
+        ),
+      );
+      return <Child value={value} />;
+    }
 
     const observableA = createBehaviorSubject('a-0');
     const observableB = createBehaviorSubject('b-0');
@@ -162,18 +186,31 @@ describe('useSubscription', () => {
   it('should ignore values emitted by a new subscribable until the commit phase', () => {
     const log = [];
 
-    function Child({value}) {
-      Scheduler.yieldValue('Child: ' + value);
+    function Grandchild({value}) {
+      Scheduler.yieldValue('Grandchild: ' + value);
       return null;
     }
 
-    const Subscription = createSubscription({
-      getCurrentValue: source => source.getValue(),
-      subscribe: (source, callback) => {
-        const subscription = source.subscribe(callback);
-        return () => subscription.unsubscribe();
-      },
-    });
+    function Child({value = 'default'}) {
+      Scheduler.yieldValue('Child: ' + value);
+      return <Grandchild value={value} />;
+    }
+
+    function Subscription({source}) {
+      const value = useSubscription(
+        React.useMemo(
+          () => ({
+            getCurrentValue: () => source.getValue(),
+            subscribe: callback => {
+              const subscription = source.subscribe(callback);
+              return () => subscription.unsubscribe();
+            },
+          }),
+          [source],
+        ),
+      );
+      return <Child value={value} />;
+    }
 
     class Parent extends React.Component {
       state = {};
@@ -197,14 +234,7 @@ describe('useSubscription', () => {
       }
 
       render() {
-        return (
-          <Subscription source={this.state.observed}>
-            {({value = 'default'}) => {
-              Scheduler.yieldValue('Subscriber: ' + value);
-              return <Child value={value} />;
-            }}
-          </Subscription>
-        );
+        return <Subscription source={this.state.observed} />;
       }
     }
 
@@ -215,12 +245,12 @@ describe('useSubscription', () => {
       <Parent observed={observableA} />,
       {unstable_isConcurrent: true},
     );
-    expect(Scheduler).toFlushAndYield(['Subscriber: a-0', 'Child: a-0']);
+    expect(Scheduler).toFlushAndYield(['Child: a-0', 'Grandchild: a-0']);
     expect(log).toEqual(['Parent.componentDidMount']);
 
     // Start React update, but don't finish
     renderer.update(<Parent observed={observableB} />);
-    expect(Scheduler).toFlushAndYieldThrough(['Subscriber: b-0']);
+    expect(Scheduler).toFlushAndYieldThrough(['Child: b-0']);
     expect(log).toEqual(['Parent.componentDidMount']);
 
     // Emit some updates from the uncommitted subscribable
@@ -236,11 +266,11 @@ describe('useSubscription', () => {
     // But the intermediate ones should be ignored,
     // And the final rendered output should be the higher-priority observable.
     expect(Scheduler).toFlushAndYield([
-      'Child: b-0',
-      'Subscriber: b-3',
+      'Grandchild: b-0',
       'Child: b-3',
-      'Subscriber: a-0',
+      'Grandchild: b-3',
       'Child: a-0',
+      'Grandchild: a-0',
     ]);
     expect(log).toEqual([
       'Parent.componentDidMount',
@@ -252,18 +282,31 @@ describe('useSubscription', () => {
   it('should not drop values emitted between updates', () => {
     const log = [];
 
-    function Child({value}) {
-      Scheduler.yieldValue('Child: ' + value);
+    function Grandchild({value}) {
+      Scheduler.yieldValue('Grandchild: ' + value);
       return null;
     }
 
-    const Subscription = createSubscription({
-      getCurrentValue: source => source.getValue(),
-      subscribe: (source, callback) => {
-        const subscription = source.subscribe(callback);
-        return () => subscription.unsubscribe();
-      },
-    });
+    function Child({value = 'default'}) {
+      Scheduler.yieldValue('Child: ' + value);
+      return <Grandchild value={value} />;
+    }
+
+    function Subscription({source}) {
+      const value = useSubscription(
+        React.useMemo(
+          () => ({
+            getCurrentValue: () => source.getValue(),
+            subscribe: callback => {
+              const subscription = source.subscribe(callback);
+              return () => subscription.unsubscribe();
+            },
+          }),
+          [source],
+        ),
+      );
+      return <Child value={value} />;
+    }
 
     class Parent extends React.Component {
       state = {};
@@ -287,14 +330,7 @@ describe('useSubscription', () => {
       }
 
       render() {
-        return (
-          <Subscription source={this.state.observed}>
-            {({value = 'default'}) => {
-              Scheduler.yieldValue('Subscriber: ' + value);
-              return <Child value={value} />;
-            }}
-          </Subscription>
-        );
+        return <Subscription source={this.state.observed} />;
       }
     }
 
@@ -305,12 +341,12 @@ describe('useSubscription', () => {
       <Parent observed={observableA} />,
       {unstable_isConcurrent: true},
     );
-    expect(Scheduler).toFlushAndYield(['Subscriber: a-0', 'Child: a-0']);
+    expect(Scheduler).toFlushAndYield(['Child: a-0', 'Grandchild: a-0']);
     expect(log).toEqual(['Parent.componentDidMount']);
 
     // Start React update, but don't finish
     renderer.update(<Parent observed={observableB} />);
-    expect(Scheduler).toFlushAndYieldThrough(['Subscriber: b-0']);
+    expect(Scheduler).toFlushAndYieldThrough(['Child: b-0']);
     expect(log).toEqual(['Parent.componentDidMount']);
 
     // Emit some updates from the old subscribable
@@ -324,9 +360,9 @@ describe('useSubscription', () => {
     // We expect the new subscribable to finish rendering,
     // But then the updated values from the old subscribable should be used.
     expect(Scheduler).toFlushAndYield([
-      'Child: b-0',
-      'Subscriber: a-2',
+      'Grandchild: b-0',
       'Child: a-2',
+      'Grandchild: a-2',
     ]);
     expect(log).toEqual([
       'Parent.componentDidMount',
@@ -345,12 +381,25 @@ describe('useSubscription', () => {
   });
 
   it('should guard against updates that happen after unmounting', () => {
-    const Subscription = createSubscription({
-      getCurrentValue: source => source.getValue(),
-      subscribe: (source, callback) => {
-        return source.subscribe(callback);
-      },
-    });
+    function Child({value = 'default'}) {
+      Scheduler.yieldValue(value);
+      return null;
+    }
+
+    function Subscription({source}) {
+      const value = useSubscription(
+        React.useMemo(
+          () => ({
+            getCurrentValue: () => source.getValue(),
+            subscribe: callback => {
+              return source.subscribe(callback);
+            },
+          }),
+          [source],
+        ),
+      );
+      return <Child value={value} />;
+    }
 
     const eventHandler = {
       _callbacks: [],
@@ -382,12 +431,7 @@ describe('useSubscription', () => {
     });
 
     const renderer = ReactTestRenderer.create(
-      <Subscription source={eventHandler}>
-        {({value}) => {
-          Scheduler.yieldValue(value);
-          return null;
-        }}
-      </Subscription>,
+      <Subscription source={eventHandler} />,
       {unstable_isConcurrent: true},
     );
 
