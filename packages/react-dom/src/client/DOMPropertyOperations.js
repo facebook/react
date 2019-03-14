@@ -15,6 +15,8 @@ import {
   BOOLEAN,
   OVERLOADED_BOOLEAN,
 } from '../shared/DOMProperty';
+import sanitizeURL from '../shared/sanitizeURL';
+import {disableJavaScriptURLs} from 'shared/ReactFeatureFlags';
 
 import type {PropertyInfo} from '../shared/DOMProperty';
 
@@ -34,6 +36,13 @@ export function getValueForProperty(
       const {propertyName} = propertyInfo;
       return (node: any)[propertyName];
     } else {
+      if (!disableJavaScriptURLs && propertyInfo.sanitizeURL) {
+        // If we haven't fully disabled javascript: URLs, and if
+        // the hydration is successful of a javascript: URL, we
+        // still want to warn on the client.
+        sanitizeURL('' + (expected: any));
+      }
+
       const attributeName = propertyInfo.attributeName;
 
       let stringValue = null;
@@ -164,6 +173,9 @@ export function setValueForProperty(
       // `setAttribute` with objects becomes only `[object]` in IE8/9,
       // ('' + value) makes it output the correct toString()-value.
       attributeValue = '' + (value: any);
+      if (propertyInfo.sanitizeURL) {
+        sanitizeURL(attributeValue);
+      }
     }
     if (attributeNamespace) {
       node.setAttributeNS(attributeNamespace, attributeName, attributeValue);

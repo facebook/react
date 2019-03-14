@@ -1,4 +1,5 @@
 import './hydration.css';
+import VersionPicker from '../../VersionPicker';
 import {SAMPLE_CODE} from './data';
 import {CodeEditor, CodeError} from './Code';
 import {compile} from './code-transformer';
@@ -6,12 +7,17 @@ import {reactPaths} from '../../../react-loader';
 import qs from 'query-string';
 
 const React = window.React;
+// The Hydration fixture can render at a different version than the parent
+// app. This allows rendering for versions of React older than the DOM
+// test fixtures can support.
+const initialVersion = qs.parse(window.location.search).version || 'local';
 
 class Hydration extends React.Component {
   state = {
     error: null,
     code: SAMPLE_CODE,
     hydrate: true,
+    version: initialVersion,
   };
 
   ready = false;
@@ -72,9 +78,14 @@ class Hydration extends React.Component {
     });
   };
 
+  setVersion = version => {
+    this.setState({version});
+  };
+
   render() {
-    const {code, error, hydrate} = this.state;
-    const src = '/renderer.html?' + qs.stringify({hydrate, ...reactPaths()});
+    const {code, error, hydrate, version} = this.state;
+    const src =
+      '/renderer.html?' + qs.stringify({hydrate, ...reactPaths(version)});
 
     return (
       <div className="hydration">
@@ -88,6 +99,16 @@ class Hydration extends React.Component {
               onChange={this.setCheckbox}
             />
             Auto-Hydrate
+          </label>
+
+          <label htmlFor="hydration_version">
+            Version:
+            <VersionPicker
+              id="hydration_version"
+              name="hyration_version"
+              version={version}
+              onChange={this.setVersion}
+            />
           </label>
         </header>
 

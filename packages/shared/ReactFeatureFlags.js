@@ -42,6 +42,9 @@ export function addUserTimingListener() {
   throw new Error('Not implemented.');
 }
 
+// Disable javascript: URL strings in href for XSS protection.
+export const disableJavaScriptURLs = false;
+
 // React Fire: prevent the value and checked attributes from syncing
 // with their related DOM properties
 export const disableInputAttributeSyncing = false;
@@ -55,3 +58,6 @@ export const warnAboutShorthandPropertyCollision = false;
 // See https://github.com/react-native-community/discussions-and-proposals/issues/72 for more information
 // This is a flag so we can fix warnings in RN core before turning it on
 export const warnAboutDeprecatedSetNativeProps = false;
+
+// Experimental React Events support. Only used in www builds for now.
+export const enableEventAPI = false;

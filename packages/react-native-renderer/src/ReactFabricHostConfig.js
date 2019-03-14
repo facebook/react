@@ -14,18 +14,13 @@ import type {
   NativeMethodsMixinType,
   ReactNativeBaseComponentViewConfig,
 } from './ReactNativeTypes';
+import type {ReactEventResponder} from 'shared/ReactTypes';
 
 import {
   mountSafeCallback_NOT_REALLY_SAFE,
   warnForStyleProps,
 } from './NativeMethodsMixinUtils';
 import {create, diff} from './ReactNativeAttributePayload';
-import {
-  now as ReactNativeFrameSchedulingNow,
-  cancelDeferredCallback as ReactNativeFrameSchedulingCancelDeferredCallback,
-  scheduleDeferredCallback as ReactNativeFrameSchedulingScheduleDeferredCallback,
-  shouldYield as ReactNativeFrameSchedulingShouldYield,
-} from './ReactNativeFrameScheduling';
 import {get as getViewConfigForType} from 'ReactNativeViewConfigRegistry';
 
 import deepFreezeAndThrowOnMutationInDev from 'deepFreezeAndThrowOnMutationInDev';
@@ -333,16 +328,10 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
 
 // The Fabric renderer is secondary to the existing React Native renderer.
 export const isPrimaryRenderer = false;
-export const now = ReactNativeFrameSchedulingNow;
-export const scheduleDeferredCallback = ReactNativeFrameSchedulingScheduleDeferredCallback;
-export const cancelDeferredCallback = ReactNativeFrameSchedulingCancelDeferredCallback;
-export const shouldYield = ReactNativeFrameSchedulingShouldYield;
 
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
 export const noTimeout = -1;
-export const schedulePassiveEffects = scheduleDeferredCallback;
-export const cancelPassiveEffects = cancelDeferredCallback;
 
 // -------------------
 //     Persistence
@@ -399,29 +388,9 @@ export function cloneHiddenInstance(
   };
 }
 
-export function cloneUnhiddenInstance(
+export function cloneHiddenTextInstance(
   instance: Instance,
-  type: string,
-  props: Props,
-  internalInstanceHandle: Object,
-): Instance {
-  const viewConfig = instance.canonical.viewConfig;
-  const node = instance.node;
-  const updatePayload = diff(
-    {...props, style: [props.style, {display: 'none'}]},
-    props,
-    viewConfig.validAttributes,
-  );
-  return {
-    node: cloneNodeWithNewProps(node, updatePayload),
-    canonical: instance.canonical,
-  };
-}
-
-export function createHiddenTextInstance(
   text: string,
-  rootContainerInstance: Container,
-  hostContext: HostContext,
   internalInstanceHandle: Object,
 ): TextInstance {
   throw new Error('Not yet implemented.');
@@ -449,3 +418,19 @@ export function replaceContainerChildren(
   container: Container,
   newChildren: ChildSet,
 ): void {}
+
+export function handleEventComponent(
+  eventResponder: ReactEventResponder,
+  rootContainerInstance: Container,
+  internalInstanceHandle: Object,
+) {
+  // TODO: add handleEventComponent implementation
+}
+
+export function handleEventTarget(
+  type: string,
+  props: Props,
+  internalInstanceHandle: Object,
+) {
+  // TODO: add handleEventTarget implementation
+}

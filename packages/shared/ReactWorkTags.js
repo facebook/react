@@ -26,7 +26,9 @@ export type WorkTag =
   | 15
   | 16
   | 17
-  | 18;
+  | 18
+  | 19
+  | 20;
 
 export const FunctionComponent = 0;
 export const ClassComponent = 1;
@@ -47,3 +49,5 @@ export const SimpleMemoComponent = 15;
 export const LazyComponent = 16;
 export const IncompleteClassComponent = 17;
 export const DehydratedSuspenseComponent = 18;
+export const EventComponent = 19;
+export const EventTarget = 20;

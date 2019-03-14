@@ -7,8 +7,9 @@
  * @flow
  */
 
-import * as Scheduler from 'scheduler/unstable_mock';
 import warning from 'shared/warning';
+
+import type {ReactEventResponder} from 'shared/ReactTypes';
 
 export type Type = string;
 export type Props = Object;
@@ -195,18 +196,10 @@ export function createTextInstance(
 }
 
 export const isPrimaryRenderer = false;
-// This approach enables `now` to be mocked by tests,
-// Even after the reconciler has initialized and read host config values.
-export const now = Scheduler.unstable_now;
-export const scheduleDeferredCallback = Scheduler.unstable_scheduleCallback;
-export const cancelDeferredCallback = Scheduler.unstable_cancelCallback;
-export const shouldYield = Scheduler.unstable_shouldYield;
 
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
 export const noTimeout = -1;
-export const schedulePassiveEffects = Scheduler.unstable_scheduleCallback;
-export const cancelPassiveEffects = Scheduler.unstable_cancelCallback;
 
 // -------------------
 //     Mutation
@@ -268,4 +261,20 @@ export function unhideTextInstance(
   text: string,
 ): void {
   textInstance.isHidden = false;
+}
+
+export function handleEventComponent(
+  eventResponder: ReactEventResponder,
+  rootContainerInstance: Container,
+  internalInstanceHandle: Object,
+) {
+  // TODO: add handleEventComponent implementation
+}
+
+export function handleEventTarget(
+  type: string,
+  props: Props,
+  internalInstanceHandle: Object,
+) {
+  // TODO: add handleEventTarget implementation
 }

@@ -14,9 +14,7 @@ import type {Interaction} from 'scheduler/src/Tracing';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.
-// TODO: We're not using this import anymore, but I've left this here so we
-// don't accidentally use named imports when we add it back.
-// import * as Scheduler from 'scheduler';
+import * as Scheduler from 'scheduler';
 import {
   __interactionsRef,
   __subscriberRef,
@@ -78,17 +76,11 @@ import {
   setCurrentFiber,
 } from './ReactCurrentFiber';
 import {
-  now,
-  scheduleDeferredCallback,
-  cancelDeferredCallback,
-  shouldYield,
   prepareForCommit,
   resetAfterCommit,
   scheduleTimeout,
   cancelTimeout,
   noTimeout,
-  schedulePassiveEffects,
-  cancelPassiveEffects,
 } from './ReactFiberHostConfig';
 import {
   markPendingPriorityLevel,
@@ -171,6 +163,15 @@ import {
   commitPassiveHookEffects,
 } from './ReactFiberCommitWork';
 import {ContextOnlyDispatcher} from './ReactFiberHooks';
+
+// Intentionally not named imports because Rollup would use dynamic dispatch for
+// CommonJS interop named imports.
+const {
+  unstable_scheduleCallback: scheduleCallback,
+  unstable_cancelCallback: cancelCallback,
+  unstable_shouldYield: shouldYield,
+  unstable_now: now,
+} = Scheduler;
 
 export type Thenable = {
   then(resolve: () => mixed, reject?: () => mixed): mixed,
@@ -598,7 +599,7 @@ function markLegacyErrorBoundaryAsFailed(instance: mixed) {
 
 function flushPassiveEffects() {
   if (passiveEffectCallbackHandle !== null) {
-    cancelPassiveEffects(passiveEffectCallbackHandle);
+    cancelCallback(passiveEffectCallbackHandle);
   }
   if (passiveEffectCallback !== null) {
     // We call the scheduled callback instead of commitPassiveEffects directly
@@ -807,7 +808,7 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
       // here because that code is still in flux.
       callback = Scheduler_tracing_wrap(callback);
     }
-    passiveEffectCallbackHandle = schedulePassiveEffects(callback);
+    passiveEffectCallbackHandle = scheduleCallback(callback);
     passiveEffectCallback = callback;
   }
 
@@ -1978,7 +1979,7 @@ function scheduleCallbackWithExpirationTime(
       if (callbackID !== null) {
         // Existing callback has insufficient timeout. Cancel and schedule a
         // new one.
-        cancelDeferredCallback(callbackID);
+        cancelCallback(callbackID);
       }
     }
     // The request callback timer is already running. Don't start a new one.
@@ -1990,7 +1991,7 @@ function scheduleCallbackWithExpirationTime(
   const currentMs = now() - originalStartTimeMs;
   const expirationTimeMs = expirationTimeToMs(expirationTime);
   const timeout = expirationTimeMs - currentMs;
-  callbackID = scheduleDeferredCallback(performAsyncWork, {timeout});
+  callbackID = scheduleCallback(performAsyncWork, {timeout});
 }
 
 // For every call to renderRoot, one of onFatal, onComplete, onSuspend, and

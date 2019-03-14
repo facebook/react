@@ -51,19 +51,16 @@ export const shouldSetTextContent = $$$hostConfig.shouldSetTextContent;
 export const shouldDeprioritizeSubtree =
   $$$hostConfig.shouldDeprioritizeSubtree;
 export const createTextInstance = $$$hostConfig.createTextInstance;
-export const scheduleDeferredCallback = $$$hostConfig.scheduleDeferredCallback;
-export const cancelDeferredCallback = $$$hostConfig.cancelDeferredCallback;
-export const shouldYield = $$$hostConfig.shouldYield;
 export const scheduleTimeout = $$$hostConfig.setTimeout;
 export const cancelTimeout = $$$hostConfig.clearTimeout;
 export const noTimeout = $$$hostConfig.noTimeout;
-export const schedulePassiveEffects = $$$hostConfig.schedulePassiveEffects;
-export const cancelPassiveEffects = $$$hostConfig.cancelPassiveEffects;
 export const now = $$$hostConfig.now;
 export const isPrimaryRenderer = $$$hostConfig.isPrimaryRenderer;
 export const supportsMutation = $$$hostConfig.supportsMutation;
 export const supportsPersistence = $$$hostConfig.supportsPersistence;
 export const supportsHydration = $$$hostConfig.supportsHydration;
+export const handleEventComponent = $$$hostConfig.handleEventComponent;
+export const handleEventTarget = $$$hostConfig.handleEventTarget;
 
 // -------------------
 //      Mutation
@@ -96,8 +93,7 @@ export const finalizeContainerChildren =
   $$$hostConfig.finalizeContainerChildren;
 export const replaceContainerChildren = $$$hostConfig.replaceContainerChildren;
 export const cloneHiddenInstance = $$$hostConfig.cloneHiddenInstance;
-export const cloneUnhiddenInstance = $$$hostConfig.cloneUnhiddenInstance;
-export const createHiddenTextInstance = $$$hostConfig.createHiddenTextInstance;
+export const cloneHiddenTextInstance = $$$hostConfig.cloneHiddenTextInstance;
 
 // -------------------
 //     Hydration
