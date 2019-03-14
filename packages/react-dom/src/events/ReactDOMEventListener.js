@@ -244,8 +244,8 @@ function trapEvent(
       // passive or not. Furthermore, given we generally always listen to
       // events on the root, we have have to anticipate that this might
       // occur and listen to both ahead of time.
-      eventListener(element, rawEventName, passiveListener, PASSIVE_FALSE);
-      eventListener(element, rawEventName, activeListener, PASSIVE_TRUE);
+      eventListener(element, rawEventName, passiveListener, PASSIVE_TRUE);
+      eventListener(element, rawEventName, activeListener, PASSIVE_FALSE);
     } else {
       const fallbackListener = bindDispatch(
         dispatch,
