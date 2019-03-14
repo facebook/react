@@ -29,6 +29,7 @@ export const disableInputAttributeSyncing = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const warnAboutDeprecatedLifecycles = true;
 export const warnAboutDeprecatedSetNativeProps = true;
+export const enableEventAPI = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

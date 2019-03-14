@@ -13,7 +13,9 @@ export type ReactNode =
   | ReactText
   | ReactFragment
   | ReactProvider<any>
-  | ReactConsumer<any>;
+  | ReactConsumer<any>
+  | ReactEvent
+  | ReactEventTarget;
 
 export type ReactEmpty = null | void | boolean;
 
@@ -77,4 +79,21 @@ export type ReactPortal = {
 
 export type RefObject = {|
   current: any,
+|};
+
+export type ReactEventResponder = {
+  targetEventTypes: Array<string>,
+  createInitialState?: (props: Object) => Object,
+  handleEvent: (context: Object, props: Object, state: Object) => void,
+};
+
+export type ReactEvent = {|
+  $$typeof: Symbol | number,
+  props: null | Object,
+  responder: ReactEventResponder,
+|};
+
+export type ReactEventTarget = {|
+  $$typeof: Symbol | number,
+  type: string,
 |};

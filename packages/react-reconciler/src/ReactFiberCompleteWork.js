@@ -38,6 +38,8 @@ import {
   SimpleMemoComponent,
   LazyComponent,
   IncompleteClassComponent,
+  EventComponent,
+  EventTarget,
 } from 'shared/ReactWorkTags';
 import {
   Placement,
@@ -63,6 +65,7 @@ import {
   createContainerChildSet,
   appendChildToContainerChildSet,
   finalizeContainerChildren,
+  handleEventComponent,
 } from './ReactFiberHostConfig';
 import {
   getRootHostContainer,
@@ -760,6 +763,16 @@ function completeWork(
           workInProgress.stateNode = null;
         }
       }
+      break;
+    }
+    case EventComponent: {
+      const rootContainerInstance = getRootHostContainer();
+      const responder = workInProgress.type.responder;
+      handleEventComponent(responder, rootContainerInstance, workInProgress);
+      break;
+    }
+    case EventTarget: {
+      markUpdate(workInProgress);
       break;
     }
     default:
