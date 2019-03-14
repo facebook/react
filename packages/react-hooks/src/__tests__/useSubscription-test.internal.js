@@ -137,11 +137,13 @@ describe('useSubscription', () => {
     expect(Scheduler).toFlushAndYield(['default']);
   });
 
-  it('should unsubscribe from old subscribables and subscribe to new subscribables when props change', () => {
+  it('should unsubscribe from old sources and subscribe to new sources when memoized props change', () => {
     function Child({value = 'default'}) {
       Scheduler.yieldValue(value);
       return null;
     }
+
+    let subscriptions = [];
 
     function Subscription({source}) {
       const value = useSubscription(
@@ -149,6 +151,7 @@ describe('useSubscription', () => {
           () => ({
             getCurrentValue: () => source.getValue(),
             subscribe: callback => {
+              subscriptions.push(source);
               const subscription = source.subscribe(callback);
               return () => subscription.unsubscribe();
             },
@@ -162,6 +165,8 @@ describe('useSubscription', () => {
     const observableA = createBehaviorSubject('a-0');
     const observableB = createBehaviorSubject('b-0');
 
+    expect(subscriptions).toHaveLength(0);
+
     const renderer = ReactTestRenderer.create(
       <Subscription source={observableA} />,
       {unstable_isConcurrent: true},
@@ -170,9 +175,15 @@ describe('useSubscription', () => {
     // Updates while subscribed should re-render the child component
     expect(Scheduler).toFlushAndYield(['a-0']);
 
+    expect(subscriptions).toHaveLength(1);
+    expect(subscriptions[0]).toBe(observableA);
+
     // Unsetting the subscriber prop should reset subscribed values
     renderer.update(<Subscription source={observableB} />);
     expect(Scheduler).toFlushAndYield(['b-0']);
+
+    expect(subscriptions).toHaveLength(2);
+    expect(subscriptions[1]).toBe(observableB);
 
     // Updates to the old subscribable should not re-render the child component
     act(() => observableA.next('a-1'));
@@ -181,6 +192,65 @@ describe('useSubscription', () => {
     // Updates to the bew subscribable should re-render the child component
     act(() => observableB.next('b-1'));
     expect(Scheduler).toFlushAndYield(['b-1']);
+
+    expect(subscriptions).toHaveLength(2);
+  });
+
+  it('should unsubscribe from old sources and subscribe to new sources when useCallback functions change', () => {
+    function Child({value = 'default'}) {
+      Scheduler.yieldValue(value);
+      return null;
+    }
+
+    let subscriptions = [];
+
+    function Subscription({source}) {
+      const value = useSubscription({
+        getCurrentValue: React.useCallback(() => source.getValue(), [source]),
+        subscribe: React.useCallback(
+          callback => {
+            subscriptions.push(source);
+            const subscription = source.subscribe(callback);
+            return () => subscription.unsubscribe();
+          },
+          [source],
+        ),
+      });
+      return <Child value={value} />;
+    }
+
+    const observableA = createBehaviorSubject('a-0');
+    const observableB = createBehaviorSubject('b-0');
+
+    expect(subscriptions).toHaveLength(0);
+
+    const renderer = ReactTestRenderer.create(
+      <Subscription source={observableA} />,
+      {unstable_isConcurrent: true},
+    );
+
+    // Updates while subscribed should re-render the child component
+    expect(Scheduler).toFlushAndYield(['a-0']);
+
+    expect(subscriptions).toHaveLength(1);
+    expect(subscriptions[0]).toBe(observableA);
+
+    // Unsetting the subscriber prop should reset subscribed values
+    renderer.update(<Subscription source={observableB} />);
+    expect(Scheduler).toFlushAndYield(['b-0']);
+
+    expect(subscriptions).toHaveLength(2);
+    expect(subscriptions[1]).toBe(observableB);
+
+    // Updates to the old subscribable should not re-render the child component
+    act(() => observableA.next('a-1'));
+    expect(Scheduler).toFlushAndYield([]);
+
+    // Updates to the bew subscribable should re-render the child component
+    act(() => observableB.next('b-1'));
+    expect(Scheduler).toFlushAndYield(['b-1']);
+
+    expect(subscriptions).toHaveLength(2);
   });
 
   it('should ignore values emitted by a new subscribable until the commit phase', () => {
