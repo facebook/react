@@ -9,6 +9,8 @@
 
 import warning from 'shared/warning';
 
+import type {ReactEventResponder} from 'shared/ReactTypes';
+
 export type Type = string;
 export type Props = Object;
 export type Container = {|
@@ -259,4 +261,20 @@ export function unhideTextInstance(
   text: string,
 ): void {
   textInstance.isHidden = false;
+}
+
+export function handleEventComponent(
+  eventResponder: ReactEventResponder,
+  rootContainerInstance: Container,
+  internalInstanceHandle: Object,
+) {
+  // TODO: add handleEventComponent implementation
+}
+
+export function handleEventTarget(
+  type: string,
+  props: Props,
+  internalInstanceHandle: Object,
+) {
+  // TODO: add handleEventTarget implementation
 }
