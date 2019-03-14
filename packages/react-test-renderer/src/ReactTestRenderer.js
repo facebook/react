@@ -552,7 +552,7 @@ const ReactTestRendererFiber = {
   act(callback: () => void | Promise<void>) {
     // note: keep these warning messages in sync with
     // createReactNoop.js and ReactTestUtils.js
-    const result = actedUpdates(callback);
+    const result = actedUpdates(callback, tick);
     if (
       result !== null &&
       typeof result === 'object' &&
@@ -597,6 +597,28 @@ const ReactTestRendererFiber = {
     }
   },
 };
+
+const nextTick =
+  typeof setImmediate !== 'undefined'
+    ? setImmediate
+    : callback => {
+        const channel = new MessageChannel();
+        channel.port1.onmessage = callback;
+        channel.port2.postMessage(undefined);
+      };
+
+function tick(callback: () => void, untilFalse: () => boolean) {
+  return new Promise((resolve, reject) => {
+    callback();
+    nextTick(() => {
+      if (untilFalse()) {
+        tick(callback, untilFalse).then(resolve, reject);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
 
 const fiberToWrapper = new WeakMap();
 function wrapFiber(fiber: Fiber): ReactTestInstance {

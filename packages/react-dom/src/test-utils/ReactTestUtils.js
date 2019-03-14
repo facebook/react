@@ -3,6 +3,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
  */
 
 import React from 'react';
@@ -151,6 +152,28 @@ function validateClassInstance(inst, methodName) {
 let actContainerElement = null;
 
 let didWarnAboutActInNodejs = false;
+
+const nextTick =
+  typeof setImmediate !== 'undefined'
+    ? setImmediate
+    : callback => {
+        const channel = new MessageChannel();
+        channel.port1.onmessage = callback;
+        channel.port2.postMessage(undefined);
+      };
+
+function tick(callback: () => void, untilFalse: () => boolean) {
+  return new Promise((resolve, reject) => {
+    callback();
+    nextTick(() => {
+      if (untilFalse()) {
+        tick(callback, untilFalse).then(resolve, reject);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
 
 /**
  * Utilities for making it easy to test React components.
@@ -406,7 +429,7 @@ const ReactTestUtils = {
     }
     // note: keep these warning messages in sync with
     // createReactNoop.js and ReactTestRenderer.js
-    const result = actedUpdates(callback);
+    const result = actedUpdates(callback, tick);
     if (
       result !== null &&
       typeof result === 'object' &&

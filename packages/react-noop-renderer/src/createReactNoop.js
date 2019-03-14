@@ -774,7 +774,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     act(callback: () => void | Promise<void>) {
       // note: keep these warning messages in sync with
       // ReactTestRenderer.js and ReactTestUtils.js
-      const result = NoopRenderer.actedUpdates(callback);
+      const result = NoopRenderer.actedUpdates(callback, tick);
       if (
         result !== null &&
         typeof result === 'object' &&
@@ -961,6 +961,28 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   };
 
   return ReactNoop;
+}
+
+const nextTick =
+  typeof setImmediate !== 'undefined'
+    ? setImmediate
+    : callback => {
+        const channel = new MessageChannel();
+        channel.port1.onmessage = callback;
+        channel.port2.postMessage(undefined);
+      };
+
+function tick(callback: () => void, untilFalse: () => boolean) {
+  return new Promise((resolve, reject) => {
+    callback();
+    nextTick(() => {
+      if (untilFalse()) {
+        tick(callback, untilFalse).then(resolve, reject);
+      } else {
+        resolve();
+      }
+    });
+  });
 }
 
 export default createReactNoop;
