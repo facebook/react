@@ -31,6 +31,8 @@ import SimpleEventPlugin from './SimpleEventPlugin';
 import {getRawEventName} from './DOMTopLevelEventTypes';
 import {passiveBrowserEventsSupported} from './checkPassiveEvents';
 
+import {enableEventAPI} from 'shared/ReactFeatureFlags';
+
 const {isInteractiveTopLevelEventType} = SimpleEventPlugin;
 
 const CALLBACK_BOOKKEEPING_POOL_SIZE = 10;
@@ -169,33 +171,35 @@ export function trapEventForResponderEventSystem(
   capture: boolean,
   passive: boolean,
 ): void {
-  const dispatch = isInteractiveTopLevelEventType(topLevelType)
-    ? dispatchInteractiveEvent
-    : dispatchEvent;
-  const rawEventName = getRawEventName(topLevelType);
-  let eventFlags = RESPONDER_EVENT_SYSTEM;
+  if (enableEventAPI) {
+    const dispatch = isInteractiveTopLevelEventType(topLevelType)
+      ? dispatchInteractiveEvent
+      : dispatchEvent;
+    const rawEventName = getRawEventName(topLevelType);
+    let eventFlags = RESPONDER_EVENT_SYSTEM;
 
-  // If passive option is not supported, then the event will be
-  // active and not passive, but we flag it as using not being
-  // supported too. This way the responder event plugins know,
-  // and can provide polyfills if needed.
-  if (passive) {
-    if (passiveBrowserEventsSupported) {
-      eventFlags |= IS_ACTIVE;
-      eventFlags |= PASSIVE_NOT_SUPPORTED;
-      passive = false;
+    // If passive option is not supported, then the event will be
+    // active and not passive, but we flag it as using not being
+    // supported too. This way the responder event plugins know,
+    // and can provide polyfills if needed.
+    if (passive) {
+      if (passiveBrowserEventsSupported) {
+        eventFlags |= IS_ACTIVE;
+        eventFlags |= PASSIVE_NOT_SUPPORTED;
+        passive = false;
+      } else {
+        eventFlags |= IS_PASSIVE;
+      }
     } else {
-      eventFlags |= IS_PASSIVE;
+      eventFlags |= IS_ACTIVE;
     }
-  } else {
-    eventFlags |= IS_ACTIVE;
-  }
-  // Check if interactive and wrap in interactiveUpdates
-  const listener = dispatch.bind(null, topLevelType, eventFlags);
-  if (capture) {
-    addEventCaptureListener(element, rawEventName, listener, passive);
-  } else {
-    addEventBubbleListener(element, rawEventName, listener, passive);
+    // Check if interactive and wrap in interactiveUpdates
+    const listener = dispatch.bind(null, topLevelType, eventFlags);
+    if (capture) {
+      addEventCaptureListener(element, rawEventName, listener, passive);
+    } else {
+      addEventBubbleListener(element, rawEventName, listener, passive);
+    }
   }
 }
 
