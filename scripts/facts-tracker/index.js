@@ -23,14 +23,11 @@ function exec(command, args) {
   return execFileSync(command, args, options).toString();
 }
 
-const isCI = !!process.env.TRAVIS_REPO_SLUG;
+const isCI = !!process.env.REPO_SLUG;
 
 if (isCI) {
-  const branch = process.env.TRAVIS_BRANCH || process.env.CIRCLE_BRANCH;
-  const isPullRequest =
-    (!!process.env.TRAVIS_PULL_REQUEST &&
-      process.env.TRAVIS_PULL_REQUEST !== 'false') ||
-    !!process.env.CI_PULL_REQUEST;
+  const branch = process.env.CIRCLE_BRANCH;
+  const isPullRequest = !!process.env.CI_PULL_REQUEST;
 
   if (branch !== 'master') {
     console.error('facts-tracker: Branch is not master, exiting...');
@@ -50,20 +47,10 @@ if (isCI) {
         '\n' +
         'Go to https://github.com/settings/tokens/new\n' +
         ' - Fill "Token description" with "facts-tracker for ' +
-        process.env.TRAVIS_REPO_SLUG +
+        process.env.REPO_SLUG +
         '"\n' +
         ' - Check "public_repo"\n' +
-        ' - Press "Generate Token"\n' +
-        '\n' +
-        'In a different tab, go to https://travis-ci.org/' +
-        process.env.TRAVIS_REPO_SLUG +
-        '/settings\n' +
-        ' - Make sure "Build only if .travis.yml is present" is ON\n' +
-        ' - Fill "Name" with "GITHUB_USER" and "Value" with the name of the ' +
-        'account you generated the token with. Press "Add"\n' +
-        '\n' +
-        'Once this is done, commit anything to the repository to restart ' +
-        'Travis and it should work :)'
+        ' - Press "Generate Token"\n'
     );
     process.exit(1);
   }
@@ -89,7 +76,7 @@ if (process.argv.length <= 2) {
 
 function getRepoSlug() {
   if (isCI) {
-    return process.env.TRAVIS_REPO_SLUG;
+    return process.env.REPO_SLUG;
   }
 
   const remotes = exec('git', ['remote', '-v']).split('\n');
