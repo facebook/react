@@ -8,12 +8,13 @@
  */
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
+import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
 export let passiveBrowserEventsSupported = false;
 
 // Check if browser support events with passive listeners
 // https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#Safely_detecting_option_support
-if (canUseDOM) {
+if (enableEventAPI && canUseDOM) {
   try {
     const options = {
       get passive() {
