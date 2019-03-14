@@ -50,7 +50,7 @@ export const REACT_EVENT_COMPONENT_TYPE = hasSymbol
   ? Symbol.for('react.event')
   : 0xead5;
 export const REACT_EVENT_TARGET_TYPE = hasSymbol
-  ? Symbol.for('react.event-target')
+  ? Symbol.for('react.event_target')
   : 0xead6;
 
 const MAYBE_ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
