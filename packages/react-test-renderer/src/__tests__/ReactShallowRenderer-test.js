@@ -1518,7 +1518,7 @@ describe('ReactShallowRenderer', () => {
     const shallowRenderer = createRenderer();
     shallowRenderer.render(<SomeComponent foo={1} />);
     expect(areEqual).not.toHaveBeenCalled();
-    expect(shallowRenderer.getRenderOutput()).toEqual(<div>1</div>);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>{1}</div>);
   });
 
   it('should handle memo(forwardRef())', () => {
