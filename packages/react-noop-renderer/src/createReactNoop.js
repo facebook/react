@@ -55,6 +55,13 @@ if (__DEV__) {
   Object.freeze(UPDATE_SIGNAL);
 }
 
+let globalPromise = null;
+if (typeof window !== 'undefined') {
+  globalPromise = window.Promise;
+} else if (typeof global !== 'undefined') {
+  globalPromise = global.Promise;
+}
+
 function createReactNoop(reconciler: Function, useMutation: boolean) {
   let instanceCounter = 0;
   let hostDiffCounter = 0;
@@ -773,8 +780,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       ) {
         let called = false;
         if (__DEV__) {
-          // eslint-disable-next-line no-undef
-          Promise.resolve()
+          // $FlowFixMe - if we've reached this far, we're certain Promise is available
+          globalPromise
+            .resolve()
             .then(() => {})
             .then(() => {
               if (!called) {
@@ -982,13 +990,6 @@ try {
     channel.port1.onmessage = callback;
     channel.port2.postMessage(undefined);
   };
-}
-
-let globalPromise = null;
-if (typeof window !== 'undefined') {
-  globalPromise = window.Promise;
-} else if (typeof global !== 'undefined') {
-  globalPromise = global.Promise;
 }
 
 function runCallbackUntilPredicateFails(
