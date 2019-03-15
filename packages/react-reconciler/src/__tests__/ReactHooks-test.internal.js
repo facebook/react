@@ -1702,6 +1702,7 @@ describe('ReactHooks', () => {
   it('does not fire a false positive warning when previous effect unmounts the component', () => {
     let {useState, useEffect} = React;
     let globalListener;
+    let _setState;
 
     function A() {
       const [show, setShow] = useState(true);
@@ -1721,7 +1722,14 @@ describe('ReactHooks', () => {
       useEffect(() => {
         let isStale = false;
 
+        _setState = setState;
         globalListener = () => {
+          if (!isStale) {
+            setState('hello');
+          }
+          if (!isStale) {
+            setState('goodbye');
+          }
           if (!isStale) {
             setState('hello');
           }
@@ -1747,6 +1755,15 @@ describe('ReactHooks', () => {
       'An update to C inside a test was not wrapped in act',
       // Note: should *not* warn about updates on unmounted component.
       // Because there's no way for component to know it got unmounted.
+    ]);
+
+    // Verify the warning isn't disabled permanently.
+    expect(() => {
+      ReactTestRenderer.act(() => {
+        _setState('bad');
+      });
+    }).toWarnDev([
+      "Can't perform a React state update on an unmounted component",
     ]);
   });
 

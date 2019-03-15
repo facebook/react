@@ -181,6 +181,7 @@ const {ReactCurrentDispatcher, ReactCurrentOwner} = ReactSharedInternals;
 
 let didWarnAboutStateTransition;
 let didWarnSetStateChildContext;
+let suppressUpdateOnUnmountedWarning;
 let warnAboutUpdateOnUnmounted;
 let warnAboutInvalidUpdates;
 
@@ -199,6 +200,7 @@ if (enableSchedulerTracing) {
 if (__DEV__) {
   didWarnAboutStateTransition = false;
   didWarnSetStateChildContext = false;
+  suppressUpdateOnUnmountedWarning = false;
   const didWarnStateUpdateForUnmountedComponent = {};
 
   warnAboutUpdateOnUnmounted = function(fiber: Fiber, isClass: boolean) {
@@ -605,6 +607,12 @@ function flushPassiveEffects() {
     // We call the scheduled callback instead of commitPassiveEffects directly
     // to ensure tracing works correctly.
     passiveEffectCallback();
+    if (__DEV__) {
+      // Flushing passive effects could have led to unmounting a component
+      // that the user has already called setState on. So temporarily suppress
+      // any warnings about that until the next scheduleWork call.
+      suppressUpdateOnUnmountedWarning = true;
+    }
   }
 }
 
@@ -1847,18 +1855,27 @@ export function warnIfNotCurrentlyBatchingInDev(fiber: Fiber): void {
 
 function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
   const root = scheduleWorkToRoot(fiber, expirationTime);
+
+  let suppressWarning;
+  if (__DEV__) {
+    suppressWarning = suppressUpdateOnUnmountedWarning;
+    suppressUpdateOnUnmountedWarning = false;
+  }
+
   if (root === null) {
     if (__DEV__) {
-      switch (fiber.tag) {
-        case ClassComponent:
-          warnAboutUpdateOnUnmounted(fiber, true);
-          break;
-        case FunctionComponent:
-        case ForwardRef:
-        case MemoComponent:
-        case SimpleMemoComponent:
-          warnAboutUpdateOnUnmounted(fiber, false);
-          break;
+      if (!suppressWarning) {
+        switch (fiber.tag) {
+          case ClassComponent:
+            warnAboutUpdateOnUnmounted(fiber, true);
+            break;
+          case FunctionComponent:
+          case ForwardRef:
+          case MemoComponent:
+          case SimpleMemoComponent:
+            warnAboutUpdateOnUnmounted(fiber, false);
+            break;
+        }
       }
     }
     return;
