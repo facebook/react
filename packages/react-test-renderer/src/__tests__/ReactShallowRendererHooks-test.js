@@ -304,4 +304,22 @@ describe('ReactShallowRenderer with hooks', () => {
       </div>,
     );
   });
+
+  it('should work with with forwardRef + any hook', () => {
+    const SomeComponent = React.forwardRef((props, ref) => {
+      const randomNumberRef = React.useRef({number: Math.random()});
+
+      return (
+        <div ref={ref}>
+          <p>The random number is: {randomNumberRef.current.number}</p>
+        </div>
+      );
+    });
+
+    const shallowRenderer = createRenderer();
+    let firstResult = shallowRenderer.render(<SomeComponent />);
+    let secondResult = shallowRenderer.render(<SomeComponent />);
+
+    expect(firstResult).toEqual(secondResult);
+  });
 });
