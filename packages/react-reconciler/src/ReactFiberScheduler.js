@@ -2523,9 +2523,14 @@ function flushSync<A, R>(fn: (a: A) => R, a: A): R {
   }
 }
 
-function interactiveUpdates<A, B, R>(fn: (A, B) => R, a: A, b: B): R {
+function interactiveUpdates<A, B, C, R>(
+  fn: (A, B, C) => R,
+  a: A,
+  b: B,
+  c: C,
+): R {
   if (isBatchingInteractiveUpdates) {
-    return fn(a, b);
+    return fn(a, b, c);
   }
   // If there are any pending interactive updates, synchronously flush them.
   // This needs to happen before we read any handlers, because the effect of
@@ -2545,7 +2550,7 @@ function interactiveUpdates<A, B, R>(fn: (A, B) => R, a: A, b: B): R {
   isBatchingInteractiveUpdates = true;
   isBatchingUpdates = true;
   try {
-    return fn(a, b);
+    return fn(a, b, c);
   } finally {
     isBatchingInteractiveUpdates = previousIsBatchingInteractiveUpdates;
     isBatchingUpdates = previousIsBatchingUpdates;

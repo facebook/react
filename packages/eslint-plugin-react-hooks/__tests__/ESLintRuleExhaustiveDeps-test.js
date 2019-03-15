@@ -1060,12 +1060,10 @@ const tests = {
         }
       `,
       errors: [
-        "React Hook useMemo doesn't serve any purpose without a dependency array. " +
-          'To enable this optimization, pass an array of values used by the inner ' +
-          'function as the second argument to useMemo.',
-        "React Hook useCallback doesn't serve any purpose without a dependency array. " +
-          'To enable this optimization, pass an array of values used by the inner ' +
-          'function as the second argument to useCallback.',
+        'React Hook useMemo does nothing when called with only one argument. ' +
+          'Did you forget to pass an array of dependencies?',
+        'React Hook useCallback does nothing when called with only one argument. ' +
+          'Did you forget to pass an array of dependencies?',
       ],
     },
     {
@@ -1260,7 +1258,7 @@ const tests = {
         "React Hook useCallback has a missing dependency: 'local2'. " +
           'Either include it or remove the dependency array. ' +
           "Outer scope values like 'local1' aren't valid dependencies " +
-          "because their mutation doesn't re-render the component.",
+          "because mutating them doesn't re-render the component.",
       ],
     },
     {
@@ -1326,7 +1324,7 @@ const tests = {
         "React Hook useCallback has an unnecessary dependency: 'window'. " +
           'Either exclude it or remove the dependency array. ' +
           "Outer scope values like 'window' aren't valid dependencies " +
-          "because their mutation doesn't re-render the component.",
+          "because mutating them doesn't re-render the component.",
       ],
     },
     {
@@ -1397,6 +1395,24 @@ const tests = {
     },
     {
       code: `
+        function MyComponent() {
+          useEffect(() => {}, ['foo']);
+        }
+      `,
+      // TODO: we could autofix this.
+      output: `
+        function MyComponent() {
+          useEffect(() => {}, ['foo']);
+        }
+      `,
+      errors: [
+        // Don't assume user meant `foo` because it's not used in the effect.
+        "The 'foo' literal is not a valid dependency because it never changes. " +
+          'You can safely remove it.',
+      ],
+    },
+    {
+      code: `
         function MyComponent({ foo, bar, baz }) {
           useEffect(() => {
             console.log(foo, bar, baz);
@@ -1413,9 +1429,9 @@ const tests = {
       errors: [
         "React Hook useEffect has missing dependencies: 'bar', 'baz', and 'foo'. " +
           'Either include them or remove the dependency array.',
-        "The 'foo' string literal is not a valid dependency because it never changes. " +
+        "The 'foo' literal is not a valid dependency because it never changes. " +
           'Did you mean to include foo in the array instead?',
-        "The 'bar' string literal is not a valid dependency because it never changes. " +
+        "The 'bar' literal is not a valid dependency because it never changes. " +
           'Did you mean to include bar in the array instead?',
       ],
     },
@@ -1437,9 +1453,9 @@ const tests = {
       errors: [
         "React Hook useEffect has missing dependencies: 'bar', 'baz', and 'foo'. " +
           'Either include them or remove the dependency array.',
-        "The '42' literal is not a valid dependency because it never changes. You can safely remove it.",
-        "The 'false' literal is not a valid dependency because it never changes. You can safely remove it.",
-        "The 'null' literal is not a valid dependency because it never changes. You can safely remove it.",
+        'The 42 literal is not a valid dependency because it never changes. You can safely remove it.',
+        'The false literal is not a valid dependency because it never changes. You can safely remove it.',
+        'The null literal is not a valid dependency because it never changes. You can safely remove it.',
       ],
     },
     {
@@ -1456,8 +1472,8 @@ const tests = {
         }
       `,
       errors: [
-        'React Hook useEffect has a second argument which is not an array ' +
-          "literal. This means we can't statically verify whether you've " +
+        'React Hook useEffect was passed a dependency list that is not an ' +
+          "array literal. This means we can't statically verify whether you've " +
           'passed the correct dependencies.',
       ],
     },
@@ -1482,8 +1498,8 @@ const tests = {
         }
       `,
       errors: [
-        'React Hook useEffect has a second argument which is not an array ' +
-          "literal. This means we can't statically verify whether you've " +
+        'React Hook useEffect was passed a dependency list that is not an ' +
+          "array literal. This means we can't statically verify whether you've " +
           'passed the correct dependencies.',
         "React Hook useEffect has a missing dependency: 'local'. " +
           'Either include it or remove the dependency array.',
@@ -2327,8 +2343,8 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'state'. " +
           'Either include it or remove the dependency array. ' +
-          `You can also write 'setState(s => ...)' ` +
-          `if you only use 'state' for the 'setState' call.`,
+          `You can also do a functional update 'setState(s => ...)' ` +
+          `if you only need 'state' in the 'setState' call.`,
       ],
     },
     {
@@ -2358,8 +2374,8 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'state'. " +
           'Either include it or remove the dependency array. ' +
-          `You can also write 'setState(s => ...)' ` +
-          `if you only use 'state' for the 'setState' call.`,
+          `You can also do a functional update 'setState(s => ...)' ` +
+          `if you only need 'state' in the 'setState' call.`,
       ],
     },
     {
@@ -2421,7 +2437,7 @@ const tests = {
         "React Hook useEffect has unnecessary dependencies: 'ref1.current' and 'ref2.current'. " +
           'Either exclude them or remove the dependency array. ' +
           "Mutable values like 'ref1.current' aren't valid dependencies " +
-          "because their mutation doesn't re-render the component.",
+          "because mutating them doesn't re-render the component.",
       ],
     },
     {
@@ -2445,7 +2461,7 @@ const tests = {
         "React Hook useEffect has an unnecessary dependency: 'ref.current'. " +
           'Either exclude it or remove the dependency array. ' +
           "Mutable values like 'ref.current' aren't valid dependencies " +
-          "because their mutation doesn't re-render the component.",
+          "because mutating them doesn't re-render the component.",
       ],
     },
     {
@@ -2473,7 +2489,7 @@ const tests = {
         "React Hook useEffect has unnecessary dependencies: 'ref1.current' and 'ref2.current'. " +
           'Either exclude them or remove the dependency array. ' +
           "Mutable values like 'ref1.current' aren't valid dependencies " +
-          "because their mutation doesn't re-render the component.",
+          "because mutating them doesn't re-render the component.",
       ],
     },
     {
@@ -2501,7 +2517,7 @@ const tests = {
         "React Hook useCallback has unnecessary dependencies: 'activeTab', 'ref1.current', and 'ref2.current'. " +
           'Either exclude them or remove the dependency array. ' +
           "Mutable values like 'ref1.current' aren't valid dependencies " +
-          "because their mutation doesn't re-render the component.",
+          "because mutating them doesn't re-render the component.",
       ],
     },
     {
@@ -2525,7 +2541,7 @@ const tests = {
         "React Hook useEffect has an unnecessary dependency: 'ref.current'. " +
           'Either exclude it or remove the dependency array. ' +
           "Mutable values like 'ref.current' aren't valid dependencies " +
-          "because their mutation doesn't re-render the component.",
+          "because mutating them doesn't re-render the component.",
       ],
     },
     {
@@ -2574,9 +2590,10 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'props'. " +
           'Either include it or remove the dependency array. ' +
-          `However, the preferred fix is to destructure the 'props' ` +
-          `object outside of the useEffect call and refer to specific ` +
-          `props directly by their names.`,
+          `However, 'props' will change when *any* prop changes, so the ` +
+          `preferred fix is to destructure the 'props' object outside ` +
+          `of the useEffect call and refer to those specific ` +
+          `props inside useEffect.`,
       ],
     },
     {
@@ -2607,9 +2624,10 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'props'. " +
           'Either include it or remove the dependency array. ' +
-          `However, the preferred fix is to destructure the 'props' ` +
-          `object outside of the useEffect call and refer to specific ` +
-          `props directly by their names.`,
+          `However, 'props' will change when *any* prop changes, so the ` +
+          `preferred fix is to destructure the 'props' object outside ` +
+          `of the useEffect call and refer to those specific ` +
+          `props inside useEffect.`,
       ],
     },
     {
@@ -2660,9 +2678,10 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'props'. " +
           'Either include it or remove the dependency array. ' +
-          `However, the preferred fix is to destructure the 'props' ` +
-          `object outside of the useEffect call and refer to specific ` +
-          `props directly by their names.`,
+          `However, 'props' will change when *any* prop changes, so the ` +
+          `preferred fix is to destructure the 'props' object outside ` +
+          `of the useEffect call and refer to those specific ` +
+          `props inside useEffect.`,
       ],
     },
     {
@@ -2689,9 +2708,10 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'props'. " +
           'Either include it or remove the dependency array. ' +
-          `However, the preferred fix is to destructure the 'props' ` +
-          `object outside of the useEffect call and refer to specific ` +
-          `props directly by their names.`,
+          `However, 'props' will change when *any* prop changes, so the ` +
+          `preferred fix is to destructure the 'props' object outside ` +
+          `of the useEffect call and refer to those specific ` +
+          `props inside useEffect.`,
       ],
     },
     {
@@ -2718,9 +2738,10 @@ const tests = {
       errors: [
         "React Hook useEffect has missing dependencies: 'props' and 'skillsCount'. " +
           'Either include them or remove the dependency array. ' +
-          `However, the preferred fix is to destructure the 'props' ` +
-          `object outside of the useEffect call and refer to specific ` +
-          `props directly by their names.`,
+          `However, 'props' will change when *any* prop changes, so the ` +
+          `preferred fix is to destructure the 'props' object outside ` +
+          `of the useEffect call and refer to those specific ` +
+          `props inside useEffect.`,
       ],
     },
     {
@@ -2819,29 +2840,25 @@ const tests = {
       `,
       errors: [
         // value2
-        `Assignments to the 'value2' variable from inside a React useEffect Hook ` +
-          `will not persist between re-renders. ` +
-          `If it's only needed by this Hook, move the variable inside it. ` +
-          `Alternatively, declare a ref with the useRef Hook, ` +
-          `and keep the mutable value in its 'current' property.`,
+        `Assignments to the 'value2' variable from inside React Hook useEffect ` +
+          `will be lost after each render. To preserve the value over time, ` +
+          `store it in a useRef Hook and keep the mutable value in the '.current' property. ` +
+          `Otherwise, you can move this variable directly inside useEffect.`,
         // value
-        `Assignments to the 'value' variable from inside a React useEffect Hook ` +
-          `will not persist between re-renders. ` +
-          `If it's only needed by this Hook, move the variable inside it. ` +
-          `Alternatively, declare a ref with the useRef Hook, ` +
-          `and keep the mutable value in its 'current' property.`,
+        `Assignments to the 'value' variable from inside React Hook useEffect ` +
+          `will be lost after each render. To preserve the value over time, ` +
+          `store it in a useRef Hook and keep the mutable value in the '.current' property. ` +
+          `Otherwise, you can move this variable directly inside useEffect.`,
         // value4
-        `Assignments to the 'value4' variable from inside a React useEffect Hook ` +
-          `will not persist between re-renders. ` +
-          `If it's only needed by this Hook, move the variable inside it. ` +
-          `Alternatively, declare a ref with the useRef Hook, ` +
-          `and keep the mutable value in its 'current' property.`,
+        `Assignments to the 'value4' variable from inside React Hook useEffect ` +
+          `will be lost after each render. To preserve the value over time, ` +
+          `store it in a useRef Hook and keep the mutable value in the '.current' property. ` +
+          `Otherwise, you can move this variable directly inside useEffect.`,
         // asyncValue
-        `Assignments to the 'asyncValue' variable from inside a React useEffect Hook ` +
-          `will not persist between re-renders. ` +
-          `If it's only needed by this Hook, move the variable inside it. ` +
-          `Alternatively, declare a ref with the useRef Hook, ` +
-          `and keep the mutable value in its 'current' property.`,
+        `Assignments to the 'asyncValue' variable from inside React Hook useEffect ` +
+          `will be lost after each render. To preserve the value over time, ` +
+          `store it in a useRef Hook and keep the mutable value in the '.current' property. ` +
+          `Otherwise, you can move this variable directly inside useEffect.`,
       ],
     },
     {
@@ -2886,23 +2903,20 @@ const tests = {
       `,
       errors: [
         // value
-        `Assignments to the 'value' variable from inside a React useEffect Hook ` +
-          `will not persist between re-renders. ` +
-          `If it's only needed by this Hook, move the variable inside it. ` +
-          `Alternatively, declare a ref with the useRef Hook, ` +
-          `and keep the mutable value in its 'current' property.`,
+        `Assignments to the 'value' variable from inside React Hook useEffect ` +
+          `will be lost after each render. To preserve the value over time, ` +
+          `store it in a useRef Hook and keep the mutable value in the '.current' property. ` +
+          `Otherwise, you can move this variable directly inside useEffect.`,
         // value2
-        `Assignments to the 'value2' variable from inside a React useEffect Hook ` +
-          `will not persist between re-renders. ` +
-          `If it's only needed by this Hook, move the variable inside it. ` +
-          `Alternatively, declare a ref with the useRef Hook, ` +
-          `and keep the mutable value in its 'current' property.`,
+        `Assignments to the 'value2' variable from inside React Hook useEffect ` +
+          `will be lost after each render. To preserve the value over time, ` +
+          `store it in a useRef Hook and keep the mutable value in the '.current' property. ` +
+          `Otherwise, you can move this variable directly inside useEffect.`,
         // asyncValue
-        `Assignments to the 'asyncValue' variable from inside a React useEffect Hook ` +
-          `will not persist between re-renders. ` +
-          `If it's only needed by this Hook, move the variable inside it. ` +
-          `Alternatively, declare a ref with the useRef Hook, ` +
-          `and keep the mutable value in its 'current' property.`,
+        `Assignments to the 'asyncValue' variable from inside React Hook useEffect ` +
+          `will be lost after each render. To preserve the value over time, ` +
+          `store it in a useRef Hook and keep the mutable value in the '.current' property. ` +
+          `Otherwise, you can move this variable directly inside useEffect.`,
       ],
     },
     {
@@ -2929,11 +2943,10 @@ const tests = {
         }
       `,
       errors: [
-        `Accessing 'myRef.current' during the effect cleanup ` +
-          `will likely read a different ref value because by this time React ` +
-          `has already updated the ref. If this ref is managed by React, store ` +
-          `'myRef.current' in a variable inside ` +
-          `the effect itself and refer to that variable from the cleanup function.`,
+        `The ref value 'myRef.current' will likely have changed by the time ` +
+          `this effect cleanup function runs. If this ref points to a node ` +
+          `rendered by React, copy 'myRef.current' to a variable inside the effect, ` +
+          `and use that variable in the cleanup function.`,
       ],
     },
     {
@@ -2956,11 +2969,10 @@ const tests = {
         }
       `,
       errors: [
-        `Accessing 'myRef.current' during the effect cleanup ` +
-          `will likely read a different ref value because by this time React ` +
-          `has already updated the ref. If this ref is managed by React, store ` +
-          `'myRef.current' in a variable inside ` +
-          `the effect itself and refer to that variable from the cleanup function.`,
+        `The ref value 'myRef.current' will likely have changed by the time ` +
+          `this effect cleanup function runs. If this ref points to a node ` +
+          `rendered by React, copy 'myRef.current' to a variable inside the effect, ` +
+          `and use that variable in the cleanup function.`,
       ],
     },
     {
@@ -2995,11 +3007,10 @@ const tests = {
         }
       `,
       errors: [
-        `Accessing 'myRef.current' during the effect cleanup ` +
-          `will likely read a different ref value because by this time React ` +
-          `has already updated the ref. If this ref is managed by React, store ` +
-          `'myRef.current' in a variable inside ` +
-          `the effect itself and refer to that variable from the cleanup function.`,
+        `The ref value 'myRef.current' will likely have changed by the time ` +
+          `this effect cleanup function runs. If this ref points to a node ` +
+          `rendered by React, copy 'myRef.current' to a variable inside the effect, ` +
+          `and use that variable in the cleanup function.`,
       ],
     },
     {
@@ -3034,11 +3045,10 @@ const tests = {
         }
       `,
       errors: [
-        `Accessing 'myRef.current' during the effect cleanup ` +
-          `will likely read a different ref value because by this time React ` +
-          `has already updated the ref. If this ref is managed by React, store ` +
-          `'myRef.current' in a variable inside ` +
-          `the effect itself and refer to that variable from the cleanup function.`,
+        `The ref value 'myRef.current' will likely have changed by the time ` +
+          `this effect cleanup function runs. If this ref points to a node ` +
+          `rendered by React, copy 'myRef.current' to a variable inside the effect, ` +
+          `and use that variable in the cleanup function.`,
       ],
     },
     {
@@ -3088,7 +3098,7 @@ const tests = {
         "React Hook useEffect has an unnecessary dependency: 'window'. " +
           'Either exclude it or remove the dependency array. ' +
           "Outer scope values like 'window' aren't valid dependencies " +
-          "because their mutation doesn't re-render the component.",
+          "because mutating them doesn't re-render the component.",
       ],
     },
     {
@@ -3114,7 +3124,7 @@ const tests = {
         "React Hook useEffect has an unnecessary dependency: 'MutableStore.hello'. " +
           'Either exclude it or remove the dependency array. ' +
           "Outer scope values like 'MutableStore.hello' aren't valid dependencies " +
-          "because their mutation doesn't re-render the component.",
+          "because mutating them doesn't re-render the component.",
       ],
     },
     {
@@ -3151,7 +3161,7 @@ const tests = {
           "'MutableStore.hello.world', 'global.stuff', and 'z'. " +
           'Either exclude them or remove the dependency array. ' +
           "Outer scope values like 'MutableStore.hello.world' aren't valid dependencies " +
-          "because their mutation doesn't re-render the component.",
+          "because mutating them doesn't re-render the component.",
       ],
     },
     {
@@ -3190,7 +3200,7 @@ const tests = {
           "'MutableStore.hello.world', 'global.stuff', and 'z'. " +
           'Either exclude them or remove the dependency array. ' +
           "Outer scope values like 'MutableStore.hello.world' aren't valid dependencies " +
-          "because their mutation doesn't re-render the component.",
+          "because mutating them doesn't re-render the component.",
       ],
     },
     {
@@ -3227,7 +3237,7 @@ const tests = {
           "'MutableStore.hello.world', 'global.stuff', 'props.foo', 'x', 'y', and 'z'. " +
           'Either exclude them or remove the dependency array. ' +
           "Outer scope values like 'MutableStore.hello.world' aren't valid dependencies " +
-          "because their mutation doesn't re-render the component.",
+          "because mutating them doesn't re-render the component.",
       ],
     },
     {
@@ -3956,8 +3966,8 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'count'. " +
           'Either include it or remove the dependency array. ' +
-          `You can also write 'setCount(c => ...)' if you ` +
-          `only use 'count' for the 'setCount' call.`,
+          `You can also do a functional update 'setCount(c => ...)' if you ` +
+          `only need 'count' in the 'setCount' call.`,
       ],
     },
     {
@@ -3994,8 +4004,8 @@ const tests = {
       errors: [
         "React Hook useEffect has missing dependencies: 'count' and 'increment'. " +
           'Either include them or remove the dependency array. ' +
-          `You can also write 'setCount(c => ...)' if you ` +
-          `only use 'count' for the 'setCount' call.`,
+          `You can also do a functional update 'setCount(c => ...)' if you ` +
+          `only need 'count' in the 'setCount' call.`,
       ],
     },
     {
@@ -4196,8 +4206,8 @@ const tests = {
       errors: [
         "React Hook useEffect has a missing dependency: 'increment'. " +
           'Either include it or remove the dependency array. ' +
-          'You can also replace useState with an inline useReducer ' +
-          `if 'setCount' needs the current value of 'increment'.`,
+          `If 'setCount' needs the current value of 'increment', ` +
+          `you can also switch to useReducer instead of useState and read 'increment' in the reducer.`,
       ],
     },
     {
@@ -4292,7 +4302,7 @@ const tests = {
       errors: [
         `React Hook useEffect has a missing dependency: 'fetchPodcasts'. ` +
           `Either include it or remove the dependency array. ` +
-          `If specifying 'fetchPodcasts' makes the dependencies change too often, ` +
+          `If 'fetchPodcasts' changes too often, ` +
           `find the parent component that defines it and wrap that definition in useCallback.`,
       ],
     },
@@ -4316,7 +4326,7 @@ const tests = {
       errors: [
         `React Hook useEffect has a missing dependency: 'fetchPodcasts'. ` +
           `Either include it or remove the dependency array. ` +
-          `If specifying 'fetchPodcasts' makes the dependencies change too often, ` +
+          `If 'fetchPodcasts' changes too often, ` +
           `find the parent component that defines it and wrap that definition in useCallback.`,
       ],
     },
@@ -4348,7 +4358,7 @@ const tests = {
       errors: [
         `React Hook useEffect has missing dependencies: 'fetchPodcasts' and 'fetchPodcasts2'. ` +
           `Either include them or remove the dependency array. ` +
-          `If specifying 'fetchPodcasts' makes the dependencies change too often, ` +
+          `If 'fetchPodcasts' changes too often, ` +
           `find the parent component that defines it and wrap that definition in useCallback.`,
       ],
     },
@@ -4374,7 +4384,7 @@ const tests = {
       errors: [
         `React Hook useEffect has a missing dependency: 'fetchPodcasts'. ` +
           `Either include it or remove the dependency array. ` +
-          `If specifying 'fetchPodcasts' makes the dependencies change too often, ` +
+          `If 'fetchPodcasts' changes too often, ` +
           `find the parent component that defines it and wrap that definition in useCallback.`,
       ],
     },
@@ -4426,7 +4436,7 @@ const tests = {
           `  }\n` +
           `\n` +
           `  return () => { ignore = true; };\n` +
-          `}, []);\n` +
+          `}, ...);\n` +
           `\n` +
           `This lets you handle multiple requests without bugs.`,
       ],

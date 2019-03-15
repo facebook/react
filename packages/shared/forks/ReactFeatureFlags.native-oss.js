@@ -20,11 +20,13 @@ export const warnAboutDeprecatedLifecycles = false;
 export const enableProfilerTimer = __PROFILE__;
 export const enableSchedulerTracing = __PROFILE__;
 export const enableSuspenseServerRenderer = false;
+export const disableJavaScriptURLs = false;
 export const disableInputAttributeSyncing = false;
 export const enableStableConcurrentModeAPIs = false;
 export const warnAboutShorthandPropertyCollision = false;
 export const enableSchedulerDebugging = false;
 export const warnAboutDeprecatedSetNativeProps = false;
+export const enableEventAPI = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

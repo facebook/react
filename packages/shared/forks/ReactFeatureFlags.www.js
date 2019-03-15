@@ -16,6 +16,7 @@ export const {
   debugRenderPhaseSideEffectsForStrictMode,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   warnAboutDeprecatedLifecycles,
+  disableJavaScriptURLs,
   disableInputAttributeSyncing,
   warnAboutShorthandPropertyCollision,
   warnAboutDeprecatedSetNativeProps,
@@ -63,6 +64,8 @@ function updateFlagOutsideOfReactCallStack() {
     });
   }
 }
+
+export const enableEventAPI = true;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

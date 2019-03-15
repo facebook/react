@@ -282,7 +282,9 @@ if (__DEV__) {
         );
       // https://html.spec.whatwg.org/multipage/semantics.html#the-html-element
       case 'html':
-        return tag === 'head' || tag === 'body';
+        return tag === 'head' || tag === 'body' || tag === 'frameset';
+      case 'frameset':
+        return tag === 'frame';
       case '#document':
         return tag === 'html';
     }
@@ -314,6 +316,7 @@ if (__DEV__) {
       case 'caption':
       case 'col':
       case 'colgroup':
+      case 'frameset':
       case 'frame':
       case 'head':
       case 'html':

@@ -1,3 +1,5 @@
+import {findDOMNode} from '../../../find-dom-node';
+
 const React = window.React;
 
 export class CodeEditor extends React.Component {
@@ -6,6 +8,8 @@ export class CodeEditor extends React.Component {
   }
 
   componentDidMount() {
+    this.textarea = findDOMNode(this);
+
     // Important: CodeMirror incorrectly lays out the editor
     // if it executes before CSS has loaded
     // https://github.com/graphql/graphiql/issues/33#issuecomment-318188555
@@ -44,7 +48,6 @@ export class CodeEditor extends React.Component {
   render() {
     return (
       <textarea
-        ref={ref => (this.textarea = ref)}
         defaultValue={this.props.code}
         autoComplete="off"
         hidden={true}
@@ -71,6 +74,10 @@ export class CodeError extends React.Component {
 
     if (supportsDetails) {
       const [summary, ...body] = error.message.split(/\n+/g);
+
+      if (body.length >= 0) {
+        return <div className={className}>{summary}</div>;
+      }
 
       return (
         <details className={className}>

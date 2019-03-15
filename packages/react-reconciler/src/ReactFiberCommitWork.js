@@ -43,6 +43,7 @@ import {
   IncompleteClassComponent,
   MemoComponent,
   SimpleMemoComponent,
+  EventTarget,
 } from 'shared/ReactWorkTags';
 import {
   invokeGuardedCallback,
@@ -90,6 +91,7 @@ import {
   hideTextInstance,
   unhideInstance,
   unhideTextInstance,
+  handleEventTarget,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -299,6 +301,7 @@ function commitBeforeMutationLifeCycles(
     case HostText:
     case HostPortal:
     case IncompleteClassComponent:
+    case EventTarget:
       // Nothing to do for these component types
       return;
     default: {
@@ -346,22 +349,23 @@ function commitHookEffectList(
             } else if (typeof destroy.then === 'function') {
               addendum =
                 '\n\nIt looks like you wrote useEffect(async () => ...) or returned a Promise. ' +
-                'Instead, you may write an async function separately ' +
-                'and then call it from inside the effect:\n\n' +
-                'async function fetchComment(commentId) {\n' +
-                '  // You can await here\n' +
-                '}\n\n' +
+                'Instead, write the async function inside your effect ' +
+                'and call it immediately:\n\n' +
                 'useEffect(() => {\n' +
-                '  fetchComment(commentId);\n' +
-                '}, [commentId]);\n\n' +
-                'In the future, React will provide a more idiomatic solution for data fetching ' +
-                "that doesn't involve writing effects manually.";
+                '  async function fetchData() {\n' +
+                '    // You can await here\n' +
+                '    const response = await MyAPI.getData(someId);\n' +
+                '    // ...\n' +
+                '  }\n' +
+                '  fetchData();\n' +
+                '}, [someId]);\n\n' +
+                'Learn more about data fetching with Hooks: https://fb.me/react-hooks-data-fetching';
             } else {
               addendum = ' You returned: ' + destroy;
             }
             warningWithoutStack(
               false,
-              'An Effect function must not return anything besides a function, ' +
+              'An effect function must not return anything besides a function, ' +
                 'which is used for clean-up.%s%s',
               addendum,
               getStackByFiberInDevAndProd(finishedWork),
@@ -583,8 +587,8 @@ function commitLifeCycles(
       return;
     }
     case SuspenseComponent:
-      break;
     case IncompleteClassComponent:
+    case EventTarget:
       break;
     default: {
       invariant(
@@ -1131,6 +1135,13 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
         commitHookEffectList(UnmountMutation, MountMutation, finishedWork);
         return;
       }
+      case Profiler: {
+        return;
+      }
+      case SuspenseComponent: {
+        commitSuspenseComponent(finishedWork);
+        return;
+      }
     }
 
     commitContainer(finishedWork);
@@ -1199,53 +1210,16 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       return;
     }
     case SuspenseComponent: {
-      let newState: SuspenseState | null = finishedWork.memoizedState;
-
-      let newDidTimeout;
-      let primaryChildParent = finishedWork;
-      if (newState === null) {
-        newDidTimeout = false;
-      } else {
-        newDidTimeout = true;
-        primaryChildParent = finishedWork.child;
-        if (newState.timedOutAt === NoWork) {
-          // If the children had not already timed out, record the time.
-          // This is used to compute the elapsed time during subsequent
-          // attempts to render the children.
-          newState.timedOutAt = requestCurrentTime();
-        }
-      }
-
-      if (primaryChildParent !== null) {
-        hideOrUnhideAllChildren(primaryChildParent, newDidTimeout);
-      }
-
-      // If this boundary just timed out, then it will have a set of thenables.
-      // For each thenable, attach a listener so that when it resolves, React
-      // attempts to re-render the boundary in the primary (pre-timeout) state.
-      const thenables: Set<Thenable> | null = (finishedWork.updateQueue: any);
-      if (thenables !== null) {
-        finishedWork.updateQueue = null;
-        let retryCache = finishedWork.stateNode;
-        if (retryCache === null) {
-          retryCache = finishedWork.stateNode = new PossiblyWeakSet();
-        }
-        thenables.forEach(thenable => {
-          // Memoize using the boundary fiber to prevent redundant listeners.
-          let retry = resolveRetryThenable.bind(null, finishedWork, thenable);
-          if (enableSchedulerTracing) {
-            retry = Schedule_tracing_wrap(retry);
-          }
-          if (!retryCache.has(thenable)) {
-            retryCache.add(thenable);
-            thenable.then(retry, retry);
-          }
-        });
-      }
-
+      commitSuspenseComponent(finishedWork);
       return;
     }
     case IncompleteClassComponent: {
+      return;
+    }
+    case EventTarget: {
+      const newProps = finishedWork.memoizedProps;
+      const type = finishedWork.type.type;
+      handleEventTarget(type, newProps, finishedWork);
       return;
     }
     default: {
@@ -1255,6 +1229,52 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
           'likely caused by a bug in React. Please file an issue.',
       );
     }
+  }
+}
+
+function commitSuspenseComponent(finishedWork: Fiber) {
+  let newState: SuspenseState | null = finishedWork.memoizedState;
+
+  let newDidTimeout;
+  let primaryChildParent = finishedWork;
+  if (newState === null) {
+    newDidTimeout = false;
+  } else {
+    newDidTimeout = true;
+    primaryChildParent = finishedWork.child;
+    if (newState.timedOutAt === NoWork) {
+      // If the children had not already timed out, record the time.
+      // This is used to compute the elapsed time during subsequent
+      // attempts to render the children.
+      newState.timedOutAt = requestCurrentTime();
+    }
+  }
+
+  if (supportsMutation && primaryChildParent !== null) {
+    hideOrUnhideAllChildren(primaryChildParent, newDidTimeout);
+  }
+
+  // If this boundary just timed out, then it will have a set of thenables.
+  // For each thenable, attach a listener so that when it resolves, React
+  // attempts to re-render the boundary in the primary (pre-timeout) state.
+  const thenables: Set<Thenable> | null = (finishedWork.updateQueue: any);
+  if (thenables !== null) {
+    finishedWork.updateQueue = null;
+    let retryCache = finishedWork.stateNode;
+    if (retryCache === null) {
+      retryCache = finishedWork.stateNode = new PossiblyWeakSet();
+    }
+    thenables.forEach(thenable => {
+      // Memoize using the boundary fiber to prevent redundant listeners.
+      let retry = resolveRetryThenable.bind(null, finishedWork, thenable);
+      if (enableSchedulerTracing) {
+        retry = Schedule_tracing_wrap(retry);
+      }
+      if (!retryCache.has(thenable)) {
+        retryCache.add(thenable);
+        thenable.then(retry, retry);
+      }
+    });
   }
 }
 
