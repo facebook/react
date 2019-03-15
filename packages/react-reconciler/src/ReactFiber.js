@@ -12,7 +12,7 @@ import type {
   ReactFragment,
   ReactPortal,
   RefObject,
-  ReactEvent,
+  ReactEventComponent,
   ReactEventTarget,
 } from 'shared/ReactTypes';
 import type {WorkTag} from 'shared/ReactWorkTags';
@@ -614,15 +614,15 @@ export function createFiberFromFragment(
 }
 
 export function createFiberFromEventComponent(
-  event: ReactEvent,
+  eventComponent: ReactEventComponent,
   pendingProps: any,
   mode: TypeOfMode,
   expirationTime: ExpirationTime,
   key: null | string,
 ): Fiber {
   const fiber = createFiber(EventComponent, pendingProps, key, mode);
-  fiber.elementType = event;
-  fiber.type = event;
+  fiber.elementType = eventComponent;
+  fiber.type = eventComponent;
   fiber.stateNode = new Map();
   fiber.expirationTime = expirationTime;
   return fiber;

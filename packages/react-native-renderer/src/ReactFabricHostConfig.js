@@ -428,7 +428,7 @@ export function handleEventComponent(
 }
 
 export function handleEventTarget(
-  type: string,
+  type: Symbol | number,
   props: Props,
   internalInstanceHandle: Object,
 ) {
