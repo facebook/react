@@ -5,9 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 import warningWithoutStack from 'shared/warningWithoutStack';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {getCurrentFiberStackInDev} from 'react-reconciler/src/ReactCurrentFiber';
+
+import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
 let validateDOMNesting = () => {};
 let updatedAncestorInfo = () => {};
@@ -159,10 +162,18 @@ if (__DEV__) {
     dlItemTagAutoclosing: null,
   };
 
-  updatedAncestorInfo = function(oldInfo, tag) {
+  updatedAncestorInfo = function(oldInfo, tag: string | Symbol) {
     let ancestorInfo = {...(oldInfo || emptyAncestorInfo)};
     let info = {tag};
 
+    if (enableEventAPI) {
+      if (tag === REACT_EVENT_COMPONENT_TYPE) {
+        ancestorInfo.inEventComponent = true;
+        return ancestorInfo;
+      } else {
+        ancestorInfo.inEventComponent = false;
+      }
+    }
     if (inScopeTags.indexOf(tag) !== -1) {
       ancestorInfo.aTagInScope = null;
       ancestorInfo.buttonTagInScope = null;
@@ -411,6 +422,14 @@ if (__DEV__) {
     const parentTag = parentInfo && parentInfo.tag;
 
     if (childText != null) {
+      if (enableEventAPI) {
+        warningWithoutStack(
+          !ancestorInfo.inEventComponent,
+          'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
+            'Wrap the child text "%s" in an element.',
+          childText,
+        );
+      }
       warningWithoutStack(
         childTag == null,
         'validateDOMNesting: when childText is passed, childTag should be null',

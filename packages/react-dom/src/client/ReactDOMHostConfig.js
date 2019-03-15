@@ -149,7 +149,7 @@ export function getRootHostContext(
 
 export function getChildHostContext(
   parentHostContext: HostContext,
-  type: string,
+  type: string | Symbol,
   rootContainerInstance: Container,
 ): HostContext {
   if (__DEV__) {

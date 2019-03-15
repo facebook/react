@@ -5,6 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
+
+import {enableEventAPI} from 'shared/ReactFeatureFlags';
+
 const HTML_NAMESPACE = 'http://www.w3.org/1999/xhtml';
 const MATH_NAMESPACE = 'http://www.w3.org/1998/Math/MathML';
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
@@ -29,8 +33,11 @@ export function getIntrinsicNamespace(type: string): string {
 
 export function getChildNamespace(
   parentNamespace: string | null,
-  type: string,
+  type: string | Symbol,
 ): string {
+  if (enableEventAPI && type === REACT_EVENT_COMPONENT_TYPE) {
+    return parentNamespace;
+  }
   if (parentNamespace == null || parentNamespace === HTML_NAMESPACE) {
     // No (or default) parent namespace: potential entry point.
     return getIntrinsicNamespace(type);

@@ -1937,17 +1937,10 @@ function updateEventComponent(current, workInProgress, renderExpirationTime) {
     renderExpirationTime,
   );
   if (__DEV__) {
-    // Check event node has any text nodes as direct nodes and warn
-    let child = workInProgress.child;
-    while (child !== null) {
-      if (child.tag === HostText) {
-        warningWithoutStack(
-          false,
-          'React event components cannot have text nodes as direct children',
-        );
-      }
-      child = child.sibling;
-    }
+    // We need to validate the event component does not have any direct children
+    // that are text host nodes (once resolved). So we use host context in the
+    // renderer and validate this inside the renderer. We only do this in DEV.
+    pushHostContext(workInProgress);
   }
   return workInProgress.child;
 }
@@ -1965,16 +1958,16 @@ function updateEventTarget(current, workInProgress, renderExpirationTime) {
   const parent = workInProgress.return;
   invariant(
     parent !== null && parent.tag === Event,
-    'Event target components must be direct child of event components',
+    'Event target components must be direct children of event components',
   );
-  // These invariants only occur in DEV to reduce overhead in production
+  // These warnings only occur in DEV to reduce overhead in production
   if (__DEV__ && nextProps.type === 'touch-hit') {
     let childrenCount = 0;
     let child = workInProgress.child;
     while (child !== null) {
       if (child.tag === HostText) {
         childrenCount++;
-        invariant(
+        warning(
           false,
           '<TouchHitTarget> cannot have text nodes as direct children',
         );
@@ -1984,7 +1977,7 @@ function updateEventTarget(current, workInProgress, renderExpirationTime) {
       child = child.sibling;
     }
     if (childrenCount !== 1) {
-      invariant(false, '<TouchHitTarget> must only have a single child.');
+      warning(false, '<TouchHitTarget> must only have a single child.');
     }
   }
   return workInProgress.child;
