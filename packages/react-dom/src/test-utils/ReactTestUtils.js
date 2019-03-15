@@ -181,12 +181,19 @@ try {
   };
 }
 
+let globalPromise = null;
+if (typeof window !== 'undefined') {
+  globalPromise = window.Promise;
+} else if (typeof global !== 'undefined') {
+  globalPromise = global.Promise;
+}
+
 function runCallbackUntilPredicateFails(
   callback: () => void,
   predicate: () => boolean,
 ) {
-  // eslint-disable-next-line no-undef
-  return new Promise((resolve, reject) => {
+  // $FlowFixMe - if we've reached this far, we're certain Promise is available 
+  return new globalPromise((resolve, reject) => {
     callback();
     enqueueTask(() => {
       if (predicate()) {
