@@ -2,6 +2,7 @@
 
 import React, {
   useCallback,
+  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -11,67 +12,64 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList } from 'react-window';
 import SnapshotCommitListItem from './SnapshotCommitListItem';
 import { minBarWidth } from './constants';
+import { ProfilerDataContext } from './ProfilerDataContext';
+import { StoreContext } from '../context';
 
 export type ItemData = {|
   commitDurations: Array<number>,
+  commitIndex: number | null,
   commitTimes: Array<number>,
+  filteredCommitIndices: Array<number>,
   isMouseDown: boolean,
   maxDuration: number,
-  selectedCommitIndex: number,
   setCommitIndex: (index: number) => void,
 |};
 
-type Props = {|
-  commitDurations: Array<number>,
-  commitTimes: Array<number>,
-  selectedCommitIndex: number,
-  setCommitIndex: (index: number) => void,
-  viewNextCommit: () => void,
-  viewPrevCommit: () => void,
-|};
+type Props = {||};
 
-export default function SnapshotCommitList(props: Props) {
+export default function SnapshotCommitList(_: Props) {
   return (
     <AutoSizer>
-      {({ height, width }) => <List height={height} width={width} {...props} />}
+      {({ height, width }) => <List height={height} width={width} />}
     </AutoSizer>
   );
 }
 
 type ListProps = {|
   height: number,
-  commitDurations: Array<number>,
-  commitTimes: Array<number>,
-  selectedCommitIndex: number,
-  setCommitIndex: (index: number) => void,
-  viewNextCommit: () => void,
-  viewPrevCommit: () => void,
   width: number,
 |};
 
-function List({
-  height,
-  commitDurations,
-  commitTimes,
-  selectedCommitIndex,
-  setCommitIndex,
-  viewNextCommit,
-  viewPrevCommit,
-  width,
-}: ListProps) {
+function List({ height, width }: ListProps) {
   const listRef = useRef<FixedSizeList<ItemData> | null>(null);
   const [isMouseDown, setIsMouseDown] = useState(false);
-  const prevSelectedCommitIndexRef = useRef<number>(-1);
+  const prevCommitIndexRef = useRef<number | null>(null);
+
+  const { profilingCache } = useContext(StoreContext);
+  const {
+    commitIndex,
+    filteredCommitIndices,
+    rendererID,
+    rootID,
+    setCommitIndex,
+  } = useContext(ProfilerDataContext);
+
+  const { commitDurations, commitTimes } = profilingCache.ProfilingSummary.read(
+    {
+      rendererID: ((rendererID: any): number),
+      rootID: ((rootID: any): number),
+    }
+  );
 
   // Make sure any newly selected snapshot is visible within the list.
   useEffect(() => {
-    if (selectedCommitIndex !== prevSelectedCommitIndexRef.current) {
-      prevSelectedCommitIndexRef.current = selectedCommitIndex;
-      if (listRef.current !== null) {
-        listRef.current.scrollToItem(selectedCommitIndex);
+    if (commitIndex !== prevCommitIndexRef.current) {
+      prevCommitIndexRef.current = commitIndex;
+      if (commitIndex !== null && listRef.current !== null) {
+        listRef.current.scrollToItem(commitIndex);
       }
     }
-  }, [listRef, selectedCommitIndex]);
+  }, [listRef, commitIndex]);
 
   const handleMouseDown = useCallback(() => {
     setIsMouseDown(true);
@@ -104,18 +102,20 @@ function List({
   const itemData = useMemo<ItemData>(
     () => ({
       commitDurations,
+      commitIndex,
       commitTimes,
+      filteredCommitIndices,
       isMouseDown,
       maxDuration,
-      selectedCommitIndex,
       setCommitIndex,
     }),
     [
       commitDurations,
+      commitIndex,
       commitTimes,
+      filteredCommitIndices,
       isMouseDown,
       maxDuration,
-      selectedCommitIndex,
       setCommitIndex,
     ]
   );
@@ -130,7 +130,7 @@ function List({
         <FixedSizeList
           direction="horizontal"
           height={height}
-          itemCount={commitDurations.length}
+          itemCount={filteredCommitIndices.length}
           itemData={itemData}
           itemSize={itemSize}
           ref={(listRef: any) /* Flow bug? */}

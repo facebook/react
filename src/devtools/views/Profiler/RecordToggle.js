@@ -3,7 +3,7 @@
 import React, { useContext } from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
-import { ProfilerContext } from './ProfilerContext';
+import { ProfilerStatusContext } from './ProfilerStatusContext';
 
 import styles from './RecordToggle.css';
 
@@ -11,7 +11,7 @@ export type Props = {||};
 
 export default function RecordToggle(_: Props) {
   const { isProfiling, startProfiling, stopProfiling } = useContext(
-    ProfilerContext
+    ProfilerStatusContext
   );
 
   return (

@@ -1,8 +1,7 @@
 // @flow
 
-import React, { useCallback, useContext, useEffect, useRef } from 'react';
-import { useModalDismissSignal } from '../hooks';
-import { ProfilerContext } from './ProfilerContext';
+import React, { useCallback, useEffect, useRef } from 'react';
+import { useLocalStorage, useModalDismissSignal } from '../hooks';
 
 import styles from './FilterModal.css';
 
@@ -11,12 +10,14 @@ type Props = {|
 |};
 
 export default function FilterModal({ dismissModal }: Props) {
-  const {
-    isMinCommitDurationEnabled,
-    minCommitDuration,
-    setMinCommitDuration,
-    setIsMinCommitDurationEnabled,
-  } = useContext(ProfilerContext);
+  const [
+    isCommitFilterEnabled,
+    setIsCommitFilterEnabled,
+  ] = useLocalStorage<boolean>('isCommitFilterEnabled', false);
+  const [minCommitDuration, setMinCommitDuration] = useLocalStorage<number>(
+    'minCommitDuration',
+    0
+  );
 
   const handleNumberChange = useCallback(
     ({ currentTarget }) => {
@@ -30,14 +31,14 @@ export default function FilterModal({ dismissModal }: Props) {
 
   const handleEnabledChange = useCallback(
     ({ currentTarget }) => {
-      setIsMinCommitDurationEnabled(currentTarget.checked);
+      setIsCommitFilterEnabled(currentTarget.checked);
       if (currentTarget.checked) {
         if (inputRef.current !== null) {
           inputRef.current.focus();
         }
       }
     },
-    [setIsMinCommitDurationEnabled]
+    [setIsCommitFilterEnabled]
   );
 
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -56,7 +57,7 @@ export default function FilterModal({ dismissModal }: Props) {
       <div className={styles.Modal} ref={modalRef}>
         <label>
           <input
-            checked={isMinCommitDurationEnabled}
+            checked={isCommitFilterEnabled}
             onChange={handleEnabledChange}
             type="checkbox"
           />{' '}

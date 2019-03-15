@@ -2,9 +2,15 @@
 
 import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 
+type LocalStorageKey =
+  | 'displayDensity'
+  | 'isCommitFilterEnabled'
+  | 'minCommitDuration'
+  | 'theme';
+
 // Forked from https://usehooks.com/useLocalStorage/
 export function useLocalStorage<T>(
-  key: string,
+  key: LocalStorageKey,
   initialValue: T
 ): [T, (value: T | (() => T)) => void] {
   const getValueFromLocalStorage = useCallback(() => {
@@ -85,24 +91,27 @@ export function useModalDismissSignal(
 }
 
 // Copied from https://github.com/facebook/react/pull/15022
-export function useSubscription<Value, Source>({
-  source,
+export function useSubscription<Value>({
   getCurrentValue,
   subscribe,
 }: {|
-  source: Source,
-  getCurrentValue: (source: Source) => Value,
-  subscribe: (source: Source, callback: Function) => () => void,
+  getCurrentValue: () => Value,
+  subscribe: (callback: Function) => () => void,
 |}): Value {
   const [state, setState] = useState({
-    source,
-    value: getCurrentValue(source),
+    getCurrentValue,
+    subscribe,
+    value: getCurrentValue(),
   });
 
-  if (state.source !== source) {
+  if (
+    state.getCurrentValue !== getCurrentValue ||
+    state.subscribe !== subscribe
+  ) {
     setState({
-      source,
-      value: getCurrentValue(source),
+      getCurrentValue,
+      subscribe,
+      value: getCurrentValue(),
     });
   }
 
@@ -115,11 +124,14 @@ export function useSubscription<Value, Source>({
       }
 
       setState(prevState => {
-        if (prevState.source !== source) {
+        if (
+          prevState.getCurrentValue !== getCurrentValue ||
+          prevState.subscribe !== subscribe
+        ) {
           return prevState;
         }
 
-        const value = getCurrentValue(source);
+        const value = getCurrentValue();
         if (prevState.value === value) {
           return prevState;
         }
@@ -127,7 +139,7 @@ export function useSubscription<Value, Source>({
         return { ...prevState, value };
       });
     };
-    const unsubscribe = subscribe(source, checkForUpdates);
+    const unsubscribe = subscribe(checkForUpdates);
 
     checkForUpdates();
 
@@ -135,7 +147,7 @@ export function useSubscription<Value, Source>({
       didUnsubscribe = true;
       unsubscribe();
     };
-  }, [getCurrentValue, source, subscribe]);
+  }, [getCurrentValue, subscribe]);
 
   return state.value;
 }

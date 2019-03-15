@@ -1,7 +1,11 @@
 // @flow
 
-import React, { useCallback, useContext, useState } from 'react';
-import { ProfilerContext, ProfilerContextController } from './ProfilerContext';
+import React, { Suspense, useCallback, useContext, useState } from 'react';
+import { ProfilerDataContextController } from './ProfilerDataContext';
+import {
+  ProfilerStatusContext,
+  ProfilerStatusContextController,
+} from './ProfilerStatusContext';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import TabBar from '../TabBar';
@@ -15,14 +19,23 @@ export type Props = {||};
 
 export default function ProfilerOuter(_: Props) {
   return (
-    <ProfilerContextController>
-      <ProfilerInner />
-    </ProfilerContextController>
+    <ProfilerStatusContextController>
+      <Suspense fallback={<ProfilerFallback />}>
+        <ProfilerDataContextController>
+          <ProfilerInner />
+        </ProfilerDataContextController>
+      </Suspense>
+    </ProfilerStatusContextController>
   );
 }
 
+function ProfilerFallback() {
+  // TODO (profiling) Real fallback UI
+  return null;
+}
+
 function ProfilerInner(_: Props) {
-  const { hasProfilingData, isProfiling } = useContext(ProfilerContext);
+  const { hasProfilingData, isProfiling } = useContext(ProfilerStatusContext);
 
   const showProfilingControls = !isProfiling && hasProfilingData;
 

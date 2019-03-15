@@ -66,11 +66,14 @@
   .TabLabelSmall {
     display: none;
   }
+
+  .IconSizeSmall {
+    margin-right: 0;
+  }
 }
 
 @media screen and (max-width: 600px) {
-  .IconSizeLarge,
-  .IconSizeSmall {
+  .IconSizeLarge {
     margin-right: 0;
   }
 
