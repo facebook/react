@@ -44,6 +44,7 @@ import dangerousStyleValue from '../shared/dangerousStyleValue';
 
 import type {DOMContainer} from './ReactDOM';
 import type {ReactEventResponder} from 'shared/ReactTypes';
+import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
 export type Type = string;
 export type Props = {
@@ -65,6 +66,7 @@ export type PublicInstance = Element | Text;
 type HostContextDev = {
   namespace: string,
   ancestorInfo: mixed,
+  isEventComponent?: boolean,
 };
 type HostContextProd = string;
 export type HostContext = HostContextDev | HostContextProd;
@@ -73,7 +75,11 @@ export type ChildSet = void; // Unused
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 
-import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
+import {
+  enableSuspenseServerRenderer,
+  enableEventAPI,
+} from 'shared/ReactFeatureFlags';
+import warning from 'shared/warning';
 
 // Intentionally not named imports because Rollup would
 // use dynamic dispatch for CommonJS interop named imports.
@@ -142,6 +148,9 @@ export function getRootHostContext(
   if (__DEV__) {
     const validatedTag = type.toLowerCase();
     const ancestorInfo = updatedAncestorInfo(null, validatedTag);
+    if (enableEventAPI) {
+      return {namespace, ancestorInfo, isEventComponent: false};
+    }
     return {namespace, ancestorInfo};
   }
   return namespace;
@@ -159,6 +168,12 @@ export function getChildHostContext(
       parentHostContextDev.ancestorInfo,
       type,
     );
+    if (enableEventAPI) {
+      if (type === REACT_EVENT_COMPONENT_TYPE) {
+        return {namespace, ancestorInfo, isEventComponent: true};
+      }
+      return {namespace, ancestorInfo, isEventComponent: false};
+    }
     return {namespace, ancestorInfo};
   }
   const parentNamespace = ((parentHostContext: any): HostContextProd);
@@ -296,6 +311,14 @@ export function createTextInstance(
   if (__DEV__) {
     const hostContextDev = ((hostContext: any): HostContextDev);
     validateDOMNesting(null, text, hostContextDev.ancestorInfo);
+    if (enableEventAPI) {
+      warning(
+        !hostContextDev.isEventComponent,
+        'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
+          'Wrap the child text "%s" in an element.',
+        text,
+      );
+    }
   }
   const textNode: TextInstance = createTextNode(text, rootContainerInstance);
   precacheFiberNode(internalInstanceHandle, textNode);

@@ -81,8 +81,12 @@ export type RefObject = {|
   current: any,
 |};
 
+export type ReactEventResponderEventType =
+  | string
+  | {name: string, passive?: boolean, capture?: boolean};
+
 export type ReactEventResponder = {
-  targetEventTypes: Array<string>,
+  targetEventTypes: Array<ReactEventResponderEventType>,
   createInitialState?: (props: Object) => Object,
   handleEvent: (context: Object, props: Object, state: Object) => void,
 };

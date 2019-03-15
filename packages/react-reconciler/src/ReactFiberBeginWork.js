@@ -61,7 +61,10 @@ import shallowEqual from 'shared/shallowEqual';
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
-import {REACT_LAZY_TYPE} from 'shared/ReactSymbols';
+import {
+  REACT_LAZY_TYPE,
+  REACT_EVENT_TARGET_TOUCH_HIT,
+} from 'shared/ReactSymbols';
 import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {
@@ -1960,8 +1963,9 @@ function updateEventTarget(current, workInProgress, renderExpirationTime) {
     parent !== null && parent.tag === Event,
     'Event target components must be direct children of event components',
   );
+  const eventTargetType = nextProps.type;
   // These warnings only occur in DEV to reduce overhead in production
-  if (__DEV__ && nextProps.type === 'touch-hit') {
+  if (__DEV__ && eventTargetType === REACT_EVENT_TARGET_TOUCH_HIT) {
     let childrenCount = 0;
     let child = workInProgress.child;
     while (child !== null) {
