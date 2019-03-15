@@ -584,7 +584,7 @@ const ReactTestRendererFiber = {
       };
     } else {
       return {
-        then() {
+        then(successFn) {
           if (__DEV__) {
             warningWithoutStack(
               false,
@@ -592,6 +592,7 @@ const ReactTestRendererFiber = {
               'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
             );
           }
+          successFn()
         },
       };
     }

@@ -55,29 +55,30 @@ describe('ReactTestRenderer.act()', () => {
 
   describe('async', () => {
     it('should work with async/await', async () => {
+      function fetch(url){
+        return Promise.resolve({
+          details: [1, 2, 3]
+        })
+      }
       function App() {
-        let [ctr, setCtr] = React.useState(0);
-        async function someAsyncFunction() {
-          await null;
-          setCtr(1);
-        }
+        let [details, setDetails] = React.useState(0);
+        
         React.useEffect(() => {
-          someAsyncFunction();
+          async function fetchDetails() {
+            const response = await fetch();
+            setDetails(response.details);
+          }
+          fetchDetails();
         }, []);
-        return ctr;
+        return details;
       }
       let root;
-      ReactTestRenderer.act(() => {
-        root = ReactTestRenderer.create(<App />);
-        Promise.resolve();
-      });
-      // The TestRenderer needs a micro task before it advances
-      // but we can catch it with act()
-      await act(async () => {
-        await Promise.resolve();
-      });
 
-      expect(root.toJSON()).toEqual('1');
+      await ReactTestRenderer.act(async () => {
+        root = ReactTestRenderer.create(<App />);
+      });      
+
+      expect(root.toJSON()).toEqual(['1', '2', '3']);
     });
   });
 });

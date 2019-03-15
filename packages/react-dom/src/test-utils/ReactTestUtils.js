@@ -439,7 +439,6 @@ const ReactTestUtils = {
       if (__DEV__) {
         // eslint-disable-next-line no-undef
         Promise.resolve()
-          .then(() => {})
           .then(() => {
             if (!called) {
               warningWithoutStack(
@@ -461,14 +460,15 @@ const ReactTestUtils = {
       };
     } else {
       return {
-        then() {
+        then(successFn) {
           if (__DEV__) {
             warningWithoutStack(
               false,
               // todo - well... why not? maybe this would be fine.
               'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
             );
-          }
+          }          
+          successFn()
         },
       };
     }

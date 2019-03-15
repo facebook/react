@@ -806,7 +806,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         };
       } else {
         return {
-          then() {
+          then(successFn) {
             if (__DEV__) {
               warningWithoutStack(
                 false,
@@ -814,6 +814,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
                 'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
               );
             }
+            successFn()
           },
         };
       }
