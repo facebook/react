@@ -27,6 +27,7 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 type Container = {
   rootID: string,
   children: Array<Instance | TextInstance>,
+  pendingChildren: Array<Instance | TextInstance>,
 };
 type Props = {prop: any, hidden: boolean, children?: mixed};
 type Instance = {|
@@ -452,7 +453,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         finalizeContainerChildren(
           container: Container,
           newChildren: Array<Instance | TextInstance>,
-        ): void {},
+        ): void {
+          container.pendingChildren = newChildren;
+        },
 
         replaceContainerChildren(
           container: Container,
@@ -481,26 +484,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           return clone;
         },
 
-        cloneUnhiddenInstance(
-          instance: Instance,
-          type: string,
-          props: Props,
-          internalInstanceHandle: Object,
-        ): Instance {
-          const clone = cloneInstance(
-            instance,
-            null,
-            type,
-            props,
-            props,
-            internalInstanceHandle,
-            true,
-            null,
-          );
-          clone.hidden = props.hidden === true;
-          return clone;
-        },
-
         cloneHiddenTextInstance(
           instance: TextInstance,
           text: string,
@@ -510,29 +493,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
             text: instance.text,
             id: instanceCounter++,
             hidden: true,
-            context: instance.context,
-          };
-          // Hide from unit tests
-          Object.defineProperty(clone, 'id', {
-            value: clone.id,
-            enumerable: false,
-          });
-          Object.defineProperty(clone, 'context', {
-            value: clone.context,
-            enumerable: false,
-          });
-          return clone;
-        },
-
-        cloneUnhiddenTextInstance(
-          instance: TextInstance,
-          text: string,
-          internalInstanceHandle: Object,
-        ): TextInstance {
-          const clone = {
-            text: instance.text,
-            id: instanceCounter++,
-            hidden: false,
             context: instance.context,
           };
           // Hide from unit tests
@@ -619,13 +579,22 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       }
     },
 
+    getPendingChildren(rootID: string = DEFAULT_ROOT_ID) {
+      const container = rootContainers.get(rootID);
+      if (container) {
+        return container.pendingChildren;
+      } else {
+        return null;
+      }
+    },
+
     getOrCreateRootContainer(
       rootID: string = DEFAULT_ROOT_ID,
       isConcurrent: boolean = false,
     ) {
       let root = roots.get(rootID);
       if (!root) {
-        const container = {rootID: rootID, children: []};
+        const container = {rootID: rootID, pendingChildren: [], children: []};
         rootContainers.set(rootID, container);
         root = NoopRenderer.createContainer(container, isConcurrent, false);
         roots.set(rootID, root);
@@ -635,6 +604,25 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     getChildrenAsJSX(rootID: string = DEFAULT_ROOT_ID) {
       const children = childToJSX(ReactNoop.getChildren(rootID), null);
+      if (children === null) {
+        return null;
+      }
+      if (Array.isArray(children)) {
+        return {
+          $$typeof: REACT_ELEMENT_TYPE,
+          type: REACT_FRAGMENT_TYPE,
+          key: null,
+          ref: null,
+          props: {children},
+          _owner: null,
+          _store: __DEV__ ? {} : undefined,
+        };
+      }
+      return children;
+    },
+
+    getPendingChildrenAsJSX(rootID: string = DEFAULT_ROOT_ID) {
+      const children = childToJSX(ReactNoop.getPendingChildren(rootID), null);
       if (children === null) {
         return null;
       }
@@ -831,7 +819,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       // Trick to flush passive effects without exposing an internal API:
       // Create a throwaway root and schedule a dummy update on it.
       const rootID = 'bloopandthenmoreletterstoavoidaconflict';
-      const container = {rootID: rootID, children: []};
+      const container = {rootID: rootID, pendingChildren: [], children: []};
       rootContainers.set(rootID, container);
       const root = NoopRenderer.createContainer(container, true, false);
       NoopRenderer.updateContainer(null, root, null, null);

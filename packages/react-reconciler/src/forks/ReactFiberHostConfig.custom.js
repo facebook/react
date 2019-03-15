@@ -59,6 +59,8 @@ export const isPrimaryRenderer = $$$hostConfig.isPrimaryRenderer;
 export const supportsMutation = $$$hostConfig.supportsMutation;
 export const supportsPersistence = $$$hostConfig.supportsPersistence;
 export const supportsHydration = $$$hostConfig.supportsHydration;
+export const handleEventComponent = $$$hostConfig.handleEventComponent;
+export const handleEventTarget = $$$hostConfig.handleEventTarget;
 
 // -------------------
 //      Mutation
@@ -91,10 +93,7 @@ export const finalizeContainerChildren =
   $$$hostConfig.finalizeContainerChildren;
 export const replaceContainerChildren = $$$hostConfig.replaceContainerChildren;
 export const cloneHiddenInstance = $$$hostConfig.cloneHiddenInstance;
-export const cloneUnhiddenInstance = $$$hostConfig.cloneUnhiddenInstance;
 export const cloneHiddenTextInstance = $$$hostConfig.cloneHiddenTextInstance;
-export const cloneUnhiddenTextInstance =
-  $$$hostConfig.cloneUnhiddenTextInstance;
 
 // -------------------
 //     Hydration

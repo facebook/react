@@ -1387,44 +1387,88 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Hi')]);
     });
 
-    it('toggles visibility during the mutation phase', async () => {
-      const {useRef, useLayoutEffect} = React;
+    if (global.__PERSISTENT__) {
+      it('hides/unhides suspended children before layout effects fire (persistent)', async () => {
+        const {useRef, useLayoutEffect} = React;
 
-      function Parent() {
-        const child = useRef(null);
+        function Parent() {
+          const child = useRef(null);
 
-        useLayoutEffect(() => {
-          Scheduler.yieldValue('Child is hidden: ' + child.current.hidden);
-        });
+          useLayoutEffect(() => {
+            Scheduler.yieldValue(ReactNoop.getPendingChildrenAsJSX());
+          });
 
-        return (
-          <span ref={child} hidden={false}>
-            <AsyncText ms={1000} text="Hi" />
-          </span>
-        );
-      }
+          return (
+            <span ref={child} hidden={false}>
+              <AsyncText ms={1000} text="Hi" />
+            </span>
+          );
+        }
 
-      function App(props) {
-        return (
-          <Suspense fallback={<Text text="Loading..." />}>
-            <Parent />
-          </Suspense>
-        );
-      }
+        function App(props) {
+          return (
+            <Suspense fallback={<Text text="Loading..." />}>
+              <Parent />
+            </Suspense>
+          );
+        }
 
-      ReactNoop.renderLegacySyncRoot(<App middleText="B" />);
+        ReactNoop.renderLegacySyncRoot(<App middleText="B" />);
 
-      expect(Scheduler).toHaveYielded([
-        'Suspend! [Hi]',
-        'Loading...',
-        // The child should have already been hidden
-        'Child is hidden: true',
-      ]);
+        expect(Scheduler).toHaveYielded([
+          'Suspend! [Hi]',
+          'Loading...',
+          // The child should have already been hidden
+          <React.Fragment>
+            <span hidden={true} />
+            <span prop="Loading..." />
+          </React.Fragment>,
+        ]);
 
-      await advanceTimers(1000);
+        await advanceTimers(1000);
 
-      expect(Scheduler).toHaveYielded(['Promise resolved [Hi]', 'Hi']);
-    });
+        expect(Scheduler).toHaveYielded(['Promise resolved [Hi]', 'Hi']);
+      });
+    } else {
+      it('hides/unhides suspended children before layout effects fire (mutation)', async () => {
+        const {useRef, useLayoutEffect} = React;
+
+        function Parent() {
+          const child = useRef(null);
+
+          useLayoutEffect(() => {
+            Scheduler.yieldValue('Child is hidden: ' + child.current.hidden);
+          });
+
+          return (
+            <span ref={child} hidden={false}>
+              <AsyncText ms={1000} text="Hi" />
+            </span>
+          );
+        }
+
+        function App(props) {
+          return (
+            <Suspense fallback={<Text text="Loading..." />}>
+              <Parent />
+            </Suspense>
+          );
+        }
+
+        ReactNoop.renderLegacySyncRoot(<App middleText="B" />);
+
+        expect(Scheduler).toHaveYielded([
+          'Suspend! [Hi]',
+          'Loading...',
+          // The child should have already been hidden
+          'Child is hidden: true',
+        ]);
+
+        await advanceTimers(1000);
+
+        expect(Scheduler).toHaveYielded(['Promise resolved [Hi]', 'Hi']);
+      });
+    }
   });
 
   it('does not call lifecycles of a suspended component', async () => {

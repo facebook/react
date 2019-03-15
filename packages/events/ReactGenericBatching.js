@@ -20,8 +20,8 @@ import {
 let _batchedUpdatesImpl = function(fn, bookkeeping) {
   return fn(bookkeeping);
 };
-let _interactiveUpdatesImpl = function(fn, a, b) {
-  return fn(a, b);
+let _interactiveUpdatesImpl = function(fn, a, b, c) {
+  return fn(a, b, c);
 };
 let _flushInteractiveUpdatesImpl = function() {};
 
@@ -52,8 +52,8 @@ export function batchedUpdates(fn, bookkeeping) {
   }
 }
 
-export function interactiveUpdates(fn, a, b) {
-  return _interactiveUpdatesImpl(fn, a, b);
+export function interactiveUpdates(fn, a, b, c) {
+  return _interactiveUpdatesImpl(fn, a, b, c);
 }
 
 export function flushInteractiveUpdates() {

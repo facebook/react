@@ -521,9 +521,7 @@ class ReactShallowRenderer {
     if (this._instance) {
       this._updateClassComponent(element, this._context);
     } else {
-      if (isForwardRef(element)) {
-        this._rendered = element.type.render(element.props, element.ref);
-      } else if (shouldConstruct(element.type)) {
+      if (shouldConstruct(element.type)) {
         this._instance = new element.type(
           element.props,
           this._context,
@@ -565,11 +563,15 @@ class ReactShallowRenderer {
         ReactCurrentDispatcher.current = this._dispatcher;
         this._prepareToUseHooks(element.type);
         try {
-          this._rendered = element.type.call(
-            undefined,
-            element.props,
-            this._context,
-          );
+          if (isForwardRef(element)) {
+            this._rendered = element.type.render(element.props, element.ref);
+          } else {
+            this._rendered = element.type.call(
+              undefined,
+              element.props,
+              this._context,
+            );
+          }
         } finally {
           ReactCurrentDispatcher.current = prevDispatcher;
         }
