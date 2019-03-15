@@ -55,14 +55,14 @@ describe('ReactTestRenderer.act()', () => {
 
   describe('async', () => {
     it('should work with async/await', async () => {
-      function fetch(url){
+      function fetch(url) {
         return Promise.resolve({
-          details: [1, 2, 3]
-        })
+          details: [1, 2, 3],
+        });
       }
       function App() {
         let [details, setDetails] = React.useState(0);
-        
+
         React.useEffect(() => {
           async function fetchDetails() {
             const response = await fetch();
@@ -76,7 +76,7 @@ describe('ReactTestRenderer.act()', () => {
 
       await ReactTestRenderer.act(async () => {
         root = ReactTestRenderer.create(<App />);
-      });      
+      });
 
       expect(root.toJSON()).toEqual(['1', '2', '3']);
     });

@@ -195,6 +195,31 @@ describe('ReactTestUtils.act()', () => {
 
         expect(container.innerHTML).toBe('1');
       });
+      it('can handle cascading promises with fake timers', async () => {
+        // this component triggers an effect, that waits a tick,
+        // then sets state. repeats this 5 times.
+        function App() {
+          let [state, setState] = React.useState(0);
+          async function ticker() {
+            await null;
+            setState(x => x + 1);
+          }
+          React.useEffect(
+            () => {
+              ticker();
+            },
+            [Math.min(state, 4)],
+          );
+          return state;
+        }
+        const el = document.createElement('div');
+        await act(async () => {
+          ReactDOM.render(<App />, el);
+        });
+
+        // all 5 ticks present and accounted for
+        expect(el.innerHTML).toBe('5');
+      });
     });
 
     it('warns if you return a value inside act', () => {
@@ -213,7 +238,7 @@ describe('ReactTestUtils.act()', () => {
     });
 
     it('warns if you try to await an .act call', () => {
-      expect(act(() => {}).then).toWarnDev(
+      expect(() => act(() => {}).then(() => {})).toWarnDev(
         [
           'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
         ],

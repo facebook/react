@@ -1832,7 +1832,10 @@ let actingUpdatesScopeDepth = 0;
 
 export function actedUpdates(
   callback: () => void | Promise<void>,
-  tickUntil: (callback: () => void, testFn: () => boolean) => Promise<void>,
+  runCallbackUntilPredicateFails: (
+    callback: () => void,
+    predicate: () => boolean,
+  ) => Promise<void>,
 ) {
   let previousActingUpdatesScopeDepth;
   if (__DEV__) {
@@ -1861,7 +1864,7 @@ export function actedUpdates(
   ) {
     return result.then(
       () => {
-        return tickUntil(
+        return runCallbackUntilPredicateFails(
           flushPassiveEffects,
           () => passiveEffectCallback !== null,
         ).then(() => {

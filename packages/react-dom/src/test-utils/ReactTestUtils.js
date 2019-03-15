@@ -152,22 +152,48 @@ function validateClassInstance(inst, methodName) {
 let actContainerElement = null;
 
 let didWarnAboutActInNodejs = false;
+let didWarnAboutMessageChannel = false;
 
-const nextTick =
-  typeof setImmediate !== 'undefined'
-    ? setImmediate
-    : callback => {
-        const channel = new MessageChannel();
-        channel.port1.onmessage = callback;
-        channel.port2.postMessage(undefined);
-      };
+let enqueueTask;
+try {
+  // assuming we're in node, let's try to get node's
+  // version of setImmediate, bypassing fake timers if any
+  let r = require; // trick packagers not to bundle this stuff.
+  enqueueTask = r('timers').setImmediate;
+} catch (_err) {
+  // we're in a browser
+  // we can't use regular timers because they may still be faked
+  // so we try MessageChannel+postMessage instead
+  enqueueTask = function(callback) {
+    if (didWarnAboutMessageChannel === false) {
+      didWarnAboutMessageChannel = true;
+      warningWithoutStack(
+        typeof MessageChannel !== 'undefined',
+        'This browser does not have a MessageChannel implementation, ' +
+          'so enqueuing tasks via await act(async () => ...) will fail. ' +
+          'Please file an issue at https://github.com/facebook/react/issues ' +
+          'if you encounter this warning.',
+      );
+    }
+    const channel = new MessageChannel();
+    channel.port1.onmessage = callback;
+    channel.port2.postMessage(undefined);
+  };
+}
 
-function tick(callback: () => void, untilFalse: () => boolean) {
+function runCallbackUntilPredicateFails(
+  callback: () => void,
+  predicate: () => boolean,
+) {
+  // eslint-disable-next-line no-undef
   return new Promise((resolve, reject) => {
     callback();
-    nextTick(() => {
-      if (untilFalse()) {
-        tick(callback, untilFalse).then(resolve, reject);
+    enqueueTask(() => {
+      if (predicate()) {
+        runCallbackUntilPredicateFails(callback, predicate).then(
+          resolve,
+          reject,
+        );
       } else {
         resolve();
       }
@@ -429,7 +455,7 @@ const ReactTestUtils = {
     }
     // note: keep these warning messages in sync with
     // createReactNoop.js and ReactTestRenderer.js
-    const result = actedUpdates(callback, tick);
+    const result = actedUpdates(callback, runCallbackUntilPredicateFails);
     if (
       result !== null &&
       typeof result === 'object' &&
@@ -439,6 +465,7 @@ const ReactTestUtils = {
       if (__DEV__) {
         // eslint-disable-next-line no-undef
         Promise.resolve()
+          .then(() => {})
           .then(() => {
             if (!called) {
               warningWithoutStack(
@@ -467,8 +494,8 @@ const ReactTestUtils = {
               // todo - well... why not? maybe this would be fine.
               'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
             );
-          }          
-          successFn()
+          }
+          successFn();
         },
       };
     }
