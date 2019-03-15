@@ -193,7 +193,7 @@ function runCallbackUntilPredicateFails(
   callback: () => void,
   predicate: () => boolean,
 ) {
-  // $FlowFixMe - if we've reached this far, we're certain Promise is available 
+  // $FlowFixMe - if we've reached this far, we're certain Promise is available
   return new globalPromise((resolve, reject) => {
     callback();
     enqueueTask(() => {
