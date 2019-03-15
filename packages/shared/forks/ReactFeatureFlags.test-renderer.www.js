@@ -24,6 +24,7 @@ export const enableStableConcurrentModeAPIs = false;
 export const enableSchedulerDebugging = false;
 export const warnAboutDeprecatedSetNativeProps = false;
 export const disableJavaScriptURLs = false;
+export const disableYielding = false;
 export const enableEventAPI = true;
 
 // Only used in www builds.
