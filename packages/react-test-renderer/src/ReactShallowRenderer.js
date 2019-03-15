@@ -198,7 +198,6 @@ class ReactShallowRenderer {
     this._renderPhaseUpdates = null;
     this._currentlyRenderingComponent = null;
     this._numberOfReRenders = 0;
-    this._previousComponentIdentity = null;
   }
 
   _context: null | Object;
@@ -213,7 +212,6 @@ class ReactShallowRenderer {
   _workInProgressHook: null | Hook;
   _firstWorkInProgressHook: null | Hook;
   _currentlyRenderingComponent: null | Object;
-  _previousComponentIdentity: null | Object;
   _renderPhaseUpdates: Map<UpdateQueue<any>, Update<any>> | null;
   _isReRender: boolean;
   _didScheduleRenderPhaseUpdate: boolean;
@@ -446,14 +444,7 @@ class ReactShallowRenderer {
   }
 
   _prepareToUseHooks(componentIdentity: Object): void {
-    if (
-      this._previousComponentIdentity !== null &&
-      this._previousComponentIdentity !== componentIdentity
-    ) {
-      this._firstWorkInProgressHook = null;
-    }
     this._currentlyRenderingComponent = componentIdentity;
-    this._previousComponentIdentity = componentIdentity;
   }
 
   _finishHooks(element: ReactElement, context: null | Object) {
@@ -635,7 +626,6 @@ class ReactShallowRenderer {
     }
 
     this._firstWorkInProgressHook = null;
-    this._previousComponentIdentity = null;
     this._context = null;
     this._element = null;
     this._newState = null;
