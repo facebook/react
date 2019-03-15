@@ -2,7 +2,6 @@
 
 import React, {
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -12,72 +11,91 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList } from 'react-window';
 import SnapshotCommitListItem from './SnapshotCommitListItem';
 import { minBarWidth } from './constants';
-import { ProfilerDataContext } from './ProfilerDataContext';
-import { StoreContext } from '../context';
 
 export type ItemData = {|
   commitDurations: Array<number>,
-  commitIndex: number | null,
   commitTimes: Array<number>,
   filteredCommitIndices: Array<number>,
   isMouseDown: boolean,
   maxDuration: number,
-  setCommitIndex: (index: number) => void,
+  selectedCommitIndex: number | null,
+  setSelectedCommitIndex: (index: number) => void,
 |};
 
-type Props = {||};
+type Props = {|
+  commitDurations: Array<number>,
+  commitTimes: Array<number>,
+  filteredCommitIndices: Array<number>,
+  selectedCommitIndex: number | null,
+  setSelectedCommitIndex: (index: number) => void,
+|};
 
-export default function SnapshotCommitList(_: Props) {
+export default function SnapshotCommitList({
+  commitDurations,
+  commitTimes,
+  filteredCommitIndices,
+  selectedCommitIndex,
+  setSelectedCommitIndex,
+}: Props) {
   return (
     <AutoSizer>
-      {({ height, width }) => <List height={height} width={width} />}
+      {({ height, width }) => (
+        <List
+          commitDurations={commitDurations}
+          commitTimes={commitTimes}
+          height={height}
+          filteredCommitIndices={filteredCommitIndices}
+          selectedCommitIndex={selectedCommitIndex}
+          setSelectedCommitIndex={setSelectedCommitIndex}
+          width={width}
+        />
+      )}
     </AutoSizer>
   );
 }
 
 type ListProps = {|
+  commitDurations: Array<number>,
+  commitTimes: Array<number>,
   height: number,
+  filteredCommitIndices: Array<number>,
+  selectedCommitIndex: number | null,
+  setSelectedCommitIndex: (index: number) => void,
   width: number,
 |};
 
-function List({ height, width }: ListProps) {
+function List({
+  commitDurations,
+  selectedCommitIndex,
+  commitTimes,
+  height,
+  filteredCommitIndices,
+  setSelectedCommitIndex,
+  width,
+}: ListProps) {
   const listRef = useRef<FixedSizeList<ItemData> | null>(null);
-  const [isMouseDown, setIsMouseDown] = useState(false);
   const prevCommitIndexRef = useRef<number | null>(null);
 
-  const { profilingCache } = useContext(StoreContext);
-  const {
-    commitIndex,
-    filteredCommitIndices,
-    rendererID,
-    rootID,
-    setCommitIndex,
-  } = useContext(ProfilerDataContext);
-
-  const { commitDurations, commitTimes } = profilingCache.ProfilingSummary.read(
-    {
-      rendererID: ((rendererID: any): number),
-      rootID: ((rootID: any): number),
-    }
-  );
-
-  // Make sure any newly selected snapshot is visible within the list.
+  // Make sure a newly selected snapshot is fully visible within the list.
   useEffect(() => {
-    if (commitIndex !== prevCommitIndexRef.current) {
-      prevCommitIndexRef.current = commitIndex;
-      if (commitIndex !== null && listRef.current !== null) {
-        listRef.current.scrollToItem(commitIndex);
+    if (selectedCommitIndex !== prevCommitIndexRef.current) {
+      prevCommitIndexRef.current = selectedCommitIndex;
+      if (selectedCommitIndex !== null && listRef.current !== null) {
+        listRef.current.scrollToItem(selectedCommitIndex);
       }
     }
-  }, [listRef, commitIndex]);
+  }, [listRef, selectedCommitIndex]);
 
+  // When the mouse is down, dragging over a commit should auto-select it.
+  // This provides a nice way for users to swipe across a range of commits to compare them.
+  // TODO (profiling) This interaction may not feel as nice with suspense; reconsider it?
+  const [isMouseDown, setIsMouseDown] = useState(false);
   const handleMouseDown = useCallback(() => {
     setIsMouseDown(true);
   }, []);
   const handleMouseUp = useCallback(() => {
     setIsMouseDown(false);
   }, []);
-
   useEffect(() => {
     window.addEventListener('mouseup', handleMouseUp);
     return () => {
@@ -86,8 +104,8 @@ function List({ height, width }: ListProps) {
   }, [handleMouseUp]);
 
   const itemSize = useMemo(
-    () => Math.max(minBarWidth, width / commitDurations.length),
-    [commitDurations, width]
+    () => Math.max(minBarWidth, width / filteredCommitIndices.length),
+    [filteredCommitIndices, width]
   );
   const maxDuration = useMemo(
     () =>
@@ -102,21 +120,21 @@ function List({ height, width }: ListProps) {
   const itemData = useMemo<ItemData>(
     () => ({
       commitDurations,
-      commitIndex,
       commitTimes,
       filteredCommitIndices,
       isMouseDown,
       maxDuration,
-      setCommitIndex,
+      selectedCommitIndex,
+      setSelectedCommitIndex,
     }),
     [
       commitDurations,
-      commitIndex,
       commitTimes,
       filteredCommitIndices,
       isMouseDown,
       maxDuration,
-      setCommitIndex,
+      selectedCommitIndex,
+      setSelectedCommitIndex,
     ]
   );
 

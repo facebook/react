@@ -1,21 +1,13 @@
-.SnapshotSelector {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  color: var(--color-text-color);
-  margin-left: 0.5rem;
-}
-
 .Button {
+  flex: 0 0 auto;
   margin-left: 0.25rem;
 }
 
 .Commits {
-  flex: 1 1 auto;
   height: 2.25rem;
-  min-width: 50px;
+  min-width: 30px;
   margin-left: 0.25rem;
+  overflow: hidden;
 }
 
 .VRule {
@@ -25,7 +17,8 @@
   margin: 0 0.25rem;
 }
 
-.Number {
+.IndexLabel {
+  flex: 0 0 auto;
   white-space: nowrap;
   font-family: var(--font-family-monospace);
 }

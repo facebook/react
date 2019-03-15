@@ -1,7 +1,8 @@
 // @flow
 
-import React, { useCallback, useEffect, useRef } from 'react';
-import { useLocalStorage, useModalDismissSignal } from '../hooks';
+import React, { useCallback, useContext, useEffect, useRef } from 'react';
+import { ProfilerContext } from './ProfilerContext';
+import { useModalDismissSignal } from '../hooks';
 
 import styles from './FilterModal.css';
 
@@ -10,14 +11,12 @@ type Props = {|
 |};
 
 export default function FilterModal({ dismissModal }: Props) {
-  const [
+  const {
     isCommitFilterEnabled,
+    minCommitDuration,
     setIsCommitFilterEnabled,
-  ] = useLocalStorage<boolean>('isCommitFilterEnabled', false);
-  const [minCommitDuration, setMinCommitDuration] = useLocalStorage<number>(
-    'minCommitDuration',
-    0
-  );
+    setMinCommitDuration,
+  } = useContext(ProfilerContext);
 
   const handleNumberChange = useCallback(
     ({ currentTarget }) => {

@@ -17,12 +17,12 @@ type Props = {
 function SnapshotCommitListItem({ data: itemData, index, style }: Props) {
   const {
     commitDurations,
-    commitIndex,
     commitTimes,
     filteredCommitIndices,
     isMouseDown,
     maxDuration,
-    setCommitIndex,
+    selectedCommitIndex,
+    setSelectedCommitIndex,
   } = itemData;
 
   index = filteredCommitIndices[index];
@@ -30,15 +30,15 @@ function SnapshotCommitListItem({ data: itemData, index, style }: Props) {
   const commitDuration = commitDurations[index];
   const commitTime = commitTimes[index];
 
-  const handleClick = useCallback(() => setCommitIndex(index), [
+  const handleClick = useCallback(() => setSelectedCommitIndex(index), [
     index,
-    setCommitIndex,
+    setSelectedCommitIndex,
   ]);
 
   // Guard against commits with duration 0
   const percentage =
     Math.min(1, Math.max(0, commitDuration / maxDuration)) || 0;
-  const isSelected = commitIndex === index;
+  const isSelected = selectedCommitIndex === index;
 
   // Leave a 1px gap between snapshots
   const width = parseFloat(style.width) - 1;

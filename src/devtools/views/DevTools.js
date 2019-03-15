@@ -9,6 +9,7 @@ import Settings from './Settings/Settings';
 import TabBar from './TabBar';
 import { SettingsContextController } from './Settings/SettingsContext';
 import { TreeContextController } from './Elements/TreeContext';
+import { ProfilerContextController } from './Profiler/ProfilerContext';
 import ReactLogo from './ReactLogo';
 
 import styles from './DevTools.css';
@@ -104,27 +105,31 @@ export default function DevTools({
       <StoreContext.Provider value={store}>
         <SettingsContextController browserTheme={browserTheme}>
           <TreeContextController viewElementSource={viewElementSource}>
-            <div className={styles.DevTools}>
-              {showTabBar && (
-                <div className={styles.TabBar}>
-                  <ReactLogo />
-                  <span className={styles.DevToolsVersion}>
-                    {process.env.DEVTOOLS_VERSION}
-                  </span>
-                  <div className={styles.Spacer} />
-                  <TabBar
-                    currentTab={tab}
-                    id="DevTools"
-                    selectTab={setTab}
-                    size="large"
-                    tabs={
-                      supportsProfiling ? tabsWithProfiler : tabsWithoutProfiler
-                    }
-                  />
-                </div>
-              )}
-              <div className={styles.TabContent}>{tabElement}</div>
-            </div>
+            <ProfilerContextController>
+              <div className={styles.DevTools}>
+                {showTabBar && (
+                  <div className={styles.TabBar}>
+                    <ReactLogo />
+                    <span className={styles.DevToolsVersion}>
+                      {process.env.DEVTOOLS_VERSION}
+                    </span>
+                    <div className={styles.Spacer} />
+                    <TabBar
+                      currentTab={tab}
+                      id="DevTools"
+                      selectTab={setTab}
+                      size="large"
+                      tabs={
+                        supportsProfiling
+                          ? tabsWithProfiler
+                          : tabsWithoutProfiler
+                      }
+                    />
+                  </div>
+                )}
+                <div className={styles.TabContent}>{tabElement}</div>
+              </div>
+            </ProfilerContextController>
           </TreeContextController>
         </SettingsContextController>
       </StoreContext.Provider>

@@ -2,15 +2,9 @@
 
 import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 
-type LocalStorageKey =
-  | 'displayDensity'
-  | 'isCommitFilterEnabled'
-  | 'minCommitDuration'
-  | 'theme';
-
 // Forked from https://usehooks.com/useLocalStorage/
 export function useLocalStorage<T>(
-  key: LocalStorageKey,
+  key: string,
   initialValue: T
 ): [T, (value: T | (() => T)) => void] {
   const getValueFromLocalStorage = useCallback(() => {

@@ -1,11 +1,7 @@
 // @flow
 
 import React, { Suspense, useCallback, useContext, useState } from 'react';
-import { ProfilerDataContextController } from './ProfilerDataContext';
-import {
-  ProfilerStatusContext,
-  ProfilerStatusContextController,
-} from './ProfilerStatusContext';
+import { ProfilerContext } from './ProfilerContext';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import TabBar from '../TabBar';
@@ -15,46 +11,68 @@ import SnapshotSelector from './SnapshotSelector';
 
 import styles from './Profiler.css';
 
-export type Props = {||};
+export default function Profiler(_: {||}) {
+  const { hasProfilingData, isProfiling } = useContext(ProfilerContext);
 
-export default function ProfilerOuter(_: Props) {
-  return (
-    <ProfilerStatusContextController>
+  if (isProfiling || !hasProfilingData) {
+    return <NonSuspendingProfiler isProfiling={isProfiling} />;
+  } else {
+    return (
       <Suspense fallback={<ProfilerFallback />}>
-        <ProfilerDataContextController>
-          <ProfilerInner />
-        </ProfilerDataContextController>
+        <SuspendingProfiler />
       </Suspense>
-    </ProfilerStatusContextController>
+    );
+  }
+}
+
+// This view is rendered when there is no profiler data (either we haven't profiled yet or we're currently profiling).
+// Nothing in this view's subtree suspends.
+// By not suspending while profiling is in progress, we avoid potential cache invalidation trickiness.
+function NonSuspendingProfiler({ isProfiling }: {| isProfiling: boolean |}) {
+  const view = isProfiling ? <RecortdingInProgress /> : <NoProfilingData />;
+
+  return (
+    <div className={styles.Profiler}>
+      <div className={styles.LeftColumn}>
+        <div className={styles.Toolbar}>
+          <RecordToggle />
+          <Button disabled title="Reload and start profiling">
+            {/* TODO (profiling) Wire up reload button */}
+            <ButtonIcon type="reload" />
+          </Button>
+          <div className={styles.VRule} />
+          <TabBar
+            currentTab={null}
+            disabled
+            id="Profiler"
+            selectTab={() => {}}
+            size="small"
+            tabs={tabs}
+          />
+        </div>
+        <div className={styles.Content}>{view}</div>
+      </div>
+    </div>
   );
 }
 
+// TODO (profiling) Real fallback UI
 function ProfilerFallback() {
-  // TODO (profiling) Real fallback UI
-  return null;
+  return <div>Loading...</div>;
 }
 
-function ProfilerInner(_: Props) {
-  const { hasProfilingData, isProfiling } = useContext(ProfilerStatusContext);
-
-  const showProfilingControls = !isProfiling && hasProfilingData;
-
+// This view is rendered when there is profiler data (even though there may not be any for the currently selected root).
+// This view's subtree uses suspense to request profiler data from the backend.
+function SuspendingProfiler(_: {||}) {
   const [tab, setTab] = useState('flame-chart');
   const [isFilterModalShowing, setIsFilterModalShowing] = useState(false);
 
   const showFilterModal = useCallback(() => setIsFilterModalShowing(true));
   const dismissFilterModal = useCallback(() => setIsFilterModalShowing(false));
 
-  let view = null;
-  if (isProfiling) {
-    view = <RecortdingInProgress />;
-  } else if (!hasProfilingData) {
-    view = <NoProfilingData />;
-  } else {
-    // TODO (profiling) Differentiate between no data and no data for the current root
-    // TODO (profiling) Show selected "tab" view
-    view = <div>Coming soon...</div>;
-  }
+  // TODO (profiling) Differentiate between no data and no data for the current root
+  // TODO (profiling) Show selected "tab" view
+  const view = <div>Coming soon...</div>;
 
   return (
     <div className={styles.Profiler}>
@@ -68,7 +86,6 @@ function ProfilerInner(_: Props) {
           <div className={styles.VRule} />
           <TabBar
             currentTab={tab}
-            disabled={!showProfilingControls}
             id="Profiler"
             selectTab={setTab}
             size="small"
@@ -78,7 +95,7 @@ function ProfilerInner(_: Props) {
           <Button onClick={showFilterModal} title="Filter commits by duration">
             <ButtonIcon type="filter" />
           </Button>
-          {showProfilingControls && <SnapshotSelector />}
+          <SnapshotSelector />
         </div>
         <div className={styles.Content}>
           {view}
@@ -87,13 +104,11 @@ function ProfilerInner(_: Props) {
           )}
         </div>
       </div>
-      {showProfilingControls && (
-        <div className={styles.RightColumn}>
-          {/* TODO (profiler) Dynamic information */}
-          <div className={styles.Toolbar}>Commit information</div>
-          <div className={styles.InspectedProperties} />
-        </div>
-      )}
+      <div className={styles.RightColumn}>
+        {/* TODO (profiler) Dynamic information */}
+        <div className={styles.Toolbar}>Commit information</div>
+        <div className={styles.InspectedProperties} />
+      </div>
     </div>
   );
 }
