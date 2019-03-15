@@ -538,9 +538,8 @@ async function createBundle(bundle, bundleType) {
           break;
         case 'ERROR':
         case 'FATAL':
-          // console.log(`${chalk.bgRed.black(' OH NOES! ')} ${logKey}\n`);
-          // handleRollupError(error);
-          console.log(event.code, event);
+          console.log(`${chalk.bgRed.black(' OH NOES! ')} ${logKey}\n`);
+          handleRollupError(event.error);
           break;
       }
     });
