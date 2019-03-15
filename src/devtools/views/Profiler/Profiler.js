@@ -70,8 +70,8 @@ function SuspendingProfiler(_: {||}) {
   const showFilterModal = useCallback(() => setIsFilterModalShowing(true));
   const dismissFilterModal = useCallback(() => setIsFilterModalShowing(false));
 
-  // TODO (profiling) Differentiate between no data and no data for the current root
   // TODO (profiling) Show selected "tab" view
+  // TODO (profiling) Handle cases: no selected commit, no data for root
   const view = <div>Coming soon...</div>;
 
   return (

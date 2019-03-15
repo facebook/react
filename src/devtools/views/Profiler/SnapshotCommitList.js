@@ -19,6 +19,7 @@ export type ItemData = {|
   isMouseDown: boolean,
   maxDuration: number,
   selectedCommitIndex: number | null,
+  selectedFilteredCommitIndex: number | null,
   setSelectedCommitIndex: (index: number) => void,
 |};
 
@@ -27,6 +28,7 @@ type Props = {|
   commitTimes: Array<number>,
   filteredCommitIndices: Array<number>,
   selectedCommitIndex: number | null,
+  selectedFilteredCommitIndex: number | null,
   setSelectedCommitIndex: (index: number) => void,
 |};
 
@@ -35,6 +37,7 @@ export default function SnapshotCommitList({
   commitTimes,
   filteredCommitIndices,
   selectedCommitIndex,
+  selectedFilteredCommitIndex,
   setSelectedCommitIndex,
 }: Props) {
   return (
@@ -46,6 +49,7 @@ export default function SnapshotCommitList({
           height={height}
           filteredCommitIndices={filteredCommitIndices}
           selectedCommitIndex={selectedCommitIndex}
+          selectedFilteredCommitIndex={selectedFilteredCommitIndex}
           setSelectedCommitIndex={setSelectedCommitIndex}
           width={width}
         />
@@ -60,6 +64,7 @@ type ListProps = {|
   height: number,
   filteredCommitIndices: Array<number>,
   selectedCommitIndex: number | null,
+  selectedFilteredCommitIndex: number | null,
   setSelectedCommitIndex: (index: number) => void,
   width: number,
 |};
@@ -70,6 +75,7 @@ function List({
   commitTimes,
   height,
   filteredCommitIndices,
+  selectedFilteredCommitIndex,
   setSelectedCommitIndex,
   width,
 }: ListProps) {
@@ -78,13 +84,13 @@ function List({
 
   // Make sure a newly selected snapshot is fully visible within the list.
   useEffect(() => {
-    if (selectedCommitIndex !== prevCommitIndexRef.current) {
-      prevCommitIndexRef.current = selectedCommitIndex;
-      if (selectedCommitIndex !== null && listRef.current !== null) {
-        listRef.current.scrollToItem(selectedCommitIndex);
+    if (selectedFilteredCommitIndex !== prevCommitIndexRef.current) {
+      prevCommitIndexRef.current = selectedFilteredCommitIndex;
+      if (selectedFilteredCommitIndex !== null && listRef.current !== null) {
+        listRef.current.scrollToItem(selectedFilteredCommitIndex);
       }
     }
-  }, [listRef, selectedCommitIndex]);
+  }, [listRef, selectedFilteredCommitIndex]);
 
   // When the mouse is down, dragging over a commit should auto-select it.
   // This provides a nice way for users to swipe across a range of commits to compare them.
@@ -125,6 +131,7 @@ function List({
       isMouseDown,
       maxDuration,
       selectedCommitIndex,
+      selectedFilteredCommitIndex,
       setSelectedCommitIndex,
     }),
     [
@@ -134,6 +141,7 @@ function List({
       isMouseDown,
       maxDuration,
       selectedCommitIndex,
+      selectedFilteredCommitIndex,
       setSelectedCommitIndex,
     ]
   );
@@ -144,19 +152,17 @@ function List({
       onMouseUp={handleMouseUp}
       style={{ height, width }}
     >
-      {commitDurations.length > 0 && (
-        <FixedSizeList
-          direction="horizontal"
-          height={height}
-          itemCount={filteredCommitIndices.length}
-          itemData={itemData}
-          itemSize={itemSize}
-          ref={(listRef: any) /* Flow bug? */}
-          width={width}
-        >
-          {SnapshotCommitListItem}
-        </FixedSizeList>
-      )}
+      <FixedSizeList
+        direction="horizontal"
+        height={height}
+        itemCount={filteredCommitIndices.length}
+        itemData={itemData}
+        itemSize={itemSize}
+        ref={(listRef: any) /* Flow bug? */}
+        width={width}
+      >
+        {SnapshotCommitListItem}
+      </FixedSizeList>
     </div>
   );
 }

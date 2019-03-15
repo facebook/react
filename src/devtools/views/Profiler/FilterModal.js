@@ -20,7 +20,7 @@ export default function FilterModal({ dismissModal }: Props) {
 
   const handleNumberChange = useCallback(
     ({ currentTarget }) => {
-      const newValue = parseInt(currentTarget.value, 10);
+      const newValue = parseFloat(currentTarget.value);
       setMinCommitDuration(
         Number.isNaN(newValue) || newValue <= 0 ? 0 : newValue
       );

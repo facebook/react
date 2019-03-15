@@ -4,7 +4,7 @@
 }
 
 .Commits {
-  height: 2.25rem;
+  height: 100%;
   min-width: 30px;
   margin-left: 0.25rem;
   overflow: hidden;

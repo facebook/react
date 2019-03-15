@@ -42,9 +42,30 @@ export default function SnapshotSelector(_: Props) {
   );
 
   const numCommits = filteredCommitIndices.length;
+
+  // Map the (unfiltered) selected commit index to an index within the filtered data.
+  const selectedFilteredCommitIndex = useMemo(() => {
+    if (selectedCommitIndex !== null) {
+      for (let i = 0; i < filteredCommitIndices.length; i++) {
+        if (filteredCommitIndices[i] === selectedCommitIndex) {
+          return i;
+        }
+      }
+    }
+    return null;
+  }, [filteredCommitIndices, selectedCommitIndex]);
+
+  if (selectedFilteredCommitIndex === null) {
+    if (numCommits > 0) {
+      setSelectedCommitIndex(0);
+    }
+  } else if (selectedFilteredCommitIndex >= numCommits) {
+    setSelectedCommitIndex(numCommits === 0 ? null : numCommits - 1);
+  }
+
   let currentCommitNumber = '-';
   if (numCommits > 0) {
-    currentCommitNumber = `${selectedCommitIndex + 1}`.padStart(
+    currentCommitNumber = `${selectedFilteredCommitIndex + 1}`.padStart(
       `${numCommits}`.length,
       '0'
     );
@@ -52,18 +73,26 @@ export default function SnapshotSelector(_: Props) {
 
   const viewNextCommit = useCallback(() => {
     const nextCommitIndex = Math.min(
-      ((selectedCommitIndex: any): number) + 1,
+      ((selectedFilteredCommitIndex: any): number) + 1,
       filteredCommitIndices.length - 1
     );
     setSelectedCommitIndex(filteredCommitIndices[nextCommitIndex]);
-  }, [selectedCommitIndex, filteredCommitIndices, setSelectedCommitIndex]);
+  }, [
+    selectedFilteredCommitIndex,
+    filteredCommitIndices,
+    setSelectedCommitIndex,
+  ]);
   const viewPrevCommit = useCallback(() => {
     const nextCommitIndex = Math.max(
-      ((selectedCommitIndex: any): number) - 1,
+      ((selectedFilteredCommitIndex: any): number) - 1,
       0
     );
     setSelectedCommitIndex(filteredCommitIndices[nextCommitIndex]);
-  }, [selectedCommitIndex, filteredCommitIndices, setSelectedCommitIndex]);
+  }, [
+    selectedFilteredCommitIndex,
+    filteredCommitIndices,
+    setSelectedCommitIndex,
+  ]);
 
   if (rendererID === null || rootID === null) {
     return null;
@@ -77,7 +106,7 @@ export default function SnapshotSelector(_: Props) {
       </span>
       <Button
         className={styles.Button}
-        disabled={selectedCommitIndex === 0 || numCommits === 0}
+        disabled={selectedFilteredCommitIndex === 0 || numCommits === 0}
         onClick={viewPrevCommit}
       >
         <ButtonIcon type="previous" />
@@ -95,6 +124,7 @@ export default function SnapshotSelector(_: Props) {
             commitTimes={commitTimes}
             filteredCommitIndices={filteredCommitIndices}
             selectedCommitIndex={selectedCommitIndex}
+            selectedFilteredCommitIndex={selectedFilteredCommitIndex}
             setSelectedCommitIndex={setSelectedCommitIndex}
           />
         )}
@@ -103,7 +133,8 @@ export default function SnapshotSelector(_: Props) {
       <Button
         className={styles.Button}
         disabled={
-          selectedCommitIndex === null || selectedCommitIndex >= numCommits - 1
+          selectedFilteredCommitIndex === null ||
+          selectedFilteredCommitIndex >= numCommits - 1
         }
         onClick={viewNextCommit}
       >
