@@ -253,7 +253,10 @@ if (__DEV__) {
   };
 }
 
-function ensureListeningTo(rootContainerElement, registrationName) {
+function ensureListeningTo(
+  rootContainerElement: Element | Node,
+  registrationName: string,
+): void {
   const isDocumentOrFragment =
     rootContainerElement.nodeType === DOCUMENT_NODE ||
     rootContainerElement.nodeType === DOCUMENT_FRAGMENT_NODE;
