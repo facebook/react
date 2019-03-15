@@ -358,7 +358,7 @@ function commitHookEffectList(
                 '    // ...\n' +
                 '  }\n' +
                 '  fetchData();\n' +
-                '}, [someId]);\n\n' +
+                `}, [someId]); // Or [] if effect doesn't need props or state\n\n` +
                 'Learn more about data fetching with Hooks: https://fb.me/react-hooks-data-fetching';
             } else {
               addendum = ' You returned: ' + destroy;
