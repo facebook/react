@@ -624,13 +624,7 @@ class ReactShallowRenderer {
         this._instance.componentWillUnmount();
       }
     }
-
-    this._firstWorkInProgressHook = null;
-    this._context = null;
-    this._element = null;
-    this._newState = null;
-    this._rendered = null;
-    this._instance = null;
+    this._reset();
   }
 
   _mountClassComponent(
