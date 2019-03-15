@@ -112,19 +112,15 @@ export default {
           message:
             `Effect callbacks are synchronous to prevent race conditions. ` +
             `Put the async function inside:\n\n` +
-            `useEffect(() => {\n` +
-            `  let ignore = false;\n` +
-            `  fetchSomething();\n` +
-            `\n` +
-            `  async function fetchSomething() {\n` +
-            `    const result = await ...\n` +
-            `    if (!ignore) setState(result);\n` +
-            `  }\n` +
-            `\n` +
-            `  return () => { ignore = true; };\n` +
-            `}, ...);\n` +
-            `\n` +
-            `This lets you handle multiple requests without bugs.`,
+            'useEffect(() => {\n' +
+            '  async function fetchData() {\n' +
+            '    // You can await here\n' +
+            '    const response = await MyAPI.getData(someId);\n' +
+            '    // ...\n' +
+            '  }\n' +
+            '  fetchData();\n' +
+            `}, [someId]); // Or [] if effect doesn't need props or state\n\n` +
+            'Learn more about data fetching with Hooks: https://fb.me/react-hooks-data-fetching',
         });
       }
 
