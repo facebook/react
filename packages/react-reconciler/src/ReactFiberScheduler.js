@@ -174,7 +174,7 @@ const {
 } = Scheduler;
 
 export type Thenable = {
-  then(resolve: () => mixed, reject?: () => mixed): mixed,
+  then(resolve: () => mixed, reject?: () => mixed): void | Thenable,
 };
 
 const {ReactCurrentDispatcher, ReactCurrentOwner} = ReactSharedInternals;
@@ -1831,11 +1831,12 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
 let actingUpdatesScopeDepth = 0;
 
 export function actedUpdates(
-  callback: () => void | Promise<void>,
+  callback: () => void | Thenable,
   runCallbackUntilPredicateFails: (
     callback: () => void,
     predicate: () => boolean,
-  ) => Promise<void>,
+    onDone: (?Error) => void,
+  ) => void | Thenable,
 ) {
   let previousActingUpdatesScopeDepth;
   if (__DEV__) {
@@ -1864,15 +1865,24 @@ export function actedUpdates(
   ) {
     return result.then(
       () => {
-        return runCallbackUntilPredicateFails(
-          flushPassiveEffects,
-          () => passiveEffectCallback !== null,
-        ).then(() => {
-          if (__DEV__) {
-            actingUpdatesScopeDepth--;
-            warnIfScopeDepthMismatch();
-          }
-        });
+        return {
+          then(successFn, errorFn) {
+            runCallbackUntilPredicateFails(
+              flushPassiveEffects,
+              () => passiveEffectCallback !== null,
+              err => {
+                if (err) {
+                  return errorFn(err);
+                }
+                if (__DEV__) {
+                  actingUpdatesScopeDepth--;
+                  warnIfScopeDepthMismatch();
+                }
+                successFn();
+              },
+            );
+          },
+        };
       },
       error => {
         if (__DEV__) {

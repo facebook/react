@@ -17,6 +17,7 @@
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {Thenable} from 'react-reconciler/src/ReactFiberScheduler';
 
 import * as Scheduler from 'scheduler/unstable_mock';
 import {createPortal} from 'shared/ReactPortal';
@@ -53,13 +54,6 @@ const UPDATE_SIGNAL = {};
 if (__DEV__) {
   Object.freeze(NO_CONTEXT);
   Object.freeze(UPDATE_SIGNAL);
-}
-
-let globalPromise = null;
-if (typeof window !== 'undefined') {
-  globalPromise = window.Promise;
-} else if (typeof global !== 'undefined') {
-  globalPromise = global.Promise;
 }
 
 function createReactNoop(reconciler: Function, useMutation: boolean) {
@@ -766,7 +760,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     interactiveUpdates: NoopRenderer.interactiveUpdates,
 
-    act(callback: () => void | Promise<void>) {
+    act(callback: () => void | Thenable) {
       // note: keep these warning messages in sync with
       // ReactTestRenderer.js and ReactTestUtils.js
       const result = NoopRenderer.actedUpdates(
@@ -780,20 +774,20 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       ) {
         let called = false;
         if (__DEV__) {
-          // $FlowFixMe - if we've reached this far, we're certain Promise is available
-          globalPromise
-            .resolve()
-            .then(() => {})
-            .then(() => {
-              if (!called) {
-                warningWithoutStack(
-                  null,
-                  'You called act() without awaiting its result. ' +
-                    'This could lead to unexpected testing behaviour, interleaving multiple act ' +
-                    'calls and mixing their scopes. You should - await act(async () => ...);',
-                );
-              }
-            });
+          if (typeof Promise !== 'undefined') {
+            Promise.resolve()
+              .then(() => {})
+              .then(() => {
+                if (!called) {
+                  warningWithoutStack(
+                    null,
+                    'You called act() without awaiting its result. ' +
+                      'This could lead to unexpected testing behaviour, interleaving multiple act ' +
+                      'calls and mixing their scopes. You should - await act(async () => ...);',
+                  );
+                }
+              });
+          }
         }
         return {
           then(successFn: () => mixed, errorFn: () => mixed) {
@@ -997,21 +991,20 @@ try {
 function runCallbackUntilPredicateFails(
   callback: () => void,
   predicate: () => boolean,
+  onDone: (err: ?Error) => void,
 ) {
-  // $FlowFixMe - if we've reached this far, we're certain Promise is available
-  return new globalPromise((resolve, reject) => {
+  try {
     callback();
     enqueueTask(() => {
       if (predicate()) {
-        runCallbackUntilPredicateFails(callback, predicate).then(
-          resolve,
-          reject,
-        );
+        runCallbackUntilPredicateFails(callback, predicate, onDone);
       } else {
-        resolve();
+        onDone();
       }
     });
-  });
+  } catch (err) {
+    onDone(err);
+  }
 }
 
 export default createReactNoop;

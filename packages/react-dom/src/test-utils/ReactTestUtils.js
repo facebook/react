@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  */
+import type {Thenable} from 'react-reconciler/src/ReactFiberScheduler';
 
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -47,13 +48,6 @@ const [
 function Event(suffix) {}
 
 let hasWarnedAboutDeprecatedMockComponent = false;
-
-let globalPromise = null;
-if (typeof window !== 'undefined') {
-  globalPromise = window.Promise;
-} else if (typeof global !== 'undefined') {
-  globalPromise = global.Promise;
-}
 
 /**
  * @class ReactTestUtils
@@ -194,21 +188,20 @@ try {
 function runCallbackUntilPredicateFails(
   callback: () => void,
   predicate: () => boolean,
+  onDone: (err: ?Error) => void,
 ) {
-  // $FlowFixMe - if we've reached this far, we're certain Promise is available
-  return new globalPromise((resolve, reject) => {
+  try {
     callback();
     enqueueTask(() => {
       if (predicate()) {
-        runCallbackUntilPredicateFails(callback, predicate).then(
-          resolve,
-          reject,
-        );
+        runCallbackUntilPredicateFails(callback, predicate, onDone);
       } else {
-        resolve();
+        onDone();
       }
     });
-  });
+  } catch (err) {
+    onDone(err);
+  }
 }
 
 /**
@@ -446,7 +439,7 @@ const ReactTestUtils = {
 
   Simulate: null,
   SimulateNative: {},
-  act(callback: () => void | Promise<void>) {
+  act(callback: () => void | Thenable) {
     if (actContainerElement === null) {
       if (__DEV__) {
         // warn if we're trying to use this in something like node (without jsdom)
@@ -473,20 +466,20 @@ const ReactTestUtils = {
     ) {
       let called = false;
       if (__DEV__) {
-        // $FlowFixMe - if we've reached this far, we're certain Promise is available
-        globalPromise
-          .resolve()
-          .then(() => {})
-          .then(() => {
-            if (!called) {
-              warningWithoutStack(
-                null,
-                'You called act(async () => ...) without await. ' +
-                  'This could lead to unexpected testing behaviour, interleaving multiple act ' +
-                  'calls and mixing their scopes. You should - await act(async () => ...);',
-              );
-            }
-          });
+        if (typeof Promise !== 'undefined') {
+          Promise.resolve()
+            .then(() => {})
+            .then(() => {
+              if (!called) {
+                warningWithoutStack(
+                  null,
+                  'You called act(async () => ...) without await. ' +
+                    'This could lead to unexpected testing behaviour, interleaving multiple act ' +
+                    'calls and mixing their scopes. You should - await act(async () => ...);',
+                );
+              }
+            });
+        }
       }
       return {
         then(successFn, errorFn) {
