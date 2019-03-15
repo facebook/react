@@ -178,6 +178,10 @@ class ReactShallowRenderer {
   };
 
   constructor() {
+    this._reset();
+  }
+
+  _reset() {
     this._context = null;
     this._element = null;
     this._instance = null;
@@ -513,6 +517,9 @@ class ReactShallowRenderer {
 
     if (this._rendering) {
       return;
+    }
+    if (this._element != null && this._element.type !== element.type) {
+      this._reset();
     }
 
     const elementType = isMemo(element.type) ? element.type.type : element.type;
