@@ -574,7 +574,6 @@ class ReactShallowRenderer {
         let shouldRender = true;
         if (
           isMemo(element.type) &&
-          elementType === this._previousComponentIdentity &&
           previousElement !== null
         ) {
           // This is a Memo component that is being re-rendered.
@@ -586,7 +585,8 @@ class ReactShallowRenderer {
         if (shouldRender) {
           const prevDispatcher = ReactCurrentDispatcher.current;
           ReactCurrentDispatcher.current = this._dispatcher;
-          this._prepareToUseHooks(elementType);
+          const componentIdentity = {};
+          this._prepareToUseHooks(componentIdentity);
           try {
             // elementType could still be a ForwardRef if it was
             // nested inside Memo.
