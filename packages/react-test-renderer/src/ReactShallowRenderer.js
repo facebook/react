@@ -535,7 +535,7 @@ class ReactShallowRenderer {
     }
 
     if (this._instance) {
-      this._updateClassComponent(element, this._context);
+      this._updateClassComponent(elementType, element, this._context);
     } else {
       if (shouldConstruct(elementType)) {
         this._instance = new elementType(
@@ -558,7 +558,7 @@ class ReactShallowRenderer {
           }
         }
 
-        if (elementType.hasOwnProperty('contextTypes')) {
+        if (elementType.contextTypes) {
           currentlyValidatingElement = element;
           checkPropTypes(
             elementType.contextTypes,
@@ -571,7 +571,7 @@ class ReactShallowRenderer {
           currentlyValidatingElement = null;
         }
 
-        this._mountClassComponent(element, this._context);
+        this._mountClassComponent(elementType, element, this._context);
       } else {
         let shouldRender = true;
         if (
@@ -636,12 +636,15 @@ class ReactShallowRenderer {
     this._instance = null;
   }
 
-  _mountClassComponent(element: ReactElement, context: null | Object) {
+  _mountClassComponent(
+    elementType: Function,
+    element: ReactElement,
+    context: null | Object,
+  ) {
     this._instance.context = context;
     this._instance.props = element.props;
     this._instance.state = this._instance.state || null;
     this._instance.updater = this._updater;
-    const elementType = isMemo(element.type) ? element.type.type : element.type;
 
     if (
       typeof this._instance.UNSAFE_componentWillMount === 'function' ||
@@ -674,12 +677,15 @@ class ReactShallowRenderer {
     // because DOM refs are not available.
   }
 
-  _updateClassComponent(element: ReactElement, context: null | Object) {
+  _updateClassComponent(
+    elementType: Function,
+    element: ReactElement,
+    context: null | Object,
+  ) {
     const {props} = element;
 
     const oldState = this._instance.state || emptyObject;
     const oldProps = this._instance.props;
-    const elementType = isMemo(element.type) ? element.type.type : element.type;
 
     if (oldProps !== props) {
       // In order to support react-lifecycles-compat polyfilled components,
