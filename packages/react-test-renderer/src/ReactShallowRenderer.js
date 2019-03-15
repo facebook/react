@@ -31,7 +31,7 @@ type Update<A> = {
 };
 
 type UpdateQueue<A> = {
-  last: Update<A> | null,
+  first: Update<A> | null,
   dispatch: any,
 };
 
@@ -178,6 +178,10 @@ class ReactShallowRenderer {
   };
 
   constructor() {
+    this._reset();
+  }
+
+  _reset() {
     this._context = null;
     this._element = null;
     this._instance = null;
@@ -192,9 +196,7 @@ class ReactShallowRenderer {
     this._isReRender = false;
     this._didScheduleRenderPhaseUpdate = false;
     this._renderPhaseUpdates = null;
-    this._currentlyRenderingComponent = null;
     this._numberOfReRenders = 0;
-    this._previousComponentIdentity = null;
   }
 
   _context: null | Object;
@@ -208,8 +210,6 @@ class ReactShallowRenderer {
   _dispatcher: DispatcherType;
   _workInProgressHook: null | Hook;
   _firstWorkInProgressHook: null | Hook;
-  _currentlyRenderingComponent: null | Object;
-  _previousComponentIdentity: null | Object;
   _renderPhaseUpdates: Map<UpdateQueue<any>, Update<any>> | null;
   _isReRender: boolean;
   _didScheduleRenderPhaseUpdate: boolean;
@@ -217,7 +217,7 @@ class ReactShallowRenderer {
 
   _validateCurrentlyRenderingComponent() {
     invariant(
-      this._currentlyRenderingComponent !== null,
+      this._rendering && !this._instance,
       'Hooks can only be called inside the body of a function component. ' +
         '(https://fb.me/react-invalid-hook-call)',
     );
@@ -232,33 +232,44 @@ class ReactShallowRenderer {
       this._validateCurrentlyRenderingComponent();
       this._createWorkInProgressHook();
       const workInProgressHook: Hook = (this._workInProgressHook: any);
+
       if (this._isReRender) {
-        // This is a re-render. Apply the new render phase updates to the previous
-        // current hook.
+        // This is a re-render.
         const queue: UpdateQueue<A> = (workInProgressHook.queue: any);
         const dispatch: Dispatch<A> = (queue.dispatch: any);
-        if (this._renderPhaseUpdates !== null) {
-          // Render phase updates are stored in a map of queue -> linked list
-          const firstRenderPhaseUpdate = this._renderPhaseUpdates.get(queue);
-          if (firstRenderPhaseUpdate !== undefined) {
-            (this._renderPhaseUpdates: any).delete(queue);
-            let newState = workInProgressHook.memoizedState;
-            let update = firstRenderPhaseUpdate;
-            do {
-              // Process this render phase update. We don't have to check the
-              // priority because it will always be the same as the current
-              // render's.
-              const action = update.action;
-              newState = reducer(newState, action);
-              update = update.next;
-            } while (update !== null);
-
-            workInProgressHook.memoizedState = newState;
-
-            return [newState, dispatch];
+        if (this._numberOfReRenders > 0) {
+          // Apply the new render phase updates to the previous current hook.
+          if (this._renderPhaseUpdates !== null) {
+            // Render phase updates are stored in a map of queue -> linked list
+            const firstRenderPhaseUpdate = this._renderPhaseUpdates.get(queue);
+            if (firstRenderPhaseUpdate !== undefined) {
+              (this._renderPhaseUpdates: any).delete(queue);
+              let newState = workInProgressHook.memoizedState;
+              let update = firstRenderPhaseUpdate;
+              do {
+                const action = update.action;
+                newState = reducer(newState, action);
+                update = update.next;
+              } while (update !== null);
+              workInProgressHook.memoizedState = newState;
+              return [newState, dispatch];
+            }
           }
+          return [workInProgressHook.memoizedState, dispatch];
         }
-        return [workInProgressHook.memoizedState, dispatch];
+        // Process updates outside of render
+        let newState = workInProgressHook.memoizedState;
+        let update = queue.first;
+        if (update !== null) {
+          do {
+            const action = update.action;
+            newState = reducer(newState, action);
+            update = update.next;
+          } while (update !== null);
+          queue.first = null;
+          workInProgressHook.memoizedState = newState;
+        }
+        return [newState, dispatch];
       } else {
         let initialState;
         if (reducer === basicStateReducer) {
@@ -273,16 +284,12 @@ class ReactShallowRenderer {
         }
         workInProgressHook.memoizedState = initialState;
         const queue: UpdateQueue<A> = (workInProgressHook.queue = {
-          last: null,
+          first: null,
           dispatch: null,
         });
         const dispatch: Dispatch<
           A,
-        > = (queue.dispatch = (this._dispatchAction.bind(
-          this,
-          (this._currentlyRenderingComponent: any),
-          queue,
-        ): any));
+        > = (queue.dispatch = (this._dispatchAction.bind(this, queue): any));
         return [workInProgressHook.memoizedState, dispatch];
       }
     };
@@ -373,18 +380,14 @@ class ReactShallowRenderer {
     };
   }
 
-  _dispatchAction<A>(
-    componentIdentity: Object,
-    queue: UpdateQueue<A>,
-    action: A,
-  ) {
+  _dispatchAction<A>(queue: UpdateQueue<A>, action: A) {
     invariant(
       this._numberOfReRenders < RE_RENDER_LIMIT,
       'Too many re-renders. React limits the number of renders to prevent ' +
         'an infinite loop.',
     );
 
-    if (componentIdentity === this._currentlyRenderingComponent) {
+    if (this._rendering) {
       // This is a render phase update. Stash it in a lazily-created map of
       // queue -> linked list of updates. After this render pass, we'll restart
       // and apply the stashed updates on top of the work-in-progress hook.
@@ -409,9 +412,24 @@ class ReactShallowRenderer {
         lastRenderPhaseUpdate.next = update;
       }
     } else {
-      // This means an update has happened after the function component has
-      // returned. On the server this is a no-op. In React Fiber, the update
-      // would be scheduled for a future render.
+      const update: Update<A> = {
+        action,
+        next: null,
+      };
+
+      // Append the update to the end of the list.
+      let last = queue.first;
+      if (last === null) {
+        queue.first = update;
+      } else {
+        while (last.next !== null) {
+          last = last.next;
+        }
+        last.next = update;
+      }
+
+      // Re-render now.
+      this.render(this._element, this._context);
     }
   }
 
@@ -441,17 +459,6 @@ class ReactShallowRenderer {
     return this._workInProgressHook;
   }
 
-  _prepareToUseHooks(componentIdentity: Object): void {
-    if (
-      this._previousComponentIdentity !== null &&
-      this._previousComponentIdentity !== componentIdentity
-    ) {
-      this._firstWorkInProgressHook = null;
-    }
-    this._currentlyRenderingComponent = componentIdentity;
-    this._previousComponentIdentity = componentIdentity;
-  }
-
   _finishHooks(element: ReactElement, context: null | Object) {
     if (this._didScheduleRenderPhaseUpdate) {
       // Updates were scheduled during the render phase. They are stored in
@@ -466,7 +473,6 @@ class ReactShallowRenderer {
       this._rendering = false;
       this.render(element, context);
     } else {
-      this._currentlyRenderingComponent = null;
       this._workInProgressHook = null;
       this._renderPhaseUpdates = null;
       this._numberOfReRenders = 0;
@@ -513,6 +519,9 @@ class ReactShallowRenderer {
 
     if (this._rendering) {
       return;
+    }
+    if (this._element != null && this._element.type !== element.type) {
+      this._reset();
     }
 
     const elementType = isMemo(element.type) ? element.type.type : element.type;
@@ -574,11 +583,7 @@ class ReactShallowRenderer {
         this._mountClassComponent(elementType, element, this._context);
       } else {
         let shouldRender = true;
-        if (
-          isMemo(element.type) &&
-          elementType === this._previousComponentIdentity &&
-          previousElement !== null
-        ) {
+        if (isMemo(element.type) && previousElement !== null) {
           // This is a Memo component that is being re-rendered.
           const compare = element.type.compare || shallowEqual;
           if (compare(previousElement.props, element.props)) {
@@ -588,7 +593,6 @@ class ReactShallowRenderer {
         if (shouldRender) {
           const prevDispatcher = ReactCurrentDispatcher.current;
           ReactCurrentDispatcher.current = this._dispatcher;
-          this._prepareToUseHooks(elementType);
           try {
             // elementType could still be a ForwardRef if it was
             // nested inside Memo.
@@ -626,14 +630,7 @@ class ReactShallowRenderer {
         this._instance.componentWillUnmount();
       }
     }
-
-    this._firstWorkInProgressHook = null;
-    this._previousComponentIdentity = null;
-    this._context = null;
-    this._element = null;
-    this._newState = null;
-    this._rendered = null;
-    this._instance = null;
+    this._reset();
   }
 
   _mountClassComponent(
