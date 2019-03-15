@@ -401,6 +401,16 @@ export default {
             });
           }
 
+          // Ignore references to the function itself as it's not defined yet.
+          const def = reference.resolved.defs[0];
+          if (
+            def != null &&
+            def.node != null &&
+            def.node.init === node.parent
+          ) {
+            continue;
+          }
+
           // Add the dependency to a map so we can make sure it is referenced
           // again in our dependencies array. Remember whether it's static.
           if (!dependencies.has(dependency)) {

@@ -972,6 +972,26 @@ const tests = {
         }
       `,
     },
+    {
+      code: `
+        function Example() {
+          const foo = useCallback(() => {
+            foo();
+          }, []);
+        }
+      `,
+    },
+    {
+      code: `
+        function Example({ prop }) {
+          const foo = useCallback(() => {
+            if (prop) {
+              foo();
+            }
+          }, [prop]);
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -4439,6 +4459,52 @@ const tests = {
           `}, ...);\n` +
           `\n` +
           `This lets you handle multiple requests without bugs.`,
+      ],
+    },
+    {
+      code: `
+        function Example() {
+          const foo = useCallback(() => {
+            foo();
+          }, [foo]);
+        }
+      `,
+      output: `
+        function Example() {
+          const foo = useCallback(() => {
+            foo();
+          }, []);
+        }
+      `,
+      errors: [
+        "React Hook useCallback has an unnecessary dependency: 'foo'. " +
+          'Either exclude it or remove the dependency array.',
+      ],
+    },
+    {
+      code: `
+        function Example({ prop }) {
+          const foo = useCallback(() => {
+            prop.hello(foo);
+          }, [foo]);
+          const bar = useCallback(() => {
+            foo();
+          }, [foo]);
+        }
+      `,
+      output: `
+        function Example({ prop }) {
+          const foo = useCallback(() => {
+            prop.hello(foo);
+          }, [prop]);
+          const bar = useCallback(() => {
+            foo();
+          }, [foo]);
+        }
+      `,
+      errors: [
+        "React Hook useCallback has a missing dependency: 'prop'. " +
+          'Either include it or remove the dependency array.',
       ],
     },
   ],
