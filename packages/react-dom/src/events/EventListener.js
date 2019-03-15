@@ -11,30 +11,23 @@ export function addEventBubbleListener(
   element: Document | Element | Node,
   eventType: string,
   listener: Function,
-  passive?: boolean,
 ): void {
-  if (passive === undefined) {
-    element.addEventListener(eventType, listener, false);
-  } else {
-    element.addEventListener(eventType, listener, {
-      passive,
-      capture: false,
-    });
-  }
+  element.addEventListener(eventType, listener, false);
 }
 
 export function addEventCaptureListener(
   element: Document | Element | Node,
   eventType: string,
   listener: Function,
-  passive?: boolean,
 ): void {
-  if (passive === undefined) {
-    element.addEventListener(eventType, listener, true);
-  } else {
-    element.addEventListener(eventType, listener, {
-      passive,
-      capture: true,
-    });
-  }
+  element.addEventListener(eventType, listener, true);
+}
+
+export function addEventListener(
+  element: Document | Element | Node,
+  eventType: string,
+  listener: Function,
+  options: {passive: boolean},
+): void {
+  element.addEventListener(eventType, listener, (options: any));
 }

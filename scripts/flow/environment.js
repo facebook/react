@@ -35,13 +35,9 @@ declare module 'EventListener' {
       target: Element,
       type: string,
       callback: Function,
-      passive?: boolean,
+      priority?: number,
+      options?: {passive: boolean},
     ) => mixed,
-    capture: (
-      target: Element,
-      type: string,
-      callback: Function,
-      passive?: boolean,
-    ) => mixed,
+    capture: (target: Element, type: string, callback: Function) => mixed,
   };
 }

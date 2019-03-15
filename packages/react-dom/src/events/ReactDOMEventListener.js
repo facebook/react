@@ -24,7 +24,11 @@ import {
   PASSIVE_NOT_SUPPORTED,
 } from 'events/EventSystemFlags';
 
-import {addEventBubbleListener, addEventCaptureListener} from './EventListener';
+import {
+  addEventBubbleListener,
+  addEventCaptureListener,
+  addEventListener,
+} from './EventListener';
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 import SimpleEventPlugin from './SimpleEventPlugin';
@@ -195,11 +199,10 @@ export function trapEventForResponderEventSystem(
     }
     // Check if interactive and wrap in interactiveUpdates
     const listener = dispatch.bind(null, topLevelType, eventFlags);
-    if (capture) {
-      addEventCaptureListener(element, rawEventName, listener, passive);
-    } else {
-      addEventBubbleListener(element, rawEventName, listener, passive);
-    }
+    addEventListener(element, rawEventName, listener, {
+      capture,
+      passive,
+    });
   }
 }
 
