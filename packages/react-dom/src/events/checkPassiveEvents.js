@@ -16,11 +16,13 @@ export let passiveBrowserEventsSupported = false;
 // https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#Safely_detecting_option_support
 if (enableEventAPI && canUseDOM) {
   try {
-    const options = {
-      get passive() {
+    const options = {};
+    // $FlowFixMe: Ignore Flow complaining about needing a value
+    Object.defineProperty(options, 'passive', {
+      get: function() {
         passiveBrowserEventsSupported = true;
       },
-    };
+    });
     window.addEventListener('test', options, options);
     window.removeEventListener('test', options, options);
   } catch (e) {
