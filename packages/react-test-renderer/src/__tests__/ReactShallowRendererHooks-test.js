@@ -90,6 +90,61 @@ describe('ReactShallowRenderer with hooks', () => {
     );
   });
 
+  it('should work with updating a derived value from useState', () => {
+    let _updateName;
+
+    function SomeComponent({defaultName}) {
+      const [name, updateName] = React.useState(defaultName);
+      const [prevName, updatePrevName] = React.useState(defaultName);
+      const [letter, updateLetter] = React.useState(name[0]);
+
+      _updateName = updateName;
+
+      if (name !== prevName) {
+        updatePrevName(name);
+        updateLetter(name[0]);
+      }
+
+      return (
+        <div>
+          <p>
+            Your name is: <span>{name + ' (' + letter + ')'}</span>
+          </p>
+        </div>
+      );
+    }
+
+    const shallowRenderer = createRenderer();
+    let result = shallowRenderer.render(
+      <SomeComponent defaultName={'Sophie'} />,
+    );
+    expect(result).toEqual(
+      <div>
+        <p>
+          Your name is: <span>Sophie (S)</span>
+        </p>
+      </div>,
+    );
+
+    result = shallowRenderer.render(<SomeComponent defaultName={'Dan'} />);
+    expect(result).toEqual(
+      <div>
+        <p>
+          Your name is: <span>Sophie (S)</span>
+        </p>
+      </div>,
+    );
+
+    _updateName('Dan');
+    expect(shallowRenderer.getRenderOutput()).toEqual(
+      <div>
+        <p>
+          Your name is: <span>Dan (D)</span>
+        </p>
+      </div>,
+    );
+  });
+
   it('should work with useReducer', () => {
     function reducer(state, action) {
       switch (action.type) {
@@ -321,5 +376,116 @@ describe('ReactShallowRenderer with hooks', () => {
     let secondResult = shallowRenderer.render(<SomeComponent />);
 
     expect(firstResult).toEqual(secondResult);
+  });
+
+  it('should update a value from useState outside the render', () => {
+    let _dispatch;
+
+    function SomeComponent({defaultName}) {
+      const [count, dispatch] = React.useReducer(
+        (s, a) => (a === 'inc' ? s + 1 : s),
+        0,
+      );
+      const [name, updateName] = React.useState(defaultName);
+      _dispatch = () => dispatch('inc');
+
+      return (
+        <div onClick={() => updateName('Dan')}>
+          <p>
+            Your name is: <span>{name}</span> ({count})
+          </p>
+        </div>
+      );
+    }
+
+    const shallowRenderer = createRenderer();
+    const element = <SomeComponent defaultName={'Dominic'} />;
+    const result = shallowRenderer.render(element);
+    expect(result.props.children).toEqual(
+      <p>
+        Your name is: <span>Dominic</span> ({0})
+      </p>,
+    );
+
+    result.props.onClick();
+    let updated = shallowRenderer.render(element);
+    expect(updated.props.children).toEqual(
+      <p>
+        Your name is: <span>Dan</span> ({0})
+      </p>,
+    );
+
+    _dispatch('foo');
+    updated = shallowRenderer.render(element);
+    expect(updated.props.children).toEqual(
+      <p>
+        Your name is: <span>Dan</span> ({1})
+      </p>,
+    );
+
+    _dispatch('inc');
+    updated = shallowRenderer.render(element);
+    expect(updated.props.children).toEqual(
+      <p>
+        Your name is: <span>Dan</span> ({2})
+      </p>,
+    );
+  });
+
+  it('should ignore a foreign update outside the render', () => {
+    let _updateCountForFirstRender;
+
+    function SomeComponent() {
+      const [count, updateCount] = React.useState(0);
+      if (!_updateCountForFirstRender) {
+        _updateCountForFirstRender = updateCount;
+      }
+      return count;
+    }
+
+    const shallowRenderer = createRenderer();
+    const element = <SomeComponent />;
+    let result = shallowRenderer.render(element);
+    expect(result).toEqual(0);
+    _updateCountForFirstRender(1);
+    result = shallowRenderer.render(element);
+    expect(result).toEqual(1);
+
+    shallowRenderer.unmount();
+    result = shallowRenderer.render(element);
+    expect(result).toEqual(0);
+    _updateCountForFirstRender(1); // Should be ignored.
+    result = shallowRenderer.render(element);
+    expect(result).toEqual(0);
+  });
+
+  it('should not forget render phase updates', () => {
+    let _updateCount;
+
+    function SomeComponent() {
+      const [count, updateCount] = React.useState(0);
+      _updateCount = updateCount;
+      if (count < 5) {
+        updateCount(x => x + 1);
+      }
+      return count;
+    }
+
+    const shallowRenderer = createRenderer();
+    const element = <SomeComponent />;
+    let result = shallowRenderer.render(element);
+    expect(result).toEqual(5);
+
+    _updateCount(10);
+    result = shallowRenderer.render(element);
+    expect(result).toEqual(10);
+
+    _updateCount(x => x + 1);
+    result = shallowRenderer.render(element);
+    expect(result).toEqual(11);
+
+    _updateCount(x => x - 10);
+    result = shallowRenderer.render(element);
+    expect(result).toEqual(5);
   });
 });
