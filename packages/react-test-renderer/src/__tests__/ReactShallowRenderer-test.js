@@ -1565,4 +1565,46 @@ describe('ReactShallowRenderer', () => {
       'forwardRef requires a render function but was given object.',
     );
   });
+
+  it('should let you change type', () => {
+    function Foo({prop}) {
+      return <div>Foo {prop}</div>;
+    }
+    function Bar({prop}) {
+      return <div>Bar {prop}</div>;
+    }
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Foo prop="foo1" />);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>Foo {'foo1'}</div>);
+    shallowRenderer.render(<Foo prop="foo2" />);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>Foo {'foo2'}</div>);
+    shallowRenderer.render(<Bar prop="bar1" />);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>Bar {'bar1'}</div>);
+    shallowRenderer.render(<Bar prop="bar2" />);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>Bar {'bar2'}</div>);
+  });
+
+  it('should let you change class type', () => {
+    class Foo extends React.Component {
+      render() {
+        return <div>Foo {this.props.prop}</div>;
+      }
+    }
+    class Bar extends React.Component {
+      render() {
+        return <div>Bar {this.props.prop}</div>;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Foo prop="foo1" />);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>Foo {'foo1'}</div>);
+    shallowRenderer.render(<Foo prop="foo2" />);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>Foo {'foo2'}</div>);
+    shallowRenderer.render(<Bar prop="bar1" />);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>Bar {'bar1'}</div>);
+    shallowRenderer.render(<Bar prop="bar2" />);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>Bar {'bar2'}</div>);
+  });
 });
