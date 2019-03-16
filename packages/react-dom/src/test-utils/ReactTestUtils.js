@@ -43,6 +43,7 @@ const [
   dispatchEvent,
   runEventsInBatch,
   actedUpdates,
+  doesHavePendingPassiveEffects,
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
 
 function Event(suffix) {}
@@ -185,15 +186,12 @@ try {
   };
 }
 
-function flushEffectsAndMicroTasks(
-  doesHavePassiveEffects: () => boolean,
-  onDone: (err: ?Error) => void,
-) {
+function flushEffectsAndMicroTasks(onDone: (err: ?Error) => void) {
   try {
     ReactDOM.render(<div />, actContainerElement);
     enqueueTask(() => {
-      if (doesHavePassiveEffects()) {
-        flushEffectsAndMicroTasks(doesHavePassiveEffects, onDone);
+      if (doesHavePendingPassiveEffects()) {
+        flushEffectsAndMicroTasks(onDone);
       } else {
         onDone();
       }
@@ -438,7 +436,7 @@ const ReactTestUtils = {
 
   Simulate: null,
   SimulateNative: {},
-  act(callback: () => void | Thenable) {
+  act(callback: () => Thenable) {
     if (actContainerElement === null) {
       if (__DEV__) {
         // warn if we're trying to use this in something like node (without jsdom)
@@ -458,7 +456,7 @@ const ReactTestUtils = {
     // note: keep these warning messages in sync with
     // createReactNoop.js and ReactTestRenderer.js
     let thenable;
-    actedUpdates((doesHavePassiveEffects, onDone) => {
+    actedUpdates(onDone => {
       const result = ReactDOM.unstable_batchedUpdates(callback);
       if (
         result !== null &&
@@ -487,20 +485,18 @@ const ReactTestUtils = {
         }
 
         // in this case, the returned thenable runs the callback, flushes
-        // effects and  microtasks in a loop until doesHavePassiveEffects() === false,
+        // effects and  microtasks in a loop until doesHavePendingPassiveEffects() === false,
         // and cleans up
         thenable = {
           then(successFn, errorFn) {
             called = true;
             result.then(
               () => {
-                flushEffectsAndMicroTasks(doesHavePassiveEffects, () => {
+                flushEffectsAndMicroTasks(() => {
                   if (onDone !== undefined) {
                     onDone();
                   }
-                  if (typeof successFn === 'function') {
-                    successFn();
-                  }
+                  successFn();
                 });
               },
               err => {
@@ -537,7 +533,7 @@ const ReactTestUtils = {
 
         // flush effects until none remain, and cleanup
         try {
-          while (doesHavePassiveEffects()) {
+          while (doesHavePendingPassiveEffects()) {
             ReactDOM.render(<div />, actContainerElement);
           }
           if (onDone !== undefined) {

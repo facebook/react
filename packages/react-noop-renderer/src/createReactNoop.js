@@ -760,11 +760,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     interactiveUpdates: NoopRenderer.interactiveUpdates,
 
-    act(callback: () => void | Thenable) {
+    act(callback: () => Thenable) {
       // note: keep these warning messages in sync with
       // ReactTestRenderer.js and ReactTestUtils.js
       let thenable;
-      NoopRenderer.actedUpdates((doesHavePassiveEffects, onDone) => {
+      NoopRenderer.actedUpdates(onDone => {
         const result = NoopRenderer.batchedUpdates(callback);
         if (
           result !== null &&
@@ -794,7 +794,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
               called = true;
               result.then(
                 () => {
-                  flushEffectsAndMicroTasks(doesHavePassiveEffects, () => {
+                  flushEffectsAndMicroTasks(() => {
                     if (onDone !== undefined) {
                       onDone();
                     }
@@ -833,7 +833,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
             );
           }
           try {
-            while (doesHavePassiveEffects()) {
+            while (NoopRenderer.doesHavePendingPassiveEffects()) {
               ReactNoop.flushPassiveEffects();
             }
             if (onDone !== undefined) {
@@ -991,15 +991,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
   };
 
-  function flushEffectsAndMicroTasks(
-    doesHavePassiveEffects: () => boolean,
-    onDone: (err: ?Error) => void,
-  ) {
+  function flushEffectsAndMicroTasks(onDone: (err: ?Error) => void) {
     try {
       ReactNoop.flushPassiveEffects();
       enqueueTask(() => {
-        if (doesHavePassiveEffects()) {
-          flushEffectsAndMicroTasks(doesHavePassiveEffects, onDone);
+        if (NoopRenderer.doesHavePendingPassiveEffects()) {
+          flushEffectsAndMicroTasks(onDone);
         } else {
           onDone();
         }

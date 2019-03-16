@@ -21,6 +21,7 @@ import {
   injectIntoDevTools,
   batchedUpdates,
   actedUpdates,
+  doesHavePendingPassiveEffects,
 } from 'react-reconciler/inline.test';
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
 import {
@@ -550,11 +551,11 @@ const ReactTestRendererFiber = {
   unstable_batchedUpdates: batchedUpdates,
   /* eslint-enable camelcase */
 
-  act(callback: () => void | Thenable) {
+  act(callback: () => Thenable) {
     // note: keep these warning messages in sync with
     // createReactNoop.js and ReactTestUtils.js
     let thenable;
-    actedUpdates((doesHavePassiveEffects, onDone) => {
+    actedUpdates(onDone => {
       const result = batchedUpdates(callback);
       if (
         result !== null &&
@@ -584,7 +585,7 @@ const ReactTestRendererFiber = {
             called = true;
             result.then(
               () => {
-                flushEffectsAndMicroTasks(doesHavePassiveEffects, () => {
+                flushEffectsAndMicroTasks(() => {
                   if (onDone !== undefined) {
                     onDone();
                   }
@@ -623,7 +624,7 @@ const ReactTestRendererFiber = {
           );
         }
         try {
-          while (doesHavePassiveEffects()) {
+          while (doesHavePendingPassiveEffects()) {
             flushPassiveEffects();
           }
           if (onDone !== undefined) {
@@ -689,15 +690,12 @@ function flushPassiveEffects() {
   updateContainer(null, actRoot, null, null);
 }
 
-function flushEffectsAndMicroTasks(
-  doesHavePassiveEffects: () => boolean,
-  onDone: (err: ?Error) => void,
-) {
+function flushEffectsAndMicroTasks(onDone: (err: ?Error) => void) {
   try {
     flushPassiveEffects();
     enqueueTask(() => {
-      if (doesHavePassiveEffects()) {
-        flushEffectsAndMicroTasks(doesHavePassiveEffects, onDone);
+      if (doesHavePendingPassiveEffects()) {
+        flushEffectsAndMicroTasks(onDone);
       } else {
         onDone();
       }

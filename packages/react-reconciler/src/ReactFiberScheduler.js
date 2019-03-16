@@ -1825,21 +1825,18 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
   return root;
 }
 
+export function doesHavePendingPassiveEffects() {
+  return passiveEffectCallback !== null;
+}
+
 // in a test-like environment, we want to warn if dispatchAction() is
 // called outside of a TestUtils.act(...)/batchedUpdates/render call.
 // so we have a a step counter for when we descend/ascend from
 // actedUpdates() calls, and test on it for when to warn
 let actingUpdatesScopeDepth = 0;
 
-function doesHavePassiveEffects() {
-  return passiveEffectCallback !== null;
-}
-
 export function actedUpdates(
-  callback: (
-    doesHavePassiveEffects: () => boolean,
-    onDone: void | ((?Error) => void),
-  ) => void,
+  callback: (onDone: void | ((?Error) => void)) => void,
 ) {
   let previousActingUpdatesScopeDepth;
   if (__DEV__) {
@@ -1861,12 +1858,12 @@ export function actedUpdates(
   }
 
   if (__DEV__) {
-    callback(doesHavePassiveEffects, () => {
+    callback(() => {
       actingUpdatesScopeDepth--;
       warnIfScopeDepthMismatch();
     });
   } else {
-    callback(doesHavePassiveEffects);
+    callback();
   }
 }
 
