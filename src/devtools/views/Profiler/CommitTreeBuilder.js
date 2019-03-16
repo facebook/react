@@ -233,3 +233,7 @@ function updateTree(
     rootID: commitTree.rootID,
   };
 }
+
+export function invalidateCommitTrees(): void {
+  rootToCommitTreeMap.clear();
+}

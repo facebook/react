@@ -2,7 +2,10 @@
 
 import { createResource, invalidateResources } from './cache';
 import Store from './store';
-import { getCommitTree } from 'src/devtools/views/Profiler/CommitTreeBuilder';
+import {
+  getCommitTree,
+  invalidateCommitTrees,
+} from 'src/devtools/views/Profiler/CommitTreeBuilder';
 
 import type { Resource } from './cache';
 import type { Bridge } from '../types';
@@ -128,6 +131,7 @@ export default class ProfilingCache {
 
   invalidate() {
     invalidateResources();
+    invalidateCommitTrees();
 
     this._pendingCommitDetailsMap.clear();
     this._pendingProfileSummaryMap.clear();
