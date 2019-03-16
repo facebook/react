@@ -63,7 +63,6 @@ function findNodeHandle(componentOrHandle: any): ?number {
       owner.stateNode._warnedAboutRefsInRender = true;
     }
   }
-
   if (componentOrHandle == null) {
     return null;
   }
