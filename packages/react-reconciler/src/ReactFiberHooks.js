@@ -89,8 +89,8 @@ type Update<S, A> = {
 type UpdateQueue<S, A> = {
   last: Update<S, A> | null,
   dispatch: (A => mixed) | null,
-  eagerReducer: ((S, A) => S) | null,
-  eagerState: S | null,
+  lastRenderedReducer: ((S, A) => S) | null,
+  lastRenderedState: S | null,
 };
 
 export type HookType =
@@ -591,8 +591,8 @@ function mountReducer<S, I, A>(
   const queue = (hook.queue = {
     last: null,
     dispatch: null,
-    eagerReducer: reducer,
-    eagerState: (initialState: any),
+    lastRenderedReducer: reducer,
+    lastRenderedState: (initialState: any),
   });
   const dispatch: Dispatch<A> = (queue.dispatch = (dispatchAction.bind(
     null,
@@ -614,6 +614,8 @@ function updateReducer<S, I, A>(
     queue !== null,
     'Should have a queue. This is likely a bug in React. Please file an issue.',
   );
+
+  queue.lastRenderedReducer = reducer;
 
   if (numberOfReRenders > 0) {
     // This is a re-render. Apply the new render phase updates to the previous
@@ -650,8 +652,7 @@ function updateReducer<S, I, A>(
           hook.baseState = newState;
         }
 
-        queue.eagerReducer = reducer;
-        queue.eagerState = newState;
+        queue.lastRenderedState = newState;
 
         return [newState, dispatch];
       }
@@ -730,8 +731,7 @@ function updateReducer<S, I, A>(
     hook.baseUpdate = newBaseUpdate;
     hook.baseState = newBaseState;
 
-    queue.eagerReducer = reducer;
-    queue.eagerState = newState;
+    queue.lastRenderedState = newState;
   }
 
   const dispatch: Dispatch<A> = (queue.dispatch: any);
@@ -749,8 +749,8 @@ function mountState<S>(
   const queue = (hook.queue = {
     last: null,
     dispatch: null,
-    eagerReducer: basicStateReducer,
-    eagerState: (initialState: any),
+    lastRenderedReducer: basicStateReducer,
+    lastRenderedState: (initialState: any),
   });
   const dispatch: Dispatch<
     BasicStateAction<S>,
@@ -1129,21 +1129,21 @@ function dispatchAction<S, A>(
       // The queue is currently empty, which means we can eagerly compute the
       // next state before entering the render phase. If the new state is the
       // same as the current state, we may be able to bail out entirely.
-      const eagerReducer = queue.eagerReducer;
-      if (eagerReducer !== null) {
+      const lastRenderedReducer = queue.lastRenderedReducer;
+      if (lastRenderedReducer !== null) {
         let prevDispatcher;
         if (__DEV__) {
           prevDispatcher = ReactCurrentDispatcher.current;
           ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
         }
         try {
-          const currentState: S = (queue.eagerState: any);
-          const eagerState = eagerReducer(currentState, action);
+          const currentState: S = (queue.lastRenderedState: any);
+          const eagerState = lastRenderedReducer(currentState, action);
           // Stash the eagerly computed state, and the reducer used to compute
           // it, on the update object. If the reducer hasn't changed by the
           // time we enter the render phase, then the eager state can be used
           // without calling the reducer again.
-          update.eagerReducer = eagerReducer;
+          update.eagerReducer = lastRenderedReducer;
           update.eagerState = eagerState;
           if (is(eagerState, currentState)) {
             // Fast path. We can bail out without scheduling React to re-render.
