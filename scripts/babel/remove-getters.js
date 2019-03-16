@@ -26,9 +26,28 @@ module.exports = ({types: t}) => {
         const keyNode = path.node.key;
         const isValidKey = t.isIdentifier(keyNode);
         if (!isValidKey) {
-          throw path.buildCodeFrameError(
-            'Getter key format not supported. Expected identifier.'
-          );
+          return;
+          /*
+            Similar to Rollup.legacy behaviour.
+            Don't throw error.
+
+            Not all getters code usage can be transformed in meaningful way.
+
+            Code usage of getters, where they can't be transformed should be wrapped in try catch.
+
+            e.g.
+
+            var passiveSupported = false;
+            try {
+              var options = {
+                  get passive() {
+                    passiveBrowserEventsSupported = true;
+                  },
+              };
+            } catch(err) {
+              passiveSupported = false;
+            }
+          */
         }
 
         const bodyNode = path.node.body;
@@ -37,9 +56,10 @@ module.exports = ({types: t}) => {
           t.isReturnStatement(bodyNode.body[0]) &&
           t.isIdentifier(bodyNode.body[0].argument);
         if (!isValidBody) {
-          throw path.buildCodeFrameError(
-            'Getter body format not supported. Expected return of identifier.'
-          );
+          /*
+            Similar to Rollup.legacy behaviour.
+            Not all getters code usage can be transformed in meaningful way.
+          */
         }
 
         const prop = keyNode.name;
