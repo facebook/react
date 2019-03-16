@@ -470,6 +470,7 @@ const ReactTestUtils = {
         let called = false;
         if (__DEV__) {
           if (typeof Promise !== 'undefined') {
+            //eslint-disable-next-line no-undef
             Promise.resolve()
               .then(() => {})
               .then(() => {
