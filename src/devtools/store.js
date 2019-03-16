@@ -5,6 +5,7 @@ import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_RESET_CHILDREN,
+  TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
 import { ElementTypeRoot } from './types';
 import { utfDecodeString } from '../utils';
@@ -12,7 +13,7 @@ import { __DEBUG__ } from '../constants';
 import ProfilingCache from './ProfilingCache';
 
 import type { ElementType } from './types';
-import type { Element } from './views/elements/types';
+import type { Element } from './views/Elements/types';
 import type { Bridge } from '../types';
 
 const debug = (methodName, ...args) => {
@@ -117,6 +118,14 @@ export default class Store extends EventEmitter {
 
   get profilingCache(): ProfilingCache {
     return this._profilingCache;
+  }
+
+  get profilingOperations(): Map<number, Array<Uint32Array>> {
+    return this._profilingOperations;
+  }
+
+  get profilingSnapshot(): Map<number, ProfilingSnapshotNode> {
+    return this._profilingSnapshot;
   }
 
   get revision(): number {
@@ -506,6 +515,12 @@ export default class Store extends EventEmitter {
           element.weight = childWeight + 1;
 
           weightDelta = childWeight + 1 - prevWeight;
+          break;
+        case TREE_OPERATION_UPDATE_TREE_BASE_DURATION:
+          // Base duration updates are only sent while profiling is in progress.
+          // We can ignore them at this point.
+          // The profiler UI uses them lazily in order to generate the tree.
+          i = i + 3;
           break;
         default:
           throw Error(`Unsupported Bridge operation ${operation}`);

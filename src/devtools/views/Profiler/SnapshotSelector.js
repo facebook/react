@@ -41,7 +41,7 @@ export default function SnapshotSelector(_: Props) {
     [commitDurations, isCommitFilterEnabled, minCommitDuration]
   );
 
-  const numCommits = filteredCommitIndices.length;
+  const numFilteredCommits = filteredCommitIndices.length;
 
   // Map the (unfiltered) selected commit index to an index within the filtered data.
   const selectedFilteredCommitIndex = useMemo(() => {
@@ -56,19 +56,24 @@ export default function SnapshotSelector(_: Props) {
   }, [filteredCommitIndices, selectedCommitIndex]);
 
   if (selectedFilteredCommitIndex === null) {
-    if (numCommits > 0) {
+    if (numFilteredCommits > 0) {
       setSelectedCommitIndex(0);
     }
-  } else if (selectedFilteredCommitIndex >= numCommits) {
-    setSelectedCommitIndex(numCommits === 0 ? null : numCommits - 1);
+  } else if (selectedFilteredCommitIndex >= numFilteredCommits) {
+    setSelectedCommitIndex(
+      numFilteredCommits === 0 ? null : numFilteredCommits - 1
+    );
   }
 
-  let currentCommitNumber = '-';
-  if (numCommits > 0) {
-    currentCommitNumber = `${selectedFilteredCommitIndex + 1}`.padStart(
-      `${numCommits}`.length,
-      '0'
-    );
+  let label = null;
+  if (numFilteredCommits > 0) {
+    label =
+      `${selectedFilteredCommitIndex + 1}`.padStart(
+        `${numFilteredCommits}`.length,
+        '0'
+      ) +
+      ' / ' +
+      numFilteredCommits;
   }
 
   const viewNextCommit = useCallback(() => {
@@ -101,12 +106,10 @@ export default function SnapshotSelector(_: Props) {
   return (
     <Fragment>
       <div className={styles.VRule} />
-      <span className={styles.IndexLabel}>
-        {numCommits > 0 ? `${currentCommitNumber} / ${numCommits}` : '-'}
-      </span>
+      <span className={styles.IndexLabel}>{label}</span>
       <Button
         className={styles.Button}
-        disabled={selectedFilteredCommitIndex === 0 || numCommits === 0}
+        disabled={selectedFilteredCommitIndex === 0 || numFilteredCommits === 0}
         onClick={viewPrevCommit}
       >
         <ButtonIcon type="previous" />
@@ -114,11 +117,14 @@ export default function SnapshotSelector(_: Props) {
       <div
         className={styles.Commits}
         style={{
-          flex: numCommits > 0 ? '1 1 auto' : '0 0 auto',
-          maxWidth: numCommits > 0 ? numCommits * maxBarWidth : undefined,
+          flex: numFilteredCommits > 0 ? '1 1 auto' : '0 0 auto',
+          maxWidth:
+            numFilteredCommits > 0
+              ? numFilteredCommits * maxBarWidth
+              : undefined,
         }}
       >
-        {numCommits > 0 && (
+        {numFilteredCommits > 0 && (
           <SnapshotCommitList
             commitDurations={commitDurations}
             commitTimes={commitTimes}
@@ -128,13 +134,15 @@ export default function SnapshotSelector(_: Props) {
             setSelectedCommitIndex={setSelectedCommitIndex}
           />
         )}
-        {numCommits === 0 && <div className={styles.NoCommits}>No commits</div>}
+        {numFilteredCommits === 0 && (
+          <div className={styles.NoCommits}>No commits</div>
+        )}
       </div>
       <Button
         className={styles.Button}
         disabled={
           selectedFilteredCommitIndex === null ||
-          selectedFilteredCommitIndex >= numCommits - 1
+          selectedFilteredCommitIndex >= numFilteredCommits - 1
         }
         onClick={viewNextCommit}
       >

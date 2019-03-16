@@ -1,31 +1,31 @@
 // @flow
 
-// Map of root ID to commit durations.
-// Roots that were committed during the profiling session will have a non-empty array of values.
-// Each value in the array represents the total amount of time the commit took.
-// More detailed information about a commit must be requested separately.
-export type CommitDurationsMap = Map<number, Array<number>>;
-
-export type Interaction = {|
+export type Node = {|
   id: number,
-  timestamp: number,
-  label: string,
+  children: Array<number>,
+  displayName: string | null,
+  key: number | string | null,
+  parentID: number,
+  treeBaseDuration: number,
 |};
 
-export type Node = {|
-  actualDuration: number,
-  baseDuration: number,
-  displayName: string,
-  id: number,
-  parentID: number,
-  selfDuration: number,
+export type CommitTree = {|
+  nodes: Map<number, Node>,
+  rootID: number,
+|};
+
+export type Interaction = {|
+  id: string,
+  name: string,
+  timestamp: number,
 |};
 
 export type CommitDetails = {|
-  duration: number,
   interactions: Array<Interaction>,
-  root: Node,
-  timestamp: number,
+  committedFibers: Array<{|
+    actualDuration: number,
+    id: number,
+  |}>,
 |};
 
 export type ProfilingSummary = {|

@@ -16,7 +16,7 @@ Every React commit that changes the tree in a way DevTools cares about results i
 
 The payload for each message is a typed array. The first two entries are numbers that identify which renderer and root the update belongs to (for multi-root support). The rest of the array depends on the operations being made to the tree.
 
-We only send the following bits of information: element type, id, parent id, owner id, name, and key. Additional information (e.g. props, state) requires a separate "_inspectElement_" message.
+No updates are required for many commits because we only send the following bits of information: element type, id, parent id, owner id, name, and key. Additional information (e.g. props, state) requires a separate "_inspectElement_" message.
 
 #### Adding a root node
 
@@ -25,7 +25,7 @@ Adding a root to the tree requires sending 4 numbers:
 1. add operation constant (`1`)
 1. fiber id
 1. element type constant (`8 === ElementTypeRoot`)
-1. profiling flag
+1. profiling supported flag
 
 For example, adding a root fiber with an id of 1:
 ```js
@@ -97,6 +97,23 @@ For example:
   2,  // number of children
   35, // first child id
   21, // second child id
+]
+```
+
+#### Updating tree base duration
+
+While profiling is in progress, we send an extra operation any time a fiber is added or a updated in a way that affects its tree base duration. This information is needed by the Profiler UI in order to render the "snapshot" and "ranked" chart views.
+
+1. tree base duration constant (`4`)
+1. fiber id
+1. tree base duration
+
+For example, updating the base duration for a fiber with an id of 1:
+```js
+[
+  4,  // tree base duration operation
+  1,  // fiber id
+  32, // new tree base duration value
 ]
 ```
 
@@ -251,12 +268,10 @@ Here is an example commit in which two elements were rendered and one interactio
   commitIndex: 0,
   interactions: [
     {
-      id: 1,
       timestamp: 4,
       name: "Foo"
     },
     {
-      id: 2,
       timestamp: 4,
       name: "Bar"
     }
@@ -265,13 +280,11 @@ Here is an example commit in which two elements were rendered and one interactio
     {
       id: 1,
       baseDuration: 15,
-      selfDuration: 4,
       actualDuration: 15
     },
     {
       id: 2,
       baseDuration: 11,
-      selfDuration: 8,
       actualDuration: 11
     }
   }
@@ -319,16 +332,16 @@ Here is an example of a profiling session consisting of two interactions:
   rootID: 1,
   interactions: [
     {
-      id: 1,
       name: "Foo",
+      timestamp: 4,
       commits: [
         0, // index of first commit
         2  // index of second commit
       ]
     },
     {
-      id: 2,
       name: "Bar",
+      timestamp: 4,
       commits: [
         0  // index of first commit
       ]

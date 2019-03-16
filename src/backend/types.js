@@ -19,11 +19,6 @@ export type FiberData = {|
   type: ElementType,
 |};
 
-export type Interaction = {|
-  name: string,
-  timestamp: number,
-|};
-
 export type NativeType = {};
 export type RendererID = number;
 
@@ -54,6 +49,22 @@ export type ReactRenderer = {
   currentDispatcherRef?: {| current: null | Dispatcher |},
 };
 
+export type Interaction = {|
+  id: string,
+  name: string,
+  timestamp: number,
+|};
+
+export type CommitDetails = {|
+  commitIndex: number,
+  interactions: Array<Interaction>,
+  committedFibers: Array<{|
+    actualDuration: number,
+    id: number,
+  |}>,
+  rootID: number,
+|};
+
 export type ProfilingSummary = {|
   commitDurations: Array<number>,
   commitTimes: Array<number>,
@@ -64,6 +75,7 @@ export type ProfilingSummary = {|
 
 export type RendererInterface = {
   cleanup: () => void,
+  getCommitDetails: (rootID: number, commitIndex: number) => CommitDetails,
   getNativeFromReactElement?: ?(component: Fiber) => ?NativeType,
   getFiberIDFromNative: (
     component: NativeType,

@@ -46,6 +46,7 @@ export default class Agent extends EventEmitter {
   addBridge(bridge: Bridge) {
     this._bridge = bridge;
 
+    bridge.addListener('getCommitDetails', this.getCommitDetails);
     bridge.addListener('getProfilingStatus', this.getProfilingStatus);
     bridge.addListener('getProfilingSummary', this.getProfilingSummary);
     bridge.addListener('highlightElementInDOM', this.highlightElementInDOM);
@@ -75,6 +76,26 @@ export default class Agent extends EventEmitter {
     }
     return null;
   }
+
+  getCommitDetails = ({
+    commitIndex,
+    rendererID,
+    rootID,
+  }: {
+    commitIndex: number,
+    rendererID: number,
+    rootID: number,
+  }) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}"`);
+    } else {
+      this._bridge.send(
+        'commitDetails',
+        renderer.getCommitDetails(rootID, commitIndex)
+      );
+    }
+  };
 
   getProfilingStatus = () => {
     this._bridge.send('profilingStatus', this._isProfiling);

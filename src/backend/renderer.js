@@ -19,11 +19,13 @@ import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_RESET_CHILDREN,
+  TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
 import { getUID } from '../utils';
 import { inspectHooksOfFiber } from './ReactDebugHooks';
 
 import type {
+  CommitDetails,
   DevToolsHook,
   Fiber,
   FiberData,
@@ -474,6 +476,10 @@ export function attach(
   // When a mount or update is in progress, this value tracks the root that is being operated on.
   let currentRootID: number = -1;
 
+  function getInteractionID({ name, timestamp }: Interaction): string {
+    return `${timestamp}-${name}`;
+  }
+
   function getFiberID(primaryFiber: Fiber): number {
     if (!fiberToIDMap.has(primaryFiber)) {
       const id = getUID();
@@ -623,6 +629,14 @@ export function attach(
       }
       addOperation(operation);
     }
+
+    if (isProfiling) {
+      const operation = new Uint32Array(3);
+      operation[0] = TREE_OPERATION_UPDATE_TREE_BASE_DURATION;
+      operation[1] = id;
+      operation[2] = fiber.treeBaseDuration;
+      addOperation(operation);
+    }
   }
 
   function enqueueUnmount(fiber) {
@@ -682,21 +696,26 @@ export function attach(
     if (isProfiling) {
       if (haveProfilerTimesChanged(fiber.alternate, fiber)) {
         const id = getFiberID(getPrimaryFiber(fiber));
+        const { actualDuration, treeBaseDuration } = fiber;
 
-        idToTreeBaseDurationMap.set(id, fiber.treeBaseDuration);
+        const operation = new Uint32Array(3);
+        operation[0] = TREE_OPERATION_UPDATE_TREE_BASE_DURATION;
+        operation[1] = id;
+        operation[2] = treeBaseDuration;
+        addOperation(operation);
 
-        if (fiber.actualDuration > 0) {
+        idToTreeBaseDurationMap.set(id, treeBaseDuration);
+
+        if (actualDuration > 0) {
           // If profiling is active, store durations for elements that were rendered during the commit.
           const metadata = ((currentCommitProfilingMetadata: any): CommitProfilingData);
           metadata.committedFibers.push({
             id,
-            actualDuration: fiber.actualDuration,
-            selfDuration: fiber.selfDuration,
-            treeBaseDuration: fiber.treeBaseDuration,
+            actualDuration,
           });
           metadata.maxActualDuration = Math.max(
             metadata.maxActualDuration,
-            fiber.actualDuration
+            actualDuration
           );
         }
       }
@@ -864,9 +883,10 @@ export function attach(
         committedFibers: [],
         commitTime: performance.now() - profilingStartTime,
         interactions: Array.from(root.memoizedInteractions).map(
-          ({ name, timestamp }: Interaction) => ({
-            name,
-            timestamp: timestamp - profilingStartTime,
+          (interaction: Interaction) => ({
+            id: getInteractionID(interaction),
+            name: interaction.name,
+            timestamp: interaction.timestamp - profilingStartTime,
           })
         ),
         maxActualDuration: 0,
@@ -1360,8 +1380,6 @@ export function attach(
   type CommittedFiber = {|
     actualDuration: number,
     id: number,
-    selfDuration: number,
-    treeBaseDuration: number,
   |};
 
   type CommitProfilingData = {|
@@ -1378,6 +1396,33 @@ export function attach(
   let isProfiling: boolean = false;
   let profilingStartTime: number = 0;
   let rootToCommitProfilingMetadataMap: CommitProfilingMetadataMap | null = null;
+
+  function getCommitDetails(
+    rootID: number,
+    commitIndex: number
+  ): CommitDetails {
+    const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
+      rootID
+    );
+    if (commitProfilingMetadata != null) {
+      const commitProfilingData = commitProfilingMetadata[commitIndex];
+      if (commitProfilingData != null) {
+        return {
+          commitIndex,
+          interactions: commitProfilingData.interactions,
+          committedFibers: commitProfilingData.committedFibers,
+          rootID,
+        };
+      }
+    }
+    // TODO (profiling) Is this right? Should I return null? Does it matter?
+    return {
+      commitIndex,
+      interactions: [],
+      committedFibers: [],
+      rootID,
+    };
+  }
 
   function getProfilingSummary(rootID: number): ProfilingSummary {
     const interactions = new Set();
@@ -1428,6 +1473,7 @@ export function attach(
 
   return {
     cleanup,
+    getCommitDetails,
     getFiberIDFromNative,
     getNativeFromReactElement,
     getProfilingSummary,

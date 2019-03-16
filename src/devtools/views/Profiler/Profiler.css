@@ -81,3 +81,13 @@
   font-size: var(--font-size-sans-large);
   padding: 0.5rem;
 }
+
+.Fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sans-large);
+  color: var(--color-dim);
+}

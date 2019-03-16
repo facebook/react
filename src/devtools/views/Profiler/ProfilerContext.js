@@ -28,6 +28,7 @@ type Context = {|
   // If nothing is selected though, this will default to the first root.
   rendererID: number | null,
   rootID: number | null,
+  rootHasProfilingData: boolean,
 
   // Controls whether commits are filtered by duration.
   // This value is controlled by a filter toggle UI in the Profiler toolbar.
@@ -85,14 +86,19 @@ function ProfilerContextController({ children }: Props) {
   // or use a portal to share the contexts themselves between Chrome tabs.
   let rendererID = null;
   let rootID = null;
+  let rootHasProfilingData = false;
   if (selectedElementID) {
     rendererID = store.getRendererIDForElement(
       ((selectedElementID: any): number)
     );
     rootID = store.getRootIDForElement(((selectedElementID: any): number));
+    rootHasProfilingData = store.profilingOperations.has(
+      ((rootID: any): number)
+    );
   } else if (store.roots.length > 0) {
     // If no root is selected, assume the first root; many React apps are single root anyway.
     rootID = store.roots[0];
+    rootHasProfilingData = store.profilingOperations.has(rootID);
     rendererID = store.getRendererIDForElement(((rootID: any): number));
   }
 
@@ -121,6 +127,7 @@ function ProfilerContextController({ children }: Props) {
 
       rendererID,
       rootID,
+      rootHasProfilingData,
 
       isCommitFilterEnabled,
       setIsCommitFilterEnabled,
@@ -138,6 +145,7 @@ function ProfilerContextController({ children }: Props) {
 
       rendererID,
       rootID,
+      rootHasProfilingData,
 
       isCommitFilterEnabled,
       setIsCommitFilterEnabled,
