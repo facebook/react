@@ -13,7 +13,6 @@ import type {
   MeasureOnSuccessCallback,
   NativeMethodsMixinType,
   ReactNativeBaseComponentViewConfig,
-  ReactNativeComponent,
 } from './ReactNativeTypes';
 
 import invariant from 'shared/invariant';
@@ -106,7 +105,7 @@ export default function(
      * `findNodeHandle(component)`.
      */
     measureLayout: function(
-      relativeToNativeNode: number | Class<ReactNativeComponent<any>>,
+      relativeToNativeNode: number | Object,
       onSuccess: MeasureLayoutOnSuccessCallback,
       onFail: () => void /* currently unused */,
     ) {
@@ -127,7 +126,7 @@ export default function(
       if (relativeNode == null) {
         warningWithoutStack(
           false,
-          `Warning: ref.measureLayout must be called with a node handle or a ref to a native component.`,
+          'Warning: ref.measureLayout must be called with a node handle or a ref to a native component.',
         );
 
         return;

@@ -13,7 +13,6 @@ import type {
   MeasureOnSuccessCallback,
   NativeMethodsMixinType,
   ReactNativeBaseComponentViewConfig,
-  ReactNativeComponent,
 } from './ReactNativeTypes';
 import type {Instance} from './ReactNativeHostConfig';
 
@@ -71,7 +70,7 @@ class ReactNativeFiberHostComponent {
   }
 
   measureLayout(
-    relativeToNativeNode: number | Class<ReactNativeComponent<any>>,
+    relativeToNativeNode: number | Object,
     onSuccess: MeasureLayoutOnSuccessCallback,
     onFail: () => void /* currently unused */,
   ) {
@@ -92,7 +91,7 @@ class ReactNativeFiberHostComponent {
     if (relativeNode == null) {
       warningWithoutStack(
         false,
-        `Warning: ref.measureLayout must be called with a node handle or a ref to a native component.`,
+        'Warning: ref.measureLayout must be called with a node handle or a ref to a native component.',
       );
 
       return;

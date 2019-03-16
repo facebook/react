@@ -13,7 +13,6 @@ import type {
   MeasureOnSuccessCallback,
   NativeMethodsMixinType,
   ReactNativeBaseComponentViewConfig,
-  ReactNativeComponent,
 } from './ReactNativeTypes';
 
 import {
@@ -123,7 +122,7 @@ class ReactFabricHostComponent {
   }
 
   measureLayout(
-    relativeToNativeNode: number | Class<ReactNativeComponent<any>>,
+    relativeToNativeNode: number | Object,
     onSuccess: MeasureLayoutOnSuccessCallback,
     onFail: () => void /* currently unused */,
   ) {
@@ -144,7 +143,7 @@ class ReactFabricHostComponent {
     if (relativeNode == null) {
       warningWithoutStack(
         false,
-        `Warning: ref.measureLayout must be called with a node handle or a ref to a native component.`,
+        'Warning: ref.measureLayout must be called with a node handle or a ref to a native component.',
       );
 
       return;

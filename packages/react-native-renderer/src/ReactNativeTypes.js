@@ -83,13 +83,13 @@ export type ViewConfigGetter = () => ReactNativeBaseComponentViewConfig<>;
 /**
  * Class only exists for its Flow type.
  */
-export class ReactNativeComponent<Props> extends React.Component<Props> {
+class ReactNativeComponent<Props> extends React.Component<Props> {
   blur(): void {}
   focus(): void {}
   measure(callback: MeasureOnSuccessCallback): void {}
   measureInWindow(callback: MeasureInWindowOnSuccessCallback): void {}
   measureLayout(
-    relativeToNativeNode: number | Class<ReactNativeComponent<any>>,
+    relativeToNativeNode: number | Object,
     onSuccess: MeasureLayoutOnSuccessCallback,
     onFail?: () => void,
   ): void {}
@@ -106,7 +106,7 @@ export type NativeMethodsMixinType = {
   measure(callback: MeasureOnSuccessCallback): void,
   measureInWindow(callback: MeasureInWindowOnSuccessCallback): void,
   measureLayout(
-    relativeToNativeNode: number | Class<ReactNativeComponent<any>>,
+    relativeToNativeNode: number | Object,
     onSuccess: MeasureLayoutOnSuccessCallback,
     onFail: () => void,
   ): void,
