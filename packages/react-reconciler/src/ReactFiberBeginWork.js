@@ -99,7 +99,11 @@ import {
   registerSuspenseInstanceRetry,
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
-import {pushHostContext, pushHostContainer} from './ReactFiberHostContext';
+import {
+  pushHostContext,
+  pushHostContainer,
+  pushHostContextForEvent,
+} from './ReactFiberHostContext';
 import {
   pushProvider,
   propagateContextChange,
@@ -1943,7 +1947,7 @@ function updateEventComponent(current, workInProgress, renderExpirationTime) {
     // We need to validate the event component does not have any direct children
     // that are text host nodes (once resolved). So we use host context in the
     // renderer and validate this inside the renderer. We only do this in DEV.
-    pushHostContext(workInProgress);
+    pushHostContextForEvent(workInProgress);
   }
   return workInProgress.child;
 }
@@ -1959,29 +1963,29 @@ function updateEventTarget(current, workInProgress, renderExpirationTime) {
     renderExpirationTime,
   );
   const parent = workInProgress.return;
-  invariant(
-    parent !== null && parent.tag === Event,
-    'Event target components must be direct children of event components',
-  );
-  const eventTargetType = nextProps.type;
   // These warnings only occur in DEV to reduce overhead in production
-  if (__DEV__ && eventTargetType === REACT_EVENT_TARGET_TOUCH_HIT) {
-    let childrenCount = 0;
-    let child = workInProgress.child;
-    while (child !== null) {
-      if (child.tag === HostText) {
-        childrenCount++;
-        warning(
-          false,
-          '<TouchHitTarget> cannot have text nodes as direct children',
-        );
-      } else if (child.tag === HostComponent) {
-        childrenCount++;
+  if (__DEV__) {
+    warning(
+      parent !== null && parent.tag === EventComponent,
+      'Event target components must be direct children of event components.',
+    );
+    const eventTargetType = workInProgress.type.type;
+    // These warnings only occur in DEV to reduce overhead in production
+    if (__DEV__) {
+      if (eventTargetType === REACT_EVENT_TARGET_TOUCH_HIT) {
+        let childrenCount = 0;
+        let child = workInProgress.child;
+        while (child !== null) {
+          // TODO: make this traverse through composite components to find child nodes
+          if (child.tag === HostComponent || child.tag === HostText) {
+            childrenCount++;
+          }
+          child = child.sibling;
+        }
+        if (childrenCount !== 1) {
+          warning(false, '<TouchHitTarget> must only have a single child.');
+        }
       }
-      child = child.sibling;
-    }
-    if (childrenCount !== 1) {
-      warning(false, '<TouchHitTarget> must only have a single child.');
     }
   }
   return workInProgress.child;

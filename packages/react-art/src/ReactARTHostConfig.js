@@ -340,6 +340,10 @@ export function getChildHostContext() {
   return NO_CONTEXT;
 }
 
+export function getChildHostContextForEvent() {
+  return NO_CONTEXT;
+}
+
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
 export const noTimeout = -1;

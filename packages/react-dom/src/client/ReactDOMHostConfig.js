@@ -43,8 +43,7 @@ import {
 import dangerousStyleValue from '../shared/dangerousStyleValue';
 
 import type {DOMContainer} from './ReactDOM';
-import type {ReactEventResponder} from 'shared/ReactTypes';
-import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
+import type {ReactEventComponent, ReactEventResponder} from 'shared/ReactTypes';
 
 export type Type = string;
 export type Props = {
@@ -148,9 +147,6 @@ export function getRootHostContext(
   if (__DEV__) {
     const validatedTag = type.toLowerCase();
     const ancestorInfo = updatedAncestorInfo(null, validatedTag);
-    if (enableEventAPI) {
-      return {namespace, ancestorInfo, isEventComponent: false};
-    }
     return {namespace, ancestorInfo};
   }
   return namespace;
@@ -158,7 +154,7 @@ export function getRootHostContext(
 
 export function getChildHostContext(
   parentHostContext: HostContext,
-  type: string | Symbol,
+  type: string,
   rootContainerInstance: Container,
 ): HostContext {
   if (__DEV__) {
@@ -168,16 +164,21 @@ export function getChildHostContext(
       parentHostContextDev.ancestorInfo,
       type,
     );
-    if (enableEventAPI) {
-      if (type === REACT_EVENT_COMPONENT_TYPE) {
-        return {namespace, ancestorInfo, isEventComponent: true};
-      }
-      return {namespace, ancestorInfo, isEventComponent: false};
-    }
     return {namespace, ancestorInfo};
   }
   const parentNamespace = ((parentHostContext: any): HostContextProd);
   return getChildNamespace(parentNamespace, type);
+}
+
+export function getChildHostContextForEvent(
+  parentHostContext: HostContext,
+  eventComponent: ReactEventComponent,
+): HostContext {
+  if (__DEV__) {
+    const parentHostContextDev = ((parentHostContext: any): HostContextDev);
+    return {...parentHostContextDev, isEventComponent: true};
+  }
+  return parentHostContext;
 }
 
 export function getPublicInstance(instance: Instance): * {

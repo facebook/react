@@ -16,13 +16,14 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ReactNodeList, ReactEventComponent} from 'shared/ReactTypes';
 
 import * as Scheduler from 'scheduler/unstable_mock';
 import {createPortal} from 'shared/ReactPortal';
 import expect from 'expect';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 
 // for .act's return value
 type Thenable = {
@@ -54,6 +55,7 @@ type HostContext = Object;
 
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
+const EVENT_COMPONENT_CONTEXT = {};
 const UPDATE_SIGNAL = {};
 if (__DEV__) {
   Object.freeze(NO_CONTEXT);
@@ -250,6 +252,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return NO_CONTEXT;
     },
 
+    getChildHostContextForEvent(
+      parentHostContext: HostContext,
+      eventComponent: ReactEventComponent,
+    ) {
+      return EVENT_COMPONENT_CONTEXT;
+    },
+
     getPublicInstance(instance) {
       return instance;
     },
@@ -333,6 +342,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       hostContext: Object,
       internalInstanceHandle: Object,
     ): TextInstance {
+      warning(
+        hostContext !== EVENT_COMPONENT_CONTEXT,
+        'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
+          'Wrap the child text "%s" in an element.',
+        text,
+      );
       if (hostContext === UPPERCASE_CONTEXT) {
         text = text.toUpperCase();
       }
@@ -363,6 +378,14 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     isPrimaryRenderer: true,
     supportsHydration: false,
+
+    handleEventComponent() {
+      // NO-OP
+    },
+
+    handleEventTarget() {
+      // NO-OP
+    },
   };
 
   const hostConfig = useMutation

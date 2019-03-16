@@ -12,12 +12,13 @@ import type {StackCursor} from './ReactFiberStack';
 import type {Container, HostContext} from './ReactFiberHostConfig';
 
 import invariant from 'shared/invariant';
-import {EventComponent} from 'shared/ReactWorkTags';
 
-import {getChildHostContext, getRootHostContext} from './ReactFiberHostConfig';
+import {
+  getChildHostContext,
+  getRootHostContext,
+  getChildHostContextForEvent,
+} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
-
-import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
 declare class NoContextT {}
 const NO_CONTEXT: NoContextT = ({}: any);
@@ -82,12 +83,22 @@ function pushHostContext(fiber: Fiber): void {
     rootInstanceStackCursor.current,
   );
   const context: HostContext = requiredContext(contextStackCursor.current);
-  let type = fiber.type;
-  // For React event components, we get the typeof field (the symbol)
-  if (enableEventAPI && fiber.tag === EventComponent) {
-    type = type.$$typeof;
+  const nextContext = getChildHostContext(context, fiber.type, rootInstance);
+
+  // Don't push this Fiber's context unless it's unique.
+  if (context === nextContext) {
+    return;
   }
-  const nextContext = getChildHostContext(context, type, rootInstance);
+
+  // Track the context and the Fiber that provided it.
+  // This enables us to pop only Fibers that provide unique contexts.
+  push(contextFiberStackCursor, fiber, fiber);
+  push(contextStackCursor, nextContext, fiber);
+}
+
+function pushHostContextForEvent(fiber: Fiber): void {
+  const context: HostContext = requiredContext(contextStackCursor.current);
+  const nextContext = getChildHostContextForEvent(context, fiber.type);
 
   // Don't push this Fiber's context unless it's unique.
   if (context === nextContext) {
@@ -118,4 +129,5 @@ export {
   popHostContext,
   pushHostContainer,
   pushHostContext,
+  pushHostContextForEvent,
 };

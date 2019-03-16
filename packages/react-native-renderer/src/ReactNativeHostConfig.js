@@ -8,7 +8,7 @@
  */
 
 import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
-import type {ReactEventResponder} from 'shared/ReactTypes';
+import type {ReactEventComponent, ReactEventResponder} from 'shared/ReactTypes';
 
 import invariant from 'shared/invariant';
 
@@ -204,6 +204,13 @@ export function getChildHostContext(
   } else {
     return parentHostContext;
   }
+}
+
+export function getChildHostContextForEvent(
+  parentHostContext: HostContext,
+  eventComponent: ReactEventComponent,
+) {
+  // TODO: add getChildHostContextForEvent implementation
 }
 
 export function getPublicInstance(instance: Instance): * {
