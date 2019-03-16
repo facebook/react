@@ -627,6 +627,8 @@ function updateReducer<S, I, A>(
     'Should have a queue. This is likely a bug in React. Please file an issue.',
   );
 
+  queue.eagerReducer = reducer;
+
   if (numberOfReRenders > 0) {
     // This is a re-render. Apply the new render phase updates to the previous
     // work-in-progress hook.
@@ -662,7 +664,6 @@ function updateReducer<S, I, A>(
           hook.baseState = newState;
         }
 
-        queue.eagerReducer = reducer;
         queue.eagerState = newState;
 
         return [newState, dispatch];
@@ -742,7 +743,6 @@ function updateReducer<S, I, A>(
     hook.baseUpdate = newBaseUpdate;
     hook.baseState = newBaseState;
 
-    queue.eagerReducer = reducer;
     queue.eagerState = newState;
   }
 

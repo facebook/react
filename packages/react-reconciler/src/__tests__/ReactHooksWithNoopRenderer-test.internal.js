@@ -1963,4 +1963,55 @@ describe('ReactHooksWithNoopRenderer', () => {
       // );
     });
   });
+
+  it('eager bailout optimization should always compare to latest rendered reducer', () => {
+    // Edge case based on a bug report
+    let setCounter;
+    function App() {
+      const [counter, _setCounter] = useState(1);
+      setCounter = _setCounter;
+      return <Component count={counter} />;
+    }
+
+    function Component({count}) {
+      const [state, dispatch] = useReducer(() => {
+        // This reducer closes over a value from props. If the reducer is not
+        // properly updated, the eager reducer will compare to an old value
+        // and bail out incorrectly.
+        Scheduler.yieldValue('Reducer: ' + count);
+        return count;
+      }, -1);
+      useEffect(
+        () => {
+          Scheduler.yieldValue('Effect: ' + count);
+          dispatch();
+        },
+        [count],
+      );
+      Scheduler.yieldValue('Render: ' + state);
+      return count;
+    }
+
+    ReactNoop.render(<App />);
+    expect(Scheduler).toFlushAndYield([
+      'Render: -1',
+      'Effect: 1',
+      'Reducer: 1',
+      'Reducer: 1',
+      'Render: 1',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput('1');
+
+    act(() => {
+      setCounter(2);
+    });
+    expect(Scheduler).toFlushAndYield([
+      'Render: 1',
+      'Effect: 2',
+      'Reducer: 2',
+      'Reducer: 2',
+      'Render: 2',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput('2');
+  });
 });
