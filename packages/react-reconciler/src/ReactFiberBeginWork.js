@@ -61,10 +61,7 @@ import shallowEqual from 'shared/shallowEqual';
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
-import {
-  REACT_LAZY_TYPE,
-  REACT_EVENT_TARGET_TOUCH_HIT,
-} from 'shared/ReactSymbols';
+import {REACT_LAZY_TYPE} from 'shared/ReactSymbols';
 import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {
@@ -1944,9 +1941,6 @@ function updateEventComponent(current, workInProgress, renderExpirationTime) {
     renderExpirationTime,
   );
   if (__DEV__) {
-    // We need to validate the event component does not have any direct children
-    // that are text host nodes (once resolved). So we use host context in the
-    // renderer and validate this inside the renderer. We only do this in DEV.
     pushHostContextForEvent(workInProgress);
   }
   return workInProgress.child;
@@ -1962,31 +1956,8 @@ function updateEventTarget(current, workInProgress, renderExpirationTime) {
     nextChildren,
     renderExpirationTime,
   );
-  const parent = workInProgress.return;
-  // These warnings only occur in DEV to reduce overhead in production
   if (__DEV__) {
-    warning(
-      parent !== null && parent.tag === EventComponent,
-      'Event target components must be direct children of event components.',
-    );
-    const eventTargetType = workInProgress.type.type;
-    // These warnings only occur in DEV to reduce overhead in production
-    if (__DEV__) {
-      if (eventTargetType === REACT_EVENT_TARGET_TOUCH_HIT) {
-        let childrenCount = 0;
-        let child = workInProgress.child;
-        while (child !== null) {
-          // TODO: make this traverse through composite components to find child nodes
-          if (child.tag === HostComponent || child.tag === HostText) {
-            childrenCount++;
-          }
-          child = child.sibling;
-        }
-        if (childrenCount !== 1) {
-          warning(false, '<TouchHitTarget> must only have a single child.');
-        }
-      }
-    }
+    pushHostContextForEvent(workInProgress);
   }
   return workInProgress.child;
 }

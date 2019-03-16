@@ -14,7 +14,11 @@ import type {
   NativeMethodsMixinType,
   ReactNativeBaseComponentViewConfig,
 } from './ReactNativeTypes';
-import type {ReactEventComponent, ReactEventResponder} from 'shared/ReactTypes';
+import type {
+  ReactEventComponent,
+  ReactEventResponder,
+  ReactEventTarget,
+} from 'shared/ReactTypes';
 
 import {
   mountSafeCallback_NOT_REALLY_SAFE,
@@ -285,7 +289,7 @@ export function getChildHostContext(
 
 export function getChildHostContextForEvent(
   parentHostContext: HostContext,
-  eventComponent: ReactEventComponent,
+  event: ReactEventComponent | ReactEventTarget,
 ) {
   // TODO: add getChildHostContextForEvent implementation
 }

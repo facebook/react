@@ -126,12 +126,12 @@ describe('ReactTopLevelText', () => {
       ReactNoop.render(<Test />);
       expect(Scheduler).toFlushWithoutYielding();
     }).toWarnDev(
-      'Warning: validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
+      'Warning: validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
         'Wrap the child text "Hello world" in an element.',
     );
   });
 
-  it.only('should warn when an event target has a direct text child #2', () => {
+  it('should warn when an event target has a direct text child #2', () => {
     const EventComponent = createReactEventComponent();
     const EventTarget = createReactEventTarget();
 
@@ -148,7 +148,7 @@ describe('ReactTopLevelText', () => {
       ReactNoop.render(<Test />);
       expect(Scheduler).toFlushWithoutYielding();
     }).toWarnDev(
-      'Warning: validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
+      'Warning: validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
         'Wrap the child text "Hello world" in an element.',
     );
   });
@@ -169,7 +169,10 @@ describe('ReactTopLevelText', () => {
     expect(() => {
       ReactNoop.render(<Test />);
       expect(Scheduler).toFlushWithoutYielding();
-    }).toWarnDev('Warning: <TouchHitTarget> must only have a single child.');
+    }).toWarnDev(
+      'Warning: validateDOMNesting: React event targets mut have only a single DOM element as a child. ' +
+        'Instead, found 2 children.',
+    );
   });
 
   it('should warn if an event target is not a direct child of an event component', () => {
@@ -190,7 +193,7 @@ describe('ReactTopLevelText', () => {
       ReactNoop.render(<Test />);
       expect(Scheduler).toFlushWithoutYielding();
     }).toWarnDev(
-      'Warning: Event target components must be direct children of event components.',
+      'Warning: validateDOMNesting: React event targets must be direct children of event components.',
     );
   });
 });

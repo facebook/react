@@ -9,7 +9,11 @@
 
 import warning from 'shared/warning';
 
-import type {ReactEventComponent, ReactEventResponder} from 'shared/ReactTypes';
+import type {
+  ReactEventComponent,
+  ReactEventResponder,
+  ReactEventTarget,
+} from 'shared/ReactTypes';
 
 export type Type = string;
 export type Props = Object;
@@ -119,7 +123,7 @@ export function getChildHostContext(
 
 export function getChildHostContextForEvent(
   parentHostContext: HostContext,
-  eventComponent: ReactEventComponent,
+  event: ReactEventComponent | ReactEventTarget,
 ): HostContext {
   return NO_CONTEXT;
 }

@@ -16,14 +16,25 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
-import type {ReactNodeList, ReactEventComponent} from 'shared/ReactTypes';
+import type {
+  ReactNodeList,
+  ReactEventComponent,
+  ReactEventTarget,
+} from 'shared/ReactTypes';
 
 import * as Scheduler from 'scheduler/unstable_mock';
 import {createPortal} from 'shared/ReactPortal';
 import expect from 'expect';
-import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import {
+  REACT_FRAGMENT_TYPE,
+  REACT_ELEMENT_TYPE,
+  REACT_EVENT_COMPONENT_TYPE,
+  REACT_EVENT_TARGET_TYPE,
+} from 'shared/ReactSymbols';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import warning from 'shared/warning';
+
+import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
 // for .act's return value
 type Thenable = {
@@ -56,10 +67,20 @@ type HostContext = Object;
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
 const EVENT_COMPONENT_CONTEXT = {};
+const EVENT_TARGET_CONTEXT = {};
 const UPDATE_SIGNAL = {};
 if (__DEV__) {
   Object.freeze(NO_CONTEXT);
   Object.freeze(UPDATE_SIGNAL);
+}
+
+function isContextEventTargetContext(hostContext: HostContext) {
+  return (
+    enableEventAPI &&
+    typeof hostContext === 'object' &&
+    hostContext !== null &&
+    hostContext.type === EVENT_TARGET_CONTEXT
+  );
 }
 
 function createReactNoop(reconciler: Function, useMutation: boolean) {
@@ -254,9 +275,23 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     getChildHostContextForEvent(
       parentHostContext: HostContext,
-      eventComponent: ReactEventComponent,
+      event: ReactEventComponent | ReactEventTarget,
     ) {
-      return EVENT_COMPONENT_CONTEXT;
+      if (__DEV__ && enableEventAPI) {
+        if (event.$$typeof === REACT_EVENT_COMPONENT_TYPE) {
+          return EVENT_COMPONENT_CONTEXT;
+        } else if (event.$$typeof === REACT_EVENT_TARGET_TYPE) {
+          warning(
+            parentHostContext === EVENT_COMPONENT_CONTEXT,
+            'validateDOMNesting: React event targets must be direct children of event components.',
+          );
+          return {
+            type: EVENT_TARGET_CONTEXT,
+            hostNodeCount: 0,
+          };
+        }
+      }
+      return parentHostContext;
     },
 
     getPublicInstance(instance) {
@@ -271,6 +306,17 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     ): Instance {
       if (type === 'errorInCompletePhase') {
         throw new Error('Error in host config.');
+      }
+      if (__DEV__ && enableEventAPI) {
+        if (isContextEventTargetContext(hostContext)) {
+          hostContext.hostNodeCount++;
+          warning(
+            hostContext.hostNodeCount === 1,
+            'validateDOMNesting: React event targets mut have only a single ' +
+              'DOM element as a child. Instead, found %s children.',
+            hostContext.hostNodeCount,
+          );
+        }
       }
       const inst = {
         id: instanceCounter++,
@@ -342,12 +388,20 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       hostContext: Object,
       internalInstanceHandle: Object,
     ): TextInstance {
-      warning(
-        hostContext !== EVENT_COMPONENT_CONTEXT,
-        'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
-          'Wrap the child text "%s" in an element.',
-        text,
-      );
+      if (__DEV__ && enableEventAPI) {
+        warning(
+          hostContext !== EVENT_COMPONENT_CONTEXT,
+          'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
+            'Wrap the child text "%s" in an element.',
+          text,
+        );
+        warning(
+          !isContextEventTargetContext(hostContext),
+          'validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
+            'Wrap the child text "%s" in an element.',
+          text,
+        );
+      }
       if (hostContext === UPPERCASE_CONTEXT) {
         text = text.toUpperCase();
       }

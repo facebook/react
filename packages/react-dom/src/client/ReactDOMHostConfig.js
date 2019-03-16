@@ -43,7 +43,15 @@ import {
 import dangerousStyleValue from '../shared/dangerousStyleValue';
 
 import type {DOMContainer} from './ReactDOM';
-import type {ReactEventComponent, ReactEventResponder} from 'shared/ReactTypes';
+import type {
+  ReactEventComponent,
+  ReactEventTarget,
+  ReactEventResponder,
+} from 'shared/ReactTypes';
+import {
+  REACT_EVENT_COMPONENT_TYPE,
+  REACT_EVENT_TARGET_TYPE,
+} from 'shared/ReactSymbols';
 
 export type Type = string;
 export type Props = {
@@ -66,6 +74,8 @@ type HostContextDev = {
   namespace: string,
   ancestorInfo: mixed,
   isEventComponent?: boolean,
+  isEventTarget?: boolean,
+  hostNodeCount?: number,
 };
 type HostContextProd = string;
 export type HostContext = HostContextDev | HostContextProd;
@@ -172,11 +182,21 @@ export function getChildHostContext(
 
 export function getChildHostContextForEvent(
   parentHostContext: HostContext,
-  eventComponent: ReactEventComponent,
+  event: ReactEventComponent | ReactEventTarget,
 ): HostContext {
   if (__DEV__) {
     const parentHostContextDev = ((parentHostContext: any): HostContextDev);
-    return {...parentHostContextDev, isEventComponent: true};
+    if (event.$$typeof === REACT_EVENT_COMPONENT_TYPE) {
+      return {...parentHostContextDev, isEventComponent: true};
+    } else if (event.$$typeof === REACT_EVENT_TARGET_TYPE) {
+      warning(
+        typeof parentHostContext === 'function' &&
+          parentHostContext !== null &&
+          parentHostContext.$$typeof === REACT_EVENT_COMPONENT_TYPE,
+        'validateDOMNesting: React event targets must be direct children of event components.',
+      );
+      return {...parentHostContextDev, isEventTarget: true, hostNodeCount: 0};
+    }
   }
   return parentHostContext;
 }
@@ -209,6 +229,17 @@ export function createInstance(
   if (__DEV__) {
     // TODO: take namespace into account when validating.
     const hostContextDev = ((hostContext: any): HostContextDev);
+    if (__DEV__ && enableEventAPI) {
+      if (hostContextDev.isEventTarget) {
+        (hostContextDev: any).hostNodeCount++;
+        warning(
+          hostContextDev.hostNodeCount === 1,
+          'validateDOMNesting: React event targets mut have only a single ' +
+            'DOM element as a child. Instead, found %s children.',
+          hostContextDev.hostNodeCount,
+        );
+      }
+    }
     validateDOMNesting(type, null, hostContextDev.ancestorInfo);
     if (
       typeof props.children === 'string' ||
@@ -316,6 +347,12 @@ export function createTextInstance(
       warning(
         !hostContextDev.isEventComponent,
         'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
+          'Wrap the child text "%s" in an element.',
+        text,
+      );
+      warning(
+        !hostContextDev.isEventTarget,
+        'validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
           'Wrap the child text "%s" in an element.',
         text,
       );

@@ -771,8 +771,6 @@ function completeWork(
     case EventComponent: {
       if (enableEventAPI) {
         if (__DEV__) {
-          // We validate that event components do not have text nodes as direct children
-          // in the renderer using host context. We only do this in DEV.
           popHostContext(workInProgress);
         }
         const rootContainerInstance = getRootHostContainer();
@@ -783,6 +781,9 @@ function completeWork(
     }
     case EventTarget: {
       if (enableEventAPI) {
+        if (__DEV__) {
+          popHostContext(workInProgress);
+        }
         markUpdate(workInProgress);
       }
       break;
