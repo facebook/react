@@ -27,6 +27,7 @@
   --light-color-commit-gradient-7: #dfba57;
   --light-color-commit-gradient-8: #efbb49;
   --light-color-commit-gradient-9: #febc38;
+  --light-color-commit-gradient-text: #000000;
   --light-color-component-name: #8155cb;
   --light-color-component-name-inverted: #ffffff;
   --light-color-dim: #777d88;
@@ -68,6 +69,7 @@
   --dark-color-commit-gradient-7: #dfba57;
   --dark-color-commit-gradient-8: #efbb49;
   --dark-color-commit-gradient-9: #febc38;
+  --dark-color-commit-gradient-text: #000000;
   --dark-color-component-name: #61dafb;
   --dark-color-component-name-inverted: ##282828;
   --dark-color-dim: #8f949d;

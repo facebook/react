@@ -21,6 +21,7 @@
   flex: 0 0 auto;
   white-space: nowrap;
   font-family: var(--font-family-monospace);
+  margin-left: 0.25rem;
 }
 
 .NoCommits {

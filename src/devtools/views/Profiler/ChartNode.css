@@ -1,0 +1,31 @@
+.Group {
+  transition: all ease-in-out 250ms;
+}
+
+.Rect {
+  cursor: pointer;
+  stroke: var(--color-background);
+  transition: all ease-in-out 250ms;
+}
+
+.ForeignObject {
+  pointer-events: none;
+  transition: all ease-in-out 250ms;
+}
+
+.Div {
+  pointer-events: none;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  font-size: var(--font-family-sans);
+  font-family: var(--font-size-sans-normal);
+  margin-left: 4px;
+  margin-right: 4px;
+  line-height: 1.5;
+  padding: 0 0 0;
+  font-weight: 400;
+  color: var(--color-commit-gradient-text);
+  text-align: left;
+  transition: all ease-in-out 250ms;
+}

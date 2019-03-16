@@ -6,6 +6,10 @@ import {
   getCommitTree,
   invalidateCommitTrees,
 } from 'src/devtools/views/Profiler/CommitTreeBuilder';
+import {
+  getChartData as getRankedChartData,
+  invalidateChartData as invalidateRankedChartData,
+} from 'src/devtools/views/Profiler/RankedChartBuilder';
 
 import type { Resource } from './cache';
 import type { Bridge } from '../types';
@@ -15,9 +19,10 @@ import type {
 } from 'src/backend/types';
 import type {
   CommitDetails as CommitDetailsFrontend,
-  CommitTree,
+  CommitTree as CommitTreeFrontend,
   ProfilingSummary as ProfilingSummaryFrontend,
 } from 'src/devtools/views/Profiler/types';
+import type { ChartData as RankedChartData } from 'src/devtools/views/Profiler/RankedChartBuilder';
 
 type CommitDetailsParams = {|
   commitIndex: number,
@@ -25,7 +30,7 @@ type CommitDetailsParams = {|
   rendererID: number,
 |};
 
-type CommitTreeParams = {|
+type GetCommitTreeParams = {|
   commitIndex: number,
   profilingSummary: ProfilingSummaryFrontend,
   rendererID: number,
@@ -38,6 +43,9 @@ type ProfilingSummaryParams = {|
 |};
 
 export default class ProfilingCache {
+  _bridge: Bridge;
+  _store: Store;
+
   _pendingCommitDetailsMap: Map<
     string,
     (commitDetails: CommitDetailsFrontend) => void
@@ -48,90 +56,105 @@ export default class ProfilingCache {
     (profilingSummary: ProfilingSummaryFrontend) => void
   > = new Map();
 
-  CommitDetails: Resource<CommitDetailsParams, CommitDetailsFrontend>;
-  CommitTree: Resource<CommitTreeParams, CommitTree>;
-  ProfilingSummary: Resource<ProfilingSummaryParams, ProfilingSummaryFrontend>;
+  CommitDetails: Resource<
+    CommitDetailsParams,
+    CommitDetailsFrontend
+  > = createResource(
+    ({ commitIndex, rendererID, rootID }: CommitDetailsParams) => {
+      return new Promise(resolve => {
+        if (!this._store.profilingOperations.has(rootID)) {
+          // If no profiling data was recorded for this root, skip the round trip.
+          resolve({
+            actualDurations: new Map(),
+            interactions: [],
+          });
+        } else {
+          this._pendingCommitDetailsMap.set(
+            `${rootID}-${commitIndex}`,
+            resolve
+          );
+          this._bridge.send('getCommitDetails', {
+            commitIndex,
+            rendererID,
+            rootID,
+          });
+        }
+      });
+    },
+    ({ commitIndex, rendererID, rootID }: CommitDetailsParams) =>
+      `${rootID}-${commitIndex}`
+  );
+
+  ProfilingSummary: Resource<
+    ProfilingSummaryParams,
+    ProfilingSummaryFrontend
+  > = createResource(
+    ({ rendererID, rootID }: ProfilingSummaryParams) => {
+      return new Promise(resolve => {
+        if (!this._store.profilingOperations.has(rootID)) {
+          // If no profiling data was recorded for this root, skip the round trip.
+          resolve({
+            commitDurations: [],
+            commitTimes: [],
+            initialTreeBaseDurations: new Map(),
+            interactionCount: 0,
+          });
+        } else {
+          this._pendingProfileSummaryMap.set(rootID, resolve);
+          this._bridge.send('getProfilingSummary', { rendererID, rootID });
+        }
+      });
+    },
+    ({ rendererID, rootID }: ProfilingSummaryParams) => rootID
+  );
 
   constructor(bridge: Bridge, store: Store) {
-    this.CommitDetails = createResource(
-      ({ commitIndex, rendererID, rootID }: CommitDetailsParams) => {
-        return new Promise(resolve => {
-          if (!store.profilingOperations.has(rootID)) {
-            // If no profiling data was recorded for this root, skip the round trip.
-            resolve({
-              actualDurations: new Map(),
-              interactions: [],
-            });
-          } else {
-            this._pendingCommitDetailsMap.set(
-              `${rootID}-${commitIndex}`,
-              resolve
-            );
-            bridge.send('getCommitDetails', {
-              commitIndex,
-              rendererID,
-              rootID,
-            });
-          }
-        });
-      },
-      ({ commitIndex, rendererID, rootID }: CommitDetailsParams) =>
-        `${rootID}-${commitIndex}`
-    );
-
-    this.CommitTree = createResource(
-      ({
-        commitIndex,
-        profilingSummary,
-        rendererID,
-        rootID,
-      }: CommitTreeParams) =>
-        new Promise(resolve =>
-          resolve(
-            getCommitTree({
-              commitIndex,
-              profilingSummary,
-              rendererID,
-              rootID,
-              store,
-            })
-          )
-        ),
-      ({
-        commitIndex,
-        profilingSummary,
-        rendererID,
-        rootID,
-      }: CommitTreeParams) => `${rootID}-${commitIndex}`
-    );
-
-    this.ProfilingSummary = createResource(
-      ({ rendererID, rootID }: ProfilingSummaryParams) => {
-        return new Promise(resolve => {
-          if (!store.profilingOperations.has(rootID)) {
-            // If no profiling data was recorded for this root, skip the round trip.
-            resolve({
-              commitDurations: [],
-              commitTimes: [],
-              initialTreeBaseDurations: new Map(),
-              interactionCount: 0,
-            });
-          } else {
-            this._pendingProfileSummaryMap.set(rootID, resolve);
-            bridge.send('getProfilingSummary', { rendererID, rootID });
-          }
-        });
-      },
-      ({ rendererID, rootID }: ProfilingSummaryParams) => rootID
-    );
+    this._bridge = bridge;
+    this._store = store;
 
     bridge.addListener('commitDetails', this.onCommitDetails);
     bridge.addListener('profilingSummary', this.onProfileSummary);
   }
 
+  getCommitTree = ({
+    commitIndex,
+    profilingSummary,
+    rendererID,
+    rootID,
+  }: GetCommitTreeParams) =>
+    getCommitTree({
+      commitIndex,
+      profilingSummary,
+      rendererID,
+      rootID,
+      store: this._store,
+    });
+
+  getRankedChartData = ({
+    commitDetails,
+    commitIndex,
+    commitTree,
+    rootID,
+  }: {|
+    commitDetails: CommitDetailsFrontend,
+    commitIndex: number,
+    commitTree: CommitTreeFrontend,
+    rootID: number,
+  |}): RankedChartData =>
+    getRankedChartData({
+      commitDetails,
+      commitIndex,
+      commitTree,
+      rootID,
+    });
+
   invalidate() {
+    // Invalidate Susepnse caches.
     invalidateResources();
+
+    // Invalidate non-Suspense caches too.
     invalidateCommitTrees();
+    invalidateRankedChartData();
 
     this._pendingCommitDetailsMap.clear();
     this._pendingProfileSummaryMap.clear();

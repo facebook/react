@@ -1,18 +1,55 @@
 // @flow
 
-import React, { useContext } from 'react';
+import React, { useCallback, useContext, useMemo } from 'react';
+import AutoSizer from 'react-virtualized-auto-sizer';
+import { FixedSizeList } from 'react-window';
 import { ProfilerContext } from './ProfilerContext';
-import { calculateSelfDuration } from './utils';
+import NoCommitData from './NoCommitData';
+import CommitRankedListItem from './CommitRankedListItem';
+import { barHeight } from './constants';
+import { scale } from './utils';
 import { StoreContext } from '../context';
 
 import styles from './CommitRanked.css';
 
-import type { CommitDetails, CommitTree, Node } from './types';
+import type { ChartData } from './RankedChartBuilder';
 
-export default function CommitRanked(_: {||}) {
-  const { rendererID, rootID, selectedCommitIndex } = useContext(
-    ProfilerContext
+export type ItemData = {|
+  chartData: ChartData,
+  scaleX: (value: number, fallbackValue: number) => number,
+  selectedFiberID: number | null,
+  selectedFiberIndex: number,
+  selectFiber: (id: number | null) => void,
+  width: number,
+|};
+
+export default function CommitRankedAutoSizer(_: {||}) {
+  const { selectFiber } = useContext(ProfilerContext);
+  const deselectCurrentFiber = useCallback(
+    event => {
+      event.stopPropagation();
+      selectFiber(null);
+    },
+    [selectFiber]
   );
+
+  return (
+    <div className={styles.Container} onClick={deselectCurrentFiber}>
+      <AutoSizer>
+        {({ height, width }) => <CommitRanked height={height} width={width} />}
+      </AutoSizer>
+    </div>
+  );
+}
+
+function CommitRanked({ height, width }: {| height: number, width: number |}) {
+  const {
+    rendererID,
+    rootID,
+    selectedCommitIndex,
+    selectedFiberID,
+    selectFiber,
+  } = useContext(ProfilerContext);
 
   const { profilingCache } = useContext(StoreContext);
 
@@ -27,64 +64,66 @@ export default function CommitRanked(_: {||}) {
     rootID: ((rootID: any): number),
   });
 
-  const commitTree = profilingCache.CommitTree.read({
+  const commitTree = profilingCache.getCommitTree({
     commitIndex: ((selectedCommitIndex: any): number),
     profilingSummary,
     rendererID: ((rendererID: any): number),
     rootID: ((rootID: any): number),
   });
 
-  const chartData = generateChartData(commitTree, commitDetails);
-
-  return 'Coming soon: Ranked';
-}
-
-type ChartNode = {|
-  id: number,
-  label: string,
-  name: string,
-  title: string,
-  value: number,
-|};
-
-type ChartData = {|
-  maxValue: number,
-  nodes: Array<ChartNode>,
-|};
-
-const generateChartData = (
-  commitTree: CommitTree,
-  commitDetails: CommitDetails
-): ChartData => {
-  const { nodes } = commitTree;
-
-  let maxSelfDuration = 0;
-
-  const chartNodes: Array<ChartNode> = [];
-  commitDetails.actualDurations.forEach((actualDuration, id) => {
-    const node = ((nodes.get(id): any): Node);
-
-    // Don't show the root node in this chart.
-    if (node.parentID === 0) {
-      return;
-    }
-
-    const selfDuration = calculateSelfDuration(id, commitTree, commitDetails);
-    maxSelfDuration = Math.max(maxSelfDuration, selfDuration);
-
-    const name = node.displayName || 'Unknown';
-    const label = `${name} (${selfDuration.toFixed(1)}ms)`;
-    chartNodes.push({
-      id,
-      label,
-      name,
-      title: label,
-      value: selfDuration,
-    });
+  const chartData = profilingCache.getRankedChartData({
+    commitDetails,
+    commitIndex: ((selectedCommitIndex: any): number),
+    commitTree,
+    rootID: ((rootID: any): number),
   });
 
-  return {
-    maxValue: maxSelfDuration,
-    nodes: chartNodes.sort((a, b) => b.value - a.value),
-  };
+  const selectedFiberIndex = useMemo(
+    () => getNodeIndex(chartData, selectedFiberID),
+    [chartData, selectedFiberID]
+  );
+
+  const itemData = useMemo<ItemData>(
+    () => ({
+      chartData,
+      scaleX: scale(0, chartData.nodes[selectedFiberIndex].value, 0, width),
+      selectedFiberID,
+      selectedFiberIndex,
+      selectFiber,
+      width,
+    }),
+    [chartData, selectedFiberID, selectedFiberIndex, selectFiber, width]
+  );
+
+  // If a commit contains no fibers with an actualDuration > 0,
+  // Display a fallback message.
+  if (chartData.nodes.length === 0) {
+    return <NoCommitData />;
+  }
+
+  return (
+    <FixedSizeList
+      height={height}
+      innerTagName="svg"
+      itemCount={chartData.nodes.length}
+      itemData={itemData}
+      itemSize={barHeight}
+      width={width}
+    >
+      {CommitRankedListItem}
+    </FixedSizeList>
+  );
+}
+
+const getNodeIndex = (chartData: ChartData, id: number | null): number => {
+  if (id === null) {
+    return 0;
+  }
+  const { nodes } = chartData;
+  for (let index = 0; index < nodes.length; index++) {
+    if (nodes[index].id === id) {
+      return index;
+    }
+  }
+  return 0;
 };

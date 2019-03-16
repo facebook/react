@@ -44,6 +44,10 @@ type Context = {|
   // It impacts the flame graph and ranked charts.
   selectedCommitIndex: number | null,
   setSelectedCommitIndex: (value: number | null) => void,
+
+  // Which fiber is currently selected in the Ranked or Flamegraph charts?
+  selectedFiberID: number | null,
+  selectFiber: (id: number | null) => void,
 |};
 
 const ProfilerContext = createContext<Context>(((null: any): Context));
@@ -118,6 +122,8 @@ function ProfilerContextController({ children }: Props) {
     null
   );
 
+  const [selectedFiberID, selectFiber] = useState<number | null>(null);
+
   const value = useMemo(
     () => ({
       hasProfilingData,
@@ -136,6 +142,9 @@ function ProfilerContextController({ children }: Props) {
 
       selectedCommitIndex,
       setSelectedCommitIndex,
+
+      selectedFiberID,
+      selectFiber,
     }),
     [
       hasProfilingData,
@@ -154,6 +163,9 @@ function ProfilerContextController({ children }: Props) {
 
       selectedCommitIndex,
       setSelectedCommitIndex,
+
+      selectedFiberID,
+      selectFiber,
     ]
   );
 

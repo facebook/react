@@ -24,7 +24,7 @@ export default function CommitFlamegraph(_: {||}) {
     rootID: ((rootID: any): number),
   });
 
-  const commitTree = profilingCache.CommitTree.read({
+  const commitTree = profilingCache.getCommitTree({
     commitIndex: ((selectedCommitIndex: any): number),
     profilingSummary,
     rendererID: ((rendererID: any): number),

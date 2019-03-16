@@ -145,6 +145,7 @@ function updateThemeVariables(theme: Theme): void {
   updateStyleHelper(theme, 'color-commit-gradient-7');
   updateStyleHelper(theme, 'color-commit-gradient-8');
   updateStyleHelper(theme, 'color-commit-gradient-9');
+  updateStyleHelper(theme, 'color-commit-gradient-text');
   updateStyleHelper(theme, 'color-component-name');
   updateStyleHelper(theme, 'color-component-name-inverted');
   updateStyleHelper(theme, 'color-dim');

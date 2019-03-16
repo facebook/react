@@ -58,3 +58,13 @@ export const formatPercentage = (percentage: number) =>
   Math.round(percentage * 100);
 export const formatTime = (timestamp: number) =>
   Math.round(Math.round(timestamp) / 100) / 10;
+
+export const scale = (
+  minValue: number,
+  maxValue: number,
+  minRange: number,
+  maxRange: number
+) => (value: number, fallbackValue: number) =>
+  maxValue - minValue === 0
+    ? fallbackValue
+    : ((value - minValue) / (maxValue - minValue)) * (maxRange - minRange);
