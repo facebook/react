@@ -292,6 +292,7 @@ export function getChildHostContextForEvent(
   event: ReactEventComponent | ReactEventTarget,
 ) {
   // TODO: add getChildHostContextForEvent implementation
+  return parentHostContext;
 }
 
 export function getPublicInstance(instance: Instance): * {

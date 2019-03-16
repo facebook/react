@@ -820,13 +820,10 @@ function commitContainer(finishedWork: Fiber) {
   }
 
   switch (finishedWork.tag) {
-    case ClassComponent: {
-      return;
-    }
-    case HostComponent: {
-      return;
-    }
-    case HostText: {
+    case ClassComponent:
+    case HostComponent:
+    case HostText:
+    case EventTarget: {
       return;
     }
     case HostRoot:
