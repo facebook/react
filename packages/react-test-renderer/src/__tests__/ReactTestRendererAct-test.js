@@ -2,6 +2,7 @@ jest.useRealTimers();
 
 let React;
 let ReactTestRenderer;
+let Scheduler;
 let act;
 
 describe('ReactTestRenderer.act()', () => {
@@ -9,6 +10,7 @@ describe('ReactTestRenderer.act()', () => {
     jest.resetModules();
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
+    Scheduler = require('scheduler');
     act = ReactTestRenderer.act;
   });
   it('can use .act() to flush effects', () => {
@@ -79,6 +81,42 @@ describe('ReactTestRenderer.act()', () => {
       });
 
       expect(root.toJSON()).toEqual(['1', '2', '3']);
+    });
+
+    it('should not flush effects without also flushing microtasks', async () => {
+      const {useEffect, useReducer} = React;
+
+      const alreadyResolvedPromise = Promise.resolve();
+
+      function App() {
+        // This component will keep updating itself until step === 3
+        const [step, proceed] = useReducer(s => (s === 3 ? 3 : s + 1), 1);
+        useEffect(() => {
+          Scheduler.yieldValue('Effect');
+          alreadyResolvedPromise.then(() => {
+            Scheduler.yieldValue('Microtask');
+            proceed();
+          });
+        });
+        return step;
+      }
+      const root = ReactTestRenderer.create(null);
+      await act(async () => {
+        root.update(<App />);
+      });
+      expect(Scheduler).toHaveYielded([
+        // Should not flush effects without also flushing microtasks
+        // First render:
+        'Effect',
+        'Microtask',
+        // Second render:
+        'Effect',
+        'Microtask',
+        // Final render:
+        'Effect',
+        'Microtask',
+      ]);
+      expect(root).toMatchRenderedOutput('3');
     });
   });
 });
