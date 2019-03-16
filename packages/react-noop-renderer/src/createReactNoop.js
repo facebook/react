@@ -763,54 +763,90 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     act(callback: () => void | Thenable) {
       // note: keep these warning messages in sync with
       // ReactTestRenderer.js and ReactTestUtils.js
-      const result = NoopRenderer.actedUpdates(
-        callback,
-        runCallbackUntilPredicateFails,
-      );
-      if (
-        result !== null &&
-        typeof result === 'object' &&
-        typeof result.then === 'function'
-      ) {
-        let called = false;
-        if (__DEV__) {
-          if (typeof Promise !== 'undefined') {
-            Promise.resolve()
-              .then(() => {})
-              .then(() => {
-                if (!called) {
-                  warningWithoutStack(
-                    null,
-                    'You called act() without awaiting its result. ' +
-                      'This could lead to unexpected testing behaviour, interleaving multiple act ' +
-                      'calls and mixing their scopes. You should - await act(async () => ...);',
-                  );
-                }
-              });
+      let thenable;
+      NoopRenderer.actedUpdates((doesHavePassiveEffects, onDone) => {
+        const result = NoopRenderer.batchedUpdates(callback);
+        if (
+          result !== null &&
+          typeof result === 'object' &&
+          typeof result.then === 'function'
+        ) {
+          let called = false;
+          if (__DEV__) {
+            if (typeof Promise !== 'undefined') {
+              Promise.resolve()
+                .then(() => {})
+                .then(() => {
+                  if (called === false) {
+                    warningWithoutStack(
+                      null,
+                      'You called act(async () => ...) without await. ' +
+                        'This could lead to unexpected testing behaviour, interleaving multiple act ' +
+                        'calls and mixing their scopes. You should - await act(async () => ...);',
+                    );
+                  }
+                });
+            }
+          }
+          thenable = {
+            then(successFn, errorFn) {
+              called = true;
+              result.then(
+                () => {
+                  flushEffectsAndMicroTasks(doesHavePassiveEffects, () => {
+                    if (onDone !== undefined) {
+                      onDone();
+                    }
+                    if (typeof successFn === 'function') {
+                      successFn();
+                    }
+                  });
+                },
+                err => {
+                  if (onDone !== undefined) {
+                    onDone(err);
+                  }
+                  errorFn(err);
+                },
+              );
+            },
+          };
+        } else {
+          thenable = {
+            then(successFn) {
+              if (__DEV__) {
+                warningWithoutStack(
+                  false,
+                  'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
+                );
+              }
+              successFn();
+            },
+          };
+          if (__DEV__) {
+            warningWithoutStack(
+              result === undefined,
+              'The callback passed to act(...) function ' +
+                'must return undefined, or a Promise. You returned %s',
+              result,
+            );
+          }
+          try {
+            while (doesHavePassiveEffects()) {
+              ReactNoop.flushPassiveEffects();
+            }
+            if (onDone !== undefined) {
+              onDone();
+            }
+          } catch (err) {
+            if (onDone !== undefined) {
+              onDone(err);
+            }
+            throw err;
           }
         }
-        return {
-          then(successFn: () => mixed, errorFn: () => mixed) {
-            called = true;
-            return result.then(() => {
-              return successFn();
-            }, errorFn);
-          },
-        };
-      } else {
-        return {
-          then(successFn: () => mixed) {
-            if (__DEV__) {
-              warningWithoutStack(
-                false,
-                // todo - well... why not? maybe this would be fine.
-                'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
-              );
-            }
-            successFn();
-          },
-        };
-      }
+      });
+      return thenable;
     },
 
     flushSync(fn: () => mixed) {
@@ -954,6 +990,24 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
   };
 
+  function flushEffectsAndMicroTasks(
+    doesHavePassiveEffects: () => boolean,
+    onDone: (err: ?Error) => void,
+  ) {
+    try {
+      ReactNoop.flushPassiveEffects();
+      enqueueTask(() => {
+        if (doesHavePassiveEffects()) {
+          flushEffectsAndMicroTasks(doesHavePassiveEffects, onDone);
+        } else {
+          onDone();
+        }
+      });
+    } catch (err) {
+      onDone(err);
+    }
+  }
+
   return ReactNoop;
 }
 
@@ -986,25 +1040,6 @@ try {
     channel.port1.onmessage = callback;
     channel.port2.postMessage(undefined);
   };
-}
-
-function runCallbackUntilPredicateFails(
-  callback: () => void,
-  predicate: () => boolean,
-  onDone: (err: ?Error) => void,
-) {
-  try {
-    callback();
-    enqueueTask(() => {
-      if (predicate()) {
-        runCallbackUntilPredicateFails(callback, predicate, onDone);
-      } else {
-        onDone();
-      }
-    });
-  } catch (err) {
-    onDone(err);
-  }
 }
 
 export default createReactNoop;

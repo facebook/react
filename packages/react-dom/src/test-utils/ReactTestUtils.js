@@ -185,16 +185,15 @@ try {
   };
 }
 
-function runCallbackUntilPredicateFails(
-  callback: () => void,
-  predicate: () => boolean,
+function flushEffectsAndMicroTasks(
+  doesHavePassiveEffects: () => boolean,
   onDone: (err: ?Error) => void,
 ) {
   try {
-    callback();
+    ReactDOM.render(<div />, actContainerElement);
     enqueueTask(() => {
-      if (predicate()) {
-        runCallbackUntilPredicateFails(callback, predicate, onDone);
+      if (doesHavePassiveEffects()) {
+        flushEffectsAndMicroTasks(doesHavePassiveEffects, onDone);
       } else {
         onDone();
       }
@@ -458,51 +457,100 @@ const ReactTestUtils = {
     }
     // note: keep these warning messages in sync with
     // createReactNoop.js and ReactTestRenderer.js
-    const result = actedUpdates(callback, runCallbackUntilPredicateFails);
-    if (
-      result !== null &&
-      typeof result === 'object' &&
-      typeof result.then === 'function'
-    ) {
-      let called = false;
-      if (__DEV__) {
-        if (typeof Promise !== 'undefined') {
-          Promise.resolve()
-            .then(() => {})
-            .then(() => {
-              if (!called) {
-                warningWithoutStack(
-                  null,
-                  'You called act(async () => ...) without await. ' +
-                    'This could lead to unexpected testing behaviour, interleaving multiple act ' +
-                    'calls and mixing their scopes. You should - await act(async () => ...);',
-                );
-              }
-            });
+    let thenable;
+    actedUpdates((doesHavePassiveEffects, onDone) => {
+      const result = ReactDOM.unstable_batchedUpdates(callback);
+      if (
+        result !== null &&
+        typeof result === 'object' &&
+        typeof result.then === 'function'
+      ) {
+        // setup a boolean that gets set to true only
+        // once this act() call is await-ed
+        let called = false;
+        if (__DEV__) {
+          if (typeof Promise !== 'undefined') {
+            Promise.resolve()
+              .then(() => {})
+              .then(() => {
+                if (called === false) {
+                  warningWithoutStack(
+                    null,
+                    'You called act(async () => ...) without await. ' +
+                      'This could lead to unexpected testing behaviour, interleaving multiple act ' +
+                      'calls and mixing their scopes. You should - await act(async () => ...);',
+                  );
+                }
+              });
+          }
+        }
+
+        // in this case, the returned thenable runs the callback, flushes
+        // effects and  microtasks in a loop until doesHavePassiveEffects() === false,
+        // and cleans up
+        thenable = {
+          then(successFn, errorFn) {
+            called = true;
+            result.then(
+              () => {
+                flushEffectsAndMicroTasks(doesHavePassiveEffects, () => {
+                  if (onDone !== undefined) {
+                    onDone();
+                  }
+                  if (typeof successFn === 'function') {
+                    successFn();
+                  }
+                });
+              },
+              err => {
+                if (onDone !== undefined) {
+                  onDone(err);
+                }
+                errorFn(err);
+              },
+            );
+          },
+        };
+      } else {
+        // in the sync case, the returned thenable only warns *if* awaite-ed
+        thenable = {
+          then(successFn) {
+            if (__DEV__) {
+              warningWithoutStack(
+                false,
+                'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
+              );
+            }
+            successFn();
+          },
+        };
+
+        if (__DEV__) {
+          warningWithoutStack(
+            result === undefined,
+            'The callback passed to act(...) function ' +
+              'must return undefined, or a Promise. You returned %s',
+            result,
+          );
+        }
+
+        // flush effects until none remain, and cleanup
+        try {
+          while (doesHavePassiveEffects()) {
+            ReactDOM.render(<div />, actContainerElement);
+          }
+          if (onDone !== undefined) {
+            onDone();
+          }
+        } catch (err) {
+          if (onDone !== undefined) {
+            onDone(err);
+          }
+          throw err;
         }
       }
-      return {
-        then(successFn, errorFn) {
-          called = true;
-          return result.then(() => {
-            return successFn();
-          }, errorFn);
-        },
-      };
-    } else {
-      return {
-        then(successFn) {
-          if (__DEV__) {
-            warningWithoutStack(
-              false,
-              // todo - well... why not? maybe this would be fine.
-              'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
-            );
-          }
-          successFn();
-        },
-      };
-    }
+    });
+    return thenable;
   },
 };
 

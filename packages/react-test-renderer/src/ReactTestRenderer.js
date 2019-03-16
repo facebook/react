@@ -553,51 +553,90 @@ const ReactTestRendererFiber = {
   act(callback: () => void | Thenable) {
     // note: keep these warning messages in sync with
     // createReactNoop.js and ReactTestUtils.js
-    const result = actedUpdates(callback, runCallbackUntilPredicateFails);
-    if (
-      result !== null &&
-      typeof result === 'object' &&
-      typeof result.then === 'function'
-    ) {
-      let called = false;
-      if (__DEV__) {
-        if (typeof Promise !== 'undefined') {
-          Promise.resolve()
-            .then(() => {})
-            .then(() => {
-              if (!called) {
-                warningWithoutStack(
-                  null,
-                  'You called act() without awaiting its result. ' +
-                    'This could lead to unexpected testing behaviour, interleaving multiple act ' +
-                    'calls and mixing their scopes. You should - await act(async () => ...);',
-                );
-              }
-            });
+    let thenable;
+    actedUpdates((doesHavePassiveEffects, onDone) => {
+      const result = batchedUpdates(callback);
+      if (
+        result !== null &&
+        typeof result === 'object' &&
+        typeof result.then === 'function'
+      ) {
+        let called = false;
+        if (__DEV__) {
+          if (typeof Promise !== 'undefined') {
+            Promise.resolve()
+              .then(() => {})
+              .then(() => {
+                if (called === false) {
+                  warningWithoutStack(
+                    null,
+                    'You called act(async () => ...) without await. ' +
+                      'This could lead to unexpected testing behaviour, interleaving multiple act ' +
+                      'calls and mixing their scopes. You should - await act(async () => ...);',
+                  );
+                }
+              });
+          }
+        }
+        thenable = {
+          then(successFn, errorFn) {
+            called = true;
+            result.then(
+              () => {
+                flushEffectsAndMicroTasks(doesHavePassiveEffects, () => {
+                  if (onDone !== undefined) {
+                    onDone();
+                  }
+                  if (typeof successFn === 'function') {
+                    successFn();
+                  }
+                });
+              },
+              err => {
+                if (onDone !== undefined) {
+                  onDone(err);
+                }
+                errorFn(err);
+              },
+            );
+          },
+        };
+      } else {
+        thenable = {
+          then(successFn) {
+            if (__DEV__) {
+              warningWithoutStack(
+                false,
+                'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
+              );
+            }
+            successFn();
+          },
+        };
+        if (__DEV__) {
+          warningWithoutStack(
+            result === undefined,
+            'The callback passed to act(...) function ' +
+              'must return undefined, or a Promise. You returned %s',
+            result,
+          );
+        }
+        try {
+          while (doesHavePassiveEffects()) {
+            flushPassiveEffects();
+          }
+          if (onDone !== undefined) {
+            onDone();
+          }
+        } catch (err) {
+          if (onDone !== undefined) {
+            onDone(err);
+          }
+          throw err;
         }
       }
-      return {
-        then(successFn: () => mixed, errorFn: () => mixed) {
-          called = true;
-          return result.then(() => {
-            return successFn();
-          }, errorFn);
-        },
-      };
-    } else {
-      return {
-        then(successFn: () => mixed) {
-          if (__DEV__) {
-            warningWithoutStack(
-              false,
-              // todo - well... why not? maybe this would be fine.
-              'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
-            );
-          }
-          successFn();
-        },
-      };
-    }
+    });
+    return thenable;
   },
 };
 
@@ -632,16 +671,32 @@ try {
   };
 }
 
-function runCallbackUntilPredicateFails(
-  callback: () => void,
-  predicate: () => boolean,
+// root used to flush effects during .act() calls
+const actRoot = createContainer(
+  {
+    children: [],
+    createNodeMock: defaultTestOptions.createNodeMock,
+    tag: 'CONTAINER',
+  },
+  true,
+  false,
+);
+
+function flushPassiveEffects() {
+  // Trick to flush passive effects without exposing an internal API:
+  // Create a throwaway root and schedule a dummy update on it.
+  updateContainer(null, actRoot, null, null);
+}
+
+function flushEffectsAndMicroTasks(
+  doesHavePassiveEffects: () => boolean,
   onDone: (err: ?Error) => void,
 ) {
   try {
-    callback();
+    flushPassiveEffects();
     enqueueTask(() => {
-      if (predicate()) {
-        runCallbackUntilPredicateFails(callback, predicate, onDone);
+      if (doesHavePassiveEffects()) {
+        flushEffectsAndMicroTasks(doesHavePassiveEffects, onDone);
       } else {
         onDone();
       }

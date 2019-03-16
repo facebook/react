@@ -1831,12 +1831,10 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
 let actingUpdatesScopeDepth = 0;
 
 export function actedUpdates(
-  callback: () => void | Thenable,
-  runCallbackUntilPredicateFails: (
-    callback: () => void,
-    predicate: () => boolean,
-    onDone: (?Error) => void,
-  ) => void | Thenable,
+  callback: (
+    doesHavePassiveEffects: () => boolean,
+    onDone: void | ((?Error) => void),
+  ) => void,
 ) {
   let previousActingUpdatesScopeDepth;
   if (__DEV__) {
@@ -1857,58 +1855,15 @@ export function actedUpdates(
     }
   }
 
-  const result = batchedUpdates(callback);
-  if (
-    result !== null &&
-    typeof result === 'object' &&
-    typeof result.then === 'function'
-  ) {
-    return result.then(
-      () => {
-        return {
-          then(successFn, errorFn) {
-            runCallbackUntilPredicateFails(
-              flushPassiveEffects,
-              () => passiveEffectCallback !== null,
-              err => {
-                if (err) {
-                  return errorFn(err);
-                }
-                if (__DEV__) {
-                  actingUpdatesScopeDepth--;
-                  warnIfScopeDepthMismatch();
-                }
-                successFn();
-              },
-            );
-          },
-        };
-      },
-      error => {
-        if (__DEV__) {
-          actingUpdatesScopeDepth--;
-          warnIfScopeDepthMismatch();
-        }
-        throw error;
-      },
-    );
-  } else {
-    while (passiveEffectCallback !== null) {
-      flushPassiveEffects();
-    }
-    if (__DEV__) {
-      if (result !== undefined) {
-        warningWithoutStack(
-          false,
-          'The callback passed to act(...) function ' +
-            'must return undefined, or a Promise. You returned %s',
-          result,
-        );
-      }
+  let onDone;
+  if (__DEV__) {
+    onDone = () => {
       actingUpdatesScopeDepth--;
       warnIfScopeDepthMismatch();
-    }
+    };
   }
+
+  callback(() => passiveEffectCallback !== null, onDone);
 }
 
 export function warnIfNotCurrentlyActingUpdatesInDev(fiber: Fiber): void {
