@@ -809,6 +809,49 @@ describe('ReactHooks', () => {
     expect(root).toMatchRenderedOutput('4');
   });
 
+  it('uses the right reducer in an edge case', () => {
+    let _setCounter;
+
+    function Parent() {
+      const [counter, setCounter] = React.useState(1);
+      _setCounter = setCounter;
+      return (
+        <React.Fragment>
+          {counter}
+          <Child count={counter} />
+        </React.Fragment>
+      );
+    }
+
+    function Child({count}) {
+      const reducer = (state, action) => {
+        return count;
+      };
+      const [state, dispatch] = React.useReducer(reducer);
+      React.useEffect(
+        () => {
+          dispatch();
+        },
+        [count],
+      );
+      return state || 'init';
+    }
+
+    const root = ReactTestRenderer.create(null);
+    ReactTestRenderer.act(() => {
+      root.update(<Parent />);
+    });
+    expect(root).toMatchRenderedOutput('11');
+    ReactTestRenderer.act(() => {
+      _setCounter(c => c + 1);
+    });
+    expect(root).toMatchRenderedOutput('22');
+    ReactTestRenderer.act(() => {
+      _setCounter(c => c + 1);
+    });
+    expect(root).toMatchRenderedOutput('33');
+  });
+
   it('warns for bad useImperativeHandle first arg', () => {
     const {useImperativeHandle} = React;
     function App() {
