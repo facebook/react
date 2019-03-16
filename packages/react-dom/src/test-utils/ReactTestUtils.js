@@ -513,7 +513,7 @@ const ReactTestUtils = {
           },
         };
       } else {
-        // in the sync case, the returned thenable only warns *if* awaite-ed
+        // in the sync case, the returned thenable only warns *if* await-ed
         thenable = {
           then(successFn) {
             if (__DEV__) {

@@ -1830,6 +1830,10 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
 // actedUpdates() calls, and test on it for when to warn
 let actingUpdatesScopeDepth = 0;
 
+function doesHavePassiveEffects() {
+  return passiveEffectCallback !== null;
+}
+
 export function actedUpdates(
   callback: (
     doesHavePassiveEffects: () => boolean,
@@ -1855,15 +1859,14 @@ export function actedUpdates(
     }
   }
 
-  let onDone;
   if (__DEV__) {
-    onDone = () => {
+    callback(doesHavePassiveEffects, () => {
       actingUpdatesScopeDepth--;
       warnIfScopeDepthMismatch();
-    };
+    });
+  } else {
+    callback(doesHavePassiveEffects);
   }
-
-  callback(() => passiveEffectCallback !== null, onDone);
 }
 
 export function warnIfNotCurrentlyActingUpdatesInDev(fiber: Fiber): void {
