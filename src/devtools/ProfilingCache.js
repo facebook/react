@@ -59,7 +59,7 @@ export default class ProfilingCache {
           if (!store.profilingOperations.has(rootID)) {
             // If no profiling data was recorded for this root, skip the round trip.
             resolve({
-              committedFibers: [],
+              actualDurations: new Map(),
               interactions: [],
             });
           } else {
@@ -139,7 +139,7 @@ export default class ProfilingCache {
 
   onCommitDetails = ({
     commitIndex,
-    committedFibers,
+    actualDurations,
     interactions,
     rootID,
   }: CommitDetailsBackend) => {
@@ -148,8 +148,13 @@ export default class ProfilingCache {
     if (resolve != null) {
       this._pendingCommitDetailsMap.delete(key);
 
+      const actualDurationsMap = new Map();
+      for (let i = 0; i < actualDurations.length; i += 2) {
+        actualDurationsMap.set(actualDurations[i], actualDurations[i + 1]);
+      }
+
       resolve({
-        committedFibers,
+        actualDurations: actualDurationsMap,
         interactions,
       });
     }
@@ -166,7 +171,7 @@ export default class ProfilingCache {
     if (resolve != null) {
       this._pendingProfileSummaryMap.delete(rootID);
       const initialTreeBaseDurationsMap = new Map();
-      for (let i = 0; i < initialTreeBaseDurations.length; i++) {
+      for (let i = 0; i < initialTreeBaseDurations.length; i += 2) {
         initialTreeBaseDurationsMap.set(
           initialTreeBaseDurations[i],
           initialTreeBaseDurations[i + 1]

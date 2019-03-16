@@ -693,30 +693,32 @@ export function attach(
   ) {
     debug('enqueueUpdateIfNecessary()', fiber);
 
-    if (isProfiling) {
-      if (haveProfilerTimesChanged(fiber.alternate, fiber)) {
-        const id = getFiberID(getPrimaryFiber(fiber));
-        const { actualDuration, treeBaseDuration } = fiber;
+    const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
+    if (isProfilingSupported) {
+      const id = getFiberID(getPrimaryFiber(fiber));
+      const { actualDuration, treeBaseDuration } = fiber;
 
-        const operation = new Uint32Array(3);
-        operation[0] = TREE_OPERATION_UPDATE_TREE_BASE_DURATION;
-        operation[1] = id;
-        operation[2] = treeBaseDuration;
-        addOperation(operation);
+      idToTreeBaseDurationMap.set(id, fiber.treeBaseDuration);
 
-        idToTreeBaseDurationMap.set(id, treeBaseDuration);
+      if (isProfiling) {
+        if (treeBaseDuration !== fiber.alternate.treeBaseDuration) {
+          const operation = new Uint32Array(3);
+          operation[0] = TREE_OPERATION_UPDATE_TREE_BASE_DURATION;
+          operation[1] = getFiberID(getPrimaryFiber(fiber));
+          operation[2] = treeBaseDuration;
+          addOperation(operation);
+        }
 
-        if (actualDuration > 0) {
-          // If profiling is active, store durations for elements that were rendered during the commit.
-          const metadata = ((currentCommitProfilingMetadata: any): CommitProfilingData);
-          metadata.committedFibers.push({
-            id,
-            actualDuration,
-          });
-          metadata.maxActualDuration = Math.max(
-            metadata.maxActualDuration,
-            actualDuration
-          );
+        if (haveProfilerTimesChanged(fiber.alternate, fiber)) {
+          if (actualDuration > 0) {
+            // If profiling is active, store durations for elements that were rendered during the commit.
+            const metadata = ((currentCommitProfilingMetadata: any): CommitProfilingData);
+            metadata.actualDurations.push(id, actualDuration);
+            metadata.maxActualDuration = Math.max(
+              metadata.maxActualDuration,
+              actualDuration
+            );
+          }
         }
       }
     }
@@ -880,7 +882,7 @@ export function attach(
       // If profiling is active, store commit time and duration, and the current interactions.
       // The frontend may request this information after profiling has stopped.
       currentCommitProfilingMetadata = {
-        committedFibers: [],
+        actualDurations: [],
         commitTime: performance.now() - profilingStartTime,
         interactions: Array.from(root.memoizedInteractions).map(
           (interaction: Interaction) => ({
@@ -1377,13 +1379,8 @@ export function attach(
     }
   }
 
-  type CommittedFiber = {|
-    actualDuration: number,
-    id: number,
-  |};
-
   type CommitProfilingData = {|
-    committedFibers: Array<CommittedFiber>,
+    actualDurations: Array<number>,
     commitTime: number,
     interactions: Array<Interaction>,
     maxActualDuration: number,
@@ -1410,7 +1407,7 @@ export function attach(
         return {
           commitIndex,
           interactions: commitProfilingData.interactions,
-          committedFibers: commitProfilingData.committedFibers,
+          actualDurations: commitProfilingData.actualDurations,
           rootID,
         };
       }
@@ -1419,7 +1416,7 @@ export function attach(
     return {
       commitIndex,
       interactions: [],
-      committedFibers: [],
+      actualDurations: [],
       rootID,
     };
   }

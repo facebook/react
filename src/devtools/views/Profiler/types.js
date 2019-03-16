@@ -21,11 +21,8 @@ export type Interaction = {|
 |};
 
 export type CommitDetails = {|
+  actualDurations: Map<number, number>,
   interactions: Array<Interaction>,
-  committedFibers: Array<{|
-    actualDuration: number,
-    id: number,
-  |}>,
 |};
 
 export type ProfilingSummary = {|

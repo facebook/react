@@ -575,33 +575,37 @@ export default class Store extends EventEmitter {
 
   // DEBUG
   __printTree = () => {
-    console.group('__printTree()');
-    this._roots.forEach((rootID: number) => {
-      const printElement = (id: number) => {
-        const element = ((this._idToElement.get(id): any): Element);
-        console.log(
-          `${'•'.repeat(element.depth)}${element.id}:${element.displayName ||
-            ''}${element.key ? `key:"${element.key}"` : ''} (${element.weight})`
-        );
-        element.children.forEach(printElement);
-      };
-      const root = ((this._idToElement.get(rootID): any): Element);
-      console.group(`${rootID}:root (${root.weight})`);
-      root.children.forEach(printElement);
-      console.groupEnd();
-    });
-    console.group(`List of ${this.numElements} elements`);
-    for (let i = 0; i < this.numElements; i++) {
-      //if (i === 4) { debugger }
-      const element = this.getElementAtIndex(i);
-      if (element != null) {
-        console.log(
-          `${'•'.repeat(element.depth)}${i}: ${element.displayName ||
-            'Unknown'}`
-        );
+    if (__DEBUG__) {
+      console.group('__printTree()');
+      this._roots.forEach((rootID: number) => {
+        const printElement = (id: number) => {
+          const element = ((this._idToElement.get(id): any): Element);
+          console.log(
+            `${'•'.repeat(element.depth)}${element.id}:${element.displayName ||
+              ''} ${element.key ? `key:"${element.key}"` : ''} (${
+              element.weight
+            })`
+          );
+          element.children.forEach(printElement);
+        };
+        const root = ((this._idToElement.get(rootID): any): Element);
+        console.group(`${rootID}:root (${root.weight})`);
+        root.children.forEach(printElement);
+        console.groupEnd();
+      });
+      console.group(`List of ${this.numElements} elements`);
+      for (let i = 0; i < this.numElements; i++) {
+        //if (i === 4) { debugger }
+        const element = this.getElementAtIndex(i);
+        if (element != null) {
+          console.log(
+            `${'•'.repeat(element.depth)}${i}: ${element.displayName ||
+              'Unknown'}`
+          );
+        }
       }
+      console.groupEnd();
+      console.groupEnd();
     }
-    console.groupEnd();
-    console.groupEnd();
   };
 }

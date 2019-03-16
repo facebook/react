@@ -55,6 +55,8 @@ export default function SnapshotSelector(_: Props) {
     return null;
   }, [filteredCommitIndices, selectedCommitIndex]);
 
+  // TODO (profiling) This should be managed by the context controller (reducer).
+  // TODO (profiling) We should also reset the selected index to 0 between profiling sessions.
   if (selectedFilteredCommitIndex === null) {
     if (numFilteredCommits > 0) {
       setSelectedCommitIndex(0);

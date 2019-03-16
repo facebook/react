@@ -56,12 +56,9 @@ export type Interaction = {|
 |};
 
 export type CommitDetails = {|
+  actualDurations: Array<number>,
   commitIndex: number,
   interactions: Array<Interaction>,
-  committedFibers: Array<{|
-    actualDuration: number,
-    id: number,
-  |}>,
   rootID: number,
 |};
 

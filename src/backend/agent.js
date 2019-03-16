@@ -46,6 +46,9 @@ export default class Agent extends EventEmitter {
   addBridge(bridge: Bridge) {
     this._bridge = bridge;
 
+    // TODO (profiling) Component commits
+    // TODO (profiling) Interactions
+
     bridge.addListener('getCommitDetails', this.getCommitDetails);
     bridge.addListener('getProfilingStatus', this.getProfilingStatus);
     bridge.addListener('getProfilingSummary', this.getProfilingSummary);

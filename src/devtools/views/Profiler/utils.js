@@ -1,5 +1,7 @@
 // @flow
 
+import type { CommitDetails, CommitTree, Node } from './types';
+
 const commitGradient = [
   'var(--color-commit-gradient-0)',
   'var(--color-commit-gradient-1)',
@@ -12,6 +14,30 @@ const commitGradient = [
   'var(--color-commit-gradient-8)',
   'var(--color-commit-gradient-9)',
 ];
+
+export const calculateSelfDuration = (
+  id: number,
+  commitTree: CommitTree,
+  commitDetails: CommitDetails
+): number => {
+  const { actualDurations } = commitDetails;
+  const { nodes } = commitTree;
+
+  if (!actualDurations.has(id)) {
+    return 0;
+  }
+
+  let selfDuration = ((actualDurations.get(id): any): number);
+
+  const node = ((nodes.get(id): any): Node);
+  node.children.forEach(childID => {
+    if (actualDurations.has(childID)) {
+      selfDuration -= ((actualDurations.get(childID): any): number);
+    }
+  });
+
+  return selfDuration;
+};
 
 export const getGradientColor = (value: number) => {
   const maxIndex = commitGradient.length - 1;

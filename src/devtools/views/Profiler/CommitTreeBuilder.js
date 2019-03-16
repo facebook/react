@@ -1,6 +1,7 @@
 // @flow
 
 import {
+  __DEBUG__,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_RESET_CHILDREN,
@@ -16,6 +17,17 @@ import type {
   Node,
   ProfilingSummary as ProfilingSummaryFrontend,
 } from 'src/devtools/views/Profiler/types';
+
+const debug = (methodName, ...args) => {
+  if (__DEBUG__) {
+    console.log(
+      `%cCommitTreeBuilder %c${methodName}`,
+      'color: pink; font-weight: bold;',
+      'font-weight: bold;',
+      ...args
+    );
+  }
+};
 
 const rootToCommitTreeMap: Map<number, Array<CommitTree>> = new Map();
 
@@ -49,40 +61,29 @@ export function getCommitTree({
     // If this is the very first commit, start with the cached snapshot and apply the first mutation.
     // Otherwise load (or generate) the previous commit and append a mutation to it.
     if (commitIndex === 0) {
-      const initialCommitTree = {
-        nodes: new Map(),
-        rootID,
-      };
+      const nodes = new Map();
 
       // Construct the initial tree.
-      const queue: Array<number> = [rootID];
-      while (queue.length > 0) {
-        const currentID = queue.pop();
-        const currentNode = ((store.profilingSnapshot.get(
-          currentID
-        ): any): Node);
-
-        initialCommitTree.nodes.set(currentID, {
-          id: currentID,
-          children: currentNode.children,
-          displayName: currentNode.displayName,
-          key: currentNode.key,
-          parentID: 0,
-          treeBaseDuration: ((profilingSummary.initialTreeBaseDurations.get(
-            currentID
-          ): any): number),
-        });
-
-        queue.push(...currentNode.children);
-      }
+      recursivelyIniitliazeTree(
+        rootID,
+        0,
+        nodes,
+        profilingSummary.initialTreeBaseDurations,
+        store
+      );
 
       // Mutate the tree
       const commitOperations = store.profilingOperations.get(rootID);
       if (commitOperations != null && commitIndex < commitOperations.length) {
         const commitTree = updateTree(
-          initialCommitTree,
+          { nodes, rootID },
           commitOperations[commitIndex]
         );
+
+        if (__DEBUG__) {
+          __printTree(commitTree);
+        }
+
         commitTrees.push(commitTree);
         return commitTree;
       }
@@ -100,6 +101,11 @@ export function getCommitTree({
           previousCommitTree,
           commitOperations[commitIndex]
         );
+
+        if (__DEBUG__) {
+          __printTree(commitTree);
+        }
+
         commitTrees.push(commitTree);
         return commitTree;
       }
@@ -111,6 +117,35 @@ export function getCommitTree({
     nodes: new Map(),
     rootID,
   };
+}
+
+function recursivelyIniitliazeTree(
+  id: number,
+  parentID: number,
+  nodes: Map<number, Node>,
+  initialTreeBaseDurations: Map<number, number>,
+  store: Store
+): void {
+  const node = ((store.profilingSnapshot.get(id): any): Node);
+
+  nodes.set(id, {
+    id,
+    children: node.children,
+    displayName: node.displayName,
+    key: node.key,
+    parentID,
+    treeBaseDuration: ((initialTreeBaseDurations.get(id): any): number),
+  });
+
+  node.children.forEach(childID =>
+    recursivelyIniitliazeTree(
+      childID,
+      id,
+      nodes,
+      initialTreeBaseDurations,
+      store
+    )
+  );
 }
 
 function updateTree(
@@ -170,6 +205,11 @@ function updateTree(
             parentNode = ((nodes.get(parentID): any): Node);
             parentNode.children = parentNode.children.concat(id);
 
+            debug(
+              'Add',
+              `fiber ${id} (${displayName || 'null'}) as child of ${parentID}`
+            );
+
             const node: Node = {
               children: [],
               displayName,
@@ -197,6 +237,8 @@ function updateTree(
         if (parentNode == null) {
           // No-op
         } else {
+          debug('Remove', `fiber ${id} from parent ${parentID}`);
+
           parentNode.children = parentNode.children.filter(
             childID => childID !== id
           );
@@ -212,14 +254,22 @@ function updateTree(
 
         i = i + 3 + numChildren;
 
+        debug('Re-order', `fiber ${id} children ${children.join(',')}`);
+
         node = ((nodes.get(id): any): Node);
         node.children = Array.from(children);
+
         break;
       case TREE_OPERATION_UPDATE_TREE_BASE_DURATION:
         id = operations[i + 1];
 
         node = ((nodes.get(id): any): Node);
         node.treeBaseDuration = operations[i + 2];
+
+        debug(
+          'Update',
+          `fiber ${id} treeBaseDuration to ${node.treeBaseDuration}`
+        );
 
         i = i + 3;
         break;
@@ -237,3 +287,29 @@ function updateTree(
 export function invalidateCommitTrees(): void {
   rootToCommitTreeMap.clear();
 }
+
+// DEBUG
+const __printTree = (commitTree: CommitTree) => {
+  if (__DEBUG__) {
+    const { nodes, rootID } = commitTree;
+    console.group('__printTree()');
+    const queue = [rootID, 0];
+    while (queue.length > 0) {
+      const id = queue.shift();
+      const depth = queue.shift();
+
+      const node = ((nodes.get(id): any): Node);
+
+      console.log(
+        `${'•'.repeat(depth)}${node.id}:${node.displayName || ''} ${
+          node.key ? `key:"${node.key}"` : ''
+        } (${node.treeBaseDuration})`
+      );
+
+      node.children.forEach(childID => {
+        queue.push(childID, depth + 1);
+      });
+    }
+    console.groupEnd();
+  }
+};
