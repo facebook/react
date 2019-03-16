@@ -14,6 +14,7 @@ import type {
   MeasureOnSuccessCallback,
   NativeMethodsMixinType,
   ReactNativeBaseComponentViewConfig,
+  ReactNativeComponent as ReactNativeNativeComponent,
 } from './ReactNativeTypes';
 
 import React from 'react';
@@ -116,13 +117,36 @@ export default function(
      * Obtain a native node handle with `ReactNative.findNodeHandle(component)`.
      */
     measureLayout(
-      relativeToNativeNode: number,
+      relativeToNativeNode: number | Class<ReactNativeNativeComponent<any>>,
       onSuccess: MeasureLayoutOnSuccessCallback,
       onFail: () => void /* currently unused */,
     ): void {
+      let relativeNode;
+
+      if (typeof relativeToNativeNode === 'number') {
+        // Already a node handle
+        relativeNode = relativeToNativeNode;
+      } else if (relativeToNativeNode._nativeTag) {
+        relativeNode = relativeToNativeNode._nativeTag;
+      } else if (
+        relativeToNativeNode.canonical &&
+        relativeToNativeNode.canonical._nativeTag
+      ) {
+        relativeNode = relativeToNativeNode.canonical._nativeTag;
+      }
+
+      if (relativeNode == null) {
+        warningWithoutStack(
+          false,
+          `Warning: ref.measureLayout must be called with a node handle or a ref to a native component.`,
+        );
+
+        return;
+      }
+
       UIManager.measureLayout(
         findNodeHandle(this),
-        relativeToNativeNode,
+        relativeNode,
         mountSafeCallback_NOT_REALLY_SAFE(this, onFail),
         mountSafeCallback_NOT_REALLY_SAFE(this, onSuccess),
       );
