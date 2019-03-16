@@ -2014,4 +2014,37 @@ describe('ReactHooksWithNoopRenderer', () => {
     ]);
     expect(ReactNoop).toMatchRenderedOutput('2');
   });
+
+  it('should update latest rendered reducer when a preceding state receives a render phase update', () => {
+    // Similar to previous test, except using a preceding render phase update
+    // instead of new props.
+    let dispatch;
+    function App() {
+      const [step, setStep] = useState(0);
+      const [shadow, _dispatch] = useReducer(() => step, step);
+      dispatch = _dispatch;
+
+      if (step < 5) {
+        setStep(step + 1);
+      }
+
+      Scheduler.yieldValue(`Step: ${step}, Shadow: ${shadow}`);
+      return shadow;
+    }
+
+    ReactNoop.render(<App />);
+    expect(Scheduler).toFlushAndYield([
+      'Step: 0, Shadow: 0',
+      'Step: 1, Shadow: 0',
+      'Step: 2, Shadow: 0',
+      'Step: 3, Shadow: 0',
+      'Step: 4, Shadow: 0',
+      'Step: 5, Shadow: 0',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput('0');
+
+    act(() => dispatch());
+    expect(Scheduler).toFlushAndYield(['Step: 5, Shadow: 5']);
+    expect(ReactNoop).toMatchRenderedOutput('5');
+  });
 });
