@@ -37,7 +37,7 @@ module.exports = ({types: t}) => {
 
             e.g. use try catch because getters of this style is used as a side effect.
 
-            var passiveSupported = false;
+            var passiveBrowserEventsSupported = false;
             try {
               var options = {
                   get passive() {
@@ -45,7 +45,7 @@ module.exports = ({types: t}) => {
                   },
               };
             } catch(err) {
-              passiveSupported = false;
+              passiveBrowserEventsSupported = false;
             }
           */
         }
