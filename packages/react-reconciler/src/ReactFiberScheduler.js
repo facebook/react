@@ -521,7 +521,12 @@ function commitAllLifeCycles(
       rootWithPendingPassiveEffects = finishedRoot;
     }
 
-    nextEffect = nextEffect.nextEffect;
+    const nextNextEffect = nextEffect.nextEffect;
+    if (effectTag & Deletion) {
+      // Remove nextEffect reference to assist GC
+      nextEffect.nextEffect = null;
+    }
+    nextEffect = nextNextEffect;
   }
   if (__DEV__) {
     resetCurrentFiber();
