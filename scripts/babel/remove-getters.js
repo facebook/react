@@ -35,7 +35,7 @@ module.exports = ({types: t}) => {
 
             Code usage of getters, where they can't be transformed should be wrapped in try catch.
 
-            e.g.
+            e.g. use try catch because getters of this style is used as a side effect.
 
             var passiveSupported = false;
             try {
@@ -59,7 +59,9 @@ module.exports = ({types: t}) => {
           /*
             Similar to Rollup.legacy behaviour.
             Not all getters code usage can be transformed in meaningful way.
+            Simply return and don't throw error.
           */
+          return;
         }
 
         const prop = keyNode.name;
