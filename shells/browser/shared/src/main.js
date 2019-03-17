@@ -25,6 +25,7 @@ function createPanelIfReactLoaded() {
       let bridge = null;
       let store = null;
       let elementsPanel = null;
+      let profilerPanel = null;
       let settingsPanel = null;
 
       function initBridgeAndStore() {
@@ -56,6 +57,9 @@ function createPanelIfReactLoaded() {
         if (elementsPanel !== null) {
           elementsPanel.injectBridgeAndStore(bridge, store);
         }
+        if (profilerPanel !== null) {
+          profilerPanel.injectBridgeAndStore(bridge, store);
+        }
         if (settingsPanel !== null) {
           settingsPanel.injectBridgeAndStore(bridge, store);
         }
@@ -79,6 +83,22 @@ function createPanelIfReactLoaded() {
           });
           panel.onHidden.addListener(() => {
             // TODO: Stop highlighting and stuff.
+          });
+        }
+      );
+
+      // TODO (profiling) Is there a way to detect profiling support and conditionally register this panel?
+      chrome.devtools.panels.create(
+        '⚛ Profiler',
+        '',
+        'profiler.html',
+        panel => {
+          panel.onShown.addListener(panel => {
+            if (settingsPanel === null) {
+              panel.injectBridgeAndStore(bridge, store);
+            }
+
+            profilerPanel = panel;
           });
         }
       );

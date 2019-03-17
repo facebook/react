@@ -17,6 +17,7 @@ module.exports = {
     inject: './src/GlobalHook.js',
     main: './src/main.js',
     elements: './src/panels/elements.js',
+    profiler: './src/panels/profiler.js',
     settings: './src/panels/settings.js',
   },
   output: {

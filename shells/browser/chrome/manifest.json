@@ -30,6 +30,7 @@
   "web_accessible_resources": [
     "elements.html",
     "main.html",
+    "profiler.html",
     "settings.html",
     "build/backend.js"
   ],

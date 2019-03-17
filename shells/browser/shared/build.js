@@ -12,6 +12,7 @@ const STATIC_FILES = [
   'popups',
   'elements.html',
   'main.html',
+  'profiler.html',
   'settings.html',
 ];
 
