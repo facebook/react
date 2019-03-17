@@ -29,13 +29,12 @@ module.exports = ({types: t}) => {
           return;
           /*
             Similar to Rollup.legacy behaviour.
-            Don't throw error.
-
             Not all getters code usage can be transformed in meaningful way.
+            Simply return and don't throw error.
 
-            Code usage of getters, where they can't be transformed should be wrapped in try catch.
+            This code based contains getters which can't be transformed but is guarded by using a try catch block.
 
-            e.g. use try catch because getters of this style is used as a side effect.
+            e.g. getters which has a side effect.
 
             var passiveBrowserEventsSupported = false;
             try {
