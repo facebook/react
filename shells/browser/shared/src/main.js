@@ -1,8 +1,16 @@
 /* global chrome */
 
+import { createElement } from 'react';
+import { unstable_createRoot as createRoot } from 'react-dom';
 import Bridge from 'src/bridge';
 import Store from 'src/devtools/Store';
 import inject from './inject';
+import {
+  createViewElementSource,
+  getBrowserName,
+  getBrowserTheme,
+} from './utils';
+import DevTools from 'src/devtools/views/DevTools';
 
 let panelCreated = false;
 
@@ -22,6 +30,7 @@ function createPanelIfReactLoaded() {
 
       clearInterval(loadCheckInterval);
 
+      let renderRootToPortal = null;
       let bridge = null;
       let store = null;
       let elementsPanel = null;
@@ -54,69 +63,85 @@ function createPanelIfReactLoaded() {
         // Otherwise the Store may miss important initial tree op codes.
         inject(chrome.runtime.getURL('build/backend.js'));
 
+        const viewElementSource = createViewElementSource(bridge, store);
+
+        const container = document.createElement('div');
+        const root = createRoot(container);
+
+        renderRootToPortal = ({ overrideTab, portalContainer }) => {
+          root.render(
+            createElement(DevTools, {
+              bridge,
+              browserName: getBrowserName(),
+              browserTheme: getBrowserTheme(),
+              overrideTab,
+              portalContainer,
+              showTabBar: false,
+              store,
+              viewElementSource,
+            })
+          );
+
+          const oldLinkTags = document.getElementsByTagName('link');
+          const newLinkTags = [];
+          for (let oldLinkTag of oldLinkTags) {
+            if (oldLinkTag.rel === 'stylesheet') {
+              const newLinkTag = document.createElement('link');
+              for (let attribute of oldLinkTag.attributes) {
+                newLinkTag.setAttribute(
+                  attribute.nodeName,
+                  attribute.nodeValue
+                );
+              }
+              newLinkTags.push(newLinkTag);
+            }
+          }
+
+          return newLinkTags;
+        };
+
         if (elementsPanel !== null) {
-          elementsPanel.injectBridgeAndStore(bridge, store);
-        }
-        if (profilerPanel !== null) {
-          profilerPanel.injectBridgeAndStore(bridge, store);
-        }
-        if (settingsPanel !== null) {
-          settingsPanel.injectBridgeAndStore(bridge, store);
+          elementsPanel.render(renderRootToPortal, 'elements');
         }
       }
 
       initBridgeAndStore();
 
-      chrome.devtools.panels.create(
-        '⚛ Elements',
-        '',
-        'elements.html',
-        panel => {
-          panel.onShown.addListener(panel => {
-            if (elementsPanel === null) {
-              panel.injectBridgeAndStore(bridge, store);
-            }
+      chrome.devtools.panels.create('⚛ Elements', '', 'panel.html', panel => {
+        panel.onShown.addListener(panel => {
+          elementsPanel = panel;
 
-            elementsPanel = panel;
+          if (renderRootToPortal !== null) {
+            elementsPanel.render(renderRootToPortal, 'elements');
+          }
 
-            // TODO: When the user switches to the panel, check for an Elements tab selection.
-          });
-          panel.onHidden.addListener(() => {
-            // TODO: Stop highlighting and stuff.
-          });
-        }
-      );
+          // TODO: When the user switches to the panel, check for an Elements tab selection.
+        });
+        panel.onHidden.addListener(() => {
+          // TODO: Stop highlighting and stuff.
+        });
+      });
 
       // TODO (profiling) Is there a way to detect profiling support and conditionally register this panel?
-      chrome.devtools.panels.create(
-        '⚛ Profiler',
-        '',
-        'profiler.html',
-        panel => {
-          panel.onShown.addListener(panel => {
-            if (settingsPanel === null) {
-              panel.injectBridgeAndStore(bridge, store);
-            }
+      chrome.devtools.panels.create('⚛ Profiler', '', 'panel.html', panel => {
+        panel.onShown.addListener(panel => {
+          profilerPanel = panel;
 
-            profilerPanel = panel;
-          });
-        }
-      );
+          if (renderRootToPortal !== null) {
+            profilerPanel.render(renderRootToPortal, 'profiler');
+          }
+        });
+      });
 
-      chrome.devtools.panels.create(
-        '⚛ Settings',
-        '',
-        'settings.html',
-        panel => {
-          panel.onShown.addListener(panel => {
-            if (settingsPanel === null) {
-              panel.injectBridgeAndStore(bridge, store);
-            }
+      chrome.devtools.panels.create('⚛ Settings', '', 'panel.html', panel => {
+        panel.onShown.addListener(panel => {
+          settingsPanel = panel;
 
-            settingsPanel = panel;
-          });
-        }
-      );
+          if (renderRootToPortal !== null) {
+            settingsPanel.render(renderRootToPortal, 'settings');
+          }
+        });
+      });
 
       chrome.devtools.network.onNavigated.removeListener(checkPageForReact);
 

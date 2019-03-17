@@ -16,9 +16,7 @@ module.exports = {
     contentScript: './src/contentScript.js',
     inject: './src/GlobalHook.js',
     main: './src/main.js',
-    elements: './src/panels/elements.js',
-    profiler: './src/panels/profiler.js',
-    settings: './src/panels/settings.js',
+    panel: './src/panel.js',
   },
   output: {
     path: __dirname + '/build',

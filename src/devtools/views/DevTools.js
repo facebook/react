@@ -1,6 +1,7 @@
 // @flow
 
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Store from '../store';
 import { BridgeContext, StoreContext } from './context';
 import Elements from './Elements/Elements';
@@ -27,6 +28,8 @@ export type Props = {|
   browserName: BrowserName,
   defaultTab?: TabID,
   browserTheme: BrowserTheme,
+  overrideTab?: TabID,
+  portalContainer?: Element,
   showTabBar?: boolean,
   store: Store,
   viewElementSource?: ?Function,
@@ -59,11 +62,17 @@ export default function DevTools({
   browserName,
   defaultTab = 'elements',
   browserTheme = 'light',
+  overrideTab,
+  portalContainer,
   showTabBar = false,
   store,
   viewElementSource = null,
 }: Props) {
   const [tab, setTab] = useState(defaultTab);
+  if (overrideTab != null && overrideTab !== tab) {
+    setTab(overrideTab);
+  }
+
   const [supportsProfiling, setSupportsProfiling] = useState(
     store.supportsProfiling
   );
@@ -100,7 +109,7 @@ export default function DevTools({
       break;
   }
 
-  return (
+  const children = (
     <BridgeContext.Provider value={bridge}>
       <StoreContext.Provider value={store}>
         <SettingsContextController browserTheme={browserTheme}>
@@ -135,4 +144,8 @@ export default function DevTools({
       </StoreContext.Provider>
     </BridgeContext.Provider>
   );
+
+  return portalContainer != null
+    ? createPortal(children, portalContainer)
+    : children;
 }
