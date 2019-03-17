@@ -152,7 +152,15 @@ function updateTree(
   commitTree: CommitTree,
   operations: Uint32Array
 ): CommitTree {
+  // Clone the original tree so edits don't affect it.
   const nodes = new Map(commitTree.nodes);
+
+  // Clone nodes before mutating them so edits don't affect them.
+  const getClonedNode = (id: number): Node => {
+    const clonedNode = ((Object.assign({}, nodes.get(id)): any): Node);
+    nodes.set(id, clonedNode);
+    return clonedNode;
+  };
 
   let i = 2;
   while (i < operations.length) {
@@ -202,7 +210,7 @@ function updateTree(
             // For now, we avoid adding it to the tree twice by checking if it's already been mounted.
             // Maybe in the future we'll revisit this.
           } else {
-            parentNode = ((nodes.get(parentID): any): Node);
+            parentNode = getClonedNode(parentID);
             parentNode.children = parentNode.children.concat(id);
 
             debug(
@@ -228,12 +236,12 @@ function updateTree(
 
         i = i + 2;
 
-        node = ((nodes.get(id): any): Node);
+        node = getClonedNode(id);
         parentID = node.parentID;
 
         nodes.delete(id);
 
-        parentNode = ((nodes.get(parentID): any): Node);
+        parentNode = getClonedNode(parentID);
         if (parentNode == null) {
           // No-op
         } else {
@@ -256,14 +264,14 @@ function updateTree(
 
         debug('Re-order', `fiber ${id} children ${children.join(',')}`);
 
-        node = ((nodes.get(id): any): Node);
+        node = getClonedNode(id);
         node.children = Array.from(children);
 
         break;
       case TREE_OPERATION_UPDATE_TREE_BASE_DURATION:
         id = operations[i + 1];
 
-        node = ((nodes.get(id): any): Node);
+        node = getClonedNode(id);
         node.treeBaseDuration = operations[i + 2] / 1000; // Convert microseconds back to milliseconds;
 
         debug(
