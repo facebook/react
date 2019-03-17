@@ -13,7 +13,6 @@ type Props = {|
   onClick: Function,
   onDoubleClick?: Function,
   placeLabelAboveNode?: boolean,
-  title: string,
   width: number,
   x: number,
   y: number,
@@ -28,14 +27,13 @@ export default function ChartNode({
   label,
   onClick,
   onDoubleClick,
-  title,
   width,
   x,
   y,
 }: Props) {
   return (
     <g className={styles.Group} transform={`translate(${x},${y})`}>
-      <title>{title}</title>
+      <title>{label}</title>
       <rect
         width={width}
         height={height}

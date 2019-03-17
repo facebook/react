@@ -8,7 +8,6 @@ export type ChartNode = {|
   id: number,
   label: string,
   name: string,
-  title: string,
   value: number,
 |};
 
@@ -58,7 +57,6 @@ export function getChartData({
       id,
       label,
       name,
-      title: label,
       value: selfDuration,
     });
   });

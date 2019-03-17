@@ -1,15 +1,63 @@
 // @flow
 
-import React, { useContext } from 'react';
+import React, { useCallback, useContext, useMemo } from 'react';
+import AutoSizer from 'react-virtualized-auto-sizer';
+import { FixedSizeList } from 'react-window';
 import { ProfilerContext } from './ProfilerContext';
+import NoCommitData from './NoCommitData';
+import CommitFlamegraphListItem from './CommitFlamegraphListItem';
+import { barHeight } from './constants';
+import { scale } from './utils';
 import { StoreContext } from '../context';
 
 import styles from './CommitFlamegraph.css';
 
-export default function CommitFlamegraph(_: {||}) {
-  const { rendererID, rootID, selectedCommitIndex } = useContext(
-    ProfilerContext
+import type { ChartData, ChartNode } from './FlamegraphChartBuilder';
+
+export type ItemData = {|
+  chartData: ChartData,
+  scaleX: (value: number, fallbackValue: number) => number,
+  selectedChartNode: ChartNode,
+  selectedChartNodeIndex: number,
+  selectFiber: (id: number | null) => void,
+  width: number,
+|};
+
+export default function CommitFlamegraphAutoSizer(_: {||}) {
+  const { selectFiber } = useContext(ProfilerContext);
+  const deselectCurrentFiber = useCallback(
+    event => {
+      event.stopPropagation();
+      selectFiber(null);
+    },
+    [selectFiber]
   );
+
+  return (
+    <div className={styles.Container} onClick={deselectCurrentFiber}>
+      <AutoSizer>
+        {({ height, width }) => (
+          <CommitFlamegraph height={height} width={width} />
+        )}
+      </AutoSizer>
+    </div>
+  );
+}
+
+function CommitFlamegraph({
+  height,
+  width,
+}: {|
+  height: number,
+  width: number,
+|}) {
+  const {
+    rendererID,
+    rootID,
+    selectedCommitIndex,
+    selectFiber,
+    selectedFiberID,
+  } = useContext(ProfilerContext);
 
   const { profilingCache } = useContext(StoreContext);
 
@@ -31,5 +79,58 @@ export default function CommitFlamegraph(_: {||}) {
     rootID: ((rootID: any): number),
   });
 
-  return 'Coming soon: Flamegraph';
+  const chartData = profilingCache.getFlamegraphChartData({
+    commitDetails,
+    commitIndex: ((selectedCommitIndex: any): number),
+    commitTree,
+    rootID: ((rootID: any): number),
+  });
+
+  const selectedChartNodeIndex = useMemo(
+    () =>
+      selectedFiberID === null
+        ? 0
+        : ((chartData.idToDepthMap.get(selectedFiberID): any): number) - 1,
+    [chartData, selectedFiberID]
+  );
+
+  const selectedChartNode = useMemo(() => {
+    if (selectedFiberID === null) {
+      return chartData.rows[0][0];
+    }
+    return ((chartData.rows[selectedChartNodeIndex].find(
+      chartNode => chartNode.id === selectedFiberID
+    ): any): ChartNode);
+  }, [chartData, selectedFiberID, selectedChartNodeIndex]);
+
+  const itemData = useMemo<ItemData>(
+    () => ({
+      chartData,
+      scaleX: scale(0, selectedChartNode.treeBaseDuration, 0, width),
+      selectedChartNode,
+      selectedChartNodeIndex,
+      selectFiber,
+      width,
+    }),
+    [chartData, selectedChartNode, selectedChartNodeIndex, selectFiber, width]
+  );
+
+  // If a commit contains no fibers with an actualDuration > 0,
+  // Display a fallback message.
+  if (chartData.depth === 0) {
+    return <NoCommitData />;
+  }
+
+  return (
+    <FixedSizeList
+      height={height}
+      innerElementType="svg"
+      itemCount={chartData.depth}
+      itemData={itemData}
+      itemSize={barHeight}
+      width={width}
+    >
+      {CommitFlamegraphListItem}
+    </FixedSizeList>
+  );
 }

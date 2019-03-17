@@ -1,6 +1,7 @@
 // @flow
 
 export const barHeight = 20;
+export const barWidthThreshold = 2;
 export const maxBarWidth = 30;
 export const minBarHeight = 5;
 export const minBarWidth = 5;

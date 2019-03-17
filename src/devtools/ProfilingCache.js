@@ -7,6 +7,10 @@ import {
   invalidateCommitTrees,
 } from 'src/devtools/views/Profiler/CommitTreeBuilder';
 import {
+  getChartData as getFlamegraphChartData,
+  invalidateChartData as invalidateFlamegraphChartData,
+} from 'src/devtools/views/Profiler/FlamegraphChartBuilder';
+import {
   getChartData as getRankedChartData,
   invalidateChartData as invalidateRankedChartData,
 } from 'src/devtools/views/Profiler/RankedChartBuilder';
@@ -22,6 +26,7 @@ import type {
   CommitTree as CommitTreeFrontend,
   ProfilingSummary as ProfilingSummaryFrontend,
 } from 'src/devtools/views/Profiler/types';
+import type { ChartData as FlamegraphChartData } from 'src/devtools/views/Profiler/FlamegraphChartBuilder';
 import type { ChartData as RankedChartData } from 'src/devtools/views/Profiler/RankedChartBuilder';
 
 type CommitDetailsParams = {|
@@ -130,6 +135,24 @@ export default class ProfilingCache {
       store: this._store,
     });
 
+  getFlamegraphChartData = ({
+    commitDetails,
+    commitIndex,
+    commitTree,
+    rootID,
+  }: {|
+    commitDetails: CommitDetailsFrontend,
+    commitIndex: number,
+    commitTree: CommitTreeFrontend,
+    rootID: number,
+  |}): FlamegraphChartData =>
+    getFlamegraphChartData({
+      commitDetails,
+      commitIndex,
+      commitTree,
+      rootID,
+    });
+
   getRankedChartData = ({
     commitDetails,
     commitIndex,
@@ -154,6 +177,7 @@ export default class ProfilingCache {
 
     // Invalidate non-Suspense caches too.
     invalidateCommitTrees();
+    invalidateFlamegraphChartData();
     invalidateRankedChartData();
 
     this._pendingCommitDetailsMap.clear();

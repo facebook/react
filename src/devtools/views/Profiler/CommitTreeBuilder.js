@@ -264,7 +264,7 @@ function updateTree(
         id = operations[i + 1];
 
         node = ((nodes.get(id): any): Node);
-        node.treeBaseDuration = operations[i + 2];
+        node.treeBaseDuration = operations[i + 2] / 1000; // Convert microseconds back to milliseconds;
 
         debug(
           'Update',

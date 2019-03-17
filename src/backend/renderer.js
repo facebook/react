@@ -631,10 +631,14 @@ export function attach(
     }
 
     if (isProfiling) {
+      // Tree base duration updates are included in the operations typed array.
+      // So we have to convert them from milliseconds to microseconds so we can send them as ints.
+      const treeBaseDuration = Math.floor(fiber.treeBaseDuration * 1000);
+
       const operation = new Uint32Array(3);
       operation[0] = TREE_OPERATION_UPDATE_TREE_BASE_DURATION;
       operation[1] = id;
-      operation[2] = fiber.treeBaseDuration;
+      operation[2] = treeBaseDuration;
       addOperation(operation);
     }
   }
@@ -702,6 +706,10 @@ export function attach(
 
       if (isProfiling) {
         if (treeBaseDuration !== fiber.alternate.treeBaseDuration) {
+          // Tree base duration updates are included in the operations typed array.
+          // So we have to convert them from milliseconds to microseconds so we can send them as ints.
+          const treeBaseDuration = Math.floor(fiber.treeBaseDuration * 1000);
+
           const operation = new Uint32Array(3);
           operation[0] = TREE_OPERATION_UPDATE_TREE_BASE_DURATION;
           operation[1] = getFiberID(getPrimaryFiber(fiber));
@@ -1443,6 +1451,8 @@ export function attach(
     ((initialTreeBaseDurationsMap: any): Map<number, number>).forEach(
       (treeBaseDuration, id) => {
         if (idToRootMap.get(id) === rootID) {
+          // We don't need to convert milliseconds to microseconds in this case,
+          // because the profiling summary is JSON serialized.
           initialTreeBaseDurations.push(id, treeBaseDuration);
         }
       }

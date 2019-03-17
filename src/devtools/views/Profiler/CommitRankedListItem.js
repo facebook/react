@@ -42,7 +42,6 @@ export default function CommitRankedListItem({
       key={node.id}
       label={node.label}
       onClick={handleClick}
-      title={node.title}
       width={Math.max(minBarWidth, scaleX(node.value, width))}
       x={0}
       y={top}
