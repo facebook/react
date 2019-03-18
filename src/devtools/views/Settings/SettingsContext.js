@@ -23,17 +23,57 @@ type Context = {|
 const SettingsContext = createContext<Context>(((null: any): Context));
 SettingsContext.displayName = 'SettingsContext';
 
+type DocumentElements = Array<HTMLElement>;
+
 type Props = {|
   browserTheme: BrowserTheme,
   children: React$Node,
+  elementsPortalContainer?: Element,
+  profilerPortalContainer?: Element,
+  settingsPortalContainer?: Element,
 |};
 
-function SettingsContextController({ browserTheme, children }: Props) {
+function SettingsContextController({
+  browserTheme,
+  children,
+  elementsPortalContainer,
+  profilerPortalContainer,
+  settingsPortalContainer,
+}: Props) {
   const [displayDensity, setDisplayDensity] = useLocalStorage<DisplayDensity>(
     'displayDensity',
     'compact'
   );
   const [theme, setTheme] = useLocalStorage<Theme>('theme', 'auto');
+
+  const documentElements = useMemo<DocumentElements>(() => {
+    const array: Array<HTMLElement> = [
+      ((document.documentElement: any): HTMLElement),
+    ];
+    if (elementsPortalContainer != null) {
+      array.push(
+        ((elementsPortalContainer.ownerDocument
+          .documentElement: any): HTMLElement)
+      );
+    }
+    if (profilerPortalContainer != null) {
+      array.push(
+        ((profilerPortalContainer.ownerDocument
+          .documentElement: any): HTMLElement)
+      );
+    }
+    if (settingsPortalContainer != null) {
+      array.push(
+        ((settingsPortalContainer.ownerDocument
+          .documentElement: any): HTMLElement)
+      );
+    }
+    return array;
+  }, [
+    elementsPortalContainer,
+    profilerPortalContainer,
+    settingsPortalContainer,
+  ]);
 
   const comfortableLineHeight = parseInt(
     getComputedStyle((document.body: any)).getPropertyValue(
@@ -51,31 +91,31 @@ function SettingsContextController({ browserTheme, children }: Props) {
   useLayoutEffect(() => {
     switch (displayDensity) {
       case 'compact':
-        updateDisplayDensity('compact');
+        updateDisplayDensity('compact', documentElements);
         break;
       case 'comfortable':
-        updateDisplayDensity('comfortable');
+        updateDisplayDensity('comfortable', documentElements);
         break;
       default:
         throw Error(`Unsupported displayDensity value "${displayDensity}"`);
     }
-  }, [displayDensity]);
+  }, [displayDensity, documentElements]);
 
   useLayoutEffect(() => {
     switch (theme) {
       case 'light':
-        updateThemeVariables('light');
+        updateThemeVariables('light', documentElements);
         break;
       case 'dark':
-        updateThemeVariables('dark');
+        updateThemeVariables('dark', documentElements);
         break;
       case 'auto':
-        updateThemeVariables(browserTheme);
+        updateThemeVariables(browserTheme, documentElements);
         break;
       default:
         throw Error(`Unsupported theme value "${theme}"`);
     }
-  }, [browserTheme, theme]);
+  }, [browserTheme, theme, documentElements]);
 
   const value = useMemo(
     () => ({
@@ -105,63 +145,95 @@ function SettingsContextController({ browserTheme, children }: Props) {
   );
 }
 
-function setStyleVariable(name: string, value: string) {
-  (document.documentElement: any).style.setProperty(name, value);
+function setStyleVariable(
+  name: string,
+  value: string,
+  documentElements: DocumentElements
+) {
+  documentElements.forEach(documentElement =>
+    documentElement.style.setProperty(name, value)
+  );
 }
 
-function updateStyleHelper(themeKey: string, style: string) {
-  setStyleVariable(`--${style}`, `var(--${themeKey}-${style})`);
+function updateStyleHelper(
+  themeKey: string,
+  style: string,
+  documentElements: DocumentElements
+) {
+  setStyleVariable(
+    `--${style}`,
+    `var(--${themeKey}-${style})`,
+    documentElements
+  );
 }
 
-function updateDisplayDensity(displayDensity: DisplayDensity): void {
-  updateStyleHelper(displayDensity, 'font-size-monospace-normal');
-  updateStyleHelper(displayDensity, 'font-size-monospace-large');
-  updateStyleHelper(displayDensity, 'font-size-sans-normal');
-  updateStyleHelper(displayDensity, 'font-size-sans-large');
-  updateStyleHelper(displayDensity, 'line-height-data');
+function updateDisplayDensity(
+  displayDensity: DisplayDensity,
+  documentElements: DocumentElements
+): void {
+  updateStyleHelper(
+    displayDensity,
+    'font-size-monospace-normal',
+    documentElements
+  );
+  updateStyleHelper(
+    displayDensity,
+    'font-size-monospace-large',
+    documentElements
+  );
+  updateStyleHelper(displayDensity, 'font-size-sans-normal', documentElements);
+  updateStyleHelper(displayDensity, 'font-size-sans-large', documentElements);
+  updateStyleHelper(displayDensity, 'line-height-data', documentElements);
 }
 
-function updateThemeVariables(theme: Theme): void {
-  updateStyleHelper(theme, 'color-attribute-name');
-  updateStyleHelper(theme, 'color-attribute-value');
-  updateStyleHelper(theme, 'color-attribute-editable-value');
-  updateStyleHelper(theme, 'color-background');
-  updateStyleHelper(theme, 'color-border');
-  updateStyleHelper(theme, 'color-button-background');
-  updateStyleHelper(theme, 'color-button-background-focus');
-  updateStyleHelper(theme, 'color-button-background-hover');
-  updateStyleHelper(theme, 'color-button');
-  updateStyleHelper(theme, 'color-button-disabled');
-  updateStyleHelper(theme, 'color-button-focus');
-  updateStyleHelper(theme, 'color-button-hover');
-  updateStyleHelper(theme, 'color-commit-did-not-render');
-  updateStyleHelper(theme, 'color-commit-gradient-0');
-  updateStyleHelper(theme, 'color-commit-gradient-1');
-  updateStyleHelper(theme, 'color-commit-gradient-2');
-  updateStyleHelper(theme, 'color-commit-gradient-3');
-  updateStyleHelper(theme, 'color-commit-gradient-4');
-  updateStyleHelper(theme, 'color-commit-gradient-5');
-  updateStyleHelper(theme, 'color-commit-gradient-6');
-  updateStyleHelper(theme, 'color-commit-gradient-7');
-  updateStyleHelper(theme, 'color-commit-gradient-8');
-  updateStyleHelper(theme, 'color-commit-gradient-9');
-  updateStyleHelper(theme, 'color-commit-gradient-text');
-  updateStyleHelper(theme, 'color-component-name');
-  updateStyleHelper(theme, 'color-component-name-inverted');
-  updateStyleHelper(theme, 'color-dim');
-  updateStyleHelper(theme, 'color-dimmer');
-  updateStyleHelper(theme, 'color-dimmest');
-  updateStyleHelper(theme, 'color-jsx-arrow-brackets');
-  updateStyleHelper(theme, 'color-jsx-arrow-brackets-inverted');
-  updateStyleHelper(theme, 'color-modal-background');
-  updateStyleHelper(theme, 'color-record-active');
-  updateStyleHelper(theme, 'color-record-hover');
-  updateStyleHelper(theme, 'color-record-inactive');
-  updateStyleHelper(theme, 'color-tree-node-selected');
-  updateStyleHelper(theme, 'color-tree-node-hover');
-  updateStyleHelper(theme, 'color-search-match');
-  updateStyleHelper(theme, 'color-search-match-current');
-  updateStyleHelper(theme, 'color-text-color');
+function updateThemeVariables(
+  theme: Theme,
+  documentElements: DocumentElements
+): void {
+  updateStyleHelper(theme, 'color-attribute-name', documentElements);
+  updateStyleHelper(theme, 'color-attribute-value', documentElements);
+  updateStyleHelper(theme, 'color-attribute-editable-value', documentElements);
+  updateStyleHelper(theme, 'color-background', documentElements);
+  updateStyleHelper(theme, 'color-border', documentElements);
+  updateStyleHelper(theme, 'color-button-background', documentElements);
+  updateStyleHelper(theme, 'color-button-background-focus', documentElements);
+  updateStyleHelper(theme, 'color-button-background-hover', documentElements);
+  updateStyleHelper(theme, 'color-button', documentElements);
+  updateStyleHelper(theme, 'color-button-disabled', documentElements);
+  updateStyleHelper(theme, 'color-button-focus', documentElements);
+  updateStyleHelper(theme, 'color-button-hover', documentElements);
+  updateStyleHelper(theme, 'color-commit-did-not-render', documentElements);
+  updateStyleHelper(theme, 'color-commit-gradient-0', documentElements);
+  updateStyleHelper(theme, 'color-commit-gradient-1', documentElements);
+  updateStyleHelper(theme, 'color-commit-gradient-2', documentElements);
+  updateStyleHelper(theme, 'color-commit-gradient-3', documentElements);
+  updateStyleHelper(theme, 'color-commit-gradient-4', documentElements);
+  updateStyleHelper(theme, 'color-commit-gradient-5', documentElements);
+  updateStyleHelper(theme, 'color-commit-gradient-6', documentElements);
+  updateStyleHelper(theme, 'color-commit-gradient-7', documentElements);
+  updateStyleHelper(theme, 'color-commit-gradient-8', documentElements);
+  updateStyleHelper(theme, 'color-commit-gradient-9', documentElements);
+  updateStyleHelper(theme, 'color-commit-gradient-text', documentElements);
+  updateStyleHelper(theme, 'color-component-name', documentElements);
+  updateStyleHelper(theme, 'color-component-name-inverted', documentElements);
+  updateStyleHelper(theme, 'color-dim', documentElements);
+  updateStyleHelper(theme, 'color-dimmer', documentElements);
+  updateStyleHelper(theme, 'color-dimmest', documentElements);
+  updateStyleHelper(theme, 'color-jsx-arrow-brackets', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-jsx-arrow-brackets-inverted',
+    documentElements
+  );
+  updateStyleHelper(theme, 'color-modal-background', documentElements);
+  updateStyleHelper(theme, 'color-record-active', documentElements);
+  updateStyleHelper(theme, 'color-record-hover', documentElements);
+  updateStyleHelper(theme, 'color-record-inactive', documentElements);
+  updateStyleHelper(theme, 'color-tree-node-selected', documentElements);
+  updateStyleHelper(theme, 'color-tree-node-hover', documentElements);
+  updateStyleHelper(theme, 'color-search-match', documentElements);
+  updateStyleHelper(theme, 'color-search-match-current', documentElements);
+  updateStyleHelper(theme, 'color-text-color', documentElements);
 }
 
 export { SettingsContext, SettingsContextController };

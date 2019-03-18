@@ -25,11 +25,24 @@ export type TabID = 'elements' | 'profiler' | 'settings';
 export type Props = {|
   bridge: Bridge,
   browserName: BrowserName,
-  defaultTab?: TabID,
   browserTheme: BrowserTheme,
+  defaultTab?: TabID,
   showTabBar?: boolean,
   store: Store,
   viewElementSource?: ?Function,
+
+  // This property is used only by the web extension target.
+  // The built-in tab UI is hidden in that case, in favor of the browser's own panel tabs.
+  // This is done to save space within the app.
+  // Because of this, the extension needs to be able to change which tab is active/rendered.
+  overrideTab?: TabID,
+
+  // To avoid potential multi-root trickiness, the web extension uses portals to render tabs.
+  // The root <DevTools> app is rendered in the top-level extension window,
+  // but individual tabs (e.g. Elements, Profiling) can be rendered into portals within their browser panels.
+  elementsPortalContainer?: Element,
+  profilerPortalContainer?: Element,
+  settingsPortalContainer?: Element,
 |};
 
 const elementTab = {
@@ -57,13 +70,21 @@ const tabsWithoutProfiler = [elementTab, settingsTab];
 export default function DevTools({
   bridge,
   browserName,
-  defaultTab = 'elements',
   browserTheme = 'light',
+  defaultTab = 'elements',
+  elementsPortalContainer,
+  overrideTab,
+  profilerPortalContainer,
+  settingsPortalContainer,
   showTabBar = false,
   store,
   viewElementSource = null,
 }: Props) {
   const [tab, setTab] = useState(defaultTab);
+  if (overrideTab != null && overrideTab !== tab) {
+    setTab(overrideTab);
+  }
+
   const [supportsProfiling, setSupportsProfiling] = useState(
     store.supportsProfiling
   );
@@ -89,21 +110,31 @@ export default function DevTools({
   let tabElement;
   switch (tab) {
     case 'profiler':
-      tabElement = <Profiler />;
+      tabElement = (
+        <Profiler
+          portalContainer={profilerPortalContainer}
+          supportsProfiling={supportsProfiling}
+        />
+      );
       break;
     case 'settings':
-      tabElement = <Settings />;
+      tabElement = <Settings portalContainer={settingsPortalContainer} />;
       break;
     case 'elements':
     default:
-      tabElement = <Elements />;
+      tabElement = <Elements portalContainer={elementsPortalContainer} />;
       break;
   }
 
   return (
     <BridgeContext.Provider value={bridge}>
       <StoreContext.Provider value={store}>
-        <SettingsContextController browserTheme={browserTheme}>
+        <SettingsContextController
+          browserTheme={browserTheme}
+          elementsPortalContainer={elementsPortalContainer}
+          profilerPortalContainer={profilerPortalContainer}
+          settingsPortalContainer={settingsPortalContainer}
+        >
           <TreeContextController viewElementSource={viewElementSource}>
             <ProfilerContextController>
               <div className={styles.DevTools}>

@@ -1,13 +1,16 @@
 // @flow
 
 import React, { useCallback, useContext } from 'react';
+import { createPortal } from 'react-dom';
 import { SettingsContext } from './SettingsContext';
 
 import styles from './Settings.css';
 
-export type Props = {||};
+export type Props = {|
+  portalContainer?: Element,
+|};
 
-export default function Settings(_: Props) {
+export default function Settings({ portalContainer }: Props) {
   const { displayDensity, setDisplayDensity, theme, setTheme } = useContext(
     SettingsContext
   );
@@ -26,7 +29,7 @@ export default function Settings(_: Props) {
     [setTheme]
   );
 
-  return (
+  const children = (
     <div className={styles.Settings}>
       <div className={styles.Section}>
         <div className={styles.Header}>Theme</div>
@@ -90,4 +93,8 @@ export default function Settings(_: Props) {
       </div>
     </div>
   );
+
+  return portalContainer != null
+    ? createPortal(children, portalContainer)
+    : children;
 }
