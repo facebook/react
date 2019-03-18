@@ -1,7 +1,7 @@
 /* global chrome */
 
 import { createElement } from 'react';
-import { unstable_createRoot as createRoot } from 'react-dom';
+import { unstable_createRoot as createRoot, flushSync } from 'react-dom';
 import Bridge from 'src/bridge';
 import Store from 'src/devtools/Store';
 import inject from './inject';
@@ -38,7 +38,9 @@ function createPanelIfReactLoaded() {
       let settingsPortalContainer = null;
 
       let cloneStyleTags = null;
+      let mostRecentOverrideTab = null;
       let render = null;
+      let root = null;
 
       function initBridgeAndStore() {
         let hasPortBeenDisconnected = false;
@@ -68,10 +70,11 @@ function createPanelIfReactLoaded() {
 
         const viewElementSource = createViewElementSource(bridge, store);
 
-        const container = document.createElement('div');
-        const root = createRoot(container);
+        root = createRoot(document.createElement('div'));
 
-        render = overrideTab => {
+        render = (overrideTab = mostRecentOverrideTab) => {
+          mostRecentOverrideTab = overrideTab;
+
           root.render(
             createElement(DevTools, {
               bridge,
@@ -87,6 +90,8 @@ function createPanelIfReactLoaded() {
             })
           );
         };
+
+        render();
       }
 
       cloneStyleTags = () => {
@@ -150,7 +155,9 @@ function createPanelIfReactLoaded() {
       chrome.devtools.network.onNavigated.addListener(function onNavigated() {
         bridge.send('shutdown');
 
-        initBridgeAndStore();
+        // It's easiest to recreate the DevTools panel (to clean up potential stale state).
+        // We can revisit this in the future as a small optimization.
+        flushSync(() => root.unmount(initBridgeAndStore));
       });
     }
   );
