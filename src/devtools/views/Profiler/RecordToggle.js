@@ -7,9 +7,11 @@ import { ProfilerContext } from './ProfilerContext';
 
 import styles from './RecordToggle.css';
 
-export type Props = {||};
+export type Props = {|
+  disabled?: boolean,
+|};
 
-export default function RecordToggle(_: Props) {
+export default function RecordToggle({ disabled }: Props) {
   const { isProfiling, startProfiling, stopProfiling } = useContext(
     ProfilerContext
   );
@@ -19,6 +21,7 @@ export default function RecordToggle(_: Props) {
       className={
         isProfiling ? styles.ActiveRecordToggle : styles.InactiveRecordToggle
       }
+      disabled={disabled}
       onClick={isProfiling ? stopProfiling : startProfiling}
       title={isProfiling ? 'Stop profiling' : 'Start profiling'}
     >

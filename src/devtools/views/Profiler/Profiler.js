@@ -16,9 +16,13 @@ import styles from './Profiler.css';
 
 export type Props = {|
   portalContainer?: Element,
+  supportsProfiling: boolean,
 |};
 
-export default function Profiler({ portalContainer }: Props) {
+export default function Profiler({
+  portalContainer,
+  supportsProfiling,
+}: Props) {
   const { hasProfilingData, isProfiling, rootHasProfilingData } = useContext(
     ProfilerContext
   );
@@ -29,6 +33,7 @@ export default function Profiler({ portalContainer }: Props) {
       <NonSuspendingProfiler
         hasProfilingData={hasProfilingData}
         isProfiling={isProfiling}
+        supportsProfiling={supportsProfiling}
       />
     );
   } else {
@@ -47,12 +52,16 @@ export default function Profiler({ portalContainer }: Props) {
 function NonSuspendingProfiler({
   hasProfilingData,
   isProfiling,
+  supportsProfiling,
 }: {|
   hasProfilingData: boolean,
   isProfiling: boolean,
+  supportsProfiling: boolean,
 |}) {
   let view = null;
-  if (isProfiling) {
+  if (!supportsProfiling) {
+    view = <ProfilingNotSupported />;
+  } else if (isProfiling) {
     view = <RecortdingInProgress />;
   } else if (!hasProfilingData) {
     view = <NoProfilingData />;
@@ -64,7 +73,7 @@ function NonSuspendingProfiler({
     <div className={styles.Profiler}>
       <div className={styles.LeftColumn}>
         <div className={styles.Toolbar}>
-          <RecordToggle />
+          <RecordToggle disabled={!supportsProfiling} />
           <Button disabled title="Reload and start profiling">
             {/* TODO (profiling) Wire up reload button */}
             <ButtonIcon type="reload" />
@@ -196,6 +205,29 @@ const NoProfilingDataForRoot = () => (
     <div className={styles.Row}>
       Select a different root in the elements panel, or click the record button{' '}
       <RecordToggle /> to start recording.
+    </div>
+  </div>
+);
+
+const ProfilingNotSupported = () => (
+  <div className={styles.Column}>
+    <div className={styles.Header}>Profiling not supported.</div>
+    <div className={styles.Column}>
+      <p>
+        Profiling support requires either a development or production-profiling
+        build of React v16.5+.
+      </p>
+      <p>
+        Learn more at{' '}
+        <a
+          href="https://fb.me/react-profiling"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          fb.me/react-profiling
+        </a>
+        .
+      </p>
     </div>
   </div>
 );

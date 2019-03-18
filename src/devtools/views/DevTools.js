@@ -110,7 +110,12 @@ export default function DevTools({
   let tabElement;
   switch (tab) {
     case 'profiler':
-      tabElement = <Profiler portalContainer={profilerPortalContainer} />;
+      tabElement = (
+        <Profiler
+          portalContainer={profilerPortalContainer}
+          supportsProfiling={supportsProfiling}
+        />
+      );
       break;
     case 'settings':
       tabElement = <Settings portalContainer={settingsPortalContainer} />;

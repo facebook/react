@@ -22,7 +22,8 @@
   outline: none;
   box-shadow: 0 0 0 2px var(--color-button-background-focus) inset;
 }
-.Button:disabled {
+.Button:disabled,
+.Button:disabled:active {
   background: var(--color-button-background);
   color: var(--color-button-disabled);
   cursor: default;
