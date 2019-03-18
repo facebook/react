@@ -1,7 +1,6 @@
 // @flow
 
 import React, { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 import Store from '../store';
 import { BridgeContext, StoreContext } from './context';
 import Elements from './Elements/Elements';
@@ -26,10 +25,12 @@ export type TabID = 'elements' | 'profiler' | 'settings';
 export type Props = {|
   bridge: Bridge,
   browserName: BrowserName,
-  defaultTab?: TabID,
   browserTheme: BrowserTheme,
+  defaultTab?: TabID,
+  elementsPortalContainer?: Element,
   overrideTab?: TabID,
-  portalContainer?: Element,
+  profilerPortalContainer?: Element,
+  settingsPortalContainer?: Element,
   showTabBar?: boolean,
   store: Store,
   viewElementSource?: ?Function,
@@ -60,10 +61,12 @@ const tabsWithoutProfiler = [elementTab, settingsTab];
 export default function DevTools({
   bridge,
   browserName,
-  defaultTab = 'elements',
   browserTheme = 'light',
+  defaultTab = 'elements',
+  elementsPortalContainer,
   overrideTab,
-  portalContainer,
+  profilerPortalContainer,
+  settingsPortalContainer,
   showTabBar = false,
   store,
   viewElementSource = null,
@@ -98,21 +101,26 @@ export default function DevTools({
   let tabElement;
   switch (tab) {
     case 'profiler':
-      tabElement = <Profiler />;
+      tabElement = <Profiler portalContainer={profilerPortalContainer} />;
       break;
     case 'settings':
-      tabElement = <Settings />;
+      tabElement = <Settings portalContainer={settingsPortalContainer} />;
       break;
     case 'elements':
     default:
-      tabElement = <Elements />;
+      tabElement = <Elements portalContainer={elementsPortalContainer} />;
       break;
   }
 
-  const children = (
+  return (
     <BridgeContext.Provider value={bridge}>
       <StoreContext.Provider value={store}>
-        <SettingsContextController browserTheme={browserTheme}>
+        <SettingsContextController
+          browserTheme={browserTheme}
+          elementsPortalContainer={elementsPortalContainer}
+          profilerPortalContainer={profilerPortalContainer}
+          settingsPortalContainer={settingsPortalContainer}
+        >
           <TreeContextController viewElementSource={viewElementSource}>
             <ProfilerContextController>
               <div className={styles.DevTools}>
@@ -144,8 +152,4 @@ export default function DevTools({
       </StoreContext.Provider>
     </BridgeContext.Provider>
   );
-
-  return portalContainer != null
-    ? createPortal(children, portalContainer)
-    : children;
 }

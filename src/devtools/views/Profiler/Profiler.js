@@ -1,6 +1,7 @@
 // @flow
 
 import React, { Suspense, useCallback, useContext, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ProfilerContext } from './ProfilerContext';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
@@ -13,21 +14,30 @@ import SnapshotSelector from './SnapshotSelector';
 
 import styles from './Profiler.css';
 
-export default function Profiler(_: {||}) {
+export type Props = {|
+  portalContainer?: Element,
+|};
+
+export default function Profiler({ portalContainer }: Props) {
   const { hasProfilingData, isProfiling, rootHasProfilingData } = useContext(
     ProfilerContext
   );
 
+  let children = null;
   if (isProfiling || !rootHasProfilingData) {
-    return (
+    children = (
       <NonSuspendingProfiler
         hasProfilingData={hasProfilingData}
         isProfiling={isProfiling}
       />
     );
   } else {
-    return <SuspendingProfiler />;
+    children = <SuspendingProfiler />;
   }
+
+  return portalContainer != null
+    ? createPortal(children, portalContainer)
+    : children;
 }
 
 // This view is rendered when there is no profiler data (either we haven't profiled yet or we're currently profiling).

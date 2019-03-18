@@ -1,17 +1,12 @@
-const container = document.getElementById('container');
+window.container = document.getElementById('container');
 
 let hasInjectedStyles = false;
 
-window.render = (renderRootToPortal, tab) => {
-  container.innerHTML = '';
-
-  const linkTags = renderRootToPortal({
-    overrideTab: tab,
-    portalContainer: container,
-  });
-
+window.injectStyles = getLinkTags => {
   if (!hasInjectedStyles) {
     hasInjectedStyles = true;
+
+    const linkTags = getLinkTags();
 
     for (let linkTag of linkTags) {
       document.head.appendChild(linkTag);

@@ -30,12 +30,13 @@ function createPanelIfReactLoaded() {
 
       clearInterval(loadCheckInterval);
 
-      let renderRootToPortal = null;
       let bridge = null;
       let store = null;
-      let elementsPanel = null;
-      let profilerPanel = null;
-      let settingsPanel = null;
+      let elementsPortalContainer = null;
+      let profilerPortalContainer = null;
+      let settingsPortalContainer = null;
+      let cloneStyleTags = null;
+      let render = null;
 
       function initBridgeAndStore() {
         let hasPortBeenDisconnected = false;
@@ -68,51 +69,47 @@ function createPanelIfReactLoaded() {
         const container = document.createElement('div');
         const root = createRoot(container);
 
-        renderRootToPortal = ({ overrideTab, portalContainer }) => {
+        render = overrideTab => {
           root.render(
             createElement(DevTools, {
               bridge,
               browserName: getBrowserName(),
               browserTheme: getBrowserTheme(),
+              elementsPortalContainer,
               overrideTab,
-              portalContainer,
+              profilerPortalContainer,
+              settingsPortalContainer,
               showTabBar: false,
               store,
               viewElementSource,
             })
           );
-
-          const oldLinkTags = document.getElementsByTagName('link');
-          const newLinkTags = [];
-          for (let oldLinkTag of oldLinkTags) {
-            if (oldLinkTag.rel === 'stylesheet') {
-              const newLinkTag = document.createElement('link');
-              for (let attribute of oldLinkTag.attributes) {
-                newLinkTag.setAttribute(
-                  attribute.nodeName,
-                  attribute.nodeValue
-                );
-              }
-              newLinkTags.push(newLinkTag);
-            }
-          }
-
-          return newLinkTags;
         };
-
-        if (elementsPanel !== null) {
-          elementsPanel.render(renderRootToPortal, 'elements');
-        }
       }
+
+      cloneStyleTags = () => {
+        const linkTags = [];
+        for (let linkTag of document.getElementsByTagName('link')) {
+          if (linkTag.rel === 'stylesheet') {
+            const newLinkTag = document.createElement('link');
+            for (let attribute of linkTag.attributes) {
+              newLinkTag.setAttribute(attribute.nodeName, attribute.nodeValue);
+            }
+            linkTags.push(newLinkTag);
+          }
+        }
+        return linkTags;
+      };
 
       initBridgeAndStore();
 
       chrome.devtools.panels.create('⚛ Elements', '', 'panel.html', panel => {
         panel.onShown.addListener(panel => {
-          elementsPanel = panel;
-
-          if (renderRootToPortal !== null) {
-            elementsPanel.render(renderRootToPortal, 'elements');
+          elementsPortalContainer = panel.container;
+          if (elementsPortalContainer != null) {
+            elementsPortalContainer.innerHTML = '';
+            render('elements');
+            panel.injectStyles(cloneStyleTags);
           }
 
           // TODO: When the user switches to the panel, check for an Elements tab selection.
@@ -125,20 +122,22 @@ function createPanelIfReactLoaded() {
       // TODO (profiling) Is there a way to detect profiling support and conditionally register this panel?
       chrome.devtools.panels.create('⚛ Profiler', '', 'panel.html', panel => {
         panel.onShown.addListener(panel => {
-          profilerPanel = panel;
-
-          if (renderRootToPortal !== null) {
-            profilerPanel.render(renderRootToPortal, 'profiler');
+          profilerPortalContainer = panel.container;
+          if (profilerPortalContainer != null) {
+            profilerPortalContainer.innerHTML = '';
+            render('profiler');
+            panel.injectStyles(cloneStyleTags);
           }
         });
       });
 
       chrome.devtools.panels.create('⚛ Settings', '', 'panel.html', panel => {
         panel.onShown.addListener(panel => {
-          settingsPanel = panel;
-
-          if (renderRootToPortal !== null) {
-            settingsPanel.render(renderRootToPortal, 'settings');
+          settingsPortalContainer = panel.container;
+          if (settingsPortalContainer != null) {
+            settingsPortalContainer.innerHTML = '';
+            render('settings');
+            panel.injectStyles(cloneStyleTags);
           }
         });
       });
