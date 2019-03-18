@@ -95,8 +95,10 @@ function defineRefPropWarningGetter(props, displayName) {
  * if something is a React Element.
  *
  * @param {*} type
+ * @param {*} props
  * @param {*} key
  * @param {string|object} ref
+ * @param {*} owner
  * @param {*} self A *temporary* helper to detect places where `this` is
  * different from the `owner` when React.createElement is called, so that we
  * can warn. We want to get rid of owner and replace string `ref`s with arrow
@@ -104,11 +106,9 @@ function defineRefPropWarningGetter(props, displayName) {
  * change in behavior.
  * @param {*} source An annotation object (added by a transpiler or otherwise)
  * indicating filename, line number, and/or other information.
- * @param {*} owner
- * @param {*} props
  * @internal
  */
-const ReactElement = function(type, key, ref, self, source, owner, props) {
+const ReactElement = function(type, props, key, ref, owner, self, source) {
   const element = {
     // This tag allows us to uniquely identify this as a React Element
     $$typeof: REACT_ELEMENT_TYPE,
@@ -163,6 +163,131 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
 
   return element;
 };
+
+/**
+ * https://github.com/reactjs/rfcs/pull/107
+ * @param {*} type
+ * @param {object} props
+ * @param {string} key
+ */
+export function jsx(type, config, maybeKey) {
+  let propName;
+
+  // Reserved names are extracted
+  const props = {};
+
+  let key = null;
+  let ref = null;
+
+  if (hasValidRef(config)) {
+    ref = config.ref;
+  }
+
+  if (hasValidKey(config)) {
+    key = '' + config.key;
+  }
+
+  // Remaining properties are added to a new props object
+  for (propName in config) {
+    if (
+      hasOwnProperty.call(config, propName) &&
+      !RESERVED_PROPS.hasOwnProperty(propName)
+    ) {
+      props[propName] = config[propName];
+    }
+  }
+
+  // intentionally not checking if key was set above
+  // this key is higher priority as it's static
+  if (maybeKey !== undefined) {
+    key = '' + maybeKey;
+  }
+
+  // Resolve default props
+  if (type && type.defaultProps) {
+    const defaultProps = type.defaultProps;
+    for (propName in defaultProps) {
+      if (props[propName] === undefined) {
+        props[propName] = defaultProps[propName];
+      }
+    }
+  }
+
+  return ReactElement(type, props, key, ref, ReactCurrentOwner.current);
+}
+
+/**
+ * https://github.com/reactjs/rfcs/pull/107
+ * @param {*} type
+ * @param {object} props
+ * @param {string} key
+ */
+export function jsxDEV(type, config, maybeKey, source, self) {
+  let propName;
+
+  // Reserved names are extracted
+  const props = {};
+
+  let key = null;
+  let ref = null;
+
+  if (hasValidRef(config)) {
+    ref = config.ref;
+  }
+
+  if (hasValidKey(config)) {
+    key = '' + config.key;
+  }
+
+  // Remaining properties are added to a new props object
+  for (propName in config) {
+    if (
+      hasOwnProperty.call(config, propName) &&
+      !RESERVED_PROPS.hasOwnProperty(propName)
+    ) {
+      props[propName] = config[propName];
+    }
+  }
+
+  // intentionally not checking if key was set above
+  // this key is higher priority as it's static
+  if (maybeKey !== undefined) {
+    key = '' + maybeKey;
+  }
+
+  // Resolve default props
+  if (type && type.defaultProps) {
+    const defaultProps = type.defaultProps;
+    for (propName in defaultProps) {
+      if (props[propName] === undefined) {
+        props[propName] = defaultProps[propName];
+      }
+    }
+  }
+
+  if (key || ref) {
+    const displayName =
+      typeof type === 'function'
+        ? type.displayName || type.name || 'Unknown'
+        : type;
+    if (key) {
+      defineKeyPropWarningGetter(props, displayName);
+    }
+    if (ref) {
+      defineRefPropWarningGetter(props, displayName);
+    }
+  }
+
+  return ReactElement(
+    type,
+    props,
+    key,
+    ref,
+    ReactCurrentOwner.current,
+    self,
+    source,
+  );
+}
 
 /**
  * Create and return a new ReactElement of the given type.
@@ -243,12 +368,12 @@ export function createElement(type, config, children) {
   }
   return ReactElement(
     type,
+    props,
     key,
     ref,
+    ReactCurrentOwner.current,
     self,
     source,
-    ReactCurrentOwner.current,
-    props,
   );
 }
 
@@ -270,12 +395,12 @@ export function createFactory(type) {
 export function cloneAndReplaceKey(oldElement, newKey) {
   const newElement = ReactElement(
     oldElement.type,
+    oldElement.props,
     newKey,
     oldElement.ref,
+    oldElement._owner,
     oldElement._self,
     oldElement._source,
-    oldElement._owner,
-    oldElement.props,
   );
 
   return newElement;
@@ -353,7 +478,7 @@ export function cloneElement(element, config, children) {
     props.children = childArray;
   }
 
-  return ReactElement(element.type, key, ref, self, source, owner, props);
+  return ReactElement(element.type, props, key, ref, owner, self, source);
 }
 
 /**
