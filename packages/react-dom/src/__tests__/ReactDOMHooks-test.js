@@ -179,4 +179,36 @@ describe('ReactDOMHooks', () => {
 
     expect(labelRef.current.innerHTML).toBe('abc');
   });
+
+  it('should flush passive effects before interactive events', () => {
+    const {useState, useEffect} = React;
+
+    function Foo() {
+      const [count, setCount] = useState(0);
+      const [enabled, setEnabled] = useState(true);
+      useEffect(() => {
+        return () => {
+          setEnabled(false);
+        };
+      });
+      function handleClick() {
+        setCount(x => x + 1);
+      }
+      return <button onClick={enabled ? handleClick : null}>{count}</button>;
+    }
+
+    ReactDOM.render(<Foo />, container);
+    container.firstChild.dispatchEvent(
+      new Event('click', {bubbles: true, cancelable: true}),
+    );
+    // Cleanup from first passive effect should remove the handler.
+    container.firstChild.dispatchEvent(
+      new Event('click', {bubbles: true, cancelable: true}),
+    );
+    container.firstChild.dispatchEvent(
+      new Event('click', {bubbles: true, cancelable: true}),
+    );
+    jest.runAllTimers();
+    expect(container.textContent).toBe('1');
+  });
 });

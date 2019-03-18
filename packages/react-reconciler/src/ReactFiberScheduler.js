@@ -2541,14 +2541,8 @@ function interactiveUpdates<A, B, C, R>(
   // This needs to happen before we read any handlers, because the effect of
   // the previous event may influence which handlers are called during
   // this event.
-  if (
-    !isBatchingUpdates &&
-    !isRendering &&
-    lowestPriorityPendingInteractiveExpirationTime !== NoWork
-  ) {
-    // Synchronously flush pending interactive updates.
-    performWork(lowestPriorityPendingInteractiveExpirationTime, false);
-    lowestPriorityPendingInteractiveExpirationTime = NoWork;
+  if (!isBatchingUpdates) {
+    flushInteractiveUpdates();
   }
   const previousIsBatchingInteractiveUpdates = isBatchingInteractiveUpdates;
   const previousIsBatchingUpdates = isBatchingUpdates;
@@ -2571,6 +2565,7 @@ function flushInteractiveUpdates() {
     lowestPriorityPendingInteractiveExpirationTime !== NoWork
   ) {
     // Synchronously flush pending interactive updates.
+    flushPassiveEffects();
     performWork(lowestPriorityPendingInteractiveExpirationTime, false);
     lowestPriorityPendingInteractiveExpirationTime = NoWork;
   }
