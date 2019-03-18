@@ -32,9 +32,11 @@ function createPanelIfReactLoaded() {
 
       let bridge = null;
       let store = null;
+
       let elementsPortalContainer = null;
       let profilerPortalContainer = null;
       let settingsPortalContainer = null;
+
       let cloneStyleTags = null;
       let render = null;
 
