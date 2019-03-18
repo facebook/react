@@ -73,7 +73,7 @@ import invariant from 'shared/invariant';
     if (__DEV__) {
       throw _ReactError(\`Expected a component class, got \${Foo}.\${Bar}\`);
     } else {
-      throw _ReactErrorProd(18, [Foo, Bar]);
+      throw _ReactErrorProd(18, Foo, Bar);
     }
   }
 })();"
@@ -89,7 +89,7 @@ import invariant from 'shared/invariant';
     if (__DEV__) {
       throw _ReactError(\`Expected \${foo} target to be an array; got \${bar}\`);
     } else {
-      throw _ReactErrorProd(7, [foo, bar]);
+      throw _ReactErrorProd(7, foo, bar);
     }
   }
 })();"

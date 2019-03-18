@@ -10,12 +10,10 @@
 // template literal strings. The messages will be converted to ReactError during
 // build, and in production they will be minified.
 
-function ReactErrorProd(code, args) {
+function ReactErrorProd(code) {
   let url = 'https://reactjs.org/docs/error-decoder.html?invariant=' + code;
-  if (args !== undefined) {
-    for (let i = 0; i < args.length; i++) {
-      url += '&args[]=' + encodeURIComponent(args[i]);
-    }
+  for (let i = 1; i < arguments.length; i++) {
+    url += '&args[]=' + encodeURIComponent(arguments[i]);
   }
   return new Error(
     `Minified React error #${code}; visit ${url} for the full message or ` +

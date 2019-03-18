@@ -30,7 +30,7 @@ module.exports = function(babel) {
           //   if (__DEV__) {
           //     throw ReactError(`A ${adj} message that contains ${noun}`);
           //   } else {
-          //     throw ReactErrorProd(ERR_CODE, [adj, noun]);
+          //     throw ReactErrorProd(ERR_CODE, adj, noun);
           //   }
           // }
           //
@@ -93,17 +93,12 @@ module.exports = function(babel) {
           );
 
           // Outputs:
-          //   throw ReactErrorProd(ERR_CODE, [adj, noun]);
+          //   throw ReactErrorProd(ERR_CODE, adj, noun);
           const prodThrow = t.throwStatement(
-            t.callExpression(
-              reactErrorProdIdentfier,
-              [
-                t.numericLiteral(prodErrorId),
-                errorMsgExpressions.length > 0
-                  ? t.arrayExpression(errorMsgExpressions)
-                  : undefined,
-              ].filter(arg => arg !== undefined)
-            )
+            t.callExpression(reactErrorProdIdentfier, [
+              t.numericLiteral(prodErrorId),
+              ...errorMsgExpressions,
+            ])
           );
 
           // Outputs:
@@ -111,7 +106,7 @@ module.exports = function(babel) {
           //     if (__DEV__) {
           //       throw ReactError(`A ${adj} message that contains ${noun}`);
           //     } else {
-          //       throw ReactErrorProd(ERR_CODE, [adj, noun]);
+          //       throw ReactErrorProd(ERR_CODE, adj, noun);
           //     }
           //   }
           path.replaceWith(
