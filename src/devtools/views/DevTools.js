@@ -27,13 +27,22 @@ export type Props = {|
   browserName: BrowserName,
   browserTheme: BrowserTheme,
   defaultTab?: TabID,
-  elementsPortalContainer?: Element,
-  overrideTab?: TabID,
-  profilerPortalContainer?: Element,
-  settingsPortalContainer?: Element,
   showTabBar?: boolean,
   store: Store,
   viewElementSource?: ?Function,
+
+  // This property is used only by the web extension target.
+  // The built-in tab UI is hidden in that case, in favor of the browser's own panel tabs.
+  // This is done to save space within the app.
+  // Because of this, the extension needs to be able to change which tab is active/rendered.
+  overrideTab?: TabID,
+
+  // To avoid potential multi-root trickiness, the web extension uses portals to render tabs.
+  // The root <DevTools> app is rendered in the top-level extension window,
+  // but individual tabs (e.g. Elements, Profiling) can be rendered into portals within their browser panels.
+  elementsPortalContainer?: Element,
+  profilerPortalContainer?: Element,
+  settingsPortalContainer?: Element,
 |};
 
 const elementTab = {
