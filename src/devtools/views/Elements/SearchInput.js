@@ -52,19 +52,28 @@ export default function SearchInput(props: Props) {
 
   // Auto-focus search input
   useEffect(() => {
-    const handleWindowKeyDown = event => {
+    if (inputRef.current === null) {
+      return () => {};
+    }
+
+    const handleWindowKey = (event: KeyboardEvent) => {
       const { key, metaKey } = event;
       if (key === 'f' && metaKey) {
         if (inputRef.current !== null) {
           inputRef.current.focus();
           event.preventDefault();
+          event.stopPropagation();
         }
       }
     };
 
-    window.addEventListener('keydown', handleWindowKeyDown);
+    // It's important to listen to the ownerDocument to support the browser extension.
+    // Here we use portals to render individual tabs (e.g. Profiler),
+    // and the root document might belong to a different window.
+    const ownerDocument = inputRef.current.ownerDocument;
+    ownerDocument.addEventListener('keydown', handleWindowKey);
 
-    return () => window.removeEventListener('keydown', handleWindowKeyDown);
+    return () => ownerDocument.removeEventListener('keydown', handleWindowKey);
   }, [inputRef]);
 
   return (

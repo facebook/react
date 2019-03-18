@@ -58,6 +58,10 @@ export function useModalDismissSignal(
   dismissCallback: Function
 ): void {
   useEffect(() => {
+    if (modalRef.current === null) {
+      return () => {};
+    }
+
     const handleKeyDown = ({ key }: any) => {
       if (key === 'Escape') {
         dismissCallback();
@@ -71,15 +75,18 @@ export function useModalDismissSignal(
       }
     };
 
-    const body = ((document.body: any): HTMLBodyElement);
-    body.addEventListener('keydown', handleKeyDown);
-    body.addEventListener('mousedown', handleMouseOrTouch);
-    body.addEventListener('touchstart', handleMouseOrTouch);
+    // It's important to listen to the ownerDocument to support the browser extension.
+    // Here we use portals to render individual tabs (e.g. Profiler),
+    // and the root document might belong to a different window.
+    const ownerDocument = modalRef.current.ownerDocument;
+    ownerDocument.addEventListener('keydown', handleKeyDown);
+    ownerDocument.addEventListener('mousedown', handleMouseOrTouch);
+    ownerDocument.addEventListener('touchstart', handleMouseOrTouch);
 
     return () => {
-      body.removeEventListener('keydown', handleKeyDown);
-      body.removeEventListener('mousedown', handleMouseOrTouch);
-      body.removeEventListener('touchstart', handleMouseOrTouch);
+      ownerDocument.removeEventListener('keydown', handleKeyDown);
+      ownerDocument.removeEventListener('mousedown', handleMouseOrTouch);
+      ownerDocument.removeEventListener('touchstart', handleMouseOrTouch);
     };
   }, [modalRef, dismissCallback]);
 }

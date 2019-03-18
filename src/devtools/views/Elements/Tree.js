@@ -32,6 +32,7 @@ export default function Tree(props: Props) {
     selectPreviousElementInTree,
   } = useContext(TreeContext);
   const listRef = useRef<FixedSizeList<any> | null>(null);
+  const treeRef = useRef<HTMLDivElement | null>(null);
 
   const { lineHeight } = useContext(SettingsContext);
 
@@ -45,7 +46,11 @@ export default function Tree(props: Props) {
 
   // Navigate the tree with up/down arrow keys.
   useEffect(() => {
-    const handleKeyDown = event => {
+    if (treeRef.current === null) {
+      return () => {};
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
       // eslint-disable-next-line default-case
       switch (event.key) {
         case 'ArrowDown':
@@ -67,10 +72,14 @@ export default function Tree(props: Props) {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
+    // It's important to listen to the ownerDocument to support the browser extension.
+    // Here we use portals to render individual tabs (e.g. Profiler),
+    // and the root document might belong to a different window.
+    const ownerDocument = treeRef.current.ownerDocument;
+    ownerDocument.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      ownerDocument.removeEventListener('keydown', handleKeyDown);
     };
   }, [
     selectNextElementInTree,
@@ -90,7 +99,7 @@ export default function Tree(props: Props) {
   );
 
   return (
-    <div className={styles.Tree}>
+    <div className={styles.Tree} ref={treeRef}>
       <div className={styles.SearchInput}>
         {ownerStack.length > 0 ? <OwnersStack /> : <SearchInput />}
         <InspectHostNodesToggle />

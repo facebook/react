@@ -80,6 +80,7 @@ function List({
   width,
 }: ListProps) {
   const listRef = useRef<FixedSizeList<ItemData> | null>(null);
+  const divRef = useRef<HTMLDivElement | null>(null);
   const prevCommitIndexRef = useRef<number | null>(null);
 
   // Make sure a newly selected snapshot is fully visible within the list.
@@ -103,11 +104,17 @@ function List({
     setIsMouseDown(false);
   }, []);
   useEffect(() => {
-    window.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [handleMouseUp]);
+    if (divRef.current === null) {
+      return () => {};
+    }
+
+    // It's important to listen to the ownerDocument to support the browser extension.
+    // Here we use portals to render individual tabs (e.g. Profiler),
+    // and the root document might belong to a different window.
+    const ownerDocument = divRef.current.ownerDocument;
+    ownerDocument.addEventListener('mouseup', handleMouseUp);
+    return () => ownerDocument.removeEventListener('mouseup', handleMouseUp);
+  }, [divRef, handleMouseUp]);
 
   const itemSize = useMemo(
     () => Math.max(minBarWidth, width / filteredCommitIndices.length),
@@ -150,6 +157,7 @@ function List({
     <div
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
+      ref={divRef}
       style={{ height, width }}
     >
       <FixedSizeList
