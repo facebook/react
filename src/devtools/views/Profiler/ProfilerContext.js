@@ -124,6 +124,15 @@ function ProfilerContextController({ children }: Props) {
 
   const [selectedFiberID, selectFiber] = useState<number | null>(null);
 
+  if (isProfiling) {
+    if (selectedFiberID !== null) {
+      selectFiber(null);
+    }
+    if (selectedCommitIndex !== null) {
+      setSelectedCommitIndex(null);
+    }
+  }
+
   const value = useMemo(
     () => ({
       hasProfilingData,

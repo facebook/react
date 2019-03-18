@@ -56,7 +56,8 @@ export default function SnapshotSelector(_: Props) {
   }, [filteredCommitIndices, selectedCommitIndex]);
 
   // TODO (profiling) This should be managed by the context controller (reducer).
-  // TODO (profiling) We should also reset the selected index to 0 between profiling sessions.
+  // It doesn't currently know about the filtered commits though (since it doesn't suspend).
+  // Maybe this component should pass filteredCommitIndices up?
   if (selectedFilteredCommitIndex === null) {
     if (numFilteredCommits > 0) {
       setSelectedCommitIndex(0);
