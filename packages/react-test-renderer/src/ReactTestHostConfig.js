@@ -14,6 +14,11 @@ import type {
   ReactEventResponder,
   ReactEventTarget,
 } from 'shared/ReactTypes';
+import {
+  REACT_EVENT_COMPONENT_TYPE,
+  REACT_EVENT_TARGET_TYPE,
+} from 'shared/ReactSymbols';
+import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
 export type Type = string;
 export type Props = Object;
@@ -46,6 +51,8 @@ export type NoTimeout = -1;
 export * from 'shared/HostConfigWithNoPersistence';
 export * from 'shared/HostConfigWithNoHydration';
 
+const EVENT_COMPONENT_CONTEXT = {};
+const EVENT_TARGET_CONTEXT = {};
 const NO_CONTEXT = {};
 const UPDATE_SIGNAL = {};
 if (__DEV__) {
@@ -125,6 +132,20 @@ export function getChildHostContextForEvent(
   parentHostContext: HostContext,
   event: ReactEventComponent | ReactEventTarget,
 ): HostContext {
+  if (__DEV__ && enableEventAPI) {
+    if (event.$$typeof === REACT_EVENT_COMPONENT_TYPE) {
+      return EVENT_COMPONENT_CONTEXT;
+    } else if (event.$$typeof === REACT_EVENT_TARGET_TYPE) {
+      warning(
+        parentHostContext === EVENT_COMPONENT_CONTEXT,
+        'validateDOMNesting: React event targets must be direct children of event components.',
+      );
+      return {
+        type: EVENT_TARGET_CONTEXT,
+        hostNodeCount: 0,
+      };
+    }
+  }
   return NO_CONTEXT;
 }
 
@@ -143,6 +164,17 @@ export function createInstance(
   hostContext: Object,
   internalInstanceHandle: Object,
 ): Instance {
+  if (__DEV__ && enableEventAPI) {
+    if (isContextEventTargetContext(hostContext)) {
+      hostContext.hostNodeCount++;
+      warning(
+        hostContext.hostNodeCount === 1,
+        'validateDOMNesting: React event targets mut have only a single ' +
+          'DOM element as a child. Instead, found %s children.',
+        hostContext.hostNodeCount,
+      );
+    }
+  }
   return {
     type,
     props,
@@ -193,12 +225,35 @@ export function shouldDeprioritizeSubtree(type: string, props: Props): boolean {
   return false;
 }
 
+function isContextEventTargetContext(hostContext: HostContext) {
+  return (
+    enableEventAPI &&
+    typeof hostContext === 'object' &&
+    hostContext !== null &&
+    hostContext.type === EVENT_TARGET_CONTEXT
+  );
+}
+
 export function createTextInstance(
   text: string,
   rootContainerInstance: Container,
   hostContext: Object,
   internalInstanceHandle: Object,
 ): TextInstance {
+  if (__DEV__ && enableEventAPI) {
+    warning(
+      hostContext !== EVENT_COMPONENT_CONTEXT,
+      'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
+        'Wrap the child text "%s" in an element.',
+      text,
+    );
+    warning(
+      !isContextEventTargetContext(hostContext),
+      'validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
+        'Wrap the child text "%s" in an element.',
+      text,
+    );
+  }
   return {
     text,
     isHidden: false,
