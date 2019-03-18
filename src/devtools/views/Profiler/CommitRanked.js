@@ -104,7 +104,7 @@ function CommitRanked({ height, width }: {| height: number, width: number |}) {
   return (
     <FixedSizeList
       height={height}
-      innerTagName="svg"
+      innerElementType="svg"
       itemCount={chartData.nodes.length}
       itemData={itemData}
       itemSize={barHeight}
