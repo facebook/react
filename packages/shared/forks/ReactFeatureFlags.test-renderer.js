@@ -21,6 +21,7 @@ export const enableProfilerTimer = false;
 export const enableSchedulerTracing = false;
 export const enableSuspenseServerRenderer = false;
 export const disableJavaScriptURLs = false;
+export const disableYielding = false;
 export const disableInputAttributeSyncing = false;
 export const enableStableConcurrentModeAPIs = false;
 export const warnAboutShorthandPropertyCollision = false;

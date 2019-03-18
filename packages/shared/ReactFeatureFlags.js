@@ -45,6 +45,9 @@ export function addUserTimingListener() {
 // Disable javascript: URL strings in href for XSS protection.
 export const disableJavaScriptURLs = false;
 
+// Disables yielding during render in Concurrent Mode. Used for debugging only.
+export const disableYielding = false;
+
 // React Fire: prevent the value and checked attributes from syncing
 // with their related DOM properties
 export const disableInputAttributeSyncing = false;

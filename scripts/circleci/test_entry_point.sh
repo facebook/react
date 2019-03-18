@@ -15,7 +15,6 @@ if [ $((0 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
   COMMANDS_TO_RUN+=('./scripts/circleci/check_license.sh')
   COMMANDS_TO_RUN+=('./scripts/circleci/check_modules.sh')
   COMMANDS_TO_RUN+=('./scripts/circleci/test_print_warnings.sh')
-  COMMANDS_TO_RUN+=('./scripts/circleci/track_stats.sh')
 fi
 
 if [ $((1 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then

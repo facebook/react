@@ -63,6 +63,7 @@ import {
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   warnAboutDeprecatedLifecycles,
   enableSuspenseServerRenderer,
+  disableYielding,
 } from 'shared/ReactFeatureFlags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
@@ -2019,7 +2020,7 @@ function onSuspend(
   msUntilTimeout: number,
 ): void {
   root.expirationTime = rootExpirationTime;
-  if (msUntilTimeout === 0 && !shouldYield()) {
+  if (msUntilTimeout === 0 && (disableYielding || !shouldYield())) {
     // Don't wait an additional tick. Commit the tree immediately.
     root.pendingCommitExpirationTime = suspendedExpirationTime;
     root.finishedWork = finishedWork;
@@ -2233,7 +2234,11 @@ function performAsyncWork(didTimeout) {
       } while (root !== firstScheduledRoot);
     }
   }
-  performWork(NoWork, true);
+  let isYieldy = true;
+  if (disableYielding) {
+    isYieldy = false;
+  }
+  performWork(NoWork, isYieldy);
 }
 
 function performSyncWork() {
