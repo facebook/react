@@ -904,4 +904,43 @@ describe('ReactDOMServer', () => {
         '    in App (at **)',
     ]);
   });
+
+  it('should warn if an invalid contextType is defined', () => {
+    const Context = React.createContext();
+
+    class ComponentA extends React.Component {
+      // It should warn for both Context.Consumer and Context.Provider
+      static contextType = Context.Consumer;
+      render() {
+        return <div />;
+      }
+    }
+    class ComponentB extends React.Component {
+      static contextType = Context.Provider;
+      render() {
+        return <div />;
+      }
+    }
+
+    expect(() => {
+      ReactDOMServer.renderToString(<ComponentA />);
+    }).toWarnDev(
+      'Warning: ComponentA defines an invalid contextType. ' +
+        'contextType should point to the Context object returned by React.createContext(). ' +
+        'Did you accidentally pass the Context.Consumer instead?',
+      {withoutStack: true},
+    );
+
+    // Warnings should be deduped by component type
+    ReactDOMServer.renderToString(<ComponentA />);
+
+    expect(() => {
+      ReactDOMServer.renderToString(<ComponentB />);
+    }).toWarnDev(
+      'Warning: ComponentB defines an invalid contextType. ' +
+        'contextType should point to the Context object returned by React.createContext(). ' +
+        'Did you accidentally pass the Context.Provider instead?',
+      {withoutStack: true},
+    );
+  });
 });

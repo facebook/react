@@ -77,7 +77,10 @@ export function processContext(
   const contextType = type.contextType;
   if (typeof contextType === 'object' && contextType !== null) {
     if (__DEV__) {
-      if (contextType.$$typeof !== REACT_CONTEXT_TYPE) {
+      const isContextConsumer =
+        contextType.$$typeof === REACT_CONTEXT_TYPE &&
+        contextType._context !== undefined;
+      if (contextType.$$typeof !== REACT_CONTEXT_TYPE || isContextConsumer) {
         let name = getComponentName(type) || 'Component';
         if (!didWarnAboutInvalidateContextType[name]) {
           didWarnAboutInvalidateContextType[name] = true;
@@ -85,8 +88,9 @@ export function processContext(
             false,
             '%s defines an invalid contextType. ' +
               'contextType should point to the Context object returned by React.createContext(). ' +
-              'Did you accidentally pass the Context.Provider instead?',
+              'Did you accidentally pass the Context.%s instead?',
             name,
+            isContextConsumer ? 'Consumer' : 'Provider',
           );
         }
       }
