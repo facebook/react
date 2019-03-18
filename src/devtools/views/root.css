@@ -16,7 +16,7 @@
   --light-color-button-focus: #3578e5;
   --light-color-button-hover: #3578e5;
   --light-color-border: #eeeeee;
-  --light-color-commit-did-not-render: #777d88;
+  --light-color-commit-did-not-render: #cfd1d5;
   --light-color-commit-gradient-0: #37afa9;
   --light-color-commit-gradient-1: #63b19e;
   --light-color-commit-gradient-2: #80b393;
@@ -58,7 +58,7 @@
   --dark-color-button-focus: #a2e9fc;
   --dark-color-button-hover: #a2e9fc;
   --dark-color-border: #3d424a;
-  --dark-color-commit-did-not-render: #8f949d;
+  --dark-color-commit-did-not-render: #777d88;
   --dark-color-commit-gradient-0: #37afa9;
   --dark-color-commit-gradient-1: #63b19e;
   --dark-color-commit-gradient-2: #80b393;
