@@ -835,7 +835,6 @@ describe('ReactStrictMode', () => {
             <div>
               <LegacyContextConsumer />
               <FunctionalLegacyContextConsumer />
-              <FactoryLegacyContextConsumer />
             </div>
           );
         }
@@ -843,14 +842,6 @@ describe('ReactStrictMode', () => {
 
       function FunctionalLegacyContextConsumer() {
         return null;
-      }
-
-      function FactoryLegacyContextConsumer() {
-        return {
-          render() {
-            return null;
-          },
-        };
       }
 
       LegacyContextProvider.childContextTypes = {
@@ -885,10 +876,6 @@ describe('ReactStrictMode', () => {
         color: PropTypes.string,
       };
 
-      FactoryLegacyContextConsumer.contextTypes = {
-        color: PropTypes.string,
-      };
-
       let rendered;
 
       expect(() => {
@@ -898,7 +885,7 @@ describe('ReactStrictMode', () => {
           '\n    in StrictMode (at **)' +
           '\n    in div (at **)' +
           '\n    in Root (at **)' +
-          '\n\nPlease update the following components: FactoryLegacyContextConsumer, ' +
+          '\n\nPlease update the following components: ' +
           'FunctionalLegacyContextConsumer, LegacyContextConsumer, LegacyContextProvider' +
           '\n\nLearn more about this warning here:' +
           '\nhttps://fb.me/react-strict-mode-warnings',

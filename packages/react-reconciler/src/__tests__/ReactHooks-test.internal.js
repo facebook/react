@@ -1327,7 +1327,14 @@ describe('ReactHooks', () => {
     expect(renderCount).toBe(1);
 
     renderCount = 0;
-    renderer.update(<Factory />);
+    expect(() => renderer.update(<Factory />)).toWarnDev(
+      'Warning: The <Factory /> component appears to be a function component that returns a class instance. ' +
+        'Change Factory to a class that extends React.Component instead. ' +
+        "If you can't use a class try assigning the prototype on the function as a workaround. " +
+        '`Factory.prototype = React.Component.prototype`. ' +
+        "Don't use an arrow function since it cannot be called with `new` by React.",
+      {withoutStack: true},
+    );
     expect(renderCount).toBe(1);
     renderCount = 0;
     renderer.update(<Factory />);

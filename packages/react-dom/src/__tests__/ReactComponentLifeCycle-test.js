@@ -977,7 +977,16 @@ describe('ReactComponentLifeCycle', () => {
     };
 
     const div = document.createElement('div');
-    ReactDOM.render(<Parent ref={c => c && log.push('ref')} />, div);
+    expect(() =>
+      ReactDOM.render(<Parent ref={c => c && log.push('ref')} />, div),
+    ).toWarnDev(
+      'Warning: The <Parent /> component appears to be a function component that returns a class instance. ' +
+        'Change Parent to a class that extends React.Component instead. ' +
+        "If you can't use a class try assigning the prototype on the function as a workaround. " +
+        '`Parent.prototype = React.Component.prototype`. ' +
+        "Don't use an arrow function since it cannot be called with `new` by React.",
+      {withoutStack: true},
+    );
     ReactDOM.render(<Parent ref={c => c && log.push('ref')} />, div);
 
     expect(log).toEqual([
