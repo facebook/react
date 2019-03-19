@@ -144,6 +144,7 @@ const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 let didReceiveUpdate: boolean = false;
 
 let didWarnAboutBadClass;
+let didWarnAboutModulePatternComponent;
 let didWarnAboutContextTypeOnFunctionComponent;
 let didWarnAboutGetDerivedStateOnFunctionComponent;
 let didWarnAboutFunctionRefs;
@@ -151,6 +152,7 @@ export let didWarnAboutReassigningProps;
 
 if (__DEV__) {
   didWarnAboutBadClass = {};
+  didWarnAboutModulePatternComponent = {};
   didWarnAboutContextTypeOnFunctionComponent = {};
   didWarnAboutGetDerivedStateOnFunctionComponent = {};
   didWarnAboutFunctionRefs = {};
@@ -1222,6 +1224,24 @@ function mountIndeterminateComponent(
     typeof value.render === 'function' &&
     value.$$typeof === undefined
   ) {
+    if (__DEV__) {
+      const componentName = getComponentName(Component) || 'Unknown';
+      if (!didWarnAboutModulePatternComponent[componentName]) {
+        warningWithoutStack(
+          false,
+          'The <%s /> component appears to be a function component that returns a class instance. ' +
+            'Change %s to a class that extends React.Component instead. ' +
+            "If you can't use a class try assigning the prototype on the function as a workaround. " +
+            "`%s.prototype = React.Component.prototype`. Don't use an arrow function since it " +
+            'cannot be called with `new` by React.',
+          componentName,
+          componentName,
+          componentName,
+        );
+        didWarnAboutModulePatternComponent[componentName] = true;
+      }
+    }
+
     // Proceed under the assumption that this is a class instance
     workInProgress.tag = ClassComponent;
 
