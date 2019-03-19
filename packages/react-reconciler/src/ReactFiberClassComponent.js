@@ -534,7 +534,7 @@ function constructClassInstance(
             'This can also happen due to a circular dependency, so ' +
             'try moving the createContext() call to a separate file.';
         } else if (typeof contextType !== 'object') {
-          addendum = ' However, it is set to ' + typeof contextType + '.';
+          addendum = ' However, it is set to a ' + typeof contextType + '.';
         } else if (contextType.$$typeof === REACT_PROVIDER_TYPE) {
           addendum = ' Did you accidentally pass the Context.Provider instead?';
         } else if (contextType._context !== undefined) {

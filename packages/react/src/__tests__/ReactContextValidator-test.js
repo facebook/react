@@ -654,7 +654,7 @@ describe('ReactContextValidator', () => {
     }).toWarnDev(
       'Foo defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
-        'However, it is set to string.',
+        'However, it is set to a string.',
       {withoutStack: true},
     );
   });
