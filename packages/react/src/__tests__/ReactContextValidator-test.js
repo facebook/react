@@ -578,6 +578,87 @@ describe('ReactContextValidator', () => {
     );
   });
 
+  it('should not warn when class contextType is null', () => {
+    class Foo extends React.Component {
+      static contextType = null; // Handy for conditional declaration
+      render() {
+        return this.context.hello.world;
+      }
+    }
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(<Foo />);
+    }).toThrow("Cannot read property 'world' of undefined");
+  });
+
+  it('should warn when class contextType is undefined', () => {
+    class Foo extends React.Component {
+      // This commonly happens with circular deps
+      // https://github.com/facebook/react/issues/13969
+      static contextType = undefined;
+      render() {
+        return this.context.hello.world;
+      }
+    }
+
+    expect(() => {
+      expect(() => {
+        ReactTestUtils.renderIntoDocument(<Foo />);
+      }).toThrow("Cannot read property 'world' of undefined");
+    }).toWarnDev(
+      'Foo defines an invalid contextType. ' +
+        'contextType should point to the Context object returned by React.createContext(). ' +
+        'However, it is set to undefined. ' +
+        'This can be caused by a typo or by mixing up named and default imports. ' +
+        'This can also happen due to a circular dependency, ' +
+        'so try moving the createContext() call to a separate file.',
+      {withoutStack: true},
+    );
+  });
+
+  it('should warn when class contextType is an object', () => {
+    class Foo extends React.Component {
+      // Can happen due to a typo
+      static contextType = {
+        x: 42,
+        y: 'hello',
+      };
+      render() {
+        return this.context.hello.world;
+      }
+    }
+
+    expect(() => {
+      expect(() => {
+        ReactTestUtils.renderIntoDocument(<Foo />);
+      }).toThrow("Cannot read property 'hello' of undefined");
+    }).toWarnDev(
+      'Foo defines an invalid contextType. ' +
+        'contextType should point to the Context object returned by React.createContext(). ' +
+        'However, it is set to an object with keys {x, y}.',
+      {withoutStack: true},
+    );
+  });
+
+  it('should warn when class contextType is a primitive', () => {
+    class Foo extends React.Component {
+      static contextType = 'foo';
+      render() {
+        return this.context.hello.world;
+      }
+    }
+
+    expect(() => {
+      expect(() => {
+        ReactTestUtils.renderIntoDocument(<Foo />);
+      }).toThrow("Cannot read property 'world' of undefined");
+    }).toWarnDev(
+      'Foo defines an invalid contextType. ' +
+        'contextType should point to the Context object returned by React.createContext(). ' +
+        'However, it is set to a string.',
+      {withoutStack: true},
+    );
+  });
+
   it('should warn if you define contextType on a function component', () => {
     const Context = React.createContext();
 

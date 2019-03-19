@@ -24,7 +24,7 @@ import shallowEqual from 'shared/shallowEqual';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
+import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {resolveDefaultProps} from './ReactFiberLazyComponent';
@@ -513,27 +513,51 @@ function constructClassInstance(
   let unmaskedContext = emptyContextObject;
   let context = null;
   const contextType = ctor.contextType;
-  if (typeof contextType === 'object' && contextType !== null) {
-    if (__DEV__) {
-      const isContextConsumer =
-        contextType.$$typeof === REACT_CONTEXT_TYPE &&
-        contextType._context !== undefined;
-      if (
-        (contextType.$$typeof !== REACT_CONTEXT_TYPE || isContextConsumer) &&
-        !didWarnAboutInvalidateContextType.has(ctor)
-      ) {
+
+  if (__DEV__) {
+    if ('contextType' in ctor) {
+      let isValid =
+        // Allow null for conditional declaration
+        contextType === null ||
+        (contextType !== undefined &&
+          contextType.$$typeof === REACT_CONTEXT_TYPE &&
+          contextType._context === undefined); // Not a <Context.Consumer>
+
+      if (!isValid && !didWarnAboutInvalidateContextType.has(ctor)) {
         didWarnAboutInvalidateContextType.add(ctor);
+
+        let addendum = '';
+        if (contextType === undefined) {
+          addendum =
+            ' However, it is set to undefined. ' +
+            'This can be caused by a typo or by mixing up named and default imports. ' +
+            'This can also happen due to a circular dependency, so ' +
+            'try moving the createContext() call to a separate file.';
+        } else if (typeof contextType !== 'object') {
+          addendum = ' However, it is set to a ' + typeof contextType + '.';
+        } else if (contextType.$$typeof === REACT_PROVIDER_TYPE) {
+          addendum = ' Did you accidentally pass the Context.Provider instead?';
+        } else if (contextType._context !== undefined) {
+          // <Context.Consumer>
+          addendum = ' Did you accidentally pass the Context.Consumer instead?';
+        } else {
+          addendum =
+            ' However, it is set to an object with keys {' +
+            Object.keys(contextType).join(', ') +
+            '}.';
+        }
         warningWithoutStack(
           false,
           '%s defines an invalid contextType. ' +
-            'contextType should point to the Context object returned by React.createContext(). ' +
-            'Did you accidentally pass the Context.%s instead?',
+            'contextType should point to the Context object returned by React.createContext().%s',
           getComponentName(ctor) || 'Component',
-          isContextConsumer ? 'Consumer' : 'Provider',
+          addendum,
         );
       }
     }
+  }
 
+  if (typeof contextType === 'object' && contextType !== null) {
     context = readContext((contextType: any));
   } else {
     unmaskedContext = getUnmaskedContext(workInProgress, ctor, true);
