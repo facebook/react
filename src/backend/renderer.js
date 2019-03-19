@@ -592,6 +592,7 @@ export function attach(
 
       const ownerID =
         _debugOwner != null ? getFiberID(getPrimaryFiber(_debugOwner)) : 0;
+      const parentID = getFiberID(getPrimaryFiber(parentFiber));
 
       let encodedDisplayName = ((null: any): Uint8Array);
       let encodedKey = ((null: any): Uint8Array);
@@ -617,7 +618,7 @@ export function attach(
       operation[0] = TREE_OPERATION_ADD;
       operation[1] = id;
       operation[2] = type;
-      operation[3] = getFiberID(getPrimaryFiber(parentFiber));
+      operation[3] = parentID;
       operation[4] = ownerID;
       operation[5] = encodedDisplayNameSize;
       if (displayName !== null) {
@@ -1398,6 +1399,7 @@ export function attach(
 
   let currentCommitProfilingMetadata: CommitProfilingData | null = null;
   let initialTreeBaseDurationsMap: Map<number, number> | null = null;
+  let initialIDToRootMap: Map<number, number> | null = null;
   let isProfiling: boolean = false;
   let profilingStartTime: number = 0;
   let rootToCommitProfilingMetadataMap: CommitProfilingMetadataMap | null = null;
@@ -1450,7 +1452,9 @@ export function attach(
     const initialTreeBaseDurations = [];
     ((initialTreeBaseDurationsMap: any): Map<number, number>).forEach(
       (treeBaseDuration, id) => {
-        if (idToRootMap.get(id) === rootID) {
+        if (
+          ((initialIDToRootMap: any): Map<number, number>).get(id) === rootID
+        ) {
           // We don't need to convert milliseconds to microseconds in this case,
           // because the profiling summary is JSON serialized.
           initialTreeBaseDurations.push(id, treeBaseDuration);
@@ -1468,7 +1472,13 @@ export function attach(
   }
 
   function startProfiling() {
+    // Capture initial values as of the time profiling starts.
+    // It's important we snapshot both the durations and the id-to-root map,
+    // since either of these may change during the profiling session
+    // (e.g. when a fiber is re-rendered or when a fiber gets removed).
     initialTreeBaseDurationsMap = new Map(idToTreeBaseDurationMap);
+    initialIDToRootMap = new Map(idToRootMap);
+
     isProfiling = true;
     profilingStartTime = performance.now();
     rootToCommitProfilingMetadataMap = new Map();
