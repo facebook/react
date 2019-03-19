@@ -13,13 +13,7 @@ import {
 } from 'shared/ReactSymbols';
 import type {ReactEventTarget} from 'shared/ReactTypes';
 
-const TouchHitTarget: ReactEventTarget = {
+export const TouchHitTarget: ReactEventTarget = {
   $$typeof: REACT_EVENT_TARGET_TYPE,
   type: REACT_EVENT_TARGET_TOUCH_HIT,
 };
-
-const ReactEvents = {
-  TouchHitTarget,
-};
-
-export default ReactEvents;
