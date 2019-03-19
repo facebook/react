@@ -747,6 +747,9 @@ function commitUnmount(current: Fiber): void {
   }
 
   current.stateNode = null;
+  if (current.alternate != null) {
+    current.alternate.stateNode = null;
+  }
 }
 
 function commitNestedUnmounts(root: Fiber): void {
