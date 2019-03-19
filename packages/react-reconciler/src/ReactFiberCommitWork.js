@@ -746,6 +746,7 @@ function commitUnmount(current: Fiber): void {
     }
   }
 
+  // Remove reference for GC
   current.stateNode = null;
   if (current.alternate != null) {
     current.alternate.stateNode = null;
