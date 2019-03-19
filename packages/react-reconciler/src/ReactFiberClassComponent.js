@@ -164,10 +164,7 @@ export function applyDerivedStateFromProps(
     warnOnUndefinedDerivedState(ctor, partialState);
   }
   // Merge the partial state and the previous state.
-  const memoizedState =
-    partialState === null || partialState === undefined
-      ? prevState
-      : Object.assign({}, prevState, partialState);
+  const memoizedState = Object.assign({}, prevState, partialState);
   workInProgress.memoizedState = memoizedState;
 
   // Once the update queue is empty, persist the derived state onto the
