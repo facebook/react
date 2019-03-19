@@ -768,12 +768,23 @@ describe('ReactErrorBoundaries', () => {
     };
 
     const container = document.createElement('div');
-    ReactDOM.render(
-      <ErrorBoundary>
-        <BrokenComponentWillMountWithContext />
-      </ErrorBoundary>,
-      container,
+    expect(() =>
+      ReactDOM.render(
+        <ErrorBoundary>
+          <BrokenComponentWillMountWithContext />
+        </ErrorBoundary>,
+        container,
+      ),
+    ).toWarnDev(
+      'Warning: The <BrokenComponentWillMountWithContext /> component appears to be a function component that ' +
+        'returns a class instance. ' +
+        'Change BrokenComponentWillMountWithContext to a class that extends React.Component instead. ' +
+        "If you can't use a class try assigning the prototype on the function as a workaround. " +
+        '`BrokenComponentWillMountWithContext.prototype = React.Component.prototype`. ' +
+        "Don't use an arrow function since it cannot be called with `new` by React.",
+      {withoutStack: true},
     );
+
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
   });
 

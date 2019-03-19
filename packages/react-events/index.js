@@ -9,8 +9,4 @@
 
 'use strict';
 
-const ReactEvents = require('./src/ReactEvents');
-
-// TODO: decide on the top-level export form.
-// This is hacky but makes it work with both Rollup and Jest.
-module.exports = ReactEvents.default || ReactEvents;
+export * from './src/ReactEvents';
