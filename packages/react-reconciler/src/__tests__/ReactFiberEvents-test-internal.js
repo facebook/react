@@ -17,6 +17,7 @@ let ReactFeatureFlags;
 let EventComponent;
 let ReactTestRenderer;
 let EventTarget;
+let ReactEvents;
 
 const noOpResponder = {
   targetEventTypes: [],
@@ -31,19 +32,13 @@ function createReactEventComponent() {
   };
 }
 
-function createReactEventTarget() {
-  return {
-    $$typeof: Symbol.for('react.event_target'),
-    type: Symbol.for('react.event_target.touch_hit'),
-  };
-}
-
 function init() {
   jest.resetModules();
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
   ReactFeatureFlags.enableEventAPI = true;
   React = require('react');
   Scheduler = require('scheduler');
+  ReactEvents = require('react-events');
 }
 
 function initNoopRenderer() {
@@ -63,7 +58,7 @@ describe('ReactTopLevelText', () => {
     beforeEach(() => {
       initNoopRenderer();
       EventComponent = createReactEventComponent();
-      EventTarget = createReactEventTarget();
+      EventTarget = ReactEvents.TouchHitTarget;
     });
 
     it('should render a simple event component with a single child', () => {
@@ -200,7 +195,7 @@ describe('ReactTopLevelText', () => {
     beforeEach(() => {
       initTestRenderer();
       EventComponent = createReactEventComponent();
-      EventTarget = createReactEventTarget();
+      EventTarget = ReactEvents.TouchHitTarget;
     });
 
     it('should render a simple event component with a single child', () => {
