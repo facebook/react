@@ -180,18 +180,6 @@ const forks = Object.freeze({
     return 'scheduler/src/forks/SchedulerHostConfig.default';
   },
 
-  // This logic is forked on www to fork the formatting function.
-  'shared/invariant': (bundleType, entry) => {
-    switch (bundleType) {
-      case FB_WWW_DEV:
-      case FB_WWW_PROD:
-      case FB_WWW_PROFILING:
-        return 'shared/forks/invariant.www.js';
-      default:
-        return null;
-    }
-  },
-
   // This logic is forked on www to ignore some warnings.
   'shared/lowPriorityWarning': (bundleType, entry) => {
     switch (bundleType) {

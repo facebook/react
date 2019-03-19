@@ -99,5 +99,5 @@ export type ReactEventComponent = {|
 
 export type ReactEventTarget = {|
   $$typeof: Symbol | number,
-  type: string,
+  type: Symbol | number,
 |};

@@ -110,7 +110,12 @@ describe('ReactHooksWithNoopRenderer', () => {
     ReactNoop.render(<BadCounter />);
 
     expect(Scheduler).toFlushAndThrow(
-      'Hooks can only be called inside the body of a function component.',
+      'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
+        ' one of the following reasons:\n' +
+        '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
+        '2. You might be breaking the Rules of Hooks\n' +
+        '3. You might have more than one copy of React in the same app\n' +
+        'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
     );
 
     // Confirm that a subsequent hook works properly.
@@ -133,7 +138,12 @@ describe('ReactHooksWithNoopRenderer', () => {
     }
     ReactNoop.render(<Counter />);
     expect(Scheduler).toFlushAndThrow(
-      'Hooks can only be called inside the body of a function component.',
+      'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
+        ' one of the following reasons:\n' +
+        '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
+        '2. You might be breaking the Rules of Hooks\n' +
+        '3. You might have more than one copy of React in the same app\n' +
+        'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
     );
 
     // Confirm that a subsequent hook works properly.
@@ -147,7 +157,12 @@ describe('ReactHooksWithNoopRenderer', () => {
 
   it('throws when called outside the render phase', () => {
     expect(() => useState(0)).toThrow(
-      'Hooks can only be called inside the body of a function component.',
+      'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
+        ' one of the following reasons:\n' +
+        '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
+        '2. You might be breaking the Rules of Hooks\n' +
+        '3. You might have more than one copy of React in the same app\n' +
+        'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
     );
   });
 
@@ -1962,5 +1977,89 @@ describe('ReactHooksWithNoopRenderer', () => {
       //     'accidental early return statement.',
       // );
     });
+  });
+
+  it('eager bailout optimization should always compare to latest rendered reducer', () => {
+    // Edge case based on a bug report
+    let setCounter;
+    function App() {
+      const [counter, _setCounter] = useState(1);
+      setCounter = _setCounter;
+      return <Component count={counter} />;
+    }
+
+    function Component({count}) {
+      const [state, dispatch] = useReducer(() => {
+        // This reducer closes over a value from props. If the reducer is not
+        // properly updated, the eager reducer will compare to an old value
+        // and bail out incorrectly.
+        Scheduler.yieldValue('Reducer: ' + count);
+        return count;
+      }, -1);
+      useEffect(
+        () => {
+          Scheduler.yieldValue('Effect: ' + count);
+          dispatch();
+        },
+        [count],
+      );
+      Scheduler.yieldValue('Render: ' + state);
+      return count;
+    }
+
+    ReactNoop.render(<App />);
+    expect(Scheduler).toFlushAndYield([
+      'Render: -1',
+      'Effect: 1',
+      'Reducer: 1',
+      'Reducer: 1',
+      'Render: 1',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput('1');
+
+    act(() => {
+      setCounter(2);
+    });
+    expect(Scheduler).toFlushAndYield([
+      'Render: 1',
+      'Effect: 2',
+      'Reducer: 2',
+      'Reducer: 2',
+      'Render: 2',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput('2');
+  });
+
+  it('should update latest rendered reducer when a preceding state receives a render phase update', () => {
+    // Similar to previous test, except using a preceding render phase update
+    // instead of new props.
+    let dispatch;
+    function App() {
+      const [step, setStep] = useState(0);
+      const [shadow, _dispatch] = useReducer(() => step, step);
+      dispatch = _dispatch;
+
+      if (step < 5) {
+        setStep(step + 1);
+      }
+
+      Scheduler.yieldValue(`Step: ${step}, Shadow: ${shadow}`);
+      return shadow;
+    }
+
+    ReactNoop.render(<App />);
+    expect(Scheduler).toFlushAndYield([
+      'Step: 0, Shadow: 0',
+      'Step: 1, Shadow: 0',
+      'Step: 2, Shadow: 0',
+      'Step: 3, Shadow: 0',
+      'Step: 4, Shadow: 0',
+      'Step: 5, Shadow: 0',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput('0');
+
+    act(() => dispatch());
+    expect(Scheduler).toFlushAndYield(['Step: 5, Shadow: 5']);
+    expect(ReactNoop).toMatchRenderedOutput('5');
   });
 });

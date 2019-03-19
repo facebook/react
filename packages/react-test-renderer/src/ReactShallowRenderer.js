@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import {isForwardRef} from 'react-is';
+import {isForwardRef, isMemo, ForwardRef} from 'react-is';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import getComponentName from 'shared/getComponentName';
 import shallowEqual from 'shared/shallowEqual';
@@ -31,7 +31,7 @@ type Update<A> = {
 };
 
 type UpdateQueue<A> = {
-  last: Update<A> | null,
+  first: Update<A> | null,
   dispatch: any,
 };
 
@@ -178,6 +178,10 @@ class ReactShallowRenderer {
   };
 
   constructor() {
+    this._reset();
+  }
+
+  _reset() {
     this._context = null;
     this._element = null;
     this._instance = null;
@@ -192,9 +196,7 @@ class ReactShallowRenderer {
     this._isReRender = false;
     this._didScheduleRenderPhaseUpdate = false;
     this._renderPhaseUpdates = null;
-    this._currentlyRenderingComponent = null;
     this._numberOfReRenders = 0;
-    this._previousComponentIdentity = null;
   }
 
   _context: null | Object;
@@ -208,8 +210,6 @@ class ReactShallowRenderer {
   _dispatcher: DispatcherType;
   _workInProgressHook: null | Hook;
   _firstWorkInProgressHook: null | Hook;
-  _currentlyRenderingComponent: null | Object;
-  _previousComponentIdentity: null | Object;
   _renderPhaseUpdates: Map<UpdateQueue<any>, Update<any>> | null;
   _isReRender: boolean;
   _didScheduleRenderPhaseUpdate: boolean;
@@ -217,9 +217,13 @@ class ReactShallowRenderer {
 
   _validateCurrentlyRenderingComponent() {
     invariant(
-      this._currentlyRenderingComponent !== null,
-      'Hooks can only be called inside the body of a function component. ' +
-        '(https://fb.me/react-invalid-hook-call)',
+      this._rendering && !this._instance,
+      'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
+        ' one of the following reasons:\n' +
+        '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
+        '2. You might be breaking the Rules of Hooks\n' +
+        '3. You might have more than one copy of React in the same app\n' +
+        'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
     );
   }
 
@@ -232,33 +236,44 @@ class ReactShallowRenderer {
       this._validateCurrentlyRenderingComponent();
       this._createWorkInProgressHook();
       const workInProgressHook: Hook = (this._workInProgressHook: any);
+
       if (this._isReRender) {
-        // This is a re-render. Apply the new render phase updates to the previous
-        // current hook.
+        // This is a re-render.
         const queue: UpdateQueue<A> = (workInProgressHook.queue: any);
         const dispatch: Dispatch<A> = (queue.dispatch: any);
-        if (this._renderPhaseUpdates !== null) {
-          // Render phase updates are stored in a map of queue -> linked list
-          const firstRenderPhaseUpdate = this._renderPhaseUpdates.get(queue);
-          if (firstRenderPhaseUpdate !== undefined) {
-            (this._renderPhaseUpdates: any).delete(queue);
-            let newState = workInProgressHook.memoizedState;
-            let update = firstRenderPhaseUpdate;
-            do {
-              // Process this render phase update. We don't have to check the
-              // priority because it will always be the same as the current
-              // render's.
-              const action = update.action;
-              newState = reducer(newState, action);
-              update = update.next;
-            } while (update !== null);
-
-            workInProgressHook.memoizedState = newState;
-
-            return [newState, dispatch];
+        if (this._numberOfReRenders > 0) {
+          // Apply the new render phase updates to the previous current hook.
+          if (this._renderPhaseUpdates !== null) {
+            // Render phase updates are stored in a map of queue -> linked list
+            const firstRenderPhaseUpdate = this._renderPhaseUpdates.get(queue);
+            if (firstRenderPhaseUpdate !== undefined) {
+              (this._renderPhaseUpdates: any).delete(queue);
+              let newState = workInProgressHook.memoizedState;
+              let update = firstRenderPhaseUpdate;
+              do {
+                const action = update.action;
+                newState = reducer(newState, action);
+                update = update.next;
+              } while (update !== null);
+              workInProgressHook.memoizedState = newState;
+              return [newState, dispatch];
+            }
           }
+          return [workInProgressHook.memoizedState, dispatch];
         }
-        return [workInProgressHook.memoizedState, dispatch];
+        // Process updates outside of render
+        let newState = workInProgressHook.memoizedState;
+        let update = queue.first;
+        if (update !== null) {
+          do {
+            const action = update.action;
+            newState = reducer(newState, action);
+            update = update.next;
+          } while (update !== null);
+          queue.first = null;
+          workInProgressHook.memoizedState = newState;
+        }
+        return [newState, dispatch];
       } else {
         let initialState;
         if (reducer === basicStateReducer) {
@@ -273,16 +288,12 @@ class ReactShallowRenderer {
         }
         workInProgressHook.memoizedState = initialState;
         const queue: UpdateQueue<A> = (workInProgressHook.queue = {
-          last: null,
+          first: null,
           dispatch: null,
         });
         const dispatch: Dispatch<
           A,
-        > = (queue.dispatch = (this._dispatchAction.bind(
-          this,
-          (this._currentlyRenderingComponent: any),
-          queue,
-        ): any));
+        > = (queue.dispatch = (this._dispatchAction.bind(this, queue): any));
         return [workInProgressHook.memoizedState, dispatch];
       }
     };
@@ -373,18 +384,14 @@ class ReactShallowRenderer {
     };
   }
 
-  _dispatchAction<A>(
-    componentIdentity: Object,
-    queue: UpdateQueue<A>,
-    action: A,
-  ) {
+  _dispatchAction<A>(queue: UpdateQueue<A>, action: A) {
     invariant(
       this._numberOfReRenders < RE_RENDER_LIMIT,
       'Too many re-renders. React limits the number of renders to prevent ' +
         'an infinite loop.',
     );
 
-    if (componentIdentity === this._currentlyRenderingComponent) {
+    if (this._rendering) {
       // This is a render phase update. Stash it in a lazily-created map of
       // queue -> linked list of updates. After this render pass, we'll restart
       // and apply the stashed updates on top of the work-in-progress hook.
@@ -409,9 +416,24 @@ class ReactShallowRenderer {
         lastRenderPhaseUpdate.next = update;
       }
     } else {
-      // This means an update has happened after the function component has
-      // returned. On the server this is a no-op. In React Fiber, the update
-      // would be scheduled for a future render.
+      const update: Update<A> = {
+        action,
+        next: null,
+      };
+
+      // Append the update to the end of the list.
+      let last = queue.first;
+      if (last === null) {
+        queue.first = update;
+      } else {
+        while (last.next !== null) {
+          last = last.next;
+        }
+        last.next = update;
+      }
+
+      // Re-render now.
+      this.render(this._element, this._context);
     }
   }
 
@@ -441,17 +463,6 @@ class ReactShallowRenderer {
     return this._workInProgressHook;
   }
 
-  _prepareToUseHooks(componentIdentity: Object): void {
-    if (
-      this._previousComponentIdentity !== null &&
-      this._previousComponentIdentity !== componentIdentity
-    ) {
-      this._firstWorkInProgressHook = null;
-    }
-    this._currentlyRenderingComponent = componentIdentity;
-    this._previousComponentIdentity = componentIdentity;
-  }
-
   _finishHooks(element: ReactElement, context: null | Object) {
     if (this._didScheduleRenderPhaseUpdate) {
       // Updates were scheduled during the render phase. They are stored in
@@ -466,7 +477,6 @@ class ReactShallowRenderer {
       this._rendering = false;
       this.render(element, context);
     } else {
-      this._currentlyRenderingComponent = null;
       this._workInProgressHook = null;
       this._renderPhaseUpdates = null;
       this._numberOfReRenders = 0;
@@ -500,7 +510,8 @@ class ReactShallowRenderer {
       element.type,
     );
     invariant(
-      isForwardRef(element) || typeof element.type === 'function',
+      isForwardRef(element) ||
+        (typeof element.type === 'function' || isMemo(element.type)),
       'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
         'components, but the provided element type was `%s`.',
       Array.isArray(element.type)
@@ -513,25 +524,40 @@ class ReactShallowRenderer {
     if (this._rendering) {
       return;
     }
+    if (this._element != null && this._element.type !== element.type) {
+      this._reset();
+    }
+
+    const elementType = isMemo(element.type) ? element.type.type : element.type;
+    const previousElement = this._element;
 
     this._rendering = true;
     this._element = element;
-    this._context = getMaskedContext(element.type.contextTypes, context);
+    this._context = getMaskedContext(elementType.contextTypes, context);
+
+    // Inner memo component props aren't currently validated in createElement.
+    if (isMemo(element.type) && elementType.propTypes) {
+      currentlyValidatingElement = element;
+      checkPropTypes(
+        elementType.propTypes,
+        element.props,
+        'prop',
+        getComponentName(elementType),
+        getStackAddendum,
+      );
+    }
 
     if (this._instance) {
-      this._updateClassComponent(element, this._context);
+      this._updateClassComponent(elementType, element, this._context);
     } else {
-      if (isForwardRef(element)) {
-        this._rendered = element.type.render(element.props, element.ref);
-      } else if (shouldConstruct(element.type)) {
-        this._instance = new element.type(
+      if (shouldConstruct(elementType)) {
+        this._instance = new elementType(
           element.props,
           this._context,
           this._updater,
         );
-
-        if (typeof element.type.getDerivedStateFromProps === 'function') {
-          const partialState = element.type.getDerivedStateFromProps.call(
+        if (typeof elementType.getDerivedStateFromProps === 'function') {
+          const partialState = elementType.getDerivedStateFromProps.call(
             null,
             element.props,
             this._instance.state,
@@ -545,35 +571,54 @@ class ReactShallowRenderer {
           }
         }
 
-        if (element.type.hasOwnProperty('contextTypes')) {
+        if (elementType.contextTypes) {
           currentlyValidatingElement = element;
-
           checkPropTypes(
-            element.type.contextTypes,
+            elementType.contextTypes,
             this._context,
             'context',
-            getName(element.type, this._instance),
+            getName(elementType, this._instance),
             getStackAddendum,
           );
 
           currentlyValidatingElement = null;
         }
 
-        this._mountClassComponent(element, this._context);
+        this._mountClassComponent(elementType, element, this._context);
       } else {
-        const prevDispatcher = ReactCurrentDispatcher.current;
-        ReactCurrentDispatcher.current = this._dispatcher;
-        this._prepareToUseHooks(element.type);
-        try {
-          this._rendered = element.type.call(
-            undefined,
-            element.props,
-            this._context,
-          );
-        } finally {
-          ReactCurrentDispatcher.current = prevDispatcher;
+        let shouldRender = true;
+        if (isMemo(element.type) && previousElement !== null) {
+          // This is a Memo component that is being re-rendered.
+          const compare = element.type.compare || shallowEqual;
+          if (compare(previousElement.props, element.props)) {
+            shouldRender = false;
+          }
         }
-        this._finishHooks(element, context);
+        if (shouldRender) {
+          const prevDispatcher = ReactCurrentDispatcher.current;
+          ReactCurrentDispatcher.current = this._dispatcher;
+          try {
+            // elementType could still be a ForwardRef if it was
+            // nested inside Memo.
+            if (elementType.$$typeof === ForwardRef) {
+              invariant(
+                typeof elementType.render === 'function',
+                'forwardRef requires a render function but was given %s.',
+                typeof elementType.render,
+              );
+              this._rendered = elementType.render.call(
+                undefined,
+                element.props,
+                element.ref,
+              );
+            } else {
+              this._rendered = elementType(element.props, this._context);
+            }
+          } finally {
+            ReactCurrentDispatcher.current = prevDispatcher;
+          }
+          this._finishHooks(element, context);
+        }
       }
     }
 
@@ -589,17 +634,14 @@ class ReactShallowRenderer {
         this._instance.componentWillUnmount();
       }
     }
-
-    this._firstWorkInProgressHook = null;
-    this._previousComponentIdentity = null;
-    this._context = null;
-    this._element = null;
-    this._newState = null;
-    this._rendered = null;
-    this._instance = null;
+    this._reset();
   }
 
-  _mountClassComponent(element: ReactElement, context: null | Object) {
+  _mountClassComponent(
+    elementType: Function,
+    element: ReactElement,
+    context: null | Object,
+  ) {
     this._instance.context = context;
     this._instance.props = element.props;
     this._instance.state = this._instance.state || null;
@@ -614,7 +656,7 @@ class ReactShallowRenderer {
       // In order to support react-lifecycles-compat polyfilled components,
       // Unsafe lifecycles should not be invoked for components using the new APIs.
       if (
-        typeof element.type.getDerivedStateFromProps !== 'function' &&
+        typeof elementType.getDerivedStateFromProps !== 'function' &&
         typeof this._instance.getSnapshotBeforeUpdate !== 'function'
       ) {
         if (typeof this._instance.componentWillMount === 'function') {
@@ -636,8 +678,12 @@ class ReactShallowRenderer {
     // because DOM refs are not available.
   }
 
-  _updateClassComponent(element: ReactElement, context: null | Object) {
-    const {props, type} = element;
+  _updateClassComponent(
+    elementType: Function,
+    element: ReactElement,
+    context: null | Object,
+  ) {
+    const {props} = element;
 
     const oldState = this._instance.state || emptyObject;
     const oldProps = this._instance.props;
@@ -646,7 +692,7 @@ class ReactShallowRenderer {
       // In order to support react-lifecycles-compat polyfilled components,
       // Unsafe lifecycles should not be invoked for components using the new APIs.
       if (
-        typeof element.type.getDerivedStateFromProps !== 'function' &&
+        typeof elementType.getDerivedStateFromProps !== 'function' &&
         typeof this._instance.getSnapshotBeforeUpdate !== 'function'
       ) {
         if (typeof this._instance.componentWillReceiveProps === 'function') {
@@ -662,8 +708,8 @@ class ReactShallowRenderer {
 
     // Read state after cWRP in case it calls setState
     let state = this._newState || oldState;
-    if (typeof type.getDerivedStateFromProps === 'function') {
-      const partialState = type.getDerivedStateFromProps.call(
+    if (typeof elementType.getDerivedStateFromProps === 'function') {
+      const partialState = elementType.getDerivedStateFromProps.call(
         null,
         props,
         state,
@@ -683,7 +729,10 @@ class ReactShallowRenderer {
         state,
         context,
       );
-    } else if (type.prototype && type.prototype.isPureReactComponent) {
+    } else if (
+      elementType.prototype &&
+      elementType.prototype.isPureReactComponent
+    ) {
       shouldUpdate =
         !shallowEqual(oldProps, props) || !shallowEqual(oldState, state);
     }
@@ -692,7 +741,7 @@ class ReactShallowRenderer {
       // In order to support react-lifecycles-compat polyfilled components,
       // Unsafe lifecycles should not be invoked for components using the new APIs.
       if (
-        typeof element.type.getDerivedStateFromProps !== 'function' &&
+        typeof elementType.getDerivedStateFromProps !== 'function' &&
         typeof this._instance.getSnapshotBeforeUpdate !== 'function'
       ) {
         if (typeof this._instance.componentWillUpdate === 'function') {
@@ -727,7 +776,8 @@ function getDisplayName(element) {
   } else if (typeof element.type === 'string') {
     return element.type;
   } else {
-    return element.type.displayName || element.type.name || 'Unknown';
+    const elementType = isMemo(element.type) ? element.type.type : element.type;
+    return elementType.displayName || elementType.name || 'Unknown';
   }
 }
 
