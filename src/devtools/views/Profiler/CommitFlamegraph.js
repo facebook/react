@@ -86,21 +86,29 @@ function CommitFlamegraph({
     rootID: ((rootID: any): number),
   });
 
-  const selectedChartNodeIndex = useMemo(
-    () =>
-      selectedFiberID === null
-        ? 0
-        : ((chartData.idToDepthMap.get(selectedFiberID): any): number) - 1,
-    [chartData, selectedFiberID]
-  );
+  const selectedChartNodeIndex = useMemo<number>(() => {
+    if (selectedFiberID === null) {
+      return 0;
+    }
+    // The selected node might not be in the tree for this commit,
+    // so it's important that we have a fallback plan.
+    const depth = chartData.idToDepthMap.get(selectedFiberID);
+    return depth !== undefined ? depth - 1 : 0;
+  }, [chartData, selectedFiberID]);
 
   const selectedChartNode = useMemo(() => {
-    if (selectedFiberID === null) {
+    let chartNode = null;
+    if (selectedFiberID !== null) {
+      chartNode = ((chartData.rows[selectedChartNodeIndex].find(
+        chartNode => chartNode.id === selectedFiberID
+      ): any): ChartNode);
+    }
+    // The selected node might not be in the tree for this commit,
+    // so it's important that we have a fallback plan.
+    if (chartNode == null) {
       return chartData.rows[0][0];
     }
-    return ((chartData.rows[selectedChartNodeIndex].find(
-      chartNode => chartNode.id === selectedFiberID
-    ): any): ChartNode);
+    return chartNode;
   }, [chartData, selectedFiberID, selectedChartNodeIndex]);
 
   const itemData = useMemo<ItemData>(
