@@ -20,6 +20,10 @@ export default {
           additionalHooks: {
             type: 'string',
           },
+          missingDependencies: {
+            // TODO: Can this have an enum option for just removing the hook
+            enum: ['inject'],
+          },
         },
       },
     ],
@@ -32,7 +36,19 @@ export default {
       context.options[0].additionalHooks
         ? new RegExp(context.options[0].additionalHooks)
         : undefined;
-    const options = {additionalHooks};
+
+    // Currently only supports "useMemo" & "useCallback"
+    const ifMissingDependencies =
+      context.options &&
+      context.options[0] &&
+      context.options[0].missingDependencies
+        ? context.options[0].missingDependencies
+        : undefined;
+
+    const options = {
+      additionalHooks,
+      missingDependencies: ifMissingDependencies,
+    };
 
     // Should be shared between visitors.
     let setStateCallSites = new WeakMap();
@@ -77,6 +93,7 @@ export default {
       if (node.parent.arguments[callbackIndex] !== node) {
         return;
       }
+      const callbackNode = node.parent.arguments[callbackIndex];
 
       // Get the reactive hook node.
       const reactiveHook = node.parent.callee;
@@ -94,7 +111,6 @@ export default {
           reactiveHookName === 'useMemo' ||
           reactiveHookName === 'useCallback'
         ) {
-          // TODO: Can this have an autofix?
           context.report({
             node: node.parent.callee,
             message:
@@ -102,8 +118,9 @@ export default {
               `only one argument. Did you forget to pass an array of ` +
               `dependencies?`,
           });
+        } else {
+          return;
         }
-        return;
       }
 
       if (isEffect && node.async) {
@@ -470,100 +487,106 @@ export default {
 
       const declaredDependencies = [];
       const externalDependencies = new Set();
-      if (declaredDependenciesNode.type !== 'ArrayExpression') {
-        // If the declared dependencies are not an array expression then we
-        // can't verify that the user provided the correct dependencies. Tell
-        // the user this in an error.
-        context.report({
-          node: declaredDependenciesNode,
-          message:
-            `React Hook ${context.getSource(reactiveHook)} was passed a ` +
-            'dependency list that is not an array literal. This means we ' +
-            "can't statically verify whether you've passed the correct " +
-            'dependencies.',
-        });
-      } else {
-        declaredDependenciesNode.elements.forEach(declaredDependencyNode => {
-          // Skip elided elements.
-          if (declaredDependencyNode === null) {
-            return;
-          }
-          // If we see a spread element then add a special warning.
-          if (declaredDependencyNode.type === 'SpreadElement') {
-            context.report({
-              node: declaredDependencyNode,
-              message:
-                `React Hook ${context.getSource(reactiveHook)} has a spread ` +
-                "element in its dependency array. This means we can't " +
-                "statically verify whether you've passed the " +
-                'correct dependencies.',
-            });
-            return;
-          }
-          // Try to normalize the declared dependency. If we can't then an error
-          // will be thrown. We will catch that error and report an error.
-          let declaredDependency;
-          try {
-            declaredDependency = toPropertyAccessString(declaredDependencyNode);
-          } catch (error) {
-            if (/Unsupported node type/.test(error.message)) {
-              if (declaredDependencyNode.type === 'Literal') {
-                if (dependencies.has(declaredDependencyNode.value)) {
-                  context.report({
-                    node: declaredDependencyNode,
-                    message:
-                      `The ${
-                        declaredDependencyNode.raw
-                      } literal is not a valid dependency ` +
-                      `because it never changes. ` +
-                      `Did you mean to include ${
-                        declaredDependencyNode.value
-                      } in the array instead?`,
-                  });
+      if (declaredDependenciesNode) {
+        if (declaredDependenciesNode.type !== 'ArrayExpression') {
+          // If the declared dependencies are not an array expression then we
+          // can't verify that the user provided the correct dependencies. Tell
+          // the user this in an error.
+          context.report({
+            node: declaredDependenciesNode,
+            message:
+              `React Hook ${context.getSource(reactiveHook)} was passed a ` +
+              'dependency list that is not an array literal. This means we ' +
+              "can't statically verify whether you've passed the correct " +
+              'dependencies.',
+          });
+        } else {
+          declaredDependenciesNode.elements.forEach(declaredDependencyNode => {
+            // Skip elided elements.
+            if (declaredDependencyNode === null) {
+              return;
+            }
+            // If we see a spread element then add a special warning.
+            if (declaredDependencyNode.type === 'SpreadElement') {
+              context.report({
+                node: declaredDependencyNode,
+                message:
+                  `React Hook ${context.getSource(
+                    reactiveHook,
+                  )} has a spread ` +
+                  "element in its dependency array. This means we can't " +
+                  "statically verify whether you've passed the " +
+                  'correct dependencies.',
+              });
+              return;
+            }
+            // Try to normalize the declared dependency. If we can't then an error
+            // will be thrown. We will catch that error and report an error.
+            let declaredDependency;
+            try {
+              declaredDependency = toPropertyAccessString(
+                declaredDependencyNode,
+              );
+            } catch (error) {
+              if (/Unsupported node type/.test(error.message)) {
+                if (declaredDependencyNode.type === 'Literal') {
+                  if (dependencies.has(declaredDependencyNode.value)) {
+                    context.report({
+                      node: declaredDependencyNode,
+                      message:
+                        `The ${
+                          declaredDependencyNode.raw
+                        } literal is not a valid dependency ` +
+                        `because it never changes. ` +
+                        `Did you mean to include ${
+                          declaredDependencyNode.value
+                        } in the array instead?`,
+                    });
+                  } else {
+                    context.report({
+                      node: declaredDependencyNode,
+                      message:
+                        `The ${
+                          declaredDependencyNode.raw
+                        } literal is not a valid dependency ` +
+                        'because it never changes. You can safely remove it.',
+                    });
+                  }
                 } else {
                   context.report({
                     node: declaredDependencyNode,
                     message:
-                      `The ${
-                        declaredDependencyNode.raw
-                      } literal is not a valid dependency ` +
-                      'because it never changes. You can safely remove it.',
+                      `React Hook ${context.getSource(reactiveHook)} has a ` +
+                      `complex expression in the dependency array. ` +
+                      'Extract it to a separate variable so it can be statically checked.',
                   });
                 }
+
+                return;
               } else {
-                context.report({
-                  node: declaredDependencyNode,
-                  message:
-                    `React Hook ${context.getSource(reactiveHook)} has a ` +
-                    `complex expression in the dependency array. ` +
-                    'Extract it to a separate variable so it can be statically checked.',
-                });
+                throw error;
               }
-
-              return;
-            } else {
-              throw error;
             }
-          }
 
-          let maybeID = declaredDependencyNode;
-          while (maybeID.type === 'MemberExpression') {
-            maybeID = maybeID.object;
-          }
-          const isDeclaredInComponent = !componentScope.through.some(
-            ref => ref.identifier === maybeID,
-          );
+            let maybeID = declaredDependencyNode;
+            while (maybeID.type === 'MemberExpression') {
+              maybeID = maybeID.object;
+            }
+            const isDeclaredInComponent = !componentScope.through.some(
+              ref => ref.identifier === maybeID,
+            );
 
-          // Add the dependency to our declared dependency map.
-          declaredDependencies.push({
-            key: declaredDependency,
-            node: declaredDependencyNode,
+            // Add the dependency to our declared dependency map.
+            declaredDependencies.push({
+              key: declaredDependency,
+              node: declaredDependencyNode,
+            });
+
+            if (!isDeclaredInComponent) {
+              externalDependencies.add(declaredDependency);
+            }
           });
-
-          if (!isDeclaredInComponent) {
-            externalDependencies.add(declaredDependency);
-          }
-        });
+        }
       }
 
       // Warn about assigning to variables in the outer scope.
@@ -705,7 +728,13 @@ export default {
         suggestedDependencies.sort();
       }
 
-      function getWarningMessage(deps, singlePrefix, label, fixVerb) {
+      function getWarningMessage(
+        deps,
+        singlePrefix,
+        label,
+        fixVerb,
+        secondaryFix,
+      ) {
         if (deps.size === 0) {
           return null;
         }
@@ -720,9 +749,11 @@ export default {
               .sort()
               .map(name => "'" + name + "'"),
           ) +
-          `. Either ${fixVerb} ${
-            deps.size > 1 ? 'them' : 'it'
-          } or remove the dependency array.`
+          (secondaryFix
+            ? `. Either ${fixVerb} ${
+                deps.size > 1 ? 'them' : 'it'
+              } or ${secondaryFix}.`
+            : `. Did you mean to ${fixVerb} ${deps.size > 1 ? 'them' : 'it'}?`)
         );
       }
 
@@ -937,23 +968,56 @@ export default {
         }
       }
 
+      if (
+        !declaredDependenciesNode &&
+        (reactiveHookName === 'useMemo' || reactiveHookName === 'useCallback')
+      ) {
+        // TODO: Can this have an autofix to remove hook if suggestedDependencies is empty
+        if (suggestedDependencies.length > 0) {
+          context.report({
+            node: node.parent.callee,
+            message:
+              `React Hook ${context.getSource(reactiveHook)} has ` +
+              getWarningMessage(missingDependencies, 'a', 'missing', 'include'),
+            fix(fixer) {
+              // TODO: consider preserving the comments or formatting?
+              if (options.missingDependencies === 'inject') {
+                return fixer.insertTextAfter(
+                  callbackNode,
+                  `, [${suggestedDependencies.join(', ')}]`,
+                );
+              }
+              return null;
+            },
+          });
+        }
+        return;
+      }
       context.report({
         node: declaredDependenciesNode,
         message:
           `React Hook ${context.getSource(reactiveHook)} has ` +
           // To avoid a long message, show the next actionable item.
-          (getWarningMessage(missingDependencies, 'a', 'missing', 'include') ||
+          (getWarningMessage(
+            missingDependencies,
+            'a',
+            'missing',
+            'include',
+            'remove the dependency array',
+          ) ||
             getWarningMessage(
               unnecessaryDependencies,
               'an',
               'unnecessary',
               'exclude',
+              'remove the dependency array',
             ) ||
             getWarningMessage(
               duplicateDependencies,
               'a',
               'duplicate',
               'omit',
+              'remove the dependency array',
             )) +
           extraWarning,
         fix(fixer) {
