@@ -43,15 +43,13 @@ import {
 import dangerousStyleValue from '../shared/dangerousStyleValue';
 
 import type {DOMContainer} from './ReactDOM';
-import type {
-  ReactEventComponent,
-  ReactEventTarget,
-  ReactEventResponder,
-} from 'shared/ReactTypes';
+import type {ReactEventResponder} from 'shared/ReactTypes';
 import {
   REACT_EVENT_COMPONENT_TYPE,
   REACT_EVENT_TARGET_TYPE,
+  REACT_EVENT_TARGET_TOUCH_HIT,
 } from 'shared/ReactSymbols';
+import getElementFromTouchHitTarget from 'shared/getElementFromTouchHitTarget';
 
 export type Type = string;
 export type Props = {
@@ -73,9 +71,10 @@ export type PublicInstance = Element | Text;
 type HostContextDev = {
   namespace: string,
   ancestorInfo: mixed,
-  isEventComponent?: boolean,
-  isEventTarget?: boolean,
-  hostNodeCount?: number,
+  eventData: null | {|
+    isEventComponent?: boolean,
+    isEventTarget?: boolean,
+  |},
 };
 type HostContextProd = string;
 export type HostContext = HostContextDev | HostContextProd;
@@ -157,7 +156,7 @@ export function getRootHostContext(
   if (__DEV__) {
     const validatedTag = type.toLowerCase();
     const ancestorInfo = updatedAncestorInfo(null, validatedTag);
-    return {namespace, ancestorInfo};
+    return {namespace, ancestorInfo, eventData: null};
   }
   return namespace;
 }
@@ -174,7 +173,7 @@ export function getChildHostContext(
       parentHostContextDev.ancestorInfo,
       type,
     );
-    return {namespace, ancestorInfo};
+    return {namespace, ancestorInfo, eventData: null};
   }
   const parentNamespace = ((parentHostContext: any): HostContextProd);
   return getChildNamespace(parentNamespace, type);
@@ -182,21 +181,30 @@ export function getChildHostContext(
 
 export function getChildHostContextForEvent(
   parentHostContext: HostContext,
-  event: ReactEventComponent | ReactEventTarget,
+  type: Symbol | number,
 ): HostContext {
   if (__DEV__) {
     const parentHostContextDev = ((parentHostContext: any): HostContextDev);
-    if (event.$$typeof === REACT_EVENT_COMPONENT_TYPE) {
-      return {...parentHostContextDev, isEventComponent: true};
-    } else if (event.$$typeof === REACT_EVENT_TARGET_TYPE) {
+    const {namespace, ancestorInfo} = parentHostContextDev;
+    let eventData = null;
+
+    if (type === REACT_EVENT_COMPONENT_TYPE) {
+      eventData = {
+        isEventComponent: true,
+        isEventTarget: false,
+      };
+    } else if (type === REACT_EVENT_TARGET_TYPE) {
       warning(
-        typeof parentHostContext === 'function' &&
-          parentHostContext !== null &&
-          parentHostContext.$$typeof === REACT_EVENT_COMPONENT_TYPE,
+        parentHostContextDev.eventData !== null &&
+          parentHostContextDev.eventData.isEventComponent,
         'validateDOMNesting: React event targets must be direct children of event components.',
       );
-      return {...parentHostContextDev, isEventTarget: true, hostNodeCount: 0};
+      eventData = {
+        isEventComponent: false,
+        isEventTarget: true,
+      };
     }
+    return {namespace, ancestorInfo, eventData};
   }
   return parentHostContext;
 }
@@ -229,17 +237,6 @@ export function createInstance(
   if (__DEV__) {
     // TODO: take namespace into account when validating.
     const hostContextDev = ((hostContext: any): HostContextDev);
-    if (__DEV__ && enableEventAPI) {
-      if (hostContextDev.isEventTarget) {
-        (hostContextDev: any).hostNodeCount++;
-        warning(
-          hostContextDev.hostNodeCount === 1,
-          'validateDOMNesting: React event targets mut have only a single ' +
-            'DOM element as a child. Instead, found %s children.',
-          hostContextDev.hostNodeCount,
-        );
-      }
-    }
     validateDOMNesting(type, null, hostContextDev.ancestorInfo);
     if (
       typeof props.children === 'string' ||
@@ -344,18 +341,21 @@ export function createTextInstance(
     const hostContextDev = ((hostContext: any): HostContextDev);
     validateDOMNesting(null, text, hostContextDev.ancestorInfo);
     if (enableEventAPI) {
-      warning(
-        !hostContextDev.isEventComponent,
-        'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
-          'Wrap the child text "%s" in an element.',
-        text,
-      );
-      warning(
-        !hostContextDev.isEventTarget,
-        'validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
-          'Wrap the child text "%s" in an element.',
-        text,
-      );
+      const eventData = hostContextDev.eventData;
+      if (eventData !== null) {
+        warning(
+          !eventData.isEventComponent,
+          'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
+            'Wrap the child text "%s" in an element.',
+          text,
+        );
+        warning(
+          !eventData.isEventTarget,
+          'validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
+            'Wrap the child text "%s" in an element.',
+          text,
+        );
+      }
     }
   }
   const textNode: TextInstance = createTextNode(text, rootContainerInstance);
@@ -869,5 +869,21 @@ export function handleEventTarget(
   props: Props,
   internalInstanceHandle: Object,
 ) {
-  // TODO: add handleEventTarget implementation
+  // Touch target hit slop handling
+  if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
+    // Validates that there is a single element
+    const element = getElementFromTouchHitTarget(internalInstanceHandle);
+    if (element !== null) {
+      // We update the event target state node to be that of the element.
+      // We can then diff this entry to determine if we need to add the
+      // hit slop element, or change the dimensions of the hit slop.
+      const lastElement = internalInstanceHandle.stateNode;
+      if (lastElement !== element) {
+        internalInstanceHandle.stateNode = element;
+        // TODO: Create the hit slop element and attach it to the element
+      } else {
+        // TODO: Diff the left, top, right, bottom props
+      }
+    }
+  }
 }

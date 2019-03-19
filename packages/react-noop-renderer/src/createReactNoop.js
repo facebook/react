@@ -16,11 +16,7 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
-import type {
-  ReactNodeList,
-  ReactEventComponent,
-  ReactEventTarget,
-} from 'shared/ReactTypes';
+import type {ReactNodeList} from 'shared/ReactTypes';
 
 import * as Scheduler from 'scheduler/unstable_mock';
 import {createPortal} from 'shared/ReactPortal';
@@ -30,9 +26,11 @@ import {
   REACT_ELEMENT_TYPE,
   REACT_EVENT_COMPONENT_TYPE,
   REACT_EVENT_TARGET_TYPE,
+  REACT_EVENT_TARGET_TOUCH_HIT,
 } from 'shared/ReactSymbols';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import warning from 'shared/warning';
+import getElementFromTouchHitTarget from 'shared/getElementFromTouchHitTarget';
 
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
@@ -72,15 +70,6 @@ const UPDATE_SIGNAL = {};
 if (__DEV__) {
   Object.freeze(NO_CONTEXT);
   Object.freeze(UPDATE_SIGNAL);
-}
-
-function isContextEventTargetContext(hostContext: HostContext) {
-  return (
-    enableEventAPI &&
-    typeof hostContext === 'object' &&
-    hostContext !== null &&
-    hostContext.type === EVENT_TARGET_CONTEXT
-  );
 }
 
 function createReactNoop(reconciler: Function, useMutation: boolean) {
@@ -275,20 +264,17 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     getChildHostContextForEvent(
       parentHostContext: HostContext,
-      event: ReactEventComponent | ReactEventTarget,
+      type: Symbol | number,
     ) {
       if (__DEV__ && enableEventAPI) {
-        if (event.$$typeof === REACT_EVENT_COMPONENT_TYPE) {
+        if (type === REACT_EVENT_COMPONENT_TYPE) {
           return EVENT_COMPONENT_CONTEXT;
-        } else if (event.$$typeof === REACT_EVENT_TARGET_TYPE) {
+        } else if (type === REACT_EVENT_TARGET_TYPE) {
           warning(
             parentHostContext === EVENT_COMPONENT_CONTEXT,
             'validateDOMNesting: React event targets must be direct children of event components.',
           );
-          return {
-            type: EVENT_TARGET_CONTEXT,
-            hostNodeCount: 0,
-          };
+          return EVENT_TARGET_CONTEXT;
         }
       }
       return parentHostContext;
@@ -306,17 +292,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     ): Instance {
       if (type === 'errorInCompletePhase') {
         throw new Error('Error in host config.');
-      }
-      if (__DEV__ && enableEventAPI) {
-        if (isContextEventTargetContext(hostContext)) {
-          hostContext.hostNodeCount++;
-          warning(
-            hostContext.hostNodeCount === 1,
-            'validateDOMNesting: React event targets mut have only a single ' +
-              'DOM element as a child. Instead, found %s children.',
-            hostContext.hostNodeCount,
-          );
-        }
       }
       const inst = {
         id: instanceCounter++,
@@ -396,7 +371,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           text,
         );
         warning(
-          !isContextEventTargetContext(hostContext),
+          hostContext !== EVENT_TARGET_CONTEXT,
           'validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
             'Wrap the child text "%s" in an element.',
           text,
@@ -437,8 +412,15 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       // NO-OP
     },
 
-    handleEventTarget() {
-      // NO-OP
+    handleEventTarget(
+      type: Symbol | number,
+      props: Props,
+      internalInstanceHandle: Object,
+    ) {
+      if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
+        // Validates that there is a single element
+        getElementFromTouchHitTarget(internalInstanceHandle);
+      }
     },
   };
 

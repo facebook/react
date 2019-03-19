@@ -14,7 +14,6 @@ let React;
 let ReactNoop;
 let Scheduler;
 let ReactFeatureFlags;
-let ReactSymbols;
 let EventComponent;
 let ReactTestRenderer;
 let EventTarget;
@@ -26,7 +25,7 @@ const noOpResponder = {
 
 function createReactEventComponent() {
   return {
-    $$typeof: ReactSymbols.REACT_EVENT_COMPONENT_TYPE,
+    $$typeof: Symbol.for('react.event_component'),
     props: null,
     responder: noOpResponder,
   };
@@ -34,8 +33,8 @@ function createReactEventComponent() {
 
 function createReactEventTarget() {
   return {
-    $$typeof: ReactSymbols.REACT_EVENT_TARGET_TYPE,
-    type: ReactSymbols.REACT_EVENT_TARGET_TOUCH_HIT,
+    $$typeof: Symbol.for('react.event_target'),
+    type: Symbol.for('react.event_target.touch_hit'),
   };
 }
 
@@ -45,7 +44,6 @@ function init() {
   ReactFeatureFlags.enableEventAPI = true;
   React = require('react');
   Scheduler = require('scheduler');
-  ReactSymbols = require('shared/ReactSymbols');
 }
 
 function initNoopRenderer() {
@@ -133,10 +131,11 @@ describe('ReactTopLevelText', () => {
       expect(() => {
         ReactNoop.render(<Test />);
         expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
+      }).toWarnDev([
         'Warning: validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
           'Wrap the child text "Hello world" in an element.',
-      );
+        'Warning: <TouchHitTarget> must have a single DOM element as a child. Found no children.',
+      ]);
     });
 
     it('should warn when an event target has a direct text child #2', () => {
@@ -152,10 +151,11 @@ describe('ReactTopLevelText', () => {
       expect(() => {
         ReactNoop.render(<Test />);
         expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
+      }).toWarnDev([
         'Warning: validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
           'Wrap the child text "Hello world" in an element.',
-      );
+        'Warning: <TouchHitTarget> must have a single DOM element as a child. Found no children.',
+      ]);
     });
 
     it('should warn when an event target has more than one child', () => {
@@ -172,8 +172,7 @@ describe('ReactTopLevelText', () => {
         ReactNoop.render(<Test />);
         expect(Scheduler).toFlushWithoutYielding();
       }).toWarnDev(
-        'Warning: validateDOMNesting: React event targets mut have only a single DOM element as a child. ' +
-          'Instead, found 2 children.',
+        'Warning: <TouchHitTarget> must only have a single DOM element as a child. Found many children.',
       );
     });
 
@@ -286,10 +285,11 @@ describe('ReactTopLevelText', () => {
       expect(() => {
         root.update(<Test />);
         expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
+      }).toWarnDev([
         'Warning: validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
           'Wrap the child text "Hello world" in an element.',
-      );
+        'Warning: <TouchHitTarget> must have a single DOM element as a child. Found no children.',
+      ]);
     });
 
     it('should warn when an event target has a direct text child #2', () => {
@@ -306,10 +306,11 @@ describe('ReactTopLevelText', () => {
       expect(() => {
         root.update(<Test />);
         expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
+      }).toWarnDev([
         'Warning: validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
           'Wrap the child text "Hello world" in an element.',
-      );
+        'Warning: <TouchHitTarget> must have a single DOM element as a child. Found no children.',
+      ]);
     });
 
     it('should warn when an event target has more than one child', () => {
@@ -327,10 +328,9 @@ describe('ReactTopLevelText', () => {
         root.update(<Test />);
         expect(Scheduler).toFlushWithoutYielding();
       }).toWarnDev(
-        'Warning: validateDOMNesting: React event targets mut have only a single DOM element as a child. ' +
-          'Instead, found 2 children.',
+        'Warning: <TouchHitTarget> must only have a single DOM element as a child. Found many children.',
       );
-      // Should allow this and not error
+      // This should not fire a warning, as this is now valid.
       const Test2 = () => (
         <EventComponent>
           <EventTarget>

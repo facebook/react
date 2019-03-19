@@ -66,6 +66,7 @@ import {
   appendChildToContainerChildSet,
   finalizeContainerChildren,
   handleEventComponent,
+  handleEventTarget,
 } from './ReactFiberHostConfig';
 import {
   getRootHostContainer,
@@ -770,9 +771,7 @@ function completeWork(
     }
     case EventComponent: {
       if (enableEventAPI) {
-        if (__DEV__) {
-          popHostContext(workInProgress);
-        }
+        popHostContext(workInProgress);
         const rootContainerInstance = getRootHostContainer();
         const responder = workInProgress.type.responder;
         handleEventComponent(responder, rootContainerInstance, workInProgress);
@@ -781,10 +780,9 @@ function completeWork(
     }
     case EventTarget: {
       if (enableEventAPI) {
-        if (__DEV__) {
-          popHostContext(workInProgress);
-        }
-        markUpdate(workInProgress);
+        popHostContext(workInProgress);
+        const type = workInProgress.type.type;
+        handleEventTarget(type, newProps, workInProgress);
       }
       break;
     }

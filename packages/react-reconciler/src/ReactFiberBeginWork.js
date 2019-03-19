@@ -1940,9 +1940,7 @@ function updateEventComponent(current, workInProgress, renderExpirationTime) {
     nextChildren,
     renderExpirationTime,
   );
-  if (__DEV__) {
-    pushHostContextForEvent(workInProgress);
-  }
+  pushHostContextForEvent(workInProgress);
   return workInProgress.child;
 }
 
@@ -1956,9 +1954,7 @@ function updateEventTarget(current, workInProgress, renderExpirationTime) {
     nextChildren,
     renderExpirationTime,
   );
-  if (__DEV__) {
-    pushHostContextForEvent(workInProgress);
-  }
+  pushHostContextForEvent(workInProgress);
   return workInProgress.child;
 }
 

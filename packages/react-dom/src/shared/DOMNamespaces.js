@@ -33,7 +33,7 @@ export function getIntrinsicNamespace(type: string): string {
 
 export function getChildNamespace(
   parentNamespace: string | null,
-  type: string | Symbol,
+  type: string,
 ): string {
   if (enableEventAPI && type === REACT_EVENT_COMPONENT_TYPE) {
     return parentNamespace;

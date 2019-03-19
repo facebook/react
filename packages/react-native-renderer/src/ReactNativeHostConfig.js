@@ -8,11 +8,7 @@
  */
 
 import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
-import type {
-  ReactEventComponent,
-  ReactEventResponder,
-  ReactEventTarget,
-} from 'shared/ReactTypes';
+import type {ReactEventResponder} from 'shared/ReactTypes';
 
 import invariant from 'shared/invariant';
 
@@ -212,7 +208,7 @@ export function getChildHostContext(
 
 export function getChildHostContextForEvent(
   parentHostContext: HostContext,
-  event: ReactEventComponent | ReactEventTarget,
+  type: Symbol | number,
 ) {
   // TODO: add getChildHostContextForEvent implementation
   return parentHostContext;
