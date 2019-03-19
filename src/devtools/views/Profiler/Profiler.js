@@ -11,6 +11,8 @@ import CommitRanked from './CommitRanked';
 import FilterModal from './FilterModal';
 import RecordToggle from './RecordToggle';
 import SnapshotSelector from './SnapshotSelector';
+import SidebarCommitInfo from './SidebarCommitInfo';
+import SidebarInteractions from './SidebarInteractions';
 
 import styles from './Profiler.css';
 
@@ -124,6 +126,19 @@ function SuspendingProfiler() {
       break;
   }
 
+  let sidebar = null;
+  switch (tab) {
+    case 'interactions':
+      sidebar = <SidebarInteractions />;
+      break;
+    case 'flame-chart':
+    case 'ranked-chart':
+      sidebar = <SidebarCommitInfo />;
+      break;
+    default:
+      break;
+  }
+
   return (
     <div className={styles.Profiler}>
       <div className={styles.LeftColumn}>
@@ -157,11 +172,7 @@ function SuspendingProfiler() {
         </div>
       </div>
       <div className={styles.RightColumn}>
-        <Suspense fallback={<ProfilerFallback />}>
-          {/* TODO (profiler) Dynamic information */}
-          <div className={styles.Toolbar}>Commit information</div>
-          <div className={styles.InspectedProperties} />
-        </Suspense>
+        <Suspense fallback={<ProfilerFallback />}>{sidebar}</Suspense>
       </div>
     </div>
   );

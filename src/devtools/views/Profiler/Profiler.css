@@ -62,10 +62,6 @@
   border-top: 1px solid var(--color-border);
 }
 
-.InspectedProperties {
-  padding: 0.5rem;
-}
-
 .VRule {
   height: 20px;
   width: 1px;

@@ -1,0 +1,34 @@
+.Toolbar {
+  height: 2.25rem;
+  padding: 0 0.5rem;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border);
+}
+
+.Content {
+  padding: 0.5rem;
+}
+
+.List {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ListItem {
+  margin: 0 0 0.25rem;
+}
+
+.Label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: bold;
+}
+
+.Value {
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-normal);
+}

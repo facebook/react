@@ -1,0 +1,13 @@
+.Toolbar {
+  height: 2.25rem;
+  padding: 0 0.5rem;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border);
+}
+
+.Content {
+  padding: 0.5rem;
+}
