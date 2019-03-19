@@ -7,12 +7,15 @@
  * @flow
  */
 
-import {REACT_EVENT_TARGET_TYPE} from 'shared/ReactSymbols';
+import {
+  REACT_EVENT_TARGET_TYPE,
+  REACT_EVENT_TARGET_TOUCH_HIT,
+} from 'shared/ReactSymbols';
 import type {ReactEventTarget} from 'shared/ReactTypes';
 
 const TouchHitTarget: ReactEventTarget = {
   $$typeof: REACT_EVENT_TARGET_TYPE,
-  type: 'touch-hit',
+  type: REACT_EVENT_TARGET_TOUCH_HIT,
 };
 
 const ReactEvents = {
