@@ -578,24 +578,16 @@ describe('ReactContextValidator', () => {
     );
   });
 
-  it('should warn when class contextType is null', () => {
+  it('should not warn when class contextType is null', () => {
     class Foo extends React.Component {
-      static contextType = null;
+      static contextType = null; // Handy for conditional declaration
       render() {
         return this.context.hello.world;
       }
     }
-
     expect(() => {
-      expect(() => {
-        ReactTestUtils.renderIntoDocument(<Foo />);
-      }).toThrow("Cannot read property 'world' of undefined");
-    }).toWarnDev(
-      'Foo defines an invalid contextType. ' +
-        'contextType should point to the Context object returned by React.createContext(). ' +
-        'However, it is set to null.',
-      {withoutStack: true},
-    );
+      ReactTestUtils.renderIntoDocument(<Foo />);
+    }).toThrow("Cannot read property 'world' of undefined");
   });
 
   it('should warn when class contextType is undefined', () => {

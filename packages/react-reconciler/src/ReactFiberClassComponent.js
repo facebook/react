@@ -517,18 +517,17 @@ function constructClassInstance(
   if (__DEV__) {
     if ('contextType' in ctor) {
       let isValid =
-        contextType !== null &&
-        contextType !== undefined &&
-        contextType.$$typeof === REACT_CONTEXT_TYPE &&
-        contextType._context === undefined; // Not a <Context.Consumer>
+        // Allow null for conditional declaration
+        contextType === null ||
+        (contextType !== undefined &&
+          contextType.$$typeof === REACT_CONTEXT_TYPE &&
+          contextType._context === undefined); // Not a <Context.Consumer>
 
       if (!isValid && !didWarnAboutInvalidateContextType.has(ctor)) {
         didWarnAboutInvalidateContextType.add(ctor);
 
         let addendum = '';
-        if (contextType === null) {
-          addendum = ' However, it is set to null.';
-        } else if (contextType === undefined) {
+        if (contextType === undefined) {
           addendum =
             ' However, it is set to undefined. ' +
             'This can be caused by a typo or by mixing up named and default imports. ' +
