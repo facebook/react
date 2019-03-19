@@ -1147,6 +1147,34 @@
       "packageName": "scheduler",
       "size": 12088,
       "gzip": 2473
+    },
+    {
+      "filename": "react-events.development.js",
+      "bundleType": "NODE_DEV",
+      "packageName": "react-events",
+      "size": 1135,
+      "gzip": 623
+    },
+    {
+      "filename": "react-events.production.min.js",
+      "bundleType": "NODE_PROD",
+      "packageName": "react-events",
+      "size": 448,
+      "gzip": 328
+    },
+    {
+      "filename": "ReactEvents-dev.js",
+      "bundleType": "FB_WWW_DEV",
+      "packageName": "react-events",
+      "size": 1106,
+      "gzip": 613
+    },
+    {
+      "filename": "ReactEvents-prod.js",
+      "bundleType": "FB_WWW_PROD",
+      "packageName": "react-events",
+      "size": 643,
+      "gzip": 377
     }
   ]
 }
