@@ -1323,9 +1323,9 @@ export function listenToEventResponderEvents(
       // Create a unique name for this event, plus it's properties. We'll
       // use this to ensure we don't listen to the same event with the same
       // properties again.
-      const listeningName = `${topLevelType}${passive ? '_passive' : ''}${
-        capture ? '_capture' : ''
-      }`;
+      const passiveKey = passive ? '_passive' : '';
+      const captureKey = capture ? '_capture' : '';
+      const listeningName = `${topLevelType}${passiveKey}${captureKey}`;
       if (!listeningSet.has(listeningName)) {
         trapEventForResponderEventSystem(
           element,
