@@ -269,9 +269,11 @@ let nextRenderDidError: boolean = false;
 
 // The next fiber with an effect that we're currently committing.
 let nextEffect: Fiber | null = null;
+// A previous fiber reference used to unlink the next effect.
+let prevEffect: Fiber | null = null;
 
 let isCommitting: boolean = false;
-let rootWithPendingPassiveEffects: FiberRoot | null = null;
+let firstPassiveEffect: Fiber | null = null;
 let passiveEffectCallbackHandle: * = null;
 let passiveEffectCallback: * = null;
 
@@ -517,15 +519,20 @@ function commitAllLifeCycles(
       commitAttachRef(nextEffect);
     }
 
-    if (effectTag & Passive) {
-      rootWithPendingPassiveEffects = finishedRoot;
+    if (effectTag & Passive && firstPassiveEffect === null) {
+      firstPassiveEffect = nextEffect;
     }
 
     const nextNextEffect = nextEffect.nextEffect;
     if (effectTag & Deletion) {
-      // Remove nextEffect reference to assist GC
+      // Remove node from effect chain for GC. We only do this with Deletion
+      // effects because we iterate the effect chain again for passive effects.
       nextEffect.nextEffect = null;
+      if (prevEffect !== null) {
+        prevEffect.nextEffect = nextNextEffect;
+      }
     }
+    prevEffect = nextEffect;
     nextEffect = nextNextEffect;
   }
   if (__DEV__) {
@@ -534,7 +541,6 @@ function commitAllLifeCycles(
 }
 
 function commitPassiveEffects(root: FiberRoot, firstEffect: Fiber): void {
-  rootWithPendingPassiveEffects = null;
   passiveEffectCallbackHandle = null;
   passiveEffectCallback = null;
 
@@ -765,6 +771,8 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
   // and deletions in the entire tree have already been invoked.
   // This pass also triggers any renderer-specific initial effects.
   nextEffect = firstEffect;
+  prevEffect = null;
+  firstPassiveEffect = null;
   startCommitLifeCyclesTimer();
   while (nextEffect !== null) {
     let didError = false;
@@ -802,12 +810,12 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
     }
   }
 
-  if (firstEffect !== null && rootWithPendingPassiveEffects !== null) {
+  if (firstPassiveEffect !== null) {
     // This commit included a passive effect. These do not need to fire until
     // after the next paint. Schedule an callback to fire them in an async
     // event. To ensure serial execution, the callback will be flushed early if
-    // we enter rootWithPendingPassiveEffects commit phase before then.
-    let callback = commitPassiveEffects.bind(null, root, firstEffect);
+    // we enter the commit phase before then.
+    let callback = commitPassiveEffects.bind(null, root, firstPassiveEffect);
     if (enableSchedulerTracing) {
       // TODO: Avoid this extra callback by mutating the tracing ref directly,
       // like we do at the beginning of commitRoot. I've opted not to do that
