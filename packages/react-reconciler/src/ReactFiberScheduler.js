@@ -815,12 +815,7 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
     }
   }
 
-  if (rootWithPendingPassiveEffects !== null) {
-    invariant(
-      firstEffect !== null,
-      'Should have next effect. This error is likely caused by a bug ' +
-        'in React. Please file an issue.',
-    );
+  if (firstEffect !== null && rootWithPendingPassiveEffects !== null) {
     // This commit included a passive effect. These do not need to fire until
     // after the next paint. Schedule an callback to fire them in an async
     // event. To ensure serial execution, the callback will be flushed early if
