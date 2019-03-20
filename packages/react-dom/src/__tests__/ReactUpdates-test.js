@@ -1377,6 +1377,21 @@ describe('ReactUpdates', () => {
     }).toThrow('Maximum');
   });
 
+  it('does not fall into an infinite update loop with useLayoutEffect', () => {
+    function NonTerminating() {
+      const [step, setStep] = React.useState(0);
+      React.useLayoutEffect(() => {
+        setStep(x => x + 1);
+      });
+      return step;
+    }
+
+    const container = document.createElement('div');
+    expect(() => {
+      ReactDOM.render(<NonTerminating />, container);
+    }).toThrow('Maximum');
+  });
+
   it('can recover after falling into an infinite update loop', () => {
     class NonTerminating extends React.Component {
       state = {step: 0};
