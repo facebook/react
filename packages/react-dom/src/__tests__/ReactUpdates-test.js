@@ -1312,6 +1312,46 @@ describe('ReactUpdates', () => {
     ReactDOM.render(<Foo />, container);
   });
 
+  it('resets the update counter for unrelated updates', () => {
+    const container = document.createElement('div');
+    const ref = React.createRef();
+
+    class EventuallyTerminating extends React.Component {
+      state = {step: 0};
+      componentDidMount() {
+        this.setState({step: 1});
+      }
+      componentDidUpdate() {
+        if (this.state.step < limit) {
+          this.setState({step: this.state.step + 1});
+        }
+      }
+      render() {
+        return this.state.step;
+      }
+    }
+
+    let limit = 55;
+    expect(() => {
+      ReactDOM.render(<EventuallyTerminating ref={ref} />, container);
+    }).toThrow('Maximum');
+
+    // Verify that we don't go over the limit if these updates are unrelated.
+    limit -= 10;
+    ReactDOM.render(<EventuallyTerminating ref={ref} />, container);
+    expect(container.textContent).toBe(limit.toString());
+    ref.current.setState({step: 0});
+    expect(container.textContent).toBe(limit.toString());
+    ref.current.setState({step: 0});
+    expect(container.textContent).toBe(limit.toString());
+
+    limit += 10;
+    expect(() => {
+      ref.current.setState({step: 0});
+    }).toThrow('Maximum');
+    expect(ref.current).toBe(null);
+  });
+
   it('does not fall into an infinite update loop', () => {
     class NonTerminating extends React.Component {
       state = {step: 0};
@@ -1335,6 +1375,46 @@ describe('ReactUpdates', () => {
     expect(() => {
       ReactDOM.render(<NonTerminating />, container);
     }).toThrow('Maximum');
+  });
+
+  it('can recover after falling into an infinite update loop', () => {
+    class NonTerminating extends React.Component {
+      state = {step: 0};
+      componentDidMount() {
+        this.setState({step: 1});
+      }
+      componentDidUpdate() {
+        this.setState({step: 2});
+      }
+      render() {
+        return this.state.step;
+      }
+    }
+
+    class Terminating extends React.Component {
+      state = {step: 0};
+      componentDidMount() {
+        this.setState({step: 1});
+      }
+      render() {
+        return this.state.step;
+      }
+    }
+
+    const container = document.createElement('div');
+    expect(() => {
+      ReactDOM.render(<NonTerminating />, container);
+    }).toThrow('Maximum');
+
+    ReactDOM.render(<Terminating />, container);
+    expect(container.textContent).toBe('1');
+
+    expect(() => {
+      ReactDOM.render(<NonTerminating />, container);
+    }).toThrow('Maximum');
+
+    ReactDOM.render(<Terminating />, container);
+    expect(container.textContent).toBe('1');
   });
 
   it('does not fall into an infinite error loop', () => {
