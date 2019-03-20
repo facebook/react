@@ -14,6 +14,7 @@ import warning from 'shared/warning';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import type {ReactEventResponder} from 'shared/ReactTypes';
+import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 
 import {
   getValueForAttribute,
@@ -1281,7 +1282,7 @@ export function listenToEventResponderEvents(
   const {targetEventTypes} = eventResponder;
   // Get the listening set for this element. We use this to track
   // what events we're listening to.
-  const listeningSet = getListeningSetForElement(element, false);
+  const listeningSet = getListeningSetForElement(element);
 
   // Go through each target event type of the event responder
   for (let i = 0, length = targetEventTypes.length; i < length; ++i) {
@@ -1319,9 +1320,16 @@ export function listenToEventResponderEvents(
     // Create a unique name for this event, plus it's properties. We'll
     // use this to ensure we don't listen to the same event with the same
     // properties again.
-    const listeningName = `${name}_${passive}_${capture}`;
+    const listeningName = `${topLevelType}${passive ? '_passive' : ''}${
+      capture ? '_capture' : ''
+    }`;
     if (!listeningSet.has(listeningName)) {
-      trapEventForResponderEventSystem(element, topLevelType, capture, passive);
+      trapEventForResponderEventSystem(
+        element,
+        ((topLevelType: any): DOMTopLevelEventType),
+        capture,
+        passive,
+      );
       listeningSet.add(listeningName);
     }
   }
