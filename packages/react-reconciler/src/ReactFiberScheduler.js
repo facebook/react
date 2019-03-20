@@ -730,7 +730,7 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
   // Commit all the side-effects within a tree. We'll do this in two passes.
   // The first pass performs all the host insertions, updates, deletions and
   // ref unmounts.
-  prevEffect = null;
+  prevEffect = (null: Fiber | null);
   nextEffect = firstEffect;
   startCommitHostEffectsTimer();
   while (nextEffect !== null) {
@@ -816,10 +816,15 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
   }
 
   if (rootWithPendingPassiveEffects !== null) {
+    invariant(
+      firstEffect !== null,
+      'Should have next effect. This error is likely caused by a bug ' +
+        'in React. Please file an issue.',
+    );
     // This commit included a passive effect. These do not need to fire until
     // after the next paint. Schedule an callback to fire them in an async
     // event. To ensure serial execution, the callback will be flushed early if
-    // we enter the commit phase before then.
+    // we enter rootWithPendingPassiveEffects commit phase before then.
     let callback = commitPassiveEffects.bind(null, root, firstEffect);
     if (enableSchedulerTracing) {
       // TODO: Avoid this extra callback by mutating the tracing ref directly,
