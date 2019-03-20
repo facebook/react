@@ -12,7 +12,7 @@ import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue} from './ReactCapturedValue';
 import type {Update} from './ReactUpdateQueue';
-import type {Thenable} from './ReactFiberScheduler';
+import type {Thenable} from './ReactFiberScheduler.old';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
@@ -67,7 +67,7 @@ import {
   isAlreadyFailedLegacyErrorBoundary,
   pingSuspendedRoot,
   resolveRetryThenable,
-} from './ReactFiberScheduler';
+} from './ReactFiberScheduler.old';
 
 import invariant from 'shared/invariant';
 import maxSigned31BitInt from './maxSigned31BitInt';

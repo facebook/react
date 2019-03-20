@@ -144,7 +144,7 @@ import {
   createWorkInProgress,
   isSimpleFunctionComponent,
 } from './ReactFiber';
-import {requestCurrentTime, retryTimedOutBoundary} from './ReactFiberScheduler';
+import {requestCurrentTime, retryTimedOutBoundary} from './ReactFiberScheduler.old';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 

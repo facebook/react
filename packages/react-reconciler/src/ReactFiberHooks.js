@@ -34,7 +34,7 @@ import {
   computeExpirationForFiber,
   flushPassiveEffects,
   requestCurrentTime,
-} from './ReactFiberScheduler';
+} from './ReactFiberScheduler.old';
 
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';

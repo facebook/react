@@ -53,7 +53,7 @@ import {
   computeExpirationForFiber,
   scheduleWork,
   flushPassiveEffects,
-} from './ReactFiberScheduler';
+} from './ReactFiberScheduler.old';
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;

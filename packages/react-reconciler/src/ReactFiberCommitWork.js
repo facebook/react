@@ -21,7 +21,7 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue, CapturedError} from './ReactCapturedValue';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
-import type {Thenable} from './ReactFiberScheduler';
+import type {Thenable} from './ReactFiberScheduler.old';
 
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {
@@ -95,7 +95,7 @@ import {
   captureCommitPhaseError,
   requestCurrentTime,
   resolveRetryThenable,
-} from './ReactFiberScheduler';
+} from './ReactFiberScheduler.old';
 import {
   NoEffect as NoHookEffect,
   UnmountSnapshot,
