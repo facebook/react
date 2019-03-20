@@ -35,6 +35,8 @@ import {
   SimpleMemoComponent,
   LazyComponent,
   IncompleteClassComponent,
+  EventComponent,
+  EventTarget,
 } from 'shared/ReactWorkTags';
 import {
   NoEffect,
@@ -52,6 +54,7 @@ import {
   debugRenderPhaseSideEffectsForStrictMode,
   enableProfilerTimer,
   enableSuspenseServerRenderer,
+  enableEventAPI,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
@@ -93,7 +96,11 @@ import {
   registerSuspenseInstanceRetry,
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
-import {pushHostContext, pushHostContainer} from './ReactFiberHostContext';
+import {
+  pushHostContext,
+  pushHostContainer,
+  pushHostContextForEvent,
+} from './ReactFiberHostContext';
 import {
   pushProvider,
   propagateContextChange,
@@ -1943,6 +1950,34 @@ function updateContextConsumer(
   return workInProgress.child;
 }
 
+function updateEventComponent(current, workInProgress, renderExpirationTime) {
+  const nextProps = workInProgress.pendingProps;
+  let nextChildren = nextProps.children;
+
+  reconcileChildren(
+    current,
+    workInProgress,
+    nextChildren,
+    renderExpirationTime,
+  );
+  pushHostContextForEvent(workInProgress);
+  return workInProgress.child;
+}
+
+function updateEventTarget(current, workInProgress, renderExpirationTime) {
+  const nextProps = workInProgress.pendingProps;
+  let nextChildren = nextProps.children;
+
+  reconcileChildren(
+    current,
+    workInProgress,
+    nextChildren,
+    renderExpirationTime,
+  );
+  pushHostContextForEvent(workInProgress);
+  return workInProgress.child;
+}
+
 export function markWorkInProgressReceivedUpdate() {
   didReceiveUpdate = true;
 }
@@ -2256,6 +2291,22 @@ function beginWork(
           workInProgress,
           renderExpirationTime,
         );
+      }
+      break;
+    }
+    case EventComponent: {
+      if (enableEventAPI) {
+        return updateEventComponent(
+          current,
+          workInProgress,
+          renderExpirationTime,
+        );
+      }
+      break;
+    }
+    case EventTarget: {
+      if (enableEventAPI) {
+        return updateEventTarget(current, workInProgress, renderExpirationTime);
       }
       break;
     }
