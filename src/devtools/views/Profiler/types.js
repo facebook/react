@@ -15,9 +15,17 @@ export type CommitTree = {|
 |};
 
 export type Interaction = {|
-  id: string,
+  id: number,
   name: string,
   timestamp: number,
+|};
+
+export type Interactions = {|
+  interactions: Array<{|
+    ...Interaction,
+    commits: Array<number>,
+  |}>,
+  rootID: number,
 |};
 
 export type CommitDetails = {|

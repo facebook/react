@@ -19,10 +19,12 @@ import type { Resource } from './cache';
 import type { Bridge } from '../types';
 import type {
   CommitDetails as CommitDetailsBackend,
+  Interactions as InteractionsBackend,
   ProfilingSummary as ProfilingSummaryBackend,
 } from 'src/backend/types';
 import type {
   CommitDetails as CommitDetailsFrontend,
+  Interactions as InteractionsFrontend,
   CommitTree as CommitTreeFrontend,
   ProfilingSummary as ProfilingSummaryFrontend,
 } from 'src/devtools/views/Profiler/types';
@@ -31,6 +33,11 @@ import type { ChartData as RankedChartData } from 'src/devtools/views/Profiler/R
 
 type CommitDetailsParams = {|
   commitIndex: number,
+  rootID: number,
+  rendererID: number,
+|};
+
+type InteractionsParams = {|
   rootID: number,
   rendererID: number,
 |};
@@ -54,6 +61,11 @@ export default class ProfilingCache {
   _pendingCommitDetailsMap: Map<
     string,
     (commitDetails: CommitDetailsFrontend) => void
+  > = new Map();
+
+  _pendingInteractionsMap: Map<
+    number,
+    (interactions: InteractionsFrontend) => void
   > = new Map();
 
   _pendingProfileSummaryMap: Map<
@@ -90,6 +102,30 @@ export default class ProfilingCache {
       `${rootID}-${commitIndex}`
   );
 
+  Interactions: Resource<
+    InteractionsParams,
+    InteractionsFrontend
+  > = createResource(
+    ({ rendererID, rootID }: InteractionsParams) => {
+      return new Promise(resolve => {
+        if (!this._store.profilingOperations.has(rootID)) {
+          // If no profiling data was recorded for this root, skip the round trip.
+          resolve({
+            interactions: [],
+            rootID,
+          });
+        } else {
+          this._pendingInteractionsMap.set(rootID, resolve);
+          this._bridge.send('getInteractions', {
+            rendererID,
+            rootID,
+          });
+        }
+      });
+    },
+    ({ rendererID, rootID }: ProfilingSummaryParams) => rootID
+  );
+
   ProfilingSummary: Resource<
     ProfilingSummaryParams,
     ProfilingSummaryFrontend
@@ -118,6 +154,7 @@ export default class ProfilingCache {
     this._store = store;
 
     bridge.addListener('commitDetails', this.onCommitDetails);
+    bridge.addListener('interactions', this.onInteractions);
     bridge.addListener('profilingSummary', this.onProfileSummary);
   }
 
@@ -203,6 +240,18 @@ export default class ProfilingCache {
       resolve({
         actualDurations: actualDurationsMap,
         interactions,
+      });
+    }
+  };
+
+  onInteractions = ({ interactions, rootID }: InteractionsBackend) => {
+    const resolve = this._pendingInteractionsMap.get(rootID);
+    if (resolve != null) {
+      this._pendingInteractionsMap.delete(rootID);
+
+      resolve({
+        interactions,
+        rootID,
       });
     }
   };

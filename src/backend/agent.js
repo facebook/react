@@ -50,6 +50,7 @@ export default class Agent extends EventEmitter {
     // TODO (profiling) Interactions
 
     bridge.addListener('getCommitDetails', this.getCommitDetails);
+    bridge.addListener('getInteractions', this.getInteractions);
     bridge.addListener('getProfilingStatus', this.getProfilingStatus);
     bridge.addListener('getProfilingSummary', this.getProfilingSummary);
     bridge.addListener('highlightElementInDOM', this.highlightElementInDOM);
@@ -96,6 +97,26 @@ export default class Agent extends EventEmitter {
       this._bridge.send(
         'commitDetails',
         renderer.getCommitDetails(rootID, commitIndex)
+      );
+    }
+  };
+
+  getInteractions = ({
+    commitIndex,
+    rendererID,
+    rootID,
+  }: {
+    commitIndex: number,
+    rendererID: number,
+    rootID: number,
+  }) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}"`);
+    } else {
+      this._bridge.send(
+        'interactions',
+        renderer.getInteractions(rootID, commitIndex)
       );
     }
   };

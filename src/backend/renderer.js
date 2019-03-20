@@ -30,6 +30,8 @@ import type {
   Fiber,
   FiberData,
   Interaction,
+  Interactions,
+  InteractionWithCommits,
   ProfilingSummary,
   ReactRenderer,
   RendererInterface,
@@ -476,10 +478,6 @@ export function attach(
   // When a mount or update is in progress, this value tracks the root that is being operated on.
   let currentRootID: number = -1;
 
-  function getInteractionID({ name, timestamp }: Interaction): string {
-    return `${timestamp}-${name}`;
-  }
-
   function getFiberID(primaryFiber: Fiber): number {
     if (!fiberToIDMap.has(primaryFiber)) {
       const id = getUID();
@@ -894,11 +892,7 @@ export function attach(
         actualDurations: [],
         commitTime: performance.now() - profilingStartTime,
         interactions: Array.from(root.memoizedInteractions).map(
-          (interaction: Interaction) => ({
-            id: getInteractionID(interaction),
-            name: interaction.name,
-            timestamp: interaction.timestamp - profilingStartTime,
-          })
+          (interaction: Interaction) => ({ ...interaction })
         ),
         maxActualDuration: 0,
       };
@@ -1431,6 +1425,40 @@ export function attach(
     };
   }
 
+  function getInteractions(rootID: number, commitIndex: number): Interactions {
+    const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
+      rootID
+    );
+    if (commitProfilingMetadata != null) {
+      const interactionsMap: Map<number, InteractionWithCommits> = new Map();
+
+      commitProfilingMetadata.forEach((commitProfilingData, commitIndex) => {
+        commitProfilingData.interactions.forEach(interaction => {
+          const interactionWithCommits = interactionsMap.get(interaction.id);
+          if (interactionWithCommits != null) {
+            interactionWithCommits.commits.push(commitIndex);
+          } else {
+            interactionsMap.set(interaction.id, {
+              ...interaction,
+              commits: [commitIndex],
+            });
+          }
+        });
+      });
+
+      return {
+        interactions: Array.from(interactionsMap.values()),
+        rootID,
+      };
+    }
+
+    // TODO (profiling) Is this right? Should I return null? Does it matter?
+    return {
+      interactions: [],
+      rootID,
+    };
+  }
+
   function getProfilingSummary(rootID: number): ProfilingSummary {
     const interactions = new Set();
     const commitDurations = [];
@@ -1492,6 +1520,7 @@ export function attach(
     cleanup,
     getCommitDetails,
     getFiberIDFromNative,
+    getInteractions,
     getNativeFromReactElement,
     getProfilingSummary,
     handleCommitFiberRoot,

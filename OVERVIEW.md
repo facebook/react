@@ -268,10 +268,12 @@ Here is an example commit in which two elements were rendered and one interactio
   commitIndex: 0,
   interactions: [
     {
+      id: 8,
       timestamp: 4,
       name: "Foo"
     },
     {
+      id: 11,
       timestamp: 4,
       name: "Bar"
     }
@@ -332,6 +334,7 @@ Here is an example of a profiling session consisting of two interactions:
   rootID: 1,
   interactions: [
     {
+      id: 8,
       name: "Foo",
       timestamp: 4,
       commits: [
@@ -340,6 +343,7 @@ Here is an example of a profiling session consisting of two interactions:
       ]
     },
     {
+      id: 11,
       name: "Bar",
       timestamp: 4,
       commits: [

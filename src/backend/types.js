@@ -50,7 +50,7 @@ export type ReactRenderer = {
 };
 
 export type Interaction = {|
-  id: string,
+  id: number,
   name: string,
   timestamp: number,
 |};
@@ -59,6 +59,16 @@ export type CommitDetails = {|
   actualDurations: Array<number>,
   commitIndex: number,
   interactions: Array<Interaction>,
+  rootID: number,
+|};
+
+export type InteractionWithCommits = {|
+  ...Interaction,
+  commits: Array<number>,
+|};
+
+export type Interactions = {|
+  interactions: Array<InteractionWithCommits>,
   rootID: number,
 |};
 
@@ -78,6 +88,7 @@ export type RendererInterface = {
     component: NativeType,
     findNearestUnfilteredAncestor?: boolean
   ) => number | null,
+  getInteractions: (rootID: number, commitIndex: number) => Interactions,
   getProfilingSummary: (rootID: number) => ProfilingSummary,
   handleCommitFiberRoot: (fiber: Object) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,
