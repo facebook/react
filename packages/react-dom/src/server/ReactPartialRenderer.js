@@ -397,278 +397,6 @@ function validateRenderResult(child, type) {
   }
 }
 
-function resolve(
-  child: mixed,
-  context: Object,
-  threadID: ThreadID,
-): {|
-  child: mixed,
-  context: Object,
-|} {
-  while (React.isValidElement(child)) {
-    // Safe because we just checked it's an element.
-    let element: ReactElement = (child: any);
-    let Component = element.type;
-    if (__DEV__) {
-      pushElementToDebugStack(element);
-    }
-    if (typeof Component !== 'function') {
-      break;
-    }
-    processChild(element, Component);
-  }
-
-  // Extra closure so queue and replace can be captured properly
-  function processChild(element, Component) {
-    let publicContext = processContext(Component, context, threadID);
-
-    let queue = [];
-    let replace = false;
-    let updater = {
-      isMounted: function(publicInstance) {
-        return false;
-      },
-      enqueueForceUpdate: function(publicInstance) {
-        if (queue === null) {
-          warnNoop(publicInstance, 'forceUpdate');
-          return null;
-        }
-      },
-      enqueueReplaceState: function(publicInstance, completeState) {
-        replace = true;
-        queue = [completeState];
-      },
-      enqueueSetState: function(publicInstance, currentPartialState) {
-        if (queue === null) {
-          warnNoop(publicInstance, 'setState');
-          return null;
-        }
-        queue.push(currentPartialState);
-      },
-    };
-
-    let inst;
-    if (shouldConstruct(Component)) {
-      inst = new Component(element.props, publicContext, updater);
-
-      if (typeof Component.getDerivedStateFromProps === 'function') {
-        if (__DEV__) {
-          if (inst.state === null || inst.state === undefined) {
-            const componentName = getComponentName(Component) || 'Unknown';
-            if (!didWarnAboutUninitializedState[componentName]) {
-              warningWithoutStack(
-                false,
-                '`%s` uses `getDerivedStateFromProps` but its initial state is ' +
-                  '%s. This is not recommended. Instead, define the initial state by ' +
-                  'assigning an object to `this.state` in the constructor of `%s`. ' +
-                  'This ensures that `getDerivedStateFromProps` arguments have a consistent shape.',
-                componentName,
-                inst.state === null ? 'null' : 'undefined',
-                componentName,
-              );
-              didWarnAboutUninitializedState[componentName] = true;
-            }
-          }
-        }
-
-        let partialState = Component.getDerivedStateFromProps.call(
-          null,
-          element.props,
-          inst.state,
-        );
-
-        if (__DEV__) {
-          if (partialState === undefined) {
-            const componentName = getComponentName(Component) || 'Unknown';
-            if (!didWarnAboutUndefinedDerivedState[componentName]) {
-              warningWithoutStack(
-                false,
-                '%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. ' +
-                  'You have returned undefined.',
-                componentName,
-              );
-              didWarnAboutUndefinedDerivedState[componentName] = true;
-            }
-          }
-        }
-
-        if (partialState != null) {
-          inst.state = Object.assign({}, inst.state, partialState);
-        }
-      }
-    } else {
-      if (__DEV__) {
-        if (
-          Component.prototype &&
-          typeof Component.prototype.render === 'function'
-        ) {
-          const componentName = getComponentName(Component) || 'Unknown';
-
-          if (!didWarnAboutBadClass[componentName]) {
-            warningWithoutStack(
-              false,
-              "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
-                'This is likely to cause errors. Change %s to extend React.Component instead.',
-              componentName,
-              componentName,
-            );
-            didWarnAboutBadClass[componentName] = true;
-          }
-        }
-      }
-      const componentIdentity = {};
-      prepareToUseHooks(componentIdentity);
-      inst = Component(element.props, publicContext, updater);
-      inst = finishHooks(Component, element.props, inst, publicContext);
-
-      if (inst == null || inst.render == null) {
-        child = inst;
-        validateRenderResult(child, Component);
-        return;
-      }
-
-      if (__DEV__) {
-        const componentName = getComponentName(Component) || 'Unknown';
-        if (!didWarnAboutModulePatternComponent[componentName]) {
-          warningWithoutStack(
-            false,
-            'The <%s /> component appears to be a function component that returns a class instance. ' +
-              'Change %s to a class that extends React.Component instead. ' +
-              "If you can't use a class try assigning the prototype on the function as a workaround. " +
-              "`%s.prototype = React.Component.prototype`. Don't use an arrow function since it " +
-              'cannot be called with `new` by React.',
-            componentName,
-            componentName,
-            componentName,
-          );
-          didWarnAboutModulePatternComponent[componentName] = true;
-        }
-      }
-    }
-
-    inst.props = element.props;
-    inst.context = publicContext;
-    inst.updater = updater;
-
-    let initialState = inst.state;
-    if (initialState === undefined) {
-      inst.state = initialState = null;
-    }
-    if (
-      typeof inst.UNSAFE_componentWillMount === 'function' ||
-      typeof inst.componentWillMount === 'function'
-    ) {
-      if (typeof inst.componentWillMount === 'function') {
-        if (__DEV__) {
-          if (
-            warnAboutDeprecatedLifecycles &&
-            inst.componentWillMount.__suppressDeprecationWarning !== true
-          ) {
-            const componentName = getComponentName(Component) || 'Unknown';
-
-            if (!didWarnAboutDeprecatedWillMount[componentName]) {
-              lowPriorityWarning(
-                false,
-                '%s: componentWillMount() is deprecated and will be ' +
-                  'removed in the next major version. Read about the motivations ' +
-                  'behind this change: ' +
-                  'https://fb.me/react-async-component-lifecycle-hooks' +
-                  '\n\n' +
-                  'As a temporary workaround, you can rename to ' +
-                  'UNSAFE_componentWillMount instead.',
-                componentName,
-              );
-              didWarnAboutDeprecatedWillMount[componentName] = true;
-            }
-          }
-        }
-
-        // In order to support react-lifecycles-compat polyfilled components,
-        // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
-        if (typeof Component.getDerivedStateFromProps !== 'function') {
-          inst.componentWillMount();
-        }
-      }
-      if (
-        typeof inst.UNSAFE_componentWillMount === 'function' &&
-        typeof Component.getDerivedStateFromProps !== 'function'
-      ) {
-        // In order to support react-lifecycles-compat polyfilled components,
-        // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
-        inst.UNSAFE_componentWillMount();
-      }
-      if (queue.length) {
-        let oldQueue = queue;
-        let oldReplace = replace;
-        queue = null;
-        replace = false;
-
-        if (oldReplace && oldQueue.length === 1) {
-          inst.state = oldQueue[0];
-        } else {
-          let nextState = oldReplace ? oldQueue[0] : inst.state;
-          let dontMutate = true;
-          for (let i = oldReplace ? 1 : 0; i < oldQueue.length; i++) {
-            let partial = oldQueue[i];
-            let partialState =
-              typeof partial === 'function'
-                ? partial.call(inst, nextState, element.props, publicContext)
-                : partial;
-            if (partialState != null) {
-              if (dontMutate) {
-                dontMutate = false;
-                nextState = Object.assign({}, nextState, partialState);
-              } else {
-                Object.assign(nextState, partialState);
-              }
-            }
-          }
-          inst.state = nextState;
-        }
-      } else {
-        queue = null;
-      }
-    }
-    child = inst.render();
-
-    if (__DEV__) {
-      if (child === undefined && inst.render._isMockFunction) {
-        // This is probably bad practice. Consider warning here and
-        // deprecating this convenience.
-        child = null;
-      }
-    }
-    validateRenderResult(child, Component);
-
-    let childContext;
-    if (typeof inst.getChildContext === 'function') {
-      let childContextTypes = Component.childContextTypes;
-      if (typeof childContextTypes === 'object') {
-        childContext = inst.getChildContext();
-        for (let contextKey in childContext) {
-          invariant(
-            contextKey in childContextTypes,
-            '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
-            getComponentName(Component) || 'Unknown',
-            contextKey,
-          );
-        }
-      } else {
-        warningWithoutStack(
-          false,
-          '%s.getChildContext(): childContextTypes must be defined in order to ' +
-            'use getChildContext().',
-          getComponentName(Component) || 'Unknown',
-        );
-      }
-    }
-    if (childContext) {
-      context = Object.assign({}, context, childContext);
-    }
-  }
-  return {child, context};
-}
-
 type Frame = {
   type: mixed,
   domNamespace: string,
@@ -919,7 +647,7 @@ class ReactDOMServerRenderer {
       return escapeTextForBrowser(text);
     } else {
       let nextChild;
-      ({child: nextChild, context} = resolve(child, context, this.threadID));
+      ({child: nextChild, context} = this.resolve(child, context));
       if (nextChild === null || nextChild === false) {
         return '';
       } else if (!React.isValidElement(nextChild)) {
@@ -1198,6 +926,286 @@ class ReactDOMServerRenderer {
         info,
       );
     }
+  }
+
+  resolve(
+    child: mixed,
+    context: Object,
+  ): {|
+    child: mixed,
+    context: Object,
+  |} {
+    while (React.isValidElement(child)) {
+      // Safe because we just checked it's an element.
+      let element: ReactElement = (child: any);
+      let Component = element.type;
+      if (__DEV__) {
+        pushElementToDebugStack(element);
+      }
+      if (typeof Component !== 'function') {
+        break;
+      }
+      ({child, context} = this.resolveNext(element, context, Component));
+    }
+
+    return {child, context};
+  }
+
+  resolveNext(
+    element: ReactElement,
+    context: Object,
+    Component: Function,
+  ): {|
+    child: mixed,
+    context: Object,
+  |} {
+    let publicContext = processContext(Component, context, this.threadID);
+
+    let queue = [];
+    let replace = false;
+    let updater = {
+      isMounted: function(publicInstance) {
+        return false;
+      },
+      enqueueForceUpdate: function(publicInstance) {
+        if (queue === null) {
+          warnNoop(publicInstance, 'forceUpdate');
+          return null;
+        }
+      },
+      enqueueReplaceState: function(publicInstance, completeState) {
+        replace = true;
+        queue = [completeState];
+      },
+      enqueueSetState: function(publicInstance, currentPartialState) {
+        if (queue === null) {
+          warnNoop(publicInstance, 'setState');
+          return null;
+        }
+        queue.push(currentPartialState);
+      },
+    };
+
+    let inst, child;
+    if (shouldConstruct(Component)) {
+      inst = new Component(element.props, publicContext, updater);
+
+      if (typeof Component.getDerivedStateFromProps === 'function') {
+        if (__DEV__) {
+          if (inst.state === null || inst.state === undefined) {
+            const componentName = getComponentName(Component) || 'Unknown';
+            if (!didWarnAboutUninitializedState[componentName]) {
+              warningWithoutStack(
+                false,
+                '`%s` uses `getDerivedStateFromProps` but its initial state is ' +
+                  '%s. This is not recommended. Instead, define the initial state by ' +
+                  'assigning an object to `this.state` in the constructor of `%s`. ' +
+                  'This ensures that `getDerivedStateFromProps` arguments have a consistent shape.',
+                componentName,
+                inst.state === null ? 'null' : 'undefined',
+                componentName,
+              );
+              didWarnAboutUninitializedState[componentName] = true;
+            }
+          }
+        }
+
+        let partialState = Component.getDerivedStateFromProps.call(
+          null,
+          element.props,
+          inst.state,
+        );
+
+        if (__DEV__) {
+          if (partialState === undefined) {
+            const componentName = getComponentName(Component) || 'Unknown';
+            if (!didWarnAboutUndefinedDerivedState[componentName]) {
+              warningWithoutStack(
+                false,
+                '%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. ' +
+                  'You have returned undefined.',
+                componentName,
+              );
+              didWarnAboutUndefinedDerivedState[componentName] = true;
+            }
+          }
+        }
+
+        if (partialState != null) {
+          inst.state = Object.assign({}, inst.state, partialState);
+        }
+      }
+    } else {
+      if (__DEV__) {
+        if (
+          Component.prototype &&
+          typeof Component.prototype.render === 'function'
+        ) {
+          const componentName = getComponentName(Component) || 'Unknown';
+
+          if (!didWarnAboutBadClass[componentName]) {
+            warningWithoutStack(
+              false,
+              "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
+                'This is likely to cause errors. Change %s to extend React.Component instead.',
+              componentName,
+              componentName,
+            );
+            didWarnAboutBadClass[componentName] = true;
+          }
+        }
+      }
+      const componentIdentity = {};
+      prepareToUseHooks(componentIdentity);
+      inst = Component(element.props, publicContext, updater);
+      inst = finishHooks(Component, element.props, inst, publicContext);
+
+      if (inst == null || inst.render == null) {
+        child = inst;
+        validateRenderResult(child, Component);
+        return {child, context};
+      }
+
+      if (__DEV__) {
+        const componentName = getComponentName(Component) || 'Unknown';
+        if (!didWarnAboutModulePatternComponent[componentName]) {
+          warningWithoutStack(
+            false,
+            'The <%s /> component appears to be a function component that returns a class instance. ' +
+              'Change %s to a class that extends React.Component instead. ' +
+              "If you can't use a class try assigning the prototype on the function as a workaround. " +
+              "`%s.prototype = React.Component.prototype`. Don't use an arrow function since it " +
+              'cannot be called with `new` by React.',
+            componentName,
+            componentName,
+            componentName,
+          );
+          didWarnAboutModulePatternComponent[componentName] = true;
+        }
+      }
+    }
+
+    inst.props = element.props;
+    inst.context = publicContext;
+    inst.updater = updater;
+
+    let initialState = inst.state;
+    if (initialState === undefined) {
+      inst.state = initialState = null;
+    }
+    if (
+      typeof inst.UNSAFE_componentWillMount === 'function' ||
+      typeof inst.componentWillMount === 'function'
+    ) {
+      if (typeof inst.componentWillMount === 'function') {
+        if (__DEV__) {
+          if (
+            warnAboutDeprecatedLifecycles &&
+            inst.componentWillMount.__suppressDeprecationWarning !== true
+          ) {
+            const componentName = getComponentName(Component) || 'Unknown';
+
+            if (!didWarnAboutDeprecatedWillMount[componentName]) {
+              lowPriorityWarning(
+                false,
+                '%s: componentWillMount() is deprecated and will be ' +
+                  'removed in the next major version. Read about the motivations ' +
+                  'behind this change: ' +
+                  'https://fb.me/react-async-component-lifecycle-hooks' +
+                  '\n\n' +
+                  'As a temporary workaround, you can rename to ' +
+                  'UNSAFE_componentWillMount instead.',
+                componentName,
+              );
+              didWarnAboutDeprecatedWillMount[componentName] = true;
+            }
+          }
+        }
+
+        // In order to support react-lifecycles-compat polyfilled components,
+        // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
+        if (typeof Component.getDerivedStateFromProps !== 'function') {
+          inst.componentWillMount();
+        }
+      }
+      if (
+        typeof inst.UNSAFE_componentWillMount === 'function' &&
+        typeof Component.getDerivedStateFromProps !== 'function'
+      ) {
+        // In order to support react-lifecycles-compat polyfilled components,
+        // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
+        inst.UNSAFE_componentWillMount();
+      }
+      if (queue.length) {
+        let oldQueue = queue;
+        let oldReplace = replace;
+        queue = null;
+        replace = false;
+
+        if (oldReplace && oldQueue.length === 1) {
+          inst.state = oldQueue[0];
+        } else {
+          let nextState = oldReplace ? oldQueue[0] : inst.state;
+          let dontMutate = true;
+          for (let i = oldReplace ? 1 : 0; i < oldQueue.length; i++) {
+            let partial = oldQueue[i];
+            let partialState =
+              typeof partial === 'function'
+                ? partial.call(inst, nextState, element.props, publicContext)
+                : partial;
+            if (partialState != null) {
+              if (dontMutate) {
+                dontMutate = false;
+                nextState = Object.assign({}, nextState, partialState);
+              } else {
+                Object.assign(nextState, partialState);
+              }
+            }
+          }
+          inst.state = nextState;
+        }
+      } else {
+        queue = null;
+      }
+    }
+    child = inst.render();
+
+    if (__DEV__) {
+      if (child === undefined && inst.render._isMockFunction) {
+        // This is probably bad practice. Consider warning here and
+        // deprecating this convenience.
+        child = null;
+      }
+    }
+    validateRenderResult(child, Component);
+
+    let childContext;
+    if (typeof inst.getChildContext === 'function') {
+      let childContextTypes = Component.childContextTypes;
+      if (typeof childContextTypes === 'object') {
+        childContext = inst.getChildContext();
+        for (let contextKey in childContext) {
+          invariant(
+            contextKey in childContextTypes,
+            '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
+            getComponentName(Component) || 'Unknown',
+            contextKey,
+          );
+        }
+      } else {
+        warningWithoutStack(
+          false,
+          '%s.getChildContext(): childContextTypes must be defined in order to ' +
+            'use getChildContext().',
+          getComponentName(Component) || 'Unknown',
+        );
+      }
+    }
+    if (childContext) {
+      context = Object.assign({}, context, childContext);
+    }
+
+    return {child, context};
   }
 
   renderDOM(
