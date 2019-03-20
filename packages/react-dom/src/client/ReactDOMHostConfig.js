@@ -861,7 +861,7 @@ export function handleEventComponent(
   eventResponder: ReactEventResponder,
   rootContainerInstance: Container,
   internalInstanceHandle: Object,
-) {
+): void {
   const rootElement = rootContainerInstance.ownerDocument;
   listenToEventResponderEvents(eventResponder, rootElement);
 }
@@ -870,7 +870,7 @@ export function handleEventTarget(
   type: Symbol | number,
   props: Props,
   internalInstanceHandle: Object,
-) {
+): void {
   // Touch target hit slop handling
   if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
     // Validates that there is a single element

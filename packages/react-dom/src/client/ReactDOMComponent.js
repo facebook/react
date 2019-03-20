@@ -1280,7 +1280,7 @@ export function restoreControlledState(
 export function listenToEventResponderEvents(
   eventResponder: ReactEventResponder,
   element: Element | Document,
-) {
+): void {
   if (enableEventAPI) {
     const {targetEventTypes} = eventResponder;
     // Get the listening set for this element. We use this to track
