@@ -1417,6 +1417,33 @@ describe('ReactUpdates', () => {
     expect(container.textContent).toBe('1');
   });
 
+  it('does not fall into mutually recursive infinite update loop with same container', () => {
+    // Note: this test would fail if there were two or more different roots.
+
+    class A extends React.Component {
+      componentDidMount() {
+        ReactDOM.render(<B />, container);
+      }
+      render() {
+        return null;
+      }
+    }
+
+    class B extends React.Component {
+      componentDidMount() {
+        ReactDOM.render(<A />, container);
+      }
+      render() {
+        return null;
+      }
+    }
+
+    const container = document.createElement('div');
+    expect(() => {
+      ReactDOM.render(<A />, container);
+    }).toThrow('Maximum');
+  });
+
   it('does not fall into an infinite error loop', () => {
     function BadRender() {
       throw new Error('error');
