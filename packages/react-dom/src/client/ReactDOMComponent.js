@@ -85,6 +85,8 @@ import {validateProperties as validateARIAProperties} from '../shared/ReactDOMIn
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
 
+import {enableEventAPI} from 'shared/ReactFeatureFlags';
+
 let didWarnInvalidHydration = false;
 let didWarnShadyDOM = false;
 
@@ -1279,58 +1281,60 @@ export function listenToEventResponderEvents(
   eventResponder: ReactEventResponder,
   element: Element | Document,
 ) {
-  const {targetEventTypes} = eventResponder;
-  // Get the listening set for this element. We use this to track
-  // what events we're listening to.
-  const listeningSet = getListeningSetForElement(element);
+  if (enableEventAPI) {
+    const {targetEventTypes} = eventResponder;
+    // Get the listening set for this element. We use this to track
+    // what events we're listening to.
+    const listeningSet = getListeningSetForElement(element);
 
-  // Go through each target event type of the event responder
-  for (let i = 0, length = targetEventTypes.length; i < length; ++i) {
-    const targetEventType = targetEventTypes[i];
-    let topLevelType;
-    let capture = false;
-    let passive = true;
+    // Go through each target event type of the event responder
+    for (let i = 0, length = targetEventTypes.length; i < length; ++i) {
+      const targetEventType = targetEventTypes[i];
+      let topLevelType;
+      let capture = false;
+      let passive = true;
 
-    // By default, if no event config object is provided (only a string),
-    // we default to enabling passive and not capture.
-    if (typeof targetEventType === 'string') {
-      topLevelType = targetEventType;
-    } else {
-      if (__DEV__) {
-        warning(
-          typeof targetEventType === 'object' && targetEventType !== null,
-          'Event Responder: invalid entry in targetEventTypes array. ' +
-            'Entry must be string or an object. Instead, got %s.',
-          targetEventType,
+      // By default, if no event config object is provided (only a string),
+      // we default to enabling passive and not capture.
+      if (typeof targetEventType === 'string') {
+        topLevelType = targetEventType;
+      } else {
+        if (__DEV__) {
+          warning(
+            typeof targetEventType === 'object' && targetEventType !== null,
+            'Event Responder: invalid entry in targetEventTypes array. ' +
+              'Entry must be string or an object. Instead, got %s.',
+            targetEventType,
+          );
+        }
+        const targetEventConfigObject = ((targetEventType: any): {
+          name: string,
+          passive?: boolean,
+          capture?: boolean,
+        });
+        topLevelType = targetEventConfigObject.name;
+        if (targetEventConfigObject.passive !== undefined) {
+          passive = targetEventConfigObject.passive;
+        }
+        if (targetEventConfigObject.capture !== undefined) {
+          capture = targetEventConfigObject.capture;
+        }
+      }
+      // Create a unique name for this event, plus it's properties. We'll
+      // use this to ensure we don't listen to the same event with the same
+      // properties again.
+      const listeningName = `${topLevelType}${passive ? '_passive' : ''}${
+        capture ? '_capture' : ''
+      }`;
+      if (!listeningSet.has(listeningName)) {
+        trapEventForResponderEventSystem(
+          element,
+          ((topLevelType: any): DOMTopLevelEventType),
+          capture,
+          passive,
         );
+        listeningSet.add(listeningName);
       }
-      const targetEventConfigObject = ((targetEventType: any): {
-        name: string,
-        passive?: boolean,
-        capture?: boolean,
-      });
-      topLevelType = targetEventConfigObject.name;
-      if (targetEventConfigObject.passive !== undefined) {
-        passive = targetEventConfigObject.passive;
-      }
-      if (targetEventConfigObject.capture !== undefined) {
-        capture = targetEventConfigObject.capture;
-      }
-    }
-    // Create a unique name for this event, plus it's properties. We'll
-    // use this to ensure we don't listen to the same event with the same
-    // properties again.
-    const listeningName = `${topLevelType}${passive ? '_passive' : ''}${
-      capture ? '_capture' : ''
-    }`;
-    if (!listeningSet.has(listeningName)) {
-      trapEventForResponderEventSystem(
-        element,
-        ((topLevelType: any): DOMTopLevelEventType),
-        capture,
-        passive,
-      );
-      listeningSet.add(listeningName);
     }
   }
 }

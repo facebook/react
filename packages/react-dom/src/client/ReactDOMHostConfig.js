@@ -862,10 +862,8 @@ export function handleEventComponent(
   rootContainerInstance: Container,
   internalInstanceHandle: Object,
 ) {
-  if (enableEventAPI) {
-    const rootElement = rootContainerInstance.ownerDocument;
-    listenToEventResponderEvents(eventResponder, rootElement);
-  }
+  const rootElement = rootContainerInstance.ownerDocument;
+  listenToEventResponderEvents(eventResponder, rootElement);
 }
 
 export function handleEventTarget(
@@ -873,22 +871,20 @@ export function handleEventTarget(
   props: Props,
   internalInstanceHandle: Object,
 ) {
-  if (enableEventAPI) {
-    // Touch target hit slop handling
-    if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
-      // Validates that there is a single element
-      const element = getElementFromTouchHitTarget(internalInstanceHandle);
-      if (element !== null) {
-        // We update the event target state node to be that of the element.
-        // We can then diff this entry to determine if we need to add the
-        // hit slop element, or change the dimensions of the hit slop.
-        const lastElement = internalInstanceHandle.stateNode;
-        if (lastElement !== element) {
-          internalInstanceHandle.stateNode = element;
-          // TODO: Create the hit slop element and attach it to the element
-        } else {
-          // TODO: Diff the left, top, right, bottom props
-        }
+  // Touch target hit slop handling
+  if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
+    // Validates that there is a single element
+    const element = getElementFromTouchHitTarget(internalInstanceHandle);
+    if (element !== null) {
+      // We update the event target state node to be that of the element.
+      // We can then diff this entry to determine if we need to add the
+      // hit slop element, or change the dimensions of the hit slop.
+      const lastElement = internalInstanceHandle.stateNode;
+      if (lastElement !== element) {
+        internalInstanceHandle.stateNode = element;
+        // TODO: Create the hit slop element and attach it to the element
+      } else {
+        // TODO: Diff the left, top, right, bottom props
       }
     }
   }
