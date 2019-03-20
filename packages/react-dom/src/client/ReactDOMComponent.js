@@ -13,6 +13,7 @@ import {registrationNameModules} from 'events/EventPluginRegistry';
 import warning from 'shared/warning';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import type {ReactEventResponder} from 'shared/ReactTypes';
 
 import {
   getValueForAttribute,
@@ -57,7 +58,12 @@ import {
   TOP_SUBMIT,
   TOP_TOGGLE,
 } from '../events/DOMTopLevelEventTypes';
-import {listenTo, trapBubbledEvent} from '../events/ReactBrowserEventEmitter';
+import {
+  listenTo,
+  trapBubbledEvent,
+  getListeningSetForElement,
+} from '../events/ReactBrowserEventEmitter';
+import {trapEventForResponderEventSystem} from '../events/ReactDOMEventListener.js';
 import {mediaEventTypes} from '../events/DOMTopLevelEventTypes';
 import {
   createDangerousStringForStyles,
@@ -1265,5 +1271,58 @@ export function restoreControlledState(
     case 'select':
       ReactDOMSelectRestoreControlledState(domElement, props);
       return;
+  }
+}
+
+export function listenToEventResponderEvents(
+  eventResponder: ReactEventResponder,
+  element: Element | Document,
+) {
+  const {targetEventTypes} = eventResponder;
+  // Get the listening set for this element. We use this to track
+  // what events we're listening to.
+  const listeningSet = getListeningSetForElement(element, false);
+
+  // Go through each target event type of the event responder
+  for (let i = 0, length = targetEventTypes.length; i < length; ++i) {
+    const targetEventType = targetEventTypes[i];
+    let topLevelType;
+    let capture = false;
+    let passive = true;
+
+    // By default, if no event config object is provided (only a string),
+    // we default to enabling passive and not capture.
+    if (typeof targetEventType === 'string') {
+      topLevelType = targetEventType;
+    } else {
+      if (__DEV__) {
+        warning(
+          typeof targetEventType === 'object' && targetEventType !== null,
+          'Event Responder: invalid entry in targetEventTypes array. ' +
+            'Entry must be string or an object. Instead, got %s.',
+          targetEventType,
+        );
+      }
+      const targetEventConfigObject = ((targetEventType: any): {
+        name: string,
+        passive?: boolean,
+        capture?: boolean,
+      });
+      topLevelType = targetEventConfigObject.name;
+      if (targetEventConfigObject.passive !== undefined) {
+        passive = targetEventConfigObject.passive;
+      }
+      if (targetEventConfigObject.capture !== undefined) {
+        capture = targetEventConfigObject.capture;
+      }
+    }
+    // Create a unique name for this event, plus it's properties. We'll
+    // use this to ensure we don't listen to the same event with the same
+    // properties again.
+    const listeningName = `${name}_${passive}_${capture}`;
+    if (!listeningSet.has(listeningName)) {
+      trapEventForResponderEventSystem(element, topLevelType, capture, passive);
+      listeningSet.add(listeningName);
+    }
   }
 }

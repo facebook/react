@@ -24,6 +24,7 @@ import {
   warnForDeletedHydratableText,
   warnForInsertedHydratedElement,
   warnForInsertedHydratedText,
+  listenToEventResponderEvents,
 } from './ReactDOMComponent';
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
@@ -861,7 +862,8 @@ export function handleEventComponent(
   rootContainerInstance: Container,
   internalInstanceHandle: Object,
 ) {
-  // TODO: add handleEventComponent implementation
+  const rootElement = rootContainerInstance.ownerDocument;
+  listenToEventResponderEvents(eventResponder, rootElement);
 }
 
 export function handleEventTarget(

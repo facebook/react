@@ -93,7 +93,7 @@ const elementListeningSets:
       Set<DOMTopLevelEventType>,
     > = new PossiblyWeakMap();
 
-function getListeningSetForElement(
+export function getListeningSetForElement(
   element: Document | Element | Node,
 ): Set<DOMTopLevelEventType> {
   let listeningSet = elementListeningSets.get(element);
