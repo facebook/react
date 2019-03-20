@@ -4,9 +4,15 @@ import React from 'react';
 
 import styles from './NoCommitData.css';
 
-export default function NoCommitData() {
+export default function NoCommitData({
+  height,
+  width,
+}: {|
+  height: number,
+  width: number,
+|}) {
   return (
-    <div className={styles.NoCommitData}>
+    <div className={styles.NoCommitData} style={{ height, width }}>
       <p className={styles.Header}>
         There is no timing data to display for the currently selected commit.
       </p>

@@ -21,12 +21,12 @@
   color: var(--color-component-name);
 }
 .Component:hover {
-  background-color: var(--color-tree-node-hover);
+  background-color: var(--color-hover-background);
 }
 
 .FocusedComponent {
-  background-color: var(--color-tree-node-selected);
-  color: var(--color-component-name-inverted);
+  background-color: var(--color-selected-background);
+  color: var(--color-selected-foreground);
 }
 
 .VRule {

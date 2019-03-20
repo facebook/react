@@ -1,21 +1,20 @@
 // @flow
 
-import React, { Fragment, useCallback } from 'react';
+import React, { Fragment, memo, useCallback } from 'react';
+import { areEqual } from 'react-window';
 import { barHeight, barWidthThreshold } from './constants';
 import { getGradientColor } from './utils';
 import ChartNode from './ChartNode';
 
 import type { ItemData } from './CommitFlamegraph';
 
-export default function CommitFlamegraphListItem({
-  data,
-  index,
-  style,
-}: {
+type Props = {
   data: ItemData,
   index: number,
   style: Object,
-}) {
+};
+
+function CommitFlamegraphListItem({ data, index, style }: Props) {
   const {
     chartData,
     scaleX,
@@ -100,3 +99,5 @@ export default function CommitFlamegraphListItem({
     </Fragment>
   );
 }
+
+export default memo<Props>(CommitFlamegraphListItem, areEqual);

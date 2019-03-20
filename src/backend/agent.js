@@ -102,11 +102,9 @@ export default class Agent extends EventEmitter {
   };
 
   getInteractions = ({
-    commitIndex,
     rendererID,
     rootID,
   }: {
-    commitIndex: number,
     rendererID: number,
     rootID: number,
   }) => {
@@ -114,10 +112,7 @@ export default class Agent extends EventEmitter {
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}"`);
     } else {
-      this._bridge.send(
-        'interactions',
-        renderer.getInteractions(rootID, commitIndex)
-      );
+      this._bridge.send('interactions', renderer.getInteractions(rootID));
     }
   };
 

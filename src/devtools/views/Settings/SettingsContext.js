@@ -219,6 +219,7 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-dim', documentElements);
   updateStyleHelper(theme, 'color-dimmer', documentElements);
   updateStyleHelper(theme, 'color-dimmest', documentElements);
+  updateStyleHelper(theme, 'color-hover-background', documentElements);
   updateStyleHelper(theme, 'color-jsx-arrow-brackets', documentElements);
   updateStyleHelper(
     theme,
@@ -229,8 +230,9 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-record-active', documentElements);
   updateStyleHelper(theme, 'color-record-hover', documentElements);
   updateStyleHelper(theme, 'color-record-inactive', documentElements);
-  updateStyleHelper(theme, 'color-tree-node-selected', documentElements);
-  updateStyleHelper(theme, 'color-tree-node-hover', documentElements);
+  updateStyleHelper(theme, 'color-selected-background', documentElements);
+  updateStyleHelper(theme, 'color-selected-border', documentElements);
+  updateStyleHelper(theme, 'color-selected-foreground', documentElements);
   updateStyleHelper(theme, 'color-search-match', documentElements);
   updateStyleHelper(theme, 'color-search-match-current', documentElements);
   updateStyleHelper(theme, 'color-text-color', documentElements);

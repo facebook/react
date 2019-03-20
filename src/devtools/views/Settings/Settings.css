@@ -38,7 +38,7 @@
 }
 
 .Option:hover {
-  background-color: var(--color-tree-node-hover);
+  background-color: var(--color-hover-background);
 }
 
 .Option:first-of-type {

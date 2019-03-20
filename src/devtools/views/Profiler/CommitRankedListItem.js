@@ -1,21 +1,20 @@
 // @flow
 
-import React, { useCallback } from 'react';
+import React, { memo, useCallback } from 'react';
+import { areEqual } from 'react-window';
 import { barHeight, minBarWidth } from './constants';
 import { getGradientColor } from './utils';
 import ChartNode from './ChartNode';
 
 import type { ItemData } from './CommitRanked';
 
-export default function CommitRankedListItem({
-  data,
-  index,
-  style,
-}: {
+type Props = {
   data: ItemData,
   index: number,
   style: Object,
-}) {
+};
+
+function CommitRankedListItem({ data, index, style }: Props) {
   const { chartData, scaleX, selectedFiberIndex, selectFiber, width } = data;
 
   const node = chartData.nodes[index];
@@ -48,3 +47,5 @@ export default function CommitRankedListItem({
     />
   );
 }
+
+export default memo<Props>(CommitRankedListItem, areEqual);

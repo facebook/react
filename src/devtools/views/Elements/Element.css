@@ -9,16 +9,17 @@
   user-select: none;
 }
 .Element:hover {
-  background-color: var(--color-tree-node-hover);
+  background-color: var(--color-hover-background);
 }
 
 .SelectedElement {
-  background-color: var(--color-tree-node-selected);
+  background-color: var(--color-selected-background);
+  color: var(--color-selected-foreground);
 
   /* Invert colors */
   --color-component-name: var(--color-component-name-inverted);
   --color-jsx-arrow-brackets: var(--color-jsx-arrow-brackets-inverted);
-  --color-attribute-name: var(--color-tree-node-hover);
+  --color-attribute-name: var(--color-hover-background);
   --color-attribute-value: var(--color-component-name-inverted);
 }
 

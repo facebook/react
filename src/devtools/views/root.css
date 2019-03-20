@@ -33,6 +33,7 @@
   --light-color-dim: #777d88;
   --light-color-dimmer: #cfd1d5;
   --light-color-dimmest: #eff0f1;
+  --light-color-hover-background: #ebf1fb;
   --light-color-jsx-arrow-brackets: #333333;
   --light-color-jsx-arrow-brackets-inverted: rgba(255, 255, 255, 0.7);
   --light-color-modal-background: rgba(255, 255, 255, 0.25);
@@ -41,9 +42,10 @@
   --light-color-record-inactive: #cfd1d5;
   --light-color-search-match: yellow;
   --light-color-search-match-current: #f7923b;
+  --light-color-selected-background: #0088fa;
+  --light-color-selected-border: #0088fa;
+  --light-color-selected-foreground: #ffffff;
   --light-color-text-color: #000000;
-  --light-color-tree-node-selected: #0088fa;
-  --light-color-tree-node-hover: #ebf1fb;
 
   /* Dark theme */
   --dark-color-attribute-name: #9d87d2;
@@ -75,6 +77,7 @@
   --dark-color-dim: #8f949d;
   --dark-color-dimmer: #777d88;
   --dark-color-dimmest: #4f5766;
+  --dark-color-hover-background: #3d424a;
   --dark-color-jsx-arrow-brackets: #777d88;
   --dark-color-jsx-arrow-brackets-inverted: rgba(255, 255, 255, 0.7);
   --dark-color-modal-background: rgba(0, 0, 0, 0.25);
@@ -83,9 +86,10 @@
   --dark-color-record-inactive: #777d88;
   --dark-color-search-match: yellow;
   --dark-color-search-match-current: #f7923b;
+  --dark-color-selected-background: #178fb9;
+  --dark-color-selected-border: #178fb9;
+  --dark-color-selected-foreground: #ffffff;
   --dark-color-text-color: #ffffff;
-  --dark-color-tree-node-selected: #178fb9;
-  --dark-color-tree-node-hover: #3d424a;
 
   /* Compact density */
   --compact-font-size-monospace-normal: 11px;

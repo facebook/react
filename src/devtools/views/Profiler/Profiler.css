@@ -87,3 +87,7 @@
   font-size: var(--font-size-sans-large);
   color: var(--color-dim);
 }
+
+.Link {
+  color: var(--color-button);
+}

@@ -7,12 +7,19 @@ import React, {
   useMemo,
   useState,
 } from 'react';
+import { unstable_batchedUpdates as batchedUpdates } from 'react-dom';
 import { useLocalStorage, useSubscription } from '../hooks';
 import { TreeContext } from '../Elements/TreeContext';
 import { StoreContext } from '../context';
 import Store from '../../store';
 
+export type TabID = 'flame-chart' | 'ranked-chart' | 'interactions';
+
 type Context = {|
+  // Which tab is selexted in the Profiler UI?
+  selectedTabID: TabID,
+  selectTab(id: TabID): void,
+
   // Have we recorded any profiling data?
   // Are we currently profiling?
   // This value may be modified by the record button in the Profiler toolbar,
@@ -48,6 +55,10 @@ type Context = {|
   // Which fiber is currently selected in the Ranked or Flamegraph charts?
   selectedFiberID: number | null,
   selectFiber: (id: number | null) => void,
+
+  // Which interaction is currently selected in the Interactions graph?
+  selectedInteractionID: number | null,
+  selectInteraction: (id: number | null) => void,
 |};
 
 const ProfilerContext = createContext<Context>(((null: any): Context));
@@ -84,10 +95,6 @@ function ProfilerContextController({ children }: Props) {
     Store
   >(subscription);
 
-  // TODO (profiling) The browser extension is a multi-root app,
-  // so it won't work for the "Profiling" root to depend on a value that's set by the "Elements" root.
-  // We'll either need to lift that state up into the (shared) Store,
-  // or use a portal to share the contexts themselves between Chrome tabs.
   let rendererID = null;
   let rootID = null;
   let rootHasProfilingData = false;
@@ -121,20 +128,31 @@ function ProfilerContextController({ children }: Props) {
   const [selectedCommitIndex, setSelectedCommitIndex] = useState<number | null>(
     null
   );
-
+  const [selectedTabID, selectTab] = useState<TabID>('flame-chart');
   const [selectedFiberID, selectFiber] = useState<number | null>(null);
+  const [selectedInteractionID, selectInteraction] = useState<number | null>(
+    null
+  );
 
   if (isProfiling) {
-    if (selectedFiberID !== null) {
-      selectFiber(null);
-    }
-    if (selectedCommitIndex !== null) {
-      setSelectedCommitIndex(null);
-    }
+    batchedUpdates(() => {
+      if (selectedCommitIndex !== null) {
+        setSelectedCommitIndex(null);
+      }
+      if (selectedFiberID !== null) {
+        selectFiber(null);
+      }
+      if (selectedInteractionID !== null) {
+        selectInteraction(null);
+      }
+    });
   }
 
   const value = useMemo(
     () => ({
+      selectedTabID,
+      selectTab,
+
       hasProfilingData,
       isProfiling,
       startProfiling,
@@ -154,8 +172,14 @@ function ProfilerContextController({ children }: Props) {
 
       selectedFiberID,
       selectFiber,
+
+      selectedInteractionID,
+      selectInteraction,
     }),
     [
+      selectedTabID,
+      selectTab,
+
       hasProfilingData,
       isProfiling,
       startProfiling,
@@ -175,6 +199,9 @@ function ProfilerContextController({ children }: Props) {
 
       selectedFiberID,
       selectFiber,
+
+      selectedInteractionID,
+      selectInteraction,
     ]
   );
 

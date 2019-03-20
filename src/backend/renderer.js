@@ -1425,7 +1425,7 @@ export function attach(
     };
   }
 
-  function getInteractions(rootID: number, commitIndex: number): Interactions {
+  function getInteractions(rootID: number): Interactions {
     const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
       rootID
     );

@@ -13,11 +13,11 @@
 }
 .Tab:hover,
 .TabCurrent:hover {
-  background-color: var(--color-tree-node-hover);
+  background-color: var(--color-hover-background);
 }
 
 .TabCurrent {
-  border-bottom: 3px solid var(--color-tree-node-selected);
+  border-bottom: 3px solid var(--color-selected-border);
 }
 
 .TabDisabled {

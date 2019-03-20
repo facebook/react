@@ -1,0 +1,16 @@
+.Interaction,
+.SelectedInteraction {
+  display: flex;
+  align-items: center;
+  padding: 0 0.25rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.Interaction:hover {
+  background-color: var(--color-hover-background);
+}
+
+.SelectedInteraction {
+  background-color: var(--color-selected-background);
+  color: var(--color-selected-foreground);
+}

@@ -1,4 +1,4 @@
-.NoCommitData {
+.NoInteractions {
   width: 100%;
   height: 100%;
   display: flex;
@@ -9,4 +9,8 @@
 
 .Header {
   font-size: var(--font-size-sans-large);
+}
+
+.Link {
+  color: var(--color-button);
 }

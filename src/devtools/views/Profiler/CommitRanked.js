@@ -98,7 +98,7 @@ function CommitRanked({ height, width }: {| height: number, width: number |}) {
   // If a commit contains no fibers with an actualDuration > 0,
   // Display a fallback message.
   if (chartData.nodes.length === 0) {
-    return <NoCommitData />;
+    return <NoCommitData height={height} width={width} />;
   }
 
   return (

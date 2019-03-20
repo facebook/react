@@ -126,7 +126,7 @@ function CommitFlamegraph({
   // If a commit contains no fibers with an actualDuration > 0,
   // Display a fallback message.
   if (chartData.depth === 0) {
-    return <NoCommitData />;
+    return <NoCommitData height={height} width={width} />;
   }
 
   return (

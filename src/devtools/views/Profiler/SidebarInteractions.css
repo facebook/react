@@ -11,3 +11,19 @@
 .Content {
   padding: 0.5rem;
 }
+
+.Name {
+  font-size: var(--font-size-sans-large);
+  white-space: nowrap;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+}
+
+.NothingSelected {
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--color-dim);
+}

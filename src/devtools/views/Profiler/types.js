@@ -20,11 +20,13 @@ export type Interaction = {|
   timestamp: number,
 |};
 
+export type InteractionWithCommits = {|
+  ...Interaction,
+  commits: Array<number>,
+|};
+
 export type Interactions = {|
-  interactions: Array<{|
-    ...Interaction,
-    commits: Array<number>,
-  |}>,
+  interactions: Array<InteractionWithCommits>,
   rootID: number,
 |};
 

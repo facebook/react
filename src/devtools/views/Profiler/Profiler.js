@@ -9,7 +9,9 @@ import TabBar from '../TabBar';
 import CommitFlamegraph from './CommitFlamegraph';
 import CommitRanked from './CommitRanked';
 import FilterModal from './FilterModal';
+import Interactions from './Interactions';
 import RecordToggle from './RecordToggle';
+import ReloadAndProfileButton from './ReloadAndProfileButton';
 import SnapshotSelector from './SnapshotSelector';
 import SidebarCommitInfo from './SidebarCommitInfo';
 import SidebarInteractions from './SidebarInteractions';
@@ -76,10 +78,7 @@ function NonSuspendingProfiler({
       <div className={styles.LeftColumn}>
         <div className={styles.Toolbar}>
           <RecordToggle disabled={!supportsProfiling} />
-          <Button disabled title="Reload and start profiling">
-            {/* TODO (profiling) Wire up reload button */}
-            <ButtonIcon type="reload" />
-          </Button>
+          <ReloadAndProfileButton />
           <div className={styles.VRule} />
           <TabBar
             currentTab={null}
@@ -105,14 +104,14 @@ function ProfilerFallback() {
 // This view's subtree uses suspense to request profiler data from the backend.
 // NOTE that the structure of this UI should mirror NonSuspendingProfiler.
 function SuspendingProfiler() {
-  const [tab, setTab] = useState('flame-chart');
+  const { selectedTabID, selectTab } = useContext(ProfilerContext);
   const [isFilterModalShowing, setIsFilterModalShowing] = useState(false);
 
   const showFilterModal = useCallback(() => setIsFilterModalShowing(true));
   const dismissFilterModal = useCallback(() => setIsFilterModalShowing(false));
 
   let view = null;
-  switch (tab) {
+  switch (selectedTabID) {
     case 'flame-chart':
       view = <CommitFlamegraph />;
       break;
@@ -120,14 +119,14 @@ function SuspendingProfiler() {
       view = <CommitRanked />;
       break;
     case 'interactions':
-      view = <div>Coming soon: Interactions</div>; // TODO (profiling)
+      view = <Interactions />;
       break;
     default:
       break;
   }
 
   let sidebar = null;
-  switch (tab) {
+  switch (selectedTabID) {
     case 'interactions':
       sidebar = <SidebarInteractions />;
       break;
@@ -144,15 +143,12 @@ function SuspendingProfiler() {
       <div className={styles.LeftColumn}>
         <div className={styles.Toolbar}>
           <RecordToggle />
-          <Button disabled title="Reload and start profiling">
-            {/* TODO (profiling) Wire up reload button */}
-            <ButtonIcon type="reload" />
-          </Button>
+          <ReloadAndProfileButton />
           <div className={styles.VRule} />
           <TabBar
-            currentTab={tab}
+            currentTab={selectedTabID}
             id="Profiler"
-            selectTab={setTab}
+            selectTab={selectTab}
             size="small"
             tabs={tabs}
           />
@@ -231,6 +227,7 @@ const ProfilingNotSupported = () => (
       <p>
         Learn more at{' '}
         <a
+          className={styles.Link}
           href="https://fb.me/react-profiling"
           rel="noopener noreferrer"
           target="_blank"

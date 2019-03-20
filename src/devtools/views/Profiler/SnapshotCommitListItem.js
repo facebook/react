@@ -52,7 +52,7 @@ function SnapshotCommitListItem({ data: itemData, index, style }: Props) {
         ...style,
         width,
         borderBottom: isSelected
-          ? '3px solid var(--color-tree-node-selected)'
+          ? '3px solid var(--color-selected-border)'
           : undefined,
       }}
       title={`Duration ${formatDuration(commitDuration)}ms at ${formatTime(

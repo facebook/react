@@ -88,7 +88,7 @@ export type RendererInterface = {
     component: NativeType,
     findNearestUnfilteredAncestor?: boolean
   ) => number | null,
-  getInteractions: (rootID: number, commitIndex: number) => Interactions,
+  getInteractions: (rootID: number) => Interactions,
   getProfilingSummary: (rootID: number) => ProfilingSummary,
   handleCommitFiberRoot: (fiber: Object) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,
