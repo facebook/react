@@ -12,9 +12,32 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import {HostComponent} from 'shared/ReactWorkTags';
 import warning from 'shared/warning';
 
+type HostContext = Object;
+
+type TextInstance =
+  | Text
+  | {|
+      text: string,
+      id: number,
+      hidden: boolean,
+      context: HostContext,
+    |};
+
+type Instance =
+  | Element
+  | {|
+      type: string,
+      id: number,
+      children: Array<Instance | TextInstance>,
+      text: string | null,
+      prop: any,
+      hidden: boolean,
+      context: HostContext,
+    |};
+
 export default function getElementFromTouchHitTarget(
   targetFiber: Fiber,
-): null | Element {
+): null | Instance {
   // Traverse through child fibers and find the first host components
   let node = targetFiber.child;
   let hostComponent = null;
