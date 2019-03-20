@@ -1,6 +1,7 @@
 // @flow
 
 import React, { Fragment, useCallback, useState } from 'react';
+import { unstable_trace as trace } from 'scheduler/tracing';
 import ListItem from './ListItem';
 import styles from './List.css';
 
@@ -23,16 +24,18 @@ export default function List(props: Props) {
 
   const handleClick = useCallback(() => {
     if (newItemText !== '') {
-      setItems([
-        ...items,
-        {
-          id: uid,
-          isComplete: false,
-          text: newItemText,
-        },
-      ]);
-      setUID(uid + 1);
-      setNewItemText('');
+      trace(`Add "${newItemText}"`, performance.now(), () => {
+        setItems([
+          ...items,
+          {
+            id: uid,
+            isComplete: false,
+            text: newItemText,
+          },
+        ]);
+        setUID(uid + 1);
+        setNewItemText('');
+      });
     }
   }, [newItemText, items, uid]);
 
@@ -54,24 +57,28 @@ export default function List(props: Props) {
 
   const removeItem = useCallback(
     itemToRemove => {
-      setItems(items.filter(item => item !== itemToRemove));
+      trace(`Remove "${itemToRemove.text}"`, performance.now(), () => {
+        setItems(items.filter(item => item !== itemToRemove));
+      });
     },
     [items]
   );
 
   const toggleItem = useCallback(
     itemToToggle => {
-      const index = items.indexOf(itemToToggle);
+      trace(`Toggle "${itemToToggle.text}"`, performance.now(), () => {
+        const index = items.indexOf(itemToToggle);
 
-      setItems(
-        items
-          .slice(0, index)
-          .concat({
-            ...itemToToggle,
-            isComplete: !itemToToggle.isComplete,
-          })
-          .concat(items.slice(index + 1))
-      );
+        setItems(
+          items
+            .slice(0, index)
+            .concat({
+              ...itemToToggle,
+              isComplete: !itemToToggle.isComplete,
+            })
+            .concat(items.slice(index + 1))
+        );
+      });
     },
     [items]
   );

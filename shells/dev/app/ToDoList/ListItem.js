@@ -1,6 +1,6 @@
 // @flow
 
-import React, { useCallback } from 'react';
+import React, { memo, useCallback } from 'react';
 import styles from './ListItem.css';
 
 import type { Item } from './List';
@@ -11,7 +11,7 @@ type Props = {|
   toggleItem: (item: Item) => void,
 |};
 
-export default function ListItem({ item, removeItem, toggleItem }: Props) {
+function ListItem({ item, removeItem, toggleItem }: Props) {
   const handleDelete = useCallback(() => {
     removeItem(item);
   }, [item, removeItem]);
@@ -37,3 +37,5 @@ export default function ListItem({ item, removeItem, toggleItem }: Props) {
     </li>
   );
 }
+
+export default memo<Props>(ListItem);

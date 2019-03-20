@@ -15,6 +15,11 @@ export default function SidebarCommitInfo(_: Props) {
   );
 
   const { profilingCache } = useContext(StoreContext);
+
+  if (selectedCommitIndex === null) {
+    return null; // TODO (profiling) Use a better UI
+  }
+
   const { commitDurations, commitTimes } = profilingCache.ProfilingSummary.read(
     {
       rendererID: ((rendererID: any): number),
@@ -22,9 +27,11 @@ export default function SidebarCommitInfo(_: Props) {
     }
   );
 
-  if (selectedCommitIndex === null) {
-    return 'TODO';
-  }
+  const { interactions } = profilingCache.CommitDetails.read({
+    commitIndex: ((selectedCommitIndex: any): number),
+    rendererID: ((rendererID: any): number),
+    rootID: ((rootID: any): number),
+  });
 
   return (
     <Fragment>
@@ -34,21 +41,29 @@ export default function SidebarCommitInfo(_: Props) {
           <li className={styles.ListItem}>
             <label className={styles.Label}>Committed at</label>:{' '}
             <span className={styles.Value}>
-              {formatTime(commitTimes[selectedCommitIndex])}s
+              {formatTime(commitTimes[((selectedCommitIndex: any): number)])}s
             </span>
           </li>
           <li className={styles.ListItem}>
             <label className={styles.Label}>Render duration</label>:{' '}
             <span className={styles.Value}>
-              {formatDuration(commitDurations[selectedCommitIndex])}ms
+              {formatDuration(
+                commitDurations[((selectedCommitIndex: any): number)]
+              )}
+              ms
             </span>
           </li>
           <li className={styles.ListItem}>
             <label className={styles.Label}>Interactions</label>:
-            <ul className={styles.List}>
-              <li className={styles.ListItem}>
-                <div>Coming soon</div>
-              </li>
+            <ul className={styles.InteractionList}>
+              {interactions.length === 0 ? (
+                <li className={styles.InteractionListItem}>None</li>
+              ) : null}
+              {interactions.map((interaction, index) => (
+                <li key={index} className={styles.ListItem}>
+                  {interaction.name}
+                </li>
+              ))}
             </ul>
           </li>
         </ul>

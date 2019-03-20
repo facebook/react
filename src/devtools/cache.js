@@ -1,6 +1,6 @@
 // @flow
 
-import { createContext, useContext } from 'react';
+import React, { createContext } from 'react';
 
 // Cache implementation was forked from the React repo:
 // https://github.com/facebook/react/blob/master/packages/react-cache/src/ReactCache.js
@@ -45,6 +45,21 @@ export type Resource<I, V> = {
 const Pending = 0;
 const Resolved = 1;
 const Rejected = 2;
+
+const ReactCurrentDispatcher = (React: any)
+  .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentDispatcher;
+
+function readContext(Context, observedBits) {
+  const dispatcher = ReactCurrentDispatcher.current;
+  if (dispatcher === null) {
+    throw new Error(
+      'react-cache: read and preload may only be called from within a ' +
+        "component's render. They are not supported in event handlers or " +
+        'lifecycle methods.'
+    );
+  }
+  return dispatcher.readContext(Context, observedBits);
+}
 
 function identityHashFn(input) {
   return input;
@@ -106,7 +121,7 @@ export function createResource<I, K: string | number, V>(
     read(input: I): V {
       // Prevent access outside of render.
       // eslint-disable-next-line react-hooks/rules-of-hooks
-      useContext(CacheContext);
+      readContext(CacheContext);
 
       const key = hashInput(input);
       const result: Result<V> = accessResult(resource, fetch, input, key);
@@ -132,7 +147,7 @@ export function createResource<I, K: string | number, V>(
     preload(input: I): void {
       // Prevent access outside of render.
       // eslint-disable-next-line react-hooks/rules-of-hooks
-      useContext(CacheContext);
+      readContext(CacheContext);
 
       const key = hashInput(input);
       accessResult(resource, fetch, input, key);

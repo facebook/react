@@ -12,14 +12,20 @@
   padding: 0.5rem;
 }
 
-.List {
+.List,
+.InteractionList {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.ListItem {
-  margin: 0 0 0.25rem;
+.InteractionList {
+  padding: 0.5rem;
+}
+
+.ListItem,
+.InteractionListItem {
+  margin: 0 0 0.5rem;
 }
 
 .Label {

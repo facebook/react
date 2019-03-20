@@ -12,6 +12,8 @@ import styles from './SnapshotSelector.css';
 
 export type Props = {||};
 
+// TODO (profiling) Left/right arrow navigation.
+
 export default function SnapshotSelector(_: Props) {
   const {
     isCommitFilterEnabled,
