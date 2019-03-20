@@ -10,7 +10,7 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
-import type {Thenable} from './ReactFiberScheduler.old';
+import type {Thenable} from './ReactFiberScheduler';
 import type {Interaction} from 'scheduler/src/Tracing';
 
 import {noTimeout} from './ReactFiberHostConfig';

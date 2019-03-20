@@ -54,7 +54,7 @@ import {
   interactiveUpdates,
   flushInteractiveUpdates,
   flushPassiveEffects,
-} from './ReactFiberScheduler.old';
+} from './ReactFiberScheduler';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import {
