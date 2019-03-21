@@ -13,19 +13,31 @@ function normalizeCodeLocInfo(str) {
   return str && str.replace(/at .+?:\d+/g, 'at **');
 }
 
-function expectWarningToMatch(expectedMessage, expectedStack) {
-  expect(console.error).toHaveBeenCalledTimes(1);
-  expect(console.warn).toHaveBeenCalledTimes(1);
+function expectHelper(spy, prefix, ...expectedArgs) {
+  const expectedStack = expectedArgs.pop();
 
-  let [actualMessage, actualStack] = console.error.calls.mostRecent().args;
+  expect(spy).toHaveBeenCalledTimes(1);
 
-  expect(actualMessage).toBe(`error: ${expectedMessage}`);
-  expect(normalizeCodeLocInfo(actualStack)).toBe(expectedStack);
+  const actualArgs = spy.calls.mostRecent().args;
 
-  [actualMessage, actualStack] = console.warn.calls.mostRecent().args;
+  let actualStack = undefined;
+  if (expectedStack !== undefined) {
+    actualStack = actualArgs.pop();
+    expect(normalizeCodeLocInfo(actualStack)).toBe(expectedStack);
+  }
 
-  expect(actualMessage).toBe(`warn: ${expectedMessage}`);
-  expect(normalizeCodeLocInfo(actualStack)).toBe(expectedStack);
+  expect(actualArgs).toHaveLength(expectedArgs.length);
+  actualArgs.forEach((actualArg, index) => {
+    const expectedArg = expectedArgs[index];
+    expect(actualArg).toBe(
+      index === 0 ? `${prefix}: ${expectedArg}` : expectedArg,
+    );
+  });
+}
+
+function expectMessageAndStack(...expectedArgs) {
+  expectHelper(console.error, 'error', ...expectedArgs);
+  expectHelper(console.warn, 'warn', ...expectedArgs);
 }
 
 describe('withComponentStack', () => {
@@ -64,7 +76,25 @@ describe('withComponentStack', () => {
     it('does not include component stack when called outside of render', () => {
       error('error: logged outside of render');
       warn('warn: logged outside of render');
-      expectWarningToMatch('logged outside of render', undefined);
+      expectMessageAndStack('logged outside of render', undefined);
+    });
+
+    it('should support multiple args', () => {
+      function Component() {
+        error('error: number:', 123, 'boolean:', true);
+        warn('warn: number:', 123, 'boolean:', true);
+        return null;
+      }
+
+      ReactTestRenderer.create(<Component />);
+
+      expectMessageAndStack(
+        'number:',
+        123,
+        'boolean:',
+        true,
+        '\n    in Component (at **)',
+      );
     });
 
     it('includes component stack when called from a render method', () => {
@@ -82,7 +112,7 @@ describe('withComponentStack', () => {
 
       ReactTestRenderer.create(<Parent />);
 
-      expectWarningToMatch(
+      expectMessageAndStack(
         'logged in child render method',
         '\n    in Child (at **)' + '\n    in Parent (at **)',
       );
@@ -105,7 +135,7 @@ describe('withComponentStack', () => {
 
       ReactTestRenderer.create(<Parent />);
 
-      expectWarningToMatch(
+      expectMessageAndStack(
         'logged in child cWM lifecycle',
         '\n    in Child (at **)' + '\n    in Parent (at **)',
       );
@@ -128,7 +158,7 @@ describe('withComponentStack', () => {
 
       ReactTestRenderer.create(<Parent />);
 
-      expectWarningToMatch(
+      expectMessageAndStack(
         'logged in child cDM lifecycle',
         '\n    in Child (at **)' + '\n    in Parent (at **)',
       );
@@ -153,7 +183,7 @@ describe('withComponentStack', () => {
 
       scheduler.flushAll(); // Flush passive effects
 
-      expectWarningToMatch(
+      expectMessageAndStack(
         'logged in child render method',
         '\n    in Child (at **)' + '\n    in Parent (at **)',
       );
