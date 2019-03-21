@@ -88,7 +88,7 @@ export default {
       // So no need to check for dependency inclusion.
       const depsIndex = callbackIndex + 1;
       const declaredDependenciesNode = node.parent.arguments[depsIndex];
-      if (!declaredDependenciesNode) {
+      if (!declaredDependenciesNode && !isEffect) {
         // These are only used for optimization.
         if (
           reactiveHookName === 'useMemo' ||
@@ -468,6 +468,9 @@ export default {
         },
       );
 
+      if (!declaredDependenciesNode) {
+        return;
+      }
       const declaredDependencies = [];
       const externalDependencies = new Set();
       if (declaredDependenciesNode.type !== 'ArrayExpression') {
