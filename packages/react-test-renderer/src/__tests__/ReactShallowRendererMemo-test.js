@@ -226,12 +226,12 @@ describe('ReactShallowRendererMemo', () => {
       class SomeComponent extends React.Component {
         render() {
           return (
-            <React.unstable_Profiler id="test" onRender={jest.fn()}>
+            <React.Profiler id="test" onRender={jest.fn()}>
               <div>
                 <span className="child1" />
                 <span className="child2" />
               </div>
-            </React.unstable_Profiler>
+            </React.Profiler>
           );
         }
       },
@@ -240,7 +240,7 @@ describe('ReactShallowRendererMemo', () => {
     const shallowRenderer = createRenderer();
     const result = shallowRenderer.render(<SomeComponent />);
 
-    expect(result.type).toBe(React.unstable_Profiler);
+    expect(result.type).toBe(React.Profiler);
     expect(result.props.children).toEqual(
       <div>
         <span className="child1" />

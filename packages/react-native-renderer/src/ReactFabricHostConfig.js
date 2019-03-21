@@ -283,6 +283,14 @@ export function getChildHostContext(
   }
 }
 
+export function getChildHostContextForEvent(
+  parentHostContext: HostContext,
+  type: Symbol | number,
+) {
+  // TODO: add getChildHostContextForEvent implementation
+  return parentHostContext;
+}
+
 export function getPublicInstance(instance: Instance): * {
   return instance.canonical;
 }
@@ -428,7 +436,7 @@ export function handleEventComponent(
 }
 
 export function handleEventTarget(
-  type: string,
+  type: Symbol | number,
   props: Props,
   internalInstanceHandle: Object,
 ) {
