@@ -17,11 +17,12 @@ if (__DEV__) {
   error = function() {
     const stack = ReactDebugCurrentFrame.getStackAddendum();
     if (stack !== '') {
-      const args = [];
-      for (let i = 0; i < arguments.length; i++) {
+      const length = arguments.length;
+      const args = new Array(length + 1);
+      for (let i = 0; i < length; i++) {
         args[i] = arguments[i];
       }
-      args.push(stack);
+      args[length] = stack;
       console.error.apply(console, args);
     } else {
       console.error.apply(console, arguments);
@@ -31,11 +32,12 @@ if (__DEV__) {
   warn = function() {
     const stack = ReactDebugCurrentFrame.getStackAddendum();
     if (stack !== '') {
-      const args = [];
-      for (let i = 0; i < arguments.length; i++) {
+      const length = arguments.length;
+      const args = new Array(length + 1);
+      for (let i = 0; i < length; i++) {
         args[i] = arguments[i];
       }
-      args.push(stack);
+      args[length] = stack;
       console.warn.apply(console, args);
     } else {
       console.warn.apply(console, arguments);
