@@ -123,6 +123,7 @@ import {
   expirationTimeToMs,
   computeAsyncExpiration,
   computeInteractiveExpiration,
+  LOW_PRIORITY_EXPIRATION,
 } from './ReactFiberExpirationTime';
 import {ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
 import {enqueueUpdate, resetCurrentlyProcessingQueue} from './ReactUpdateQueue';
@@ -173,6 +174,8 @@ const {
   unstable_cancelCallback: cancelCallback,
   unstable_shouldYield: shouldYield,
   unstable_now: now,
+  unstable_getCurrentPriorityLevel: getCurrentPriorityLevel,
+  unstable_NormalPriority: NormalPriority,
 } = Scheduler;
 
 export type Thenable = {
@@ -826,7 +829,7 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
       // here because that code is still in flux.
       callback = Scheduler_tracing_wrap(callback);
     }
-    passiveEffectCallbackHandle = scheduleCallback(callback);
+    passiveEffectCallbackHandle = scheduleCallback(NormalPriority, callback);
     passiveEffectCallback = callback;
   }
 
@@ -1677,6 +1680,25 @@ function renderDidError() {
   nextRenderDidError = true;
 }
 
+function inferStartTimeFromExpirationTime(
+  root: FiberRoot,
+  expirationTime: ExpirationTime,
+) {
+  // We don't know exactly when the update was scheduled, but we can infer an
+  // approximate start time from the expiration time. First, find the earliest
+  // uncommitted expiration time in the tree, including work that is suspended.
+  // Then subtract the offset used to compute an async update's expiration time.
+  // This will cause high priority (interactive) work to expire earlier than
+  // necessary, but we can account for this by adjusting for the Just
+  // Noticeable Difference.
+  const earliestExpirationTime = findEarliestOutstandingPriorityLevel(
+    root,
+    expirationTime,
+  );
+  const earliestExpirationTimeMs = expirationTimeToMs(earliestExpirationTime);
+  return earliestExpirationTimeMs - LOW_PRIORITY_EXPIRATION;
+}
+
 function pingSuspendedRoot(
   root: FiberRoot,
   thenable: Thenable,
@@ -2044,7 +2066,8 @@ function scheduleCallbackWithExpirationTime(
   const currentMs = now() - originalStartTimeMs;
   const expirationTimeMs = expirationTimeToMs(expirationTime);
   const timeout = expirationTimeMs - currentMs;
-  callbackID = scheduleCallback(performAsyncWork, {timeout});
+  const priorityLevel = getCurrentPriorityLevel();
+  callbackID = scheduleCallback(priorityLevel, performAsyncWork, {timeout});
 }
 
 // For every call to renderRoot, one of onFatal, onComplete, onSuspend, and
@@ -2677,7 +2700,6 @@ export {
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
   scheduleWork,
-  requestWork,
   flushRoot,
   batchedUpdates,
   unbatchedUpdates,
@@ -2689,4 +2711,5 @@ export {
   flushInteractiveUpdates,
   computeUniqueAsyncExpiration,
   flushPassiveEffects,
+  inferStartTimeFromExpirationTime,
 };

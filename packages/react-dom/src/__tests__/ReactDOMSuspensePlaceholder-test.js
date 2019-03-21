@@ -14,6 +14,7 @@ let ReactDOM;
 let Suspense;
 let ReactCache;
 let ReactTestUtils;
+let Scheduler;
 let TextResource;
 let act;
 
@@ -26,6 +27,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
     ReactDOM = require('react-dom');
     ReactCache = require('react-cache');
     ReactTestUtils = require('react-dom/test-utils');
+    Scheduler = require('scheduler');
     act = ReactTestUtils.act;
     Suspense = React.Suspense;
     container = document.createElement('div');
@@ -94,6 +96,8 @@ describe('ReactDOMSuspensePlaceholder', () => {
 
     await advanceTimers(500);
 
+    Scheduler.flushAll();
+
     expect(divs[0].current.style.display).toEqual('');
     expect(divs[1].current.style.display).toEqual('');
     // This div's display was set with a prop.
@@ -114,6 +118,8 @@ describe('ReactDOMSuspensePlaceholder', () => {
     expect(container.textContent).toEqual('Loading...');
 
     await advanceTimers(500);
+
+    Scheduler.flushAll();
 
     expect(container.textContent).toEqual('ABC');
   });
@@ -159,6 +165,8 @@ describe('ReactDOMSuspensePlaceholder', () => {
       );
 
       await advanceTimers(500);
+
+      Scheduler.flushAll();
 
       expect(container.innerHTML).toEqual(
         '<span style="display: inline;">Sibling</span><span style="">Async</span>',

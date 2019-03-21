@@ -18,6 +18,7 @@ let ReactTestRenderer;
 let Scheduler;
 let ReactDOMServer;
 let act;
+let enableNewScheduler;
 
 // Additional tests can be found in ReactHooksWithNoopRenderer. Plan is to
 // gradually migrate those to this file.
@@ -32,6 +33,7 @@ describe('ReactHooks', () => {
     Scheduler = require('scheduler');
     ReactDOMServer = require('react-dom/server');
     act = ReactTestRenderer.act;
+    enableNewScheduler = ReactFeatureFlags.enableNewScheduler;
   });
 
   if (__DEV__) {
@@ -1747,6 +1749,9 @@ describe('ReactHooks', () => {
     );
     expect(root).toMatchRenderedOutput('loading');
     await Promise.resolve();
+    if (enableNewScheduler) {
+      Scheduler.flushAll();
+    }
     expect(root).toMatchRenderedOutput('hello');
   });
 
@@ -1778,6 +1783,9 @@ describe('ReactHooks', () => {
     );
     expect(root).toMatchRenderedOutput('loading');
     await Promise.resolve();
+    if (enableNewScheduler) {
+      Scheduler.flushAll();
+    }
     expect(root).toMatchRenderedOutput('hello');
   });
 
@@ -1809,6 +1817,9 @@ describe('ReactHooks', () => {
     );
     expect(root).toMatchRenderedOutput('loading');
     await Promise.resolve();
+    if (enableNewScheduler) {
+      Scheduler.flushAll();
+    }
     expect(root).toMatchRenderedOutput('hello');
   });
 });

@@ -9,10 +9,11 @@
 
 'use strict';
 
+let Scheduler;
 let scheduleCallback;
-let runWithPriority;
 let ImmediatePriority;
 let UserBlockingPriority;
+let NormalPriority;
 
 describe('SchedulerNoDOM', () => {
   // If Scheduler runs in a non-DOM environment, it falls back to a naive
@@ -30,22 +31,22 @@ describe('SchedulerNoDOM', () => {
       ),
     );
 
-    const Scheduler = require('scheduler');
+    Scheduler = require('scheduler');
     scheduleCallback = Scheduler.unstable_scheduleCallback;
-    runWithPriority = Scheduler.unstable_runWithPriority;
     ImmediatePriority = Scheduler.unstable_ImmediatePriority;
     UserBlockingPriority = Scheduler.unstable_UserBlockingPriority;
+    NormalPriority = Scheduler.unstable_NormalPriority;
   });
 
   it('runAllTimers flushes all scheduled callbacks', () => {
     let log = [];
-    scheduleCallback(() => {
+    scheduleCallback(NormalPriority, () => {
       log.push('A');
     });
-    scheduleCallback(() => {
+    scheduleCallback(NormalPriority, () => {
       log.push('B');
     });
-    scheduleCallback(() => {
+    scheduleCallback(NormalPriority, () => {
       log.push('C');
     });
     expect(log).toEqual([]);
@@ -56,19 +57,17 @@ describe('SchedulerNoDOM', () => {
   it('executes callbacks in order of priority', () => {
     let log = [];
 
-    scheduleCallback(() => {
+    scheduleCallback(NormalPriority, () => {
       log.push('A');
     });
-    scheduleCallback(() => {
+    scheduleCallback(NormalPriority, () => {
       log.push('B');
     });
-    runWithPriority(UserBlockingPriority, () => {
-      scheduleCallback(() => {
-        log.push('C');
-      });
-      scheduleCallback(() => {
-        log.push('D');
-      });
+    scheduleCallback(UserBlockingPriority, () => {
+      log.push('C');
+    });
+    scheduleCallback(UserBlockingPriority, () => {
+      log.push('D');
     });
 
     expect(log).toEqual([]);
@@ -76,39 +75,22 @@ describe('SchedulerNoDOM', () => {
     expect(log).toEqual(['C', 'D', 'A', 'B']);
   });
 
-  it('calls immediate callbacks immediately', () => {
-    let log = [];
-
-    runWithPriority(ImmediatePriority, () => {
-      scheduleCallback(() => {
-        log.push('A');
-        scheduleCallback(() => {
-          log.push('B');
-        });
-      });
-    });
-
-    expect(log).toEqual(['A', 'B']);
-  });
-
   it('handles errors', () => {
     let log = [];
 
-    expect(() => {
-      runWithPriority(ImmediatePriority, () => {
-        scheduleCallback(() => {
-          log.push('A');
-          throw new Error('Oops A');
-        });
-        scheduleCallback(() => {
-          log.push('B');
-        });
-        scheduleCallback(() => {
-          log.push('C');
-          throw new Error('Oops C');
-        });
-      });
-    }).toThrow('Oops A');
+    scheduleCallback(ImmediatePriority, () => {
+      log.push('A');
+      throw new Error('Oops A');
+    });
+    scheduleCallback(ImmediatePriority, () => {
+      log.push('B');
+    });
+    scheduleCallback(ImmediatePriority, () => {
+      log.push('C');
+      throw new Error('Oops C');
+    });
+
+    expect(() => jest.runAllTimers()).toThrow('Oops A');
 
     expect(log).toEqual(['A']);
 

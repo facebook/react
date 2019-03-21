@@ -48,29 +48,35 @@ var currentPriorityLevel = NormalPriority;
 var currentEventStartTime = -1;
 var currentExpirationTime = -1;
 
-// This is set when a callback is being executed, to prevent re-entrancy.
-var isExecutingCallback = false;
+// This is set while performing work, to prevent re-entrancy.
+var isPerformingWork = false;
+
+// This is set while working on a callback, to detect when a callback
+// cancels itself.
+var currentlyFlushingCallback = null;
 
 var isHostCallbackScheduled = false;
 
-function ensureHostCallbackIsScheduled() {
-  if (isExecutingCallback) {
+function scheduleHostCallbackIfNeeded() {
+  if (isPerformingWork) {
     // Don't schedule work yet; wait until the next time we yield.
     return;
   }
-  // Schedule the host callback using the earliest expiration in the list.
-  var expirationTime = firstCallbackNode.expirationTime;
-  if (!isHostCallbackScheduled) {
-    isHostCallbackScheduled = true;
-  } else {
-    // Cancel the existing host callback.
-    cancelHostCallback();
+  if (firstCallbackNode !== null) {
+    // Schedule the host callback using the earliest expiration in the list.
+    var expirationTime = firstCallbackNode.expirationTime;
+    if (isHostCallbackScheduled) {
+      // Cancel the existing host callback.
+      cancelHostCallback();
+    } else {
+      isHostCallbackScheduled = true;
+    }
+    requestHostCallback(flushWork, expirationTime);
   }
-  requestHostCallback(flushWork, expirationTime);
 }
 
 function flushFirstCallback() {
-  var flushedNode = firstCallbackNode;
+  currentlyFlushingCallback = firstCallbackNode;
 
   // Remove the node from the list before calling the callback. That way the
   // list is in a consistent state even if the callback throws.
@@ -85,23 +91,35 @@ function flushFirstCallback() {
     next.previous = lastCallbackNode;
   }
 
-  flushedNode.next = flushedNode.previous = null;
+  currentlyFlushingCallback.next = currentlyFlushingCallback.previous = null;
 
   // Now it's safe to call the callback.
-  var callback = flushedNode.callback;
-  var expirationTime = flushedNode.expirationTime;
-  var priorityLevel = flushedNode.priorityLevel;
+  var callback = currentlyFlushingCallback.callback;
+  var expirationTime = currentlyFlushingCallback.expirationTime;
+  var priorityLevel = currentlyFlushingCallback.priorityLevel;
   var previousPriorityLevel = currentPriorityLevel;
   var previousExpirationTime = currentExpirationTime;
   currentPriorityLevel = priorityLevel;
   currentExpirationTime = expirationTime;
   var continuationCallback;
   try {
-    continuationCallback = callback(currentDidTimeout);
+    continuationCallback = callback(
+      currentDidTimeout || priorityLevel === ImmediatePriority,
+    );
+  } catch (error) {
+    currentlyFlushingCallback = null;
+    throw error;
   } finally {
     currentPriorityLevel = previousPriorityLevel;
     currentExpirationTime = previousExpirationTime;
   }
+
+  if (currentlyFlushingCallback === null) {
+    // Callback was cancelled during execution. Exit, even if there is
+    // a continutation.
+    return;
+  }
+  currentlyFlushingCallback = null;
 
   // A callback may return a continuation. The continuation should be scheduled
   // with the same priority and expiration as the just-finished callback.
@@ -141,7 +159,7 @@ function flushFirstCallback() {
       } else if (nextAfterContinuation === firstCallbackNode) {
         // The new callback is the highest priority callback in the list.
         firstCallbackNode = continuationNode;
-        ensureHostCallbackIsScheduled();
+        scheduleHostCallbackIfNeeded();
       }
 
       var previous = nextAfterContinuation.previous;
@@ -152,42 +170,16 @@ function flushFirstCallback() {
   }
 }
 
-function flushImmediateWork() {
-  if (
-    // Confirm we've exited the outer most event handler
-    currentEventStartTime === -1 &&
-    firstCallbackNode !== null &&
-    firstCallbackNode.priorityLevel === ImmediatePriority
-  ) {
-    isExecutingCallback = true;
-    try {
-      do {
-        flushFirstCallback();
-      } while (
-        // Keep flushing until there are no more immediate callbacks
-        firstCallbackNode !== null &&
-        firstCallbackNode.priorityLevel === ImmediatePriority
-      );
-    } finally {
-      isExecutingCallback = false;
-      if (firstCallbackNode !== null) {
-        // There's still work remaining. Request another callback.
-        ensureHostCallbackIsScheduled();
-      } else {
-        isHostCallbackScheduled = false;
-      }
-    }
-  }
-}
-
 function flushWork(didTimeout) {
   // Exit right away if we're currently paused
-
   if (enableSchedulerDebugging && isSchedulerPaused) {
     return;
   }
 
-  isExecutingCallback = true;
+  // We'll need a new host callback the next time work is scheduled.
+  isHostCallbackScheduled = false;
+
+  isPerformingWork = true;
   const previousDidTimeout = currentDidTimeout;
   currentDidTimeout = didTimeout;
   try {
@@ -226,16 +218,10 @@ function flushWork(didTimeout) {
       }
     }
   } finally {
-    isExecutingCallback = false;
+    isPerformingWork = false;
     currentDidTimeout = previousDidTimeout;
-    if (firstCallbackNode !== null) {
-      // There's still work remaining. Request another callback.
-      ensureHostCallbackIsScheduled();
-    } else {
-      isHostCallbackScheduled = false;
-    }
-    // Before exiting, flush all the immediate work that was scheduled.
-    flushImmediateWork();
+    // There's still work remaining. Request another callback.
+    scheduleHostCallbackIfNeeded();
   }
 }
 
@@ -258,12 +244,13 @@ function unstable_runWithPriority(priorityLevel, eventHandler) {
 
   try {
     return eventHandler();
+  } catch (error) {
+    // There's still work remaining. Request another callback.
+    scheduleHostCallbackIfNeeded();
+    throw error;
   } finally {
     currentPriorityLevel = previousPriorityLevel;
     currentEventStartTime = previousEventStartTime;
-
-    // Before exiting, flush all the immediate work that was scheduled.
-    flushImmediateWork();
   }
 }
 
@@ -289,12 +276,13 @@ function unstable_next(eventHandler) {
 
   try {
     return eventHandler();
+  } catch (error) {
+    // There's still work remaining. Request another callback.
+    scheduleHostCallbackIfNeeded();
+    throw error;
   } finally {
     currentPriorityLevel = previousPriorityLevel;
     currentEventStartTime = previousEventStartTime;
-
-    // Before exiting, flush all the immediate work that was scheduled.
-    flushImmediateWork();
   }
 }
 
@@ -309,15 +297,22 @@ function unstable_wrapCallback(callback) {
 
     try {
       return callback.apply(this, arguments);
+    } catch (error) {
+      // There's still work remaining. Request another callback.
+      scheduleHostCallbackIfNeeded();
+      throw error;
     } finally {
       currentPriorityLevel = previousPriorityLevel;
       currentEventStartTime = previousEventStartTime;
-      flushImmediateWork();
     }
   };
 }
 
-function unstable_scheduleCallback(callback, deprecated_options) {
+function unstable_scheduleCallback(
+  priorityLevel,
+  callback,
+  deprecated_options,
+) {
   var startTime =
     currentEventStartTime !== -1 ? currentEventStartTime : getCurrentTime();
 
@@ -330,7 +325,7 @@ function unstable_scheduleCallback(callback, deprecated_options) {
     // FIXME: Remove this branch once we lift expiration times out of React.
     expirationTime = startTime + deprecated_options.timeout;
   } else {
-    switch (currentPriorityLevel) {
+    switch (priorityLevel) {
       case ImmediatePriority:
         expirationTime = startTime + IMMEDIATE_PRIORITY_TIMEOUT;
         break;
@@ -351,7 +346,7 @@ function unstable_scheduleCallback(callback, deprecated_options) {
 
   var newNode = {
     callback,
-    priorityLevel: currentPriorityLevel,
+    priorityLevel: priorityLevel,
     expirationTime,
     next: null,
     previous: null,
@@ -363,7 +358,7 @@ function unstable_scheduleCallback(callback, deprecated_options) {
   if (firstCallbackNode === null) {
     // This is the first callback in the list.
     firstCallbackNode = newNode.next = newNode.previous = newNode;
-    ensureHostCallbackIsScheduled();
+    scheduleHostCallbackIfNeeded();
   } else {
     var next = null;
     var node = firstCallbackNode;
@@ -383,7 +378,7 @@ function unstable_scheduleCallback(callback, deprecated_options) {
     } else if (next === firstCallbackNode) {
       // The new callback has the earliest expiration in the entire list.
       firstCallbackNode = newNode;
-      ensureHostCallbackIsScheduled();
+      scheduleHostCallbackIfNeeded();
     }
 
     var previous = next.previous;
@@ -402,7 +397,7 @@ function unstable_pauseExecution() {
 function unstable_continueExecution() {
   isSchedulerPaused = false;
   if (firstCallbackNode !== null) {
-    ensureHostCallbackIsScheduled();
+    scheduleHostCallbackIfNeeded();
   }
 }
 
@@ -413,6 +408,9 @@ function unstable_getFirstCallbackNode() {
 function unstable_cancelCallback(callbackNode) {
   var next = callbackNode.next;
   if (next === null) {
+    if (currentlyFlushingCallback === callbackNode) {
+      currentlyFlushingCallback = null;
+    }
     // Already cancelled.
     return;
   }
@@ -439,10 +437,11 @@ function unstable_getCurrentPriorityLevel() {
 
 function unstable_shouldYield() {
   return (
-    !currentDidTimeout &&
-    ((firstCallbackNode !== null &&
-      firstCallbackNode.expirationTime < currentExpirationTime) ||
-      shouldYieldToHost())
+    currentlyFlushingCallback === null ||
+    (!currentDidTimeout &&
+      ((firstCallbackNode !== null &&
+        firstCallbackNode.expirationTime < currentExpirationTime) ||
+        shouldYieldToHost()))
   );
 }
 
