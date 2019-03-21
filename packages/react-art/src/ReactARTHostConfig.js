@@ -340,6 +340,10 @@ export function getChildHostContext() {
   return NO_CONTEXT;
 }
 
+export function getChildHostContextForEvent() {
+  return NO_CONTEXT;
+}
+
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
 export const noTimeout = -1;
@@ -440,7 +444,7 @@ export function handleEventComponent(
 }
 
 export function handleEventTarget(
-  type: string,
+  type: Symbol | number,
   props: Props,
   internalInstanceHandle: Object,
 ) {

@@ -8,9 +8,9 @@
  */
 'use strict';
 
-let reactProdInvariant;
+let ReactErrorProd;
 
-describe('reactProdInvariant', () => {
+describe('ReactErrorProd', () => {
   let globalErrorMock;
 
   beforeEach(() => {
@@ -25,7 +25,7 @@ describe('reactProdInvariant', () => {
       expect(typeof global.Error).toBe('function');
     }
     jest.resetModules();
-    reactProdInvariant = require('shared/reactProdInvariant').default;
+    ReactErrorProd = require('shared/ReactErrorProd').default;
   });
 
   afterEach(() => {
@@ -36,7 +36,7 @@ describe('reactProdInvariant', () => {
 
   it('should throw with the correct number of `%s`s in the URL', () => {
     expect(function() {
-      reactProdInvariant(124, 'foo', 'bar');
+      throw ReactErrorProd(124, 'foo', 'bar');
     }).toThrowError(
       'Minified React error #124; visit ' +
         'https://reactjs.org/docs/error-decoder.html?invariant=124&args[]=foo&args[]=bar' +
@@ -45,7 +45,7 @@ describe('reactProdInvariant', () => {
     );
 
     expect(function() {
-      reactProdInvariant(20);
+      throw ReactErrorProd(20);
     }).toThrowError(
       'Minified React error #20; visit ' +
         'https://reactjs.org/docs/error-decoder.html?invariant=20' +
@@ -54,7 +54,7 @@ describe('reactProdInvariant', () => {
     );
 
     expect(function() {
-      reactProdInvariant(77, '<div>', '&?bar');
+      throw ReactErrorProd(77, '<div>', '&?bar');
     }).toThrowError(
       'Minified React error #77; visit ' +
         'https://reactjs.org/docs/error-decoder.html?invariant=77&args[]=%3Cdiv%3E&args[]=%26%3Fbar' +

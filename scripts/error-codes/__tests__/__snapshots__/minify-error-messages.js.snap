@@ -1,0 +1,96 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`error transform should correctly transform invariants that are not in the error codes map 1`] = `
+"import _ReactError from 'shared/ReactError';
+
+import invariant from 'shared/invariant';
+(function () {
+  if (!condition) {
+    throw _ReactError(\`This is not a real error message.\`);
+  }
+})();"
+`;
+
+exports[`error transform should handle escaped characters 1`] = `
+"import _ReactError from 'shared/ReactError';
+
+import invariant from 'shared/invariant';
+(function () {
+  if (!condition) {
+    throw _ReactError(\`What's up?\`);
+  }
+})();"
+`;
+
+exports[`error transform should only add \`ReactError\` and \`ReactErrorProd\` once each 1`] = `
+"import _ReactErrorProd from 'shared/ReactErrorProd';
+import _ReactError from 'shared/ReactError';
+
+import invariant from 'shared/invariant';
+(function () {
+  if (!condition) {
+    if (__DEV__) {
+      throw _ReactError(\`Do not override existing functions.\`);
+    } else {
+      throw _ReactErrorProd(16);
+    }
+  }
+})();
+(function () {
+  if (!condition) {
+    if (__DEV__) {
+      throw _ReactError(\`Do not override existing functions.\`);
+    } else {
+      throw _ReactErrorProd(16);
+    }
+  }
+})();"
+`;
+
+exports[`error transform should replace simple invariant calls 1`] = `
+"import _ReactErrorProd from 'shared/ReactErrorProd';
+import _ReactError from 'shared/ReactError';
+
+import invariant from 'shared/invariant';
+(function () {
+  if (!condition) {
+    if (__DEV__) {
+      throw _ReactError(\`Do not override existing functions.\`);
+    } else {
+      throw _ReactErrorProd(16);
+    }
+  }
+})();"
+`;
+
+exports[`error transform should support invariant calls with a concatenated template string and args 1`] = `
+"import _ReactErrorProd from 'shared/ReactErrorProd';
+import _ReactError from 'shared/ReactError';
+
+import invariant from 'shared/invariant';
+(function () {
+  if (!condition) {
+    if (__DEV__) {
+      throw _ReactError(\`Expected a component class, got \${Foo}.\${Bar}\`);
+    } else {
+      throw _ReactErrorProd(18, Foo, Bar);
+    }
+  }
+})();"
+`;
+
+exports[`error transform should support invariant calls with args 1`] = `
+"import _ReactErrorProd from 'shared/ReactErrorProd';
+import _ReactError from 'shared/ReactError';
+
+import invariant from 'shared/invariant';
+(function () {
+  if (!condition) {
+    if (__DEV__) {
+      throw _ReactError(\`Expected \${foo} target to be an array; got \${bar}\`);
+    } else {
+      throw _ReactErrorProd(7, foo, bar);
+    }
+  }
+})();"
+`;

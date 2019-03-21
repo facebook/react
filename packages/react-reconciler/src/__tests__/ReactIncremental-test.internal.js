@@ -2026,8 +2026,15 @@ describe('ReactIncremental', () => {
 
     ReactNoop.render(<Recurse />);
     expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
-      'Legacy context API has been detected within a strict-mode tree: \n\n' +
-        'Please update the following components: Recurse',
+      [
+        'Warning: The <Recurse /> component appears to be a function component that returns a class instance. ' +
+          'Change Recurse to a class that extends React.Component instead. ' +
+          "If you can't use a class try assigning the prototype on the function as a workaround. " +
+          '`Recurse.prototype = React.Component.prototype`. ' +
+          "Don't use an arrow function since it cannot be called with `new` by React.",
+        'Legacy context API has been detected within a strict-mode tree: \n\n' +
+          'Please update the following components: Recurse',
+      ],
       {withoutStack: true},
     );
     expect(ops).toEqual([

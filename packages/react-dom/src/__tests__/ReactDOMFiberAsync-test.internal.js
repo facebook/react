@@ -710,5 +710,36 @@ describe('ReactDOMFiberAsync', () => {
       // everything without yielding when the flag is on.
       expect(Scheduler).toHaveYielded(['A', 'B', 'C']);
     });
+
+    it('wont suspend during a render if yielding is disabled', () => {
+      let p = new Promise(resolve => {});
+
+      function Suspend() {
+        throw p;
+      }
+
+      let root = ReactDOM.unstable_createRoot(container);
+      root.render(
+        <React.Suspense maxDuration={1000} fallback={'Loading'}>
+          Initial
+        </React.Suspense>,
+      );
+
+      Scheduler.flushAll();
+      expect(container.textContent).toBe('Initial');
+
+      root.render(
+        <React.Suspense maxDuration={1000} fallback={'Loading'}>
+          <Suspend />
+        </React.Suspense>,
+      );
+
+      expect(Scheduler).toHaveYielded([]);
+
+      Scheduler.flushAll();
+
+      // This should have flushed to the DOM even though we haven't ran the timers.
+      expect(container.textContent).toBe('Loading');
+    });
   });
 });

@@ -102,6 +102,7 @@
     "test": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.source.js",
     "test-persistent": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.source-persistent.js",
     "test-fire": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.source-fire.js",
+    "test-new-scheduler": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.source-new-scheduler.js",
     "test-prod": "cross-env NODE_ENV=production jest --config ./scripts/jest/config.source.js",
     "test-fire-prod": "cross-env NODE_ENV=production jest --config ./scripts/jest/config.source-fire.js",
     "test-prod-build": "yarn test-build-prod",

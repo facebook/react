@@ -1596,8 +1596,15 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(() => {
       expect(Scheduler).toFlushAndThrow('Oops!');
     }).toWarnDev(
-      'Legacy context API has been detected within a strict-mode tree: \n\n' +
-        'Please update the following components: Provider',
+      [
+        'Warning: The <Provider /> component appears to be a function component that returns a class instance. ' +
+          'Change Provider to a class that extends React.Component instead. ' +
+          "If you can't use a class try assigning the prototype on the function as a workaround. " +
+          '`Provider.prototype = React.Component.prototype`. ' +
+          "Don't use an arrow function since it cannot be called with `new` by React.",
+        'Legacy context API has been detected within a strict-mode tree: \n\n' +
+          'Please update the following components: Provider',
+      ],
       {withoutStack: true},
     );
   });

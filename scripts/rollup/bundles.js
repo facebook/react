@@ -461,6 +461,15 @@ const bundles = [
     global: 'SchedulerTracing',
     externals: [],
   },
+
+  /******* React Events (experimental) *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react-events',
+    global: 'ReactEvents',
+    externals: [],
+  },
 ];
 
 // Based on deep-freeze by substack (public domain)

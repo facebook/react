@@ -21,8 +21,18 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import * as Scheduler from 'scheduler/unstable_mock';
 import {createPortal} from 'shared/ReactPortal';
 import expect from 'expect';
-import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import {
+  REACT_FRAGMENT_TYPE,
+  REACT_ELEMENT_TYPE,
+  REACT_EVENT_COMPONENT_TYPE,
+  REACT_EVENT_TARGET_TYPE,
+  REACT_EVENT_TARGET_TOUCH_HIT,
+} from 'shared/ReactSymbols';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
+import getElementFromTouchHitTarget from 'shared/getElementFromTouchHitTarget';
+
+import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
 // for .act's return value
 type Thenable = {
@@ -54,6 +64,8 @@ type HostContext = Object;
 
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
+const EVENT_COMPONENT_CONTEXT = {};
+const EVENT_TARGET_CONTEXT = {};
 const UPDATE_SIGNAL = {};
 if (__DEV__) {
   Object.freeze(NO_CONTEXT);
@@ -250,6 +262,24 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return NO_CONTEXT;
     },
 
+    getChildHostContextForEvent(
+      parentHostContext: HostContext,
+      type: Symbol | number,
+    ) {
+      if (__DEV__ && enableEventAPI) {
+        if (type === REACT_EVENT_COMPONENT_TYPE) {
+          return EVENT_COMPONENT_CONTEXT;
+        } else if (type === REACT_EVENT_TARGET_TYPE) {
+          warning(
+            parentHostContext === EVENT_COMPONENT_CONTEXT,
+            'validateDOMNesting: React event targets must be direct children of event components.',
+          );
+          return EVENT_TARGET_CONTEXT;
+        }
+      }
+      return parentHostContext;
+    },
+
     getPublicInstance(instance) {
       return instance;
     },
@@ -333,6 +363,20 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       hostContext: Object,
       internalInstanceHandle: Object,
     ): TextInstance {
+      if (__DEV__ && enableEventAPI) {
+        warning(
+          hostContext !== EVENT_COMPONENT_CONTEXT,
+          'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
+            'Wrap the child text "%s" in an element.',
+          text,
+        );
+        warning(
+          hostContext !== EVENT_TARGET_CONTEXT,
+          'validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
+            'Wrap the child text "%s" in an element.',
+          text,
+        );
+      }
       if (hostContext === UPPERCASE_CONTEXT) {
         text = text.toUpperCase();
       }
@@ -363,6 +407,21 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     isPrimaryRenderer: true,
     supportsHydration: false,
+
+    handleEventComponent() {
+      // NO-OP
+    },
+
+    handleEventTarget(
+      type: Symbol | number,
+      props: Props,
+      internalInstanceHandle: Object,
+    ) {
+      if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
+        // Validates that there is a single element
+        getElementFromTouchHitTarget(internalInstanceHandle);
+      }
+    },
   };
 
   const hostConfig = useMutation
