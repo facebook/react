@@ -14,21 +14,29 @@ let warn = noop;
 if (__DEV__) {
   const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 
-  error = (...args) => {
+  error = function() {
+    const args = [];
+    for (let i = 0; i < arguments.length; i++) {
+      args[i] = arguments[i];
+    }
     const stack = ReactDebugCurrentFrame.getStackAddendum();
     if (stack !== '') {
-      console.error(...args, stack);
+      console.error.apply(console, args.concat(stack));
     } else {
-      console.error(...args);
+      console.error.apply(console, args);
     }
   };
 
-  warn = (...args) => {
+  warn = function() {
+    const args = [];
+    for (let i = 0; i < arguments.length; i++) {
+      args[i] = arguments[i];
+    }
     const stack = ReactDebugCurrentFrame.getStackAddendum();
     if (stack !== '') {
-      console.warn(...args, stack);
+      console.warn.apply(console, args.concat(stack));
     } else {
-      console.warn(...args);
+      console.warn.apply(console, args);
     }
   };
 }
