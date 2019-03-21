@@ -992,6 +992,18 @@ const tests = {
         }
       `,
     },
+    {
+      code: `
+        function Hello() {
+          const [state, setState] = useState(0);
+          useEffect(() => {
+            const handleResize = () => setState(window.innerWidth);
+            window.addEventListener('resize', handleResize);
+            return () => window.removeEventListener('resize', handleResize);
+          });
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -4460,6 +4472,102 @@ const tests = {
       errors: [
         `React Hook useEffect has an unnecessary dependency: 'fetchData'. ` +
           `Either exclude it or remove the dependency array.`,
+      ],
+    },
+    {
+      code: `
+        function Hello() {
+          const [state, setState] = useState(0);
+          useEffect(() => {
+            setState({});
+          });
+        }
+      `,
+      output: `
+        function Hello() {
+          const [state, setState] = useState(0);
+          useEffect(() => {
+            setState({});
+          }, []);
+        }
+      `,
+      errors: [
+        `React Hook useEffect contains a call to 'setState'. ` +
+          `Without a list of dependencies, this can lead to an infinite chain of updates. ` +
+          `To fix this, pass [] as a second argument to the useEffect Hook.`,
+      ],
+    },
+    {
+      code: `
+        function Hello() {
+          const [data, setData] = useState(0);
+          useEffect(() => {
+            fetchData.then(setData);
+          });
+        }
+      `,
+      output: `
+        function Hello() {
+          const [data, setData] = useState(0);
+          useEffect(() => {
+            fetchData.then(setData);
+          }, []);
+        }
+      `,
+      errors: [
+        `React Hook useEffect contains a call to 'setData'. ` +
+          `Without a list of dependencies, this can lead to an infinite chain of updates. ` +
+          `To fix this, pass [] as a second argument to the useEffect Hook.`,
+      ],
+    },
+    {
+      code: `
+        function Hello({ country }) {
+          const [data, setData] = useState(0);
+          useEffect(() => {
+            fetchData(country).then(setData);
+          });
+        }
+      `,
+      output: `
+        function Hello({ country }) {
+          const [data, setData] = useState(0);
+          useEffect(() => {
+            fetchData(country).then(setData);
+          }, [country]);
+        }
+      `,
+      errors: [
+        `React Hook useEffect contains a call to 'setData'. ` +
+          `Without a list of dependencies, this can lead to an infinite chain of updates. ` +
+          `To fix this, pass [country] as a second argument to the useEffect Hook.`,
+      ],
+    },
+    {
+      code: `
+        function Hello({ prop1, prop2 }) {
+          const [state, setState] = useState(0);
+          useEffect(() => {
+            if (prop1) {
+              setState(prop2);
+            }
+          });
+        }
+      `,
+      output: `
+        function Hello({ prop1, prop2 }) {
+          const [state, setState] = useState(0);
+          useEffect(() => {
+            if (prop1) {
+              setState(prop2);
+            }
+          }, [prop1, prop2]);
+        }
+      `,
+      errors: [
+        `React Hook useEffect contains a call to 'setState'. ` +
+          `Without a list of dependencies, this can lead to an infinite chain of updates. ` +
+          `To fix this, pass [prop1, prop2] as a second argument to the useEffect Hook.`,
       ],
     },
     {
