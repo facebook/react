@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {runEventsInBatch} from 'events/EventPluginHub';
+import {runEventsInBatch} from 'events/EventBatching';
 import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
 import {enqueueStateRestore} from 'events/ReactControlledComponent';
 import {batchedUpdates} from 'events/ReactGenericBatching';
