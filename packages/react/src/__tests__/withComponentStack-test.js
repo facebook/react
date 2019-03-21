@@ -15,18 +15,25 @@ function normalizeCodeLocInfo(str) {
 
 function expectWarningToMatch(expectedMessage, expectedStack) {
   expect(console.error).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledTimes(1);
 
-  const [actualMessage, actualStack] = console.error.calls.mostRecent().args;
+  let [actualMessage, actualStack] = console.error.calls.mostRecent().args;
 
-  expect(actualMessage).toBe(expectedMessage);
+  expect(actualMessage).toBe(`error: ${expectedMessage}`);
+  expect(normalizeCodeLocInfo(actualStack)).toBe(expectedStack);
+
+  [actualMessage, actualStack] = console.warn.calls.mostRecent().args;
+
+  expect(actualMessage).toBe(`warn: ${expectedMessage}`);
   expect(normalizeCodeLocInfo(actualStack)).toBe(expectedStack);
 }
 
-describe('warnWithComponentStack', () => {
+describe('withComponentStack', () => {
   let React = null;
   let ReactTestRenderer = null;
+  let error = null;
   let scheduler = null;
-  let warnWithComponentStack = null;
+  let warn = null;
 
   beforeEach(() => {
     jest.resetModules();
@@ -36,22 +43,28 @@ describe('warnWithComponentStack', () => {
     ReactTestRenderer = require('react-test-renderer');
     scheduler = require('scheduler');
 
-    warnWithComponentStack = React.unstable_warnWithComponentStack;
+    error = React.error;
+    warn = React.warn;
 
     spyOnDevAndProd(console, 'error');
+    spyOnDevAndProd(console, 'warn');
   });
 
   if (!__DEV__) {
-    it('passes warnings through to console.error in production mode', () => {
-      warnWithComponentStack('Warning logged in production mode');
-      expectWarningToMatch('Warning logged in production mode', undefined);
+    it('does nothing in production mode', () => {
+      error('error');
+      warn('warning');
+
+      expect(console.error).toHaveBeenCalledTimes(0);
+      expect(console.warn).toHaveBeenCalledTimes(0);
     });
   }
 
   if (__DEV__) {
     it('does not include component stack when called outside of render', () => {
-      warnWithComponentStack('Warning logged outside of render');
-      expectWarningToMatch('Warning logged outside of render', undefined);
+      error('error: logged outside of render');
+      warn('warn: logged outside of render');
+      expectWarningToMatch('logged outside of render', undefined);
     });
 
     it('includes component stack when called from a render method', () => {
@@ -62,14 +75,15 @@ describe('warnWithComponentStack', () => {
       }
 
       function Child() {
-        warnWithComponentStack('Warning logged in child render method');
+        error('error: logged in child render method');
+        warn('warn: logged in child render method');
         return null;
       }
 
       ReactTestRenderer.create(<Parent />);
 
       expectWarningToMatch(
-        'Warning logged in child render method',
+        'logged in child render method',
         '\n    in Child (at **)' + '\n    in Parent (at **)',
       );
     });
@@ -81,7 +95,8 @@ describe('warnWithComponentStack', () => {
 
       class Child extends React.Component {
         UNSAFE_componentWillMount() {
-          warnWithComponentStack('Warning logged in child cWM lifecycle');
+          error('error: logged in child cWM lifecycle');
+          warn('warn: logged in child cWM lifecycle');
         }
         render() {
           return null;
@@ -91,7 +106,7 @@ describe('warnWithComponentStack', () => {
       ReactTestRenderer.create(<Parent />);
 
       expectWarningToMatch(
-        'Warning logged in child cWM lifecycle',
+        'logged in child cWM lifecycle',
         '\n    in Child (at **)' + '\n    in Parent (at **)',
       );
     });
@@ -103,7 +118,8 @@ describe('warnWithComponentStack', () => {
 
       class Child extends React.Component {
         componentDidMount() {
-          warnWithComponentStack('Warning logged in child cDM lifecycle');
+          error('error: logged in child cDM lifecycle');
+          warn('warn: logged in child cDM lifecycle');
         }
         render() {
           return null;
@@ -113,7 +129,7 @@ describe('warnWithComponentStack', () => {
       ReactTestRenderer.create(<Parent />);
 
       expectWarningToMatch(
-        'Warning logged in child cDM lifecycle',
+        'logged in child cDM lifecycle',
         '\n    in Child (at **)' + '\n    in Parent (at **)',
       );
     });
@@ -127,7 +143,8 @@ describe('warnWithComponentStack', () => {
 
       function Child() {
         React.useEffect(() => {
-          warnWithComponentStack('Warning logged in child render method');
+          error('error: logged in child render method');
+          warn('warn: logged in child render method');
         });
         return null;
       }
@@ -137,7 +154,7 @@ describe('warnWithComponentStack', () => {
       scheduler.flushAll(); // Flush passive effects
 
       expectWarningToMatch(
-        'Warning logged in child render method',
+        'logged in child render method',
         '\n    in Child (at **)' + '\n    in Parent (at **)',
       );
     });

@@ -7,10 +7,14 @@
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-let warnWithComponentStack = (...args) => console.error(...args);
+function noop() {}
+
+let error = noop;
+let warn = noop;
 if (__DEV__) {
-  warnWithComponentStack = (...args) => {
-    const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+  const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+
+  error = (...args) => {
     const stack = ReactDebugCurrentFrame.getStackAddendum();
     if (stack !== '') {
       console.error(...args, stack);
@@ -18,6 +22,15 @@ if (__DEV__) {
       console.error(...args);
     }
   };
+
+  warn = (...args) => {
+    const stack = ReactDebugCurrentFrame.getStackAddendum();
+    if (stack !== '') {
+      console.warn(...args, stack);
+    } else {
+      console.warn(...args);
+    }
+  };
 }
 
-export default warnWithComponentStack;
+export {error, warn};

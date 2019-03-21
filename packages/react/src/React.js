@@ -45,7 +45,7 @@ import {
   cloneElementWithValidation,
 } from './ReactElementValidator';
 import ReactSharedInternals from './ReactSharedInternals';
-import warnWithComponentStack from './warnWithComponentStack';
+import {error, warn} from './withComponentStack';
 import {enableStableConcurrentModeAPIs} from 'shared/ReactFeatureFlags';
 
 const React = {
@@ -65,6 +65,9 @@ const React = {
   forwardRef,
   lazy,
   memo,
+
+  error,
+  warn,
 
   useCallback,
   useContext,
@@ -90,8 +93,6 @@ const React = {
   version: ReactVersion,
 
   unstable_ConcurrentMode: REACT_CONCURRENT_MODE_TYPE,
-
-  unstable_warnWithComponentStack: warnWithComponentStack,
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactSharedInternals,
 };
