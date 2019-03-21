@@ -1087,7 +1087,7 @@ const tests = {
       ],
     },
     {
-      // Infer deps onto hooks that need them
+      // Does nothing to deps on useMemo/useCallback if no options specified
       code: `
         function MyComponent(props) {
           let foo = 42;
@@ -1107,6 +1107,65 @@ const tests = {
           const value = useMemo(() => {
             console.log(foo);
           });
+          const fn = useCallback(() => {
+             alert(bar);
+          });
+        }
+      `,
+      errors: [
+        'React Hook useMemo does nothing when called with only one argument. ' +
+          'Did you forget to pass an array of dependencies?',
+        "React Hook useMemo has a missing dependency: 'foo'. " +
+          'Did you mean to include it?',
+        'React Hook useCallback does nothing when called with only one argument. ' +
+          'Did you forget to pass an array of dependencies?',
+        "React Hook useCallback has a missing dependency: 'bar'. " +
+          'Did you mean to include it?',
+      ],
+    },
+    {
+      // Does nothing to deps on useMemo if no deps required
+      code: `
+        function MyComponent(props) {
+          const value = useMemo(() => { return 2*2; });
+          const fn = useCallback(() => { alert('foo'); });
+        }
+      `,
+      output: `
+        function MyComponent(props) {
+          const value = useMemo(() => { return 2*2; });
+          const fn = useCallback(() => { alert('foo'); });
+        }
+      `,
+      errors: [
+        'React Hook useMemo does nothing when called with only one argument. ' +
+          'Did you forget to pass an array of dependencies?',
+        'React Hook useCallback does nothing when called with only one argument. ' +
+          'Did you forget to pass an array of dependencies?',
+      ],
+      options: [{missingDependencies: 'inject'}],
+    },
+    {
+      // Inject deps onto hooks that need them
+      code: `
+        function MyComponent(props) {
+          let foo = 42;
+          let bar = 43;
+          const value = useMemo(() => {
+            console.log(foo);
+          });
+          const fn = useCallback(() => {
+             alert(bar);
+          });
+        }
+      `,
+      output: `
+        function MyComponent(props) {
+          let foo = 42;
+          let bar = 43;
+          const value = useMemo(() => {
+            console.log(foo);
+          }, [foo]);
           const fn = useCallback(() => {
              alert(bar);
           }, [bar]);
@@ -1122,32 +1181,7 @@ const tests = {
         "React Hook useCallback has a missing dependency: 'bar'. " +
           'Did you mean to include it?',
       ],
-    },
-    {
-      code: `
-        function MyComponent(props) {
-          const local = {};
-          useCallback(() => {
-            console.log(props.foo);
-            console.log(props.bar);
-          });
-        }
-      `,
-      output: `
-        function MyComponent(props) {
-          const local = {};
-          useCallback(() => {
-            console.log(props.foo);
-            console.log(props.bar);
-          }, [props.bar, props.foo]);
-        }
-      `,
-      errors: [
-        'React Hook useCallback does nothing when called with only one argument. ' +
-          'Did you forget to pass an array of dependencies?',
-        "React Hook useCallback has missing dependencies: 'props.bar' and 'props.foo'. " +
-          'Did you mean to include them?',
-      ],
+      options: [{missingDependencies: 'inject'}],
     },
     {
       // Regression test
