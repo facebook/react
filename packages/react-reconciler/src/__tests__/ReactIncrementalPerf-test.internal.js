@@ -191,7 +191,7 @@ describe('ReactDebugFiberPerf', () => {
 
   it('does not include ConcurrentMode, StrictMode, or Profiler components in measurements', () => {
     ReactNoop.render(
-      <React.unstable_Profiler id="test" onRender={jest.fn()}>
+      <React.Profiler id="test" onRender={jest.fn()}>
         <React.StrictMode>
           <Parent>
             <React.unstable_ConcurrentMode>
@@ -199,7 +199,7 @@ describe('ReactDebugFiberPerf', () => {
             </React.unstable_ConcurrentMode>
           </Parent>
         </React.StrictMode>
-      </React.unstable_Profiler>,
+      </React.Profiler>,
     );
     addComment('Mount');
     expect(Scheduler).toFlushWithoutYielding();

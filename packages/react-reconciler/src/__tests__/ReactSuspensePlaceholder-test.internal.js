@@ -31,7 +31,7 @@ describe('ReactSuspensePlaceholder', () => {
     Scheduler = require('scheduler');
     ReactCache = require('react-cache');
 
-    Profiler = React.unstable_Profiler;
+    Profiler = React.Profiler;
     Suspense = React.Suspense;
 
     TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
