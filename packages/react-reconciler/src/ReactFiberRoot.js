@@ -83,6 +83,13 @@ type BaseFiberRootProperties = {|
   firstBatch: Batch | null,
   // Linked-list of roots
   nextScheduledRoot: FiberRoot | null,
+
+  // New Scheduler fields
+  callbackNode: *,
+  callbackExpirationTime: ExpirationTime,
+  firstPendingTime: ExpirationTime,
+  lastPendingTime: ExpirationTime,
+  pingTime: ExpirationTime,
 |};
 
 // The following attributes are only used by interaction tracing builds.
@@ -145,6 +152,12 @@ export function createFiberRoot(
       interactionThreadID: unstable_getThreadID(),
       memoizedInteractions: new Set(),
       pendingInteractionMap: new Map(),
+
+      callbackNode: null,
+      callbackExpirationTime: NoWork,
+      firstPendingTime: NoWork,
+      lastPendingTime: NoWork,
+      pingTime: NoWork,
     }: FiberRoot);
   } else {
     root = ({
@@ -172,6 +185,12 @@ export function createFiberRoot(
       expirationTime: NoWork,
       firstBatch: null,
       nextScheduledRoot: null,
+
+      callbackNode: null,
+      callbackExpirationTime: NoWork,
+      firstPendingTime: NoWork,
+      lastPendingTime: NoWork,
+      pingTime: NoWork,
     }: BaseFiberRootProperties);
   }
 

@@ -48,6 +48,15 @@ function toFlushWithoutYielding(Scheduler) {
   return toFlushAndYield(Scheduler, []);
 }
 
+function toFlushExpired(Scheduler, expectedYields) {
+  assertYieldsWereCleared(Scheduler);
+  Scheduler.unstable_flushExpired();
+  const actualYields = Scheduler.unstable_clearYields();
+  return captureAssertion(() => {
+    expect(actualYields).toEqual(expectedYields);
+  });
+}
+
 function toHaveYielded(Scheduler, expectedYields) {
   return captureAssertion(() => {
     const actualYields = Scheduler.unstable_clearYields();
@@ -68,6 +77,7 @@ module.exports = {
   toFlushAndYield,
   toFlushAndYieldThrough,
   toFlushWithoutYielding,
+  toFlushExpired,
   toHaveYielded,
   toFlushAndThrow,
 };

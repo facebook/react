@@ -5,6 +5,7 @@ let Scheduler;
 let ReactFeatureFlags;
 let Suspense;
 let lazy;
+let enableNewScheduler;
 
 describe('ReactLazy', () => {
   beforeEach(() => {
@@ -18,6 +19,7 @@ describe('ReactLazy', () => {
     lazy = React.lazy;
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
+    enableNewScheduler = ReactFeatureFlags.enableNewScheduler;
   });
 
   function Text(props) {
@@ -485,19 +487,33 @@ describe('ReactLazy', () => {
 
     await Promise.resolve();
 
+    if (enableNewScheduler) {
+      // The new scheduler pings in a separate task
+      expect(Scheduler).toHaveYielded([]);
+    } else {
+      // The old scheduler pings synchronously
+      expect(Scheduler).toHaveYielded(['UNSAFE_componentWillMount: A', 'A1']);
+    }
+
     root.update(
       <Suspense fallback={<Text text="Loading..." />}>
         <LazyClass num={2} />
       </Suspense>,
     );
-    expect(Scheduler).toHaveYielded([
-      'UNSAFE_componentWillMount: A',
-      'A1',
-      'UNSAFE_componentWillReceiveProps: A -> A',
-      'UNSAFE_componentWillUpdate: A -> A',
-      'A2',
-    ]);
-    expect(Scheduler).toFlushAndYield([]);
+
+    if (enableNewScheduler) {
+      // Because this ping happens in a new task, the ping and the update
+      // are batched together
+      expect(Scheduler).toHaveYielded(['UNSAFE_componentWillMount: A', 'A2']);
+    } else {
+      // The old scheduler must do two separate renders, no batching.
+      expect(Scheduler).toHaveYielded([
+        'UNSAFE_componentWillReceiveProps: A -> A',
+        'UNSAFE_componentWillUpdate: A -> A',
+        'A2',
+      ]);
+    }
+
     expect(root).toMatchRenderedOutput('A2');
 
     root.update(
