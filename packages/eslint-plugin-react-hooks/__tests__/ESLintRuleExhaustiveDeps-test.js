@@ -2971,6 +2971,36 @@ const tests = {
     },
     {
       code: `
+        function MyComponent() {
+          const myRef = useRef();
+          useEffect(() => {
+            const handleMove = () => {};
+            myRef.current.addEventListener('mousemove', handleMove);
+            return () => myRef.current.removeEventListener('mousemove', handleMove);
+          });
+          return <div ref={myRef} />;
+        }
+      `,
+      output: `
+        function MyComponent() {
+          const myRef = useRef();
+          useEffect(() => {
+            const handleMove = () => {};
+            myRef.current.addEventListener('mousemove', handleMove);
+            return () => myRef.current.removeEventListener('mousemove', handleMove);
+          });
+          return <div ref={myRef} />;
+        }
+      `,
+      errors: [
+        `The ref value 'myRef.current' will likely have changed by the time ` +
+          `this effect cleanup function runs. If this ref points to a node ` +
+          `rendered by React, copy 'myRef.current' to a variable inside the effect, ` +
+          `and use that variable in the cleanup function.`,
+      ],
+    },
+    {
+      code: `
         function useMyThing(myRef) {
           useEffect(() => {
             const handleMove = () => {};
@@ -4441,6 +4471,31 @@ const tests = {
       output: `
         function Thing() {
           useEffect(async () => {}, []);
+        }
+      `,
+      errors: [
+        `Effect callbacks are synchronous to prevent race conditions. ` +
+          `Put the async function inside:\n\n` +
+          'useEffect(() => {\n' +
+          '  async function fetchData() {\n' +
+          '    // You can await here\n' +
+          '    const response = await MyAPI.getData(someId);\n' +
+          '    // ...\n' +
+          '  }\n' +
+          '  fetchData();\n' +
+          `}, [someId]); // Or [] if effect doesn't need props or state\n\n` +
+          'Learn more about data fetching with Hooks: https://fb.me/react-hooks-data-fetching',
+      ],
+    },
+    {
+      code: `
+        function Thing() {
+          useEffect(async () => {});
+        }
+      `,
+      output: `
+        function Thing() {
+          useEffect(async () => {});
         }
       `,
       errors: [
