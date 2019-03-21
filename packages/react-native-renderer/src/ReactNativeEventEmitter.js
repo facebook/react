@@ -7,7 +7,10 @@
  * @flow
  */
 
-import {getListener, runExtractedEventsInBatch} from 'events/EventPluginHub';
+import {
+  getListener,
+  runExtractedPluginEventsInBatch,
+} from 'events/EventPluginHub';
 import {registrationNameModules} from 'events/EventPluginRegistry';
 import {batchedUpdates} from 'events/ReactGenericBatching';
 import warningWithoutStack from 'shared/warningWithoutStack';
@@ -95,7 +98,7 @@ function _receiveRootNodeIDEvent(
   const nativeEvent = nativeEventParam || EMPTY_NATIVE_EVENT;
   const inst = getInstanceFromNode(rootNodeID);
   batchedUpdates(function() {
-    runExtractedEventsInBatch(
+    runExtractedPluginEventsInBatch(
       topLevelType,
       inst,
       nativeEvent,

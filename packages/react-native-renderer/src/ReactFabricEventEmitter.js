@@ -9,7 +9,10 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
-import {getListener, runExtractedEventsInBatch} from 'events/EventPluginHub';
+import {
+  getListener,
+  runExtractedPluginEventsInBatch,
+} from 'events/EventPluginHub';
 import {registrationNameModules} from 'events/EventPluginRegistry';
 import {batchedUpdates} from 'events/ReactGenericBatching';
 
@@ -25,7 +28,7 @@ export function dispatchEvent(
 ) {
   const targetFiber = (target: null | Fiber);
   batchedUpdates(function() {
-    runExtractedEventsInBatch(
+    runExtractedPluginEventsInBatch(
       topLevelType,
       targetFiber,
       nativeEvent,
