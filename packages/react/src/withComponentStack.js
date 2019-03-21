@@ -15,28 +15,30 @@ if (__DEV__) {
   const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 
   error = function() {
-    const args = [];
-    for (let i = 0; i < arguments.length; i++) {
-      args[i] = arguments[i];
-    }
     const stack = ReactDebugCurrentFrame.getStackAddendum();
     if (stack !== '') {
-      console.error.apply(console, args.concat(stack));
-    } else {
+      const args = [];
+      for (let i = 0; i < arguments.length; i++) {
+        args[i] = arguments[i];
+      }
+      args.push(stack);
       console.error.apply(console, args);
+    } else {
+      console.error.apply(console, arguments);
     }
   };
 
   warn = function() {
-    const args = [];
-    for (let i = 0; i < arguments.length; i++) {
-      args[i] = arguments[i];
-    }
     const stack = ReactDebugCurrentFrame.getStackAddendum();
     if (stack !== '') {
-      console.warn.apply(console, args.concat(stack));
-    } else {
+      const args = [];
+      for (let i = 0; i < arguments.length; i++) {
+        args[i] = arguments[i];
+      }
+      args.push(stack);
       console.warn.apply(console, args);
+    } else {
+      console.warn.apply(console, arguments);
     }
   };
 }
