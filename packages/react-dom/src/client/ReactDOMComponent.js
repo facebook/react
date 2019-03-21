@@ -1283,7 +1283,7 @@ export function listenToEventResponderEvents(
 ): void {
   if (enableEventAPI) {
     const {targetEventTypes} = eventResponder;
-    // Get the listening set for this element. We use this to track
+    // Get the listening Set for this element. We use this to track
     // what events we're listening to.
     const listeningSet = getListeningSetForElement(element);
 
@@ -1294,7 +1294,7 @@ export function listenToEventResponderEvents(
       let capture = false;
       let passive = true;
 
-      // By default, if no event config object is provided (only a string),
+      // If no event config object is provided (i.e. - only a string),
       // we default to enabling passive and not capture.
       if (typeof targetEventType === 'string') {
         topLevelType = targetEventType;
@@ -1320,7 +1320,7 @@ export function listenToEventResponderEvents(
           capture = targetEventConfigObject.capture;
         }
       }
-      // Create a unique name for this event, plus it's properties. We'll
+      // Create a unique name for this event, plus its properties. We'll
       // use this to ensure we don't listen to the same event with the same
       // properties again.
       const passiveKey = passive ? '_passive' : '';
