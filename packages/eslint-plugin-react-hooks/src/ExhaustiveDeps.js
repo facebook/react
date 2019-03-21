@@ -20,10 +20,6 @@ export default {
           additionalHooks: {
             type: 'string',
           },
-          missingDependencies: {
-            // TODO: Can this have an enum option for just removing the hook
-            enum: ['inject'],
-          },
         },
       },
     ],
@@ -37,17 +33,8 @@ export default {
         ? new RegExp(context.options[0].additionalHooks)
         : undefined;
 
-    // Currently only supports "useMemo" & "useCallback"
-    const ifMissingDependencies =
-      context.options &&
-      context.options[0] &&
-      context.options[0].missingDependencies
-        ? context.options[0].missingDependencies
-        : undefined;
-
     const options = {
       additionalHooks,
-      missingDependencies: ifMissingDependencies,
     };
 
     // Should be shared between visitors.
@@ -972,7 +959,6 @@ export default {
         !declaredDependenciesNode &&
         (reactiveHookName === 'useMemo' || reactiveHookName === 'useCallback')
       ) {
-        // TODO: Can this have an autofix to remove hook if suggestedDependencies is empty
         if (suggestedDependencies.length > 0) {
           context.report({
             node: node.parent.callee,
@@ -980,14 +966,13 @@ export default {
               `React Hook ${context.getSource(reactiveHook)} has ` +
               getWarningMessage(missingDependencies, 'a', 'missing', 'include'),
             fix(fixer) {
-              // TODO: consider preserving the comments or formatting?
-              if (options.missingDependencies === 'inject') {
+              if (reactiveHookName === 'useCallback') {
                 return fixer.insertTextAfter(
                   callbackNode,
                   `, [${suggestedDependencies.join(', ')}]`,
                 );
               }
-              return null;
+              return;
             },
           });
         }
