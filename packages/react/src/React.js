@@ -45,6 +45,7 @@ import {
   cloneElementWithValidation,
 } from './ReactElementValidator';
 import ReactSharedInternals from './ReactSharedInternals';
+import {error, warn} from './withComponentStack';
 import {enableStableConcurrentModeAPIs} from 'shared/ReactFeatureFlags';
 
 const React = {
@@ -64,6 +65,9 @@ const React = {
   forwardRef,
   lazy,
   memo,
+
+  error,
+  warn,
 
   useCallback,
   useContext,
