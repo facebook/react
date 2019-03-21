@@ -11,6 +11,7 @@ import type {AnyNativeEvent} from 'events/PluginModuleType';
 import {EventComponent} from 'shared/ReactWorkTags';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 import type {ReactEventResponder} from 'shared/ReactTypes';
+import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
@@ -102,7 +103,25 @@ export function runResponderEventsInBatch(
   // Traverse up the fiber tree till we find event component fibers.
   while (node !== null) {
     if (node.tag === EventComponent) {
-      if (node.alternate !== null && !currentEventComponentFibers.has(node)) {
+      // When we traverse the fiber tree from the target fiber, we will
+      // ecounter event component fibers that might not be the current
+      // fiber. This will happen frequently because of how ReactDOM
+      // stores elements relative to their fibers. When we create or
+      // mount elements, we store their fiber on the element. We never
+      // update the fiber when the element updates to its alternate fiber,
+      // we only update the props for the fiber. Furthermore, we also
+      // never update the props if the element doesn't need an update.
+      // That means that an element target might point to a fiber tree
+      // that is stale and not the current tree. To get around this, we
+      // always store the current event component in a Set and use this
+      // logic to determine when we need to swith to the event component
+      // fiber alternate.
+      if (!currentEventComponentFibers.has(node)) {
+        invariant(
+          node.alternate !== null,
+          'runResponderEventsInBatch failed to find the active fiber. ' +
+            'This is most definitely a bug in React.',
+        );
         node = node.alternate;
       }
       // TODO create a responder context and pass it through
