@@ -21,6 +21,8 @@ import {
   HostRoot,
   HostPortal,
   HostText,
+  Fragment,
+  SuspenseComponent,
 } from 'shared/ReactWorkTags';
 import {NoEffect, Placement} from 'shared/ReactSideEffectTags';
 
@@ -119,8 +121,27 @@ export function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
     let parentA = a.return;
     let parentB = parentA ? parentA.alternate : null;
     if (!parentA || !parentB) {
-      // We're at the root.
-      break;
+      // We're either at the root, or we're in a special Fragment
+      // with no alternate, which is how Suspense (un)hiding works.
+      let maybeSuspenseFragment = parentA || parentB;
+      if (maybeSuspenseFragment && maybeSuspenseFragment.tag === Fragment) {
+        const maybeSuspense = maybeSuspenseFragment.return;
+        if (
+          maybeSuspense &&
+          maybeSuspense.tag === SuspenseComponent &&
+          // If state isn't null, it timed out and we have two Fragment children.
+          maybeSuspense.memoizedState !== null
+        ) {
+          parentA = maybeSuspense;
+          parentB = maybeSuspense;
+          a = maybeSuspenseFragment;
+          b = maybeSuspenseFragment;
+        } else {
+          break;
+        }
+      } else {
+        break;
+      }
     }
 
     // If both copies of the parent fiber point to the same child, we can
