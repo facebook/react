@@ -6,6 +6,23 @@
   </summary>
 </details>
 
+## 16.8.5 (March 22, 2019)
+
+### React DOM
+
+* Don't set the first option as selected in select tag with `size` attribute. ([@kulek1](https://github.com/kulek1) in [#14242](https://github.com/facebook/react/pull/14242))
+* Improve the `useEffect(async () => ...)` warning message. ([@gaearon](https://github.com/gaearon) in [#15118](https://github.com/facebook/react/pull/15118))
+
+### React DOM Server
+
+* Improve the `useLayoutEffect` warning message when server rendering. ([@gaearon](https://github.com/gaearon) in [#15158](https://github.com/facebook/react/pull/15158))
+
+### React Shallow Renderer
+
+* Fix `setState` in shallow renderer to work with Hooks. ([@gaearon](https://github.com/gaearon) in [#15120](https://github.com/facebook/react/pull/15120))
+* Fix shallow renderer to support `React.memo`. ([@aweary](https://github.com/aweary) in [#14816](https://github.com/facebook/react/pull/14816))
+* Fix shallow renderer not allowing Hooks inside `forwardRef`. ([@eps1lon](https://github.com/eps1lon) in [#15100](https://github.com/facebook/react/pull/15100))
+
 ## 16.8.4 (March 5, 2019)
 
 ### React DOM and other renderers
