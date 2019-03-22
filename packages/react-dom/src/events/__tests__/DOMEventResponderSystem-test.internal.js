@@ -54,11 +54,20 @@ describe('DOMEventResponderSystem', () => {
 
   it('the event responder handleEvent() function should fire on click event', () => {
     let eventResponderFiredCount = 0;
+    let eventLog = [];
     const buttonRef = React.createRef();
 
-    const ClickEventComponent = createReactEventComponent(['click'], () => {
-      eventResponderFiredCount++;
-    });
+    const ClickEventComponent = createReactEventComponent(
+      ['click'],
+      (context, props) => {
+        eventResponderFiredCount++;
+        eventLog.push({
+          name: context.eventType,
+          passive: context.isPassive(),
+          passiveSupported: context.isPassiveSupported(),
+        });
+      },
+    );
 
     const Test = () => (
       <ClickEventComponent>
@@ -73,6 +82,13 @@ describe('DOMEventResponderSystem', () => {
     let buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
     expect(eventResponderFiredCount).toBe(1);
+    expect(eventLog.length).toBe(1);
+    // JSDOM does not support passive events, so this will be false
+    expect(eventLog[0]).toEqual({
+      name: 'click',
+      passive: false,
+      passiveSupported: false,
+    });
 
     // Unmounting the container and clicking should not increment anything
     ReactDOM.render(null, container);
@@ -84,5 +100,44 @@ describe('DOMEventResponderSystem', () => {
     buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
     expect(eventResponderFiredCount).toBe(2);
+  });
+
+  it('the event responder handleEvent() function should fire on click event (passive events forced)', () => {
+    // JSDOM does not support passive events, so this manually overrides the value to be true
+    const checkPassiveEvents = require('react-dom/src/events/checkPassiveEvents');
+    checkPassiveEvents.passiveBrowserEventsSupported = true;
+
+    let eventLog = [];
+    const buttonRef = React.createRef();
+
+    const ClickEventComponent = createReactEventComponent(
+      ['click'],
+      (context, props) => {
+        eventLog.push({
+          name: context.eventType,
+          passive: context.isPassive(),
+          passiveSupported: context.isPassiveSupported(),
+        });
+      },
+    );
+
+    const Test = () => (
+      <ClickEventComponent>
+        <button ref={buttonRef}>Click me!</button>
+      </ClickEventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+
+    // Clicking the button should trigger the event responder handleEvent()
+    let buttonElement = buttonRef.current;
+    dispatchClickEvent(buttonElement);
+    expect(eventLog.length).toBe(1);
+    // JSDOM does not support passive events, so this will be false
+    expect(eventLog[0]).toEqual({
+      name: 'click',
+      passive: true,
+      passiveSupported: true,
+    });
   });
 });

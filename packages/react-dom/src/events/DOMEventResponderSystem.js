@@ -6,7 +6,11 @@
  * @flow
  */
 
-import {type EventSystemFlags} from 'events/EventSystemFlags';
+import {
+  type EventSystemFlags,
+  IS_PASSIVE,
+  PASSIVE_NOT_SUPPORTED,
+} from 'events/EventSystemFlags';
 import type {AnyNativeEvent} from 'events/PluginModuleType';
 import {EventComponent} from 'shared/ReactWorkTags';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
@@ -31,6 +35,27 @@ export const eventResponderValidEventTypes: Map<
   ReactEventResponder,
   Set<DOMTopLevelEventType>,
 > = new Map();
+
+// TODO add context methods for dispatching events
+function DOMEventResponderContext(
+  topLevelType: DOMTopLevelEventType,
+  nativeEvent: AnyNativeEvent,
+  nativeEventTarget: EventTarget,
+  eventSystemFlags: EventSystemFlags,
+) {
+  this.event = nativeEvent;
+  this.eventType = topLevelType;
+  this.eventTarget = nativeEventTarget;
+  this._flags = eventSystemFlags;
+}
+
+DOMEventResponderContext.prototype.isPassive = function(): boolean {
+  return (this._flags & IS_PASSIVE) !== 0;
+};
+
+DOMEventResponderContext.prototype.isPassiveSupported = function(): boolean {
+  return (this._flags & PASSIVE_NOT_SUPPORTED) === 0;
+};
 
 function createValidEventTypeSet(targetEventTypes): Set<DOMTopLevelEventType> {
   const eventTypeSet = new Set();
@@ -97,8 +122,12 @@ export function runResponderEventsInBatch(
   nativeEventTarget: EventTarget,
   eventSystemFlags: EventSystemFlags,
 ): void {
-  // TODO add proper event context
-  let context = ({}: any);
+  let context = new DOMEventResponderContext(
+    topLevelType,
+    nativeEvent,
+    nativeEventTarget,
+    eventSystemFlags,
+  );
   let node = targetFiber;
   // Traverse up the fiber tree till we find event component fibers.
   while (node !== null) {
@@ -124,7 +153,6 @@ export function runResponderEventsInBatch(
         );
         node = node.alternate;
       }
-      // TODO create a responder context and pass it through
       handleTopLevelType(topLevelType, node, context);
     }
     node = node.return;
