@@ -2,6 +2,6 @@
 
 jest.mock('shared/ReactFeatureFlags', () => {
   const ReactFeatureFlags = require.requireActual('shared/ReactFeatureFlags');
-  ReactFeatureFlags.enableNewScheduler = true;
+  ReactFeatureFlags.enableNewScheduler = false;
   return ReactFeatureFlags;
 });
