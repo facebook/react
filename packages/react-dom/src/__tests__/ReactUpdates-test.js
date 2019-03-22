@@ -1528,7 +1528,7 @@ describe('ReactUpdates', () => {
   });
 
   if (__DEV__) {
-    it('warns about a deferred infinite update loop with useEffect', async () => {
+    it('warns about a deferred infinite update loop with useEffect', () => {
       function NonTerminating() {
         const [step, setStep] = React.useState(0);
         React.useEffect(() => {
@@ -1554,7 +1554,6 @@ describe('ReactUpdates', () => {
         ReactDOM.render(<App />, container);
         while (error === null) {
           Scheduler.unstable_flushNumberOfYields(1);
-          await Promise.resolve();
         }
         expect(error).toContain('Warning: Maximum update depth exceeded.');
         expect(stack).toContain('in NonTerminating');
@@ -1563,7 +1562,7 @@ describe('ReactUpdates', () => {
       }
     });
 
-    it('can have nested updates if they do not cross the limit', async () => {
+    it('can have nested updates if they do not cross the limit', () => {
       let _setStep;
       const LIMIT = 50;
 
@@ -1585,7 +1584,6 @@ describe('ReactUpdates', () => {
       // Verify we can flush them asynchronously without warning
       for (let i = 0; i < LIMIT * 2; i++) {
         Scheduler.unstable_flushNumberOfYields(1);
-        await Promise.resolve();
       }
       expect(container.textContent).toBe('50');
 
@@ -1598,7 +1596,6 @@ describe('ReactUpdates', () => {
       expect(container.textContent).toBe('0');
       for (let i = 0; i < LIMIT * 2; i++) {
         Scheduler.unstable_flushNumberOfYields(1);
-        await Promise.resolve();
       }
       expect(container.textContent).toBe('50');
     });
