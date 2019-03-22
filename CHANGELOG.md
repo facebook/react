@@ -21,7 +21,7 @@
 
 * Fix `setState` in shallow renderer to work with Hooks. ([@gaearon](https://github.com/gaearon) in [#15120](https://github.com/facebook/react/pull/15120))
 * Fix shallow renderer to support `React.memo`. ([@aweary](https://github.com/aweary) in [#14816](https://github.com/facebook/react/pull/14816))
-* Fix shallow renderer not allowing Hooks inside `forwardRef`. ([@eps1lon](https://github.com/eps1lon) in [#15100](https://github.com/facebook/react/pull/15100))
+* Fix shallow renderer to support Hooks inside `forwardRef`. ([@eps1lon](https://github.com/eps1lon) in [#15100](https://github.com/facebook/react/pull/15100))
 
 ## 16.8.4 (March 5, 2019)
 
