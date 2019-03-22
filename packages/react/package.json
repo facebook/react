@@ -4,7 +4,7 @@
   "keywords": [
     "react"
   ],
-  "version": "16.8.4",
+  "version": "16.8.5",
   "homepage": "https://reactjs.org/",
   "bugs": "https://github.com/facebook/react/issues",
   "license": "MIT",
@@ -29,7 +29,7 @@
     "loose-envify": "^1.1.0",
     "object-assign": "^4.1.1",
     "prop-types": "^15.6.2",
-    "scheduler": "^0.13.4"
+    "scheduler": "^0.13.5"
   },
   "browserify": {
     "transform": [
