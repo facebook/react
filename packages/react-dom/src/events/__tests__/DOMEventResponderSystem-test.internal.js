@@ -133,11 +133,90 @@ describe('DOMEventResponderSystem', () => {
     let buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
     expect(eventLog.length).toBe(1);
-    // JSDOM does not support passive events, so this will be false
     expect(eventLog[0]).toEqual({
       name: 'click',
       passive: true,
       passiveSupported: true,
     });
+  });
+
+  it('nested event responders and their handleEvent() function should fire multiple times', () => {
+    let eventResponderFiredCount = 0;
+    let eventLog = [];
+    const buttonRef = React.createRef();
+
+    const ClickEventComponent = createReactEventComponent(
+      ['click'],
+      (context, props) => {
+        eventResponderFiredCount++;
+        eventLog.push({
+          name: context.eventType,
+          passive: context.isPassive(),
+          passiveSupported: context.isPassiveSupported(),
+        });
+      },
+    );
+
+    const Test = () => (
+      <ClickEventComponent>
+        <ClickEventComponent>
+          <button ref={buttonRef}>Click me!</button>
+        </ClickEventComponent>
+      </ClickEventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+
+    // Clicking the button should trigger the event responder handleEvent()
+    let buttonElement = buttonRef.current;
+    dispatchClickEvent(buttonElement);
+    expect(eventResponderFiredCount).toBe(2);
+    expect(eventLog.length).toBe(2);
+    // JSDOM does not support passive events, so this will be false
+    expect(eventLog[0]).toEqual({
+      name: 'click',
+      passive: false,
+      passiveSupported: false,
+    });
+    expect(eventLog[1]).toEqual({
+      name: 'click',
+      passive: false,
+      passiveSupported: false,
+    });
+  });
+
+  it('nested event responders and their handleEvent() should fire in the correct order', () => {
+    let eventLog = [];
+    const buttonRef = React.createRef();
+
+    const ClickEventComponentA = createReactEventComponent(
+      ['click'],
+      (context, props) => {
+        eventLog.push('A');
+      },
+    );
+
+    const ClickEventComponentB = createReactEventComponent(
+      ['click'],
+      (context, props) => {
+        eventLog.push('B');
+      },
+    );
+
+    const Test = () => (
+      <ClickEventComponentA>
+        <ClickEventComponentB>
+          <button ref={buttonRef}>Click me!</button>
+        </ClickEventComponentB>
+      </ClickEventComponentA>
+    );
+
+    ReactDOM.render(<Test />, container);
+
+    // Clicking the button should trigger the event responder handleEvent()
+    let buttonElement = buttonRef.current;
+    dispatchClickEvent(buttonElement);
+
+    expect(eventLog).toEqual(['B', 'A']);
   });
 });
