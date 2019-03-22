@@ -2234,23 +2234,18 @@ function performAsyncWork(didTimeout) {
       } while (root !== firstScheduledRoot);
     }
   }
-  let isYieldy = true;
-  if (disableYielding) {
-    isYieldy = false;
-  }
-  performWork(NoWork, isYieldy);
-}
 
-function performSyncWork() {
-  performWork(Sync, false);
-}
-
-function performWork(minExpirationTime: ExpirationTime, isYieldy: boolean) {
   // Keep working on roots until there's no more work, or until there's a higher
   // priority event.
   findHighestPriorityRoot();
 
-  if (isYieldy) {
+  if (disableYielding) {
+    // Just do it all
+    while (nextFlushedRoot !== null && nextFlushedExpirationTime !== NoWork) {
+      performWorkOnRoot(nextFlushedRoot, nextFlushedExpirationTime, false);
+      findHighestPriorityRoot();
+    }
+  } else {
     recomputeCurrentRendererTime();
     currentSchedulerTime = currentRendererTime;
 
@@ -2263,7 +2258,6 @@ function performWork(minExpirationTime: ExpirationTime, isYieldy: boolean) {
     while (
       nextFlushedRoot !== null &&
       nextFlushedExpirationTime !== NoWork &&
-      minExpirationTime <= nextFlushedExpirationTime &&
       !(shouldYield() && currentRendererTime > nextFlushedExpirationTime)
     ) {
       performWorkOnRoot(
@@ -2275,25 +2269,48 @@ function performWork(minExpirationTime: ExpirationTime, isYieldy: boolean) {
       recomputeCurrentRendererTime();
       currentSchedulerTime = currentRendererTime;
     }
-  } else {
-    while (
-      nextFlushedRoot !== null &&
-      nextFlushedExpirationTime !== NoWork &&
-      minExpirationTime <= nextFlushedExpirationTime
-    ) {
-      performWorkOnRoot(nextFlushedRoot, nextFlushedExpirationTime, false);
-      findHighestPriorityRoot();
-    }
   }
 
   // We're done flushing work. Either we ran out of time in this callback,
   // or there's no more work left with sufficient priority.
 
   // If we're inside a callback, set this to false since we just completed it.
-  if (isYieldy) {
-    callbackExpirationTime = NoWork;
-    callbackID = null;
+  callbackExpirationTime = NoWork;
+  callbackID = null;
+
+  // If there's work left over, schedule a new callback.
+  if (nextFlushedExpirationTime !== NoWork) {
+    scheduleCallbackWithExpirationTime(
+      ((nextFlushedRoot: any): FiberRoot),
+      nextFlushedExpirationTime,
+    );
   }
+
+  // Clean-up.
+  finishRendering();
+}
+
+function performSyncWork() {
+  performWork(Sync);
+}
+
+function performWork(minExpirationTime: ExpirationTime) {
+  // Keep working on roots until there's no more work, or until there's a higher
+  // priority event.
+  findHighestPriorityRoot();
+
+  while (
+    nextFlushedRoot !== null &&
+    nextFlushedExpirationTime !== NoWork &&
+    minExpirationTime <= nextFlushedExpirationTime
+  ) {
+    performWorkOnRoot(nextFlushedRoot, nextFlushedExpirationTime, false);
+    findHighestPriorityRoot();
+  }
+
+  // We're done flushing work. Either we ran out of time in this callback,
+  // or there's no more work left with sufficient priority.
+
   // If there's work left over, schedule a new callback.
   if (nextFlushedExpirationTime !== NoWork) {
     scheduleCallbackWithExpirationTime(
@@ -2547,7 +2564,7 @@ function interactiveUpdates<A, B, C, R>(
     lowestPriorityPendingInteractiveExpirationTime !== NoWork
   ) {
     // Synchronously flush pending interactive updates.
-    performWork(lowestPriorityPendingInteractiveExpirationTime, false);
+    performWork(lowestPriorityPendingInteractiveExpirationTime);
     lowestPriorityPendingInteractiveExpirationTime = NoWork;
   }
   const previousIsBatchingInteractiveUpdates = isBatchingInteractiveUpdates;
@@ -2571,7 +2588,7 @@ function flushInteractiveUpdates() {
     lowestPriorityPendingInteractiveExpirationTime !== NoWork
   ) {
     // Synchronously flush pending interactive updates.
-    performWork(lowestPriorityPendingInteractiveExpirationTime, false);
+    performWork(lowestPriorityPendingInteractiveExpirationTime);
     lowestPriorityPendingInteractiveExpirationTime = NoWork;
   }
 }
