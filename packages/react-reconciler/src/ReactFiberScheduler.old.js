@@ -67,6 +67,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
+import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
@@ -547,7 +548,9 @@ function commitPassiveEffects(root: FiberRoot, firstEffect: Fiber): void {
       let didError = false;
       let error;
       if (__DEV__) {
+        isInPassiveEffectDEV = true;
         invokeGuardedCallback(null, commitPassiveHookEffects, null, effect);
+        isInPassiveEffectDEV = false;
         if (hasCaughtError()) {
           didError = true;
           error = clearCaughtError();
@@ -580,6 +583,14 @@ function commitPassiveEffects(root: FiberRoot, firstEffect: Fiber): void {
   // Flush any sync work that was scheduled by effects
   if (!isBatchingUpdates && !isRendering) {
     performSyncWork();
+  }
+
+  if (__DEV__) {
+    if (rootWithPendingPassiveEffects === root) {
+      nestedPassiveEffectCountDEV++;
+    } else {
+      nestedPassiveEffectCountDEV = 0;
+    }
   }
 }
 
@@ -1897,6 +1908,21 @@ function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
         'the number of nested updates to prevent infinite loops.',
     );
   }
+  if (__DEV__) {
+    if (
+      isInPassiveEffectDEV &&
+      nestedPassiveEffectCountDEV > NESTED_PASSIVE_UPDATE_LIMIT
+    ) {
+      nestedPassiveEffectCountDEV = 0;
+      warning(
+        false,
+        'Maximum update depth exceeded. This can happen when a ' +
+          'component calls setState inside useEffect, but ' +
+          "useEffect either doesn't have a dependency array, or " +
+          'one of the dependencies changes on every render.',
+      );
+    }
+  }
 }
 
 function deferredUpdates<A>(fn: () => A): A {
@@ -1961,6 +1987,15 @@ let currentSchedulerTime: ExpirationTime = currentRendererTime;
 const NESTED_UPDATE_LIMIT = 50;
 let nestedUpdateCount: number = 0;
 let lastCommittedRootDuringThisBatch: FiberRoot | null = null;
+
+// Similar, but for useEffect infinite loops. These are DEV-only.
+const NESTED_PASSIVE_UPDATE_LIMIT = 50;
+let nestedPassiveEffectCountDEV;
+let isInPassiveEffectDEV;
+if (__DEV__) {
+  nestedPassiveEffectCountDEV = 0;
+  isInPassiveEffectDEV = false;
+}
 
 function recomputeCurrentRendererTime() {
   const currentTimeMs = now() - originalStartTimeMs;
@@ -2342,6 +2377,12 @@ function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
 function finishRendering() {
   nestedUpdateCount = 0;
   lastCommittedRootDuringThisBatch = null;
+
+  if (__DEV__) {
+    if (rootWithPendingPassiveEffects === null) {
+      nestedPassiveEffectCountDEV = 0;
+    }
+  }
 
   if (completedBatches !== null) {
     const batches = completedBatches;
