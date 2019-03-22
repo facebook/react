@@ -468,9 +468,101 @@ export default {
         },
       );
 
-      if (!declaredDependenciesNode) {
+      // Warn about assigning to variables in the outer scope.
+      // Those are usually bugs.
+      let staleAssignments = new Set();
+      function reportStaleAssignment(writeExpr, key) {
+        if (staleAssignments.has(key)) {
+          return;
+        }
+        staleAssignments.add(key);
+        context.report({
+          node: writeExpr,
+          message:
+            `Assignments to the '${key}' variable from inside React Hook ` +
+            `${context.getSource(reactiveHook)} will be lost after each ` +
+            `render. To preserve the value over time, store it in a useRef ` +
+            `Hook and keep the mutable value in the '.current' property. ` +
+            `Otherwise, you can move this variable directly inside ` +
+            `${context.getSource(reactiveHook)}.`,
+        });
+      }
+
+      // Remember which deps are optional and report bad usage first.
+      const optionalDependencies = new Set();
+      dependencies.forEach(({isStatic, references}, key) => {
+        if (isStatic) {
+          optionalDependencies.add(key);
+        }
+        references.forEach(reference => {
+          if (reference.writeExpr) {
+            reportStaleAssignment(reference.writeExpr, key);
+          }
+        });
+      });
+
+      if (staleAssignments.size > 0) {
+        // The intent isn't clear so we'll wait until you fix those first.
         return;
       }
+
+      if (!declaredDependenciesNode) {
+        // Check if there are any top-level setState() calls.
+        // Those tend to lead to infinite loops.
+        let setStateInsideEffectWithoutDeps = null;
+        dependencies.forEach(({isStatic, references}, key) => {
+          if (setStateInsideEffectWithoutDeps) {
+            return;
+          }
+          references.forEach(reference => {
+            if (setStateInsideEffectWithoutDeps) {
+              return;
+            }
+
+            const id = reference.identifier;
+            const isSetState = setStateCallSites.has(id);
+            if (!isSetState) {
+              return;
+            }
+
+            let fnScope = reference.from;
+            while (fnScope.type !== 'function') {
+              fnScope = fnScope.upper;
+            }
+            const isDirectlyInsideEffect = fnScope.block === node;
+            if (isDirectlyInsideEffect) {
+              // TODO: we could potentially ignore early returns.
+              setStateInsideEffectWithoutDeps = key;
+            }
+          });
+        });
+        if (setStateInsideEffectWithoutDeps) {
+          let {suggestedDependencies} = collectRecommendations({
+            dependencies,
+            declaredDependencies: [],
+            optionalDependencies,
+            externalDependencies: new Set(),
+            isEffect: true,
+          });
+          context.report({
+            node: node.parent.callee,
+            message:
+              `React Hook ${reactiveHookName} contains a call to '${setStateInsideEffectWithoutDeps}'. ` +
+              `Without a list of dependencies, this can lead to an infinite chain of updates. ` +
+              `To fix this, pass [` +
+              suggestedDependencies.join(', ') +
+              `] as a second argument to the ${reactiveHookName} Hook.`,
+            fix(fixer) {
+              return fixer.insertTextAfter(
+                node,
+                `, [${suggestedDependencies.join(', ')}]`,
+              );
+            },
+          });
+        }
+        return;
+      }
+
       const declaredDependencies = [];
       const externalDependencies = new Set();
       if (declaredDependenciesNode.type !== 'ArrayExpression') {
@@ -567,43 +659,6 @@ export default {
             externalDependencies.add(declaredDependency);
           }
         });
-      }
-
-      // Warn about assigning to variables in the outer scope.
-      // Those are usually bugs.
-      let staleAssignments = new Set();
-      function reportStaleAssignment(writeExpr, key) {
-        if (staleAssignments.has(key)) {
-          return;
-        }
-        staleAssignments.add(key);
-        context.report({
-          node: writeExpr,
-          message:
-            `Assignments to the '${key}' variable from inside React Hook ` +
-            `${context.getSource(reactiveHook)} will be lost after each ` +
-            `render. To preserve the value over time, store it in a useRef ` +
-            `Hook and keep the mutable value in the '.current' property. ` +
-            `Otherwise, you can move this variable directly inside ` +
-            `${context.getSource(reactiveHook)}.`,
-        });
-      }
-
-      // Remember which deps are optional and report bad usage first.
-      const optionalDependencies = new Set();
-      dependencies.forEach(({isStatic, references}, key) => {
-        if (isStatic) {
-          optionalDependencies.add(key);
-        }
-        references.forEach(reference => {
-          if (reference.writeExpr) {
-            reportStaleAssignment(reference.writeExpr, key);
-          }
-        });
-      });
-      if (staleAssignments.size > 0) {
-        // The intent isn't clear so we'll wait until you fix those first.
-        return;
       }
 
       let {
