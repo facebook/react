@@ -2071,4 +2071,57 @@ describe('ReactHooksWithNoopRenderer', () => {
     expect(Scheduler).toFlushAndYield(['Step: 5, Shadow: 5']);
     expect(ReactNoop).toMatchRenderedOutput('5');
   });
+
+  it('successful eager bailout should not store dispatched item in the queue', () => {
+    let setDisabled;
+    let increment;
+
+    function Counter({disabled}) {
+      const [count, dispatch] = useReducer((state, action) => {
+        if (disabled) {
+          return state;
+        }
+        if (action.type === 'increment') {
+          return state + 1;
+        }
+        return state;
+      }, 0);
+
+      increment = () => dispatch({type: 'increment'});
+
+      Scheduler.yieldValue('Render count: ' + count);
+      return count;
+    }
+
+    function App() {
+      const [disabled, _setDisabled] = useState(true);
+      setDisabled = _setDisabled;
+      Scheduler.yieldValue('Render disabled: ' + disabled);
+      return <Counter disabled={disabled} />;
+    }
+
+    ReactNoop.render(<App />);
+    expect(Scheduler).toFlushAndYield([
+      'Render disabled: true',
+      'Render count: 0',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput('0');
+
+    act(() => {
+      increment();
+      increment();
+      increment();
+    });
+    expect(Scheduler).toFlushAndYield([]);
+    expect(ReactNoop).toMatchRenderedOutput('0');
+
+    act(() => {
+      setDisabled(false);
+    });
+    expect(Scheduler).toFlushAndYield([
+      'Render disabled: false',
+      'Render count: 0',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput('0');
+  });
 });
