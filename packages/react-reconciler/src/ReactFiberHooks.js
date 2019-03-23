@@ -1123,21 +1123,6 @@ function dispatchAction<S, A>(
       next: null,
     };
 
-    // Append the update to the end of the list.
-    const last = queue.last;
-    if (last === null) {
-      // This is the first update. Create a circular list.
-      update.next = update;
-    } else {
-      const first = last.next;
-      if (first !== null) {
-        // Still circular.
-        update.next = first;
-      }
-      last.next = update;
-    }
-    queue.last = update;
-
     if (
       fiber.expirationTime === NoWork &&
       (alternate === null || alternate.expirationTime === NoWork)
@@ -1182,6 +1167,22 @@ function dispatchAction<S, A>(
         warnIfNotCurrentlyBatchingInDev(fiber);
       }
     }
+
+    // Append the update to the end of the list.
+    const last = queue.last;
+    if (last === null) {
+      // This is the first update. Create a circular list.
+      update.next = update;
+    } else {
+      const first = last.next;
+      if (first !== null) {
+        // Still circular.
+        update.next = first;
+      }
+      last.next = update;
+    }
+    queue.last = update;
+
     scheduleWork(fiber, expirationTime);
   }
 }
