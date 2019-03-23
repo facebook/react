@@ -110,7 +110,7 @@ export function useLayoutEffect(
 
   invariant(
     create != null,
-    'useEffect must be called with a create function, but null or undefined was passed.',
+    'useLayoutEffect must be called with a create function, but null or undefined was passed.',
   );
 
   return dispatcher.useLayoutEffect(create, inputs);
