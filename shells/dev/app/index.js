@@ -8,6 +8,7 @@ import DeeplyNestedComponents from './DeeplyNestedComponents';
 import EditableProps from './EditableProps';
 import ElementTypes from './ElementTypes';
 import InspectableElements from './InspectableElements';
+import InteractionTracing from './InteractionTracing';
 import ToDoList from './ToDoList';
 
 import './styles.css';
@@ -26,6 +27,7 @@ function mountHelper(App) {
 
 function mountTestApp() {
   mountHelper(ToDoList);
+  mountHelper(InteractionTracing);
   mountHelper(InspectableElements);
   mountHelper(ElementTypes);
   mountHelper(EditableProps);
