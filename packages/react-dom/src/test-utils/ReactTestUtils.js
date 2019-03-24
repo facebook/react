@@ -24,6 +24,7 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 import * as DOMTopLevelEventTypes from '../events/DOMTopLevelEventTypes';
 import {PLUGIN_EVENT_SYSTEM} from 'events/EventSystemFlags';
+import createAct from 'shared/createAct';
 
 const {findDOMNode} = ReactDOM;
 // Keep in sync with ReactDOMUnstableNativeDependencies.js
@@ -155,51 +156,13 @@ function validateClassInstance(inst, methodName) {
 let actContainerElement = null;
 
 let didWarnAboutActInNodejs = false;
-let didWarnAboutMessageChannel = false;
 
-let enqueueTask;
-try {
-  // assuming we're in node, let's try to get node's
-  // version of setImmediate, bypassing fake timers if any
-  let r = require; // trick packagers not to bundle this stuff.
-  enqueueTask = r('timers').setImmediate;
-} catch (_err) {
-  // we're in a browser
-  // we can't use regular timers because they may still be faked
-  // so we try MessageChannel+postMessage instead
-  enqueueTask = function(callback) {
-    if (__DEV__) {
-      if (didWarnAboutMessageChannel === false) {
-        didWarnAboutMessageChannel = true;
-        warningWithoutStack(
-          typeof MessageChannel !== 'undefined',
-          'This browser does not have a MessageChannel implementation, ' +
-            'so enqueuing tasks via await act(async () => ...) will fail. ' +
-            'Please file an issue at https://github.com/facebook/react/issues ' +
-            'if you encounter this warning.',
-        );
-      }
-    }
-    const channel = new MessageChannel();
-    channel.port1.onmessage = callback;
-    channel.port2.postMessage(undefined);
-  };
-}
-
-function flushEffectsAndMicroTasks(onDone: (err: ?Error) => void) {
-  try {
-    ReactDOM.render(<div />, actContainerElement);
-    enqueueTask(() => {
-      if (doesHavePendingPassiveEffects()) {
-        flushEffectsAndMicroTasks(onDone);
-      } else {
-        onDone();
-      }
-    });
-  } catch (err) {
-    onDone(err);
-  }
-}
+const act = createAct(
+  actedUpdates,
+  ReactDOM.unstable_batchedUpdates,
+  () => ReactDOM.render(<div />, actContainerElement),
+  doesHavePendingPassiveEffects,
+);
 
 /**
  * Utilities for making it easy to test React components.
@@ -436,6 +399,7 @@ const ReactTestUtils = {
 
   Simulate: null,
   SimulateNative: {},
+
   act(callback: () => Thenable) {
     if (actContainerElement === null) {
       if (__DEV__) {
@@ -453,101 +417,7 @@ const ReactTestUtils = {
       // now make the stub element
       actContainerElement = document.createElement('div');
     }
-    // note: keep these warning messages in sync with
-    // createReactNoop.js and ReactTestRenderer.js
-    let thenable;
-    actedUpdates(onDone => {
-      const result = ReactDOM.unstable_batchedUpdates(callback);
-      if (
-        result !== null &&
-        typeof result === 'object' &&
-        typeof result.then === 'function'
-      ) {
-        // setup a boolean that gets set to true only
-        // once this act() call is await-ed
-        let called = false;
-        if (__DEV__) {
-          if (typeof Promise !== 'undefined') {
-            //eslint-disable-next-line no-undef
-            Promise.resolve()
-              .then(() => {})
-              .then(() => {
-                if (called === false) {
-                  warningWithoutStack(
-                    null,
-                    'You called act(async () => ...) without await. ' +
-                      'This could lead to unexpected testing behaviour, interleaving multiple act ' +
-                      'calls and mixing their scopes. You should - await act(async () => ...);',
-                  );
-                }
-              });
-          }
-        }
-
-        // in this case, the returned thenable runs the callback, flushes
-        // effects and  microtasks in a loop until doesHavePendingPassiveEffects() === false,
-        // and cleans up
-        thenable = {
-          then(successFn, errorFn) {
-            called = true;
-            result.then(
-              () => {
-                flushEffectsAndMicroTasks(() => {
-                  if (onDone !== undefined) {
-                    onDone();
-                  }
-                  successFn();
-                });
-              },
-              err => {
-                if (onDone !== undefined) {
-                  onDone(err);
-                }
-                errorFn(err);
-              },
-            );
-          },
-        };
-      } else {
-        // in the sync case, the returned thenable only warns *if* await-ed
-        thenable = {
-          then(successFn) {
-            if (__DEV__) {
-              warningWithoutStack(
-                false,
-                'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
-              );
-            }
-            successFn();
-          },
-        };
-
-        if (__DEV__) {
-          warningWithoutStack(
-            result === undefined,
-            'The callback passed to act(...) function ' +
-              'must return undefined, or a Promise. You returned %s',
-            result,
-          );
-        }
-
-        // flush effects until none remain, and cleanup
-        try {
-          while (doesHavePendingPassiveEffects()) {
-            ReactDOM.render(<div />, actContainerElement);
-          }
-          if (onDone !== undefined) {
-            onDone();
-          }
-        } catch (err) {
-          if (onDone !== undefined) {
-            onDone(err);
-          }
-          throw err;
-        }
-      }
-    });
-    return thenable;
+    return act(callback);
   },
 };
 

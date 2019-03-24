@@ -44,6 +44,7 @@ import {
 import invariant from 'shared/invariant';
 import ReactVersion from 'shared/ReactVersion';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import createAct from 'shared/createAct';
 
 import {getPublicInstance} from './ReactTestHostConfig';
 
@@ -550,96 +551,12 @@ const ReactTestRendererFiber = {
   /* eslint-disable camelcase */
   unstable_batchedUpdates: batchedUpdates,
   /* eslint-enable camelcase */
-
-  act(callback: () => Thenable) {
-    // note: keep these warning messages in sync with
-    // createReactNoop.js and ReactTestUtils.js
-    let thenable;
-    actedUpdates(onDone => {
-      const result = batchedUpdates(callback);
-      if (
-        result !== null &&
-        typeof result === 'object' &&
-        typeof result.then === 'function'
-      ) {
-        let called = false;
-        if (__DEV__) {
-          if (typeof Promise !== 'undefined') {
-            //eslint-disable-next-line no-undef
-            Promise.resolve()
-              .then(() => {})
-              .then(() => {
-                if (called === false) {
-                  warningWithoutStack(
-                    null,
-                    'You called act(async () => ...) without await. ' +
-                      'This could lead to unexpected testing behaviour, interleaving multiple act ' +
-                      'calls and mixing their scopes. You should - await act(async () => ...);',
-                  );
-                }
-              });
-          }
-        }
-        thenable = {
-          then(successFn, errorFn) {
-            called = true;
-            result.then(
-              () => {
-                flushEffectsAndMicroTasks(() => {
-                  if (onDone !== undefined) {
-                    onDone();
-                  }
-                  if (typeof successFn === 'function') {
-                    successFn();
-                  }
-                });
-              },
-              err => {
-                if (onDone !== undefined) {
-                  onDone(err);
-                }
-                errorFn(err);
-              },
-            );
-          },
-        };
-      } else {
-        thenable = {
-          then(successFn) {
-            if (__DEV__) {
-              warningWithoutStack(
-                false,
-                'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
-              );
-            }
-            successFn();
-          },
-        };
-        if (__DEV__) {
-          warningWithoutStack(
-            result === undefined,
-            'The callback passed to act(...) function ' +
-              'must return undefined, or a Promise. You returned %s',
-            result,
-          );
-        }
-        try {
-          while (doesHavePendingPassiveEffects()) {
-            flushPassiveEffects();
-          }
-          if (onDone !== undefined) {
-            onDone();
-          }
-        } catch (err) {
-          if (onDone !== undefined) {
-            onDone(err);
-          }
-          throw err;
-        }
-      }
-    });
-    return thenable;
-  },
+  act: createAct(
+    actedUpdates,
+    batchedUpdates,
+    flushPassiveEffects,
+    doesHavePendingPassiveEffects,
+  )  
 };
 
 let didWarnAboutMessageChannel = false;

@@ -24,6 +24,7 @@ import {createPortal} from 'shared/ReactPortal';
 import expect from 'expect';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import createAct from 'shared/createAct';
 
 type Container = {
   rootID: string,
@@ -760,95 +761,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     interactiveUpdates: NoopRenderer.interactiveUpdates,
 
-    act(callback: () => Thenable) {
-      // note: keep these warning messages in sync with
-      // ReactTestRenderer.js and ReactTestUtils.js
-      let thenable;
-      NoopRenderer.actedUpdates(onDone => {
-        const result = NoopRenderer.batchedUpdates(callback);
-        if (
-          result !== null &&
-          typeof result === 'object' &&
-          typeof result.then === 'function'
-        ) {
-          let called = false;
-          if (__DEV__) {
-            if (typeof Promise !== 'undefined') {
-              //eslint-disable-next-line no-undef
-              Promise.resolve()
-                .then(() => {})
-                .then(() => {
-                  if (called === false) {
-                    warningWithoutStack(
-                      null,
-                      'You called act(async () => ...) without await. ' +
-                        'This could lead to unexpected testing behaviour, interleaving multiple act ' +
-                        'calls and mixing their scopes. You should - await act(async () => ...);',
-                    );
-                  }
-                });
-            }
-          }
-          thenable = {
-            then(successFn, errorFn) {
-              called = true;
-              result.then(
-                () => {
-                  flushEffectsAndMicroTasks(() => {
-                    if (onDone !== undefined) {
-                      onDone();
-                    }
-                    if (typeof successFn === 'function') {
-                      successFn();
-                    }
-                  });
-                },
-                err => {
-                  if (onDone !== undefined) {
-                    onDone(err);
-                  }
-                  errorFn(err);
-                },
-              );
-            },
-          };
-        } else {
-          thenable = {
-            then(successFn) {
-              if (__DEV__) {
-                warningWithoutStack(
-                  false,
-                  'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
-                );
-              }
-              successFn();
-            },
-          };
-          if (__DEV__) {
-            warningWithoutStack(
-              result === undefined,
-              'The callback passed to act(...) function ' +
-                'must return undefined, or a Promise. You returned %s',
-              result,
-            );
-          }
-          try {
-            while (NoopRenderer.doesHavePendingPassiveEffects()) {
-              ReactNoop.flushPassiveEffects();
-            }
-            if (onDone !== undefined) {
-              onDone();
-            }
-          } catch (err) {
-            if (onDone !== undefined) {
-              onDone(err);
-            }
-            throw err;
-          }
-        }
-      });
-      return thenable;
-    },
+    act: createAct(
+      NoopRenderer.actedUpdates,
+      NoopRenderer.batchedUpdates,
+      () => ReactNoop.flushPassiveEffects(),
+      NoopRenderer.doesHavePendingPassiveEffects,
+    ),
 
     flushSync(fn: () => mixed) {
       NoopRenderer.flushSync(fn);
