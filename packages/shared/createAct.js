@@ -44,6 +44,7 @@ try {
 
 export default function createAct(
   actedUpdates: (() => void) => void,
+  // $FlowFixMe
   batchedUpdates,
   flushPassiveEffects: () => void,
   doesHavePendingPassiveEffects: () => boolean,
