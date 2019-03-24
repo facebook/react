@@ -21,6 +21,7 @@ export default function InteractionTracing() {
       );
     });
   }, [count]);
+
   const handleCascadingUpdate = useCallback(() => {
     trace('cascade', performance.now(), () => {
       setTimeout(
@@ -32,6 +33,19 @@ export default function InteractionTracing() {
         }),
         count * 100
       );
+    });
+  }, [count]);
+
+  const handleMultiple = useCallback(() => {
+    trace('first', performance.now(), () => {
+      trace('second', performance.now(), () => {
+        setTimeout(
+          wrap(() => {
+            setCount(count + 1);
+          }),
+          count * 100
+        );
+      });
     });
   }, [count]);
 
@@ -53,6 +67,7 @@ export default function InteractionTracing() {
       <button onClick={handleCascadingUpdate}>
         Cascading Update ({count}, {shouldCascade ? 'true' : 'false'})
       </button>
+      <button onClick={handleMultiple}>Multiple</button>
     </Fragment>
   );
 }

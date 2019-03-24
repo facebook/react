@@ -50,7 +50,7 @@ type Context = {|
   // This value is controlled by the commit selector UI in the Profiler toolbar.
   // It impacts the flame graph and ranked charts.
   selectedCommitIndex: number | null,
-  setSelectedCommitIndex: (value: number | null) => void,
+  selectCommitIndex: (value: number | null) => void,
 
   // Which fiber is currently selected in the Ranked or Flamegraph charts?
   selectedFiberID: number | null,
@@ -125,7 +125,7 @@ function ProfilerContextController({ children }: Props) {
     0
   );
 
-  const [selectedCommitIndex, setSelectedCommitIndex] = useState<number | null>(
+  const [selectedCommitIndex, selectCommitIndex] = useState<number | null>(
     null
   );
   const [selectedTabID, selectTab] = useState<TabID>('flame-chart');
@@ -137,7 +137,7 @@ function ProfilerContextController({ children }: Props) {
   if (isProfiling) {
     batchedUpdates(() => {
       if (selectedCommitIndex !== null) {
-        setSelectedCommitIndex(null);
+        selectCommitIndex(null);
       }
       if (selectedFiberID !== null) {
         selectFiber(null);
@@ -168,7 +168,7 @@ function ProfilerContextController({ children }: Props) {
       setMinCommitDuration,
 
       selectedCommitIndex,
-      setSelectedCommitIndex,
+      selectCommitIndex,
 
       selectedFiberID,
       selectFiber,
@@ -195,7 +195,7 @@ function ProfilerContextController({ children }: Props) {
       setMinCommitDuration,
 
       selectedCommitIndex,
-      setSelectedCommitIndex,
+      selectCommitIndex,
 
       selectedFiberID,
       selectFiber,

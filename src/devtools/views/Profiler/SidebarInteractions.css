@@ -10,6 +10,7 @@
 
 .Content {
   padding: 0.5rem;
+  user-select: none;
 }
 
 .Name {
@@ -26,4 +27,17 @@
   justify-content: center;
   height: 100%;
   color: var(--color-dim);
+}
+
+.List {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ListItem {
+  padding: 0.25rem 0.5rem;
+}
+.ListItem:hover {
+  background-color: var(--color-hover-background);
 }

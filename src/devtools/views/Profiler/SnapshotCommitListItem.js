@@ -22,7 +22,7 @@ function SnapshotCommitListItem({ data: itemData, index, style }: Props) {
     isMouseDown,
     maxDuration,
     selectedCommitIndex,
-    setSelectedCommitIndex,
+    selectCommitIndex,
   } = itemData;
 
   index = filteredCommitIndices[index];
@@ -30,9 +30,9 @@ function SnapshotCommitListItem({ data: itemData, index, style }: Props) {
   const commitDuration = commitDurations[index];
   const commitTime = commitTimes[index];
 
-  const handleClick = useCallback(() => setSelectedCommitIndex(index), [
+  const handleClick = useCallback(() => selectCommitIndex(index), [
     index,
-    setSelectedCommitIndex,
+    selectCommitIndex,
   ]);
 
   // Guard against commits with duration 0

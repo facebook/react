@@ -12,6 +12,7 @@ import { scale } from './utils';
 import styles from './Interactions.css';
 
 import type { ChartData } from './InteractionsChartBuilder';
+import type { TabID } from './ProfilerContext';
 import type { InteractionWithCommits, ProfilingSummary } from './types';
 
 export type ItemData = {|
@@ -21,7 +22,9 @@ export type ItemData = {|
   profilingSummary: ProfilingSummary,
   scaleX: (value: number, fallbackValue: number) => number,
   selectedInteractionID: number | null,
+  selectCommitIndex: (id: number | null) => void,
   selectInteraction: (id: number | null) => void,
+  selectTab: (id: TabID) => void,
 |};
 
 export default function InteractionsAutoSizer(_: {||}) {
@@ -40,6 +43,8 @@ function Interactions({ height, width }: {| height: number, width: number |}) {
     rootID,
     selectedInteractionID,
     selectInteraction,
+    selectCommitIndex,
+    selectTab,
   } = useContext(ProfilerContext);
   const { profilingCache } = useContext(StoreContext);
 
@@ -71,14 +76,18 @@ function Interactions({ height, width }: {| height: number, width: number |}) {
       profilingSummary,
       scaleX: scale(0, chartData.lastInteractionTime, 0, timelineWidth),
       selectedInteractionID,
+      selectCommitIndex,
       selectInteraction,
+      selectTab,
     };
   }, [
     chartData,
     interactions,
     profilingSummary,
     selectedInteractionID,
+    selectCommitIndex,
     selectInteraction,
+    selectTab,
     width,
   ]);
 

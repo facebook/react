@@ -10,6 +10,7 @@
 
 .Content {
   padding: 0.5rem;
+  user-select: none;
 }
 
 .List,
@@ -20,12 +21,18 @@
 }
 
 .InteractionList {
-  padding: 0.5rem;
+  padding: 0.25rem;
 }
 
-.ListItem,
-.InteractionListItem {
+.ListItem {
   margin: 0 0 0.5rem;
+}
+
+.InteractionListItem {
+  padding: 0.25rem 0.5rem;
+}
+.InteractionListItem:hover {
+  background-color: var(--color-hover-background);
 }
 
 .Label {

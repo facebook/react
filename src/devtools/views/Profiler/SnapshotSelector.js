@@ -21,7 +21,7 @@ export default function SnapshotSelector(_: Props) {
     rendererID,
     rootID,
     selectedCommitIndex,
-    setSelectedCommitIndex,
+    selectCommitIndex,
   } = useContext(ProfilerContext);
 
   const { profilingCache } = useContext(StoreContext);
@@ -62,12 +62,10 @@ export default function SnapshotSelector(_: Props) {
   // Maybe this component should pass filteredCommitIndices up?
   if (selectedFilteredCommitIndex === null) {
     if (numFilteredCommits > 0) {
-      setSelectedCommitIndex(0);
+      selectCommitIndex(0);
     }
   } else if (selectedFilteredCommitIndex >= numFilteredCommits) {
-    setSelectedCommitIndex(
-      numFilteredCommits === 0 ? null : numFilteredCommits - 1
-    );
+    selectCommitIndex(numFilteredCommits === 0 ? null : numFilteredCommits - 1);
   }
 
   let label = null;
@@ -86,23 +84,15 @@ export default function SnapshotSelector(_: Props) {
       ((selectedFilteredCommitIndex: any): number) + 1,
       filteredCommitIndices.length - 1
     );
-    setSelectedCommitIndex(filteredCommitIndices[nextCommitIndex]);
-  }, [
-    selectedFilteredCommitIndex,
-    filteredCommitIndices,
-    setSelectedCommitIndex,
-  ]);
+    selectCommitIndex(filteredCommitIndices[nextCommitIndex]);
+  }, [selectedFilteredCommitIndex, filteredCommitIndices, selectCommitIndex]);
   const viewPrevCommit = useCallback(() => {
     const nextCommitIndex = Math.max(
       ((selectedFilteredCommitIndex: any): number) - 1,
       0
     );
-    setSelectedCommitIndex(filteredCommitIndices[nextCommitIndex]);
-  }, [
-    selectedFilteredCommitIndex,
-    filteredCommitIndices,
-    setSelectedCommitIndex,
-  ]);
+    selectCommitIndex(filteredCommitIndices[nextCommitIndex]);
+  }, [selectedFilteredCommitIndex, filteredCommitIndices, selectCommitIndex]);
 
   if (rendererID === null || rootID === null) {
     return null;
@@ -136,7 +126,7 @@ export default function SnapshotSelector(_: Props) {
             filteredCommitIndices={filteredCommitIndices}
             selectedCommitIndex={selectedCommitIndex}
             selectedFilteredCommitIndex={selectedFilteredCommitIndex}
-            setSelectedCommitIndex={setSelectedCommitIndex}
+            selectCommitIndex={selectCommitIndex}
           />
         )}
         {numFilteredCommits === 0 && (

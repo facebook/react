@@ -12,9 +12,13 @@ import type { InteractionWithCommits } from './types';
 export type Props = {||};
 
 export default function SidebarInteractions(_: Props) {
-  const { selectedInteractionID, rendererID, rootID } = useContext(
-    ProfilerContext
-  );
+  const {
+    selectedInteractionID,
+    rendererID,
+    rootID,
+    selectCommitIndex,
+    selectTab,
+  } = useContext(ProfilerContext);
 
   const { profilingCache } = useContext(StoreContext);
 
@@ -37,15 +41,24 @@ export default function SidebarInteractions(_: Props) {
     interaction => interaction.id === selectedInteractionID
   ): any): InteractionWithCommits);
 
+  const viewCommit = (commitIndex: number) => {
+    selectTab('flame-chart');
+    selectCommitIndex(commitIndex);
+  };
+
   return (
     <Fragment>
       <div className={styles.Toolbar}>
         <div className={styles.Name}>{interaction.name}</div>
       </div>
       <div className={styles.Content}>
-        <ul>
+        <ul className={styles.List}>
           {interaction.commits.map(commitIndex => (
-            <li key={commitIndex}>
+            <li
+              key={commitIndex}
+              className={styles.ListItem}
+              onClick={() => viewCommit(commitIndex)}
+            >
               timestamp: {formatTime(commitTimes[commitIndex])}s
               <br />
               duration: {formatDuration(commitDurations[commitIndex])}ms

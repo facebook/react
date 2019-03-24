@@ -22,7 +22,9 @@ function InteractionListItem({ data: itemData, index, style }: Props) {
     profilingSummary,
     scaleX,
     selectedInteractionID,
+    selectCommitIndex,
     selectInteraction,
+    selectTab,
   } = itemData;
 
   const { maxCommitDuration } = chartData;
@@ -39,6 +41,11 @@ function InteractionListItem({ data: itemData, index, style }: Props) {
     interaction.commits.length > 0
       ? commitTimes[interaction.commits[interaction.commits.length - 1]]
       : interaction.timestamp;
+
+  const viewCommit = (commitIndex: number) => {
+    selectTab('flame-chart');
+    selectCommitIndex(commitIndex);
+  };
 
   return (
     <div
@@ -68,6 +75,7 @@ function InteractionListItem({ data: itemData, index, style }: Props) {
         <div
           className={styles.CommitBox}
           key={commitIndex}
+          onClick={() => viewCommit(commitIndex)}
           style={{
             backgroundColor: getGradientColor(
               Math.min(

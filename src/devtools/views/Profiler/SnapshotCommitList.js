@@ -20,7 +20,7 @@ export type ItemData = {|
   maxDuration: number,
   selectedCommitIndex: number | null,
   selectedFilteredCommitIndex: number | null,
-  setSelectedCommitIndex: (index: number) => void,
+  selectCommitIndex: (index: number) => void,
 |};
 
 type Props = {|
@@ -29,7 +29,7 @@ type Props = {|
   filteredCommitIndices: Array<number>,
   selectedCommitIndex: number | null,
   selectedFilteredCommitIndex: number | null,
-  setSelectedCommitIndex: (index: number) => void,
+  selectCommitIndex: (index: number) => void,
 |};
 
 export default function SnapshotCommitList({
@@ -38,7 +38,7 @@ export default function SnapshotCommitList({
   filteredCommitIndices,
   selectedCommitIndex,
   selectedFilteredCommitIndex,
-  setSelectedCommitIndex,
+  selectCommitIndex,
 }: Props) {
   return (
     <AutoSizer>
@@ -50,7 +50,7 @@ export default function SnapshotCommitList({
           filteredCommitIndices={filteredCommitIndices}
           selectedCommitIndex={selectedCommitIndex}
           selectedFilteredCommitIndex={selectedFilteredCommitIndex}
-          setSelectedCommitIndex={setSelectedCommitIndex}
+          selectCommitIndex={selectCommitIndex}
           width={width}
         />
       )}
@@ -65,7 +65,7 @@ type ListProps = {|
   filteredCommitIndices: Array<number>,
   selectedCommitIndex: number | null,
   selectedFilteredCommitIndex: number | null,
-  setSelectedCommitIndex: (index: number) => void,
+  selectCommitIndex: (index: number) => void,
   width: number,
 |};
 
@@ -76,7 +76,7 @@ function List({
   height,
   filteredCommitIndices,
   selectedFilteredCommitIndex,
-  setSelectedCommitIndex,
+  selectCommitIndex,
   width,
 }: ListProps) {
   const listRef = useRef<FixedSizeList<ItemData> | null>(null);
@@ -139,7 +139,7 @@ function List({
       maxDuration,
       selectedCommitIndex,
       selectedFilteredCommitIndex,
-      setSelectedCommitIndex,
+      selectCommitIndex,
     }),
     [
       commitDurations,
@@ -149,7 +149,7 @@ function List({
       maxDuration,
       selectedCommitIndex,
       selectedFilteredCommitIndex,
-      setSelectedCommitIndex,
+      selectCommitIndex,
     ]
   );
 

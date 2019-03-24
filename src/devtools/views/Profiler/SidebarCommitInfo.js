@@ -10,9 +10,13 @@ import styles from './SidebarCommitInfo.css';
 export type Props = {||};
 
 export default function SidebarCommitInfo(_: Props) {
-  const { selectedCommitIndex, rendererID, rootID } = useContext(
-    ProfilerContext
-  );
+  const {
+    selectedCommitIndex,
+    rendererID,
+    rootID,
+    selectInteraction,
+    selectTab,
+  } = useContext(ProfilerContext);
 
   const { profilingCache } = useContext(StoreContext);
 
@@ -32,6 +36,11 @@ export default function SidebarCommitInfo(_: Props) {
     rendererID: ((rendererID: any): number),
     rootID: ((rootID: any): number),
   });
+
+  const viewInteraction = interaction => {
+    selectTab('interactions');
+    selectInteraction(interaction.id);
+  };
 
   return (
     <Fragment>
@@ -53,14 +62,18 @@ export default function SidebarCommitInfo(_: Props) {
               ms
             </span>
           </li>
-          <li className={styles.ListItem}>
+          <li className={styles.InteractionList}>
             <label className={styles.Label}>Interactions</label>:
             <ul className={styles.InteractionList}>
               {interactions.length === 0 ? (
                 <li className={styles.InteractionListItem}>None</li>
               ) : null}
               {interactions.map((interaction, index) => (
-                <li key={index} className={styles.ListItem}>
+                <li
+                  key={index}
+                  className={styles.InteractionListItem}
+                  onClick={() => viewInteraction(interaction)}
+                >
                   {interaction.name}
                 </li>
               ))}
