@@ -2,6 +2,7 @@
 
 import React, { memo, useCallback } from 'react';
 import { areEqual } from 'react-window';
+import { getGradientColor } from './utils';
 
 import styles from './InteractionListItem.css';
 
@@ -14,7 +15,18 @@ type Props = {
 };
 
 function InteractionListItem({ data: itemData, index, style }: Props) {
-  const { interactions, selectedInteractionID, selectInteraction } = itemData;
+  const {
+    chartData,
+    interactions,
+    labelWidth,
+    profilingSummary,
+    scaleX,
+    selectedInteractionID,
+    selectInteraction,
+  } = itemData;
+
+  const { maxCommitDuration } = chartData;
+  const { commitDurations, commitTimes } = profilingSummary;
 
   const interaction = interactions[index];
 
@@ -22,7 +34,11 @@ function InteractionListItem({ data: itemData, index, style }: Props) {
     selectInteraction(interaction.id);
   }, [interaction, selectInteraction]);
 
-  // TODO (profiling Render commit bar)
+  const startTime = interaction.timestamp;
+  const stopTime =
+    interaction.commits.length > 0
+      ? commitTimes[interaction.commits[interaction.commits.length - 1]]
+      : interaction.timestamp;
 
   return (
     <div
@@ -33,9 +49,36 @@ function InteractionListItem({ data: itemData, index, style }: Props) {
       }
       onClick={handleClick}
       style={style}
-      title={interaction.name}
     >
-      {interaction.name}
+      <div
+        className={styles.Name}
+        style={{ maxWidth: labelWidth }}
+        title={interaction.name}
+      >
+        {interaction.name}
+      </div>
+      <div
+        className={styles.InteractionLine}
+        style={{
+          left: labelWidth + scaleX(startTime, 0),
+          width: scaleX(stopTime - startTime, 0),
+        }}
+      />
+      {interaction.commits.map(commitIndex => (
+        <div
+          className={styles.CommitBox}
+          key={commitIndex}
+          style={{
+            backgroundColor: getGradientColor(
+              Math.min(
+                1,
+                Math.max(0, commitDurations[commitIndex] / maxCommitDuration)
+              ) || 0
+            ),
+            left: labelWidth + scaleX(commitTimes[commitIndex], 0),
+          }}
+        />
+      ))}
     </div>
   );
 }

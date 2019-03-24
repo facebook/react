@@ -25,10 +25,7 @@ export type InteractionWithCommits = {|
   commits: Array<number>,
 |};
 
-export type Interactions = {|
-  interactions: Array<InteractionWithCommits>,
-  rootID: number,
-|};
+export type Interactions = Array<InteractionWithCommits>;
 
 export type CommitDetails = {|
   actualDurations: Map<number, number>,

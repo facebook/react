@@ -22,7 +22,7 @@ export default function SidebarInteractions(_: Props) {
     return <div className={styles.NothingSelected}>Nothing selected</div>;
   }
 
-  const { interactions } = profilingCache.Interactions.read({
+  const interactions = profilingCache.Interactions.read({
     rendererID: ((rendererID: any): number),
     rootID: ((rootID: any): number),
   });

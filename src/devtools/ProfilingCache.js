@@ -11,6 +11,10 @@ import {
   invalidateChartData as invalidateFlamegraphChartData,
 } from 'src/devtools/views/Profiler/FlamegraphChartBuilder';
 import {
+  getChartData as getInteractionsChartData,
+  invalidateChartData as invalidateInteractionsChartData,
+} from 'src/devtools/views/Profiler/InteractionsChartBuilder';
+import {
   getChartData as getRankedChartData,
   invalidateChartData as invalidateRankedChartData,
 } from 'src/devtools/views/Profiler/RankedChartBuilder';
@@ -25,10 +29,12 @@ import type {
 import type {
   CommitDetails as CommitDetailsFrontend,
   Interactions as InteractionsFrontend,
+  InteractionWithCommits,
   CommitTree as CommitTreeFrontend,
   ProfilingSummary as ProfilingSummaryFrontend,
 } from 'src/devtools/views/Profiler/types';
 import type { ChartData as FlamegraphChartData } from 'src/devtools/views/Profiler/FlamegraphChartBuilder';
+import type { ChartData as InteractionsChartData } from 'src/devtools/views/Profiler/InteractionsChartBuilder';
 import type { ChartData as RankedChartData } from 'src/devtools/views/Profiler/RankedChartBuilder';
 
 type CommitDetailsParams = {|
@@ -110,10 +116,7 @@ export default class ProfilingCache {
       return new Promise(resolve => {
         if (!this._store.profilingOperations.has(rootID)) {
           // If no profiling data was recorded for this root, skip the round trip.
-          resolve({
-            interactions: [],
-            rootID,
-          });
+          resolve([]);
         } else {
           this._pendingInteractionsMap.set(rootID, resolve);
           this._bridge.send('getInteractions', {
@@ -190,6 +193,21 @@ export default class ProfilingCache {
       rootID,
     });
 
+  getInteractionsChartData = ({
+    interactions,
+    profilingSummary,
+    rootID,
+  }: {|
+    interactions: Array<InteractionWithCommits>,
+    profilingSummary: ProfilingSummaryFrontend,
+    rootID: number,
+  |}): InteractionsChartData =>
+    getInteractionsChartData({
+      interactions,
+      profilingSummary,
+      rootID,
+    });
+
   getRankedChartData = ({
     commitDetails,
     commitIndex,
@@ -215,6 +233,7 @@ export default class ProfilingCache {
     // Invalidate non-Suspense caches too.
     invalidateCommitTrees();
     invalidateFlamegraphChartData();
+    invalidateInteractionsChartData();
     invalidateRankedChartData();
 
     this._pendingCommitDetailsMap.clear();
@@ -249,10 +268,7 @@ export default class ProfilingCache {
     if (resolve != null) {
       this._pendingInteractionsMap.delete(rootID);
 
-      resolve({
-        interactions,
-        rootID,
-      });
+      resolve(interactions);
     }
   };
 

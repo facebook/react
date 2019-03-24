@@ -892,7 +892,10 @@ export function attach(
         actualDurations: [],
         commitTime: performance.now() - profilingStartTime,
         interactions: Array.from(root.memoizedInteractions).map(
-          (interaction: Interaction) => ({ ...interaction })
+          (interaction: Interaction) => ({
+            ...interaction,
+            timestamp: interaction.timestamp - profilingStartTime,
+          })
         ),
         maxActualDuration: 0,
       };

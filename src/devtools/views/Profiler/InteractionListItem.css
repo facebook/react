@@ -11,6 +11,31 @@
 }
 
 .SelectedInteraction {
-  background-color: var(--color-selected-background);
-  color: var(--color-selected-foreground);
+  background-color: var(--color-hover-background);
+}
+
+.Name {
+  white-space: nowrap;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+}
+
+.Timeline {
+  position: relative;
+  height: 100%;
+}
+
+.InteractionLine {
+  position: absolute;
+  height: 3px;
+  background-color: var(--color-commit-did-not-render);
+  border-radius: 0.125rem;
+}
+
+.CommitBox {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-color: var(--color-commit-did-not-render);
+  cursor: pointer;
 }
