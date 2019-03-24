@@ -1419,7 +1419,11 @@ export function attach(
         };
       }
     }
-    // TODO (profiling) Is this right? Should I return null? Does it matter?
+
+    console.warn(
+      `getCommitDetails(): No profiling info recorded for root "${rootID}" and commit ${commitIndex}`
+    );
+
     return {
       commitIndex,
       interactions: [],
@@ -1455,7 +1459,10 @@ export function attach(
       };
     }
 
-    // TODO (profiling) Is this right? Should I return null? Does it matter?
+    console.warn(
+      `getInteractions(): No interactions recorded for root "${rootID}"`
+    );
+
     return {
       interactions: [],
       rootID,

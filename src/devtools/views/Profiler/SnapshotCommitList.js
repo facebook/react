@@ -95,7 +95,6 @@ function List({
 
   // When the mouse is down, dragging over a commit should auto-select it.
   // This provides a nice way for users to swipe across a range of commits to compare them.
-  // TODO (profiling) This interaction may not feel as nice with suspense; reconsider it?
   const [isMouseDown, setIsMouseDown] = useState(false);
   const handleMouseDown = useCallback(() => {
     setIsMouseDown(true);

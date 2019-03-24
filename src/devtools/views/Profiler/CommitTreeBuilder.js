@@ -112,7 +112,10 @@ export function getCommitTree({
     }
   }
 
-  // TODO (profiling) Should I throw here? Is this ever expected?
+  console.error(
+    `getCommitTree(): Unable to reconstruct tree for root "${rootID}" and commit ${commitIndex}`
+  );
+
   return {
     nodes: new Map(),
     rootID,

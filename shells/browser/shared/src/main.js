@@ -126,7 +126,6 @@ function createPanelIfReactLoaded() {
         });
       });
 
-      // TODO (profiling) Is there a way to detect profiling support and conditionally register this panel?
       chrome.devtools.panels.create('⚛ Profiler', '', 'panel.html', panel => {
         panel.onShown.addListener(panel => {
           profilerPortalContainer = panel.container;
