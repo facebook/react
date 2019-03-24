@@ -2124,4 +2124,50 @@ describe('ReactHooksWithNoopRenderer', () => {
     ]);
     expect(ReactNoop).toMatchRenderedOutput('0');
   });
+
+  it('eager bailout should get ignored in batch update when parent rerenders with new props', () => {
+    let setDisabled;
+    let increment;
+
+    function Counter({ disabled }) {
+      const [count, dispatch] = useReducer((state, action) => {
+        if (disabled) {
+          return state;
+        }
+        if (action.type === 'increment') {
+          return state + 1;
+        }
+        return state;
+      }, 0);
+
+      increment = () => dispatch({ type: 'increment' });
+
+      Scheduler.yieldValue('Render count: ' + count);
+      return count;
+    }
+
+    function App() {
+      const [disabled, _setDisabled] = useState(true);
+      setDisabled = _setDisabled;
+      Scheduler.yieldValue('Render disabled: ' + disabled);
+      return <Counter disabled={disabled} />;
+    }
+
+    ReactNoop.render(<App />);
+    expect(Scheduler).toFlushAndYield([
+      'Render disabled: true',
+      'Render count: 0',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput('0');
+
+    act(() => {
+      increment();
+      setDisabled(false);
+    });
+    expect(Scheduler).toFlushAndYield([
+      'Render disabled: false',
+      'Render count: 1',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput('1');
+  });
 });
