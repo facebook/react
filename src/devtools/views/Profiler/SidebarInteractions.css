@@ -29,6 +29,10 @@
   color: var(--color-dim);
 }
 
+.Commits {
+  font-weight: bold;
+}
+
 .List {
   list-style: none;
   margin: 0;
@@ -36,8 +40,17 @@
 }
 
 .ListItem {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   padding: 0.25rem 0.5rem;
 }
 .ListItem:hover {
   background-color: var(--color-hover-background);
+}
+
+.CommitBox {
+  width: 20px;
+  height: 20px;
+  margin-right: 0.5rem;
 }
