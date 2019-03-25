@@ -188,9 +188,6 @@ export function trapEventForResponderEventSystem(
   passive: boolean,
 ): void {
   if (enableEventAPI) {
-    const dispatch = isInteractiveTopLevelEventType(topLevelType)
-      ? dispatchInteractiveEvent
-      : dispatchEvent;
     const rawEventName = getRawEventName(topLevelType);
     let eventFlags = RESPONDER_EVENT_SYSTEM;
 
@@ -210,7 +207,7 @@ export function trapEventForResponderEventSystem(
       eventFlags |= IS_ACTIVE;
     }
     // Check if interactive and wrap in interactiveUpdates
-    const listener = dispatch.bind(null, topLevelType, eventFlags);
+    const listener = dispatchEvent.bind(null, topLevelType, eventFlags);
     addEventListener(element, rawEventName, listener, {
       capture,
       passive,

@@ -13,11 +13,17 @@ import {
 } from 'events/EventSystemFlags';
 import type {AnyNativeEvent} from 'events/PluginModuleType';
 import {EventComponent} from 'shared/ReactWorkTags';
-import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 import type {ReactEventResponder} from 'shared/ReactTypes';
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
+import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
+import accumulateInto from 'events/accumulateInto';
+import SyntheticEvent from 'events/SyntheticEvent';
+import {runEventsInBatch} from 'events/ReactGenericBatching';
+import {interactiveUpdates} from 'events/ReactGenericBatching';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
+
+import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
 // We track the active component fibers so we can traverse through
 // the fiber tree and find the relative current fibers. We need to
@@ -36,6 +42,8 @@ export const eventResponderValidEventTypes: Map<
   Set<DOMTopLevelEventType>,
 > = new Map();
 
+type EventListener = (event: SyntheticEvent) => void;
+
 // TODO add context methods for dispatching events
 function DOMEventResponderContext(
   topLevelType: DOMTopLevelEventType,
@@ -47,6 +55,10 @@ function DOMEventResponderContext(
   this.eventType = topLevelType;
   this.eventTarget = nativeEventTarget;
   this._flags = eventSystemFlags;
+  this._fiber = null;
+  this._responder = null;
+  this._discreteEvents = [];
+  this._nonDiscreteEvents = [];
 }
 
 DOMEventResponderContext.prototype.isPassive = function(): boolean {
@@ -55,6 +67,73 @@ DOMEventResponderContext.prototype.isPassive = function(): boolean {
 
 DOMEventResponderContext.prototype.isPassiveSupported = function(): boolean {
   return (this._flags & PASSIVE_NOT_SUPPORTED) === 0;
+};
+
+function copyEventProperties(eventData, syntheticEvent) {
+  for (let propName in eventData) {
+    syntheticEvent[propName] = eventData[propName];
+  }
+}
+
+DOMEventResponderContext.prototype.dispatchEvent = function(
+  name: string,
+  eventListener: EventListener,
+  eventTarget: AnyNativeEvent,
+  capture: boolean,
+  discrete: boolean,
+  extraProperties?: Object,
+): void {
+  const eventTargetFiber = getClosestInstanceFromNode(eventTarget);
+  const syntheticEvent = SyntheticEvent.getPooled(
+    null,
+    eventTargetFiber,
+    this.event,
+    eventTarget,
+  );
+  if (extraProperties !== undefined) {
+    copyEventProperties(extraProperties, syntheticEvent);
+  }
+  syntheticEvent.type = name;
+  syntheticEvent._dispatchInstances = [eventTargetFiber];
+  syntheticEvent._dispatchListeners = [eventListener];
+  syntheticEvent.capture = capture;
+  if (discrete) {
+    this._discreteEvents.push(syntheticEvent);
+  } else {
+    this._nonDiscreteEvents.push(syntheticEvent);
+  }
+};
+
+function accumulateTwoPhaseEvents(
+  events: Array<SyntheticEvent>,
+): Array<SyntheticEvent> {
+  let i;
+  // Capture phase
+  for (i = events.length; i-- > 0; ) {
+    const syntheticEvent = events[i];
+    if (syntheticEvent.capture) {
+      events = accumulateInto(events, syntheticEvent);
+    }
+  }
+  // Bubble phase
+  for (i = 0; i < events.length; i++) {
+    const syntheticEvent = events[i];
+    if (!syntheticEvent.capture) {
+      events = accumulateInto(events, syntheticEvent);
+    }
+  }
+  return events;
+}
+
+DOMEventResponderContext.prototype._runEventsInBatch = function(): void {
+  if (this._discreteEvents.length > 0) {
+    interactiveUpdates(() => {
+      runEventsInBatch(accumulateTwoPhaseEvents(this._discreteEvents));
+    });
+  }
+  if (this._nonDiscreteEvents.length > 0) {
+    runEventsInBatch(accumulateTwoPhaseEvents(this._nonDiscreteEvents));
+  }
 };
 
 function createValidEventTypeSet(targetEventTypes): Set<DOMTopLevelEventType> {
@@ -111,7 +190,8 @@ function handleTopLevelType(
     state = responder.createInitialState(props);
     stateNode.set(responder, state);
   }
-  // TODO provide all the props for handleEvent
+  context._fiber = fiber;
+  context._responder = responder;
   responder.handleEvent(context, props, state);
 }
 
@@ -157,5 +237,5 @@ export function runResponderEventsInBatch(
     }
     node = node.return;
   }
-  // TODO dispatch extracted events from context (with batching)
+  context._runEventsInBatch();
 }
