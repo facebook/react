@@ -10,3 +10,8 @@
 .Header {
   font-size: var(--font-size-sans-large);
 }
+
+.FilterMessage {
+  display: flex;
+  align-items: center;
+}

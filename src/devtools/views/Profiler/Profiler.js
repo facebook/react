@@ -1,10 +1,12 @@
 // @flow
 
-import React, { Suspense, useCallback, useContext, useState } from 'react';
+import React, { Suspense, useCallback, useContext } from 'react';
 import { createPortal } from 'react-dom';
+import {
+  CommitFilterModalContext,
+  CommitFilterModalContextController,
+} from './CommitFilterModalContext';
 import { ProfilerContext } from './ProfilerContext';
-import Button from '../Button';
-import ButtonIcon from '../ButtonIcon';
 import TabBar from '../TabBar';
 import CommitFlamegraph from './CommitFlamegraph';
 import CommitRanked from './CommitRanked';
@@ -15,6 +17,7 @@ import ReloadAndProfileButton from './ReloadAndProfileButton';
 import SnapshotSelector from './SnapshotSelector';
 import SidebarCommitInfo from './SidebarCommitInfo';
 import SidebarInteractions from './SidebarInteractions';
+import ToggleCommitFilterModalButton from './ToggleCommitFilterModalButton';
 
 import styles from './Profiler.css';
 
@@ -41,7 +44,11 @@ export default function Profiler({
       />
     );
   } else {
-    children = <SuspendingProfiler />;
+    children = (
+      <CommitFilterModalContextController>
+        <SuspendingProfiler />
+      </CommitFilterModalContextController>
+    );
   }
 
   return portalContainer != null
@@ -105,9 +112,10 @@ function ProfilerFallback() {
 // NOTE that the structure of this UI should mirror NonSuspendingProfiler.
 function SuspendingProfiler() {
   const { selectedTabID, selectTab } = useContext(ProfilerContext);
-  const [isFilterModalShowing, setIsFilterModalShowing] = useState(false);
+  const { isFilterModalShowing, setIsFilterModalShowing } = useContext(
+    CommitFilterModalContext
+  );
 
-  const showFilterModal = useCallback(() => setIsFilterModalShowing(true));
   const dismissFilterModal = useCallback(() => setIsFilterModalShowing(false));
 
   let view = null;
@@ -153,9 +161,7 @@ function SuspendingProfiler() {
             tabs={tabs}
           />
           <div className={styles.Spacer} />
-          <Button onClick={showFilterModal} title="Filter commits by duration">
-            <ButtonIcon type="filter" />
-          </Button>
+          <ToggleCommitFilterModalButton />
           <Suspense fallback={<ProfilerFallback />}>
             <SnapshotSelector />
           </Suspense>

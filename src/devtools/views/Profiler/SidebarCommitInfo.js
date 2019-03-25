@@ -32,7 +32,7 @@ export default function SidebarCommitInfo(_: Props) {
   );
 
   const { interactions } = profilingCache.CommitDetails.read({
-    commitIndex: ((selectedCommitIndex: any): number),
+    commitIndex: selectedCommitIndex,
     rendererID: ((rendererID: any): number),
     rootID: ((rootID: any): number),
   });

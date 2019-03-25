@@ -61,6 +61,8 @@ export default function SnapshotSelector(_: Props) {
   if (selectedFilteredCommitIndex === null) {
     if (numFilteredCommits > 0) {
       selectCommitIndex(0);
+    } else {
+      selectCommitIndex(null);
     }
   } else if (selectedFilteredCommitIndex >= numFilteredCommits) {
     selectCommitIndex(numFilteredCommits === 0 ? null : numFilteredCommits - 1);
