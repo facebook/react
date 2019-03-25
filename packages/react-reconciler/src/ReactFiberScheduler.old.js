@@ -176,7 +176,7 @@ const {
 } = Scheduler;
 
 export type Thenable = {
-  then(resolve: () => mixed, reject?: () => mixed): mixed,
+  then(resolve: () => mixed, reject?: () => mixed): void | Thenable,
 };
 
 const {ReactCurrentDispatcher, ReactCurrentOwner} = ReactSharedInternals;
@@ -1835,10 +1835,55 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
   }
   return root;
 }
+export function doesHavePendingPassiveEffects() {
+  return passiveEffectCallback !== null;
+}
 
-export function warnIfNotCurrentlyBatchingInDev(fiber: Fiber): void {
+// in a test-like environment, we want to warn if dispatchAction() is
+// called outside of a TestUtils.act(...)/batchedUpdates/render call.
+// so we have a a step counter for when we descend/ascend from
+// actedUpdates() calls, and test on it for when to warn
+let actingUpdatesScopeDepth = 0;
+
+export function actedUpdates(
+  callback: (onDone: void | ((?Error) => void)) => void,
+) {
+  let previousActingUpdatesScopeDepth;
   if (__DEV__) {
-    if (isRendering === false && isBatchingUpdates === false) {
+    previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
+    actingUpdatesScopeDepth++;
+  }
+
+  function warnIfScopeDepthMismatch() {
+    if (__DEV__) {
+      if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
+        // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
+        warningWithoutStack(
+          null,
+          'You seem to have overlapping act() calls, this is not supported. ' +
+            'Be sure to await previous act() calls before making a new one. ',
+        );
+      }
+    }
+  }
+
+  if (__DEV__) {
+    callback(() => {
+      actingUpdatesScopeDepth--;
+      warnIfScopeDepthMismatch();
+    });
+  } else {
+    callback();
+  }
+}
+
+export function warnIfNotCurrentlyActingUpdatesInDev(fiber: Fiber): void {
+  if (__DEV__) {
+    if (
+      actingUpdatesScopeDepth === 0 &&
+      isRendering === false &&
+      isBatchingUpdates === false
+    ) {
       warningWithoutStack(
         false,
         'An update to %s inside a test was not wrapped in act(...).\n\n' +

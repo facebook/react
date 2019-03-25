@@ -33,4 +33,6 @@ export const interactiveUpdates = notYetImplemented;
 export const flushInteractiveUpdates = notYetImplemented;
 export const computeUniqueAsyncExpiration = notYetImplemented;
 export const flushPassiveEffects = notYetImplemented;
-export const warnIfNotCurrentlyBatchingInDev = notYetImplemented;
+export const doesHavePendingPassiveEffects = notYetImplemented;
+export const actedUpdates = notYetImplemented;
+export const warnIfNotCurrentlyActingUpdatesInDev = notYetImplemented;
