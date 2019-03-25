@@ -94,10 +94,12 @@ export function useEffect(
 ) {
   const dispatcher = resolveDispatcher();
 
-  invariant(
-    create != null,
-    'useEffect must be called with a create function, but null or undefined was passed.',
-  );
+  if (__DEV__) {
+    warning(
+      create != null,
+      'useEffect must be called with a create function, but null or undefined was passed.',
+    );
+  }
 
   return dispatcher.useEffect(create, inputs);
 }
@@ -108,10 +110,12 @@ export function useLayoutEffect(
 ) {
   const dispatcher = resolveDispatcher();
 
-  invariant(
-    create != null,
-    'useLayoutEffect must be called with a create function, but null or undefined was passed.',
-  );
+  if (__DEV__) {
+    warning(
+      create != null,
+      'useLayoutEffect must be called with a create function, but null or undefined was passed.',
+    );
+  }
 
   return dispatcher.useLayoutEffect(create, inputs);
 }
