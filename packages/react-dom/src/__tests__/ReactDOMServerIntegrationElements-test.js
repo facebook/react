@@ -644,7 +644,7 @@ describe('ReactDOMServerIntegration', () => {
             },
           };
         };
-        checkFooDiv(await render(<FactoryComponent />));
+        checkFooDiv(await render(<FactoryComponent />, 1));
       });
     });
 

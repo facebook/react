@@ -90,12 +90,12 @@ const elementListeningSets:
   | WeakMap
   | Map<
       Document | Element | Node,
-      Set<DOMTopLevelEventType>,
+      Set<DOMTopLevelEventType | string>,
     > = new PossiblyWeakMap();
 
-function getListeningSetForElement(
+export function getListeningSetForElement(
   element: Document | Element | Node,
-): Set<DOMTopLevelEventType> {
+): Set<DOMTopLevelEventType | string> {
   let listeningSet = elementListeningSets.get(element);
   if (listeningSet === undefined) {
     listeningSet = new Set();

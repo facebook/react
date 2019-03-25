@@ -1,6 +1,6 @@
 {
   "name": "scheduler",
-  "version": "0.13.4",
+  "version": "0.13.5",
   "description": "Cooperative scheduler for the browser environment.",
   "main": "index.js",
   "repository": {

@@ -13,6 +13,8 @@ import {registrationNameModules} from 'events/EventPluginRegistry';
 import warning from 'shared/warning';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import type {ReactEventResponder} from 'shared/ReactTypes';
+import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 
 import {
   getValueForAttribute,
@@ -57,7 +59,12 @@ import {
   TOP_SUBMIT,
   TOP_TOGGLE,
 } from '../events/DOMTopLevelEventTypes';
-import {listenTo, trapBubbledEvent} from '../events/ReactBrowserEventEmitter';
+import {
+  listenTo,
+  trapBubbledEvent,
+  getListeningSetForElement,
+} from '../events/ReactBrowserEventEmitter';
+import {trapEventForResponderEventSystem} from '../events/ReactDOMEventListener.js';
 import {mediaEventTypes} from '../events/DOMTopLevelEventTypes';
 import {
   createDangerousStringForStyles,
@@ -77,6 +84,8 @@ import possibleStandardNames from '../shared/possibleStandardNames';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
+
+import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
 let didWarnInvalidHydration = false;
 let didWarnShadyDOM = false;
@@ -1265,5 +1274,67 @@ export function restoreControlledState(
     case 'select':
       ReactDOMSelectRestoreControlledState(domElement, props);
       return;
+  }
+}
+
+export function listenToEventResponderEvents(
+  eventResponder: ReactEventResponder,
+  element: Element | Document,
+): void {
+  if (enableEventAPI) {
+    const {targetEventTypes} = eventResponder;
+    // Get the listening Set for this element. We use this to track
+    // what events we're listening to.
+    const listeningSet = getListeningSetForElement(element);
+
+    // Go through each target event type of the event responder
+    for (let i = 0, length = targetEventTypes.length; i < length; ++i) {
+      const targetEventType = targetEventTypes[i];
+      let topLevelType;
+      let capture = false;
+      let passive = true;
+
+      // If no event config object is provided (i.e. - only a string),
+      // we default to enabling passive and not capture.
+      if (typeof targetEventType === 'string') {
+        topLevelType = targetEventType;
+      } else {
+        if (__DEV__) {
+          warning(
+            typeof targetEventType === 'object' && targetEventType !== null,
+            'Event Responder: invalid entry in targetEventTypes array. ' +
+              'Entry must be string or an object. Instead, got %s.',
+            targetEventType,
+          );
+        }
+        const targetEventConfigObject = ((targetEventType: any): {
+          name: string,
+          passive?: boolean,
+          capture?: boolean,
+        });
+        topLevelType = targetEventConfigObject.name;
+        if (targetEventConfigObject.passive !== undefined) {
+          passive = targetEventConfigObject.passive;
+        }
+        if (targetEventConfigObject.capture !== undefined) {
+          capture = targetEventConfigObject.capture;
+        }
+      }
+      // Create a unique name for this event, plus its properties. We'll
+      // use this to ensure we don't listen to the same event with the same
+      // properties again.
+      const passiveKey = passive ? '_passive' : '';
+      const captureKey = capture ? '_capture' : '';
+      const listeningName = `${topLevelType}${passiveKey}${captureKey}`;
+      if (!listeningSet.has(listeningName)) {
+        trapEventForResponderEventSystem(
+          element,
+          ((topLevelType: any): DOMTopLevelEventType),
+          capture,
+          passive,
+        );
+        listeningSet.add(listeningName);
+      }
+    }
   }
 }

@@ -8,7 +8,13 @@
  */
 
 import type {ReactElement, Source} from 'shared/ReactElementType';
-import type {ReactFragment, ReactPortal, RefObject} from 'shared/ReactTypes';
+import type {
+  ReactFragment,
+  ReactPortal,
+  RefObject,
+  ReactEventComponent,
+  ReactEventTarget,
+} from 'shared/ReactTypes';
 import type {WorkTag} from 'shared/ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {SideEffectTag} from 'shared/ReactSideEffectTags';
@@ -19,7 +25,7 @@ import type {HookType} from './ReactFiberHooks';
 
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
+import {enableProfilerTimer, enableEventAPI} from 'shared/ReactFeatureFlags';
 import {NoEffect} from 'shared/ReactSideEffectTags';
 import {
   IndeterminateComponent,
@@ -38,6 +44,8 @@ import {
   FunctionComponent,
   MemoComponent,
   LazyComponent,
+  EventComponent,
+  EventTarget,
 } from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
@@ -60,6 +68,8 @@ import {
   REACT_SUSPENSE_TYPE,
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
+  REACT_EVENT_COMPONENT_TYPE,
+  REACT_EVENT_TARGET_TYPE,
 } from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -503,6 +513,28 @@ export function createFiberFromTypeAndProps(
               fiberTag = LazyComponent;
               resolvedType = null;
               break getTag;
+            case REACT_EVENT_COMPONENT_TYPE:
+              if (enableEventAPI) {
+                return createFiberFromEventComponent(
+                  type,
+                  pendingProps,
+                  mode,
+                  expirationTime,
+                  key,
+                );
+              }
+              break;
+            case REACT_EVENT_TARGET_TYPE:
+              if (enableEventAPI) {
+                return createFiberFromEventTarget(
+                  type,
+                  pendingProps,
+                  mode,
+                  expirationTime,
+                  key,
+                );
+              }
+              break;
           }
         }
         let info = '';
@@ -577,6 +609,35 @@ export function createFiberFromFragment(
   key: null | string,
 ): Fiber {
   const fiber = createFiber(Fragment, elements, key, mode);
+  fiber.expirationTime = expirationTime;
+  return fiber;
+}
+
+export function createFiberFromEventComponent(
+  eventComponent: ReactEventComponent,
+  pendingProps: any,
+  mode: TypeOfMode,
+  expirationTime: ExpirationTime,
+  key: null | string,
+): Fiber {
+  const fiber = createFiber(EventComponent, pendingProps, key, mode);
+  fiber.elementType = eventComponent;
+  fiber.type = eventComponent;
+  fiber.stateNode = new Map();
+  fiber.expirationTime = expirationTime;
+  return fiber;
+}
+
+export function createFiberFromEventTarget(
+  eventTarget: ReactEventTarget,
+  pendingProps: any,
+  mode: TypeOfMode,
+  expirationTime: ExpirationTime,
+  key: null | string,
+): Fiber {
+  const fiber = createFiber(EventTarget, pendingProps, key, mode);
+  fiber.elementType = eventTarget;
+  fiber.type = eventTarget;
   fiber.expirationTime = expirationTime;
   return fiber;
 }

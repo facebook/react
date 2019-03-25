@@ -43,7 +43,6 @@ import {
   IncompleteClassComponent,
   MemoComponent,
   SimpleMemoComponent,
-  EventTarget,
 } from 'shared/ReactWorkTags';
 import {
   invokeGuardedCallback,
@@ -91,7 +90,6 @@ import {
   hideTextInstance,
   unhideInstance,
   unhideTextInstance,
-  handleEventTarget,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -301,7 +299,6 @@ function commitBeforeMutationLifeCycles(
     case HostText:
     case HostPortal:
     case IncompleteClassComponent:
-    case EventTarget:
       // Nothing to do for these component types
       return;
     default: {
@@ -588,7 +585,6 @@ function commitLifeCycles(
     }
     case SuspenseComponent:
     case IncompleteClassComponent:
-    case EventTarget:
       break;
     default: {
       invariant(
@@ -819,12 +815,8 @@ function commitContainer(finishedWork: Fiber) {
   }
 
   switch (finishedWork.tag) {
-    case ClassComponent: {
-      return;
-    }
-    case HostComponent: {
-      return;
-    }
+    case ClassComponent:
+    case HostComponent:
     case HostText: {
       return;
     }
@@ -1214,12 +1206,6 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       return;
     }
     case IncompleteClassComponent: {
-      return;
-    }
-    case EventTarget: {
-      const newProps = finishedWork.memoizedProps;
-      const type = finishedWork.type.type;
-      handleEventTarget(type, newProps, finishedWork);
       return;
     }
     default: {

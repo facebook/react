@@ -118,7 +118,14 @@ describe('ReactCompositeComponent', () => {
     }
 
     const el = document.createElement('div');
-    ReactDOM.render(<Child test="test" />, el);
+    expect(() => ReactDOM.render(<Child test="test" />, el)).toWarnDev(
+      'Warning: The <Child /> component appears to be a function component that returns a class instance. ' +
+        'Change Child to a class that extends React.Component instead. ' +
+        "If you can't use a class try assigning the prototype on the function as a workaround. " +
+        '`Child.prototype = React.Component.prototype`. ' +
+        "Don't use an arrow function since it cannot be called with `new` by React.",
+      {withoutStack: true},
+    );
 
     expect(el.textContent).toBe('test');
   });
