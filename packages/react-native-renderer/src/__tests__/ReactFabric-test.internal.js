@@ -322,20 +322,7 @@ describe('ReactFabric', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    class Subclass extends ReactFabric.NativeComponent {
-      render() {
-        return <View>{this.props.children}</View>;
-      }
-    }
-
-    const CreateClass = createReactClass({
-      mixins: [NativeMethodsMixin],
-      render() {
-        return <View>{this.props.children}</View>;
-      },
-    });
-
-    [View, Subclass, CreateClass].forEach(Component => {
+    [View].forEach(Component => {
       UIManager.measureLayout.mockReset();
 
       let viewRef;
@@ -381,64 +368,6 @@ describe('ReactFabric', () => {
       expect(successCallback).not.toBeCalled();
       args[3]('success');
       expect(successCallback).toBeCalledWith('success');
-    });
-  });
-
-  it('should warn if passed a non native ref to ref.measureLayout', () => {
-    const View = createReactNativeComponentClass('RCTView', () => ({
-      validAttributes: {foo: true},
-      uiViewClassName: 'RCTView',
-    }));
-
-    class Subclass extends ReactFabric.NativeComponent {
-      render() {
-        return <View>{this.props.children}</View>;
-      }
-    }
-
-    const CreateClass = createReactClass({
-      mixins: [NativeMethodsMixin],
-      render() {
-        return <View>{this.props.children}</View>;
-      },
-    });
-
-    [Subclass, CreateClass].forEach(Component => {
-      UIManager.measureLayout.mockReset();
-
-      let viewRef;
-      let otherRef;
-      ReactFabric.render(
-        <Component>
-          <Component
-            foo="bar"
-            ref={ref => {
-              viewRef = ref;
-            }}
-          />
-          <Component
-            ref={ref => {
-              otherRef = ref;
-            }}
-          />
-        </Component>,
-        11,
-      );
-
-      expect(UIManager.measureLayout).not.toBeCalled();
-
-      const successCallback = jest.fn();
-      const failureCallback = jest.fn();
-      expect(() => {
-        viewRef.measureLayout(otherRef, successCallback, failureCallback);
-      }).toWarnDev(
-        [
-          `Warning: ref.measureLayout must be called with a node handle or a ref to a native component.`,
-        ],
-        {withoutStack: true},
-      );
-
-      expect(UIManager.measureLayout).not.toBeCalled();
     });
   });
 
