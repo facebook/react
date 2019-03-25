@@ -21,7 +21,7 @@ export default function SidebarCommitInfo(_: Props) {
   const { profilingCache } = useContext(StoreContext);
 
   if (selectedCommitIndex === null) {
-    return null; // TODO (profiling) Use a better UI
+    return <div className={styles.NothingSelected}>Nothing selected</div>;
   }
 
   const { commitDurations, commitTimes } = profilingCache.ProfilingSummary.read(

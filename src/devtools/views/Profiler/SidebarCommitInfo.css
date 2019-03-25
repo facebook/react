@@ -4,13 +4,12 @@
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  border-bottom: 1px solid var(--color-border);
-  border-top: 1px solid var(--color-border);
 }
 
 .Content {
   padding: 0.5rem;
   user-select: none;
+  border-top: 1px solid var(--color-border);
 }
 
 .List,
@@ -44,4 +43,12 @@
 .Value {
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-monospace-normal);
+}
+
+.NothingSelected {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--color-dim);
 }
