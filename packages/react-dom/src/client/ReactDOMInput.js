@@ -177,13 +177,22 @@ export function updateWrapper(element: Element, props: Object) {
 
   if (value != null) {
     if (type === 'number') {
-      if (
-        (value === 0 && node.value === '') ||
-        // We explicitly want to coerce to number here if possible.
-        // eslint-disable-next-line
-        node.value != (value: any)
-      ) {
-        node.value = toString(value);
+      let nodeValue = node.value;
+
+      // If the React prop value is NaN and current input value is invalid,
+      // it means both React and the DOM have invalid states (reported as
+      // empty). In this case, do not assign the value property, which would
+      // clear user input. The resulting state remains the same while still
+      // maintaining user expectations.
+      if (!(isNaN(value) && nodeValue === '')) {
+        if (
+          (value === 0 && nodeValue === '') ||
+          // We explicitly want to coerce to number here if possible.
+          // eslint-disable-next-line
+          nodeValue != (value: any)
+        ) {
+          node.value = toString(value);
+        }
       }
     } else if (node.value !== toString(value)) {
       node.value = toString(value);

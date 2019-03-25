@@ -3,6 +3,7 @@ import TestCase from '../../TestCase';
 import NumberTestCase from './NumberTestCase';
 import NumberInputDecimal from './NumberInputDecimal';
 import NumberInputExtraZeroes from './NumberInputExtraZeroes';
+import NumericParsedInput from './NumericParsedInput.js';
 
 const React = window.React;
 
@@ -185,6 +186,21 @@ function NumberInputs() {
           </a>{' '}
           that we can not control for.
         </p>
+      </TestCase>
+
+      <TestCase title="Assigning NaN to an invalid number input">
+        <TestCase.Steps>
+          <li>
+            Enter an invalid number, like <code>3.2...</code>
+          </li>
+        </TestCase.Steps>
+
+        <TestCase.ExpectedResult>
+          The input should not clear the value as soon as the number becomes
+          invalid.
+        </TestCase.ExpectedResult>
+
+        <NumericParsedInput />
       </TestCase>
     </FixtureSet>
   );
