@@ -34,8 +34,8 @@
 
 .CommitBox {
   position: absolute;
-  width: 10px;
-  height: 10px;
+  width: var(--interaction-commit-size);
+  height: var(--interaction-commit-size);
   background-color: var(--color-commit-did-not-render);
   cursor: pointer;
 }

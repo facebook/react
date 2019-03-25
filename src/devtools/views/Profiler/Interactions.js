@@ -90,9 +90,21 @@ function Interactions({ height, width }: {| height: number, width: number |}) {
   );
 
   const itemData = useMemo<ItemData>(() => {
-    // TODO (profiling) constants
-    const labelWidth = Math.min(200, width / 5);
-    const timelineWidth = width - labelWidth - 10;
+    const interactionCommitSize = parseInt(
+      getComputedStyle((document.body: any)).getPropertyValue(
+        '--interaction-commit-size'
+      ),
+      10
+    );
+    const interactionLabelWidth = parseInt(
+      getComputedStyle((document.body: any)).getPropertyValue(
+        '--interaction-label-width'
+      ),
+      10
+    );
+
+    const labelWidth = Math.min(interactionLabelWidth, width / 5);
+    const timelineWidth = width - labelWidth - interactionCommitSize;
 
     return {
       chartData,
