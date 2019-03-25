@@ -12,8 +12,6 @@ import styles from './SnapshotSelector.css';
 
 export type Props = {||};
 
-// TODO (profiling) Left/right arrow navigation.
-
 export default function SnapshotSelector(_: Props) {
   const {
     isCommitFilterEnabled,
@@ -94,6 +92,24 @@ export default function SnapshotSelector(_: Props) {
     selectCommitIndex(filteredCommitIndices[nextCommitIndex]);
   }, [selectedFilteredCommitIndex, filteredCommitIndices, selectCommitIndex]);
 
+  const handleKeyDown = useCallback(
+    event => {
+      switch (event.key) {
+        case 'ArrowLeft':
+          viewPrevCommit();
+          event.stopPropagation();
+          break;
+        case 'ArrowRight':
+          viewNextCommit();
+          event.stopPropagation();
+          break;
+        default:
+          break;
+      }
+    },
+    [viewNextCommit, viewPrevCommit]
+  );
+
   if (rendererID === null || rootID === null) {
     return null;
   }
@@ -111,6 +127,7 @@ export default function SnapshotSelector(_: Props) {
       </Button>
       <div
         className={styles.Commits}
+        onKeyDown={handleKeyDown}
         style={{
           flex: numFilteredCommits > 0 ? '1 1 auto' : '0 0 auto',
           maxWidth:
@@ -118,6 +135,7 @@ export default function SnapshotSelector(_: Props) {
               ? numFilteredCommits * maxBarWidth
               : undefined,
         }}
+        tabIndex={0}
       >
         {numFilteredCommits > 0 && (
           <SnapshotCommitList

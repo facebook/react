@@ -9,6 +9,9 @@
   margin-left: 0.25rem;
   overflow: hidden;
 }
+.Commits:focus {
+  outline: none;
+}
 
 .VRule {
   height: 20px;

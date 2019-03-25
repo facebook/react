@@ -1,6 +1,6 @@
 // @flow
 
-import React, { useContext, useMemo } from 'react';
+import React, { useCallback, useContext, useMemo } from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList } from 'react-window';
 import { ProfilerContext } from './ProfilerContext';
@@ -64,6 +64,31 @@ function Interactions({ height, width }: {| height: number, width: number |}) {
     rootID: ((rootID: any): number),
   });
 
+  const handleKeyDown = useCallback(
+    event => {
+      let index;
+      switch (event.key) {
+        case 'ArrowDown':
+          index = interactions.findIndex(
+            interaction => interaction.id === selectedInteractionID
+          );
+          selectInteraction(Math.min(interactions.length - 1, index + 1));
+          event.stopPropagation();
+          break;
+        case 'ArrowUp':
+          index = interactions.findIndex(
+            interaction => interaction.id === selectedInteractionID
+          );
+          selectInteraction(Math.max(0, index - 1));
+          event.stopPropagation();
+          break;
+        default:
+          break;
+      }
+    },
+    [interactions, selectedInteractionID, selectInteraction]
+  );
+
   const itemData = useMemo<ItemData>(() => {
     // TODO (profiling) constants
     const labelWidth = Math.min(200, width / 5);
@@ -91,8 +116,6 @@ function Interactions({ height, width }: {| height: number, width: number |}) {
     width,
   ]);
 
-  // TODO (profiling) Up/down arrow keys to select prev/next interaction.
-
   // If a commit contains no fibers with an actualDuration > 0,
   // Display a fallback message.
   if (interactions.length === 0) {
@@ -100,14 +123,16 @@ function Interactions({ height, width }: {| height: number, width: number |}) {
   }
 
   return (
-    <FixedSizeList
-      height={height}
-      itemCount={interactions.length}
-      itemData={itemData}
-      itemSize={30}
-      width={width}
-    >
-      {InteractionListItem}
-    </FixedSizeList>
+    <div className={styles.FocusTarget} onKeyDown={handleKeyDown} tabIndex={0}>
+      <FixedSizeList
+        height={height}
+        itemCount={interactions.length}
+        itemData={itemData}
+        itemSize={30}
+        width={width}
+      >
+        {InteractionListItem}
+      </FixedSizeList>
+    </div>
   );
 }

@@ -58,7 +58,6 @@ export default function Tree(props: Props) {
           event.preventDefault();
           break;
         case 'ArrowLeft':
-          console.log('LEFT');
           selectParentElementInTree();
           break;
         case 'ArrowRight':
