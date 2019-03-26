@@ -148,7 +148,7 @@ function handleTopLevelType(
   context: Object,
 ): void {
   const responder: ReactEventResponder = fiber.type.responder;
-  const {props, stateMap} = fiber.stateNode;
+  let {props, state} = fiber.stateNode;
   let validEventTypesForResponder = eventResponderValidEventTypes.get(
     responder,
   );
@@ -162,10 +162,8 @@ function handleTopLevelType(
   if (!validEventTypesForResponder.has(topLevelType)) {
     return;
   }
-  let state = stateMap.get(responder);
-  if (state === undefined && responder.createInitialState !== undefined) {
-    state = responder.createInitialState(props);
-    stateMap.set(responder, state);
+  if (state === null && responder.createInitialState !== undefined) {
+    state = fiber.stateNode.state = responder.createInitialState(props);
   }
   context._fiber = fiber;
   context._responder = responder;
