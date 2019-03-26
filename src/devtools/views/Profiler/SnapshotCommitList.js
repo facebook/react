@@ -12,6 +12,8 @@ import { FixedSizeList } from 'react-window';
 import SnapshotCommitListItem from './SnapshotCommitListItem';
 import { minBarWidth } from './constants';
 
+import styles from './SnapshotCommitList.css';
+
 export type ItemData = {|
   commitDurations: Array<number>,
   commitTimes: Array<number>,
@@ -160,6 +162,7 @@ function List({
       style={{ height, width }}
     >
       <FixedSizeList
+        className={styles.List}
         direction="horizontal"
         height={height}
         itemCount={filteredCommitIndices.length}

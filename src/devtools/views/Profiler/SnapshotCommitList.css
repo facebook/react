@@ -1,0 +1,9 @@
+.List {
+  /**
+   * The decision to suppress the default (horizontal) scroll bars is intentional.
+   * The snapshot selector is small enough that the scrollbar renders it essentially useless.
+   * There are two alternative navigation mechanisms (arrow keys and arrow buttons).
+   * If necessary, we could also expand the click-and-drag mechanism to scroll.
+   */
+  overflow-x: hidden;
+}
