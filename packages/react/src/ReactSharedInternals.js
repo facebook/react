@@ -11,8 +11,10 @@ import * as SchedulerTracing from 'scheduler/tracing';
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
 import ReactCurrentOwner from './ReactCurrentOwner';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
+import ReactAdHocProfiler from './ReactAdHocProfiler';
 
 const ReactSharedInternals = {
+  ReactAdHocProfiler,
   ReactCurrentDispatcher,
   ReactCurrentOwner,
   // Used by renderers to avoid bundling object-assign twice in UMD bundles:

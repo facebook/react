@@ -8,6 +8,12 @@
  */
 
 import {TEXT_NODE} from '../shared/HTMLNodeType';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
+
+const {
+  startAdHocProfiler,
+  stopAdHocProfiler,
+} = ReactSharedInternals.ReactAdHocProfiler;
 
 /**
  * Set the textContent property of a node. For text updates, it's faster
@@ -27,11 +33,15 @@ let setTextContent = function(node: Element, text: string): void {
       firstChild === node.lastChild &&
       firstChild.nodeType === TEXT_NODE
     ) {
+      startAdHocProfiler('dom');
       firstChild.nodeValue = text;
+      stopAdHocProfiler('dom');
       return;
     }
   }
+  startAdHocProfiler('dom');
   node.textContent = text;
+  stopAdHocProfiler('dom');
 };
 
 export default setTextContent;

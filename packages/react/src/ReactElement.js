@@ -8,8 +8,14 @@
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
+
+const {
+  startAdHocProfiler,
+  stopAdHocProfiler,
+} = ReactSharedInternals.ReactAdHocProfiler;
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -109,6 +115,8 @@ function defineRefPropWarningGetter(props, displayName) {
  * @internal
  */
 const ReactElement = function(type, key, ref, self, source, owner, props) {
+  startAdHocProfiler('createElement');
+
   const element = {
     // This tag allows us to uniquely identify this as a React Element
     $$typeof: REACT_ELEMENT_TYPE,
@@ -161,6 +169,8 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
     }
   }
 
+  stopAdHocProfiler('createElement');
+
   return element;
 };
 
@@ -169,6 +179,8 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
  * See https://reactjs.org/docs/react-api.html#createelement
  */
 export function createElement(type, config, children) {
+  startAdHocProfiler('createElement');
+
   let propName;
 
   // Reserved names are extracted
@@ -241,6 +253,9 @@ export function createElement(type, config, children) {
       }
     }
   }
+
+  stopAdHocProfiler('createElement');
+
   return ReactElement(
     type,
     key,

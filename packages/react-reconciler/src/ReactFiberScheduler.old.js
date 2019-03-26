@@ -179,7 +179,12 @@ export type Thenable = {
   then(resolve: () => mixed, reject?: () => mixed): mixed,
 };
 
-const {ReactCurrentDispatcher, ReactCurrentOwner} = ReactSharedInternals;
+const {
+  ReactAdHocProfiler,
+  ReactCurrentDispatcher,
+  ReactCurrentOwner,
+} = ReactSharedInternals;
+const {startAdHocProfiler, stopAdHocProfiler} = ReactAdHocProfiler;
 
 let didWarnAboutStateTransition;
 let didWarnSetStateChildContext;
@@ -621,6 +626,7 @@ function flushPassiveEffects() {
 }
 
 function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
+  startAdHocProfiler('commitRoot');
   isWorking = true;
   isCommitting = true;
   startCommitTimer();
@@ -901,6 +907,7 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
       );
     }
   }
+  stopAdHocProfiler('commitRoot');
 }
 
 function resetChildExpirationTime(
@@ -1156,6 +1163,7 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
 }
 
 function performUnitOfWork(workInProgress: Fiber): Fiber | null {
+  startAdHocProfiler('performUnitOfWork');
   // The current, flushed, state of this fiber is the alternate.
   // Ideally nothing should rely on this, but relying on it here
   // means that we don't need an additional field on the work in
@@ -1214,6 +1222,7 @@ function performUnitOfWork(workInProgress: Fiber): Fiber | null {
 
   ReactCurrentOwner.current = null;
 
+  stopAdHocProfiler('performUnitOfWork');
   return next;
 }
 

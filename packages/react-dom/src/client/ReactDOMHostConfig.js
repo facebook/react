@@ -51,6 +51,7 @@ import {
   REACT_EVENT_TARGET_TOUCH_HIT,
 } from 'shared/ReactSymbols';
 import getElementFromTouchHitTarget from 'shared/getElementFromTouchHitTarget';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 export type Type = string;
 export type Props = {
@@ -115,6 +116,11 @@ const STYLE = 'style';
 
 let eventsEnabled: ?boolean = null;
 let selectionInformation: ?mixed = null;
+
+const {
+  startAdHocProfiler,
+  stopAdHocProfiler,
+} = ReactSharedInternals.ReactAdHocProfiler;
 
 function shouldAutoFocusHostComponent(type: string, props: Props): boolean {
   switch (type) {
@@ -413,7 +419,12 @@ export function commitUpdate(
   // with current event handlers.
   updateFiberProps(domElement, newProps);
   // Apply the diff to the DOM node.
-  updateProperties(domElement, updatePayload, type, oldProps, newProps);
+  try {
+    startAdHocProfiler('dom');
+    updateProperties(domElement, updatePayload, type, oldProps, newProps);
+  } finally {
+    stopAdHocProfiler('dom');
+  }
 }
 
 export function resetTextContent(domElement: Instance): void {
@@ -425,14 +436,24 @@ export function commitTextUpdate(
   oldText: string,
   newText: string,
 ): void {
-  textInstance.nodeValue = newText;
+  try {
+    startAdHocProfiler('dom');
+    textInstance.nodeValue = newText;
+  } finally {
+    stopAdHocProfiler('dom');
+  }
 }
 
 export function appendChild(
   parentInstance: Instance,
   child: Instance | TextInstance,
 ): void {
-  parentInstance.appendChild(child);
+  try {
+    startAdHocProfiler('dom');
+    parentInstance.appendChild(child);
+  } finally {
+    stopAdHocProfiler('dom');
+  }
 }
 
 export function appendChildToContainer(
@@ -440,12 +461,17 @@ export function appendChildToContainer(
   child: Instance | TextInstance,
 ): void {
   let parentNode;
-  if (container.nodeType === COMMENT_NODE) {
-    parentNode = (container.parentNode: any);
-    parentNode.insertBefore(child, container);
-  } else {
-    parentNode = container;
-    parentNode.appendChild(child);
+  try {
+    startAdHocProfiler('dom');
+    if (container.nodeType === COMMENT_NODE) {
+      parentNode = (container.parentNode: any);
+      parentNode.insertBefore(child, container);
+    } else {
+      parentNode = container;
+      parentNode.appendChild(child);
+    }
+  } finally {
+    stopAdHocProfiler('dom');
   }
   // This container might be used for a portal.
   // If something inside a portal is clicked, that click should bubble
@@ -470,7 +496,12 @@ export function insertBefore(
   child: Instance | TextInstance,
   beforeChild: Instance | TextInstance | SuspenseInstance,
 ): void {
-  parentInstance.insertBefore(child, beforeChild);
+  try {
+    startAdHocProfiler('dom');
+    parentInstance.insertBefore(child, beforeChild);
+  } finally {
+    stopAdHocProfiler('dom');
+  }
 }
 
 export function insertInContainerBefore(
@@ -478,10 +509,15 @@ export function insertInContainerBefore(
   child: Instance | TextInstance,
   beforeChild: Instance | TextInstance | SuspenseInstance,
 ): void {
-  if (container.nodeType === COMMENT_NODE) {
-    (container.parentNode: any).insertBefore(child, beforeChild);
-  } else {
-    container.insertBefore(child, beforeChild);
+  try {
+    startAdHocProfiler('dom');
+    if (container.nodeType === COMMENT_NODE) {
+      (container.parentNode: any).insertBefore(child, beforeChild);
+    } else {
+      container.insertBefore(child, beforeChild);
+    }
+  } finally {
+    stopAdHocProfiler('dom');
   }
 }
 
@@ -489,17 +525,27 @@ export function removeChild(
   parentInstance: Instance,
   child: Instance | TextInstance | SuspenseInstance,
 ): void {
-  parentInstance.removeChild(child);
+  try {
+    startAdHocProfiler('dom');
+    parentInstance.removeChild(child);
+  } finally {
+    stopAdHocProfiler('dom');
+  }
 }
 
 export function removeChildFromContainer(
   container: Container,
   child: Instance | TextInstance | SuspenseInstance,
 ): void {
-  if (container.nodeType === COMMENT_NODE) {
-    (container.parentNode: any).removeChild(child);
-  } else {
-    container.removeChild(child);
+  try {
+    startAdHocProfiler('dom');
+    if (container.nodeType === COMMENT_NODE) {
+      (container.parentNode: any).removeChild(child);
+    } else {
+      container.removeChild(child);
+    }
+  } finally {
+    stopAdHocProfiler('dom');
   }
 }
 
@@ -514,12 +560,22 @@ export function clearSuspenseBoundary(
   let depth = 0;
   do {
     let nextNode = node.nextSibling;
-    parentInstance.removeChild(node);
+    try {
+      startAdHocProfiler('dom');
+      parentInstance.removeChild(node);
+    } finally {
+      stopAdHocProfiler('dom');
+    }
     if (nextNode && nextNode.nodeType === COMMENT_NODE) {
       let data = ((nextNode: any).data: string);
       if (data === SUSPENSE_END_DATA) {
         if (depth === 0) {
-          parentInstance.removeChild(nextNode);
+          try {
+            startAdHocProfiler('dom');
+            parentInstance.removeChild(nextNode);
+          } finally {
+            stopAdHocProfiler('dom');
+          }
           return;
         } else {
           depth--;
@@ -554,7 +610,12 @@ export function hideInstance(instance: Instance): void {
   // TODO: Does this work for all element types? What about MathML? Should we
   // pass host context to this method?
   instance = ((instance: any): HTMLElement);
-  instance.style.display = 'none';
+  try {
+    startAdHocProfiler('dom');
+    instance.style.display = 'none';
+  } finally {
+    stopAdHocProfiler('dom');
+  }
 }
 
 export function hideTextInstance(textInstance: TextInstance): void {
@@ -570,14 +631,24 @@ export function unhideInstance(instance: Instance, props: Props): void {
     styleProp.hasOwnProperty('display')
       ? styleProp.display
       : null;
-  instance.style.display = dangerousStyleValue('display', display);
+  try {
+    startAdHocProfiler('dom');
+    instance.style.display = dangerousStyleValue('display', display);
+  } finally {
+    stopAdHocProfiler('dom');
+  }
 }
 
 export function unhideTextInstance(
   textInstance: TextInstance,
   text: string,
 ): void {
-  textInstance.nodeValue = text;
+  try {
+    startAdHocProfiler('dom');
+    textInstance.nodeValue = text;
+  } finally {
+    stopAdHocProfiler('dom');
+  }
 }
 
 // -------------------

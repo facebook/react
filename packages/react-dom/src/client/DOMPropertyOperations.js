@@ -17,8 +17,14 @@ import {
 } from '../shared/DOMProperty';
 import sanitizeURL from '../shared/sanitizeURL';
 import {disableJavaScriptURLs} from 'shared/ReactFeatureFlags';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import type {PropertyInfo} from '../shared/DOMProperty';
+
+const {
+  startAdHocProfiler,
+  stopAdHocProfiler,
+} = ReactSharedInternals.ReactAdHocProfiler;
 
 /**
  * Get the value for a property on a node. Only used in DEV for SSR validation.
@@ -177,10 +183,15 @@ export function setValueForProperty(
         sanitizeURL(attributeValue);
       }
     }
-    if (attributeNamespace) {
-      node.setAttributeNS(attributeNamespace, attributeName, attributeValue);
-    } else {
-      node.setAttribute(attributeName, attributeValue);
+    try {
+      startAdHocProfiler('dom');
+      if (attributeNamespace) {
+        node.setAttributeNS(attributeNamespace, attributeName, attributeValue);
+      } else {
+        node.setAttribute(attributeName, attributeValue);
+      }
+    } finally {
+      stopAdHocProfiler('dom');
     }
   }
 }

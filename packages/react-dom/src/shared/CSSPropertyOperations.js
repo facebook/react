@@ -13,6 +13,12 @@ import warnValidStyle from './warnValidStyle';
 import warning from 'shared/warning';
 
 import {warnAboutShorthandPropertyCollision} from 'shared/ReactFeatureFlags';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
+
+const {
+  startAdHocProfiler,
+  stopAdHocProfiler,
+} = ReactSharedInternals.ReactAdHocProfiler;
 
 /**
  * Operations for dealing with CSS properties.
@@ -76,11 +82,13 @@ export function setValueForStyles(node, styles) {
     if (styleName === 'float') {
       styleName = 'cssFloat';
     }
+    startAdHocProfiler('dom');
     if (isCustomProperty) {
       style.setProperty(styleName, styleValue);
     } else {
       style[styleName] = styleValue;
     }
+    stopAdHocProfiler('dom');
   }
 }
 

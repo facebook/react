@@ -12,6 +12,7 @@ import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCur
 import {registrationNameModules} from 'events/EventPluginRegistry';
 import warning from 'shared/warning';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import type {ReactEventResponder} from 'shared/ReactTypes';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
@@ -86,6 +87,11 @@ import {validateProperties as validateInputProperties} from '../shared/ReactDOMN
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
 
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
+
+const {
+  startAdHocProfiler,
+  stopAdHocProfiler,
+} = ReactSharedInternals.ReactAdHocProfiler;
 
 let didWarnInvalidHydration = false;
 let didWarnShadyDOM = false;
@@ -416,21 +422,36 @@ export function createElement(
     }
 
     if (type === 'script') {
-      // Create the script via .innerHTML so its "parser-inserted" flag is
-      // set to true and it does not execute
-      const div = ownerDocument.createElement('div');
-      div.innerHTML = '<script><' + '/script>'; // eslint-disable-line
-      // This is guaranteed to yield a script element.
-      const firstChild = ((div.firstChild: any): HTMLScriptElement);
-      domElement = div.removeChild(firstChild);
+      try {
+        startAdHocProfiler('dom');
+        // Create the script via .innerHTML so its "parser-inserted" flag is
+        // set to true and it does not execute
+        const div = ownerDocument.createElement('div');
+        div.innerHTML = '<script><' + '/script>'; // eslint-disable-line
+        // This is guaranteed to yield a script element.
+        const firstChild = ((div.firstChild: any): HTMLScriptElement);
+        domElement = div.removeChild(firstChild);
+      } finally {
+        stopAdHocProfiler('dom');
+      }
     } else if (typeof props.is === 'string') {
-      // $FlowIssue `createElement` should be updated for Web Components
-      domElement = ownerDocument.createElement(type, {is: props.is});
+      try {
+        startAdHocProfiler('dom');
+        // $FlowIssue `createElement` should be updated for Web Components
+        domElement = ownerDocument.createElement(type, {is: props.is});
+      } finally {
+        stopAdHocProfiler('dom');
+      }
     } else {
       // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
       // See discussion in https://github.com/facebook/react/pull/6896
       // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
-      domElement = ownerDocument.createElement(type);
+      try {
+        startAdHocProfiler('dom');
+        domElement = ownerDocument.createElement(type);
+      } finally {
+        stopAdHocProfiler('dom');
+      }
       // Normally attributes are assigned in `setInitialDOMProperties`, however the `multiple` and `size`
       // attributes on `select`s needs to be added before `option`s are inserted.
       // This prevents:
@@ -453,7 +474,12 @@ export function createElement(
       }
     }
   } else {
-    domElement = ownerDocument.createElementNS(namespaceURI, type);
+    try {
+      startAdHocProfiler('dom');
+      domElement = ownerDocument.createElementNS(namespaceURI, type);
+    } finally {
+      stopAdHocProfiler('dom');
+    }
   }
 
   if (__DEV__) {
@@ -483,9 +509,16 @@ export function createTextNode(
   text: string,
   rootContainerElement: Element | Document,
 ): Text {
-  return getOwnerDocumentFromRootContainer(rootContainerElement).createTextNode(
-    text,
-  );
+  let textNode;
+  try {
+    startAdHocProfiler('dom');
+    textNode = getOwnerDocumentFromRootContainer(
+      rootContainerElement,
+    ).createTextNode(text);
+  } finally {
+    stopAdHocProfiler('dom');
+  }
+  return textNode;
 }
 
 export function setInitialProperties(
