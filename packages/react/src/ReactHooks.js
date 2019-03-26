@@ -99,7 +99,6 @@ export function useEffect(
       create != null,
       'useEffect must be called with a create function, but null or undefined was passed.',
     );
-    return;
   }
 
   return dispatcher.useEffect(create, inputs);
@@ -116,7 +115,6 @@ export function useLayoutEffect(
       create != null,
       'useLayoutEffect must be called with a create function, but null or undefined was passed.',
     );
-    return;
   }
 
   return dispatcher.useLayoutEffect(create, inputs);
