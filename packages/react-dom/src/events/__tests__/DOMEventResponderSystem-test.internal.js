@@ -219,4 +219,40 @@ describe('DOMEventResponderSystem', () => {
 
     expect(eventLog).toEqual(['B', 'A']);
   });
+
+  it('custom event dispatching for click -> magicClick works', () => {
+    let eventLog = [];
+    const buttonRef = React.createRef();
+
+    const ClickEventComponent = createReactEventComponent(
+      ['click'],
+      (context, props) => {
+        if (props.onMagicClick) {
+          context.dispatchEvent(
+            'magicclick',
+            props.onMagicClick,
+            context.eventTarget,
+          );
+        }
+      },
+    );
+
+    function handleMagicEvent(e) {
+      eventLog.push('magic event fired', e.type);
+    }
+
+    const Test = () => (
+      <ClickEventComponent onMagicClick={handleMagicEvent}>
+        <button ref={buttonRef}>Click me!</button>
+      </ClickEventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+
+    // Clicking the button should trigger the event responder handleEvent()
+    let buttonElement = buttonRef.current;
+    dispatchClickEvent(buttonElement);
+
+    expect(eventLog).toEqual(['magic event fired', 'magicclick']);
+  });
 });

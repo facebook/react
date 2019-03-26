@@ -16,7 +16,6 @@ import {EventComponent} from 'shared/ReactWorkTags';
 import type {ReactEventResponder} from 'shared/ReactTypes';
 import warning from 'shared/warning';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
-import accumulateInto from 'events/accumulateInto';
 import SyntheticEvent from 'events/SyntheticEvent';
 import {runEventsInBatch} from 'events/EventBatching';
 import {interactiveUpdates} from 'events/ReactGenericBatching';
@@ -37,6 +36,13 @@ export const eventResponderValidEventTypes: Map<
 
 type EventListener = (event: SyntheticEvent) => void;
 
+function createEventQueue() {
+  return {
+    bubble: [],
+    capture: [],
+  };
+}
+
 // TODO add context methods for dispatching events
 function DOMEventResponderContext(
   topLevelType: DOMTopLevelEventType,
@@ -50,8 +56,8 @@ function DOMEventResponderContext(
   this._flags = eventSystemFlags;
   this._fiber = null;
   this._responder = null;
-  this._discreteEvents = [];
-  this._nonDiscreteEvents = [];
+  this._discreteEvents = null;
+  this._nonDiscreteEvents = null;
 }
 
 DOMEventResponderContext.prototype.isPassive = function(): boolean {
@@ -69,11 +75,11 @@ function copyEventProperties(eventData, syntheticEvent) {
 }
 
 DOMEventResponderContext.prototype.dispatchEvent = function(
-  name: string,
+  eventName: string,
   eventListener: EventListener,
   eventTarget: AnyNativeEvent,
-  capture: boolean,
-  discrete: boolean,
+  capture?: boolean,
+  discrete?: boolean,
   extraProperties?: Object,
 ): void {
   const eventTargetFiber = getClosestInstanceFromNode(eventTarget);
@@ -86,46 +92,51 @@ DOMEventResponderContext.prototype.dispatchEvent = function(
   if (extraProperties !== undefined) {
     copyEventProperties(extraProperties, syntheticEvent);
   }
-  syntheticEvent.type = name;
+  syntheticEvent.type = eventName;
   syntheticEvent._dispatchInstances = [eventTargetFiber];
   syntheticEvent._dispatchListeners = [eventListener];
-  syntheticEvent.capture = capture;
+
+  let events;
   if (discrete) {
-    this._discreteEvents.push(syntheticEvent);
+    events = this._discreteEvents;
+    if (events === null) {
+      events = this._nonDiscreteEvents = createEventQueue();
+    }
+    if (capture) {
+      events.capture.push(syntheticEvent);
+    } else {
+      events.bubble.push(syntheticEvent);
+    }
   } else {
-    this._nonDiscreteEvents.push(syntheticEvent);
+    events = this._nonDiscreteEvents;
+    if (events === null) {
+      events = this._nonDiscreteEvents = createEventQueue();
+    }
+    if (capture) {
+      events.capture.push(syntheticEvent);
+    } else {
+      events.bubble.push(syntheticEvent);
+    }
   }
 };
 
-function accumulateTwoPhaseEvents(
-  events: Array<SyntheticEvent>,
-): Array<SyntheticEvent> {
-  let i;
-  // Capture phase
-  for (i = events.length; i-- > 0; ) {
-    const syntheticEvent = events[i];
-    if (syntheticEvent.capture) {
-      events = accumulateInto(events, syntheticEvent);
-    }
+function runTwoPhaseEvents({bubble, capture}) {
+  if (capture.length > 0) {
+    // We always fire capture events in LIFO order
+    capture.reverse();
   }
-  // Bubble phase
-  for (i = 0; i < events.length; i++) {
-    const syntheticEvent = events[i];
-    if (!syntheticEvent.capture) {
-      events = accumulateInto(events, syntheticEvent);
-    }
-  }
-  return events;
+  runEventsInBatch(capture);
+  runEventsInBatch(bubble);
 }
 
 DOMEventResponderContext.prototype._runEventsInBatch = function(): void {
-  if (this._discreteEvents.length > 0) {
+  if (this._discreteEvents !== null) {
     interactiveUpdates(() => {
-      runEventsInBatch(accumulateTwoPhaseEvents(this._discreteEvents));
+      runTwoPhaseEvents(this._discreteEvents);
     });
   }
-  if (this._nonDiscreteEvents.length > 0) {
-    runEventsInBatch(accumulateTwoPhaseEvents(this._nonDiscreteEvents));
+  if (this._nonDiscreteEvents !== null) {
+    runTwoPhaseEvents(this._nonDiscreteEvents);
   }
 };
 
