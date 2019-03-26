@@ -110,9 +110,17 @@ function createPanelIfReactLoaded() {
 
       initBridgeAndStore();
 
+      let currentPanel = null;
+
       chrome.devtools.panels.create('⚛ Elements', '', 'panel.html', panel => {
         panel.onShown.addListener(panel => {
+          if (currentPanel === panel) {
+            return;
+          }
+
+          currentPanel = panel;
           elementsPortalContainer = panel.container;
+
           if (elementsPortalContainer != null) {
             elementsPortalContainer.innerHTML = '';
             render('elements');
@@ -128,7 +136,13 @@ function createPanelIfReactLoaded() {
 
       chrome.devtools.panels.create('⚛ Profiler', '', 'panel.html', panel => {
         panel.onShown.addListener(panel => {
+          if (currentPanel === panel) {
+            return;
+          }
+
+          currentPanel = panel;
           profilerPortalContainer = panel.container;
+
           if (profilerPortalContainer != null) {
             profilerPortalContainer.innerHTML = '';
             render('profiler');
@@ -139,7 +153,13 @@ function createPanelIfReactLoaded() {
 
       chrome.devtools.panels.create('⚛ Settings', '', 'panel.html', panel => {
         panel.onShown.addListener(panel => {
+          if (currentPanel === panel) {
+            return;
+          }
+
+          currentPanel = panel;
           settingsPortalContainer = panel.container;
+
           if (settingsPortalContainer != null) {
             settingsPortalContainer.innerHTML = '';
             render('settings');
