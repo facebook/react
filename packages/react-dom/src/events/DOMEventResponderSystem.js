@@ -36,13 +36,6 @@ export const eventResponderValidEventTypes: Map<
 
 type EventListener = (event: SyntheticEvent) => void;
 
-function createEventQueue() {
-  return {
-    bubble: [],
-    capture: [],
-  };
-}
-
 // TODO add context methods for dispatching events
 function DOMEventResponderContext(
   topLevelType: DOMTopLevelEventType,
@@ -78,8 +71,7 @@ DOMEventResponderContext.prototype.dispatchEvent = function(
   eventName: string,
   eventListener: EventListener,
   eventTarget: AnyNativeEvent,
-  capture?: boolean,
-  discrete?: boolean,
+  discrete: boolean,
   extraProperties?: Object,
 ): void {
   const eventTargetFiber = getClosestInstanceFromNode(eventTarget);
@@ -100,43 +92,25 @@ DOMEventResponderContext.prototype.dispatchEvent = function(
   if (discrete) {
     events = this._discreteEvents;
     if (events === null) {
-      events = this._nonDiscreteEvents = createEventQueue();
-    }
-    if (capture) {
-      events.capture.push(syntheticEvent);
-    } else {
-      events.bubble.push(syntheticEvent);
+      events = this._discreteEvents = [];
     }
   } else {
     events = this._nonDiscreteEvents;
     if (events === null) {
-      events = this._nonDiscreteEvents = createEventQueue();
-    }
-    if (capture) {
-      events.capture.push(syntheticEvent);
-    } else {
-      events.bubble.push(syntheticEvent);
+      events = this._nonDiscreteEvents = [];
     }
   }
+  events.push(syntheticEvent);
 };
-
-function runTwoPhaseEvents({bubble, capture}) {
-  if (capture.length > 0) {
-    // We always fire capture events in LIFO order
-    capture.reverse();
-  }
-  runEventsInBatch(capture);
-  runEventsInBatch(bubble);
-}
 
 DOMEventResponderContext.prototype._runEventsInBatch = function(): void {
   if (this._discreteEvents !== null) {
     interactiveUpdates(() => {
-      runTwoPhaseEvents(this._discreteEvents);
+      runEventsInBatch(this._discreteEvents);
     });
   }
   if (this._nonDiscreteEvents !== null) {
-    runTwoPhaseEvents(this._nonDiscreteEvents);
+    runEventsInBatch(this._nonDiscreteEvents);
   }
 };
 

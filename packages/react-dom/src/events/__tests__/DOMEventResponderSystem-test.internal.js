@@ -232,6 +232,7 @@ describe('DOMEventResponderSystem', () => {
             'magicclick',
             props.onMagicClick,
             context.eventTarget,
+            false,
           );
         }
       },
