@@ -19,7 +19,7 @@ import warning from 'shared/warning';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 import accumulateInto from 'events/accumulateInto';
 import SyntheticEvent from 'events/SyntheticEvent';
-import {runEventsInBatch} from 'events/ReactGenericBatching';
+import {runEventsInBatch} from 'events/EventBatching';
 import {interactiveUpdates} from 'events/ReactGenericBatching';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
