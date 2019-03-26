@@ -44,10 +44,8 @@ import {
   enqueueStateRestore,
   restoreStateIfNeeded,
 } from 'events/ReactControlledComponent';
-import {
-  injection as EventPluginHubInjection,
-  runEventsInBatch,
-} from 'events/EventPluginHub';
+import {injection as EventPluginHubInjection} from 'events/EventPluginHub';
+import {runEventsInBatch} from 'events/EventBatching';
 import {eventNameDispatchConfigs} from 'events/EventPluginRegistry';
 import {
   accumulateTwoPhaseDispatches,

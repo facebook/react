@@ -53,7 +53,7 @@ function initTestRenderer() {
 
 // This is a new feature in Fiber so I put it in its own test file. It could
 // probably move to one of the other test files once it is official.
-describe('ReactTopLevelText', () => {
+describe('ReactFiberEvents', () => {
   describe('NoopRenderer', () => {
     beforeEach(() => {
       initNoopRenderer();
