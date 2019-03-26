@@ -44,7 +44,6 @@ import {
 import dangerousStyleValue from '../shared/dangerousStyleValue';
 
 import type {DOMContainer} from './ReactDOM';
-import {currentEventComponentFibers} from '../events/DOMEventResponderSystem';
 import type {ReactEventResponder} from 'shared/ReactTypes';
 import {
   REACT_EVENT_COMPONENT_TYPE,
@@ -52,7 +51,6 @@ import {
   REACT_EVENT_TARGET_TOUCH_HIT,
 } from 'shared/ReactSymbols';
 import getElementFromTouchHitTarget from 'shared/getElementFromTouchHitTarget';
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 export type Type = string;
 export type Props = {
@@ -865,16 +863,6 @@ export function handleEventComponent(
   internalInstanceHandle: Object,
 ): void {
   if (enableEventAPI) {
-    // We keep the event responder hub up-to-do with the state of
-    // event component fiber tree (it uses this to know what events to fire).
-    // To do this, we update the current event component fiber and remove
-    // the alternate fiber if it exists.
-    const eventComponetFiber = ((internalInstanceHandle: any): Fiber);
-    currentEventComponentFibers.add(eventComponetFiber);
-    const alternateFiber = eventComponetFiber.alternate;
-    if (alternateFiber !== null) {
-      currentEventComponentFibers.delete(alternateFiber);
-    }
     const rootElement = rootContainerInstance.ownerDocument;
     listenToEventResponderEvents(eventResponder, rootElement);
   }

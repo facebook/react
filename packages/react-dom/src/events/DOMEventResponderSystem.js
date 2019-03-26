@@ -14,7 +14,6 @@ import {
 import type {AnyNativeEvent} from 'events/PluginModuleType';
 import {EventComponent} from 'shared/ReactWorkTags';
 import type {ReactEventResponder} from 'shared/ReactTypes';
-import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 import accumulateInto from 'events/accumulateInto';
@@ -24,12 +23,6 @@ import {interactiveUpdates} from 'events/ReactGenericBatching';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
-
-// We track the active component fibers so we can traverse through
-// the fiber tree and find the relative current fibers. We need to
-// do this because an update might have switched an event component
-// fiber to its alternate fiber.
-export const currentEventComponentFibers: Set<Fiber> = new Set();
 
 // Event responders provide us an array of target event types.
 // To ensure we fire the right responders for given events, we check
@@ -170,8 +163,7 @@ function handleTopLevelType(
   context: Object,
 ): void {
   const responder: ReactEventResponder = fiber.type.responder;
-  const props = fiber.memoizedProps;
-  const stateNode = fiber.stateNode;
+  const {props, stateMap} = fiber.stateNode;
   let validEventTypesForResponder = eventResponderValidEventTypes.get(
     responder,
   );
@@ -185,10 +177,10 @@ function handleTopLevelType(
   if (!validEventTypesForResponder.has(topLevelType)) {
     return;
   }
-  let state = stateNode.get(responder);
+  let state = stateMap.get(responder);
   if (state === undefined && responder.createInitialState !== undefined) {
     state = responder.createInitialState(props);
-    stateNode.set(responder, state);
+    stateMap.set(responder, state);
   }
   context._fiber = fiber;
   context._responder = responder;
@@ -202,7 +194,7 @@ export function runResponderEventsInBatch(
   nativeEventTarget: EventTarget,
   eventSystemFlags: EventSystemFlags,
 ): void {
-  let context = new DOMEventResponderContext(
+  const context = new DOMEventResponderContext(
     topLevelType,
     nativeEvent,
     nativeEventTarget,
@@ -212,27 +204,6 @@ export function runResponderEventsInBatch(
   // Traverse up the fiber tree till we find event component fibers.
   while (node !== null) {
     if (node.tag === EventComponent) {
-      // When we traverse the fiber tree from the target fiber, we will
-      // ecounter event component fibers that might not be the current
-      // fiber. This will happen frequently because of how ReactDOM
-      // stores elements relative to their fibers. When we create or
-      // mount elements, we store their fiber on the element. We never
-      // update the fiber when the element updates to its alternate fiber,
-      // we only update the props for the fiber. Furthermore, we also
-      // never update the props if the element doesn't need an update.
-      // That means that an element target might point to a fiber tree
-      // that is stale and not the current tree. To get around this, we
-      // always store the current event component in a Set and use this
-      // logic to determine when we need to swith to the event component
-      // fiber alternate.
-      if (!currentEventComponentFibers.has(node)) {
-        invariant(
-          node.alternate !== null,
-          'runResponderEventsInBatch failed to find the active fiber. ' +
-            'This is most definitely a bug in React.',
-        );
-        node = node.alternate;
-      }
       handleTopLevelType(topLevelType, node, context);
     }
     node = node.return;
