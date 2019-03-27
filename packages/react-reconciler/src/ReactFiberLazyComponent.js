@@ -50,9 +50,9 @@ export function readLazyComponentType<T>(lazyComponent: LazyComponent<T>): T {
       thenable.then(
         moduleObject => {
           if (lazyComponent._status === Pending) {
-            const defaultExport = moduleObject.default;
+            const _result = moduleObject ? moduleObject.default : moduleObject;
             if (__DEV__) {
-              if (defaultExport === undefined) {
+              if (result === undefined) {
                 warning(
                   false,
                   'lazy: Expected the result of a dynamic import() call. ' +
@@ -63,7 +63,7 @@ export function readLazyComponentType<T>(lazyComponent: LazyComponent<T>): T {
               }
             }
             lazyComponent._status = Resolved;
-            lazyComponent._result = defaultExport;
+            lazyComponent._result = _result;
           }
         },
         error => {
