@@ -22,12 +22,7 @@ const rootEventTypes = ['pointerup', 'scroll'];
 // In the case we don't have PointerEvents (Safari), we listen to touch events
 // too
 if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
-  targetEventTypes.push(
-    'touchstart',
-    {name: 'touchend', passive: false},
-    'mousedown',
-    'touchcancel',
-  );
+  targetEventTypes.push('touchstart', 'touchend', 'mousedown', 'touchcancel');
   rootEventTypes.push('mouseup');
 }
 
@@ -38,6 +33,7 @@ type PressState = {
   isPressed: boolean,
   longPressTimeout: null | TimeoutID,
   pressTarget: null | EventTarget,
+  shouldSkipMouseAfterTouch: boolean,
 };
 
 function dispatchPressEvent(
@@ -143,6 +139,7 @@ const PressResponder = {
       isPressed: false,
       longPressTimeout: null,
       pressTarget: null,
+      shouldSkipMouseAfterTouch: false,
     };
   },
   handleEvent(
@@ -168,7 +165,11 @@ const PressResponder = {
         let keyPressEventListener = props.onPress;
 
         // Wrap listener with prevent default behaviour, unless
-        // we are dealing with an anchor
+        // we are dealing with an anchor. Anchor tags are special beacuse
+        // we need to use the "click" event, to properly allow browser
+        // heuristics for cancelling link clicks. Furthermore, iOS and
+        // Android can show previous of anchor tags that requires working
+        // with click rather than touch events (and mouse down/up).
         if (!isAnchorTagElement(eventTarget)) {
           keyPressEventListener = (e, key) => {
             if (!e.isDefaultPrevented() && !e.nativeEvent.defaultPrevented) {
@@ -184,7 +185,8 @@ const PressResponder = {
       case 'touchstart':
         // Touch events are for Safari, which lack pointer event support.
         if (!state.isPressed && !context.isTargetOwned(eventTarget)) {
-          // We bail out of polyfilling anchor tags
+          // We bail out of polyfilling anchor tags, given the same heuristics
+          // explained above in regards to needing to use click events.
           if (isAnchorTagElement(eventTarget)) {
             state.isAnchorTouched = true;
             return;
@@ -232,15 +234,18 @@ const PressResponder = {
           }
           state.isPressed = false;
           state.isLongPressed = false;
-          // Prevent mouse events from firing
-          (event: any).preventDefault();
+          state.shouldSkipMouseAfterTouch = true;
           context.removeRootEventTypes(rootEventTypes);
         }
         break;
       }
       case 'pointerdown':
       case 'mousedown': {
-        if (!state.isPressed && !context.isTargetOwned(eventTarget)) {
+        if (
+          !state.isPressed &&
+          !context.isTargetOwned(eventTarget) &&
+          !state.shouldSkipMouseAfterTouch
+        ) {
           if ((event: any).pointerType === 'mouse') {
             // Ignore if we are pressing on hit slop area with mouse
             if (
@@ -252,7 +257,7 @@ const PressResponder = {
               return;
             }
             // Ignore right-clicks
-            if (event.button === 2) {
+            if (event.button === 2 || event.button === 1) {
               return;
             }
           }
@@ -266,6 +271,10 @@ const PressResponder = {
       case 'mouseup':
       case 'pointerup': {
         if (state.isPressed) {
+          if (state.shouldSkipMouseAfterTouch) {
+            state.shouldSkipMouseAfterTouch = false;
+            return;
+          }
           dispatchPressOutEvents(context, props, state);
           if (
             state.pressTarget !== null &&
@@ -308,6 +317,7 @@ const PressResponder = {
       case 'contextmenu':
       case 'pointercancel': {
         if (state.isPressed) {
+          state.shouldSkipMouseAfterTouch = false;
           dispatchPressOutEvents(context, props, state);
           state.isPressed = false;
           state.isLongPressed = false;
