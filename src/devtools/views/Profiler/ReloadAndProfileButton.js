@@ -18,7 +18,11 @@ export default function ReloadAndProfileButton() {
   }
 
   return (
-    <Button onClick={reloadAndProfile} title="Reload and start profiling">
+    <Button
+      disabled={!store.supportsProfiling}
+      onClick={reloadAndProfile}
+      title="Reload and start profiling"
+    >
       <ButtonIcon type="reload" />
     </Button>
   );
