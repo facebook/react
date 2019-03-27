@@ -209,7 +209,7 @@ DOMEventResponderContext.prototype.releaseOwnership = function() {
 
 function getTargetEventTypes(
   eventTypes: Array<ReactEventResponderEventType>,
-): Set<string> {
+): Set<DOMTopLevelEventType> {
   let cachedSet = targetEventTypeCached.get(eventTypes);
 
   if (cachedSet === undefined) {
@@ -218,7 +218,7 @@ function getTargetEventTypes(
       const eventType = eventTypes[i];
       const topLevelEventType =
         typeof eventType === 'string' ? eventType : eventType.name;
-      cachedSet.add(topLevelEventType);
+      cachedSet.add(((topLevelEventType: any): DOMTopLevelEventType));
     }
     targetEventTypeCached.set(eventTypes, cachedSet);
   }
