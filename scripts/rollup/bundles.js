@@ -470,6 +470,14 @@ const bundles = [
     global: 'ReactEvents',
     externals: [],
   },
+
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    moduleType: NON_FIBER_RENDERER,
+    entry: 'react-events/press',
+    global: 'ReactEventsPress',
+    externals: [],
+  },
 ];
 
 // Based on deep-freeze by substack (public domain)

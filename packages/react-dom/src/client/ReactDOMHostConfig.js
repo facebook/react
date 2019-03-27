@@ -24,7 +24,7 @@ import {
   warnForDeletedHydratableText,
   warnForInsertedHydratedElement,
   warnForInsertedHydratedText,
-  listenToEventResponderEvents,
+  listenToEventResponderEventTypes,
 } from './ReactDOMComponent';
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
@@ -864,7 +864,10 @@ export function handleEventComponent(
 ): void {
   if (enableEventAPI) {
     const rootElement = rootContainerInstance.ownerDocument;
-    listenToEventResponderEvents(eventResponder, rootElement);
+    listenToEventResponderEventTypes(
+      eventResponder.targetEventTypes,
+      rootElement,
+    );
   }
 }
 
