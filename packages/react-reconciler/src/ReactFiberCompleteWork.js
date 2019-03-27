@@ -774,6 +774,8 @@ function completeWork(
         popHostContext(workInProgress);
         const rootContainerInstance = getRootHostContainer();
         const responder = workInProgress.type.responder;
+        // Update the props on the event component state node
+        workInProgress.stateNode.props = newProps;
         handleEventComponent(responder, rootContainerInstance, workInProgress);
       }
       break;
