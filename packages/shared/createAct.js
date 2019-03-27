@@ -66,10 +66,7 @@ export default function createAct(
 
   return function act(callback: () => Thenable) {
     let thenable;
-    actedUpdates(onDone => {
-      while (doesHavePendingPassiveEffects()) {
-        flushPassiveEffects();
-      }
+    actedUpdates(onDone => {      
       const result = batchedUpdates(callback);
       if (
         result !== null &&
