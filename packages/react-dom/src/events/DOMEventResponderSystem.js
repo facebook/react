@@ -187,6 +187,22 @@ DOMEventResponderContext.prototype.removeRootEventTypes = function(
   }
 };
 
+DOMEventResponderContext.prototype.isPositionWithinTouchHitTarget = function() {
+  // TODO
+};
+
+DOMEventResponderContext.prototype.isTargetOwned = function() {
+  // TODO
+};
+
+DOMEventResponderContext.prototype.requestOwnership = function() {
+  // TODO
+};
+
+DOMEventResponderContext.prototype.releaseOwnership = function() {
+  // TODO
+};
+
 function handleTopLevelType(
   topLevelType: DOMTopLevelEventType,
   fiber: Fiber,

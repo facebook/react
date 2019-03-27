@@ -55,7 +55,7 @@ function dispatchPressInEvents(
   state: PressState,
 ): void {
   if (props.onPressIn) {
-    context.dispatchEvent('pressin', props.onPressIn, state.pressTarget, false);
+    context.dispatchEvent('pressin', props.onPressIn, state.pressTarget, true);
   }
   if (props.onPressChange) {
     const pressChangeEventListener = () => {
@@ -102,7 +102,7 @@ function dispatchPressOutEvents(
       'pressout',
       props.onPressOut,
       state.pressTarget,
-      false,
+      true,
     );
   }
   if (props.onPressChange) {
@@ -265,7 +265,7 @@ const PressResponder = {
       }
       case 'mouseup':
       case 'pointerup': {
-        if (state.isPressed && !context.isPassive) {
+        if (state.isPressed) {
           dispatchPressOutEvents(context, props, state);
           if (
             state.pressTarget !== null &&
@@ -316,7 +316,7 @@ const PressResponder = {
         break;
       }
       case 'click': {
-        if (state.defaultPrevented && !context.isPassive) {
+        if (state.defaultPrevented) {
           (event: any).preventDefault();
           state.defaultPrevented = false;
         }
