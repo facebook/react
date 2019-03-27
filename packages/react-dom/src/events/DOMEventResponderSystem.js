@@ -64,152 +64,150 @@ function DOMEventResponderContext(
   this._isBatching = true;
 }
 
-if (enableEventAPI) {
-  DOMEventResponderContext.prototype.isPassive = function(): boolean {
-    return (this._flags & IS_PASSIVE) !== 0;
-  };
+DOMEventResponderContext.prototype.isPassive = function(): boolean {
+  return (this._flags & IS_PASSIVE) !== 0;
+};
 
-  DOMEventResponderContext.prototype.isPassiveSupported = function(): boolean {
-    return (this._flags & PASSIVE_NOT_SUPPORTED) === 0;
-  };
+DOMEventResponderContext.prototype.isPassiveSupported = function(): boolean {
+  return (this._flags & PASSIVE_NOT_SUPPORTED) === 0;
+};
 
-  DOMEventResponderContext.prototype.dispatchEvent = function(
-    eventName: string,
-    eventListener: EventListener,
-    eventTarget: AnyNativeEvent,
-    discrete: boolean,
-    extraProperties?: Object,
-  ): void {
-    const eventTargetFiber = getClosestInstanceFromNode(eventTarget);
-    const syntheticEvent = SyntheticEvent.getPooled(
-      null,
-      eventTargetFiber,
-      this.event,
-      eventTarget,
-    );
-    if (extraProperties !== undefined) {
-      copyEventProperties(extraProperties, syntheticEvent);
-    }
-    syntheticEvent.type = eventName;
-    syntheticEvent._dispatchInstances = [eventTargetFiber];
-    syntheticEvent._dispatchListeners = [eventListener];
+DOMEventResponderContext.prototype.dispatchEvent = function(
+  eventName: string,
+  eventListener: EventListener,
+  eventTarget: AnyNativeEvent,
+  discrete: boolean,
+  extraProperties?: Object,
+): void {
+  const eventTargetFiber = getClosestInstanceFromNode(eventTarget);
+  const syntheticEvent = SyntheticEvent.getPooled(
+    null,
+    eventTargetFiber,
+    this.event,
+    eventTarget,
+  );
+  if (extraProperties !== undefined) {
+    copyEventProperties(extraProperties, syntheticEvent);
+  }
+  syntheticEvent.type = eventName;
+  syntheticEvent._dispatchInstances = [eventTargetFiber];
+  syntheticEvent._dispatchListeners = [eventListener];
 
-    if (this._isBatching) {
-      let events;
-      if (discrete) {
-        events = this._discreteEvents;
-        if (events === null) {
-          events = this._discreteEvents = [];
-        }
-      } else {
-        events = this._nonDiscreteEvents;
-        if (events === null) {
-          events = this._nonDiscreteEvents = [];
-        }
+  if (this._isBatching) {
+    let events;
+    if (discrete) {
+      events = this._discreteEvents;
+      if (events === null) {
+        events = this._discreteEvents = [];
       }
-      events.push(syntheticEvent);
     } else {
-      if (discrete) {
-        interactiveUpdates(() => {
-          executeDispatch(syntheticEvent, eventListener, eventTargetFiber);
-        });
-      } else {
+      events = this._nonDiscreteEvents;
+      if (events === null) {
+        events = this._nonDiscreteEvents = [];
+      }
+    }
+    events.push(syntheticEvent);
+  } else {
+    if (discrete) {
+      interactiveUpdates(() => {
         executeDispatch(syntheticEvent, eventListener, eventTargetFiber);
-      }
+      });
+    } else {
+      executeDispatch(syntheticEvent, eventListener, eventTargetFiber);
     }
-  };
+  }
+};
 
-  DOMEventResponderContext.prototype.isTargetWithinEventComponent = function(
-    target: AnyNativeEvent,
-  ): boolean {
-    const eventFiber = this._fiber;
+DOMEventResponderContext.prototype.isTargetWithinEventComponent = function(
+  target: AnyNativeEvent,
+): boolean {
+  const eventFiber = this._fiber;
 
-    if (target != null) {
-      let fiber = getClosestInstanceFromNode(target);
-      while (fiber !== null) {
-        if (fiber === eventFiber || fiber === eventFiber.alternate) {
-          return true;
-        }
-        fiber = fiber.return;
-      }
-    }
-    return false;
-  };
-
-  DOMEventResponderContext.prototype.isTargetWithinElement = function(
-    childTarget: EventTarget,
-    parentTarget: EventTarget,
-  ): boolean {
-    const childFiber = getClosestInstanceFromNode(childTarget);
-    const parentFiber = getClosestInstanceFromNode(parentTarget);
-
-    let currentFiber = childFiber;
-    while (currentFiber !== null) {
-      if (currentFiber === parentFiber) {
+  if (target != null) {
+    let fiber = getClosestInstanceFromNode(target);
+    while (fiber !== null) {
+      if (fiber === eventFiber || fiber === eventFiber.alternate) {
         return true;
       }
-      currentFiber = currentFiber.return;
+      fiber = fiber.return;
     }
-    return false;
-  };
+  }
+  return false;
+};
 
-  DOMEventResponderContext.prototype.addRootEventTypes = function(
-    rootEventTypes: Array<ReactEventResponderEventType>,
-  ) {
-    const element = this.eventTarget.ownerDocument;
-    listenToEventResponderEventTypes(rootEventTypes, element);
-    const eventComponent = this._fiber;
-    for (let i = 0; i < rootEventTypes.length; i++) {
-      const rootEventType = rootEventTypes[i];
-      const topLevelEventType =
-        typeof rootEventType === 'string' ? rootEventType : rootEventType.name;
-      let rootEventComponents = rootEventTypesToEventComponents.get(
+DOMEventResponderContext.prototype.isTargetWithinElement = function(
+  childTarget: EventTarget,
+  parentTarget: EventTarget,
+): boolean {
+  const childFiber = getClosestInstanceFromNode(childTarget);
+  const parentFiber = getClosestInstanceFromNode(parentTarget);
+
+  let currentFiber = childFiber;
+  while (currentFiber !== null) {
+    if (currentFiber === parentFiber) {
+      return true;
+    }
+    currentFiber = currentFiber.return;
+  }
+  return false;
+};
+
+DOMEventResponderContext.prototype.addRootEventTypes = function(
+  rootEventTypes: Array<ReactEventResponderEventType>,
+) {
+  const element = this.eventTarget.ownerDocument;
+  listenToEventResponderEventTypes(rootEventTypes, element);
+  const eventComponent = this._fiber;
+  for (let i = 0; i < rootEventTypes.length; i++) {
+    const rootEventType = rootEventTypes[i];
+    const topLevelEventType =
+      typeof rootEventType === 'string' ? rootEventType : rootEventType.name;
+    let rootEventComponents = rootEventTypesToEventComponents.get(
+      topLevelEventType,
+    );
+    if (rootEventComponents === undefined) {
+      rootEventComponents = new Set();
+      rootEventTypesToEventComponents.set(
         topLevelEventType,
+        rootEventComponents,
       );
-      if (rootEventComponents === undefined) {
-        rootEventComponents = new Set();
-        rootEventTypesToEventComponents.set(
-          topLevelEventType,
-          rootEventComponents,
-        );
-      }
-      rootEventComponents.add(eventComponent);
     }
-  };
+    rootEventComponents.add(eventComponent);
+  }
+};
 
-  DOMEventResponderContext.prototype.removeRootEventTypes = function(
-    rootEventTypes: Array<ReactEventResponderEventType>,
-  ): void {
-    const eventComponent = this._fiber;
-    for (let i = 0; i < rootEventTypes.length; i++) {
-      const rootEventType = rootEventTypes[i];
-      const topLevelEventType =
-        typeof rootEventType === 'string' ? rootEventType : rootEventType.name;
-      let rootEventComponents = rootEventTypesToEventComponents.get(
-        topLevelEventType,
-      );
-      if (rootEventComponents !== undefined) {
-        rootEventComponents.delete(eventComponent);
-      }
+DOMEventResponderContext.prototype.removeRootEventTypes = function(
+  rootEventTypes: Array<ReactEventResponderEventType>,
+): void {
+  const eventComponent = this._fiber;
+  for (let i = 0; i < rootEventTypes.length; i++) {
+    const rootEventType = rootEventTypes[i];
+    const topLevelEventType =
+      typeof rootEventType === 'string' ? rootEventType : rootEventType.name;
+    let rootEventComponents = rootEventTypesToEventComponents.get(
+      topLevelEventType,
+    );
+    if (rootEventComponents !== undefined) {
+      rootEventComponents.delete(eventComponent);
     }
-  };
+  }
+};
 
-  DOMEventResponderContext.prototype.isPositionWithinTouchHitTarget = function() {
-    // TODO
-  };
+DOMEventResponderContext.prototype.isPositionWithinTouchHitTarget = function() {
+  // TODO
+};
 
-  DOMEventResponderContext.prototype.isTargetOwned = function() {
-    // TODO
-  };
+DOMEventResponderContext.prototype.isTargetOwned = function() {
+  // TODO
+};
 
-  DOMEventResponderContext.prototype.requestOwnership = function() {
-    // TODO
-  };
+DOMEventResponderContext.prototype.requestOwnership = function() {
+  // TODO
+};
 
-  DOMEventResponderContext.prototype.releaseOwnership = function() {
-    // TODO
-  };
-}
+DOMEventResponderContext.prototype.releaseOwnership = function() {
+  // TODO
+};
 
 function getTargetEventTypes(
   eventTypes: Array<ReactEventResponderEventType>,
