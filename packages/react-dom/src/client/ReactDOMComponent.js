@@ -13,7 +13,7 @@ import {registrationNameModules} from 'events/EventPluginRegistry';
 import warning from 'shared/warning';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import type {ReactEventResponder} from 'shared/ReactTypes';
+import type {ReactEventResponderEventType} from 'shared/ReactTypes';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 
 import {
@@ -1277,19 +1277,18 @@ export function restoreControlledState(
   }
 }
 
-export function listenToEventResponderEvents(
-  eventResponder: ReactEventResponder,
+export function listenToEventResponderEventTypes(
+  eventTypes: Array<ReactEventResponderEventType>,
   element: Element | Document,
 ): void {
   if (enableEventAPI) {
-    const {targetEventTypes} = eventResponder;
     // Get the listening Set for this element. We use this to track
     // what events we're listening to.
     const listeningSet = getListeningSetForElement(element);
 
     // Go through each target event type of the event responder
-    for (let i = 0, length = targetEventTypes.length; i < length; ++i) {
-      const targetEventType = targetEventTypes[i];
+    for (let i = 0, length = eventTypes.length; i < length; ++i) {
+      const targetEventType = eventTypes[i];
       let topLevelType;
       let capture = false;
       let passive = true;
@@ -1323,7 +1322,7 @@ export function listenToEventResponderEvents(
       // Create a unique name for this event, plus its properties. We'll
       // use this to ensure we don't listen to the same event with the same
       // properties again.
-      const passiveKey = passive ? '_passive' : '';
+      const passiveKey = passive ? '_passive' : '_active';
       const captureKey = capture ? '_capture' : '';
       const listeningName = `${topLevelType}${passiveKey}${captureKey}`;
       if (!listeningSet.has(listeningName)) {
