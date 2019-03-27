@@ -27,6 +27,8 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import {listenToEventResponderEventTypes} from '../client/ReactDOMComponent';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
+import {enableEventAPI} from 'shared/ReactFeatureFlags';
+
 const rootEventTypesToEventComponents: Map<
   DOMTopLevelEventType | string,
   Set<Fiber>,
@@ -255,40 +257,49 @@ export function runResponderEventsInBatch(
   nativeEventTarget: EventTarget,
   eventSystemFlags: EventSystemFlags,
 ): void {
-  const context = new DOMEventResponderContext(
-    topLevelType,
-    nativeEvent,
-    nativeEventTarget,
-    eventSystemFlags,
-  );
-  let node = targetFiber;
-  // Traverse up the fiber tree till we find event component fibers.
-  while (node !== null) {
-    if (node.tag === EventComponent) {
-      handleTopLevelType(topLevelType, node, context, false);
+  if (enableEventAPI) {
+    const context = new DOMEventResponderContext(
+      topLevelType,
+      nativeEvent,
+      nativeEventTarget,
+      eventSystemFlags,
+    );
+    let node = targetFiber;
+    // Traverse up the fiber tree till we find event component fibers.
+    while (node !== null) {
+      if (node.tag === EventComponent) {
+        handleTopLevelType(topLevelType, node, context, false);
+      }
+      node = node.return;
     }
-    node = node.return;
-  }
-  // Handle root level events
-  const rootEventComponents = rootEventTypesToEventComponents.get(topLevelType);
-  if (rootEventComponents !== undefined) {
-    const rootEventComponentFibers = Array.from(rootEventComponents);
+    // Handle root level events
+    const rootEventComponents = rootEventTypesToEventComponents.get(
+      topLevelType,
+    );
+    if (rootEventComponents !== undefined) {
+      const rootEventComponentFibers = Array.from(rootEventComponents);
 
-    for (let i = 0; i < rootEventComponentFibers.length; i++) {
-      const rootEventComponentFiber = rootEventComponentFibers[i];
-      handleTopLevelType(topLevelType, rootEventComponentFiber, context, true);
+      for (let i = 0; i < rootEventComponentFibers.length; i++) {
+        const rootEventComponentFiber = rootEventComponentFibers[i];
+        handleTopLevelType(
+          topLevelType,
+          rootEventComponentFiber,
+          context,
+          true,
+        );
+      }
     }
+    // Run batched events
+    const discreteEvents = context._discreteEvents;
+    if (discreteEvents !== null) {
+      interactiveUpdates(() => {
+        runEventsInBatch(discreteEvents);
+      });
+    }
+    const nonDiscreteEvents = context._nonDiscreteEvents;
+    if (nonDiscreteEvents !== null) {
+      runEventsInBatch(nonDiscreteEvents);
+    }
+    context._isBatching = false;
   }
-  // Run batched events
-  const discreteEvents = context._discreteEvents;
-  if (discreteEvents !== null) {
-    interactiveUpdates(() => {
-      runEventsInBatch(discreteEvents);
-    });
-  }
-  const nonDiscreteEvents = context._nonDiscreteEvents;
-  if (nonDiscreteEvents !== null) {
-    runEventsInBatch(nonDiscreteEvents);
-  }
-  context._isBatching = false;
 }
