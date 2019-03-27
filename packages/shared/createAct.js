@@ -66,7 +66,7 @@ export default function createAct(
 
   return function act(callback: () => Thenable) {
     let thenable;
-    actedUpdates(onDone => {      
+    actedUpdates(onDone => {
       const result = batchedUpdates(callback);
       if (
         result !== null &&
