@@ -38,10 +38,22 @@ type SetInParams = {|
   value: any,
 |};
 
+const RELOAD_AND_PROFILE_KEY = 'React::DevTools::reloadAndProfile';
+
 export default class Agent extends EventEmitter {
   _bridge: Bridge = ((null: any): Bridge);
   _isProfiling: boolean = false;
   _rendererInterfaces: { [key: RendererID]: RendererInterface } = {};
+
+  constructor() {
+    super();
+
+    if (localStorage.getItem(RELOAD_AND_PROFILE_KEY) === 'true') {
+      this._isProfiling = true;
+
+      localStorage.removeItem(RELOAD_AND_PROFILE_KEY);
+    }
+  }
 
   addBridge(bridge: Bridge) {
     this._bridge = bridge;
@@ -56,6 +68,7 @@ export default class Agent extends EventEmitter {
     bridge.addListener('overrideHookState', this.overrideHookState);
     bridge.addListener('overrideProps', this.overrideProps);
     bridge.addListener('overrideState', this.overrideState);
+    bridge.addListener('reloadAndProfile', this.reloadAndProfile);
     bridge.addListener('selectElement', this.selectElement);
     bridge.addListener('startInspectingDOM', this.startInspectingDOM);
     bridge.addListener('startProfiling', this.startProfiling);
@@ -63,6 +76,10 @@ export default class Agent extends EventEmitter {
     bridge.addListener('stopProfiling', this.stopProfiling);
     bridge.addListener('shutdown', this.shutdown);
     bridge.addListener('viewElementSource', this.viewElementSource);
+
+    if (this._isProfiling) {
+      this._bridge.send('profilingStatus', true);
+    }
   }
 
   getIDForNode(node: Object): number | null {
@@ -179,6 +196,15 @@ export default class Agent extends EventEmitter {
     }
   };
 
+  reloadAndProfile = () => {
+    localStorage.setItem(RELOAD_AND_PROFILE_KEY, 'true');
+
+    // This code path should only be hit if the shell has explicitly told the Store that it supports profiling.
+    // In that case, the shell must also listen for this specific message to know when it needs to reload the app.
+    // The agent can't do this in a way that is renderer agnostic.
+    this._bridge.send('reloadAppForProfiling');
+  };
+
   selectElement = ({ id, rendererID }: InspectSelectParams) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
@@ -235,6 +261,10 @@ export default class Agent extends EventEmitter {
     rendererInterface: RendererInterface
   ) {
     this._rendererInterfaces[rendererID] = rendererInterface;
+
+    if (this._isProfiling) {
+      rendererInterface.startProfiling();
+    }
   }
 
   shutdown = () => {

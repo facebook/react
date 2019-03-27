@@ -12,6 +12,8 @@ import {
 } from './utils';
 import DevTools from 'src/devtools/views/DevTools';
 
+const SUPPORTS_PROFILING_KEY = 'React::DevTools::supportsProfiling';
+
 let panelCreated = false;
 
 function createPanelIfReactLoaded() {
@@ -61,8 +63,24 @@ function createPanelIfReactLoaded() {
             }
           },
         });
+        bridge.addListener('reloadAppForProfiling', () => {
+          localStorage.setItem(SUPPORTS_PROFILING_KEY, 'true');
+          chrome.devtools.inspectedWindow.eval('window.location.reload();');
+        });
 
-        store = new Store(bridge);
+        // This flag lets us tip the Store off early that we expect to be profiling.
+        // This avoids flashing a temporary "Profiling not supported" message in the Profiler tab,
+        // after a user has clicked the "reload and profile" button.
+        let supportsProfiling = false;
+        if (localStorage.getItem(SUPPORTS_PROFILING_KEY) === 'true') {
+          supportsProfiling = true;
+          localStorage.removeItem(SUPPORTS_PROFILING_KEY);
+        }
+
+        store = new Store(bridge, {
+          supportsReloadAndProfile: true,
+          supportsProfiling,
+        });
 
         // Initialize the backend only once the Store has been initialized.
         // Otherwise the Store may miss important initial tree op codes.

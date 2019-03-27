@@ -61,13 +61,17 @@ port.onDisconnect.addListener(handleDisconnect);
 
 window.addEventListener('message', handleMessageFromPage);
 
+sayHelloToBackend();
+
 // The backend waits to install the global hook until notified by the content script.
 // In the event of a page reload, the content script might be loaded before the backend is injected.
 // Because of this we need to poll the backend until it has been initialized.
-const intervalID = setInterval(() => {
-  if (backendInitialized || backendDisconnected) {
-    clearInterval(intervalID);
-  } else {
-    sayHelloToBackend();
-  }
-}, 500);
+if (!backendInitialized) {
+  const intervalID = setInterval(() => {
+    if (backendInitialized || backendDisconnected) {
+      clearInterval(intervalID);
+    } else {
+      sayHelloToBackend();
+    }
+  }, 500);
+}

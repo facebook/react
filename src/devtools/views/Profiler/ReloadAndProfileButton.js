@@ -1,13 +1,24 @@
 // @flow
 
-import React from 'react';
+import React, { useCallback, useContext } from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
+import { BridgeContext, StoreContext } from '../context';
 
 export default function ReloadAndProfileButton() {
-  // TODO (profiling) Wire up reload button
+  const bridge = useContext(BridgeContext);
+  const store = useContext(StoreContext);
+
+  const reloadAndProfile = useCallback(() => bridge.send('reloadAndProfile'), [
+    bridge,
+  ]);
+
+  if (!store.supportsReloadAndProfile) {
+    return null;
+  }
+
   return (
-    <Button disabled title="Reload and start profiling">
+    <Button onClick={reloadAndProfile} title="Reload and start profiling">
       <ButtonIcon type="reload" />
     </Button>
   );

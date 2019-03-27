@@ -639,6 +639,17 @@ export function attach(
       operation[1] = id;
       operation[2] = treeBaseDuration;
       addOperation(operation);
+
+      const { actualDuration } = fiber;
+      if (actualDuration > 0) {
+        // If profiling is active, store durations for elements that were rendered during the commit.
+        const metadata = ((currentCommitProfilingMetadata: any): CommitProfilingData);
+        metadata.actualDurations.push(id, actualDuration);
+        metadata.maxActualDuration = Math.max(
+          metadata.maxActualDuration,
+          actualDuration
+        );
+      }
     }
   }
 
@@ -866,6 +877,23 @@ export function attach(
     // Hydrate all the roots for the first time.
     hook.getFiberRoots(rendererID).forEach(root => {
       currentRootID = getFiberID(getPrimaryFiber(root.current));
+
+      if (isProfiling) {
+        // If profiling is active, store commit time and duration, and the current interactions.
+        // The frontend may request this information after profiling has stopped.
+        currentCommitProfilingMetadata = {
+          actualDurations: [],
+          commitTime: performance.now() - profilingStartTime,
+          interactions: Array.from(root.memoizedInteractions).map(
+            (interaction: Interaction) => ({
+              ...interaction,
+              timestamp: interaction.timestamp - profilingStartTime,
+            })
+          ),
+          maxActualDuration: 0,
+        };
+      }
+
       mountFiber(root.current, null);
       flushPendingEvents(root);
       currentRootID = -1;

@@ -27,6 +27,11 @@ const debug = (methodName, ...args) => {
   }
 };
 
+type Config = {|
+  supportsReloadAndProfile?: boolean,
+  supportsProfiling?: boolean,
+|};
+
 type ProfilingSnapshotNode = {|
   id: number,
   children: Array<number>,
@@ -86,10 +91,21 @@ export default class Store extends EventEmitter {
 
   _supportsProfiling: boolean = false;
 
-  constructor(bridge: Bridge) {
+  _supportsReloadAndProfile: boolean = false;
+
+  constructor(bridge: Bridge, config?: Config) {
     super();
 
     debug('constructor', 'subscribing to Bridge');
+
+    if (config != null) {
+      if (config.supportsProfiling) {
+        this._supportsProfiling = true;
+      }
+      if (config.supportsReloadAndProfile) {
+        this._supportsReloadAndProfile = true;
+      }
+    }
 
     this._bridge = bridge;
     bridge.addListener('operations', this.onBridgeOperations);
@@ -138,6 +154,10 @@ export default class Store extends EventEmitter {
 
   get supportsProfiling(): boolean {
     return this._supportsProfiling;
+  }
+
+  get supportsReloadAndProfile(): boolean {
+    return this._supportsReloadAndProfile;
   }
 
   getElementAtIndex(index: number): Element | null {

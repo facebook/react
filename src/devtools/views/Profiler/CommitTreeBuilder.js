@@ -44,71 +44,69 @@ export function getCommitTree({
   rootID: number,
   store: Store,
 |}): CommitTree {
-  if (store.profilingSnapshot.has(rootID)) {
-    if (!rootToCommitTreeMap.has(rootID)) {
-      rootToCommitTreeMap.set(rootID, []);
-    }
+  if (!rootToCommitTreeMap.has(rootID)) {
+    rootToCommitTreeMap.set(rootID, []);
+  }
 
-    const commitTrees = ((rootToCommitTreeMap.get(
-      rootID
-    ): any): Array<CommitTree>);
+  const commitTrees = ((rootToCommitTreeMap.get(
+    rootID
+  ): any): Array<CommitTree>);
 
-    if (commitIndex < commitTrees.length) {
-      return commitTrees[commitIndex];
-    }
+  if (commitIndex < commitTrees.length) {
+    return commitTrees[commitIndex];
+  }
 
-    // Commits are generated sequentially and cached.
-    // If this is the very first commit, start with the cached snapshot and apply the first mutation.
-    // Otherwise load (or generate) the previous commit and append a mutation to it.
-    if (commitIndex === 0) {
-      const nodes = new Map();
+  // Commits are generated sequentially and cached.
+  // If this is the very first commit, start with the cached snapshot and apply the first mutation.
+  // Otherwise load (or generate) the previous commit and append a mutation to it.
+  if (commitIndex === 0) {
+    const nodes = new Map();
 
-      // Construct the initial tree.
-      recursivelyIniitliazeTree(
-        rootID,
-        0,
-        nodes,
-        profilingSummary.initialTreeBaseDurations,
-        store
+    // Construct the initial tree.
+    recursivelyIniitliazeTree(
+      rootID,
+      0,
+      nodes,
+      profilingSummary.initialTreeBaseDurations,
+      store
+    );
+
+    // Mutate the tree
+    const commitOperations = store.profilingOperations.get(rootID);
+    if (commitOperations != null && commitIndex < commitOperations.length) {
+      const commitTree = updateTree(
+        { nodes, rootID },
+        commitOperations[commitIndex]
       );
 
-      // Mutate the tree
-      const commitOperations = store.profilingOperations.get(rootID);
-      if (commitOperations != null && commitIndex < commitOperations.length) {
-        const commitTree = updateTree(
-          { nodes, rootID },
-          commitOperations[commitIndex]
-        );
-
-        if (__DEBUG__) {
-          __printTree(commitTree);
-        }
-
-        commitTrees.push(commitTree);
-        return commitTree;
+      if (__DEBUG__) {
+        __printTree(commitTree);
       }
-    } else {
-      const previousCommitTree = getCommitTree({
-        commitIndex: commitIndex - 1,
-        profilingSummary,
-        rendererID,
-        rootID,
-        store,
-      });
-      const commitOperations = store.profilingOperations.get(rootID);
-      if (commitOperations != null && commitIndex < commitOperations.length) {
-        const commitTree = updateTree(
-          previousCommitTree,
-          commitOperations[commitIndex]
-        );
 
-        if (__DEBUG__) {
-          __printTree(commitTree);
-        }
+      commitTrees.push(commitTree);
+      return commitTree;
+    }
+  } else {
+    const previousCommitTree = getCommitTree({
+      commitIndex: commitIndex - 1,
+      profilingSummary,
+      rendererID,
+      rootID,
+      store,
+    });
+    const commitOperations = store.profilingOperations.get(rootID);
+    if (commitOperations != null && commitIndex < commitOperations.length) {
+      const commitTree = updateTree(
+        previousCommitTree,
+        commitOperations[commitIndex]
+      );
 
-        commitTrees.push(commitTree);
-        return commitTree;
+      if (__DEBUG__) {
+        __printTree(commitTree);
       }
+
+      commitTrees.push(commitTree);
+      return commitTree;
     }
   }
 
@@ -129,26 +127,27 @@ function recursivelyIniitliazeTree(
   initialTreeBaseDurations: Map<number, number>,
   store: Store
 ): void {
-  const node = ((store.profilingSnapshot.get(id): any): Node);
-
-  nodes.set(id, {
-    id,
-    children: node.children,
-    displayName: node.displayName,
-    key: node.key,
-    parentID,
-    treeBaseDuration: ((initialTreeBaseDurations.get(id): any): number),
-  });
-
-  node.children.forEach(childID =>
-    recursivelyIniitliazeTree(
-      childID,
+  const node = store.profilingSnapshot.get(id);
+  if (node != null) {
+    nodes.set(id, {
       id,
-      nodes,
-      initialTreeBaseDurations,
-      store
-    )
-  );
+      children: node.children,
+      displayName: node.displayName,
+      key: node.key,
+      parentID,
+      treeBaseDuration: ((initialTreeBaseDurations.get(id): any): number),
+    });
+
+    node.children.forEach(childID =>
+      recursivelyIniitliazeTree(
+        childID,
+        id,
+        nodes,
+        initialTreeBaseDurations,
+        store
+      )
+    );
+  }
 }
 
 function updateTree(
@@ -183,7 +182,26 @@ function updateTree(
         i = i + 3;
 
         if (type === ElementTypeRoot) {
-          // No-op
+          i++; // supportsProfiling flag
+
+          debug('Add', `new root fiber ${id}`);
+
+          if (nodes.has(id)) {
+            // The renderer's tree walking approach sometimes mounts the same Fiber twice with Suspense and Lazy.
+            // For now, we avoid adding it to the tree twice by checking if it's already been mounted.
+            // Maybe in the future we'll revisit this.
+          } else {
+            const node: Node = {
+              children: [],
+              displayName: null,
+              id,
+              key: null,
+              parentID: 0,
+              treeBaseDuration: 0, // This will be updated by a subsequent operation
+            };
+
+            nodes.set(id, node);
+          }
         } else {
           parentID = ((operations[i]: any): number);
           i++;
@@ -213,13 +231,13 @@ function updateTree(
             // For now, we avoid adding it to the tree twice by checking if it's already been mounted.
             // Maybe in the future we'll revisit this.
           } else {
-            parentNode = getClonedNode(parentID);
-            parentNode.children = parentNode.children.concat(id);
-
             debug(
               'Add',
               `fiber ${id} (${displayName || 'null'}) as child of ${parentID}`
             );
+
+            parentNode = getClonedNode(parentID);
+            parentNode.children = parentNode.children.concat(id);
 
             const node: Node = {
               children: [],
