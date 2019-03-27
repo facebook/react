@@ -1250,29 +1250,29 @@
       "filename": "react-events-press.development.js",
       "bundleType": "UMD_DEV",
       "packageName": "react-events",
-      "size": 9396,
-      "gzip": 2197
+      "size": 9488,
+      "gzip": 2236
     },
     {
       "filename": "react-events-press.production.min.js",
       "bundleType": "UMD_PROD",
       "packageName": "react-events",
-      "size": 3990,
-      "gzip": 1358
+      "size": 4001,
+      "gzip": 1373
     },
     {
       "filename": "react-events-hover.development.js",
       "bundleType": "UMD_DEV",
       "packageName": "react-events",
-      "size": 4701,
-      "gzip": 1289
+      "size": 4837,
+      "gzip": 1343
     },
     {
       "filename": "react-events-hover.production.min.js",
       "bundleType": "UMD_PROD",
       "packageName": "react-events",
-      "size": 2123,
-      "gzip": 867
+      "size": 2162,
+      "gzip": 891
     }
   ]
 }

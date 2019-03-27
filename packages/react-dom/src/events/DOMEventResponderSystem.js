@@ -31,6 +31,10 @@ const rootEventTypesToEventComponents: Map<
   DOMTopLevelEventType | string,
   Set<Fiber>,
 > = new Map();
+const targetEventTypeCached: Map<
+  Array<ReactEventResponderEventType>,
+  Set<DOMTopLevelEventType>,
+> = new Map();
 
 type EventListener = (event: SyntheticEvent) => void;
 
@@ -203,6 +207,24 @@ DOMEventResponderContext.prototype.releaseOwnership = function() {
   // TODO
 };
 
+function getTargetEventTypes(
+  eventTypes: Array<ReactEventResponderEventType>,
+): Set<string> {
+  let cachedSet = targetEventTypeCached.get(eventTypes);
+
+  if (cachedSet === undefined) {
+    cachedSet = new Set();
+    for (let i = 0; i < eventTypes.length; i++) {
+      const eventType = eventTypes[i];
+      const topLevelEventType =
+        typeof eventType === 'string' ? eventType : eventType.name;
+      cachedSet.add(topLevelEventType);
+    }
+    targetEventTypeCached.set(eventTypes, cachedSet);
+  }
+  return cachedSet;
+}
+
 function handleTopLevelType(
   topLevelType: DOMTopLevelEventType,
   fiber: Fiber,
@@ -212,8 +234,8 @@ function handleTopLevelType(
   const responder: ReactEventResponder = fiber.type.responder;
   if (!isRootLevelEvent) {
     // Validate the target event type exists on the responder
-    const targetEventTypes = responder.targetEventTypes;
-    if (targetEventTypes.indexOf(topLevelType) === -1) {
+    const targetEventTypes = getTargetEventTypes(responder.targetEventTypes);
+    if (!targetEventTypes.has(topLevelType)) {
       return;
     }
   }

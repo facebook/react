@@ -1322,7 +1322,7 @@ export function listenToEventResponderEventTypes(
       // Create a unique name for this event, plus its properties. We'll
       // use this to ensure we don't listen to the same event with the same
       // properties again.
-      const passiveKey = passive ? '_passive' : '';
+      const passiveKey = passive ? '_passive' : '_active';
       const captureKey = capture ? '_capture' : '';
       const listeningName = `${topLevelType}${passiveKey}${captureKey}`;
       if (!listeningSet.has(listeningName)) {

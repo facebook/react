@@ -9,6 +9,6 @@
 
 'use strict';
 
-import Press from './src/Press';
+const Press = require('./src/Press');
 
-export default Press;
+module.exports = Press.default || Press;
