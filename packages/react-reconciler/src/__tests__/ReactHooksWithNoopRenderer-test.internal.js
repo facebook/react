@@ -1886,41 +1886,42 @@ describe('ReactHooksWithNoopRenderer', () => {
         // This reducer closes over a value from props. If the reducer is not
         // properly updated, the eager reducer will compare to an old value
         // and bail out incorrectly.
-        Scheduler.yieldValue('Reducer: ' + count);
+        ReactNoop.yield('Reducer: ' + count);
         return count;
       }, -1);
       useEffect(
         () => {
-          Scheduler.yieldValue('Effect: ' + count);
+          ReactNoop.yield('Effect: ' + count);
           dispatch();
         },
         [count],
       );
-      Scheduler.yieldValue('Render: ' + state);
-      return count;
+      ReactNoop.yield('Render: ' + state);
+      return <span prop={count} />;
     }
 
     ReactNoop.render(<App />);
-    expect(Scheduler).toFlushAndYield([
-      'Render: -1',
+    expect(ReactNoop.flush()).toEqual(['Render: -1']);
+    ReactNoop.flushPassiveEffects();
+    expect(ReactNoop.flush()).toEqual([
       'Effect: 1',
       'Reducer: 1',
       'Reducer: 1',
       'Render: 1',
     ]);
-    expect(ReactNoop).toMatchRenderedOutput('1');
+    expect(ReactNoop.getChildren()).toEqual([span(1)]);
 
     act(() => {
       setCounter(2);
     });
-    expect(Scheduler).toFlushAndYield([
+    expect(ReactNoop.flush()).toEqual([
       'Render: 1',
       'Effect: 2',
       'Reducer: 2',
       'Reducer: 2',
       'Render: 2',
     ]);
-    expect(ReactNoop).toMatchRenderedOutput('2');
+    expect(ReactNoop.getChildren()).toEqual([span(2)]);
   });
 
   it('should update latest rendered reducer when a preceding state receives a render phase update', () => {
@@ -1936,12 +1937,12 @@ describe('ReactHooksWithNoopRenderer', () => {
         setStep(step + 1);
       }
 
-      Scheduler.yieldValue(`Step: ${step}, Shadow: ${shadow}`);
-      return shadow;
+      ReactNoop.yield(`Step: ${step}, Shadow: ${shadow}`);
+      return <span prop={shadow} />;
     }
 
     ReactNoop.render(<App />);
-    expect(Scheduler).toFlushAndYield([
+    expect(ReactNoop.flush()).toEqual([
       'Step: 0, Shadow: 0',
       'Step: 1, Shadow: 0',
       'Step: 2, Shadow: 0',
@@ -1949,10 +1950,10 @@ describe('ReactHooksWithNoopRenderer', () => {
       'Step: 4, Shadow: 0',
       'Step: 5, Shadow: 0',
     ]);
-    expect(ReactNoop).toMatchRenderedOutput('0');
+    expect(ReactNoop.getChildren()).toEqual([span(0)]);
 
     act(() => dispatch());
-    expect(Scheduler).toFlushAndYield(['Step: 5, Shadow: 5']);
-    expect(ReactNoop).toMatchRenderedOutput('5');
+    expect(ReactNoop.flush()).toEqual(['Step: 5, Shadow: 5']);
+    expect(ReactNoop.getChildren()).toEqual([span(5)]);
   });
 });
