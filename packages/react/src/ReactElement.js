@@ -22,28 +22,16 @@ const RESERVED_PROPS = {
 
 let specialPropKeyWarningShown, specialPropRefWarningShown;
 
-function hasValidRef(config) {
+function hasValidRefAndKey(config, flag) {
   if (__DEV__) {
-    if (hasOwnProperty.call(config, 'ref')) {
-      const getter = Object.getOwnPropertyDescriptor(config, 'ref').get;
+    if (hasOwnProperty.call(config, flag)) {
+      const getter = Object.getOwnPropertyDescriptor(config, flag).get;
       if (getter && getter.isReactWarning) {
         return false;
       }
     }
   }
   return config.ref !== undefined;
-}
-
-function hasValidKey(config) {
-  if (__DEV__) {
-    if (hasOwnProperty.call(config, 'key')) {
-      const getter = Object.getOwnPropertyDescriptor(config, 'key').get;
-      if (getter && getter.isReactWarning) {
-        return false;
-      }
-    }
-  }
-  return config.key !== undefined;
 }
 
 function defineKeyPropWarningGetter(props, displayName) {
@@ -180,10 +168,10 @@ export function createElement(type, config, children) {
   let source = null;
 
   if (config != null) {
-    if (hasValidRef(config)) {
+    if (hasValidRefAndKey(config, 'ref')) {
       ref = config.ref;
     }
-    if (hasValidKey(config)) {
+    if (hasValidRefAndKey(config, 'key')) {
       key = '' + config.key;
     }
 
@@ -311,12 +299,12 @@ export function cloneElement(element, config, children) {
   let owner = element._owner;
 
   if (config != null) {
-    if (hasValidRef(config)) {
+    if (hasValidRefAndKey(config, 'ref')) {
       // Silently steal the ref from the parent.
       ref = config.ref;
       owner = ReactCurrentOwner.current;
     }
-    if (hasValidKey(config)) {
+    if (hasValidRefAndKey(config, 'key')) {
       key = '' + config.key;
     }
 
