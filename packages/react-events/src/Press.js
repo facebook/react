@@ -80,6 +80,15 @@ function dispatchPressInEvents(
           true,
         );
       }
+      if (props.onLongPress) {
+        const longPressEventListener = e => {
+          props.onLongPress(e);
+          if (e.nativeEvent.defaultPrevented) {
+            state.defaultPrevented = true;
+          }
+        };
+        dispatchPressEvent(context, 'longpress', state, longPressEventListener);
+      }
     }, longPressDelay);
   }
 }
@@ -108,17 +117,6 @@ function dispatchPressOutEvents(
     context.dispatchEvent(
       'presschange',
       pressChangeEventListener,
-      state.pressTarget,
-      true,
-    );
-  }
-  if (props.onLongPressChange && state.isLongPressed) {
-    const longPressChangeEventListener = () => {
-      props.onLongPressChange(false);
-    };
-    context.dispatchEvent(
-      'longpresschange',
-      longPressChangeEventListener,
       state.pressTarget,
       true,
     );
@@ -220,14 +218,10 @@ const PressResponder = {
               target !== null &&
               context.isTargetWithinEventComponent(target)
             ) {
-              if (state.isLongPressed && props.onLongPress) {
-                dispatchPressEvent(
-                  context,
-                  'longpress',
-                  state,
-                  props.onLongPress,
-                );
-              } else if (props.onPress) {
+              if (
+                props.onPress &&
+                !(state.isLongPressed && props.longPressCancelsPress)
+              ) {
                 dispatchPressEvent(context, 'press', state, props.onPress);
               }
             }
@@ -256,7 +250,7 @@ const PressResponder = {
             ) {
               return;
             }
-            // Ignore right-clicks
+            // Ignore middle- and right-clicks
             if (event.button === 2 || event.button === 1) {
               return;
             }
@@ -281,20 +275,10 @@ const PressResponder = {
             (props.onPress || props.onLongPress)
           ) {
             if (context.isTargetWithinElement(eventTarget, state.pressTarget)) {
-              if (state.isLongPressed && props.onLongPress) {
-                const longPressEventListener = e => {
-                  props.onLongPress(e);
-                  if (e.nativeEvent.defaultPrevented) {
-                    state.defaultPrevented = true;
-                  }
-                };
-                dispatchPressEvent(
-                  context,
-                  'longpress',
-                  state,
-                  longPressEventListener,
-                );
-              } else if (props.onPress) {
+              if (
+                props.onPress &&
+                !(state.isLongPressed && props.longPressCancelsPress)
+              ) {
                 const pressEventListener = (e, key) => {
                   props.onPress(e, key);
                   if (e.nativeEvent.defaultPrevented) {
