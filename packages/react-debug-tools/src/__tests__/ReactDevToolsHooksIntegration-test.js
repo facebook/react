@@ -16,15 +16,25 @@ describe('React hooks DevTools integration', () => {
   let ReactTestRenderer;
   let act;
   let overrideHookState;
+  let overrideProps;
+  let suspendedFibers;
 
   beforeEach(() => {
+    suspendedFibers = new Set();
     global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
       inject: injected => {
         overrideHookState = injected.overrideHookState;
+        overrideProps = injected.overrideProps;
       },
       supportsFiber: true,
       onCommitFiberRoot: () => {},
       onCommitFiberUnmount: () => {},
+      shouldSuspendFiber(rendererId, fiber) {
+        return (
+          suspendedFibers.has(fiber) ||
+          (fiber.alternate && suspendedFibers.has(fiber.alternate))
+        );
+      },
     };
 
     jest.resetModules();
@@ -171,6 +181,43 @@ describe('React hooks DevTools integration', () => {
         props: {},
         children: ['count:', '11'],
       });
+    }
+  });
+
+  it('should support triggering suspense in DEV', () => {
+    function MyComponent() {
+      return 'Done';
+    }
+
+    const renderer = ReactTestRenderer.create(
+      <React.Suspense fallback={'Loading'}>
+        <MyComponent />
+      </React.Suspense>,
+    );
+    expect(renderer.toJSON()).toEqual('Done');
+
+    const fiber = renderer.root._currentFiber().return;
+    if (__DEV__) {
+      // Mark as loading
+      suspendedFibers.add(fiber);
+      overrideProps(fiber, [], null); // Re-render
+      expect(renderer.toJSON()).toEqual('Loading');
+
+      overrideProps(fiber, [], null); // Re-render
+      expect(renderer.toJSON()).toEqual('Loading');
+
+      // Mark as done
+      suspendedFibers.delete(fiber);
+      overrideProps(fiber, [], null); // Re-render
+      expect(renderer.toJSON()).toEqual('Done');
+
+      overrideProps(fiber, [], null); // Re-render
+      expect(renderer.toJSON()).toEqual('Done');
+
+      // Mark as loading again
+      suspendedFibers.add(fiber);
+      overrideProps(fiber, [], null); // Re-render
+      expect(renderer.toJSON()).toEqual('Loading');
     }
   });
 });

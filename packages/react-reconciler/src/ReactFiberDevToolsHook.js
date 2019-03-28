@@ -16,6 +16,9 @@ declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
 
 let onCommitFiberRoot = null;
 let onCommitFiberUnmount = null;
+let shouldSuspendFiber = function() {
+  return false;
+};
 let hasLoggedError = false;
 
 function catchErrors(fn) {
@@ -71,6 +74,13 @@ export function injectInternals(internals: Object): boolean {
     onCommitFiberUnmount = catchErrors(fiber =>
       hook.onCommitFiberUnmount(rendererID, fiber),
     );
+    if (__DEV__) {
+      if (hook.shouldSuspendFiber) {
+        shouldSuspendFiber = catchErrors(fiber =>
+          hook.shouldSuspendFiber(rendererID, fiber),
+        );
+      }
+    }
   } catch (err) {
     // Catch all errors because it is unsafe to throw during initialization.
     if (__DEV__) {
@@ -95,4 +105,8 @@ export function onCommitUnmount(fiber: Fiber) {
   if (typeof onCommitFiberUnmount === 'function') {
     onCommitFiberUnmount(fiber);
   }
+}
+
+export function shouldSuspend(fiber: Fiber) {
+  return shouldSuspendFiber(fiber);
 }
