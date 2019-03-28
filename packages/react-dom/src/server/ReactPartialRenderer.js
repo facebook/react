@@ -1183,9 +1183,14 @@ class ReactDOMServerRenderer {
                 ((frame: any): FrameDev).debugElementStack = [];
               }
               this.stack.push(frame);
+              return '';
             }
-            return '';
+            invariant(
+              false,
+              'ReactDOMServer does not yet support the event API.',
+            );
           }
+          // eslint-disable-next-line-no-fallthrough
           case REACT_LAZY_TYPE:
             invariant(
               false,
