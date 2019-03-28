@@ -1152,127 +1152,29 @@
       "filename": "react-events.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-events",
-      "size": 990,
-      "gzip": 545
+      "size": 1135,
+      "gzip": 623
     },
     {
       "filename": "react-events.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-events",
-      "size": 506,
-      "gzip": 343
+      "size": 448,
+      "gzip": 328
     },
     {
       "filename": "ReactEvents-dev.js",
       "bundleType": "FB_WWW_DEV",
       "packageName": "react-events",
-      "size": 956,
-      "gzip": 536
+      "size": 1106,
+      "gzip": 613
     },
     {
       "filename": "ReactEvents-prod.js",
       "bundleType": "FB_WWW_PROD",
       "packageName": "react-events",
-      "size": 687,
-      "gzip": 410
-    },
-    {
-      "filename": "react-events.development.js",
-      "bundleType": "UMD_DEV",
-      "packageName": "react-events",
-      "size": 1183,
-      "gzip": 605
-    },
-    {
-      "filename": "react-events.production.min.js",
-      "bundleType": "UMD_PROD",
-      "packageName": "react-events",
-      "size": 676,
-      "gzip": 420
-    },
-    {
-      "filename": "react-events-press.development.js",
-      "bundleType": "UMD_DEV",
-      "packageName": "react-events",
-      "size": 10147,
-      "gzip": 2467
-    },
-    {
-      "filename": "react-events-press.production.min.js",
-      "bundleType": "UMD_PROD",
-      "packageName": "react-events",
-      "size": 4169,
-      "gzip": 1426
-    },
-    {
-      "filename": "react-events-press.development.js",
-      "bundleType": "NODE_DEV",
-      "packageName": "react-events",
-      "size": 9973,
-      "gzip": 2424
-    },
-    {
-      "filename": "react-events-press.production.min.js",
-      "bundleType": "NODE_PROD",
-      "packageName": "react-events",
-      "size": 4002,
-      "gzip": 1370
-    },
-    {
-      "filename": "ReactEventsPress-dev.js",
-      "bundleType": "FB_WWW_DEV",
-      "packageName": "react-events",
-      "size": 10209,
-      "gzip": 2469
-    },
-    {
-      "filename": "ReactEventsPress-prod.js",
-      "bundleType": "FB_WWW_PROD",
-      "packageName": "react-events",
-      "size": 8373,
-      "gzip": 1778
-    },
-    {
-      "filename": "react-events-hover.development.js",
-      "bundleType": "UMD_DEV",
-      "packageName": "react-events",
-      "size": 4837,
-      "gzip": 1343
-    },
-    {
-      "filename": "react-events-hover.production.min.js",
-      "bundleType": "UMD_PROD",
-      "packageName": "react-events",
-      "size": 2162,
-      "gzip": 891
-    },
-    {
-      "filename": "react-events-hover.development.js",
-      "bundleType": "NODE_DEV",
-      "packageName": "react-events",
-      "size": 4663,
-      "gzip": 1301
-    },
-    {
-      "filename": "react-events-hover.production.min.js",
-      "bundleType": "NODE_PROD",
-      "packageName": "react-events",
-      "size": 1993,
-      "gzip": 834
-    },
-    {
-      "filename": "ReactEventsHover-dev.js",
-      "bundleType": "FB_WWW_DEV",
-      "packageName": "react-events",
-      "size": 4643,
-      "gzip": 1323
-    },
-    {
-      "filename": "ReactEventsHover-prod.js",
-      "bundleType": "FB_WWW_PROD",
-      "packageName": "react-events",
-      "size": 3852,
-      "gzip": 1076
+      "size": 643,
+      "gzip": 377
     }
   ]
 }
