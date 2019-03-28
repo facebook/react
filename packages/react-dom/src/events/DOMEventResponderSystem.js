@@ -28,12 +28,12 @@ import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
-let listenToResponderEventImpl;
+let listenToResponderEventTypesImpl;
 
-export function setListenToResponderEvent(
-  _listenToResponderEventImpl: Function,
+export function setListenToResponderEventTypes(
+  _listenToResponderEventTypesImpl: Function,
 ) {
-  listenToResponderEventImpl = _listenToResponderEventImpl;
+  listenToResponderEventTypesImpl = _listenToResponderEventTypesImpl;
 }
 
 const rootEventTypesToEventComponents: Map<
@@ -163,7 +163,7 @@ DOMEventResponderContext.prototype.addRootEventTypes = function(
   rootEventTypes: Array<ReactEventResponderEventType>,
 ) {
   const element = this.eventTarget.ownerDocument;
-  listenToResponderEventImpl(rootEventTypes, element);
+  listenToResponderEventTypesImpl(rootEventTypes, element);
   const eventComponent = this._fiber;
   for (let i = 0; i < rootEventTypes.length; i++) {
     const rootEventType = rootEventTypes[i];
