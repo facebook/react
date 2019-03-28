@@ -259,7 +259,7 @@ function handleTopLevelType(
 
 export function runResponderEventsInBatch(
   topLevelType: DOMTopLevelEventType,
-  targetFiber: Fiber,
+  targetFiber: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: EventTarget,
   eventSystemFlags: EventSystemFlags,
