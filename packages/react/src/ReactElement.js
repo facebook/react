@@ -22,7 +22,7 @@ const RESERVED_PROPS = {
 
 let specialPropKeyWarningShown, specialPropRefWarningShown;
 
-function hasValidRefAndKey(config, flag) {
+function hasValidRefOrKey(config, flag) {
   if (__DEV__) {
     if (hasOwnProperty.call(config, flag)) {
       const getter = Object.getOwnPropertyDescriptor(config, flag).get;
@@ -168,10 +168,10 @@ export function createElement(type, config, children) {
   let source = null;
 
   if (config != null) {
-    if (hasValidRefAndKey(config, 'ref')) {
+    if (hasValidRefOrKey(config, 'ref')) {
       ref = config.ref;
     }
-    if (hasValidRefAndKey(config, 'key')) {
+    if (hasValidRefOrKey(config, 'key')) {
       key = '' + config.key;
     }
 
@@ -299,12 +299,12 @@ export function cloneElement(element, config, children) {
   let owner = element._owner;
 
   if (config != null) {
-    if (hasValidRefAndKey(config, 'ref')) {
+    if (hasValidRefOrKey(config, 'ref')) {
       // Silently steal the ref from the parent.
       ref = config.ref;
       owner = ReactCurrentOwner.current;
     }
-    if (hasValidRefAndKey(config, 'key')) {
+    if (hasValidRefOrKey(config, 'key')) {
       key = '' + config.key;
     }
 
