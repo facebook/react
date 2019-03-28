@@ -15,6 +15,7 @@ import {canUseDOM} from 'shared/ExecutionEnvironment';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import type {ReactEventResponderEventType} from 'shared/ReactTypes';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
+import {setListenToResponderEventTypes} from '../events/DOMEventResponderSystem';
 
 import {
   getValueForAttribute,
@@ -1336,4 +1337,9 @@ export function listenToEventResponderEventTypes(
       }
     }
   }
+}
+
+// We can remove this once the event API is stable and out of a flag
+if (enableEventAPI) {
+  setListenToResponderEventTypes(listenToEventResponderEventTypes);
 }

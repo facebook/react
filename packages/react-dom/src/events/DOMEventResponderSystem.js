@@ -24,10 +24,17 @@ import {interactiveUpdates} from 'events/ReactGenericBatching';
 import {executeDispatch} from 'events/EventPluginUtils';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
-import {listenToEventResponderEventTypes} from '../client/ReactDOMComponent';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
+
+let listenToResponderEventTypesImpl;
+
+export function setListenToResponderEventTypes(
+  _listenToResponderEventTypesImpl: Function,
+) {
+  listenToResponderEventTypesImpl = _listenToResponderEventTypesImpl;
+}
 
 const rootEventTypesToEventComponents: Map<
   DOMTopLevelEventType | string,
@@ -156,7 +163,7 @@ DOMEventResponderContext.prototype.addRootEventTypes = function(
   rootEventTypes: Array<ReactEventResponderEventType>,
 ) {
   const element = this.eventTarget.ownerDocument;
-  listenToEventResponderEventTypes(rootEventTypes, element);
+  listenToResponderEventTypesImpl(rootEventTypes, element);
   const eventComponent = this._fiber;
   for (let i = 0; i < rootEventTypes.length; i++) {
     const rootEventType = rootEventTypes[i];
