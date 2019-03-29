@@ -1459,7 +1459,7 @@ export function handleEventTouchHitTarget(
       const left = nextProps.left;
       const right = nextProps.right;
       const top = nextProps.top;
-      const bottom = nextProps.left;
+      const bottom = nextProps.bottom;
 
       if (lastElement !== element) {
         if (
