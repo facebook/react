@@ -15,7 +15,7 @@ import {canUseDOM} from 'shared/ExecutionEnvironment';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import type {ReactEventResponderEventType} from 'shared/ReactTypes';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
-import {setListenToResponderEventTypes} from '../events/DOMEventResponderSystem';
+import getElementFromTouchHitTarget from 'shared/getElementFromTouchHitTarget';
 
 import {
   getValueForAttribute,
@@ -85,6 +85,15 @@ import possibleStandardNames from '../shared/possibleStandardNames';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
+import {setListenToResponderEventTypes} from '../events/DOMEventResponderSystem';
+import {precacheFiberNode} from './ReactDOMComponentTree';
+import type {
+  Container,
+  HostContext,
+  HostContextDev,
+  HostContextProd,
+  Props,
+} from './ReactDOMHostConfig';
 
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
@@ -1342,4 +1351,128 @@ export function listenToEventResponderEventTypes(
 // We can remove this once the event API is stable and out of a flag
 if (enableEventAPI) {
   setListenToResponderEventTypes(listenToEventResponderEventTypes);
+}
+
+const emptyObject = {};
+
+export function createEventTargetHitSlop(
+  {
+    bottom,
+    left,
+    right,
+    top,
+  }: {bottom?: number, left?: number, right?: number, top?: number},
+  rootContainerInstance: Element | Document,
+  parentNamespace: string,
+): Element {
+  const hitSlopElement = createElement(
+    'div',
+    emptyObject,
+    rootContainerInstance,
+    parentNamespace,
+  );
+  const hitSlopElementStyle = ((hitSlopElement: any): HTMLElement).style;
+
+  hitSlopElementStyle.position = 'absolute';
+  hitSlopElementStyle.display = 'block';
+  if (top !== undefined) {
+    hitSlopElementStyle.top = `-${top}px`;
+  }
+  if (left !== undefined) {
+    hitSlopElementStyle.left = `-${left}px`;
+  }
+  if (right !== undefined) {
+    hitSlopElementStyle.right = `-${right}px`;
+  }
+  if (bottom !== undefined) {
+    hitSlopElementStyle.bottom = `-${bottom}px`;
+  }
+  return hitSlopElement;
+}
+
+export function handleEventTouchHitTarget(
+  lastProps: Props,
+  nextProps: Props,
+  rootContainerInstance: Container,
+  internalInstanceHandle: Object,
+  hostContext: HostContext,
+): void {
+  // Validates that there is a single element
+  const node = getElementFromTouchHitTarget(internalInstanceHandle);
+  if (node !== null) {
+    let parentNamespace: string;
+    if (__DEV__) {
+      const hostContextDev = ((hostContext: any): HostContextDev);
+      parentNamespace = hostContextDev.namespace;
+      warning(
+        parentNamespace === HTML_NAMESPACE,
+        'An event touch hit target was used in an unsupported DOM namespace. ' +
+          'Ensure the touch hit target is used in a HTML namespace.',
+      );
+    } else {
+      parentNamespace = ((hostContext: any): HostContextProd);
+    }
+
+    const element = ((node: any): HTMLElement);
+    // We update the event target state node to be that of the element.
+    // We can then diff this entry to determine if we need to add the
+    // hit slop element, or change the dimensions of the hit slop.
+    const lastElement = internalInstanceHandle.stateNode;
+    if (lastElement !== element) {
+      internalInstanceHandle.stateNode = element;
+      const hitSlopElement = createEventTargetHitSlop(
+        nextProps,
+        rootContainerInstance,
+        parentNamespace,
+      );
+      // We need to make the target relative so we can make the hit slop
+      // element inside it absolutely position around the target.
+      // TODO add a dev check for the computed style and warn if it isn't
+      // compatible.
+      element.style.position = 'relative';
+      element.appendChild(hitSlopElement);
+      precacheFiberNode(internalInstanceHandle, hitSlopElement);
+    } else {
+      // We appended the hit slop to the element, so it will always be the last child.
+      // TODO add a DEV validation warning to ensure this remains correct.
+      const hitSlopElement = element.lastChild;
+      const hitSlopElementStyle = ((hitSlopElement: any): HTMLElement).style;
+
+      // Diff and update the sides of the hit slop
+      if (lastProps !== nextProps) {
+        const left = nextProps.left;
+        if (lastProps.left !== left) {
+          if (left === undefined) {
+            hitSlopElementStyle.left = '';
+          } else {
+            hitSlopElementStyle.left = `-${left}px`;
+          }
+        }
+        const right = nextProps.right;
+        if (lastProps.right !== right) {
+          if (right === undefined) {
+            hitSlopElementStyle.right = '';
+          } else {
+            hitSlopElementStyle.right = `-${right}px`;
+          }
+        }
+        const top = nextProps.top;
+        if (lastProps.top !== top) {
+          if (top === undefined) {
+            hitSlopElementStyle.top = '';
+          } else {
+            hitSlopElementStyle.top = `-${top}px`;
+          }
+        }
+        const bottom = nextProps.left;
+        if (lastProps.bottom !== bottom) {
+          if (bottom === undefined) {
+            hitSlopElementStyle.bottom = '';
+          } else {
+            hitSlopElementStyle.bottom = `-${bottom}px`;
+          }
+        }
+      }
+    }
+  }
 }

@@ -12,7 +12,10 @@ import {
   PASSIVE_NOT_SUPPORTED,
 } from 'events/EventSystemFlags';
 import type {AnyNativeEvent} from 'events/PluginModuleType';
-import {EventComponent} from 'shared/ReactWorkTags';
+import {
+  EventComponent,
+  EventTarget as EventTargetWorkTag,
+} from 'shared/ReactWorkTags';
 import type {
   ReactEventResponder,
   ReactEventResponderEventType,
@@ -160,6 +163,29 @@ DOMEventResponderContext.prototype.isTargetWithinElement = function(
   return false;
 };
 
+DOMEventResponderContext.prototype.isTargetPositionWithinHitSlop = function(
+  x: number,
+  y: number,
+): boolean {
+  const target = this.eventTarget.ownerDocument.elementFromPoint(x, y);
+  const childFiber = getClosestInstanceFromNode(target);
+  if (childFiber.tag === EventTargetWorkTag) {
+    // TODO find another way to do this without using the
+    // expensive getBoundingClientRect.
+    const {
+      left,
+      top,
+      right,
+      bottom,
+    } = target.parentNode.getBoundingClientRect();
+    if (x > left && y > top && x < right && y < bottom) {
+      return false;
+    }
+    return true;
+  }
+  return false;
+};
+
 DOMEventResponderContext.prototype.addRootEventTypes = function(
   rootEventTypes: Array<ReactEventResponderEventType>,
 ) {
@@ -199,10 +225,6 @@ DOMEventResponderContext.prototype.removeRootEventTypes = function(
       rootEventComponents.delete(eventComponent);
     }
   }
-};
-
-DOMEventResponderContext.prototype.isPositionWithinTouchHitTarget = function() {
-  // TODO
 };
 
 DOMEventResponderContext.prototype.isTargetOwned = function(

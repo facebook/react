@@ -110,7 +110,7 @@ const HoverResponder = {
             return;
           }
           if (
-            context.isPositionWithinTouchHitTarget(
+            context.isTargetPositionWithinHitSlop(
               (event: any).x,
               (event: any).y,
             )
@@ -137,7 +137,7 @@ const HoverResponder = {
         if (!state.isTouched) {
           if (state.isInHitSlop) {
             if (
-              !context.isPositionWithinTouchHitTarget(
+              !context.isTargetPositionWithinHitSlop(
                 (event: any).x,
                 (event: any).y,
               )
@@ -148,7 +148,7 @@ const HoverResponder = {
             }
           } else if (
             state.isHovered &&
-            context.isPositionWithinTouchHitTarget(
+            context.isTargetPositionWithinHitSlop(
               (event: any).x,
               (event: any).y,
             )

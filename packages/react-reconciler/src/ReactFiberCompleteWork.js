@@ -91,6 +91,8 @@ import {
   enableEventAPI,
 } from 'shared/ReactFeatureFlags';
 
+const emptyObject = {};
+
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
   // a PlacementAndUpdate.
@@ -783,8 +785,18 @@ function completeWork(
     case EventTarget: {
       if (enableEventAPI) {
         popHostContext(workInProgress);
+        const rootContainerInstance = getRootHostContainer();
+        const currentHostContext = getHostContext();
         const type = workInProgress.type.type;
-        handleEventTarget(type, newProps, workInProgress);
+        const oldProps = current !== null ? current.memoizedProps : emptyObject;
+        handleEventTarget(
+          type,
+          oldProps,
+          newProps,
+          rootContainerInstance,
+          workInProgress,
+          currentHostContext,
+        );
       }
       break;
     }

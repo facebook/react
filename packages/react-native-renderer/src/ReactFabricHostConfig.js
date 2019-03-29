@@ -437,7 +437,9 @@ export function handleEventComponent(
 
 export function handleEventTarget(
   type: Symbol | number,
-  props: Props,
+  lastProps: Props,
+  nextProps: Props,
+  rootContainerInstance: Container,
   internalInstanceHandle: Object,
 ) {
   // TODO: add handleEventTarget implementation

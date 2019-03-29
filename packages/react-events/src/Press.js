@@ -13,7 +13,7 @@ import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 const targetEventTypes = [
   {name: 'click', passive: false},
   {name: 'keydown', passive: false},
-  'pointerdown',
+  {name: 'pointerdown', passive: false},
   'pointercancel',
   'contextmenu',
 ];
@@ -243,11 +243,13 @@ const PressResponder = {
           if ((event: any).pointerType === 'mouse') {
             // Ignore if we are pressing on hit slop area with mouse
             if (
-              context.isPositionWithinTouchHitTarget(
+              context.isTargetPositionWithinHitSlop(
                 (event: any).x,
                 (event: any).y,
               )
             ) {
+              // This ensures that focus isn't incorrectly triggered
+              (event: any).preventDefault();
               return;
             }
             // Ignore middle- and right-clicks

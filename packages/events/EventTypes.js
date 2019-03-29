@@ -30,7 +30,7 @@ export type EventResponderContext = {
   ) => boolean,
   isTargetOwned: EventTarget => boolean,
   isTargetWithinEventComponent: EventTarget => boolean,
-  isPositionWithinTouchHitTarget: (x: number, y: number) => boolean,
+  isTargetPositionWithinHitSlop: (x: number, y: number) => boolean,
   addRootEventTypes: (
     rootEventTypes: Array<ReactEventResponderEventType>,
   ) => void,

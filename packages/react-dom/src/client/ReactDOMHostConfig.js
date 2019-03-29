@@ -25,6 +25,7 @@ import {
   warnForInsertedHydratedElement,
   warnForInsertedHydratedText,
   listenToEventResponderEventTypes,
+  handleEventTouchHitTarget,
 } from './ReactDOMComponent';
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
@@ -50,7 +51,6 @@ import {
   REACT_EVENT_TARGET_TYPE,
   REACT_EVENT_TARGET_TOUCH_HIT,
 } from 'shared/ReactSymbols';
-import getElementFromTouchHitTarget from 'shared/getElementFromTouchHitTarget';
 
 export type Type = string;
 export type Props = {
@@ -62,6 +62,10 @@ export type Props = {
   style?: {
     display?: string,
   },
+  bottom?: number,
+  left?: number,
+  right?: number,
+  top?: number,
 };
 export type Container = Element | Document;
 export type Instance = Element;
@@ -69,7 +73,7 @@ export type TextInstance = Text;
 export type SuspenseInstance = Comment & {_reactRetry?: () => void};
 export type HydratableInstance = Instance | TextInstance | SuspenseInstance;
 export type PublicInstance = Element | Text;
-type HostContextDev = {
+export type HostContextDev = {
   namespace: string,
   ancestorInfo: mixed,
   eventData: null | {|
@@ -77,7 +81,7 @@ type HostContextDev = {
     isEventTarget?: boolean,
   |},
 };
-type HostContextProd = string;
+export type HostContextProd = string;
 export type HostContext = HostContextDev | HostContextProd;
 export type UpdatePayload = Array<mixed>;
 export type ChildSet = void; // Unused
@@ -873,26 +877,22 @@ export function handleEventComponent(
 
 export function handleEventTarget(
   type: Symbol | number,
-  props: Props,
+  lastProps: Props,
+  nextProps: Props,
+  rootContainerInstance: Container,
   internalInstanceHandle: Object,
+  hostContext: HostContext,
 ): void {
   if (enableEventAPI) {
     // Touch target hit slop handling
     if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
-      // Validates that there is a single element
-      const element = getElementFromTouchHitTarget(internalInstanceHandle);
-      if (element !== null) {
-        // We update the event target state node to be that of the element.
-        // We can then diff this entry to determine if we need to add the
-        // hit slop element, or change the dimensions of the hit slop.
-        const lastElement = internalInstanceHandle.stateNode;
-        if (lastElement !== element) {
-          internalInstanceHandle.stateNode = element;
-          // TODO: Create the hit slop element and attach it to the element
-        } else {
-          // TODO: Diff the left, top, right, bottom props
-        }
-      }
+      handleEventTouchHitTarget(
+        lastProps,
+        nextProps,
+        rootContainerInstance,
+        internalInstanceHandle,
+        hostContext,
+      );
     }
   }
 }
