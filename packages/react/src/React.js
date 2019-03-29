@@ -45,6 +45,7 @@ import {
   cloneElementWithValidation,
 } from './ReactElementValidator';
 import ReactSharedInternals from './ReactSharedInternals';
+import {error, warn} from './withComponentStack';
 import {enableStableConcurrentModeAPIs} from 'shared/ReactFeatureFlags';
 
 const React = {
@@ -65,6 +66,9 @@ const React = {
   lazy,
   memo,
 
+  error,
+  warn,
+
   useCallback,
   useContext,
   useEffect,
@@ -77,6 +81,7 @@ const React = {
   useState,
 
   Fragment: REACT_FRAGMENT_TYPE,
+  Profiler: REACT_PROFILER_TYPE,
   StrictMode: REACT_STRICT_MODE_TYPE,
   Suspense: REACT_SUSPENSE_TYPE,
 
@@ -88,7 +93,6 @@ const React = {
   version: ReactVersion,
 
   unstable_ConcurrentMode: REACT_CONCURRENT_MODE_TYPE,
-  unstable_Profiler: REACT_PROFILER_TYPE,
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactSharedInternals,
 };
@@ -100,9 +104,7 @@ const React = {
 
 if (enableStableConcurrentModeAPIs) {
   React.ConcurrentMode = REACT_CONCURRENT_MODE_TYPE;
-  React.Profiler = REACT_PROFILER_TYPE;
   React.unstable_ConcurrentMode = undefined;
-  React.unstable_Profiler = undefined;
 }
 
 export default React;

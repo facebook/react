@@ -188,11 +188,11 @@ export function trapEventForResponderEventSystem(
     // and can provide polyfills if needed.
     if (passive) {
       if (passiveBrowserEventsSupported) {
+        eventFlags |= IS_PASSIVE;
+      } else {
         eventFlags |= IS_ACTIVE;
         eventFlags |= PASSIVE_NOT_SUPPORTED;
         passive = false;
-      } else {
-        eventFlags |= IS_PASSIVE;
       }
     } else {
       eventFlags |= IS_ACTIVE;

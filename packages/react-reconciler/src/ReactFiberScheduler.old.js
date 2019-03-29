@@ -67,6 +67,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
+import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
@@ -547,7 +548,9 @@ function commitPassiveEffects(root: FiberRoot, firstEffect: Fiber): void {
       let didError = false;
       let error;
       if (__DEV__) {
+        isInPassiveEffectDEV = true;
         invokeGuardedCallback(null, commitPassiveHookEffects, null, effect);
+        isInPassiveEffectDEV = false;
         if (hasCaughtError()) {
           didError = true;
           error = clearCaughtError();
@@ -580,6 +583,14 @@ function commitPassiveEffects(root: FiberRoot, firstEffect: Fiber): void {
   // Flush any sync work that was scheduled by effects
   if (!isBatchingUpdates && !isRendering) {
     performSyncWork();
+  }
+
+  if (__DEV__) {
+    if (rootWithPendingPassiveEffects === root) {
+      nestedPassiveEffectCountDEV++;
+    } else {
+      nestedPassiveEffectCountDEV = 0;
+    }
   }
 }
 
@@ -1897,6 +1908,21 @@ function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
         'the number of nested updates to prevent infinite loops.',
     );
   }
+  if (__DEV__) {
+    if (
+      isInPassiveEffectDEV &&
+      nestedPassiveEffectCountDEV > NESTED_PASSIVE_UPDATE_LIMIT
+    ) {
+      nestedPassiveEffectCountDEV = 0;
+      warning(
+        false,
+        'Maximum update depth exceeded. This can happen when a ' +
+          'component calls setState inside useEffect, but ' +
+          "useEffect either doesn't have a dependency array, or " +
+          'one of the dependencies changes on every render.',
+      );
+    }
+  }
 }
 
 function deferredUpdates<A>(fn: () => A): A {
@@ -1961,6 +1987,15 @@ let currentSchedulerTime: ExpirationTime = currentRendererTime;
 const NESTED_UPDATE_LIMIT = 50;
 let nestedUpdateCount: number = 0;
 let lastCommittedRootDuringThisBatch: FiberRoot | null = null;
+
+// Similar, but for useEffect infinite loops. These are DEV-only.
+const NESTED_PASSIVE_UPDATE_LIMIT = 50;
+let nestedPassiveEffectCountDEV;
+let isInPassiveEffectDEV;
+if (__DEV__) {
+  nestedPassiveEffectCountDEV = 0;
+  isInPassiveEffectDEV = false;
+}
 
 function recomputeCurrentRendererTime() {
   const currentTimeMs = now() - originalStartTimeMs;
@@ -2234,23 +2269,18 @@ function performAsyncWork(didTimeout) {
       } while (root !== firstScheduledRoot);
     }
   }
-  let isYieldy = true;
-  if (disableYielding) {
-    isYieldy = false;
-  }
-  performWork(NoWork, isYieldy);
-}
 
-function performSyncWork() {
-  performWork(Sync, false);
-}
-
-function performWork(minExpirationTime: ExpirationTime, isYieldy: boolean) {
   // Keep working on roots until there's no more work, or until there's a higher
   // priority event.
   findHighestPriorityRoot();
 
-  if (isYieldy) {
+  if (disableYielding) {
+    // Just do it all
+    while (nextFlushedRoot !== null && nextFlushedExpirationTime !== NoWork) {
+      performWorkOnRoot(nextFlushedRoot, nextFlushedExpirationTime, false);
+      findHighestPriorityRoot();
+    }
+  } else {
     recomputeCurrentRendererTime();
     currentSchedulerTime = currentRendererTime;
 
@@ -2263,7 +2293,6 @@ function performWork(minExpirationTime: ExpirationTime, isYieldy: boolean) {
     while (
       nextFlushedRoot !== null &&
       nextFlushedExpirationTime !== NoWork &&
-      minExpirationTime <= nextFlushedExpirationTime &&
       !(shouldYield() && currentRendererTime > nextFlushedExpirationTime)
     ) {
       performWorkOnRoot(
@@ -2275,25 +2304,48 @@ function performWork(minExpirationTime: ExpirationTime, isYieldy: boolean) {
       recomputeCurrentRendererTime();
       currentSchedulerTime = currentRendererTime;
     }
-  } else {
-    while (
-      nextFlushedRoot !== null &&
-      nextFlushedExpirationTime !== NoWork &&
-      minExpirationTime <= nextFlushedExpirationTime
-    ) {
-      performWorkOnRoot(nextFlushedRoot, nextFlushedExpirationTime, false);
-      findHighestPriorityRoot();
-    }
   }
 
   // We're done flushing work. Either we ran out of time in this callback,
   // or there's no more work left with sufficient priority.
 
   // If we're inside a callback, set this to false since we just completed it.
-  if (isYieldy) {
-    callbackExpirationTime = NoWork;
-    callbackID = null;
+  callbackExpirationTime = NoWork;
+  callbackID = null;
+
+  // If there's work left over, schedule a new callback.
+  if (nextFlushedExpirationTime !== NoWork) {
+    scheduleCallbackWithExpirationTime(
+      ((nextFlushedRoot: any): FiberRoot),
+      nextFlushedExpirationTime,
+    );
   }
+
+  // Clean-up.
+  finishRendering();
+}
+
+function performSyncWork() {
+  performWork(Sync);
+}
+
+function performWork(minExpirationTime: ExpirationTime) {
+  // Keep working on roots until there's no more work, or until there's a higher
+  // priority event.
+  findHighestPriorityRoot();
+
+  while (
+    nextFlushedRoot !== null &&
+    nextFlushedExpirationTime !== NoWork &&
+    minExpirationTime <= nextFlushedExpirationTime
+  ) {
+    performWorkOnRoot(nextFlushedRoot, nextFlushedExpirationTime, false);
+    findHighestPriorityRoot();
+  }
+
+  // We're done flushing work. Either we ran out of time in this callback,
+  // or there's no more work left with sufficient priority.
+
   // If there's work left over, schedule a new callback.
   if (nextFlushedExpirationTime !== NoWork) {
     scheduleCallbackWithExpirationTime(
@@ -2325,6 +2377,12 @@ function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
 function finishRendering() {
   nestedUpdateCount = 0;
   lastCommittedRootDuringThisBatch = null;
+
+  if (__DEV__) {
+    if (rootWithPendingPassiveEffects === null) {
+      nestedPassiveEffectCountDEV = 0;
+    }
+  }
 
   if (completedBatches !== null) {
     const batches = completedBatches;
@@ -2547,7 +2605,7 @@ function interactiveUpdates<A, B, C, R>(
     lowestPriorityPendingInteractiveExpirationTime !== NoWork
   ) {
     // Synchronously flush pending interactive updates.
-    performWork(lowestPriorityPendingInteractiveExpirationTime, false);
+    performWork(lowestPriorityPendingInteractiveExpirationTime);
     lowestPriorityPendingInteractiveExpirationTime = NoWork;
   }
   const previousIsBatchingInteractiveUpdates = isBatchingInteractiveUpdates;
@@ -2571,7 +2629,7 @@ function flushInteractiveUpdates() {
     lowestPriorityPendingInteractiveExpirationTime !== NoWork
   ) {
     // Synchronously flush pending interactive updates.
-    performWork(lowestPriorityPendingInteractiveExpirationTime, false);
+    performWork(lowestPriorityPendingInteractiveExpirationTime);
     lowestPriorityPendingInteractiveExpirationTime = NoWork;
   }
 }

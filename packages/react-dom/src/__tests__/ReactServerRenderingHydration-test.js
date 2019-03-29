@@ -391,9 +391,9 @@ describe('ReactDOMServerHydration', () => {
   it('should be able to render and hydrate Profiler components', () => {
     const callback = jest.fn();
     const markup = (
-      <React.unstable_Profiler id="profiler" onRender={callback}>
+      <React.Profiler id="profiler" onRender={callback}>
         <div>Hi</div>
-      </React.unstable_Profiler>
+      </React.Profiler>
     );
 
     const element = document.createElement('div');
