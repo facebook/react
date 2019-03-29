@@ -210,6 +210,7 @@ DOMEventResponderContext.prototype.isTargetOwned = function() {
 
 DOMEventResponderContext.prototype.requestOwnership = function() {
   // TODO
+  return true;
 };
 
 DOMEventResponderContext.prototype.releaseOwnership = function() {

@@ -17,13 +17,13 @@ const targetEventTypes = [
   'pointercancel',
   'contextmenu',
 ];
-const rootEventTypes = ['pointerup', 'scroll'];
+const rootEventTypes = [{name: 'pointerup', passive: false}, 'scroll'];
 
 // In the case we don't have PointerEvents (Safari), we listen to touch events
 // too
 if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
   targetEventTypes.push('touchstart', 'touchend', 'mousedown', 'touchcancel');
-  rootEventTypes.push('mouseup');
+  rootEventTypes.push({name: 'mouseup', passive: false});
 }
 
 type PressState = {
@@ -169,11 +169,11 @@ const PressResponder = {
         // Android can show previous of anchor tags that requires working
         // with click rather than touch events (and mouse down/up).
         if (!isAnchorTagElement(eventTarget)) {
-          keyPressEventListener = (e, key) => {
+          keyPressEventListener = e => {
             if (!e.isDefaultPrevented() && !e.nativeEvent.defaultPrevented) {
               e.preventDefault();
               state.defaultPrevented = true;
-              props.onPress(e, key);
+              props.onPress(e);
             }
           };
         }
@@ -279,8 +279,8 @@ const PressResponder = {
                 props.onPress &&
                 !(state.isLongPressed && props.longPressCancelsPress)
               ) {
-                const pressEventListener = (e, key) => {
-                  props.onPress(e, key);
+                const pressEventListener = e => {
+                  props.onPress(e);
                   if (e.nativeEvent.defaultPrevented) {
                     state.defaultPrevented = true;
                   }
