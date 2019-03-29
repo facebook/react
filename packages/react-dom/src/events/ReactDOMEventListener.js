@@ -143,7 +143,7 @@ function handleTopLevel(bookKeeping: BookKeepingInstance) {
         nativeEvent,
         eventTarget,
       );
-    } else if (enableEventAPI && targetInst !== null) {
+    } else if (enableEventAPI) {
       // Responder event system (experimental event API)
       runResponderEventsInBatch(
         topLevelType,
