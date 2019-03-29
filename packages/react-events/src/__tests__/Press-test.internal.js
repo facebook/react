@@ -94,21 +94,21 @@ describe('Press event responder', () => {
     expect(events).toEqual(['keydown', 'press 2']);
   });
 
-  it('should support onPressIn and onPressOut', () => {
+  it('should support onPressStart and onPressEnd', () => {
     let divRef = React.createRef();
     let events = [];
 
-    function handleOnPressIn() {
-      events.push('onPressIn');
+    function handleOnPressStart() {
+      events.push('onPressStart');
     }
 
-    function handleOnPressOut() {
-      events.push('onPressOut');
+    function handleOnPressEnd() {
+      events.push('onPressEnd');
     }
 
     function Component() {
       return (
-        <Press onPressIn={handleOnPressIn} onPressOut={handleOnPressOut}>
+        <Press onPressStart={handleOnPressStart} onPressEnd={handleOnPressEnd}>
           <div ref={divRef}>Press me!</div>
         </Press>
       );
@@ -124,6 +124,6 @@ describe('Press event responder', () => {
     pointerLeaveEvent.initEvent('pointerup', true, true);
     divRef.current.dispatchEvent(pointerLeaveEvent);
 
-    expect(events).toEqual(['onPressIn', 'onPressOut']);
+    expect(events).toEqual(['onPressStart', 'onPressEnd']);
   });
 });
