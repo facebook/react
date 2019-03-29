@@ -1434,72 +1434,74 @@ export function handleEventTouchHitTarget(
   internalInstanceHandle: Object,
   hostContext: HostContext,
 ): void {
-  // Validates that there is a single element
-  const node = getElementFromTouchHitTarget(internalInstanceHandle);
-  if (node !== null) {
-    let parentNamespace: string;
-    if (__DEV__) {
-      const hostContextDev = ((hostContext: any): HostContextDev);
-      parentNamespace = hostContextDev.namespace;
-      warning(
-        parentNamespace === HTML_NAMESPACE,
-        'An event touch hit target was used in an unsupported DOM namespace. ' +
-          'Ensure the touch hit target is used in a HTML namespace.',
-      );
-    } else {
-      parentNamespace = ((hostContext: any): HostContextProd);
-    }
-
-    const element = ((node: any): HTMLElement);
-    // We update the event target state node to be that of the element.
-    // We can then diff this entry to determine if we need to add the
-    // hit slop element, or change the dimensions of the hit slop.
-    const lastElement = internalInstanceHandle.stateNode;
-    const left = nextProps.left;
-    const right = nextProps.right;
-    const top = nextProps.top;
-    const bottom = nextProps.left;
-
-    if (lastElement !== element) {
-      if (
-        left === undefined &&
-        right === undefined &&
-        top === undefined &&
-        bottom === undefined
-      ) {
-        return;
+  if (enableEventAPI) {
+    // Validates that there is a single element
+    const node = getElementFromTouchHitTarget(internalInstanceHandle);
+    if (node !== null) {
+      let parentNamespace: string;
+      if (__DEV__) {
+        const hostContextDev = ((hostContext: any): HostContextDev);
+        parentNamespace = hostContextDev.namespace;
+        warning(
+          parentNamespace === HTML_NAMESPACE,
+          'An event touch hit target was used in an unsupported DOM namespace. ' +
+            'Ensure the touch hit target is used in a HTML namespace.',
+        );
+      } else {
+        parentNamespace = ((hostContext: any): HostContextProd);
       }
-      internalInstanceHandle.stateNode = element;
-      const hitSlopElement = createEventTargetHitSlop(
-        left,
-        right,
-        top,
-        bottom,
-        rootContainerInstance,
-        parentNamespace,
-      );
-      // We need to make the target relative so we can make the hit slop
-      // element inside it absolutely position around the target.
-      // TODO add a dev check for the computed style and warn if it isn't
-      // compatible.
-      element.style.position = 'relative';
-      element.appendChild(hitSlopElement);
-      precacheFiberNode(internalInstanceHandle, hitSlopElement);
-    } else {
-      // We appended the hit slop to the element, so it will always be the last child.
-      // TODO add a DEV validation warning to ensure this remains correct.
-      const hitSlopElement = element.lastChild;
 
-      // Diff and update the sides of the hit slop
-      if (lastProps !== nextProps) {
-        diffAndUpdateEventTargetHitSlop(
+      const element = ((node: any): HTMLElement);
+      // We update the event target state node to be that of the element.
+      // We can then diff this entry to determine if we need to add the
+      // hit slop element, or change the dimensions of the hit slop.
+      const lastElement = internalInstanceHandle.stateNode;
+      const left = nextProps.left;
+      const right = nextProps.right;
+      const top = nextProps.top;
+      const bottom = nextProps.left;
+
+      if (lastElement !== element) {
+        if (
+          left === undefined &&
+          right === undefined &&
+          top === undefined &&
+          bottom === undefined
+        ) {
+          return;
+        }
+        internalInstanceHandle.stateNode = element;
+        const hitSlopElement = createEventTargetHitSlop(
           left,
           right,
           top,
           bottom,
-          lastProps,
-          ((hitSlopElement: any): HTMLElement),
+          rootContainerInstance,
+          parentNamespace,
         );
+        // We need to make the target relative so we can make the hit slop
+        // element inside it absolutely position around the target.
+        // TODO add a dev check for the computed style and warn if it isn't
+        // compatible.
+        element.style.position = 'relative';
+        element.appendChild(hitSlopElement);
+        precacheFiberNode(internalInstanceHandle, hitSlopElement);
+      } else {
+        // We appended the hit slop to the element, so it will always be the last child.
+        // TODO add a DEV validation warning to ensure this remains correct.
+        const hitSlopElement = element.lastChild;
+
+        // Diff and update the sides of the hit slop
+        if (lastProps !== nextProps) {
+          diffAndUpdateEventTargetHitSlop(
+            left,
+            right,
+            top,
+            bottom,
+            lastProps,
+            ((hitSlopElement: any): HTMLElement),
+          );
+        }
       }
     }
   }

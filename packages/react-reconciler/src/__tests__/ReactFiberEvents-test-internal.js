@@ -536,7 +536,7 @@ describe('ReactFiberEvents', () => {
       );
     });
 
-    it.only('should render a simple event component with a single event target (hit slop)', () => {
+    it('should render a simple event component with a single event target (hit slop)', () => {
       const Test = () => (
         <EventComponent>
           <EventTarget left={10} bottom={10} right={10} top={10}>

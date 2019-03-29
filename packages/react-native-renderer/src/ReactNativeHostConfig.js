@@ -500,6 +500,7 @@ export function handleEventTarget(
   nextProps: Props,
   rootContainerInstance: Container,
   internalInstanceHandle: Object,
+  hostContext: HostContext,
 ) {
   // TODO: add handleEventTarget implementation
 }
