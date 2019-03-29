@@ -27,26 +27,6 @@ module.exports = ({types: t}) => {
         const isValidKey = t.isIdentifier(keyNode);
         if (!isValidKey) {
           return;
-          /*
-            Similar to Rollup.legacy behaviour.
-            Not all getters code usage can be transformed in meaningful way.
-            Simply return and don't throw error.
-
-            This code based contains getters which can't be transformed but is guarded by using a try catch block.
-
-            e.g. getters which has a side effect.
-
-            var passiveBrowserEventsSupported = false;
-            try {
-              var options = {
-                  get passive() {
-                    passiveBrowserEventsSupported = true;
-                  },
-              };
-            } catch(err) {
-              passiveBrowserEventsSupported = false;
-            }
-          */
         }
 
         const bodyNode = path.node.body;
@@ -55,11 +35,6 @@ module.exports = ({types: t}) => {
           t.isReturnStatement(bodyNode.body[0]) &&
           t.isIdentifier(bodyNode.body[0].argument);
         if (!isValidBody) {
-          /*
-            Similar to Rollup.legacy behaviour.
-            Not all getters code usage can be transformed in meaningful way.
-            Simply return and don't throw error.
-          */
           return;
         }
 
