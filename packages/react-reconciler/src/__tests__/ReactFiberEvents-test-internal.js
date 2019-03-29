@@ -536,10 +536,10 @@ describe('ReactFiberEvents', () => {
       );
     });
 
-    it('should render a simple event component with a single event target (hit slop)', () => {
+    it.only('should render a simple event component with a single event target (hit slop)', () => {
       const Test = () => (
         <EventComponent>
-          <EventTarget>
+          <EventTarget left={10} bottom={10} right={10} top={10}>
             <div>Hello world</div>
           </EventTarget>
         </EventComponent>
@@ -548,11 +548,15 @@ describe('ReactFiberEvents', () => {
       const container = document.createElement('div');
       ReactDOM.render(<Test />, container);
       expect(Scheduler).toFlushWithoutYielding();
-      expect(container.innerHTML).toBe('<div>Hello world</div>');
+      expect(container.innerHTML).toBe(
+        '<div style="position: relative;">' +
+          'Hello world<div style="position: absolute; display: block; ' +
+          'top: -10px; left: -10px; right: -10px; bottom: -10px;"></div></div>',
+      );
 
       const Test2 = () => (
         <EventComponent>
-          <EventTarget left={10} bottom={10} right={10} top={10}>
+          <EventTarget left={20} right={30}>
             <span>I am now a span</span>
           </EventTarget>
         </EventComponent>
@@ -562,8 +566,8 @@ describe('ReactFiberEvents', () => {
       expect(Scheduler).toFlushWithoutYielding();
       expect(container.innerHTML).toBe(
         '<span style="position: relative;">I am now a span' +
-          '<div style="position: absolute; display: block; top: -10px; ' +
-          'left: -10px; right: -10px; bottom: -10px;"></div></span>',
+          '<div style="position: absolute; display: block; ' +
+          'left: -20px; right: -30px; bottom: -20px;"></div></span>',
       );
     });
   });

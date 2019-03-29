@@ -60,8 +60,8 @@
       "filename": "react-dom.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-dom",
-      "size": 831448,
-      "gzip": 187801
+      "size": 826372,
+      "gzip": 186963
     },
     {
       "filename": "react-dom.production.min.js",
@@ -179,8 +179,8 @@
       "filename": "react-dom-server.browser.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-dom",
-      "size": 133968,
-      "gzip": 35384
+      "size": 132878,
+      "gzip": 35237
     },
     {
       "filename": "react-dom-server.browser.production.min.js",
@@ -207,8 +207,8 @@
       "filename": "react-dom-server.node.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-dom",
-      "size": 135957,
-      "gzip": 35941
+      "size": 134867,
+      "gzip": 35791
     },
     {
       "filename": "react-dom-server.node.production.min.js",
@@ -1054,8 +1054,8 @@
       "filename": "react-dom-unstable-fire.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-dom",
-      "size": 831801,
-      "gzip": 187971
+      "size": 826725,
+      "gzip": 187104
     },
     {
       "filename": "react-dom-unstable-fire.production.min.js",
@@ -1152,8 +1152,8 @@
       "filename": "react-events.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-events",
-      "size": 990,
-      "gzip": 545
+      "size": 1135,
+      "gzip": 623
     },
     {
       "filename": "react-events.production.min.js",
@@ -1175,41 +1175,6 @@
       "packageName": "react-events",
       "size": 643,
       "gzip": 377
-    },
-    {
-      "filename": "react-events-press.development.js",
-      "bundleType": "NODE_DEV",
-      "packageName": "react-events",
-      "size": 9678,
-      "gzip": 2405
-    },
-    {
-      "filename": "react-events-hover.development.js",
-      "bundleType": "NODE_DEV",
-      "packageName": "react-events",
-      "size": 4660,
-      "gzip": 1298
-    },
-    {
-      "filename": "react-events-focus.development.js",
-      "bundleType": "NODE_DEV",
-      "packageName": "react-events",
-      "size": 2844,
-      "gzip": 985
-    },
-    {
-      "filename": "react-events-swipe.development.js",
-      "bundleType": "NODE_DEV",
-      "packageName": "react-events",
-      "size": 5947,
-      "gzip": 1711
-    },
-    {
-      "filename": "react-events-drag.development.js",
-      "bundleType": "NODE_DEV",
-      "packageName": "react-events",
-      "size": 5216,
-      "gzip": 1551
     }
   ]
 }
