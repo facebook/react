@@ -168,7 +168,13 @@ DOMEventResponderContext.prototype.isTargetPositionWithinHitSlop = function(
   y: number,
 ): boolean {
   const target = this.eventTarget.ownerDocument.elementFromPoint(x, y);
+  if (target === null) {
+    return false;
+  }
   const childFiber = getClosestInstanceFromNode(target);
+  if (childFiber === null) {
+    return false;
+  }
   if (childFiber.tag === EventTargetWorkTag) {
     // TODO find another way to do this without using the
     // expensive getBoundingClientRect.
