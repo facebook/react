@@ -16,7 +16,6 @@ export const {
   debugRenderPhaseSideEffectsForStrictMode,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   warnAboutDeprecatedLifecycles,
-  disableJavaScriptURLs,
   disableYielding,
   disableInputAttributeSyncing,
   warnAboutShorthandPropertyCollision,
@@ -38,6 +37,8 @@ export const enableSchedulerDebugging = true;
 export const enableStableConcurrentModeAPIs = false;
 
 export const enableSuspenseServerRenderer = true;
+
+export const disableJavaScriptURLs = true;
 
 // I've chosen to make this a static flag instead of a dynamic flag controlled
 // by a GK so that it doesn't increase bundle size. It should still be easy

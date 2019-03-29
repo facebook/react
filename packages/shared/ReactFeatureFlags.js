@@ -23,7 +23,7 @@ export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 
 // Warn about deprecated, async-unsafe lifecycles; relates to RFC #6:
-export const warnAboutDeprecatedLifecycles = false;
+export const warnAboutDeprecatedLifecycles = true;
 
 // Gather advanced timing metrics for Profiler subtrees.
 export const enableProfilerTimer = __PROFILE__;

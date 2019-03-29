@@ -11,6 +11,7 @@
   "files": [
     "LICENSE",
     "README.md",
+    "press.js",
     "build-info.json",
     "cjs/",
     "umd/"

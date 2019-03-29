@@ -546,15 +546,24 @@ describe('create-react-class-integration', () => {
     });
 
     expect(() => {
-      ReactDOM.render(<Component />, document.createElement('div'));
-    }).toWarnDev(
-      'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
-        'Component uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
-        '  componentWillMount\n' +
-        '  componentWillReceiveProps\n' +
-        '  componentWillUpdate\n\n' +
-        'The above lifecycles should be removed. Learn more about this warning here:\n' +
-        'https://fb.me/react-async-component-lifecycle-hooks',
+      expect(() => {
+        ReactDOM.render(<Component />, document.createElement('div'));
+      }).toWarnDev(
+        'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
+          'Component uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
+          '  componentWillMount\n' +
+          '  componentWillReceiveProps\n' +
+          '  componentWillUpdate\n\n' +
+          'The above lifecycles should be removed. Learn more about this warning here:\n' +
+          'https://fb.me/react-async-component-lifecycle-hooks',
+        {withoutStack: true},
+      );
+    }).toLowPriorityWarnDev(
+      [
+        'componentWillMount is deprecated',
+        'componentWillReceiveProps is deprecated',
+        'componentWillUpdate is deprecated',
+      ],
       {withoutStack: true},
     );
     ReactDOM.render(<Component foo={1} />, document.createElement('div'));
@@ -581,15 +590,24 @@ describe('create-react-class-integration', () => {
     });
 
     expect(() => {
-      ReactDOM.render(<Component />, document.createElement('div'));
-    }).toWarnDev(
-      'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
-        'Component uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
-        '  componentWillMount\n' +
-        '  componentWillReceiveProps\n' +
-        '  componentWillUpdate\n\n' +
-        'The above lifecycles should be removed. Learn more about this warning here:\n' +
-        'https://fb.me/react-async-component-lifecycle-hooks',
+      expect(() => {
+        ReactDOM.render(<Component />, document.createElement('div'));
+      }).toWarnDev(
+        'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
+          'Component uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
+          '  componentWillMount\n' +
+          '  componentWillReceiveProps\n' +
+          '  componentWillUpdate\n\n' +
+          'The above lifecycles should be removed. Learn more about this warning here:\n' +
+          'https://fb.me/react-async-component-lifecycle-hooks',
+        {withoutStack: true},
+      );
+    }).toLowPriorityWarnDev(
+      [
+        'componentWillMount is deprecated',
+        'componentWillReceiveProps is deprecated',
+        'componentWillUpdate is deprecated',
+      ],
       {withoutStack: true},
     );
     ReactDOM.render(<Component foo={1} />, document.createElement('div'));
@@ -627,7 +645,16 @@ describe('create-react-class-integration', () => {
     });
 
     const div = document.createElement('div');
-    ReactDOM.render(<Component foo="bar" />, div);
+    expect(() =>
+      ReactDOM.render(<Component foo="bar" />, div),
+    ).toLowPriorityWarnDev(
+      [
+        'componentWillMount is deprecated',
+        'componentWillReceiveProps is deprecated',
+        'componentWillUpdate is deprecated',
+      ],
+      {withoutStack: true},
+    );
     expect(log).toEqual(['componentWillMount', 'UNSAFE_componentWillMount']);
 
     log.length = 0;
@@ -638,6 +665,91 @@ describe('create-react-class-integration', () => {
       'UNSAFE_componentWillReceiveProps',
       'componentWillUpdate',
       'UNSAFE_componentWillUpdate',
+    ]);
+  });
+
+  it('isMounted works', () => {
+    const ops = [];
+    let instance;
+    const Component = createReactClass({
+      displayName: 'MyComponent',
+      mixins: [
+        {
+          UNSAFE_componentWillMount() {
+            this.log('mixin.componentWillMount');
+          },
+          componentDidMount() {
+            this.log('mixin.componentDidMount');
+          },
+          UNSAFE_componentWillUpdate() {
+            this.log('mixin.componentWillUpdate');
+          },
+          componentDidUpdate() {
+            this.log('mixin.componentDidUpdate');
+          },
+          componentWillUnmount() {
+            this.log('mixin.componentWillUnmount');
+          },
+        },
+      ],
+      log(name) {
+        ops.push(`${name}: ${this.isMounted()}`);
+      },
+      getInitialState() {
+        this.log('getInitialState');
+        return {};
+      },
+      UNSAFE_componentWillMount() {
+        this.log('componentWillMount');
+      },
+      componentDidMount() {
+        this.log('componentDidMount');
+      },
+      UNSAFE_componentWillUpdate() {
+        this.log('componentWillUpdate');
+      },
+      componentDidUpdate() {
+        this.log('componentDidUpdate');
+      },
+      componentWillUnmount() {
+        this.log('componentWillUnmount');
+      },
+      render() {
+        instance = this;
+        this.log('render');
+        return <div />;
+      },
+    });
+
+    const container = document.createElement('div');
+
+    expect(() => ReactDOM.render(<Component />, container)).toWarnDev(
+      'Warning: MyComponent: isMounted is deprecated. Instead, make sure to ' +
+        'clean up subscriptions and pending requests in componentWillUnmount ' +
+        'to prevent memory leaks.',
+      {withoutStack: true},
+    );
+
+    // Dedupe
+    ReactDOM.render(<Component />, container);
+
+    ReactDOM.unmountComponentAtNode(container);
+    instance.log('after unmount');
+    expect(ops).toEqual([
+      'getInitialState: false',
+      'mixin.componentWillMount: false',
+      'componentWillMount: false',
+      'render: false',
+      'mixin.componentDidMount: true',
+      'componentDidMount: true',
+      'mixin.componentWillUpdate: true',
+      'componentWillUpdate: true',
+      'render: true',
+      'mixin.componentDidUpdate: true',
+      'componentDidUpdate: true',
+      'mixin.componentWillUnmount: true',
+      'componentWillUnmount: true',
+      'after unmount: false',
     ]);
   });
 });
