@@ -302,6 +302,61 @@ describe('ReactFabric', () => {
     });
   });
 
+  it('should support ref in ref.measureLayout', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    [View].forEach(Component => {
+      UIManager.measureLayout.mockReset();
+
+      let viewRef;
+      let otherRef;
+      ReactFabric.render(
+        <Component>
+          <Component
+            foo="bar"
+            ref={ref => {
+              viewRef = ref;
+            }}
+          />
+          <View
+            ref={ref => {
+              otherRef = ref;
+            }}
+          />
+        </Component>,
+        11,
+      );
+
+      expect(UIManager.measureLayout).not.toBeCalled();
+
+      const successCallback = jest.fn();
+      const failureCallback = jest.fn();
+      viewRef.measureLayout(otherRef, successCallback, failureCallback);
+
+      expect(UIManager.measureLayout).toHaveBeenCalledTimes(1);
+      expect(UIManager.measureLayout).toHaveBeenCalledWith(
+        expect.any(Number),
+        expect.any(Number),
+        expect.any(Function),
+        expect.any(Function),
+      );
+
+      const args = UIManager.measureLayout.mock.calls[0];
+      expect(args[0]).not.toEqual(args[1]);
+      expect(successCallback).not.toBeCalled();
+      expect(failureCallback).not.toBeCalled();
+      args[2]('fail');
+      expect(failureCallback).toBeCalledWith('fail');
+
+      expect(successCallback).not.toBeCalled();
+      args[3]('success');
+      expect(successCallback).toBeCalledWith('success');
+    });
+  });
+
   it('returns the correct instance and calls it in the callback', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},

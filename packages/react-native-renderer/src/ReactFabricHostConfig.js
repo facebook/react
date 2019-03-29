@@ -119,13 +119,36 @@ class ReactFabricHostComponent {
   }
 
   measureLayout(
-    relativeToNativeNode: number,
+    relativeToNativeNode: number | Object,
     onSuccess: MeasureLayoutOnSuccessCallback,
     onFail: () => void /* currently unused */,
   ) {
+    let relativeNode;
+
+    if (typeof relativeToNativeNode === 'number') {
+      // Already a node handle
+      relativeNode = relativeToNativeNode;
+    } else if (relativeToNativeNode._nativeTag) {
+      relativeNode = relativeToNativeNode._nativeTag;
+    } else if (
+      relativeToNativeNode.canonical &&
+      relativeToNativeNode.canonical._nativeTag
+    ) {
+      relativeNode = relativeToNativeNode.canonical._nativeTag;
+    }
+
+    if (relativeNode == null) {
+      warningWithoutStack(
+        false,
+        'Warning: ref.measureLayout must be called with a node handle or a ref to a native component.',
+      );
+
+      return;
+    }
+
     UIManager.measureLayout(
       this._nativeTag,
-      relativeToNativeNode,
+      relativeNode,
       mountSafeCallback_NOT_REALLY_SAFE(this, onFail),
       mountSafeCallback_NOT_REALLY_SAFE(this, onSuccess),
     );
