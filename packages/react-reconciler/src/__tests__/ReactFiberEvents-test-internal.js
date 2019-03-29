@@ -567,7 +567,7 @@ describe('ReactFiberEvents', () => {
       expect(container.innerHTML).toBe(
         '<span style="position: relative;">I am now a span' +
           '<div style="position: absolute; display: block; ' +
-          'left: -20px; right: -30px; bottom: -20px;"></div></span>',
+          'left: -20px; right: -30px;"></div></span>',
       );
     });
   });
