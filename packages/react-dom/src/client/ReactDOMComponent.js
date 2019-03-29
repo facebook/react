@@ -1356,12 +1356,10 @@ if (enableEventAPI) {
 const emptyObject = {};
 
 export function createEventTargetHitSlop(
-  {
-    bottom,
-    left,
-    right,
-    top,
-  }: {bottom?: number, left?: number, right?: number, top?: number},
+  left: number | void,
+  right: number | void,
+  top: number | void,
+  bottom: number | void,
   rootContainerInstance: Element | Document,
   parentNamespace: string,
 ): Element {
@@ -1388,6 +1386,45 @@ export function createEventTargetHitSlop(
     hitSlopElementStyle.bottom = `-${bottom}px`;
   }
   return hitSlopElement;
+}
+
+export function diffAndUpdateEventTargetHitSlop(
+  left: number | void,
+  right: number | void,
+  top: number | void,
+  bottom: number | void,
+  lastProps: Props,
+  hitSlopElement: HTMLElement,
+): void {
+  const hitSlopElementStyle = hitSlopElement.style;
+  if (lastProps.left !== left) {
+    if (left === undefined) {
+      hitSlopElementStyle.left = '';
+    } else {
+      hitSlopElementStyle.left = `-${left}px`;
+    }
+  }
+  if (lastProps.right !== right) {
+    if (right === undefined) {
+      hitSlopElementStyle.right = '';
+    } else {
+      hitSlopElementStyle.right = `-${right}px`;
+    }
+  }
+  if (lastProps.top !== top) {
+    if (top === undefined) {
+      hitSlopElementStyle.top = '';
+    } else {
+      hitSlopElementStyle.top = `-${top}px`;
+    }
+  }
+  if (lastProps.bottom !== bottom) {
+    if (bottom === undefined) {
+      hitSlopElementStyle.bottom = '';
+    } else {
+      hitSlopElementStyle.bottom = `-${bottom}px`;
+    }
+  }
 }
 
 export function handleEventTouchHitTarget(
@@ -1418,10 +1455,26 @@ export function handleEventTouchHitTarget(
     // We can then diff this entry to determine if we need to add the
     // hit slop element, or change the dimensions of the hit slop.
     const lastElement = internalInstanceHandle.stateNode;
+    const left = nextProps.left;
+    const right = nextProps.right;
+    const top = nextProps.top;
+    const bottom = nextProps.left;
+
     if (lastElement !== element) {
+      if (
+        left === undefined &&
+        right === undefined &&
+        top === undefined &&
+        bottom === undefined
+      ) {
+        return;
+      }
       internalInstanceHandle.stateNode = element;
       const hitSlopElement = createEventTargetHitSlop(
-        nextProps,
+        left,
+        right,
+        top,
+        bottom,
         rootContainerInstance,
         parentNamespace,
       );
@@ -1436,42 +1489,17 @@ export function handleEventTouchHitTarget(
       // We appended the hit slop to the element, so it will always be the last child.
       // TODO add a DEV validation warning to ensure this remains correct.
       const hitSlopElement = element.lastChild;
-      const hitSlopElementStyle = ((hitSlopElement: any): HTMLElement).style;
 
       // Diff and update the sides of the hit slop
       if (lastProps !== nextProps) {
-        const left = nextProps.left;
-        if (lastProps.left !== left) {
-          if (left === undefined) {
-            hitSlopElementStyle.left = '';
-          } else {
-            hitSlopElementStyle.left = `-${left}px`;
-          }
-        }
-        const right = nextProps.right;
-        if (lastProps.right !== right) {
-          if (right === undefined) {
-            hitSlopElementStyle.right = '';
-          } else {
-            hitSlopElementStyle.right = `-${right}px`;
-          }
-        }
-        const top = nextProps.top;
-        if (lastProps.top !== top) {
-          if (top === undefined) {
-            hitSlopElementStyle.top = '';
-          } else {
-            hitSlopElementStyle.top = `-${top}px`;
-          }
-        }
-        const bottom = nextProps.left;
-        if (lastProps.bottom !== bottom) {
-          if (bottom === undefined) {
-            hitSlopElementStyle.bottom = '';
-          } else {
-            hitSlopElementStyle.bottom = `-${bottom}px`;
-          }
-        }
+        diffAndUpdateEventTargetHitSlop(
+          left,
+          right,
+          top,
+          bottom,
+          lastProps,
+          ((hitSlopElement: any): HTMLElement),
+        );
       }
     }
   }
