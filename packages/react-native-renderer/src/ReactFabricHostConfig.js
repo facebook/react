@@ -16,17 +16,13 @@ import type {
 } from './ReactNativeTypes';
 import type {ReactEventResponder} from 'shared/ReactTypes';
 
-import {
-  mountSafeCallback_NOT_REALLY_SAFE,
-  warnForStyleProps,
-} from './NativeMethodsMixinUtils';
+import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';
 import {create, diff} from './ReactNativeAttributePayload';
 import {get as getViewConfigForType} from 'ReactNativeViewConfigRegistry';
 
 import deepFreezeAndThrowOnMutationInDev from 'deepFreezeAndThrowOnMutationInDev';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {warnAboutDeprecatedSetNativeProps} from 'shared/ReactFeatureFlags';
 
 import {dispatchEvent} from './ReactFabricEventEmitter';
 
@@ -136,31 +132,12 @@ class ReactFabricHostComponent {
   }
 
   setNativeProps(nativeProps: Object) {
-    if (__DEV__) {
-      if (warnAboutDeprecatedSetNativeProps) {
-        warningWithoutStack(
-          false,
-          'Warning: Calling ref.setNativeProps(nativeProps) ' +
-            'is deprecated and will be removed in a future release. ' +
-            'Use the setNativeProps export from the react-native package instead.' +
-            "\n\timport {setNativeProps} from 'react-native';\n\tsetNativeProps(ref, nativeProps);\n",
-        );
-      }
-      warnForStyleProps(nativeProps, this.viewConfig.validAttributes);
-    }
+    warningWithoutStack(
+      false,
+      'Warning: setNativeProps is not currently supported in Fabric',
+    );
 
-    const updatePayload = create(nativeProps, this.viewConfig.validAttributes);
-
-    // Avoid the overhead of bridge calls if there's no update.
-    // This is an expensive no-op for Android, and causes an unnecessary
-    // view invalidation for certain components (eg RCTTextInput) on iOS.
-    if (updatePayload != null) {
-      UIManager.updateView(
-        this._nativeTag,
-        this.viewConfig.uiViewClassName,
-        updatePayload,
-      );
-    }
+    return;
   }
 }
 
