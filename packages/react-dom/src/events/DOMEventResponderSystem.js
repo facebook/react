@@ -44,6 +44,7 @@ const targetEventTypeCached: Map<
   Array<ReactEventResponderEventType>,
   Set<DOMTopLevelEventType>,
 > = new Map();
+const targetOwnership: Map<EventTarget, Fiber> = new Map();
 
 type EventListener = (event: SyntheticEvent) => void;
 
@@ -204,16 +205,37 @@ DOMEventResponderContext.prototype.isPositionWithinTouchHitTarget = function() {
   // TODO
 };
 
-DOMEventResponderContext.prototype.isTargetOwned = function() {
-  // TODO
+DOMEventResponderContext.prototype.isTargetOwned = function(
+  targetElement: Element | Node,
+): boolean {
+  const targetDoc = targetElement.ownerDocument;
+  return targetOwnership.has(targetDoc);
 };
 
-DOMEventResponderContext.prototype.requestOwnership = function() {
-  // TODO
+DOMEventResponderContext.prototype.requestOwnership = function(
+  targetElement: Element | Node,
+): boolean {
+  const targetDoc = targetElement.ownerDocument;
+  if (targetOwnership.has(targetDoc)) {
+    return false;
+  }
+  targetOwnership.set(targetDoc, this._fiber);
+  return true;
 };
 
-DOMEventResponderContext.prototype.releaseOwnership = function() {
-  // TODO
+DOMEventResponderContext.prototype.releaseOwnership = function(
+  targetElement: Element | Node,
+): boolean {
+  const targetDoc = targetElement.ownerDocument;
+  if (!targetOwnership.has(targetDoc)) {
+    return false;
+  }
+  const owner = targetOwnership.get(targetDoc);
+  if (owner === this._fiber || owner === this._fiber.alternate) {
+    targetOwnership.delete(targetDoc);
+    return true;
+  }
+  return false;
 };
 
 function getTargetEventTypes(

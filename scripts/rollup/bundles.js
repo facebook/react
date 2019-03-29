@@ -507,6 +507,51 @@ const bundles = [
     global: 'ReactEventsHover',
     externals: [],
   },
+
+  {
+    bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+    ],
+    moduleType: NON_FIBER_RENDERER,
+    entry: 'react-events/focus',
+    global: 'ReactEventsFocus',
+    externals: [],
+  },
+
+  {
+    bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+    ],
+    moduleType: NON_FIBER_RENDERER,
+    entry: 'react-events/swipe',
+    global: 'ReactEventsSwipe',
+    externals: [],
+  },
+
+  {
+    bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+    ],
+    moduleType: NON_FIBER_RENDERER,
+    entry: 'react-events/drag',
+    global: 'ReactEventsDrag',
+    externals: [],
+  },
 ];
 
 // Based on deep-freeze by substack (public domain)

@@ -9,6 +9,7 @@
 
 import SyntheticEvent from 'events/SyntheticEvent';
 import type {AnyNativeEvent} from 'events/PluginModuleType';
+import type {ReactEventResponderEventType} from 'shared/ReactTypes';
 
 export type EventResponderContext = {
   event: AnyNativeEvent,
@@ -30,8 +31,12 @@ export type EventResponderContext = {
   isTargetOwned: EventTarget => boolean,
   isTargetWithinEventComponent: EventTarget => boolean,
   isPositionWithinTouchHitTarget: (x: number, y: number) => boolean,
-  addRootEventTypes: (rootEventTypes: Array<string>) => void,
-  removeRootEventTypes: (rootEventTypes: Array<string>) => void,
+  addRootEventTypes: (
+    rootEventTypes: Array<ReactEventResponderEventType>,
+  ) => void,
+  removeRootEventTypes: (
+    rootEventTypes: Array<ReactEventResponderEventType>,
+  ) => void,
   requestOwnership: (target: EventTarget | null) => boolean,
   releaseOwnership: (target: EventTarget | null) => boolean,
 };
