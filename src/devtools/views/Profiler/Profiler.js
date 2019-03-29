@@ -102,9 +102,12 @@ function NonSuspendingProfiler({
   );
 }
 
-// TODO (profiling) Real fallback UI
-function ProfilerFallback() {
-  return <div className={styles.Fallback}>Loading...</div>;
+function ContentFallback() {
+  return <div className={styles.ContentFallback}>Loading...</div>;
+}
+
+function SnapshotSelectorFallback() {
+  return <div className={styles.SnapshotSelectorFallback}>Loading...</div>;
 }
 
 // This view is rendered when there is profiler data (even though there may not be any for the currently selected root).
@@ -162,19 +165,20 @@ function SuspendingProfiler() {
           />
           <div className={styles.Spacer} />
           <ToggleCommitFilterModalButton />
-          <Suspense fallback={<ProfilerFallback />}>
+          <div className={styles.VRule} />
+          <Suspense fallback={<SnapshotSelectorFallback />}>
             <SnapshotSelector />
           </Suspense>
         </div>
         <div className={styles.Content}>
-          <Suspense fallback={<ProfilerFallback />}>{view}</Suspense>
+          <Suspense fallback={<ContentFallback />}>{view}</Suspense>
           {isFilterModalShowing && (
             <FilterModal dismissModal={dismissFilterModal} />
           )}
         </div>
       </div>
       <div className={styles.RightColumn}>
-        <Suspense fallback={<ProfilerFallback />}>{sidebar}</Suspense>
+        <Suspense fallback={<ContentFallback />}>{sidebar}</Suspense>
       </div>
     </div>
   );

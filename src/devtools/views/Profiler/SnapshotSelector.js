@@ -118,7 +118,6 @@ export default function SnapshotSelector(_: Props) {
 
   return (
     <Fragment>
-      <div className={styles.VRule} />
       <span className={styles.IndexLabel}>{label}</span>
       <Button
         className={styles.Button}
