@@ -319,6 +319,7 @@ export function handleEventTarget(
   nextProps: Props,
   rootContainerInstance: Container,
   internalInstanceHandle: Object,
+  hostContext: HostContext,
 ) {
   if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
     // Validates that there is a single element
