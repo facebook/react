@@ -535,6 +535,37 @@ describe('ReactFiberEvents', () => {
         'Warning: validateDOMNesting: React event targets must be direct children of event components.',
       );
     });
+
+    it('should render a simple event component with a single event target (hit slop)', () => {
+      const Test = () => (
+        <EventComponent>
+          <EventTarget>
+            <div>Hello world</div>
+          </EventTarget>
+        </EventComponent>
+      );
+
+      const container = document.createElement('div');
+      ReactDOM.render(<Test />, container);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(container.innerHTML).toBe('<div>Hello world</div>');
+
+      const Test2 = () => (
+        <EventComponent>
+          <EventTarget left={10} bottom={10} right={10} top={10}>
+            <span>I am now a span</span>
+          </EventTarget>
+        </EventComponent>
+      );
+
+      ReactDOM.render(<Test2 />, container);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(container.innerHTML).toBe(
+        '<span style="position: relative;">I am now a span' +
+          '<div style="position: absolute; display: block; top: -10px; ' +
+          'left: -10px; right: -10px; bottom: -10px;"></div></span>',
+      );
+    });
   });
 
   describe('ReactDOMServer', () => {
