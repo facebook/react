@@ -22,6 +22,8 @@ import {
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_LAZY_TYPE,
+  REACT_EVENT_COMPONENT_TYPE,
+  REACT_EVENT_TARGET_TYPE,
 } from 'shared/ReactSymbols';
 import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
 
@@ -87,7 +89,12 @@ function getComponentName(type: mixed): string | null {
         if (resolvedThenable) {
           return getComponentName(resolvedThenable);
         }
+        break;
       }
+      case REACT_EVENT_COMPONENT_TYPE:
+        return type.displayName;
+      case REACT_EVENT_TARGET_TYPE:
+        return type.displayName;
     }
   }
   return null;
