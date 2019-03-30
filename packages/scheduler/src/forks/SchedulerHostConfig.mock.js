@@ -3,32 +3,27 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @flow
  */
 
-let currentTime: number = 0;
-let scheduledCallback: (boolean => void) | null = null;
-let scheduledCallbackExpiration: number = -1;
-let yieldedValues: Array<mixed> | null = null;
-let expectedNumberOfYields: number = -1;
-let didStop: boolean = false;
-let isFlushing: boolean = false;
+let currentTime = 0;
+let scheduledCallback = null;
+let scheduledCallbackExpiration = -1;
+let yieldedValues = null;
+let expectedNumberOfYields = -1;
+let didStop = false;
+let isFlushing = false;
 
-export function requestHostCallback(
-  callback: boolean => void,
-  expiration: number,
-) {
+export function requestHostCallback(callback, expiration) {
   scheduledCallback = callback;
   scheduledCallbackExpiration = expiration;
 }
 
-export function cancelHostCallback(): void {
+export function cancelHostCallback() {
   scheduledCallback = null;
   scheduledCallbackExpiration = -1;
 }
 
-export function shouldYieldToHost(): boolean {
+export function shouldYieldToHost() {
   if (
     (expectedNumberOfYields !== -1 &&
       yieldedValues !== null &&
@@ -43,7 +38,7 @@ export function shouldYieldToHost(): boolean {
   return false;
 }
 
-export function getCurrentTime(): number {
+export function getCurrentTime() {
   return currentTime;
 }
 
@@ -61,7 +56,7 @@ export function reset() {
 }
 
 // Should only be used via an assertion helper that inspects the yielded values.
-export function unstable_flushNumberOfYields(count: number): void {
+export function unstable_flushNumberOfYields(count) {
   if (isFlushing) {
     throw new Error('Already flushing work.');
   }
@@ -99,7 +94,7 @@ export function unstable_flushExpired() {
   }
 }
 
-export function unstable_flushWithoutYielding(): void {
+export function unstable_flushWithoutYielding() {
   if (isFlushing) {
     throw new Error('Already flushing work.');
   }
@@ -120,7 +115,7 @@ export function unstable_flushWithoutYielding(): void {
   }
 }
 
-export function unstable_clearYields(): Array<mixed> {
+export function unstable_clearYields() {
   if (yieldedValues === null) {
     return [];
   }
@@ -129,7 +124,7 @@ export function unstable_clearYields(): Array<mixed> {
   return values;
 }
 
-export function flushAll(): void {
+export function flushAll() {
   if (yieldedValues !== null) {
     throw new Error(
       'Log is not empty. Assert on the log of yielded values before ' +
@@ -146,7 +141,7 @@ export function flushAll(): void {
   }
 }
 
-export function yieldValue(value: mixed): void {
+export function yieldValue(value) {
   if (yieldedValues === null) {
     yieldedValues = [value];
   } else {
@@ -154,7 +149,7 @@ export function yieldValue(value: mixed): void {
   }
 }
 
-export function advanceTime(ms: number) {
+export function advanceTime(ms) {
   currentTime += ms;
   // If the host callback timed out, flush the expired work.
   if (

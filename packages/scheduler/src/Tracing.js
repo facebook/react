@@ -4,71 +4,24 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @flow
  */
 
 import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
 
-export type Interaction = {|
-  __count: number,
-  id: number,
-  name: string,
-  timestamp: number,
-|};
-
-export type Subscriber = {
-  // A new interaction has been created via the trace() method.
-  onInteractionTraced: (interaction: Interaction) => void,
-
-  // All scheduled async work for an interaction has finished.
-  onInteractionScheduledWorkCompleted: (interaction: Interaction) => void,
-
-  // New async work has been scheduled for a set of interactions.
-  // When this work is later run, onWorkStarted/onWorkStopped will be called.
-  // A batch of async/yieldy work may be scheduled multiple times before completing.
-  // In that case, onWorkScheduled may be called more than once before onWorkStopped.
-  // Work is scheduled by a "thread" which is identified by a unique ID.
-  onWorkScheduled: (interactions: Set<Interaction>, threadID: number) => void,
-
-  // A batch of scheduled work has been canceled.
-  // Work is done by a "thread" which is identified by a unique ID.
-  onWorkCanceled: (interactions: Set<Interaction>, threadID: number) => void,
-
-  // A batch of work has started for a set of interactions.
-  // When this work is complete, onWorkStopped will be called.
-  // Work is not always completed synchronously; yielding may occur in between.
-  // A batch of async/yieldy work may also be re-started before completing.
-  // In that case, onWorkStarted may be called more than once before onWorkStopped.
-  // Work is done by a "thread" which is identified by a unique ID.
-  onWorkStarted: (interactions: Set<Interaction>, threadID: number) => void,
-
-  // A batch of work has completed for a set of interactions.
-  // Work is done by a "thread" which is identified by a unique ID.
-  onWorkStopped: (interactions: Set<Interaction>, threadID: number) => void,
-};
-
-export type InteractionsRef = {
-  current: Set<Interaction>,
-};
-
-export type SubscriberRef = {
-  current: Subscriber | null,
-};
-
 const DEFAULT_THREAD_ID = 0;
 
 // Counters used to generate unique IDs.
-let interactionIDCounter: number = 0;
-let threadIDCounter: number = 0;
+let interactionIDCounter = 0;
+let threadIDCounter = 0;
 
 // Set of currently traced interactions.
 // Interactions "stack"–
 // Meaning that newly traced interactions are appended to the previously active set.
 // When an interaction goes out of scope, the previous set (if any) is restored.
-let interactionsRef: InteractionsRef = (null: any);
+let interactionsRef = null;
 
 // Listener(s) to notify when interactions begin and end.
-let subscriberRef: SubscriberRef = (null: any);
+let subscriberRef = null;
 
 if (enableSchedulerTracing) {
   interactionsRef = {
@@ -80,8 +33,7 @@ if (enableSchedulerTracing) {
 }
 
 export {interactionsRef as __interactionsRef, subscriberRef as __subscriberRef};
-
-export function unstable_clear(callback: Function): any {
+export function unstable_clear(callback) {
   if (!enableSchedulerTracing) {
     return callback();
   }
@@ -95,30 +47,27 @@ export function unstable_clear(callback: Function): any {
     interactionsRef.current = prevInteractions;
   }
 }
-
-export function unstable_getCurrent(): Set<Interaction> | null {
+export function unstable_getCurrent() {
   if (!enableSchedulerTracing) {
     return null;
   } else {
     return interactionsRef.current;
   }
 }
-
-export function unstable_getThreadID(): number {
+export function unstable_getThreadID() {
   return ++threadIDCounter;
 }
-
 export function unstable_trace(
-  name: string,
-  timestamp: number,
-  callback: Function,
-  threadID: number = DEFAULT_THREAD_ID,
-): any {
+  name,
+  timestamp,
+  callback,
+  threadID = DEFAULT_THREAD_ID,
+) {
   if (!enableSchedulerTracing) {
     return callback();
   }
 
-  const interaction: Interaction = {
+  const interaction = {
     __count: 1,
     id: interactionIDCounter++,
     name,
@@ -172,10 +121,7 @@ export function unstable_trace(
   return returnValue;
 }
 
-export function unstable_wrap(
-  callback: Function,
-  threadID: number = DEFAULT_THREAD_ID,
-): Function {
+export function unstable_wrap(callback, threadID = DEFAULT_THREAD_ID) {
   if (!enableSchedulerTracing) {
     return callback;
   }

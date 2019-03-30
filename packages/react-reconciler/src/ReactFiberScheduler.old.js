@@ -10,7 +10,7 @@
 import type {Fiber} from './ReactFiber';
 import type {Batch, FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {Interaction} from 'scheduler/src/Tracing';
+import type {Interaction} from 'scheduler/tracing';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.
