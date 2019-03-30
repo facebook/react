@@ -9,7 +9,11 @@
 module.exports = [
   {
     shortName: 'dom',
-    entryPoints: ['react-dom', 'react-dom/unstable-fizz.node'],
+    entryPoints: [
+      'react-dom',
+      'react-dom/unstable-fizz.node',
+      'react-dom/unstable-new-scheduler',
+    ],
     isFlowTyped: true,
     isFizzSupported: true,
   },
