@@ -8,12 +8,14 @@ import {
 } from './CommitFilterModalContext';
 import { ProfilerContext } from './ProfilerContext';
 import TabBar from '../TabBar';
+import ClearProfilingDataButton from './ClearProfilingDataButton';
 import CommitFlamegraph from './CommitFlamegraph';
 import CommitRanked from './CommitRanked';
 import FilterModal from './FilterModal';
 import Interactions from './Interactions';
 import RecordToggle from './RecordToggle';
 import ReloadAndProfileButton from './ReloadAndProfileButton';
+import SaveProfilingDataButton from './SaveProfilingDataButton';
 import SnapshotSelector from './SnapshotSelector';
 import SidebarCommitInfo from './SidebarCommitInfo';
 import SidebarInteractions from './SidebarInteractions';
@@ -86,6 +88,8 @@ function NonSuspendingProfiler({
         <div className={styles.Toolbar}>
           <RecordToggle disabled={!supportsProfiling} />
           <ReloadAndProfileButton />
+          <ClearProfilingDataButton />
+          <SaveProfilingDataButton />
           <div className={styles.VRule} />
           <TabBar
             currentTab={null}
@@ -155,6 +159,8 @@ function SuspendingProfiler() {
         <div className={styles.Toolbar}>
           <RecordToggle />
           <ReloadAndProfileButton />
+          <ClearProfilingDataButton />
+          <SaveProfilingDataButton />
           <div className={styles.VRule} />
           <TabBar
             currentTab={selectedTabID}

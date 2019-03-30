@@ -5,9 +5,11 @@ import styles from './ButtonIcon.css';
 
 export type IconType =
   | 'back'
+  | 'cancel'
   | 'close'
   | 'copy'
   | 'down'
+  | 'download'
   | 'filter'
   | 'more'
   | 'next'
@@ -30,6 +32,9 @@ export default function ButtonIcon({ type }: Props) {
     case 'back':
       pathData = PATH_BACK;
       break;
+    case 'cancel':
+      pathData = PATH_CANCEL;
+      break;
     case 'close':
       pathData = PATH_CLOSE;
       break;
@@ -38,6 +43,9 @@ export default function ButtonIcon({ type }: Props) {
       break;
     case 'down':
       pathData = PATH_DOWN;
+      break;
+    case 'download':
+      pathData = PATH_DOWNLOAD;
       break;
     case 'filter':
       pathData = PATH_FILTER;
@@ -97,6 +105,11 @@ const PATH_BACK = `
   10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z
 `;
 
+const PATH_CANCEL = `
+  M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.69L5.69
+  16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.69L18.31 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z
+`;
+
 const PATH_CLOSE =
   'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z';
 
@@ -106,6 +119,11 @@ const PATH_COPY = `
 `;
 
 const PATH_DOWN = 'M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z';
+
+const PATH_DOWNLOAD = `
+  M 21.855469 8.460938 L 16.214844 8.460938 L 16.214844 0 L 7.753906 0 L 7.753906 8.460938 L 2.113281 8.460938 L 11.984375
+  18.332031 Z M 2.113281 21.152344 L 2.113281 23.972656 L 21.855469 23.972656 L 21.855469 21.152344 Z M 2.113281 21.152344
+`;
 
 const PATH_FILTER = 'M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z';
 

@@ -38,8 +38,8 @@
   --light-color-jsx-arrow-brackets-inverted: rgba(255, 255, 255, 0.7);
   --light-color-modal-background: rgba(255, 255, 255, 0.25);
   --light-color-record-active: #fc3a4b;
-  --light-color-record-hover: #000000;
-  --light-color-record-inactive: #cfd1d5;
+  --light-color-record-hover: #3578e5;
+  --light-color-record-inactive: #0088fa;
   --light-color-search-match: yellow;
   --light-color-search-match-current: #f7923b;
   --light-color-selected-background: #0088fa;
@@ -82,8 +82,8 @@
   --dark-color-jsx-arrow-brackets-inverted: rgba(255, 255, 255, 0.7);
   --dark-color-modal-background: rgba(0, 0, 0, 0.25);
   --dark-color-record-active: #fc3a4b;
-  --dark-color-record-hover: #ffffff;
-  --dark-color-record-inactive: #777d88;
+  --dark-color-record-hover: #a2e9fc;
+  --dark-color-record-inactive: #61dafb;
   --dark-color-search-match: yellow;
   --dark-color-search-match-current: #f7923b;
   --dark-color-selected-background: #178fb9;

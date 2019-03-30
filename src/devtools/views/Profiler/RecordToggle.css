@@ -1,7 +1,9 @@
 .ActiveRecordToggle {
   color: var(--color-record-active);
 }
-.ActiveRecordToggle:hover,
+.ActiveRecordToggle:hover {
+  color: var(--color-record-active);
+}
 .ActiveRecordToggle:focus {
   color: var(--color-record-active);
 }
@@ -12,7 +14,9 @@
 .InactiveRecordToggle {
   color: var(--color-record-inactive);
 }
-.InactiveRecordToggle:hover,
+.InactiveRecordToggle:hover {
+  color: var(--color-record-hover);
+}
 .InactiveRecordToggle:focus {
   color: var(--color-record-inactive);
 }
