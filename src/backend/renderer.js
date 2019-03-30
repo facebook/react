@@ -5,6 +5,8 @@ import {
   ElementTypeClass,
   ElementTypeFunction,
   ElementTypeContext,
+  ElementTypeEventComponent,
+  ElementTypeEventTarget,
   ElementTypeForwardRef,
   ElementTypeMemo,
   ElementTypeOtherOrUnknown,
@@ -47,6 +49,12 @@ function getInternalReactConstants(version) {
     CONTEXT_CONSUMER_SYMBOL_STRING: 'Symbol(react.context)',
     CONTEXT_PROVIDER_NUMBER: 0xeacd,
     CONTEXT_PROVIDER_SYMBOL_STRING: 'Symbol(react.provider)',
+    EVENT_COMPONENT_NUMBER: 0xead5,
+    EVENT_COMPONENT_STRING: 'Symbol(react.event_component)',
+    EVENT_TARGET_NUMBER: 0xead6,
+    EVENT_TARGET_STRING: 'Symbol(react.event_target)',
+    EVENT_TARGET_TOUCH_HIT_NUMBER: 0xead7,
+    EVENT_TARGET_TOUCH_HIT_STRING: 'Symbol(react.event_target.touch_hit)',
     FORWARD_REF_NUMBER: 0xead0,
     FORWARD_REF_SYMBOL_STRING: 'Symbol(react.forward_ref)',
     MEMO_NUMBER: 0xead3,
@@ -79,6 +87,8 @@ function getInternalReactConstants(version) {
       ContextProvider: 10,
       CoroutineComponent: -1, // Removed
       CoroutineHandlerPhase: -1, // Removed
+      EventComponent: 19, // Added in 16.9
+      EventTarget: 20, // Added in 16.9
       ForwardRef: 11,
       Fragment: 7,
       FunctionComponent: 0,
@@ -103,6 +113,8 @@ function getInternalReactConstants(version) {
       ContextProvider: 12,
       CoroutineComponent: -1, // Removed
       CoroutineHandlerPhase: -1, // Removed
+      EventComponent: -1, // Doesn't exist yet
+      EventTarget: -1, // Doesn't exist yet
       ForwardRef: 13,
       Fragment: 9,
       FunctionComponent: 0,
@@ -127,6 +139,8 @@ function getInternalReactConstants(version) {
       ContextProvider: 13,
       CoroutineComponent: 7,
       CoroutineHandlerPhase: 8,
+      EventComponent: -1, // Doesn't exist yet
+      EventTarget: -1, // Doesn't exist yet
       ForwardRef: 14,
       Fragment: 10,
       FunctionComponent: 1,
@@ -172,6 +186,8 @@ export function attach(
     FunctionComponent,
     ClassComponent,
     ContextConsumer,
+    EventComponent,
+    EventTarget,
     Fragment,
     ForwardRef,
     HostRoot,
@@ -191,6 +207,8 @@ export function attach(
     CONTEXT_CONSUMER_SYMBOL_STRING,
     CONTEXT_PROVIDER_NUMBER,
     CONTEXT_PROVIDER_SYMBOL_STRING,
+    EVENT_TARGET_TOUCH_HIT_NUMBER,
+    EVENT_TARGET_TOUCH_HIT_STRING,
     PROFILER_NUMBER,
     PROFILER_SYMBOL_STRING,
     STRICT_MODE_NUMBER,
@@ -241,13 +259,14 @@ export function attach(
       case MemoComponent:
       case SimpleMemoComponent:
         return false;
+      case EventComponent:
       case HostPortal:
       case HostComponent:
       case HostText:
       case Fragment:
         return true;
       default:
-        const typeSymbol = getTypeSymbol(fiber);
+        const typeSymbol = getTypeSymbol(fiber.type);
 
         switch (typeSymbol) {
           case CONCURRENT_MODE_NUMBER:
@@ -272,9 +291,7 @@ export function attach(
     }
   }
 
-  function getTypeSymbol(fiber: Fiber): Symbol | number {
-    const { type } = fiber;
-
+  function getTypeSymbol(type: any): Symbol | number {
     const symbolOrNumber =
       typeof type === 'object' && type !== null ? type.$$typeof : type;
 
@@ -318,6 +335,29 @@ export function attach(
           type: ElementTypeFunction,
         };
         break;
+      case EventComponent:
+        fiberData = {
+          displayName: null,
+          key,
+          type: ElementTypeEventComponent,
+        };
+        break;
+      case EventTarget:
+        switch (getTypeSymbol(elementType.type)) {
+          case EVENT_TARGET_TOUCH_HIT_NUMBER:
+          case EVENT_TARGET_TOUCH_HIT_STRING:
+            displayName = 'TouchHitTarget';
+            break;
+          default:
+            displayName = 'EventTarget';
+            break;
+        }
+        fiberData = {
+          displayName,
+          key,
+          type: ElementTypeEventTarget,
+        };
+        break;
       case ForwardRef:
         const functionName = getDisplayName(resolvedType.render, '');
         displayName =
@@ -342,7 +382,7 @@ export function attach(
       case Fragment:
         return {
           displayName: null,
-          key: null,
+          key,
           type: ElementTypeOtherOrUnknown,
         };
       case MemoComponent:
@@ -360,7 +400,7 @@ export function attach(
         };
         break;
       default:
-        const typeSymbol = getTypeSymbol(fiber);
+        const typeSymbol = getTypeSymbol(type);
 
         switch (typeSymbol) {
           case CONCURRENT_MODE_NUMBER:
@@ -1254,7 +1294,7 @@ export function attach(
         tag === ForwardRef) &&
       !!memoizedState;
 
-    const typeSymbol = getTypeSymbol(fiber);
+    const typeSymbol = getTypeSymbol(type);
 
     let canViewSource = false;
     let context = null;
@@ -1284,13 +1324,12 @@ export function attach(
       // Look for overridden value.
       let current = ((fiber: any): Fiber).return;
       while (current !== null) {
-        const currentTypeSymbol = getTypeSymbol(current);
+        const currentType = current.type;
+        const currentTypeSymbol = getTypeSymbol(currentType);
         if (
           currentTypeSymbol === CONTEXT_PROVIDER_NUMBER ||
           currentTypeSymbol === CONTEXT_PROVIDER_SYMBOL_STRING
         ) {
-          const currentType = current.type;
-
           // 16.3.0 exposed the context object as "context"
           // PR #12501 changed it to "_context" for 16.3.1+
           // NOTE Keep in sync with getDataForFiber()

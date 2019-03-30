@@ -160,6 +160,17 @@ export default class Store extends EventEmitter {
     return this._supportsReloadAndProfile;
   }
 
+  clearProfilingData(): void {
+    this._profilingOperations = new Map();
+    this._profilingSnapshot = new Map();
+
+    // Invalidate suspense cache if profiling data is being (re-)recorded.
+    // Note that we clear now because any existing data is "stale".
+    this._profilingCache.invalidate();
+
+    this.emit('isProfiling');
+  }
+
   getElementAtIndex(index: number): Element | null {
     if (index < 0 || index >= this.numElements) {
       console.warn(
