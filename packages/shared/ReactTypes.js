@@ -100,6 +100,6 @@ export type ReactEventComponent = {|
 
 export type ReactEventTarget = {|
   $$typeof: Symbol | number,
-  displayName: string,
+  displayName?: string,
   type: Symbol | number,
 |};
