@@ -15,5 +15,6 @@ import type {ReactEventTarget} from 'shared/ReactTypes';
 
 export const TouchHitTarget: ReactEventTarget = {
   $$typeof: REACT_EVENT_TARGET_TYPE,
+  displayName: 'TouchHitTarget',
   type: REACT_EVENT_TARGET_TOUCH_HIT,
 };

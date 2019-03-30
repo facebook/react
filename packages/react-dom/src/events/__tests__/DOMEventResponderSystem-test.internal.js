@@ -21,6 +21,7 @@ function createReactEventComponent(targetEventTypes, handleEvent) {
 
   return {
     $$typeof: Symbol.for('react.event_component'),
+    displayName: 'TestEventComponent',
     props: null,
     responder: testEventResponder,
   };

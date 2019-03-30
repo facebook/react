@@ -126,4 +126,8 @@ describe('Press event responder', () => {
 
     expect(events).toEqual(['onPressIn', 'onPressOut']);
   });
+
+  it('expect displayName to show up for event component', () => {
+    expect(Press.displayName).toBe('Press');
+  });
 });

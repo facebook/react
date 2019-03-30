@@ -96,6 +96,7 @@ const FocusResponder = {
 
 export default {
   $$typeof: REACT_EVENT_COMPONENT_TYPE,
+  displayName: 'Focus',
   props: null,
   responder: FocusResponder,
 };

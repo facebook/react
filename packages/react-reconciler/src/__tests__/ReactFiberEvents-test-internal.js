@@ -28,6 +28,7 @@ const noOpResponder = {
 function createReactEventComponent() {
   return {
     $$typeof: Symbol.for('react.event_component'),
+    displayName: 'TestEventComponent',
     props: null,
     responder: noOpResponder,
   };
