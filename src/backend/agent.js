@@ -58,6 +58,10 @@ export default class Agent extends EventEmitter {
   addBridge(bridge: Bridge) {
     this._bridge = bridge;
 
+    bridge.addListener(
+      'downloadProfilingSummary',
+      this.downloadProfilingSummary
+    );
     bridge.addListener('getCommitDetails', this.getCommitDetails);
     bridge.addListener('getInteractions', this.getInteractions);
     bridge.addListener('getProfilingStatus', this.getProfilingStatus);
@@ -94,6 +98,24 @@ export default class Agent extends EventEmitter {
     }
     return null;
   }
+
+  downloadProfilingSummary = ({
+    rendererID,
+    rootID,
+  }: {
+    rendererID: number,
+    rootID: number,
+  }) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}"`);
+    } else {
+      this._bridge.send('downloadFile', {
+        contents: renderer.getProfilingSummaryForDownload(rootID),
+        filename: 'profile-data.json',
+      });
+    }
+  };
 
   getCommitDetails = ({
     commitIndex,

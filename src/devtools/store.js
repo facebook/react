@@ -28,6 +28,7 @@ const debug = (methodName, ...args) => {
 };
 
 type Config = {|
+  supportsDownloads?: boolean,
   supportsReloadAndProfile?: boolean,
   supportsProfiling?: boolean,
 |};
@@ -89,8 +90,10 @@ export default class Store extends EventEmitter {
   // Renderer ID is needed to support inspection fiber props, state, and hooks.
   _rootIDToRendererID: Map<number, number> = new Map();
 
+  // These options may be initially set by a confiugraiton option when constructing the Store.
+  // In the case of "supportsProfiling", the option may be updated based on the injected renderers.
+  _supportsDownloads: boolean = false;
   _supportsProfiling: boolean = false;
-
   _supportsReloadAndProfile: boolean = false;
 
   constructor(bridge: Bridge, config?: Config) {
@@ -99,10 +102,18 @@ export default class Store extends EventEmitter {
     debug('constructor', 'subscribing to Bridge');
 
     if (config != null) {
-      if (config.supportsProfiling) {
+      const {
+        supportsDownloads,
+        supportsProfiling,
+        supportsReloadAndProfile,
+      } = config;
+      if (supportsDownloads) {
+        this._supportsDownloads = true;
+      }
+      if (supportsProfiling) {
         this._supportsProfiling = true;
       }
-      if (config.supportsReloadAndProfile) {
+      if (supportsReloadAndProfile) {
         this._supportsReloadAndProfile = true;
       }
     }
@@ -150,6 +161,10 @@ export default class Store extends EventEmitter {
 
   get roots(): $ReadOnlyArray<number> {
     return this._roots;
+  }
+
+  get supportsDownloads(): boolean {
+    return this._supportsDownloads;
   }
 
   get supportsProfiling(): boolean {

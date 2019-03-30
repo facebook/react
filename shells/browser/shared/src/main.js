@@ -67,6 +67,13 @@ function createPanelIfReactLoaded() {
           localStorage.setItem(SUPPORTS_PROFILING_KEY, 'true');
           chrome.devtools.inspectedWindow.eval('window.location.reload();');
         });
+        bridge.addListener('downloadFile', ({ contents, filename }) => {
+          chrome.runtime.sendMessage({
+            downloadFile: true,
+            contents,
+            filename,
+          });
+        });
 
         // This flag lets us tip the Store off early that we expect to be profiling.
         // This avoids flashing a temporary "Profiling not supported" message in the Profiler tab,
@@ -78,6 +85,7 @@ function createPanelIfReactLoaded() {
         }
 
         store = new Store(bridge, {
+          supportsDownloads: true,
           supportsReloadAndProfile: true,
           supportsProfiling,
         });

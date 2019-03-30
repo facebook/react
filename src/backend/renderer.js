@@ -1536,6 +1536,27 @@ export function attach(
     };
   }
 
+  function getProfilingSummaryForDownload(rootID: number): string {
+    const commitDetails = [];
+    const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
+      rootID
+    );
+    if (commitProfilingMetadata != null) {
+      for (let index = 0; index < commitProfilingMetadata.length; index++) {
+        commitDetails.push(getCommitDetails(rootID, index));
+      }
+    }
+    return JSON.stringify(
+      {
+        summary: getProfilingSummary(rootID),
+        interactions: getInteractions(rootID),
+        commitDetails,
+      },
+      null,
+      2
+    );
+  }
+
   function getProfilingSummary(rootID: number): ProfilingSummary {
     const interactions = new Set();
     const commitDurations = [];
@@ -1599,6 +1620,7 @@ export function attach(
     getFiberIDFromNative,
     getInteractions,
     getNativeFromReactElement,
+    getProfilingSummaryForDownload,
     getProfilingSummary,
     handleCommitFiberRoot,
     handleCommitFiberUnmount,

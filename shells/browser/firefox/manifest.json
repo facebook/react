@@ -40,7 +40,14 @@
     "persistent": false
   },
 
-  "permissions": ["file:///*", "http://*/*", "https://*/*"],
+  "permissions": [
+    "background",
+    "downloads",
+    "tabs",
+    "file:///*",
+    "http://*/*",
+    "https://*/*"
+  ],
 
   "content_scripts": [
     {
