@@ -254,7 +254,7 @@ export function dispatchEvent(
   const nativeEventTarget = getEventTarget(nativeEvent);
   let targetInst = getClosestInstanceFromNode(nativeEventTarget);
   if (
-    targetInst !== null &&
+    targetInst &&
     typeof targetInst.tag === 'number' &&
     !isFiberMounted(targetInst)
   ) {
