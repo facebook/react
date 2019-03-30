@@ -45,7 +45,7 @@ function dispatchPressEvent(
   context.dispatchEvent(name, listener, state.pressTarget, true);
 }
 
-function dispatchPressInEvents(
+function dispatchPressStartEvents(
   context: EventResponderContext,
   props: Object,
   state: PressState,
@@ -57,20 +57,24 @@ function dispatchPressInEvents(
     dispatchPressEvent(context, state, 'presschange', pressChangeEventListener);
   }
 
-  if (props.onPressIn) {
-    dispatchPressEvent(context, state, 'pressin', props.onPressIn);
+  if (props.onPressStart) {
+    dispatchPressEvent(context, state, 'pressstart', props.onPressStart);
   }
   if (props.onPressChange) {
     dispatchPressChangeEvent(true);
   }
   if ((props.onLongPress || props.onLongPressChange) && !state.isLongPressed) {
-    const longPressDelay = props.longPressDelay || 1000;
+    const delayLongPress = calculateDelayMS(props.delayLongPress, 0, 1000);
 
     state.longPressTimeout = setTimeout(() => {
       state.isLongPressed = true;
       state.longPressTimeout = null;
 
-      if (props.onPressChange && props.longPressCancelsPress) {
+      if (
+        props.onPressChange &&
+        props.onLongPressShouldCancelPress &&
+        props.onLongPressShouldCancelPress()
+      ) {
         dispatchPressChangeEvent(false);
       }
 
@@ -95,11 +99,11 @@ function dispatchPressInEvents(
           longPressChangeEventListener,
         );
       }
-    }, longPressDelay);
+    }, delayLongPress);
   }
 }
 
-function dispatchPressOutEvents(
+function dispatchPressEndEvents(
   context: EventResponderContext,
   props: Object,
   state: PressState,
@@ -108,8 +112,8 @@ function dispatchPressOutEvents(
     clearTimeout(state.longPressTimeout);
     state.longPressTimeout = null;
   }
-  if (props.onPressOut) {
-    dispatchPressEvent(context, state, 'pressout', props.onPressOut);
+  if (props.onPressEnd) {
+    dispatchPressEvent(context, state, 'pressend', props.onPressEnd);
   }
   if (props.onPressChange) {
     const pressChangeEventListener = () => {
@@ -132,6 +136,11 @@ function dispatchPressOutEvents(
 
 function isAnchorTagElement(eventTarget: EventTarget): boolean {
   return (eventTarget: any).nodeName === 'A';
+}
+
+function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
+  const maybeNumber = delay == null ? null : delay;
+  return Math.max(min, maybeNumber != null ? maybeNumber : fallback);
 }
 
 const PressResponder = {
@@ -197,7 +206,7 @@ const PressResponder = {
             return;
           }
           state.pressTarget = eventTarget;
-          dispatchPressInEvents(context, props, state);
+          dispatchPressStartEvents(context, props, state);
           state.isPressed = true;
           context.addRootEventTypes(rootEventTypes);
         }
@@ -209,7 +218,7 @@ const PressResponder = {
           return;
         }
         if (state.isPressed) {
-          dispatchPressOutEvents(context, props, state);
+          dispatchPressEndEvents(context, props, state);
           if (
             eventType !== 'touchcancel' &&
             (props.onPress || props.onLongPress)
@@ -227,7 +236,11 @@ const PressResponder = {
             ) {
               if (
                 props.onPress &&
-                !(state.isLongPressed && props.longPressCancelsPress)
+                !(
+                  state.isLongPressed &&
+                  props.onLongPressShouldCancelPress &&
+                  props.onLongPressShouldCancelPress()
+                )
               ) {
                 dispatchPressEvent(context, state, 'press', props.onPress);
               }
@@ -263,7 +276,7 @@ const PressResponder = {
             }
           }
           state.pressTarget = eventTarget;
-          dispatchPressInEvents(context, props, state);
+          dispatchPressStartEvents(context, props, state);
           state.isPressed = true;
           context.addRootEventTypes(rootEventTypes);
         }
@@ -276,7 +289,7 @@ const PressResponder = {
             state.shouldSkipMouseAfterTouch = false;
             return;
           }
-          dispatchPressOutEvents(context, props, state);
+          dispatchPressEndEvents(context, props, state);
           if (
             state.pressTarget !== null &&
             (props.onPress || props.onLongPress)
@@ -284,7 +297,11 @@ const PressResponder = {
             if (context.isTargetWithinElement(eventTarget, state.pressTarget)) {
               if (
                 props.onPress &&
-                !(state.isLongPressed && props.longPressCancelsPress)
+                !(
+                  state.isLongPressed &&
+                  props.onLongPressShouldCancelPress &&
+                  props.onLongPressShouldCancelPress()
+                )
               ) {
                 const pressEventListener = e => {
                   props.onPress(e);
@@ -309,7 +326,7 @@ const PressResponder = {
       case 'pointercancel': {
         if (state.isPressed) {
           state.shouldSkipMouseAfterTouch = false;
-          dispatchPressOutEvents(context, props, state);
+          dispatchPressEndEvents(context, props, state);
           state.isPressed = false;
           state.isLongPressed = false;
           context.removeRootEventTypes(rootEventTypes);
