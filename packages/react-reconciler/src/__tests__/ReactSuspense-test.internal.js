@@ -140,10 +140,10 @@ describe('ReactSuspense', () => {
     // Render two sibling Suspense components
     const root = ReactTestRenderer.create(
       <React.Fragment>
-        <Suspense maxDuration={1000} fallback={<Text text="Loading A..." />}>
+        <Suspense fallback={<Text text="Loading A..." />}>
           <AsyncText text="A" ms={5000} />
         </Suspense>
-        <Suspense maxDuration={3000} fallback={<Text text="Loading B..." />}>
+        <Suspense fallback={<Text text="Loading B..." />}>
           <AsyncText text="B" ms={6000} />
         </Suspense>
       </React.Fragment>,
@@ -211,7 +211,7 @@ describe('ReactSuspense', () => {
     }
 
     const root = ReactTestRenderer.create(
-      <Suspense maxDuration={1000} fallback={<Text text="Loading..." />}>
+      <Suspense fallback={<Text text="Loading..." />}>
         <Async />
         <Text text="Sibling" />
       </Suspense>,
@@ -272,7 +272,7 @@ describe('ReactSuspense', () => {
   it('only captures if `fallback` is defined', () => {
     const root = ReactTestRenderer.create(
       <Suspense fallback={<Text text="Loading..." />}>
-        <Suspense maxDuration={100}>
+        <Suspense>
           <AsyncText text="Hi" ms={5000} />
         </Suspense>
       </Suspense>,
@@ -368,9 +368,7 @@ describe('ReactSuspense', () => {
 
       function App() {
         return (
-          <Suspense
-            maxDuration={1000}
-            fallback={<TextWithLifecycle text="Loading..." />}>
+          <Suspense fallback={<TextWithLifecycle text="Loading..." />}>
             <TextWithLifecycle text="A" />
             <AsyncTextWithLifecycle ms={100} text="B" ref={instance} />
             <TextWithLifecycle text="C" />
@@ -631,7 +629,7 @@ describe('ReactSuspense', () => {
 
       function App(props) {
         return (
-          <Suspense maxDuration={10} fallback={<Text text="Loading..." />}>
+          <Suspense fallback={<Text text="Loading..." />}>
             <Stateful />
           </Suspense>
         );
@@ -681,7 +679,7 @@ describe('ReactSuspense', () => {
 
       function App(props) {
         return (
-          <Suspense maxDuration={10} fallback={<ShouldMountOnce />}>
+          <Suspense fallback={<ShouldMountOnce />}>
             <AsyncText ms={1000} text="Child 1" />
             <AsyncText ms={2000} text="Child 2" />
             <AsyncText ms={3000} text="Child 3" />
@@ -726,7 +724,7 @@ describe('ReactSuspense', () => {
     it('does not get stuck with fallback in concurrent mode for a large delay', () => {
       function App(props) {
         return (
-          <Suspense maxDuration={10} fallback={<Text text="Loading..." />}>
+          <Suspense fallback={<Text text="Loading..." />}>
             <AsyncText ms={1000} text="Child 1" />
             <AsyncText ms={7000} text="Child 2" />
           </Suspense>

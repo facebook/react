@@ -156,6 +156,7 @@ let didWarnAboutContextTypeOnFunctionComponent;
 let didWarnAboutGetDerivedStateOnFunctionComponent;
 let didWarnAboutFunctionRefs;
 export let didWarnAboutReassigningProps;
+let didWarnAboutMaxDuration;
 
 if (__DEV__) {
   didWarnAboutBadClass = {};
@@ -164,6 +165,7 @@ if (__DEV__) {
   didWarnAboutGetDerivedStateOnFunctionComponent = {};
   didWarnAboutFunctionRefs = {};
   didWarnAboutReassigningProps = false;
+  didWarnAboutMaxDuration = false;
 }
 
 export function reconcileChildren(
@@ -1406,6 +1408,19 @@ function updateSuspenseComponent(
     };
     nextDidTimeout = true;
     workInProgress.effectTag &= ~DidCapture;
+  }
+
+  if (__DEV__) {
+    if ('maxDuration' in nextProps) {
+      if (!didWarnAboutMaxDuration) {
+        didWarnAboutMaxDuration = true;
+        warning(
+          false,
+          'maxDuration has been removed from React. ' +
+            'Remove the maxDuration prop.',
+        );
+      }
+    }
   }
 
   // This next part is a bit confusing. If the children timeout, we switch to

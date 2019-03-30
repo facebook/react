@@ -74,12 +74,12 @@ describe('ReactDOMSuspensePlaceholder', () => {
     ];
     function App() {
       return (
-        <Suspense maxDuration={500} fallback={<Text text="Loading..." />}>
+        <Suspense fallback={<Text text="Loading..." />}>
           <div ref={divs[0]}>
             <Text text="A" />
           </div>
           <div ref={divs[1]}>
-            <AsyncText ms={1000} text="B" />
+            <AsyncText ms={500} text="B" />
           </div>
           <div style={{display: 'block'}} ref={divs[2]}>
             <Text text="C" />
@@ -92,7 +92,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
     expect(divs[1].current.style.display).toEqual('none');
     expect(divs[2].current.style.display).toEqual('none');
 
-    await advanceTimers(1000);
+    await advanceTimers(500);
 
     expect(divs[0].current.style.display).toEqual('');
     expect(divs[1].current.style.display).toEqual('');
@@ -103,9 +103,9 @@ describe('ReactDOMSuspensePlaceholder', () => {
   it('hides and unhides timed out text nodes', async () => {
     function App() {
       return (
-        <Suspense maxDuration={500} fallback={<Text text="Loading..." />}>
+        <Suspense fallback={<Text text="Loading..." />}>
           <Text text="A" />
-          <AsyncText ms={1000} text="B" />
+          <AsyncText ms={500} text="B" />
           <Text text="C" />
         </Suspense>
       );
@@ -113,7 +113,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
     ReactDOM.render(<App />, container);
     expect(container.textContent).toEqual('Loading...');
 
-    await advanceTimers(1000);
+    await advanceTimers(500);
 
     expect(container.textContent).toEqual('ABC');
   });
@@ -137,10 +137,10 @@ describe('ReactDOMSuspensePlaceholder', () => {
 
       function App() {
         return (
-          <Suspense maxDuration={500} fallback={<Text text="Loading..." />}>
+          <Suspense fallback={<Text text="Loading..." />}>
             <Sibling>Sibling</Sibling>
             <span>
-              <AsyncText ms={1000} text="Async" />
+              <AsyncText ms={500} text="Async" />
             </span>
           </Suspense>
         );
@@ -158,7 +158,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
         '<span style="display: none;">Sibling</span><span style="display: none;"></span>Loading...',
       );
 
-      await advanceTimers(1000);
+      await advanceTimers(500);
 
       expect(container.innerHTML).toEqual(
         '<span style="display: inline;">Sibling</span><span style="">Async</span>',

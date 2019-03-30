@@ -110,7 +110,7 @@ describe('ReactSuspensePlaceholder', () => {
 
     function App(props) {
       return (
-        <Suspense maxDuration={500} fallback={<Text text="Loading..." />}>
+        <Suspense fallback={<Text text="Loading..." />}>
           <HiddenText text="A" />
           <span>
             <AsyncText ms={1000} text={props.middleText} />
@@ -176,7 +176,7 @@ describe('ReactSuspensePlaceholder', () => {
   it('times out text nodes', async () => {
     function App(props) {
       return (
-        <Suspense maxDuration={500} fallback={<Text text="Loading..." />}>
+        <Suspense fallback={<Text text="Loading..." />}>
           <Text text="A" />
           <AsyncText ms={1000} text={props.middleText} />
           <Text text="C" />
@@ -225,7 +225,7 @@ describe('ReactSuspensePlaceholder', () => {
         // uppercase is a special type that causes React Noop to render child
         // text nodes as uppercase.
         <uppercase>
-          <Suspense maxDuration={500} fallback={<Text text="Loading..." />}>
+          <Suspense fallback={<Text text="Loading..." />}>
             <Text text="a" />
             <AsyncText ms={1000} text={props.middleText} />
             <Text text="c" />
@@ -293,7 +293,7 @@ describe('ReactSuspensePlaceholder', () => {
         Scheduler.yieldValue('App');
         return (
           <Profiler id="root" onRender={onRender}>
-            <Suspense maxDuration={500} fallback={<Fallback />}>
+            <Suspense fallback={<Fallback />}>
               {shouldSuspend && <Suspending />}
               <Text fakeRenderDuration={textRenderDuration} text={text} />
             </Suspense>
