@@ -26,6 +26,7 @@ import {
   REACT_EVENT_TARGET_TYPE,
 } from 'shared/ReactSymbols';
 import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
+import type {ReactEventComponent, ReactEventTarget} from 'shared/ReactTypes';
 
 function getWrappedName(
   outerType: mixed,
@@ -92,9 +93,9 @@ function getComponentName(type: mixed): string | null {
         break;
       }
       case REACT_EVENT_COMPONENT_TYPE:
-        return type.displayName;
+        return ((type: any): ReactEventComponent).displayName;
       case REACT_EVENT_TARGET_TYPE:
-        return type.displayName;
+        return ((type: any): ReactEventTarget).displayName;
     }
   }
   return null;
