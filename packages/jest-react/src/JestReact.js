@@ -26,60 +26,13 @@ function captureAssertion(fn) {
 }
 
 function assertYieldsWereCleared(root) {
-  const actualYields = root.unstable_clearYields();
+  const Scheduler = root._Scheduler;
+  const actualYields = Scheduler.unstable_clearYields();
   invariant(
     actualYields.length === 0,
     'Log of yielded values is not empty. ' +
       'Call expect(ReactTestRenderer).unstable_toHaveYielded(...) first.',
   );
-}
-
-export function unstable_toFlushAndYield(root, expectedYields) {
-  assertYieldsWereCleared(root);
-  const actualYields = root.unstable_flushAll();
-  return captureAssertion(() => {
-    expect(actualYields).toEqual(expectedYields);
-  });
-}
-
-export function unstable_toFlushAndYieldThrough(root, expectedYields) {
-  assertYieldsWereCleared(root);
-  const actualYields = root.unstable_flushNumberOfYields(expectedYields.length);
-  return captureAssertion(() => {
-    expect(actualYields).toEqual(expectedYields);
-  });
-}
-
-export function unstable_toFlushWithoutYielding(root) {
-  return unstable_toFlushAndYield(root, []);
-}
-
-export function unstable_toHaveYielded(ReactTestRenderer, expectedYields) {
-  return captureAssertion(() => {
-    if (
-      ReactTestRenderer === null ||
-      typeof ReactTestRenderer !== 'object' ||
-      typeof ReactTestRenderer.unstable_setNowImplementation !== 'function'
-    ) {
-      invariant(
-        false,
-        'The matcher `unstable_toHaveYielded` expects an instance of React Test ' +
-          'Renderer.\n\nTry: ' +
-          'expect(ReactTestRenderer).unstable_toHaveYielded(expectedYields)',
-      );
-    }
-    const actualYields = ReactTestRenderer.unstable_clearYields();
-    expect(actualYields).toEqual(expectedYields);
-  });
-}
-
-export function unstable_toFlushAndThrow(root, ...rest) {
-  assertYieldsWereCleared(root);
-  return captureAssertion(() => {
-    expect(() => {
-      root.unstable_flushAll();
-    }).toThrow(...rest);
-  });
 }
 
 export function unstable_toMatchRenderedOutput(root, expectedJSX) {

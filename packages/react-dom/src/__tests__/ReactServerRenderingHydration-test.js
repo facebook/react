@@ -358,11 +358,21 @@ describe('ReactDOMServerHydration', () => {
     );
 
     const element = document.createElement('div');
-    element.innerHTML = ReactDOMServer.renderToString(markup);
+    expect(() => {
+      element.innerHTML = ReactDOMServer.renderToString(markup);
+    }).toLowPriorityWarnDev(
+      ['componentWillMount() is deprecated and will be removed'],
+      {withoutStack: true},
+    );
     expect(element.textContent).toBe('Hi');
 
-    expect(() => ReactDOM.hydrate(markup, element)).toWarnDev(
-      'Please update the following components to use componentDidMount instead: ComponentWithWarning',
+    expect(() => {
+      expect(() => ReactDOM.hydrate(markup, element)).toWarnDev(
+        'Please update the following components to use componentDidMount instead: ComponentWithWarning',
+      );
+    }).toLowPriorityWarnDev(
+      ['componentWillMount is deprecated and will be removed'],
+      {withoutStack: true},
     );
     expect(element.textContent).toBe('Hi');
   });
@@ -391,9 +401,9 @@ describe('ReactDOMServerHydration', () => {
   it('should be able to render and hydrate Profiler components', () => {
     const callback = jest.fn();
     const markup = (
-      <React.unstable_Profiler id="profiler" onRender={callback}>
+      <React.Profiler id="profiler" onRender={callback}>
         <div>Hi</div>
-      </React.unstable_Profiler>
+      </React.Profiler>
     );
 
     const element = document.createElement('div');

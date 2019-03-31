@@ -14,7 +14,6 @@ import type {
   FiberRoot,
   Batch as FiberRootBatch,
 } from 'react-reconciler/src/ReactFiberRoot';
-import type {Container} from './ReactDOMHostConfig';
 
 import '../shared/checkReact';
 import './ReactDOMClientInjection';
@@ -45,10 +44,8 @@ import {
   enqueueStateRestore,
   restoreStateIfNeeded,
 } from 'events/ReactControlledComponent';
-import {
-  injection as EventPluginHubInjection,
-  runEventsInBatch,
-} from 'events/EventPluginHub';
+import {injection as EventPluginHubInjection} from 'events/EventPluginHub';
+import {runEventsInBatch} from 'events/EventBatching';
 import {eventNameDispatchConfigs} from 'events/EventPluginRegistry';
 import {
   accumulateTwoPhaseDispatches,
@@ -160,9 +157,11 @@ setRestoreImplementation(restoreControlledState);
 export type DOMContainer =
   | (Element & {
       _reactRootContainer: ?Root,
+      _reactHasBeenPassedToCreateRootDEV: ?boolean,
     })
   | (Document & {
       _reactRootContainer: ?Root,
+      _reactHasBeenPassedToCreateRootDEV: ?boolean,
     });
 
 type Batch = FiberRootBatch & {
@@ -362,7 +361,7 @@ ReactWork.prototype._onCommit = function(): void {
 };
 
 function ReactRoot(
-  container: Container,
+  container: DOMContainer,
   isConcurrent: boolean,
   hydrate: boolean,
 ) {
@@ -543,12 +542,6 @@ function legacyRenderSubtreeIntoContainer(
   forceHydrate: boolean,
   callback: ?Function,
 ) {
-  // TODO: Ensure all entry points contain this check
-  invariant(
-    isValidContainer(container),
-    'Target container is not a DOM element.',
-  );
-
   if (__DEV__) {
     topLevelUpdateWarnings(container);
   }
@@ -652,6 +645,19 @@ const ReactDOM: Object = {
   },
 
   hydrate(element: React$Node, container: DOMContainer, callback: ?Function) {
+    invariant(
+      isValidContainer(container),
+      'Target container is not a DOM element.',
+    );
+    if (__DEV__) {
+      warningWithoutStack(
+        !container._reactHasBeenPassedToCreateRootDEV,
+        'You are calling ReactDOM.hydrate() on a container that was previously ' +
+          'passed to ReactDOM.%s(). This is not supported. ' +
+          'Did you mean to call createRoot(container, {hydrate: true}).render(element)?',
+        enableStableConcurrentModeAPIs ? 'createRoot' : 'unstable_createRoot',
+      );
+    }
     // TODO: throw or warn if we couldn't hydrate?
     return legacyRenderSubtreeIntoContainer(
       null,
@@ -667,6 +673,19 @@ const ReactDOM: Object = {
     container: DOMContainer,
     callback: ?Function,
   ) {
+    invariant(
+      isValidContainer(container),
+      'Target container is not a DOM element.',
+    );
+    if (__DEV__) {
+      warningWithoutStack(
+        !container._reactHasBeenPassedToCreateRootDEV,
+        'You are calling ReactDOM.render() on a container that was previously ' +
+          'passed to ReactDOM.%s(). This is not supported. ' +
+          'Did you mean to call root.render(element)?',
+        enableStableConcurrentModeAPIs ? 'createRoot' : 'unstable_createRoot',
+      );
+    }
     return legacyRenderSubtreeIntoContainer(
       null,
       element,
@@ -682,6 +701,10 @@ const ReactDOM: Object = {
     containerNode: DOMContainer,
     callback: ?Function,
   ) {
+    invariant(
+      isValidContainer(containerNode),
+      'Target container is not a DOM element.',
+    );
     invariant(
       parentComponent != null && hasInstance(parentComponent),
       'parentComponent must be a valid React Component',
@@ -700,6 +723,15 @@ const ReactDOM: Object = {
       isValidContainer(container),
       'unmountComponentAtNode(...): Target container is not a DOM element.',
     );
+
+    if (__DEV__) {
+      warningWithoutStack(
+        !container._reactHasBeenPassedToCreateRootDEV,
+        'You are calling ReactDOM.unmountComponentAtNode() on a container that was previously ' +
+          'passed to ReactDOM.%s(). This is not supported. Did you mean to call root.unmount()?',
+        enableStableConcurrentModeAPIs ? 'createRoot' : 'unstable_createRoot',
+      );
+    }
 
     if (container._reactRootContainer) {
       if (__DEV__) {
@@ -805,6 +837,15 @@ function createRoot(container: DOMContainer, options?: RootOptions): ReactRoot {
     '%s(...): Target container is not a DOM element.',
     functionName,
   );
+  if (__DEV__) {
+    warningWithoutStack(
+      !container._reactRootContainer,
+      'You are calling ReactDOM.%s() on a container that was previously ' +
+        'passed to ReactDOM.render(). This is not supported.',
+      enableStableConcurrentModeAPIs ? 'createRoot' : 'unstable_createRoot',
+    );
+    container._reactHasBeenPassedToCreateRootDEV = true;
+  }
   const hydrate = options != null && options.hydrate === true;
   return new ReactRoot(container, true, hydrate);
 }

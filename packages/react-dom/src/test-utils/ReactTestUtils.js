@@ -18,8 +18,15 @@ import {
 import SyntheticEvent from 'events/SyntheticEvent';
 import invariant from 'shared/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 import * as DOMTopLevelEventTypes from '../events/DOMTopLevelEventTypes';
+import {PLUGIN_EVENT_SYSTEM} from 'events/EventSystemFlags';
+
+// for .act's return value
+type Thenable = {
+  then(resolve: () => mixed, reject?: () => mixed): mixed,
+};
 
 const {findDOMNode} = ReactDOM;
 // Keep in sync with ReactDOMUnstableNativeDependencies.js
@@ -57,7 +64,7 @@ let hasWarnedAboutDeprecatedMockComponent = false;
  */
 function simulateNativeEventOnNode(topLevelType, node, fakeNativeEvent) {
   fakeNativeEvent.target = node;
-  dispatchEvent(topLevelType, fakeNativeEvent);
+  dispatchEvent(topLevelType, PLUGIN_EVENT_SYSTEM, fakeNativeEvent);
 }
 
 /**
@@ -144,6 +151,9 @@ function validateClassInstance(inst, methodName) {
     received,
   );
 }
+
+// a stub element, lazily initialized, used by act() when flushing effects
+let actContainerElement = null;
 
 /**
  * Utilities for making it easy to test React components.
@@ -380,6 +390,59 @@ const ReactTestUtils = {
 
   Simulate: null,
   SimulateNative: {},
+
+  act(callback: () => void): Thenable {
+    if (actContainerElement === null) {
+      // warn if we can't actually create the stub element
+      if (__DEV__) {
+        warningWithoutStack(
+          typeof document !== 'undefined' &&
+            document !== null &&
+            typeof document.createElement === 'function',
+          'It looks like you called TestUtils.act(...) in a non-browser environment. ' +
+            "If you're using TestRenderer for your tests, you should call " +
+            'TestRenderer.act(...) instead of TestUtils.act(...).',
+        );
+      }
+      // then make it
+      actContainerElement = document.createElement('div');
+    }
+
+    const result = ReactDOM.unstable_batchedUpdates(callback);
+    // note: keep these warning messages in sync with
+    // createReactNoop.js and ReactTestRenderer.js
+    if (__DEV__) {
+      if (result !== undefined) {
+        let addendum;
+        if (result !== null && typeof result.then === 'function') {
+          addendum =
+            '\n\nIt looks like you wrote ReactTestUtils.act(async () => ...), ' +
+            'or returned a Promise from the callback passed to it. ' +
+            'Putting asynchronous logic inside ReactTestUtils.act(...) is not supported.\n';
+        } else {
+          addendum = ' You returned: ' + result;
+        }
+        warningWithoutStack(
+          false,
+          'The callback passed to ReactTestUtils.act(...) function must not return anything.%s',
+          addendum,
+        );
+      }
+    }
+    ReactDOM.render(<div />, actContainerElement);
+    // we want the user to not expect a return,
+    // but we want to warn if they use it like they can await on it.
+    return {
+      then() {
+        if (__DEV__) {
+          warningWithoutStack(
+            false,
+            'Do not await the result of calling ReactTestUtils.act(...), it is not a Promise.',
+          );
+        }
+      },
+    };
+  },
 };
 
 /**
@@ -433,7 +496,7 @@ function makeSimulator(eventType) {
 
     ReactDOM.unstable_batchedUpdates(function() {
       // Normally extractEvent enqueues a state restore, but we'll just always
-      // do that since we we're by-passing it here.
+      // do that since we're by-passing it here.
       enqueueStateRestore(domNode);
       runEventsInBatch(event);
     });

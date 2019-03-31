@@ -7,6 +7,8 @@
  * @flow
  */
 
+import * as Scheduler from 'scheduler';
+
 import {precacheFiberNode, updateFiberProps} from './ReactDOMComponentTree';
 import {
   createElement,
@@ -22,6 +24,7 @@ import {
   warnForDeletedHydratableText,
   warnForInsertedHydratedElement,
   warnForInsertedHydratedText,
+  listenToEventResponderEventTypes,
 } from './ReactDOMComponent';
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
@@ -41,6 +44,13 @@ import {
 import dangerousStyleValue from '../shared/dangerousStyleValue';
 
 import type {DOMContainer} from './ReactDOM';
+import type {ReactEventResponder} from 'shared/ReactTypes';
+import {
+  REACT_EVENT_COMPONENT_TYPE,
+  REACT_EVENT_TARGET_TYPE,
+  REACT_EVENT_TARGET_TOUCH_HIT,
+} from 'shared/ReactSymbols';
+import getElementFromTouchHitTarget from 'shared/getElementFromTouchHitTarget';
 
 export type Type = string;
 export type Props = {
@@ -56,11 +66,16 @@ export type Props = {
 export type Container = Element | Document;
 export type Instance = Element;
 export type TextInstance = Text;
-export type HydratableInstance = Element | Text;
+export type SuspenseInstance = Comment & {_reactRetry?: () => void};
+export type HydratableInstance = Instance | TextInstance | SuspenseInstance;
 export type PublicInstance = Element | Text;
 type HostContextDev = {
   namespace: string,
   ancestorInfo: mixed,
+  eventData: null | {|
+    isEventComponent?: boolean,
+    isEventTarget?: boolean,
+  |},
 };
 type HostContextProd = string;
 export type HostContext = HostContextDev | HostContextProd;
@@ -69,17 +84,32 @@ export type ChildSet = void; // Unused
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 
-export {
-  unstable_now as now,
-  unstable_scheduleCallback as scheduleDeferredCallback,
-  unstable_shouldYield as shouldYield,
-  unstable_cancelCallback as cancelDeferredCallback,
-} from 'scheduler';
+import {
+  enableSuspenseServerRenderer,
+  enableEventAPI,
+} from 'shared/ReactFeatureFlags';
+import warning from 'shared/warning';
+
+// Intentionally not named imports because Rollup would
+// use dynamic dispatch for CommonJS interop named imports.
+const {
+  unstable_now: now,
+  unstable_scheduleCallback: scheduleDeferredCallback,
+  unstable_shouldYield: shouldYield,
+  unstable_cancelCallback: cancelDeferredCallback,
+} = Scheduler;
+
+export {now, scheduleDeferredCallback, shouldYield, cancelDeferredCallback};
 
 let SUPPRESS_HYDRATION_WARNING;
 if (__DEV__) {
   SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
 }
+
+const SUSPENSE_START_DATA = '$';
+const SUSPENSE_END_DATA = '/$';
+const SUSPENSE_PENDING_START_DATA = '$?';
+const SUSPENSE_FALLBACK_START_DATA = '$!';
 
 const STYLE = 'style';
 
@@ -127,7 +157,7 @@ export function getRootHostContext(
   if (__DEV__) {
     const validatedTag = type.toLowerCase();
     const ancestorInfo = updatedAncestorInfo(null, validatedTag);
-    return {namespace, ancestorInfo};
+    return {namespace, ancestorInfo, eventData: null};
   }
   return namespace;
 }
@@ -144,10 +174,40 @@ export function getChildHostContext(
       parentHostContextDev.ancestorInfo,
       type,
     );
-    return {namespace, ancestorInfo};
+    return {namespace, ancestorInfo, eventData: null};
   }
   const parentNamespace = ((parentHostContext: any): HostContextProd);
   return getChildNamespace(parentNamespace, type);
+}
+
+export function getChildHostContextForEvent(
+  parentHostContext: HostContext,
+  type: Symbol | number,
+): HostContext {
+  if (__DEV__) {
+    const parentHostContextDev = ((parentHostContext: any): HostContextDev);
+    const {namespace, ancestorInfo} = parentHostContextDev;
+    let eventData = null;
+
+    if (type === REACT_EVENT_COMPONENT_TYPE) {
+      eventData = {
+        isEventComponent: true,
+        isEventTarget: false,
+      };
+    } else if (type === REACT_EVENT_TARGET_TYPE) {
+      warning(
+        parentHostContextDev.eventData !== null &&
+          parentHostContextDev.eventData.isEventComponent,
+        'validateDOMNesting: React event targets must be direct children of event components.',
+      );
+      eventData = {
+        isEventComponent: false,
+        isEventTarget: true,
+      };
+    }
+    return {namespace, ancestorInfo, eventData};
+  }
+  return parentHostContext;
 }
 
 export function getPublicInstance(instance: Instance): * {
@@ -281,6 +341,23 @@ export function createTextInstance(
   if (__DEV__) {
     const hostContextDev = ((hostContext: any): HostContextDev);
     validateDOMNesting(null, text, hostContextDev.ancestorInfo);
+    if (enableEventAPI) {
+      const eventData = hostContextDev.eventData;
+      if (eventData !== null) {
+        warning(
+          !eventData.isEventComponent,
+          'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
+            'Wrap the child text "%s" in an element.',
+          text,
+        );
+        warning(
+          !eventData.isEventTarget,
+          'validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
+            'Wrap the child text "%s" in an element.',
+          text,
+        );
+      }
+    }
   }
   const textNode: TextInstance = createTextNode(text, rootContainerInstance);
   precacheFiberNode(internalInstanceHandle, textNode);
@@ -391,7 +468,7 @@ export function appendChildToContainer(
 export function insertBefore(
   parentInstance: Instance,
   child: Instance | TextInstance,
-  beforeChild: Instance | TextInstance,
+  beforeChild: Instance | TextInstance | SuspenseInstance,
 ): void {
   parentInstance.insertBefore(child, beforeChild);
 }
@@ -399,7 +476,7 @@ export function insertBefore(
 export function insertInContainerBefore(
   container: Container,
   child: Instance | TextInstance,
-  beforeChild: Instance | TextInstance,
+  beforeChild: Instance | TextInstance | SuspenseInstance,
 ): void {
   if (container.nodeType === COMMENT_NODE) {
     (container.parentNode: any).insertBefore(child, beforeChild);
@@ -410,19 +487,66 @@ export function insertInContainerBefore(
 
 export function removeChild(
   parentInstance: Instance,
-  child: Instance | TextInstance,
+  child: Instance | TextInstance | SuspenseInstance,
 ): void {
   parentInstance.removeChild(child);
 }
 
 export function removeChildFromContainer(
   container: Container,
-  child: Instance | TextInstance,
+  child: Instance | TextInstance | SuspenseInstance,
 ): void {
   if (container.nodeType === COMMENT_NODE) {
     (container.parentNode: any).removeChild(child);
   } else {
     container.removeChild(child);
+  }
+}
+
+export function clearSuspenseBoundary(
+  parentInstance: Instance,
+  suspenseInstance: SuspenseInstance,
+): void {
+  let node = suspenseInstance;
+  // Delete all nodes within this suspense boundary.
+  // There might be nested nodes so we need to keep track of how
+  // deep we are and only break out when we're back on top.
+  let depth = 0;
+  do {
+    let nextNode = node.nextSibling;
+    parentInstance.removeChild(node);
+    if (nextNode && nextNode.nodeType === COMMENT_NODE) {
+      let data = ((nextNode: any).data: string);
+      if (data === SUSPENSE_END_DATA) {
+        if (depth === 0) {
+          parentInstance.removeChild(nextNode);
+          return;
+        } else {
+          depth--;
+        }
+      } else if (
+        data === SUSPENSE_START_DATA ||
+        data === SUSPENSE_PENDING_START_DATA ||
+        data === SUSPENSE_FALLBACK_START_DATA
+      ) {
+        depth++;
+      }
+    }
+    node = nextNode;
+  } while (node);
+  // TODO: Warn, we didn't find the end comment boundary.
+}
+
+export function clearSuspenseBoundaryFromContainer(
+  container: Container,
+  suspenseInstance: SuspenseInstance,
+): void {
+  if (container.nodeType === COMMENT_NODE) {
+    clearSuspenseBoundary((container.parentNode: any), suspenseInstance);
+  } else if (container.nodeType === ELEMENT_NODE) {
+    clearSuspenseBoundary((container: any), suspenseInstance);
+  } else {
+    // Document nodes should never contain suspense boundaries.
   }
 }
 
@@ -463,7 +587,7 @@ export function unhideTextInstance(
 export const supportsHydration = true;
 
 export function canHydrateInstance(
-  instance: Instance | TextInstance,
+  instance: HydratableInstance,
   type: string,
   props: Props,
 ): null | Instance {
@@ -478,7 +602,7 @@ export function canHydrateInstance(
 }
 
 export function canHydrateTextInstance(
-  instance: Instance | TextInstance,
+  instance: HydratableInstance,
   text: string,
 ): null | TextInstance {
   if (text === '' || instance.nodeType !== TEXT_NODE) {
@@ -489,15 +613,46 @@ export function canHydrateTextInstance(
   return ((instance: any): TextInstance);
 }
 
+export function canHydrateSuspenseInstance(
+  instance: HydratableInstance,
+): null | SuspenseInstance {
+  if (instance.nodeType !== COMMENT_NODE) {
+    // Empty strings are not parsed by HTML so there won't be a correct match here.
+    return null;
+  }
+  // This has now been refined to a suspense node.
+  return ((instance: any): SuspenseInstance);
+}
+
+export function isSuspenseInstancePending(instance: SuspenseInstance) {
+  return instance.data === SUSPENSE_PENDING_START_DATA;
+}
+
+export function isSuspenseInstanceFallback(instance: SuspenseInstance) {
+  return instance.data === SUSPENSE_FALLBACK_START_DATA;
+}
+
+export function registerSuspenseInstanceRetry(
+  instance: SuspenseInstance,
+  callback: () => void,
+) {
+  instance._reactRetry = callback;
+}
+
 export function getNextHydratableSibling(
-  instance: Instance | TextInstance,
-): null | Instance | TextInstance {
+  instance: HydratableInstance,
+): null | HydratableInstance {
   let node = instance.nextSibling;
   // Skip non-hydratable nodes.
   while (
     node &&
     node.nodeType !== ELEMENT_NODE &&
-    node.nodeType !== TEXT_NODE
+    node.nodeType !== TEXT_NODE &&
+    (!enableSuspenseServerRenderer ||
+      node.nodeType !== COMMENT_NODE ||
+      ((node: any).data !== SUSPENSE_START_DATA &&
+        (node: any).data !== SUSPENSE_PENDING_START_DATA &&
+        (node: any).data !== SUSPENSE_FALLBACK_START_DATA))
   ) {
     node = node.nextSibling;
   }
@@ -506,13 +661,18 @@ export function getNextHydratableSibling(
 
 export function getFirstHydratableChild(
   parentInstance: Container | Instance,
-): null | Instance | TextInstance {
+): null | HydratableInstance {
   let next = parentInstance.firstChild;
   // Skip non-hydratable nodes.
   while (
     next &&
     next.nodeType !== ELEMENT_NODE &&
-    next.nodeType !== TEXT_NODE
+    next.nodeType !== TEXT_NODE &&
+    (!enableSuspenseServerRenderer ||
+      next.nodeType !== COMMENT_NODE ||
+      ((next: any).data !== SUSPENSE_START_DATA &&
+        (next: any).data !== SUSPENSE_FALLBACK_START_DATA &&
+        (next: any).data !== SUSPENSE_PENDING_START_DATA))
   ) {
     next = next.nextSibling;
   }
@@ -556,6 +716,33 @@ export function hydrateTextInstance(
   return diffHydratedText(textInstance, text);
 }
 
+export function getNextHydratableInstanceAfterSuspenseInstance(
+  suspenseInstance: SuspenseInstance,
+): null | HydratableInstance {
+  let node = suspenseInstance.nextSibling;
+  // Skip past all nodes within this suspense boundary.
+  // There might be nested nodes so we need to keep track of how
+  // deep we are and only break out when we're back on top.
+  let depth = 0;
+  while (node) {
+    if (node.nodeType === COMMENT_NODE) {
+      let data = ((node: any).data: string);
+      if (data === SUSPENSE_END_DATA) {
+        if (depth === 0) {
+          return getNextHydratableSibling((node: any));
+        } else {
+          depth--;
+        }
+      } else if (data === SUSPENSE_START_DATA) {
+        depth++;
+      }
+    }
+    node = node.nextSibling;
+  }
+  // TODO: Warn, we didn't find the end comment boundary.
+  return null;
+}
+
 export function didNotMatchHydratedContainerTextInstance(
   parentContainer: Container,
   textInstance: TextInstance,
@@ -580,11 +767,13 @@ export function didNotMatchHydratedTextInstance(
 
 export function didNotHydrateContainerInstance(
   parentContainer: Container,
-  instance: Instance | TextInstance,
+  instance: HydratableInstance,
 ) {
   if (__DEV__) {
     if (instance.nodeType === ELEMENT_NODE) {
       warnForDeletedHydratableElement(parentContainer, (instance: any));
+    } else if (instance.nodeType === COMMENT_NODE) {
+      // TODO: warnForDeletedHydratableSuspenseBoundary
     } else {
       warnForDeletedHydratableText(parentContainer, (instance: any));
     }
@@ -595,11 +784,13 @@ export function didNotHydrateInstance(
   parentType: string,
   parentProps: Props,
   parentInstance: Instance,
-  instance: Instance | TextInstance,
+  instance: HydratableInstance,
 ) {
   if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
     if (instance.nodeType === ELEMENT_NODE) {
       warnForDeletedHydratableElement(parentInstance, (instance: any));
+    } else if (instance.nodeType === COMMENT_NODE) {
+      // TODO: warnForDeletedHydratableSuspenseBoundary
     } else {
       warnForDeletedHydratableText(parentInstance, (instance: any));
     }
@@ -625,6 +816,14 @@ export function didNotFindHydratableContainerTextInstance(
   }
 }
 
+export function didNotFindHydratableContainerSuspenseInstance(
+  parentContainer: Container,
+) {
+  if (__DEV__) {
+    // TODO: warnForInsertedHydratedSupsense(parentContainer);
+  }
+}
+
 export function didNotFindHydratableInstance(
   parentType: string,
   parentProps: Props,
@@ -645,5 +844,55 @@ export function didNotFindHydratableTextInstance(
 ) {
   if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
     warnForInsertedHydratedText(parentInstance, text);
+  }
+}
+
+export function didNotFindHydratableSuspenseInstance(
+  parentType: string,
+  parentProps: Props,
+  parentInstance: Instance,
+) {
+  if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
+    // TODO: warnForInsertedHydratedSuspense(parentInstance);
+  }
+}
+
+export function handleEventComponent(
+  eventResponder: ReactEventResponder,
+  rootContainerInstance: Container,
+  internalInstanceHandle: Object,
+): void {
+  if (enableEventAPI) {
+    const rootElement = rootContainerInstance.ownerDocument;
+    listenToEventResponderEventTypes(
+      eventResponder.targetEventTypes,
+      rootElement,
+    );
+  }
+}
+
+export function handleEventTarget(
+  type: Symbol | number,
+  props: Props,
+  internalInstanceHandle: Object,
+): void {
+  if (enableEventAPI) {
+    // Touch target hit slop handling
+    if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
+      // Validates that there is a single element
+      const element = getElementFromTouchHitTarget(internalInstanceHandle);
+      if (element !== null) {
+        // We update the event target state node to be that of the element.
+        // We can then diff this entry to determine if we need to add the
+        // hit slop element, or change the dimensions of the hit slop.
+        const lastElement = internalInstanceHandle.stateNode;
+        if (lastElement !== element) {
+          internalInstanceHandle.stateNode = element;
+          // TODO: Create the hit slop element and attach it to the element
+        } else {
+          // TODO: Diff the left, top, right, bottom props
+        }
+      }
+    }
   }
 }

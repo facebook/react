@@ -17,6 +17,7 @@ npm install react-is
 ### Determining if a Component is Valid
 
 ```js
+import React from "react";
 import * as ReactIs from "react-is";
 
 class ClassComponent extends React.Component {

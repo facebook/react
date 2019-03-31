@@ -702,8 +702,17 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     const container = document.createElement('div');
-    expect(() => ReactDOM.render(<Component />, container)).toWarnDev(
-      'Unsafe legacy lifecycles will not be called for components using new component APIs.',
+    expect(() => {
+      expect(() => ReactDOM.render(<Component />, container)).toWarnDev(
+        'Unsafe legacy lifecycles will not be called for components using new component APIs.',
+        {withoutStack: true},
+      );
+    }).toLowPriorityWarnDev(
+      [
+        'componentWillMount is deprecated',
+        'componentWillReceiveProps is deprecated',
+        'componentWillUpdate is deprecated',
+      ],
       {withoutStack: true},
     );
   });
@@ -730,8 +739,19 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     const container = document.createElement('div');
-    expect(() => ReactDOM.render(<Component value={1} />, container)).toWarnDev(
-      'Unsafe legacy lifecycles will not be called for components using new component APIs.',
+    expect(() => {
+      expect(() =>
+        ReactDOM.render(<Component value={1} />, container),
+      ).toWarnDev(
+        'Unsafe legacy lifecycles will not be called for components using new component APIs.',
+        {withoutStack: true},
+      );
+    }).toLowPriorityWarnDev(
+      [
+        'componentWillMount is deprecated',
+        'componentWillReceiveProps is deprecated',
+        'componentWillUpdate is deprecated',
+      ],
       {withoutStack: true},
     );
     ReactDOM.render(<Component value={2} />, container);
@@ -781,14 +801,21 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    expect(() => ReactDOM.render(<AllLegacyLifecycles />, container)).toWarnDev(
-      'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
-        'AllLegacyLifecycles uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
-        '  componentWillMount\n' +
-        '  UNSAFE_componentWillReceiveProps\n' +
-        '  componentWillUpdate\n\n' +
-        'The above lifecycles should be removed. Learn more about this warning here:\n' +
-        'https://fb.me/react-async-component-lifecycle-hooks',
+    expect(() => {
+      expect(() =>
+        ReactDOM.render(<AllLegacyLifecycles />, container),
+      ).toWarnDev(
+        'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
+          'AllLegacyLifecycles uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
+          '  componentWillMount\n' +
+          '  UNSAFE_componentWillReceiveProps\n' +
+          '  componentWillUpdate\n\n' +
+          'The above lifecycles should be removed. Learn more about this warning here:\n' +
+          'https://fb.me/react-async-component-lifecycle-hooks',
+        {withoutStack: true},
+      );
+    }).toLowPriorityWarnDev(
+      ['componentWillMount is deprecated', 'componentWillUpdate is deprecated'],
       {withoutStack: true},
     );
 
@@ -824,15 +851,21 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    expect(() => ReactDOM.render(<WillMountAndUpdate />, container)).toWarnDev(
-      'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
-        'WillMountAndUpdate uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
-        '  componentWillMount\n' +
-        '  UNSAFE_componentWillUpdate\n\n' +
-        'The above lifecycles should be removed. Learn more about this warning here:\n' +
-        'https://fb.me/react-async-component-lifecycle-hooks',
-      {withoutStack: true},
-    );
+    expect(() => {
+      expect(() =>
+        ReactDOM.render(<WillMountAndUpdate />, container),
+      ).toWarnDev(
+        'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
+          'WillMountAndUpdate uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
+          '  componentWillMount\n' +
+          '  UNSAFE_componentWillUpdate\n\n' +
+          'The above lifecycles should be removed. Learn more about this warning here:\n' +
+          'https://fb.me/react-async-component-lifecycle-hooks',
+        {withoutStack: true},
+      );
+    }).toLowPriorityWarnDev(['componentWillMount is deprecated'], {
+      withoutStack: true,
+    });
 
     class WillReceiveProps extends React.Component {
       state = {};
@@ -845,14 +878,18 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    expect(() => ReactDOM.render(<WillReceiveProps />, container)).toWarnDev(
-      'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
-        'WillReceiveProps uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
-        '  componentWillReceiveProps\n\n' +
-        'The above lifecycles should be removed. Learn more about this warning here:\n' +
-        'https://fb.me/react-async-component-lifecycle-hooks',
-      {withoutStack: true},
-    );
+    expect(() => {
+      expect(() => ReactDOM.render(<WillReceiveProps />, container)).toWarnDev(
+        'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
+          'WillReceiveProps uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
+          '  componentWillReceiveProps\n\n' +
+          'The above lifecycles should be removed. Learn more about this warning here:\n' +
+          'https://fb.me/react-async-component-lifecycle-hooks',
+        {withoutStack: true},
+      );
+    }).toLowPriorityWarnDev(['componentWillReceiveProps is deprecated'], {
+      withoutStack: true,
+    });
   });
 
   it('should warn about deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', () => {
@@ -870,14 +907,21 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    expect(() => ReactDOM.render(<AllLegacyLifecycles />, container)).toWarnDev(
-      'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
-        'AllLegacyLifecycles uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
-        '  componentWillMount\n' +
-        '  UNSAFE_componentWillReceiveProps\n' +
-        '  componentWillUpdate\n\n' +
-        'The above lifecycles should be removed. Learn more about this warning here:\n' +
-        'https://fb.me/react-async-component-lifecycle-hooks',
+    expect(() => {
+      expect(() =>
+        ReactDOM.render(<AllLegacyLifecycles />, container),
+      ).toWarnDev(
+        'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
+          'AllLegacyLifecycles uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
+          '  componentWillMount\n' +
+          '  UNSAFE_componentWillReceiveProps\n' +
+          '  componentWillUpdate\n\n' +
+          'The above lifecycles should be removed. Learn more about this warning here:\n' +
+          'https://fb.me/react-async-component-lifecycle-hooks',
+        {withoutStack: true},
+      );
+    }).toLowPriorityWarnDev(
+      ['componentWillMount is deprecated', 'componentWillUpdate is deprecated'],
       {withoutStack: true},
     );
 
@@ -911,15 +955,21 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    expect(() => ReactDOM.render(<WillMountAndUpdate />, container)).toWarnDev(
-      'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
-        'WillMountAndUpdate uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
-        '  componentWillMount\n' +
-        '  UNSAFE_componentWillUpdate\n\n' +
-        'The above lifecycles should be removed. Learn more about this warning here:\n' +
-        'https://fb.me/react-async-component-lifecycle-hooks',
-      {withoutStack: true},
-    );
+    expect(() => {
+      expect(() =>
+        ReactDOM.render(<WillMountAndUpdate />, container),
+      ).toWarnDev(
+        'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
+          'WillMountAndUpdate uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
+          '  componentWillMount\n' +
+          '  UNSAFE_componentWillUpdate\n\n' +
+          'The above lifecycles should be removed. Learn more about this warning here:\n' +
+          'https://fb.me/react-async-component-lifecycle-hooks',
+        {withoutStack: true},
+      );
+    }).toLowPriorityWarnDev(['componentWillMount is deprecated'], {
+      withoutStack: true,
+    });
 
     class WillReceiveProps extends React.Component {
       state = {};
@@ -931,14 +981,18 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    expect(() => ReactDOM.render(<WillReceiveProps />, container)).toWarnDev(
-      'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
-        'WillReceiveProps uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
-        '  componentWillReceiveProps\n\n' +
-        'The above lifecycles should be removed. Learn more about this warning here:\n' +
-        'https://fb.me/react-async-component-lifecycle-hooks',
-      {withoutStack: true},
-    );
+    expect(() => {
+      expect(() => ReactDOM.render(<WillReceiveProps />, container)).toWarnDev(
+        'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
+          'WillReceiveProps uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
+          '  componentWillReceiveProps\n\n' +
+          'The above lifecycles should be removed. Learn more about this warning here:\n' +
+          'https://fb.me/react-async-component-lifecycle-hooks',
+        {withoutStack: true},
+      );
+    }).toLowPriorityWarnDev(['componentWillReceiveProps is deprecated'], {
+      withoutStack: true,
+    });
   });
 
   it('calls effects on module-pattern component', function() {
@@ -977,7 +1031,16 @@ describe('ReactComponentLifeCycle', () => {
     };
 
     const div = document.createElement('div');
-    ReactDOM.render(<Parent ref={c => c && log.push('ref')} />, div);
+    expect(() =>
+      ReactDOM.render(<Parent ref={c => c && log.push('ref')} />, div),
+    ).toWarnDev(
+      'Warning: The <Parent /> component appears to be a function component that returns a class instance. ' +
+        'Change Parent to a class that extends React.Component instead. ' +
+        "If you can't use a class try assigning the prototype on the function as a workaround. " +
+        '`Parent.prototype = React.Component.prototype`. ' +
+        "Don't use an arrow function since it cannot be called with `new` by React.",
+      {withoutStack: true},
+    );
     ReactDOM.render(<Parent ref={c => c && log.push('ref')} />, div);
 
     expect(log).toEqual([
@@ -1063,7 +1126,16 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     const div = document.createElement('div');
-    ReactDOM.render(<MyComponent foo="bar" />, div);
+    expect(() =>
+      ReactDOM.render(<MyComponent foo="bar" />, div),
+    ).toLowPriorityWarnDev(
+      [
+        'componentWillMount is deprecated',
+        'componentWillReceiveProps is deprecated',
+        'componentWillUpdate is deprecated',
+      ],
+      {withoutStack: true},
+    );
     expect(log).toEqual(['componentWillMount', 'UNSAFE_componentWillMount']);
 
     log.length = 0;
@@ -1201,6 +1273,40 @@ describe('ReactComponentLifeCycle', () => {
     expect(log).toEqual([]);
   });
 
+  it('should pass previous state to shouldComponentUpdate even with getDerivedStateFromProps', () => {
+    const divRef = React.createRef();
+    class SimpleComponent extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          value: props.value,
+        };
+      }
+
+      static getDerivedStateFromProps(nextProps, prevState) {
+        if (nextProps.value === prevState.value) {
+          return null;
+        }
+        return {value: nextProps.value};
+      }
+
+      shouldComponentUpdate(nextProps, nextState) {
+        return nextState.value !== this.state.value;
+      }
+
+      render() {
+        return <div ref={divRef}>value: {this.state.value}</div>;
+      }
+    }
+
+    const div = document.createElement('div');
+
+    ReactDOM.render(<SimpleComponent value="initial" />, div);
+    expect(divRef.current.textContent).toBe('value: initial');
+    ReactDOM.render(<SimpleComponent value="updated" />, div);
+    expect(divRef.current.textContent).toBe('value: updated');
+  });
+
   it('should call getSnapshotBeforeUpdate before mutations are committed', () => {
     const log = [];
 
@@ -1280,5 +1386,88 @@ describe('ReactComponentLifeCycle', () => {
 
     // De-duped
     ReactDOM.render(<MyComponent />, div);
+  });
+
+  it('warns about deprecated unsafe lifecycles', function() {
+    class MyComponent extends React.Component {
+      componentWillMount() {}
+      componentWillReceiveProps() {}
+      componentWillUpdate() {}
+      render() {
+        return null;
+      }
+    }
+
+    const container = document.createElement('div');
+    expect(() =>
+      ReactDOM.render(<MyComponent x={1} />, container),
+    ).toLowPriorityWarnDev(
+      [
+        'componentWillMount is deprecated and will be removed in the next major version. ' +
+          'Use componentDidMount instead. As a temporary workaround, ' +
+          'you can rename to UNSAFE_componentWillMount.' +
+          '\n\nPlease update the following components: MyComponent',
+        'componentWillReceiveProps is deprecated and will be removed in the next major version. ' +
+          'Use static getDerivedStateFromProps instead.' +
+          '\n\nPlease update the following components: MyComponent',
+        'componentWillUpdate is deprecated and will be removed in the next major version. ' +
+          'Use componentDidUpdate instead. As a temporary workaround, ' +
+          'you can rename to UNSAFE_componentWillUpdate.' +
+          '\n\nPlease update the following components: MyComponent',
+      ],
+      {withoutStack: true},
+    );
+
+    // Dedupe check (update and instantiate new
+    ReactDOM.render(<MyComponent x={2} />, container);
+    ReactDOM.render(<MyComponent key="new" x={1} />, container);
+  });
+
+  describe('react-lifecycles-compat', () => {
+    const {polyfill} = require('react-lifecycles-compat');
+
+    it('should not warn for components with polyfilled getDerivedStateFromProps', () => {
+      class PolyfilledComponent extends React.Component {
+        state = {};
+        static getDerivedStateFromProps() {
+          return null;
+        }
+        render() {
+          return null;
+        }
+      }
+
+      polyfill(PolyfilledComponent);
+
+      const container = document.createElement('div');
+      ReactDOM.render(
+        <React.StrictMode>
+          <PolyfilledComponent />
+        </React.StrictMode>,
+        container,
+      );
+    });
+
+    it('should not warn for components with polyfilled getSnapshotBeforeUpdate', () => {
+      class PolyfilledComponent extends React.Component {
+        getSnapshotBeforeUpdate() {
+          return null;
+        }
+        componentDidUpdate() {}
+        render() {
+          return null;
+        }
+      }
+
+      polyfill(PolyfilledComponent);
+
+      const container = document.createElement('div');
+      ReactDOM.render(
+        <React.StrictMode>
+          <PolyfilledComponent />
+        </React.StrictMode>,
+        container,
+      );
+    });
   });
 });

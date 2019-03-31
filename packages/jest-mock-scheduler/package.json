@@ -4,7 +4,11 @@
   "version": "0.1.0",
   "description": "Jest matchers and utilities for testing the scheduler package.",
   "main": "index.js",
-  "repository": "facebook/react",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/facebook/react.git",
+    "directory": "packages/jest-mock-scheduler"
+  },
   "keywords": [
     "jest",
     "scheduler"

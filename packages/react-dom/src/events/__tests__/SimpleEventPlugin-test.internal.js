@@ -13,6 +13,7 @@ describe('SimpleEventPlugin', function() {
   let React;
   let ReactDOM;
   let ReactFeatureFlags;
+  let Scheduler;
 
   let onClick;
   let container;
@@ -35,33 +36,10 @@ describe('SimpleEventPlugin', function() {
   }
 
   beforeEach(function() {
-    // TODO pull this into helper method, reduce repetition.
-    // mock the browser APIs which are used in schedule:
-    // - requestAnimationFrame should pass the DOMHighResTimeStamp argument
-    // - calling 'window.postMessage' should actually fire postmessage handlers
-    global.requestAnimationFrame = function(cb) {
-      return setTimeout(() => {
-        cb(Date.now());
-      });
-    };
-    const originalAddEventListener = global.addEventListener;
-    let postMessageCallback;
-    global.addEventListener = function(eventName, callback, useCapture) {
-      if (eventName === 'message') {
-        postMessageCallback = callback;
-      } else {
-        originalAddEventListener(eventName, callback, useCapture);
-      }
-    };
-    global.postMessage = function(messageKey, targetOrigin) {
-      const postMessageEvent = {source: window, data: messageKey};
-      if (postMessageCallback) {
-        postMessageCallback(postMessageEvent);
-      }
-    };
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
+    Scheduler = require('scheduler');
 
     onClick = jest.fn();
   });
@@ -258,6 +236,7 @@ describe('SimpleEventPlugin', function() {
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
       ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
       ReactDOM = require('react-dom');
+      Scheduler = require('scheduler');
     });
 
     it('flushes pending interactive work before extracting event handler', () => {
@@ -296,7 +275,7 @@ describe('SimpleEventPlugin', function() {
       expect(ops).toEqual([]);
       expect(button).toBe(undefined);
       // Flush async work
-      jest.runAllTimers();
+      Scheduler.flushAll();
       expect(ops).toEqual(['render button: enabled']);
 
       ops = [];
@@ -336,7 +315,7 @@ describe('SimpleEventPlugin', function() {
       click();
       click();
       click();
-      jest.runAllTimers();
+      Scheduler.flushAll();
       expect(ops).toEqual([]);
     });
 
@@ -367,7 +346,7 @@ describe('SimpleEventPlugin', function() {
       // Should not have flushed yet because it's async
       expect(button).toBe(undefined);
       // Flush async work
-      jest.runAllTimers();
+      Scheduler.flushAll();
       expect(button.textContent).toEqual('Count: 0');
 
       function click() {
@@ -390,7 +369,7 @@ describe('SimpleEventPlugin', function() {
       click();
 
       // Flush the remaining work
-      jest.runAllTimers();
+      Scheduler.flushAll();
       // The counter should equal the total number of clicks
       expect(button.textContent).toEqual('Count: 7');
     });
@@ -459,7 +438,7 @@ describe('SimpleEventPlugin', function() {
       click();
 
       // Flush the remaining work
-      jest.runAllTimers();
+      Scheduler.flushAll();
       // Both counters should equal the total number of clicks
       expect(button.textContent).toEqual('High-pri count: 7, Low-pri count: 7');
     });

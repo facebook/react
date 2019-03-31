@@ -234,12 +234,12 @@ describe('ReactShallowRenderer', () => {
     class SomeComponent extends React.Component {
       render() {
         return (
-          <React.unstable_Profiler id="test" onRender={jest.fn()}>
+          <React.Profiler id="test" onRender={jest.fn()}>
             <div>
               <span className="child1" />
               <span className="child2" />
             </div>
-          </React.unstable_Profiler>
+          </React.Profiler>
         );
       }
     }
@@ -247,7 +247,7 @@ describe('ReactShallowRenderer', () => {
     const shallowRenderer = createRenderer();
     const result = shallowRenderer.render(<SomeComponent />);
 
-    expect(result.type).toBe(React.unstable_Profiler);
+    expect(result.type).toBe(React.Profiler);
     expect(result.props.children).toEqual(
       <div>
         <span className="child1" />
@@ -942,6 +942,42 @@ describe('ReactShallowRenderer', () => {
     expect(result).toEqual(<div>value:1</div>);
   });
 
+  it('should pass previous state to shouldComponentUpdate even with getDerivedStateFromProps', () => {
+    class SimpleComponent extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          value: props.value,
+        };
+      }
+
+      static getDerivedStateFromProps(nextProps, prevState) {
+        if (nextProps.value === prevState.value) {
+          return null;
+        }
+        return {value: nextProps.value};
+      }
+
+      shouldComponentUpdate(nextProps, nextState) {
+        return nextState.value !== this.state.value;
+      }
+
+      render() {
+        return <div>{`value:${this.state.value}`}</div>;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    const initialResult = shallowRenderer.render(
+      <SimpleComponent value="initial" />,
+    );
+    expect(initialResult).toEqual(<div>value:initial</div>);
+    const updatedResult = shallowRenderer.render(
+      <SimpleComponent value="updated" />,
+    );
+    expect(updatedResult).toEqual(<div>value:updated</div>);
+  });
+
   it('can setState with an updater function', () => {
     let instance;
 
@@ -1417,5 +1453,158 @@ describe('ReactShallowRenderer', () => {
     const shallowRenderer = createRenderer();
     shallowRenderer.render(<Foo foo="bar" />);
     expect(logs).toEqual([undefined]);
+  });
+
+  it('should handle memo', () => {
+    function Foo() {
+      return <div>foo</div>;
+    }
+    const MemoFoo = React.memo(Foo);
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<MemoFoo />);
+  });
+
+  it('should enable React.memo to prevent a re-render', () => {
+    const logs = [];
+    const Foo = React.memo(({count}) => {
+      logs.push(`Foo: ${count}`);
+      return <div>{count}</div>;
+    });
+    const Bar = React.memo(({count}) => {
+      logs.push(`Bar: ${count}`);
+      return <div>{count}</div>;
+    });
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Foo count={1} />);
+    expect(logs).toEqual(['Foo: 1']);
+    logs.length = 0;
+    // Rendering the same element with the same props should be prevented
+    shallowRenderer.render(<Foo count={1} />);
+    expect(logs).toEqual([]);
+    // A different element with the same props should cause a re-render
+    shallowRenderer.render(<Bar count={1} />);
+    expect(logs).toEqual(['Bar: 1']);
+  });
+
+  it('should respect a custom comparison function with React.memo', () => {
+    let renderCount = 0;
+    function areEqual(props, nextProps) {
+      return props.foo === nextProps.foo;
+    }
+    const Foo = React.memo(({foo, bar}) => {
+      renderCount++;
+      return (
+        <div>
+          {foo} {bar}
+        </div>
+      );
+    }, areEqual);
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Foo foo={1} bar={1} />);
+    expect(renderCount).toBe(1);
+    // Change a prop that the comparison funciton ignores
+    shallowRenderer.render(<Foo foo={1} bar={2} />);
+    expect(renderCount).toBe(1);
+    shallowRenderer.render(<Foo foo={2} bar={2} />);
+    expect(renderCount).toBe(2);
+  });
+
+  it('should not call the comparison function with React.memo on the initial render', () => {
+    const areEqual = jest.fn(() => false);
+    const SomeComponent = React.memo(({foo}) => {
+      return <div>{foo}</div>;
+    }, areEqual);
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<SomeComponent foo={1} />);
+    expect(areEqual).not.toHaveBeenCalled();
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>{1}</div>);
+  });
+
+  it('should handle memo(forwardRef())', () => {
+    const testRef = React.createRef();
+    const SomeComponent = React.forwardRef((props, ref) => {
+      expect(ref).toEqual(testRef);
+      return (
+        <div>
+          <span className="child1" />
+          <span className="child2" />
+        </div>
+      );
+    });
+
+    const SomeMemoComponent = React.memo(SomeComponent);
+
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<SomeMemoComponent ref={testRef} />);
+
+    expect(result.type).toBe('div');
+    expect(result.props.children).toEqual([
+      <span className="child1" />,
+      <span className="child2" />,
+    ]);
+  });
+
+  it('should warn for forwardRef(memo())', () => {
+    const testRef = React.createRef();
+    const SomeMemoComponent = React.memo(({foo}) => {
+      return <div>{foo}</div>;
+    });
+    const shallowRenderer = createRenderer();
+    expect(() => {
+      expect(() => {
+        const SomeComponent = React.forwardRef(SomeMemoComponent);
+        shallowRenderer.render(<SomeComponent ref={testRef} />);
+      }).toWarnDev(
+        'Warning: forwardRef requires a render function but received ' +
+          'a `memo` component. Instead of forwardRef(memo(...)), use ' +
+          'memo(forwardRef(...))',
+        {withoutStack: true},
+      );
+    }).toThrowError(
+      'forwardRef requires a render function but was given object.',
+    );
+  });
+
+  it('should let you change type', () => {
+    function Foo({prop}) {
+      return <div>Foo {prop}</div>;
+    }
+    function Bar({prop}) {
+      return <div>Bar {prop}</div>;
+    }
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Foo prop="foo1" />);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>Foo {'foo1'}</div>);
+    shallowRenderer.render(<Foo prop="foo2" />);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>Foo {'foo2'}</div>);
+    shallowRenderer.render(<Bar prop="bar1" />);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>Bar {'bar1'}</div>);
+    shallowRenderer.render(<Bar prop="bar2" />);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>Bar {'bar2'}</div>);
+  });
+
+  it('should let you change class type', () => {
+    class Foo extends React.Component {
+      render() {
+        return <div>Foo {this.props.prop}</div>;
+      }
+    }
+    class Bar extends React.Component {
+      render() {
+        return <div>Bar {this.props.prop}</div>;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Foo prop="foo1" />);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>Foo {'foo1'}</div>);
+    shallowRenderer.render(<Foo prop="foo2" />);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>Foo {'foo2'}</div>);
+    shallowRenderer.render(<Bar prop="bar1" />);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>Bar {'bar1'}</div>);
+    shallowRenderer.render(<Bar prop="bar2" />);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>Bar {'bar2'}</div>);
   });
 });

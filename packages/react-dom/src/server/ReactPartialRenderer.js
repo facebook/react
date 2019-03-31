@@ -21,8 +21,8 @@ import describeComponentFrame from 'shared/describeComponentFrame';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   warnAboutDeprecatedLifecycles,
-  enableHooks,
   enableSuspenseServerRenderer,
+  enableEventAPI,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -37,6 +37,8 @@ import {
   REACT_CONTEXT_TYPE,
   REACT_LAZY_TYPE,
   REACT_MEMO_TYPE,
+  REACT_EVENT_COMPONENT_TYPE,
+  REACT_EVENT_TARGET_TYPE,
 } from 'shared/ReactSymbols';
 
 import {
@@ -55,7 +57,6 @@ import {
   prepareToUseHooks,
   finishHooks,
   Dispatcher,
-  DispatcherWithoutHooks,
   currentThreadID,
   setCurrentThreadID,
 } from './ReactPartialRendererHooks';
@@ -181,6 +182,7 @@ let didWarnDefaultTextareaValue = false;
 let didWarnInvalidOptionChildren = false;
 const didWarnAboutNoopUpdateForComponent = {};
 const didWarnAboutBadClass = {};
+const didWarnAboutModulePatternComponent = {};
 const didWarnAboutDeprecatedWillMount = {};
 const didWarnAboutUndefinedDerivedState = {};
 const didWarnAboutUninitializedState = {};
@@ -527,6 +529,24 @@ function resolve(
         validateRenderResult(child, Component);
         return;
       }
+
+      if (__DEV__) {
+        const componentName = getComponentName(Component) || 'Unknown';
+        if (!didWarnAboutModulePatternComponent[componentName]) {
+          warningWithoutStack(
+            false,
+            'The <%s /> component appears to be a function component that returns a class instance. ' +
+              'Change %s to a class that extends React.Component instead. ' +
+              "If you can't use a class try assigning the prototype on the function as a workaround. " +
+              "`%s.prototype = React.Component.prototype`. Don't use an arrow function since it " +
+              'cannot be called with `new` by React.',
+            componentName,
+            componentName,
+            componentName,
+          );
+          didWarnAboutModulePatternComponent[componentName] = true;
+        }
+      }
     }
 
     inst.props = element.props;
@@ -717,6 +737,7 @@ class ReactDOMServerRenderer {
   destroy() {
     if (!this.exhausted) {
       this.exhausted = true;
+      this.clearProviders();
       freeThreadID(this.threadID);
     }
   }
@@ -778,6 +799,15 @@ class ReactDOMServerRenderer {
     context[this.threadID] = previousValue;
   }
 
+  clearProviders(): void {
+    // Restore any remaining providers on the stack to previous values
+    for (let index = this.contextIndex; index >= 0; index--) {
+      const context: ReactContext<any> = this.contextStack[index];
+      const previousValue = this.contextValueStack[index];
+      context[this.threadID] = previousValue;
+    }
+  }
+
   read(bytes: number): string | null {
     if (this.exhausted) {
       return null;
@@ -786,11 +816,7 @@ class ReactDOMServerRenderer {
     const prevThreadID = currentThreadID;
     setCurrentThreadID(this.threadID);
     const prevDispatcher = ReactCurrentDispatcher.current;
-    if (enableHooks) {
-      ReactCurrentDispatcher.current = Dispatcher;
-    } else {
-      ReactCurrentDispatcher.current = DispatcherWithoutHooks;
-    }
+    ReactCurrentDispatcher.current = Dispatcher;
     try {
       // Markup generated within <Suspense> ends up buffered until we know
       // nothing in that boundary suspended
@@ -831,6 +857,7 @@ class ReactDOMServerRenderer {
                 'suspense fallback not found, something is broken',
               );
               this.stack.push(fallbackFrame);
+              out[this.suspenseDepth] += '<!--$!-->';
               // Skip flushing output since we're switching to the fallback
               continue;
             } else {
@@ -962,9 +989,27 @@ class ReactDOMServerRenderer {
         }
         case REACT_SUSPENSE_TYPE: {
           if (enableSuspenseServerRenderer) {
-            const fallbackChildren = toArray(
-              ((nextChild: any): ReactElement).props.fallback,
-            );
+            const fallback = ((nextChild: any): ReactElement).props.fallback;
+            if (fallback === undefined) {
+              // If there is no fallback, then this just behaves as a fragment.
+              const nextChildren = toArray(
+                ((nextChild: any): ReactElement).props.children,
+              );
+              const frame: Frame = {
+                type: null,
+                domNamespace: parentNamespace,
+                children: nextChildren,
+                childIndex: 0,
+                context: context,
+                footer: '',
+              };
+              if (__DEV__) {
+                ((frame: any): FrameDev).debugElementStack = [];
+              }
+              this.stack.push(frame);
+              return '';
+            }
+            const fallbackChildren = toArray(fallback);
             const nextChildren = toArray(
               ((nextChild: any): ReactElement).props.children,
             );
@@ -974,8 +1019,7 @@ class ReactDOMServerRenderer {
               children: fallbackChildren,
               childIndex: 0,
               context: context,
-              footer: '',
-              out: '',
+              footer: '<!--/$-->',
             };
             const frame: Frame = {
               fallbackFrame,
@@ -984,7 +1028,7 @@ class ReactDOMServerRenderer {
               children: nextChildren,
               childIndex: 0,
               context: context,
-              footer: '',
+              footer: '<!--/$-->',
             };
             if (__DEV__) {
               ((frame: any): FrameDev).debugElementStack = [];
@@ -992,7 +1036,7 @@ class ReactDOMServerRenderer {
             }
             this.stack.push(frame);
             this.suspenseDepth++;
-            return '';
+            return '<!--$-->';
           } else {
             invariant(false, 'ReactDOMServer does not yet support Suspense.');
           }
@@ -1121,6 +1165,32 @@ class ReactDOMServerRenderer {
             this.stack.push(frame);
             return '';
           }
+          case REACT_EVENT_COMPONENT_TYPE:
+          case REACT_EVENT_TARGET_TYPE: {
+            if (enableEventAPI) {
+              const nextChildren = toArray(
+                ((nextChild: any): ReactElement).props.children,
+              );
+              const frame: Frame = {
+                type: null,
+                domNamespace: parentNamespace,
+                children: nextChildren,
+                childIndex: 0,
+                context: context,
+                footer: '',
+              };
+              if (__DEV__) {
+                ((frame: any): FrameDev).debugElementStack = [];
+              }
+              this.stack.push(frame);
+              return '';
+            }
+            invariant(
+              false,
+              'ReactDOMServer does not yet support the event API.',
+            );
+          }
+          // eslint-disable-next-line-no-fallthrough
           case REACT_LAZY_TYPE:
             invariant(
               false,

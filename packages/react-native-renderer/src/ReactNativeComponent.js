@@ -24,6 +24,9 @@ import UIManager from 'UIManager';
 import {create} from './ReactNativeAttributePayload';
 import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';
 
+import warningWithoutStack from 'shared/warningWithoutStack';
+import {warnAboutDeprecatedSetNativeProps} from 'shared/ReactFeatureFlags';
+
 export default function(
   findNodeHandle: any => ?number,
   findHostInstance: any => any,
@@ -153,6 +156,28 @@ export default function(
         return;
       }
 
+      if (maybeInstance.canonical) {
+        warningWithoutStack(
+          false,
+          'Warning: setNativeProps is not currently supported in Fabric',
+        );
+        return;
+      }
+
+      if (__DEV__) {
+        if (warnAboutDeprecatedSetNativeProps) {
+          warningWithoutStack(
+            false,
+            'Warning: Calling ref.setNativeProps(nativeProps) ' +
+              'is deprecated and will be removed in a future release. ' +
+              'Use the setNativeProps export from the react-native package instead.' +
+              "\n\timport {setNativeProps} from 'react-native';\n\tsetNativeProps(ref, nativeProps);\n",
+          );
+        }
+      }
+
+      const nativeTag =
+        maybeInstance._nativeTag || maybeInstance.canonical._nativeTag;
       const viewConfig: ReactNativeBaseComponentViewConfig<> =
         maybeInstance.viewConfig || maybeInstance.canonical.viewConfig;
 
@@ -163,7 +188,7 @@ export default function(
       // view invalidation for certain components (eg RCTTextInput) on iOS.
       if (updatePayload != null) {
         UIManager.updateView(
-          maybeInstance._nativeTag,
+          nativeTag,
           viewConfig.uiViewClassName,
           updatePayload,
         );

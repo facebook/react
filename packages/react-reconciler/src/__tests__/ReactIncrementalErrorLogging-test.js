@@ -12,12 +12,14 @@
 
 let React;
 let ReactNoop;
+let Scheduler;
 
 describe('ReactIncrementalErrorLogging', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactNoop = require('react-noop-renderer');
+    Scheduler = require('scheduler');
   });
 
   // Note: in this test file we won't be using toWarnDev() matchers
@@ -50,7 +52,7 @@ describe('ReactIncrementalErrorLogging', () => {
         </span>
       </div>,
     );
-    expect(ReactNoop.flushDeferredPri).toThrowError('constructor error');
+    expect(Scheduler).toFlushAndThrow('constructor error');
     expect(console.error).toHaveBeenCalledTimes(1);
     expect(console.error).toHaveBeenCalledWith(
       __DEV__
@@ -86,7 +88,7 @@ describe('ReactIncrementalErrorLogging', () => {
         </span>
       </div>,
     );
-    expect(ReactNoop.flushDeferredPri).toThrowError('componentDidMount error');
+    expect(Scheduler).toFlushAndThrow('componentDidMount error');
     expect(console.error).toHaveBeenCalledTimes(1);
     expect(console.error).toHaveBeenCalledWith(
       __DEV__
@@ -125,7 +127,7 @@ describe('ReactIncrementalErrorLogging', () => {
         </span>
       </div>,
     );
-    expect(ReactNoop.flushDeferredPri).toThrow('render error');
+    expect(Scheduler).toFlushAndThrow('render error');
     expect(logCapturedErrorCalls.length).toBe(1);
     expect(logCapturedErrorCalls[0]).toEqual(
       __DEV__
@@ -165,10 +167,10 @@ describe('ReactIncrementalErrorLogging', () => {
         this.setState({step: 1});
       }
       componentWillUnmount() {
-        ReactNoop.yield('componentWillUnmount: ' + this.state.step);
+        Scheduler.yieldValue('componentWillUnmount: ' + this.state.step);
       }
       render() {
-        ReactNoop.yield('render: ' + this.state.step);
+        Scheduler.yieldValue('render: ' + this.state.step);
         if (this.state.step > 0) {
           throw new Error('oops');
         }
@@ -181,7 +183,7 @@ describe('ReactIncrementalErrorLogging', () => {
         <Foo />
       </ErrorBoundary>,
     );
-    expect(ReactNoop.flush()).toEqual(
+    expect(Scheduler).toFlushAndYield(
       [
         'render: 0',
         __DEV__ && 'render: 0', // replay

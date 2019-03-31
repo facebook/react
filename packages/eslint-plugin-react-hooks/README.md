@@ -2,26 +2,20 @@
 
 This ESLint plugin enforces the [Rules of Hooks](https://reactjs.org/docs/hooks-rules.html).
 
-It is a part of the [Hooks proposal](https://reactjs.org/docs/hooks-intro.html) for React.
-
-## Experimental Status
-
-This is an experimental release and is intended to be used for testing the Hooks proposal with React 16.7 alpha. The exact heuristics it uses may be adjusted.
-
-The [Rules of Hooks](https://reactjs.org/docs/hooks-rules.html) documentation contains a link to the technical RFC. Please leave a comment on the RFC if you have concerns or ideas about how this plugin should work.
+It is a part of the [Hooks API](https://reactjs.org/docs/hooks-intro.html) for React.
 
 ## Installation
 
-**Note: If you're using Create React App, please wait for a corresponding experimental release of `react-scripts` that includes this rule instead of adding it directly.**
+**Note: If you're using Create React App, please wait for a corresponding release of `react-scripts` that includes this rule instead of adding it directly.**
 
 Assuming you already have ESLint installed, run:
 
 ```sh
 # npm
-npm install eslint-plugin-react-hooks@next --save-dev
+npm install eslint-plugin-react-hooks --save-dev
 
 # yarn
-yarn add eslint-plugin-react-hooks@next --dev
+yarn add eslint-plugin-react-hooks --dev
 ```
 
 Then add it to your ESLint configuration:
@@ -34,7 +28,8 @@ Then add it to your ESLint configuration:
   ],
   "rules": {
     // ...
-    "react-hooks/rules-of-hooks": "error"
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn"
   }
 }
 ```
@@ -42,6 +37,8 @@ Then add it to your ESLint configuration:
 ## Valid and Invalid Examples
 
 Please refer to the [Rules of Hooks](https://reactjs.org/docs/hooks-rules.html) documentation and the [Hooks FAQ](https://reactjs.org/docs/hooks-faq.html#what-exactly-do-the-lint-rules-enforce) to learn more about this rule.
+
+For feedback about the `exhaustive-deps` rule, please post in [this thread](https://github.com/facebook/react/issues/14920).
 
 ## License
 

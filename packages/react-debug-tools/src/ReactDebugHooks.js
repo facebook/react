@@ -10,6 +10,7 @@
 import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {Hook} from 'react-reconciler/src/ReactFiberHooks';
+import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactFiberHooks';
 
 import ErrorStackParser from 'error-stack-parser';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -114,13 +115,18 @@ function useState<S>(
   return [state, (action: BasicStateAction<S>) => {}];
 }
 
-function useReducer<S, A>(
+function useReducer<S, I, A>(
   reducer: (S, A) => S,
-  initialState: S,
-  initialAction: A | void | null,
+  initialArg: I,
+  init?: I => S,
 ): [S, Dispatch<A>] {
   let hook = nextHook();
-  let state = hook !== null ? hook.memoizedState : initialState;
+  let state;
+  if (hook !== null) {
+    state = hook.memoizedState;
+  } else {
+    state = init !== undefined ? init(initialArg) : ((initialArg: any): S);
+  }
   hookLog.push({
     primitive: 'Reducer',
     stackError: new Error(),
@@ -141,7 +147,7 @@ function useRef<T>(initialValue: T): {current: T} {
 }
 
 function useLayoutEffect(
-  create: () => mixed,
+  create: () => (() => void) | void,
   inputs: Array<mixed> | void | null,
 ): void {
   nextHook();
@@ -153,7 +159,7 @@ function useLayoutEffect(
 }
 
 function useEffect(
-  create: () => mixed,
+  create: () => (() => void) | void,
   inputs: Array<mixed> | void | null,
 ): void {
   nextHook();
@@ -209,7 +215,7 @@ function useMemo<T>(
   return value;
 }
 
-const Dispatcher = {
+const Dispatcher: DispatcherType = {
   readContext,
   useCallback,
   useContext,
@@ -226,6 +232,8 @@ const Dispatcher = {
 // Inspect
 
 type HooksNode = {
+  id: number | null,
+  isStateEditable: boolean,
   name: string,
   value: mixed,
   subHooks: Array<HooksNode>,
@@ -367,6 +375,7 @@ function buildTree(rootStack, readHookLog): HooksTree {
   let rootChildren = [];
   let prevStack = null;
   let levelChildren = rootChildren;
+  let nativeHookID = 0;
   let stackOfChildren = [];
   for (let i = 0; i < readHookLog.length; i++) {
     let hook = readHookLog[i];
@@ -397,6 +406,8 @@ function buildTree(rootStack, readHookLog): HooksTree {
       for (let j = stack.length - commonSteps - 1; j >= 1; j--) {
         let children = [];
         levelChildren.push({
+          id: null,
+          isStateEditable: false,
           name: parseCustomHookName(stack[j - 1].functionName),
           value: undefined,
           subHooks: children,
@@ -406,8 +417,22 @@ function buildTree(rootStack, readHookLog): HooksTree {
       }
       prevStack = stack;
     }
+    const {primitive} = hook;
+
+    // For now, the "id" of stateful hooks is just the stateful hook index.
+    // Custom hooks have no ids, nor do non-stateful native hooks (e.g. Context, DebugValue).
+    const id =
+      primitive === 'Context' || primitive === 'DebugValue'
+        ? null
+        : nativeHookID++;
+
+    // For the time being, only State and Reducer hooks support runtime overrides.
+    const isStateEditable = primitive === 'Reducer' || primitive === 'State';
+
     levelChildren.push({
-      name: hook.primitive,
+      id,
+      isStateEditable,
+      name: primitive,
       value: hook.value,
       subHooks: [],
     });

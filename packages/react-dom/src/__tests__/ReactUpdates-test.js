@@ -12,12 +12,15 @@
 let React;
 let ReactDOM;
 let ReactTestUtils;
+let Scheduler;
 
 describe('ReactUpdates', () => {
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
+    Scheduler = require('scheduler');
   });
 
   it('should batch state when updating state twice', () => {
@@ -1311,6 +1314,46 @@ describe('ReactUpdates', () => {
     ReactDOM.render(<Foo />, container);
   });
 
+  it('resets the update counter for unrelated updates', () => {
+    const container = document.createElement('div');
+    const ref = React.createRef();
+
+    class EventuallyTerminating extends React.Component {
+      state = {step: 0};
+      componentDidMount() {
+        this.setState({step: 1});
+      }
+      componentDidUpdate() {
+        if (this.state.step < limit) {
+          this.setState({step: this.state.step + 1});
+        }
+      }
+      render() {
+        return this.state.step;
+      }
+    }
+
+    let limit = 55;
+    expect(() => {
+      ReactDOM.render(<EventuallyTerminating ref={ref} />, container);
+    }).toThrow('Maximum');
+
+    // Verify that we don't go over the limit if these updates are unrelated.
+    limit -= 10;
+    ReactDOM.render(<EventuallyTerminating ref={ref} />, container);
+    expect(container.textContent).toBe(limit.toString());
+    ref.current.setState({step: 0});
+    expect(container.textContent).toBe(limit.toString());
+    ref.current.setState({step: 0});
+    expect(container.textContent).toBe(limit.toString());
+
+    limit += 10;
+    expect(() => {
+      ref.current.setState({step: 0});
+    }).toThrow('Maximum');
+    expect(ref.current).toBe(null);
+  });
+
   it('does not fall into an infinite update loop', () => {
     class NonTerminating extends React.Component {
       state = {step: 0};
@@ -1333,6 +1376,88 @@ describe('ReactUpdates', () => {
     const container = document.createElement('div');
     expect(() => {
       ReactDOM.render(<NonTerminating />, container);
+    }).toThrow('Maximum');
+  });
+
+  it('does not fall into an infinite update loop with useLayoutEffect', () => {
+    function NonTerminating() {
+      const [step, setStep] = React.useState(0);
+      React.useLayoutEffect(() => {
+        setStep(x => x + 1);
+      });
+      return step;
+    }
+
+    const container = document.createElement('div');
+    expect(() => {
+      ReactDOM.render(<NonTerminating />, container);
+    }).toThrow('Maximum');
+  });
+
+  it('can recover after falling into an infinite update loop', () => {
+    class NonTerminating extends React.Component {
+      state = {step: 0};
+      componentDidMount() {
+        this.setState({step: 1});
+      }
+      componentDidUpdate() {
+        this.setState({step: 2});
+      }
+      render() {
+        return this.state.step;
+      }
+    }
+
+    class Terminating extends React.Component {
+      state = {step: 0};
+      componentDidMount() {
+        this.setState({step: 1});
+      }
+      render() {
+        return this.state.step;
+      }
+    }
+
+    const container = document.createElement('div');
+    expect(() => {
+      ReactDOM.render(<NonTerminating />, container);
+    }).toThrow('Maximum');
+
+    ReactDOM.render(<Terminating />, container);
+    expect(container.textContent).toBe('1');
+
+    expect(() => {
+      ReactDOM.render(<NonTerminating />, container);
+    }).toThrow('Maximum');
+
+    ReactDOM.render(<Terminating />, container);
+    expect(container.textContent).toBe('1');
+  });
+
+  it('does not fall into mutually recursive infinite update loop with same container', () => {
+    // Note: this test would fail if there were two or more different roots.
+
+    class A extends React.Component {
+      componentDidMount() {
+        ReactDOM.render(<B />, container);
+      }
+      render() {
+        return null;
+      }
+    }
+
+    class B extends React.Component {
+      componentDidMount() {
+        ReactDOM.render(<A />, container);
+      }
+      render() {
+        return null;
+      }
+    }
+
+    const container = document.createElement('div');
+    expect(() => {
+      ReactDOM.render(<A />, container);
     }).toThrow('Maximum');
   });
 
@@ -1401,4 +1526,96 @@ describe('ReactUpdates', () => {
       });
     });
   });
+
+  if (__DEV__) {
+    it('warns about a deferred infinite update loop with useEffect', () => {
+      function NonTerminating() {
+        const [step, setStep] = React.useState(0);
+        React.useEffect(() => {
+          setStep(x => x + 1);
+          Scheduler.yieldValue(step);
+        });
+        return step;
+      }
+
+      function App() {
+        return <NonTerminating />;
+      }
+
+      let error = null;
+      let stack = null;
+      let originalConsoleError = console.error;
+      console.error = (e, s) => {
+        error = e;
+        stack = s;
+      };
+      try {
+        const container = document.createElement('div');
+        ReactDOM.render(<App />, container);
+        while (error === null) {
+          Scheduler.unstable_flushNumberOfYields(1);
+        }
+        expect(error).toContain('Warning: Maximum update depth exceeded.');
+        expect(stack).toContain('in NonTerminating');
+      } finally {
+        console.error = originalConsoleError;
+      }
+    });
+
+    it('can have nested updates if they do not cross the limit', () => {
+      let _setStep;
+      const LIMIT = 50;
+
+      function Terminating() {
+        const [step, setStep] = React.useState(0);
+        _setStep = setStep;
+        React.useEffect(() => {
+          if (step < LIMIT) {
+            setStep(x => x + 1);
+            Scheduler.yieldValue(step);
+          }
+        });
+        return step;
+      }
+
+      const container = document.createElement('div');
+      ReactDOM.render(<Terminating />, container);
+
+      // Verify we can flush them asynchronously without warning
+      for (let i = 0; i < LIMIT * 2; i++) {
+        Scheduler.unstable_flushNumberOfYields(1);
+      }
+      expect(container.textContent).toBe('50');
+
+      // Verify restarting from 0 doesn't cross the limit
+      expect(() => {
+        _setStep(0);
+      }).toWarnDev(
+        'An update to Terminating inside a test was not wrapped in act',
+      );
+      expect(container.textContent).toBe('0');
+      for (let i = 0; i < LIMIT * 2; i++) {
+        Scheduler.unstable_flushNumberOfYields(1);
+      }
+      expect(container.textContent).toBe('50');
+    });
+
+    it('can have many updates inside useEffect without triggering a warning', () => {
+      function Terminating() {
+        const [step, setStep] = React.useState(0);
+        React.useEffect(() => {
+          for (let i = 0; i < 1000; i++) {
+            setStep(x => x + 1);
+          }
+          Scheduler.yieldValue('Done');
+        }, []);
+        return step;
+      }
+
+      const container = document.createElement('div');
+      ReactDOM.render(<Terminating />, container);
+      expect(Scheduler).toFlushAndYield(['Done']);
+      expect(container.textContent).toBe('1000');
+    });
+  }
 });

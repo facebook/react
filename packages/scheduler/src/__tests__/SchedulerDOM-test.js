@@ -89,8 +89,13 @@ describe('SchedulerDOM', () => {
     };
     jest.resetModules();
 
-    const JestMockScheduler = require('jest-mock-scheduler');
-    JestMockScheduler.mockRestore();
+    // Un-mock scheduler
+    jest.mock('scheduler', () => require.requireActual('scheduler'));
+    jest.mock('scheduler/src/SchedulerHostConfig', () =>
+      require.requireActual(
+        'scheduler/src/forks/SchedulerHostConfig.default.js',
+      ),
+    );
 
     Scheduler = require('scheduler');
   });
@@ -140,7 +145,7 @@ describe('SchedulerDOM', () => {
         expect(callbackLog).toEqual(['A', 'B']);
       });
 
-      it("accepts callbacks betweeen animationFrame and postMessage and doesn't stall", () => {
+      it("accepts callbacks between animationFrame and postMessage and doesn't stall", () => {
         const {unstable_scheduleCallback: scheduleCallback} = Scheduler;
         const callbackLog = [];
         const callbackA = jest.fn(() => callbackLog.push('A'));

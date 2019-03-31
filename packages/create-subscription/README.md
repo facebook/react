@@ -36,7 +36,7 @@ This abstraction can handle a variety of subscription types, including:
 yarn add create-subscription
 
 # NPM
-npm install create-subscription --save
+npm install create-subscription
 ```
 
 # Usage

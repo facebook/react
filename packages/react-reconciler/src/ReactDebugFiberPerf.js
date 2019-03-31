@@ -21,6 +21,7 @@ import {
   ContextConsumer,
   Mode,
   SuspenseComponent,
+  DehydratedSuspenseComponent,
 } from 'shared/ReactWorkTags';
 
 type MeasurementPhase =
@@ -317,7 +318,8 @@ export function stopFailedWorkTimer(fiber: Fiber): void {
     }
     fiber._debugIsCurrentlyTiming = false;
     const warning =
-      fiber.tag === SuspenseComponent
+      fiber.tag === SuspenseComponent ||
+      fiber.tag === DehydratedSuspenseComponent
         ? 'Rendering was suspended'
         : 'An error was thrown inside this error boundary';
     endFiberMark(fiber, null, warning);

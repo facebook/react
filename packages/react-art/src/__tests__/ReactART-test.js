@@ -31,6 +31,7 @@ const Wedge = require('react-art/Wedge');
 // Isolate the noop renderer
 jest.resetModules();
 const ReactNoop = require('react-noop-renderer');
+const Scheduler = require('scheduler');
 
 let Group;
 let Shape;
@@ -358,7 +359,7 @@ describe('ReactART', () => {
     const CurrentRendererContext = React.createContext(null);
 
     function Yield(props) {
-      ReactNoop.yield(props.value);
+      Scheduler.yieldValue(props.value);
       return null;
     }
 
@@ -385,7 +386,7 @@ describe('ReactART', () => {
       </CurrentRendererContext.Provider>,
     );
 
-    ReactNoop.flushThrough(['A']);
+    expect(Scheduler).toFlushAndYieldThrough(['A']);
 
     ReactDOM.render(
       <Surface>
@@ -400,7 +401,7 @@ describe('ReactART', () => {
     expect(ops).toEqual([null, 'ART']);
 
     ops = [];
-    expect(ReactNoop.flush()).toEqual(['B', 'C']);
+    expect(Scheduler).toFlushAndYield(['B', 'C']);
 
     expect(ops).toEqual(['Test']);
   });

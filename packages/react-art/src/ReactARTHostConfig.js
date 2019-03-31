@@ -5,17 +5,23 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export {
-  unstable_now as now,
-  unstable_scheduleCallback as scheduleDeferredCallback,
-  unstable_shouldYield as shouldYield,
-  unstable_cancelCallback as cancelDeferredCallback,
-} from 'scheduler';
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
+import * as Scheduler from 'scheduler';
 import invariant from 'shared/invariant';
 
 import {TYPES, EVENT_TYPES, childrenAsString} from './ReactARTInternals';
+
+// Intentionally not named imports because Rollup would
+// use dynamic dispatch for CommonJS interop named imports.
+const {
+  unstable_now: now,
+  unstable_scheduleCallback: scheduleDeferredCallback,
+  unstable_shouldYield: shouldYield,
+  unstable_cancelCallback: cancelDeferredCallback,
+} = Scheduler;
+
+export {now, scheduleDeferredCallback, shouldYield, cancelDeferredCallback};
 
 const pooledTransform = new Transform();
 
@@ -334,6 +340,10 @@ export function getChildHostContext() {
   return NO_CONTEXT;
 }
 
+export function getChildHostContextForEvent() {
+  return NO_CONTEXT;
+}
+
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
 export const noTimeout = -1;
@@ -423,4 +433,20 @@ export function unhideInstance(instance, props) {
 
 export function unhideTextInstance(textInstance, text): void {
   // Noop
+}
+
+export function handleEventComponent(
+  eventResponder: ReactEventResponder,
+  rootContainerInstance: Container,
+  internalInstanceHandle: Object,
+) {
+  // TODO: add handleEventComponent implementation
+}
+
+export function handleEventTarget(
+  type: Symbol | number,
+  props: Props,
+  internalInstanceHandle: Object,
+) {
+  // TODO: add handleEventTarget implementation
 }
