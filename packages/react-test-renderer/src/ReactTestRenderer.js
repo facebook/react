@@ -19,7 +19,6 @@ import {
   flushSync,
   injectIntoDevTools,
   batchedUpdates,
-  actedUpdates,
   doesHavePendingPassiveEffects,
 } from 'react-reconciler/inline.test';
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
@@ -550,10 +549,8 @@ const ReactTestRendererFiber = {
   unstable_batchedUpdates: batchedUpdates,
   /* eslint-enable camelcase */
   act: createAct(
-    actedUpdates,
     batchedUpdates,
-    flushPassiveEffects,
-    doesHavePendingPassiveEffects,
+    flushPassiveEffectsAndReturnTrueIfStillPending,
   ),
 };
 
@@ -572,6 +569,12 @@ function flushPassiveEffects() {
   // Trick to flush passive effects without exposing an internal API:
   // Create a throwaway root and schedule a dummy update on it.
   updateContainer(null, actRoot, null, null);
+}
+
+function flushPassiveEffectsAndReturnTrueIfStillPending() {
+  const hasPendingPassiveEffects = doesHavePendingPassiveEffects();
+  flushPassiveEffects();
+  return hasPendingPassiveEffects;
 }
 
 const fiberToWrapper = new WeakMap();

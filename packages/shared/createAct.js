@@ -10,6 +10,7 @@
 import type {Thenable} from 'react-reconciler/src/ReactFiberScheduler';
 
 import warningWithoutStack from './warningWithoutStack';
+import actingUpdatesScopeDepth from './actingUpdatesScopeDepth';
 
 let didWarnAboutMessageChannel = false;
 
@@ -42,18 +43,43 @@ try {
   };
 }
 
+function createActedUpdatesScope(callback: (onDone: (?Error) => void) => void) {
+  let previousActingUpdatesScopeDepth;
+  if (__DEV__) {
+    previousActingUpdatesScopeDepth = actingUpdatesScopeDepth._;
+    actingUpdatesScopeDepth._++;
+  }
+
+  function warnIfScopeDepthMismatch() {
+    if (__DEV__) {
+      if (actingUpdatesScopeDepth._ > previousActingUpdatesScopeDepth) {
+        // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
+        warningWithoutStack(
+          null,
+          'You seem to have overlapping act() calls, this is not supported. ' +
+            'Be sure to await previous act() calls before making a new one. ',
+        );
+      }
+    }
+  }
+
+  callback(() => {
+    if (__DEV__) {
+      actingUpdatesScopeDepth._--;
+      warnIfScopeDepthMismatch();
+    }
+  });
+}
+
 export default function createAct(
-  actedUpdates: (() => void) => void,
-  // $FlowFixMe
-  batchedUpdates,
-  flushPassiveEffects: () => void,
-  doesHavePendingPassiveEffects: () => boolean,
+  batchedUpdates: (() => void | Thenable) => void | Thenable,
+  flushPassiveEffectsAndReturnTrueIfStillPending: () => boolean,
 ) {
   function flushEffectsAndMicroTasks(onDone: (err: ?Error) => void) {
     try {
-      flushPassiveEffects();
+      flushPassiveEffectsAndReturnTrueIfStillPending();
       enqueueTask(() => {
-        if (doesHavePendingPassiveEffects()) {
+        if (flushPassiveEffectsAndReturnTrueIfStillPending()) {
           flushEffectsAndMicroTasks(onDone);
         } else {
           onDone();
@@ -66,7 +92,7 @@ export default function createAct(
 
   return function act(callback: () => Thenable) {
     let thenable;
-    actedUpdates(onDone => {
+    createActedUpdatesScope(onDone => {
       const result = batchedUpdates(callback);
       if (
         result !== null &&
@@ -95,7 +121,7 @@ export default function createAct(
         }
 
         // in this case, the returned thenable runs the callback, flushes
-        // effects and  microtasks in a loop until doesHavePendingPassiveEffects() === false,
+        // effects and  microtasks in a loop until flushPassiveEffectsAndReturnTrueIfStillPending() === false,
         // and cleans up
         thenable = {
           then(successFn, errorFn) {
@@ -103,16 +129,12 @@ export default function createAct(
             result.then(
               () => {
                 flushEffectsAndMicroTasks(() => {
-                  if (onDone !== undefined) {
-                    onDone();
-                  }
+                  onDone();
                   successFn();
                 });
               },
               err => {
-                if (onDone !== undefined) {
-                  onDone(err);
-                }
+                onDone();
                 errorFn(err);
               },
             );
@@ -143,16 +165,10 @@ export default function createAct(
 
         // flush effects until none remain, and cleanup
         try {
-          while (doesHavePendingPassiveEffects()) {
-            flushPassiveEffects();
-          }
-          if (onDone !== undefined) {
-            onDone();
-          }
+          while (flushPassiveEffectsAndReturnTrueIfStillPending()) {}
+          onDone();
         } catch (err) {
-          if (onDone !== undefined) {
-            onDone(err);
-          }
+          onDone(err);
           throw err;
         }
       }

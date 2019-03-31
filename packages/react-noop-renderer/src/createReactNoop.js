@@ -819,11 +819,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     interactiveUpdates: NoopRenderer.interactiveUpdates,
 
-    act: createAct(
-      NoopRenderer.actedUpdates,
-      NoopRenderer.batchedUpdates,
-      () => ReactNoop.flushPassiveEffects(),
-      NoopRenderer.doesHavePendingPassiveEffects,
+    act: createAct(NoopRenderer.batchedUpdates, () =>
+      ReactNoop.flushPassiveEffectsAndReturnTrueIfStillPending(),
     ),
 
     flushSync(fn: () => mixed) {
@@ -838,6 +835,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       rootContainers.set(rootID, container);
       const root = NoopRenderer.createContainer(container, true, false);
       NoopRenderer.updateContainer(null, root, null, null);
+    },
+
+    flushPassiveEffectsAndReturnTrueIfStillPending() {
+      const hasPendingPassiveEffects = NoopRenderer.doesHavePendingPassiveEffects();
+      ReactNoop.flushPassiveEffects();
+      return hasPendingPassiveEffects;
     },
 
     // Logs the current state of the tree.

@@ -35,7 +35,6 @@ import {
   computeUniqueAsyncExpiration as computeUniqueAsyncExpiration_old,
   flushPassiveEffects as flushPassiveEffects_old,
   doesHavePendingPassiveEffects as doesHavePendingPassiveEffects_old,
-  actedUpdates as actedUpdates_old,
   warnIfNotCurrentlyActingUpdatesInDev as warnIfNotCurrentlyActingUpdatesInDev_old,
 } from './ReactFiberScheduler.old';
 
@@ -65,7 +64,6 @@ import {
   computeUniqueAsyncExpiration as computeUniqueAsyncExpiration_new,
   flushPassiveEffects as flushPassiveEffects_new,
   doesHavePendingPassiveEffects as doesHavePendingPassiveEffects_new,
-  actedUpdates as actedUpdates_new,
   warnIfNotCurrentlyActingUpdatesInDev as warnIfNotCurrentlyActingUpdatesInDev_new,
 } from './ReactFiberScheduler.new';
 
@@ -94,7 +92,6 @@ export let flushInteractiveUpdates = flushInteractiveUpdates_old;
 export let computeUniqueAsyncExpiration = computeUniqueAsyncExpiration_old;
 export let flushPassiveEffects = flushPassiveEffects_old;
 export let doesHavePendingPassiveEffects = doesHavePendingPassiveEffects_old;
-export let actedUpdates = actedUpdates_old;
 export let warnIfNotCurrentlyActingUpdatesInDev = warnIfNotCurrentlyActingUpdatesInDev_old;
 
 if (enableNewScheduler) {
@@ -123,7 +120,6 @@ if (enableNewScheduler) {
   computeUniqueAsyncExpiration = computeUniqueAsyncExpiration_new;
   flushPassiveEffects = flushPassiveEffects_new;
   doesHavePendingPassiveEffects = doesHavePendingPassiveEffects_new;
-  actedUpdates = actedUpdates_new;
   warnIfNotCurrentlyActingUpdatesInDev = warnIfNotCurrentlyActingUpdatesInDev_new;
 }
 

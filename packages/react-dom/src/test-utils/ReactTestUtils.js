@@ -3,7 +3,6 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
  */
 import type {Thenable} from 'react-reconciler/src/ReactFiberScheduler';
 
@@ -43,7 +42,6 @@ const [
   restoreStateIfNeeded,
   dispatchEvent,
   runEventsInBatch,
-  actedUpdates,
   doesHavePendingPassiveEffects,
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
 
@@ -155,14 +153,14 @@ function validateClassInstance(inst, methodName) {
 // a plain dom element, lazily initialized, used by act() when flushing effects
 let actContainerElement = null;
 
+// a warning for when you try to use TestUtils.act in a non-browser environment
 let didWarnAboutActInNodejs = false;
 
-const act = createAct(
-  actedUpdates,
-  ReactDOM.unstable_batchedUpdates,
-  () => ReactDOM.render(<div />, actContainerElement),
-  doesHavePendingPassiveEffects,
-);
+const act = createAct(ReactDOM.unstable_batchedUpdates, () => {
+  const hasPendingPassiveEffects = doesHavePendingPassiveEffects();
+  ReactDOM.render(<div />, actContainerElement);
+  return hasPendingPassiveEffects;
+});
 
 /**
  * Utilities for making it easy to test React components.

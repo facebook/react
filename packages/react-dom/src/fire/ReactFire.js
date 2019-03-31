@@ -40,7 +40,6 @@ import {
   getPublicRootInstance,
   findHostInstance,
   findHostInstanceWithWarning,
-  actedUpdates,
   doesHavePendingPassiveEffects,
 } from 'react-reconciler/inline.fire';
 import {createPortal as createPortalImpl} from 'shared/ReactPortal';
@@ -828,7 +827,6 @@ const ReactDOM: Object = {
       restoreStateIfNeeded,
       dispatchEvent,
       runEventsInBatch,
-      actedUpdates,
       doesHavePendingPassiveEffects,
     ],
   },

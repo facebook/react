@@ -69,6 +69,7 @@ import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import actingUpdatesScopeDepth from 'shared/actingUpdatesScopeDepth';
 
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import {
@@ -1835,52 +1836,15 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
   }
   return root;
 }
+
 export function doesHavePendingPassiveEffects() {
   return passiveEffectCallback !== null;
-}
-
-// in a test-like environment, we want to warn if dispatchAction() is
-// called outside of a TestUtils.act(...)/batchedUpdates/render call.
-// so we have a a step counter for when we descend/ascend from
-// actedUpdates() calls, and test on it for when to warn
-let actingUpdatesScopeDepth = 0;
-
-export function actedUpdates(
-  callback: (onDone: void | ((?Error) => void)) => void,
-) {
-  let previousActingUpdatesScopeDepth;
-  if (__DEV__) {
-    previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
-    actingUpdatesScopeDepth++;
-  }
-
-  function warnIfScopeDepthMismatch() {
-    if (__DEV__) {
-      if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
-        // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
-        warningWithoutStack(
-          null,
-          'You seem to have overlapping act() calls, this is not supported. ' +
-            'Be sure to await previous act() calls before making a new one. ',
-        );
-      }
-    }
-  }
-
-  if (__DEV__) {
-    callback(() => {
-      actingUpdatesScopeDepth--;
-      warnIfScopeDepthMismatch();
-    });
-  } else {
-    callback();
-  }
 }
 
 export function warnIfNotCurrentlyActingUpdatesInDev(fiber: Fiber): void {
   if (__DEV__) {
     if (
-      actingUpdatesScopeDepth === 0 &&
+      actingUpdatesScopeDepth._ === 0 &&
       isRendering === false &&
       isBatchingUpdates === false
     ) {
