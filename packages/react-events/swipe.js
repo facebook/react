@@ -3,9 +3,12 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
 'use strict';
 
-// TODO: this is special because it gets imported during build.
-module.exports = '16.8.6';
+const Swipe = require('./src/Swipe');
+
+module.exports = Swipe.default || Swipe;

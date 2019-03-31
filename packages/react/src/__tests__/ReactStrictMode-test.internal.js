@@ -411,20 +411,29 @@ describe('ReactStrictMode', () => {
 
       let rendered;
 
-      expect(
-        () => (rendered = ReactTestRenderer.create(<SyncRoot />)),
-      ).toWarnDev(
-        'Unsafe lifecycle methods were found within a strict-mode tree:' +
-          '\n    in ConcurrentMode (at **)' +
-          '\n    in SyncRoot (at **)' +
-          '\n\ncomponentWillMount: Please update the following components ' +
-          'to use componentDidMount instead: AsyncRoot, Parent' +
-          '\n\ncomponentWillReceiveProps: Please update the following components ' +
-          'to use static getDerivedStateFromProps instead: Child, Parent' +
-          '\n\ncomponentWillUpdate: Please update the following components ' +
-          'to use componentDidUpdate instead: AsyncRoot, Parent' +
-          '\n\nLearn more about this warning here:' +
-          '\nhttps://fb.me/react-strict-mode-warnings',
+      expect(() => {
+        expect(
+          () => (rendered = ReactTestRenderer.create(<SyncRoot />)),
+        ).toWarnDev(
+          'Unsafe lifecycle methods were found within a strict-mode tree:' +
+            '\n    in ConcurrentMode (at **)' +
+            '\n    in SyncRoot (at **)' +
+            '\n\ncomponentWillMount: Please update the following components ' +
+            'to use componentDidMount instead: AsyncRoot, Parent' +
+            '\n\ncomponentWillReceiveProps: Please update the following components ' +
+            'to use static getDerivedStateFromProps instead: Child, Parent' +
+            '\n\ncomponentWillUpdate: Please update the following components ' +
+            'to use componentDidUpdate instead: AsyncRoot, Parent' +
+            '\n\nLearn more about this warning here:' +
+            '\nhttps://fb.me/react-strict-mode-warnings',
+        );
+      }).toLowPriorityWarnDev(
+        [
+          'componentWillMount is deprecated',
+          'componentWillReceiveProps is deprecated',
+          'componentWillUpdate is deprecated',
+        ],
+        {withoutStack: true},
       );
 
       // Dedupe
@@ -489,24 +498,28 @@ describe('ReactStrictMode', () => {
 
       let rendered;
 
-      expect(
-        () => (rendered = ReactTestRenderer.create(<SyncRoot />)),
-      ).toWarnDev([
-        'Unsafe lifecycle methods were found within a strict-mode tree:' +
-          '\n    in ConcurrentMode (at **)' +
-          '\n    in AsyncRootOne (at **)' +
-          '\n    in div (at **)' +
-          '\n    in SyncRoot (at **)' +
-          '\n\ncomponentWillMount: Please update the following components ' +
-          'to use componentDidMount instead: Bar, Foo',
-        'Unsafe lifecycle methods were found within a strict-mode tree:' +
-          '\n    in ConcurrentMode (at **)' +
-          '\n    in AsyncRootTwo (at **)' +
-          '\n    in div (at **)' +
-          '\n    in SyncRoot (at **)' +
-          '\n\ncomponentWillMount: Please update the following components ' +
-          'to use componentDidMount instead: Baz',
-      ]);
+      expect(() => {
+        expect(
+          () => (rendered = ReactTestRenderer.create(<SyncRoot />)),
+        ).toWarnDev([
+          'Unsafe lifecycle methods were found within a strict-mode tree:' +
+            '\n    in ConcurrentMode (at **)' +
+            '\n    in AsyncRootOne (at **)' +
+            '\n    in div (at **)' +
+            '\n    in SyncRoot (at **)' +
+            '\n\ncomponentWillMount: Please update the following components ' +
+            'to use componentDidMount instead: Bar, Foo',
+          'Unsafe lifecycle methods were found within a strict-mode tree:' +
+            '\n    in ConcurrentMode (at **)' +
+            '\n    in AsyncRootTwo (at **)' +
+            '\n    in div (at **)' +
+            '\n    in SyncRoot (at **)' +
+            '\n\ncomponentWillMount: Please update the following components ' +
+            'to use componentDidMount instead: Baz',
+        ]);
+      }).toLowPriorityWarnDev(['componentWillMount is deprecated'], {
+        withoutStack: true,
+      });
 
       // Dedupe
       rendered = ReactTestRenderer.create(<SyncRoot />);

@@ -11,6 +11,12 @@
   "files": [
     "LICENSE",
     "README.md",
+    "press.js",
+    "hover.js",
+    "focus.js",
+    "swipe.js",
+    "drag.js",
+    "index.js",
     "build-info.json",
     "cjs/",
     "umd/"
