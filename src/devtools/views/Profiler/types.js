@@ -28,11 +28,15 @@ export type InteractionWithCommits = {|
 export type Interactions = Array<InteractionWithCommits>;
 
 export type CommitDetails = {|
+  rootID: number,
+  commitIndex: number,
   actualDurations: Map<number, number>,
   interactions: Array<Interaction>,
 |};
 
 export type ProfilingSummary = {|
+  rootID: number,
+
   // Commit durations
   commitDurations: Array<number>,
 
@@ -43,4 +47,20 @@ export type ProfilingSummary = {|
   initialTreeBaseDurations: Map<number, number>,
 
   interactionCount: number,
+|};
+
+export type ProfilingSnapshotNode = {|
+  id: number,
+  children: Array<number>,
+  displayName: string | null,
+  key: number | string | null,
+|};
+
+export type ImportedProfilingData = {|
+  version: number,
+  profilingOperations: Map<number, Array<Uint32Array>>,
+  profilingSnapshot: Map<number, ProfilingSnapshotNode>,
+  commitDetails: CommitDetails,
+  interactions: Interactions,
+  profilingSummary: ProfilingSummary,
 |};

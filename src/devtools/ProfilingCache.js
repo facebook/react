@@ -51,8 +51,6 @@ type InteractionsParams = {|
 type GetCommitTreeParams = {|
   commitIndex: number,
   profilingSummary: ProfilingSummaryFrontend,
-  rendererID: number,
-  rootID: number,
 |};
 
 type ProfilingSummaryParams = {|
@@ -85,13 +83,19 @@ export default class ProfilingCache {
   > = createResource(
     ({ commitIndex, rendererID, rootID }: CommitDetailsParams) => {
       return new Promise(resolve => {
-        if (!this._store.profilingOperations.has(rootID)) {
-          // If no profiling data was recorded for this root, skip the round trip.
-          resolve({
-            actualDurations: new Map(),
-            interactions: [],
-          });
-        } else {
+        const importedProfilingData = this._store.importedProfilingData;
+        if (importedProfilingData !== null) {
+          const { commitDetails } = (importedProfilingData: any);
+          if (commitDetails != null && commitIndex < commitDetails.length) {
+            const response = commitDetails[commitIndex];
+            this._pendingCommitDetailsMap.set(
+              `${response.rootID}-${commitIndex}`,
+              resolve
+            );
+            this.onCommitDetails(response);
+            return;
+          }
+        } else if (this._store.profilingOperations.has(rootID)) {
           this._pendingCommitDetailsMap.set(
             `${rootID}-${commitIndex}`,
             resolve
@@ -101,7 +105,16 @@ export default class ProfilingCache {
             rendererID,
             rootID,
           });
+          return;
         }
+
+        // If no profiling data was recorded for this root, skip the round trip.
+        resolve({
+          rootID,
+          commitIndex,
+          actualDurations: new Map(),
+          interactions: [],
+        });
       });
     },
     ({ commitIndex, rendererID, rootID }: CommitDetailsParams) =>
@@ -114,16 +127,25 @@ export default class ProfilingCache {
   > = createResource(
     ({ rendererID, rootID }: InteractionsParams) => {
       return new Promise(resolve => {
-        if (!this._store.profilingOperations.has(rootID)) {
-          // If no profiling data was recorded for this root, skip the round trip.
-          resolve([]);
-        } else {
+        const importedProfilingData = this._store.importedProfilingData;
+        if (importedProfilingData !== null) {
+          const { interactions } = (importedProfilingData: any);
+          if (interactions != null) {
+            this._pendingInteractionsMap.set(interactions.rootID, resolve);
+            this.onInteractions(interactions);
+            return;
+          }
+        } else if (this._store.profilingOperations.has(rootID)) {
           this._pendingInteractionsMap.set(rootID, resolve);
           this._bridge.send('getInteractions', {
             rendererID,
             rootID,
           });
+          return;
         }
+
+        // If no profiling data was recorded for this root, skip the round trip.
+        resolve([]);
       });
     },
     ({ rendererID, rootID }: ProfilingSummaryParams) => rootID
@@ -135,18 +157,31 @@ export default class ProfilingCache {
   > = createResource(
     ({ rendererID, rootID }: ProfilingSummaryParams) => {
       return new Promise(resolve => {
-        if (!this._store.profilingOperations.has(rootID)) {
-          // If no profiling data was recorded for this root, skip the round trip.
-          resolve({
-            commitDurations: [],
-            commitTimes: [],
-            initialTreeBaseDurations: new Map(),
-            interactionCount: 0,
-          });
-        } else {
+        const importedProfilingData = this._store.importedProfilingData;
+        if (importedProfilingData !== null) {
+          const { profilingSummary } = (importedProfilingData: any);
+          if (profilingSummary != null) {
+            this._pendingProfileSummaryMap.set(
+              profilingSummary.rootID,
+              resolve
+            );
+            this.onProfileSummary(profilingSummary);
+            return;
+          }
+        } else if (this._store.profilingOperations.has(rootID)) {
           this._pendingProfileSummaryMap.set(rootID, resolve);
           this._bridge.send('getProfilingSummary', { rendererID, rootID });
+          return;
         }
+
+        // If no profiling data was recorded for this root, skip the round trip.
+        resolve({
+          rootID,
+          commitDurations: [],
+          commitTimes: [],
+          initialTreeBaseDurations: new Map(),
+          interactionCount: 0,
+        });
       });
     },
     ({ rendererID, rootID }: ProfilingSummaryParams) => rootID
@@ -161,17 +196,10 @@ export default class ProfilingCache {
     bridge.addListener('profilingSummary', this.onProfileSummary);
   }
 
-  getCommitTree = ({
-    commitIndex,
-    profilingSummary,
-    rendererID,
-    rootID,
-  }: GetCommitTreeParams) =>
+  getCommitTree = ({ commitIndex, profilingSummary }: GetCommitTreeParams) =>
     getCommitTree({
       commitIndex,
       profilingSummary,
-      rendererID,
-      rootID,
       store: this._store,
     });
 
@@ -179,18 +207,15 @@ export default class ProfilingCache {
     commitDetails,
     commitIndex,
     commitTree,
-    rootID,
   }: {|
     commitDetails: CommitDetailsFrontend,
     commitIndex: number,
     commitTree: CommitTreeFrontend,
-    rootID: number,
   |}): FlamegraphChartData =>
     getFlamegraphChartData({
       commitDetails,
       commitIndex,
       commitTree,
-      rootID,
     });
 
   getInteractionsChartData = ({
@@ -200,30 +225,25 @@ export default class ProfilingCache {
   }: {|
     interactions: Array<InteractionWithCommits>,
     profilingSummary: ProfilingSummaryFrontend,
-    rootID: number,
   |}): InteractionsChartData =>
     getInteractionsChartData({
       interactions,
       profilingSummary,
-      rootID,
     });
 
   getRankedChartData = ({
     commitDetails,
     commitIndex,
     commitTree,
-    rootID,
   }: {|
     commitDetails: CommitDetailsFrontend,
     commitIndex: number,
     commitTree: CommitTreeFrontend,
-    rootID: number,
   |}): RankedChartData =>
     getRankedChartData({
       commitDetails,
       commitIndex,
       commitTree,
-      rootID,
     });
 
   invalidate() {
@@ -257,6 +277,8 @@ export default class ProfilingCache {
       }
 
       resolve({
+        rootID,
+        commitIndex,
         actualDurations: actualDurationsMap,
         interactions,
       });
@@ -291,6 +313,7 @@ export default class ProfilingCache {
       }
 
       resolve({
+        rootID,
         commitDurations,
         commitTimes,
         initialTreeBaseDurations: initialTreeBaseDurationsMap,

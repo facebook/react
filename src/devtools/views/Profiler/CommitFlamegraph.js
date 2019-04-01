@@ -56,15 +56,12 @@ export default function CommitFlamegraphAutoSizer(_: {||}) {
     commitTree = profilingCache.getCommitTree({
       commitIndex: selectedCommitIndex,
       profilingSummary,
-      rendererID: ((rendererID: any): number),
-      rootID: ((rootID: any): number),
     });
 
     chartData = profilingCache.getFlamegraphChartData({
       commitDetails,
       commitIndex: selectedCommitIndex,
       commitTree,
-      rootID: ((rootID: any): number),
     });
   }
 

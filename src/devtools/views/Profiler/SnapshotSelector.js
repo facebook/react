@@ -112,7 +112,7 @@ export default function SnapshotSelector(_: Props) {
     [viewNextCommit, viewPrevCommit]
   );
 
-  if (rendererID === null || rootID === null) {
+  if (commitDurations.length === 0) {
     return null;
   }
 

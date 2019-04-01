@@ -67,9 +67,9 @@ function createPanelIfReactLoaded() {
           localStorage.setItem(SUPPORTS_PROFILING_KEY, 'true');
           chrome.devtools.inspectedWindow.eval('window.location.reload();');
         });
-        bridge.addListener('downloadFile', ({ contents, filename }) => {
+        bridge.addListener('exportFile', ({ contents, filename }) => {
           chrome.runtime.sendMessage({
-            downloadFile: true,
+            exportFile: true,
             contents,
             filename,
           });
@@ -85,7 +85,7 @@ function createPanelIfReactLoaded() {
         }
 
         store = new Store(bridge, {
-          supportsDownloads: true,
+          supportsFileDownloads: true,
           supportsReloadAndProfile: true,
           supportsProfiling,
         });

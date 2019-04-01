@@ -110,7 +110,7 @@ chrome.runtime.onMessage.addListener((request, sender) => {
       setIconAndPopup(reactBuildType, sender.tab.id);
     }
 
-    if (request.downloadFile) {
+    if (request.exportFile) {
       let { contents, filename } = request;
       if (!Array.isArray(contents)) {
         contents = [contents];

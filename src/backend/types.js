@@ -89,7 +89,7 @@ export type RendererInterface = {
     findNearestUnfilteredAncestor?: boolean
   ) => number | null,
   getInteractions: (rootID: number) => Interactions,
-  getProfilingSummaryForDownload: (rootID: number) => string,
+  getProfilingDataForDownload: (rootID: number) => Object,
   getProfilingSummary: (rootID: number) => ProfilingSummary,
   handleCommitFiberRoot: (fiber: Object) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,

@@ -12,12 +12,12 @@ const cachedChartData: Map<number, ChartData> = new Map();
 export function getChartData({
   interactions,
   profilingSummary,
-  rootID,
 }: {|
   interactions: Array<InteractionWithCommits>,
   profilingSummary: ProfilingSummary,
-  rootID: number,
 |}): ChartData {
+  const { rootID } = profilingSummary;
+
   if (cachedChartData.has(rootID)) {
     return ((cachedChartData.get(rootID): any): ChartData);
   }

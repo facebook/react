@@ -34,16 +34,14 @@ const rootToCommitTreeMap: Map<number, Array<CommitTree>> = new Map();
 export function getCommitTree({
   commitIndex,
   profilingSummary,
-  rendererID,
-  rootID,
   store,
 }: {|
   commitIndex: number,
   profilingSummary: ProfilingSummaryFrontend,
-  rendererID: number,
-  rootID: number,
   store: Store,
 |}): CommitTree {
+  const { rootID } = profilingSummary;
+
   if (!rootToCommitTreeMap.has(rootID)) {
     rootToCommitTreeMap.set(rootID, []);
   }
@@ -55,6 +53,12 @@ export function getCommitTree({
   if (commitIndex < commitTrees.length) {
     return commitTrees[commitIndex];
   }
+
+  const { importedProfilingData } = store;
+  const profilingOperations =
+    importedProfilingData != null
+      ? importedProfilingData.profilingOperations
+      : store.profilingOperations;
 
   // Commits are generated sequentially and cached.
   // If this is the very first commit, start with the cached snapshot and apply the first mutation.
@@ -72,7 +76,7 @@ export function getCommitTree({
     );
 
     // Mutate the tree
-    const commitOperations = store.profilingOperations.get(rootID);
+    const commitOperations = profilingOperations.get(rootID);
     if (commitOperations != null && commitIndex < commitOperations.length) {
       const commitTree = updateTree(
         { nodes, rootID },
@@ -90,11 +94,9 @@ export function getCommitTree({
     const previousCommitTree = getCommitTree({
       commitIndex: commitIndex - 1,
       profilingSummary,
-      rendererID,
-      rootID,
       store,
     });
-    const commitOperations = store.profilingOperations.get(rootID);
+    const commitOperations = profilingOperations.get(rootID);
     if (commitOperations != null && commitIndex < commitOperations.length) {
       const commitTree = updateTree(
         previousCommitTree,
@@ -127,7 +129,12 @@ function recursivelyIniitliazeTree(
   initialTreeBaseDurations: Map<number, number>,
   store: Store
 ): void {
-  const node = store.profilingSnapshot.get(id);
+  const { importedProfilingData } = store;
+  const profilingSnapshot =
+    importedProfilingData != null
+      ? importedProfilingData.profilingSnapshot
+      : store.profilingSnapshot;
+  const node = profilingSnapshot.get(id);
   if (node != null) {
     nodes.set(id, {
       id,

@@ -15,7 +15,7 @@ import FilterModal from './FilterModal';
 import Interactions from './Interactions';
 import RecordToggle from './RecordToggle';
 import ReloadAndProfileButton from './ReloadAndProfileButton';
-import SaveProfilingDataButton from './SaveProfilingDataButton';
+import ProfilingImportExportButtons from './ProfilingImportExportButtons';
 import SnapshotSelector from './SnapshotSelector';
 import SidebarCommitInfo from './SidebarCommitInfo';
 import SidebarInteractions from './SidebarInteractions';
@@ -89,7 +89,7 @@ function NonSuspendingProfiler({
           <RecordToggle disabled={!supportsProfiling} />
           <ReloadAndProfileButton />
           <ClearProfilingDataButton />
-          <SaveProfilingDataButton />
+          <ProfilingImportExportButtons />
           <div className={styles.VRule} />
           <TabBar
             currentTab={null}
@@ -160,7 +160,7 @@ function SuspendingProfiler() {
           <RecordToggle />
           <ReloadAndProfileButton />
           <ClearProfilingDataButton />
-          <SaveProfilingDataButton />
+          <ProfilingImportExportButtons />
           <div className={styles.VRule} />
           <TabBar
             currentTab={selectedTabID}

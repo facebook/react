@@ -14,6 +14,10 @@ import ProfilingCache from './ProfilingCache';
 
 import type { ElementType } from './types';
 import type { Element } from './views/Elements/types';
+import type {
+  ImportedProfilingData,
+  ProfilingSnapshotNode,
+} from './views/Profiler/types';
 import type { Bridge } from '../types';
 
 const debug = (methodName, ...args) => {
@@ -28,16 +32,9 @@ const debug = (methodName, ...args) => {
 };
 
 type Config = {|
-  supportsDownloads?: boolean,
+  supportsFileDownloads?: boolean,
   supportsReloadAndProfile?: boolean,
   supportsProfiling?: boolean,
-|};
-
-type ProfilingSnapshotNode = {|
-  id: number,
-  children: Array<number>,
-  displayName: string | null,
-  key: number | string | null,
 |};
 
 export type Capabilities = {|
@@ -54,6 +51,9 @@ export default class Store extends EventEmitter {
   // Map of ID to Element.
   // Elements are mutable (for now) to avoid excessive cloning during tree updates.
   _idToElement: Map<number, Element> = new Map();
+
+  // The user has imported a previously exported profiling session.
+  _importedProfilingData: ImportedProfilingData | null = null;
 
   // The backend is currently profiling.
   // When profiling is in progress, operations are stored so that we can later reconstruct past commit trees.
@@ -92,7 +92,7 @@ export default class Store extends EventEmitter {
 
   // These options may be initially set by a confiugraiton option when constructing the Store.
   // In the case of "supportsProfiling", the option may be updated based on the injected renderers.
-  _supportsDownloads: boolean = false;
+  _supportsFileDownloads: boolean = false;
   _supportsProfiling: boolean = false;
   _supportsReloadAndProfile: boolean = false;
 
@@ -103,12 +103,12 @@ export default class Store extends EventEmitter {
 
     if (config != null) {
       const {
-        supportsDownloads,
+        supportsFileDownloads,
         supportsProfiling,
         supportsReloadAndProfile,
       } = config;
-      if (supportsDownloads) {
-        this._supportsDownloads = true;
+      if (supportsFileDownloads) {
+        this._supportsFileDownloads = true;
       }
       if (supportsProfiling) {
         this._supportsProfiling = true;
@@ -132,7 +132,21 @@ export default class Store extends EventEmitter {
 
   // Profiling data has been recorded for at least one root.
   get hasProfilingData(): boolean {
-    return this._profilingOperations.size > 0;
+    return (
+      this._importedProfilingData !== null || this._profilingOperations.size > 0
+    );
+  }
+
+  get importedProfilingData(): ImportedProfilingData | null {
+    return this._importedProfilingData;
+  }
+  set importedProfilingData(value: ImportedProfilingData | null): void {
+    this._importedProfilingData = value;
+    this._profilingOperations = new Map();
+    this._profilingSnapshot = new Map();
+    this._profilingCache.invalidate();
+
+    this.emit('importedProfilingData');
   }
 
   get isProfiling(): boolean {
@@ -163,8 +177,8 @@ export default class Store extends EventEmitter {
     return this._roots;
   }
 
-  get supportsDownloads(): boolean {
-    return this._supportsDownloads;
+  get supportsFileDownloads(): boolean {
+    return this._supportsFileDownloads;
   }
 
   get supportsProfiling(): boolean {
@@ -176,6 +190,7 @@ export default class Store extends EventEmitter {
   }
 
   clearProfilingData(): void {
+    this._importedProfilingData = null;
     this._profilingOperations = new Map();
     this._profilingSnapshot = new Map();
 
@@ -600,6 +615,7 @@ export default class Store extends EventEmitter {
 
   onProfilingStatus = (isProfiling: boolean) => {
     if (isProfiling) {
+      this._importedProfilingData = null;
       this._profilingOperations = new Map();
       this._profilingSnapshot = new Map();
       this.roots.forEach(this._takeProfilingSnapshotRecursive);

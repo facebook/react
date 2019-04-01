@@ -61,7 +61,6 @@ function Interactions({ height, width }: {| height: number, width: number |}) {
   const chartData = profilingCache.getInteractionsChartData({
     interactions,
     profilingSummary,
-    rootID: ((rootID: any): number),
   });
 
   const handleKeyDown = useCallback(

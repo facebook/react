@@ -1536,7 +1536,7 @@ export function attach(
     };
   }
 
-  function getProfilingSummaryForDownload(rootID: number): string {
+  function getProfilingDataForDownload(rootID: number): Object {
     const commitDetails = [];
     const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
       rootID
@@ -1546,15 +1546,12 @@ export function attach(
         commitDetails.push(getCommitDetails(rootID, index));
       }
     }
-    return JSON.stringify(
-      {
-        summary: getProfilingSummary(rootID),
-        interactions: getInteractions(rootID),
-        commitDetails,
-      },
-      null,
-      2
-    );
+    return {
+      version: 1,
+      profilingSummary: getProfilingSummary(rootID),
+      commitDetails,
+      interactions: getInteractions(rootID),
+    };
   }
 
   function getProfilingSummary(rootID: number): ProfilingSummary {
@@ -1620,7 +1617,7 @@ export function attach(
     getFiberIDFromNative,
     getInteractions,
     getNativeFromReactElement,
-    getProfilingSummaryForDownload,
+    getProfilingDataForDownload,
     getProfilingSummary,
     handleCommitFiberRoot,
     handleCommitFiberUnmount,

@@ -5,5 +5,5 @@
    * There are two alternative navigation mechanisms (arrow keys and arrow buttons).
    * If necessary, we could also expand the click-and-drag mechanism to scroll.
    */
-  overflow-x: hidden;
+  overflow-x: hidden !important;
 }

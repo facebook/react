@@ -1,0 +1,18 @@
+.VRule {
+  height: 20px;
+  width: 1px;
+  border-left: 1px solid var(--color-border);
+  padding-left: 0.25rem;
+  margin-left: 0.25rem;
+}
+
+/**
+ * https://developer.mozilla.org/en-US/docs/Web/API/File/Using_files_from_web_applications
+ */
+.Input {
+  position: absolute !important;
+  height: 1px;
+  width: 1px;
+  overflow: hidden;
+  clip: rect(1px, 1px, 1px, 1px);
+}

@@ -13,6 +13,8 @@ import { TreeContext } from '../Elements/TreeContext';
 import { StoreContext } from '../context';
 import Store from '../../store';
 
+import type { ImportedProfilingData } from './types';
+
 export type TabID = 'flame-chart' | 'ranked-chart' | 'interactions';
 
 type Context = {|
@@ -66,6 +68,7 @@ ProfilerContext.displayName = 'ProfilerContext';
 
 type StoreProfilingState = {|
   hasProfilingData: boolean,
+  importedProfilingData: ImportedProfilingData | null,
   isProfiling: boolean,
 |};
 
@@ -81,24 +84,32 @@ function ProfilerContextController({ children }: Props) {
     () => ({
       getCurrentValue: () => ({
         hasProfilingData: store.hasProfilingData,
+        importedProfilingData: store.importedProfilingData,
         isProfiling: store.isProfiling,
       }),
       subscribe: (callback: Function) => {
+        store.addListener('importedProfilingData', callback);
         store.addListener('isProfiling', callback);
-        return () => store.removeListener('isProfiling', callback);
+        return () => {
+          store.removeListener('importedProfilingData', callback);
+          store.removeListener('isProfiling', callback);
+        };
       },
     }),
     [store]
   );
-  const { isProfiling, hasProfilingData } = useSubscription<
-    StoreProfilingState,
-    Store
-  >(subscription);
+  const {
+    isProfiling,
+    hasProfilingData,
+    importedProfilingData,
+  } = useSubscription<StoreProfilingState, Store>(subscription);
 
   let rendererID = null;
   let rootID = null;
   let rootHasProfilingData = false;
-  if (selectedElementID) {
+  if (importedProfilingData !== null) {
+    rootHasProfilingData = true;
+  } else if (selectedElementID) {
     rendererID = store.getRendererIDForElement(
       ((selectedElementID: any): number)
     );

@@ -40,7 +40,6 @@ export default function SidebarInteractions(_: Props) {
   const { maxCommitDuration } = profilingCache.getInteractionsChartData({
     interactions,
     profilingSummary,
-    rootID: ((rootID: any): number),
   });
 
   const { commitDurations, commitTimes } = profilingSummary;

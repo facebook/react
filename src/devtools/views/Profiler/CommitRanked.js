@@ -56,15 +56,12 @@ export default function CommitRankedAutoSizer(_: {||}) {
     commitTree = profilingCache.getCommitTree({
       commitIndex: selectedCommitIndex,
       profilingSummary,
-      rendererID: ((rendererID: any): number),
-      rootID: ((rootID: any): number),
     });
 
     chartData = profilingCache.getRankedChartData({
       commitDetails,
       commitIndex: selectedCommitIndex,
       commitTree,
-      rootID: ((rootID: any): number),
     });
   }
 

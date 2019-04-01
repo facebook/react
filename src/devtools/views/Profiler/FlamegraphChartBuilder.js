@@ -28,21 +28,18 @@ export function getChartData({
   commitDetails,
   commitIndex,
   commitTree,
-  rootID,
 }: {|
   commitDetails: CommitDetails,
   commitIndex: number,
   commitTree: CommitTree,
-  rootID: number,
 |}): ChartData {
-  const key = `${rootID}-${commitIndex}`;
+  const { actualDurations, rootID } = commitDetails;
+  const { nodes } = commitTree;
 
+  const key = `${rootID}-${commitIndex}`;
   if (cachedChartData.has(key)) {
     return ((cachedChartData.get(key): any): ChartData);
   }
-
-  const { nodes } = commitTree;
-  const { actualDurations } = commitDetails;
 
   const idToDepthMap: Map<number, number> = new Map();
   const rows: Array<Array<ChartNode>> = [];
