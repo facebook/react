@@ -40,7 +40,7 @@ var IDLE_PRIORITY = maxSigned31BitInt;
 // Callbacks are stored as a circular, doubly linked list.
 var firstCallbackNode = null;
 
-var currentDidTimeout = false;
+var currentHostCallbackDidTimeout = false;
 // Pausing the scheduler is useful for debugging.
 var isSchedulerPaused = false;
 
@@ -50,10 +50,6 @@ var currentExpirationTime = -1;
 
 // This is set while performing work, to prevent re-entrancy.
 var isPerformingWork = false;
-
-// This is set while working on a callback, to detect when a callback
-// cancels itself.
-var currentlyFlushingCallback = null;
 
 var isHostCallbackScheduled = false;
 
@@ -76,7 +72,7 @@ function scheduleHostCallbackIfNeeded() {
 }
 
 function flushFirstCallback() {
-  currentlyFlushingCallback = firstCallbackNode;
+  const currentlyFlushingCallback = firstCallbackNode;
 
   // Remove the node from the list before calling the callback. That way the
   // list is in a consistent state even if the callback throws.
@@ -103,23 +99,17 @@ function flushFirstCallback() {
   currentExpirationTime = expirationTime;
   var continuationCallback;
   try {
-    continuationCallback = callback(
-      currentDidTimeout || priorityLevel === ImmediatePriority,
-    );
+    const didUserCallbackTimeout =
+      currentHostCallbackDidTimeout ||
+      // Immediate priority callbacks are always called as if they timed out
+      priorityLevel === ImmediatePriority;
+    continuationCallback = callback(didUserCallbackTimeout);
   } catch (error) {
-    currentlyFlushingCallback = null;
     throw error;
   } finally {
     currentPriorityLevel = previousPriorityLevel;
     currentExpirationTime = previousExpirationTime;
   }
-
-  if (currentlyFlushingCallback === null) {
-    // Callback was cancelled during execution. Exit, even if there is
-    // a continutation.
-    return;
-  }
-  currentlyFlushingCallback = null;
 
   // A callback may return a continuation. The continuation should be scheduled
   // with the same priority and expiration as the just-finished callback.
@@ -170,7 +160,7 @@ function flushFirstCallback() {
   }
 }
 
-function flushWork(didTimeout) {
+function flushWork(didUserCallbackTimeout) {
   // Exit right away if we're currently paused
   if (enableSchedulerDebugging && isSchedulerPaused) {
     return;
@@ -180,10 +170,10 @@ function flushWork(didTimeout) {
   isHostCallbackScheduled = false;
 
   isPerformingWork = true;
-  const previousDidTimeout = currentDidTimeout;
-  currentDidTimeout = didTimeout;
+  const previousDidTimeout = currentHostCallbackDidTimeout;
+  currentHostCallbackDidTimeout = didUserCallbackTimeout;
   try {
-    if (didTimeout) {
+    if (didUserCallbackTimeout) {
       // Flush all the expired callbacks without yielding.
       while (
         firstCallbackNode !== null &&
@@ -219,7 +209,7 @@ function flushWork(didTimeout) {
     }
   } finally {
     isPerformingWork = false;
-    currentDidTimeout = previousDidTimeout;
+    currentHostCallbackDidTimeout = previousDidTimeout;
     // There's still work remaining. Request another callback.
     scheduleHostCallbackIfNeeded();
   }
@@ -408,9 +398,6 @@ function unstable_getFirstCallbackNode() {
 function unstable_cancelCallback(callbackNode) {
   var next = callbackNode.next;
   if (next === null) {
-    if (currentlyFlushingCallback === callbackNode) {
-      currentlyFlushingCallback = null;
-    }
     // Already cancelled.
     return;
   }
@@ -437,11 +424,10 @@ function unstable_getCurrentPriorityLevel() {
 
 function unstable_shouldYield() {
   return (
-    currentlyFlushingCallback === null ||
-    (!currentDidTimeout &&
-      ((firstCallbackNode !== null &&
-        firstCallbackNode.expirationTime < currentExpirationTime) ||
-        shouldYieldToHost()))
+    !currentHostCallbackDidTimeout &&
+    ((firstCallbackNode !== null &&
+      firstCallbackNode.expirationTime < currentExpirationTime) ||
+      shouldYieldToHost())
   );
 }
 
