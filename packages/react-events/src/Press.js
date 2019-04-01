@@ -10,6 +10,11 @@
 import type {EventResponderContext} from 'events/EventTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
+const DEFAULT_PRESS_DELAY_MS = 0;
+const DEFAULT_PRESS_END_DELAY_MS = 0;
+const DEFAULT_PRESS_START_DELAY_MS = 0;
+const DEFAULT_LONG_PRESS_DELAY_MS = 1000;
+
 const targetEventTypes = [
   {name: 'click', passive: false},
   {name: 'keydown', passive: false},
@@ -81,7 +86,7 @@ function dispatchPressStartEvents(
     dispatchPressChangeEvent(true);
   }
   if ((props.onLongPress || props.onLongPressChange) && !state.isLongPressed) {
-    const delayLongPress = calculateDelayMS(props.delayLongPress, 0, 1000);
+    const delayLongPress = calculateDelayMS(props.delayLongPress, 0, DEFAULT_LONG_PRESS_DELAY_MS);
 
     state.longPressTimeout = setTimeout(() => {
       state.isLongPressed = true;
