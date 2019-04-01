@@ -190,6 +190,11 @@ export function getChildHostContextForEvent(
     let eventData = null;
 
     if (type === REACT_EVENT_COMPONENT_TYPE) {
+      warning(
+        parentHostContextDev.eventData === null ||
+          !parentHostContextDev.eventData.isEventTarget,
+        'validateDOMNesting: React event targets must not have event components as children.',
+      );
       eventData = {
         isEventComponent: true,
         isEventTarget: false,

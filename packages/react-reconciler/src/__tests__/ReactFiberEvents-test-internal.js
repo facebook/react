@@ -203,6 +203,25 @@ describe('ReactFiberEvents', () => {
       );
     });
 
+    it('should warn if an event target has an event component as a child', () => {
+      const Test = () => (
+        <EventComponent>
+          <EventTarget>
+            <EventComponent>
+              <span>Child 1</span>
+            </EventComponent>
+          </EventTarget>
+        </EventComponent>
+      );
+
+      expect(() => {
+        ReactNoop.render(<Test />);
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toWarnDev(
+        'Warning: validateDOMNesting: React event targets must not have event components as children.',
+      );
+    });
+
     it('should handle event components correctly with error boundaries', () => {
       function ErrorComponent() {
         throw new Error('Failed!');
@@ -504,6 +523,26 @@ describe('ReactFiberEvents', () => {
       );
     });
 
+    it('should warn if an event target has an event component as a child', () => {
+      const Test = () => (
+        <EventComponent>
+          <EventTarget>
+            <EventComponent>
+              <span>Child 1</span>
+            </EventComponent>
+          </EventTarget>
+        </EventComponent>
+      );
+
+      const root = ReactTestRenderer.create(null);
+      expect(() => {
+        root.update(<Test />);
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toWarnDev(
+        'Warning: validateDOMNesting: React event targets must not have event components as children.',
+      );
+    });
+
     it('should handle event components correctly with error boundaries', () => {
       function ErrorComponent() {
         throw new Error('Failed!');
@@ -802,6 +841,26 @@ describe('ReactFiberEvents', () => {
         expect(Scheduler).toFlushWithoutYielding();
       }).toWarnDev(
         'Warning: validateDOMNesting: React event targets must be direct children of event components.',
+      );
+    });
+
+    it('should warn if an event target has an event component as a child', () => {
+      const Test = () => (
+        <EventComponent>
+          <EventTarget>
+            <EventComponent>
+              <span>Child 1</span>
+            </EventComponent>
+          </EventTarget>
+        </EventComponent>
+      );
+
+      expect(() => {
+        const container = document.createElement('div');
+        ReactDOM.render(<Test />, container);
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toWarnDev(
+        'Warning: validateDOMNesting: React event targets must not have event components as children.',
       );
     });
 
