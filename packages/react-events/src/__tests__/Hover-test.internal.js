@@ -97,7 +97,6 @@ describe('Hover event responder', () => {
     mouseOutEvent.initEvent('mouseout', true, true);
     divRef.current.dispatchEvent(mouseOutEvent);
 
-    console.log(events);
     expect(events).toEqual(['onHoverStart', 'onHoverEnd']);
   });
 });
