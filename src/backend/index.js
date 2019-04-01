@@ -33,8 +33,16 @@ export function initBackend(
   ];
 
   const attachRenderer = (id: number, renderer: ReactRenderer) => {
-    const rendererInterface = attach(hook, id, renderer, global);
-    hook.rendererInterfaces.set(id, rendererInterface);
+    let rendererInterface = hook.rendererInterfaces.get(id);
+
+    // Inject any not-yet-injected renderers (if we didn't reload-and-profile)
+    if (!rendererInterface) {
+      rendererInterface = attach(hook, id, renderer, global);
+
+      hook.rendererInterfaces.set(id, rendererInterface);
+    }
+
+    // Notify the DevTools frontend about any renderers that were attached early.
     hook.emit('renderer-attached', {
       id,
       renderer,

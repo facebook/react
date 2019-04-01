@@ -79,6 +79,20 @@ export function installHook(target: any): DevToolsHook | null {
 
     hook.emit('renderer', { id, renderer, reactBuildType });
 
+    // If we have just reloaded to profile, we need to inject the renderer interface before the app loads.
+    // Otherwise the renderer won't yet exist and we can skip this step.
+    const attach = target.__REACT_DEVTOOLS_ATTACH__;
+    if (typeof attach === 'function') {
+      const rendererInterface = attach(hook, id, renderer, target);
+      hook.rendererInterfaces.set(id, rendererInterface);
+
+      /*hook.emit('renderer-attached', {
+        id,
+        renderer,
+        rendererInterface,
+      });*/
+    }
+
     return id;
   }
 

@@ -1595,6 +1595,10 @@ export function attach(
   }
 
   function startProfiling() {
+    if (isProfiling) {
+      return;
+    }
+
     // Capture initial values as of the time profiling starts.
     // It's important we snapshot both the durations and the id-to-root map,
     // since either of these may change during the profiling session
@@ -1609,6 +1613,11 @@ export function attach(
 
   function stopProfiling() {
     isProfiling = false;
+  }
+
+  // Automatically start profiling so that we don't miss timing info from initial "mount".
+  if (localStorage.getItem('React::DevTools::reloadAndProfile') === 'true') {
+    startProfiling();
   }
 
   return {
