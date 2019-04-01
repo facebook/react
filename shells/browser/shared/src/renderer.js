@@ -1,8 +1,9 @@
 /**
- * Install the hook on window, which is an event emitter.
- * Note because Chrome content scripts cannot directly modify the window object,
- * we are evaling this function by inserting a script tag.
- * That's why we have to inline the whole event emitter implementation here.
+ * In order to support reload-and-profile functionality, the renderer needs to be injected before any other scripts.
+ * Since it is a complex file (with imports) we can't just toString() it like we do with the hook itself,
+ * So this entry point (one of the web_accessible_resources) provcides a way to eagerly inject it.
+ * The hook will look for the presence of a global __REACT_DEVTOOLS_ATTACH__ and attach an injected renderer early.
+ * The normal case (not a reload-and-profile) will not make use of this entry point though.
  *
  * @flow
  */

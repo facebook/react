@@ -42,7 +42,8 @@ export function initBackend(
       hook.rendererInterfaces.set(id, rendererInterface);
     }
 
-    // Notify the DevTools frontend about any renderers that were attached early.
+    // Notify the DevTools frontend about new renderers.
+    // This includes any that were attached early (via __REACT_DEVTOOLS_ATTACH__).
     hook.emit('renderer-attached', {
       id,
       renderer,

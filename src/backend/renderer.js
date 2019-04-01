@@ -18,6 +18,7 @@ import { getDisplayName, utfEncodeString } from '../utils';
 import { cleanForBridge, copyWithSet, setInObject } from './utils';
 import {
   __DEBUG__,
+  RELOAD_AND_PROFILE_KEY,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_RESET_CHILDREN,
@@ -1616,7 +1617,7 @@ export function attach(
   }
 
   // Automatically start profiling so that we don't miss timing info from initial "mount".
-  if (localStorage.getItem('React::DevTools::reloadAndProfile') === 'true') {
+  if (localStorage.getItem(RELOAD_AND_PROFILE_KEY) === 'true') {
     startProfiling();
   }
 
