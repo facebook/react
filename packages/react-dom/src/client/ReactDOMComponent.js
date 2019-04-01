@@ -1461,7 +1461,7 @@ export function handleEventTouchHitTarget(
       const bottom = nextProps.bottom;
 
       if (lastElement !== element) {
-        if (left == null && right === null && top == null && bottom == null) {
+        if (left == null && right == null && top == null && bottom == null) {
           return;
         }
         internalInstanceHandle.stateNode = element;
