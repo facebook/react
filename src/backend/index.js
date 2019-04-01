@@ -23,7 +23,10 @@ export function initBackend(
         rendererInterface: RendererInterface,
       }) => {
         agent.setRendererInterface(id, rendererInterface);
-        rendererInterface.walkTree();
+
+        // Now that the Store and the renderer interface are connected,
+        // it's time to flush the pending operation codes to the frontend.
+        rendererInterface.flushInitialOperations();
       }
     ),
 

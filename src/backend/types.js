@@ -82,6 +82,7 @@ export type ProfilingSummary = {|
 
 export type RendererInterface = {
   cleanup: () => void,
+  flushInitialOperations: () => void,
   getCommitDetails: (rootID: number, commitIndex: number) => CommitDetails,
   getNativeFromReactElement?: ?(component: Fiber) => ?NativeType,
   getFiberIDFromNative: (
@@ -108,7 +109,6 @@ export type RendererInterface = {
   setInState: (id: number, path: Array<string | number>, value: any) => void,
   startProfiling: () => void,
   stopProfiling: () => void,
-  walkTree: () => void,
 };
 
 export type Handler = (data: any) => void;

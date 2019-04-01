@@ -41,6 +41,10 @@ export function getChartData({
   actualDurations.forEach((actualDuration, id) => {
     const node = ((nodes.get(id): any): Node);
 
+    if (node == null) {
+      throw Error(`Could not find node with id "${id}" in commit tree`);
+    }
+
     // Don't show the root node in this chart.
     if (node.parentID === 0) {
       return;
