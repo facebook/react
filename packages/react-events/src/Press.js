@@ -164,6 +164,11 @@ function isAnchorTagElement(eventTarget: EventTarget): boolean {
   return (eventTarget: any).nodeName === 'A';
 }
 
+function isValidKeyPress(key: string): boolean {
+  // Accessibility for keyboards. Space and Enter only.
+  return key === ' ' || key === 'Enter';
+}
+
 function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
   const maybeNumber = delay == null ? null : delay;
   return Math.max(min, maybeNumber != null ? maybeNumber : fallback);
@@ -191,15 +196,11 @@ const PressResponder = {
 
     switch (eventType) {
       case 'keydown': {
-        if (!props.onPress || context.isTargetOwned(eventTarget)) {
-          return;
-        }
-        const isValidKeyPress =
-          (event: any).which === 13 ||
-          (event: any).which === 32 ||
-          (event: any).keyCode === 13;
-
-        if (!isValidKeyPress) {
+        if (
+          !props.onPress ||
+          context.isTargetOwned(eventTarget) ||
+          !isValidKeyPress((event: any).key)
+        ) {
           return;
         }
         let keyPressEventListener = props.onPress;
