@@ -17,6 +17,7 @@ let EventComponent;
 let ReactTestRenderer;
 let ReactDOM;
 let ReactDOMServer;
+let ReactTestUtils;
 let EventTarget;
 let ReactEvents;
 
@@ -55,6 +56,7 @@ function initTestRenderer() {
 function initReactDOM() {
   init();
   ReactDOM = require('react-dom');
+  ReactTestUtils = require('react-dom/test-utils');
 }
 
 function initReactDOMServer() {
@@ -198,6 +200,207 @@ describe('ReactFiberEvents', () => {
         expect(Scheduler).toFlushWithoutYielding();
       }).toWarnDev(
         'Warning: validateDOMNesting: React event targets must be direct children of event components.',
+      );
+    });
+
+    it('should warn if an event target has an event component as a child', () => {
+      const Test = () => (
+        <EventComponent>
+          <EventTarget>
+            <EventComponent>
+              <span>Child 1</span>
+            </EventComponent>
+          </EventTarget>
+        </EventComponent>
+      );
+
+      expect(() => {
+        ReactNoop.render(<Test />);
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toWarnDev(
+        'Warning: validateDOMNesting: React event targets must not have event components as children.',
+      );
+    });
+
+    it('should handle event components correctly with error boundaries', () => {
+      function ErrorComponent() {
+        throw new Error('Failed!');
+      }
+
+      const Test = () => (
+        <EventComponent>
+          <EventTarget>
+            <span>
+              <ErrorComponent />
+            </span>
+          </EventTarget>
+        </EventComponent>
+      );
+
+      class Wrapper extends React.Component {
+        state = {
+          error: null,
+        };
+
+        componentDidCatch(error) {
+          this.setState({
+            error,
+          });
+        }
+
+        render() {
+          if (this.state.error) {
+            return 'Worked!';
+          }
+          return <Test />;
+        }
+      }
+
+      ReactNoop.render(<Wrapper />);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(ReactNoop).toMatchRenderedOutput('Worked!');
+    });
+
+    it('should handle re-renders where there is a bail-out in a parent', () => {
+      let _updateCounter;
+
+      function Child() {
+        const [counter, updateCounter] = React.useState(0);
+
+        _updateCounter = updateCounter;
+
+        return (
+          <div>
+            <span>Child - {counter}</span>
+          </div>
+        );
+      }
+
+      const Parent = () => (
+        <EventComponent>
+          <EventTarget>
+            <div>
+              <Child />
+            </div>
+          </EventTarget>
+        </EventComponent>
+      );
+
+      ReactNoop.render(<Parent />);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(ReactNoop).toMatchRenderedOutput(
+        <div>
+          <div>
+            <span>Child - 0</span>
+          </div>
+        </div>,
+      );
+
+      ReactNoop.act(() => {
+        _updateCounter(counter => counter + 1);
+      });
+      expect(Scheduler).toFlushWithoutYielding();
+
+      expect(ReactNoop).toMatchRenderedOutput(
+        <div>
+          <div>
+            <span>Child - 1</span>
+          </div>
+        </div>,
+      );
+    });
+
+    it('should handle re-renders where there is a bail-out in a parent and an error occurs', () => {
+      let _updateCounter;
+
+      function Child() {
+        const [counter, updateCounter] = React.useState(0);
+
+        _updateCounter = updateCounter;
+
+        if (counter === 1) {
+          return null;
+        }
+
+        return (
+          <div>
+            <span>Child - {counter}</span>
+          </div>
+        );
+      }
+
+      const Parent = () => (
+        <EventComponent>
+          <EventTarget>
+            <Child />
+          </EventTarget>
+        </EventComponent>
+      );
+
+      ReactNoop.render(<Parent />);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(ReactNoop).toMatchRenderedOutput(
+        <div>
+          <span>Child - 0</span>
+        </div>,
+      );
+
+      expect(() => {
+        ReactNoop.act(() => {
+          _updateCounter(counter => counter + 1);
+        });
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toWarnDev(
+        'Warning: <TouchHitTarget> must have a single DOM element as a child. Found no children.',
+      );
+    });
+
+    it('should handle re-renders where there is a bail-out in a parent and an error occurs #2', () => {
+      let _updateCounter;
+
+      function Child() {
+        const [counter, updateCounter] = React.useState(0);
+
+        _updateCounter = updateCounter;
+
+        if (counter === 1) {
+          return (
+            <EventComponent>
+              <div>Child</div>
+            </EventComponent>
+          );
+        }
+
+        return (
+          <div>
+            <span>Child - {counter}</span>
+          </div>
+        );
+      }
+
+      const Parent = () => (
+        <EventComponent>
+          <EventTarget>
+            <Child />
+          </EventTarget>
+        </EventComponent>
+      );
+
+      ReactNoop.render(<Parent />);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(ReactNoop).toMatchRenderedOutput(
+        <div>
+          <span>Child - 0</span>
+        </div>,
+      );
+
+      expect(() => {
+        ReactNoop.act(() => {
+          _updateCounter(counter => counter + 1);
+        });
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toWarnDev(
+        'Warning: validateDOMNesting: React event targets must not have event components as children.',
       );
     });
   });
@@ -368,6 +571,210 @@ describe('ReactFiberEvents', () => {
         'Warning: validateDOMNesting: React event targets must be direct children of event components.',
       );
     });
+
+    it('should warn if an event target has an event component as a child', () => {
+      const Test = () => (
+        <EventComponent>
+          <EventTarget>
+            <EventComponent>
+              <span>Child 1</span>
+            </EventComponent>
+          </EventTarget>
+        </EventComponent>
+      );
+
+      const root = ReactTestRenderer.create(null);
+      expect(() => {
+        root.update(<Test />);
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toWarnDev(
+        'Warning: validateDOMNesting: React event targets must not have event components as children.',
+      );
+    });
+
+    it('should handle event components correctly with error boundaries', () => {
+      function ErrorComponent() {
+        throw new Error('Failed!');
+      }
+
+      const Test = () => (
+        <EventComponent>
+          <EventTarget>
+            <span>
+              <ErrorComponent />
+            </span>
+          </EventTarget>
+        </EventComponent>
+      );
+
+      class Wrapper extends React.Component {
+        state = {
+          error: null,
+        };
+
+        componentDidCatch(error) {
+          this.setState({
+            error,
+          });
+        }
+
+        render() {
+          if (this.state.error) {
+            return 'Worked!';
+          }
+          return <Test />;
+        }
+      }
+
+      const root = ReactTestRenderer.create(null);
+      root.update(<Wrapper />);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(root).toMatchRenderedOutput('Worked!');
+    });
+
+    it('should handle re-renders where there is a bail-out in a parent', () => {
+      let _updateCounter;
+
+      function Child() {
+        const [counter, updateCounter] = React.useState(0);
+
+        _updateCounter = updateCounter;
+
+        return (
+          <div>
+            <span>Child - {counter}</span>
+          </div>
+        );
+      }
+
+      const Parent = () => (
+        <EventComponent>
+          <EventTarget>
+            <div>
+              <Child />
+            </div>
+          </EventTarget>
+        </EventComponent>
+      );
+
+      const root = ReactTestRenderer.create(null);
+      root.update(<Parent />);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(root).toMatchRenderedOutput(
+        <div>
+          <div>
+            <span>Child - 0</span>
+          </div>
+        </div>,
+      );
+
+      ReactTestRenderer.act(() => {
+        _updateCounter(counter => counter + 1);
+      });
+
+      expect(root).toMatchRenderedOutput(
+        <div>
+          <div>
+            <span>Child - 1</span>
+          </div>
+        </div>,
+      );
+    });
+
+    it('should handle re-renders where there is a bail-out in a parent and an error occurs', () => {
+      let _updateCounter;
+
+      function Child() {
+        const [counter, updateCounter] = React.useState(0);
+
+        _updateCounter = updateCounter;
+
+        if (counter === 1) {
+          return null;
+        }
+
+        return (
+          <div>
+            <span>Child - {counter}</span>
+          </div>
+        );
+      }
+
+      const Parent = () => (
+        <EventComponent>
+          <EventTarget>
+            <Child />
+          </EventTarget>
+        </EventComponent>
+      );
+
+      const root = ReactTestRenderer.create(null);
+      root.update(<Parent />);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(root).toMatchRenderedOutput(
+        <div>
+          <span>Child - 0</span>
+        </div>,
+      );
+
+      expect(() => {
+        ReactTestRenderer.act(() => {
+          _updateCounter(counter => counter + 1);
+        });
+      }).toWarnDev(
+        'Warning: <TouchHitTarget> must have a single DOM element as a child. Found no children.',
+      );
+    });
+
+    it('should handle re-renders where there is a bail-out in a parent and an error occurs #2', () => {
+      let _updateCounter;
+
+      function Child() {
+        const [counter, updateCounter] = React.useState(0);
+
+        _updateCounter = updateCounter;
+
+        if (counter === 1) {
+          return (
+            <EventComponent>
+              <div>Child</div>
+            </EventComponent>
+          );
+        }
+
+        return (
+          <div>
+            <span>Child - {counter}</span>
+          </div>
+        );
+      }
+
+      const Parent = () => (
+        <EventComponent>
+          <EventTarget>
+            <Child />
+          </EventTarget>
+        </EventComponent>
+      );
+
+      const root = ReactTestRenderer.create(null);
+      root.update(<Parent />);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(root).toMatchRenderedOutput(
+        <div>
+          <span>Child - 0</span>
+        </div>,
+      );
+
+      expect(() => {
+        ReactTestRenderer.act(() => {
+          _updateCounter(counter => counter + 1);
+        });
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toWarnDev(
+        'Warning: validateDOMNesting: React event targets must not have event components as children.',
+      );
+    });
   });
 
   describe('ReactDOM', () => {
@@ -536,6 +943,192 @@ describe('ReactFiberEvents', () => {
       );
     });
 
+    it('should warn if an event target has an event component as a child', () => {
+      const Test = () => (
+        <EventComponent>
+          <EventTarget>
+            <EventComponent>
+              <span>Child 1</span>
+            </EventComponent>
+          </EventTarget>
+        </EventComponent>
+      );
+
+      expect(() => {
+        const container = document.createElement('div');
+        ReactDOM.render(<Test />, container);
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toWarnDev(
+        'Warning: validateDOMNesting: React event targets must not have event components as children.',
+      );
+    });
+
+    it('should handle event components correctly with error boundaries', () => {
+      function ErrorComponent() {
+        throw new Error('Failed!');
+      }
+
+      const Test = () => (
+        <EventComponent>
+          <EventTarget>
+            <span>
+              <ErrorComponent />
+            </span>
+          </EventTarget>
+        </EventComponent>
+      );
+
+      class Wrapper extends React.Component {
+        state = {
+          error: null,
+        };
+
+        componentDidCatch(error) {
+          this.setState({
+            error,
+          });
+        }
+
+        render() {
+          if (this.state.error) {
+            return 'Worked!';
+          }
+          return <Test />;
+        }
+      }
+
+      const container = document.createElement('div');
+      ReactDOM.render(<Wrapper />, container);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(container.innerHTML).toBe('Worked!');
+    });
+
+    it('should handle re-renders where there is a bail-out in a parent', () => {
+      let _updateCounter;
+
+      function Child() {
+        const [counter, updateCounter] = React.useState(0);
+
+        _updateCounter = updateCounter;
+
+        return (
+          <div>
+            <span>Child - {counter}</span>
+          </div>
+        );
+      }
+
+      const Parent = () => (
+        <EventComponent>
+          <EventTarget>
+            <div>
+              <Child />
+            </div>
+          </EventTarget>
+        </EventComponent>
+      );
+
+      const container = document.createElement('div');
+      ReactDOM.render(<Parent />, container);
+      expect(container.innerHTML).toBe(
+        '<div><div><span>Child - 0</span></div></div>',
+      );
+
+      ReactTestUtils.act(() => {
+        _updateCounter(counter => counter + 1);
+      });
+
+      expect(container.innerHTML).toBe(
+        '<div><div><span>Child - 1</span></div></div>',
+      );
+    });
+
+    it('should handle re-renders where there is a bail-out in a parent and an error occurs', () => {
+      let _updateCounter;
+
+      function Child() {
+        const [counter, updateCounter] = React.useState(0);
+
+        _updateCounter = updateCounter;
+
+        if (counter === 1) {
+          return null;
+        }
+
+        return (
+          <div>
+            <span>Child - {counter}</span>
+          </div>
+        );
+      }
+
+      const Parent = () => (
+        <EventComponent>
+          <EventTarget>
+            <Child />
+          </EventTarget>
+        </EventComponent>
+      );
+
+      const container = document.createElement('div');
+      ReactDOM.render(<Parent />, container);
+      expect(container.innerHTML).toBe('<div><span>Child - 0</span></div>');
+
+      expect(() => {
+        ReactTestUtils.act(() => {
+          _updateCounter(counter => counter + 1);
+        });
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toWarnDev(
+        'Warning: <TouchHitTarget> must have a single DOM element as a child. Found no children.',
+      );
+    });
+
+    it('should handle re-renders where there is a bail-out in a parent and an error occurs #2', () => {
+      let _updateCounter;
+
+      function Child() {
+        const [counter, updateCounter] = React.useState(0);
+
+        _updateCounter = updateCounter;
+
+        if (counter === 1) {
+          return (
+            <EventComponent>
+              <div>Child</div>
+            </EventComponent>
+          );
+        }
+
+        return (
+          <div>
+            <span>Child - {counter}</span>
+          </div>
+        );
+      }
+
+      const Parent = () => (
+        <EventComponent>
+          <EventTarget>
+            <Child />
+          </EventTarget>
+        </EventComponent>
+      );
+
+      const container = document.createElement('div');
+      ReactDOM.render(<Parent />, container);
+      expect(container.innerHTML).toBe('<div><span>Child - 0</span></div>');
+
+      expect(() => {
+        ReactTestUtils.act(() => {
+          _updateCounter(counter => counter + 1);
+        });
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toWarnDev(
+        'Warning: validateDOMNesting: React event targets must not have event components as children.',
+      );
+    });
+
     it('should render a simple event component with a single event target (hit slop)', () => {
       const Test = () => (
         <EventComponent>
@@ -550,7 +1143,7 @@ describe('ReactFiberEvents', () => {
       expect(Scheduler).toFlushWithoutYielding();
       expect(container.innerHTML).toBe(
         '<div style="position: relative;">' +
-          'Hello world<div style="position: absolute; display: block; ' +
+          'Hello world<div style="position: absolute; ' +
           'top: -10px; left: -10px; right: -10px; bottom: -10px;"></div></div>',
       );
 
@@ -566,7 +1159,7 @@ describe('ReactFiberEvents', () => {
       expect(Scheduler).toFlushWithoutYielding();
       expect(container.innerHTML).toBe(
         '<span style="position: relative;">I am now a span' +
-          '<div style="position: absolute; display: block; ' +
+          '<div style="position: absolute; ' +
           'left: -20px; right: -30px;"></div></span>',
       );
     });

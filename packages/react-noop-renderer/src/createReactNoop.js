@@ -268,6 +268,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     ) {
       if (__DEV__ && enableEventAPI) {
         if (type === REACT_EVENT_COMPONENT_TYPE) {
+          warning(
+            parentHostContext !== EVENT_TARGET_CONTEXT,
+            'validateDOMNesting: React event targets must not have event components as children.',
+          );
           return EVENT_COMPONENT_CONTEXT;
         } else if (type === REACT_EVENT_TARGET_TYPE) {
           warning(

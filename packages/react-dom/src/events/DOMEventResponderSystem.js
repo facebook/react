@@ -167,7 +167,12 @@ DOMEventResponderContext.prototype.isTargetPositionWithinHitSlop = function(
   x: number,
   y: number,
 ): boolean {
-  const target = this.eventTarget.ownerDocument.elementFromPoint(x, y);
+  const doc = this.eventTarget.ownerDocument;
+  // This isn't available in some environments (JSDOM)
+  if (typeof doc.elementFromPoint !== 'function') {
+    return false;
+  }
+  const target = doc.elementFromPoint(x, y);
   if (target === null) {
     return false;
   }
