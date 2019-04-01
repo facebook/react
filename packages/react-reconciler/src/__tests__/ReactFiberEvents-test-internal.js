@@ -310,7 +310,7 @@ describe('ReactFiberEvents', () => {
       );
     });
 
-    it('should handle errors in re-renders where there is a bail-out in a parent', () => {
+    it('should handle re-renders where there is a bail-out in a parent and an error occurs', () => {
       let _updateCounter;
 
       function Child() {
@@ -352,6 +352,55 @@ describe('ReactFiberEvents', () => {
         expect(Scheduler).toFlushWithoutYielding();
       }).toWarnDev(
         'Warning: <TouchHitTarget> must have a single DOM element as a child. Found no children.',
+      );
+    });
+
+    it('should handle re-renders where there is a bail-out in a parent and an error occurs #2', () => {
+      let _updateCounter;
+
+      function Child() {
+        const [counter, updateCounter] = React.useState(0);
+
+        _updateCounter = updateCounter;
+
+        if (counter === 1) {
+          return (
+            <EventComponent>
+              <div>Child</div>
+            </EventComponent>
+          );
+        }
+
+        return (
+          <div>
+            <span>Child - {counter}</span>
+          </div>
+        );
+      }
+
+      const Parent = () => (
+        <EventComponent>
+          <EventTarget>
+            <Child />
+          </EventTarget>
+        </EventComponent>
+      );
+
+      ReactNoop.render(<Parent />);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(ReactNoop).toMatchRenderedOutput(
+        <div>
+          <span>Child - 0</span>
+        </div>,
+      );
+
+      expect(() => {
+        ReactNoop.act(() => {
+          _updateCounter(counter => counter + 1);
+        });
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toWarnDev(
+        'Warning: validateDOMNesting: React event targets must not have event components as children.',
       );
     });
   });
@@ -632,7 +681,7 @@ describe('ReactFiberEvents', () => {
       );
     });
 
-    it('should handle errors in re-renders where there is a bail-out in a parent', () => {
+    it('should handle re-renders where there is a bail-out in a parent and an error occurs', () => {
       let _updateCounter;
 
       function Child() {
@@ -674,6 +723,56 @@ describe('ReactFiberEvents', () => {
         });
       }).toWarnDev(
         'Warning: <TouchHitTarget> must have a single DOM element as a child. Found no children.',
+      );
+    });
+
+    it('should handle re-renders where there is a bail-out in a parent and an error occurs #2', () => {
+      let _updateCounter;
+
+      function Child() {
+        const [counter, updateCounter] = React.useState(0);
+
+        _updateCounter = updateCounter;
+
+        if (counter === 1) {
+          return (
+            <EventComponent>
+              <div>Child</div>
+            </EventComponent>
+          );
+        }
+
+        return (
+          <div>
+            <span>Child - {counter}</span>
+          </div>
+        );
+      }
+
+      const Parent = () => (
+        <EventComponent>
+          <EventTarget>
+            <Child />
+          </EventTarget>
+        </EventComponent>
+      );
+
+      const root = ReactTestRenderer.create(null);
+      root.update(<Parent />);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(root).toMatchRenderedOutput(
+        <div>
+          <span>Child - 0</span>
+        </div>,
+      );
+
+      expect(() => {
+        ReactTestRenderer.act(() => {
+          _updateCounter(counter => counter + 1);
+        });
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toWarnDev(
+        'Warning: validateDOMNesting: React event targets must not have event components as children.',
       );
     });
   });
@@ -944,7 +1043,7 @@ describe('ReactFiberEvents', () => {
       );
     });
 
-    it('should handle errors in re-renders where there is a bail-out in a parent', () => {
+    it('should handle re-renders where there is a bail-out in a parent and an error occurs', () => {
       let _updateCounter;
 
       function Child() {
@@ -982,6 +1081,51 @@ describe('ReactFiberEvents', () => {
         expect(Scheduler).toFlushWithoutYielding();
       }).toWarnDev(
         'Warning: <TouchHitTarget> must have a single DOM element as a child. Found no children.',
+      );
+    });
+
+    it('should handle re-renders where there is a bail-out in a parent and an error occurs #2', () => {
+      let _updateCounter;
+
+      function Child() {
+        const [counter, updateCounter] = React.useState(0);
+
+        _updateCounter = updateCounter;
+
+        if (counter === 1) {
+          return (
+            <EventComponent>
+              <div>Child</div>
+            </EventComponent>
+          );
+        }
+
+        return (
+          <div>
+            <span>Child - {counter}</span>
+          </div>
+        );
+      }
+
+      const Parent = () => (
+        <EventComponent>
+          <EventTarget>
+            <Child />
+          </EventTarget>
+        </EventComponent>
+      );
+
+      const container = document.createElement('div');
+      ReactDOM.render(<Parent />, container);
+      expect(container.innerHTML).toBe('<div><span>Child - 0</span></div>');
+
+      expect(() => {
+        ReactTestUtils.act(() => {
+          _updateCounter(counter => counter + 1);
+        });
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toWarnDev(
+        'Warning: validateDOMNesting: React event targets must not have event components as children.',
       );
     });
   });
