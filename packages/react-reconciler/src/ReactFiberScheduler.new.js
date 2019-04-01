@@ -1168,10 +1168,20 @@ function resetChildExpirationTime(completedWork: Fiber) {
 }
 
 function commitRoot(root, expirationTime) {
-  return runWithPriority(
+  runWithPriority(
     ImmediatePriority,
     commitRootImpl.bind(null, root, expirationTime),
   );
+  // If there are passive effects, schedule a callback to flush them. This goes
+  // outside commitRootImpl so that it inherits the priority of the render.
+  if (rootWithPendingPassiveEffects !== null) {
+    const priorityLevel = getCurrentPriorityLevel();
+    scheduleCallback(priorityLevel, () => {
+      flushPassiveEffects();
+      return null;
+    });
+  }
+  return null;
 }
 
 function commitRootImpl(root, expirationTime) {
@@ -1374,10 +1384,11 @@ function commitRootImpl(root, expirationTime) {
   stopCommitTimer();
 
   if (rootDoesHavePassiveEffects) {
+    // This commit has passive effects. Stash a reference to them. But don't
+    // schedule a callback until after flushing layout work.
     rootDoesHavePassiveEffects = false;
     rootWithPendingPassiveEffects = root;
     pendingPassiveEffectsExpirationTime = expirationTime;
-    schedulePassiveEffectCallback();
   } else {
     if (enableSchedulerTracing) {
       // If there are no passive effects, then we can complete the pending
@@ -1549,13 +1560,6 @@ function commitLayoutEffects(
     resetCurrentDebugFiberInDEV();
     nextEffect = nextEffect.nextEffect;
   }
-}
-
-function schedulePassiveEffectCallback() {
-  scheduleCallback(NormalPriority, () => {
-    flushPassiveEffects();
-    return null;
-  });
 }
 
 export function flushPassiveEffects() {
