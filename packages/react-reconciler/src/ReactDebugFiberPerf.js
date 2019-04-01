@@ -9,7 +9,10 @@
 
 import type {Fiber} from './ReactFiber';
 
-import {enableUserTimingAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableProfilerTimer,
+  enableUserTimingAPI,
+} from 'shared/ReactFeatureFlags';
 import getComponentName from 'shared/getComponentName';
 import {
   HostRoot,
@@ -22,6 +25,7 @@ import {
   Mode,
   SuspenseComponent,
   DehydratedSuspenseComponent,
+  Profiler,
 } from 'shared/ReactWorkTags';
 
 type MeasurementPhase =
@@ -105,6 +109,14 @@ const getFiberMarkName = (label: string, debugID: number) => {
   return `${label} (#${debugID})`;
 };
 
+const getFiberName = (fiber: Fiber): string => {
+  if (fiber.tag === Profiler) {
+    return `Profiler(${fiber.pendingProps.id})`;
+  } else {
+    return getComponentName(fiber.type) || 'Unknown';
+  }
+};
+
 const getFiberLabel = (
   componentName: string,
   isMounted: boolean,
@@ -123,7 +135,7 @@ const beginFiberMark = (
   fiber: Fiber,
   phase: MeasurementPhase | null,
 ): boolean => {
-  const componentName = getComponentName(fiber.type) || 'Unknown';
+  const componentName = getFiberName(fiber);
   const debugID = ((fiber._debugID: any): number);
   const isMounted = fiber.alternate !== null;
   const label = getFiberLabel(componentName, isMounted, phase);
@@ -142,7 +154,7 @@ const beginFiberMark = (
 };
 
 const clearFiberMark = (fiber: Fiber, phase: MeasurementPhase | null) => {
-  const componentName = getComponentName(fiber.type) || 'Unknown';
+  const componentName = getFiberName(fiber);
   const debugID = ((fiber._debugID: any): number);
   const isMounted = fiber.alternate !== null;
   const label = getFiberLabel(componentName, isMounted, phase);
@@ -155,7 +167,7 @@ const endFiberMark = (
   phase: MeasurementPhase | null,
   warning: string | null,
 ) => {
-  const componentName = getComponentName(fiber.type) || 'Unknown';
+  const componentName = getFiberName(fiber);
   const debugID = ((fiber._debugID: any): number);
   const isMounted = fiber.alternate !== null;
   const label = getFiberLabel(componentName, isMounted, phase);
@@ -164,20 +176,27 @@ const endFiberMark = (
 };
 
 const shouldIgnoreFiber = (fiber: Fiber): boolean => {
-  // Host components should be skipped in the timeline.
-  // We could check typeof fiber.type, but does this work with RN?
-  switch (fiber.tag) {
-    case HostRoot:
-    case HostComponent:
-    case HostText:
-    case HostPortal:
-    case Fragment:
-    case ContextProvider:
-    case ContextConsumer:
-    case Mode:
-      return true;
-    default:
-      return false;
+  if (enableUserTimingAPI) {
+    // Host components should be skipped in the timeline.
+    // We could check typeof fiber.type, but does this work with RN?
+    switch (fiber.tag) {
+      case HostRoot:
+      case HostComponent:
+      case HostText:
+      case HostPortal:
+      case Fragment:
+      case ContextProvider:
+      case ContextConsumer:
+      case Mode:
+        return true;
+      default:
+        return false;
+    }
+  } else if (enableProfilerTimer) {
+    // We only care about Profiler fibers in this case.
+    return fiber.tag !== Profiler;
+  } else {
+    return true;
   }
 };
 
@@ -266,7 +285,7 @@ export function stopRequestCallbackTimer(
 }
 
 export function startWorkTimer(fiber: Fiber): void {
-  if (enableUserTimingAPI) {
+  if (enableUserTimingAPI || enableProfilerTimer) {
     if (!supportsUserTiming || shouldIgnoreFiber(fiber)) {
       return;
     }
@@ -280,7 +299,7 @@ export function startWorkTimer(fiber: Fiber): void {
 }
 
 export function cancelWorkTimer(fiber: Fiber): void {
-  if (enableUserTimingAPI) {
+  if (enableUserTimingAPI || enableProfilerTimer) {
     if (!supportsUserTiming || shouldIgnoreFiber(fiber)) {
       return;
     }
@@ -292,7 +311,7 @@ export function cancelWorkTimer(fiber: Fiber): void {
 }
 
 export function stopWorkTimer(fiber: Fiber): void {
-  if (enableUserTimingAPI) {
+  if (enableUserTimingAPI || enableProfilerTimer) {
     if (!supportsUserTiming || shouldIgnoreFiber(fiber)) {
       return;
     }
@@ -307,7 +326,7 @@ export function stopWorkTimer(fiber: Fiber): void {
 }
 
 export function stopFailedWorkTimer(fiber: Fiber): void {
-  if (enableUserTimingAPI) {
+  if (enableUserTimingAPI || enableProfilerTimer) {
     if (!supportsUserTiming || shouldIgnoreFiber(fiber)) {
       return;
     }
@@ -327,7 +346,7 @@ export function stopFailedWorkTimer(fiber: Fiber): void {
 }
 
 export function startPhaseTimer(fiber: Fiber, phase: MeasurementPhase): void {
-  if (enableUserTimingAPI) {
+  if (enableUserTimingAPI || enableProfilerTimer) {
     if (!supportsUserTiming) {
       return;
     }

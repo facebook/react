@@ -96,7 +96,7 @@ exports[`ReactDebugFiberPerf does not include ConcurrentMode, StrictMode, or Pro
 
 // Mount
 ⚛ (React Tree Reconciliation: Completed Root)
-  ⚛ Profiler [mount]
+  ⚛ Profiler(test) [mount]
     ⚛ Parent [mount]
       ⚛ Child [mount]
 
