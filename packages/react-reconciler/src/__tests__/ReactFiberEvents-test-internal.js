@@ -200,6 +200,45 @@ describe('ReactFiberEvents', () => {
         'Warning: validateDOMNesting: React event targets must be direct children of event components.',
       );
     });
+
+    it('event components should correctly work with error boundaries', () => {
+      function ErrorComponent() {
+        throw new Error('Failed!');
+      }
+
+      const Test = () => (
+        <EventComponent>
+          <EventTarget>
+            <span>
+              <ErrorComponent />
+            </span>
+          </EventTarget>
+        </EventComponent>
+      );
+
+      class Wrapper extends React.Component {
+        state = {
+          error: null,
+        };
+
+        componentDidCatch(error) {
+          this.setState({
+            error,
+          });
+        }
+
+        render() {
+          if (this.state.error) {
+            return 'Worked!';
+          }
+          return <Test />;
+        }
+      }
+
+      ReactNoop.render(<Wrapper />);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(ReactNoop).toMatchRenderedOutput('Worked!');
+    });
   });
 
   describe('TestRenderer', () => {
@@ -368,6 +407,46 @@ describe('ReactFiberEvents', () => {
         'Warning: validateDOMNesting: React event targets must be direct children of event components.',
       );
     });
+
+    it('event components should correctly work with error boundaries', () => {
+      function ErrorComponent() {
+        throw new Error('Failed!');
+      }
+
+      const Test = () => (
+        <EventComponent>
+          <EventTarget>
+            <span>
+              <ErrorComponent />
+            </span>
+          </EventTarget>
+        </EventComponent>
+      );
+
+      class Wrapper extends React.Component {
+        state = {
+          error: null,
+        };
+
+        componentDidCatch(error) {
+          this.setState({
+            error,
+          });
+        }
+
+        render() {
+          if (this.state.error) {
+            return 'Worked!';
+          }
+          return <Test />;
+        }
+      }
+
+      const root = ReactTestRenderer.create(null);
+      root.update(<Wrapper />);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(root).toMatchRenderedOutput('Worked!');
+    });
   });
 
   describe('ReactDOM', () => {
@@ -534,6 +613,46 @@ describe('ReactFiberEvents', () => {
       }).toWarnDev(
         'Warning: validateDOMNesting: React event targets must be direct children of event components.',
       );
+    });
+
+    it('event components should correctly work with error boundaries', () => {
+      function ErrorComponent() {
+        throw new Error('Failed!');
+      }
+
+      const Test = () => (
+        <EventComponent>
+          <EventTarget>
+            <span>
+              <ErrorComponent />
+            </span>
+          </EventTarget>
+        </EventComponent>
+      );
+
+      class Wrapper extends React.Component {
+        state = {
+          error: null,
+        };
+
+        componentDidCatch(error) {
+          this.setState({
+            error,
+          });
+        }
+
+        render() {
+          if (this.state.error) {
+            return 'Worked!';
+          }
+          return <Test />;
+        }
+      }
+
+      const container = document.createElement('div');
+      ReactDOM.render(<Wrapper />, container);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(container.innerHTML).toBe('Worked!');
     });
   });
 
