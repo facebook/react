@@ -23,7 +23,10 @@ export function initBackend(
         rendererInterface: RendererInterface,
       }) => {
         agent.setRendererInterface(id, rendererInterface);
-        rendererInterface.walkTree();
+
+        // Now that the Store and the renderer interface are connected,
+        // it's time to flush the pending operation codes to the frontend.
+        rendererInterface.flushInitialOperations();
       }
     ),
 
@@ -33,8 +36,17 @@ export function initBackend(
   ];
 
   const attachRenderer = (id: number, renderer: ReactRenderer) => {
-    const rendererInterface = attach(hook, id, renderer, global);
-    hook.rendererInterfaces.set(id, rendererInterface);
+    let rendererInterface = hook.rendererInterfaces.get(id);
+
+    // Inject any not-yet-injected renderers (if we didn't reload-and-profile)
+    if (!rendererInterface) {
+      rendererInterface = attach(hook, id, renderer, global);
+
+      hook.rendererInterfaces.set(id, rendererInterface);
+    }
+
+    // Notify the DevTools frontend about new renderers.
+    // This includes any that were attached early (via __REACT_DEVTOOLS_ATTACH__).
     hook.emit('renderer-attached', {
       id,
       renderer,

@@ -18,6 +18,7 @@ import { getDisplayName, utfEncodeString } from '../utils';
 import { cleanForBridge, copyWithSet, setInObject } from './utils';
 import {
   __DEBUG__,
+  RELOAD_AND_PROFILE_KEY,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_RESET_CHILDREN,
@@ -566,6 +567,7 @@ export function attach(
   }
 
   let pendingOperations: Uint32Array = new Uint32Array(0);
+  let pendingOperationsQueue: Array<Uint32Array> | null = [];
 
   function addOperation(
     newAction: Uint32Array,
@@ -603,7 +605,16 @@ export function attach(
     // Let the frontend know about tree operations.
     // The first value in this array will identify which root it corresponds to,
     // so we do no longer need to dispatch a separate root-committed event.
-    hook.emit('operations', pendingOperations);
+    if (pendingOperationsQueue !== null) {
+      // Until the frontend has been connected, store the tree operations.
+      // This will let us avoid walking the tree later when the frontend connects,
+      // and it enables the Profiler's reload-and-profile functionality to work as well.
+      pendingOperationsQueue.push(pendingOperations);
+    } else {
+      // If we've already connected to the frontend, just pass the operations through.
+      hook.emit('operations', pendingOperations);
+    }
+
     pendingOperations = new Uint32Array(0);
   }
 
@@ -913,31 +924,46 @@ export function attach(
     // We don't patch any methods so there is no cleanup.
   }
 
-  function walkTree() {
-    // Hydrate all the roots for the first time.
-    hook.getFiberRoots(rendererID).forEach(root => {
-      currentRootID = getFiberID(getPrimaryFiber(root.current));
+  function flushInitialOperations() {
+    const localPendingOperationsQueue = pendingOperationsQueue;
 
-      if (isProfiling) {
-        // If profiling is active, store commit time and duration, and the current interactions.
-        // The frontend may request this information after profiling has stopped.
-        currentCommitProfilingMetadata = {
-          actualDurations: [],
-          commitTime: performance.now() - profilingStartTime,
-          interactions: Array.from(root.memoizedInteractions).map(
-            (interaction: Interaction) => ({
-              ...interaction,
-              timestamp: interaction.timestamp - profilingStartTime,
-            })
-          ),
-          maxActualDuration: 0,
-        };
-      }
+    pendingOperationsQueue = null;
 
-      mountFiber(root.current, null);
-      flushPendingEvents(root);
-      currentRootID = -1;
-    });
+    if (
+      localPendingOperationsQueue !== null &&
+      localPendingOperationsQueue.length > 0
+    ) {
+      // We may have already queued up some operations before the frontend connected
+      // If so, let the frontend know about them.
+      localPendingOperationsQueue.forEach(pendingOperations => {
+        hook.emit('operations', pendingOperations);
+      });
+    } else {
+      // If we have not been profiling, then we can just walk the tree and build up its current state as-is.
+      hook.getFiberRoots(rendererID).forEach(root => {
+        currentRootID = getFiberID(getPrimaryFiber(root.current));
+
+        if (isProfiling) {
+          // If profiling is active, store commit time and duration, and the current interactions.
+          // The frontend may request this information after profiling has stopped.
+          currentCommitProfilingMetadata = {
+            actualDurations: [],
+            commitTime: performance.now() - profilingStartTime,
+            interactions: Array.from(root.memoizedInteractions).map(
+              (interaction: Interaction) => ({
+                ...interaction,
+                timestamp: interaction.timestamp - profilingStartTime,
+              })
+            ),
+            maxActualDuration: 0,
+          };
+        }
+
+        mountFiber(root.current, null);
+        flushPendingEvents(root);
+        currentRootID = -1;
+      });
+    }
   }
 
   function handleCommitFiberUnmount(fiber) {
@@ -1595,6 +1621,10 @@ export function attach(
   }
 
   function startProfiling() {
+    if (isProfiling) {
+      return;
+    }
+
     // Capture initial values as of the time profiling starts.
     // It's important we snapshot both the durations and the id-to-root map,
     // since either of these may change during the profiling session
@@ -1611,8 +1641,14 @@ export function attach(
     isProfiling = false;
   }
 
+  // Automatically start profiling so that we don't miss timing info from initial "mount".
+  if (localStorage.getItem(RELOAD_AND_PROFILE_KEY) === 'true') {
+    startProfiling();
+  }
+
   return {
     cleanup,
+    flushInitialOperations,
     getCommitDetails,
     getFiberIDFromNative,
     getInteractions,
@@ -1631,6 +1667,5 @@ export function attach(
     setInState,
     startProfiling,
     stopProfiling,
-    walkTree,
   };
 }

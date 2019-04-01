@@ -112,14 +112,9 @@ export function getCommitTree({
     }
   }
 
-  console.error(
+  throw Error(
     `getCommitTree(): Unable to reconstruct tree for root "${rootID}" and commit ${commitIndex}`
   );
-
-  return {
-    nodes: new Map(),
-    rootID,
-  };
 }
 
 function recursivelyIniitliazeTree(

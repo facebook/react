@@ -78,15 +78,18 @@ function createPanelIfReactLoaded() {
         // This flag lets us tip the Store off early that we expect to be profiling.
         // This avoids flashing a temporary "Profiling not supported" message in the Profiler tab,
         // after a user has clicked the "reload and profile" button.
+        let isProfiling = false;
         let supportsProfiling = false;
         if (localStorage.getItem(SUPPORTS_PROFILING_KEY) === 'true') {
           supportsProfiling = true;
+          isProfiling = true;
           localStorage.removeItem(SUPPORTS_PROFILING_KEY);
         }
 
         const browserName = getBrowserName();
 
         store = new Store(bridge, {
+          isProfiling,
           supportsFileDownloads: browserName === 'Chrome',
           supportsReloadAndProfile: true,
           supportsProfiling,

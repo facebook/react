@@ -130,7 +130,7 @@ function ProfilerContextController({ children }: Props) {
   const [
     isCommitFilterEnabled,
     setIsCommitFilterEnabled,
-  ] = useLocalStorage<boolean>('isCommitFilterEnabled', false);
+  ] = useLocalStorage<boolean>('React::DevTools::isCommitFilterEnabled', false);
   const [minCommitDuration, setMinCommitDuration] = useLocalStorage<number>(
     'minCommitDuration',
     0

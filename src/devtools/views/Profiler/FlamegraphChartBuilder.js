@@ -56,6 +56,11 @@ export function getChartData({
     idToDepthMap.set(id, currentDepth);
 
     const node = ((nodes.get(id): any): Node);
+
+    if (node == null) {
+      throw Error(`Could not find node with id "${id}" in commit tree`);
+    }
+
     const name = node.displayName || 'Unknown';
 
     const selfDuration = calculateSelfDuration(id, commitTree, commitDetails);

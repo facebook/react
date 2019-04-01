@@ -1,7 +1,7 @@
 // @flow
 
 import EventEmitter from 'events';
-import { __DEBUG__ } from '../constants';
+import { RELOAD_AND_PROFILE_KEY, __DEBUG__ } from '../constants';
 import { hideOverlay, showOverlay } from './views/Highlighter';
 
 import type { RendererID, RendererInterface } from './types';
@@ -37,8 +37,6 @@ type SetInParams = {|
   rendererID: number,
   value: any,
 |};
-
-const RELOAD_AND_PROFILE_KEY = 'React::DevTools::reloadAndProfile';
 
 export default class Agent extends EventEmitter {
   _bridge: Bridge = ((null: any): Bridge);
