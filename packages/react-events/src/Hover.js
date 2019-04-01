@@ -29,19 +29,19 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
   targetEventTypes.push('touchstart', 'mouseover', 'mouseout');
 }
 
-function dispatchHoverInEvents(
+function dispatchHoverStartEvents(
   context: EventResponderContext,
   props: Object,
   state: HoverState,
 ): void {
   const {event, eventTarget} = context;
+  if (context.isTargetWithinEventComponent((event: any).relatedTarget)) {
+    return;
+  }
+  if (props.onHoverStart) {
+    context.dispatchEvent('hoverstart', props.onHoverStart, eventTarget, true);
+  }
   if (props.onHoverChange) {
-    if (context.isTargetWithinEventComponent((event: any).relatedTarget)) {
-      return;
-    }
-    if (props.onHoverIn) {
-      context.dispatchEvent('hoverin', props.onHoverIn, eventTarget, true);
-    }
     const hoverChangeEventListener = () => {
       props.onHoverChange(true);
     };
@@ -54,13 +54,13 @@ function dispatchHoverInEvents(
   }
 }
 
-function dispatchHoverOutEvents(context: EventResponderContext, props: Object) {
+function dispatchHoverEndEvents(context: EventResponderContext, props: Object) {
   const {event, eventTarget} = context;
   if (context.isTargetWithinEventComponent((event: any).relatedTarget)) {
     return;
   }
-  if (props.onHoverOut) {
-    context.dispatchEvent('hoverout', props.onHoverOut, eventTarget, true);
+  if (props.onHoverEnd) {
+    context.dispatchEvent('hoverend', props.onHoverEnd, eventTarget, true);
   }
   if (props.onHoverChange) {
     const hoverChangeEventListener = () => {
@@ -118,7 +118,7 @@ const HoverResponder = {
             state.isInHitSlop = true;
             return;
           }
-          dispatchHoverInEvents(context, props, state);
+          dispatchHoverStartEvents(context, props, state);
           state.isHovered = true;
         }
         break;
@@ -126,7 +126,7 @@ const HoverResponder = {
       case 'pointerout':
       case 'mouseout': {
         if (state.isHovered && !state.isTouched) {
-          dispatchHoverOutEvents(context, props);
+          dispatchHoverEndEvents(context, props);
           state.isHovered = false;
         }
         state.isInHitSlop = false;
@@ -142,7 +142,7 @@ const HoverResponder = {
                 (event: any).y,
               )
             ) {
-              dispatchHoverInEvents(context, props, state);
+              dispatchHoverStartEvents(context, props, state);
               state.isHovered = true;
               state.isInHitSlop = false;
             }
@@ -153,7 +153,7 @@ const HoverResponder = {
               (event: any).y,
             )
           ) {
-            dispatchHoverOutEvents(context, props);
+            dispatchHoverEndEvents(context, props);
             state.isHovered = false;
             state.isInHitSlop = true;
           }
@@ -162,7 +162,7 @@ const HoverResponder = {
       }
       case 'pointercancel': {
         if (state.isHovered && !state.isTouched) {
-          dispatchHoverOutEvents(context, props);
+          dispatchHoverEndEvents(context, props);
           state.isHovered = false;
           state.isTouched = false;
         }
