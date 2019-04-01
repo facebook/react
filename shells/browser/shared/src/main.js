@@ -3,7 +3,7 @@
 import { createElement } from 'react';
 import { unstable_createRoot as createRoot, flushSync } from 'react-dom';
 import Bridge from 'src/bridge';
-import Store from 'src/devtools/Store';
+import Store from 'src/devtools/store';
 import inject from './inject';
 import {
   createViewElementSource,
