@@ -26,6 +26,23 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
   rootEventTypes.push({name: 'mouseup', passive: false});
 }
 
+type PressProps = {
+  disabled: boolean,
+  delayLongPress: number,
+  delayPress: number,
+  delayPressEnd: number,
+  delayPressStart: number,
+  hitSlop: Object,
+  onLongPress: (e: Object) => void,
+  onLongPressChange: (boolean) => void,
+  onLongPressShouldCancelPress: () => boolean,
+  onPress: (e: Object) => void,
+  onPressChange: (boolean) => void,
+  onPressEnd: (e: Object) => void,
+  onPressStart: (e: Object) => void,
+  pressRententionOffset: Object,
+};
+
 type PressState = {
   defaultPrevented: boolean,
   isAnchorTouched: boolean,
@@ -47,7 +64,7 @@ function dispatchPressEvent(
 
 function dispatchPressStartEvents(
   context: EventResponderContext,
-  props: Object,
+  props: PressProps,
   state: PressState,
 ): void {
   function dispatchPressChangeEvent(bool) {
@@ -105,7 +122,7 @@ function dispatchPressStartEvents(
 
 function dispatchPressEndEvents(
   context: EventResponderContext,
-  props: Object,
+  props: PressProps,
   state: PressState,
 ): void {
   if (state.longPressTimeout !== null) {
@@ -158,7 +175,7 @@ const PressResponder = {
   },
   handleEvent(
     context: EventResponderContext,
-    props: Object,
+    props: PressProps,
     state: PressState,
   ): void {
     const {eventTarget, eventType, event} = context;
