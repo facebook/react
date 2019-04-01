@@ -218,8 +218,12 @@ const PressResponder = {
         dispatchPressEvent(context, state, 'press', keyPressEventListener);
         break;
       }
+
+      /**
+       * Touch event implementations are only needed for Safari, which lacks
+       * support for pointer events.
+       */
       case 'touchstart':
-        // Touch events are for Safari, which lack pointer event support.
         if (!state.isPressed && !context.isTargetOwned(eventTarget)) {
           // We bail out of polyfilling anchor tags, given the same heuristics
           // explained above in regards to needing to use click events.
@@ -235,7 +239,6 @@ const PressResponder = {
 
         break;
       case 'touchend': {
-        // Touch events are for Safari, which lack pointer event support
         if (state.isAnchorTouched) {
           return;
         }
@@ -275,6 +278,10 @@ const PressResponder = {
         }
         break;
       }
+
+      /**
+       * Respond to pointer events and fall back to mouse.
+       */
       case 'pointerdown':
       case 'mousedown': {
         if (
@@ -282,7 +289,7 @@ const PressResponder = {
           !context.isTargetOwned(eventTarget) &&
           !state.shouldSkipMouseAfterTouch
         ) {
-          if ((event: any).pointerType === 'mouse') {
+          if ((event: any).pointerType === 'mouse' || eventType === 'mousedown') {
             // Ignore if we are pressing on hit slop area with mouse
             if (
               context.isPositionWithinTouchHitTarget(
@@ -304,8 +311,8 @@ const PressResponder = {
         }
         break;
       }
-      case 'mouseup':
-      case 'pointerup': {
+      case 'pointerup':
+      case 'mouseup': {
         if (state.isPressed) {
           if (state.shouldSkipMouseAfterTouch) {
             state.shouldSkipMouseAfterTouch = false;
@@ -342,6 +349,7 @@ const PressResponder = {
         state.isAnchorTouched = false;
         break;
       }
+
       case 'scroll':
       case 'touchcancel':
       case 'contextmenu':
