@@ -10,9 +10,9 @@
 import type {EventResponderContext} from 'events/EventTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
-const DEFAULT_PRESS_DELAY_MS = 0;
-const DEFAULT_PRESS_END_DELAY_MS = 0;
-const DEFAULT_PRESS_START_DELAY_MS = 0;
+// const DEFAULT_PRESS_DELAY_MS = 0;
+// const DEFAULT_PRESS_END_DELAY_MS = 0;
+// const DEFAULT_PRESS_START_DELAY_MS = 0;
 const DEFAULT_LONG_PRESS_DELAY_MS = 1000;
 
 const targetEventTypes = [
@@ -39,10 +39,10 @@ type PressProps = {
   delayPressStart: number,
   hitSlop: Object,
   onLongPress: (e: Object) => void,
-  onLongPressChange: (boolean) => void,
+  onLongPressChange: boolean => void,
   onLongPressShouldCancelPress: () => boolean,
   onPress: (e: Object) => void,
-  onPressChange: (boolean) => void,
+  onPressChange: boolean => void,
   onPressEnd: (e: Object) => void,
   onPressStart: (e: Object) => void,
   pressRententionOffset: Object,
@@ -86,7 +86,11 @@ function dispatchPressStartEvents(
     dispatchPressChangeEvent(true);
   }
   if ((props.onLongPress || props.onLongPressChange) && !state.isLongPressed) {
-    const delayLongPress = calculateDelayMS(props.delayLongPress, 0, DEFAULT_LONG_PRESS_DELAY_MS);
+    const delayLongPress = calculateDelayMS(
+      props.delayLongPress,
+      0,
+      DEFAULT_LONG_PRESS_DELAY_MS,
+    );
 
     state.longPressTimeout = setTimeout(() => {
       state.isLongPressed = true;
@@ -289,7 +293,10 @@ const PressResponder = {
           !context.isTargetOwned(eventTarget) &&
           !state.shouldSkipMouseAfterTouch
         ) {
-          if ((event: any).pointerType === 'mouse' || eventType === 'mousedown') {
+          if (
+            (event: any).pointerType === 'mouse' ||
+            eventType === 'mousedown'
+          ) {
             // Ignore if we are pressing on hit slop area with mouse
             if (
               context.isPositionWithinTouchHitTarget(
