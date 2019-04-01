@@ -10,7 +10,6 @@
 import type {Thenable} from 'react-reconciler/src/ReactFiberScheduler';
 
 import warningWithoutStack from './warningWithoutStack';
-import actingUpdatesScopeDepth from './actingUpdatesScopeDepth';
 
 let didWarnAboutMessageChannel = false;
 
@@ -43,7 +42,10 @@ try {
   };
 }
 
-function createActedUpdatesScope(callback: (onDone: (?Error) => void) => void) {
+function createActedUpdatesScope(
+  actingUpdatesScopeDepth: {_: number},
+  callback: (onDone: (?Error) => void) => void,
+) {
   let previousActingUpdatesScopeDepth;
   if (__DEV__) {
     previousActingUpdatesScopeDepth = actingUpdatesScopeDepth._;
@@ -73,13 +75,14 @@ function createActedUpdatesScope(callback: (onDone: (?Error) => void) => void) {
 
 export default function createAct(
   batchedUpdates: (() => void | Thenable) => void | Thenable,
-  flushPassiveEffectsAndReturnTrueIfStillPending: () => boolean,
+  actingUpdatesScopeDepth: {_: number},
+  flushPassiveEffects: () => boolean,
 ) {
   function flushEffectsAndMicroTasks(onDone: (err: ?Error) => void) {
     try {
-      flushPassiveEffectsAndReturnTrueIfStillPending();
+      flushPassiveEffects();
       enqueueTask(() => {
-        if (flushPassiveEffectsAndReturnTrueIfStillPending()) {
+        if (flushPassiveEffects()) {
           flushEffectsAndMicroTasks(onDone);
         } else {
           onDone();
@@ -92,7 +95,7 @@ export default function createAct(
 
   return function act(callback: () => Thenable) {
     let thenable;
-    createActedUpdatesScope(onDone => {
+    createActedUpdatesScope(actingUpdatesScopeDepth, onDone => {
       const result = batchedUpdates(callback);
       if (
         result !== null &&
@@ -121,7 +124,7 @@ export default function createAct(
         }
 
         // in this case, the returned thenable runs the callback, flushes
-        // effects and  microtasks in a loop until flushPassiveEffectsAndReturnTrueIfStillPending() === false,
+        // effects and  microtasks in a loop until flushPassiveEffects() === false,
         // and cleans up
         thenable = {
           then(successFn, errorFn) {
@@ -165,7 +168,7 @@ export default function createAct(
 
         // flush effects until none remain, and cleanup
         try {
-          while (flushPassiveEffectsAndReturnTrueIfStillPending()) {}
+          while (flushPassiveEffects()) {}
           onDone();
         } catch (err) {
           onDone(err);

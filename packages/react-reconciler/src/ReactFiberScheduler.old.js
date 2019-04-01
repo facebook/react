@@ -69,7 +69,6 @@ import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import actingUpdatesScopeDepth from 'shared/actingUpdatesScopeDepth';
 
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import {
@@ -611,6 +610,7 @@ function markLegacyErrorBoundaryAsFailed(instance: mixed) {
 }
 
 function flushPassiveEffects() {
+  const didFlushEffects = passiveEffectCallback !== null;
   if (passiveEffectCallbackHandle !== null) {
     cancelCallback(passiveEffectCallbackHandle);
   }
@@ -619,6 +619,7 @@ function flushPassiveEffects() {
     // to ensure tracing works correctly.
     passiveEffectCallback();
   }
+  return didFlushEffects;
 }
 
 function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
@@ -1837,9 +1838,11 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
   return root;
 }
 
-export function doesHavePendingPassiveEffects() {
-  return passiveEffectCallback !== null;
-}
+// in a test-like environment, we want to warn if dispatchAction() is
+// called outside of a TestUtils.act(...)/batchedUpdates/render call.
+// so we have a a step counter for when we descend/ascend from
+// act() calls, and test on it for when to warn
+const actingUpdatesScopeDepth = {_: 0};
 
 export function warnIfNotCurrentlyActingUpdatesInDev(fiber: Fiber): void {
   if (__DEV__) {
@@ -2680,5 +2683,6 @@ export {
   interactiveUpdates,
   flushInteractiveUpdates,
   computeUniqueAsyncExpiration,
+  actingUpdatesScopeDepth,
   flushPassiveEffects,
 };

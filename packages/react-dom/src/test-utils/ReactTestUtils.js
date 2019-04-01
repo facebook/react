@@ -42,7 +42,8 @@ const [
   restoreStateIfNeeded,
   dispatchEvent,
   runEventsInBatch,
-  doesHavePendingPassiveEffects,
+  actingUpdatesScopeDepth,
+  flushPassiveEffects,
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
 
 function Event(suffix) {}
@@ -156,11 +157,11 @@ let actContainerElement = null;
 // a warning for when you try to use TestUtils.act in a non-browser environment
 let didWarnAboutActInNodejs = false;
 
-const act = createAct(ReactDOM.unstable_batchedUpdates, () => {
-  const hasPendingPassiveEffects = doesHavePendingPassiveEffects();
-  ReactDOM.render(<div />, actContainerElement);
-  return hasPendingPassiveEffects;
-});
+const act = createAct(
+  ReactDOM.unstable_batchedUpdates,
+  actingUpdatesScopeDepth,
+  flushPassiveEffects,
+);
 
 /**
  * Utilities for making it easy to test React components.

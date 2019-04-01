@@ -819,29 +819,17 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     interactiveUpdates: NoopRenderer.interactiveUpdates,
 
-    act: createAct(NoopRenderer.batchedUpdates, () =>
-      ReactNoop.flushPassiveEffectsAndReturnTrueIfStillPending(),
+    act: createAct(
+      NoopRenderer.batchedUpdates,
+      NoopRenderer.actingUpdatesScopeDepth,
+      NoopRenderer.flushPassiveEffects,
     ),
 
     flushSync(fn: () => mixed) {
       NoopRenderer.flushSync(fn);
     },
 
-    flushPassiveEffects() {
-      // Trick to flush passive effects without exposing an internal API:
-      // Create a throwaway root and schedule a dummy update on it.
-      const rootID = 'bloopandthenmoreletterstoavoidaconflict';
-      const container = {rootID: rootID, pendingChildren: [], children: []};
-      rootContainers.set(rootID, container);
-      const root = NoopRenderer.createContainer(container, true, false);
-      NoopRenderer.updateContainer(null, root, null, null);
-    },
-
-    flushPassiveEffectsAndReturnTrueIfStillPending() {
-      const hasPendingPassiveEffects = NoopRenderer.doesHavePendingPassiveEffects();
-      ReactNoop.flushPassiveEffects();
-      return hasPendingPassiveEffects;
-    },
+    flushPassiveEffects: NoopRenderer.flushPassiveEffects,
 
     // Logs the current state of the tree.
     dumpTree(rootID: string = DEFAULT_ROOT_ID) {
