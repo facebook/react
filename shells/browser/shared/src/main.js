@@ -84,8 +84,10 @@ function createPanelIfReactLoaded() {
           localStorage.removeItem(SUPPORTS_PROFILING_KEY);
         }
 
+        const browserName = getBrowserName();
+
         store = new Store(bridge, {
-          supportsFileDownloads: true,
+          supportsFileDownloads: browserName === 'Chrome',
           supportsReloadAndProfile: true,
           supportsProfiling,
         });
@@ -104,7 +106,7 @@ function createPanelIfReactLoaded() {
           root.render(
             createElement(DevTools, {
               bridge,
-              browserName: getBrowserName(),
+              browserName,
               browserTheme: getBrowserTheme(),
               elementsPortalContainer,
               overrideTab,
