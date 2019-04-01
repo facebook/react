@@ -124,17 +124,6 @@ export default function(
      * Manipulation](docs/direct-manipulation.html)).
      */
     setNativeProps: function(nativeProps: Object) {
-      if (__DEV__) {
-        if (warnAboutDeprecatedSetNativeProps) {
-          warningWithoutStack(
-            false,
-            'Warning: Calling ref.setNativeProps(nativeProps) ' +
-              'is deprecated and will be removed in a future release. ' +
-              'Use the setNativeProps export from the react-native package instead.' +
-              "\n\timport {setNativeProps} from 'react-native';\n\tsetNativeProps(ref, nativeProps);\n",
-          );
-        }
-      }
       // Class components don't have viewConfig -> validateAttributes.
       // Nor does it make sense to set native props on a non-native component.
       // Instead, find the nearest host component and set props on it.
@@ -154,6 +143,26 @@ export default function(
       // This is not an error; it could mean a class component rendered null.
       if (maybeInstance == null) {
         return;
+      }
+
+      if (maybeInstance.canonical) {
+        warningWithoutStack(
+          false,
+          'Warning: setNativeProps is not currently supported in Fabric',
+        );
+        return;
+      }
+
+      if (__DEV__) {
+        if (warnAboutDeprecatedSetNativeProps) {
+          warningWithoutStack(
+            false,
+            'Warning: Calling ref.setNativeProps(nativeProps) ' +
+              'is deprecated and will be removed in a future release. ' +
+              'Use the setNativeProps export from the react-native package instead.' +
+              "\n\timport {setNativeProps} from 'react-native';\n\tsetNativeProps(ref, nativeProps);\n",
+          );
+        }
       }
 
       const nativeTag =
