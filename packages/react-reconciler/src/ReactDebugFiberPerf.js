@@ -253,7 +253,7 @@ export function stopRequestCallbackTimer(
   expirationTime: number,
 ): void {
   if (enableUserTimingAPI) {
-    if (supportsUserTiming && isWaitingForCallback) {
+    if (supportsUserTiming) {
       isWaitingForCallback = false;
       const warning = didExpire ? 'React was blocked by main thread' : null;
       endMark(
