@@ -1356,10 +1356,10 @@ if (enableEventAPI) {
 const emptyObject = {};
 
 export function createEventTargetHitSlop(
-  left: number | void,
-  right: number | void,
-  top: number | void,
-  bottom: number | void,
+  left: number | void | null,
+  right: number | void | null,
+  top: number | void | null,
+  bottom: number | void | null,
   rootContainerInstance: Element | Document,
   parentNamespace: string,
 ): Element {
@@ -1372,54 +1372,53 @@ export function createEventTargetHitSlop(
   const hitSlopElementStyle = ((hitSlopElement: any): HTMLElement).style;
 
   hitSlopElementStyle.position = 'absolute';
-  hitSlopElementStyle.display = 'block';
-  if (top !== undefined) {
+  if (top != null) {
     hitSlopElementStyle.top = `-${top}px`;
   }
-  if (left !== undefined) {
+  if (left != null) {
     hitSlopElementStyle.left = `-${left}px`;
   }
-  if (right !== undefined) {
+  if (right != null) {
     hitSlopElementStyle.right = `-${right}px`;
   }
-  if (bottom !== undefined) {
+  if (bottom != null) {
     hitSlopElementStyle.bottom = `-${bottom}px`;
   }
   return hitSlopElement;
 }
 
 export function diffAndUpdateEventTargetHitSlop(
-  left: number | void,
-  right: number | void,
-  top: number | void,
-  bottom: number | void,
+  left: number | null | void,
+  right: number | null | void,
+  top: number | null | void,
+  bottom: number | null | void,
   lastProps: Props,
   hitSlopElement: HTMLElement,
 ): void {
   const hitSlopElementStyle = hitSlopElement.style;
   if (lastProps.left !== left) {
-    if (left === undefined) {
+    if (left == null) {
       hitSlopElementStyle.left = '';
     } else {
       hitSlopElementStyle.left = `-${left}px`;
     }
   }
   if (lastProps.right !== right) {
-    if (right === undefined) {
+    if (right == null) {
       hitSlopElementStyle.right = '';
     } else {
       hitSlopElementStyle.right = `-${right}px`;
     }
   }
   if (lastProps.top !== top) {
-    if (top === undefined) {
+    if (top == null) {
       hitSlopElementStyle.top = '';
     } else {
       hitSlopElementStyle.top = `-${top}px`;
     }
   }
   if (lastProps.bottom !== bottom) {
-    if (bottom === undefined) {
+    if (bottom == null) {
       hitSlopElementStyle.bottom = '';
     } else {
       hitSlopElementStyle.bottom = `-${bottom}px`;
@@ -1462,12 +1461,7 @@ export function handleEventTouchHitTarget(
       const bottom = nextProps.bottom;
 
       if (lastElement !== element) {
-        if (
-          left === undefined &&
-          right === undefined &&
-          top === undefined &&
-          bottom === undefined
-        ) {
+        if (left == null && right === null && top == null && bottom == null) {
           return;
         }
         internalInstanceHandle.stateNode = element;

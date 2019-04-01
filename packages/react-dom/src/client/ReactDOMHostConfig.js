@@ -62,10 +62,10 @@ export type Props = {
   style?: {
     display?: string,
   },
-  bottom?: number,
-  left?: number,
-  right?: number,
-  top?: number,
+  bottom?: null | number,
+  left?: null | number,
+  right?: null | number,
+  top?: null | number,
 };
 export type Container = Element | Document;
 export type Instance = Element;
