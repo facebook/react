@@ -34,10 +34,8 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
 type PressProps = {
   disabled: boolean,
   delayLongPress: number,
-  delayPress: number,
   delayPressEnd: number,
   delayPressStart: number,
-  hitSlop: Object,
   onLongPress: (e: Object) => void,
   onLongPressChange: boolean => void,
   onLongPressShouldCancelPress: () => boolean,
