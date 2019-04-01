@@ -43,18 +43,18 @@ try {
 }
 
 function createActedUpdatesScope(
-  actingUpdatesScopeDepth: {_: number},
+  actingUpdatesScopeDepth: [number],
   callback: (onDone: (?Error) => void) => void,
 ) {
   let previousActingUpdatesScopeDepth;
   if (__DEV__) {
-    previousActingUpdatesScopeDepth = actingUpdatesScopeDepth._;
-    actingUpdatesScopeDepth._++;
+    previousActingUpdatesScopeDepth = actingUpdatesScopeDepth[0];
+    actingUpdatesScopeDepth[0]++;
   }
 
   function warnIfScopeDepthMismatch() {
     if (__DEV__) {
-      if (actingUpdatesScopeDepth._ > previousActingUpdatesScopeDepth) {
+      if (actingUpdatesScopeDepth[0] > previousActingUpdatesScopeDepth) {
         // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
         warningWithoutStack(
           null,
@@ -67,7 +67,7 @@ function createActedUpdatesScope(
 
   callback(() => {
     if (__DEV__) {
-      actingUpdatesScopeDepth._--;
+      actingUpdatesScopeDepth[0]--;
       warnIfScopeDepthMismatch();
     }
   });
@@ -75,7 +75,7 @@ function createActedUpdatesScope(
 
 export default function createAct(
   batchedUpdates: (() => void | Thenable) => void | Thenable,
-  actingUpdatesScopeDepth: {_: number},
+  actingUpdatesScopeDepth: [number],
   flushPassiveEffects: () => boolean,
 ) {
   function flushEffectsAndMicroTasks(onDone: (err: ?Error) => void) {

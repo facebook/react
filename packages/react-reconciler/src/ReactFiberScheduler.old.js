@@ -1842,12 +1842,14 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
 // called outside of a TestUtils.act(...)/batchedUpdates/render call.
 // so we have a a step counter for when we descend/ascend from
 // act() calls, and test on it for when to warn
-const actingUpdatesScopeDepth = {_: 0};
+// It's a tuple with a single value. Look for shared/createAct to
+// see how we change the value inside act() calls
+const actingUpdatesScopeDepth = [0];
 
 export function warnIfNotCurrentlyActingUpdatesInDev(fiber: Fiber): void {
   if (__DEV__) {
     if (
-      actingUpdatesScopeDepth._ === 0 &&
+      actingUpdatesScopeDepth[0] === 0 &&
       isRendering === false &&
       isBatchingUpdates === false
     ) {
