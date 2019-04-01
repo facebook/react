@@ -200,11 +200,6 @@ export function getChildHostContextForEvent(
         isEventTarget: false,
       };
     } else if (type === REACT_EVENT_TARGET_TYPE) {
-      warning(
-        parentHostContextDev.eventData !== null &&
-          parentHostContextDev.eventData.isEventComponent,
-        'validateDOMNesting: React event targets must be direct children of event components.',
-      );
       eventData = {
         isEventComponent: false,
         isEventTarget: true,

@@ -184,25 +184,6 @@ describe('ReactFiberEvents', () => {
       );
     });
 
-    it('should warn if an event target is not a direct child of an event component', () => {
-      const Test = () => (
-        <EventComponent>
-          <div>
-            <EventTarget>
-              <span>Child 1</span>
-            </EventTarget>
-          </div>
-        </EventComponent>
-      );
-
-      expect(() => {
-        ReactNoop.render(<Test />);
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: React event targets must be direct children of event components.',
-      );
-    });
-
     it('should warn if an event target has an event component as a child', () => {
       const Test = () => (
         <EventComponent>
@@ -550,26 +531,6 @@ describe('ReactFiberEvents', () => {
       root.update(<Test2 />);
       expect(Scheduler).toFlushWithoutYielding();
       expect(root).toMatchRenderedOutput(<span>Child 1</span>);
-    });
-
-    it('should warn if an event target is not a direct child of an event component', () => {
-      const Test = () => (
-        <EventComponent>
-          <div>
-            <EventTarget>
-              <span>Child 1</span>
-            </EventTarget>
-          </div>
-        </EventComponent>
-      );
-
-      const root = ReactTestRenderer.create(null);
-      expect(() => {
-        root.update(<Test />);
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: React event targets must be direct children of event components.',
-      );
     });
 
     it('should warn if an event target has an event component as a child', () => {
@@ -921,26 +882,6 @@ describe('ReactFiberEvents', () => {
       ReactDOM.render(<Test2 />, container);
       expect(Scheduler).toFlushWithoutYielding();
       expect(container.innerHTML).toBe('<span>Child 1</span>');
-    });
-
-    it('should warn if an event target is not a direct child of an event component', () => {
-      const Test = () => (
-        <EventComponent>
-          <div>
-            <EventTarget>
-              <span>Child 1</span>
-            </EventTarget>
-          </div>
-        </EventComponent>
-      );
-
-      expect(() => {
-        const container = document.createElement('div');
-        ReactDOM.render(<Test />, container);
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: React event targets must be direct children of event components.',
-      );
     });
 
     it('should warn if an event target has an event component as a child', () => {

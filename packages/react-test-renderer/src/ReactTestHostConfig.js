@@ -139,10 +139,6 @@ export function getChildHostContextForEvent(
       );
       return EVENT_COMPONENT_CONTEXT;
     } else if (type === REACT_EVENT_TARGET_TYPE) {
-      warning(
-        parentHostContext === EVENT_COMPONENT_CONTEXT,
-        'validateDOMNesting: React event targets must be direct children of event components.',
-      );
       return EVENT_TARGET_CONTEXT;
     }
   }
