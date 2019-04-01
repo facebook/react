@@ -52,7 +52,7 @@ export function readLazyComponentType<T>(lazyComponent: LazyComponent<T>): T {
           if (lazyComponent._status === Pending) {
             const _result = moduleObject ? moduleObject.default : moduleObject;
             if (__DEV__) {
-              if (result === undefined) {
+              if (_result === undefined) {
                 warning(
                   false,
                   'lazy: Expected the result of a dynamic import() call. ' +
