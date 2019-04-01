@@ -2112,8 +2112,15 @@ function beginWork(
             // been unsuspended it has committed as a regular Suspense component.
             // If it needs to be retried, it should have work scheduled on it.
             workInProgress.effectTag |= DidCapture;
-            break;
           }
+          break;
+        }
+        case EventComponent:
+        case EventTarget: {
+          if (enableEventAPI) {
+            pushHostContextForEvent(workInProgress);
+          }
+          break;
         }
       }
       return bailoutOnAlreadyFinishedWork(
