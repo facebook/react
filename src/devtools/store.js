@@ -103,10 +103,14 @@ export default class Store extends EventEmitter {
 
     if (config != null) {
       const {
+        isProfiling,
         supportsFileDownloads,
         supportsProfiling,
         supportsReloadAndProfile,
       } = config;
+      if (isProfiling) {
+        this._isProfiling = true;
+      }
       if (supportsFileDownloads) {
         this._supportsFileDownloads = true;
       }
