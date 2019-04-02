@@ -47,16 +47,16 @@ const targetEventTypeCached: Map<
 const targetOwnership: Map<EventTarget, Fiber> = new Map();
 const eventsWithStopPropagation:
   | WeakSet
-  | Set<$Shape<ParitalEventObject>> = new PossiblyWeakSet();
+  | Set<$Shape<PartialEventObject>> = new PossiblyWeakSet();
 
-type ParitalEventObject = {
-  listener: ($Shape<ParitalEventObject>) => void,
+type PartialEventObject = {
+  listener: ($Shape<PartialEventObject>) => void,
   target: Element | Document,
   type: string,
 };
 type EventQueue = {
-  bubble: null | Array<$Shape<ParitalEventObject>>,
-  capture: null | Array<$Shape<ParitalEventObject>>,
+  bubble: null | Array<$Shape<PartialEventObject>>,
+  capture: null | Array<$Shape<PartialEventObject>>,
   discrete: boolean,
   phase: EventQueuePhase,
 };
@@ -74,15 +74,15 @@ function createEventQueue(phase: EventQueuePhase): EventQueue {
   };
 }
 
-function processEvent(event: $Shape<ParitalEventObject>): void {
+function processEvent(event: $Shape<PartialEventObject>): void {
   const type = event.type;
   const listener = event.listener;
   invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
 }
 
 function processEvents(
-  bubble: null | Array<$Shape<ParitalEventObject>>,
-  capture: null | Array<$Shape<ParitalEventObject>>,
+  bubble: null | Array<$Shape<PartialEventObject>>,
+  capture: null | Array<$Shape<PartialEventObject>>,
 ): void {
   let i, length;
 
@@ -181,7 +181,7 @@ DOMEventResponderContext.prototype.dispatchEvent = function(
       );
     };
   }
-  const eventObject = ((possibleEventObject: any): $Shape<ParitalEventObject>);
+  const eventObject = ((possibleEventObject: any): $Shape<PartialEventObject>);
   let events;
 
   if (capture) {

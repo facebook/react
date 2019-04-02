@@ -23,7 +23,7 @@ type HoverState = {
   isTouched: boolean,
 };
 
-type HoverEventType = 'hover' | 'hoverstart' | 'hoverend' | 'hoverchange';
+type HoverEventType = 'hoverstart' | 'hoverend' | 'hoverchange';
 
 type HoverEvent = {|
   listener: HoverEvent => void,

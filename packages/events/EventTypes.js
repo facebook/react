@@ -10,12 +10,6 @@
 import type {AnyNativeEvent} from 'events/PluginModuleType';
 import type {ReactEventResponderEventType} from 'shared/ReactTypes';
 
-type ParitalEventObject = {
-  listener: ($Shape<ParitalEventObject>) => void,
-  target: Element | Document,
-  type: string,
-};
-
 export type EventResponderContext = {
   event: AnyNativeEvent,
   eventTarget: Element | Document,
