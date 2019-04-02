@@ -98,6 +98,7 @@ const AUTOFOCUS = 'autoFocus';
 const CHILDREN = 'children';
 const STYLE = 'style';
 const HTML = '__html';
+const EMPTY_OBJECT = {};
 
 const {html: HTML_NAMESPACE} = Namespaces;
 
@@ -1337,6 +1338,39 @@ export function listenToEventResponderEventTypes(
       }
     }
   }
+}
+
+export function createTouchHitTargetElement(
+  bottom: number | void | null,
+  left: number | void | null,
+  right: number | void | null,
+  top: number | void | null,
+  rootContainerInstance: Element | Document,
+  parentNamespace: string,
+): HTMLElement {
+  const touchHitTargetElement = ((createElement(
+    'div',
+    EMPTY_OBJECT,
+    rootContainerInstance,
+    parentNamespace,
+  ): any): HTMLElement);
+  const touchHitTargetElementStyle = touchHitTargetElement.style;
+
+  touchHitTargetElementStyle.position = 'absolute';
+  if (top != null) {
+    touchHitTargetElementStyle.top = `-${top}px`;
+  }
+  if (left != null) {
+    touchHitTargetElementStyle.left = `-${left}px`;
+  }
+  if (right != null) {
+    touchHitTargetElementStyle.right = `-${right}px`;
+  }
+  if (bottom != null) {
+    touchHitTargetElementStyle.bottom = `-${bottom}px`;
+  }
+
+  return touchHitTargetElement;
 }
 
 // We can remove this once the event API is stable and out of a flag

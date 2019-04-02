@@ -64,7 +64,8 @@ export const supportsMutation = $$$hostConfig.supportsMutation;
 export const supportsPersistence = $$$hostConfig.supportsPersistence;
 export const supportsHydration = $$$hostConfig.supportsHydration;
 export const handleEventComponent = $$$hostConfig.handleEventComponent;
-export const handleEventTarget = $$$hostConfig.handleEventTarget;
+export const createTouchHitTargetInstance =
+  $$$hostConfig.createTouchHitTargetInstance;
 
 // -------------------
 //      Mutation

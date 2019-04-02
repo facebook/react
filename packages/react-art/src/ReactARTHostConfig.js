@@ -447,11 +447,13 @@ export function handleEventComponent(
   // TODO: add handleEventComponent implementation
 }
 
-export function handleEventTarget(
-  type: Symbol | number,
-  props: Props,
+export function createTouchHitTargetInstance(
   parentInstance: Container,
+  props: Props,
+  rootContainerInstance: Container,
+  hostContext: HostContext,
   internalInstanceHandle: Object,
 ) {
-  // TODO: add handleEventTarget implementation
+  // TODO: add createTouchHitTargetInstance implementation
+  return (null: any);
 }

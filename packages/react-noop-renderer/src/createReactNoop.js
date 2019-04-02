@@ -432,15 +432,14 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       // NO-OP
     },
 
-    handleEventTarget(
-      type: Symbol | number,
-      props: Props,
+    createTouchHitTargetInstance(
       parentInstance: Container,
+      props: Props,
+      rootContainerInstance: Container,
+      hostContext: HostContext,
       internalInstanceHandle: Object,
     ) {
-      if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
-        // TODO
-      }
+      // TODO: add createTouchHitTargetInstance implementation
     },
   };
 

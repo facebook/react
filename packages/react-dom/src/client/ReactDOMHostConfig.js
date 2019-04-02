@@ -25,6 +25,7 @@ import {
   warnForInsertedHydratedElement,
   warnForInsertedHydratedText,
   listenToEventResponderEventTypes,
+  createTouchHitTargetElement,
 } from './ReactDOMComponent';
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
@@ -33,7 +34,7 @@ import {
   isEnabled as ReactBrowserEventEmitterIsEnabled,
   setEnabled as ReactBrowserEventEmitterSetEnabled,
 } from '../events/ReactBrowserEventEmitter';
-import {getChildNamespace} from '../shared/DOMNamespaces';
+import {Namespaces, getChildNamespace} from '../shared/DOMNamespaces';
 import {
   ELEMENT_NODE,
   TEXT_NODE,
@@ -57,6 +58,10 @@ export type Props = {
   style?: {
     display?: string,
   },
+  bottom?: null | number,
+  left?: null | number,
+  right?: null | number,
+  top?: null | number,
 };
 export type Container = Element | Document;
 export type Instance = Element;
@@ -85,6 +90,8 @@ import {
   enableEventAPI,
 } from 'shared/ReactFeatureFlags';
 import warning from 'shared/warning';
+
+const {html: HTML_NAMESPACE} = Namespaces;
 
 // Intentionally not named imports because Rollup would
 // use dynamic dispatch for CommonJS interop named imports.
@@ -899,16 +906,33 @@ export function handleEventComponent(
   }
 }
 
-export function handleEventTarget(
-  type: Symbol | number,
-  props: Props,
+export function createTouchHitTargetInstance(
   parentInstance: Container,
+  props: Props,
+  rootContainerInstance: Container,
+  hostContext: HostContext,
   internalInstanceHandle: Object,
-): void {
-  if (enableEventAPI) {
-    // Touch target hit slop handling
-    if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
-      // TODO
-    }
+): Instance {
+  const {bottom, left, right, top} = props;
+  let parentNamespace: string;
+  if (__DEV__) {
+    const hostContextDev = ((hostContext: any): HostContextDev);
+    parentNamespace = hostContextDev.namespace;
+    throw new Error(
+      '<TouchHitTarget> was used in an unsupported DOM namespace. ' +
+        'Ensure the <TouchHitTarget> is used in an HTML namespace.',
+    );
+  } else {
+    parentNamespace = ((hostContext: any): HostContextProd);
   }
+  const touchHitTargetInstance = createTouchHitTargetElement(
+    bottom,
+    left,
+    right,
+    top,
+    rootContainerInstance,
+    parentNamespace,
+  );
+  precacheFiberNode(internalInstanceHandle, touchHitTargetInstance);
+  return touchHitTargetInstance;
 }

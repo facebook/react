@@ -66,7 +66,7 @@ import {
   appendChildToContainerChildSet,
   finalizeContainerChildren,
   handleEventComponent,
-  handleEventTarget,
+  createTouchHitTargetInstance,
 } from './ReactFiberHostConfig';
 import {
   getRootHostContainer,
@@ -90,6 +90,7 @@ import {
   enableSuspenseServerRenderer,
   enableEventAPI,
 } from 'shared/ReactFeatureFlags';
+import {REACT_EVENT_TARGET_TOUCH_HIT} from 'shared/ReactSymbols';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -784,18 +785,40 @@ function completeWork(
       if (enableEventAPI) {
         popHostContext(workInProgress);
         const type = workInProgress.type.type;
-        let node = workInProgress.return;
-        let parentHostInstance = null;
-        // Traverse up the fiber tree till we find a host component fiber
-        while (node !== null) {
-          if (node.tag === HostComponent) {
-            parentHostInstance = node.stateNode;
-            break;
+
+        if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
+          let node = workInProgress.return;
+          let parentHostInstance = null;
+          // Traverse up the fiber tree till we find a host component fiber
+          while (node !== null) {
+            if (node.tag === HostComponent) {
+              parentHostInstance = node.stateNode;
+              break;
+            }
+            node = node.return;
           }
-          node = node.return;
-        }
-        if (parentHostInstance !== null) {
-          handleEventTarget(type, newProps, parentHostInstance, workInProgress);
+          invariant(
+            parentHostInstance !== null,
+            'A touch hit target was completed without a parent host component node. ' +
+              'This is probably a bug in React.',
+          );
+
+          if (current !== null && workInProgress.stateNode != null) {
+            // Update
+          } else {
+            const currentHostContext = getHostContext();
+            const rootContainerInstance = getRootHostContainer();
+            const instance = createTouchHitTargetInstance(
+              parentHostInstance,
+              newProps,
+              rootContainerInstance,
+              currentHostContext,
+              workInProgress,
+            );
+
+            appendAllChildren(instance, workInProgress, false, false);
+            workInProgress.stateNode = instance;
+          }
         }
       }
       break;
