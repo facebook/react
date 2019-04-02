@@ -15,6 +15,7 @@ let ReactFeatureFlags;
 let React;
 let ReactNoop;
 let Scheduler;
+let enableNewScheduler;
 
 describe('ReactIncrementalErrorHandling', () => {
   beforeEach(() => {
@@ -22,6 +23,7 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
+    enableNewScheduler = ReactFeatureFlags.enableNewScheduler;
     PropTypes = require('prop-types');
     React = require('react');
     ReactNoop = require('react-noop-renderer');
@@ -131,6 +133,7 @@ describe('ReactIncrementalErrorHandling', () => {
       'ErrorBoundary (catch)',
       'ErrorMessage',
     ]);
+
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: oops!')]);
   });
 
@@ -306,21 +309,17 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('retries one more time before handling error', () => {
-    let ops = [];
     function BadRender() {
-      ops.push('BadRender');
       Scheduler.yieldValue('BadRender');
       throw new Error('oops');
     }
 
     function Sibling() {
-      ops.push('Sibling');
       Scheduler.yieldValue('Sibling');
       return <span prop="Sibling" />;
     }
 
     function Parent() {
-      ops.push('Parent');
       Scheduler.yieldValue('Parent');
       return (
         <React.Fragment>
@@ -338,10 +337,15 @@ describe('ReactIncrementalErrorHandling', () => {
     // Finish the rest of the async work
     expect(Scheduler).toFlushAndYieldThrough(['Sibling']);
 
-    // React retries once, synchronously, before throwing.
-    ops = [];
-    expect(() => ReactNoop.flushNextYield()).toThrow('oops');
-    expect(ops).toEqual(['Parent', 'BadRender', 'Sibling']);
+    // Old scheduler renders, commits, and throws synchronously
+    expect(() => Scheduler.unstable_flushNumberOfYields(1)).toThrow('oops');
+    expect(Scheduler).toHaveYielded([
+      'Parent',
+      'BadRender',
+      'Sibling',
+      'commit',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([]);
   });
 
   // TODO: This is currently unobservable, but will be once we lift renderRoot
@@ -744,7 +748,8 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([span('a:5')]);
   });
 
-  it('applies sync updates regardless despite errors in scheduling', () => {
+  // TODO: Is this a breaking change?
+  it('defers additional sync work to a separate event after an error', () => {
     ReactNoop.render(<span prop="a:1" />);
     expect(() => {
       ReactNoop.flushSync(() => {
@@ -755,6 +760,7 @@ describe('ReactIncrementalErrorHandling', () => {
         });
       });
     }).toThrow('Hello');
+    Scheduler.flushAll();
     expect(ReactNoop.getChildren()).toEqual([span('a:3')]);
   });
 
@@ -962,43 +968,46 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren('a')).toEqual([
       span('Caught an error: Hello.'),
     ]);
+    expect(Scheduler).toFlushWithoutYielding();
     expect(ReactNoop.getChildren('b')).toEqual([span('b:1')]);
   });
 
   it('continues work on other roots despite uncaught errors', () => {
     function BrokenRender(props) {
-      throw new Error('Hello');
+      throw new Error(props.label);
     }
 
-    ReactNoop.renderToRootWithID(<BrokenRender />, 'a');
+    ReactNoop.renderToRootWithID(<BrokenRender label="a" />, 'a');
     expect(() => {
       expect(Scheduler).toFlushWithoutYielding();
-    }).toThrow('Hello');
+    }).toThrow('a');
     expect(ReactNoop.getChildren('a')).toEqual([]);
 
-    ReactNoop.renderToRootWithID(<BrokenRender />, 'a');
+    ReactNoop.renderToRootWithID(<BrokenRender label="a" />, 'a');
     ReactNoop.renderToRootWithID(<span prop="b:2" />, 'b');
     expect(() => {
       expect(Scheduler).toFlushWithoutYielding();
-    }).toThrow('Hello');
+    }).toThrow('a');
 
+    expect(Scheduler).toFlushWithoutYielding();
     expect(ReactNoop.getChildren('a')).toEqual([]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:2')]);
 
     ReactNoop.renderToRootWithID(<span prop="a:3" />, 'a');
-    ReactNoop.renderToRootWithID(<BrokenRender />, 'b');
+    ReactNoop.renderToRootWithID(<BrokenRender label="b" />, 'b');
     expect(() => {
       expect(Scheduler).toFlushWithoutYielding();
-    }).toThrow('Hello');
+    }).toThrow('b');
     expect(ReactNoop.getChildren('a')).toEqual([span('a:3')]);
     expect(ReactNoop.getChildren('b')).toEqual([]);
 
     ReactNoop.renderToRootWithID(<span prop="a:4" />, 'a');
-    ReactNoop.renderToRootWithID(<BrokenRender />, 'b');
+    ReactNoop.renderToRootWithID(<BrokenRender label="b" />, 'b');
     ReactNoop.renderToRootWithID(<span prop="c:4" />, 'c');
     expect(() => {
       expect(Scheduler).toFlushWithoutYielding();
-    }).toThrow('Hello');
+    }).toThrow('b');
+    expect(Scheduler).toFlushWithoutYielding();
     expect(ReactNoop.getChildren('a')).toEqual([span('a:4')]);
     expect(ReactNoop.getChildren('b')).toEqual([]);
     expect(ReactNoop.getChildren('c')).toEqual([span('c:4')]);
@@ -1007,25 +1016,43 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop.renderToRootWithID(<span prop="b:5" />, 'b');
     ReactNoop.renderToRootWithID(<span prop="c:5" />, 'c');
     ReactNoop.renderToRootWithID(<span prop="d:5" />, 'd');
-    ReactNoop.renderToRootWithID(<BrokenRender />, 'e');
+    ReactNoop.renderToRootWithID(<BrokenRender label="e" />, 'e');
     expect(() => {
       expect(Scheduler).toFlushWithoutYielding();
-    }).toThrow('Hello');
+    }).toThrow('e');
+    expect(Scheduler).toFlushWithoutYielding();
     expect(ReactNoop.getChildren('a')).toEqual([span('a:5')]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:5')]);
     expect(ReactNoop.getChildren('c')).toEqual([span('c:5')]);
     expect(ReactNoop.getChildren('d')).toEqual([span('d:5')]);
     expect(ReactNoop.getChildren('e')).toEqual([]);
 
-    ReactNoop.renderToRootWithID(<BrokenRender />, 'a');
+    ReactNoop.renderToRootWithID(<BrokenRender label="a" />, 'a');
     ReactNoop.renderToRootWithID(<span prop="b:6" />, 'b');
-    ReactNoop.renderToRootWithID(<BrokenRender />, 'c');
+    ReactNoop.renderToRootWithID(<BrokenRender label="c" />, 'c');
     ReactNoop.renderToRootWithID(<span prop="d:6" />, 'd');
-    ReactNoop.renderToRootWithID(<BrokenRender />, 'e');
+    ReactNoop.renderToRootWithID(<BrokenRender label="e" />, 'e');
     ReactNoop.renderToRootWithID(<span prop="f:6" />, 'f');
-    expect(() => {
-      expect(Scheduler).toFlushWithoutYielding();
-    }).toThrow('Hello');
+
+    if (enableNewScheduler) {
+      // The new scheduler will throw all three errors.
+      expect(() => {
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toThrow('a');
+      expect(() => {
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toThrow('c');
+      expect(() => {
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toThrow('e');
+    } else {
+      // The old scheduler only throws the first one.
+      expect(() => {
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toThrow('a');
+    }
+
+    expect(Scheduler).toFlushWithoutYielding();
     expect(ReactNoop.getChildren('a')).toEqual([]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:6')]);
     expect(ReactNoop.getChildren('c')).toEqual([]);

@@ -22,7 +22,6 @@ import {
   markLegacyErrorBoundaryAsFailed as markLegacyErrorBoundaryAsFailed_old,
   isAlreadyFailedLegacyErrorBoundary as isAlreadyFailedLegacyErrorBoundary_old,
   scheduleWork as scheduleWork_old,
-  requestWork as requestWork_old,
   flushRoot as flushRoot_old,
   batchedUpdates as batchedUpdates_old,
   unbatchedUpdates as unbatchedUpdates_old,
@@ -35,6 +34,7 @@ import {
   computeUniqueAsyncExpiration as computeUniqueAsyncExpiration_old,
   flushPassiveEffects as flushPassiveEffects_old,
   warnIfNotCurrentlyActingUpdatesInDev as warnIfNotCurrentlyActingUpdatesInDev_old,
+  inferStartTimeFromExpirationTime as inferStartTimeFromExpirationTime_old,
 } from './ReactFiberScheduler.old';
 
 import {
@@ -50,7 +50,6 @@ import {
   markLegacyErrorBoundaryAsFailed as markLegacyErrorBoundaryAsFailed_new,
   isAlreadyFailedLegacyErrorBoundary as isAlreadyFailedLegacyErrorBoundary_new,
   scheduleWork as scheduleWork_new,
-  requestWork as requestWork_new,
   flushRoot as flushRoot_new,
   batchedUpdates as batchedUpdates_new,
   unbatchedUpdates as unbatchedUpdates_new,
@@ -63,61 +62,80 @@ import {
   computeUniqueAsyncExpiration as computeUniqueAsyncExpiration_new,
   flushPassiveEffects as flushPassiveEffects_new,
   warnIfNotCurrentlyActingUpdatesInDev as warnIfNotCurrentlyActingUpdatesInDev_new,
+  inferStartTimeFromExpirationTime as inferStartTimeFromExpirationTime_new,
 } from './ReactFiberScheduler.new';
 
-export let requestCurrentTime = requestCurrentTime_old;
-export let computeExpirationForFiber = computeExpirationForFiber_old;
-export let captureCommitPhaseError = captureCommitPhaseError_old;
-export let onUncaughtError = onUncaughtError_old;
-export let renderDidSuspend = renderDidSuspend_old;
-export let renderDidError = renderDidError_old;
-export let pingSuspendedRoot = pingSuspendedRoot_old;
-export let retryTimedOutBoundary = retryTimedOutBoundary_old;
-export let resolveRetryThenable = resolveRetryThenable_old;
-export let markLegacyErrorBoundaryAsFailed = markLegacyErrorBoundaryAsFailed_old;
-export let isAlreadyFailedLegacyErrorBoundary = isAlreadyFailedLegacyErrorBoundary_old;
-export let scheduleWork = scheduleWork_old;
-export let requestWork = requestWork_old;
-export let flushRoot = flushRoot_old;
-export let batchedUpdates = batchedUpdates_old;
-export let unbatchedUpdates = unbatchedUpdates_old;
-export let flushSync = flushSync_old;
-export let flushControlled = flushControlled_old;
-export let deferredUpdates = deferredUpdates_old;
-export let syncUpdates = syncUpdates_old;
-export let interactiveUpdates = interactiveUpdates_old;
-export let flushInteractiveUpdates = flushInteractiveUpdates_old;
-export let computeUniqueAsyncExpiration = computeUniqueAsyncExpiration_old;
-export let flushPassiveEffects = flushPassiveEffects_old;
-export let warnIfNotCurrentlyActingUpdatesInDev = warnIfNotCurrentlyActingUpdatesInDev_old;
-
-if (enableNewScheduler) {
-  requestCurrentTime = requestCurrentTime_new;
-  computeExpirationForFiber = computeExpirationForFiber_new;
-  captureCommitPhaseError = captureCommitPhaseError_new;
-  onUncaughtError = onUncaughtError_new;
-  renderDidSuspend = renderDidSuspend_new;
-  renderDidError = renderDidError_new;
-  pingSuspendedRoot = pingSuspendedRoot_new;
-  retryTimedOutBoundary = retryTimedOutBoundary_new;
-  resolveRetryThenable = resolveRetryThenable_new;
-  markLegacyErrorBoundaryAsFailed = markLegacyErrorBoundaryAsFailed_new;
-  isAlreadyFailedLegacyErrorBoundary = isAlreadyFailedLegacyErrorBoundary_new;
-  scheduleWork = scheduleWork_new;
-  requestWork = requestWork_new;
-  flushRoot = flushRoot_new;
-  batchedUpdates = batchedUpdates_new;
-  unbatchedUpdates = unbatchedUpdates_new;
-  flushSync = flushSync_new;
-  flushControlled = flushControlled_new;
-  deferredUpdates = deferredUpdates_new;
-  syncUpdates = syncUpdates_new;
-  interactiveUpdates = interactiveUpdates_new;
-  flushInteractiveUpdates = flushInteractiveUpdates_new;
-  computeUniqueAsyncExpiration = computeUniqueAsyncExpiration_new;
-  flushPassiveEffects = flushPassiveEffects_new;
-  warnIfNotCurrentlyActingUpdatesInDev = warnIfNotCurrentlyActingUpdatesInDev_new;
-}
+export const requestCurrentTime = enableNewScheduler
+  ? requestCurrentTime_new
+  : requestCurrentTime_old;
+export const computeExpirationForFiber = enableNewScheduler
+  ? computeExpirationForFiber_new
+  : computeExpirationForFiber_old;
+export const captureCommitPhaseError = enableNewScheduler
+  ? captureCommitPhaseError_new
+  : captureCommitPhaseError_old;
+export const onUncaughtError = enableNewScheduler
+  ? onUncaughtError_new
+  : onUncaughtError_old;
+export const renderDidSuspend = enableNewScheduler
+  ? renderDidSuspend_new
+  : renderDidSuspend_old;
+export const renderDidError = enableNewScheduler
+  ? renderDidError_new
+  : renderDidError_old;
+export const pingSuspendedRoot = enableNewScheduler
+  ? pingSuspendedRoot_new
+  : pingSuspendedRoot_old;
+export const retryTimedOutBoundary = enableNewScheduler
+  ? retryTimedOutBoundary_new
+  : retryTimedOutBoundary_old;
+export const resolveRetryThenable = enableNewScheduler
+  ? resolveRetryThenable_new
+  : resolveRetryThenable_old;
+export const markLegacyErrorBoundaryAsFailed = enableNewScheduler
+  ? markLegacyErrorBoundaryAsFailed_new
+  : markLegacyErrorBoundaryAsFailed_old;
+export const isAlreadyFailedLegacyErrorBoundary = enableNewScheduler
+  ? isAlreadyFailedLegacyErrorBoundary_new
+  : isAlreadyFailedLegacyErrorBoundary_old;
+export const scheduleWork = enableNewScheduler
+  ? scheduleWork_new
+  : scheduleWork_old;
+export const flushRoot = enableNewScheduler ? flushRoot_new : flushRoot_old;
+export const batchedUpdates = enableNewScheduler
+  ? batchedUpdates_new
+  : batchedUpdates_old;
+export const unbatchedUpdates = enableNewScheduler
+  ? unbatchedUpdates_new
+  : unbatchedUpdates_old;
+export const flushSync = enableNewScheduler ? flushSync_new : flushSync_old;
+export const flushControlled = enableNewScheduler
+  ? flushControlled_new
+  : flushControlled_old;
+export const deferredUpdates = enableNewScheduler
+  ? deferredUpdates_new
+  : deferredUpdates_old;
+export const syncUpdates = enableNewScheduler
+  ? syncUpdates_new
+  : syncUpdates_old;
+export const interactiveUpdates = enableNewScheduler
+  ? interactiveUpdates_new
+  : interactiveUpdates_old;
+export const flushInteractiveUpdates = enableNewScheduler
+  ? flushInteractiveUpdates_new
+  : flushInteractiveUpdates_old;
+export const computeUniqueAsyncExpiration = enableNewScheduler
+  ? computeUniqueAsyncExpiration_new
+  : computeUniqueAsyncExpiration_old;
+export const flushPassiveEffects = enableNewScheduler
+  ? flushPassiveEffects_new
+  : flushPassiveEffects_old;
+export const warnIfNotCurrentlyActingUpdatesInDev = enableNewScheduler
+  ? warnIfNotCurrentlyActingUpdatesInDev_new
+  : warnIfNotCurrentlyActingUpdatesInDev_old;
+export const inferStartTimeFromExpirationTime = enableNewScheduler
+  ? inferStartTimeFromExpirationTime_new
+  : inferStartTimeFromExpirationTime_old;
 
 export type Thenable = {
   then(resolve: () => mixed, reject?: () => mixed): void | Thenable,

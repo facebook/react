@@ -1747,6 +1747,7 @@ describe('ReactHooks', () => {
     );
     expect(root).toMatchRenderedOutput('loading');
     await Promise.resolve();
+    Scheduler.flushAll();
     expect(root).toMatchRenderedOutput('hello');
   });
 
@@ -1778,6 +1779,7 @@ describe('ReactHooks', () => {
     );
     expect(root).toMatchRenderedOutput('loading');
     await Promise.resolve();
+    Scheduler.flushAll();
     expect(root).toMatchRenderedOutput('hello');
   });
 
@@ -1809,6 +1811,7 @@ describe('ReactHooks', () => {
     );
     expect(root).toMatchRenderedOutput('loading');
     await Promise.resolve();
+    Scheduler.flushAll();
     expect(root).toMatchRenderedOutput('hello');
   });
 });
