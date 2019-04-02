@@ -52,3 +52,25 @@
   height: 100%;
   color: var(--color-dim);
 }
+
+.Screenshot {
+  width: 100%;
+}
+
+.Modal {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-modal-background);
+  padding: 0.5rem;
+}
+
+.ModalImage {
+  max-height: 100%;
+  max-width: 100%;
+}

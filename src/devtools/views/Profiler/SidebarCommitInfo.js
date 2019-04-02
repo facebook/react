@@ -1,6 +1,6 @@
 // @flow
 
-import React, { Fragment, useContext } from 'react';
+import React, { Fragment, useCallback, useContext, useState } from 'react';
 import { ProfilerContext } from './ProfilerContext';
 import { formatDuration, formatTime } from './utils';
 import { StoreContext } from '../context';
@@ -18,7 +18,25 @@ export default function SidebarCommitInfo(_: Props) {
     selectTab,
   } = useContext(ProfilerContext);
 
-  const { profilingCache } = useContext(StoreContext);
+  const { profilingCache, profilingScreenshots } = useContext(StoreContext);
+
+  const screenshot =
+    selectedCommitIndex !== null
+      ? profilingScreenshots.get(selectedCommitIndex)
+      : null;
+  const [
+    isScreenshotModalVisible,
+    setIsScreenshotModalVisible,
+  ] = useState<boolean>(false);
+
+  const hideScreenshotModal = useCallback(
+    () => setIsScreenshotModalVisible(false),
+    []
+  );
+  const showScreenshotModal = useCallback(
+    () => setIsScreenshotModalVisible(true),
+    []
+  );
 
   if (selectedCommitIndex === null) {
     return <div className={styles.NothingSelected}>Nothing selected</div>;
@@ -79,8 +97,38 @@ export default function SidebarCommitInfo(_: Props) {
               ))}
             </ul>
           </li>
+          {screenshot != null && (
+            <li>
+              <img
+                alt="Screenshot"
+                className={styles.Screenshot}
+                onClick={showScreenshotModal}
+                src={screenshot}
+              />
+            </li>
+          )}
+          {screenshot != null && isScreenshotModalVisible && (
+            <ScreenshotModal
+              hideScreenshotModal={hideScreenshotModal}
+              screenshot={screenshot}
+            />
+          )}
         </ul>
       </div>
     </Fragment>
+  );
+}
+
+function ScreenshotModal({
+  hideScreenshotModal,
+  screenshot,
+}: {|
+  hideScreenshotModal: Function,
+  screenshot: string,
+|}) {
+  return (
+    <div className={styles.Modal} onClick={hideScreenshotModal}>
+      <img alt="Screenshot" className={styles.ModalImage} src={screenshot} />
+    </div>
   );
 }

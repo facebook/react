@@ -72,6 +72,9 @@ export default class Store extends EventEmitter {
   // to reconstruct the state of each root for each commit.
   _profilingOperations: Map<number, Array<Uint32Array>> = new Map();
 
+  // Stores screenshots for each commit (when profiling).
+  _profilingScreenshots: Map<number, string> = new Map();
+
   // Snapshot of the state of the main Store (including all roots) when profiling started.
   // Once profiling is finished, this snapshot can be used along with "operations" messages emitted during profiling,
   // to reconstruct the state of each root for each commit.
@@ -126,6 +129,7 @@ export default class Store extends EventEmitter {
     this._bridge = bridge;
     bridge.addListener('operations', this.onBridgeOperations);
     bridge.addListener('profilingStatus', this.onProfilingStatus);
+    bridge.addListener('screenshotCaptured', this.onScreenshotCaptured);
     bridge.addListener('shutdown', this.onBridgeShutdown);
 
     // It's possible that profiling has already started (e.g. "reload and start profiling")
@@ -170,6 +174,10 @@ export default class Store extends EventEmitter {
     return this._profilingOperations;
   }
 
+  get profilingScreenshots(): Map<number, string> {
+    return this._profilingScreenshots;
+  }
+
   get profilingSnapshot(): Map<number, ProfilingSnapshotNode> {
     return this._profilingSnapshot;
   }
@@ -197,6 +205,7 @@ export default class Store extends EventEmitter {
   clearProfilingData(): void {
     this._importedProfilingData = null;
     this._profilingOperations = new Map();
+    this._profilingScreenshots = new Map();
     this._profilingSnapshot = new Map();
 
     // Invalidate suspense cache if profiling data is being (re-)recorded.
@@ -400,12 +409,17 @@ export default class Store extends EventEmitter {
     const rootID = operations[1];
 
     if (this._isProfiling) {
-      const profilingOperations = this._profilingOperations.get(rootID);
+      let profilingOperations = this._profilingOperations.get(rootID);
       if (profilingOperations == null) {
-        this._profilingOperations.set(rootID, [operations]);
+        profilingOperations = [operations];
+        this._profilingOperations.set(rootID, profilingOperations);
       } else {
         profilingOperations.push(operations);
       }
+
+      const commitIndex = profilingOperations.length - 1;
+
+      this._bridge.send('captureScreenshot', { commitIndex });
     }
 
     let addedElementIDs: Uint32Array = new Uint32Array(0);
@@ -622,6 +636,7 @@ export default class Store extends EventEmitter {
     if (isProfiling) {
       this._importedProfilingData = null;
       this._profilingOperations = new Map();
+      this._profilingScreenshots = new Map();
       this._profilingSnapshot = new Map();
       this.roots.forEach(this._takeProfilingSnapshotRecursive);
     }
@@ -630,6 +645,16 @@ export default class Store extends EventEmitter {
       this._isProfiling = isProfiling;
       this.emit('isProfiling');
     }
+  };
+
+  onScreenshotCaptured = ({
+    commitIndex,
+    dataURL,
+  }: {|
+    commitIndex: number,
+    dataURL: string,
+  |}) => {
+    this._profilingScreenshots.set(commitIndex, dataURL);
   };
 
   onBridgeShutdown = () => {

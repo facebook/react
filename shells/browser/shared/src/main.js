@@ -74,6 +74,15 @@ function createPanelIfReactLoaded() {
             filename,
           });
         });
+        bridge.addListener('captureScreenshot', ({ commitIndex }) => {
+          chrome.runtime.sendMessage(
+            {
+              captureScreenshot: true,
+              commitIndex,
+            },
+            response => bridge.send('screenshotCaptured', response)
+          );
+        });
 
         // This flag lets us tip the Store off early that we expect to be profiling.
         // This avoids flashing a temporary "Profiling not supported" message in the Profiler tab,

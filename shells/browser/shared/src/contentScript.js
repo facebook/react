@@ -75,3 +75,15 @@ if (!backendInitialized) {
     }
   }, 500);
 }
+
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+  if (request.event === 'screenshotCaptured') {
+    window.postMessage(
+      {
+        source: 'react-devtools-content-script',
+        payload: request,
+      },
+      '*'
+    );
+  }
+});
