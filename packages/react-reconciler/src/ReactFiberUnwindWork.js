@@ -232,16 +232,12 @@ function throwException(
             break;
           }
         }
-        let timeoutPropMs = workInProgress.pendingProps.maxDuration;
-        if (typeof timeoutPropMs === 'number') {
-          if (timeoutPropMs <= 0) {
-            earliestTimeoutMs = 0;
-          } else if (
-            earliestTimeoutMs === -1 ||
-            timeoutPropMs < earliestTimeoutMs
-          ) {
-            earliestTimeoutMs = timeoutPropMs;
-          }
+        const defaultSuspenseTimeout = 150;
+        if (
+          earliestTimeoutMs === -1 ||
+          defaultSuspenseTimeout < earliestTimeoutMs
+        ) {
+          earliestTimeoutMs = defaultSuspenseTimeout;
         }
       }
       // If there is a DehydratedSuspenseComponent we don't have to do anything because
