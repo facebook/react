@@ -18,15 +18,13 @@ import type {
   ReactEventResponderEventType,
 } from 'shared/ReactTypes';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
-import SyntheticEvent from 'events/SyntheticEvent';
-import {runEventsInBatch} from 'events/EventBatching';
-import {interactiveUpdates} from 'events/ReactGenericBatching';
-import {executeDispatch} from 'events/EventPluginUtils';
+import {batchedUpdates, interactiveUpdates} from 'events/ReactGenericBatching';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
-
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
+import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
+import warning from 'shared/warning';
 
 let listenToResponderEventTypesImpl;
 
@@ -46,11 +44,70 @@ const targetEventTypeCached: Map<
 > = new Map();
 const targetOwnership: Map<EventTarget, Fiber> = new Map();
 
-type EventListener = (event: SyntheticEvent) => void;
+type ParitalEventObject = {
+  listener: ($Shape<ParitalEventObject>) => void,
+  target: Element | Document,
+  type: string,
+};
+type EventQueue = {
+  bubble: Array<$Shape<ParitalEventObject>>,
+  capture: Array<$Shape<ParitalEventObject>>,
+};
+type BatchedEventQueue = {
+  discrete: null | EventQueue,
+  phase: EventQueuePhase,
+  nonDiscrete: null | EventQueue,
+};
+type EventQueuePhase = 0 | 1;
 
-function copyEventProperties(eventData, syntheticEvent) {
-  for (let propName in eventData) {
-    syntheticEvent[propName] = eventData[propName];
+const DURING_EVENT_PHASE = 0;
+const AFTER_EVENT_PHASE = 1;
+
+function createEventQueue(): EventQueue {
+  return {
+    bubble: [],
+    capture: [],
+  };
+}
+
+function createBatchedEventQueue(phase: EventQueuePhase): BatchedEventQueue {
+  return {
+    discrete: null,
+    phase,
+    nonDiscrete: null,
+  };
+}
+
+function processEvent(event: $Shape<ParitalEventObject>): void {
+  const type = event.type;
+  const listener = event.listener;
+  invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
+}
+
+function processEventQueue(eventQueue: EventQueue): void {
+  const {bubble, capture} = eventQueue;
+  let i, length;
+
+  // TODO support stopPropagation via an alternative approach
+  // Process events in two phases
+  for (i = capture.length; i-- > 0; ) {
+    processEvent(capture[i]);
+  }
+  for (i = 0, length = bubble.length; i < length; ++i) {
+    processEvent(bubble[i]);
+  }
+}
+
+function processBatchedEventQueue(batchedEventQueue: BatchedEventQueue): void {
+  const {discrete, nonDiscrete} = batchedEventQueue;
+
+  if (discrete !== null) {
+    interactiveUpdates(() => {
+      processEventQueue(discrete);
+    });
+  }
+  if (nonDiscrete !== null) {
+    processEventQueue(nonDiscrete);
   }
 }
 
@@ -70,6 +127,7 @@ function DOMEventResponderContext(
   this._discreteEvents = null;
   this._nonDiscreteEvents = null;
   this._isBatching = true;
+  this._batchedEventQueue = createBatchedEventQueue(DURING_EVENT_PHASE);
 }
 
 DOMEventResponderContext.prototype.isPassive = function(): boolean {
@@ -81,48 +139,57 @@ DOMEventResponderContext.prototype.isPassiveSupported = function(): boolean {
 };
 
 DOMEventResponderContext.prototype.dispatchEvent = function(
-  eventName: string,
-  eventListener: EventListener,
-  eventTarget: AnyNativeEvent,
+  possibleEventObject: Object,
   discrete: boolean,
-  extraProperties?: Object,
+  capture: boolean,
 ): void {
-  const eventTargetFiber = getClosestInstanceFromNode(eventTarget);
-  const syntheticEvent = SyntheticEvent.getPooled(
-    null,
-    eventTargetFiber,
-    this.event,
-    eventTarget,
-  );
-  if (extraProperties !== undefined) {
-    copyEventProperties(extraProperties, syntheticEvent);
-  }
-  syntheticEvent.type = eventName;
-  syntheticEvent._dispatchInstances = [eventTargetFiber];
-  syntheticEvent._dispatchListeners = [eventListener];
+  const batchedEventQueue = this._batchedEventQueue;
+  const {listener, target, type} = possibleEventObject;
 
-  if (this._isBatching) {
-    let events;
-    if (discrete) {
-      events = this._discreteEvents;
-      if (events === null) {
-        events = this._discreteEvents = [];
-      }
-    } else {
-      events = this._nonDiscreteEvents;
-      if (events === null) {
-        events = this._nonDiscreteEvents = [];
-      }
+  if (listener == null || target == null || type == null) {
+    throw new Error(
+      'context.dispatchEvent: "listener", "target" and "type" fields on event object are required.',
+    );
+  }
+  if (__DEV__) {
+    possibleEventObject.preventDefault = () => {
+      // Update this warning when we have a story around dealing with preventDefault
+      warning(
+        false,
+        'preventDefault() is no longer available on event objects created from event responder modules.',
+      );
+    };
+    possibleEventObject.stopPropagation = () => {
+      // Update this warning when we have a story around dealing with stopPropgation
+      warning(
+        false,
+        'stopPropagation() is no longer available on event objects created from event responder modules.',
+      );
+    };
+  }
+  const eventObject = ((possibleEventObject: any): $Shape<ParitalEventObject>);
+  let eventQueue;
+  if (discrete) {
+    eventQueue = batchedEventQueue.discrete;
+    if (eventQueue === null) {
+      eventQueue = batchedEventQueue.discrete = createEventQueue();
     }
-    events.push(syntheticEvent);
   } else {
-    if (discrete) {
-      interactiveUpdates(() => {
-        executeDispatch(syntheticEvent, eventListener, eventTargetFiber);
-      });
-    } else {
-      executeDispatch(syntheticEvent, eventListener, eventTargetFiber);
+    eventQueue = batchedEventQueue.nonDiscrete;
+    if (eventQueue === null) {
+      eventQueue = batchedEventQueue.nonDiscrete = createEventQueue();
     }
+  }
+  let eventQueueArr;
+  if (capture) {
+    eventQueueArr = eventQueue.capture;
+  } else {
+    eventQueueArr = eventQueue.bubble;
+  }
+  eventQueueArr.push(eventObject);
+
+  if (batchedEventQueue.phase === AFTER_EVENT_PHASE) {
+    batchedUpdates(processBatchedEventQueue, batchedEventQueue);
   }
 };
 
@@ -318,17 +385,9 @@ export function runResponderEventsInBatch(
         );
       }
     }
-    // Run batched events
-    const discreteEvents = context._discreteEvents;
-    if (discreteEvents !== null) {
-      interactiveUpdates(() => {
-        runEventsInBatch(discreteEvents);
-      });
-    }
-    const nonDiscreteEvents = context._nonDiscreteEvents;
-    if (nonDiscreteEvents !== null) {
-      runEventsInBatch(nonDiscreteEvents);
-    }
-    context._isBatching = false;
+    processBatchedEventQueue(context._batchedEventQueue);
+    // In order to capture and process async events from responder modules
+    // we create a new event queue.
+    context._eventQueue = createBatchedEventQueue(AFTER_EVENT_PHASE);
   }
 }

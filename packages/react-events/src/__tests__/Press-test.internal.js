@@ -89,8 +89,10 @@ describe('Press event responder', () => {
     });
     buttonRef.current.dispatchEvent(keyDownEvent);
 
-    // press 1 should not occur as press 2 will preventDefault
-    expect(events).toEqual(['keydown', 'press 2']);
+    // TODO update this test once we have a form of stopPropagation in
+    // the responder system again. This test had to be updated because
+    // we have removed stopPropagation() from synthetic events.
+    expect(events).toEqual(['keydown', 'press 2', 'press 1']);
   });
 
   it('should support onPressStart and onPressEnd', () => {
