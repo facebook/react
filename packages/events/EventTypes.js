@@ -24,8 +24,11 @@ export type EventResponderContext = {
   isPassiveSupported: () => boolean,
   dispatchEvent: <E>(
     eventObject: E,
-    discrete: boolean,
-    capture: boolean,
+    {
+      capture?: boolean,
+      discrete?: boolean,
+      stopPropagation?: boolean,
+    },
   ) => void,
   isTargetWithinElement: (
     childTarget: Element | Document,

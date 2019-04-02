@@ -50,7 +50,7 @@ function dispatchFocusInEvents(context: EventResponderContext, props: Object) {
       eventTarget,
       props.onFocus,
     );
-    context.dispatchEvent(syntheticEvent, true, false);
+    context.dispatchEvent(syntheticEvent, {discrete: true});
   }
   if (props.onFocusChange) {
     const focusChangeEventListener = () => {
@@ -61,7 +61,7 @@ function dispatchFocusInEvents(context: EventResponderContext, props: Object) {
       eventTarget,
       focusChangeEventListener,
     );
-    context.dispatchEvent(syntheticEvent, true, false);
+    context.dispatchEvent(syntheticEvent, {discrete: true});
   }
 }
 
@@ -72,7 +72,7 @@ function dispatchFocusOutEvents(context: EventResponderContext, props: Object) {
   }
   if (props.onBlur) {
     const syntheticEvent = createFocusEvent('blur', eventTarget, props.onBlur);
-    context.dispatchEvent(syntheticEvent, true, false);
+    context.dispatchEvent(syntheticEvent, {discrete: true});
   }
   if (props.onFocusChange) {
     const focusChangeEventListener = () => {
@@ -83,7 +83,7 @@ function dispatchFocusOutEvents(context: EventResponderContext, props: Object) {
       eventTarget,
       focusChangeEventListener,
     );
-    context.dispatchEvent(syntheticEvent, true, false);
+    context.dispatchEvent(syntheticEvent, {discrete: true});
   }
 }
 

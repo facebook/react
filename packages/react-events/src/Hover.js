@@ -64,7 +64,7 @@ function dispatchHoverStartEvents(
       eventTarget,
       props.onHoverStart,
     );
-    context.dispatchEvent(syntheticEvent, true, false);
+    context.dispatchEvent(syntheticEvent, {discrete: true});
   }
   if (props.onHoverChange) {
     const hoverChangeEventListener = () => {
@@ -75,7 +75,7 @@ function dispatchHoverStartEvents(
       eventTarget,
       hoverChangeEventListener,
     );
-    context.dispatchEvent(syntheticEvent, true, false);
+    context.dispatchEvent(syntheticEvent, {discrete: true});
   }
 }
 
@@ -90,7 +90,7 @@ function dispatchHoverEndEvents(context: EventResponderContext, props: Object) {
       eventTarget,
       props.onHoverEnd,
     );
-    context.dispatchEvent(syntheticEvent, true, false);
+    context.dispatchEvent(syntheticEvent, {discrete: true});
   }
   if (props.onHoverChange) {
     const hoverChangeEventListener = () => {
@@ -101,7 +101,7 @@ function dispatchHoverEndEvents(context: EventResponderContext, props: Object) {
       eventTarget,
       hoverChangeEventListener,
     );
-    context.dispatchEvent(syntheticEvent, true, false);
+    context.dispatchEvent(syntheticEvent, {discrete: true});
   }
 }
 

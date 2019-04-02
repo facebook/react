@@ -90,7 +90,7 @@ function dispatchPressEvent(
 ): void {
   const target = ((state.pressTarget: any): Element | Document);
   const syntheticEvent = createPressEvent(name, target, listener);
-  context.dispatchEvent(syntheticEvent, true, false);
+  context.dispatchEvent(syntheticEvent, {discrete: true});
 }
 
 function dispatchPressStartEvents(

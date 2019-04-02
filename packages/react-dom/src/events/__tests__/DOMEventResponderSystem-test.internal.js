@@ -233,7 +233,7 @@ describe('DOMEventResponderSystem', () => {
             target: context.eventTarget,
             type: 'magicclick',
           };
-          context.dispatchEvent(event, true, false);
+          context.dispatchEvent(event, {discrete: true});
         }
       },
     );

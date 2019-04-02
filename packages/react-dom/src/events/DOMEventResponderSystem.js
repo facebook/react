@@ -34,6 +34,8 @@ export function setListenToResponderEventTypes(
   listenToResponderEventTypesImpl = _listenToResponderEventTypesImpl;
 }
 
+const PossiblyWeakSet = typeof WeakSet === 'function' ? WeakSet : Set;
+
 const rootEventTypesToEventComponents: Map<
   DOMTopLevelEventType | string,
   Set<Fiber>,
@@ -43,6 +45,9 @@ const targetEventTypeCached: Map<
   Set<DOMTopLevelEventType>,
 > = new Map();
 const targetOwnership: Map<EventTarget, Fiber> = new Map();
+const eventsWithStopPropagation:
+  | WeakSet
+  | Set<$Shape<ParitalEventObject>> = new PossiblyWeakSet();
 
 type ParitalEventObject = {
   listener: ($Shape<ParitalEventObject>) => void,
@@ -50,31 +55,22 @@ type ParitalEventObject = {
   type: string,
 };
 type EventQueue = {
-  bubble: Array<$Shape<ParitalEventObject>>,
-  capture: Array<$Shape<ParitalEventObject>>,
-};
-type BatchedEventQueue = {
-  discrete: null | EventQueue,
+  bubble: null | Array<$Shape<ParitalEventObject>>,
+  capture: null | Array<$Shape<ParitalEventObject>>,
+  discrete: boolean,
   phase: EventQueuePhase,
-  nonDiscrete: null | EventQueue,
 };
 type EventQueuePhase = 0 | 1;
 
 const DURING_EVENT_PHASE = 0;
 const AFTER_EVENT_PHASE = 1;
 
-function createEventQueue(): EventQueue {
+function createEventQueue(phase: EventQueuePhase): EventQueue {
   return {
-    bubble: [],
-    capture: [],
-  };
-}
-
-function createBatchedEventQueue(phase: EventQueuePhase): BatchedEventQueue {
-  return {
-    discrete: null,
+    bubble: null,
+    capture: null,
+    discrete: false,
     phase,
-    nonDiscrete: null,
   };
 }
 
@@ -84,30 +80,41 @@ function processEvent(event: $Shape<ParitalEventObject>): void {
   invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
 }
 
-function processEventQueue(eventQueue: EventQueue): void {
-  const {bubble, capture} = eventQueue;
+function processEvents(
+  bubble: null | Array<$Shape<ParitalEventObject>>,
+  capture: null | Array<$Shape<ParitalEventObject>>,
+): void {
   let i, length;
 
-  // TODO support stopPropagation via an alternative approach
-  // Process events in two phases
-  for (i = capture.length; i-- > 0; ) {
-    processEvent(capture[i]);
+  if (capture !== null) {
+    for (i = capture.length; i-- > 0; ) {
+      const event = capture[i];
+      processEvent(capture[i]);
+      if (eventsWithStopPropagation.has(event)) {
+        return;
+      }
+    }
   }
-  for (i = 0, length = bubble.length; i < length; ++i) {
-    processEvent(bubble[i]);
+  if (bubble !== null) {
+    for (i = 0, length = bubble.length; i < length; ++i) {
+      const event = bubble[i];
+      processEvent(event);
+      if (eventsWithStopPropagation.has(event)) {
+        return;
+      }
+    }
   }
 }
 
-function processBatchedEventQueue(batchedEventQueue: BatchedEventQueue): void {
-  const {discrete, nonDiscrete} = batchedEventQueue;
+function processEventQueue(eventQueue: EventQueue): void {
+  const {bubble, capture, discrete} = eventQueue;
 
-  if (discrete !== null) {
+  if (discrete) {
     interactiveUpdates(() => {
-      processEventQueue(discrete);
+      processEvents(bubble, capture);
     });
-  }
-  if (nonDiscrete !== null) {
-    processEventQueue(nonDiscrete);
+  } else {
+    processEvents(bubble, capture);
   }
 }
 
@@ -127,7 +134,7 @@ function DOMEventResponderContext(
   this._discreteEvents = null;
   this._nonDiscreteEvents = null;
   this._isBatching = true;
-  this._batchedEventQueue = createBatchedEventQueue(DURING_EVENT_PHASE);
+  this._eventQueue = createEventQueue(DURING_EVENT_PHASE);
 }
 
 DOMEventResponderContext.prototype.isPassive = function(): boolean {
@@ -140,10 +147,17 @@ DOMEventResponderContext.prototype.isPassiveSupported = function(): boolean {
 
 DOMEventResponderContext.prototype.dispatchEvent = function(
   possibleEventObject: Object,
-  discrete: boolean,
-  capture: boolean,
+  {
+    capture,
+    discrete,
+    stopPropagation,
+  }: {
+    capture?: boolean,
+    discrete?: boolean,
+    stopPropagation?: boolean,
+  },
 ): void {
-  const batchedEventQueue = this._batchedEventQueue;
+  const eventQueue = this._eventQueue;
   const {listener, target, type} = possibleEventObject;
 
   if (listener == null || target == null || type == null) {
@@ -168,28 +182,29 @@ DOMEventResponderContext.prototype.dispatchEvent = function(
     };
   }
   const eventObject = ((possibleEventObject: any): $Shape<ParitalEventObject>);
-  let eventQueue;
-  if (discrete) {
-    eventQueue = batchedEventQueue.discrete;
-    if (eventQueue === null) {
-      eventQueue = batchedEventQueue.discrete = createEventQueue();
-    }
-  } else {
-    eventQueue = batchedEventQueue.nonDiscrete;
-    if (eventQueue === null) {
-      eventQueue = batchedEventQueue.nonDiscrete = createEventQueue();
-    }
-  }
-  let eventQueueArr;
-  if (capture) {
-    eventQueueArr = eventQueue.capture;
-  } else {
-    eventQueueArr = eventQueue.bubble;
-  }
-  eventQueueArr.push(eventObject);
+  let events;
 
-  if (batchedEventQueue.phase === AFTER_EVENT_PHASE) {
-    batchedUpdates(processBatchedEventQueue, batchedEventQueue);
+  if (capture) {
+    events = eventQueue.capture;
+    if (events === null) {
+      events = eventQueue.capture = [];
+    }
+  } else {
+    events = eventQueue.bubble;
+    if (events === null) {
+      events = eventQueue.bubble = [];
+    }
+  }
+  if (discrete) {
+    eventQueue.discrete = true;
+  }
+  events.push(eventObject);
+
+  if (stopPropagation) {
+    eventsWithStopPropagation.add(eventObject);
+  }
+  if (eventQueue.phase === AFTER_EVENT_PHASE) {
+    batchedUpdates(processEventQueue, eventQueue);
   }
 };
 
@@ -385,9 +400,9 @@ export function runResponderEventsInBatch(
         );
       }
     }
-    processBatchedEventQueue(context._batchedEventQueue);
+    processEventQueue(context._eventQueue);
     // In order to capture and process async events from responder modules
     // we create a new event queue.
-    context._batchedEventQueue = createBatchedEventQueue(AFTER_EVENT_PHASE);
+    context._eventQueue = createEventQueue(AFTER_EVENT_PHASE);
   }
 }
