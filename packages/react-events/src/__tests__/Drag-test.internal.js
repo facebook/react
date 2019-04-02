@@ -13,18 +13,6 @@ let React;
 let ReactFeatureFlags;
 let ReactDOM;
 let Drag;
-let dragMoveOptions = [
-  'mousemove',
-  true, //canBubble
-  true, //cancelable
-  window, //event's AbstractView : should be window
-  1, // detail : Event's mouse click count
-  50, // screenX
-  50, // screenY
-  50, // clientX
-  50, // clientY
-];
-
 describe('Drag event responder', () => {
   let container;
 
@@ -49,12 +37,8 @@ describe('Drag event responder', () => {
     let divRef = React.createRef();
     let events = [];
 
-    function handleOnDrag(e) {
-      if (e) {
-        events.push('dragging');
-      } else {
-        events.push('dragend');
-      }
+    function handleOnDrag() {
+      events.push({isChanged: true});
     }
 
     function Component() {
@@ -67,19 +51,35 @@ describe('Drag event responder', () => {
 
     ReactDOM.render(<Component />, container);
 
-    const mouseOverEvent = document.createEvent('Event');
+    const mouseOverEvent = document.createEvent('MouseEvents');
     mouseOverEvent.initEvent('mousedown', true, true);
     divRef.current.dispatchEvent(mouseOverEvent);
 
-    const mouseOutEvent = document.createEvent('MouseEvents');
-    mouseOutEvent.initMouseEvent(...dragMoveOptions);
-    divRef.current.dispatchEvent(mouseOutEvent);
+    const mouseMoveEvent = document.createEvent('MouseEvents');
+    for (let index = 0; index <= 20; index++) {
+      mouseMoveEvent.initMouseEvent(
+        'mousemove',
+        true,
+        true,
+        window,
+        1,
+        index,
+        index,
+        50,
+        50,
+      );
+      divRef.current.dispatchEvent(mouseMoveEvent);
+    }
+    divRef.current.dispatchEvent(mouseMoveEvent);
 
-    const mouseUpEvent = document.createEvent('Event');
+    const mouseUpEvent = document.createEvent('MouseEvents');
     mouseUpEvent.initEvent('mouseup', true, true);
     divRef.current.dispatchEvent(mouseUpEvent);
 
-    expect(events).toEqual(['dragging', 'dragend']);
+    expect(events).toHaveLength(2);
+    expect(events).toEqual(
+      expect.arrayContaining([expect.objectContaining({isChanged: true})]),
+    );
   });
 
   it('should support onDragStart and onDragEnd', () => {
@@ -104,18 +104,87 @@ describe('Drag event responder', () => {
 
     ReactDOM.render(<Component />, container);
 
-    const mouseOverEvent = document.createEvent('Event');
+    const mouseOverEvent = document.createEvent('MouseEvents');
     mouseOverEvent.initEvent('mousedown', true, true);
     divRef.current.dispatchEvent(mouseOverEvent);
 
-    const mouseOutEvent = document.createEvent('MouseEvents');
-    mouseOutEvent.initMouseEvent(...dragMoveOptions);
-    divRef.current.dispatchEvent(mouseOutEvent);
+    const mouseMoveEvent = document.createEvent('MouseEvents');
+    for (let index = 0; index <= 20; index++) {
+      mouseMoveEvent.initMouseEvent(
+        'mousemove',
+        true,
+        true,
+        window,
+        1,
+        index,
+        index,
+        50,
+        50,
+      );
+      divRef.current.dispatchEvent(mouseMoveEvent);
+    }
+    divRef.current.dispatchEvent(mouseMoveEvent);
 
-    const mouseUpEvent = document.createEvent('Event');
+    const mouseUpEvent = document.createEvent('MouseEvents');
     mouseUpEvent.initEvent('mouseup', true, true);
     divRef.current.dispatchEvent(mouseUpEvent);
 
     expect(events).toEqual(['dragstart', 'dragend']);
+  });
+
+  it('should support onDragMove', () => {
+    let divRef = React.createRef();
+    let events = [];
+
+    function handleDragMove(e) {
+      events.push({
+        diffX: e.diffX,
+        diffY: e.diffY,
+      });
+    }
+
+    function Component() {
+      return (
+        <Drag onDragMove={handleDragMove}>
+          <div ref={divRef}>Drag me!</div>
+        </Drag>
+      );
+    }
+
+    ReactDOM.render(<Component />, container);
+
+    const mouseOverEvent = document.createEvent('MouseEvents');
+    mouseOverEvent.initEvent('mousedown', true, true);
+    divRef.current.dispatchEvent(mouseOverEvent);
+
+    const mouseMoveEvent = document.createEvent('MouseEvents');
+    for (let index = 0; index <= 20; index++) {
+      mouseMoveEvent.initMouseEvent(
+        'mousemove',
+        true,
+        true,
+        window,
+        1,
+        index,
+        index,
+        50,
+        50,
+      );
+      divRef.current.dispatchEvent(mouseMoveEvent);
+    }
+
+    const mouseUpEvent = document.createEvent('MouseEvents');
+    mouseUpEvent.initEvent('mouseup', true, true);
+    divRef.current.dispatchEvent(mouseUpEvent);
+    expect(events).toHaveLength(20);
+    let index = 0;
+    expect(events).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          diffX: index,
+          diffY: index++,
+        }),
+      ]),
+    );
   });
 });
