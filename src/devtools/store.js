@@ -32,6 +32,7 @@ const debug = (methodName, ...args) => {
 };
 
 type Config = {|
+  isProfiling?: boolean,
   supportsFileDownloads?: boolean,
   supportsReloadAndProfile?: boolean,
   supportsProfiling?: boolean,
