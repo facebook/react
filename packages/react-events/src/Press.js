@@ -10,6 +10,11 @@
 import type {EventResponderContext} from 'events/EventTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
+// const DEFAULT_PRESS_DELAY_MS = 0;
+// const DEFAULT_PRESS_END_DELAY_MS = 0;
+// const DEFAULT_PRESS_START_DELAY_MS = 0;
+const DEFAULT_LONG_PRESS_DELAY_MS = 1000;
+
 const targetEventTypes = [
   {name: 'click', passive: false},
   {name: 'keydown', passive: false},
@@ -25,6 +30,21 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
   targetEventTypes.push('touchstart', 'touchend', 'mousedown', 'touchcancel');
   rootEventTypes.push({name: 'mouseup', passive: false});
 }
+
+type PressProps = {
+  disabled: boolean,
+  delayLongPress: number,
+  delayPressEnd: number,
+  delayPressStart: number,
+  onLongPress: (e: Object) => void,
+  onLongPressChange: boolean => void,
+  onLongPressShouldCancelPress: () => boolean,
+  onPress: (e: Object) => void,
+  onPressChange: boolean => void,
+  onPressEnd: (e: Object) => void,
+  onPressStart: (e: Object) => void,
+  pressRententionOffset: Object,
+};
 
 type PressState = {
   defaultPrevented: boolean,
@@ -47,7 +67,7 @@ function dispatchPressEvent(
 
 function dispatchPressStartEvents(
   context: EventResponderContext,
-  props: Object,
+  props: PressProps,
   state: PressState,
 ): void {
   function dispatchPressChangeEvent(bool) {
@@ -64,7 +84,11 @@ function dispatchPressStartEvents(
     dispatchPressChangeEvent(true);
   }
   if ((props.onLongPress || props.onLongPressChange) && !state.isLongPressed) {
-    const delayLongPress = calculateDelayMS(props.delayLongPress, 0, 1000);
+    const delayLongPress = calculateDelayMS(
+      props.delayLongPress,
+      0,
+      DEFAULT_LONG_PRESS_DELAY_MS,
+    );
 
     state.longPressTimeout = setTimeout(() => {
       state.isLongPressed = true;
@@ -105,7 +129,7 @@ function dispatchPressStartEvents(
 
 function dispatchPressEndEvents(
   context: EventResponderContext,
-  props: Object,
+  props: PressProps,
   state: PressState,
 ): void {
   if (state.longPressTimeout !== null) {
@@ -138,6 +162,11 @@ function isAnchorTagElement(eventTarget: EventTarget): boolean {
   return (eventTarget: any).nodeName === 'A';
 }
 
+function isValidKeyPress(key: string): boolean {
+  // Accessibility for keyboards. Space and Enter only.
+  return key === ' ' || key === 'Enter';
+}
+
 function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
   const maybeNumber = delay == null ? null : delay;
   return Math.max(min, maybeNumber != null ? maybeNumber : fallback);
@@ -158,22 +187,18 @@ const PressResponder = {
   },
   handleEvent(
     context: EventResponderContext,
-    props: Object,
+    props: PressProps,
     state: PressState,
   ): void {
     const {eventTarget, eventType, event} = context;
 
     switch (eventType) {
       case 'keydown': {
-        if (!props.onPress || context.isTargetOwned(eventTarget)) {
-          return;
-        }
-        const isValidKeyPress =
-          (event: any).which === 13 ||
-          (event: any).which === 32 ||
-          (event: any).keyCode === 13;
-
-        if (!isValidKeyPress) {
+        if (
+          !props.onPress ||
+          context.isTargetOwned(eventTarget) ||
+          !isValidKeyPress((event: any).key)
+        ) {
           return;
         }
         let keyPressEventListener = props.onPress;
@@ -196,8 +221,12 @@ const PressResponder = {
         dispatchPressEvent(context, state, 'press', keyPressEventListener);
         break;
       }
+
+      /**
+       * Touch event implementations are only needed for Safari, which lacks
+       * support for pointer events.
+       */
       case 'touchstart':
-        // Touch events are for Safari, which lack pointer event support.
         if (!state.isPressed && !context.isTargetOwned(eventTarget)) {
           // We bail out of polyfilling anchor tags, given the same heuristics
           // explained above in regards to needing to use click events.
@@ -213,7 +242,6 @@ const PressResponder = {
 
         break;
       case 'touchend': {
-        // Touch events are for Safari, which lack pointer event support
         if (state.isAnchorTouched) {
           return;
         }
@@ -253,6 +281,10 @@ const PressResponder = {
         }
         break;
       }
+
+      /**
+       * Respond to pointer events and fall back to mouse.
+       */
       case 'pointerdown':
       case 'mousedown': {
         if (
@@ -260,7 +292,10 @@ const PressResponder = {
           !context.isTargetOwned(eventTarget) &&
           !state.shouldSkipMouseAfterTouch
         ) {
-          if ((event: any).pointerType === 'mouse') {
+          if (
+            (event: any).pointerType === 'mouse' ||
+            eventType === 'mousedown'
+          ) {
             // Ignore if we are pressing on hit slop area with mouse
             if (
               context.isPositionWithinTouchHitTarget(
@@ -282,8 +317,8 @@ const PressResponder = {
         }
         break;
       }
-      case 'mouseup':
-      case 'pointerup': {
+      case 'pointerup':
+      case 'mouseup': {
         if (state.isPressed) {
           if (state.shouldSkipMouseAfterTouch) {
             state.shouldSkipMouseAfterTouch = false;
@@ -320,6 +355,7 @@ const PressResponder = {
         state.isAnchorTouched = false;
         break;
       }
+
       case 'scroll':
       case 'touchcancel':
       case 'contextmenu':

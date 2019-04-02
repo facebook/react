@@ -83,8 +83,7 @@ describe('Press event responder', () => {
 
     events = [];
     const keyDownEvent = new KeyboardEvent('keydown', {
-      which: 13,
-      keyCode: 13,
+      key: 'Enter',
       bubbles: true,
       cancelable: true,
     });
