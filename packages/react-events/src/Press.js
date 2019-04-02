@@ -36,13 +36,13 @@ type PressProps = {
   delayLongPress: number,
   delayPressEnd: number,
   delayPressStart: number,
-  onLongPress: (e: Object) => void,
+  onLongPress: (e: PressEvent) => void,
   onLongPressChange: boolean => void,
   onLongPressShouldCancelPress: () => boolean,
-  onPress: (e: Object) => void,
+  onPress: (e: PressEvent) => void,
   onPressChange: boolean => void,
-  onPressEnd: (e: Object) => void,
-  onPressStart: (e: Object) => void,
+  onPressEnd: (e: PressEvent) => void,
+  onPressStart: (e: PressEvent) => void,
   pressRententionOffset: Object,
 };
 
@@ -52,17 +52,45 @@ type PressState = {
   isLongPressed: boolean,
   isPressed: boolean,
   longPressTimeout: null | TimeoutID,
-  pressTarget: null | EventTarget,
+  pressTarget: null | Element | Document,
   shouldSkipMouseAfterTouch: boolean,
 };
+
+type PressEventType =
+  | 'press'
+  | 'pressstart'
+  | 'pressend'
+  | 'presschange'
+  | 'longpress'
+  | 'longpresschange';
+
+type PressEvent = {|
+  listener: PressEvent => void,
+  target: Element | Document,
+  type: PressEventType,
+|};
+
+function createPressEvent(
+  type: PressEventType,
+  target: Element | Document,
+  listener: PressEvent => void,
+): PressEvent {
+  return {
+    listener,
+    target,
+    type,
+  };
+}
 
 function dispatchPressEvent(
   context: EventResponderContext,
   state: PressState,
-  name: string,
+  name: PressEventType,
   listener: (e: Object) => void,
 ): void {
-  context.dispatchEvent(name, listener, state.pressTarget, true);
+  const target = ((state.pressTarget: any): Element | Document);
+  const syntheticEvent = createPressEvent(name, target, listener);
+  context.dispatchEvent(syntheticEvent, {discrete: true});
 }
 
 function dispatchPressStartEvents(
@@ -97,9 +125,10 @@ function dispatchPressStartEvents(
       if (props.onLongPress) {
         const longPressEventListener = e => {
           props.onLongPress(e);
-          if (e.nativeEvent.defaultPrevented) {
-            state.defaultPrevented = true;
-          }
+          // TODO address this again at some point
+          // if (e.nativeEvent.defaultPrevented) {
+          //   state.defaultPrevented = true;
+          // }
         };
         dispatchPressEvent(context, state, 'longpress', longPressEventListener);
       }
@@ -193,24 +222,7 @@ const PressResponder = {
         ) {
           return;
         }
-        let keyPressEventListener = props.onPress;
-
-        // Wrap listener with prevent default behaviour, unless
-        // we are dealing with an anchor. Anchor tags are special beacuse
-        // we need to use the "click" event, to properly allow browser
-        // heuristics for cancelling link clicks. Furthermore, iOS and
-        // Android can show previous of anchor tags that requires working
-        // with click rather than touch events (and mouse down/up).
-        if (!isAnchorTagElement(eventTarget)) {
-          keyPressEventListener = e => {
-            if (!e.isDefaultPrevented() && !e.nativeEvent.defaultPrevented) {
-              e.preventDefault();
-              state.defaultPrevented = true;
-              props.onPress(e);
-            }
-          };
-        }
-        dispatchPressEvent(context, state, 'press', keyPressEventListener);
+        dispatchPressEvent(context, state, 'press', props.onPress);
         break;
       }
 
@@ -332,9 +344,10 @@ const PressResponder = {
               ) {
                 const pressEventListener = e => {
                   props.onPress(e);
-                  if (e.nativeEvent.defaultPrevented) {
-                    state.defaultPrevented = true;
-                  }
+                  // TODO address this again at some point
+                  // if (e.nativeEvent.defaultPrevented) {
+                  //   state.defaultPrevented = true;
+                  // }
                 };
                 dispatchPressEvent(context, state, 'press', pressEventListener);
               }

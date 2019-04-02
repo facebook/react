@@ -23,18 +23,45 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
   });
 }
 
+type EventData = {
+  diffX: number,
+  diffY: number,
+};
+type SwipeEventType = 'swipeleft' | 'swiperight' | 'swipeend' | 'swipemove';
+
+type SwipeEvent = {|
+  listener: SwipeEvent => void,
+  target: Element | Document,
+  type: SwipeEventType,
+  diffX?: number,
+  diffY?: number,
+|};
+
+function createSwipeEvent(
+  type: SwipeEventType,
+  target: Element | Document,
+  listener: SwipeEvent => void,
+  eventData?: EventData,
+): SwipeEvent {
+  return {
+    listener,
+    target,
+    type,
+    ...eventData,
+  };
+}
+
 function dispatchSwipeEvent(
   context: EventResponderContext,
-  name: string,
-  listener: (e: Object) => void,
+  name: SwipeEventType,
+  listener: SwipeEvent => void,
   state: SwipeState,
   discrete: boolean,
-  eventData?: {
-    diffX: number,
-    diffY: number,
-  },
+  eventData?: EventData,
 ) {
-  context.dispatchEvent(name, listener, state.swipeTarget, discrete, eventData);
+  const target = ((state.swipeTarget: any): Element | Document);
+  const syntheticEvent = createSwipeEvent(name, target, listener, eventData);
+  context.dispatchEvent(syntheticEvent, {discrete});
 }
 
 type SwipeState = {
@@ -44,7 +71,7 @@ type SwipeState = {
   startX: number,
   startY: number,
   touchId: null | number,
-  swipeTarget: null | EventTarget,
+  swipeTarget: null | Element | Document,
   x: number,
   y: number,
 };

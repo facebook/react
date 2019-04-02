@@ -14,7 +14,7 @@ const targetEventTypes = ['pointerdown', 'pointercancel'];
 const rootEventTypes = ['pointerup', {name: 'pointermove', passive: false}];
 
 type DragState = {
-  dragTarget: null | EventTarget,
+  dragTarget: null | Element | Document,
   isPointerDown: boolean,
   isDragging: boolean,
   startX: number,
@@ -33,18 +33,45 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
   });
 }
 
+type EventData = {
+  diffX: number,
+  diffY: number,
+};
+type DragEventType = 'dragend' | 'dragchange' | 'dragmove';
+
+type DragEvent = {|
+  listener: DragEvent => void,
+  target: Element | Document,
+  type: DragEventType,
+  diffX?: number,
+  diffY?: number,
+|};
+
+function createDragEvent(
+  type: DragEventType,
+  target: Element | Document,
+  listener: DragEvent => void,
+  eventData?: EventData,
+): DragEvent {
+  return {
+    listener,
+    target,
+    type,
+    ...eventData,
+  };
+}
+
 function dispatchDragEvent(
   context: EventResponderContext,
-  name: string,
-  listener: (e: Object) => void,
+  name: DragEventType,
+  listener: DragEvent => void,
   state: DragState,
   discrete: boolean,
-  eventData?: {
-    diffX: number,
-    diffY: number,
-  },
+  eventData?: EventData,
 ): void {
-  context.dispatchEvent(name, listener, state.dragTarget, discrete, eventData);
+  const target = ((state.dragTarget: any): Element | Document);
+  const syntheticEvent = createDragEvent(name, target, listener, eventData);
+  context.dispatchEvent(syntheticEvent, {discrete});
 }
 
 const DragResponder = {
@@ -112,10 +139,11 @@ const DragResponder = {
                 const dragChangeEventListener = () => {
                   props.onDragChange(true);
                 };
-                context.dispatchEvent(
+                dispatchDragEvent(
+                  context,
                   'dragchange',
                   dragChangeEventListener,
-                  state.dragTarget,
+                  state,
                   true,
                 );
               }
@@ -160,10 +188,11 @@ const DragResponder = {
             const dragChangeEventListener = () => {
               props.onDragChange(false);
             };
-            context.dispatchEvent(
+            dispatchDragEvent(
+              context,
               'dragchange',
               dragChangeEventListener,
-              state.dragTarget,
+              state,
               true,
             );
           }

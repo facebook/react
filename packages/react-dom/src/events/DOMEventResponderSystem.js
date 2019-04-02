@@ -18,15 +18,13 @@ import type {
   ReactEventResponderEventType,
 } from 'shared/ReactTypes';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
-import SyntheticEvent from 'events/SyntheticEvent';
-import {runEventsInBatch} from 'events/EventBatching';
-import {interactiveUpdates} from 'events/ReactGenericBatching';
-import {executeDispatch} from 'events/EventPluginUtils';
+import {batchedUpdates, interactiveUpdates} from 'events/ReactGenericBatching';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
-
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
+import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
+import warning from 'shared/warning';
 
 let listenToResponderEventTypesImpl;
 
@@ -35,6 +33,8 @@ export function setListenToResponderEventTypes(
 ) {
   listenToResponderEventTypesImpl = _listenToResponderEventTypesImpl;
 }
+
+const PossiblyWeakSet = typeof WeakSet === 'function' ? WeakSet : Set;
 
 const rootEventTypesToEventComponents: Map<
   DOMTopLevelEventType | string,
@@ -45,12 +45,76 @@ const targetEventTypeCached: Map<
   Set<DOMTopLevelEventType>,
 > = new Map();
 const targetOwnership: Map<EventTarget, Fiber> = new Map();
+const eventsWithStopPropagation:
+  | WeakSet
+  | Set<$Shape<PartialEventObject>> = new PossiblyWeakSet();
 
-type EventListener = (event: SyntheticEvent) => void;
+type PartialEventObject = {
+  listener: ($Shape<PartialEventObject>) => void,
+  target: Element | Document,
+  type: string,
+};
+type EventQueue = {
+  bubble: null | Array<$Shape<PartialEventObject>>,
+  capture: null | Array<$Shape<PartialEventObject>>,
+  discrete: boolean,
+  phase: EventQueuePhase,
+};
+type EventQueuePhase = 0 | 1;
 
-function copyEventProperties(eventData, syntheticEvent) {
-  for (let propName in eventData) {
-    syntheticEvent[propName] = eventData[propName];
+const DURING_EVENT_PHASE = 0;
+const AFTER_EVENT_PHASE = 1;
+
+function createEventQueue(phase: EventQueuePhase): EventQueue {
+  return {
+    bubble: null,
+    capture: null,
+    discrete: false,
+    phase,
+  };
+}
+
+function processEvent(event: $Shape<PartialEventObject>): void {
+  const type = event.type;
+  const listener = event.listener;
+  invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
+}
+
+function processEvents(
+  bubble: null | Array<$Shape<PartialEventObject>>,
+  capture: null | Array<$Shape<PartialEventObject>>,
+): void {
+  let i, length;
+
+  if (capture !== null) {
+    for (i = capture.length; i-- > 0; ) {
+      const event = capture[i];
+      processEvent(capture[i]);
+      if (eventsWithStopPropagation.has(event)) {
+        return;
+      }
+    }
+  }
+  if (bubble !== null) {
+    for (i = 0, length = bubble.length; i < length; ++i) {
+      const event = bubble[i];
+      processEvent(event);
+      if (eventsWithStopPropagation.has(event)) {
+        return;
+      }
+    }
+  }
+}
+
+function processEventQueue(eventQueue: EventQueue): void {
+  const {bubble, capture, discrete} = eventQueue;
+
+  if (discrete) {
+    interactiveUpdates(() => {
+      processEvents(bubble, capture);
+    });
+  } else {
+    processEvents(bubble, capture);
   }
 }
 
@@ -70,6 +134,7 @@ function DOMEventResponderContext(
   this._discreteEvents = null;
   this._nonDiscreteEvents = null;
   this._isBatching = true;
+  this._eventQueue = createEventQueue(DURING_EVENT_PHASE);
 }
 
 DOMEventResponderContext.prototype.isPassive = function(): boolean {
@@ -81,48 +146,65 @@ DOMEventResponderContext.prototype.isPassiveSupported = function(): boolean {
 };
 
 DOMEventResponderContext.prototype.dispatchEvent = function(
-  eventName: string,
-  eventListener: EventListener,
-  eventTarget: AnyNativeEvent,
-  discrete: boolean,
-  extraProperties?: Object,
+  possibleEventObject: Object,
+  {
+    capture,
+    discrete,
+    stopPropagation,
+  }: {
+    capture?: boolean,
+    discrete?: boolean,
+    stopPropagation?: boolean,
+  },
 ): void {
-  const eventTargetFiber = getClosestInstanceFromNode(eventTarget);
-  const syntheticEvent = SyntheticEvent.getPooled(
-    null,
-    eventTargetFiber,
-    this.event,
-    eventTarget,
-  );
-  if (extraProperties !== undefined) {
-    copyEventProperties(extraProperties, syntheticEvent);
-  }
-  syntheticEvent.type = eventName;
-  syntheticEvent._dispatchInstances = [eventTargetFiber];
-  syntheticEvent._dispatchListeners = [eventListener];
+  const eventQueue = this._eventQueue;
+  const {listener, target, type} = possibleEventObject;
 
-  if (this._isBatching) {
-    let events;
-    if (discrete) {
-      events = this._discreteEvents;
-      if (events === null) {
-        events = this._discreteEvents = [];
-      }
-    } else {
-      events = this._nonDiscreteEvents;
-      if (events === null) {
-        events = this._nonDiscreteEvents = [];
-      }
+  if (listener == null || target == null || type == null) {
+    throw new Error(
+      'context.dispatchEvent: "listener", "target" and "type" fields on event object are required.',
+    );
+  }
+  if (__DEV__) {
+    possibleEventObject.preventDefault = () => {
+      // Update this warning when we have a story around dealing with preventDefault
+      warning(
+        false,
+        'preventDefault() is no longer available on event objects created from event responder modules.',
+      );
+    };
+    possibleEventObject.stopPropagation = () => {
+      // Update this warning when we have a story around dealing with stopPropgation
+      warning(
+        false,
+        'stopPropagation() is no longer available on event objects created from event responder modules.',
+      );
+    };
+  }
+  const eventObject = ((possibleEventObject: any): $Shape<PartialEventObject>);
+  let events;
+
+  if (capture) {
+    events = eventQueue.capture;
+    if (events === null) {
+      events = eventQueue.capture = [];
     }
-    events.push(syntheticEvent);
   } else {
-    if (discrete) {
-      interactiveUpdates(() => {
-        executeDispatch(syntheticEvent, eventListener, eventTargetFiber);
-      });
-    } else {
-      executeDispatch(syntheticEvent, eventListener, eventTargetFiber);
+    events = eventQueue.bubble;
+    if (events === null) {
+      events = eventQueue.bubble = [];
     }
+  }
+  if (discrete) {
+    eventQueue.discrete = true;
+  }
+  events.push(eventObject);
+
+  if (stopPropagation) {
+    eventsWithStopPropagation.add(eventObject);
+  }
+  if (eventQueue.phase === AFTER_EVENT_PHASE) {
+    batchedUpdates(processEventQueue, eventQueue);
   }
 };
 
@@ -318,17 +400,9 @@ export function runResponderEventsInBatch(
         );
       }
     }
-    // Run batched events
-    const discreteEvents = context._discreteEvents;
-    if (discreteEvents !== null) {
-      interactiveUpdates(() => {
-        runEventsInBatch(discreteEvents);
-      });
-    }
-    const nonDiscreteEvents = context._nonDiscreteEvents;
-    if (nonDiscreteEvents !== null) {
-      runEventsInBatch(nonDiscreteEvents);
-    }
-    context._isBatching = false;
+    processEventQueue(context._eventQueue);
+    // In order to capture and process async events from responder modules
+    // we create a new event queue.
+    context._eventQueue = createEventQueue(AFTER_EVENT_PHASE);
   }
 }

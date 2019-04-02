@@ -388,8 +388,10 @@ describe('Event responder: Press', () => {
 
       events = [];
       ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: 'Enter'}));
-      // Outer press should not occur as inner press will preventDefault
-      expect(events).toEqual(['keydown', 'inner: onPress']);
+      // TODO update this test once we have a form of stopPropagation in
+      // the responder system again. This test had to be updated because
+      // we have removed stopPropagation() from synthetic events.
+      expect(events).toEqual(['keydown', 'inner: onPress', 'outer: onPress']);
     });
   });
 });

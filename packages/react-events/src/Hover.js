@@ -23,6 +23,26 @@ type HoverState = {
   isTouched: boolean,
 };
 
+type HoverEventType = 'hoverstart' | 'hoverend' | 'hoverchange';
+
+type HoverEvent = {|
+  listener: HoverEvent => void,
+  target: Element | Document,
+  type: HoverEventType,
+|};
+
+function createHoverEvent(
+  type: HoverEventType,
+  target: Element | Document,
+  listener: HoverEvent => void,
+): HoverEvent {
+  return {
+    listener,
+    target,
+    type,
+  };
+}
+
 // In the case we don't have PointerEvents (Safari), we listen to touch events
 // too
 if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
@@ -39,18 +59,23 @@ function dispatchHoverStartEvents(
     return;
   }
   if (props.onHoverStart) {
-    context.dispatchEvent('hoverstart', props.onHoverStart, eventTarget, true);
+    const syntheticEvent = createHoverEvent(
+      'hoverstart',
+      eventTarget,
+      props.onHoverStart,
+    );
+    context.dispatchEvent(syntheticEvent, {discrete: true});
   }
   if (props.onHoverChange) {
     const hoverChangeEventListener = () => {
       props.onHoverChange(true);
     };
-    context.dispatchEvent(
+    const syntheticEvent = createHoverEvent(
       'hoverchange',
-      hoverChangeEventListener,
       eventTarget,
-      true,
+      hoverChangeEventListener,
     );
+    context.dispatchEvent(syntheticEvent, {discrete: true});
   }
 }
 
@@ -60,18 +85,23 @@ function dispatchHoverEndEvents(context: EventResponderContext, props: Object) {
     return;
   }
   if (props.onHoverEnd) {
-    context.dispatchEvent('hoverend', props.onHoverEnd, eventTarget, true);
+    const syntheticEvent = createHoverEvent(
+      'hoverend',
+      eventTarget,
+      props.onHoverEnd,
+    );
+    context.dispatchEvent(syntheticEvent, {discrete: true});
   }
   if (props.onHoverChange) {
     const hoverChangeEventListener = () => {
       props.onHoverChange(false);
     };
-    context.dispatchEvent(
+    const syntheticEvent = createHoverEvent(
       'hoverchange',
-      hoverChangeEventListener,
       eventTarget,
-      true,
+      hoverChangeEventListener,
     );
+    context.dispatchEvent(syntheticEvent, {discrete: true});
   }
 }
 
