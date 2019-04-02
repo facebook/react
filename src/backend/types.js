@@ -1,7 +1,7 @@
 // @flow
 
 import type { ElementType } from 'src/devtools/types';
-import type { InspectedElement } from 'src/devtools/views/elements/types';
+import type { InspectedElement } from 'src/devtools/views/Components/types';
 
 type BundleType =
   | 0 // PROD
