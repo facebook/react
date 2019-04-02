@@ -1852,9 +1852,9 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
 export function warnIfNotCurrentlyActingUpdatesInDev(fiber: Fiber): void {
   if (__DEV__) {
     if (
-      ReactShouldWarnActingUpdates.current === false &&
+      isBatchingUpdates === false &&
       isRendering === false &&
-      isBatchingUpdates === false
+      ReactShouldWarnActingUpdates.current === false
     ) {
       warningWithoutStack(
         false,
