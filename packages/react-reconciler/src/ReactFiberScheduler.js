@@ -33,7 +33,6 @@ import {
   interactiveUpdates as interactiveUpdates_old,
   flushInteractiveUpdates as flushInteractiveUpdates_old,
   computeUniqueAsyncExpiration as computeUniqueAsyncExpiration_old,
-  actingUpdatesScopeDepth as actingUpdatesScopeDepth_old,
   flushPassiveEffects as flushPassiveEffects_old,
   warnIfNotCurrentlyActingUpdatesInDev as warnIfNotCurrentlyActingUpdatesInDev_old,
 } from './ReactFiberScheduler.old';
@@ -62,7 +61,6 @@ import {
   interactiveUpdates as interactiveUpdates_new,
   flushInteractiveUpdates as flushInteractiveUpdates_new,
   computeUniqueAsyncExpiration as computeUniqueAsyncExpiration_new,
-  actingUpdatesScopeDepth as actingUpdatesScopeDepth_new,
   flushPassiveEffects as flushPassiveEffects_new,
   warnIfNotCurrentlyActingUpdatesInDev as warnIfNotCurrentlyActingUpdatesInDev_new,
 } from './ReactFiberScheduler.new';
@@ -90,7 +88,6 @@ export let syncUpdates = syncUpdates_old;
 export let interactiveUpdates = interactiveUpdates_old;
 export let flushInteractiveUpdates = flushInteractiveUpdates_old;
 export let computeUniqueAsyncExpiration = computeUniqueAsyncExpiration_old;
-export let actingUpdatesScopeDepth = actingUpdatesScopeDepth_old;
 export let flushPassiveEffects = flushPassiveEffects_old;
 export let warnIfNotCurrentlyActingUpdatesInDev = warnIfNotCurrentlyActingUpdatesInDev_old;
 
@@ -118,7 +115,6 @@ if (enableNewScheduler) {
   interactiveUpdates = interactiveUpdates_new;
   flushInteractiveUpdates = flushInteractiveUpdates_new;
   computeUniqueAsyncExpiration = computeUniqueAsyncExpiration_new;
-  actingUpdatesScopeDepth = actingUpdatesScopeDepth_new;
   flushPassiveEffects = flushPassiveEffects_new;
   warnIfNotCurrentlyActingUpdatesInDev = warnIfNotCurrentlyActingUpdatesInDev_new;
 }

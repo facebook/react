@@ -35,7 +35,6 @@ import {
   getPublicRootInstance,
   findHostInstance,
   findHostInstanceWithWarning,
-  actingUpdatesScopeDepth,
   flushPassiveEffects,
 } from 'react-reconciler/inline.dom';
 import {createPortal as createPortalImpl} from 'shared/ReactPortal';
@@ -822,7 +821,6 @@ const ReactDOM: Object = {
       restoreStateIfNeeded,
       dispatchEvent,
       runEventsInBatch,
-      actingUpdatesScopeDepth,
       flushPassiveEffects,
     ],
   },

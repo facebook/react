@@ -10,6 +10,25 @@
 import type {Thenable} from 'react-reconciler/src/ReactFiberScheduler';
 
 import warningWithoutStack from './warningWithoutStack';
+import React from 'react';
+
+const {
+  isActingUpdates,
+} = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+
+let actingUpdatesScopeDepth = 0;
+
+function incrementActingScopeDepth() {
+  actingUpdatesScopeDepth++;
+  isActingUpdates[0] = true;
+}
+
+function decrementActingScopeDepth() {
+  actingUpdatesScopeDepth--;
+  if (actingUpdatesScopeDepth === 0) {
+    isActingUpdates[0] = false;
+  }
+}
 
 let didWarnAboutMessageChannel = false;
 
@@ -42,19 +61,16 @@ try {
   };
 }
 
-function createActedUpdatesScope(
-  actingUpdatesScopeDepth: [number],
-  callback: (onDone: (?Error) => void) => void,
-) {
+function createActedUpdatesScope(callback: (onDone: (?Error) => void) => void) {
   let previousActingUpdatesScopeDepth;
   if (__DEV__) {
-    previousActingUpdatesScopeDepth = actingUpdatesScopeDepth[0];
-    actingUpdatesScopeDepth[0]++;
+    previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
+    incrementActingScopeDepth();
   }
 
   function warnIfScopeDepthMismatch() {
     if (__DEV__) {
-      if (actingUpdatesScopeDepth[0] > previousActingUpdatesScopeDepth) {
+      if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
         // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
         warningWithoutStack(
           null,
@@ -67,7 +83,7 @@ function createActedUpdatesScope(
 
   callback(() => {
     if (__DEV__) {
-      actingUpdatesScopeDepth[0]--;
+      decrementActingScopeDepth();
       warnIfScopeDepthMismatch();
     }
   });
@@ -75,7 +91,6 @@ function createActedUpdatesScope(
 
 export default function createAct(
   batchedUpdates: (() => void | Thenable) => void | Thenable,
-  actingUpdatesScopeDepth: [number],
   flushPassiveEffects: () => boolean,
 ) {
   function flushEffectsAndMicroTasks(onDone: (err: ?Error) => void) {
@@ -95,7 +110,7 @@ export default function createAct(
 
   return function act(callback: () => Thenable) {
     let thenable;
-    createActedUpdatesScope(actingUpdatesScopeDepth, onDone => {
+    createActedUpdatesScope(onDone => {
       const result = batchedUpdates(callback);
       if (
         result !== null &&

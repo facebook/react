@@ -53,7 +53,6 @@ import {
   syncUpdates,
   interactiveUpdates,
   flushInteractiveUpdates,
-  actingUpdatesScopeDepth,
   flushPassiveEffects,
 } from './ReactFiberScheduler';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
@@ -311,7 +310,6 @@ export {
   flushInteractiveUpdates,
   flushControlled,
   flushSync,
-  actingUpdatesScopeDepth,
   flushPassiveEffects,
 };
 

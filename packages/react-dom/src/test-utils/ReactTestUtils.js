@@ -42,7 +42,6 @@ const [
   restoreStateIfNeeded,
   dispatchEvent,
   runEventsInBatch,
-  actingUpdatesScopeDepth,
   flushPassiveEffects,
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
 
@@ -157,11 +156,7 @@ let actContainerElement = null;
 // a warning for when you try to use TestUtils.act in a non-browser environment
 let didWarnAboutActInNodejs = false;
 
-const act = createAct(
-  ReactDOM.unstable_batchedUpdates,
-  actingUpdatesScopeDepth,
-  flushPassiveEffects,
-);
+const act = createAct(ReactDOM.unstable_batchedUpdates, flushPassiveEffects);
 
 /**
  * Utilities for making it easy to test React components.

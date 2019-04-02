@@ -820,7 +820,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     act: createAct(
       NoopRenderer.batchedUpdates,
-      NoopRenderer.actingUpdatesScopeDepth,
       NoopRenderer.flushPassiveEffects,
     ),
 

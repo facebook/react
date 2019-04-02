@@ -179,7 +179,11 @@ export type Thenable = {
   then(resolve: () => mixed, reject?: () => mixed): void | Thenable,
 };
 
-const {ReactCurrentDispatcher, ReactCurrentOwner} = ReactSharedInternals;
+const {
+  ReactCurrentDispatcher,
+  ReactCurrentOwner,
+  isActingUpdates,
+} = ReactSharedInternals;
 
 let didWarnAboutStateTransition;
 let didWarnSetStateChildContext;
@@ -1844,12 +1848,11 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
 // act() calls, and test on it for when to warn
 // It's a tuple with a single value. Look for shared/createAct to
 // see how we change the value inside act() calls
-const actingUpdatesScopeDepth = [0];
 
 export function warnIfNotCurrentlyActingUpdatesInDev(fiber: Fiber): void {
   if (__DEV__) {
     if (
-      actingUpdatesScopeDepth[0] === 0 &&
+      isActingUpdates[0] === false &&
       isRendering === false &&
       isBatchingUpdates === false
     ) {
@@ -2685,6 +2688,5 @@ export {
   interactiveUpdates,
   flushInteractiveUpdates,
   computeUniqueAsyncExpiration,
-  actingUpdatesScopeDepth,
   flushPassiveEffects,
 };

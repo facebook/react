@@ -19,7 +19,6 @@ import {
   flushSync,
   injectIntoDevTools,
   batchedUpdates,
-  actingUpdatesScopeDepth,
   flushPassiveEffects,
 } from 'react-reconciler/inline.test';
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
@@ -549,7 +548,7 @@ const ReactTestRendererFiber = {
   /* eslint-disable-next-line camelcase */
   unstable_batchedUpdates: batchedUpdates,
 
-  act: createAct(batchedUpdates, actingUpdatesScopeDepth, flushPassiveEffects),
+  act: createAct(batchedUpdates, flushPassiveEffects),
 };
 
 const fiberToWrapper = new WeakMap();
