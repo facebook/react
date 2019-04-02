@@ -118,33 +118,42 @@ function dispatchPressStartEvents(
       DEFAULT_LONG_PRESS_DELAY_MS,
     );
 
-    state.longPressTimeout = setTimeout(() => {
-      state.isLongPressed = true;
-      state.longPressTimeout = null;
+    state.longPressTimeout = setTimeout(
+      () =>
+        context.withAsyncDispatching(() => {
+          state.isLongPressed = true;
+          state.longPressTimeout = null;
 
-      if (props.onLongPress) {
-        const longPressEventListener = e => {
-          props.onLongPress(e);
-          // TODO address this again at some point
-          // if (e.nativeEvent.defaultPrevented) {
-          //   state.defaultPrevented = true;
-          // }
-        };
-        dispatchPressEvent(context, state, 'longpress', longPressEventListener);
-      }
+          if (props.onLongPress) {
+            const longPressEventListener = e => {
+              props.onLongPress(e);
+              // TODO address this again at some point
+              // if (e.nativeEvent.defaultPrevented) {
+              //   state.defaultPrevented = true;
+              // }
+            };
+            dispatchPressEvent(
+              context,
+              state,
+              'longpress',
+              longPressEventListener,
+            );
+          }
 
-      if (props.onLongPressChange) {
-        const longPressChangeEventListener = () => {
-          props.onLongPressChange(true);
-        };
-        dispatchPressEvent(
-          context,
-          state,
-          'longpresschange',
-          longPressChangeEventListener,
-        );
-      }
-    }, delayLongPress);
+          if (props.onLongPressChange) {
+            const longPressChangeEventListener = () => {
+              props.onLongPressChange(true);
+            };
+            dispatchPressEvent(
+              context,
+              state,
+              'longpresschange',
+              longPressChangeEventListener,
+            );
+          }
+        }),
+      delayLongPress,
+    );
   }
 }
 
