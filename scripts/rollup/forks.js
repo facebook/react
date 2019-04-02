@@ -65,25 +65,14 @@ const forks = Object.freeze({
     return null;
   },
 
-  'react-reconciler/src/ReactFiberScheduler': (bundleType, entry) => {
-    if (entry === 'react-dom/unstable-new-scheduler') {
-      return 'react-reconciler/src/ReactFiberScheduler.new.js';
-    }
-    return 'react-reconciler/src/ReactFiberScheduler.old.js';
-  },
-
   // We have a few forks for different environments.
   'shared/ReactFeatureFlags': (bundleType, entry) => {
     switch (entry) {
       case 'react-dom/unstable-new-scheduler': {
-        switch (bundleType) {
-          case FB_WWW_DEV:
-          case FB_WWW_PROD:
-          case FB_WWW_PROFILING:
-            return 'shared/forks/ReactFeatureFlags.www-new-scheduler.js';
-          default:
-            return 'shared/forks/ReactFeatureFlags.new-scheduler.js';
+        if (entry === 'react-dom/unstable-new-scheduler') {
+          return 'shared/forks/ReactFeatureFlags.www-new-scheduler.js';
         }
+        return null;
       }
       case 'react-native-renderer':
         switch (bundleType) {
