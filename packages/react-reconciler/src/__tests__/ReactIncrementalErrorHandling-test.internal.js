@@ -134,11 +134,6 @@ describe('ReactIncrementalErrorHandling', () => {
       'ErrorMessage',
     ]);
 
-    if (enableNewScheduler) {
-      expect(ReactNoop.getChildren()).toEqual([]);
-      Scheduler.flushAll();
-    }
-
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: oops!')]);
   });
 
@@ -342,23 +337,14 @@ describe('ReactIncrementalErrorHandling', () => {
     // Finish the rest of the async work
     expect(Scheduler).toFlushAndYieldThrough(['Sibling']);
 
-    // React retries once, synchronously, before throwing.
-    if (enableNewScheduler) {
-      // New scheduler yields in between render and commit
-      Scheduler.unstable_flushNumberOfYields(1);
-      expect(Scheduler).toHaveYielded(['Parent', 'BadRender', 'Sibling']);
-      // Error is thrown during commit
-      expect(() => Scheduler.flushAll()).toThrow('oops');
-    } else {
-      // Old scheduler renders, commits, and throws synchronously
-      expect(() => Scheduler.unstable_flushNumberOfYields(1)).toThrow('oops');
-      expect(Scheduler).toHaveYielded([
-        'Parent',
-        'BadRender',
-        'Sibling',
-        'commit',
-      ]);
-    }
+    // Old scheduler renders, commits, and throws synchronously
+    expect(() => Scheduler.unstable_flushNumberOfYields(1)).toThrow('oops');
+    expect(Scheduler).toHaveYielded([
+      'Parent',
+      'BadRender',
+      'Sibling',
+      'commit',
+    ]);
     expect(ReactNoop.getChildren()).toEqual([]);
   });
 

@@ -854,9 +854,11 @@ function renderRoot(
         // caused by tearing due to a mutation during an event. Try rendering
         // one more time without yiedling to events.
         prepareFreshStack(root, expirationTime);
-        // Return a continutation to maintian the same priority, but pass
-        // isSync true to disable yielding.
-        return renderRoot.bind(null, root, expirationTime, true);
+        scheduleCallback(
+          ImmediatePriority,
+          renderRoot.bind(null, root, expirationTime),
+        );
+        return null;
       }
       // If we're already rendering synchronously, commit the root in its
       // errored state.
