@@ -12,12 +12,11 @@ import {
   batchedUpdates,
   flushPassiveEffects,
 } from 'react-reconciler/inline.test';
-import React from 'react';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import enqueueTask from 'shared/enqueueTask';
 
-const {
-  isActingUpdates,
-} = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+const {ReactShouldWarnActingUpdates} = ReactSharedInternals;
 
 const RendererHelpers = {
   batchedUpdates,
@@ -27,78 +26,9 @@ const RendererHelpers = {
 // the rest of this file should be exactly the same in ReactTestUtilsAct.js,
 // ReactTestRendererAct.js, ReactNoopAct.js, ReactNoopPersistentAct.js
 
+// we track the 'depth' of the act() calls with this counter,
+// so we can tell if any async act() calls try to run in parallel.
 let actingUpdatesScopeDepth = 0;
-
-function incrementActingScopeDepth() {
-  actingUpdatesScopeDepth++;
-  isActingUpdates[0] = true;
-}
-
-function decrementActingScopeDepth() {
-  actingUpdatesScopeDepth--;
-  if (actingUpdatesScopeDepth === 0) {
-    isActingUpdates[0] = false;
-  }
-}
-
-let didWarnAboutMessageChannel = false;
-
-let enqueueTask;
-try {
-  // assuming we're in node, let's try to get node's
-  // version of setImmediate, bypassing fake timers if any
-  let r = require; // trick packagers not to bundle this stuff.
-  enqueueTask = r('timers').setImmediate;
-} catch (_err) {
-  // we're in a browser
-  // we can't use regular timers because they may still be faked
-  // so we try MessageChannel+postMessage instead
-  enqueueTask = function(callback) {
-    if (__DEV__) {
-      if (didWarnAboutMessageChannel === false) {
-        didWarnAboutMessageChannel = true;
-        warningWithoutStack(
-          typeof MessageChannel !== 'undefined',
-          'This browser does not have a MessageChannel implementation, ' +
-            'so enqueuing tasks via await act(async () => ...) will fail. ' +
-            'Please file an issue at https://github.com/facebook/react/issues ' +
-            'if you encounter this warning.',
-        );
-      }
-    }
-    const channel = new MessageChannel();
-    channel.port1.onmessage = callback;
-    channel.port2.postMessage(undefined);
-  };
-}
-
-function createActedUpdatesScope(callback: (onDone: (?Error) => void) => void) {
-  let previousActingUpdatesScopeDepth;
-  if (__DEV__) {
-    previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
-    incrementActingScopeDepth();
-  }
-
-  function warnIfScopeDepthMismatch() {
-    if (__DEV__) {
-      if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
-        // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
-        warningWithoutStack(
-          null,
-          'You seem to have overlapping act() calls, this is not supported. ' +
-            'Be sure to await previous act() calls before making a new one. ',
-        );
-      }
-    }
-  }
-
-  callback(() => {
-    if (__DEV__) {
-      decrementActingScopeDepth();
-      warnIfScopeDepthMismatch();
-    }
-  });
-}
 
 function flushEffectsAndMicroTasks(onDone: (err: ?Error) => void) {
   try {
@@ -116,87 +46,111 @@ function flushEffectsAndMicroTasks(onDone: (err: ?Error) => void) {
 }
 
 export default function act(callback: () => Thenable) {
-  let thenable;
-  createActedUpdatesScope(onDone => {
-    const result = RendererHelpers.batchedUpdates(callback);
-    if (
-      result !== null &&
-      typeof result === 'object' &&
-      typeof result.then === 'function'
-    ) {
-      // setup a boolean that gets set to true only
-      // once this act() call is await-ed
-      let called = false;
-      if (__DEV__) {
-        if (typeof Promise !== 'undefined') {
-          //eslint-disable-next-line no-undef
-          Promise.resolve()
-            .then(() => {})
-            .then(() => {
-              if (called === false) {
-                warningWithoutStack(
-                  null,
-                  'You called act(async () => ...) without await. ' +
-                    'This could lead to unexpected testing behaviour, interleaving multiple act ' +
-                    'calls and mixing their scopes. You should - await act(async () => ...);',
-                );
-              }
-            });
-        }
+  let previousActingUpdatesScopeDepth;
+  if (__DEV__) {
+    previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
+    actingUpdatesScopeDepth++;
+    ReactShouldWarnActingUpdates.current = true;
+  }
+
+  function onDone() {
+    if (__DEV__) {
+      actingUpdatesScopeDepth--;
+      if (actingUpdatesScopeDepth === 0) {
+        ReactShouldWarnActingUpdates.current = false;
       }
-
-      // in this case, the returned thenable runs the callback, flushes
-      // effects and  microtasks in a loop until flushPassiveEffects() === false,
-      // and cleans up
-      thenable = {
-        then(successFn, errorFn) {
-          called = true;
-          result.then(
-            () => {
-              flushEffectsAndMicroTasks(() => {
-                onDone();
-                successFn();
-              });
-            },
-            err => {
-              onDone();
-              errorFn(err);
-            },
-          );
-        },
-      };
-    } else {
-      // in the sync case, the returned thenable only warns *if* await-ed
-      thenable = {
-        then(successFn) {
-          if (__DEV__) {
-            warningWithoutStack(
-              false,
-              'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
-            );
-          }
-          successFn();
-        },
-      };
-
-      if (__DEV__) {
+      if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
+        // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
         warningWithoutStack(
-          result === undefined,
-          'The callback passed to act(...) function ' +
-            'must return undefined, or a Promise. You returned %s',
-          result,
+          null,
+          'You seem to have overlapping act() calls, this is not supported. ' +
+            'Be sure to await previous act() calls before making a new one. ',
         );
       }
+    }
+  }
 
-      // flush effects until none remain, and cleanup
-      try {
-        while (RendererHelpers.flushPassiveEffects()) {}
-        onDone();
-      } catch (err) {
-        onDone(err);
-        throw err;
+  const result = RendererHelpers.batchedUpdates(callback);
+  if (
+    result !== null &&
+    typeof result === 'object' &&
+    typeof result.then === 'function'
+  ) {
+    // setup a boolean that gets set to true only
+    // once this act() call is await-ed
+    let called = false;
+    if (__DEV__) {
+      if (typeof Promise !== 'undefined') {
+        //eslint-disable-next-line no-undef
+        Promise.resolve()
+          .then(() => {})
+          .then(() => {
+            if (called === false) {
+              warningWithoutStack(
+                null,
+                'You called act(async () => ...) without await. ' +
+                  'This could lead to unexpected testing behaviour, interleaving multiple act ' +
+                  'calls and mixing their scopes. You should - await act(async () => ...);',
+              );
+            }
+          });
       }
     }
-  });
-  return thenable;
+
+    // in the async case, the returned thenable runs the callback, flushes
+    // effects and  microtasks in a loop until flushPassiveEffects() === false,
+    // and cleans up
+    return {
+      then(resolve: () => void, reject: (?Error) => void) {
+        called = true;
+        result.then(
+          () => {
+            flushEffectsAndMicroTasks((err: ?Error) => {
+              onDone();
+              if (err) {
+                reject(err);
+              } else {
+                resolve();
+              }
+            });
+          },
+          err => {
+            onDone();
+            reject(err);
+          },
+        );
+      },
+    };
+  } else {
+    if (__DEV__) {
+      warningWithoutStack(
+        result === undefined,
+        'The callback passed to act(...) function ' +
+          'must return undefined, or a Promise. You returned %s',
+        result,
+      );
+    }
+
+    // flush effects until none remain, and cleanup
+    try {
+      while (RendererHelpers.flushPassiveEffects()) {}
+      onDone();
+    } catch (err) {
+      onDone();
+      throw err;
+    }
+
+    // in the sync case, the returned thenable only warns *if* await-ed
+    return {
+      then(resolve: () => void) {
+        if (__DEV__) {
+          warningWithoutStack(
+            false,
+            'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
+          );
+        }
+        resolve();
+      },
+    };
+  }
 }

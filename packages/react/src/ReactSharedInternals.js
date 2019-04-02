@@ -16,7 +16,7 @@ const ReactSharedInternals = {
   ReactCurrentDispatcher,
   ReactCurrentOwner,
   // used by act()
-  isActingUpdates: [false],
+  ReactShouldWarnActingUpdates: {current: false},
   // Used by renderers to avoid bundling object-assign twice in UMD bundles:
   assign,
 };

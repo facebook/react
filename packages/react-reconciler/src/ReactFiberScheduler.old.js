@@ -182,7 +182,7 @@ export type Thenable = {
 const {
   ReactCurrentDispatcher,
   ReactCurrentOwner,
-  isActingUpdates,
+  ReactShouldWarnActingUpdates,
 } = ReactSharedInternals;
 
 let didWarnAboutStateTransition;
@@ -1852,7 +1852,7 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
 export function warnIfNotCurrentlyActingUpdatesInDev(fiber: Fiber): void {
   if (__DEV__) {
     if (
-      isActingUpdates[0] === false &&
+      ReactShouldWarnActingUpdates.current === false &&
       isRendering === false &&
       isBatchingUpdates === false
     ) {
