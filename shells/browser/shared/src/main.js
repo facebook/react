@@ -143,7 +143,7 @@ function createPanelIfReactLoaded() {
 
       let currentPanel = null;
 
-      chrome.devtools.panels.create('⚛ Elements', '', 'panel.html', panel => {
+      chrome.devtools.panels.create('⚛ Components', '', 'panel.html', panel => {
         panel.onShown.addListener(panel => {
           if (currentPanel === panel) {
             return;

@@ -48,8 +48,8 @@ export type Props = {|
 const elementTab = {
   id: ('elements': TabID),
   icon: 'elements',
-  label: 'Elements',
-  title: 'React Elements',
+  label: 'Components',
+  title: 'React Components',
 };
 const profilerTab = {
   id: ('profiler': TabID),
