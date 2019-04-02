@@ -37,7 +37,7 @@ type EventData = {
   diffX: number,
   diffY: number,
 };
-type DragEventType = 'dragend' | 'dragchange' | 'dragmove';
+type DragEventType = 'dragstart' | 'dragend' | 'dragchange' | 'dragmove';
 
 type DragEvent = {|
   listener: DragEvent => void,
