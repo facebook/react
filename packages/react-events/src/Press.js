@@ -86,21 +86,13 @@ function dispatchPressStartEvents(
   if ((props.onLongPress || props.onLongPressChange) && !state.isLongPressed) {
     const delayLongPress = calculateDelayMS(
       props.delayLongPress,
-      0,
+      10,
       DEFAULT_LONG_PRESS_DELAY_MS,
     );
 
     state.longPressTimeout = setTimeout(() => {
       state.isLongPressed = true;
       state.longPressTimeout = null;
-
-      if (
-        props.onPressChange &&
-        props.onLongPressShouldCancelPress &&
-        props.onLongPressShouldCancelPress()
-      ) {
-        dispatchPressChangeEvent(false);
-      }
 
       if (props.onLongPress) {
         const longPressEventListener = e => {
