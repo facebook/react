@@ -388,6 +388,6 @@ export function runResponderEventsInBatch(
     processBatchedEventQueue(context._batchedEventQueue);
     // In order to capture and process async events from responder modules
     // we create a new event queue.
-    context._eventQueue = createBatchedEventQueue(AFTER_EVENT_PHASE);
+    context._batchedEventQueue = createBatchedEventQueue(AFTER_EVENT_PHASE);
   }
 }
