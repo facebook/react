@@ -30,7 +30,9 @@ export default function SelectedElement(_: Props) {
   const element =
     selectedElementID !== null ? store.getElementByID(selectedElementID) : null;
 
-  const inspectedElement = useInspectedElement(selectedElementID);
+  const actualInspectedElement = useInspectedElement(selectedElementID);
+  // The UI lags behind to avoid flashing a loading state.
+  const inspectedElement = useLastNonNullValue(actualInspectedElement);
 
   const highlightElement = useCallback(() => {
     if (element !== null && selectedElementID !== null) {
@@ -283,4 +285,12 @@ function useInspectedElement(id: number | null): InspectedElement | null {
   }, [bridge, id, idRef, store]);
 
   return inspectedElement;
+}
+
+function useLastNonNullValue<T>(value: T | null): T | null {
+  const [lastNonNullValue, setLastNonNullValue] = useState(value);
+  if (value !== null && value !== lastNonNullValue) {
+    setLastNonNullValue(value);
+  }
+  return lastNonNullValue;
 }
