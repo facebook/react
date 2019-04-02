@@ -14,6 +14,7 @@
  * environment.
  */
 
+import type {Thenable} from 'react-reconciler/src/ReactFiberScheduler';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
 import type {ReactNodeList} from 'shared/ReactTypes';
@@ -26,15 +27,11 @@ import {
   REACT_ELEMENT_TYPE,
   REACT_EVENT_TARGET_TOUCH_HIT,
 } from 'shared/ReactSymbols';
-import warningWithoutStack from 'shared/warningWithoutStack';
 import warning from 'shared/warning';
-
+import enqueueTask from 'shared/enqueueTask';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
+import warningWithoutStack from 'shared/warningWithoutStack';
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
-
-// for .act's return value
-type Thenable = {
-  then(resolve: () => mixed, reject?: () => mixed): mixed,
-};
 
 type Container = {
   rootID: string,
@@ -58,6 +55,8 @@ type TextInstance = {|
   context: HostContext,
 |};
 type HostContext = Object;
+
+const {ReactShouldWarnActingUpdates} = ReactSharedInternals;
 
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
@@ -598,6 +597,140 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   const roots = new Map();
   const DEFAULT_ROOT_ID = '<default>';
 
+  const {flushPassiveEffects, batchedUpdates} = NoopRenderer;
+
+  // this act() implementation should be exactly the same in
+  // ReactTestUtilsAct.js, ReactTestRendererAct.js, createReactNoop.js
+
+  let actingUpdatesScopeDepth = 0;
+
+  function flushEffectsAndMicroTasks(onDone: (err: ?Error) => void) {
+    try {
+      flushPassiveEffects();
+      enqueueTask(() => {
+        if (flushPassiveEffects()) {
+          flushEffectsAndMicroTasks(onDone);
+        } else {
+          onDone();
+        }
+      });
+    } catch (err) {
+      onDone(err);
+    }
+  }
+
+  function act(callback: () => Thenable) {
+    let previousActingUpdatesScopeDepth;
+    if (__DEV__) {
+      previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
+      actingUpdatesScopeDepth++;
+      ReactShouldWarnActingUpdates.current = true;
+    }
+
+    function onDone() {
+      if (__DEV__) {
+        actingUpdatesScopeDepth--;
+        if (actingUpdatesScopeDepth === 0) {
+          ReactShouldWarnActingUpdates.current = false;
+        }
+        if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
+          // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
+          warningWithoutStack(
+            null,
+            'You seem to have overlapping act() calls, this is not supported. ' +
+              'Be sure to await previous act() calls before making a new one. ',
+          );
+        }
+      }
+    }
+
+    const result = batchedUpdates(callback);
+    if (
+      result !== null &&
+      typeof result === 'object' &&
+      typeof result.then === 'function'
+    ) {
+      // setup a boolean that gets set to true only
+      // once this act() call is await-ed
+      let called = false;
+      if (__DEV__) {
+        if (typeof Promise !== 'undefined') {
+          //eslint-disable-next-line no-undef
+          Promise.resolve()
+            .then(() => {})
+            .then(() => {
+              if (called === false) {
+                warningWithoutStack(
+                  null,
+                  'You called act(async () => ...) without await. ' +
+                    'This could lead to unexpected testing behaviour, interleaving multiple act ' +
+                    'calls and mixing their scopes. You should - await act(async () => ...);',
+                );
+              }
+            });
+        }
+      }
+
+      // in the async case, the returned thenable runs the callback, flushes
+      // effects and  microtasks in a loop until flushPassiveEffects() === false,
+      // and cleans up
+      return {
+        then(resolve: () => void, reject: (?Error) => void) {
+          called = true;
+          result.then(
+            () => {
+              flushEffectsAndMicroTasks((err: ?Error) => {
+                onDone();
+                if (err) {
+                  reject(err);
+                } else {
+                  resolve();
+                }
+              });
+            },
+            err => {
+              onDone();
+              reject(err);
+            },
+          );
+        },
+      };
+    } else {
+      if (__DEV__) {
+        warningWithoutStack(
+          result === undefined,
+          'The callback passed to act(...) function ' +
+            'must return undefined, or a Promise. You returned %s',
+          result,
+        );
+      }
+
+      // flush effects until none remain, and cleanup
+      try {
+        while (flushPassiveEffects()) {}
+        onDone();
+      } catch (err) {
+        onDone();
+        throw err;
+      }
+
+      // in the sync case, the returned thenable only warns *if* await-ed
+      return {
+        then(resolve: () => void) {
+          if (__DEV__) {
+            warningWithoutStack(
+              false,
+              'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
+            );
+          }
+          resolve();
+        },
+      };
+    }
+  }
+
+  // end act() implementation
+
   function childToJSX(child, text) {
     if (text !== null) {
       return text;
@@ -843,56 +976,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     interactiveUpdates: NoopRenderer.interactiveUpdates,
 
-    // maybe this should exist only in the test file
-    act(callback: () => void): Thenable {
-      // note: keep these warning messages in sync with
-      // ReactTestRenderer.js and ReactTestUtils.js
-      let result = NoopRenderer.batchedUpdates(callback);
-      if (__DEV__) {
-        if (result !== undefined) {
-          let addendum;
-          if (result !== null && typeof result.then === 'function') {
-            addendum =
-              "\n\nIt looks like you wrote ReactNoop.act(async () => ...) or returned a Promise from it's callback. " +
-              'Putting asynchronous logic inside ReactNoop.act(...) is not supported.\n';
-          } else {
-            addendum = ' You returned: ' + result;
-          }
-          warningWithoutStack(
-            false,
-            'The callback passed to ReactNoop.act(...) function must not return anything.%s',
-            addendum,
-          );
-        }
-      }
-      ReactNoop.flushPassiveEffects();
-      // we want the user to not expect a return,
-      // but we want to warn if they use it like they can await on it.
-      return {
-        then() {
-          if (__DEV__) {
-            warningWithoutStack(
-              false,
-              'Do not await the result of calling ReactNoop.act(...), it is not a Promise.',
-            );
-          }
-        },
-      };
-    },
-
     flushSync(fn: () => mixed) {
       NoopRenderer.flushSync(fn);
     },
 
-    flushPassiveEffects() {
-      // Trick to flush passive effects without exposing an internal API:
-      // Create a throwaway root and schedule a dummy update on it.
-      const rootID = 'bloopandthenmoreletterstoavoidaconflict';
-      const container = {rootID: rootID, pendingChildren: [], children: []};
-      rootContainers.set(rootID, container);
-      const root = NoopRenderer.createContainer(container, true, false);
-      NoopRenderer.updateContainer(null, root, null, null);
-    },
+    flushPassiveEffects: NoopRenderer.flushPassiveEffects,
+
+    act,
 
     // Logs the current state of the tree.
     dumpTree(rootID: string = DEFAULT_ROOT_ID) {

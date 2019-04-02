@@ -34,7 +34,7 @@ import {
   flushInteractiveUpdates as flushInteractiveUpdates_old,
   computeUniqueAsyncExpiration as computeUniqueAsyncExpiration_old,
   flushPassiveEffects as flushPassiveEffects_old,
-  warnIfNotCurrentlyBatchingInDev as warnIfNotCurrentlyBatchingInDev_old,
+  warnIfNotCurrentlyActingUpdatesInDev as warnIfNotCurrentlyActingUpdatesInDev_old,
 } from './ReactFiberScheduler.old';
 
 import {
@@ -62,7 +62,7 @@ import {
   flushInteractiveUpdates as flushInteractiveUpdates_new,
   computeUniqueAsyncExpiration as computeUniqueAsyncExpiration_new,
   flushPassiveEffects as flushPassiveEffects_new,
-  warnIfNotCurrentlyBatchingInDev as warnIfNotCurrentlyBatchingInDev_new,
+  warnIfNotCurrentlyActingUpdatesInDev as warnIfNotCurrentlyActingUpdatesInDev_new,
 } from './ReactFiberScheduler.new';
 
 export let requestCurrentTime = requestCurrentTime_old;
@@ -89,7 +89,7 @@ export let interactiveUpdates = interactiveUpdates_old;
 export let flushInteractiveUpdates = flushInteractiveUpdates_old;
 export let computeUniqueAsyncExpiration = computeUniqueAsyncExpiration_old;
 export let flushPassiveEffects = flushPassiveEffects_old;
-export let warnIfNotCurrentlyBatchingInDev = warnIfNotCurrentlyBatchingInDev_old;
+export let warnIfNotCurrentlyActingUpdatesInDev = warnIfNotCurrentlyActingUpdatesInDev_old;
 
 if (enableNewScheduler) {
   requestCurrentTime = requestCurrentTime_new;
@@ -116,9 +116,9 @@ if (enableNewScheduler) {
   flushInteractiveUpdates = flushInteractiveUpdates_new;
   computeUniqueAsyncExpiration = computeUniqueAsyncExpiration_new;
   flushPassiveEffects = flushPassiveEffects_new;
-  warnIfNotCurrentlyBatchingInDev = warnIfNotCurrentlyBatchingInDev_new;
+  warnIfNotCurrentlyActingUpdatesInDev = warnIfNotCurrentlyActingUpdatesInDev_new;
 }
 
 export type Thenable = {
-  then(resolve: () => mixed, reject?: () => mixed): mixed,
+  then(resolve: () => mixed, reject?: () => mixed): void | Thenable,
 };

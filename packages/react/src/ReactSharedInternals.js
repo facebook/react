@@ -15,6 +15,8 @@ import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 const ReactSharedInternals = {
   ReactCurrentDispatcher,
   ReactCurrentOwner,
+  // used by act()
+  ReactShouldWarnActingUpdates: {current: false},
   // Used by renderers to avoid bundling object-assign twice in UMD bundles:
   assign,
 };

@@ -176,10 +176,14 @@ const {
 } = Scheduler;
 
 export type Thenable = {
-  then(resolve: () => mixed, reject?: () => mixed): mixed,
+  then(resolve: () => mixed, reject?: () => mixed): void | Thenable,
 };
 
-const {ReactCurrentDispatcher, ReactCurrentOwner} = ReactSharedInternals;
+const {
+  ReactCurrentDispatcher,
+  ReactCurrentOwner,
+  ReactShouldWarnActingUpdates,
+} = ReactSharedInternals;
 
 let didWarnAboutStateTransition;
 let didWarnSetStateChildContext;
@@ -610,6 +614,7 @@ function markLegacyErrorBoundaryAsFailed(instance: mixed) {
 }
 
 function flushPassiveEffects() {
+  const didFlushEffects = passiveEffectCallback !== null;
   if (passiveEffectCallbackHandle !== null) {
     cancelCallback(passiveEffectCallbackHandle);
   }
@@ -618,6 +623,7 @@ function flushPassiveEffects() {
     // to ensure tracing works correctly.
     passiveEffectCallback();
   }
+  return didFlushEffects;
 }
 
 function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
@@ -1836,9 +1842,20 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
   return root;
 }
 
-export function warnIfNotCurrentlyBatchingInDev(fiber: Fiber): void {
+// in a test-like environment, we want to warn if dispatchAction() is
+// called outside of a TestUtils.act(...)/batchedUpdates/render call.
+// so we have a a step counter for when we descend/ascend from
+// act() calls, and test on it for when to warn
+// It's a tuple with a single value. Look for shared/createAct to
+// see how we change the value inside act() calls
+
+export function warnIfNotCurrentlyActingUpdatesInDev(fiber: Fiber): void {
   if (__DEV__) {
-    if (isRendering === false && isBatchingUpdates === false) {
+    if (
+      isBatchingUpdates === false &&
+      isRendering === false &&
+      ReactShouldWarnActingUpdates.current === false
+    ) {
       warningWithoutStack(
         false,
         'An update to %s inside a test was not wrapped in act(...).\n\n' +
