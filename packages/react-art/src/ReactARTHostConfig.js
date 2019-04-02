@@ -340,7 +340,11 @@ export function getChildHostContext() {
   return NO_CONTEXT;
 }
 
-export function getChildHostContextForEvent() {
+export function getChildHostContextForEventComponent() {
+  return NO_CONTEXT;
+}
+
+export function getChildHostContextForEventTarget() {
   return NO_CONTEXT;
 }
 
@@ -446,6 +450,7 @@ export function handleEventComponent(
 export function handleEventTarget(
   type: Symbol | number,
   props: Props,
+  parentInstance: Container,
   internalInstanceHandle: Object,
 ) {
   // TODO: add handleEventTarget implementation

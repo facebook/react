@@ -19,24 +19,49 @@ type FocusState = {
   isFocused: boolean,
 };
 
+type FocusEventType = 'focus' | 'blur' | 'focuschange';
+
+type FocusEvent = {|
+  listener: FocusEvent => void,
+  target: Element | Document,
+  type: FocusEventType,
+|};
+
+function createFocusEvent(
+  type: FocusEventType,
+  target: Element | Document,
+  listener: FocusEvent => void,
+): FocusEvent {
+  return {
+    listener,
+    target,
+    type,
+  };
+}
+
 function dispatchFocusInEvents(context: EventResponderContext, props: Object) {
   const {event, eventTarget} = context;
   if (context.isTargetWithinEventComponent((event: any).relatedTarget)) {
     return;
   }
   if (props.onFocus) {
-    context.dispatchEvent('focus', props.onFocus, eventTarget, true);
+    const syntheticEvent = createFocusEvent(
+      'focus',
+      eventTarget,
+      props.onFocus,
+    );
+    context.dispatchEvent(syntheticEvent, {discrete: true});
   }
   if (props.onFocusChange) {
     const focusChangeEventListener = () => {
       props.onFocusChange(true);
     };
-    context.dispatchEvent(
+    const syntheticEvent = createFocusEvent(
       'focuschange',
-      focusChangeEventListener,
       eventTarget,
-      true,
+      focusChangeEventListener,
     );
+    context.dispatchEvent(syntheticEvent, {discrete: true});
   }
 }
 
@@ -46,18 +71,19 @@ function dispatchFocusOutEvents(context: EventResponderContext, props: Object) {
     return;
   }
   if (props.onBlur) {
-    context.dispatchEvent('blur', props.onBlur, eventTarget, true);
+    const syntheticEvent = createFocusEvent('blur', eventTarget, props.onBlur);
+    context.dispatchEvent(syntheticEvent, {discrete: true});
   }
   if (props.onFocusChange) {
     const focusChangeEventListener = () => {
       props.onFocusChange(false);
     };
-    context.dispatchEvent(
+    const syntheticEvent = createFocusEvent(
       'focuschange',
-      focusChangeEventListener,
       eventTarget,
-      true,
+      focusChangeEventListener,
     );
+    context.dispatchEvent(syntheticEvent, {discrete: true});
   }
 }
 

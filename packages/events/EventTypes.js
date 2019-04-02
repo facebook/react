@@ -7,29 +7,29 @@
  * @flow
  */
 
-import SyntheticEvent from 'events/SyntheticEvent';
 import type {AnyNativeEvent} from 'events/PluginModuleType';
 import type {ReactEventResponderEventType} from 'shared/ReactTypes';
 
 export type EventResponderContext = {
   event: AnyNativeEvent,
-  eventTarget: EventTarget,
+  eventTarget: Element | Document,
   eventType: string,
   isPassive: () => boolean,
   isPassiveSupported: () => boolean,
-  dispatchEvent: (
-    name: string,
-    listener: (e: SyntheticEvent) => void | null,
-    pressTarget: EventTarget | null,
-    discrete: boolean,
-    extraProperties?: Object,
+  dispatchEvent: <E>(
+    eventObject: E,
+    {
+      capture?: boolean,
+      discrete?: boolean,
+      stopPropagation?: boolean,
+    },
   ) => void,
   isTargetWithinElement: (
-    childTarget: EventTarget,
-    parentTarget: EventTarget,
+    childTarget: Element | Document,
+    parentTarget: Element | Document,
   ) => boolean,
-  isTargetOwned: EventTarget => boolean,
-  isTargetWithinEventComponent: EventTarget => boolean,
+  isTargetOwned: (Element | Document) => boolean,
+  isTargetWithinEventComponent: (Element | Document) => boolean,
   isPositionWithinTouchHitTarget: (x: number, y: number) => boolean,
   addRootEventTypes: (
     rootEventTypes: Array<ReactEventResponderEventType>,
@@ -37,6 +37,6 @@ export type EventResponderContext = {
   removeRootEventTypes: (
     rootEventTypes: Array<ReactEventResponderEventType>,
   ) => void,
-  requestOwnership: (target: EventTarget | null) => boolean,
-  releaseOwnership: (target: EventTarget | null) => boolean,
+  requestOwnership: (target: Element | Document | null) => boolean,
+  releaseOwnership: (target: Element | Document | null) => boolean,
 };
