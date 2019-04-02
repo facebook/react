@@ -23,11 +23,11 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 import * as DOMTopLevelEventTypes from '../events/DOMTopLevelEventTypes';
 import {PLUGIN_EVENT_SYSTEM} from 'events/EventSystemFlags';
-import createAct from 'shared/createAct';
+import act from './ReactTestUtilsAct';
 
 const {findDOMNode} = ReactDOM;
 // Keep in sync with ReactDOMUnstableNativeDependencies.js
-// and ReactDOM.js:
+// ReactDOM.js, and ReactTestUtilsAct.js:
 const [
   getInstanceFromNode,
   /* eslint-disable no-unused-vars */
@@ -42,6 +42,7 @@ const [
   restoreStateIfNeeded,
   dispatchEvent,
   runEventsInBatch,
+  // eslint-disable-next-line no-unused-vars
   flushPassiveEffects,
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
 
@@ -155,8 +156,6 @@ let actContainerElement = null;
 
 // a warning for when you try to use TestUtils.act in a non-browser environment
 let didWarnAboutActInNodejs = false;
-
-const act = createAct(ReactDOM.unstable_batchedUpdates, flushPassiveEffects);
 
 /**
  * Utilities for making it easy to test React components.

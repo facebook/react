@@ -16,10 +16,13 @@
 
 import ReactFiberPersistentReconciler from 'react-reconciler/persistent';
 import createReactNoop from './createReactNoop';
+import act from './ReactNoopPersistentAct';
 
 const ReactNoopPersistent = createReactNoop(
   ReactFiberPersistentReconciler, // reconciler
   false, // useMutation
 );
+
+ReactNoopPersistent.act = act;
 
 export default ReactNoopPersistent;

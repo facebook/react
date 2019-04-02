@@ -808,7 +808,7 @@ const ReactDOM: Object = {
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // Keep in sync with ReactDOMUnstableNativeDependencies.js
-    // and ReactTestUtils.js. This is an array for better minification.
+    // ReactTestUtils.js, and ReactTestUtilsAct.js. This is an array for better minification.
     Events: [
       getInstanceFromNode,
       getNodeFromInstance,

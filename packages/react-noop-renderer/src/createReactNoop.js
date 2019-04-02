@@ -14,6 +14,7 @@
  * environment.
  */
 
+import type {Thenable} from 'react-reconciler/src/ReactFiberScheduler';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
 import type {ReactNodeList} from 'shared/ReactTypes';
@@ -30,7 +31,6 @@ import {
 } from 'shared/ReactSymbols';
 import warning from 'shared/warning';
 import getElementFromTouchHitTarget from 'shared/getElementFromTouchHitTarget';
-import createAct from 'shared/createAct';
 
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
@@ -818,16 +818,16 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     interactiveUpdates: NoopRenderer.interactiveUpdates,
 
-    act: createAct(
-      NoopRenderer.batchedUpdates,
-      NoopRenderer.flushPassiveEffects,
-    ),
-
     flushSync(fn: () => mixed) {
       NoopRenderer.flushSync(fn);
     },
 
     flushPassiveEffects: NoopRenderer.flushPassiveEffects,
+
+    // we patch in .act() after it's created
+    act(callback: () => Thenable) {
+      throw new Error('not implemented');
+    },
 
     // Logs the current state of the tree.
     dumpTree(rootID: string = DEFAULT_ROOT_ID) {
