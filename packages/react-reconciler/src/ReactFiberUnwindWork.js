@@ -27,6 +27,8 @@ import {
   SuspenseComponent,
   DehydratedSuspenseComponent,
   IncompleteClassComponent,
+  EventComponent,
+  EventTarget,
 } from 'shared/ReactWorkTags';
 import {
   DidCapture,
@@ -38,6 +40,7 @@ import {
 import {
   enableSchedulerTracing,
   enableSuspenseServerRenderer,
+  enableEventAPI,
 } from 'shared/ReactFeatureFlags';
 import {ConcurrentMode} from './ReactTypeOfMode';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent';
@@ -509,6 +512,12 @@ function unwindWork(
       return null;
     case ContextProvider:
       popProvider(workInProgress);
+      return null;
+    case EventComponent:
+    case EventTarget:
+      if (enableEventAPI) {
+        popHostContext(workInProgress);
+      }
       return null;
     default:
       return null;

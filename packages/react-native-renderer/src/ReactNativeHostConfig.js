@@ -206,11 +206,18 @@ export function getChildHostContext(
   }
 }
 
-export function getChildHostContextForEvent(
+export function getChildHostContextForEventComponent(
+  parentHostContext: HostContext,
+) {
+  // TODO: add getChildHostContextForEventComponent implementation
+  return parentHostContext;
+}
+
+export function getChildHostContextForEventTarget(
   parentHostContext: HostContext,
   type: Symbol | number,
 ) {
-  // TODO: add getChildHostContextForEvent implementation
+  // TODO: add getChildHostContextForEventTarget implementation
   return parentHostContext;
 }
 
@@ -497,6 +504,7 @@ export function handleEventComponent(
 export function handleEventTarget(
   type: Symbol | number,
   props: Props,
+  parentInstance: Container,
   internalInstanceHandle: Object,
 ) {
   // TODO: add handleEventTarget implementation

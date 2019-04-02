@@ -25,16 +25,12 @@ import expect from 'expect';
 import {
   REACT_FRAGMENT_TYPE,
   REACT_ELEMENT_TYPE,
-  REACT_EVENT_COMPONENT_TYPE,
-  REACT_EVENT_TARGET_TYPE,
   REACT_EVENT_TARGET_TOUCH_HIT,
 } from 'shared/ReactSymbols';
 import warning from 'shared/warning';
-import getElementFromTouchHitTarget from 'shared/getElementFromTouchHitTarget';
 import enqueueTask from 'shared/enqueueTask';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import warningWithoutStack from 'shared/warningWithoutStack';
-
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
 type Container = {
@@ -66,6 +62,7 @@ const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
 const EVENT_COMPONENT_CONTEXT = {};
 const EVENT_TARGET_CONTEXT = {};
+const EVENT_TOUCH_HIT_TARGET_CONTEXT = {};
 const UPDATE_SIGNAL = {};
 if (__DEV__) {
   Object.freeze(NO_CONTEXT);
@@ -262,20 +259,32 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return NO_CONTEXT;
     },
 
-    getChildHostContextForEvent(
+    getChildHostContextForEventComponent(parentHostContext: HostContext) {
+      if (__DEV__ && enableEventAPI) {
+        warning(
+          parentHostContext !== EVENT_TARGET_CONTEXT &&
+            parentHostContext !== EVENT_TOUCH_HIT_TARGET_CONTEXT,
+          'validateDOMNesting: React event targets must not have event components as children.',
+        );
+        return EVENT_COMPONENT_CONTEXT;
+      }
+      return parentHostContext;
+    },
+
+    getChildHostContextForEventTarget(
       parentHostContext: HostContext,
       type: Symbol | number,
     ) {
       if (__DEV__ && enableEventAPI) {
-        if (type === REACT_EVENT_COMPONENT_TYPE) {
-          return EVENT_COMPONENT_CONTEXT;
-        } else if (type === REACT_EVENT_TARGET_TYPE) {
+        if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
           warning(
-            parentHostContext === EVENT_COMPONENT_CONTEXT,
-            'validateDOMNesting: React event targets must be direct children of event components.',
+            parentHostContext !== EVENT_COMPONENT_CONTEXT,
+            'validateDOMNesting: <TouchHitTarget> cannot not be a direct child of an event component. ' +
+              'Ensure <TouchHitTarget> is a direct child of a DOM element.',
           );
-          return EVENT_TARGET_CONTEXT;
+          return EVENT_TOUCH_HIT_TARGET_CONTEXT;
         }
+        return EVENT_TARGET_CONTEXT;
       }
       return parentHostContext;
     },
@@ -290,6 +299,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       rootContainerInstance: Container,
       hostContext: HostContext,
     ): Instance {
+      if (__DEV__ && enableEventAPI) {
+        warning(
+          hostContext !== EVENT_TOUCH_HIT_TARGET_CONTEXT,
+          'validateDOMNesting: <TouchHitTarget> must not have any children.',
+        );
+      }
       if (type === 'errorInCompletePhase') {
         throw new Error('Error in host config.');
       }
@@ -365,6 +380,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     ): TextInstance {
       if (__DEV__ && enableEventAPI) {
         warning(
+          hostContext !== EVENT_TOUCH_HIT_TARGET_CONTEXT,
+          'validateDOMNesting: <TouchHitTarget> must not have any children.',
+        );
+        warning(
           hostContext !== EVENT_COMPONENT_CONTEXT,
           'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
             'Wrap the child text "%s" in an element.',
@@ -415,11 +434,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     handleEventTarget(
       type: Symbol | number,
       props: Props,
+      parentInstance: Container,
       internalInstanceHandle: Object,
     ) {
       if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
-        // Validates that there is a single element
-        getElementFromTouchHitTarget(internalInstanceHandle);
+        // TODO
       }
     },
   };

@@ -228,12 +228,12 @@ describe('DOMEventResponderSystem', () => {
       ['click'],
       (context, props) => {
         if (props.onMagicClick) {
-          context.dispatchEvent(
-            'magicclick',
-            props.onMagicClick,
-            context.eventTarget,
-            false,
-          );
+          const event = {
+            listener: props.onMagicClick,
+            target: context.eventTarget,
+            type: 'magicclick',
+          };
+          context.dispatchEvent(event, {discrete: true});
         }
       },
     );

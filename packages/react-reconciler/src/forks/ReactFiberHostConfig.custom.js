@@ -41,8 +41,10 @@ export opaque type NoTimeout = mixed; // eslint-disable-line no-undef
 export const getPublicInstance = $$$hostConfig.getPublicInstance;
 export const getRootHostContext = $$$hostConfig.getRootHostContext;
 export const getChildHostContext = $$$hostConfig.getChildHostContext;
-export const getChildHostContextForEvent =
-  $$$hostConfig.getChildHostContextForEvent;
+export const getChildHostContextForEventComponent =
+  $$$hostConfig.getChildHostContextForEventComponent;
+export const getChildHostContextForEventTarget =
+  $$$hostConfig.getChildHostContextForEventTarget;
 export const prepareForCommit = $$$hostConfig.prepareForCommit;
 export const resetAfterCommit = $$$hostConfig.resetAfterCommit;
 export const createInstance = $$$hostConfig.createInstance;

@@ -99,7 +99,8 @@ import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {
   pushHostContext,
   pushHostContainer,
-  pushHostContextForEvent,
+  pushHostContextForEventComponent,
+  pushHostContextForEventTarget,
 } from './ReactFiberHostContext';
 import {
   pushProvider,
@@ -1960,7 +1961,7 @@ function updateEventComponent(current, workInProgress, renderExpirationTime) {
     nextChildren,
     renderExpirationTime,
   );
-  pushHostContextForEvent(workInProgress);
+  pushHostContextForEventComponent(workInProgress);
   return workInProgress.child;
 }
 
@@ -1974,7 +1975,7 @@ function updateEventTarget(current, workInProgress, renderExpirationTime) {
     nextChildren,
     renderExpirationTime,
   );
-  pushHostContextForEvent(workInProgress);
+  pushHostContextForEventTarget(workInProgress);
   return workInProgress.child;
 }
 
@@ -2112,8 +2113,19 @@ function beginWork(
             // been unsuspended it has committed as a regular Suspense component.
             // If it needs to be retried, it should have work scheduled on it.
             workInProgress.effectTag |= DidCapture;
-            break;
           }
+          break;
+        }
+        case EventComponent:
+          if (enableEventAPI) {
+            pushHostContextForEventComponent(workInProgress);
+          }
+          break;
+        case EventTarget: {
+          if (enableEventAPI) {
+            pushHostContextForEventTarget(workInProgress);
+          }
+          break;
         }
       }
       return bailoutOnAlreadyFinishedWork(
