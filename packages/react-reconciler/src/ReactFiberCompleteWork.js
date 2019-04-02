@@ -784,7 +784,19 @@ function completeWork(
       if (enableEventAPI) {
         popHostContext(workInProgress);
         const type = workInProgress.type.type;
-        handleEventTarget(type, newProps, workInProgress);
+        let node = workInProgress.return;
+        let parentHostInstance = null;
+        // Traverse up the fiber tree till we find a host component fiber
+        while (node !== null) {
+          if (node.tag === HostComponent) {
+            parentHostInstance = node.stateNode;
+            break;
+          }
+          node = node.return;
+        }
+        if (parentHostInstance !== null) {
+          handleEventTarget(type, newProps, parentHostInstance, workInProgress);
+        }
       }
       break;
     }
