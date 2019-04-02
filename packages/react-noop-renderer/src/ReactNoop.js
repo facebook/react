@@ -16,13 +16,10 @@
 
 import ReactFiberReconciler from 'react-reconciler';
 import createReactNoop from './createReactNoop';
-import act from './ReactNoopAct';
 
 const ReactNoop = createReactNoop(
   ReactFiberReconciler, // reconciler
   true, // useMutation
 );
-
-ReactNoop.act = act;
 
 export default ReactNoop;

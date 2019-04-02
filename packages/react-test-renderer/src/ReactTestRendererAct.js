@@ -18,13 +18,8 @@ import enqueueTask from 'shared/enqueueTask';
 
 const {ReactShouldWarnActingUpdates} = ReactSharedInternals;
 
-const RendererHelpers = {
-  batchedUpdates,
-  flushPassiveEffects,
-};
-
-// the rest of this file should be exactly the same in ReactTestUtilsAct.js,
-// ReactTestRendererAct.js, ReactNoopAct.js, ReactNoopPersistentAct.js
+// this implementation should be exactly the same in
+// ReactTestUtilsAct.js, ReactTestRendererAct.js, createReactNoop.js
 
 // we track the 'depth' of the act() calls with this counter,
 // so we can tell if any async act() calls try to run in parallel.
@@ -32,9 +27,9 @@ let actingUpdatesScopeDepth = 0;
 
 function flushEffectsAndMicroTasks(onDone: (err: ?Error) => void) {
   try {
-    RendererHelpers.flushPassiveEffects();
+    flushPassiveEffects();
     enqueueTask(() => {
-      if (RendererHelpers.flushPassiveEffects()) {
+      if (flushPassiveEffects()) {
         flushEffectsAndMicroTasks(onDone);
       } else {
         onDone();
@@ -45,7 +40,7 @@ function flushEffectsAndMicroTasks(onDone: (err: ?Error) => void) {
   }
 }
 
-export default function act(callback: () => Thenable) {
+function act(callback: () => Thenable) {
   let previousActingUpdatesScopeDepth;
   if (__DEV__) {
     previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
@@ -70,7 +65,7 @@ export default function act(callback: () => Thenable) {
     }
   }
 
-  const result = RendererHelpers.batchedUpdates(callback);
+  const result = batchedUpdates(callback);
   if (
     result !== null &&
     typeof result === 'object' &&
@@ -133,7 +128,7 @@ export default function act(callback: () => Thenable) {
 
     // flush effects until none remain, and cleanup
     try {
-      while (RendererHelpers.flushPassiveEffects()) {}
+      while (flushPassiveEffects()) {}
       onDone();
     } catch (err) {
       onDone();
@@ -154,3 +149,5 @@ export default function act(callback: () => Thenable) {
     };
   }
 }
+
+export default act;
