@@ -81,7 +81,7 @@ function createPressEvent(
   };
 }
 
-function dispatchPressEvent(
+function dispatchEvent(
   context: EventResponderContext,
   state: PressState,
   name: PressEventType,
@@ -101,11 +101,11 @@ function dispatchPressStartEvents(
     const pressChangeEventListener = () => {
       props.onPressChange(bool);
     };
-    dispatchPressEvent(context, state, 'presschange', pressChangeEventListener);
+    dispatchEvent(context, state, 'presschange', pressChangeEventListener);
   }
 
   if (props.onPressStart) {
-    dispatchPressEvent(context, state, 'pressstart', props.onPressStart);
+    dispatchEvent(context, state, 'pressstart', props.onPressStart);
   }
   if (props.onPressChange) {
     dispatchPressChangeEvent(true);
@@ -131,7 +131,7 @@ function dispatchPressStartEvents(
               //   state.defaultPrevented = true;
               // }
             };
-            dispatchPressEvent(
+            dispatchEvent(
               context,
               state,
               'longpress',
@@ -143,7 +143,7 @@ function dispatchPressStartEvents(
             const longPressChangeEventListener = () => {
               props.onLongPressChange(true);
             };
-            dispatchPressEvent(
+            dispatchEvent(
               context,
               state,
               'longpresschange',
@@ -166,19 +166,19 @@ function dispatchPressEndEvents(
     state.longPressTimeout = null;
   }
   if (props.onPressEnd) {
-    dispatchPressEvent(context, state, 'pressend', props.onPressEnd);
+    dispatchEvent(context, state, 'pressend', props.onPressEnd);
   }
   if (props.onPressChange) {
     const pressChangeEventListener = () => {
       props.onPressChange(false);
     };
-    dispatchPressEvent(context, state, 'presschange', pressChangeEventListener);
+    dispatchEvent(context, state, 'presschange', pressChangeEventListener);
   }
   if (props.onLongPressChange && state.isLongPressed) {
     const longPressChangeEventListener = () => {
       props.onLongPressChange(false);
     };
-    dispatchPressEvent(
+    dispatchEvent(
       context,
       state,
       'longpresschange',
@@ -230,7 +230,7 @@ const PressResponder = {
         ) {
           return;
         }
-        dispatchPressEvent(context, state, 'press', props.onPress);
+        dispatchEvent(context, state, 'press', props.onPress);
         break;
       }
 
@@ -282,7 +282,7 @@ const PressResponder = {
                   props.onLongPressShouldCancelPress()
                 )
               ) {
-                dispatchPressEvent(context, state, 'press', props.onPress);
+                dispatchEvent(context, state, 'press', props.onPress);
               }
             }
           }
@@ -357,7 +357,7 @@ const PressResponder = {
                   //   state.defaultPrevented = true;
                   // }
                 };
-                dispatchPressEvent(context, state, 'press', pressEventListener);
+                dispatchEvent(context, state, 'press', pressEventListener);
               }
             }
           }
