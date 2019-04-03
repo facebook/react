@@ -203,9 +203,9 @@ describe('React hooks DevTools integration', () => {
       expect(renderer.toJSON().children).toEqual(['Loading']);
       overrideProps(fiber, [], null); // Re-render
       expect(renderer.toJSON().children).toEqual(['Loading']);
+
       // Release the lock
       overrideSuspense(() => false);
-
       overrideProps(fiber, [], null); // Re-render
       expect(renderer.toJSON().children).toEqual(['Done']);
       overrideProps(fiber, [], null); // Re-render
@@ -258,9 +258,9 @@ describe('React hooks DevTools integration', () => {
       expect(renderer.toJSON().children).toEqual(['Loading']);
       overrideProps(fiber, [], null); // Re-render
       expect(renderer.toJSON().children).toEqual(['Loading']);
+
       // Release the lock
       overrideSuspense(() => false);
-
       overrideProps(fiber, [], null); // Re-render
       expect(renderer.toJSON().children).toEqual(['Done']);
       overrideProps(fiber, [], null); // Re-render
