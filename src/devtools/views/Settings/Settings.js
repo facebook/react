@@ -37,7 +37,7 @@ export default function Settings({ portalContainer }: Props) {
           <label className={styles.Option}>
             <input
               type="radio"
-              name="Settings-Settings-theme"
+              name="Settings-theme"
               checked={theme === 'auto'}
               value="auto"
               onChange={updateTheme}
