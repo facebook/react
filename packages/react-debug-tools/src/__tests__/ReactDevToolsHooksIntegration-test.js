@@ -14,6 +14,7 @@ describe('React hooks DevTools integration', () => {
   let React;
   let ReactDebugTools;
   let ReactTestRenderer;
+  let Scheduler;
   let act;
   let overrideHookState;
   let overrideProps;
@@ -36,6 +37,7 @@ describe('React hooks DevTools integration', () => {
     React = require('react');
     ReactDebugTools = require('react-debug-tools');
     ReactTestRenderer = require('react-test-renderer');
+    Scheduler = require('scheduler');
 
     act = ReactTestRenderer.act;
   });
@@ -178,7 +180,7 @@ describe('React hooks DevTools integration', () => {
     }
   });
 
-  it('should support overriding suspense', () => {
+  it('should support overriding suspense in sync mode', () => {
     if (__DEV__) {
       // Lock the first render
       overrideSuspense(() => true);
@@ -195,6 +197,61 @@ describe('React hooks DevTools integration', () => {
         </React.Suspense>
       </div>,
     );
+    const fiber = renderer.root._currentFiber().child;
+    if (__DEV__) {
+      // First render was locked
+      expect(renderer.toJSON().children).toEqual(['Loading']);
+      overrideProps(fiber, [], null); // Re-render
+      expect(renderer.toJSON().children).toEqual(['Loading']);
+      // Release the lock
+      overrideSuspense(() => false);
+
+      overrideProps(fiber, [], null); // Re-render
+      expect(renderer.toJSON().children).toEqual(['Done']);
+      overrideProps(fiber, [], null); // Re-render
+      expect(renderer.toJSON().children).toEqual(['Done']);
+
+      // Lock again
+      overrideSuspense(() => true);
+      overrideProps(fiber, [], null); // Re-render
+      expect(renderer.toJSON().children).toEqual(['Loading']);
+
+      // Release the lock again
+      overrideSuspense(() => false);
+      overrideProps(fiber, [], null); // Re-render
+      expect(renderer.toJSON().children).toEqual(['Done']);
+
+      // Ensure it checks specific fibers.
+      overrideSuspense(f => f === fiber || f === fiber.alternate);
+      overrideProps(fiber, [], null); // Re-render
+      expect(renderer.toJSON().children).toEqual(['Loading']);
+      overrideSuspense(f => f !== fiber && f !== fiber.alternate);
+      overrideProps(fiber, [], null); // Re-render
+      expect(renderer.toJSON().children).toEqual(['Done']);
+    } else {
+      expect(renderer.toJSON().children).toEqual(['Done']);
+    }
+  });
+
+  it('should support overriding suspense in concurrent mode', () => {
+    if (__DEV__) {
+      // Lock the first render
+      overrideSuspense(() => true);
+    }
+
+    function MyComponent() {
+      return 'Done';
+    }
+
+    const renderer = ReactTestRenderer.create(
+      <div>
+        <React.Suspense fallback={'Loading'}>
+          <MyComponent />
+        </React.Suspense>
+      </div>,
+      {unstable_isConcurrent: true},
+    );
+    expect(Scheduler).toFlushAndYield([]);
     const fiber = renderer.root._currentFiber().child;
     if (__DEV__) {
       // First render was locked
