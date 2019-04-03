@@ -91,7 +91,6 @@ import {
   markPingedPriorityLevel,
   hasLowerPriorityWork,
   isPriorityLevelSuspended,
-  findEarliestOutstandingPriorityLevel,
   didExpireAtExpirationTime,
 } from './ReactFiberPendingPriority';
 import {
@@ -272,7 +271,8 @@ let nextUnitOfWork: Fiber | null = null;
 let nextRoot: FiberRoot | null = null;
 // The time at which we're currently rendering work.
 let nextRenderExpirationTime: ExpirationTime = NoWork;
-let nextLatestAbsoluteTimeoutMs: number = -1;
+let mostRecentEventTime: ExpirationTime = Sync;
+let nextRenderDidSuspend: boolean = false;
 let nextRenderDidError: boolean = false;
 
 // The next fiber with an effect that we're currently committing.
@@ -399,7 +399,8 @@ function resetStack() {
 
   nextRoot = null;
   nextRenderExpirationTime = NoWork;
-  nextLatestAbsoluteTimeoutMs = -1;
+  mostRecentEventTime = Sync;
+  nextRenderDidSuspend = false;
   nextRenderDidError = false;
   nextUnitOfWork = null;
 }
@@ -1502,32 +1503,25 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
     }
   }
 
-  if (isYieldy && nextLatestAbsoluteTimeoutMs !== -1) {
+  // Check if we should suspend this commit.
+  // If mostRecentEventTime is Sync, that means we didn't track any event
+  // times. That can happen if we retried but nothing switched from fallback
+  // to content. There's no reason to delay doing no work.
+  if (isYieldy && nextRenderDidSuspend && mostRecentEventTime !== Sync) {
     // The tree was suspended.
     const suspendedExpirationTime = expirationTime;
     markSuspendedPriorityLevel(root, suspendedExpirationTime);
 
-    // Find the earliest uncommitted expiration time in the tree, including
-    // work that is suspended. The timeout threshold cannot be longer than
-    // the overall expiration.
-    const earliestExpirationTime = findEarliestOutstandingPriorityLevel(
-      root,
-      expirationTime,
+    const eventTimeMs: number = inferTimeFromExpirationTime(
+      mostRecentEventTime,
     );
-    const earliestExpirationTimeMs = expirationTimeToMs(earliestExpirationTime);
-    if (earliestExpirationTimeMs < nextLatestAbsoluteTimeoutMs) {
-      nextLatestAbsoluteTimeoutMs = earliestExpirationTimeMs;
-    }
-
-    // Subtract the current time from the absolute timeout to get the number
-    // of milliseconds until the timeout. In other words, convert an absolute
-    // timestamp to a relative time. This is the value that is passed
-    // to `setTimeout`.
-    const currentTimeMs = expirationTimeToMs(requestCurrentTime());
-    let msUntilTimeout = nextLatestAbsoluteTimeoutMs - currentTimeMs;
-    msUntilTimeout = msUntilTimeout < 0 ? 0 : msUntilTimeout;
+    const currentTimeMs: number = now();
+    const timeElapsed = currentTimeMs - eventTimeMs;
 
     // TODO: Account for the Just Noticeable Difference
+    const timeoutMs = 150;
+    let msUntilTimeout = timeoutMs - timeElapsed;
+    msUntilTimeout = msUntilTimeout < 0 ? 0 : msUntilTimeout;
 
     const rootExpirationTime = root.expirationTime;
     onSuspend(
@@ -1662,41 +1656,27 @@ function computeExpirationForFiber(currentTime: ExpirationTime, fiber: Fiber) {
   return expirationTime;
 }
 
-function renderDidSuspend(
-  root: FiberRoot,
-  absoluteTimeoutMs: number,
-  suspendedTime: ExpirationTime,
-) {
-  // Schedule the timeout.
-  if (
-    absoluteTimeoutMs >= 0 &&
-    nextLatestAbsoluteTimeoutMs < absoluteTimeoutMs
-  ) {
-    nextLatestAbsoluteTimeoutMs = absoluteTimeoutMs;
+function markRenderEventTime(expirationTime: ExpirationTime): void {
+  if (expirationTime < mostRecentEventTime) {
+    mostRecentEventTime = expirationTime;
   }
+}
+
+function renderDidSuspend() {
+  nextRenderDidSuspend = true;
 }
 
 function renderDidError() {
   nextRenderDidError = true;
 }
 
-function inferStartTimeFromExpirationTime(
-  root: FiberRoot,
-  expirationTime: ExpirationTime,
-) {
+function inferTimeFromExpirationTime(expirationTime: ExpirationTime) {
   // We don't know exactly when the update was scheduled, but we can infer an
-  // approximate start time from the expiration time. First, find the earliest
-  // uncommitted expiration time in the tree, including work that is suspended.
-  // Then subtract the offset used to compute an async update's expiration time.
-  // This will cause high priority (interactive) work to expire earlier than
-  // necessary, but we can account for this by adjusting for the Just
-  // Noticeable Difference.
-  const earliestExpirationTime = findEarliestOutstandingPriorityLevel(
-    root,
-    expirationTime,
+  // approximate start time from the expiration time.
+  const earliestExpirationTimeMs = expirationTimeToMs(expirationTime);
+  return (
+    earliestExpirationTimeMs - LOW_PRIORITY_EXPIRATION + originalStartTimeMs
   );
-  const earliestExpirationTimeMs = expirationTimeToMs(earliestExpirationTime);
-  return earliestExpirationTimeMs - LOW_PRIORITY_EXPIRATION;
 }
 
 function pingSuspendedRoot(
@@ -2692,6 +2672,7 @@ export {
   computeExpirationForFiber,
   captureCommitPhaseError,
   onUncaughtError,
+  markRenderEventTime,
   renderDidSuspend,
   renderDidError,
   pingSuspendedRoot,
@@ -2711,5 +2692,4 @@ export {
   flushInteractiveUpdates,
   computeUniqueAsyncExpiration,
   flushPassiveEffects,
-  inferStartTimeFromExpirationTime,
 };

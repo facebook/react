@@ -194,7 +194,11 @@ let workInProgress: Fiber | null = null;
 let renderExpirationTime: ExpirationTime = NoWork;
 // Whether to root completed, errored, suspended, etc.
 let workInProgressRootExitStatus: RootExitStatus = RootIncomplete;
-let workInProgressRootAbsoluteTimeoutMs: number = -1;
+// Most recent event time among processed updates during this render.
+// This is conceptually a time stamp but expressed in terms of an ExpirationTime
+// because we deal mostly with expiration times in the hot path, so this avoids
+// the conversion happening in the hot path.
+let workInProgressRootMostRecentEventTime: ExpirationTime = Sync;
 
 let nextEffect: Fiber | null = null;
 let hasUncaughtError = false;
@@ -678,7 +682,7 @@ function prepareFreshStack(root, expirationTime) {
   workInProgress = createWorkInProgress(root.current, null, expirationTime);
   renderExpirationTime = expirationTime;
   workInProgressRootExitStatus = RootIncomplete;
-  workInProgressRootAbsoluteTimeoutMs = -1;
+  workInProgressRootMostRecentEventTime = Sync;
 
   if (__DEV__) {
     ReactStrictModeWarnings.discardPendingWarnings();
@@ -884,10 +888,12 @@ function renderRoot(
         // at that level.
         return renderRoot.bind(null, root, lastPendingTime);
       }
-      if (!isSync) {
+      // If workInProgressRootMostRecentEventTime is Sync, that means we didn't
+      // track any event times. That can happen if we retried but nothing switched
+      // from fallback to content. There's no reason to delay doing no work.
+      if (!isSync && workInProgressRootMostRecentEventTime !== Sync) {
         const msUntilTimeout = computeMsUntilTimeout(
-          root,
-          workInProgressRootAbsoluteTimeoutMs,
+          workInProgressRootMostRecentEventTime,
         );
         if (msUntilTimeout > 0) {
           // The render is suspended, it hasn't timed out, and there's no lower
@@ -913,20 +919,15 @@ function renderRoot(
   }
 }
 
-export function renderDidSuspend(
-  root: FiberRoot,
-  absoluteTimeoutMs: number,
-  // TODO: Don't need this argument anymore
-  suspendedTime: ExpirationTime,
-) {
-  if (
-    absoluteTimeoutMs >= 0 &&
-    workInProgressRootAbsoluteTimeoutMs < absoluteTimeoutMs
-  ) {
-    workInProgressRootAbsoluteTimeoutMs = absoluteTimeoutMs;
-    if (workInProgressRootExitStatus === RootIncomplete) {
-      workInProgressRootExitStatus = RootSuspended;
-    }
+export function markRenderEventTime(expirationTime: ExpirationTime): void {
+  if (expirationTime < workInProgressRootMostRecentEventTime) {
+    workInProgressRootMostRecentEventTime = expirationTime;
+  }
+}
+
+export function renderDidSuspend(): void {
+  if (workInProgressRootExitStatus === RootIncomplete) {
+    workInProgressRootExitStatus = RootSuspended;
   }
 }
 
@@ -937,6 +938,13 @@ export function renderDidError() {
   ) {
     workInProgressRootExitStatus = RootErrored;
   }
+}
+
+function inferTimeFromExpirationTime(expirationTime: ExpirationTime): number {
+  // We don't know exactly when the update was scheduled, but we can infer an
+  // approximate start time from the expiration time.
+  const earliestExpirationTimeMs = expirationTimeToMs(expirationTime);
+  return earliestExpirationTimeMs - LOW_PRIORITY_EXPIRATION + initialTimeMs;
 }
 
 function workLoopSync() {
@@ -1805,37 +1813,20 @@ export function resolveRetryThenable(boundaryFiber: Fiber, thenable: Thenable) {
   retryTimedOutBoundary(boundaryFiber);
 }
 
-export function inferStartTimeFromExpirationTime(
-  root: FiberRoot,
-  expirationTime: ExpirationTime,
-) {
-  // We don't know exactly when the update was scheduled, but we can infer an
-  // approximate start time from the expiration time.
-  const earliestExpirationTimeMs = expirationTimeToMs(root.firstPendingTime);
-  // TODO: Track this on the root instead. It's more accurate, doesn't rely on
-  // assumptions about priority, and isn't coupled to Scheduler details.
-  return earliestExpirationTimeMs - LOW_PRIORITY_EXPIRATION;
-}
-
-function computeMsUntilTimeout(root, absoluteTimeoutMs) {
+function computeMsUntilTimeout(mostRecentEventTime: ExpirationTime) {
   if (disableYielding) {
     // Timeout immediately when yielding is disabled.
     return 0;
   }
 
-  // Find the earliest uncommitted expiration time in the tree, including
-  // work that is suspended. The timeout threshold cannot be longer than
-  // the overall expiration.
-  const earliestExpirationTimeMs = expirationTimeToMs(root.firstPendingTime);
-  if (earliestExpirationTimeMs < absoluteTimeoutMs) {
-    absoluteTimeoutMs = earliestExpirationTimeMs;
-  }
+  const eventTimeMs: number = inferTimeFromExpirationTime(mostRecentEventTime);
+  const currentTimeMs: number = now();
+  const timeElapsed = currentTimeMs - eventTimeMs;
 
-  // Subtract the current time from the absolute timeout to get the number
-  // of milliseconds until the timeout. In other words, convert an absolute
-  // timestamp to a relative time. This is the value that is passed
-  // to `setTimeout`.
-  let msUntilTimeout = absoluteTimeoutMs - now();
+  // TODO: Account for the Just Noticeable Difference
+  const timeoutMs = 150;
+  const msUntilTimeout = timeoutMs - timeElapsed;
+  // This is the value that is passed to `setTimeout`.
   return msUntilTimeout < 0 ? 0 : msUntilTimeout;
 }
 

@@ -14,6 +14,7 @@ import {
   computeExpirationForFiber as computeExpirationForFiber_old,
   captureCommitPhaseError as captureCommitPhaseError_old,
   onUncaughtError as onUncaughtError_old,
+  markRenderEventTime as markRenderEventTime_old,
   renderDidSuspend as renderDidSuspend_old,
   renderDidError as renderDidError_old,
   pingSuspendedRoot as pingSuspendedRoot_old,
@@ -34,7 +35,6 @@ import {
   computeUniqueAsyncExpiration as computeUniqueAsyncExpiration_old,
   flushPassiveEffects as flushPassiveEffects_old,
   warnIfNotCurrentlyActingUpdatesInDev as warnIfNotCurrentlyActingUpdatesInDev_old,
-  inferStartTimeFromExpirationTime as inferStartTimeFromExpirationTime_old,
 } from './ReactFiberScheduler.old';
 
 import {
@@ -42,6 +42,7 @@ import {
   computeExpirationForFiber as computeExpirationForFiber_new,
   captureCommitPhaseError as captureCommitPhaseError_new,
   onUncaughtError as onUncaughtError_new,
+  markRenderEventTime as markRenderEventTime_new,
   renderDidSuspend as renderDidSuspend_new,
   renderDidError as renderDidError_new,
   pingSuspendedRoot as pingSuspendedRoot_new,
@@ -62,7 +63,6 @@ import {
   computeUniqueAsyncExpiration as computeUniqueAsyncExpiration_new,
   flushPassiveEffects as flushPassiveEffects_new,
   warnIfNotCurrentlyActingUpdatesInDev as warnIfNotCurrentlyActingUpdatesInDev_new,
-  inferStartTimeFromExpirationTime as inferStartTimeFromExpirationTime_new,
 } from './ReactFiberScheduler.new';
 
 export const requestCurrentTime = enableNewScheduler
@@ -77,6 +77,9 @@ export const captureCommitPhaseError = enableNewScheduler
 export const onUncaughtError = enableNewScheduler
   ? onUncaughtError_new
   : onUncaughtError_old;
+export const markRenderEventTime = enableNewScheduler
+  ? markRenderEventTime_new
+  : markRenderEventTime_old;
 export const renderDidSuspend = enableNewScheduler
   ? renderDidSuspend_new
   : renderDidSuspend_old;
@@ -133,9 +136,6 @@ export const flushPassiveEffects = enableNewScheduler
 export const warnIfNotCurrentlyActingUpdatesInDev = enableNewScheduler
   ? warnIfNotCurrentlyActingUpdatesInDev_new
   : warnIfNotCurrentlyActingUpdatesInDev_old;
-export const inferStartTimeFromExpirationTime = enableNewScheduler
-  ? inferStartTimeFromExpirationTime_new
-  : inferStartTimeFromExpirationTime_old;
 
 export type Thenable = {
   then(resolve: () => mixed, reject?: () => mixed): void | Thenable,
