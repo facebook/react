@@ -52,7 +52,7 @@ type PressEvent = {|
 // const DEFAULT_PRESS_DELAY_MS = 0;
 // const DEFAULT_PRESS_END_DELAY_MS = 0;
 // const DEFAULT_PRESS_START_DELAY_MS = 0;
-const DEFAULT_LONG_PRESS_DELAY_MS = 1000;
+const DEFAULT_LONG_PRESS_DELAY_MS = 500;
 
 const targetEventTypes = [
   {name: 'click', passive: false},

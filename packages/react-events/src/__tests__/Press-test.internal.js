@@ -14,7 +14,7 @@ let ReactFeatureFlags;
 let ReactDOM;
 let Press;
 
-const DEFAULT_LONG_PRESS_DELAY = 1000;
+const DEFAULT_LONG_PRESS_DELAY = 500;
 
 const createPointerEvent = type => {
   const event = document.createEvent('Event');
