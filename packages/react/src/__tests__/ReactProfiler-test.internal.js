@@ -105,7 +105,6 @@ const mockDevToolsForTest = () => {
     onCommitRoot: () => {},
     onCommitUnmount: () => {},
     isDevToolsPresent: true,
-    shouldSuspend: () => false,
   }));
 };
 
