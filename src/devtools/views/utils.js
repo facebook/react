@@ -12,7 +12,7 @@ export function createRegExp(string: string): RegExp {
 export function getMetaValueLabel(data: Object): string | null {
   switch (data[meta.type]) {
     case 'react_element':
-      return `<${data[meta.name]}/>`;
+      return `<${data[meta.name]} />`;
     case 'function':
       return `${data[meta.name] || 'fn'}()`;
     case 'object':
