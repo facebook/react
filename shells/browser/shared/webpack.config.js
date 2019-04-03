@@ -15,7 +15,7 @@ module.exports = {
   entry: {
     background: './src/background.js',
     contentScript: './src/contentScript.js',
-    inject: './src/GlobalHook.js',
+    injectGlobalHook: './src/injectGlobalHook.js',
     main: './src/main.js',
     panel: './src/panel.js',
     renderer: './src/renderer.js',

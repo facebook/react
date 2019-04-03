@@ -58,7 +58,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["build/inject.js"],
+      "js": ["build/injectGlobalHook.js"],
       "run_at": "document_start"
     }
   ]
