@@ -58,19 +58,13 @@ type EventQueue = {
   bubble: null | Array<$Shape<PartialEventObject>>,
   capture: null | Array<$Shape<PartialEventObject>>,
   discrete: boolean,
-  phase: EventQueuePhase,
 };
-type EventQueuePhase = 0 | 1;
 
-const DURING_EVENT_PHASE = 0;
-const AFTER_EVENT_PHASE = 1;
-
-function createEventQueue(phase: EventQueuePhase): EventQueue {
+function createEventQueue(): EventQueue {
   return {
     bubble: null,
     capture: null,
     discrete: false,
-    phase,
   };
 }
 
@@ -134,7 +128,7 @@ function DOMEventResponderContext(
   this._discreteEvents = null;
   this._nonDiscreteEvents = null;
   this._isBatching = true;
-  this._eventQueue = createEventQueue(DURING_EVENT_PHASE);
+  this._eventQueue = createEventQueue();
 }
 
 DOMEventResponderContext.prototype.isPassive = function(): boolean {
@@ -202,9 +196,6 @@ DOMEventResponderContext.prototype.dispatchEvent = function(
 
   if (stopPropagation) {
     eventsWithStopPropagation.add(eventObject);
-  }
-  if (eventQueue.phase === AFTER_EVENT_PHASE) {
-    batchedUpdates(processEventQueue, eventQueue);
   }
 };
 
@@ -320,6 +311,19 @@ DOMEventResponderContext.prototype.releaseOwnership = function(
   return false;
 };
 
+DOMEventResponderContext.prototype.withAsyncDispatching = function(
+  func: () => void,
+) {
+  const previousEventQueue = this._eventQueue;
+  this._eventQueue = createEventQueue();
+  try {
+    func();
+    batchedUpdates(processEventQueue, this._eventQueue);
+  } finally {
+    this._eventQueue = previousEventQueue;
+  }
+};
+
 function getTargetEventTypes(
   eventTypes: Array<ReactEventResponderEventType>,
 ): Set<DOMTopLevelEventType> {
@@ -401,8 +405,5 @@ export function runResponderEventsInBatch(
       }
     }
     processEventQueue(context._eventQueue);
-    // In order to capture and process async events from responder modules
-    // we create a new event queue.
-    context._eventQueue = createEventQueue(AFTER_EVENT_PHASE);
   }
 }

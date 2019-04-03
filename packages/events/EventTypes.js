@@ -39,4 +39,5 @@ export type EventResponderContext = {
   ) => void,
   requestOwnership: (target: Element | Document | null) => boolean,
   releaseOwnership: (target: Element | Document | null) => boolean,
+  withAsyncDispatching: (func: () => void) => void,
 };
