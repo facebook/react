@@ -431,17 +431,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       // NO-OP
     },
 
-    createTouchHitTargetInstance(
-      bottom: number,
-      left: number,
-      right: number,
-      top: number,
-      parentInstance: Container,
-      rootContainerInstance: Container,
-      hostContext: HostContext,
-      internalInstanceHandle: Object,
-    ): Instance {
-      throw new Error('Not yet implemented.');
+    createTouchHitTargetInstance() {
+      // NO-OP
     },
   };
 

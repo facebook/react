@@ -23,6 +23,7 @@ import {
   HostRoot,
   SuspenseComponent,
   DehydratedSuspenseComponent,
+  EventTarget,
 } from 'shared/ReactWorkTags';
 import {Deletion, Placement} from 'shared/ReactSideEffectTags';
 import invariant from 'shared/invariant';
@@ -49,8 +50,14 @@ import {
   didNotFindHydratableInstance,
   didNotFindHydratableTextInstance,
   didNotFindHydratableSuspenseInstance,
+  hydrateTouchHitTargetInstance,
+  canHydrateTouchHitTargetInstance,
 } from './ReactFiberHostConfig';
-import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
+import {
+  enableSuspenseServerRenderer,
+  enableEventAPI,
+} from 'shared/ReactFeatureFlags';
+import {REACT_EVENT_TARGET_TOUCH_HIT} from 'shared/ReactSymbols';
 
 // The deepest Fiber on the stack involved in a hydration context.
 // This may have been an insertion or a hydration.
@@ -221,6 +228,21 @@ function tryHydrate(fiber, nextInstance) {
       }
       return false;
     }
+    case EventTarget: {
+      if (enableEventAPI) {
+        const type = fiber.type.type;
+        if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
+          const touchHitTargetInstance = canHydrateTouchHitTargetInstance(
+            nextInstance,
+          );
+          if (touchHitTargetInstance !== null) {
+            fiber.stateNode = (touchHitTargetInstance: Instance);
+            return true;
+          }
+        }
+      }
+      return false;
+    }
     default:
       return false;
   }
@@ -344,6 +366,24 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
   return shouldUpdate;
 }
 
+function prepareToHydrateTouchHitTargetInstance(
+  bottom: number,
+  left: number,
+  right: number,
+  top: number,
+  fiber: Fiber,
+): boolean {
+  if (!supportsHydration) {
+    invariant(
+      false,
+      'Expected prepareToHydrateTouchHitTargetInstance() to never be called. ' +
+        'This error is likely caused by a bug in React. Please file an issue.',
+    );
+  }
+  const instance: Instance = fiber.stateNode;
+  return hydrateTouchHitTargetInstance(bottom, left, right, top, instance);
+}
+
 function skipPastDehydratedSuspenseInstance(fiber: Fiber): void {
   if (!supportsHydration) {
     invariant(
@@ -440,4 +480,5 @@ export {
   prepareToHydrateHostTextInstance,
   skipPastDehydratedSuspenseInstance,
   popHydrationState,
+  prepareToHydrateTouchHitTargetInstance,
 };

@@ -330,7 +330,7 @@ export function handleEventComponent(
   rootContainerInstance: Container,
   internalInstanceHandle: Object,
 ): void {
-  throw new Error('Not yet implemented.');
+  // noop
 }
 
 export function createTouchHitTargetInstance(
@@ -338,12 +338,44 @@ export function createTouchHitTargetInstance(
   left: number,
   right: number,
   top: number,
-  parentInstance: Container,
   rootContainerInstance: Container,
   hostContext: HostContext,
   internalInstanceHandle: Object,
 ): Instance {
-  throw new Error('Not yet implemented.');
+  let topStyle = '';
+  let leftStyle = '';
+  let rightStyle = '';
+  let bottomStyle = '';
+
+  if (top !== 0) {
+    topStyle = `-${top}px`;
+  }
+  if (left !== 0) {
+    leftStyle = `-${left}px`;
+  }
+  if (right !== 0) {
+    rightStyle = `-${right}px`;
+  }
+  if (bottom !== 0) {
+    bottomStyle = `-${bottom}px`;
+  }
+
+  return {
+    type: 'div',
+    props: {
+      style: {
+        position: 'absolute',
+        top: topStyle,
+        left: leftStyle,
+        right: rightStyle,
+        bottom: bottomStyle,
+      },
+    },
+    isHidden: false,
+    children: [],
+    rootContainerInstance,
+    tag: 'INSTANCE',
+  };
 }
 
 export function commitTouchHitTargetUpdate(
@@ -356,6 +388,20 @@ export function commitTouchHitTargetUpdate(
   newRight: number,
   newTop: number,
   touchHitTargetInstance: Instance,
+  parentInstance: null | Container,
 ): void {
-  throw new Error('Not yet implemented.');
+  const style = touchHitTargetInstance.props.style;
+
+  if (oldTop !== newTop) {
+    style.top = `-${newTop}px`;
+  }
+  if (oldLeft !== newLeft) {
+    style.left = `-${newLeft}px`;
+  }
+  if (oldRight !== newRight) {
+    style.right = `-${newRight}px`;
+  }
+  if (oldBottom !== newBottom) {
+    style.bottom = `-${newBottom}px`;
+  }
 }

@@ -61,7 +61,10 @@ import shallowEqual from 'shared/shallowEqual';
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
-import {REACT_LAZY_TYPE} from 'shared/ReactSymbols';
+import {
+  REACT_LAZY_TYPE,
+  REACT_EVENT_TARGET_TOUCH_HIT,
+} from 'shared/ReactSymbols';
 import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {
@@ -1981,8 +1984,13 @@ function updateEventComponent(current, workInProgress, renderExpirationTime) {
 }
 
 function updateEventTarget(current, workInProgress, renderExpirationTime) {
+  const type = workInProgress.type.type;
   const nextProps = workInProgress.pendingProps;
   let nextChildren = nextProps.children;
+
+  if (type === REACT_EVENT_TARGET_TOUCH_HIT && current === null) {
+    tryToClaimNextHydratableInstance(workInProgress);
+  }
 
   reconcileChildren(
     current,

@@ -48,6 +48,7 @@ import dangerousStyleValue from '../shared/dangerousStyleValue';
 import type {DOMContainer} from './ReactDOM';
 import type {ReactEventResponder} from 'shared/ReactTypes';
 import {REACT_EVENT_TARGET_TOUCH_HIT} from 'shared/ReactSymbols';
+import {canUseDOM} from 'shared/ExecutionEnvironment';
 
 export type Type = string;
 export type Props = {
@@ -908,7 +909,6 @@ export function createTouchHitTargetInstance(
   left: number,
   right: number,
   top: number,
-  parentInstance: Container,
   rootContainerInstance: Container,
   hostContext: HostContext,
   internalInstanceHandle: Object,
@@ -948,7 +948,21 @@ export function commitTouchHitTargetUpdate(
   newRight: number,
   newTop: number,
   touchHitTargetInstance: Instance,
+  parentInstance: null | Container,
 ): void {
+  if (__DEV__ && canUseDOM && parentInstance !== null) {
+    // This is done at DEV time because getComputedStyle will
+    // typically force a style recalculation and force a layout,
+    // reflow -– both of which are sync are expensive.
+    const computedStyles = window.getComputedStyle(parentInstance);
+    warning(
+      computedStyles.getPropertyValue('position') !== 'static',
+      '<TouchHitTarget> inserts an empty absolutely positioned <div>. ' +
+        'This requires its parent DOM node to be positioned too, but the ' +
+        'parent DOM node was found to have the style "position" set to ' +
+        'value "static". Try using a "position" value of "relative".',
+    );
+  }
   updateTouchHitTargetElement(
     oldBottom,
     oldLeft,
@@ -960,4 +974,28 @@ export function commitTouchHitTargetUpdate(
     newTop,
     touchHitTargetInstance,
   );
+}
+
+export function hydrateTouchHitTargetInstance(
+  bottom: number,
+  left: number,
+  right: number,
+  top: number,
+  touchHitTargetInstance: Instance,
+): boolean {
+  // Rather than do computed checks on the position styles, we always flag
+  // the hit target instance as needing to update from hydration.
+  return true;
+}
+
+export function canHydrateTouchHitTargetInstance(instance: HydratableInstance) {
+  // The touch hit target element is always a <div>.
+  if (
+    instance.nodeType !== ELEMENT_NODE ||
+    instance.nodeName.toLowerCase() !== 'div'
+  ) {
+    return null;
+  }
+  // This has now been refined to an element node.
+  return ((instance: any): Instance);
 }

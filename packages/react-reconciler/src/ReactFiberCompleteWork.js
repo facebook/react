@@ -86,6 +86,7 @@ import {
   prepareToHydrateHostTextInstance,
   skipPastDehydratedSuspenseInstance,
   popHydrationState,
+  prepareToHydrateTouchHitTargetInstance,
 } from './ReactFiberHydrationContext';
 import {
   enableSuspenseServerRenderer,
@@ -128,7 +129,10 @@ if (supportsMutation) {
           node.tag === EventTarget &&
           node.type.type === REACT_EVENT_TARGET_TOUCH_HIT)
       ) {
-        appendInitialChild(parent, node.stateNode);
+        const instance = node.stateNode;
+        if (instance !== null) {
+          appendInitialChild(parent, instance);
+        }
       } else if (node.tag === HostPortal) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
@@ -214,7 +218,6 @@ if (supportsMutation) {
     newTop: number,
     current: Fiber,
     workInProgress: Fiber,
-    parentHostInstance: Container,
   ) {
     if (enableEventAPI) {
       const oldProps = current.memoizedProps;
@@ -287,7 +290,9 @@ if (supportsMutation) {
             node,
           );
         }
-        appendInitialChild(parent, instance);
+        if (instance !== null) {
+          appendInitialChild(parent, instance);
+        }
       } else if (node.tag === HostPortal) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
@@ -395,7 +400,9 @@ if (supportsMutation) {
             node,
           );
         }
-        appendChildToContainerChildSet(containerChildSet, instance);
+        if (instance !== null) {
+          appendChildToContainerChildSet(containerChildSet, instance);
+        }
       } else if (node.tag === HostPortal) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
@@ -568,7 +575,6 @@ if (supportsMutation) {
     newTop: number,
     current: Fiber,
     workInProgress: Fiber,
-    parentHostInstance: Container,
   ) {
     if (enableEventAPI) {
       const oldProps = current.memoizedProps;
@@ -590,7 +596,6 @@ if (supportsMutation) {
           newLeft,
           newRight,
           newTop,
-          parentHostInstance,
           rootContainerInstance,
           currentHostContext,
           workInProgress,
@@ -630,7 +635,6 @@ if (supportsMutation) {
     newTop: number,
     current: Fiber,
     workInProgress: Fiber,
-    parentHostInstance: Container,
   ) {
     // Noop
   };
@@ -919,21 +923,6 @@ function completeWork(
         const type = workInProgress.type.type;
 
         if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
-          let node = workInProgress.return;
-          let parentHostInstance = null;
-          // Traverse up the fiber tree till we find a host component fiber
-          while (node !== null) {
-            if (node.tag === HostComponent) {
-              parentHostInstance = node.stateNode;
-              break;
-            }
-            node = node.return;
-          }
-          invariant(
-            parentHostInstance !== null,
-            'A touch hit target was completed without a parent host component node. ' +
-              'This is probably a bug in React.',
-          );
           const newBottom = newProps.bottom || 0;
           const newLeft = newProps.left || 0;
           const newRight = newProps.right || 0;
@@ -949,7 +938,6 @@ function completeWork(
               newTop,
               current,
               workInProgress,
-              parentHostInstance,
             );
           } else {
             if (
@@ -962,16 +950,42 @@ function completeWork(
             }
             const currentHostContext = getHostContext();
             const rootContainerInstance = getRootHostContainer();
-            workInProgress.stateNode = createTouchHitTargetInstance(
-              newBottom,
-              newLeft,
-              newRight,
-              newTop,
-              parentHostInstance,
-              rootContainerInstance,
-              currentHostContext,
-              workInProgress,
-            );
+            const wasHydrated = popHydrationState(workInProgress);
+            if (wasHydrated) {
+              if (
+                prepareToHydrateTouchHitTargetInstance(
+                  newBottom,
+                  newLeft,
+                  newRight,
+                  newTop,
+                  workInProgress,
+                )
+              ) {
+                markUpdate(workInProgress);
+              }
+            } else {
+              workInProgress.stateNode = createTouchHitTargetInstance(
+                newBottom,
+                newLeft,
+                newRight,
+                newTop,
+                rootContainerInstance,
+                currentHostContext,
+                workInProgress,
+              );
+              // If the previous hit slop dimensions were all 0, we never actually
+              // create a host instance. In this case, we need to mark the update
+              // as having a new placement to deal with.
+              if (current !== null) {
+                workInProgress.effectTag |= Placement;
+              }
+              // For cases like ReactDOM, where we need to validate that the
+              // parent host component is styled correctly in relation to its
+              // "position" style, we mark an update for the commit phase.
+              if (__DEV__) {
+                markUpdate(workInProgress);
+              }
+            }
           }
         }
       }

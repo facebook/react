@@ -146,3 +146,7 @@ export const didNotFindHydratableTextInstance =
   $$$hostConfig.didNotFindHydratableTextInstance;
 export const didNotFindHydratableSuspenseInstance =
   $$$hostConfig.didNotFindHydratableSuspenseInstance;
+export const hydrateTouchHitTargetInstance =
+  $$$hostConfig.hydrateTouchHitTargetInstance;
+export const canHydrateTouchHitTargetInstance =
+  $$$hostConfig.canHydrateTouchHitTargetInstance;

@@ -303,6 +303,7 @@ function commitBeforeMutationLifeCycles(
     case HostText:
     case HostPortal:
     case IncompleteClassComponent:
+    case EventTarget:
       // Nothing to do for these component types
       return;
     default: {
@@ -589,6 +590,7 @@ function commitLifeCycles(
     }
     case SuspenseComponent:
     case IncompleteClassComponent:
+    case EventTarget:
       break;
     default: {
       invariant(
@@ -821,7 +823,8 @@ function commitContainer(finishedWork: Fiber) {
   switch (finishedWork.tag) {
     case ClassComponent:
     case HostComponent:
-    case HostText: {
+    case HostText:
+    case EventTarget: {
       return;
     }
     case HostRoot:
@@ -958,18 +961,27 @@ function commitPlacement(finishedWork: Fiber): void {
   // children to find all the terminal nodes.
   let node: Fiber = finishedWork;
   while (true) {
-    if (node.tag === HostComponent || node.tag === HostText) {
-      if (before) {
-        if (isContainer) {
-          insertInContainerBefore(parent, node.stateNode, before);
+    if (
+      node.tag === HostComponent ||
+      node.tag === HostText ||
+      (enableEventAPI &&
+        node.tag === EventTarget &&
+        node.type.type === REACT_EVENT_TARGET_TOUCH_HIT)
+    ) {
+      const stateNode = node.stateNode;
+      if (stateNode !== null) {
+        if (before) {
+          if (isContainer) {
+            insertInContainerBefore(parent, stateNode, before);
+          } else {
+            insertBefore(parent, stateNode, before);
+          }
         } else {
-          insertBefore(parent, node.stateNode, before);
-        }
-      } else {
-        if (isContainer) {
-          appendChildToContainer(parent, node.stateNode);
-        } else {
-          appendChild(parent, node.stateNode);
+          if (isContainer) {
+            appendChildToContainer(parent, stateNode);
+          } else {
+            appendChild(parent, stateNode);
+          }
         }
       }
     } else if (node.tag === HostPortal) {
@@ -1036,7 +1048,13 @@ function unmountHostComponents(current): void {
       currentParentIsValid = true;
     }
 
-    if (node.tag === HostComponent || node.tag === HostText) {
+    if (
+      node.tag === HostComponent ||
+      node.tag === HostText ||
+      (enableEventAPI &&
+        node.tag === EventTarget &&
+        node.type.type === REACT_EVENT_TARGET_TOUCH_HIT)
+    ) {
       commitNestedUnmounts(node);
       // After all the children have unmounted, it is now safe to remove the
       // node from the tree.
@@ -1223,6 +1241,22 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
           const newLeft = newProps.left || 0;
           const newRight = newProps.right || 0;
           const newTop = newProps.top || 0;
+          let parentHostInstance = null;
+
+          if (__DEV__) {
+            let node = finishedWork.return;
+            // For cases like ReactDOM, where we need to validate that the
+            // parent host component is styled correctly in relation to its
+            // "position" style. To do this we traverse the fiber tree upwards
+            // until we find the parent host component instance.
+            while (node !== null) {
+              if (node.tag === HostComponent) {
+                parentHostInstance = node.stateNode;
+                break;
+              }
+              node = node.return;
+            }
+          }
           commitTouchHitTargetUpdate(
             oldBottom,
             oldLeft,
@@ -1233,6 +1267,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
             newRight,
             newTop,
             instance,
+            parentHostInstance,
           );
         }
       }
