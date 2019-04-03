@@ -10,10 +10,12 @@
 import type {EventResponderContext} from 'events/EventTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
-const targetEventTypes = [
-  {name: 'focus', passive: true, capture: true},
-  {name: 'blur', passive: true, capture: true},
-];
+type FocusProps = {
+  disabled: boolean,
+  onBlur: (e: FocusEvent) => void,
+  onFocus: (e: FocusEvent) => void,
+  onFocusChange: boolean => void,
+};
 
 type FocusState = {
   isFocused: boolean,
@@ -27,6 +29,11 @@ type FocusEvent = {|
   type: FocusEventType,
 |};
 
+const targetEventTypes = [
+  {name: 'focus', passive: true, capture: true},
+  {name: 'blur', passive: true, capture: true},
+];
+
 function createFocusEvent(
   type: FocusEventType,
   target: Element | Document,
@@ -39,7 +46,10 @@ function createFocusEvent(
   };
 }
 
-function dispatchFocusInEvents(context: EventResponderContext, props: Object) {
+function dispatchFocusInEvents(
+  context: EventResponderContext,
+  props: FocusProps,
+) {
   const {event, eventTarget} = context;
   if (context.isTargetWithinEventComponent((event: any).relatedTarget)) {
     return;
@@ -53,19 +63,22 @@ function dispatchFocusInEvents(context: EventResponderContext, props: Object) {
     context.dispatchEvent(syntheticEvent, {discrete: true});
   }
   if (props.onFocusChange) {
-    const focusChangeEventListener = () => {
+    const listener = () => {
       props.onFocusChange(true);
     };
     const syntheticEvent = createFocusEvent(
       'focuschange',
       eventTarget,
-      focusChangeEventListener,
+      listener,
     );
     context.dispatchEvent(syntheticEvent, {discrete: true});
   }
 }
 
-function dispatchFocusOutEvents(context: EventResponderContext, props: Object) {
+function dispatchFocusOutEvents(
+  context: EventResponderContext,
+  props: FocusProps,
+) {
   const {event, eventTarget} = context;
   if (context.isTargetWithinEventComponent((event: any).relatedTarget)) {
     return;
@@ -75,13 +88,13 @@ function dispatchFocusOutEvents(context: EventResponderContext, props: Object) {
     context.dispatchEvent(syntheticEvent, {discrete: true});
   }
   if (props.onFocusChange) {
-    const focusChangeEventListener = () => {
+    const listener = () => {
       props.onFocusChange(false);
     };
     const syntheticEvent = createFocusEvent(
       'focuschange',
       eventTarget,
-      focusChangeEventListener,
+      listener,
     );
     context.dispatchEvent(syntheticEvent, {discrete: true});
   }
