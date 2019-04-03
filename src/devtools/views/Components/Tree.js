@@ -113,7 +113,7 @@ export default function Tree(props: Props) {
             <FixedSizeList
               className={styles.List}
               height={height}
-              innerElementType={innerElementType}
+              innerElementType={TreeWrapper}
               itemCount={numElements}
               itemData={itemData}
               itemSize={lineHeight}
@@ -129,18 +129,34 @@ export default function Tree(props: Props) {
   );
 }
 
-// This style override enables the background color to fill the full visible width,
-// when combined with the CSS tweaks in Element.
-// A lot of options were considered; this seemed the one that requires the least code.
-// See https://github.com/bvaughn/react-devtools-experimental/issues/9
-const innerElementType = ({ style, ...rest }) => (
-  <div
-    style={{
-      ...style,
-      display: 'inline-block',
-      minWidth: '100%',
-      width: undefined,
-    }}
-    {...rest}
-  />
-);
+function TreeWrapper({ style, ...rest }) {
+  const {
+    numElements,
+    selectedElementIndex,
+    selectElementAtIndex,
+  } = useContext(TreeContext);
+
+  const handleFocus = () => {
+    if (selectedElementIndex === null && numElements > 0) {
+      selectElementAtIndex(0);
+    }
+  };
+
+  // This style override enables the background color to fill the full visible width,
+  // when combined with the CSS tweaks in Element.
+  // A lot of options were considered; this seemed the one that requires the least code.
+  // See https://github.com/bvaughn/react-devtools-experimental/issues/9
+  return (
+    <div
+      tabIndex={0}
+      onFocus={handleFocus}
+      style={{
+        ...style,
+        display: 'inline-block',
+        minWidth: '100%',
+        width: undefined,
+      }}
+      {...rest}
+    />
+  );
+}
