@@ -8,6 +8,8 @@
 import {HostComponent, HostText, EventTarget} from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 
+import {enableEventAPI} from 'shared/ReactFeatureFlags';
+
 const randomKey = Math.random()
   .toString(36)
   .slice(2);
@@ -41,7 +43,7 @@ export function getClosestInstanceFromNode(node) {
   if (
     inst.tag === HostComponent ||
     inst.tag === HostText ||
-    inst.tag === EventTarget
+    (enableEventAPI && inst.tag === EventTarget)
   ) {
     // In Fiber, this will always be the deepest root.
     return inst;
@@ -60,7 +62,7 @@ export function getInstanceFromNode(node) {
     if (
       inst.tag === HostComponent ||
       inst.tag === HostText ||
-      inst.tag === EventTarget
+      (enableEventAPI && inst.tag === EventTarget)
     ) {
       return inst;
     } else {
@@ -78,7 +80,7 @@ export function getNodeFromInstance(inst) {
   if (
     inst.tag === HostComponent ||
     inst.tag === HostText ||
-    inst.tag === EventTarget
+    (enableEventAPI && inst.tag === EventTarget)
   ) {
     // In Fiber this, is just the state node right now. We assume it will be
     // a host component or host text.
