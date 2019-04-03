@@ -12,6 +12,7 @@
 
 let React;
 let ReactTestRenderer;
+let Scheduler;
 let ReactDebugTools;
 let act;
 
@@ -20,6 +21,7 @@ describe('ReactHooksInspectionIntegration', () => {
     jest.resetModules();
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
+    Scheduler = require('scheduler');
     act = ReactTestRenderer.act;
     ReactDebugTools = require('react-debug-tools');
   });
@@ -617,6 +619,8 @@ describe('ReactHooksInspectionIntegration', () => {
     );
 
     await LazyFoo;
+
+    Scheduler.flushAll();
 
     let childFiber = renderer.root._currentFiber();
     let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);

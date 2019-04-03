@@ -394,4 +394,8 @@ describe('Event responder: Press', () => {
       expect(events).toEqual(['keydown', 'inner: onPress', 'outer: onPress']);
     });
   });
+
+  it('expect displayName to show up for event component', () => {
+    expect(Press.displayName).toBe('Press');
+  });
 });

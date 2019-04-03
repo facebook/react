@@ -720,16 +720,14 @@ describe('ReactDOMFiberAsync', () => {
 
       let root = ReactDOM.unstable_createRoot(container);
       root.render(
-        <React.Suspense maxDuration={1000} fallback={'Loading'}>
-          Initial
-        </React.Suspense>,
+        <React.Suspense fallback={'Loading'}>Initial</React.Suspense>,
       );
 
       Scheduler.flushAll();
       expect(container.textContent).toBe('Initial');
 
       root.render(
-        <React.Suspense maxDuration={1000} fallback={'Loading'}>
+        <React.Suspense fallback={'Loading'}>
           <Suspend />
         </React.Suspense>,
       );
