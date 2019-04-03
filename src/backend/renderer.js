@@ -39,7 +39,7 @@ import type {
   ReactRenderer,
   RendererInterface,
 } from './types';
-import type { InspectedElement } from 'src/devtools/views/elements/types';
+import type { InspectedElement } from 'src/devtools/views/Components/types';
 
 function getInternalReactConstants(version) {
   const ReactSymbols = {

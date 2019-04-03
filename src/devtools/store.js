@@ -13,7 +13,7 @@ import { __DEBUG__ } from '../constants';
 import ProfilingCache from './ProfilingCache';
 
 import type { ElementType } from './types';
-import type { Element } from './views/Elements/types';
+import type { Element } from './views/Components/types';
 import type {
   ImportedProfilingData,
   ProfilingSnapshotNode,

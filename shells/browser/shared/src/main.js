@@ -35,7 +35,7 @@ function createPanelIfReactLoaded() {
       let bridge = null;
       let store = null;
 
-      let elementsPortalContainer = null;
+      let componentsPortalContainer = null;
       let profilerPortalContainer = null;
       let settingsPortalContainer = null;
 
@@ -120,7 +120,7 @@ function createPanelIfReactLoaded() {
               bridge,
               browserName,
               browserTheme: getBrowserTheme(),
-              elementsPortalContainer,
+              componentsPortalContainer,
               overrideTab,
               profilerPortalContainer,
               settingsPortalContainer,
@@ -152,18 +152,18 @@ function createPanelIfReactLoaded() {
 
       let currentPanel = null;
 
-      chrome.devtools.panels.create('⚛ Elements', '', 'panel.html', panel => {
+      chrome.devtools.panels.create('⚛ Components', '', 'panel.html', panel => {
         panel.onShown.addListener(panel => {
           if (currentPanel === panel) {
             return;
           }
 
           currentPanel = panel;
-          elementsPortalContainer = panel.container;
+          componentsPortalContainer = panel.container;
 
-          if (elementsPortalContainer != null) {
-            elementsPortalContainer.innerHTML = '';
-            render('elements');
+          if (componentsPortalContainer != null) {
+            componentsPortalContainer.innerHTML = '';
+            render('components');
             panel.injectStyles(cloneStyleTags);
           }
 

@@ -9,7 +9,7 @@ import React, {
 } from 'react';
 import { unstable_batchedUpdates as batchedUpdates } from 'react-dom';
 import { useLocalStorage, useSubscription } from '../hooks';
-import { TreeContext } from '../Elements/TreeContext';
+import { TreeContext } from '../Components/TreeContext';
 import { StoreContext } from '../context';
 import Store from '../../store';
 

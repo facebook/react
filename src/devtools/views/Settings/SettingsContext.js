@@ -28,7 +28,7 @@ type DocumentElements = Array<HTMLElement>;
 type Props = {|
   browserTheme: BrowserTheme,
   children: React$Node,
-  elementsPortalContainer?: Element,
+  componentsPortalContainer?: Element,
   profilerPortalContainer?: Element,
   settingsPortalContainer?: Element,
 |};
@@ -36,7 +36,7 @@ type Props = {|
 function SettingsContextController({
   browserTheme,
   children,
-  elementsPortalContainer,
+  componentsPortalContainer,
   profilerPortalContainer,
   settingsPortalContainer,
 }: Props) {
@@ -53,9 +53,9 @@ function SettingsContextController({
     const array: Array<HTMLElement> = [
       ((document.documentElement: any): HTMLElement),
     ];
-    if (elementsPortalContainer != null) {
+    if (componentsPortalContainer != null) {
       array.push(
-        ((elementsPortalContainer.ownerDocument
+        ((componentsPortalContainer.ownerDocument
           .documentElement: any): HTMLElement)
       );
     }
@@ -73,7 +73,7 @@ function SettingsContextController({
     }
     return array;
   }, [
-    elementsPortalContainer,
+    componentsPortalContainer,
     profilerPortalContainer,
     settingsPortalContainer,
   ]);
