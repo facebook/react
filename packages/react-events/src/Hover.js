@@ -10,12 +10,14 @@
 import type {EventResponderContext} from 'events/EventTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
-const targetEventTypes = [
-  'pointerover',
-  'pointermove',
-  'pointerout',
-  'pointercancel',
-];
+type HoverProps = {
+  disabled: boolean,
+  delayHoverEnd: number,
+  delayHoverStart: number,
+  onHoverChange: boolean => void,
+  onHoverEnd: (e: HoverEvent) => void,
+  onHoverStart: (e: HoverEvent) => void,
+};
 
 type HoverState = {
   isHovered: boolean,
@@ -31,6 +33,21 @@ type HoverEvent = {|
   type: HoverEventType,
 |};
 
+// const DEFAULT_HOVER_END_DELAY_MS = 0;
+// const DEFAULT_HOVER_START_DELAY_MS = 0;
+
+const targetEventTypes = [
+  'pointerover',
+  'pointermove',
+  'pointerout',
+  'pointercancel',
+];
+
+// If PointerEvents is not supported (e.g., Safari), also listen to touch and mouse events.
+if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
+  targetEventTypes.push('touchstart', 'mouseover', 'mouseout');
+}
+
 function createHoverEvent(
   type: HoverEventType,
   target: Element | Document,
@@ -43,16 +60,9 @@ function createHoverEvent(
   };
 }
 
-// In the case we don't have PointerEvents (Safari), we listen to touch events
-// too
-if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
-  targetEventTypes.push('touchstart', 'mouseover', 'mouseout');
-}
-
 function dispatchHoverStartEvents(
   context: EventResponderContext,
-  props: Object,
-  state: HoverState,
+  props: HoverProps,
 ): void {
   const {event, eventTarget} = context;
   if (context.isTargetWithinEventComponent((event: any).relatedTarget)) {
@@ -67,19 +77,22 @@ function dispatchHoverStartEvents(
     context.dispatchEvent(syntheticEvent, {discrete: true});
   }
   if (props.onHoverChange) {
-    const hoverChangeEventListener = () => {
+    const listener = () => {
       props.onHoverChange(true);
     };
     const syntheticEvent = createHoverEvent(
       'hoverchange',
       eventTarget,
-      hoverChangeEventListener,
+      listener,
     );
     context.dispatchEvent(syntheticEvent, {discrete: true});
   }
 }
 
-function dispatchHoverEndEvents(context: EventResponderContext, props: Object) {
+function dispatchHoverEndEvents(
+  context: EventResponderContext,
+  props: HoverProps,
+) {
   const {event, eventTarget} = context;
   if (context.isTargetWithinEventComponent((event: any).relatedTarget)) {
     return;
@@ -93,13 +106,13 @@ function dispatchHoverEndEvents(context: EventResponderContext, props: Object) {
     context.dispatchEvent(syntheticEvent, {discrete: true});
   }
   if (props.onHoverChange) {
-    const hoverChangeEventListener = () => {
+    const listener = () => {
       props.onHoverChange(false);
     };
     const syntheticEvent = createHoverEvent(
       'hoverchange',
       eventTarget,
-      hoverChangeEventListener,
+      listener,
     );
     context.dispatchEvent(syntheticEvent, {discrete: true});
   }
@@ -116,18 +129,22 @@ const HoverResponder = {
   },
   handleEvent(
     context: EventResponderContext,
-    props: Object,
+    props: HoverProps,
     state: HoverState,
   ): void {
     const {eventType, eventTarget, event} = context;
 
     switch (eventType) {
-      case 'touchstart':
-        // Touch devices don't have hover support
+      /**
+       * Prevent hover events when touch is being used.
+       */
+      case 'touchstart': {
         if (!state.isTouched) {
           state.isTouched = true;
         }
         break;
+      }
+
       case 'pointerover':
       case 'mouseover': {
         if (
@@ -148,7 +165,7 @@ const HoverResponder = {
             state.isInHitSlop = true;
             return;
           }
-          dispatchHoverStartEvents(context, props, state);
+          dispatchHoverStartEvents(context, props);
           state.isHovered = true;
         }
         break;
@@ -172,7 +189,7 @@ const HoverResponder = {
                 (event: any).y,
               )
             ) {
-              dispatchHoverStartEvents(context, props, state);
+              dispatchHoverStartEvents(context, props);
               state.isHovered = true;
               state.isInHitSlop = false;
             }
