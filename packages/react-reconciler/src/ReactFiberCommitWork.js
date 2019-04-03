@@ -28,6 +28,7 @@ import {
   enableSchedulerTracing,
   enableProfilerTimer,
   enableSuspenseServerRenderer,
+  enableEventAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -43,6 +44,7 @@ import {
   IncompleteClassComponent,
   MemoComponent,
   SimpleMemoComponent,
+  EventTarget,
 } from 'shared/ReactWorkTags';
 import {
   invokeGuardedCallback,
@@ -90,6 +92,7 @@ import {
   hideTextInstance,
   unhideInstance,
   unhideTextInstance,
+  commitTouchHitTargetUpdate,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -107,6 +110,7 @@ import {
   MountPassive,
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork';
+import {REACT_EVENT_TARGET_TOUCH_HIT} from 'shared/ReactSymbols';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -1193,6 +1197,45 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       const oldText: string =
         current !== null ? current.memoizedProps : newText;
       commitTextUpdate(textInstance, oldText, newText);
+      return;
+    }
+    case EventTarget: {
+      if (enableEventAPI) {
+        const type = finishedWork.type.type;
+
+        if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
+          invariant(
+            finishedWork.stateNode !== null,
+            'This should have a touch hit target element initialized. This error is likely ' +
+              'caused by a bug in React. Please file an issue.',
+          );
+          const instance: Instance = finishedWork.stateNode;
+          const newProps = finishedWork.memoizedProps;
+          // For hydration we reuse the update path but we treat the oldProps
+          // as the newProps. The updatePayload will contain the real change in
+          // this case.
+          const oldProps = current !== null ? current.memoizedProps : newProps;
+          const oldBottom = oldProps.bottom || 0;
+          const oldLeft = oldProps.left || 0;
+          const oldRight = oldProps.right || 0;
+          const oldTop = oldProps.top || 0;
+          const newBottom = newProps.bottom || 0;
+          const newLeft = newProps.left || 0;
+          const newRight = newProps.right || 0;
+          const newTop = newProps.top || 0;
+          commitTouchHitTargetUpdate(
+            oldBottom,
+            oldLeft,
+            oldRight,
+            oldTop,
+            newBottom,
+            newLeft,
+            newRight,
+            newTop,
+            instance,
+          );
+        }
+      }
       return;
     }
     case HostRoot: {

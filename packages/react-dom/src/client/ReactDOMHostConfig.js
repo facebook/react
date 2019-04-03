@@ -26,6 +26,7 @@ import {
   warnForInsertedHydratedText,
   listenToEventResponderEventTypes,
   createTouchHitTargetElement,
+  updateTouchHitTargetElement,
 } from './ReactDOMComponent';
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
@@ -58,10 +59,6 @@ export type Props = {
   style?: {
     display?: string,
   },
-  bottom?: null | number,
-  left?: null | number,
-  right?: null | number,
-  top?: null | number,
 };
 export type Container = Element | Document;
 export type Instance = Element;
@@ -907,21 +904,25 @@ export function handleEventComponent(
 }
 
 export function createTouchHitTargetInstance(
+  bottom: number,
+  left: number,
+  right: number,
+  top: number,
   parentInstance: Container,
-  props: Props,
   rootContainerInstance: Container,
   hostContext: HostContext,
   internalInstanceHandle: Object,
 ): Instance {
-  const {bottom, left, right, top} = props;
   let parentNamespace: string;
   if (__DEV__) {
     const hostContextDev = ((hostContext: any): HostContextDev);
     parentNamespace = hostContextDev.namespace;
-    throw new Error(
-      '<TouchHitTarget> was used in an unsupported DOM namespace. ' +
-        'Ensure the <TouchHitTarget> is used in an HTML namespace.',
-    );
+    if (parentNamespace !== HTML_NAMESPACE) {
+      throw new Error(
+        '<TouchHitTarget> was used in an unsupported DOM namespace. ' +
+          'Ensure the <TouchHitTarget> is used in an HTML namespace.',
+      );
+    }
   } else {
     parentNamespace = ((hostContext: any): HostContextProd);
   }
@@ -935,4 +936,28 @@ export function createTouchHitTargetInstance(
   );
   precacheFiberNode(internalInstanceHandle, touchHitTargetInstance);
   return touchHitTargetInstance;
+}
+
+export function commitTouchHitTargetUpdate(
+  oldBottom: number,
+  oldLeft: number,
+  oldRight: number,
+  oldTop: number,
+  newBottom: number,
+  newLeft: number,
+  newRight: number,
+  newTop: number,
+  touchHitTargetInstance: Instance,
+): void {
+  updateTouchHitTargetElement(
+    oldBottom,
+    oldLeft,
+    oldRight,
+    oldTop,
+    newBottom,
+    newLeft,
+    newRight,
+    newTop,
+    touchHitTargetInstance,
+  );
 }

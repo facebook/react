@@ -502,12 +502,28 @@ export function handleEventComponent(
 }
 
 export function createTouchHitTargetInstance(
+  bottom: number,
+  left: number,
+  right: number,
+  top: number,
   parentInstance: Container,
-  props: Props,
   rootContainerInstance: Container,
   hostContext: HostContext,
   internalInstanceHandle: Object,
-) {
-  // TODO: add createTouchHitTargetInstance implementation
-  return (null: any);
+): Instance {
+  throw new Error('Not yet implemented.');
+}
+
+export function commitTouchHitTargetUpdate(
+  oldBottom: number,
+  oldLeft: number,
+  oldRight: number,
+  oldTop: number,
+  newBottom: number,
+  newLeft: number,
+  newRight: number,
+  newTop: number,
+  touchHitTargetInstance: Instance,
+): void {
+  throw new Error('Not yet implemented.');
 }

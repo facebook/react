@@ -432,13 +432,16 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     createTouchHitTargetInstance(
+      bottom: number,
+      left: number,
+      right: number,
+      top: number,
       parentInstance: Container,
-      props: Props,
       rootContainerInstance: Container,
       hostContext: HostContext,
       internalInstanceHandle: Object,
-    ) {
-      // TODO: add createTouchHitTargetInstance implementation
+    ): Instance {
+      throw new Error('Not yet implemented.');
     },
   };
 
@@ -587,6 +590,17 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
             enumerable: false,
           });
           return clone;
+        },
+
+        cloneHiddenTouchHitTargetInstance(
+          instance: Instance,
+          bottom: number,
+          left: number,
+          right: number,
+          top: number,
+          internalInstanceHandle: Object,
+        ) {
+          throw new Error('Not yet implemented.');
         },
       };
 

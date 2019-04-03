@@ -67,6 +67,7 @@ import {
   finalizeContainerChildren,
   handleEventComponent,
   createTouchHitTargetInstance,
+  cloneHiddenTouchHitTargetInstance,
 } from './ReactFiberHostConfig';
 import {
   getRootHostContainer,
@@ -106,6 +107,7 @@ let appendAllChildren;
 let updateHostContainer;
 let updateHostComponent;
 let updateHostText;
+let updateTouchHitTarget;
 if (supportsMutation) {
   // Mutation mode
 
@@ -119,7 +121,13 @@ if (supportsMutation) {
     // children to find all the terminal nodes.
     let node = workInProgress.child;
     while (node !== null) {
-      if (node.tag === HostComponent || node.tag === HostText) {
+      if (
+        node.tag === HostComponent ||
+        node.tag === HostText ||
+        (enableEventAPI &&
+          node.tag === EventTarget &&
+          node.type.type === REACT_EVENT_TARGET_TOUCH_HIT)
+      ) {
         appendInitialChild(parent, node.stateNode);
       } else if (node.tag === HostPortal) {
         // If we have a portal child, then we don't want to traverse
@@ -199,6 +207,33 @@ if (supportsMutation) {
       markUpdate(workInProgress);
     }
   };
+  updateTouchHitTarget = function(
+    newBottom: number,
+    newLeft: number,
+    newRight: number,
+    newTop: number,
+    current: Fiber,
+    workInProgress: Fiber,
+    parentHostInstance: Container,
+  ) {
+    if (enableEventAPI) {
+      const oldProps = current.memoizedProps;
+      const oldBottom = oldProps.bottom || 0;
+      const oldLeft = oldProps.left || 0;
+      const oldRight = oldProps.right || 0;
+      const oldTop = oldProps.top || 0;
+
+      // If the hit slop values differ, mark it as an update. All the work in done in commitWork.
+      if (
+        oldBottom !== newBottom ||
+        oldLeft !== newLeft ||
+        oldRight !== newRight ||
+        oldTop !== newTop
+      ) {
+        markUpdate(workInProgress);
+      }
+    }
+  };
 } else if (supportsPersistence) {
   // Persistent host tree mode
 
@@ -228,6 +263,29 @@ if (supportsMutation) {
           // This child is inside a timed out tree. Hide it.
           const text = node.memoizedProps;
           instance = cloneHiddenTextInstance(instance, text, node);
+        }
+        appendInitialChild(parent, instance);
+      } else if (
+        enableEventAPI &&
+        node.tag === EventTarget &&
+        node.type.type === REACT_EVENT_TARGET_TOUCH_HIT
+      ) {
+        let instance = node.stateNode;
+        if (needsVisibilityToggle && isHidden) {
+          // This child is inside a timed out tree. Hide it.
+          const props = node.memoizedProps;
+          const bottom = props.bottom || 0;
+          const left = props.left || 0;
+          const right = props.right || 0;
+          const top = props.top || 0;
+          instance = cloneHiddenTouchHitTargetInstance(
+            instance,
+            bottom,
+            left,
+            right,
+            top,
+            node,
+          );
         }
         appendInitialChild(parent, instance);
       } else if (node.tag === HostPortal) {
@@ -313,6 +371,29 @@ if (supportsMutation) {
           // This child is inside a timed out tree. Hide it.
           const text = node.memoizedProps;
           instance = cloneHiddenTextInstance(instance, text, node);
+        }
+        appendChildToContainerChildSet(containerChildSet, instance);
+      } else if (
+        enableEventAPI &&
+        node.tag === EventTarget &&
+        node.type.type === REACT_EVENT_TARGET_TOUCH_HIT
+      ) {
+        let instance = node.stateNode;
+        if (needsVisibilityToggle && isHidden) {
+          // This child is inside a timed out tree. Hide it.
+          const props = node.memoizedProps;
+          const bottom = props.bottom || 0;
+          const left = props.left || 0;
+          const right = props.right || 0;
+          const top = props.top || 0;
+          instance = cloneHiddenTouchHitTargetInstance(
+            instance,
+            bottom,
+            left,
+            right,
+            top,
+            node,
+          );
         }
         appendChildToContainerChildSet(containerChildSet, instance);
       } else if (node.tag === HostPortal) {
@@ -480,6 +561,46 @@ if (supportsMutation) {
       markUpdate(workInProgress);
     }
   };
+  updateTouchHitTarget = function(
+    newBottom: number,
+    newLeft: number,
+    newRight: number,
+    newTop: number,
+    current: Fiber,
+    workInProgress: Fiber,
+    parentHostInstance: Container,
+  ) {
+    if (enableEventAPI) {
+      const oldProps = current.memoizedProps;
+      const oldBottom = oldProps.bottom || 0;
+      const oldLeft = oldProps.left || 0;
+      const oldRight = oldProps.right || 0;
+      const oldTop = oldProps.top || 0;
+
+      if (
+        oldBottom !== newBottom ||
+        oldLeft !== newLeft ||
+        oldRight !== newRight ||
+        oldTop !== newTop
+      ) {
+        const currentHostContext = getHostContext();
+        const rootContainerInstance = getRootHostContainer();
+        workInProgress.stateNode = createTouchHitTargetInstance(
+          newBottom,
+          newLeft,
+          newRight,
+          newTop,
+          parentHostInstance,
+          rootContainerInstance,
+          currentHostContext,
+          workInProgress,
+        );
+        // We'll have to mark it as having an effect, even though we won't use the effect for anything.
+        // This lets the parents know that at least one of their children has changed.
+        markUpdate(workInProgress);
+      }
+    }
+  };
 } else {
   // No host operations
   updateHostContainer = function(workInProgress: Fiber) {
@@ -499,6 +620,17 @@ if (supportsMutation) {
     workInProgress: Fiber,
     oldText: string,
     newText: string,
+  ) {
+    // Noop
+  };
+  updateTouchHitTarget = function(
+    newBottom: number,
+    newLeft: number,
+    newRight: number,
+    newTop: number,
+    current: Fiber,
+    workInProgress: Fiber,
+    parentHostInstance: Container,
   ) {
     // Noop
   };
@@ -802,22 +934,44 @@ function completeWork(
             'A touch hit target was completed without a parent host component node. ' +
               'This is probably a bug in React.',
           );
+          const newBottom = newProps.bottom || 0;
+          const newLeft = newProps.left || 0;
+          const newRight = newProps.right || 0;
+          const newTop = newProps.top || 0;
 
           if (current !== null && workInProgress.stateNode != null) {
-            // Update
+            // If we have an alternate, that means this is an update and we need
+            // to schedule a side-effect to do the updates.
+            updateTouchHitTarget(
+              newBottom,
+              newLeft,
+              newRight,
+              newTop,
+              current,
+              workInProgress,
+              parentHostInstance,
+            );
           } else {
+            if (
+              newBottom === 0 &&
+              newLeft === 0 &&
+              newRight === 0 &&
+              newTop === 0
+            ) {
+              return null;
+            }
             const currentHostContext = getHostContext();
             const rootContainerInstance = getRootHostContainer();
-            const instance = createTouchHitTargetInstance(
+            workInProgress.stateNode = createTouchHitTargetInstance(
+              newBottom,
+              newLeft,
+              newRight,
+              newTop,
               parentHostInstance,
-              newProps,
               rootContainerInstance,
               currentHostContext,
               workInProgress,
             );
-
-            appendAllChildren(instance, workInProgress, false, false);
-            workInProgress.stateNode = instance;
           }
         }
       }

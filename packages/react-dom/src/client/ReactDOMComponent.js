@@ -1341,10 +1341,10 @@ export function listenToEventResponderEventTypes(
 }
 
 export function createTouchHitTargetElement(
-  bottom: number | void | null,
-  left: number | void | null,
-  right: number | void | null,
-  top: number | void | null,
+  bottom: number,
+  left: number,
+  right: number,
+  top: number,
   rootContainerInstance: Element | Document,
   parentNamespace: string,
 ): HTMLElement {
@@ -1357,20 +1357,48 @@ export function createTouchHitTargetElement(
   const touchHitTargetElementStyle = touchHitTargetElement.style;
 
   touchHitTargetElementStyle.position = 'absolute';
-  if (top != null) {
+  if (top !== 0) {
     touchHitTargetElementStyle.top = `-${top}px`;
   }
-  if (left != null) {
+  if (left !== 0) {
     touchHitTargetElementStyle.left = `-${left}px`;
   }
-  if (right != null) {
+  if (right !== 0) {
     touchHitTargetElementStyle.right = `-${right}px`;
   }
-  if (bottom != null) {
+  if (bottom !== 0) {
     touchHitTargetElementStyle.bottom = `-${bottom}px`;
   }
 
   return touchHitTargetElement;
+}
+
+export function updateTouchHitTargetElement(
+  oldBottom: number,
+  oldLeft: number,
+  oldRight: number,
+  oldTop: number,
+  newBottom: number,
+  newLeft: number,
+  newRight: number,
+  newTop: number,
+  touchHitTargetElement: Element,
+) {
+  const touchHitTargetElementStyle = ((touchHitTargetElement: any): HTMLElement)
+    .style;
+
+  if (oldTop !== newTop) {
+    touchHitTargetElementStyle.top = `-${newTop}px`;
+  }
+  if (oldLeft !== newLeft) {
+    touchHitTargetElementStyle.left = `-${newLeft}px`;
+  }
+  if (oldRight !== newRight) {
+    touchHitTargetElementStyle.right = `-${newRight}px`;
+  }
+  if (oldBottom !== newBottom) {
+    touchHitTargetElementStyle.bottom = `-${newBottom}px`;
+  }
 }
 
 // We can remove this once the event API is stable and out of a flag

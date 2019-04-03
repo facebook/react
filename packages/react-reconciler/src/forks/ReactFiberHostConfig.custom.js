@@ -85,6 +85,8 @@ export const hideInstance = $$$hostConfig.hideInstance;
 export const hideTextInstance = $$$hostConfig.hideTextInstance;
 export const unhideInstance = $$$hostConfig.unhideInstance;
 export const unhideTextInstance = $$$hostConfig.unhideTextInstance;
+export const commitTouchHitTargetUpdate =
+  $$$hostConfig.commitTouchHitTargetUpdate;
 
 // -------------------
 //     Persistence
@@ -99,6 +101,8 @@ export const finalizeContainerChildren =
 export const replaceContainerChildren = $$$hostConfig.replaceContainerChildren;
 export const cloneHiddenInstance = $$$hostConfig.cloneHiddenInstance;
 export const cloneHiddenTextInstance = $$$hostConfig.cloneHiddenTextInstance;
+export const cloneHiddenTouchHitTargetInstance =
+  $$$hostConfig.cloneHiddenTouchHitTargetInstance;
 
 // -------------------
 //     Hydration
