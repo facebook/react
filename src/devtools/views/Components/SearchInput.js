@@ -17,6 +17,8 @@ export default function SearchInput(props: Props) {
     searchIndex,
     searchResults,
     searchText,
+    selectNextElementInTree,
+    selectPreviousElementInTree,
     setSearchText,
   } = useContext(TreeContext);
 
@@ -31,15 +33,24 @@ export default function SearchInput(props: Props) {
     setSearchText('');
   }, [setSearchText]);
 
-  const handleKeyDown = useCallback(event => {
-    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') {
-      // It's convenient for up/down arrow keys to change the selected element when focused on the search input.
-      // But e.g. left/right arrow keys should move the text cursor.
-      // For now just block everything except for up/down arrow keys.
-      // TODO Revisit this approach.
-      event.stopPropagation();
-    }
-  }, []);
+  const handleKeyDown = useCallback(
+    event => {
+      // For convenience, let up/down arrow keys change Tree selection.
+      switch (event.key) {
+        case 'ArrowDown':
+          selectNextElementInTree();
+          event.preventDefault();
+          break;
+        case 'ArrowUp':
+          selectPreviousElementInTree();
+          event.preventDefault();
+          break;
+        default:
+          break;
+      }
+    },
+    [selectNextElementInTree, selectPreviousElementInTree]
+  );
 
   const handleInputKeyPress = useCallback(
     ({ key }) => {

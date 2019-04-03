@@ -51,6 +51,10 @@ export default function Tree(props: Props) {
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event: any).target.tagName === 'INPUT') {
+        return;
+      }
+
       // eslint-disable-next-line default-case
       switch (event.key) {
         case 'ArrowDown':
