@@ -93,9 +93,15 @@ function getComponentName(type: mixed): string | null {
         }
         break;
       }
-      case REACT_EVENT_COMPONENT_TYPE:
-        return ((type: any): ReactEventComponent).displayName;
-      case REACT_EVENT_TARGET_TYPE:
+      case REACT_EVENT_COMPONENT_TYPE: {
+        const eventComponent = ((type: any): ReactEventComponent);
+        const displayName = eventComponent.displayName;
+        if (displayName !== undefined) {
+          return displayName;
+        }
+        break;
+      }
+      case REACT_EVENT_TARGET_TYPE: {
         const eventTarget = ((type: any): ReactEventTarget);
         if (eventTarget.type === REACT_EVENT_TARGET_TOUCH_HIT) {
           return 'TouchHitTarget';
@@ -104,6 +110,7 @@ function getComponentName(type: mixed): string | null {
         if (displayName !== undefined) {
           return displayName;
         }
+      }
     }
   }
   return null;
