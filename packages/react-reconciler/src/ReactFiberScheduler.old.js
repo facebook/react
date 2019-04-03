@@ -1365,6 +1365,8 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
           if (mayReplay) {
             const failedUnitOfWork: Fiber = nextUnitOfWork;
             replayUnitOfWork(failedUnitOfWork, thrownValue, isYieldy);
+            // after replay we should rest hooks to fix #15219
+            resetHooks();
           }
         }
 

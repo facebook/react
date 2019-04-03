@@ -349,7 +349,6 @@ export function renderWithHooks(
     hookTypesUpdateIndexDev = -1;
   }
 
-  // The following should have already been reset
   // currentHook = null;
   // workInProgressHook = null;
 
