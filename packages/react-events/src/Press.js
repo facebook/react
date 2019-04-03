@@ -10,27 +10,6 @@
 import type {EventResponderContext} from 'events/EventTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
-// const DEFAULT_PRESS_DELAY_MS = 0;
-// const DEFAULT_PRESS_END_DELAY_MS = 0;
-// const DEFAULT_PRESS_START_DELAY_MS = 0;
-const DEFAULT_LONG_PRESS_DELAY_MS = 1000;
-
-const targetEventTypes = [
-  {name: 'click', passive: false},
-  {name: 'keydown', passive: false},
-  'pointerdown',
-  'pointercancel',
-  'contextmenu',
-];
-const rootEventTypes = [{name: 'pointerup', passive: false}, 'scroll'];
-
-// In the case we don't have PointerEvents (Safari), we listen to touch events
-// too
-if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
-  targetEventTypes.push('touchstart', 'touchend', 'mousedown', 'touchcancel');
-  rootEventTypes.push({name: 'mouseup', passive: false});
-}
-
 type PressProps = {
   disabled: boolean,
   delayLongPress: number,
@@ -69,6 +48,26 @@ type PressEvent = {|
   target: Element | Document,
   type: PressEventType,
 |};
+
+// const DEFAULT_PRESS_DELAY_MS = 0;
+// const DEFAULT_PRESS_END_DELAY_MS = 0;
+// const DEFAULT_PRESS_START_DELAY_MS = 0;
+const DEFAULT_LONG_PRESS_DELAY_MS = 1000;
+
+const targetEventTypes = [
+  {name: 'click', passive: false},
+  {name: 'keydown', passive: false},
+  'pointerdown',
+  'pointercancel',
+  'contextmenu',
+];
+const rootEventTypes = [{name: 'pointerup', passive: false}, 'scroll'];
+
+// If PointerEvents is not supported (e.g., Safari), also listen to touch and mouse events.
+if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
+  targetEventTypes.push('touchstart', 'touchend', 'mousedown', 'touchcancel');
+  rootEventTypes.push({name: 'mouseup', passive: false});
+}
 
 function createPressEvent(
   type: PressEventType,

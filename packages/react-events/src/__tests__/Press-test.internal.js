@@ -69,7 +69,7 @@ describe('Event responder: Press', () => {
       expect(onPressStart).toHaveBeenCalledTimes(1);
     });
 
-    it('ignores emulated "mousedown" event', () => {
+    it('ignores browser emulated "mousedown" event', () => {
       ref.current.dispatchEvent(createPointerEvent('pointerdown'));
       ref.current.dispatchEvent(createPointerEvent('mousedown'));
       expect(onPressStart).toHaveBeenCalledTimes(1);
@@ -109,7 +109,7 @@ describe('Event responder: Press', () => {
       expect(onPressEnd).toHaveBeenCalledTimes(1);
     });
 
-    it('ignores emulated "mouseup" event', () => {
+    it('ignores browser emulated "mouseup" event', () => {
       ref.current.dispatchEvent(createPointerEvent('touchstart'));
       ref.current.dispatchEvent(createPointerEvent('touchend'));
       ref.current.dispatchEvent(createPointerEvent('mouseup'));
@@ -122,7 +122,6 @@ describe('Event responder: Press', () => {
       ref.current.dispatchEvent(createPointerEvent('mouseup'));
       expect(onPressEnd).toHaveBeenCalledTimes(1);
     });
-
     it('is called after "touchend" event', () => {
       ref.current.dispatchEvent(createPointerEvent('touchstart'));
       ref.current.dispatchEvent(createPointerEvent('touchend'));
@@ -152,6 +151,24 @@ describe('Event responder: Press', () => {
       expect(onPressChange).toHaveBeenCalledTimes(1);
       expect(onPressChange).toHaveBeenCalledWith(true);
       ref.current.dispatchEvent(createPointerEvent('pointerup'));
+      expect(onPressChange).toHaveBeenCalledTimes(2);
+      expect(onPressChange).toHaveBeenCalledWith(false);
+    });
+
+    // No PointerEvent fallbacks
+    it('is called after "mousedown" and "mouseup" events', () => {
+      ref.current.dispatchEvent(createPointerEvent('mousedown'));
+      expect(onPressChange).toHaveBeenCalledTimes(1);
+      expect(onPressChange).toHaveBeenCalledWith(true);
+      ref.current.dispatchEvent(createPointerEvent('mouseup'));
+      expect(onPressChange).toHaveBeenCalledTimes(2);
+      expect(onPressChange).toHaveBeenCalledWith(false);
+    });
+    it('is called after "touchstart" and "touchend" events', () => {
+      ref.current.dispatchEvent(createPointerEvent('touchstart'));
+      expect(onPressChange).toHaveBeenCalledTimes(1);
+      expect(onPressChange).toHaveBeenCalledWith(true);
+      ref.current.dispatchEvent(createPointerEvent('touchend'));
       expect(onPressChange).toHaveBeenCalledTimes(2);
       expect(onPressChange).toHaveBeenCalledWith(false);
     });
