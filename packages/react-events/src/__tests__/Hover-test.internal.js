@@ -186,4 +186,8 @@ describe('Hover event responder', () => {
     // TODO: complete delayHoverStart tests
     // describe('delayHoverEnd', () => {});
   });
+
+  it('expect displayName to show up for event component', () => {
+    expect(Hover.displayName).toBe('Hover');
+  });
 });
