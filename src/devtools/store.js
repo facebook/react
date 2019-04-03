@@ -31,8 +31,12 @@ const debug = (methodName, ...args) => {
   }
 };
 
+const LOCAL_STORAGE_CAPTURE_SCREENSHOTS_KEY =
+  'React::DevTools::captureScreenshots';
+
 type Config = {|
   isProfiling?: boolean,
+  supportsCaptureScreenshots?: boolean,
   supportsFileDownloads?: boolean,
   supportsReloadAndProfile?: boolean,
   supportsProfiling?: boolean,
@@ -48,6 +52,8 @@ export type Capabilities = {|
  */
 export default class Store extends EventEmitter {
   _bridge: Bridge;
+
+  _captureScreenshots: boolean = false;
 
   // Map of ID to Element.
   // Elements are mutable (for now) to avoid excessive cloning during tree updates.
@@ -96,6 +102,7 @@ export default class Store extends EventEmitter {
 
   // These options may be initially set by a confiugraiton option when constructing the Store.
   // In the case of "supportsProfiling", the option may be updated based on the injected renderers.
+  _supportsCaptureScreenshots: boolean = false;
   _supportsFileDownloads: boolean = false;
   _supportsProfiling: boolean = false;
   _supportsReloadAndProfile: boolean = false;
@@ -108,12 +115,19 @@ export default class Store extends EventEmitter {
     if (config != null) {
       const {
         isProfiling,
+        supportsCaptureScreenshots,
         supportsFileDownloads,
         supportsProfiling,
         supportsReloadAndProfile,
       } = config;
       if (isProfiling) {
         this._isProfiling = true;
+      }
+      if (supportsCaptureScreenshots) {
+        this._supportsCaptureScreenshots = true;
+        this._captureScreenshots =
+          localStorage.getItem(LOCAL_STORAGE_CAPTURE_SCREENSHOTS_KEY) !==
+          'false';
       }
       if (supportsFileDownloads) {
         this._supportsFileDownloads = true;
@@ -137,6 +151,20 @@ export default class Store extends EventEmitter {
     bridge.send('getProfilingStatus');
 
     this._profilingCache = new ProfilingCache(bridge, this);
+  }
+
+  get captureScreenshots(): boolean {
+    return this._captureScreenshots;
+  }
+  set captureScreenshots(value: boolean): void {
+    this._captureScreenshots = value;
+
+    localStorage.setItem(
+      LOCAL_STORAGE_CAPTURE_SCREENSHOTS_KEY,
+      value ? 'true' : 'false'
+    );
+
+    this.emit('captureScreenshots');
   }
 
   // Profiling data has been recorded for at least one root.
@@ -188,6 +216,10 @@ export default class Store extends EventEmitter {
 
   get roots(): $ReadOnlyArray<number> {
     return this._roots;
+  }
+
+  get supportsCaptureScreenshots(): boolean {
+    return this._supportsCaptureScreenshots;
   }
 
   get supportsFileDownloads(): boolean {
@@ -419,7 +451,9 @@ export default class Store extends EventEmitter {
 
       const commitIndex = profilingOperations.length - 1;
 
-      this._bridge.send('captureScreenshot', { commitIndex });
+      if (this._captureScreenshots) {
+        this._bridge.send('captureScreenshot', { commitIndex });
+      }
     }
 
     let addedElementIDs: Uint32Array = new Uint32Array(0);

@@ -1,8 +1,11 @@
 // @flow
 
-import React, { useCallback, useContext } from 'react';
+import React, { useCallback, useContext, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { useSubscription } from '../hooks';
+import { StoreContext } from '../context';
 import { SettingsContext } from './SettingsContext';
+import Store from 'src/devtools/store';
 
 import styles from './Settings.css';
 
@@ -11,9 +14,22 @@ export type Props = {|
 |};
 
 export default function Settings({ portalContainer }: Props) {
+  const store = useContext(StoreContext);
   const { displayDensity, setDisplayDensity, theme, setTheme } = useContext(
     SettingsContext
   );
+
+  const subscription = useMemo(
+    () => ({
+      getCurrentValue: () => store.captureScreenshots,
+      subscribe: (callback: Function) => {
+        store.addListener('captureScreenshots', callback);
+        return () => store.removeListener('captureScreenshots', callback);
+      },
+    }),
+    [store]
+  );
+  const captureScreenshots = useSubscription<boolean, Store>(subscription);
 
   const updateDisplayDensity = useCallback(
     ({ currentTarget }) => {
@@ -27,6 +43,13 @@ export default function Settings({ portalContainer }: Props) {
       setTheme(currentTarget.value);
     },
     [setTheme]
+  );
+
+  const updateCaptureScreenshotsWhileProfiling = useCallback(
+    ({ currentTarget }) => {
+      store.captureScreenshots = currentTarget.checked;
+    },
+    [store]
   );
 
   const children = (
@@ -91,6 +114,21 @@ export default function Settings({ portalContainer }: Props) {
           </label>
         </div>
       </div>
+      {store.supportsCaptureScreenshots && (
+        <div className={styles.Section}>
+          <div className={styles.Header}>Profiler</div>
+          <div className={styles.OptionGroup}>
+            <label className={styles.Option}>
+              <input
+                type="checkbox"
+                checked={captureScreenshots}
+                onChange={updateCaptureScreenshotsWhileProfiling}
+              />{' '}
+              Capture screenshots while profiling
+            </label>
+          </div>
+        </div>
+      )}
     </div>
   );
 

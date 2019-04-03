@@ -54,7 +54,7 @@ inject('./build/app.js', () => {
 
       cb(bridge);
 
-      const store = new Store(bridge);
+      const store = new Store(bridge, { supportsCaptureScreenshots: true });
 
       const root = createRoot(container);
       const batch = root.createBatch();

@@ -1,7 +1,7 @@
 // @flow
 
 import EventEmitter from 'events';
-import { RELOAD_AND_PROFILE_KEY, __DEBUG__ } from '../constants';
+import { LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY, __DEBUG__ } from '../constants';
 import { hideOverlay, showOverlay } from './views/Highlighter';
 
 import type { RendererID, RendererInterface } from './types';
@@ -46,10 +46,10 @@ export default class Agent extends EventEmitter {
   constructor() {
     super();
 
-    if (localStorage.getItem(RELOAD_AND_PROFILE_KEY) === 'true') {
+    if (localStorage.getItem(LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
       this._isProfiling = true;
 
-      localStorage.removeItem(RELOAD_AND_PROFILE_KEY);
+      localStorage.removeItem(LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY);
     }
   }
 
@@ -233,7 +233,7 @@ export default class Agent extends EventEmitter {
   };
 
   reloadAndProfile = () => {
-    localStorage.setItem(RELOAD_AND_PROFILE_KEY, 'true');
+    localStorage.setItem(LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY, 'true');
 
     // This code path should only be hit if the shell has explicitly told the Store that it supports profiling.
     // In that case, the shell must also listen for this specific message to know when it needs to reload the app.

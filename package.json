@@ -56,6 +56,7 @@
     "cli-spinners": "^1.0.0",
     "clipboard-js": "^0.3.6",
     "css-loader": "^1.0.1",
+    "html2canvas": "^1.0.0-alpha.12",
     "error-stack-parser": "^2.0.2",
     "es6-symbol": "3.0.2",
     "escape-string-regexp": "^1.0.5",

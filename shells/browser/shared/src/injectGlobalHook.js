@@ -2,7 +2,7 @@
 
 import nullthrows from 'nullthrows';
 import { installHook } from 'src/hook';
-import { RELOAD_AND_PROFILE_KEY } from 'src/constants';
+import { LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY } from 'src/constants';
 
 function injectCode(code) {
   const script = document.createElement('script');
@@ -63,7 +63,7 @@ window.__REACT_DEVTOOLS_GLOBAL_HOOK__.nativeSet = Set;
 `;
 
 // If we have just reloaded to profile, we need to inject the renderer interface before the app loads.
-if (localStorage.getItem(RELOAD_AND_PROFILE_KEY) === 'true') {
+if (localStorage.getItem(LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
   const rendererURL = chrome.runtime.getURL('build/renderer.js');
   let rendererCode;
 

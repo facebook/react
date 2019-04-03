@@ -55,6 +55,9 @@
 
 .Screenshot {
   width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 0.25rem;
+  cursor: pointer;
 }
 
 .Modal {
@@ -73,4 +76,6 @@
 .ModalImage {
   max-height: 100%;
   max-width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
 }

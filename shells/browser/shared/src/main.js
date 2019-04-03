@@ -12,7 +12,8 @@ import {
 } from './utils';
 import DevTools from 'src/devtools/views/DevTools';
 
-const SUPPORTS_PROFILING_KEY = 'React::DevTools::supportsProfiling';
+const LOCAL_STORAGE_SUPPORTS_PROFILING_KEY =
+  'React::DevTools::supportsProfiling';
 
 let panelCreated = false;
 
@@ -64,7 +65,7 @@ function createPanelIfReactLoaded() {
           },
         });
         bridge.addListener('reloadAppForProfiling', () => {
-          localStorage.setItem(SUPPORTS_PROFILING_KEY, 'true');
+          localStorage.setItem(LOCAL_STORAGE_SUPPORTS_PROFILING_KEY, 'true');
           chrome.devtools.inspectedWindow.eval('window.location.reload();');
         });
         bridge.addListener('exportFile', ({ contents, filename }) => {
@@ -89,16 +90,19 @@ function createPanelIfReactLoaded() {
         // after a user has clicked the "reload and profile" button.
         let isProfiling = false;
         let supportsProfiling = false;
-        if (localStorage.getItem(SUPPORTS_PROFILING_KEY) === 'true') {
+        if (
+          localStorage.getItem(LOCAL_STORAGE_SUPPORTS_PROFILING_KEY) === 'true'
+        ) {
           supportsProfiling = true;
           isProfiling = true;
-          localStorage.removeItem(SUPPORTS_PROFILING_KEY);
+          localStorage.removeItem(LOCAL_STORAGE_SUPPORTS_PROFILING_KEY);
         }
 
         const browserName = getBrowserName();
 
         store = new Store(bridge, {
           isProfiling,
+          supportsCaptureScreenshots: true,
           supportsFileDownloads: browserName === 'Chrome',
           supportsReloadAndProfile: true,
           supportsProfiling,
