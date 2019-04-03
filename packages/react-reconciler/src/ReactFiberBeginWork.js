@@ -77,7 +77,6 @@ import {
   cloneChildFibers,
 } from './ReactChildFiber';
 import {processUpdateQueue} from './ReactUpdateQueue';
-import {shouldSuspend} from './ReactFiberDevToolsHook';
 import {
   NoWork,
   Never,
@@ -97,6 +96,7 @@ import {
   registerSuspenseInstanceRetry,
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
+import {shouldSuspend} from './ReactFiberReconciler';
 import {
   pushHostContext,
   pushHostContainer,
