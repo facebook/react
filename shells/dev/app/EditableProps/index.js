@@ -3,7 +3,9 @@
 import React, {
   createContext,
   Component,
+  forwardRef,
   Fragment,
+  memo,
   useCallback,
   useDebugValue,
   useEffect,
@@ -38,7 +40,7 @@ function StatefulFunction({ name }: StatefulFunctionProps) {
   );
 
   return (
-    <Fragment>
+    <ul>
       <li>Name: {name}</li>
       <li>
         <button onClick={handleUpdateCountClick}>
@@ -51,7 +53,7 @@ function StatefulFunction({ name }: StatefulFunctionProps) {
       <li>
         <button onClick={handleUpdateReducerClick}>Swap reducer values</button>
       </li>
-    </Fragment>
+    </ul>
   );
 }
 
@@ -76,7 +78,7 @@ class StatefulClass extends Component<Props, State> {
 
   render() {
     return (
-      <Fragment>
+      <ul>
         <li>Name: {this.props.name}</li>
         <li>Toggle: {this.props.toggle ? 'true' : 'false'}</li>
         <li>
@@ -84,19 +86,48 @@ class StatefulClass extends Component<Props, State> {
         </li>
         <li>Cities: {this.state.cities.join(', ')}</li>
         <li>Context: {this.context ? 'true' : 'false'}</li>
-      </Fragment>
+      </ul>
     );
   }
 }
+
+const MemoizedStatefulClass = memo(StatefulClass);
+const MemoizedStatefulFunction = memo(StatefulFunction);
+
+const ForwardRef = forwardRef<{| name: string |}, HTMLUListElement>(
+  ({ name }, ref) => {
+    const [count, updateCount] = useState(0);
+    const debouncedCount = useDebounce(count, 1000);
+    const handleUpdateCountClick = useCallback(() => updateCount(count + 1), [
+      count,
+    ]);
+    return (
+      <ul ref={ref}>
+        <li>Name: {name}</li>
+        <li>
+          <button onClick={handleUpdateCountClick}>
+            Debounced count: {debouncedCount}
+          </button>
+        </li>
+      </ul>
+    );
+  }
+);
 
 export default function EditableProps() {
   return (
     <Fragment>
       <h1>Editable props</h1>
-      <ul>
-        <StatefulClass name="Brian" toggle={true} />
-        <StatefulFunction name="Brian" />
-      </ul>
+      <strong>Class</strong>
+      <StatefulClass name="Brian" toggle={true} />
+      <strong>Function</strong>
+      <StatefulFunction name="Brian" />
+      <strong>Memoized Class</strong>
+      <MemoizedStatefulClass name="Brian" toggle={true} />
+      <strong>Memoized Function</strong>
+      <MemoizedStatefulFunction name="Brian" />
+      <strong>Forward Ref</strong>
+      <ForwardRef name="Brian" />
     </Fragment>
   );
 }

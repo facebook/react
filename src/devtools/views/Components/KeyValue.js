@@ -11,7 +11,6 @@ type OverrideValueFn = (path: Array<string | number>, value: any) => void;
 type KeyValueProps = {|
   depth: number,
   name: string,
-  nameClassName?: string,
   overrideValueFn?: ?OverrideValueFn,
   path?: Array<any>,
   value: any,
@@ -20,7 +19,6 @@ type KeyValueProps = {|
 export default function KeyValue({
   depth,
   name,
-  nameClassName = styles.Name,
   overrideValueFn,
   path = [],
   value,
@@ -47,6 +45,9 @@ export default function KeyValue({
       displayValue = 'undefined';
     }
 
+    const nameClassName =
+      typeof overrideValueFn === 'function' ? styles.EditableName : styles.Name;
+
     children = (
       <div key="root" className={styles.Item} style={{ paddingLeft }}>
         <span className={nameClassName}>{name}</span>
@@ -66,7 +67,7 @@ export default function KeyValue({
     // TODO Is this type even necessary? Can we just drop it?
     children = (
       <div key="root" className={styles.Item} style={{ paddingLeft }}>
-        <span className={nameClassName}>{name}</span>
+        <span className={styles.Name}>{name}</span>
         <span className={styles.Value}>{getMetaValueLabel(value)}</span>
       </div>
     );
@@ -88,7 +89,7 @@ export default function KeyValue({
           className={styles.Item}
           style={{ paddingLeft }}
         >
-          <span className={nameClassName}>{name}</span>
+          <span className={styles.Name}>{name}</span>
           <span>Array</span>
         </div>
       );
@@ -110,7 +111,7 @@ export default function KeyValue({
           className={styles.Item}
           style={{ paddingLeft }}
         >
-          <span className={nameClassName}>{name}</span>
+          <span className={styles.Name}>{name}</span>
           <span>Object</span>
         </div>
       );

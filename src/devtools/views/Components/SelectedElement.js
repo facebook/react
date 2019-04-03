@@ -15,7 +15,12 @@ import HooksTree from './HooksTree';
 import InspectedElementTree from './InspectedElementTree';
 import { hydrate } from 'src/hydration';
 import styles from './SelectedElement.css';
-import { ElementTypeClass, ElementTypeFunction } from '../../types';
+import {
+  ElementTypeClass,
+  ElementTypeForwardRef,
+  ElementTypeFunction,
+  ElementTypeMemo,
+} from '../../types';
 
 import type { InspectedElement } from './types';
 import type { DehydratedData, Element } from './types';
@@ -145,7 +150,12 @@ function InspectedElementView({
       const rendererID = store.getRendererIDForElement(id);
       bridge.send('overrideState', { id, path, rendererID, value });
     };
-  } else if (type === ElementTypeFunction && canEditFunctionProps) {
+  } else if (
+    (type === ElementTypeFunction ||
+      type === ElementTypeMemo ||
+      type === ElementTypeForwardRef) &&
+    canEditFunctionProps
+  ) {
     overridePropsFn = (path: Array<string | number>, value: any) => {
       const rendererID = store.getRendererIDForElement(id);
       bridge.send('overrideProps', { id, path, rendererID, value });

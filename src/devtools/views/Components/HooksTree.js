@@ -110,12 +110,7 @@ function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
           <div className={styles.NameValueRow}>
             <span className={styles.Name}>{name}</span>
           </div>
-          <KeyValue
-            depth={1}
-            name="DebugValue"
-            nameClassName={styles.Name}
-            value={value}
-          />
+          <KeyValue depth={1} name="DebugValue" value={value} />
           <InnerHooksTreeView
             canEditHooks={canEditHooks}
             hooks={subHooks}
@@ -160,7 +155,6 @@ function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
           <KeyValue
             depth={0}
             name={name}
-            nameClassName={styles.Name}
             overrideValueFn={overrideValueFn}
             value={value}
           />
@@ -170,7 +164,15 @@ function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
       return (
         <div className={styles.Hook}>
           <div className={styles.NameValueRow}>
-            <span className={styles.Name}>{name}</span>
+            <span
+              className={
+                typeof overrideValueFn === 'function'
+                  ? styles.EditableName
+                  : styles.Name
+              }
+            >
+              {name}
+            </span>
             {typeof overrideValueFn === 'function' ? (
               <EditableValue
                 dataType={type}

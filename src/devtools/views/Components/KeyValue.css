@@ -3,9 +3,14 @@
 }
 
 .Name {
+  color: var(--color-dim);
+  flex: 0 0 auto;
+}
+.EditableName {
   color: var(--color-attribute-name);
   flex: 0 0 auto;
 }
+.EditableName:after,
 .Name:after {
   content: ': ';
   color: var(--color-text-color);
