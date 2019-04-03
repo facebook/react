@@ -21,8 +21,6 @@ import {
   HostRoot,
   HostPortal,
   HostText,
-  Fragment,
-  SuspenseComponent,
 } from 'shared/ReactWorkTags';
 import {NoEffect, Placement} from 'shared/ReactSideEffectTags';
 
@@ -115,33 +113,27 @@ export function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
   // If we have two possible branches, we'll walk backwards up to the root
   // to see what path the root points to. On the way we may hit one of the
   // special cases and we'll deal with them.
-  let a = fiber;
-  let b = alternate;
+  let a: Fiber = fiber;
+  let b: Fiber = alternate;
   while (true) {
     let parentA = a.return;
-    let parentB = parentA ? parentA.alternate : null;
-    if (!parentA || !parentB) {
-      // We're either at the root, or we're in a special Fragment
-      // with no alternate, which is how Suspense (un)hiding works.
-      let maybeSuspenseFragment = parentA || parentB;
-      if (maybeSuspenseFragment && maybeSuspenseFragment.tag === Fragment) {
-        const maybeSuspense = maybeSuspenseFragment.return;
-        if (
-          maybeSuspense &&
-          maybeSuspense.tag === SuspenseComponent &&
-          // If state isn't null, it timed out and we have two Fragment children.
-          maybeSuspense.memoizedState !== null
-        ) {
-          parentA = maybeSuspense;
-          parentB = maybeSuspense;
-          a = maybeSuspenseFragment;
-          b = maybeSuspenseFragment;
-        } else {
-          break;
-        }
-      } else {
-        break;
+    if (parentA === null) {
+      // We're at the root.
+      break;
+    }
+    let parentB = parentA.alternate;
+    if (parentB === null) {
+      // There is no alternate. This is an unusual case. Currently, it only
+      // happens when a Suspense component is hidden. An extra fragment fiber
+      // is inserted in between the Suspense fiber and its children. Skip
+      // over this extra fragment fiber and proceed to the next parent.
+      const nextParent = parentA.return;
+      if (nextParent !== null) {
+        a = b = nextParent;
+        continue;
       }
+      // If there's no parent, we're at the root.
+      break;
     }
 
     // If both copies of the parent fiber point to the same child, we can
