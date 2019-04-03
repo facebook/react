@@ -452,10 +452,22 @@ export function createTouchHitTargetInstance(
   left: number,
   right: number,
   top: number,
-  parentInstance: Container,
   rootContainerInstance: Container,
   hostContext: HostContext,
   internalInstanceHandle: Object,
 ): Instance {
+  throw new Error('Not yet implemented.');
+}
+
+export function commitTouchHitTargetUpdate(
+  bottom: number,
+  left: number,
+  right: number,
+  top: number,
+  parentInstance: Container,
+  rootContainerInstance: Container,
+  hostContext: HostContext,
+  internalInstanceHandle: Object,
+): void {
   throw new Error('Not yet implemented.');
 }
