@@ -37,7 +37,7 @@ type EventData = {
   diffX: number,
   diffY: number,
 };
-type DragEventType = 'dragend' | 'dragchange' | 'dragmove';
+type DragEventType = 'dragstart' | 'dragend' | 'dragchange' | 'dragmove';
 
 type DragEvent = {|
   listener: DragEvent => void,
@@ -99,6 +99,9 @@ const DragResponder = {
       case 'mousedown':
       case 'pointerdown': {
         if (!state.isDragging) {
+          if (props.onShouldClaimOwnership) {
+            context.releaseOwnership(state.dragTarget);
+          }
           const obj =
             eventType === 'touchstart' ? (event: any).changedTouches[0] : event;
           const x = (state.startX = (obj: any).screenX);
@@ -107,6 +110,17 @@ const DragResponder = {
           state.y = y;
           state.dragTarget = eventTarget;
           state.isPointerDown = true;
+
+          if (props.onDragStart) {
+            dispatchDragEvent(
+              context,
+              'dragstart',
+              props.onDragStart,
+              state,
+              true,
+            );
+          }
+
           context.addRootEventTypes(rootEventTypes);
         }
         break;
