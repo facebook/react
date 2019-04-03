@@ -256,4 +256,67 @@ describe('DOMEventResponderSystem', () => {
 
     expect(eventLog).toEqual(['magic event fired', 'magicclick']);
   });
+
+  it('async event dispatching works', () => {
+    let eventLog = [];
+    const buttonRef = React.createRef();
+
+    const LongPressEventComponent = createReactEventComponent(
+      ['click'],
+      (context, props) => {
+        const pressEvent = {
+          listener: props.onPress,
+          target: context.eventTarget,
+          type: 'press',
+        };
+        context.dispatchEvent(pressEvent, {discrete: true});
+
+        setTimeout(
+          () =>
+            context.withAsyncDispatching(() => {
+              if (props.onLongPress) {
+                const longPressEvent = {
+                  listener: props.onLongPress,
+                  target: context.eventTarget,
+                  type: 'longpress',
+                };
+                context.dispatchEvent(longPressEvent, {discrete: true});
+              }
+
+              if (props.onLongPressChange) {
+                const longPressChangeEvent = {
+                  listener: props.onLongPressChange,
+                  target: context.eventTarget,
+                  type: 'longpresschange',
+                };
+                context.dispatchEvent(longPressChangeEvent, {discrete: true});
+              }
+            }),
+          500,
+        );
+      },
+    );
+
+    function log(msg) {
+      eventLog.push(msg);
+    }
+
+    const Test = () => (
+      <LongPressEventComponent
+        onPress={() => log('press')}
+        onLongPress={() => log('longpress')}
+        onLongPressChange={() => log('longpresschange')}>
+        <button ref={buttonRef}>Click me!</button>
+      </LongPressEventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+
+    // Clicking the button should trigger the event responder handleEvent()
+    let buttonElement = buttonRef.current;
+    dispatchClickEvent(buttonElement);
+    jest.runAllTimers();
+
+    expect(eventLog).toEqual(['press', 'longpress', 'longpresschange']);
+  });
 });
