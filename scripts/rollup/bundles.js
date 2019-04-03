@@ -118,6 +118,7 @@ const bundles = [
       FB_WWW_PROFILING,
       NODE_DEV,
       NODE_PROD,
+      NODE_PROFILING,
     ],
     moduleType: RENDERER,
     entry: 'react-dom/unstable-new-scheduler',
