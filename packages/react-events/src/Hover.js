@@ -204,6 +204,7 @@ const HoverResponder = {
 
 export default {
   $$typeof: REACT_EVENT_COMPONENT_TYPE,
+  displayName: 'Hover',
   props: null,
   responder: HoverResponder,
 };

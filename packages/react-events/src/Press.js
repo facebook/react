@@ -395,6 +395,7 @@ const PressResponder = {
 
 export default {
   $$typeof: REACT_EVENT_COMPONENT_TYPE,
+  displayName: 'Press',
   props: null,
   responder: PressResponder,
 };

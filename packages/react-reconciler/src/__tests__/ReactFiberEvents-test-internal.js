@@ -29,6 +29,7 @@ const noOpResponder = {
 function createReactEventComponent() {
   return {
     $$typeof: ReactSymbols.REACT_EVENT_COMPONENT_TYPE,
+    displayName: 'TestEventComponent',
     props: null,
     responder: noOpResponder,
   };
@@ -37,6 +38,7 @@ function createReactEventComponent() {
 function createReactEventTarget() {
   return {
     $$typeof: ReactSymbols.REACT_EVENT_TARGET_TYPE,
+    displayName: 'TestEventTarget',
     type: Symbol.for('react.event_target.test'),
   };
 }
@@ -392,6 +394,54 @@ describe('ReactFiberEvents', () => {
         'Warning: validateDOMNesting: React event targets must not have event components as children.',
       );
     });
+
+    it('should error with a component stack contains the names of the event components and event targets', () => {
+      let componentStackMessage;
+
+      function ErrorComponent() {
+        throw new Error('Failed!');
+      }
+
+      const Test = () => (
+        <EventComponent>
+          <EventTarget>
+            <span>
+              <ErrorComponent />
+            </span>
+          </EventTarget>
+        </EventComponent>
+      );
+
+      class Wrapper extends React.Component {
+        state = {
+          error: null,
+        };
+
+        componentDidCatch(error, errMessage) {
+          componentStackMessage = errMessage.componentStack;
+          this.setState({
+            error,
+          });
+        }
+
+        render() {
+          if (this.state.error) {
+            return null;
+          }
+          return <Test />;
+        }
+      }
+
+      ReactNoop.render(<Wrapper />);
+      expect(Scheduler).toFlushWithoutYielding();
+
+      expect(componentStackMessage.includes('ErrorComponent')).toBe(true);
+      expect(componentStackMessage.includes('span')).toBe(true);
+      expect(componentStackMessage.includes('TestEventTarget')).toBe(true);
+      expect(componentStackMessage.includes('TestEventComponent')).toBe(true);
+      expect(componentStackMessage.includes('Test')).toBe(true);
+      expect(componentStackMessage.includes('Wrapper')).toBe(true);
+    });
   });
 
   describe('TestRenderer', () => {
@@ -570,7 +620,7 @@ describe('ReactFiberEvents', () => {
           error: null,
         };
 
-        componentDidCatch(error) {
+        componentDidCatch(error, errStack) {
           this.setState({
             error,
           });
@@ -733,6 +783,55 @@ describe('ReactFiberEvents', () => {
       }).toWarnDev(
         'Warning: validateDOMNesting: React event targets must not have event components as children.',
       );
+    });
+
+    it('should error with a component stack contains the names of the event components and event targets', () => {
+      let componentStackMessage;
+
+      function ErrorComponent() {
+        throw new Error('Failed!');
+      }
+
+      const Test = () => (
+        <EventComponent>
+          <EventTarget>
+            <span>
+              <ErrorComponent />
+            </span>
+          </EventTarget>
+        </EventComponent>
+      );
+
+      class Wrapper extends React.Component {
+        state = {
+          error: null,
+        };
+
+        componentDidCatch(error, errMessage) {
+          componentStackMessage = errMessage.componentStack;
+          this.setState({
+            error,
+          });
+        }
+
+        render() {
+          if (this.state.error) {
+            return null;
+          }
+          return <Test />;
+        }
+      }
+
+      const root = ReactTestRenderer.create(null);
+      root.update(<Wrapper />);
+      expect(Scheduler).toFlushWithoutYielding();
+
+      expect(componentStackMessage.includes('ErrorComponent')).toBe(true);
+      expect(componentStackMessage.includes('span')).toBe(true);
+      expect(componentStackMessage.includes('TestEventTarget')).toBe(true);
+      expect(componentStackMessage.includes('TestEventComponent')).toBe(true);
+      expect(componentStackMessage.includes('Test')).toBe(true);
+      expect(componentStackMessage.includes('Wrapper')).toBe(true);
     });
   });
 
@@ -1052,6 +1151,54 @@ describe('ReactFiberEvents', () => {
       }).toWarnDev(
         'Warning: validateDOMNesting: React event targets must not have event components as children.',
       );
+    });
+
+    it('should error with a component stack contains the names of the event components and event targets', () => {
+      let componentStackMessage;
+
+      function ErrorComponent() {
+        throw new Error('Failed!');
+      }
+
+      const Test = () => (
+        <EventComponent>
+          <EventTarget>
+            <span>
+              <ErrorComponent />
+            </span>
+          </EventTarget>
+        </EventComponent>
+      );
+
+      class Wrapper extends React.Component {
+        state = {
+          error: null,
+        };
+
+        componentDidCatch(error, errMessage) {
+          componentStackMessage = errMessage.componentStack;
+          this.setState({
+            error,
+          });
+        }
+
+        render() {
+          if (this.state.error) {
+            return null;
+          }
+          return <Test />;
+        }
+      }
+
+      const container = document.createElement('div');
+      ReactDOM.render(<Wrapper />, container);
+
+      expect(componentStackMessage.includes('ErrorComponent')).toBe(true);
+      expect(componentStackMessage.includes('span')).toBe(true);
+      expect(componentStackMessage.includes('TestEventTarget')).toBe(true);
+      expect(componentStackMessage.includes('TestEventComponent')).toBe(true);
+      expect(componentStackMessage.includes('Test')).toBe(true);
+      expect(componentStackMessage.includes('Wrapper')).toBe(true);
     });
   });
 

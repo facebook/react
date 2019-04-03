@@ -211,6 +211,7 @@ const DragResponder = {
 
 export default {
   $$typeof: REACT_EVENT_COMPONENT_TYPE,
+  displayName: 'Drag',
   props: null,
   responder: DragResponder,
 };
