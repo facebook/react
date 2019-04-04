@@ -6,7 +6,34 @@ import { meta } from '../../hydration';
 import type { HooksTree } from 'src/backend/types';
 
 export function createRegExp(string: string): RegExp {
-  return new RegExp(escapeStringRegExp(string), 'i');
+  // 'item' should match 'Item' and 'ListItem', but not 'InviteMom'.
+  // To do this, we'll slice off 'tem' and check first letter separately.
+  const escaped = escapeStringRegExp(string);
+  const firstLetter = escaped[0];
+  let restRegex = '';
+  // For 'item' input, restRegex becomes '[tT][eE][mM]'
+  // We can't simply make it case-insensitive because first letter case matters.
+  for (let i = 1; i < escaped.length; i++) {
+    const char = escaped[i];
+    restRegex += '[' + char.toLowerCase() + char.toUpperCase() + ']';
+  }
+  // Respect first letter only if it starts a word.
+  return new RegExp(
+    // For example:
+    // (^[iI]|I)[tT][eE][mM]
+    // Matches:
+    // 'Item'
+    // 'ListItem'
+    // but not 'InviteMom'
+    '(^[' +
+      firstLetter +
+      firstLetter.toLowerCase() +
+      ']' +
+      '|' +
+      firstLetter.toUpperCase() +
+      ')' +
+      restRegex
+  );
 }
 
 export function getMetaValueLabel(data: Object): string | null {
