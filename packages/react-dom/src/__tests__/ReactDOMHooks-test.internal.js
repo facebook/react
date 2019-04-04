@@ -9,6 +9,8 @@
 
 'use strict';
 
+let ReactFeatureFlags;
+let enableNewScheduler;
 let React;
 let ReactDOM;
 let Scheduler;
@@ -19,6 +21,8 @@ describe('ReactDOMHooks', () => {
   beforeEach(() => {
     jest.resetModules();
 
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    enableNewScheduler = ReactFeatureFlags.enableNewScheduler;
     React = require('react');
     ReactDOM = require('react-dom');
     Scheduler = require('scheduler');
@@ -97,15 +101,30 @@ describe('ReactDOMHooks', () => {
     }
 
     ReactDOM.render(<Foo />, container);
-    ReactDOM.unstable_batchedUpdates(() => {
-      _set(0); // Forces the effect to be flushed
-      expect(otherContainer.textContent).toBe('');
-      ReactDOM.render(<B />, otherContainer);
-      expect(otherContainer.textContent).toBe('');
-    });
-    expect(otherContainer.textContent).toBe('B');
-    expect(calledA).toBe(false); // It was in a batch
-    expect(calledB).toBe(true);
+
+    if (enableNewScheduler) {
+      // The old behavior was accidental; in the new scheduler, flushing passive
+      // effects also flushes synchronous work, even inside batchedUpdates.
+      ReactDOM.unstable_batchedUpdates(() => {
+        _set(0); // Forces the effect to be flushed
+        expect(otherContainer.textContent).toBe('A');
+        ReactDOM.render(<B />, otherContainer);
+        expect(otherContainer.textContent).toBe('A');
+      });
+      expect(otherContainer.textContent).toBe('B');
+      expect(calledA).toBe(true);
+      expect(calledB).toBe(true);
+    } else {
+      ReactDOM.unstable_batchedUpdates(() => {
+        _set(0); // Forces the effect to be flushed
+        expect(otherContainer.textContent).toBe('');
+        ReactDOM.render(<B />, otherContainer);
+        expect(otherContainer.textContent).toBe('');
+      });
+      expect(otherContainer.textContent).toBe('B');
+      expect(calledA).toBe(false); // It was in a batch
+      expect(calledB).toBe(true);
+    }
   });
 
   it('should not bail out when an update is scheduled from within an event handler', () => {

@@ -43,7 +43,6 @@ import {
   requestCurrentTime,
   computeExpirationForFiber,
   scheduleWork,
-  requestWork,
   flushRoot,
   batchedUpdates,
   unbatchedUpdates,
@@ -300,7 +299,6 @@ export function updateContainer(
 
 export {
   flushRoot,
-  requestWork,
   computeUniqueAsyncExpiration,
   batchedUpdates,
   unbatchedUpdates,
@@ -310,6 +308,7 @@ export {
   flushInteractiveUpdates,
   flushControlled,
   flushSync,
+  flushPassiveEffects,
 };
 
 export function getPublicRootInstance(

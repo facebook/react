@@ -7,7 +7,16 @@
  * @flow
  */
 
+import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
+
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
+
+import {
+  ImmediatePriority,
+  UserBlockingPriority,
+  NormalPriority,
+  IdlePriority,
+} from './SchedulerWithReactIntegration';
 
 export type ExpirationTime = number;
 
@@ -46,6 +55,8 @@ function computeExpirationBucket(
   );
 }
 
+// TODO: This corresponds to Scheduler's NormalPriority, not LowPriority. Update
+// the names to reflect.
 export const LOW_PRIORITY_EXPIRATION = 5000;
 export const LOW_PRIORITY_BATCH_SIZE = 250;
 
@@ -79,4 +90,32 @@ export function computeInteractiveExpiration(currentTime: ExpirationTime) {
     HIGH_PRIORITY_EXPIRATION,
     HIGH_PRIORITY_BATCH_SIZE,
   );
+}
+
+export function inferPriorityFromExpirationTime(
+  currentTime: ExpirationTime,
+  expirationTime: ExpirationTime,
+): ReactPriorityLevel {
+  if (expirationTime === Sync) {
+    return ImmediatePriority;
+  }
+  if (expirationTime === Never) {
+    return IdlePriority;
+  }
+  const msUntil =
+    msToExpirationTime(expirationTime) - msToExpirationTime(currentTime);
+  if (msUntil <= 0) {
+    return ImmediatePriority;
+  }
+  if (msUntil <= HIGH_PRIORITY_EXPIRATION) {
+    return UserBlockingPriority;
+  }
+  if (msUntil <= LOW_PRIORITY_EXPIRATION) {
+    return NormalPriority;
+  }
+
+  // TODO: Handle LowPriority
+
+  // Assume anything lower has idle priority
+  return IdlePriority;
 }

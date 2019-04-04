@@ -99,7 +99,8 @@ import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {
   pushHostContext,
   pushHostContainer,
-  pushHostContextForEvent,
+  pushHostContextForEventComponent,
+  pushHostContextForEventTarget,
 } from './ReactFiberHostContext';
 import {
   pushProvider,
@@ -156,6 +157,7 @@ let didWarnAboutContextTypeOnFunctionComponent;
 let didWarnAboutGetDerivedStateOnFunctionComponent;
 let didWarnAboutFunctionRefs;
 export let didWarnAboutReassigningProps;
+let didWarnAboutMaxDuration;
 
 if (__DEV__) {
   didWarnAboutBadClass = {};
@@ -164,6 +166,7 @@ if (__DEV__) {
   didWarnAboutGetDerivedStateOnFunctionComponent = {};
   didWarnAboutFunctionRefs = {};
   didWarnAboutReassigningProps = false;
+  didWarnAboutMaxDuration = false;
 }
 
 export function reconcileChildren(
@@ -1408,6 +1411,19 @@ function updateSuspenseComponent(
     workInProgress.effectTag &= ~DidCapture;
   }
 
+  if (__DEV__) {
+    if ('maxDuration' in nextProps) {
+      if (!didWarnAboutMaxDuration) {
+        didWarnAboutMaxDuration = true;
+        warning(
+          false,
+          'maxDuration has been removed from React. ' +
+            'Remove the maxDuration prop.',
+        );
+      }
+    }
+  }
+
   // This next part is a bit confusing. If the children timeout, we switch to
   // showing the fallback children in place of the "primary" children.
   // However, we don't want to delete the primary children because then their
@@ -1960,7 +1976,7 @@ function updateEventComponent(current, workInProgress, renderExpirationTime) {
     nextChildren,
     renderExpirationTime,
   );
-  pushHostContextForEvent(workInProgress);
+  pushHostContextForEventComponent(workInProgress);
   return workInProgress.child;
 }
 
@@ -1974,7 +1990,7 @@ function updateEventTarget(current, workInProgress, renderExpirationTime) {
     nextChildren,
     renderExpirationTime,
   );
-  pushHostContextForEvent(workInProgress);
+  pushHostContextForEventTarget(workInProgress);
   return workInProgress.child;
 }
 
@@ -2116,9 +2132,13 @@ function beginWork(
           break;
         }
         case EventComponent:
+          if (enableEventAPI) {
+            pushHostContextForEventComponent(workInProgress);
+          }
+          break;
         case EventTarget: {
           if (enableEventAPI) {
-            pushHostContextForEvent(workInProgress);
+            pushHostContextForEventTarget(workInProgress);
           }
           break;
         }

@@ -12,6 +12,7 @@
 let React;
 let ReactDOM;
 let ReactDOMServer;
+let Scheduler;
 
 // These tests rely both on ReactDOMServer and ReactDOM.
 // If a test only needs ReactDOMServer, put it in ReactServerRendering-test instead.
@@ -21,6 +22,7 @@ describe('ReactDOMServerHydration', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
+    Scheduler = require('scheduler');
   });
 
   it('should have the correct mounting behavior (old hydrate API)', () => {
@@ -498,6 +500,7 @@ describe('ReactDOMServerHydration', () => {
 
     jest.runAllTimers();
     await Promise.resolve();
+    Scheduler.flushAll();
     expect(element.textContent).toBe('Hello world');
   });
 });

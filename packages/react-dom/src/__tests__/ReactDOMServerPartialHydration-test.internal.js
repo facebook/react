@@ -363,7 +363,7 @@ describe('ReactDOMServerPartialHydration', () => {
         <div>
           <Suspense fallback="Loading...">
             <span ref={ref} className={className}>
-              <Suspense maxDuration={200}>
+              <Suspense>
                 <Child text={text} />
               </Suspense>
             </span>
@@ -703,7 +703,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
   });
 
-  it('replaces the fallback within the maxDuration if there is a nested suspense', async () => {
+  it('replaces the fallback within the suspended time if there is a nested suspense', async () => {
     let suspend = false;
     let promise = new Promise(resolvePromise => {});
     let ref = React.createRef();
@@ -724,7 +724,7 @@ describe('ReactDOMServerPartialHydration', () => {
     function App() {
       return (
         <div>
-          <Suspense fallback="Loading..." maxDuration={100}>
+          <Suspense fallback="Loading...">
             <span ref={ref}>
               <Child />
             </span>
@@ -751,7 +751,7 @@ describe('ReactDOMServerPartialHydration', () => {
     let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
     root.render(<App />);
     Scheduler.flushAll();
-    // This will have exceeded the maxDuration so we should timeout.
+    // This will have exceeded the suspended time so we should timeout.
     jest.advanceTimersByTime(500);
     // The boundary should longer be suspended for the middle content
     // even though the inner boundary is still suspended.
@@ -762,7 +762,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
   });
 
-  it('replaces the fallback within the maxDuration if there is a nested suspense in a nested suspense', async () => {
+  it('replaces the fallback within the suspended time if there is a nested suspense in a nested suspense', async () => {
     let suspend = false;
     let promise = new Promise(resolvePromise => {});
     let ref = React.createRef();
@@ -784,7 +784,7 @@ describe('ReactDOMServerPartialHydration', () => {
       return (
         <div>
           <Suspense fallback="Another layer">
-            <Suspense fallback="Loading..." maxDuration={100}>
+            <Suspense fallback="Loading...">
               <span ref={ref}>
                 <Child />
               </span>
@@ -812,7 +812,7 @@ describe('ReactDOMServerPartialHydration', () => {
     let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
     root.render(<App />);
     Scheduler.flushAll();
-    // This will have exceeded the maxDuration so we should timeout.
+    // This will have exceeded the suspended time so we should timeout.
     jest.advanceTimersByTime(500);
     // The boundary should longer be suspended for the middle content
     // even though the inner boundary is still suspended.
