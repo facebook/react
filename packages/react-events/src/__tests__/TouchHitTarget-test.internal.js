@@ -23,7 +23,7 @@ let TouchHitTarget;
 
 const noOpResponder = {
   targetEventTypes: [],
-  handleEvent() {},
+  onEvent() {},
 };
 
 function createReactEventComponent() {
