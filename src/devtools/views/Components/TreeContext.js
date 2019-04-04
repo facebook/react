@@ -309,7 +309,10 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
   }
 
   // Changes in search index or typing should override the selected element.
-  if (searchIndex !== prevSearchIndex || searchText.indexOf(prevSearchText) === 0) {
+  if (
+    searchIndex !== prevSearchIndex ||
+    searchText.indexOf(prevSearchText) === 0
+  ) {
     if (searchIndex === null) {
       selectedElementIndex = null;
       selectedElementID = null;
