@@ -340,8 +340,16 @@ export function findHostInstanceWithNoPortals(
   return hostFiber.stateNode;
 }
 
+let shouldSuspendImpl = fiber => false;
+
+export function shouldSuspend(fiber: Fiber): boolean {
+  return shouldSuspendImpl(fiber);
+}
+
 let overrideHookState = null;
 let overrideProps = null;
+let scheduleUpdate = null;
+let setSuspenseHandler = null;
 
 if (__DEV__) {
   const copyWithSetImpl = (
@@ -409,6 +417,15 @@ if (__DEV__) {
     }
     scheduleWork(fiber, Sync);
   };
+
+  scheduleUpdate = (fiber: Fiber) => {
+    flushPassiveEffects();
+    scheduleWork(fiber, Sync);
+  };
+
+  setSuspenseHandler = (newShouldSuspendImpl: Fiber => boolean) => {
+    shouldSuspendImpl = newShouldSuspendImpl;
+  };
 }
 
 export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
@@ -419,6 +436,8 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
     ...devToolsConfig,
     overrideHookState,
     overrideProps,
+    setSuspenseHandler,
+    scheduleUpdate,
     currentDispatcherRef: ReactCurrentDispatcher,
     findHostInstanceByFiber(fiber: Fiber): Instance | TextInstance | null {
       const hostFiber = findCurrentHostFiber(fiber);

@@ -1,5 +1,6 @@
 {
   "name": "react-events",
+  "private": true,
   "description": "React is a JavaScript library for building user interfaces.",
   "keywords": [
     "react"
