@@ -26,8 +26,8 @@ export function createRegExp(string: string): RegExp {
     // 'ListItem'
     // but not 'InviteMom'
     '(^[' +
-      firstLetter +
       firstLetter.toLowerCase() +
+      firstLetter.toUpperCase() +
       ']' +
       '|' +
       firstLetter.toUpperCase() +
