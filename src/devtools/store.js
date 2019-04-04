@@ -110,7 +110,9 @@ export default class Store extends EventEmitter {
   constructor(bridge: Bridge, config?: Config) {
     super();
 
-    debug('constructor', 'subscribing to Bridge');
+    if (__DEBUG__) {
+      debug('constructor', 'subscribing to Bridge');
+    }
 
     if (config != null) {
       const {
@@ -433,7 +435,9 @@ export default class Store extends EventEmitter {
       operations = Uint32Array.from(Object.values(operations));
     }
 
-    debug('onBridgeOperations', operations);
+    if (__DEBUG__) {
+      debug('onBridgeOperations', operations);
+    }
 
     let haveRootsChanged = false;
 
@@ -479,7 +483,9 @@ export default class Store extends EventEmitter {
           i = i + 3;
 
           if (type === ElementTypeRoot) {
-            debug('Add', `new root fiber ${id}`);
+            if (__DEBUG__) {
+              debug('Add', `new root fiber ${id}`);
+            }
 
             if (this._idToElement.has(id)) {
               // The renderer's tree walking approach sometimes mounts the same Fiber twice with Suspense and Lazy.
@@ -532,10 +538,12 @@ export default class Store extends EventEmitter {
                 : utfDecodeString((operations.slice(i, i + keyLength): any));
             i += +keyLength;
 
-            debug(
-              'Add',
-              `fiber ${id} (${displayName || 'null'}) as child of ${parentID}`
-            );
+            if (__DEBUG__) {
+              debug(
+                'Add',
+                `fiber ${id} (${displayName || 'null'}) as child of ${parentID}`
+              );
+            }
 
             if (this._idToElement.has(id)) {
               // The renderer's tree walking approach sometimes mounts the same Fiber twice with Suspense and Lazy.
@@ -582,7 +590,9 @@ export default class Store extends EventEmitter {
 
           parentElement = ((this._idToElement.get(parentID): any): Element);
           if (parentElement == null) {
-            debug('Remove', `fiber ${id} root`);
+            if (__DEBUG__) {
+              debug('Remove', `fiber ${id} root`);
+            }
 
             this._roots = this._roots.filter(rootID => rootID !== id);
             this._rootIDToRendererID.delete(id);
@@ -590,7 +600,9 @@ export default class Store extends EventEmitter {
 
             haveRootsChanged = true;
           } else {
-            debug('Remove', `fiber ${id} from parent ${parentID}`);
+            if (__DEBUG__) {
+              debug('Remove', `fiber ${id} from parent ${parentID}`);
+            }
 
             parentElement.children = parentElement.children.filter(
               childID => childID !== id
@@ -613,7 +625,9 @@ export default class Store extends EventEmitter {
 
           i = i + 3 + numChildren;
 
-          debug('Re-order', `fiber ${id} children ${children.join(',')}`);
+          if (__DEBUG__) {
+            debug('Re-order', `fiber ${id} children ${children.join(',')}`);
+          }
 
           element = ((this._idToElement.get(id): any): Element);
           element.children = Array.from(children);
@@ -692,7 +706,9 @@ export default class Store extends EventEmitter {
   };
 
   onBridgeShutdown = () => {
-    debug('onBridgeShutdown', 'unsubscribing from Bridge');
+    if (__DEBUG__) {
+      debug('onBridgeShutdown', 'unsubscribing from Bridge');
+    }
 
     this._bridge.removeListener('operations', this.onBridgeOperations);
     this._bridge.removeListener('profilingStatus', this.onProfilingStatus);

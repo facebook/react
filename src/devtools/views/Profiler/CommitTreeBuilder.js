@@ -186,7 +186,9 @@ function updateTree(
         if (type === ElementTypeRoot) {
           i++; // supportsProfiling flag
 
-          debug('Add', `new root fiber ${id}`);
+          if (__DEBUG__) {
+            debug('Add', `new root fiber ${id}`);
+          }
 
           if (nodes.has(id)) {
             // The renderer's tree walking approach sometimes mounts the same Fiber twice with Suspense and Lazy.
@@ -233,10 +235,12 @@ function updateTree(
             // For now, we avoid adding it to the tree twice by checking if it's already been mounted.
             // Maybe in the future we'll revisit this.
           } else {
-            debug(
-              'Add',
-              `fiber ${id} (${displayName || 'null'}) as child of ${parentID}`
-            );
+            if (__DEBUG__) {
+              debug(
+                'Add',
+                `fiber ${id} (${displayName || 'null'}) as child of ${parentID}`
+              );
+            }
 
             parentNode = getClonedNode(parentID);
             parentNode.children = parentNode.children.concat(id);
@@ -268,7 +272,9 @@ function updateTree(
         if (parentNode == null) {
           // No-op
         } else {
-          debug('Remove', `fiber ${id} from parent ${parentID}`);
+          if (__DEBUG__) {
+            debug('Remove', `fiber ${id} from parent ${parentID}`);
+          }
 
           parentNode.children = parentNode.children.filter(
             childID => childID !== id
@@ -285,7 +291,9 @@ function updateTree(
 
         i = i + 3 + numChildren;
 
-        debug('Re-order', `fiber ${id} children ${children.join(',')}`);
+        if (__DEBUG__) {
+          debug('Re-order', `fiber ${id} children ${children.join(',')}`);
+        }
 
         node = getClonedNode(id);
         node.children = Array.from(children);
@@ -297,10 +305,12 @@ function updateTree(
         node = getClonedNode(id);
         node.treeBaseDuration = operations[i + 2] / 1000; // Convert microseconds back to milliseconds;
 
-        debug(
-          'Update',
-          `fiber ${id} treeBaseDuration to ${node.treeBaseDuration}`
-        );
+        if (__DEBUG__) {
+          debug(
+            'Update',
+            `fiber ${id} treeBaseDuration to ${node.treeBaseDuration}`
+          );
+        }
 
         i = i + 3;
         break;

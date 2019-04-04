@@ -365,7 +365,9 @@ export default class Agent extends EventEmitter {
   };
 
   onHookOperations = (operations: Uint32Array) => {
-    debug('onHookOperations', operations);
+    if (__DEBUG__) {
+      debug('onHookOperations', operations);
+    }
 
     // TODO:
     // The chrome.runtime does not currently support transferables; it forces JSON serialization.
