@@ -27,6 +27,10 @@
   border-top: 1px solid var(--color-border);
 }
 
+.OwnersHeader {
+  font-family: var(--font-family-sans);
+}
+
 .Component,
 .Owner {
   overflow: hidden;
