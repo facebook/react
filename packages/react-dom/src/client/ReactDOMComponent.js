@@ -98,7 +98,6 @@ const AUTOFOCUS = 'autoFocus';
 const CHILDREN = 'children';
 const STYLE = 'style';
 const HTML = '__html';
-const EMPTY_OBJECT = {};
 
 const {html: HTML_NAMESPACE} = Namespaces;
 
@@ -1337,67 +1336,6 @@ export function listenToEventResponderEventTypes(
         listeningSet.add(listeningName);
       }
     }
-  }
-}
-
-export function createTouchHitTargetElement(
-  bottom: number,
-  left: number,
-  right: number,
-  top: number,
-  rootContainerInstance: Element | Document,
-  parentNamespace: string,
-): HTMLElement {
-  const touchHitTargetElement = ((createElement(
-    'div',
-    EMPTY_OBJECT,
-    rootContainerInstance,
-    parentNamespace,
-  ): any): HTMLElement);
-  const touchHitTargetElementStyle = touchHitTargetElement.style;
-
-  touchHitTargetElementStyle.position = 'absolute';
-  if (top !== 0) {
-    touchHitTargetElementStyle.top = `-${top}px`;
-  }
-  if (left !== 0) {
-    touchHitTargetElementStyle.left = `-${left}px`;
-  }
-  if (right !== 0) {
-    touchHitTargetElementStyle.right = `-${right}px`;
-  }
-  if (bottom !== 0) {
-    touchHitTargetElementStyle.bottom = `-${bottom}px`;
-  }
-
-  return touchHitTargetElement;
-}
-
-export function updateTouchHitTargetElement(
-  oldBottom: number,
-  oldLeft: number,
-  oldRight: number,
-  oldTop: number,
-  newBottom: number,
-  newLeft: number,
-  newRight: number,
-  newTop: number,
-  touchHitTargetElement: Element,
-) {
-  const touchHitTargetElementStyle = ((touchHitTargetElement: any): HTMLElement)
-    .style;
-
-  if (oldTop !== newTop) {
-    touchHitTargetElementStyle.top = `-${newTop}px`;
-  }
-  if (oldLeft !== newLeft) {
-    touchHitTargetElementStyle.left = `-${newLeft}px`;
-  }
-  if (oldRight !== newRight) {
-    touchHitTargetElementStyle.right = `-${newRight}px`;
-  }
-  if (oldBottom !== newBottom) {
-    touchHitTargetElementStyle.bottom = `-${newBottom}px`;
   }
 }
 

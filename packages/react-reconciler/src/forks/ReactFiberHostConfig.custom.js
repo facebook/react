@@ -64,8 +64,9 @@ export const supportsMutation = $$$hostConfig.supportsMutation;
 export const supportsPersistence = $$$hostConfig.supportsPersistence;
 export const supportsHydration = $$$hostConfig.supportsHydration;
 export const handleEventComponent = $$$hostConfig.handleEventComponent;
-export const createTouchHitTargetInstance =
-  $$$hostConfig.createTouchHitTargetInstance;
+export const handleEventTarget = $$$hostConfig.handleEventTarget;
+export const getEventTargetChildElement =
+  $$$hostConfig.getEventTargetChildElement;
 
 // -------------------
 //      Mutation
@@ -87,6 +88,7 @@ export const unhideInstance = $$$hostConfig.unhideInstance;
 export const unhideTextInstance = $$$hostConfig.unhideTextInstance;
 export const commitTouchHitTargetUpdate =
   $$$hostConfig.commitTouchHitTargetUpdate;
+export const commitEventTarget = $$$hostConfig.commitEventTarget;
 
 // -------------------
 //     Persistence
@@ -146,7 +148,3 @@ export const didNotFindHydratableTextInstance =
   $$$hostConfig.didNotFindHydratableTextInstance;
 export const didNotFindHydratableSuspenseInstance =
   $$$hostConfig.didNotFindHydratableSuspenseInstance;
-export const hydrateTouchHitTargetInstance =
-  $$$hostConfig.hydrateTouchHitTargetInstance;
-export const canHydrateTouchHitTargetInstance =
-  $$$hostConfig.canHydrateTouchHitTargetInstance;

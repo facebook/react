@@ -25,8 +25,6 @@ import {
   warnForInsertedHydratedElement,
   warnForInsertedHydratedText,
   listenToEventResponderEventTypes,
-  createTouchHitTargetElement,
-  updateTouchHitTargetElement,
 } from './ReactDOMComponent';
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
@@ -60,6 +58,22 @@ export type Props = {
   style?: {
     display?: string,
   },
+  bottom?: null | number,
+  left?: null | number,
+  right?: null | number,
+  top?: null | number,
+};
+export type EventTargetChildElement = {
+  type: string,
+  props: null | {
+    style?: {
+      position?: string,
+      bottom?: string,
+      left?: string,
+      right?: string,
+      top?: string,
+    },
+  },
 };
 export type Container = Element | Document;
 export type Instance = Element;
@@ -73,7 +87,6 @@ type HostContextDev = {
   eventData: null | {|
     isEventComponent?: boolean,
     isEventTarget?: boolean,
-    eventTargetType?: null | Symbol | number,
   |},
 };
 type HostContextProd = string;
@@ -195,7 +208,6 @@ export function getChildHostContextForEventComponent(
     const eventData = {
       isEventComponent: true,
       isEventTarget: false,
-      eventTargetType: null,
     };
     return {namespace, ancestorInfo, eventData};
   }
@@ -209,17 +221,24 @@ export function getChildHostContextForEventTarget(
   if (__DEV__) {
     const parentHostContextDev = ((parentHostContext: any): HostContextDev);
     const {namespace, ancestorInfo} = parentHostContextDev;
-    warning(
-      parentHostContextDev.eventData === null ||
-        !parentHostContextDev.eventData.isEventComponent ||
-        type !== REACT_EVENT_TARGET_TOUCH_HIT,
-      'validateDOMNesting: <TouchHitTarget> cannot not be a direct child of an event component. ' +
-        'Ensure <TouchHitTarget> is a direct child of a DOM element.',
-    );
+    if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
+      warning(
+        parentHostContextDev.eventData === null ||
+          !parentHostContextDev.eventData.isEventComponent,
+        'validateDOMNesting: <TouchHitTarget> cannot not be a direct child of an event component. ' +
+          'Ensure <TouchHitTarget> is a direct child of a DOM element.',
+      );
+      const parentNamespace = parentHostContextDev.namespace;
+      if (parentNamespace !== HTML_NAMESPACE) {
+        throw new Error(
+          '<TouchHitTarget> was used in an unsupported DOM namespace. ' +
+            'Ensure the <TouchHitTarget> is used in an HTML namespace.',
+        );
+      }
+    }
     const eventData = {
       isEventComponent: false,
       isEventTarget: true,
-      eventTargetType: type,
     };
     return {namespace, ancestorInfo, eventData};
   }
@@ -254,16 +273,6 @@ export function createInstance(
   if (__DEV__) {
     // TODO: take namespace into account when validating.
     const hostContextDev = ((hostContext: any): HostContextDev);
-    if (enableEventAPI) {
-      const eventData = hostContextDev.eventData;
-      if (eventData !== null) {
-        warning(
-          !eventData.isEventTarget ||
-            eventData.eventTargetType !== REACT_EVENT_TARGET_TOUCH_HIT,
-          'Warning: validateDOMNesting: <TouchHitTarget> must not have any children.',
-        );
-      }
-    }
     validateDOMNesting(type, null, hostContextDev.ancestorInfo);
     if (
       typeof props.children === 'string' ||
@@ -371,21 +380,8 @@ export function createTextInstance(
       const eventData = hostContextDev.eventData;
       if (eventData !== null) {
         warning(
-          eventData === null ||
-            !eventData.isEventTarget ||
-            eventData.eventTargetType !== REACT_EVENT_TARGET_TOUCH_HIT,
-          'Warning: validateDOMNesting: <TouchHitTarget> must not have any children.',
-        );
-        warning(
           !eventData.isEventComponent,
           'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
-            'Wrap the child text "%s" in an element.',
-          text,
-        );
-        warning(
-          !eventData.isEventTarget ||
-            eventData.eventTargetType === REACT_EVENT_TARGET_TOUCH_HIT,
-          'validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
             'Wrap the child text "%s" in an element.',
           text,
         );
@@ -904,98 +900,64 @@ export function handleEventComponent(
   }
 }
 
-export function createTouchHitTargetInstance(
-  bottom: number,
-  left: number,
-  right: number,
-  top: number,
-  rootContainerInstance: Container,
-  hostContext: HostContext,
-  internalInstanceHandle: Object,
-): Instance {
-  let parentNamespace: string;
-  if (__DEV__) {
-    const hostContextDev = ((hostContext: any): HostContextDev);
-    parentNamespace = hostContextDev.namespace;
-    if (parentNamespace !== HTML_NAMESPACE) {
-      throw new Error(
-        '<TouchHitTarget> was used in an unsupported DOM namespace. ' +
-          'Ensure the <TouchHitTarget> is used in an HTML namespace.',
-      );
+export function getEventTargetChildElement(
+  type: Symbol | number,
+  props: Props,
+): null | EventTargetChildElement {
+  if (enableEventAPI) {
+    if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
+      const {bottom, left, right, top} = props;
+
+      if (!bottom && !left && !right && !top) {
+        return null;
+      }
+      return {
+        type: 'div',
+        props: {
+          style: {
+            position: 'absolute',
+            bottom: bottom ? `-${bottom}px` : '0px',
+            left: left ? `-${left}px` : '0px',
+            right: right ? `-${right}px` : '0px',
+            top: top ? `-${top}px` : '0px',
+          },
+        },
+      };
     }
-  } else {
-    parentNamespace = ((hostContext: any): HostContextProd);
   }
-  const touchHitTargetInstance = createTouchHitTargetElement(
-    bottom,
-    left,
-    right,
-    top,
-    rootContainerInstance,
-    parentNamespace,
-  );
-  precacheFiberNode(internalInstanceHandle, touchHitTargetInstance);
-  return touchHitTargetInstance;
+  return null;
 }
 
-export function commitTouchHitTargetUpdate(
-  oldBottom: number,
-  oldLeft: number,
-  oldRight: number,
-  oldTop: number,
-  newBottom: number,
-  newLeft: number,
-  newRight: number,
-  newTop: number,
-  touchHitTargetInstance: Instance,
-  parentInstance: null | Container,
-): void {
-  if (__DEV__ && canUseDOM && parentInstance !== null) {
-    // This is done at DEV time because getComputedStyle will
-    // typically force a style recalculation and force a layout,
-    // reflow -– both of which are sync are expensive.
-    const computedStyles = window.getComputedStyle(parentInstance);
-    warning(
-      computedStyles.getPropertyValue('position') !== 'static',
-      '<TouchHitTarget> inserts an empty absolutely positioned <div>. ' +
-        'This requires its parent DOM node to be positioned too, but the ' +
-        'parent DOM node was found to have the style "position" set to ' +
-        'value "static". Try using a "position" value of "relative".',
-    );
-  }
-  updateTouchHitTargetElement(
-    oldBottom,
-    oldLeft,
-    oldRight,
-    oldTop,
-    newBottom,
-    newLeft,
-    newRight,
-    newTop,
-    touchHitTargetInstance,
-  );
-}
-
-export function hydrateTouchHitTargetInstance(
-  bottom: number,
-  left: number,
-  right: number,
-  top: number,
-  touchHitTargetInstance: Instance,
+export function handleEventTarget(
+  type: Symbol | number,
+  props: Props,
+  rootContainerInstance: Container,
+  internalInstanceHandle: Object,
 ): boolean {
-  // Rather than do computed checks on the position styles, we always flag
-  // the hit target instance as needing to update from hydration.
-  return true;
+  return false;
 }
 
-export function canHydrateTouchHitTargetInstance(instance: HydratableInstance) {
-  // The touch hit target element is always a <div>.
-  if (
-    instance.nodeType !== ELEMENT_NODE ||
-    instance.nodeName.toLowerCase() !== 'div'
-  ) {
-    return null;
+export function commitEventTarget(
+  type: Symbol | number,
+  props: Props,
+  instance: Instance,
+  parentInstance: Instance,
+): void {
+  if (enableEventAPI) {
+    if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
+      if (__DEV__ && canUseDOM) {
+        // This is done at DEV time because getComputedStyle will
+        // typically force a style recalculation and force a layout,
+        // reflow -– both of which are sync are expensive.
+        const computedStyles = window.getComputedStyle(parentInstance);
+        warning(
+          computedStyles.getPropertyValue('position') !== 'static',
+          '<TouchHitTarget> inserts an empty absolutely positioned <div>. ' +
+            'This requires its parent DOM node to be positioned too, but the ' +
+            'parent DOM node was found to have the style "position" set to ' +
+            'value "static". Try using a "position" value of "relative".',
+        );
+      }
+    }
   }
-  // This has now been refined to an element node.
-  return ((instance: any): Instance);
 }

@@ -453,29 +453,27 @@ export function handleEventComponent(
   throw new Error('Not yet implemented.');
 }
 
-export function createTouchHitTargetInstance(
-  bottom: number,
-  left: number,
-  right: number,
-  top: number,
-  rootContainerInstance: Container,
-  hostContext: HostContext,
-  internalInstanceHandle: Object,
-): Instance {
+export function getEventTargetChildElement(
+  type: Symbol | number,
+  props: Props,
+): null {
   throw new Error('Not yet implemented.');
 }
 
-export function commitTouchHitTargetUpdate(
-  oldBottom: number,
-  oldLeft: number,
-  oldRight: number,
-  oldTop: number,
-  newBottom: number,
-  newLeft: number,
-  newRight: number,
-  newTop: number,
-  touchHitTargetInstance: Instance,
-  parentInstance: null | Container,
+export function handleEventTarget(
+  type: Symbol | number,
+  props: Props,
+  rootContainerInstance: Container,
+  internalInstanceHandle: Object,
+): boolean {
+  throw new Error('Not yet implemented.');
+}
+
+export function commitEventTarget(
+  type: Symbol | number,
+  props: Props,
+  instance: Instance,
+  parentInstance: Instance,
 ): void {
   throw new Error('Not yet implemented.');
 }

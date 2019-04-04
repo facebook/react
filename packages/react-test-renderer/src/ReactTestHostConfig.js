@@ -14,6 +14,18 @@ import {REACT_EVENT_TARGET_TOUCH_HIT} from 'shared/ReactSymbols';
 
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
+type EventTargetChildElement = {
+  type: string,
+  props: null | {
+    style?: {
+      position?: string,
+      bottom?: string,
+      left?: string,
+      right?: string,
+      top?: string,
+    },
+  },
+};
 export type Type = string;
 export type Props = Object;
 export type Container = {|
@@ -170,12 +182,6 @@ export function createInstance(
   hostContext: Object,
   internalInstanceHandle: Object,
 ): Instance {
-  if (__DEV__ && enableEventAPI) {
-    warning(
-      hostContext !== EVENT_TOUCH_HIT_TARGET_CONTEXT,
-      'validateDOMNesting: <TouchHitTarget> must not have any children.',
-    );
-  }
   return {
     type,
     props,
@@ -233,10 +239,6 @@ export function createTextInstance(
   internalInstanceHandle: Object,
 ): TextInstance {
   if (__DEV__ && enableEventAPI) {
-    warning(
-      hostContext !== EVENT_TOUCH_HIT_TARGET_CONTEXT,
-      'validateDOMNesting: <TouchHitTarget> must not have any children.',
-    );
     warning(
       hostContext !== EVENT_COMPONENT_CONTEXT,
       'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
@@ -333,75 +335,57 @@ export function handleEventComponent(
   // noop
 }
 
-export function createTouchHitTargetInstance(
-  bottom: number,
-  left: number,
-  right: number,
-  top: number,
-  rootContainerInstance: Container,
-  hostContext: HostContext,
-  internalInstanceHandle: Object,
-): Instance {
-  let topStyle = '';
-  let leftStyle = '';
-  let rightStyle = '';
-  let bottomStyle = '';
+export function getEventTargetChildElement(
+  type: Symbol | number,
+  props: Props,
+): null | EventTargetChildElement {
+  if (enableEventAPI) {
+    if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
+      const {bottom, left, right, top} = props;
 
-  if (top !== 0) {
-    topStyle = `-${top}px`;
+      if (!bottom && !left && !right && !top) {
+        return null;
+      }
+      return {
+        type: 'div',
+        props: {
+          style: {
+            position: 'absolute',
+            bottom: bottom ? `-${bottom}px` : '0px',
+            left: left ? `-${left}px` : '0px',
+            right: right ? `-${right}px` : '0px',
+            top: top ? `-${top}px` : '0px',
+          },
+        },
+      };
+    }
   }
-  if (left !== 0) {
-    leftStyle = `-${left}px`;
-  }
-  if (right !== 0) {
-    rightStyle = `-${right}px`;
-  }
-  if (bottom !== 0) {
-    bottomStyle = `-${bottom}px`;
-  }
-
-  return {
-    type: 'div',
-    props: {
-      style: {
-        position: 'absolute',
-        top: topStyle,
-        left: leftStyle,
-        right: rightStyle,
-        bottom: bottomStyle,
-      },
-    },
-    isHidden: false,
-    children: [],
-    rootContainerInstance,
-    tag: 'INSTANCE',
-  };
+  return null;
 }
 
-export function commitTouchHitTargetUpdate(
-  oldBottom: number,
-  oldLeft: number,
-  oldRight: number,
-  oldTop: number,
-  newBottom: number,
-  newLeft: number,
-  newRight: number,
-  newTop: number,
-  touchHitTargetInstance: Instance,
-  parentInstance: null | Container,
-): void {
-  const style = touchHitTargetInstance.props.style;
+export function handleEventTarget(
+  type: Symbol | number,
+  props: Props,
+  rootContainerInstance: Container,
+  internalInstanceHandle: Object,
+): boolean {
+  if (enableEventAPI) {
+    if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
+      // In DEV we do a computed style check on the position to ensure
+      // the parent host component is correctly position in the document.
+      if (__DEV__) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
 
-  if (oldTop !== newTop) {
-    style.top = `-${newTop}px`;
-  }
-  if (oldLeft !== newLeft) {
-    style.left = `-${newLeft}px`;
-  }
-  if (oldRight !== newRight) {
-    style.right = `-${newRight}px`;
-  }
-  if (oldBottom !== newBottom) {
-    style.bottom = `-${newBottom}px`;
-  }
+export function commitEventTarget(
+  type: Symbol | number,
+  props: Props,
+  instance: Instance,
+  parentInstance: Instance,
+): void {
+  // noop
 }

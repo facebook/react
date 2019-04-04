@@ -5,10 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {HostComponent, HostText, EventTarget} from 'shared/ReactWorkTags';
+import {HostComponent, HostText} from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
-
-import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
 const randomKey = Math.random()
   .toString(36)
@@ -40,11 +38,7 @@ export function getClosestInstanceFromNode(node) {
   }
 
   let inst = node[internalInstanceKey];
-  if (
-    inst.tag === HostComponent ||
-    inst.tag === HostText ||
-    (enableEventAPI && inst.tag === EventTarget)
-  ) {
+  if (inst.tag === HostComponent || inst.tag === HostText) {
     // In Fiber, this will always be the deepest root.
     return inst;
   }
@@ -59,11 +53,7 @@ export function getClosestInstanceFromNode(node) {
 export function getInstanceFromNode(node) {
   const inst = node[internalInstanceKey];
   if (inst) {
-    if (
-      inst.tag === HostComponent ||
-      inst.tag === HostText ||
-      (enableEventAPI && inst.tag === EventTarget)
-    ) {
+    if (inst.tag === HostComponent || inst.tag === HostText) {
       return inst;
     } else {
       return null;
@@ -77,11 +67,7 @@ export function getInstanceFromNode(node) {
  * DOM node.
  */
 export function getNodeFromInstance(inst) {
-  if (
-    inst.tag === HostComponent ||
-    inst.tag === HostText ||
-    (enableEventAPI && inst.tag === EventTarget)
-  ) {
+  if (inst.tag === HostComponent || inst.tag === HostText) {
     // In Fiber this, is just the state node right now. We assume it will be
     // a host component or host text.
     return inst.stateNode;

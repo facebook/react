@@ -100,9 +100,7 @@ describe('TouchHitTarget', () => {
       expect(() => {
         ReactNoop.render(<Test />);
         expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: <TouchHitTarget> must not have any children.',
-      );
+      }).toWarnDev('Warning: Event targets should not have children.');
 
       const Test2 = () => (
         <EventComponent>
@@ -115,9 +113,7 @@ describe('TouchHitTarget', () => {
       expect(() => {
         ReactNoop.render(<Test2 />);
         expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: <TouchHitTarget> must not have any children.',
-      );
+      }).toWarnDev('Warning: Event targets should not have children.');
 
       // Should render without warnings
       const Test3 = () => (
@@ -187,9 +183,7 @@ describe('TouchHitTarget', () => {
       expect(() => {
         root.update(<Test />);
         expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: <TouchHitTarget> must not have any children.',
-      );
+      }).toWarnDev('Warning: Event targets should not have children.');
 
       const Test2 = () => (
         <EventComponent>
@@ -202,9 +196,7 @@ describe('TouchHitTarget', () => {
       expect(() => {
         root.update(<Test2 />);
         expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: <TouchHitTarget> must not have any children.',
-      );
+      }).toWarnDev('Warning: Event targets should not have children.');
 
       // Should render without warnings
       const Test3 = () => (
@@ -275,9 +267,7 @@ describe('TouchHitTarget', () => {
       expect(() => {
         ReactDOM.render(<Test />, container);
         expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: <TouchHitTarget> must not have any children.',
-      );
+      }).toWarnDev('Warning: Event targets should not have children.');
 
       const Test2 = () => (
         <EventComponent>
@@ -290,9 +280,7 @@ describe('TouchHitTarget', () => {
       expect(() => {
         ReactDOM.render(<Test2 />, container);
         expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: <TouchHitTarget> must not have any children.',
-      );
+      }).toWarnDev('Warning: Event targets should not have children.');
 
       // Should render without warnings
       const Test3 = () => (
@@ -342,8 +330,8 @@ describe('TouchHitTarget', () => {
       ReactDOM.render(<Test />, container);
       expect(Scheduler).toFlushWithoutYielding();
       expect(container.innerHTML).toBe(
-        '<div><div style="position: absolute; top: -10px; ' +
-          'left: -10px; right: -10px; bottom: -10px;"></div></div>',
+        '<div><div style="position: absolute; bottom: -10px; ' +
+          'left: -10px; right: -10px; top: -10px;"></div></div>',
       );
 
       cond = true;
@@ -374,8 +362,8 @@ describe('TouchHitTarget', () => {
       ReactDOM.render(<Test />, container);
       expect(Scheduler).toFlushWithoutYielding();
       expect(container.innerHTML).toBe(
-        '<div><div style="position: absolute; top: -10px; ' +
-          'left: -10px; right: -10px; bottom: -10px;"></div></div>',
+        '<div><div style="position: absolute; bottom: -10px; ' +
+          'left: -10px; right: -10px; top: -10px;"></div></div>',
       );
     });
 
@@ -398,17 +386,14 @@ describe('TouchHitTarget', () => {
       ReactDOM.render(<Test />, container);
       expect(Scheduler).toFlushWithoutYielding();
       expect(container.innerHTML).toBe(
-        '<div><div style="position: absolute; top: -10px; ' +
-          'left: -10px; right: -10px; bottom: -10px;"></div></div>',
+        '<div><div style="position: absolute; bottom: -10px; ' +
+          'left: -10px; right: -10px; top: -10px;"></div></div>',
       );
 
       cond = true;
       ReactDOM.render(<Test />, container);
       expect(Scheduler).toFlushWithoutYielding();
-      expect(container.innerHTML).toBe(
-        '<div><div style="position: absolute; top: -0px; ' +
-          'left: -0px; right: -0px; bottom: -0px;"></div></div>',
-      );
+      expect(container.innerHTML).toBe('<div></div>');
     });
 
     it('should render a conditional TouchHitTarget hit slop correctly (true -> false)', () => {
@@ -439,8 +424,8 @@ describe('TouchHitTarget', () => {
       ReactDOM.render(<Test />, container);
       expect(Scheduler).toFlushWithoutYielding();
       expect(container.innerHTML).toBe(
-        '<div><span>Random span 1</span><div style="position: absolute; top: -10px; ' +
-          'left: -10px; right: -10px; bottom: -10px;"></div><span>Random span 2</span></div>',
+        '<div><span>Random span 1</span><div style="position: absolute; bottom: -10px; ' +
+          'left: -10px; right: -10px; top: -10px;"></div><span>Random span 2</span></div>',
       );
     });
 
@@ -470,16 +455,16 @@ describe('TouchHitTarget', () => {
       ReactDOM.render(<Test />, container);
       expect(Scheduler).toFlushWithoutYielding();
       expect(container.innerHTML).toBe(
-        '<div><span>Random span 1</span><div style="position: absolute; ' +
-          'left: -20px;"></div><span>Random span 2</span></div>',
+        '<div><span>Random span 1</span><div style="position: absolute; bottom: 0px; ' +
+          'left: -20px; right: 0px; top: 0px;"></div><span>Random span 2</span></div>',
       );
 
       cond = true;
       ReactDOM.render(<Test />, container);
       expect(Scheduler).toFlushWithoutYielding();
       expect(container.innerHTML).toBe(
-        '<div><span>Random span 1</span><div style="position: absolute; left: -0px; ' +
-          'top: -10px; right: -10px; bottom: -10px;"></div><span>Random span 2</span></div>',
+        '<div><span>Random span 1</span><div style="position: absolute; bottom: 0px; ' +
+          'left: -20px; right: 0px; top: 0px;"></div><span>Random span 2</span></div>',
       );
     });
 
@@ -509,16 +494,16 @@ describe('TouchHitTarget', () => {
       ReactDOM.render(<Test />, container);
       expect(Scheduler).toFlushWithoutYielding();
       expect(container.innerHTML).toBe(
-        '<div><span>Random span 1</span><div style="position: absolute; ' +
-          'top: -10px; right: -10px; bottom: -10px;"></div><span>Random span 2</span></div>',
+        '<div><span>Random span 1</span><div style="position: absolute; bottom: -10px; ' +
+          'left: 0px; right: -10px; top: -10px;"></div><span>Random span 2</span></div>',
       );
 
       cond = false;
       ReactDOM.render(<Test />, container);
       expect(Scheduler).toFlushWithoutYielding();
       expect(container.innerHTML).toBe(
-        '<div><span>Random span 1</span><div style="position: absolute; top: -0px; ' +
-          'right: -0px; bottom: -0px; left: -20px;"></div><span>Random span 2</span></div>',
+        '<div><span>Random span 1</span><div style="position: absolute; bottom: -10px; ' +
+          'left: 0px; right: -10px; top: -10px;"></div><span>Random span 2</span></div>',
       );
     });
 
@@ -547,11 +532,11 @@ describe('TouchHitTarget', () => {
 
       const container2 = document.createElement('div');
       container2.innerHTML =
-        '<div><div style="position:absolute;-10px;-10px;-10px;-10px;"></div></div>';
+        '<div><div style="position:absolute;bottom:-10px;left:-10px;right:-10px;top:-10px"></div></div>';
       ReactDOM.hydrate(<Test2 />, container2);
       expect(Scheduler).toFlushWithoutYielding();
       expect(container2.innerHTML).toBe(
-        '<div><div style="position:absolute;-10px;-10px;-10px;-10px;"></div></div>',
+        '<div><div style="position:absolute;bottom:-10px;left:-10px;right:-10px;top:-10px"></div></div>',
       );
     });
 
@@ -566,10 +551,16 @@ describe('TouchHitTarget', () => {
 
       const container = document.createElement('div');
       container.innerHTML = '<div></div>';
-      ReactDOM.hydrate(<Test />, container);
+      expect(() => {
+        ReactDOM.hydrate(<Test />, container);
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toWarnDev(
+        'Warning: Expected server HTML to contain a matching <div> in <div>.',
+        {withoutStack: true},
+      );
       expect(Scheduler).toFlushWithoutYielding();
       expect(container.innerHTML).toBe(
-        '<div><div style="position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px;"></div></div>',
+        '<div><div style="position: absolute; bottom: -10px; left: -10px; right: -10px; top: -10px;"></div></div>',
       );
     });
   });
@@ -605,7 +596,7 @@ describe('TouchHitTarget', () => {
 
       let output = ReactDOMServer.renderToString(<Test />);
       expect(output).toBe(
-        '<div><div style="position:absolute;-10px;-10px;-10px;-10px;"></div></div>',
+        '<div><div style="position:absolute;bottom:-10px;left:-10px;right:-10px;top:-10px"></div></div>',
       );
 
       const Test2 = () => (
@@ -618,7 +609,7 @@ describe('TouchHitTarget', () => {
 
       output = ReactDOMServer.renderToString(<Test2 />);
       expect(output).toBe(
-        '<div><div style="position:absolute;-10px;"></div></div>',
+        '<div><div style="position:absolute;bottom:-10px;left:0px;right:0x;top:0px"></div></div>',
       );
 
       const Test3 = () => (
@@ -631,7 +622,7 @@ describe('TouchHitTarget', () => {
 
       output = ReactDOMServer.renderToString(<Test3 />);
       expect(output).toBe(
-        '<div><div style="position:absolute;-1px;-2px;-3px;-4px;"></div></div>',
+        '<div><div style="position:absolute;bottom:-4px;left:-2px;right:-3px;top:-1px"></div></div>',
       );
     });
   });

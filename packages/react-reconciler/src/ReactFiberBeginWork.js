@@ -61,10 +61,7 @@ import shallowEqual from 'shared/shallowEqual';
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
-import {
-  REACT_LAZY_TYPE,
-  REACT_EVENT_TARGET_TOUCH_HIT,
-} from 'shared/ReactSymbols';
+import {REACT_LAZY_TYPE} from 'shared/ReactSymbols';
 import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {
@@ -99,6 +96,7 @@ import {
   registerSuspenseInstanceRetry,
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
+import {getEventTargetChildElement} from './ReactFiberHostConfig';
 import {
   pushHostContext,
   pushHostContainer,
@@ -1986,18 +1984,31 @@ function updateEventComponent(current, workInProgress, renderExpirationTime) {
 function updateEventTarget(current, workInProgress, renderExpirationTime) {
   const type = workInProgress.type.type;
   const nextProps = workInProgress.pendingProps;
-  let nextChildren = nextProps.children;
+  const eventTargetChild = getEventTargetChildElement(type, nextProps);
 
-  if (type === REACT_EVENT_TARGET_TOUCH_HIT && current === null) {
-    tryToClaimNextHydratableInstance(workInProgress);
+  if (__DEV__) {
+    warning(
+      nextProps.children == null,
+      'Event targets should not have children.',
+    );
   }
+  if (eventTargetChild !== null) {
+    const child = (workInProgress.child = createFiberFromTypeAndProps(
+      eventTargetChild.type,
+      null,
+      eventTargetChild.props,
+      null,
+      workInProgress.mode,
+      renderExpirationTime,
+    ));
+    child.return = workInProgress;
 
-  reconcileChildren(
-    current,
-    workInProgress,
-    nextChildren,
-    renderExpirationTime,
-  );
+    if (current === null || current.child === null) {
+      child.effectTag = Placement;
+    }
+  } else {
+    reconcileChildren(current, workInProgress, null, renderExpirationTime);
+  }
   pushHostContextForEventTarget(workInProgress);
   return workInProgress.child;
 }

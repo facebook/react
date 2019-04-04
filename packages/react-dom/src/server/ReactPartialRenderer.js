@@ -1182,12 +1182,15 @@ class ReactDOMServerRenderer {
                 if (bottom === 0 && left === 0 && right === 0 && top === 0) {
                   return '';
                 }
-                let topString = top ? `-${top}px;` : '';
-                let leftString = left ? `-${left}px;` : '';
-                let rightString = right ? `-${right}px;` : '';
-                let bottomString = bottom ? `-${bottom}px;` : '';
+                let topString = top ? `-${top}px` : '0px';
+                let leftString = left ? `-${left}px` : '0px';
+                let rightString = right ? `-${right}px` : '0x';
+                let bottomString = bottom ? `-${bottom}px` : '0px';
 
-                return `<div style="position:absolute;${topString}${leftString}${rightString}${bottomString}"></div>`;
+                return (
+                  `<div style="position:absolute;bottom:` +
+                  `${bottomString};left:${leftString};right:${rightString};top:${topString}"></div>`
+                );
               }
               const nextChildren = toArray(
                 ((nextChild: any): ReactElement).props.children,

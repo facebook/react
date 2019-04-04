@@ -92,7 +92,7 @@ import {
   hideTextInstance,
   unhideInstance,
   unhideTextInstance,
-  commitTouchHitTargetUpdate,
+  commitEventTarget,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -110,7 +110,6 @@ import {
   MountPassive,
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork';
-import {REACT_EVENT_TARGET_TOUCH_HIT} from 'shared/ReactSymbols';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -961,27 +960,19 @@ function commitPlacement(finishedWork: Fiber): void {
   // children to find all the terminal nodes.
   let node: Fiber = finishedWork;
   while (true) {
-    if (
-      node.tag === HostComponent ||
-      node.tag === HostText ||
-      (enableEventAPI &&
-        node.tag === EventTarget &&
-        node.type.type === REACT_EVENT_TARGET_TOUCH_HIT)
-    ) {
+    if (node.tag === HostComponent || node.tag === HostText) {
       const stateNode = node.stateNode;
-      if (stateNode !== null) {
-        if (before) {
-          if (isContainer) {
-            insertInContainerBefore(parent, stateNode, before);
-          } else {
-            insertBefore(parent, stateNode, before);
-          }
+      if (before) {
+        if (isContainer) {
+          insertInContainerBefore(parent, stateNode, before);
         } else {
-          if (isContainer) {
-            appendChildToContainer(parent, stateNode);
-          } else {
-            appendChild(parent, stateNode);
-          }
+          insertBefore(parent, stateNode, before);
+        }
+      } else {
+        if (isContainer) {
+          appendChildToContainer(parent, stateNode);
+        } else {
+          appendChild(parent, stateNode);
         }
       }
     } else if (node.tag === HostPortal) {
@@ -1048,13 +1039,7 @@ function unmountHostComponents(current): void {
       currentParentIsValid = true;
     }
 
-    if (
-      node.tag === HostComponent ||
-      node.tag === HostText ||
-      (enableEventAPI &&
-        node.tag === EventTarget &&
-        node.type.type === REACT_EVENT_TARGET_TOUCH_HIT)
-    ) {
+    if (node.tag === HostComponent || node.tag === HostText) {
       commitNestedUnmounts(node);
       // After all the children have unmounted, it is now safe to remove the
       // node from the tree.
@@ -1220,56 +1205,28 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case EventTarget: {
       if (enableEventAPI) {
         const type = finishedWork.type.type;
+        const props = finishedWork.memoizedProps;
+        const instance = finishedWork.stateNode;
+        let parentInstance = null;
 
-        if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
-          invariant(
-            finishedWork.stateNode !== null,
-            'This should have a touch hit target element initialized. This error is likely ' +
-              'caused by a bug in React. Please file an issue.',
-          );
-          const instance: Instance = finishedWork.stateNode;
-          const newProps = finishedWork.memoizedProps;
-          // For hydration we reuse the update path but we treat the oldProps
-          // as the newProps. The updatePayload will contain the real change in
-          // this case.
-          const oldProps = current !== null ? current.memoizedProps : newProps;
-          const oldBottom = oldProps.bottom || 0;
-          const oldLeft = oldProps.left || 0;
-          const oldRight = oldProps.right || 0;
-          const oldTop = oldProps.top || 0;
-          const newBottom = newProps.bottom || 0;
-          const newLeft = newProps.left || 0;
-          const newRight = newProps.right || 0;
-          const newTop = newProps.top || 0;
-          let parentHostInstance = null;
-
-          if (__DEV__) {
-            let node = finishedWork.return;
-            // For cases like ReactDOM, where we need to validate that the
-            // parent host component is styled correctly in relation to its
-            // "position" style. To do this we traverse the fiber tree upwards
-            // until we find the parent host component instance.
-            while (node !== null) {
-              if (node.tag === HostComponent) {
-                parentHostInstance = node.stateNode;
-                break;
-              }
-              node = node.return;
-            }
+        let node = finishedWork.return;
+        // Traverse up the fiber tree until we find the parent host node.
+        while (node !== null) {
+          if (node.tag === HostComponent) {
+            parentInstance = node.stateNode;
+            break;
+          } else if (node.tag === HostRoot) {
+            parentInstance = node.stateNode.containerInfo;
+            break;
           }
-          commitTouchHitTargetUpdate(
-            oldBottom,
-            oldLeft,
-            oldRight,
-            oldTop,
-            newBottom,
-            newLeft,
-            newRight,
-            newTop,
-            instance,
-            parentHostInstance,
-          );
+          node = node.return;
         }
+        invariant(
+          parentInstance !== null,
+          'This should have a parent host component initialized. This error is likely ' +
+            'caused by a bug in React. Please file an issue.',
+        );
+        commitEventTarget(type, props, instance, parentInstance);
       }
       return;
     }
