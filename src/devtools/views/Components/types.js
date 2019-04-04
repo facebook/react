@@ -42,7 +42,7 @@ export type InspectedElement = {|
   canEditFunctionProps: boolean,
 
   // Is this Suspense, and can its value be overriden now?
-  canEditSuspense: boolean,
+  canToggleSuspense: boolean,
 
   // Can view component source location.
   canViewSource: boolean,

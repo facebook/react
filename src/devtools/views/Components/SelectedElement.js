@@ -126,7 +126,7 @@ function InspectedElementView({
   const {
     canEditFunctionProps,
     canEditHooks,
-    canEditSuspense,
+    canToggleSuspense,
     context,
     hooks,
     owners,
@@ -165,7 +165,7 @@ function InspectedElementView({
       const rendererID = store.getRendererIDForElement(id);
       bridge.send('overrideProps', { id, path, rendererID, value });
     };
-  } else if (type === ElementTypeSuspense && canEditSuspense) {
+  } else if (type === ElementTypeSuspense && canToggleSuspense) {
     overrideSuspenseFn = (path: Array<string | number>, value: boolean) => {
       if (path.length !== 1 && path !== IS_SUSPENDED) {
         throw new Error('Unexpected path.');

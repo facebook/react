@@ -226,7 +226,7 @@ export function attach(
     setSuspenseHandler,
     scheduleUpdate,
   } = renderer;
-  const supportsEditingSuspense =
+  const supportsTogglingSuspense =
     typeof setSuspenseHandler === 'function' &&
     typeof scheduleUpdate === 'function';
 
@@ -1443,8 +1443,8 @@ export function attach(
       // Does the current renderer support editable function props?
       canEditFunctionProps: typeof overrideProps === 'function',
 
-      canEditSuspense:
-        supportsEditingSuspense &&
+      canToggleSuspense:
+        supportsTogglingSuspense &&
         // If it's showing the real content, we can always flip fallback.
         (!isTimedOutSuspense ||
           // If it's showing fallback because we previously forced it to,
