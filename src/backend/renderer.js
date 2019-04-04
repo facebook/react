@@ -735,7 +735,9 @@ export function attach(
   }
 
   function mountFiber(fiber: Fiber, parentFiber: Fiber | null) {
-    debug('mountFiber()', fiber, parentFiber);
+    if (__DEBUG__) {
+      debug('mountFiber()', fiber, parentFiber);
+    }
 
     const shouldEnqueueMount = !shouldFilterFiber(fiber);
 
@@ -756,7 +758,9 @@ export function attach(
     fiber: Fiber,
     hasChildOrderChanged: boolean
   ) {
-    debug('enqueueUpdateIfNecessary()', fiber);
+    if (__DEBUG__) {
+      debug('enqueueUpdateIfNecessary()', fiber);
+    }
 
     const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
     if (isProfilingSupported) {
@@ -833,7 +837,9 @@ export function attach(
     prevFiber: Fiber,
     parentFiber: Fiber | null
   ) {
-    debug('enqueueUpdateIfNecessary()', nextFiber, parentFiber);
+    if (__DEBUG__) {
+      debug('enqueueUpdateIfNecessary()', nextFiber, parentFiber);
+    }
 
     const shouldEnqueueUpdate = !shouldFilterFiber(nextFiber);
 
