@@ -19,6 +19,7 @@ import type {
 import React from 'react';
 // Modules provided by RN:
 import TextInputState from 'TextInputState';
+import FabricUIManager from 'FabricUIManager';
 import UIManager from 'UIManager';
 
 import {create} from './ReactNativeAttributePayload';
@@ -83,10 +84,33 @@ export default function(
      * [`onLayout` prop](docs/view.html#onlayout) instead.
      */
     measure(callback: MeasureOnSuccessCallback): void {
-      UIManager.measure(
-        findNodeHandle(this),
-        mountSafeCallback_NOT_REALLY_SAFE(this, callback),
-      );
+      let maybeInstance;
+
+      // Fiber errors if findNodeHandle is called for an umounted component.
+      // Tests using ReactTestRenderer will trigger this case indirectly.
+      // Mimicking stack behavior, we should silently ignore this case.
+      // TODO Fix ReactTestRenderer so we can remove this try/catch.
+      try {
+        maybeInstance = findHostInstance(this);
+      } catch (error) {}
+
+      // If there is no host component beneath this we should fail silently.
+      // This is not an error; it could mean a class component rendered null.
+      if (maybeInstance == null) {
+        return;
+      }
+
+      if (maybeInstance.canonical) {
+        FabricUIManager.measure(
+          maybeInstance.node,
+          mountSafeCallback_NOT_REALLY_SAFE(this, callback),
+        );
+      } else {
+        UIManager.measure(
+          findNodeHandle(this),
+          mountSafeCallback_NOT_REALLY_SAFE(this, callback),
+        );
+      }
     }
 
     /**
@@ -103,10 +127,33 @@ export default function(
      * These values are not available until after natives rendering completes.
      */
     measureInWindow(callback: MeasureInWindowOnSuccessCallback): void {
-      UIManager.measureInWindow(
-        findNodeHandle(this),
-        mountSafeCallback_NOT_REALLY_SAFE(this, callback),
-      );
+      let maybeInstance;
+
+      // Fiber errors if findNodeHandle is called for an umounted component.
+      // Tests using ReactTestRenderer will trigger this case indirectly.
+      // Mimicking stack behavior, we should silently ignore this case.
+      // TODO Fix ReactTestRenderer so we can remove this try/catch.
+      try {
+        maybeInstance = findHostInstance(this);
+      } catch (error) {}
+
+      // If there is no host component beneath this we should fail silently.
+      // This is not an error; it could mean a class component rendered null.
+      if (maybeInstance == null) {
+        return;
+      }
+
+      if (maybeInstance.canonical) {
+        FabricUIManager.measureInWindow(
+          maybeInstance.node,
+          mountSafeCallback_NOT_REALLY_SAFE(this, callback),
+        );
+      } else {
+        UIManager.measureInWindow(
+          findNodeHandle(this),
+          mountSafeCallback_NOT_REALLY_SAFE(this, callback),
+        );
+      }
     }
 
     /**
@@ -120,12 +167,38 @@ export default function(
       onSuccess: MeasureLayoutOnSuccessCallback,
       onFail: () => void /* currently unused */,
     ): void {
-      UIManager.measureLayout(
-        findNodeHandle(this),
-        relativeToNativeNode,
-        mountSafeCallback_NOT_REALLY_SAFE(this, onFail),
-        mountSafeCallback_NOT_REALLY_SAFE(this, onSuccess),
-      );
+      let maybeInstance;
+
+      // Fiber errors if findNodeHandle is called for an umounted component.
+      // Tests using ReactTestRenderer will trigger this case indirectly.
+      // Mimicking stack behavior, we should silently ignore this case.
+      // TODO Fix ReactTestRenderer so we can remove this try/catch.
+      try {
+        maybeInstance = findHostInstance(this);
+      } catch (error) {}
+
+      // If there is no host component beneath this we should fail silently.
+      // This is not an error; it could mean a class component rendered null.
+      if (maybeInstance == null) {
+        return;
+      }
+
+      if (maybeInstance.canonical) {
+        warningWithoutStack(
+          false,
+          'Warning: measureLayout on components using NativeMethodsMixin '+
+          'or ReactNative.NativeComponent is not currently supported in Fabric. ' +
+          'measureLayout must be called on a native ref. Consider using forwardRef.',
+        );
+        return;
+      } else {
+        UIManager.measureLayout(
+          findNodeHandle(this),
+          relativeToNativeNode,
+          mountSafeCallback_NOT_REALLY_SAFE(this, onFail),
+          mountSafeCallback_NOT_REALLY_SAFE(this, onSuccess),
+        );
+      }
     }
 
     /**

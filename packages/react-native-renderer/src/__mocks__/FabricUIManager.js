@@ -119,6 +119,10 @@ const RCTFabricUIManager = {
   }),
 
   registerEventHandler: jest.fn(function registerEventHandler(callback) {}),
+
+  measure: jest.fn(),
+  measureLayout: jest.fn(),
+  measureInWindow: jest.fn(),
 };
 
 module.exports = RCTFabricUIManager;

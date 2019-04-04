@@ -124,6 +124,21 @@ declare module 'FabricUIManager' {
       payload: Object,
     ) => void,
   ): void;
+
+  declare function measure(
+    node: Node,
+    callback: MeasureOnSuccessCallback,
+  ): void;
+  declare function measureInWindow(
+    node: Node,
+    callback: MeasureInWindowOnSuccessCallback,
+  ): void;
+  declare function measureLayout(
+    node: Node,
+    relativeNode: Node,
+    onFail: () => void,
+    onSuccess: MeasureLayoutOnSuccessCallback,
+  ): void;
 }
 
 declare module 'View' {

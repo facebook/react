@@ -39,6 +39,9 @@ import {
   appendChildToSet as appendChildNodeToSet,
   completeRoot,
   registerEventHandler,
+  measure as fabricMeasure,
+  measureInWindow as fabricMeasureInWindow,
+  measureLayout as fabricMeasureLayout,
 } from 'FabricUIManager';
 import UIManager from 'UIManager';
 
@@ -85,15 +88,18 @@ class ReactFabricHostComponent {
   _nativeTag: number;
   viewConfig: ReactNativeBaseComponentViewConfig<>;
   currentProps: Props;
+  _internalInstanceHandle: Instance;
 
   constructor(
     tag: number,
     viewConfig: ReactNativeBaseComponentViewConfig<>,
     props: Props,
+    internalInstanceHandle: Instance,
   ) {
     this._nativeTag = tag;
     this.viewConfig = viewConfig;
     this.currentProps = props;
+    this._internalInstanceHandle = internalInstanceHandle;
   }
 
   blur() {
@@ -105,50 +111,36 @@ class ReactFabricHostComponent {
   }
 
   measure(callback: MeasureOnSuccessCallback) {
-    UIManager.measure(
-      this._nativeTag,
+    fabricMeasure(
+      this._internalInstanceHandle.stateNode.node,
       mountSafeCallback_NOT_REALLY_SAFE(this, callback),
     );
   }
 
   measureInWindow(callback: MeasureInWindowOnSuccessCallback) {
-    UIManager.measureInWindow(
-      this._nativeTag,
+    fabricMeasureInWindow(
+      this._internalInstanceHandle.stateNode.node,
       mountSafeCallback_NOT_REALLY_SAFE(this, callback),
     );
   }
 
   measureLayout(
-    relativeToNativeNode: number | Object,
+    relativeToNativeNode: Object,
     onSuccess: MeasureLayoutOnSuccessCallback,
     onFail: () => void /* currently unused */,
   ) {
-    let relativeNode;
-
-    if (typeof relativeToNativeNode === 'number') {
-      // Already a node handle
-      relativeNode = relativeToNativeNode;
-    } else if (relativeToNativeNode._nativeTag) {
-      relativeNode = relativeToNativeNode._nativeTag;
-    } else if (
-      relativeToNativeNode.canonical &&
-      relativeToNativeNode.canonical._nativeTag
-    ) {
-      relativeNode = relativeToNativeNode.canonical._nativeTag;
-    }
-
-    if (relativeNode == null) {
+    if (relativeToNativeNode._internalInstanceHandle == null) {
       warningWithoutStack(
         false,
-        'Warning: ref.measureLayout must be called with a node handle or a ref to a native component.',
+        'Warning: ref.measureLayout must be called with a ref to a native component.',
       );
 
       return;
     }
 
-    UIManager.measureLayout(
-      this._nativeTag,
-      relativeNode,
+    fabricMeasureLayout(
+      this._internalInstanceHandle.stateNode.node,
+      relativeToNativeNode._internalInstanceHandle.stateNode.node,
       mountSafeCallback_NOT_REALLY_SAFE(this, onFail),
       mountSafeCallback_NOT_REALLY_SAFE(this, onSuccess),
     );
@@ -212,7 +204,12 @@ export function createInstance(
     internalInstanceHandle, // internalInstanceHandle
   );
 
-  const component = new ReactFabricHostComponent(tag, viewConfig, props);
+  const component = new ReactFabricHostComponent(
+    tag,
+    viewConfig,
+    props,
+    internalInstanceHandle,
+  );
 
   return {
     node: node,
