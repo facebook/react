@@ -124,7 +124,10 @@ const SwipeResponder = {
             state.x = x;
             state.y = y;
             state.swipeTarget = eventTarget;
-            context.addRootEventTypes(rootEventTypes);
+            context.addRootEventTypes(
+              eventTarget.ownerDocument,
+              rootEventTypes,
+            );
           } else {
             state.touchId = null;
           }
@@ -134,7 +137,7 @@ const SwipeResponder = {
       case 'touchmove':
       case 'mousemove':
       case 'pointermove': {
-        if (event.isPassive()) {
+        if (event.passive) {
           return;
         }
         if (state.isSwiping) {

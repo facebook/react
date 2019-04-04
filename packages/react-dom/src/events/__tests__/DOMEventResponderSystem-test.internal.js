@@ -64,8 +64,8 @@ describe('DOMEventResponderSystem', () => {
         eventResponderFiredCount++;
         eventLog.push({
           name: event.eventType,
-          passive: event.isPassive(),
-          passiveSupported: event.isPassiveSupported(),
+          passive: event.passive,
+          passiveSupported: event.passiveSupported,
         });
       },
     );
@@ -116,8 +116,8 @@ describe('DOMEventResponderSystem', () => {
       (event, context, props) => {
         eventLog.push({
           name: event.eventType,
-          passive: event.isPassive(),
-          passiveSupported: event.isPassiveSupported(),
+          passive: event.passive,
+          passiveSupported: event.passiveSupported,
         });
       },
     );
@@ -152,8 +152,8 @@ describe('DOMEventResponderSystem', () => {
         eventResponderFiredCount++;
         eventLog.push({
           name: event.eventType,
-          passive: event.isPassive(),
-          passiveSupported: event.isPassiveSupported(),
+          passive: event.passive,
+          passiveSupported: event.passiveSupported,
         });
       },
     );
@@ -272,29 +272,25 @@ describe('DOMEventResponderSystem', () => {
         };
         context.dispatchEvent(pressEvent, {discrete: true});
 
-        setTimeout(
-          () =>
-            context.withAsyncDispatching(() => {
-              if (props.onLongPress) {
-                const longPressEvent = {
-                  listener: props.onLongPress,
-                  target: event.eventTarget,
-                  type: 'longpress',
-                };
-                context.dispatchEvent(longPressEvent, {discrete: true});
-              }
+        context.setTimeout(() => {
+          if (props.onLongPress) {
+            const longPressEvent = {
+              listener: props.onLongPress,
+              target: event.eventTarget,
+              type: 'longpress',
+            };
+            context.dispatchEvent(longPressEvent, {discrete: true});
+          }
 
-              if (props.onLongPressChange) {
-                const longPressChangeEvent = {
-                  listener: props.onLongPressChange,
-                  target: event.eventTarget,
-                  type: 'longpresschange',
-                };
-                context.dispatchEvent(longPressChangeEvent, {discrete: true});
-              }
-            }),
-          500,
-        );
+          if (props.onLongPressChange) {
+            const longPressChangeEvent = {
+              listener: props.onLongPressChange,
+              target: event.eventTarget,
+              type: 'longpresschange',
+            };
+            context.dispatchEvent(longPressChangeEvent, {discrete: true});
+          }
+        }, 500);
       },
     );
 

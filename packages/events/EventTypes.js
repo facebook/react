@@ -14,13 +14,13 @@ export type ResponderEvent = {
   nativeEvent: AnyNativeEvent,
   eventTarget: Element | Document,
   eventType: string,
-  isPassive: () => boolean,
-  isPassiveSupported: () => boolean,
+  passive: boolean,
+  passiveSupported: boolean,
 };
 
 export type ResponderContext = {
-  dispatchEvent: <E>(
-    eventObject: E,
+  dispatchEvent: (
+    eventObject: Object,
     {
       capture?: boolean,
       discrete?: boolean,
@@ -34,6 +34,7 @@ export type ResponderContext = {
   isTargetWithinEventComponent: (Element | Document) => boolean,
   isPositionWithinTouchHitTarget: (x: number, y: number) => boolean,
   addRootEventTypes: (
+    document: Document,
     rootEventTypes: Array<ReactEventResponderEventType>,
   ) => void,
   removeRootEventTypes: (
@@ -42,5 +43,5 @@ export type ResponderContext = {
   hasOwnership: () => boolean,
   requestOwnership: () => boolean,
   releaseOwnership: () => boolean,
-  withAsyncDispatching: (func: () => void) => void,
+  setTimeout: (func: () => void, timeout: number) => TimeoutID,
 };

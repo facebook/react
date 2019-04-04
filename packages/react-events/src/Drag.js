@@ -124,14 +124,14 @@ const DragResponder = {
             );
           }
 
-          context.addRootEventTypes(rootEventTypes);
+          context.addRootEventTypes(eventTarget.ownerDocument, rootEventTypes);
         }
         break;
       }
       case 'touchmove':
       case 'mousemove':
       case 'pointermove': {
-        if (event.isPassive()) {
+        if (event.passive) {
           return;
         }
         if (state.isPointerDown) {

@@ -7,7 +7,11 @@
  */
 
 import type {ResponderContext, ResponderEvent} from 'events/EventTypes';
-import {type EventSystemFlags} from 'events/EventSystemFlags';
+import {
+  type EventSystemFlags,
+  IS_PASSIVE,
+  PASSIVE_NOT_SUPPORTED,
+} from 'events/EventSystemFlags';
 import type {AnyNativeEvent} from 'events/PluginModuleType';
 import {EventComponent} from 'shared/ReactWorkTags';
 import type {
@@ -15,16 +19,13 @@ import type {
   ReactEventResponderEventType,
 } from 'shared/ReactTypes';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
-import {interactiveUpdates} from 'events/ReactGenericBatching';
+import {batchedUpdates, interactiveUpdates} from 'events/ReactGenericBatching';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
-
+import warning from 'shared/warning';
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
 import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
-import {DOMEventResponderEvent} from './DOMEventResponderEvent';
-import {
-  DOMEventResponderContext,
-  createEventQueue,
-} from './DOMEventResponderContext';
+
+import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
 export let listenToResponderEventTypesImpl;
 
@@ -34,19 +35,202 @@ export function setListenToResponderEventTypes(
   listenToResponderEventTypesImpl = _listenToResponderEventTypesImpl;
 }
 
-let eventResponderContext = null;
+type EventQueue = {
+  bubble: null | Array<$Shape<PartialEventObject>>,
+  capture: null | Array<$Shape<PartialEventObject>>,
+  discrete: boolean,
+};
 
-if (enableEventAPI) {
-  // We re-use the same context object many times, to improve memory/peformance
-  eventResponderContext = new DOMEventResponderContext();
-}
+type PartialEventObject = {
+  listener: ($Shape<PartialEventObject>) => void,
+  target: Element | Document,
+  type: string,
+};
 
-export const rootEventTypesToEventComponents: Map<
+let currentOwner = null;
+let currentFiber: Fiber;
+let currentResponder: ReactEventResponder;
+let currentEventQueue: EventQueue;
+
+const eventResponderContext: ResponderContext = {
+  dispatchEvent(
+    possibleEventObject: Object,
+    {
+      capture,
+      discrete,
+      stopPropagation,
+    }: {
+      capture?: boolean,
+      discrete?: boolean,
+      stopPropagation?: boolean,
+    },
+  ): void {
+    const eventQueue = currentEventQueue;
+    const {listener, target, type} = possibleEventObject;
+
+    if (listener == null || target == null || type == null) {
+      throw new Error(
+        'context.dispatchEvent: "listener", "target" and "type" fields on event object are required.',
+      );
+    }
+    if (__DEV__) {
+      possibleEventObject.preventDefault = () => {
+        // Update this warning when we have a story around dealing with preventDefault
+        warning(
+          false,
+          'preventDefault() is no longer available on event objects created from event responder modules.',
+        );
+      };
+      possibleEventObject.stopPropagation = () => {
+        // Update this warning when we have a story around dealing with stopPropgation
+        warning(
+          false,
+          'stopPropagation() is no longer available on event objects created from event responder modules.',
+        );
+      };
+    }
+    const eventObject = ((possibleEventObject: any): $Shape<
+      PartialEventObject,
+    >);
+    let events;
+
+    if (capture) {
+      events = eventQueue.capture;
+      if (events === null) {
+        events = eventQueue.capture = [];
+      }
+    } else {
+      events = eventQueue.bubble;
+      if (events === null) {
+        events = eventQueue.bubble = [];
+      }
+    }
+    if (discrete) {
+      eventQueue.discrete = true;
+    }
+    events.push(eventObject);
+
+    if (stopPropagation) {
+      eventsWithStopPropagation.add(eventObject);
+    }
+  },
+  isPositionWithinTouchHitTarget(x: number, y: number): boolean {
+    return false;
+  },
+  isTargetWithinEventComponent(target: Element | Document): boolean {
+    const eventFiber = currentFiber;
+
+    if (target != null) {
+      let fiber = getClosestInstanceFromNode(target);
+      while (fiber !== null) {
+        if (fiber === eventFiber || fiber === eventFiber.alternate) {
+          return true;
+        }
+        fiber = fiber.return;
+      }
+    }
+    return false;
+  },
+  isTargetWithinElement(
+    childTarget: Element | Document,
+    parentTarget: Element | Document,
+  ): boolean {
+    const childFiber = getClosestInstanceFromNode(childTarget);
+    const parentFiber = getClosestInstanceFromNode(parentTarget);
+
+    let node = childFiber;
+    while (node !== null) {
+      if (node === parentFiber) {
+        return true;
+      }
+      node = node.return;
+    }
+    return false;
+  },
+  addRootEventTypes(
+    doc: Document,
+    rootEventTypes: Array<ReactEventResponderEventType>,
+  ): void {
+    listenToResponderEventTypesImpl(rootEventTypes, doc);
+    const eventComponent = currentFiber;
+    for (let i = 0; i < rootEventTypes.length; i++) {
+      const rootEventType = rootEventTypes[i];
+      const topLevelEventType =
+        typeof rootEventType === 'string' ? rootEventType : rootEventType.name;
+      let rootEventComponents = rootEventTypesToEventComponents.get(
+        topLevelEventType,
+      );
+      if (rootEventComponents === undefined) {
+        rootEventComponents = new Set();
+        rootEventTypesToEventComponents.set(
+          topLevelEventType,
+          rootEventComponents,
+        );
+      }
+      rootEventComponents.add(eventComponent);
+    }
+  },
+  removeRootEventTypes(
+    rootEventTypes: Array<ReactEventResponderEventType>,
+  ): void {
+    const eventComponent = currentFiber;
+    for (let i = 0; i < rootEventTypes.length; i++) {
+      const rootEventType = rootEventTypes[i];
+      const topLevelEventType =
+        typeof rootEventType === 'string' ? rootEventType : rootEventType.name;
+      let rootEventComponents = rootEventTypesToEventComponents.get(
+        topLevelEventType,
+      );
+      if (rootEventComponents !== undefined) {
+        rootEventComponents.delete(eventComponent);
+      }
+    }
+  },
+  hasOwnership(): boolean {
+    return currentOwner === currentFiber;
+  },
+  requestOwnership(): boolean {
+    if (currentOwner !== null) {
+      return false;
+    }
+    currentOwner = currentFiber;
+    return true;
+  },
+  releaseOwnership(): boolean {
+    if (currentOwner !== currentFiber) {
+      return false;
+    }
+    currentOwner = null;
+    return false;
+  },
+  setTimeout(func: () => void, delay): TimeoutID {
+    const contextResponder = currentResponder;
+    const contextFiber = currentFiber;
+    return setTimeout(() => {
+      const previousEventQueue = currentEventQueue;
+      const previousFiber = currentFiber;
+      const previousResponder = currentResponder;
+      currentEventQueue = createEventQueue();
+      currentResponder = contextResponder;
+      currentFiber = contextFiber;
+      try {
+        func();
+        batchedUpdates(processEventQueue, currentEventQueue);
+      } finally {
+        currentFiber = previousFiber;
+        currentEventQueue = previousEventQueue;
+        currentResponder = previousResponder;
+      }
+    }, delay);
+  },
+};
+
+const rootEventTypesToEventComponents: Map<
   DOMTopLevelEventType | string,
   Set<Fiber>,
 > = new Map();
 const PossiblyWeakSet = typeof WeakSet === 'function' ? WeakSet : Set;
-export const eventsWithStopPropagation:
+const eventsWithStopPropagation:
   | WeakSet
   | Set<$Shape<PartialEventObject>> = new PossiblyWeakSet();
 const targetEventTypeCached: Map<
@@ -54,11 +238,28 @@ const targetEventTypeCached: Map<
   Set<DOMTopLevelEventType>,
 > = new Map();
 
-export type PartialEventObject = {
-  listener: ($Shape<PartialEventObject>) => void,
-  target: Element | Document,
-  type: string,
-};
+function createResponderEvent(
+  topLevelType: string,
+  nativeEvent: AnyNativeEvent,
+  nativeEventTarget: Element | Document,
+  eventSystemFlags: EventSystemFlags,
+): ResponderEvent {
+  return {
+    nativeEvent: nativeEvent,
+    eventTarget: nativeEventTarget,
+    eventType: topLevelType,
+    passive: (eventSystemFlags & IS_PASSIVE) !== 0,
+    passiveSupported: (eventSystemFlags & PASSIVE_NOT_SUPPORTED) === 0,
+  };
+}
+
+function createEventQueue(): EventQueue {
+  return {
+    bubble: null,
+    capture: null,
+    discrete: false,
+  };
+}
 
 function processEvent(event: $Shape<PartialEventObject>): void {
   const type = event.type;
@@ -93,11 +294,7 @@ function processEvents(
 }
 
 export function processEventQueue(): void {
-  const {
-    bubble,
-    capture,
-    discrete,
-  } = ((eventResponderContext: any): Object)._eventQueue;
+  const {bubble, capture, discrete} = currentEventQueue;
 
   if (discrete) {
     interactiveUpdates(() => {
@@ -129,7 +326,7 @@ function getTargetEventTypes(
 function handleTopLevelType(
   topLevelType: DOMTopLevelEventType,
   fiber: Fiber,
-  responerEvent: Object,
+  responderEvent: ResponderEvent,
   isRootLevelEvent: boolean,
 ): void {
   const responder: ReactEventResponder = fiber.type.responder;
@@ -144,16 +341,10 @@ function handleTopLevelType(
   if (state === null && responder.createInitialState !== undefined) {
     state = fiber.stateNode.state = responder.createInitialState(props);
   }
-  const currentEventResponderContext = ((eventResponderContext: any): Object);
-  currentEventResponderContext._fiber = fiber;
-  currentEventResponderContext._responder = responder;
-  currentEventResponderContext._event = responerEvent;
-  responder.onEvent(
-    ((responerEvent: any): ResponderEvent),
-    ((eventResponderContext: any): ResponderContext),
-    props,
-    state,
-  );
+  currentFiber = fiber;
+  currentResponder = responder;
+
+  responder.onEvent(responderEvent, eventResponderContext, props, state);
 }
 
 export function runResponderEventsInBatch(
@@ -164,19 +355,18 @@ export function runResponderEventsInBatch(
   eventSystemFlags: EventSystemFlags,
 ): void {
   if (enableEventAPI) {
-    const currentEventResponderContext = ((eventResponderContext: any): Object);
-    currentEventResponderContext._eventQueue = createEventQueue();
-    const responerEvent = new DOMEventResponderEvent(
-      topLevelType,
+    currentEventQueue = createEventQueue();
+    const responderEvent = createResponderEvent(
+      ((topLevelType: any): string),
       nativeEvent,
-      nativeEventTarget,
+      ((nativeEventTarget: any): Element | Document),
       eventSystemFlags,
     );
     let node = targetFiber;
     // Traverse up the fiber tree till we find event component fibers.
     while (node !== null) {
       if (node.tag === EventComponent) {
-        handleTopLevelType(topLevelType, node, responerEvent, false);
+        handleTopLevelType(topLevelType, node, responderEvent, false);
       }
       node = node.return;
     }
@@ -192,7 +382,7 @@ export function runResponderEventsInBatch(
         handleTopLevelType(
           topLevelType,
           rootEventComponentFiber,
-          responerEvent,
+          responderEvent,
           true,
         );
       }
