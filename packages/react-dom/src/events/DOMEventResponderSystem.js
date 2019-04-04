@@ -6,7 +6,11 @@
  * @flow
  */
 
-import type {ResponderContext, ResponderEvent} from 'events/EventTypes';
+import type {
+  ResponderContext,
+  ResponderEvent,
+  ResponderDispatchEventOptions,
+} from 'events/EventTypes';
 import {
   type EventSystemFlags,
   IS_PASSIVE,
@@ -55,15 +59,7 @@ let currentEventQueue: EventQueue;
 const eventResponderContext: ResponderContext = {
   dispatchEvent(
     possibleEventObject: Object,
-    {
-      capture,
-      discrete,
-      stopPropagation,
-    }: {
-      capture?: boolean,
-      discrete?: boolean,
-      stopPropagation?: boolean,
-    },
+    {capture, discrete, stopPropagation}: ResponderDispatchEventOptions,
   ): void {
     const eventQueue = currentEventQueue;
     const {listener, target, type} = possibleEventObject;

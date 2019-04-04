@@ -18,14 +18,16 @@ export type ResponderEvent = {
   passiveSupported: boolean,
 };
 
+export type ResponderDispatchEventOptions = {
+  capture?: boolean,
+  discrete?: boolean,
+  stopPropagation?: boolean,
+};
+
 export type ResponderContext = {
   dispatchEvent: (
     eventObject: Object,
-    {
-      capture?: boolean,
-      discrete?: boolean,
-      stopPropagation?: boolean,
-    },
+    otpions: ResponderDispatchEventOptions,
   ) => void,
   isTargetWithinElement: (
     childTarget: Element | Document,
