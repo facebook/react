@@ -25,10 +25,9 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
 
 type EventData = {
   pointerType: PointerType,
-  delta: {
-    x: number,
-    y: numer,
-  },
+  initial: Point,
+  delta: Point,
+  point: Point,
   direction: SwipeDirection,
 };
 type PointerType = 'mouse' | 'pointer' | 'touch';

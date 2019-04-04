@@ -181,7 +181,7 @@ describe('Swipe event responder', () => {
     });
   });
 
-  describe('Directions', () => {
+  describe('Swipe Directions', () => {
     let ref, directions;
 
     beforeEach(() => {
