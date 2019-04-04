@@ -6,18 +6,36 @@ import { meta } from '../../hydration';
 import type { HooksTree } from 'src/backend/types';
 
 export function createRegExp(string: string): RegExp {
+  function isLetter(char: string) {
+    return char.toLowerCase() !== char.toUpperCase();
+  }
+
+  function matchAnyCase(char: string) {
+    if (!isLetter(char)) {
+      // Don't mess with special characters like [.
+      return char;
+    }
+    return '[' + char.toLowerCase() + char.toUpperCase() + ']';
+  }
+
   // 'item' should match 'Item' and 'ListItem', but not 'InviteMom'.
   // To do this, we'll slice off 'tem' and check first letter separately.
   const escaped = escapeStringRegExp(string);
-  const firstLetter = escaped[0];
+  const firstChar = escaped[0];
   let restRegex = '';
   // For 'item' input, restRegex becomes '[tT][eE][mM]'
   // We can't simply make it case-insensitive because first letter case matters.
   for (let i = 1; i < escaped.length; i++) {
-    const char = escaped[i];
-    restRegex += '[' + char.toLowerCase() + char.toUpperCase() + ']';
+    restRegex += matchAnyCase(escaped[i]);
   }
-  // Respect first letter only if it starts a word.
+
+  if (!isLetter(firstChar)) {
+    // We can't put a non-character like [ in a group
+    // so we fall back to the simple case.
+    return new RegExp(firstChar + restRegex);
+  }
+
+  // Construct a smarter regex.
   return new RegExp(
     // For example:
     // (^[iI]|I)[tT][eE][mM]
@@ -25,12 +43,10 @@ export function createRegExp(string: string): RegExp {
     // 'Item'
     // 'ListItem'
     // but not 'InviteMom'
-    '(^[' +
-      firstLetter.toLowerCase() +
-      firstLetter.toUpperCase() +
-      ']' +
+    '(^' +
+      matchAnyCase(firstChar) +
       '|' +
-      firstLetter.toUpperCase() +
+      firstChar.toUpperCase() +
       ')' +
       restRegex
   );

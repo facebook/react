@@ -95,7 +95,7 @@ export default function SearchInput(props: Props) {
         onChange={handleTextChange}
         onKeyDown={handleKeyDown}
         onKeyPress={handleInputKeyPress}
-        placeholder="Search (text or /regex/)"
+        placeholder="Search"
         ref={inputRef}
         value={searchText}
       />
