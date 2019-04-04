@@ -624,6 +624,7 @@ export function createFiberFromEventComponent(
   fiber.elementType = eventComponent;
   fiber.type = eventComponent;
   fiber.stateNode = {
+    context: null,
     props: pendingProps,
     state: null,
   };
