@@ -351,6 +351,7 @@ export function getEventTargetChildElement(
         props: {
           style: {
             position: 'absolute',
+            zIndex: -1,
             bottom: bottom ? `-${bottom}px` : '0px',
             left: left ? `-${left}px` : '0px',
             right: right ? `-${right}px` : '0px',

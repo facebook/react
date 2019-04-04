@@ -68,6 +68,7 @@ export type EventTargetChildElement = {
   props: null | {
     style?: {
       position?: string,
+      zIndex?: number,
       bottom?: string,
       left?: string,
       right?: string,
@@ -916,6 +917,7 @@ export function getEventTargetChildElement(
         props: {
           style: {
             position: 'absolute',
+            zIndex: -1,
             bottom: bottom ? `-${bottom}px` : '0px',
             left: left ? `-${left}px` : '0px',
             right: right ? `-${right}px` : '0px',
@@ -950,12 +952,21 @@ export function commitEventTarget(
         // typically force a style recalculation and force a layout,
         // reflow -– both of which are sync are expensive.
         const computedStyles = window.getComputedStyle(parentInstance);
+        const position = computedStyles.getPropertyValue('position');
         warning(
-          computedStyles.getPropertyValue('position') !== 'static',
+          position !== '' && position !== 'static',
           '<TouchHitTarget> inserts an empty absolutely positioned <div>. ' +
             'This requires its parent DOM node to be positioned too, but the ' +
             'parent DOM node was found to have the style "position" set to ' +
-            'value "static". Try using a "position" value of "relative".',
+            'either no value, or a value of "static". Try using a "position" ' +
+            'value of "relative".',
+        );
+        warning(
+          computedStyles.getPropertyValue('zIndex') !== '',
+          '<TouchHitTarget> inserts an empty <div> with "z-index" of "-1". ' +
+            'This requires its parent DOM node to have a "z-index" great than "-1",' +
+            'but the parent DOM node was found to no "z-index" value set.' +
+            ' Try using a "z-index" value of "0" or greater.',
         );
       }
     }

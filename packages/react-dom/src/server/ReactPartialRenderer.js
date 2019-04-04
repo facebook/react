@@ -1188,7 +1188,7 @@ class ReactDOMServerRenderer {
                 let bottomString = bottom ? `-${bottom}px` : '0px';
 
                 return (
-                  `<div style="position:absolute;bottom:` +
+                  `<div style="position:absolute;z-index:-1;bottom:` +
                   `${bottomString};left:${leftString};right:${rightString};top:${topString}"></div>`
                 );
               }
