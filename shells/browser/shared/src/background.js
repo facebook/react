@@ -123,19 +123,27 @@ chrome.runtime.onMessage.addListener((request, sender) => {
 
     if (request.captureScreenshot) {
       const { commitIndex } = request;
-      chrome.tabs.captureVisibleTab(undefined, undefined, dataURL => {
-        // TODO For some reason, sending a response using the third param (sendResponse) doesn't work,
-        // so we have to use the chrome.tabs API for this instead.
-        chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-          chrome.tabs.sendMessage(tabs[0].id, {
-            event: 'screenshotCaptured',
-            payload: {
-              commitIndex,
-              dataURL,
-            },
+      try {
+        chrome.tabs.captureVisibleTab(undefined, undefined, dataURL => {
+          // TODO For some reason, sending a response using the third param (sendResponse) doesn't work,
+          // so we have to use the chrome.tabs API for this instead.
+          chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+            if (tabs.length > 0) {
+              chrome.tabs.sendMessage(tabs[0].id, {
+                event: 'screenshotCaptured',
+                payload: {
+                  commitIndex,
+                  dataURL,
+                },
+              });
+            }
           });
         });
-      });
+      } catch (error) {
+        // Screen captures may not always be allowed.
+        // DevTools is robust enough to handle missing images in this case.
+        // See https://stackoverflow.com/questions/55504938
+      }
     }
   }
 });
