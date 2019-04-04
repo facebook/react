@@ -827,6 +827,50 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('goodbye')]);
   });
 
+  it('a suspended update that expires', async () => {
+    // Regression test. This test used to fall into an infinite loop.
+    function ExpensiveText({text}) {
+      // This causes the update to expire.
+      Scheduler.advanceTime(10000);
+      // Then something suspends.
+      return <AsyncText text={text} ms={200000} />;
+    }
+
+    function App() {
+      return (
+        <Suspense fallback="Loading...">
+          <ExpensiveText text="A" />
+          <ExpensiveText text="B" />
+          <ExpensiveText text="C" />
+        </Suspense>
+      );
+    }
+
+    ReactNoop.render(<App />);
+    expect(Scheduler).toFlushAndYield([
+      'Suspend! [A]',
+      'Suspend! [B]',
+      'Suspend! [C]',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput('Loading...');
+
+    await advanceTimers(200000);
+    expect(Scheduler).toHaveYielded([
+      'Promise resolved [A]',
+      'Promise resolved [B]',
+      'Promise resolved [C]',
+    ]);
+
+    expect(Scheduler).toFlushAndYield(['A', 'B', 'C']);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <React.Fragment>
+        <span prop="A" />
+        <span prop="B" />
+        <span prop="C" />
+      </React.Fragment>,
+    );
+  });
+
   describe('sync mode', () => {
     it('times out immediately', async () => {
       function App() {
