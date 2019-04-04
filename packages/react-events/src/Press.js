@@ -10,27 +10,6 @@
 import type {EventResponderContext} from 'events/EventTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
-// const DEFAULT_PRESS_DELAY_MS = 0;
-// const DEFAULT_PRESS_END_DELAY_MS = 0;
-// const DEFAULT_PRESS_START_DELAY_MS = 0;
-const DEFAULT_LONG_PRESS_DELAY_MS = 1000;
-
-const targetEventTypes = [
-  {name: 'click', passive: false},
-  {name: 'keydown', passive: false},
-  'pointerdown',
-  'pointercancel',
-  'contextmenu',
-];
-const rootEventTypes = [{name: 'pointerup', passive: false}, 'scroll'];
-
-// In the case we don't have PointerEvents (Safari), we listen to touch events
-// too
-if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
-  targetEventTypes.push('touchstart', 'touchend', 'mousedown', 'touchcancel');
-  rootEventTypes.push({name: 'mouseup', passive: false});
-}
-
 type PressProps = {
   disabled: boolean,
   delayLongPress: number,
@@ -70,6 +49,30 @@ type PressEvent = {|
   type: PressEventType,
 |};
 
+// const DEFAULT_PRESS_DELAY_MS = 0;
+// const DEFAULT_PRESS_END_DELAY_MS = 0;
+// const DEFAULT_PRESS_START_DELAY_MS = 0;
+const DEFAULT_LONG_PRESS_DELAY_MS = 500;
+
+const targetEventTypes = [
+  {name: 'click', passive: false},
+  {name: 'keydown', passive: false},
+  'pointerdown',
+  'pointercancel',
+  'contextmenu',
+];
+const rootEventTypes = [
+  {name: 'keyup', passive: false},
+  {name: 'pointerup', passive: false},
+  'scroll',
+];
+
+// If PointerEvents is not supported (e.g., Safari), also listen to touch and mouse events.
+if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
+  targetEventTypes.push('touchstart', 'touchend', 'mousedown', 'touchcancel');
+  rootEventTypes.push({name: 'mouseup', passive: false});
+}
+
 function createPressEvent(
   type: PressEventType,
   target: Element | Document,
@@ -82,7 +85,7 @@ function createPressEvent(
   };
 }
 
-function dispatchPressEvent(
+function dispatchEvent(
   context: EventResponderContext,
   state: PressState,
   name: PressEventType,
@@ -93,23 +96,40 @@ function dispatchPressEvent(
   context.dispatchEvent(syntheticEvent, {discrete: true});
 }
 
+function dispatchPressChangeEvent(
+  context: EventResponderContext,
+  props: PressProps,
+  state: PressState,
+): void {
+  const listener = () => {
+    props.onPressChange(state.isPressed);
+  };
+  dispatchEvent(context, state, 'presschange', listener);
+}
+
+function dispatchLongPressChangeEvent(
+  context: EventResponderContext,
+  props: PressProps,
+  state: PressState,
+): void {
+  const listener = () => {
+    props.onLongPressChange(state.isLongPressed);
+  };
+  dispatchEvent(context, state, 'longpresschange', listener);
+}
+
 function dispatchPressStartEvents(
   context: EventResponderContext,
   props: PressProps,
   state: PressState,
 ): void {
-  function dispatchPressChangeEvent(bool) {
-    const pressChangeEventListener = () => {
-      props.onPressChange(bool);
-    };
-    dispatchPressEvent(context, state, 'presschange', pressChangeEventListener);
-  }
+  state.isPressed = true;
 
   if (props.onPressStart) {
-    dispatchPressEvent(context, state, 'pressstart', props.onPressStart);
+    dispatchEvent(context, state, 'pressstart', props.onPressStart);
   }
   if (props.onPressChange) {
-    dispatchPressChangeEvent(true);
+    dispatchPressChangeEvent(context, props, state);
   }
   if ((props.onLongPress || props.onLongPressChange) && !state.isLongPressed) {
     const delayLongPress = calculateDelayMS(
@@ -125,31 +145,18 @@ function dispatchPressStartEvents(
           state.longPressTimeout = null;
 
           if (props.onLongPress) {
-            const longPressEventListener = e => {
+            const listener = e => {
               props.onLongPress(e);
               // TODO address this again at some point
               // if (e.nativeEvent.defaultPrevented) {
               //   state.defaultPrevented = true;
               // }
             };
-            dispatchPressEvent(
-              context,
-              state,
-              'longpress',
-              longPressEventListener,
-            );
+            dispatchEvent(context, state, 'longpress', listener);
           }
 
           if (props.onLongPressChange) {
-            const longPressChangeEventListener = () => {
-              props.onLongPressChange(true);
-            };
-            dispatchPressEvent(
-              context,
-              state,
-              'longpresschange',
-              longPressChangeEventListener,
-            );
+            dispatchLongPressChangeEvent(context, props, state);
           }
         }),
       delayLongPress,
@@ -167,24 +174,21 @@ function dispatchPressEndEvents(
     state.longPressTimeout = null;
   }
   if (props.onPressEnd) {
-    dispatchPressEvent(context, state, 'pressend', props.onPressEnd);
+    dispatchEvent(context, state, 'pressend', props.onPressEnd);
   }
-  if (props.onPressChange) {
-    const pressChangeEventListener = () => {
-      props.onPressChange(false);
-    };
-    dispatchPressEvent(context, state, 'presschange', pressChangeEventListener);
+
+  if (state.isPressed) {
+    state.isPressed = false;
+    if (props.onPressChange) {
+      dispatchPressChangeEvent(context, props, state);
+    }
   }
-  if (props.onLongPressChange && state.isLongPressed) {
-    const longPressChangeEventListener = () => {
-      props.onLongPressChange(false);
-    };
-    dispatchPressEvent(
-      context,
-      state,
-      'longpresschange',
-      longPressChangeEventListener,
-    );
+
+  if (state.isLongPressed) {
+    state.isLongPressed = false;
+    if (props.onLongPressChange) {
+      dispatchLongPressChangeEvent(context, props, state);
+    }
   }
 }
 
@@ -223,78 +227,6 @@ const PressResponder = {
     const {eventTarget, eventType, event} = context;
 
     switch (eventType) {
-      case 'keydown': {
-        if (
-          !props.onPress ||
-          context.isTargetOwned(eventTarget) ||
-          !isValidKeyPress((event: any).key)
-        ) {
-          return;
-        }
-        dispatchPressEvent(context, state, 'press', props.onPress);
-        break;
-      }
-
-      /**
-       * Touch event implementations are only needed for Safari, which lacks
-       * support for pointer events.
-       */
-      case 'touchstart':
-        if (!state.isPressed && !context.isTargetOwned(eventTarget)) {
-          // We bail out of polyfilling anchor tags, given the same heuristics
-          // explained above in regards to needing to use click events.
-          if (isAnchorTagElement(eventTarget)) {
-            state.isAnchorTouched = true;
-            return;
-          }
-          state.pressTarget = eventTarget;
-          dispatchPressStartEvents(context, props, state);
-          state.isPressed = true;
-          context.addRootEventTypes(rootEventTypes);
-        }
-
-        break;
-      case 'touchend': {
-        if (state.isAnchorTouched) {
-          return;
-        }
-        if (state.isPressed) {
-          dispatchPressEndEvents(context, props, state);
-          if (
-            eventType !== 'touchcancel' &&
-            (props.onPress || props.onLongPress)
-          ) {
-            // Find if the X/Y of the end touch is still that of the original target
-            const changedTouch = (event: any).changedTouches[0];
-            const doc = (eventTarget: any).ownerDocument;
-            const target = doc.elementFromPoint(
-              changedTouch.screenX,
-              changedTouch.screenY,
-            );
-            if (
-              target !== null &&
-              context.isTargetWithinEventComponent(target)
-            ) {
-              if (
-                props.onPress &&
-                !(
-                  state.isLongPressed &&
-                  props.onLongPressShouldCancelPress &&
-                  props.onLongPressShouldCancelPress()
-                )
-              ) {
-                dispatchPressEvent(context, state, 'press', props.onPress);
-              }
-            }
-          }
-          state.isPressed = false;
-          state.isLongPressed = false;
-          state.shouldSkipMouseAfterTouch = true;
-          context.removeRootEventTypes(rootEventTypes);
-        }
-        break;
-      }
-
       /**
        * Respond to pointer events and fall back to mouse.
        */
@@ -309,8 +241,11 @@ const PressResponder = {
             (event: any).pointerType === 'mouse' ||
             eventType === 'mousedown'
           ) {
-            // Ignore if we are pressing on hit slop area with mouse
             if (
+              // Ignore right- and middle-clicks
+              event.button === 1 ||
+              event.button === 2 ||
+              // Ignore pressing on hit slop area with mouse
               context.isPositionWithinTouchHitTarget(
                 (event: any).x,
                 (event: any).y,
@@ -318,14 +253,9 @@ const PressResponder = {
             ) {
               return;
             }
-            // Ignore middle- and right-clicks
-            if (event.button === 2 || event.button === 1) {
-              return;
-            }
           }
           state.pressTarget = eventTarget;
           dispatchPressStartEvents(context, props, state);
-          state.isPressed = true;
           context.addRootEventTypes(rootEventTypes);
         }
         break;
@@ -337,52 +267,147 @@ const PressResponder = {
             state.shouldSkipMouseAfterTouch = false;
             return;
           }
+
+          const wasLongPressed = state.isLongPressed;
+
           dispatchPressEndEvents(context, props, state);
-          if (
-            state.pressTarget !== null &&
-            (props.onPress || props.onLongPress)
-          ) {
+
+          if (state.pressTarget !== null && props.onPress) {
             if (context.isTargetWithinElement(eventTarget, state.pressTarget)) {
               if (
-                props.onPress &&
                 !(
-                  state.isLongPressed &&
+                  wasLongPressed &&
                   props.onLongPressShouldCancelPress &&
                   props.onLongPressShouldCancelPress()
                 )
               ) {
-                const pressEventListener = e => {
+                const listener = e => {
                   props.onPress(e);
                   // TODO address this again at some point
                   // if (e.nativeEvent.defaultPrevented) {
                   //   state.defaultPrevented = true;
                   // }
                 };
-                dispatchPressEvent(context, state, 'press', pressEventListener);
+                dispatchEvent(context, state, 'press', listener);
               }
             }
           }
-          state.isPressed = false;
-          state.isLongPressed = false;
           context.removeRootEventTypes(rootEventTypes);
         }
         state.isAnchorTouched = false;
         break;
       }
 
-      case 'scroll':
-      case 'touchcancel':
-      case 'contextmenu':
-      case 'pointercancel': {
+      /**
+       * Touch event implementations are only needed for Safari, which lacks
+       * support for pointer events.
+       */
+      case 'touchstart': {
+        if (!state.isPressed && !context.isTargetOwned(eventTarget)) {
+          // We bail out of polyfilling anchor tags, given the same heuristics
+          // explained above in regards to needing to use click events.
+          if (isAnchorTagElement(eventTarget)) {
+            state.isAnchorTouched = true;
+            return;
+          }
+          state.pressTarget = eventTarget;
+          dispatchPressStartEvents(context, props, state);
+          context.addRootEventTypes(rootEventTypes);
+        }
+        break;
+      }
+      case 'touchend': {
+        if (state.isAnchorTouched) {
+          state.isAnchorTouched = false;
+          return;
+        }
         if (state.isPressed) {
-          state.shouldSkipMouseAfterTouch = false;
+          const wasLongPressed = state.isLongPressed;
+
           dispatchPressEndEvents(context, props, state);
-          state.isPressed = false;
-          state.isLongPressed = false;
+
+          if (eventType !== 'touchcancel' && props.onPress) {
+            // Find if the X/Y of the end touch is still that of the original target
+            const changedTouch = (event: any).changedTouches[0];
+            const doc = (eventTarget: any).ownerDocument;
+            const target = doc.elementFromPoint(
+              changedTouch.screenX,
+              changedTouch.screenY,
+            );
+            if (
+              target !== null &&
+              context.isTargetWithinEventComponent(target)
+            ) {
+              if (
+                !(
+                  wasLongPressed &&
+                  props.onLongPressShouldCancelPress &&
+                  props.onLongPressShouldCancelPress()
+                )
+              ) {
+                dispatchEvent(context, state, 'press', props.onPress);
+              }
+            }
+          }
+          state.shouldSkipMouseAfterTouch = true;
           context.removeRootEventTypes(rootEventTypes);
         }
         break;
       }
+
+      /**
+       * Keyboard interaction support
+       * TODO: determine UX for metaKey + validKeyPress interactions
+       */
+      case 'keydown': {
+        if (
+          !state.isPressed &&
+          !state.isLongPressed &&
+          !context.isTargetOwned(eventTarget) &&
+          isValidKeyPress((event: any).key)
+        ) {
+          // Prevent spacebar press from scrolling the window
+          if ((event: any).key === ' ') {
+            (event: any).preventDefault();
+          }
+          state.pressTarget = eventTarget;
+          dispatchPressStartEvents(context, props, state);
+          context.addRootEventTypes(rootEventTypes);
+        }
+        break;
+      }
+      case 'keyup': {
+        if (state.isPressed && isValidKeyPress((event: any).key)) {
+          const wasLongPressed = state.isLongPressed;
+          dispatchPressEndEvents(context, props, state);
+          if (state.pressTarget !== null && props.onPress) {
+            if (
+              !(
+                wasLongPressed &&
+                props.onLongPressShouldCancelPress &&
+                props.onLongPressShouldCancelPress()
+              )
+            ) {
+              dispatchEvent(context, state, 'press', props.onPress);
+            }
+          }
+          context.removeRootEventTypes(rootEventTypes);
+        }
+        break;
+      }
+
+      case 'contextmenu':
+      case 'pointercancel':
+      case 'scroll':
+      case 'touchcancel': {
+        if (state.isPressed) {
+          state.shouldSkipMouseAfterTouch = false;
+          dispatchPressEndEvents(context, props, state);
+          context.removeRootEventTypes(rootEventTypes);
+        }
+        break;
+      }
+
       case 'click': {
         if (state.defaultPrevented) {
           (event: any).preventDefault();

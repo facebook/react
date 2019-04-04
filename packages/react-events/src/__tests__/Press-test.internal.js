@@ -14,7 +14,7 @@ let ReactFeatureFlags;
 let ReactDOM;
 let Press;
 
-const DEFAULT_LONG_PRESS_DELAY = 1000;
+const DEFAULT_LONG_PRESS_DELAY = 500;
 
 const createPointerEvent = type => {
   const event = document.createEvent('Event');
@@ -69,10 +69,29 @@ describe('Event responder: Press', () => {
       expect(onPressStart).toHaveBeenCalledTimes(1);
     });
 
-    it('ignores emulated "mousedown" event', () => {
+    it('ignores browser emulated "mousedown" event', () => {
       ref.current.dispatchEvent(createPointerEvent('pointerdown'));
       ref.current.dispatchEvent(createPointerEvent('mousedown'));
       expect(onPressStart).toHaveBeenCalledTimes(1);
+    });
+
+    it('is called once after "keydown" events for Enter', () => {
+      ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: 'Enter'}));
+      ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: 'Enter'}));
+      ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: 'Enter'}));
+      expect(onPressStart).toHaveBeenCalledTimes(1);
+    });
+
+    it('is called once after "keydown" events for Spacebar', () => {
+      ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: ' '}));
+      ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: ' '}));
+      ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: ' '}));
+      expect(onPressStart).toHaveBeenCalledTimes(1);
+    });
+
+    it('is not called after "keydown" for other keys', () => {
+      ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: 'a'}));
+      expect(onPressStart).not.toBeCalled();
     });
 
     // No PointerEvent fallbacks
@@ -109,11 +128,29 @@ describe('Event responder: Press', () => {
       expect(onPressEnd).toHaveBeenCalledTimes(1);
     });
 
-    it('ignores emulated "mouseup" event', () => {
+    it('ignores browser emulated "mouseup" event', () => {
       ref.current.dispatchEvent(createPointerEvent('touchstart'));
       ref.current.dispatchEvent(createPointerEvent('touchend'));
       ref.current.dispatchEvent(createPointerEvent('mouseup'));
       expect(onPressEnd).toHaveBeenCalledTimes(1);
+    });
+
+    it('is called after "keyup" event for Enter', () => {
+      ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: 'Enter'}));
+      ref.current.dispatchEvent(createKeyboardEvent('keyup', {key: 'Enter'}));
+      expect(onPressEnd).toHaveBeenCalledTimes(1);
+    });
+
+    it('is called after "keyup" event for Spacebar', () => {
+      ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: ' '}));
+      ref.current.dispatchEvent(createKeyboardEvent('keyup', {key: ' '}));
+      expect(onPressEnd).toHaveBeenCalledTimes(1);
+    });
+
+    it('is not called after "keyup" event for other keys', () => {
+      ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: 'Enter'}));
+      ref.current.dispatchEvent(createKeyboardEvent('keyup', {key: 'a'}));
+      expect(onPressEnd).not.toBeCalled();
     });
 
     // No PointerEvent fallbacks
@@ -122,7 +159,6 @@ describe('Event responder: Press', () => {
       ref.current.dispatchEvent(createPointerEvent('mouseup'));
       expect(onPressEnd).toHaveBeenCalledTimes(1);
     });
-
     it('is called after "touchend" event', () => {
       ref.current.dispatchEvent(createPointerEvent('touchstart'));
       ref.current.dispatchEvent(createPointerEvent('touchend'));
@@ -155,6 +191,33 @@ describe('Event responder: Press', () => {
       expect(onPressChange).toHaveBeenCalledTimes(2);
       expect(onPressChange).toHaveBeenCalledWith(false);
     });
+
+    it('is called after valid "keydown" and "keyup" events', () => {
+      ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: 'Enter'}));
+      expect(onPressChange).toHaveBeenCalledTimes(1);
+      expect(onPressChange).toHaveBeenCalledWith(true);
+      ref.current.dispatchEvent(createKeyboardEvent('keyup', {key: 'Enter'}));
+      expect(onPressChange).toHaveBeenCalledTimes(2);
+      expect(onPressChange).toHaveBeenCalledWith(false);
+    });
+
+    // No PointerEvent fallbacks
+    it('is called after "mousedown" and "mouseup" events', () => {
+      ref.current.dispatchEvent(createPointerEvent('mousedown'));
+      expect(onPressChange).toHaveBeenCalledTimes(1);
+      expect(onPressChange).toHaveBeenCalledWith(true);
+      ref.current.dispatchEvent(createPointerEvent('mouseup'));
+      expect(onPressChange).toHaveBeenCalledTimes(2);
+      expect(onPressChange).toHaveBeenCalledWith(false);
+    });
+    it('is called after "touchstart" and "touchend" events', () => {
+      ref.current.dispatchEvent(createPointerEvent('touchstart'));
+      expect(onPressChange).toHaveBeenCalledTimes(1);
+      expect(onPressChange).toHaveBeenCalledWith(true);
+      ref.current.dispatchEvent(createPointerEvent('touchend'));
+      expect(onPressChange).toHaveBeenCalledTimes(2);
+      expect(onPressChange).toHaveBeenCalledWith(false);
+    });
   });
 
   describe('onPress', () => {
@@ -176,6 +239,20 @@ describe('Event responder: Press', () => {
       ref.current.dispatchEvent(createPointerEvent('pointerup'));
       expect(onPress).toHaveBeenCalledTimes(1);
     });
+
+    it('is called after valid "keyup" event', () => {
+      ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: 'Enter'}));
+      ref.current.dispatchEvent(createKeyboardEvent('keyup', {key: 'Enter'}));
+      expect(onPress).toHaveBeenCalledTimes(1);
+    });
+
+    // No PointerEvent fallbacks
+    // TODO: jsdom missing APIs
+    //it('is called after "touchend" event', () => {
+    //ref.current.dispatchEvent(createPointerEvent('touchstart'));
+    //ref.current.dispatchEvent(createPointerEvent('touchend'));
+    //expect(onPress).toHaveBeenCalledTimes(1);
+    //});
   });
 
   describe('onLongPress', () => {
@@ -192,7 +269,7 @@ describe('Event responder: Press', () => {
       ReactDOM.render(element, container);
     });
 
-    it('is called if press lasts default delay', () => {
+    it('is called if "pointerdown" lasts default delay', () => {
       ref.current.dispatchEvent(createPointerEvent('pointerdown'));
       jest.advanceTimersByTime(DEFAULT_LONG_PRESS_DELAY - 1);
       expect(onLongPress).not.toBeCalled();
@@ -200,10 +277,26 @@ describe('Event responder: Press', () => {
       expect(onLongPress).toHaveBeenCalledTimes(1);
     });
 
-    it('is not called if press is released before delay', () => {
+    it('is not called if "pointerup" is dispatched before delay', () => {
       ref.current.dispatchEvent(createPointerEvent('pointerdown'));
       jest.advanceTimersByTime(DEFAULT_LONG_PRESS_DELAY - 1);
       ref.current.dispatchEvent(createPointerEvent('pointerup'));
+      jest.advanceTimersByTime(1);
+      expect(onLongPress).not.toBeCalled();
+    });
+
+    it('is called if valid "keydown" lasts default delay', () => {
+      ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: 'Enter'}));
+      jest.advanceTimersByTime(DEFAULT_LONG_PRESS_DELAY - 1);
+      expect(onLongPress).not.toBeCalled();
+      jest.advanceTimersByTime(1);
+      expect(onLongPress).toHaveBeenCalledTimes(1);
+    });
+
+    it('is not called if valid "keyup" is dispatched before delay', () => {
+      ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: 'Enter'}));
+      jest.advanceTimersByTime(DEFAULT_LONG_PRESS_DELAY - 1);
+      ref.current.dispatchEvent(createKeyboardEvent('keyup', {key: 'Enter'}));
       jest.advanceTimersByTime(1);
       expect(onLongPress).not.toBeCalled();
     });
@@ -339,7 +432,7 @@ describe('Event responder: Press', () => {
 
   describe('nested responders', () => {
     it('dispatch events in the correct order', () => {
-      let events = [];
+      const events = [];
       const ref = React.createRef();
       const createEventHandler = msg => () => {
         events.push(msg);
@@ -385,13 +478,6 @@ describe('Event responder: Press', () => {
         'outer: onPressChange',
         'outer: onPress',
       ]);
-
-      events = [];
-      ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: 'Enter'}));
-      // TODO update this test once we have a form of stopPropagation in
-      // the responder system again. This test had to be updated because
-      // we have removed stopPropagation() from synthetic events.
-      expect(events).toEqual(['keydown', 'inner: onPress', 'outer: onPress']);
     });
   });
 
