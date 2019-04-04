@@ -72,14 +72,21 @@ type HookViewProps = {|
 
 function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
   const { name, id: hookID, isStateEditable, subHooks, value } = hook;
-  if (hook.hasOwnProperty(meta.inspected)) {
-    // This Hook is too deep and hasn't been hydrated.
-    // TODO: show UI to load its data.
-    return null;
-  }
 
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
+
+  if (hook.hasOwnProperty(meta.inspected)) {
+    // This Hook is too deep and hasn't been hydrated.
+    // TODO: show UI to load its data.
+    return (
+      <div className={styles.Hook}>
+        <div className={styles.NameValueRow}>
+          <span className={styles.TruncationIndicator}>...</span>
+        </div>
+      </div>
+    );
+  }
 
   // TODO Add click and key handlers for toggling element open/close state.
 

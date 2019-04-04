@@ -46,3 +46,7 @@
   color: var(--color-dimmer);
   font-style: italic;
 }
+
+.TruncationIndicator {
+  color: var(--color-dimmer);
+}

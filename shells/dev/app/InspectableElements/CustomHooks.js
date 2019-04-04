@@ -32,11 +32,28 @@ function useCustomObject() {
   return useState(123);
 }
 
-function useVeryDeeplyNestedHook(i) {
-  useDebugValue(i);
-  if (i > 0) {
-    useVeryDeeplyNestedHook(i - 1);
-  }
+function useDeepHookA() {
+  useDebugValue('useDeepHookA');
+  useDeepHookB();
+}
+function useDeepHookB() {
+  useDebugValue('useDeepHookB');
+  useDeepHookC();
+}
+function useDeepHookC() {
+  useDebugValue('useDeepHookC');
+  useDeepHookD();
+}
+function useDeepHookD() {
+  useDebugValue('useDeepHookD');
+  useDeepHookE();
+}
+function useDeepHookE() {
+  useDebugValue('useDeepHookE');
+  useDeepHookF();
+}
+function useDeepHookF() {
+  useDebugValue('useDeepHookF');
 }
 
 function FunctionWithHooks(props: any, ref: React$Ref<any>) {
@@ -61,7 +78,7 @@ function FunctionWithHooks(props: any, ref: React$Ref<any>) {
   useNestedOuterHook();
 
   // Verify deep nesting doesn't break
-  useVeryDeeplyNestedHook(50);
+  useDeepHookA();
 
   return <button onClick={onClick}>Count: {debouncedCount}</button>;
 }
