@@ -206,28 +206,15 @@ function OwnerView({ displayName, id }: { displayName: string, id: number }) {
     selectElementByID,
   ]);
 
-  const handleKeyPress = useCallback(
-    e => {
-      if (e.key === ' ' || e.key === 'Enter') {
-        e.preventDefault();
-        selectElementByID(id);
-      }
-    },
-    [id, selectElementByID]
-  );
-
   return (
-    <div
+    <button
       key={id}
       className={styles.Owner}
       onClick={handleClick}
-      onKeyPress={handleKeyPress}
       title={displayName}
-      tabIndex={0}
-      role="button"
     >
       {displayName}
-    </div>
+    </button>
   );
 }
 

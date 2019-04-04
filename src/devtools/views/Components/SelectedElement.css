@@ -59,8 +59,17 @@
 }
 
 .Owner {
-  padding-left: 0.75rem;
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.25rem;
+  margin-left: 0.5rem;
   cursor: pointer;
+  background: none;
+  border: none;
+  display: block;
+}
+.Owner:focus {
+  outline: none;
+  background-color: var(--color-button-background-focus);
 }
 
 .Loading {
