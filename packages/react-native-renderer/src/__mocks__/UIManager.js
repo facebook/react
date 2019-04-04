@@ -153,6 +153,8 @@ const RCTUIManager = {
     views.get(parentTag).children.forEach(tag => removeChild(parentTag, tag));
   }),
   replaceExistingNonRootView: jest.fn(),
+  measure: jest.fn(),
+  measureInWindow: jest.fn(),
   measureLayout: jest.fn(),
   __takeSnapshot: jest.fn(),
 };

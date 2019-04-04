@@ -249,6 +249,106 @@ describe('ReactNative', () => {
     });
   });
 
+  it('should call UIManager.measure on ref.measure', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    class Subclass extends ReactNative.NativeComponent {
+      render() {
+        return <View>{this.props.children}</View>;
+      }
+    }
+
+    const CreateClass = createReactClass({
+      mixins: [NativeMethodsMixin],
+      render() {
+        return <View>{this.props.children}</View>;
+      },
+    });
+
+    [View, Subclass, CreateClass].forEach(Component => {
+      UIManager.measure.mockClear();
+
+      let viewRef;
+      ReactNative.render(
+        <Component
+          ref={ref => {
+            viewRef = ref;
+          }}
+        />,
+        11,
+      );
+
+      expect(UIManager.measure).not.toBeCalled();
+
+      const successCallback = jest.fn();
+      viewRef.measure(successCallback);
+
+      expect(UIManager.measure).toHaveBeenCalledTimes(1);
+      expect(UIManager.measure).toHaveBeenCalledWith(
+        expect.any(Number),
+        expect.any(Function),
+      );
+
+      const args = UIManager.measure.mock.calls[0];
+      expect(successCallback).not.toBeCalled();
+      args[1]('success');
+      expect(successCallback).toBeCalledWith('success');
+    });
+  });
+
+  it('should call UIManager.measureInWindow on ref.measureInWindow', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    class Subclass extends ReactNative.NativeComponent {
+      render() {
+        return <View>{this.props.children}</View>;
+      }
+    }
+
+    const CreateClass = createReactClass({
+      mixins: [NativeMethodsMixin],
+      render() {
+        return <View>{this.props.children}</View>;
+      },
+    });
+
+    [View, Subclass, CreateClass].forEach(Component => {
+      UIManager.measureInWindow.mockClear();
+
+      let viewRef;
+      ReactNative.render(
+        <Component
+          ref={ref => {
+            viewRef = ref;
+          }}
+        />,
+        11,
+      );
+
+      expect(UIManager.measureInWindow).not.toBeCalled();
+
+      const successCallback = jest.fn();
+      viewRef.measureInWindow(successCallback);
+
+      expect(UIManager.measureInWindow).toHaveBeenCalledTimes(1);
+      expect(UIManager.measureInWindow).toHaveBeenCalledWith(
+        expect.any(Number),
+        expect.any(Function),
+      );
+
+      const args = UIManager.measureInWindow.mock.calls[0];
+      expect(successCallback).not.toBeCalled();
+      args[1]('success');
+      expect(successCallback).toBeCalledWith('success');
+    });
+  });
+
   it('should support reactTag in ref.measureLayout', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
