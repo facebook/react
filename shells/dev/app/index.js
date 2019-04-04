@@ -32,6 +32,7 @@ function mountTestApp() {
   mountHelper(ElementTypes);
   mountHelper(EditableProps);
   mountHelper(DeeplyNestedComponents);
+  mountHelper(SuspenseTree);
 }
 
 function unmountTestApp() {

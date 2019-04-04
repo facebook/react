@@ -199,6 +199,7 @@ export function attach(
     IndeterminateComponent,
     MemoComponent,
     SimpleMemoComponent,
+    SuspenseComponent,
   } = ReactTypeOfWork;
   const {
     CONCURRENT_MODE_NUMBER,
@@ -219,7 +220,15 @@ export function attach(
     DEPRECATED_PLACEHOLDER_SYMBOL_STRING,
   } = ReactSymbols;
 
-  const { overrideHookState, overrideProps } = renderer;
+  const {
+    overrideHookState,
+    overrideProps,
+    setSuspenseHandler,
+    scheduleUpdate,
+  } = renderer;
+  const supportsEditingSuspense =
+    typeof setSuspenseHandler === 'function' &&
+    typeof scheduleUpdate === 'function';
 
   const debug = (name: string, fiber: Fiber, parentFiber: ?Fiber): void => {
     if (__DEBUG__) {
@@ -845,8 +854,7 @@ export function attach(
 
     // Suspense components only have a non-null memoizedState if they're timed-out.
     const isTimedOutSuspense =
-      nextFiber.tag === ReactTypeOfWork.SuspenseComponent &&
-      nextFiber.memoizedState !== null;
+      nextFiber.tag === SuspenseComponent && nextFiber.memoizedState !== null;
 
     if (isTimedOutSuspense) {
       // The behavior of timed-out Suspense trees is unique.
@@ -1411,6 +1419,9 @@ export function attach(
       }
     }
 
+    const isTimedOutSuspense =
+      tag === SuspenseComponent && memoizedState !== null;
+
     return {
       id,
 
@@ -1419,6 +1430,14 @@ export function attach(
 
       // Does the current renderer support editable function props?
       canEditFunctionProps: typeof overrideProps === 'function',
+
+      canEditSuspense:
+        supportsEditingSuspense &&
+        // If it's showing the real content, we can always flip fallback.
+        (!isTimedOutSuspense ||
+          // If it's showing fallback because we previously forced it to,
+          // allow toggling it back to remove the fallback override.
+          forceFallbackForSuspenseIDs.has(id)),
 
       // Can view component source location.
       canViewSource,
@@ -1667,6 +1686,45 @@ export function attach(
     startProfiling();
   }
 
+  // React will switch between these implementations depending on whether
+  // we have any manually suspended Fibers or not.
+
+  function shouldSuspendFiberAlwaysFalse() {
+    return false;
+  }
+
+  let forceFallbackForSuspenseIDs = new Set();
+  function shouldSuspendFiberAccordingToSet(fiber) {
+    const id = getFiberID(getPrimaryFiber(((fiber: any): Fiber)));
+    return forceFallbackForSuspenseIDs.has(id);
+  }
+
+  function overrideSuspense(id, forceFallback) {
+    if (
+      typeof setSuspenseHandler !== 'function' ||
+      typeof scheduleUpdate !== 'function'
+    ) {
+      throw new Error(
+        'Expected overrideSuspense() to not get called for earlier React versions.'
+      );
+    }
+    if (forceFallback) {
+      forceFallbackForSuspenseIDs.add(id);
+      if (forceFallbackForSuspenseIDs.size === 1) {
+        // First override is added. Switch React to slower path.
+        setSuspenseHandler(shouldSuspendFiberAccordingToSet);
+      }
+    } else {
+      forceFallbackForSuspenseIDs.delete(id);
+      if (forceFallbackForSuspenseIDs.size === 0) {
+        // Last override is gone. Switch React back to fast path.
+        setSuspenseHandler(shouldSuspendFiberAlwaysFalse);
+      }
+    }
+    const fiber = idToFiberMap.get(id);
+    scheduleUpdate(fiber);
+  }
+
   return {
     cleanup,
     flushInitialOperations,
@@ -1680,6 +1738,7 @@ export function attach(
     handleCommitFiberUnmount,
     inspectElement,
     prepareViewElementSource,
+    overrideSuspense,
     renderer,
     selectElement,
     setInContext,

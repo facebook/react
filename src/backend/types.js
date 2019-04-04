@@ -45,6 +45,10 @@ export type ReactRenderer = {
     value: any
   ) => void,
 
+  // 16.9+
+  scheduleUpdate?: ?(fiber: Object) => void,
+  setSuspenseHandler?: ?(shouldSuspend: (fiber: Object) => boolean) => void,
+
   // Only injected by React v16.8+ in order to support hooks inspection.
   currentDispatcherRef?: {| current: null | Dispatcher |},
 };
@@ -95,6 +99,7 @@ export type RendererInterface = {
   handleCommitFiberRoot: (fiber: Object) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,
   inspectElement: (id: number) => InspectedElement | null,
+  overrideSuspense: (id: number, forceFallback: boolean) => void,
   prepareViewElementSource: (id: number) => void,
   renderer: ReactRenderer | null,
   selectElement: (id: number) => void,

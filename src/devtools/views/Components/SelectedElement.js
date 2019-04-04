@@ -20,6 +20,7 @@ import {
   ElementTypeForwardRef,
   ElementTypeFunction,
   ElementTypeMemo,
+  ElementTypeSuspense,
 } from '../../types';
 
 import type { InspectedElement } from './types';
@@ -115,6 +116,8 @@ type InspectedElementViewProps = {|
   inspectedElement: InspectedElement,
 |};
 
+const IS_SUSPENDED = 'Suspended';
+
 function InspectedElementView({
   element,
   inspectedElement,
@@ -123,6 +126,7 @@ function InspectedElementView({
   const {
     canEditFunctionProps,
     canEditHooks,
+    canEditSuspense,
     context,
     hooks,
     owners,
@@ -137,6 +141,7 @@ function InspectedElementView({
   let overrideContextFn = null;
   let overridePropsFn = null;
   let overrideStateFn = null;
+  let overrideSuspenseFn = null;
   if (type === ElementTypeClass) {
     overrideContextFn = (path: Array<string | number>, value: any) => {
       const rendererID = store.getRendererIDForElement(id);
@@ -160,6 +165,14 @@ function InspectedElementView({
       const rendererID = store.getRendererIDForElement(id);
       bridge.send('overrideProps', { id, path, rendererID, value });
     };
+  } else if (type === ElementTypeSuspense && canEditSuspense) {
+    overrideSuspenseFn = (path: Array<string | number>, value: boolean) => {
+      if (path.length !== 1 && path !== IS_SUSPENDED) {
+        throw new Error('Unexpected path.');
+      }
+      const rendererID = store.getRendererIDForElement(id);
+      bridge.send('overrideSuspense', { id, rendererID, forceFallback: value });
+    };
   }
 
   return (
@@ -170,11 +183,21 @@ function InspectedElementView({
         overrideValueFn={overridePropsFn}
         showWhenEmpty
       />
-      <InspectedElementTree
-        label="state"
-        data={state}
-        overrideValueFn={overrideStateFn}
-      />
+      {type === ElementTypeSuspense ? (
+        <InspectedElementTree
+          label="suspense"
+          data={{
+            [IS_SUSPENDED]: state !== null,
+          }}
+          overrideValueFn={overrideSuspenseFn}
+        />
+      ) : (
+        <InspectedElementTree
+          label="state"
+          data={state}
+          overrideValueFn={overrideStateFn}
+        />
+      )}
       <HooksTree canEditHooks={canEditHooks} hooks={hooks} id={id} />
       <InspectedElementTree
         label="context"
