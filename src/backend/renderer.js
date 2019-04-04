@@ -716,6 +716,16 @@ export function attach(
   function enqueueUnmount(fiber) {
     const isRoot = fiber.tag === HostRoot;
     const primaryFiber = getPrimaryFiber(fiber);
+    if (!fiberToIDMap.has(primaryFiber)) {
+      // If we've never seen this Fiber, it might be because
+      // it is inside a non-current Suspense fragment tree,
+      // and so the store is not even aware of it.
+      // In that case we can just ignore it, or otherwise
+      // there will be errors later on.
+      primaryFibers.delete(primaryFiber);
+      // TODO: this is fragile and can obscure actual bugs.
+      return;
+    }
     const id = getFiberID(primaryFiber);
     if (isRoot) {
       const operation = new Uint32Array(2);
@@ -757,8 +767,24 @@ export function attach(
       enqueueMount(fiber, parentFiber);
     }
 
-    if (fiber.child !== null) {
-      mountFiber(fiber.child, shouldEnqueueMount ? fiber : parentFiber, true);
+    const isTimedOutSuspense =
+      fiber.tag === ReactTypeOfWork.SuspenseComponent &&
+      fiber.memoizedState !== null;
+
+    if (isTimedOutSuspense) {
+      // Special case: if Suspense mounts in a timed-out state,
+      // get the fallback child from the inner fragment and mount
+      // it as if it was our own child. Updates handle this too.
+      const primaryChildFragment = fiber.child;
+      const fallbackChildFragment = primaryChildFragment.sibling;
+      const fallbackChild = fallbackChildFragment.child;
+      if (fallbackChild !== null) {
+        mountFiber(fallbackChild, shouldEnqueueMount ? fiber : parentFiber, true);
+      }
+    } else {
+      if (fiber.child !== null) {
+        mountFiber(fiber.child, shouldEnqueueMount ? fiber : parentFiber, true);
+      }
     }
 
     if (traverseSiblings && fiber.sibling !== null) {
