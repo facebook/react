@@ -1105,6 +1105,7 @@ export function attach(
   // This function is copied from React and should be kept in sync:
   // https://github.com/facebook/react/blob/master/packages/react-reconciler/src/ReactFiberTreeReflection.js
   // It would be nice if we updated React to inject this function directly (vs just indirectly via findDOMNode).
+  // BEGIN copied code
   function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
     let alternate = fiber.alternate;
     if (!alternate) {
@@ -1121,13 +1122,26 @@ export function attach(
     // If we have two possible branches, we'll walk backwards up to the root
     // to see what path the root points to. On the way we may hit one of the
     // special cases and we'll deal with them.
-    let a = fiber;
-    let b = alternate;
+    let a: Fiber = fiber;
+    let b: Fiber = alternate;
     while (true) {
       let parentA = a.return;
-      let parentB = parentA ? parentA.alternate : null;
-      if (!parentA || !parentB) {
+      if (parentA === null) {
         // We're at the root.
+        break;
+      }
+      let parentB = parentA.alternate;
+      if (parentB === null) {
+        // There is no alternate. This is an unusual case. Currently, it only
+        // happens when a Suspense component is hidden. An extra fragment fiber
+        // is inserted in between the Suspense fiber and its children. Skip
+        // over this extra fragment fiber and proceed to the next parent.
+        const nextParent = parentA.return;
+        if (nextParent !== null) {
+          a = b = nextParent;
+          continue;
+        }
+        // If there's no parent, we're at the root.
         break;
       }
 
@@ -1234,6 +1248,7 @@ export function attach(
     // Otherwise B has to be current branch.
     return alternate;
   }
+  // END copied code
 
   function selectElement(id: number): void {
     let fiber = idToFiberMap.get(id);
