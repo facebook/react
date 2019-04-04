@@ -10,6 +10,9 @@
 /* eslint-disable */
 
 import type {
+  MeasureOnSuccessCallback,
+  MeasureInWindowOnSuccessCallback,
+  MeasureLayoutOnSuccessCallback,
   ReactNativeBaseComponentViewConfig,
   ViewConfigGetter,
 } from 'react-native-renderer/src/ReactNativeTypes';

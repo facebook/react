@@ -427,7 +427,20 @@ describe('ReactNative', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    [View].forEach(Component => {
+    class Subclass extends ReactNative.NativeComponent {
+      render() {
+        return <View>{this.props.children}</View>;
+      }
+    }
+
+    const CreateClass = createReactClass({
+      mixins: [NativeMethodsMixin],
+      render() {
+        return <View>{this.props.children}</View>;
+      },
+    });
+
+    [View, Subclass, CreateClass].forEach(Component => {
       UIManager.measureLayout.mockReset();
 
       let viewRef;

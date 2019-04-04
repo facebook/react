@@ -503,11 +503,16 @@ describe('ReactFabric', () => {
 
       expect(() => {
         viewRef.measureLayout(otherRef, successCallback, failureCallback);
-      }).toWarnDev(['Warning: measureLayout on components using NativeMethodsMixin '+
-      'or ReactNative.NativeComponent is not currently supported in Fabric. ' +
-      'measureLayout must be called on a native ref. Consider using forwardRef.'], {
-        withoutStack: true,
-      });
+      }).toWarnDev(
+        [
+          'Warning: measureLayout on components using NativeMethodsMixin ' +
+            'or ReactNative.NativeComponent is not currently supported in Fabric. ' +
+            'measureLayout must be called on a native ref. Consider using forwardRef.',
+        ],
+        {
+          withoutStack: true,
+        },
+      );
 
       expect(FabricUIManager.measureLayout).not.toBeCalled();
       expect(UIManager.measureLayout).not.toBeCalled();

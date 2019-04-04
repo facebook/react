@@ -43,7 +43,6 @@ import {
   measureInWindow as fabricMeasureInWindow,
   measureLayout as fabricMeasureLayout,
 } from 'FabricUIManager';
-import UIManager from 'UIManager';
 
 // Counter for uniquely identifying views.
 // % 10 === 1 means it is a rootTag.
@@ -88,13 +87,13 @@ class ReactFabricHostComponent {
   _nativeTag: number;
   viewConfig: ReactNativeBaseComponentViewConfig<>;
   currentProps: Props;
-  _internalInstanceHandle: Instance;
+  _internalInstanceHandle: Object;
 
   constructor(
     tag: number,
     viewConfig: ReactNativeBaseComponentViewConfig<>,
     props: Props,
-    internalInstanceHandle: Instance,
+    internalInstanceHandle: Object,
   ) {
     this._nativeTag = tag;
     this.viewConfig = viewConfig;
@@ -125,11 +124,14 @@ class ReactFabricHostComponent {
   }
 
   measureLayout(
-    relativeToNativeNode: Object,
+    relativeToNativeNode: number | Object,
     onSuccess: MeasureLayoutOnSuccessCallback,
     onFail: () => void /* currently unused */,
   ) {
-    if (relativeToNativeNode._internalInstanceHandle == null) {
+    if (
+      typeof relativeToNativeNode === 'number' ||
+      !(relativeToNativeNode instanceof ReactFabricHostComponent)
+    ) {
       warningWithoutStack(
         false,
         'Warning: ref.measureLayout must be called with a ref to a native component.',
