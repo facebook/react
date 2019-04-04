@@ -113,7 +113,7 @@ export default function Tree(props: Props) {
             <FixedSizeList
               className={styles.List}
               height={height}
-              innerElementType={innerElementType}
+              innerElementType={InnerElementType}
               itemCount={numElements}
               itemData={itemData}
               itemSize={lineHeight}
@@ -129,7 +129,7 @@ export default function Tree(props: Props) {
   );
 }
 
-function innerElementType({ style, ...rest }) {
+function InnerElementType({ style, ...rest }) {
   const {
     numElements,
     selectedElementIndex,
