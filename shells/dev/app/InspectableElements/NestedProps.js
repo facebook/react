@@ -23,6 +23,29 @@ export default function ObjectProps() {
       array={['first', 'second', 'third']}
       objectInArray={[object]}
       arrayInObject={{ array: ['first', 'second', 'third'] }}
+      deepObject={{
+        // Known limitation: we won't go deeper than several levels.
+        // In the future, we might offer a way to request deeper access on demand.
+        a: {
+          b: {
+            c: {
+              d: {
+                e: {
+                  f: {
+                    g: {
+                      h: {
+                        i: {
+                          j: 10,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }}
     />
   );
 }
