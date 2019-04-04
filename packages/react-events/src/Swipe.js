@@ -24,17 +24,29 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
 }
 
 type EventData = {
-  diffX: number,
-  diffY: number,
+  pointerType: PointerType,
+  delta: {
+    x: number,
+    y: numer,
+  },
+  direction: SwipeDirection,
 };
-type SwipeEventType = 'swipeleft' | 'swiperight' | 'swipeend' | 'swipemove';
+type PointerType = 'mouse' | 'pointer' | 'touch';
+
+type SwipeEventType = 'swipestart' | 'swipeend' | 'swipemove';
+
+type SwipeDirection = 'up' | 'left' | 'down' | 'right';
+
+type Point = {|
+  x: number,
+  y: number,
+|};
 
 type SwipeEvent = {|
   listener: SwipeEvent => void,
   target: Element | Document,
   type: SwipeEventType,
-  diffX?: number,
-  diffY?: number,
+  delta: Point,
 |};
 
 function createSwipeEvent(
@@ -64,10 +76,64 @@ function dispatchSwipeEvent(
   context.dispatchEvent(syntheticEvent, {discrete});
 }
 
+function dispatchSwipStartEvent(
+  context: ResponderContext,
+  props: Object,
+  state: SwipeState,
+  point: Point,
+) {
+  const eventData = {
+    delta: {
+      x: point.x - state.startX,
+      diffY: point.y - state.startY,
+    },
+    initial: {x: state.startX, y: state.startY},
+    point,
+    //TODO: fill pointerType
+    // pointerType: ... ,
+    direction: state.direction,
+  };
+  dispatchSwipeEvent(
+    context,
+    'swipestart',
+    props.onSwipeStart,
+    state,
+    true,
+    eventData,
+  );
+}
+
+function dispatchSwipeMoveEvent(
+  context: ResponderContext,
+  props: Object,
+  state: SwipeState,
+  point: Point,
+) {
+  const eventData = {
+    delta: {
+      x: point.x - state.startX,
+      diffY: point.y - state.startY,
+    },
+    initial: {x: state.startX, y: state.startY},
+    point,
+    //TODO: fill pointerType
+    // pointerType: ... ,
+    direction: state.direction,
+  };
+  dispatchSwipeEvent(
+    context,
+    'swipemove',
+    props.onSwipe,
+    state,
+    false,
+    eventData,
+  );
+}
+
 type SwipeState = {
-  direction: number,
+  direction: null | SwipeDirection,
   isSwiping: boolean,
-  lastDirection: number,
+  lastDirection: null | SwipeDirection,
   startX: number,
   startY: number,
   touchId: null | number,
@@ -80,9 +146,9 @@ const SwipeResponder = {
   targetEventTypes,
   createInitialState(): SwipeState {
     return {
-      direction: 0,
+      direction: null,
       isSwiping: false,
-      lastDirection: 0,
+      lastDirection: null,
       startX: 0,
       startY: 0,
       touchId: null,
@@ -104,7 +170,7 @@ const SwipeResponder = {
       case 'mousedown':
       case 'pointerdown': {
         if (!state.isSwiping && !context.hasOwnership()) {
-          let obj = event;
+          let obj = nativeEvent;
           if (type === 'touchstart') {
             obj = (nativeEvent: any).targetTouches[0];
             state.touchId = obj.identifier;
@@ -124,6 +190,9 @@ const SwipeResponder = {
             state.x = x;
             state.y = y;
             state.swipeTarget = target;
+            if (props.onSwipeStart) {
+              dispatchSwipStartEvent(context, props, state, {x, y});
+            }
             context.addRootEventTypes(target.ownerDocument, rootEventTypes);
           } else {
             state.touchId = null;
@@ -159,26 +228,21 @@ const SwipeResponder = {
           }
           const x = (obj: any).screenX;
           const y = (obj: any).screenY;
-          if (x < state.x && props.onSwipeLeft) {
-            state.direction = 3;
-          } else if (x > state.x && props.onSwipeRight) {
-            state.direction = 1;
+          if (x < state.x) {
+            state.direction = 'left';
+          } else if (x > state.x) {
+            state.direction = 'right';
+          }
+          if (y < state.y) {
+            state.direction = 'down';
+          } else if (y > state.y) {
+            state.direction = 'up';
           }
           state.x = x;
           state.y = y;
-          if (props.onSwipeMove) {
-            const eventData = {
-              diffX: x - state.startX,
-              diffY: y - state.startY,
-            };
-            dispatchSwipeEvent(
-              context,
-              'swipemove',
-              props.onSwipeMove,
-              state,
-              false,
-              eventData,
-            );
+          state.lastDirection = state.direction;
+          if (props.onSwipe) {
+            dispatchSwipeMoveEvent(context, props, state, {x, y});
             (nativeEvent: any).preventDefault();
           }
         }
@@ -196,26 +260,12 @@ const SwipeResponder = {
           if (props.onShouldClaimOwnership) {
             context.releaseOwnership();
           }
-          const direction = state.direction;
           const lastDirection = state.lastDirection;
-          if (direction !== lastDirection) {
-            if (props.onSwipeLeft && direction === 3) {
-              dispatchSwipeEvent(
-                context,
-                'swipeleft',
-                props.onSwipeLeft,
-                state,
-                true,
-              );
-            } else if (props.onSwipeRight && direction === 1) {
-              dispatchSwipeEvent(
-                context,
-                'swiperight',
-                props.onSwipeRight,
-                state,
-                true,
-              );
-            }
+          if (state.direction !== lastDirection && props.onSwipe) {
+            dispatchSwipeMoveEvent(context, props, state, {
+              x: state.x,
+              y: state.y,
+            });
           }
           if (props.onSwipeEnd) {
             dispatchSwipeEvent(
@@ -226,7 +276,7 @@ const SwipeResponder = {
               true,
             );
           }
-          state.lastDirection = direction;
+          state.lastDirection = null;
           state.isSwiping = false;
           state.swipeTarget = null;
           state.touchId = null;
