@@ -119,10 +119,7 @@ if (supportsMutation) {
     let node = workInProgress.child;
     while (node !== null) {
       if (node.tag === HostComponent || node.tag === HostText) {
-        const instance = node.stateNode;
-        if (instance !== null) {
-          appendInitialChild(parent, instance);
-        }
+        appendInitialChild(parent, node.stateNode);
       } else if (node.tag === HostPortal) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in

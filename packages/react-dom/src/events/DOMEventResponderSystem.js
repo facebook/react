@@ -294,7 +294,8 @@ DOMEventResponderContext.prototype.isPositionWithinTouchHitTarget = function(
   if (childFiber === null) {
     return false;
   }
-  if (childFiber.tag === EventTargetWorkTag) {
+  const parentFiber = childFiber.return;
+  if (parentFiber !== null && parentFiber.tag === EventTargetWorkTag) {
     // TODO find another way to do this without using the
     // expensive getBoundingClientRect.
     const {
