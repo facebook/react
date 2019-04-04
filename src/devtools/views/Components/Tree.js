@@ -113,7 +113,7 @@ export default function Tree(props: Props) {
             <FixedSizeList
               className={styles.List}
               height={height}
-              innerElementType={TreeWrapper}
+              innerElementType={innerElementType}
               itemCount={numElements}
               itemData={itemData}
               itemSize={lineHeight}
@@ -129,7 +129,7 @@ export default function Tree(props: Props) {
   );
 }
 
-function TreeWrapper({ style, ...rest }) {
+function innerElementType({ style, ...rest }) {
   const {
     numElements,
     selectedElementIndex,
