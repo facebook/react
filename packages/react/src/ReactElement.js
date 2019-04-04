@@ -108,7 +108,7 @@ function defineRefPropWarningGetter(props, displayName) {
  * indicating filename, line number, and/or other information.
  * @internal
  */
-const ReactElement = function(type, props, key, ref, owner, self, source) {
+const ReactElement = function(type, key, ref, self, source, owner, props) {
   const element = {
     // This tag allows us to uniquely identify this as a React Element
     $$typeof: REACT_ELEMENT_TYPE,
@@ -213,7 +213,15 @@ export function jsx(type, config, maybeKey) {
     }
   }
 
-  return ReactElement(type, props, key, ref, ReactCurrentOwner.current);
+  return ReactElement(
+    type,
+    key,
+    ref,
+    undefined,
+    undefined,
+    ReactCurrentOwner.current,
+    props,
+  );
 }
 
 /**
@@ -280,12 +288,12 @@ export function jsxDEV(type, config, maybeKey, source, self) {
 
   return ReactElement(
     type,
-    props,
     key,
     ref,
-    ReactCurrentOwner.current,
     self,
     source,
+    ReactCurrentOwner.current,
+    props,
   );
 }
 
@@ -368,12 +376,12 @@ export function createElement(type, config, children) {
   }
   return ReactElement(
     type,
-    props,
     key,
     ref,
-    ReactCurrentOwner.current,
     self,
     source,
+    ReactCurrentOwner.current,
+    props,
   );
 }
 
@@ -395,12 +403,12 @@ export function createFactory(type) {
 export function cloneAndReplaceKey(oldElement, newKey) {
   const newElement = ReactElement(
     oldElement.type,
-    oldElement.props,
     newKey,
     oldElement.ref,
-    oldElement._owner,
     oldElement._self,
     oldElement._source,
+    oldElement._owner,
+    oldElement.props,
   );
 
   return newElement;
@@ -478,7 +486,7 @@ export function cloneElement(element, config, children) {
     props.children = childArray;
   }
 
-  return ReactElement(element.type, props, key, ref, owner, self, source);
+  return ReactElement(element.type, key, ref, self, source, owner, props);
 }
 
 /**
