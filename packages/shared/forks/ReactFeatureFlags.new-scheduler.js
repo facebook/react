@@ -28,3 +28,4 @@ export const warnAboutDeprecatedSetNativeProps = false;
 export const enableEventAPI = false;
 
 export const enableNewScheduler = true;
+export const enableJSXTransformAPI = false;
