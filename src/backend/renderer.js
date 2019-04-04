@@ -1053,18 +1053,30 @@ export function attach(
     currentRootID = -1;
   }
 
-  // The naming is confusing.
-  // They deal with opaque nodes (fibers), not elements.
-  function getNativeFromReactElement(id: number) {
+  function findNativeByFiberID(id: number) {
     try {
-      const primaryFiber = getPrimaryFiber(idToFiberMap.get(id));
-      const hostInstance = renderer.findHostInstanceByFiber(primaryFiber);
-      return hostInstance;
+      const fiber = findCurrentFiberUsingSlowPath(idToFiberMap.get(id));
+      if (fiber === null) {
+        return null;
+      }
+      const isTimedOutSuspense =
+        fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
+      if (!isTimedOutSuspense) {
+        // Normal case.
+        return renderer.findHostInstanceByFiber(fiber);
+      } else {
+        // A timed-out Suspense's findDOMNode is useless.
+        // Try our best to find the fallback directly.
+        const maybeFallbackFiber =
+          (fiber.child && fiber.child.sibling) || fiber;
+        return renderer.findHostInstanceByFiber(maybeFallbackFiber);
+      }
     } catch (err) {
       // The fiber might have unmounted by now.
       return null;
     }
   }
+
   function getFiberIDFromNative(
     hostInstance,
     findNearestUnfilteredAncestor = false
@@ -1731,7 +1743,7 @@ export function attach(
     getCommitDetails,
     getFiberIDFromNative,
     getInteractions,
-    getNativeFromReactElement,
+    findNativeByFiberID,
     getProfilingDataForDownload,
     getProfilingSummary,
     handleCommitFiberRoot,

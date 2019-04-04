@@ -86,9 +86,9 @@ export type ProfilingSummary = {|
 
 export type RendererInterface = {
   cleanup: () => void,
+  findNativeByFiberID: (id: number) => ?NativeType,
   flushInitialOperations: () => void,
   getCommitDetails: (rootID: number, commitIndex: number) => CommitDetails,
-  getNativeFromReactElement?: ?(component: Fiber) => ?NativeType,
   getFiberIDFromNative: (
     component: NativeType,
     findNearestUnfilteredAncestor?: boolean

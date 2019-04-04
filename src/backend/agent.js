@@ -210,11 +210,8 @@ export default class Agent extends EventEmitter {
     }
 
     let node: HTMLElement | null = null;
-    if (
-      renderer !== null &&
-      typeof renderer.getNativeFromReactElement === 'function'
-    ) {
-      node = ((renderer.getNativeFromReactElement(id): any): HTMLElement);
+    if (renderer !== null) {
+      node = ((renderer.findNativeByFiberID(id): any): HTMLElement);
     }
 
     if (node != null) {
