@@ -32,6 +32,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--color-component-name);
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-normal);
 }
 .Component:before,
 .Owner:before {
