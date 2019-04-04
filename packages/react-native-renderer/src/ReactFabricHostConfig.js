@@ -411,17 +411,6 @@ export function cloneHiddenTextInstance(
   throw new Error('Not yet implemented.');
 }
 
-export function cloneHiddenTouchHitTargetInstance(
-  instance: Instance,
-  bottom: number,
-  left: number,
-  right: number,
-  top: number,
-  internalInstanceHandle: Object,
-) {
-  throw new Error('Not yet implemented.');
-}
-
 export function createContainerChildSet(container: Container): ChildSet {
   return createChildNodeSet(container);
 }

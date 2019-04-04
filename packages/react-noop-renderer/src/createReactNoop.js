@@ -628,17 +628,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           });
           return clone;
         },
-
-        cloneHiddenTouchHitTargetInstance(
-          instance: Instance,
-          bottom: number,
-          left: number,
-          right: number,
-          top: number,
-          internalInstanceHandle: Object,
-        ) {
-          throw new Error('Not yet implemented.');
-        },
       };
 
   const NoopRenderer = reconciler(hostConfig);

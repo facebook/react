@@ -103,8 +103,6 @@ export const finalizeContainerChildren =
 export const replaceContainerChildren = $$$hostConfig.replaceContainerChildren;
 export const cloneHiddenInstance = $$$hostConfig.cloneHiddenInstance;
 export const cloneHiddenTextInstance = $$$hostConfig.cloneHiddenTextInstance;
-export const cloneHiddenTouchHitTargetInstance =
-  $$$hostConfig.cloneHiddenTouchHitTargetInstance;
 
 // -------------------
 //     Hydration
