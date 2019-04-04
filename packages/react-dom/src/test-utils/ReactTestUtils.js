@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+import type {Thenable} from 'react-reconciler/src/ReactFiberScheduler';
 
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -22,15 +23,11 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 import * as DOMTopLevelEventTypes from '../events/DOMTopLevelEventTypes';
 import {PLUGIN_EVENT_SYSTEM} from 'events/EventSystemFlags';
-
-// for .act's return value
-type Thenable = {
-  then(resolve: () => mixed, reject?: () => mixed): mixed,
-};
+import act from './ReactTestUtilsAct';
 
 const {findDOMNode} = ReactDOM;
 // Keep in sync with ReactDOMUnstableNativeDependencies.js
-// and ReactDOM.js:
+// ReactDOM.js, and ReactTestUtilsAct.js:
 const [
   getInstanceFromNode,
   /* eslint-disable no-unused-vars */
@@ -45,6 +42,8 @@ const [
   restoreStateIfNeeded,
   dispatchEvent,
   runEventsInBatch,
+  // eslint-disable-next-line no-unused-vars
+  flushPassiveEffects,
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
 
 function Event(suffix) {}
@@ -152,8 +151,11 @@ function validateClassInstance(inst, methodName) {
   );
 }
 
-// a stub element, lazily initialized, used by act() when flushing effects
+// a plain dom element, lazily initialized, used by act() when flushing effects
 let actContainerElement = null;
+
+// a warning for when you try to use TestUtils.act in a non-browser environment
+let didWarnAboutActInNodejs = false;
 
 /**
  * Utilities for making it easy to test React components.
@@ -391,57 +393,24 @@ const ReactTestUtils = {
   Simulate: null,
   SimulateNative: {},
 
-  act(callback: () => void): Thenable {
+  act(callback: () => Thenable) {
     if (actContainerElement === null) {
-      // warn if we can't actually create the stub element
       if (__DEV__) {
-        warningWithoutStack(
-          typeof document !== 'undefined' &&
-            document !== null &&
-            typeof document.createElement === 'function',
-          'It looks like you called TestUtils.act(...) in a non-browser environment. ' +
-            "If you're using TestRenderer for your tests, you should call " +
-            'TestRenderer.act(...) instead of TestUtils.act(...).',
-        );
-      }
-      // then make it
-      actContainerElement = document.createElement('div');
-    }
-
-    const result = ReactDOM.unstable_batchedUpdates(callback);
-    // note: keep these warning messages in sync with
-    // createReactNoop.js and ReactTestRenderer.js
-    if (__DEV__) {
-      if (result !== undefined) {
-        let addendum;
-        if (result !== null && typeof result.then === 'function') {
-          addendum =
-            '\n\nIt looks like you wrote ReactTestUtils.act(async () => ...), ' +
-            'or returned a Promise from the callback passed to it. ' +
-            'Putting asynchronous logic inside ReactTestUtils.act(...) is not supported.\n';
-        } else {
-          addendum = ' You returned: ' + result;
-        }
-        warningWithoutStack(
-          false,
-          'The callback passed to ReactTestUtils.act(...) function must not return anything.%s',
-          addendum,
-        );
-      }
-    }
-    ReactDOM.render(<div />, actContainerElement);
-    // we want the user to not expect a return,
-    // but we want to warn if they use it like they can await on it.
-    return {
-      then() {
-        if (__DEV__) {
+        // warn if we're trying to use this in something like node (without jsdom)
+        if (didWarnAboutActInNodejs === false) {
+          didWarnAboutActInNodejs = true;
           warningWithoutStack(
-            false,
-            'Do not await the result of calling ReactTestUtils.act(...), it is not a Promise.',
+            typeof document !== 'undefined' && document !== null,
+            'It looks like you called ReactTestUtils.act(...) in a non-browser environment. ' +
+              "If you're using TestRenderer for your tests, you should call " +
+              'ReactTestRenderer.act(...) instead of ReactTestUtils.act(...).',
           );
         }
-      },
-    };
+      }
+      // now make the stub element
+      actContainerElement = document.createElement('div');
+    }
+    return act(callback);
   },
 };
 

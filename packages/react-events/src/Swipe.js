@@ -239,6 +239,7 @@ const SwipeResponder = {
 
 export default {
   $$typeof: REACT_EVENT_COMPONENT_TYPE,
+  displayName: 'Swipe',
   props: null,
   responder: SwipeResponder,
 };

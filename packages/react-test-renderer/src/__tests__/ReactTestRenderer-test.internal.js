@@ -1023,40 +1023,19 @@ describe('ReactTestRenderer', () => {
     ReactTestRenderer.create(<App />);
   });
 
-  describe('act', () => {
-    it('can use .act() to batch updates and effects', () => {
-      function App(props) {
-        React.useEffect(() => {
-          props.callback();
-        });
-        return null;
-      }
-      let called = false;
-      ReactTestRenderer.act(() => {
-        ReactTestRenderer.create(
-          <App
-            callback={() => {
-              called = true;
-            }}
-          />,
-        );
-      });
-
-      expect(called).toBe(true);
-    });
-    it('warns and throws if you use TestUtils.act instead of TestRenderer.act in node', () => {
-      // we warn when you try to load 2 renderers in the same 'scope'
-      // so as suggested, we call resetModules() to carry on with the test
-      jest.resetModules();
-      const {act} = require('react-dom/test-utils');
-      expect(() => {
-        expect(() => act(() => {})).toThrow('document is not defined');
-      }).toWarnDev(
-        [
-          'It looks like you called TestUtils.act(...) in a non-browser environment',
-        ],
-        {withoutStack: 1},
-      );
-    });
+  // we run this test here because we need a dom-less scope
+  it('warns and throws if you use TestUtils.act instead of TestRenderer.act in node', () => {
+    // we warn when you try to load 2 renderers in the same 'scope'
+    // so as suggested, we call resetModules() to carry on with the test
+    jest.resetModules();
+    const {act} = require('react-dom/test-utils');
+    expect(() => {
+      expect(() => act(() => {})).toThrow('document is not defined');
+    }).toWarnDev(
+      [
+        'It looks like you called ReactTestUtils.act(...) in a non-browser environment',
+      ],
+      {withoutStack: 1},
+    );
   });
 });
