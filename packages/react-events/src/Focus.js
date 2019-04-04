@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {EventResponderContext} from 'events/EventTypes';
+import type {ResponderEvent, ResponderContext} from 'events/EventTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
 const targetEventTypes = [
@@ -39,9 +39,13 @@ function createFocusEvent(
   };
 }
 
-function dispatchFocusInEvents(context: EventResponderContext, props: Object) {
-  const {event, eventTarget} = context;
-  if (context.isTargetWithinEventComponent((event: any).relatedTarget)) {
+function dispatchFocusInEvents(
+  event: ResponderEvent,
+  context: ResponderContext,
+  props: Object,
+) {
+  const {nativeEvent, eventTarget} = event;
+  if (context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)) {
     return;
   }
   if (props.onFocus) {
@@ -65,9 +69,13 @@ function dispatchFocusInEvents(context: EventResponderContext, props: Object) {
   }
 }
 
-function dispatchFocusOutEvents(context: EventResponderContext, props: Object) {
-  const {event, eventTarget} = context;
-  if (context.isTargetWithinEventComponent((event: any).relatedTarget)) {
+function dispatchFocusOutEvents(
+  event: ResponderEvent,
+  context: ResponderContext,
+  props: Object,
+) {
+  const {nativeEvent, eventTarget} = event;
+  if (context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)) {
     return;
   }
   if (props.onBlur) {
@@ -94,24 +102,25 @@ const FocusResponder = {
       isFocused: false,
     };
   },
-  handleEvent(
-    context: EventResponderContext,
+  onEvent(
+    event: ResponderEvent,
+    context: ResponderContext,
     props: Object,
     state: FocusState,
   ): void {
-    const {eventTarget, eventType} = context;
+    const {eventType} = event;
 
     switch (eventType) {
       case 'focus': {
-        if (!state.isFocused && !context.isTargetOwned(eventTarget)) {
-          dispatchFocusInEvents(context, props);
+        if (!state.isFocused && !context.hasOwnership()) {
+          dispatchFocusInEvents(event, context, props);
           state.isFocused = true;
         }
         break;
       }
       case 'blur': {
         if (state.isFocused) {
-          dispatchFocusOutEvents(context, props);
+          dispatchFocusOutEvents(event, context, props);
           state.isFocused = false;
         }
         break;

@@ -10,12 +10,15 @@
 import type {AnyNativeEvent} from 'events/PluginModuleType';
 import type {ReactEventResponderEventType} from 'shared/ReactTypes';
 
-export type EventResponderContext = {
-  event: AnyNativeEvent,
+export type ResponderEvent = {
+  nativeEvent: AnyNativeEvent,
   eventTarget: Element | Document,
   eventType: string,
   isPassive: () => boolean,
   isPassiveSupported: () => boolean,
+};
+
+export type ResponderContext = {
   dispatchEvent: <E>(
     eventObject: E,
     {
@@ -28,7 +31,6 @@ export type EventResponderContext = {
     childTarget: Element | Document,
     parentTarget: Element | Document,
   ) => boolean,
-  isTargetOwned: (Element | Document) => boolean,
   isTargetWithinEventComponent: (Element | Document) => boolean,
   isPositionWithinTouchHitTarget: (x: number, y: number) => boolean,
   addRootEventTypes: (
@@ -37,7 +39,8 @@ export type EventResponderContext = {
   removeRootEventTypes: (
     rootEventTypes: Array<ReactEventResponderEventType>,
   ) => void,
-  requestOwnership: (target: Element | Document | null) => boolean,
-  releaseOwnership: (target: Element | Document | null) => boolean,
+  hasOwnership: () => boolean,
+  requestOwnership: () => boolean,
+  releaseOwnership: () => boolean,
   withAsyncDispatching: (func: () => void) => void,
 };

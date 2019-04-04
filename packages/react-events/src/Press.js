@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {EventResponderContext} from 'events/EventTypes';
+import type {ResponderEvent, ResponderContext} from 'events/EventTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
 // const DEFAULT_PRESS_DELAY_MS = 0;
@@ -83,7 +83,7 @@ function createPressEvent(
 }
 
 function dispatchPressEvent(
-  context: EventResponderContext,
+  context: ResponderContext,
   state: PressState,
   name: PressEventType,
   listener: (e: Object) => void,
@@ -94,7 +94,7 @@ function dispatchPressEvent(
 }
 
 function dispatchPressStartEvents(
-  context: EventResponderContext,
+  context: ResponderContext,
   props: PressProps,
   state: PressState,
 ): void {
@@ -158,7 +158,7 @@ function dispatchPressStartEvents(
 }
 
 function dispatchPressEndEvents(
-  context: EventResponderContext,
+  context: ResponderContext,
   props: PressProps,
   state: PressState,
 ): void {
@@ -202,6 +202,21 @@ function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
   return Math.max(min, maybeNumber != null ? maybeNumber : fallback);
 }
 
+function unmountResponder(
+  context: ResponderContext,
+  props: PressProps,
+  state: PressState,
+): void {
+  if (state.isPressed) {
+    state.isPressed = false;
+    dispatchPressEndEvents(context, props, state);
+    if (state.longPressTimeout !== null) {
+      clearTimeout(state.longPressTimeout);
+      state.longPressTimeout = null;
+    }
+  }
+}
+
 const PressResponder = {
   targetEventTypes,
   createInitialState(): PressState {
@@ -215,19 +230,20 @@ const PressResponder = {
       shouldSkipMouseAfterTouch: false,
     };
   },
-  handleEvent(
-    context: EventResponderContext,
+  onEvent(
+    event: ResponderEvent,
+    context: ResponderContext,
     props: PressProps,
     state: PressState,
   ): void {
-    const {eventTarget, eventType, event} = context;
+    const {eventTarget, eventType, nativeEvent} = event;
 
     switch (eventType) {
       case 'keydown': {
         if (
           !props.onPress ||
-          context.isTargetOwned(eventTarget) ||
-          !isValidKeyPress((event: any).key)
+          context.hasOwnership() ||
+          !isValidKeyPress((nativeEvent: any).key)
         ) {
           return;
         }
@@ -240,7 +256,7 @@ const PressResponder = {
        * support for pointer events.
        */
       case 'touchstart':
-        if (!state.isPressed && !context.isTargetOwned(eventTarget)) {
+        if (!state.isPressed && !context.hasOwnership()) {
           // We bail out of polyfilling anchor tags, given the same heuristics
           // explained above in regards to needing to use click events.
           if (isAnchorTagElement(eventTarget)) {
@@ -265,7 +281,7 @@ const PressResponder = {
             (props.onPress || props.onLongPress)
           ) {
             // Find if the X/Y of the end touch is still that of the original target
-            const changedTouch = (event: any).changedTouches[0];
+            const changedTouch = (nativeEvent: any).changedTouches[0];
             const doc = (eventTarget: any).ownerDocument;
             const target = doc.elementFromPoint(
               changedTouch.screenX,
@@ -302,24 +318,24 @@ const PressResponder = {
       case 'mousedown': {
         if (
           !state.isPressed &&
-          !context.isTargetOwned(eventTarget) &&
+          !context.hasOwnership() &&
           !state.shouldSkipMouseAfterTouch
         ) {
           if (
-            (event: any).pointerType === 'mouse' ||
+            (nativeEvent: any).pointerType === 'mouse' ||
             eventType === 'mousedown'
           ) {
             // Ignore if we are pressing on hit slop area with mouse
             if (
               context.isPositionWithinTouchHitTarget(
-                (event: any).x,
-                (event: any).y,
+                (nativeEvent: any).x,
+                (nativeEvent: any).y,
               )
             ) {
               return;
             }
             // Ignore middle- and right-clicks
-            if (event.button === 2 || event.button === 1) {
+            if (nativeEvent.button === 2 || nativeEvent.button === 1) {
               return;
             }
           }
@@ -385,11 +401,23 @@ const PressResponder = {
       }
       case 'click': {
         if (state.defaultPrevented) {
-          (event: any).preventDefault();
+          (nativeEvent: any).preventDefault();
           state.defaultPrevented = false;
         }
       }
     }
+  },
+  // TODO This method doesn't work as of yet
+  onUnmount(context: ResponderContext, props: PressProps, state: PressState) {
+    unmountResponder(context, props, state);
+  },
+  // TODO This method doesn't work as of yet
+  onOwnershipChange(
+    context: ResponderContext,
+    props: PressProps,
+    state: PressState,
+  ) {
+    unmountResponder(context, props, state);
   },
 };
 
