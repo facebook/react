@@ -246,8 +246,8 @@ function createResponderEvent(
 ): ResponderEvent {
   return {
     nativeEvent: nativeEvent,
-    eventTarget: nativeEventTarget,
-    eventType: topLevelType,
+    target: nativeEventTarget,
+    type: topLevelType,
     passive: (eventSystemFlags & IS_PASSIVE) !== 0,
     passiveSupported: (eventSystemFlags & PASSIVE_NOT_SUPPORTED) === 0,
   };

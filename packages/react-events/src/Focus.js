@@ -51,27 +51,19 @@ function dispatchFocusInEvents(
   context: ResponderContext,
   props: FocusProps,
 ) {
-  const {nativeEvent, eventTarget} = event;
+  const {nativeEvent, target} = event;
   if (context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)) {
     return;
   }
   if (props.onFocus) {
-    const syntheticEvent = createFocusEvent(
-      'focus',
-      eventTarget,
-      props.onFocus,
-    );
+    const syntheticEvent = createFocusEvent('focus', target, props.onFocus);
     context.dispatchEvent(syntheticEvent, {discrete: true});
   }
   if (props.onFocusChange) {
     const listener = () => {
       props.onFocusChange(true);
     };
-    const syntheticEvent = createFocusEvent(
-      'focuschange',
-      eventTarget,
-      listener,
-    );
+    const syntheticEvent = createFocusEvent('focuschange', target, listener);
     context.dispatchEvent(syntheticEvent, {discrete: true});
   }
 }
@@ -81,23 +73,19 @@ function dispatchFocusOutEvents(
   context: ResponderContext,
   props: FocusProps,
 ) {
-  const {nativeEvent, eventTarget} = event;
+  const {nativeEvent, target} = event;
   if (context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)) {
     return;
   }
   if (props.onBlur) {
-    const syntheticEvent = createFocusEvent('blur', eventTarget, props.onBlur);
+    const syntheticEvent = createFocusEvent('blur', target, props.onBlur);
     context.dispatchEvent(syntheticEvent, {discrete: true});
   }
   if (props.onFocusChange) {
     const listener = () => {
       props.onFocusChange(false);
     };
-    const syntheticEvent = createFocusEvent(
-      'focuschange',
-      eventTarget,
-      listener,
-    );
+    const syntheticEvent = createFocusEvent('focuschange', target, listener);
     context.dispatchEvent(syntheticEvent, {discrete: true});
   }
 }
@@ -115,9 +103,9 @@ const FocusResponder = {
     props: Object,
     state: FocusState,
   ): void {
-    const {eventType} = event;
+    const {type} = event;
 
-    switch (eventType) {
+    switch (type) {
       case 'focus': {
         if (!state.isFocused && !context.hasOwnership()) {
           dispatchFocusInEvents(event, context, props);

@@ -97,15 +97,15 @@ const SwipeResponder = {
     props: Object,
     state: SwipeState,
   ): void {
-    const {eventTarget, eventType, nativeEvent} = event;
+    const {target, type, nativeEvent} = event;
 
-    switch (eventType) {
+    switch (type) {
       case 'touchstart':
       case 'mousedown':
       case 'pointerdown': {
         if (!state.isSwiping && !context.hasOwnership()) {
           let obj = event;
-          if (eventType === 'touchstart') {
+          if (type === 'touchstart') {
             obj = (nativeEvent: any).targetTouches[0];
             state.touchId = obj.identifier;
           }
@@ -123,11 +123,8 @@ const SwipeResponder = {
             state.startY = y;
             state.x = x;
             state.y = y;
-            state.swipeTarget = eventTarget;
-            context.addRootEventTypes(
-              eventTarget.ownerDocument,
-              rootEventTypes,
-            );
+            state.swipeTarget = target;
+            context.addRootEventTypes(target.ownerDocument, rootEventTypes);
           } else {
             state.touchId = null;
           }
@@ -142,7 +139,7 @@ const SwipeResponder = {
         }
         if (state.isSwiping) {
           let obj = null;
-          if (eventType === 'touchmove') {
+          if (type === 'touchmove') {
             const targetTouches = (nativeEvent: any).targetTouches;
             for (let i = 0; i < targetTouches.length; i++) {
               if (state.touchId === targetTouches[i].identifier) {

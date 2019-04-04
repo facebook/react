@@ -65,14 +65,14 @@ function dispatchHoverStartEvents(
   context: ResponderContext,
   props: HoverProps,
 ): void {
-  const {nativeEvent, eventTarget} = event;
+  const {nativeEvent, target} = event;
   if (context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)) {
     return;
   }
   if (props.onHoverStart) {
     const syntheticEvent = createHoverEvent(
       'hoverstart',
-      eventTarget,
+      target,
       props.onHoverStart,
     );
     context.dispatchEvent(syntheticEvent, {discrete: true});
@@ -81,11 +81,7 @@ function dispatchHoverStartEvents(
     const listener = () => {
       props.onHoverChange(true);
     };
-    const syntheticEvent = createHoverEvent(
-      'hoverchange',
-      eventTarget,
-      listener,
-    );
+    const syntheticEvent = createHoverEvent('hoverchange', target, listener);
     context.dispatchEvent(syntheticEvent, {discrete: true});
   }
 }
@@ -95,14 +91,14 @@ function dispatchHoverEndEvents(
   context: ResponderContext,
   props: HoverProps,
 ) {
-  const {nativeEvent, eventTarget} = event;
+  const {nativeEvent, target} = event;
   if (context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)) {
     return;
   }
   if (props.onHoverEnd) {
     const syntheticEvent = createHoverEvent(
       'hoverend',
-      eventTarget,
+      target,
       props.onHoverEnd,
     );
     context.dispatchEvent(syntheticEvent, {discrete: true});
@@ -111,11 +107,7 @@ function dispatchHoverEndEvents(
     const listener = () => {
       props.onHoverChange(false);
     };
-    const syntheticEvent = createHoverEvent(
-      'hoverchange',
-      eventTarget,
-      listener,
-    );
+    const syntheticEvent = createHoverEvent('hoverchange', target, listener);
     context.dispatchEvent(syntheticEvent, {discrete: true});
   }
 }
@@ -135,9 +127,9 @@ const HoverResponder = {
     props: HoverProps,
     state: HoverState,
   ): void {
-    const {eventType, nativeEvent} = event;
+    const {type, nativeEvent} = event;
 
-    switch (eventType) {
+    switch (type) {
       /**
        * Prevent hover events when touch is being used.
        */

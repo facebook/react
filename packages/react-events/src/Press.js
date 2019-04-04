@@ -236,9 +236,9 @@ const PressResponder = {
     props: PressProps,
     state: PressState,
   ): void {
-    const {eventTarget, eventType, nativeEvent} = event;
+    const {target, type, nativeEvent} = event;
 
-    switch (eventType) {
+    switch (type) {
       /**
        * Respond to pointer events and fall back to mouse.
        */
@@ -251,7 +251,7 @@ const PressResponder = {
         ) {
           if (
             (nativeEvent: any).pointerType === 'mouse' ||
-            eventType === 'mousedown'
+            type === 'mousedown'
           ) {
             if (
               // Ignore right- and middle-clicks
@@ -266,9 +266,9 @@ const PressResponder = {
               return;
             }
           }
-          state.pressTarget = eventTarget;
+          state.pressTarget = target;
           dispatchPressStartEvents(context, props, state);
-          context.addRootEventTypes(eventTarget.ownerDocument, rootEventTypes);
+          context.addRootEventTypes(target.ownerDocument, rootEventTypes);
         }
         break;
       }
@@ -285,7 +285,7 @@ const PressResponder = {
           dispatchPressEndEvents(context, props, state);
 
           if (state.pressTarget !== null && props.onPress) {
-            if (context.isTargetWithinElement(eventTarget, state.pressTarget)) {
+            if (context.isTargetWithinElement(target, state.pressTarget)) {
               if (
                 !(
                   wasLongPressed &&
@@ -318,13 +318,13 @@ const PressResponder = {
         if (!state.isPressed && !context.hasOwnership()) {
           // We bail out of polyfilling anchor tags, given the same heuristics
           // explained above in regards to needing to use click events.
-          if (isAnchorTagElement(eventTarget)) {
+          if (isAnchorTagElement(target)) {
             state.isAnchorTouched = true;
             return;
           }
-          state.pressTarget = eventTarget;
+          state.pressTarget = target;
           dispatchPressStartEvents(context, props, state);
-          context.addRootEventTypes(eventTarget.ownerDocument, rootEventTypes);
+          context.addRootEventTypes(target.ownerDocument, rootEventTypes);
         }
         break;
       }
@@ -338,17 +338,17 @@ const PressResponder = {
 
           dispatchPressEndEvents(context, props, state);
 
-          if (eventType !== 'touchcancel' && props.onPress) {
+          if (type !== 'touchcancel' && props.onPress) {
             // Find if the X/Y of the end touch is still that of the original target
             const changedTouch = (nativeEvent: any).changedTouches[0];
-            const doc = (eventTarget: any).ownerDocument;
-            const target = doc.elementFromPoint(
+            const doc = (target: any).ownerDocument;
+            const fromTarget = doc.elementFromPoint(
               changedTouch.screenX,
               changedTouch.screenY,
             );
             if (
-              target !== null &&
-              context.isTargetWithinEventComponent(target)
+              fromTarget !== null &&
+              context.isTargetWithinEventComponent(fromTarget)
             ) {
               if (
                 !(
@@ -382,9 +382,9 @@ const PressResponder = {
           if ((nativeEvent: any).key === ' ') {
             (nativeEvent: any).preventDefault();
           }
-          state.pressTarget = eventTarget;
+          state.pressTarget = target;
           dispatchPressStartEvents(context, props, state);
-          context.addRootEventTypes(eventTarget.ownerDocument, rootEventTypes);
+          context.addRootEventTypes(target.ownerDocument, rootEventTypes);
         }
         break;
       }

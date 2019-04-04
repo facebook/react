@@ -93,9 +93,9 @@ const DragResponder = {
     props: Object,
     state: DragState,
   ): void {
-    const {eventTarget, eventType, nativeEvent} = event;
+    const {target, type, nativeEvent} = event;
 
-    switch (eventType) {
+    switch (type) {
       case 'touchstart':
       case 'mousedown':
       case 'pointerdown': {
@@ -104,14 +104,14 @@ const DragResponder = {
             context.releaseOwnership();
           }
           const obj =
-            eventType === 'touchstart'
+            type === 'touchstart'
               ? (nativeEvent: any).changedTouches[0]
               : nativeEvent;
           const x = (state.startX = (obj: any).screenX);
           const y = (state.startY = (obj: any).screenY);
           state.x = x;
           state.y = y;
-          state.dragTarget = eventTarget;
+          state.dragTarget = target;
           state.isPointerDown = true;
 
           if (props.onDragStart) {
@@ -124,7 +124,7 @@ const DragResponder = {
             );
           }
 
-          context.addRootEventTypes(eventTarget.ownerDocument, rootEventTypes);
+          context.addRootEventTypes(target.ownerDocument, rootEventTypes);
         }
         break;
       }
@@ -136,7 +136,7 @@ const DragResponder = {
         }
         if (state.isPointerDown) {
           const obj =
-            eventType === 'touchmove'
+            type === 'touchmove'
               ? (nativeEvent: any).changedTouches[0]
               : nativeEvent;
           const x = (obj: any).screenX;

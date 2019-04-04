@@ -63,7 +63,7 @@ describe('DOMEventResponderSystem', () => {
       (event, context, props) => {
         eventResponderFiredCount++;
         eventLog.push({
-          name: event.eventType,
+          name: event.type,
           passive: event.passive,
           passiveSupported: event.passiveSupported,
         });
@@ -115,7 +115,7 @@ describe('DOMEventResponderSystem', () => {
       ['click'],
       (event, context, props) => {
         eventLog.push({
-          name: event.eventType,
+          name: event.type,
           passive: event.passive,
           passiveSupported: event.passiveSupported,
         });
@@ -151,7 +151,7 @@ describe('DOMEventResponderSystem', () => {
       (event, context, props) => {
         eventResponderFiredCount++;
         eventLog.push({
-          name: event.eventType,
+          name: event.type,
           passive: event.passive,
           passiveSupported: event.passiveSupported,
         });
@@ -231,7 +231,7 @@ describe('DOMEventResponderSystem', () => {
         if (props.onMagicClick) {
           const syntheticEvent = {
             listener: props.onMagicClick,
-            target: event.eventTarget,
+            target: event.target,
             type: 'magicclick',
           };
           context.dispatchEvent(syntheticEvent, {discrete: true});
@@ -267,7 +267,7 @@ describe('DOMEventResponderSystem', () => {
       (event, context, props) => {
         const pressEvent = {
           listener: props.onPress,
-          target: event.eventTarget,
+          target: event.target,
           type: 'press',
         };
         context.dispatchEvent(pressEvent, {discrete: true});
@@ -276,7 +276,7 @@ describe('DOMEventResponderSystem', () => {
           if (props.onLongPress) {
             const longPressEvent = {
               listener: props.onLongPress,
-              target: event.eventTarget,
+              target: event.target,
               type: 'longpress',
             };
             context.dispatchEvent(longPressEvent, {discrete: true});
@@ -285,7 +285,7 @@ describe('DOMEventResponderSystem', () => {
           if (props.onLongPressChange) {
             const longPressChangeEvent = {
               listener: props.onLongPressChange,
-              target: event.eventTarget,
+              target: event.target,
               type: 'longpresschange',
             };
             context.dispatchEvent(longPressChangeEvent, {discrete: true});

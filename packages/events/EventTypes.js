@@ -12,8 +12,8 @@ import type {ReactEventResponderEventType} from 'shared/ReactTypes';
 
 export type ResponderEvent = {
   nativeEvent: AnyNativeEvent,
-  eventTarget: Element | Document,
-  eventType: string,
+  target: Element | Document,
+  type: string,
   passive: boolean,
   passiveSupported: boolean,
 };
