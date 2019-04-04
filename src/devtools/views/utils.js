@@ -6,6 +6,23 @@ import { meta } from '../../hydration';
 import type { HooksTree } from 'src/backend/types';
 
 export function createRegExp(string: string): RegExp {
+  // Allow /regex/ syntax with optional last /
+  if (string[0] === '/') {
+    // Cut off first slash
+    string = string.substring(1);
+    // Cut off last slash, but only if it's there
+    if (string[string.length - 1] === '/') {
+      string = string.substring(0, string.length - 1);
+    }
+    try {
+      return new RegExp(string, 'i');
+    } catch (err) {
+      // Bad regex. Make it not match anything.
+      // TODO: maybe warn in console?
+      return new RegExp('.^');
+    }
+  }
+
   function isLetter(char: string) {
     return char.toLowerCase() !== char.toUpperCase();
   }
