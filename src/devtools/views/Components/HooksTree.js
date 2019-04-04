@@ -9,6 +9,7 @@ import EditableValue from './EditableValue';
 import KeyValue from './KeyValue';
 import { serializeHooksForCopy } from '../utils';
 import styles from './HooksTree.css';
+import { meta } from '../../../hydration';
 
 import type { HooksNode, HooksTree } from 'src/backend/types';
 
@@ -71,6 +72,11 @@ type HookViewProps = {|
 
 function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
   const { name, id: hookID, isStateEditable, subHooks, value } = hook;
+  if (hook.hasOwnProperty(meta.inspected)) {
+    // This Hook is too deep and hasn't been hydrated.
+    // TODO: show UI to load its data.
+    return null;
+  }
 
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);

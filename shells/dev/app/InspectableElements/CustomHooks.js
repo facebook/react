@@ -32,6 +32,13 @@ function useCustomObject() {
   return useState(123);
 }
 
+function useVeryDeeplyNestedHook(i) {
+  useDebugValue(i);
+  if (i > 0) {
+    useVeryDeeplyNestedHook(i - 1);
+  }
+}
+
 function FunctionWithHooks(props: any, ref: React$Ref<any>) {
   const [count, updateCount] = useState(0);
 
@@ -52,6 +59,9 @@ function FunctionWithHooks(props: any, ref: React$Ref<any>) {
 
   // Tests nested custom hooks
   useNestedOuterHook();
+
+  // Verify deep nesting doesn't break
+  useVeryDeeplyNestedHook(50);
 
   return <button onClick={onClick}>Count: {debouncedCount}</button>;
 }
