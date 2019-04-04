@@ -17,15 +17,15 @@ describe('React hooks DevTools integration', () => {
   let Scheduler;
   let act;
   let overrideHookState;
-  let overrideProps;
-  let overrideSuspense;
+  let scheduleUpdate;
+  let setSuspenseHandler;
 
   beforeEach(() => {
     global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
       inject: injected => {
         overrideHookState = injected.overrideHookState;
-        overrideProps = injected.overrideProps;
-        overrideSuspense = injected.overrideSuspense;
+        scheduleUpdate = injected.scheduleUpdate;
+        setSuspenseHandler = injected.setSuspenseHandler;
       },
       supportsFiber: true,
       onCommitFiberRoot: () => {},
@@ -183,7 +183,7 @@ describe('React hooks DevTools integration', () => {
   it('should support overriding suspense in sync mode', () => {
     if (__DEV__) {
       // Lock the first render
-      overrideSuspense(() => true);
+      setSuspenseHandler(() => true);
     }
 
     function MyComponent() {
@@ -201,32 +201,32 @@ describe('React hooks DevTools integration', () => {
     if (__DEV__) {
       // First render was locked
       expect(renderer.toJSON().children).toEqual(['Loading']);
-      overrideProps(fiber, [], null); // Re-render
+      scheduleUpdate(fiber); // Re-render
       expect(renderer.toJSON().children).toEqual(['Loading']);
 
       // Release the lock
-      overrideSuspense(() => false);
-      overrideProps(fiber, [], null); // Re-render
+      setSuspenseHandler(() => false);
+      scheduleUpdate(fiber); // Re-render
       expect(renderer.toJSON().children).toEqual(['Done']);
-      overrideProps(fiber, [], null); // Re-render
+      scheduleUpdate(fiber); // Re-render
       expect(renderer.toJSON().children).toEqual(['Done']);
 
       // Lock again
-      overrideSuspense(() => true);
-      overrideProps(fiber, [], null); // Re-render
+      setSuspenseHandler(() => true);
+      scheduleUpdate(fiber); // Re-render
       expect(renderer.toJSON().children).toEqual(['Loading']);
 
       // Release the lock again
-      overrideSuspense(() => false);
-      overrideProps(fiber, [], null); // Re-render
+      setSuspenseHandler(() => false);
+      scheduleUpdate(fiber); // Re-render
       expect(renderer.toJSON().children).toEqual(['Done']);
 
       // Ensure it checks specific fibers.
-      overrideSuspense(f => f === fiber || f === fiber.alternate);
-      overrideProps(fiber, [], null); // Re-render
+      setSuspenseHandler(f => f === fiber || f === fiber.alternate);
+      scheduleUpdate(fiber); // Re-render
       expect(renderer.toJSON().children).toEqual(['Loading']);
-      overrideSuspense(f => f !== fiber && f !== fiber.alternate);
-      overrideProps(fiber, [], null); // Re-render
+      setSuspenseHandler(f => f !== fiber && f !== fiber.alternate);
+      scheduleUpdate(fiber); // Re-render
       expect(renderer.toJSON().children).toEqual(['Done']);
     } else {
       expect(renderer.toJSON().children).toEqual(['Done']);
@@ -236,7 +236,7 @@ describe('React hooks DevTools integration', () => {
   it('should support overriding suspense in concurrent mode', () => {
     if (__DEV__) {
       // Lock the first render
-      overrideSuspense(() => true);
+      setSuspenseHandler(() => true);
     }
 
     function MyComponent() {
@@ -256,32 +256,32 @@ describe('React hooks DevTools integration', () => {
     if (__DEV__) {
       // First render was locked
       expect(renderer.toJSON().children).toEqual(['Loading']);
-      overrideProps(fiber, [], null); // Re-render
+      scheduleUpdate(fiber); // Re-render
       expect(renderer.toJSON().children).toEqual(['Loading']);
 
       // Release the lock
-      overrideSuspense(() => false);
-      overrideProps(fiber, [], null); // Re-render
+      setSuspenseHandler(() => false);
+      scheduleUpdate(fiber); // Re-render
       expect(renderer.toJSON().children).toEqual(['Done']);
-      overrideProps(fiber, [], null); // Re-render
+      scheduleUpdate(fiber); // Re-render
       expect(renderer.toJSON().children).toEqual(['Done']);
 
       // Lock again
-      overrideSuspense(() => true);
-      overrideProps(fiber, [], null); // Re-render
+      setSuspenseHandler(() => true);
+      scheduleUpdate(fiber); // Re-render
       expect(renderer.toJSON().children).toEqual(['Loading']);
 
       // Release the lock again
-      overrideSuspense(() => false);
-      overrideProps(fiber, [], null); // Re-render
+      setSuspenseHandler(() => false);
+      scheduleUpdate(fiber); // Re-render
       expect(renderer.toJSON().children).toEqual(['Done']);
 
       // Ensure it checks specific fibers.
-      overrideSuspense(f => f === fiber || f === fiber.alternate);
-      overrideProps(fiber, [], null); // Re-render
+      setSuspenseHandler(f => f === fiber || f === fiber.alternate);
+      scheduleUpdate(fiber); // Re-render
       expect(renderer.toJSON().children).toEqual(['Loading']);
-      overrideSuspense(f => f !== fiber && f !== fiber.alternate);
-      overrideProps(fiber, [], null); // Re-render
+      setSuspenseHandler(f => f !== fiber && f !== fiber.alternate);
+      scheduleUpdate(fiber); // Re-render
       expect(renderer.toJSON().children).toEqual(['Done']);
     } else {
       expect(renderer.toJSON().children).toEqual(['Done']);

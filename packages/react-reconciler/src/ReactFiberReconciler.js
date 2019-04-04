@@ -348,7 +348,8 @@ export function shouldSuspend(fiber: Fiber): boolean {
 
 let overrideHookState = null;
 let overrideProps = null;
-let overrideSuspense = null;
+let scheduleUpdate = null;
+let setSuspenseHandler = null;
 
 if (__DEV__) {
   const copyWithSetImpl = (
@@ -410,18 +411,19 @@ if (__DEV__) {
   // Support DevTools props for function components, forwardRef, memo, host components, etc.
   overrideProps = (fiber: Fiber, path: Array<string | number>, value: any) => {
     flushPassiveEffects();
-    if (path.length > 0) {
-      fiber.pendingProps = copyWithSet(fiber.memoizedProps, path, value);
-    } else {
-      fiber.pendingProps = {...fiber.pendingProps};
-    }
+    fiber.pendingProps = copyWithSet(fiber.memoizedProps, path, value);
     if (fiber.alternate) {
       fiber.alternate.pendingProps = fiber.pendingProps;
     }
     scheduleWork(fiber, Sync);
   };
 
-  overrideSuspense = (newShouldSuspendImpl: Fiber => boolean) => {
+  scheduleUpdate = (fiber: Fiber) => {
+    flushPassiveEffects();
+    scheduleWork(fiber, Sync);
+  };
+
+  setSuspenseHandler = (newShouldSuspendImpl: Fiber => boolean) => {
     shouldSuspendImpl = newShouldSuspendImpl;
   };
 }
@@ -434,7 +436,8 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
     ...devToolsConfig,
     overrideHookState,
     overrideProps,
-    overrideSuspense,
+    setSuspenseHandler,
+    scheduleUpdate,
     currentDispatcherRef: ReactCurrentDispatcher,
     findHostInstanceByFiber(fiber: Fiber): Instance | TextInstance | null {
       const hostFiber = findCurrentHostFiber(fiber);
