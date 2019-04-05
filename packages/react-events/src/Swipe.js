@@ -39,7 +39,7 @@ type EventData = {
   initial: Point,
   delta: Point,
   point: Point,
-  direction: SwipeDirection,
+  direction: null | SwipeDirection,
 };
 
 type SwipeEvent = {|
@@ -93,8 +93,7 @@ function dispatchSwipStartEvent(
     },
     initial: {x: state.startX, y: state.startY},
     point,
-    //TODO: fill pointerType
-    // pointerType: ... ,
+    pointerType: state.swipeTarget,
     direction: state.direction,
   };
   dispatchSwipeEvent(
@@ -120,8 +119,7 @@ function dispatchSwipeMoveEvent(
     },
     initial: {x: state.startX, y: state.startY},
     point,
-    //TODO: fill pointerType
-    // pointerType: ... ,
+    pointerType: state.swipeTarget,
     direction: state.direction,
   };
   dispatchSwipeEvent(
