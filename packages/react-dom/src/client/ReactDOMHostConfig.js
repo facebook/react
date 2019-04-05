@@ -45,6 +45,7 @@ import dangerousStyleValue from '../shared/dangerousStyleValue';
 
 import type {DOMContainer} from './ReactDOM';
 import type {ReactEventResponder} from 'shared/ReactTypes';
+import {unmountEventResponder} from '../events/DOMEventResponderSystem';
 import {REACT_EVENT_TARGET_TOUCH_HIT} from 'shared/ReactSymbols';
 
 export type Type = string;
@@ -888,7 +889,6 @@ export function didNotFindHydratableSuspenseInstance(
 export function handleEventComponent(
   eventResponder: ReactEventResponder,
   rootContainerInstance: Container,
-  internalInstanceHandle: Object,
 ): void {
   if (enableEventAPI) {
     const rootElement = rootContainerInstance.ownerDocument;
@@ -896,6 +896,17 @@ export function handleEventComponent(
       eventResponder.targetEventTypes,
       rootElement,
     );
+  }
+}
+
+export function unmountEventComponent(
+  eventResponder: ReactEventResponder,
+  rootContainerInstance: Container,
+  internalInstanceHandle: Object,
+): void {
+  if (enableEventAPI) {
+    // TODO stop listening to targetEventTypes
+    unmountEventResponder(eventResponder, internalInstanceHandle);
   }
 }
 

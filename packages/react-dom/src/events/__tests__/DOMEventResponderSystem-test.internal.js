@@ -13,10 +13,11 @@ let React;
 let ReactFeatureFlags;
 let ReactDOM;
 
-function createReactEventComponent(targetEventTypes, onEvent) {
+function createReactEventComponent(targetEventTypes, onEvent, onUnmount) {
   const testEventResponder = {
     targetEventTypes,
     onEvent,
+    onUnmount,
   };
 
   return {
@@ -315,5 +316,27 @@ describe('DOMEventResponderSystem', () => {
     jest.runAllTimers();
 
     expect(eventLog).toEqual(['press', 'longpress', 'longpresschange']);
+  });
+
+  it('the event responder onUnmount() function should fire', () => {
+    let onUnmountFired = 0;
+
+    const EventComponent = createReactEventComponent(
+      [],
+      (event, context, props) => {},
+      () => {
+        onUnmountFired++;
+      },
+    );
+
+    const Test = () => (
+      <EventComponent>
+        <button />
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+    ReactDOM.render(null, container);
+    expect(onUnmountFired).toEqual(1);
   });
 });

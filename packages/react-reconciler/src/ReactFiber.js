@@ -626,6 +626,7 @@ export function createFiberFromEventComponent(
   fiber.stateNode = {
     context: null,
     props: pendingProps,
+    rootInstance: null,
     state: null,
   };
   fiber.expirationTime = expirationTime;
