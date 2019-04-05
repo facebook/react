@@ -397,7 +397,7 @@ export function runResponderEventsInBatch(
 export function unmountEventResponder(
   responder: ReactEventResponder,
   fiber: Fiber,
-) {
+): void {
   const onUnmount = responder.onUnmount;
   if (onUnmount !== undefined) {
     let {props, state} = fiber.stateNode;

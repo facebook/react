@@ -328,9 +328,16 @@ export function unhideTextInstance(
 export function handleEventComponent(
   eventResponder: ReactEventResponder,
   rootContainerInstance: Container,
-  internalInstanceHandle: Object,
 ) {
   // TODO: add handleEventComponent implementation
+}
+
+export function unmountEventComponent(
+  eventResponder: ReactEventResponder,
+  rootContainerInstance: Container,
+  internalInstanceHandle: Object,
+): void {
+  // TODO: add unmountEventComponent implementation
 }
 
 export function handleEventTarget(

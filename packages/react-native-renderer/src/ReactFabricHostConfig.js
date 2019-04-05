@@ -437,9 +437,16 @@ export function replaceContainerChildren(
 export function handleEventComponent(
   eventResponder: ReactEventResponder,
   rootContainerInstance: Container,
-  internalInstanceHandle: Object,
 ) {
-  // TODO: add handleEventComponent implementation
+  throw new Error('Not yet implemented.');
+}
+
+export function unmountEventComponent(
+  eventResponder: ReactEventResponder,
+  rootContainerInstance: Container,
+  internalInstanceHandle: Object,
+): void {
+  throw new Error('Not yet implemented.');
 }
 
 export function handleEventTarget(
@@ -448,5 +455,5 @@ export function handleEventTarget(
   parentInstance: Container,
   internalInstanceHandle: Object,
 ) {
-  // TODO: add handleEventTarget implementation
+  throw new Error('Not yet implemented.');
 }
