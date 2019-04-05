@@ -281,6 +281,45 @@ describe('Swipe event responder', () => {
     });
   });
 
+  describe('PointerType', () => {
+    let onSwipeStart, ref, pointerType;
+
+    beforeEach(() => {
+      onSwipeStart = e => {
+        pointerType = e.pointerType;
+      };
+      ref = React.createRef();
+      const element = (
+        <Swipe onSwipeStart={onSwipeStart}>
+          <div ref={ref} />
+        </Swipe>
+      );
+      ReactDOM.render(element, container);
+    });
+
+    it('sould be "mouse"', () => {
+      ref.current.dispatchEvent(createMouseEvent('mousedown'));
+      expect(pointerType).toEqual('mouse');
+    });
+
+    it('sould be "pointer"', () => {
+      ref.current.dispatchEvent(createMouseEvent('pointerdown'));
+      expect(pointerType).toEqual('pointer');
+    });
+
+    it('sould be "touch"', () => {
+      ref.current.dispatchEvent(createTouchEvent('touchstart'));
+      expect(pointerType).toEqual('touch');
+    });
+
+    it('is called after "mouse"', () => {
+      ref.current.dispatchEvent(createMouseEvent('mousedown'));
+      ref.current.dispatchEvent(createMouseEvent('pointerdown'));
+      ref.current.dispatchEvent(createTouchEvent('touchstart'));
+      expect(pointerType).toEqual('mouse');
+    });
+  });
+
   it('expect displayName to show up for event component', () => {
     expect(Swipe.displayName).toBe('Swipe');
   });

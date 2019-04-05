@@ -23,7 +23,7 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
   });
 }
 
-// type PointerType = 'mouse' | 'pointer' | 'touch';
+type PointerType = 'mouse' | 'pointer' | 'touch';
 
 type SwipeEventType = 'swipestart' | 'swipeend' | 'swipemove';
 
@@ -35,7 +35,7 @@ type Point = {
 };
 
 type EventData = {
-  // pointerType: PointerType,
+  pointerType: null | PointerType,
   initial: Point,
   delta: Point,
   point: Point,
@@ -46,7 +46,7 @@ type SwipeEvent = {|
   listener: SwipeEvent => void,
   target: Element | Document,
   type: SwipeEventType,
-  // pointerType: PointerType,
+  pointerType: null | PointerType,
   initial: Point,
   delta: Point,
   point: Point,
@@ -93,7 +93,7 @@ function dispatchSwipStartEvent(
     },
     initial: {x: state.startX, y: state.startY},
     point,
-    // pointerType: state.swipeTarget,
+    pointerType: state.pointerType,
     direction: state.direction,
   };
   dispatchSwipeEvent(
@@ -119,7 +119,7 @@ function dispatchSwipeMoveEvent(
     },
     initial: {x: state.startX, y: state.startY},
     point,
-    // pointerType: state.swipeTarget,
+    pointerType: state.pointerType,
     direction: state.direction,
   };
   dispatchSwipeEvent(
@@ -151,6 +151,7 @@ const SwipeResponder = {
       direction: null,
       isSwiping: false,
       lastDirection: null,
+      pointerType: null,
       startX: 0,
       startY: 0,
       touchId: null,
@@ -192,6 +193,14 @@ const SwipeResponder = {
             state.x = x;
             state.y = y;
             state.swipeTarget = target;
+            //use if statement to prevent Fallthrough warning
+            if (type === 'touchstart') {
+              state.pointerType = 'touch';
+            } else if (type === 'mousedown') {
+              state.pointerType = 'mouse';
+            } else if (type === 'pointerdown') {
+              state.pointerType = 'pointer';
+            }
             if (props.onSwipeStart) {
               dispatchSwipStartEvent(context, props, state, {x, y});
             }
