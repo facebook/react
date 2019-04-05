@@ -743,23 +743,26 @@ export function attach(
     }
   }
 
-  function mountFiber(fiber: Fiber, parentFiber: Fiber | null) {
+  function mountFiber(
+    fiber: Fiber,
+    parentFiber: Fiber | null,
+    traverseSiblings = false
+  ) {
     if (__DEBUG__) {
       debug('mountFiber()', fiber, parentFiber);
     }
 
     const shouldEnqueueMount = !shouldFilterFiber(fiber);
-
     if (shouldEnqueueMount) {
       enqueueMount(fiber, parentFiber);
     }
 
     if (fiber.child !== null) {
-      mountFiber(fiber.child, shouldEnqueueMount ? fiber : parentFiber);
+      mountFiber(fiber.child, shouldEnqueueMount ? fiber : parentFiber, true);
     }
 
-    if (fiber.sibling) {
-      mountFiber(fiber.sibling, parentFiber);
+    if (traverseSiblings && fiber.sibling !== null) {
+      mountFiber(fiber.sibling, parentFiber, true);
     }
   }
 

@@ -487,32 +487,26 @@ export default class Store extends EventEmitter {
               debug('Add', `new root fiber ${id}`);
             }
 
-            if (this._idToElement.has(id)) {
-              // The renderer's tree walking approach sometimes mounts the same Fiber twice with Suspense and Lazy.
-              // For now, we avoid adding it to the tree twice by checking if it's already been mounted.
-              // Maybe in the future we'll revisit this.
-            } else {
-              const supportsProfiling = operations[i] > 0;
-              i++;
+            const supportsProfiling = operations[i] > 0;
+            i++;
 
-              this._roots = this._roots.concat(id);
-              this._rootIDToRendererID.set(id, rendererID);
-              this._rootIDToCapabilities.set(id, { supportsProfiling });
+            this._roots = this._roots.concat(id);
+            this._rootIDToRendererID.set(id, rendererID);
+            this._rootIDToCapabilities.set(id, { supportsProfiling });
 
-              this._idToElement.set(id, {
-                children: [],
-                depth: -1,
-                displayName: null,
-                id,
-                key: null,
-                ownerID: 0,
-                parentID: 0,
-                type,
-                weight: 0,
-              });
+            this._idToElement.set(id, {
+              children: [],
+              depth: -1,
+              displayName: null,
+              id,
+              key: null,
+              ownerID: 0,
+              parentID: 0,
+              type,
+              weight: 0,
+            });
 
-              haveRootsChanged = true;
-            }
+            haveRootsChanged = true;
           } else {
             parentID = ((operations[i]: any): number);
             i++;
@@ -545,35 +539,29 @@ export default class Store extends EventEmitter {
               );
             }
 
-            if (this._idToElement.has(id)) {
-              // The renderer's tree walking approach sometimes mounts the same Fiber twice with Suspense and Lazy.
-              // For now, we avoid adding it to the tree twice by checking if it's already been mounted.
-              // Maybe in the future we'll revisit this.
-            } else {
-              parentElement = ((this._idToElement.get(parentID): any): Element);
-              parentElement.children = parentElement.children.concat(id);
+            parentElement = ((this._idToElement.get(parentID): any): Element);
+            parentElement.children = parentElement.children.concat(id);
 
-              const element: Element = {
-                children: [],
-                depth: parentElement.depth + 1,
-                displayName,
-                id,
-                key,
-                ownerID,
-                parentID: parentElement.id,
-                type,
-                weight: 1,
-              };
+            const element: Element = {
+              children: [],
+              depth: parentElement.depth + 1,
+              displayName,
+              id,
+              key,
+              ownerID,
+              parentID: parentElement.id,
+              type,
+              weight: 1,
+            };
 
-              this._idToElement.set(id, element);
+            this._idToElement.set(id, element);
 
-              const oldAddedElementIDs = addedElementIDs;
-              addedElementIDs = new Uint32Array(addedElementIDs.length + 1);
-              addedElementIDs.set(oldAddedElementIDs);
-              addedElementIDs[oldAddedElementIDs.length] = id;
+            const oldAddedElementIDs = addedElementIDs;
+            addedElementIDs = new Uint32Array(addedElementIDs.length + 1);
+            addedElementIDs.set(oldAddedElementIDs);
+            addedElementIDs[oldAddedElementIDs.length] = id;
 
-              weightDelta = 1;
-            }
+            weightDelta = 1;
           }
           break;
         case TREE_OPERATION_REMOVE:
