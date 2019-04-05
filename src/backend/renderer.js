@@ -22,6 +22,7 @@ import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_RESET_CHILDREN,
+  TREE_OPERATION_RECURSIVE_REMOVE_CHILDREN,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
 import { getUID } from '../utils';
@@ -627,7 +628,7 @@ export function attach(
     pendingOperations = new Uint32Array(0);
   }
 
-  function enqueueMount(fiber: Fiber, parentFiber: Fiber | null) {
+  function recordMount(fiber: Fiber, parentFiber: Fiber | null) {
     const isRoot = fiber.tag === HostRoot;
     const id = getFiberID(getPrimaryFiber(fiber));
 
@@ -713,7 +714,7 @@ export function attach(
     }
   }
 
-  function enqueueUnmount(fiber) {
+  function recordUnmount(fiber) {
     const isRoot = fiber.tag === HostRoot;
     const primaryFiber = getPrimaryFiber(fiber);
     if (!fiberToIDMap.has(primaryFiber)) {
@@ -753,18 +754,27 @@ export function attach(
     }
   }
 
-  function mountFiber(
+  function recordRecursiveRemoveChildren(fiber) {
+    const primaryFiber = getPrimaryFiber(fiber);
+    const id = getFiberID(primaryFiber);
+    const operation = new Uint32Array(2);
+    operation[0] = TREE_OPERATION_RECURSIVE_REMOVE_CHILDREN;
+    operation[1] = id;
+    addOperation(operation, false);
+  }
+
+  function mountFiberRecursively(
     fiber: Fiber,
     parentFiber: Fiber | null,
     traverseSiblings = false
   ) {
     if (__DEBUG__) {
-      debug('mountFiber()', fiber, parentFiber);
+      debug('mountFiberRecursively()', fiber, parentFiber);
     }
 
-    const shouldEnqueueMount = !shouldFilterFiber(fiber);
-    if (shouldEnqueueMount) {
-      enqueueMount(fiber, parentFiber);
+    const shouldInclude = !shouldFilterFiber(fiber);
+    if (shouldInclude) {
+      recordMount(fiber, parentFiber);
     }
 
     const isTimedOutSuspense =
@@ -779,25 +789,45 @@ export function attach(
       const fallbackChildFragment = primaryChildFragment.sibling;
       const fallbackChild = fallbackChildFragment.child;
       if (fallbackChild !== null) {
-        mountFiber(fallbackChild, shouldEnqueueMount ? fiber : parentFiber, true);
+        mountFiberRecursively(
+          fallbackChild,
+          shouldInclude ? fiber : parentFiber,
+          true
+        );
       }
     } else {
       if (fiber.child !== null) {
-        mountFiber(fiber.child, shouldEnqueueMount ? fiber : parentFiber, true);
+        mountFiberRecursively(
+          fiber.child,
+          shouldInclude ? fiber : parentFiber,
+          true
+        );
       }
     }
 
     if (traverseSiblings && fiber.sibling !== null) {
-      mountFiber(fiber.sibling, parentFiber, true);
+      mountFiberRecursively(fiber.sibling, parentFiber, true);
     }
   }
 
-  function enqueueUpdateIfNecessary(
-    fiber: Fiber,
-    hasChildOrderChanged: boolean
-  ) {
+  function unmountFiberRecursively(fiber, traverseSiblings = false) {
     if (__DEBUG__) {
-      debug('enqueueUpdateIfNecessary()', fiber);
+      debug('unmountFiberRecursively()', fiber, traverseSiblings);
+    }
+    if (!shouldFilterFiber(fiber)) {
+      recordUnmount(fiber);
+    }
+    if (fiber.child !== null) {
+      unmountFiberRecursively(fiber.child, true);
+    }
+    if (traverseSiblings && fiber.sibling !== null) {
+      unmountFiberRecursively(fiber.sibling, true);
+    }
+  }
+
+  function maybeRecordUpdate(fiber: Fiber, hasChildOrderChanged: boolean) {
+    if (__DEBUG__) {
+      debug('maybeRecordUpdate()', fiber);
     }
 
     const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
@@ -844,7 +874,7 @@ export function attach(
       // We might want to revisit this if it proves to be too inefficient.
       let child = fiber.child;
       while (child !== null) {
-        findReorderedChildren(child, nextChildren);
+        findReorderedChildrenRecursively(child, nextChildren);
         child = child.sibling;
       }
 
@@ -858,108 +888,139 @@ export function attach(
     }
   }
 
-  function findReorderedChildren(fiber: Fiber, nextChildren: Array<number>) {
+  function findReorderedChildrenRecursively(
+    fiber: Fiber,
+    nextChildren: Array<number>
+  ) {
     if (!shouldFilterFiber(fiber)) {
       nextChildren.push(getFiberID(getPrimaryFiber(fiber)));
     } else {
       let child = fiber.child;
       while (child !== null) {
-        findReorderedChildren(child, nextChildren);
+        findReorderedChildrenRecursively(child, nextChildren);
         child = child.sibling;
       }
     }
   }
 
-  function updateFiber(
+  function updateFiberRecursively(
     nextFiber: Fiber,
     prevFiber: Fiber,
     parentFiber: Fiber | null
   ) {
     if (__DEBUG__) {
-      debug('enqueueUpdateIfNecessary()', nextFiber, parentFiber);
+      debug('updateFiberRecursively()', nextFiber, parentFiber);
     }
 
-    const shouldEnqueueUpdate = !shouldFilterFiber(nextFiber);
+    // The behavior of timed-out Suspense trees is unique.
+    // Rather than unmount the timed out content (and possibly lose important state),
+    // React re-parents this content within a hidden Fragment while the fallback is showing.
+    // This behavior doesn't need to be observable in the DevTools though.
+    // It might even result in a bad user experience for e.g. node selection in the Elements panel.
+    // The easiest fix is to strip out the intermediate Fragment fibers,
+    // so the Elements panel and Profiler don't need to special case them.
+    if (nextFiber.tag === SuspenseComponent) {
+      // Suspense components only have a non-null memoizedState if they're timed-out.
+      const prevDidTimeout = prevFiber.memoizedState !== null;
+      const nextDidTimeOut = nextFiber.memoizedState !== null;
 
-    // Suspense components only have a non-null memoizedState if they're timed-out.
-    const isTimedOutSuspense =
-      nextFiber.tag === SuspenseComponent && nextFiber.memoizedState !== null;
-
-    if (isTimedOutSuspense) {
-      // The behavior of timed-out Suspense trees is unique.
-      // Rather than unmount the timed out content (and possibly lose important state),
-      // React re-parents this content within a hidden Fragment while the fallback is showing.
-      // This behavior doesn't need to be observable in the DevTools though.
-      // It might even result in a bad user experience for e.g. node selection in the Elements panel.
-      // The easiest fix is to strip out the intermediate Fragment fibers,
-      // so the Elements panel and Profiler don't need to special case them.
-      const primaryChildFragment = nextFiber.child;
-      const fallbackChildFragment = primaryChildFragment.sibling;
-      const fallbackChild = fallbackChildFragment.child;
-
-      // The primary, hidden child is never actually updated in this case,
-      // so we can skip any updates to its tree.
-      // We only need to track updates to the Fallback UI for now.
-      if (fallbackChild.alternate) {
-        updateFiber(fallbackChild, fallbackChild.alternate, nextFiber);
+      // The logic below is inspired by the codepaths in updateSuspenseComponent()
+      // inside ReactFiberBeginWork in the React source code.
+      if (prevDidTimeout) {
+        if (nextDidTimeOut) {
+          // Fallback -> Fallback:
+          // 1. Reconcile fallback set.
+          const nextFallbackChildSet = nextFiber.child.sibling;
+          // Note: We can't use nextFiber.child.sibling.alternate
+          // because the set is special and alternate may not exist.
+          const prevFallbackChildSet = prevFiber.child.sibling;
+          updateFiberRecursively(
+            nextFallbackChildSet,
+            prevFallbackChildSet,
+            nextFiber
+          );
+          return;
+        } else {
+          // Fallback -> Primary:
+          // 1. Unmount fallback set
+          // Note: don't emulate fallback unmount because React actually did it.
+          // 2. Mount primary set
+          const nextPrimaryChildSet = nextFiber.child;
+          mountFiberRecursively(nextPrimaryChildSet, nextFiber, true);
+          return;
+        }
       } else {
-        mountFiber(fallbackChild, nextFiber);
+        if (nextDidTimeOut) {
+          // Primary -> Fallback:
+          // 1. Hide primary set
+          // This is not a real unmount, so it won't get reported by React.
+          // By this point it's *too late* to find the previous primary child set
+          // so we'll just tell the store to "forget" about those children.
+          // They might "resurface" later when we switch to primary content,
+          // but from the store's point of view they will be a new tree.
+          recordRecursiveRemoveChildren(nextFiber);
+          // 2. Mount fallback set
+          const nextFallbackChildSet = nextFiber.child.sibling;
+          mountFiberRecursively(nextFallbackChildSet, nextFiber, true);
+          return;
+        } else {
+          // Primary -> Primary:
+          // 1. Reconcile primary set.
+          // Note: no return so we can passthrough to the logic below.
+        }
       }
+    }
 
-      if (shouldEnqueueUpdate) {
-        enqueueUpdateIfNecessary(nextFiber, false);
-      }
-    } else {
-      let hasChildOrderChanged = false;
-      if (nextFiber.child !== prevFiber.child) {
-        // If the first child is different, we need to traverse them.
-        // Each next child will be either a new child (mount) or an alternate (update).
-        let nextChild = nextFiber.child;
-        let prevChildAtSameIndex = prevFiber.child;
-        while (nextChild) {
-          // We already know children will be referentially different because
-          // they are either new mounts or alternates of previous children.
-          // Schedule updates and mounts depending on whether alternates exist.
-          // We don't track deletions here because they are reported separately.
-          if (nextChild.alternate) {
-            const prevChild = nextChild.alternate;
-            updateFiber(
-              nextChild,
-              prevChild,
-              shouldEnqueueUpdate ? nextFiber : parentFiber
-            );
-            // However we also keep track if the order of the children matches
-            // the previous order. They are always different referentially, but
-            // if the instances line up conceptually we'll want to know that.
-            if (!hasChildOrderChanged && prevChild !== prevChildAtSameIndex) {
-              hasChildOrderChanged = true;
-            }
-          } else {
-            mountFiber(
-              nextChild,
-              shouldEnqueueUpdate ? nextFiber : parentFiber
-            );
-            if (!hasChildOrderChanged) {
-              hasChildOrderChanged = true;
-            }
+    const shouldInclude = !shouldFilterFiber(nextFiber);
+    let hasChildOrderChanged = false;
+    if (nextFiber.child !== prevFiber.child) {
+      // If the first child is different, we need to traverse them.
+      // Each next child will be either a new child (mount) or an alternate (update).
+      let nextChild = nextFiber.child;
+      let prevChildAtSameIndex = prevFiber.child;
+      while (nextChild) {
+        // We already know children will be referentially different because
+        // they are either new mounts or alternates of previous children.
+        // Schedule updates and mounts depending on whether alternates exist.
+        // We don't track deletions here because they are reported separately.
+        if (nextChild.alternate) {
+          const prevChild = nextChild.alternate;
+          updateFiberRecursively(
+            nextChild,
+            prevChild,
+            shouldInclude ? nextFiber : parentFiber
+          );
+          // However we also keep track if the order of the children matches
+          // the previous order. They are always different referentially, but
+          // if the instances line up conceptually we'll want to know that.
+          if (!hasChildOrderChanged && prevChild !== prevChildAtSameIndex) {
+            hasChildOrderChanged = true;
           }
-          // Try the next child.
-          nextChild = nextChild.sibling;
-          // Advance the pointer in the previous list so that we can
-          // keep comparing if they line up.
-          if (!hasChildOrderChanged && prevChildAtSameIndex != null) {
-            prevChildAtSameIndex = prevChildAtSameIndex.sibling;
+        } else {
+          mountFiberRecursively(
+            nextChild,
+            shouldInclude ? nextFiber : parentFiber
+          );
+          if (!hasChildOrderChanged) {
+            hasChildOrderChanged = true;
           }
         }
-        // If we have no more children, but used to, they don't line up.
+        // Try the next child.
+        nextChild = nextChild.sibling;
+        // Advance the pointer in the previous list so that we can
+        // keep comparing if they line up.
         if (!hasChildOrderChanged && prevChildAtSameIndex != null) {
-          hasChildOrderChanged = true;
+          prevChildAtSameIndex = prevChildAtSameIndex.sibling;
         }
       }
-
-      if (shouldEnqueueUpdate) {
-        enqueueUpdateIfNecessary(nextFiber, hasChildOrderChanged);
+      // If we have no more children, but used to, they don't line up.
+      if (!hasChildOrderChanged && prevChildAtSameIndex != null) {
+        hasChildOrderChanged = true;
       }
+    }
+
+    if (shouldInclude) {
+      maybeRecordUpdate(nextFiber, hasChildOrderChanged);
     }
   }
 
@@ -1002,7 +1063,7 @@ export function attach(
           };
         }
 
-        mountFiber(root.current, null);
+        mountFiberRecursively(root.current, null);
         flushPendingEvents(root);
         currentRootID = -1;
       });
@@ -1013,7 +1074,7 @@ export function attach(
     // This is not recursive.
     // We can't traverse fibers after unmounting so instead
     // we rely on React telling us about each unmount.
-    enqueueUnmount(fiber);
+    recordUnmount(fiber);
   }
 
   function handleCommitFiberRoot(root) {
@@ -1047,17 +1108,17 @@ export function attach(
         current.memoizedState != null && current.memoizedState.element != null;
       if (!wasMounted && isMounted) {
         // Mount a new root.
-        mountFiber(current, null);
+        mountFiberRecursively(current, null);
       } else if (wasMounted && isMounted) {
         // Update an existing root.
-        updateFiber(current, alternate, null);
+        updateFiberRecursively(current, alternate, null);
       } else if (wasMounted && !isMounted) {
         // Unmount an existing root.
-        enqueueUnmount(current);
+        recordUnmount(current);
       }
     } else {
       // Mount a new root.
-      mountFiber(current, null);
+      mountFiberRecursively(current, null);
     }
 
     if (isProfiling) {

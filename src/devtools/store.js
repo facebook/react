@@ -3,6 +3,7 @@
 import EventEmitter from 'events';
 import {
   TREE_OPERATION_ADD,
+  TREE_OPERATION_RECURSIVE_REMOVE_CHILDREN,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_RESET_CHILDREN,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
@@ -572,7 +573,52 @@ export default class Store extends EventEmitter {
             weightDelta = 1;
           }
           break;
-        case TREE_OPERATION_REMOVE:
+        case TREE_OPERATION_RECURSIVE_REMOVE_CHILDREN: {
+          id = ((operations[i + 1]: any): number);
+
+          if (!this._idToElement.has(id)) {
+            throw new Error(
+              'Store does not contain fiber ' +
+                id +
+                '. This is a bug in React DevTools.'
+            );
+          }
+
+          i = i + 2;
+
+          let justRemovedIDs = [];
+          const recursivelyRemove = childID => {
+            justRemovedIDs.push(childID);
+            const child = this._idToElement.get(childID);
+            if (!child) {
+              throw new Error(
+                'Store does not contain fiber ' +
+                  childID +
+                  '. This is a bug in React DevTools.'
+              );
+            }
+            this._idToElement.delete(childID);
+            child.children.forEach(recursivelyRemove);
+          };
+
+          // Track removed items so search results can be updated
+          const oldRemovedElementIDs = removedElementIDs;
+          removedElementIDs = new Uint32Array(
+            removedElementIDs.length + justRemovedIDs.length
+          );
+          removedElementIDs.set(oldRemovedElementIDs);
+          let startIndex = oldRemovedElementIDs.length;
+          for (let j = 0; j < justRemovedIDs.length; j++) {
+            removedElementIDs[startIndex + j] = oldRemovedElementIDs[j];
+          }
+
+          parentElement = ((this._idToElement.get(id): any): Element);
+          parentElement.children.forEach(recursivelyRemove);
+          parentElement.children = [];
+          weightDelta = -parentElement.weight + 1;
+          break;
+        }
+        case TREE_OPERATION_REMOVE: {
           id = ((operations[i + 1]: any): number);
 
           if (!this._idToElement.has(id)) {
@@ -614,11 +660,12 @@ export default class Store extends EventEmitter {
           }
 
           // Track removed items so search results can be updated
-          const oldRemovededElementIDs = removedElementIDs;
+          const oldRemovedElementIDs = removedElementIDs;
           removedElementIDs = new Uint32Array(removedElementIDs.length + 1);
-          removedElementIDs.set(oldRemovededElementIDs);
-          removedElementIDs[oldRemovededElementIDs.length] = id;
+          removedElementIDs.set(oldRemovedElementIDs);
+          removedElementIDs[oldRemovedElementIDs.length] = id;
           break;
+        }
         case TREE_OPERATION_RESET_CHILDREN:
           id = ((operations[i + 1]: any): number);
           const numChildren = ((operations[i + 2]: any): number);
