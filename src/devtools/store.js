@@ -482,12 +482,12 @@ export default class Store extends EventEmitter {
 
           i = i + 3;
 
-          if (__DEBUG__) {
-            if (this._idToElement.has(id)) {
-              console.error(
-                'Store already contains fiber ' + id + '. This is a bug.'
-              );
-            }
+          if (this._idToElement.has(id)) {
+            throw new Error(
+              'Store already contains fiber ' +
+                id +
+                '. This is a bug in React DevTools.'
+            );
           }
 
           if (type === ElementTypeRoot) {
@@ -575,12 +575,12 @@ export default class Store extends EventEmitter {
         case TREE_OPERATION_REMOVE:
           id = ((operations[i + 1]: any): number);
 
-          if (__DEBUG__) {
-            if (!this._idToElement.has(id)) {
-              console.error(
-                'Store does not contain fiber ' + id + '. This is a bug.'
-              );
-            }
+          if (!this._idToElement.has(id)) {
+            throw new Error(
+              'Store does not contain fiber ' +
+                id +
+                '. This is a bug in React DevTools.'
+            );
           }
 
           i = i + 2;
