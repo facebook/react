@@ -448,6 +448,7 @@ const attributes = [
     read: getSVGAttribute('direction'),
   },
   {name: 'disabled', tagName: 'input'},
+  {name: 'disablePictureInPicture', tagName: 'video'},
   {
     name: 'display',
     tagName: 'svg',

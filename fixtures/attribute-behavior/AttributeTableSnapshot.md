@@ -2773,6 +2773,31 @@
 | `disabled=(null)`| (initial)| `<boolean: false>` |
 | `disabled=(undefined)`| (initial)| `<boolean: false>` |
 
+## `disablePictureInPicture` (on `<video>` inside `<div>`)
+| Test Case | Flags | Result |
+| -disablePictureInPicture | --- |
+| `disablePictureInPicture=(string)`| (changed)| `<boolean: true>` |
+| `disablePictureInPicture=(empty string)`| (initial)| `<boolean: false>` |
+| `disablePictureInPicture=(array with string)`| (changed)| `<boolean: true>` |
+| `disablePictureInPicture=(empty array)`| (changed)| `<boolean: true>` |
+| `disablePictureInPicture=(object)`| (changed)| `<boolean: true>` |
+| `disablePictureInPicture=(numeric string)`| (changed)| `<boolean: true>` |
+| `disablePictureInPicture=(-1)`| (changed)| `<boolean: true>` |
+| `disablePictureInPicture=(0)`| (initial)| `<boolean: false>` |
+| `disablePictureInPicture=(integer)`| (changed)| `<boolean: true>` |
+| `disablePictureInPicture=(NaN)`| (initial, warning)| `<boolean: false>` |
+| `disablePictureInPicture=(float)`| (changed)| `<boolean: true>` |
+| `disablePictureInPicture=(true)`| (changed)| `<boolean: true>` |
+| `disablePictureInPicture=(false)`| (initial)| `<boolean: false>` |
+| `disablePictureInPicture=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `disablePictureInPicture=(string 'false')`| (changed, warning)| `<boolean: true>` |
+| `disablePictureInPicture=(string 'on')`| (changed)| `<boolean: true>` |
+| `disablePictureInPicture=(string 'off')`| (changed)| `<boolean: true>` |
+| `disablePictureInPicture=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `disablePictureInPicture=(function)`| (initial, warning)| `<boolean: false>` |
+| `disablePictureInPicture=(null)`| (initial)| `<boolean: false>` |
+| `disablePictureInPicture=(undefined)`| (initial)| `<boolean: false>` |
+
 ## `display` (on `<svg>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
