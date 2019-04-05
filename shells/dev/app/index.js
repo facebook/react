@@ -10,6 +10,7 @@ import ElementTypes from './ElementTypes';
 import InspectableElements from './InspectableElements';
 import InteractionTracing from './InteractionTracing';
 import ToDoList from './ToDoList';
+import Toggle from './Toggle';
 
 import './styles.css';
 
@@ -31,6 +32,7 @@ function mountTestApp() {
   mountHelper(InspectableElements);
   mountHelper(ElementTypes);
   mountHelper(EditableProps);
+  mountHelper(Toggle);
   mountHelper(DeeplyNestedComponents);
 }
 
