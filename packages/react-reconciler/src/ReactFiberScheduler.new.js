@@ -742,26 +742,38 @@ function renderRoot(
     }
 
     startWorkLoopTimer(workInProgress);
+
+    // TODO: Fork renderRoot into renderRootSync and renderRootAsync
+    if (isSync) {
+      if (expirationTime !== Sync) {
+        // An async update expired. There may be other expired updates on
+        // this root. We should render all the expired work in a
+        // single batch.
+        const currentTime = requestCurrentTime();
+        if (currentTime < expirationTime) {
+          // Restart at the current time.
+          workPhase = prevWorkPhase;
+          resetContextDependencies();
+          ReactCurrentDispatcher.current = prevDispatcher;
+          if (enableSchedulerTracing) {
+            __interactionsRef.current = ((prevInteractions: any): Set<
+              Interaction,
+            >);
+          }
+          return renderRoot.bind(null, root, currentTime);
+        }
+      }
+    } else {
+      // Since we know we're in a React event, we can clear the current
+      // event time. The next update will compute a new event time.
+      currentEventTime = NoWork;
+    }
+
     do {
       try {
         if (isSync) {
-          if (expirationTime !== Sync) {
-            // An async update expired. There may be other expired updates on
-            // this root. We should render all the expired work in a
-            // single batch.
-            const currentTime = requestCurrentTime();
-            if (currentTime < expirationTime) {
-              // Restart at the current time.
-              workPhase = prevWorkPhase;
-              ReactCurrentDispatcher.current = prevDispatcher;
-              return renderRoot.bind(null, root, currentTime);
-            }
-          }
           workLoopSync();
         } else {
-          // Since we know we're in a React event, we can clear the current
-          // event time. The next update will compute a new event time.
-          currentEventTime = NoWork;
           workLoop();
         }
         break;
