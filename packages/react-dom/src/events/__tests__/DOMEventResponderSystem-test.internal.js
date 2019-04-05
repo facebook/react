@@ -13,10 +13,10 @@ let React;
 let ReactFeatureFlags;
 let ReactDOM;
 
-function createReactEventComponent(targetEventTypes, handleEvent) {
+function createReactEventComponent(targetEventTypes, onEvent) {
   const testEventResponder = {
     targetEventTypes,
-    handleEvent,
+    onEvent,
   };
 
   return {
@@ -53,19 +53,19 @@ describe('DOMEventResponderSystem', () => {
     container = null;
   });
 
-  it('the event responder handleEvent() function should fire on click event', () => {
+  it('the event responder onEvent() function should fire on click event', () => {
     let eventResponderFiredCount = 0;
     let eventLog = [];
     const buttonRef = React.createRef();
 
     const ClickEventComponent = createReactEventComponent(
       ['click'],
-      (context, props) => {
+      (event, context, props) => {
         eventResponderFiredCount++;
         eventLog.push({
-          name: context.eventType,
-          passive: context.isPassive(),
-          passiveSupported: context.isPassiveSupported(),
+          name: event.type,
+          passive: event.passive,
+          passiveSupported: event.passiveSupported,
         });
       },
     );
@@ -79,7 +79,7 @@ describe('DOMEventResponderSystem', () => {
     ReactDOM.render(<Test />, container);
     expect(container.innerHTML).toBe('<button>Click me!</button>');
 
-    // Clicking the button should trigger the event responder handleEvent()
+    // Clicking the button should trigger the event responder onEvent()
     let buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
     expect(eventResponderFiredCount).toBe(1);
@@ -103,7 +103,7 @@ describe('DOMEventResponderSystem', () => {
     expect(eventResponderFiredCount).toBe(2);
   });
 
-  it('the event responder handleEvent() function should fire on click event (passive events forced)', () => {
+  it('the event responder onEvent() function should fire on click event (passive events forced)', () => {
     // JSDOM does not support passive events, so this manually overrides the value to be true
     const checkPassiveEvents = require('react-dom/src/events/checkPassiveEvents');
     checkPassiveEvents.passiveBrowserEventsSupported = true;
@@ -113,11 +113,11 @@ describe('DOMEventResponderSystem', () => {
 
     const ClickEventComponent = createReactEventComponent(
       ['click'],
-      (context, props) => {
+      (event, context, props) => {
         eventLog.push({
-          name: context.eventType,
-          passive: context.isPassive(),
-          passiveSupported: context.isPassiveSupported(),
+          name: event.type,
+          passive: event.passive,
+          passiveSupported: event.passiveSupported,
         });
       },
     );
@@ -130,7 +130,7 @@ describe('DOMEventResponderSystem', () => {
 
     ReactDOM.render(<Test />, container);
 
-    // Clicking the button should trigger the event responder handleEvent()
+    // Clicking the button should trigger the event responder onEvent()
     let buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
     expect(eventLog.length).toBe(1);
@@ -141,19 +141,19 @@ describe('DOMEventResponderSystem', () => {
     });
   });
 
-  it('nested event responders and their handleEvent() function should fire multiple times', () => {
+  it('nested event responders and their onEvent() function should fire multiple times', () => {
     let eventResponderFiredCount = 0;
     let eventLog = [];
     const buttonRef = React.createRef();
 
     const ClickEventComponent = createReactEventComponent(
       ['click'],
-      (context, props) => {
+      (event, context, props) => {
         eventResponderFiredCount++;
         eventLog.push({
-          name: context.eventType,
-          passive: context.isPassive(),
-          passiveSupported: context.isPassiveSupported(),
+          name: event.type,
+          passive: event.passive,
+          passiveSupported: event.passiveSupported,
         });
       },
     );
@@ -168,7 +168,7 @@ describe('DOMEventResponderSystem', () => {
 
     ReactDOM.render(<Test />, container);
 
-    // Clicking the button should trigger the event responder handleEvent()
+    // Clicking the button should trigger the event responder onEvent()
     let buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
     expect(eventResponderFiredCount).toBe(2);
@@ -186,7 +186,7 @@ describe('DOMEventResponderSystem', () => {
     });
   });
 
-  it('nested event responders and their handleEvent() should fire in the correct order', () => {
+  it('nested event responders and their onEvent() should fire in the correct order', () => {
     let eventLog = [];
     const buttonRef = React.createRef();
 
@@ -214,7 +214,7 @@ describe('DOMEventResponderSystem', () => {
 
     ReactDOM.render(<Test />, container);
 
-    // Clicking the button should trigger the event responder handleEvent()
+    // Clicking the button should trigger the event responder onEvent()
     let buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
 
@@ -227,14 +227,14 @@ describe('DOMEventResponderSystem', () => {
 
     const ClickEventComponent = createReactEventComponent(
       ['click'],
-      (context, props) => {
+      (event, context, props) => {
         if (props.onMagicClick) {
-          const event = {
+          const syntheticEvent = {
             listener: props.onMagicClick,
-            target: context.eventTarget,
+            target: event.target,
             type: 'magicclick',
           };
-          context.dispatchEvent(event, {discrete: true});
+          context.dispatchEvent(syntheticEvent, {discrete: true});
         }
       },
     );
@@ -251,7 +251,7 @@ describe('DOMEventResponderSystem', () => {
 
     ReactDOM.render(<Test />, container);
 
-    // Clicking the button should trigger the event responder handleEvent()
+    // Clicking the button should trigger the event responder onEvent()
     let buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
 
@@ -264,37 +264,33 @@ describe('DOMEventResponderSystem', () => {
 
     const LongPressEventComponent = createReactEventComponent(
       ['click'],
-      (context, props) => {
+      (event, context, props) => {
         const pressEvent = {
           listener: props.onPress,
-          target: context.eventTarget,
+          target: event.target,
           type: 'press',
         };
         context.dispatchEvent(pressEvent, {discrete: true});
 
-        setTimeout(
-          () =>
-            context.withAsyncDispatching(() => {
-              if (props.onLongPress) {
-                const longPressEvent = {
-                  listener: props.onLongPress,
-                  target: context.eventTarget,
-                  type: 'longpress',
-                };
-                context.dispatchEvent(longPressEvent, {discrete: true});
-              }
+        context.setTimeout(() => {
+          if (props.onLongPress) {
+            const longPressEvent = {
+              listener: props.onLongPress,
+              target: event.target,
+              type: 'longpress',
+            };
+            context.dispatchEvent(longPressEvent, {discrete: true});
+          }
 
-              if (props.onLongPressChange) {
-                const longPressChangeEvent = {
-                  listener: props.onLongPressChange,
-                  target: context.eventTarget,
-                  type: 'longpresschange',
-                };
-                context.dispatchEvent(longPressChangeEvent, {discrete: true});
-              }
-            }),
-          500,
-        );
+          if (props.onLongPressChange) {
+            const longPressChangeEvent = {
+              listener: props.onLongPressChange,
+              target: event.target,
+              type: 'longpresschange',
+            };
+            context.dispatchEvent(longPressChangeEvent, {discrete: true});
+          }
+        }, 500);
       },
     );
 
@@ -313,7 +309,7 @@ describe('DOMEventResponderSystem', () => {
 
     ReactDOM.render(<Test />, container);
 
-    // Clicking the button should trigger the event responder handleEvent()
+    // Clicking the button should trigger the event responder onEvent()
     let buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
     jest.runAllTimers();

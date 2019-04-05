@@ -10,34 +10,40 @@
 import type {AnyNativeEvent} from 'events/PluginModuleType';
 import type {ReactEventResponderEventType} from 'shared/ReactTypes';
 
-export type EventResponderContext = {
-  event: AnyNativeEvent,
-  eventTarget: Element | Document,
-  eventType: string,
-  isPassive: () => boolean,
-  isPassiveSupported: () => boolean,
-  dispatchEvent: <E>(
-    eventObject: E,
-    {
-      capture?: boolean,
-      discrete?: boolean,
-      stopPropagation?: boolean,
-    },
+export type ResponderEvent = {
+  nativeEvent: AnyNativeEvent,
+  target: Element | Document,
+  type: string,
+  passive: boolean,
+  passiveSupported: boolean,
+};
+
+export type ResponderDispatchEventOptions = {
+  capture?: boolean,
+  discrete?: boolean,
+  stopPropagation?: boolean,
+};
+
+export type ResponderContext = {
+  dispatchEvent: (
+    eventObject: Object,
+    otpions: ResponderDispatchEventOptions,
   ) => void,
   isTargetWithinElement: (
     childTarget: Element | Document,
     parentTarget: Element | Document,
   ) => boolean,
-  isTargetOwned: (Element | Document) => boolean,
   isTargetWithinEventComponent: (Element | Document) => boolean,
   isPositionWithinTouchHitTarget: (x: number, y: number) => boolean,
   addRootEventTypes: (
+    document: Document,
     rootEventTypes: Array<ReactEventResponderEventType>,
   ) => void,
   removeRootEventTypes: (
     rootEventTypes: Array<ReactEventResponderEventType>,
   ) => void,
-  requestOwnership: (target: Element | Document | null) => boolean,
-  releaseOwnership: (target: Element | Document | null) => boolean,
-  withAsyncDispatching: (func: () => void) => void,
+  hasOwnership: () => boolean,
+  requestOwnership: () => boolean,
+  releaseOwnership: () => boolean,
+  setTimeout: (func: () => void, timeout: number) => TimeoutID,
 };

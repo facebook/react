@@ -7,13 +7,15 @@
  * @flow
  */
 
-import type {EventResponderContext} from 'events/EventTypes';
+import type {ResponderEvent, ResponderContext} from 'events/EventTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
-const targetEventTypes = [
-  {name: 'focus', passive: true, capture: true},
-  {name: 'blur', passive: true, capture: true},
-];
+type FocusProps = {
+  disabled: boolean,
+  onBlur: (e: FocusEvent) => void,
+  onFocus: (e: FocusEvent) => void,
+  onFocusChange: boolean => void,
+};
 
 type FocusState = {
   isFocused: boolean,
@@ -27,6 +29,11 @@ type FocusEvent = {|
   type: FocusEventType,
 |};
 
+const targetEventTypes = [
+  {name: 'focus', passive: true, capture: true},
+  {name: 'blur', passive: true, capture: true},
+];
+
 function createFocusEvent(
   type: FocusEventType,
   target: Element | Document,
@@ -39,50 +46,46 @@ function createFocusEvent(
   };
 }
 
-function dispatchFocusInEvents(context: EventResponderContext, props: Object) {
-  const {event, eventTarget} = context;
-  if (context.isTargetWithinEventComponent((event: any).relatedTarget)) {
+function dispatchFocusInEvents(
+  event: ResponderEvent,
+  context: ResponderContext,
+  props: FocusProps,
+) {
+  const {nativeEvent, target} = event;
+  if (context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)) {
     return;
   }
   if (props.onFocus) {
-    const syntheticEvent = createFocusEvent(
-      'focus',
-      eventTarget,
-      props.onFocus,
-    );
+    const syntheticEvent = createFocusEvent('focus', target, props.onFocus);
     context.dispatchEvent(syntheticEvent, {discrete: true});
   }
   if (props.onFocusChange) {
-    const focusChangeEventListener = () => {
+    const listener = () => {
       props.onFocusChange(true);
     };
-    const syntheticEvent = createFocusEvent(
-      'focuschange',
-      eventTarget,
-      focusChangeEventListener,
-    );
+    const syntheticEvent = createFocusEvent('focuschange', target, listener);
     context.dispatchEvent(syntheticEvent, {discrete: true});
   }
 }
 
-function dispatchFocusOutEvents(context: EventResponderContext, props: Object) {
-  const {event, eventTarget} = context;
-  if (context.isTargetWithinEventComponent((event: any).relatedTarget)) {
+function dispatchFocusOutEvents(
+  event: ResponderEvent,
+  context: ResponderContext,
+  props: FocusProps,
+) {
+  const {nativeEvent, target} = event;
+  if (context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)) {
     return;
   }
   if (props.onBlur) {
-    const syntheticEvent = createFocusEvent('blur', eventTarget, props.onBlur);
+    const syntheticEvent = createFocusEvent('blur', target, props.onBlur);
     context.dispatchEvent(syntheticEvent, {discrete: true});
   }
   if (props.onFocusChange) {
-    const focusChangeEventListener = () => {
+    const listener = () => {
       props.onFocusChange(false);
     };
-    const syntheticEvent = createFocusEvent(
-      'focuschange',
-      eventTarget,
-      focusChangeEventListener,
-    );
+    const syntheticEvent = createFocusEvent('focuschange', target, listener);
     context.dispatchEvent(syntheticEvent, {discrete: true});
   }
 }
@@ -94,24 +97,25 @@ const FocusResponder = {
       isFocused: false,
     };
   },
-  handleEvent(
-    context: EventResponderContext,
+  onEvent(
+    event: ResponderEvent,
+    context: ResponderContext,
     props: Object,
     state: FocusState,
   ): void {
-    const {eventTarget, eventType} = context;
+    const {type} = event;
 
-    switch (eventType) {
+    switch (type) {
       case 'focus': {
-        if (!state.isFocused && !context.isTargetOwned(eventTarget)) {
-          dispatchFocusInEvents(context, props);
+        if (!state.isFocused && !context.hasOwnership()) {
+          dispatchFocusInEvents(event, context, props);
           state.isFocused = true;
         }
         break;
       }
       case 'blur': {
         if (state.isFocused) {
-          dispatchFocusOutEvents(context, props);
+          dispatchFocusOutEvents(event, context, props);
           state.isFocused = false;
         }
         break;
