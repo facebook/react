@@ -20,9 +20,12 @@ type HoverProps = {
 };
 
 type HoverState = {
+  isActiveHovered: boolean,
   isHovered: boolean,
   isInHitSlop: boolean,
   isTouched: boolean,
+  hoverStartTimeout: null | TimeoutID,
+  hoverEndTimeout: null | TimeoutID,
 };
 
 type HoverEventType = 'hoverstart' | 'hoverend' | 'hoverchange';
@@ -60,29 +63,67 @@ function createHoverEvent(
   };
 }
 
+function dispatchHoverChangeEvent(
+  event: ResponderEvent,
+  context: ResponderContext,
+  props: HoverProps,
+  state: HoverState,
+): void {
+  const listener = () => {
+    props.onHoverChange(state.isActiveHovered);
+  };
+  const syntheticEvent = createHoverEvent(
+    'hoverchange',
+    event.target,
+    listener,
+  );
+  context.dispatchEvent(syntheticEvent, {discrete: true});
+}
+
 function dispatchHoverStartEvents(
   event: ResponderEvent,
   context: ResponderContext,
   props: HoverProps,
+  state: HoverState,
 ): void {
   const {nativeEvent, target} = event;
   if (context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)) {
     return;
   }
-  if (props.onHoverStart) {
-    const syntheticEvent = createHoverEvent(
-      'hoverstart',
-      target,
-      props.onHoverStart,
-    );
-    context.dispatchEvent(syntheticEvent, {discrete: true});
+
+  state.isHovered = true;
+
+  if (state.hoverEndTimeout !== null) {
+    clearTimeout(state.hoverEndTimeout);
+    state.hoverEndTimeout = null;
   }
-  if (props.onHoverChange) {
-    const listener = () => {
-      props.onHoverChange(true);
-    };
-    const syntheticEvent = createHoverEvent('hoverchange', target, listener);
-    context.dispatchEvent(syntheticEvent, {discrete: true});
+
+  const dispatch = () => {
+    state.isActiveHovered = true;
+
+    if (props.onHoverStart) {
+      const syntheticEvent = createHoverEvent(
+        'hoverstart',
+        target,
+        props.onHoverStart,
+      );
+      context.dispatchEvent(syntheticEvent, {discrete: true});
+    }
+    if (props.onHoverChange) {
+      dispatchHoverChangeEvent(event, context, props, state);
+    }
+  };
+
+  if (!state.isActiveHovered) {
+    const delay = calculateDelayMS(props.delayHoverStart, 0, 0);
+    if (delay > 0) {
+      state.hoverStartTimeout = context.setTimeout(() => {
+        state.hoverStartTimeout = null;
+        dispatch();
+      }, delay);
+    } else {
+      dispatch();
+    }
   }
 }
 
@@ -90,35 +131,63 @@ function dispatchHoverEndEvents(
   event: ResponderEvent,
   context: ResponderContext,
   props: HoverProps,
+  state: HoverState,
 ) {
   const {nativeEvent, target} = event;
   if (context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)) {
     return;
   }
-  if (props.onHoverEnd) {
-    const syntheticEvent = createHoverEvent(
-      'hoverend',
-      target,
-      props.onHoverEnd,
-    );
-    context.dispatchEvent(syntheticEvent, {discrete: true});
+
+  state.isHovered = false;
+
+  if (state.hoverStartTimeout !== null) {
+    clearTimeout(state.hoverStartTimeout);
+    state.hoverStartTimeout = null;
   }
-  if (props.onHoverChange) {
-    const listener = () => {
-      props.onHoverChange(false);
-    };
-    const syntheticEvent = createHoverEvent('hoverchange', target, listener);
-    context.dispatchEvent(syntheticEvent, {discrete: true});
+
+  const dispatch = () => {
+    state.isActiveHovered = false;
+
+    if (props.onHoverEnd) {
+      const syntheticEvent = createHoverEvent(
+        'hoverend',
+        target,
+        props.onHoverEnd,
+      );
+      context.dispatchEvent(syntheticEvent, {discrete: true});
+    }
+    if (props.onHoverChange) {
+      dispatchHoverChangeEvent(event, context, props, state);
+    }
+  };
+
+  if (state.isActiveHovered) {
+    const delay = calculateDelayMS(props.delayHoverEnd, 0, 0);
+    if (delay > 0) {
+      state.hoverEndTimeout = context.setTimeout(() => {
+        dispatch();
+      }, delay);
+    } else {
+      dispatch();
+    }
   }
+}
+
+function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
+  const maybeNumber = delay == null ? null : delay;
+  return Math.max(min, maybeNumber != null ? maybeNumber : fallback);
 }
 
 const HoverResponder = {
   targetEventTypes,
   createInitialState() {
     return {
+      isActiveHovered: false,
       isHovered: false,
       isInHitSlop: false,
       isTouched: false,
+      hoverStartTimeout: null,
+      hoverEndTimeout: null,
     };
   },
   onEvent(
@@ -156,23 +225,22 @@ const HoverResponder = {
             state.isInHitSlop = true;
             return;
           }
-          dispatchHoverStartEvents(event, context, props);
-          state.isHovered = true;
+          dispatchHoverStartEvents(event, context, props, state);
         }
         break;
       }
       case 'pointerout':
       case 'mouseout': {
         if (state.isHovered && !state.isTouched) {
-          dispatchHoverEndEvents(event, context, props);
-          state.isHovered = false;
+          dispatchHoverEndEvents(event, context, props, state);
         }
         state.isInHitSlop = false;
         state.isTouched = false;
         break;
       }
+
       case 'pointermove': {
-        if (!state.isTouched) {
+        if (state.isHovered && !state.isTouched) {
           if (state.isInHitSlop) {
             if (
               !context.isPositionWithinTouchHitTarget(
@@ -180,8 +248,7 @@ const HoverResponder = {
                 (nativeEvent: any).y,
               )
             ) {
-              dispatchHoverStartEvents(event, context, props);
-              state.isHovered = true;
+              dispatchHoverStartEvents(event, context, props, state);
               state.isInHitSlop = false;
             }
           } else if (
@@ -191,17 +258,16 @@ const HoverResponder = {
               (nativeEvent: any).y,
             )
           ) {
-            dispatchHoverEndEvents(event, context, props);
-            state.isHovered = false;
+            dispatchHoverEndEvents(event, context, props, state);
             state.isInHitSlop = true;
           }
         }
         break;
       }
+
       case 'pointercancel': {
         if (state.isHovered && !state.isTouched) {
-          dispatchHoverEndEvents(event, context, props);
-          state.isHovered = false;
+          dispatchHoverEndEvents(event, context, props, state);
           state.isTouched = false;
         }
         break;

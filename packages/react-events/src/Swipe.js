@@ -104,7 +104,7 @@ const SwipeResponder = {
       case 'mousedown':
       case 'pointerdown': {
         if (!state.isSwiping && !context.hasOwnership()) {
-          let obj = event;
+          let obj = nativeEvent;
           if (type === 'touchstart') {
             obj = (nativeEvent: any).targetTouches[0];
             state.touchId = obj.identifier;
