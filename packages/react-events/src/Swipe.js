@@ -46,7 +46,11 @@ type SwipeEvent = {|
   listener: SwipeEvent => void,
   target: Element | Document,
   type: SwipeEventType,
+  pointerType: PointerType,
+  initial: Point,
   delta: Point,
+  point: Point,
+  direction: SwipeDirection,
 |};
 
 function createSwipeEvent(
@@ -112,7 +116,7 @@ function dispatchSwipeMoveEvent(
   const eventData = {
     delta: {
       x: point.x - state.startX,
-      diffY: point.y - state.startY,
+      y: point.y - state.startY,
     },
     initial: {x: state.startX, y: state.startY},
     point,
