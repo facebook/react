@@ -1,6 +1,7 @@
 // @flow
 
 import React, {
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -132,8 +133,10 @@ export default function Tree(props: Props) {
 function InnerElementType({ style, ...rest }) {
   const {
     numElements,
+    selectedElementID,
     selectedElementIndex,
     selectElementAtIndex,
+    selectOwner,
   } = useContext(TreeContext);
 
   const handleFocus = () => {
@@ -142,20 +145,38 @@ function InnerElementType({ style, ...rest }) {
     }
   };
 
+  const handleKeyPress = useCallback(
+    event => {
+      switch (event.key) {
+        case 'Enter':
+        case ' ':
+          if (selectedElementID !== null) {
+            selectOwner(selectedElementID);
+          }
+          break;
+        default:
+          break;
+      }
+    },
+    [selectedElementID, selectOwner]
+  );
+
   // This style override enables the background color to fill the full visible width,
   // when combined with the CSS tweaks in Element.
   // A lot of options were considered; this seemed the one that requires the least code.
   // See https://github.com/bvaughn/react-devtools-experimental/issues/9
   return (
     <div
-      tabIndex={0}
+      className={styles.InnerElementType}
       onFocus={handleFocus}
+      onKeyPress={handleKeyPress}
       style={{
         ...style,
         display: 'inline-block',
         minWidth: '100%',
         width: undefined,
       }}
+      tabIndex={0}
       {...rest}
     />
   );

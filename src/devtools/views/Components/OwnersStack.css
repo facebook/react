@@ -14,6 +14,8 @@
   font-size: var(--font-size-monospace-normal);
   white-space: nowrap;
   border-radius: 0.125rem;
+  border: none;
+  background: none;
 }
 
 .Component {
@@ -23,10 +25,17 @@
 .Component:hover {
   background-color: var(--color-hover-background);
 }
+.Component:focus {
+  outline: none;
+  background-color: var(--color-hover-background);
+}
 
 .FocusedComponent {
   background-color: var(--color-selected-background);
   color: var(--color-selected-foreground);
+}
+.FocusedComponent:focus {
+  outline: none;
 }
 
 .VRule {

@@ -134,9 +134,11 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
         break;
       case 'SELECT_NEXT_ELEMENT_IN_TREE':
         if (
-          selectedElementIndex !== null &&
-          selectedElementIndex + 1 < numElements
+          selectedElementIndex === null ||
+          selectedElementIndex + 1 >= numElements
         ) {
+          selectedElementIndex = 0;
+        } else {
           selectedElementIndex++;
         }
         break;
@@ -152,7 +154,9 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
         }
         break;
       case 'SELECT_PREVIOUS_ELEMENT_IN_TREE':
-        if (selectedElementIndex !== null && selectedElementIndex > 0) {
+        if (selectedElementIndex === null || selectedElementIndex === 0) {
+          selectedElementIndex = numElements - 1;
+        } else {
           selectedElementIndex--;
         }
         break;

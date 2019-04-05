@@ -42,22 +42,20 @@ function ElementView({ id, index }: Props) {
   const store = useContext(StoreContext);
   const { displayName } = ((store.getElementByID(id): any): Element);
 
-  const isCurrentlyFocusedOwner = ownerStackIndex === index;
+  const isSelected = ownerStackIndex === index;
 
   const handleClick = useCallback(() => {
-    if (!isCurrentlyFocusedOwner) {
+    if (!isSelected) {
       selectOwner(id);
     }
-  }, [id, isCurrentlyFocusedOwner, selectOwner]);
+  }, [id, isSelected, selectOwner]);
 
   return (
-    <span
-      className={
-        isCurrentlyFocusedOwner ? styles.FocusedComponent : styles.Component
-      }
+    <button
+      className={isSelected ? styles.FocusedComponent : styles.Component}
       onClick={handleClick}
     >
       {displayName}
-    </span>
+    </button>
   );
 }

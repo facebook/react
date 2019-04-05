@@ -18,11 +18,18 @@
   width: 100%;
   overflow: auto;
   flex: 1 0 auto;
-  padding: 0.25rem;
 }
 
 .List {
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-monospace-normal);
   line-height: var(--line-height-data);
+  border: 0.25rem solid transparent;
+}
+.List:focus-within {
+  border-color: var(--color-button-background-focus);
+}
+
+.InnerElementType:focus {
+  outline: none;
 }
