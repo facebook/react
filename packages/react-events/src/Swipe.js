@@ -23,6 +23,17 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
   });
 }
 
+type PointerType = 'mouse' | 'pointer' | 'touch';
+
+type SwipeEventType = 'swipestart' | 'swipeend' | 'swipemove';
+
+type SwipeDirection = 'up' | 'left' | 'down' | 'right';
+
+type Point = {
+  x: number,
+  y: number,
+};
+
 type EventData = {
   pointerType: PointerType,
   initial: Point,
@@ -30,16 +41,6 @@ type EventData = {
   point: Point,
   direction: SwipeDirection,
 };
-type PointerType = 'mouse' | 'pointer' | 'touch';
-
-type SwipeEventType = 'swipestart' | 'swipeend' | 'swipemove';
-
-type SwipeDirection = 'up' | 'left' | 'down' | 'right';
-
-type Point = {|
-  x: number,
-  y: number,
-|};
 
 type SwipeEvent = {|
   listener: SwipeEvent => void,
@@ -84,7 +85,7 @@ function dispatchSwipStartEvent(
   const eventData = {
     delta: {
       x: point.x - state.startX,
-      diffY: point.y - state.startY,
+      y: point.y - state.startY,
     },
     initial: {x: state.startX, y: state.startY},
     point,
