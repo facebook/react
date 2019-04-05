@@ -27,11 +27,15 @@ type PressProps = {
 
 type PressState = {
   defaultPrevented: boolean,
+  isActivePressed: boolean,
+  isActivePressStart: boolean,
   isAnchorTouched: boolean,
   isLongPressed: boolean,
   isPressed: boolean,
   longPressTimeout: null | TimeoutID,
   pressTarget: null | Element | Document,
+  pressEndTimeout: null | TimeoutID,
+  pressStartTimeout: null | TimeoutID,
   shouldSkipMouseAfterTouch: boolean,
 };
 
@@ -49,9 +53,8 @@ type PressEvent = {|
   type: PressEventType,
 |};
 
-// const DEFAULT_PRESS_DELAY_MS = 0;
-// const DEFAULT_PRESS_END_DELAY_MS = 0;
-// const DEFAULT_PRESS_START_DELAY_MS = 0;
+const DEFAULT_PRESS_END_DELAY_MS = 0;
+const DEFAULT_PRESS_START_DELAY_MS = 0;
 const DEFAULT_LONG_PRESS_DELAY_MS = 500;
 
 const targetEventTypes = [
@@ -102,7 +105,7 @@ function dispatchPressChangeEvent(
   state: PressState,
 ): void {
   const listener = () => {
-    props.onPressChange(state.isPressed);
+    props.onPressChange(state.isActivePressed);
   };
   dispatchEvent(context, state, 'presschange', listener);
 }
@@ -118,6 +121,34 @@ function dispatchLongPressChangeEvent(
   dispatchEvent(context, state, 'longpresschange', listener);
 }
 
+function activate(context, props, state) {
+  const wasActivePressed = state.isActivePressed;
+  state.isActivePressed = true;
+
+  if (props.onPressStart) {
+    dispatchEvent(context, state, 'pressstart', props.onPressStart);
+  }
+  if (!wasActivePressed && props.onPressChange) {
+    dispatchPressChangeEvent(context, props, state);
+  }
+}
+
+function deactivate(context, props, state) {
+  const wasLongPressed = state.isLongPressed;
+  state.isActivePressed = false;
+  state.isLongPressed = false;
+
+  if (props.onPressEnd) {
+    dispatchEvent(context, state, 'pressend', props.onPressEnd);
+  }
+  if (props.onPressChange) {
+    dispatchPressChangeEvent(context, props, state);
+  }
+  if (wasLongPressed && props.onLongPressChange) {
+    dispatchLongPressChangeEvent(context, props, state);
+  }
+}
+
 function dispatchPressStartEvents(
   context: ResponderContext,
   props: PressProps,
@@ -125,38 +156,58 @@ function dispatchPressStartEvents(
 ): void {
   state.isPressed = true;
 
-  if (props.onPressStart) {
-    dispatchEvent(context, state, 'pressstart', props.onPressStart);
+  if (state.pressEndTimeout !== null) {
+    clearTimeout(state.pressEndTimeout);
+    state.pressEndTimeout = null;
   }
-  if (props.onPressChange) {
-    dispatchPressChangeEvent(context, props, state);
-  }
-  if ((props.onLongPress || props.onLongPressChange) && !state.isLongPressed) {
-    const delayLongPress = calculateDelayMS(
-      props.delayLongPress,
-      10,
-      DEFAULT_LONG_PRESS_DELAY_MS,
+
+  const dispatch = () => {
+    state.isActivePressStart = true;
+    activate(context, props, state);
+
+    if (
+      (props.onLongPress || props.onLongPressChange) &&
+      !state.isLongPressed
+    ) {
+      const delayLongPress = calculateDelayMS(
+        props.delayLongPress,
+        10,
+        DEFAULT_LONG_PRESS_DELAY_MS,
+      );
+      state.longPressTimeout = context.setTimeout(() => {
+        state.isLongPressed = true;
+        state.longPressTimeout = null;
+        if (props.onLongPress) {
+          const listener = e => {
+            props.onLongPress(e);
+            // TODO address this again at some point
+            // if (e.nativeEvent.defaultPrevented) {
+            //   state.defaultPrevented = true;
+            // }
+          };
+          dispatchEvent(context, state, 'longpress', listener);
+        }
+        if (props.onLongPressChange) {
+          dispatchLongPressChangeEvent(context, props, state);
+        }
+      }, delayLongPress);
+    }
+  };
+
+  if (!state.isActivePressStart) {
+    const delayPressStart = calculateDelayMS(
+      props.delayPressStart,
+      0,
+      DEFAULT_PRESS_START_DELAY_MS,
     );
-
-    state.longPressTimeout = context.setTimeout(() => {
-      state.isLongPressed = true;
-      state.longPressTimeout = null;
-
-      if (props.onLongPress) {
-        const listener = e => {
-          props.onLongPress(e);
-          // TODO address this again at some point
-          // if (e.nativeEvent.defaultPrevented) {
-          //   state.defaultPrevented = true;
-          // }
-        };
-        dispatchEvent(context, state, 'longpress', listener);
-      }
-
-      if (props.onLongPressChange) {
-        dispatchLongPressChangeEvent(context, props, state);
-      }
-    }, delayLongPress);
+    if (delayPressStart > 0) {
+      state.pressStartTimeout = context.setTimeout(() => {
+        state.pressStartTimeout = null;
+        dispatch();
+      }, delayPressStart);
+    } else {
+      dispatch();
+    }
   }
 }
 
@@ -165,25 +216,36 @@ function dispatchPressEndEvents(
   props: PressProps,
   state: PressState,
 ): void {
+  const wasActivePressStart = state.isActivePressStart;
+
+  state.isActivePressStart = false;
+  state.isPressed = false;
+
   if (state.longPressTimeout !== null) {
     clearTimeout(state.longPressTimeout);
     state.longPressTimeout = null;
   }
-  if (props.onPressEnd) {
-    dispatchEvent(context, state, 'pressend', props.onPressEnd);
+
+  if (!wasActivePressStart && state.pressStartTimeout !== null) {
+    clearTimeout(state.pressStartTimeout);
+    state.pressStartTimeout = null;
+    // if we haven't yet activated (due to delays), activate now
+    activate(context, props, state);
   }
 
-  if (state.isPressed) {
-    state.isPressed = false;
-    if (props.onPressChange) {
-      dispatchPressChangeEvent(context, props, state);
-    }
-  }
-
-  if (state.isLongPressed) {
-    state.isLongPressed = false;
-    if (props.onLongPressChange) {
-      dispatchLongPressChangeEvent(context, props, state);
+  if (state.isActivePressed) {
+    const delayPressEnd = calculateDelayMS(
+      props.delayPressEnd,
+      0,
+      DEFAULT_PRESS_END_DELAY_MS,
+    );
+    if (delayPressEnd > 0) {
+      state.pressEndTimeout = context.setTimeout(() => {
+        state.pressEndTimeout = null;
+        deactivate(context, props, state);
+      }, delayPressEnd);
+    } else {
+      deactivate(context, props, state);
     }
   }
 }
@@ -208,13 +270,8 @@ function unmountResponder(
   state: PressState,
 ): void {
   if (state.isPressed) {
-    state.isPressed = false;
-    context.removeRootEventTypes(rootEventTypes);
     dispatchPressEndEvents(context, props, state);
-    if (state.longPressTimeout !== null) {
-      clearTimeout(state.longPressTimeout);
-      state.longPressTimeout = null;
-    }
+    context.removeRootEventTypes(rootEventTypes);
   }
 }
 
@@ -223,10 +280,14 @@ const PressResponder = {
   createInitialState(): PressState {
     return {
       defaultPrevented: false,
+      isActivePressed: false,
+      isActivePressStart: false,
       isAnchorTouched: false,
       isLongPressed: false,
       isPressed: false,
       longPressTimeout: null,
+      pressEndTimeout: null,
+      pressStartTimeout: null,
       pressTarget: null,
       shouldSkipMouseAfterTouch: false,
     };

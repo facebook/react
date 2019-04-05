@@ -115,7 +115,11 @@ function dispatchHoverStartEvents(
   };
 
   if (!state.isActiveHovered) {
-    const delayHoverStart = calculateDelayMS(props.delayHoverStart, 0, DEFAULT_HOVER_START_DELAY_MS);
+    const delayHoverStart = calculateDelayMS(
+      props.delayHoverStart,
+      0,
+      DEFAULT_HOVER_START_DELAY_MS,
+    );
     if (delayHoverStart > 0) {
       state.hoverStartTimeout = context.setTimeout(() => {
         state.hoverStartTimeout = null;
@@ -162,7 +166,11 @@ function dispatchHoverEndEvents(
   };
 
   if (state.isActiveHovered) {
-    const delayHoverEnd = calculateDelayMS(props.delayHoverEnd, 0, DEFAULT_HOVER_END_DELAY_MS);
+    const delayHoverEnd = calculateDelayMS(
+      props.delayHoverEnd,
+      0,
+      DEFAULT_HOVER_END_DELAY_MS,
+    );
     if (delayHoverEnd > 0) {
       state.hoverEndTimeout = context.setTimeout(() => {
         deactivate();
