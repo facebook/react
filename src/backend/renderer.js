@@ -772,8 +772,8 @@ export function attach(
       debug('mountFiberRecursively()', fiber, parentFiber);
     }
 
-    const shouldInclude = !shouldFilterFiber(fiber);
-    if (shouldInclude) {
+    const shouldIncludeInTree = !shouldFilterFiber(fiber);
+    if (shouldIncludeInTree) {
       recordMount(fiber, parentFiber);
     }
 
@@ -791,7 +791,7 @@ export function attach(
       if (fallbackChild !== null) {
         mountFiberRecursively(
           fallbackChild,
-          shouldInclude ? fiber : parentFiber,
+          shouldIncludeInTree ? fiber : parentFiber,
           true
         );
       }
@@ -799,7 +799,7 @@ export function attach(
       if (fiber.child !== null) {
         mountFiberRecursively(
           fiber.child,
-          shouldInclude ? fiber : parentFiber,
+          shouldIncludeInTree ? fiber : parentFiber,
           true
         );
       }
@@ -971,7 +971,7 @@ export function attach(
       }
     }
 
-    const shouldInclude = !shouldFilterFiber(nextFiber);
+    const shouldIncludeInTree = !shouldFilterFiber(nextFiber);
     let hasChildOrderChanged = false;
     if (nextFiber.child !== prevFiber.child) {
       // If the first child is different, we need to traverse them.
@@ -988,7 +988,7 @@ export function attach(
           updateFiberRecursively(
             nextChild,
             prevChild,
-            shouldInclude ? nextFiber : parentFiber
+            shouldIncludeInTree ? nextFiber : parentFiber
           );
           // However we also keep track if the order of the children matches
           // the previous order. They are always different referentially, but
@@ -999,7 +999,7 @@ export function attach(
         } else {
           mountFiberRecursively(
             nextChild,
-            shouldInclude ? nextFiber : parentFiber
+            shouldIncludeInTree ? nextFiber : parentFiber
           );
           if (!hasChildOrderChanged) {
             hasChildOrderChanged = true;
@@ -1019,7 +1019,7 @@ export function attach(
       }
     }
 
-    if (shouldInclude) {
+    if (shouldIncludeInTree) {
       maybeRecordUpdate(nextFiber, hasChildOrderChanged);
     }
   }
