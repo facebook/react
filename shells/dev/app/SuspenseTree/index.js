@@ -6,19 +6,21 @@ function SuspenseTree() {
   return (
     <>
       <h1>Suspense</h1>
-      <PrimaryFallbackTest />
+      <h4>Primary to Fallback Cycle</h4>
+      <PrimaryFallbackTest initialSuspend={false} />
+      <h4>Fallback to Primary Cycle</h4>
+      <PrimaryFallbackTest initialSuspend={true} />
       <NestedSuspenseTest />
     </>
   );
 }
 
-function PrimaryFallbackTest() {
-  const [suspend, setSuspend] = useState(false);
+function PrimaryFallbackTest({ initialSuspend }) {
+  const [suspend, setSuspend] = useState(initialSuspend);
   const fallbackStep = useTestSequence('fallback', Fallback1, Fallback2);
   const primaryStep = useTestSequence('primary', Primary1, Primary2);
   return (
     <>
-      <h3>Suspense Primary / Fallback</h3>
       <label>
         <input
           checked={suspend}

@@ -714,7 +714,7 @@ export function attach(
     }
   }
 
-  function recordUnmount(fiber) {
+  function recordUnmount(fiber: Fiber) {
     const isRoot = fiber.tag === HostRoot;
     const primaryFiber = getPrimaryFiber(fiber);
     if (!fiberToIDMap.has(primaryFiber)) {
