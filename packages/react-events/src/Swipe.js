@@ -23,7 +23,7 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
   });
 }
 
-type PointerType = 'mouse' | 'pointer' | 'touch';
+// type PointerType = 'mouse' | 'pointer' | 'touch';
 
 type SwipeEventType = 'swipestart' | 'swipeend' | 'swipemove';
 
@@ -35,7 +35,7 @@ type Point = {
 };
 
 type EventData = {
-  pointerType: PointerType,
+  // pointerType: PointerType,
   initial: Point,
   delta: Point,
   point: Point,
@@ -46,11 +46,11 @@ type SwipeEvent = {|
   listener: SwipeEvent => void,
   target: Element | Document,
   type: SwipeEventType,
-  pointerType: PointerType,
+  // pointerType: PointerType,
   initial: Point,
   delta: Point,
   point: Point,
-  direction: SwipeDirection,
+  direction: null | SwipeDirection,
 |};
 
 function createSwipeEvent(
@@ -93,7 +93,7 @@ function dispatchSwipStartEvent(
     },
     initial: {x: state.startX, y: state.startY},
     point,
-    pointerType: state.swipeTarget,
+    // pointerType: state.swipeTarget,
     direction: state.direction,
   };
   dispatchSwipeEvent(
@@ -119,7 +119,7 @@ function dispatchSwipeMoveEvent(
     },
     initial: {x: state.startX, y: state.startY},
     point,
-    pointerType: state.swipeTarget,
+    // pointerType: state.swipeTarget,
     direction: state.direction,
   };
   dispatchSwipeEvent(
