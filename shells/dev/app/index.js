@@ -11,6 +11,7 @@ import InspectableElements from './InspectableElements';
 import InteractionTracing from './InteractionTracing';
 import ToDoList from './ToDoList';
 import Toggle from './Toggle';
+import SuspenseTree from './SuspenseTree';
 
 import './styles.css';
 
@@ -33,6 +34,7 @@ function mountTestApp() {
   mountHelper(ElementTypes);
   mountHelper(EditableProps);
   mountHelper(Toggle);
+  mountHelper(SuspenseTree);
   mountHelper(DeeplyNestedComponents);
 }
 
