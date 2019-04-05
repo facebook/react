@@ -78,7 +78,7 @@ type Props = {|
 
 function ProfilerContextController({ children }: Props) {
   const store = useContext(StoreContext);
-  const { selectedElementID } = useContext(TreeContext);
+  const { selectElementAtIndex, selectedElementID } = useContext(TreeContext);
 
   const subscription = useMemo(
     () => ({
@@ -140,9 +140,22 @@ function ProfilerContextController({ children }: Props) {
     null
   );
   const [selectedTabID, selectTab] = useState<TabID>('flame-chart');
-  const [selectedFiberID, selectFiber] = useState<number | null>(null);
+  const [selectedFiberID, selectFiberID] = useState<number | null>(null);
   const [selectedInteractionID, selectInteraction] = useState<number | null>(
     null
+  );
+
+  const selectFiber = useCallback(
+    (id: number | null) => {
+      selectFiberID(id);
+      if (id !== null) {
+        const index = store.getIndexOfElementID(id);
+        if (index !== null) {
+          selectElementAtIndex(index);
+        }
+      }
+    },
+    [selectElementAtIndex, selectFiberID, store]
   );
 
   if (isProfiling) {
@@ -151,7 +164,7 @@ function ProfilerContextController({ children }: Props) {
         selectCommitIndex(null);
       }
       if (selectedFiberID !== null) {
-        selectFiber(null);
+        selectFiberID(null);
       }
       if (selectedInteractionID !== null) {
         selectInteraction(null);

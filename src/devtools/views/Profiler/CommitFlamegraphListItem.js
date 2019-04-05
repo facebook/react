@@ -47,10 +47,9 @@ function CommitFlamegraphListItem({ data, index, style }: Props) {
     <Fragment>
       {row.map(chartNode => {
         const {
-          actualDuration,
           didRender,
           id,
-          name,
+          label,
           offset,
           selfDuration,
           treeBaseDuration,
@@ -74,12 +73,8 @@ function CommitFlamegraphListItem({ data, index, style }: Props) {
         }
 
         let color = 'var(--color-commit-did-not-render)';
-        let label = name;
         if (didRender) {
           color = getGradientColor(selfDuration / maxSelfDuration);
-          label = `${name} (${selfDuration.toFixed(
-            1
-          )}ms of ${actualDuration.toFixed(1)}ms)`;
         }
 
         return (

@@ -9,7 +9,6 @@ export type ChartNode = {|
   didRender: boolean,
   id: number,
   label: string,
-  name: string,
   offset: number,
   selfDuration: number,
   treeBaseDuration: number,
@@ -61,19 +60,28 @@ export function getChartData({
       throw Error(`Could not find node with id "${id}" in commit tree`);
     }
 
-    const name = node.displayName || 'Unknown';
-
+    const actualDuration = actualDurations.get(id) || 0;
     const selfDuration = calculateSelfDuration(id, commitTree, commitDetails);
+    const didRender = actualDurations.has(id);
+
+    const name = node.displayName || 'Unknown';
+    const maybeKey = node.key !== null ? ` key="${node.key}"` : '';
+
+    let label = `${name}${maybeKey}`;
+    if (didRender) {
+      label += ` (${selfDuration.toFixed(1)}ms) of ${actualDuration.toFixed(
+        1
+      )}ms)`;
+    }
 
     maxDepth = Math.max(maxDepth, currentDepth);
     maxSelfDuration = Math.max(maxSelfDuration, selfDuration);
 
     const chartNode: ChartNode = {
-      actualDuration: actualDurations.get(id) || 0,
-      didRender: actualDurations.has(id),
+      actualDuration,
+      didRender,
       id,
-      label: `${name} (${selfDuration.toFixed(1)}ms)`,
-      name,
+      label,
       offset: parentOffset,
       selfDuration,
       treeBaseDuration: node.treeBaseDuration,

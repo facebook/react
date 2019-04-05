@@ -7,7 +7,6 @@ import type { CommitDetails, CommitTree, Node } from './types';
 export type ChartNode = {|
   id: number,
   label: string,
-  name: string,
   value: number,
 |};
 
@@ -54,11 +53,11 @@ export function getChartData({
     maxSelfDuration = Math.max(maxSelfDuration, selfDuration);
 
     const name = node.displayName || 'Unknown';
-    const label = `${name} (${selfDuration.toFixed(1)}ms)`;
+    const maybeKey = node.key !== null ? ` key="${node.key}"` : '';
+    const label = `${name}${maybeKey} (${selfDuration.toFixed(1)}ms)`;
     chartNodes.push({
       id,
       label,
-      name,
       value: selfDuration,
     });
   });
