@@ -38,6 +38,12 @@ type SetInParams = {|
   value: any,
 |};
 
+type OverrideSuspenseParams = {|
+  id: number,
+  rendererID: number,
+  forceFallback: boolean,
+|};
+
 export default class Agent extends EventEmitter {
   _bridge: Bridge = ((null: any): Bridge);
   _isProfiling: boolean = false;
@@ -68,6 +74,7 @@ export default class Agent extends EventEmitter {
     bridge.addListener('overrideHookState', this.overrideHookState);
     bridge.addListener('overrideProps', this.overrideProps);
     bridge.addListener('overrideState', this.overrideState);
+    bridge.addListener('overrideSuspense', this.overrideSuspense);
     bridge.addListener('reloadAndProfile', this.reloadAndProfile);
     bridge.addListener('screenshotCaptured', this.screenshotCaptured);
     bridge.addListener('selectElement', this.selectElement);
@@ -203,11 +210,8 @@ export default class Agent extends EventEmitter {
     }
 
     let node: HTMLElement | null = null;
-    if (
-      renderer !== null &&
-      typeof renderer.getNativeFromReactElement === 'function'
-    ) {
-      node = ((renderer.getNativeFromReactElement(id): any): HTMLElement);
+    if (renderer !== null) {
+      node = ((renderer.findNativeByFiberID(id): any): HTMLElement);
     }
 
     if (node != null) {
@@ -299,6 +303,19 @@ export default class Agent extends EventEmitter {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
     } else {
       renderer.setInState(id, path, value);
+    }
+  };
+
+  overrideSuspense = ({
+    id,
+    rendererID,
+    forceFallback,
+  }: OverrideSuspenseParams) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+    } else {
+      renderer.overrideSuspense(id, forceFallback);
     }
   };
 
