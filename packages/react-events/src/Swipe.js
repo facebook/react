@@ -136,6 +136,7 @@ type SwipeState = {
   direction: null | SwipeDirection,
   isSwiping: boolean,
   lastDirection: null | SwipeDirection,
+  pointerType: null | PointerType,
   startX: number,
   startY: number,
   touchId: null | number,
