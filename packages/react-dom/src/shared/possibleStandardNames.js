@@ -54,7 +54,7 @@ const possibleStandardNames = {
   defer: 'defer',
   dir: 'dir',
   disabled: 'disabled',
-  disablePictureInPicture: 'disablepictureinpicture',
+  disablepictureinpicture: 'disablePictureInPicture',
   download: 'download',
   draggable: 'draggable',
   enctype: 'encType',
