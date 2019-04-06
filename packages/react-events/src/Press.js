@@ -209,6 +209,7 @@ function unmountResponder(
 ): void {
   if (state.isPressed) {
     state.isPressed = false;
+    context.removeRootEventTypes(rootEventTypes);
     dispatchPressEndEvents(context, props, state);
     if (state.longPressTimeout !== null) {
       clearTimeout(state.longPressTimeout);
@@ -429,7 +430,6 @@ const PressResponder = {
       }
     }
   },
-  // TODO This method doesn't work as of yet
   onUnmount(context: ResponderContext, props: PressProps, state: PressState) {
     unmountResponder(context, props, state);
   },

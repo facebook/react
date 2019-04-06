@@ -776,7 +776,9 @@ function completeWork(
         const responder = workInProgress.type.responder;
         // Update the props on the event component state node
         workInProgress.stateNode.props = newProps;
-        handleEventComponent(responder, rootContainerInstance, workInProgress);
+        // Update the root container, so we can properly unmount events at some point
+        workInProgress.stateNode.rootInstance = rootContainerInstance;
+        handleEventComponent(responder, rootContainerInstance);
       }
       break;
     }

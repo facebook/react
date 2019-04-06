@@ -431,7 +431,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     isPrimaryRenderer: true,
     supportsHydration: false,
 
-    handleEventComponent() {
+    handleEventComponent(): void {
+      // NO-OP
+    },
+
+    unmountEventComponent(): void {
       // NO-OP
     },
 

@@ -442,6 +442,13 @@ export function unhideTextInstance(textInstance, text): void {
 export function handleEventComponent(
   eventResponder: ReactEventResponder,
   rootContainerInstance: Container,
+) {
+  throw new Error('Not yet implemented.');
+}
+
+export function unmountEventComponent(
+  eventResponder: ReactEventResponder,
+  rootContainerInstance: Container,
   internalInstanceHandle: Object,
 ): void {
   throw new Error('Not yet implemented.');

@@ -364,10 +364,17 @@ function handleTopLevelType(
   if (state === null && responder.createInitialState !== undefined) {
     state = fiber.stateNode.state = responder.createInitialState(props);
   }
+  const previousFiber = currentFiber;
+  const previousResponder = currentResponder;
   currentFiber = fiber;
   currentResponder = responder;
 
-  responder.onEvent(responderEvent, eventResponderContext, props, state);
+  try {
+    responder.onEvent(responderEvent, eventResponderContext, props, state);
+  } finally {
+    currentFiber = previousFiber;
+    currentResponder = previousResponder;
+  }
 }
 
 export function runResponderEventsInBatch(
@@ -411,5 +418,32 @@ export function runResponderEventsInBatch(
       }
     }
     processEventQueue();
+  }
+}
+
+export function unmountEventResponder(
+  responder: ReactEventResponder,
+  fiber: Fiber,
+): void {
+  const onUnmount = responder.onUnmount;
+  if (onUnmount !== undefined) {
+    let {props, state} = fiber.stateNode;
+    const previousEventQueue = currentEventQueue;
+    const previousFiber = currentFiber;
+    const previousResponder = currentResponder;
+    currentEventQueue = createEventQueue();
+    currentFiber = fiber;
+    currentResponder = responder;
+    try {
+      onUnmount(eventResponderContext, props, state);
+    } finally {
+      currentEventQueue = previousEventQueue;
+      currentFiber = previousFiber;
+      currentResponder = previousResponder;
+    }
+  }
+  if (currentOwner === fiber) {
+    // TODO fire owner changed callback
+    currentOwner = null;
   }
 }

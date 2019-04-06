@@ -330,7 +330,6 @@ export function unhideTextInstance(
 export function handleEventComponent(
   eventResponder: ReactEventResponder,
   rootContainerInstance: Container,
-  internalInstanceHandle: Object,
 ): void {
   // noop
 }
@@ -362,6 +361,14 @@ export function getEventTargetChildElement(
     }
   }
   return null;
+}
+
+export function unmountEventComponent(
+  eventResponder: ReactEventResponder,
+  rootContainerInstance: Container,
+  internalInstanceHandle: Object,
+): void {
+  // TODO: add unmountEventComponent implementation
 }
 
 export function handleEventTarget(

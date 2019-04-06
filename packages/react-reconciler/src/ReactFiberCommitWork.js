@@ -44,6 +44,7 @@ import {
   IncompleteClassComponent,
   MemoComponent,
   SimpleMemoComponent,
+  EventComponent,
   EventTarget,
 } from 'shared/ReactWorkTags';
 import {
@@ -92,6 +93,7 @@ import {
   hideTextInstance,
   unhideInstance,
   unhideTextInstance,
+  unmountEventComponent,
   commitEventTarget,
 } from './ReactFiberHostConfig';
 import {
@@ -744,6 +746,14 @@ function commitUnmount(current: Fiber): void {
         emptyPortalContainer(current);
       }
       return;
+    }
+    case EventComponent: {
+      if (enableEventAPI) {
+        const rootContainerInstance = current.stateNode.rootInstance;
+        const responder = current.type.responder;
+        unmountEventComponent(responder, rootContainerInstance, current);
+        current.stateNode = null;
+      }
     }
   }
 }

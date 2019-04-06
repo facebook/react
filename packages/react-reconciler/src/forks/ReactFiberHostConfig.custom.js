@@ -86,6 +86,7 @@ export const hideInstance = $$$hostConfig.hideInstance;
 export const hideTextInstance = $$$hostConfig.hideTextInstance;
 export const unhideInstance = $$$hostConfig.unhideInstance;
 export const unhideTextInstance = $$$hostConfig.unhideTextInstance;
+export const unmountEventComponent = $$$hostConfig.unmountEventComponent;
 export const commitTouchHitTargetUpdate =
   $$$hostConfig.commitTouchHitTargetUpdate;
 export const commitEventTarget = $$$hostConfig.commitEventTarget;
