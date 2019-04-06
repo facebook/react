@@ -17,7 +17,10 @@ import {
   PASSIVE_NOT_SUPPORTED,
 } from 'events/EventSystemFlags';
 import type {AnyNativeEvent} from 'events/PluginModuleType';
-import {EventComponent} from 'shared/ReactWorkTags';
+import {
+  EventComponent,
+  EventTarget as EventTargetWorkTag,
+} from 'shared/ReactWorkTags';
 import type {
   ReactEventResponder,
   ReactEventResponderEventType,
@@ -110,7 +113,31 @@ const eventResponderContext: ResponderContext = {
       eventsWithStopPropagation.add(eventObject);
     }
   },
-  isPositionWithinTouchHitTarget(x: number, y: number): boolean {
+  isPositionWithinTouchHitTarget(doc: Document, x: number, y: number): boolean {
+    // This isn't available in some environments (JSDOM)
+    if (typeof doc.elementFromPoint !== 'function') {
+      return false;
+    }
+    const target = doc.elementFromPoint(x, y);
+    if (target === null) {
+      return false;
+    }
+    const childFiber = getClosestInstanceFromNode(target);
+    if (childFiber === null) {
+      return false;
+    }
+    const parentFiber = childFiber.return;
+    if (parentFiber !== null && parentFiber.tag === EventTargetWorkTag) {
+      const parentNode = ((target.parentNode: any): Element);
+      // TODO find another way to do this without using the
+      // expensive getBoundingClientRect.
+      const {left, top, right, bottom} = parentNode.getBoundingClientRect();
+      // Check if the co-ords intersect with the target element's rect.
+      if (x > left && y > top && x < right && y < bottom) {
+        return false;
+      }
+      return true;
+    }
     return false;
   },
   isTargetWithinEventComponent(target: Element | Document): boolean {

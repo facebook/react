@@ -196,7 +196,7 @@ const HoverResponder = {
     props: HoverProps,
     state: HoverState,
   ): void {
-    const {type, nativeEvent} = event;
+    const {type, target, nativeEvent} = event;
 
     switch (type) {
       /**
@@ -218,6 +218,7 @@ const HoverResponder = {
           }
           if (
             context.isPositionWithinTouchHitTarget(
+              target.ownerDocument,
               (nativeEvent: any).x,
               (nativeEvent: any).y,
             )
@@ -244,6 +245,7 @@ const HoverResponder = {
           if (state.isInHitSlop) {
             if (
               !context.isPositionWithinTouchHitTarget(
+                target.ownerDocument,
                 (nativeEvent: any).x,
                 (nativeEvent: any).y,
               )
@@ -254,6 +256,7 @@ const HoverResponder = {
           } else if (
             state.isHovered &&
             context.isPositionWithinTouchHitTarget(
+              target.ownerDocument,
               (nativeEvent: any).x,
               (nativeEvent: any).y,
             )

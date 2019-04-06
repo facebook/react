@@ -784,18 +784,15 @@ function completeWork(
       if (enableEventAPI) {
         popHostContext(workInProgress);
         const type = workInProgress.type.type;
-        let node = workInProgress.return;
-        let parentHostInstance = null;
-        // Traverse up the fiber tree till we find a host component fiber
-        while (node !== null) {
-          if (node.tag === HostComponent) {
-            parentHostInstance = node.stateNode;
-            break;
-          }
-          node = node.return;
-        }
-        if (parentHostInstance !== null) {
-          handleEventTarget(type, newProps, parentHostInstance, workInProgress);
+        const rootContainerInstance = getRootHostContainer();
+        const shouldUpdate = handleEventTarget(
+          type,
+          newProps,
+          rootContainerInstance,
+          workInProgress,
+        );
+        if (shouldUpdate) {
+          markUpdate(workInProgress);
         }
       }
       break;
