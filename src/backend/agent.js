@@ -49,8 +49,8 @@ export default class Agent extends EventEmitter {
   _isProfiling: boolean = false;
   _rendererInterfaces: { [key: RendererID]: RendererInterface } = {};
 
-  _selectInterval: null | IntervalID;
-  _nextFiberIDToSelect: null | number;
+  _selectFiberInterval: null | IntervalID;
+  _lastInspectedNode: null | HTMLElement;
 
   constructor() {
     super();
@@ -342,7 +342,10 @@ export default class Agent extends EventEmitter {
     window.addEventListener('mousedown', this._onMouseDown, true);
     window.addEventListener('mouseup', this._onMouseUp, true);
     window.addEventListener('mouseover', this._onMouseOver, true);
-    this._selectInterval = setInterval(this._updateSelectedFiber, 200);
+    this._selectFiberInterval = setInterval(
+      this._selectFiberForLastInspectedNode,
+      200
+    );
   };
 
   startProfiling = () => {
@@ -364,10 +367,10 @@ export default class Agent extends EventEmitter {
     window.removeEventListener('mouseup', this._onMouseUp, true);
     window.removeEventListener('mouseover', this._onMouseOver, true);
 
-    this._updateSelectedFiber();
-    clearInterval(this._selectInterval);
-    this._selectInterval = null;
-    this._nextFiberIDToSelect = null;
+    this._selectFiberForLastInspectedNode();
+    clearInterval(this._selectFiberInterval);
+    this._selectFiberInterval = null;
+    this._lastInspectedNode = null;
   };
 
   stopProfiling = () => {
@@ -431,10 +434,7 @@ export default class Agent extends EventEmitter {
     event.stopPropagation();
 
     const target = ((event.target: any): HTMLElement);
-    const id = this.getIDForNode(target);
-    if (id !== null) {
-      this._nextFiberIDToSelect = id;
-    }
+    this._lastInspectedNode = target;
   };
 
   // While we don't do anything here, this makes choosing
@@ -453,17 +453,16 @@ export default class Agent extends EventEmitter {
     // Don't pass the name explicitly.
     // It will be inferred from DOM tag and Fiber owner.
     showOverlay(target);
-
-    const id = this.getIDForNode(target);
-    if (id !== null) {
-      this._nextFiberIDToSelect = id;
-    }
+    this._lastInspectedNode = target;
   };
 
-  _updateSelectedFiber = () => {
-    const id = this._nextFiberIDToSelect;
-    if (id !== null) {
-      this._bridge.send('selectFiber', id);
+  _selectFiberForLastInspectedNode = () => {
+    const node = this._lastInspectedNode;
+    if (node !== null) {
+      const id = this.getIDForNode(node);
+      if (id !== null) {
+        this._bridge.send('selectFiber', id);
+      }
     }
   };
 }
