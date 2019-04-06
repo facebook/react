@@ -128,7 +128,15 @@ export default class Overlay {
       left: box.left - dims.marginLeft + 'px',
     });
 
-    this.nameSpan.textContent = name || node.nodeName.toLowerCase();
+    if (!name) {
+      name = node.nodeName.toLowerCase();
+      const ownerName = getOwnerDisplayName(node);
+      if (ownerName) {
+        name += ' (in ' + ownerName + ')';
+      }
+    }
+
+    this.nameSpan.textContent = name;
     this.dimSpan.textContent =
       Math.round(box.width) + 'px × ' + Math.round(box.height) + 'px';
 
@@ -143,6 +151,37 @@ export default class Overlay {
     );
     assign(this.tip.style, tipPos);
   }
+}
+
+function getOwnerDisplayName(node) {
+  const fiber = getFiber(node);
+  if (fiber === null) {
+    return null;
+  }
+  const owner = fiber._debugOwner;
+  if (owner && owner.type) {
+    const ownerName = owner.type.displayName || owner.type.name;
+    return ownerName || null;
+  }
+  return null;
+}
+
+let lastFoundInternalKey = null;
+function getFiber(node) {
+  if (
+    lastFoundInternalKey !== null &&
+    node.hasOwnProperty(lastFoundInternalKey)
+  ) {
+    return (node: any)[lastFoundInternalKey];
+  }
+  let internalKey = Object.keys(node).find(
+    key => key.indexOf('__reactInternalInstance') === 0
+  );
+  if (internalKey) {
+    lastFoundInternalKey = internalKey;
+    return (node: any)[lastFoundInternalKey];
+  }
+  return null;
 }
 
 function findTipPos(dims, win) {
