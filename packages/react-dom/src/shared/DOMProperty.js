@@ -294,6 +294,7 @@ const properties = {};
   'default',
   'defer',
   'disabled',
+  'disablePictureInPicture',
   'formNoValidate',
   'hidden',
   'loop',
