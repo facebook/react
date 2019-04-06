@@ -23,7 +23,7 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
   });
 }
 
-type PointerType = 'mouse' | 'pointer' | 'touch';
+type PointerType = 'mouse' | 'pen' | 'touch';
 
 type SwipeEventType = 'swipestart' | 'swipeend' | 'swipemove';
 
@@ -53,6 +53,9 @@ type SwipeEvent = {|
   direction: null | SwipeDirection,
 |};
 
+//min distance traveled to be considered swipe
+const DEFAULT_TRESHOLD_SWIP = 10;
+
 function createSwipeEvent(
   type: SwipeEventType,
   target: Element | Document,
@@ -80,7 +83,7 @@ function dispatchSwipeEvent(
   context.dispatchEvent(syntheticEvent, {discrete});
 }
 
-function dispatchSwipStartEvent(
+function dispatchSwipeStartEvent(
   context: ResponderContext,
   props: Object,
   state: SwipeState,
@@ -194,16 +197,9 @@ const SwipeResponder = {
             state.x = x;
             state.y = y;
             state.swipeTarget = target;
-            //use if statement to prevent Fallthrough warning
-            if (type === 'touchstart') {
-              state.pointerType = 'touch';
-            } else if (type === 'mousedown') {
-              state.pointerType = 'mouse';
-            } else if (type === 'pointerdown') {
-              state.pointerType = 'pointer';
-            }
+            state.pointerType = nativeEvent.pointerEvent;
             if (props.onSwipeStart) {
-              dispatchSwipStartEvent(context, props, state, {x, y});
+              dispatchSwipeStartEvent(context, props, state, {x, y});
             }
             context.addRootEventTypes(target.ownerDocument, rootEventTypes);
           } else {
@@ -240,16 +236,15 @@ const SwipeResponder = {
           }
           const x = (obj: any).screenX;
           const y = (obj: any).screenY;
-          if (x < state.x) {
-            state.direction = 'left';
-          } else if (x > state.x) {
-            state.direction = 'right';
+          const distX = x - state.startX;
+          const distY = y - state.startY;
+
+          if (Math.abs(distX) >= DEFAULT_TRESHOLD_SWIP) {
+            state.direction = distX < 0 ? 'left' : 'right';
+          } else if (Math.abs(distY) >= DEFAULT_TRESHOLD_SWIP) {
+            state.direction = distY < 0 ? 'down' : 'up';
           }
-          if (y < state.y) {
-            state.direction = 'down';
-          } else if (y > state.y) {
-            state.direction = 'up';
-          }
+
           state.x = x;
           state.y = y;
           state.lastDirection = state.direction;

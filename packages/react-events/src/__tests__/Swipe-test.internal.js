@@ -20,6 +20,14 @@ const createMouseEvent = (type, x = 0, y = 0) => {
   return event;
 };
 
+const createPointerEvent = (type, x = 0, y = 0) => {
+  // const event = new PointerEvent(type, { bubbles: true, cancelable: false, screenX: x, screenY: y });
+  //TODO: check pointer event undefined error
+  const event = document.createEvent('MouseEvents');
+  event.initMouseEvent(type, true, true, window, 1, x, y, 0, 0);
+  return event;
+};
+
 const createTouchEvent = (type, x = 0, y = 0, identifiers = [1]) => {
   let touches = [];
   for (let i = 0; i < identifiers.length; i++) {
@@ -79,12 +87,12 @@ describe('Swipe event responder', () => {
     });
 
     it('is called after "pointerdown" event', () => {
-      ref.current.dispatchEvent(createMouseEvent('pointerdown'));
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
       expect(onSwipeStart).toHaveBeenCalledTimes(1);
     });
 
     it('ignores emulated "mousedown" event', () => {
-      ref.current.dispatchEvent(createMouseEvent('pointerdown'));
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
       ref.current.dispatchEvent(createMouseEvent('mousedown'));
       expect(onSwipeStart).toHaveBeenCalledTimes(1);
     });
@@ -116,9 +124,9 @@ describe('Swipe event responder', () => {
     });
 
     it('is called after "pointerup" event', () => {
-      ref.current.dispatchEvent(createMouseEvent('pointerdown'));
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
       ref.current.dispatchEvent(createMouseEvent('pointermove', 50, 50));
-      ref.current.dispatchEvent(createMouseEvent('pointerup'));
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
       expect(onSwipeEnd).toHaveBeenCalledTimes(1);
     });
 
@@ -161,7 +169,7 @@ describe('Swipe event responder', () => {
     });
 
     it('is called after "pointermove" event', () => {
-      ref.current.dispatchEvent(createMouseEvent('pointerdown'));
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
       ref.current.dispatchEvent(createMouseEvent('pointermove', 50, 50));
       expect(onSwipe).toHaveBeenCalledTimes(1);
     });
@@ -176,7 +184,7 @@ describe('Swipe event responder', () => {
       ref.current.dispatchEvent(createTouchEvent('touchstart'));
       ref.current.dispatchEvent(createTouchEvent('touchend'));
       ref.current.dispatchEvent(createMouseEvent('mousemove', 50, 50));
-      ref.current.dispatchEvent(createMouseEvent('pointerup'));
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
       expect(onSwipe).toHaveBeenCalledTimes(1);
     });
   });
@@ -200,45 +208,67 @@ describe('Swipe event responder', () => {
     });
 
     it('should be right', () => {
-      ref.current.dispatchEvent(createMouseEvent('mousedown'));
-      ref.current.dispatchEvent(createMouseEvent('mousemove', 50, 0));
-      ref.current.dispatchEvent(createMouseEvent('mouseup'));
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      ref.current.dispatchEvent(createMouseEvent('pointermove', 50, 0));
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
       expect(directions).toEqual(['right']);
     });
     it('should be left', () => {
-      ref.current.dispatchEvent(createMouseEvent('mousedown'));
-      ref.current.dispatchEvent(createMouseEvent('mousemove', -50, 0));
-      ref.current.dispatchEvent(createMouseEvent('mouseup'));
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      ref.current.dispatchEvent(createMouseEvent('pointermove', -50, 0));
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
       expect(directions).toEqual(['left']);
     });
     it('should be up', () => {
-      ref.current.dispatchEvent(createMouseEvent('mousedown'));
-      ref.current.dispatchEvent(createMouseEvent('mousemove', 0, 50));
-      ref.current.dispatchEvent(createMouseEvent('mouseup'));
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      ref.current.dispatchEvent(createMouseEvent('pointermove', 0, 50));
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
       expect(directions).toEqual(['up']);
     });
     it('should be down', () => {
-      ref.current.dispatchEvent(createMouseEvent('mousedown'));
-      ref.current.dispatchEvent(createMouseEvent('mousemove', 0, -50));
-      ref.current.dispatchEvent(createMouseEvent('mouseup'));
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      ref.current.dispatchEvent(createMouseEvent('pointermove', 0, -50));
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
       expect(directions).toEqual(['down']);
     });
 
-    it('directions in events in the correct order vertical', () => {
-      ref.current.dispatchEvent(createMouseEvent('mousedown'));
-      ref.current.dispatchEvent(createMouseEvent('mousemove', -50, 0));
-      ref.current.dispatchEvent(createMouseEvent('mousemove', 50, 0));
-      ref.current.dispatchEvent(createMouseEvent('mousemove', 60, 0));
-      ref.current.dispatchEvent(createMouseEvent('mouseup'));
-      expect(directions).toEqual(['left', 'right', 'right']);
-    });
     it('directions in events in the correct order horizontal', () => {
-      ref.current.dispatchEvent(createMouseEvent('mousedown'));
-      ref.current.dispatchEvent(createMouseEvent('mousemove', 0, -50));
-      ref.current.dispatchEvent(createMouseEvent('mousemove', 0, 50));
-      ref.current.dispatchEvent(createMouseEvent('mousemove', 0, 60));
-      ref.current.dispatchEvent(createMouseEvent('mouseup'));
-      expect(directions).toEqual(['down', 'up', 'up']);
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      ref.current.dispatchEvent(createMouseEvent('pointermove', -50, 0));
+      ref.current.dispatchEvent(createMouseEvent('pointermove', 50, 0));
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
+      expect(directions).toEqual(['left', 'right']);
+    });
+    it('directions in events in the correct order vertical', () => {
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      ref.current.dispatchEvent(createMouseEvent('pointermove', 0, -50));
+      ref.current.dispatchEvent(createMouseEvent('pointermove', 0, 50));
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
+      expect(directions).toEqual(['down', 'up']);
+    });
+    it('directions in events in the correct order horizontal and vertical', () => {
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      ref.current.dispatchEvent(createMouseEvent('pointermove', 0, -50));
+      ref.current.dispatchEvent(createMouseEvent('pointermove', 50, 0));
+      ref.current.dispatchEvent(createMouseEvent('pointermove', 0, 50));
+      ref.current.dispatchEvent(createMouseEvent('pointermove', -50, 0));
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
+      expect(directions).toEqual(['down', 'right', 'up', 'left']);
+    });
+    it('directions in events in the correct order horizontal and vertical with leave pointer in each swipe', () => {
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      ref.current.dispatchEvent(createMouseEvent('pointermove', 0, -50));
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      ref.current.dispatchEvent(createMouseEvent('pointermove', 50, 0));
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      ref.current.dispatchEvent(createMouseEvent('pointermove', 0, 50));
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      ref.current.dispatchEvent(createMouseEvent('pointermove', -50, 0));
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
+      expect(directions).toEqual(['down', 'right', 'up', 'left']);
     });
   });
 
@@ -278,45 +308,6 @@ describe('Swipe event responder', () => {
         'inner: onSwipeEnd',
         'outer: onSwipeEnd',
       ]);
-    });
-  });
-
-  describe('PointerType', () => {
-    let onSwipeStart, ref, pointerType;
-
-    beforeEach(() => {
-      onSwipeStart = e => {
-        pointerType = e.pointerType;
-      };
-      ref = React.createRef();
-      const element = (
-        <Swipe onSwipeStart={onSwipeStart}>
-          <div ref={ref} />
-        </Swipe>
-      );
-      ReactDOM.render(element, container);
-    });
-
-    it('sould be "mouse"', () => {
-      ref.current.dispatchEvent(createMouseEvent('mousedown'));
-      expect(pointerType).toEqual('mouse');
-    });
-
-    it('sould be "pointer"', () => {
-      ref.current.dispatchEvent(createMouseEvent('pointerdown'));
-      expect(pointerType).toEqual('pointer');
-    });
-
-    it('sould be "touch"', () => {
-      ref.current.dispatchEvent(createTouchEvent('touchstart'));
-      expect(pointerType).toEqual('touch');
-    });
-
-    it('is called after "mouse"', () => {
-      ref.current.dispatchEvent(createMouseEvent('mousedown'));
-      ref.current.dispatchEvent(createMouseEvent('pointerdown'));
-      ref.current.dispatchEvent(createTouchEvent('touchstart'));
-      expect(pointerType).toEqual('mouse');
     });
   });
 
