@@ -454,11 +454,27 @@ export function unmountEventComponent(
   throw new Error('Not yet implemented.');
 }
 
+export function getEventTargetChildElement(
+  type: Symbol | number,
+  props: Props,
+): null {
+  throw new Error('Not yet implemented.');
+}
+
 export function handleEventTarget(
   type: Symbol | number,
   props: Props,
-  parentInstance: Container,
+  rootContainerInstance: Container,
   internalInstanceHandle: Object,
-) {
+): boolean {
+  throw new Error('Not yet implemented.');
+}
+
+export function commitEventTarget(
+  type: Symbol | number,
+  props: Props,
+  instance: Instance,
+  parentInstance: Instance,
+): void {
   throw new Error('Not yet implemented.');
 }

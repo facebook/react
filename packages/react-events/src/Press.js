@@ -260,6 +260,7 @@ const PressResponder = {
               nativeEvent.button === 2 ||
               // Ignore pressing on hit slop area with mouse
               context.isPositionWithinTouchHitTarget(
+                target.ownerDocument,
                 (nativeEvent: any).x,
                 (nativeEvent: any).y,
               )

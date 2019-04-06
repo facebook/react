@@ -33,7 +33,7 @@ import {
   isEnabled as ReactBrowserEventEmitterIsEnabled,
   setEnabled as ReactBrowserEventEmitterSetEnabled,
 } from '../events/ReactBrowserEventEmitter';
-import {getChildNamespace} from '../shared/DOMNamespaces';
+import {Namespaces, getChildNamespace} from '../shared/DOMNamespaces';
 import {
   ELEMENT_NODE,
   TEXT_NODE,
@@ -47,6 +47,7 @@ import type {DOMContainer} from './ReactDOM';
 import type {ReactEventResponder} from 'shared/ReactTypes';
 import {unmountEventResponder} from '../events/DOMEventResponderSystem';
 import {REACT_EVENT_TARGET_TOUCH_HIT} from 'shared/ReactSymbols';
+import {canUseDOM} from 'shared/ExecutionEnvironment';
 
 export type Type = string;
 export type Props = {
@@ -57,6 +58,23 @@ export type Props = {
   dangerouslySetInnerHTML?: mixed,
   style?: {
     display?: string,
+  },
+  bottom?: null | number,
+  left?: null | number,
+  right?: null | number,
+  top?: null | number,
+};
+export type EventTargetChildElement = {
+  type: string,
+  props: null | {
+    style?: {
+      position?: string,
+      zIndex?: number,
+      bottom?: string,
+      left?: string,
+      right?: string,
+      top?: string,
+    },
   },
 };
 export type Container = Element | Document;
@@ -71,7 +89,6 @@ type HostContextDev = {
   eventData: null | {|
     isEventComponent?: boolean,
     isEventTarget?: boolean,
-    eventTargetType?: null | Symbol | number,
   |},
 };
 type HostContextProd = string;
@@ -86,6 +103,8 @@ import {
   enableEventAPI,
 } from 'shared/ReactFeatureFlags';
 import warning from 'shared/warning';
+
+const {html: HTML_NAMESPACE} = Namespaces;
 
 // Intentionally not named imports because Rollup would
 // use dynamic dispatch for CommonJS interop named imports.
@@ -191,7 +210,6 @@ export function getChildHostContextForEventComponent(
     const eventData = {
       isEventComponent: true,
       isEventTarget: false,
-      eventTargetType: null,
     };
     return {namespace, ancestorInfo, eventData};
   }
@@ -205,17 +223,24 @@ export function getChildHostContextForEventTarget(
   if (__DEV__) {
     const parentHostContextDev = ((parentHostContext: any): HostContextDev);
     const {namespace, ancestorInfo} = parentHostContextDev;
-    warning(
-      parentHostContextDev.eventData === null ||
-        !parentHostContextDev.eventData.isEventComponent ||
-        type !== REACT_EVENT_TARGET_TOUCH_HIT,
-      'validateDOMNesting: <TouchHitTarget> cannot not be a direct child of an event component. ' +
-        'Ensure <TouchHitTarget> is a direct child of a DOM element.',
-    );
+    if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
+      warning(
+        parentHostContextDev.eventData === null ||
+          !parentHostContextDev.eventData.isEventComponent,
+        'validateDOMNesting: <TouchHitTarget> cannot not be a direct child of an event component. ' +
+          'Ensure <TouchHitTarget> is a direct child of a DOM element.',
+      );
+      const parentNamespace = parentHostContextDev.namespace;
+      if (parentNamespace !== HTML_NAMESPACE) {
+        throw new Error(
+          '<TouchHitTarget> was used in an unsupported DOM namespace. ' +
+            'Ensure the <TouchHitTarget> is used in an HTML namespace.',
+        );
+      }
+    }
     const eventData = {
       isEventComponent: false,
       isEventTarget: true,
-      eventTargetType: type,
     };
     return {namespace, ancestorInfo, eventData};
   }
@@ -250,16 +275,6 @@ export function createInstance(
   if (__DEV__) {
     // TODO: take namespace into account when validating.
     const hostContextDev = ((hostContext: any): HostContextDev);
-    if (enableEventAPI) {
-      const eventData = hostContextDev.eventData;
-      if (eventData !== null) {
-        warning(
-          !eventData.isEventTarget ||
-            eventData.eventTargetType !== REACT_EVENT_TARGET_TOUCH_HIT,
-          'Warning: validateDOMNesting: <TouchHitTarget> must not have any children.',
-        );
-      }
-    }
     validateDOMNesting(type, null, hostContextDev.ancestorInfo);
     if (
       typeof props.children === 'string' ||
@@ -367,21 +382,8 @@ export function createTextInstance(
       const eventData = hostContextDev.eventData;
       if (eventData !== null) {
         warning(
-          eventData === null ||
-            !eventData.isEventTarget ||
-            eventData.eventTargetType !== REACT_EVENT_TARGET_TOUCH_HIT,
-          'Warning: validateDOMNesting: <TouchHitTarget> must not have any children.',
-        );
-        warning(
           !eventData.isEventComponent,
           'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
-            'Wrap the child text "%s" in an element.',
-          text,
-        );
-        warning(
-          !eventData.isEventTarget ||
-            eventData.eventTargetType === REACT_EVENT_TARGET_TOUCH_HIT,
-          'validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
             'Wrap the child text "%s" in an element.',
           text,
         );
@@ -910,16 +912,74 @@ export function unmountEventComponent(
   }
 }
 
+export function getEventTargetChildElement(
+  type: Symbol | number,
+  props: Props,
+): null | EventTargetChildElement {
+  if (enableEventAPI) {
+    if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
+      const {bottom, left, right, top} = props;
+
+      if (!bottom && !left && !right && !top) {
+        return null;
+      }
+      return {
+        type: 'div',
+        props: {
+          style: {
+            position: 'absolute',
+            zIndex: -1,
+            bottom: bottom ? `-${bottom}px` : '0px',
+            left: left ? `-${left}px` : '0px',
+            right: right ? `-${right}px` : '0px',
+            top: top ? `-${top}px` : '0px',
+          },
+        },
+      };
+    }
+  }
+  return null;
+}
+
 export function handleEventTarget(
   type: Symbol | number,
   props: Props,
-  parentInstance: Container,
+  rootContainerInstance: Container,
   internalInstanceHandle: Object,
+): boolean {
+  return false;
+}
+
+export function commitEventTarget(
+  type: Symbol | number,
+  props: Props,
+  instance: Instance,
+  parentInstance: Instance,
 ): void {
   if (enableEventAPI) {
-    // Touch target hit slop handling
     if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
-      // TODO
+      if (__DEV__ && canUseDOM) {
+        // This is done at DEV time because getComputedStyle will
+        // typically force a style recalculation and force a layout,
+        // reflow -– both of which are sync are expensive.
+        const computedStyles = window.getComputedStyle(parentInstance);
+        const position = computedStyles.getPropertyValue('position');
+        warning(
+          position !== '' && position !== 'static',
+          '<TouchHitTarget> inserts an empty absolutely positioned <div>. ' +
+            'This requires its parent DOM node to be positioned too, but the ' +
+            'parent DOM node was found to have the style "position" set to ' +
+            'either no value, or a value of "static". Try using a "position" ' +
+            'value of "relative".',
+        );
+        warning(
+          computedStyles.getPropertyValue('zIndex') !== '',
+          '<TouchHitTarget> inserts an empty <div> with "z-index" of "-1". ' +
+            'This requires its parent DOM node to have a "z-index" great than "-1",' +
+            'but the parent DOM node was found to no "z-index" value set.' +
+            ' Try using a "z-index" value of "0" or greater.',
+        );
+      }
     }
   }
 }

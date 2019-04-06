@@ -65,6 +65,8 @@ export const supportsPersistence = $$$hostConfig.supportsPersistence;
 export const supportsHydration = $$$hostConfig.supportsHydration;
 export const handleEventComponent = $$$hostConfig.handleEventComponent;
 export const handleEventTarget = $$$hostConfig.handleEventTarget;
+export const getEventTargetChildElement =
+  $$$hostConfig.getEventTargetChildElement;
 
 // -------------------
 //      Mutation
@@ -85,6 +87,9 @@ export const hideTextInstance = $$$hostConfig.hideTextInstance;
 export const unhideInstance = $$$hostConfig.unhideInstance;
 export const unhideTextInstance = $$$hostConfig.unhideTextInstance;
 export const unmountEventComponent = $$$hostConfig.unmountEventComponent;
+export const commitTouchHitTargetUpdate =
+  $$$hostConfig.commitTouchHitTargetUpdate;
+export const commitEventTarget = $$$hostConfig.commitEventTarget;
 
 // -------------------
 //     Persistence

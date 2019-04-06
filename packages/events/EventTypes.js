@@ -34,7 +34,11 @@ export type ResponderContext = {
     parentTarget: Element | Document,
   ) => boolean,
   isTargetWithinEventComponent: (Element | Document) => boolean,
-  isPositionWithinTouchHitTarget: (x: number, y: number) => boolean,
+  isPositionWithinTouchHitTarget: (
+    doc: Document,
+    x: number,
+    y: number,
+  ) => boolean,
   addRootEventTypes: (
     document: Document,
     rootEventTypes: Array<ReactEventResponderEventType>,

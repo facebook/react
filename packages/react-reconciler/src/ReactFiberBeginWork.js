@@ -96,6 +96,7 @@ import {
   registerSuspenseInstanceRetry,
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
+import {getEventTargetChildElement} from './ReactFiberHostConfig';
 import {shouldSuspend} from './ReactFiberReconciler';
 import {
   pushHostContext,
@@ -1988,15 +1989,33 @@ function updateEventComponent(current, workInProgress, renderExpirationTime) {
 }
 
 function updateEventTarget(current, workInProgress, renderExpirationTime) {
+  const type = workInProgress.type.type;
   const nextProps = workInProgress.pendingProps;
-  let nextChildren = nextProps.children;
+  const eventTargetChild = getEventTargetChildElement(type, nextProps);
 
-  reconcileChildren(
-    current,
-    workInProgress,
-    nextChildren,
-    renderExpirationTime,
-  );
+  if (__DEV__) {
+    warning(
+      nextProps.children == null,
+      'Event targets should not have children.',
+    );
+  }
+  if (eventTargetChild !== null) {
+    const child = (workInProgress.child = createFiberFromTypeAndProps(
+      eventTargetChild.type,
+      null,
+      eventTargetChild.props,
+      null,
+      workInProgress.mode,
+      renderExpirationTime,
+    ));
+    child.return = workInProgress;
+
+    if (current === null || current.child === null) {
+      child.effectTag = Placement;
+    }
+  } else {
+    reconcileChildren(current, workInProgress, null, renderExpirationTime);
+  }
   pushHostContextForEventTarget(workInProgress);
   return workInProgress.child;
 }

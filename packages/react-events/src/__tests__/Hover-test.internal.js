@@ -84,8 +84,70 @@ describe('Hover event responder', () => {
       expect(onHoverStart).not.toBeCalled();
     });
 
-    // TODO: complete delayHoverStart tests
-    // describe('delayHoverStart', () => {});
+    describe('delayHoverStart', () => {
+      it('can be configured', () => {
+        const element = (
+          <Hover delayHoverStart={2000} onHoverStart={onHoverStart}>
+            <div ref={ref} />
+          </Hover>
+        );
+        ReactDOM.render(element, container);
+
+        ref.current.dispatchEvent(createPointerEvent('pointerover'));
+        jest.advanceTimersByTime(1999);
+        expect(onHoverStart).not.toBeCalled();
+        jest.advanceTimersByTime(1);
+        expect(onHoverStart).toHaveBeenCalledTimes(1);
+      });
+
+      it('onHoverStart is called synchronously if delay is 0ms', () => {
+        const element = (
+          <Hover delayHoverStart={0} onHoverStart={onHoverStart}>
+            <div ref={ref} />
+          </Hover>
+        );
+        ReactDOM.render(element, container);
+
+        ref.current.dispatchEvent(createPointerEvent('pointerover'));
+        expect(onHoverStart).toHaveBeenCalledTimes(1);
+      });
+
+      it('onHoverStart is only called once per active hover', () => {
+        const element = (
+          <Hover
+            delayHoverStart={500}
+            delayHoverEnd={100}
+            onHoverStart={onHoverStart}>
+            <div ref={ref} />
+          </Hover>
+        );
+        ReactDOM.render(element, container);
+
+        ref.current.dispatchEvent(createPointerEvent('pointerover'));
+        jest.advanceTimersByTime(500);
+        expect(onHoverStart).toHaveBeenCalledTimes(1);
+        ref.current.dispatchEvent(createPointerEvent('pointerout'));
+        jest.advanceTimersByTime(10);
+        ref.current.dispatchEvent(createPointerEvent('pointerover'));
+        jest.runAllTimers();
+        expect(onHoverStart).toHaveBeenCalledTimes(1);
+      });
+
+      it('onHoverStart is not called if "pointerout" is dispatched during a delay', () => {
+        const element = (
+          <Hover delayHoverStart={500} onHoverStart={onHoverStart}>
+            <div ref={ref} />
+          </Hover>
+        );
+        ReactDOM.render(element, container);
+
+        ref.current.dispatchEvent(createPointerEvent('pointerover'));
+        jest.advanceTimersByTime(499);
+        ref.current.dispatchEvent(createPointerEvent('pointerout'));
+        jest.advanceTimersByTime(1);
+        expect(onHoverStart).not.toBeCalled();
+      });
+    });
   });
 
   describe('onHoverChange', () => {
@@ -183,8 +245,87 @@ describe('Hover event responder', () => {
       expect(onHoverEnd).not.toBeCalled();
     });
 
-    // TODO: complete delayHoverStart tests
-    // describe('delayHoverEnd', () => {});
+    describe('delayHoverEnd', () => {
+      it('can be configured', () => {
+        const element = (
+          <Hover delayHoverEnd={2000} onHoverEnd={onHoverEnd}>
+            <div ref={ref} />
+          </Hover>
+        );
+        ReactDOM.render(element, container);
+
+        ref.current.dispatchEvent(createPointerEvent('pointerover'));
+        ref.current.dispatchEvent(createPointerEvent('pointerout'));
+        jest.advanceTimersByTime(1999);
+        expect(onHoverEnd).not.toBeCalled();
+        jest.advanceTimersByTime(1);
+        expect(onHoverEnd).toHaveBeenCalledTimes(1);
+      });
+
+      it('delayHoverEnd is called synchronously if delay is 0ms', () => {
+        const element = (
+          <Hover delayHoverEnd={0} onHoverEnd={onHoverEnd}>
+            <div ref={ref} />
+          </Hover>
+        );
+        ReactDOM.render(element, container);
+
+        ref.current.dispatchEvent(createPointerEvent('pointerover'));
+        ref.current.dispatchEvent(createPointerEvent('pointerout'));
+        expect(onHoverEnd).toHaveBeenCalledTimes(1);
+      });
+
+      it('onHoverEnd is only called once per active hover', () => {
+        const element = (
+          <Hover delayHoverEnd={500} onHoverEnd={onHoverEnd}>
+            <div ref={ref} />
+          </Hover>
+        );
+        ReactDOM.render(element, container);
+
+        ref.current.dispatchEvent(createPointerEvent('pointerover'));
+        ref.current.dispatchEvent(createPointerEvent('pointerout'));
+        jest.advanceTimersByTime(499);
+        ref.current.dispatchEvent(createPointerEvent('pointerover'));
+        jest.advanceTimersByTime(100);
+        ref.current.dispatchEvent(createPointerEvent('pointerout'));
+        jest.runAllTimers();
+        expect(onHoverEnd).toHaveBeenCalledTimes(1);
+      });
+
+      it('onHoverEnd is not called if "pointerover" is dispatched during a delay', () => {
+        const element = (
+          <Hover delayHoverEnd={500} onHoverEnd={onHoverEnd}>
+            <div ref={ref} />
+          </Hover>
+        );
+        ReactDOM.render(element, container);
+
+        ref.current.dispatchEvent(createPointerEvent('pointerover'));
+        ref.current.dispatchEvent(createPointerEvent('pointerout'));
+        jest.advanceTimersByTime(499);
+        ref.current.dispatchEvent(createPointerEvent('pointerover'));
+        jest.advanceTimersByTime(1);
+        expect(onHoverEnd).not.toBeCalled();
+      });
+
+      it('onHoverEnd is not called if there was no active hover', () => {
+        const element = (
+          <Hover
+            delayHoverStart={500}
+            delayHoverEnd={100}
+            onHoverEnd={onHoverEnd}>
+            <div ref={ref} />
+          </Hover>
+        );
+        ReactDOM.render(element, container);
+
+        ref.current.dispatchEvent(createPointerEvent('pointerover'));
+        ref.current.dispatchEvent(createPointerEvent('pointerout'));
+        jest.runAllTimers();
+        expect(onHoverEnd).not.toBeCalled();
+      });
+    });
   });
 
   it('expect displayName to show up for event component', () => {
