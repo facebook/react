@@ -443,7 +443,8 @@ export default class Agent extends EventEmitter {
 
     const target = ((event.target: any): HTMLElement);
 
-    // Pass an empty string so it can infer name from tag and owner.
-    showOverlay(target, '');
+    // Don't pass the name explicitly.
+    // It will be inferred from DOM tag and Fiber owner.
+    showOverlay(target);
   };
 }
