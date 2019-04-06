@@ -810,21 +810,6 @@ export function attach(
     }
   }
 
-  function unmountFiberRecursively(fiber, traverseSiblings = false) {
-    if (__DEBUG__) {
-      debug('unmountFiberRecursively()', fiber, traverseSiblings);
-    }
-    if (!shouldFilterFiber(fiber)) {
-      recordUnmount(fiber);
-    }
-    if (fiber.child !== null) {
-      unmountFiberRecursively(fiber.child, true);
-    }
-    if (traverseSiblings && fiber.sibling !== null) {
-      unmountFiberRecursively(fiber.sibling, true);
-    }
-  }
-
   function maybeRecordUpdate(fiber: Fiber, hasChildOrderChanged: boolean) {
     if (__DEBUG__) {
       debug('maybeRecordUpdate()', fiber);
