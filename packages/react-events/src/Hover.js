@@ -36,8 +36,8 @@ type HoverEvent = {|
   type: HoverEventType,
 |};
 
-// const DEFAULT_HOVER_END_DELAY_MS = 0;
-// const DEFAULT_HOVER_START_DELAY_MS = 0;
+const DEFAULT_HOVER_END_DELAY_MS = 0;
+const DEFAULT_HOVER_START_DELAY_MS = 0;
 
 const targetEventTypes = [
   'pointerover',
@@ -98,7 +98,7 @@ function dispatchHoverStartEvents(
     state.hoverEndTimeout = null;
   }
 
-  const dispatch = () => {
+  const activate = () => {
     state.isActiveHovered = true;
 
     if (props.onHoverStart) {
@@ -115,14 +115,18 @@ function dispatchHoverStartEvents(
   };
 
   if (!state.isActiveHovered) {
-    const delay = calculateDelayMS(props.delayHoverStart, 0, 0);
-    if (delay > 0) {
+    const delayHoverStart = calculateDelayMS(
+      props.delayHoverStart,
+      0,
+      DEFAULT_HOVER_START_DELAY_MS,
+    );
+    if (delayHoverStart > 0) {
       state.hoverStartTimeout = context.setTimeout(() => {
         state.hoverStartTimeout = null;
-        dispatch();
-      }, delay);
+        activate();
+      }, delayHoverStart);
     } else {
-      dispatch();
+      activate();
     }
   }
 }
@@ -145,7 +149,7 @@ function dispatchHoverEndEvents(
     state.hoverStartTimeout = null;
   }
 
-  const dispatch = () => {
+  const deactivate = () => {
     state.isActiveHovered = false;
 
     if (props.onHoverEnd) {
@@ -162,13 +166,17 @@ function dispatchHoverEndEvents(
   };
 
   if (state.isActiveHovered) {
-    const delay = calculateDelayMS(props.delayHoverEnd, 0, 0);
-    if (delay > 0) {
+    const delayHoverEnd = calculateDelayMS(
+      props.delayHoverEnd,
+      0,
+      DEFAULT_HOVER_END_DELAY_MS,
+    );
+    if (delayHoverEnd > 0) {
       state.hoverEndTimeout = context.setTimeout(() => {
-        dispatch();
-      }, delay);
+        deactivate();
+      }, delayHoverEnd);
     } else {
-      dispatch();
+      deactivate();
     }
   }
 }
