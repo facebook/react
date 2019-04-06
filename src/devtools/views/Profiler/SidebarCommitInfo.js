@@ -18,7 +18,11 @@ export default function SidebarCommitInfo(_: Props) {
     selectTab,
   } = useContext(ProfilerContext);
 
-  const { profilingCache, profilingScreenshots } = useContext(StoreContext);
+  const {
+    captureScreenshots,
+    profilingCache,
+    profilingScreenshots,
+  } = useContext(StoreContext);
 
   const screenshot =
     selectedCommitIndex !== null
@@ -97,14 +101,20 @@ export default function SidebarCommitInfo(_: Props) {
               ))}
             </ul>
           </li>
-          {screenshot != null && (
+          {captureScreenshots && (
             <li>
-              <img
-                alt="Screenshot"
-                className={styles.Screenshot}
-                onClick={showScreenshotModal}
-                src={screenshot}
-              />
+              {screenshot != null ? (
+                <img
+                  alt="Screenshot"
+                  className={styles.Screenshot}
+                  onClick={showScreenshotModal}
+                  src={screenshot}
+                />
+              ) : (
+                <div className={styles.NoScreenshot}>
+                  No screenshot available
+                </div>
+              )}
             </li>
           )}
           {screenshot != null && isScreenshotModalVisible && (

@@ -51,3 +51,9 @@
   border-bottom-right-radius: 0.25rem;
   border-right: 1px solid var(--color-border);
 }
+
+.ScreenshotThrottling {
+  background-color: var(--color-hover-background);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}

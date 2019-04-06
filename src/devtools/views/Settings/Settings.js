@@ -117,16 +117,20 @@ export default function Settings({ portalContainer }: Props) {
       {store.supportsCaptureScreenshots && (
         <div className={styles.Section}>
           <div className={styles.Header}>Profiler</div>
-          <div className={styles.OptionGroup}>
-            <label className={styles.Option}>
-              <input
-                type="checkbox"
-                checked={captureScreenshots}
-                onChange={updateCaptureScreenshotsWhileProfiling}
-              />{' '}
-              Capture screenshots while profiling
-            </label>
-          </div>
+          <label>
+            <input
+              type="checkbox"
+              checked={captureScreenshots}
+              onChange={updateCaptureScreenshotsWhileProfiling}
+            />{' '}
+            Capture screenshots while profiling
+            {captureScreenshots && (
+              <p className={styles.ScreenshotThrottling}>
+                Screenshots will be throttled in order to reduce the negative
+                impact on performance.
+              </p>
+            )}
+          </label>
         </div>
       )}
     </div>
