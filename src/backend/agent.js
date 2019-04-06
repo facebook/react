@@ -49,6 +49,9 @@ export default class Agent extends EventEmitter {
   _isProfiling: boolean = false;
   _rendererInterfaces: { [key: RendererID]: RendererInterface } = {};
 
+  _selectInterval: null | IntervalID;
+  _nextFiberIDToSelect: null | number;
+
   constructor() {
     super();
 
@@ -339,6 +342,7 @@ export default class Agent extends EventEmitter {
     window.addEventListener('mousedown', this._onMouseDown, true);
     window.addEventListener('mouseup', this._onMouseUp, true);
     window.addEventListener('mouseover', this._onMouseOver, true);
+    this._selectInterval = setInterval(this._updateSelectedFiber, 200);
   };
 
   startProfiling = () => {
@@ -359,6 +363,11 @@ export default class Agent extends EventEmitter {
     window.removeEventListener('mousedown', this._onMouseDown, true);
     window.removeEventListener('mouseup', this._onMouseUp, true);
     window.removeEventListener('mouseover', this._onMouseOver, true);
+
+    this._updateSelectedFiber();
+    clearInterval(this._selectInterval);
+    this._selectInterval = null;
+    this._nextFiberIDToSelect = null;
   };
 
   stopProfiling = () => {
@@ -423,9 +432,8 @@ export default class Agent extends EventEmitter {
 
     const target = ((event.target: any): HTMLElement);
     const id = this.getIDForNode(target);
-
     if (id !== null) {
-      this._bridge.send('selectFiber', id);
+      this._nextFiberIDToSelect = id;
     }
   };
 
@@ -442,9 +450,20 @@ export default class Agent extends EventEmitter {
     event.stopPropagation();
 
     const target = ((event.target: any): HTMLElement);
-
     // Don't pass the name explicitly.
     // It will be inferred from DOM tag and Fiber owner.
     showOverlay(target);
+
+    const id = this.getIDForNode(target);
+    if (id !== null) {
+      this._nextFiberIDToSelect = id;
+    }
+  };
+
+  _updateSelectedFiber = () => {
+    const id = this._nextFiberIDToSelect;
+    if (id !== null) {
+      this._bridge.send('selectFiber', id);
+    }
   };
 }
