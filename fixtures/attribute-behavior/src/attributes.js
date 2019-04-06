@@ -451,7 +451,7 @@ const attributes = [
   {
     name: 'disablePictureInPicture',
     tagName: 'video',
-    read: getProperty('disablepictureinpicture')
+    read: getProperty('disablepictureinpicture'),
   },
   {
     name: 'display',
