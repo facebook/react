@@ -1,5 +1,6 @@
 // @flow
 import React, {
+  Fragment,
   useCallback,
   useContext,
   useLayoutEffect,
@@ -11,7 +12,7 @@ import ButtonIcon from '../ButtonIcon';
 import Toggle from '../Toggle';
 import { TreeContext } from './TreeContext';
 import { StoreContext } from '../context';
-import { useIsOverflowing } from '../hooks';
+import { useIsOverflowing, useModalDismissSignal } from '../hooks';
 
 import type { Element } from './types';
 
@@ -102,8 +103,13 @@ function ElementsDropdown({
     [selectOwner, setIsDropdownVisible]
   );
 
+  const modalRef = useRef<HTMLDivElement | null>(null);
+  const dismissModal = useCallback(() => setIsDropdownVisible(false));
+
+  useModalDismissSignal(modalRef, dismissModal);
+
   return (
-    <div className={styles.DropdownWrapper}>
+    <Fragment>
       <Toggle
         className={styles.Toggle}
         isChecked={isDropdownVisible}
@@ -113,7 +119,7 @@ function ElementsDropdown({
         <ButtonIcon type="more" />
       </Toggle>
       {isDropdownVisible && (
-        <div className={styles.Dropdown}>
+        <div className={styles.Modal} ref={modalRef}>
           {ownerStack.map((id, index) => (
             <button
               className={
@@ -128,7 +134,7 @@ function ElementsDropdown({
           ))}
         </div>
       )}
-    </div>
+    </Fragment>
   );
 }
 

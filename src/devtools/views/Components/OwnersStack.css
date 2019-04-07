@@ -2,6 +2,7 @@
   flex: 1;
   display: flex;
   align-items: center;
+  position: relative;
 }
 
 .Component,
@@ -42,27 +43,26 @@
   margin-right: 0.5rem;
 }
 
-.DropdownWrapper {
-  display: inline-block;
-  position: relative;
-}
-
-.Dropdown {
-  z-index: 1;
-  position: absolute;
-  top: calc(100% + 0.25rem);
-  left: 0;
-  background-color: var(--color-background);
-  overflow-y: auto;
-  max-height: 10rem;
-  display: flex;
-  flex-direction: column;
-}
-
 .VRule {
   flex: 0 0 auto;
   height: 20px;
   width: 1px;
   background-color: var(--color-border);
   margin: 0 0.5rem;
+}
+
+.Modal {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: 2.5rem;
+  z-index: 1;
+  display: inline-flex;
+  flex-direction: column;
+  background-color: var(--color-background);
+  padding: 0.5rem;
+  padding-right: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 0.25rem;
+  max-height: 10rem;
+  overflow: auto;
 }
