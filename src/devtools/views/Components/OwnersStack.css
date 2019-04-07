@@ -2,25 +2,21 @@
   flex: 1;
   display: flex;
   align-items: center;
-  overflow-x: auto;
+  position: relative;
 }
 
 .Component,
-.FocusedComponent {
+.SelectedComponent {
   padding: 0.25rem;
   margin-right: 0.5rem;
   color: var(--color-component-name);
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-monospace-normal);
-  white-space: nowrap;
   border-radius: 0.125rem;
   border: none;
   background: none;
-}
-
-.Component {
   cursor: pointer;
-  color: var(--color-component-name);
+  text-align: left;
 }
 .Component:hover {
   background-color: var(--color-hover-background);
@@ -30,17 +26,43 @@
   background-color: var(--color-hover-background);
 }
 
-.FocusedComponent {
+.SelectedComponent {
   background-color: var(--color-selected-background);
   color: var(--color-selected-foreground);
 }
-.FocusedComponent:focus {
+.SelectedComponent:focus {
   outline: none;
 }
 
+.Bar {
+  display: flex;
+  flex: 1 0 auto;
+}
+
+.Toggle {
+  margin-right: 0.5rem;
+}
+
 .VRule {
+  flex: 0 0 auto;
   height: 20px;
   width: 1px;
   background-color: var(--color-border);
   margin: 0 0.5rem;
+}
+
+.Modal {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: 2.5rem;
+  z-index: 1;
+  display: inline-flex;
+  flex-direction: column;
+  background-color: var(--color-background);
+  padding: 0.5rem;
+  padding-right: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 0.25rem;
+  max-height: 10rem;
+  overflow: auto;
 }

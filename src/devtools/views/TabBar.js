@@ -1,5 +1,6 @@
 // @flow
 
+import classNames from 'classnames';
 import React, { Fragment, useCallback } from 'react';
 import Icon from './Icon';
 
@@ -60,9 +61,11 @@ export default function TabBar({
     <Fragment>
       {tabs.map(({ icon, id, label, title }) => (
         <label
-          className={`${tabClassName} ${
-            disabled ? styles.TabDisabled : styles.Tab
-          } ${!disabled && currentTab === id ? styles.TabCurrent : ''}`}
+          className={classNames(
+            tabClassName,
+            disabled ? styles.TabDisabled : styles.Tab,
+            !disabled && currentTab === id ? styles.TabCurrent : null
+          )}
           key={id}
           onKeyDown={handleKeyDown}
           title={title || label}
