@@ -7,12 +7,12 @@ import React, {
   createRef,
   forwardRef,
 } from 'react';
-import throttle from 'lodash.throttle';
 import classNames from 'classnames';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import { TreeContext } from './TreeContext';
 import { StoreContext } from '../context';
+import { useIsOverflowing } from '../hooks';
 
 import type { Element } from './types';
 
@@ -27,6 +27,7 @@ function ElementsDropdown({
   children,
 }: ElementsDropdownProps) {
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+
   const handleClick = useCallback(() => {
     setIsDropdownVisible(!isDropdownVisible);
   }, [isDropdownVisible, setIsDropdownVisible]);
@@ -102,11 +103,11 @@ export default function OwnerStack() {
   const { ownerStack, ownerStackIndex, resetOwnerStack } = useContext(
     TreeContext
   );
-  const [isElementsBarOverflowing, setIsElementsBarOverflowing] = useState(
-    false
-  );
+
   const [elementsTotalWidth, setElementsTotalWidth] = useState(0);
   const elementsBarRef = createRef<HTMLDivElement | null>();
+  const isOverflowing = useIsOverflowing(elementsBarRef, elementsTotalWidth);
+
   const elements = ownerStack.map((id, index) => (
     <ElementView key={id} id={id} index={index} />
   ));
@@ -115,22 +116,20 @@ export default function OwnerStack() {
     if (elementsBarRef.current === null) {
       return () => {};
     }
-    const elements = Array.from(elementsBarRef.current.children);
-    const elementsTotalWidth = elements.reduce((acc, el) => {
-      const { offsetWidth } = el;
-      const marginRight = parseInt(getComputedStyle(el).marginRight, 10);
-      return acc + (offsetWidth + marginRight);
-    }, 0);
+
+    let elementsTotalWidth = 0;
+    for (let i = 0; i < ownerStack.length; i++) {
+      const element = elementsBarRef.current.children[i];
+      const computedStyle = getComputedStyle(element);
+
+      elementsTotalWidth +=
+        element.offsetWidth +
+        parseInt(computedStyle.marginLeft, 10) +
+        parseInt(computedStyle.marginRight, 10);
+    }
 
     setElementsTotalWidth(elementsTotalWidth);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ownerStackIndex, elementsBarRef]);
-
-  useElementsBarOverflowing(
-    elementsBarRef,
-    elementsTotalWidth,
-    setIsElementsBarOverflowing
-  );
+  }, [elementsBarRef, ownerStack.length]);
 
   return (
     <div className={styles.OwnerStack}>
@@ -141,7 +140,7 @@ export default function OwnerStack() {
       >
         <ButtonIcon type="close" />
       </Button>
-      {isElementsBarOverflowing && (
+      {isOverflowing && (
         <ElementsDropdown selectedElementIndex={ownerStackIndex}>
           {elements}
         </ElementsDropdown>
@@ -149,35 +148,9 @@ export default function OwnerStack() {
       <div className={styles.VRule} />
       <ElementsBar
         elements={elements}
-        showSelectedOnly={isElementsBarOverflowing}
+        showSelectedOnly={isOverflowing}
         ref={elementsBarRef}
       />
     </div>
   );
-}
-
-function useElementsBarOverflowing(
-  elementsBarRef: Object,
-  elementsTotalWidth: number,
-  callback: Function
-) {
-  useLayoutEffect(() => {
-    const handleResize = throttle(() => {
-      let isElementsBarOverflowing = false;
-      if (elementsBarRef.current !== null) {
-        const elementsBarWidth = elementsBarRef.current.clientWidth;
-        isElementsBarOverflowing = elementsBarWidth <= elementsTotalWidth;
-      }
-      callback(isElementsBarOverflowing);
-    }, 100);
-
-    handleResize();
-
-    // It's important to listen to the ownerDocument.defaultView to support the browser extension.
-    // Here we use portals to render individual tabs (e.g. Profiler),
-    // and the root document might belong to a different window.
-    const ownerWindow = elementsBarRef.current.ownerDocument.defaultView;
-    ownerWindow.addEventListener('resize', handleResize);
-    return () => ownerWindow.removeEventListener('resize', handleResize);
-  }, [elementsBarRef, elementsTotalWidth, callback]);
 }
