@@ -19,6 +19,15 @@ type HoverProps = {
   onHoverStart: (e: HoverEvent) => void,
 };
 
+type PointType = {
+  x: number,
+  y: number,
+};
+
+type HoverEventType = 'hoverstart' | 'hoverend' | 'hoverchange';
+
+type PointerType = 'mouse';
+
 type HoverState = {
   isActiveHovered: boolean,
   isHovered: boolean,
@@ -26,14 +35,21 @@ type HoverState = {
   isTouched: boolean,
   hoverStartTimeout: null | TimeoutID,
   hoverEndTimeout: null | TimeoutID,
+  point: PointType,
+  pointerType: PointerType,
 };
 
-type HoverEventType = 'hoverstart' | 'hoverend' | 'hoverchange';
+type EventData = {
+  pointerType: PointerType,
+  point: PointType,
+};
 
 type HoverEvent = {|
   listener: HoverEvent => void,
   target: Element | Document,
   type: HoverEventType,
+  pointerType: PointerType,
+  point: PointType,
 |};
 
 const DEFAULT_HOVER_END_DELAY_MS = 0;
@@ -55,11 +71,13 @@ function createHoverEvent(
   type: HoverEventType,
   target: Element | Document,
   listener: HoverEvent => void,
+  eventData?: EventData,
 ): HoverEvent {
   return {
     listener,
     target,
     type,
+    ...eventData,
   };
 }
 
@@ -69,13 +87,19 @@ function dispatchHoverChangeEvent(
   props: HoverProps,
   state: HoverState,
 ): void {
+  const {nativeEvent} = event;
   const listener = () => {
     props.onHoverChange(state.isActiveHovered);
+  };
+  const eventData = {
+    point: state.point,
+    pointerType: (nativeEvent: any).pointerType,
   };
   const syntheticEvent = createHoverEvent(
     'hoverchange',
     event.target,
     listener,
+    eventData,
   );
   context.dispatchEvent(syntheticEvent, {discrete: true});
 }
@@ -92,6 +116,16 @@ function dispatchHoverStartEvents(
   }
 
   state.isHovered = true;
+  const x = (nativeEvent: any).screenX;
+  const y = (nativeEvent: any).screenY;
+  state.point = {
+    x,
+    y,
+  };
+  const eventData = {
+    point: state.point,
+    pointerType: (nativeEvent: any).pointerType,
+  };
 
   if (state.hoverEndTimeout !== null) {
     clearTimeout(state.hoverEndTimeout);
@@ -106,6 +140,7 @@ function dispatchHoverStartEvents(
         'hoverstart',
         target,
         props.onHoverStart,
+        eventData,
       );
       context.dispatchEvent(syntheticEvent, {discrete: true});
     }
@@ -143,6 +178,16 @@ function dispatchHoverEndEvents(
   }
 
   state.isHovered = false;
+  const x = (nativeEvent: any).screenX;
+  const y = (nativeEvent: any).screenY;
+  state.point = {
+    x,
+    y,
+  };
+  const eventData = {
+    point: state.point,
+    pointerType: (nativeEvent: any).pointerType,
+  };
 
   if (state.hoverStartTimeout !== null) {
     clearTimeout(state.hoverStartTimeout);
@@ -157,6 +202,7 @@ function dispatchHoverEndEvents(
         'hoverend',
         target,
         props.onHoverEnd,
+        eventData,
       );
       context.dispatchEvent(syntheticEvent, {discrete: true});
     }
@@ -188,7 +234,7 @@ function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
 
 const HoverResponder = {
   targetEventTypes,
-  createInitialState() {
+  createInitialState(): HoverState {
     return {
       isActiveHovered: false,
       isHovered: false,
@@ -196,6 +242,8 @@ const HoverResponder = {
       isTouched: false,
       hoverStartTimeout: null,
       hoverEndTimeout: null,
+      point: {x: 0, y: 0},
+      pointerType: 'mouse',
     };
   },
   onEvent(
