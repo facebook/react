@@ -27,19 +27,19 @@ type PointerType = 'mouse' | 'pen' | 'touch';
 
 type SwipeEventType = 'swipestart' | 'swipeend' | 'swipemove';
 
-type SwipeDirection = 'up' | 'left' | 'down' | 'right';
+type SwipeDirectionType = 'up' | 'left' | 'down' | 'right';
 
-type Point = {
+type PointType = {
   x: number,
   y: number,
 };
 
 type EventData = {
   pointerType: null | PointerType,
-  initial: Point,
-  delta: Point,
-  point: Point,
-  direction: null | SwipeDirection,
+  initial: PointType,
+  delta: PointType,
+  point: PointType,
+  direction: null | SwipeDirectionType,
 };
 
 type SwipeEvent = {|
@@ -47,14 +47,14 @@ type SwipeEvent = {|
   target: Element | Document,
   type: SwipeEventType,
   pointerType: null | PointerType,
-  initial: Point,
-  delta: Point,
-  point: Point,
-  direction: null | SwipeDirection,
+  initial: PointType,
+  delta: PointType,
+  point: PointType,
+  direction: null | SwipeDirectionType,
 |};
 
 //min distance traveled to be considered swipe
-const DEFAULT_TRESHOLD_SWIP = 10;
+const DEFAULT_TRESHOLD_SWIP = 1;
 
 function createSwipeEvent(
   type: SwipeEventType,
@@ -87,7 +87,7 @@ function dispatchSwipeStartEvent(
   context: ResponderContext,
   props: Object,
   state: SwipeState,
-  point: Point,
+  point: PointType,
 ) {
   const eventData = {
     delta: {
@@ -113,7 +113,7 @@ function dispatchSwipeMoveEvent(
   context: ResponderContext,
   props: Object,
   state: SwipeState,
-  point: Point,
+  point: PointType,
 ) {
   const eventData = {
     delta: {
@@ -136,9 +136,9 @@ function dispatchSwipeMoveEvent(
 }
 
 type SwipeState = {
-  direction: null | SwipeDirection,
+  direction: null | SwipeDirectionType,
   isSwiping: boolean,
-  lastDirection: null | SwipeDirection,
+  lastDirection: null | SwipeDirectionType,
   pointerType: null | PointerType,
   startX: number,
   startY: number,
@@ -197,7 +197,7 @@ const SwipeResponder = {
             state.x = x;
             state.y = y;
             state.swipeTarget = target;
-            state.pointerType = nativeEvent.pointerEvent;
+            state.pointerType = (nativeEvent: any).pointerType;
             if (props.onSwipeStart) {
               dispatchSwipeStartEvent(context, props, state, {x, y});
             }
