@@ -2,7 +2,7 @@
 import React, {
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useState,
   createRef,
   forwardRef,
@@ -31,7 +31,7 @@ function ElementsDropdown({
     setIsDropdownVisible(!isDropdownVisible);
   }, [isDropdownVisible, setIsDropdownVisible]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setIsDropdownVisible(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedElementIndex]);
@@ -111,7 +111,7 @@ export default function OwnerStack() {
     <ElementView key={id} id={id} index={index} />
   ));
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (elementsBarRef.current === null) {
       return () => {};
     }
@@ -161,16 +161,15 @@ function useElementsBarOverflowing(
   elementsTotalWidth: number,
   callback: Function
 ) {
-  useEffect(() => {
-    const handleResize = () => {
+  useLayoutEffect(() => {
+    const handleResize = throttle(() => {
       let isElementsBarOverflowing = false;
       if (elementsBarRef.current !== null) {
         const elementsBarWidth = elementsBarRef.current.clientWidth;
         isElementsBarOverflowing = elementsBarWidth <= elementsTotalWidth;
       }
       callback(isElementsBarOverflowing);
-    };
-    const debounceHandleResize = throttle(handleResize, 100);
+    }, 100);
 
     handleResize();
 
@@ -178,8 +177,7 @@ function useElementsBarOverflowing(
     // Here we use portals to render individual tabs (e.g. Profiler),
     // and the root document might belong to a different window.
     const ownerWindow = elementsBarRef.current.ownerDocument.defaultView;
-    ownerWindow.addEventListener('resize', debounceHandleResize);
-    return () =>
-      ownerWindow.removeEventListener('resize', debounceHandleResize);
+    ownerWindow.addEventListener('resize', handleResize);
+    return () => ownerWindow.removeEventListener('resize', handleResize);
   }, [elementsBarRef, elementsTotalWidth, callback]);
 }
