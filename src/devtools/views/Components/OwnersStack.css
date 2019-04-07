@@ -2,7 +2,6 @@
   flex: 1;
   display: flex;
   align-items: center;
-  overflow-x: auto;
 }
 
 .Component,
@@ -12,7 +11,6 @@
   color: var(--color-component-name);
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-monospace-normal);
-  white-space: nowrap;
   border-radius: 0.125rem;
   border: none;
   background: none;
@@ -38,7 +36,48 @@
   outline: none;
 }
 
+.ElementsBar {
+  flex: 1 0 auto;
+}
+
+.ElementsBarSelectedOnly {
+  margin-left: 0.25rem;
+}
+
+.ElementsBarSelectedOnly .Component {
+  visibility: hidden;
+}
+.ElementsBarSelectedOnly .FocusedComponent {
+  float: left;
+}
+
+.ElementsDropdown {
+  position: relative;
+}
+
+.Dropdown {
+  z-index: 1;
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-selected-border);
+  overflow-y: auto;
+}
+
+.Dropdown .Component,
+.Dropdown .FocusedComponent {
+  display: block;
+  margin: 0.25rem 0.75rem 0.35rem;
+}
+
+.DropdownButtonActive {
+  background-color: var(--color-selected-background);
+  color: var(--color-selected-foreground);
+}
+
 .VRule {
+  flex: 0 0 auto;
   height: 20px;
   width: 1px;
   background-color: var(--color-border);
