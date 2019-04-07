@@ -1,6 +1,7 @@
 // @flow
 
 import assign from 'object-assign';
+import { getElementDimensions } from '../../utils';
 
 type Rect = {
   bottom: number,
@@ -213,24 +214,6 @@ function findTipPos(dims, win) {
     return { top, right: margin };
   }
   return { top, left: dims.left + margin + 'px' };
-}
-
-function getElementDimensions(domElement) {
-  const calculatedStyle = window.getComputedStyle(domElement);
-  return {
-    borderLeft: +calculatedStyle.borderLeftWidth.match(/[0-9]*/)[0],
-    borderRight: +calculatedStyle.borderRightWidth.match(/[0-9]*/)[0],
-    borderTop: +calculatedStyle.borderTopWidth.match(/[0-9]*/)[0],
-    borderBottom: +calculatedStyle.borderBottomWidth.match(/[0-9]*/)[0],
-    marginLeft: +calculatedStyle.marginLeft.match(/[0-9]*/)[0],
-    marginRight: +calculatedStyle.marginRight.match(/[0-9]*/)[0],
-    marginTop: +calculatedStyle.marginTop.match(/[0-9]*/)[0],
-    marginBottom: +calculatedStyle.marginBottom.match(/[0-9]*/)[0],
-    paddingLeft: +calculatedStyle.paddingLeft.match(/[0-9]*/)[0],
-    paddingRight: +calculatedStyle.paddingRight.match(/[0-9]*/)[0],
-    paddingTop: +calculatedStyle.paddingTop.match(/[0-9]*/)[0],
-    paddingBottom: +calculatedStyle.paddingBottom.match(/[0-9]*/)[0],
-  };
 }
 
 // Get the window object for the document that a node belongs to,

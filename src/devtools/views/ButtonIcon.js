@@ -7,6 +7,7 @@ export type IconType =
   | 'back'
   | 'cancel'
   | 'close'
+  | 'colon'
   | 'copy'
   | 'down'
   | 'export'
@@ -38,6 +39,9 @@ export default function ButtonIcon({ type }: Props) {
       break;
     case 'close':
       pathData = PATH_CLOSE;
+      break;
+    case 'colon':
+      pathData = PATH_COLON;
       break;
     case 'copy':
       pathData = PATH_COPY;
@@ -116,6 +120,9 @@ const PATH_CANCEL = `
 
 const PATH_CLOSE =
   'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z';
+
+const PATH_COLON =
+  'M10,9a2,2 0 1,0 4,0a2,2 0 1,0 -4,0 M10,19a2,2 0 1,0 4,0a2,2 0 1,0 -4,0';
 
 const PATH_COPY = `
   M3 13h2v-2H3v2zm0 4h2v-2H3v2zm2 4v-2H3a2 2 0 0 0 2 2zM3 9h2V7H3v2zm12 12h2v-2h-2v2zm4-18H9a2 2 0 0 0-2
