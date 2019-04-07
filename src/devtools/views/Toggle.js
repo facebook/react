@@ -10,6 +10,7 @@ type Props = {
   isChecked: boolean,
   isDisabled?: boolean,
   onChange: (isChecked: boolean) => void,
+  title?: string,
 };
 
 export default function Toggle({
