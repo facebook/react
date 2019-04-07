@@ -13,7 +13,6 @@ import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import { TreeContext } from './TreeContext';
 import { StoreContext } from '../context';
-import { getElementDimensions } from '../../../utils';
 
 import type { Element } from './types';
 
@@ -58,10 +57,7 @@ type ElementsBarProps = {
   showSelectedOnly: boolean,
 };
 const ElementsBar = forwardRef(
-  (
-    { elements, showSelectedOnly }: ElementsBarProps,
-    ref: Object
-  ) => {
+  ({ elements, showSelectedOnly }: ElementsBarProps, ref: Object) => {
     return (
       <div
         className={classNames(styles.ElementsBar, {
@@ -122,7 +118,7 @@ export default function OwnerStack() {
     const elements = Array.from(elementsBarRef.current.children);
     const elementsTotalWidth = elements.reduce((acc, el) => {
       const { offsetWidth } = el;
-      const { marginRight } = getElementDimensions(el);
+      const marginRight = parseInt(getComputedStyle(el).marginRight, 10);
       return acc + (offsetWidth + marginRight);
     }, 0);
 
