@@ -69,7 +69,7 @@ export function getChartData({
 
     let label = `${name}${maybeKey}`;
     if (didRender) {
-      label += ` (${selfDuration.toFixed(1)}ms) of ${actualDuration.toFixed(
+      label += ` (${selfDuration.toFixed(1)}ms of ${actualDuration.toFixed(
         1
       )}ms)`;
     }

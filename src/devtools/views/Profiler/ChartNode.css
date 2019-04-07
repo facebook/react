@@ -18,10 +18,10 @@
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
-  font-size: var(--font-family-sans);
-  font-family: var(--font-size-sans-normal);
-  margin-left: 4px;
-  margin-right: 4px;
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-sans-normal);
+  margin-left: 0.25rem;
+  margin-right: 0.25rem;
   line-height: 1.5;
   padding: 0 0 0;
   font-weight: 400;
