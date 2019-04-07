@@ -7,6 +7,7 @@ import React, {
   createRef,
   forwardRef,
 } from 'react';
+import throttle from 'lodash.throttle';
 import classNames from 'classnames';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
@@ -175,14 +176,10 @@ function useElementsBarOverflowing(
   }, [elementsBarRef, elementsTotalWidth]);
 
   useEffect(() => {
-    let timeoutID = null;
     const handleResize = () => {
       callback(isElementsBarOverflowing());
     };
-    const debounceHandleResize = () => {
-      clearTimeout(((timeoutID: any): TimeoutID));
-      timeoutID = setTimeout(handleResize, 100);
-    };
+    const debounceHandleResize = throttle(handleResize, 100);
 
     handleResize();
     // It's important to listen to the ownerDocument.defaultView to support the browser extension.
@@ -192,9 +189,6 @@ function useElementsBarOverflowing(
     ownerWindow.addEventListener('resize', debounceHandleResize);
     return () => {
       ownerWindow.removeEventListener('resize', debounceHandleResize);
-      if (timeoutID !== null) {
-        clearTimeout(timeoutID);
-      }
     };
   }, [elementsBarRef, isElementsBarOverflowing, callback]);
 }

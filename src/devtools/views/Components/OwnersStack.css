@@ -60,7 +60,6 @@
   position: absolute;
   top: calc(100% + 5px);
   left: 0;
-  min-height: 200px;
   background-color: var(--color-background);
   border: 1px solid var(--color-selected-border);
   overflow-y: auto;
