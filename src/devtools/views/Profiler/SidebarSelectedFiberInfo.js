@@ -41,17 +41,17 @@ export default function SidebarSelectedFiberInfo(_: Props) {
     const time = commitTimes[commitIndex];
 
     listItems.push(
-      <li
+      <button
         key={commitIndex}
         className={
           selectedCommitIndex === commitIndex
-            ? styles.CurrentListItem
-            : styles.ListItem
+            ? styles.CurrentCommit
+            : styles.Commit
         }
         onClick={() => selectCommitIndex(commitIndex)}
       >
         {formatTime(time)}s for {formatDuration(duration)}ms
-      </li>
+      </button>
     );
   }
 
@@ -71,8 +71,7 @@ export default function SidebarSelectedFiberInfo(_: Props) {
         </Button>
       </div>
       <div className={styles.Content}>
-        <label className={styles.Label}>Rendered at</label>:
-        <ul className={styles.List}>{listItems}</ul>
+        <label className={styles.Label}>Rendered at</label>: {listItems}
       </div>
     </Fragment>
   );

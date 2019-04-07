@@ -15,6 +15,10 @@
 .TabCurrent:hover {
   background-color: var(--color-hover-background);
 }
+.Tab:focus-within,
+.TabCurrent:focus-within {
+  background-color: var(--color-hover-background);
+}
 
 .TabCurrent {
   border-bottom: 3px solid var(--color-selected-border);

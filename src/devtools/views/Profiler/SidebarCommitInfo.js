@@ -84,22 +84,22 @@ export default function SidebarCommitInfo(_: Props) {
               ms
             </span>
           </li>
-          <li className={styles.InteractionList}>
+          <li className={styles.Interactions}>
             <label className={styles.Label}>Interactions</label>:
-            <ul className={styles.InteractionList}>
+            <div className={styles.InteractionList}>
               {interactions.length === 0 ? (
-                <li className={styles.InteractionListItemNone}>None</li>
+                <div className={styles.NoInteractions}>None</div>
               ) : null}
               {interactions.map((interaction, index) => (
-                <li
+                <button
                   key={index}
-                  className={styles.InteractionListItem}
+                  className={styles.Interaction}
                   onClick={() => viewInteraction(interaction)}
                 >
                   {interaction.name}
-                </li>
+                </button>
               ))}
-            </ul>
+            </div>
           </li>
           {captureScreenshots && (
             <li>

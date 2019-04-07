@@ -12,31 +12,36 @@
   border-top: 1px solid var(--color-border);
 }
 
-.List,
-.InteractionList {
+.List {
   list-style: none;
   margin: 0;
   padding: 0;
-}
-
-.InteractionList {
-  margin: 0 0 0.5rem;
 }
 
 .ListItem {
   margin: 0 0 0.5rem;
 }
 
-.InteractionListItem,
-.InteractionListItemNone {
-  padding: 0.25rem 0.5rem;
-}
-.InteractionListItem:hover {
-  background-color: var(--color-hover-background);
+.NoInteractions {
+  color: var(--color-dim);
 }
 
-.InteractionListItemNone {
-  color: var(--color-dim);
+.Interactions {
+  margin: 0 0 0.5rem;
+}
+.Interaction {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  color: var(--color-text);
+}
+.Interaction:focus,
+.Interaction:hover {
+  outline: none;
+  background-color: var(--color-hover-background);
 }
 
 .Label {

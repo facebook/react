@@ -32,21 +32,26 @@
   margin-bottom: 0.5rem;
 }
 
-.List {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.CurrentListItem,
-.ListItem {
+.CurrentCommit,
+.Commit {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
   padding: 0.25rem 0.5rem;
+  color: var(--color-text);
 }
-.ListItem:hover {
+.Commit:focus,
+.Commit:hover {
+  outline: none;
   background-color: var(--color-hover-background);
 }
 
-.CurrentListItem {
+.CurrentCommit {
   background-color: var(--color-selected-background);
   color: var(--color-selected-foreground);
+}
+.CurrentCommit:focus {
+  outline: none;
 }
