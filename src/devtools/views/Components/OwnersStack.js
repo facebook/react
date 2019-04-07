@@ -3,13 +3,12 @@ import React, {
   useCallback,
   useContext,
   useLayoutEffect,
+  useRef,
   useState,
-  createRef,
-  forwardRef,
 } from 'react';
-import classNames from 'classnames';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
+import Toggle from '../Toggle';
 import { TreeContext } from './TreeContext';
 import { StoreContext } from '../context';
 import { useIsOverflowing } from '../hooks';
@@ -18,99 +17,14 @@ import type { Element } from './types';
 
 import styles from './OwnersStack.css';
 
-type ElementsDropdownProps = {
-  selectedElementIndex: number | null,
-  children: Array<any>,
-};
-function ElementsDropdown({
-  selectedElementIndex,
-  children,
-}: ElementsDropdownProps) {
-  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
-
-  const handleClick = useCallback(() => {
-    setIsDropdownVisible(!isDropdownVisible);
-  }, [isDropdownVisible, setIsDropdownVisible]);
-
-  useLayoutEffect(() => {
-    setIsDropdownVisible(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedElementIndex]);
-
-  return (
-    <div className={styles.ElementsDropdown}>
-      <Button
-        className={classNames(styles.IconButton, {
-          [styles.DropdownButtonActive]: isDropdownVisible,
-        })}
-        onClick={handleClick}
-        title="Open elements dropdown"
-      >
-        <ButtonIcon type="more" />
-      </Button>
-      {isDropdownVisible && <div className={styles.Dropdown}>{children}</div>}
-    </div>
-  );
-}
-
-type ElementsBarProps = {
-  elements: Array<any>,
-  showSelectedOnly: boolean,
-};
-const ElementsBar = forwardRef(
-  ({ elements, showSelectedOnly }: ElementsBarProps, ref: Object) => {
-    return (
-      <div
-        className={classNames(styles.ElementsBar, {
-          [styles.ElementsBarSelectedOnly]: showSelectedOnly,
-        })}
-        ref={ref}
-      >
-        {elements}
-      </div>
-    );
-  }
-);
-
-type ElementViewProps = {
-  id: number,
-  index: number,
-};
-function ElementView({ id, index }: ElementViewProps) {
-  const { ownerStackIndex, selectOwner } = useContext(TreeContext);
-  const store = useContext(StoreContext);
-  const { displayName } = ((store.getElementByID(id): any): Element);
-
-  const isSelected = ownerStackIndex === index;
-
-  const handleClick = useCallback(() => {
-    if (!isSelected) {
-      selectOwner(id);
-    }
-  }, [id, isSelected, selectOwner]);
-
-  return (
-    <button
-      className={isSelected ? styles.FocusedComponent : styles.Component}
-      onClick={handleClick}
-    >
-      {displayName}
-    </button>
-  );
-}
-
 export default function OwnerStack() {
   const { ownerStack, ownerStackIndex, resetOwnerStack } = useContext(
     TreeContext
   );
 
   const [elementsTotalWidth, setElementsTotalWidth] = useState(0);
-  const elementsBarRef = createRef<HTMLDivElement | null>();
+  const elementsBarRef = useRef<HTMLDivElement | null>(null);
   const isOverflowing = useIsOverflowing(elementsBarRef, elementsTotalWidth);
-
-  const elements = ownerStack.map((id, index) => (
-    <ElementView key={id} id={id} index={index} />
-  ));
 
   useLayoutEffect(() => {
     if (elementsBarRef.current === null) {
@@ -140,17 +54,108 @@ export default function OwnerStack() {
       >
         <ButtonIcon type="close" />
       </Button>
-      {isOverflowing && (
-        <ElementsDropdown selectedElementIndex={ownerStackIndex}>
-          {elements}
-        </ElementsDropdown>
-      )}
       <div className={styles.VRule} />
-      <ElementsBar
-        elements={elements}
-        showSelectedOnly={isOverflowing}
-        ref={elementsBarRef}
-      />
+      <div className={styles.Bar} ref={elementsBarRef}>
+        {isOverflowing && (
+          <ElementsDropdown
+            ownerStack={ownerStack}
+            ownerStackIndex={ownerStackIndex}
+          />
+        )}
+        {isOverflowing ? (
+          <ElementView
+            id={ownerStack[((ownerStackIndex: any): number)]}
+            index={ownerStackIndex}
+          />
+        ) : (
+          ownerStack.map((id, index) => (
+            <ElementView key={id} id={id} index={index} />
+          ))
+        )}
+      </div>
     </div>
+  );
+}
+
+type ElementsDropdownProps = {
+  ownerStack: Array<number>,
+  ownerStackIndex: number | null,
+};
+function ElementsDropdown({
+  ownerStack,
+  ownerStackIndex,
+}: ElementsDropdownProps) {
+  const store = useContext(StoreContext);
+  const { selectOwner } = useContext(TreeContext);
+
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+
+  const handleDropdownButtonClick = useCallback(() => {
+    setIsDropdownVisible(!isDropdownVisible);
+  }, [isDropdownVisible, setIsDropdownVisible]);
+
+  const handleElementClick = useCallback(
+    (id: number) => {
+      selectOwner(id);
+      setIsDropdownVisible(false);
+    },
+    [selectOwner, setIsDropdownVisible]
+  );
+
+  return (
+    <div className={styles.DropdownWrapper}>
+      <Toggle
+        className={styles.Toggle}
+        isChecked={isDropdownVisible}
+        onChange={handleDropdownButtonClick}
+        title="Open elements dropdown"
+      >
+        <ButtonIcon type="more" />
+      </Toggle>
+      {isDropdownVisible && (
+        <div className={styles.Dropdown}>
+          {ownerStack.map((id, index) => (
+            <button
+              className={
+                ownerStackIndex === index
+                  ? styles.SelectedComponent
+                  : styles.Component
+              }
+              onClick={() => handleElementClick(id)}
+            >
+              {((store.getElementByID(id): any): Element).displayName}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+type ElementViewProps = {
+  id: number,
+  index: number | null,
+};
+function ElementView({ id, index }: ElementViewProps) {
+  const store = useContext(StoreContext);
+  const { ownerStackIndex, selectOwner } = useContext(TreeContext);
+
+  const { displayName } = ((store.getElementByID(id): any): Element);
+
+  const isSelected = ownerStackIndex === index;
+
+  const handleClick = useCallback(() => {
+    if (!isSelected) {
+      selectOwner(id);
+    }
+  }, [id, isSelected, selectOwner]);
+
+  return (
+    <button
+      className={isSelected ? styles.SelectedComponent : styles.Component}
+      onClick={handleClick}
+    >
+      {displayName}
+    </button>
   );
 }

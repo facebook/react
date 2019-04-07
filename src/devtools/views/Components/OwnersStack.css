@@ -5,7 +5,7 @@
 }
 
 .Component,
-.FocusedComponent {
+.SelectedComponent {
   padding: 0.25rem;
   margin-right: 0.5rem;
   color: var(--color-component-name);
@@ -14,11 +14,8 @@
   border-radius: 0.125rem;
   border: none;
   background: none;
-}
-
-.Component {
   cursor: pointer;
-  color: var(--color-component-name);
+  text-align: left;
 }
 .Component:hover {
   background-color: var(--color-hover-background);
@@ -28,52 +25,38 @@
   background-color: var(--color-hover-background);
 }
 
-.FocusedComponent {
+.SelectedComponent {
   background-color: var(--color-selected-background);
   color: var(--color-selected-foreground);
 }
-.FocusedComponent:focus {
+.SelectedComponent:focus {
   outline: none;
 }
 
-.ElementsBar {
+.Bar {
+  display: flex;
   flex: 1 0 auto;
 }
 
-.ElementsBarSelectedOnly {
-  margin-left: 0.25rem;
+.Toggle {
+  margin-right: 0.5rem;
 }
 
-.ElementsBarSelectedOnly .Component {
-  visibility: hidden;
-}
-.ElementsBarSelectedOnly .FocusedComponent {
-  float: left;
-}
-
-.ElementsDropdown {
+.DropdownWrapper {
+  display: inline-block;
   position: relative;
 }
 
 .Dropdown {
   z-index: 1;
   position: absolute;
-  top: calc(100% + 5px);
+  top: calc(100% + 0.25rem);
   left: 0;
   background-color: var(--color-background);
-  border: 1px solid var(--color-selected-border);
   overflow-y: auto;
-}
-
-.Dropdown .Component,
-.Dropdown .FocusedComponent {
-  display: block;
-  margin: 0.25rem 0.75rem 0.35rem;
-}
-
-.DropdownButtonActive {
-  background-color: var(--color-selected-background);
-  color: var(--color-selected-foreground);
+  max-height: 10rem;
+  display: flex;
+  flex-direction: column;
 }
 
 .VRule {
