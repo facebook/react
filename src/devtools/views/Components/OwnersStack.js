@@ -45,7 +45,7 @@ function ElementsDropdown({
         onClick={handleClick}
         title="Open elements dropdown"
       >
-        <ButtonIcon type="colon" />
+        <ButtonIcon type="more" />
       </Button>
       {isDropdownVisible && <div className={styles.Dropdown}>{children}</div>}
     </div>
