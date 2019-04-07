@@ -118,6 +118,7 @@ export default function Tree(props: Props) {
               itemCount={numElements}
               itemData={itemData}
               itemSize={lineHeight}
+              overscanCount={3}
               ref={listRef}
               width={width}
             >
