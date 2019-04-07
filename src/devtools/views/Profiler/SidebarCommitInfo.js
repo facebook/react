@@ -88,7 +88,7 @@ export default function SidebarCommitInfo(_: Props) {
             <label className={styles.Label}>Interactions</label>:
             <ul className={styles.InteractionList}>
               {interactions.length === 0 ? (
-                <li className={styles.InteractionListItem}>None</li>
+                <li className={styles.InteractionListItemNone}>None</li>
               ) : null}
               {interactions.map((interaction, index) => (
                 <li
@@ -103,6 +103,7 @@ export default function SidebarCommitInfo(_: Props) {
           </li>
           {captureScreenshots && (
             <li>
+              <label className={styles.Label}>Screenshot</label>:
               {screenshot != null ? (
                 <img
                   alt="Screenshot"

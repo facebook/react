@@ -65,6 +65,7 @@ export default class Agent extends EventEmitter {
     bridge.addListener('captureScreenshot', this.captureScreenshot);
     bridge.addListener('exportProfilingSummary', this.exportProfilingSummary);
     bridge.addListener('getCommitDetails', this.getCommitDetails);
+    bridge.addListener('getFiberCommits', this.getFiberCommits);
     bridge.addListener('getInteractions', this.getInteractions);
     bridge.addListener('getProfilingStatus', this.getProfilingStatus);
     bridge.addListener('getProfilingSummary', this.getProfilingSummary);
@@ -154,6 +155,26 @@ export default class Agent extends EventEmitter {
       this._bridge.send(
         'commitDetails',
         renderer.getCommitDetails(rootID, commitIndex)
+      );
+    }
+  };
+
+  getFiberCommits = ({
+    fiberID,
+    rendererID,
+    rootID,
+  }: {
+    fiberID: number,
+    rendererID: number,
+    rootID: number,
+  }) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}"`);
+    } else {
+      this._bridge.send(
+        'fiberCommits',
+        renderer.getFiberCommits(rootID, fiberID)
       );
     }
   };

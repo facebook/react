@@ -20,18 +20,23 @@
 }
 
 .InteractionList {
-  padding: 0.25rem;
+  margin: 0 0 0.5rem;
 }
 
 .ListItem {
   margin: 0 0 0.5rem;
 }
 
-.InteractionListItem {
+.InteractionListItem,
+.InteractionListItemNone {
   padding: 0.25rem 0.5rem;
 }
 .InteractionListItem:hover {
   background-color: var(--color-hover-background);
+}
+
+.InteractionListItemNone {
+  color: var(--color-dim);
 }
 
 .Label {

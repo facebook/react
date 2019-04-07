@@ -26,9 +26,9 @@ function CommitFlamegraphListItem({ data, index, style }: Props) {
   const { maxSelfDuration, rows } = chartData;
 
   const handleClick = useCallback(
-    (event: MouseEvent, id: number) => {
+    (event: MouseEvent, id: number, name: string) => {
       event.stopPropagation();
-      selectFiber(id);
+      selectFiber(id, name);
     },
     [selectFiber]
   );
@@ -50,6 +50,7 @@ function CommitFlamegraphListItem({ data, index, style }: Props) {
           didRender,
           id,
           label,
+          name,
           offset,
           selfDuration,
           treeBaseDuration,
@@ -84,7 +85,7 @@ function CommitFlamegraphListItem({ data, index, style }: Props) {
             isDimmed={index < selectedChartNodeIndex}
             key={id}
             label={label}
-            onClick={event => handleClick(event, id)}
+            onClick={event => handleClick(event, id, name)}
             width={nodeWidth}
             x={nodeOffset - selectedNodeOffset}
             y={top}

@@ -32,6 +32,7 @@ import type {
   CommitDetails,
   DevToolsHook,
   Fiber,
+  FiberCommits,
   FiberData,
   Interaction,
   Interactions,
@@ -1652,6 +1653,39 @@ export function attach(
     };
   }
 
+  function getFiberCommits(rootID: number, fiberID: number): FiberCommits {
+    const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
+      rootID
+    );
+    if (commitProfilingMetadata != null) {
+      const commitDurations = [];
+      commitProfilingMetadata.forEach(({ actualDurations }, commitIndex) => {
+        for (let i = 0; i < actualDurations.length; i += 2) {
+          if (actualDurations[i] === fiberID) {
+            commitDurations.push(commitIndex, actualDurations[i + 1]);
+            break;
+          }
+        }
+      });
+
+      return {
+        commitDurations,
+        fiberID,
+        rootID,
+      };
+    }
+
+    console.warn(
+      `getFiberCommits(): No profiling info recorded for root "${rootID}"`
+    );
+
+    return {
+      commitDurations: [],
+      fiberID,
+      rootID,
+    };
+  }
+
   function getInteractions(rootID: number): Interactions {
     const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
       rootID
@@ -1817,6 +1851,7 @@ export function attach(
     flushInitialOperations,
     getCommitDetails,
     getFiberIDFromNative,
+    getFiberCommits,
     getInteractions,
     findNativeByFiberID,
     getProfilingDataForDownload,

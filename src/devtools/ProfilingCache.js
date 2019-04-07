@@ -23,11 +23,13 @@ import type { Resource } from './cache';
 import type { Bridge } from '../types';
 import type {
   CommitDetails as CommitDetailsBackend,
+  FiberCommits as FiberCommitsBackend,
   Interactions as InteractionsBackend,
   ProfilingSummary as ProfilingSummaryBackend,
 } from 'src/backend/types';
 import type {
   CommitDetails as CommitDetailsFrontend,
+  FiberCommits as FiberCommitsFrontend,
   Interactions as InteractionsFrontend,
   InteractionWithCommits,
   CommitTree as CommitTreeFrontend,
@@ -39,13 +41,19 @@ import type { ChartData as RankedChartData } from 'src/devtools/views/Profiler/R
 
 type CommitDetailsParams = {|
   commitIndex: number,
-  rootID: number,
   rendererID: number,
+  rootID: number,
+|};
+
+type FiberCommitsParams = {|
+  fiberID: number,
+  rendererID: number,
+  rootID: number,
 |};
 
 type InteractionsParams = {|
-  rootID: number,
   rendererID: number,
+  rootID: number,
 |};
 
 type GetCommitTreeParams = {|
@@ -54,8 +62,8 @@ type GetCommitTreeParams = {|
 |};
 
 type ProfilingSummaryParams = {|
-  rootID: number,
   rendererID: number,
+  rootID: number,
 |};
 
 export default class ProfilingCache {
@@ -65,6 +73,11 @@ export default class ProfilingCache {
   _pendingCommitDetailsMap: Map<
     string,
     (commitDetails: CommitDetailsFrontend) => void
+  > = new Map();
+
+  _pendingFiberCommitsMap: Map<
+    string,
+    (fiberCommits: FiberCommitsFrontend) => void
   > = new Map();
 
   _pendingInteractionsMap: Map<
@@ -119,6 +132,38 @@ export default class ProfilingCache {
     },
     ({ commitIndex, rendererID, rootID }: CommitDetailsParams) =>
       `${rootID}-${commitIndex}`
+  );
+
+  FiberCommits: Resource<
+    FiberCommitsParams,
+    FiberCommitsFrontend
+  > = createResource(
+    ({ fiberID, rendererID, rootID }: FiberCommitsParams) => {
+      return new Promise(resolve => {
+        const importedProfilingData = this._store.importedProfilingData;
+        if (importedProfilingData !== null) {
+          // TODO (profiling) commit details
+          // Copy from renderer getFiberCommits()
+        } else if (this._store.profilingOperations.has(rootID)) {
+          this._pendingFiberCommitsMap.set(`${rootID}-${fiberID}`, resolve);
+          this._bridge.send('getFiberCommits', {
+            fiberID,
+            rendererID,
+            rootID,
+          });
+          return;
+        }
+
+        // If no profiling data was recorded for this root, skip the round trip.
+        resolve({
+          commitDurations: [],
+          fiberID,
+          rootID,
+        });
+      });
+    },
+    ({ fiberID, rendererID, rootID }: FiberCommitsParams) =>
+      `${rootID}-${fiberID}`
   );
 
   Interactions: Resource<
@@ -192,6 +237,7 @@ export default class ProfilingCache {
     this._store = store;
 
     bridge.addListener('commitDetails', this.onCommitDetails);
+    bridge.addListener('fiberCommits', this.onFiberCommits);
     bridge.addListener('interactions', this.onInteractions);
     bridge.addListener('profilingSummary', this.onProfileSummary);
   }
@@ -285,6 +331,24 @@ export default class ProfilingCache {
     }
   };
 
+  onFiberCommits = ({
+    commitDurations,
+    fiberID,
+    rootID,
+  }: FiberCommitsBackend) => {
+    const key = `${rootID}-${fiberID}`;
+    const resolve = this._pendingFiberCommitsMap.get(key);
+    if (resolve != null) {
+      this._pendingFiberCommitsMap.delete(key);
+
+      resolve({
+        commitDurations,
+        fiberID,
+        rootID,
+      });
+    }
+  };
+
   onInteractions = ({ interactions, rootID }: InteractionsBackend) => {
     const resolve = this._pendingInteractionsMap.get(rootID);
     if (resolve != null) {
@@ -304,6 +368,7 @@ export default class ProfilingCache {
     const resolve = this._pendingProfileSummaryMap.get(rootID);
     if (resolve != null) {
       this._pendingProfileSummaryMap.delete(rootID);
+
       const initialTreeBaseDurationsMap = new Map();
       for (let i = 0; i < initialTreeBaseDurations.length; i += 2) {
         initialTreeBaseDurationsMap.set(

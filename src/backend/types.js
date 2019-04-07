@@ -66,6 +66,12 @@ export type CommitDetails = {|
   rootID: number,
 |};
 
+export type FiberCommits = {|
+  commitDurations: Array<number>,
+  fiberID: number,
+  rootID: number,
+|};
+
 export type InteractionWithCommits = {|
   ...Interaction,
   commits: Array<number>,
@@ -93,6 +99,7 @@ export type RendererInterface = {
     component: NativeType,
     findNearestUnfilteredAncestor?: boolean
   ) => number | null,
+  getFiberCommits: (rootID: number, fiberID: number) => FiberCommits,
   getInteractions: (rootID: number) => Interactions,
   getProfilingDataForDownload: (rootID: number) => Object,
   getProfilingSummary: (rootID: number) => ProfilingSummary,

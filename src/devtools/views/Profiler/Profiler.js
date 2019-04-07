@@ -19,6 +19,7 @@ import ProfilingImportExportButtons from './ProfilingImportExportButtons';
 import SnapshotSelector from './SnapshotSelector';
 import SidebarCommitInfo from './SidebarCommitInfo';
 import SidebarInteractions from './SidebarInteractions';
+import SidebarSelectedFiberInfo from './SidebarSelectedFiberInfo';
 import ToggleCommitFilterModalButton from './ToggleCommitFilterModalButton';
 
 import styles from './Profiler.css';
@@ -118,7 +119,9 @@ function SnapshotSelectorFallback() {
 // This view's subtree uses suspense to request profiler data from the backend.
 // NOTE that the structure of this UI should mirror NonSuspendingProfiler.
 function SuspendingProfiler() {
-  const { selectedTabID, selectTab } = useContext(ProfilerContext);
+  const { selectedFiberID, selectedTabID, selectTab } = useContext(
+    ProfilerContext
+  );
   const { isFilterModalShowing, setIsFilterModalShowing } = useContext(
     CommitFilterModalContext
   );
@@ -147,7 +150,11 @@ function SuspendingProfiler() {
       break;
     case 'flame-chart':
     case 'ranked-chart':
-      sidebar = <SidebarCommitInfo />;
+      if (selectedFiberID !== null) {
+        sidebar = <SidebarSelectedFiberInfo />;
+      } else {
+        sidebar = <SidebarCommitInfo />;
+      }
       break;
     default:
       break;
