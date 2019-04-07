@@ -129,9 +129,7 @@ export default function OwnerStack() {
   useElementsBarOverflowing(
     elementsBarRef,
     elementsTotalWidth,
-    isElementsBarOverflowing => {
-      setIsElementsBarOverflowing(isElementsBarOverflowing);
-    }
+    setIsElementsBarOverflowing
   );
 
   return (
@@ -163,28 +161,25 @@ function useElementsBarOverflowing(
   elementsTotalWidth: number,
   callback: Function
 ) {
-  const isElementsBarOverflowing = useCallback(() => {
-    if (elementsBarRef.current !== null) {
-      const elementsBarWidth = elementsBarRef.current.clientWidth;
-      return elementsBarWidth <= elementsTotalWidth;
-    }
-    return false;
-  }, [elementsBarRef, elementsTotalWidth]);
-
   useEffect(() => {
     const handleResize = () => {
-      callback(isElementsBarOverflowing());
+      let isElementsBarOverflowing = false;
+      if (elementsBarRef.current !== null) {
+        const elementsBarWidth = elementsBarRef.current.clientWidth;
+        isElementsBarOverflowing = elementsBarWidth <= elementsTotalWidth;
+      }
+      callback(isElementsBarOverflowing);
     };
     const debounceHandleResize = throttle(handleResize, 100);
 
     handleResize();
+
     // It's important to listen to the ownerDocument.defaultView to support the browser extension.
     // Here we use portals to render individual tabs (e.g. Profiler),
     // and the root document might belong to a different window.
     const ownerWindow = elementsBarRef.current.ownerDocument.defaultView;
     ownerWindow.addEventListener('resize', debounceHandleResize);
-    return () => {
+    return () =>
       ownerWindow.removeEventListener('resize', debounceHandleResize);
-    };
-  }, [elementsBarRef, isElementsBarOverflowing, callback]);
+  }, [elementsBarRef, elementsTotalWidth, callback]);
 }
