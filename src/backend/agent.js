@@ -304,7 +304,8 @@ export default class Agent extends EventEmitter {
       if (node !== null) {
         window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = node;
       }
-      this._bridge.send('selectElement', renderer.selectElement(id));
+      renderer.selectElement(id);
+      this._bridge.send('selectElement', { id });
     }
   };
 

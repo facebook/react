@@ -85,6 +85,16 @@ function createPanelIfReactLoaded() {
           );
         });
 
+        // Remember if we should sync the browser DevTools to the React tab.
+        // We'll only do that if user intentionally chooses a different React component.
+        let lastSelectedID = null;
+        bridge.addListener('selectElement', ({ id }) => {
+          if (!hasReactSelectionChanged && lastSelectedID !== id) {
+            hasReactSelectionChanged = true;
+            lastSelectedID = id;
+          }
+        });
+
         // This flag lets us tip the Store off early that we expect to be profiling.
         // This avoids flashing a temporary "Profiling not supported" message in the Profiler tab,
         // after a user has clicked the "reload and profile" button.
@@ -180,12 +190,20 @@ function createPanelIfReactLoaded() {
         );
       }
 
+      let hasReactSelectionChanged = false;
+
       function maybeSetBrowserSelectionFromReact() {
+        // Don't change the browser element selection when navigating away
+        // from the Components tab if the user didn't change the React selection.
+        if (!hasReactSelectionChanged) {
+          return;
+        }
+        hasReactSelectionChanged = false;
         chrome.devtools.inspectedWindow.eval(
           '(window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 != null)' +
             '  ? (inspect(window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0), true)' +
             '  : false',
-          (didChangeSelection, error) => {
+          (_, error) => {
             if (error) {
               console.error(error);
             }
