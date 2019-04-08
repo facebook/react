@@ -1404,6 +1404,12 @@ function commitRootImpl(root, expirationTime) {
     rootWithPendingPassiveEffects = root;
     pendingPassiveEffectsExpirationTime = expirationTime;
   } else {
+    nextEffect = firstEffect;
+    while (nextEffect !== null) {
+      const nextNextEffect = nextEffect.nextEffect;
+      nextEffect.nextEffect = null;
+      nextEffect = nextNextEffect;
+    }
     if (enableSchedulerTracing) {
       // If there are no passive effects, then we can complete the pending
       // interactions. Otherwise, we'll wait until after the passive effects
@@ -1620,7 +1626,9 @@ export function flushPassiveEffects() {
         captureCommitPhaseError(effect, error);
       }
     }
-    effect = effect.nextEffect;
+    const nextNextEffect = effect.nextEffect;
+    effect.nextEffect = null;
+    effect = nextNextEffect;
   }
 
   if (enableSchedulerTracing) {
