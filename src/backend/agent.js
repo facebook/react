@@ -90,6 +90,10 @@ export default class Agent extends EventEmitter {
     bridge.addListener('startProfiling', this.startProfiling);
     bridge.addListener('stopInspectingDOM', this.stopInspectingDOM);
     bridge.addListener('stopProfiling', this.stopProfiling);
+    bridge.addListener(
+      'syncSelectionFromNativeElementsPanel',
+      this.syncSelectionFromNativeElementsPanel
+    );
     bridge.addListener('shutdown', this.shutdown);
     bridge.addListener('viewElementSource', this.viewElementSource);
 
@@ -304,7 +308,22 @@ export default class Agent extends EventEmitter {
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
     } else {
-      this._bridge.send('selectElement', renderer.selectElement(id));
+      // When a different React component is selected, we want to store
+      // the active DOM node ($0) on the global hook so that content script
+      // can update the native elements panel to match it.
+      const node = ((renderer.findNativeByFiberID(id): any): HTMLElement);
+      if (node !== null) {
+        // However, we don't want to do it if the current $0 node already
+        // belongs to this component. In this case we were probably inspecting
+        // a part of its host subtree, and changing $0 would be disuptive.
+        const prev$0 = window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0;
+        const prev$0ID = this.getIDForNode(prev$0);
+        if (prev$0ID !== id) {
+          window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = node;
+        }
+      }
+      renderer.selectElement(id);
+      this._bridge.send('selectElement');
     }
   };
 
@@ -373,6 +392,17 @@ export default class Agent extends EventEmitter {
       rendererInterface.startProfiling();
     }
   }
+
+  syncSelectionFromNativeElementsPanel = () => {
+    const target = window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0;
+    if (target == null) {
+      return;
+    }
+    const id = this.getIDForNode(target);
+    if (id !== null) {
+      this._bridge.send('selectFiber', id);
+    }
+  };
 
   shutdown = () => {
     this.emit('shutdown');
