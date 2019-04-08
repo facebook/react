@@ -1,6 +1,8 @@
 // @flow
 
 import EventEmitter from 'events';
+import memoize from 'memoize-one';
+import throttle from 'lodash.throttle';
 import { LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY, __DEBUG__ } from '../constants';
 import { hideOverlay, showOverlay } from './views/Highlighter';
 
@@ -48,9 +50,6 @@ export default class Agent extends EventEmitter {
   _bridge: Bridge = ((null: any): Bridge);
   _isProfiling: boolean = false;
   _rendererInterfaces: { [key: RendererID]: RendererInterface } = {};
-
-  _selectFiberInterval: null | IntervalID;
-  _lastInspectedNode: null | HTMLElement;
 
   constructor() {
     super();
@@ -384,10 +383,6 @@ export default class Agent extends EventEmitter {
     window.addEventListener('mousedown', this._onMouseDown, true);
     window.addEventListener('mouseup', this._onMouseUp, true);
     window.addEventListener('mouseover', this._onMouseOver, true);
-    this._selectFiberInterval = setInterval(
-      this._selectFiberForLastInspectedNode,
-      200
-    );
   };
 
   startProfiling = () => {
@@ -408,11 +403,6 @@ export default class Agent extends EventEmitter {
     window.removeEventListener('mousedown', this._onMouseDown, true);
     window.removeEventListener('mouseup', this._onMouseUp, true);
     window.removeEventListener('mouseover', this._onMouseOver, true);
-
-    this._selectFiberForLastInspectedNode();
-    clearInterval(this._selectFiberInterval);
-    this._selectFiberInterval = null;
-    this._lastInspectedNode = null;
   };
 
   stopProfiling = () => {
@@ -475,8 +465,7 @@ export default class Agent extends EventEmitter {
     event.preventDefault();
     event.stopPropagation();
 
-    const target = ((event.target: any): HTMLElement);
-    this._lastInspectedNode = target;
+    this._selectFiberForNode(((event.target: any): HTMLElement));
   };
 
   // While we don't do anything here, this makes choosing
@@ -492,19 +481,21 @@ export default class Agent extends EventEmitter {
     event.stopPropagation();
 
     const target = ((event.target: any): HTMLElement);
+
     // Don't pass the name explicitly.
     // It will be inferred from DOM tag and Fiber owner.
     showOverlay(target, null, false);
-    this._lastInspectedNode = target;
+
+    this._selectFiberForNode(target);
   };
 
-  _selectFiberForLastInspectedNode = () => {
-    const node = this._lastInspectedNode;
-    if (node !== null) {
+  _selectFiberForNode = throttle(
+    memoize((node: HTMLElement) => {
       const id = this.getIDForNode(node);
       if (id !== null) {
         this._bridge.send('selectFiber', id);
       }
-    }
-  };
+    }),
+    200
+  );
 }
