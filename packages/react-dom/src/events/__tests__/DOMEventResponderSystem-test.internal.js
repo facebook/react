@@ -13,9 +13,15 @@ let React;
 let ReactFeatureFlags;
 let ReactDOM;
 
-function createReactEventComponent(targetEventTypes, onEvent, onUnmount) {
+function createReactEventComponent(
+  targetEventTypes,
+  createInitialState,
+  onEvent,
+  onUnmount,
+) {
   const testEventResponder = {
     targetEventTypes,
+    createInitialState,
     onEvent,
     onUnmount,
   };
@@ -61,6 +67,7 @@ describe('DOMEventResponderSystem', () => {
 
     const ClickEventComponent = createReactEventComponent(
       ['click'],
+      undefined,
       (event, context, props) => {
         eventResponderFiredCount++;
         eventLog.push({
@@ -114,6 +121,7 @@ describe('DOMEventResponderSystem', () => {
 
     const ClickEventComponent = createReactEventComponent(
       ['click'],
+      undefined,
       (event, context, props) => {
         eventLog.push({
           name: event.type,
@@ -149,6 +157,7 @@ describe('DOMEventResponderSystem', () => {
 
     const ClickEventComponent = createReactEventComponent(
       ['click'],
+      undefined,
       (event, context, props) => {
         eventResponderFiredCount++;
         eventLog.push({
@@ -193,6 +202,7 @@ describe('DOMEventResponderSystem', () => {
 
     const ClickEventComponentA = createReactEventComponent(
       ['click'],
+      undefined,
       (context, props) => {
         eventLog.push('A');
       },
@@ -200,6 +210,7 @@ describe('DOMEventResponderSystem', () => {
 
     const ClickEventComponentB = createReactEventComponent(
       ['click'],
+      undefined,
       (context, props) => {
         eventLog.push('B');
       },
@@ -228,6 +239,7 @@ describe('DOMEventResponderSystem', () => {
 
     const ClickEventComponent = createReactEventComponent(
       ['click'],
+      undefined,
       (event, context, props) => {
         if (props.onMagicClick) {
           const syntheticEvent = {
@@ -265,6 +277,7 @@ describe('DOMEventResponderSystem', () => {
 
     const LongPressEventComponent = createReactEventComponent(
       ['click'],
+      undefined,
       (event, context, props) => {
         const pressEvent = {
           listener: props.onPress,
@@ -323,7 +336,8 @@ describe('DOMEventResponderSystem', () => {
 
     const EventComponent = createReactEventComponent(
       [],
-      (event, context, props) => {},
+      undefined,
+      (event, context, props, state) => {},
       () => {
         onUnmountFired++;
       },
@@ -338,5 +352,30 @@ describe('DOMEventResponderSystem', () => {
     ReactDOM.render(<Test />, container);
     ReactDOM.render(null, container);
     expect(onUnmountFired).toEqual(1);
+  });
+
+  it('the event responder onUnmount() function should fire with state', () => {
+    let counter = 0;
+
+    const EventComponent = createReactEventComponent(
+      [],
+      () => ({
+        incrementAmount: 5,
+      }),
+      (event, context, props, state) => {},
+      (context, props, state) => {
+        counter += state.incrementAmount;
+      },
+    );
+
+    const Test = () => (
+      <EventComponent>
+        <button />
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+    ReactDOM.render(null, container);
+    expect(counter).toEqual(5);
   });
 });
