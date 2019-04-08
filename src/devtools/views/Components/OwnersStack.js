@@ -122,6 +122,7 @@ function ElementsDropdown({
         <div className={styles.Modal} ref={modalRef}>
           {ownerStack.map((id, index) => (
             <button
+              key={id}
               className={
                 ownerStackIndex === index
                   ? styles.SelectedComponent
