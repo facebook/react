@@ -1410,7 +1410,7 @@ export function attach(
     }
   }
 
-  function inspectElement(id: number): InspectedElement | null {
+  function inspectElementRaw(id: number): InspectedElement | null {
     let fiber = idToFiberMap.get(id);
 
     if (fiber == null) {
@@ -1491,7 +1491,7 @@ export function attach(
     if (context !== null) {
       // To simplify hydration and display logic for context, wrap in a value object.
       // Otherwise simple values (e.g. strings, booleans) become harder to handle.
-      context = cleanForBridge({ value: context });
+      context = { value: context };
     }
 
     let owners = null;
@@ -1534,12 +1534,10 @@ export function attach(
       // TODO Review sanitization approach for the below inspectable values.
       context,
       hooks: usesHooks
-        ? cleanForBridge(
-            inspectHooksOfFiber(fiber, (renderer.currentDispatcherRef: any))
-          )
+        ? inspectHooksOfFiber(fiber, (renderer.currentDispatcherRef: any))
         : null,
-      props: cleanForBridge(memoizedProps),
-      state: usesHooks ? null : cleanForBridge(memoizedState),
+      props: memoizedProps,
+      state: usesHooks ? null : memoizedState,
 
       // List of owners
       owners,
@@ -1547,6 +1545,19 @@ export function attach(
       // Location of component in source coude.
       source: _debugSource,
     };
+  }
+
+  function inspectElement(id: number): InspectedElement | null {
+    let result = inspectElementRaw(id);
+    if (result === null) {
+      return null;
+    }
+    // TODO Review sanitization approach for the below inspectable values.
+    result.context = cleanForBridge(result.context);
+    result.hooks = cleanForBridge(result.hooks);
+    result.props = cleanForBridge(result.props);
+    result.state = cleanForBridge(result.state);
+    return result;
   }
 
   function setInHook(
