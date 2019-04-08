@@ -837,7 +837,7 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
   } else {
     // We are done with the effect chain at this point so let's clear the
     // nextEffect pointers to assist with GC. If we have passive effects, we'll
-    // clear this in flushPassiveEffects.
+    // clear this in commitPassiveEffects.
     nextEffect = firstEffect;
     while (nextEffect !== null) {
       const nextNextEffect = nextEffect.nextEffect;
