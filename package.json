@@ -77,7 +77,7 @@
     "fbjs": "0.5.1",
     "fbjs-scripts": "0.7.0",
     "firefox-profile": "^1.0.2",
-    "flow-bin": "^0.94.0",
+    "flow-bin": "^0.96.0",
     "fs-extra": "^3.0.1",
     "gh-pages": "^1.0.0",
     "html2canvas": "^1.0.0-alpha.12",
