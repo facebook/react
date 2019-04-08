@@ -27,33 +27,35 @@ import {
 import isValidElementType from 'shared/isValidElementType';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 
+export function typeOfElementType(type: any) {
+  switch (type) {
+    case REACT_ASYNC_MODE_TYPE:
+    case REACT_CONCURRENT_MODE_TYPE:
+    case REACT_FRAGMENT_TYPE:
+    case REACT_PROFILER_TYPE:
+    case REACT_STRICT_MODE_TYPE:
+    case REACT_SUSPENSE_TYPE:
+      return type;
+    default:
+      const $$typeofType = type && type.$$typeof;
+
+      switch ($$typeofType) {
+        case REACT_CONTEXT_TYPE:
+        case REACT_FORWARD_REF_TYPE:
+        case REACT_PROVIDER_TYPE:
+          return $$typeofType;
+        default:
+          return REACT_ELEMENT_TYPE;
+      }
+  }
+}
+
 export function typeOf(object: any) {
   if (typeof object === 'object' && object !== null) {
     const $$typeof = object.$$typeof;
     switch ($$typeof) {
       case REACT_ELEMENT_TYPE:
-        const type = object.type;
-
-        switch (type) {
-          case REACT_ASYNC_MODE_TYPE:
-          case REACT_CONCURRENT_MODE_TYPE:
-          case REACT_FRAGMENT_TYPE:
-          case REACT_PROFILER_TYPE:
-          case REACT_STRICT_MODE_TYPE:
-          case REACT_SUSPENSE_TYPE:
-            return type;
-          default:
-            const $$typeofType = type && type.$$typeof;
-
-            switch ($$typeofType) {
-              case REACT_CONTEXT_TYPE:
-              case REACT_FORWARD_REF_TYPE:
-              case REACT_PROVIDER_TYPE:
-                return $$typeofType;
-              default:
-                return $$typeof;
-            }
-        }
+        return typeOfElementType(object.type);
       case REACT_LAZY_TYPE:
       case REACT_MEMO_TYPE:
       case REACT_PORTAL_TYPE:
