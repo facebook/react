@@ -9,7 +9,7 @@
 
 import warning from 'shared/warning';
 
-import type {ReactEventResponder} from 'shared/ReactTypes';
+import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 import {REACT_EVENT_TARGET_TOUCH_HIT} from 'shared/ReactSymbols';
 
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
@@ -327,9 +327,20 @@ export function unhideTextInstance(
   textInstance.isHidden = false;
 }
 
-export function handleEventComponent(
-  eventResponder: ReactEventResponder,
-  rootContainerInstance: Container,
+export function mountEventComponent(
+  eventComponentInstance: ReactEventComponentInstance,
+): void {
+  // noop
+}
+
+export function updateEventComponent(
+  eventComponentInstance: ReactEventComponentInstance,
+): void {
+  // noop
+}
+
+export function unmountEventComponent(
+  eventComponentInstance: ReactEventComponentInstance,
 ): void {
   // noop
 }
@@ -361,14 +372,6 @@ export function getEventTargetChildElement(
     }
   }
   return null;
-}
-
-export function unmountEventComponent(
-  eventResponder: ReactEventResponder,
-  rootContainerInstance: Container,
-  internalInstanceHandle: Object,
-): void {
-  // TODO: add unmountEventComponent implementation
 }
 
 export function handleEventTarget(

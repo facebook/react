@@ -749,9 +749,8 @@ function commitUnmount(current: Fiber): void {
     }
     case EventComponent: {
       if (enableEventAPI) {
-        const rootContainerInstance = current.stateNode.rootInstance;
-        const responder = current.type.responder;
-        unmountEventComponent(responder, rootContainerInstance, current);
+        const eventComponentInstance = current.stateNode;
+        unmountEventComponent(eventComponentInstance);
         current.stateNode = null;
       }
     }
