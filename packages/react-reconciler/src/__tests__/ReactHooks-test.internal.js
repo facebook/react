@@ -608,8 +608,8 @@ describe('ReactHooks', () => {
       'Warning: The final argument passed to useLayoutEffect changed size ' +
         'between renders. The order and size of this array must remain ' +
         'constant.\n\n' +
-        'Previous: [A, B]\n' +
-        'Incoming: [A]\n',
+        'Previous: [A]\n' +
+        'Incoming: [A, B]\n',
     ]);
   });
 
