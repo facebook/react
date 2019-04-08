@@ -87,6 +87,10 @@ export default class Agent extends EventEmitter {
     bridge.addListener('startProfiling', this.startProfiling);
     bridge.addListener('stopInspectingDOM', this.stopInspectingDOM);
     bridge.addListener('stopProfiling', this.stopProfiling);
+    bridge.addListener(
+      'syncSelectionFromBrowserTools',
+      this.syncSelectionFromBrowserTools
+    );
     bridge.addListener('shutdown', this.shutdown);
     bridge.addListener('viewElementSource', this.viewElementSource);
 
@@ -292,6 +296,14 @@ export default class Agent extends EventEmitter {
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
     } else {
+      // Update the active DOM node on the global hook object.
+      // The content script will read this to update window.$0
+      // when we switch tabs.
+      let node: HTMLElement | null = null;
+      node = ((renderer.findNativeByFiberID(id): any): HTMLElement);
+      if (node !== null) {
+        window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = node;
+      }
       this._bridge.send('selectElement', renderer.selectElement(id));
     }
   };
@@ -361,6 +373,17 @@ export default class Agent extends EventEmitter {
       rendererInterface.startProfiling();
     }
   }
+
+  syncSelectionFromBrowserTools = () => {
+    const target = window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0;
+    if (target == null) {
+      return;
+    }
+    const id = this.getIDForNode(target);
+    if (id !== null) {
+      this._bridge.send('selectFiber', id);
+    }
+  };
 
   shutdown = () => {
     this.emit('shutdown');

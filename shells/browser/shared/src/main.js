@@ -162,10 +162,43 @@ function createPanelIfReactLoaded() {
         container._hasInitialHTMLBeenCleared = true;
       }
 
+      function maybeSetReactSelectionFromBrowser() {
+        // When the user chooses a different node in the browser Elements tab,
+        // copy it over to the hook object so that we can sync the selection.
+        chrome.devtools.inspectedWindow.eval(
+          // Don't reset selection if it didn't change in Elements tab.
+          '(window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 !== $0)' +
+            '  ? (window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = $0, true)' +
+            '  : false',
+          (didChangeSelection, error) => {
+            if (error) {
+              console.error(error);
+            } else if (didChangeSelection) {
+              bridge.send('syncSelectionFromBrowserTools');
+            }
+          }
+        );
+      }
+
+      function maybeSetBrowserSelectionFromReact() {
+        chrome.devtools.inspectedWindow.eval(
+          '(window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 != null)' +
+            '  ? (inspect(window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0), true)' +
+            '  : false',
+          (didChangeSelection, error) => {
+            if (error) {
+              console.error(error);
+            }
+          }
+        );
+      }
+
       let currentPanel = null;
 
       chrome.devtools.panels.create('⚛ Components', '', 'panel.html', panel => {
         panel.onShown.addListener(panel => {
+          maybeSetReactSelectionFromBrowser();
+
           if (currentPanel === panel) {
             return;
           }
@@ -178,10 +211,9 @@ function createPanelIfReactLoaded() {
             render('components');
             panel.injectStyles(cloneStyleTags);
           }
-
-          // TODO: When the user switches to the panel, check for an Elements tab selection.
         });
         panel.onHidden.addListener(() => {
+          maybeSetBrowserSelectionFromReact();
           // TODO: Stop highlighting and stuff.
         });
       });
