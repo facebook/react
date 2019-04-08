@@ -107,25 +107,6 @@ export default function DevTools({
     };
   }, [store, supportsProfiling]);
 
-  let tabElement;
-  switch (tab) {
-    case 'profiler':
-      tabElement = (
-        <Profiler
-          portalContainer={profilerPortalContainer}
-          supportsProfiling={supportsProfiling}
-        />
-      );
-      break;
-    case 'settings':
-      tabElement = <Settings portalContainer={settingsPortalContainer} />;
-      break;
-    case 'components':
-    default:
-      tabElement = <Components portalContainer={componentsPortalContainer} />;
-      break;
-  }
-
   return (
     <BridgeContext.Provider value={bridge}>
       <StoreContext.Provider value={store}>
@@ -158,7 +139,21 @@ export default function DevTools({
                     />
                   </div>
                 )}
-                <div className={styles.TabContent}>{tabElement}</div>
+                <div
+                  className={styles.TabContent}
+                  hidden={tab !== 'components'}
+                >
+                  <Components portalContainer={componentsPortalContainer} />
+                </div>
+                <div className={styles.TabContent} hidden={tab !== 'profiler'}>
+                  <Profiler
+                    portalContainer={profilerPortalContainer}
+                    supportsProfiling={supportsProfiling}
+                  />
+                </div>
+                <div className={styles.TabContent} hidden={tab !== 'settings'}>
+                  <Settings portalContainer={settingsPortalContainer} />
+                </div>
               </div>
             </ProfilerContextController>
           </TreeContextController>
