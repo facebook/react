@@ -101,9 +101,15 @@ export function useModalDismissSignal(
       }
     };
 
-    const handleMouseOrTouch = ({ target }: any) => {
+    const handleClick = (event: any) => {
       // $FlowFixMe
-      if (modalRef.current !== null && !modalRef.current.contains(target)) {
+      if (
+        modalRef.current !== null &&
+        !modalRef.current.contains(event.target)
+      ) {
+        event.stopPropagation();
+        event.preventDefault();
+
         dismissCallback();
       }
     };
@@ -113,13 +119,11 @@ export function useModalDismissSignal(
     // and the root document might belong to a different window.
     const ownerDocument = modalRef.current.ownerDocument;
     ownerDocument.addEventListener('keydown', handleKeyDown);
-    ownerDocument.addEventListener('mousedown', handleMouseOrTouch);
-    ownerDocument.addEventListener('touchstart', handleMouseOrTouch);
+    ownerDocument.addEventListener('click', handleClick);
 
     return () => {
       ownerDocument.removeEventListener('keydown', handleKeyDown);
-      ownerDocument.removeEventListener('mousedown', handleMouseOrTouch);
-      ownerDocument.removeEventListener('touchstart', handleMouseOrTouch);
+      ownerDocument.removeEventListener('click', handleClick);
     };
   }, [modalRef, dismissCallback]);
 }
