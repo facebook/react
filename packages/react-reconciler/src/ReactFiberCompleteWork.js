@@ -774,10 +774,18 @@ function completeWork(
         popHostContext(workInProgress);
         const rootContainerInstance = getRootHostContainer();
         const responder = workInProgress.type.responder;
+        const stateNode = workInProgress.stateNode;
         // Update the props on the event component state node
-        workInProgress.stateNode.props = newProps;
+        stateNode.props = newProps;
         // Update the root container, so we can properly unmount events at some point
-        workInProgress.stateNode.rootInstance = rootContainerInstance;
+        stateNode.rootInstance = rootContainerInstance;
+        // Initialize event component state if createInitialState exists
+        if (
+          stateNode.state === null &&
+          responder.createInitialState !== undefined
+        ) {
+          stateNode.state = responder.createInitialState(newProps);
+        }
         handleEventComponent(responder, rootContainerInstance);
       }
       break;

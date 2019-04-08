@@ -56,7 +56,6 @@ type PartialEventObject = {
 
 let currentOwner = null;
 let currentFiber: Fiber;
-let currentResponder: ReactEventResponder;
 let currentEventQueue: EventQueue;
 
 const eventResponderContext: ResponderContext = {
@@ -227,14 +226,11 @@ const eventResponderContext: ResponderContext = {
     return false;
   },
   setTimeout(func: () => void, delay): TimeoutID {
-    const contextResponder = currentResponder;
     const contextFiber = currentFiber;
     return setTimeout(() => {
       const previousEventQueue = currentEventQueue;
       const previousFiber = currentFiber;
-      const previousResponder = currentResponder;
       currentEventQueue = createEventQueue();
-      currentResponder = contextResponder;
       currentFiber = contextFiber;
       try {
         func();
@@ -242,7 +238,6 @@ const eventResponderContext: ResponderContext = {
       } finally {
         currentFiber = previousFiber;
         currentEventQueue = previousEventQueue;
-        currentResponder = previousResponder;
       }
     }, delay);
   },
@@ -361,19 +356,12 @@ function handleTopLevelType(
     }
   }
   let {props, state} = fiber.stateNode;
-  if (state === null && responder.createInitialState !== undefined) {
-    state = fiber.stateNode.state = responder.createInitialState(props);
-  }
   const previousFiber = currentFiber;
-  const previousResponder = currentResponder;
   currentFiber = fiber;
-  currentResponder = responder;
-
   try {
     responder.onEvent(responderEvent, eventResponderContext, props, state);
   } finally {
     currentFiber = previousFiber;
-    currentResponder = previousResponder;
   }
 }
 
@@ -430,16 +418,13 @@ export function unmountEventResponder(
     let {props, state} = fiber.stateNode;
     const previousEventQueue = currentEventQueue;
     const previousFiber = currentFiber;
-    const previousResponder = currentResponder;
     currentEventQueue = createEventQueue();
     currentFiber = fiber;
-    currentResponder = responder;
     try {
       onUnmount(eventResponderContext, props, state);
     } finally {
       currentEventQueue = previousEventQueue;
       currentFiber = previousFiber;
-      currentResponder = previousResponder;
     }
   }
   if (currentOwner === fiber) {
