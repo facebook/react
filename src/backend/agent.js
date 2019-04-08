@@ -88,8 +88,8 @@ export default class Agent extends EventEmitter {
     bridge.addListener('stopInspectingDOM', this.stopInspectingDOM);
     bridge.addListener('stopProfiling', this.stopProfiling);
     bridge.addListener(
-      'syncSelectionFromBrowserTools',
-      this.syncSelectionFromBrowserTools
+      'syncSelectionFromNativeElementsPanel',
+      this.syncSelectionFromNativeElementsPanel
     );
     bridge.addListener('shutdown', this.shutdown);
     bridge.addListener('viewElementSource', this.viewElementSource);
@@ -299,8 +299,7 @@ export default class Agent extends EventEmitter {
       // Update the active DOM node on the global hook object.
       // The content script will read this to update window.$0
       // when we switch tabs.
-      let node: HTMLElement | null = null;
-      node = ((renderer.findNativeByFiberID(id): any): HTMLElement);
+      const node = ((renderer.findNativeByFiberID(id): any): HTMLElement);
       if (node !== null) {
         window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = node;
       }
@@ -375,7 +374,7 @@ export default class Agent extends EventEmitter {
     }
   }
 
-  syncSelectionFromBrowserTools = () => {
+  syncSelectionFromNativeElementsPanel = () => {
     const target = window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0;
     if (target == null) {
       return;

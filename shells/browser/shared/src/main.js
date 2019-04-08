@@ -184,7 +184,7 @@ function createPanelIfReactLoaded() {
             if (error) {
               console.error(error);
             } else if (didChangeSelection) {
-              bridge.send('syncSelectionFromBrowserTools');
+              bridge.send('syncSelectionFromNativeElementsPanel');
             }
           }
         );
