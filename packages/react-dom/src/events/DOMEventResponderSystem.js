@@ -253,7 +253,7 @@ const targetEventTypeCached: Map<
   Array<ReactEventResponderEventType>,
   Set<DOMTopLevelEventType>,
 > = new Map();
-const ownershipChangeListeners = new Set();
+const ownershipChangeListeners: Set<ReactEventComponentInstance> = new Set();
 
 function createResponderEvent(
   topLevelType: string,
