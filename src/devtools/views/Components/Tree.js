@@ -13,12 +13,21 @@ import { FixedSizeList } from 'react-window';
 import { TreeContext } from './TreeContext';
 import { SettingsContext } from '../Settings/SettingsContext';
 import { BridgeContext } from '../context';
-import Element from './Element';
+import ElementView from './Element';
 import InspectHostNodesToggle from './InspectHostNodesToggle';
 import OwnersStack from './OwnersStack';
 import SearchInput from './SearchInput';
 
 import styles from './Tree.css';
+
+import type { Element } from './types';
+
+export type ItemData = {|
+  baseDepth: number,
+  numElements: number,
+  getElementAtIndex: (index: number) => Element | null,
+  lastScrolledIDRef: { current: number | null },
+|};
 
 type Props = {||};
 
@@ -34,7 +43,8 @@ export default function Tree(props: Props) {
     selectPreviousElementInTree,
   } = useContext(TreeContext);
   const bridge = useContext(BridgeContext);
-  const listRef = useRef<FixedSizeList<any> | null>(null);
+  // $FlowFixMe https://github.com/facebook/flow/issues/7341
+  const listRef = useRef<FixedSizeList<ItemData> | null>(null);
   const treeRef = useRef<HTMLDivElement | null>(null);
 
   const { lineHeight } = useContext(SettingsContext);
@@ -54,7 +64,7 @@ export default function Tree(props: Props) {
   // This ref is passed down the context to elements.
   // It lets them avoid autoscrolling to the same item many times
   // when a selected virtual row goes in and out of the viewport.
-  const lastScrolledIDRef = useRef(null);
+  const lastScrolledIDRef = useRef<number | null>(null);
 
   // Navigate the tree with up/down arrow keys.
   useEffect(() => {
@@ -104,7 +114,7 @@ export default function Tree(props: Props) {
 
   // Let react-window know to re-render any time the underlying tree data changes.
   // This includes the owner context, since it controls a filtered view of the tree.
-  const itemData = useMemo(
+  const itemData = useMemo<ItemData>(
     () => ({
       baseDepth,
       numElements,
@@ -127,6 +137,7 @@ export default function Tree(props: Props) {
       <div className={styles.AutoSizerWrapper} onMouseLeave={handleMouseLeave}>
         <AutoSizer>
           {({ height, width }) => (
+            // $FlowFixMe https://github.com/facebook/flow/issues/7341
             <FixedSizeList
               className={styles.List}
               height={height}
@@ -138,7 +149,7 @@ export default function Tree(props: Props) {
               ref={listRef}
               width={width}
             >
-              {Element}
+              {ElementView}
             </FixedSizeList>
           )}
         </AutoSizer>

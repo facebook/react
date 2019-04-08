@@ -13,18 +13,18 @@ import { createRegExp } from '../utils';
 import { TreeContext } from './TreeContext';
 import { BridgeContext, StoreContext } from '../context';
 
+import type { ItemData } from './Tree';
 import type { Element } from './types';
 
 import styles from './Element.css';
 
 type Props = {
+  data: ItemData,
   index: number,
   style: Object,
-  // TODO: I can't get the correct type to work here:
-  data: Object,
 };
 
-export default function ElementView({ index, style, data }: Props) {
+export default function ElementView({ data, index, style }: Props) {
   const {
     baseDepth,
     getElementAtIndex,
