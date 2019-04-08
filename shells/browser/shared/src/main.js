@@ -87,12 +87,8 @@ function createPanelIfReactLoaded() {
 
         // Remember if we should sync the browser DevTools to the React tab.
         // We'll only do that if user intentionally chooses a different React component.
-        let lastSelectedID = null;
-        bridge.addListener('selectElement', ({ id }) => {
-          if (!hasReactSelectionChanged && lastSelectedID !== id) {
-            hasReactSelectionChanged = true;
-            lastSelectedID = id;
-          }
+        bridge.addListener('selectElement', () => {
+          hasReactSelectionChanged = true;
         });
 
         // This flag lets us tip the Store off early that we expect to be profiling.
