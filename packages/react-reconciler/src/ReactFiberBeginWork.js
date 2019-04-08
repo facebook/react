@@ -96,10 +96,13 @@ import {
   registerSuspenseInstanceRetry,
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
+import {getEventTargetChildElement} from './ReactFiberHostConfig';
+import {shouldSuspend} from './ReactFiberReconciler';
 import {
   pushHostContext,
   pushHostContainer,
-  pushHostContextForEvent,
+  pushHostContextForEventComponent,
+  pushHostContextForEventTarget,
 } from './ReactFiberHostContext';
 import {
   pushProvider,
@@ -156,6 +159,7 @@ let didWarnAboutContextTypeOnFunctionComponent;
 let didWarnAboutGetDerivedStateOnFunctionComponent;
 let didWarnAboutFunctionRefs;
 export let didWarnAboutReassigningProps;
+let didWarnAboutMaxDuration;
 
 if (__DEV__) {
   didWarnAboutBadClass = {};
@@ -164,6 +168,7 @@ if (__DEV__) {
   didWarnAboutGetDerivedStateOnFunctionComponent = {};
   didWarnAboutFunctionRefs = {};
   didWarnAboutReassigningProps = false;
+  didWarnAboutMaxDuration = false;
 }
 
 export function reconcileChildren(
@@ -1389,6 +1394,12 @@ function updateSuspenseComponent(
   const mode = workInProgress.mode;
   const nextProps = workInProgress.pendingProps;
 
+  if (__DEV__) {
+    if (shouldSuspend(workInProgress)) {
+      workInProgress.effectTag |= DidCapture;
+    }
+  }
+
   // We should attempt to render the primary children unless this boundary
   // already suspended during this render (`alreadyCaptured` is true).
   let nextState: SuspenseState | null = workInProgress.memoizedState;
@@ -1406,6 +1417,19 @@ function updateSuspenseComponent(
     };
     nextDidTimeout = true;
     workInProgress.effectTag &= ~DidCapture;
+  }
+
+  if (__DEV__) {
+    if ('maxDuration' in nextProps) {
+      if (!didWarnAboutMaxDuration) {
+        didWarnAboutMaxDuration = true;
+        warning(
+          false,
+          'maxDuration has been removed from React. ' +
+            'Remove the maxDuration prop.',
+        );
+      }
+    }
   }
 
   // This next part is a bit confusing. If the children timeout, we switch to
@@ -1960,21 +1984,39 @@ function updateEventComponent(current, workInProgress, renderExpirationTime) {
     nextChildren,
     renderExpirationTime,
   );
-  pushHostContextForEvent(workInProgress);
+  pushHostContextForEventComponent(workInProgress);
   return workInProgress.child;
 }
 
 function updateEventTarget(current, workInProgress, renderExpirationTime) {
+  const type = workInProgress.type.type;
   const nextProps = workInProgress.pendingProps;
-  let nextChildren = nextProps.children;
+  const eventTargetChild = getEventTargetChildElement(type, nextProps);
 
-  reconcileChildren(
-    current,
-    workInProgress,
-    nextChildren,
-    renderExpirationTime,
-  );
-  pushHostContextForEvent(workInProgress);
+  if (__DEV__) {
+    warning(
+      nextProps.children == null,
+      'Event targets should not have children.',
+    );
+  }
+  if (eventTargetChild !== null) {
+    const child = (workInProgress.child = createFiberFromTypeAndProps(
+      eventTargetChild.type,
+      null,
+      eventTargetChild.props,
+      null,
+      workInProgress.mode,
+      renderExpirationTime,
+    ));
+    child.return = workInProgress;
+
+    if (current === null || current.child === null) {
+      child.effectTag = Placement;
+    }
+  } else {
+    reconcileChildren(current, workInProgress, null, renderExpirationTime);
+  }
+  pushHostContextForEventTarget(workInProgress);
   return workInProgress.child;
 }
 
@@ -2112,8 +2154,19 @@ function beginWork(
             // been unsuspended it has committed as a regular Suspense component.
             // If it needs to be retried, it should have work scheduled on it.
             workInProgress.effectTag |= DidCapture;
-            break;
           }
+          break;
+        }
+        case EventComponent:
+          if (enableEventAPI) {
+            pushHostContextForEventComponent(workInProgress);
+          }
+          break;
+        case EventTarget: {
+          if (enableEventAPI) {
+            pushHostContextForEventTarget(workInProgress);
+          }
+          break;
         }
       }
       return bailoutOnAlreadyFinishedWork(

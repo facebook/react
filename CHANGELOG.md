@@ -6,6 +6,33 @@
   </summary>
 </details>
 
+## 16.8.6 (March 27, 2019)
+
+### React DOM
+
+* Fix an incorrect bailout in `useReducer()`. ([@acdlite](https://github.com/acdlite) in [#15124](https://github.com/facebook/react/pull/15124))
+* Fix iframe warnings in Safari DevTools. ([@renanvalentin](https://github.com/renanvalentin) in [#15099](https://github.com/facebook/react/pull/15099))
+* Warn if `contextType` is set to `Context.Consumer` instead of `Context`. ([@aweary](https://github.com/aweary) in [#14831](https://github.com/facebook/react/pull/14831))
+* Warn if `contextType` is set to invalid values. ([@gaearon](https://github.com/gaearon) in [#15142](https://github.com/facebook/react/pull/15142))
+
+## 16.8.5 (March 22, 2019)
+
+### React DOM
+
+* Don't set the first option as selected in select tag with `size` attribute. ([@kulek1](https://github.com/kulek1) in [#14242](https://github.com/facebook/react/pull/14242))
+* Improve the `useEffect(async () => ...)` warning message. ([@gaearon](https://github.com/gaearon) in [#15118](https://github.com/facebook/react/pull/15118))
+* Improve the error message sometimes caused by duplicate React. ([@jaredpalmer](https://github.com/jaredpalmer) in [#15139](https://github.com/facebook/react/pull/15139))
+
+### React DOM Server
+
+* Improve the `useLayoutEffect` warning message when server rendering. ([@gaearon](https://github.com/gaearon) in [#15158](https://github.com/facebook/react/pull/15158))
+
+### React Shallow Renderer
+
+* Fix `setState` in shallow renderer to work with Hooks. ([@gaearon](https://github.com/gaearon) in [#15120](https://github.com/facebook/react/pull/15120))
+* Fix shallow renderer to support `React.memo`. ([@aweary](https://github.com/aweary) in [#14816](https://github.com/facebook/react/pull/14816))
+* Fix shallow renderer to support Hooks inside `forwardRef`. ([@eps1lon](https://github.com/eps1lon) in [#15100](https://github.com/facebook/react/pull/15100))
+
 ## 16.8.4 (March 5, 2019)
 
 ### React DOM and other renderers

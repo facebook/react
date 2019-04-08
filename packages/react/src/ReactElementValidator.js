@@ -27,7 +27,12 @@ import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
-import {isValidElement, createElement, cloneElement} from './ReactElement';
+import {
+  isValidElement,
+  createElement,
+  cloneElement,
+  jsxDEV,
+} from './ReactElement';
 import ReactDebugCurrentFrame, {
   setCurrentlyValidatingElement,
 } from './ReactDebugCurrentFrame';
@@ -48,16 +53,18 @@ function getDeclarationErrorAddendum() {
   return '';
 }
 
-function getSourceInfoErrorAddendum(elementProps) {
-  if (
-    elementProps !== null &&
-    elementProps !== undefined &&
-    elementProps.__source !== undefined
-  ) {
-    const source = elementProps.__source;
+function getSourceInfoErrorAddendum(source) {
+  if (source !== undefined) {
     const fileName = source.fileName.replace(/^.*[\\\/]/, '');
     const lineNumber = source.lineNumber;
     return '\n\nCheck your code at ' + fileName + ':' + lineNumber + '.';
+  }
+  return '';
+}
+
+function getSourceInfoErrorAddendumForProps(elementProps) {
+  if (elementProps !== null && elementProps !== undefined) {
+    return getSourceInfoErrorAddendum(elementProps.__source);
   }
   return '';
 }
@@ -259,6 +266,117 @@ function validateFragmentProps(fragment) {
   setCurrentlyValidatingElement(null);
 }
 
+export function jsxWithValidation(
+  type,
+  props,
+  key,
+  isStaticChildren,
+  source,
+  self,
+) {
+  const validType = isValidElementType(type);
+
+  // We warn in this case but don't throw. We expect the element creation to
+  // succeed and there will likely be errors in render.
+  if (!validType) {
+    let info = '';
+    if (
+      type === undefined ||
+      (typeof type === 'object' &&
+        type !== null &&
+        Object.keys(type).length === 0)
+    ) {
+      info +=
+        ' You likely forgot to export your component from the file ' +
+        "it's defined in, or you might have mixed up default and named imports.";
+    }
+
+    const sourceInfo = getSourceInfoErrorAddendum(source);
+    if (sourceInfo) {
+      info += sourceInfo;
+    } else {
+      info += getDeclarationErrorAddendum();
+    }
+
+    let typeString;
+    if (type === null) {
+      typeString = 'null';
+    } else if (Array.isArray(type)) {
+      typeString = 'array';
+    } else if (type !== undefined && type.$$typeof === REACT_ELEMENT_TYPE) {
+      typeString = `<${getComponentName(type.type) || 'Unknown'} />`;
+      info =
+        ' Did you accidentally export a JSX literal instead of a component?';
+    } else {
+      typeString = typeof type;
+    }
+
+    warning(
+      false,
+      'React.jsx: type is invalid -- expected a string (for ' +
+        'built-in components) or a class/function (for composite ' +
+        'components) but got: %s.%s',
+      typeString,
+      info,
+    );
+  }
+
+  const element = jsxDEV(type, props, key, source, self);
+
+  // The result can be nullish if a mock or a custom function is used.
+  // TODO: Drop this when these are no longer allowed as the type argument.
+  if (element == null) {
+    return element;
+  }
+
+  // Skip key warning if the type isn't valid since our key validation logic
+  // doesn't expect a non-string/function type and can throw confusing errors.
+  // We don't want exception behavior to differ between dev and prod.
+  // (Rendering will throw with a helpful message and as soon as the type is
+  // fixed, the key warnings will appear.)
+  if (validType) {
+    const children = props.children;
+    if (children !== undefined) {
+      if (isStaticChildren) {
+        for (let i = 0; i < children.length; i++) {
+          validateChildKeys(children[i], type);
+        }
+      } else {
+        validateChildKeys(children, type);
+      }
+    }
+  }
+
+  if (props.key !== undefined) {
+    warning(
+      false,
+      'React.jsx: Spreading a key to JSX is a deprecated pattern. ' +
+        'Explicitly pass a key after spreading props in your JSX call. ' +
+        'E.g. <ComponentName {...props} key={key} />',
+    );
+  }
+
+  if (type === REACT_FRAGMENT_TYPE) {
+    validateFragmentProps(element);
+  } else {
+    validatePropTypes(element);
+  }
+
+  return element;
+}
+
+// These two functions exist to still get child warnings in dev
+// even with the prod transform. This means that jsxDEV is purely
+// opt-in behavior for better messages but that we won't stop
+// giving you warnings if you use production apis.
+export function jsxWithValidationStatic(type, props, key) {
+  return jsxWithValidation(type, props, key, true);
+}
+
+export function jsxWithValidationDynamic(type, props, key) {
+  return jsxWithValidation(type, props, key, false);
+}
+
 export function createElementWithValidation(type, props, children) {
   const validType = isValidElementType(type);
 
@@ -277,7 +395,7 @@ export function createElementWithValidation(type, props, children) {
         "it's defined in, or you might have mixed up default and named imports.";
     }
 
-    const sourceInfo = getSourceInfoErrorAddendum(props);
+    const sourceInfo = getSourceInfoErrorAddendumForProps(props);
     if (sourceInfo) {
       info += sourceInfo;
     } else {

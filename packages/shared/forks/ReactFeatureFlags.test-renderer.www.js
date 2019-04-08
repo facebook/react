@@ -15,7 +15,7 @@ import typeof * as PersistentFeatureFlagsType from './ReactFeatureFlags.persiste
 export const debugRenderPhaseSideEffects = false;
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableUserTimingAPI = __DEV__;
-export const warnAboutDeprecatedLifecycles = false;
+export const warnAboutDeprecatedLifecycles = true;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = false;
 export const enableSchedulerTracing = false;
@@ -27,6 +27,7 @@ export const disableJavaScriptURLs = false;
 export const disableYielding = false;
 export const enableEventAPI = true;
 export const enableNewScheduler = false;
+export const enableJSXTransformAPI = true;
 
 // Only used in www builds.
 export function addUserTimingListener() {

@@ -22,6 +22,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   warnAboutDeprecatedLifecycles,
   enableSuspenseServerRenderer,
+  enableEventAPI,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -36,6 +37,9 @@ import {
   REACT_CONTEXT_TYPE,
   REACT_LAZY_TYPE,
   REACT_MEMO_TYPE,
+  REACT_EVENT_COMPONENT_TYPE,
+  REACT_EVENT_TARGET_TYPE,
+  REACT_EVENT_TARGET_TOUCH_HIT,
 } from 'shared/ReactSymbols';
 
 import {
@@ -1162,6 +1166,55 @@ class ReactDOMServerRenderer {
             this.stack.push(frame);
             return '';
           }
+          case REACT_EVENT_COMPONENT_TYPE:
+          case REACT_EVENT_TARGET_TYPE: {
+            if (enableEventAPI) {
+              if (
+                elementType.$$typeof === REACT_EVENT_TARGET_TYPE &&
+                elementType.type === REACT_EVENT_TARGET_TOUCH_HIT
+              ) {
+                const props = nextElement.props;
+                const bottom = props.bottom || 0;
+                const left = props.left || 0;
+                const right = props.right || 0;
+                const top = props.top || 0;
+
+                if (bottom === 0 && left === 0 && right === 0 && top === 0) {
+                  return '';
+                }
+                let topString = top ? `-${top}px` : '0px';
+                let leftString = left ? `-${left}px` : '0px';
+                let rightString = right ? `-${right}px` : '0x';
+                let bottomString = bottom ? `-${bottom}px` : '0px';
+
+                return (
+                  `<div style="position:absolute;z-index:-1;bottom:` +
+                  `${bottomString};left:${leftString};right:${rightString};top:${topString}"></div>`
+                );
+              }
+              const nextChildren = toArray(
+                ((nextChild: any): ReactElement).props.children,
+              );
+              const frame: Frame = {
+                type: null,
+                domNamespace: parentNamespace,
+                children: nextChildren,
+                childIndex: 0,
+                context: context,
+                footer: '',
+              };
+              if (__DEV__) {
+                ((frame: any): FrameDev).debugElementStack = [];
+              }
+              this.stack.push(frame);
+              return '';
+            }
+            invariant(
+              false,
+              'ReactDOMServer does not yet support the event API.',
+            );
+          }
+          // eslint-disable-next-line-no-fallthrough
           case REACT_LAZY_TYPE:
             invariant(
               false,

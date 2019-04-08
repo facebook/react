@@ -6,7 +6,6 @@
  * @flow
  */
 
-import {rethrowCaughtError} from 'shared/ReactErrorUtils';
 import invariant from 'shared/invariant';
 
 import {
@@ -14,43 +13,15 @@ import {
   injectEventPluginsByName,
   plugins,
 } from './EventPluginRegistry';
-import {
-  executeDispatchesInOrder,
-  getFiberCurrentPropsFromNode,
-} from './EventPluginUtils';
+import {getFiberCurrentPropsFromNode} from './EventPluginUtils';
 import accumulateInto from './accumulateInto';
-import forEachAccumulated from './forEachAccumulated';
+import {runEventsInBatch} from './EventBatching';
 
 import type {PluginModule} from './PluginModuleType';
 import type {ReactSyntheticEvent} from './ReactSyntheticEventType';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {AnyNativeEvent} from './PluginModuleType';
 import type {TopLevelType} from './TopLevelEventTypes';
-
-/**
- * Internal queue of events that have accumulated their dispatches and are
- * waiting to have their dispatches executed.
- */
-let eventQueue: ?(Array<ReactSyntheticEvent> | ReactSyntheticEvent) = null;
-
-/**
- * Dispatches an event and releases it back into the pool, unless persistent.
- *
- * @param {?object} event Synthetic event to be dispatched.
- * @private
- */
-const executeDispatchesAndRelease = function(event: ReactSyntheticEvent) {
-  if (event) {
-    executeDispatchesInOrder(event);
-
-    if (!event.isPersistent()) {
-      event.constructor.release(event);
-    }
-  }
-};
-const executeDispatchesAndReleaseTopLevel = function(e) {
-  return executeDispatchesAndRelease(e);
-};
 
 function isInteractive(tag) {
   return (
@@ -158,7 +129,7 @@ export function getListener(inst: Fiber, registrationName: string) {
  * @return {*} An accumulation of synthetic events.
  * @internal
  */
-function extractEvents(
+function extractPluginEvents(
   topLevelType: TopLevelType,
   targetInst: null | Fiber,
   nativeEvent: AnyNativeEvent,
@@ -183,39 +154,13 @@ function extractEvents(
   return events;
 }
 
-export function runEventsInBatch(
-  events: Array<ReactSyntheticEvent> | ReactSyntheticEvent | null,
-) {
-  if (events !== null) {
-    eventQueue = accumulateInto(eventQueue, events);
-  }
-
-  // Set `eventQueue` to null before processing it so that we can tell if more
-  // events get enqueued while processing.
-  const processingEventQueue = eventQueue;
-  eventQueue = null;
-
-  if (!processingEventQueue) {
-    return;
-  }
-
-  forEachAccumulated(processingEventQueue, executeDispatchesAndReleaseTopLevel);
-  invariant(
-    !eventQueue,
-    'processEventQueue(): Additional events were enqueued while processing ' +
-      'an event queue. Support for this has not yet been implemented.',
-  );
-  // This would be a good time to rethrow if any of the event handlers threw.
-  rethrowCaughtError();
-}
-
-export function runExtractedEventsInBatch(
+export function runExtractedPluginEventsInBatch(
   topLevelType: TopLevelType,
   targetInst: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: EventTarget,
 ) {
-  const events = extractEvents(
+  const events = extractPluginEvents(
     topLevelType,
     targetInst,
     nativeEvent,

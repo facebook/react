@@ -23,7 +23,7 @@ export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 
 // Warn about deprecated, async-unsafe lifecycles; relates to RFC #6:
-export const warnAboutDeprecatedLifecycles = false;
+export const warnAboutDeprecatedLifecycles = true;
 
 // Gather advanced timing metrics for Profiler subtrees.
 export const enableProfilerTimer = __PROFILE__;
@@ -68,3 +68,6 @@ export const enableEventAPI = false;
 // Enables rewritten version of ReactFiberScheduler. Added in case we need to
 // quickly revert it.
 export const enableNewScheduler = false;
+
+// New API for JSX transforms to target - https://github.com/reactjs/rfcs/pull/107
+export const enableJSXTransformAPI = false;

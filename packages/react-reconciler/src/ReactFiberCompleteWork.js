@@ -774,7 +774,19 @@ function completeWork(
         popHostContext(workInProgress);
         const rootContainerInstance = getRootHostContainer();
         const responder = workInProgress.type.responder;
-        handleEventComponent(responder, rootContainerInstance, workInProgress);
+        const stateNode = workInProgress.stateNode;
+        // Update the props on the event component state node
+        stateNode.props = newProps;
+        // Update the root container, so we can properly unmount events at some point
+        stateNode.rootInstance = rootContainerInstance;
+        // Initialize event component state if createInitialState exists
+        if (
+          stateNode.state === null &&
+          responder.createInitialState !== undefined
+        ) {
+          stateNode.state = responder.createInitialState(newProps);
+        }
+        handleEventComponent(responder, rootContainerInstance);
       }
       break;
     }
@@ -782,7 +794,16 @@ function completeWork(
       if (enableEventAPI) {
         popHostContext(workInProgress);
         const type = workInProgress.type.type;
-        handleEventTarget(type, newProps, workInProgress);
+        const rootContainerInstance = getRootHostContainer();
+        const shouldUpdate = handleEventTarget(
+          type,
+          newProps,
+          rootContainerInstance,
+          workInProgress,
+        );
+        if (shouldUpdate) {
+          markUpdate(workInProgress);
+        }
       }
       break;
     }

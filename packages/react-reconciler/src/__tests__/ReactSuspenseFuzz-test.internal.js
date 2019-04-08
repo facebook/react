@@ -268,11 +268,6 @@ describe('ReactSuspenseFuzz', () => {
             remainingElements--;
             const children = createRandomChildren(3);
 
-            const maxDuration = pickRandomWeighted(rand, [
-              {value: undefined, weight: 1},
-              {value: rand.intBetween(0, 5000), weight: 1},
-            ]);
-
             const fallbackType = pickRandomWeighted(rand, [
               {value: 'none', weight: 1},
               {value: 'normal', weight: 1},
@@ -290,11 +285,7 @@ describe('ReactSuspenseFuzz', () => {
               );
             }
 
-            return React.createElement(
-              Suspense,
-              {maxDuration, fallback},
-              ...children,
-            );
+            return React.createElement(Suspense, {fallback}, ...children);
           }
           case 'return':
           default:

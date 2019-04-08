@@ -992,6 +992,18 @@ const tests = {
         }
       `,
     },
+    {
+      code: `
+        function Hello() {
+          const [state, setState] = useState(0);
+          useEffect(() => {
+            const handleResize = () => setState(window.innerWidth);
+            window.addEventListener('resize', handleResize);
+            return () => window.removeEventListener('resize', handleResize);
+          });
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -2971,6 +2983,36 @@ const tests = {
     },
     {
       code: `
+        function MyComponent() {
+          const myRef = useRef();
+          useEffect(() => {
+            const handleMove = () => {};
+            myRef.current.addEventListener('mousemove', handleMove);
+            return () => myRef.current.removeEventListener('mousemove', handleMove);
+          });
+          return <div ref={myRef} />;
+        }
+      `,
+      output: `
+        function MyComponent() {
+          const myRef = useRef();
+          useEffect(() => {
+            const handleMove = () => {};
+            myRef.current.addEventListener('mousemove', handleMove);
+            return () => myRef.current.removeEventListener('mousemove', handleMove);
+          });
+          return <div ref={myRef} />;
+        }
+      `,
+      errors: [
+        `The ref value 'myRef.current' will likely have changed by the time ` +
+          `this effect cleanup function runs. If this ref points to a node ` +
+          `rendered by React, copy 'myRef.current' to a variable inside the effect, ` +
+          `and use that variable in the cleanup function.`,
+      ],
+    },
+    {
+      code: `
         function useMyThing(myRef) {
           useEffect(() => {
             const handleMove = () => {};
@@ -4434,6 +4476,102 @@ const tests = {
     },
     {
       code: `
+        function Hello() {
+          const [state, setState] = useState(0);
+          useEffect(() => {
+            setState({});
+          });
+        }
+      `,
+      output: `
+        function Hello() {
+          const [state, setState] = useState(0);
+          useEffect(() => {
+            setState({});
+          }, []);
+        }
+      `,
+      errors: [
+        `React Hook useEffect contains a call to 'setState'. ` +
+          `Without a list of dependencies, this can lead to an infinite chain of updates. ` +
+          `To fix this, pass [] as a second argument to the useEffect Hook.`,
+      ],
+    },
+    {
+      code: `
+        function Hello() {
+          const [data, setData] = useState(0);
+          useEffect(() => {
+            fetchData.then(setData);
+          });
+        }
+      `,
+      output: `
+        function Hello() {
+          const [data, setData] = useState(0);
+          useEffect(() => {
+            fetchData.then(setData);
+          }, []);
+        }
+      `,
+      errors: [
+        `React Hook useEffect contains a call to 'setData'. ` +
+          `Without a list of dependencies, this can lead to an infinite chain of updates. ` +
+          `To fix this, pass [] as a second argument to the useEffect Hook.`,
+      ],
+    },
+    {
+      code: `
+        function Hello({ country }) {
+          const [data, setData] = useState(0);
+          useEffect(() => {
+            fetchData(country).then(setData);
+          });
+        }
+      `,
+      output: `
+        function Hello({ country }) {
+          const [data, setData] = useState(0);
+          useEffect(() => {
+            fetchData(country).then(setData);
+          }, [country]);
+        }
+      `,
+      errors: [
+        `React Hook useEffect contains a call to 'setData'. ` +
+          `Without a list of dependencies, this can lead to an infinite chain of updates. ` +
+          `To fix this, pass [country] as a second argument to the useEffect Hook.`,
+      ],
+    },
+    {
+      code: `
+        function Hello({ prop1, prop2 }) {
+          const [state, setState] = useState(0);
+          useEffect(() => {
+            if (prop1) {
+              setState(prop2);
+            }
+          });
+        }
+      `,
+      output: `
+        function Hello({ prop1, prop2 }) {
+          const [state, setState] = useState(0);
+          useEffect(() => {
+            if (prop1) {
+              setState(prop2);
+            }
+          }, [prop1, prop2]);
+        }
+      `,
+      errors: [
+        `React Hook useEffect contains a call to 'setState'. ` +
+          `Without a list of dependencies, this can lead to an infinite chain of updates. ` +
+          `To fix this, pass [prop1, prop2] as a second argument to the useEffect Hook.`,
+      ],
+    },
+    {
+      code: `
         function Thing() {
           useEffect(async () => {}, []);
         }
@@ -4441,6 +4579,31 @@ const tests = {
       output: `
         function Thing() {
           useEffect(async () => {}, []);
+        }
+      `,
+      errors: [
+        `Effect callbacks are synchronous to prevent race conditions. ` +
+          `Put the async function inside:\n\n` +
+          'useEffect(() => {\n' +
+          '  async function fetchData() {\n' +
+          '    // You can await here\n' +
+          '    const response = await MyAPI.getData(someId);\n' +
+          '    // ...\n' +
+          '  }\n' +
+          '  fetchData();\n' +
+          `}, [someId]); // Or [] if effect doesn't need props or state\n\n` +
+          'Learn more about data fetching with Hooks: https://fb.me/react-hooks-data-fetching',
+      ],
+    },
+    {
+      code: `
+        function Thing() {
+          useEffect(async () => {});
+        }
+      `,
+      output: `
+        function Thing() {
+          useEffect(async () => {});
         }
       `,
       errors: [

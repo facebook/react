@@ -110,6 +110,22 @@ const bundles = [
     externals: ['react'],
   },
 
+  /******* React DOM (new scheduler) *******/
+  {
+    bundleTypes: [
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      FB_WWW_PROFILING,
+      NODE_DEV,
+      NODE_PROD,
+      NODE_PROFILING,
+    ],
+    moduleType: RENDERER,
+    entry: 'react-dom/unstable-new-scheduler',
+    global: 'ReactDOMNewScheduler',
+    externals: ['react'],
+  },
+
   /******* Test Utils *******/
   {
     moduleType: RENDERER_UTILS,
@@ -464,10 +480,92 @@ const bundles = [
 
   /******* React Events (experimental) *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+    ],
     moduleType: ISOMORPHIC,
     entry: 'react-events',
     global: 'ReactEvents',
+    externals: [],
+  },
+
+  {
+    bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+    ],
+    moduleType: NON_FIBER_RENDERER,
+    entry: 'react-events/press',
+    global: 'ReactEventsPress',
+    externals: [],
+  },
+
+  {
+    bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+    ],
+    moduleType: NON_FIBER_RENDERER,
+    entry: 'react-events/hover',
+    global: 'ReactEventsHover',
+    externals: [],
+  },
+
+  {
+    bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+    ],
+    moduleType: NON_FIBER_RENDERER,
+    entry: 'react-events/focus',
+    global: 'ReactEventsFocus',
+    externals: [],
+  },
+
+  {
+    bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+    ],
+    moduleType: NON_FIBER_RENDERER,
+    entry: 'react-events/swipe',
+    global: 'ReactEventsSwipe',
+    externals: [],
+  },
+
+  {
+    bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+    ],
+    moduleType: NON_FIBER_RENDERER,
+    entry: 'react-events/drag',
+    global: 'ReactEventsDrag',
     externals: [],
   },
 ];

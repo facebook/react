@@ -27,6 +27,8 @@ import {
   SuspenseComponent,
   DehydratedSuspenseComponent,
   IncompleteClassComponent,
+  EventComponent,
+  EventTarget,
 } from 'shared/ReactWorkTags';
 import {
   DidCapture,
@@ -38,6 +40,7 @@ import {
 import {
   enableSchedulerTracing,
   enableSuspenseServerRenderer,
+  enableEventAPI,
 } from 'shared/ReactFeatureFlags';
 import {ConcurrentMode} from './ReactTypeOfMode';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent';
@@ -67,16 +70,12 @@ import {
   isAlreadyFailedLegacyErrorBoundary,
   pingSuspendedRoot,
   resolveRetryThenable,
+  inferStartTimeFromExpirationTime,
 } from './ReactFiberScheduler';
 
 import invariant from 'shared/invariant';
 import maxSigned31BitInt from './maxSigned31BitInt';
-import {
-  Sync,
-  expirationTimeToMs,
-  LOW_PRIORITY_EXPIRATION,
-} from './ReactFiberExpirationTime';
-import {findEarliestOutstandingPriorityLevel} from './ReactFiberPendingPriority';
+import {Sync, expirationTimeToMs} from './ReactFiberExpirationTime';
 
 const PossiblyWeakSet = typeof WeakSet === 'function' ? WeakSet : Set;
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
@@ -229,16 +228,12 @@ function throwException(
             break;
           }
         }
-        let timeoutPropMs = workInProgress.pendingProps.maxDuration;
-        if (typeof timeoutPropMs === 'number') {
-          if (timeoutPropMs <= 0) {
-            earliestTimeoutMs = 0;
-          } else if (
-            earliestTimeoutMs === -1 ||
-            timeoutPropMs < earliestTimeoutMs
-          ) {
-            earliestTimeoutMs = timeoutPropMs;
-          }
+        const defaultSuspenseTimeout = 150;
+        if (
+          earliestTimeoutMs === -1 ||
+          defaultSuspenseTimeout < earliestTimeoutMs
+        ) {
+          earliestTimeoutMs = defaultSuspenseTimeout;
         }
       }
       // If there is a DehydratedSuspenseComponent we don't have to do anything because
@@ -323,21 +318,12 @@ function throwException(
           if (startTimeMs === -1) {
             // This suspend happened outside of any already timed-out
             // placeholders. We don't know exactly when the update was
-            // scheduled, but we can infer an approximate start time from the
-            // expiration time. First, find the earliest uncommitted expiration
-            // time in the tree, including work that is suspended. Then subtract
-            // the offset used to compute an async update's expiration time.
-            // This will cause high priority (interactive) work to expire
-            // earlier than necessary, but we can account for this by adjusting
-            // for the Just Noticeable Difference.
-            const earliestExpirationTime = findEarliestOutstandingPriorityLevel(
+            // scheduled, but we can infer an approximate start time based on
+            // the expiration time and the priority.
+            startTimeMs = inferStartTimeFromExpirationTime(
               root,
               renderExpirationTime,
             );
-            const earliestExpirationTimeMs = expirationTimeToMs(
-              earliestExpirationTime,
-            );
-            startTimeMs = earliestExpirationTimeMs - LOW_PRIORITY_EXPIRATION;
           }
           absoluteTimeoutMs = startTimeMs + earliestTimeoutMs;
         }
@@ -509,6 +495,12 @@ function unwindWork(
       return null;
     case ContextProvider:
       popProvider(workInProgress);
+      return null;
+    case EventComponent:
+    case EventTarget:
+      if (enableEventAPI) {
+        popHostContext(workInProgress);
+      }
       return null;
     default:
       return null;

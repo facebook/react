@@ -1,5 +1,6 @@
 {
   "name": "react-events",
+  "private": true,
   "description": "React is a JavaScript library for building user interfaces.",
   "keywords": [
     "react"
@@ -11,6 +12,12 @@
   "files": [
     "LICENSE",
     "README.md",
+    "press.js",
+    "hover.js",
+    "focus.js",
+    "swipe.js",
+    "drag.js",
+    "index.js",
     "build-info.json",
     "cjs/",
     "umd/"

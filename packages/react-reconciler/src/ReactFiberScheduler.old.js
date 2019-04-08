@@ -67,6 +67,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
+import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
@@ -122,6 +123,7 @@ import {
   expirationTimeToMs,
   computeAsyncExpiration,
   computeInteractiveExpiration,
+  LOW_PRIORITY_EXPIRATION,
 } from './ReactFiberExpirationTime';
 import {ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
 import {enqueueUpdate, resetCurrentlyProcessingQueue} from './ReactUpdateQueue';
@@ -172,13 +174,19 @@ const {
   unstable_cancelCallback: cancelCallback,
   unstable_shouldYield: shouldYield,
   unstable_now: now,
+  unstable_getCurrentPriorityLevel: getCurrentPriorityLevel,
+  unstable_NormalPriority: NormalPriority,
 } = Scheduler;
 
 export type Thenable = {
-  then(resolve: () => mixed, reject?: () => mixed): mixed,
+  then(resolve: () => mixed, reject?: () => mixed): void | Thenable,
 };
 
-const {ReactCurrentDispatcher, ReactCurrentOwner} = ReactSharedInternals;
+const {
+  ReactCurrentDispatcher,
+  ReactCurrentOwner,
+  ReactShouldWarnActingUpdates,
+} = ReactSharedInternals;
 
 let didWarnAboutStateTransition;
 let didWarnSetStateChildContext;
@@ -565,7 +573,9 @@ function commitPassiveEffects(
       let didError = false;
       let error;
       if (__DEV__) {
+        isInPassiveEffectDEV = true;
         invokeGuardedCallback(null, commitPassiveHookEffects, null, effect);
+        isInPassiveEffectDEV = false;
         if (hasCaughtError()) {
           didError = true;
           error = clearCaughtError();
@@ -599,6 +609,14 @@ function commitPassiveEffects(
   if (!isBatchingUpdates && !isRendering) {
     performSyncWork();
   }
+
+  if (__DEV__) {
+    if (rootWithPendingPassiveEffects === root) {
+      nestedPassiveEffectCountDEV++;
+    } else {
+      nestedPassiveEffectCountDEV = 0;
+    }
+  }
 }
 
 function isAlreadyFailedLegacyErrorBoundary(instance: mixed): boolean {
@@ -617,6 +635,7 @@ function markLegacyErrorBoundaryAsFailed(instance: mixed) {
 }
 
 function flushPassiveEffects() {
+  const didFlushEffects = passiveEffectCallback !== null;
   if (passiveEffectCallbackHandle !== null) {
     cancelCallback(passiveEffectCallbackHandle);
   }
@@ -625,6 +644,7 @@ function flushPassiveEffects() {
     // to ensure tracing works correctly.
     passiveEffectCallback();
   }
+  return didFlushEffects;
 }
 
 function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
@@ -827,7 +847,7 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
       // here because that code is still in flux.
       callback = Scheduler_tracing_wrap(callback);
     }
-    passiveEffectCallbackHandle = scheduleCallback(callback);
+    passiveEffectCallbackHandle = scheduleCallback(NormalPriority, callback);
     passiveEffectCallback = callback;
   }
 
@@ -1678,6 +1698,25 @@ function renderDidError() {
   nextRenderDidError = true;
 }
 
+function inferStartTimeFromExpirationTime(
+  root: FiberRoot,
+  expirationTime: ExpirationTime,
+) {
+  // We don't know exactly when the update was scheduled, but we can infer an
+  // approximate start time from the expiration time. First, find the earliest
+  // uncommitted expiration time in the tree, including work that is suspended.
+  // Then subtract the offset used to compute an async update's expiration time.
+  // This will cause high priority (interactive) work to expire earlier than
+  // necessary, but we can account for this by adjusting for the Just
+  // Noticeable Difference.
+  const earliestExpirationTime = findEarliestOutstandingPriorityLevel(
+    root,
+    expirationTime,
+  );
+  const earliestExpirationTimeMs = expirationTimeToMs(earliestExpirationTime);
+  return earliestExpirationTimeMs - LOW_PRIORITY_EXPIRATION;
+}
+
 function pingSuspendedRoot(
   root: FiberRoot,
   thenable: Thenable,
@@ -1843,9 +1882,20 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
   return root;
 }
 
-export function warnIfNotCurrentlyBatchingInDev(fiber: Fiber): void {
+// in a test-like environment, we want to warn if dispatchAction() is
+// called outside of a TestUtils.act(...)/batchedUpdates/render call.
+// so we have a a step counter for when we descend/ascend from
+// act() calls, and test on it for when to warn
+// It's a tuple with a single value. Look for shared/createAct to
+// see how we change the value inside act() calls
+
+export function warnIfNotCurrentlyActingUpdatesInDev(fiber: Fiber): void {
   if (__DEV__) {
-    if (isRendering === false && isBatchingUpdates === false) {
+    if (
+      isBatchingUpdates === false &&
+      isRendering === false &&
+      ReactShouldWarnActingUpdates.current === false
+    ) {
       warningWithoutStack(
         false,
         'An update to %s inside a test was not wrapped in act(...).\n\n' +
@@ -1915,6 +1965,21 @@ function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
         'the number of nested updates to prevent infinite loops.',
     );
   }
+  if (__DEV__) {
+    if (
+      isInPassiveEffectDEV &&
+      nestedPassiveEffectCountDEV > NESTED_PASSIVE_UPDATE_LIMIT
+    ) {
+      nestedPassiveEffectCountDEV = 0;
+      warning(
+        false,
+        'Maximum update depth exceeded. This can happen when a ' +
+          'component calls setState inside useEffect, but ' +
+          "useEffect either doesn't have a dependency array, or " +
+          'one of the dependencies changes on every render.',
+      );
+    }
+  }
 }
 
 function deferredUpdates<A>(fn: () => A): A {
@@ -1980,6 +2045,15 @@ const NESTED_UPDATE_LIMIT = 50;
 let nestedUpdateCount: number = 0;
 let lastCommittedRootDuringThisBatch: FiberRoot | null = null;
 
+// Similar, but for useEffect infinite loops. These are DEV-only.
+const NESTED_PASSIVE_UPDATE_LIMIT = 50;
+let nestedPassiveEffectCountDEV;
+let isInPassiveEffectDEV;
+if (__DEV__) {
+  nestedPassiveEffectCountDEV = 0;
+  isInPassiveEffectDEV = false;
+}
+
 function recomputeCurrentRendererTime() {
   const currentTimeMs = now() - originalStartTimeMs;
   currentRendererTime = msToExpirationTime(currentTimeMs);
@@ -2010,7 +2084,8 @@ function scheduleCallbackWithExpirationTime(
   const currentMs = now() - originalStartTimeMs;
   const expirationTimeMs = expirationTimeToMs(expirationTime);
   const timeout = expirationTimeMs - currentMs;
-  callbackID = scheduleCallback(performAsyncWork, {timeout});
+  const priorityLevel = getCurrentPriorityLevel();
+  callbackID = scheduleCallback(priorityLevel, performAsyncWork, {timeout});
 }
 
 // For every call to renderRoot, one of onFatal, onComplete, onSuspend, and
@@ -2252,23 +2327,18 @@ function performAsyncWork(didTimeout) {
       } while (root !== firstScheduledRoot);
     }
   }
-  let isYieldy = true;
-  if (disableYielding) {
-    isYieldy = false;
-  }
-  performWork(NoWork, isYieldy);
-}
 
-function performSyncWork() {
-  performWork(Sync, false);
-}
-
-function performWork(minExpirationTime: ExpirationTime, isYieldy: boolean) {
   // Keep working on roots until there's no more work, or until there's a higher
   // priority event.
   findHighestPriorityRoot();
 
-  if (isYieldy) {
+  if (disableYielding) {
+    // Just do it all
+    while (nextFlushedRoot !== null && nextFlushedExpirationTime !== NoWork) {
+      performWorkOnRoot(nextFlushedRoot, nextFlushedExpirationTime, false);
+      findHighestPriorityRoot();
+    }
+  } else {
     recomputeCurrentRendererTime();
     currentSchedulerTime = currentRendererTime;
 
@@ -2281,7 +2351,6 @@ function performWork(minExpirationTime: ExpirationTime, isYieldy: boolean) {
     while (
       nextFlushedRoot !== null &&
       nextFlushedExpirationTime !== NoWork &&
-      minExpirationTime <= nextFlushedExpirationTime &&
       !(shouldYield() && currentRendererTime > nextFlushedExpirationTime)
     ) {
       performWorkOnRoot(
@@ -2293,25 +2362,48 @@ function performWork(minExpirationTime: ExpirationTime, isYieldy: boolean) {
       recomputeCurrentRendererTime();
       currentSchedulerTime = currentRendererTime;
     }
-  } else {
-    while (
-      nextFlushedRoot !== null &&
-      nextFlushedExpirationTime !== NoWork &&
-      minExpirationTime <= nextFlushedExpirationTime
-    ) {
-      performWorkOnRoot(nextFlushedRoot, nextFlushedExpirationTime, false);
-      findHighestPriorityRoot();
-    }
   }
 
   // We're done flushing work. Either we ran out of time in this callback,
   // or there's no more work left with sufficient priority.
 
   // If we're inside a callback, set this to false since we just completed it.
-  if (isYieldy) {
-    callbackExpirationTime = NoWork;
-    callbackID = null;
+  callbackExpirationTime = NoWork;
+  callbackID = null;
+
+  // If there's work left over, schedule a new callback.
+  if (nextFlushedExpirationTime !== NoWork) {
+    scheduleCallbackWithExpirationTime(
+      ((nextFlushedRoot: any): FiberRoot),
+      nextFlushedExpirationTime,
+    );
   }
+
+  // Clean-up.
+  finishRendering();
+}
+
+function performSyncWork() {
+  performWork(Sync);
+}
+
+function performWork(minExpirationTime: ExpirationTime) {
+  // Keep working on roots until there's no more work, or until there's a higher
+  // priority event.
+  findHighestPriorityRoot();
+
+  while (
+    nextFlushedRoot !== null &&
+    nextFlushedExpirationTime !== NoWork &&
+    minExpirationTime <= nextFlushedExpirationTime
+  ) {
+    performWorkOnRoot(nextFlushedRoot, nextFlushedExpirationTime, false);
+    findHighestPriorityRoot();
+  }
+
+  // We're done flushing work. Either we ran out of time in this callback,
+  // or there's no more work left with sufficient priority.
+
   // If there's work left over, schedule a new callback.
   if (nextFlushedExpirationTime !== NoWork) {
     scheduleCallbackWithExpirationTime(
@@ -2343,6 +2435,12 @@ function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
 function finishRendering() {
   nestedUpdateCount = 0;
   lastCommittedRootDuringThisBatch = null;
+
+  if (__DEV__) {
+    if (rootWithPendingPassiveEffects === null) {
+      nestedPassiveEffectCountDEV = 0;
+    }
+  }
 
   if (completedBatches !== null) {
     const batches = completedBatches;
@@ -2565,7 +2663,7 @@ function interactiveUpdates<A, B, C, R>(
     lowestPriorityPendingInteractiveExpirationTime !== NoWork
   ) {
     // Synchronously flush pending interactive updates.
-    performWork(lowestPriorityPendingInteractiveExpirationTime, false);
+    performWork(lowestPriorityPendingInteractiveExpirationTime);
     lowestPriorityPendingInteractiveExpirationTime = NoWork;
   }
   const previousIsBatchingInteractiveUpdates = isBatchingInteractiveUpdates;
@@ -2589,7 +2687,7 @@ function flushInteractiveUpdates() {
     lowestPriorityPendingInteractiveExpirationTime !== NoWork
   ) {
     // Synchronously flush pending interactive updates.
-    performWork(lowestPriorityPendingInteractiveExpirationTime, false);
+    performWork(lowestPriorityPendingInteractiveExpirationTime);
     lowestPriorityPendingInteractiveExpirationTime = NoWork;
   }
 }
@@ -2620,7 +2718,6 @@ export {
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
   scheduleWork,
-  requestWork,
   flushRoot,
   batchedUpdates,
   unbatchedUpdates,
@@ -2632,4 +2729,5 @@ export {
   flushInteractiveUpdates,
   computeUniqueAsyncExpiration,
   flushPassiveEffects,
+  inferStartTimeFromExpirationTime,
 };

@@ -12,7 +12,8 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 
 import {batchedUpdates, interactiveUpdates} from 'events/ReactGenericBatching';
-import {runExtractedEventsInBatch} from 'events/EventPluginHub';
+import {runExtractedPluginEventsInBatch} from 'events/EventPluginHub';
+import {runResponderEventsInBatch} from '../events/DOMEventResponderSystem';
 import {isFiberMounted} from 'react-reconciler/reflection';
 import {HostRoot} from 'shared/ReactWorkTags';
 import {
@@ -130,16 +131,27 @@ function handleTopLevel(bookKeeping: BookKeepingInstance) {
 
   for (let i = 0; i < bookKeeping.ancestors.length; i++) {
     targetInst = bookKeeping.ancestors[i];
-    if (bookKeeping.eventSystemFlags === PLUGIN_EVENT_SYSTEM) {
-      runExtractedEventsInBatch(
-        ((bookKeeping.topLevelType: any): DOMTopLevelEventType),
+    const eventSystemFlags = bookKeeping.eventSystemFlags;
+    const eventTarget = getEventTarget(bookKeeping.nativeEvent);
+    const topLevelType = ((bookKeeping.topLevelType: any): DOMTopLevelEventType);
+    const nativeEvent = ((bookKeeping.nativeEvent: any): AnyNativeEvent);
+
+    if (eventSystemFlags === PLUGIN_EVENT_SYSTEM) {
+      runExtractedPluginEventsInBatch(
+        topLevelType,
         targetInst,
-        ((bookKeeping.nativeEvent: any): AnyNativeEvent),
-        getEventTarget(bookKeeping.nativeEvent),
+        nativeEvent,
+        eventTarget,
       );
-    } else {
-      // RESPONDER_EVENT_SYSTEM
-      // TODO: Add implementation
+    } else if (enableEventAPI) {
+      // Responder event system (experimental event API)
+      runResponderEventsInBatch(
+        topLevelType,
+        targetInst,
+        nativeEvent,
+        eventTarget,
+        eventSystemFlags,
+      );
     }
   }
 }
@@ -176,9 +188,6 @@ export function trapEventForResponderEventSystem(
   passive: boolean,
 ): void {
   if (enableEventAPI) {
-    const dispatch = isInteractiveTopLevelEventType(topLevelType)
-      ? dispatchInteractiveEvent
-      : dispatchEvent;
     const rawEventName = getRawEventName(topLevelType);
     let eventFlags = RESPONDER_EVENT_SYSTEM;
 
@@ -188,17 +197,17 @@ export function trapEventForResponderEventSystem(
     // and can provide polyfills if needed.
     if (passive) {
       if (passiveBrowserEventsSupported) {
+        eventFlags |= IS_PASSIVE;
+      } else {
         eventFlags |= IS_ACTIVE;
         eventFlags |= PASSIVE_NOT_SUPPORTED;
         passive = false;
-      } else {
-        eventFlags |= IS_PASSIVE;
       }
     } else {
       eventFlags |= IS_ACTIVE;
     }
     // Check if interactive and wrap in interactiveUpdates
-    const listener = dispatch.bind(null, topLevelType, eventFlags);
+    const listener = dispatchEvent.bind(null, topLevelType, eventFlags);
     addEventListener(element, rawEventName, listener, {
       capture,
       passive,

@@ -340,7 +340,11 @@ export function getChildHostContext() {
   return NO_CONTEXT;
 }
 
-export function getChildHostContextForEvent() {
+export function getChildHostContextForEventComponent() {
+  return NO_CONTEXT;
+}
+
+export function getChildHostContextForEventTarget() {
   return NO_CONTEXT;
 }
 
@@ -438,15 +442,39 @@ export function unhideTextInstance(textInstance, text): void {
 export function handleEventComponent(
   eventResponder: ReactEventResponder,
   rootContainerInstance: Container,
-  internalInstanceHandle: Object,
 ) {
-  // TODO: add handleEventComponent implementation
+  throw new Error('Not yet implemented.');
+}
+
+export function unmountEventComponent(
+  eventResponder: ReactEventResponder,
+  rootContainerInstance: Container,
+  internalInstanceHandle: Object,
+): void {
+  throw new Error('Not yet implemented.');
+}
+
+export function getEventTargetChildElement(
+  type: Symbol | number,
+  props: Props,
+): null {
+  throw new Error('Not yet implemented.');
 }
 
 export function handleEventTarget(
   type: Symbol | number,
   props: Props,
+  rootContainerInstance: Container,
   internalInstanceHandle: Object,
-) {
-  // TODO: add handleEventTarget implementation
+): boolean {
+  throw new Error('Not yet implemented.');
+}
+
+export function commitEventTarget(
+  type: Symbol | number,
+  props: Props,
+  instance: Instance,
+  parentInstance: Instance,
+): void {
+  throw new Error('Not yet implemented.');
 }
