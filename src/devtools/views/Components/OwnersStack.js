@@ -28,7 +28,10 @@ export default function OwnerStack() {
   const isOverflowing = useIsOverflowing(elementsBarRef, elementsTotalWidth);
 
   useLayoutEffect(() => {
-    if (elementsBarRef.current === null) {
+    // If we're already overflowing, then we don't need to re-measure items.
+    // That's because once the owners stack is open, it can only get larger (by driling in).
+    // A totally new stack can only be reached by exiting this mode and re-entering it.
+    if (elementsBarRef.current === null || isOverflowing) {
       return () => {};
     }
 
@@ -44,7 +47,7 @@ export default function OwnerStack() {
     }
 
     setElementsTotalWidth(elementsTotalWidth);
-  }, [elementsBarRef, ownerStack.length]);
+  }, [elementsBarRef, isOverflowing, ownerStack.length]);
 
   return (
     <div className={styles.OwnerStack}>
