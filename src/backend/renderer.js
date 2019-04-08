@@ -1530,6 +1530,8 @@ export function attach(
       // Can view component source location.
       canViewSource,
 
+      displayName: getDataForFiber(fiber).displayName,
+
       // Inspectable properties.
       // TODO Review sanitization approach for the below inspectable values.
       context,
@@ -1558,6 +1560,43 @@ export function attach(
     result.props = cleanForBridge(result.props);
     result.state = cleanForBridge(result.state);
     return result;
+  }
+
+  function logElementToConsole(id) {
+    const result = inspectElementRaw(id);
+    if (result === null) {
+      console.warn(`Could not find Fiber with id "${id}"`);
+      return;
+    }
+
+    const supportsGroup = typeof console.groupCollapsed === 'function';
+    const label =
+      '[Click to expand] <' + (result.displayName || 'Component') + ' />';
+
+    if (supportsGroup) {
+      console.groupCollapsed(label);
+    }
+    if (result.props !== null) {
+      console.log('Props:', result.props);
+    }
+    if (result.state !== null) {
+      console.log('State:', result.state);
+    }
+    if (result.hooks !== null) {
+      console.log('Hooks:', result.hooks);
+    }
+    const nativeNode = findNativeByFiberID(id);
+    if (nativeNode !== null) {
+      console.log('Node:', nativeNode);
+    }
+    if (window.chrome || /firefox/i.test(navigator.userAgent)) {
+      console.log(
+        'Right-click any value to save it as a global variable for further inspection.'
+      );
+    }
+    if (supportsGroup) {
+      console.groupEnd();
+    }
   }
 
   function setInHook(
@@ -1870,6 +1909,7 @@ export function attach(
     handleCommitFiberRoot,
     handleCommitFiberUnmount,
     inspectElement,
+    logElementToConsole,
     prepareViewElementSource,
     overrideSuspense,
     renderer,
