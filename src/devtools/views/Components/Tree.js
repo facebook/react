@@ -12,6 +12,7 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList } from 'react-window';
 import { TreeContext } from './TreeContext';
 import { SettingsContext } from '../Settings/SettingsContext';
+import { BridgeContext } from '../context';
 import Element from './Element';
 import InspectHostNodesToggle from './InspectHostNodesToggle';
 import OwnersStack from './OwnersStack';
@@ -32,6 +33,7 @@ export default function Tree(props: Props) {
     selectParentElementInTree,
     selectPreviousElementInTree,
   } = useContext(TreeContext);
+  const bridge = useContext(BridgeContext);
   const listRef = useRef<FixedSizeList<any> | null>(null);
   const treeRef = useRef<HTMLDivElement | null>(null);
 
@@ -112,13 +114,17 @@ export default function Tree(props: Props) {
     [baseDepth, numElements, getElementAtIndex, lastScrolledIDRef]
   );
 
+  const handleMouseLeave = useCallback(() => {
+    bridge.send('clearHighlightedElementInDOM');
+  }, [bridge]);
+
   return (
     <div className={styles.Tree} ref={treeRef}>
       <div className={styles.SearchInput}>
         {ownerStack.length > 0 ? <OwnersStack /> : <SearchInput />}
         <InspectHostNodesToggle />
       </div>
-      <div className={styles.AutoSizerWrapper}>
+      <div className={styles.AutoSizerWrapper} onMouseLeave={handleMouseLeave}>
         <AutoSizer>
           {({ height, width }) => (
             <FixedSizeList

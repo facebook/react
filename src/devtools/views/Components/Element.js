@@ -11,6 +11,7 @@ import React, {
 import { ElementTypeClass, ElementTypeFunction } from 'src/devtools/types';
 import { createRegExp } from '../utils';
 import { TreeContext } from './TreeContext';
+import { BridgeContext, StoreContext } from '../context';
 
 import type { Element } from './types';
 
@@ -31,6 +32,9 @@ export default function ElementView({ index, style, data }: Props) {
     selectedElementID,
     selectElementByID,
   } = useContext(TreeContext);
+  const bridge = useContext(BridgeContext);
+  const store = useContext(StoreContext);
+
   const element = getElementAtIndex(index);
 
   const id = element === null ? null : element.id;
@@ -82,6 +86,21 @@ export default function ElementView({ index, style, data }: Props) {
     [id, selectElementByID]
   );
 
+  const rendererID = id !== null ? store.getRendererIDForElement(id) : null;
+  // Individual elements don't have a corresponding leave handler.
+  // Instead, it's implemented on the tree level.
+  const handleMouseEnter = useCallback(() => {
+    if (element !== null && id !== null && rendererID !== null) {
+      bridge.send('highlightElementInDOM', {
+        displayName: element.displayName,
+        hideAfterTimeout: false,
+        id,
+        rendererID,
+        scrollIntoView: false,
+      });
+    }
+  }, [bridge, element, id, rendererID]);
+
   // Handle elements that are removed from the tree while an async render is in progress.
   if (element == null) {
     console.warn(`<ElementView> Could not find element at index ${index}`);
@@ -100,6 +119,7 @@ export default function ElementView({ index, style, data }: Props) {
   return (
     <div
       className={isSelected ? styles.SelectedElement : styles.Element}
+      onMouseEnter={handleMouseEnter}
       onMouseDown={handleMouseDown}
       onDoubleClick={handleDoubleClick}
       style={{

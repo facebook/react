@@ -63,6 +63,10 @@ export default class Agent extends EventEmitter {
     this._bridge = bridge;
 
     bridge.addListener('captureScreenshot', this.captureScreenshot);
+    bridge.addListener(
+      'clearHighlightedElementInDOM',
+      this.clearHighlightedElementInDOM
+    );
     bridge.addListener('exportProfilingSummary', this.exportProfilingSummary);
     bridge.addListener('getCommitDetails', this.getCommitDetails);
     bridge.addListener('getFiberCommits', this.getFiberCommits);
@@ -216,14 +220,22 @@ export default class Agent extends EventEmitter {
     }
   };
 
+  clearHighlightedElementInDOM = () => {
+    hideOverlay();
+  };
+
   highlightElementInDOM = ({
     displayName,
+    hideAfterTimeout,
     id,
     rendererID,
+    scrollIntoView,
   }: {
     displayName: string,
+    hideAfterTimeout: boolean,
     id: number,
     rendererID: number,
+    scrollIntoView: boolean,
   }) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
@@ -236,13 +248,12 @@ export default class Agent extends EventEmitter {
     }
 
     if (node != null) {
-      if (typeof node.scrollIntoView === 'function') {
+      if (scrollIntoView && typeof node.scrollIntoView === 'function') {
         // If the node isn't visible show it before highlighting it.
         // We may want to reconsider this; it might be a little disruptive.
         node.scrollIntoView({ block: 'nearest', inline: 'nearest' });
       }
-
-      showOverlay(((node: any): HTMLElement), displayName);
+      showOverlay(((node: any): HTMLElement), displayName, hideAfterTimeout);
     } else {
       hideOverlay();
     }
@@ -466,6 +477,6 @@ export default class Agent extends EventEmitter {
 
     // Don't pass the name explicitly.
     // It will be inferred from DOM tag and Fiber owner.
-    showOverlay(target);
+    showOverlay(target, null, false);
   };
 }
