@@ -47,6 +47,8 @@ export default function SelectedElement(_: Props) {
           displayName: element.displayName,
           id: selectedElementID,
           rendererID,
+          scrollIntoView: true,
+          isSticky: false,
         });
       }
     }

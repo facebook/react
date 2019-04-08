@@ -18,7 +18,8 @@ export function hideOverlay() {
 
 export function showOverlay(
   element: HTMLElement | null,
-  componentName: string = ''
+  componentName: string | null,
+  isSticky: boolean
 ) {
   if (timeoutID !== null) {
     clearTimeout(timeoutID);
@@ -34,5 +35,7 @@ export function showOverlay(
 
   overlay.inspect(element, componentName);
 
-  timeoutID = setTimeout(hideOverlay, SHOW_DURATION);
+  if (!isSticky) {
+    timeoutID = setTimeout(hideOverlay, SHOW_DURATION);
+  }
 }
