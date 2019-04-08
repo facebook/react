@@ -38,12 +38,21 @@ export default function Tree(props: Props) {
   const { lineHeight } = useContext(SettingsContext);
 
   // Make sure a newly selected element is visible in the list.
-  // This is helpful for things like the owners list.
+  // This is helpful for things like the owners list and search.
   useLayoutEffect(() => {
     if (selectedElementIndex !== null && listRef.current != null) {
       listRef.current.scrollToItem(selectedElementIndex);
+      // Note this autoscroll only works for rows.
+      // There's another autoscroll inside the elements
+      // that ensures the component name is visible horizontally.
+      // It's too early to do it now because the row might not exist yet.
     }
   }, [listRef, selectedElementIndex]);
+
+  // This ref is passed down the context to elements.
+  // It lets them avoid autoscrolling to the same item many times
+  // when a selected virtual row goes in and out of the viewport.
+  const lastScrolledIDRef = useRef(null);
 
   // Navigate the tree with up/down arrow keys.
   useEffect(() => {
@@ -98,8 +107,9 @@ export default function Tree(props: Props) {
       baseDepth,
       numElements,
       getElementAtIndex,
+      lastScrolledIDRef,
     }),
-    [baseDepth, numElements, getElementAtIndex]
+    [baseDepth, numElements, getElementAtIndex, lastScrolledIDRef]
   );
 
   return (

@@ -4,7 +4,7 @@ import React, {
   Fragment,
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
 } from 'react';
@@ -19,9 +19,11 @@ import styles from './Element.css';
 type Props = {
   index: number,
   style: Object,
+  // TODO: I can't get the correct type to work here:
+  data: Object,
 };
 
-export default function ElementView({ index, style }: Props) {
+export default function ElementView({ index, style, data }: Props) {
   const {
     baseDepth,
     getElementAtIndex,
@@ -29,11 +31,11 @@ export default function ElementView({ index, style }: Props) {
     selectedElementID,
     selectElementByID,
   } = useContext(TreeContext);
-
   const element = getElementAtIndex(index);
 
   const id = element === null ? null : element.id;
   const isSelected = selectedElementID === id;
+  const lastScrolledIDRef = data.lastScrolledIDRef;
 
   const handleDoubleClick = useCallback(() => {
     if (id !== null) {
@@ -43,8 +45,22 @@ export default function ElementView({ index, style }: Props) {
 
   const ref = useRef<HTMLSpanElement | null>(null);
 
-  useEffect(() => {
+  // The tree above has its own autoscrolling, but it only works for rows.
+  // However, even when the row gets into the viewport, the component name
+  // might be too far left or right on the screen. Adjust it in this case.
+  useLayoutEffect(() => {
     if (isSelected) {
+      // Don't select the same item twice.
+      // A row may appear and disappear just by scrolling:
+      // https://github.com/bvaughn/react-devtools-experimental/issues/67
+      // It doesn't necessarily indicate a user action.
+      // TODO: we might want to revamp the autoscroll logic
+      // to only happen explicitly for user-initiated events.
+      if (lastScrolledIDRef.current === id) {
+        return;
+      }
+      lastScrolledIDRef.current = id;
+
       if (ref.current !== null) {
         ref.current.scrollIntoView({
           behavior: 'auto',
@@ -53,7 +69,7 @@ export default function ElementView({ index, style }: Props) {
         });
       }
     }
-  }, [isSelected]);
+  }, [id, isSelected, lastScrolledIDRef]);
 
   // TODO Add click and key handlers for toggling element open/close state.
 
