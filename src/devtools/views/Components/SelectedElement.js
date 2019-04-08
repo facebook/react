@@ -39,14 +39,13 @@ export default function SelectedElement(_: Props) {
   const inspectedElement = useInspectedElement(selectedElementID);
 
   const highlightElement = useCallback(() => {
-    const id = selectedElementID;
-    if (element !== null && id !== null) {
-      const rendererID = store.getRendererIDForElement(id);
+    if (element !== null && selectedElementID !== null) {
+      const rendererID = store.getRendererIDForElement(selectedElementID);
       if (rendererID !== null) {
         bridge.send('highlightElementInDOM', {
           displayName: element.displayName,
           hideAfterTimeout: true,
-          id,
+          id: selectedElementID,
           rendererID,
           scrollIntoView: true,
         });
@@ -55,12 +54,11 @@ export default function SelectedElement(_: Props) {
   }, [bridge, element, selectedElementID, store]);
 
   const logElement = useCallback(() => {
-    const id = selectedElementID;
-    if (id !== null) {
-      const rendererID = store.getRendererIDForElement(id);
+    if (selectedElementID !== null) {
+      const rendererID = store.getRendererIDForElement(selectedElementID);
       if (rendererID !== null) {
         bridge.send('logElementToConsole', {
-          id,
+          id: selectedElementID,
           rendererID,
         });
       }
