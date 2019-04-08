@@ -226,14 +226,14 @@ export default class Agent extends EventEmitter {
 
   highlightElementInDOM = ({
     displayName,
+    hideAfterTimeout,
     id,
-    isSticky,
     rendererID,
     scrollIntoView,
   }: {
     displayName: string,
+    hideAfterTimeout: boolean,
     id: number,
-    isSticky: boolean,
     rendererID: number,
     scrollIntoView: boolean,
   }) => {
@@ -253,7 +253,7 @@ export default class Agent extends EventEmitter {
         // We may want to reconsider this; it might be a little disruptive.
         node.scrollIntoView({ block: 'nearest', inline: 'nearest' });
       }
-      showOverlay(((node: any): HTMLElement), displayName, isSticky);
+      showOverlay(((node: any): HTMLElement), displayName, hideAfterTimeout);
     } else {
       hideOverlay();
     }
@@ -477,6 +477,6 @@ export default class Agent extends EventEmitter {
 
     // Don't pass the name explicitly.
     // It will be inferred from DOM tag and Fiber owner.
-    showOverlay(target, null, true);
+    showOverlay(target, null, false);
   };
 }

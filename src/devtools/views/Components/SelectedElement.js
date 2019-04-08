@@ -45,10 +45,10 @@ export default function SelectedElement(_: Props) {
       if (rendererID !== null) {
         bridge.send('highlightElementInDOM', {
           displayName: element.displayName,
+          hideAfterTimeout: true,
           id: selectedElementID,
           rendererID,
           scrollIntoView: true,
-          isSticky: false,
         });
       }
     }
@@ -271,7 +271,7 @@ function useInspectedElement(id: number | null): InspectedElement | null {
       return () => {};
     }
 
-    const rendererID = store.getRendererIDForElement(id) || null;
+    const rendererID = store.getRendererIDForElement(id);
 
     // Update the $r variable.
     bridge.send('selectElement', { id, rendererID });
