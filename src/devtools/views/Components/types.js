@@ -58,6 +58,8 @@ export type InspectedElement = {|
 
   // Location of component in source coude.
   source: Object | null,
+
+  displayName: string | null,
 |};
 
 // TODO: Add profiling type

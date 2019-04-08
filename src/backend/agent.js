@@ -75,6 +75,7 @@ export default class Agent extends EventEmitter {
     bridge.addListener('getProfilingSummary', this.getProfilingSummary);
     bridge.addListener('highlightElementInDOM', this.highlightElementInDOM);
     bridge.addListener('inspectElement', this.inspectElement);
+    bridge.addListener('logElementToConsole', this.logElementToConsole);
     bridge.addListener('overrideContext', this.overrideContext);
     bridge.addListener('overrideHookState', this.overrideHookState);
     bridge.addListener('overrideProps', this.overrideProps);
@@ -265,6 +266,15 @@ export default class Agent extends EventEmitter {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
     } else {
       this._bridge.send('inspectedElement', renderer.inspectElement(id));
+    }
+  };
+
+  logElementToConsole = ({ id, rendererID }: InspectSelectParams) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+    } else {
+      renderer.logElementToConsole(id);
     }
   };
 

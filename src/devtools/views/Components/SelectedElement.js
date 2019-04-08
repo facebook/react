@@ -39,20 +39,33 @@ export default function SelectedElement(_: Props) {
   const inspectedElement = useInspectedElement(selectedElementID);
 
   const highlightElement = useCallback(() => {
-    if (element !== null && selectedElementID !== null) {
-      const rendererID =
-        store.getRendererIDForElement(selectedElementID) || null;
+    const id = selectedElementID;
+    if (element !== null && id !== null) {
+      const rendererID = store.getRendererIDForElement(id);
       if (rendererID !== null) {
         bridge.send('highlightElementInDOM', {
           displayName: element.displayName,
           hideAfterTimeout: true,
-          id: selectedElementID,
+          id,
           rendererID,
           scrollIntoView: true,
         });
       }
     }
   }, [bridge, element, selectedElementID, store]);
+
+  const logElement = useCallback(() => {
+    const id = selectedElementID;
+    if (id !== null) {
+      const rendererID = store.getRendererIDForElement(id);
+      if (rendererID !== null) {
+        bridge.send('logElementToConsole', {
+          id,
+          rendererID,
+        });
+      }
+    }
+  }, [bridge, selectedElementID, store]);
 
   const viewSource = useCallback(() => {
     if (viewElementSource != null && selectedElementID !== null) {
@@ -88,6 +101,13 @@ export default function SelectedElement(_: Props) {
           title="Highlight this element in the page"
         >
           <ButtonIcon type="view-dom" />
+        </Button>
+        <Button
+          className={styles.IconButton}
+          onClick={logElement}
+          title="Log this component data to the console"
+        >
+          <ButtonIcon type="log-data" />
         </Button>
         <Button
           className={styles.IconButton}

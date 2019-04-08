@@ -106,6 +106,7 @@ export type RendererInterface = {
   handleCommitFiberRoot: (fiber: Object) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,
   inspectElement: (id: number) => InspectedElement | null,
+  logElementToConsole: (id: number) => void,
   overrideSuspense: (id: number, forceFallback: boolean) => void,
   prepareViewElementSource: (id: number) => void,
   renderer: ReactRenderer | null,

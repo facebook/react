@@ -12,6 +12,7 @@ export type IconType =
   | 'export'
   | 'filter'
   | 'import'
+  | 'log-data'
   | 'more'
   | 'next'
   | 'previous'
@@ -53,6 +54,9 @@ export default function ButtonIcon({ type }: Props) {
       break;
     case 'import':
       pathData = PATH_IMPORT;
+      break;
+    case 'log-data':
+      pathData = PATH_EXPORT; // TODO: real icon
       break;
     case 'more':
       pathData = PATH_MORE;
