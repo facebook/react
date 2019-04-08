@@ -1404,6 +1404,9 @@ function commitRootImpl(root, expirationTime) {
     rootWithPendingPassiveEffects = root;
     pendingPassiveEffectsExpirationTime = expirationTime;
   } else {
+    // We are done with the effect chain at this point so let's clear the
+    // nextEffect pointers to assist with GC. If we have passive effects, we'll
+    // clear this in flushPassiveEffects.
     nextEffect = firstEffect;
     while (nextEffect !== null) {
       const nextNextEffect = nextEffect.nextEffect;
@@ -1627,6 +1630,7 @@ export function flushPassiveEffects() {
       }
     }
     const nextNextEffect = effect.nextEffect;
+    // Remove nextEffect pointer to assist GC
     effect.nextEffect = null;
     effect = nextNextEffect;
   }

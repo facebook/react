@@ -277,9 +277,6 @@ let nextRenderDidError: boolean = false;
 
 // The next fiber with an effect that we're currently committing.
 let nextEffect: Fiber | null = null;
-// Fiber pointers used for effect chain manipulation.
-let firstEffect: Fiber | null = null;
-let prevEffect: Fiber | null = null;
 
 let isCommitting: boolean = false;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
@@ -432,7 +429,6 @@ function commitAllHostEffects() {
     // possible bitmap value, we remove the secondary effects from the
     // effect tag and switch on that value.
     let primaryEffectTag = effectTag & (Placement | Update | Deletion);
-    const nextNextEffect = nextEffect.nextEffect;
     switch (primaryEffectTag) {
       case Placement: {
         commitPlacement(nextEffect);
@@ -463,21 +459,10 @@ function commitAllHostEffects() {
       }
       case Deletion: {
         commitDeletion(nextEffect);
-
-        // We can now remove this Deletion node from the effect chain to assist GC.
-        if (prevEffect !== null) {
-          prevEffect.nextEffect = nextNextEffect;
-        } else {
-          firstEffect = nextNextEffect;
-        }
-        nextEffect.nextEffect = null;
         break;
       }
     }
-    if (!(primaryEffectTag & Deletion)) {
-      prevEffect = nextEffect;
-    }
-    nextEffect = nextNextEffect;
+    nextEffect = nextEffect.nextEffect;
   }
 
   if (__DEV__) {
@@ -551,10 +536,7 @@ function commitAllLifeCycles(
   }
 }
 
-function commitPassiveEffects(
-  root: FiberRoot,
-  firstNonDeletionEffect: Fiber,
-): void {
+function commitPassiveEffects(root: FiberRoot, firstEffect: Fiber): void {
   rootWithPendingPassiveEffects = null;
   passiveEffectCallbackHandle = null;
   passiveEffectCallback = null;
@@ -563,7 +545,7 @@ function commitPassiveEffects(
   const previousIsRendering = isRendering;
   isRendering = true;
 
-  let effect = firstNonDeletionEffect;
+  let effect = firstEffect;
   do {
     if (__DEV__) {
       setCurrentFiber(effect);
@@ -592,7 +574,10 @@ function commitPassiveEffects(
         captureCommitPhaseError(effect, error);
       }
     }
-    effect = effect.nextEffect;
+    const nextNextEffect = effect.nextEffect;
+    // Remove nextEffect pointer to assist GC
+    effect.nextEffect = null;
+    effect = nextNextEffect;
   } while (effect !== null);
   if (__DEV__) {
     resetCurrentFiber();
@@ -688,6 +673,7 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
   // Reset this to null before calling lifecycles
   ReactCurrentOwner.current = null;
 
+  let firstEffect;
   if (finishedWork.effectTag > PerformedWork) {
     // A fiber's effect list consists only of its children, not itself. So if
     // the root has an effect, we need to add it to the end of the list. The
@@ -750,7 +736,6 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
   // Commit all the side-effects within a tree. We'll do this in two passes.
   // The first pass performs all the host insertions, updates, deletions and
   // ref unmounts.
-  prevEffect = (null: Fiber | null);
   nextEffect = firstEffect;
   startCommitHostEffectsTimer();
   while (nextEffect !== null) {
@@ -849,6 +834,16 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
     }
     passiveEffectCallbackHandle = scheduleCallback(NormalPriority, callback);
     passiveEffectCallback = callback;
+  } else {
+    // We are done with the effect chain at this point so let's clear the
+    // nextEffect pointers to assist with GC. If we have passive effects, we'll
+    // clear this in flushPassiveEffects.
+    nextEffect = firstEffect;
+    while (nextEffect !== null) {
+      const nextNextEffect = nextEffect.nextEffect;
+      nextEffect.nextEffect = null;
+      nextEffect = nextNextEffect;
+    }
   }
 
   isCommitting = false;
