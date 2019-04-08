@@ -215,21 +215,21 @@ function findTipPos(dims, win) {
   return { top, left: dims.left + margin + 'px' };
 }
 
-function getElementDimensions(domElement) {
+export function getElementDimensions(domElement: Element) {
   const calculatedStyle = window.getComputedStyle(domElement);
   return {
-    borderLeft: +calculatedStyle.borderLeftWidth.match(/[0-9]*/)[0],
-    borderRight: +calculatedStyle.borderRightWidth.match(/[0-9]*/)[0],
-    borderTop: +calculatedStyle.borderTopWidth.match(/[0-9]*/)[0],
-    borderBottom: +calculatedStyle.borderBottomWidth.match(/[0-9]*/)[0],
-    marginLeft: +calculatedStyle.marginLeft.match(/[0-9]*/)[0],
-    marginRight: +calculatedStyle.marginRight.match(/[0-9]*/)[0],
-    marginTop: +calculatedStyle.marginTop.match(/[0-9]*/)[0],
-    marginBottom: +calculatedStyle.marginBottom.match(/[0-9]*/)[0],
-    paddingLeft: +calculatedStyle.paddingLeft.match(/[0-9]*/)[0],
-    paddingRight: +calculatedStyle.paddingRight.match(/[0-9]*/)[0],
-    paddingTop: +calculatedStyle.paddingTop.match(/[0-9]*/)[0],
-    paddingBottom: +calculatedStyle.paddingBottom.match(/[0-9]*/)[0],
+    borderLeft: parseInt(calculatedStyle.borderLeftWidth, 10),
+    borderRight: parseInt(calculatedStyle.borderRightWidth, 10),
+    borderTop: parseInt(calculatedStyle.borderTopWidth, 10),
+    borderBottom: parseInt(calculatedStyle.borderBottomWidth, 10),
+    marginLeft: parseInt(calculatedStyle.marginLeft, 10),
+    marginRight: parseInt(calculatedStyle.marginRight, 10),
+    marginTop: parseInt(calculatedStyle.marginTop, 10),
+    marginBottom: parseInt(calculatedStyle.marginBottom, 10),
+    paddingLeft: parseInt(calculatedStyle.paddingLeft, 10),
+    paddingRight: parseInt(calculatedStyle.paddingRight, 10),
+    paddingTop: parseInt(calculatedStyle.paddingTop, 10),
+    paddingBottom: parseInt(calculatedStyle.paddingBottom, 10),
   };
 }
 

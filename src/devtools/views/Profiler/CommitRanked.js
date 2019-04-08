@@ -20,7 +20,7 @@ export type ItemData = {|
   scaleX: (value: number, fallbackValue: number) => number,
   selectedFiberID: number | null,
   selectedFiberIndex: number,
-  selectFiber: (id: number | null) => void,
+  selectFiber: (id: number | null, name: string | null) => void,
   width: number,
 |};
 
@@ -33,7 +33,7 @@ export default function CommitRankedAutoSizer(_: {||}) {
   const deselectCurrentFiber = useCallback(
     event => {
       event.stopPropagation();
-      selectFiber(null);
+      selectFiber(null, null);
     },
     [selectFiber]
   );

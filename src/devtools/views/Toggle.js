@@ -10,6 +10,7 @@ type Props = {
   isChecked: boolean,
   isDisabled?: boolean,
   onChange: (isChecked: boolean) => void,
+  title?: string,
 };
 
 export default function Toggle({
@@ -18,6 +19,7 @@ export default function Toggle({
   isDisabled = false,
   isChecked,
   onChange,
+  title,
 }: Props) {
   let defaultClassName;
   if (isDisabled) {
@@ -36,7 +38,7 @@ export default function Toggle({
   );
 
   return (
-    <label className={`${defaultClassName} ${className}`}>
+    <label className={`${defaultClassName} ${className}`} title={title}>
       <input
         type="checkbox"
         className={styles.Input}

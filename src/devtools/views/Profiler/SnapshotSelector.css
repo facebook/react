@@ -11,6 +11,7 @@
 }
 .Commits:focus {
   outline: none;
+  background-color: var(--color-button-background-focus);
 }
 
 .IndexLabel {

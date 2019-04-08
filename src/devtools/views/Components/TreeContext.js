@@ -383,7 +383,10 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
     case 'RESET_OWNER_STACK':
       ownerStack = [];
       ownerStackIndex = null;
-      selectedElementIndex = null;
+      selectedElementIndex =
+        selectedElementID !== null
+          ? store.getIndexOfElementID(selectedElementID)
+          : null;
       _ownerFlatTree = null;
       break;
     case 'SELECT_ELEMENT_AT_INDEX':

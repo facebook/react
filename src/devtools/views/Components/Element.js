@@ -4,24 +4,27 @@ import React, {
   Fragment,
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
 } from 'react';
 import { ElementTypeClass, ElementTypeFunction } from 'src/devtools/types';
 import { createRegExp } from '../utils';
 import { TreeContext } from './TreeContext';
+import { BridgeContext, StoreContext } from '../context';
 
+import type { ItemData } from './Tree';
 import type { Element } from './types';
 
 import styles from './Element.css';
 
 type Props = {
+  data: ItemData,
   index: number,
   style: Object,
 };
 
-export default function ElementView({ index, style }: Props) {
+export default function ElementView({ data, index, style }: Props) {
   const {
     baseDepth,
     getElementAtIndex,
@@ -29,11 +32,14 @@ export default function ElementView({ index, style }: Props) {
     selectedElementID,
     selectElementByID,
   } = useContext(TreeContext);
+  const bridge = useContext(BridgeContext);
+  const store = useContext(StoreContext);
 
   const element = getElementAtIndex(index);
 
   const id = element === null ? null : element.id;
   const isSelected = selectedElementID === id;
+  const lastScrolledIDRef = data.lastScrolledIDRef;
 
   const handleDoubleClick = useCallback(() => {
     if (id !== null) {
@@ -43,8 +49,22 @@ export default function ElementView({ index, style }: Props) {
 
   const ref = useRef<HTMLSpanElement | null>(null);
 
-  useEffect(() => {
+  // The tree above has its own autoscrolling, but it only works for rows.
+  // However, even when the row gets into the viewport, the component name
+  // might be too far left or right on the screen. Adjust it in this case.
+  useLayoutEffect(() => {
     if (isSelected) {
+      // Don't select the same item twice.
+      // A row may appear and disappear just by scrolling:
+      // https://github.com/bvaughn/react-devtools-experimental/issues/67
+      // It doesn't necessarily indicate a user action.
+      // TODO: we might want to revamp the autoscroll logic
+      // to only happen explicitly for user-initiated events.
+      if (lastScrolledIDRef.current === id) {
+        return;
+      }
+      lastScrolledIDRef.current = id;
+
       if (ref.current !== null) {
         ref.current.scrollIntoView({
           behavior: 'auto',
@@ -53,7 +73,7 @@ export default function ElementView({ index, style }: Props) {
         });
       }
     }
-  }, [isSelected]);
+  }, [id, isSelected, lastScrolledIDRef]);
 
   // TODO Add click and key handlers for toggling element open/close state.
 
@@ -65,6 +85,21 @@ export default function ElementView({ index, style }: Props) {
     },
     [id, selectElementByID]
   );
+
+  const rendererID = id !== null ? store.getRendererIDForElement(id) : null;
+  // Individual elements don't have a corresponding leave handler.
+  // Instead, it's implemented on the tree level.
+  const handleMouseEnter = useCallback(() => {
+    if (element !== null && id !== null && rendererID !== null) {
+      bridge.send('highlightElementInDOM', {
+        displayName: element.displayName,
+        hideAfterTimeout: false,
+        id,
+        rendererID,
+        scrollIntoView: false,
+      });
+    }
+  }, [bridge, element, id, rendererID]);
 
   // Handle elements that are removed from the tree while an async render is in progress.
   if (element == null) {
@@ -84,6 +119,7 @@ export default function ElementView({ index, style }: Props) {
   return (
     <div
       className={isSelected ? styles.SelectedElement : styles.Element}
+      onMouseEnter={handleMouseEnter}
       onMouseDown={handleMouseDown}
       onDoubleClick={handleDoubleClick}
       style={{

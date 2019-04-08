@@ -32,6 +32,7 @@ import type {
   CommitDetails,
   DevToolsHook,
   Fiber,
+  FiberCommits,
   FiberData,
   Interaction,
   Interactions,
@@ -810,21 +811,6 @@ export function attach(
     }
   }
 
-  function unmountFiberRecursively(fiber, traverseSiblings = false) {
-    if (__DEBUG__) {
-      debug('unmountFiberRecursively()', fiber, traverseSiblings);
-    }
-    if (!shouldFilterFiber(fiber)) {
-      recordUnmount(fiber);
-    }
-    if (fiber.child !== null) {
-      unmountFiberRecursively(fiber.child, true);
-    }
-    if (traverseSiblings && fiber.sibling !== null) {
-      unmountFiberRecursively(fiber.sibling, true);
-    }
-  }
-
   function maybeRecordUpdate(fiber: Fiber, hasChildOrderChanged: boolean) {
     if (__DEBUG__) {
       debug('maybeRecordUpdate()', fiber);
@@ -1424,7 +1410,7 @@ export function attach(
     }
   }
 
-  function inspectElement(id: number): InspectedElement | null {
+  function inspectElementRaw(id: number): InspectedElement | null {
     let fiber = idToFiberMap.get(id);
 
     if (fiber == null) {
@@ -1505,7 +1491,7 @@ export function attach(
     if (context !== null) {
       // To simplify hydration and display logic for context, wrap in a value object.
       // Otherwise simple values (e.g. strings, booleans) become harder to handle.
-      context = cleanForBridge({ value: context });
+      context = { value: context };
     }
 
     let owners = null;
@@ -1544,16 +1530,16 @@ export function attach(
       // Can view component source location.
       canViewSource,
 
+      displayName: getDataForFiber(fiber).displayName,
+
       // Inspectable properties.
       // TODO Review sanitization approach for the below inspectable values.
       context,
       hooks: usesHooks
-        ? cleanForBridge(
-            inspectHooksOfFiber(fiber, (renderer.currentDispatcherRef: any))
-          )
+        ? inspectHooksOfFiber(fiber, (renderer.currentDispatcherRef: any))
         : null,
-      props: cleanForBridge(memoizedProps),
-      state: usesHooks ? null : cleanForBridge(memoizedState),
+      props: memoizedProps,
+      state: usesHooks ? null : memoizedState,
 
       // List of owners
       owners,
@@ -1561,6 +1547,56 @@ export function attach(
       // Location of component in source coude.
       source: _debugSource,
     };
+  }
+
+  function inspectElement(id: number): InspectedElement | null {
+    let result = inspectElementRaw(id);
+    if (result === null) {
+      return null;
+    }
+    // TODO Review sanitization approach for the below inspectable values.
+    result.context = cleanForBridge(result.context);
+    result.hooks = cleanForBridge(result.hooks);
+    result.props = cleanForBridge(result.props);
+    result.state = cleanForBridge(result.state);
+    return result;
+  }
+
+  function logElementToConsole(id) {
+    const result = inspectElementRaw(id);
+    if (result === null) {
+      console.warn(`Could not find Fiber with id "${id}"`);
+      return;
+    }
+
+    const supportsGroup = typeof console.groupCollapsed === 'function';
+    const label =
+      '[Click to expand] <' + (result.displayName || 'Component') + ' />';
+
+    if (supportsGroup) {
+      console.groupCollapsed(label);
+    }
+    if (result.props !== null) {
+      console.log('Props:', result.props);
+    }
+    if (result.state !== null) {
+      console.log('State:', result.state);
+    }
+    if (result.hooks !== null) {
+      console.log('Hooks:', result.hooks);
+    }
+    const nativeNode = findNativeByFiberID(id);
+    if (nativeNode !== null) {
+      console.log('Node:', nativeNode);
+    }
+    if (window.chrome || /firefox/i.test(navigator.userAgent)) {
+      console.log(
+        'Right-click any value to save it as a global variable for further inspection.'
+      );
+    }
+    if (supportsGroup) {
+      console.groupEnd();
+    }
   }
 
   function setInHook(
@@ -1663,6 +1699,39 @@ export function attach(
       commitIndex,
       interactions: [],
       actualDurations: [],
+      rootID,
+    };
+  }
+
+  function getFiberCommits(rootID: number, fiberID: number): FiberCommits {
+    const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
+      rootID
+    );
+    if (commitProfilingMetadata != null) {
+      const commitDurations = [];
+      commitProfilingMetadata.forEach(({ actualDurations }, commitIndex) => {
+        for (let i = 0; i < actualDurations.length; i += 2) {
+          if (actualDurations[i] === fiberID) {
+            commitDurations.push(commitIndex, actualDurations[i + 1]);
+            break;
+          }
+        }
+      });
+
+      return {
+        commitDurations,
+        fiberID,
+        rootID,
+      };
+    }
+
+    console.warn(
+      `getFiberCommits(): No profiling info recorded for root "${rootID}"`
+    );
+
+    return {
+      commitDurations: [],
+      fiberID,
       rootID,
     };
   }
@@ -1832,6 +1901,7 @@ export function attach(
     flushInitialOperations,
     getCommitDetails,
     getFiberIDFromNative,
+    getFiberCommits,
     getInteractions,
     findNativeByFiberID,
     getProfilingDataForDownload,
@@ -1839,6 +1909,7 @@ export function attach(
     handleCommitFiberRoot,
     handleCommitFiberUnmount,
     inspectElement,
+    logElementToConsole,
     prepareViewElementSource,
     overrideSuspense,
     renderer,

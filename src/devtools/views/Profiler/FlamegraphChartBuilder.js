@@ -9,6 +9,7 @@ export type ChartNode = {|
   didRender: boolean,
   id: number,
   label: string,
+  name: string,
   offset: number,
   selfDuration: number,
   treeBaseDuration: number,
@@ -69,7 +70,7 @@ export function getChartData({
 
     let label = `${name}${maybeKey}`;
     if (didRender) {
-      label += ` (${selfDuration.toFixed(1)}ms) of ${actualDuration.toFixed(
+      label += ` (${selfDuration.toFixed(1)}ms of ${actualDuration.toFixed(
         1
       )}ms)`;
     }
@@ -82,6 +83,7 @@ export function getChartData({
       didRender,
       id,
       label,
+      name,
       offset: parentOffset,
       selfDuration,
       treeBaseDuration: node.treeBaseDuration,

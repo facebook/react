@@ -34,6 +34,12 @@ export type CommitDetails = {|
   interactions: Array<Interaction>,
 |};
 
+export type FiberCommits = {|
+  commitDurations: Array<number>,
+  fiberID: number,
+  rootID: number,
+|};
+
 export type ProfilingSummary = {|
   rootID: number,
 

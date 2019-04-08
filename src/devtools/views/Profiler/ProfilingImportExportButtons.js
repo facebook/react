@@ -85,6 +85,7 @@ export default function ProfilingImportExportButtons() {
         className={styles.Input}
         type="file"
         onChange={handleFiles}
+        tabIndex={-1}
       />
       <Button
         disabled={isProfiling}

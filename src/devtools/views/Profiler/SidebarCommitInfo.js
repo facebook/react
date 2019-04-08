@@ -18,7 +18,11 @@ export default function SidebarCommitInfo(_: Props) {
     selectTab,
   } = useContext(ProfilerContext);
 
-  const { profilingCache, profilingScreenshots } = useContext(StoreContext);
+  const {
+    captureScreenshots,
+    profilingCache,
+    profilingScreenshots,
+  } = useContext(StoreContext);
 
   const screenshot =
     selectedCommitIndex !== null
@@ -80,31 +84,38 @@ export default function SidebarCommitInfo(_: Props) {
               ms
             </span>
           </li>
-          <li className={styles.InteractionList}>
+          <li className={styles.Interactions}>
             <label className={styles.Label}>Interactions</label>:
-            <ul className={styles.InteractionList}>
+            <div className={styles.InteractionList}>
               {interactions.length === 0 ? (
-                <li className={styles.InteractionListItem}>None</li>
+                <div className={styles.NoInteractions}>None</div>
               ) : null}
               {interactions.map((interaction, index) => (
-                <li
+                <button
                   key={index}
-                  className={styles.InteractionListItem}
+                  className={styles.Interaction}
                   onClick={() => viewInteraction(interaction)}
                 >
                   {interaction.name}
-                </li>
+                </button>
               ))}
-            </ul>
+            </div>
           </li>
-          {screenshot != null && (
+          {captureScreenshots && (
             <li>
-              <img
-                alt="Screenshot"
-                className={styles.Screenshot}
-                onClick={showScreenshotModal}
-                src={screenshot}
-              />
+              <label className={styles.Label}>Screenshot</label>:
+              {screenshot != null ? (
+                <img
+                  alt="Screenshot"
+                  className={styles.Screenshot}
+                  onClick={showScreenshotModal}
+                  src={screenshot}
+                />
+              ) : (
+                <div className={styles.NoScreenshot}>
+                  No screenshot available
+                </div>
+              )}
             </li>
           )}
           {screenshot != null && isScreenshotModalVisible && (

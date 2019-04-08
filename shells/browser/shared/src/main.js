@@ -154,6 +154,14 @@ function createPanelIfReactLoaded() {
 
       initBridgeAndStore();
 
+      function ensureInitialHTMLIsCleared(container) {
+        if (container._hasInitialHTMLBeenCleared) {
+          return;
+        }
+        container.innerHTML = '';
+        container._hasInitialHTMLBeenCleared = true;
+      }
+
       let currentPanel = null;
 
       chrome.devtools.panels.create('⚛ Components', '', 'panel.html', panel => {
@@ -166,7 +174,7 @@ function createPanelIfReactLoaded() {
           componentsPortalContainer = panel.container;
 
           if (componentsPortalContainer != null) {
-            componentsPortalContainer.innerHTML = '';
+            ensureInitialHTMLIsCleared(componentsPortalContainer);
             render('components');
             panel.injectStyles(cloneStyleTags);
           }
@@ -188,7 +196,7 @@ function createPanelIfReactLoaded() {
           profilerPortalContainer = panel.container;
 
           if (profilerPortalContainer != null) {
-            profilerPortalContainer.innerHTML = '';
+            ensureInitialHTMLIsCleared(profilerPortalContainer);
             render('profiler');
             panel.injectStyles(cloneStyleTags);
           }
@@ -205,7 +213,7 @@ function createPanelIfReactLoaded() {
           settingsPortalContainer = panel.container;
 
           if (settingsPortalContainer != null) {
-            settingsPortalContainer.innerHTML = '';
+            ensureInitialHTMLIsCleared(settingsPortalContainer);
             render('settings');
             panel.injectStyles(cloneStyleTags);
           }

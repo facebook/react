@@ -56,7 +56,8 @@ type Context = {|
 
   // Which fiber is currently selected in the Ranked or Flamegraph charts?
   selectedFiberID: number | null,
-  selectFiber: (id: number | null) => void,
+  selectedFiberName: string | null,
+  selectFiber: (id: number | null, name: string | null) => void,
 
   // Which interaction is currently selected in the Interactions graph?
   selectedInteractionID: number | null,
@@ -141,13 +142,15 @@ function ProfilerContextController({ children }: Props) {
   );
   const [selectedTabID, selectTab] = useState<TabID>('flame-chart');
   const [selectedFiberID, selectFiberID] = useState<number | null>(null);
+  const [selectedFiberName, selectFiberName] = useState<string | null>(null);
   const [selectedInteractionID, selectInteraction] = useState<number | null>(
     null
   );
 
   const selectFiber = useCallback(
-    (id: number | null) => {
+    (id: number | null, name: string | null) => {
       selectFiberID(id);
+      selectFiberName(name);
       if (id !== null) {
         const index = store.getIndexOfElementID(id);
         if (index !== null) {
@@ -155,7 +158,7 @@ function ProfilerContextController({ children }: Props) {
         }
       }
     },
-    [selectElementAtIndex, selectFiberID, store]
+    [selectElementAtIndex, selectFiberID, selectFiberName, store]
   );
 
   if (isProfiling) {
@@ -165,6 +168,7 @@ function ProfilerContextController({ children }: Props) {
       }
       if (selectedFiberID !== null) {
         selectFiberID(null);
+        selectFiberName(null);
       }
       if (selectedInteractionID !== null) {
         selectInteraction(null);
@@ -195,6 +199,7 @@ function ProfilerContextController({ children }: Props) {
       selectCommitIndex,
 
       selectedFiberID,
+      selectedFiberName,
       selectFiber,
 
       selectedInteractionID,
@@ -222,6 +227,7 @@ function ProfilerContextController({ children }: Props) {
       selectCommitIndex,
 
       selectedFiberID,
+      selectedFiberName,
       selectFiber,
 
       selectedInteractionID,

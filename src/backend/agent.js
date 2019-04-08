@@ -66,13 +66,19 @@ export default class Agent extends EventEmitter {
     this._bridge = bridge;
 
     bridge.addListener('captureScreenshot', this.captureScreenshot);
+    bridge.addListener(
+      'clearHighlightedElementInDOM',
+      this.clearHighlightedElementInDOM
+    );
     bridge.addListener('exportProfilingSummary', this.exportProfilingSummary);
     bridge.addListener('getCommitDetails', this.getCommitDetails);
+    bridge.addListener('getFiberCommits', this.getFiberCommits);
     bridge.addListener('getInteractions', this.getInteractions);
     bridge.addListener('getProfilingStatus', this.getProfilingStatus);
     bridge.addListener('getProfilingSummary', this.getProfilingSummary);
     bridge.addListener('highlightElementInDOM', this.highlightElementInDOM);
     bridge.addListener('inspectElement', this.inspectElement);
+    bridge.addListener('logElementToConsole', this.logElementToConsole);
     bridge.addListener('overrideContext', this.overrideContext);
     bridge.addListener('overrideHookState', this.overrideHookState);
     bridge.addListener('overrideProps', this.overrideProps);
@@ -161,6 +167,26 @@ export default class Agent extends EventEmitter {
     }
   };
 
+  getFiberCommits = ({
+    fiberID,
+    rendererID,
+    rootID,
+  }: {
+    fiberID: number,
+    rendererID: number,
+    rootID: number,
+  }) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}"`);
+    } else {
+      this._bridge.send(
+        'fiberCommits',
+        renderer.getFiberCommits(rootID, fiberID)
+      );
+    }
+  };
+
   getInteractions = ({
     rendererID,
     rootID,
@@ -198,14 +224,22 @@ export default class Agent extends EventEmitter {
     }
   };
 
+  clearHighlightedElementInDOM = () => {
+    hideOverlay();
+  };
+
   highlightElementInDOM = ({
     displayName,
+    hideAfterTimeout,
     id,
     rendererID,
+    scrollIntoView,
   }: {
     displayName: string,
+    hideAfterTimeout: boolean,
     id: number,
     rendererID: number,
+    scrollIntoView: boolean,
   }) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
@@ -218,13 +252,12 @@ export default class Agent extends EventEmitter {
     }
 
     if (node != null) {
-      if (typeof node.scrollIntoView === 'function') {
+      if (scrollIntoView && typeof node.scrollIntoView === 'function') {
         // If the node isn't visible show it before highlighting it.
         // We may want to reconsider this; it might be a little disruptive.
         node.scrollIntoView({ block: 'nearest', inline: 'nearest' });
       }
-
-      showOverlay(((node: any): HTMLElement), displayName);
+      showOverlay(((node: any): HTMLElement), displayName, hideAfterTimeout);
     } else {
       hideOverlay();
     }
@@ -236,6 +269,15 @@ export default class Agent extends EventEmitter {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
     } else {
       this._bridge.send('inspectedElement', renderer.inspectElement(id));
+    }
+  };
+
+  logElementToConsole = ({ id, rendererID }: InspectSelectParams) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+    } else {
+      renderer.logElementToConsole(id);
     }
   };
 
@@ -452,7 +494,7 @@ export default class Agent extends EventEmitter {
     const target = ((event.target: any): HTMLElement);
     // Don't pass the name explicitly.
     // It will be inferred from DOM tag and Fiber owner.
-    showOverlay(target);
+    showOverlay(target, null, false);
     this._lastInspectedNode = target;
   };
 

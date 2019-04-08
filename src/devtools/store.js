@@ -1,6 +1,8 @@
 // @flow
 
 import EventEmitter from 'events';
+import memoize from 'memoize-one';
+import throttle from 'lodash.throttle';
 import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_RECURSIVE_REMOVE_CHILDREN,
@@ -34,6 +36,8 @@ const debug = (methodName, ...args) => {
 
 const LOCAL_STORAGE_CAPTURE_SCREENSHOTS_KEY =
   'React::DevTools::captureScreenshots';
+
+const THROTTLE_CAPTURE_SCREENSHOT_DURATION = 500;
 
 type Config = {|
   isProfiling?: boolean,
@@ -129,8 +133,8 @@ export default class Store extends EventEmitter {
       if (supportsCaptureScreenshots) {
         this._supportsCaptureScreenshots = true;
         this._captureScreenshots =
-          localStorage.getItem(LOCAL_STORAGE_CAPTURE_SCREENSHOTS_KEY) !==
-          'false';
+          localStorage.getItem(LOCAL_STORAGE_CAPTURE_SCREENSHOTS_KEY) ===
+          'true';
       }
       if (supportsFileDownloads) {
         this._supportsFileDownloads = true;
@@ -416,6 +420,13 @@ export default class Store extends EventEmitter {
     this.emit('isProfiling');
   }
 
+  _captureScreenshot = throttle(
+    memoize((commitIndex: number) => {
+      this._bridge.send('captureScreenshot', { commitIndex });
+    }),
+    THROTTLE_CAPTURE_SCREENSHOT_DURATION
+  );
+
   _takeProfilingSnapshotRecursive = (id: number) => {
     const element = this.getElementByID(id);
     if (element !== null) {
@@ -454,10 +465,9 @@ export default class Store extends EventEmitter {
         profilingOperations.push(operations);
       }
 
-      const commitIndex = profilingOperations.length - 1;
-
       if (this._captureScreenshots) {
-        this._bridge.send('captureScreenshot', { commitIndex });
+        const commitIndex = profilingOperations.length - 1;
+        this._captureScreenshot(commitIndex);
       }
     }
 

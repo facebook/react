@@ -7,6 +7,7 @@ import type { CommitDetails, CommitTree, Node } from './types';
 export type ChartNode = {|
   id: number,
   label: string,
+  name: string,
   value: number,
 |};
 
@@ -58,6 +59,7 @@ export function getChartData({
     chartNodes.push({
       id,
       label,
+      name,
       value: selfDuration,
     });
   });

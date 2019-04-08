@@ -22,7 +22,7 @@ function CommitRankedListItem({ data, index, style }: Props) {
   const handleClick = useCallback(
     event => {
       event.stopPropagation();
-      selectFiber(node.id);
+      selectFiber(node.id, node.name);
     },
     [node, selectFiber]
   );

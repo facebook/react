@@ -40,17 +40,30 @@ export default function SelectedElement(_: Props) {
 
   const highlightElement = useCallback(() => {
     if (element !== null && selectedElementID !== null) {
-      const rendererID =
-        store.getRendererIDForElement(selectedElementID) || null;
+      const rendererID = store.getRendererIDForElement(selectedElementID);
       if (rendererID !== null) {
         bridge.send('highlightElementInDOM', {
           displayName: element.displayName,
+          hideAfterTimeout: true,
+          id: selectedElementID,
+          rendererID,
+          scrollIntoView: true,
+        });
+      }
+    }
+  }, [bridge, element, selectedElementID, store]);
+
+  const logElement = useCallback(() => {
+    if (selectedElementID !== null) {
+      const rendererID = store.getRendererIDForElement(selectedElementID);
+      if (rendererID !== null) {
+        bridge.send('logElementToConsole', {
           id: selectedElementID,
           rendererID,
         });
       }
     }
-  }, [bridge, element, selectedElementID, store]);
+  }, [bridge, selectedElementID, store]);
 
   const viewSource = useCallback(() => {
     if (viewElementSource != null && selectedElementID !== null) {
@@ -86,6 +99,13 @@ export default function SelectedElement(_: Props) {
           title="Highlight this element in the page"
         >
           <ButtonIcon type="view-dom" />
+        </Button>
+        <Button
+          className={styles.IconButton}
+          onClick={logElement}
+          title="Log this component data to the console"
+        >
+          <ButtonIcon type="log-data" />
         </Button>
         <Button
           className={styles.IconButton}
@@ -207,7 +227,7 @@ function InspectedElementView({
 
       {ownerStack.length === 0 && owners !== null && owners.length > 0 && (
         <div className={styles.Owners}>
-          <div className={styles.OwnersHeader}>owner stack</div>
+          <div className={styles.OwnersHeader}>rendered by</div>
           {owners.map(owner => (
             <OwnerView
               key={owner.id}
@@ -269,7 +289,7 @@ function useInspectedElement(id: number | null): InspectedElement | null {
       return () => {};
     }
 
-    const rendererID = store.getRendererIDForElement(id) || null;
+    const rendererID = store.getRendererIDForElement(id);
 
     // Update the $r variable.
     bridge.send('selectElement', { id, rendererID });
