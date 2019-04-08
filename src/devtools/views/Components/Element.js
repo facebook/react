@@ -87,6 +87,8 @@ export default function ElementView({ index, style, data }: Props) {
   );
 
   const rendererID = store.getRendererIDForElement(element.id) || null;
+  // Individual elements don't have a corresponding leave handler.
+  // Instead, it's implemented on the tree level.
   const handleMouseEnter = useCallback(() => {
     if (rendererID !== null) {
       bridge.send('highlightElementInDOM', {
