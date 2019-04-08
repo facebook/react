@@ -296,12 +296,19 @@ export default class Agent extends EventEmitter {
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
     } else {
-      // Update the active DOM node on the global hook object.
-      // The content script will read this to update window.$0
-      // when we switch tabs.
+      // When a different React component is selected, we want to store
+      // the active DOM node ($0) on the global hook so that content script
+      // can update the native elements panel to match it.
       const node = ((renderer.findNativeByFiberID(id): any): HTMLElement);
       if (node !== null) {
-        window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = node;
+        // However, we don't want to do it if the current $0 node already
+        // belongs to this component. In this case we were probably inspecting
+        // a part of its host subtree, and changing $0 would be disuptive.
+        const prev$0 = window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0;
+        const prev$0ID = this.getIDForNode(prev$0);
+        if (prev$0ID !== id) {
+          window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = node;
+        }
       }
       renderer.selectElement(id);
       this._bridge.send('selectElement');
