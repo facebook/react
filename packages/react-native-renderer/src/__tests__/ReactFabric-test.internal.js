@@ -335,20 +335,11 @@ describe('ReactFabric', () => {
       );
 
       expect(FabricUIManager.measure).not.toBeCalled();
-
       const successCallback = jest.fn();
       viewRef.measure(successCallback);
-
       expect(FabricUIManager.measure).toHaveBeenCalledTimes(1);
-      expect(FabricUIManager.measure).toHaveBeenCalledWith(
-        expect.any(Object),
-        expect.any(Function),
-      );
-
-      const args = FabricUIManager.measure.mock.calls[0];
-      expect(successCallback).not.toBeCalled();
-      args[1]('success');
-      expect(successCallback).toBeCalledWith('success');
+      expect(successCallback).toHaveBeenCalledTimes(1);
+      expect(successCallback).toHaveBeenCalledWith(10, 10, 100, 100, 0, 0);
     });
   });
 
@@ -385,20 +376,11 @@ describe('ReactFabric', () => {
       );
 
       expect(FabricUIManager.measureInWindow).not.toBeCalled();
-
       const successCallback = jest.fn();
       viewRef.measureInWindow(successCallback);
-
       expect(FabricUIManager.measureInWindow).toHaveBeenCalledTimes(1);
-      expect(FabricUIManager.measureInWindow).toHaveBeenCalledWith(
-        expect.any(Object),
-        expect.any(Function),
-      );
-
-      const args = FabricUIManager.measureInWindow.mock.calls[0];
-      expect(successCallback).not.toBeCalled();
-      args[1]('success');
-      expect(successCallback).toBeCalledWith('success');
+      expect(successCallback).toHaveBeenCalledTimes(1);
+      expect(successCallback).toHaveBeenCalledWith(10, 10, 100, 100);
     });
   });
 
@@ -409,7 +391,7 @@ describe('ReactFabric', () => {
     }));
 
     [View].forEach(Component => {
-      FabricUIManager.measureLayout.mockReset();
+      FabricUIManager.measureLayout.mockClear();
 
       let viewRef;
       let otherRef;
@@ -431,29 +413,12 @@ describe('ReactFabric', () => {
       );
 
       expect(FabricUIManager.measureLayout).not.toBeCalled();
-
       const successCallback = jest.fn();
       const failureCallback = jest.fn();
       viewRef.measureLayout(otherRef, successCallback, failureCallback);
-
       expect(FabricUIManager.measureLayout).toHaveBeenCalledTimes(1);
-      expect(FabricUIManager.measureLayout).toHaveBeenCalledWith(
-        expect.any(Object),
-        expect.any(Object),
-        expect.any(Function),
-        expect.any(Function),
-      );
-
-      const args = FabricUIManager.measureLayout.mock.calls[0];
-      expect(args[0]).not.toEqual(args[1]);
-      expect(successCallback).not.toBeCalled();
-      expect(failureCallback).not.toBeCalled();
-      args[2]('fail');
-      expect(failureCallback).toBeCalledWith('fail');
-
-      expect(successCallback).not.toBeCalled();
-      args[3]('success');
-      expect(successCallback).toBeCalledWith('success');
+      expect(successCallback).toHaveBeenCalledTimes(1);
+      expect(successCallback).toHaveBeenCalledWith(1, 1, 100, 100);
     });
   });
 
