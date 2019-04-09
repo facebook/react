@@ -198,12 +198,15 @@ function InnerElementType({ style, ...rest }) {
   // We shouldn't retain this width across different conceptual trees though,
   // so when the user opens the "owners tree" view, we should discard the previous width.
   const divRef = useRef<HTMLDivElement | null>(null);
-  const minWidthRef = useRef<number>(parseInt(style.width, 10));
-  const minWidth = ownerStack.length > 0 ? '100%' : minWidthRef.current;
+  const minWidthRef = useRef<number | null>(null);
+  const minWidth =
+    ownerStack.length > 0 || minWidthRef.current === null
+      ? '100%'
+      : minWidthRef.current;
   useEffect(() => {
     if (divRef.current !== null) {
       minWidthRef.current = Math.max(
-        minWidthRef.current,
+        minWidthRef.current || 0,
         divRef.current.offsetWidth
       );
     }
