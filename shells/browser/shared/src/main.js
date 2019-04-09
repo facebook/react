@@ -85,12 +85,6 @@ function createPanelIfReactLoaded() {
           );
         });
 
-        // Remember if we should sync the browser DevTools to the React tab.
-        // We'll only do that if user intentionally chooses a different React component.
-        bridge.addListener('selectElement', () => {
-          hasReactSelectionChanged = true;
-        });
-
         // This flag lets us tip the Store off early that we expect to be profiling.
         // This avoids flashing a temporary "Profiling not supported" message in the Profiler tab,
         // after a user has clicked the "reload and profile" button.
@@ -168,51 +162,39 @@ function createPanelIfReactLoaded() {
         container._hasInitialHTMLBeenCleared = true;
       }
 
-      function maybeSetReactSelectionFromBrowser() {
+      function setReactSelectionFromBrowser() {
         // When the user chooses a different node in the browser Elements tab,
         // copy it over to the hook object so that we can sync the selection.
         chrome.devtools.inspectedWindow.eval(
-          // Don't reset selection if it didn't change in Elements tab.
-          '(window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 !== $0)' +
-            '  ? (window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = $0, true)' +
-            '  : false',
-          (didChangeSelection, error) => {
+          '(window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = $0, undefined)',
+          (_, error) => {
             if (error) {
               console.error(error);
-            } else if (didChangeSelection) {
+            } else {
               bridge.send('syncSelectionFromNativeElementsPanel');
             }
           }
         );
       }
 
-      let hasReactSelectionChanged = false;
-
-      function maybeSetBrowserSelectionFromReact() {
-        // Don't change the browser element selection when navigating away
-        // from the Components tab if the user didn't change the React selection.
-        if (!hasReactSelectionChanged) {
+      // When the user selects another item in the native Elements tab,
+      // select the corresponding React component.
+      let isListeningToNativeSelectionChange = false;
+      function ensureListeningToNativeSelectionChange() {
+        if (isListeningToNativeSelectionChange) {
           return;
         }
-        hasReactSelectionChanged = false;
-        chrome.devtools.inspectedWindow.eval(
-          '(window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 != null)' +
-            '  ? (inspect(window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0), true)' +
-            '  : false',
-          (_, error) => {
-            if (error) {
-              console.error(error);
-            }
-          }
-        );
+        isListeningToNativeSelectionChange = true;
+        setReactSelectionFromBrowser();
+        chrome.devtools.panels.elements.onSelectionChanged.addListener(() => {
+          setReactSelectionFromBrowser();
+        });
       }
 
       let currentPanel = null;
 
       chrome.devtools.panels.create('⚛ Components', '', 'panel.html', panel => {
         panel.onShown.addListener(panel => {
-          maybeSetReactSelectionFromBrowser();
-
           if (currentPanel === panel) {
             return;
           }
@@ -225,9 +207,14 @@ function createPanelIfReactLoaded() {
             render('components');
             panel.injectStyles(cloneStyleTags);
           }
+
+          // Don't start listening to native selection change
+          // until *after* the panel is visible. Otherwise, we'll
+          // set the selected element too early and won't scroll
+          // to it the first time we open Components panel.
+          ensureListeningToNativeSelectionChange();
         });
         panel.onHidden.addListener(() => {
-          maybeSetBrowserSelectionFromReact();
           // TODO: Stop highlighting and stuff.
         });
       });
