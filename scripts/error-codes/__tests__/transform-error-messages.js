@@ -8,11 +8,11 @@
 'use strict';
 
 let babel = require('babel-core');
-let devExpressionWithCodes = require('../minify-error-messages');
+let devExpressionWithCodes = require('../transform-error-messages');
 
-function transform(input) {
+function transform(input, options = {}) {
   return babel.transform(input, {
-    plugins: [devExpressionWithCodes],
+    plugins: [[devExpressionWithCodes, options]],
   }).code;
 }
 
@@ -80,6 +80,18 @@ invariant(condition, 'This is not a real error message.');
 import invariant from 'shared/invariant';
 invariant(condition, 'What\\'s up?');
 `)
+    ).toMatchSnapshot();
+  });
+
+  it('should support noMinify option', () => {
+    expect(
+      transform(
+        `
+import invariant from 'shared/invariant';
+invariant(condition, 'Do not override existing functions.');
+`,
+        {noMinify: true}
+      )
     ).toMatchSnapshot();
   });
 });
