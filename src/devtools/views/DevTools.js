@@ -14,6 +14,7 @@ import ReactLogo from './ReactLogo';
 
 import styles from './DevTools.css';
 
+import '@reach/menu-button/styles.css';
 import './root.css';
 
 import type { Bridge } from '../../types';

@@ -45,6 +45,7 @@
     "@babel/preset-env": "^7.1.6",
     "@babel/preset-flow": "^7.0.0",
     "@babel/preset-react": "^7.0.0",
+    "@reach/menu-button": "^0.1.9",
     "adm-zip": "^0.4.7",
     "babel-core": "^7.0.0-bridge",
     "babel-eslint": "^9.0.0",
