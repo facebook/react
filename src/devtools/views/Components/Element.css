@@ -1,5 +1,6 @@
 .Element,
-.SelectedElement {
+.SelectedElement,
+.InactiveElement {
   border-radius: 0.25em;
   white-space: nowrap;
   line-height: var(--line-height-data);
@@ -10,6 +11,9 @@
 }
 .Element:hover {
   background-color: var(--color-hover-background);
+}
+.InactiveElement {
+  background-color: var(--color-inactive-background);
 }
 
 .SelectedElement {
