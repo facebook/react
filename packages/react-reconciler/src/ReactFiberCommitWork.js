@@ -1275,13 +1275,13 @@ function commitSuspenseComponent(finishedWork: Fiber) {
   } else {
     newDidTimeout = true;
     primaryChildParent = finishedWork.child;
-    if (newState.timedOutAt === NoWork) {
+    if (newState.fallbackExpirationTime === NoWork) {
       // If the children had not already timed out, record the time.
       // This is used to compute the elapsed time during subsequent
       // attempts to render the children.
       // We model this as a normal pri expiration time since that's
       // how we infer start time for updates.
-      newState.timedOutAt = computeAsyncExpirationNoBucket(
+      newState.fallbackExpirationTime = computeAsyncExpirationNoBucket(
         requestCurrentTime(),
       );
     }

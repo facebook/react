@@ -1413,7 +1413,8 @@ function updateSuspenseComponent(
     // Something in this boundary's subtree already suspended. Switch to
     // rendering the fallback children.
     nextState = {
-      timedOutAt: nextState !== null ? nextState.timedOutAt : NoWork,
+      fallbackExpirationTime:
+        nextState !== null ? nextState.fallbackExpirationTime : NoWork,
     };
     nextDidTimeout = true;
     workInProgress.effectTag &= ~DidCapture;
