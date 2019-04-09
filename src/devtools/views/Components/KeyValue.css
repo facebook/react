@@ -26,3 +26,13 @@
   color: var(--color-dimmer);
   font-style: italic;
 }
+
+.Opener {
+  padding: 0.125rem;
+  margin-left: -1rem;
+}
+
+.Opener svg {
+  width: 0.75rem;
+  height: 0.75rem;
+}
