@@ -40,6 +40,7 @@ import {
   completeRoot,
   registerEventHandler,
 } from 'FabricUIManager';
+import UIManager from 'UIManager';
 
 // Counter for uniquely identifying views.
 // % 10 === 1 means it is a rootTag.
