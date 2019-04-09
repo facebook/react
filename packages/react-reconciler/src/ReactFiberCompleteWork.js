@@ -43,6 +43,7 @@ import {
   EventComponent,
   EventTarget,
 } from 'shared/ReactWorkTags';
+import {ConcurrentMode, NoContext} from './ReactTypeOfMode';
 import {
   Placement,
   Ref,
@@ -93,7 +94,7 @@ import {
   enableSuspenseServerRenderer,
   enableEventAPI,
 } from 'shared/ReactFeatureFlags';
-import {markRenderEventTime} from './ReactFiberScheduler';
+import {markRenderEventTime, renderDidSuspend} from './ReactFiberScheduler';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -711,6 +712,17 @@ function completeWork(
             }
             currentFallbackChild.effectTag = Deletion;
           }
+        }
+      }
+
+      if (nextDidTimeout && !prevDidTimeout) {
+        // If this subtreee is running in concurrent mode we can suspend,
+        // otherwise we won't suspend.
+        // TODO: This will still suspend a synchronous tree if anything
+        // in the concurrent tree already suspended during this render.
+        // This is a known bug.
+        if ((workInProgress.mode & ConcurrentMode) !== NoContext) {
+          renderDidSuspend();
         }
       }
 

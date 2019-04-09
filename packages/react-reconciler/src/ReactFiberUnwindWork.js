@@ -62,7 +62,6 @@ import {
 } from './ReactFiberContext';
 import {popProvider} from './ReactFiberNewContext';
 import {
-  renderDidSuspend,
   renderDidError,
   onUncaughtError,
   markLegacyErrorBoundaryAsFailed,
@@ -269,8 +268,6 @@ function throwException(
         // with the normal suspend path.
 
         attachPingListener(root, renderExpirationTime, thenable);
-
-        renderDidSuspend();
 
         workInProgress.effectTag |= ShouldCapture;
         workInProgress.expirationTime = renderExpirationTime;
