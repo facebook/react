@@ -18,7 +18,7 @@ import type {
 import invariant from 'shared/invariant';
 // Modules provided by RN:
 import TextInputState from 'TextInputState';
-import FabricUIManager from 'FabricUIManager';
+import * as FabricUIManager from 'FabricUIManager';
 import UIManager from 'UIManager';
 
 import {create} from './ReactNativeAttributePayload';
