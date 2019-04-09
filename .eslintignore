@@ -3,6 +3,7 @@ node_modules
 shells/browser/chrome/build
 shells/browser/firefox/build
 shells/dev/build
+vendor
 
 package-lock.json
 yarn.lock
