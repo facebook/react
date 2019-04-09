@@ -1,6 +1,7 @@
 // @flow
 
 import React, {
+  useState,
   useCallback,
   useContext,
   useEffect,
@@ -27,6 +28,7 @@ export type ItemData = {|
   numElements: number,
   getElementAtIndex: (index: number) => Element | null,
   lastScrolledIDRef: { current: number | null },
+  treeFocused: boolean,
 |};
 
 type Props = {||};
@@ -46,6 +48,9 @@ export default function Tree(props: Props) {
   // $FlowFixMe https://github.com/facebook/flow/issues/7341
   const listRef = useRef<FixedSizeList<ItemData> | null>(null);
   const treeRef = useRef<HTMLDivElement | null>(null);
+  const elementsRef = useRef<HTMLDivElement | null>(null);
+
+  const [treeFocused, setTreeFocused] = useState<boolean>(false);
 
   const { lineHeight } = useContext(SettingsContext);
 
@@ -112,6 +117,30 @@ export default function Tree(props: Props) {
     selectPreviousElementInTree,
   ]);
 
+  useEffect(() => {
+    if (elementsRef.current === null) {
+      return () => {};
+    }
+
+    const handleFocusIn = () => {
+      setTreeFocused(true);
+    };
+
+    const handleFocusOut = () => {
+      setTreeFocused(false);
+    };
+
+    const elementsElement = elementsRef.current;
+
+    elementsElement.addEventListener('focusin', handleFocusIn);
+    elementsElement.addEventListener('focusout', handleFocusOut);
+
+    return () => {
+      elementsElement.removeEventListener('focusin', handleFocusIn);
+      elementsElement.removeEventListener('focusout', handleFocusOut);
+    };
+  }, []);
+
   // Let react-window know to re-render any time the underlying tree data changes.
   // This includes the owner context, since it controls a filtered view of the tree.
   const itemData = useMemo<ItemData>(
@@ -120,8 +149,9 @@ export default function Tree(props: Props) {
       numElements,
       getElementAtIndex,
       lastScrolledIDRef,
+      treeFocused,
     }),
-    [baseDepth, numElements, getElementAtIndex, lastScrolledIDRef]
+    [baseDepth, numElements, getElementAtIndex, lastScrolledIDRef, treeFocused]
   );
 
   const handleMouseLeave = useCallback(() => {
@@ -134,7 +164,11 @@ export default function Tree(props: Props) {
         {ownerStack.length > 0 ? <OwnersStack /> : <SearchInput />}
         <InspectHostNodesToggle />
       </div>
-      <div className={styles.AutoSizerWrapper} onMouseLeave={handleMouseLeave}>
+      <div
+        className={styles.AutoSizerWrapper}
+        onMouseLeave={handleMouseLeave}
+        ref={elementsRef}
+      >
         <AutoSizer>
           {({ height, width }) => (
             // $FlowFixMe https://github.com/facebook/flow/issues/7341

@@ -2,10 +2,8 @@
 
 import React, {
   Fragment,
-  useState,
   useCallback,
   useContext,
-  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -37,13 +35,12 @@ export default function ElementView({ data, index, style }: Props) {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
-  const [windowFocused, setWindowFocused] = useState<boolean>(true);
-
   const element = getElementAtIndex(index);
 
   const id = element === null ? null : element.id;
   const isSelected = selectedElementID === id;
   const lastScrolledIDRef = data.lastScrolledIDRef;
+  const treeFocused = data.treeFocused;
 
   const handleDoubleClick = useCallback(() => {
     if (id !== null) {
@@ -52,30 +49,6 @@ export default function ElementView({ data, index, style }: Props) {
   }, [id, selectOwner]);
 
   const ref = useRef<HTMLSpanElement | null>(null);
-
-  useEffect(() => {
-    if (ref.current === null || !isSelected) {
-      return () => {};
-    }
-
-    const handleFocus = () => {
-      setWindowFocused(true);
-    };
-
-    const handleBlur = () => {
-      setWindowFocused(false);
-    };
-
-    const ownerDocument = ref.current.ownerDocument.defaultView;
-
-    ownerDocument.addEventListener('focus', handleFocus);
-    ownerDocument.addEventListener('blur', handleBlur);
-
-    return () => {
-      ownerDocument.removeEventListener('focus', handleFocus);
-      ownerDocument.removeEventListener('blur', handleBlur);
-    };
-  }, [isSelected]);
 
   // The tree above has its own autoscrolling, but it only works for rows.
   // However, even when the row gets into the viewport, the component name
@@ -147,7 +120,7 @@ export default function ElementView({ data, index, style }: Props) {
   return (
     <div
       className={
-        isSelected && windowFocused
+        isSelected && treeFocused
           ? styles.SelectedElement
           : isSelected
           ? styles.InactiveElement
