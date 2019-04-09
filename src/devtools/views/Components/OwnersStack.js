@@ -1,18 +1,17 @@
 // @flow
 import React, {
-  Fragment,
   useCallback,
   useContext,
   useLayoutEffect,
   useRef,
   useState,
 } from 'react';
+import { Menu, MenuList, MenuButton, MenuItem } from '@reach/menu-button';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
-import Toggle from '../Toggle';
 import { TreeContext } from './TreeContext';
 import { StoreContext } from '../context';
-import { useIsOverflowing, useModalDismissSignal } from '../hooks';
+import { useIsOverflowing } from '../hooks';
 
 import type { Element } from './types';
 
@@ -92,53 +91,23 @@ function ElementsDropdown({
   const store = useContext(StoreContext);
   const { selectOwner } = useContext(TreeContext);
 
-  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
-
-  const handleDropdownButtonClick = useCallback(() => {
-    setIsDropdownVisible(!isDropdownVisible);
-  }, [isDropdownVisible, setIsDropdownVisible]);
-
-  const handleElementClick = useCallback(
-    (id: number) => {
-      selectOwner(id);
-      setIsDropdownVisible(false);
-    },
-    [selectOwner, setIsDropdownVisible]
-  );
-
-  const modalRef = useRef<HTMLDivElement | null>(null);
-  const dismissModal = useCallback(() => setIsDropdownVisible(false));
-
-  useModalDismissSignal(modalRef, dismissModal);
-
   return (
-    <Fragment>
-      <Toggle
-        className={styles.Toggle}
-        isChecked={isDropdownVisible}
-        onChange={handleDropdownButtonClick}
-        title="Open elements dropdown"
-      >
+    <Menu>
+      <MenuButton className={styles.MenuButton} title="Open elements dropdown">
         <ButtonIcon type="more" />
-      </Toggle>
-      {isDropdownVisible && (
-        <div className={styles.Modal} ref={modalRef}>
-          {ownerStack.map((id, index) => (
-            <button
-              key={id}
-              className={
-                ownerStackIndex === index
-                  ? styles.SelectedComponent
-                  : styles.Component
-              }
-              onClick={() => handleElementClick(id)}
-            >
-              {((store.getElementByID(id): any): Element).displayName}
-            </button>
-          ))}
-        </div>
-      )}
-    </Fragment>
+      </MenuButton>
+      <MenuList className={styles.Modal}>
+        {ownerStack.map((id, index) => (
+          <MenuItem
+            key={id}
+            className={styles.Component}
+            onSelect={() => selectOwner(id)}
+          >
+            {((store.getElementByID(id): any): Element).displayName}
+          </MenuItem>
+        ))}
+      </MenuList>
+    </Menu>
   );
 }
 

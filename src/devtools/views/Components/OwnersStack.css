@@ -6,6 +6,7 @@
 }
 
 .Component,
+.Component[data-reach-menu-item],
 .SelectedComponent {
   padding: 0.25rem;
   margin-right: 0.5rem;
@@ -17,19 +18,27 @@
   background: none;
   cursor: pointer;
   text-align: left;
+  user-select: none;
 }
-.Component:hover {
+
+.Component:hover,
+.Component[data-reach-menu-item]:hover {
   background-color: var(--color-hover-background);
 }
-.Component:focus {
+.Component:focus,
+.Component[data-reach-menu-item]:focus {
   outline: none;
   background-color: var(--color-hover-background);
 }
 
-.SelectedComponent {
+.Component[data-reach-menu-item][data-selected],
+.Component[data-reach-menu-item][data-selected]:hover,
+.SelectedComponent,
+.SelectedComponent:hover {
   background-color: var(--color-selected-background);
   color: var(--color-selected-foreground);
 }
+.Component[data-reach-menu-item][data-selected]:focus,
 .SelectedComponent:focus {
   outline: none;
 }
@@ -37,10 +46,6 @@
 .Bar {
   display: flex;
   flex: 1 0 auto;
-}
-
-.Toggle {
-  margin-right: 0.5rem;
 }
 
 .VRule {
@@ -51,18 +56,46 @@
   margin: 0 0.5rem;
 }
 
-.Modal {
-  position: absolute;
-  top: calc(100% + 0.25rem);
-  left: 2.5rem;
-  z-index: 1;
+.MenuButton {
+  border-radius: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem;
+  cursor: pointer;
+  flex: 0 0 auto;
+  border: none;
+  background: var(--color-button-background);
+  color: var(--color-button);
+  margin-right: 0.5rem;
+}
+.MenuButton:hover {
+  background: var(--color-button-background-hover);
+  color: var(--color-button-hover);
+}
+.MenuButton[aria-expanded='true'],
+.MenuButton[aria-expanded='true']:active {
+  background: var(--color-button-background-focus);
+  color: var(--color-button-focus);
+  outline: none;
+}
+.MenuButton:focus-within {
+  box-shadow: 0 0 0 2px var(--color-button-background-focus) inset;
+  outline: none;
+}
+
+.Modal[data-reach-menu-list] {
   display: inline-flex;
   flex-direction: column;
   background-color: var(--color-background);
+  color: var(--color-text-color);
   padding: 0.5rem;
   padding-right: 0;
   border: 1px solid var(--color-border);
   border-radius: 0.25rem;
   max-height: 10rem;
   overflow: auto;
+
+  /* Reach UI tries to set its own :( */
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-normal);
 }

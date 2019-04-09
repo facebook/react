@@ -73,7 +73,7 @@ export default function Tree(props: Props) {
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event: any).target.tagName === 'INPUT') {
+      if ((event: any).target.tagName === 'INPUT' || event.defaultPrevented) {
         return;
       }
 
