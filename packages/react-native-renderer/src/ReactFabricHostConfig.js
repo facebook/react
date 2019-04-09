@@ -14,7 +14,7 @@ import type {
   NativeMethodsMixinType,
   ReactNativeBaseComponentViewConfig,
 } from './ReactNativeTypes';
-import type {ReactEventResponder} from 'shared/ReactTypes';
+import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 
 import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';
 import {create, diff} from './ReactNativeAttributePayload';
@@ -434,17 +434,20 @@ export function replaceContainerChildren(
   newChildren: ChildSet,
 ): void {}
 
-export function handleEventComponent(
-  eventResponder: ReactEventResponder,
-  rootContainerInstance: Container,
+export function mountEventComponent(
+  eventComponentInstance: ReactEventComponentInstance,
+) {
+  throw new Error('Not yet implemented.');
+}
+
+export function updateEventComponent(
+  eventComponentInstance: ReactEventComponentInstance,
 ) {
   throw new Error('Not yet implemented.');
 }
 
 export function unmountEventComponent(
-  eventResponder: ReactEventResponder,
-  rootContainerInstance: Container,
-  internalInstanceHandle: Object,
+  eventComponentInstance: ReactEventComponentInstance,
 ): void {
   throw new Error('Not yet implemented.');
 }

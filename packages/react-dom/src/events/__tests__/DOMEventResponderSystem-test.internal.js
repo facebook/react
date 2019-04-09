@@ -18,12 +18,14 @@ function createReactEventComponent(
   createInitialState,
   onEvent,
   onUnmount,
+  onOwnershipChange,
 ) {
   const testEventResponder = {
     targetEventTypes,
     createInitialState,
     onEvent,
     onUnmount,
+    onOwnershipChange,
   };
 
   return {
@@ -377,5 +379,39 @@ describe('DOMEventResponderSystem', () => {
     ReactDOM.render(<Test />, container);
     ReactDOM.render(null, container);
     expect(counter).toEqual(5);
+  });
+
+  it('the event responder onOwnershipChange() function should fire', () => {
+    let onOwnershipChangeFired = 0;
+    let ownershipGained = false;
+    const buttonRef = React.createRef();
+
+    const EventComponent = createReactEventComponent(
+      ['click'],
+      undefined,
+      (event, context, props, state) => {
+        ownershipGained = context.requestOwnership();
+      },
+      undefined,
+      () => {
+        onOwnershipChangeFired++;
+      },
+    );
+
+    const Test = () => (
+      <EventComponent>
+        <button ref={buttonRef} />
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+
+    // Clicking the button should trigger the event responder onEvent()
+    let buttonElement = buttonRef.current;
+    dispatchClickEvent(buttonElement);
+    jest.runAllTimers();
+
+    expect(ownershipGained).toEqual(true);
+    expect(onOwnershipChangeFired).toEqual(1);
   });
 });

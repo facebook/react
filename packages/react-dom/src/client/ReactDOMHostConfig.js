@@ -44,8 +44,11 @@ import {
 import dangerousStyleValue from '../shared/dangerousStyleValue';
 
 import type {DOMContainer} from './ReactDOM';
-import type {ReactEventResponder} from 'shared/ReactTypes';
-import {unmountEventResponder} from '../events/DOMEventResponderSystem';
+import type {ReactEventComponentInstance} from 'shared/ReactTypes';
+import {
+  mountEventResponder,
+  unmountEventResponder,
+} from '../events/DOMEventResponderSystem';
 import {REACT_EVENT_TARGET_TOUCH_HIT} from 'shared/ReactSymbols';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 
@@ -888,27 +891,34 @@ export function didNotFindHydratableSuspenseInstance(
   }
 }
 
-export function handleEventComponent(
-  eventResponder: ReactEventResponder,
-  rootContainerInstance: Container,
+export function mountEventComponent(
+  eventComponentInstance: ReactEventComponentInstance,
 ): void {
   if (enableEventAPI) {
+    mountEventResponder(eventComponentInstance);
+    updateEventComponent(eventComponentInstance);
+  }
+}
+
+export function updateEventComponent(
+  eventComponentInstance: ReactEventComponentInstance,
+): void {
+  if (enableEventAPI) {
+    const rootContainerInstance = ((eventComponentInstance.rootInstance: any): Container);
     const rootElement = rootContainerInstance.ownerDocument;
     listenToEventResponderEventTypes(
-      eventResponder.targetEventTypes,
+      eventComponentInstance.responder.targetEventTypes,
       rootElement,
     );
   }
 }
 
 export function unmountEventComponent(
-  eventResponder: ReactEventResponder,
-  rootContainerInstance: Container,
-  internalInstanceHandle: Object,
+  eventComponentInstance: ReactEventComponentInstance,
 ): void {
   if (enableEventAPI) {
     // TODO stop listening to targetEventTypes
-    unmountEventResponder(eventResponder, internalInstanceHandle);
+    unmountEventResponder(eventComponentInstance);
   }
 }
 

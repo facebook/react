@@ -89,20 +89,32 @@ export type ReactEventResponderEventType =
 
 export type ReactEventResponder = {
   targetEventTypes: Array<ReactEventResponderEventType>,
-  createInitialState?: (props: Object) => Object,
+  createInitialState?: (props: null | Object) => Object,
   onEvent: (
     event: ResponderEvent,
     context: ResponderContext,
-    props: Object,
-    state: Object,
+    props: null | Object,
+    state: null | Object,
   ) => void,
-  onUnmount: (context: ResponderContext, props: Object, state: Object) => void,
+  onUnmount: (
+    context: ResponderContext,
+    props: null | Object,
+    state: null | Object,
+  ) => void,
   onOwnershipChange: (
     context: ResponderContext,
-    props: Object,
-    state: Object,
+    props: null | Object,
+    state: null | Object,
   ) => void,
 };
+
+export type ReactEventComponentInstance = {|
+  context: null | Object,
+  props: null | Object,
+  responder: ReactEventResponder,
+  rootInstance: mixed,
+  state: null | Object,
+|};
 
 export type ReactEventComponent = {|
   $$typeof: Symbol | number,

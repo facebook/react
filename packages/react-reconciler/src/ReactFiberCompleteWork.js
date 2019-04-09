@@ -17,6 +17,7 @@ import type {
   Container,
   ChildSet,
 } from './ReactFiberHostConfig';
+import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 
 import {
   IndeterminateComponent,
@@ -65,7 +66,8 @@ import {
   createContainerChildSet,
   appendChildToContainerChildSet,
   finalizeContainerChildren,
-  handleEventComponent,
+  mountEventComponent,
+  updateEventComponent,
   handleEventTarget,
 } from './ReactFiberHostConfig';
 import {
@@ -774,19 +776,29 @@ function completeWork(
         popHostContext(workInProgress);
         const rootContainerInstance = getRootHostContainer();
         const responder = workInProgress.type.responder;
-        const stateNode = workInProgress.stateNode;
-        // Update the props on the event component state node
-        stateNode.props = newProps;
-        // Update the root container, so we can properly unmount events at some point
-        stateNode.rootInstance = rootContainerInstance;
-        // Initialize event component state if createInitialState exists
-        if (
-          stateNode.state === null &&
-          responder.createInitialState !== undefined
-        ) {
-          stateNode.state = responder.createInitialState(newProps);
+        let eventComponentInstance: ReactEventComponentInstance | null =
+          workInProgress.stateNode;
+
+        if (eventComponentInstance === null) {
+          let responderState = null;
+          if (responder.createInitialState !== undefined) {
+            responderState = responder.createInitialState(newProps);
+          }
+          eventComponentInstance = workInProgress.stateNode = {
+            context: null,
+            props: newProps,
+            responder,
+            rootInstance: rootContainerInstance,
+            state: responderState,
+          };
+          mountEventComponent(eventComponentInstance);
+        } else {
+          // Update the props on the event component state node
+          eventComponentInstance.props = newProps;
+          // Update the root container, so we can properly unmount events at some point
+          eventComponentInstance.rootInstance = rootContainerInstance;
+          updateEventComponent(eventComponentInstance);
         }
-        handleEventComponent(responder, rootContainerInstance);
       }
       break;
     }
