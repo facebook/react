@@ -58,6 +58,7 @@ export default class Overlay {
         '"SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace',
       fontWeight: 'bold',
       padding: '3px 5px',
+      pointerEvents: 'none',
       position: 'fixed',
       fontSize: '12px',
     });
