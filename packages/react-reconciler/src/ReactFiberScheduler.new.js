@@ -228,12 +228,13 @@ let interruptedBy: Fiber | null = null;
 // In other words, because expiration times determine how updates are batched,
 // we want all updates of like priority that occur within the same event to
 // receive the same expiration time. Otherwise we get tearing.
+let initialTimeMs: number = now();
 let currentEventTime: ExpirationTime = NoWork;
 
 export function requestCurrentTime() {
   if (workPhase === RenderPhase || workPhase === CommitPhase) {
     // We're inside React, so it's fine to read the actual time.
-    return msToExpirationTime(now());
+    return msToExpirationTime(now() - initialTimeMs);
   }
   // We're not inside React, so we may be in the middle of a browser event.
   if (currentEventTime !== NoWork) {
@@ -241,7 +242,7 @@ export function requestCurrentTime() {
     return currentEventTime;
   }
   // This is the first update since React yielded. Compute a new start time.
-  currentEventTime = msToExpirationTime(now());
+  currentEventTime = msToExpirationTime(now() - initialTimeMs);
   return currentEventTime;
 }
 

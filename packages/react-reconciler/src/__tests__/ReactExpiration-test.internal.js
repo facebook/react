@@ -245,4 +245,31 @@ describe('ReactExpiration', () => {
       '1 [D] [render]',
     ]);
   });
+
+  it('should measure expiration times relative to module initialization', () => {
+    // Tests an implementation detail where expiration times are computed using
+    // bitwise operations.
+
+    jest.resetModules();
+    Scheduler = require('scheduler');
+    // Before importing the renderer, advance the current time by a number
+    // larger than the maximum allowed for bitwise operations.
+    const maxSigned31BitInt = 1073741823;
+    Scheduler.advanceTime(maxSigned31BitInt * 100);
+
+    // Now import the renderer. On module initialization, it will read the
+    // current time.
+    ReactNoop = require('react-noop-renderer');
+
+    ReactNoop.render('Hi');
+
+    // The update should not have expired yet.
+    expect(Scheduler).toFlushExpired([]);
+    expect(ReactNoop).toMatchRenderedOutput(null);
+
+    // Advance the time some more to expire the update.
+    Scheduler.advanceTime(10000);
+    expect(Scheduler).toFlushExpired([]);
+    expect(ReactNoop).toMatchRenderedOutput('Hi');
+  });
 });
