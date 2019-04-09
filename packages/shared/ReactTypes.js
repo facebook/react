@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {ResponderEvent, ResponderContext} from 'events/EventTypes';
+
 export type ReactNode =
   | React$Element<any>
   | ReactPortal
@@ -87,9 +89,32 @@ export type ReactEventResponderEventType =
 
 export type ReactEventResponder = {
   targetEventTypes: Array<ReactEventResponderEventType>,
-  createInitialState?: (props: Object) => Object,
-  handleEvent: (context: Object, props: Object, state: Object) => void,
+  createInitialState?: (props: null | Object) => Object,
+  onEvent: (
+    event: ResponderEvent,
+    context: ResponderContext,
+    props: null | Object,
+    state: null | Object,
+  ) => void,
+  onUnmount: (
+    context: ResponderContext,
+    props: null | Object,
+    state: null | Object,
+  ) => void,
+  onOwnershipChange: (
+    context: ResponderContext,
+    props: null | Object,
+    state: null | Object,
+  ) => void,
 };
+
+export type ReactEventComponentInstance = {|
+  context: null | Object,
+  props: null | Object,
+  responder: ReactEventResponder,
+  rootInstance: mixed,
+  state: null | Object,
+|};
 
 export type ReactEventComponent = {|
   $$typeof: Symbol | number,

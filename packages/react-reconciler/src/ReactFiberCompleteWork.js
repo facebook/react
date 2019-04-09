@@ -17,6 +17,7 @@ import type {
   Container,
   ChildSet,
 } from './ReactFiberHostConfig';
+import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 
 import {
   IndeterminateComponent,
@@ -65,7 +66,8 @@ import {
   createContainerChildSet,
   appendChildToContainerChildSet,
   finalizeContainerChildren,
-  handleEventComponent,
+  mountEventComponent,
+  updateEventComponent,
   handleEventTarget,
 } from './ReactFiberHostConfig';
 import {
@@ -774,9 +776,29 @@ function completeWork(
         popHostContext(workInProgress);
         const rootContainerInstance = getRootHostContainer();
         const responder = workInProgress.type.responder;
-        // Update the props on the event component state node
-        workInProgress.stateNode.props = newProps;
-        handleEventComponent(responder, rootContainerInstance, workInProgress);
+        let eventComponentInstance: ReactEventComponentInstance | null =
+          workInProgress.stateNode;
+
+        if (eventComponentInstance === null) {
+          let responderState = null;
+          if (responder.createInitialState !== undefined) {
+            responderState = responder.createInitialState(newProps);
+          }
+          eventComponentInstance = workInProgress.stateNode = {
+            context: null,
+            props: newProps,
+            responder,
+            rootInstance: rootContainerInstance,
+            state: responderState,
+          };
+          mountEventComponent(eventComponentInstance);
+        } else {
+          // Update the props on the event component state node
+          eventComponentInstance.props = newProps;
+          // Update the root container, so we can properly unmount events at some point
+          eventComponentInstance.rootInstance = rootContainerInstance;
+          updateEventComponent(eventComponentInstance);
+        }
       }
       break;
     }
@@ -784,18 +806,15 @@ function completeWork(
       if (enableEventAPI) {
         popHostContext(workInProgress);
         const type = workInProgress.type.type;
-        let node = workInProgress.return;
-        let parentHostInstance = null;
-        // Traverse up the fiber tree till we find a host component fiber
-        while (node !== null) {
-          if (node.tag === HostComponent) {
-            parentHostInstance = node.stateNode;
-            break;
-          }
-          node = node.return;
-        }
-        if (parentHostInstance !== null) {
-          handleEventTarget(type, newProps, parentHostInstance, workInProgress);
+        const rootContainerInstance = getRootHostContainer();
+        const shouldUpdate = handleEventTarget(
+          type,
+          newProps,
+          rootContainerInstance,
+          workInProgress,
+        );
+        if (shouldUpdate) {
+          markUpdate(workInProgress);
         }
       }
       break;

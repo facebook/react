@@ -104,8 +104,70 @@ describe('Event responder: Press', () => {
       expect(onPressStart).toHaveBeenCalledTimes(1);
     });
 
-    // TODO: complete delayPressStart tests
-    // describe('delayPressStart', () => {});
+    describe('delayPressStart', () => {
+      it('can be configured', () => {
+        const element = (
+          <Press delayPressStart={2000} onPressStart={onPressStart}>
+            <div ref={ref} />
+          </Press>
+        );
+        ReactDOM.render(element, container);
+
+        ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+        jest.advanceTimersByTime(1999);
+        expect(onPressStart).not.toBeCalled();
+        jest.advanceTimersByTime(1);
+        expect(onPressStart).toHaveBeenCalledTimes(1);
+      });
+
+      it('is cut short if the press is released during a delay', () => {
+        const element = (
+          <Press delayPressStart={2000} onPressStart={onPressStart}>
+            <div ref={ref} />
+          </Press>
+        );
+        ReactDOM.render(element, container);
+
+        ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+        jest.advanceTimersByTime(499);
+        expect(onPressStart).toHaveBeenCalledTimes(0);
+        ref.current.dispatchEvent(createPointerEvent('pointerup'));
+        expect(onPressStart).toHaveBeenCalledTimes(1);
+        jest.runAllTimers();
+        expect(onPressStart).toHaveBeenCalledTimes(1);
+      });
+
+      it('onPressStart is called synchronously if delay is 0ms', () => {
+        const element = (
+          <Press delayPressStart={0} onPressStart={onPressStart}>
+            <div ref={ref} />
+          </Press>
+        );
+        ReactDOM.render(element, container);
+
+        ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+        expect(onPressStart).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('delayPressEnd', () => {
+      it('onPressStart called each time a press is initiated', () => {
+        // This test makes sure that onPressStart is called each time a press
+        // starts, even if a delayPressEnd is delaying the deactivation of the
+        // previous press.
+        const element = (
+          <Press delayPressEnd={2000} onPressStart={onPressStart}>
+            <div ref={ref} />
+          </Press>
+        );
+        ReactDOM.render(element, container);
+
+        ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+        ref.current.dispatchEvent(createPointerEvent('pointerup'));
+        ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+        expect(onPressStart).toHaveBeenCalledTimes(2);
+      });
+    });
   });
 
   describe('onPressEnd', () => {
@@ -165,8 +227,55 @@ describe('Event responder: Press', () => {
       expect(onPressEnd).toHaveBeenCalledTimes(1);
     });
 
-    // TODO: complete delayPressStart tests
-    // describe('delayPressStart', () => {});
+    describe('delayPressEnd', () => {
+      it('can be configured', () => {
+        const element = (
+          <Press delayPressEnd={2000} onPressEnd={onPressEnd}>
+            <div ref={ref} />
+          </Press>
+        );
+        ReactDOM.render(element, container);
+
+        ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+        ref.current.dispatchEvent(createPointerEvent('pointerup'));
+        jest.advanceTimersByTime(1999);
+        expect(onPressEnd).not.toBeCalled();
+        jest.advanceTimersByTime(1);
+        expect(onPressEnd).toHaveBeenCalledTimes(1);
+      });
+
+      it('is reset if "pointerdown" is dispatched during a delay', () => {
+        const element = (
+          <Press delayPressEnd={500} onPressEnd={onPressEnd}>
+            <div ref={ref} />
+          </Press>
+        );
+        ReactDOM.render(element, container);
+
+        ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+        ref.current.dispatchEvent(createPointerEvent('pointerup'));
+        jest.advanceTimersByTime(499);
+        ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+        jest.advanceTimersByTime(1);
+        expect(onPressEnd).not.toBeCalled();
+        ref.current.dispatchEvent(createPointerEvent('pointerup'));
+        jest.runAllTimers();
+        expect(onPressEnd).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    it('onPressEnd is called synchronously if delay is 0ms', () => {
+      const element = (
+        <Press delayPressEnd={0} onPressEnd={onPressEnd}>
+          <div ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
+      expect(onPressEnd).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('onPressChange', () => {
@@ -197,6 +306,55 @@ describe('Event responder: Press', () => {
       expect(onPressChange).toHaveBeenCalledTimes(1);
       expect(onPressChange).toHaveBeenCalledWith(true);
       ref.current.dispatchEvent(createKeyboardEvent('keyup', {key: 'Enter'}));
+      expect(onPressChange).toHaveBeenCalledTimes(2);
+      expect(onPressChange).toHaveBeenCalledWith(false);
+    });
+
+    it('is called after delayed onPressStart', () => {
+      const element = (
+        <Press delayPressStart={500} onPressChange={onPressChange}>
+          <div ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      jest.advanceTimersByTime(499);
+      expect(onPressChange).not.toBeCalled();
+      jest.advanceTimersByTime(1);
+      expect(onPressChange).toHaveBeenCalledTimes(1);
+      expect(onPressChange).toHaveBeenCalledWith(true);
+    });
+
+    it('is called after delayPressStart is cut short', () => {
+      const element = (
+        <Press delayPressStart={500} onPressChange={onPressChange}>
+          <div ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      jest.advanceTimersByTime(100);
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
+      expect(onPressChange).toHaveBeenCalledTimes(2);
+    });
+
+    it('is called after delayed onPressEnd', () => {
+      const element = (
+        <Press delayPressEnd={500} onPressChange={onPressChange}>
+          <div ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      expect(onPressChange).toHaveBeenCalledTimes(1);
+      expect(onPressChange).toHaveBeenCalledWith(true);
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
+      jest.advanceTimersByTime(499);
+      expect(onPressChange).toHaveBeenCalledTimes(1);
+      jest.advanceTimersByTime(1);
       expect(onPressChange).toHaveBeenCalledTimes(2);
       expect(onPressChange).toHaveBeenCalledWith(false);
     });
@@ -246,13 +404,26 @@ describe('Event responder: Press', () => {
       expect(onPress).toHaveBeenCalledTimes(1);
     });
 
+    it('is always called immediately after press is released', () => {
+      const element = (
+        <Press delayPressEnd={500} onPress={onPress}>
+          <div ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
+      expect(onPress).toHaveBeenCalledTimes(1);
+    });
+
     // No PointerEvent fallbacks
     // TODO: jsdom missing APIs
-    //it('is called after "touchend" event', () => {
-    //ref.current.dispatchEvent(createPointerEvent('touchstart'));
-    //ref.current.dispatchEvent(createPointerEvent('touchend'));
-    //expect(onPress).toHaveBeenCalledTimes(1);
-    //});
+    // it('is called after "touchend" event', () => {
+    // ref.current.dispatchEvent(createPointerEvent('touchstart'));
+    // ref.current.dispatchEvent(createPointerEvent('touchend'));
+    // expect(onPress).toHaveBeenCalledTimes(1);
+    // });
   });
 
   describe('onLongPress', () => {
@@ -332,7 +503,6 @@ describe('Event responder: Press', () => {
         expect(onLongPress).toHaveBeenCalledTimes(1);
       });
 
-      /*
       it('compounds with "delayPressStart"', () => {
         const delayPressStart = 100;
         const element = (
@@ -343,12 +513,13 @@ describe('Event responder: Press', () => {
         ReactDOM.render(element, container);
 
         ref.current.dispatchEvent(createPointerEvent('pointerdown'));
-        jest.advanceTimersByTime(delayPressStart + DEFAULT_LONG_PRESS_DELAY - 1);
+        jest.advanceTimersByTime(
+          delayPressStart + DEFAULT_LONG_PRESS_DELAY - 1,
+        );
         expect(onLongPress).not.toBeCalled();
         jest.advanceTimersByTime(1);
         expect(onLongPress).toHaveBeenCalledTimes(1);
       });
-      */
     });
   });
 
@@ -368,6 +539,28 @@ describe('Event responder: Press', () => {
       expect(onLongPressChange).toHaveBeenCalledTimes(1);
       expect(onLongPressChange).toHaveBeenCalledWith(true);
       ref.current.dispatchEvent(createPointerEvent('pointerup'));
+      expect(onLongPressChange).toHaveBeenCalledTimes(2);
+      expect(onLongPressChange).toHaveBeenCalledWith(false);
+    });
+
+    it('is called after delayed onPressEnd', () => {
+      const onLongPressChange = jest.fn();
+      const ref = React.createRef();
+      const element = (
+        <Press delayPressEnd={500} onLongPressChange={onLongPressChange}>
+          <div ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      jest.advanceTimersByTime(DEFAULT_LONG_PRESS_DELAY);
+      expect(onLongPressChange).toHaveBeenCalledTimes(1);
+      expect(onLongPressChange).toHaveBeenCalledWith(true);
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
+      jest.advanceTimersByTime(499);
+      expect(onLongPressChange).toHaveBeenCalledTimes(1);
+      jest.advanceTimersByTime(1);
       expect(onLongPressChange).toHaveBeenCalledTimes(2);
       expect(onLongPressChange).toHaveBeenCalledWith(false);
     });
@@ -429,6 +622,69 @@ describe('Event responder: Press', () => {
   //it('"onPress*" events are called when press is released before measure completes', () => {});
   //});
   //});
+
+  describe('delayed and multiple events', () => {
+    it('dispatches in the correct order', () => {
+      let events;
+      const ref = React.createRef();
+      const createEventHandler = msg => () => {
+        events.push(msg);
+      };
+
+      const element = (
+        <Press
+          delayPressStart={250}
+          delayPressEnd={250}
+          onLongPress={createEventHandler('onLongPress')}
+          onLongPressChange={createEventHandler('onLongPressChange')}
+          onPress={createEventHandler('onPress')}
+          onPressChange={createEventHandler('onPressChange')}
+          onPressStart={createEventHandler('onPressStart')}
+          onPressEnd={createEventHandler('onPressEnd')}>
+          <div ref={ref} />
+        </Press>
+      );
+
+      ReactDOM.render(element, container);
+
+      // 1
+      events = [];
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
+      jest.runAllTimers();
+
+      expect(events).toEqual([
+        'onPressStart',
+        'onPressChange',
+        'onPress',
+        'onPressStart',
+        'onPress',
+        'onPressEnd',
+        'onPressChange',
+      ]);
+
+      // 2
+      events = [];
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      jest.advanceTimersByTime(250);
+      jest.advanceTimersByTime(500);
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
+      jest.runAllTimers();
+
+      expect(events).toEqual([
+        'onPressStart',
+        'onPressChange',
+        'onLongPress',
+        'onLongPressChange',
+        'onPress',
+        'onPressEnd',
+        'onPressChange',
+        'onLongPressChange',
+      ]);
+    });
+  });
 
   describe('nested responders', () => {
     it('dispatch events in the correct order', () => {

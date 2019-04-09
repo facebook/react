@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {EventResponderContext} from 'events/EventTypes';
+import type {ResponderEvent, ResponderContext} from 'events/EventTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
 type FocusProps = {
@@ -47,55 +47,45 @@ function createFocusEvent(
 }
 
 function dispatchFocusInEvents(
-  context: EventResponderContext,
+  event: ResponderEvent,
+  context: ResponderContext,
   props: FocusProps,
 ) {
-  const {event, eventTarget} = context;
-  if (context.isTargetWithinEventComponent((event: any).relatedTarget)) {
+  const {nativeEvent, target} = event;
+  if (context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)) {
     return;
   }
   if (props.onFocus) {
-    const syntheticEvent = createFocusEvent(
-      'focus',
-      eventTarget,
-      props.onFocus,
-    );
+    const syntheticEvent = createFocusEvent('focus', target, props.onFocus);
     context.dispatchEvent(syntheticEvent, {discrete: true});
   }
   if (props.onFocusChange) {
     const listener = () => {
       props.onFocusChange(true);
     };
-    const syntheticEvent = createFocusEvent(
-      'focuschange',
-      eventTarget,
-      listener,
-    );
+    const syntheticEvent = createFocusEvent('focuschange', target, listener);
     context.dispatchEvent(syntheticEvent, {discrete: true});
   }
 }
 
 function dispatchFocusOutEvents(
-  context: EventResponderContext,
+  event: ResponderEvent,
+  context: ResponderContext,
   props: FocusProps,
 ) {
-  const {event, eventTarget} = context;
-  if (context.isTargetWithinEventComponent((event: any).relatedTarget)) {
+  const {nativeEvent, target} = event;
+  if (context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)) {
     return;
   }
   if (props.onBlur) {
-    const syntheticEvent = createFocusEvent('blur', eventTarget, props.onBlur);
+    const syntheticEvent = createFocusEvent('blur', target, props.onBlur);
     context.dispatchEvent(syntheticEvent, {discrete: true});
   }
   if (props.onFocusChange) {
     const listener = () => {
       props.onFocusChange(false);
     };
-    const syntheticEvent = createFocusEvent(
-      'focuschange',
-      eventTarget,
-      listener,
-    );
+    const syntheticEvent = createFocusEvent('focuschange', target, listener);
     context.dispatchEvent(syntheticEvent, {discrete: true});
   }
 }
@@ -107,24 +97,25 @@ const FocusResponder = {
       isFocused: false,
     };
   },
-  handleEvent(
-    context: EventResponderContext,
+  onEvent(
+    event: ResponderEvent,
+    context: ResponderContext,
     props: Object,
     state: FocusState,
   ): void {
-    const {eventTarget, eventType} = context;
+    const {type} = event;
 
-    switch (eventType) {
+    switch (type) {
       case 'focus': {
-        if (!state.isFocused && !context.isTargetOwned(eventTarget)) {
-          dispatchFocusInEvents(context, props);
+        if (!state.isFocused && !context.hasOwnership()) {
+          dispatchFocusInEvents(event, context, props);
           state.isFocused = true;
         }
         break;
       }
       case 'blur': {
         if (state.isFocused) {
-          dispatchFocusOutEvents(context, props);
+          dispatchFocusOutEvents(event, context, props);
           state.isFocused = false;
         }
         break;

@@ -228,12 +228,13 @@ let interruptedBy: Fiber | null = null;
 // In other words, because expiration times determine how updates are batched,
 // we want all updates of like priority that occur within the same event to
 // receive the same expiration time. Otherwise we get tearing.
+let initialTimeMs: number = now();
 let currentEventTime: ExpirationTime = NoWork;
 
 export function requestCurrentTime() {
   if (workPhase === RenderPhase || workPhase === CommitPhase) {
     // We're inside React, so it's fine to read the actual time.
-    return msToExpirationTime(now());
+    return msToExpirationTime(now() - initialTimeMs);
   }
   // We're not inside React, so we may be in the middle of a browser event.
   if (currentEventTime !== NoWork) {
@@ -241,7 +242,7 @@ export function requestCurrentTime() {
     return currentEventTime;
   }
   // This is the first update since React yielded. Compute a new start time.
-  currentEventTime = msToExpirationTime(now());
+  currentEventTime = msToExpirationTime(now() - initialTimeMs);
   return currentEventTime;
 }
 
@@ -742,26 +743,38 @@ function renderRoot(
     }
 
     startWorkLoopTimer(workInProgress);
+
+    // TODO: Fork renderRoot into renderRootSync and renderRootAsync
+    if (isSync) {
+      if (expirationTime !== Sync) {
+        // An async update expired. There may be other expired updates on
+        // this root. We should render all the expired work in a
+        // single batch.
+        const currentTime = requestCurrentTime();
+        if (currentTime < expirationTime) {
+          // Restart at the current time.
+          workPhase = prevWorkPhase;
+          resetContextDependencies();
+          ReactCurrentDispatcher.current = prevDispatcher;
+          if (enableSchedulerTracing) {
+            __interactionsRef.current = ((prevInteractions: any): Set<
+              Interaction,
+            >);
+          }
+          return renderRoot.bind(null, root, currentTime);
+        }
+      }
+    } else {
+      // Since we know we're in a React event, we can clear the current
+      // event time. The next update will compute a new event time.
+      currentEventTime = NoWork;
+    }
+
     do {
       try {
         if (isSync) {
-          if (expirationTime !== Sync) {
-            // An async update expired. There may be other expired updates on
-            // this root. We should render all the expired work in a
-            // single batch.
-            const currentTime = requestCurrentTime();
-            if (currentTime < expirationTime) {
-              // Restart at the current time.
-              workPhase = prevWorkPhase;
-              ReactCurrentDispatcher.current = prevDispatcher;
-              return renderRoot.bind(null, root, currentTime);
-            }
-          }
           workLoopSync();
         } else {
-          // Since we know we're in a React event, we can clear the current
-          // event time. The next update will compute a new event time.
-          currentEventTime = NoWork;
           workLoop();
         }
         break;

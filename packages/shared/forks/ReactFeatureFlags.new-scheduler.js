@@ -26,5 +26,6 @@ export const enableStableConcurrentModeAPIs = false;
 export const warnAboutShorthandPropertyCollision = false;
 export const warnAboutDeprecatedSetNativeProps = false;
 export const enableEventAPI = false;
+export const enableJSXTransformAPI = false;
 
 export const enableNewScheduler = true;
