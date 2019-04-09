@@ -1,4 +1,6 @@
 .OwnerStack {
+  max-width: 100%;
+  overflow-x: auto;
   flex: 1;
   display: flex;
   align-items: center;
@@ -19,6 +21,9 @@
   cursor: pointer;
   text-align: left;
   user-select: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .Component:hover,
@@ -45,7 +50,8 @@
 
 .Bar {
   display: flex;
-  flex: 1 0 auto;
+  flex: 0 1 auto;
+  overflow-x: auto;
 }
 
 .VRule {
