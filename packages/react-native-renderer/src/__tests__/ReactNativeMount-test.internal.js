@@ -282,20 +282,11 @@ describe('ReactNative', () => {
       );
 
       expect(UIManager.measure).not.toBeCalled();
-
       const successCallback = jest.fn();
       viewRef.measure(successCallback);
-
       expect(UIManager.measure).toHaveBeenCalledTimes(1);
-      expect(UIManager.measure).toHaveBeenCalledWith(
-        expect.any(Number),
-        expect.any(Function),
-      );
-
-      const args = UIManager.measure.mock.calls[0];
-      expect(successCallback).not.toBeCalled();
-      args[1]('success');
-      expect(successCallback).toBeCalledWith('success');
+      expect(successCallback).toHaveBeenCalledTimes(1);
+      expect(successCallback).toHaveBeenCalledWith(10, 10, 100, 100, 0, 0);
     });
   });
 
@@ -332,20 +323,11 @@ describe('ReactNative', () => {
       );
 
       expect(UIManager.measureInWindow).not.toBeCalled();
-
       const successCallback = jest.fn();
       viewRef.measureInWindow(successCallback);
-
       expect(UIManager.measureInWindow).toHaveBeenCalledTimes(1);
-      expect(UIManager.measureInWindow).toHaveBeenCalledWith(
-        expect.any(Number),
-        expect.any(Function),
-      );
-
-      const args = UIManager.measureInWindow.mock.calls[0];
-      expect(successCallback).not.toBeCalled();
-      args[1]('success');
-      expect(successCallback).toBeCalledWith('success');
+      expect(successCallback).toHaveBeenCalledTimes(1);
+      expect(successCallback).toHaveBeenCalledWith(10, 10, 100, 100);
     });
   });
 
@@ -369,7 +351,7 @@ describe('ReactNative', () => {
     });
 
     [View, Subclass, CreateClass].forEach(Component => {
-      UIManager.measureLayout.mockReset();
+      UIManager.measureLayout.mockClear();
 
       let viewRef;
       let otherRef;
@@ -391,7 +373,6 @@ describe('ReactNative', () => {
       );
 
       expect(UIManager.measureLayout).not.toBeCalled();
-
       const successCallback = jest.fn();
       const failureCallback = jest.fn();
       viewRef.measureLayout(
@@ -399,25 +380,9 @@ describe('ReactNative', () => {
         successCallback,
         failureCallback,
       );
-
       expect(UIManager.measureLayout).toHaveBeenCalledTimes(1);
-      expect(UIManager.measureLayout).toHaveBeenCalledWith(
-        expect.any(Number),
-        expect.any(Number),
-        expect.any(Function),
-        expect.any(Function),
-      );
-
-      const args = UIManager.measureLayout.mock.calls[0];
-      expect(args[0]).not.toEqual(args[1]);
-      expect(successCallback).not.toBeCalled();
-      expect(failureCallback).not.toBeCalled();
-      args[2]('fail');
-      expect(failureCallback).toBeCalledWith('fail');
-
-      expect(successCallback).not.toBeCalled();
-      args[3]('success');
-      expect(successCallback).toBeCalledWith('success');
+      expect(successCallback).toHaveBeenCalledTimes(1);
+      expect(successCallback).toHaveBeenCalledWith(1, 1, 100, 100);
     });
   });
 
@@ -428,7 +393,7 @@ describe('ReactNative', () => {
     }));
 
     [View].forEach(Component => {
-      UIManager.measureLayout.mockReset();
+      UIManager.measureLayout.mockClear();
 
       let viewRef;
       let otherRef;
@@ -450,29 +415,12 @@ describe('ReactNative', () => {
       );
 
       expect(UIManager.measureLayout).not.toBeCalled();
-
       const successCallback = jest.fn();
       const failureCallback = jest.fn();
       viewRef.measureLayout(otherRef, successCallback, failureCallback);
-
       expect(UIManager.measureLayout).toHaveBeenCalledTimes(1);
-      expect(UIManager.measureLayout).toHaveBeenCalledWith(
-        expect.any(Number),
-        expect.any(Number),
-        expect.any(Function),
-        expect.any(Function),
-      );
-
-      const args = UIManager.measureLayout.mock.calls[0];
-      expect(args[0]).not.toEqual(args[1]);
-      expect(successCallback).not.toBeCalled();
-      expect(failureCallback).not.toBeCalled();
-      args[2]('fail');
-      expect(failureCallback).toBeCalledWith('fail');
-
-      expect(successCallback).not.toBeCalled();
-      args[3]('success');
-      expect(successCallback).toBeCalledWith('success');
+      expect(successCallback).toHaveBeenCalledTimes(1);
+      expect(successCallback).toHaveBeenCalledWith(1, 1, 100, 100);
     });
   });
 
