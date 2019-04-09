@@ -882,28 +882,30 @@ function renderRoot(
       return commitRoot.bind(null, root, expirationTime);
     }
     case RootSuspended: {
-      const lastPendingTime = root.lastPendingTime;
-      if (root.lastPendingTime < expirationTime) {
-        // There's lower priority work. It might be unsuspended. Try rendering
-        // at that level.
-        return renderRoot.bind(null, root, lastPendingTime);
-      }
-      // If workInProgressRootMostRecentEventTime is Sync, that means we didn't
-      // track any event times. That can happen if we retried but nothing switched
-      // from fallback to content. There's no reason to delay doing no work.
-      if (!isSync && workInProgressRootMostRecentEventTime !== Sync) {
-        const msUntilTimeout = computeMsUntilTimeout(
-          workInProgressRootMostRecentEventTime,
-        );
-        if (msUntilTimeout > 0) {
-          // The render is suspended, it hasn't timed out, and there's no lower
-          // priority work to do. Instead of committing the fallback
-          // immediately, wait for more data to arrive.
-          root.timeoutHandle = scheduleTimeout(
-            commitRoot.bind(null, root, expirationTime),
-            msUntilTimeout,
+      if (!isSync) {
+        const lastPendingTime = root.lastPendingTime;
+        if (root.lastPendingTime < expirationTime) {
+          // There's lower priority work. It might be unsuspended. Try rendering
+          // at that level.
+          return renderRoot.bind(null, root, lastPendingTime);
+        }
+        // If workInProgressRootMostRecentEventTime is Sync, that means we didn't
+        // track any event times. That can happen if we retried but nothing switched
+        // from fallback to content. There's no reason to delay doing no work.
+        if (workInProgressRootMostRecentEventTime !== Sync) {
+          const msUntilTimeout = computeMsUntilTimeout(
+            workInProgressRootMostRecentEventTime,
           );
-          return null;
+          if (msUntilTimeout > 0) {
+            // The render is suspended, it hasn't timed out, and there's no lower
+            // priority work to do. Instead of committing the fallback
+            // immediately, wait for more data to arrive.
+            root.timeoutHandle = scheduleTimeout(
+              commitRoot.bind(null, root, expirationTime),
+              msUntilTimeout,
+            );
+            return null;
+          }
         }
       }
       // The work expired. Commit immediately.
