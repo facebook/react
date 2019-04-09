@@ -22,8 +22,6 @@
   text-align: left;
   user-select: none;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .Component:hover,
@@ -50,7 +48,7 @@
 
 .Bar {
   display: flex;
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   overflow-x: auto;
 }
 
