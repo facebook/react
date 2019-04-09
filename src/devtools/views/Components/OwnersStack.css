@@ -6,6 +6,7 @@
 }
 
 .Component,
+.Component[data-reach-menu-item],
 .SelectedComponent {
   padding: 0.25rem;
   margin-right: 0.5rem;
@@ -18,19 +19,25 @@
   cursor: pointer;
   text-align: left;
 }
-.Component[data-selected],
-.Component:hover {
+
+.Component:hover,
+.Component[data-reach-menu-item]:hover {
   background-color: var(--color-hover-background);
 }
-.Component:focus {
+.Component:focus,
+.Component[data-reach-menu-item]:focus {
   outline: none;
   background-color: var(--color-hover-background);
 }
 
-.SelectedComponent {
+.Component[data-reach-menu-item][data-selected],
+.Component[data-reach-menu-item][data-selected]:hover,
+.SelectedComponent,
+.SelectedComponent:hover {
   background-color: var(--color-selected-background);
   color: var(--color-selected-foreground);
 }
+.Component[data-reach-menu-item][data-selected]:focus,
 .SelectedComponent:focus {
   outline: none;
 }

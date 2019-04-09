@@ -100,11 +100,7 @@ function ElementsDropdown({
         {ownerStack.map((id, index) => (
           <MenuItem
             key={id}
-            className={
-              ownerStackIndex === index
-                ? styles.SelectedComponent
-                : styles.Component
-            }
+            className={styles.Component}
             onSelect={() => selectOwner(id)}
           >
             {((store.getElementByID(id): any): Element).displayName}
