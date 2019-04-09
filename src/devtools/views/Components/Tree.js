@@ -161,6 +161,7 @@ export default function Tree(props: Props) {
 function InnerElementType({ style, ...rest }) {
   const {
     numElements,
+    ownerStack,
     selectedElementID,
     selectedElementIndex,
     selectElementAtIndex,
@@ -189,6 +190,25 @@ function InnerElementType({ style, ...rest }) {
     [selectedElementID, selectOwner]
   );
 
+  // The list may need to scroll horizontally due to deeply nested elements.
+  // We don't know the maximum scroll width up front, because we're windowing.
+  // What we can do instead, is passively measure the width of the current rows,
+  // and ensure that once we've grown to a new max size, we don't shrink below it.
+  // This improves the user experience when scrolling between wide and narrow rows.
+  // We shouldn't retain this width across different conceptual trees though,
+  // so when the user opens the "owners tree" view, we should discard the previous width.
+  const divRef = useRef<HTMLDivElement | null>(null);
+  const minWidthRef = useRef<number>(parseInt(style.width, 10));
+  const minWidth = ownerStack.length > 0 ? '100%' : minWidthRef.current;
+  useEffect(() => {
+    if (divRef.current !== null) {
+      minWidthRef.current = Math.max(
+        minWidthRef.current,
+        divRef.current.offsetWidth
+      );
+    }
+  });
+
   // This style override enables the background color to fill the full visible width,
   // when combined with the CSS tweaks in Element.
   // A lot of options were considered; this seemed the one that requires the least code.
@@ -201,9 +221,10 @@ function InnerElementType({ style, ...rest }) {
       style={{
         ...style,
         display: 'inline-block',
-        minWidth: '100%',
+        minWidth,
         width: undefined,
       }}
+      ref={divRef}
       tabIndex={0}
       {...rest}
     />
