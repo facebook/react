@@ -12,6 +12,9 @@ import invariant from 'shared/invariant';
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as PersistentFeatureFlagsType from './ReactFeatureFlags.persistent';
 
+// Re-export dynamic flags from the www version.
+export const {enableNewScheduler} = require('ReactFeatureFlags');
+
 export const debugRenderPhaseSideEffects = false;
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableUserTimingAPI = __DEV__;
@@ -26,7 +29,6 @@ export const warnAboutDeprecatedSetNativeProps = false;
 export const disableJavaScriptURLs = false;
 export const disableYielding = false;
 export const enableEventAPI = true;
-export const enableNewScheduler = false;
 export const enableJSXTransformAPI = true;
 
 // Only used in www builds.
