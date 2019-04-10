@@ -325,14 +325,15 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
     didRequestSearch = true;
   }
   if (searchText !== prevSearchText) {
-    if (searchResults.indexOf(selectedElementID) === -1) {
+    const newSearchIndex = searchResults.indexOf(selectedElementID);
+    if (newSearchIndex === -1) {
       // Only move the selection if the new query
       // doesn't match the current selection anymore.
       didRequestSearch = true;
     } else {
       // Selected item still matches the new search query.
       // Adjust the index to reflect its position in new results.
-      searchIndex = searchResults.indexOf(selectedElementID);
+      searchIndex = newSearchIndex;
     }
   }
   if (didRequestSearch) {
