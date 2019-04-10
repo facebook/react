@@ -398,6 +398,20 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
             ownerStackIndex = ownerStack.length - 1;
           }
         }
+        if (selectedElementID !== null) {
+          // Mutation might have caused the index of this ID to shift.
+          selectedElementIndex = _ownerFlatTree.indexOf(selectedElementID);
+        }
+      } else {
+        if (selectedElementID !== null) {
+          // Mutation might have caused the index of this ID to shift.
+          selectedElementIndex = store.getIndexOfElementID(selectedElementID);
+        }
+      }
+      if (selectedElementIndex === -1) {
+        // If we couldn't find this ID after mutation, unselect it.
+        selectedElementIndex = null;
+        selectedElementID = null;
       }
       break;
     case 'RESET_OWNER_STACK':
