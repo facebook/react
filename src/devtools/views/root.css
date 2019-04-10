@@ -34,7 +34,7 @@
   --light-color-dimmer: #cfd1d5;
   --light-color-dimmest: #eff0f1;
   --light-color-hover-background: #ebf1fb;
-  --light-color-inactive-background: #ccc;
+  --light-color-inactive-background: #f1f1f1;
   --light-color-jsx-arrow-brackets: #333333;
   --light-color-jsx-arrow-brackets-inverted: rgba(255, 255, 255, 0.7);
   --light-color-modal-background: rgba(255, 255, 255, 0.75);
@@ -79,7 +79,7 @@
   --dark-color-dimmer: #777d88;
   --dark-color-dimmest: #4f5766;
   --dark-color-hover-background: #3d424a;
-  --dark-color-inactive-background: #44474c;
+  --dark-color-inactive-background: #3d424a;
   --dark-color-jsx-arrow-brackets: #777d88;
   --dark-color-jsx-arrow-brackets-inverted: rgba(255, 255, 255, 0.7);
   --dark-color-modal-background: rgba(0, 0, 0, 0.75);
