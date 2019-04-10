@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`sanity should pass 1`] = `
+▾ <Grandparent>
+  ▾ <Parent>
+      <Child key="one">
+      <Child key="two">
+  ▾ <Parent>
+      <Child key="one">
+      <Child key="two">
+`;

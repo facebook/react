@@ -836,39 +836,30 @@ export default class Store extends EventEmitter {
     this._bridge.removeListener('shutdown', this.onBridgeShutdown);
   };
 
-  // DEBUG
-  __printTree = () => {
-    if (__DEBUG__) {
-      console.group('__printTree()');
-      this._roots.forEach((rootID: number) => {
-        const printElement = (id: number) => {
-          const element = ((this._idToElement.get(id): any): Element);
-          console.log(
-            `${'•'.repeat(element.depth)}${element.id}:${element.displayName ||
-              ''} ${element.key ? `key:"${element.key}"` : ''} (${
-              element.weight
-            })`
-          );
-          element.children.forEach(printElement);
-        };
-        const root = ((this._idToElement.get(rootID): any): Element);
-        console.group(`${rootID}:root (${root.weight})`);
-        root.children.forEach(printElement);
-        console.groupEnd();
-      });
-      console.group(`List of ${this.numElements} elements`);
-      for (let i = 0; i < this.numElements; i++) {
-        //if (i === 4) { debugger }
-        const element = this.getElementAtIndex(i);
-        if (element != null) {
-          console.log(
-            `${'•'.repeat(element.depth)}${i}: ${element.displayName ||
-              'Unknown'}`
-          );
-        }
+  // Jest snapshot testing
+  __toSnapshot = () => {
+    const snapshot = [];
+
+    // TODO Include root (ids) in the snapshot?
+    for (let i = 0; i < this._weightAcrossRoots; i++) {
+      const element = ((this.getElementAtIndex(i): any): Element);
+
+      let prefix = ' ';
+      if (element.children.length > 0) {
+        prefix = element.isCollapsed ? '▸' : '▾';
       }
-      console.groupEnd();
-      console.groupEnd();
+
+      let key = '';
+      if (element.key !== null) {
+        key = ` key="${element.key}"`;
+      }
+
+      snapshot.push(
+        `${'  '.repeat(element.depth)}${prefix} <${element.displayName ||
+          'null'}${key}>`
+      );
     }
+
+    return snapshot.join('\n');
   };
 }

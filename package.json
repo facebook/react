@@ -9,6 +9,18 @@
   "jest": {
     "modulePathIgnorePatterns": [
       "<rootDir>/shells"
+    ],
+    "modulePaths": [
+      "<rootDir>"
+    ],
+    "moduleNameMapper": {
+      "^src/(.*)$": "<rootDir>/src/$1"
+    },
+    "snapshotSerializers": [
+      "<rootDir>/src/__tests__/storeSerializer"
+    ],
+    "testMatch": [
+      "**/__tests__/*-test.js"
     ]
   },
   "scripts": {
@@ -26,6 +38,7 @@
     "prettier": "prettier --write '**/*.{js,json,css}'",
     "start": "cd ./shells/dev && opener ./index.html && webpack --config webpack.config.js --watch",
     "test": "jest",
+    "test-debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "test:chrome": "node ./shells/browser/chrome/test",
     "test:firefox": "node ./shells/browser/firefox/test",
     "test:standalone": "cd packages/react-devtools && yarn start",
@@ -52,7 +65,7 @@
     "adm-zip": "^0.4.7",
     "babel-core": "^7.0.0-bridge",
     "babel-eslint": "^9.0.0",
-    "babel-jest": "^23.6.0",
+    "babel-jest": "^24.7.1",
     "babel-loader": "^8.0.4",
     "child-process-promise": "^2.2.1",
     "chrome-launch": "^1.1.4",
@@ -86,7 +99,7 @@
     "gh-pages": "^1.0.0",
     "html2canvas": "^1.0.0-alpha.12",
     "immutable": "3.7.6",
-    "jest": "22.1.4",
+    "jest": "^24.7.1",
     "lerna": "^2.8.0",
     "lint-staged": "^7.0.5",
     "lodash.throttle": "^4.1.1",
@@ -99,10 +112,10 @@
     "opener": "^1.5.1",
     "prettier": "^1.16.1",
     "prop-types": "^15.6.2",
-    "react": "^16.8.4",
+    "react": "^16.8.6",
     "react-color": "^2.11.7",
-    "react-dom": "^16.8.4",
-    "react-is": "^16.8.4",
+    "react-dom": "^16.8.6",
+    "react-is": "^16.8.6",
     "react-virtualized-auto-sizer": "^1.0.2",
     "react-window": "^1.7.2",
     "scheduler": "^0.13",

@@ -6,18 +6,30 @@ import type { Wall } from './types';
 
 const BATCH_DURATION = 100;
 
+type Config = {|
+  batchDuration?: number,
+|};
+
 type Message = {|
   event: string,
   payload: any,
 |};
 
 export default class Bridge extends EventEmitter {
+  _batchDuration: number = BATCH_DURATION;
   _messageQueue: Array<any> = [];
   _timeoutID: TimeoutID | null = null;
   _wall: Wall;
 
-  constructor(wall: Wall) {
+  constructor(wall: Wall, config?: Config) {
     super();
+
+    if (config != null) {
+      const { batchDuration } = config;
+      if (batchDuration !== undefined) {
+        this._batchDuration = batchDuration;
+      }
+    }
 
     this._wall = wall;
 
@@ -32,10 +44,9 @@ export default class Bridge extends EventEmitter {
     // - if there hasn't been a message recently, we set a timer for 0 ms in
     //   the future, allowing all messages created in the same tick to be sent
     //   together
-    // - if there *has* been a message flushed in the last BATCH_DURATION ms
+    // - if there *has* been a message flushed in the last X ms
     //   (or we're waiting for our setTimeout-0 to fire), then _timeoutID will
     //   be set, and we'll simply add to the queue and wait for that
-
     this._messageQueue.push(event, payload, transferable);
     if (!this._timeoutID) {
       this._timeoutID = setTimeout(this._flush, 0);
@@ -56,10 +67,10 @@ export default class Bridge extends EventEmitter {
       }
       this._messageQueue.length = 0;
 
-      // Check again for queued messages in BATCH_DURATION ms. This will keep
+      // Check again for queued messages in X ms. This will keep
       // flushing in a loop as long as messages continue to be added. Once no
       // more are, the timer expires.
-      this._timeoutID = setTimeout(this._flush, BATCH_DURATION);
+      this._timeoutID = setTimeout(this._flush, this._batchDuration);
     }
   };
 }
