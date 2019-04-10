@@ -4,7 +4,7 @@
 events API that is not available in open source builds.*
 
 Event components do not render a host node. They listen to native browser events
-dispatched  on the host node of their child and transform those events into
+dispatched on the host node of their child and transform those events into
 high-level events for applications.
 
 
@@ -176,7 +176,8 @@ Disables all `Press` events.
 
 ### onLongPress: (e: PressEvent) => void
 
-Called once the element has been pressed for the length of `delayLongPress`.
+Called once the element has been pressed for the length of `delayLongPress`. If
+the press point moves more than 10px `onLongPress` is cancelled.
 
 ### onLongPressChange: boolean => void
 
@@ -202,9 +203,15 @@ Called when the element changes press state (i.e., after `onPressStart` and
 
 ### onPressEnd: (e: PressEvent) => void
 
-Called once the element is no longer pressed. If the press starts again before
-the `delayPressEnd` threshold is exceeded then the delay is reset to prevent
-`onPressEnd` being called during a press.
+Called once the element is no longer pressed (because it was released, or moved
+beyond the hit bounds). If the press starts again before the `delayPressEnd`
+threshold is exceeded then the delay is reset to prevent `onPressEnd` being
+called during a press.
+
+### onPressMove: (e: PressEvent) => void
+
+Called when an active press moves within the hit bounds of the element. Never
+called for keyboard-initiated press events.
 
 ### onPressStart: (e: PressEvent) => void
 
@@ -212,7 +219,7 @@ Called once the element is pressed down. If the press is released before the
 `delayPressStart` threshold is exceeded then the delay is cut short and
 `onPressStart` is called immediately.
 
-### pressRententionOffset: PressOffset
+### pressRetentionOffset: PressOffset
 
 Defines how far the pointer (while held down) may move outside the bounds of the
 element before it is deactivated. Once deactivated, the pointer (still held
