@@ -24,6 +24,7 @@ import React, {
   useEffect,
   useMemo,
   useReducer,
+  useRef,
 } from 'react';
 import { createRegExp } from '../utils';
 import { BridgeContext, StoreContext } from '../context';
@@ -198,7 +199,7 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
     selectedElementIndex,
   } = state;
 
-  const prevSearchIndex = searchIndex;
+  let prevSearchIndex = searchIndex;
   const prevSearchText = searchText;
   const numPrevSearchResults = searchResults.length;
 
@@ -306,10 +307,25 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
             if (prevSearchIndex === null) {
               searchIndex = 0;
             } else {
-              searchIndex = Math.min(
-                ((prevSearchIndex: any): number),
-                searchResults.length - 1
-              );
+              // Changes in search index or typing should override the selected element.
+              // The one exception is when a search is broadened (e.g. "Cat" -> "Ca").
+              // In this case, it's probably desirable to maintain a stable selection.
+              // Replacements of text( e.g. "cat" -> "dog") likely require an index change.
+              const didRelaxSearchText =
+                prevSearchText.length > searchText.length &&
+                prevSearchText.startsWith(searchText);
+              if (didRelaxSearchText) {
+                searchIndex = prevSearchIndex;
+              } else {
+                searchIndex = Math.min(
+                  ((prevSearchIndex: any): number),
+                  searchResults.length - 1
+                );
+
+                // Force selected element ID to be re-evaluated below, even if the search index didn't change,
+                // because new search text means the same index may now point to a new element.
+                prevSearchIndex = null;
+              }
             }
           }
         }
@@ -685,6 +701,30 @@ function TreeContextController({ children, viewElementSource }: Props) {
     bridge.addListener('selectFiber', handleSelectFiber);
     return () => bridge.removeListener('selectFiber', handleSelectFiber);
   }, [bridge, dispatch]);
+
+  // If a newly-selected search result is inside of a collapsed subtree, auto expand it.
+  // We also need to handle when the search text changed (selecting a new element) without changing the index.
+  const prevSearchIndex = useRef<number | null>(null);
+  const prevSearchText = useRef<string>('');
+  useEffect(() => {
+    if (
+      state.searchIndex !== prevSearchIndex.current ||
+      state.searchText !== prevSearchText.current
+    ) {
+      prevSearchIndex.current = state.searchIndex;
+      prevSearchText.current = state.searchText;
+
+      if (state.searchIndex !== null && state.selectedElementID !== null) {
+        let element = store.getElementByID(state.selectedElementID);
+        while (element !== null && element.parentID > 0) {
+          element = ((store.getElementByID(element.parentID): any): Element);
+          if (element.isCollapsed) {
+            store.toggleIsCollapsed(element.id, false);
+          }
+        }
+      }
+    }
+  }, [state.searchIndex, state.searchText, state.selectedElementID, store]);
 
   // Mutations to the underlying tree may impact this context (e.g. search results, selection state).
   useEffect(() => {
