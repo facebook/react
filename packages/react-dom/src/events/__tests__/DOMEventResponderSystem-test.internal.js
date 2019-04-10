@@ -12,6 +12,7 @@
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
+let ReactSymbols;
 
 function createReactEventComponent(
   targetEventTypes,
@@ -42,6 +43,14 @@ function dispatchClickEvent(element) {
   element.dispatchEvent(clickEvent);
 }
 
+function createReactEventTarget(type) {
+  return {
+    $$typeof: ReactSymbols.REACT_EVENT_TARGET_TYPE,
+    displayName: 'TestEventTarget',
+    type,
+  };
+}
+
 // This is a new feature in Fiber so I put it in its own test file. It could
 // probably move to one of the other test files once it is official.
 describe('DOMEventResponderSystem', () => {
@@ -55,6 +64,7 @@ describe('DOMEventResponderSystem', () => {
     ReactDOM = require('react-dom');
     container = document.createElement('div');
     document.body.appendChild(container);
+    ReactSymbols = require('shared/ReactSymbols');
   });
 
   afterEach(() => {
@@ -413,5 +423,182 @@ describe('DOMEventResponderSystem', () => {
 
     expect(ownershipGained).toEqual(true);
     expect(onOwnershipChangeFired).toEqual(1);
+  });
+
+  it('should be possible to query event targets for their elements', () => {
+    let queryResult = null;
+    const buttonRef = React.createRef();
+    const divRef = React.createRef();
+    const eventTargetType = Symbol.for('react.event_target.test');
+    const EventTarget = createReactEventTarget(eventTargetType);
+
+    const EventComponent = createReactEventComponent(
+      ['click'],
+      undefined,
+      (event, context, props, state) => {
+        queryResult = Array.from(
+          context.getEventTargetsFromTarget(event.target),
+        );
+      },
+    );
+
+    const Test = () => (
+      <EventComponent>
+        <div ref={divRef}>
+          <EventTarget />
+          <button ref={buttonRef}>
+            <EventTarget />
+            Press me!
+          </button>
+        </div>
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+
+    let buttonElement = buttonRef.current;
+    let divElement = divRef.current;
+    dispatchClickEvent(buttonElement);
+    jest.runAllTimers();
+
+    expect(queryResult).toEqual([buttonElement, divElement]);
+  });
+
+  it('should be possible to query event targets for their elements by type', () => {
+    let queryResult = null;
+    const buttonRef = React.createRef();
+    const divRef = React.createRef();
+    const eventTargetType = Symbol.for('react.event_target.test');
+    const EventTarget = createReactEventTarget(eventTargetType);
+
+    const eventTargetType2 = Symbol.for('react.event_target.test2');
+    const EventTarget2 = createReactEventTarget(eventTargetType2);
+
+    const EventComponent = createReactEventComponent(
+      ['click'],
+      undefined,
+      (event, context, props, state) => {
+        queryResult = Array.from(
+          context.getEventTargetsFromTarget(event.target, eventTargetType2),
+        );
+      },
+    );
+
+    const Test = () => (
+      <EventComponent>
+        <div ref={divRef}>
+          <EventTarget2 />
+          <button ref={buttonRef}>
+            <EventTarget />
+            Press me!
+          </button>
+        </div>
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+
+    let buttonElement = buttonRef.current;
+    let divElement = divRef.current;
+    dispatchClickEvent(buttonElement);
+    jest.runAllTimers();
+
+    expect(queryResult).toEqual([divElement]);
+  });
+
+  it('should be possible to query event targets for their elements by key', () => {
+    let queryResult = null;
+    const buttonRef = React.createRef();
+    const divRef = React.createRef();
+    const eventTargetType = Symbol.for('react.event_target.test');
+    const EventTarget = createReactEventTarget(eventTargetType);
+
+    const EventComponent = createReactEventComponent(
+      ['click'],
+      undefined,
+      (event, context, props, state) => {
+        queryResult = Array.from(
+          context.getEventTargetsFromTarget(event.target, undefined, 'a'),
+        );
+      },
+    );
+
+    const Test = () => (
+      <EventComponent>
+        <div ref={divRef}>
+          <EventTarget />
+          <button ref={buttonRef}>
+            <EventTarget key="a" />
+            Press me!
+          </button>
+        </div>
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+
+    let buttonElement = buttonRef.current;
+    dispatchClickEvent(buttonElement);
+    jest.runAllTimers();
+
+    expect(queryResult).toEqual([buttonElement]);
+  });
+
+  it('should be possible to query event targets for their elements by type and key', () => {
+    let queryResult = null;
+    let queryResult2 = null;
+    let queryResult3 = null;
+    const buttonRef = React.createRef();
+    const divRef = React.createRef();
+    const eventTargetType = Symbol.for('react.event_target.test');
+    const EventTarget = createReactEventTarget(eventTargetType);
+
+    const eventTargetType2 = Symbol.for('react.event_target.test2');
+    const EventTarget2 = createReactEventTarget(eventTargetType2);
+
+    const EventComponent = createReactEventComponent(
+      ['click'],
+      undefined,
+      (event, context, props, state) => {
+        queryResult = Array.from(
+          context.getEventTargetsFromTarget(
+            event.target,
+            eventTargetType2,
+            'a',
+          ),
+        );
+        queryResult2 = Array.from(
+          context.getEventTargetsFromTarget(event.target, eventTargetType, 'c'),
+        );
+        // Should return an empty array as this doesn't exist
+        queryResult3 = Array.from(
+          context.getEventTargetsFromTarget(event.target, eventTargetType, 'd'),
+        );
+      },
+    );
+
+    const Test = () => (
+      <EventComponent>
+        <div ref={divRef}>
+          <EventTarget2 key="a" />
+          <EventTarget2 key="b" />
+          <button ref={buttonRef}>
+            <EventTarget key="c" />
+            Press me!
+          </button>
+        </div>
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+
+    let buttonElement = buttonRef.current;
+    let divElement = divRef.current;
+    dispatchClickEvent(buttonElement);
+    jest.runAllTimers();
+
+    expect(queryResult).toEqual([divElement]);
+    expect(queryResult2).toEqual([buttonElement]);
+    expect(queryResult3).toEqual([]);
   });
 });

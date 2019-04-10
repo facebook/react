@@ -15,6 +15,7 @@ import type {AnyNativeEvent} from 'events/PluginModuleType';
 import {
   EventComponent,
   EventTarget as EventTargetWorkTag,
+  HostComponent,
 } from 'shared/ReactWorkTags';
 import type {
   ReactEventResponderEventType,
@@ -237,7 +238,59 @@ const eventResponderContext: ReactResponderContext = {
       }
     }, delay);
   },
+  getEventTargetsFromTarget(
+    target: Element | Document,
+    queryType?: Symbol | number,
+    queryKey?: string,
+  ): Set<Element> {
+    const eventTargetHostComponents = new Set();
+    let node = getClosestInstanceFromNode(target);
+    while (node !== null) {
+      if (node.stateNode === currentInstance) {
+        break;
+      }
+      let child = node.child;
+
+      while (child !== null) {
+        if (
+          child.tag === EventTargetWorkTag &&
+          queryEventTarget(child, queryType, queryKey)
+        ) {
+          let parent = child.return;
+
+          if (parent !== null) {
+            if (parent.stateNode === currentInstance) {
+              break;
+            }
+            if (parent.tag === HostComponent) {
+              eventTargetHostComponents.add(parent.stateNode);
+              break;
+            }
+            parent = parent.return;
+          }
+          break;
+        }
+        child = child.sibling;
+      }
+      node = node.return;
+    }
+    return eventTargetHostComponents;
+  },
 };
+
+function queryEventTarget(
+  child: Fiber,
+  queryType: void | Symbol | number,
+  queryKey: void | string,
+): boolean {
+  if (queryType !== undefined && child.type.type !== queryType) {
+    return false;
+  }
+  if (queryKey !== undefined && child.key !== queryKey) {
+    return false;
+  }
+  return true;
+}
 
 const rootEventTypesToEventComponentInstances: Map<
   DOMTopLevelEventType | string,
