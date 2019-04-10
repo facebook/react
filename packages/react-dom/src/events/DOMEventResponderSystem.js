@@ -31,7 +31,10 @@ import warning from 'shared/warning';
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
 import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
 
-import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
+import {
+  getClosestInstanceFromNode,
+  getFiberCurrentPropsFromNode,
+} from '../client/ReactDOMComponentTree';
 
 export let listenToResponderEventTypesImpl;
 
@@ -242,9 +245,19 @@ const eventResponderContext: ReactResponderContext = {
     target: Element | Document,
     queryType?: Symbol | number,
     queryKey?: string,
-  ): Set<Element> {
-    const eventTargetHostComponents = new Set();
+  ): Array<{
+    node: Element,
+    props: null | Object,
+  }> {
+    const eventTargetHostComponents = [];
     let node = getClosestInstanceFromNode(target);
+    // We traverse up the fiber tree from the target fiber, to the
+    // current event component fiber. Along the way, we check if
+    // the fiber has any children that are event targets. If there
+    // are, we query them (optionally) to ensure they match the
+    // specified type and key. We then push the event target props
+    // along with the associated parent host component of that event
+    // target.
     while (node !== null) {
       if (node.stateNode === currentInstance) {
         break;
@@ -256,6 +269,7 @@ const eventResponderContext: ReactResponderContext = {
           child.tag === EventTargetWorkTag &&
           queryEventTarget(child, queryType, queryKey)
         ) {
+          const props = child.stateNode.props;
           let parent = child.return;
 
           if (parent !== null) {
@@ -263,7 +277,10 @@ const eventResponderContext: ReactResponderContext = {
               break;
             }
             if (parent.tag === HostComponent) {
-              eventTargetHostComponents.add(parent.stateNode);
+              eventTargetHostComponents.push({
+                node: parent.stateNode,
+                props,
+              });
               break;
             }
             parent = parent.return;

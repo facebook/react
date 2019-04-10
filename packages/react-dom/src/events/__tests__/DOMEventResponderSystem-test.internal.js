@@ -445,9 +445,9 @@ describe('DOMEventResponderSystem', () => {
     const Test = () => (
       <EventComponent>
         <div ref={divRef}>
-          <EventTarget />
+          <EventTarget foo={1} />
           <button ref={buttonRef}>
-            <EventTarget />
+            <EventTarget foo={2} />
             Press me!
           </button>
         </div>
@@ -461,7 +461,20 @@ describe('DOMEventResponderSystem', () => {
     dispatchClickEvent(buttonElement);
     jest.runAllTimers();
 
-    expect(queryResult).toEqual([buttonElement, divElement]);
+    expect(queryResult).toEqual([
+      {
+        node: buttonElement,
+        props: {
+          foo: 2,
+        },
+      },
+      {
+        node: divElement,
+        props: {
+          foo: 1,
+        },
+      },
+    ]);
   });
 
   it('should be possible to query event targets for their elements by type', () => {
@@ -478,8 +491,9 @@ describe('DOMEventResponderSystem', () => {
       ['click'],
       undefined,
       (event, context, props, state) => {
-        queryResult = Array.from(
-          context.getEventTargetsFromTarget(event.target, eventTargetType2),
+        queryResult = context.getEventTargetsFromTarget(
+          event.target,
+          eventTargetType2,
         );
       },
     );
@@ -487,9 +501,9 @@ describe('DOMEventResponderSystem', () => {
     const Test = () => (
       <EventComponent>
         <div ref={divRef}>
-          <EventTarget2 />
+          <EventTarget2 foo={1} />
           <button ref={buttonRef}>
-            <EventTarget />
+            <EventTarget foo={2} />
             Press me!
           </button>
         </div>
@@ -503,7 +517,14 @@ describe('DOMEventResponderSystem', () => {
     dispatchClickEvent(buttonElement);
     jest.runAllTimers();
 
-    expect(queryResult).toEqual([divElement]);
+    expect(queryResult).toEqual([
+      {
+        node: divElement,
+        props: {
+          foo: 1,
+        },
+      },
+    ]);
   });
 
   it('should be possible to query event targets for their elements by key', () => {
@@ -517,8 +538,10 @@ describe('DOMEventResponderSystem', () => {
       ['click'],
       undefined,
       (event, context, props, state) => {
-        queryResult = Array.from(
-          context.getEventTargetsFromTarget(event.target, undefined, 'a'),
+        queryResult = context.getEventTargetsFromTarget(
+          event.target,
+          undefined,
+          'a',
         );
       },
     );
@@ -526,9 +549,9 @@ describe('DOMEventResponderSystem', () => {
     const Test = () => (
       <EventComponent>
         <div ref={divRef}>
-          <EventTarget />
+          <EventTarget foo={1} />
           <button ref={buttonRef}>
-            <EventTarget key="a" />
+            <EventTarget key="a" foo={2} />
             Press me!
           </button>
         </div>
@@ -541,7 +564,14 @@ describe('DOMEventResponderSystem', () => {
     dispatchClickEvent(buttonElement);
     jest.runAllTimers();
 
-    expect(queryResult).toEqual([buttonElement]);
+    expect(queryResult).toEqual([
+      {
+        node: buttonElement,
+        props: {
+          foo: 2,
+        },
+      },
+    ]);
   });
 
   it('should be possible to query event targets for their elements by type and key', () => {
@@ -560,19 +590,23 @@ describe('DOMEventResponderSystem', () => {
       ['click'],
       undefined,
       (event, context, props, state) => {
-        queryResult = Array.from(
-          context.getEventTargetsFromTarget(
-            event.target,
-            eventTargetType2,
-            'a',
-          ),
+        queryResult = context.getEventTargetsFromTarget(
+          event.target,
+          eventTargetType2,
+          'a',
         );
-        queryResult2 = Array.from(
-          context.getEventTargetsFromTarget(event.target, eventTargetType, 'c'),
+
+        queryResult2 = context.getEventTargetsFromTarget(
+          event.target,
+          eventTargetType,
+          'c',
         );
+
         // Should return an empty array as this doesn't exist
-        queryResult3 = Array.from(
-          context.getEventTargetsFromTarget(event.target, eventTargetType, 'd'),
+        queryResult3 = context.getEventTargetsFromTarget(
+          event.target,
+          eventTargetType,
+          'd',
         );
       },
     );
@@ -580,10 +614,10 @@ describe('DOMEventResponderSystem', () => {
     const Test = () => (
       <EventComponent>
         <div ref={divRef}>
-          <EventTarget2 key="a" />
-          <EventTarget2 key="b" />
+          <EventTarget2 key="a" foo={1} />
+          <EventTarget2 key="b" foo={2} />
           <button ref={buttonRef}>
-            <EventTarget key="c" />
+            <EventTarget key="c" foo={3} />
             Press me!
           </button>
         </div>
@@ -597,8 +631,22 @@ describe('DOMEventResponderSystem', () => {
     dispatchClickEvent(buttonElement);
     jest.runAllTimers();
 
-    expect(queryResult).toEqual([divElement]);
-    expect(queryResult2).toEqual([buttonElement]);
+    expect(queryResult).toEqual([
+      {
+        node: divElement,
+        props: {
+          foo: 1,
+        },
+      },
+    ]);
+    expect(queryResult2).toEqual([
+      {
+        node: buttonElement,
+        props: {
+          foo: 3,
+        },
+      },
+    ]);
     expect(queryResult3).toEqual([]);
   });
 });

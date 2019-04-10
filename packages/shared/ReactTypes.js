@@ -173,5 +173,8 @@ export type ReactResponderContext = {
     target: Element | Document,
     queryType?: Symbol | number,
     queryKey?: string,
-  ) => Set<Element>,
+  ) => Array<{
+    node: Element,
+    props: null | Object,
+  }>,
 };
