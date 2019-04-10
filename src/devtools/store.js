@@ -353,7 +353,12 @@ export default class Store extends EventEmitter {
           break;
         }
         const child = ((this._idToElement.get(childID): any): Element);
-        index += child.isCollapsed ? 1 : child.weight;
+
+        // We intentionally ignore collapsed state when determining an item's index.
+        // We only do this for the direct path to an element.
+        // That's because the index of the element is meaningless if it's inside of a collapsed tree.
+        // If this index is used to display the element, the caller should also un-collapse its ancestors.
+        index += child.weight;
       }
 
       previousID = current.id;

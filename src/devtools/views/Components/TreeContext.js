@@ -22,6 +22,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useReducer,
   useRef,
@@ -110,6 +111,8 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
     selectedElementID,
   } = state;
 
+  let lookupIDForIndex = true;
+
   // Base tree should ignore selected element changes when the owner's tree is active.
   if (ownerStack.length === 0) {
     switch (type) {
@@ -128,6 +131,11 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
         selectedElementIndex = ((payload: any): number | null);
         break;
       case 'SELECT_ELEMENT_BY_ID':
+        // Skip lookup in this case; it would be redundant.
+        // It might also cause problems if the specified element was inside of a (not yet expanded) subtree.
+        lookupIDForIndex = false;
+
+        selectedElementID = payload;
         selectedElementIndex =
           payload === null
             ? null
@@ -168,7 +176,7 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
   }
 
   // Keep selected item ID and index in sync.
-  if (selectedElementIndex !== state.selectedElementIndex) {
+  if (lookupIDForIndex && selectedElementIndex !== state.selectedElementIndex) {
     if (selectedElementIndex === null) {
       selectedElementID = null;
     } else {
@@ -687,19 +695,14 @@ function TreeContextController({ children, viewElementSource }: Props) {
     return () => bridge.removeListener('selectFiber', handleSelectFiber);
   }, [bridge, dispatch]);
 
-  // If a newly-selected search result is inside of a collapsed subtree, auto expand it.
-  // We also need to handle when the search text changed (selecting a new element) without changing the index.
-  const prevSearchIndex = useRef<number | null>(null);
-  const prevSearchText = useRef<string>('');
-  useEffect(() => {
-    if (
-      state.searchIndex !== prevSearchIndex.current ||
-      state.searchText !== prevSearchText.current
-    ) {
-      prevSearchIndex.current = state.searchIndex;
-      prevSearchText.current = state.searchText;
+  // If a newly-selected search result or inspection selection is inside of a collapsed subtree, auto expand it.
+  // This needs to be a layout effect to avoid temporarily flashing an incorrect selection.
+  const prevSelectedElementID = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    if (state.selectedElementID !== prevSelectedElementID.current) {
+      prevSelectedElementID.current = state.selectedElementID;
 
-      if (state.searchIndex !== null && state.selectedElementID !== null) {
+      if (state.selectedElementID !== null) {
         let element = store.getElementByID(state.selectedElementID);
         while (element !== null && element.parentID > 0) {
           element = ((store.getElementByID(element.parentID): any): Element);
@@ -709,7 +712,7 @@ function TreeContextController({ children, viewElementSource }: Props) {
         }
       }
     }
-  }, [state.searchIndex, state.searchText, state.selectedElementID, store]);
+  }, [state.selectedElementID, store]);
 
   // Mutations to the underlying tree may impact this context (e.g. search results, selection state).
   useEffect(() => {

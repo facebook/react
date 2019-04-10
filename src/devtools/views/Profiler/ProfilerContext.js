@@ -79,7 +79,7 @@ type Props = {|
 
 function ProfilerContextController({ children }: Props) {
   const store = useContext(StoreContext);
-  const { selectElementAtIndex, selectedElementID } = useContext(TreeContext);
+  const { selectElementByID, selectedElementID } = useContext(TreeContext);
 
   const subscription = useMemo(
     () => ({
@@ -152,13 +152,14 @@ function ProfilerContextController({ children }: Props) {
       selectFiberID(id);
       selectFiberName(name);
       if (id !== null) {
-        const index = store.getIndexOfElementID(id);
-        if (index !== null) {
-          selectElementAtIndex(index);
+        // If this element is still in the store, then select it in the Components tab as well.
+        const element = store.getElementByID(id);
+        if (element !== null) {
+          selectElementByID(id);
         }
       }
     },
-    [selectElementAtIndex, selectFiberID, selectFiberName, store]
+    [selectElementByID, selectFiberID, selectFiberName, store]
   );
 
   if (isProfiling) {
