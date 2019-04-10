@@ -407,7 +407,7 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
             ownerStackIndex = ownerStack.length - 1;
           }
         }
-        if (selectedElementID !== null) {
+        if (selectedElementID !== null && _ownerFlatTree !== null) {
           // Mutation might have caused the index of this ID to shift.
           selectedElementIndex = _ownerFlatTree.indexOf(selectedElementID);
         }
