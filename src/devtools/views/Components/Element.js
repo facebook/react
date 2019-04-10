@@ -30,6 +30,7 @@ export default function ElementView({ data, index, style }: Props) {
   const {
     baseDepth,
     getElementAtIndex,
+    ownerStack,
     selectOwner,
     selectedElementID,
     selectElementByID,
@@ -136,7 +137,9 @@ export default function ElementView({ data, index, style }: Props) {
         marginBottom: `-${style.height}px`,
       }}
     >
-      <ExpandCollapseToggle element={element} store={store} />
+      {ownerStack.length === 0 ? (
+        <ExpandCollapseToggle element={element} store={store} />
+      ) : null}
       <span className={styles.Component} ref={ref}>
         <DisplayName displayName={displayName} id={((id: any): number)} />
         {key && (
