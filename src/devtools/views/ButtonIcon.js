@@ -7,8 +7,10 @@ export type IconType =
   | 'back'
   | 'cancel'
   | 'close'
+  | 'collapsed'
   | 'copy'
   | 'down'
+  | 'expanded'
   | 'export'
   | 'filter'
   | 'import'
@@ -40,11 +42,17 @@ export default function ButtonIcon({ type }: Props) {
     case 'close':
       pathData = PATH_CLOSE;
       break;
+    case 'collapsed':
+      pathData = PATH_COLLAPSED;
+      break;
     case 'copy':
       pathData = PATH_COPY;
       break;
     case 'down':
       pathData = PATH_DOWN;
+      break;
+    case 'expanded':
+      pathData = PATH_EXPANDED;
       break;
     case 'export':
       pathData = PATH_EXPORT;
@@ -121,12 +129,16 @@ const PATH_CANCEL = `
 const PATH_CLOSE =
   'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z';
 
+const PATH_COLLAPSED = 'M10 17l5-5-5-5v10z';
+
 const PATH_COPY = `
   M3 13h2v-2H3v2zm0 4h2v-2H3v2zm2 4v-2H3a2 2 0 0 0 2 2zM3 9h2V7H3v2zm12 12h2v-2h-2v2zm4-18H9a2 2 0 0 0-2
   2v10a2 2 0 0 0 2 2h10c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 12H9V5h10v10zm-8 6h2v-2h-2v2zm-4 0h2v-2H7v2z
 `;
 
 const PATH_DOWN = 'M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z';
+
+const PATH_EXPANDED = 'M7 10l5 5 5-5z';
 
 const PATH_EXPORT = 'M15.82,2.14v7H21l-9,9L3,9.18H8.18v-7ZM3,20.13H21v1.73H3Z';
 
