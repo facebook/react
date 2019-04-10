@@ -15,7 +15,7 @@ const pathToBabel = path.join(
   'package.json'
 );
 const pathToBabelPluginDevWithCode = require.resolve(
-  '../error-codes/minify-error-messages'
+  '../error-codes/transform-error-messages'
 );
 const pathToBabelPluginWrapWarning = require.resolve(
   '../babel/wrap-warning-with-env-check'

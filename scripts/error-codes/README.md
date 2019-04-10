@@ -12,6 +12,6 @@ provide a better debugging support in production. Check out the blog post
   can test it by running `yarn build -- --extract-errors`, but you should only
   commit changes to this file when running a release. (The release tool will
   perform this step automatically.)
-- [`minify-error-codes`](https://github.com/facebook/react/blob/master/scripts/error-codes/minify-error-codes)
+- [`transform-error-messages`](https://github.com/facebook/react/blob/master/scripts/error-codes/transform-error-messages)
   is a Babel pass that rewrites error messages to IDs for a production
   (minified) build.
