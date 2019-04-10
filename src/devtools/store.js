@@ -353,7 +353,7 @@ export default class Store extends EventEmitter {
           break;
         }
         const child = ((this._idToElement.get(childID): any): Element);
-        index += child.weight;
+        index += child.isCollapsed ? 1 : child.weight;
       }
 
       previousID = current.id;
