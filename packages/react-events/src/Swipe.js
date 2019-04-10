@@ -7,7 +7,10 @@
  * @flow
  */
 
-import type {ResponderEvent, ResponderContext} from 'events/EventTypes';
+import type {
+  ReactResponderEvent,
+  ReactResponderContext,
+} from 'shared/ReactTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
 const targetEventTypes = ['pointerdown', 'pointercancel'];
@@ -52,7 +55,7 @@ function createSwipeEvent(
 }
 
 function dispatchSwipeEvent(
-  context: ResponderContext,
+  context: ReactResponderContext,
   name: SwipeEventType,
   listener: SwipeEvent => void,
   state: SwipeState,
@@ -92,8 +95,8 @@ const SwipeResponder = {
     };
   },
   onEvent(
-    event: ResponderEvent,
-    context: ResponderContext,
+    event: ReactResponderEvent,
+    context: ReactResponderContext,
     props: Object,
     state: SwipeState,
   ): void {
