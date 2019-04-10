@@ -32,5 +32,6 @@
   display: inline-flex;
   width: 1rem;
   height: 1rem;
+  padding: 0;
   color: var(--color-expand-collapse-toggle);
 }

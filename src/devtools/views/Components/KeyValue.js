@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import type { Element } from 'react';
 import EditableValue from './EditableValue';
+import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import { getMetaValueLabel } from '../utils';
 import { meta } from '../../../hydration';
@@ -81,9 +82,13 @@ export default function KeyValue({
     );
   } else {
     const opener = (
-      <div className={styles.Opener} onClick={handleToggle}>
+      <Button
+        className={styles.Opener}
+        onClick={handleToggle}
+        title={`${open ? 'Collapse' : 'Expand'} prop value`}
+      >
         <ButtonIcon type={open ? 'expanded' : 'collapsed'} />
-      </div>
+      </Button>
     );
 
     if (Array.isArray(value)) {
