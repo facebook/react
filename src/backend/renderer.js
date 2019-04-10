@@ -1570,11 +1570,12 @@ export function attach(
     }
 
     const supportsGroup = typeof console.groupCollapsed === 'function';
-    const label =
-      '[Click to expand] <' + (result.displayName || 'Component') + ' />';
-
     if (supportsGroup) {
-      console.groupCollapsed(label);
+      console.groupCollapsed(
+        `[Click to expand] %c<${result.displayName || 'Component'} />`,
+        // --dom-tag-name-color is the CSS variable Chrome styles HTML elements with in the console.
+        'color: var(--dom-tag-name-color); font-weight: normal;'
+      );
     }
     if (result.props !== null) {
       console.log('Props:', result.props);
