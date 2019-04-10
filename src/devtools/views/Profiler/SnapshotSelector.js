@@ -123,6 +123,7 @@ export default function SnapshotSelector(_: Props) {
         className={styles.Button}
         disabled={selectedFilteredCommitIndex === 0 || numFilteredCommits === 0}
         onClick={viewPrevCommit}
+        title="Select previous commit"
       >
         <ButtonIcon type="previous" />
       </Button>
@@ -159,6 +160,7 @@ export default function SnapshotSelector(_: Props) {
           selectedFilteredCommitIndex >= numFilteredCommits - 1
         }
         onClick={viewNextCommit}
+        title="Select next commit"
       >
         <ButtonIcon type="next" />
       </Button>
