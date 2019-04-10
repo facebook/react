@@ -1535,9 +1535,20 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
     const timeElapsed = currentTimeMs - eventTimeMs;
 
     let msUntilTimeout = jnd(timeElapsed) - timeElapsed;
+
     if (msUntilTimeout < 10) {
       // Don't bother with a very short suspense time.
       msUntilTimeout = 0;
+    } else {
+      // Compute the time until this render pass would expire.
+      const timeUntilExpirationMs =
+        expirationTimeToMs(suspendedExpirationTime) +
+        originalStartTimeMs -
+        currentTimeMs;
+      // Clamp the timeout to the expiration time.
+      if (timeUntilExpirationMs < msUntilTimeout) {
+        msUntilTimeout = timeUntilExpirationMs;
+      }
     }
 
     const rootExpirationTime = root.expirationTime;

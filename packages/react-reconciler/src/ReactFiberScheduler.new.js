@@ -895,8 +895,9 @@ function renderRoot(
         // track any event times. That can happen if we retried but nothing switched
         // from fallback to content. There's no reason to delay doing no work.
         if (workInProgressRootMostRecentEventTime !== Sync) {
-          const msUntilTimeout = computeMsUntilTimeout(
+          let msUntilTimeout = computeMsUntilTimeout(
             workInProgressRootMostRecentEventTime,
+            expirationTime,
           );
           // Don't bother with a very short suspense time.
           if (msUntilTimeout > 10) {
@@ -1843,7 +1844,10 @@ function jnd(timeElapsed: number) {
               : ceil(timeElapsed / 1960) * 1960;
 }
 
-function computeMsUntilTimeout(mostRecentEventTime: ExpirationTime) {
+function computeMsUntilTimeout(
+  mostRecentEventTime: ExpirationTime,
+  committedExpirationTime: ExpirationTime,
+) {
   if (disableYielding) {
     // Timeout immediately when yielding is disabled.
     return 0;
@@ -1853,7 +1857,19 @@ function computeMsUntilTimeout(mostRecentEventTime: ExpirationTime) {
   const currentTimeMs: number = now();
   const timeElapsed = currentTimeMs - eventTimeMs;
 
-  const msUntilTimeout = jnd(timeElapsed) - timeElapsed;
+  let msUntilTimeout = jnd(timeElapsed) - timeElapsed;
+
+  // Compute the time until this render pass would expire.
+  const timeUntilExpirationMs =
+    expirationTimeToMs(committedExpirationTime) + initialTimeMs - currentTimeMs;
+
+  // Clamp the timeout to the expiration time.
+  // TODO: Once the event time is exact instead of inferred from expiration time
+  // we don't need this.
+  if (timeUntilExpirationMs < msUntilTimeout) {
+    msUntilTimeout = timeUntilExpirationMs;
+  }
+
   // This is the value that is passed to `setTimeout`.
   return msUntilTimeout;
 }

@@ -1788,6 +1788,42 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(Scheduler).toFlushAndYield(['B']);
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('B')]);
   });
+
+  it('does not suspend for very long after a higher priority update', async () => {
+    function Foo() {
+      Scheduler.yieldValue('Foo');
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <AsyncText text="A" ms={5000} />
+        </Suspense>
+      );
+    }
+
+    ReactNoop.interactiveUpdates(() => ReactNoop.render(<Foo />));
+    expect(Scheduler).toFlushAndYieldThrough(['Foo']);
+
+    // Advance some time.
+    Scheduler.advanceTime(100);
+    await advanceTimers(100);
+
+    expect(Scheduler).toFlushAndYield([
+      // A suspends
+      'Suspend! [A]',
+      'Loading...',
+    ]);
+    // We're now suspended and we haven't shown anything yet.
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    // Flush some of the time
+    Scheduler.advanceTime(500);
+    await advanceTimers(500);
+    // We should have already shown the fallback.
+    // When we wrote this test, we inferred the start time of high priority
+    // updates as way earlier in the past. This test ensures that we don't
+    // use this assumption to add a very long JND.
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
+  });
 });
 
 // TODO:
