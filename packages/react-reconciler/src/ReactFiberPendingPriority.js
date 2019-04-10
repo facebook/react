@@ -219,23 +219,6 @@ function clearPing(root, completedTime) {
   }
 }
 
-export function findEarliestOutstandingPriorityLevel(
-  root: FiberRoot,
-  renderExpirationTime: ExpirationTime,
-): ExpirationTime {
-  let earliestExpirationTime = renderExpirationTime;
-
-  const earliestPendingTime = root.earliestPendingTime;
-  const earliestSuspendedTime = root.earliestSuspendedTime;
-  if (earliestPendingTime > earliestExpirationTime) {
-    earliestExpirationTime = earliestPendingTime;
-  }
-  if (earliestSuspendedTime > earliestExpirationTime) {
-    earliestExpirationTime = earliestSuspendedTime;
-  }
-  return earliestExpirationTime;
-}
-
 export function didExpireAtExpirationTime(
   root: FiberRoot,
   currentTime: ExpirationTime,

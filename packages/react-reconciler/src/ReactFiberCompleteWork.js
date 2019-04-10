@@ -18,6 +18,7 @@ import type {
   ChildSet,
 } from './ReactFiberHostConfig';
 import type {ReactEventComponentInstance} from 'shared/ReactTypes';
+import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import {
   IndeterminateComponent,
@@ -42,6 +43,7 @@ import {
   EventComponent,
   EventTarget,
 } from 'shared/ReactWorkTags';
+import {ConcurrentMode, NoContext} from './ReactTypeOfMode';
 import {
   Placement,
   Ref,
@@ -92,6 +94,7 @@ import {
   enableSuspenseServerRenderer,
   enableEventAPI,
 } from 'shared/ReactFeatureFlags';
+import {markRenderEventTime, renderDidSuspend} from './ReactFiberScheduler';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -665,7 +668,7 @@ function completeWork(
     case ForwardRef:
       break;
     case SuspenseComponent: {
-      const nextState = workInProgress.memoizedState;
+      const nextState: null | SuspenseState = workInProgress.memoizedState;
       if ((workInProgress.effectTag & DidCapture) !== NoEffect) {
         // Something suspended. Re-render with the fallback children.
         workInProgress.expirationTime = renderExpirationTime;
@@ -674,34 +677,58 @@ function completeWork(
       }
 
       const nextDidTimeout = nextState !== null;
-      const prevDidTimeout = current !== null && current.memoizedState !== null;
-
+      let prevDidTimeout = false;
       if (current === null) {
         // In cases where we didn't find a suitable hydration boundary we never
         // downgraded this to a DehydratedSuspenseComponent, but we still need to
         // pop the hydration state since we might be inside the insertion tree.
         popHydrationState(workInProgress);
-      } else if (!nextDidTimeout && prevDidTimeout) {
-        // We just switched from the fallback to the normal children. Delete
-        // the fallback.
-        // TODO: Would it be better to store the fallback fragment on
-        // the stateNode during the begin phase?
-        const currentFallbackChild: Fiber | null = (current.child: any).sibling;
-        if (currentFallbackChild !== null) {
-          // Deletions go at the beginning of the return fiber's effect list
-          const first = workInProgress.firstEffect;
-          if (first !== null) {
-            workInProgress.firstEffect = currentFallbackChild;
-            currentFallbackChild.nextEffect = first;
-          } else {
-            workInProgress.firstEffect = workInProgress.lastEffect = currentFallbackChild;
-            currentFallbackChild.nextEffect = null;
+      } else {
+        const prevState: null | SuspenseState = current.memoizedState;
+        prevDidTimeout = prevState !== null;
+        if (!nextDidTimeout && prevState !== null) {
+          // We just switched from the fallback to the normal children.
+
+          // Mark the event time of the switching from fallback to normal children,
+          // based on the start of when we first showed the fallback. This time
+          // was given a normal pri expiration time at the time it was shown.
+          const fallbackExpirationTimeExpTime: ExpirationTime =
+            prevState.fallbackExpirationTime;
+          markRenderEventTime(fallbackExpirationTimeExpTime);
+
+          // Delete the fallback.
+          // TODO: Would it be better to store the fallback fragment on
+          // the stateNode during the begin phase?
+          const currentFallbackChild: Fiber | null = (current.child: any)
+            .sibling;
+          if (currentFallbackChild !== null) {
+            // Deletions go at the beginning of the return fiber's effect list
+            const first = workInProgress.firstEffect;
+            if (first !== null) {
+              workInProgress.firstEffect = currentFallbackChild;
+              currentFallbackChild.nextEffect = first;
+            } else {
+              workInProgress.firstEffect = workInProgress.lastEffect = currentFallbackChild;
+              currentFallbackChild.nextEffect = null;
+            }
+            currentFallbackChild.effectTag = Deletion;
           }
-          currentFallbackChild.effectTag = Deletion;
+        }
+      }
+
+      if (nextDidTimeout && !prevDidTimeout) {
+        // If this subtreee is running in concurrent mode we can suspend,
+        // otherwise we won't suspend.
+        // TODO: This will still suspend a synchronous tree if anything
+        // in the concurrent tree already suspended during this render.
+        // This is a known bug.
+        if ((workInProgress.mode & ConcurrentMode) !== NoContext) {
+          renderDidSuspend();
         }
       }
 
       if (supportsPersistence) {
+        // TODO: Only schedule updates if not prevDidTimeout.
         if (nextDidTimeout) {
           // If this boundary just timed out, schedule an effect to attach a
           // retry listener to the proimse. This flag is also used to hide the
@@ -710,6 +737,7 @@ function completeWork(
         }
       }
       if (supportsMutation) {
+        // TODO: Only schedule updates if these values are non equal, i.e. it changed.
         if (nextDidTimeout || prevDidTimeout) {
           // If this boundary just timed out, schedule an effect to attach a
           // retry listener to the proimse. This flag is also used to hide the

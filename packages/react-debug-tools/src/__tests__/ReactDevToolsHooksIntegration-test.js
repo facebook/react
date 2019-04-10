@@ -251,7 +251,10 @@ describe('React hooks DevTools integration', () => {
       </div>,
       {unstable_isConcurrent: true},
     );
+
     expect(Scheduler).toFlushAndYield([]);
+    // Ensure we timeout any suspense time.
+    jest.advanceTimersByTime(1000);
     const fiber = renderer.root._currentFiber().child;
     if (__DEV__) {
       // First render was locked
