@@ -43,6 +43,7 @@ export default function ElementView({ data, index, style }: Props) {
   const id = element === null ? null : element.id;
   const isSelected = selectedElementID === id;
   const lastScrolledIDRef = data.lastScrolledIDRef;
+  const treeFocused = data.treeFocused;
 
   const handleDoubleClick = useCallback(() => {
     if (id !== null) {
@@ -117,7 +118,13 @@ export default function ElementView({ data, index, style }: Props) {
 
   return (
     <div
-      className={isSelected ? styles.SelectedElement : styles.Element}
+      className={
+        isSelected && treeFocused
+          ? styles.SelectedElement
+          : isSelected
+          ? styles.InactiveElement
+          : styles.Element
+      }
       onMouseEnter={handleMouseEnter}
       onMouseDown={handleMouseDown}
       onDoubleClick={handleDoubleClick}
