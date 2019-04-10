@@ -40,6 +40,7 @@ type Context = {|
   selectedElementID: number | null,
   selectedElementIndex: number | null,
   getElementAtIndex(index: number): Element | null,
+  selectChildElementInTree(): void,
   selectElementAtIndex(index: number): void,
   selectElementByID(id: number | null): void,
   selectNextElementInTree(): void,
@@ -91,6 +92,7 @@ type Action = {|
     | 'GO_TO_PREVIOUS_SEARCH_RESULT'
     | 'HANDLE_STORE_MUTATION'
     | 'RESET_OWNER_STACK'
+    | 'SELECT_CHILD_ELEMENT_IN_TREE'
     | 'SELECT_ELEMENT_AT_INDEX'
     | 'SELECT_ELEMENT_BY_ID'
     | 'SELECT_NEXT_ELEMENT_IN_TREE'
@@ -127,6 +129,20 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
           selectedElementIndex = null;
         }
         break;
+      case 'SELECT_CHILD_ELEMENT_IN_TREE':
+        if (selectedElementIndex !== null) {
+          const selectedElement = store.getElementAtIndex(
+            ((selectedElementIndex: any): number)
+          );
+          if (selectedElement !== null && selectedElement.children.length > 0) {
+            const firstChildID = selectedElement.children[0];
+            const firstChildIndex = store.getIndexOfElementID(firstChildID);
+            if (firstChildIndex !== null) {
+              selectedElementIndex = firstChildIndex;
+            }
+          }
+        }
+        break;
       case 'SELECT_ELEMENT_AT_INDEX':
         selectedElementIndex = ((payload: any): number | null);
         break;
@@ -157,8 +173,12 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
             ((selectedElementIndex: any): number)
           );
           if (selectedElement !== null && selectedElement.parentID !== null) {
-            selectedElementIndex =
-              store.getIndexOfElementID(selectedElement.parentID) || 0;
+            const parentIndex = store.getIndexOfElementID(
+              selectedElement.parentID
+            );
+            if (parentIndex !== null) {
+              selectedElementIndex = parentIndex;
+            }
           }
         }
         break;
@@ -568,6 +588,7 @@ function TreeContextController({ children, viewElementSource }: Props) {
         case 'RESET_OWNER_STACK':
         case 'SELECT_ELEMENT_AT_INDEX':
         case 'SELECT_ELEMENT_BY_ID':
+        case 'SELECT_CHILD_ELEMENT_IN_TREE':
         case 'SELECT_NEXT_ELEMENT_IN_TREE':
         case 'SELECT_PARENT_ELEMENT_IN_TREE':
         case 'SELECT_PREVIOUS_ELEMENT_IN_TREE':
@@ -636,6 +657,10 @@ function TreeContextController({ children, viewElementSource }: Props) {
     () => dispatch({ type: 'RESET_OWNER_STACK' }),
     [dispatch]
   );
+  const selectChildElementInTree = useCallback(
+    () => dispatch({ type: 'SELECT_CHILD_ELEMENT_IN_TREE' }),
+    [dispatch]
+  );
   const selectNextElementInTree = useCallback(
     () => dispatch({ type: 'SELECT_NEXT_ELEMENT_IN_TREE' }),
     [dispatch]
@@ -661,6 +686,7 @@ function TreeContextController({ children, viewElementSource }: Props) {
       selectedElementID: state.selectedElementID,
       selectedElementIndex: state.selectedElementIndex,
       getElementAtIndex,
+      selectChildElementInTree,
       selectElementByID,
       selectElementAtIndex,
       selectNextElementInTree,
@@ -689,6 +715,7 @@ function TreeContextController({ children, viewElementSource }: Props) {
       goToNextSearchResult,
       goToPreviousSearchResult,
       resetOwnerStack,
+      selectChildElementInTree,
       selectElementAtIndex,
       selectElementByID,
       selectNextElementInTree,
