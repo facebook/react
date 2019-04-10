@@ -430,9 +430,10 @@ export default class Store extends EventEmitter {
   toggleIsCollapsed(id: number, isCollapsed: boolean): void {
     const element = this.getElementByID(id);
     if (element !== null) {
+      const oldWeight = element.isCollapsed ? 1 : element.weight;
       element.isCollapsed = isCollapsed;
-
-      const weightDelta = isCollapsed ? 1 - element.weight : element.weight - 1;
+      const newWeight = element.isCollapsed ? 1 : element.weight;
+      const weightDelta = newWeight - oldWeight;
 
       this._weightAcrossRoots += weightDelta;
 
