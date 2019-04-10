@@ -7,7 +7,10 @@
  * @flow
  */
 
-import type {ResponderEvent, ResponderContext} from 'events/EventTypes';
+import type {
+  ReactResponderEvent,
+  ReactResponderContext,
+} from 'shared/ReactTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
 const targetEventTypes = ['pointerdown', 'pointercancel'];
@@ -62,7 +65,7 @@ function createDragEvent(
 }
 
 function dispatchDragEvent(
-  context: ResponderContext,
+  context: ReactResponderContext,
   name: DragEventType,
   listener: DragEvent => void,
   state: DragState,
@@ -88,8 +91,8 @@ const DragResponder = {
     };
   },
   onEvent(
-    event: ResponderEvent,
-    context: ResponderContext,
+    event: ReactResponderEvent,
+    context: ReactResponderContext,
     props: Object,
     state: DragState,
   ): void {

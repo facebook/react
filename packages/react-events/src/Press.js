@@ -7,7 +7,10 @@
  * @flow
  */
 
-import type {ResponderEvent, ResponderContext} from 'events/EventTypes';
+import type {
+  ReactResponderEvent,
+  ReactResponderContext,
+} from 'shared/ReactTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
 type PressProps = {
@@ -89,7 +92,7 @@ function createPressEvent(
 }
 
 function dispatchEvent(
-  context: ResponderContext,
+  context: ReactResponderContext,
   state: PressState,
   name: PressEventType,
   listener: (e: Object) => void,
@@ -100,7 +103,7 @@ function dispatchEvent(
 }
 
 function dispatchPressChangeEvent(
-  context: ResponderContext,
+  context: ReactResponderContext,
   props: PressProps,
   state: PressState,
 ): void {
@@ -111,7 +114,7 @@ function dispatchPressChangeEvent(
 }
 
 function dispatchLongPressChangeEvent(
-  context: ResponderContext,
+  context: ReactResponderContext,
   props: PressProps,
   state: PressState,
 ): void {
@@ -150,7 +153,7 @@ function deactivate(context, props, state) {
 }
 
 function dispatchPressStartEvents(
-  context: ResponderContext,
+  context: ReactResponderContext,
   props: PressProps,
   state: PressState,
 ): void {
@@ -212,7 +215,7 @@ function dispatchPressStartEvents(
 }
 
 function dispatchPressEndEvents(
-  context: ResponderContext,
+  context: ReactResponderContext,
   props: PressProps,
   state: PressState,
 ): void {
@@ -265,7 +268,7 @@ function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
 }
 
 function unmountResponder(
-  context: ResponderContext,
+  context: ReactResponderContext,
   props: PressProps,
   state: PressState,
 ): void {
@@ -293,8 +296,8 @@ const PressResponder = {
     };
   },
   onEvent(
-    event: ResponderEvent,
-    context: ResponderContext,
+    event: ReactResponderEvent,
+    context: ReactResponderContext,
     props: PressProps,
     state: PressState,
   ): void {
@@ -491,12 +494,16 @@ const PressResponder = {
       }
     }
   },
-  onUnmount(context: ResponderContext, props: PressProps, state: PressState) {
+  onUnmount(
+    context: ReactResponderContext,
+    props: PressProps,
+    state: PressState,
+  ) {
     unmountResponder(context, props, state);
   },
   // TODO This method doesn't work as of yet
   onOwnershipChange(
-    context: ResponderContext,
+    context: ReactResponderContext,
     props: PressProps,
     state: PressState,
   ) {

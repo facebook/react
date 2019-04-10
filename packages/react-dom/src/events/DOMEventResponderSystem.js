@@ -6,11 +6,6 @@
  * @flow
  */
 
-import type {
-  ResponderContext,
-  ResponderEvent,
-  ResponderDispatchEventOptions,
-} from 'events/EventTypes';
 import {
   type EventSystemFlags,
   IS_PASSIVE,
@@ -24,6 +19,9 @@ import {
 import type {
   ReactEventResponderEventType,
   ReactEventComponentInstance,
+  ReactResponderContext,
+  ReactResponderEvent,
+  ReactResponderDispatchEventOptions,
 } from 'shared/ReactTypes';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 import {batchedUpdates, interactiveUpdates} from 'events/ReactGenericBatching';
@@ -58,10 +56,10 @@ let currentOwner = null;
 let currentInstance: ReactEventComponentInstance;
 let currentEventQueue: EventQueue;
 
-const eventResponderContext: ResponderContext = {
+const eventResponderContext: ReactResponderContext = {
   dispatchEvent(
     possibleEventObject: Object,
-    {capture, discrete, stopPropagation}: ResponderDispatchEventOptions,
+    {capture, discrete, stopPropagation}: ReactResponderDispatchEventOptions,
   ): void {
     const eventQueue = currentEventQueue;
     const {listener, target, type} = possibleEventObject;
@@ -260,7 +258,7 @@ function createResponderEvent(
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: Element | Document,
   eventSystemFlags: EventSystemFlags,
-): ResponderEvent {
+): ReactResponderEvent {
   return {
     nativeEvent: nativeEvent,
     target: nativeEventTarget,
@@ -342,7 +340,7 @@ function getTargetEventTypes(
 
 function handleTopLevelType(
   topLevelType: DOMTopLevelEventType,
-  responderEvent: ResponderEvent,
+  responderEvent: ReactResponderEvent,
   eventComponentInstance: ReactEventComponentInstance,
   isRootLevelEvent: boolean,
 ): void {

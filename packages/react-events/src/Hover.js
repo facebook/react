@@ -7,7 +7,10 @@
  * @flow
  */
 
-import type {ResponderEvent, ResponderContext} from 'events/EventTypes';
+import type {
+  ReactResponderEvent,
+  ReactResponderContext,
+} from 'shared/ReactTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
 type HoverProps = {
@@ -64,8 +67,8 @@ function createHoverEvent(
 }
 
 function dispatchHoverChangeEvent(
-  event: ResponderEvent,
-  context: ResponderContext,
+  event: ReactResponderEvent,
+  context: ReactResponderContext,
   props: HoverProps,
   state: HoverState,
 ): void {
@@ -81,8 +84,8 @@ function dispatchHoverChangeEvent(
 }
 
 function dispatchHoverStartEvents(
-  event: ResponderEvent,
-  context: ResponderContext,
+  event: ReactResponderEvent,
+  context: ReactResponderContext,
   props: HoverProps,
   state: HoverState,
 ): void {
@@ -132,8 +135,8 @@ function dispatchHoverStartEvents(
 }
 
 function dispatchHoverEndEvents(
-  event: ResponderEvent,
-  context: ResponderContext,
+  event: ReactResponderEvent,
+  context: ReactResponderContext,
   props: HoverProps,
   state: HoverState,
 ) {
@@ -199,8 +202,8 @@ const HoverResponder = {
     };
   },
   onEvent(
-    event: ResponderEvent,
-    context: ResponderContext,
+    event: ReactResponderEvent,
+    context: ReactResponderContext,
     props: HoverProps,
     state: HoverState,
   ): void {
