@@ -41,7 +41,9 @@ export default function Tree(props: Props) {
     ownerStack,
     selectedElementID,
     selectedElementIndex,
+    selectElementAtIndex,
     selectNextElementInTree,
+    selectOwner,
     selectParentElementInTree,
     selectPreviousElementInTree,
   } = useContext(TreeContext);
@@ -50,7 +52,6 @@ export default function Tree(props: Props) {
   // $FlowFixMe https://github.com/facebook/flow/issues/7341
   const listRef = useRef<FixedSizeList<ItemData> | null>(null);
   const treeRef = useRef<HTMLDivElement | null>(null);
-  const elementsRef = useRef<HTMLDivElement | null>(null);
 
   const [treeFocused, setTreeFocused] = useState<boolean>(false);
 
@@ -147,29 +148,31 @@ export default function Tree(props: Props) {
     store,
   ]);
 
-  useEffect(() => {
-    if (elementsRef.current === null) {
-      return () => {};
+  const handleBlur = useCallback(() => setTreeFocused(false));
+
+  const handleFocus = useCallback(() => {
+    setTreeFocused(true);
+
+    if (selectedElementIndex === null && numElements > 0) {
+      selectElementAtIndex(0);
     }
+  }, [numElements, selectedElementIndex, selectElementAtIndex]);
 
-    const handleFocusIn = () => {
-      setTreeFocused(true);
-    };
-
-    const handleFocusOut = () => {
-      setTreeFocused(false);
-    };
-
-    const elementsElement = elementsRef.current;
-
-    elementsElement.addEventListener('focusin', handleFocusIn);
-    elementsElement.addEventListener('focusout', handleFocusOut);
-
-    return () => {
-      elementsElement.removeEventListener('focusin', handleFocusIn);
-      elementsElement.removeEventListener('focusout', handleFocusOut);
-    };
-  }, []);
+  const handleKeyPress = useCallback(
+    event => {
+      switch (event.key) {
+        case 'Enter':
+        case ' ':
+          if (selectedElementID !== null) {
+            selectOwner(selectedElementID);
+          }
+          break;
+        default:
+          break;
+      }
+    },
+    [selectedElementID, selectOwner]
+  );
 
   // Let react-window know to re-render any time the underlying tree data changes.
   // This includes the owner context, since it controls a filtered view of the tree.
@@ -196,8 +199,11 @@ export default function Tree(props: Props) {
       </div>
       <div
         className={styles.AutoSizerWrapper}
+        onBlur={handleBlur}
+        onFocus={handleFocus}
+        onKeyPress={handleKeyPress}
         onMouseLeave={handleMouseLeave}
-        ref={elementsRef}
+        tabIndex={0}
       >
         <AutoSizer>
           {({ height, width }) => (
@@ -223,36 +229,7 @@ export default function Tree(props: Props) {
 }
 
 function InnerElementType({ style, ...rest }) {
-  const {
-    numElements,
-    ownerStack,
-    selectedElementID,
-    selectedElementIndex,
-    selectElementAtIndex,
-    selectOwner,
-  } = useContext(TreeContext);
-
-  const handleFocus = () => {
-    if (selectedElementIndex === null && numElements > 0) {
-      selectElementAtIndex(0);
-    }
-  };
-
-  const handleKeyPress = useCallback(
-    event => {
-      switch (event.key) {
-        case 'Enter':
-        case ' ':
-          if (selectedElementID !== null) {
-            selectOwner(selectedElementID);
-          }
-          break;
-        default:
-          break;
-      }
-    },
-    [selectedElementID, selectOwner]
-  );
+  const { ownerStack } = useContext(TreeContext);
 
   // The list may need to scroll horizontally due to deeply nested elements.
   // We don't know the maximum scroll width up front, because we're windowing.
@@ -283,8 +260,6 @@ function InnerElementType({ style, ...rest }) {
   return (
     <div
       className={styles.InnerElementType}
-      onFocus={handleFocus}
-      onKeyPress={handleKeyPress}
       style={{
         ...style,
         display: 'inline-block',
@@ -292,7 +267,6 @@ function InnerElementType({ style, ...rest }) {
         width: undefined,
       }}
       ref={divRef}
-      tabIndex={0}
       {...rest}
     />
   );
