@@ -26,7 +26,12 @@ export default function KeyValue({
   path = [],
   value,
 }: KeyValueProps) {
-  const [isOpen, setIsOpen] = useState<boolean>(true);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+
+  const toggleIsOpen = useCallback(
+    () => setIsOpen(prevIsOpen => !prevIsOpen),
+    []
+  );
 
   const dataType = typeof value;
   const isSimpleType =
@@ -103,7 +108,12 @@ export default function KeyValue({
           ) : (
             <div className={styles.ExpandCollapseToggle} />
           )}
-          <span className={styles.Name}>{name}</span>
+          <span
+            className={styles.Name}
+            onDoubleClick={hasChildren ? toggleIsOpen : undefined}
+          >
+            {name}
+          </span>
           <span>Array</span>
         </div>
       );
@@ -129,7 +139,12 @@ export default function KeyValue({
           ) : (
             <div className={styles.ExpandCollapseToggle} />
           )}
-          <span className={styles.Name}>{name}</span>
+          <span
+            className={styles.Name}
+            onDoubleClick={hasChildren ? toggleIsOpen : undefined}
+          >
+            {name}
+          </span>
           <span>Object</span>
         </div>
       );
