@@ -202,17 +202,25 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
   const prevSearchText = searchText;
   const numPrevSearchResults = searchResults.length;
 
+  // We track explicitly whether search was requested because
+  // we might want to search even if search index didn't change.
+  // For example, if you press "next result" on a search with a single
+  // result but a different current selection, we'll set this to true.
+  let didRequestSearch = false;
+
   // Search isn't supported when the owner's tree is active.
   if (ownerStack.length === 0) {
     switch (type) {
       case 'GO_TO_NEXT_SEARCH_RESULT':
         if (numPrevSearchResults > 0) {
+          didRequestSearch = true;
           searchIndex =
             searchIndex + 1 < numPrevSearchResults ? searchIndex + 1 : 0;
         }
         break;
       case 'GO_TO_PREVIOUS_SEARCH_RESULT':
         if (numPrevSearchResults > 0) {
+          didRequestSearch = true;
           searchIndex =
             ((searchIndex: any): number) > 0
               ? ((searchIndex: any): number) - 1
@@ -312,11 +320,23 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
     }
   }
 
-  // Changes in search index or typing should override the selected element.
-  const didAddToSearchText =
-    searchText.length > prevSearchText.length &&
-    searchText.indexOf(prevSearchText) === 0;
-  if (searchIndex !== prevSearchIndex || didAddToSearchText) {
+  if (searchIndex !== prevSearchIndex) {
+    // The user intentionally navigated between search results
+    didRequestSearch = true;
+  }
+  if (searchText !== prevSearchText) {
+    const newSearchIndex = searchResults.indexOf(selectedElementID);
+    if (newSearchIndex === -1) {
+      // Only move the selection if the new query
+      // doesn't match the current selection anymore.
+      didRequestSearch = true;
+    } else {
+      // Selected item still matches the new search query.
+      // Adjust the index to reflect its position in new results.
+      searchIndex = newSearchIndex;
+    }
+  }
+  if (didRequestSearch) {
     if (searchIndex === null) {
       selectedElementIndex = null;
       selectedElementID = null;
