@@ -320,16 +320,20 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
     }
   }
 
-  // Changes in search index or typing should override the selected element.
   if (searchIndex !== prevSearchIndex) {
+    // The user intentionally navigated between search results
     didRequestSearch = true;
   }
-  if (
-    // Did the user type more?
-    searchText.length > prevSearchText.length &&
-    searchText.indexOf(prevSearchText) === 0
-  ) {
-    didRequestSearch = true;
+  if (searchText !== prevSearchText) {
+    if (searchResults.indexOf(selectedElementID) === -1) {
+      // Only move the selection if the new query
+      // doesn't match the current selection anymore.
+      didRequestSearch = true;
+    } else {
+      // Selected item still matches the new search query.
+      // Adjust the index to reflect its position in new results.
+      searchIndex = searchResults.indexOf(selectedElementID);
+    }
   }
   if (didRequestSearch) {
     if (searchIndex === null) {
