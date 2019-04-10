@@ -1,7 +1,10 @@
 // @flow
 
-import React from 'react';
+import React, { useState } from 'react';
+import type { Element } from 'react';
 import EditableValue from './EditableValue';
+import Button from '../Button';
+import ButtonIcon from '../ButtonIcon';
 import { getMetaValueLabel } from '../utils';
 import { meta } from '../../../hydration';
 import styles from './KeyValue.css';
@@ -23,6 +26,12 @@ export default function KeyValue({
   path = [],
   value,
 }: KeyValueProps) {
+  const [open, setOpen] = useState(false);
+
+  const handleToggle = () => {
+    setOpen(prevOpen => !prevOpen);
+  };
+
   const dataType = typeof value;
   const isSimpleType =
     dataType === 'number' ||
@@ -72,45 +81,72 @@ export default function KeyValue({
       </div>
     );
   } else {
+    const opener = (
+      <Button
+        className={styles.Opener}
+        onClick={handleToggle}
+        title={`${open ? 'Collapse' : 'Expand'} prop value`}
+      >
+        <ButtonIcon type={open ? 'expanded' : 'collapsed'} />
+      </Button>
+    );
+
     if (Array.isArray(value)) {
-      children = value.map((innerValue, index) => (
-        <KeyValue
-          key={index}
-          depth={depth + 1}
-          name={index}
-          overrideValueFn={overrideValueFn}
-          path={path.concat(index)}
-          value={value[index]}
-        />
-      ));
+      const showOpener = value.length > 0;
+
+      children = open
+        ? value.map((innerValue, index) => (
+            <KeyValue
+              key={index}
+              depth={depth + 1}
+              name={index}
+              overrideValueFn={overrideValueFn}
+              path={path.concat(index)}
+              value={value[index]}
+            />
+          ))
+        : [];
       children.unshift(
         <div
           key={`${depth}-root`}
           className={styles.Item}
-          style={{ paddingLeft }}
+          style={{
+            paddingLeft: showOpener
+              ? `calc(${paddingLeft} - 1rem)`
+              : paddingLeft,
+          }}
         >
+          {showOpener && opener}
           <span className={styles.Name}>{name}</span>
           <span>Array</span>
         </div>
       );
     } else {
-      // $FlowFixMe "Missing type annotation for U" whatever that means
-      children = Object.entries(value).map(([name, value]) => (
-        <KeyValue
-          key={name}
-          depth={depth + 1}
-          name={name}
-          overrideValueFn={overrideValueFn}
-          path={path.concat(name)}
-          value={value}
-        />
-      ));
+      const showOpener = Object.entries(value).length > 0;
+
+      children = open
+        ? Object.entries(value).map<Element<any>>(([name, value]) => (
+            <KeyValue
+              key={name}
+              depth={depth + 1}
+              name={name}
+              overrideValueFn={overrideValueFn}
+              path={path.concat(name)}
+              value={value}
+            />
+          ))
+        : [];
       children.unshift(
         <div
           key={`${depth}-root`}
           className={styles.Item}
-          style={{ paddingLeft }}
+          style={{
+            paddingLeft: showOpener
+              ? `calc(${paddingLeft} - 1rem)`
+              : paddingLeft,
+          }}
         >
+          {showOpener && opener}
           <span className={styles.Name}>{name}</span>
           <span>Object</span>
         </div>

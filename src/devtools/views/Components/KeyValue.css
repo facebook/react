@@ -1,5 +1,6 @@
 .Item {
   display: flex;
+  --color-expand-collapse-toggle: var(--color-dim);
 }
 
 .Name {
@@ -25,4 +26,12 @@
 .None {
   color: var(--color-dimmer);
   font-style: italic;
+}
+
+.Opener {
+  display: inline-flex;
+  width: 1rem;
+  height: 1rem;
+  padding: 0;
+  color: var(--color-expand-collapse-toggle);
 }
