@@ -425,7 +425,7 @@ describe('DOMEventResponderSystem', () => {
     expect(onOwnershipChangeFired).toEqual(1);
   });
 
-  it('should be possible to query event targets for their elements', () => {
+  it('should be possible to get event targets', () => {
     let queryResult = null;
     const buttonRef = React.createRef();
     const divRef = React.createRef();
@@ -477,7 +477,7 @@ describe('DOMEventResponderSystem', () => {
     ]);
   });
 
-  it('should be possible to query event targets for their elements by type', () => {
+  it('should be possible to query event targets by type', () => {
     let queryResult = null;
     const buttonRef = React.createRef();
     const divRef = React.createRef();
@@ -527,7 +527,7 @@ describe('DOMEventResponderSystem', () => {
     ]);
   });
 
-  it('should be possible to query event targets for their elements by key', () => {
+  it('should be possible to query event targets by key', () => {
     let queryResult = null;
     const buttonRef = React.createRef();
     const divRef = React.createRef();
@@ -574,7 +574,7 @@ describe('DOMEventResponderSystem', () => {
     ]);
   });
 
-  it('should be possible to query event targets for their elements by type and key', () => {
+  it('should be possible to query event targets by type and key', () => {
     let queryResult = null;
     let queryResult2 = null;
     let queryResult3 = null;
