@@ -199,7 +199,7 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
     selectedElementIndex,
   } = state;
 
-  let prevSearchIndex = searchIndex;
+  const prevSearchIndex = searchIndex;
   const prevSearchText = searchText;
   const numPrevSearchResults = searchResults.length;
 
@@ -307,25 +307,10 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
             if (prevSearchIndex === null) {
               searchIndex = 0;
             } else {
-              // Changes in search index or typing should override the selected element.
-              // The one exception is when a search is broadened (e.g. "Cat" -> "Ca").
-              // In this case, it's probably desirable to maintain a stable selection.
-              // Replacements of text( e.g. "cat" -> "dog") likely require an index change.
-              const didRelaxSearchText =
-                prevSearchText.length > searchText.length &&
-                prevSearchText.startsWith(searchText);
-              if (didRelaxSearchText) {
-                searchIndex = prevSearchIndex;
-              } else {
-                searchIndex = Math.min(
-                  ((prevSearchIndex: any): number),
-                  searchResults.length - 1
-                );
-
-                // Force selected element ID to be re-evaluated below, even if the search index didn't change,
-                // because new search text means the same index may now point to a new element.
-                prevSearchIndex = null;
-              }
+              searchIndex = Math.min(
+                ((prevSearchIndex: any): number),
+                searchResults.length - 1
+              );
             }
           }
         }
