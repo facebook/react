@@ -62,7 +62,7 @@ export default function KeyValue({
 
     children = (
       <div key="root" className={styles.Item} style={style}>
-        <div className={styles.ExpandCollapseToggle} />
+        <div className={styles.ExpandCollapseToggleSpacer} />
         <span className={nameClassName}>{name}</span>
         {typeof overrideValueFn === 'function' ? (
           <EditableValue
@@ -80,7 +80,7 @@ export default function KeyValue({
     // TODO Is this type even necessary? Can we just drop it?
     children = (
       <div key="root" className={styles.Item} style={style}>
-        <div className={styles.ExpandCollapseToggle} />
+        <div className={styles.ExpandCollapseToggleSpacer} />
         <span className={styles.Name}>{name}</span>
         <span className={styles.Value}>{getMetaValueLabel(value)}</span>
       </div>
@@ -106,7 +106,7 @@ export default function KeyValue({
           {hasChildren ? (
             <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
           ) : (
-            <div className={styles.ExpandCollapseToggle} />
+            <div className={styles.ExpandCollapseToggleSpacer} />
           )}
           <span
             className={styles.Name}
@@ -137,7 +137,7 @@ export default function KeyValue({
           {hasChildren ? (
             <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
           ) : (
-            <div className={styles.ExpandCollapseToggle} />
+            <div className={styles.ExpandCollapseToggleSpacer} />
           )}
           <span
             className={styles.Name}

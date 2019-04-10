@@ -4,7 +4,10 @@
 }
 
 .Hook {
-  padding-left: 0.75rem;
+}
+
+.Children {
+  padding-left: 1rem;
 }
 
 .HeaderRow {
@@ -49,4 +52,8 @@
 
 .TruncationIndicator {
   color: var(--color-dimmer);
+}
+
+.ExpandCollapseToggleSpacer {
+  width: 1rem;
 }

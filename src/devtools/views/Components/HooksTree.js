@@ -121,28 +121,34 @@ function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
       return (
         <div className={styles.Hook}>
           <div className={styles.NameValueRow}>
+            <span className={styles.ExpandCollapseToggleSpacer} />
             <span className={styles.Name}>{name}</span>
           </div>
-          <KeyValue depth={1} name="DebugValue" value={value} />
-          <InnerHooksTreeView
-            canEditHooks={canEditHooks}
-            hooks={subHooks}
-            id={id}
-          />
+          <div className={styles.Children}>
+            <KeyValue depth={1} name="DebugValue" value={value} />
+            <InnerHooksTreeView
+              canEditHooks={canEditHooks}
+              hooks={subHooks}
+              id={id}
+            />
+          </div>
         </div>
       );
     } else {
       return (
         <div className={styles.Hook}>
           <div className={styles.NameValueRow}>
+            <span className={styles.ExpandCollapseToggleSpacer} />
             <span className={styles.Name}>{name}</span> {/* $FlowFixMe */}
             <span className={styles.Value}>{displayValue}</span>
           </div>
-          <InnerHooksTreeView
-            canEditHooks={canEditHooks}
-            hooks={subHooks}
-            id={id}
-          />
+          <div className={styles.Children}>
+            <InnerHooksTreeView
+              canEditHooks={canEditHooks}
+              hooks={subHooks}
+              id={id}
+            />
+          </div>
         </div>
       );
     }
@@ -166,7 +172,7 @@ function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
       return (
         <div className={styles.Hook}>
           <KeyValue
-            depth={0}
+            depth={1}
             name={name}
             overrideValueFn={overrideValueFn}
             value={value}
@@ -177,6 +183,7 @@ function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
       return (
         <div className={styles.Hook}>
           <div className={styles.NameValueRow}>
+            <span className={styles.ExpandCollapseToggleSpacer} />
             <span
               className={
                 typeof overrideValueFn === 'function'
