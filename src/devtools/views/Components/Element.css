@@ -8,8 +8,6 @@
   align-items: center;
   cursor: default;
   user-select: none;
-
-  --color-expand-collapse-toggle: var(--color-dim);
 }
 .Element:hover {
   background-color: var(--color-hover-background);

@@ -222,6 +222,7 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-dim', documentElements);
   updateStyleHelper(theme, 'color-dimmer', documentElements);
   updateStyleHelper(theme, 'color-dimmest', documentElements);
+  updateStyleHelper(theme, 'color-expand-collapse-toggle', documentElements);
   updateStyleHelper(theme, 'color-hover-background', documentElements);
   updateStyleHelper(theme, 'color-inactive-background', documentElements);
   updateStyleHelper(theme, 'color-jsx-arrow-brackets', documentElements);

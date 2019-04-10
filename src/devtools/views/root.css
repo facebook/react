@@ -33,6 +33,7 @@
   --light-color-dim: #777d88;
   --light-color-dimmer: #cfd1d5;
   --light-color-dimmest: #eff0f1;
+  --light-color-expand-collapse-toggle: #777d88;
   --light-color-hover-background: #ebf1fb;
   --light-color-inactive-background: #f1f1f1;
   --light-color-jsx-arrow-brackets: #333333;
@@ -78,6 +79,7 @@
   --dark-color-dim: #8f949d;
   --dark-color-dimmer: #777d88;
   --dark-color-dimmest: #4f5766;
+  --dark-color-expand-collapse-toggle: #8f949d;
   --dark-color-hover-background: #3d424a;
   --dark-color-inactive-background: #3d424a;
   --dark-color-jsx-arrow-brackets: #777d88;

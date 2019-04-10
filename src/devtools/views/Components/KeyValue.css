@@ -1,6 +1,5 @@
 .Item {
   display: flex;
-  --color-expand-collapse-toggle: var(--color-dim);
 }
 
 .Name {
