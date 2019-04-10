@@ -84,10 +84,11 @@ export default function Tree(props: Props) {
       // eslint-disable-next-line default-case
       switch (event.key) {
         case 'ArrowDown':
-          selectNextElementInTree();
           event.preventDefault();
+          selectNextElementInTree();
           break;
         case 'ArrowLeft':
+          event.preventDefault();
           element =
             selectedElementID !== null
               ? store.getElementByID(selectedElementID)
@@ -103,6 +104,7 @@ export default function Tree(props: Props) {
           }
           break;
         case 'ArrowRight':
+          event.preventDefault();
           element =
             selectedElementID !== null
               ? store.getElementByID(selectedElementID)
@@ -116,11 +118,10 @@ export default function Tree(props: Props) {
           } else {
             selectNextElementInTree();
           }
-          event.preventDefault();
           break;
         case 'ArrowUp':
-          selectPreviousElementInTree();
           event.preventDefault();
+          selectPreviousElementInTree();
           break;
       }
     };
