@@ -5,6 +5,7 @@
 .Name {
   color: var(--color-dim);
   flex: 0 0 auto;
+  user-select: none;
 }
 .EditableName {
   color: var(--color-attribute-name);
@@ -27,7 +28,7 @@
   font-style: italic;
 }
 
-.Opener {
+.ExpandCollapseToggle {
   display: inline-flex;
   width: 1rem;
   height: 1rem;

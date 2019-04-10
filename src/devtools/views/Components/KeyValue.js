@@ -1,6 +1,6 @@
 // @flow
 
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import type { Element } from 'react';
 import EditableValue from './EditableValue';
 import Button from '../Button';
@@ -26,11 +26,7 @@ export default function KeyValue({
   path = [],
   value,
 }: KeyValueProps) {
-  const [open, setOpen] = useState(false);
-
-  const handleToggle = () => {
-    setOpen(prevOpen => !prevOpen);
-  };
+  const [isOpen, setIsOpen] = useState<boolean>(true);
 
   const dataType = typeof value;
   const isSimpleType =
@@ -39,7 +35,9 @@ export default function KeyValue({
     dataType === 'boolean' ||
     value == null;
 
-  const paddingLeft = `${depth * 0.75}rem`;
+  const style = {
+    paddingLeft: `${(depth - 1) * 0.75}rem`,
+  };
 
   let children = null;
   if (isSimpleType) {
@@ -58,7 +56,8 @@ export default function KeyValue({
       typeof overrideValueFn === 'function' ? styles.EditableName : styles.Name;
 
     children = (
-      <div key="root" className={styles.Item} style={{ paddingLeft }}>
+      <div key="root" className={styles.Item} style={style}>
+        <div className={styles.ExpandCollapseToggle} />
         <span className={nameClassName}>{name}</span>
         {typeof overrideValueFn === 'function' ? (
           <EditableValue
@@ -75,26 +74,17 @@ export default function KeyValue({
   } else if (value.hasOwnProperty(meta.type)) {
     // TODO Is this type even necessary? Can we just drop it?
     children = (
-      <div key="root" className={styles.Item} style={{ paddingLeft }}>
+      <div key="root" className={styles.Item} style={style}>
+        <div className={styles.ExpandCollapseToggle} />
         <span className={styles.Name}>{name}</span>
         <span className={styles.Value}>{getMetaValueLabel(value)}</span>
       </div>
     );
   } else {
-    const opener = (
-      <Button
-        className={styles.Opener}
-        onClick={handleToggle}
-        title={`${open ? 'Collapse' : 'Expand'} prop value`}
-      >
-        <ButtonIcon type={open ? 'expanded' : 'collapsed'} />
-      </Button>
-    );
-
     if (Array.isArray(value)) {
-      const showOpener = value.length > 0;
+      const hasChildren = value.length > 0;
 
-      children = open
+      children = isOpen
         ? value.map((innerValue, index) => (
             <KeyValue
               key={index}
@@ -107,24 +97,20 @@ export default function KeyValue({
           ))
         : [];
       children.unshift(
-        <div
-          key={`${depth}-root`}
-          className={styles.Item}
-          style={{
-            paddingLeft: showOpener
-              ? `calc(${paddingLeft} - 1rem)`
-              : paddingLeft,
-          }}
-        >
-          {showOpener && opener}
+        <div key={`${depth}-root`} className={styles.Item} style={style}>
+          {hasChildren ? (
+            <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
+          ) : (
+            <div className={styles.ExpandCollapseToggle} />
+          )}
           <span className={styles.Name}>{name}</span>
           <span>Array</span>
         </div>
       );
     } else {
-      const showOpener = Object.entries(value).length > 0;
+      const hasChildren = Object.entries(value).length > 0;
 
-      children = open
+      children = isOpen
         ? Object.entries(value).map<Element<any>>(([name, value]) => (
             <KeyValue
               key={name}
@@ -137,16 +123,12 @@ export default function KeyValue({
           ))
         : [];
       children.unshift(
-        <div
-          key={`${depth}-root`}
-          className={styles.Item}
-          style={{
-            paddingLeft: showOpener
-              ? `calc(${paddingLeft} - 1rem)`
-              : paddingLeft,
-          }}
-        >
-          {showOpener && opener}
+        <div key={`${depth}-root`} className={styles.Item} style={style}>
+          {hasChildren ? (
+            <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
+          ) : (
+            <div className={styles.ExpandCollapseToggle} />
+          )}
           <span className={styles.Name}>{name}</span>
           <span>Object</span>
         </div>
@@ -155,4 +137,28 @@ export default function KeyValue({
   }
 
   return children;
+}
+
+type ExpandCollapseToggleProps = {|
+  isOpen: boolean,
+  setIsOpen: Function,
+|};
+
+function ExpandCollapseToggle({
+  isOpen,
+  setIsOpen,
+}: ExpandCollapseToggleProps) {
+  const handleClick = useCallback(() => {
+    setIsOpen(prevIsOpen => !prevIsOpen);
+  }, [setIsOpen]);
+
+  return (
+    <Button
+      className={styles.ExpandCollapseToggle}
+      onClick={handleClick}
+      title={`${isOpen ? 'Collapse' : 'Expand'} prop value`}
+    >
+      <ButtonIcon type={isOpen ? 'expanded' : 'collapsed'} />
+    </Button>
+  );
 }
