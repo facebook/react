@@ -333,7 +333,7 @@ function calculateResponderRegion(target, props) {
 }
 
 function isPressWithinResponderRegion(
-  nativeEvent: $PropertyType<ResponderEvent, 'nativeEvent'>,
+  nativeEvent: $PropertyType<ReactResponderEvent, 'nativeEvent'>,
   state: PressState,
 ): boolean {
   const {responderRegion} = state;
