@@ -10,6 +10,7 @@
 .EditableName {
   color: var(--color-attribute-name);
   flex: 0 0 auto;
+  user-select: none;
 }
 .EditableName:after,
 .Name:after {
