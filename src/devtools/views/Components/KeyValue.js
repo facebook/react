@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import type { Element } from 'react';
 import EditableValue from './EditableValue';
-import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import { getMetaValueLabel } from '../utils';
 import { meta } from '../../../hydration';
@@ -82,12 +81,14 @@ export default function KeyValue({
     );
   } else {
     const opener = (
-      <Button className={styles.Opener} onClick={handleToggle}>
-        <ButtonIcon type={open ? 'up' : 'down'} />
-      </Button>
+      <div className={styles.Opener} onClick={handleToggle}>
+        <ButtonIcon type={open ? 'expanded' : 'collapsed'} />
+      </div>
     );
 
     if (Array.isArray(value)) {
+      const showOpener = value.length > 0;
+
       children = open
         ? value.map((innerValue, index) => (
             <KeyValue
@@ -104,14 +105,20 @@ export default function KeyValue({
         <div
           key={`${depth}-root`}
           className={styles.Item}
-          style={{ paddingLeft }}
+          style={{
+            paddingLeft: showOpener
+              ? `calc(${paddingLeft} - 1rem)`
+              : paddingLeft,
+          }}
         >
-          {value.length > 0 && opener}
+          {showOpener && opener}
           <span className={styles.Name}>{name}</span>
           <span>Array</span>
         </div>
       );
     } else {
+      const showOpener = Object.entries(value).length > 0;
+
       children = open
         ? Object.entries(value).map<Element<any>>(([name, value]) => (
             <KeyValue
@@ -128,9 +135,13 @@ export default function KeyValue({
         <div
           key={`${depth}-root`}
           className={styles.Item}
-          style={{ paddingLeft }}
+          style={{
+            paddingLeft: showOpener
+              ? `calc(${paddingLeft} - 1rem)`
+              : paddingLeft,
+          }}
         >
-          {Object.entries(value).length > 0 && opener}
+          {showOpener && opener}
           <span className={styles.Name}>{name}</span>
           <span>Object</span>
         </div>

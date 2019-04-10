@@ -1,5 +1,6 @@
 .Item {
   display: flex;
+  --color-expand-collapse-toggle: var(--color-dim);
 }
 
 .Name {
@@ -28,11 +29,8 @@
 }
 
 .Opener {
-  padding: 0.125rem;
-  margin-left: -1rem;
-}
-
-.Opener svg {
-  width: 0.75rem;
-  height: 0.75rem;
+  display: inline-flex;
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-expand-collapse-toggle);
 }
