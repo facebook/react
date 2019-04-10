@@ -841,6 +841,9 @@ function completeWork(
           rootContainerInstance,
           workInProgress,
         );
+        // Update the latest props on the stateNode. This is used
+        // during the event phase to find the most current props.
+        workInProgress.stateNode.props = newProps;
         if (shouldUpdate) {
           markUpdate(workInProgress);
         }

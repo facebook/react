@@ -15,6 +15,7 @@ import type {AnyNativeEvent} from 'events/PluginModuleType';
 import {
   EventComponent,
   EventTarget as EventTargetWorkTag,
+  HostComponent,
 } from 'shared/ReactWorkTags';
 import type {
   ReactEventResponderEventType,
@@ -237,7 +238,73 @@ const eventResponderContext: ReactResponderContext = {
       }
     }, delay);
   },
+  getEventTargetsFromTarget(
+    target: Element | Document,
+    queryType?: Symbol | number,
+    queryKey?: string,
+  ): Array<{
+    node: Element,
+    props: null | Object,
+  }> {
+    const eventTargetHostComponents = [];
+    let node = getClosestInstanceFromNode(target);
+    // We traverse up the fiber tree from the target fiber, to the
+    // current event component fiber. Along the way, we check if
+    // the fiber has any children that are event targets. If there
+    // are, we query them (optionally) to ensure they match the
+    // specified type and key. We then push the event target props
+    // along with the associated parent host component of that event
+    // target.
+    while (node !== null) {
+      if (node.stateNode === currentInstance) {
+        break;
+      }
+      let child = node.child;
+
+      while (child !== null) {
+        if (
+          child.tag === EventTargetWorkTag &&
+          queryEventTarget(child, queryType, queryKey)
+        ) {
+          const props = child.stateNode.props;
+          let parent = child.return;
+
+          if (parent !== null) {
+            if (parent.stateNode === currentInstance) {
+              break;
+            }
+            if (parent.tag === HostComponent) {
+              eventTargetHostComponents.push({
+                node: parent.stateNode,
+                props,
+              });
+              break;
+            }
+            parent = parent.return;
+          }
+          break;
+        }
+        child = child.sibling;
+      }
+      node = node.return;
+    }
+    return eventTargetHostComponents;
+  },
 };
+
+function queryEventTarget(
+  child: Fiber,
+  queryType: void | Symbol | number,
+  queryKey: void | string,
+): boolean {
+  if (queryType !== undefined && child.type.type !== queryType) {
+    return false;
+  }
+  if (queryKey !== undefined && child.key !== queryKey) {
+    return false;
+  }
+  return true;
+}
 
 const rootEventTypesToEventComponentInstances: Map<
   DOMTopLevelEventType | string,
