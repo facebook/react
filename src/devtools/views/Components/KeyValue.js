@@ -1,6 +1,7 @@
 // @flow
 
 import React, { useState } from 'react';
+import type { Element } from 'react';
 import EditableValue from './EditableValue';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
@@ -112,8 +113,7 @@ export default function KeyValue({
       );
     } else {
       children = open
-        ? // $FlowFixMe "Missing type annotation for U" whatever that means
-          Object.entries(value).map(([name, value]) => (
+        ? Object.entries(value).map<Element<any>>(([name, value]) => (
             <KeyValue
               key={name}
               depth={depth + 1}
