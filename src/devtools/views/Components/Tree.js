@@ -12,7 +12,7 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList } from 'react-window';
 import { TreeContext } from './TreeContext';
 import { SettingsContext } from '../Settings/SettingsContext';
-import { BridgeContext } from '../context';
+import { BridgeContext, StoreContext } from '../context';
 import ElementView from './Element';
 import InspectHostNodesToggle from './InspectHostNodesToggle';
 import OwnersStack from './OwnersStack';
@@ -37,12 +37,14 @@ export default function Tree(props: Props) {
     getElementAtIndex,
     numElements,
     ownerStack,
+    selectedElementID,
     selectedElementIndex,
     selectNextElementInTree,
     selectParentElementInTree,
     selectPreviousElementInTree,
   } = useContext(TreeContext);
   const bridge = useContext(BridgeContext);
+  const store = useContext(StoreContext);
   // $FlowFixMe https://github.com/facebook/flow/issues/7341
   const listRef = useRef<FixedSizeList<ItemData> | null>(null);
   const treeRef = useRef<HTMLDivElement | null>(null);
@@ -77,6 +79,8 @@ export default function Tree(props: Props) {
         return;
       }
 
+      let element;
+
       // eslint-disable-next-line default-case
       switch (event.key) {
         case 'ArrowDown':
@@ -84,10 +88,34 @@ export default function Tree(props: Props) {
           event.preventDefault();
           break;
         case 'ArrowLeft':
-          selectParentElementInTree();
+          element =
+            selectedElementID !== null
+              ? store.getElementByID(selectedElementID)
+              : null;
+          if (
+            element !== null &&
+            element.children.length > 0 &&
+            !element.isCollapsed
+          ) {
+            store.toggleIsCollapsed(element.id, true);
+          } else {
+            selectParentElementInTree();
+          }
           break;
         case 'ArrowRight':
-          selectNextElementInTree();
+          element =
+            selectedElementID !== null
+              ? store.getElementByID(selectedElementID)
+              : null;
+          if (
+            element !== null &&
+            element.children.length > 0 &&
+            element.isCollapsed
+          ) {
+            store.toggleIsCollapsed(element.id, false);
+          } else {
+            selectNextElementInTree();
+          }
           event.preventDefault();
           break;
         case 'ArrowUp':
@@ -107,9 +135,11 @@ export default function Tree(props: Props) {
       ownerDocument.removeEventListener('keydown', handleKeyDown);
     };
   }, [
+    selectedElementID,
     selectNextElementInTree,
     selectParentElementInTree,
     selectPreviousElementInTree,
+    store,
   ]);
 
   // Let react-window know to re-render any time the underlying tree data changes.
