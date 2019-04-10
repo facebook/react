@@ -16,7 +16,7 @@ export default function InspectHostNodesToggle() {
       if (isChecked) {
         bridge.send('startInspectingDOM');
       } else {
-        bridge.send('stopInspectingDOM');
+        bridge.send('stopInspectingDOM', false);
       }
     },
     [bridge]

@@ -52,6 +52,7 @@ export default function Tree(props: Props) {
   // $FlowFixMe https://github.com/facebook/flow/issues/7341
   const listRef = useRef<FixedSizeList<ItemData> | null>(null);
   const treeRef = useRef<HTMLDivElement | null>(null);
+  const focusTargetRef = useRef<HTMLDivElement | null>(null);
 
   const [treeFocused, setTreeFocused] = useState<boolean>(false);
 
@@ -68,6 +69,19 @@ export default function Tree(props: Props) {
       // It's too early to do it now because the row might not exist yet.
     }
   }, [listRef, selectedElementIndex]);
+
+  // Picking an element in the inspector should put focus into the tree.
+  // This ensures that keyboard navigation works right after picking a node.
+  useEffect(() => {
+    function handleStopInspectingDOM(didSelectNode) {
+      if (didSelectNode && focusTargetRef.current !== null) {
+        focusTargetRef.current.focus();
+      }
+    }
+    bridge.addListener('stopInspectingDOM', handleStopInspectingDOM);
+    return () =>
+      bridge.removeListener('stopInspectingDOM', handleStopInspectingDOM);
+  }, [bridge]);
 
   // This ref is passed down the context to elements.
   // It lets them avoid autoscrolling to the same item many times
@@ -204,6 +218,7 @@ export default function Tree(props: Props) {
         onFocus={handleFocus}
         onKeyPress={handleKeyPress}
         onMouseLeave={handleMouseLeave}
+        ref={focusTargetRef}
         tabIndex={0}
       >
         <AutoSizer>

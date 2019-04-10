@@ -479,7 +479,7 @@ export default class Agent extends EventEmitter {
     event.stopPropagation();
 
     this.stopInspectingDOM();
-    this._bridge.send('stopInspectingDOM');
+    this._bridge.send('stopInspectingDOM', true);
   };
 
   _onMouseDown = (event: MouseEvent) => {
