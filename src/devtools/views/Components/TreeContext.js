@@ -134,7 +134,11 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
           const selectedElement = store.getElementAtIndex(
             ((selectedElementIndex: any): number)
           );
-          if (selectedElement !== null && selectedElement.children.length > 0) {
+          if (
+            selectedElement !== null &&
+            selectedElement.children.length > 0 &&
+            !selectedElement.isCollapsed
+          ) {
             const firstChildID = selectedElement.children[0];
             const firstChildIndex = store.getIndexOfElementID(firstChildID);
             if (firstChildIndex !== null) {
