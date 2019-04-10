@@ -7,6 +7,8 @@
   align-items: center;
   cursor: default;
   user-select: none;
+
+  --color-expand-collapse-toggle: var(--color-dim);
 }
 .Element:hover {
   background-color: var(--color-hover-background);
@@ -21,6 +23,7 @@
   --color-jsx-arrow-brackets: var(--color-jsx-arrow-brackets-inverted);
   --color-attribute-name: var(--color-hover-background);
   --color-attribute-value: var(--color-component-name-inverted);
+  --color-expand-collapse-toggle: var(--color-component-name-inverted);
 }
 
 .DollarR {
@@ -54,4 +57,11 @@
 }
 .CurrentHighlight {
   background-color: var(--color-search-match-current);
+}
+
+.ExpandCollapseToggle {
+  display: inline-flex;
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-expand-collapse-toggle);
 }

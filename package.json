@@ -104,7 +104,7 @@
     "react-dom": "^16.8.4",
     "react-is": "^16.8.4",
     "react-virtualized-auto-sizer": "^1.0.2",
-    "react-window": "^1.5.1",
+    "react-window": "^1.7.2",
     "scheduler": "^0.13",
     "semver": "^5.5.1",
     "style-loader": "^0.23.1",

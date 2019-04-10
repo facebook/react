@@ -22,8 +22,10 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useReducer,
+  useRef,
 } from 'react';
 import { createRegExp } from '../utils';
 import { BridgeContext, StoreContext } from '../context';
@@ -109,6 +111,8 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
     selectedElementID,
   } = state;
 
+  let lookupIDForIndex = true;
+
   // Base tree should ignore selected element changes when the owner's tree is active.
   if (ownerStack.length === 0) {
     switch (type) {
@@ -127,6 +131,11 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
         selectedElementIndex = ((payload: any): number | null);
         break;
       case 'SELECT_ELEMENT_BY_ID':
+        // Skip lookup in this case; it would be redundant.
+        // It might also cause problems if the specified element was inside of a (not yet expanded) subtree.
+        lookupIDForIndex = false;
+
+        selectedElementID = payload;
         selectedElementIndex =
           payload === null
             ? null
@@ -167,7 +176,7 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
   }
 
   // Keep selected item ID and index in sync.
-  if (selectedElementIndex !== state.selectedElementIndex) {
+  if (lookupIDForIndex && selectedElementIndex !== state.selectedElementIndex) {
     if (selectedElementIndex === null) {
       selectedElementID = null;
     } else {
@@ -685,6 +694,25 @@ function TreeContextController({ children, viewElementSource }: Props) {
     bridge.addListener('selectFiber', handleSelectFiber);
     return () => bridge.removeListener('selectFiber', handleSelectFiber);
   }, [bridge, dispatch]);
+
+  // If a newly-selected search result or inspection selection is inside of a collapsed subtree, auto expand it.
+  // This needs to be a layout effect to avoid temporarily flashing an incorrect selection.
+  const prevSelectedElementID = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    if (state.selectedElementID !== prevSelectedElementID.current) {
+      prevSelectedElementID.current = state.selectedElementID;
+
+      if (state.selectedElementID !== null) {
+        let element = store.getElementByID(state.selectedElementID);
+        while (element !== null && element.parentID > 0) {
+          element = ((store.getElementByID(element.parentID): any): Element);
+          if (element.isCollapsed) {
+            store.toggleIsCollapsed(element.id, false);
+          }
+        }
+      }
+    }
+  }, [state.selectedElementID, store]);
 
   // Mutations to the underlying tree may impact this context (e.g. search results, selection state).
   useEffect(() => {

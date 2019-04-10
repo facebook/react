@@ -9,6 +9,8 @@ import React, {
   useRef,
 } from 'react';
 import { ElementTypeClass, ElementTypeFunction } from 'src/devtools/types';
+import Store from 'src/devtools/store';
+import ButtonIcon from '../ButtonIcon';
 import { createRegExp } from '../utils';
 import { TreeContext } from './TreeContext';
 import { BridgeContext, StoreContext } from '../context';
@@ -28,6 +30,7 @@ export default function ElementView({ data, index, style }: Props) {
   const {
     baseDepth,
     getElementAtIndex,
+    ownerStack,
     selectOwner,
     selectedElementID,
     selectElementByID,
@@ -75,8 +78,6 @@ export default function ElementView({ data, index, style }: Props) {
     }
   }, [id, isSelected, lastScrolledIDRef]);
 
-  // TODO Add click and key handlers for toggling element open/close state.
-
   const handleMouseDown = useCallback(
     ({ metaKey }) => {
       if (id !== null) {
@@ -114,8 +115,6 @@ export default function ElementView({ data, index, style }: Props) {
   const showDollarR =
     isSelected && (type === ElementTypeClass || type === ElementTypeFunction);
 
-  // TODO styles.SelectedElement is 100% width but it doesn't take horizontal overflow into account.
-
   return (
     <div
       className={isSelected ? styles.SelectedElement : styles.Element}
@@ -138,6 +137,9 @@ export default function ElementView({ data, index, style }: Props) {
         marginBottom: `-${style.height}px`,
       }}
     >
+      {ownerStack.length === 0 ? (
+        <ExpandCollapseToggle element={element} store={store} />
+      ) : null}
       <span className={styles.Component} ref={ref}>
         <DisplayName displayName={displayName} id={((id: any): number)} />
         {key && (
@@ -148,6 +150,45 @@ export default function ElementView({ data, index, style }: Props) {
         )}
       </span>
       {showDollarR && <span className={styles.DollarR}>&nbsp;== $r</span>}
+    </div>
+  );
+}
+
+// Prevent double clicks on toggle from drilling into the owner list.
+const swallowDoubleClick = event => {
+  event.preventDefault();
+  event.stopPropagation();
+};
+
+type ExpandCollapseToggleProps = {|
+  element: Element,
+  store: Store,
+|};
+
+function ExpandCollapseToggle({ element, store }: ExpandCollapseToggleProps) {
+  const { children, id, isCollapsed } = element;
+
+  const toggleCollapsed = useCallback(
+    event => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      store.toggleIsCollapsed(id, !isCollapsed);
+    },
+    [id, isCollapsed, store]
+  );
+
+  if (children.length === 0) {
+    return <div className={styles.ExpandCollapseToggle} />;
+  }
+
+  return (
+    <div
+      className={styles.ExpandCollapseToggle}
+      onClick={toggleCollapsed}
+      onDoubleClick={swallowDoubleClick}
+    >
+      <ButtonIcon type={isCollapsed ? 'collapsed' : 'expanded'} />
     </div>
   );
 }
