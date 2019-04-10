@@ -287,16 +287,18 @@ export default class Store extends EventEmitter {
     let currentElement = ((this._idToElement.get(firstChildID): any): Element);
     let currentWeight = rootWeight;
     while (index !== currentWeight) {
-      for (let i = 0; i < currentElement.children.length; i++) {
+      const numChildren = currentElement.children.length;
+      for (let i = 0; i < numChildren; i++) {
         const childID = currentElement.children[i];
         const child = ((this._idToElement.get(childID): any): Element);
-        const { weight } = child;
-        if (index <= currentWeight + weight) {
+        const childWeight = child.isCollapsed ? 1 : child.weight;
+
+        if (index <= currentWeight + childWeight) {
           currentWeight++;
           currentElement = child;
           break;
         } else {
-          currentWeight += weight;
+          currentWeight += childWeight;
         }
       }
     }
@@ -420,6 +422,28 @@ export default class Store extends EventEmitter {
     this.emit('isProfiling');
   }
 
+  toggleIsCollapsed(id: number, isCollapsed: boolean): void {
+    const element = this.getElementByID(id);
+    if (element !== null) {
+      element.isCollapsed = isCollapsed;
+
+      const weightDelta = isCollapsed ? 1 - element.weight : element.weight - 1;
+
+      this._numElements += weightDelta;
+
+      let parentElement = this._idToElement.get(element.parentID);
+      while (parentElement != null) {
+        parentElement.weight += weightDelta;
+        parentElement = this._idToElement.get(parentElement.parentID);
+      }
+
+      // The Tree context's search reducer expects an explicit list of ids for nodes that were added or removed.
+      // In this  case, we can pass it empty arrays since nodes in a collapsed tree are still there (just hidden).
+      // Updating the selected search index later may require auto-expanding a collapsed subtree though.
+      this.emit('mutated', [[], []]);
+    }
+  }
+
   _captureScreenshot = throttle(
     memoize((commitIndex: number) => {
       this._bridge.send('captureScreenshot', { commitIndex });
@@ -518,6 +542,7 @@ export default class Store extends EventEmitter {
               depth: -1,
               displayName: null,
               id,
+              isCollapsed: false,
               key: null,
               ownerID: 0,
               parentID: 0,
@@ -566,6 +591,7 @@ export default class Store extends EventEmitter {
               depth: parentElement.depth + 1,
               displayName,
               id,
+              isCollapsed: false,
               key,
               ownerID,
               parentID: parentElement.id,
@@ -715,13 +741,26 @@ export default class Store extends EventEmitter {
           throw Error(`Unsupported Bridge operation ${operation}`);
       }
 
-      this._numElements += weightDelta;
+      let isInsideCollapsedSubTree = false;
 
       while (parentElement != null) {
         parentElement.weight += weightDelta;
+
+        // Additions and deletions within a collapsed subtree should not bubble beyond the collapsed parent.
+        // Their weight will bubble up when the parent is expanded.
+        if (parentElement.isCollapsed) {
+          isInsideCollapsedSubTree = true;
+          break;
+        }
+
         parentElement = ((this._idToElement.get(
           parentElement.parentID
         ): any): Element);
+      }
+
+      // Additions and deletions within a collapsed subtree should not affect the overall number of elements.
+      if (!isInsideCollapsedSubTree) {
+        this._numElements += weightDelta;
       }
     }
 

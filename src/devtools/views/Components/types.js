@@ -14,6 +14,9 @@ export type Element = {|
   displayName: string | null,
   key: number | string | null,
 
+  // Should the elements children be visible in the tree?
+  isCollapsed: boolean,
+
   // Owner (if available)
   ownerID: number,
 
