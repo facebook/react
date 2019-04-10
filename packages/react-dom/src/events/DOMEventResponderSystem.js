@@ -31,10 +31,7 @@ import warning from 'shared/warning';
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
 import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
 
-import {
-  getClosestInstanceFromNode,
-  getFiberCurrentPropsFromNode,
-} from '../client/ReactDOMComponentTree';
+import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
 export let listenToResponderEventTypesImpl;
 
