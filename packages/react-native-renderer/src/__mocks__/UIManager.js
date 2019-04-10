@@ -153,7 +153,40 @@ const RCTUIManager = {
     views.get(parentTag).children.forEach(tag => removeChild(parentTag, tag));
   }),
   replaceExistingNonRootView: jest.fn(),
-  measureLayout: jest.fn(),
+  measure: jest.fn(function measure(tag, callback) {
+    invariant(
+      typeof tag === 'number',
+      'Expected tag to be a number, was passed %s',
+      tag,
+    );
+    callback(10, 10, 100, 100, 0, 0);
+  }),
+  measureInWindow: jest.fn(function measureInWindow(tag, callback) {
+    invariant(
+      typeof tag === 'number',
+      'Expected tag to be a number, was passed %s',
+      tag,
+    );
+    callback(10, 10, 100, 100);
+  }),
+  measureLayout: jest.fn(function measureLayout(
+    tag,
+    relativeTag,
+    fail,
+    success,
+  ) {
+    invariant(
+      typeof tag === 'number',
+      'Expected tag to be a number, was passed %s',
+      tag,
+    );
+    invariant(
+      typeof relativeTag === 'number',
+      'Expected relativeTag to be a number, was passed %s',
+      relativeTag,
+    );
+    success(1, 1, 100, 100);
+  }),
   __takeSnapshot: jest.fn(),
 };
 

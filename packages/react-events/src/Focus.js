@@ -7,7 +7,10 @@
  * @flow
  */
 
-import type {ResponderEvent, ResponderContext} from 'events/EventTypes';
+import type {
+  ReactResponderEvent,
+  ReactResponderContext,
+} from 'shared/ReactTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
 type FocusProps = {
@@ -47,8 +50,8 @@ function createFocusEvent(
 }
 
 function dispatchFocusInEvents(
-  event: ResponderEvent,
-  context: ResponderContext,
+  event: ReactResponderEvent,
+  context: ReactResponderContext,
   props: FocusProps,
 ) {
   const {nativeEvent, target} = event;
@@ -69,8 +72,8 @@ function dispatchFocusInEvents(
 }
 
 function dispatchFocusOutEvents(
-  event: ResponderEvent,
-  context: ResponderContext,
+  event: ReactResponderEvent,
+  context: ReactResponderContext,
   props: FocusProps,
 ) {
   const {nativeEvent, target} = event;
@@ -98,8 +101,8 @@ const FocusResponder = {
     };
   },
   onEvent(
-    event: ResponderEvent,
-    context: ResponderContext,
+    event: ReactResponderEvent,
+    context: ReactResponderContext,
     props: Object,
     state: FocusState,
   ): void {

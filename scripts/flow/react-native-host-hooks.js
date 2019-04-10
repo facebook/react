@@ -10,6 +10,9 @@
 /* eslint-disable */
 
 import type {
+  MeasureOnSuccessCallback,
+  MeasureInWindowOnSuccessCallback,
+  MeasureLayoutOnSuccessCallback,
   ReactNativeBaseComponentViewConfig,
   ViewConfigGetter,
 } from 'react-native-renderer/src/ReactNativeTypes';
@@ -123,6 +126,21 @@ declare module 'FabricUIManager' {
       type: RNTopLevelEventType,
       payload: Object,
     ) => void,
+  ): void;
+
+  declare function measure(
+    node: Node,
+    callback: MeasureOnSuccessCallback,
+  ): void;
+  declare function measureInWindow(
+    node: Node,
+    callback: MeasureInWindowOnSuccessCallback,
+  ): void;
+  declare function measureLayout(
+    node: Node,
+    relativeNode: Node,
+    onFail: () => void,
+    onSuccess: MeasureLayoutOnSuccessCallback,
   ): void;
 }
 

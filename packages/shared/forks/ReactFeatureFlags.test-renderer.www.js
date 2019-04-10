@@ -27,6 +27,7 @@ export const disableJavaScriptURLs = false;
 export const disableYielding = false;
 export const enableEventAPI = true;
 export const enableNewScheduler = false;
+export const enableJSXTransformAPI = true;
 
 // Only used in www builds.
 export function addUserTimingListener() {

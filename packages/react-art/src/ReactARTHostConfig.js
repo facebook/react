@@ -11,6 +11,7 @@ import * as Scheduler from 'scheduler';
 import invariant from 'shared/invariant';
 
 import {TYPES, EVENT_TYPES, childrenAsString} from './ReactARTInternals';
+import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 
 // Intentionally not named imports because Rollup would
 // use dynamic dispatch for CommonJS interop named imports.
@@ -439,19 +440,45 @@ export function unhideTextInstance(textInstance, text): void {
   // Noop
 }
 
-export function handleEventComponent(
-  eventResponder: ReactEventResponder,
-  rootContainerInstance: Container,
-  internalInstanceHandle: Object,
+export function mountEventComponent(
+  eventComponentInstance: ReactEventComponentInstance,
 ) {
-  // TODO: add handleEventComponent implementation
+  throw new Error('Not yet implemented.');
+}
+
+export function updateEventComponent(
+  eventComponentInstance: ReactEventComponentInstance,
+) {
+  throw new Error('Not yet implemented.');
+}
+
+export function unmountEventComponent(
+  eventComponentInstance: ReactEventComponentInstance,
+): void {
+  throw new Error('Not yet implemented.');
+}
+
+export function getEventTargetChildElement(
+  type: Symbol | number,
+  props: Props,
+): null {
+  throw new Error('Not yet implemented.');
 }
 
 export function handleEventTarget(
   type: Symbol | number,
   props: Props,
-  parentInstance: Container,
+  rootContainerInstance: Container,
   internalInstanceHandle: Object,
-) {
-  // TODO: add handleEventTarget implementation
+): boolean {
+  throw new Error('Not yet implemented.');
+}
+
+export function commitEventTarget(
+  type: Symbol | number,
+  props: Props,
+  instance: Instance,
+  parentInstance: Instance,
+): void {
+  throw new Error('Not yet implemented.');
 }

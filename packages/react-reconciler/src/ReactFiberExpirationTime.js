@@ -70,6 +70,14 @@ export function computeAsyncExpiration(
   );
 }
 
+// Same as computeAsyncExpiration but without the bucketing logic. This is
+// used to compute timestamps instead of actual expiration times.
+export function computeAsyncExpirationNoBucket(
+  currentTime: ExpirationTime,
+): ExpirationTime {
+  return currentTime - LOW_PRIORITY_EXPIRATION / UNIT_SIZE;
+}
+
 // We intentionally set a higher expiration time for interactive updates in
 // dev than in production.
 //
