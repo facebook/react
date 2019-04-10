@@ -116,15 +116,16 @@ export default function ElementView({ data, index, style }: Props) {
   const showDollarR =
     isSelected && (type === ElementTypeClass || type === ElementTypeFunction);
 
+  let className = styles.Element;
+  if (isSelected) {
+    className = treeFocused
+      ? styles.SelectedElement
+      : styles.InactiveSelectedElement;
+  }
+
   return (
     <div
-      className={
-        isSelected && treeFocused
-          ? styles.SelectedElement
-          : isSelected
-          ? styles.InactiveElement
-          : styles.Element
-      }
+      className={className}
       onMouseEnter={handleMouseEnter}
       onMouseDown={handleMouseDown}
       onDoubleClick={handleDoubleClick}
