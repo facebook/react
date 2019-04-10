@@ -71,10 +71,6 @@ export default class Store extends EventEmitter {
   // When profiling is in progress, operations are stored so that we can later reconstruct past commit trees.
   _isProfiling: boolean = false;
 
-  // Total number of visible elements (within all roots).
-  // Used for windowing purposes.
-  _numElements: number = 0;
-
   // Suspense cache for reading profilign data.
   _profilingCache: ProfilingCache;
 
@@ -111,6 +107,10 @@ export default class Store extends EventEmitter {
   _supportsFileDownloads: boolean = false;
   _supportsProfiling: boolean = false;
   _supportsReloadAndProfile: boolean = false;
+
+  // Total number of visible elements (within all roots).
+  // Used for windowing purposes.
+  _weightAcrossRoots: number = 0;
 
   constructor(bridge: Bridge, config?: Config) {
     super();
@@ -198,7 +198,7 @@ export default class Store extends EventEmitter {
   }
 
   get numElements(): number {
-    return this._numElements;
+    return this._weightAcrossRoots;
   }
 
   get profilingCache(): ProfilingCache {
@@ -429,7 +429,7 @@ export default class Store extends EventEmitter {
 
       const weightDelta = isCollapsed ? 1 - element.weight : element.weight - 1;
 
-      this._numElements += weightDelta;
+      this._weightAcrossRoots += weightDelta;
 
       let parentElement = this._idToElement.get(element.parentID);
       while (parentElement != null) {
@@ -760,7 +760,7 @@ export default class Store extends EventEmitter {
 
       // Additions and deletions within a collapsed subtree should not affect the overall number of elements.
       if (!isInsideCollapsedSubTree) {
-        this._numElements += weightDelta;
+        this._weightAcrossRoots += weightDelta;
       }
     }
 
