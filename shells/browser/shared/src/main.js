@@ -166,35 +166,35 @@ function createPanelIfReactLoaded() {
         // When the user chooses a different node in the browser Elements tab,
         // copy it over to the hook object so that we can sync the selection.
         chrome.devtools.inspectedWindow.eval(
-          '(window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = $0, undefined)',
-          (_, error) => {
+          '(window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 !== $0) ?' +
+            '(window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = $0, true) :' +
+            'false',
+          (didSelectionChange, error) => {
             if (error) {
               console.error(error);
-            } else {
-              bridge.send('syncSelectionFromNativeElementsPanel');
+            } else if (didSelectionChange) {
+              // Remember to sync the selection next time we show Components tab.
+              needsToSyncElementSelection = true;
             }
           }
         );
       }
 
-      // When the user selects another item in the native Elements tab,
-      // select the corresponding React component.
-      let isListeningToNativeSelectionChange = false;
-      function ensureListeningToNativeSelectionChange() {
-        if (isListeningToNativeSelectionChange) {
-          return;
-        }
-        isListeningToNativeSelectionChange = true;
+      setReactSelectionFromBrowser();
+      chrome.devtools.panels.elements.onSelectionChanged.addListener(() => {
         setReactSelectionFromBrowser();
-        chrome.devtools.panels.elements.onSelectionChanged.addListener(() => {
-          setReactSelectionFromBrowser();
-        });
-      }
+      });
 
       let currentPanel = null;
+      let needsToSyncElementSelection = false;
 
       chrome.devtools.panels.create('⚛ Components', '', 'panel.html', panel => {
         panel.onShown.addListener(panel => {
+          if (needsToSyncElementSelection) {
+            needsToSyncElementSelection = false;
+            bridge.send('syncSelectionFromNativeElementsPanel');
+          }
+
           if (currentPanel === panel) {
             return;
           }
@@ -207,12 +207,6 @@ function createPanelIfReactLoaded() {
             render('components');
             panel.injectStyles(cloneStyleTags);
           }
-
-          // Don't start listening to native selection change
-          // until *after* the panel is visible. Otherwise, we'll
-          // set the selected element too early and won't scroll
-          // to it the first time we open Components panel.
-          ensureListeningToNativeSelectionChange();
         });
         panel.onHidden.addListener(() => {
           // TODO: Stop highlighting and stuff.
