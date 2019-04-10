@@ -31,7 +31,7 @@ export function HooksTreeView({ canEditHooks, hooks, id }: HooksTreeViewProps) {
       <div className={styles.HooksTreeView}>
         <div className={styles.HeaderRow}>
           <div className={styles.Header}>hooks</div>
-          <Button onClick={handleCopy}>
+          <Button onClick={handleCopy} title="Copy to clipboard">
             <ButtonIcon type="copy" />
           </Button>
         </div>
