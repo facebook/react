@@ -361,6 +361,7 @@ function processTimers(timers: Map<Symbol, ResponderTimer>): void {
   } finally {
     currentInstance = previousInstance;
     currentEventQueue = previousEventQueue;
+    currentTimers = null;
   }
 }
 
@@ -577,6 +578,7 @@ export function unmountEventResponder(
     } finally {
       currentEventQueue = previousEventQueue;
       currentInstance = previousInstance;
+      currentTimers = null;
     }
   }
   if (currentOwner === eventComponentInstance) {
