@@ -6,9 +6,6 @@ import Bridge from 'src/bridge';
 import Store from 'src/devtools/store';
 import { installHook } from 'src/hook';
 
-// Mimic the global we set with Webpack's DefinePlugin
-global.__DEV__ = process.env.NODE_ENV !== 'production';
-
 const env = jasmine.getEnv();
 env.beforeEach(() => {
   // It's important to reset modules between test runs;

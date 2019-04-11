@@ -9,3 +9,6 @@ import 'regenerator-runtime/runtime';
 if (!global.hasOwnProperty('localStorage')) {
   global.localStorage = storage;
 }
+
+// Mimic the global we set with Webpack's DefinePlugin
+global.__DEV__ = process.env.NODE_ENV !== 'production';
