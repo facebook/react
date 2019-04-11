@@ -1,51 +1,64 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Store should support mount and update operations 1`] = `
+exports[`Store should support mount and update operations for multiple roots: mount 1`] = `
 [root]
-  ▾ <Grandparent>
-    ▾ <Parent>
-        <Child key="0">
-        <Child key="1">
-        <Child key="2">
-        <Child key="3">
-    ▾ <Parent>
-        <Child key="0">
-        <Child key="1">
-        <Child key="2">
-        <Child key="3">
-`;
-
-exports[`Store should support mount and update operations 2`] = `
-[root]
-  ▾ <Grandparent>
-    ▾ <Parent>
-        <Child key="0">
-        <Child key="1">
-    ▾ <Parent>
-        <Child key="0">
-        <Child key="1">
-`;
-
-exports[`Store should support mount and update operations for multiple roots 1`] = `
-[root]
-  ▾ <Parent>
+  ▾ <Parent key="A">
       <Child key="0">
       <Child key="1">
       <Child key="2">
 [root]
-  ▾ <Parent>
+  ▾ <Parent key="B">
       <Child key="0">
       <Child key="1">
 `;
 
-exports[`Store should support mount and update operations for multiple roots 2`] = `
+exports[`Store should support mount and update operations for multiple roots: unmount A 1`] = ``;
+
+exports[`Store should support mount and update operations for multiple roots: unmount B 1`] = `
 [root]
-  ▾ <Parent>
+  ▾ <Parent key="A">
+      <Child key="0">
+      <Child key="1">
+      <Child key="2">
+      <Child key="3">
+`;
+
+exports[`Store should support mount and update operations for multiple roots: update 1`] = `
+[root]
+  ▾ <Parent key="A">
       <Child key="0">
       <Child key="1">
       <Child key="2">
       <Child key="3">
 [root]
-  ▾ <Parent>
+  ▾ <Parent key="B">
       <Child key="0">
+`;
+
+exports[`Store should support mount and update operations: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+        <Child key="2">
+        <Child key="3">
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+        <Child key="2">
+        <Child key="3">
+`;
+
+exports[`Store should support mount and update operations: unmount 1`] = ``;
+
+exports[`Store should support mount and update operations: update 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
 `;

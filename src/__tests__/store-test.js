@@ -3,13 +3,23 @@
 describe('Store', () => {
   let React;
   let ReactDOM;
+  let TestUtils;
   let store;
+
+  const act = (callback: Function) => {
+    TestUtils.act(() => {
+      callback();
+    });
+
+    jest.runAllTimers(); // Flush Bridge operations
+  };
 
   beforeEach(() => {
     store = global.store;
 
     React = require('react');
     ReactDOM = require('react-dom');
+    TestUtils = require('react-dom/test-utils');
   });
 
   it('should support mount and update operations', () => {
@@ -25,17 +35,14 @@ describe('Store', () => {
 
     const container = document.createElement('div');
 
-    ReactDOM.render(<Grandparent count={4} />, container);
+    act(() => ReactDOM.render(<Grandparent count={4} />, container));
+    expect(store).toMatchSnapshot('mount');
 
-    jest.runAllTimers(); // Flush Bridge operations
+    act(() => ReactDOM.render(<Grandparent count={2} />, container));
+    expect(store).toMatchSnapshot('update');
 
-    expect(store).toMatchSnapshot();
-
-    ReactDOM.render(<Grandparent count={2} />, container);
-
-    jest.runAllTimers(); // Flush Bridge operations
-
-    expect(store).toMatchSnapshot();
+    act(() => ReactDOM.unmountComponentAtNode(container));
+    expect(store).toMatchSnapshot('unmount');
   });
 
   it('should support mount and update operations for multiple roots', () => {
@@ -46,18 +53,22 @@ describe('Store', () => {
     const containerA = document.createElement('div');
     const containerB = document.createElement('div');
 
-    ReactDOM.render(<Parent count={3} />, containerA);
-    ReactDOM.render(<Parent count={2} />, containerB);
+    act(() => {
+      ReactDOM.render(<Parent key="A" count={3} />, containerA);
+      ReactDOM.render(<Parent key="B" count={2} />, containerB);
+    });
+    expect(store).toMatchSnapshot('mount');
 
-    jest.runAllTimers(); // Flush Bridge operations
+    act(() => {
+      ReactDOM.render(<Parent key="A" count={4} />, containerA);
+      ReactDOM.render(<Parent key="B" count={1} />, containerB);
+    });
+    expect(store).toMatchSnapshot('update');
 
-    expect(store).toMatchSnapshot();
+    act(() => ReactDOM.unmountComponentAtNode(containerB));
+    expect(store).toMatchSnapshot('unmount B');
 
-    ReactDOM.render(<Parent count={4} />, containerA);
-    ReactDOM.render(<Parent count={1} />, containerB);
-
-    jest.runAllTimers(); // Flush Bridge operations
-
-    expect(store).toMatchSnapshot();
+    act(() => ReactDOM.unmountComponentAtNode(containerA));
+    expect(store).toMatchSnapshot('unmount A');
   });
 });
