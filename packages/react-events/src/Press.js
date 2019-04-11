@@ -354,16 +354,17 @@ function calculateResponderRegion(target, props) {
 }
 
 function getPointerType(nativeEvent: any) {
-  if (nativeEvent.pointerType != null) {
-    return nativeEvent.pointerType;
+  const {type, pointerType} = nativeEvent;
+  if (pointerType != null) {
+    return pointerType;
   }
-  if (nativeEvent.type.indexOf('mouse') > -1) {
+  if (type.indexOf('mouse') > -1) {
     return 'mouse';
   }
-  if (nativeEvent.type.indexOf('touch') > -1) {
+  if (type.indexOf('touch') > -1) {
     return 'touch';
   }
-  if (nativeEvent.type.indexOf('key') > -1) {
+  if (type.indexOf('key') > -1) {
     return 'keyboard';
   }
   return '';
