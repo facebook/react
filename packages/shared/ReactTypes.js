@@ -169,4 +169,12 @@ export type ReactResponderContext = {
   requestOwnership: () => boolean,
   releaseOwnership: () => boolean,
   setTimeout: (func: () => void, timeout: number) => TimeoutID,
+  getEventTargetsFromTarget: (
+    target: Element | Document,
+    queryType?: Symbol | number,
+    queryKey?: string,
+  ) => Array<{
+    node: Element,
+    props: null | Object,
+  }>,
 };

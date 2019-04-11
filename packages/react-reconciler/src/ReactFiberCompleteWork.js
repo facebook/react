@@ -692,9 +692,9 @@ function completeWork(
           // Mark the event time of the switching from fallback to normal children,
           // based on the start of when we first showed the fallback. This time
           // was given a normal pri expiration time at the time it was shown.
-          const fallbackExpirationTimeExpTime: ExpirationTime =
+          const fallbackExpirationTime: ExpirationTime =
             prevState.fallbackExpirationTime;
-          markRenderEventTime(fallbackExpirationTimeExpTime);
+          markRenderEventTime(fallbackExpirationTime);
 
           // Delete the fallback.
           // TODO: Would it be better to store the fallback fragment on
@@ -841,6 +841,9 @@ function completeWork(
           rootContainerInstance,
           workInProgress,
         );
+        // Update the latest props on the stateNode. This is used
+        // during the event phase to find the most current props.
+        workInProgress.stateNode.props = newProps;
         if (shouldUpdate) {
           markUpdate(workInProgress);
         }

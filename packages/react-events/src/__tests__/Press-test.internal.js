@@ -16,9 +16,14 @@ let Press;
 
 const DEFAULT_LONG_PRESS_DELAY = 500;
 
-const createPointerEvent = type => {
-  const event = document.createEvent('Event');
-  event.initEvent(type, true, true);
+const createPointerEvent = (type, data) => {
+  const event = document.createEvent('CustomEvent');
+  event.initCustomEvent(type, true, true);
+  if (data != null) {
+    Object.entries(data).forEach(([key, value]) => {
+      event[key] = value;
+    });
+  }
   return event;
 };
 
@@ -592,36 +597,241 @@ describe('Event responder: Press', () => {
     });
   });
 
-  // TODO
-  //describe('`onPress*` with movement', () => {
-  //describe('within bounds of hit rect', () => {
-  /** ┌──────────────────┐
-   *  │  ┌────────────┐  │
-   *  │  │ VisualRect │  │
-   *  │  └────────────┘  │
-   *  │     HitRect    X │ <= Move to X and release
-   *  └──────────────────┘
-   */
+  describe('press with movement', () => {
+    const rectMock = {
+      width: 100,
+      height: 100,
+      top: 50,
+      left: 50,
+      right: 500,
+      bottom: 500,
+    };
+    const pressRectOffset = 20;
+    const getBoundingClientRectMock = () => rectMock;
+    const coordinatesInside = {
+      pageX: rectMock.left - pressRectOffset,
+      pageY: rectMock.top - pressRectOffset,
+    };
+    const coordinatesOutside = {
+      pageX: rectMock.left - pressRectOffset - 1,
+      pageY: rectMock.top - pressRectOffset - 1,
+    };
 
-  //it('"onPress*" events are called when no delay', () => {});
-  //it('"onPress*" events are called after a delay', () => {});
-  //});
+    describe('within bounds of hit rect', () => {
+      /** ┌──────────────────┐
+       *  │  ┌────────────┐  │
+       *  │  │ VisualRect │  │
+       *  │  └────────────┘  │
+       *  │     HitRect    X │ <= Move to X and release
+       *  └──────────────────┘
+       */
+      it('no delay and "onPress*" events are called immediately', () => {
+        let events = [];
+        const ref = React.createRef();
+        const createEventHandler = msg => () => {
+          events.push(msg);
+        };
 
-  //describe('beyond bounds of hit rect', () => {
-  /** ┌──────────────────┐
-   *  │  ┌────────────┐  │
-   *  │  │ VisualRect │  │
-   *  │  └────────────┘  │
-   *  │     HitRect      │
-   *  └──────────────────┘
-   *                   X   <= Move to X and release
-   */
+        const element = (
+          <Press
+            onPress={createEventHandler('onPress')}
+            onPressChange={createEventHandler('onPressChange')}
+            onPressMove={createEventHandler('onPressMove')}
+            onPressStart={createEventHandler('onPressStart')}
+            onPressEnd={createEventHandler('onPressEnd')}>
+            <div ref={ref} />
+          </Press>
+        );
 
-  //it('"onPress" only is not called when no delay', () => {});
-  //it('"onPress*" events are not called after a delay', () => {});
-  //it('"onPress*" events are called when press is released before measure completes', () => {});
-  //});
-  //});
+        ReactDOM.render(element, container);
+
+        ref.current.getBoundingClientRect = getBoundingClientRectMock;
+        ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+        ref.current.dispatchEvent(
+          createPointerEvent('pointermove', coordinatesInside),
+        );
+        ref.current.dispatchEvent(createPointerEvent('pointerup'));
+        jest.runAllTimers();
+
+        expect(events).toEqual([
+          'onPressStart',
+          'onPressChange',
+          'onPressMove',
+          'onPressEnd',
+          'onPressChange',
+          'onPress',
+        ]);
+      });
+
+      it('delay and "onPressMove" is called before "onPress*" events', () => {
+        let events = [];
+        const ref = React.createRef();
+        const createEventHandler = msg => () => {
+          events.push(msg);
+        };
+
+        const element = (
+          <Press
+            delayPressStart={500}
+            onPress={createEventHandler('onPress')}
+            onPressChange={createEventHandler('onPressChange')}
+            onPressMove={createEventHandler('onPressMove')}
+            onPressStart={createEventHandler('onPressStart')}
+            onPressEnd={createEventHandler('onPressEnd')}>
+            <div ref={ref} />
+          </Press>
+        );
+
+        ReactDOM.render(element, container);
+
+        ref.current.getBoundingClientRect = getBoundingClientRectMock;
+        ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+        ref.current.dispatchEvent(
+          createPointerEvent('pointermove', coordinatesInside),
+        );
+        jest.advanceTimersByTime(499);
+        expect(events).toEqual(['onPressMove']);
+        events = [];
+
+        jest.advanceTimersByTime(1);
+        expect(events).toEqual(['onPressStart', 'onPressChange']);
+        events = [];
+
+        ref.current.dispatchEvent(createPointerEvent('pointerup'));
+        expect(events).toEqual(['onPressEnd', 'onPressChange', 'onPress']);
+      });
+
+      it('press retention offset can be configured', () => {
+        let events = [];
+        const ref = React.createRef();
+        const createEventHandler = msg => () => {
+          events.push(msg);
+        };
+        const pressRetentionOffset = {top: 40, bottom: 40, left: 40, right: 40};
+
+        const element = (
+          <Press
+            pressRetentionOffset={pressRetentionOffset}
+            onPress={createEventHandler('onPress')}
+            onPressChange={createEventHandler('onPressChange')}
+            onPressMove={createEventHandler('onPressMove')}
+            onPressStart={createEventHandler('onPressStart')}
+            onPressEnd={createEventHandler('onPressEnd')}>
+            <div ref={ref} />
+          </Press>
+        );
+
+        ReactDOM.render(element, container);
+        ref.current.getBoundingClientRect = getBoundingClientRectMock;
+        ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+        ref.current.dispatchEvent(
+          createPointerEvent('pointermove', {
+            pageX: rectMock.left - pressRetentionOffset.left,
+            pageY: rectMock.top - pressRetentionOffset.top,
+          }),
+        );
+        ref.current.dispatchEvent(createPointerEvent('pointerup'));
+        expect(events).toEqual([
+          'onPressStart',
+          'onPressChange',
+          'onPressMove',
+          'onPressEnd',
+          'onPressChange',
+          'onPress',
+        ]);
+      });
+    });
+
+    describe('beyond bounds of hit rect', () => {
+      /** ┌──────────────────┐
+       *  │  ┌────────────┐  │
+       *  │  │ VisualRect │  │
+       *  │  └────────────┘  │
+       *  │     HitRect      │
+       *  └──────────────────┘
+       *                   X   <= Move to X and release
+       */
+
+      it('"onPress" is not called on release', () => {
+        let events = [];
+        const ref = React.createRef();
+        const createEventHandler = msg => () => {
+          events.push(msg);
+        };
+
+        const element = (
+          <Press
+            onPress={createEventHandler('onPress')}
+            onPressChange={createEventHandler('onPressChange')}
+            onPressMove={createEventHandler('onPressMove')}
+            onPressStart={createEventHandler('onPressStart')}
+            onPressEnd={createEventHandler('onPressEnd')}>
+            <div ref={ref} />
+          </Press>
+        );
+
+        ReactDOM.render(element, container);
+
+        ref.current.getBoundingClientRect = getBoundingClientRectMock;
+        ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+        ref.current.dispatchEvent(
+          createPointerEvent('pointermove', coordinatesInside),
+        );
+        ref.current.dispatchEvent(
+          createPointerEvent('pointermove', coordinatesOutside),
+        );
+        ref.current.dispatchEvent(createPointerEvent('pointerup'));
+        jest.runAllTimers();
+
+        expect(events).toEqual([
+          'onPressStart',
+          'onPressChange',
+          'onPressMove',
+          'onPressEnd',
+          'onPressChange',
+        ]);
+      });
+
+      it('"onPress*" events are not called after delay expires', () => {
+        let events = [];
+        const ref = React.createRef();
+        const createEventHandler = msg => () => {
+          events.push(msg);
+        };
+
+        const element = (
+          <Press
+            delayPressStart={500}
+            delayPressEnd={500}
+            onLongPress={createEventHandler('onLongPress')}
+            onPress={createEventHandler('onPress')}
+            onPressChange={createEventHandler('onPressChange')}
+            onPressMove={createEventHandler('onPressMove')}
+            onPressStart={createEventHandler('onPressStart')}
+            onPressEnd={createEventHandler('onPressEnd')}>
+            <div ref={ref} />
+          </Press>
+        );
+
+        ReactDOM.render(element, container);
+
+        ref.current.getBoundingClientRect = getBoundingClientRectMock;
+        ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+        ref.current.dispatchEvent(
+          createPointerEvent('pointermove', coordinatesInside),
+        );
+        ref.current.dispatchEvent(
+          createPointerEvent('pointermove', coordinatesOutside),
+        );
+        jest.runAllTimers();
+        expect(events).toEqual(['onPressMove']);
+        events = [];
+        ref.current.dispatchEvent(createPointerEvent('pointerup'));
+        jest.runAllTimers();
+        expect(events).toEqual([]);
+      });
+    });
+  });
 
   describe('delayed and multiple events', () => {
     it('dispatches in the correct order', () => {

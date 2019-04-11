@@ -638,6 +638,10 @@ export function createFiberFromEventTarget(
   fiber.elementType = eventTarget;
   fiber.type = eventTarget;
   fiber.expirationTime = expirationTime;
+  // Store latest props
+  fiber.stateNode = {
+    props: pendingProps,
+  };
   return fiber;
 }
 

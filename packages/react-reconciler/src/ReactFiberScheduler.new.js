@@ -160,6 +160,8 @@ import {
 } from 'shared/ReactErrorUtils';
 import {onCommitRoot} from './ReactFiberDevToolsHook';
 
+const ceil = Math.ceil;
+
 const {
   ReactCurrentDispatcher,
   ReactCurrentOwner,
@@ -893,10 +895,12 @@ function renderRoot(
         // track any event times. That can happen if we retried but nothing switched
         // from fallback to content. There's no reason to delay doing no work.
         if (workInProgressRootMostRecentEventTime !== Sync) {
-          const msUntilTimeout = computeMsUntilTimeout(
+          let msUntilTimeout = computeMsUntilTimeout(
             workInProgressRootMostRecentEventTime,
+            expirationTime,
           );
-          if (msUntilTimeout > 0) {
+          // Don't bother with a very short suspense time.
+          if (msUntilTimeout > 10) {
             // The render is suspended, it hasn't timed out, and there's no lower
             // priority work to do. Instead of committing the fallback
             // immediately, wait for more data to arrive.
@@ -1815,7 +1819,35 @@ export function resolveRetryThenable(boundaryFiber: Fiber, thenable: Thenable) {
   retryTimedOutBoundary(boundaryFiber);
 }
 
-function computeMsUntilTimeout(mostRecentEventTime: ExpirationTime) {
+// Computes the next Just Noticeable Difference (JND) boundary.
+// The theory is that a person can't tell the difference between small differences in time.
+// Therefore, if we wait a bit longer than necessary that won't translate to a noticeable
+// difference in the experience. However, waiting for longer might mean that we can avoid
+// showing an intermediate loading state. The longer we have already waited, the harder it
+// is to tell small differences in time. Therefore, the longer we've already waited,
+// the longer we can wait additionally. At some point we have to give up though.
+// We pick a train model where the next boundary commits at a consistent schedule.
+// These particular numbers are vague estimates. We expect to adjust them based on research.
+function jnd(timeElapsed: number) {
+  return timeElapsed < 120
+    ? 120
+    : timeElapsed < 480
+      ? 480
+      : timeElapsed < 1080
+        ? 1080
+        : timeElapsed < 1920
+          ? 1920
+          : timeElapsed < 3000
+            ? 3000
+            : timeElapsed < 4320
+              ? 4320
+              : ceil(timeElapsed / 1960) * 1960;
+}
+
+function computeMsUntilTimeout(
+  mostRecentEventTime: ExpirationTime,
+  committedExpirationTime: ExpirationTime,
+) {
   if (disableYielding) {
     // Timeout immediately when yielding is disabled.
     return 0;
@@ -1825,11 +1857,21 @@ function computeMsUntilTimeout(mostRecentEventTime: ExpirationTime) {
   const currentTimeMs: number = now();
   const timeElapsed = currentTimeMs - eventTimeMs;
 
-  // TODO: Account for the Just Noticeable Difference
-  const timeoutMs = 150;
-  const msUntilTimeout = timeoutMs - timeElapsed;
+  let msUntilTimeout = jnd(timeElapsed) - timeElapsed;
+
+  // Compute the time until this render pass would expire.
+  const timeUntilExpirationMs =
+    expirationTimeToMs(committedExpirationTime) + initialTimeMs - currentTimeMs;
+
+  // Clamp the timeout to the expiration time.
+  // TODO: Once the event time is exact instead of inferred from expiration time
+  // we don't need this.
+  if (timeUntilExpirationMs < msUntilTimeout) {
+    msUntilTimeout = timeUntilExpirationMs;
+  }
+
   // This is the value that is passed to `setTimeout`.
-  return msUntilTimeout < 0 ? 0 : msUntilTimeout;
+  return msUntilTimeout;
 }
 
 function checkForNestedUpdates() {
