@@ -140,7 +140,6 @@ export type ReactResponderEvent = {
 export type ReactResponderDispatchEventOptions = {
   capture?: boolean,
   discrete?: boolean,
-  stopPropagation?: boolean,
 };
 
 export type ReactResponderContext = {
@@ -148,6 +147,7 @@ export type ReactResponderContext = {
     eventObject: Object,
     otpions: ReactResponderDispatchEventOptions,
   ) => void,
+  dispatchStopPropagation: (passive?: boolean) => void,
   isTargetWithinElement: (
     childTarget: Element | Document,
     parentTarget: Element | Document,
@@ -168,7 +168,8 @@ export type ReactResponderContext = {
   hasOwnership: () => boolean,
   requestOwnership: () => boolean,
   releaseOwnership: () => boolean,
-  setTimeout: (func: () => void, timeout: number) => TimeoutID,
+  setTimeout: (func: () => void, timeout: number) => Symbol,
+  clearTimeout: (timerId: Symbol) => void,
   getEventTargetsFromTarget: (
     target: Element | Document,
     queryType?: Symbol | number,
