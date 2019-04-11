@@ -108,6 +108,7 @@
     "jest": "^24.7.1",
     "lerna": "^2.8.0",
     "lint-staged": "^7.0.5",
+    "local-storage-fallback": "^4.1.1",
     "lodash.throttle": "^4.1.1",
     "log-update": "^2.0.0",
     "lru-cache": "^4.1.3",
