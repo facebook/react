@@ -41,9 +41,11 @@ export function setListenToResponderEventTypes(
   listenToResponderEventTypesImpl = _listenToResponderEventTypesImpl;
 }
 
+type EventObjectTypes = {|stopPropagation: true|} | $Shape<PartialEventObject>;
+
 type EventQueue = {
-  bubble: null | Array<$Shape<PartialEventObject>>,
-  capture: null | Array<$Shape<PartialEventObject>>,
+  bubble: null | Array<EventObjectTypes>,
+  capture: null | Array<EventObjectTypes>,
   discrete: boolean,
 };
 
@@ -53,6 +55,29 @@ type PartialEventObject = {
   type: string,
 };
 
+type ResponderTimeout = {|
+  id: TimeoutID,
+  timers: Map<Symbol, ResponderTimer>,
+|};
+
+type ResponderTimer = {|
+  instance: ReactEventComponentInstance,
+  func: () => void,
+  id: Symbol,
+|};
+
+const activeTimeouts: Map<Symbol, ResponderTimeout> = new Map();
+const rootEventTypesToEventComponentInstances: Map<
+  DOMTopLevelEventType | string,
+  Set<ReactEventComponentInstance>,
+> = new Map();
+const targetEventTypeCached: Map<
+  Array<ReactEventResponderEventType>,
+  Set<DOMTopLevelEventType>,
+> = new Map();
+const ownershipChangeListeners: Set<ReactEventComponentInstance> = new Set();
+
+let currentTimers = new Map();
 let currentOwner = null;
 let currentInstance: ReactEventComponentInstance;
 let currentEventQueue: EventQueue;
@@ -60,9 +85,8 @@ let currentEventQueue: EventQueue;
 const eventResponderContext: ReactResponderContext = {
   dispatchEvent(
     possibleEventObject: Object,
-    {capture, discrete, stopPropagation}: ReactResponderDispatchEventOptions,
+    {capture, discrete}: ReactResponderDispatchEventOptions,
   ): void {
-    const eventQueue = currentEventQueue;
     const {listener, target, type} = possibleEventObject;
 
     if (listener == null || target == null || type == null) {
@@ -89,27 +113,15 @@ const eventResponderContext: ReactResponderContext = {
     const eventObject = ((possibleEventObject: any): $Shape<
       PartialEventObject,
     >);
-    let events;
-
-    if (capture) {
-      events = eventQueue.capture;
-      if (events === null) {
-        events = eventQueue.capture = [];
-      }
-    } else {
-      events = eventQueue.bubble;
-      if (events === null) {
-        events = eventQueue.bubble = [];
-      }
-    }
+    const events = getEventsFromEventQueue(capture);
     if (discrete) {
-      eventQueue.discrete = true;
+      currentEventQueue.discrete = true;
     }
     events.push(eventObject);
-
-    if (stopPropagation) {
-      eventsWithStopPropagation.add(eventObject);
-    }
+  },
+  dispatchStopPropagation(capture?: boolean) {
+    const events = getEventsFromEventQueue();
+    events.push({stopPropagation: true});
   },
   isPositionWithinTouchHitTarget(doc: Document, x: number, y: number): boolean {
     // This isn't available in some environments (JSDOM)
@@ -222,21 +234,42 @@ const eventResponderContext: ReactResponderContext = {
     triggerOwnershipListeners();
     return false;
   },
-  setTimeout(func: () => void, delay): TimeoutID {
-    const contextInstance = currentInstance;
-    return setTimeout(() => {
-      const previousEventQueue = currentEventQueue;
-      const previousInstance = currentInstance;
-      currentEventQueue = createEventQueue();
-      currentInstance = contextInstance;
-      try {
-        func();
-        batchedUpdates(processEventQueue, currentEventQueue);
-      } finally {
-        currentInstance = previousInstance;
-        currentEventQueue = previousEventQueue;
+  setTimeout(func: () => void, delay): Symbol {
+    if (currentTimers === null) {
+      currentTimers = new Map();
+    }
+    let timeout = currentTimers.get(delay);
+
+    const timerId = Symbol();
+    if (timeout === undefined) {
+      const timers = new Map();
+      const id = setTimeout(() => {
+        processTimers(timers);
+      }, delay);
+      timeout = {
+        id,
+        timers,
+      };
+      currentTimers.set(delay, timeout);
+    }
+    timeout.timers.set(timerId, {
+      instance: currentInstance,
+      func,
+      id: timerId,
+    });
+    activeTimeouts.set(timerId, timeout);
+    return timerId;
+  },
+  clearTimeout(timerId: Symbol): void {
+    const timeout = activeTimeouts.get(timerId);
+
+    if (timeout !== undefined) {
+      const timers = timeout.timers;
+      timers.delete(timerId);
+      if (timers.size === 0) {
+        clearTimeout(timeout.id);
       }
-    }, delay);
+    }
   },
   getEventTargetsFromTarget(
     target: Element | Document,
@@ -292,6 +325,46 @@ const eventResponderContext: ReactResponderContext = {
   },
 };
 
+function getEventsFromEventQueue(capture?: boolean): Array<EventObjectTypes> {
+  let events;
+  if (capture) {
+    events = currentEventQueue.capture;
+    if (events === null) {
+      events = currentEventQueue.capture = [];
+    }
+  } else {
+    events = currentEventQueue.bubble;
+    if (events === null) {
+      events = currentEventQueue.bubble = [];
+    }
+  }
+  return events;
+}
+
+function processTimers(timers: Map<Symbol, ResponderTimer>): void {
+  const previousEventQueue = currentEventQueue;
+  const previousInstance = currentInstance;
+  currentEventQueue = createEventQueue();
+
+  try {
+    const timersArr = Array.from(timers.values());
+    for (let i = 0; i < timersArr.length; i++) {
+      const {instance, func, id} = timersArr[i];
+      currentInstance = instance;
+      try {
+        func();
+      } finally {
+        activeTimeouts.delete(id);
+      }
+    }
+    batchedUpdates(processEventQueue, currentEventQueue);
+  } finally {
+    currentInstance = previousInstance;
+    currentEventQueue = previousEventQueue;
+    currentTimers = null;
+  }
+}
+
 function queryEventTarget(
   child: Fiber,
   queryType: void | Symbol | number,
@@ -305,20 +378,6 @@ function queryEventTarget(
   }
   return true;
 }
-
-const rootEventTypesToEventComponentInstances: Map<
-  DOMTopLevelEventType | string,
-  Set<ReactEventComponentInstance>,
-> = new Map();
-const PossiblyWeakSet = typeof WeakSet === 'function' ? WeakSet : Set;
-const eventsWithStopPropagation:
-  | WeakSet
-  | Set<$Shape<PartialEventObject>> = new PossiblyWeakSet();
-const targetEventTypeCached: Map<
-  Array<ReactEventResponderEventType>,
-  Set<DOMTopLevelEventType>,
-> = new Map();
-const ownershipChangeListeners: Set<ReactEventComponentInstance> = new Set();
 
 function createResponderEvent(
   topLevelType: string,
@@ -350,27 +409,27 @@ function processEvent(event: $Shape<PartialEventObject>): void {
 }
 
 function processEvents(
-  bubble: null | Array<$Shape<PartialEventObject>>,
-  capture: null | Array<$Shape<PartialEventObject>>,
+  bubble: null | Array<EventObjectTypes>,
+  capture: null | Array<EventObjectTypes>,
 ): void {
   let i, length;
 
   if (capture !== null) {
     for (i = capture.length; i-- > 0; ) {
       const event = capture[i];
-      processEvent(capture[i]);
-      if (eventsWithStopPropagation.has(event)) {
+      if (event.stopPropagation === true) {
         return;
       }
+      processEvent(((event: any): $Shape<PartialEventObject>));
     }
   }
   if (bubble !== null) {
     for (i = 0, length = bubble.length; i < length; ++i) {
       const event = bubble[i];
-      processEvent(event);
-      if (eventsWithStopPropagation.has(event)) {
+      if (event.stopPropagation === true) {
         return;
       }
+      processEvent(((event: any): $Shape<PartialEventObject>));
     }
   }
 }
@@ -475,6 +534,7 @@ export function runResponderEventsInBatch(
       }
     }
     processEventQueue();
+    currentTimers = null;
   }
 }
 
@@ -518,6 +578,7 @@ export function unmountEventResponder(
     } finally {
       currentEventQueue = previousEventQueue;
       currentInstance = previousInstance;
+      currentTimers = null;
     }
   }
   if (currentOwner === eventComponentInstance) {

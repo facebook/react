@@ -27,8 +27,8 @@ type HoverState = {
   isHovered: boolean,
   isInHitSlop: boolean,
   isTouched: boolean,
-  hoverStartTimeout: null | TimeoutID,
-  hoverEndTimeout: null | TimeoutID,
+  hoverStartTimeout: null | Symbol,
+  hoverEndTimeout: null | Symbol,
 };
 
 type HoverEventType = 'hoverstart' | 'hoverend' | 'hoverchange';
@@ -97,7 +97,7 @@ function dispatchHoverStartEvents(
   state.isHovered = true;
 
   if (state.hoverEndTimeout !== null) {
-    clearTimeout(state.hoverEndTimeout);
+    context.clearTimeout(state.hoverEndTimeout);
     state.hoverEndTimeout = null;
   }
 
@@ -148,7 +148,7 @@ function dispatchHoverEndEvents(
   state.isHovered = false;
 
   if (state.hoverStartTimeout !== null) {
-    clearTimeout(state.hoverStartTimeout);
+    context.clearTimeout(state.hoverStartTimeout);
     state.hoverStartTimeout = null;
   }
 

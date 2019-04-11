@@ -33,19 +33,21 @@ type PressProps = {
     left: number,
   },
   preventDefault: boolean,
+  stopPropagation: boolean,
 };
 
 type PressState = {
+  didDispatchEvent: boolean,
   isActivePressed: boolean,
   isActivePressStart: boolean,
   isAnchorTouched: boolean,
   isLongPressed: boolean,
   isPressed: boolean,
   isPressWithinResponderRegion: boolean,
-  longPressTimeout: null | TimeoutID,
+  longPressTimeout: null | Symbol,
   pressTarget: null | Element | Document,
-  pressEndTimeout: null | TimeoutID,
-  pressStartTimeout: null | TimeoutID,
+  pressEndTimeout: null | Symbol,
+  pressStartTimeout: null | Symbol,
   responderRegion: null | $ReadOnly<{|
     bottom: number,
     left: number,
@@ -124,7 +126,10 @@ function dispatchEvent(
 ): void {
   const target = ((state.pressTarget: any): Element | Document);
   const syntheticEvent = createPressEvent(name, target, listener);
-  context.dispatchEvent(syntheticEvent, {discrete: true});
+  context.dispatchEvent(syntheticEvent, {
+    discrete: true,
+  });
+  state.didDispatchEvent = true;
 }
 
 function dispatchPressChangeEvent(
@@ -185,7 +190,7 @@ function dispatchPressStartEvents(
   state.isPressed = true;
 
   if (state.pressEndTimeout !== null) {
-    clearTimeout(state.pressEndTimeout);
+    context.clearTimeout(state.pressEndTimeout);
     state.pressEndTimeout = null;
   }
 
@@ -210,6 +215,14 @@ function dispatchPressStartEvents(
         }
         if (props.onLongPressChange) {
           dispatchLongPressChangeEvent(context, props, state);
+        }
+        if (state.didDispatchEvent) {
+          const shouldStopPropagation =
+            props.stopPropagation === undefined ? true : props.stopPropagation;
+          if (shouldStopPropagation) {
+            context.dispatchStopPropagation();
+          }
+          state.didDispatchEvent = false;
         }
       }, delayLongPress);
     }
@@ -243,12 +256,12 @@ function dispatchPressEndEvents(
   state.isPressed = false;
 
   if (state.longPressTimeout !== null) {
-    clearTimeout(state.longPressTimeout);
+    context.clearTimeout(state.longPressTimeout);
     state.longPressTimeout = null;
   }
 
   if (!wasActivePressStart && state.pressStartTimeout !== null) {
-    clearTimeout(state.pressStartTimeout);
+    context.clearTimeout(state.pressStartTimeout);
     state.pressStartTimeout = null;
     // don't activate if a press has moved beyond the responder region
     if (state.isPressWithinResponderRegion) {
@@ -356,6 +369,7 @@ const PressResponder = {
   targetEventTypes,
   createInitialState(): PressState {
     return {
+      didDispatchEvent: false,
       isActivePressed: false,
       isActivePressStart: false,
       isAnchorTouched: false,
@@ -601,6 +615,14 @@ const PressResponder = {
           }
         }
       }
+    }
+    if (state.didDispatchEvent) {
+      const shouldStopPropagation =
+        props.stopPropagation === undefined ? true : props.stopPropagation;
+      if (shouldStopPropagation) {
+        context.dispatchStopPropagation();
+      }
+      state.didDispatchEvent = false;
     }
   },
   onUnmount(
