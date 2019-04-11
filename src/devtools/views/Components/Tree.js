@@ -41,6 +41,7 @@ export default function Tree(props: Props) {
     ownerStack,
     selectedElementID,
     selectedElementIndex,
+    selectChildElementInTree,
     selectElementAtIndex,
     selectNextElementInTree,
     selectOwner,
@@ -113,14 +114,12 @@ export default function Tree(props: Props) {
             selectedElementID !== null
               ? store.getElementByID(selectedElementID)
               : null;
-          if (
-            element !== null &&
-            element.children.length > 0 &&
-            !element.isCollapsed
-          ) {
-            store.toggleIsCollapsed(element.id, true);
-          } else {
-            selectParentElementInTree();
+          if (element !== null) {
+            if (element.children.length > 0 && !element.isCollapsed) {
+              store.toggleIsCollapsed(element.id, true);
+            } else {
+              selectParentElementInTree();
+            }
           }
           break;
         case 'ArrowRight':
@@ -129,14 +128,12 @@ export default function Tree(props: Props) {
             selectedElementID !== null
               ? store.getElementByID(selectedElementID)
               : null;
-          if (
-            element !== null &&
-            element.children.length > 0 &&
-            element.isCollapsed
-          ) {
-            store.toggleIsCollapsed(element.id, false);
-          } else {
-            selectNextElementInTree();
+          if (element !== null) {
+            if (element.children.length > 0 && element.isCollapsed) {
+              store.toggleIsCollapsed(element.id, false);
+            } else {
+              selectChildElementInTree();
+            }
           }
           break;
         case 'ArrowUp':
@@ -157,6 +154,7 @@ export default function Tree(props: Props) {
     };
   }, [
     selectedElementID,
+    selectChildElementInTree,
     selectNextElementInTree,
     selectParentElementInTree,
     selectPreviousElementInTree,
