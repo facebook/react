@@ -70,7 +70,6 @@ type PressEventType =
   | 'longpresschange';
 
 type PressEvent = {|
-  listener: PressEvent => void,
   target: Element | Document,
   type: PressEventType,
   pointerType: PointerType,
@@ -114,11 +113,9 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
 function createPressEvent(
   type: PressEventType,
   target: Element | Document,
-  listener: PressEvent => void,
   pointerType: PointerType,
 ): PressEvent {
   return {
-    listener,
     target,
     type,
     pointerType,
@@ -133,8 +130,8 @@ function dispatchEvent(
 ): void {
   const target = ((state.pressTarget: any): Element | Document);
   const pointerType = state.pointerType;
-  const syntheticEvent = createPressEvent(name, target, listener, pointerType);
-  context.dispatchEvent(syntheticEvent, {
+  const syntheticEvent = createPressEvent(name, target, pointerType);
+  context.dispatchEvent(syntheticEvent, listener, {
     discrete: true,
   });
   state.didDispatchEvent = true;

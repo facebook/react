@@ -34,7 +34,6 @@ type HoverState = {
 type HoverEventType = 'hoverstart' | 'hoverend' | 'hoverchange';
 
 type HoverEvent = {|
-  listener: HoverEvent => void,
   target: Element | Document,
   type: HoverEventType,
 |};
@@ -57,10 +56,8 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
 function createHoverEvent(
   type: HoverEventType,
   target: Element | Document,
-  listener: HoverEvent => void,
 ): HoverEvent {
   return {
-    listener,
     target,
     type,
   };
@@ -76,12 +73,8 @@ function dispatchHoverChangeEvent(
   const listener = () => {
     props.onHoverChange(bool);
   };
-  const syntheticEvent = createHoverEvent(
-    'hoverchange',
-    event.target,
-    listener,
-  );
-  context.dispatchEvent(syntheticEvent, {discrete: true});
+  const syntheticEvent = createHoverEvent('hoverchange', event.target);
+  context.dispatchEvent(syntheticEvent, listener, {discrete: true});
 }
 
 function dispatchHoverStartEvents(
@@ -106,12 +99,10 @@ function dispatchHoverStartEvents(
     state.isActiveHovered = true;
 
     if (props.onHoverStart) {
-      const syntheticEvent = createHoverEvent(
-        'hoverstart',
-        target,
-        props.onHoverStart,
-      );
-      context.dispatchEvent(syntheticEvent, {discrete: true});
+      const syntheticEvent = createHoverEvent('hoverstart', target);
+      context.dispatchEvent(syntheticEvent, props.onHoverStart, {
+        discrete: true,
+      });
     }
     if (props.onHoverChange) {
       dispatchHoverChangeEvent(event, context, props, state);
@@ -157,12 +148,8 @@ function dispatchHoverEndEvents(
     state.isActiveHovered = false;
 
     if (props.onHoverEnd) {
-      const syntheticEvent = createHoverEvent(
-        'hoverend',
-        target,
-        props.onHoverEnd,
-      );
-      context.dispatchEvent(syntheticEvent, {discrete: true});
+      const syntheticEvent = createHoverEvent('hoverend', target);
+      context.dispatchEvent(syntheticEvent, props.onHoverEnd, {discrete: true});
     }
     if (props.onHoverChange) {
       dispatchHoverChangeEvent(event, context, props, state);

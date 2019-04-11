@@ -43,7 +43,6 @@ type EventData = {
 type DragEventType = 'dragstart' | 'dragend' | 'dragchange' | 'dragmove';
 
 type DragEvent = {|
-  listener: DragEvent => void,
   target: Element | Document,
   type: DragEventType,
   diffX?: number,
@@ -53,11 +52,9 @@ type DragEvent = {|
 function createDragEvent(
   type: DragEventType,
   target: Element | Document,
-  listener: DragEvent => void,
   eventData?: EventData,
 ): DragEvent {
   return {
-    listener,
     target,
     type,
     ...eventData,
@@ -73,8 +70,8 @@ function dispatchDragEvent(
   eventData?: EventData,
 ): void {
   const target = ((state.dragTarget: any): Element | Document);
-  const syntheticEvent = createDragEvent(name, target, listener, eventData);
-  context.dispatchEvent(syntheticEvent, {discrete});
+  const syntheticEvent = createDragEvent(name, target, eventData);
+  context.dispatchEvent(syntheticEvent, listener, {discrete});
 }
 
 const DragResponder = {
