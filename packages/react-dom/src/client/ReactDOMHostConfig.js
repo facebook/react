@@ -936,6 +936,7 @@ export function getEventTargetChildElement(
       return {
         type: 'div',
         props: {
+          suppressHydrationWarning: true,
           style: {
             position: 'absolute',
             zIndex: -1,

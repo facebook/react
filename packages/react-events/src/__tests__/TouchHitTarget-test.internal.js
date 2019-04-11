@@ -507,6 +507,39 @@ describe('TouchHitTarget', () => {
       );
     });
 
+    it('should hydrate TouchHitTarget hit slop elements correcty', () => {
+      const Test = () => (
+        <EventComponent>
+          <div>
+            <TouchHitTarget />
+          </div>
+        </EventComponent>
+      );
+
+      const container = document.createElement('div');
+      container.innerHTML = '<div></div>';
+      ReactDOM.hydrate(<Test />, container);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(container.innerHTML).toBe('<div></div>');
+
+      const Test2 = () => (
+        <EventComponent>
+          <div>
+            <TouchHitTarget top={10} left={10} right={10} bottom={10} />
+          </div>
+        </EventComponent>
+      );
+
+      const container2 = document.createElement('div');
+      container2.innerHTML =
+        '<div><div style="position:absolute;z-index:-1;bottom:-10px;left:-10px;right:-10px;top:-10px"></div></div>';
+      ReactDOM.hydrate(<Test2 />, container2);
+      expect(Scheduler).toFlushWithoutYielding();
+      expect(container2.innerHTML).toBe(
+        '<div><div style="position:absolute;z-index:-1;bottom:-10px;left:-10px;right:-10px;top:-10px"></div></div>',
+      );
+    });
+
     it('should hydrate TouchHitTarget hit slop elements correcty and patch them', () => {
       const Test = () => (
         <EventComponent>
@@ -550,7 +583,7 @@ describe('TouchHitTarget', () => {
       );
 
       const output = ReactDOMServer.renderToString(<Test />);
-      expect(output).toBe('<div></div>');
+      expect(output).toBe('<div><div></div></div>');
     });
 
     it('should render a TouchHitTarget without hit slop values', () => {
@@ -563,7 +596,7 @@ describe('TouchHitTarget', () => {
       );
 
       let output = ReactDOMServer.renderToString(<Test />);
-      expect(output).toBe('<div></div>');
+      expect(output).toBe('<div><div></div></div>');
 
       const Test2 = () => (
         <EventComponent>
@@ -574,7 +607,7 @@ describe('TouchHitTarget', () => {
       );
 
       output = ReactDOMServer.renderToString(<Test2 />);
-      expect(output).toBe('<div></div>');
+      expect(output).toBe('<div><div></div></div>');
 
       const Test3 = () => (
         <EventComponent>
@@ -585,7 +618,7 @@ describe('TouchHitTarget', () => {
       );
 
       output = ReactDOMServer.renderToString(<Test3 />);
-      expect(output).toBe('<div></div>');
+      expect(output).toBe('<div><div></div></div>');
     });
   });
 });
