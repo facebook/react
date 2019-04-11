@@ -61,7 +61,6 @@ type ResponderTimeout = {|
 |};
 
 type ResponderTimer = {|
-  event: ReactResponderEvent,
   instance: ReactEventComponentInstance,
   func: () => void,
   id: Symbol,
@@ -85,7 +84,6 @@ const eventListeners:
       ($Shape<PartialEventObject>) => void,
     > = new PossiblyWeakMap();
 
-let currentEvent: null | ReactResponderEvent = null;
 let currentTimers = new Map();
 let currentOwner = null;
 let currentInstance: null | ReactEventComponentInstance = null;
@@ -278,7 +276,6 @@ const eventResponderContext: ReactResponderContext = {
       currentTimers.set(delay, timeout);
     }
     timeout.timers.set(timerId, {
-      event: ((currentEvent: any): ReactResponderEvent),
       instance: ((currentInstance: any): ReactEventComponentInstance),
       func,
       id: timerId,
@@ -375,9 +372,8 @@ function processTimers(timers: Map<Symbol, ResponderTimer>): void {
   currentEventQueue = createEventQueue();
   try {
     for (let i = 0; i < timersArr.length; i++) {
-      const {event, instance, func, id} = timersArr[i];
+      const {instance, func, id} = timersArr[i];
       currentInstance = instance;
-      currentEvent = event;
       try {
         func();
       } finally {
@@ -387,7 +383,6 @@ function processTimers(timers: Map<Symbol, ResponderTimer>): void {
     batchedUpdates(processEventQueue, currentEventQueue);
   } finally {
     currentTimers = null;
-    currentEvent = null;
     currentInstance = null;
     currentEventQueue = null;
   }
@@ -496,6 +491,7 @@ function getTargetEventTypes(
 
 function handleTopLevelType(
   topLevelType: DOMTopLevelEventType,
+  responderEvent: ReactResponderEvent,
   eventComponentInstance: ReactEventComponentInstance,
   isRootLevelEvent: boolean,
 ): void {
@@ -508,12 +504,7 @@ function handleTopLevelType(
     }
   }
   currentInstance = eventComponentInstance;
-  responder.onEvent(
-    ((currentEvent: any): ReactResponderEvent),
-    eventResponderContext,
-    props,
-    state,
-  );
+  responder.onEvent(responderEvent, eventResponderContext, props, state);
 }
 
 export function runResponderEventsInBatch(
@@ -525,7 +516,7 @@ export function runResponderEventsInBatch(
 ): void {
   if (enableEventAPI) {
     currentEventQueue = createEventQueue();
-    currentEvent = createResponderEvent(
+    const responderEvent = createResponderEvent(
       ((topLevelType: any): string),
       nativeEvent,
       ((nativeEventTarget: any): Element | Document),
@@ -538,7 +529,12 @@ export function runResponderEventsInBatch(
       while (node !== null) {
         if (node.tag === EventComponent) {
           const eventComponentInstance = node.stateNode;
-          handleTopLevelType(topLevelType, eventComponentInstance, false);
+          handleTopLevelType(
+            topLevelType,
+            responderEvent,
+            eventComponentInstance,
+            false,
+          );
         }
         node = node.return;
       }
@@ -551,13 +547,17 @@ export function runResponderEventsInBatch(
 
         for (let i = 0; i < rootEventComponentInstances.length; i++) {
           const rootEventComponentInstance = rootEventComponentInstances[i];
-          handleTopLevelType(topLevelType, rootEventComponentInstance, true);
+          handleTopLevelType(
+            topLevelType,
+            responderEvent,
+            rootEventComponentInstance,
+            true,
+          );
         }
       }
       processEventQueue();
     } finally {
       currentTimers = null;
-      currentEvent = null;
       currentInstance = null;
       currentEventQueue = null;
     }
@@ -616,7 +616,7 @@ export function unmountEventResponder(
 
 function validateResponderContext(): void {
   invariant(
-    currentEvent && currentEventQueue && currentInstance,
+    currentEventQueue && currentInstance,
     'An event responder context was used outside of an event cycle. ' +
       'Use context.setTimeout() to use asynchronous responder context outside of event cycle .',
   );
