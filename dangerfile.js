@@ -25,7 +25,7 @@
 //
 // `DANGER_GITHUB_API_TOKEN=[ENV_ABOVE] yarn danger pr https://github.com/facebook/react/pull/11865
 
-const {markdown, danger} = require('danger');
+const {markdown, danger, warn} = require('danger');
 const fetch = require('node-fetch');
 
 const {generateResultsArray} = require('./scripts/rollup/stats');
@@ -108,18 +108,61 @@ function git(args) {
   // Use git locally to grab the commit which represents the place
   // where the branches differ
   const upstreamRepo = danger.github.pr.base.repo.full_name;
-  const upstreamRef = danger.github.pr.base.ref;
-  await git(`remote add upstream https://github.com/${upstreamRepo}.git`);
-  await git('fetch upstream');
-  const mergeBaseCommit = await git(`merge-base HEAD upstream/${upstreamRef}`);
+  if (upstreamRepo !== 'facebook/react') {
+    // Exit unless we're running in the main repo
+    return;
+  }
 
-  const commitURL = sha =>
-    `http://react.zpao.com/builds/master/_commits/${sha}/results.json`;
-  const response = await fetch(commitURL(mergeBaseCommit));
+  const upstreamRef = danger.github.pr.base.ref;
+  await git(`remote add upstream https://github.com/facebook/react.git`);
+  await git('fetch upstream');
+  const baseCommit = await git(`merge-base HEAD upstream/${upstreamRef}`);
+
+  let resultsResponse = null;
+  try {
+    let baseCIBuildId = null;
+    const statusesResponse = await fetch(
+      `https://api.github.com/repos/facebook/react/commits/${baseCommit}/statuses`
+    );
+    const statuses = await statusesResponse.json();
+    for (let i = 0; i < statuses.length; i++) {
+      const status = statuses[i];
+      if (status.context === 'ci/circleci' && status.state === 'success') {
+        baseCIBuildId = /\/facebook\/react\/([0-9]+)/.exec(
+          status.target_url
+        )[1];
+      }
+    }
+
+    if (baseCIBuildId === null) {
+      warn(`Base commit is broken: ${baseCommit}`);
+      return;
+    }
+
+    const baseArtifactsInfoResponse = await fetch(
+      `https://circleci.com/api/v1.1/project/github/facebook/react/${baseCIBuildId}/artifacts`
+    );
+    const baseArtifactsInfo = await baseArtifactsInfoResponse.json();
+
+    for (let i = 0; i < baseArtifactsInfo.length; i++) {
+      const info = baseArtifactsInfo[i];
+      if (info.path === 'home/circleci/project/scripts/results.json') {
+        resultsResponse = await fetch(info.url);
+      }
+    }
+  } catch (error) {
+    warn(`Failed to fetch build artifacts for base commit: ${baseCommit}`);
+    return;
+  }
+
+  if (resultsResponse === null) {
+    warn(`Could not find build artifacts for base commit: ${baseCommit}`);
+    return;
+  }
 
   // Take the JSON of the build response and
   // make an array comparing the results for printing
-  const previousBuildResults = await response.json();
+  const previousBuildResults = await resultsResponse.json();
   const results = generateResultsArray(
     currentBuildResults,
     previousBuildResults
@@ -212,7 +255,7 @@ function git(args) {
   <details>
   <summary>Details of bundled changes.</summary>
 
-  <p>Comparing: ${mergeBaseCommit}...${danger.github.pr.head.sha}</p>
+  <p>Comparing: ${baseCommit}...${danger.github.pr.head.sha}</p>
 
 
   ${allTables.join('\n')}
