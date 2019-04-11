@@ -36,6 +36,8 @@ type PressProps = {
   stopPropagation: boolean,
 };
 
+type PointerType = '' | 'mouse' | 'keyboard' | 'pen' | 'touch';
+
 type PressState = {
   didDispatchEvent: boolean,
   isActivePressed: boolean,
@@ -45,6 +47,7 @@ type PressState = {
   isPressed: boolean,
   isPressWithinResponderRegion: boolean,
   longPressTimeout: null | Symbol,
+  pointerType: PointerType,
   pressTarget: null | Element | Document,
   pressEndTimeout: null | Symbol,
   pressStartTimeout: null | Symbol,
@@ -70,6 +73,7 @@ type PressEvent = {|
   listener: PressEvent => void,
   target: Element | Document,
   type: PressEventType,
+  pointerType: PointerType,
 |};
 
 const DEFAULT_PRESS_END_DELAY_MS = 0;
@@ -110,11 +114,13 @@ function createPressEvent(
   type: PressEventType,
   target: Element | Document,
   listener: PressEvent => void,
+  pointerType: PointerType,
 ): PressEvent {
   return {
     listener,
     target,
     type,
+    pointerType,
   };
 }
 
@@ -125,7 +131,8 @@ function dispatchEvent(
   listener: (e: Object) => void,
 ): void {
   const target = ((state.pressTarget: any): Element | Document);
-  const syntheticEvent = createPressEvent(name, target, listener);
+  const pointerType = state.pointerType;
+  const syntheticEvent = createPressEvent(name, target, listener, pointerType);
   context.dispatchEvent(syntheticEvent, {
     discrete: true,
   });
@@ -137,8 +144,9 @@ function dispatchPressChangeEvent(
   props: PressProps,
   state: PressState,
 ): void {
+  const bool = state.isActivePressed;
   const listener = () => {
-    props.onPressChange(state.isActivePressed);
+    props.onPressChange(bool);
   };
   dispatchEvent(context, state, 'presschange', listener);
 }
@@ -148,8 +156,9 @@ function dispatchLongPressChangeEvent(
   props: PressProps,
   state: PressState,
 ): void {
+  const bool = state.isLongPressed;
   const listener = () => {
-    props.onLongPressChange(state.isLongPressed);
+    props.onLongPressChange(bool);
   };
   dispatchEvent(context, state, 'longpresschange', listener);
 }
@@ -338,6 +347,22 @@ function calculateResponderRegion(target, props) {
   };
 }
 
+function getPointerType(nativeEvent: any) {
+  if (nativeEvent.pointerType != null) {
+    return nativeEvent.pointerType;
+  }
+  if (nativeEvent.type.indexOf('mouse') > -1) {
+    return 'mouse';
+  }
+  if (nativeEvent.type.indexOf('touch') > -1) {
+    return 'touch';
+  }
+  if (nativeEvent.type.indexOf('key') > -1) {
+    return 'keyboard';
+  }
+  return '';
+}
+
 function isPressWithinResponderRegion(
   nativeEvent: $PropertyType<ReactResponderEvent, 'nativeEvent'>,
   state: PressState,
@@ -377,6 +402,7 @@ const PressResponder = {
       isPressed: false,
       isPressWithinResponderRegion: true,
       longPressTimeout: null,
+      pointerType: '',
       pressEndTimeout: null,
       pressStartTimeout: null,
       pressTarget: null,
@@ -403,10 +429,10 @@ const PressResponder = {
           !context.hasOwnership() &&
           !state.shouldSkipMouseAfterTouch
         ) {
-          if (
-            (nativeEvent: any).pointerType === 'mouse' ||
-            type === 'mousedown'
-          ) {
+          const pointerType = getPointerType(nativeEvent);
+          state.pointerType = pointerType;
+
+          if (pointerType === 'mouse' || type === 'mousedown') {
             if (
               // Ignore right- and middle-clicks
               nativeEvent.button === 1 ||
@@ -435,6 +461,9 @@ const PressResponder = {
           if (state.shouldSkipMouseAfterTouch) {
             return;
           }
+
+          const pointerType = getPointerType(nativeEvent);
+          state.pointerType = pointerType;
 
           if (state.responderRegion == null) {
             let currentTarget = (target: any);
@@ -469,6 +498,9 @@ const PressResponder = {
             state.shouldSkipMouseAfterTouch = false;
             return;
           }
+
+          const pointerType = getPointerType(nativeEvent);
+          state.pointerType = pointerType;
 
           const wasLongPressed = state.isLongPressed;
 
@@ -506,6 +538,8 @@ const PressResponder = {
             state.isAnchorTouched = true;
             return;
           }
+          const pointerType = getPointerType(nativeEvent);
+          state.pointerType = pointerType;
           state.pressTarget = target;
           state.isPressWithinResponderRegion = true;
           dispatchPressStartEvents(context, props, state);
@@ -519,6 +553,9 @@ const PressResponder = {
           return;
         }
         if (state.isPressed) {
+          const pointerType = getPointerType(nativeEvent);
+          state.pointerType = pointerType;
+
           const wasLongPressed = state.isLongPressed;
 
           dispatchPressEndEvents(context, props, state);
@@ -558,18 +595,21 @@ const PressResponder = {
        */
       case 'keydown': {
         if (
-          !state.isPressed &&
-          !state.isLongPressed &&
           !context.hasOwnership() &&
           isValidKeyPress((nativeEvent: any).key)
         ) {
-          // Prevent spacebar press from scrolling the window
-          if ((nativeEvent: any).key === ' ') {
-            (nativeEvent: any).preventDefault();
+          if (state.isPressed) {
+            // Prevent spacebar press from scrolling the window
+            if ((nativeEvent: any).key === ' ') {
+              (nativeEvent: any).preventDefault();
+            }
+          } else {
+            const pointerType = getPointerType(nativeEvent);
+            state.pointerType = pointerType;
+            state.pressTarget = target;
+            dispatchPressStartEvents(context, props, state);
+            context.addRootEventTypes(target.ownerDocument, rootEventTypes);
           }
-          state.pressTarget = target;
-          dispatchPressStartEvents(context, props, state);
-          context.addRootEventTypes(target.ownerDocument, rootEventTypes);
         }
         break;
       }
@@ -616,6 +656,7 @@ const PressResponder = {
         }
       }
     }
+
     if (state.didDispatchEvent) {
       const shouldStopPropagation =
         props.stopPropagation === undefined ? true : props.stopPropagation;
