@@ -94,6 +94,7 @@ let didWarnShadyDOM = false;
 const DANGEROUSLY_SET_INNER_HTML = 'dangerouslySetInnerHTML';
 const SUPPRESS_CONTENT_EDITABLE_WARNING = 'suppressContentEditableWarning';
 const SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
+const HYDRATE_TOUCH_HIT_TARGET = 'hydrateTouchHitTarget';
 const AUTOFOCUS = 'autoFocus';
 const CHILDREN = 'children';
 const STYLE = 'style';
@@ -1037,6 +1038,9 @@ export function diffHydratedProperties(
       let serverValue;
       const propertyInfo = getPropertyInfo(propKey);
       if (suppressHydrationWarning) {
+        if (enableEventAPI && propKey === HYDRATE_TOUCH_HIT_TARGET) {
+          updatePayload = [STYLE, rawProps.style];
+        }
         // Don't bother comparing. We're ignoring all these warnings.
       } else if (
         propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||

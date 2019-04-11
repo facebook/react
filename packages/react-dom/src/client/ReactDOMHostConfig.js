@@ -936,15 +936,17 @@ export function getEventTargetChildElement(
       return {
         type: 'div',
         props: {
-          suppressHydrationWarning: true,
           style: {
             position: 'absolute',
             zIndex: -1,
+            pointerEvents: 'auto',
             bottom: bottom ? `-${bottom}px` : '0px',
             left: left ? `-${left}px` : '0px',
             right: right ? `-${right}px` : '0px',
             top: top ? `-${top}px` : '0px',
           },
+          hydrateTouchHitTarget: true,
+          suppressHydrationWarning: true,
         },
       };
     }
