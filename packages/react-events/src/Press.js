@@ -32,10 +32,10 @@ type PressProps = {
     bottom: number,
     left: number,
   },
+  preventDefault: boolean,
 };
 
 type PressState = {
-  defaultPrevented: boolean,
   isActivePressed: boolean,
   isActivePressStart: boolean,
   isAnchorTouched: boolean,
@@ -206,14 +206,7 @@ function dispatchPressStartEvents(
         state.isLongPressed = true;
         state.longPressTimeout = null;
         if (props.onLongPress) {
-          const listener = e => {
-            props.onLongPress(e);
-            // TODO address this again at some point
-            // if (e.nativeEvent.defaultPrevented) {
-            //   state.defaultPrevented = true;
-            // }
-          };
-          dispatchEvent(context, state, 'longpress', listener);
+          dispatchEvent(context, state, 'longpress', props.onLongPress);
         }
         if (props.onLongPressChange) {
           dispatchLongPressChangeEvent(context, props, state);
@@ -363,7 +356,6 @@ const PressResponder = {
   targetEventTypes,
   createInitialState(): PressState {
     return {
-      defaultPrevented: false,
       isActivePressed: false,
       isActivePressStart: false,
       isAnchorTouched: false,
@@ -477,14 +469,7 @@ const PressResponder = {
                   props.onLongPressShouldCancelPress()
                 )
               ) {
-                const listener = e => {
-                  props.onPress(e);
-                  // TODO address this again at some point
-                  // if (e.nativeEvent.defaultPrevented) {
-                  //   state.defaultPrevented = true;
-                  // }
-                };
-                dispatchEvent(context, state, 'press', listener);
+                dispatchEvent(context, state, 'press', props.onPress);
               }
             }
           }
@@ -607,9 +592,13 @@ const PressResponder = {
       }
 
       case 'click': {
-        if (state.defaultPrevented) {
-          (nativeEvent: any).preventDefault();
-          state.defaultPrevented = false;
+        if (isAnchorTagElement(target)) {
+          const {ctrlKey, metaKey, shiftKey} = ((nativeEvent: any): MouseEvent);
+          const preventDefault = props.preventDefault;
+          // Check "open in new window/tab" key modifiers
+          if (preventDefault !== false && !shiftKey && !ctrlKey && !metaKey) {
+            (nativeEvent: any).preventDefault();
+          }
         }
       }
     }
