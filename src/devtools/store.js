@@ -48,6 +48,7 @@ type Config = {|
 |};
 
 export type Capabilities = {|
+  hasOwnerMetadata: boolean,
   supportsProfiling: boolean,
 |};
 
@@ -59,6 +60,9 @@ export default class Store extends EventEmitter {
   _bridge: Bridge;
 
   _captureScreenshots: boolean = false;
+
+  // At least one of the injected renderers contains (DEV only) owner metadata.
+  _hasOwnerMetadata: boolean = false;
 
   // Map of ID to Element.
   // Elements are mutable (for now) to avoid excessive cloning during tree updates.
@@ -172,6 +176,10 @@ export default class Store extends EventEmitter {
     );
 
     this.emit('captureScreenshots');
+  }
+
+  get hasOwnerMetadata(): boolean {
+    return this._hasOwnerMetadata;
   }
 
   // Profiling data has been recorded for at least one root.
@@ -534,9 +542,15 @@ export default class Store extends EventEmitter {
             const supportsProfiling = operations[i] > 0;
             i++;
 
+            const hasOwnerMetadata = operations[i] > 0;
+            i++;
+
             this._roots = this._roots.concat(id);
             this._rootIDToRendererID.set(id, rendererID);
-            this._rootIDToCapabilities.set(id, { supportsProfiling });
+            this._rootIDToCapabilities.set(id, {
+              hasOwnerMetadata,
+              supportsProfiling,
+            });
 
             this._idToElement.set(id, {
               children: [],
@@ -768,12 +782,18 @@ export default class Store extends EventEmitter {
     this._revision++;
 
     if (haveRootsChanged) {
+      this._hasOwnerMetadata = false;
       this._supportsProfiling = false;
-      this._rootIDToCapabilities.forEach(({ supportsProfiling }) => {
-        if (supportsProfiling) {
-          this._supportsProfiling = true;
+      this._rootIDToCapabilities.forEach(
+        ({ hasOwnerMetadata, supportsProfiling }) => {
+          if (hasOwnerMetadata) {
+            this._hasOwnerMetadata = true;
+          }
+          if (supportsProfiling) {
+            this._supportsProfiling = true;
+          }
         }
-      });
+      );
 
       this.emit('roots');
     }

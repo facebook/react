@@ -639,12 +639,15 @@ export function attach(
       idToTreeBaseDurationMap.set(id, fiber.treeBaseDuration);
     }
 
+    const hasOwnerMetadata = fiber.hasOwnProperty('_debugOwner');
+
     if (isRoot) {
-      const operation = new Uint32Array(4);
+      const operation = new Uint32Array(5);
       operation[0] = TREE_OPERATION_ADD;
       operation[1] = id;
       operation[2] = ElementTypeRoot;
       operation[3] = isProfilingSupported ? 1 : 0;
+      operation[4] = hasOwnerMetadata ? 1 : 0;
       addOperation(operation);
     } else {
       const { displayName, key, type } = getDataForFiber(fiber);

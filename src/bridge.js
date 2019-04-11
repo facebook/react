@@ -51,7 +51,7 @@ export default class Bridge extends EventEmitter {
         this._wall.send(
           this._messageQueue[i],
           this._messageQueue[i + 1],
-          this._messageQueue[i + 2],
+          this._messageQueue[i + 2]
         );
       }
       this._messageQueue.length = 0;

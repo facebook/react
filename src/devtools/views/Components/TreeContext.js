@@ -484,30 +484,34 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
       }
       break;
     case 'SELECT_OWNER':
-      ownerStackIndex = ownerStack.indexOf(payload);
+      // If the Store doesn't have any owners metadata, don't drill into an empty stack.
+      // This is a confusing user experience.
+      if (store.hasOwnerMetadata) {
+        ownerStackIndex = ownerStack.indexOf(payload);
 
-      // Always force reset selection to be the top of the new owner tree.
-      selectedElementIndex = 0;
-      prevSelectedElementIndex = null;
+        // Always force reset selection to be the top of the new owner tree.
+        selectedElementIndex = 0;
+        prevSelectedElementIndex = null;
 
-      // If this owner is already in the current stack, just select it.
-      // Otherwise, create a new stack.
-      if (ownerStackIndex < 0) {
-        // Add this new owner, and fill in the owners above it as well.
-        ownerStack = [];
-        let currentOwnerID = ((payload: any): number);
-        while (currentOwnerID !== 0) {
-          ownerStack.unshift(currentOwnerID);
-          currentOwnerID = ((store.getElementByID(
-            currentOwnerID
-          ): any): Element).ownerID;
-        }
-        ownerStackIndex = ownerStack.length - 1;
+        // If this owner is already in the current stack, just select it.
+        // Otherwise, create a new stack.
+        if (ownerStackIndex < 0) {
+          // Add this new owner, and fill in the owners above it as well.
+          ownerStack = [];
+          let currentOwnerID = ((payload: any): number);
+          while (currentOwnerID !== 0) {
+            ownerStack.unshift(currentOwnerID);
+            currentOwnerID = ((store.getElementByID(
+              currentOwnerID
+            ): any): Element).ownerID;
+          }
+          ownerStackIndex = ownerStack.length - 1;
 
-        if (searchText !== '') {
-          searchIndex = null;
-          searchResults = [];
-          searchText = '';
+          if (searchText !== '') {
+            searchIndex = null;
+            searchResults = [];
+            searchText = '';
+          }
         }
       }
       break;

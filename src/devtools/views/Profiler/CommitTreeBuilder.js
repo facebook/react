@@ -194,6 +194,7 @@ function updateTree(
 
         if (type === ElementTypeRoot) {
           i++; // supportsProfiling flag
+          i++; // hasOwnerMetadata flag
 
           if (__DEBUG__) {
             debug('Add', `new root fiber ${id}`);
