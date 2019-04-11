@@ -217,7 +217,8 @@ function dispatchPressStartEvents(
           dispatchLongPressChangeEvent(context, props, state);
         }
         if (state.didDispatchEvent) {
-          const shouldStopPropagation = props.stopPropagation === undefined ? true : props.stopPropagation;
+          const shouldStopPropagation =
+            props.stopPropagation === undefined ? true : props.stopPropagation;
           if (shouldStopPropagation) {
             context.dispatchStopPropagation();
           }
@@ -616,7 +617,8 @@ const PressResponder = {
       }
     }
     if (state.didDispatchEvent) {
-      const shouldStopPropagation = props.stopPropagation === undefined ? true : props.stopPropagation;
+      const shouldStopPropagation =
+        props.stopPropagation === undefined ? true : props.stopPropagation;
       if (shouldStopPropagation) {
         context.dispatchStopPropagation();
       }
