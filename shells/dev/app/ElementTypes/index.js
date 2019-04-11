@@ -10,7 +10,7 @@ import React, {
   unstable_ConcurrentMode as ConcurrentMode,
   Fragment,
   // $FlowFixMe Flow doesn't know about the Profiler import yet
-  unstable_Profiler as Profiler,
+  Profiler,
   StrictMode,
   Suspense,
 } from 'react';
