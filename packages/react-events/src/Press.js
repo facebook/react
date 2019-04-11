@@ -261,6 +261,7 @@ function dispatchPressEndEvents(
   state: PressState,
 ): void {
   const wasActivePressStart = state.isActivePressStart;
+  let activationWasForced = false;
 
   state.isActivePressStart = false;
   state.isPressed = false;
@@ -277,13 +278,17 @@ function dispatchPressEndEvents(
     if (state.isPressWithinResponderRegion) {
       // if we haven't yet activated (due to delays), activate now
       activate(context, props, state);
+      activationWasForced = true;
     }
   }
 
   if (state.isActivePressed) {
     const delayPressEnd = calculateDelayMS(
       props.delayPressEnd,
-      0,
+      // if activation and deactivation occur during the same event there's no
+      // time for visual user feedback therefore a small delay is added before
+      // deactivating.
+      activationWasForced ? 10 : 0,
       DEFAULT_PRESS_END_DELAY_MS,
     );
     if (delayPressEnd > 0) {
