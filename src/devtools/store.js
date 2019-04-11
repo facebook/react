@@ -836,30 +836,40 @@ export default class Store extends EventEmitter {
     this._bridge.removeListener('shutdown', this.onBridgeShutdown);
   };
 
-  // Jest snapshot testing
+  // Used for Jest snapshot testing.
+  // May also be useful for visually debugging the tree, so it lives on the Store.
   __toSnapshot = () => {
-    const snapshot = [];
+    const snapshotLines = [];
 
-    // TODO Include root (ids) in the snapshot?
-    for (let i = 0; i < this._weightAcrossRoots; i++) {
-      const element = ((this.getElementAtIndex(i): any): Element);
+    let rootWeight = 0;
 
-      let prefix = ' ';
-      if (element.children.length > 0) {
-        prefix = element.isCollapsed ? '▸' : '▾';
+    this._roots.forEach(rootID => {
+      snapshotLines.push('[root]');
+
+      const { weight } = ((this.getElementByID(rootID): any): Element);
+
+      for (let i = rootWeight; i < rootWeight + weight; i++) {
+        const element = ((this.getElementAtIndex(i): any): Element);
+
+        let prefix = ' ';
+        if (element.children.length > 0) {
+          prefix = element.isCollapsed ? '▸' : '▾';
+        }
+
+        let key = '';
+        if (element.key !== null) {
+          key = ` key="${element.key}"`;
+        }
+
+        snapshotLines.push(
+          `${'  '.repeat(element.depth + 1)}${prefix} <${element.displayName ||
+            'null'}${key}>`
+        );
       }
 
-      let key = '';
-      if (element.key !== null) {
-        key = ` key="${element.key}"`;
-      }
+      rootWeight += weight;
+    });
 
-      snapshot.push(
-        `${'  '.repeat(element.depth)}${prefix} <${element.displayName ||
-          'null'}${key}>`
-      );
-    }
-
-    return snapshot.join('\n');
+    return snapshotLines.join('\n');
   };
 }
