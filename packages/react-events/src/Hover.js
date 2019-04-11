@@ -72,8 +72,9 @@ function dispatchHoverChangeEvent(
   props: HoverProps,
   state: HoverState,
 ): void {
+  const bool = state.isActiveHovered;
   const listener = () => {
-    props.onHoverChange(state.isActiveHovered);
+    props.onHoverChange(bool);
   };
   const syntheticEvent = createHoverEvent(
     'hoverchange',
