@@ -1241,6 +1241,22 @@ function workLoop(isYieldy) {
   }
 }
 
+function jnd(timeElapsed: number) {
+  return timeElapsed < 120
+    ? 120
+    : timeElapsed < 480
+      ? 480
+      : timeElapsed < 1080
+        ? 1080
+        : timeElapsed < 1920
+          ? 1920
+          : timeElapsed < 3000
+            ? 3000
+            : timeElapsed < 4320
+              ? 4320
+              : Math.ceil(timeElapsed / 1960) * 1960;
+}
+
 function renderRoot(root: FiberRoot, isYieldy: boolean): void {
   invariant(
     !isWorking,
@@ -1518,10 +1534,22 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
     const currentTimeMs: number = now();
     const timeElapsed = currentTimeMs - eventTimeMs;
 
-    // TODO: Account for the Just Noticeable Difference
-    const timeoutMs = 150;
-    let msUntilTimeout = timeoutMs - timeElapsed;
-    msUntilTimeout = msUntilTimeout < 0 ? 0 : msUntilTimeout;
+    let msUntilTimeout = jnd(timeElapsed) - timeElapsed;
+
+    if (msUntilTimeout < 10) {
+      // Don't bother with a very short suspense time.
+      msUntilTimeout = 0;
+    } else {
+      // Compute the time until this render pass would expire.
+      const timeUntilExpirationMs =
+        expirationTimeToMs(suspendedExpirationTime) +
+        originalStartTimeMs -
+        currentTimeMs;
+      // Clamp the timeout to the expiration time.
+      if (timeUntilExpirationMs < msUntilTimeout) {
+        msUntilTimeout = timeUntilExpirationMs;
+      }
+    }
 
     const rootExpirationTime = root.expirationTime;
     onSuspend(

@@ -692,9 +692,9 @@ function completeWork(
           // Mark the event time of the switching from fallback to normal children,
           // based on the start of when we first showed the fallback. This time
           // was given a normal pri expiration time at the time it was shown.
-          const fallbackExpirationTimeExpTime: ExpirationTime =
+          const fallbackExpirationTime: ExpirationTime =
             prevState.fallbackExpirationTime;
-          markRenderEventTime(fallbackExpirationTimeExpTime);
+          markRenderEventTime(fallbackExpirationTime);
 
           // Delete the fallback.
           // TODO: Would it be better to store the fallback fragment on

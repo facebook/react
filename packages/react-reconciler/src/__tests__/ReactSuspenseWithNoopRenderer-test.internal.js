@@ -1668,6 +1668,162 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       </React.Fragment>,
     );
   });
+
+  it('suspends for longer if something took a long (CPU bound) time to render', async () => {
+    function Foo() {
+      Scheduler.yieldValue('Foo');
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <AsyncText text="A" ms={5000} />
+        </Suspense>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    Scheduler.advanceTime(100);
+    await advanceTimers(100);
+    // Start rendering
+    expect(Scheduler).toFlushAndYieldThrough(['Foo']);
+    // For some reason it took a long time to render Foo.
+    Scheduler.advanceTime(1250);
+    await advanceTimers(1250);
+    expect(Scheduler).toFlushAndYield([
+      // A suspends
+      'Suspend! [A]',
+      'Loading...',
+    ]);
+    // We're now suspended and we haven't shown anything yet.
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    // Flush some of the time
+    Scheduler.advanceTime(450);
+    await advanceTimers(450);
+    // Because we've already been waiting for so long we can
+    // wait a bit longer. Still nothing...
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    // Eventually we'll show the fallback.
+    Scheduler.advanceTime(500);
+    await advanceTimers(500);
+    // No need to rerender.
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
+
+    // Flush the promise completely
+    Scheduler.advanceTime(4500);
+    await advanceTimers(4500);
+    // Renders successfully
+    expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
+    expect(Scheduler).toFlushAndYield(['A']);
+    expect(ReactNoop.getChildren()).toEqual([span('A')]);
+  });
+
+  it('suspends for longer if a fallback has been shown for a long time', async () => {
+    function Foo() {
+      Scheduler.yieldValue('Foo');
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <AsyncText text="A" ms={5000} />
+          <Suspense fallback={<Text text="Loading more..." />}>
+            <AsyncText text="B" ms={10000} />
+          </Suspense>
+        </Suspense>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    // Start rendering
+    expect(Scheduler).toFlushAndYield([
+      'Foo',
+      // A suspends
+      'Suspend! [A]',
+      // B suspends
+      'Suspend! [B]',
+      'Loading more...',
+      'Loading...',
+    ]);
+    // We're now suspended and we haven't shown anything yet.
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    // Show the fallback.
+    Scheduler.advanceTime(400);
+    await advanceTimers(400);
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
+
+    // Wait a long time.
+    Scheduler.advanceTime(5000);
+    await advanceTimers(5000);
+    expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
+
+    // Retry with the new content.
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      // B still suspends
+      'Suspend! [B]',
+      'Loading more...',
+    ]);
+    // Because we've already been waiting for so long we can
+    // wait a bit longer. Still nothing...
+    Scheduler.advanceTime(600);
+    await advanceTimers(600);
+    expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
+
+    // Eventually we'll show more content with inner fallback.
+    Scheduler.advanceTime(3000);
+    await advanceTimers(3000);
+    // No need to rerender.
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(ReactNoop.getChildren()).toEqual([
+      span('A'),
+      span('Loading more...'),
+    ]);
+
+    // Flush the last promise completely
+    Scheduler.advanceTime(4500);
+    await advanceTimers(4500);
+    // Renders successfully
+    expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
+    expect(Scheduler).toFlushAndYield(['B']);
+    expect(ReactNoop.getChildren()).toEqual([span('A'), span('B')]);
+  });
+
+  it('does not suspend for very long after a higher priority update', async () => {
+    function Foo() {
+      Scheduler.yieldValue('Foo');
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <AsyncText text="A" ms={5000} />
+        </Suspense>
+      );
+    }
+
+    ReactNoop.interactiveUpdates(() => ReactNoop.render(<Foo />));
+    expect(Scheduler).toFlushAndYieldThrough(['Foo']);
+
+    // Advance some time.
+    Scheduler.advanceTime(100);
+    await advanceTimers(100);
+
+    expect(Scheduler).toFlushAndYield([
+      // A suspends
+      'Suspend! [A]',
+      'Loading...',
+    ]);
+    // We're now suspended and we haven't shown anything yet.
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    // Flush some of the time
+    Scheduler.advanceTime(500);
+    await advanceTimers(500);
+    // We should have already shown the fallback.
+    // When we wrote this test, we inferred the start time of high priority
+    // updates as way earlier in the past. This test ensures that we don't
+    // use this assumption to add a very long JND.
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
+  });
 });
 
 // TODO:
