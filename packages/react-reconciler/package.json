@@ -33,7 +33,7 @@
     "loose-envify": "^1.1.0",
     "object-assign": "^4.1.1",
     "prop-types": "^15.6.2",
-    "scheduler": "^0.13.6"
+    "scheduler": "^0.14.0"
   },
   "browserify": {
     "transform": [
