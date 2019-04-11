@@ -424,8 +424,8 @@ describe('TouchHitTarget', () => {
       ReactDOM.render(<Test />, container);
       expect(Scheduler).toFlushWithoutYielding();
       expect(container.innerHTML).toBe(
-        '<div><span>Random span 1</span><div style="position: absolute; z-index: -1; pointer-events: auto; '
-        + 'bottom: -10px; left: -10px; right: -10px; top: -10px;"></div><span>Random span 2</span></div>',
+        '<div><span>Random span 1</span><div style="position: absolute; z-index: -1; pointer-events: auto; ' +
+          'bottom: -10px; left: -10px; right: -10px; top: -10px;"></div><span>Random span 2</span></div>',
       );
     });
 
@@ -455,8 +455,8 @@ describe('TouchHitTarget', () => {
       ReactDOM.render(<Test />, container);
       expect(Scheduler).toFlushWithoutYielding();
       expect(container.innerHTML).toBe(
-        '<div><span>Random span 1</span><div style="position: absolute; z-index: -1; pointer-events: auto; '
-        + 'bottom: 0px; left: -20px; right: 0px; top: 0px;"></div><span>Random span 2</span></div>',
+        '<div><span>Random span 1</span><div style="position: absolute; z-index: -1; pointer-events: auto; ' +
+          'bottom: 0px; left: -20px; right: 0px; top: 0px;"></div><span>Random span 2</span></div>',
       );
 
       cond = true;
@@ -532,13 +532,13 @@ describe('TouchHitTarget', () => {
 
       const container2 = document.createElement('div');
       container2.innerHTML =
-        '<div><div style="position:absolute;pointer-events:none;z-index:-1;'
-        + 'bottom:-10px;left:-10px;right:-10px;top:-10px"></div></div>';
+        '<div><div style="position:absolute;pointer-events:none;z-index:-1;' +
+        'bottom:-10px;left:-10px;right:-10px;top:-10px"></div></div>';
       ReactDOM.hydrate(<Test2 />, container2);
       expect(Scheduler).toFlushWithoutYielding();
       expect(container2.innerHTML).toBe(
-        '<div><div style="position: absolute; pointer-events: auto; z-index: -1; '
-        + 'bottom: -10px; left: -10px; right: -10px; top: -10px;"></div></div>',
+        '<div><div style="position: absolute; pointer-events: auto; z-index: -1; ' +
+          'bottom: -10px; left: -10px; right: -10px; top: -10px;"></div></div>',
       );
     });
 
