@@ -1,23 +1,51 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Store should initialize a multiple root tree 1`] = `
-[root]
-  ▾ <Parent>
-      <Child key="one">
-      <Child key="two">
-[root]
-  ▾ <Parent>
-      <Child key="one">
-      <Child key="two">
-`;
-
-exports[`Store should initialize a simple tree 1`] = `
+exports[`Store should support mount and update operations 1`] = `
 [root]
   ▾ <Grandparent>
     ▾ <Parent>
-        <Child key="one">
-        <Child key="two">
+        <Child key="0">
+        <Child key="1">
+        <Child key="2">
+        <Child key="3">
     ▾ <Parent>
-        <Child key="one">
-        <Child key="two">
+        <Child key="0">
+        <Child key="1">
+        <Child key="2">
+        <Child key="3">
+`;
+
+exports[`Store should support mount and update operations 2`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+`;
+
+exports[`Store should support mount and update operations for multiple roots 1`] = `
+[root]
+  ▾ <Parent>
+      <Child key="0">
+      <Child key="1">
+      <Child key="2">
+[root]
+  ▾ <Parent>
+      <Child key="0">
+      <Child key="1">
+`;
+
+exports[`Store should support mount and update operations for multiple roots 2`] = `
+[root]
+  ▾ <Parent>
+      <Child key="0">
+      <Child key="1">
+      <Child key="2">
+      <Child key="3">
+[root]
+  ▾ <Parent>
+      <Child key="0">
 `;
