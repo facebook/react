@@ -26,17 +26,14 @@ env.beforeEach(() => {
 
   bridgeListeners = [];
 
-  bridge = new Bridge(
-    {
-      listen(callback) {
-        bridgeListeners.push(callback);
-      },
-      send(event: string, payload: any, transferable?: Array<any>) {
-        bridgeListeners.forEach(callback => callback({ event, payload }));
-      },
+  bridge = new Bridge({
+    listen(callback) {
+      bridgeListeners.push(callback);
     },
-    { batchDuration: 0 }
-  );
+    send(event: string, payload: any, transferable?: Array<any>) {
+      bridgeListeners.forEach(callback => callback({ event, payload }));
+    },
+  });
 
   agent = new Agent();
   agent.addBridge(bridge);
