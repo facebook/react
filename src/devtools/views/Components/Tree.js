@@ -154,6 +154,7 @@ export default function Tree(props: Props) {
     };
   }, [
     selectedElementID,
+    selectChildElementInTree,
     selectNextElementInTree,
     selectParentElementInTree,
     selectPreviousElementInTree,
