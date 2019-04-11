@@ -71,4 +71,60 @@ describe('Store', () => {
     act(() => ReactDOM.unmountComponentAtNode(containerA));
     expect(store).toMatchSnapshot('unmount A');
   });
+
+  it('should filter DOM nodes from the store tree', () => {
+    const Grandparent = () => (
+      <div>
+        <div>
+          <Parent />
+        </div>
+        <Parent />
+      </div>
+    );
+    const Parent = () => (
+      <div>
+        <Child />
+      </div>
+    );
+    const Child = () => <div>Hi!</div>;
+
+    act(() =>
+      ReactDOM.render(<Grandparent count={4} />, document.createElement('div'))
+    );
+    expect(store).toMatchSnapshot('mount');
+  });
+
+  // TODO We should write more complex Suspense tests than just this
+  it('should display Suspense nodes properly in various states', async done => {
+    const Loading = () => <div>Loading...</div>;
+    const SuspendingComponent = () => {
+      throw new Promise(() => {});
+    };
+    const Component = () => {
+      return <div>Hello</div>;
+    };
+    const Wrapper = ({ shouldSuspense }) => (
+      <React.Fragment>
+        <Component key="Outside" />
+        <React.Suspense fallback={<Loading />}>
+          {shouldSuspense ? (
+            <SuspendingComponent />
+          ) : (
+            <Component key="Inside" />
+          )}
+        </React.Suspense>
+      </React.Fragment>
+    );
+
+    const container = document.createElement('div');
+    act(() => ReactDOM.render(<Wrapper shouldSuspense={true} />, container));
+    expect(store).toMatchSnapshot('loading');
+
+    act(async () => {
+      ReactDOM.render(<Wrapper shouldSuspense={false} />, container);
+    });
+    expect(store).toMatchSnapshot('resolved');
+
+    done();
+  });
 });

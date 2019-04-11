@@ -1,5 +1,30 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Store should display Suspense nodes properly in various states: loading 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Loading>
+`;
+
+exports[`Store should display Suspense nodes properly in various states: resolved 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Component key="Inside">
+`;
+
+exports[`Store should filter DOM nodes from the store tree: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child>
+    ▾ <Parent>
+        <Child>
+`;
+
 exports[`Store should support mount and update operations for multiple roots: mount 1`] = `
 [root]
   ▾ <Parent key="A">
