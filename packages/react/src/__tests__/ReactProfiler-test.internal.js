@@ -12,7 +12,6 @@
 
 let React;
 let ReactFeatureFlags;
-let enableNewScheduler;
 let ReactNoop;
 let Scheduler;
 let ReactCache;
@@ -36,7 +35,6 @@ function loadModules({
   ReactFeatureFlags.enableProfilerTimer = enableProfilerTimer;
   ReactFeatureFlags.enableSchedulerTracing = enableSchedulerTracing;
   ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = replayFailedUnitOfWorkWithInvokeGuardedCallback;
-  enableNewScheduler = ReactFeatureFlags.enableNewScheduler;
 
   React = require('react');
   Scheduler = require('scheduler');
@@ -1354,9 +1352,7 @@ describe('Profiler', () => {
             },
           );
         }).toThrow('Expected error onWorkScheduled');
-        if (enableNewScheduler) {
-          expect(Scheduler).toFlushAndYield(['Component:fail']);
-        }
+        expect(Scheduler).toFlushAndYield(['Component:fail']);
         throwInOnWorkScheduled = false;
         expect(onWorkScheduled).toHaveBeenCalled();
 
@@ -1391,14 +1387,10 @@ describe('Profiler', () => {
         // Errors that happen inside of a subscriber should throw,
         throwInOnWorkStarted = true;
         expect(Scheduler).toFlushAndThrow('Expected error onWorkStarted');
-        if (enableNewScheduler) {
-          // Rendering was interrupted by the error that was thrown
-          expect(Scheduler).toHaveYielded([]);
-          // Rendering continues in the next task
-          expect(Scheduler).toFlushAndYield(['Component:text']);
-        } else {
-          expect(Scheduler).toHaveYielded(['Component:text']);
-        }
+        // Rendering was interrupted by the error that was thrown
+        expect(Scheduler).toHaveYielded([]);
+        // Rendering continues in the next task
+        expect(Scheduler).toFlushAndYield(['Component:text']);
         throwInOnWorkStarted = false;
         expect(onWorkStarted).toHaveBeenCalled();
 
@@ -2389,16 +2381,8 @@ describe('Profiler', () => {
         jest.runAllTimers();
         await resourcePromise;
 
-        if (enableNewScheduler) {
-          expect(Scheduler).toHaveYielded(['Promise resolved [loaded]']);
-          expect(Scheduler).toFlushExpired(['AsyncText [loaded]']);
-        } else {
-          expect(Scheduler).toHaveYielded([
-            'Promise resolved [loaded]',
-            'AsyncText [loaded]',
-          ]);
-        }
-
+        expect(Scheduler).toHaveYielded(['Promise resolved [loaded]']);
+        expect(Scheduler).toFlushExpired(['AsyncText [loaded]']);
         expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
         expect(
           onInteractionScheduledWorkCompleted,
@@ -2454,9 +2438,7 @@ describe('Profiler', () => {
         await resourcePromise;
 
         expect(Scheduler).toHaveYielded(['Promise resolved [loaded]']);
-        if (enableNewScheduler) {
-          expect(Scheduler).toFlushExpired([]);
-        }
+        expect(Scheduler).toFlushExpired([]);
 
         expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
 
@@ -2631,16 +2613,8 @@ describe('Profiler', () => {
         jest.advanceTimersByTime(100);
         await originalPromise;
 
-        if (enableNewScheduler) {
-          expect(Scheduler).toHaveYielded(['Promise resolved [loaded]']);
-          expect(Scheduler).toFlushExpired(['AsyncText [loaded]']);
-        } else {
-          expect(Scheduler).toHaveYielded([
-            'Promise resolved [loaded]',
-            'AsyncText [loaded]',
-          ]);
-        }
-
+        expect(Scheduler).toHaveYielded(['Promise resolved [loaded]']);
+        expect(Scheduler).toFlushExpired(['AsyncText [loaded]']);
         expect(renderer.toJSON()).toEqual(['loaded', 'updated']);
 
         expect(onRender).toHaveBeenCalledTimes(1);
