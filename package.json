@@ -16,6 +16,12 @@
     "moduleNameMapper": {
       "^src/(.*)$": "<rootDir>/src/$1"
     },
+    "setupFiles": [
+      "<rootDir>/src/__tests__/setupEnv"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/src/__tests__/setupTests"
+    ],
     "snapshotSerializers": [
       "<rootDir>/src/__tests__/storeSerializer"
     ],

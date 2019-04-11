@@ -189,6 +189,9 @@ export function installHook(target: any): DevToolsHook | null {
     target,
     '__REACT_DEVTOOLS_GLOBAL_HOOK__',
     ({
+      // This property needs to be configurable for the test environment,
+      // else we won't be able to delete and recreate it beween tests.
+      configurable: __DEV__,
       enumerable: false,
       get() {
         return hook;

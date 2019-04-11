@@ -1,0 +1,20 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Store should initialize a multiple root tree 1`] = `
+▾ <Parent>
+    <Child key="one">
+    <Child key="two">
+▾ <Parent>
+    <Child key="one">
+    <Child key="two">
+`;
+
+exports[`Store should initialize a simple tree 1`] = `
+▾ <Grandparent>
+  ▾ <Parent>
+      <Child key="one">
+      <Child key="two">
+  ▾ <Parent>
+      <Child key="one">
+      <Child key="two">
+`;
