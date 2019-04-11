@@ -89,9 +89,10 @@ const DEFAULT_PRESS_RETENTION_OFFSET = {
 const targetEventTypes = [
   {name: 'click', passive: false},
   {name: 'keydown', passive: false},
+  {name: 'keypress', passive: false},
+  {name: 'contextmenu', passive: false},
   'pointerdown',
   'pointercancel',
-  'contextmenu',
 ];
 const rootEventTypes = [
   {name: 'keyup', passive: false},
@@ -593,7 +594,8 @@ const PressResponder = {
        * Keyboard interaction support
        * TODO: determine UX for metaKey + validKeyPress interactions
        */
-      case 'keydown': {
+      case 'keydown':
+      case 'keypress': {
         if (
           !context.hasOwnership() &&
           isValidKeyPress((nativeEvent: any).key)
@@ -633,7 +635,6 @@ const PressResponder = {
         break;
       }
 
-      case 'contextmenu':
       case 'pointercancel':
       case 'scroll':
       case 'touchcancel': {
@@ -648,12 +649,26 @@ const PressResponder = {
       case 'click': {
         if (isAnchorTagElement(target)) {
           const {ctrlKey, metaKey, shiftKey} = ((nativeEvent: any): MouseEvent);
-          const preventDefault = props.preventDefault;
           // Check "open in new window/tab" key modifiers
+          const preventDefault = props.preventDefault;
           if (preventDefault !== false && !shiftKey && !ctrlKey && !metaKey) {
             (nativeEvent: any).preventDefault();
           }
         }
+        break;
+      }
+
+      case 'contextmenu': {
+        if (state.isPressed) {
+          if (props.preventDefault !== false) {
+            (nativeEvent: any).preventDefault();
+          } else {
+            state.shouldSkipMouseAfterTouch = false;
+            dispatchPressEndEvents(context, props, state);
+            context.removeRootEventTypes(rootEventTypes);
+          }
+        }
+        break;
       }
     }
 
