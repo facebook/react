@@ -1029,6 +1029,8 @@ export function diffHydratedProperties(
         }
         ensureListeningTo(rootContainerElement, propKey);
       }
+    } else if (enableEventAPI && propKey === HYDRATE_TOUCH_HIT_TARGET) {
+      updatePayload = [STYLE, rawProps.style];
     } else if (
       __DEV__ &&
       // Convince Flow we've calculated it (it's DEV-only in this method.)
@@ -1038,9 +1040,6 @@ export function diffHydratedProperties(
       let serverValue;
       const propertyInfo = getPropertyInfo(propKey);
       if (suppressHydrationWarning) {
-        if (enableEventAPI && propKey === HYDRATE_TOUCH_HIT_TARGET) {
-          updatePayload = [STYLE, rawProps.style];
-        }
         // Don't bother comparing. We're ignoring all these warnings.
       } else if (
         propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
