@@ -6,10 +6,6 @@ import Bridge from 'src/bridge';
 import Store from 'src/devtools/store';
 import { installHook } from 'src/hook';
 
-let agent;
-let bridge;
-let bridgeListeners;
-
 // Mimic the global we set with Webpack's DefinePlugin
 global.__DEV__ = process.env.NODE_ENV !== 'production';
 
@@ -24,9 +20,9 @@ env.beforeEach(() => {
 
   installHook(global);
 
-  bridgeListeners = [];
+  const bridgeListeners = [];
 
-  bridge = new Bridge({
+  const bridge = new Bridge({
     listen(callback) {
       bridgeListeners.push(callback);
     },
@@ -35,7 +31,7 @@ env.beforeEach(() => {
     },
   });
 
-  agent = new Agent();
+  const agent = new Agent();
   agent.addBridge(bridge);
 
   initBackend(global.__REACT_DEVTOOLS_GLOBAL_HOOK__, agent, global);
