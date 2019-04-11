@@ -1131,6 +1131,67 @@ describe('Event responder: Press', () => {
     });
   });
 
+  describe('link components', () => {
+    it('prevents native behaviour by default', () => {
+      const onPress = jest.fn();
+      const preventDefault = jest.fn();
+      const ref = React.createRef();
+      const element = (
+        <Press onPress={onPress}>
+          <a href="#" ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
+      ref.current.dispatchEvent(createPointerEvent('click', {preventDefault}));
+      expect(preventDefault).toBeCalled();
+    });
+
+    it('uses native behaviour for interactions with modifier keys', () => {
+      const onPress = jest.fn();
+      const preventDefault = jest.fn();
+      const ref = React.createRef();
+      const element = (
+        <Press onPress={onPress}>
+          <a href="#" ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+
+      ['metaKey', 'ctrlKey', 'shiftKey'].forEach(modifierKey => {
+        ref.current.dispatchEvent(
+          createPointerEvent('pointerdown', {[modifierKey]: true}),
+        );
+        ref.current.dispatchEvent(
+          createPointerEvent('pointerup', {[modifierKey]: true}),
+        );
+        ref.current.dispatchEvent(
+          createPointerEvent('click', {[modifierKey]: true, preventDefault}),
+        );
+        expect(preventDefault).not.toBeCalled();
+      });
+    });
+
+    it('uses native behaviour if preventDefault is false', () => {
+      const onPress = jest.fn();
+      const preventDefault = jest.fn();
+      const ref = React.createRef();
+      const element = (
+        <Press onPress={onPress} preventDefault={false}>
+          <a href="#" ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
+      ref.current.dispatchEvent(createPointerEvent('click', {preventDefault}));
+      expect(preventDefault).not.toBeCalled();
+    });
+  });
+
   it('expect displayName to show up for event component', () => {
     expect(Press.displayName).toBe('Press');
   });

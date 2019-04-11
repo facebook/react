@@ -654,9 +654,9 @@ const PressResponder = {
       case 'click': {
         if (isAnchorTagElement(target)) {
           const {ctrlKey, metaKey, shiftKey} = ((nativeEvent: any): MouseEvent);
-          // Check "open in new window/tab" key modifiers
+          // Check "open in new window/tab" and "open context menu" key modifiers
           const preventDefault = props.preventDefault;
-          if (preventDefault !== false && !shiftKey && !ctrlKey && !metaKey) {
+          if (preventDefault !== false && !shiftKey && !metaKey && !ctrlKey) {
             (nativeEvent: any).preventDefault();
           }
         }
