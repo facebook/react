@@ -146,8 +146,9 @@ function git(args) {
 
     for (let i = 0; i < baseArtifactsInfo.length; i++) {
       const info = baseArtifactsInfo[i];
-      if (info.path === 'home/circleci/project/scripts/results.json') {
+      if (info.path === 'home/circleci/project/scripts/rollup/results.json') {
         resultsResponse = await fetch(info.url);
+        break;
       }
     }
   } catch (error) {
