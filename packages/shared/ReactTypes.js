@@ -87,9 +87,32 @@ export type ReactEventResponderEventType =
 
 export type ReactEventResponder = {
   targetEventTypes: Array<ReactEventResponderEventType>,
-  createInitialState?: (props: Object) => Object,
-  handleEvent: (context: Object, props: Object, state: Object) => void,
+  createInitialState?: (props: null | Object) => Object,
+  onEvent: (
+    event: ReactResponderEvent,
+    context: ReactResponderContext,
+    props: null | Object,
+    state: null | Object,
+  ) => void,
+  onUnmount: (
+    context: ReactResponderContext,
+    props: null | Object,
+    state: null | Object,
+  ) => void,
+  onOwnershipChange: (
+    context: ReactResponderContext,
+    props: null | Object,
+    state: null | Object,
+  ) => void,
 };
+
+export type ReactEventComponentInstance = {|
+  context: null | Object,
+  props: null | Object,
+  responder: ReactEventResponder,
+  rootInstance: mixed,
+  state: null | Object,
+|};
 
 export type ReactEventComponent = {|
   $$typeof: Symbol | number,
@@ -103,3 +126,57 @@ export type ReactEventTarget = {|
   displayName?: string,
   type: Symbol | number,
 |};
+
+type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | Touch;
+
+export type ReactResponderEvent = {
+  nativeEvent: AnyNativeEvent,
+  target: Element | Document,
+  type: string,
+  passive: boolean,
+  passiveSupported: boolean,
+};
+
+export type ReactResponderDispatchEventOptions = {
+  capture?: boolean,
+  discrete?: boolean,
+};
+
+export type ReactResponderContext = {
+  dispatchEvent: (
+    eventObject: Object,
+    listener: (Object) => void,
+    otpions: ReactResponderDispatchEventOptions,
+  ) => void,
+  dispatchStopPropagation: (passive?: boolean) => void,
+  isTargetWithinElement: (
+    childTarget: Element | Document,
+    parentTarget: Element | Document,
+  ) => boolean,
+  isTargetWithinEventComponent: (Element | Document) => boolean,
+  isPositionWithinTouchHitTarget: (
+    doc: Document,
+    x: number,
+    y: number,
+  ) => boolean,
+  addRootEventTypes: (
+    document: Document,
+    rootEventTypes: Array<ReactEventResponderEventType>,
+  ) => void,
+  removeRootEventTypes: (
+    rootEventTypes: Array<ReactEventResponderEventType>,
+  ) => void,
+  hasOwnership: () => boolean,
+  requestOwnership: () => boolean,
+  releaseOwnership: () => boolean,
+  setTimeout: (func: () => void, timeout: number) => Symbol,
+  clearTimeout: (timerId: Symbol) => void,
+  getEventTargetsFromTarget: (
+    target: Element | Document,
+    queryType?: Symbol | number,
+    queryKey?: string,
+  ) => Array<{
+    node: Element,
+    props: null | Object,
+  }>,
+};

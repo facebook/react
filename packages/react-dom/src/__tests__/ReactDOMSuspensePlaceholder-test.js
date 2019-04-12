@@ -233,4 +233,48 @@ describe('ReactDOMSuspensePlaceholder', () => {
     await Lazy;
     expect(log).toEqual(['cDU first', 'cDU second']);
   });
+
+  // Regression test for https://github.com/facebook/react/issues/14188
+  it('can call findDOMNode() in a suspended component commit phase (#2)', () => {
+    let suspendOnce = Promise.resolve();
+    function Suspend() {
+      if (suspendOnce) {
+        let promise = suspendOnce;
+        suspendOnce = null;
+        throw promise;
+      }
+      return null;
+    }
+
+    const log = [];
+    class Child extends React.Component {
+      componentDidMount() {
+        log.push('cDM');
+        ReactDOM.findDOMNode(this);
+      }
+
+      componentDidUpdate() {
+        log.push('cDU');
+        ReactDOM.findDOMNode(this);
+      }
+
+      render() {
+        return null;
+      }
+    }
+
+    function App() {
+      return (
+        <Suspense fallback="Loading">
+          <Suspend />
+          <Child />
+        </Suspense>
+      );
+    }
+
+    ReactDOM.render(<App />, container);
+    expect(log).toEqual(['cDM']);
+    ReactDOM.render(<App />, container);
+    expect(log).toEqual(['cDM', 'cDU']);
+  });
 });

@@ -33,12 +33,32 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
+type EventTargetChildElement = {
+  type: string,
+  props: null | {
+    style?: {
+      position?: string,
+      bottom?: string,
+      left?: string,
+      right?: string,
+      top?: string,
+    },
+  },
+};
 type Container = {
   rootID: string,
   children: Array<Instance | TextInstance>,
   pendingChildren: Array<Instance | TextInstance>,
 };
-type Props = {prop: any, hidden: boolean, children?: mixed};
+type Props = {
+  prop: any,
+  hidden: boolean,
+  children?: mixed,
+  bottom?: null | number,
+  left?: null | number,
+  right?: null | number,
+  top?: null | number,
+};
 type Instance = {|
   type: string,
   id: number,
@@ -299,12 +319,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       rootContainerInstance: Container,
       hostContext: HostContext,
     ): Instance {
-      if (__DEV__ && enableEventAPI) {
-        warning(
-          hostContext !== EVENT_TOUCH_HIT_TARGET_CONTEXT,
-          'validateDOMNesting: <TouchHitTarget> must not have any children.',
-        );
-      }
       if (type === 'errorInCompletePhase') {
         throw new Error('Error in host config.');
       }
@@ -380,18 +394,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     ): TextInstance {
       if (__DEV__ && enableEventAPI) {
         warning(
-          hostContext !== EVENT_TOUCH_HIT_TARGET_CONTEXT,
-          'validateDOMNesting: <TouchHitTarget> must not have any children.',
-        );
-        warning(
           hostContext !== EVENT_COMPONENT_CONTEXT,
           'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
-            'Wrap the child text "%s" in an element.',
-          text,
-        );
-        warning(
-          hostContext !== EVENT_TARGET_CONTEXT,
-          'validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
             'Wrap the child text "%s" in an element.',
           text,
         );
@@ -427,19 +431,63 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     isPrimaryRenderer: true,
     supportsHydration: false,
 
-    handleEventComponent() {
+    mountEventComponent(): void {
       // NO-OP
+    },
+
+    updateEventComponent(): void {
+      // NO-OP
+    },
+
+    unmountEventComponent(): void {
+      // NO-OP
+    },
+
+    getEventTargetChildElement(
+      type: Symbol | number,
+      props: Props,
+    ): null | EventTargetChildElement {
+      if (enableEventAPI) {
+        if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
+          const {bottom, left, right, top} = props;
+
+          if (!bottom && !left && !right && !top) {
+            return null;
+          }
+          return {
+            type: 'div',
+            props: {
+              style: {
+                position: 'absolute',
+                zIndex: -1,
+                bottom: bottom ? `-${bottom}px` : '0px',
+                left: left ? `-${left}px` : '0px',
+                right: right ? `-${right}px` : '0px',
+                top: top ? `-${top}px` : '0px',
+              },
+            },
+          };
+        }
+      }
+      return null;
     },
 
     handleEventTarget(
       type: Symbol | number,
       props: Props,
-      parentInstance: Container,
+      rootContainerInstance: Container,
       internalInstanceHandle: Object,
-    ) {
-      if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
-        // TODO
-      }
+    ): boolean {
+      return false;
+    },
+
+    commitEventTarget(
+      type: Symbol | number,
+      props: Props,
+      instance: Instance,
+      parentInstance: Instance,
+    ): void {
+      // NO-OP
     },
   };
 

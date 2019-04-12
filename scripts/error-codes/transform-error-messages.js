@@ -19,6 +19,7 @@ module.exports = function(babel) {
     visitor: {
       CallExpression(path, file) {
         const node = path.node;
+        const noMinify = file.opts.noMinify;
         if (path.get('callee').isIdentifier({name: 'invariant'})) {
           // Turns this code:
           //
@@ -66,7 +67,7 @@ module.exports = function(babel) {
           const errorMap = invertObject(existingErrorMap);
 
           let prodErrorId = errorMap[errorMsgLiteral];
-          if (prodErrorId === undefined) {
+          if (prodErrorId === undefined || noMinify) {
             // There is no error code for this message. We use a lint rule to
             // enforce that messages can be minified, so assume this is
             // intentional and exit gracefully.

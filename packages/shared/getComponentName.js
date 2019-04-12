@@ -25,9 +25,13 @@ import {
   REACT_EVENT_COMPONENT_TYPE,
   REACT_EVENT_TARGET_TYPE,
   REACT_EVENT_TARGET_TOUCH_HIT,
+  REACT_EVENT_FOCUS_TARGET,
+  REACT_EVENT_PRESS_TARGET,
 } from 'shared/ReactSymbols';
 import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
 import type {ReactEventComponent, ReactEventTarget} from 'shared/ReactTypes';
+
+import {enableEventAPI} from './ReactFeatureFlags';
 
 function getWrappedName(
   outerType: mixed,
@@ -94,21 +98,29 @@ function getComponentName(type: mixed): string | null {
         break;
       }
       case REACT_EVENT_COMPONENT_TYPE: {
-        const eventComponent = ((type: any): ReactEventComponent);
-        const displayName = eventComponent.displayName;
-        if (displayName !== undefined) {
-          return displayName;
+        if (enableEventAPI) {
+          const eventComponent = ((type: any): ReactEventComponent);
+          const displayName = eventComponent.displayName;
+          if (displayName !== undefined) {
+            return displayName;
+          }
         }
         break;
       }
       case REACT_EVENT_TARGET_TYPE: {
-        const eventTarget = ((type: any): ReactEventTarget);
-        if (eventTarget.type === REACT_EVENT_TARGET_TOUCH_HIT) {
-          return 'TouchHitTarget';
-        }
-        const displayName = eventTarget.displayName;
-        if (displayName !== undefined) {
-          return displayName;
+        if (enableEventAPI) {
+          const eventTarget = ((type: any): ReactEventTarget);
+          if (eventTarget.type === REACT_EVENT_TARGET_TOUCH_HIT) {
+            return 'TouchHitTarget';
+          } else if (eventTarget.type === REACT_EVENT_FOCUS_TARGET) {
+            return 'FocusTarget';
+          } else if (eventTarget.type === REACT_EVENT_PRESS_TARGET) {
+            return 'PressTarget';
+          }
+          const displayName = eventTarget.displayName;
+          if (displayName !== undefined) {
+            return displayName;
+          }
         }
       }
     }
