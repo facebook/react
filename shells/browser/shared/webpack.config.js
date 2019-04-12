@@ -1,22 +1,13 @@
-const { execSync } = require('child_process');
 const { readFileSync } = require('fs');
 const { resolve } = require('path');
 const { DefinePlugin } = require('webpack');
+const { getGitHubURL, getVersionString } = require('../../utils');
 
 const NODE_ENV = process.env.NODE_ENV;
 const __DEV__ = NODE_ENV !== 'production';
 
-// TODO potentially replac this with an fb.me URL (if it can forward the query params)
-const GITHUB_URL = execSync('git remote get-url origin')
-  .toString()
-  .trim()
-  .replace(':', '/')
-  .replace('git@', 'https://')
-  .replace('.git', '');
-
-const DEVTOOLS_VERSION = JSON.parse(
-  readFileSync(resolve(__dirname, '../../../package.json'))
-).version;
+const GITHUB_URL = getGitHubURL();
+const DEVTOOLS_VERSION = getVersionString();
 
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
