@@ -699,7 +699,6 @@ const PressResponder = {
   ) {
     unmountResponder(context, props, state);
   },
-  // TODO This method doesn't work as of yet
   onOwnershipChange(
     context: ReactResponderContext,
     props: PressProps,

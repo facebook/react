@@ -24,6 +24,7 @@ type HoverProps = {
 };
 
 type HoverState = {
+  hoverTarget: null | Element | Document,
   isActiveHovered: boolean,
   isHovered: boolean,
   isInHitSlop: boolean,
@@ -66,7 +67,6 @@ function createHoverEvent(
 }
 
 function dispatchHoverChangeEvent(
-  event: ReactResponderEvent,
   context: ReactResponderContext,
   props: HoverProps,
   state: HoverState,
@@ -75,7 +75,10 @@ function dispatchHoverChangeEvent(
   const listener = () => {
     props.onHoverChange(bool);
   };
-  const syntheticEvent = createHoverEvent('hoverchange', event.target);
+  const syntheticEvent = createHoverEvent(
+    'hoverchange',
+    ((state.hoverTarget: any): Element | Document),
+  );
   context.dispatchEvent(syntheticEvent, listener, {discrete: true});
 }
 
@@ -85,9 +88,14 @@ function dispatchHoverStartEvents(
   props: HoverProps,
   state: HoverState,
 ): void {
-  const {nativeEvent, target} = event;
-  if (context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)) {
-    return;
+  const target = state.hoverTarget;
+  if (event !== null) {
+    const {nativeEvent} = event;
+    if (
+      context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)
+    ) {
+      return;
+    }
   }
 
   state.isHovered = true;
@@ -101,13 +109,16 @@ function dispatchHoverStartEvents(
     state.isActiveHovered = true;
 
     if (props.onHoverStart) {
-      const syntheticEvent = createHoverEvent('hoverstart', target);
+      const syntheticEvent = createHoverEvent(
+        'hoverstart',
+        ((target: any): Element | Document),
+      );
       context.dispatchEvent(syntheticEvent, props.onHoverStart, {
         discrete: true,
       });
     }
     if (props.onHoverChange) {
-      dispatchHoverChangeEvent(event, context, props, state);
+      dispatchHoverChangeEvent(context, props, state);
     }
   };
 
@@ -129,14 +140,19 @@ function dispatchHoverStartEvents(
 }
 
 function dispatchHoverEndEvents(
-  event: ReactResponderEvent,
+  event: null | ReactResponderEvent,
   context: ReactResponderContext,
   props: HoverProps,
   state: HoverState,
 ) {
-  const {nativeEvent, target} = event;
-  if (context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)) {
-    return;
+  const target = state.hoverTarget;
+  if (event !== null) {
+    const {nativeEvent} = event;
+    if (
+      context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)
+    ) {
+      return;
+    }
   }
 
   state.isHovered = false;
@@ -150,11 +166,14 @@ function dispatchHoverEndEvents(
     state.isActiveHovered = false;
 
     if (props.onHoverEnd) {
-      const syntheticEvent = createHoverEvent('hoverend', target);
+      const syntheticEvent = createHoverEvent(
+        'hoverend',
+        ((target: any): Element | Document),
+      );
       context.dispatchEvent(syntheticEvent, props.onHoverEnd, {discrete: true});
     }
     if (props.onHoverChange) {
-      dispatchHoverChangeEvent(event, context, props, state);
+      dispatchHoverChangeEvent(context, props, state);
     }
   };
 
@@ -177,6 +196,16 @@ function dispatchHoverEndEvents(
 function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
   const maybeNumber = delay == null ? null : delay;
   return Math.max(min, maybeNumber != null ? maybeNumber : fallback);
+}
+
+function unmountResponder(
+  context: ReactResponderContext,
+  props: HoverProps,
+  state: HoverState,
+): void {
+  if (state.isHovered) {
+    dispatchHoverEndEvents(null, context, props, state);
+  }
 }
 
 const HoverResponder = {
@@ -231,6 +260,7 @@ const HoverResponder = {
             state.isInHitSlop = true;
             return;
           }
+          state.hoverTarget = target;
           dispatchHoverStartEvents(event, context, props, state);
         }
         break;
@@ -241,6 +271,7 @@ const HoverResponder = {
           dispatchHoverEndEvents(event, context, props, state);
         }
         state.isInHitSlop = false;
+        state.hoverTarget = null;
         state.isTouched = false;
         state.skipMouseAfterPointer = false;
         break;
@@ -293,11 +324,26 @@ const HoverResponder = {
       case 'pointercancel': {
         if (state.isHovered && !state.isTouched) {
           dispatchHoverEndEvents(event, context, props, state);
+          state.hoverTarget = null;
           state.isTouched = false;
         }
         break;
       }
     }
+  },
+  onUnmount(
+    context: ReactResponderContext,
+    props: HoverProps,
+    state: HoverState,
+  ) {
+    unmountResponder(context, props, state);
+  },
+  onOwnershipChange(
+    context: ReactResponderContext,
+    props: HoverProps,
+    state: HoverState,
+  ) {
+    unmountResponder(context, props, state);
   },
 };
 
