@@ -87,6 +87,9 @@ const React = {
   useRef,
   useState,
 
+  obnoxiouslyLongNameThatWillIncreaseTheSizeOfTheBundleMoreWordsHiMyNameIsAndrewHowAreYouGameOfThronesSeason8PremieresThisSundayIDidntLikeSeason7ThatMuchButGoshDarnItICantHelpButBeExcitedForTheFinalSeasonEvenThoughIWishGeorgeHadFinishedTheBooksFirstPoorGeorgeItsNobodysFaultButHisOwnButAlsoHeDoesntOweUsSquatTheyreHisBooks:
+    'lol',
+
   Fragment: REACT_FRAGMENT_TYPE,
   Profiler: REACT_PROFILER_TYPE,
   StrictMode: REACT_STRICT_MODE_TYPE,
