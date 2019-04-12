@@ -3,8 +3,7 @@
 import React, { useCallback, useState } from 'react';
 import type { Element } from 'react';
 import EditableValue from './EditableValue';
-import Button from '../Button';
-import ButtonIcon from '../ButtonIcon';
+import ExpandCollapseToggle from './ExpandCollapseToggle';
 import { getMetaValueLabel } from '../utils';
 import { meta } from '../../../hydration';
 import styles from './KeyValue.css';
@@ -152,28 +151,4 @@ export default function KeyValue({
   }
 
   return children;
-}
-
-type ExpandCollapseToggleProps = {|
-  isOpen: boolean,
-  setIsOpen: Function,
-|};
-
-function ExpandCollapseToggle({
-  isOpen,
-  setIsOpen,
-}: ExpandCollapseToggleProps) {
-  const handleClick = useCallback(() => {
-    setIsOpen(prevIsOpen => !prevIsOpen);
-  }, [setIsOpen]);
-
-  return (
-    <Button
-      className={styles.ExpandCollapseToggle}
-      onClick={handleClick}
-      title={`${isOpen ? 'Collapse' : 'Expand'} prop value`}
-    >
-      <ButtonIcon type={isOpen ? 'expanded' : 'collapsed'} />
-    </Button>
-  );
 }

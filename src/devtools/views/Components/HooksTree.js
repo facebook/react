@@ -1,11 +1,12 @@
 // @flow
 
 import { copy } from 'clipboard-js';
-import React, { useCallback, useContext } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
 import { BridgeContext, StoreContext } from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import EditableValue from './EditableValue';
+import ExpandCollapseToggle from './ExpandCollapseToggle';
 import KeyValue from './KeyValue';
 import { serializeHooksForCopy } from '../utils';
 import styles from './HooksTree.css';
@@ -76,6 +77,13 @@ function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+
+  const toggleIsOpen = useCallback(
+    () => setIsOpen(prevIsOpen => !prevIsOpen),
+    []
+  );
+
   if (hook.hasOwnProperty(meta.inspected)) {
     // This Hook is too deep and hasn't been hydrated.
     // TODO: show UI to load its data.
@@ -121,34 +129,43 @@ function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
       return (
         <div className={styles.Hook}>
           <div className={styles.NameValueRow}>
-            <span className={styles.ExpandCollapseToggleSpacer} />
-            <span className={styles.Name}>{name}</span>
+            <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
+            <span onDoubleClick={toggleIsOpen} className={styles.Name}>
+              {name}
+            </span>
           </div>
-          <div className={styles.Children}>
-            <KeyValue depth={1} name="DebugValue" value={value} />
-            <InnerHooksTreeView
-              canEditHooks={canEditHooks}
-              hooks={subHooks}
-              id={id}
-            />
-          </div>
+          {isOpen && (
+            <div className={styles.Children}>
+              <KeyValue depth={1} name="DebugValue" value={value} />
+              <InnerHooksTreeView
+                canEditHooks={canEditHooks}
+                hooks={subHooks}
+                id={id}
+              />
+            </div>
+          )}
         </div>
       );
     } else {
       return (
         <div className={styles.Hook}>
           <div className={styles.NameValueRow}>
-            <span className={styles.ExpandCollapseToggleSpacer} />
-            <span className={styles.Name}>{name}</span> {/* $FlowFixMe */}
+            <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
+            <span onDoubleClick={toggleIsOpen} className={styles.Name}>
+              {name}
+            </span>{' '}
+            {/* $FlowFixMe */}
             <span className={styles.Value}>{displayValue}</span>
           </div>
-          <div className={styles.Children}>
-            <InnerHooksTreeView
-              canEditHooks={canEditHooks}
-              hooks={subHooks}
-              id={id}
-            />
-          </div>
+          {isOpen && (
+            <div className={styles.Children}>
+              <InnerHooksTreeView
+                canEditHooks={canEditHooks}
+                hooks={subHooks}
+                id={id}
+              />
+            </div>
+          )}
         </div>
       );
     }
