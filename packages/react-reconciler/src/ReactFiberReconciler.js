@@ -278,15 +278,15 @@ export function createContainer(
   isConcurrent: boolean,
   hydrate: boolean,
 ): OpaqueRoot {
-  const fiberRoot = createFiberRoot(containerInfo, isConcurrent, hydrate);  
-  if(__DEV__){
+  const fiberRoot = createFiberRoot(containerInfo, isConcurrent, hydrate);
+  if (__DEV__) {
     // jest isn't a 'global', it's just exposed to tests via a wrapped function
     // further, this isn't a test file, so flow doesn't recognize the symbol. So...
     // $FlowExpectedError - because requirements don't give a damn about your type sigs.
     if ('undefined' !== typeof jest) {
       warnIfNotScopedWithMatchingAct(fiberRoot.current);
-    }  
-  }  
+    }
+  }
   return fiberRoot;
 }
 
