@@ -52,6 +52,9 @@
     "test:standalone": "cd packages/react-devtools && yarn start",
     "typecheck": "flow check"
   },
+  "devEngines": {
+    "node": "10.x || 11.x"
+  },
   "lint-staged": {
     "{shells,src}/**/*.{js,json,css}": [
       "prettier --write",
