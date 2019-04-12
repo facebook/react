@@ -7,7 +7,7 @@ jobs:
   build:
     docker:
       # specify the version you desire here
-      - image: circleci/node:7.10
+      - image: circleci/node:10.12.0
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
@@ -21,19 +21,38 @@ jobs:
 
       # Download and cache dependencies
       - restore_cache:
+          name: Restore node_modules cache
           keys:
-            - v1-dependencies-{{ checksum "package.json" }}
-            # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
+            - v1-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}
+            - v1-node-{{ arch }}-{{ .Branch }}-
+            - v1-node-{{ arch }}-
 
-      - run: yarn install
+      - run:
+          name: Nodejs Version
+          command: node --version
+
+      - run:
+          name: Install Packages
+          command: yarn install --frozen-lockfile
 
       - save_cache:
+          name: Save node_modules cache
+          key: v1-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}
           paths:
             - node_modules
-          key: v1-dependencies-{{ checksum "package.json" }}
 
-      - run: yarn prettier:ci
-      - run: yarn lint:ci
-      - run: yarn flow
-      - run: yarn test
+      - run:
+          name: Check formatting
+          command: yarn prettier:ci
+
+      - run:
+          name: Check lint
+          command: yarn lint:ci
+
+      - run:
+          name: Check Flow
+          command: yarn flow
+
+      - run:
+          name: Test Packages
+          command: yarn test
