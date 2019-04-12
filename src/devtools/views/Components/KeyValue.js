@@ -12,6 +12,7 @@ type OverrideValueFn = (path: Array<string | number>, value: any) => void;
 
 type KeyValueProps = {|
   depth: number,
+  hidden?: boolean,
   name: string,
   overrideValueFn?: ?OverrideValueFn,
   path?: Array<any>,
@@ -20,6 +21,7 @@ type KeyValueProps = {|
 
 export default function KeyValue({
   depth,
+  hidden,
   name,
   overrideValueFn,
   path = [],
@@ -60,7 +62,7 @@ export default function KeyValue({
       typeof overrideValueFn === 'function' ? styles.EditableName : styles.Name;
 
     children = (
-      <div key="root" className={styles.Item} style={style}>
+      <div key="root" className={styles.Item} hidden={hidden} style={style}>
         <div className={styles.ExpandCollapseToggleSpacer} />
         <span className={nameClassName}>{name}</span>
         {typeof overrideValueFn === 'function' ? (
@@ -78,7 +80,7 @@ export default function KeyValue({
   } else if (value.hasOwnProperty(meta.type)) {
     // TODO Is this type even necessary? Can we just drop it?
     children = (
-      <div key="root" className={styles.Item} style={style}>
+      <div key="root" className={styles.Item} hidden={hidden} style={style}>
         <div className={styles.ExpandCollapseToggleSpacer} />
         <span className={styles.Name}>{name}</span>
         <span className={styles.Value}>{getMetaValueLabel(value)}</span>
@@ -88,20 +90,24 @@ export default function KeyValue({
     if (Array.isArray(value)) {
       const hasChildren = value.length > 0;
 
-      children = isOpen
-        ? value.map((innerValue, index) => (
-            <KeyValue
-              key={index}
-              depth={depth + 1}
-              name={index}
-              overrideValueFn={overrideValueFn}
-              path={path.concat(index)}
-              value={value[index]}
-            />
-          ))
-        : [];
+      children = value.map((innerValue, index) => (
+        <KeyValue
+          key={index}
+          depth={depth + 1}
+          hidden={hidden || !isOpen}
+          name={index}
+          overrideValueFn={overrideValueFn}
+          path={path.concat(index)}
+          value={value[index]}
+        />
+      ));
       children.unshift(
-        <div key={`${depth}-root`} className={styles.Item} style={style}>
+        <div
+          key={`${depth}-root`}
+          className={styles.Item}
+          hidden={hidden}
+          style={style}
+        >
           {hasChildren ? (
             <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
           ) : (
@@ -119,20 +125,24 @@ export default function KeyValue({
     } else {
       const hasChildren = Object.entries(value).length > 0;
 
-      children = isOpen
-        ? Object.entries(value).map<Element<any>>(([name, value]) => (
-            <KeyValue
-              key={name}
-              depth={depth + 1}
-              name={name}
-              overrideValueFn={overrideValueFn}
-              path={path.concat(name)}
-              value={value}
-            />
-          ))
-        : [];
+      children = Object.entries(value).map<Element<any>>(([name, value]) => (
+        <KeyValue
+          key={name}
+          depth={depth + 1}
+          hidden={hidden || !isOpen}
+          name={name}
+          overrideValueFn={overrideValueFn}
+          path={path.concat(name)}
+          value={value}
+        />
+      ));
       children.unshift(
-        <div key={`${depth}-root`} className={styles.Item} style={style}>
+        <div
+          key={`${depth}-root`}
+          className={styles.Item}
+          hidden={hidden}
+          style={style}
+        >
           {hasChildren ? (
             <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
           ) : (

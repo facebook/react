@@ -1,4 +1,4 @@
-.Item {
+.Item:not([hidden]) {
   display: flex;
 }
 

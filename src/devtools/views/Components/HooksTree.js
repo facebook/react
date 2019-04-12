@@ -134,16 +134,14 @@ function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
               {name}
             </span>
           </div>
-          {isOpen && (
-            <div className={styles.Children}>
-              <KeyValue depth={1} name="DebugValue" value={value} />
-              <InnerHooksTreeView
-                canEditHooks={canEditHooks}
-                hooks={subHooks}
-                id={id}
-              />
-            </div>
-          )}
+          <div className={styles.Children} hidden={!isOpen}>
+            <KeyValue depth={1} name="DebugValue" value={value} />
+            <InnerHooksTreeView
+              canEditHooks={canEditHooks}
+              hooks={subHooks}
+              id={id}
+            />
+          </div>
         </div>
       );
     } else {
@@ -157,15 +155,13 @@ function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
             {/* $FlowFixMe */}
             <span className={styles.Value}>{displayValue}</span>
           </div>
-          {isOpen && (
-            <div className={styles.Children}>
-              <InnerHooksTreeView
-                canEditHooks={canEditHooks}
-                hooks={subHooks}
-                id={id}
-              />
-            </div>
-          )}
+          <div className={styles.Children} hidden={!isOpen}>
+            <InnerHooksTreeView
+              canEditHooks={canEditHooks}
+              hooks={subHooks}
+              id={id}
+            />
+          </div>
         </div>
       );
     }
