@@ -83,6 +83,7 @@
     "classnames": "2.2.1",
     "cli-spinners": "^1.0.0",
     "clipboard-js": "^0.3.6",
+    "crx": "git+https://github.com/oncletom/crx#ef150e8",
     "css-loader": "^1.0.1",
     "error-stack-parser": "^2.0.2",
     "es6-symbol": "3.0.2",
@@ -130,11 +131,13 @@
     "react-is": "^16.9.0-alpha.0",
     "react-virtualized-auto-sizer": "^1.0.2",
     "react-window": "^1.8.0",
+    "request-promise": "^4.2.4",
     "scheduler": "^0.14.0-alpha.0",
     "semver": "^5.5.1",
     "style-loader": "^0.23.1",
-    "web-ext": "^1.10.1",
+    "web-ext": "^3.0.0",
     "webpack": "^4.26.0",
-    "webpack-cli": "^3.1.2"
+    "webpack-cli": "^3.1.2",
+    "xml-js": "^1.6.11"
   }
 }
