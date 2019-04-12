@@ -68,7 +68,7 @@ export default function Tree(props: Props) {
   // This is helpful for things like the owners list and search.
   useLayoutEffect(() => {
     if (selectedElementIndex !== null && listRef.current != null) {
-      listRef.current.scrollToItem(selectedElementIndex);
+      listRef.current.scrollToItem(selectedElementIndex, 'smart');
       // Note this autoscroll only works for rows.
       // There's another autoscroll inside the elements
       // that ensures the component name is visible horizontally.
