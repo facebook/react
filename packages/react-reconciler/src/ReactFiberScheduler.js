@@ -33,6 +33,7 @@ import {
   flushInteractiveUpdates as flushInteractiveUpdates_old,
   computeUniqueAsyncExpiration as computeUniqueAsyncExpiration_old,
   flushPassiveEffects as flushPassiveEffects_old,
+  warnIfNotScopedWithMatchingAct as warnIfNotScopedWithMatchingAct_old,
   warnIfNotCurrentlyActingUpdatesInDev as warnIfNotCurrentlyActingUpdatesInDev_old,
   inferStartTimeFromExpirationTime as inferStartTimeFromExpirationTime_old,
 } from './ReactFiberScheduler.old';
@@ -61,6 +62,7 @@ import {
   flushInteractiveUpdates as flushInteractiveUpdates_new,
   computeUniqueAsyncExpiration as computeUniqueAsyncExpiration_new,
   flushPassiveEffects as flushPassiveEffects_new,
+  warnIfNotScopedWithMatchingAct as warnIfNotScopedWithMatchingAct_new,
   warnIfNotCurrentlyActingUpdatesInDev as warnIfNotCurrentlyActingUpdatesInDev_new,
   inferStartTimeFromExpirationTime as inferStartTimeFromExpirationTime_new,
 } from './ReactFiberScheduler.new';
@@ -130,6 +132,9 @@ export const computeUniqueAsyncExpiration = enableNewScheduler
 export const flushPassiveEffects = enableNewScheduler
   ? flushPassiveEffects_new
   : flushPassiveEffects_old;
+export const warnIfNotScopedWithMatchingAct = enableNewScheduler
+  ? warnIfNotScopedWithMatchingAct_new
+  : warnIfNotScopedWithMatchingAct_old;
 export const warnIfNotCurrentlyActingUpdatesInDev = enableNewScheduler
   ? warnIfNotCurrentlyActingUpdatesInDev_new
   : warnIfNotCurrentlyActingUpdatesInDev_old;

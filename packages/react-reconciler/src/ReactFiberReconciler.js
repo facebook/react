@@ -17,6 +17,7 @@ import type {
 } from './ReactFiberHostConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import ReactActingUpdatesSigil from './ReactActingUpdatesSigil';
 
 import {
   findCurrentHostFiber,
@@ -53,6 +54,7 @@ import {
   interactiveUpdates,
   flushInteractiveUpdates,
   flushPassiveEffects,
+  warnIfNotScopedWithMatchingAct,
 } from './ReactFiberScheduler';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
@@ -275,8 +277,15 @@ export function createContainer(
   containerInfo: Container,
   isConcurrent: boolean,
   hydrate: boolean,
-): OpaqueRoot {
-  return createFiberRoot(containerInfo, isConcurrent, hydrate);
+): OpaqueRoot {  
+  const fiberRoot = createFiberRoot(containerInfo, isConcurrent, hydrate);
+  // jest isn't a 'global', it's just exposed to tests via a wrapped function
+  // further, this isn't a test file, so flow doesn't recognize the symbol. So...
+  // $FlowExpectedError - because requirements don't give a damn about your type sigs.
+  if ('undefined' !== typeof jest) {
+    warnIfNotScopedWithMatchingAct(fiberRoot.current);
+  }
+  return fiberRoot;
 }
 
 export function updateContainer(
@@ -309,6 +318,7 @@ export {
   flushControlled,
   flushSync,
   flushPassiveEffects,
+  warnIfNotScopedWithMatchingAct,
 };
 
 export function getPublicRootInstance(
@@ -436,3 +446,5 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
     },
   });
 }
+
+export {ReactActingUpdatesSigil};

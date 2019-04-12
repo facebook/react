@@ -166,6 +166,7 @@ import {
   commitPassiveHookEffects,
 } from './ReactFiberCommitWork';
 import {ContextOnlyDispatcher} from './ReactFiberHooks';
+import ReactActingUpdatesSigil from './ReactActingUpdatesSigil';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.
@@ -1864,19 +1865,39 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
   return root;
 }
 
+export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
+  if (__DEV__) {
+    if (
+      ReactShouldWarnActingUpdates.current !== null &&
+      ReactShouldWarnActingUpdates.current !== ReactActingUpdatesSigil
+    ) {
+      // it looks like we're using the wrong matching act(), so log a warning
+      warningWithoutStack(
+        false,
+        "It looks like you're using the wrong act() around your interactions.\n" +
+          'Be sure to use the matching version of act() corresponding to your renderer. e.g. -\n' +
+          "for react-dom, import {act} from 'react-dom/test-utils';\n" +
+          'for react-test-renderer, const {act} = TestRenderer.' +
+          '%s',
+        getStackByFiberInDevAndProd(fiber),
+      );
+    }
+  }
+}
+
 // in a test-like environment, we want to warn if dispatchAction() is
 // called outside of a TestUtils.act(...)/batchedUpdates/render call.
 // so we have a a step counter for when we descend/ascend from
 // act() calls, and test on it for when to warn
-// It's a tuple with a single value. Look for shared/createAct to
-// see how we change the value inside act() calls
+// It's a tuple with a single value. Look into ReactTestUtilsAct as an
+// example of how we change the value
 
 export function warnIfNotCurrentlyActingUpdatesInDev(fiber: Fiber): void {
   if (__DEV__) {
     if (
       isBatchingUpdates === false &&
       isRendering === false &&
-      ReactShouldWarnActingUpdates.current === false
+      ReactShouldWarnActingUpdates.current !== ReactActingUpdatesSigil
     ) {
       warningWithoutStack(
         false,

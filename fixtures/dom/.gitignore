@@ -16,6 +16,10 @@ public/react-dom-server.browser.development.js
 public/react-dom-server.browser.production.min.js
 public/react-dom-test-utils.development.js
 public/react-dom-test-utils.production.min.js
+public/react-test-renderer.development.js
+public/react-test-renderer.production.min.js
+public/scheduler.development.js
+public/scheduler.production.min.js
 
 # misc
 .DS_Store

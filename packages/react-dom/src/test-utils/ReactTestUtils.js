@@ -42,8 +42,10 @@ const [
   restoreStateIfNeeded,
   dispatchEvent,
   runEventsInBatch,
-  // eslint-disable-next-line no-unused-vars
+  /* eslint-disable no-unused-vars */
   flushPassiveEffects,
+  ReactActingUpdatesSigil,
+  /* eslint-enable no-unused-vars */
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
 
 function Event(suffix) {}

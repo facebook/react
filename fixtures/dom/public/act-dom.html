@@ -1,41 +1,58 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>sanity test for ReactTestUtils.act</title>
-</head>
-<body>
-  this page tests whether act runs properly in a browser.
-  <br/>
-  your console should say "5"
-  <script src='react.development.js'></script>
-  <script src='react-dom.development.js'></script>
-  <script src='react-dom-test-utils.development.js'></script>
-  <script>
-    async function run(){
-      // from ReactTestUtilsAct-test.js
+  <head>
+    <title>sanity test for ReactTestUtils.act</title>
+  </head>
+  <body>
+    this page tests whether act runs properly in a browser.
+    <br />
+    your console should say "5", and a warning about not using the right act()
+    <script src="react.development.js"></script>
+    <script src="react-dom.development.js"></script>
+    <script src="react-dom-test-utils.development.js"></script>
+    <script src="scheduler.development.js"></script>
+    <script src="react-test-renderer.development.js"></script>
+    <script>
+      window.jest = {}; // to enable warnings
       function App() {
         let [state, setState] = React.useState(0);
         async function ticker() {
           await null;
           setState(x => x + 1);
         }
-        React.useEffect(
-          () => {
-            ticker();
-          },
-          [Math.min(state, 4)],
-        );
+        React.useEffect(() => {
+          ticker();
+        }, [Math.min(state, 4)]);
         return state;
       }
-      const el = document.createElement('div');
-      await ReactTestUtils.act(async () => {
-        ReactDOM.render(React.createElement(App), el);
-      });
-      // all 5 ticks present and accounted for
-      console.log(el.innerHTML);
-    }
-    run();
-    
-  </script>
-</body>
+
+      function sleep(period){
+        return new Promise(resolve => setTimeout(resolve, period))
+      }
+
+      async function testDOMAsynAct() {
+        // from ReactTestUtilsAct-test.js
+
+        const el = document.createElement("div");
+        await ReactTestUtils.act(async () => {
+          ReactDOM.render(React.createElement(App), el);
+        });
+        // all 5 ticks present and accounted for
+        console.log(el.innerHTML);
+      }
+
+      async function testMixRenderers() {
+        await ReactTestUtils.act(async () => {
+          ReactTestRenderer.create(React.createElement(App));
+        });
+      }
+
+      async function run() {
+        await testDOMAsynAct();
+        await testMixRenderers();
+      }
+
+      run();
+    </script>
+  </body>
 </html>

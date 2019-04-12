@@ -11,6 +11,7 @@ import type {Thenable} from 'react-reconciler/src/ReactFiberScheduler';
 import {
   batchedUpdates,
   flushPassiveEffects,
+  ReactActingUpdatesSigil,
 } from 'react-reconciler/inline.test';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import warningWithoutStack from 'shared/warningWithoutStack';
@@ -42,18 +43,18 @@ function flushEffectsAndMicroTasks(onDone: (err: ?Error) => void) {
 
 function act(callback: () => Thenable) {
   let previousActingUpdatesScopeDepth;
+  let previousActingUpdatesSigil;
   if (__DEV__) {
     previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
+    previousActingUpdatesSigil = ReactShouldWarnActingUpdates.current;
     actingUpdatesScopeDepth++;
-    ReactShouldWarnActingUpdates.current = true;
+    ReactShouldWarnActingUpdates.current = ReactActingUpdatesSigil;
   }
 
   function onDone() {
     if (__DEV__) {
       actingUpdatesScopeDepth--;
-      if (actingUpdatesScopeDepth === 0) {
-        ReactShouldWarnActingUpdates.current = false;
-      }
+      ReactShouldWarnActingUpdates.current = previousActingUpdatesSigil;
       if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
         // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
         warningWithoutStack(
