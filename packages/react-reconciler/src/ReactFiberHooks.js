@@ -34,6 +34,7 @@ import {
   flushPassiveEffects,
   requestCurrentTime,
   warnIfNotCurrentlyActingUpdatesInDev,
+  markRenderEventTime,
 } from './ReactFiberScheduler';
 
 import invariant from 'shared/invariant';
@@ -315,8 +316,8 @@ function areHookInputsEqual(
           'Previous: %s\n' +
           'Incoming: %s',
         currentHookNameInDev,
-        `[${nextDeps.join(', ')}]`,
         `[${prevDeps.join(', ')}]`,
+        `[${nextDeps.join(', ')}]`,
       );
     }
   }
@@ -718,6 +719,16 @@ function updateReducer<S, I, A>(
           remainingExpirationTime = updateExpirationTime;
         }
       } else {
+        // This update does have sufficient priority.
+
+        // Mark the event time of this update as relevant to this render pass.
+        // TODO: This should ideally use the true event time of this update rather than
+        // its priority which is a derived and not reverseable value.
+        // TODO: We should skip this update if it was already committed but currently
+        // we have no way of detecting the difference between a committed and suspended
+        // update here.
+        markRenderEventTime(updateExpirationTime);
+
         // Process this update.
         if (update.eagerReducer === reducer) {
           // If this update was processed eagerly, and its reducer matches the

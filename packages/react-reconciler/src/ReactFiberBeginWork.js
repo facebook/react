@@ -96,6 +96,8 @@ import {
   registerSuspenseInstanceRetry,
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
+import {getEventTargetChildElement} from './ReactFiberHostConfig';
+import {shouldSuspend} from './ReactFiberReconciler';
 import {
   pushHostContext,
   pushHostContainer,
@@ -1392,6 +1394,12 @@ function updateSuspenseComponent(
   const mode = workInProgress.mode;
   const nextProps = workInProgress.pendingProps;
 
+  if (__DEV__) {
+    if (shouldSuspend(workInProgress)) {
+      workInProgress.effectTag |= DidCapture;
+    }
+  }
+
   // We should attempt to render the primary children unless this boundary
   // already suspended during this render (`alreadyCaptured` is true).
   let nextState: SuspenseState | null = workInProgress.memoizedState;
@@ -1405,7 +1413,8 @@ function updateSuspenseComponent(
     // Something in this boundary's subtree already suspended. Switch to
     // rendering the fallback children.
     nextState = {
-      timedOutAt: nextState !== null ? nextState.timedOutAt : NoWork,
+      fallbackExpirationTime:
+        nextState !== null ? nextState.fallbackExpirationTime : NoWork,
     };
     nextDidTimeout = true;
     workInProgress.effectTag &= ~DidCapture;
@@ -1981,15 +1990,33 @@ function updateEventComponent(current, workInProgress, renderExpirationTime) {
 }
 
 function updateEventTarget(current, workInProgress, renderExpirationTime) {
+  const type = workInProgress.type.type;
   const nextProps = workInProgress.pendingProps;
-  let nextChildren = nextProps.children;
+  const eventTargetChild = getEventTargetChildElement(type, nextProps);
 
-  reconcileChildren(
-    current,
-    workInProgress,
-    nextChildren,
-    renderExpirationTime,
-  );
+  if (__DEV__) {
+    warning(
+      nextProps.children == null,
+      'Event targets should not have children.',
+    );
+  }
+  if (eventTargetChild !== null) {
+    const child = (workInProgress.child = createFiberFromTypeAndProps(
+      eventTargetChild.type,
+      null,
+      eventTargetChild.props,
+      null,
+      workInProgress.mode,
+      renderExpirationTime,
+    ));
+    child.return = workInProgress;
+
+    if (current === null || current.child === null) {
+      child.effectTag = Placement;
+    }
+  } else {
+    reconcileChildren(current, workInProgress, null, renderExpirationTime);
+  }
   pushHostContextForEventTarget(workInProgress);
   return workInProgress.child;
 }

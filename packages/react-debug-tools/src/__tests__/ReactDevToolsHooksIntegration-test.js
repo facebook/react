@@ -14,13 +14,18 @@ describe('React hooks DevTools integration', () => {
   let React;
   let ReactDebugTools;
   let ReactTestRenderer;
+  let Scheduler;
   let act;
   let overrideHookState;
+  let scheduleUpdate;
+  let setSuspenseHandler;
 
   beforeEach(() => {
     global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
       inject: injected => {
         overrideHookState = injected.overrideHookState;
+        scheduleUpdate = injected.scheduleUpdate;
+        setSuspenseHandler = injected.setSuspenseHandler;
       },
       supportsFiber: true,
       onCommitFiberRoot: () => {},
@@ -32,6 +37,7 @@ describe('React hooks DevTools integration', () => {
     React = require('react');
     ReactDebugTools = require('react-debug-tools');
     ReactTestRenderer = require('react-test-renderer');
+    Scheduler = require('scheduler');
 
     act = ReactTestRenderer.act;
   });
@@ -171,6 +177,117 @@ describe('React hooks DevTools integration', () => {
         props: {},
         children: ['count:', '11'],
       });
+    }
+  });
+
+  it('should support overriding suspense in sync mode', () => {
+    if (__DEV__) {
+      // Lock the first render
+      setSuspenseHandler(() => true);
+    }
+
+    function MyComponent() {
+      return 'Done';
+    }
+
+    const renderer = ReactTestRenderer.create(
+      <div>
+        <React.Suspense fallback={'Loading'}>
+          <MyComponent />
+        </React.Suspense>
+      </div>,
+    );
+    const fiber = renderer.root._currentFiber().child;
+    if (__DEV__) {
+      // First render was locked
+      expect(renderer.toJSON().children).toEqual(['Loading']);
+      scheduleUpdate(fiber); // Re-render
+      expect(renderer.toJSON().children).toEqual(['Loading']);
+
+      // Release the lock
+      setSuspenseHandler(() => false);
+      scheduleUpdate(fiber); // Re-render
+      expect(renderer.toJSON().children).toEqual(['Done']);
+      scheduleUpdate(fiber); // Re-render
+      expect(renderer.toJSON().children).toEqual(['Done']);
+
+      // Lock again
+      setSuspenseHandler(() => true);
+      scheduleUpdate(fiber); // Re-render
+      expect(renderer.toJSON().children).toEqual(['Loading']);
+
+      // Release the lock again
+      setSuspenseHandler(() => false);
+      scheduleUpdate(fiber); // Re-render
+      expect(renderer.toJSON().children).toEqual(['Done']);
+
+      // Ensure it checks specific fibers.
+      setSuspenseHandler(f => f === fiber || f === fiber.alternate);
+      scheduleUpdate(fiber); // Re-render
+      expect(renderer.toJSON().children).toEqual(['Loading']);
+      setSuspenseHandler(f => f !== fiber && f !== fiber.alternate);
+      scheduleUpdate(fiber); // Re-render
+      expect(renderer.toJSON().children).toEqual(['Done']);
+    } else {
+      expect(renderer.toJSON().children).toEqual(['Done']);
+    }
+  });
+
+  it('should support overriding suspense in concurrent mode', () => {
+    if (__DEV__) {
+      // Lock the first render
+      setSuspenseHandler(() => true);
+    }
+
+    function MyComponent() {
+      return 'Done';
+    }
+
+    const renderer = ReactTestRenderer.create(
+      <div>
+        <React.Suspense fallback={'Loading'}>
+          <MyComponent />
+        </React.Suspense>
+      </div>,
+      {unstable_isConcurrent: true},
+    );
+
+    expect(Scheduler).toFlushAndYield([]);
+    // Ensure we timeout any suspense time.
+    jest.advanceTimersByTime(1000);
+    const fiber = renderer.root._currentFiber().child;
+    if (__DEV__) {
+      // First render was locked
+      expect(renderer.toJSON().children).toEqual(['Loading']);
+      scheduleUpdate(fiber); // Re-render
+      expect(renderer.toJSON().children).toEqual(['Loading']);
+
+      // Release the lock
+      setSuspenseHandler(() => false);
+      scheduleUpdate(fiber); // Re-render
+      expect(renderer.toJSON().children).toEqual(['Done']);
+      scheduleUpdate(fiber); // Re-render
+      expect(renderer.toJSON().children).toEqual(['Done']);
+
+      // Lock again
+      setSuspenseHandler(() => true);
+      scheduleUpdate(fiber); // Re-render
+      expect(renderer.toJSON().children).toEqual(['Loading']);
+
+      // Release the lock again
+      setSuspenseHandler(() => false);
+      scheduleUpdate(fiber); // Re-render
+      expect(renderer.toJSON().children).toEqual(['Done']);
+
+      // Ensure it checks specific fibers.
+      setSuspenseHandler(f => f === fiber || f === fiber.alternate);
+      scheduleUpdate(fiber); // Re-render
+      expect(renderer.toJSON().children).toEqual(['Loading']);
+      setSuspenseHandler(f => f !== fiber && f !== fiber.alternate);
+      scheduleUpdate(fiber); // Re-render
+      expect(renderer.toJSON().children).toEqual(['Done']);
+    } else {
+      expect(renderer.toJSON().children).toEqual(['Done']);
     }
   });
 });

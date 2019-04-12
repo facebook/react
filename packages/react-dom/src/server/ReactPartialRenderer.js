@@ -39,6 +39,7 @@ import {
   REACT_MEMO_TYPE,
   REACT_EVENT_COMPONENT_TYPE,
   REACT_EVENT_TARGET_TYPE,
+  REACT_EVENT_TARGET_TOUCH_HIT,
 } from 'shared/ReactSymbols';
 
 import {
@@ -1168,6 +1169,20 @@ class ReactDOMServerRenderer {
           case REACT_EVENT_COMPONENT_TYPE:
           case REACT_EVENT_TARGET_TYPE: {
             if (enableEventAPI) {
+              if (
+                elementType.$$typeof === REACT_EVENT_TARGET_TYPE &&
+                elementType.type === REACT_EVENT_TARGET_TOUCH_HIT
+              ) {
+                // We do not render a hit slop element anymore. Instead we rely
+                // on hydration adding in the hit slop element. The previous
+                // logic had a bug where rendering a hit slop at SSR meant that
+                // mouse events incorrectly registered events on the hit slop
+                // even though it designed to be used for touch events only.
+                // The logic that filters out mouse events from the hit slop
+                // is handled in event responder modules, which only get
+                // initialized upon hydration.
+                return '';
+              }
               const nextChildren = toArray(
                 ((nextChild: any): ReactElement).props.children,
               );

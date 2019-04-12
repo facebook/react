@@ -7,7 +7,10 @@
  * @flow
  */
 
-import type {EventResponderContext} from 'events/EventTypes';
+import type {
+  ReactResponderEvent,
+  ReactResponderContext,
+} from 'shared/ReactTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
 const targetEventTypes = ['pointerdown', 'pointercancel'];
@@ -30,7 +33,6 @@ type EventData = {
 type SwipeEventType = 'swipeleft' | 'swiperight' | 'swipeend' | 'swipemove';
 
 type SwipeEvent = {|
-  listener: SwipeEvent => void,
   target: Element | Document,
   type: SwipeEventType,
   diffX?: number,
@@ -40,11 +42,9 @@ type SwipeEvent = {|
 function createSwipeEvent(
   type: SwipeEventType,
   target: Element | Document,
-  listener: SwipeEvent => void,
   eventData?: EventData,
 ): SwipeEvent {
   return {
-    listener,
     target,
     type,
     ...eventData,
@@ -52,7 +52,7 @@ function createSwipeEvent(
 }
 
 function dispatchSwipeEvent(
-  context: EventResponderContext,
+  context: ReactResponderContext,
   name: SwipeEventType,
   listener: SwipeEvent => void,
   state: SwipeState,
@@ -60,8 +60,8 @@ function dispatchSwipeEvent(
   eventData?: EventData,
 ) {
   const target = ((state.swipeTarget: any): Element | Document);
-  const syntheticEvent = createSwipeEvent(name, target, listener, eventData);
-  context.dispatchEvent(syntheticEvent, {discrete});
+  const syntheticEvent = createSwipeEvent(name, target, eventData);
+  context.dispatchEvent(syntheticEvent, listener, {discrete});
 }
 
 type SwipeState = {
@@ -91,21 +91,22 @@ const SwipeResponder = {
       y: 0,
     };
   },
-  handleEvent(
-    context: EventResponderContext,
+  onEvent(
+    event: ReactResponderEvent,
+    context: ReactResponderContext,
     props: Object,
     state: SwipeState,
   ): void {
-    const {eventTarget, eventType, event} = context;
+    const {target, type, nativeEvent} = event;
 
-    switch (eventType) {
+    switch (type) {
       case 'touchstart':
       case 'mousedown':
       case 'pointerdown': {
-        if (!state.isSwiping && !context.isTargetOwned(eventTarget)) {
-          let obj = event;
-          if (eventType === 'touchstart') {
-            obj = (event: any).targetTouches[0];
+        if (!state.isSwiping && !context.hasOwnership()) {
+          let obj = nativeEvent;
+          if (type === 'touchstart') {
+            obj = (nativeEvent: any).targetTouches[0];
             state.touchId = obj.identifier;
           }
           const x = (obj: any).screenX;
@@ -114,7 +115,7 @@ const SwipeResponder = {
           let shouldEnableSwiping = true;
 
           if (props.onShouldClaimOwnership && props.onShouldClaimOwnership()) {
-            shouldEnableSwiping = context.requestOwnership(eventTarget);
+            shouldEnableSwiping = context.requestOwnership();
           }
           if (shouldEnableSwiping) {
             state.isSwiping = true;
@@ -122,8 +123,8 @@ const SwipeResponder = {
             state.startY = y;
             state.x = x;
             state.y = y;
-            state.swipeTarget = eventTarget;
-            context.addRootEventTypes(rootEventTypes);
+            state.swipeTarget = target;
+            context.addRootEventTypes(target.ownerDocument, rootEventTypes);
           } else {
             state.touchId = null;
           }
@@ -133,13 +134,13 @@ const SwipeResponder = {
       case 'touchmove':
       case 'mousemove':
       case 'pointermove': {
-        if (context.isPassive()) {
+        if (event.passive) {
           return;
         }
         if (state.isSwiping) {
           let obj = null;
-          if (eventType === 'touchmove') {
-            const targetTouches = (event: any).targetTouches;
+          if (type === 'touchmove') {
+            const targetTouches = (nativeEvent: any).targetTouches;
             for (let i = 0; i < targetTouches.length; i++) {
               if (state.touchId === targetTouches[i].identifier) {
                 obj = targetTouches[i];
@@ -147,7 +148,7 @@ const SwipeResponder = {
               }
             }
           } else {
-            obj = event;
+            obj = nativeEvent;
           }
           if (obj === null) {
             state.isSwiping = false;
@@ -178,7 +179,7 @@ const SwipeResponder = {
               false,
               eventData,
             );
-            (event: any).preventDefault();
+            (nativeEvent: any).preventDefault();
           }
         }
         break;
@@ -193,7 +194,7 @@ const SwipeResponder = {
             return;
           }
           if (props.onShouldClaimOwnership) {
-            context.releaseOwnership(state.swipeTarget);
+            context.releaseOwnership();
           }
           const direction = state.direction;
           const lastDirection = state.lastDirection;

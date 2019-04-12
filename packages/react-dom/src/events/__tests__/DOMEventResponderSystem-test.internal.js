@@ -12,11 +12,21 @@
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
+let ReactSymbols;
 
-function createReactEventComponent(targetEventTypes, handleEvent) {
+function createReactEventComponent(
+  targetEventTypes,
+  createInitialState,
+  onEvent,
+  onUnmount,
+  onOwnershipChange,
+) {
   const testEventResponder = {
     targetEventTypes,
-    handleEvent,
+    createInitialState,
+    onEvent,
+    onUnmount,
+    onOwnershipChange,
   };
 
   return {
@@ -33,6 +43,14 @@ function dispatchClickEvent(element) {
   element.dispatchEvent(clickEvent);
 }
 
+function createReactEventTarget(type) {
+  return {
+    $$typeof: ReactSymbols.REACT_EVENT_TARGET_TYPE,
+    displayName: 'TestEventTarget',
+    type,
+  };
+}
+
 // This is a new feature in Fiber so I put it in its own test file. It could
 // probably move to one of the other test files once it is official.
 describe('DOMEventResponderSystem', () => {
@@ -46,6 +64,7 @@ describe('DOMEventResponderSystem', () => {
     ReactDOM = require('react-dom');
     container = document.createElement('div');
     document.body.appendChild(container);
+    ReactSymbols = require('shared/ReactSymbols');
   });
 
   afterEach(() => {
@@ -53,19 +72,20 @@ describe('DOMEventResponderSystem', () => {
     container = null;
   });
 
-  it('the event responder handleEvent() function should fire on click event', () => {
+  it('the event responder onEvent() function should fire on click event', () => {
     let eventResponderFiredCount = 0;
     let eventLog = [];
     const buttonRef = React.createRef();
 
     const ClickEventComponent = createReactEventComponent(
       ['click'],
-      (context, props) => {
+      undefined,
+      (event, context, props) => {
         eventResponderFiredCount++;
         eventLog.push({
-          name: context.eventType,
-          passive: context.isPassive(),
-          passiveSupported: context.isPassiveSupported(),
+          name: event.type,
+          passive: event.passive,
+          passiveSupported: event.passiveSupported,
         });
       },
     );
@@ -79,7 +99,7 @@ describe('DOMEventResponderSystem', () => {
     ReactDOM.render(<Test />, container);
     expect(container.innerHTML).toBe('<button>Click me!</button>');
 
-    // Clicking the button should trigger the event responder handleEvent()
+    // Clicking the button should trigger the event responder onEvent()
     let buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
     expect(eventResponderFiredCount).toBe(1);
@@ -103,7 +123,7 @@ describe('DOMEventResponderSystem', () => {
     expect(eventResponderFiredCount).toBe(2);
   });
 
-  it('the event responder handleEvent() function should fire on click event (passive events forced)', () => {
+  it('the event responder onEvent() function should fire on click event (passive events forced)', () => {
     // JSDOM does not support passive events, so this manually overrides the value to be true
     const checkPassiveEvents = require('react-dom/src/events/checkPassiveEvents');
     checkPassiveEvents.passiveBrowserEventsSupported = true;
@@ -113,11 +133,12 @@ describe('DOMEventResponderSystem', () => {
 
     const ClickEventComponent = createReactEventComponent(
       ['click'],
-      (context, props) => {
+      undefined,
+      (event, context, props) => {
         eventLog.push({
-          name: context.eventType,
-          passive: context.isPassive(),
-          passiveSupported: context.isPassiveSupported(),
+          name: event.type,
+          passive: event.passive,
+          passiveSupported: event.passiveSupported,
         });
       },
     );
@@ -130,7 +151,7 @@ describe('DOMEventResponderSystem', () => {
 
     ReactDOM.render(<Test />, container);
 
-    // Clicking the button should trigger the event responder handleEvent()
+    // Clicking the button should trigger the event responder onEvent()
     let buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
     expect(eventLog.length).toBe(1);
@@ -141,19 +162,20 @@ describe('DOMEventResponderSystem', () => {
     });
   });
 
-  it('nested event responders and their handleEvent() function should fire multiple times', () => {
+  it('nested event responders and their onEvent() function should fire multiple times', () => {
     let eventResponderFiredCount = 0;
     let eventLog = [];
     const buttonRef = React.createRef();
 
     const ClickEventComponent = createReactEventComponent(
       ['click'],
-      (context, props) => {
+      undefined,
+      (event, context, props) => {
         eventResponderFiredCount++;
         eventLog.push({
-          name: context.eventType,
-          passive: context.isPassive(),
-          passiveSupported: context.isPassiveSupported(),
+          name: event.type,
+          passive: event.passive,
+          passiveSupported: event.passiveSupported,
         });
       },
     );
@@ -168,7 +190,7 @@ describe('DOMEventResponderSystem', () => {
 
     ReactDOM.render(<Test />, container);
 
-    // Clicking the button should trigger the event responder handleEvent()
+    // Clicking the button should trigger the event responder onEvent()
     let buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
     expect(eventResponderFiredCount).toBe(2);
@@ -186,12 +208,13 @@ describe('DOMEventResponderSystem', () => {
     });
   });
 
-  it('nested event responders and their handleEvent() should fire in the correct order', () => {
+  it('nested event responders and their onEvent() should fire in the correct order', () => {
     let eventLog = [];
     const buttonRef = React.createRef();
 
     const ClickEventComponentA = createReactEventComponent(
       ['click'],
+      undefined,
       (context, props) => {
         eventLog.push('A');
       },
@@ -199,6 +222,7 @@ describe('DOMEventResponderSystem', () => {
 
     const ClickEventComponentB = createReactEventComponent(
       ['click'],
+      undefined,
       (context, props) => {
         eventLog.push('B');
       },
@@ -214,7 +238,7 @@ describe('DOMEventResponderSystem', () => {
 
     ReactDOM.render(<Test />, container);
 
-    // Clicking the button should trigger the event responder handleEvent()
+    // Clicking the button should trigger the event responder onEvent()
     let buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
 
@@ -227,14 +251,16 @@ describe('DOMEventResponderSystem', () => {
 
     const ClickEventComponent = createReactEventComponent(
       ['click'],
-      (context, props) => {
+      undefined,
+      (event, context, props) => {
         if (props.onMagicClick) {
-          const event = {
-            listener: props.onMagicClick,
-            target: context.eventTarget,
+          const syntheticEvent = {
+            target: event.target,
             type: 'magicclick',
           };
-          context.dispatchEvent(event, {discrete: true});
+          context.dispatchEvent(syntheticEvent, props.onMagicClick, {
+            discrete: true,
+          });
         }
       },
     );
@@ -251,7 +277,7 @@ describe('DOMEventResponderSystem', () => {
 
     ReactDOM.render(<Test />, container);
 
-    // Clicking the button should trigger the event responder handleEvent()
+    // Clicking the button should trigger the event responder onEvent()
     let buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
 
@@ -264,37 +290,37 @@ describe('DOMEventResponderSystem', () => {
 
     const LongPressEventComponent = createReactEventComponent(
       ['click'],
-      (context, props) => {
+      undefined,
+      (event, context, props) => {
         const pressEvent = {
-          listener: props.onPress,
-          target: context.eventTarget,
+          target: event.target,
           type: 'press',
         };
-        context.dispatchEvent(pressEvent, {discrete: true});
+        context.dispatchEvent(pressEvent, props.onPress, {discrete: true});
 
-        setTimeout(
-          () =>
-            context.withAsyncDispatching(() => {
-              if (props.onLongPress) {
-                const longPressEvent = {
-                  listener: props.onLongPress,
-                  target: context.eventTarget,
-                  type: 'longpress',
-                };
-                context.dispatchEvent(longPressEvent, {discrete: true});
-              }
+        context.setTimeout(() => {
+          if (props.onLongPress) {
+            const longPressEvent = {
+              target: event.target,
+              type: 'longpress',
+            };
+            context.dispatchEvent(longPressEvent, props.onLongPress, {
+              discrete: true,
+            });
+          }
 
-              if (props.onLongPressChange) {
-                const longPressChangeEvent = {
-                  listener: props.onLongPressChange,
-                  target: context.eventTarget,
-                  type: 'longpresschange',
-                };
-                context.dispatchEvent(longPressChangeEvent, {discrete: true});
-              }
-            }),
-          500,
-        );
+          if (props.onLongPressChange) {
+            const longPressChangeEvent = {
+              target: event.target,
+              type: 'longpresschange',
+            };
+            context.dispatchEvent(
+              longPressChangeEvent,
+              props.onLongPressChange,
+              {discrete: true},
+            );
+          }
+        }, 500);
       },
     );
 
@@ -313,11 +339,318 @@ describe('DOMEventResponderSystem', () => {
 
     ReactDOM.render(<Test />, container);
 
-    // Clicking the button should trigger the event responder handleEvent()
+    // Clicking the button should trigger the event responder onEvent()
     let buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
     jest.runAllTimers();
 
     expect(eventLog).toEqual(['press', 'longpress', 'longpresschange']);
+  });
+
+  it('the event responder onUnmount() function should fire', () => {
+    let onUnmountFired = 0;
+
+    const EventComponent = createReactEventComponent(
+      [],
+      undefined,
+      (event, context, props, state) => {},
+      () => {
+        onUnmountFired++;
+      },
+    );
+
+    const Test = () => (
+      <EventComponent>
+        <button />
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+    ReactDOM.render(null, container);
+    expect(onUnmountFired).toEqual(1);
+  });
+
+  it('the event responder onUnmount() function should fire with state', () => {
+    let counter = 0;
+
+    const EventComponent = createReactEventComponent(
+      [],
+      () => ({
+        incrementAmount: 5,
+      }),
+      (event, context, props, state) => {},
+      (context, props, state) => {
+        counter += state.incrementAmount;
+      },
+    );
+
+    const Test = () => (
+      <EventComponent>
+        <button />
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+    ReactDOM.render(null, container);
+    expect(counter).toEqual(5);
+  });
+
+  it('the event responder onOwnershipChange() function should fire', () => {
+    let onOwnershipChangeFired = 0;
+    let ownershipGained = false;
+    const buttonRef = React.createRef();
+
+    const EventComponent = createReactEventComponent(
+      ['click'],
+      undefined,
+      (event, context, props, state) => {
+        ownershipGained = context.requestOwnership();
+      },
+      undefined,
+      () => {
+        onOwnershipChangeFired++;
+      },
+    );
+
+    const Test = () => (
+      <EventComponent>
+        <button ref={buttonRef} />
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+
+    // Clicking the button should trigger the event responder onEvent()
+    let buttonElement = buttonRef.current;
+    dispatchClickEvent(buttonElement);
+    jest.runAllTimers();
+
+    expect(ownershipGained).toEqual(true);
+    expect(onOwnershipChangeFired).toEqual(1);
+  });
+
+  it('should be possible to get event targets', () => {
+    let queryResult = null;
+    const buttonRef = React.createRef();
+    const divRef = React.createRef();
+    const eventTargetType = Symbol.for('react.event_target.test');
+    const EventTarget = createReactEventTarget(eventTargetType);
+
+    const EventComponent = createReactEventComponent(
+      ['click'],
+      undefined,
+      (event, context, props, state) => {
+        queryResult = Array.from(
+          context.getEventTargetsFromTarget(event.target),
+        );
+      },
+    );
+
+    const Test = () => (
+      <EventComponent>
+        <div ref={divRef}>
+          <EventTarget foo={1} />
+          <button ref={buttonRef}>
+            <EventTarget foo={2} />
+            Press me!
+          </button>
+        </div>
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+
+    let buttonElement = buttonRef.current;
+    let divElement = divRef.current;
+    dispatchClickEvent(buttonElement);
+    jest.runAllTimers();
+
+    expect(queryResult).toEqual([
+      {
+        node: buttonElement,
+        props: {
+          foo: 2,
+        },
+      },
+      {
+        node: divElement,
+        props: {
+          foo: 1,
+        },
+      },
+    ]);
+  });
+
+  it('should be possible to query event targets by type', () => {
+    let queryResult = null;
+    const buttonRef = React.createRef();
+    const divRef = React.createRef();
+    const eventTargetType = Symbol.for('react.event_target.test');
+    const EventTarget = createReactEventTarget(eventTargetType);
+
+    const eventTargetType2 = Symbol.for('react.event_target.test2');
+    const EventTarget2 = createReactEventTarget(eventTargetType2);
+
+    const EventComponent = createReactEventComponent(
+      ['click'],
+      undefined,
+      (event, context, props, state) => {
+        queryResult = context.getEventTargetsFromTarget(
+          event.target,
+          eventTargetType2,
+        );
+      },
+    );
+
+    const Test = () => (
+      <EventComponent>
+        <div ref={divRef}>
+          <EventTarget2 foo={1} />
+          <button ref={buttonRef}>
+            <EventTarget foo={2} />
+            Press me!
+          </button>
+        </div>
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+
+    let buttonElement = buttonRef.current;
+    let divElement = divRef.current;
+    dispatchClickEvent(buttonElement);
+    jest.runAllTimers();
+
+    expect(queryResult).toEqual([
+      {
+        node: divElement,
+        props: {
+          foo: 1,
+        },
+      },
+    ]);
+  });
+
+  it('should be possible to query event targets by key', () => {
+    let queryResult = null;
+    const buttonRef = React.createRef();
+    const divRef = React.createRef();
+    const eventTargetType = Symbol.for('react.event_target.test');
+    const EventTarget = createReactEventTarget(eventTargetType);
+
+    const EventComponent = createReactEventComponent(
+      ['click'],
+      undefined,
+      (event, context, props, state) => {
+        queryResult = context.getEventTargetsFromTarget(
+          event.target,
+          undefined,
+          'a',
+        );
+      },
+    );
+
+    const Test = () => (
+      <EventComponent>
+        <div ref={divRef}>
+          <EventTarget foo={1} />
+          <button ref={buttonRef}>
+            <EventTarget key="a" foo={2} />
+            Press me!
+          </button>
+        </div>
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+
+    let buttonElement = buttonRef.current;
+    dispatchClickEvent(buttonElement);
+    jest.runAllTimers();
+
+    expect(queryResult).toEqual([
+      {
+        node: buttonElement,
+        props: {
+          foo: 2,
+        },
+      },
+    ]);
+  });
+
+  it('should be possible to query event targets by type and key', () => {
+    let queryResult = null;
+    let queryResult2 = null;
+    let queryResult3 = null;
+    const buttonRef = React.createRef();
+    const divRef = React.createRef();
+    const eventTargetType = Symbol.for('react.event_target.test');
+    const EventTarget = createReactEventTarget(eventTargetType);
+
+    const eventTargetType2 = Symbol.for('react.event_target.test2');
+    const EventTarget2 = createReactEventTarget(eventTargetType2);
+
+    const EventComponent = createReactEventComponent(
+      ['click'],
+      undefined,
+      (event, context, props, state) => {
+        queryResult = context.getEventTargetsFromTarget(
+          event.target,
+          eventTargetType2,
+          'a',
+        );
+
+        queryResult2 = context.getEventTargetsFromTarget(
+          event.target,
+          eventTargetType,
+          'c',
+        );
+
+        // Should return an empty array as this doesn't exist
+        queryResult3 = context.getEventTargetsFromTarget(
+          event.target,
+          eventTargetType,
+          'd',
+        );
+      },
+    );
+
+    const Test = () => (
+      <EventComponent>
+        <div ref={divRef}>
+          <EventTarget2 key="a" foo={1} />
+          <EventTarget2 key="b" foo={2} />
+          <button ref={buttonRef}>
+            <EventTarget key="c" foo={3} />
+            Press me!
+          </button>
+        </div>
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+
+    let buttonElement = buttonRef.current;
+    let divElement = divRef.current;
+    dispatchClickEvent(buttonElement);
+    jest.runAllTimers();
+
+    expect(queryResult).toEqual([
+      {
+        node: divElement,
+        props: {
+          foo: 1,
+        },
+      },
+    ]);
+    expect(queryResult2).toEqual([
+      {
+        node: buttonElement,
+        props: {
+          foo: 3,
+        },
+      },
+    ]);
+    expect(queryResult3).toEqual([]);
   });
 });
