@@ -33,7 +33,6 @@ type EventData = {
 type SwipeEventType = 'swipeleft' | 'swiperight' | 'swipeend' | 'swipemove';
 
 type SwipeEvent = {|
-  listener: SwipeEvent => void,
   target: Element | Document,
   type: SwipeEventType,
   diffX?: number,
@@ -43,11 +42,9 @@ type SwipeEvent = {|
 function createSwipeEvent(
   type: SwipeEventType,
   target: Element | Document,
-  listener: SwipeEvent => void,
   eventData?: EventData,
 ): SwipeEvent {
   return {
-    listener,
     target,
     type,
     ...eventData,
@@ -63,8 +60,8 @@ function dispatchSwipeEvent(
   eventData?: EventData,
 ) {
   const target = ((state.swipeTarget: any): Element | Document);
-  const syntheticEvent = createSwipeEvent(name, target, listener, eventData);
-  context.dispatchEvent(syntheticEvent, {discrete});
+  const syntheticEvent = createSwipeEvent(name, target, eventData);
+  context.dispatchEvent(syntheticEvent, listener, {discrete});
 }
 
 type SwipeState = {
