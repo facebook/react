@@ -836,39 +836,40 @@ export default class Store extends EventEmitter {
     this._bridge.removeListener('shutdown', this.onBridgeShutdown);
   };
 
-  // DEBUG
-  __printTree = () => {
-    if (__DEBUG__) {
-      console.group('__printTree()');
-      this._roots.forEach((rootID: number) => {
-        const printElement = (id: number) => {
-          const element = ((this._idToElement.get(id): any): Element);
-          console.log(
-            `${'•'.repeat(element.depth)}${element.id}:${element.displayName ||
-              ''} ${element.key ? `key:"${element.key}"` : ''} (${
-              element.weight
-            })`
-          );
-          element.children.forEach(printElement);
-        };
-        const root = ((this._idToElement.get(rootID): any): Element);
-        console.group(`${rootID}:root (${root.weight})`);
-        root.children.forEach(printElement);
-        console.groupEnd();
-      });
-      console.group(`List of ${this.numElements} elements`);
-      for (let i = 0; i < this.numElements; i++) {
-        //if (i === 4) { debugger }
-        const element = this.getElementAtIndex(i);
-        if (element != null) {
-          console.log(
-            `${'•'.repeat(element.depth)}${i}: ${element.displayName ||
-              'Unknown'}`
-          );
+  // Used for Jest snapshot testing.
+  // May also be useful for visually debugging the tree, so it lives on the Store.
+  __toSnapshot = () => {
+    const snapshotLines = [];
+
+    let rootWeight = 0;
+
+    this._roots.forEach(rootID => {
+      snapshotLines.push('[root]');
+
+      const { weight } = ((this.getElementByID(rootID): any): Element);
+
+      for (let i = rootWeight; i < rootWeight + weight; i++) {
+        const element = ((this.getElementAtIndex(i): any): Element);
+
+        let prefix = ' ';
+        if (element.children.length > 0) {
+          prefix = element.isCollapsed ? '▸' : '▾';
         }
+
+        let key = '';
+        if (element.key !== null) {
+          key = ` key="${element.key}"`;
+        }
+
+        snapshotLines.push(
+          `${'  '.repeat(element.depth + 1)}${prefix} <${element.displayName ||
+            'null'}${key}>`
+        );
       }
-      console.groupEnd();
-      console.groupEnd();
-    }
+
+      rootWeight += weight;
+    });
+
+    return snapshotLines.join('\n');
   };
 }

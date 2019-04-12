@@ -9,6 +9,24 @@
   "jest": {
     "modulePathIgnorePatterns": [
       "<rootDir>/shells"
+    ],
+    "modulePaths": [
+      "<rootDir>"
+    ],
+    "moduleNameMapper": {
+      "^src/(.*)$": "<rootDir>/src/$1"
+    },
+    "setupFiles": [
+      "<rootDir>/src/__tests__/setupEnv"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/src/__tests__/setupTests"
+    ],
+    "snapshotSerializers": [
+      "<rootDir>/src/__tests__/storeSerializer"
+    ],
+    "testMatch": [
+      "**/__tests__/*-test.js"
     ]
   },
   "scripts": {
@@ -22,10 +40,13 @@
     "deploy:firefox": "node ./shells/browser/firefox/deploy",
     "linc": "lint-staged",
     "lint": "eslint '**/*.js'",
+    "lint:ci": "eslint '**/*.js' --max-warnings 0",
     "precommit": "lint-staged",
     "prettier": "prettier --write '**/*.{js,json,css}'",
+    "prettier:ci": "prettier --check '**/*.{js,json,css}'",
     "start": "cd ./shells/dev && opener ./index.html && webpack --config webpack.config.js --watch",
     "test": "jest",
+    "test-debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "test:chrome": "node ./shells/browser/chrome/test",
     "test:firefox": "node ./shells/browser/firefox/test",
     "test:standalone": "cd packages/react-devtools && yarn start",
@@ -52,7 +73,7 @@
     "adm-zip": "^0.4.7",
     "babel-core": "^7.0.0-bridge",
     "babel-eslint": "^9.0.0",
-    "babel-jest": "^23.6.0",
+    "babel-jest": "^24.7.1",
     "babel-loader": "^8.0.4",
     "child-process-promise": "^2.2.1",
     "chrome-launch": "^1.1.4",
@@ -86,9 +107,10 @@
     "gh-pages": "^1.0.0",
     "html2canvas": "^1.0.0-alpha.12",
     "immutable": "3.7.6",
-    "jest": "22.1.4",
+    "jest": "^24.7.1",
     "lerna": "^2.8.0",
     "lint-staged": "^7.0.5",
+    "local-storage-fallback": "^4.1.1",
     "lodash.throttle": "^4.1.1",
     "log-update": "^2.0.0",
     "lru-cache": "^4.1.3",
@@ -97,15 +119,15 @@
     "nullthrows": "^1.0.0",
     "object-assign": "4.0.1",
     "opener": "^1.5.1",
-    "prettier": "^1.16.1",
+    "prettier": "^1.16.4",
     "prop-types": "^15.6.2",
-    "react": "^16.8.4",
+    "react": "^16.9.0-alpha.0",
     "react-color": "^2.11.7",
-    "react-dom": "^16.8.4",
-    "react-is": "^16.8.4",
+    "react-dom": "^16.9.0-alpha.0",
+    "react-is": "^16.9.0-alpha.0",
     "react-virtualized-auto-sizer": "^1.0.2",
     "react-window": "^1.7.2",
-    "scheduler": "^0.13",
+    "scheduler": "^0.14.0-alpha.0",
     "semver": "^5.5.1",
     "style-loader": "^0.23.1",
     "web-ext": "^1.10.1",

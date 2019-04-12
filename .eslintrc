@@ -8,5 +8,9 @@
   },
   "settings": {
     "version": "detect"
+  },
+  "globals": {
+    "__DEV__": "readonly",
+    "jasmine": "readonly"
   }
 }

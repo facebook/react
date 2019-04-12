@@ -1,0 +1,139 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Store should display Suspense nodes properly in various states: 1: loading 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Loading>
+`;
+
+exports[`Store should display Suspense nodes properly in various states: 2: resolved 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Component key="Inside">
+`;
+
+exports[`Store should filter DOM nodes from the store tree: 1: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child>
+    ▾ <Parent>
+        <Child>
+`;
+
+exports[`Store should support collapsing parts of the tree: 1: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+`;
+
+exports[`Store should support collapsing parts of the tree: 2: collapse first Parent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▸ <Parent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+`;
+
+exports[`Store should support collapsing parts of the tree: 3: collapse second Parent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▸ <Parent>
+    ▸ <Parent>
+`;
+
+exports[`Store should support collapsing parts of the tree: 4: expand first Parent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+    ▸ <Parent>
+`;
+
+exports[`Store should support collapsing parts of the tree: 5: collapse Grandparent 1`] = `
+[root]
+  ▸ <Grandparent>
+`;
+
+exports[`Store should support collapsing parts of the tree: 6: expand Grandparent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+    ▸ <Parent>
+`;
+
+exports[`Store should support mount and update operations for multiple roots: 1: mount 1`] = `
+[root]
+  ▾ <Parent key="A">
+      <Child key="0">
+      <Child key="1">
+      <Child key="2">
+[root]
+  ▾ <Parent key="B">
+      <Child key="0">
+      <Child key="1">
+`;
+
+exports[`Store should support mount and update operations for multiple roots: 2: update 1`] = `
+[root]
+  ▾ <Parent key="A">
+      <Child key="0">
+      <Child key="1">
+      <Child key="2">
+      <Child key="3">
+[root]
+  ▾ <Parent key="B">
+      <Child key="0">
+`;
+
+exports[`Store should support mount and update operations for multiple roots: 3: unmount B 1`] = `
+[root]
+  ▾ <Parent key="A">
+      <Child key="0">
+      <Child key="1">
+      <Child key="2">
+      <Child key="3">
+`;
+
+exports[`Store should support mount and update operations for multiple roots: 4: unmount A 1`] = ``;
+
+exports[`Store should support mount and update operations: 1: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+        <Child key="2">
+        <Child key="3">
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+        <Child key="2">
+        <Child key="3">
+`;
+
+exports[`Store should support mount and update operations: 2: update 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+`;
+
+exports[`Store should support mount and update operations: 3: unmount 1`] = ``;

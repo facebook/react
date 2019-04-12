@@ -35,7 +35,6 @@ export default class Bridge extends EventEmitter {
     // - if there *has* been a message flushed in the last BATCH_DURATION ms
     //   (or we're waiting for our setTimeout-0 to fire), then _timeoutID will
     //   be set, and we'll simply add to the queue and wait for that
-
     this._messageQueue.push(event, payload, transferable);
     if (!this._timeoutID) {
       this._timeoutID = setTimeout(this._flush, 0);

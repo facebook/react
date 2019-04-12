@@ -19,6 +19,7 @@ shells/dev/build/*
 [include]
 
 [libs]
+/flow-typed/
 ./flow.js
 
 [lints]
