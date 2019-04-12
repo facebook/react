@@ -30,5 +30,6 @@
 }
 
 .ExpandCollapseToggleSpacer {
+  flex: 0 0 1rem;
   width: 1rem;
 }
