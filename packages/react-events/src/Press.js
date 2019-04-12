@@ -426,7 +426,8 @@ const PressResponder = {
     props: PressProps,
     state: PressState,
   ): void {
-    const {target, type, nativeEvent} = event;
+    const {target, type} = event;
+    const nativeEvent: any = event.nativeEvent;
 
     switch (type) {
       /**
@@ -442,21 +443,23 @@ const PressResponder = {
           const pointerType = getPointerType(nativeEvent);
           state.pointerType = pointerType;
 
-          if (pointerType === 'mouse' || type === 'mousedown') {
-            if (
-              // Ignore right- and middle-clicks
-              nativeEvent.button === 1 ||
-              nativeEvent.button === 2 ||
-              // Ignore pressing on hit slop area with mouse
-              context.isPositionWithinTouchHitTarget(
-                target.ownerDocument,
-                (nativeEvent: any).x,
-                (nativeEvent: any).y,
-              )
-            ) {
-              return;
-            }
+          // Ignore any device buttons except left-mouse and touch/pen contact
+          if (nativeEvent.button > 0) {
+            return;
           }
+
+          // Ignore pressing on hit slop area with mouse
+          if (
+            (pointerType === 'mouse' || type === 'mousedown') &&
+            context.isPositionWithinTouchHitTarget(
+              target.ownerDocument,
+              nativeEvent.x,
+              nativeEvent.y,
+            )
+          ) {
+            return;
+          }
+
           state.pressTarget = target;
           state.isPressWithinResponderRegion = true;
           dispatchPressStartEvents(context, props, state);
@@ -574,7 +577,7 @@ const PressResponder = {
 
           if (type !== 'touchcancel' && props.onPress) {
             // Find if the X/Y of the end touch is still that of the original target
-            const changedTouch = (nativeEvent: any).changedTouches[0];
+            const changedTouch = nativeEvent.changedTouches[0];
             const doc = (target: any).ownerDocument;
             const fromTarget = doc.elementFromPoint(
               changedTouch.screenX,
@@ -607,14 +610,11 @@ const PressResponder = {
        */
       case 'keydown':
       case 'keypress': {
-        if (
-          !context.hasOwnership() &&
-          isValidKeyPress((nativeEvent: any).key)
-        ) {
+        if (!context.hasOwnership() && isValidKeyPress(nativeEvent.key)) {
           if (state.isPressed) {
             // Prevent spacebar press from scrolling the window
-            if ((nativeEvent: any).key === ' ') {
-              (nativeEvent: any).preventDefault();
+            if (nativeEvent.key === ' ') {
+              nativeEvent.preventDefault();
             }
           } else {
             const pointerType = getPointerType(nativeEvent);
@@ -627,7 +627,7 @@ const PressResponder = {
         break;
       }
       case 'keyup': {
-        if (state.isPressed && isValidKeyPress((nativeEvent: any).key)) {
+        if (state.isPressed && isValidKeyPress(nativeEvent.key)) {
           const wasLongPressed = state.isLongPressed;
           dispatchPressEndEvents(context, props, state);
           if (state.pressTarget !== null && props.onPress) {
@@ -659,11 +659,11 @@ const PressResponder = {
 
       case 'click': {
         if (isAnchorTagElement(target)) {
-          const {ctrlKey, metaKey, shiftKey} = ((nativeEvent: any): MouseEvent);
+          const {ctrlKey, metaKey, shiftKey} = (nativeEvent: MouseEvent);
           // Check "open in new window/tab" and "open context menu" key modifiers
           const preventDefault = props.preventDefault;
           if (preventDefault !== false && !shiftKey && !metaKey && !ctrlKey) {
-            (nativeEvent: any).preventDefault();
+            nativeEvent.preventDefault();
           }
         }
         break;
@@ -672,7 +672,7 @@ const PressResponder = {
       case 'contextmenu': {
         if (state.isPressed) {
           if (props.preventDefault !== false) {
-            (nativeEvent: any).preventDefault();
+            nativeEvent.preventDefault();
           } else {
             state.shouldSkipMouseAfterTouch = false;
             dispatchPressEndEvents(context, props, state);
