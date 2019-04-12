@@ -2,8 +2,10 @@
 
 const AdmZip = require('adm-zip');
 const { execSync } = require('child_process');
+const { readFileSync, writeFileSync } = require('fs');
 const { copy, ensureDir, move, remove } = require('fs-extra');
 const { join } = require('path');
+const { getGitCommit } = require('../../utils');
 
 // These files are copied along with Webpack-bundled files
 // to produce the final web extension
@@ -52,12 +54,18 @@ const build = async (tempPath, manifestPath) => {
   // Make temp dir
   await ensureDir(zipPath);
 
+  const copiedManifestPath = join(zipPath, 'manifest.json');
+
   // Copy unbuilt source files to zip dir to be packaged:
   await copy(binPath, join(zipPath, 'build'));
-  await copy(manifestPath, join(zipPath, 'manifest.json'));
+  await copy(manifestPath, copiedManifestPath);
   await Promise.all(
     STATIC_FILES.map(file => copy(join(__dirname, file), join(zipPath, file)))
   );
+
+  let manifest = JSON.parse(readFileSync(copiedManifestPath).toString());
+  manifest.description += `\n\nCreated from revision ${getGitCommit()}`;
+  writeFileSync(copiedManifestPath, JSON.stringify(manifest, null, 2));
 
   // Pack the extension
   const zip = new AdmZip();
