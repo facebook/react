@@ -9020,10 +9020,10 @@ react-virtualized-auto-sizer@^1.0.2:
   resolved "https://registry.yarnpkg.com/react-virtualized-auto-sizer/-/react-virtualized-auto-sizer-1.0.2.tgz#a61dd4f756458bbf63bd895a92379f9b70f803bd"
   integrity sha512-MYXhTY1BZpdJFjUovvYHVBmkq79szK/k7V3MO+36gJkWGkrXKtyr4vCPtpphaTLRAdDNoYEYFZWE8LjN+PIHNg==
 
-react-window@^1.7.2:
-  version "1.7.2"
-  resolved "https://registry.yarnpkg.com/react-window/-/react-window-1.7.2.tgz#2e1528d5b9991e863302bfe74cb52d0ff7082e78"
-  integrity sha512-GK1gxSeGPLBDSQhPmYhCYrtf5MkGK8rwVjeyPgxZLvLRw0wvyzKZPMc/jfemiGNGfuJyW3kx1z6QR9uK7r2XdA==
+react-window@^1.8.0:
+  version "1.8.0"
+  resolved "https://registry.yarnpkg.com/react-window/-/react-window-1.8.0.tgz#08196d1e0749fe60d0b29bb94ae682d37666e620"
+  integrity sha512-impIDEhm3+9/Y8ctiFaUI07a8Y/1jG0U4ONRUmYe7IsU+UQ2B0Ayyfbr+3R3nwAJpVGHx5pfI5SoDBt1o07YFw==
   dependencies:
     "@babel/runtime" "^7.0.0"
     memoize-one ">=3.1.1 <6"

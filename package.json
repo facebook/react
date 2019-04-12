@@ -129,7 +129,7 @@
     "react-dom": "^16.9.0-alpha.0",
     "react-is": "^16.9.0-alpha.0",
     "react-virtualized-auto-sizer": "^1.0.2",
-    "react-window": "^1.7.2",
+    "react-window": "^1.8.0",
     "scheduler": "^0.14.0-alpha.0",
     "semver": "^5.5.1",
     "style-loader": "^0.23.1",
