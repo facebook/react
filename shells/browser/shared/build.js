@@ -17,7 +17,7 @@ const preProcess = async (destinationPath, tempPath) => {
   await ensureDir(tempPath); // Create temp dir for this new build
 };
 
-const build = async (tempPath, manifestPath) => {
+const build = async (tempPath, manifestPath, manifestVersion) => {
   const binPath = join(tempPath, 'bin');
   const zipPath = join(tempPath, 'zip');
 
@@ -63,8 +63,14 @@ const build = async (tempPath, manifestPath) => {
     STATIC_FILES.map(file => copy(join(__dirname, file), join(zipPath, file)))
   );
 
-  let manifest = JSON.parse(readFileSync(copiedManifestPath).toString());
-  manifest.description += `\n\nCreated from revision ${getGitCommit()}`;
+  const commit = getGitCommit();
+
+  const manifest = JSON.parse(readFileSync(copiedManifestPath).toString());
+  manifest.description += `\n\nCreated from revision ${commit}`;
+  if (manifestVersion) {
+    manifest.version = manifestVersion;
+    manifest.version_name = `${manifestVersion} ${commit}`;
+  }
   writeFileSync(copiedManifestPath, JSON.stringify(manifest, null, 2));
 
   // Pack the extension
@@ -84,7 +90,7 @@ const postProcess = async (tempPath, destinationPath) => {
   await remove(tempPath); // Clean up temp directory and files
 };
 
-const main = async buildId => {
+const main = async (buildId, manifestVersion) => {
   const root = join(__dirname, '..', buildId);
   const manifestPath = join(root, 'manifest.json');
   const destinationPath = join(root, 'build');
@@ -92,7 +98,7 @@ const main = async buildId => {
   try {
     const tempPath = join(__dirname, 'build', buildId);
     await preProcess(destinationPath, tempPath);
-    await build(tempPath, manifestPath);
+    await build(tempPath, manifestPath, manifestVersion);
 
     const builtUnpackedPath = join(destinationPath, 'unpacked');
     await postProcess(tempPath, destinationPath);
