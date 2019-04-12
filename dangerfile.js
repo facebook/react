@@ -118,7 +118,7 @@ function git(args) {
   await git('fetch upstream');
   const baseCommit = await git(`merge-base HEAD upstream/${upstreamRef}`);
 
-  let resultsResponse = null;
+  let previousBuildResults = null;
   try {
     let baseCIBuildId = null;
     const statusesResponse = await fetch(
@@ -154,7 +154,8 @@ function git(args) {
     for (let i = 0; i < baseArtifactsInfo.length; i++) {
       const info = baseArtifactsInfo[i];
       if (info.path === 'home/circleci/project/scripts/rollup/results.json') {
-        resultsResponse = await fetch(info.url);
+        const resultsResponse = await fetch(info.url);
+        previousBuildResults = await resultsResponse.json();
         break;
       }
     }
@@ -163,14 +164,13 @@ function git(args) {
     return;
   }
 
-  if (resultsResponse === null) {
+  if (previousBuildResults === null) {
     warn(`Could not find build artifacts for base commit: ${baseCommit}`);
     return;
   }
 
   // Take the JSON of the build response and
   // make an array comparing the results for printing
-  const previousBuildResults = await resultsResponse.json();
   const results = generateResultsArray(
     currentBuildResults,
     previousBuildResults
