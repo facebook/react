@@ -145,6 +145,7 @@ export type ReactResponderDispatchEventOptions = {
 export type ReactResponderContext = {
   dispatchEvent: (
     eventObject: Object,
+    listener: (Object) => void,
     otpions: ReactResponderDispatchEventOptions,
   ) => void,
   dispatchStopPropagation: (passive?: boolean) => void,

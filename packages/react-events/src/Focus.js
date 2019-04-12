@@ -27,7 +27,6 @@ type FocusState = {
 type FocusEventType = 'focus' | 'blur' | 'focuschange';
 
 type FocusEvent = {|
-  listener: FocusEvent => void,
   target: Element | Document,
   type: FocusEventType,
 |};
@@ -40,10 +39,8 @@ const targetEventTypes = [
 function createFocusEvent(
   type: FocusEventType,
   target: Element | Document,
-  listener: FocusEvent => void,
 ): FocusEvent {
   return {
-    listener,
     target,
     type,
   };
@@ -59,15 +56,15 @@ function dispatchFocusInEvents(
     return;
   }
   if (props.onFocus) {
-    const syntheticEvent = createFocusEvent('focus', target, props.onFocus);
-    context.dispatchEvent(syntheticEvent, {discrete: true});
+    const syntheticEvent = createFocusEvent('focus', target);
+    context.dispatchEvent(syntheticEvent, props.onFocus, {discrete: true});
   }
   if (props.onFocusChange) {
     const listener = () => {
       props.onFocusChange(true);
     };
-    const syntheticEvent = createFocusEvent('focuschange', target, listener);
-    context.dispatchEvent(syntheticEvent, {discrete: true});
+    const syntheticEvent = createFocusEvent('focuschange', target);
+    context.dispatchEvent(syntheticEvent, listener, {discrete: true});
   }
 }
 
@@ -81,15 +78,15 @@ function dispatchFocusOutEvents(
     return;
   }
   if (props.onBlur) {
-    const syntheticEvent = createFocusEvent('blur', target, props.onBlur);
-    context.dispatchEvent(syntheticEvent, {discrete: true});
+    const syntheticEvent = createFocusEvent('blur', target);
+    context.dispatchEvent(syntheticEvent, props.onBlur, {discrete: true});
   }
   if (props.onFocusChange) {
     const listener = () => {
       props.onFocusChange(false);
     };
-    const syntheticEvent = createFocusEvent('focuschange', target, listener);
-    context.dispatchEvent(syntheticEvent, {discrete: true});
+    const syntheticEvent = createFocusEvent('focuschange', target);
+    context.dispatchEvent(syntheticEvent, listener, {discrete: true});
   }
 }
 

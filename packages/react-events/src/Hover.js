@@ -37,7 +37,6 @@ type HoverState = {
 type HoverEventType = 'hoverstart' | 'hoverend' | 'hoverchange' | 'hovermove';
 
 type HoverEvent = {|
-  listener: HoverEvent => void,
   target: Element | Document,
   type: HoverEventType,
 |};
@@ -60,10 +59,8 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
 function createHoverEvent(
   type: HoverEventType,
   target: Element | Document,
-  listener: HoverEvent => void,
 ): HoverEvent {
   return {
-    listener,
     target,
     type,
   };
@@ -81,9 +78,8 @@ function dispatchHoverChangeEvent(
   const syntheticEvent = createHoverEvent(
     'hoverchange',
     ((state.hoverTarget: any): Element | Document),
-    listener,
   );
-  context.dispatchEvent(syntheticEvent, {discrete: true});
+  context.dispatchEvent(syntheticEvent, listener, {discrete: true});
 }
 
 function dispatchHoverStartEvents(
@@ -92,6 +88,7 @@ function dispatchHoverStartEvents(
   props: HoverProps,
   state: HoverState,
 ): void {
+  const target = state.hoverTarget;
   if (event !== null) {
     const {nativeEvent} = event;
     if (
@@ -114,10 +111,11 @@ function dispatchHoverStartEvents(
     if (props.onHoverStart) {
       const syntheticEvent = createHoverEvent(
         'hoverstart',
-        ((state.hoverTarget: any): Element | Document),
-        props.onHoverStart,
+        ((target: any): Element | Document),
       );
-      context.dispatchEvent(syntheticEvent, {discrete: true});
+      context.dispatchEvent(syntheticEvent, props.onHoverStart, {
+        discrete: true,
+      });
     }
     if (props.onHoverChange) {
       dispatchHoverChangeEvent(context, props, state);
@@ -171,9 +169,8 @@ function dispatchHoverEndEvents(
       const syntheticEvent = createHoverEvent(
         'hoverend',
         ((target: any): Element | Document),
-        props.onHoverEnd,
       );
-      context.dispatchEvent(syntheticEvent, {discrete: true});
+      context.dispatchEvent(syntheticEvent, props.onHoverEnd, {discrete: true});
     }
     if (props.onHoverChange) {
       dispatchHoverChangeEvent(context, props, state);
@@ -313,9 +310,10 @@ const HoverResponder = {
                 const syntheticEvent = createHoverEvent(
                   'hovermove',
                   event.target,
-                  props.onHoverMove,
                 );
-                context.dispatchEvent(syntheticEvent, {discrete: false});
+                context.dispatchEvent(syntheticEvent, props.onHoverMove, {
+                  discrete: false,
+                });
               }
             }
           }
