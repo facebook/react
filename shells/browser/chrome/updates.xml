@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>
+  <app appid='akkpaehpnolchhkkfbedcdcikfdnjobk'>
+    <updatecheck codebase='https://react-devtools-experimental-chrome.now.sh/ReactDevTools.crx' version='4.0.0' />
+  </app>
+</gupdate>
