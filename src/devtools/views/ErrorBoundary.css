@@ -14,7 +14,7 @@
 
 .Stack {
   margin-top: 0.5rem;
-  white-space: pre;
+  white-space: pre-wrap;
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-monospace-small);
   background-color: hsl(0, 100%, 97%);
