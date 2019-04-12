@@ -85,6 +85,13 @@ describe('Event responder: Press', () => {
       expect(onPressStart).toHaveBeenCalledTimes(1);
     });
 
+    it('ignores any events not caused by left-click or touch/pen contact', () => {
+      ref.current.dispatchEvent(createPointerEvent('pointerdown', {button: 1}));
+      ref.current.dispatchEvent(createPointerEvent('pointerdown', {button: 5}));
+      ref.current.dispatchEvent(createPointerEvent('mousedown', {button: 2}));
+      expect(onPressStart).toHaveBeenCalledTimes(0);
+    });
+
     it('is called once after "keydown" events for Enter', () => {
       ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: 'Enter'}));
       ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: 'Enter'}));
