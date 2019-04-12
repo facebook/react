@@ -147,6 +147,7 @@ function dispatchHoverEndEvents(
   props: HoverProps,
   state: HoverState,
 ) {
+  const target = state.hoverTarget;
   if (event !== null) {
     const {nativeEvent} = event;
     if (
@@ -169,7 +170,7 @@ function dispatchHoverEndEvents(
     if (props.onHoverEnd) {
       const syntheticEvent = createHoverEvent(
         'hoverend',
-        ((state.hoverTarget: any): Element | Document),
+        ((target: any): Element | Document),
         props.onHoverEnd,
       );
       context.dispatchEvent(syntheticEvent, {discrete: true});
