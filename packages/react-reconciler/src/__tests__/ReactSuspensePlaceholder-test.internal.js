@@ -17,7 +17,6 @@ let ReactCache;
 let Suspense;
 let TextResource;
 let textResourceShouldFail;
-let enableNewScheduler;
 
 describe('ReactSuspensePlaceholder', () => {
   beforeEach(() => {
@@ -31,7 +30,6 @@ describe('ReactSuspensePlaceholder', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     ReactCache = require('react-cache');
-    enableNewScheduler = ReactFeatureFlags.enableNewScheduler;
 
     Profiler = React.Profiler;
     Suspense = React.Suspense;
@@ -325,16 +323,8 @@ describe('ReactSuspensePlaceholder', () => {
 
         jest.advanceTimersByTime(1000);
 
-        if (enableNewScheduler) {
-          expect(Scheduler).toHaveYielded(['Promise resolved [Loaded]']);
-          expect(Scheduler).toFlushExpired(['Loaded']);
-        } else {
-          expect(Scheduler).toHaveYielded([
-            'Promise resolved [Loaded]',
-            'Loaded',
-          ]);
-        }
-
+        expect(Scheduler).toHaveYielded(['Promise resolved [Loaded]']);
+        expect(Scheduler).toFlushExpired(['Loaded']);
         expect(ReactNoop).toMatchRenderedOutput('LoadedText');
         expect(onRender).toHaveBeenCalledTimes(2);
 
@@ -434,16 +424,8 @@ describe('ReactSuspensePlaceholder', () => {
 
         jest.advanceTimersByTime(1000);
 
-        if (enableNewScheduler) {
-          expect(Scheduler).toHaveYielded(['Promise resolved [Loaded]']);
-          expect(Scheduler).toFlushExpired(['Loaded']);
-        } else {
-          expect(Scheduler).toHaveYielded([
-            'Promise resolved [Loaded]',
-            'Loaded',
-          ]);
-        }
-
+        expect(Scheduler).toHaveYielded(['Promise resolved [Loaded]']);
+        expect(Scheduler).toFlushExpired(['Loaded']);
         expect(ReactNoop).toMatchRenderedOutput('LoadedNew');
         expect(onRender).toHaveBeenCalledTimes(4);
 
