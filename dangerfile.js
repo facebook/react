@@ -32,7 +32,7 @@ const {generateResultsArray} = require('./scripts/rollup/stats');
 const {existsSync, readFileSync} = require('fs');
 const {exec} = require('child_process');
 
-if (!existsSync('./scripts/rollup/results.json')) {
+if (!existsSync('./build/bundle-sizes.json')) {
   // This indicates the build failed previously.
   // In that case, there's nothing for the Dangerfile to do.
   // Exit early to avoid leaving a redundant (and potentially confusing) PR comment.
@@ -40,7 +40,7 @@ if (!existsSync('./scripts/rollup/results.json')) {
 }
 
 const currentBuildResults = JSON.parse(
-  readFileSync('./scripts/rollup/results.json')
+  readFileSync('./build/bundle-sizes.json')
 );
 
 /**
@@ -118,7 +118,7 @@ function git(args) {
   await git('fetch upstream');
   const baseCommit = await git(`merge-base HEAD upstream/${upstreamRef}`);
 
-  let resultsResponse = null;
+  let previousBuildResults = null;
   try {
     let baseCIBuildId = null;
     const statusesResponse = await fetch(
@@ -153,8 +153,9 @@ function git(args) {
 
     for (let i = 0; i < baseArtifactsInfo.length; i++) {
       const info = baseArtifactsInfo[i];
-      if (info.path === 'home/circleci/project/scripts/rollup/results.json') {
-        resultsResponse = await fetch(info.url);
+      if (info.path === 'home/circleci/project/build/bundle-sizes.json') {
+        const resultsResponse = await fetch(info.url);
+        previousBuildResults = await resultsResponse.json();
         break;
       }
     }
@@ -163,14 +164,13 @@ function git(args) {
     return;
   }
 
-  if (resultsResponse === null) {
+  if (previousBuildResults === null) {
     warn(`Could not find build artifacts for base commit: ${baseCommit}`);
     return;
   }
 
   // Take the JSON of the build response and
   // make an array comparing the results for printing
-  const previousBuildResults = await resultsResponse.json();
   const results = generateResultsArray(
     currentBuildResults,
     previousBuildResults
