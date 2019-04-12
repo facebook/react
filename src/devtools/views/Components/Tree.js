@@ -27,7 +27,9 @@ export type ItemData = {|
   baseDepth: number,
   numElements: number,
   getElementAtIndex: (index: number) => Element | null,
+  isNavigatingWithKeyboard: boolean,
   lastScrolledIDRef: { current: number | null },
+  onElementMouseEnter: (id: number) => void,
   treeFocused: boolean,
 |};
 
@@ -50,6 +52,9 @@ export default function Tree(props: Props) {
   } = useContext(TreeContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
+  const [isNavigatingWithKeyboard, setIsNavigatingWithKeyboard] = useState(
+    false
+  );
   // $FlowFixMe https://github.com/facebook/flow/issues/7341
   const listRef = useRef<FixedSizeList<ItemData> | null>(null);
   const treeRef = useRef<HTMLDivElement | null>(null);
@@ -101,8 +106,6 @@ export default function Tree(props: Props) {
       }
 
       let element;
-
-      // eslint-disable-next-line default-case
       switch (event.key) {
         case 'ArrowDown':
           event.preventDefault();
@@ -140,7 +143,10 @@ export default function Tree(props: Props) {
           event.preventDefault();
           selectPreviousElementInTree();
           break;
+        default:
+          return;
       }
+      setIsNavigatingWithKeyboard(true);
     };
 
     // It's important to listen to the ownerDocument to support the browser extension.
@@ -161,8 +167,8 @@ export default function Tree(props: Props) {
     store,
   ]);
 
+  // Focus management.
   const handleBlur = useCallback(() => setTreeFocused(false));
-
   const handleFocus = useCallback(() => {
     setTreeFocused(true);
 
@@ -187,6 +193,53 @@ export default function Tree(props: Props) {
     [selectedElementID, selectOwner]
   );
 
+  const highlightElementInDOM = useCallback(
+    (id: number) => {
+      const element = store.getElementByID(id);
+      const rendererID = store.getRendererIDForElement(id);
+      if (element !== null) {
+        bridge.send('highlightElementInDOM', {
+          displayName: element.displayName,
+          hideAfterTimeout: false,
+          id,
+          rendererID,
+          scrollIntoView: false,
+        });
+      }
+    },
+    [store, bridge]
+  );
+
+  // If we switch the selected element while using the keyboard,
+  // start highlighting it in the DOM instead of the last hovered node.
+  useEffect(() => {
+    if (isNavigatingWithKeyboard && selectedElementID !== null) {
+      highlightElementInDOM(selectedElementID);
+    }
+  }, [isNavigatingWithKeyboard, highlightElementInDOM, selectedElementID]);
+
+  // Highlight last hovered element.
+  const handleElementMouseEnter = useCallback(
+    id => {
+      // Ignore hover while we're navigating with keyboard.
+      // This avoids flicker from the hovered nodes under the mouse.
+      if (!isNavigatingWithKeyboard) {
+        highlightElementInDOM(id);
+      }
+    },
+    [isNavigatingWithKeyboard, highlightElementInDOM]
+  );
+
+  const handleMouseMove = useCallback(() => {
+    // We started using the mouse again.
+    // This will enable hover styles in individual rows.
+    setIsNavigatingWithKeyboard(false);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    bridge.send('clearHighlightedElementInDOM');
+  }, [bridge]);
+
   // Let react-window know to re-render any time the underlying tree data changes.
   // This includes the owner context, since it controls a filtered view of the tree.
   const itemData = useMemo<ItemData>(
@@ -194,15 +247,21 @@ export default function Tree(props: Props) {
       baseDepth,
       numElements,
       getElementAtIndex,
+      isNavigatingWithKeyboard,
+      onElementMouseEnter: handleElementMouseEnter,
       lastScrolledIDRef,
       treeFocused,
     }),
-    [baseDepth, numElements, getElementAtIndex, lastScrolledIDRef, treeFocused]
+    [
+      baseDepth,
+      numElements,
+      getElementAtIndex,
+      isNavigatingWithKeyboard,
+      handleElementMouseEnter,
+      lastScrolledIDRef,
+      treeFocused,
+    ]
   );
-
-  const handleMouseLeave = useCallback(() => {
-    bridge.send('clearHighlightedElementInDOM');
-  }, [bridge]);
 
   return (
     <div className={styles.Tree} ref={treeRef}>
@@ -215,6 +274,7 @@ export default function Tree(props: Props) {
         onBlur={handleBlur}
         onFocus={handleFocus}
         onKeyPress={handleKeyPress}
+        onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         ref={focusTargetRef}
         tabIndex={0}

@@ -7,13 +7,14 @@ import React, {
   useLayoutEffect,
   useMemo,
   useRef,
+  useState,
 } from 'react';
 import { ElementTypeClass, ElementTypeFunction } from 'src/devtools/types';
 import Store from 'src/devtools/store';
 import ButtonIcon from '../ButtonIcon';
 import { createRegExp } from '../utils';
 import { TreeContext } from './TreeContext';
-import { BridgeContext, StoreContext } from '../context';
+import { StoreContext } from '../context';
 
 import type { ItemData } from './Tree';
 import type { Element } from './types';
@@ -27,6 +28,7 @@ type Props = {
 };
 
 export default function ElementView({ data, index, style }: Props) {
+  const [isHovered, setIsHovered] = useState(false);
   const {
     baseDepth,
     getElementAtIndex,
@@ -35,15 +37,18 @@ export default function ElementView({ data, index, style }: Props) {
     selectedElementID,
     selectElementByID,
   } = useContext(TreeContext);
-  const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
   const element = getElementAtIndex(index);
 
+  const {
+    lastScrolledIDRef,
+    treeFocused,
+    isNavigatingWithKeyboard,
+    onElementMouseEnter,
+  } = data;
   const id = element === null ? null : element.id;
   const isSelected = selectedElementID === id;
-  const lastScrolledIDRef = data.lastScrolledIDRef;
-  const treeFocused = data.treeFocused;
 
   const handleDoubleClick = useCallback(() => {
     if (id !== null) {
@@ -88,20 +93,16 @@ export default function ElementView({ data, index, style }: Props) {
     [id, selectElementByID]
   );
 
-  const rendererID = id !== null ? store.getRendererIDForElement(id) : null;
-  // Individual elements don't have a corresponding leave handler.
-  // Instead, it's implemented on the tree level.
   const handleMouseEnter = useCallback(() => {
-    if (element !== null && id !== null && rendererID !== null) {
-      bridge.send('highlightElementInDOM', {
-        displayName: element.displayName,
-        hideAfterTimeout: false,
-        id,
-        rendererID,
-        scrollIntoView: false,
-      });
+    setIsHovered(true);
+    if (id !== null) {
+      onElementMouseEnter(id);
     }
-  }, [bridge, element, id, rendererID]);
+  }, [onElementMouseEnter, id]);
+
+  const handleMouseLeave = useCallback(() => {
+    setIsHovered(false);
+  }, []);
 
   // Handle elements that are removed from the tree while an async render is in progress.
   if (element == null) {
@@ -121,12 +122,15 @@ export default function ElementView({ data, index, style }: Props) {
     className = treeFocused
       ? styles.SelectedElement
       : styles.InactiveSelectedElement;
+  } else if (isHovered && !isNavigatingWithKeyboard) {
+    className = styles.HoveredElement;
   }
 
   return (
     <div
       className={className}
       onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       onMouseDown={handleMouseDown}
       onDoubleClick={handleDoubleClick}
       style={{
