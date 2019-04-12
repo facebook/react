@@ -645,11 +645,17 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   const roots = new Map();
   const DEFAULT_ROOT_ID = '<default>';
 
-  const {flushPassiveEffects, batchedUpdates} = NoopRenderer;
+  const {
+    flushPassiveEffects,
+    batchedUpdates,
+    ReactActingUpdatesSigil,
+  } = NoopRenderer;
 
   // this act() implementation should be exactly the same in
   // ReactTestUtilsAct.js, ReactTestRendererAct.js, createReactNoop.js
 
+  // we track the 'depth' of the act() calls with this counter,
+  // so we can tell if any async act() calls try to run in parallel.
   let actingUpdatesScopeDepth = 0;
 
   function flushEffectsAndMicroTasks(onDone: (err: ?Error) => void) {
@@ -669,18 +675,18 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   function act(callback: () => Thenable) {
     let previousActingUpdatesScopeDepth;
+    let previousActingUpdatesSigil;
     if (__DEV__) {
       previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
+      previousActingUpdatesSigil = ReactShouldWarnActingUpdates.current;
       actingUpdatesScopeDepth++;
-      ReactShouldWarnActingUpdates.current = true;
+      ReactShouldWarnActingUpdates.current = ReactActingUpdatesSigil;
     }
 
     function onDone() {
       if (__DEV__) {
         actingUpdatesScopeDepth--;
-        if (actingUpdatesScopeDepth === 0) {
-          ReactShouldWarnActingUpdates.current = false;
-        }
+        ReactShouldWarnActingUpdates.current = previousActingUpdatesSigil;
         if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
           // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
           warningWithoutStack(

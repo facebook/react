@@ -35,6 +35,7 @@ import {
   requestCurrentTime,
   warnIfNotCurrentlyActingUpdatesInDev,
   markRenderEventTime,
+  warnIfNotScopedWithMatchingAct,
 } from './ReactFiberScheduler';
 
 import invariant from 'shared/invariant';
@@ -1180,6 +1181,7 @@ function dispatchAction<S, A>(
       // further, this isn't a test file, so flow doesn't recognize the symbol. So...
       // $FlowExpectedError - because requirements don't give a damn about your type sigs.
       if ('undefined' !== typeof jest) {
+        warnIfNotScopedWithMatchingAct(fiber);
         warnIfNotCurrentlyActingUpdatesInDev(fiber);
       }
     }

@@ -159,6 +159,7 @@ import {
   clearCaughtError,
 } from 'shared/ReactErrorUtils';
 import {onCommitRoot} from './ReactFiberDevToolsHook';
+import ReactActingUpdatesSigil from './ReactActingUpdatesSigil';
 
 const ceil = Math.ceil;
 
@@ -2077,11 +2078,38 @@ function warnAboutInvalidUpdatesOnClassComponentsInDEV(fiber) {
   }
 }
 
+export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
+  if (__DEV__) {
+    if (
+      ReactShouldWarnActingUpdates.current !== null &&
+      ReactShouldWarnActingUpdates.current !== ReactActingUpdatesSigil
+    ) {
+      // it looks like we're using the wrong matching act(), so log a warning
+      warningWithoutStack(
+        false,
+        "It looks like you're using the wrong act() around your interactions.\n" +
+          'Be sure to use the matching version of act() corresponding to your renderer. e.g. -\n' +
+          "for react-dom, import {act} from 'react-test-utils';\n" +
+          'for react-test-renderer, const {act} = TestRenderer.' +
+          '%s',
+        getStackByFiberInDevAndProd(fiber),
+      );
+    }
+  }
+}
+
+// in a test-like environment, we want to warn if dispatchAction() is
+// called outside of a TestUtils.act(...)/batchedUpdates/render call.
+// so we have a a step counter for when we descend/ascend from
+// act() calls, and test on it for when to warn
+// It's a tuple with a single value. Look into ReactTestUtilsAct as an
+// example of how we change the value
+
 function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
   if (__DEV__) {
     if (
       workPhase === NotWorking &&
-      ReactShouldWarnActingUpdates.current === false
+      ReactShouldWarnActingUpdates.current !== ReactActingUpdatesSigil
     ) {
       warningWithoutStack(
         false,

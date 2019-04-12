@@ -31,6 +31,7 @@ const [
   runEventsInBatch,
   /* eslint-enable no-unused-vars */
   flushPassiveEffects,
+  ReactActingUpdatesSigil,
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
 
 const batchedUpdates = ReactDOM.unstable_batchedUpdates;
@@ -61,18 +62,18 @@ function flushEffectsAndMicroTasks(onDone: (err: ?Error) => void) {
 
 function act(callback: () => Thenable) {
   let previousActingUpdatesScopeDepth;
+  let previousActingUpdatesSigil;
   if (__DEV__) {
     previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
+    previousActingUpdatesSigil = ReactShouldWarnActingUpdates.current;
     actingUpdatesScopeDepth++;
-    ReactShouldWarnActingUpdates.current = true;
+    ReactShouldWarnActingUpdates.current = ReactActingUpdatesSigil;
   }
 
   function onDone() {
     if (__DEV__) {
       actingUpdatesScopeDepth--;
-      if (actingUpdatesScopeDepth === 0) {
-        ReactShouldWarnActingUpdates.current = false;
-      }
+      ReactShouldWarnActingUpdates.current = previousActingUpdatesSigil;
       if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
         // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
         warningWithoutStack(
