@@ -127,15 +127,22 @@ function git(args) {
     const statuses = await statusesResponse.json();
     for (let i = 0; i < statuses.length; i++) {
       const status = statuses[i];
-      if (status.context === 'ci/circleci' && status.state === 'success') {
-        baseCIBuildId = /\/facebook\/react\/([0-9]+)/.exec(
-          status.target_url
-        )[1];
+      if (status.context === 'ci/circleci') {
+        if (status.state === 'success') {
+          baseCIBuildId = /\/facebook\/react\/([0-9]+)/.exec(
+            status.target_url
+          )[1];
+          break;
+        }
+        if (status.state === 'failure') {
+          warn(`Base commit is broken: ${baseCommit}`);
+          return;
+        }
       }
     }
 
     if (baseCIBuildId === null) {
-      warn(`Base commit is broken: ${baseCommit}`);
+      warn(`Could not find build artifacts for base commit: ${baseCommit}`);
       return;
     }
 
