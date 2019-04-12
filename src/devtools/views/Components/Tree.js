@@ -27,7 +27,7 @@ export type ItemData = {|
   baseDepth: number,
   numElements: number,
   getElementAtIndex: (index: number) => Element | null,
-  isNavigatingWithKeyboard: boolean,
+  isUsingKeyboardOrSearch: boolean,
   lastScrolledIDRef: { current: number | null },
   onElementMouseEnter: (id: number) => void,
   treeFocused: boolean,
@@ -52,9 +52,7 @@ export default function Tree(props: Props) {
   } = useContext(TreeContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
-  const [isNavigatingWithKeyboard, setIsNavigatingWithKeyboard] = useState(
-    false
-  );
+  const [isUsingKeyboardOrSearch, setIsUsingKeyboardOrSearch] = useState(false);
   // $FlowFixMe https://github.com/facebook/flow/issues/7341
   const listRef = useRef<FixedSizeList<ItemData> | null>(null);
   const treeRef = useRef<HTMLDivElement | null>(null);
@@ -146,7 +144,7 @@ export default function Tree(props: Props) {
         default:
           return;
       }
-      setIsNavigatingWithKeyboard(true);
+      setIsUsingKeyboardOrSearch(true);
     };
 
     // It's important to listen to the ownerDocument to support the browser extension.
@@ -213,32 +211,47 @@ export default function Tree(props: Props) {
   // If we switch the selected element while using the keyboard,
   // start highlighting it in the DOM instead of the last hovered node.
   useEffect(() => {
-    if (isNavigatingWithKeyboard && selectedElementID !== null) {
-      highlightElementInDOM(selectedElementID);
+    if (isUsingKeyboardOrSearch) {
+      if (selectedElementID !== null) {
+        highlightElementInDOM(selectedElementID);
+      } else {
+        bridge.send('clearHighlightedElementInDOM');
+      }
     }
-  }, [isNavigatingWithKeyboard, highlightElementInDOM, selectedElementID]);
+  }, [
+    bridge,
+    isUsingKeyboardOrSearch,
+    highlightElementInDOM,
+    selectedElementID,
+  ]);
 
   // Highlight last hovered element.
   const handleElementMouseEnter = useCallback(
     id => {
       // Ignore hover while we're navigating with keyboard.
       // This avoids flicker from the hovered nodes under the mouse.
-      if (!isNavigatingWithKeyboard) {
+      if (!isUsingKeyboardOrSearch) {
         highlightElementInDOM(id);
       }
     },
-    [isNavigatingWithKeyboard, highlightElementInDOM]
+    [isUsingKeyboardOrSearch, highlightElementInDOM]
   );
 
   const handleMouseMove = useCallback(() => {
     // We started using the mouse again.
     // This will enable hover styles in individual rows.
-    setIsNavigatingWithKeyboard(false);
+    setIsUsingKeyboardOrSearch(false);
   }, []);
 
   const handleMouseLeave = useCallback(() => {
     bridge.send('clearHighlightedElementInDOM');
   }, [bridge]);
+
+  const handleSearchInteraction = useCallback(() => {
+    // We started navigating using search.
+    // This will disable hover styles and start highlighting DOM elements.
+    setIsUsingKeyboardOrSearch(true);
+  }, []);
 
   // Let react-window know to re-render any time the underlying tree data changes.
   // This includes the owner context, since it controls a filtered view of the tree.
@@ -247,7 +260,7 @@ export default function Tree(props: Props) {
       baseDepth,
       numElements,
       getElementAtIndex,
-      isNavigatingWithKeyboard,
+      isUsingKeyboardOrSearch,
       onElementMouseEnter: handleElementMouseEnter,
       lastScrolledIDRef,
       treeFocused,
@@ -256,7 +269,7 @@ export default function Tree(props: Props) {
       baseDepth,
       numElements,
       getElementAtIndex,
-      isNavigatingWithKeyboard,
+      isUsingKeyboardOrSearch,
       handleElementMouseEnter,
       lastScrolledIDRef,
       treeFocused,
@@ -266,7 +279,11 @@ export default function Tree(props: Props) {
   return (
     <div className={styles.Tree} ref={treeRef}>
       <div className={styles.SearchInput}>
-        {ownerStack.length > 0 ? <OwnersStack /> : <SearchInput />}
+        {ownerStack.length > 0 ? (
+          <OwnersStack />
+        ) : (
+          <SearchInput onSearchInteraction={handleSearchInteraction} />
+        )}
         <InspectHostNodesToggle />
       </div>
       <div

@@ -8,9 +8,12 @@ import Icon from '../Icon';
 
 import styles from './SearchInput.css';
 
-type Props = {||};
+type Props = {|
+  onSearchInteraction: () => void,
+|};
 
 export default function SearchInput(props: Props) {
+  const { onSearchInteraction } = props;
   const {
     goToNextSearchResult,
     goToPreviousSearchResult,
@@ -25,13 +28,17 @@ export default function SearchInput(props: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const handleTextChange = useCallback(
-    ({ currentTarget }) => setSearchText(currentTarget.value),
-    [setSearchText]
+    ({ currentTarget }) => {
+      setSearchText(currentTarget.value);
+      onSearchInteraction();
+    },
+    [setSearchText, onSearchInteraction]
   );
 
   const resetSearch = useCallback(() => {
     setSearchText('');
-  }, [setSearchText]);
+    onSearchInteraction();
+  }, [setSearchText, onSearchInteraction]);
 
   const handleKeyDown = useCallback(
     event => {
@@ -39,26 +46,29 @@ export default function SearchInput(props: Props) {
       switch (event.key) {
         case 'ArrowDown':
           selectNextElementInTree();
+          onSearchInteraction();
           event.preventDefault();
           break;
         case 'ArrowUp':
           selectPreviousElementInTree();
+          onSearchInteraction();
           event.preventDefault();
           break;
         default:
           break;
       }
     },
-    [selectNextElementInTree, selectPreviousElementInTree]
+    [selectNextElementInTree, selectPreviousElementInTree, onSearchInteraction]
   );
 
   const handleInputKeyPress = useCallback(
     ({ key }) => {
       if (key === 'Enter') {
         goToNextSearchResult();
+        onSearchInteraction();
       }
     },
-    [goToNextSearchResult]
+    [goToNextSearchResult, onSearchInteraction]
   );
 
   // Auto-focus search input
@@ -109,7 +119,10 @@ export default function SearchInput(props: Props) {
       <Button
         className={styles.IconButton}
         disabled={!searchText}
-        onClick={goToPreviousSearchResult}
+        onClick={() => {
+          goToPreviousSearchResult();
+          onSearchInteraction();
+        }}
         title="Scroll to previous search result"
       >
         <ButtonIcon type="up" />
@@ -117,7 +130,10 @@ export default function SearchInput(props: Props) {
       <Button
         className={styles.IconButton}
         disabled={!searchText}
-        onClick={goToNextSearchResult}
+        onClick={() => {
+          goToNextSearchResult();
+          onSearchInteraction();
+        }}
         title="Scroll to next search result"
       >
         <ButtonIcon type="down" />
