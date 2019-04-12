@@ -1,7 +1,6 @@
 // @flow
 
 import React, { Suspense, useCallback, useContext } from 'react';
-import { createPortal } from 'react-dom';
 import {
   CommitFilterModalContext,
   CommitFilterModalContextController,
@@ -21,25 +20,21 @@ import SidebarCommitInfo from './SidebarCommitInfo';
 import SidebarInteractions from './SidebarInteractions';
 import SidebarSelectedFiberInfo from './SidebarSelectedFiberInfo';
 import ToggleCommitFilterModalButton from './ToggleCommitFilterModalButton';
+import portaledContent from '../portaledContent';
 
 import styles from './Profiler.css';
 
 export type Props = {|
-  portalContainer?: Element,
   supportsProfiling: boolean,
 |};
 
-export default function Profiler({
-  portalContainer,
-  supportsProfiling,
-}: Props) {
+function Profiler({ supportsProfiling }: Props) {
   const { hasProfilingData, isProfiling, rootHasProfilingData } = useContext(
     ProfilerContext
   );
 
-  let children = null;
   if (isProfiling || !rootHasProfilingData) {
-    children = (
+    return (
       <NonSuspendingProfiler
         hasProfilingData={hasProfilingData}
         isProfiling={isProfiling}
@@ -47,16 +42,12 @@ export default function Profiler({
       />
     );
   } else {
-    children = (
+    return (
       <CommitFilterModalContextController>
         <SuspendingProfiler />
       </CommitFilterModalContextController>
     );
   }
-
-  return portalContainer != null
-    ? createPortal(children, portalContainer)
-    : children;
 }
 
 // This view is rendered when there is no profiler data (either we haven't profiled yet or we're currently profiling).
@@ -271,3 +262,5 @@ const RecortdingInProgress = () => (
     </div>
   </div>
 );
+
+export default portaledContent(Profiler);

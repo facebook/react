@@ -96,15 +96,19 @@
   --dark-color-text-color: #ffffff;
 
   /* Compact density */
+  --compact-font-size-monospace-small: 9px;
   --compact-font-size-monospace-normal: 11px;
   --compact-font-size-monospace-large: 15px;
+  --compact-font-size-sans-small: 10px;
   --compact-font-size-sans-normal: 12px;
   --compact-font-size-sans-large: 14px;
   --compact-line-height-data: 18px;
 
   /* Comfortable density */
+  --comfortable-font-size-monospace-small: 10px;
   --comfortable-font-size-monospace-normal: 13px;
   --comfortable-font-size-monospace-large: 17px;
+  --comfortable-font-size-sans-small: 12px;
   --comfortable-font-size-sans-normal: 14px;
   --comfortable-font-size-sans-large: 16px;
   --comfortable-line-height-data: 22px;

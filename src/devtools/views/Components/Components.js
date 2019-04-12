@@ -1,18 +1,14 @@
 // @flow
 
 import React from 'react';
-import { createPortal } from 'react-dom';
 import Tree from './Tree';
 import SelectedElement from './SelectedElement';
 import styles from './Components.css';
+import portaledContent from '../portaledContent';
 
-export type Props = {|
-  portalContainer?: Element,
-|};
-
-export default function Components({ portalContainer }: Props) {
+function Components(_: {||}) {
   // TODO Flex wrappers below should be user resizable.
-  const children = (
+  return (
     <div className={styles.Components}>
       <div className={styles.TreeWrapper}>
         <Tree />
@@ -22,8 +18,6 @@ export default function Components({ portalContainer }: Props) {
       </div>
     </div>
   );
-
-  return portalContainer != null
-    ? createPortal(children, portalContainer)
-    : children;
 }
+
+export default portaledContent(Components);

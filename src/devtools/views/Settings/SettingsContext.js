@@ -184,8 +184,14 @@ function updateDisplayDensity(
     'font-size-monospace-large',
     documentElements
   );
+  updateStyleHelper(
+    displayDensity,
+    'font-size-monospace-small',
+    documentElements
+  );
   updateStyleHelper(displayDensity, 'font-size-sans-normal', documentElements);
   updateStyleHelper(displayDensity, 'font-size-sans-large', documentElements);
+  updateStyleHelper(displayDensity, 'font-size-sans-small', documentElements);
   updateStyleHelper(displayDensity, 'line-height-data', documentElements);
 }
 

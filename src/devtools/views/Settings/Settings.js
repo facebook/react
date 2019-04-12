@@ -1,19 +1,15 @@
 // @flow
 
 import React, { useCallback, useContext, useMemo } from 'react';
-import { createPortal } from 'react-dom';
 import { useSubscription } from '../hooks';
 import { StoreContext } from '../context';
 import { SettingsContext } from './SettingsContext';
 import Store from 'src/devtools/store';
+import portaledContent from '../portaledContent';
 
 import styles from './Settings.css';
 
-export type Props = {|
-  portalContainer?: Element,
-|};
-
-export default function Settings({ portalContainer }: Props) {
+function Settings(_: {||}) {
   const store = useContext(StoreContext);
   const { displayDensity, setDisplayDensity, theme, setTheme } = useContext(
     SettingsContext
@@ -52,7 +48,7 @@ export default function Settings({ portalContainer }: Props) {
     [store]
   );
 
-  const children = (
+  return (
     <div className={styles.Settings}>
       <div className={styles.Section}>
         <div className={styles.Header}>Theme</div>
@@ -135,8 +131,6 @@ export default function Settings({ portalContainer }: Props) {
       )}
     </div>
   );
-
-  return portalContainer != null
-    ? createPortal(children, portalContainer)
-    : children;
 }
+
+export default portaledContent(Settings);
