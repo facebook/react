@@ -331,6 +331,36 @@ describe('Hover event responder', () => {
     });
   });
 
+  describe('onHoverMove', () => {
+    it('is called after "pointermove"', () => {
+      const onHoverMove = jest.fn();
+      const ref = React.createRef();
+      const element = (
+        <Hover onHoverMove={onHoverMove}>
+          <div ref={ref} />
+        </Hover>
+      );
+      ReactDOM.render(element, container);
+
+      ref.current.getBoundingClientRect = () => ({
+        top: 50,
+        left: 50,
+        bottom: 500,
+        right: 500,
+      });
+      ref.current.dispatchEvent(createPointerEvent('pointerover'));
+      ref.current.dispatchEvent(
+        createPointerEvent('pointermove', {pointerType: 'mouse'}),
+      );
+      ref.current.dispatchEvent(createPointerEvent('touchmove'));
+      ref.current.dispatchEvent(createPointerEvent('mousemove'));
+      expect(onHoverMove).toHaveBeenCalledTimes(1);
+      expect(onHoverMove).toHaveBeenCalledWith(
+        expect.objectContaining({type: 'hovermove'}),
+      );
+    });
+  });
+
   it('expect displayName to show up for event component', () => {
     expect(Hover.displayName).toBe('Hover');
   });

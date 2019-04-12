@@ -110,22 +110,6 @@ const bundles = [
     externals: ['react'],
   },
 
-  /******* React DOM (new scheduler) *******/
-  {
-    bundleTypes: [
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-      FB_WWW_PROFILING,
-      NODE_DEV,
-      NODE_PROD,
-      NODE_PROFILING,
-    ],
-    moduleType: RENDERER,
-    entry: 'react-dom/unstable-new-scheduler',
-    global: 'ReactDOMNewScheduler',
-    externals: ['react'],
-  },
-
   /******* Test Utils *******/
   {
     moduleType: RENDERER_UTILS,
