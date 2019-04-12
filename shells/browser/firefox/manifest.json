@@ -41,8 +41,7 @@
   ],
 
   "background": {
-    "scripts": ["build/background.js"],
-    "persistent": false
+    "scripts": ["build/background.js"]
   },
 
   "permissions": [
