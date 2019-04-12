@@ -11,6 +11,7 @@ let React;
 let ReactDOM;
 let ReactTestUtils;
 let act;
+let container;
 
 jest.useRealTimers();
 
@@ -29,6 +30,12 @@ describe('ReactTestUtils.act()', () => {
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
     act = ReactTestUtils.act;
+    container = document.createElement('div');
+    document.body.appendChild(container);
+  });
+  afterEach(() => {
+    ReactDOM.unmountComponentAtNode(container);
+    document.body.removeChild(container);
   });
 
   describe('sync', () => {
@@ -66,9 +73,6 @@ describe('ReactTestUtils.act()', () => {
         );
       }
 
-      const container = document.createElement('div');
-      // attach to body so events works
-      document.body.appendChild(container);
       let calledCounter = 0;
       act(() => {
         ReactDOM.render(
@@ -96,8 +100,6 @@ describe('ReactTestUtils.act()', () => {
       act(click);
       expect(calledCounter).toBe(5);
       expect(button.innerHTML).toBe('5');
-
-      document.body.removeChild(container);
     });
 
     it('should flush effects recursively', () => {
@@ -111,7 +113,6 @@ describe('ReactTestUtils.act()', () => {
         return ctr;
       }
 
-      const container = document.createElement('div');
       act(() => {
         ReactDOM.render(<App />, container);
       });
@@ -130,8 +131,6 @@ describe('ReactTestUtils.act()', () => {
           </button>
         );
       }
-      const container = document.createElement('div');
-      document.body.appendChild(container);
       let button;
       act(() => {
         ReactDOM.render(<App />, container);
@@ -142,7 +141,6 @@ describe('ReactTestUtils.act()', () => {
       expect(() => setValue(1)).toWarnDev([
         'An update to App inside a test was not wrapped in act(...).',
       ]);
-      document.body.removeChild(container);
     });
     describe('fake timers', () => {
       beforeEach(() => {
@@ -162,7 +160,6 @@ describe('ReactTestUtils.act()', () => {
           }, []);
           return toggle;
         }
-        const container = document.createElement('div');
 
         act(() => {
           ReactDOM.render(<App />, container);
@@ -184,7 +181,6 @@ describe('ReactTestUtils.act()', () => {
           }, []);
           return toggle;
         }
-        const container = document.createElement('div');
 
         act(() => {
           ReactDOM.render(<App />, container);
@@ -219,6 +215,33 @@ describe('ReactTestUtils.act()', () => {
 
         // all 5 ticks present and accounted for
         expect(el.innerHTML).toBe('5');
+      });
+      it('flushes immediate re-renders with act', () => {
+        function App() {
+          let [ctr, setCtr] = React.useState(0);
+          React.useEffect(() => {
+            if (ctr === 0) {
+              setCtr(1);
+            }
+            const timeout = setTimeout(() => setCtr(2), 1000);
+            return () => clearTimeout(timeout);
+          });
+          return ctr;
+        }
+
+        act(() => {
+          ReactDOM.render(<App />, container);
+          // Since the effects won't be flushed yet, this does not advance the timer
+          jest.runAllTimers();
+        });
+
+        expect(container.innerHTML).toBe('1');
+
+        act(() => {
+          jest.runAllTimers();
+        });
+
+        expect(container.innerHTML).toBe('2');
       });
     });
 
