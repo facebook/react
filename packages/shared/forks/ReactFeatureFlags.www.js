@@ -40,11 +40,6 @@ export const enableSuspenseServerRenderer = true;
 
 export const disableJavaScriptURLs = true;
 
-// I've chosen to make this a static flag instead of a dynamic flag controlled
-// by a GK so that it doesn't increase bundle size. It should still be easy
-// to rollback by reverting the commit that turns this on.
-export const enableNewScheduler = false;
-
 let refCount = 0;
 export function addUserTimingListener() {
   if (__DEV__) {

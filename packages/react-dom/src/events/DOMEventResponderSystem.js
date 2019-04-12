@@ -30,6 +30,7 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import warning from 'shared/warning';
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
 import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
+import invariant from 'shared/invariant';
 
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
@@ -50,7 +51,6 @@ type EventQueue = {
 };
 
 type PartialEventObject = {
-  listener: ($Shape<PartialEventObject>) => void,
   target: Element | Document,
   type: string,
 };
@@ -76,22 +76,31 @@ const targetEventTypeCached: Map<
   Set<DOMTopLevelEventType>,
 > = new Map();
 const ownershipChangeListeners: Set<ReactEventComponentInstance> = new Set();
+const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
+const eventListeners:
+  | WeakMap
+  | Map<
+      $Shape<PartialEventObject>,
+      ($Shape<PartialEventObject>) => void,
+    > = new PossiblyWeakMap();
 
 let currentTimers = new Map();
 let currentOwner = null;
-let currentInstance: ReactEventComponentInstance;
-let currentEventQueue: EventQueue;
+let currentInstance: null | ReactEventComponentInstance = null;
+let currentEventQueue: null | EventQueue = null;
 
 const eventResponderContext: ReactResponderContext = {
   dispatchEvent(
     possibleEventObject: Object,
+    listener: ($Shape<PartialEventObject>) => void,
     {capture, discrete}: ReactResponderDispatchEventOptions,
   ): void {
-    const {listener, target, type} = possibleEventObject;
+    validateResponderContext();
+    const {target, type} = possibleEventObject;
 
-    if (listener == null || target == null || type == null) {
+    if (target == null || type == null) {
       throw new Error(
-        'context.dispatchEvent: "listener", "target" and "type" fields on event object are required.',
+        'context.dispatchEvent: "target" and "type" fields on event object are required.',
       );
     }
     if (__DEV__) {
@@ -115,15 +124,18 @@ const eventResponderContext: ReactResponderContext = {
     >);
     const events = getEventsFromEventQueue(capture);
     if (discrete) {
-      currentEventQueue.discrete = true;
+      ((currentEventQueue: any): EventQueue).discrete = true;
     }
+    eventListeners.set(eventObject, listener);
     events.push(eventObject);
   },
   dispatchStopPropagation(capture?: boolean) {
+    validateResponderContext();
     const events = getEventsFromEventQueue();
     events.push({stopPropagation: true});
   },
   isPositionWithinTouchHitTarget(doc: Document, x: number, y: number): boolean {
+    validateResponderContext();
     // This isn't available in some environments (JSDOM)
     if (typeof doc.elementFromPoint !== 'function') {
       return false;
@@ -151,6 +163,7 @@ const eventResponderContext: ReactResponderContext = {
     return false;
   },
   isTargetWithinEventComponent(target: Element | Document): boolean {
+    validateResponderContext();
     if (target != null) {
       let fiber = getClosestInstanceFromNode(target);
       while (fiber !== null) {
@@ -182,6 +195,7 @@ const eventResponderContext: ReactResponderContext = {
     doc: Document,
     rootEventTypes: Array<ReactEventResponderEventType>,
   ): void {
+    validateResponderContext();
     listenToResponderEventTypesImpl(rootEventTypes, doc);
     for (let i = 0; i < rootEventTypes.length; i++) {
       const rootEventType = rootEventTypes[i];
@@ -197,12 +211,15 @@ const eventResponderContext: ReactResponderContext = {
           rootEventComponentInstances,
         );
       }
-      rootEventComponentInstances.add(currentInstance);
+      rootEventComponentInstances.add(
+        ((currentInstance: any): ReactEventComponentInstance),
+      );
     }
   },
   removeRootEventTypes(
     rootEventTypes: Array<ReactEventResponderEventType>,
   ): void {
+    validateResponderContext();
     for (let i = 0; i < rootEventTypes.length; i++) {
       const rootEventType = rootEventTypes[i];
       const topLevelEventType =
@@ -211,14 +228,18 @@ const eventResponderContext: ReactResponderContext = {
         topLevelEventType,
       );
       if (rootEventComponents !== undefined) {
-        rootEventComponents.delete(currentInstance);
+        rootEventComponents.delete(
+          ((currentInstance: any): ReactEventComponentInstance),
+        );
       }
     }
   },
   hasOwnership(): boolean {
+    validateResponderContext();
     return currentOwner === currentInstance;
   },
   requestOwnership(): boolean {
+    validateResponderContext();
     if (currentOwner !== null) {
       return false;
     }
@@ -227,6 +248,7 @@ const eventResponderContext: ReactResponderContext = {
     return true;
   },
   releaseOwnership(): boolean {
+    validateResponderContext();
     if (currentOwner !== currentInstance) {
       return false;
     }
@@ -235,6 +257,7 @@ const eventResponderContext: ReactResponderContext = {
     return false;
   },
   setTimeout(func: () => void, delay): Symbol {
+    validateResponderContext();
     if (currentTimers === null) {
       currentTimers = new Map();
     }
@@ -253,7 +276,7 @@ const eventResponderContext: ReactResponderContext = {
       currentTimers.set(delay, timeout);
     }
     timeout.timers.set(timerId, {
-      instance: currentInstance,
+      instance: ((currentInstance: any): ReactEventComponentInstance),
       func,
       id: timerId,
     });
@@ -261,6 +284,7 @@ const eventResponderContext: ReactResponderContext = {
     return timerId;
   },
   clearTimeout(timerId: Symbol): void {
+    validateResponderContext();
     const timeout = activeTimeouts.get(timerId);
 
     if (timeout !== undefined) {
@@ -279,6 +303,7 @@ const eventResponderContext: ReactResponderContext = {
     node: Element,
     props: null | Object,
   }> {
+    validateResponderContext();
     const eventTargetHostComponents = [];
     let node = getClosestInstanceFromNode(target);
     // We traverse up the fiber tree from the target fiber, to the
@@ -326,28 +351,26 @@ const eventResponderContext: ReactResponderContext = {
 };
 
 function getEventsFromEventQueue(capture?: boolean): Array<EventObjectTypes> {
+  const eventQueue = ((currentEventQueue: any): EventQueue);
   let events;
   if (capture) {
-    events = currentEventQueue.capture;
+    events = eventQueue.capture;
     if (events === null) {
-      events = currentEventQueue.capture = [];
+      events = eventQueue.capture = [];
     }
   } else {
-    events = currentEventQueue.bubble;
+    events = eventQueue.bubble;
     if (events === null) {
-      events = currentEventQueue.bubble = [];
+      events = eventQueue.bubble = [];
     }
   }
   return events;
 }
 
 function processTimers(timers: Map<Symbol, ResponderTimer>): void {
-  const previousEventQueue = currentEventQueue;
-  const previousInstance = currentInstance;
+  const timersArr = Array.from(timers.values());
   currentEventQueue = createEventQueue();
-
   try {
-    const timersArr = Array.from(timers.values());
     for (let i = 0; i < timersArr.length; i++) {
       const {instance, func, id} = timersArr[i];
       currentInstance = instance;
@@ -359,9 +382,9 @@ function processTimers(timers: Map<Symbol, ResponderTimer>): void {
     }
     batchedUpdates(processEventQueue, currentEventQueue);
   } finally {
-    currentInstance = previousInstance;
-    currentEventQueue = previousEventQueue;
     currentTimers = null;
+    currentInstance = null;
+    currentEventQueue = null;
   }
 }
 
@@ -404,7 +427,9 @@ function createEventQueue(): EventQueue {
 
 function processEvent(event: $Shape<PartialEventObject>): void {
   const type = event.type;
-  const listener = event.listener;
+  const listener = ((eventListeners.get(event): any): (
+    $Shape<PartialEventObject>,
+  ) => void);
   invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
 }
 
@@ -435,7 +460,7 @@ function processEvents(
 }
 
 export function processEventQueue(): void {
-  const {bubble, capture, discrete} = currentEventQueue;
+  const {bubble, capture, discrete} = ((currentEventQueue: any): EventQueue);
 
   if (discrete) {
     interactiveUpdates(() => {
@@ -478,13 +503,8 @@ function handleTopLevelType(
       return;
     }
   }
-  const previousInstance = currentInstance;
   currentInstance = eventComponentInstance;
-  try {
-    responder.onEvent(responderEvent, eventResponderContext, props, state);
-  } finally {
-    currentInstance = previousInstance;
-  }
+  responder.onEvent(responderEvent, eventResponderContext, props, state);
 }
 
 export function runResponderEventsInBatch(
@@ -502,54 +522,60 @@ export function runResponderEventsInBatch(
       ((nativeEventTarget: any): Element | Document),
       eventSystemFlags,
     );
-    let node = targetFiber;
-    // Traverse up the fiber tree till we find event component fibers.
-    while (node !== null) {
-      if (node.tag === EventComponent) {
-        const eventComponentInstance = node.stateNode;
-        handleTopLevelType(
-          topLevelType,
-          responderEvent,
-          eventComponentInstance,
-          false,
-        );
-      }
-      node = node.return;
-    }
-    // Handle root level events
-    const rootEventInstances = rootEventTypesToEventComponentInstances.get(
-      topLevelType,
-    );
-    if (rootEventInstances !== undefined) {
-      const rootEventComponentInstances = Array.from(rootEventInstances);
 
-      for (let i = 0; i < rootEventComponentInstances.length; i++) {
-        const rootEventComponentInstance = rootEventComponentInstances[i];
-        handleTopLevelType(
-          topLevelType,
-          responderEvent,
-          rootEventComponentInstance,
-          true,
-        );
+    try {
+      let node = targetFiber;
+      // Traverse up the fiber tree till we find event component fibers.
+      while (node !== null) {
+        if (node.tag === EventComponent) {
+          const eventComponentInstance = node.stateNode;
+          handleTopLevelType(
+            topLevelType,
+            responderEvent,
+            eventComponentInstance,
+            false,
+          );
+        }
+        node = node.return;
       }
+      // Handle root level events
+      const rootEventInstances = rootEventTypesToEventComponentInstances.get(
+        topLevelType,
+      );
+      if (rootEventInstances !== undefined) {
+        const rootEventComponentInstances = Array.from(rootEventInstances);
+
+        for (let i = 0; i < rootEventComponentInstances.length; i++) {
+          const rootEventComponentInstance = rootEventComponentInstances[i];
+          handleTopLevelType(
+            topLevelType,
+            responderEvent,
+            rootEventComponentInstance,
+            true,
+          );
+        }
+      }
+      processEventQueue();
+    } finally {
+      currentTimers = null;
+      currentInstance = null;
+      currentEventQueue = null;
     }
-    processEventQueue();
-    currentTimers = null;
   }
 }
 
 function triggerOwnershipListeners(): void {
   const listeningInstances = Array.from(ownershipChangeListeners);
   const previousInstance = currentInstance;
-  for (let i = 0; i < listeningInstances.length; i++) {
-    const instance = listeningInstances[i];
-    const {props, responder, state} = instance;
-    currentInstance = instance;
-    try {
+  try {
+    for (let i = 0; i < listeningInstances.length; i++) {
+      const instance = listeningInstances[i];
+      const {props, responder, state} = instance;
+      currentInstance = instance;
       responder.onOwnershipChange(eventResponderContext, props, state);
-    } finally {
-      currentInstance = previousInstance;
     }
+  } finally {
+    currentInstance = previousInstance;
   }
 }
 
@@ -569,15 +595,13 @@ export function unmountEventResponder(
   const onUnmount = responder.onUnmount;
   if (onUnmount !== undefined) {
     let {props, state} = eventComponentInstance;
-    const previousEventQueue = currentEventQueue;
-    const previousInstance = currentInstance;
     currentEventQueue = createEventQueue();
     currentInstance = eventComponentInstance;
     try {
       onUnmount(eventResponderContext, props, state);
     } finally {
-      currentEventQueue = previousEventQueue;
-      currentInstance = previousInstance;
+      currentEventQueue = null;
+      currentInstance = null;
       currentTimers = null;
     }
   }
@@ -588,4 +612,12 @@ export function unmountEventResponder(
   if (responder.onOwnershipChange !== undefined) {
     ownershipChangeListeners.delete(eventComponentInstance);
   }
+}
+
+function validateResponderContext(): void {
+  invariant(
+    currentEventQueue && currentInstance,
+    'An event responder context was used outside of an event cycle. ' +
+      'Use context.setTimeout() to use asynchronous responder context outside of event cycle .',
+  );
 }

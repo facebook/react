@@ -28,7 +28,6 @@ type FocusState = {
 type FocusEventType = 'focus' | 'blur' | 'focuschange';
 
 type FocusEvent = {|
-  listener: FocusEvent => void,
   target: Element | Document,
   type: FocusEventType,
 |};
@@ -41,10 +40,8 @@ const targetEventTypes = [
 function createFocusEvent(
   type: FocusEventType,
   target: Element | Document,
-  listener: FocusEvent => void,
 ): FocusEvent {
   return {
-    listener,
     target,
     type,
   };
@@ -68,9 +65,8 @@ function dispatchFocusInEvents(
     const syntheticEvent = createFocusEvent(
       'focus',
       ((state.focusTarget: any): Element | Document),
-      props.onFocus,
     );
-    context.dispatchEvent(syntheticEvent, {discrete: true});
+    context.dispatchEvent(syntheticEvent, props.onFocus, {discrete: true});
   }
   if (props.onFocusChange) {
     const listener = () => {
@@ -79,9 +75,8 @@ function dispatchFocusInEvents(
     const syntheticEvent = createFocusEvent(
       'focuschange',
       ((state.focusTarget: any): Element | Document),
-      listener,
     );
-    context.dispatchEvent(syntheticEvent, {discrete: true});
+    context.dispatchEvent(syntheticEvent, listener, {discrete: true});
   }
 }
 
@@ -103,9 +98,8 @@ function dispatchFocusOutEvents(
     const syntheticEvent = createFocusEvent(
       'blur',
       ((state.focusTarget: any): Element | Document),
-      props.onBlur,
     );
-    context.dispatchEvent(syntheticEvent, {discrete: true});
+    context.dispatchEvent(syntheticEvent, props.onBlur, {discrete: true});
   }
   if (props.onFocusChange) {
     const listener = () => {
@@ -114,9 +108,8 @@ function dispatchFocusOutEvents(
     const syntheticEvent = createFocusEvent(
       'focuschange',
       ((state.focusTarget: any): Element | Document),
-      listener,
     );
-    context.dispatchEvent(syntheticEvent, {discrete: true});
+    context.dispatchEvent(syntheticEvent, listener, {discrete: true});
   }
 }
 

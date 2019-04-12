@@ -255,11 +255,12 @@ describe('DOMEventResponderSystem', () => {
       (event, context, props) => {
         if (props.onMagicClick) {
           const syntheticEvent = {
-            listener: props.onMagicClick,
             target: event.target,
             type: 'magicclick',
           };
-          context.dispatchEvent(syntheticEvent, {discrete: true});
+          context.dispatchEvent(syntheticEvent, props.onMagicClick, {
+            discrete: true,
+          });
         }
       },
     );
@@ -292,29 +293,32 @@ describe('DOMEventResponderSystem', () => {
       undefined,
       (event, context, props) => {
         const pressEvent = {
-          listener: props.onPress,
           target: event.target,
           type: 'press',
         };
-        context.dispatchEvent(pressEvent, {discrete: true});
+        context.dispatchEvent(pressEvent, props.onPress, {discrete: true});
 
         context.setTimeout(() => {
           if (props.onLongPress) {
             const longPressEvent = {
-              listener: props.onLongPress,
               target: event.target,
               type: 'longpress',
             };
-            context.dispatchEvent(longPressEvent, {discrete: true});
+            context.dispatchEvent(longPressEvent, props.onLongPress, {
+              discrete: true,
+            });
           }
 
           if (props.onLongPressChange) {
             const longPressChangeEvent = {
-              listener: props.onLongPressChange,
               target: event.target,
               type: 'longpresschange',
             };
-            context.dispatchEvent(longPressChangeEvent, {discrete: true});
+            context.dispatchEvent(
+              longPressChangeEvent,
+              props.onLongPressChange,
+              {discrete: true},
+            );
           }
         }, 500);
       },

@@ -31,7 +31,6 @@ export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const warnAboutDeprecatedLifecycles = true;
 export const warnAboutDeprecatedSetNativeProps = true;
 export const enableEventAPI = false;
-export const enableNewScheduler = false;
 export const enableJSXTransformAPI = false;
 
 // Only used in www builds.
