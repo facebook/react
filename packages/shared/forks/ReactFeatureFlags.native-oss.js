@@ -28,7 +28,6 @@ export const warnAboutShorthandPropertyCollision = false;
 export const enableSchedulerDebugging = false;
 export const warnAboutDeprecatedSetNativeProps = false;
 export const enableEventAPI = false;
-export const enableNewScheduler = false;
 export const enableJSXTransformAPI = false;
 
 // Only used in www builds.

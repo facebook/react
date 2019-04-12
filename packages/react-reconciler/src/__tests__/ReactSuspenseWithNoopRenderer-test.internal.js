@@ -7,7 +7,6 @@ let ReactCache;
 let Suspense;
 let StrictMode;
 let ConcurrentMode;
-let enableNewScheduler;
 
 let TextResource;
 let textResourceShouldFail;
@@ -29,7 +28,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     Suspense = React.Suspense;
     StrictMode = React.StrictMode;
     ConcurrentMode = React.unstable_ConcurrentMode;
-    enableNewScheduler = ReactFeatureFlags.enableNewScheduler;
 
     TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
       return new Promise((resolve, reject) =>
@@ -889,16 +887,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       ReactNoop.expire(100);
       await advanceTimers(100);
 
-      if (enableNewScheduler) {
-        expect(Scheduler).toHaveYielded(['Promise resolved [Result]']);
-        expect(Scheduler).toFlushExpired(['Result']);
-      } else {
-        expect(Scheduler).toHaveYielded([
-          'Promise resolved [Result]',
-          'Result',
-        ]);
-      }
-
+      expect(Scheduler).toHaveYielded(['Promise resolved [Result]']);
+      expect(Scheduler).toFlushExpired(['Result']);
       expect(ReactNoop.getChildren()).toEqual([span('Result')]);
     });
 
@@ -935,27 +925,15 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       // Initial mount. This is synchronous, because the root is sync.
       ReactNoop.renderLegacySyncRoot(<App />);
       await advanceTimers(100);
-      if (enableNewScheduler) {
-        expect(Scheduler).toHaveYielded([
-          'Suspend! [Step: 1]',
-          'Sibling',
-          'Loading (1)',
-          'Loading (2)',
-          'Loading (3)',
-          'Promise resolved [Step: 1]',
-        ]);
-        expect(Scheduler).toFlushExpired(['Step: 1']);
-      } else {
-        expect(Scheduler).toHaveYielded([
-          'Suspend! [Step: 1]',
-          'Sibling',
-          'Loading (1)',
-          'Loading (2)',
-          'Loading (3)',
-          'Promise resolved [Step: 1]',
-          'Step: 1',
-        ]);
-      }
+      expect(Scheduler).toHaveYielded([
+        'Suspend! [Step: 1]',
+        'Sibling',
+        'Loading (1)',
+        'Loading (2)',
+        'Loading (3)',
+        'Promise resolved [Step: 1]',
+      ]);
+      expect(Scheduler).toFlushExpired(['Step: 1']);
       expect(ReactNoop).toMatchRenderedOutput(
         <React.Fragment>
           <span prop="Step: 1" />
@@ -987,15 +965,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       );
 
       await advanceTimers(100);
-      if (enableNewScheduler) {
-        expect(Scheduler).toHaveYielded(['Promise resolved [Step: 2]']);
-        expect(Scheduler).toFlushExpired(['Step: 2']);
-      } else {
-        expect(Scheduler).toHaveYielded([
-          'Promise resolved [Step: 2]',
-          'Step: 2',
-        ]);
-      }
+      expect(Scheduler).toHaveYielded(['Promise resolved [Step: 2]']);
+      expect(Scheduler).toFlushExpired(['Step: 2']);
       expect(ReactNoop).toMatchRenderedOutput(
         <React.Fragment>
           <span prop="Step: 2" />
@@ -1054,33 +1025,18 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         );
         await advanceTimers(100);
 
-        if (enableNewScheduler) {
-          expect(Scheduler).toHaveYielded([
-            'Before',
-            'Suspend! [Async: 1]',
-            'After',
-            'Loading...',
-            'Before',
-            'Sync: 1',
-            'After',
-            'Did mount',
-            'Promise resolved [Async: 1]',
-          ]);
-          expect(Scheduler).toFlushExpired(['Async: 1']);
-        } else {
-          expect(Scheduler).toHaveYielded([
-            'Before',
-            'Suspend! [Async: 1]',
-            'After',
-            'Loading...',
-            'Before',
-            'Sync: 1',
-            'After',
-            'Did mount',
-            'Promise resolved [Async: 1]',
-            'Async: 1',
-          ]);
-        }
+        expect(Scheduler).toHaveYielded([
+          'Before',
+          'Suspend! [Async: 1]',
+          'After',
+          'Loading...',
+          'Before',
+          'Sync: 1',
+          'After',
+          'Did mount',
+          'Promise resolved [Async: 1]',
+        ]);
+        expect(Scheduler).toFlushExpired(['Async: 1']);
         expect(ReactNoop).toMatchRenderedOutput(
           <React.Fragment>
             <span prop="Before" />
@@ -1135,16 +1091,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         // synchronously.
         await advanceTimers(100);
 
-        if (enableNewScheduler) {
-          expect(Scheduler).toHaveYielded(['Promise resolved [Async: 2]']);
-          expect(Scheduler).toFlushExpired(['Async: 2']);
-        } else {
-          expect(Scheduler).toHaveYielded([
-            'Promise resolved [Async: 2]',
-            'Async: 2',
-          ]);
-        }
-
+        expect(Scheduler).toHaveYielded(['Promise resolved [Async: 2]']);
+        expect(Scheduler).toFlushExpired(['Async: 2']);
         expect(ReactNoop).toMatchRenderedOutput(
           <React.Fragment>
             <span prop="Before" />
@@ -1208,33 +1156,18 @@ describe('ReactSuspenseWithNoopRenderer', () => {
           Scheduler.yieldValue('Did mount'),
         );
         await advanceTimers(100);
-        if (enableNewScheduler) {
-          expect(Scheduler).toHaveYielded([
-            'Before',
-            'Suspend! [Async: 1]',
-            'After',
-            'Loading...',
-            'Before',
-            'Sync: 1',
-            'After',
-            'Did mount',
-            'Promise resolved [Async: 1]',
-          ]);
-          expect(Scheduler).toFlushExpired(['Async: 1']);
-        } else {
-          expect(Scheduler).toHaveYielded([
-            'Before',
-            'Suspend! [Async: 1]',
-            'After',
-            'Loading...',
-            'Before',
-            'Sync: 1',
-            'After',
-            'Did mount',
-            'Promise resolved [Async: 1]',
-            'Async: 1',
-          ]);
-        }
+        expect(Scheduler).toHaveYielded([
+          'Before',
+          'Suspend! [Async: 1]',
+          'After',
+          'Loading...',
+          'Before',
+          'Sync: 1',
+          'After',
+          'Did mount',
+          'Promise resolved [Async: 1]',
+        ]);
+        expect(Scheduler).toFlushExpired(['Async: 1']);
         expect(ReactNoop).toMatchRenderedOutput(
           <React.Fragment>
             <span prop="Before" />
@@ -1289,16 +1222,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         // synchronously.
         await advanceTimers(100);
 
-        if (enableNewScheduler) {
-          expect(Scheduler).toHaveYielded(['Promise resolved [Async: 2]']);
-          expect(Scheduler).toFlushExpired(['Async: 2']);
-        } else {
-          expect(Scheduler).toHaveYielded([
-            'Promise resolved [Async: 2]',
-            'Async: 2',
-          ]);
-        }
-
+        expect(Scheduler).toHaveYielded(['Promise resolved [Async: 2]']);
+        expect(Scheduler).toFlushExpired(['Async: 2']);
         expect(ReactNoop).toMatchRenderedOutput(
           <React.Fragment>
             <span prop="Before" />
@@ -1376,13 +1301,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       ReactNoop.expire(1000);
       await advanceTimers(1000);
 
-      if (enableNewScheduler) {
-        expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
-        expect(Scheduler).toFlushExpired(['B']);
-      } else {
-        expect(Scheduler).toHaveYielded(['Promise resolved [B]', 'B']);
-      }
-
+      expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
+      expect(Scheduler).toFlushExpired(['B']);
       expect(ReactNoop).toMatchRenderedOutput(
         <React.Fragment>
           <span prop="A" />
@@ -1434,21 +1354,12 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
       await advanceTimers(1000);
 
-      if (enableNewScheduler) {
-        expect(Scheduler).toHaveYielded(['Promise resolved [Hi]']);
-        expect(Scheduler).toFlushExpired([
-          'constructor',
-          'Hi',
-          'componentDidMount',
-        ]);
-      } else {
-        expect(Scheduler).toHaveYielded([
-          'Promise resolved [Hi]',
-          'constructor',
-          'Hi',
-          'componentDidMount',
-        ]);
-      }
+      expect(Scheduler).toHaveYielded(['Promise resolved [Hi]']);
+      expect(Scheduler).toFlushExpired([
+        'constructor',
+        'Hi',
+        'componentDidMount',
+      ]);
       expect(ReactNoop.getChildren()).toEqual([span('Hi')]);
     });
 
@@ -1487,12 +1398,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       ]);
       expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
       await advanceTimers(100);
-      if (enableNewScheduler) {
-        expect(Scheduler).toHaveYielded(['Promise resolved [Hi]']);
-        expect(Scheduler).toFlushExpired(['Hi']);
-      } else {
-        expect(Scheduler).toHaveYielded(['Promise resolved [Hi]', 'Hi']);
-      }
+      expect(Scheduler).toHaveYielded(['Promise resolved [Hi]']);
+      expect(Scheduler).toFlushExpired(['Hi']);
       expect(ReactNoop.getChildren()).toEqual([span('Hi')]);
     });
 
@@ -1536,12 +1443,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
         await advanceTimers(1000);
 
-        if (enableNewScheduler) {
-          expect(Scheduler).toHaveYielded(['Promise resolved [Hi]']);
-          expect(Scheduler).toFlushExpired(['Hi']);
-        } else {
-          expect(Scheduler).toHaveYielded(['Promise resolved [Hi]', 'Hi']);
-        }
+        expect(Scheduler).toHaveYielded(['Promise resolved [Hi]']);
+        expect(Scheduler).toFlushExpired(['Hi']);
       });
     } else {
       it('hides/unhides suspended children before layout effects fire (mutation)', async () => {
@@ -1580,12 +1483,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
         await advanceTimers(1000);
 
-        if (enableNewScheduler) {
-          expect(Scheduler).toHaveYielded(['Promise resolved [Hi]']);
-          expect(Scheduler).toFlushExpired(['Hi']);
-        } else {
-          expect(Scheduler).toHaveYielded(['Promise resolved [Hi]', 'Hi']);
-        }
+        expect(Scheduler).toHaveYielded(['Promise resolved [Hi]']);
+        expect(Scheduler).toFlushExpired(['Hi']);
       });
     }
   });

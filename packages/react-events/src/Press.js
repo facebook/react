@@ -10,6 +10,7 @@
 import type {
   ReactResponderEvent,
   ReactResponderContext,
+  ReactResponderDispatchEventOptions,
 } from 'shared/ReactTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
@@ -127,13 +128,18 @@ function dispatchEvent(
   state: PressState,
   name: PressEventType,
   listener: (e: Object) => void,
+  options?: ReactResponderDispatchEventOptions,
 ): void {
   const target = ((state.pressTarget: any): Element | Document);
   const pointerType = state.pointerType;
   const syntheticEvent = createPressEvent(name, target, pointerType);
-  context.dispatchEvent(syntheticEvent, listener, {
-    discrete: true,
-  });
+  context.dispatchEvent(
+    syntheticEvent,
+    listener,
+    options || {
+      discrete: true,
+    },
+  );
   state.didDispatchEvent = true;
 }
 
@@ -486,7 +492,9 @@ const PressResponder = {
           if (isPressWithinResponderRegion(nativeEvent, state)) {
             state.isPressWithinResponderRegion = true;
             if (props.onPressMove) {
-              dispatchEvent(context, state, 'pressmove', props.onPressMove);
+              dispatchEvent(context, state, 'pressmove', props.onPressMove, {
+                discrete: false,
+              });
             }
           } else {
             state.isPressWithinResponderRegion = false;

@@ -47,4 +47,7 @@ jobs:
           path: ./build.tgz
 
       - store_artifacts:
+          path: ./scripts/rollup/results.json
+
+      - store_artifacts:
           path: ./scripts/error-codes/codes.json
