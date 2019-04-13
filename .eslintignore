@@ -3,6 +3,7 @@ node_modules
 flow-typed
 shells/browser/chrome/build
 shells/browser/firefox/build
+shells/browser/shared/build
 shells/dev/build
 vendor
 

@@ -1,6 +1,8 @@
-/shells/chrome.crx
-/shells/chrome.pem
-/shells/firefox/*.xpi
+/shells/browser/chrome/*.crx
+/shells/browser/chrome/*.pem
+/shells/browser/firefox/*.xpi
+/shells/browser/firefox/*.pem
+/shells/browser/shared/build
 build
 node_modules
 npm-debug.log
