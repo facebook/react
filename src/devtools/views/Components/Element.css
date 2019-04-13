@@ -17,6 +17,11 @@
   background-color: var(--color-inactive-background);
 }
 
+.ScrollAnchor {
+  height: 100%;
+  width: 0;
+}
+
 .SelectedElement {
   background-color: var(--color-selected-background);
   color: var(--color-selected-foreground);
