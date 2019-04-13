@@ -13,6 +13,8 @@ import type {
 } from 'shared/ReactTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
+const CAPTURE_PHASE = 2;
+
 type HoverProps = {
   disabled: boolean,
   delayHoverEnd: number,
@@ -132,6 +134,7 @@ function dispatchHoverStartEvents(
       state.hoverStartTimeout = context.setTimeout(() => {
         state.hoverStartTimeout = null;
         activate();
+        return false;
       }, delayHoverStart);
     } else {
       activate();
@@ -186,6 +189,7 @@ function dispatchHoverEndEvents(
     if (delayHoverEnd > 0) {
       state.hoverEndTimeout = context.setTimeout(() => {
         deactivate();
+        return false;
       }, delayHoverEnd);
     } else {
       deactivate();
@@ -226,9 +230,13 @@ const HoverResponder = {
     context: ReactResponderContext,
     props: HoverProps,
     state: HoverState,
-  ): void {
-    const {type, target, nativeEvent} = event;
+  ): boolean {
+    const {type, phase, target, nativeEvent} = event;
 
+    // Hover doesn't handle capture target events at this point
+    if (phase === CAPTURE_PHASE) {
+      return false;
+    }
     switch (type) {
       /**
        * Prevent hover events when touch is being used.
@@ -242,10 +250,10 @@ const HoverResponder = {
 
       case 'pointerover':
       case 'mouseover': {
-        if (!state.isHovered && !state.isTouched && !context.hasOwnership()) {
+        if (!state.isHovered && !state.isTouched) {
           if ((nativeEvent: any).pointerType === 'touch') {
             state.isTouched = true;
-            return;
+            return false;
           }
           if (type === 'pointerover') {
             state.skipMouseAfterPointer = true;
@@ -258,7 +266,7 @@ const HoverResponder = {
             )
           ) {
             state.isInHitSlop = true;
-            return;
+            return false;
           }
           state.hoverTarget = target;
           dispatchHoverStartEvents(event, context, props, state);
@@ -280,7 +288,7 @@ const HoverResponder = {
       case 'pointermove':
       case 'mousemove': {
         if (type === 'mousemove' && state.skipMouseAfterPointer === true) {
-          return;
+          return false;
         }
 
         if (state.isHovered && !state.isTouched) {
@@ -330,6 +338,7 @@ const HoverResponder = {
         break;
       }
     }
+    return false;
   },
   onUnmount(
     context: ReactResponderContext,

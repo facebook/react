@@ -13,6 +13,7 @@ import type {
 } from 'shared/ReactTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
+const CAPTURE_PHASE = 2;
 const targetEventTypes = ['pointerdown', 'pointercancel'];
 const rootEventTypes = ['pointerup', {name: 'pointermove', passive: false}];
 
@@ -92,9 +93,13 @@ const DragResponder = {
     context: ReactResponderContext,
     props: Object,
     state: DragState,
-  ): void {
-    const {target, type, nativeEvent} = event;
+  ): boolean {
+    const {target, phase, type, nativeEvent} = event;
 
+    // Drag doesn't handle capture target events at this point
+    if (phase === CAPTURE_PHASE) {
+      return false;
+    }
     switch (type) {
       case 'touchstart':
       case 'mousedown':
@@ -132,7 +137,7 @@ const DragResponder = {
       case 'mousemove':
       case 'pointermove': {
         if (event.passive) {
-          return;
+          return false;
         }
         if (state.isPointerDown) {
           const obj =
@@ -225,6 +230,7 @@ const DragResponder = {
         break;
       }
     }
+    return false;
   },
 };
 

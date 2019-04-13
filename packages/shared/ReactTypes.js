@@ -93,7 +93,7 @@ export type ReactEventResponder = {
     context: ReactResponderContext,
     props: null | Object,
     state: null | Object,
-  ) => void,
+  ) => boolean,
   onUnmount: (
     context: ReactResponderContext,
     props: null | Object,
@@ -135,6 +135,7 @@ export type ReactResponderEvent = {
   type: string,
   passive: boolean,
   passiveSupported: boolean,
+  phase: 0 | 1 | 2,
 };
 
 export type ReactResponderDispatchEventOptions = {
@@ -148,7 +149,6 @@ export type ReactResponderContext = {
     listener: (Object) => void,
     otpions: ReactResponderDispatchEventOptions,
   ) => void,
-  dispatchStopPropagation: (passive?: boolean) => void,
   isTargetWithinElement: (
     childTarget: Element | Document,
     parentTarget: Element | Document,
@@ -169,7 +169,7 @@ export type ReactResponderContext = {
   hasOwnership: () => boolean,
   requestOwnership: () => boolean,
   releaseOwnership: () => boolean,
-  setTimeout: (func: () => void, timeout: number) => Symbol,
+  setTimeout: (func: () => boolean, timeout: number) => Symbol,
   clearTimeout: (timerId: Symbol) => void,
   getEventTargetsFromTarget: (
     target: Element | Document,

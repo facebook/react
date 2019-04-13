@@ -13,6 +13,8 @@ import type {
 } from 'shared/ReactTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
+const CAPTURE_PHASE = 2;
+
 type FocusProps = {
   disabled: boolean,
   onBlur: (e: FocusEvent) => void,
@@ -136,12 +138,16 @@ const FocusResponder = {
     context: ReactResponderContext,
     props: Object,
     state: FocusState,
-  ): void {
-    const {type, target} = event;
+  ): boolean {
+    const {type, phase, target} = event;
 
+    // Focus doesn't handle capture target events at this point
+    if (phase === CAPTURE_PHASE) {
+      return false;
+    }
     switch (type) {
       case 'focus': {
-        if (!state.isFocused && !context.hasOwnership()) {
+        if (!state.isFocused) {
           state.focusTarget = target;
           dispatchFocusInEvents(event, context, props, state);
           state.isFocused = true;
@@ -157,6 +163,7 @@ const FocusResponder = {
         break;
       }
     }
+    return false;
   },
   onUnmount(
     context: ReactResponderContext,
