@@ -56,7 +56,8 @@ export default function ElementView({ data, index, style }: Props) {
     }
   }, [id, selectOwner]);
 
-  const ref = useRef<HTMLSpanElement | null>(null);
+  const scrollAnchorStartRef = useRef<HTMLSpanElement | null>(null);
+  const scrollAnchorEndRef = useRef<HTMLSpanElement | null>(null);
 
   // The tree above has its own autoscrolling, but it only works for rows.
   // However, even when the row gets into the viewport, the component name
@@ -74,8 +75,20 @@ export default function ElementView({ data, index, style }: Props) {
       }
       lastScrolledIDRef.current = id;
 
-      if (ref.current !== null) {
-        ref.current.scrollIntoView({
+      // We want to bring the whole <Component> name into view,
+      // including the expansion toggle and the "=== $r" hint.
+      // However, even calling scrollIntoView() on their parent node
+      // wouldn't guarantee that it will be *fully* brought into view.
+      // As a workaround, we'll have two anchor spans, and scroll each into view.
+      if (scrollAnchorStartRef.current !== null) {
+        scrollAnchorStartRef.current.scrollIntoView({
+          behavior: 'auto',
+          block: 'nearest',
+          inline: 'nearest',
+        });
+      }
+      if (scrollAnchorEndRef.current !== null) {
+        scrollAnchorEndRef.current.scrollIntoView({
           behavior: 'auto',
           block: 'nearest',
           inline: 'nearest',
@@ -149,10 +162,11 @@ export default function ElementView({ data, index, style }: Props) {
         marginBottom: `-${style.height}px`,
       }}
     >
+      <span className={styles.ScrollAnchor} ref={scrollAnchorStartRef} />
       {ownerStack.length === 0 ? (
         <ExpandCollapseToggle element={element} store={store} />
       ) : null}
-      <span className={styles.Component} ref={ref}>
+      <span className={styles.Component}>
         <DisplayName displayName={displayName} id={((id: any): number)} />
         {key && (
           <Fragment>
@@ -162,6 +176,7 @@ export default function ElementView({ data, index, style }: Props) {
         )}
       </span>
       {showDollarR && <span className={styles.DollarR}>&nbsp;== $r</span>}
+      <span className={styles.ScrollAnchor} ref={scrollAnchorEndRef} />
     </div>
   );
 }
