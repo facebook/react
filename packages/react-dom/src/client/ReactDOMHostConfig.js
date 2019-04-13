@@ -33,7 +33,7 @@ import {
   isEnabled as ReactBrowserEventEmitterIsEnabled,
   setEnabled as ReactBrowserEventEmitterSetEnabled,
 } from '../events/ReactBrowserEventEmitter';
-import {getChildNamespace} from '../shared/DOMNamespaces';
+import {Namespaces, getChildNamespace} from '../shared/DOMNamespaces';
 import {
   ELEMENT_NODE,
   TEXT_NODE,
@@ -44,13 +44,13 @@ import {
 import dangerousStyleValue from '../shared/dangerousStyleValue';
 
 import type {DOMContainer} from './ReactDOM';
-import type {ReactEventResponder} from 'shared/ReactTypes';
+import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 import {
-  REACT_EVENT_COMPONENT_TYPE,
-  REACT_EVENT_TARGET_TYPE,
-  REACT_EVENT_TARGET_TOUCH_HIT,
-} from 'shared/ReactSymbols';
-import getElementFromTouchHitTarget from 'shared/getElementFromTouchHitTarget';
+  mountEventResponder,
+  unmountEventResponder,
+} from '../events/DOMEventResponderSystem';
+import {REACT_EVENT_TARGET_TOUCH_HIT} from 'shared/ReactSymbols';
+import {canUseDOM} from 'shared/ExecutionEnvironment';
 
 export type Type = string;
 export type Props = {
@@ -61,6 +61,23 @@ export type Props = {
   dangerouslySetInnerHTML?: mixed,
   style?: {
     display?: string,
+  },
+  bottom?: null | number,
+  left?: null | number,
+  right?: null | number,
+  top?: null | number,
+};
+export type EventTargetChildElement = {
+  type: string,
+  props: null | {
+    style?: {
+      position?: string,
+      zIndex?: number,
+      bottom?: string,
+      left?: string,
+      right?: string,
+      top?: string,
+    },
   },
 };
 export type Container = Element | Document;
@@ -89,6 +106,8 @@ import {
   enableEventAPI,
 } from 'shared/ReactFeatureFlags';
 import warning from 'shared/warning';
+
+const {html: HTML_NAMESPACE} = Namespaces;
 
 // Intentionally not named imports because Rollup would
 // use dynamic dispatch for CommonJS interop named imports.
@@ -180,31 +199,52 @@ export function getChildHostContext(
   return getChildNamespace(parentNamespace, type);
 }
 
-export function getChildHostContextForEvent(
+export function getChildHostContextForEventComponent(
+  parentHostContext: HostContext,
+): HostContext {
+  if (__DEV__) {
+    const parentHostContextDev = ((parentHostContext: any): HostContextDev);
+    const {namespace, ancestorInfo} = parentHostContextDev;
+    warning(
+      parentHostContextDev.eventData === null ||
+        !parentHostContextDev.eventData.isEventTarget,
+      'validateDOMNesting: React event targets must not have event components as children.',
+    );
+    const eventData = {
+      isEventComponent: true,
+      isEventTarget: false,
+    };
+    return {namespace, ancestorInfo, eventData};
+  }
+  return parentHostContext;
+}
+
+export function getChildHostContextForEventTarget(
   parentHostContext: HostContext,
   type: Symbol | number,
 ): HostContext {
   if (__DEV__) {
     const parentHostContextDev = ((parentHostContext: any): HostContextDev);
     const {namespace, ancestorInfo} = parentHostContextDev;
-    let eventData = null;
-
-    if (type === REACT_EVENT_COMPONENT_TYPE) {
-      eventData = {
-        isEventComponent: true,
-        isEventTarget: false,
-      };
-    } else if (type === REACT_EVENT_TARGET_TYPE) {
+    if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
       warning(
-        parentHostContextDev.eventData !== null &&
-          parentHostContextDev.eventData.isEventComponent,
-        'validateDOMNesting: React event targets must be direct children of event components.',
+        parentHostContextDev.eventData === null ||
+          !parentHostContextDev.eventData.isEventComponent,
+        'validateDOMNesting: <TouchHitTarget> cannot not be a direct child of an event component. ' +
+          'Ensure <TouchHitTarget> is a direct child of a DOM element.',
       );
-      eventData = {
-        isEventComponent: false,
-        isEventTarget: true,
-      };
+      const parentNamespace = parentHostContextDev.namespace;
+      if (parentNamespace !== HTML_NAMESPACE) {
+        throw new Error(
+          '<TouchHitTarget> was used in an unsupported DOM namespace. ' +
+            'Ensure the <TouchHitTarget> is used in an HTML namespace.',
+        );
+      }
     }
+    const eventData = {
+      isEventComponent: false,
+      isEventTarget: true,
+    };
     return {namespace, ancestorInfo, eventData};
   }
   return parentHostContext;
@@ -347,12 +387,6 @@ export function createTextInstance(
         warning(
           !eventData.isEventComponent,
           'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
-            'Wrap the child text "%s" in an element.',
-          text,
-        );
-        warning(
-          !eventData.isEventTarget,
-          'validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
             'Wrap the child text "%s" in an element.',
           text,
         );
@@ -857,41 +891,104 @@ export function didNotFindHydratableSuspenseInstance(
   }
 }
 
-export function handleEventComponent(
-  eventResponder: ReactEventResponder,
-  rootContainerInstance: Container,
-  internalInstanceHandle: Object,
+export function mountEventComponent(
+  eventComponentInstance: ReactEventComponentInstance,
 ): void {
   if (enableEventAPI) {
+    mountEventResponder(eventComponentInstance);
+    updateEventComponent(eventComponentInstance);
+  }
+}
+
+export function updateEventComponent(
+  eventComponentInstance: ReactEventComponentInstance,
+): void {
+  if (enableEventAPI) {
+    const rootContainerInstance = ((eventComponentInstance.rootInstance: any): Container);
     const rootElement = rootContainerInstance.ownerDocument;
     listenToEventResponderEventTypes(
-      eventResponder.targetEventTypes,
+      eventComponentInstance.responder.targetEventTypes,
       rootElement,
     );
   }
 }
 
+export function unmountEventComponent(
+  eventComponentInstance: ReactEventComponentInstance,
+): void {
+  if (enableEventAPI) {
+    // TODO stop listening to targetEventTypes
+    unmountEventResponder(eventComponentInstance);
+  }
+}
+
+export function getEventTargetChildElement(
+  type: Symbol | number,
+  props: Props,
+): null | EventTargetChildElement {
+  if (enableEventAPI) {
+    if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
+      const {bottom, left, right, top} = props;
+
+      if (!bottom && !left && !right && !top) {
+        return null;
+      }
+      return {
+        type: 'div',
+        props: {
+          style: {
+            position: 'absolute',
+            zIndex: -1,
+            bottom: bottom ? `-${bottom}px` : '0px',
+            left: left ? `-${left}px` : '0px',
+            right: right ? `-${right}px` : '0px',
+            top: top ? `-${top}px` : '0px',
+          },
+        },
+      };
+    }
+  }
+  return null;
+}
+
 export function handleEventTarget(
   type: Symbol | number,
   props: Props,
+  rootContainerInstance: Container,
   internalInstanceHandle: Object,
+): boolean {
+  return false;
+}
+
+export function commitEventTarget(
+  type: Symbol | number,
+  props: Props,
+  instance: Instance,
+  parentInstance: Instance,
 ): void {
   if (enableEventAPI) {
-    // Touch target hit slop handling
     if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
-      // Validates that there is a single element
-      const element = getElementFromTouchHitTarget(internalInstanceHandle);
-      if (element !== null) {
-        // We update the event target state node to be that of the element.
-        // We can then diff this entry to determine if we need to add the
-        // hit slop element, or change the dimensions of the hit slop.
-        const lastElement = internalInstanceHandle.stateNode;
-        if (lastElement !== element) {
-          internalInstanceHandle.stateNode = element;
-          // TODO: Create the hit slop element and attach it to the element
-        } else {
-          // TODO: Diff the left, top, right, bottom props
-        }
+      if (__DEV__ && canUseDOM) {
+        // This is done at DEV time because getComputedStyle will
+        // typically force a style recalculation and force a layout,
+        // reflow -– both of which are sync are expensive.
+        const computedStyles = window.getComputedStyle(parentInstance);
+        const position = computedStyles.getPropertyValue('position');
+        warning(
+          position !== '' && position !== 'static',
+          '<TouchHitTarget> inserts an empty absolutely positioned <div>. ' +
+            'This requires its parent DOM node to be positioned too, but the ' +
+            'parent DOM node was found to have the style "position" set to ' +
+            'either no value, or a value of "static". Try using a "position" ' +
+            'value of "relative".',
+        );
+        warning(
+          computedStyles.getPropertyValue('zIndex') !== '',
+          '<TouchHitTarget> inserts an empty <div> with "z-index" of "-1". ' +
+            'This requires its parent DOM node to have a "z-index" great than "-1",' +
+            'but the parent DOM node was found to no "z-index" value set.' +
+            ' Try using a "z-index" value of "0" or greater.',
+        );
       }
     }
   }

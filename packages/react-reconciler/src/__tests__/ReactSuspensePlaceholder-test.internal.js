@@ -110,7 +110,7 @@ describe('ReactSuspensePlaceholder', () => {
 
     function App(props) {
       return (
-        <Suspense maxDuration={500} fallback={<Text text="Loading..." />}>
+        <Suspense fallback={<Text text="Loading..." />}>
           <HiddenText text="A" />
           <span>
             <AsyncText ms={1000} text={props.middleText} />
@@ -176,7 +176,7 @@ describe('ReactSuspensePlaceholder', () => {
   it('times out text nodes', async () => {
     function App(props) {
       return (
-        <Suspense maxDuration={500} fallback={<Text text="Loading..." />}>
+        <Suspense fallback={<Text text="Loading..." />}>
           <Text text="A" />
           <AsyncText ms={1000} text={props.middleText} />
           <Text text="C" />
@@ -225,7 +225,7 @@ describe('ReactSuspensePlaceholder', () => {
         // uppercase is a special type that causes React Noop to render child
         // text nodes as uppercase.
         <uppercase>
-          <Suspense maxDuration={500} fallback={<Text text="Loading..." />}>
+          <Suspense fallback={<Text text="Loading..." />}>
             <Text text="a" />
             <AsyncText ms={1000} text={props.middleText} />
             <Text text="c" />
@@ -293,7 +293,7 @@ describe('ReactSuspensePlaceholder', () => {
         Scheduler.yieldValue('App');
         return (
           <Profiler id="root" onRender={onRender}>
-            <Suspense maxDuration={500} fallback={<Fallback />}>
+            <Suspense fallback={<Fallback />}>
               {shouldSuspend && <Suspending />}
               <Text fakeRenderDuration={textRenderDuration} text={text} />
             </Suspense>
@@ -323,10 +323,8 @@ describe('ReactSuspensePlaceholder', () => {
 
         jest.advanceTimersByTime(1000);
 
-        expect(Scheduler).toHaveYielded([
-          'Promise resolved [Loaded]',
-          'Loaded',
-        ]);
+        expect(Scheduler).toHaveYielded(['Promise resolved [Loaded]']);
+        expect(Scheduler).toFlushExpired(['Loaded']);
         expect(ReactNoop).toMatchRenderedOutput('LoadedText');
         expect(onRender).toHaveBeenCalledTimes(2);
 
@@ -426,10 +424,8 @@ describe('ReactSuspensePlaceholder', () => {
 
         jest.advanceTimersByTime(1000);
 
-        expect(Scheduler).toHaveYielded([
-          'Promise resolved [Loaded]',
-          'Loaded',
-        ]);
+        expect(Scheduler).toHaveYielded(['Promise resolved [Loaded]']);
+        expect(Scheduler).toFlushExpired(['Loaded']);
         expect(ReactNoop).toMatchRenderedOutput('LoadedNew');
         expect(onRender).toHaveBeenCalledTimes(4);
 
@@ -476,8 +472,16 @@ describe('ReactSuspensePlaceholder', () => {
         expect(onRender.mock.calls[1][3]).toBe(15);
 
         // Update again while timed out.
+        // Since this test was originally written we added an optimization to avoid
+        // suspending in the case that we already timed out. To simulate the old
+        // behavior, we add a different suspending boundary as a sibling.
         ReactNoop.render(
-          <App shouldSuspend={true} text="New" textRenderDuration={6} />,
+          <React.Fragment>
+            <App shouldSuspend={true} text="New" textRenderDuration={6} />
+            <Suspense fallback={null}>
+              <AsyncText ms={250} text="Sibling" fakeRenderDuration={1} />
+            </Suspense>
+          </React.Fragment>,
         );
         expect(Scheduler).toFlushAndYield([
           'App',
@@ -485,18 +489,23 @@ describe('ReactSuspensePlaceholder', () => {
           'Suspend! [Loaded]',
           'New',
           'Fallback',
+          'Suspend! [Sibling]',
         ]);
         expect(ReactNoop).toMatchRenderedOutput('Loading...');
         expect(onRender).toHaveBeenCalledTimes(2);
 
         // Resolve the pending promise.
         jest.advanceTimersByTime(250);
-        expect(Scheduler).toHaveYielded(['Promise resolved [Loaded]']);
+        expect(Scheduler).toHaveYielded([
+          'Promise resolved [Loaded]',
+          'Promise resolved [Sibling]',
+        ]);
         expect(Scheduler).toFlushAndYield([
           'App',
           'Suspending',
           'Loaded',
           'New',
+          'Sibling',
         ]);
         expect(onRender).toHaveBeenCalledTimes(3);
 

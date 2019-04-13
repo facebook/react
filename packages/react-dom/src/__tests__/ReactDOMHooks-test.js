@@ -99,12 +99,12 @@ describe('ReactDOMHooks', () => {
     ReactDOM.render(<Foo />, container);
     ReactDOM.unstable_batchedUpdates(() => {
       _set(0); // Forces the effect to be flushed
-      expect(otherContainer.textContent).toBe('');
+      expect(otherContainer.textContent).toBe('A');
       ReactDOM.render(<B />, otherContainer);
-      expect(otherContainer.textContent).toBe('');
+      expect(otherContainer.textContent).toBe('A');
     });
     expect(otherContainer.textContent).toBe('B');
-    expect(calledA).toBe(false); // It was in a batch
+    expect(calledA).toBe(true);
     expect(calledB).toBe(true);
   });
 

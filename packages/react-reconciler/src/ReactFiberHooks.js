@@ -30,10 +30,11 @@ import {
 } from './ReactHookEffectTags';
 import {
   scheduleWork,
-  warnIfNotCurrentlyBatchingInDev,
   computeExpirationForFiber,
   flushPassiveEffects,
   requestCurrentTime,
+  warnIfNotCurrentlyActingUpdatesInDev,
+  markRenderEventTime,
 } from './ReactFiberScheduler';
 
 import invariant from 'shared/invariant';
@@ -315,8 +316,8 @@ function areHookInputsEqual(
           'Previous: %s\n' +
           'Incoming: %s',
         currentHookNameInDev,
-        `[${nextDeps.join(', ')}]`,
         `[${prevDeps.join(', ')}]`,
+        `[${nextDeps.join(', ')}]`,
       );
     }
   }
@@ -718,6 +719,16 @@ function updateReducer<S, I, A>(
           remainingExpirationTime = updateExpirationTime;
         }
       } else {
+        // This update does have sufficient priority.
+
+        // Mark the event time of this update as relevant to this render pass.
+        // TODO: This should ideally use the true event time of this update rather than
+        // its priority which is a derived and not reverseable value.
+        // TODO: We should skip this update if it was already committed but currently
+        // we have no way of detecting the difference between a committed and suspended
+        // update here.
+        markRenderEventTime(updateExpirationTime);
+
         // Process this update.
         if (update.eagerReducer === reducer) {
           // If this update was processed eagerly, and its reducer matches the
@@ -1046,19 +1057,6 @@ function updateMemo<T>(
   return nextValue;
 }
 
-// in a test-like environment, we want to warn if dispatchAction()
-// is called outside of a batchedUpdates/TestUtils.act(...) call.
-let shouldWarnForUnbatchedSetState = false;
-
-if (__DEV__) {
-  // jest isn't a 'global', it's just exposed to tests via a wrapped function
-  // further, this isn't a test file, so flow doesn't recognize the symbol. So...
-  // $FlowExpectedError - because requirements don't give a damn about your type sigs.
-  if ('undefined' !== typeof jest) {
-    shouldWarnForUnbatchedSetState = true;
-  }
-}
-
 function dispatchAction<S, A>(
   fiber: Fiber,
   queue: UpdateQueue<S, A>,
@@ -1178,8 +1176,11 @@ function dispatchAction<S, A>(
       }
     }
     if (__DEV__) {
-      if (shouldWarnForUnbatchedSetState === true) {
-        warnIfNotCurrentlyBatchingInDev(fiber);
+      // jest isn't a 'global', it's just exposed to tests via a wrapped function
+      // further, this isn't a test file, so flow doesn't recognize the symbol. So...
+      // $FlowExpectedError - because requirements don't give a damn about your type sigs.
+      if ('undefined' !== typeof jest) {
+        warnIfNotCurrentlyActingUpdatesInDev(fiber);
       }
     }
     scheduleWork(fiber, expirationTime);

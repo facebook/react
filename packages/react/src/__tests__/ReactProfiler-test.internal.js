@@ -1352,6 +1352,7 @@ describe('Profiler', () => {
             },
           );
         }).toThrow('Expected error onWorkScheduled');
+        expect(Scheduler).toFlushAndYield(['Component:fail']);
         throwInOnWorkScheduled = false;
         expect(onWorkScheduled).toHaveBeenCalled();
 
@@ -1386,7 +1387,10 @@ describe('Profiler', () => {
         // Errors that happen inside of a subscriber should throw,
         throwInOnWorkStarted = true;
         expect(Scheduler).toFlushAndThrow('Expected error onWorkStarted');
-        expect(Scheduler).toHaveYielded(['Component:text']);
+        // Rendering was interrupted by the error that was thrown
+        expect(Scheduler).toHaveYielded([]);
+        // Rendering continues in the next task
+        expect(Scheduler).toFlushAndYield(['Component:text']);
         throwInOnWorkStarted = false;
         expect(onWorkStarted).toHaveBeenCalled();
 
@@ -2362,21 +2366,23 @@ describe('Profiler', () => {
           () => {
             ReactTestRenderer.create(
               <React.Profiler id="app" onRender={onRender}>
-                <React.Suspense
-                  maxDuration={1000}
-                  fallback={<Text text="loading" />}>
-                  <AsyncText text="loaded" ms={2000} />
+                <React.Suspense fallback={<Text text="loading" />}>
+                  <AsyncText text="loaded" ms={500} />
                 </React.Suspense>
               </React.Profiler>,
             );
           },
         );
 
+        expect(Scheduler).toHaveYielded(['Suspend [loaded]', 'Text [loading]']);
+
         expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
 
         jest.runAllTimers();
         await resourcePromise;
 
+        expect(Scheduler).toHaveYielded(['Promise resolved [loaded]']);
+        expect(Scheduler).toFlushExpired(['AsyncText [loaded]']);
         expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
         expect(
           onInteractionScheduledWorkCompleted,
@@ -2416,10 +2422,8 @@ describe('Profiler', () => {
           () => {
             ReactTestRenderer.create(
               <React.Profiler id="app" onRender={onRender}>
-                <React.Suspense
-                  maxDuration={1000}
-                  fallback={<Text text="loading" />}>
-                  <AsyncComponentWithCascadingWork text="loaded" ms={2000} />
+                <React.Suspense fallback={<Text text="loading" />}>
+                  <AsyncComponentWithCascadingWork text="loaded" ms={500} />
                 </React.Suspense>
               </React.Profiler>,
             );
@@ -2428,8 +2432,13 @@ describe('Profiler', () => {
 
         expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
 
+        expect(Scheduler).toHaveYielded(['Text [loading]']);
+
         jest.runAllTimers();
         await resourcePromise;
+
+        expect(Scheduler).toHaveYielded(['Promise resolved [loaded]']);
+        expect(Scheduler).toFlushExpired([]);
 
         expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
 
@@ -2455,10 +2464,8 @@ describe('Profiler', () => {
           () => {
             ReactTestRenderer.create(
               <React.Profiler id="app" onRender={onRender}>
-                <React.Suspense
-                  maxDuration={1000}
-                  fallback={<Text text="loading" />}>
-                  <AsyncText text="loaded" ms={2000} />
+                <React.Suspense fallback={<Text text="loading" />}>
+                  <AsyncText text="loaded" ms={500} />
                 </React.Suspense>
               </React.Profiler>,
               {
@@ -2468,8 +2475,8 @@ describe('Profiler', () => {
           },
         );
 
-        Scheduler.advanceTime(1500);
-        await awaitableAdvanceTimers(1500);
+        Scheduler.advanceTime(400);
+        await awaitableAdvanceTimers(400);
 
         expect(Scheduler).toFlushAndYield([
           'Suspend [loaded]',
@@ -2477,8 +2484,8 @@ describe('Profiler', () => {
         ]);
         expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
 
-        Scheduler.advanceTime(2500);
-        await awaitableAdvanceTimers(2500);
+        Scheduler.advanceTime(500);
+        await awaitableAdvanceTimers(500);
 
         expect(Scheduler).toHaveYielded(['Promise resolved [loaded]']);
         expect(Scheduler).toFlushAndYield(['AsyncText [loaded]']);
@@ -2502,10 +2509,8 @@ describe('Profiler', () => {
           () => {
             ReactTestRenderer.create(
               <React.Profiler id="app" onRender={onRender}>
-                <React.Suspense
-                  maxDuration={2000}
-                  fallback={<Text text="loading" />}>
-                  <AsyncText text="loaded" ms={1000} />
+                <React.Suspense fallback={<Text text="loading" />}>
+                  <AsyncText text="loaded" ms={100} />
                 </React.Suspense>
               </React.Profiler>,
               {unstable_isConcurrent: true},
@@ -2519,7 +2524,7 @@ describe('Profiler', () => {
 
         expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
 
-        jest.advanceTimersByTime(1000);
+        jest.advanceTimersByTime(100);
         await resourcePromise;
         expect(Scheduler).toHaveYielded(['Promise resolved [loaded]']);
         expect(Scheduler).toFlushAndYield(['AsyncText [loaded]']);
@@ -2545,10 +2550,8 @@ describe('Profiler', () => {
           () => {
             renderer = ReactTestRenderer.create(
               <React.Profiler id="app" onRender={onRender}>
-                <React.Suspense
-                  maxDuration={2000}
-                  fallback={<Text text="loading" />}>
-                  <AsyncText text="loaded" ms={1000} />
+                <React.Suspense fallback={<Text text="loading" />}>
+                  <AsyncText text="loaded" ms={100} />
                 </React.Suspense>
                 <Text text="initial" />
               </React.Profiler>,
@@ -2579,10 +2582,8 @@ describe('Profiler', () => {
             () => {
               renderer.update(
                 <React.Profiler id="app" onRender={onRender}>
-                  <React.Suspense
-                    maxDuration={2000}
-                    fallback={<Text text="loading" />}>
-                    <AsyncText text="loaded" ms={1000} />
+                  <React.Suspense fallback={<Text text="loading" />}>
+                    <AsyncText text="loaded" ms={100} />
                   </React.Suspense>
                   <Text text="updated" />
                 </React.Profiler>,
@@ -2590,6 +2591,14 @@ describe('Profiler', () => {
             },
           );
         });
+        expect(Scheduler).toHaveYielded([
+          'Suspend [loaded]',
+          'Text [loading]',
+          'Text [initial]',
+          'Suspend [loaded]',
+          'Text [loading]',
+          'Text [updated]',
+        ]);
         expect(renderer.toJSON()).toEqual(['loading', 'updated']);
 
         expect(onRender).toHaveBeenCalledTimes(1);
@@ -2600,9 +2609,12 @@ describe('Profiler', () => {
 
         expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
 
-        Scheduler.advanceTime(1000);
-        jest.advanceTimersByTime(1000);
+        Scheduler.advanceTime(100);
+        jest.advanceTimersByTime(100);
         await originalPromise;
+
+        expect(Scheduler).toHaveYielded(['Promise resolved [loaded]']);
+        expect(Scheduler).toFlushExpired(['AsyncText [loaded]']);
         expect(renderer.toJSON()).toEqual(['loaded', 'updated']);
 
         expect(onRender).toHaveBeenCalledTimes(1);
@@ -2631,10 +2643,8 @@ describe('Profiler', () => {
           () => {
             renderer = ReactTestRenderer.create(
               <React.Profiler id="app" onRender={onRender}>
-                <React.Suspense
-                  maxDuration={2000}
-                  fallback={<Text text="loading" />}>
-                  <AsyncText text="loaded" ms={1000} />
+                <React.Suspense fallback={<Text text="loading" />}>
+                  <AsyncText text="loaded" ms={100} />
                 </React.Suspense>
                 <Text text="initial" />
               </React.Profiler>,
@@ -2651,8 +2661,8 @@ describe('Profiler', () => {
         expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
         expect(onRender).not.toHaveBeenCalled();
 
-        Scheduler.advanceTime(500);
-        jest.advanceTimersByTime(500);
+        Scheduler.advanceTime(50);
+        jest.advanceTimersByTime(50);
 
         const highPriUpdateInteraction = {
           id: 1,
@@ -2669,10 +2679,8 @@ describe('Profiler', () => {
             () => {
               renderer.update(
                 <React.Profiler id="app" onRender={onRender}>
-                  <React.Suspense
-                    maxDuration={2000}
-                    fallback={<Text text="loading" />}>
-                    <AsyncText text="loaded" ms={1000} />
+                  <React.Suspense fallback={<Text text="loading" />}>
+                    <AsyncText text="loaded" ms={100} />
                   </React.Suspense>
                   <Text text="updated" />
                 </React.Profiler>,
@@ -2695,8 +2703,8 @@ describe('Profiler', () => {
 
         expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(0);
 
-        Scheduler.advanceTime(500);
-        jest.advanceTimersByTime(500);
+        Scheduler.advanceTime(50);
+        jest.advanceTimersByTime(50);
         await originalPromise;
         expect(Scheduler).toHaveYielded(['Promise resolved [loaded]']);
         expect(Scheduler).toFlushAndYield(['AsyncText [loaded]']);

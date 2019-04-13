@@ -110,6 +110,14 @@ describe('ReactDebugFiberPerf', () => {
     };
   }
 
+  function Parent(props) {
+    return <div>{props.children}</div>;
+  }
+
+  function Child(props) {
+    return <div>{props.children}</div>;
+  }
+
   beforeEach(() => {
     jest.resetModules();
     resetFlamechart();
@@ -130,14 +138,6 @@ describe('ReactDebugFiberPerf', () => {
   afterEach(() => {
     delete global.performance;
   });
-
-  function Parent(props) {
-    return <div>{props.children}</div>;
-  }
-
-  function Child(props) {
-    return <div>{props.children}</div>;
-  }
 
   it('measures a simple reconciliation', () => {
     ReactNoop.render(

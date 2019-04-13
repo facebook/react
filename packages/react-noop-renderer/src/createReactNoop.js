@@ -14,6 +14,7 @@
  * environment.
  */
 
+import type {Thenable} from 'react-reconciler/src/ReactFiberScheduler';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
 import type {ReactNodeList} from 'shared/ReactTypes';
@@ -24,27 +25,40 @@ import expect from 'expect';
 import {
   REACT_FRAGMENT_TYPE,
   REACT_ELEMENT_TYPE,
-  REACT_EVENT_COMPONENT_TYPE,
-  REACT_EVENT_TARGET_TYPE,
   REACT_EVENT_TARGET_TOUCH_HIT,
 } from 'shared/ReactSymbols';
-import warningWithoutStack from 'shared/warningWithoutStack';
 import warning from 'shared/warning';
-import getElementFromTouchHitTarget from 'shared/getElementFromTouchHitTarget';
-
+import enqueueTask from 'shared/enqueueTask';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
+import warningWithoutStack from 'shared/warningWithoutStack';
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
-// for .act's return value
-type Thenable = {
-  then(resolve: () => mixed, reject?: () => mixed): mixed,
+type EventTargetChildElement = {
+  type: string,
+  props: null | {
+    style?: {
+      position?: string,
+      bottom?: string,
+      left?: string,
+      right?: string,
+      top?: string,
+    },
+  },
 };
-
 type Container = {
   rootID: string,
   children: Array<Instance | TextInstance>,
   pendingChildren: Array<Instance | TextInstance>,
 };
-type Props = {prop: any, hidden: boolean, children?: mixed};
+type Props = {
+  prop: any,
+  hidden: boolean,
+  children?: mixed,
+  bottom?: null | number,
+  left?: null | number,
+  right?: null | number,
+  top?: null | number,
+};
 type Instance = {|
   type: string,
   id: number,
@@ -62,10 +76,13 @@ type TextInstance = {|
 |};
 type HostContext = Object;
 
+const {ReactShouldWarnActingUpdates} = ReactSharedInternals;
+
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
 const EVENT_COMPONENT_CONTEXT = {};
 const EVENT_TARGET_CONTEXT = {};
+const EVENT_TOUCH_HIT_TARGET_CONTEXT = {};
 const UPDATE_SIGNAL = {};
 if (__DEV__) {
   Object.freeze(NO_CONTEXT);
@@ -262,20 +279,32 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return NO_CONTEXT;
     },
 
-    getChildHostContextForEvent(
+    getChildHostContextForEventComponent(parentHostContext: HostContext) {
+      if (__DEV__ && enableEventAPI) {
+        warning(
+          parentHostContext !== EVENT_TARGET_CONTEXT &&
+            parentHostContext !== EVENT_TOUCH_HIT_TARGET_CONTEXT,
+          'validateDOMNesting: React event targets must not have event components as children.',
+        );
+        return EVENT_COMPONENT_CONTEXT;
+      }
+      return parentHostContext;
+    },
+
+    getChildHostContextForEventTarget(
       parentHostContext: HostContext,
       type: Symbol | number,
     ) {
       if (__DEV__ && enableEventAPI) {
-        if (type === REACT_EVENT_COMPONENT_TYPE) {
-          return EVENT_COMPONENT_CONTEXT;
-        } else if (type === REACT_EVENT_TARGET_TYPE) {
+        if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
           warning(
-            parentHostContext === EVENT_COMPONENT_CONTEXT,
-            'validateDOMNesting: React event targets must be direct children of event components.',
+            parentHostContext !== EVENT_COMPONENT_CONTEXT,
+            'validateDOMNesting: <TouchHitTarget> cannot not be a direct child of an event component. ' +
+              'Ensure <TouchHitTarget> is a direct child of a DOM element.',
           );
-          return EVENT_TARGET_CONTEXT;
+          return EVENT_TOUCH_HIT_TARGET_CONTEXT;
         }
+        return EVENT_TARGET_CONTEXT;
       }
       return parentHostContext;
     },
@@ -370,12 +399,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
             'Wrap the child text "%s" in an element.',
           text,
         );
-        warning(
-          hostContext !== EVENT_TARGET_CONTEXT,
-          'validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
-            'Wrap the child text "%s" in an element.',
-          text,
-        );
       }
       if (hostContext === UPPERCASE_CONTEXT) {
         text = text.toUpperCase();
@@ -408,19 +431,63 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     isPrimaryRenderer: true,
     supportsHydration: false,
 
-    handleEventComponent() {
+    mountEventComponent(): void {
       // NO-OP
+    },
+
+    updateEventComponent(): void {
+      // NO-OP
+    },
+
+    unmountEventComponent(): void {
+      // NO-OP
+    },
+
+    getEventTargetChildElement(
+      type: Symbol | number,
+      props: Props,
+    ): null | EventTargetChildElement {
+      if (enableEventAPI) {
+        if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
+          const {bottom, left, right, top} = props;
+
+          if (!bottom && !left && !right && !top) {
+            return null;
+          }
+          return {
+            type: 'div',
+            props: {
+              style: {
+                position: 'absolute',
+                zIndex: -1,
+                bottom: bottom ? `-${bottom}px` : '0px',
+                left: left ? `-${left}px` : '0px',
+                right: right ? `-${right}px` : '0px',
+                top: top ? `-${top}px` : '0px',
+              },
+            },
+          };
+        }
+      }
+      return null;
     },
 
     handleEventTarget(
       type: Symbol | number,
       props: Props,
+      rootContainerInstance: Container,
       internalInstanceHandle: Object,
-    ) {
-      if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
-        // Validates that there is a single element
-        getElementFromTouchHitTarget(internalInstanceHandle);
-      }
+    ): boolean {
+      return false;
+    },
+
+    commitEventTarget(
+      type: Symbol | number,
+      props: Props,
+      instance: Instance,
+      parentInstance: Instance,
+    ): void {
+      // NO-OP
     },
   };
 
@@ -577,6 +644,140 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   const rootContainers = new Map();
   const roots = new Map();
   const DEFAULT_ROOT_ID = '<default>';
+
+  const {flushPassiveEffects, batchedUpdates} = NoopRenderer;
+
+  // this act() implementation should be exactly the same in
+  // ReactTestUtilsAct.js, ReactTestRendererAct.js, createReactNoop.js
+
+  let actingUpdatesScopeDepth = 0;
+
+  function flushEffectsAndMicroTasks(onDone: (err: ?Error) => void) {
+    try {
+      flushPassiveEffects();
+      enqueueTask(() => {
+        if (flushPassiveEffects()) {
+          flushEffectsAndMicroTasks(onDone);
+        } else {
+          onDone();
+        }
+      });
+    } catch (err) {
+      onDone(err);
+    }
+  }
+
+  function act(callback: () => Thenable) {
+    let previousActingUpdatesScopeDepth;
+    if (__DEV__) {
+      previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
+      actingUpdatesScopeDepth++;
+      ReactShouldWarnActingUpdates.current = true;
+    }
+
+    function onDone() {
+      if (__DEV__) {
+        actingUpdatesScopeDepth--;
+        if (actingUpdatesScopeDepth === 0) {
+          ReactShouldWarnActingUpdates.current = false;
+        }
+        if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
+          // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
+          warningWithoutStack(
+            null,
+            'You seem to have overlapping act() calls, this is not supported. ' +
+              'Be sure to await previous act() calls before making a new one. ',
+          );
+        }
+      }
+    }
+
+    const result = batchedUpdates(callback);
+    if (
+      result !== null &&
+      typeof result === 'object' &&
+      typeof result.then === 'function'
+    ) {
+      // setup a boolean that gets set to true only
+      // once this act() call is await-ed
+      let called = false;
+      if (__DEV__) {
+        if (typeof Promise !== 'undefined') {
+          //eslint-disable-next-line no-undef
+          Promise.resolve()
+            .then(() => {})
+            .then(() => {
+              if (called === false) {
+                warningWithoutStack(
+                  null,
+                  'You called act(async () => ...) without await. ' +
+                    'This could lead to unexpected testing behaviour, interleaving multiple act ' +
+                    'calls and mixing their scopes. You should - await act(async () => ...);',
+                );
+              }
+            });
+        }
+      }
+
+      // in the async case, the returned thenable runs the callback, flushes
+      // effects and  microtasks in a loop until flushPassiveEffects() === false,
+      // and cleans up
+      return {
+        then(resolve: () => void, reject: (?Error) => void) {
+          called = true;
+          result.then(
+            () => {
+              flushEffectsAndMicroTasks((err: ?Error) => {
+                onDone();
+                if (err) {
+                  reject(err);
+                } else {
+                  resolve();
+                }
+              });
+            },
+            err => {
+              onDone();
+              reject(err);
+            },
+          );
+        },
+      };
+    } else {
+      if (__DEV__) {
+        warningWithoutStack(
+          result === undefined,
+          'The callback passed to act(...) function ' +
+            'must return undefined, or a Promise. You returned %s',
+          result,
+        );
+      }
+
+      // flush effects until none remain, and cleanup
+      try {
+        while (flushPassiveEffects()) {}
+        onDone();
+      } catch (err) {
+        onDone();
+        throw err;
+      }
+
+      // in the sync case, the returned thenable only warns *if* await-ed
+      return {
+        then(resolve: () => void) {
+          if (__DEV__) {
+            warningWithoutStack(
+              false,
+              'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
+            );
+          }
+          resolve();
+        },
+      };
+    }
+  }
+
+  // end act() implementation
 
   function childToJSX(child, text) {
     if (text !== null) {
@@ -823,56 +1024,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     interactiveUpdates: NoopRenderer.interactiveUpdates,
 
-    // maybe this should exist only in the test file
-    act(callback: () => void): Thenable {
-      // note: keep these warning messages in sync with
-      // ReactTestRenderer.js and ReactTestUtils.js
-      let result = NoopRenderer.batchedUpdates(callback);
-      if (__DEV__) {
-        if (result !== undefined) {
-          let addendum;
-          if (result !== null && typeof result.then === 'function') {
-            addendum =
-              "\n\nIt looks like you wrote ReactNoop.act(async () => ...) or returned a Promise from it's callback. " +
-              'Putting asynchronous logic inside ReactNoop.act(...) is not supported.\n';
-          } else {
-            addendum = ' You returned: ' + result;
-          }
-          warningWithoutStack(
-            false,
-            'The callback passed to ReactNoop.act(...) function must not return anything.%s',
-            addendum,
-          );
-        }
-      }
-      ReactNoop.flushPassiveEffects();
-      // we want the user to not expect a return,
-      // but we want to warn if they use it like they can await on it.
-      return {
-        then() {
-          if (__DEV__) {
-            warningWithoutStack(
-              false,
-              'Do not await the result of calling ReactNoop.act(...), it is not a Promise.',
-            );
-          }
-        },
-      };
-    },
-
     flushSync(fn: () => mixed) {
       NoopRenderer.flushSync(fn);
     },
 
-    flushPassiveEffects() {
-      // Trick to flush passive effects without exposing an internal API:
-      // Create a throwaway root and schedule a dummy update on it.
-      const rootID = 'bloopandthenmoreletterstoavoidaconflict';
-      const container = {rootID: rootID, pendingChildren: [], children: []};
-      rootContainers.set(rootID, container);
-      const root = NoopRenderer.createContainer(container, true, false);
-      NoopRenderer.updateContainer(null, root, null, null);
-    },
+    flushPassiveEffects: NoopRenderer.flushPassiveEffects,
+
+    act,
 
     // Logs the current state of the tree.
     dumpTree(rootID: string = DEFAULT_ROOT_ID) {

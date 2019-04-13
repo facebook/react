@@ -13,7 +13,6 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue} from './ReactCapturedValue';
 import type {Update} from './ReactUpdateQueue';
 import type {Thenable} from './ReactFiberScheduler';
-import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import getComponentName from 'shared/getComponentName';
@@ -27,6 +26,8 @@ import {
   SuspenseComponent,
   DehydratedSuspenseComponent,
   IncompleteClassComponent,
+  EventComponent,
+  EventTarget,
 } from 'shared/ReactWorkTags';
 import {
   DidCapture,
@@ -38,8 +39,9 @@ import {
 import {
   enableSchedulerTracing,
   enableSuspenseServerRenderer,
+  enableEventAPI,
 } from 'shared/ReactFeatureFlags';
-import {ConcurrentMode} from './ReactTypeOfMode';
+import {ConcurrentMode, NoContext} from './ReactTypeOfMode';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent';
 
 import {createCapturedValue} from './ReactCapturedValue';
@@ -60,7 +62,6 @@ import {
 } from './ReactFiberContext';
 import {popProvider} from './ReactFiberNewContext';
 import {
-  renderDidSuspend,
   renderDidError,
   onUncaughtError,
   markLegacyErrorBoundaryAsFailed,
@@ -70,13 +71,8 @@ import {
 } from './ReactFiberScheduler';
 
 import invariant from 'shared/invariant';
-import maxSigned31BitInt from './maxSigned31BitInt';
-import {
-  Sync,
-  expirationTimeToMs,
-  LOW_PRIORITY_EXPIRATION,
-} from './ReactFiberExpirationTime';
-import {findEarliestOutstandingPriorityLevel} from './ReactFiberPendingPriority';
+
+import {Sync} from './ReactFiberExpirationTime';
 
 const PossiblyWeakSet = typeof WeakSet === 'function' ? WeakSet : Set;
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
@@ -207,48 +203,8 @@ function throwException(
     // This is a thenable.
     const thenable: Thenable = (value: any);
 
-    // Find the earliest timeout threshold of all the placeholders in the
-    // ancestor path. We could avoid this traversal by storing the thresholds on
-    // the stack, but we choose not to because we only hit this path if we're
-    // IO-bound (i.e. if something suspends). Whereas the stack is used even in
-    // the non-IO- bound case.
-    let workInProgress = returnFiber;
-    let earliestTimeoutMs = -1;
-    let startTimeMs = -1;
-    do {
-      if (workInProgress.tag === SuspenseComponent) {
-        const current = workInProgress.alternate;
-        if (current !== null) {
-          const currentState: SuspenseState | null = current.memoizedState;
-          if (currentState !== null) {
-            // Reached a boundary that already timed out. Do not search
-            // any further.
-            const timedOutAt = currentState.timedOutAt;
-            startTimeMs = expirationTimeToMs(timedOutAt);
-            // Do not search any further.
-            break;
-          }
-        }
-        let timeoutPropMs = workInProgress.pendingProps.maxDuration;
-        if (typeof timeoutPropMs === 'number') {
-          if (timeoutPropMs <= 0) {
-            earliestTimeoutMs = 0;
-          } else if (
-            earliestTimeoutMs === -1 ||
-            timeoutPropMs < earliestTimeoutMs
-          ) {
-            earliestTimeoutMs = timeoutPropMs;
-          }
-        }
-      }
-      // If there is a DehydratedSuspenseComponent we don't have to do anything because
-      // if something suspends inside it, we will simply leave that as dehydrated. It
-      // will never timeout.
-      workInProgress = workInProgress.return;
-    } while (workInProgress !== null);
-
     // Schedule the nearest Suspense to re-render the timed out view.
-    workInProgress = returnFiber;
+    let workInProgress = returnFiber;
     do {
       if (
         workInProgress.tag === SuspenseComponent &&
@@ -275,7 +231,7 @@ function throwException(
         // Note: It doesn't matter whether the component that suspended was
         // inside a concurrent mode tree. If the Suspense is outside of it, we
         // should *not* suspend the commit.
-        if ((workInProgress.mode & ConcurrentMode) === NoEffect) {
+        if ((workInProgress.mode & ConcurrentMode) === NoContext) {
           workInProgress.effectTag |= DidCapture;
 
           // We're going to commit this fiber even though it didn't complete.
@@ -312,41 +268,6 @@ function throwException(
         // with the normal suspend path.
 
         attachPingListener(root, renderExpirationTime, thenable);
-
-        let absoluteTimeoutMs;
-        if (earliestTimeoutMs === -1) {
-          // If no explicit threshold is given, default to an arbitrarily large
-          // value. The actual size doesn't matter because the threshold for the
-          // whole tree will be clamped to the expiration time.
-          absoluteTimeoutMs = maxSigned31BitInt;
-        } else {
-          if (startTimeMs === -1) {
-            // This suspend happened outside of any already timed-out
-            // placeholders. We don't know exactly when the update was
-            // scheduled, but we can infer an approximate start time from the
-            // expiration time. First, find the earliest uncommitted expiration
-            // time in the tree, including work that is suspended. Then subtract
-            // the offset used to compute an async update's expiration time.
-            // This will cause high priority (interactive) work to expire
-            // earlier than necessary, but we can account for this by adjusting
-            // for the Just Noticeable Difference.
-            const earliestExpirationTime = findEarliestOutstandingPriorityLevel(
-              root,
-              renderExpirationTime,
-            );
-            const earliestExpirationTimeMs = expirationTimeToMs(
-              earliestExpirationTime,
-            );
-            startTimeMs = earliestExpirationTimeMs - LOW_PRIORITY_EXPIRATION;
-          }
-          absoluteTimeoutMs = startTimeMs + earliestTimeoutMs;
-        }
-
-        // Mark the earliest timeout in the suspended fiber's ancestor path.
-        // After completing the root, we'll take the largest of all the
-        // suspended fiber's timeouts and use it to compute a timeout for the
-        // whole tree.
-        renderDidSuspend(root, absoluteTimeoutMs, renderExpirationTime);
 
         workInProgress.effectTag |= ShouldCapture;
         workInProgress.expirationTime = renderExpirationTime;
@@ -509,6 +430,12 @@ function unwindWork(
       return null;
     case ContextProvider:
       popProvider(workInProgress);
+      return null;
+    case EventComponent:
+    case EventTarget:
+      if (enableEventAPI) {
+        popHostContext(workInProgress);
+      }
       return null;
     default:
       return null;

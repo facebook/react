@@ -608,8 +608,8 @@ describe('ReactHooks', () => {
       'Warning: The final argument passed to useLayoutEffect changed size ' +
         'between renders. The order and size of this array must remain ' +
         'constant.\n\n' +
-        'Previous: [A, B]\n' +
-        'Incoming: [A]\n',
+        'Previous: [A]\n' +
+        'Incoming: [A, B]\n',
     ]);
   });
 
@@ -1046,11 +1046,10 @@ describe('ReactHooks', () => {
 
     class Cls extends React.Component {
       render() {
-        act(() =>
-          _setState(() => {
-            ReactCurrentDispatcher.current.readContext(ThemeContext);
-          }),
+        _setState(() =>
+          ReactCurrentDispatcher.current.readContext(ThemeContext),
         );
+
         return null;
       }
     }
@@ -1062,13 +1061,7 @@ describe('ReactHooks', () => {
           <Cls />
         </React.Fragment>,
       ),
-    ).toWarnDev(
-      [
-        'Context can only be read while React is rendering',
-        'Render methods should be a pure function of props and state',
-      ],
-      {withoutStack: 1},
-    );
+    ).toWarnDev(['Context can only be read while React is rendering']);
   });
 
   it('warns when calling hooks inside useReducer', () => {
@@ -1754,6 +1747,7 @@ describe('ReactHooks', () => {
     );
     expect(root).toMatchRenderedOutput('loading');
     await Promise.resolve();
+    Scheduler.flushAll();
     expect(root).toMatchRenderedOutput('hello');
   });
 
@@ -1785,6 +1779,7 @@ describe('ReactHooks', () => {
     );
     expect(root).toMatchRenderedOutput('loading');
     await Promise.resolve();
+    Scheduler.flushAll();
     expect(root).toMatchRenderedOutput('hello');
   });
 
@@ -1816,6 +1811,7 @@ describe('ReactHooks', () => {
     );
     expect(root).toMatchRenderedOutput('loading');
     await Promise.resolve();
+    Scheduler.flushAll();
     expect(root).toMatchRenderedOutput('hello');
   });
 });

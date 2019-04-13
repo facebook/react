@@ -28,6 +28,7 @@ import {
   enableSchedulerTracing,
   enableProfilerTimer,
   enableSuspenseServerRenderer,
+  enableEventAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -43,6 +44,8 @@ import {
   IncompleteClassComponent,
   MemoComponent,
   SimpleMemoComponent,
+  EventComponent,
+  EventTarget,
 } from 'shared/ReactWorkTags';
 import {
   invokeGuardedCallback,
@@ -60,7 +63,10 @@ import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import warning from 'shared/warning';
 
-import {NoWork} from './ReactFiberExpirationTime';
+import {
+  NoWork,
+  computeAsyncExpirationNoBucket,
+} from './ReactFiberExpirationTime';
 import {onCommitUnmount} from './ReactFiberDevToolsHook';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
@@ -90,6 +96,8 @@ import {
   hideTextInstance,
   unhideInstance,
   unhideTextInstance,
+  unmountEventComponent,
+  commitEventTarget,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -299,6 +307,7 @@ function commitBeforeMutationLifeCycles(
     case HostText:
     case HostPortal:
     case IncompleteClassComponent:
+    case EventTarget:
       // Nothing to do for these component types
       return;
     default: {
@@ -585,6 +594,7 @@ function commitLifeCycles(
     }
     case SuspenseComponent:
     case IncompleteClassComponent:
+    case EventTarget:
       break;
     default: {
       invariant(
@@ -740,6 +750,13 @@ function commitUnmount(current: Fiber): void {
       }
       return;
     }
+    case EventComponent: {
+      if (enableEventAPI) {
+        const eventComponentInstance = current.stateNode;
+        unmountEventComponent(eventComponentInstance);
+        current.stateNode = null;
+      }
+    }
   }
 }
 
@@ -817,7 +834,8 @@ function commitContainer(finishedWork: Fiber) {
   switch (finishedWork.tag) {
     case ClassComponent:
     case HostComponent:
-    case HostText: {
+    case HostText:
+    case EventTarget: {
       return;
     }
     case HostRoot:
@@ -955,17 +973,18 @@ function commitPlacement(finishedWork: Fiber): void {
   let node: Fiber = finishedWork;
   while (true) {
     if (node.tag === HostComponent || node.tag === HostText) {
+      const stateNode = node.stateNode;
       if (before) {
         if (isContainer) {
-          insertInContainerBefore(parent, node.stateNode, before);
+          insertInContainerBefore(parent, stateNode, before);
         } else {
-          insertBefore(parent, node.stateNode, before);
+          insertBefore(parent, stateNode, before);
         }
       } else {
         if (isContainer) {
-          appendChildToContainer(parent, node.stateNode);
+          appendChildToContainer(parent, stateNode);
         } else {
-          appendChild(parent, node.stateNode);
+          appendChild(parent, stateNode);
         }
       }
     } else if (node.tag === HostPortal) {
@@ -1195,6 +1214,34 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       commitTextUpdate(textInstance, oldText, newText);
       return;
     }
+    case EventTarget: {
+      if (enableEventAPI) {
+        const type = finishedWork.type.type;
+        const props = finishedWork.memoizedProps;
+        const instance = finishedWork.stateNode;
+        let parentInstance = null;
+
+        let node = finishedWork.return;
+        // Traverse up the fiber tree until we find the parent host node.
+        while (node !== null) {
+          if (node.tag === HostComponent) {
+            parentInstance = node.stateNode;
+            break;
+          } else if (node.tag === HostRoot) {
+            parentInstance = node.stateNode.containerInfo;
+            break;
+          }
+          node = node.return;
+        }
+        invariant(
+          parentInstance !== null,
+          'This should have a parent host component initialized. This error is likely ' +
+            'caused by a bug in React. Please file an issue.',
+        );
+        commitEventTarget(type, props, instance, parentInstance);
+      }
+      return;
+    }
     case HostRoot: {
       return;
     }
@@ -1228,11 +1275,15 @@ function commitSuspenseComponent(finishedWork: Fiber) {
   } else {
     newDidTimeout = true;
     primaryChildParent = finishedWork.child;
-    if (newState.timedOutAt === NoWork) {
+    if (newState.fallbackExpirationTime === NoWork) {
       // If the children had not already timed out, record the time.
       // This is used to compute the elapsed time during subsequent
       // attempts to render the children.
-      newState.timedOutAt = requestCurrentTime();
+      // We model this as a normal pri expiration time since that's
+      // how we infer start time for updates.
+      newState.fallbackExpirationTime = computeAsyncExpirationNoBucket(
+        requestCurrentTime(),
+      );
     }
   }
 

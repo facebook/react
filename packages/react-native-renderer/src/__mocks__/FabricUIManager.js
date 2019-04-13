@@ -119,6 +119,57 @@ const RCTFabricUIManager = {
   }),
 
   registerEventHandler: jest.fn(function registerEventHandler(callback) {}),
+
+  measure: jest.fn(function measure(node, callback) {
+    invariant(
+      typeof node === 'object',
+      'Expected node to be an object, was passed "%s"',
+      typeof node,
+    );
+    invariant(
+      typeof node.viewName === 'string',
+      'Expected node to be a host node.',
+    );
+    callback(10, 10, 100, 100, 0, 0);
+  }),
+  measureInWindow: jest.fn(function measureInWindow(node, callback) {
+    invariant(
+      typeof node === 'object',
+      'Expected node to be an object, was passed "%s"',
+      typeof node,
+    );
+    invariant(
+      typeof node.viewName === 'string',
+      'Expected node to be a host node.',
+    );
+    callback(10, 10, 100, 100);
+  }),
+  measureLayout: jest.fn(function measureLayout(
+    node,
+    relativeNode,
+    fail,
+    success,
+  ) {
+    invariant(
+      typeof node === 'object',
+      'Expected node to be an object, was passed "%s"',
+      typeof node,
+    );
+    invariant(
+      typeof node.viewName === 'string',
+      'Expected node to be a host node.',
+    );
+    invariant(
+      typeof relativeNode === 'object',
+      'Expected relative node to be an object, was passed "%s"',
+      typeof relativeNode,
+    );
+    invariant(
+      typeof relativeNode.viewName === 'string',
+      'Expected relative node to be a host node.',
+    );
+    success(1, 1, 100, 100);
+  }),
 };
 
 module.exports = RCTFabricUIManager;

@@ -8,7 +8,7 @@
  */
 
 import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
-import type {ReactEventResponder} from 'shared/ReactTypes';
+import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 
 import invariant from 'shared/invariant';
 
@@ -206,11 +206,18 @@ export function getChildHostContext(
   }
 }
 
-export function getChildHostContextForEvent(
+export function getChildHostContextForEventComponent(
+  parentHostContext: HostContext,
+) {
+  // TODO: add getChildHostContextForEventComponent implementation
+  return parentHostContext;
+}
+
+export function getChildHostContextForEventTarget(
   parentHostContext: HostContext,
   type: Symbol | number,
 ) {
-  // TODO: add getChildHostContextForEvent implementation
+  // TODO: add getChildHostContextForEventTarget implementation
   return parentHostContext;
 }
 
@@ -486,18 +493,45 @@ export function unhideTextInstance(
   throw new Error('Not yet implemented.');
 }
 
-export function handleEventComponent(
-  eventResponder: ReactEventResponder,
-  rootContainerInstance: Container,
-  internalInstanceHandle: Object,
+export function mountEventComponent(
+  eventComponentInstance: ReactEventComponentInstance,
 ) {
-  // TODO: add handleEventComponent implementation
+  throw new Error('Not yet implemented.');
+}
+
+export function updateEventComponent(
+  eventComponentInstance: ReactEventComponentInstance,
+) {
+  throw new Error('Not yet implemented.');
+}
+
+export function unmountEventComponent(
+  eventComponentInstance: ReactEventComponentInstance,
+): void {
+  throw new Error('Not yet implemented.');
+}
+
+export function getEventTargetChildElement(
+  type: Symbol | number,
+  props: Props,
+): null {
+  throw new Error('Not yet implemented.');
 }
 
 export function handleEventTarget(
   type: Symbol | number,
   props: Props,
+  rootContainerInstance: Container,
   internalInstanceHandle: Object,
-) {
-  // TODO: add handleEventTarget implementation
+): boolean {
+  throw new Error('Not yet implemented.');
+}
+
+export function commitEventTarget(
+  type: Symbol | number,
+  props: Props,
+  instance: Instance,
+  parentInstance: Instance,
+): void {
+  throw new Error('Not yet implemented.');
 }

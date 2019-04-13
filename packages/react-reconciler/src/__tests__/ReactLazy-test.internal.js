@@ -119,8 +119,8 @@ describe('ReactLazy', () => {
       return <Text text="Bar" />;
     }
 
-    const promiseForFoo = delay(1000).then(() => fakeImport(Foo));
-    const promiseForBar = delay(2000).then(() => fakeImport(Bar));
+    const promiseForFoo = delay(100).then(() => fakeImport(Foo));
+    const promiseForBar = delay(500).then(() => fakeImport(Bar));
 
     const LazyFoo = lazy(() => promiseForFoo);
     const LazyBar = lazy(() => promiseForBar);
@@ -138,13 +138,13 @@ describe('ReactLazy', () => {
     expect(Scheduler).toFlushAndYield(['Loading...']);
     expect(root).toMatchRenderedOutput(null);
 
-    jest.advanceTimersByTime(1000);
+    jest.advanceTimersByTime(100);
     await promiseForFoo;
 
     expect(Scheduler).toFlushAndYield(['Foo', 'Loading...']);
     expect(root).toMatchRenderedOutput(null);
 
-    jest.advanceTimersByTime(1000);
+    jest.advanceTimersByTime(500);
     await promiseForBar;
 
     expect(Scheduler).toFlushAndYield(['Foo', 'Bar']);
@@ -485,19 +485,15 @@ describe('ReactLazy', () => {
 
     await Promise.resolve();
 
+    expect(Scheduler).toHaveYielded([]);
+
     root.update(
       <Suspense fallback={<Text text="Loading..." />}>
         <LazyClass num={2} />
       </Suspense>,
     );
-    expect(Scheduler).toHaveYielded([
-      'UNSAFE_componentWillMount: A',
-      'A1',
-      'UNSAFE_componentWillReceiveProps: A -> A',
-      'UNSAFE_componentWillUpdate: A -> A',
-      'A2',
-    ]);
-    expect(Scheduler).toFlushAndYield([]);
+
+    expect(Scheduler).toHaveYielded(['UNSAFE_componentWillMount: A', 'A2']);
     expect(root).toMatchRenderedOutput('A2');
 
     root.update(

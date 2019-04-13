@@ -88,7 +88,7 @@ describe('ProfilerDOM', () => {
       const root = ReactDOM.unstable_createRoot(element);
       batch = root.createBatch();
       batch.render(
-        <React.Suspense maxDuration={100} fallback={<Text text="Loading..." />}>
+        <React.Suspense fallback={<Text text="Loading..." />}>
           <AsyncText text="Text" ms={2000} />
         </React.Suspense>,
       );
