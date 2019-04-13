@@ -190,6 +190,11 @@ function ExpandCollapseToggle({ element, store }: ExpandCollapseToggleProps) {
     [id, isCollapsed, store]
   );
 
+  const stopPropagation = useCallback(event => {
+    // Prevent the row from selecting
+    event.stopPropagation();
+  }, []);
+
   if (children.length === 0) {
     return <div className={styles.ExpandCollapseToggle} />;
   }
@@ -197,6 +202,7 @@ function ExpandCollapseToggle({ element, store }: ExpandCollapseToggleProps) {
   return (
     <div
       className={styles.ExpandCollapseToggle}
+      onMouseDown={stopPropagation}
       onClick={toggleCollapsed}
       onDoubleClick={swallowDoubleClick}
     >
