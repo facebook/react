@@ -333,22 +333,32 @@ function InnerElementType({ style, ...rest }) {
   // What we can do instead, is passively measure the width of the current rows,
   // and ensure that once we've grown to a new max size, we don't shrink below it.
   // This improves the user experience when scrolling between wide and narrow rows.
-  // We shouldn't retain this width across different conceptual trees though,
-  // so when the user opens the "owners tree" view, we should discard the previous width.
   const divRef = useRef<HTMLDivElement | null>(null);
-  const minWidthRef = useRef<number | null>(null);
-  const minWidth =
-    ownerStack.length > 0 || minWidthRef.current === null
-      ? '100%'
-      : minWidthRef.current;
+  const [minWidth, setMinWidth] = useState(null);
   useEffect(() => {
     if (divRef.current !== null) {
-      minWidthRef.current = Math.max(
-        minWidthRef.current || 0,
-        divRef.current.offsetWidth
-      );
+      const measuredWidth = divRef.current.offsetWidth;
+      setMinWidth(w => Math.max(w || 0, measuredWidth));
     }
   });
+
+  // When the window is resized, forget the specific min width.
+  // This will cause a render with 100% min-width, a measurement
+  // in an effect, and a second render where we know the width.
+  useEffect(() => {
+    const invalidateMinWidth = () => setMinWidth(null);
+    window.addEventListener('resize', invalidateMinWidth);
+    return () => window.removeEventListener('resize', invalidateMinWidth);
+  }, []);
+
+  // We shouldn't retain this width across different conceptual trees though,
+  // so when the user opens the "owners tree" view, we should discard the previous width.
+  const hasOwnerStack = ownerStack.length > 0;
+  const [prevHasOwnerStack, setPrevHasOwnerStack] = useState(hasOwnerStack);
+  if (hasOwnerStack !== prevHasOwnerStack) {
+    setPrevHasOwnerStack(hasOwnerStack);
+    setMinWidth(null);
+  }
 
   // This style override enables the background color to fill the full visible width,
   // when combined with the CSS tweaks in Element.
@@ -360,7 +370,7 @@ function InnerElementType({ style, ...rest }) {
       style={{
         ...style,
         display: 'inline-block',
-        minWidth,
+        minWidth: minWidth || '100%',
         width: undefined,
       }}
       ref={divRef}
