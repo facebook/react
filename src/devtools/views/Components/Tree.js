@@ -27,7 +27,7 @@ export type ItemData = {|
   baseDepth: number,
   numElements: number,
   getElementAtIndex: (index: number) => Element | null,
-  isUsingKeyboardOrSearch: boolean,
+  isNavigatingWithKeyboard: boolean,
   lastScrolledIDRef: { current: number | null },
   onElementMouseEnter: (id: number) => void,
   treeFocused: boolean,
@@ -41,6 +41,8 @@ export default function Tree(props: Props) {
     getElementAtIndex,
     numElements,
     ownerStack,
+    searchIndex,
+    searchResults,
     selectedElementID,
     selectedElementIndex,
     selectChildElementInTree,
@@ -52,7 +54,9 @@ export default function Tree(props: Props) {
   } = useContext(TreeContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
-  const [isUsingKeyboardOrSearch, setIsUsingKeyboardOrSearch] = useState(false);
+  const [isNavigatingWithKeyboard, setIsNavigatingWithKeyboard] = useState(
+    false
+  );
   // $FlowFixMe https://github.com/facebook/flow/issues/7341
   const listRef = useRef<FixedSizeList<ItemData> | null>(null);
   const treeRef = useRef<HTMLDivElement | null>(null);
@@ -144,7 +148,7 @@ export default function Tree(props: Props) {
         default:
           return;
       }
-      setIsUsingKeyboardOrSearch(true);
+      setIsNavigatingWithKeyboard(true);
     };
 
     // It's important to listen to the ownerDocument to support the browser extension.
@@ -210,8 +214,18 @@ export default function Tree(props: Props) {
 
   // If we switch the selected element while using the keyboard,
   // start highlighting it in the DOM instead of the last hovered node.
+  const searchRef = useRef({ searchIndex, searchResults });
   useEffect(() => {
-    if (isUsingKeyboardOrSearch) {
+    let didSelectNewSearchResult = false;
+    if (
+      searchRef.current.searchIndex !== searchIndex ||
+      searchRef.current.searchResults !== searchResults
+    ) {
+      searchRef.current.searchIndex = searchIndex;
+      searchRef.current.searchResults = searchResults;
+      didSelectNewSearchResult = true;
+    }
+    if (isNavigatingWithKeyboard || didSelectNewSearchResult) {
       if (selectedElementID !== null) {
         highlightElementInDOM(selectedElementID);
       } else {
@@ -220,8 +234,10 @@ export default function Tree(props: Props) {
     }
   }, [
     bridge,
-    isUsingKeyboardOrSearch,
+    isNavigatingWithKeyboard,
     highlightElementInDOM,
+    searchIndex,
+    searchResults,
     selectedElementID,
   ]);
 
@@ -230,28 +246,22 @@ export default function Tree(props: Props) {
     id => {
       // Ignore hover while we're navigating with keyboard.
       // This avoids flicker from the hovered nodes under the mouse.
-      if (!isUsingKeyboardOrSearch) {
+      if (!isNavigatingWithKeyboard) {
         highlightElementInDOM(id);
       }
     },
-    [isUsingKeyboardOrSearch, highlightElementInDOM]
+    [isNavigatingWithKeyboard, highlightElementInDOM]
   );
 
   const handleMouseMove = useCallback(() => {
     // We started using the mouse again.
     // This will enable hover styles in individual rows.
-    setIsUsingKeyboardOrSearch(false);
+    setIsNavigatingWithKeyboard(false);
   }, []);
 
   const handleMouseLeave = useCallback(() => {
     bridge.send('clearHighlightedElementInDOM');
   }, [bridge]);
-
-  const handleSearchInteraction = useCallback(() => {
-    // We started navigating using search.
-    // This will disable hover styles and start highlighting DOM elements.
-    setIsUsingKeyboardOrSearch(true);
-  }, []);
 
   // Let react-window know to re-render any time the underlying tree data changes.
   // This includes the owner context, since it controls a filtered view of the tree.
@@ -260,7 +270,7 @@ export default function Tree(props: Props) {
       baseDepth,
       numElements,
       getElementAtIndex,
-      isUsingKeyboardOrSearch,
+      isNavigatingWithKeyboard,
       onElementMouseEnter: handleElementMouseEnter,
       lastScrolledIDRef,
       treeFocused,
@@ -269,7 +279,7 @@ export default function Tree(props: Props) {
       baseDepth,
       numElements,
       getElementAtIndex,
-      isUsingKeyboardOrSearch,
+      isNavigatingWithKeyboard,
       handleElementMouseEnter,
       lastScrolledIDRef,
       treeFocused,
@@ -279,11 +289,7 @@ export default function Tree(props: Props) {
   return (
     <div className={styles.Tree} ref={treeRef}>
       <div className={styles.SearchInput}>
-        {ownerStack.length > 0 ? (
-          <OwnersStack />
-        ) : (
-          <SearchInput onSearchInteraction={handleSearchInteraction} />
-        )}
+        {ownerStack.length > 0 ? <OwnersStack /> : <SearchInput />}
         <InspectHostNodesToggle />
       </div>
       <div

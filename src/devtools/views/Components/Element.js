@@ -44,7 +44,7 @@ export default function ElementView({ data, index, style }: Props) {
   const {
     lastScrolledIDRef,
     treeFocused,
-    isUsingKeyboardOrSearch,
+    isNavigatingWithKeyboard,
     onElementMouseEnter,
   } = data;
   const id = element === null ? null : element.id;
@@ -122,7 +122,7 @@ export default function ElementView({ data, index, style }: Props) {
     className = treeFocused
       ? styles.SelectedElement
       : styles.InactiveSelectedElement;
-  } else if (isHovered && !isUsingKeyboardOrSearch) {
+  } else if (isHovered && !isNavigatingWithKeyboard) {
     className = styles.HoveredElement;
   }
 
