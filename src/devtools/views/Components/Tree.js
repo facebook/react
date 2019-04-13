@@ -336,6 +336,8 @@ function InnerElementType({ style, ...rest }) {
   // This improves the user experience when scrolling between wide and narrow rows.
   const divRef = useRef<HTMLDivElement | null>(null);
   const [minWidth, setMinWidth] = useState(null);
+  // TODO This is a valid warning, but we're ignoring it for the time being.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (divRef.current !== null) {
       const measuredWidth = divRef.current.offsetWidth;
