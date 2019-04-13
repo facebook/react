@@ -538,41 +538,44 @@ function traverseAndTriggerEventResponderInstances(
   let length = targetEventResponderInstances.length;
   let i;
   let shouldStopPropagation = false;
+  let responderEvent;
 
   // Capture target phase
-  for (i = length; i-- > 0; ) {
-    const targetEventResponderInstance = targetEventResponderInstances[i];
-    const responderEvent = createResponderEvent(
+  if (length > 0) {
+    responderEvent = createResponderEvent(
       ((topLevelType: any): string),
       nativeEvent,
       ((nativeEventTarget: any): Element | Document),
       eventSystemFlags,
       CAPTURE_PHASE,
     );
-    shouldStopPropagation = triggerEventResponderEventListener(
-      responderEvent,
-      targetEventResponderInstance,
-    );
-    if (shouldStopPropagation) {
-      return;
+    for (i = length; i-- > 0; ) {
+      const targetEventResponderInstance = targetEventResponderInstances[i];
+      shouldStopPropagation = triggerEventResponderEventListener(
+        responderEvent,
+        targetEventResponderInstance,
+      );
+      if (shouldStopPropagation) {
+        return;
+      }
     }
-  }
-  // Bubble target phase
-  for (i = 0; i < length; i++) {
-    const targetEventResponderInstance = targetEventResponderInstances[i];
-    const responderEvent = createResponderEvent(
+    // Bubble target phase
+    responderEvent = createResponderEvent(
       ((topLevelType: any): string),
       nativeEvent,
       ((nativeEventTarget: any): Element | Document),
       eventSystemFlags,
       BUBBLE_PHASE,
     );
-    shouldStopPropagation = triggerEventResponderEventListener(
-      responderEvent,
-      targetEventResponderInstance,
-    );
-    if (shouldStopPropagation) {
-      return;
+    for (i = 0; i < length; i++) {
+      const targetEventResponderInstance = targetEventResponderInstances[i];
+      shouldStopPropagation = triggerEventResponderEventListener(
+        responderEvent,
+        targetEventResponderInstance,
+      );
+      if (shouldStopPropagation) {
+        return;
+      }
     }
   }
   // Root phase
@@ -580,21 +583,23 @@ function traverseAndTriggerEventResponderInstances(
     topLevelType,
   );
   length = rootEventResponderInstances.length;
-  for (i = 0; i < length; i++) {
-    const targetEventResponderInstance = rootEventResponderInstances[i];
-    const responderEvent = createResponderEvent(
+  if (length > 0) {
+    responderEvent = createResponderEvent(
       ((topLevelType: any): string),
       nativeEvent,
       ((nativeEventTarget: any): Element | Document),
       eventSystemFlags,
       ROOT_PHASE,
     );
-    shouldStopPropagation = triggerEventResponderEventListener(
-      responderEvent,
-      targetEventResponderInstance,
-    );
-    if (shouldStopPropagation) {
-      return;
+    for (i = 0; i < length; i++) {
+      const targetEventResponderInstance = rootEventResponderInstances[i];
+      shouldStopPropagation = triggerEventResponderEventListener(
+        responderEvent,
+        targetEventResponderInstance,
+      );
+      if (shouldStopPropagation) {
+        return;
+      }
     }
   }
 }
