@@ -14,6 +14,8 @@ import type {
 } from 'shared/ReactTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
+const CAPTURE_PHASE = 2;
+
 type PressProps = {
   disabled: boolean,
   delayLongPress: number,
@@ -40,7 +42,6 @@ type PressProps = {
 type PointerType = '' | 'mouse' | 'keyboard' | 'pen' | 'touch';
 
 type PressState = {
-  didDispatchEvent: boolean,
   isActivePressed: boolean,
   isActivePressStart: boolean,
   isAnchorTouched: boolean,
@@ -140,7 +141,6 @@ function dispatchEvent(
       discrete: true,
     },
   );
-  state.didDispatchEvent = true;
 }
 
 function dispatchPressChangeEvent(
@@ -200,6 +200,8 @@ function dispatchPressStartEvents(
   props: PressProps,
   state: PressState,
 ): void {
+  const shouldStopPropagation =
+    props.stopPropagation === undefined ? true : props.stopPropagation;
   state.isPressed = true;
 
   if (state.pressEndTimeout !== null) {
@@ -229,14 +231,7 @@ function dispatchPressStartEvents(
         if (props.onLongPressChange) {
           dispatchLongPressChangeEvent(context, props, state);
         }
-        if (state.didDispatchEvent) {
-          const shouldStopPropagation =
-            props.stopPropagation === undefined ? true : props.stopPropagation;
-          if (shouldStopPropagation) {
-            context.dispatchStopPropagation();
-          }
-          state.didDispatchEvent = false;
-        }
+        return shouldStopPropagation;
       }, delayLongPress);
     }
   };
@@ -251,6 +246,7 @@ function dispatchPressStartEvents(
       state.pressStartTimeout = context.setTimeout(() => {
         state.pressStartTimeout = null;
         dispatch();
+        return shouldStopPropagation;
       }, delayPressStart);
     } else {
       dispatch();
@@ -263,6 +259,8 @@ function dispatchPressEndEvents(
   props: PressProps,
   state: PressState,
 ): void {
+  const shouldStopPropagation =
+    props.stopPropagation === undefined ? true : props.stopPropagation;
   const wasActivePressStart = state.isActivePressStart;
   let activationWasForced = false;
 
@@ -298,6 +296,7 @@ function dispatchPressEndEvents(
       state.pressEndTimeout = context.setTimeout(() => {
         state.pressEndTimeout = null;
         deactivate(context, props, state);
+        return shouldStopPropagation;
       }, delayPressEnd);
     } else {
       deactivate(context, props, state);
@@ -425,9 +424,16 @@ const PressResponder = {
     context: ReactResponderContext,
     props: PressProps,
     state: PressState,
-  ): void {
-    const {target, type} = event;
+  ): boolean {
+    const {phase, target, type} = event;
+
+    // Press doesn't handle capture target events at this point
+    if (phase === CAPTURE_PHASE) {
+      return false;
+    }
     const nativeEvent: any = event.nativeEvent;
+    const shouldStopPropagation =
+      props.stopPropagation === undefined ? true : props.stopPropagation;
 
     switch (type) {
       /**
@@ -435,18 +441,9 @@ const PressResponder = {
        */
       case 'pointerdown':
       case 'mousedown': {
-        if (
-          !state.isPressed &&
-          !context.hasOwnership() &&
-          !state.shouldSkipMouseAfterTouch
-        ) {
+        if (!state.isPressed && !state.shouldSkipMouseAfterTouch) {
           const pointerType = getPointerType(nativeEvent);
           state.pointerType = pointerType;
-
-          // Ignore any device buttons except left-mouse and touch/pen contact
-          if (nativeEvent.button > 0) {
-            return;
-          }
 
           // Ignore pressing on hit slop area with mouse
           if (
@@ -457,22 +454,28 @@ const PressResponder = {
               nativeEvent.y,
             )
           ) {
-            return;
+            return false;
+          }
+
+          // Ignore any device buttons except left-mouse and touch/pen contact
+          if (nativeEvent.button > 0) {
+            return shouldStopPropagation;
           }
 
           state.pressTarget = target;
           state.isPressWithinResponderRegion = true;
           dispatchPressStartEvents(context, props, state);
           context.addRootEventTypes(target.ownerDocument, rootEventTypes);
+          return shouldStopPropagation;
         }
-        break;
+        return false;
       }
       case 'pointermove':
       case 'mousemove':
       case 'touchmove': {
         if (state.isPressed) {
           if (state.shouldSkipMouseAfterTouch) {
-            return;
+            return shouldStopPropagation;
           }
 
           const pointerType = getPointerType(nativeEvent);
@@ -503,15 +506,16 @@ const PressResponder = {
             state.isPressWithinResponderRegion = false;
             dispatchPressEndEvents(context, props, state);
           }
+          return shouldStopPropagation;
         }
-        break;
+        return false;
       }
       case 'pointerup':
       case 'mouseup': {
         if (state.isPressed) {
           if (state.shouldSkipMouseAfterTouch) {
             state.shouldSkipMouseAfterTouch = false;
-            return;
+            return shouldStopPropagation;
           }
 
           const pointerType = getPointerType(nativeEvent);
@@ -535,10 +539,11 @@ const PressResponder = {
             }
           }
           context.removeRootEventTypes(rootEventTypes);
+          return shouldStopPropagation;
         }
         state.isAnchorTouched = false;
         state.shouldSkipMouseAfterTouch = false;
-        break;
+        return false;
       }
 
       /**
@@ -546,12 +551,12 @@ const PressResponder = {
        * support for pointer events.
        */
       case 'touchstart': {
-        if (!state.isPressed && !context.hasOwnership()) {
+        if (!state.isPressed) {
           // We bail out of polyfilling anchor tags, given the same heuristics
           // explained above in regards to needing to use click events.
           if (isAnchorTagElement(target)) {
             state.isAnchorTouched = true;
-            return;
+            return shouldStopPropagation;
           }
           const pointerType = getPointerType(nativeEvent);
           state.pointerType = pointerType;
@@ -559,13 +564,14 @@ const PressResponder = {
           state.isPressWithinResponderRegion = true;
           dispatchPressStartEvents(context, props, state);
           context.addRootEventTypes(target.ownerDocument, rootEventTypes);
+          return shouldStopPropagation;
         }
-        break;
+        return false;
       }
       case 'touchend': {
         if (state.isAnchorTouched) {
           state.isAnchorTouched = false;
-          return;
+          return shouldStopPropagation;
         }
         if (state.isPressed) {
           const pointerType = getPointerType(nativeEvent);
@@ -600,8 +606,9 @@ const PressResponder = {
           }
           state.shouldSkipMouseAfterTouch = true;
           context.removeRootEventTypes(rootEventTypes);
+          return shouldStopPropagation;
         }
-        break;
+        return false;
       }
 
       /**
@@ -610,7 +617,7 @@ const PressResponder = {
        */
       case 'keydown':
       case 'keypress': {
-        if (!context.hasOwnership() && isValidKeyPress(nativeEvent.key)) {
+        if (isValidKeyPress(nativeEvent.key)) {
           if (state.isPressed) {
             // Prevent spacebar press from scrolling the window
             if (nativeEvent.key === ' ') {
@@ -623,8 +630,9 @@ const PressResponder = {
             dispatchPressStartEvents(context, props, state);
             context.addRootEventTypes(target.ownerDocument, rootEventTypes);
           }
+          return shouldStopPropagation;
         }
-        break;
+        return false;
       }
       case 'keyup': {
         if (state.isPressed && isValidKeyPress(nativeEvent.key)) {
@@ -642,8 +650,9 @@ const PressResponder = {
             }
           }
           context.removeRootEventTypes(rootEventTypes);
+          return shouldStopPropagation;
         }
-        break;
+        return false;
       }
 
       case 'pointercancel':
@@ -653,8 +662,9 @@ const PressResponder = {
           state.shouldSkipMouseAfterTouch = false;
           dispatchPressEndEvents(context, props, state);
           context.removeRootEventTypes(rootEventTypes);
+          return shouldStopPropagation;
         }
-        break;
+        return false;
       }
 
       case 'click': {
@@ -665,8 +675,9 @@ const PressResponder = {
           if (preventDefault !== false && !shiftKey && !metaKey && !ctrlKey) {
             nativeEvent.preventDefault();
           }
+          return shouldStopPropagation;
         }
-        break;
+        return false;
       }
 
       case 'contextmenu': {
@@ -678,19 +689,12 @@ const PressResponder = {
             dispatchPressEndEvents(context, props, state);
             context.removeRootEventTypes(rootEventTypes);
           }
+          return shouldStopPropagation;
         }
-        break;
+        return false;
       }
     }
-
-    if (state.didDispatchEvent) {
-      const shouldStopPropagation =
-        props.stopPropagation === undefined ? true : props.stopPropagation;
-      if (shouldStopPropagation) {
-        context.dispatchStopPropagation();
-      }
-      state.didDispatchEvent = false;
-    }
+    return false;
   },
   onUnmount(
     context: ReactResponderContext,

@@ -42,11 +42,10 @@ export function setListenToResponderEventTypes(
   listenToResponderEventTypesImpl = _listenToResponderEventTypesImpl;
 }
 
-type EventObjectTypes = {|stopPropagation: true|} | $Shape<PartialEventObject>;
+type EventObjectType = $Shape<PartialEventObject>;
 
 type EventQueue = {
-  bubble: null | Array<EventObjectTypes>,
-  capture: null | Array<EventObjectTypes>,
+  events: Array<EventObjectType>,
   discrete: boolean,
 };
 
@@ -62,10 +61,13 @@ type ResponderTimeout = {|
 
 type ResponderTimer = {|
   instance: ReactEventComponentInstance,
-  func: () => void,
+  func: () => boolean,
   id: Symbol,
 |};
 
+const ROOT_PHASE = 0;
+const BUBBLE_PHASE = 1;
+const CAPTURE_PHASE = 2;
 const activeTimeouts: Map<Symbol, ResponderTimeout> = new Map();
 const rootEventTypesToEventComponentInstances: Map<
   DOMTopLevelEventType | string,
@@ -93,7 +95,7 @@ const eventResponderContext: ReactResponderContext = {
   dispatchEvent(
     possibleEventObject: Object,
     listener: ($Shape<PartialEventObject>) => void,
-    {capture, discrete}: ReactResponderDispatchEventOptions,
+    {discrete}: ReactResponderDispatchEventOptions,
   ): void {
     validateResponderContext();
     const {target, type} = possibleEventObject;
@@ -122,17 +124,12 @@ const eventResponderContext: ReactResponderContext = {
     const eventObject = ((possibleEventObject: any): $Shape<
       PartialEventObject,
     >);
-    const events = getEventsFromEventQueue(capture);
+    const eventQueue = ((currentEventQueue: any): EventQueue);
     if (discrete) {
-      ((currentEventQueue: any): EventQueue).discrete = true;
+      eventQueue.discrete = true;
     }
     eventListeners.set(eventObject, listener);
-    events.push(eventObject);
-  },
-  dispatchStopPropagation(capture?: boolean) {
-    validateResponderContext();
-    const events = getEventsFromEventQueue();
-    events.push({stopPropagation: true});
+    eventQueue.events.push(eventObject);
   },
   isPositionWithinTouchHitTarget(doc: Document, x: number, y: number): boolean {
     validateResponderContext();
@@ -256,7 +253,7 @@ const eventResponderContext: ReactResponderContext = {
     triggerOwnershipListeners();
     return false;
   },
-  setTimeout(func: () => void, delay): Symbol {
+  setTimeout(func: () => boolean, delay): Symbol {
     validateResponderContext();
     if (currentTimers === null) {
       currentTimers = new Map();
@@ -350,37 +347,23 @@ const eventResponderContext: ReactResponderContext = {
   },
 };
 
-function getEventsFromEventQueue(capture?: boolean): Array<EventObjectTypes> {
-  const eventQueue = ((currentEventQueue: any): EventQueue);
-  let events;
-  if (capture) {
-    events = eventQueue.capture;
-    if (events === null) {
-      events = eventQueue.capture = [];
-    }
-  } else {
-    events = eventQueue.bubble;
-    if (events === null) {
-      events = eventQueue.bubble = [];
-    }
-  }
-  return events;
-}
-
 function processTimers(timers: Map<Symbol, ResponderTimer>): void {
   const timersArr = Array.from(timers.values());
+  let shouldStopPropagation = false;
   currentEventQueue = createEventQueue();
   try {
     for (let i = 0; i < timersArr.length; i++) {
       const {instance, func, id} = timersArr[i];
       currentInstance = instance;
       try {
-        func();
+        if (!shouldStopPropagation) {
+          shouldStopPropagation = func();
+        }
       } finally {
         activeTimeouts.delete(id);
       }
     }
-    batchedUpdates(processEventQueue, currentEventQueue);
+    processEventQueue();
   } finally {
     currentTimers = null;
     currentInstance = null;
@@ -407,20 +390,25 @@ function createResponderEvent(
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: Element | Document,
   eventSystemFlags: EventSystemFlags,
+  phase: 0 | 1 | 2,
 ): ReactResponderEvent {
-  return {
+  const responderEvent = {
     nativeEvent: nativeEvent,
     target: nativeEventTarget,
     type: topLevelType,
     passive: (eventSystemFlags & IS_PASSIVE) !== 0,
     passiveSupported: (eventSystemFlags & PASSIVE_NOT_SUPPORTED) === 0,
+    phase,
   };
+  if (__DEV__) {
+    Object.freeze(responderEvent);
+  }
+  return responderEvent;
 }
 
 function createEventQueue(): EventQueue {
   return {
-    bubble: null,
-    capture: null,
+    events: [],
     discrete: false,
   };
 }
@@ -433,41 +421,24 @@ function processEvent(event: $Shape<PartialEventObject>): void {
   invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
 }
 
-function processEvents(
-  bubble: null | Array<EventObjectTypes>,
-  capture: null | Array<EventObjectTypes>,
-): void {
-  let i, length;
-
-  if (capture !== null) {
-    for (i = capture.length; i-- > 0; ) {
-      const event = capture[i];
-      if (event.stopPropagation === true) {
-        return;
-      }
-      processEvent(((event: any): $Shape<PartialEventObject>));
-    }
-  }
-  if (bubble !== null) {
-    for (i = 0, length = bubble.length; i < length; ++i) {
-      const event = bubble[i];
-      if (event.stopPropagation === true) {
-        return;
-      }
-      processEvent(((event: any): $Shape<PartialEventObject>));
-    }
+function processEvents(events: Array<EventObjectType>): void {
+  for (let i = 0, length = events.length; i < length; i++) {
+    processEvent(events[i]);
   }
 }
 
 export function processEventQueue(): void {
-  const {bubble, capture, discrete} = ((currentEventQueue: any): EventQueue);
+  const {events, discrete} = ((currentEventQueue: any): EventQueue);
 
+  if (events.length === 0) {
+    return;
+  }
   if (discrete) {
     interactiveUpdates(() => {
-      processEvents(bubble, capture);
+      batchedUpdates(processEvents, events);
     });
   } else {
-    processEvents(bubble, capture);
+    batchedUpdates(processEvents, events);
   }
 }
 
@@ -489,77 +460,146 @@ function getTargetEventTypes(
   return cachedSet;
 }
 
-function handleTopLevelType(
+function getTargetEventResponderInstances(
   topLevelType: DOMTopLevelEventType,
-  responderEvent: ReactResponderEvent,
-  eventComponentInstance: ReactEventComponentInstance,
-  isRootLevelEvent: boolean,
-): void {
-  let {props, responder, state} = eventComponentInstance;
-  if (!isRootLevelEvent) {
-    // Validate the target event type exists on the responder
-    const targetEventTypes = getTargetEventTypes(responder.targetEventTypes);
-    if (!targetEventTypes.has(topLevelType)) {
-      return;
+  targetFiber: null | Fiber,
+): Array<ReactEventComponentInstance> {
+  const eventResponderInstances = [];
+  let node = targetFiber;
+  while (node !== null) {
+    // Traverse up the fiber tree till we find event component fibers.
+    if (node.tag === EventComponent) {
+      const eventComponentInstance = node.stateNode;
+      if (currentOwner === null || currentOwner === eventComponentInstance) {
+        const responder = eventComponentInstance.responder;
+        // Validate the target event type exists on the responder
+        const targetEventTypes = getTargetEventTypes(
+          responder.targetEventTypes,
+        );
+        if (targetEventTypes.has(topLevelType)) {
+          eventResponderInstances.push(eventComponentInstance);
+        }
+      }
     }
+    node = node.return;
   }
-  currentInstance = eventComponentInstance;
-  responder.onEvent(responderEvent, eventResponderContext, props, state);
+  return eventResponderInstances;
 }
 
-export function runResponderEventsInBatch(
+function getRootEventResponderInstances(
+  topLevelType: DOMTopLevelEventType,
+): Array<ReactEventComponentInstance> {
+  const eventResponderInstances = [];
+  const rootEventInstances = rootEventTypesToEventComponentInstances.get(
+    topLevelType,
+  );
+  if (rootEventInstances !== undefined) {
+    const rootEventComponentInstances = Array.from(rootEventInstances);
+
+    for (let i = 0; i < rootEventComponentInstances.length; i++) {
+      const rootEventComponentInstance = rootEventComponentInstances[i];
+
+      if (
+        currentOwner === null ||
+        currentOwner === rootEventComponentInstance
+      ) {
+        eventResponderInstances.push(rootEventComponentInstance);
+      }
+    }
+  }
+  return eventResponderInstances;
+}
+
+function triggerEventResponderEventListener(
+  responderEvent: ReactResponderEvent,
+  eventComponentInstance: ReactEventComponentInstance,
+): boolean {
+  const {responder, props, state} = eventComponentInstance;
+  currentInstance = eventComponentInstance;
+  return responder.onEvent(responderEvent, eventResponderContext, props, state);
+}
+
+function traverseAndTriggerEventResponderInstances(
   topLevelType: DOMTopLevelEventType,
   targetFiber: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: EventTarget,
   eventSystemFlags: EventSystemFlags,
 ): void {
-  if (enableEventAPI) {
-    currentEventQueue = createEventQueue();
-    const responderEvent = createResponderEvent(
+  // Trigger event responders in this order:
+  // - Capture target phase
+  // - Bubble target phase
+  // - Root phase
+
+  const targetEventResponderInstances = getTargetEventResponderInstances(
+    topLevelType,
+    targetFiber,
+  );
+  let length = targetEventResponderInstances.length;
+  let i;
+  let shouldStopPropagation = false;
+  let responderEvent;
+
+  // Capture target phase
+  if (length > 0) {
+    responderEvent = createResponderEvent(
       ((topLevelType: any): string),
       nativeEvent,
       ((nativeEventTarget: any): Element | Document),
       eventSystemFlags,
+      CAPTURE_PHASE,
     );
-
-    try {
-      let node = targetFiber;
-      // Traverse up the fiber tree till we find event component fibers.
-      while (node !== null) {
-        if (node.tag === EventComponent) {
-          const eventComponentInstance = node.stateNode;
-          handleTopLevelType(
-            topLevelType,
-            responderEvent,
-            eventComponentInstance,
-            false,
-          );
-        }
-        node = node.return;
-      }
-      // Handle root level events
-      const rootEventInstances = rootEventTypesToEventComponentInstances.get(
-        topLevelType,
+    for (i = length; i-- > 0; ) {
+      const targetEventResponderInstance = targetEventResponderInstances[i];
+      shouldStopPropagation = triggerEventResponderEventListener(
+        responderEvent,
+        targetEventResponderInstance,
       );
-      if (rootEventInstances !== undefined) {
-        const rootEventComponentInstances = Array.from(rootEventInstances);
-
-        for (let i = 0; i < rootEventComponentInstances.length; i++) {
-          const rootEventComponentInstance = rootEventComponentInstances[i];
-          handleTopLevelType(
-            topLevelType,
-            responderEvent,
-            rootEventComponentInstance,
-            true,
-          );
-        }
+      if (shouldStopPropagation) {
+        return;
       }
-      processEventQueue();
-    } finally {
-      currentTimers = null;
-      currentInstance = null;
-      currentEventQueue = null;
+    }
+    // Bubble target phase
+    responderEvent = createResponderEvent(
+      ((topLevelType: any): string),
+      nativeEvent,
+      ((nativeEventTarget: any): Element | Document),
+      eventSystemFlags,
+      BUBBLE_PHASE,
+    );
+    for (i = 0; i < length; i++) {
+      const targetEventResponderInstance = targetEventResponderInstances[i];
+      shouldStopPropagation = triggerEventResponderEventListener(
+        responderEvent,
+        targetEventResponderInstance,
+      );
+      if (shouldStopPropagation) {
+        return;
+      }
+    }
+  }
+  // Root phase
+  const rootEventResponderInstances = getRootEventResponderInstances(
+    topLevelType,
+  );
+  length = rootEventResponderInstances.length;
+  if (length > 0) {
+    responderEvent = createResponderEvent(
+      ((topLevelType: any): string),
+      nativeEvent,
+      ((nativeEventTarget: any): Element | Document),
+      eventSystemFlags,
+      ROOT_PHASE,
+    );
+    for (i = 0; i < length; i++) {
+      const targetEventResponderInstance = rootEventResponderInstances[i];
+      shouldStopPropagation = triggerEventResponderEventListener(
+        responderEvent,
+        targetEventResponderInstance,
+      );
+      if (shouldStopPropagation) {
+        return;
+      }
     }
   }
 }
@@ -620,4 +660,30 @@ function validateResponderContext(): void {
     'An event responder context was used outside of an event cycle. ' +
       'Use context.setTimeout() to use asynchronous responder context outside of event cycle .',
   );
+}
+
+export function dispatchEventForResponderEventSystem(
+  topLevelType: DOMTopLevelEventType,
+  targetFiber: null | Fiber,
+  nativeEvent: AnyNativeEvent,
+  nativeEventTarget: EventTarget,
+  eventSystemFlags: EventSystemFlags,
+): void {
+  if (enableEventAPI) {
+    currentEventQueue = createEventQueue();
+    try {
+      traverseAndTriggerEventResponderInstances(
+        topLevelType,
+        targetFiber,
+        nativeEvent,
+        nativeEventTarget,
+        eventSystemFlags,
+      );
+      processEventQueue();
+    } finally {
+      currentTimers = null;
+      currentInstance = null;
+      currentEventQueue = null;
+    }
+  }
 }
