@@ -115,7 +115,7 @@ export default function KeyValue({
           )}
           <span
             className={styles.Name}
-            onDoubleClick={hasChildren ? toggleIsOpen : undefined}
+            onClick={hasChildren ? toggleIsOpen : undefined}
           >
             {name}
           </span>
@@ -150,7 +150,7 @@ export default function KeyValue({
           )}
           <span
             className={styles.Name}
-            onDoubleClick={hasChildren ? toggleIsOpen : undefined}
+            onClick={hasChildren ? toggleIsOpen : undefined}
           >
             {name}
           </span>

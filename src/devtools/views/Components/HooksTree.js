@@ -130,7 +130,7 @@ function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
         <div className={styles.Hook}>
           <div className={styles.NameValueRow}>
             <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
-            <span onDoubleClick={toggleIsOpen} className={styles.Name}>
+            <span onClick={toggleIsOpen} className={styles.Name}>
               {name}
             </span>
           </div>
@@ -149,7 +149,7 @@ function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
         <div className={styles.Hook}>
           <div className={styles.NameValueRow}>
             <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
-            <span onDoubleClick={toggleIsOpen} className={styles.Name}>
+            <span onClick={toggleIsOpen} className={styles.Name}>
               {name}
             </span>{' '}
             {/* $FlowFixMe */}
