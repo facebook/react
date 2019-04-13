@@ -363,7 +363,7 @@ function processTimers(timers: Map<Symbol, ResponderTimer>): void {
         activeTimeouts.delete(id);
       }
     }
-    batchedUpdates(processEventQueue, currentEventQueue);
+    processEventQueue();
   } finally {
     currentTimers = null;
     currentInstance = null;
@@ -435,10 +435,10 @@ export function processEventQueue(): void {
   }
   if (discrete) {
     interactiveUpdates(() => {
-      processEvents(events);
+      batchedUpdates(processEvents, events);
     });
   } else {
-    processEvents(events);
+    batchedUpdates(processEvents, events);
   }
 }
 
