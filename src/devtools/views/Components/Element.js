@@ -80,15 +80,17 @@ export default function ElementView({ data, index, style }: Props) {
       // However, even calling scrollIntoView() on their parent node
       // wouldn't guarantee that it will be *fully* brought into view.
       // As a workaround, we'll have two anchor spans, and scroll each into view.
-      if (scrollAnchorStartRef.current !== null) {
-        scrollAnchorStartRef.current.scrollIntoView({
+      if (scrollAnchorEndRef.current !== null) {
+        scrollAnchorEndRef.current.scrollIntoView({
           behavior: 'auto',
           block: 'nearest',
           inline: 'nearest',
         });
       }
-      if (scrollAnchorEndRef.current !== null) {
-        scrollAnchorEndRef.current.scrollIntoView({
+      if (scrollAnchorStartRef.current !== null) {
+        // We scroll the start anchor last because it's
+        // more important for it to be in the view.
+        scrollAnchorStartRef.current.scrollIntoView({
           behavior: 'auto',
           block: 'nearest',
           inline: 'nearest',
