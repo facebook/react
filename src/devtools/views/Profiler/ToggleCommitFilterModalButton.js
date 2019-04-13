@@ -8,7 +8,9 @@ import ButtonIcon from '../ButtonIcon';
 export default function ToggleCommitFilterModalButton() {
   const { setIsFilterModalShowing } = useContext(CommitFilterModalContext);
 
-  const showFilterModal = useCallback(() => setIsFilterModalShowing(true));
+  const showFilterModal = useCallback(() => setIsFilterModalShowing(true), [
+    setIsFilterModalShowing,
+  ]);
 
   return (
     <Button onClick={showFilterModal} title="Filter commits by duration">

@@ -117,7 +117,9 @@ function SuspendingProfiler() {
     CommitFilterModalContext
   );
 
-  const dismissFilterModal = useCallback(() => setIsFilterModalShowing(false));
+  const dismissFilterModal = useCallback(() => setIsFilterModalShowing(false), [
+    setIsFilterModalShowing,
+  ]);
 
   let view = null;
   switch (selectedTabID) {

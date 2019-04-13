@@ -170,7 +170,7 @@ export default function Tree(props: Props) {
   ]);
 
   // Focus management.
-  const handleBlur = useCallback(() => setTreeFocused(false));
+  const handleBlur = useCallback(() => setTreeFocused(false), []);
   const handleFocus = useCallback(() => {
     setTreeFocused(true);
 
