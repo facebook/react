@@ -204,6 +204,7 @@ export default function Tree(props: Props) {
           displayName: element.displayName,
           hideAfterTimeout: false,
           id,
+          openNativeElementsPanel: false,
           rendererID,
           scrollIntoView: false,
         });

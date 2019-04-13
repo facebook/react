@@ -235,12 +235,14 @@ export default class Agent extends EventEmitter {
     displayName,
     hideAfterTimeout,
     id,
+    openNativeElementsPanel,
     rendererID,
     scrollIntoView,
   }: {
     displayName: string,
     hideAfterTimeout: boolean,
     id: number,
+    openNativeElementsPanel: boolean,
     rendererID: number,
     scrollIntoView: boolean,
   }) => {
@@ -261,6 +263,10 @@ export default class Agent extends EventEmitter {
         node.scrollIntoView({ block: 'nearest', inline: 'nearest' });
       }
       showOverlay(((node: any): HTMLElement), displayName, hideAfterTimeout);
+      if (openNativeElementsPanel) {
+        window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = node;
+        this._bridge.send('syncSelectionToNativeElementsPanel');
+      }
     } else {
       hideOverlay();
     }
