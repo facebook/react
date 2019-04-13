@@ -77,7 +77,7 @@ export default function ElementView({ data, index, style }: Props) {
 
       // We want to bring the whole <Component> name into view,
       // including the expansion toggle and the "=== $r" hint.
-      // However, even calling scrollIntoView() on their parent node
+      // However, even calling scrollIntoView() on a wrapper parent node (e.g. <span>)
       // wouldn't guarantee that it will be *fully* brought into view.
       // As a workaround, we'll have two anchor spans, and scroll each into view.
       if (scrollAnchorEndRef.current !== null) {
