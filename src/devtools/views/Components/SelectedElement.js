@@ -46,6 +46,7 @@ export default function SelectedElement(_: Props) {
           displayName: element.displayName,
           hideAfterTimeout: true,
           id: selectedElementID,
+          openNativeElementsPanel: true,
           rendererID,
           scrollIntoView: true,
         });
@@ -96,7 +97,7 @@ export default function SelectedElement(_: Props) {
         <Button
           className={styles.IconButton}
           onClick={highlightElement}
-          title="Highlight this element in the page"
+          title="Inspect the matching DOM element"
         >
           <ButtonIcon type="view-dom" />
         </Button>
