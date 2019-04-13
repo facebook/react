@@ -369,16 +369,11 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
       searchIndex = newSearchIndex;
     }
   }
-  if (didRequestSearch) {
-    if (searchIndex === null) {
-      selectedElementIndex = null;
-      selectedElementID = null;
-    } else {
-      selectedElementID = ((searchResults[searchIndex]: any): number);
-      selectedElementIndex = store.getIndexOfElementID(
-        ((selectedElementID: any): number)
-      );
-    }
+  if (didRequestSearch && searchIndex !== null) {
+    selectedElementID = ((searchResults[searchIndex]: any): number);
+    selectedElementIndex = store.getIndexOfElementID(
+      ((selectedElementID: any): number)
+    );
   }
 
   return {
