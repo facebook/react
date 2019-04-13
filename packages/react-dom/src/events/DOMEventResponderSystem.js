@@ -95,7 +95,7 @@ const eventResponderContext: ReactResponderContext = {
   dispatchEvent(
     possibleEventObject: Object,
     listener: ($Shape<PartialEventObject>) => void,
-    {capture, discrete}: ReactResponderDispatchEventOptions,
+    {discrete}: ReactResponderDispatchEventOptions,
   ): void {
     validateResponderContext();
     const {target, type} = possibleEventObject;

@@ -139,7 +139,6 @@ export type ReactResponderEvent = {
 };
 
 export type ReactResponderDispatchEventOptions = {
-  capture?: boolean,
   discrete?: boolean,
 };
 
