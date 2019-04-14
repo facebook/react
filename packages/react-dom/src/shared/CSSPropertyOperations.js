@@ -76,6 +76,11 @@ export function setValueForStyles(node, styles) {
     if (styleName === 'float') {
       styleName = 'cssFloat';
     }
+    if (styleName === undefined) {
+      try {
+        throw new Error("Stylename is undefined. Probably, you are using a code pattern for style passing which is not supported by React DOM.");
+      } catch (x) {}
+    }
     if (isCustomProperty) {
       style.setProperty(styleName, styleValue);
     } else {
