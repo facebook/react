@@ -34,9 +34,7 @@ const build = async (tempPath, manifestPath, manifestVersion) => {
     `${webpackPath} --config webpack.config.js --output-path ${binPath}`,
     {
       cwd: __dirname,
-      env: Object.assign({}, process.env, {
-        NODE_ENV: 'production',
-      }),
+      env: process.env,
       stdio: 'inherit',
     }
   );
@@ -44,9 +42,7 @@ const build = async (tempPath, manifestPath, manifestVersion) => {
     `${webpackPath} --config webpack.backend.js --output-path ${binPath}`,
     {
       cwd: __dirname,
-      env: Object.assign({}, process.env, {
-        NODE_ENV: 'production',
-      }),
+      env: process.env,
       stdio: 'inherit',
     }
   );

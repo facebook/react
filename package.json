@@ -30,9 +30,12 @@
     ]
   },
   "scripts": {
-    "build:extension": "yarn run build:extension:chrome && yarn run build:extension:firefox",
-    "build:extension:chrome": "node ./shells/browser/chrome/build",
-    "build:extension:firefox": "node ./shells/browser/firefox/build",
+    "build:extension": "cross-env NODE_ENV=production yarn run build:extension:chrome && yarn run build:extension:firefox",
+    "build:extension:dev": "cross-env NODE_ENV=development yarn run build:extension:chrome && yarn run build:extension:firefox",
+    "build:extension:chrome": "cross-env NODE_ENV=production node ./shells/browser/chrome/build",
+    "build:extension:chrome:dev": "cross-env NODE_ENV=development node ./shells/browser/chrome/build",
+    "build:extension:firefox": "cross-env NODE_ENV=production node ./shells/browser/firefox/build",
+    "build:extension:firefox:dev": "cross-env NODE_ENV=development node ./shells/browser/firefox/build",
     "build:standalone": "cd packages/react-devtools-core && yarn run build",
     "deploy": "yarn run deploy:demo && yarn run deploy:chrome && yarn run deploy:firefox",
     "deploy:demo": "cd shells/dev/ && now deploy && now alias react-devtools-experimental",
@@ -83,6 +86,7 @@
     "classnames": "2.2.1",
     "cli-spinners": "^1.0.0",
     "clipboard-js": "^0.3.6",
+    "cross-env": "^5.2.0",
     "crx": "git+https://github.com/oncletom/crx#ef150e8",
     "css-loader": "^1.0.1",
     "error-stack-parser": "^2.0.2",
