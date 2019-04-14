@@ -78,7 +78,7 @@ export function setValueForStyles(node, styles) {
     }
     if (styleName === undefined) {
       try {
-        throw new Error("Stylename is undefined. Probably, you are using a code pattern for style passing which is not supported by React DOM.");
+        throw new Error('Stylename is undefined. Probably, you are using a code pattern which is not supported by React DOM.');
       } catch (x) {}
     }
     if (isCustomProperty) {
