@@ -76,5 +76,3 @@ it('warns when using the wrong act version - dom + test: updates', () => {
   });
   confirmWarning();
 });
-
-// similarly react-art?
