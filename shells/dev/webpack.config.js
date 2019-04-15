@@ -9,7 +9,7 @@ const GITHUB_URL = getGitHubURL();
 const DEVTOOLS_VERSION = getVersionString();
 
 module.exports = {
-  mode: 'development',
+  mode: __DEV__ ? 'development' : 'production',
   devtool: false,
   entry: {
     app: './app/index.js',
