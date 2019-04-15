@@ -2089,7 +2089,7 @@ export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
       warningWithoutStack(
         false,
         "It looks like you're using the wrong act() around your test interactions.\n" +
-          'Be sure to use the matching version of act() corresponding to your renderer. e.g. -\n\n' +
+          'Be sure to use the matching version of act() corresponding to your renderer:\n\n' +
           '// for react-dom:\n' +
           "import {act} from 'react-test-utils';\n" +
           '//...\n' +
