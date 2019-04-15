@@ -37,6 +37,18 @@ function createReactEventComponent(
   };
 }
 
+const ROOT_PHASE = 0;
+const BUBBLE_PHASE = 1;
+const CAPTURE_PHASE = 2;
+
+function phaseToString(phase) {
+  return phase === ROOT_PHASE
+    ? 'root'
+    : phase === BUBBLE_PHASE
+      ? 'bubble'
+      : 'capture';
+}
+
 function dispatchClickEvent(element) {
   const clickEvent = document.createEvent('Event');
   clickEvent.initEvent('click', true, true);
@@ -86,6 +98,7 @@ describe('DOMEventResponderSystem', () => {
           name: event.type,
           passive: event.passive,
           passiveSupported: event.passiveSupported,
+          phase: event.phase,
         });
       },
     );
@@ -99,28 +112,37 @@ describe('DOMEventResponderSystem', () => {
     ReactDOM.render(<Test />, container);
     expect(container.innerHTML).toBe('<button>Click me!</button>');
 
-    // Clicking the button should trigger the event responder onEvent()
+    // Clicking the button should trigger the event responder onEvent() twice
     let buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
-    expect(eventResponderFiredCount).toBe(1);
-    expect(eventLog.length).toBe(1);
+    expect(eventResponderFiredCount).toBe(2);
+    expect(eventLog.length).toBe(2);
     // JSDOM does not support passive events, so this will be false
-    expect(eventLog[0]).toEqual({
-      name: 'click',
-      passive: false,
-      passiveSupported: false,
-    });
+    expect(eventLog).toEqual([
+      {
+        name: 'click',
+        passive: false,
+        passiveSupported: false,
+        phase: CAPTURE_PHASE,
+      },
+      {
+        name: 'click',
+        passive: false,
+        passiveSupported: false,
+        phase: BUBBLE_PHASE,
+      },
+    ]);
 
     // Unmounting the container and clicking should not increment anything
     ReactDOM.render(null, container);
     dispatchClickEvent(buttonElement);
-    expect(eventResponderFiredCount).toBe(1);
+    expect(eventResponderFiredCount).toBe(2);
 
-    // Re-rendering the container and clicking should increase the counter again
+    // Re-rendering the container and clicking should increase the counters again
     ReactDOM.render(<Test />, container);
     buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
-    expect(eventResponderFiredCount).toBe(2);
+    expect(eventResponderFiredCount).toBe(4);
   });
 
   it('the event responder onEvent() function should fire on click event (passive events forced)', () => {
@@ -139,6 +161,7 @@ describe('DOMEventResponderSystem', () => {
           name: event.type,
           passive: event.passive,
           passiveSupported: event.passiveSupported,
+          phase: event.phase,
         });
       },
     );
@@ -154,12 +177,21 @@ describe('DOMEventResponderSystem', () => {
     // Clicking the button should trigger the event responder onEvent()
     let buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
-    expect(eventLog.length).toBe(1);
-    expect(eventLog[0]).toEqual({
-      name: 'click',
-      passive: true,
-      passiveSupported: true,
-    });
+    expect(eventLog.length).toBe(2);
+    expect(eventLog).toEqual([
+      {
+        name: 'click',
+        passive: true,
+        passiveSupported: true,
+        phase: CAPTURE_PHASE,
+      },
+      {
+        name: 'click',
+        passive: true,
+        passiveSupported: true,
+        phase: BUBBLE_PHASE,
+      },
+    ]);
   });
 
   it('nested event responders and their onEvent() function should fire multiple times', () => {
@@ -176,6 +208,7 @@ describe('DOMEventResponderSystem', () => {
           name: event.type,
           passive: event.passive,
           passiveSupported: event.passiveSupported,
+          phase: event.phase,
         });
       },
     );
@@ -193,19 +226,35 @@ describe('DOMEventResponderSystem', () => {
     // Clicking the button should trigger the event responder onEvent()
     let buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
-    expect(eventResponderFiredCount).toBe(2);
-    expect(eventLog.length).toBe(2);
+    expect(eventResponderFiredCount).toBe(4);
+    expect(eventLog.length).toBe(4);
     // JSDOM does not support passive events, so this will be false
-    expect(eventLog[0]).toEqual({
-      name: 'click',
-      passive: false,
-      passiveSupported: false,
-    });
-    expect(eventLog[1]).toEqual({
-      name: 'click',
-      passive: false,
-      passiveSupported: false,
-    });
+    expect(eventLog).toEqual([
+      {
+        name: 'click',
+        passive: false,
+        passiveSupported: false,
+        phase: CAPTURE_PHASE,
+      },
+      {
+        name: 'click',
+        passive: false,
+        passiveSupported: false,
+        phase: CAPTURE_PHASE,
+      },
+      {
+        name: 'click',
+        passive: false,
+        passiveSupported: false,
+        phase: BUBBLE_PHASE,
+      },
+      {
+        name: 'click',
+        passive: false,
+        passiveSupported: false,
+        phase: BUBBLE_PHASE,
+      },
+    ]);
   });
 
   it('nested event responders and their onEvent() should fire in the correct order', () => {
@@ -215,16 +264,16 @@ describe('DOMEventResponderSystem', () => {
     const ClickEventComponentA = createReactEventComponent(
       ['click'],
       undefined,
-      (context, props) => {
-        eventLog.push('A');
+      (event, context, props) => {
+        eventLog.push(`A [${phaseToString(event.phase)}]`);
       },
     );
 
     const ClickEventComponentB = createReactEventComponent(
       ['click'],
       undefined,
-      (context, props) => {
-        eventLog.push('B');
+      (event, context, props) => {
+        eventLog.push(`B [${phaseToString(event.phase)}]`);
       },
     );
 
@@ -242,7 +291,109 @@ describe('DOMEventResponderSystem', () => {
     let buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
 
-    expect(eventLog).toEqual(['B', 'A']);
+    expect(eventLog).toEqual([
+      'A [capture]',
+      'B [capture]',
+      'B [bubble]',
+      'A [bubble]',
+    ]);
+  });
+
+  it('nested event responders and their onEvent() should fire in the correct order with stopPropagation', () => {
+    let eventLog;
+    let stopPropagationOnPhase;
+    const buttonRef = React.createRef();
+
+    const ClickEventComponentA = createReactEventComponent(
+      ['click'],
+      undefined,
+      (event, context, props) => {
+        eventLog.push(`A [${phaseToString(event.phase)}]`);
+      },
+    );
+
+    const ClickEventComponentB = createReactEventComponent(
+      ['click'],
+      undefined,
+      (event, context, props) => {
+        eventLog.push(`B [${phaseToString(event.phase)}]`);
+        if (event.phase === stopPropagationOnPhase) {
+          return true;
+        }
+      },
+    );
+
+    const Test = () => (
+      <ClickEventComponentA>
+        <ClickEventComponentB>
+          <button ref={buttonRef}>Click me!</button>
+        </ClickEventComponentB>
+      </ClickEventComponentA>
+    );
+
+    function runTestWithPhase(phase) {
+      eventLog = [];
+      stopPropagationOnPhase = phase;
+      ReactDOM.render(<Test />, container);
+      let buttonElement = buttonRef.current;
+      dispatchClickEvent(buttonElement);
+    }
+
+    runTestWithPhase(BUBBLE_PHASE);
+    expect(eventLog).toEqual(['A [capture]', 'B [capture]', 'B [bubble]']);
+    runTestWithPhase(CAPTURE_PHASE);
+    expect(eventLog).toEqual(['A [capture]', 'B [capture]']);
+  });
+
+  it('nested event responders and their onEvent() should fire in the correct order with stopPropagation #2', () => {
+    let eventLog;
+    let stopPropagationOnPhase;
+    const buttonRef = React.createRef();
+
+    const ClickEventComponentA = createReactEventComponent(
+      ['click'],
+      undefined,
+      (event, context, props) => {
+        eventLog.push(`A [${phaseToString(event.phase)}]`);
+        if (event.phase === stopPropagationOnPhase) {
+          return true;
+        }
+      },
+    );
+
+    const ClickEventComponentB = createReactEventComponent(
+      ['click'],
+      undefined,
+      (event, context, props) => {
+        eventLog.push(`B [${phaseToString(event.phase)}]`);
+      },
+    );
+
+    const Test = () => (
+      <ClickEventComponentA>
+        <ClickEventComponentB>
+          <button ref={buttonRef}>Click me!</button>
+        </ClickEventComponentB>
+      </ClickEventComponentA>
+    );
+
+    function runTestWithPhase(phase) {
+      eventLog = [];
+      stopPropagationOnPhase = phase;
+      ReactDOM.render(<Test />, container);
+      let buttonElement = buttonRef.current;
+      dispatchClickEvent(buttonElement);
+    }
+
+    runTestWithPhase(BUBBLE_PHASE);
+    expect(eventLog).toEqual([
+      'A [capture]',
+      'B [capture]',
+      'B [bubble]',
+      'A [bubble]',
+    ]);
+    runTestWithPhase(CAPTURE_PHASE);
+    expect(eventLog).toEqual(['A [capture]']);
   });
 
   it('custom event dispatching for click -> magicClick works', () => {
@@ -257,6 +408,7 @@ describe('DOMEventResponderSystem', () => {
           const syntheticEvent = {
             target: event.target,
             type: 'magicclick',
+            phase: phaseToString(event.phase),
           };
           context.dispatchEvent(syntheticEvent, props.onMagicClick, {
             discrete: true,
@@ -266,7 +418,7 @@ describe('DOMEventResponderSystem', () => {
     );
 
     function handleMagicEvent(e) {
-      eventLog.push('magic event fired', e.type);
+      eventLog.push('magic event fired', e.type, e.phase);
     }
 
     const Test = () => (
@@ -281,7 +433,14 @@ describe('DOMEventResponderSystem', () => {
     let buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
 
-    expect(eventLog).toEqual(['magic event fired', 'magicclick']);
+    expect(eventLog).toEqual([
+      'magic event fired',
+      'magicclick',
+      'capture',
+      'magic event fired',
+      'magicclick',
+      'bubble',
+    ]);
   });
 
   it('async event dispatching works', () => {
@@ -295,6 +454,7 @@ describe('DOMEventResponderSystem', () => {
         const pressEvent = {
           target: event.target,
           type: 'press',
+          phase: phaseToString(event.phase),
         };
         context.dispatchEvent(pressEvent, props.onPress, {discrete: true});
 
@@ -303,6 +463,7 @@ describe('DOMEventResponderSystem', () => {
             const longPressEvent = {
               target: event.target,
               type: 'longpress',
+              phase: phaseToString(event.phase),
             };
             context.dispatchEvent(longPressEvent, props.onLongPress, {
               discrete: true,
@@ -313,6 +474,7 @@ describe('DOMEventResponderSystem', () => {
             const longPressChangeEvent = {
               target: event.target,
               type: 'longpresschange',
+              phase: phaseToString(event.phase),
             };
             context.dispatchEvent(
               longPressChangeEvent,
@@ -330,9 +492,9 @@ describe('DOMEventResponderSystem', () => {
 
     const Test = () => (
       <LongPressEventComponent
-        onPress={() => log('press')}
-        onLongPress={() => log('longpress')}
-        onLongPressChange={() => log('longpresschange')}>
+        onPress={e => log('press ' + e.phase)}
+        onLongPress={e => log('longpress ' + e.phase)}
+        onLongPressChange={e => log('longpresschange ' + e.phase)}>
         <button ref={buttonRef}>Click me!</button>
       </LongPressEventComponent>
     );
@@ -344,7 +506,14 @@ describe('DOMEventResponderSystem', () => {
     dispatchClickEvent(buttonElement);
     jest.runAllTimers();
 
-    expect(eventLog).toEqual(['press', 'longpress', 'longpresschange']);
+    expect(eventLog).toEqual([
+      'press capture',
+      'press bubble',
+      'longpress capture',
+      'longpresschange capture',
+      'longpress bubble',
+      'longpresschange bubble',
+    ]);
   });
 
   it('the event responder onUnmount() function should fire', () => {
@@ -404,7 +573,9 @@ describe('DOMEventResponderSystem', () => {
       ['click'],
       undefined,
       (event, context, props, state) => {
-        ownershipGained = context.requestOwnership();
+        if (event.phase === BUBBLE_PHASE) {
+          ownershipGained = context.requestOwnership();
+        }
       },
       undefined,
       () => {

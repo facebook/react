@@ -429,38 +429,6 @@ describe('Event responder: Press', () => {
       expect(onPressChange).toHaveBeenCalledTimes(2);
       expect(onPressChange).toHaveBeenCalledWith(false);
     });
-
-    it('is called but does not bubble', () => {
-      const element = (
-        <Press onPressChange={onPressChange}>
-          <Press onPressChange={onPressChange}>
-            <div ref={ref} />
-          </Press>
-        </Press>
-      );
-      ReactDOM.render(element, container);
-
-      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
-      expect(onPressChange).toHaveBeenCalledTimes(1);
-      ref.current.dispatchEvent(createPointerEvent('pointerup'));
-      expect(onPressChange).toHaveBeenCalledTimes(2);
-    });
-
-    it('is called and bubbles correctly with stopPropagation set to false', () => {
-      const element = (
-        <Press onPressChange={onPressChange}>
-          <Press onPressChange={onPressChange} stopPropagation={false}>
-            <div ref={ref} />
-          </Press>
-        </Press>
-      );
-      ReactDOM.render(element, container);
-
-      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
-      expect(onPressChange).toHaveBeenCalledTimes(2);
-      ref.current.dispatchEvent(createPointerEvent('pointerup'));
-      expect(onPressChange).toHaveBeenCalledTimes(4);
-    });
   });
 
   describe('onPress', () => {
@@ -517,36 +485,6 @@ describe('Event responder: Press', () => {
     // ref.current.dispatchEvent(createPointerEvent('touchend'));
     // expect(onPress).toHaveBeenCalledTimes(1);
     // });
-
-    it('is called but does not bubble', () => {
-      const element = (
-        <Press onPress={onPress}>
-          <Press onPress={onPress}>
-            <div ref={ref} />
-          </Press>
-        </Press>
-      );
-      ReactDOM.render(element, container);
-
-      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
-      ref.current.dispatchEvent(createPointerEvent('pointerup'));
-      expect(onPress).toHaveBeenCalledTimes(1);
-    });
-
-    it('is called and bubbles correctly with stopPropagation set to false', () => {
-      const element = (
-        <Press onPress={onPress}>
-          <Press onPress={onPress} stopPropagation={false}>
-            <div ref={ref} />
-          </Press>
-        </Press>
-      );
-      ReactDOM.render(element, container);
-
-      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
-      ref.current.dispatchEvent(createPointerEvent('pointerup'));
-      expect(onPress).toHaveBeenCalledTimes(2);
-    });
   });
 
   describe('onLongPress', () => {
@@ -601,38 +539,6 @@ describe('Event responder: Press', () => {
       ref.current.dispatchEvent(createKeyboardEvent('keyup', {key: 'Enter'}));
       jest.advanceTimersByTime(1);
       expect(onLongPress).not.toBeCalled();
-    });
-
-    it('is called but does not bubble', () => {
-      const element = (
-        <Press onLongPress={onLongPress}>
-          <Press onLongPress={onLongPress}>
-            <div ref={ref} />
-          </Press>
-        </Press>
-      );
-      ReactDOM.render(element, container);
-
-      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
-      jest.advanceTimersByTime(DEFAULT_LONG_PRESS_DELAY);
-      ref.current.dispatchEvent(createPointerEvent('pointerup'));
-      expect(onLongPress).toHaveBeenCalledTimes(1);
-    });
-
-    it('is called and bubbles correctly with stopPropagation set to false', () => {
-      const element = (
-        <Press onLongPress={onLongPress}>
-          <Press onLongPress={onLongPress} stopPropagation={false}>
-            <div ref={ref} />
-          </Press>
-        </Press>
-      );
-      ReactDOM.render(element, container);
-
-      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
-      jest.advanceTimersByTime(DEFAULT_LONG_PRESS_DELAY);
-      ref.current.dispatchEvent(createPointerEvent('pointerup'));
-      expect(onLongPress).toHaveBeenCalledTimes(2);
     });
 
     describe('delayLongPress', () => {
@@ -1135,6 +1041,158 @@ describe('Event responder: Press', () => {
         'outer: onPressChange',
         'outer: onPress',
       ]);
+    });
+
+    describe('correctly get propagation stopped and do not bubble', () => {
+      it('for onPress', () => {
+        const ref = React.createRef();
+        const fn = jest.fn();
+        const element = (
+          <Press onPress={fn}>
+            <Press onPress={fn}>
+              <div ref={ref} />
+            </Press>
+          </Press>
+        );
+        ReactDOM.render(element, container);
+
+        ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+        ref.current.dispatchEvent(createPointerEvent('pointerup'));
+        expect(fn).toHaveBeenCalledTimes(1);
+      });
+
+      it('for onLongPress', () => {
+        const ref = React.createRef();
+        const fn = jest.fn();
+        const element = (
+          <Press onLongPress={fn}>
+            <Press onLongPress={fn}>
+              <div ref={ref} />
+            </Press>
+          </Press>
+        );
+        ReactDOM.render(element, container);
+
+        ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+        jest.advanceTimersByTime(DEFAULT_LONG_PRESS_DELAY);
+        ref.current.dispatchEvent(createPointerEvent('pointerup'));
+        expect(fn).toHaveBeenCalledTimes(1);
+      });
+
+      it('for onPressStart/onPressEnd', () => {
+        const ref = React.createRef();
+        const fn = jest.fn();
+        const fn2 = jest.fn();
+        const element = (
+          <Press onPressStart={fn} onPressEnd={fn2}>
+            <Press onPressStart={fn} onPressEnd={fn2}>
+              <div ref={ref} />
+            </Press>
+          </Press>
+        );
+        ReactDOM.render(element, container);
+
+        ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+        expect(fn).toHaveBeenCalledTimes(1);
+        expect(fn2).toHaveBeenCalledTimes(0);
+        ref.current.dispatchEvent(createPointerEvent('pointerup'));
+        expect(fn).toHaveBeenCalledTimes(1);
+        expect(fn2).toHaveBeenCalledTimes(1);
+      });
+
+      it('for onPressChange', () => {
+        const ref = React.createRef();
+        const fn = jest.fn();
+        const element = (
+          <Press onPressChange={fn}>
+            <Press onPressChange={fn}>
+              <div ref={ref} />
+            </Press>
+          </Press>
+        );
+        ReactDOM.render(element, container);
+
+        ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+        expect(fn).toHaveBeenCalledTimes(1);
+        ref.current.dispatchEvent(createPointerEvent('pointerup'));
+        expect(fn).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    describe('correctly bubble to other event responders when stopPropagation is set to false', () => {
+      it('for onPress', () => {
+        const ref = React.createRef();
+        const fn = jest.fn();
+        const element = (
+          <Press onPress={fn}>
+            <Press onPress={fn} stopPropagation={false}>
+              <div ref={ref} />
+            </Press>
+          </Press>
+        );
+        ReactDOM.render(element, container);
+
+        ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+        ref.current.dispatchEvent(createPointerEvent('pointerup'));
+        expect(fn).toHaveBeenCalledTimes(2);
+      });
+
+      it('for onLongPress', () => {
+        const ref = React.createRef();
+        const fn = jest.fn();
+        const element = (
+          <Press onLongPress={fn}>
+            <Press onLongPress={fn} stopPropagation={false}>
+              <div ref={ref} />
+            </Press>
+          </Press>
+        );
+        ReactDOM.render(element, container);
+
+        ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+        jest.advanceTimersByTime(DEFAULT_LONG_PRESS_DELAY);
+        ref.current.dispatchEvent(createPointerEvent('pointerup'));
+        expect(fn).toHaveBeenCalledTimes(2);
+      });
+
+      it('for onPressStart/onPressEnd', () => {
+        const ref = React.createRef();
+        const fn = jest.fn();
+        const fn2 = jest.fn();
+        const element = (
+          <Press onPressStart={fn} onPressEnd={fn2}>
+            <Press onPressStart={fn} onPressEnd={fn2} stopPropagation={false}>
+              <div ref={ref} />
+            </Press>
+          </Press>
+        );
+        ReactDOM.render(element, container);
+
+        ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+        expect(fn).toHaveBeenCalledTimes(2);
+        expect(fn2).toHaveBeenCalledTimes(0);
+        ref.current.dispatchEvent(createPointerEvent('pointerup'));
+        expect(fn).toHaveBeenCalledTimes(2);
+        expect(fn2).toHaveBeenCalledTimes(2);
+      });
+
+      it('for onPressChange', () => {
+        const ref = React.createRef();
+        const fn = jest.fn();
+        const element = (
+          <Press onPressChange={fn}>
+            <Press onPressChange={fn} stopPropagation={false}>
+              <div ref={ref} />
+            </Press>
+          </Press>
+        );
+        ReactDOM.render(element, container);
+
+        ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+        expect(fn).toHaveBeenCalledTimes(2);
+        ref.current.dispatchEvent(createPointerEvent('pointerup'));
+        expect(fn).toHaveBeenCalledTimes(4);
+      });
     });
   });
 
