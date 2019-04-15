@@ -2087,10 +2087,17 @@ export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
       // it looks like we're using the wrong matching act(), so log a warning
       warningWithoutStack(
         false,
-        "It looks like you're using the wrong act() around your interactions.\n" +
-          'Be sure to use the matching version of act() corresponding to your renderer. e.g. -\n' +
-          "for react-dom, import {act} from 'react-test-utils';\n" +
-          'for react-test-renderer, const {act} = TestRenderer.' +
+        "It looks like you're using the wrong act() around your test interactions.\n" +
+          'Be sure to use the matching version of act() corresponding to your renderer. e.g. -\n\n' +
+          '// for react-dom:\n' +
+          "import {act} from 'react-test-utils';\n" +
+          '//...\n' +
+          'act(() => ...);\n\n' +
+          '// for react-test-renderer:\n' +
+          "import TestRenderer from 'react-test-renderer';\n" +
+          'const {act} = TestRenderer;\n' +
+          '//...\n' +
+          'act(() => ...);' +
           '%s',
         getStackByFiberInDevAndProd(fiber),
       );
@@ -2115,13 +2122,12 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
         false,
         'An update to %s inside a test was not wrapped in act(...).\n\n' +
           'When testing, code that causes React state updates should be ' +
-          'wrapped into act(...):\n\n' +
-          'act(() => {\n' +
+          'wrapped inside act(...):\n\n' +
+          'await act(async () => {\n' +
           '  /* fire events that update state */\n' +
           '});\n' +
           '/* assert on the output */\n\n' +
-          "This ensures that you're testing the behavior the user would see " +
-          'in the browser.' +
+          "This ensures that you're testing behavior similar to what a user would experience.\n" +
           ' Learn more at https://fb.me/react-wrap-tests-with-act' +
           '%s',
         getComponentName(fiber.type),

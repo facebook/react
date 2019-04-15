@@ -11,7 +11,7 @@ beforeEach(() => {
 function confirmWarning() {
   expect(spy).toHaveBeenCalledWith(
     expect.stringContaining(
-      "It looks like you're using the wrong act() around your interactions."
+      "It looks like you're using the wrong act() around your test interactions."
     ),
     ''
   );
