@@ -479,15 +479,6 @@ function scheduleCallbackForRoot(
     }
   }
 
-  const timeoutHandle = root.timeoutHandle;
-  if (timeoutHandle !== noTimeout) {
-    // The root previous suspended and scheduled a timeout to commit a fallback
-    // state. Now that we have additional work, cancel the timeout.
-    root.timeoutHandle = noTimeout;
-    // $FlowFixMe Complains noTimeout is not a TimeoutID, despite the check above
-    cancelTimeout(timeoutHandle);
-  }
-
   // Add the current set of interactions to the pending set associated with
   // this root.
   schedulePendingInteraction(root, expirationTime);
@@ -672,6 +663,15 @@ export function flushControlled(fn: () => mixed): void {
 
 function prepareFreshStack(root, expirationTime) {
   root.pendingCommitExpirationTime = NoWork;
+
+  const timeoutHandle = root.timeoutHandle;
+  if (timeoutHandle !== noTimeout) {
+    // The root previous suspended and scheduled a timeout to commit a fallback
+    // state. Now that we have additional work, cancel the timeout.
+    root.timeoutHandle = noTimeout;
+    // $FlowFixMe Complains noTimeout is not a TimeoutID, despite the check above
+    cancelTimeout(timeoutHandle);
+  }
 
   if (workInProgress !== null) {
     let interruptedWork = workInProgress.return;
