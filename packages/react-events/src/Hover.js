@@ -13,28 +13,32 @@ import type {
 } from 'shared/ReactTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
+const CAPTURE_PHASE = 2;
+
 type HoverProps = {
   disabled: boolean,
   delayHoverEnd: number,
   delayHoverStart: number,
   onHoverChange: boolean => void,
   onHoverEnd: (e: HoverEvent) => void,
+  onHoverMove: (e: HoverEvent) => void,
   onHoverStart: (e: HoverEvent) => void,
 };
 
 type HoverState = {
+  hoverTarget: null | Element | Document,
   isActiveHovered: boolean,
   isHovered: boolean,
   isInHitSlop: boolean,
   isTouched: boolean,
-  hoverStartTimeout: null | TimeoutID,
-  hoverEndTimeout: null | TimeoutID,
+  hoverStartTimeout: null | Symbol,
+  hoverEndTimeout: null | Symbol,
+  skipMouseAfterPointer: boolean,
 };
 
-type HoverEventType = 'hoverstart' | 'hoverend' | 'hoverchange';
+type HoverEventType = 'hoverstart' | 'hoverend' | 'hoverchange' | 'hovermove';
 
 type HoverEvent = {|
-  listener: HoverEvent => void,
   target: Element | Document,
   type: HoverEventType,
 |};
@@ -51,36 +55,33 @@ const targetEventTypes = [
 
 // If PointerEvents is not supported (e.g., Safari), also listen to touch and mouse events.
 if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
-  targetEventTypes.push('touchstart', 'mouseover', 'mouseout');
+  targetEventTypes.push('touchstart', 'mouseover', 'mousemove', 'mouseout');
 }
 
 function createHoverEvent(
   type: HoverEventType,
   target: Element | Document,
-  listener: HoverEvent => void,
 ): HoverEvent {
   return {
-    listener,
     target,
     type,
   };
 }
 
 function dispatchHoverChangeEvent(
-  event: ReactResponderEvent,
   context: ReactResponderContext,
   props: HoverProps,
   state: HoverState,
 ): void {
+  const bool = state.isActiveHovered;
   const listener = () => {
-    props.onHoverChange(state.isActiveHovered);
+    props.onHoverChange(bool);
   };
   const syntheticEvent = createHoverEvent(
     'hoverchange',
-    event.target,
-    listener,
+    ((state.hoverTarget: any): Element | Document),
   );
-  context.dispatchEvent(syntheticEvent, {discrete: true});
+  context.dispatchEvent(syntheticEvent, listener, {discrete: true});
 }
 
 function dispatchHoverStartEvents(
@@ -89,15 +90,20 @@ function dispatchHoverStartEvents(
   props: HoverProps,
   state: HoverState,
 ): void {
-  const {nativeEvent, target} = event;
-  if (context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)) {
-    return;
+  const target = state.hoverTarget;
+  if (event !== null) {
+    const {nativeEvent} = event;
+    if (
+      context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)
+    ) {
+      return;
+    }
   }
 
   state.isHovered = true;
 
   if (state.hoverEndTimeout !== null) {
-    clearTimeout(state.hoverEndTimeout);
+    context.clearTimeout(state.hoverEndTimeout);
     state.hoverEndTimeout = null;
   }
 
@@ -107,13 +113,14 @@ function dispatchHoverStartEvents(
     if (props.onHoverStart) {
       const syntheticEvent = createHoverEvent(
         'hoverstart',
-        target,
-        props.onHoverStart,
+        ((target: any): Element | Document),
       );
-      context.dispatchEvent(syntheticEvent, {discrete: true});
+      context.dispatchEvent(syntheticEvent, props.onHoverStart, {
+        discrete: true,
+      });
     }
     if (props.onHoverChange) {
-      dispatchHoverChangeEvent(event, context, props, state);
+      dispatchHoverChangeEvent(context, props, state);
     }
   };
 
@@ -127,6 +134,7 @@ function dispatchHoverStartEvents(
       state.hoverStartTimeout = context.setTimeout(() => {
         state.hoverStartTimeout = null;
         activate();
+        return false;
       }, delayHoverStart);
     } else {
       activate();
@@ -135,20 +143,25 @@ function dispatchHoverStartEvents(
 }
 
 function dispatchHoverEndEvents(
-  event: ReactResponderEvent,
+  event: null | ReactResponderEvent,
   context: ReactResponderContext,
   props: HoverProps,
   state: HoverState,
 ) {
-  const {nativeEvent, target} = event;
-  if (context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)) {
-    return;
+  const target = state.hoverTarget;
+  if (event !== null) {
+    const {nativeEvent} = event;
+    if (
+      context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)
+    ) {
+      return;
+    }
   }
 
   state.isHovered = false;
 
   if (state.hoverStartTimeout !== null) {
-    clearTimeout(state.hoverStartTimeout);
+    context.clearTimeout(state.hoverStartTimeout);
     state.hoverStartTimeout = null;
   }
 
@@ -158,13 +171,12 @@ function dispatchHoverEndEvents(
     if (props.onHoverEnd) {
       const syntheticEvent = createHoverEvent(
         'hoverend',
-        target,
-        props.onHoverEnd,
+        ((target: any): Element | Document),
       );
-      context.dispatchEvent(syntheticEvent, {discrete: true});
+      context.dispatchEvent(syntheticEvent, props.onHoverEnd, {discrete: true});
     }
     if (props.onHoverChange) {
-      dispatchHoverChangeEvent(event, context, props, state);
+      dispatchHoverChangeEvent(context, props, state);
     }
   };
 
@@ -177,6 +189,7 @@ function dispatchHoverEndEvents(
     if (delayHoverEnd > 0) {
       state.hoverEndTimeout = context.setTimeout(() => {
         deactivate();
+        return false;
       }, delayHoverEnd);
     } else {
       deactivate();
@@ -189,6 +202,16 @@ function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
   return Math.max(min, maybeNumber != null ? maybeNumber : fallback);
 }
 
+function unmountResponder(
+  context: ReactResponderContext,
+  props: HoverProps,
+  state: HoverState,
+): void {
+  if (state.isHovered) {
+    dispatchHoverEndEvents(null, context, props, state);
+  }
+}
+
 const HoverResponder = {
   targetEventTypes,
   createInitialState() {
@@ -199,6 +222,7 @@ const HoverResponder = {
       isTouched: false,
       hoverStartTimeout: null,
       hoverEndTimeout: null,
+      skipMouseAfterPointer: false,
     };
   },
   onEvent(
@@ -206,9 +230,13 @@ const HoverResponder = {
     context: ReactResponderContext,
     props: HoverProps,
     state: HoverState,
-  ): void {
-    const {type, target, nativeEvent} = event;
+  ): boolean {
+    const {type, phase, target, nativeEvent} = event;
 
+    // Hover doesn't handle capture target events at this point
+    if (phase === CAPTURE_PHASE) {
+      return false;
+    }
     switch (type) {
       /**
        * Prevent hover events when touch is being used.
@@ -222,10 +250,13 @@ const HoverResponder = {
 
       case 'pointerover':
       case 'mouseover': {
-        if (!state.isHovered && !state.isTouched && !context.hasOwnership()) {
+        if (!state.isHovered && !state.isTouched) {
           if ((nativeEvent: any).pointerType === 'touch') {
             state.isTouched = true;
-            return;
+            return false;
+          }
+          if (type === 'pointerover') {
+            state.skipMouseAfterPointer = true;
           }
           if (
             context.isPositionWithinTouchHitTarget(
@@ -235,8 +266,9 @@ const HoverResponder = {
             )
           ) {
             state.isInHitSlop = true;
-            return;
+            return false;
           }
+          state.hoverTarget = target;
           dispatchHoverStartEvents(event, context, props, state);
         }
         break;
@@ -247,11 +279,18 @@ const HoverResponder = {
           dispatchHoverEndEvents(event, context, props, state);
         }
         state.isInHitSlop = false;
+        state.hoverTarget = null;
         state.isTouched = false;
+        state.skipMouseAfterPointer = false;
         break;
       }
 
-      case 'pointermove': {
+      case 'pointermove':
+      case 'mousemove': {
+        if (type === 'mousemove' && state.skipMouseAfterPointer === true) {
+          return false;
+        }
+
         if (state.isHovered && !state.isTouched) {
           if (state.isInHitSlop) {
             if (
@@ -264,16 +303,27 @@ const HoverResponder = {
               dispatchHoverStartEvents(event, context, props, state);
               state.isInHitSlop = false;
             }
-          } else if (
-            state.isHovered &&
-            context.isPositionWithinTouchHitTarget(
-              target.ownerDocument,
-              (nativeEvent: any).x,
-              (nativeEvent: any).y,
-            )
-          ) {
-            dispatchHoverEndEvents(event, context, props, state);
-            state.isInHitSlop = true;
+          } else if (state.isHovered) {
+            if (
+              context.isPositionWithinTouchHitTarget(
+                target.ownerDocument,
+                (nativeEvent: any).x,
+                (nativeEvent: any).y,
+              )
+            ) {
+              dispatchHoverEndEvents(event, context, props, state);
+              state.isInHitSlop = true;
+            } else {
+              if (props.onHoverMove) {
+                const syntheticEvent = createHoverEvent(
+                  'hovermove',
+                  event.target,
+                );
+                context.dispatchEvent(syntheticEvent, props.onHoverMove, {
+                  discrete: false,
+                });
+              }
+            }
           }
         }
         break;
@@ -282,11 +332,27 @@ const HoverResponder = {
       case 'pointercancel': {
         if (state.isHovered && !state.isTouched) {
           dispatchHoverEndEvents(event, context, props, state);
+          state.hoverTarget = null;
           state.isTouched = false;
         }
         break;
       }
     }
+    return false;
+  },
+  onUnmount(
+    context: ReactResponderContext,
+    props: HoverProps,
+    state: HoverState,
+  ) {
+    unmountResponder(context, props, state);
+  },
+  onOwnershipChange(
+    context: ReactResponderContext,
+    props: HoverProps,
+    state: HoverState,
+  ) {
+    unmountResponder(context, props, state);
   },
 };
 

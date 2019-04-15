@@ -13,6 +13,8 @@ import type {
 } from 'shared/ReactTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
+const CAPTURE_PHASE = 2;
+
 type FocusProps = {
   disabled: boolean,
   onBlur: (e: FocusEvent) => void,
@@ -22,12 +24,12 @@ type FocusProps = {
 
 type FocusState = {
   isFocused: boolean,
+  focusTarget: null | Element | Document,
 };
 
 type FocusEventType = 'focus' | 'blur' | 'focuschange';
 
 type FocusEvent = {|
-  listener: FocusEvent => void,
   target: Element | Document,
   type: FocusEventType,
 |};
@@ -40,56 +42,86 @@ const targetEventTypes = [
 function createFocusEvent(
   type: FocusEventType,
   target: Element | Document,
-  listener: FocusEvent => void,
 ): FocusEvent {
   return {
-    listener,
     target,
     type,
   };
 }
 
 function dispatchFocusInEvents(
-  event: ReactResponderEvent,
+  event: null | ReactResponderEvent,
   context: ReactResponderContext,
   props: FocusProps,
+  state: FocusState,
 ) {
-  const {nativeEvent, target} = event;
-  if (context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)) {
-    return;
+  if (event != null) {
+    const {nativeEvent} = event;
+    if (
+      context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)
+    ) {
+      return;
+    }
   }
   if (props.onFocus) {
-    const syntheticEvent = createFocusEvent('focus', target, props.onFocus);
-    context.dispatchEvent(syntheticEvent, {discrete: true});
+    const syntheticEvent = createFocusEvent(
+      'focus',
+      ((state.focusTarget: any): Element | Document),
+    );
+    context.dispatchEvent(syntheticEvent, props.onFocus, {discrete: true});
   }
   if (props.onFocusChange) {
     const listener = () => {
       props.onFocusChange(true);
     };
-    const syntheticEvent = createFocusEvent('focuschange', target, listener);
-    context.dispatchEvent(syntheticEvent, {discrete: true});
+    const syntheticEvent = createFocusEvent(
+      'focuschange',
+      ((state.focusTarget: any): Element | Document),
+    );
+    context.dispatchEvent(syntheticEvent, listener, {discrete: true});
   }
 }
 
 function dispatchFocusOutEvents(
-  event: ReactResponderEvent,
+  event: null | ReactResponderEvent,
   context: ReactResponderContext,
   props: FocusProps,
+  state: FocusState,
 ) {
-  const {nativeEvent, target} = event;
-  if (context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)) {
-    return;
+  if (event != null) {
+    const {nativeEvent} = event;
+    if (
+      context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)
+    ) {
+      return;
+    }
   }
   if (props.onBlur) {
-    const syntheticEvent = createFocusEvent('blur', target, props.onBlur);
-    context.dispatchEvent(syntheticEvent, {discrete: true});
+    const syntheticEvent = createFocusEvent(
+      'blur',
+      ((state.focusTarget: any): Element | Document),
+    );
+    context.dispatchEvent(syntheticEvent, props.onBlur, {discrete: true});
   }
   if (props.onFocusChange) {
     const listener = () => {
       props.onFocusChange(false);
     };
-    const syntheticEvent = createFocusEvent('focuschange', target, listener);
-    context.dispatchEvent(syntheticEvent, {discrete: true});
+    const syntheticEvent = createFocusEvent(
+      'focuschange',
+      ((state.focusTarget: any): Element | Document),
+    );
+    context.dispatchEvent(syntheticEvent, listener, {discrete: true});
+  }
+}
+
+function unmountResponder(
+  context: ReactResponderContext,
+  props: FocusProps,
+  state: FocusState,
+): void {
+  if (state.isFocused) {
+    dispatchFocusOutEvents(null, context, props, state);
   }
 }
 
@@ -98,6 +130,7 @@ const FocusResponder = {
   createInitialState(): FocusState {
     return {
       isFocused: false,
+      focusTarget: null,
     };
   },
   onEvent(
@@ -105,25 +138,46 @@ const FocusResponder = {
     context: ReactResponderContext,
     props: Object,
     state: FocusState,
-  ): void {
-    const {type} = event;
+  ): boolean {
+    const {type, phase, target} = event;
 
+    // Focus doesn't handle capture target events at this point
+    if (phase === CAPTURE_PHASE) {
+      return false;
+    }
     switch (type) {
       case 'focus': {
-        if (!state.isFocused && !context.hasOwnership()) {
-          dispatchFocusInEvents(event, context, props);
+        if (!state.isFocused) {
+          state.focusTarget = target;
+          dispatchFocusInEvents(event, context, props, state);
           state.isFocused = true;
         }
         break;
       }
       case 'blur': {
         if (state.isFocused) {
-          dispatchFocusOutEvents(event, context, props);
+          dispatchFocusOutEvents(event, context, props, state);
           state.isFocused = false;
+          state.focusTarget = null;
         }
         break;
       }
     }
+    return false;
+  },
+  onUnmount(
+    context: ReactResponderContext,
+    props: FocusProps,
+    state: FocusState,
+  ) {
+    unmountResponder(context, props, state);
+  },
+  onOwnershipChange(
+    context: ReactResponderContext,
+    props: FocusProps,
+    state: FocusState,
+  ) {
+    unmountResponder(context, props, state);
   },
 };
 

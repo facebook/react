@@ -13,6 +13,7 @@ import type {
 } from 'shared/ReactTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
+const CAPTURE_PHASE = 2;
 const targetEventTypes = ['pointerdown', 'pointercancel'];
 const rootEventTypes = ['pointerup', {name: 'pointermove', passive: false}];
 
@@ -43,7 +44,6 @@ type EventData = {
 type DragEventType = 'dragstart' | 'dragend' | 'dragchange' | 'dragmove';
 
 type DragEvent = {|
-  listener: DragEvent => void,
   target: Element | Document,
   type: DragEventType,
   diffX?: number,
@@ -53,11 +53,9 @@ type DragEvent = {|
 function createDragEvent(
   type: DragEventType,
   target: Element | Document,
-  listener: DragEvent => void,
   eventData?: EventData,
 ): DragEvent {
   return {
-    listener,
     target,
     type,
     ...eventData,
@@ -73,8 +71,8 @@ function dispatchDragEvent(
   eventData?: EventData,
 ): void {
   const target = ((state.dragTarget: any): Element | Document);
-  const syntheticEvent = createDragEvent(name, target, listener, eventData);
-  context.dispatchEvent(syntheticEvent, {discrete});
+  const syntheticEvent = createDragEvent(name, target, eventData);
+  context.dispatchEvent(syntheticEvent, listener, {discrete});
 }
 
 const DragResponder = {
@@ -95,9 +93,13 @@ const DragResponder = {
     context: ReactResponderContext,
     props: Object,
     state: DragState,
-  ): void {
-    const {target, type, nativeEvent} = event;
+  ): boolean {
+    const {target, phase, type, nativeEvent} = event;
 
+    // Drag doesn't handle capture target events at this point
+    if (phase === CAPTURE_PHASE) {
+      return false;
+    }
     switch (type) {
       case 'touchstart':
       case 'mousedown':
@@ -135,7 +137,7 @@ const DragResponder = {
       case 'mousemove':
       case 'pointermove': {
         if (event.passive) {
-          return;
+          return false;
         }
         if (state.isPointerDown) {
           const obj =
@@ -228,6 +230,7 @@ const DragResponder = {
         break;
       }
     }
+    return false;
   },
 };
 

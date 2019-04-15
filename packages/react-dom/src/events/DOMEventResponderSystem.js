@@ -30,6 +30,7 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import warning from 'shared/warning';
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
 import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
+import invariant from 'shared/invariant';
 
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
@@ -41,33 +42,67 @@ export function setListenToResponderEventTypes(
   listenToResponderEventTypesImpl = _listenToResponderEventTypesImpl;
 }
 
+type EventObjectType = $Shape<PartialEventObject>;
+
 type EventQueue = {
-  bubble: null | Array<$Shape<PartialEventObject>>,
-  capture: null | Array<$Shape<PartialEventObject>>,
+  events: Array<EventObjectType>,
   discrete: boolean,
 };
 
 type PartialEventObject = {
-  listener: ($Shape<PartialEventObject>) => void,
   target: Element | Document,
   type: string,
 };
 
+type ResponderTimeout = {|
+  id: TimeoutID,
+  timers: Map<Symbol, ResponderTimer>,
+|};
+
+type ResponderTimer = {|
+  instance: ReactEventComponentInstance,
+  func: () => boolean,
+  id: Symbol,
+|};
+
+const ROOT_PHASE = 0;
+const BUBBLE_PHASE = 1;
+const CAPTURE_PHASE = 2;
+const activeTimeouts: Map<Symbol, ResponderTimeout> = new Map();
+const rootEventTypesToEventComponentInstances: Map<
+  DOMTopLevelEventType | string,
+  Set<ReactEventComponentInstance>,
+> = new Map();
+const targetEventTypeCached: Map<
+  Array<ReactEventResponderEventType>,
+  Set<DOMTopLevelEventType>,
+> = new Map();
+const ownershipChangeListeners: Set<ReactEventComponentInstance> = new Set();
+const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
+const eventListeners:
+  | WeakMap
+  | Map<
+      $Shape<PartialEventObject>,
+      ($Shape<PartialEventObject>) => void,
+    > = new PossiblyWeakMap();
+
+let currentTimers = new Map();
 let currentOwner = null;
-let currentInstance: ReactEventComponentInstance;
-let currentEventQueue: EventQueue;
+let currentInstance: null | ReactEventComponentInstance = null;
+let currentEventQueue: null | EventQueue = null;
 
 const eventResponderContext: ReactResponderContext = {
   dispatchEvent(
     possibleEventObject: Object,
-    {capture, discrete, stopPropagation}: ReactResponderDispatchEventOptions,
+    listener: ($Shape<PartialEventObject>) => void,
+    {discrete}: ReactResponderDispatchEventOptions,
   ): void {
-    const eventQueue = currentEventQueue;
-    const {listener, target, type} = possibleEventObject;
+    validateResponderContext();
+    const {target, type} = possibleEventObject;
 
-    if (listener == null || target == null || type == null) {
+    if (target == null || type == null) {
       throw new Error(
-        'context.dispatchEvent: "listener", "target" and "type" fields on event object are required.',
+        'context.dispatchEvent: "target" and "type" fields on event object are required.',
       );
     }
     if (__DEV__) {
@@ -89,29 +124,15 @@ const eventResponderContext: ReactResponderContext = {
     const eventObject = ((possibleEventObject: any): $Shape<
       PartialEventObject,
     >);
-    let events;
-
-    if (capture) {
-      events = eventQueue.capture;
-      if (events === null) {
-        events = eventQueue.capture = [];
-      }
-    } else {
-      events = eventQueue.bubble;
-      if (events === null) {
-        events = eventQueue.bubble = [];
-      }
-    }
+    const eventQueue = ((currentEventQueue: any): EventQueue);
     if (discrete) {
       eventQueue.discrete = true;
     }
-    events.push(eventObject);
-
-    if (stopPropagation) {
-      eventsWithStopPropagation.add(eventObject);
-    }
+    eventListeners.set(eventObject, listener);
+    eventQueue.events.push(eventObject);
   },
   isPositionWithinTouchHitTarget(doc: Document, x: number, y: number): boolean {
+    validateResponderContext();
     // This isn't available in some environments (JSDOM)
     if (typeof doc.elementFromPoint !== 'function') {
       return false;
@@ -139,6 +160,7 @@ const eventResponderContext: ReactResponderContext = {
     return false;
   },
   isTargetWithinEventComponent(target: Element | Document): boolean {
+    validateResponderContext();
     if (target != null) {
       let fiber = getClosestInstanceFromNode(target);
       while (fiber !== null) {
@@ -170,6 +192,7 @@ const eventResponderContext: ReactResponderContext = {
     doc: Document,
     rootEventTypes: Array<ReactEventResponderEventType>,
   ): void {
+    validateResponderContext();
     listenToResponderEventTypesImpl(rootEventTypes, doc);
     for (let i = 0; i < rootEventTypes.length; i++) {
       const rootEventType = rootEventTypes[i];
@@ -185,12 +208,15 @@ const eventResponderContext: ReactResponderContext = {
           rootEventComponentInstances,
         );
       }
-      rootEventComponentInstances.add(currentInstance);
+      rootEventComponentInstances.add(
+        ((currentInstance: any): ReactEventComponentInstance),
+      );
     }
   },
   removeRootEventTypes(
     rootEventTypes: Array<ReactEventResponderEventType>,
   ): void {
+    validateResponderContext();
     for (let i = 0; i < rootEventTypes.length; i++) {
       const rootEventType = rootEventTypes[i];
       const topLevelEventType =
@@ -199,14 +225,18 @@ const eventResponderContext: ReactResponderContext = {
         topLevelEventType,
       );
       if (rootEventComponents !== undefined) {
-        rootEventComponents.delete(currentInstance);
+        rootEventComponents.delete(
+          ((currentInstance: any): ReactEventComponentInstance),
+        );
       }
     }
   },
   hasOwnership(): boolean {
+    validateResponderContext();
     return currentOwner === currentInstance;
   },
   requestOwnership(): boolean {
+    validateResponderContext();
     if (currentOwner !== null) {
       return false;
     }
@@ -215,6 +245,7 @@ const eventResponderContext: ReactResponderContext = {
     return true;
   },
   releaseOwnership(): boolean {
+    validateResponderContext();
     if (currentOwner !== currentInstance) {
       return false;
     }
@@ -222,21 +253,44 @@ const eventResponderContext: ReactResponderContext = {
     triggerOwnershipListeners();
     return false;
   },
-  setTimeout(func: () => void, delay): TimeoutID {
-    const contextInstance = currentInstance;
-    return setTimeout(() => {
-      const previousEventQueue = currentEventQueue;
-      const previousInstance = currentInstance;
-      currentEventQueue = createEventQueue();
-      currentInstance = contextInstance;
-      try {
-        func();
-        batchedUpdates(processEventQueue, currentEventQueue);
-      } finally {
-        currentInstance = previousInstance;
-        currentEventQueue = previousEventQueue;
+  setTimeout(func: () => boolean, delay): Symbol {
+    validateResponderContext();
+    if (currentTimers === null) {
+      currentTimers = new Map();
+    }
+    let timeout = currentTimers.get(delay);
+
+    const timerId = Symbol();
+    if (timeout === undefined) {
+      const timers = new Map();
+      const id = setTimeout(() => {
+        processTimers(timers);
+      }, delay);
+      timeout = {
+        id,
+        timers,
+      };
+      currentTimers.set(delay, timeout);
+    }
+    timeout.timers.set(timerId, {
+      instance: ((currentInstance: any): ReactEventComponentInstance),
+      func,
+      id: timerId,
+    });
+    activeTimeouts.set(timerId, timeout);
+    return timerId;
+  },
+  clearTimeout(timerId: Symbol): void {
+    validateResponderContext();
+    const timeout = activeTimeouts.get(timerId);
+
+    if (timeout !== undefined) {
+      const timers = timeout.timers;
+      timers.delete(timerId);
+      if (timers.size === 0) {
+        clearTimeout(timeout.id);
       }
-    }, delay);
+    }
   },
   getEventTargetsFromTarget(
     target: Element | Document,
@@ -246,6 +300,7 @@ const eventResponderContext: ReactResponderContext = {
     node: Element,
     props: null | Object,
   }> {
+    validateResponderContext();
     const eventTargetHostComponents = [];
     let node = getClosestInstanceFromNode(target);
     // We traverse up the fiber tree from the target fiber, to the
@@ -292,6 +347,30 @@ const eventResponderContext: ReactResponderContext = {
   },
 };
 
+function processTimers(timers: Map<Symbol, ResponderTimer>): void {
+  const timersArr = Array.from(timers.values());
+  let shouldStopPropagation = false;
+  currentEventQueue = createEventQueue();
+  try {
+    for (let i = 0; i < timersArr.length; i++) {
+      const {instance, func, id} = timersArr[i];
+      currentInstance = instance;
+      try {
+        if (!shouldStopPropagation) {
+          shouldStopPropagation = func();
+        }
+      } finally {
+        activeTimeouts.delete(id);
+      }
+    }
+    processEventQueue();
+  } finally {
+    currentTimers = null;
+    currentInstance = null;
+    currentEventQueue = null;
+  }
+}
+
 function queryEventTarget(
   child: Fiber,
   queryType: void | Symbol | number,
@@ -306,84 +385,60 @@ function queryEventTarget(
   return true;
 }
 
-const rootEventTypesToEventComponentInstances: Map<
-  DOMTopLevelEventType | string,
-  Set<ReactEventComponentInstance>,
-> = new Map();
-const PossiblyWeakSet = typeof WeakSet === 'function' ? WeakSet : Set;
-const eventsWithStopPropagation:
-  | WeakSet
-  | Set<$Shape<PartialEventObject>> = new PossiblyWeakSet();
-const targetEventTypeCached: Map<
-  Array<ReactEventResponderEventType>,
-  Set<DOMTopLevelEventType>,
-> = new Map();
-const ownershipChangeListeners: Set<ReactEventComponentInstance> = new Set();
-
 function createResponderEvent(
   topLevelType: string,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: Element | Document,
   eventSystemFlags: EventSystemFlags,
+  phase: 0 | 1 | 2,
 ): ReactResponderEvent {
-  return {
+  const responderEvent = {
     nativeEvent: nativeEvent,
     target: nativeEventTarget,
     type: topLevelType,
     passive: (eventSystemFlags & IS_PASSIVE) !== 0,
     passiveSupported: (eventSystemFlags & PASSIVE_NOT_SUPPORTED) === 0,
+    phase,
   };
+  if (__DEV__) {
+    Object.freeze(responderEvent);
+  }
+  return responderEvent;
 }
 
 function createEventQueue(): EventQueue {
   return {
-    bubble: null,
-    capture: null,
+    events: [],
     discrete: false,
   };
 }
 
 function processEvent(event: $Shape<PartialEventObject>): void {
   const type = event.type;
-  const listener = event.listener;
+  const listener = ((eventListeners.get(event): any): (
+    $Shape<PartialEventObject>,
+  ) => void);
   invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
 }
 
-function processEvents(
-  bubble: null | Array<$Shape<PartialEventObject>>,
-  capture: null | Array<$Shape<PartialEventObject>>,
-): void {
-  let i, length;
-
-  if (capture !== null) {
-    for (i = capture.length; i-- > 0; ) {
-      const event = capture[i];
-      processEvent(capture[i]);
-      if (eventsWithStopPropagation.has(event)) {
-        return;
-      }
-    }
-  }
-  if (bubble !== null) {
-    for (i = 0, length = bubble.length; i < length; ++i) {
-      const event = bubble[i];
-      processEvent(event);
-      if (eventsWithStopPropagation.has(event)) {
-        return;
-      }
-    }
+function processEvents(events: Array<EventObjectType>): void {
+  for (let i = 0, length = events.length; i < length; i++) {
+    processEvent(events[i]);
   }
 }
 
 export function processEventQueue(): void {
-  const {bubble, capture, discrete} = currentEventQueue;
+  const {events, discrete} = ((currentEventQueue: any): EventQueue);
 
+  if (events.length === 0) {
+    return;
+  }
   if (discrete) {
     interactiveUpdates(() => {
-      processEvents(bubble, capture);
+      batchedUpdates(processEvents, events);
     });
   } else {
-    processEvents(bubble, capture);
+    batchedUpdates(processEvents, events);
   }
 }
 
@@ -405,91 +460,162 @@ function getTargetEventTypes(
   return cachedSet;
 }
 
-function handleTopLevelType(
+function getTargetEventResponderInstances(
   topLevelType: DOMTopLevelEventType,
-  responderEvent: ReactResponderEvent,
-  eventComponentInstance: ReactEventComponentInstance,
-  isRootLevelEvent: boolean,
-): void {
-  let {props, responder, state} = eventComponentInstance;
-  if (!isRootLevelEvent) {
-    // Validate the target event type exists on the responder
-    const targetEventTypes = getTargetEventTypes(responder.targetEventTypes);
-    if (!targetEventTypes.has(topLevelType)) {
-      return;
+  targetFiber: null | Fiber,
+): Array<ReactEventComponentInstance> {
+  const eventResponderInstances = [];
+  let node = targetFiber;
+  while (node !== null) {
+    // Traverse up the fiber tree till we find event component fibers.
+    if (node.tag === EventComponent) {
+      const eventComponentInstance = node.stateNode;
+      if (currentOwner === null || currentOwner === eventComponentInstance) {
+        const responder = eventComponentInstance.responder;
+        // Validate the target event type exists on the responder
+        const targetEventTypes = getTargetEventTypes(
+          responder.targetEventTypes,
+        );
+        if (targetEventTypes.has(topLevelType)) {
+          eventResponderInstances.push(eventComponentInstance);
+        }
+      }
     }
+    node = node.return;
   }
-  const previousInstance = currentInstance;
-  currentInstance = eventComponentInstance;
-  try {
-    responder.onEvent(responderEvent, eventResponderContext, props, state);
-  } finally {
-    currentInstance = previousInstance;
-  }
+  return eventResponderInstances;
 }
 
-export function runResponderEventsInBatch(
+function getRootEventResponderInstances(
+  topLevelType: DOMTopLevelEventType,
+): Array<ReactEventComponentInstance> {
+  const eventResponderInstances = [];
+  const rootEventInstances = rootEventTypesToEventComponentInstances.get(
+    topLevelType,
+  );
+  if (rootEventInstances !== undefined) {
+    const rootEventComponentInstances = Array.from(rootEventInstances);
+
+    for (let i = 0; i < rootEventComponentInstances.length; i++) {
+      const rootEventComponentInstance = rootEventComponentInstances[i];
+
+      if (
+        currentOwner === null ||
+        currentOwner === rootEventComponentInstance
+      ) {
+        eventResponderInstances.push(rootEventComponentInstance);
+      }
+    }
+  }
+  return eventResponderInstances;
+}
+
+function triggerEventResponderEventListener(
+  responderEvent: ReactResponderEvent,
+  eventComponentInstance: ReactEventComponentInstance,
+): boolean {
+  const {responder, props, state} = eventComponentInstance;
+  currentInstance = eventComponentInstance;
+  return responder.onEvent(responderEvent, eventResponderContext, props, state);
+}
+
+function traverseAndTriggerEventResponderInstances(
   topLevelType: DOMTopLevelEventType,
   targetFiber: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: EventTarget,
   eventSystemFlags: EventSystemFlags,
 ): void {
-  if (enableEventAPI) {
-    currentEventQueue = createEventQueue();
-    const responderEvent = createResponderEvent(
+  // Trigger event responders in this order:
+  // - Capture target phase
+  // - Bubble target phase
+  // - Root phase
+
+  const targetEventResponderInstances = getTargetEventResponderInstances(
+    topLevelType,
+    targetFiber,
+  );
+  let length = targetEventResponderInstances.length;
+  let i;
+  let shouldStopPropagation = false;
+  let responderEvent;
+
+  // Capture target phase
+  if (length > 0) {
+    responderEvent = createResponderEvent(
       ((topLevelType: any): string),
       nativeEvent,
       ((nativeEventTarget: any): Element | Document),
       eventSystemFlags,
+      CAPTURE_PHASE,
     );
-    let node = targetFiber;
-    // Traverse up the fiber tree till we find event component fibers.
-    while (node !== null) {
-      if (node.tag === EventComponent) {
-        const eventComponentInstance = node.stateNode;
-        handleTopLevelType(
-          topLevelType,
-          responderEvent,
-          eventComponentInstance,
-          false,
-        );
-      }
-      node = node.return;
-    }
-    // Handle root level events
-    const rootEventInstances = rootEventTypesToEventComponentInstances.get(
-      topLevelType,
-    );
-    if (rootEventInstances !== undefined) {
-      const rootEventComponentInstances = Array.from(rootEventInstances);
-
-      for (let i = 0; i < rootEventComponentInstances.length; i++) {
-        const rootEventComponentInstance = rootEventComponentInstances[i];
-        handleTopLevelType(
-          topLevelType,
-          responderEvent,
-          rootEventComponentInstance,
-          true,
-        );
+    for (i = length; i-- > 0; ) {
+      const targetEventResponderInstance = targetEventResponderInstances[i];
+      shouldStopPropagation = triggerEventResponderEventListener(
+        responderEvent,
+        targetEventResponderInstance,
+      );
+      if (shouldStopPropagation) {
+        return;
       }
     }
-    processEventQueue();
+    // Bubble target phase
+    responderEvent = createResponderEvent(
+      ((topLevelType: any): string),
+      nativeEvent,
+      ((nativeEventTarget: any): Element | Document),
+      eventSystemFlags,
+      BUBBLE_PHASE,
+    );
+    for (i = 0; i < length; i++) {
+      const targetEventResponderInstance = targetEventResponderInstances[i];
+      shouldStopPropagation = triggerEventResponderEventListener(
+        responderEvent,
+        targetEventResponderInstance,
+      );
+      if (shouldStopPropagation) {
+        return;
+      }
+    }
+  }
+  // Root phase
+  const rootEventResponderInstances = getRootEventResponderInstances(
+    topLevelType,
+  );
+  length = rootEventResponderInstances.length;
+  if (length > 0) {
+    responderEvent = createResponderEvent(
+      ((topLevelType: any): string),
+      nativeEvent,
+      ((nativeEventTarget: any): Element | Document),
+      eventSystemFlags,
+      ROOT_PHASE,
+    );
+    for (i = 0; i < length; i++) {
+      const targetEventResponderInstance = rootEventResponderInstances[i];
+      shouldStopPropagation = triggerEventResponderEventListener(
+        responderEvent,
+        targetEventResponderInstance,
+      );
+      if (shouldStopPropagation) {
+        return;
+      }
+    }
   }
 }
 
 function triggerOwnershipListeners(): void {
   const listeningInstances = Array.from(ownershipChangeListeners);
   const previousInstance = currentInstance;
-  for (let i = 0; i < listeningInstances.length; i++) {
-    const instance = listeningInstances[i];
-    const {props, responder, state} = instance;
-    currentInstance = instance;
-    try {
+  try {
+    for (let i = 0; i < listeningInstances.length; i++) {
+      const instance = listeningInstances[i];
+      const {props, responder, state} = instance;
+      currentInstance = instance;
       responder.onOwnershipChange(eventResponderContext, props, state);
-    } finally {
-      currentInstance = previousInstance;
     }
+  } finally {
+    currentInstance = previousInstance;
   }
 }
 
@@ -509,15 +635,14 @@ export function unmountEventResponder(
   const onUnmount = responder.onUnmount;
   if (onUnmount !== undefined) {
     let {props, state} = eventComponentInstance;
-    const previousEventQueue = currentEventQueue;
-    const previousInstance = currentInstance;
     currentEventQueue = createEventQueue();
     currentInstance = eventComponentInstance;
     try {
       onUnmount(eventResponderContext, props, state);
     } finally {
-      currentEventQueue = previousEventQueue;
-      currentInstance = previousInstance;
+      currentEventQueue = null;
+      currentInstance = null;
+      currentTimers = null;
     }
   }
   if (currentOwner === eventComponentInstance) {
@@ -526,5 +651,39 @@ export function unmountEventResponder(
   }
   if (responder.onOwnershipChange !== undefined) {
     ownershipChangeListeners.delete(eventComponentInstance);
+  }
+}
+
+function validateResponderContext(): void {
+  invariant(
+    currentEventQueue && currentInstance,
+    'An event responder context was used outside of an event cycle. ' +
+      'Use context.setTimeout() to use asynchronous responder context outside of event cycle .',
+  );
+}
+
+export function dispatchEventForResponderEventSystem(
+  topLevelType: DOMTopLevelEventType,
+  targetFiber: null | Fiber,
+  nativeEvent: AnyNativeEvent,
+  nativeEventTarget: EventTarget,
+  eventSystemFlags: EventSystemFlags,
+): void {
+  if (enableEventAPI) {
+    currentEventQueue = createEventQueue();
+    try {
+      traverseAndTriggerEventResponderInstances(
+        topLevelType,
+        targetFiber,
+        nativeEvent,
+        nativeEventTarget,
+        eventSystemFlags,
+      );
+      processEventQueue();
+    } finally {
+      currentTimers = null;
+      currentInstance = null;
+      currentEventQueue = null;
+    }
   }
 }
