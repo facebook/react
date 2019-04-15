@@ -1,7 +1,13 @@
 // @flow
 
+const LRU = require('lru-cache');
+
 const FB_MODULE_RE = /^(.*) \[from (.*)\]$/;
 const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
+
+// On large trees, encoding takes significant time.
+// Try to reuse the already encoded strings.
+let encodedStringCache = new LRU({ max: 1000 });
 
 export function getDisplayName(
   type: Function,
@@ -56,8 +62,15 @@ export function utfDecodeString(array: Uint32Array): string {
 }
 
 export function utfEncodeString(string: string): Uint32Array {
+  let cached = encodedStringCache.get(string);
+  if (cached !== undefined) {
+    return cached;
+  }
+
   // $FlowFixMe Flow's Uint32Array.from's type definition is wrong; first argument of mapFn will be string
-  return Uint32Array.from(string, toCodePoint);
+  const encoded = Uint32Array.from(string, toCodePoint);
+  encodedStringCache.set(string, encoded);
+  return encoded;
 }
 
 function toCodePoint(string: string) {
