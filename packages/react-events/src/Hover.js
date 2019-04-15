@@ -247,6 +247,13 @@ const HoverResponder = {
         }
         break;
       }
+      case 'touchcancel':
+      case 'touchend': {
+        if (state.isTouched) {
+          state.isTouched = false;
+        }
+        break;
+      }
 
       case 'pointerover':
       case 'mouseover': {
