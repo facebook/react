@@ -160,8 +160,6 @@ import {
 } from 'shared/ReactErrorUtils';
 import {onCommitRoot} from './ReactFiberDevToolsHook';
 
-const ceil = Math.ceil;
-
 const {
   ReactCurrentDispatcher,
   ReactCurrentOwner,
@@ -1819,6 +1817,8 @@ export function resolveRetryThenable(boundaryFiber: Fiber, thenable: Thenable) {
   retryTimedOutBoundary(boundaryFiber);
 }
 
+// FIXME: This change resulted in bugs during internal testing. I've reverted
+// it temporarily. Figure out why before landing again.
 // Computes the next Just Noticeable Difference (JND) boundary.
 // The theory is that a person can't tell the difference between small differences in time.
 // Therefore, if we wait a bit longer than necessary that won't translate to a noticeable
@@ -1828,21 +1828,21 @@ export function resolveRetryThenable(boundaryFiber: Fiber, thenable: Thenable) {
 // the longer we can wait additionally. At some point we have to give up though.
 // We pick a train model where the next boundary commits at a consistent schedule.
 // These particular numbers are vague estimates. We expect to adjust them based on research.
-function jnd(timeElapsed: number) {
-  return timeElapsed < 120
-    ? 120
-    : timeElapsed < 480
-      ? 480
-      : timeElapsed < 1080
-        ? 1080
-        : timeElapsed < 1920
-          ? 1920
-          : timeElapsed < 3000
-            ? 3000
-            : timeElapsed < 4320
-              ? 4320
-              : ceil(timeElapsed / 1960) * 1960;
-}
+// function jnd(timeElapsed: number) {
+//   return timeElapsed < 120
+//     ? 120
+//     : timeElapsed < 480
+//       ? 480
+//       : timeElapsed < 1080
+//         ? 1080
+//         : timeElapsed < 1920
+//           ? 1920
+//           : timeElapsed < 3000
+//             ? 3000
+//             : timeElapsed < 4320
+//               ? 4320
+//               : ceil(timeElapsed / 1960) * 1960;
+// }
 
 function computeMsUntilTimeout(
   mostRecentEventTime: ExpirationTime,
@@ -1857,21 +1857,11 @@ function computeMsUntilTimeout(
   const currentTimeMs: number = now();
   const timeElapsed = currentTimeMs - eventTimeMs;
 
-  let msUntilTimeout = jnd(timeElapsed) - timeElapsed;
-
-  // Compute the time until this render pass would expire.
-  const timeUntilExpirationMs =
-    expirationTimeToMs(committedExpirationTime) + initialTimeMs - currentTimeMs;
-
-  // Clamp the timeout to the expiration time.
-  // TODO: Once the event time is exact instead of inferred from expiration time
-  // we don't need this.
-  if (timeUntilExpirationMs < msUntilTimeout) {
-    msUntilTimeout = timeUntilExpirationMs;
-  }
-
+  // TODO: Account for the Just Noticeable Difference
+  const timeoutMs = 150;
+  const msUntilTimeout = timeoutMs - timeElapsed;
   // This is the value that is passed to `setTimeout`.
-  return msUntilTimeout;
+  return msUntilTimeout < 0 ? 0 : msUntilTimeout;
 }
 
 function checkForNestedUpdates() {

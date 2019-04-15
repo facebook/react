@@ -1568,7 +1568,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   });
 
-  it('suspends for longer if something took a long (CPU bound) time to render', async () => {
+  it.skip('suspends for longer if something took a long (CPU bound) time to render', async () => {
     function Foo() {
       Scheduler.yieldValue('Foo');
       return (
@@ -1618,7 +1618,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('A')]);
   });
 
-  it('suspends for longer if a fallback has been shown for a long time', async () => {
+  it.skip('suspends for longer if a fallback has been shown for a long time', async () => {
     function Foo() {
       Scheduler.yieldValue('Foo');
       return (
@@ -1688,7 +1688,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('B')]);
   });
 
-  it('does not suspend for very long after a higher priority update', async () => {
+  it.skip('does not suspend for very long after a higher priority update', async () => {
     function Foo() {
       Scheduler.yieldValue('Foo');
       return (
@@ -1724,11 +1724,3 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
   });
 });
-
-// TODO:
-// An update suspends, timeout is scheduled. Update again with different timeout.
-// An update suspends, a higher priority update also suspends, each has different timeouts.
-// Can update siblings of a timed out placeholder without suspending
-// Pinging during the render phase
-// Synchronous thenable
-// Start time is computed using earliest suspended time
