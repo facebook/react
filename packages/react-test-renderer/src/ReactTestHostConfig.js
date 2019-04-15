@@ -9,11 +9,23 @@
 
 import warning from 'shared/warning';
 
-import type {ReactEventResponder} from 'shared/ReactTypes';
+import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 import {REACT_EVENT_TARGET_TOUCH_HIT} from 'shared/ReactSymbols';
 
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
+type EventTargetChildElement = {
+  type: string,
+  props: null | {
+    style?: {
+      position?: string,
+      bottom?: string,
+      left?: string,
+      right?: string,
+      top?: string,
+    },
+  },
+};
 export type Type = string;
 export type Props = Object;
 export type Container = {|
@@ -170,12 +182,6 @@ export function createInstance(
   hostContext: Object,
   internalInstanceHandle: Object,
 ): Instance {
-  if (__DEV__ && enableEventAPI) {
-    warning(
-      hostContext !== EVENT_TOUCH_HIT_TARGET_CONTEXT,
-      'validateDOMNesting: <TouchHitTarget> must not have any children.',
-    );
-  }
   return {
     type,
     props,
@@ -233,10 +239,6 @@ export function createTextInstance(
   internalInstanceHandle: Object,
 ): TextInstance {
   if (__DEV__ && enableEventAPI) {
-    warning(
-      hostContext !== EVENT_TOUCH_HIT_TARGET_CONTEXT,
-      'validateDOMNesting: <TouchHitTarget> must not have any children.',
-    );
     warning(
       hostContext !== EVENT_COMPONENT_CONTEXT,
       'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
@@ -325,21 +327,76 @@ export function unhideTextInstance(
   textInstance.isHidden = false;
 }
 
-export function handleEventComponent(
-  eventResponder: ReactEventResponder,
-  rootContainerInstance: Container,
-  internalInstanceHandle: Object,
-) {
-  // TODO: add handleEventComponent implementation
+export function mountEventComponent(
+  eventComponentInstance: ReactEventComponentInstance,
+): void {
+  // noop
+}
+
+export function updateEventComponent(
+  eventComponentInstance: ReactEventComponentInstance,
+): void {
+  // noop
+}
+
+export function unmountEventComponent(
+  eventComponentInstance: ReactEventComponentInstance,
+): void {
+  // noop
+}
+
+export function getEventTargetChildElement(
+  type: Symbol | number,
+  props: Props,
+): null | EventTargetChildElement {
+  if (enableEventAPI) {
+    if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
+      const {bottom, left, right, top} = props;
+
+      if (!bottom && !left && !right && !top) {
+        return null;
+      }
+      return {
+        type: 'div',
+        props: {
+          style: {
+            position: 'absolute',
+            zIndex: -1,
+            bottom: bottom ? `-${bottom}px` : '0px',
+            left: left ? `-${left}px` : '0px',
+            right: right ? `-${right}px` : '0px',
+            top: top ? `-${top}px` : '0px',
+          },
+        },
+      };
+    }
+  }
+  return null;
 }
 
 export function handleEventTarget(
   type: Symbol | number,
   props: Props,
-  parentInstance: Container,
+  rootContainerInstance: Container,
   internalInstanceHandle: Object,
-) {
-  if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
-    // TODO
+): boolean {
+  if (enableEventAPI) {
+    if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
+      // In DEV we do a computed style check on the position to ensure
+      // the parent host component is correctly position in the document.
+      if (__DEV__) {
+        return true;
+      }
+    }
   }
+  return false;
+}
+
+export function commitEventTarget(
+  type: Symbol | number,
+  props: Props,
+  instance: Instance,
+  parentInstance: Instance,
+): void {
+  // noop
 }

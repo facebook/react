@@ -29,6 +29,7 @@ const noOpResponder = {
 function createReactEventComponent() {
   return {
     $$typeof: ReactSymbols.REACT_EVENT_COMPONENT_TYPE,
+    displayName: 'TestEventComponent',
     props: null,
     responder: noOpResponder,
   };
@@ -37,6 +38,7 @@ function createReactEventComponent() {
 function createReactEventTarget() {
   return {
     $$typeof: ReactSymbols.REACT_EVENT_TARGET_TYPE,
+    displayName: 'TestEventTarget',
     type: Symbol.for('react.event_target.test'),
   };
 }
@@ -125,9 +127,9 @@ describe('ReactFiberEvents', () => {
     it('should render a simple event component with a single event target', () => {
       const Test = () => (
         <EventComponent>
-          <EventTarget>
-            <div>Hello world</div>
-          </EventTarget>
+          <div>
+            Hello world<EventTarget />
+          </div>
         </EventComponent>
       );
 
@@ -146,10 +148,7 @@ describe('ReactFiberEvents', () => {
       expect(() => {
         ReactNoop.render(<Test />);
         expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
-          'Wrap the child text "Hello world" in an element.',
-      );
+      }).toWarnDev('Warning: Event targets should not have children.');
     });
 
     it('should warn when an event target has a direct text child #2', () => {
@@ -165,19 +164,15 @@ describe('ReactFiberEvents', () => {
       expect(() => {
         ReactNoop.render(<Test />);
         expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
-          'Wrap the child text "Hello world" in an element.',
-      );
+      }).toWarnDev('Warning: Event targets should not have children.');
     });
 
     it('should not warn if an event target is not a direct child of an event component', () => {
       const Test = () => (
         <EventComponent>
           <div>
-            <EventTarget>
-              <span>Child 1</span>
-            </EventTarget>
+            <EventTarget />
+            <span>Child 1</span>
           </div>
         </EventComponent>
       );
@@ -205,9 +200,7 @@ describe('ReactFiberEvents', () => {
       expect(() => {
         ReactNoop.render(<Test />);
         expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: React event targets must not have event components as children.',
-      );
+      }).toWarnDev('Warning: Event targets should not have children.');
     });
 
     it('should handle event components correctly with error boundaries', () => {
@@ -217,11 +210,9 @@ describe('ReactFiberEvents', () => {
 
       const Test = () => (
         <EventComponent>
-          <EventTarget>
-            <span>
-              <ErrorComponent />
-            </span>
-          </EventTarget>
+          <span>
+            <ErrorComponent />
+          </span>
         </EventComponent>
       );
 
@@ -266,11 +257,9 @@ describe('ReactFiberEvents', () => {
 
       const Parent = () => (
         <EventComponent>
-          <EventTarget>
-            <div>
-              <Child />
-            </div>
-          </EventTarget>
+          <div>
+            <Child />
+          </div>
         </EventComponent>
       );
 
@@ -319,9 +308,7 @@ describe('ReactFiberEvents', () => {
 
       const Parent = () => (
         <EventComponent>
-          <EventTarget>
-            <Child />
-          </EventTarget>
+          <Child />
         </EventComponent>
       );
 
@@ -339,7 +326,7 @@ describe('ReactFiberEvents', () => {
         });
         expect(Scheduler).toFlushWithoutYielding();
       }).toWarnDev(
-        'Warning: validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
+        'Warning: validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
           'Wrap the child text "Text!" in an element.',
       );
     });
@@ -353,11 +340,7 @@ describe('ReactFiberEvents', () => {
         _updateCounter = updateCounter;
 
         if (counter === 1) {
-          return (
-            <EventComponent>
-              <div>Child</div>
-            </EventComponent>
-          );
+          return <EventTarget>123</EventTarget>;
         }
 
         return (
@@ -368,18 +351,20 @@ describe('ReactFiberEvents', () => {
       }
 
       const Parent = () => (
-        <EventComponent>
-          <EventTarget>
+        <div>
+          <EventComponent>
             <Child />
-          </EventTarget>
-        </EventComponent>
+          </EventComponent>
+        </div>
       );
 
       ReactNoop.render(<Parent />);
       expect(Scheduler).toFlushWithoutYielding();
       expect(ReactNoop).toMatchRenderedOutput(
         <div>
-          <span>Child - 0</span>
+          <div>
+            <span>Child - 0</span>
+          </div>
         </div>,
       );
 
@@ -388,9 +373,52 @@ describe('ReactFiberEvents', () => {
           _updateCounter(counter => counter + 1);
         });
         expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: React event targets must not have event components as children.',
+      }).toWarnDev('Warning: Event targets should not have children.');
+    });
+
+    it('should error with a component stack contains the names of the event components and event targets', () => {
+      let componentStackMessage;
+
+      function ErrorComponent() {
+        throw new Error('Failed!');
+      }
+
+      const Test = () => (
+        <EventComponent>
+          <span>
+            <ErrorComponent />
+          </span>
+        </EventComponent>
       );
+
+      class Wrapper extends React.Component {
+        state = {
+          error: null,
+        };
+
+        componentDidCatch(error, errMessage) {
+          componentStackMessage = errMessage.componentStack;
+          this.setState({
+            error,
+          });
+        }
+
+        render() {
+          if (this.state.error) {
+            return null;
+          }
+          return <Test />;
+        }
+      }
+
+      ReactNoop.render(<Wrapper />);
+      expect(Scheduler).toFlushWithoutYielding();
+
+      expect(componentStackMessage.includes('ErrorComponent')).toBe(true);
+      expect(componentStackMessage.includes('span')).toBe(true);
+      expect(componentStackMessage.includes('TestEventComponent')).toBe(true);
+      expect(componentStackMessage.includes('Test')).toBe(true);
+      expect(componentStackMessage.includes('Wrapper')).toBe(true);
     });
   });
 
@@ -448,9 +476,9 @@ describe('ReactFiberEvents', () => {
     it('should render a simple event component with a single event target', () => {
       const Test = () => (
         <EventComponent>
-          <EventTarget>
-            <div>Hello world</div>
-          </EventTarget>
+          <div>
+            Hello world<EventTarget />
+          </div>
         </EventComponent>
       );
 
@@ -461,9 +489,8 @@ describe('ReactFiberEvents', () => {
 
       const Test2 = () => (
         <EventComponent>
-          <EventTarget>
-            <span>I am now a span</span>
-          </EventTarget>
+          <EventTarget />
+          <span>I am now a span</span>
         </EventComponent>
       );
 
@@ -483,10 +510,7 @@ describe('ReactFiberEvents', () => {
       expect(() => {
         root.update(<Test />);
         expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
-          'Wrap the child text "Hello world" in an element.',
-      );
+      }).toWarnDev('Warning: Event targets should not have children.');
     });
 
     it('should warn when an event target has a direct text child #2', () => {
@@ -503,19 +527,15 @@ describe('ReactFiberEvents', () => {
       expect(() => {
         root.update(<Test />);
         expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
-          'Wrap the child text "Hello world" in an element.',
-      );
+      }).toWarnDev('Warning: Event targets should not have children.');
     });
 
     it('should not warn if an event target is not a direct child of an event component', () => {
       const Test = () => (
         <EventComponent>
           <div>
-            <EventTarget>
-              <span>Child 1</span>
-            </EventTarget>
+            <EventTarget />
+            <span>Child 1</span>
           </div>
         </EventComponent>
       );
@@ -545,9 +565,7 @@ describe('ReactFiberEvents', () => {
       expect(() => {
         root.update(<Test />);
         expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: React event targets must not have event components as children.',
-      );
+      }).toWarnDev('Warning: Event targets should not have children.');
     });
 
     it('should handle event components correctly with error boundaries', () => {
@@ -557,11 +575,9 @@ describe('ReactFiberEvents', () => {
 
       const Test = () => (
         <EventComponent>
-          <EventTarget>
-            <span>
-              <ErrorComponent />
-            </span>
-          </EventTarget>
+          <span>
+            <ErrorComponent />
+          </span>
         </EventComponent>
       );
 
@@ -607,11 +623,9 @@ describe('ReactFiberEvents', () => {
 
       const Parent = () => (
         <EventComponent>
-          <EventTarget>
-            <div>
-              <Child />
-            </div>
-          </EventTarget>
+          <div>
+            <Child />
+          </div>
         </EventComponent>
       );
 
@@ -660,9 +674,7 @@ describe('ReactFiberEvents', () => {
 
       const Parent = () => (
         <EventComponent>
-          <EventTarget>
-            <Child />
-          </EventTarget>
+          <Child />
         </EventComponent>
       );
 
@@ -680,7 +692,7 @@ describe('ReactFiberEvents', () => {
           _updateCounter(counter => counter + 1);
         });
       }).toWarnDev(
-        'Warning: validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
+        'Warning: validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
           'Wrap the child text "Text!" in an element.',
       );
     });
@@ -694,11 +706,7 @@ describe('ReactFiberEvents', () => {
         _updateCounter = updateCounter;
 
         if (counter === 1) {
-          return (
-            <EventComponent>
-              <div>Child</div>
-            </EventComponent>
-          );
+          return <EventTarget>123</EventTarget>;
         }
 
         return (
@@ -709,11 +717,11 @@ describe('ReactFiberEvents', () => {
       }
 
       const Parent = () => (
-        <EventComponent>
-          <EventTarget>
+        <div>
+          <EventComponent>
             <Child />
-          </EventTarget>
-        </EventComponent>
+          </EventComponent>
+        </div>
       );
 
       const root = ReactTestRenderer.create(null);
@@ -721,7 +729,9 @@ describe('ReactFiberEvents', () => {
       expect(Scheduler).toFlushWithoutYielding();
       expect(root).toMatchRenderedOutput(
         <div>
-          <span>Child - 0</span>
+          <div>
+            <span>Child - 0</span>
+          </div>
         </div>,
       );
 
@@ -730,9 +740,53 @@ describe('ReactFiberEvents', () => {
           _updateCounter(counter => counter + 1);
         });
         expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: React event targets must not have event components as children.',
+      }).toWarnDev('Warning: Event targets should not have children.');
+    });
+
+    it('should error with a component stack contains the names of the event components and event targets', () => {
+      let componentStackMessage;
+
+      function ErrorComponent() {
+        throw new Error('Failed!');
+      }
+
+      const Test = () => (
+        <EventComponent>
+          <span>
+            <ErrorComponent />
+          </span>
+        </EventComponent>
       );
+
+      class Wrapper extends React.Component {
+        state = {
+          error: null,
+        };
+
+        componentDidCatch(error, errMessage) {
+          componentStackMessage = errMessage.componentStack;
+          this.setState({
+            error,
+          });
+        }
+
+        render() {
+          if (this.state.error) {
+            return null;
+          }
+          return <Test />;
+        }
+      }
+
+      const root = ReactTestRenderer.create(null);
+      root.update(<Wrapper />);
+      expect(Scheduler).toFlushWithoutYielding();
+
+      expect(componentStackMessage.includes('ErrorComponent')).toBe(true);
+      expect(componentStackMessage.includes('span')).toBe(true);
+      expect(componentStackMessage.includes('TestEventComponent')).toBe(true);
+      expect(componentStackMessage.includes('Test')).toBe(true);
+      expect(componentStackMessage.includes('Wrapper')).toBe(true);
     });
   });
 
@@ -789,9 +843,9 @@ describe('ReactFiberEvents', () => {
     it('should render a simple event component with a single event target', () => {
       const Test = () => (
         <EventComponent>
-          <EventTarget>
-            <div>Hello world</div>
-          </EventTarget>
+          <div>
+            Hello world<EventTarget />
+          </div>
         </EventComponent>
       );
 
@@ -802,9 +856,8 @@ describe('ReactFiberEvents', () => {
 
       const Test2 = () => (
         <EventComponent>
-          <EventTarget>
-            <span>I am now a span</span>
-          </EventTarget>
+          <EventTarget />
+          <span>I am now a span</span>
         </EventComponent>
       );
 
@@ -824,10 +877,7 @@ describe('ReactFiberEvents', () => {
         const container = document.createElement('div');
         ReactDOM.render(<Test />, container);
         expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
-          'Wrap the child text "Hello world" in an element.',
-      );
+      }).toWarnDev('Warning: Event targets should not have children.');
     });
 
     it('should warn when an event target has a direct text child #2', () => {
@@ -844,19 +894,15 @@ describe('ReactFiberEvents', () => {
         const container = document.createElement('div');
         ReactDOM.render(<Test />, container);
         expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
-          'Wrap the child text "Hello world" in an element.',
-      );
+      }).toWarnDev('Warning: Event targets should not have children.');
     });
 
     it('should not warn if an event target is not a direct child of an event component', () => {
       const Test = () => (
         <EventComponent>
           <div>
-            <EventTarget>
-              <span>Child 1</span>
-            </EventTarget>
+            <EventTarget />
+            <span>Child 1</span>
           </div>
         </EventComponent>
       );
@@ -882,9 +928,7 @@ describe('ReactFiberEvents', () => {
         const container = document.createElement('div');
         ReactDOM.render(<Test />, container);
         expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: React event targets must not have event components as children.',
-      );
+      }).toWarnDev('Warning: Event targets should not have children.');
     });
 
     it('should handle event components correctly with error boundaries', () => {
@@ -894,11 +938,9 @@ describe('ReactFiberEvents', () => {
 
       const Test = () => (
         <EventComponent>
-          <EventTarget>
-            <span>
-              <ErrorComponent />
-            </span>
-          </EventTarget>
+          <span>
+            <ErrorComponent />
+          </span>
         </EventComponent>
       );
 
@@ -944,11 +986,9 @@ describe('ReactFiberEvents', () => {
 
       const Parent = () => (
         <EventComponent>
-          <EventTarget>
-            <div>
-              <Child />
-            </div>
-          </EventTarget>
+          <div>
+            <Child />
+          </div>
         </EventComponent>
       );
 
@@ -988,9 +1028,7 @@ describe('ReactFiberEvents', () => {
 
       const Parent = () => (
         <EventComponent>
-          <EventTarget>
-            <Child />
-          </EventTarget>
+          <Child />
         </EventComponent>
       );
 
@@ -1004,7 +1042,7 @@ describe('ReactFiberEvents', () => {
         });
         expect(Scheduler).toFlushWithoutYielding();
       }).toWarnDev(
-        'Warning: validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
+        'Warning: validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
           'Wrap the child text "Text!" in an element.',
       );
     });
@@ -1018,11 +1056,7 @@ describe('ReactFiberEvents', () => {
         _updateCounter = updateCounter;
 
         if (counter === 1) {
-          return (
-            <EventComponent>
-              <div>Child</div>
-            </EventComponent>
-          );
+          return <EventTarget>123</EventTarget>;
         }
 
         return (
@@ -1033,25 +1067,70 @@ describe('ReactFiberEvents', () => {
       }
 
       const Parent = () => (
-        <EventComponent>
-          <EventTarget>
+        <div>
+          <EventComponent>
             <Child />
-          </EventTarget>
-        </EventComponent>
+          </EventComponent>
+        </div>
       );
 
       const container = document.createElement('div');
       ReactDOM.render(<Parent />, container);
-      expect(container.innerHTML).toBe('<div><span>Child - 0</span></div>');
+      expect(container.innerHTML).toBe(
+        '<div><div><span>Child - 0</span></div></div>',
+      );
 
       expect(() => {
         ReactTestUtils.act(() => {
           _updateCounter(counter => counter + 1);
         });
         expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: React event targets must not have event components as children.',
+      }).toWarnDev('Warning: Event targets should not have children.');
+    });
+
+    it('should error with a component stack contains the names of the event components and event targets', () => {
+      let componentStackMessage;
+
+      function ErrorComponent() {
+        throw new Error('Failed!');
+      }
+
+      const Test = () => (
+        <EventComponent>
+          <span>
+            <ErrorComponent />
+          </span>
+        </EventComponent>
       );
+
+      class Wrapper extends React.Component {
+        state = {
+          error: null,
+        };
+
+        componentDidCatch(error, errMessage) {
+          componentStackMessage = errMessage.componentStack;
+          this.setState({
+            error,
+          });
+        }
+
+        render() {
+          if (this.state.error) {
+            return null;
+          }
+          return <Test />;
+        }
+      }
+
+      const container = document.createElement('div');
+      ReactDOM.render(<Wrapper />, container);
+
+      expect(componentStackMessage.includes('ErrorComponent')).toBe(true);
+      expect(componentStackMessage.includes('span')).toBe(true);
+      expect(componentStackMessage.includes('TestEventComponent')).toBe(true);
+      expect(componentStackMessage.includes('Test')).toBe(true);
+      expect(componentStackMessage.includes('Wrapper')).toBe(true);
     });
   });
 
@@ -1075,9 +1154,9 @@ describe('ReactFiberEvents', () => {
     it('should render a simple event component with a single event target', () => {
       const Test = () => (
         <EventComponent>
-          <EventTarget>
-            <div>Hello world</div>
-          </EventTarget>
+          <div>
+            Hello world<EventTarget />
+          </div>
         </EventComponent>
       );
 

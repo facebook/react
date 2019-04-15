@@ -113,13 +113,26 @@ export function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
   // If we have two possible branches, we'll walk backwards up to the root
   // to see what path the root points to. On the way we may hit one of the
   // special cases and we'll deal with them.
-  let a = fiber;
-  let b = alternate;
+  let a: Fiber = fiber;
+  let b: Fiber = alternate;
   while (true) {
     let parentA = a.return;
-    let parentB = parentA ? parentA.alternate : null;
-    if (!parentA || !parentB) {
+    if (parentA === null) {
       // We're at the root.
+      break;
+    }
+    let parentB = parentA.alternate;
+    if (parentB === null) {
+      // There is no alternate. This is an unusual case. Currently, it only
+      // happens when a Suspense component is hidden. An extra fragment fiber
+      // is inserted in between the Suspense fiber and its children. Skip
+      // over this extra fragment fiber and proceed to the next parent.
+      const nextParent = parentA.return;
+      if (nextParent !== null) {
+        a = b = nextParent;
+        continue;
+      }
+      // If there's no parent, we're at the root.
       break;
     }
 

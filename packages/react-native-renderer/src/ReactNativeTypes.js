@@ -89,7 +89,7 @@ class ReactNativeComponent<Props> extends React.Component<Props> {
   measure(callback: MeasureOnSuccessCallback): void {}
   measureInWindow(callback: MeasureInWindowOnSuccessCallback): void {}
   measureLayout(
-    relativeToNativeNode: number,
+    relativeToNativeNode: number | Object,
     onSuccess: MeasureLayoutOnSuccessCallback,
     onFail?: () => void,
   ): void {}
@@ -106,7 +106,7 @@ export type NativeMethodsMixinType = {
   measure(callback: MeasureOnSuccessCallback): void,
   measureInWindow(callback: MeasureInWindowOnSuccessCallback): void,
   measureLayout(
-    relativeToNativeNode: number,
+    relativeToNativeNode: number | Object,
     onSuccess: MeasureLayoutOnSuccessCallback,
     onFail: () => void,
   ): void,

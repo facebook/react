@@ -22,6 +22,7 @@ import {
   createFactory,
   cloneElement,
   isValidElement,
+  jsx,
 } from './ReactElement';
 import {createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
@@ -43,10 +44,16 @@ import {
   createElementWithValidation,
   createFactoryWithValidation,
   cloneElementWithValidation,
+  jsxWithValidation,
+  jsxWithValidationStatic,
+  jsxWithValidationDynamic,
 } from './ReactElementValidator';
 import ReactSharedInternals from './ReactSharedInternals';
 import {error, warn} from './withComponentStack';
-import {enableStableConcurrentModeAPIs} from 'shared/ReactFeatureFlags';
+import {
+  enableStableConcurrentModeAPIs,
+  enableJSXTransformAPI,
+} from 'shared/ReactFeatureFlags';
 
 const React = {
   Children: {
@@ -105,6 +112,19 @@ const React = {
 if (enableStableConcurrentModeAPIs) {
   React.ConcurrentMode = REACT_CONCURRENT_MODE_TYPE;
   React.unstable_ConcurrentMode = undefined;
+}
+
+if (enableJSXTransformAPI) {
+  if (__DEV__) {
+    React.jsxDEV = jsxWithValidation;
+    React.jsx = jsxWithValidationDynamic;
+    React.jsxs = jsxWithValidationStatic;
+  } else {
+    React.jsx = jsx;
+    // we may want to special case jsxs internally to take advantage of static children.
+    // for now we can ship identical prod functions
+    React.jsxs = jsx;
+  }
 }
 
 export default React;

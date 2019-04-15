@@ -68,12 +68,6 @@ const forks = Object.freeze({
   // We have a few forks for different environments.
   'shared/ReactFeatureFlags': (bundleType, entry) => {
     switch (entry) {
-      case 'react-dom/unstable-new-scheduler': {
-        if (entry === 'react-dom/unstable-new-scheduler') {
-          return 'shared/forks/ReactFeatureFlags.www-new-scheduler.js';
-        }
-        return null;
-      }
       case 'react-native-renderer':
         switch (bundleType) {
           case RN_FB_DEV:

@@ -57,6 +57,12 @@ export const REACT_EVENT_TARGET_TYPE = hasSymbol
 export const REACT_EVENT_TARGET_TOUCH_HIT = hasSymbol
   ? Symbol.for('react.event_target.touch_hit')
   : 0xead7;
+export const REACT_EVENT_FOCUS_TARGET = hasSymbol
+  ? Symbol.for('react.event_target.focus')
+  : 0xead8;
+export const REACT_EVENT_PRESS_TARGET = hasSymbol
+  ? Symbol.for('react.event_target.press')
+  : 0xead9;
 
 const MAYBE_ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 const FAUX_ITERATOR_SYMBOL = '@@iterator';

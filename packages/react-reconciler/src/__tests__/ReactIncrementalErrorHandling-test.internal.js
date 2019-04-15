@@ -15,7 +15,6 @@ let ReactFeatureFlags;
 let React;
 let ReactNoop;
 let Scheduler;
-let enableNewScheduler;
 
 describe('ReactIncrementalErrorHandling', () => {
   beforeEach(() => {
@@ -23,7 +22,6 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
-    enableNewScheduler = ReactFeatureFlags.enableNewScheduler;
     PropTypes = require('prop-types');
     React = require('react');
     ReactNoop = require('react-noop-renderer');
@@ -1034,23 +1032,15 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop.renderToRootWithID(<BrokenRender label="e" />, 'e');
     ReactNoop.renderToRootWithID(<span prop="f:6" />, 'f');
 
-    if (enableNewScheduler) {
-      // The new scheduler will throw all three errors.
-      expect(() => {
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toThrow('a');
-      expect(() => {
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toThrow('c');
-      expect(() => {
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toThrow('e');
-    } else {
-      // The old scheduler only throws the first one.
-      expect(() => {
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toThrow('a');
-    }
+    expect(() => {
+      expect(Scheduler).toFlushWithoutYielding();
+    }).toThrow('a');
+    expect(() => {
+      expect(Scheduler).toFlushWithoutYielding();
+    }).toThrow('c');
+    expect(() => {
+      expect(Scheduler).toFlushWithoutYielding();
+    }).toThrow('e');
 
     expect(Scheduler).toFlushWithoutYielding();
     expect(ReactNoop.getChildren('a')).toEqual([]);
