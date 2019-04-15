@@ -64,7 +64,6 @@ import {
 } from './ReactCurrentFiber';
 import {StrictMode} from './ReactTypeOfMode';
 import {Sync} from './ReactFiberExpirationTime';
-import ReactActingUpdatesSigil from './ReactActingUpdatesSigil';
 
 type OpaqueRoot = FiberRoot;
 
@@ -466,5 +465,3 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
     },
   });
 }
-
-export {ReactActingUpdatesSigil};

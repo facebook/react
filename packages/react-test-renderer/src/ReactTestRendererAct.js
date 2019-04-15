@@ -11,7 +11,6 @@ import type {Thenable} from 'react-reconciler/src/ReactFiberScheduler';
 import {
   batchedUpdates,
   flushPassiveEffects,
-  ReactActingUpdatesSigil,
 } from 'react-reconciler/inline.test';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import warningWithoutStack from 'shared/warningWithoutStack';
@@ -48,7 +47,9 @@ function act(callback: () => Thenable) {
     previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
     previousActingUpdatesSigil = ReactShouldWarnActingUpdates.current;
     actingUpdatesScopeDepth++;
-    ReactShouldWarnActingUpdates.current = ReactActingUpdatesSigil;
+    // we use the function flushPassiveEffects directly as the sigil,
+    // since it's unique to a renderer
+    ReactShouldWarnActingUpdates.current = flushPassiveEffects;
   }
 
   function onDone() {
@@ -86,8 +87,7 @@ function act(callback: () => Thenable) {
                 null,
                 'You called act(async () => ...) without awaiting its result. ' +
                   'This could lead to unexpected testing behaviour, interleaving multiple act ' +
-                  'calls and mixing their scopes. You should await asynchronous act() ' +
-                  'calls, like so -\n' +
+                  'calls and mixing their scopes. You should await asynchronous act() calls:\n' +
                   'await act(async () => ...);\n',
               );
             }

@@ -31,7 +31,6 @@ const [
   runEventsInBatch,
   /* eslint-enable no-unused-vars */
   flushPassiveEffects,
-  ReactActingUpdatesSigil,
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
 
 const batchedUpdates = ReactDOM.unstable_batchedUpdates;
@@ -67,7 +66,9 @@ function act(callback: () => Thenable) {
     previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
     previousActingUpdatesSigil = ReactShouldWarnActingUpdates.current;
     actingUpdatesScopeDepth++;
-    ReactShouldWarnActingUpdates.current = ReactActingUpdatesSigil;
+    // we use the function flushPassiveEffects directly as the sigil,
+    // since it's unique to a renderer
+    ReactShouldWarnActingUpdates.current = flushPassiveEffects;
   }
 
   function onDone() {
@@ -105,8 +106,7 @@ function act(callback: () => Thenable) {
                 null,
                 'You called act(async () => ...) without awaiting its result. ' +
                   'This could lead to unexpected testing behaviour, interleaving multiple act ' +
-                  'calls and mixing their scopes. You should await asynchronous act() ' +
-                  'calls, like so -\n' +
+                  'calls and mixing their scopes. You should await asynchronous act() calls:\n' +
                   'await act(async () => ...);\n',
               );
             }

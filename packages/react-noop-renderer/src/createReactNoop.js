@@ -645,11 +645,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   const roots = new Map();
   const DEFAULT_ROOT_ID = '<default>';
 
-  const {
-    flushPassiveEffects,
-    batchedUpdates,
-    ReactActingUpdatesSigil,
-  } = NoopRenderer;
+  const {flushPassiveEffects, batchedUpdates} = NoopRenderer;
 
   // this act() implementation should be exactly the same in
   // ReactTestUtilsAct.js, ReactTestRendererAct.js, createReactNoop.js
@@ -680,7 +676,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
       previousActingUpdatesSigil = ReactShouldWarnActingUpdates.current;
       actingUpdatesScopeDepth++;
-      ReactShouldWarnActingUpdates.current = ReactActingUpdatesSigil;
+      // we use the function flushPassiveEffects directly as the sigil,
+      // since it's unique to a renderer
+      ReactShouldWarnActingUpdates.current = flushPassiveEffects;
     }
 
     function onDone() {
@@ -718,8 +716,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
                   null,
                   'You called act(async () => ...) without awaiting its result. ' +
                     'This could lead to unexpected testing behaviour, interleaving multiple act ' +
-                    'calls and mixing their scopes. You should await asynchronous act() ' +
-                    'calls, like so -\n' +
+                    'calls and mixing their scopes. You should await asynchronous act() calls:\n' +
                     'await act(async () => ...);\n',
                 );
               }

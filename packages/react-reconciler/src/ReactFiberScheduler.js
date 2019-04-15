@@ -159,7 +159,6 @@ import {
   clearCaughtError,
 } from 'shared/ReactErrorUtils';
 import {onCommitRoot} from './ReactFiberDevToolsHook';
-import ReactActingUpdatesSigil from './ReactActingUpdatesSigil';
 
 const ceil = Math.ceil;
 
@@ -2082,7 +2081,9 @@ export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
   if (__DEV__) {
     if (
       ReactShouldWarnActingUpdates.current !== null &&
-      ReactShouldWarnActingUpdates.current !== ReactActingUpdatesSigil
+      // use the function flushPassiveEffects directly as the sigil
+      // so this comparison is expected here
+      ReactShouldWarnActingUpdates.current !== flushPassiveEffects
     ) {
       // it looks like we're using the wrong matching act(), so log a warning
       warningWithoutStack(
@@ -2116,7 +2117,7 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
   if (__DEV__) {
     if (
       workPhase === NotWorking &&
-      ReactShouldWarnActingUpdates.current !== ReactActingUpdatesSigil
+      ReactShouldWarnActingUpdates.current !== flushPassiveEffects
     ) {
       warningWithoutStack(
         false,
