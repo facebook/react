@@ -25,6 +25,27 @@ exports[`Store should filter DOM nodes from the store tree: 1: mount 1`] = `
         <Child>
 `;
 
+exports[`Store should handle a stress test with different tree operations: 1: abcde 1`] = `
+[root]
+  ▾ <Parent>
+      <A key="a">
+      <B key="b">
+      <C key="c">
+      <D key="d">
+      <E key="e">
+`;
+
+exports[`Store should handle a stress test with different tree operations: 2: abxde 1`] = `
+[root]
+  ▾ <Parent>
+      <A key="a">
+      <B key="b">
+    ▾ <C key="c">
+        <X>
+      <D key="d">
+      <E key="e">
+`;
+
 exports[`Store should support collapsing parts of the tree: 1: mount 1`] = `
 [root]
   ▾ <Grandparent>

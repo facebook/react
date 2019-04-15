@@ -5,12 +5,12 @@ describe('Store', () => {
   let ReactDOM;
   let TestUtils;
   let store;
+  let print;
 
   const act = (callback: Function) => {
     TestUtils.act(() => {
       callback();
     });
-
     jest.runAllTimers(); // Flush Bridge operations
   };
 
@@ -20,6 +20,8 @@ describe('Store', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     TestUtils = require('react-dom/test-utils');
+
+    print = require('./storeSerializer').print;
   });
 
   it('should support mount and update operations', () => {
@@ -162,5 +164,175 @@ describe('Store', () => {
 
     act(() => store.toggleIsCollapsed(grandparentID, false));
     expect(store).toMatchSnapshot('6: expand Grandparent');
+  });
+
+  // This is a stress test for the tree mount/update/unmount traversal.
+  // It renders different trees that should produce the same output.
+  it('should handle a stress test with different tree operations', () => {
+    let setShowX;
+    const A = () => 'a';
+    const B = () => 'b';
+    const C = () => {
+      // We'll be manually flipping this component back and forth in the test.
+      // We only do this for a single node in order to verify that DevTools
+      // can handle a subtree switching alternates while other subtrees are memoized.
+      let [showX, _setShowX] = React.useState(false);
+      setShowX = _setShowX;
+      return showX ? <X /> : 'c';
+    };
+    const D = () => 'd';
+    const E = () => 'e';
+    const X = () => 'x';
+    const a = <A key="a" />;
+    const b = <B key="b" />;
+    const c = <C key="c" />;
+    const d = <D key="d" />;
+    const e = <E key="e" />;
+
+    function Parent({ children }) {
+      return children;
+    }
+
+    // 1. Render a normal version of [a, b, c, d, e].
+    let container = document.createElement('div');
+    act(() => ReactDOM.render(<Parent>{[a, b, c, d, e]}</Parent>, container));
+    expect(store).toMatchSnapshot('1: abcde');
+    expect(container.textContent).toMatch('abcde');
+    const snapshotForABCDE = print(store);
+
+    // 2. Render a version where <C /> renders an <X /> child instead of 'c'.
+    // This is how we'll test an update to a single component.
+    act(() => {
+      setShowX(true);
+    });
+    expect(store).toMatchSnapshot('2: abxde');
+    expect(container.textContent).toMatch('abxde');
+    const snapshotForABXDE = print(store);
+
+    // 3. Verify flipping it back produces the original result.
+    act(() => {
+      setShowX(false);
+    });
+    expect(container.textContent).toMatch('abcde');
+    expect(print(store)).toBe(snapshotForABCDE);
+
+    // 4. Clean up.
+    act(() => ReactDOM.unmountComponentAtNode(container));
+    expect(print(store)).toBe('');
+
+    // Now comes the interesting part.
+    // All of these cases are equivalent to [a, b, c, d, e] in output.
+    // We'll verify that DevTools produces the same snapshots for them.
+    // These cases are picked so that rendering them sequentially in the same
+    // container results in a combination of mounts, updates, unmounts, and reorders.
+    // prettier-ignore
+    let cases = [
+      [a, b, c, d, e],
+      [[a], b, c, d, e],
+      [[a, b], c, d, e],
+      [[a, b], c, [d, e]],
+      [[a, b], c, [d, '', e]],
+      [[a], b, c, d, [e]],
+      [a, b, [[c]], d, e],
+      [[a, ''], [b], [c], [d], [e]],
+      [a, b, [c, [d, ['', e]]]],
+      [a, b, c, d, e],
+      [<div key="0">{a}</div>, b, c, d, e],
+      [<div key="0">{a}{b}</div>, c, d, e],
+      [<div key="0">{a}{b}</div>, c, <div key="1">{d}{e}</div>],
+      [<div key="1">{a}{b}</div>, c, <div key="0">{d}{e}</div>],
+      [<div key="0">{a}{b}</div>, c, <div key="1">{d}{e}</div>],
+      [<div key="2">{a}{b}</div>, c, <div key="3">{d}{e}</div>],
+      [<span key="0">{a}</span>, b, c, d, [e]],
+      [a, b, <span key="0"><span>{c}</span></span>, d, e],
+      [<div key="0">{a}</div>, [b], <span key="1">{c}</span>, [d], <div key="2">{e}</div>],
+      [a, b, [c, <div key="0">{d}<span>{e}</span></div>], ''],
+      [a, [[]], b, c, [d, [[]], e]],
+      [[[a, b, c, d], e]],
+      [a, b, c, d, e]
+    ];
+
+    // 5. Test fresh mount for each case.
+    for (let i = 0; i < cases.length; i++) {
+      // Ensure fresh mount.
+      container = document.createElement('div');
+
+      // Verify mounting 'abcde'.
+      act(() => ReactDOM.render(<Parent>{cases[i]}</Parent>, container));
+      expect(container.textContent).toMatch('abcde');
+      expect(print(store)).toEqual(snapshotForABCDE);
+
+      // Verify switching to 'abxde'.
+      act(() => {
+        setShowX(true);
+      });
+      expect(container.textContent).toMatch('abxde');
+      expect(print(store)).toBe(snapshotForABXDE);
+
+      // Verify switching back to 'abcde'.
+      act(() => {
+        setShowX(false);
+      });
+      expect(container.textContent).toMatch('abcde');
+      expect(print(store)).toBe(snapshotForABCDE);
+
+      // Clean up.
+      act(() => ReactDOM.unmountComponentAtNode(container));
+      expect(print(store)).toBe('');
+    }
+
+    // 6. Verify *updates* by reusing the container between iterations.
+    // There'll be no unmounting until the very end.
+    container = document.createElement('div');
+    for (let i = 0; i < cases.length; i++) {
+      // Verify mounting 'abcde'.
+      act(() => ReactDOM.render(<Parent>{cases[i]}</Parent>, container));
+      expect(container.textContent).toMatch('abcde');
+      expect(print(store)).toEqual(snapshotForABCDE);
+
+      // Verify switching to 'abxde'.
+      act(() => {
+        setShowX(true);
+      });
+      expect(container.textContent).toMatch('abxde');
+      expect(print(store)).toBe(snapshotForABXDE);
+
+      // Verify switching back to 'abcde'.
+      act(() => {
+        setShowX(false);
+      });
+      expect(container.textContent).toMatch('abcde');
+      expect(print(store)).toBe(snapshotForABCDE);
+      // Don't unmount. Reuse the container between iterations.
+    }
+    act(() => ReactDOM.unmountComponentAtNode(container));
+    expect(print(store)).toBe('');
+
+    // 7. Same as the previous step, but for Concurrent Mode.
+    container = document.createElement('div');
+    let root = ReactDOM.unstable_createRoot(container);
+    for (let i = 0; i < cases.length; i++) {
+      // Verify mounting 'abcde'.
+      act(() => root.render(<Parent>{cases[i]}</Parent>));
+      expect(container.textContent).toMatch('abcde');
+      expect(print(store)).toEqual(snapshotForABCDE);
+
+      // Verify switching to 'abxde'.
+      act(() => {
+        setShowX(true);
+      });
+      expect(container.textContent).toMatch('abxde');
+      expect(print(store)).toBe(snapshotForABXDE);
+
+      // Verify switching back to 'abcde'.
+      act(() => {
+        setShowX(false);
+      });
+      expect(container.textContent).toMatch('abcde');
+      expect(print(store)).toBe(snapshotForABCDE);
+      // Don't unmount. Reuse the container between iterations.
+    }
+    act(() => root.unmount());
+    expect(print(store)).toBe('');
   });
 });
