@@ -48,6 +48,7 @@
     "prettier": "prettier --write '**/*.{js,json,css}'",
     "prettier:ci": "prettier --check '**/*.{js,json,css}'",
     "start": "cd ./shells/dev && opener ./index.html && webpack --config webpack.config.js --watch",
+    "start:prod": "cross-env NODE_ENV=production npm start",
     "test": "jest",
     "test-debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "test:chrome": "node ./shells/browser/chrome/test",
