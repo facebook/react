@@ -3,6 +3,7 @@
   "plugins": ["react-hooks"],
   "rules": {
     "jsx-a11y/anchor-has-content": "off",
+    "no-loop-func": "off",
     "react-hooks/exhaustive-deps": "error",
     "react-hooks/rules-of-hooks": "error"
   },

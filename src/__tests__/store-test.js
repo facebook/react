@@ -310,6 +310,7 @@ describe('Store', () => {
 
     // 7. Same as the previous step, but for Concurrent Mode.
     container = document.createElement('div');
+    // $FlowFixMe
     let root = ReactDOM.unstable_createRoot(container);
     for (let i = 0; i < cases.length; i++) {
       // Verify mounting 'abcde'.
