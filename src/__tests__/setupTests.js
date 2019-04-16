@@ -33,6 +33,7 @@ env.beforeEach(() => {
 
   initBackend(global.__REACT_DEVTOOLS_GLOBAL_HOOK__, agent, global);
 
+  global.bridge = bridge;
   global.store = new Store(bridge);
 });
 env.afterEach(() => {
