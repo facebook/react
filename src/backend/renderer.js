@@ -828,69 +828,62 @@ export function attach(
     }
   }
 
-  function maybeRecordUpdate(fiber: Fiber, hasChildOrderChanged: boolean) {
-    if (__DEBUG__) {
-      debug('maybeRecordUpdate()', fiber);
-    }
+  function recordTreeDuration(fiber: Fiber) {
+    const id = getFiberID(getPrimaryFiber(fiber));
+    const { actualDuration, treeBaseDuration } = fiber;
 
-    const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
-    if (isProfilingSupported) {
-      const id = getFiberID(getPrimaryFiber(fiber));
-      const { actualDuration, treeBaseDuration } = fiber;
+    idToTreeBaseDurationMap.set(id, fiber.treeBaseDuration);
 
-      idToTreeBaseDurationMap.set(id, fiber.treeBaseDuration);
+    if (isProfiling) {
+      if (treeBaseDuration !== fiber.alternate.treeBaseDuration) {
+        // Tree base duration updates are included in the operations typed array.
+        // So we have to convert them from milliseconds to microseconds so we can send them as ints.
+        const treeBaseDuration = Math.floor(fiber.treeBaseDuration * 1000);
 
-      if (isProfiling) {
-        if (treeBaseDuration !== fiber.alternate.treeBaseDuration) {
-          // Tree base duration updates are included in the operations typed array.
-          // So we have to convert them from milliseconds to microseconds so we can send them as ints.
-          const treeBaseDuration = Math.floor(fiber.treeBaseDuration * 1000);
+        beginNextOperation(3);
+        nextOperation[0] = TREE_OPERATION_UPDATE_TREE_BASE_DURATION;
+        nextOperation[1] = getFiberID(getPrimaryFiber(fiber));
+        nextOperation[2] = treeBaseDuration;
+        endNextOperation(false);
+      }
 
-          beginNextOperation(3);
-          nextOperation[0] = TREE_OPERATION_UPDATE_TREE_BASE_DURATION;
-          nextOperation[1] = getFiberID(getPrimaryFiber(fiber));
-          nextOperation[2] = treeBaseDuration;
-          endNextOperation(false);
-        }
-
-        if (haveProfilerTimesChanged(fiber.alternate, fiber)) {
-          if (actualDuration > 0) {
-            // If profiling is active, store durations for elements that were rendered during the commit.
-            const metadata = ((currentCommitProfilingMetadata: any): CommitProfilingData);
-            metadata.actualDurations.push(id, actualDuration);
-            metadata.maxActualDuration = Math.max(
-              metadata.maxActualDuration,
-              actualDuration
-            );
-          }
+      if (haveProfilerTimesChanged(fiber.alternate, fiber)) {
+        if (actualDuration > 0) {
+          // If profiling is active, store durations for elements that were rendered during the commit.
+          const metadata = ((currentCommitProfilingMetadata: any): CommitProfilingData);
+          metadata.actualDurations.push(id, actualDuration);
+          metadata.maxActualDuration = Math.max(
+            metadata.maxActualDuration,
+            actualDuration
+          );
         }
       }
     }
+  }
 
+  function recordChildOrderChange(fiber: Fiber) {
     // The frontend only really cares about the displayName, key, and children.
     // The first two don't really change, so we are only concerned with the order of children here.
     // This is trickier than a simple comparison though, since certain types of fibers are filtered.
-    if (hasChildOrderChanged) {
-      const nextChildren: Array<number> = [];
+    const nextChildren: Array<number> = [];
 
-      // This is a naive implimentation that shallowly recurses children.
-      // We might want to revisit this if it proves to be too inefficient.
-      let child = fiber.child;
-      while (child !== null) {
-        findReorderedChildrenRecursively(child, nextChildren);
-        child = child.sibling;
-      }
-
-      const numChildren = nextChildren.length;
-      beginNextOperation(3 + numChildren);
-      nextOperation[0] = TREE_OPERATION_RESET_CHILDREN;
-      nextOperation[1] = getFiberID(getPrimaryFiber(fiber));
-      nextOperation[2] = numChildren;
-      for (let i = 0; i < nextChildren.length; i++) {
-        nextOperation[3 + i] = nextChildren[i];
-      }
-      endNextOperation(false);
+    // This is a naive implimentation that shallowly recurses children.
+    // We might want to revisit this if it proves to be too inefficient.
+    let child = fiber.child;
+    while (child !== null) {
+      findReorderedChildrenRecursively(child, nextChildren);
+      child = child.sibling;
     }
+
+    const numChildren = nextChildren.length;
+    beginNextOperation(3 + numChildren);
+    nextOperation[0] = TREE_OPERATION_RESET_CHILDREN;
+    nextOperation[1] = getFiberID(getPrimaryFiber(fiber));
+    nextOperation[2] = numChildren;
+    for (let i = 0; i < nextChildren.length; i++) {
+      nextOperation[3 + i] = nextChildren[i];
+    }
+    endNextOperation(false);
   }
 
   function findReorderedChildrenRecursively(
@@ -1025,7 +1018,13 @@ export function attach(
     }
 
     if (shouldIncludeInTree) {
-      maybeRecordUpdate(nextFiber, hasChildOrderChanged);
+      const isProfilingSupported = nextFiber.hasOwnProperty('treeBaseDuration');
+      if (isProfilingSupported) {
+        recordTreeDuration(nextFiber);
+      }
+      if (hasChildOrderChanged) {
+        recordChildOrderChange(nextFiber);
+      }
     }
   }
 
