@@ -264,3 +264,8 @@ exports[`Store collapseNodesByDefault:true should support mount and update opera
 `;
 
 exports[`Store collapseNodesByDefault:true should support mount and update operations: 3: unmount 1`] = ``;
+
+exports[`Store should not allow a root node to be collapsed: 1: mount 1`] = `
+[root]
+    <Component>
+`;

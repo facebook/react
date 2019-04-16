@@ -452,6 +452,10 @@ export default class Store extends EventEmitter {
   toggleIsCollapsed(id: number, isCollapsed: boolean): void {
     const element = this.getElementByID(id);
     if (element !== null) {
+      if (element.type === ElementTypeRoot) {
+        throw Error('Root nodes cannot be collapsed');
+      }
+
       const oldWeight = element.isCollapsed ? 1 : element.weight;
       element.isCollapsed = isCollapsed;
       const newWeight = element.isCollapsed ? 1 : element.weight;
@@ -576,7 +580,7 @@ export default class Store extends EventEmitter {
               depth: -1,
               displayName: null,
               id,
-              isCollapsed: false, // Never collapse roots
+              isCollapsed: false, // Never collapse roots; it would hide the entire tree.
               key: null,
               ownerID: 0,
               parentID: 0,

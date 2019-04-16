@@ -22,7 +22,20 @@ describe('Store', () => {
   });
 
   it('should not allow a root node to be collapsed', () => {
-    // TODO
+    const Component = () => <div>Hi</div>;
+
+    act(() =>
+      ReactDOM.render(<Component count={4} />, document.createElement('div'))
+    );
+    expect(store).toMatchSnapshot('1: mount');
+
+    expect(store.roots).toHaveLength(1);
+
+    const rootID = store.roots[0];
+
+    expect(() => store.toggleIsCollapsed(rootID, true)).toThrow(
+      'Root nodes cannot be collapsed'
+    );
   });
 
   describe('collapseNodesByDefault:false', () => {
