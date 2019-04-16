@@ -1,0 +1,239 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`StoreStress should handle a stress test for Suspense 1`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStress should handle a stress test for Suspense 2`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStress should handle a stress test for Suspense 3`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <A key="a">
+        <B key="b">
+        <C key="c">
+      <Y>
+`;
+
+exports[`StoreStress should handle a stress test for Suspense 4`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <C key="c">
+        <B key="b">
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStress should handle a stress test for Suspense 5`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <C key="c">
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStress should handle a stress test for Suspense 6`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <C key="c">
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStress should handle a stress test for Suspense 7`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <C key="c">
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStress should handle a stress test for Suspense 8`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <A key="a">
+        <B key="b">
+      <Y>
+`;
+
+exports[`StoreStress should handle a stress test for Suspense 9`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStress should handle a stress test for Suspense 10`] = `
+[root]
+  ▾ <Root>
+      <X>
+      <Suspense>
+      <Y>
+`;
+
+exports[`StoreStress should handle a stress test for Suspense 11`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <B key="b">
+      <Y>
+`;
+
+exports[`StoreStress should handle a stress test for Suspense 12`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStress should handle a stress test with different tree operations: 1: abcde 1`] = `
+[root]
+  ▾ <Parent>
+      <A key="a">
+      <B key="b">
+      <C key="c">
+      <D key="d">
+      <E key="e">
+`;
+
+exports[`StoreStress should handle a stress test with different tree operations: 2: abxde 1`] = `
+[root]
+  ▾ <Parent>
+      <A key="a">
+      <B key="b">
+    ▾ <C key="c">
+        <X>
+      <D key="d">
+      <E key="e">
+`;
+
+exports[`StoreStress should handle stress test with reordering 1`] = `
+[root]
+  ▾ <Root>
+      <A key="a">
+`;
+
+exports[`StoreStress should handle stress test with reordering 2`] = `
+[root]
+  ▾ <Root>
+      <B key="b">
+`;
+
+exports[`StoreStress should handle stress test with reordering 3`] = `
+[root]
+  ▾ <Root>
+      <C key="c">
+`;
+
+exports[`StoreStress should handle stress test with reordering 4`] = `
+[root]
+  ▾ <Root>
+      <D key="d">
+`;
+
+exports[`StoreStress should handle stress test with reordering 5`] = `
+[root]
+  ▾ <Root>
+      <E key="e">
+`;
+
+exports[`StoreStress should handle stress test with reordering 6`] = `
+[root]
+  ▾ <Root>
+      <A key="a">
+`;
+
+exports[`StoreStress should handle stress test with reordering 7`] = `
+[root]
+  ▾ <Root>
+      <B key="b">
+`;
+
+exports[`StoreStress should handle stress test with reordering 8`] = `
+[root]
+  ▾ <Root>
+      <C key="c">
+`;
+
+exports[`StoreStress should handle stress test with reordering 9`] = `
+[root]
+  ▾ <Root>
+      <D key="d">
+`;
+
+exports[`StoreStress should handle stress test with reordering 10`] = `
+[root]
+  ▾ <Root>
+      <E key="e">
+`;
+
+exports[`StoreStress should handle stress test with reordering 11`] = `
+[root]
+  ▾ <Root>
+      <A key="a">
+      <B key="b">
+`;
+
+exports[`StoreStress should handle stress test with reordering 12`] = `
+[root]
+  ▾ <Root>
+      <B key="b">
+      <A key="a">
+`;
+
+exports[`StoreStress should handle stress test with reordering 13`] = `
+[root]
+  ▾ <Root>
+      <B key="b">
+      <C key="c">
+`;
+
+exports[`StoreStress should handle stress test with reordering 14`] = `
+[root]
+  ▾ <Root>
+      <C key="c">
+      <B key="b">
+`;
+
+exports[`StoreStress should handle stress test with reordering 15`] = `
+[root]
+  ▾ <Root>
+      <A key="a">
+      <C key="c">
+`;
+
+exports[`StoreStress should handle stress test with reordering 16`] = `
+[root]
+  ▾ <Root>
+      <C key="c">
+      <A key="a">
+`;
