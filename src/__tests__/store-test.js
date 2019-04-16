@@ -4,7 +4,7 @@ describe('Store', () => {
   let React;
   let ReactDOM;
   let TestUtils;
-  // let bridge;
+  let bridge;
   let store;
   let print;
 
@@ -16,7 +16,7 @@ describe('Store', () => {
   };
 
   beforeEach(() => {
-    // bridge = global.bridge;
+    bridge = global.bridge;
     store = global.store;
 
     React = require('react');
@@ -549,6 +549,18 @@ describe('Store', () => {
         );
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(snapshots[j]);
+        // Check that we can transition back again.
+        act(() =>
+          ReactDOM.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={z}>{steps[i]}</React.Suspense>
+              <Y />
+            </Root>,
+            container
+          )
+        );
+        expect(print(store)).toEqual(snapshots[i]);
         // Clean up after every iteration.
         act(() => ReactDOM.unmountComponentAtNode(container));
         expect(print(store)).toBe('');
@@ -592,6 +604,22 @@ describe('Store', () => {
         );
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(snapshots[j]);
+        // Check that we can transition back again.
+        act(() =>
+          ReactDOM.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={steps[i]}>
+                <Z />
+                <Never />
+                <Z />
+              </React.Suspense>
+              <Y />
+            </Root>,
+            container
+          )
+        );
+        expect(print(store)).toEqual(snapshots[i]);
         // Clean up after every iteration.
         act(() => ReactDOM.unmountComponentAtNode(container));
         expect(print(store)).toBe('');
@@ -631,6 +659,18 @@ describe('Store', () => {
         );
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(snapshots[j]);
+        // Check that we can transition back again.
+        act(() =>
+          ReactDOM.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={z}>{steps[i]}</React.Suspense>
+              <Y />
+            </Root>,
+            container
+          )
+        );
+        expect(print(store)).toEqual(snapshots[i]);
         // Clean up after every iteration.
         act(() => ReactDOM.unmountComponentAtNode(container));
         expect(print(store)).toBe('');
@@ -670,6 +710,22 @@ describe('Store', () => {
         );
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(snapshots[j]);
+        // Check that we can transition back again.
+        act(() =>
+          ReactDOM.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={steps[i]}>
+                <Z />
+                <Never />
+                <Z />
+              </React.Suspense>
+              <Y />
+            </Root>,
+            container
+          )
+        );
+        expect(print(store)).toEqual(snapshots[i]);
         // Clean up after every iteration.
         act(() => ReactDOM.unmountComponentAtNode(container));
         expect(print(store)).toBe('');
@@ -777,8 +833,6 @@ describe('Store', () => {
         expect(print(store)).toBe('');
       }
     }
-
-    // TODO:
-    // Test Concurrent Mode
+    // TODO: Test Concurrent Mode
   });
 });
