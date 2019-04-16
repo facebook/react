@@ -339,6 +339,106 @@ describe('Store', () => {
     expect(print(store)).toBe('');
   });
 
+  it('should handle stress test with reordering', () => {
+    const A = () => 'a';
+    const B = () => 'b';
+    const C = () => 'c';
+    const D = () => 'd';
+    const E = () => 'e';
+    const a = <A key="a" />;
+    const b = <B key="b" />;
+    const c = <C key="c" />;
+    const d = <D key="d" />;
+    const e = <E key="e" />;
+
+    // prettier-ignore
+    let steps = [
+      a,
+      b,
+      c,
+      d,
+      e,
+      [a],
+      [b],
+      [c],
+      [d],
+      [e],
+      [a, b],
+      [b, a],
+      [b, c],
+      [c, b],
+      [a, c],
+      [c, a],
+    ];
+
+    const Root = ({ children }) => {
+      return children;
+    };
+
+    // 1. Capture the expected render result.
+    let snapshots = [];
+    let container = document.createElement('div');
+    for (let i = 0; i < steps.length; i++) {
+      act(() => ReactDOM.render(<Root>{steps[i]}</Root>, container));
+      // We snapshot each step once so it doesn't regress.
+      expect(store).toMatchSnapshot();
+      snapshots.push(print(store));
+      act(() => ReactDOM.unmountComponentAtNode(container));
+      expect(print(store)).toBe('');
+    }
+
+    // 2. Verify that we can update from every step to every other step and back.
+    for (let i = 0; i < steps.length; i++) {
+      for (let j = 0; j < steps.length; j++) {
+        let container = document.createElement('div');
+        act(() => ReactDOM.render(<Root>{steps[i]}</Root>, container));
+        expect(print(store)).toMatch(snapshots[i]);
+        act(() => ReactDOM.render(<Root>{steps[j]}</Root>, container));
+        expect(print(store)).toMatch(snapshots[j]);
+        act(() => ReactDOM.render(<Root>{steps[i]}</Root>, container));
+        expect(print(store)).toMatch(snapshots[i]);
+        act(() => ReactDOM.unmountComponentAtNode(container));
+        expect(print(store)).toBe('');
+      }
+    }
+
+    // 3. Same test as above, but this time we wrap children in a host component.
+    for (let i = 0; i < steps.length; i++) {
+      for (let j = 0; j < steps.length; j++) {
+        let container = document.createElement('div');
+        act(() =>
+          ReactDOM.render(
+            <Root>
+              <div>{steps[i]}</div>
+            </Root>,
+            container
+          )
+        );
+        expect(print(store)).toMatch(snapshots[i]);
+        act(() =>
+          ReactDOM.render(
+            <Root>
+              <div>{steps[j]}</div>
+            </Root>,
+            container
+          )
+        );
+        expect(print(store)).toMatch(snapshots[j]);
+        act(() =>
+          ReactDOM.render(
+            <Root>
+              <div>{steps[i]}</div>
+            </Root>,
+            container
+          )
+        );
+        expect(print(store)).toMatch(snapshots[i]);
+        act(() => ReactDOM.unmountComponentAtNode(container));
+        expect(print(store)).toBe('');
+      }
+    }
+  });
+
   it('should handle a stress test for Suspense', async () => {
     const A = () => 'a';
     const B = () => 'b';

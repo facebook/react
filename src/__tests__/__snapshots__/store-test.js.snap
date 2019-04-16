@@ -161,6 +161,108 @@ exports[`Store should handle a stress test with different tree operations: 2: ab
       <E key="e">
 `;
 
+exports[`Store should handle stress test with reordering 1`] = `
+[root]
+  ▾ <Root>
+      <A key="a">
+`;
+
+exports[`Store should handle stress test with reordering 2`] = `
+[root]
+  ▾ <Root>
+      <B key="b">
+`;
+
+exports[`Store should handle stress test with reordering 3`] = `
+[root]
+  ▾ <Root>
+      <C key="c">
+`;
+
+exports[`Store should handle stress test with reordering 4`] = `
+[root]
+  ▾ <Root>
+      <D key="d">
+`;
+
+exports[`Store should handle stress test with reordering 5`] = `
+[root]
+  ▾ <Root>
+      <E key="e">
+`;
+
+exports[`Store should handle stress test with reordering 6`] = `
+[root]
+  ▾ <Root>
+      <A key="a">
+`;
+
+exports[`Store should handle stress test with reordering 7`] = `
+[root]
+  ▾ <Root>
+      <B key="b">
+`;
+
+exports[`Store should handle stress test with reordering 8`] = `
+[root]
+  ▾ <Root>
+      <C key="c">
+`;
+
+exports[`Store should handle stress test with reordering 9`] = `
+[root]
+  ▾ <Root>
+      <D key="d">
+`;
+
+exports[`Store should handle stress test with reordering 10`] = `
+[root]
+  ▾ <Root>
+      <E key="e">
+`;
+
+exports[`Store should handle stress test with reordering 11`] = `
+[root]
+  ▾ <Root>
+      <A key="a">
+      <B key="b">
+`;
+
+exports[`Store should handle stress test with reordering 12`] = `
+[root]
+  ▾ <Root>
+      <B key="b">
+      <A key="a">
+`;
+
+exports[`Store should handle stress test with reordering 13`] = `
+[root]
+  ▾ <Root>
+      <B key="b">
+      <C key="c">
+`;
+
+exports[`Store should handle stress test with reordering 14`] = `
+[root]
+  ▾ <Root>
+      <C key="c">
+      <B key="b">
+`;
+
+exports[`Store should handle stress test with reordering 15`] = `
+[root]
+  ▾ <Root>
+      <A key="a">
+      <C key="c">
+`;
+
+exports[`Store should handle stress test with reordering 16`] = `
+[root]
+  ▾ <Root>
+      <C key="c">
+      <A key="a">
+`;
+
 exports[`Store should support collapsing parts of the tree: 1: mount 1`] = `
 [root]
   ▾ <Grandparent>
