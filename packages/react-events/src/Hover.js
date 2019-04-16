@@ -23,6 +23,8 @@ type HoverProps = {
   onHoverEnd: (e: HoverEvent) => void,
   onHoverMove: (e: HoverEvent) => void,
   onHoverStart: (e: HoverEvent) => void,
+  preventDefault: boolean,
+  stopPropagation: boolean,
 };
 
 type HoverState = {
@@ -178,6 +180,11 @@ function dispatchHoverEndEvents(
     if (props.onHoverChange) {
       dispatchHoverChangeEvent(context, props, state);
     }
+
+    state.isInHitSlop = false;
+    state.hoverTarget = null;
+    state.skipMouseAfterPointer = false;
+    state.isTouched = false;
   };
 
   if (state.isActiveHovered) {
@@ -231,7 +238,8 @@ const HoverResponder = {
     props: HoverProps,
     state: HoverState,
   ): boolean {
-    const {type, phase, target, nativeEvent} = event;
+    const {type, phase, target} = event;
+    const nativeEvent: any = event.nativeEvent;
 
     // Hover doesn't handle capture target events at this point
     if (phase === CAPTURE_PHASE) {
@@ -258,7 +266,7 @@ const HoverResponder = {
       case 'pointerover':
       case 'mouseover': {
         if (!state.isHovered && !state.isTouched) {
-          if ((nativeEvent: any).pointerType === 'touch') {
+          if (nativeEvent.pointerType === 'touch') {
             state.isTouched = true;
             return false;
           }
@@ -268,8 +276,8 @@ const HoverResponder = {
           if (
             context.isPositionWithinTouchHitTarget(
               target.ownerDocument,
-              (nativeEvent: any).x,
-              (nativeEvent: any).y,
+              nativeEvent.x,
+              nativeEvent.y,
             )
           ) {
             state.isInHitSlop = true;
@@ -285,10 +293,6 @@ const HoverResponder = {
         if (state.isHovered && !state.isTouched) {
           dispatchHoverEndEvents(event, context, props, state);
         }
-        state.isInHitSlop = false;
-        state.hoverTarget = null;
-        state.isTouched = false;
-        state.skipMouseAfterPointer = false;
         break;
       }
 
@@ -303,8 +307,8 @@ const HoverResponder = {
             if (
               !context.isPositionWithinTouchHitTarget(
                 target.ownerDocument,
-                (nativeEvent: any).x,
-                (nativeEvent: any).y,
+                nativeEvent.x,
+                nativeEvent.y,
               )
             ) {
               dispatchHoverStartEvents(event, context, props, state);
@@ -314,18 +318,15 @@ const HoverResponder = {
             if (
               context.isPositionWithinTouchHitTarget(
                 target.ownerDocument,
-                (nativeEvent: any).x,
-                (nativeEvent: any).y,
+                nativeEvent.x,
+                nativeEvent.y,
               )
             ) {
               dispatchHoverEndEvents(event, context, props, state);
               state.isInHitSlop = true;
             } else {
               if (props.onHoverMove) {
-                const syntheticEvent = createHoverEvent(
-                  'hovermove',
-                  event.target,
-                );
+                const syntheticEvent = createHoverEvent('hovermove', target);
                 context.dispatchEvent(syntheticEvent, props.onHoverMove, {
                   discrete: false,
                 });
