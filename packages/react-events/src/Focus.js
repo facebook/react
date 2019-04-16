@@ -50,67 +50,39 @@ function createFocusEvent(
 }
 
 function dispatchFocusInEvents(
-  event: null | ReactResponderEvent,
   context: ReactResponderContext,
   props: FocusProps,
   state: FocusState,
 ) {
-  if (event != null) {
-    const {nativeEvent} = event;
-    if (
-      context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)
-    ) {
-      return;
-    }
-  }
+  const target = ((state.focusTarget: any): Element | Document);
   if (props.onFocus) {
-    const syntheticEvent = createFocusEvent(
-      'focus',
-      ((state.focusTarget: any): Element | Document),
-    );
+    const syntheticEvent = createFocusEvent('focus', target);
     context.dispatchEvent(syntheticEvent, props.onFocus, {discrete: true});
   }
   if (props.onFocusChange) {
     const listener = () => {
       props.onFocusChange(true);
     };
-    const syntheticEvent = createFocusEvent(
-      'focuschange',
-      ((state.focusTarget: any): Element | Document),
-    );
+    const syntheticEvent = createFocusEvent('focuschange', target);
     context.dispatchEvent(syntheticEvent, listener, {discrete: true});
   }
 }
 
 function dispatchFocusOutEvents(
-  event: null | ReactResponderEvent,
   context: ReactResponderContext,
   props: FocusProps,
   state: FocusState,
 ) {
-  if (event != null) {
-    const {nativeEvent} = event;
-    if (
-      context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)
-    ) {
-      return;
-    }
-  }
+  const target = ((state.focusTarget: any): Element | Document);
   if (props.onBlur) {
-    const syntheticEvent = createFocusEvent(
-      'blur',
-      ((state.focusTarget: any): Element | Document),
-    );
+    const syntheticEvent = createFocusEvent('blur', target);
     context.dispatchEvent(syntheticEvent, props.onBlur, {discrete: true});
   }
   if (props.onFocusChange) {
     const listener = () => {
       props.onFocusChange(false);
     };
-    const syntheticEvent = createFocusEvent(
-      'focuschange',
-      ((state.focusTarget: any): Element | Document),
-    );
+    const syntheticEvent = createFocusEvent('focuschange', target);
     context.dispatchEvent(syntheticEvent, listener, {discrete: true});
   }
 }
@@ -121,7 +93,7 @@ function unmountResponder(
   state: FocusState,
 ): void {
   if (state.isFocused) {
-    dispatchFocusOutEvents(null, context, props, state);
+    dispatchFocusOutEvents(context, props, state);
   }
 }
 
@@ -140,6 +112,8 @@ const FocusResponder = {
     state: FocusState,
   ): boolean {
     const {type, phase, target} = event;
+    const shouldStopPropagation =
+      props.stopPropagation === undefined ? true : props.stopPropagation;
 
     // Focus doesn't handle capture target events at this point
     if (phase === CAPTURE_PHASE) {
@@ -148,22 +122,31 @@ const FocusResponder = {
     switch (type) {
       case 'focus': {
         if (!state.isFocused) {
-          state.focusTarget = target;
-          dispatchFocusInEvents(event, context, props, state);
+          // Limit focus events to the direct child of the event component.
+          // Browser focus is not expected to bubble.
+          let currentTarget = (target: any);
+          if (
+            currentTarget.parentNode &&
+            context.isTargetWithinEventComponent(currentTarget.parentNode)
+          ) {
+            break;
+          }
+          state.focusTarget = currentTarget;
+          dispatchFocusInEvents(context, props, state);
           state.isFocused = true;
         }
         break;
       }
       case 'blur': {
         if (state.isFocused) {
-          dispatchFocusOutEvents(event, context, props, state);
+          dispatchFocusOutEvents(context, props, state);
           state.isFocused = false;
           state.focusTarget = null;
         }
         break;
       }
     }
-    return false;
+    return shouldStopPropagation;
   },
   onUnmount(
     context: ReactResponderContext,
