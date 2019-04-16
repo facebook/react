@@ -105,6 +105,50 @@ describe('Focus event responder', () => {
     });
   });
 
+  describe('nested Focus components', () => {
+    it('does not propagate events by default', () => {
+      const events = [];
+      const innerRef = React.createRef();
+      const outerRef = React.createRef();
+      const createEventHandler = msg => () => {
+        events.push(msg);
+      };
+
+      const element = (
+        <Focus
+          onBlur={createEventHandler('outer: onBlur')}
+          onFocus={createEventHandler('outer: onFocus')}
+          onFocusChange={createEventHandler('outer: onFocusChange')}>
+          <div ref={outerRef}>
+            <Focus
+              onBlur={createEventHandler('inner: onBlur')}
+              onFocus={createEventHandler('inner: onFocus')}
+              onFocusChange={createEventHandler('inner: onFocusChange')}>
+              <div ref={innerRef} />
+            </Focus>
+          </div>
+        </Focus>
+      );
+
+      ReactDOM.render(element, container);
+
+      outerRef.current.dispatchEvent(createFocusEvent('focus'));
+      outerRef.current.dispatchEvent(createFocusEvent('blur'));
+      innerRef.current.dispatchEvent(createFocusEvent('focus'));
+      innerRef.current.dispatchEvent(createFocusEvent('blur'));
+      expect(events).toEqual([
+        'outer: onFocus',
+        'outer: onFocusChange',
+        'outer: onBlur',
+        'outer: onFocusChange',
+        'inner: onFocus',
+        'inner: onFocusChange',
+        'inner: onBlur',
+        'inner: onFocusChange',
+      ]);
+    });
+  });
+
   it('expect displayName to show up for event component', () => {
     expect(Focus.displayName).toBe('Focus');
   });
