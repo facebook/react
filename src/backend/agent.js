@@ -113,7 +113,7 @@ export default class Agent extends EventEmitter {
         const renderer = ((this._rendererInterfaces[
           (rendererID: any)
         ]: any): RendererInterface);
-        return renderer.getFiberIDFromNative(node, true);
+        return renderer.getInternalIDFromNative(node, true);
       } catch (e) {}
     }
     return null;
@@ -253,7 +253,7 @@ export default class Agent extends EventEmitter {
 
     let node: HTMLElement | null = null;
     if (renderer !== null) {
-      node = ((renderer.findNativeByFiberID(id): any): HTMLElement);
+      node = ((renderer.getNativeFromInternal(id): any): HTMLElement);
     }
 
     if (node != null) {

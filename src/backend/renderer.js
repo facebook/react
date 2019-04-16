@@ -14,7 +14,7 @@ import {
   ElementTypeRoot,
   ElementTypeSuspense,
 } from 'src/devtools/types';
-import { getDisplayName, utfEncodeString } from '../utils';
+import { getDisplayName, getUID, utfEncodeString } from '../utils';
 import { cleanForBridge, copyWithSet, setInObject } from './utils';
 import {
   __DEBUG__,
@@ -25,7 +25,6 @@ import {
   TREE_OPERATION_RECURSIVE_REMOVE_CHILDREN,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
-import { getUID } from '../utils';
 import { inspectHooksOfFiber } from './ReactDebugHooks';
 
 import type {
@@ -312,8 +311,6 @@ export function attach(
       : symbolOrNumber;
   }
 
-  // TODO: we might want to change the data structure once we no longer suppport Stack versions of `getData`.
-  // TODO: Keep in sync with getElementType()
   function getDataForFiber(fiber: Fiber): FiberData {
     const { elementType, type, key, tag } = fiber;
 
@@ -1166,7 +1163,7 @@ export function attach(
     currentRootID = -1;
   }
 
-  function findNativeByFiberID(id: number) {
+  function getNativeFromInternal(id: number) {
     try {
       const fiber = findCurrentFiberUsingSlowPath(idToFiberMap.get(id));
       if (fiber === null) {
@@ -1190,7 +1187,7 @@ export function attach(
     }
   }
 
-  function getFiberIDFromNative(
+  function getInternalIDFromNative(
     hostInstance,
     findNearestUnfilteredAncestor = false
   ) {
@@ -1441,6 +1438,14 @@ export function attach(
       case ForwardRef:
         global.$type = fiber.type.render;
         break;
+      case MemoComponent:
+      case SimpleMemoComponent:
+        const { elementType, type } = fiber;
+        global.$type =
+          elementType != null && elementType.type != null
+            ? elementType.type
+            : type;
+        break;
       default:
         global.$type = null;
         break;
@@ -1483,7 +1488,9 @@ export function attach(
       tag === FunctionComponent ||
       tag === IncompleteClassComponent ||
       tag === IndeterminateComponent ||
-      tag === ForwardRef
+      tag === MemoComponent ||
+      tag === ForwardRef ||
+      tag === SimpleMemoComponent
     ) {
       canViewSource = true;
       if (stateNode && stateNode.context != null) {
@@ -1623,7 +1630,7 @@ export function attach(
     if (result.hooks !== null) {
       console.log('Hooks:', result.hooks);
     }
-    const nativeNode = findNativeByFiberID(id);
+    const nativeNode = getNativeFromInternal(id);
     if (nativeNode !== null) {
       console.log('Node:', nativeNode);
     }
@@ -1938,10 +1945,10 @@ export function attach(
     cleanup,
     flushInitialOperations,
     getCommitDetails,
-    getFiberIDFromNative,
+    getInternalIDFromNative,
     getFiberCommits,
     getInteractions,
-    findNativeByFiberID,
+    getNativeFromInternal,
     getProfilingDataForDownload,
     getProfilingSummary,
     handleCommitFiberRoot,

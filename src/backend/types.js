@@ -19,7 +19,7 @@ export type FiberData = {|
   type: ElementType,
 |};
 
-export type NativeType = {};
+export type NativeType = Object;
 export type RendererID = number;
 
 type Dispatcher = any;
@@ -90,17 +90,20 @@ export type ProfilingSummary = {|
   rootID: number,
 |};
 
+export type GetInternalIDFromNative = (
+  component: NativeType,
+  findNearestUnfilteredAncestor?: boolean
+) => number | null;
+export type GetNativeFromInternal = (id: number) => ?NativeType;
+
 export type RendererInterface = {
   cleanup: () => void,
-  findNativeByFiberID: (id: number) => ?NativeType,
   flushInitialOperations: () => void,
   getCommitDetails: (rootID: number, commitIndex: number) => CommitDetails,
-  getFiberIDFromNative: (
-    component: NativeType,
-    findNearestUnfilteredAncestor?: boolean
-  ) => number | null,
   getFiberCommits: (rootID: number, fiberID: number) => FiberCommits,
   getInteractions: (rootID: number) => Interactions,
+  getInternalIDFromNative: GetInternalIDFromNative,
+  getNativeFromInternal: GetNativeFromInternal,
   getProfilingDataForDownload: (rootID: number) => Object,
   getProfilingSummary: (rootID: number) => ProfilingSummary,
   handleCommitFiberRoot: (fiber: Object) => void,
@@ -112,14 +115,14 @@ export type RendererInterface = {
   renderer: ReactRenderer | null,
   selectElement: (id: number) => void,
   setInContext: (id: number, path: Array<string | number>, value: any) => void,
+  setInProps: (id: number, path: Array<string | number>, value: any) => void,
+  setInState: (id: number, path: Array<string | number>, value: any) => void,
   setInHook: (
     id: number,
     index: number,
     path: Array<string | number>,
     value: any
   ) => void,
-  setInProps: (id: number, path: Array<string | number>, value: any) => void,
-  setInState: (id: number, path: Array<string | number>, value: any) => void,
   startProfiling: () => void,
   stopProfiling: () => void,
 };
