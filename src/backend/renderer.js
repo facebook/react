@@ -909,7 +909,9 @@ export function attach(
     if (__DEBUG__) {
       debug('updateFiberRecursively()', nextFiber, parentFiber);
     }
-
+    const shouldIncludeInTree = !shouldFilterFiber(nextFiber);
+    const isSuspense = nextFiber.tag === SuspenseComponent;
+    let hasChildOrderChanged = false;
     // The behavior of timed-out Suspense trees is unique.
     // Rather than unmount the timed out content (and possibly lose important state),
     // React re-parents this content within a hidden Fragment while the fallback is showing.
@@ -917,106 +919,89 @@ export function attach(
     // It might even result in a bad user experience for e.g. node selection in the Elements panel.
     // The easiest fix is to strip out the intermediate Fragment fibers,
     // so the Elements panel and Profiler don't need to special case them.
-    if (nextFiber.tag === SuspenseComponent) {
-      // Suspense components only have a non-null memoizedState if they're timed-out.
-      const prevDidTimeout = prevFiber.memoizedState !== null;
-      const nextDidTimeOut = nextFiber.memoizedState !== null;
-
-      // The logic below is inspired by the codepaths in updateSuspenseComponent()
-      // inside ReactFiberBeginWork in the React source code.
-      if (prevDidTimeout) {
-        if (nextDidTimeOut) {
-          // Fallback -> Fallback:
-          // 1. Reconcile fallback set.
-          const nextFallbackChildSet = nextFiber.child.sibling;
-          // Note: We can't use nextFiber.child.sibling.alternate
-          // because the set is special and alternate may not exist.
-          const prevFallbackChildSet = prevFiber.child.sibling;
-          updateFiberRecursively(
-            nextFallbackChildSet,
-            prevFallbackChildSet,
-            nextFiber
-          );
-          return;
-        } else {
-          // Fallback -> Primary:
-          // 1. Unmount fallback set
-          // Note: don't emulate fallback unmount because React actually did it.
-          // 2. Mount primary set
-          const nextPrimaryChildSet = nextFiber.child;
-          mountFiberRecursively(nextPrimaryChildSet, nextFiber, true);
-          return;
-        }
-      } else {
-        if (nextDidTimeOut) {
-          // Primary -> Fallback:
-          // 1. Hide primary set
-          // This is not a real unmount, so it won't get reported by React.
-          // By this point it's *too late* to find the previous primary child set
-          // so we'll just tell the store to "forget" about those children.
-          // They might "resurface" later when we switch to primary content,
-          // but from the store's point of view they will be a new tree.
-          recordRecursiveRemoveChildren(nextFiber);
-          // 2. Mount fallback set
-          const nextFallbackChildSet = nextFiber.child.sibling;
-          mountFiberRecursively(nextFallbackChildSet, nextFiber, true);
-          return;
-        } else {
-          // Primary -> Primary:
-          // 1. Reconcile primary set.
-          // Note: no return so we can passthrough to the logic below.
-        }
-      }
-    }
-
-    const shouldIncludeInTree = !shouldFilterFiber(nextFiber);
-    let hasChildOrderChanged = false;
-    if (nextFiber.child !== prevFiber.child) {
-      // If the first child is different, we need to traverse them.
-      // Each next child will be either a new child (mount) or an alternate (update).
-      let nextChild = nextFiber.child;
-      let prevChildAtSameIndex = prevFiber.child;
-      while (nextChild) {
-        // We already know children will be referentially different because
-        // they are either new mounts or alternates of previous children.
-        // Schedule updates and mounts depending on whether alternates exist.
-        // We don't track deletions here because they are reported separately.
-        if (nextChild.alternate) {
-          const prevChild = nextChild.alternate;
-          updateFiberRecursively(
-            nextChild,
-            prevChild,
-            shouldIncludeInTree ? nextFiber : parentFiber
-          );
-          // However we also keep track if the order of the children matches
-          // the previous order. They are always different referentially, but
-          // if the instances line up conceptually we'll want to know that.
-          if (!hasChildOrderChanged && prevChild !== prevChildAtSameIndex) {
+    // Suspense components only have a non-null memoizedState if they're timed-out.
+    const prevDidTimeout = isSuspense && prevFiber.memoizedState !== null;
+    const nextDidTimeOut = isSuspense && nextFiber.memoizedState !== null;
+    // The logic below is inspired by the codepaths in updateSuspenseComponent()
+    // inside ReactFiberBeginWork in the React source code.
+    if (prevDidTimeout && nextDidTimeOut) {
+      // Fallback -> Fallback:
+      // 1. Reconcile fallback set.
+      const nextFallbackChildSet = nextFiber.child.sibling;
+      // Note: We can't use nextFiber.child.sibling.alternate
+      // because the set is special and alternate may not exist.
+      const prevFallbackChildSet = prevFiber.child.sibling;
+      updateFiberRecursively(
+        nextFallbackChildSet,
+        prevFallbackChildSet,
+        nextFiber
+      );
+    } else if (prevDidTimeout && !nextDidTimeOut) {
+      // Fallback -> Primary:
+      // 1. Unmount fallback set
+      // Note: don't emulate fallback unmount because React actually did it.
+      // 2. Mount primary set
+      const nextPrimaryChildSet = nextFiber.child;
+      mountFiberRecursively(nextPrimaryChildSet, nextFiber, true);
+    } else if (!prevDidTimeout && nextDidTimeOut) {
+      // Primary -> Fallback:
+      // 1. Hide primary set
+      // This is not a real unmount, so it won't get reported by React.
+      // By this point it's *too late* to find the previous primary child set
+      // so we'll just tell the store to "forget" about those children.
+      // They might "resurface" later when we switch to primary content,
+      // but from the store's point of view they will be a new tree.
+      recordRecursiveRemoveChildren(nextFiber);
+      // 2. Mount fallback set
+      const nextFallbackChildSet = nextFiber.child.sibling;
+      mountFiberRecursively(nextFallbackChildSet, nextFiber, true);
+    } else if (!prevDidTimeout && !nextDidTimeOut) {
+      // Common case: Primary -> Primary.
+      // This is the same codepath as for non-Suspense fibers.
+      if (nextFiber.child !== prevFiber.child) {
+        // If the first child is different, we need to traverse them.
+        // Each next child will be either a new child (mount) or an alternate (update).
+        let nextChild = nextFiber.child;
+        let prevChildAtSameIndex = prevFiber.child;
+        while (nextChild) {
+          // We already know children will be referentially different because
+          // they are either new mounts or alternates of previous children.
+          // Schedule updates and mounts depending on whether alternates exist.
+          // We don't track deletions here because they are reported separately.
+          if (nextChild.alternate) {
+            const prevChild = nextChild.alternate;
+            updateFiberRecursively(
+              nextChild,
+              prevChild,
+              shouldIncludeInTree ? nextFiber : parentFiber
+            );
+            // However we also keep track if the order of the children matches
+            // the previous order. They are always different referentially, but
+            // if the instances line up conceptually we'll want to know that.
+            if (prevChild !== prevChildAtSameIndex) {
+              hasChildOrderChanged = true;
+            }
+          } else {
+            mountFiberRecursively(
+              nextChild,
+              shouldIncludeInTree ? nextFiber : parentFiber
+            );
             hasChildOrderChanged = true;
           }
-        } else {
-          mountFiberRecursively(
-            nextChild,
-            shouldIncludeInTree ? nextFiber : parentFiber
-          );
-          if (!hasChildOrderChanged) {
-            hasChildOrderChanged = true;
+          // Try the next child.
+          nextChild = nextChild.sibling;
+          // Advance the pointer in the previous list so that we can
+          // keep comparing if they line up.
+          if (!hasChildOrderChanged && prevChildAtSameIndex != null) {
+            prevChildAtSameIndex = prevChildAtSameIndex.sibling;
           }
         }
-        // Try the next child.
-        nextChild = nextChild.sibling;
-        // Advance the pointer in the previous list so that we can
-        // keep comparing if they line up.
+        // If we have no more children, but used to, they don't line up.
         if (!hasChildOrderChanged && prevChildAtSameIndex != null) {
-          prevChildAtSameIndex = prevChildAtSameIndex.sibling;
+          hasChildOrderChanged = true;
         }
       }
-      // If we have no more children, but used to, they don't line up.
-      if (!hasChildOrderChanged && prevChildAtSameIndex != null) {
-        hasChildOrderChanged = true;
-      }
     }
-
     if (shouldIncludeInTree) {
       const isProfilingSupported = nextFiber.hasOwnProperty('treeBaseDuration');
       if (isProfilingSupported) {
