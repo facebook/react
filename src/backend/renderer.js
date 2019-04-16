@@ -947,7 +947,9 @@ export function attach(
       // Note: don't emulate fallback unmount because React actually did it.
       // 2. Mount primary set
       const nextPrimaryChildSet = nextFiber.child;
-      mountFiberRecursively(nextPrimaryChildSet, nextFiber, true);
+      if (nextPrimaryChildSet !== null) {
+        mountFiberRecursively(nextPrimaryChildSet, nextFiber, true);
+      }
       shouldResetChildren = true;
     } else if (!prevDidTimeout && nextDidTimeOut) {
       // Primary -> Fallback:
