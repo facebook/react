@@ -861,7 +861,7 @@ export function attach(
     }
   }
 
-  function recordResetChildren(fiber: Fiber) {
+  function recordResetChildren(fiber: Fiber, childSet: Fiber) {
     // The frontend only really cares about the displayName, key, and children.
     // The first two don't really change, so we are only concerned with the order of children here.
     // This is trickier than a simple comparison though, since certain types of fibers are filtered.
@@ -869,7 +869,7 @@ export function attach(
 
     // This is a naive implimentation that shallowly recurses children.
     // We might want to revisit this if it proves to be too inefficient.
-    let child = fiber.child;
+    let child = childSet;
     while (child !== null) {
       findReorderedChildrenRecursively(child, nextChildren);
       child = child.sibling;
@@ -1023,8 +1023,16 @@ export function attach(
       }
     }
     if (shouldResetChildren) {
+      // We need to crawl the subtree for closest non-filtered Fibers
+      // so that we can display them in a flat children set.
       if (shouldIncludeInTree) {
-        recordResetChildren(nextFiber);
+        // Normally, search for children from the rendered child.
+        let nextChildSet = nextFiber.child;
+        if (nextDidTimeOut) {
+          // Special case: timed-out Suspense renders the fallback set.
+          nextChildSet = nextFiber.child.sibling;
+        }
+        recordResetChildren(nextFiber, nextChildSet);
         // We've handled the child order change for this Fiber.
         // Since it's included, there's no need to invalidate parent child order.
         return false;
