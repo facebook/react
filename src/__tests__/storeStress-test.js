@@ -307,8 +307,6 @@ describe('StoreStress', () => {
     const a = <A key="a" />;
     const b = <B key="b" />;
     const c = <C key="c" />;
-    // const x = <X key="x" />;
-    // const y = <Y key="y" />;
     const z = <Z key="z" />;
 
     // prettier-ignore
