@@ -964,7 +964,7 @@ export function attach(
       const nextFallbackChildSet = nextFiber.child.sibling;
       mountFiberRecursively(nextFallbackChildSet, nextFiber, true);
       shouldResetChildren = true;
-    } else if (!prevDidTimeout && !nextDidTimeOut) {
+    } else {
       // Common case: Primary -> Primary.
       // This is the same codepath as for non-Suspense fibers.
       if (nextFiber.child !== prevFiber.child) {
