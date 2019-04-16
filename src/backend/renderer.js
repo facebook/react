@@ -861,7 +861,7 @@ export function attach(
     }
   }
 
-  function recordChildOrderChange(fiber: Fiber) {
+  function recordResetChildren(fiber: Fiber) {
     // The frontend only really cares about the displayName, key, and children.
     // The first two don't really change, so we are only concerned with the order of children here.
     // This is trickier than a simple comparison though, since certain types of fibers are filtered.
@@ -901,17 +901,18 @@ export function attach(
     }
   }
 
+  // Returns whether closest unfiltered fiber parent needs to reset its child list.
   function updateFiberRecursively(
     nextFiber: Fiber,
     prevFiber: Fiber,
     parentFiber: Fiber | null
-  ) {
+  ): boolean {
     if (__DEBUG__) {
       debug('updateFiberRecursively()', nextFiber, parentFiber);
     }
     const shouldIncludeInTree = !shouldFilterFiber(nextFiber);
     const isSuspense = nextFiber.tag === SuspenseComponent;
-    let hasChildOrderChanged = false;
+    let shouldResetChildren = false;
     // The behavior of timed-out Suspense trees is unique.
     // Rather than unmount the timed out content (and possibly lose important state),
     // React re-parents this content within a hidden Fragment while the fallback is showing.
@@ -931,11 +932,15 @@ export function attach(
       // Note: We can't use nextFiber.child.sibling.alternate
       // because the set is special and alternate may not exist.
       const prevFallbackChildSet = prevFiber.child.sibling;
-      updateFiberRecursively(
-        nextFallbackChildSet,
-        prevFallbackChildSet,
-        nextFiber
-      );
+      if (
+        updateFiberRecursively(
+          nextFallbackChildSet,
+          prevFallbackChildSet,
+          nextFiber
+        )
+      ) {
+        shouldResetChildren = true;
+      }
     } else if (prevDidTimeout && !nextDidTimeOut) {
       // Fallback -> Primary:
       // 1. Unmount fallback set
@@ -943,6 +948,7 @@ export function attach(
       // 2. Mount primary set
       const nextPrimaryChildSet = nextFiber.child;
       mountFiberRecursively(nextPrimaryChildSet, nextFiber, true);
+      shouldResetChildren = true;
     } else if (!prevDidTimeout && nextDidTimeOut) {
       // Primary -> Fallback:
       // 1. Hide primary set
@@ -955,6 +961,7 @@ export function attach(
       // 2. Mount fallback set
       const nextFallbackChildSet = nextFiber.child.sibling;
       mountFiberRecursively(nextFallbackChildSet, nextFiber, true);
+      shouldResetChildren = true;
     } else if (!prevDidTimeout && !nextDidTimeOut) {
       // Common case: Primary -> Primary.
       // This is the same codepath as for non-Suspense fibers.
@@ -970,35 +977,42 @@ export function attach(
           // We don't track deletions here because they are reported separately.
           if (nextChild.alternate) {
             const prevChild = nextChild.alternate;
-            updateFiberRecursively(
-              nextChild,
-              prevChild,
-              shouldIncludeInTree ? nextFiber : parentFiber
-            );
+            if (
+              updateFiberRecursively(
+                nextChild,
+                prevChild,
+                shouldIncludeInTree ? nextFiber : parentFiber
+              )
+            ) {
+              // If a nested tree child order changed but it can't handle its own
+              // child order invalidation (e.g. because it's filtered out like host nodes),
+              // propagate the need to reset child order upwards to this Fiber.
+              shouldResetChildren = true;
+            }
             // However we also keep track if the order of the children matches
             // the previous order. They are always different referentially, but
             // if the instances line up conceptually we'll want to know that.
             if (prevChild !== prevChildAtSameIndex) {
-              hasChildOrderChanged = true;
+              shouldResetChildren = true;
             }
           } else {
             mountFiberRecursively(
               nextChild,
               shouldIncludeInTree ? nextFiber : parentFiber
             );
-            hasChildOrderChanged = true;
+            shouldResetChildren = true;
           }
           // Try the next child.
           nextChild = nextChild.sibling;
           // Advance the pointer in the previous list so that we can
           // keep comparing if they line up.
-          if (!hasChildOrderChanged && prevChildAtSameIndex != null) {
+          if (!shouldResetChildren && prevChildAtSameIndex !== null) {
             prevChildAtSameIndex = prevChildAtSameIndex.sibling;
           }
         }
         // If we have no more children, but used to, they don't line up.
-        if (!hasChildOrderChanged && prevChildAtSameIndex != null) {
-          hasChildOrderChanged = true;
+        if (prevChildAtSameIndex !== null) {
+          shouldResetChildren = true;
         }
       }
     }
@@ -1007,9 +1021,19 @@ export function attach(
       if (isProfilingSupported) {
         recordTreeDuration(nextFiber);
       }
-      if (hasChildOrderChanged) {
-        recordChildOrderChange(nextFiber);
+    }
+    if (shouldResetChildren) {
+      if (shouldIncludeInTree) {
+        recordResetChildren(nextFiber);
+        // We've handled the child order change for this Fiber.
+        // Since it's included, there's no need to invalidate parent child order.
+        return false;
+      } else {
+        // Let the closest unfiltered parent Fiber reset its child order instead.
+        return true;
       }
+    } else {
+      return false;
     }
   }
 
