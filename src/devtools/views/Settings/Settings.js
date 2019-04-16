@@ -15,7 +15,7 @@ function Settings(_: {||}) {
     SettingsContext
   );
 
-  const subscription = useMemo(
+  const captureScreenshotsSubscription = useMemo(
     () => ({
       getCurrentValue: () => store.captureScreenshots,
       subscribe: (callback: Function) => {
@@ -25,7 +25,23 @@ function Settings(_: {||}) {
     }),
     [store]
   );
-  const captureScreenshots = useSubscription<boolean, Store>(subscription);
+  const captureScreenshots = useSubscription<boolean, Store>(
+    captureScreenshotsSubscription
+  );
+
+  const collapseNodesByDefaultSubscription = useMemo(
+    () => ({
+      getCurrentValue: () => store.collapseNodesByDefault,
+      subscribe: (callback: Function) => {
+        store.addListener('collapseNodesByDefault', callback);
+        return () => store.removeListener('collapseNodesByDefault', callback);
+      },
+    }),
+    [store]
+  );
+  const collapseNodesByDefault = useSubscription<boolean, Store>(
+    collapseNodesByDefaultSubscription
+  );
 
   const updateDisplayDensity = useCallback(
     ({ currentTarget }) => {
@@ -44,6 +60,12 @@ function Settings(_: {||}) {
   const updateCaptureScreenshotsWhileProfiling = useCallback(
     ({ currentTarget }) => {
       store.captureScreenshots = currentTarget.checked;
+    },
+    [store]
+  );
+  const updateCollapseNodesByDefault = useCallback(
+    ({ currentTarget }) => {
+      store.collapseNodesByDefault = currentTarget.checked;
     },
     [store]
   );
@@ -86,6 +108,17 @@ function Settings(_: {||}) {
         </div>
       </div>
       <div className={styles.Section}>
+        <div className={styles.Header}>Components tree</div>
+        <label>
+          <input
+            type="checkbox"
+            checked={collapseNodesByDefault}
+            onChange={updateCollapseNodesByDefault}
+          />{' '}
+          Collapse tree by default
+        </label>
+      </div>
+      <div className={styles.Section}>
         <div className={styles.Header}>Display density</div>
         <div className={styles.OptionGroup}>
           <label className={styles.Option}>
@@ -111,22 +144,24 @@ function Settings(_: {||}) {
         </div>
       </div>
       {store.supportsCaptureScreenshots && (
-        <div className={styles.Section}>
-          <div className={styles.Header}>Profiler</div>
-          <label>
-            <input
-              type="checkbox"
-              checked={captureScreenshots}
-              onChange={updateCaptureScreenshotsWhileProfiling}
-            />{' '}
-            Capture screenshots while profiling
-            {captureScreenshots && (
-              <p className={styles.ScreenshotThrottling}>
-                Screenshots will be throttled in order to reduce the negative
-                impact on performance.
-              </p>
-            )}
-          </label>
+        <div>
+          <div className={styles.Section}>
+            <div className={styles.Header}>Profiler</div>
+            <label>
+              <input
+                type="checkbox"
+                checked={captureScreenshots}
+                onChange={updateCaptureScreenshotsWhileProfiling}
+              />{' '}
+              Capture screenshots while profiling
+            </label>
+          </div>
+          {captureScreenshots && (
+            <div className={styles.ScreenshotThrottling}>
+              Screenshots will be throttled in order to reduce the negative
+              impact on performance.
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -36,6 +36,8 @@ const debug = (methodName, ...args) => {
 
 const LOCAL_STORAGE_CAPTURE_SCREENSHOTS_KEY =
   'React::DevTools::captureScreenshots';
+const LOCAL_STORAGE_COLLAPSE_ROOTS_BY_DEFAULT_KEY =
+  'React::DevTools::collapseNodesByDefault';
 
 const THROTTLE_CAPTURE_SCREENSHOT_DURATION = 500;
 
@@ -60,6 +62,9 @@ export default class Store extends EventEmitter {
   _bridge: Bridge;
 
   _captureScreenshots: boolean = false;
+
+  // Should new nodes be collapsed by default when added to the tree?
+  _collapseNodesByDefault: boolean = true;
 
   // At least one of the injected renderers contains (DEV only) owner metadata.
   _hasOwnerMetadata: boolean = false;
@@ -123,6 +128,11 @@ export default class Store extends EventEmitter {
       debug('constructor', 'subscribing to Bridge');
     }
 
+    // Default this setting to true unless otherwise specified.
+    this._collapseNodesByDefault =
+      localStorage.getItem(LOCAL_STORAGE_COLLAPSE_ROOTS_BY_DEFAULT_KEY) !==
+      'false';
+
     if (config != null) {
       const {
         isProfiling,
@@ -176,6 +186,20 @@ export default class Store extends EventEmitter {
     );
 
     this.emit('captureScreenshots');
+  }
+
+  get collapseNodesByDefault(): boolean {
+    return this._collapseNodesByDefault;
+  }
+  set collapseNodesByDefault(value: boolean): void {
+    this._collapseNodesByDefault = value;
+
+    localStorage.setItem(
+      LOCAL_STORAGE_COLLAPSE_ROOTS_BY_DEFAULT_KEY,
+      value ? 'true' : 'false'
+    );
+
+    this.emit('collapseNodesByDefault');
   }
 
   get hasOwnerMetadata(): boolean {
@@ -552,7 +576,7 @@ export default class Store extends EventEmitter {
               depth: -1,
               displayName: null,
               id,
-              isCollapsed: false,
+              isCollapsed: false, // Never collapse roots
               key: null,
               ownerID: 0,
               parentID: 0,
@@ -601,7 +625,7 @@ export default class Store extends EventEmitter {
               depth: parentElement.depth + 1,
               displayName,
               id,
-              isCollapsed: false,
+              isCollapsed: this._collapseNodesByDefault,
               key,
               ownerID,
               parentID: parentElement.id,

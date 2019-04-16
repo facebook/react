@@ -18,6 +18,7 @@ describe('StoreStress', () => {
   beforeEach(() => {
     bridge = global.bridge;
     store = global.store;
+    store.collapseNodesByDefault = false;
 
     React = require('react');
     ReactDOM = require('react-dom');
