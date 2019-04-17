@@ -458,6 +458,8 @@ export default class Store extends EventEmitter {
         }
 
         if (element.isCollapsed) {
+          // There's nothing to change in this case.
+          // We can exit early (without even emiting a "mutated" event).
           return;
         }
 
@@ -469,6 +471,8 @@ export default class Store extends EventEmitter {
           element.parentID
         ): any): Element);
         while (parentElement != null) {
+          // We don't need to break on a collapsed parent in the same way as the expand case below.
+          // That's because collapsing a node doesn't "bubble" and affect its parents.
           parentElement.weight += weightDelta;
           parentElement = this._idToElement.get(parentElement.parentID);
         }
@@ -490,6 +494,9 @@ export default class Store extends EventEmitter {
           while (parentElement != null) {
             parentElement.weight += weightDelta;
             if (parentElement.isCollapsed) {
+              // It's important to break on a collapsed parent when expanding nodes.
+              // That's because expanding a node "bubbles" up and expands all parents as well.
+              // Breaking in this case prevents us from over-incrementing the expanded weights.
               break;
             }
             parentElement = this._idToElement.get(parentElement.parentID);
