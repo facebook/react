@@ -1,0 +1,279 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Store (legacy) collapseNodesByDefault:false should filter DOM nodes from the store tree: 1: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child>
+    ▾ <Parent>
+        <Child>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:false should support collapsing parts of the tree: 1: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:false should support collapsing parts of the tree: 2: collapse first Parent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▸ <Parent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:false should support collapsing parts of the tree: 3: collapse second Parent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▸ <Parent>
+    ▸ <Parent>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:false should support collapsing parts of the tree: 4: expand first Parent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+    ▸ <Parent>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:false should support collapsing parts of the tree: 5: collapse Grandparent 1`] = `
+[root]
+  ▸ <Grandparent>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:false should support collapsing parts of the tree: 6: expand Grandparent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+    ▸ <Parent>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:false should support mount and update operations for multiple roots: 1: mount 1`] = `
+[root]
+  ▾ <Parent key="A">
+      <Child key="0">
+      <Child key="1">
+      <Child key="2">
+[root]
+  ▾ <Parent key="B">
+      <Child key="0">
+      <Child key="1">
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:false should support mount and update operations for multiple roots: 2: update 1`] = `
+[root]
+  ▾ <Parent key="A">
+      <Child key="0">
+      <Child key="1">
+      <Child key="2">
+      <Child key="3">
+[root]
+  ▾ <Parent key="B">
+      <Child key="0">
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:false should support mount and update operations for multiple roots: 3: unmount B 1`] = `
+[root]
+  ▾ <Parent key="A">
+      <Child key="0">
+      <Child key="1">
+      <Child key="2">
+      <Child key="3">
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:false should support mount and update operations for multiple roots: 4: unmount A 1`] = ``;
+
+exports[`Store (legacy) collapseNodesByDefault:false should support mount and update operations: 1: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+        <Child key="2">
+        <Child key="3">
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+        <Child key="2">
+        <Child key="3">
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:false should support mount and update operations: 2: update 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:false should support mount and update operations: 3: unmount 1`] = ``;
+
+exports[`Store (legacy) collapseNodesByDefault:true should filter DOM nodes from the store tree: 1: mount 1`] = `
+[root]
+  ▸ <Grandparent>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should filter DOM nodes from the store tree: 2: expand Grandparent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▸ <Parent>
+    ▸ <Parent>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should filter DOM nodes from the store tree: 3: expand Parent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child>
+    ▸ <Parent>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should support expanding deep parts of the tree: 1: mount 1`] = `
+[root]
+  ▸ <Wrapper>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should support expanding deep parts of the tree: 2: expand deepest node 1`] = `
+[root]
+  ▾ <Wrapper>
+    ▾ <Nested>
+      ▾ <Nested>
+        ▾ <Nested>
+            <Nested>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should support expanding deep parts of the tree: 3: collapse root 1`] = `
+[root]
+  ▸ <Wrapper>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should support expanding deep parts of the tree: 4: expand root 1`] = `
+[root]
+  ▾ <Wrapper>
+    ▾ <Nested>
+      ▾ <Nested>
+        ▾ <Nested>
+            <Nested>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should support expanding deep parts of the tree: 5: collapse middle node 1`] = `
+[root]
+  ▾ <Wrapper>
+    ▸ <Nested>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should support expanding deep parts of the tree: 6: expand middle node 1`] = `
+[root]
+  ▾ <Wrapper>
+    ▾ <Nested>
+      ▾ <Nested>
+        ▾ <Nested>
+            <Nested>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should support expanding parts of the tree: 1: mount 1`] = `
+[root]
+  ▸ <Grandparent>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should support expanding parts of the tree: 2: expand Grandparent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▸ <Parent>
+    ▸ <Parent>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should support expanding parts of the tree: 3: expand first Parent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+    ▸ <Parent>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should support expanding parts of the tree: 4: expand second Parent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should support expanding parts of the tree: 5: collapse first Parent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▸ <Parent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should support expanding parts of the tree: 6: collapse second Parent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▸ <Parent>
+    ▸ <Parent>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should support expanding parts of the tree: 7: collapse Grandparent 1`] = `
+[root]
+  ▸ <Grandparent>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should support mount and update operations for multiple roots: 1: mount 1`] = `
+[root]
+  ▸ <Parent key="A">
+[root]
+  ▸ <Parent key="B">
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should support mount and update operations for multiple roots: 2: update 1`] = `
+[root]
+  ▸ <Parent key="A">
+[root]
+  ▸ <Parent key="B">
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should support mount and update operations for multiple roots: 3: unmount B 1`] = `
+[root]
+  ▸ <Parent key="A">
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should support mount and update operations for multiple roots: 4: unmount A 1`] = ``;
+
+exports[`Store (legacy) collapseNodesByDefault:true should support mount and update operations: 1: mount 1`] = `
+[root]
+  ▸ <Parent>
+  ▸ <Parent>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should support mount and update operations: 2: update 1`] = `
+[root]
+  ▸ <Parent>
+  ▸ <Parent>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should support mount and update operations: 3: unmount 1`] = ``;
+
+exports[`Store (legacy) should not allow a root node to be collapsed: 1: mount 1`] = `
+[root]
+    <Component>
+`;

@@ -26,7 +26,7 @@
       "<rootDir>/src/__tests__/storeSerializer"
     ],
     "testMatch": [
-      "**/__tests__/*-test.js"
+      "**/__tests__/**/*-test.js"
     ]
   },
   "scripts": {
@@ -131,8 +131,10 @@
     "prettier": "^1.16.4",
     "prop-types": "^15.6.2",
     "react": "0.0.0-4221565e1",
+    "react-15": "npm:react@^15",
     "react-color": "^2.11.7",
     "react-dom": "0.0.0-4221565e1",
+    "react-dom-15": "npm:react-dom@^15",
     "react-is": "0.0.0-4221565e1",
     "react-virtualized-auto-sizer": "^1.0.2",
     "react-window": "^1.8.0",
