@@ -368,17 +368,3 @@ if (__DEV__) {
 }
 
 export default ReactStrictModeWarnings;
-
-/* 
-
-componentWillMount is deprecated and will be removed in the next major version. 
-Consider one of the following options to silence this warning: 
-- Use componentDidMount instead.
-- To silence the warning in non-strict mode, you can rename this to UNSAFE_componentWillMount.
-- To automatically rename all unsafe lifecycle methods in your codebase, run `npx react-codemod rename-unsafe-lifecycles <path/to/code>` in your command line.
-
-Please update the following components: %s
-
-Learn more about this warning here:
-https://fb.me/react-async-component-lifecycle-hooks
-*/
