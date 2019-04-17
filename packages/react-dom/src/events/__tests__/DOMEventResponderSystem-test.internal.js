@@ -49,10 +49,14 @@ function phaseToString(phase) {
       : 'capture';
 }
 
+function dispatchEvent(element, type) {
+  const event = document.createEvent('Event');
+  event.initEvent(type, true, true);
+  element.dispatchEvent(event);
+}
+
 function dispatchClickEvent(element) {
-  const clickEvent = document.createEvent('Event');
-  clickEvent.initEvent('click', true, true);
-  element.dispatchEvent(clickEvent);
+  dispatchEvent(element, 'click');
 }
 
 function createReactEventTarget(type) {
@@ -308,7 +312,11 @@ describe('DOMEventResponderSystem', () => {
       ['click'],
       undefined,
       (event, context, props) => {
-        eventLog.push(`A [${phaseToString(event.phase)}]`);
+        context.addRootEventTypes(event.target.ownerDocument, [
+          'click',
+          'pointermove',
+        ]);
+        eventLog.push(`A [${event.type}, ${phaseToString(event.phase)}]`);
       },
     );
 
@@ -316,7 +324,11 @@ describe('DOMEventResponderSystem', () => {
       ['click'],
       undefined,
       (event, context, props) => {
-        eventLog.push(`B [${phaseToString(event.phase)}]`);
+        context.addRootEventTypes(event.target.ownerDocument, [
+          'click',
+          'pointermove',
+        ]);
+        eventLog.push(`B [${event.type}, ${phaseToString(event.phase)}]`);
         if (event.phase === stopPropagationOnPhase) {
           return true;
         }
@@ -337,12 +349,26 @@ describe('DOMEventResponderSystem', () => {
       ReactDOM.render(<Test />, container);
       let buttonElement = buttonRef.current;
       dispatchClickEvent(buttonElement);
+      dispatchEvent(buttonElement, 'pointermove');
     }
 
     runTestWithPhase(BUBBLE_PHASE);
-    expect(eventLog).toEqual(['A [capture]', 'B [capture]', 'B [bubble]']);
+    // Root phase should not be skipped for different event type
+    expect(eventLog).toEqual([
+      'A [click, capture]',
+      'B [click, capture]',
+      'B [click, bubble]',
+      'A [pointermove, root]',
+      'B [pointermove, root]',
+    ]);
     runTestWithPhase(CAPTURE_PHASE);
-    expect(eventLog).toEqual(['A [capture]', 'B [capture]']);
+    // Root phase should not be skipped for different event type
+    expect(eventLog).toEqual([
+      'A [click, capture]',
+      'B [click, capture]',
+      'A [pointermove, root]',
+      'B [pointermove, root]',
+    ]);
   });
 
   it('nested event responders and their onEvent() should fire in the correct order with stopPropagation #2', () => {
@@ -354,7 +380,11 @@ describe('DOMEventResponderSystem', () => {
       ['click'],
       undefined,
       (event, context, props) => {
-        eventLog.push(`A [${phaseToString(event.phase)}]`);
+        context.addRootEventTypes(event.target.ownerDocument, [
+          'click',
+          'pointermove',
+        ]);
+        eventLog.push(`A [${event.type}, ${phaseToString(event.phase)}]`);
         if (event.phase === stopPropagationOnPhase) {
           return true;
         }
@@ -365,7 +395,11 @@ describe('DOMEventResponderSystem', () => {
       ['click'],
       undefined,
       (event, context, props) => {
-        eventLog.push(`B [${phaseToString(event.phase)}]`);
+        context.addRootEventTypes(event.target.ownerDocument, [
+          'click',
+          'pointermove',
+        ]);
+        eventLog.push(`B [${event.type}, ${phaseToString(event.phase)}]`);
       },
     );
 
@@ -383,17 +417,26 @@ describe('DOMEventResponderSystem', () => {
       ReactDOM.render(<Test />, container);
       let buttonElement = buttonRef.current;
       dispatchClickEvent(buttonElement);
+      dispatchEvent(buttonElement, 'pointermove');
     }
 
     runTestWithPhase(BUBBLE_PHASE);
+    // Root phase should not be skipped for different event type
     expect(eventLog).toEqual([
-      'A [capture]',
-      'B [capture]',
-      'B [bubble]',
-      'A [bubble]',
+      'A [click, capture]',
+      'B [click, capture]',
+      'B [click, bubble]',
+      'A [click, bubble]',
+      'A [pointermove, root]',
+      'B [pointermove, root]',
     ]);
     runTestWithPhase(CAPTURE_PHASE);
-    expect(eventLog).toEqual(['A [capture]']);
+    // Root phase should not be skipped for different event type
+    expect(eventLog).toEqual([
+      'A [click, capture]',
+      'A [pointermove, root]',
+      'B [pointermove, root]',
+    ]);
   });
 
   it('custom event dispatching for click -> magicClick works', () => {
