@@ -189,7 +189,8 @@ describe('Store', () => {
     });
 
     it('should support reordering of children', () => {
-      const Component = ({ children = null }) => children;
+      const Root = ({ children }) => children;
+      const Component = () => null;
 
       const Foo = () => [<Component key="0" />];
       const Bar = () => [<Component key="0" />, <Component key="1" />];
@@ -198,14 +199,10 @@ describe('Store', () => {
 
       const container = document.createElement('div');
 
-      act(() =>
-        ReactDOM.render(<Component>{[foo, bar]}</Component>, container)
-      );
+      act(() => ReactDOM.render(<Root>{[foo, bar]}</Root>, container));
       expect(store).toMatchSnapshot('1: mount');
 
-      act(() =>
-        ReactDOM.render(<Component>{[bar, foo]}</Component>, container)
-      );
+      act(() => ReactDOM.render(<Root>{[bar, foo]}</Root>, container));
       expect(store).toMatchSnapshot('3: reorder children');
     });
   });
@@ -429,7 +426,8 @@ describe('Store', () => {
     });
 
     it('should support reordering of children', () => {
-      const Component = ({ children = null }) => children;
+      const Root = ({ children }) => children;
+      const Component = () => null;
 
       const Foo = () => [<Component key="0" />];
       const Bar = () => [<Component key="0" />, <Component key="1" />];
@@ -438,14 +436,10 @@ describe('Store', () => {
 
       const container = document.createElement('div');
 
-      act(() =>
-        ReactDOM.render(<Component>{[foo, bar]}</Component>, container)
-      );
+      act(() => ReactDOM.render(<Root>{[foo, bar]}</Root>, container));
       expect(store).toMatchSnapshot('1: mount');
 
-      act(() =>
-        ReactDOM.render(<Component>{[bar, foo]}</Component>, container)
-      );
+      act(() => ReactDOM.render(<Root>{[bar, foo]}</Root>, container));
       expect(store).toMatchSnapshot('3: reorder children');
     });
   });

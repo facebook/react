@@ -140,7 +140,7 @@ exports[`Store collapseNodesByDefault:false should support mount and update oper
 
 exports[`Store collapseNodesByDefault:false should support reordering of children: 1: mount 1`] = `
 [root]
-  ▾ <Component>
+  ▾ <Root>
     ▾ <Foo key="foo">
         <Component key="0">
     ▾ <Bar key="bar">
@@ -150,7 +150,7 @@ exports[`Store collapseNodesByDefault:false should support reordering of childre
 
 exports[`Store collapseNodesByDefault:false should support reordering of children: 3: reorder children 1`] = `
 [root]
-  ▾ <Component>
+  ▾ <Root>
     ▾ <Bar key="bar">
         <Component key="0">
         <Component key="1">
@@ -332,12 +332,12 @@ exports[`Store collapseNodesByDefault:true should support mount and update opera
 
 exports[`Store collapseNodesByDefault:true should support reordering of children: 1: mount 1`] = `
 [root]
-  ▸ <Component>
+  ▸ <Root>
 `;
 
 exports[`Store collapseNodesByDefault:true should support reordering of children: 3: reorder children 1`] = `
 [root]
-  ▸ <Component>
+  ▸ <Root>
 `;
 
 exports[`Store should not allow a root node to be collapsed: 1: mount 1`] = `
