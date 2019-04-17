@@ -540,8 +540,8 @@ function traverseAndTriggerEventResponderInstances(
   let shouldStopPropagation = false;
   let responderEvent;
 
-  // Capture target phase
   if (length > 0) {
+    // Capture target phase
     responderEvent = createResponderEvent(
       ((topLevelType: any): string),
       nativeEvent,
