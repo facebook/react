@@ -158,6 +158,21 @@ exports[`Store collapseNodesByDefault:false should support reordering of childre
         <Component key="0">
 `;
 
+exports[`Store collapseNodesByDefault:false should support reordering of children: 4: collapse root 1`] = `
+[root]
+  ▸ <Root>
+`;
+
+exports[`Store collapseNodesByDefault:false should support reordering of children: 5: expand root 1`] = `
+[root]
+  ▾ <Root>
+    ▾ <Bar key="bar">
+        <Component key="0">
+        <Component key="1">
+    ▾ <Foo key="foo">
+        <Component key="0">
+`;
+
 exports[`Store collapseNodesByDefault:true should display Suspense nodes properly in various states: 1: loading 1`] = `
 [root]
   ▸ <Wrapper>
@@ -336,6 +351,28 @@ exports[`Store collapseNodesByDefault:true should support reordering of children
 `;
 
 exports[`Store collapseNodesByDefault:true should support reordering of children: 3: reorder children 1`] = `
+[root]
+  ▸ <Root>
+`;
+
+exports[`Store collapseNodesByDefault:true should support reordering of children: 4: expand root 1`] = `
+[root]
+  ▾ <Root>
+    ▸ <Bar key="bar">
+    ▸ <Foo key="foo">
+`;
+
+exports[`Store collapseNodesByDefault:true should support reordering of children: 5: expand leaves 1`] = `
+[root]
+  ▾ <Root>
+    ▾ <Bar key="bar">
+        <Component key="0">
+        <Component key="1">
+    ▾ <Foo key="foo">
+        <Component key="0">
+`;
+
+exports[`Store collapseNodesByDefault:true should support reordering of children: 6: collapse root 1`] = `
 [root]
   ▸ <Root>
 `;

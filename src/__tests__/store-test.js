@@ -204,6 +204,12 @@ describe('Store', () => {
 
       act(() => ReactDOM.render(<Root>{[bar, foo]}</Root>, container));
       expect(store).toMatchSnapshot('3: reorder children');
+
+      act(() => store.toggleIsCollapsed(store.getElementIDAtIndex(0), true));
+      expect(store).toMatchSnapshot('4: collapse root');
+
+      act(() => store.toggleIsCollapsed(store.getElementIDAtIndex(0), false));
+      expect(store).toMatchSnapshot('5: expand root');
     });
   });
 
@@ -441,6 +447,18 @@ describe('Store', () => {
 
       act(() => ReactDOM.render(<Root>{[bar, foo]}</Root>, container));
       expect(store).toMatchSnapshot('3: reorder children');
+
+      act(() => store.toggleIsCollapsed(store.getElementIDAtIndex(0), false));
+      expect(store).toMatchSnapshot('4: expand root');
+
+      act(() => {
+        store.toggleIsCollapsed(store.getElementIDAtIndex(2), false);
+        store.toggleIsCollapsed(store.getElementIDAtIndex(1), false);
+      });
+      expect(store).toMatchSnapshot('5: expand leaves');
+
+      act(() => store.toggleIsCollapsed(store.getElementIDAtIndex(0), true));
+      expect(store).toMatchSnapshot('6: collapse root');
     });
   });
 });
