@@ -106,7 +106,7 @@ describe('Focus event responder', () => {
   });
 
   describe('nested Focus components', () => {
-    it('does not propagate events by default', () => {
+    it('do not propagate events by default', () => {
       const events = [];
       const innerRef = React.createRef();
       const outerRef = React.createRef();

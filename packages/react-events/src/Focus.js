@@ -20,6 +20,7 @@ type FocusProps = {
   onBlur: (e: FocusEvent) => void,
   onFocus: (e: FocusEvent) => void,
   onFocusChange: boolean => void,
+  stopPropagation: boolean,
 };
 
 type FocusState = {
