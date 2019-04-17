@@ -247,6 +247,9 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-search-match', documentElements);
   updateStyleHelper(theme, 'color-search-match-current', documentElements);
   updateStyleHelper(theme, 'color-text-color', documentElements);
+
+  // Font smoothing varies based on the theme.
+  updateStyleHelper(theme, 'font-smoothing', documentElements);
 }
 
 export { SettingsContext, SettingsContextController };

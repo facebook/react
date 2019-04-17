@@ -28,7 +28,7 @@
   --light-color-commit-gradient-8: #efbb49;
   --light-color-commit-gradient-9: #febc38;
   --light-color-commit-gradient-text: #000000;
-  --light-color-component-name: #8155cb;
+  --light-color-component-name: #6a51b2;
   --light-color-component-name-inverted: #ffffff;
   --light-color-dim: #777d88;
   --light-color-dimmer: #cfd1d5;
@@ -95,6 +95,11 @@
   --dark-color-selected-foreground: #ffffff;
   --dark-color-text-color: #ffffff;
 
+  /* Font smoothing */
+  --light-font-smoothing: auto;
+  --dark-font-smoothing: antialiased;
+  --font-smoothing: auto;
+
   /* Compact density */
   --compact-font-size-monospace-small: 9px;
   --compact-font-size-monospace-normal: 11px;
@@ -127,5 +132,5 @@
 * {
   box-sizing: border-box;
 
-  -webkit-font-smoothing: antialiased;
+  -webkit-font-smoothing: var(--font-smoothing);
 }
