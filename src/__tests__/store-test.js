@@ -187,6 +187,27 @@ describe('Store', () => {
       act(() => store.toggleIsCollapsed(grandparentID, false));
       expect(store).toMatchSnapshot('6: expand Grandparent');
     });
+
+    it('should support reordering of children', () => {
+      const Component = ({ children = null }) => children;
+
+      const Foo = () => [<Component key="0" />];
+      const Bar = () => [<Component key="0" />, <Component key="1" />];
+      const foo = <Foo key="foo" />;
+      const bar = <Bar key="bar" />;
+
+      const container = document.createElement('div');
+
+      act(() =>
+        ReactDOM.render(<Component>{[foo, bar]}</Component>, container)
+      );
+      expect(store).toMatchSnapshot('1: mount');
+
+      act(() =>
+        ReactDOM.render(<Component>{[bar, foo]}</Component>, container)
+      );
+      expect(store).toMatchSnapshot('3: reorder children');
+    });
   });
 
   describe('collapseNodesByDefault:true', () => {
@@ -405,6 +426,27 @@ describe('Store', () => {
 
       act(() => store.toggleIsCollapsed(id, false));
       expect(store).toMatchSnapshot('6: expand middle node');
+    });
+
+    it('should support reordering of children', () => {
+      const Component = ({ children = null }) => children;
+
+      const Foo = () => [<Component key="0" />];
+      const Bar = () => [<Component key="0" />, <Component key="1" />];
+      const foo = <Foo key="foo" />;
+      const bar = <Bar key="bar" />;
+
+      const container = document.createElement('div');
+
+      act(() =>
+        ReactDOM.render(<Component>{[foo, bar]}</Component>, container)
+      );
+      expect(store).toMatchSnapshot('1: mount');
+
+      act(() =>
+        ReactDOM.render(<Component>{[bar, foo]}</Component>, container)
+      );
+      expect(store).toMatchSnapshot('3: reorder children');
     });
   });
 });

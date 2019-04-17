@@ -544,6 +544,7 @@ export default class Store extends EventEmitter {
     }
 
     if (__DEBUG__) {
+      console.groupCollapsed('onBridgeOperations');
       debug('onBridgeOperations', operations);
     }
 
@@ -797,17 +798,19 @@ export default class Store extends EventEmitter {
           element = ((this._idToElement.get(id): any): Element);
           element.children = Array.from(children);
 
-          const prevWeight = element.weight;
-          let childWeight = 0;
+          if (!element.isCollapsed) {
+            const prevWeight = element.weight;
+            let childWeight = 0;
 
-          children.forEach(childID => {
-            const child = ((this._idToElement.get(childID): any): Element);
-            childWeight += child.weight;
-          });
+            children.forEach(childID => {
+              const child = ((this._idToElement.get(childID): any): Element);
+              childWeight += child.weight;
+            });
 
-          element.weight = childWeight + 1;
+            element.weight = childWeight + 1;
 
-          weightDelta = childWeight + 1 - prevWeight;
+            weightDelta = childWeight + 1 - prevWeight;
+          }
           break;
         case TREE_OPERATION_UPDATE_TREE_BASE_DURATION:
           // Base duration updates are only sent while profiling is in progress.
@@ -859,6 +862,11 @@ export default class Store extends EventEmitter {
       );
 
       this.emit('roots');
+    }
+
+    if (__DEBUG__) {
+      console.log(this.__toSnapshot(true));
+      console.groupEnd();
     }
 
     this.emit('mutated', [addedElementIDs, removedElementIDs]);

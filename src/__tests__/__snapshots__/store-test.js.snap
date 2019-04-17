@@ -138,6 +138,26 @@ exports[`Store collapseNodesByDefault:false should support mount and update oper
 
 exports[`Store collapseNodesByDefault:false should support mount and update operations: 3: unmount 1`] = ``;
 
+exports[`Store collapseNodesByDefault:false should support reordering of children: 1: mount 1`] = `
+[root]
+  ▾ <Component>
+    ▾ <Foo key="foo">
+        <Component key="0">
+    ▾ <Bar key="bar">
+        <Component key="0">
+        <Component key="1">
+`;
+
+exports[`Store collapseNodesByDefault:false should support reordering of children: 3: reorder children 1`] = `
+[root]
+  ▾ <Component>
+    ▾ <Bar key="bar">
+        <Component key="0">
+        <Component key="1">
+    ▾ <Foo key="foo">
+        <Component key="0">
+`;
+
 exports[`Store collapseNodesByDefault:true should display Suspense nodes properly in various states: 1: loading 1`] = `
 [root]
   ▸ <Wrapper>
@@ -309,6 +329,16 @@ exports[`Store collapseNodesByDefault:true should support mount and update opera
 `;
 
 exports[`Store collapseNodesByDefault:true should support mount and update operations: 3: unmount 1`] = ``;
+
+exports[`Store collapseNodesByDefault:true should support reordering of children: 1: mount 1`] = `
+[root]
+  ▸ <Component>
+`;
+
+exports[`Store collapseNodesByDefault:true should support reordering of children: 3: reorder children 1`] = `
+[root]
+  ▸ <Component>
+`;
 
 exports[`Store should not allow a root node to be collapsed: 1: mount 1`] = `
 [root]
