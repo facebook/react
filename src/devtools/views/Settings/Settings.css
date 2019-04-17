@@ -14,13 +14,14 @@
 
 .Section {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   margin-right: 0.5rem;
   margin-bottom: 0.5rem;
 }
 
 .Header {
-  margin-bottom: 0.5rem;
+  margin-right: 0.5rem;
   font-size: var(--font-size-sans-large);
 }
 
