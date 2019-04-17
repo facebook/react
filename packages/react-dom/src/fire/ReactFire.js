@@ -40,6 +40,7 @@ import {
   getPublicRootInstance,
   findHostInstance,
   findHostInstanceWithWarning,
+  flushPassiveEffects,
 } from 'react-reconciler/inline.fire';
 import {createPortal as createPortalImpl} from 'shared/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
@@ -49,10 +50,9 @@ import {
   enqueueStateRestore,
   restoreStateIfNeeded,
 } from 'events/ReactControlledComponent';
-import {
-  injection as EventPluginHubInjection,
-  runEventsInBatch,
-} from 'events/EventPluginHub';
+import {injection as EventPluginHubInjection} from 'events/EventPluginHub';
+
+import {runEventsInBatch} from 'events/EventBatching';
 import {eventNameDispatchConfigs} from 'events/EventPluginRegistry';
 import {
   accumulateTwoPhaseDispatches,
@@ -827,6 +827,7 @@ const ReactDOM: Object = {
       restoreStateIfNeeded,
       dispatchEvent,
       runEventsInBatch,
+      flushPassiveEffects,
     ],
   },
 };

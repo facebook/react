@@ -8,13 +8,24 @@
  */
 
 import warning from 'shared/warning';
-import {
-  nowImplementation as TestRendererSchedulingNowImplementation,
-  scheduleDeferredCallback as TestRendererSchedulingScheduleDeferredCallback,
-  cancelDeferredCallback as TestRendererSchedulingCancelDeferredCallback,
-  shouldYield as TestRendererSchedulingShouldYield,
-} from './ReactTestRendererScheduling';
 
+import type {ReactEventComponentInstance} from 'shared/ReactTypes';
+import {REACT_EVENT_TARGET_TOUCH_HIT} from 'shared/ReactSymbols';
+
+import {enableEventAPI} from 'shared/ReactFeatureFlags';
+
+type EventTargetChildElement = {
+  type: string,
+  props: null | {
+    style?: {
+      position?: string,
+      bottom?: string,
+      left?: string,
+      right?: string,
+      top?: string,
+    },
+  },
+};
 export type Type = string;
 export type Props = Object;
 export type Container = {|
@@ -46,6 +57,9 @@ export type NoTimeout = -1;
 export * from 'shared/HostConfigWithNoPersistence';
 export * from 'shared/HostConfigWithNoHydration';
 
+const EVENT_COMPONENT_CONTEXT = {};
+const EVENT_TARGET_CONTEXT = {};
+const EVENT_TOUCH_HIT_TARGET_CONTEXT = {};
 const NO_CONTEXT = {};
 const UPDATE_SIGNAL = {};
 if (__DEV__) {
@@ -121,6 +135,38 @@ export function getChildHostContext(
   return NO_CONTEXT;
 }
 
+export function getChildHostContextForEventComponent(
+  parentHostContext: HostContext,
+): HostContext {
+  if (__DEV__ && enableEventAPI) {
+    warning(
+      parentHostContext !== EVENT_TARGET_CONTEXT &&
+        parentHostContext !== EVENT_TOUCH_HIT_TARGET_CONTEXT,
+      'validateDOMNesting: React event targets must not have event components as children.',
+    );
+    return EVENT_COMPONENT_CONTEXT;
+  }
+  return NO_CONTEXT;
+}
+
+export function getChildHostContextForEventTarget(
+  parentHostContext: HostContext,
+  type: Symbol | number,
+): HostContext {
+  if (__DEV__ && enableEventAPI) {
+    if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
+      warning(
+        parentHostContext !== EVENT_COMPONENT_CONTEXT,
+        'validateDOMNesting: <TouchHitTarget> cannot not be a direct child of an event component. ' +
+          'Ensure <TouchHitTarget> is a direct child of a DOM element.',
+      );
+      return EVENT_TOUCH_HIT_TARGET_CONTEXT;
+    }
+    return EVENT_TARGET_CONTEXT;
+  }
+  return NO_CONTEXT;
+}
+
 export function prepareForCommit(containerInfo: Container): void {
   // noop
 }
@@ -192,6 +238,20 @@ export function createTextInstance(
   hostContext: Object,
   internalInstanceHandle: Object,
 ): TextInstance {
+  if (__DEV__ && enableEventAPI) {
+    warning(
+      hostContext !== EVENT_COMPONENT_CONTEXT,
+      'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
+        'Wrap the child text "%s" in an element.',
+      text,
+    );
+    warning(
+      hostContext !== EVENT_TARGET_CONTEXT,
+      'validateDOMNesting: React event targets cannot have text DOM nodes as children. ' +
+        'Wrap the child text "%s" in an element.',
+      text,
+    );
+  }
   return {
     text,
     isHidden: false,
@@ -200,18 +260,10 @@ export function createTextInstance(
 }
 
 export const isPrimaryRenderer = false;
-// This approach enables `now` to be mocked by tests,
-// Even after the reconciler has initialized and read host config values.
-export const now = () => TestRendererSchedulingNowImplementation();
-export const scheduleDeferredCallback = TestRendererSchedulingScheduleDeferredCallback;
-export const cancelDeferredCallback = TestRendererSchedulingCancelDeferredCallback;
-export const shouldYield = TestRendererSchedulingShouldYield;
 
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
 export const noTimeout = -1;
-export const schedulePassiveEffects = scheduleDeferredCallback;
-export const cancelPassiveEffects = cancelDeferredCallback;
 
 // -------------------
 //     Mutation
@@ -273,4 +325,78 @@ export function unhideTextInstance(
   text: string,
 ): void {
   textInstance.isHidden = false;
+}
+
+export function mountEventComponent(
+  eventComponentInstance: ReactEventComponentInstance,
+): void {
+  // noop
+}
+
+export function updateEventComponent(
+  eventComponentInstance: ReactEventComponentInstance,
+): void {
+  // noop
+}
+
+export function unmountEventComponent(
+  eventComponentInstance: ReactEventComponentInstance,
+): void {
+  // noop
+}
+
+export function getEventTargetChildElement(
+  type: Symbol | number,
+  props: Props,
+): null | EventTargetChildElement {
+  if (enableEventAPI) {
+    if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
+      const {bottom, left, right, top} = props;
+
+      if (!bottom && !left && !right && !top) {
+        return null;
+      }
+      return {
+        type: 'div',
+        props: {
+          style: {
+            position: 'absolute',
+            zIndex: -1,
+            bottom: bottom ? `-${bottom}px` : '0px',
+            left: left ? `-${left}px` : '0px',
+            right: right ? `-${right}px` : '0px',
+            top: top ? `-${top}px` : '0px',
+          },
+        },
+      };
+    }
+  }
+  return null;
+}
+
+export function handleEventTarget(
+  type: Symbol | number,
+  props: Props,
+  rootContainerInstance: Container,
+  internalInstanceHandle: Object,
+): boolean {
+  if (enableEventAPI) {
+    if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
+      // In DEV we do a computed style check on the position to ensure
+      // the parent host component is correctly position in the document.
+      if (__DEV__) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+export function commitEventTarget(
+  type: Symbol | number,
+  props: Props,
+  instance: Instance,
+  parentInstance: Instance,
+): void {
+  // noop
 }

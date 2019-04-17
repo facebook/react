@@ -6,30 +6,8 @@
  */
 
 import assign from 'object-assign';
-import {
-  unstable_cancelCallback,
-  unstable_shouldYield,
-  unstable_now,
-  unstable_scheduleCallback,
-  unstable_runWithPriority,
-  unstable_next,
-  unstable_getFirstCallbackNode,
-  unstable_pauseExecution,
-  unstable_continueExecution,
-  unstable_wrapCallback,
-  unstable_getCurrentPriorityLevel,
-} from 'scheduler';
-import {
-  __interactionsRef,
-  __subscriberRef,
-  unstable_clear,
-  unstable_getCurrent,
-  unstable_getThreadID,
-  unstable_subscribe,
-  unstable_trace,
-  unstable_unsubscribe,
-  unstable_wrap,
-} from 'scheduler/tracing';
+import * as Scheduler from 'scheduler';
+import * as SchedulerTracing from 'scheduler/tracing';
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
 import ReactCurrentOwner from './ReactCurrentOwner';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
@@ -37,6 +15,8 @@ import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 const ReactSharedInternals = {
   ReactCurrentDispatcher,
   ReactCurrentOwner,
+  // used by act()
+  ReactShouldWarnActingUpdates: {current: false},
   // Used by renderers to avoid bundling object-assign twice in UMD bundles:
   assign,
 };
@@ -48,30 +28,8 @@ if (__UMD__) {
   // This re-export is only required for UMD bundles;
   // CJS bundles use the shared NPM package.
   Object.assign(ReactSharedInternals, {
-    Scheduler: {
-      unstable_cancelCallback,
-      unstable_shouldYield,
-      unstable_now,
-      unstable_scheduleCallback,
-      unstable_runWithPriority,
-      unstable_next,
-      unstable_wrapCallback,
-      unstable_getFirstCallbackNode,
-      unstable_pauseExecution,
-      unstable_continueExecution,
-      unstable_getCurrentPriorityLevel,
-    },
-    SchedulerTracing: {
-      __interactionsRef,
-      __subscriberRef,
-      unstable_clear,
-      unstable_getCurrent,
-      unstable_getThreadID,
-      unstable_subscribe,
-      unstable_trace,
-      unstable_unsubscribe,
-      unstable_wrap,
-    },
+    Scheduler,
+    SchedulerTracing,
   });
 }
 

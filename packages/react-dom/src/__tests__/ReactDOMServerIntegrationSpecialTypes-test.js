@@ -73,9 +73,9 @@ describe('ReactDOMServerIntegration', () => {
 
   itRenders('a Profiler component and its children', async render => {
     const element = await render(
-      <React.unstable_Profiler id="profiler" onRender={jest.fn()}>
+      <React.Profiler id="profiler" onRender={jest.fn()}>
         <div>Test</div>
-      </React.unstable_Profiler>,
+      </React.Profiler>,
     );
     const parent = element.parentNode;
     const div = parent.childNodes[0];

@@ -22,6 +22,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   warnAboutDeprecatedLifecycles,
   enableSuspenseServerRenderer,
+  enableEventAPI,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -36,6 +37,9 @@ import {
   REACT_CONTEXT_TYPE,
   REACT_LAZY_TYPE,
   REACT_MEMO_TYPE,
+  REACT_EVENT_COMPONENT_TYPE,
+  REACT_EVENT_TARGET_TYPE,
+  REACT_EVENT_TARGET_TOUCH_HIT,
 } from 'shared/ReactSymbols';
 
 import {
@@ -179,6 +183,7 @@ let didWarnDefaultTextareaValue = false;
 let didWarnInvalidOptionChildren = false;
 const didWarnAboutNoopUpdateForComponent = {};
 const didWarnAboutBadClass = {};
+const didWarnAboutModulePatternComponent = {};
 const didWarnAboutDeprecatedWillMount = {};
 const didWarnAboutUndefinedDerivedState = {};
 const didWarnAboutUninitializedState = {};
@@ -525,6 +530,24 @@ function resolve(
         validateRenderResult(child, Component);
         return;
       }
+
+      if (__DEV__) {
+        const componentName = getComponentName(Component) || 'Unknown';
+        if (!didWarnAboutModulePatternComponent[componentName]) {
+          warningWithoutStack(
+            false,
+            'The <%s /> component appears to be a function component that returns a class instance. ' +
+              'Change %s to a class that extends React.Component instead. ' +
+              "If you can't use a class try assigning the prototype on the function as a workaround. " +
+              "`%s.prototype = React.Component.prototype`. Don't use an arrow function since it " +
+              'cannot be called with `new` by React.',
+            componentName,
+            componentName,
+            componentName,
+          );
+          didWarnAboutModulePatternComponent[componentName] = true;
+        }
+      }
     }
 
     inst.props = element.props;
@@ -835,6 +858,7 @@ class ReactDOMServerRenderer {
                 'suspense fallback not found, something is broken',
               );
               this.stack.push(fallbackFrame);
+              out[this.suspenseDepth] += '<!--$!-->';
               // Skip flushing output since we're switching to the fallback
               continue;
             } else {
@@ -996,8 +1020,7 @@ class ReactDOMServerRenderer {
               children: fallbackChildren,
               childIndex: 0,
               context: context,
-              footer: '',
-              out: '',
+              footer: '<!--/$-->',
             };
             const frame: Frame = {
               fallbackFrame,
@@ -1143,6 +1166,46 @@ class ReactDOMServerRenderer {
             this.stack.push(frame);
             return '';
           }
+          case REACT_EVENT_COMPONENT_TYPE:
+          case REACT_EVENT_TARGET_TYPE: {
+            if (enableEventAPI) {
+              if (
+                elementType.$$typeof === REACT_EVENT_TARGET_TYPE &&
+                elementType.type === REACT_EVENT_TARGET_TOUCH_HIT
+              ) {
+                // We do not render a hit slop element anymore. Instead we rely
+                // on hydration adding in the hit slop element. The previous
+                // logic had a bug where rendering a hit slop at SSR meant that
+                // mouse events incorrectly registered events on the hit slop
+                // even though it designed to be used for touch events only.
+                // The logic that filters out mouse events from the hit slop
+                // is handled in event responder modules, which only get
+                // initialized upon hydration.
+                return '';
+              }
+              const nextChildren = toArray(
+                ((nextChild: any): ReactElement).props.children,
+              );
+              const frame: Frame = {
+                type: null,
+                domNamespace: parentNamespace,
+                children: nextChildren,
+                childIndex: 0,
+                context: context,
+                footer: '',
+              };
+              if (__DEV__) {
+                ((frame: any): FrameDev).debugElementStack = [];
+              }
+              this.stack.push(frame);
+              return '';
+            }
+            invariant(
+              false,
+              'ReactDOMServer does not yet support the event API.',
+            );
+          }
+          // eslint-disable-next-line-no-fallthrough
           case REACT_LAZY_TYPE:
             invariant(
               false,

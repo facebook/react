@@ -11,7 +11,7 @@ import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 export type SuspenseState = {|
-  timedOutAt: ExpirationTime,
+  fallbackExpirationTime: ExpirationTime,
 |};
 
 export function shouldCaptureSuspense(workInProgress: Fiber): boolean {

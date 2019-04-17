@@ -43,7 +43,6 @@ import {
   requestCurrentTime,
   computeExpirationForFiber,
   scheduleWork,
-  requestWork,
   flushRoot,
   batchedUpdates,
   unbatchedUpdates,
@@ -300,7 +299,6 @@ export function updateContainer(
 
 export {
   flushRoot,
-  requestWork,
   computeUniqueAsyncExpiration,
   batchedUpdates,
   unbatchedUpdates,
@@ -310,6 +308,7 @@ export {
   flushInteractiveUpdates,
   flushControlled,
   flushSync,
+  flushPassiveEffects,
 };
 
 export function getPublicRootInstance(
@@ -341,7 +340,16 @@ export function findHostInstanceWithNoPortals(
   return hostFiber.stateNode;
 }
 
+let shouldSuspendImpl = fiber => false;
+
+export function shouldSuspend(fiber: Fiber): boolean {
+  return shouldSuspendImpl(fiber);
+}
+
+let overrideHookState = null;
 let overrideProps = null;
+let scheduleUpdate = null;
+let setSuspenseHandler = null;
 
 if (__DEV__) {
   const copyWithSetImpl = (
@@ -368,6 +376,38 @@ if (__DEV__) {
     return copyWithSetImpl(obj, path, 0, value);
   };
 
+  // Support DevTools editable values for useState and useReducer.
+  overrideHookState = (
+    fiber: Fiber,
+    id: number,
+    path: Array<string | number>,
+    value: any,
+  ) => {
+    // For now, the "id" of stateful hooks is just the stateful hook index.
+    // This may change in the future with e.g. nested hooks.
+    let currentHook = fiber.memoizedState;
+    while (currentHook !== null && id > 0) {
+      currentHook = currentHook.next;
+      id--;
+    }
+    if (currentHook !== null) {
+      flushPassiveEffects();
+
+      const newState = copyWithSet(currentHook.memoizedState, path, value);
+      currentHook.memoizedState = newState;
+      currentHook.baseState = newState;
+
+      // We aren't actually adding an update to the queue,
+      // because there is no update we can add for useReducer hooks that won't trigger an error.
+      // (There's no appropriate action type for DevTools overrides.)
+      // As a result though, React will see the scheduled update as a noop and bailout.
+      // Shallow cloning props works as a workaround for now to bypass the bailout check.
+      fiber.memoizedProps = {...fiber.memoizedProps};
+
+      scheduleWork(fiber, Sync);
+    }
+  };
+
   // Support DevTools props for function components, forwardRef, memo, host components, etc.
   overrideProps = (fiber: Fiber, path: Array<string | number>, value: any) => {
     flushPassiveEffects();
@@ -377,6 +417,15 @@ if (__DEV__) {
     }
     scheduleWork(fiber, Sync);
   };
+
+  scheduleUpdate = (fiber: Fiber) => {
+    flushPassiveEffects();
+    scheduleWork(fiber, Sync);
+  };
+
+  setSuspenseHandler = (newShouldSuspendImpl: Fiber => boolean) => {
+    shouldSuspendImpl = newShouldSuspendImpl;
+  };
 }
 
 export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
@@ -385,7 +434,10 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
 
   return injectInternals({
     ...devToolsConfig,
+    overrideHookState,
     overrideProps,
+    setSuspenseHandler,
+    scheduleUpdate,
     currentDispatcherRef: ReactCurrentDispatcher,
     findHostInstanceByFiber(fiber: Fiber): Instance | TextInstance | null {
       const hostFiber = findCurrentHostFiber(fiber);

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -11,6 +11,7 @@
 
 let React;
 let ReactDOM;
+let Scheduler;
 
 describe('ReactDOMHooks', () => {
   let container;
@@ -20,6 +21,7 @@ describe('ReactDOMHooks', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
+    Scheduler = require('scheduler');
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -55,7 +57,7 @@ describe('ReactDOMHooks', () => {
     expect(container.textContent).toBe('1');
     expect(container2.textContent).toBe('');
     expect(container3.textContent).toBe('');
-    jest.runAllTimers();
+    Scheduler.flushAll();
     expect(container.textContent).toBe('1');
     expect(container2.textContent).toBe('2');
     expect(container3.textContent).toBe('3');
@@ -64,7 +66,7 @@ describe('ReactDOMHooks', () => {
     expect(container.textContent).toBe('2');
     expect(container2.textContent).toBe('2'); // Not flushed yet
     expect(container3.textContent).toBe('3'); // Not flushed yet
-    jest.runAllTimers();
+    Scheduler.flushAll();
     expect(container.textContent).toBe('2');
     expect(container2.textContent).toBe('4');
     expect(container3.textContent).toBe('6');
@@ -97,12 +99,12 @@ describe('ReactDOMHooks', () => {
     ReactDOM.render(<Foo />, container);
     ReactDOM.unstable_batchedUpdates(() => {
       _set(0); // Forces the effect to be flushed
-      expect(otherContainer.textContent).toBe('');
+      expect(otherContainer.textContent).toBe('A');
       ReactDOM.render(<B />, otherContainer);
-      expect(otherContainer.textContent).toBe('');
+      expect(otherContainer.textContent).toBe('A');
     });
     expect(otherContainer.textContent).toBe('B');
-    expect(calledA).toBe(false); // It was in a batch
+    expect(calledA).toBe(true);
     expect(calledB).toBe(true);
   });
 
@@ -166,14 +168,14 @@ describe('ReactDOMHooks', () => {
       </React.unstable_ConcurrentMode>,
     );
 
-    jest.runAllTimers();
+    Scheduler.flushAll();
 
     inputRef.current.value = 'abc';
     inputRef.current.dispatchEvent(
       new Event('input', {bubbles: true, cancelable: true}),
     );
 
-    jest.runAllTimers();
+    Scheduler.flushAll();
 
     expect(labelRef.current.innerHTML).toBe('abc');
   });

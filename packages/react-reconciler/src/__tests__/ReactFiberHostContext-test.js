@@ -31,6 +31,12 @@ describe('ReactFiberHostContext', () => {
       getChildHostContext: function() {
         return null;
       },
+      getChildHostContextForEventComponent: function() {
+        return null;
+      },
+      getChildHostContextForEventTarget: function() {
+        return null;
+      },
       shouldSetTextContent: function() {
         return false;
       },

@@ -10,9 +10,11 @@
 'use strict';
 
 const React = require('react');
+const Fragment = React.Fragment;
 let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 let ReactDOM;
+let Scheduler;
 
 const ConcurrentMode = React.unstable_ConcurrentMode;
 
@@ -25,33 +27,10 @@ describe('ReactDOMFiberAsync', () => {
   let container;
 
   beforeEach(() => {
-    // TODO pull this into helper method, reduce repetition.
-    // mock the browser APIs which are used in schedule:
-    // - requestAnimationFrame should pass the DOMHighResTimeStamp argument
-    // - calling 'window.postMessage' should actually fire postmessage handlers
-    global.requestAnimationFrame = function(cb) {
-      return setTimeout(() => {
-        cb(Date.now());
-      });
-    };
-    const originalAddEventListener = global.addEventListener;
-    let postMessageCallback;
-    global.addEventListener = function(eventName, callback, useCapture) {
-      if (eventName === 'message') {
-        postMessageCallback = callback;
-      } else {
-        originalAddEventListener(eventName, callback, useCapture);
-      }
-    };
-    global.postMessage = function(messageKey, targetOrigin) {
-      const postMessageEvent = {source: window, data: messageKey};
-      if (postMessageCallback) {
-        postMessageCallback(postMessageEvent);
-      }
-    };
     jest.resetModules();
     container = document.createElement('div');
     ReactDOM = require('react-dom');
+    Scheduler = require('scheduler');
 
     document.body.appendChild(container);
   });
@@ -124,6 +103,7 @@ describe('ReactDOMFiberAsync', () => {
 
     // Should flush both updates now.
     jest.runAllTimers();
+    Scheduler.flushAll();
     expect(asyncValueRef.current.textContent).toBe('hello');
     expect(syncValueRef.current.textContent).toBe('hello');
   });
@@ -133,6 +113,7 @@ describe('ReactDOMFiberAsync', () => {
       jest.resetModules();
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
       ReactDOM = require('react-dom');
+      Scheduler = require('scheduler');
     });
 
     it('renders synchronously', () => {
@@ -160,18 +141,19 @@ describe('ReactDOMFiberAsync', () => {
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
       ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
       ReactDOM = require('react-dom');
+      Scheduler = require('scheduler');
     });
 
     it('createRoot makes the entire tree async', () => {
       const root = ReactDOM.unstable_createRoot(container);
       root.render(<div>Hi</div>);
       expect(container.textContent).toEqual('');
-      jest.runAllTimers();
+      Scheduler.flushAll();
       expect(container.textContent).toEqual('Hi');
 
       root.render(<div>Bye</div>);
       expect(container.textContent).toEqual('Hi');
-      jest.runAllTimers();
+      Scheduler.flushAll();
       expect(container.textContent).toEqual('Bye');
     });
 
@@ -188,12 +170,12 @@ describe('ReactDOMFiberAsync', () => {
       const root = ReactDOM.unstable_createRoot(container);
       root.render(<Component />);
       expect(container.textContent).toEqual('');
-      jest.runAllTimers();
+      Scheduler.flushAll();
       expect(container.textContent).toEqual('0');
 
       instance.setState({step: 1});
       expect(container.textContent).toEqual('0');
-      jest.runAllTimers();
+      Scheduler.flushAll();
       expect(container.textContent).toEqual('1');
     });
 
@@ -213,11 +195,11 @@ describe('ReactDOMFiberAsync', () => {
         </ConcurrentMode>,
         container,
       );
-      jest.runAllTimers();
+      Scheduler.flushAll();
 
       instance.setState({step: 1});
       expect(container.textContent).toEqual('0');
-      jest.runAllTimers();
+      Scheduler.flushAll();
       expect(container.textContent).toEqual('1');
     });
 
@@ -239,11 +221,11 @@ describe('ReactDOMFiberAsync', () => {
         </div>,
         container,
       );
-      jest.runAllTimers();
+      Scheduler.flushAll();
 
       instance.setState({step: 1});
       expect(container.textContent).toEqual('0');
-      jest.runAllTimers();
+      Scheduler.flushAll();
       expect(container.textContent).toEqual('1');
     });
 
@@ -369,7 +351,7 @@ describe('ReactDOMFiberAsync', () => {
         </ConcurrentMode>,
         container,
       );
-      jest.runAllTimers();
+      Scheduler.flushAll();
 
       // Updates are async by default
       instance.push('A');
@@ -392,7 +374,7 @@ describe('ReactDOMFiberAsync', () => {
       expect(ops).toEqual(['BC']);
 
       // Flush the async updates
-      jest.runAllTimers();
+      Scheduler.flushAll();
       expect(container.textContent).toEqual('ABCD');
       expect(ops).toEqual(['BC', 'ABCD']);
     });
@@ -419,7 +401,7 @@ describe('ReactDOMFiberAsync', () => {
       // Test that a normal update is async
       inst.increment();
       expect(container.textContent).toEqual('0');
-      jest.runAllTimers();
+      Scheduler.flushAll();
       expect(container.textContent).toEqual('1');
 
       let ops = [];
@@ -525,7 +507,7 @@ describe('ReactDOMFiberAsync', () => {
       const root = ReactDOM.unstable_createRoot(container);
       root.render(<Form />);
       // Flush
-      jest.runAllTimers();
+      Scheduler.flushAll();
 
       let disableButton = disableButtonRef.current;
       expect(disableButton.tagName).toBe('BUTTON');
@@ -592,7 +574,7 @@ describe('ReactDOMFiberAsync', () => {
       const root = ReactDOM.unstable_createRoot(container);
       root.render(<Form />);
       // Flush
-      jest.runAllTimers();
+      Scheduler.flushAll();
 
       let disableButton = disableButtonRef.current;
       expect(disableButton.tagName).toBe('BUTTON');
@@ -652,7 +634,7 @@ describe('ReactDOMFiberAsync', () => {
       const root = ReactDOM.unstable_createRoot(container);
       root.render(<Form />);
       // Flush
-      jest.runAllTimers();
+      Scheduler.flushAll();
 
       let enableButton = enableButtonRef.current;
       expect(enableButton.tagName).toBe('BUTTON');
@@ -676,6 +658,86 @@ describe('ReactDOMFiberAsync', () => {
 
       // Therefore the form should have been submitted.
       expect(formSubmitted).toBe(true);
+    });
+  });
+
+  describe('Disable yielding', () => {
+    beforeEach(() => {
+      jest.resetModules();
+      ReactFeatureFlags = require('shared/ReactFeatureFlags');
+      ReactFeatureFlags.disableYielding = true;
+      ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+      ReactDOM = require('react-dom');
+      Scheduler = require('scheduler');
+    });
+
+    it('wont yield during a render if yielding is disabled', () => {
+      class A extends React.Component {
+        render() {
+          Scheduler.yieldValue('A');
+          return <div>{this.props.children}</div>;
+        }
+      }
+
+      class B extends React.Component {
+        render() {
+          Scheduler.yieldValue('B');
+          return <div>{this.props.children}</div>;
+        }
+      }
+
+      class C extends React.Component {
+        render() {
+          Scheduler.yieldValue('C');
+          return <div>{this.props.children}</div>;
+        }
+      }
+
+      let root = ReactDOM.unstable_createRoot(container);
+
+      root.render(
+        <Fragment>
+          <A />
+          <B />
+          <C />
+        </Fragment>,
+      );
+
+      expect(Scheduler).toHaveYielded([]);
+
+      Scheduler.unstable_flushNumberOfYields(2);
+      // Even though we just flushed two yields, we should have rendered
+      // everything without yielding when the flag is on.
+      expect(Scheduler).toHaveYielded(['A', 'B', 'C']);
+    });
+
+    it('wont suspend during a render if yielding is disabled', () => {
+      let p = new Promise(resolve => {});
+
+      function Suspend() {
+        throw p;
+      }
+
+      let root = ReactDOM.unstable_createRoot(container);
+      root.render(
+        <React.Suspense fallback={'Loading'}>Initial</React.Suspense>,
+      );
+
+      Scheduler.flushAll();
+      expect(container.textContent).toBe('Initial');
+
+      root.render(
+        <React.Suspense fallback={'Loading'}>
+          <Suspend />
+        </React.Suspense>,
+      );
+
+      expect(Scheduler).toHaveYielded([]);
+
+      Scheduler.flushAll();
+
+      // This should have flushed to the DOM even though we haven't ran the timers.
+      expect(container.textContent).toBe('Loading');
     });
   });
 });

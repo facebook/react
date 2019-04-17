@@ -9,15 +9,25 @@
 
 'use strict';
 
-const ReactDOM = require('react-dom');
-
-// Isolate test renderer.
-jest.resetModules();
-const React = require('react');
-const ReactCache = require('react-cache');
-const ReactTestRenderer = require('react-test-renderer');
+let ReactDOM;
+let React;
+let ReactCache;
+let ReactTestRenderer;
+let Scheduler;
 
 describe('ReactTestRenderer', () => {
+  beforeEach(() => {
+    jest.resetModules();
+    ReactDOM = require('react-dom');
+
+    // Isolate test renderer.
+    jest.resetModules();
+    React = require('react');
+    ReactCache = require('react-cache');
+    ReactTestRenderer = require('react-test-renderer');
+    Scheduler = require('scheduler');
+  });
+
   it('should warn if used to render a ReactDOM portal', () => {
     const container = document.createElement('div');
     expect(() => {
@@ -62,6 +72,7 @@ describe('ReactTestRenderer', () => {
       const root = ReactTestRenderer.create(<App text="initial" />);
       PendingResources.initial('initial');
       await Promise.resolve();
+      Scheduler.flushAll();
       expect(root.toJSON()).toEqual('initial');
 
       root.update(<App text="dynamic" />);
@@ -69,6 +80,7 @@ describe('ReactTestRenderer', () => {
 
       PendingResources.dynamic('dynamic');
       await Promise.resolve();
+      Scheduler.flushAll();
       expect(root.toJSON()).toEqual('dynamic');
 
       done();
@@ -88,6 +100,7 @@ describe('ReactTestRenderer', () => {
       const root = ReactTestRenderer.create(<App text="initial" />);
       PendingResources.initial('initial');
       await Promise.resolve();
+      Scheduler.flushAll();
       expect(root.toJSON().children).toEqual(['initial']);
 
       root.update(<App text="dynamic" />);
@@ -95,6 +108,7 @@ describe('ReactTestRenderer', () => {
 
       PendingResources.dynamic('dynamic');
       await Promise.resolve();
+      Scheduler.flushAll();
       expect(root.toJSON().children).toEqual(['dynamic']);
 
       done();

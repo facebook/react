@@ -232,6 +232,8 @@ const Dispatcher: DispatcherType = {
 // Inspect
 
 type HooksNode = {
+  id: number | null,
+  isStateEditable: boolean,
   name: string,
   value: mixed,
   subHooks: Array<HooksNode>,
@@ -373,6 +375,7 @@ function buildTree(rootStack, readHookLog): HooksTree {
   let rootChildren = [];
   let prevStack = null;
   let levelChildren = rootChildren;
+  let nativeHookID = 0;
   let stackOfChildren = [];
   for (let i = 0; i < readHookLog.length; i++) {
     let hook = readHookLog[i];
@@ -403,6 +406,8 @@ function buildTree(rootStack, readHookLog): HooksTree {
       for (let j = stack.length - commonSteps - 1; j >= 1; j--) {
         let children = [];
         levelChildren.push({
+          id: null,
+          isStateEditable: false,
           name: parseCustomHookName(stack[j - 1].functionName),
           value: undefined,
           subHooks: children,
@@ -412,8 +417,22 @@ function buildTree(rootStack, readHookLog): HooksTree {
       }
       prevStack = stack;
     }
+    const {primitive} = hook;
+
+    // For now, the "id" of stateful hooks is just the stateful hook index.
+    // Custom hooks have no ids, nor do non-stateful native hooks (e.g. Context, DebugValue).
+    const id =
+      primitive === 'Context' || primitive === 'DebugValue'
+        ? null
+        : nativeHookID++;
+
+    // For the time being, only State and Reducer hooks support runtime overrides.
+    const isStateEditable = primitive === 'Reducer' || primitive === 'State';
+
     levelChildren.push({
-      name: hook.primitive,
+      id,
+      isStateEditable,
+      name: primitive,
       value: hook.value,
       subHooks: [],
     });

@@ -104,6 +104,15 @@ const ReactFabric: ReactFabricType = {
 
   findNodeHandle,
 
+  setNativeProps(handle: any, nativeProps: Object) {
+    warningWithoutStack(
+      false,
+      'Warning: setNativeProps is not currently supported in Fabric',
+    );
+
+    return;
+  },
+
   render(element: React$Element<any>, containerTag: any, callback: ?Function) {
     let root = roots.get(containerTag);
 

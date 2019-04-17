@@ -1,0 +1,42 @@
+{
+  "name": "react-events",
+  "private": true,
+  "description": "React is a JavaScript library for building user interfaces.",
+  "keywords": [
+    "react"
+  ],
+  "version": "0.1.0",
+  "homepage": "https://reactjs.org/",
+  "bugs": "https://github.com/facebook/react/issues",
+  "license": "MIT",
+  "files": [
+    "LICENSE",
+    "README.md",
+    "press.js",
+    "hover.js",
+    "focus.js",
+    "swipe.js",
+    "drag.js",
+    "index.js",
+    "build-info.json",
+    "cjs/",
+    "umd/"
+  ],
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "packages/react"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "dependencies": {
+    "loose-envify": "^1.1.0"
+  },
+  "browserify": {
+    "transform": [
+      "loose-envify"
+    ]
+  }
+}

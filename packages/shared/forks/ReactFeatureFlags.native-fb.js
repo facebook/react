@@ -24,9 +24,14 @@ export const enableStableConcurrentModeAPIs = false;
 export const warnAboutShorthandPropertyCollision = false;
 export const enableSchedulerDebugging = false;
 export const debugRenderPhaseSideEffectsForStrictMode = true;
+export const disableJavaScriptURLs = false;
+export const disableYielding = false;
 export const disableInputAttributeSyncing = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const warnAboutDeprecatedLifecycles = true;
+export const warnAboutDeprecatedSetNativeProps = true;
+export const enableEventAPI = false;
+export const enableJSXTransformAPI = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

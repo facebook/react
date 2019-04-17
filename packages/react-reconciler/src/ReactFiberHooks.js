@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -30,10 +30,11 @@ import {
 } from './ReactHookEffectTags';
 import {
   scheduleWork,
-  warnIfNotCurrentlyBatchingInDev,
   computeExpirationForFiber,
   flushPassiveEffects,
   requestCurrentTime,
+  warnIfNotCurrentlyActingUpdatesInDev,
+  markRenderEventTime,
 } from './ReactFiberScheduler';
 
 import invariant from 'shared/invariant';
@@ -89,11 +90,11 @@ type Update<S, A> = {
 type UpdateQueue<S, A> = {
   last: Update<S, A> | null,
   dispatch: (A => mixed) | null,
-  eagerReducer: ((S, A) => S) | null,
-  eagerState: S | null,
+  lastRenderedReducer: ((S, A) => S) | null,
+  lastRenderedState: S | null,
 };
 
-type HookType =
+export type HookType =
   | 'useState'
   | 'useReducer'
   | 'useContext'
@@ -118,10 +119,6 @@ export type Hook = {
   queue: UpdateQueue<any, any> | null,
 
   next: Hook | null,
-};
-
-type HookDev = Hook & {
-  _debugType: HookType,
 };
 
 type Effect = {
@@ -150,7 +147,6 @@ let currentlyRenderingFiber: Fiber | null = null;
 // current hook list is the list that belongs to the current fiber. The
 // work-in-progress hook list is a new list that will be added to the
 // work-in-progress fiber.
-let firstCurrentHook: Hook | null = null;
 let currentHook: Hook | null = null;
 let nextCurrentHook: Hook | null = null;
 let firstWorkInProgressHook: Hook | null = null;
@@ -183,7 +179,54 @@ const RE_RENDER_LIMIT = 25;
 // In DEV, this is the name of the currently executing primitive hook
 let currentHookNameInDev: ?HookType = null;
 
-function warnOnHookMismatchInDev() {
+// In DEV, this list ensures that hooks are called in the same order between renders.
+// The list stores the order of hooks used during the initial render (mount).
+// Subsequent renders (updates) reference this list.
+let hookTypesDev: Array<HookType> | null = null;
+let hookTypesUpdateIndexDev: number = -1;
+
+function mountHookTypesDev() {
+  if (__DEV__) {
+    const hookName = ((currentHookNameInDev: any): HookType);
+
+    if (hookTypesDev === null) {
+      hookTypesDev = [hookName];
+    } else {
+      hookTypesDev.push(hookName);
+    }
+  }
+}
+
+function updateHookTypesDev() {
+  if (__DEV__) {
+    const hookName = ((currentHookNameInDev: any): HookType);
+
+    if (hookTypesDev !== null) {
+      hookTypesUpdateIndexDev++;
+      if (hookTypesDev[hookTypesUpdateIndexDev] !== hookName) {
+        warnOnHookMismatchInDev(hookName);
+      }
+    }
+  }
+}
+
+function checkDepsAreArrayDev(deps: mixed) {
+  if (__DEV__) {
+    if (deps !== undefined && deps !== null && !Array.isArray(deps)) {
+      // Verify deps, but only on mount to avoid extra checks.
+      // It's unlikely their type would change as usually you define them inline.
+      warning(
+        false,
+        '%s received a final argument that is not an array (instead, received `%s`). When ' +
+          'specified, the final argument must be an array.',
+        currentHookNameInDev,
+        typeof deps,
+      );
+    }
+  }
+}
+
+function warnOnHookMismatchInDev(currentHookName: HookType) {
   if (__DEV__) {
     const componentName = getComponentName(
       ((currentlyRenderingFiber: any): Fiber).type,
@@ -191,44 +234,44 @@ function warnOnHookMismatchInDev() {
     if (!didWarnAboutMismatchedHooksForComponent.has(componentName)) {
       didWarnAboutMismatchedHooksForComponent.add(componentName);
 
-      const secondColumnStart = 22;
+      if (hookTypesDev !== null) {
+        let table = '';
 
-      let table = '';
-      let prevHook: HookDev | null = (firstCurrentHook: any);
-      let nextHook: HookDev | null = (firstWorkInProgressHook: any);
-      let n = 1;
-      while (prevHook !== null && nextHook !== null) {
-        const oldHookName = prevHook._debugType;
-        const newHookName = nextHook._debugType;
+        const secondColumnStart = 30;
 
-        let row = `${n}. ${oldHookName}`;
+        for (let i = 0; i <= ((hookTypesUpdateIndexDev: any): number); i++) {
+          const oldHookName = hookTypesDev[i];
+          const newHookName =
+            i === ((hookTypesUpdateIndexDev: any): number)
+              ? currentHookName
+              : oldHookName;
 
-        // Extra space so second column lines up
-        // lol @ IE not supporting String#repeat
-        while (row.length < secondColumnStart) {
-          row += ' ';
+          let row = `${i + 1}. ${oldHookName}`;
+
+          // Extra space so second column lines up
+          // lol @ IE not supporting String#repeat
+          while (row.length < secondColumnStart) {
+            row += ' ';
+          }
+
+          row += newHookName + '\n';
+
+          table += row;
         }
 
-        row += newHookName + '\n';
-
-        table += row;
-        prevHook = (prevHook.next: any);
-        nextHook = (nextHook.next: any);
-        n++;
+        warning(
+          false,
+          'React has detected a change in the order of Hooks called by %s. ' +
+            'This will lead to bugs and errors if not fixed. ' +
+            'For more information, read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+            '   Previous render            Next render\n' +
+            '   ------------------------------------------------------\n' +
+            '%s' +
+            '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n',
+          componentName,
+          table,
+        );
       }
-
-      warning(
-        false,
-        'React has detected a change in the order of Hooks called by %s. ' +
-          'This will lead to bugs and errors if not fixed. ' +
-          'For more information, read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
-          '   Previous render    Next render\n' +
-          '   -------------------------------\n' +
-          '%s' +
-          '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n',
-        componentName,
-        table,
-      );
     }
   }
 }
@@ -236,8 +279,12 @@ function warnOnHookMismatchInDev() {
 function throwInvalidHookError() {
   invariant(
     false,
-    'Hooks can only be called inside the body of a function component. ' +
-      '(https://fb.me/react-invalid-hook-call)',
+    'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
+      ' one of the following reasons:\n' +
+      '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
+      '2. You might be breaking the Rules of Hooks\n' +
+      '3. You might have more than one copy of React in the same app\n' +
+      'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
   );
 }
 
@@ -269,8 +316,8 @@ function areHookInputsEqual(
           'Previous: %s\n' +
           'Incoming: %s',
         currentHookNameInDev,
-        `[${nextDeps.join(', ')}]`,
         `[${prevDeps.join(', ')}]`,
+        `[${nextDeps.join(', ')}]`,
       );
     }
   }
@@ -293,8 +340,15 @@ export function renderWithHooks(
 ): any {
   renderExpirationTime = nextRenderExpirationTime;
   currentlyRenderingFiber = workInProgress;
-  firstCurrentHook = nextCurrentHook =
-    current !== null ? current.memoizedState : null;
+  nextCurrentHook = current !== null ? current.memoizedState : null;
+
+  if (__DEV__) {
+    hookTypesDev =
+      current !== null
+        ? ((current._debugHookTypes: any): Array<HookType>)
+        : null;
+    hookTypesUpdateIndexDev = -1;
+  }
 
   // The following should have already been reset
   // currentHook = null;
@@ -308,11 +362,26 @@ export function renderWithHooks(
   // numberOfReRenders = 0;
   // sideEffectTag = 0;
 
+  // TODO Warn if no hooks are used at all during mount, then some are used during update.
+  // Currently we will identify the update render as a mount because nextCurrentHook === null.
+  // This is tricky because it's valid for certain types of components (e.g. React.lazy)
+
+  // Using nextCurrentHook to differentiate between mount/update only works if at least one stateful hook is used.
+  // Non-stateful hooks (e.g. context) don't get added to memoizedState,
+  // so nextCurrentHook would be null during updates and mounts.
   if (__DEV__) {
-    ReactCurrentDispatcher.current =
-      nextCurrentHook === null
-        ? HooksDispatcherOnMountInDEV
-        : HooksDispatcherOnUpdateInDEV;
+    if (nextCurrentHook !== null) {
+      ReactCurrentDispatcher.current = HooksDispatcherOnUpdateInDEV;
+    } else if (hookTypesDev !== null) {
+      // This dispatcher handles an edge case where a component is updating,
+      // but no stateful hooks have been used.
+      // We want to match the production code behavior (which will use HooksDispatcherOnMount),
+      // but with the extra DEV validation to ensure hooks ordering hasn't changed.
+      // This dispatcher does that.
+      ReactCurrentDispatcher.current = HooksDispatcherOnMountWithHookTypesInDEV;
+    } else {
+      ReactCurrentDispatcher.current = HooksDispatcherOnMountInDEV;
+    }
   } else {
     ReactCurrentDispatcher.current =
       nextCurrentHook === null
@@ -328,13 +397,17 @@ export function renderWithHooks(
       numberOfReRenders += 1;
 
       // Start over from the beginning of the list
-      firstCurrentHook = nextCurrentHook =
-        current !== null ? current.memoizedState : null;
+      nextCurrentHook = current !== null ? current.memoizedState : null;
       nextWorkInProgressHook = firstWorkInProgressHook;
 
       currentHook = null;
       workInProgressHook = null;
       componentUpdateQueue = null;
+
+      if (__DEV__) {
+        // Also validate hook order for cascading updates.
+        hookTypesUpdateIndexDev = -1;
+      }
 
       ReactCurrentDispatcher.current = __DEV__
         ? HooksDispatcherOnUpdateInDEV
@@ -345,10 +418,6 @@ export function renderWithHooks(
 
     renderPhaseUpdates = null;
     numberOfReRenders = 0;
-  }
-
-  if (__DEV__) {
-    currentHookNameInDev = null;
   }
 
   // We can assume the previous dispatcher is always this one, since we set it
@@ -362,18 +431,29 @@ export function renderWithHooks(
   renderedWork.updateQueue = (componentUpdateQueue: any);
   renderedWork.effectTag |= sideEffectTag;
 
+  if (__DEV__) {
+    renderedWork._debugHookTypes = hookTypesDev;
+  }
+
+  // This check uses currentHook so that it works the same in DEV and prod bundles.
+  // hookTypesDev could catch more cases (e.g. context) but only in DEV bundles.
   const didRenderTooFewHooks =
     currentHook !== null && currentHook.next !== null;
 
   renderExpirationTime = NoWork;
   currentlyRenderingFiber = null;
 
-  firstCurrentHook = null;
   currentHook = null;
   nextCurrentHook = null;
   firstWorkInProgressHook = null;
   workInProgressHook = null;
   nextWorkInProgressHook = null;
+
+  if (__DEV__) {
+    currentHookNameInDev = null;
+    hookTypesDev = null;
+    hookTypesUpdateIndexDev = -1;
+  }
 
   remainingExpirationTime = NoWork;
   componentUpdateQueue = null;
@@ -416,20 +496,22 @@ export function resetHooks(): void {
   renderExpirationTime = NoWork;
   currentlyRenderingFiber = null;
 
-  firstCurrentHook = null;
   currentHook = null;
   nextCurrentHook = null;
   firstWorkInProgressHook = null;
   workInProgressHook = null;
   nextWorkInProgressHook = null;
 
+  if (__DEV__) {
+    hookTypesDev = null;
+    hookTypesUpdateIndexDev = -1;
+
+    currentHookNameInDev = null;
+  }
+
   remainingExpirationTime = NoWork;
   componentUpdateQueue = null;
   sideEffectTag = 0;
-
-  if (__DEV__) {
-    currentHookNameInDev = null;
-  }
 
   didScheduleRenderPhaseUpdate = false;
   renderPhaseUpdates = null;
@@ -447,9 +529,6 @@ function mountWorkInProgressHook(): Hook {
     next: null,
   };
 
-  if (__DEV__) {
-    (hook: any)._debugType = (currentHookNameInDev: any);
-  }
   if (workInProgressHook === null) {
     // This is the first hook in the list
     firstWorkInProgressHook = workInProgressHook = hook;
@@ -499,13 +578,6 @@ function updateWorkInProgressHook(): Hook {
       workInProgressHook = workInProgressHook.next = newHook;
     }
     nextCurrentHook = currentHook.next;
-
-    if (__DEV__) {
-      (newHook: any)._debugType = (currentHookNameInDev: any);
-      if (currentHookNameInDev !== ((currentHook: any): HookDev)._debugType) {
-        warnOnHookMismatchInDev();
-      }
-    }
   }
   return workInProgressHook;
 }
@@ -518,26 +590,6 @@ function createFunctionComponentUpdateQueue(): FunctionComponentUpdateQueue {
 
 function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S {
   return typeof action === 'function' ? action(state) : action;
-}
-
-function mountContext<T>(
-  context: ReactContext<T>,
-  observedBits: void | number | boolean,
-): T {
-  if (__DEV__) {
-    mountWorkInProgressHook();
-  }
-  return readContext(context, observedBits);
-}
-
-function updateContext<T>(
-  context: ReactContext<T>,
-  observedBits: void | number | boolean,
-): T {
-  if (__DEV__) {
-    updateWorkInProgressHook();
-  }
-  return readContext(context, observedBits);
 }
 
 function mountReducer<S, I, A>(
@@ -556,8 +608,8 @@ function mountReducer<S, I, A>(
   const queue = (hook.queue = {
     last: null,
     dispatch: null,
-    eagerReducer: reducer,
-    eagerState: (initialState: any),
+    lastRenderedReducer: reducer,
+    lastRenderedState: (initialState: any),
   });
   const dispatch: Dispatch<A> = (queue.dispatch = (dispatchAction.bind(
     null,
@@ -579,6 +631,8 @@ function updateReducer<S, I, A>(
     queue !== null,
     'Should have a queue. This is likely a bug in React. Please file an issue.',
   );
+
+  queue.lastRenderedReducer = reducer;
 
   if (numberOfReRenders > 0) {
     // This is a re-render. Apply the new render phase updates to the previous
@@ -607,7 +661,6 @@ function updateReducer<S, I, A>(
         }
 
         hook.memoizedState = newState;
-
         // Don't persist the state accumlated from the render phase updates to
         // the base state unless the queue is empty.
         // TODO: Not sure if this is the desired semantics, but it's what we
@@ -615,6 +668,8 @@ function updateReducer<S, I, A>(
         if (hook.baseUpdate === queue.last) {
           hook.baseState = newState;
         }
+
+        queue.lastRenderedState = newState;
 
         return [newState, dispatch];
       }
@@ -664,6 +719,16 @@ function updateReducer<S, I, A>(
           remainingExpirationTime = updateExpirationTime;
         }
       } else {
+        // This update does have sufficient priority.
+
+        // Mark the event time of this update as relevant to this render pass.
+        // TODO: This should ideally use the true event time of this update rather than
+        // its priority which is a derived and not reverseable value.
+        // TODO: We should skip this update if it was already committed but currently
+        // we have no way of detecting the difference between a committed and suspended
+        // update here.
+        markRenderEventTime(updateExpirationTime);
+
         // Process this update.
         if (update.eagerReducer === reducer) {
           // If this update was processed eagerly, and its reducer matches the
@@ -693,8 +758,7 @@ function updateReducer<S, I, A>(
     hook.baseUpdate = newBaseUpdate;
     hook.baseState = newBaseState;
 
-    queue.eagerReducer = reducer;
-    queue.eagerState = newState;
+    queue.lastRenderedState = newState;
   }
 
   const dispatch: Dispatch<A> = (queue.dispatch: any);
@@ -712,8 +776,8 @@ function mountState<S>(
   const queue = (hook.queue = {
     last: null,
     dispatch: null,
-    eagerReducer: basicStateReducer,
-    eagerState: (initialState: any),
+    lastRenderedReducer: basicStateReducer,
+    lastRenderedState: (initialState: any),
   });
   const dispatch: Dispatch<
     BasicStateAction<S>,
@@ -993,19 +1057,6 @@ function updateMemo<T>(
   return nextValue;
 }
 
-// in a test-like environment, we want to warn if dispatchAction()
-// is called outside of a batchedUpdates/TestUtils.act(...) call.
-let shouldWarnForUnbatchedSetState = false;
-
-if (__DEV__) {
-  // jest isn't a 'global', it's just exposed to tests via a wrapped function
-  // further, this isn't a test file, so flow doesn't recognize the symbol. So...
-  // $FlowExpectedError - because requirements don't give a damn about your type sigs.
-  if ('undefined' !== typeof jest) {
-    shouldWarnForUnbatchedSetState = true;
-  }
-}
-
 function dispatchAction<S, A>(
   fiber: Fiber,
   queue: UpdateQueue<S, A>,
@@ -1092,21 +1143,21 @@ function dispatchAction<S, A>(
       // The queue is currently empty, which means we can eagerly compute the
       // next state before entering the render phase. If the new state is the
       // same as the current state, we may be able to bail out entirely.
-      const eagerReducer = queue.eagerReducer;
-      if (eagerReducer !== null) {
+      const lastRenderedReducer = queue.lastRenderedReducer;
+      if (lastRenderedReducer !== null) {
         let prevDispatcher;
         if (__DEV__) {
           prevDispatcher = ReactCurrentDispatcher.current;
           ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
         }
         try {
-          const currentState: S = (queue.eagerState: any);
-          const eagerState = eagerReducer(currentState, action);
+          const currentState: S = (queue.lastRenderedState: any);
+          const eagerState = lastRenderedReducer(currentState, action);
           // Stash the eagerly computed state, and the reducer used to compute
           // it, on the update object. If the reducer hasn't changed by the
           // time we enter the render phase, then the eager state can be used
           // without calling the reducer again.
-          update.eagerReducer = eagerReducer;
+          update.eagerReducer = lastRenderedReducer;
           update.eagerState = eagerState;
           if (is(eagerState, currentState)) {
             // Fast path. We can bail out without scheduling React to re-render.
@@ -1125,8 +1176,11 @@ function dispatchAction<S, A>(
       }
     }
     if (__DEV__) {
-      if (shouldWarnForUnbatchedSetState === true) {
-        warnIfNotCurrentlyBatchingInDev(fiber);
+      // jest isn't a 'global', it's just exposed to tests via a wrapped function
+      // further, this isn't a test file, so flow doesn't recognize the symbol. So...
+      // $FlowExpectedError - because requirements don't give a damn about your type sigs.
+      if ('undefined' !== typeof jest) {
+        warnIfNotCurrentlyActingUpdatesInDev(fiber);
       }
     }
     scheduleWork(fiber, expirationTime);
@@ -1179,6 +1233,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
 };
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
+let HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher | null = null;
 let HooksDispatcherOnUpdateInDEV: Dispatcher | null = null;
 let InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher | null = null;
 let InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher | null = null;
@@ -1214,6 +1269,8 @@ if (__DEV__) {
 
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
+      mountHookTypesDev();
+      checkDepsAreArrayDev(deps);
       return mountCallback(callback, deps);
     },
     useContext<T>(
@@ -1221,13 +1278,16 @@ if (__DEV__) {
       observedBits: void | number | boolean,
     ): T {
       currentHookNameInDev = 'useContext';
-      return mountContext(context, observedBits);
+      mountHookTypesDev();
+      return readContext(context, observedBits);
     },
     useEffect(
       create: () => (() => void) | void,
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useEffect';
+      mountHookTypesDev();
+      checkDepsAreArrayDev(deps);
       return mountEffect(create, deps);
     },
     useImperativeHandle<T>(
@@ -1236,6 +1296,8 @@ if (__DEV__) {
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useImperativeHandle';
+      mountHookTypesDev();
+      checkDepsAreArrayDev(deps);
       return mountImperativeHandle(ref, create, deps);
     },
     useLayoutEffect(
@@ -1243,10 +1305,14 @@ if (__DEV__) {
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
+      mountHookTypesDev();
+      checkDepsAreArrayDev(deps);
       return mountLayoutEffect(create, deps);
     },
     useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useMemo';
+      mountHookTypesDev();
+      checkDepsAreArrayDev(deps);
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
       try {
@@ -1261,6 +1327,7 @@ if (__DEV__) {
       init?: I => S,
     ): [S, Dispatch<A>] {
       currentHookNameInDev = 'useReducer';
+      mountHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
       try {
@@ -1271,12 +1338,14 @@ if (__DEV__) {
     },
     useRef<T>(initialValue: T): {current: T} {
       currentHookNameInDev = 'useRef';
+      mountHookTypesDev();
       return mountRef(initialValue);
     },
     useState<S>(
       initialState: (() => S) | S,
     ): [S, Dispatch<BasicStateAction<S>>] {
       currentHookNameInDev = 'useState';
+      mountHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
       try {
@@ -1287,6 +1356,104 @@ if (__DEV__) {
     },
     useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
       currentHookNameInDev = 'useDebugValue';
+      mountHookTypesDev();
+      return mountDebugValue(value, formatterFn);
+    },
+  };
+
+  HooksDispatcherOnMountWithHookTypesInDEV = {
+    readContext<T>(
+      context: ReactContext<T>,
+      observedBits: void | number | boolean,
+    ): T {
+      return readContext(context, observedBits);
+    },
+
+    useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
+      currentHookNameInDev = 'useCallback';
+      updateHookTypesDev();
+      return mountCallback(callback, deps);
+    },
+    useContext<T>(
+      context: ReactContext<T>,
+      observedBits: void | number | boolean,
+    ): T {
+      currentHookNameInDev = 'useContext';
+      updateHookTypesDev();
+      return readContext(context, observedBits);
+    },
+    useEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useEffect';
+      updateHookTypesDev();
+      return mountEffect(create, deps);
+    },
+    useImperativeHandle<T>(
+      ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
+      create: () => T,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useImperativeHandle';
+      updateHookTypesDev();
+      return mountImperativeHandle(ref, create, deps);
+    },
+    useLayoutEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useLayoutEffect';
+      updateHookTypesDev();
+      return mountLayoutEffect(create, deps);
+    },
+    useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
+      currentHookNameInDev = 'useMemo';
+      updateHookTypesDev();
+      const prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
+      try {
+        return mountMemo(create, deps);
+      } finally {
+        ReactCurrentDispatcher.current = prevDispatcher;
+      }
+    },
+    useReducer<S, I, A>(
+      reducer: (S, A) => S,
+      initialArg: I,
+      init?: I => S,
+    ): [S, Dispatch<A>] {
+      currentHookNameInDev = 'useReducer';
+      updateHookTypesDev();
+      const prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
+      try {
+        return mountReducer(reducer, initialArg, init);
+      } finally {
+        ReactCurrentDispatcher.current = prevDispatcher;
+      }
+    },
+    useRef<T>(initialValue: T): {current: T} {
+      currentHookNameInDev = 'useRef';
+      updateHookTypesDev();
+      return mountRef(initialValue);
+    },
+    useState<S>(
+      initialState: (() => S) | S,
+    ): [S, Dispatch<BasicStateAction<S>>] {
+      currentHookNameInDev = 'useState';
+      updateHookTypesDev();
+      const prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
+      try {
+        return mountState(initialState);
+      } finally {
+        ReactCurrentDispatcher.current = prevDispatcher;
+      }
+    },
+    useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
+      currentHookNameInDev = 'useDebugValue';
+      updateHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
   };
@@ -1301,6 +1468,7 @@ if (__DEV__) {
 
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
+      updateHookTypesDev();
       return updateCallback(callback, deps);
     },
     useContext<T>(
@@ -1308,13 +1476,15 @@ if (__DEV__) {
       observedBits: void | number | boolean,
     ): T {
       currentHookNameInDev = 'useContext';
-      return updateContext(context, observedBits);
+      updateHookTypesDev();
+      return readContext(context, observedBits);
     },
     useEffect(
       create: () => (() => void) | void,
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useEffect';
+      updateHookTypesDev();
       return updateEffect(create, deps);
     },
     useImperativeHandle<T>(
@@ -1323,6 +1493,7 @@ if (__DEV__) {
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useImperativeHandle';
+      updateHookTypesDev();
       return updateImperativeHandle(ref, create, deps);
     },
     useLayoutEffect(
@@ -1330,10 +1501,12 @@ if (__DEV__) {
       deps: Array<mixed> | void | null,
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
+      updateHookTypesDev();
       return updateLayoutEffect(create, deps);
     },
     useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useMemo';
+      updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
@@ -1348,6 +1521,7 @@ if (__DEV__) {
       init?: I => S,
     ): [S, Dispatch<A>] {
       currentHookNameInDev = 'useReducer';
+      updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
@@ -1358,12 +1532,14 @@ if (__DEV__) {
     },
     useRef<T>(initialValue: T): {current: T} {
       currentHookNameInDev = 'useRef';
+      updateHookTypesDev();
       return updateRef(initialValue);
     },
     useState<S>(
       initialState: (() => S) | S,
     ): [S, Dispatch<BasicStateAction<S>>] {
       currentHookNameInDev = 'useState';
+      updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
@@ -1374,6 +1550,7 @@ if (__DEV__) {
     },
     useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
       currentHookNameInDev = 'useDebugValue';
+      updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
   };
@@ -1390,6 +1567,7 @@ if (__DEV__) {
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
       warnInvalidHookAccess();
+      mountHookTypesDev();
       return mountCallback(callback, deps);
     },
     useContext<T>(
@@ -1398,7 +1576,8 @@ if (__DEV__) {
     ): T {
       currentHookNameInDev = 'useContext';
       warnInvalidHookAccess();
-      return mountContext(context, observedBits);
+      mountHookTypesDev();
+      return readContext(context, observedBits);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -1406,6 +1585,7 @@ if (__DEV__) {
     ): void {
       currentHookNameInDev = 'useEffect';
       warnInvalidHookAccess();
+      mountHookTypesDev();
       return mountEffect(create, deps);
     },
     useImperativeHandle<T>(
@@ -1415,6 +1595,7 @@ if (__DEV__) {
     ): void {
       currentHookNameInDev = 'useImperativeHandle';
       warnInvalidHookAccess();
+      mountHookTypesDev();
       return mountImperativeHandle(ref, create, deps);
     },
     useLayoutEffect(
@@ -1423,11 +1604,13 @@ if (__DEV__) {
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
       warnInvalidHookAccess();
+      mountHookTypesDev();
       return mountLayoutEffect(create, deps);
     },
     useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useMemo';
       warnInvalidHookAccess();
+      mountHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
       try {
@@ -1443,6 +1626,7 @@ if (__DEV__) {
     ): [S, Dispatch<A>] {
       currentHookNameInDev = 'useReducer';
       warnInvalidHookAccess();
+      mountHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
       try {
@@ -1454,6 +1638,7 @@ if (__DEV__) {
     useRef<T>(initialValue: T): {current: T} {
       currentHookNameInDev = 'useRef';
       warnInvalidHookAccess();
+      mountHookTypesDev();
       return mountRef(initialValue);
     },
     useState<S>(
@@ -1461,6 +1646,7 @@ if (__DEV__) {
     ): [S, Dispatch<BasicStateAction<S>>] {
       currentHookNameInDev = 'useState';
       warnInvalidHookAccess();
+      mountHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
       try {
@@ -1472,6 +1658,7 @@ if (__DEV__) {
     useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
       currentHookNameInDev = 'useDebugValue';
       warnInvalidHookAccess();
+      mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
   };
@@ -1488,6 +1675,7 @@ if (__DEV__) {
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
       warnInvalidHookAccess();
+      updateHookTypesDev();
       return updateCallback(callback, deps);
     },
     useContext<T>(
@@ -1496,7 +1684,8 @@ if (__DEV__) {
     ): T {
       currentHookNameInDev = 'useContext';
       warnInvalidHookAccess();
-      return updateContext(context, observedBits);
+      updateHookTypesDev();
+      return readContext(context, observedBits);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -1504,6 +1693,7 @@ if (__DEV__) {
     ): void {
       currentHookNameInDev = 'useEffect';
       warnInvalidHookAccess();
+      updateHookTypesDev();
       return updateEffect(create, deps);
     },
     useImperativeHandle<T>(
@@ -1513,6 +1703,7 @@ if (__DEV__) {
     ): void {
       currentHookNameInDev = 'useImperativeHandle';
       warnInvalidHookAccess();
+      updateHookTypesDev();
       return updateImperativeHandle(ref, create, deps);
     },
     useLayoutEffect(
@@ -1521,11 +1712,13 @@ if (__DEV__) {
     ): void {
       currentHookNameInDev = 'useLayoutEffect';
       warnInvalidHookAccess();
+      updateHookTypesDev();
       return updateLayoutEffect(create, deps);
     },
     useMemo<T>(create: () => T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useMemo';
       warnInvalidHookAccess();
+      updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
@@ -1541,6 +1734,7 @@ if (__DEV__) {
     ): [S, Dispatch<A>] {
       currentHookNameInDev = 'useReducer';
       warnInvalidHookAccess();
+      updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
@@ -1552,6 +1746,7 @@ if (__DEV__) {
     useRef<T>(initialValue: T): {current: T} {
       currentHookNameInDev = 'useRef';
       warnInvalidHookAccess();
+      updateHookTypesDev();
       return updateRef(initialValue);
     },
     useState<S>(
@@ -1559,6 +1754,7 @@ if (__DEV__) {
     ): [S, Dispatch<BasicStateAction<S>>] {
       currentHookNameInDev = 'useState';
       warnInvalidHookAccess();
+      updateHookTypesDev();
       const prevDispatcher = ReactCurrentDispatcher.current;
       ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
       try {
@@ -1570,6 +1766,7 @@ if (__DEV__) {
     useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void {
       currentHookNameInDev = 'useDebugValue';
       warnInvalidHookAccess();
+      updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
   };

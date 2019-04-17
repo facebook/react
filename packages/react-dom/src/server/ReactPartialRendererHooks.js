@@ -57,8 +57,12 @@ let currentHookNameInDev: ?string;
 function resolveCurrentlyRenderingComponent(): Object {
   invariant(
     currentlyRenderingComponent !== null,
-    'Hooks can only be called inside the body of a function component. ' +
-      '(https://fb.me/react-invalid-hook-call)',
+    'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
+      ' one of the following reasons:\n' +
+      '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
+      '2. You might be breaking the Rules of Hooks\n' +
+      '3. You might have more than one copy of React in the same app\n' +
+      'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
   );
   if (__DEV__) {
     warning(
@@ -389,7 +393,8 @@ export function useLayoutEffect(
       "be encoded into the server renderer's output format. This will lead " +
       'to a mismatch between the initial, non-hydrated UI and the intended ' +
       'UI. To avoid this, useLayoutEffect should only be used in ' +
-      'components that render exclusively on the client.',
+      'components that render exclusively on the client. ' +
+      'See https://fb.me/react-uselayouteffect-ssr for common fixes.',
   );
 }
 

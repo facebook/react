@@ -14,11 +14,27 @@ describe('Scheduling UMD bundle', () => {
     global.__UMD__ = true;
 
     jest.resetModules();
+
+    jest.mock('scheduler', () => require.requireActual('scheduler'));
+    jest.mock('scheduler/src/SchedulerHostConfig', () =>
+      require.requireActual(
+        'scheduler/src/forks/SchedulerHostConfig.default.js',
+      ),
+    );
   });
 
   function filterPrivateKeys(name) {
-    // TODO: Figure out how to forward priority levels.
-    return !name.startsWith('_') && !name.endsWith('Priority');
+    // Be very careful adding things to this whitelist!
+    // It's easy to introduce bugs by doing it:
+    // https://github.com/facebook/react/issues/14904
+    switch (name) {
+      case '__interactionsRef':
+      case '__subscriberRef':
+        // Don't forward these. (TODO: why?)
+        return false;
+      default:
+        return true;
+    }
   }
 
   function validateForwardedAPIs(api, forwardedAPIs) {

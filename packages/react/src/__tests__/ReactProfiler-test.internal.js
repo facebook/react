@@ -13,11 +13,10 @@
 let React;
 let ReactFeatureFlags;
 let ReactNoop;
+let Scheduler;
 let ReactCache;
 let ReactTestRenderer;
-let advanceTimeBy;
 let SchedulerTracing;
-let mockNow;
 let AdvanceTime;
 let AsyncText;
 let Text;
@@ -30,12 +29,6 @@ function loadModules({
   replayFailedUnitOfWorkWithInvokeGuardedCallback = false,
   useNoopRenderer = false,
 } = {}) {
-  let currentTime = 0;
-
-  mockNow = jest.fn().mockImplementation(() => currentTime);
-
-  global.Date.now = mockNow;
-
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
   ReactFeatureFlags.debugRenderPhaseSideEffects = false;
   ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
@@ -44,6 +37,7 @@ function loadModules({
   ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = replayFailedUnitOfWorkWithInvokeGuardedCallback;
 
   React = require('react');
+  Scheduler = require('scheduler');
   SchedulerTracing = require('scheduler/tracing');
   ReactCache = require('react-cache');
 
@@ -53,12 +47,7 @@ function loadModules({
   } else {
     ReactNoop = null;
     ReactTestRenderer = require('react-test-renderer');
-    ReactTestRenderer.unstable_setNowImplementation(mockNow);
   }
-
-  advanceTimeBy = amount => {
-    currentTime += amount;
-  };
 
   AdvanceTime = class extends React.Component {
     static defaultProps = {
@@ -70,25 +59,17 @@ function loadModules({
     }
     render() {
       // Simulate time passing when this component is rendered
-      advanceTimeBy(this.props.byAmount);
+      Scheduler.advanceTime(this.props.byAmount);
       return this.props.children || null;
     }
   };
 
   resourcePromise = null;
 
-  function yieldForRenderer(value) {
-    if (ReactNoop) {
-      ReactNoop.yield(value);
-    } else {
-      ReactTestRenderer.unstable_yield(value);
-    }
-  }
-
   TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
     resourcePromise = new Promise((resolve, reject) =>
       setTimeout(() => {
-        yieldForRenderer(`Promise resolved [${text}]`);
+        Scheduler.yieldValue(`Promise resolved [${text}]`);
         resolve(text);
       }, ms),
     );
@@ -98,20 +79,20 @@ function loadModules({
   AsyncText = ({ms, text}) => {
     try {
       TextResource.read([text, ms]);
-      yieldForRenderer(`AsyncText [${text}]`);
+      Scheduler.yieldValue(`AsyncText [${text}]`);
       return text;
     } catch (promise) {
       if (typeof promise.then === 'function') {
-        yieldForRenderer(`Suspend [${text}]`);
+        Scheduler.yieldValue(`Suspend [${text}]`);
       } else {
-        yieldForRenderer(`Error [${text}]`);
+        Scheduler.yieldValue(`Error [${text}]`);
       }
       throw promise;
     }
   };
 
   Text = ({text}) => {
-    yieldForRenderer(`Text [${text}]`);
+    Scheduler.yieldValue(`Text [${text}]`);
     return text;
   };
 }
@@ -146,7 +127,7 @@ describe('Profiler', () => {
             it('should warn if required params are missing', () => {
               expect(() => {
                 expect(() => {
-                  ReactTestRenderer.create(<React.unstable_Profiler />);
+                  ReactTestRenderer.create(<React.Profiler />);
                 }).toThrow('onRender is not a function');
               }).toWarnDev(
                 'Profiler must specify an "id" string and "onRender" function as props',
@@ -159,7 +140,7 @@ describe('Profiler', () => {
             // As root
             expect(
               ReactTestRenderer.create(
-                <React.unstable_Profiler id="label" onRender={jest.fn()} />,
+                <React.Profiler id="label" onRender={jest.fn()} />,
               ).toJSON(),
             ).toMatchSnapshot();
 
@@ -167,7 +148,7 @@ describe('Profiler', () => {
             expect(
               ReactTestRenderer.create(
                 <div>
-                  <React.unstable_Profiler id="label" onRender={jest.fn()} />
+                  <React.Profiler id="label" onRender={jest.fn()} />
                 </div>,
               ).toJSON(),
             ).toMatchSnapshot();
@@ -178,10 +159,10 @@ describe('Profiler', () => {
             const renderer = ReactTestRenderer.create(
               <div>
                 <span>outside span</span>
-                <React.unstable_Profiler id="label" onRender={jest.fn()}>
+                <React.Profiler id="label" onRender={jest.fn()}>
                   <span>inside span</span>
                   <FunctionComponent label="function component" />
-                </React.unstable_Profiler>
+                </React.Profiler>
               </div>,
             );
             expect(renderer.toJSON()).toMatchSnapshot();
@@ -195,13 +176,13 @@ describe('Profiler', () => {
               }
             }
             const renderer = ReactTestRenderer.create(
-              <React.unstable_Profiler id="outer" onRender={jest.fn()}>
+              <React.Profiler id="outer" onRender={jest.fn()}>
                 <FunctionComponent label="outer function component" />
-                <React.unstable_Profiler id="inner" onRender={jest.fn()}>
+                <React.Profiler id="inner" onRender={jest.fn()}>
                   <ClassComponent label="inner class component" />
                   <span>inner span</span>
-                </React.unstable_Profiler>
-              </React.unstable_Profiler>,
+                </React.Profiler>
+              </React.Profiler>,
             );
             expect(renderer.toJSON()).toMatchSnapshot();
           });
@@ -240,11 +221,11 @@ describe('Profiler', () => {
         expect(() =>
           ReactTestRenderer.create(
             <ClassComponent>
-              <React.unstable_Profiler id="do-not-throw" onRender={callback}>
-                <React.unstable_Profiler id="throw" onRender={callback}>
+              <React.Profiler id="do-not-throw" onRender={callback}>
+                <React.Profiler id="throw" onRender={callback}>
                   <div />
-                </React.unstable_Profiler>
-              </React.unstable_Profiler>
+                </React.Profiler>
+              </React.Profiler>
             </ClassComponent>,
           ),
         ).toThrow('expected');
@@ -256,28 +237,50 @@ describe('Profiler', () => {
         const callback = jest.fn();
 
         const Yield = ({value}) => {
-          ReactTestRenderer.unstable_yield(value);
+          Scheduler.yieldValue(value);
           return null;
         };
 
-        const renderer = ReactTestRenderer.create(
-          <React.unstable_Profiler id="test" onRender={callback}>
+        ReactTestRenderer.create(
+          <React.Profiler id="test" onRender={callback}>
             <Yield value="first" />
             <Yield value="last" />
-          </React.unstable_Profiler>,
+          </React.Profiler>,
           {
             unstable_isConcurrent: true,
           },
         );
 
         // Times are logged until a render is committed.
-        expect(renderer).toFlushAndYieldThrough(['first']);
+        expect(Scheduler).toFlushAndYieldThrough(['first']);
         expect(callback).toHaveBeenCalledTimes(0);
-        expect(renderer).toFlushAndYield(['last']);
+        expect(Scheduler).toFlushAndYield(['last']);
         expect(callback).toHaveBeenCalledTimes(1);
       });
 
       it('does not record times for components outside of Profiler tree', () => {
+        // Mock the Scheduler module so we can track how many times the current
+        // time is read
+        jest.mock('scheduler', obj => {
+          const ActualScheduler = require.requireActual(
+            'scheduler/unstable_mock',
+          );
+          return {
+            ...ActualScheduler,
+            unstable_now: function mockUnstableNow() {
+              ActualScheduler.yieldValue('read current time');
+              return ActualScheduler.unstable_now();
+            },
+          };
+        });
+
+        jest.resetModules();
+
+        loadModules({enableSchedulerTracing});
+
+        // Clear yields in case the current time is read during initialization.
+        Scheduler.unstable_clearYields();
+
         ReactTestRenderer.create(
           <div>
             <AdvanceTime />
@@ -292,18 +295,26 @@ describe('Profiler', () => {
         // 2. To compute the update expiration time
         // 3. To record the commit time
         // No additional calls from ProfilerTimer are expected.
-        expect(mockNow).toHaveBeenCalledTimes(2);
+        expect(Scheduler).toHaveYielded([
+          'read current time',
+          'read current time',
+        ]);
+
+        // Restore original mock
+        jest.mock('scheduler', () =>
+          require.requireActual('scheduler/unstable_mock'),
+        );
       });
 
       it('logs render times for both mount and update', () => {
         const callback = jest.fn();
 
-        advanceTimeBy(5); // 0 -> 5
+        Scheduler.advanceTime(5); // 0 -> 5
 
         const renderer = ReactTestRenderer.create(
-          <React.unstable_Profiler id="test" onRender={callback}>
+          <React.Profiler id="test" onRender={callback}>
             <AdvanceTime />
-          </React.unstable_Profiler>,
+          </React.Profiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(1);
@@ -321,12 +332,12 @@ describe('Profiler', () => {
 
         callback.mockReset();
 
-        advanceTimeBy(20); // 15 -> 35
+        Scheduler.advanceTime(20); // 15 -> 35
 
         renderer.update(
-          <React.unstable_Profiler id="test" onRender={callback}>
+          <React.Profiler id="test" onRender={callback}>
             <AdvanceTime />
-          </React.unstable_Profiler>,
+          </React.Profiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(1);
@@ -344,12 +355,12 @@ describe('Profiler', () => {
 
         callback.mockReset();
 
-        advanceTimeBy(20); // 45 -> 65
+        Scheduler.advanceTime(20); // 45 -> 65
 
         renderer.update(
-          <React.unstable_Profiler id="test" onRender={callback}>
+          <React.Profiler id="test" onRender={callback}>
             <AdvanceTime byAmount={4} />
-          </React.unstable_Profiler>,
+          </React.Profiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(1);
@@ -369,17 +380,17 @@ describe('Profiler', () => {
       it('includes render times of nested Profilers in their parent times', () => {
         const callback = jest.fn();
 
-        advanceTimeBy(5); // 0 -> 5
+        Scheduler.advanceTime(5); // 0 -> 5
 
         ReactTestRenderer.create(
           <React.Fragment>
-            <React.unstable_Profiler id="parent" onRender={callback}>
+            <React.Profiler id="parent" onRender={callback}>
               <AdvanceTime byAmount={10}>
-                <React.unstable_Profiler id="child" onRender={callback}>
+                <React.Profiler id="child" onRender={callback}>
                   <AdvanceTime byAmount={20} />
-                </React.unstable_Profiler>
+                </React.Profiler>
               </AdvanceTime>
-            </React.unstable_Profiler>
+            </React.Profiler>
           </React.Fragment>,
         );
 
@@ -404,16 +415,16 @@ describe('Profiler', () => {
       it('traces sibling Profilers separately', () => {
         const callback = jest.fn();
 
-        advanceTimeBy(5); // 0 -> 5
+        Scheduler.advanceTime(5); // 0 -> 5
 
         ReactTestRenderer.create(
           <React.Fragment>
-            <React.unstable_Profiler id="first" onRender={callback}>
+            <React.Profiler id="first" onRender={callback}>
               <AdvanceTime byAmount={20} />
-            </React.unstable_Profiler>
-            <React.unstable_Profiler id="second" onRender={callback}>
+            </React.Profiler>
+            <React.Profiler id="second" onRender={callback}>
               <AdvanceTime byAmount={5} />
-            </React.unstable_Profiler>
+            </React.Profiler>
           </React.Fragment>,
         );
 
@@ -437,14 +448,14 @@ describe('Profiler', () => {
       it('does not include time spent outside of profile root', () => {
         const callback = jest.fn();
 
-        advanceTimeBy(5); // 0 -> 5
+        Scheduler.advanceTime(5); // 0 -> 5
 
         ReactTestRenderer.create(
           <React.Fragment>
             <AdvanceTime byAmount={20} />
-            <React.unstable_Profiler id="test" onRender={callback}>
+            <React.Profiler id="test" onRender={callback}>
               <AdvanceTime byAmount={5} />
-            </React.unstable_Profiler>
+            </React.Profiler>
             <AdvanceTime byAmount={20} />
           </React.Fragment>,
         );
@@ -478,17 +489,17 @@ describe('Profiler', () => {
         }
 
         const renderer = ReactTestRenderer.create(
-          <React.unstable_Profiler id="outer" onRender={callback}>
+          <React.Profiler id="outer" onRender={callback}>
             <Updater>
-              <React.unstable_Profiler id="middle" onRender={callback}>
+              <React.Profiler id="middle" onRender={callback}>
                 <Pure>
-                  <React.unstable_Profiler id="inner" onRender={callback}>
+                  <React.Profiler id="inner" onRender={callback}>
                     <div />
-                  </React.unstable_Profiler>
+                  </React.Profiler>
                 </Pure>
-              </React.unstable_Profiler>
+              </React.Profiler>
             </Updater>
-          </React.unstable_Profiler>,
+          </React.Profiler>,
         );
 
         // All profile callbacks are called for initial render
@@ -512,26 +523,26 @@ describe('Profiler', () => {
       it('decreases actual time but not base time when sCU prevents an update', () => {
         const callback = jest.fn();
 
-        advanceTimeBy(5); // 0 -> 5
+        Scheduler.advanceTime(5); // 0 -> 5
 
         const renderer = ReactTestRenderer.create(
-          <React.unstable_Profiler id="test" onRender={callback}>
+          <React.Profiler id="test" onRender={callback}>
             <AdvanceTime byAmount={10}>
               <AdvanceTime byAmount={13} shouldComponentUpdate={false} />
             </AdvanceTime>
-          </React.unstable_Profiler>,
+          </React.Profiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(1);
 
-        advanceTimeBy(30); // 28 -> 58
+        Scheduler.advanceTime(30); // 28 -> 58
 
         renderer.update(
-          <React.unstable_Profiler id="test" onRender={callback}>
+          <React.Profiler id="test" onRender={callback}>
             <AdvanceTime byAmount={4}>
               <AdvanceTime byAmount={7} shouldComponentUpdate={false} />
             </AdvanceTime>
-          </React.unstable_Profiler>,
+          </React.Profiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(2);
@@ -555,35 +566,35 @@ describe('Profiler', () => {
         class WithLifecycles extends React.Component {
           state = {};
           static getDerivedStateFromProps() {
-            advanceTimeBy(3);
+            Scheduler.advanceTime(3);
             return null;
           }
           shouldComponentUpdate() {
-            advanceTimeBy(7);
+            Scheduler.advanceTime(7);
             return true;
           }
           render() {
-            advanceTimeBy(5);
+            Scheduler.advanceTime(5);
             return null;
           }
         }
 
         const callback = jest.fn();
 
-        advanceTimeBy(5); // 0 -> 5
+        Scheduler.advanceTime(5); // 0 -> 5
 
         const renderer = ReactTestRenderer.create(
-          <React.unstable_Profiler id="test" onRender={callback}>
+          <React.Profiler id="test" onRender={callback}>
             <WithLifecycles />
-          </React.unstable_Profiler>,
+          </React.Profiler>,
         );
 
-        advanceTimeBy(15); // 13 -> 28
+        Scheduler.advanceTime(15); // 13 -> 28
 
         renderer.update(
-          <React.unstable_Profiler id="test" onRender={callback}>
+          <React.Profiler id="test" onRender={callback}>
             <WithLifecycles />
-          </React.unstable_Profiler>,
+          </React.Profiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(2);
@@ -608,26 +619,26 @@ describe('Profiler', () => {
           const callback = jest.fn();
 
           const Yield = ({renderTime}) => {
-            advanceTimeBy(renderTime);
-            ReactTestRenderer.unstable_yield('Yield:' + renderTime);
+            Scheduler.advanceTime(renderTime);
+            Scheduler.yieldValue('Yield:' + renderTime);
             return null;
           };
 
-          advanceTimeBy(5); // 0 -> 5
+          Scheduler.advanceTime(5); // 0 -> 5
 
           // Render partially, but run out of time before completing.
-          const renderer = ReactTestRenderer.create(
-            <React.unstable_Profiler id="test" onRender={callback}>
+          ReactTestRenderer.create(
+            <React.Profiler id="test" onRender={callback}>
               <Yield renderTime={2} />
               <Yield renderTime={3} />
-            </React.unstable_Profiler>,
+            </React.Profiler>,
             {unstable_isConcurrent: true},
           );
-          expect(renderer).toFlushAndYieldThrough(['Yield:2']);
+          expect(Scheduler).toFlushAndYieldThrough(['Yield:2']);
           expect(callback).toHaveBeenCalledTimes(0);
 
           // Resume render for remaining children.
-          expect(renderer).toFlushAndYield(['Yield:3']);
+          expect(Scheduler).toFlushAndYield(['Yield:3']);
 
           // Verify that logged times include both durations above.
           expect(callback).toHaveBeenCalledTimes(1);
@@ -642,34 +653,34 @@ describe('Profiler', () => {
           const callback = jest.fn();
 
           const Yield = ({renderTime}) => {
-            advanceTimeBy(renderTime);
-            ReactTestRenderer.unstable_yield('Yield:' + renderTime);
+            Scheduler.advanceTime(renderTime);
+            Scheduler.yieldValue('Yield:' + renderTime);
             return null;
           };
 
-          advanceTimeBy(5); // 0 -> 5
+          Scheduler.advanceTime(5); // 0 -> 5
 
           // Render partially, but don't finish.
           // This partial render should take 5ms of simulated time.
-          const renderer = ReactTestRenderer.create(
-            <React.unstable_Profiler id="outer" onRender={callback}>
+          ReactTestRenderer.create(
+            <React.Profiler id="outer" onRender={callback}>
               <Yield renderTime={5} />
               <Yield renderTime={10} />
-              <React.unstable_Profiler id="inner" onRender={callback}>
+              <React.Profiler id="inner" onRender={callback}>
                 <Yield renderTime={17} />
-              </React.unstable_Profiler>
-            </React.unstable_Profiler>,
+              </React.Profiler>
+            </React.Profiler>,
             {unstable_isConcurrent: true},
           );
-          expect(renderer).toFlushAndYieldThrough(['Yield:5']);
+          expect(Scheduler).toFlushAndYieldThrough(['Yield:5']);
           expect(callback).toHaveBeenCalledTimes(0);
 
           // Simulate time moving forward while frame is paused.
-          advanceTimeBy(50); // 10 -> 60
+          Scheduler.advanceTime(50); // 10 -> 60
 
           // Flush the remaining work,
           // Which should take an additional 10ms of simulated time.
-          expect(renderer).toFlushAndYield(['Yield:10', 'Yield:17']);
+          expect(Scheduler).toFlushAndYield(['Yield:10', 'Yield:17']);
           expect(callback).toHaveBeenCalledTimes(2);
 
           const [innerCall, outerCall] = callback.mock.calls;
@@ -692,38 +703,38 @@ describe('Profiler', () => {
           const callback = jest.fn();
 
           const Yield = ({renderTime}) => {
-            advanceTimeBy(renderTime);
-            ReactTestRenderer.unstable_yield('Yield:' + renderTime);
+            Scheduler.advanceTime(renderTime);
+            Scheduler.yieldValue('Yield:' + renderTime);
             return null;
           };
 
-          advanceTimeBy(5); // 0 -> 5
+          Scheduler.advanceTime(5); // 0 -> 5
 
           // Render a partially update, but don't finish.
           // This partial render should take 10ms of simulated time.
           const renderer = ReactTestRenderer.create(
-            <React.unstable_Profiler id="test" onRender={callback}>
+            <React.Profiler id="test" onRender={callback}>
               <Yield renderTime={10} />
               <Yield renderTime={20} />
-            </React.unstable_Profiler>,
+            </React.Profiler>,
             {unstable_isConcurrent: true},
           );
-          expect(renderer).toFlushAndYieldThrough(['Yield:10']);
+          expect(Scheduler).toFlushAndYieldThrough(['Yield:10']);
           expect(callback).toHaveBeenCalledTimes(0);
 
           // Simulate time moving forward while frame is paused.
-          advanceTimeBy(100); // 15 -> 115
+          Scheduler.advanceTime(100); // 15 -> 115
 
           // Interrupt with higher priority work.
           // The interrupted work simulates an additional 5ms of time.
           renderer.unstable_flushSync(() => {
             renderer.update(
-              <React.unstable_Profiler id="test" onRender={callback}>
+              <React.Profiler id="test" onRender={callback}>
                 <Yield renderTime={5} />
-              </React.unstable_Profiler>,
+              </React.Profiler>,
             );
           });
-          expect(ReactTestRenderer).toHaveYielded(['Yield:5']);
+          expect(Scheduler).toHaveYielded(['Yield:5']);
 
           // The initial work was thrown away in this case,
           // So the actual and base times should only include the final rendered tree times.
@@ -737,7 +748,7 @@ describe('Profiler', () => {
           callback.mockReset();
 
           // Verify no more unexpected callbacks from low priority work
-          expect(renderer).toFlushWithoutYielding();
+          expect(Scheduler).toFlushWithoutYielding();
           expect(callback).toHaveBeenCalledTimes(0);
         });
 
@@ -745,24 +756,24 @@ describe('Profiler', () => {
           const callback = jest.fn();
 
           const Yield = ({renderTime}) => {
-            advanceTimeBy(renderTime);
-            ReactTestRenderer.unstable_yield('Yield:' + renderTime);
+            Scheduler.advanceTime(renderTime);
+            Scheduler.yieldValue('Yield:' + renderTime);
             return null;
           };
 
-          advanceTimeBy(5); // 0 -> 5
+          Scheduler.advanceTime(5); // 0 -> 5
 
           const renderer = ReactTestRenderer.create(
-            <React.unstable_Profiler id="test" onRender={callback}>
+            <React.Profiler id="test" onRender={callback}>
               <Yield renderTime={6} />
               <Yield renderTime={15} />
-            </React.unstable_Profiler>,
+            </React.Profiler>,
             {unstable_isConcurrent: true},
           );
 
           // Render everything initially.
           // This should take 21 seconds of actual and base time.
-          expect(renderer).toFlushAndYield(['Yield:6', 'Yield:15']);
+          expect(Scheduler).toFlushAndYield(['Yield:6', 'Yield:15']);
           expect(callback).toHaveBeenCalledTimes(1);
           let call = callback.mock.calls[0];
           expect(call[2]).toBe(21); // actual time
@@ -772,40 +783,40 @@ describe('Profiler', () => {
 
           callback.mockReset();
 
-          advanceTimeBy(30); // 26 -> 56
+          Scheduler.advanceTime(30); // 26 -> 56
 
           // Render a partially update, but don't finish.
           // This partial render should take 3ms of simulated time.
           renderer.update(
-            <React.unstable_Profiler id="test" onRender={callback}>
+            <React.Profiler id="test" onRender={callback}>
               <Yield renderTime={3} />
               <Yield renderTime={5} />
               <Yield renderTime={9} />
-            </React.unstable_Profiler>,
+            </React.Profiler>,
           );
-          expect(renderer).toFlushAndYieldThrough(['Yield:3']);
+          expect(Scheduler).toFlushAndYieldThrough(['Yield:3']);
           expect(callback).toHaveBeenCalledTimes(0);
 
           // Simulate time moving forward while frame is paused.
-          advanceTimeBy(100); // 59 -> 159
+          Scheduler.advanceTime(100); // 59 -> 159
 
           // Render another 5ms of simulated time.
-          expect(renderer).toFlushAndYieldThrough(['Yield:5']);
+          expect(Scheduler).toFlushAndYieldThrough(['Yield:5']);
           expect(callback).toHaveBeenCalledTimes(0);
 
           // Simulate time moving forward while frame is paused.
-          advanceTimeBy(100); // 164 -> 264
+          Scheduler.advanceTime(100); // 164 -> 264
 
           // Interrupt with higher priority work.
           // The interrupted work simulates an additional 11ms of time.
           renderer.unstable_flushSync(() => {
             renderer.update(
-              <React.unstable_Profiler id="test" onRender={callback}>
+              <React.Profiler id="test" onRender={callback}>
                 <Yield renderTime={11} />
-              </React.unstable_Profiler>,
+              </React.Profiler>,
             );
           });
-          expect(ReactTestRenderer).toHaveYielded(['Yield:11']);
+          expect(Scheduler).toHaveYielded(['Yield:11']);
 
           // The actual time should include only the most recent render,
           // Because this lets us avoid a lot of commit phase reset complexity.
@@ -818,7 +829,7 @@ describe('Profiler', () => {
           expect(call[5]).toBe(275); // commit time
 
           // Verify no more unexpected callbacks from low priority work
-          expect(renderer).toFlushAndYield([]);
+          expect(Scheduler).toFlushAndYield([]);
           expect(callback).toHaveBeenCalledTimes(1);
         });
 
@@ -826,8 +837,8 @@ describe('Profiler', () => {
           const callback = jest.fn();
 
           const Yield = ({renderTime}) => {
-            advanceTimeBy(renderTime);
-            ReactTestRenderer.unstable_yield('Yield:' + renderTime);
+            Scheduler.advanceTime(renderTime);
+            Scheduler.yieldValue('Yield:' + renderTime);
             return null;
           };
 
@@ -836,10 +847,8 @@ describe('Profiler', () => {
             state = {renderTime: 1};
             render() {
               first = this;
-              advanceTimeBy(this.state.renderTime);
-              ReactTestRenderer.unstable_yield(
-                'FirstComponent:' + this.state.renderTime,
-              );
+              Scheduler.advanceTime(this.state.renderTime);
+              Scheduler.yieldValue('FirstComponent:' + this.state.renderTime);
               return <Yield renderTime={4} />;
             }
           }
@@ -848,28 +857,26 @@ describe('Profiler', () => {
             state = {renderTime: 2};
             render() {
               second = this;
-              advanceTimeBy(this.state.renderTime);
-              ReactTestRenderer.unstable_yield(
-                'SecondComponent:' + this.state.renderTime,
-              );
+              Scheduler.advanceTime(this.state.renderTime);
+              Scheduler.yieldValue('SecondComponent:' + this.state.renderTime);
               return <Yield renderTime={7} />;
             }
           }
 
-          advanceTimeBy(5); // 0 -> 5
+          Scheduler.advanceTime(5); // 0 -> 5
 
           const renderer = ReactTestRenderer.create(
-            <React.unstable_Profiler id="test" onRender={callback}>
+            <React.Profiler id="test" onRender={callback}>
               <FirstComponent />
               <SecondComponent />
-            </React.unstable_Profiler>,
+            </React.Profiler>,
             {unstable_isConcurrent: true},
           );
 
           // Render everything initially.
           // This simulates a total of 14ms of actual render time.
           // The base render time is also 14ms for the initial render.
-          expect(renderer).toFlushAndYield([
+          expect(Scheduler).toFlushAndYield([
             'FirstComponent:1',
             'Yield:4',
             'SecondComponent:2',
@@ -884,24 +891,21 @@ describe('Profiler', () => {
 
           callback.mockClear();
 
-          advanceTimeBy(100); // 19 -> 119
+          Scheduler.advanceTime(100); // 19 -> 119
 
           // Render a partially update, but don't finish.
           // This partial render will take 10ms of actual render time.
           first.setState({renderTime: 10});
-          expect(renderer).toFlushAndYieldThrough(['FirstComponent:10']);
+          expect(Scheduler).toFlushAndYieldThrough(['FirstComponent:10']);
           expect(callback).toHaveBeenCalledTimes(0);
 
           // Simulate time moving forward while frame is paused.
-          advanceTimeBy(100); // 129 -> 229
+          Scheduler.advanceTime(100); // 129 -> 229
 
           // Interrupt with higher priority work.
           // This simulates a total of 37ms of actual render time.
           renderer.unstable_flushSync(() => second.setState({renderTime: 30}));
-          expect(ReactTestRenderer).toHaveYielded([
-            'SecondComponent:30',
-            'Yield:7',
-          ]);
+          expect(Scheduler).toHaveYielded(['SecondComponent:30', 'Yield:7']);
 
           // The actual time should include only the most recent render (37ms),
           // Because this greatly simplifies the commit phase logic.
@@ -917,7 +921,7 @@ describe('Profiler', () => {
           callback.mockClear();
 
           // Simulate time moving forward while frame is paused.
-          advanceTimeBy(100); // 266 -> 366
+          Scheduler.advanceTime(100); // 266 -> 366
 
           // Resume the original low priority update, with rebased state.
           // This simulates a total of 14ms of actual render time,
@@ -925,7 +929,7 @@ describe('Profiler', () => {
           // The tree contains 42ms of base render time at this point,
           // Reflecting the most recent (longer) render durations.
           // TODO: This actual time should decrease by 10ms once the scheduler supports resuming.
-          expect(renderer).toFlushAndYield(['FirstComponent:10', 'Yield:4']);
+          expect(Scheduler).toFlushAndYield(['FirstComponent:10', 'Yield:4']);
           expect(callback).toHaveBeenCalledTimes(1);
           call = callback.mock.calls[0];
           expect(call[2]).toBe(14); // actual time
@@ -953,7 +957,7 @@ describe('Profiler', () => {
                 const callback = jest.fn();
 
                 const ThrowsError = () => {
-                  advanceTimeBy(3);
+                  Scheduler.advanceTime(3);
                   throw Error('expected error');
                 };
 
@@ -963,7 +967,7 @@ describe('Profiler', () => {
                     this.setState({error});
                   }
                   render() {
-                    advanceTimeBy(2);
+                    Scheduler.advanceTime(2);
                     return this.state.error === null ? (
                       this.props.children
                     ) : (
@@ -972,15 +976,15 @@ describe('Profiler', () => {
                   }
                 }
 
-                advanceTimeBy(5); // 0 -> 5
+                Scheduler.advanceTime(5); // 0 -> 5
 
                 ReactTestRenderer.create(
-                  <React.unstable_Profiler id="test" onRender={callback}>
+                  <React.Profiler id="test" onRender={callback}>
                     <ErrorBoundary>
                       <AdvanceTime byAmount={9} />
                       <ThrowsError />
                     </ErrorBoundary>
-                  </React.unstable_Profiler>,
+                  </React.Profiler>,
                 );
 
                 expect(callback).toHaveBeenCalledTimes(2);
@@ -1032,7 +1036,7 @@ describe('Profiler', () => {
                 const callback = jest.fn();
 
                 const ThrowsError = () => {
-                  advanceTimeBy(10);
+                  Scheduler.advanceTime(10);
                   throw Error('expected error');
                 };
 
@@ -1042,7 +1046,7 @@ describe('Profiler', () => {
                     return {error};
                   }
                   render() {
-                    advanceTimeBy(2);
+                    Scheduler.advanceTime(2);
                     return this.state.error === null ? (
                       this.props.children
                     ) : (
@@ -1051,15 +1055,15 @@ describe('Profiler', () => {
                   }
                 }
 
-                advanceTimeBy(5); // 0 -> 5
+                Scheduler.advanceTime(5); // 0 -> 5
 
                 ReactTestRenderer.create(
-                  <React.unstable_Profiler id="test" onRender={callback}>
+                  <React.Profiler id="test" onRender={callback}>
                     <ErrorBoundary>
                       <AdvanceTime byAmount={5} />
                       <ThrowsError />
                     </ErrorBoundary>
-                  </React.unstable_Profiler>,
+                  </React.Profiler>,
                 );
 
                 expect(callback).toHaveBeenCalledTimes(1);
@@ -1097,31 +1101,31 @@ describe('Profiler', () => {
                 // Simulate a renderer error during the "complete" phase.
                 // This mimics behavior like React Native's View/Text nesting validation.
                 ReactNoop.render(
-                  <React.unstable_Profiler id="profiler" onRender={jest.fn()}>
+                  <React.Profiler id="profiler" onRender={jest.fn()}>
                     <errorInCompletePhase>hi</errorInCompletePhase>
-                  </React.unstable_Profiler>,
+                  </React.Profiler>,
                 );
-                expect(ReactNoop.flush).toThrow('Error in host config.');
+                expect(Scheduler).toFlushAndThrow('Error in host config.');
 
                 // A similar case we've seen caused by an invariant in ReactDOM.
                 // It didn't reproduce without a host component inside.
                 ReactNoop.render(
-                  <React.unstable_Profiler id="profiler" onRender={jest.fn()}>
+                  <React.Profiler id="profiler" onRender={jest.fn()}>
                     <errorInCompletePhase>
                       <span>hi</span>
                     </errorInCompletePhase>
-                  </React.unstable_Profiler>,
+                  </React.Profiler>,
                 );
-                expect(ReactNoop.flush).toThrow('Error in host config.');
+                expect(Scheduler).toFlushAndThrow('Error in host config.');
 
                 // So long as the profiler timer's fiber stack is reset correctly,
                 // Subsequent renders should not error.
                 ReactNoop.render(
-                  <React.unstable_Profiler id="profiler" onRender={jest.fn()}>
+                  <React.Profiler id="profiler" onRender={jest.fn()}>
                     <span>hi</span>
-                  </React.unstable_Profiler>,
+                  </React.Profiler>,
                 );
-                ReactNoop.flush();
+                expect(Scheduler).toFlushWithoutYielding();
               });
             });
           },
@@ -1131,22 +1135,22 @@ describe('Profiler', () => {
       it('reflects the most recently rendered id value', () => {
         const callback = jest.fn();
 
-        advanceTimeBy(5); // 0 -> 5
+        Scheduler.advanceTime(5); // 0 -> 5
 
         const renderer = ReactTestRenderer.create(
-          <React.unstable_Profiler id="one" onRender={callback}>
+          <React.Profiler id="one" onRender={callback}>
             <AdvanceTime byAmount={2} />
-          </React.unstable_Profiler>,
+          </React.Profiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(1);
 
-        advanceTimeBy(20); // 7 -> 27
+        Scheduler.advanceTime(20); // 7 -> 27
 
         renderer.update(
-          <React.unstable_Profiler id="two" onRender={callback}>
+          <React.Profiler id="two" onRender={callback}>
             <AdvanceTime byAmount={1} />
-          </React.unstable_Profiler>,
+          </React.Profiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(2);
@@ -1179,19 +1183,19 @@ describe('Profiler', () => {
 
         class ClassComponent extends React.Component {
           componentDidMount() {
-            advanceTimeBy(5);
+            Scheduler.advanceTime(5);
             classComponentMounted = true;
           }
           render() {
-            advanceTimeBy(2);
+            Scheduler.advanceTime(2);
             return null;
           }
         }
 
         ReactTestRenderer.create(
-          <React.unstable_Profiler id="test" onRender={callback}>
+          <React.Profiler id="test" onRender={callback}>
             <ClassComponent />
-          </React.unstable_Profiler>,
+          </React.Profiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(1);
@@ -1205,14 +1209,14 @@ describe('Profiler', () => {
     loadModules({useNoopRenderer: true});
 
     const Child = ({duration, id}) => {
-      ReactNoop.advanceTime(duration);
-      ReactNoop.yield(`Child:render:${id}`);
+      Scheduler.advanceTime(duration);
+      Scheduler.yieldValue(`Child:render:${id}`);
       return null;
     };
 
     class Parent extends React.Component {
       componentDidMount() {
-        ReactNoop.yield(`Parent:componentDidMount:${this.props.id}`);
+        Scheduler.yieldValue(`Parent:componentDidMount:${this.props.id}`);
       }
       render() {
         const {duration, id} = this.props;
@@ -1225,7 +1229,7 @@ describe('Profiler', () => {
       }
     }
 
-    ReactNoop.advanceTime(50);
+    Scheduler.advanceTime(50);
 
     ReactNoop.renderToRootWithID(<Parent duration={3} id="one" />, 'one');
 
@@ -1238,13 +1242,13 @@ describe('Profiler', () => {
 
     expect(ReactNoop.getRoot('one').current.actualDuration).toBe(0);
 
-    ReactNoop.advanceTime(100);
+    Scheduler.advanceTime(100);
 
     // Process some async work, but yield before committing it.
     ReactNoop.renderToRootWithID(<Parent duration={7} id="two" />, 'two');
-    ReactNoop.flushThrough(['Child:render:two']);
+    expect(Scheduler).toFlushAndYieldThrough(['Child:render:two']);
 
-    ReactNoop.advanceTime(150);
+    Scheduler.advanceTime(150);
 
     // Commit the previously paused, batched work.
     commitFirstRender(['Parent:componentDidMount:one']);
@@ -1252,9 +1256,12 @@ describe('Profiler', () => {
     expect(ReactNoop.getRoot('one').current.actualDuration).toBe(6);
     expect(ReactNoop.getRoot('two').current.actualDuration).toBe(0);
 
-    ReactNoop.advanceTime(200);
+    Scheduler.advanceTime(200);
 
-    ReactNoop.flush();
+    expect(Scheduler).toFlushAndYield([
+      'Child:render:two',
+      'Parent:componentDidMount:two',
+    ]);
 
     expect(ReactNoop.getRoot('two').current.actualDuration).toBe(14);
   });
@@ -1326,7 +1333,7 @@ describe('Profiler', () => {
     describe('error handling', () => {
       it('should cover errors thrown in onWorkScheduled', () => {
         function Component({children}) {
-          ReactTestRenderer.unstable_yield('Component:' + children);
+          Scheduler.yieldValue('Component:' + children);
           return children;
         }
 
@@ -1335,12 +1342,17 @@ describe('Profiler', () => {
         // Errors that happen inside of a subscriber should throw,
         throwInOnWorkScheduled = true;
         expect(() => {
-          SchedulerTracing.unstable_trace('event', mockNow(), () => {
-            renderer = ReactTestRenderer.create(<Component>fail</Component>, {
-              unstable_isConcurrent: true,
-            });
-          });
+          SchedulerTracing.unstable_trace(
+            'event',
+            Scheduler.unstable_now(),
+            () => {
+              renderer = ReactTestRenderer.create(<Component>fail</Component>, {
+                unstable_isConcurrent: true,
+              });
+            },
+          );
         }).toThrow('Expected error onWorkScheduled');
+        expect(Scheduler).toFlushAndYield(['Component:fail']);
         throwInOnWorkScheduled = false;
         expect(onWorkScheduled).toHaveBeenCalled();
 
@@ -1348,7 +1360,7 @@ describe('Profiler', () => {
         renderer = ReactTestRenderer.create(<Component>succeed</Component>, {
           unstable_isConcurrent: true,
         });
-        expect(renderer).toFlushAndYield(['Component:succeed']);
+        expect(Scheduler).toFlushAndYield(['Component:succeed']);
         const tree = renderer.toTree();
         expect(tree.type).toBe(Component);
         expect(tree.props.children).toBe('succeed');
@@ -1356,27 +1368,34 @@ describe('Profiler', () => {
 
       it('should cover errors thrown in onWorkStarted', () => {
         function Component({children}) {
-          ReactTestRenderer.unstable_yield('Component:' + children);
+          Scheduler.yieldValue('Component:' + children);
           return children;
         }
 
         let renderer;
-        SchedulerTracing.unstable_trace('event', mockNow(), () => {
-          renderer = ReactTestRenderer.create(<Component>text</Component>, {
-            unstable_isConcurrent: true,
-          });
-        });
+        SchedulerTracing.unstable_trace(
+          'event',
+          Scheduler.unstable_now(),
+          () => {
+            renderer = ReactTestRenderer.create(<Component>text</Component>, {
+              unstable_isConcurrent: true,
+            });
+          },
+        );
         onWorkStarted.mockClear();
 
         // Errors that happen inside of a subscriber should throw,
         throwInOnWorkStarted = true;
-        expect(renderer).toFlushAndThrow('Expected error onWorkStarted');
-        expect(ReactTestRenderer).toHaveYielded(['Component:text']);
+        expect(Scheduler).toFlushAndThrow('Expected error onWorkStarted');
+        // Rendering was interrupted by the error that was thrown
+        expect(Scheduler).toHaveYielded([]);
+        // Rendering continues in the next task
+        expect(Scheduler).toFlushAndYield(['Component:text']);
         throwInOnWorkStarted = false;
         expect(onWorkStarted).toHaveBeenCalled();
 
         // But the React work should have still been processed.
-        expect(renderer).toFlushAndYield([]);
+        expect(Scheduler).toFlushAndYield([]);
         const tree = renderer.toTree();
         expect(tree.type).toBe(Component);
         expect(tree.props.children).toBe('text');
@@ -1384,22 +1403,26 @@ describe('Profiler', () => {
 
       it('should cover errors thrown in onWorkStopped', () => {
         function Component({children}) {
-          ReactTestRenderer.unstable_yield('Component:' + children);
+          Scheduler.yieldValue('Component:' + children);
           return children;
         }
 
         let renderer;
-        SchedulerTracing.unstable_trace('event', mockNow(), () => {
-          renderer = ReactTestRenderer.create(<Component>text</Component>, {
-            unstable_isConcurrent: true,
-          });
-        });
+        SchedulerTracing.unstable_trace(
+          'event',
+          Scheduler.unstable_now(),
+          () => {
+            renderer = ReactTestRenderer.create(<Component>text</Component>, {
+              unstable_isConcurrent: true,
+            });
+          },
+        );
         expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
 
         // Errors that happen in an on-stopped callback,
         throwInOnWorkStopped = true;
         expect(() => {
-          renderer.unstable_flushAll(['Component:text']);
+          expect(Scheduler).toFlushAndYield(['Component:text']);
         }).toThrow('Expected error onWorkStopped');
         throwInOnWorkStopped = false;
         expect(onWorkStopped).toHaveBeenCalledTimes(2);
@@ -1415,34 +1438,41 @@ describe('Profiler', () => {
 
       it('should cover errors thrown in onInteractionScheduledWorkCompleted', () => {
         function Component({children}) {
-          ReactTestRenderer.unstable_yield('Component:' + children);
+          Scheduler.yieldValue('Component:' + children);
           return children;
         }
 
         const eventOne = {
           id: 0,
           name: 'event one',
-          timestamp: mockNow(),
+          timestamp: Scheduler.unstable_now(),
         };
         const eventTwo = {
           id: 1,
           name: 'event two',
-          timestamp: mockNow(),
+          timestamp: Scheduler.unstable_now(),
         };
 
-        let renderer;
-        SchedulerTracing.unstable_trace(eventOne.name, mockNow(), () => {
-          SchedulerTracing.unstable_trace(eventTwo.name, mockNow(), () => {
-            renderer = ReactTestRenderer.create(<Component>text</Component>, {
-              unstable_isConcurrent: true,
-            });
-          });
-        });
+        SchedulerTracing.unstable_trace(
+          eventOne.name,
+          Scheduler.unstable_now(),
+          () => {
+            SchedulerTracing.unstable_trace(
+              eventTwo.name,
+              Scheduler.unstable_now(),
+              () => {
+                ReactTestRenderer.create(<Component>text</Component>, {
+                  unstable_isConcurrent: true,
+                });
+              },
+            );
+          },
+        );
         expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
 
         throwInOnInteractionScheduledWorkCompleted = true;
         expect(() => {
-          renderer.unstable_flushAll(['Component:text']);
+          expect(Scheduler).toFlushAndYield(['Component:text']);
         }).toThrow('Expected error onInteractionScheduledWorkCompleted');
 
         // Even though an error is thrown for one completed interaction,
@@ -1460,7 +1490,7 @@ describe('Profiler', () => {
       });
 
       let interaction;
-      SchedulerTracing.unstable_trace('event', mockNow(), () => {
+      SchedulerTracing.unstable_trace('event', Scheduler.unstable_now(), () => {
         const interactions = SchedulerTracing.unstable_getCurrent();
         expect(interactions.size).toBe(1);
         interaction = Array.from(interactions)[0];
@@ -1483,8 +1513,8 @@ describe('Profiler', () => {
       let instance = null;
 
       const Yield = ({duration = 10, value}) => {
-        advanceTimeBy(duration);
-        ReactTestRenderer.unstable_yield(value);
+        Scheduler.advanceTime(duration);
+        Scheduler.yieldValue(value);
         return null;
       };
 
@@ -1504,24 +1534,24 @@ describe('Profiler', () => {
         }
       }
 
-      advanceTimeBy(1);
+      Scheduler.advanceTime(1);
 
       const interactionCreation = {
         id: 0,
         name: 'creation event',
-        timestamp: mockNow(),
+        timestamp: Scheduler.unstable_now(),
       };
 
       const onRender = jest.fn();
       let renderer;
       SchedulerTracing.unstable_trace(
         interactionCreation.name,
-        mockNow(),
+        Scheduler.unstable_now(),
         () => {
           renderer = ReactTestRenderer.create(
-            <React.unstable_Profiler id="test-profiler" onRender={onRender}>
+            <React.Profiler id="test-profiler" onRender={onRender}>
               <Example />
-            </React.unstable_Profiler>,
+            </React.Profiler>,
             {
               unstable_isConcurrent: true,
             },
@@ -1550,11 +1580,11 @@ describe('Profiler', () => {
       expect(onWorkScheduled.mock.calls[0][1] > 0).toBe(true);
 
       // Mount
-      renderer.unstable_flushAll(['first', 'last']);
+      expect(Scheduler).toFlushAndYield(['first', 'last']);
       expect(onRender).toHaveBeenCalledTimes(1);
       let call = onRender.mock.calls[0];
       expect(call[0]).toEqual('test-profiler');
-      expect(call[5]).toEqual(mockNow());
+      expect(call[5]).toEqual(Scheduler.unstable_now());
       if (ReactFeatureFlags.enableSchedulerTracing) {
         expect(call[6]).toMatchInteractions([interactionCreation]);
       }
@@ -1578,70 +1608,74 @@ describe('Profiler', () => {
       onWorkStarted.mockClear();
       onWorkStopped.mockClear();
 
-      advanceTimeBy(3);
+      Scheduler.advanceTime(3);
 
       let didRunCallback = false;
 
       const interactionOne = {
         id: 1,
         name: 'initial event',
-        timestamp: mockNow(),
+        timestamp: Scheduler.unstable_now(),
       };
-      SchedulerTracing.unstable_trace(interactionOne.name, mockNow(), () => {
-        instance.setState({count: 1});
+      SchedulerTracing.unstable_trace(
+        interactionOne.name,
+        Scheduler.unstable_now(),
+        () => {
+          instance.setState({count: 1});
 
-        // Update state again to verify our traced interaction isn't registered twice
-        instance.setState({count: 2});
+          // Update state again to verify our traced interaction isn't registered twice
+          instance.setState({count: 2});
 
-        // The scheduler/tracing package will notify of work started for the default thread,
-        // But React shouldn't notify until it's been flushed.
-        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
-        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
+          // The scheduler/tracing package will notify of work started for the default thread,
+          // But React shouldn't notify until it's been flushed.
+          expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
+          expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
 
-        // Work may have been scheduled multiple times.
-        // We only care that the subscriber was notified at least once.
-        // As for the thread ID- the actual value isn't important, only that there was one.
-        expect(onWorkScheduled).toHaveBeenCalled();
-        expect(onWorkScheduled.mock.calls[0][0]).toMatchInteractions([
-          interactionOne,
-        ]);
-        expect(onWorkScheduled.mock.calls[0][1] > 0).toBe(true);
+          // Work may have been scheduled multiple times.
+          // We only care that the subscriber was notified at least once.
+          // As for the thread ID- the actual value isn't important, only that there was one.
+          expect(onWorkScheduled).toHaveBeenCalled();
+          expect(onWorkScheduled.mock.calls[0][0]).toMatchInteractions([
+            interactionOne,
+          ]);
+          expect(onWorkScheduled.mock.calls[0][1] > 0).toBe(true);
 
-        expect(renderer).toFlushAndYieldThrough(['first']);
-        expect(onRender).not.toHaveBeenCalled();
+          expect(Scheduler).toFlushAndYieldThrough(['first']);
+          expect(onRender).not.toHaveBeenCalled();
 
-        expect(onInteractionTraced).toHaveBeenCalledTimes(2);
-        expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
-          interactionOne,
-        );
-        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
-        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
-        expect(getWorkForReactThreads(onWorkStarted)[0][0]).toMatchInteractions(
-          [interactionOne],
-        );
-        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
+          expect(onInteractionTraced).toHaveBeenCalledTimes(2);
+          expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+            interactionOne,
+          );
+          expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+          expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
+          expect(
+            getWorkForReactThreads(onWorkStarted)[0][0],
+          ).toMatchInteractions([interactionOne]);
+          expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
 
-        renderer.unstable_flushAll(['last']);
-        expect(onRender).toHaveBeenCalledTimes(1);
+          expect(Scheduler).toFlushAndYield(['last']);
+          expect(onRender).toHaveBeenCalledTimes(1);
 
-        call = onRender.mock.calls[0];
-        expect(call[0]).toEqual('test-profiler');
-        expect(call[5]).toEqual(mockNow());
-        if (ReactFeatureFlags.enableSchedulerTracing) {
-          expect(call[6]).toMatchInteractions([interactionOne]);
-        }
+          call = onRender.mock.calls[0];
+          expect(call[0]).toEqual('test-profiler');
+          expect(call[5]).toEqual(Scheduler.unstable_now());
+          if (ReactFeatureFlags.enableSchedulerTracing) {
+            expect(call[6]).toMatchInteractions([interactionOne]);
+          }
 
-        didRunCallback = true;
+          didRunCallback = true;
 
-        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
-        expect(getWorkForReactThreads(onWorkStarted)[0][0]).toMatchInteractions(
-          [interactionOne],
-        );
-        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(1);
-        expect(getWorkForReactThreads(onWorkStopped)[0][0]).toMatchInteractions(
-          [interactionOne],
-        );
-      });
+          expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
+          expect(
+            getWorkForReactThreads(onWorkStarted)[0][0],
+          ).toMatchInteractions([interactionOne]);
+          expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(1);
+          expect(
+            getWorkForReactThreads(onWorkStopped)[0][0],
+          ).toMatchInteractions([interactionOne]);
+        },
+      );
 
       expect(didRunCallback).toBe(true);
 
@@ -1650,16 +1684,16 @@ describe('Profiler', () => {
       onWorkStarted.mockClear();
       onWorkStopped.mockClear();
 
-      advanceTimeBy(17);
+      Scheduler.advanceTime(17);
 
       // Verify that updating state again does not re-log our interaction.
       instance.setState({count: 3});
-      renderer.unstable_flushAll(['first', 'last']);
+      expect(Scheduler).toFlushAndYield(['first', 'last']);
 
       expect(onRender).toHaveBeenCalledTimes(1);
       call = onRender.mock.calls[0];
       expect(call[0]).toEqual('test-profiler');
-      expect(call[5]).toEqual(mockNow());
+      expect(call[5]).toEqual(Scheduler.unstable_now());
       if (ReactFeatureFlags.enableSchedulerTracing) {
         expect(call[6]).toMatchInteractions([]);
       }
@@ -1674,21 +1708,25 @@ describe('Profiler', () => {
 
       onRender.mockClear();
 
-      advanceTimeBy(3);
+      Scheduler.advanceTime(3);
 
       // Verify that root updates are also associated with traced events.
       const interactionTwo = {
         id: 2,
         name: 'root update event',
-        timestamp: mockNow(),
+        timestamp: Scheduler.unstable_now(),
       };
-      SchedulerTracing.unstable_trace(interactionTwo.name, mockNow(), () => {
-        renderer.update(
-          <React.unstable_Profiler id="test-profiler" onRender={onRender}>
-            <Example />
-          </React.unstable_Profiler>,
-        );
-      });
+      SchedulerTracing.unstable_trace(
+        interactionTwo.name,
+        Scheduler.unstable_now(),
+        () => {
+          renderer.update(
+            <React.Profiler id="test-profiler" onRender={onRender}>
+              <Example />
+            </React.Profiler>,
+          );
+        },
+      );
 
       expect(onInteractionTraced).toHaveBeenCalledTimes(3);
       expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
@@ -1710,12 +1748,12 @@ describe('Profiler', () => {
       ]);
       expect(onWorkScheduled.mock.calls[0][1] > 0).toBe(true);
 
-      renderer.unstable_flushAll(['first', 'last']);
+      expect(Scheduler).toFlushAndYield(['first', 'last']);
 
       expect(onRender).toHaveBeenCalledTimes(1);
       call = onRender.mock.calls[0];
       expect(call[0]).toEqual('test-profiler');
-      expect(call[5]).toEqual(mockNow());
+      expect(call[5]).toEqual(Scheduler.unstable_now());
       if (ReactFeatureFlags.enableSchedulerTracing) {
         expect(call[6]).toMatchInteractions([interactionTwo]);
       }
@@ -1743,7 +1781,7 @@ describe('Profiler', () => {
         state = {count: 0};
         render() {
           first = this;
-          ReactTestRenderer.unstable_yield('FirstComponent');
+          Scheduler.yieldValue('FirstComponent');
           return null;
         }
       }
@@ -1752,144 +1790,148 @@ describe('Profiler', () => {
         state = {count: 0};
         render() {
           second = this;
-          ReactTestRenderer.unstable_yield('SecondComponent');
+          Scheduler.yieldValue('SecondComponent');
           return null;
         }
       }
 
-      advanceTimeBy(5);
+      Scheduler.advanceTime(5);
 
       const renderer = ReactTestRenderer.create(
-        <React.unstable_Profiler id="test" onRender={onRender}>
+        <React.Profiler id="test" onRender={onRender}>
           <FirstComponent />
           <SecondComponent />
-        </React.unstable_Profiler>,
+        </React.Profiler>,
         {unstable_isConcurrent: true},
       );
 
       // Initial mount.
-      renderer.unstable_flushAll(['FirstComponent', 'SecondComponent']);
+      expect(Scheduler).toFlushAndYield(['FirstComponent', 'SecondComponent']);
 
       expect(onInteractionTraced).not.toHaveBeenCalled();
       expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
 
       onRender.mockClear();
 
-      advanceTimeBy(100);
+      Scheduler.advanceTime(100);
 
       const interactionLowPri = {
         id: 0,
         name: 'lowPri',
-        timestamp: mockNow(),
+        timestamp: Scheduler.unstable_now(),
       };
 
-      SchedulerTracing.unstable_trace(interactionLowPri.name, mockNow(), () => {
-        // Render a partially update, but don't finish.
-        first.setState({count: 1});
+      SchedulerTracing.unstable_trace(
+        interactionLowPri.name,
+        Scheduler.unstable_now(),
+        () => {
+          // Render a partially update, but don't finish.
+          first.setState({count: 1});
 
-        expect(onWorkScheduled).toHaveBeenCalled();
-        expect(onWorkScheduled.mock.calls[0][0]).toMatchInteractions([
-          interactionLowPri,
-        ]);
+          expect(onWorkScheduled).toHaveBeenCalled();
+          expect(onWorkScheduled.mock.calls[0][0]).toMatchInteractions([
+            interactionLowPri,
+          ]);
 
-        expect(renderer).toFlushAndYieldThrough(['FirstComponent']);
-        expect(onRender).not.toHaveBeenCalled();
+          expect(Scheduler).toFlushAndYieldThrough(['FirstComponent']);
+          expect(onRender).not.toHaveBeenCalled();
 
-        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-        expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
-          interactionLowPri,
-        );
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
-        expect(getWorkForReactThreads(onWorkStarted)[0][0]).toMatchInteractions(
-          [interactionLowPri],
-        );
-        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
-
-        advanceTimeBy(100);
-
-        const interactionHighPri = {
-          id: 1,
-          name: 'highPri',
-          timestamp: mockNow(),
-        };
-
-        // Interrupt with higher priority work.
-        // This simulates a total of 37ms of actual render time.
-        renderer.unstable_flushSync(() => {
-          SchedulerTracing.unstable_trace(
-            interactionHighPri.name,
-            mockNow(),
-            () => {
-              second.setState({count: 1});
-
-              expect(onInteractionTraced).toHaveBeenCalledTimes(2);
-              expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
-                interactionHighPri,
-              );
-              expect(
-                onInteractionScheduledWorkCompleted,
-              ).not.toHaveBeenCalled();
-
-              expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
-              expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
-            },
+          expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+          expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+            interactionLowPri,
           );
-        });
-        expect(ReactTestRenderer).toHaveYielded(['SecondComponent']);
+          expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+          expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
+          expect(
+            getWorkForReactThreads(onWorkStarted)[0][0],
+          ).toMatchInteractions([interactionLowPri]);
+          expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
 
-        expect(onInteractionTraced).toHaveBeenCalledTimes(2);
-        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
-        expect(
-          onInteractionScheduledWorkCompleted,
-        ).toHaveBeenLastNotifiedOfInteraction(interactionHighPri);
+          Scheduler.advanceTime(100);
 
-        // Verify the high priority update was associated with the high priority event.
-        expect(onRender).toHaveBeenCalledTimes(1);
-        let call = onRender.mock.calls[0];
-        expect(call[0]).toEqual('test');
-        expect(call[5]).toEqual(mockNow());
-        expect(call[6]).toMatchInteractions(
-          ReactFeatureFlags.enableSchedulerTracing
-            ? [interactionLowPri, interactionHighPri]
-            : [],
-        );
+          const interactionHighPri = {
+            id: 1,
+            name: 'highPri',
+            timestamp: Scheduler.unstable_now(),
+          };
 
-        onRender.mockClear();
+          // Interrupt with higher priority work.
+          // This simulates a total of 37ms of actual render time.
+          renderer.unstable_flushSync(() => {
+            SchedulerTracing.unstable_trace(
+              interactionHighPri.name,
+              Scheduler.unstable_now(),
+              () => {
+                second.setState({count: 1});
 
-        advanceTimeBy(100);
+                expect(onInteractionTraced).toHaveBeenCalledTimes(2);
+                expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+                  interactionHighPri,
+                );
+                expect(
+                  onInteractionScheduledWorkCompleted,
+                ).not.toHaveBeenCalled();
 
-        // Resume the original low priority update, with rebased state.
-        // Verify the low priority update was retained.
-        renderer.unstable_flushAll(['FirstComponent']);
-        expect(onRender).toHaveBeenCalledTimes(1);
-        call = onRender.mock.calls[0];
-        expect(call[0]).toEqual('test');
-        expect(call[5]).toEqual(mockNow());
-        expect(call[6]).toMatchInteractions(
-          ReactFeatureFlags.enableSchedulerTracing ? [interactionLowPri] : [],
-        );
+                expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
+                expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
+              },
+            );
+          });
+          expect(Scheduler).toHaveYielded(['SecondComponent']);
 
-        expect(onInteractionTraced).toHaveBeenCalledTimes(2);
-        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+          expect(onInteractionTraced).toHaveBeenCalledTimes(2);
+          expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+          expect(
+            onInteractionScheduledWorkCompleted,
+          ).toHaveBeenLastNotifiedOfInteraction(interactionHighPri);
 
-        // Work might be started multiple times before being completed.
-        // This is okay; it's part of the scheduler/tracing contract.
-        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(3);
-        expect(getWorkForReactThreads(onWorkStarted)[1][0]).toMatchInteractions(
-          [interactionLowPri, interactionHighPri],
-        );
-        expect(getWorkForReactThreads(onWorkStarted)[2][0]).toMatchInteractions(
-          [interactionLowPri],
-        );
-        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(2);
-        expect(getWorkForReactThreads(onWorkStopped)[0][0]).toMatchInteractions(
-          [interactionLowPri, interactionHighPri],
-        );
-        expect(getWorkForReactThreads(onWorkStopped)[1][0]).toMatchInteractions(
-          [interactionLowPri],
-        );
-      });
+          // Verify the high priority update was associated with the high priority event.
+          expect(onRender).toHaveBeenCalledTimes(1);
+          let call = onRender.mock.calls[0];
+          expect(call[0]).toEqual('test');
+          expect(call[5]).toEqual(Scheduler.unstable_now());
+          expect(call[6]).toMatchInteractions(
+            ReactFeatureFlags.enableSchedulerTracing
+              ? [interactionLowPri, interactionHighPri]
+              : [],
+          );
+
+          onRender.mockClear();
+
+          Scheduler.advanceTime(100);
+
+          // Resume the original low priority update, with rebased state.
+          // Verify the low priority update was retained.
+          expect(Scheduler).toFlushAndYield(['FirstComponent']);
+          expect(onRender).toHaveBeenCalledTimes(1);
+          call = onRender.mock.calls[0];
+          expect(call[0]).toEqual('test');
+          expect(call[5]).toEqual(Scheduler.unstable_now());
+          expect(call[6]).toMatchInteractions(
+            ReactFeatureFlags.enableSchedulerTracing ? [interactionLowPri] : [],
+          );
+
+          expect(onInteractionTraced).toHaveBeenCalledTimes(2);
+          expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+
+          // Work might be started multiple times before being completed.
+          // This is okay; it's part of the scheduler/tracing contract.
+          expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(3);
+          expect(
+            getWorkForReactThreads(onWorkStarted)[1][0],
+          ).toMatchInteractions([interactionLowPri, interactionHighPri]);
+          expect(
+            getWorkForReactThreads(onWorkStarted)[2][0],
+          ).toMatchInteractions([interactionLowPri]);
+          expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(2);
+          expect(
+            getWorkForReactThreads(onWorkStopped)[0][0],
+          ).toMatchInteractions([interactionLowPri, interactionHighPri]);
+          expect(
+            getWorkForReactThreads(onWorkStopped)[1][0],
+          ).toMatchInteractions([interactionLowPri]);
+        },
+      );
 
       expect(onInteractionTraced).toHaveBeenCalledTimes(2);
       expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
@@ -1907,18 +1949,18 @@ describe('Profiler', () => {
           count: 0,
         };
         componentDidMount() {
-          advanceTimeBy(10); // Advance timer to keep commits separate
+          Scheduler.advanceTime(10); // Advance timer to keep commits separate
           this.setState({count: 1}); // Intentional cascading update
         }
         componentDidUpdate(prevProps, prevState) {
           if (this.state.count === 2 && prevState.count === 1) {
-            advanceTimeBy(10); // Advance timer to keep commits separate
+            Scheduler.advanceTime(10); // Advance timer to keep commits separate
             this.setState({count: 3}); // Intentional cascading update
           }
         }
         render() {
           instance = this;
-          ReactTestRenderer.unstable_yield('Example:' + this.state.count);
+          Scheduler.yieldValue('Example:' + this.state.count);
           return null;
         }
       }
@@ -1926,21 +1968,24 @@ describe('Profiler', () => {
       const interactionOne = {
         id: 0,
         name: 'componentDidMount test',
-        timestamp: mockNow(),
+        timestamp: Scheduler.unstable_now(),
       };
 
       // Initial mount.
       const onRender = jest.fn();
-      let firstCommitTime = mockNow();
-      let renderer;
-      SchedulerTracing.unstable_trace(interactionOne.name, mockNow(), () => {
-        renderer = ReactTestRenderer.create(
-          <React.unstable_Profiler id="test" onRender={onRender}>
-            <Example />
-          </React.unstable_Profiler>,
-          {unstable_isConcurrent: true},
-        );
-      });
+      let firstCommitTime = Scheduler.unstable_now();
+      SchedulerTracing.unstable_trace(
+        interactionOne.name,
+        Scheduler.unstable_now(),
+        () => {
+          ReactTestRenderer.create(
+            <React.Profiler id="test" onRender={onRender}>
+              <Example />
+            </React.Profiler>,
+            {unstable_isConcurrent: true},
+          );
+        },
+      );
 
       expect(onInteractionTraced).toHaveBeenCalledTimes(1);
       expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
@@ -1950,7 +1995,7 @@ describe('Profiler', () => {
       expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
       expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
 
-      renderer.unstable_flushAll(['Example:0', 'Example:1']);
+      expect(Scheduler).toFlushAndYield(['Example:0', 'Example:1']);
 
       expect(onInteractionTraced).toHaveBeenCalledTimes(1);
       expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
@@ -1981,7 +2026,7 @@ describe('Profiler', () => {
       );
       call = onRender.mock.calls[1];
       expect(call[0]).toEqual('test');
-      expect(call[5]).toEqual(mockNow());
+      expect(call[5]).toEqual(Scheduler.unstable_now());
       expect(call[6]).toMatchInteractions(
         ReactFeatureFlags.enableSchedulerTracing ? [interactionOne] : [],
       );
@@ -1991,13 +2036,17 @@ describe('Profiler', () => {
       const interactionTwo = {
         id: 1,
         name: 'componentDidUpdate test',
-        timestamp: mockNow(),
+        timestamp: Scheduler.unstable_now(),
       };
 
       // Cause an traced, async update
-      SchedulerTracing.unstable_trace(interactionTwo.name, mockNow(), () => {
-        instance.setState({count: 2});
-      });
+      SchedulerTracing.unstable_trace(
+        interactionTwo.name,
+        Scheduler.unstable_now(),
+        () => {
+          instance.setState({count: 2});
+        },
+      );
       expect(onRender).not.toHaveBeenCalled();
       expect(onInteractionTraced).toHaveBeenCalledTimes(2);
       expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
@@ -2007,12 +2056,12 @@ describe('Profiler', () => {
       expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(2);
       expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(2);
 
-      advanceTimeBy(5);
+      Scheduler.advanceTime(5);
 
       // Flush async work (outside of traced scope)
       // This will cause an intentional cascading update from did-update
-      firstCommitTime = mockNow();
-      renderer.unstable_flushAll(['Example:2', 'Example:3']);
+      firstCommitTime = Scheduler.unstable_now();
+      expect(Scheduler).toFlushAndYield(['Example:2', 'Example:3']);
 
       expect(onInteractionTraced).toHaveBeenCalledTimes(2);
       expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
@@ -2044,7 +2093,7 @@ describe('Profiler', () => {
       );
       call = onRender.mock.calls[1];
       expect(call[0]).toEqual('test');
-      expect(call[5]).toEqual(mockNow());
+      expect(call[5]).toEqual(Scheduler.unstable_now());
       expect(call[6]).toMatchInteractions(
         ReactFeatureFlags.enableSchedulerTracing ? [interactionTwo] : [],
       );
@@ -2054,16 +2103,20 @@ describe('Profiler', () => {
       const interactionThree = {
         id: 2,
         name: 'setState callback test',
-        timestamp: mockNow(),
+        timestamp: Scheduler.unstable_now(),
       };
 
       // Cause a cascading update from the setState callback
       function callback() {
         instance.setState({count: 6});
       }
-      SchedulerTracing.unstable_trace(interactionThree.name, mockNow(), () => {
-        instance.setState({count: 5}, callback);
-      });
+      SchedulerTracing.unstable_trace(
+        interactionThree.name,
+        Scheduler.unstable_now(),
+        () => {
+          instance.setState({count: 5}, callback);
+        },
+      );
       expect(onRender).not.toHaveBeenCalled();
 
       expect(onInteractionTraced).toHaveBeenCalledTimes(3);
@@ -2076,8 +2129,8 @@ describe('Profiler', () => {
 
       // Flush async work (outside of traced scope)
       // This will cause an intentional cascading update from the setState callback
-      firstCommitTime = mockNow();
-      renderer.unstable_flushAll(['Example:5', 'Example:6']);
+      firstCommitTime = Scheduler.unstable_now();
+      expect(Scheduler).toFlushAndYield(['Example:5', 'Example:6']);
 
       expect(onInteractionTraced).toHaveBeenCalledTimes(3);
       expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(3);
@@ -2109,7 +2162,7 @@ describe('Profiler', () => {
       );
       call = onRender.mock.calls[1];
       expect(call[0]).toEqual('test');
-      expect(call[5]).toEqual(mockNow());
+      expect(call[5]).toEqual(Scheduler.unstable_now());
       expect(call[6]).toMatchInteractions(
         ReactFeatureFlags.enableSchedulerTracing ? [interactionThree] : [],
       );
@@ -2121,7 +2174,7 @@ describe('Profiler', () => {
 
       class Child extends React.Component {
         render() {
-          ReactTestRenderer.unstable_yield('Child:', this.props.count);
+          Scheduler.yieldValue('Child:' + this.props.count);
           return null;
         }
       }
@@ -2133,30 +2186,34 @@ describe('Profiler', () => {
         render() {
           parentInstance = this;
           return (
-            <React.unstable_Profiler id="test-profiler" onRender={onRender}>
+            <React.Profiler id="test-profiler" onRender={onRender}>
               <Child count={this.state.count} />
-            </React.unstable_Profiler>
+            </React.Profiler>
           );
         }
       }
 
-      advanceTimeBy(1);
+      Scheduler.advanceTime(1);
 
-      const renderer = ReactTestRenderer.create(<Parent />, {
+      ReactTestRenderer.create(<Parent />, {
         unstable_isConcurrent: true,
       });
-      renderer.unstable_flushAll(['Child:0']);
+      expect(Scheduler).toFlushAndYield(['Child:0']);
       onRender.mockClear();
 
       const interaction = {
         id: 0,
         name: 'parent interaction',
-        timestamp: mockNow(),
+        timestamp: Scheduler.unstable_now(),
       };
 
-      SchedulerTracing.unstable_trace(interaction.name, mockNow(), () => {
-        parentInstance.setState({count: 1});
-      });
+      SchedulerTracing.unstable_trace(
+        interaction.name,
+        Scheduler.unstable_now(),
+        () => {
+          parentInstance.setState({count: 1});
+        },
+      );
 
       expect(onInteractionTraced).toHaveBeenCalledTimes(1);
       expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
@@ -2167,7 +2224,7 @@ describe('Profiler', () => {
       expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
 
       expect(onRender).not.toHaveBeenCalled();
-      renderer.unstable_flushAll(['Child:1']);
+      expect(Scheduler).toFlushAndYield(['Child:1']);
       expect(onRender).toHaveBeenCalledTimes(1);
       let call = onRender.mock.calls[0];
       expect(call[0]).toEqual('test-profiler');
@@ -2204,29 +2261,33 @@ describe('Profiler', () => {
         const interaction = {
           id: 0,
           name: 'initial render',
-          timestamp: mockNow(),
+          timestamp: Scheduler.unstable_now(),
         };
 
         const monkey = React.createRef();
         class Monkey extends React.Component {
           render() {
-            ReactNoop.yield('Monkey');
+            Scheduler.yieldValue('Monkey');
             return null;
           }
         }
 
         const onRender = jest.fn();
-        SchedulerTracing.unstable_trace(interaction.name, mockNow(), () => {
-          ReactNoop.render(
-            <React.unstable_Profiler id="test-profiler" onRender={onRender}>
-              <React.Suspense fallback={<Text text="Loading..." />}>
-                <AsyncText text="Async" ms={20000} />
-              </React.Suspense>
-              <Text text="Sync" />
-              <Monkey ref={monkey} />
-            </React.unstable_Profiler>,
-          );
-        });
+        SchedulerTracing.unstable_trace(
+          interaction.name,
+          Scheduler.unstable_now(),
+          () => {
+            ReactNoop.render(
+              <React.Profiler id="test-profiler" onRender={onRender}>
+                <React.Suspense fallback={<Text text="Loading..." />}>
+                  <AsyncText text="Async" ms={20000} />
+                </React.Suspense>
+                <Text text="Sync" />
+                <Monkey ref={monkey} />
+              </React.Profiler>,
+            );
+          },
+        );
 
         expect(onInteractionTraced).toHaveBeenCalledTimes(1);
         expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
@@ -2236,7 +2297,7 @@ describe('Profiler', () => {
         expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
         expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
 
-        expect(ReactNoop.flush()).toEqual([
+        expect(Scheduler).toFlushAndYield([
           'Suspend [Async]',
           'Text [Loading...]',
           'Text [Sync]',
@@ -2252,7 +2313,7 @@ describe('Profiler', () => {
         await awaitableAdvanceTimers(10000);
         // No additional rendering work is required, since we already prepared
         // the placeholder.
-        expect(ReactNoop.flushExpired()).toEqual([]);
+        expect(Scheduler).toHaveYielded([]);
         // Should have committed the placeholder.
         expect(ReactNoop.getChildrenAsJSX()).toEqual('Loading...Sync');
         expect(onRender).toHaveBeenCalledTimes(1);
@@ -2268,15 +2329,13 @@ describe('Profiler', () => {
 
         // An unrelated update in the middle shouldn't affect things...
         monkey.current.forceUpdate();
-        expect(ReactNoop.flush()).toEqual(['Monkey']);
+        expect(Scheduler).toFlushAndYield(['Monkey']);
         expect(onRender).toHaveBeenCalledTimes(2);
 
         // Once the promise resolves, we render the suspended view
         await awaitableAdvanceTimers(10000);
-        expect(ReactNoop.flush()).toEqual([
-          'Promise resolved [Async]',
-          'AsyncText [Async]',
-        ]);
+        expect(Scheduler).toHaveYielded(['Promise resolved [Async]']);
+        expect(Scheduler).toFlushAndYield(['AsyncText [Async]']);
         expect(ReactNoop.getChildrenAsJSX()).toEqual('AsyncSync');
         expect(onRender).toHaveBeenCalledTimes(3);
 
@@ -2297,7 +2356,7 @@ describe('Profiler', () => {
         const interaction = {
           id: 0,
           name: 'initial render',
-          timestamp: mockNow(),
+          timestamp: Scheduler.unstable_now(),
         };
 
         const onRender = jest.fn();
@@ -2306,22 +2365,24 @@ describe('Profiler', () => {
           interaction.timestamp,
           () => {
             ReactTestRenderer.create(
-              <React.unstable_Profiler id="app" onRender={onRender}>
-                <React.Suspense
-                  maxDuration={1000}
-                  fallback={<Text text="loading" />}>
-                  <AsyncText text="loaded" ms={2000} />
+              <React.Profiler id="app" onRender={onRender}>
+                <React.Suspense fallback={<Text text="loading" />}>
+                  <AsyncText text="loaded" ms={500} />
                 </React.Suspense>
-              </React.unstable_Profiler>,
+              </React.Profiler>,
             );
           },
         );
+
+        expect(Scheduler).toHaveYielded(['Suspend [loaded]', 'Text [loading]']);
 
         expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
 
         jest.runAllTimers();
         await resourcePromise;
 
+        expect(Scheduler).toHaveYielded(['Promise resolved [loaded]']);
+        expect(Scheduler).toFlushExpired(['AsyncText [loaded]']);
         expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
         expect(
           onInteractionScheduledWorkCompleted,
@@ -2351,7 +2412,7 @@ describe('Profiler', () => {
         const interaction = {
           id: 0,
           name: 'initial render',
-          timestamp: mockNow(),
+          timestamp: Scheduler.unstable_now(),
         };
 
         const onRender = jest.fn();
@@ -2360,21 +2421,24 @@ describe('Profiler', () => {
           interaction.timestamp,
           () => {
             ReactTestRenderer.create(
-              <React.unstable_Profiler id="app" onRender={onRender}>
-                <React.Suspense
-                  maxDuration={1000}
-                  fallback={<Text text="loading" />}>
-                  <AsyncComponentWithCascadingWork text="loaded" ms={2000} />
+              <React.Profiler id="app" onRender={onRender}>
+                <React.Suspense fallback={<Text text="loading" />}>
+                  <AsyncComponentWithCascadingWork text="loaded" ms={500} />
                 </React.Suspense>
-              </React.unstable_Profiler>,
+              </React.Profiler>,
             );
           },
         );
 
         expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
 
+        expect(Scheduler).toHaveYielded(['Text [loading]']);
+
         jest.runAllTimers();
         await resourcePromise;
+
+        expect(Scheduler).toHaveYielded(['Promise resolved [loaded]']);
+        expect(Scheduler).toFlushExpired([]);
 
         expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
 
@@ -2390,23 +2454,20 @@ describe('Profiler', () => {
         const interaction = {
           id: 0,
           name: 'initial render',
-          timestamp: mockNow(),
+          timestamp: Scheduler.unstable_now(),
         };
 
         const onRender = jest.fn();
-        let renderer;
         SchedulerTracing.unstable_trace(
           interaction.name,
           interaction.timestamp,
           () => {
-            renderer = ReactTestRenderer.create(
-              <React.unstable_Profiler id="app" onRender={onRender}>
-                <React.Suspense
-                  maxDuration={1000}
-                  fallback={<Text text="loading" />}>
-                  <AsyncText text="loaded" ms={2000} />
+            ReactTestRenderer.create(
+              <React.Profiler id="app" onRender={onRender}>
+                <React.Suspense fallback={<Text text="loading" />}>
+                  <AsyncText text="loaded" ms={500} />
                 </React.Suspense>
-              </React.unstable_Profiler>,
+              </React.Profiler>,
               {
                 unstable_isConcurrent: true,
               },
@@ -2414,20 +2475,20 @@ describe('Profiler', () => {
           },
         );
 
-        advanceTimeBy(1500);
-        await awaitableAdvanceTimers(1500);
+        Scheduler.advanceTime(400);
+        await awaitableAdvanceTimers(400);
 
-        expect(renderer).toFlushAndYield([
+        expect(Scheduler).toFlushAndYield([
           'Suspend [loaded]',
           'Text [loading]',
         ]);
         expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
 
-        advanceTimeBy(2500);
-        await awaitableAdvanceTimers(2500);
+        Scheduler.advanceTime(500);
+        await awaitableAdvanceTimers(500);
 
-        expect(ReactTestRenderer).toHaveYielded(['Promise resolved [loaded]']);
-        expect(renderer).toFlushAndYield(['AsyncText [loaded]']);
+        expect(Scheduler).toHaveYielded(['Promise resolved [loaded]']);
+        expect(Scheduler).toFlushAndYield(['AsyncText [loaded]']);
         expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
         expect(
           onInteractionScheduledWorkCompleted,
@@ -2438,34 +2499,35 @@ describe('Profiler', () => {
         const interaction = {
           id: 0,
           name: 'initial render',
-          timestamp: mockNow(),
+          timestamp: Scheduler.unstable_now(),
         };
 
         const onRender = jest.fn();
-        let renderer;
         SchedulerTracing.unstable_trace(
           interaction.name,
           interaction.timestamp,
           () => {
-            renderer = ReactTestRenderer.create(
-              <React.unstable_Profiler id="app" onRender={onRender}>
-                <React.Suspense
-                  maxDuration={2000}
-                  fallback={<Text text="loading" />}>
-                  <AsyncText text="loaded" ms={1000} />
+            ReactTestRenderer.create(
+              <React.Profiler id="app" onRender={onRender}>
+                <React.Suspense fallback={<Text text="loading" />}>
+                  <AsyncText text="loaded" ms={100} />
                 </React.Suspense>
-              </React.unstable_Profiler>,
+              </React.Profiler>,
               {unstable_isConcurrent: true},
             );
           },
         );
-        renderer.unstable_flushAll();
+        expect(Scheduler).toFlushAndYield([
+          'Suspend [loaded]',
+          'Text [loading]',
+        ]);
 
         expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
 
-        jest.advanceTimersByTime(1000);
+        jest.advanceTimersByTime(100);
         await resourcePromise;
-        renderer.unstable_flushAll();
+        expect(Scheduler).toHaveYielded(['Promise resolved [loaded]']);
+        expect(Scheduler).toFlushAndYield(['AsyncText [loaded]']);
 
         expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
         expect(
@@ -2477,7 +2539,7 @@ describe('Profiler', () => {
         const initialRenderInteraction = {
           id: 0,
           name: 'initial render',
-          timestamp: mockNow(),
+          timestamp: Scheduler.unstable_now(),
         };
 
         const onRender = jest.fn();
@@ -2487,14 +2549,12 @@ describe('Profiler', () => {
           initialRenderInteraction.timestamp,
           () => {
             renderer = ReactTestRenderer.create(
-              <React.unstable_Profiler id="app" onRender={onRender}>
-                <React.Suspense
-                  maxDuration={2000}
-                  fallback={<Text text="loading" />}>
-                  <AsyncText text="loaded" ms={1000} />
+              <React.Profiler id="app" onRender={onRender}>
+                <React.Suspense fallback={<Text text="loading" />}>
+                  <AsyncText text="loaded" ms={100} />
                 </React.Suspense>
                 <Text text="initial" />
-              </React.unstable_Profiler>,
+              </React.Profiler>,
             );
           },
         );
@@ -2510,7 +2570,7 @@ describe('Profiler', () => {
         const highPriUpdateInteraction = {
           id: 1,
           name: 'hiPriUpdate',
-          timestamp: mockNow(),
+          timestamp: Scheduler.unstable_now(),
         };
 
         const originalPromise = resourcePromise;
@@ -2521,18 +2581,24 @@ describe('Profiler', () => {
             highPriUpdateInteraction.timestamp,
             () => {
               renderer.update(
-                <React.unstable_Profiler id="app" onRender={onRender}>
-                  <React.Suspense
-                    maxDuration={2000}
-                    fallback={<Text text="loading" />}>
-                    <AsyncText text="loaded" ms={1000} />
+                <React.Profiler id="app" onRender={onRender}>
+                  <React.Suspense fallback={<Text text="loading" />}>
+                    <AsyncText text="loaded" ms={100} />
                   </React.Suspense>
                   <Text text="updated" />
-                </React.unstable_Profiler>,
+                </React.Profiler>,
               );
             },
           );
         });
+        expect(Scheduler).toHaveYielded([
+          'Suspend [loaded]',
+          'Text [loading]',
+          'Text [initial]',
+          'Suspend [loaded]',
+          'Text [loading]',
+          'Text [updated]',
+        ]);
         expect(renderer.toJSON()).toEqual(['loading', 'updated']);
 
         expect(onRender).toHaveBeenCalledTimes(1);
@@ -2543,9 +2609,12 @@ describe('Profiler', () => {
 
         expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
 
-        advanceTimeBy(1000);
-        jest.advanceTimersByTime(1000);
+        Scheduler.advanceTime(100);
+        jest.advanceTimersByTime(100);
         await originalPromise;
+
+        expect(Scheduler).toHaveYielded(['Promise resolved [loaded]']);
+        expect(Scheduler).toFlushExpired(['AsyncText [loaded]']);
         expect(renderer.toJSON()).toEqual(['loaded', 'updated']);
 
         expect(onRender).toHaveBeenCalledTimes(1);
@@ -2563,7 +2632,7 @@ describe('Profiler', () => {
         const initialRenderInteraction = {
           id: 0,
           name: 'initial render',
-          timestamp: mockNow(),
+          timestamp: Scheduler.unstable_now(),
         };
 
         const onRender = jest.fn();
@@ -2573,19 +2642,17 @@ describe('Profiler', () => {
           initialRenderInteraction.timestamp,
           () => {
             renderer = ReactTestRenderer.create(
-              <React.unstable_Profiler id="app" onRender={onRender}>
-                <React.Suspense
-                  maxDuration={2000}
-                  fallback={<Text text="loading" />}>
-                  <AsyncText text="loaded" ms={1000} />
+              <React.Profiler id="app" onRender={onRender}>
+                <React.Suspense fallback={<Text text="loading" />}>
+                  <AsyncText text="loaded" ms={100} />
                 </React.Suspense>
                 <Text text="initial" />
-              </React.unstable_Profiler>,
+              </React.Profiler>,
               {unstable_isConcurrent: true},
             );
           },
         );
-        expect(renderer).toFlushAndYield([
+        expect(Scheduler).toFlushAndYield([
           'Suspend [loaded]',
           'Text [loading]',
           'Text [initial]',
@@ -2594,13 +2661,13 @@ describe('Profiler', () => {
         expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
         expect(onRender).not.toHaveBeenCalled();
 
-        advanceTimeBy(500);
-        jest.advanceTimersByTime(500);
+        Scheduler.advanceTime(50);
+        jest.advanceTimersByTime(50);
 
         const highPriUpdateInteraction = {
           id: 1,
           name: 'hiPriUpdate',
-          timestamp: mockNow(),
+          timestamp: Scheduler.unstable_now(),
         };
 
         const originalPromise = resourcePromise;
@@ -2611,19 +2678,17 @@ describe('Profiler', () => {
             highPriUpdateInteraction.timestamp,
             () => {
               renderer.update(
-                <React.unstable_Profiler id="app" onRender={onRender}>
-                  <React.Suspense
-                    maxDuration={2000}
-                    fallback={<Text text="loading" />}>
-                    <AsyncText text="loaded" ms={1000} />
+                <React.Profiler id="app" onRender={onRender}>
+                  <React.Suspense fallback={<Text text="loading" />}>
+                    <AsyncText text="loaded" ms={100} />
                   </React.Suspense>
                   <Text text="updated" />
-                </React.unstable_Profiler>,
+                </React.Profiler>,
               );
             },
           );
         });
-        expect(ReactTestRenderer).toHaveYielded([
+        expect(Scheduler).toHaveYielded([
           'Suspend [loaded]',
           'Text [loading]',
           'Text [updated]',
@@ -2638,11 +2703,11 @@ describe('Profiler', () => {
 
         expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(0);
 
-        advanceTimeBy(500);
-        jest.advanceTimersByTime(500);
+        Scheduler.advanceTime(50);
+        jest.advanceTimersByTime(50);
         await originalPromise;
-        expect(ReactTestRenderer).toHaveYielded(['Promise resolved [loaded]']);
-        expect(renderer).toFlushAndYield(['AsyncText [loaded]']);
+        expect(Scheduler).toHaveYielded(['Promise resolved [loaded]']);
+        expect(Scheduler).toFlushAndYield(['AsyncText [loaded]']);
         expect(renderer.toJSON()).toEqual(['loaded', 'updated']);
 
         expect(onRender).toHaveBeenCalledTimes(1);
