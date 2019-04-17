@@ -31,8 +31,11 @@ env.beforeEach(() => {
   const agent = new Agent();
   agent.addBridge(bridge);
 
-  initBackend(global.__REACT_DEVTOOLS_GLOBAL_HOOK__, agent, global);
+  const hook = global.__REACT_DEVTOOLS_GLOBAL_HOOK__;
 
+  initBackend(hook, agent, global);
+
+  global.agent = agent;
   global.bridge = bridge;
   global.store = new Store(bridge);
 });

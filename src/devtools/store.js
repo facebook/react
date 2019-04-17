@@ -315,9 +315,8 @@ export default class Store extends EventEmitter {
 
     // Find the element in the tree using the weight of each node...
     // Skip over the root itself, because roots aren't visible in the Elements tree.
-    const firstChildID = ((root: any): Element).children[0];
-    let currentElement = ((this._idToElement.get(firstChildID): any): Element);
-    let currentWeight = rootWeight;
+    let currentElement = ((root: any): Element);
+    let currentWeight = rootWeight - 1;
     while (index !== currentWeight) {
       const numChildren = currentElement.children.length;
       for (let i = 0; i < numChildren; i++) {
@@ -449,25 +448,66 @@ export default class Store extends EventEmitter {
     // We do this to avoid mismatches on e.g. CommitTreeBuilder that would cause errors.
   }
 
+  // TODO Maybe split this into two methods: expand() and collapse()
   toggleIsCollapsed(id: number, isCollapsed: boolean): void {
     const element = this.getElementByID(id);
     if (element !== null) {
-      if (element.type === ElementTypeRoot) {
-        throw Error('Root nodes cannot be collapsed');
+      if (isCollapsed) {
+        if (element.type === ElementTypeRoot) {
+          throw Error('Root nodes cannot be collapsed');
+        }
+
+        if (element.isCollapsed) {
+          return;
+        }
+
+        element.isCollapsed = true;
+
+        const weightDelta = 1 - element.weight;
+
+        let parentElement = ((this._idToElement.get(
+          element.parentID
+        ): any): Element);
+        while (parentElement != null) {
+          parentElement.weight += weightDelta;
+          parentElement = this._idToElement.get(parentElement.parentID);
+        }
+      } else {
+        let currentElement = element;
+        while (currentElement != null) {
+          const oldWeight = currentElement.isCollapsed
+            ? 1
+            : currentElement.weight;
+          currentElement.isCollapsed = false;
+          const newWeight = currentElement.isCollapsed
+            ? 1
+            : currentElement.weight;
+          const weightDelta = newWeight - oldWeight;
+
+          let parentElement = ((this._idToElement.get(
+            currentElement.parentID
+          ): any): Element);
+          while (parentElement != null) {
+            parentElement.weight += weightDelta;
+            if (parentElement.isCollapsed) {
+              break;
+            }
+            parentElement = this._idToElement.get(parentElement.parentID);
+          }
+
+          currentElement =
+            currentElement.parentID !== 0
+              ? this.getElementByID(currentElement.parentID)
+              : null;
+        }
       }
 
-      const oldWeight = element.isCollapsed ? 1 : element.weight;
-      element.isCollapsed = isCollapsed;
-      const newWeight = element.isCollapsed ? 1 : element.weight;
-      const weightDelta = newWeight - oldWeight;
-
-      this._weightAcrossRoots += weightDelta;
-
-      let parentElement = this._idToElement.get(element.parentID);
-      while (parentElement != null) {
-        parentElement.weight += weightDelta;
-        parentElement = this._idToElement.get(parentElement.parentID);
-      }
+      let weightAcrossRoots = 0;
+      this._roots.forEach(rootID => {
+        const { weight } = ((this.getElementByID(rootID): any): Element);
+        weightAcrossRoots += weight;
+      });
+      this._weightAcrossRoots = weightAcrossRoots;
 
       // The Tree context's search reducer expects an explicit list of ids for nodes that were added or removed.
       // In this  case, we can pass it empty arrays since nodes in a collapsed tree are still there (just hidden).
@@ -867,18 +907,22 @@ export default class Store extends EventEmitter {
 
   // Used for Jest snapshot testing.
   // May also be useful for visually debugging the tree, so it lives on the Store.
-  __toSnapshot = () => {
+  __toSnapshot = (includeWeight: boolean = false) => {
     const snapshotLines = [];
 
     let rootWeight = 0;
 
     this._roots.forEach(rootID => {
-      snapshotLines.push('[root]');
-
       const { weight } = ((this.getElementByID(rootID): any): Element);
+
+      snapshotLines.push('[root]' + (includeWeight ? ` (${weight})` : ''));
 
       for (let i = rootWeight; i < rootWeight + weight; i++) {
         const element = ((this.getElementAtIndex(i): any): Element);
+
+        if (element == null) {
+          throw Error(`No element for index ${i}`);
+        }
 
         let prefix = ' ';
         if (element.children.length > 0) {
@@ -890,14 +934,28 @@ export default class Store extends EventEmitter {
           key = ` key="${element.key}"`;
         }
 
+        let suffix = '';
+        if (includeWeight) {
+          suffix = ` (${element.isCollapsed ? 1 : element.weight})`;
+        }
+
         snapshotLines.push(
           `${'  '.repeat(element.depth + 1)}${prefix} <${element.displayName ||
-            'null'}${key}>`
+            'null'}${key}>${suffix}`
         );
       }
 
       rootWeight += weight;
     });
+
+    // Make sure the pretty-printed test align with the Store's reported number of total rows.
+    if (rootWeight !== this._weightAcrossRoots) {
+      throw Error(
+        `Inconsistent store state. Individual root weights (${rootWeight}) do not match total weight (${
+          this._weightAcrossRoots
+        })`
+      );
+    }
 
     return snapshotLines.join('\n');
   };

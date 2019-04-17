@@ -179,39 +179,82 @@ exports[`Store collapseNodesByDefault:true should filter DOM nodes from the stor
     ▸ <Parent>
 `;
 
-exports[`Store collapseNodesByDefault:true should support collapsing parts of the tree: 1: mount 1`] = `
+exports[`Store collapseNodesByDefault:true should support expanding deep parts of the tree: 1: mount 1`] = `
+[root]
+  ▸ <Wrapper>
+`;
+
+exports[`Store collapseNodesByDefault:true should support expanding deep parts of the tree: 2: expand deepest node 1`] = `
+[root]
+  ▾ <Wrapper>
+    ▾ <Nested>
+      ▾ <Nested>
+        ▾ <Nested>
+            <Nested>
+`;
+
+exports[`Store collapseNodesByDefault:true should support expanding deep parts of the tree: 3: collapse root 1`] = `
+[root]
+  ▸ <Wrapper>
+`;
+
+exports[`Store collapseNodesByDefault:true should support expanding deep parts of the tree: 4: expand root 1`] = `
+[root]
+  ▾ <Wrapper>
+    ▾ <Nested>
+      ▾ <Nested>
+        ▾ <Nested>
+            <Nested>
+`;
+
+exports[`Store collapseNodesByDefault:true should support expanding deep parts of the tree: 5: collapse middle node 1`] = `
+[root]
+  ▾ <Wrapper>
+    ▸ <Nested>
+`;
+
+exports[`Store collapseNodesByDefault:true should support expanding deep parts of the tree: 6: expand middle node 1`] = `
+[root]
+  ▾ <Wrapper>
+    ▾ <Nested>
+      ▾ <Nested>
+        ▾ <Nested>
+            <Nested>
+`;
+
+exports[`Store collapseNodesByDefault:true should support expanding parts of the tree: 1: mount 1`] = `
 [root]
   ▸ <Grandparent>
 `;
 
-exports[`Store collapseNodesByDefault:true should support collapsing parts of the tree: 2: expand Grandparent 1`] = `
+exports[`Store collapseNodesByDefault:true should support expanding parts of the tree: 2: expand Grandparent 1`] = `
 [root]
   ▾ <Grandparent>
     ▸ <Parent>
     ▸ <Parent>
 `;
 
-exports[`Store collapseNodesByDefault:true should support collapsing parts of the tree: 3: expand first Parent 1`] = `
-[root]
-  ▾ <Grandparent>
-    ▾ <Parent>
-        <Child key="0">
-        <Child key="1">
-    ▸ <Parent>
-`;
-
-exports[`Store collapseNodesByDefault:true should support collapsing parts of the tree: 4: expand second Parent 1`] = `
+exports[`Store collapseNodesByDefault:true should support expanding parts of the tree: 3: expand first Parent 1`] = `
 [root]
   ▾ <Grandparent>
     ▾ <Parent>
         <Child key="0">
         <Child key="1">
+    ▸ <Parent>
+`;
+
+exports[`Store collapseNodesByDefault:true should support expanding parts of the tree: 4: expand second Parent 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
     ▾ <Parent>
         <Child key="0">
         <Child key="1">
 `;
 
-exports[`Store collapseNodesByDefault:true should support collapsing parts of the tree: 5: collapse first Parent 1`] = `
+exports[`Store collapseNodesByDefault:true should support expanding parts of the tree: 5: collapse first Parent 1`] = `
 [root]
   ▾ <Grandparent>
     ▸ <Parent>
@@ -220,14 +263,14 @@ exports[`Store collapseNodesByDefault:true should support collapsing parts of th
         <Child key="1">
 `;
 
-exports[`Store collapseNodesByDefault:true should support collapsing parts of the tree: 6: collapse second Parent 1`] = `
+exports[`Store collapseNodesByDefault:true should support expanding parts of the tree: 6: collapse second Parent 1`] = `
 [root]
   ▾ <Grandparent>
     ▸ <Parent>
     ▸ <Parent>
 `;
 
-exports[`Store collapseNodesByDefault:true should support collapsing parts of the tree: 7: collapse Grandparent 1`] = `
+exports[`Store collapseNodesByDefault:true should support expanding parts of the tree: 7: collapse Grandparent 1`] = `
 [root]
   ▸ <Grandparent>
 `;
@@ -255,12 +298,14 @@ exports[`Store collapseNodesByDefault:true should support mount and update opera
 
 exports[`Store collapseNodesByDefault:true should support mount and update operations: 1: mount 1`] = `
 [root]
-  ▸ <Grandparent>
+  ▸ <Parent>
+  ▸ <Parent>
 `;
 
 exports[`Store collapseNodesByDefault:true should support mount and update operations: 2: update 1`] = `
 [root]
-  ▸ <Grandparent>
+  ▸ <Parent>
+  ▸ <Parent>
 `;
 
 exports[`Store collapseNodesByDefault:true should support mount and update operations: 3: unmount 1`] = ``;

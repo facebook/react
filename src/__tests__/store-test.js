@@ -195,22 +195,32 @@ describe('Store', () => {
     });
 
     it('should support mount and update operations', () => {
-      const Grandparent = ({ count }) => (
-        <React.Fragment>
-          <Parent count={count} />
-          <Parent count={count} />
-        </React.Fragment>
-      );
       const Parent = ({ count }) =>
         new Array(count).fill(true).map((_, index) => <Child key={index} />);
       const Child = () => <div>Hi!</div>;
 
       const container = document.createElement('div');
 
-      act(() => ReactDOM.render(<Grandparent count={4} />, container));
+      act(() =>
+        ReactDOM.render(
+          <React.Fragment>
+            <Parent count={1} />
+            <Parent count={3} />
+          </React.Fragment>,
+          container
+        )
+      );
       expect(store).toMatchSnapshot('1: mount');
 
-      act(() => ReactDOM.render(<Grandparent count={2} />, container));
+      act(() =>
+        ReactDOM.render(
+          <React.Fragment>
+            <Parent count={2} />
+            <Parent count={1} />
+          </React.Fragment>,
+          container
+        )
+      );
       expect(store).toMatchSnapshot('2: update');
 
       act(() => ReactDOM.unmountComponentAtNode(container));
@@ -311,7 +321,7 @@ describe('Store', () => {
       expect(store).toMatchSnapshot('2: resolved');
     });
 
-    it('should support collapsing parts of the tree', () => {
+    it('should support expanding parts of the tree', () => {
       const Grandparent = ({ count }) => (
         <React.Fragment>
           <Parent count={count} />
@@ -352,6 +362,49 @@ describe('Store', () => {
 
       act(() => store.toggleIsCollapsed(grandparentID, true));
       expect(store).toMatchSnapshot('7: collapse Grandparent');
+    });
+
+    it('should support expanding deep parts of the tree', () => {
+      const Wrapper = ({ forwardedRef }) => (
+        <Nested depth={3} forwardedRef={forwardedRef} />
+      );
+      const Nested = ({ depth, forwardedRef }) =>
+        depth > 0 ? (
+          <Nested depth={depth - 1} forwardedRef={forwardedRef} />
+        ) : (
+          <div ref={forwardedRef} />
+        );
+
+      const ref = React.createRef();
+
+      act(() =>
+        ReactDOM.render(
+          <Wrapper forwardedRef={ref} />,
+          document.createElement('div')
+        )
+      );
+      expect(store).toMatchSnapshot('1: mount');
+
+      const deepestedNodeID = global.agent.getIDForNode(ref.current);
+
+      act(() => store.toggleIsCollapsed(deepestedNodeID, false));
+      expect(store).toMatchSnapshot('2: expand deepest node');
+
+      const rootID = store.getElementIDAtIndex(0);
+
+      act(() => store.toggleIsCollapsed(rootID, true));
+      expect(store).toMatchSnapshot('3: collapse root');
+
+      act(() => store.toggleIsCollapsed(rootID, false));
+      expect(store).toMatchSnapshot('4: expand root');
+
+      const id = store.getElementIDAtIndex(1);
+
+      act(() => store.toggleIsCollapsed(id, true));
+      expect(store).toMatchSnapshot('5: collapse middle node');
+
+      act(() => store.toggleIsCollapsed(id, false));
+      expect(store).toMatchSnapshot('6: expand middle node');
     });
   });
 });

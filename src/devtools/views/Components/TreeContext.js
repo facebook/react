@@ -748,11 +748,8 @@ function TreeContextController({ children, viewElementSource }: Props) {
 
       if (state.selectedElementID !== null) {
         let element = store.getElementByID(state.selectedElementID);
-        while (element !== null && element.parentID > 0) {
-          element = ((store.getElementByID(element.parentID): any): Element);
-          if (element.isCollapsed) {
-            store.toggleIsCollapsed(element.id, false);
-          }
+        if (element !== null && element.parentID > 0) {
+          store.toggleIsCollapsed(element.parentID, false);
         }
       }
     }
