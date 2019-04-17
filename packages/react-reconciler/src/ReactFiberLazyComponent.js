@@ -9,7 +9,7 @@
 
 import type {LazyComponent, Thenable} from 'shared/ReactLazyComponent';
 
-import {Resolved, Rejected, Pending} from 'shared/ReactLazyComponent';
+import {Resolved, Rejected, Pending, Retrying} from 'shared/ReactLazyComponent';
 import warning from 'shared/warning';
 
 export function resolveDefaultProps(Component: any, baseProps: Object): Object {
@@ -37,12 +37,17 @@ export function readLazyComponentType<T>(lazyComponent: LazyComponent<T>): T {
     }
     case Rejected: {
       const error: mixed = result;
+      // Reset status so the promise will be retried
+      setTimeout(() => {
+        lazyComponent._status = Retrying;
+      });
       throw error;
     }
     case Pending: {
       const thenable: Thenable<T, mixed> = result;
       throw thenable;
     }
+    case Retrying:
     default: {
       lazyComponent._status = Pending;
       const ctor = lazyComponent._ctor;
@@ -78,6 +83,9 @@ export function readLazyComponentType<T>(lazyComponent: LazyComponent<T>): T {
         case Resolved:
           return lazyComponent._result;
         case Rejected:
+          setTimeout(() => {
+            lazyComponent._status = Retrying;
+          });
           throw lazyComponent._result;
       }
       lazyComponent._result = thenable;

@@ -14,7 +14,7 @@ export type Thenable<T, R> = {
 export type LazyComponent<T> = {
   $$typeof: Symbol | number,
   _ctor: () => Thenable<{default: T}, mixed>,
-  _status: 0 | 1 | 2,
+  _status: 0 | 1 | 2 | 3,
   _result: any,
 };
 
@@ -28,6 +28,7 @@ type ResolvedLazyComponent<T> = {
 export const Pending = 0;
 export const Resolved = 1;
 export const Rejected = 2;
+export const Retrying = 3;
 
 export function refineResolvedLazyComponent<T>(
   lazyComponent: LazyComponent<T>,

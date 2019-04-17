@@ -5,6 +5,7 @@ let Scheduler;
 let ReactFeatureFlags;
 let Suspense;
 let lazy;
+let ErrorBoundary;
 
 describe('ReactLazy', () => {
   beforeEach(() => {
@@ -18,6 +19,18 @@ describe('ReactLazy', () => {
     lazy = React.lazy;
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
+
+    ErrorBoundary = class extends React.Component {
+      state = {};
+      static getDerivedStateFromError(error) {
+        return {message: error.message};
+      }
+      render() {
+        return this.state.message
+          ? `Error: ${this.state.message}`
+          : this.props.children;
+      }
+    };
   });
 
   function Text(props) {
@@ -87,18 +100,6 @@ describe('ReactLazy', () => {
       },
     }));
 
-    class ErrorBoundary extends React.Component {
-      state = {};
-      static getDerivedStateFromError(error) {
-        return {message: error.message};
-      }
-      render() {
-        return this.state.message
-          ? `Error: ${this.state.message}`
-          : this.props.children;
-      }
-    }
-
     const root = ReactTestRenderer.create(
       <ErrorBoundary>
         <Suspense fallback={<Text text="Loading..." />}>
@@ -106,7 +107,6 @@ describe('ReactLazy', () => {
         </Suspense>
       </ErrorBoundary>,
     );
-    expect(Scheduler).toHaveYielded([]);
     expect(root).toMatchRenderedOutput('Error: oh no');
   });
 
@@ -179,27 +179,94 @@ describe('ReactLazy', () => {
   });
 
   it('throws if promise rejects', async () => {
-    const LazyText = lazy(async () => {
+    const promise = delay(200).then(() => {
       throw new Error('Bad network');
     });
 
+    const ctor = jest.fn().mockReturnValue(promise);
+    const LazyText = lazy(ctor);
+
     const root = ReactTestRenderer.create(
-      <Suspense fallback={<Text text="Loading..." />}>
-        <LazyText text="Hi" />
-      </Suspense>,
+      <ErrorBoundary>
+        <Suspense fallback={<Text text="Loading..." />}>
+          <LazyText text="Hi" />
+        </Suspense>
+      </ErrorBoundary>,
       {
         unstable_isConcurrent: true,
       },
     );
 
     expect(Scheduler).toFlushAndYield(['Loading...']);
-    expect(root).toMatchRenderedOutput(null);
 
+    jest.advanceTimersByTime(200);
     try {
-      await Promise.resolve();
+      await promise;
     } catch (e) {}
 
-    expect(Scheduler).toFlushAndThrow('Bad network');
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(ctor).toHaveBeenCalledTimes(1);
+    expect(root).toMatchRenderedOutput('Error: Bad network');
+  });
+
+  it('retries the promise if rejected', async () => {
+    const firstPromise = delay(200).then(() => {
+      throw new Error('1st try failed');
+    });
+
+    const secondPromise = delay(100).then(() => fakeImport(Text));
+
+    const ctor = jest
+      .fn()
+      .mockImplementationOnce(() => {
+        Scheduler.yieldValue('1st try');
+        return firstPromise;
+      })
+      .mockImplementationOnce(() => {
+        Scheduler.yieldValue('2nd try');
+        return secondPromise;
+      });
+
+    const LazyText = lazy(ctor);
+
+    const root = ReactTestRenderer.create(
+      <ErrorBoundary>
+        <Suspense fallback={<Text text="Loading..." />}>
+          <LazyText text="Hi" />
+        </Suspense>
+      </ErrorBoundary>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    expect(Scheduler).toFlushAndYield(['1st try', 'Loading...']);
+
+    jest.advanceTimersByTime(200);
+    try {
+      await firstPromise;
+    } catch (e) {}
+
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(root).toMatchRenderedOutput('Error: 1st try failed');
+    expect(ctor).toHaveBeenCalledTimes(1);
+
+    jest.advanceTimersByTime(1);
+
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <LazyText text="Hi" />
+      </Suspense>,
+    );
+
+    expect(Scheduler).toFlushAndYield(['2nd try', 'Loading...']);
+
+    jest.advanceTimersByTime(100);
+    await secondPromise;
+
+    expect(Scheduler).toFlushAndYield(['Hi']);
+    expect(ctor).toHaveBeenCalledTimes(2);
+    expect(root).toMatchRenderedOutput('Hi');
   });
 
   it('mount and reorder', async () => {
