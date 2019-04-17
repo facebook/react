@@ -51,10 +51,12 @@ describe('create-react-class-integration', () => {
       });
 
       expect(() => ReactNative.render(<View />, 1)).toLowPriorityWarnDev(
-        'componentWillMount is deprecated and will be removed in the next major version. ' +
-          'Use componentDidMount instead. As a temporary workaround, ' +
-          'you can rename to UNSAFE_componentWillMount.' +
-          '\n\nPlease update the following components: MyNativeComponent',
+        'componentWillMount is deprecated and will be removed in the next major version.\n' +
+          'Consider one of the following options to silence this warning:\n' +
+          '- Use componentDidMount instead.\n' +
+          '- To silence the warning in non-strict mode, rename componentWillMount to UNSAFE_componentWillMount.\n' +
+          '- To automatically rename all unsafe lifecycle methods in your codebase, run `npx react-codemod rename-unsafe-lifecycles <path/to/code>` in your command line.\n' +
+          '\nPlease update the following components: MyNativeComponent\n',
         {withoutStack: true},
       );
     });
@@ -68,9 +70,12 @@ describe('create-react-class-integration', () => {
       });
 
       expect(() => ReactNative.render(<View />, 1)).toLowPriorityWarnDev(
-        'componentWillReceiveProps is deprecated and will be removed in the next major version. ' +
-          'Use static getDerivedStateFromProps instead.' +
-          '\n\nPlease update the following components: MyNativeComponent',
+        'componentWillReceiveProps is deprecated and will be removed in the next major version.\n' +
+          'Consider one of the following options to silence this warning:\n' +
+          '- Use static getDerivedStateFromProps instead.\n' +
+          '- To silence the warning in non-strict mode, rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps.\n' +
+          '- To automatically rename all unsafe lifecycle methods in your codebase, run `npx react-codemod rename-unsafe-lifecycles <path/to/code>` in your command line.\n' +
+          '\nPlease update the following components: MyNativeComponent\n',
         {withoutStack: true},
       );
     });

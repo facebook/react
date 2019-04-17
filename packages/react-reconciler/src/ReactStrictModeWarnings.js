@@ -141,12 +141,14 @@ if (__DEV__) {
 
       lowPriorityWarning(
         false,
-        'componentWillMount is deprecated and will be removed in the next major version. ' +
-          'Use componentDidMount instead. As a temporary workaround, ' +
-          'you can rename to UNSAFE_componentWillMount.' +
-          '\n\nPlease update the following components: %s' +
-          '\n\nLearn more about this warning here:' +
-          '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+        'componentWillMount is deprecated and will be removed in the next major version.\n' +
+          'Consider one of the following options to silence this warning:\n' +
+          '- Use componentDidMount instead.\n' +
+          '- To silence the warning in non-strict mode, rename componentWillMount to UNSAFE_componentWillMount.\n' +
+          '- To automatically rename all unsafe lifecycle methods in your codebase, run `npx react-codemod rename-unsafe-lifecycles <path/to/code>` in your command line.\n' +
+          '\nPlease update the following components: %s\n' +
+          '\nLearn more about this warning here:\n' +
+          'https://fb.me/react-async-component-lifecycle-hooks',
         sortedNames,
       );
 
@@ -164,11 +166,14 @@ if (__DEV__) {
 
       lowPriorityWarning(
         false,
-        'componentWillReceiveProps is deprecated and will be removed in the next major version. ' +
-          'Use static getDerivedStateFromProps instead.' +
-          '\n\nPlease update the following components: %s' +
-          '\n\nLearn more about this warning here:' +
-          '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+        'componentWillReceiveProps is deprecated and will be removed in the next major version.\n' +
+          'Consider one of the following options to silence this warning:\n' +
+          '- Use static getDerivedStateFromProps instead.\n' +
+          '- To silence the warning in non-strict mode, rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps.\n' +
+          '- To automatically rename all unsafe lifecycle methods in your codebase, run `npx react-codemod rename-unsafe-lifecycles <path/to/code>` in your command line.\n' +
+          '\nPlease update the following components: %s\n' +
+          '\nLearn more about this warning here:\n' +
+          'https://fb.me/react-async-component-lifecycle-hooks',
         sortedNames,
       );
 
@@ -186,12 +191,14 @@ if (__DEV__) {
 
       lowPriorityWarning(
         false,
-        'componentWillUpdate is deprecated and will be removed in the next major version. ' +
-          'Use componentDidUpdate instead. As a temporary workaround, ' +
-          'you can rename to UNSAFE_componentWillUpdate.' +
-          '\n\nPlease update the following components: %s' +
-          '\n\nLearn more about this warning here:' +
-          '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+        'componentWillUpdate is deprecated and will be removed in the next major version.\n' +
+          'Consider one of the following options to silence this warning:\n' +
+          '- Use componentDidUpdate instead.\n' +
+          '- To silence the warning in non-strict mode, rename componentWillUpdate to UNSAFE_componentWillUpdate.\n' +
+          '- To automatically rename all unsafe lifecycle methods in your codebase, run `npx react-codemod rename-unsafe-lifecycles <path/to/code>` in your command line.\n' +
+          '\nPlease update the following components: %s\n' +
+          '\nLearn more about this warning here:\n' +
+          'https://fb.me/react-async-component-lifecycle-hooks',
         sortedNames,
       );
 
@@ -361,3 +368,17 @@ if (__DEV__) {
 }
 
 export default ReactStrictModeWarnings;
+
+/* 
+
+componentWillMount is deprecated and will be removed in the next major version. 
+Consider one of the following options to silence this warning: 
+- Use componentDidMount instead.
+- To silence the warning in non-strict mode, you can rename this to UNSAFE_componentWillMount.
+- To automatically rename all unsafe lifecycle methods in your codebase, run `npx react-codemod rename-unsafe-lifecycles <path/to/code>` in your command line.
+
+Please update the following components: %s
+
+Learn more about this warning here:
+https://fb.me/react-async-component-lifecycle-hooks
+*/
