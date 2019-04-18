@@ -1,6 +1,6 @@
 // @flow
 
-describe('StoreStress', () => {
+describe('StoreStress (Sync Mode)', () => {
   let React;
   let ReactDOM;
   let TestUtils;
@@ -29,7 +29,7 @@ describe('StoreStress', () => {
 
   // This is a stress test for the tree mount/update/unmount traversal.
   // It renders different trees that should produce the same output.
-  it('should handle a stress test with different tree operations', () => {
+  it('should handle a stress test with different tree operations (Sync Mode)', () => {
     let setShowX;
     const A = () => 'a';
     const B = () => 'b';
@@ -168,37 +168,9 @@ describe('StoreStress', () => {
     }
     act(() => ReactDOM.unmountComponentAtNode(container));
     expect(print(store)).toBe('');
-
-    // 7. Same as the previous step, but for Concurrent Mode.
-    container = document.createElement('div');
-    // $FlowFixMe
-    let root = ReactDOM.unstable_createRoot(container);
-    for (let i = 0; i < cases.length; i++) {
-      // Verify mounting 'abcde'.
-      act(() => root.render(<Parent>{cases[i]}</Parent>));
-      expect(container.textContent).toMatch('abcde');
-      expect(print(store)).toEqual(snapshotForABCDE);
-
-      // Verify switching to 'abxde'.
-      act(() => {
-        setShowX(true);
-      });
-      expect(container.textContent).toMatch('abxde');
-      expect(print(store)).toBe(snapshotForABXDE);
-
-      // Verify switching back to 'abcde'.
-      act(() => {
-        setShowX(false);
-      });
-      expect(container.textContent).toMatch('abcde');
-      expect(print(store)).toBe(snapshotForABCDE);
-      // Don't unmount. Reuse the container between iterations.
-    }
-    act(() => root.unmount());
-    expect(print(store)).toBe('');
   });
 
-  it('should handle stress test with reordering', () => {
+  it('should handle stress test with reordering (Sync Mode)', () => {
     const A = () => 'a';
     const B = () => 'b';
     const C = () => 'c';
@@ -298,7 +270,7 @@ describe('StoreStress', () => {
     }
   });
 
-  it('should handle a stress test for Suspense', async () => {
+  it('should handle a stress test for Suspense (Sync Mode)', async () => {
     const A = () => 'a';
     const B = () => 'b';
     const C = () => 'c';
@@ -690,6 +662,5 @@ describe('StoreStress', () => {
         expect(print(store)).toBe('');
       }
     }
-    // TODO: Test Concurrent Mode
   });
 });
