@@ -576,11 +576,12 @@ function resolve(
                 'componentWillMount has been renamed to UNSAFE_componentWillMount, ' +
                   "and the old name won't work in the next major version of React.\n" +
                   'We suggest doing one of the following:\n' +
-                  '- To rename all deprecated lifecycles to their new names, you can run ' +
-                  '`npx react-codemod rename-unsafe-lifecycles <path/to/code>` in your project folder.\n' +
                   '- If you initialize state in componentWillMount, move this logic into the constructor.\n' +
                   '- If you fetch data or perform other side effects in componentWillMount, ' +
                   'move this logic into componentDidMount.\n' +
+                  '- To rename all deprecated lifecycles to their new names, you can run ' +
+                  '`npx react-codemod rename-unsafe-lifecycles <path/to/code>` in your project folder. ' +
+                  '(Note that the warning will still be logged in strict mode.)\n' +
                   '\nPlease update the following components: %s\n' +
                   '\nLearn about this warning, with more examples and suggestions here:\n' +
                   'https://fb.me/react-async-component-lifecycle-hooks',

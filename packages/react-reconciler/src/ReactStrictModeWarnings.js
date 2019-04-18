@@ -142,7 +142,7 @@ if (__DEV__) {
       lowPriorityWarning(
         false,
         'componentWillMount has been renamed to UNSAFE_componentWillMount, ' +
-          "and the old name won't work in the next major version of React.\n" +
+          "and the old name won't work in the next major version of React.\n\n" +
           'We suggest doing one of the following:\n' +
           '- If you initialize state in componentWillMount, move this logic into the constructor.\n' +
           '- If you fetch data or perform other side effects in componentWillMount, ' +
@@ -151,7 +151,7 @@ if (__DEV__) {
           '`npx react-codemod rename-unsafe-lifecycles <path/to/code>` in your project folder. ' +
           '(Note that the warning will still be logged in strict mode.)\n' +
           '\nPlease update the following components: %s\n' +
-          '\nLearn about this warning, with more examples and suggestions here:\n' +
+          '\nLearn more about this warning here:\n' +
           'https://fb.me/react-async-component-lifecycle-hooks',
         sortedNames,
       );
@@ -171,20 +171,19 @@ if (__DEV__) {
       lowPriorityWarning(
         false,
         'componentWillReceiveProps has been renamed to UNSAFE_componentWillReceiveProps, ' +
-          "and the old name won't work in the next major version of React.\n" +
+          "and the old name won't work in the next major version of React.\n\n" +
           'We suggest doing one of the following:\n' +
           "- If you're updating state whenever props change, " +
           'move this logic into static getDerivedStateFromProps.\n' +
           '- If you fetch data or perform other side effects in componentWillReceiveProps, ' +
           'move this logic into componentDidUpdate.\n' +
-          '- Refactor your code to not use derived state at all, as described at ' +
-          // todo - this should be an fb.me link
-          'https://reactjs.org/blog/2018/06/07/you-probably-dont-need-derived-state.html.\n' +
+          '- Refactor your code to use memoization techniques instead of derived state. ' +
+          'Learn more at: https://fb.me/react-derived-state\n' +
           '- To rename all deprecated lifecycles to their new names, you can run ' +
           '`npx react-codemod rename-unsafe-lifecycles <path/to/code>` in your project folder. ' +
           '(Note that the warning will still be logged in strict mode.)\n' +
           '\nPlease update the following components: %s\n' +
-          '\nLearn about this warning, with more examples and suggestions here:\n' +
+          '\nLearn more about this warning here:\n' +
           'https://fb.me/react-async-component-lifecycle-hooks',
         sortedNames,
       );
@@ -204,7 +203,7 @@ if (__DEV__) {
       lowPriorityWarning(
         false,
         'componentWillUpdate has been renamed to UNSAFE_componentWillUpdate, ' +
-          "and the old name won't work in the next major version of React.\n" +
+          "and the old name won't work in the next major version of React.\n\n" +
           'We suggest doing one of the following:\n' +
           '- If you fetch data or perform other side effects in componentWillUpdate, ' +
           'move this logic into componentDidUpdate.\n' +
@@ -214,7 +213,7 @@ if (__DEV__) {
           '`npx react-codemod rename-unsafe-lifecycles <path/to/code>` in your project folder. ' +
           '(Note that the warning will still be logged in strict mode.)\n' +
           '\nPlease update the following components: %s\n' +
-          '\nLearn about this warning, with more examples and suggestions here:\n' +
+          '\nLearn more about this warning here:\n' +
           'https://fb.me/react-async-component-lifecycle-hooks',
         sortedNames,
       );
