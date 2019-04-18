@@ -40,6 +40,18 @@ describe('Store', () => {
     );
   });
 
+  it('should properly handle a root with no visible nodes', () => {
+    const Root = ({ children }) => children;
+
+    const container = document.createElement('div');
+
+    act(() => ReactDOM.render(<Root>{null}</Root>, container));
+    expect(store).toMatchSnapshot('1: mount');
+
+    act(() => ReactDOM.render(<div />, container));
+    expect(store).toMatchSnapshot('2: add host nodes');
+  });
+
   describe('collapseNodesByDefault:false', () => {
     beforeEach(() => {
       store.collapseNodesByDefault = false;

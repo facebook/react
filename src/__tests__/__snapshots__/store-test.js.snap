@@ -407,3 +407,10 @@ exports[`Store should not allow a root node to be collapsed: 1: mount 1`] = `
 [root]
     <Component>
 `;
+
+exports[`Store should properly handle a root with no visible nodes: 1: mount 1`] = `
+[root]
+    <Root>
+`;
+
+exports[`Store should properly handle a root with no visible nodes: 2: add host nodes 1`] = `[root]`;

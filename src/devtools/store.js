@@ -768,16 +768,17 @@ export default class Store extends EventEmitter {
 
           if (!element.isCollapsed) {
             const prevWeight = element.weight;
-            let childWeight = 0;
+
+            let nextWeight = element.type === ElementTypeRoot ? 0 : 1;
 
             children.forEach(childID => {
               const child = ((this._idToElement.get(childID): any): Element);
-              childWeight += child.isCollapsed ? 1 : child.weight;
+              nextWeight += child.isCollapsed ? 1 : child.weight;
             });
 
-            element.weight = childWeight + 1;
+            element.weight = nextWeight;
 
-            weightDelta = childWeight + 1 - prevWeight;
+            weightDelta = nextWeight - prevWeight;
           }
           break;
         case TREE_OPERATION_UPDATE_TREE_BASE_DURATION:
