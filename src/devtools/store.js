@@ -711,8 +711,16 @@ export default class Store extends EventEmitter {
 
           element = ((this._idToElement.get(id): any): Element);
           parentID = element.parentID;
-
           weightDelta = -element.weight;
+
+          if (element.children.length > 0) {
+            throw new Error(
+              'Fiber ' +
+                id +
+                ' was removed before its children. ' +
+                'This is a bug in React DevTools.'
+            );
+          }
 
           this._idToElement.delete(id);
 
@@ -769,7 +777,16 @@ export default class Store extends EventEmitter {
           }
 
           element = ((this._idToElement.get(id): any): Element);
+          const prevChildren = element.children;
           element.children = Array.from(children);
+          if (element.children.length !== prevChildren.length) {
+            throw new Error(
+              'Fiber ' +
+                id +
+                ' received a different number of children on reorder. ' +
+                'This is a bug in React DevTools.'
+            );
+          }
 
           if (!element.isCollapsed) {
             const prevWeight = element.weight;
