@@ -49,7 +49,6 @@ type PointerType = '' | 'mouse' | 'keyboard' | 'pen' | 'touch';
 type PressState = {
   isActivePressed: boolean,
   isActivePressStart: boolean,
-  isAnchorTouched: boolean,
   isLongPressed: boolean,
   isPressed: boolean,
   isPressWithinResponderRegion: boolean,
@@ -394,7 +393,6 @@ const PressResponder = {
       didDispatchEvent: false,
       isActivePressed: false,
       isActivePressStart: false,
-      isAnchorTouched: false,
       isLongPressed: false,
       isPressed: false,
       isPressWithinResponderRegion: true,
@@ -433,14 +431,6 @@ const PressResponder = {
       case 'mousedown':
       case 'touchstart': {
         if (!state.isPressed && !state.ignoreEmulatedMouseEvents) {
-          // Ignore touch on anchors
-          if (pointerType === 'touch') {
-            if (isAnchorTagElement(target)) {
-              state.isAnchorTouched = true;
-              return shouldStopPropagation;
-            }
-          }
-
           // Ignore unrelated key events
           if (pointerType === 'keyboard') {
             if (!isValidKeyPress(nativeEvent.key)) {
@@ -514,11 +504,6 @@ const PressResponder = {
       case 'keyup':
       case 'mouseup':
       case 'touchend': {
-        if (pointerType === 'touch' && state.isAnchorTouched) {
-          state.isAnchorTouched = false;
-          return shouldStopPropagation;
-        }
-
         if (state.isPressed) {
           // Ignore emulated events
           if (state.ignoreEmulatedMouseEvents) {
@@ -529,7 +514,6 @@ const PressResponder = {
           // Ignore emulated events
           if (pointerType === 'keyboard') {
             if (!isValidKeyPress(nativeEvent.key)) {
-              state.isAnchorTouched = false;
               return false;
             }
           }
@@ -554,7 +538,6 @@ const PressResponder = {
           context.removeRootEventTypes(rootEventTypes);
           return shouldStopPropagation;
         }
-        state.isAnchorTouched = false;
         state.ignoreEmulatedMouseEvents = false;
         return false;
       }
