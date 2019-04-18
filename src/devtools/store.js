@@ -597,16 +597,14 @@ export default class Store extends EventEmitter {
           i = i + 3;
 
           if (this._idToElement.has(id)) {
-            throw new Error(
-              'Store already contains fiber ' +
-                id +
-                '. This is a bug in React DevTools.'
+            throw Error(
+              `Cannot add node ${id} because a node with that id is already in the Store.`
             );
           }
 
           if (type === ElementTypeRoot) {
             if (__DEBUG__) {
-              debug('Add', `new root fiber ${id}`);
+              debug('Add', `new root node ${id}`);
             }
 
             const supportsProfiling = operations[i] > 0;
@@ -664,7 +662,13 @@ export default class Store extends EventEmitter {
             if (__DEBUG__) {
               debug(
                 'Add',
-                `fiber ${id} (${displayName || 'null'}) as child of ${parentID}`
+                `node ${id} (${displayName || 'null'}) as child of ${parentID}`
+              );
+            }
+
+            if (!this._idToElement.has(parentID)) {
+              throw Error(
+                `Cannot add child ${id} to parent ${parentID} because parent node was not found in the Store.`
               );
             }
 
@@ -698,10 +702,8 @@ export default class Store extends EventEmitter {
           id = ((operations[i + 1]: any): number);
 
           if (!this._idToElement.has(id)) {
-            throw new Error(
-              'Store does not contain fiber ' +
-                id +
-                '. This is a bug in React DevTools.'
+            throw Error(
+              `Cannot remove node ${id} because no matching node was found in the Store.`
             );
           }
 
@@ -716,7 +718,7 @@ export default class Store extends EventEmitter {
 
           if (parentID === 0) {
             if (__DEBUG__) {
-              debug('Remove', `fiber ${id} root`);
+              debug('Remove', `node ${id} root`);
             }
 
             this._roots = this._roots.filter(rootID => rootID !== id);
@@ -726,15 +728,12 @@ export default class Store extends EventEmitter {
             haveRootsChanged = true;
           } else {
             if (__DEBUG__) {
-              debug('Remove', `fiber ${id} from parent ${parentID}`);
+              debug('Remove', `node ${id} from parent ${parentID}`);
             }
             parentElement = ((this._idToElement.get(parentID): any): Element);
             if (parentElement === undefined) {
-              throw new Error(
-                'Fiber ' +
-                  id +
-                  ' was removed after its parent. ' +
-                  'This is a bug in React DevTools.'
+              throw Error(
+                `Cannot remove node ${id} from parent ${parentID} because no matching node was found in the Store.`
               );
             }
             parentElement.children = parentElement.children.filter(
@@ -760,7 +759,13 @@ export default class Store extends EventEmitter {
           i = i + 3 + numChildren;
 
           if (__DEBUG__) {
-            debug('Re-order', `fiber ${id} children ${children.join(',')}`);
+            debug('Re-order', `Node ${id} children ${children.join(',')}`);
+          }
+
+          if (!this._idToElement.has(id)) {
+            throw Error(
+              `Cannot reorder children for node ${id} because no matching node was found in the Store.`
+            );
           }
 
           element = ((this._idToElement.get(id): any): Element);
@@ -898,7 +903,7 @@ export default class Store extends EventEmitter {
         const element = ((this.getElementAtIndex(i): any): Element);
 
         if (element == null) {
-          throw Error(`No element for index ${i}`);
+          throw Error(`Could not find element at index ${i}`);
         }
 
         let prefix = ' ';
@@ -928,7 +933,7 @@ export default class Store extends EventEmitter {
     // Make sure the pretty-printed test align with the Store's reported number of total rows.
     if (rootWeight !== this._weightAcrossRoots) {
       throw Error(
-        `Inconsistent store state. Individual root weights (${rootWeight}) do not match total weight (${
+        `Inconsistent Store state. Individual root weights (${rootWeight}) do not match total weight (${
           this._weightAcrossRoots
         })`
       );
