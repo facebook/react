@@ -1,0 +1,239 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense (Concurrent Mode) 1`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense (Concurrent Mode) 2`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense (Concurrent Mode) 3`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <A key="a">
+        <B key="b">
+        <C key="c">
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense (Concurrent Mode) 4`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <C key="c">
+        <B key="b">
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense (Concurrent Mode) 5`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <C key="c">
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense (Concurrent Mode) 6`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <C key="c">
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense (Concurrent Mode) 7`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <C key="c">
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense (Concurrent Mode) 8`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <A key="a">
+        <B key="b">
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense (Concurrent Mode) 9`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense (Concurrent Mode) 10`] = `
+[root]
+  ▾ <Root>
+      <X>
+      <Suspense>
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense (Concurrent Mode) 11`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <B key="b">
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense (Concurrent Mode) 12`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test with different tree operations (Concurrent Mode): 1: abcde 1`] = `
+[root]
+  ▾ <Parent>
+      <A key="a">
+      <B key="b">
+      <C key="c">
+      <D key="d">
+      <E key="e">
+`;
+
+exports[`StoreStressConcurrent should handle a stress test with different tree operations (Concurrent Mode): 2: abxde 1`] = `
+[root]
+  ▾ <Parent>
+      <A key="a">
+      <B key="b">
+    ▾ <C key="c">
+        <X>
+      <D key="d">
+      <E key="e">
+`;
+
+exports[`StoreStressConcurrent should handle stress test with reordering (Concurrent Mode) 1`] = `
+[root]
+  ▾ <Root>
+      <A key="a">
+`;
+
+exports[`StoreStressConcurrent should handle stress test with reordering (Concurrent Mode) 2`] = `
+[root]
+  ▾ <Root>
+      <B key="b">
+`;
+
+exports[`StoreStressConcurrent should handle stress test with reordering (Concurrent Mode) 3`] = `
+[root]
+  ▾ <Root>
+      <C key="c">
+`;
+
+exports[`StoreStressConcurrent should handle stress test with reordering (Concurrent Mode) 4`] = `
+[root]
+  ▾ <Root>
+      <D key="d">
+`;
+
+exports[`StoreStressConcurrent should handle stress test with reordering (Concurrent Mode) 5`] = `
+[root]
+  ▾ <Root>
+      <E key="e">
+`;
+
+exports[`StoreStressConcurrent should handle stress test with reordering (Concurrent Mode) 6`] = `
+[root]
+  ▾ <Root>
+      <A key="a">
+`;
+
+exports[`StoreStressConcurrent should handle stress test with reordering (Concurrent Mode) 7`] = `
+[root]
+  ▾ <Root>
+      <B key="b">
+`;
+
+exports[`StoreStressConcurrent should handle stress test with reordering (Concurrent Mode) 8`] = `
+[root]
+  ▾ <Root>
+      <C key="c">
+`;
+
+exports[`StoreStressConcurrent should handle stress test with reordering (Concurrent Mode) 9`] = `
+[root]
+  ▾ <Root>
+      <D key="d">
+`;
+
+exports[`StoreStressConcurrent should handle stress test with reordering (Concurrent Mode) 10`] = `
+[root]
+  ▾ <Root>
+      <E key="e">
+`;
+
+exports[`StoreStressConcurrent should handle stress test with reordering (Concurrent Mode) 11`] = `
+[root]
+  ▾ <Root>
+      <A key="a">
+      <B key="b">
+`;
+
+exports[`StoreStressConcurrent should handle stress test with reordering (Concurrent Mode) 12`] = `
+[root]
+  ▾ <Root>
+      <B key="b">
+      <A key="a">
+`;
+
+exports[`StoreStressConcurrent should handle stress test with reordering (Concurrent Mode) 13`] = `
+[root]
+  ▾ <Root>
+      <B key="b">
+      <C key="c">
+`;
+
+exports[`StoreStressConcurrent should handle stress test with reordering (Concurrent Mode) 14`] = `
+[root]
+  ▾ <Root>
+      <C key="c">
+      <B key="b">
+`;
+
+exports[`StoreStressConcurrent should handle stress test with reordering (Concurrent Mode) 15`] = `
+[root]
+  ▾ <Root>
+      <A key="a">
+      <C key="c">
+`;
+
+exports[`StoreStressConcurrent should handle stress test with reordering (Concurrent Mode) 16`] = `
+[root]
+  ▾ <Root>
+      <C key="c">
+      <A key="a">
+`;

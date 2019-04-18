@@ -1,0 +1,239 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`StoreStress (Sync Mode) should handle a stress test for Suspense (Sync Mode) 1`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStress (Sync Mode) should handle a stress test for Suspense (Sync Mode) 2`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStress (Sync Mode) should handle a stress test for Suspense (Sync Mode) 3`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <A key="a">
+        <B key="b">
+        <C key="c">
+      <Y>
+`;
+
+exports[`StoreStress (Sync Mode) should handle a stress test for Suspense (Sync Mode) 4`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <C key="c">
+        <B key="b">
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStress (Sync Mode) should handle a stress test for Suspense (Sync Mode) 5`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <C key="c">
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStress (Sync Mode) should handle a stress test for Suspense (Sync Mode) 6`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <C key="c">
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStress (Sync Mode) should handle a stress test for Suspense (Sync Mode) 7`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <C key="c">
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStress (Sync Mode) should handle a stress test for Suspense (Sync Mode) 8`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <A key="a">
+        <B key="b">
+      <Y>
+`;
+
+exports[`StoreStress (Sync Mode) should handle a stress test for Suspense (Sync Mode) 9`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStress (Sync Mode) should handle a stress test for Suspense (Sync Mode) 10`] = `
+[root]
+  ▾ <Root>
+      <X>
+      <Suspense>
+      <Y>
+`;
+
+exports[`StoreStress (Sync Mode) should handle a stress test for Suspense (Sync Mode) 11`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <B key="b">
+      <Y>
+`;
+
+exports[`StoreStress (Sync Mode) should handle a stress test for Suspense (Sync Mode) 12`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStress (Sync Mode) should handle a stress test with different tree operations (Sync Mode): 1: abcde 1`] = `
+[root]
+  ▾ <Parent>
+      <A key="a">
+      <B key="b">
+      <C key="c">
+      <D key="d">
+      <E key="e">
+`;
+
+exports[`StoreStress (Sync Mode) should handle a stress test with different tree operations (Sync Mode): 2: abxde 1`] = `
+[root]
+  ▾ <Parent>
+      <A key="a">
+      <B key="b">
+    ▾ <C key="c">
+        <X>
+      <D key="d">
+      <E key="e">
+`;
+
+exports[`StoreStress (Sync Mode) should handle stress test with reordering (Sync Mode) 1`] = `
+[root]
+  ▾ <Root>
+      <A key="a">
+`;
+
+exports[`StoreStress (Sync Mode) should handle stress test with reordering (Sync Mode) 2`] = `
+[root]
+  ▾ <Root>
+      <B key="b">
+`;
+
+exports[`StoreStress (Sync Mode) should handle stress test with reordering (Sync Mode) 3`] = `
+[root]
+  ▾ <Root>
+      <C key="c">
+`;
+
+exports[`StoreStress (Sync Mode) should handle stress test with reordering (Sync Mode) 4`] = `
+[root]
+  ▾ <Root>
+      <D key="d">
+`;
+
+exports[`StoreStress (Sync Mode) should handle stress test with reordering (Sync Mode) 5`] = `
+[root]
+  ▾ <Root>
+      <E key="e">
+`;
+
+exports[`StoreStress (Sync Mode) should handle stress test with reordering (Sync Mode) 6`] = `
+[root]
+  ▾ <Root>
+      <A key="a">
+`;
+
+exports[`StoreStress (Sync Mode) should handle stress test with reordering (Sync Mode) 7`] = `
+[root]
+  ▾ <Root>
+      <B key="b">
+`;
+
+exports[`StoreStress (Sync Mode) should handle stress test with reordering (Sync Mode) 8`] = `
+[root]
+  ▾ <Root>
+      <C key="c">
+`;
+
+exports[`StoreStress (Sync Mode) should handle stress test with reordering (Sync Mode) 9`] = `
+[root]
+  ▾ <Root>
+      <D key="d">
+`;
+
+exports[`StoreStress (Sync Mode) should handle stress test with reordering (Sync Mode) 10`] = `
+[root]
+  ▾ <Root>
+      <E key="e">
+`;
+
+exports[`StoreStress (Sync Mode) should handle stress test with reordering (Sync Mode) 11`] = `
+[root]
+  ▾ <Root>
+      <A key="a">
+      <B key="b">
+`;
+
+exports[`StoreStress (Sync Mode) should handle stress test with reordering (Sync Mode) 12`] = `
+[root]
+  ▾ <Root>
+      <B key="b">
+      <A key="a">
+`;
+
+exports[`StoreStress (Sync Mode) should handle stress test with reordering (Sync Mode) 13`] = `
+[root]
+  ▾ <Root>
+      <B key="b">
+      <C key="c">
+`;
+
+exports[`StoreStress (Sync Mode) should handle stress test with reordering (Sync Mode) 14`] = `
+[root]
+  ▾ <Root>
+      <C key="c">
+      <B key="b">
+`;
+
+exports[`StoreStress (Sync Mode) should handle stress test with reordering (Sync Mode) 15`] = `
+[root]
+  ▾ <Root>
+      <A key="a">
+      <C key="c">
+`;
+
+exports[`StoreStress (Sync Mode) should handle stress test with reordering (Sync Mode) 16`] = `
+[root]
+  ▾ <Root>
+      <C key="c">
+      <A key="a">
+`;

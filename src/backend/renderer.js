@@ -22,7 +22,6 @@ import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_RESET_CHILDREN,
-  TREE_OPERATION_RECURSIVE_REMOVE_CHILDREN,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
 import { getUID } from '../utils';
@@ -772,15 +771,6 @@ export function attach(
     }
   }
 
-  function recordRecursiveRemoveChildren(fiber) {
-    const primaryFiber = getPrimaryFiber(fiber);
-    const id = getFiberID(primaryFiber);
-    beginNextOperation(2);
-    nextOperation[0] = TREE_OPERATION_RECURSIVE_REMOVE_CHILDREN;
-    nextOperation[1] = id;
-    endNextOperation(false);
-  }
-
   function mountFiberRecursively(
     fiber: Fiber,
     parentFiber: Fiber | null,
@@ -825,6 +815,18 @@ export function attach(
 
     if (traverseSiblings && fiber.sibling !== null) {
       mountFiberRecursively(fiber.sibling, parentFiber, true);
+    }
+  }
+
+  function unmountFiberChildrenRecursively(fiber: Fiber) {
+    if (__DEBUG__) {
+      debug('unmountFiberChildrenRecursively()', fiber);
+    }
+    let child = fiber.child;
+    while (child !== null) {
+      recordUnmount(child);
+      unmountFiberChildrenRecursively(child);
+      child = child.sibling;
     }
   }
 
@@ -955,11 +957,8 @@ export function attach(
       // Primary -> Fallback:
       // 1. Hide primary set
       // This is not a real unmount, so it won't get reported by React.
-      // By this point it's *too late* to find the previous primary child set
-      // so we'll just tell the store to "forget" about those children.
-      // They might "resurface" later when we switch to primary content,
-      // but from the store's point of view they will be a new tree.
-      recordRecursiveRemoveChildren(nextFiber);
+      // We need to manually walk the previous tree and record unmounts.
+      unmountFiberChildrenRecursively(prevFiber);
       // 2. Mount fallback set
       const nextFallbackChildSet = nextFiber.child.sibling;
       mountFiberRecursively(nextFallbackChildSet, nextFiber, true);
