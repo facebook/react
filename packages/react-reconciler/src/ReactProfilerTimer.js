@@ -9,7 +9,10 @@
 
 import type {Fiber} from './ReactFiber';
 
-import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
+import {
+  enableProfilerTimer,
+  enableProfilerExperimentalInstructionCount,
+} from 'shared/ReactFeatureFlags';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.
@@ -18,6 +21,7 @@ import * as Scheduler from 'scheduler';
 const {unstable_instructionCount, unstable_now} = Scheduler;
 
 const now =
+  enableProfilerExperimentalInstructionCount &&
   typeof unstable_instructionCount === 'function'
     ? unstable_instructionCount
     : unstable_now;

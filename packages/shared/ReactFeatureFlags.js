@@ -28,6 +28,10 @@ export const warnAboutDeprecatedLifecycles = true;
 // Gather advanced timing metrics for Profiler subtrees.
 export const enableProfilerTimer = __PROFILE__;
 
+// Profiler should use the experimental performance.instructionCount API (if available)
+// instead of performance.now() / Date.now()
+export const enableProfilerExperimentalInstructionCount = false;
+
 // Trace which interactions trigger each commit.
 export const enableSchedulerTracing = __PROFILE__;
 

@@ -18,6 +18,7 @@ export const {debugRenderPhaseSideEffects} = require('ReactFeatureFlags');
 // The rest of the flags are static for better dead code elimination.
 export const enableUserTimingAPI = __DEV__;
 export const enableProfilerTimer = __PROFILE__;
+export const enableProfilerExperimentalInstructionCount = false;
 export const enableSchedulerTracing = __PROFILE__;
 export const enableSuspenseServerRenderer = false;
 export const enableStableConcurrentModeAPIs = false;

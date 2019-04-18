@@ -18,6 +18,7 @@ export const enableUserTimingAPI = __DEV__;
 export const warnAboutDeprecatedLifecycles = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = false;
+export const enableProfilerExperimentalInstructionCount = false;
 export const enableSchedulerTracing = false;
 export const enableSuspenseServerRenderer = false;
 export const disableJavaScriptURLs = false;
