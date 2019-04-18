@@ -760,8 +760,7 @@ export default class Store extends EventEmitter {
 
           this._idToElement.delete(id);
 
-          parentElement = ((this._idToElement.get(parentID): any): Element);
-          if (parentElement == null) {
+          if (parentID === 0) {
             if (__DEBUG__) {
               debug('Remove', `fiber ${id} root`);
             }
@@ -775,7 +774,15 @@ export default class Store extends EventEmitter {
             if (__DEBUG__) {
               debug('Remove', `fiber ${id} from parent ${parentID}`);
             }
-
+            parentElement = ((this._idToElement.get(parentID): any): Element);
+            if (parentElement === undefined) {
+              throw new Error(
+                'Fiber ' +
+                  id +
+                  ' was removed after its parent. ' +
+                  'This is a bug in React DevTools.'
+              );
+            }
             parentElement.children = parentElement.children.filter(
               childID => childID !== id
             );

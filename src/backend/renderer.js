@@ -752,13 +752,13 @@ export function attach(
       nextOperation[1] = id;
       endNextOperation(false);
     } else if (!shouldFilterFiber(fiber)) {
-      // Non-root fibers are deleted during the commit phase.
-      // They are deleted in the child-first order. However
-      // DevTools currently expects deletions to be parent-first.
-      // This is why we unshift deletions rather tha
       beginNextOperation(2);
       nextOperation[0] = TREE_OPERATION_REMOVE;
       nextOperation[1] = id;
+      // Non-root fibers are deleted during the commit phase.
+      // They are deleted in the parent-first order. However
+      // DevTools currently expects deletions to be child-first.
+      // This is why we prepend the delete operation to the queue.
       endNextOperation(true);
     }
     fiberToIDMap.delete(primaryFiber);
