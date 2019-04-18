@@ -574,7 +574,7 @@ export function attach(
   }
 
   let pendingOperations: Array<number> = [];
-  let pendingOperationsQueue: Array<Array<number>> | null = [];
+  let pendingOperationsQueue: Array<Uint32Array> | null = [];
 
   let nextOperation: Array<number> = [];
   function beginNextOperation(size: number): void {
@@ -624,14 +624,15 @@ export function attach(
     // Let the frontend know about tree operations.
     // The first value in this array will identify which root it corresponds to,
     // so we do no longer need to dispatch a separate root-committed event.
+    const ops = Uint32Array.from(pendingOperations);
     if (pendingOperationsQueue !== null) {
       // Until the frontend has been connected, store the tree operations.
       // This will let us avoid walking the tree later when the frontend connects,
       // and it enables the Profiler's reload-and-profile functionality to work as well.
-      pendingOperationsQueue.push(pendingOperations);
+      pendingOperationsQueue.push(ops);
     } else {
       // If we've already connected to the frontend, just pass the operations through.
-      hook.emit('operations', Uint32Array.from(pendingOperations));
+      hook.emit('operations', ops);
     }
 
     pendingOperations = [];
@@ -1058,8 +1059,8 @@ export function attach(
     ) {
       // We may have already queued up some operations before the frontend connected
       // If so, let the frontend know about them.
-      localPendingOperationsQueue.forEach(pendingOperations => {
-        hook.emit('operations', Uint32Array.from(pendingOperations));
+      localPendingOperationsQueue.forEach(ops => {
+        hook.emit('operations', ops);
       });
     } else {
       // If we have not been profiling, then we can just walk the tree and build up its current state as-is.
