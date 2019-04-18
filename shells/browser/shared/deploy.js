@@ -9,7 +9,11 @@ const main = async buildId => {
   const root = join(__dirname, '..', buildId);
   const buildPath = join(root, 'build');
 
-  execSync(`node ${join(root, './build')}`);
+  execSync(`node ${join(root, './build')}`, {
+    cwd: __dirname,
+    env: process.env,
+    stdio: 'inherit',
+  });
 
   await exec(`cp ${join(root, 'now.json')} ${join(buildPath, 'now.json')}`, {
     cwd: root,

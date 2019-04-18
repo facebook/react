@@ -3,7 +3,7 @@ const { resolve } = require('path');
 const { DefinePlugin } = require('webpack');
 const { getGitHubURL, getVersionString } = require('../utils');
 
-const __DEV__ = process.env.NODE_ENV !== 'production';
+const __DEV__ = process.env.NODE_ENV === 'development';
 
 const GITHUB_URL = getGitHubURL();
 const DEVTOOLS_VERSION = getVersionString();
