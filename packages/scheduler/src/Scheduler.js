@@ -13,6 +13,7 @@ import {
   requestHostCallback,
   cancelHostCallback,
   shouldYieldToHost,
+  getCurrentInstructionCount,
   getCurrentTime,
 } from './SchedulerHostConfig';
 
@@ -447,5 +448,6 @@ export {
   unstable_continueExecution,
   unstable_pauseExecution,
   unstable_getFirstCallbackNode,
+  getCurrentInstructionCount as unstable_instructionCount,
   getCurrentTime as unstable_now,
 };

@@ -16,6 +16,7 @@
 export let requestHostCallback;
 export let cancelHostCallback;
 export let shouldYieldToHost;
+export let getCurrentInstructionCount;
 export let getCurrentTime;
 
 const hasNativePerformanceNow =
@@ -71,6 +72,15 @@ if (hasNativePerformanceNow) {
   getCurrentTime = function() {
     return Performance.now();
   };
+
+  // "instructionCount" is defined on the Performance Blink IDL interface.
+  // The performance object on window is an instance of WindowPerformance, which inherits from Performance
+  // so we can't use hasOwnProperty('instructionCount') for this check.
+  if (Performance.instructionCount !== undefined) {
+    getCurrentInstructionCount = function() {
+      return Performance.instructionCount;
+    };
+  }
 } else {
   getCurrentTime = function() {
     return localDate.now();

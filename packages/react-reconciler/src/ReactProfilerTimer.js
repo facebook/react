@@ -15,7 +15,12 @@ import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 // CommonJS interop named imports.
 import * as Scheduler from 'scheduler';
 
-const {unstable_now: now} = Scheduler;
+const {unstable_instructionCount, unstable_now} = Scheduler;
+
+const now =
+  typeof unstable_instructionCount === 'function'
+    ? unstable_instructionCount
+    : unstable_now;
 
 export type ProfilerTimer = {
   getCommitTime(): number,

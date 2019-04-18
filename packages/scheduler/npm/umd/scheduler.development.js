@@ -82,6 +82,13 @@
     );
   }
 
+  function unstable_instructionCount() {
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_instructionCount.apply(
+      this,
+      arguments
+    );
+  }
+
   function unstable_pauseExecution() {
     return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_pauseExecution.apply(
       this,
@@ -108,6 +115,7 @@
     unstable_continueExecution: unstable_continueExecution,
     unstable_pauseExecution: unstable_pauseExecution,
     unstable_getFirstCallbackNode: unstable_getFirstCallbackNode,
+    unstable_instructionCount: unstable_instructionCount,
     get unstable_IdlePriority() {
       return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
         .Scheduler.unstable_IdlePriority;

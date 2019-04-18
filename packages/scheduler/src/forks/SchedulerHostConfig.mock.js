@@ -43,6 +43,8 @@ export function shouldYieldToHost(): boolean {
   return false;
 }
 
+export const getCurrentInstructionCount = null;
+
 export function getCurrentTime(): number {
   return currentTime;
 }
