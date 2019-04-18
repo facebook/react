@@ -363,7 +363,7 @@ describe('ReactDOMServerHydration', () => {
     expect(() => {
       element.innerHTML = ReactDOMServer.renderToString(markup);
     }).toLowPriorityWarnDev(
-      ['componentWillMount() is deprecated and will be removed'],
+      ['componentWillMount has been renamed to UNSAFE_componentWillMount'],
       {withoutStack: true},
     );
     expect(element.textContent).toBe('Hi');
@@ -373,7 +373,7 @@ describe('ReactDOMServerHydration', () => {
         'Please update the following components to use componentDidMount instead: ComponentWithWarning',
       );
     }).toLowPriorityWarnDev(
-      ['componentWillMount is deprecated and will be removed'],
+      ['componentWillMount has been renamed to UNSAFE_componentWillMount'],
       {withoutStack: true},
     );
     expect(element.textContent).toBe('Hi');

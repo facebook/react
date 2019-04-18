@@ -573,13 +573,17 @@ function resolve(
             if (!didWarnAboutDeprecatedWillMount[componentName]) {
               lowPriorityWarning(
                 false,
-                '%s: componentWillMount() is deprecated and will be ' +
-                  'removed in the next major version. Read about the motivations ' +
-                  'behind this change: ' +
-                  'https://fb.me/react-async-component-lifecycle-hooks' +
-                  '\n\n' +
-                  'As a temporary workaround, you can rename to ' +
-                  'UNSAFE_componentWillMount instead.',
+                'componentWillMount has been renamed to UNSAFE_componentWillMount, ' +
+                  "and the old name won't work in the next major version of React.\n" +
+                  'We suggest doing one of the following:\n' +
+                  '- To rename all deprecated lifecycles to their new names, you can run ' +
+                  '`npx react-codemod rename-unsafe-lifecycles <path/to/code>` in your project folder.\n' +
+                  '- If you initialize state in componentWillMount, move this logic into the constructor.\n' +
+                  '- If you fetch data or perform other side effects in componentWillMount, ' +
+                  'move this logic into componentDidMount.\n' +
+                  '\nPlease update the following components: %s\n' +
+                  '\nLearn about this warning, with more examples and suggestions here:\n' +
+                  'https://fb.me/react-async-component-lifecycle-hooks',
                 componentName,
               );
               didWarnAboutDeprecatedWillMount[componentName] = true;

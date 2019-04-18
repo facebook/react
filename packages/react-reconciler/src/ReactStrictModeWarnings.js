@@ -141,13 +141,16 @@ if (__DEV__) {
 
       lowPriorityWarning(
         false,
-        'componentWillMount is deprecated and will be removed in the next major version.\n' +
-          'Consider one of the following options to silence this warning:\n' +
-          '- Use componentDidMount instead.\n' +
-          '- To silence the warning in non-strict mode, rename componentWillMount to UNSAFE_componentWillMount.\n' +
-          '- To automatically rename all unsafe lifecycle methods in your codebase, run `npx react-codemod rename-unsafe-lifecycles <path/to/code>` in your command line.\n' +
+        'componentWillMount has been renamed to UNSAFE_componentWillMount, ' +
+          "and the old name won't work in the next major version of React.\n" +
+          'We suggest doing one of the following:\n' +
+          '- To rename all deprecated lifecycles to their new names, you can run ' +
+          '`npx react-codemod rename-unsafe-lifecycles <path/to/code>` in your project folder.\n' +
+          '- If you initialize state in componentWillMount, move this logic into the constructor.\n' +
+          '- If you fetch data or perform other side effects in componentWillMount, ' +
+          'move this logic into componentDidMount.\n' +
           '\nPlease update the following components: %s\n' +
-          '\nLearn more about this warning here:\n' +
+          '\nLearn about this warning, with more examples and suggestions here:\n' +
           'https://fb.me/react-async-component-lifecycle-hooks',
         sortedNames,
       );
@@ -166,13 +169,20 @@ if (__DEV__) {
 
       lowPriorityWarning(
         false,
-        'componentWillReceiveProps is deprecated and will be removed in the next major version.\n' +
-          'Consider one of the following options to silence this warning:\n' +
-          '- Use static getDerivedStateFromProps instead.\n' +
-          '- To silence the warning in non-strict mode, rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps.\n' +
-          '- To automatically rename all unsafe lifecycle methods in your codebase, run `npx react-codemod rename-unsafe-lifecycles <path/to/code>` in your command line.\n' +
+        'componentWillReceiveProps has been renamed to UNSAFE_componentWillReceiveProps, ' +
+          "and the old name won't work in the next major version of React.\n" +
+          'We suggest doing one of the following:\n' +
+          '- To rename all deprecated lifecycles to their new names, you can run ' +
+          '`npx react-codemod rename-unsafe-lifecycles <path/to/code>` in your project folder.\n' +
+          "- If you're updating state whenever props change, " +
+          'move this logic into static getDerivedStateFromProps.\n' +
+          '- If you fetch data or perform other side effects in componentWillReceiveProps, ' +
+          'move this logic into componentDidUpdate.\n' +
+          '- Refactor your code to not use derived state at all, as described at ' +
+          // todo - this should be an fb.me link
+          'https://reactjs.org/blog/2018/06/07/you-probably-dont-need-derived-state.html.\n' +
           '\nPlease update the following components: %s\n' +
-          '\nLearn more about this warning here:\n' +
+          '\nLearn about this warning, with more examples and suggestions here:\n' +
           'https://fb.me/react-async-component-lifecycle-hooks',
         sortedNames,
       );
@@ -191,13 +201,17 @@ if (__DEV__) {
 
       lowPriorityWarning(
         false,
-        'componentWillUpdate is deprecated and will be removed in the next major version.\n' +
-          'Consider one of the following options to silence this warning:\n' +
-          '- Use componentDidUpdate instead.\n' +
-          '- To silence the warning in non-strict mode, rename componentWillUpdate to UNSAFE_componentWillUpdate.\n' +
-          '- To automatically rename all unsafe lifecycle methods in your codebase, run `npx react-codemod rename-unsafe-lifecycles <path/to/code>` in your command line.\n' +
+        'componentWillUpdate has been renamed to UNSAFE_componentWillUpdate, ' +
+          "and the old name won't work in the next major version of React.\n" +
+          'We suggest doing one of the following:\n' +
+          '- To rename all deprecated lifecycles to their new names, you can run ' +
+          '`npx react-codemod rename-unsafe-lifecycles <path/to/code>` in your project folder.\n' +
+          '- If you fetch data or perform other side effects in componentWillUpdate, ' +
+          'move this logic into componentDidUpdate.\n' +
+          "- If you're reading DOM properties before an update, " +
+          'move this logic into getSnapshotBeforeUpdate.\n' +
           '\nPlease update the following components: %s\n' +
-          '\nLearn more about this warning here:\n' +
+          '\nLearn about this warning, with more examples and suggestions here:\n' +
           'https://fb.me/react-async-component-lifecycle-hooks',
         sortedNames,
       );

@@ -429,9 +429,9 @@ describe('ReactStrictMode', () => {
         );
       }).toLowPriorityWarnDev(
         [
-          'componentWillMount is deprecated',
-          'componentWillReceiveProps is deprecated',
-          'componentWillUpdate is deprecated',
+          'componentWillMount has been renamed',
+          'componentWillReceiveProps has been renamed',
+          'componentWillUpdate has been renamed',
         ],
         {withoutStack: true},
       );
@@ -517,7 +517,7 @@ describe('ReactStrictMode', () => {
             '\n\ncomponentWillMount: Please update the following components ' +
             'to use componentDidMount instead: Baz',
         ]);
-      }).toLowPriorityWarnDev(['componentWillMount is deprecated'], {
+      }).toLowPriorityWarnDev(['componentWillMount has been renamed'], {
         withoutStack: true,
       });
 
