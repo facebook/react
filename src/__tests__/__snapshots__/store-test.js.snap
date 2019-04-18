@@ -214,6 +214,32 @@ exports[`Store collapseNodesByDefault:true should filter DOM nodes from the stor
     ▸ <Parent>
 `;
 
+exports[`Store collapseNodesByDefault:true should not add new nodes when suspense is toggled: 1: mount 1`] = `
+[root]
+  ▸ <SuspenseTree>
+`;
+
+exports[`Store collapseNodesByDefault:true should not add new nodes when suspense is toggled: 2: expand tree 1`] = `
+[root]
+  ▾ <SuspenseTree>
+    ▾ <Suspense>
+      ▸ <Parent>
+`;
+
+exports[`Store collapseNodesByDefault:true should not add new nodes when suspense is toggled: 3: toggle fallback on 1`] = `
+[root]
+  ▾ <SuspenseTree>
+    ▾ <Suspense>
+        <Fallback>
+`;
+
+exports[`Store collapseNodesByDefault:true should not add new nodes when suspense is toggled: 4: toggle fallback on 1`] = `
+[root]
+  ▾ <SuspenseTree>
+    ▾ <Suspense>
+      ▸ <Parent>
+`;
+
 exports[`Store collapseNodesByDefault:true should support expanding deep parts of the tree: 1: mount 1`] = `
 [root]
   ▸ <Wrapper>

@@ -4,6 +4,7 @@ describe('Store', () => {
   let React;
   let ReactDOM;
   let TestUtils;
+  let agent;
   let store;
 
   const act = (callback: Function) => {
@@ -14,6 +15,7 @@ describe('Store', () => {
   };
 
   beforeEach(() => {
+    agent = global.agent;
     store = global.store;
 
     React = require('react');
@@ -409,7 +411,7 @@ describe('Store', () => {
       );
       expect(store).toMatchSnapshot('1: mount');
 
-      const deepestedNodeID = global.agent.getIDForNode(ref.current);
+      const deepestedNodeID = agent.getIDForNode(ref.current);
 
       act(() => store.toggleIsCollapsed(deepestedNodeID, false));
       expect(store).toMatchSnapshot('2: expand deepest node');
@@ -459,6 +461,51 @@ describe('Store', () => {
 
       act(() => store.toggleIsCollapsed(store.getElementIDAtIndex(0), true));
       expect(store).toMatchSnapshot('6: collapse root');
+    });
+
+    it('should not add new nodes when suspense is toggled', () => {
+      const SuspenseTree = () => {
+        return (
+          <React.Suspense fallback={<Fallback>Loading outer</Fallback>}>
+            <Parent />
+          </React.Suspense>
+        );
+      };
+
+      const Fallback = () => null;
+      const Parent = () => <Child />;
+      const Child = () => null;
+
+      act(() =>
+        ReactDOM.render(<SuspenseTree />, document.createElement('div'))
+      );
+      expect(store).toMatchSnapshot('1: mount');
+
+      act(() => store.toggleIsCollapsed(store.getElementIDAtIndex(0), false));
+      act(() => store.toggleIsCollapsed(store.getElementIDAtIndex(1), false));
+      expect(store).toMatchSnapshot('2: expand tree');
+
+      // HACK There's only one renderer for this test
+      const rendererID = Object.keys(agent._rendererInterfaces)[0];
+      const suspenseID = store.getElementIDAtIndex(1);
+
+      act(() =>
+        agent.overrideSuspense({
+          id: suspenseID,
+          rendererID,
+          forceFallback: true,
+        })
+      );
+      expect(store).toMatchSnapshot('3: toggle fallback on');
+
+      act(() =>
+        agent.overrideSuspense({
+          id: suspenseID,
+          rendererID,
+          forceFallback: false,
+        })
+      );
+      expect(store).toMatchSnapshot('4: toggle fallback on');
     });
   });
 });

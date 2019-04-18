@@ -551,7 +551,7 @@ export default class Store extends EventEmitter {
 
     if (__DEBUG__) {
       console.groupCollapsed('onBridgeOperations');
-      debug('onBridgeOperations', operations);
+      debug('onBridgeOperations', operations.join(','));
     }
 
     let haveRootsChanged = false;
@@ -772,7 +772,7 @@ export default class Store extends EventEmitter {
 
             children.forEach(childID => {
               const child = ((this._idToElement.get(childID): any): Element);
-              childWeight += child.weight;
+              childWeight += child.isCollapsed ? 1 : child.weight;
             });
 
             element.weight = childWeight + 1;
