@@ -16,6 +16,7 @@ env.beforeEach(() => {
   jest.useFakeTimers();
 
   const originalConsoleError = console.error;
+  // $FlowFixMe
   console.error = (...args) => {
     if (args[0] === 'Warning: React DevTools encountered an error: %s') {
       // Rethrow errors from React.
