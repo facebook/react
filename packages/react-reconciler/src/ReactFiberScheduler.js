@@ -165,7 +165,7 @@ const ceil = Math.ceil;
 const {
   ReactCurrentDispatcher,
   ReactCurrentOwner,
-  ReactShouldWarnActingUpdates,
+  ReactActingRendererSigil,
 } = ReactSharedInternals;
 
 type WorkPhase = 0 | 1 | 2 | 3 | 4 | 5;
@@ -2080,10 +2080,10 @@ function warnAboutInvalidUpdatesOnClassComponentsInDEV(fiber) {
 export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
   if (__DEV__) {
     if (
-      ReactShouldWarnActingUpdates.current !== null &&
+      ReactActingRendererSigil.current !== null &&
       // use the function flushPassiveEffects directly as the sigil
       // so this comparison is expected here
-      ReactShouldWarnActingUpdates.current !== flushPassiveEffects
+      ReactActingRendererSigil.current !== flushPassiveEffects
     ) {
       // it looks like we're using the wrong matching act(), so log a warning
       warningWithoutStack(
@@ -2117,7 +2117,7 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
   if (__DEV__) {
     if (
       workPhase === NotWorking &&
-      ReactShouldWarnActingUpdates.current !== flushPassiveEffects
+      ReactActingRendererSigil.current !== flushPassiveEffects
     ) {
       warningWithoutStack(
         false,

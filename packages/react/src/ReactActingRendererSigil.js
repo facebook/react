@@ -9,10 +9,11 @@
 
 /**
  * Used by act() to track whether you're outside an act() scope.
- * This is an object so we can track identity of the renderer.
+ * We use a renderer's flushPassiveEffects as the sigil value
+ * so we can track identity of the renderer.
  */
 
-const ReactShouldWarnActingUpdates = {
-  current: (null: null | {}), // {} should probably be an opaque type
+const ReactActingRendererSigil = {
+  current: (null: null | (() => boolean)),
 };
-export default ReactShouldWarnActingUpdates;
+export default ReactActingRendererSigil;

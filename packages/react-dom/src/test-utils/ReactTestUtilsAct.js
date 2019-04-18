@@ -35,7 +35,7 @@ const [
 
 const batchedUpdates = ReactDOM.unstable_batchedUpdates;
 
-const {ReactShouldWarnActingUpdates} = ReactSharedInternals;
+const {ReactActingRendererSigil} = ReactSharedInternals;
 
 // this implementation should be exactly the same in
 // ReactTestUtilsAct.js, ReactTestRendererAct.js, createReactNoop.js
@@ -64,17 +64,17 @@ function act(callback: () => Thenable) {
   let previousActingUpdatesSigil;
   if (__DEV__) {
     previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
-    previousActingUpdatesSigil = ReactShouldWarnActingUpdates.current;
+    previousActingUpdatesSigil = ReactActingRendererSigil.current;
     actingUpdatesScopeDepth++;
     // we use the function flushPassiveEffects directly as the sigil,
     // since it's unique to a renderer
-    ReactShouldWarnActingUpdates.current = flushPassiveEffects;
+    ReactActingRendererSigil.current = flushPassiveEffects;
   }
 
   function onDone() {
     if (__DEV__) {
       actingUpdatesScopeDepth--;
-      ReactShouldWarnActingUpdates.current = previousActingUpdatesSigil;
+      ReactActingRendererSigil.current = previousActingUpdatesSigil;
       if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
         // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
         warningWithoutStack(
