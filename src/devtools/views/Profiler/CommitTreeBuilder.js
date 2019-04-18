@@ -3,7 +3,6 @@
 import {
   __DEBUG__,
   TREE_OPERATION_ADD,
-  TREE_OPERATION_RECURSIVE_REMOVE_CHILDREN,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_RESET_CHILDREN,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
@@ -255,37 +254,6 @@ function updateTree(
 
           nodes.set(id, node);
         }
-        break;
-      case TREE_OPERATION_RECURSIVE_REMOVE_CHILDREN:
-        id = ((operations[i + 1]: any): number);
-
-        i = i + 2;
-
-        if (!nodes.has(id)) {
-          throw new Error(
-            'Commit tree does not contain fiber ' +
-              id +
-              '. This is a bug in React DevTools.'
-          );
-        }
-
-        node = getClonedNode(id);
-
-        const recursivelyRemove = childID => {
-          if (!nodes.has(id)) {
-            throw new Error(
-              'Commit tree does not contain fiber ' +
-                id +
-                '. This is a bug in React DevTools.'
-            );
-          }
-          const child = getClonedNode(childID);
-          nodes.delete(childID);
-          child.children.forEach(recursivelyRemove);
-        };
-
-        node.children.forEach(recursivelyRemove);
-        node.children = [];
         break;
       case TREE_OPERATION_REMOVE:
         id = ((operations[i + 1]: any): number);
