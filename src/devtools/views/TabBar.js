@@ -68,6 +68,7 @@ export default function TabBar({
           )}
           key={id}
           onKeyDown={handleKeyDown}
+          onMouseDown={() => selectTab(id)}
           title={title || label}
         >
           <input
