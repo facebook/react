@@ -320,7 +320,7 @@ function useInspectedElement(id: number | null): InspectedElement | null {
       // Ask for an update in a second.
       // Make sure we only ask once though.
       clearTimeout(((timeoutID: any): TimeoutID));
-      setTimeout(sendBridgeRequest, 1000);
+      timeoutID = setTimeout(sendBridgeRequest, 1000);
     };
 
     bridge.addListener('inspectedElement', onInspectedElement);
