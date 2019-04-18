@@ -15,6 +15,16 @@ env.beforeEach(() => {
   // Fake timers let us flush Bridge operations between setup and assertions.
   jest.useFakeTimers();
 
+  const originalConsoleError = console.error;
+  // $FlowFixMe
+  console.error = (...args) => {
+    if (args[0] === 'Warning: React DevTools encountered an error: %s') {
+      // Rethrow errors from React.
+      throw args[1];
+    }
+    originalConsoleError.apply(console, args);
+  };
+
   installHook(global);
 
   const bridgeListeners = [];
