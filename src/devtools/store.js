@@ -6,7 +6,7 @@ import throttle from 'lodash.throttle';
 import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
-  TREE_OPERATION_RESET_CHILDREN,
+  TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
 import { ElementTypeRoot } from './types';
@@ -751,7 +751,7 @@ export default class Store extends EventEmitter {
           removedElementIDs[oldRemovedElementIDs.length] = id;
           break;
         }
-        case TREE_OPERATION_RESET_CHILDREN:
+        case TREE_OPERATION_REORDER_CHILDREN:
           id = ((operations[i + 1]: any): number);
           const numChildren = ((operations[i + 2]: any): number);
           const nextChildren = ((operations.slice(
