@@ -79,8 +79,9 @@ describe('Event responder: Press', () => {
       );
     });
 
-    it('ignores browser emulated "mousedown" event', () => {
+    it('ignores browser emulated events', () => {
       ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      ref.current.dispatchEvent(createPointerEvent('touchstart'));
       ref.current.dispatchEvent(createPointerEvent('mousedown'));
       expect(onPressStart).toHaveBeenCalledTimes(1);
     });
@@ -215,19 +216,24 @@ describe('Event responder: Press', () => {
     });
 
     it('is called after "pointerup" event', () => {
-      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
       ref.current.dispatchEvent(
-        createPointerEvent('pointerup', {pointerType: 'pen'}),
+        createPointerEvent('pointerdown', {pointerType: 'pen'}),
       );
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
       expect(onPressEnd).toHaveBeenCalledTimes(1);
       expect(onPressEnd).toHaveBeenCalledWith(
         expect.objectContaining({pointerType: 'pen', type: 'pressend'}),
       );
     });
 
-    it('ignores browser emulated "mouseup" event', () => {
+    it('ignores browser emulated events', () => {
+      ref.current.dispatchEvent(
+        createPointerEvent('pointerdown', {pointerType: 'touch'}),
+      );
       ref.current.dispatchEvent(createPointerEvent('touchstart'));
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
       ref.current.dispatchEvent(createPointerEvent('touchend'));
+      ref.current.dispatchEvent(createPointerEvent('mousedown'));
       ref.current.dispatchEvent(createPointerEvent('mouseup'));
       expect(onPressEnd).toHaveBeenCalledTimes(1);
       expect(onPressEnd).toHaveBeenCalledWith(
@@ -446,10 +452,10 @@ describe('Event responder: Press', () => {
     });
 
     it('is called after "pointerup" event', () => {
-      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
       ref.current.dispatchEvent(
-        createPointerEvent('pointerup', {pointerType: 'pen'}),
+        createPointerEvent('pointerdown', {pointerType: 'pen'}),
       );
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
       expect(onPress).toHaveBeenCalledTimes(1);
       expect(onPress).toHaveBeenCalledWith(
         expect.objectContaining({pointerType: 'pen', type: 'press'}),
@@ -678,7 +684,9 @@ describe('Event responder: Press', () => {
         bottom: 500,
         right: 500,
       });
-      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      ref.current.dispatchEvent(
+        createPointerEvent('pointerdown', {pointerType: 'touch'}),
+      );
       ref.current.dispatchEvent(
         createPointerEvent('pointermove', {
           pointerType: 'touch',
@@ -690,6 +698,65 @@ describe('Event responder: Press', () => {
       expect(onPressMove).toHaveBeenCalledWith(
         expect.objectContaining({pointerType: 'touch', type: 'pressmove'}),
       );
+    });
+
+    it('is not called if "pointermove" occurs during keyboard press', () => {
+      const onPressMove = jest.fn();
+      const ref = React.createRef();
+      const element = (
+        <Press onPressMove={onPressMove}>
+          <div ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+
+      ref.current.getBoundingClientRect = () => ({
+        top: 50,
+        left: 50,
+        bottom: 500,
+        right: 500,
+      });
+      ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: 'Enter'}));
+      ref.current.dispatchEvent(
+        createPointerEvent('pointermove', {
+          pointerType: 'mouse',
+          pageX: 55,
+          pageY: 55,
+        }),
+      );
+      expect(onPressMove).not.toBeCalled();
+    });
+
+    it('ignores browser emulated events', () => {
+      const onPressMove = jest.fn();
+      const ref = React.createRef();
+      const element = (
+        <Press onPressMove={onPressMove}>
+          <div ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+
+      ref.current.getBoundingClientRect = () => ({
+        top: 50,
+        left: 50,
+        bottom: 500,
+        right: 500,
+      });
+      ref.current.dispatchEvent(
+        createPointerEvent('pointerdown', {pointerType: 'touch'}),
+      );
+      ref.current.dispatchEvent(createPointerEvent('touchstart'));
+      ref.current.dispatchEvent(
+        createPointerEvent('pointermove', {
+          pointerType: 'touch',
+          pageX: 55,
+          pageY: 55,
+        }),
+      );
+      ref.current.dispatchEvent(createPointerEvent('touchmove'));
+      ref.current.dispatchEvent(createPointerEvent('mousemove'));
+      expect(onPressMove).toHaveBeenCalledTimes(1);
     });
   });
 
