@@ -1,6 +1,6 @@
 // @flow
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import Tree from './Tree';
 import SelectedElement from './SelectedElement';
 import styles from './Components.css';
@@ -14,10 +14,16 @@ function Components(_: {||}) {
         <Tree />
       </div>
       <div className={styles.SelectedElementWrapper}>
-        <SelectedElement />
+        <Suspense fallback={<Loading />}>
+          <SelectedElement />
+        </Suspense>
       </div>
     </div>
   );
+}
+
+function Loading() {
+  return <div className={styles.Loading}>Loading...</div>;
 }
 
 export default portaledContent(Components);

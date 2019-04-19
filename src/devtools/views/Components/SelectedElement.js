@@ -1,19 +1,12 @@
 // @flow
 
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useContext } from 'react';
 import { TreeContext } from './TreeContext';
 import { BridgeContext, StoreContext } from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import HooksTree from './HooksTree';
 import InspectedElementTree from './InspectedElementTree';
-import { hydrate } from 'src/hydration';
 import styles from './SelectedElement.css';
 import {
   ElementTypeClass,
@@ -23,8 +16,7 @@ import {
   ElementTypeSuspense,
 } from '../../types';
 
-import type { InspectedElement } from './types';
-import type { DehydratedData, Element } from './types';
+import type { Element, InspectedElement } from './types';
 
 export type Props = {||};
 
@@ -36,7 +28,10 @@ export default function SelectedElement(_: Props) {
   const element =
     selectedElementID !== null ? store.getElementByID(selectedElementID) : null;
 
-  const inspectedElement = useInspectedElement(selectedElementID);
+  const inspectedElement =
+    selectedElementID != null
+      ? store.inspectedElementCache.read(selectedElementID)
+      : null;
 
   const highlightElement = useCallback(() => {
     if (element !== null && selectedElementID !== null) {
@@ -260,81 +255,4 @@ function OwnerView({ displayName, id }: { displayName: string, id: number }) {
       {displayName}
     </button>
   );
-}
-
-function hydrateHelper(dehydratedData: DehydratedData | null): Object | null {
-  if (dehydratedData !== null) {
-    return hydrate(dehydratedData.data, dehydratedData.cleaned);
-  } else {
-    return null;
-  }
-}
-
-function useInspectedElement(id: number | null): InspectedElement | null {
-  const idRef = useRef(id);
-  const bridge = useContext(BridgeContext);
-  const store = useContext(StoreContext);
-
-  const [inspectedElement, setInspectedElement] = useState(null);
-
-  useEffect(() => {
-    // Track the current selected element ID.
-    // We ignore any backend updates about previously selected elements.
-    idRef.current = id;
-
-    // Hide previous/stale insepected element to avoid temporarily showing the wrong values.
-    setInspectedElement(null);
-
-    // A null id indicates that there's nothing currently selected in the tree.
-    if (id === null) {
-      return () => {};
-    }
-
-    const rendererID = store.getRendererIDForElement(id);
-
-    // Update the $r variable.
-    bridge.send('selectElement', { id, rendererID });
-
-    // Update props, state, and context in the side panel.
-    const sendBridgeRequest = () => {
-      bridge.send('inspectElement', { id, rendererID });
-    };
-
-    let timeoutID = null;
-
-    const onInspectedElement = (inspectedElement: InspectedElement) => {
-      if (!inspectedElement || inspectedElement.id !== idRef.current) {
-        // Ignore bridge updates about previously selected elements.
-        return;
-      }
-
-      if (inspectedElement !== null) {
-        inspectedElement.context = hydrateHelper(inspectedElement.context);
-        inspectedElement.hooks = hydrateHelper(inspectedElement.hooks);
-        inspectedElement.props = hydrateHelper(inspectedElement.props);
-        inspectedElement.state = hydrateHelper(inspectedElement.state);
-      }
-
-      setInspectedElement(inspectedElement);
-
-      // Ask for an update in a second.
-      // Make sure we only ask once though.
-      clearTimeout(((timeoutID: any): TimeoutID));
-      timeoutID = setTimeout(sendBridgeRequest, 1000);
-    };
-
-    bridge.addListener('inspectedElement', onInspectedElement);
-
-    sendBridgeRequest();
-
-    return () => {
-      bridge.removeListener('inspectedElement', onInspectedElement);
-
-      if (timeoutID !== null) {
-        clearTimeout(timeoutID);
-      }
-    };
-  }, [bridge, id, idRef, store]);
-
-  return inspectedElement;
 }

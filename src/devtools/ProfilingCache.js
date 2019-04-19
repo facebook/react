@@ -92,6 +92,7 @@ export default class ProfilingCache {
 
   CommitDetails: Resource<
     CommitDetailsParams,
+    string,
     CommitDetailsFrontend
   > = createResource(
     ({ commitIndex, rendererID, rootID }: CommitDetailsParams) => {
@@ -136,6 +137,7 @@ export default class ProfilingCache {
 
   FiberCommits: Resource<
     FiberCommitsParams,
+    string,
     FiberCommitsFrontend
   > = createResource(
     ({ fiberID, rendererID, rootID }: FiberCommitsParams) => {
@@ -168,6 +170,7 @@ export default class ProfilingCache {
 
   Interactions: Resource<
     InteractionsParams,
+    number,
     InteractionsFrontend
   > = createResource(
     ({ rendererID, rootID }: InteractionsParams) => {
@@ -198,6 +201,7 @@ export default class ProfilingCache {
 
   ProfilingSummary: Resource<
     ProfilingSummaryParams,
+    number,
     ProfilingSummaryFrontend
   > = createResource(
     ({ rendererID, rootID }: ProfilingSummaryParams) => {

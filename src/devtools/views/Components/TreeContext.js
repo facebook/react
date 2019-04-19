@@ -33,6 +33,10 @@ import Store from '../../store';
 
 import type { Element } from './types';
 
+// TODO Use two setState pattern for selecting Fibers:
+// The first update should be default priority and should select a new element in the Tree.
+// The second update should be deferred priority and should trigger suspense.
+
 type Context = {|
   // Tree
   baseDepth: number,

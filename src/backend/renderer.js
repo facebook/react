@@ -1492,6 +1492,7 @@ export function attach(
     }
   }
 
+  // TODO Send a no-op message if the specified Fiber hasn't been committed since it was last inspected.
   function inspectElementRaw(id: number): InspectedElement | null {
     let fiber = idToFiberMap.get(id);
 

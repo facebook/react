@@ -13,6 +13,7 @@ import { ElementTypeRoot } from './types';
 import { utfDecodeString } from '../utils';
 import { __DEBUG__ } from '../constants';
 import ProfilingCache from './ProfilingCache';
+import InspectedElementCache from './InspectedElementCache';
 
 import type { ElementType } from './types';
 import type { Element } from './views/Components/types';
@@ -75,11 +76,14 @@ export default class Store extends EventEmitter {
   // The user has imported a previously exported profiling session.
   _importedProfilingData: ImportedProfilingData | null = null;
 
+  // Suspense cache for lazy-loaded inspected Element data.
+  _inspectedElementCache: InspectedElementCache;
+
   // The backend is currently profiling.
   // When profiling is in progress, operations are stored so that we can later reconstruct past commit trees.
   _isProfiling: boolean = false;
 
-  // Suspense cache for reading profilign data.
+  // Suspense cache for reading profiling data.
   _profilingCache: ProfilingCache;
 
   // Map of root (id) to a list of tree mutation that occur during profiling.
@@ -170,6 +174,7 @@ export default class Store extends EventEmitter {
     // so the frontend needs to ask the backend for its status after mounting.
     bridge.send('getProfilingStatus');
 
+    this._inspectedElementCache = new InspectedElementCache(bridge, this);
     this._profilingCache = new ProfilingCache(bridge, this);
   }
 
@@ -222,6 +227,10 @@ export default class Store extends EventEmitter {
     this._profilingCache.invalidate();
 
     this.emit('importedProfilingData');
+  }
+
+  get inspectedElementCache(): InspectedElementCache {
+    return this._inspectedElementCache;
   }
 
   get isProfiling(): boolean {

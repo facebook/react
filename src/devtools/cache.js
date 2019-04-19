@@ -25,9 +25,9 @@ type PendingResult = {|
   value: Suspender,
 |};
 
-type ResolvedResult<V> = {|
+type ResolvedResult<Value> = {|
   status: 1,
-  value: V,
+  value: Value,
 |};
 
 type RejectedResult = {|
@@ -35,11 +35,13 @@ type RejectedResult = {|
   value: mixed,
 |};
 
-type Result<V> = PendingResult | ResolvedResult<V> | RejectedResult;
+type Result<Value> = PendingResult | ResolvedResult<Value> | RejectedResult;
 
-export type Resource<I, V> = {
-  read(I): V,
-  preload(I): void,
+export type Resource<Input, Key, Value> = {
+  invalidate(Key): void,
+  read(Input): Value,
+  preload(Input): void,
+  write(Key, Value): void,
 };
 
 const Pending = 0;
@@ -67,14 +69,14 @@ function identityHashFn(input) {
 
 const CacheContext = createContext(null);
 
-const entries: Map<Resource<any, any>, Map<any, any>> = new Map();
+const entries: Map<Resource<any, any, any>, Map<any, any>> = new Map();
 
-function accessResult<I, K, V>(
+function accessResult<Input, Key, Value>(
   resource: any,
-  fetch: I => Thenable<V>,
-  input: I,
-  key: K
-): Result<V> {
+  fetch: Input => Thenable<Value>,
+  input: Input,
+  key: Key
+): Result<Value> {
   let entriesForResource = entries.get(resource);
   if (entriesForResource === undefined) {
     entriesForResource = new Map();
@@ -86,7 +88,7 @@ function accessResult<I, K, V>(
     thenable.then(
       value => {
         if (newResult.status === Pending) {
-          const resolvedResult: ResolvedResult<V> = (newResult: any);
+          const resolvedResult: ResolvedResult<Value> = (newResult: any);
           resolvedResult.status = Resolved;
           resolvedResult.value = value;
         }
@@ -110,21 +112,28 @@ function accessResult<I, K, V>(
   }
 }
 
-export function createResource<I, K: string | number, V>(
-  fetch: I => Thenable<V>,
-  maybeHashInput?: I => K
-): Resource<I, V> {
-  const hashInput: I => K =
+export function createResource<Input, Key: string | number, Value>(
+  fetch: Input => Thenable<Value>,
+  maybeHashInput?: Input => Key
+): Resource<Input, Key, Value> {
+  const hashInput: Input => Key =
     maybeHashInput !== undefined ? maybeHashInput : (identityHashFn: any);
 
   const resource = {
-    read(input: I): V {
+    invalidate(key: Key): void {
+      const entriesForResource = entries.get(resource);
+      if (entriesForResource !== undefined) {
+        entriesForResource.delete(key);
+      }
+    },
+
+    read(input: Input): Value {
       // Prevent access outside of render.
       // eslint-disable-next-line react-hooks/rules-of-hooks
       readContext(CacheContext);
 
       const key = hashInput(input);
-      const result: Result<V> = accessResult(resource, fetch, input, key);
+      const result: Result<Value> = accessResult(resource, fetch, input, key);
       switch (result.status) {
         case Pending: {
           const suspender = result.value;
@@ -144,13 +153,22 @@ export function createResource<I, K: string | number, V>(
       }
     },
 
-    preload(input: I): void {
+    preload(input: Input): void {
       // Prevent access outside of render.
       // eslint-disable-next-line react-hooks/rules-of-hooks
       readContext(CacheContext);
 
       const key = hashInput(input);
       accessResult(resource, fetch, input, key);
+    },
+
+    write(key: Key, value: Value): void {
+      let entriesForResource = entries.get(resource);
+      if (entriesForResource === undefined) {
+        entriesForResource = new Map();
+        entries.set(resource, entriesForResource);
+      }
+      entriesForResource.set(key, value);
     },
   };
   return resource;
