@@ -65,10 +65,22 @@ describe('Hover event responder', () => {
     });
 
     it('is not called if "pointerover" pointerType is touch', () => {
-      const event = createPointerEvent('pointerover');
-      event.pointerType = 'touch';
+      const event = createPointerEvent('pointerover', {pointerType: 'touch'});
       ref.current.dispatchEvent(event);
       expect(onHoverStart).not.toBeCalled();
+    });
+
+    it('is called if valid "pointerover" follows touch', () => {
+      ref.current.dispatchEvent(
+        createPointerEvent('pointerover', {pointerType: 'touch'}),
+      );
+      ref.current.dispatchEvent(
+        createPointerEvent('pointerout', {pointerType: 'touch'}),
+      );
+      ref.current.dispatchEvent(
+        createPointerEvent('pointerover', {pointerType: 'mouse'}),
+      );
+      expect(onHoverStart).toHaveBeenCalledTimes(1);
     });
 
     it('ignores browser emulated "mouseover" event', () => {
