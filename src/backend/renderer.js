@@ -21,7 +21,7 @@ import {
   LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
-  TREE_OPERATION_RESET_CHILDREN,
+  TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
 import { getUID } from '../utils';
@@ -938,7 +938,7 @@ export function attach(
 
     const numChildren = nextChildren.length;
     beginNextOperation(3 + numChildren);
-    nextOperation[0] = TREE_OPERATION_RESET_CHILDREN;
+    nextOperation[0] = TREE_OPERATION_REORDER_CHILDREN;
     nextOperation[1] = getFiberID(getPrimaryFiber(fiber));
     nextOperation[2] = numChildren;
     for (let i = 0; i < nextChildren.length; i++) {

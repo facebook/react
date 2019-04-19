@@ -4,7 +4,7 @@ import {
   __DEBUG__,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
-  TREE_OPERATION_RESET_CHILDREN,
+  TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from 'src/constants';
 import { utfDecodeString } from 'src/utils';
@@ -286,7 +286,7 @@ function updateTree(
         }
         break;
       }
-      case TREE_OPERATION_RESET_CHILDREN: {
+      case TREE_OPERATION_REORDER_CHILDREN: {
         const id = ((operations[i + 1]: any): number);
         const numChildren = ((operations[i + 2]: any): number);
         const children = ((operations.slice(

@@ -353,10 +353,6 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
     }
   }
 
-  if (searchIndex !== prevSearchIndex) {
-    // The user intentionally navigated between search results
-    didRequestSearch = true;
-  }
   if (searchText !== prevSearchText) {
     const newSearchIndex = searchResults.indexOf(selectedElementID);
     if (newSearchIndex === -1) {
