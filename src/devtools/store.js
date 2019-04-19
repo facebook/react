@@ -601,8 +601,8 @@ export default class Store extends EventEmitter {
       }
     }
 
-    let addedElementIDs: Uint32Array = new Uint32Array(0);
-    let removedElementIDs: Uint32Array = new Uint32Array(0);
+    let addedElementIDs: Array<number> = [];
+    let removedElementIDs: Array<number> = [];
 
     let i = 2;
     while (i < operations.length) {
@@ -711,13 +711,7 @@ export default class Store extends EventEmitter {
             };
 
             this._idToElement.set(id, element);
-
-            // TODO: don't recreate this on every iteration.
-            const oldAddedElementIDs = addedElementIDs;
-            addedElementIDs = new Uint32Array(addedElementIDs.length + 1);
-            addedElementIDs.set(oldAddedElementIDs);
-            addedElementIDs[oldAddedElementIDs.length] = id;
-
+            addedElementIDs.push(id);
             this._adjustParentTreeWeight(parentElement, 1);
           }
           break;
@@ -777,13 +771,7 @@ export default class Store extends EventEmitter {
             }
 
             this._adjustParentTreeWeight(parentElement, -element.weight);
-
-            // Track removed items so search results can be updated
-            // TODO: no need to recreate this in a loop.
-            const oldRemovedElementIDs = removedElementIDs;
-            removedElementIDs = new Uint32Array(removedElementIDs.length + 1);
-            removedElementIDs.set(oldRemovedElementIDs);
-            removedElementIDs[oldRemovedElementIDs.length] = id;
+            removedElementIDs.push(id);
           }
           break;
         }
@@ -872,7 +860,10 @@ export default class Store extends EventEmitter {
       console.groupEnd();
     }
 
-    this.emit('mutated', [addedElementIDs, removedElementIDs]);
+    this.emit('mutated', [
+      new Uint32Array(addedElementIDs),
+      new Uint32Array(removedElementIDs),
+    ]);
   };
 
   onProfilingStatus = (isProfiling: boolean) => {
