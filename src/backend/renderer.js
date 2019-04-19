@@ -937,6 +937,10 @@ export function attach(
     }
 
     const numChildren = nextChildren.length;
+    if (numChildren < 2) {
+      // No need to reorder.
+      return;
+    }
     beginNextOperation(3 + numChildren);
     nextOperation[0] = TREE_OPERATION_REORDER_CHILDREN;
     nextOperation[1] = getFiberID(getPrimaryFiber(fiber));
