@@ -115,6 +115,260 @@ exports[`StoreStressConcurrent should handle a stress test for Suspense (Concurr
       <Y>
 `;
 
+exports[`StoreStressConcurrent should handle a stress test for Suspense without type change (Concurrent Mode) 1`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+      ▾ <MaybeSuspend>
+          <A key="a">
+          <Z>
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense without type change (Concurrent Mode) 2`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+      ▾ <MaybeSuspend>
+          <A key="a">
+          <Z>
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense without type change (Concurrent Mode) 3`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+      ▾ <MaybeSuspend>
+          <A key="a">
+          <B key="b">
+          <C key="c">
+          <Z>
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense without type change (Concurrent Mode) 4`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+      ▾ <MaybeSuspend>
+          <C key="c">
+          <B key="b">
+          <A key="a">
+          <Z>
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense without type change (Concurrent Mode) 5`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+      ▾ <MaybeSuspend>
+          <C key="c">
+          <A key="a">
+          <Z>
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense without type change (Concurrent Mode) 6`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+      ▾ <MaybeSuspend>
+          <C key="c">
+          <A key="a">
+          <Z>
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense without type change (Concurrent Mode) 7`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+      ▾ <MaybeSuspend>
+          <C key="c">
+          <A key="a">
+          <Z>
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense without type change (Concurrent Mode) 8`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+      ▾ <MaybeSuspend>
+          <A key="a">
+          <B key="b">
+          <Z>
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense without type change (Concurrent Mode) 9`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+      ▾ <MaybeSuspend>
+          <A key="a">
+          <Z>
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense without type change (Concurrent Mode) 10`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+      ▾ <MaybeSuspend>
+          <Z>
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense without type change (Concurrent Mode) 11`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+      ▾ <MaybeSuspend>
+          <B key="b">
+          <Z>
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense without type change (Concurrent Mode) 12`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+      ▾ <MaybeSuspend>
+          <A key="a">
+          <Z>
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense without type change (Concurrent Mode) 13`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense without type change (Concurrent Mode) 14`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense without type change (Concurrent Mode) 15`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <A key="a">
+        <B key="b">
+        <C key="c">
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense without type change (Concurrent Mode) 16`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <C key="c">
+        <B key="b">
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense without type change (Concurrent Mode) 17`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <C key="c">
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense without type change (Concurrent Mode) 18`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <C key="c">
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense without type change (Concurrent Mode) 19`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <C key="c">
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense without type change (Concurrent Mode) 20`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <A key="a">
+        <B key="b">
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense without type change (Concurrent Mode) 21`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <A key="a">
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense without type change (Concurrent Mode) 22`] = `
+[root]
+  ▾ <Root>
+      <X>
+      <Suspense>
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense without type change (Concurrent Mode) 23`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <B key="b">
+      <Y>
+`;
+
+exports[`StoreStressConcurrent should handle a stress test for Suspense without type change (Concurrent Mode) 24`] = `
+[root]
+  ▾ <Root>
+      <X>
+    ▾ <Suspense>
+        <A key="a">
+      <Y>
+`;
+
 exports[`StoreStressConcurrent should handle a stress test with different tree operations (Concurrent Mode): 1: abcde 1`] = `
 [root]
   ▾ <Parent>
