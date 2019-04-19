@@ -99,12 +99,7 @@ const targetEventTypes = [
   'pointerdown',
   'pointercancel',
 ];
-const rootEventTypes = [
-  {name: 'keyup', passive: false},
-  {name: 'pointerup', passive: false},
-  'pointermove',
-  'scroll',
-];
+const rootEventTypes = ['keyup', 'pointerup', 'pointermove', 'scroll'];
 
 // If PointerEvents is not supported (e.g., Safari), also listen to touch and mouse events.
 if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
