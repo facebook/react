@@ -80,7 +80,7 @@ For example, removing fibers with ids of 35 and 21:
 ```js
 [
   2, // remove operation
-  1, // number of removed fibers
+  2, // number of removed fibers
   35, // first removed id
   21, // second removed id
 ]
