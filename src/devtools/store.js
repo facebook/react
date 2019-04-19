@@ -799,10 +799,12 @@ export default class Store extends EventEmitter {
           }
           // This check is more expensive so it's gated
           if (__DEV__) {
-            if (nextChildren.find(childID => {
-              const childElement = this._idToElement.get(childID);
-              return childElement == null || childElement.parentID !== id;
-            }) != null) {
+            if (
+              nextChildren.find(childID => {
+                const childElement = this._idToElement.get(childID);
+                return childElement == null || childElement.parentID !== id;
+              }) != null
+            ) {
               console.error(
                 `Children cannot be added or removed during a reorder operation.`
               );
