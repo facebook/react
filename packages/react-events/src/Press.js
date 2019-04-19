@@ -430,7 +430,11 @@ const PressResponder = {
       case 'keypress':
       case 'mousedown':
       case 'touchstart': {
-        if (!state.isPressed && !state.ignoreEmulatedMouseEvents) {
+        if (!state.isPressed) {
+          if (type === 'pointerdown' || type === 'touchstart') {
+            state.ignoreEmulatedMouseEvents = true;
+          }
+
           // Ignore unrelated key events
           if (pointerType === 'keyboard') {
             if (!isValidKeyPress(nativeEvent.key)) {
@@ -438,9 +442,13 @@ const PressResponder = {
             }
           }
 
-          // Ignore mouse pressing on touch hit target area
-          if (pointerType === 'mouse') {
-            if (isEventPositionWithinTouchHitTarget(event, context)) {
+          // Ignore emulated mouse events and mouse pressing on touch hit target
+          // area
+          if (type === 'mousedown') {
+            if (
+              state.ignoreEmulatedMouseEvents ||
+              isEventPositionWithinTouchHitTarget(event, context)
+            ) {
               return shouldStopPropagation;
             }
           }
@@ -471,12 +479,12 @@ const PressResponder = {
       case 'mousemove':
       case 'touchmove': {
         if (state.isPressed) {
-          // Ignore emulated events
-          if (state.ignoreEmulatedMouseEvents) {
+          // Ignore emulated events (pointermove will dispatch touch and mouse events)
+          // Ignore pointermove events during a keyboard press
+          if (state.pointerType !== pointerType) {
             return shouldStopPropagation;
           }
 
-          state.pointerType = pointerType;
           if (state.responderRegion == null) {
             state.responderRegion = calculateResponderRegion(
               getEventCurrentTarget(event, context),
@@ -505,13 +513,7 @@ const PressResponder = {
       case 'mouseup':
       case 'touchend': {
         if (state.isPressed) {
-          // Ignore emulated events
-          if (state.ignoreEmulatedMouseEvents) {
-            state.ignoreEmulatedMouseEvents = false;
-            return shouldStopPropagation;
-          }
-
-          // Ignore emulated events
+          // Ignore unrelated keyboard events
           if (pointerType === 'keyboard') {
             if (!isValidKeyPress(nativeEvent.key)) {
               return false;
@@ -519,7 +521,6 @@ const PressResponder = {
           }
 
           const wasLongPressed = state.isLongPressed;
-          state.pointerType = pointerType;
           dispatchPressEndEvents(context, props, state);
 
           if (state.pressTarget !== null && props.onPress) {
@@ -537,8 +538,9 @@ const PressResponder = {
           }
           context.removeRootEventTypes(rootEventTypes);
           return shouldStopPropagation;
+        } else if (type === 'mouseup' && state.ignoreEmulatedMouseEvents) {
+          state.ignoreEmulatedMouseEvents = false;
         }
-        state.ignoreEmulatedMouseEvents = false;
         return false;
       }
 
