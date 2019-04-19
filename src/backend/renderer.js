@@ -239,15 +239,12 @@ export function attach(
         parentFiber == null ? null : getDataForFiber(parentFiber);
       const parentFiberDisplayName =
         (parentFiberData && parentFiberData.displayName) || 'null';
+      // NOTE: calling getFiberID or getPrimaryFiber is unsafe here
+      // because it will put them in the map. For now, we'll omit them.
+      // TODO: better debugging story for this.
       console.log(
-        `[renderer] %c${name} %c${getFiberID(
-          getPrimaryFiber(fiber)
-        )}:${fiberDisplayName} %c${
-          parentFiber
-            ? getFiberID(getPrimaryFiber(parentFiber)) +
-              ':' +
-              parentFiberDisplayName
-            : ''
+        `[renderer] %c${name} %c${fiberDisplayName} %c${
+          parentFiber ? parentFiberDisplayName : ''
         }`,
         'color: red; font-weight: bold;',
         'color: blue;',
