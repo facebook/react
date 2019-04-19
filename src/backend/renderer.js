@@ -574,13 +574,21 @@ export function attach(
   }
 
   let pendingOperations: Array<number> = [];
+  let pendingRealUnmountedIDs: Array<number> = [];
+  let pendingSimulatedUnmountedIDs: Array<number> = [];
   let pendingOperationsQueue: Array<Uint32Array> | null = [];
 
+  // We keep track of which Fibers have been reported as unmounted by React
+  // during this commit phase so that we don't try to "hide" them or their
+  // children when Suspense flips to fallback. These Fibers won't have IDs.
+  let fibersUnmountedInThisCommitPhase: WeakSet<Fiber> = new WeakSet();
+
+  // TODO: we could make this layer DEV-only and write directly to pendingOperations.
   let nextOperation: Array<number> = [];
   function beginNextOperation(size: number): void {
     nextOperation.length = size;
   }
-  function endNextOperation(addToStartOfQueue: boolean): void {
+  function endNextOperation(): void {
     if (__DEV__) {
       for (let i = 0; i < nextOperation.length; i++) {
         if (!Number.isInteger(nextOperation[i])) {
@@ -591,20 +599,16 @@ export function attach(
         }
       }
     }
-
-    if (addToStartOfQueue) {
-      pendingOperations.splice.apply(
-        pendingOperations,
-        [0, 0].concat(nextOperation)
-      );
-    } else {
-      pendingOperations.push.apply(pendingOperations, nextOperation);
-    }
+    pendingOperations.push.apply(pendingOperations, nextOperation);
     nextOperation.length = 0;
   }
 
   function flushPendingEvents(root: Object): void {
-    if (pendingOperations.length === 0) {
+    if (
+      pendingOperations.length === 0 &&
+      pendingRealUnmountedIDs.length === 0 &&
+      pendingSimulatedUnmountedIDs.length === 0
+    ) {
       // If we're currently profiling, send an "operations" method even if there are no mutations to the tree.
       // The frontend needs this no-op info to know how to reconstruct the tree for each commit,
       // even if a particular commit didn't change the shape of the tree.
@@ -613,18 +617,48 @@ export function attach(
       }
     }
 
+    const ops = new Uint32Array(
+      // Identify which renderer this update is coming from.
+      2 + // [rendererID, rootFiberID]
+      // All unmounts are batched in a single message.
+      2 + // [TREE_OPERATION_REMOVE, removedIDLength]
+        pendingRealUnmountedIDs.length +
+        pendingSimulatedUnmountedIDs.length +
+        // Regular operations
+        pendingOperations.length
+    );
+
     // Identify which renderer this update is coming from.
     // This enables roots to be mapped to renderers,
     // Which in turn enables fiber props, states, and hooks to be inspected.
-    beginNextOperation(2);
-    nextOperation[0] = rendererID;
-    nextOperation[1] = getFiberID(getPrimaryFiber(root.current));
-    endNextOperation(true);
+    let i = 0;
+    ops[i++] = rendererID;
+    ops[i++] = getFiberID(getPrimaryFiber(root.current));
+
+    // All unmounts except roots are batched in a single message.
+    ops[i++] = TREE_OPERATION_REMOVE;
+    // The first number is how many unmounted IDs we're gonna send.
+    ops[i++] =
+      pendingRealUnmountedIDs.length + pendingSimulatedUnmountedIDs.length;
+    // Fill in the real unmounts in the reverse order.
+    // They were inserted parents-first by React, but we want children-first.
+    // So we traverse our array backwards.
+    for (let j = pendingRealUnmountedIDs.length - 1; j >= 0; j--) {
+      ops[i++] = pendingRealUnmountedIDs[j];
+    }
+    // Fill in the simulated unmounts (hidden Suspense subtrees) in their order.
+    // (We want children to go before parents.)
+    // They go *after* the real unmounts because we know for sure they won't be
+    // children of already pushed "real" IDs. If they were, we wouldn't be able
+    // to discover them during the traversal, as they would have been deleted.
+    ops.set(pendingSimulatedUnmountedIDs, i);
+    i += pendingSimulatedUnmountedIDs.length;
+    // Fill in the rest of the operations.
+    ops.set(pendingOperations, i);
 
     // Let the frontend know about tree operations.
     // The first value in this array will identify which root it corresponds to,
     // so we do no longer need to dispatch a separate root-committed event.
-    const ops = Uint32Array.from(pendingOperations);
     if (pendingOperationsQueue !== null) {
       // Until the frontend has been connected, store the tree operations.
       // This will let us avoid walking the tree later when the frontend connects,
@@ -635,7 +669,10 @@ export function attach(
       hook.emit('operations', ops);
     }
 
-    pendingOperations = [];
+    pendingOperations.length = 0;
+    pendingRealUnmountedIDs.length = 0;
+    pendingSimulatedUnmountedIDs.length = 0;
+    fibersUnmountedInThisCommitPhase = new WeakSet();
   }
 
   function recordMount(fiber: Fiber, parentFiber: Fiber | null) {
@@ -657,7 +694,7 @@ export function attach(
       nextOperation[2] = ElementTypeRoot;
       nextOperation[3] = isProfilingSupported ? 1 : 0;
       nextOperation[4] = hasOwnerMetadata ? 1 : 0;
-      endNextOperation(false);
+      endNextOperation();
     } else {
       const { displayName, key, type } = getDataForFiber(fiber);
       const { _debugOwner } = fiber;
@@ -702,7 +739,7 @@ export function attach(
           nextOperation[6 + encodedDisplayNameSize + 1 + i] = encodedKey[i];
         }
       }
-      endNextOperation(false);
+      endNextOperation();
     }
 
     if (isProfiling) {
@@ -714,7 +751,7 @@ export function attach(
       nextOperation[0] = TREE_OPERATION_UPDATE_TREE_BASE_DURATION;
       nextOperation[1] = id;
       nextOperation[2] = treeBaseDuration;
-      endNextOperation(false);
+      endNextOperation();
 
       const { actualDuration } = fiber;
       if (actualDuration > 0) {
@@ -729,7 +766,7 @@ export function attach(
     }
   }
 
-  function recordUnmount(fiber: Fiber) {
+  function recordUnmount(fiber: Fiber, isSimulated: boolean) {
     const isRoot = fiber.tag === HostRoot;
     const primaryFiber = getPrimaryFiber(fiber);
     if (!fiberToIDMap.has(primaryFiber)) {
@@ -744,19 +781,22 @@ export function attach(
     }
     const id = getFiberID(primaryFiber);
     if (isRoot) {
-      beginNextOperation(2);
+      // Removing a root needs to happen at the end
+      // so we don't batch it with other unmounts.
+      beginNextOperation(3);
       nextOperation[0] = TREE_OPERATION_REMOVE;
-      nextOperation[1] = id;
-      endNextOperation(false);
+      nextOperation[1] = 1; // Remove one item
+      nextOperation[2] = id;
+      endNextOperation();
     } else if (!shouldFilterFiber(fiber)) {
-      beginNextOperation(2);
-      nextOperation[0] = TREE_OPERATION_REMOVE;
-      nextOperation[1] = id;
-      // Non-root fibers are deleted during the commit phase.
-      // They are deleted in the parent-first order. However
-      // DevTools currently expects deletions to be child-first.
-      // This is why we prepend the delete operation to the queue.
-      endNextOperation(true);
+      // To maintain child-first ordering,
+      // we'll push it into one of these queues,
+      // and later arrange them in the correct order.
+      if (isSimulated) {
+        pendingSimulatedUnmountedIDs.push(id);
+      } else {
+        pendingRealUnmountedIDs.push(id);
+      }
     }
     fiberToIDMap.delete(primaryFiber);
     idToFiberMap.delete(id);
@@ -816,14 +856,35 @@ export function attach(
     }
   }
 
+  // We use this to simulate unmounting for Suspense trees
+  // when we switch from primary to fallback.
   function unmountFiberChildrenRecursively(fiber: Fiber) {
     if (__DEBUG__) {
       debug('unmountFiberChildrenRecursively()', fiber);
     }
+
+    // We might meet a nested Suspense on our way.
+    const isTimedOutSuspense =
+      fiber.tag === ReactTypeOfWork.SuspenseComponent &&
+      fiber.memoizedState !== null;
+
     let child = fiber.child;
+    if (isTimedOutSuspense) {
+      // If it's showing fallback tree, let's traverse it instead.
+      const primaryChildFragment = fiber.child;
+      const fallbackChildFragment = primaryChildFragment.sibling;
+      // Skip over to the real Fiber child.
+      child = fallbackChildFragment.child;
+    }
+
     while (child !== null) {
-      recordUnmount(child);
-      unmountFiberChildrenRecursively(child);
+      // Record simulated unmounts children-first.
+      // We might find real committed unmounts along the way--skip them.
+      // Otherwise we would send duplicated messages for the same IDs.
+      if (!fibersUnmountedInThisCommitPhase.has(child)) {
+        unmountFiberChildrenRecursively(child);
+        recordUnmount(child, true);
+      }
       child = child.sibling;
     }
   }
@@ -844,7 +905,7 @@ export function attach(
         nextOperation[0] = TREE_OPERATION_UPDATE_TREE_BASE_DURATION;
         nextOperation[1] = getFiberID(getPrimaryFiber(fiber));
         nextOperation[2] = treeBaseDuration;
-        endNextOperation(false);
+        endNextOperation();
       }
 
       if (haveProfilerTimesChanged(fiber.alternate, fiber)) {
@@ -883,7 +944,7 @@ export function attach(
     for (let i = 0; i < nextChildren.length; i++) {
       nextOperation[3 + i] = nextChildren[i];
     }
-    endNextOperation(false);
+    endNextOperation();
   }
 
   function findReorderedChildrenRecursively(
@@ -1091,10 +1152,13 @@ export function attach(
   }
 
   function handleCommitFiberUnmount(fiber) {
+    // Remeber this is a real deletion so we don't
+    // go down this tree when hiding Suspense nodes.
+    fibersUnmountedInThisCommitPhase.add(fiber);
     // This is not recursive.
     // We can't traverse fibers after unmounting so instead
     // we rely on React telling us about each unmount.
-    recordUnmount(fiber);
+    recordUnmount(fiber, false);
   }
 
   function handleCommitFiberRoot(root) {
@@ -1134,7 +1198,7 @@ export function attach(
         updateFiberRecursively(current, alternate, null);
       } else if (wasMounted && !isMounted) {
         // Unmount an existing root.
-        recordUnmount(current);
+        recordUnmount(current, false);
       }
     } else {
       // Mount a new root.
