@@ -714,12 +714,7 @@ export default class Store extends EventEmitter {
           weightDelta = -element.weight;
 
           if (element.children.length > 0) {
-            throw new Error(
-              'Fiber ' +
-                id +
-                ' was removed before its children. ' +
-                'This is a bug in React DevTools.'
-            );
+            throw new Error(`Node ${id} was removed before its children.`);
           }
 
           this._idToElement.delete(id);
@@ -759,7 +754,7 @@ export default class Store extends EventEmitter {
         case TREE_OPERATION_RESET_CHILDREN:
           id = ((operations[i + 1]: any): number);
           const numChildren = ((operations[i + 2]: any): number);
-          const children = ((operations.slice(
+          const nextChildren = ((operations.slice(
             i + 3,
             i + 3 + numChildren
           ): any): Array<number>);
@@ -767,7 +762,7 @@ export default class Store extends EventEmitter {
           i = i + 3 + numChildren;
 
           if (__DEBUG__) {
-            debug('Re-order', `Node ${id} children ${children.join(',')}`);
+            debug('Re-order', `Node ${id} children ${nextChildren.join(',')}`);
           }
 
           if (!this._idToElement.has(id)) {
@@ -777,23 +772,28 @@ export default class Store extends EventEmitter {
           }
 
           element = ((this._idToElement.get(id): any): Element);
+
           const prevChildren = element.children;
-          element.children = Array.from(children);
-          if (element.children.length !== prevChildren.length) {
-            throw new Error(
-              'Fiber ' +
-                id +
-                ' received a different number of children on reorder. ' +
-                'This is a bug in React DevTools.'
+          if (
+            nextChildren.length !== prevChildren.length ||
+            nextChildren.find(childID => {
+              const childElement = this._idToElement.get(childID);
+              return childElement == null || childElement.parentID !== id;
+            }) != null
+          ) {
+            throw Error(
+              `Children cannot be added or removed during a reorder operation.`
             );
           }
+
+          element.children = Array.from(nextChildren);
 
           if (!element.isCollapsed) {
             const prevWeight = element.weight;
 
             let nextWeight = element.type === ElementTypeRoot ? 0 : 1;
 
-            children.forEach(childID => {
+            nextChildren.forEach(childID => {
               const child = ((this._idToElement.get(childID): any): Element);
               nextWeight += child.isCollapsed ? 1 : child.weight;
             });
