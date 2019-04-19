@@ -601,8 +601,8 @@ export default class Store extends EventEmitter {
       }
     }
 
-    let addedElementIDs: Array<number> = [];
-    let removedElementIDs: Array<number> = [];
+    const addedElementIDs: Array<number> = [];
+    const removedElementIDs: Array<number> = [];
 
     let i = 2;
     while (i < operations.length) {
@@ -811,23 +811,6 @@ export default class Store extends EventEmitter {
             }
           }
           element.children = Array.from(nextChildren);
-
-          if (!element.isCollapsed) {
-            const prevWeight = element.weight;
-
-            let nextWeight = element.type === ElementTypeRoot ? 0 : 1;
-
-            nextChildren.forEach(childID => {
-              const child = ((this._idToElement.get(childID): any): Element);
-              nextWeight += child.isCollapsed ? 1 : child.weight;
-            });
-
-            element.weight = nextWeight;
-            // TODO: passing null here is suspicious, but it's existing behavior.
-            // It is suspicious because either we shouldn't need a delta at all--
-            // or we should apply it to all parents, and not just this item.
-            this._adjustParentTreeWeight(null, nextWeight - prevWeight);
-          }
           break;
         }
         case TREE_OPERATION_UPDATE_TREE_BASE_DURATION:
