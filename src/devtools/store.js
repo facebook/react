@@ -543,6 +543,33 @@ export default class Store extends EventEmitter {
     }
   };
 
+  _adjustParentTreeWeight = (
+    parentElement: Element | null,
+    weightDelta: number
+  ) => {
+    let isInsideCollapsedSubTree = false;
+
+    while (parentElement != null) {
+      parentElement.weight += weightDelta;
+
+      // Additions and deletions within a collapsed subtree should not bubble beyond the collapsed parent.
+      // Their weight will bubble up when the parent is expanded.
+      if (parentElement.isCollapsed) {
+        isInsideCollapsedSubTree = true;
+        break;
+      }
+
+      parentElement = ((this._idToElement.get(
+        parentElement.parentID
+      ): any): Element);
+    }
+
+    // Additions and deletions within a collapsed subtree should not affect the overall number of elements.
+    if (!isInsideCollapsedSubTree) {
+      this._weightAcrossRoots += weightDelta;
+    }
+  };
+
   onBridgeOperations = (operations: Uint32Array) => {
     if (!(operations instanceof Uint32Array)) {
       // $FlowFixMe TODO HACK Temporary workaround for the fact that Chrome is not transferring the typed array.
@@ -574,25 +601,16 @@ export default class Store extends EventEmitter {
       }
     }
 
-    let addedElementIDs: Uint32Array = new Uint32Array(0);
-    let removedElementIDs: Uint32Array = new Uint32Array(0);
+    const addedElementIDs: Array<number> = [];
+    const removedElementIDs: Array<number> = [];
 
     let i = 2;
     while (i < operations.length) {
-      let id: number = ((null: any): number);
-      let element: Element = ((null: any): Element);
-      let ownerID: number = 0;
-      let parentID: number = ((null: any): number);
-      let parentElement: Element = ((null: any): Element);
-      let type: ElementType = ((null: any): ElementType);
-      let weightDelta: number = 0;
-
       const operation = operations[i];
-
       switch (operation) {
-        case TREE_OPERATION_ADD:
-          id = ((operations[i + 1]: any): number);
-          type = ((operations[i + 2]: any): ElementType);
+        case TREE_OPERATION_ADD: {
+          const id = ((operations[i + 1]: any): number);
+          const type = ((operations[i + 2]: any): ElementType);
 
           i = i + 3;
 
@@ -602,6 +620,8 @@ export default class Store extends EventEmitter {
             );
           }
 
+          let ownerID: number = 0;
+          let parentID: number = ((null: any): number);
           if (type === ElementTypeRoot) {
             if (__DEBUG__) {
               debug('Add', `new root node ${id}`);
@@ -672,7 +692,9 @@ export default class Store extends EventEmitter {
               );
             }
 
-            parentElement = ((this._idToElement.get(parentID): any): Element);
+            const parentElement = ((this._idToElement.get(
+              parentID
+            ): any): Element);
             parentElement.children = parentElement.children.concat(id);
 
             const element: Element = {
@@ -689,70 +711,67 @@ export default class Store extends EventEmitter {
             };
 
             this._idToElement.set(id, element);
-
-            const oldAddedElementIDs = addedElementIDs;
-            addedElementIDs = new Uint32Array(addedElementIDs.length + 1);
-            addedElementIDs.set(oldAddedElementIDs);
-            addedElementIDs[oldAddedElementIDs.length] = id;
-
-            weightDelta = 1;
+            addedElementIDs.push(id);
+            this._adjustParentTreeWeight(parentElement, 1);
           }
-          break;
-        case TREE_OPERATION_REMOVE: {
-          id = ((operations[i + 1]: any): number);
-
-          if (!this._idToElement.has(id)) {
-            throw Error(
-              `Cannot remove node ${id} because no matching node was found in the Store.`
-            );
-          }
-
-          i = i + 2;
-
-          element = ((this._idToElement.get(id): any): Element);
-          parentID = element.parentID;
-          weightDelta = -element.weight;
-
-          if (element.children.length > 0) {
-            throw new Error(`Node ${id} was removed before its children.`);
-          }
-
-          this._idToElement.delete(id);
-
-          if (parentID === 0) {
-            if (__DEBUG__) {
-              debug('Remove', `node ${id} root`);
-            }
-
-            this._roots = this._roots.filter(rootID => rootID !== id);
-            this._rootIDToRendererID.delete(id);
-            this._rootIDToCapabilities.delete(id);
-
-            haveRootsChanged = true;
-          } else {
-            if (__DEBUG__) {
-              debug('Remove', `node ${id} from parent ${parentID}`);
-            }
-            parentElement = ((this._idToElement.get(parentID): any): Element);
-            if (parentElement === undefined) {
-              throw Error(
-                `Cannot remove node ${id} from parent ${parentID} because no matching node was found in the Store.`
-              );
-            }
-            parentElement.children = parentElement.children.filter(
-              childID => childID !== id
-            );
-          }
-
-          // Track removed items so search results can be updated
-          const oldRemovedElementIDs = removedElementIDs;
-          removedElementIDs = new Uint32Array(removedElementIDs.length + 1);
-          removedElementIDs.set(oldRemovedElementIDs);
-          removedElementIDs[oldRemovedElementIDs.length] = id;
           break;
         }
-        case TREE_OPERATION_REORDER_CHILDREN:
-          id = ((operations[i + 1]: any): number);
+        case TREE_OPERATION_REMOVE: {
+          const removeLength = ((operations[i + 1]: any): number);
+          i = i + 2;
+
+          for (let removeIndex = 0; removeIndex < removeLength; removeIndex++) {
+            const id = ((operations[i]: any): number);
+
+            if (!this._idToElement.has(id)) {
+              throw Error(
+                `Cannot remove node ${id} because no matching node was found in the Store.`
+              );
+            }
+
+            i = i + 1;
+
+            const element = ((this._idToElement.get(id): any): Element);
+            if (element.children.length > 0) {
+              throw new Error(`Node ${id} was removed before its children.`);
+            }
+
+            this._idToElement.delete(id);
+
+            const parentID = element.parentID;
+            let parentElement = null;
+            if (parentID === 0) {
+              if (__DEBUG__) {
+                debug('Remove', `node ${id} root`);
+              }
+
+              this._roots = this._roots.filter(rootID => rootID !== id);
+              this._rootIDToRendererID.delete(id);
+              this._rootIDToCapabilities.delete(id);
+
+              haveRootsChanged = true;
+            } else {
+              if (__DEBUG__) {
+                debug('Remove', `node ${id} from parent ${parentID}`);
+              }
+              parentElement = ((this._idToElement.get(parentID): any): Element);
+              if (parentElement === undefined) {
+                throw Error(
+                  `Cannot remove node ${id} from parent ${parentID} because no matching node was found in the Store.`
+                );
+              }
+              parentElement.children = parentElement.children.filter(
+                childID => childID !== id
+              );
+            }
+
+            this._adjustParentTreeWeight(parentElement, -element.weight);
+            removedElementIDs.push(id);
+          }
+          break;
+        }
+        case TREE_OPERATION_REORDER_CHILDREN: {
+          const id = ((operations[i + 1]: any): number);
           const numChildren = ((operations[i + 2]: any): number);
           const nextChildren = ((operations.slice(
             i + 3,
@@ -771,38 +790,29 @@ export default class Store extends EventEmitter {
             );
           }
 
-          element = ((this._idToElement.get(id): any): Element);
-
+          const element = ((this._idToElement.get(id): any): Element);
           const prevChildren = element.children;
-          if (
-            nextChildren.length !== prevChildren.length ||
-            nextChildren.find(childID => {
-              const childElement = this._idToElement.get(childID);
-              return childElement == null || childElement.parentID !== id;
-            }) != null
-          ) {
+          if (nextChildren.length !== prevChildren.length) {
             throw Error(
               `Children cannot be added or removed during a reorder operation.`
             );
           }
-
-          element.children = Array.from(nextChildren);
-
-          if (!element.isCollapsed) {
-            const prevWeight = element.weight;
-
-            let nextWeight = element.type === ElementTypeRoot ? 0 : 1;
-
-            nextChildren.forEach(childID => {
-              const child = ((this._idToElement.get(childID): any): Element);
-              nextWeight += child.isCollapsed ? 1 : child.weight;
-            });
-
-            element.weight = nextWeight;
-
-            weightDelta = nextWeight - prevWeight;
+          // This check is more expensive so it's gated
+          if (__DEV__) {
+            if (
+              nextChildren.find(childID => {
+                const childElement = this._idToElement.get(childID);
+                return childElement == null || childElement.parentID !== id;
+              }) != null
+            ) {
+              console.error(
+                `Children cannot be added or removed during a reorder operation.`
+              );
+            }
           }
+          element.children = Array.from(nextChildren);
           break;
+        }
         case TREE_OPERATION_UPDATE_TREE_BASE_DURATION:
           // Base duration updates are only sent while profiling is in progress.
           // We can ignore them at this point.
@@ -811,28 +821,6 @@ export default class Store extends EventEmitter {
           break;
         default:
           throw Error(`Unsupported Bridge operation ${operation}`);
-      }
-
-      let isInsideCollapsedSubTree = false;
-
-      while (parentElement != null) {
-        parentElement.weight += weightDelta;
-
-        // Additions and deletions within a collapsed subtree should not bubble beyond the collapsed parent.
-        // Their weight will bubble up when the parent is expanded.
-        if (parentElement.isCollapsed) {
-          isInsideCollapsedSubTree = true;
-          break;
-        }
-
-        parentElement = ((this._idToElement.get(
-          parentElement.parentID
-        ): any): Element);
-      }
-
-      // Additions and deletions within a collapsed subtree should not affect the overall number of elements.
-      if (!isInsideCollapsedSubTree) {
-        this._weightAcrossRoots += weightDelta;
       }
     }
 
@@ -860,7 +848,10 @@ export default class Store extends EventEmitter {
       console.groupEnd();
     }
 
-    this.emit('mutated', [addedElementIDs, removedElementIDs]);
+    this.emit('mutated', [
+      new Uint32Array(addedElementIDs),
+      new Uint32Array(removedElementIDs),
+    ]);
   };
 
   onProfilingStatus = (isProfiling: boolean) => {

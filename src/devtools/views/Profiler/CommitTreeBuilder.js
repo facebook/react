@@ -168,18 +168,12 @@ function updateTree(
 
   let i = 2;
   while (i < operations.length) {
-    let id: number = ((null: any): number);
-    let node: Node = ((null: any): Node);
-    let parentID: number = ((null: any): number);
-    let parentNode: Node = ((null: any): Node);
-    let type: ElementType = ((null: any): ElementType);
-
     const operation = operations[i];
 
     switch (operation) {
       case TREE_OPERATION_ADD:
-        id = ((operations[i + 1]: any): number);
-        type = ((operations[i + 2]: any): ElementType);
+        const id = ((operations[i + 1]: any): number);
+        const type = ((operations[i + 2]: any): ElementType);
 
         i = i + 3;
 
@@ -210,7 +204,7 @@ function updateTree(
 
           nodes.set(id, node);
         } else {
-          parentID = ((operations[i]: any): number);
+          const parentID = ((operations[i]: any): number);
           i++;
 
           i++; // ownerID
@@ -240,7 +234,7 @@ function updateTree(
             );
           }
 
-          parentNode = getClonedNode(parentID);
+          const parentNode = getClonedNode(parentID);
           parentNode.children = parentNode.children.concat(id);
 
           const node: Node = {
@@ -254,40 +248,46 @@ function updateTree(
 
           nodes.set(id, node);
         }
-        break;
-      case TREE_OPERATION_REMOVE:
-        id = ((operations[i + 1]: any): number);
 
+        break;
+      case TREE_OPERATION_REMOVE: {
+        const removeLength = ((operations[i + 1]: any): number);
         i = i + 2;
 
-        if (!nodes.has(id)) {
-          throw new Error(
-            'Commit tree does not contain fiber ' +
-              id +
-              '. This is a bug in React DevTools.'
-          );
-        }
+        for (let removeIndex = 0; removeIndex < removeLength; removeIndex++) {
+          const id = ((operations[i]: any): number);
+          i = i + 1;
 
-        node = getClonedNode(id);
-        parentID = node.parentID;
-
-        nodes.delete(id);
-
-        parentNode = getClonedNode(parentID);
-        if (parentNode == null) {
-          // No-op
-        } else {
-          if (__DEBUG__) {
-            debug('Remove', `fiber ${id} from parent ${parentID}`);
+          if (!nodes.has(id)) {
+            throw new Error(
+              'Commit tree does not contain fiber ' +
+                id +
+                '. This is a bug in React DevTools.'
+            );
           }
 
-          parentNode.children = parentNode.children.filter(
-            childID => childID !== id
-          );
+          const node = getClonedNode(id);
+          const parentID = node.parentID;
+
+          nodes.delete(id);
+
+          const parentNode = getClonedNode(parentID);
+          if (parentNode == null) {
+            // No-op
+          } else {
+            if (__DEBUG__) {
+              debug('Remove', `fiber ${id} from parent ${parentID}`);
+            }
+
+            parentNode.children = parentNode.children.filter(
+              childID => childID !== id
+            );
+          }
         }
         break;
-      case TREE_OPERATION_REORDER_CHILDREN:
-        id = ((operations[i + 1]: any): number);
+      }
+      case TREE_OPERATION_REORDER_CHILDREN: {
+        const id = ((operations[i + 1]: any): number);
         const numChildren = ((operations[i + 2]: any): number);
         const children = ((operations.slice(
           i + 3,
@@ -300,14 +300,15 @@ function updateTree(
           debug('Re-order', `fiber ${id} children ${children.join(',')}`);
         }
 
-        node = getClonedNode(id);
+        const node = getClonedNode(id);
         node.children = Array.from(children);
 
         break;
-      case TREE_OPERATION_UPDATE_TREE_BASE_DURATION:
-        id = operations[i + 1];
+      }
+      case TREE_OPERATION_UPDATE_TREE_BASE_DURATION: {
+        const id = operations[i + 1];
 
-        node = getClonedNode(id);
+        const node = getClonedNode(id);
         node.treeBaseDuration = operations[i + 2] / 1000; // Convert microseconds back to milliseconds;
 
         if (__DEBUG__) {
@@ -319,6 +320,7 @@ function updateTree(
 
         i = i + 3;
         break;
+      }
       default:
         throw Error(`Unsupported Bridge operation ${operation}`);
     }

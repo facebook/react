@@ -668,4 +668,435 @@ describe('StoreStressConcurrent', () => {
       }
     }
   });
+
+  it('should handle a stress test for Suspense without type change (Concurrent Mode)', () => {
+    const A = () => 'a';
+    const B = () => 'b';
+    const C = () => 'c';
+    const X = () => 'x';
+    const Y = () => 'y';
+    const Z = () => 'z';
+    const a = <A key="a" />;
+    const b = <B key="b" />;
+    const c = <C key="c" />;
+    const z = <Z key="z" />;
+
+    // prettier-ignore
+    const steps = [
+      a,
+      [a],
+      [a, b, c],
+      [c, b, a],
+      [c, null, a],
+      <React.Fragment>{c}{a}</React.Fragment>,
+      <div>{c}{a}</div>,
+      <div><span>{a}</span>{b}</div>,
+      [[a]],
+      null,
+      b,
+      a
+    ];
+
+    const Never = () => {
+      throw new Promise(() => {});
+    };
+
+    const MaybeSuspend = ({ children, suspend }) => {
+      if (suspend) {
+        return (
+          <div>
+            {children}
+            <Never />
+            <X />
+          </div>
+        );
+      }
+      return (
+        <div>
+          {children}
+          <Z />
+        </div>
+      );
+    };
+
+    const Root = ({ children }) => {
+      return children;
+    };
+
+    // 1. For each step, check Suspense can render them as initial primary content.
+    // This is the only step where we use Jest snapshots.
+    let snapshots = [];
+    let container = document.createElement('div');
+    // $FlowFixMe
+    let root = ReactDOM.unstable_createRoot(container);
+    for (let i = 0; i < steps.length; i++) {
+      act(() =>
+        root.render(
+          <Root>
+            <X />
+            <React.Suspense fallback={z}>
+              <MaybeSuspend suspend={false}>{steps[i]}</MaybeSuspend>
+            </React.Suspense>
+            <Y />
+          </Root>
+        )
+      );
+      // We snapshot each step once so it doesn't regress.
+      expect(store).toMatchSnapshot();
+      snapshots.push(print(store));
+      act(() => root.unmount());
+      expect(print(store)).toBe('');
+    }
+
+    // 2. Verify check Suspense can render same steps as initial fallback content.
+    // We don't actually assert here because the tree includes <MaybeSuspend>
+    // which is different from the snapshots above. So we take more snapshots.
+    let fallbackSnapshots = [];
+    for (let i = 0; i < steps.length; i++) {
+      act(() =>
+        root.render(
+          <Root>
+            <X />
+            <React.Suspense fallback={steps[i]}>
+              <Z />
+              <MaybeSuspend suspend={true}>{steps[i]}</MaybeSuspend>
+              <Z />
+            </React.Suspense>
+            <Y />
+          </Root>
+        )
+      );
+      // We snapshot each step once so it doesn't regress.
+      expect(store).toMatchSnapshot();
+      fallbackSnapshots.push(print(store));
+      act(() => root.unmount());
+      expect(print(store)).toBe('');
+    }
+
+    // 3. Verify we can update from each step to each step in primary mode.
+    for (let i = 0; i < steps.length; i++) {
+      for (let j = 0; j < steps.length; j++) {
+        // Always start with a fresh container and steps[i].
+        container = document.createElement('div');
+        // $FlowFixMe
+        root = ReactDOM.unstable_createRoot(container);
+        act(() =>
+          root.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={z}>
+                <MaybeSuspend suspend={false}>{steps[i]}</MaybeSuspend>
+              </React.Suspense>
+              <Y />
+            </Root>
+          )
+        );
+        expect(print(store)).toEqual(snapshots[i]);
+        // Re-render with steps[j].
+        act(() =>
+          root.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={z}>
+                <MaybeSuspend suspend={false}>{steps[j]}</MaybeSuspend>
+              </React.Suspense>
+              <Y />
+            </Root>
+          )
+        );
+        // Verify the successful transition to steps[j].
+        expect(print(store)).toEqual(snapshots[j]);
+        // Check that we can transition back again.
+        act(() =>
+          root.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={z}>
+                <MaybeSuspend suspend={false}>{steps[i]}</MaybeSuspend>
+              </React.Suspense>
+              <Y />
+            </Root>
+          )
+        );
+        expect(print(store)).toEqual(snapshots[i]);
+        // Clean up after every iteration.
+        act(() => root.unmount());
+        expect(print(store)).toBe('');
+      }
+    }
+
+    // 4. Verify we can update from each step to each step in fallback mode.
+    for (let i = 0; i < steps.length; i++) {
+      for (let j = 0; j < steps.length; j++) {
+        // Always start with a fresh container and steps[i].
+        container = document.createElement('div');
+        // $FlowFixMe
+        root = ReactDOM.unstable_createRoot(container);
+        act(() =>
+          root.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={steps[i]}>
+                <Z />
+                <MaybeSuspend suspend={true}>
+                  <X />
+                  <Y />
+                </MaybeSuspend>
+                <Z />
+              </React.Suspense>
+              <Y />
+            </Root>
+          )
+        );
+        expect(print(store)).toEqual(fallbackSnapshots[i]);
+        // Re-render with steps[j].
+        act(() =>
+          root.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={steps[j]}>
+                <Z />
+                <MaybeSuspend suspend={true}>
+                  <Y />
+                  <X />
+                </MaybeSuspend>
+                <Z />
+              </React.Suspense>
+              <Y />
+            </Root>
+          )
+        );
+        // Verify the successful transition to steps[j].
+        expect(print(store)).toEqual(fallbackSnapshots[j]);
+        // Check that we can transition back again.
+        act(() =>
+          root.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={steps[i]}>
+                <Z />
+                <MaybeSuspend suspend={true}>
+                  <X />
+                  <Y />
+                </MaybeSuspend>
+                <Z />
+              </React.Suspense>
+              <Y />
+            </Root>
+          )
+        );
+        expect(print(store)).toEqual(fallbackSnapshots[i]);
+        // Clean up after every iteration.
+        act(() => root.unmount());
+        expect(print(store)).toBe('');
+      }
+    }
+
+    // 5. Verify we can update from each step to each step when moving primary -> fallback.
+    for (let i = 0; i < steps.length; i++) {
+      for (let j = 0; j < steps.length; j++) {
+        // Always start with a fresh container and steps[i].
+        container = document.createElement('div');
+        // $FlowFixMe
+        root = ReactDOM.unstable_createRoot(container);
+        act(() =>
+          root.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={z}>
+                <MaybeSuspend suspend={false}>{steps[i]}</MaybeSuspend>
+              </React.Suspense>
+              <Y />
+            </Root>
+          )
+        );
+        expect(print(store)).toEqual(snapshots[i]);
+        // Re-render with steps[j].
+        act(() =>
+          root.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={steps[j]}>
+                <MaybeSuspend suspend={true}>{steps[i]}</MaybeSuspend>
+              </React.Suspense>
+              <Y />
+            </Root>
+          )
+        );
+        // Verify the successful transition to steps[j].
+        expect(print(store)).toEqual(fallbackSnapshots[j]);
+        // Check that we can transition back again.
+        act(() =>
+          root.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={z}>
+                <MaybeSuspend suspend={false}>{steps[i]}</MaybeSuspend>
+              </React.Suspense>
+              <Y />
+            </Root>
+          )
+        );
+        expect(print(store)).toEqual(snapshots[i]);
+        // Clean up after every iteration.
+        act(() => root.unmount());
+        expect(print(store)).toBe('');
+      }
+    }
+
+    // 6. Verify we can update from each step to each step when moving fallback -> primary.
+    for (let i = 0; i < steps.length; i++) {
+      for (let j = 0; j < steps.length; j++) {
+        // Always start with a fresh container and steps[i].
+        container = document.createElement('div');
+        // $FlowFixMe
+        root = ReactDOM.unstable_createRoot(container);
+        act(() =>
+          root.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={steps[i]}>
+                <MaybeSuspend suspend={true}>{steps[j]}</MaybeSuspend>
+              </React.Suspense>
+              <Y />
+            </Root>
+          )
+        );
+        expect(print(store)).toEqual(fallbackSnapshots[i]);
+        // Re-render with steps[j].
+        act(() =>
+          root.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={steps[i]}>
+                <MaybeSuspend suspend={false}>{steps[j]}</MaybeSuspend>
+              </React.Suspense>
+              <Y />
+            </Root>
+          )
+        );
+        // Verify the successful transition to steps[j].
+        expect(print(store)).toEqual(snapshots[j]);
+        // Check that we can transition back again.
+        act(() =>
+          root.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={steps[i]}>
+                <MaybeSuspend suspend={true}>{steps[j]}</MaybeSuspend>
+              </React.Suspense>
+              <Y />
+            </Root>
+          )
+        );
+        expect(print(store)).toEqual(fallbackSnapshots[i]);
+        // Clean up after every iteration.
+        act(() => root.unmount());
+        expect(print(store)).toBe('');
+      }
+    }
+
+    // 7. Verify we can update from each step to each step when toggling Suspense.
+    for (let i = 0; i < steps.length; i++) {
+      for (let j = 0; j < steps.length; j++) {
+        // Always start with a fresh container and steps[i].
+        container = document.createElement('div');
+        // $FlowFixMe
+        root = ReactDOM.unstable_createRoot(container);
+        act(() =>
+          root.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={steps[j]}>
+                <MaybeSuspend suspend={false}>{steps[i]}</MaybeSuspend>
+              </React.Suspense>
+              <Y />
+            </Root>
+          )
+        );
+
+        // We get ID from the index in the tree above:
+        // Root, X, Suspense, ...
+        //          ^ (index is 2)
+        const suspenseID = store.getElementIDAtIndex(2);
+
+        // Force fallback.
+        expect(print(store)).toEqual(snapshots[i]);
+        act(() => {
+          const suspenseID = store.getElementIDAtIndex(2);
+          bridge.send('overrideSuspense', {
+            id: suspenseID,
+            rendererID: store.getRendererIDForElement(suspenseID),
+            forceFallback: true,
+          });
+        });
+        expect(print(store)).toEqual(fallbackSnapshots[j]);
+
+        // Stop forcing fallback.
+        act(() => {
+          bridge.send('overrideSuspense', {
+            id: suspenseID,
+            rendererID: store.getRendererIDForElement(suspenseID),
+            forceFallback: false,
+          });
+        });
+        expect(print(store)).toEqual(snapshots[i]);
+
+        // Trigger actual fallback.
+        act(() =>
+          root.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={steps[j]}>
+                <MaybeSuspend suspend={true}>{steps[i]}</MaybeSuspend>
+              </React.Suspense>
+              <Y />
+            </Root>
+          )
+        );
+        expect(print(store)).toEqual(fallbackSnapshots[j]);
+
+        // Force fallback while we're in fallback mode.
+        act(() => {
+          bridge.send('overrideSuspense', {
+            id: suspenseID,
+            rendererID: store.getRendererIDForElement(suspenseID),
+            forceFallback: true,
+          });
+        });
+        // Keep seeing fallback content.
+        expect(print(store)).toEqual(fallbackSnapshots[j]);
+
+        // Switch to primary mode.
+        act(() =>
+          root.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={steps[j]}>
+                <MaybeSuspend suspend={false}>{steps[i]}</MaybeSuspend>
+              </React.Suspense>
+              <Y />
+            </Root>
+          )
+        );
+        // Fallback is still forced though.
+        expect(print(store)).toEqual(fallbackSnapshots[j]);
+
+        // Stop forcing fallback. This reverts to primary content.
+        act(() => {
+          bridge.send('overrideSuspense', {
+            id: suspenseID,
+            rendererID: store.getRendererIDForElement(suspenseID),
+            forceFallback: false,
+          });
+        });
+        // Now we see primary content.
+        expect(print(store)).toEqual(snapshots[i]);
+
+        // Clean up after every iteration.
+        act(() => root.unmount());
+        expect(print(store)).toBe('');
+      }
+    }
+  });
 });

@@ -69,16 +69,20 @@ For example, adding a function component `<Foo>` with an id 2:
 
 #### Removing a node
 
-Removing a fiber from the tree (a root or a leaf) only requires sending 2 numbers:
+Removing a fiber from the tree (a root or a leaf) requires sending:
 
 1. remove operation constant (`2`)
-1. fiber id
+1. how many items were removed
+1. number of children
+   * (followed by a children-first list of removed fiber ids)
 
-For example, removing a root fiber with an id of 1:
+For example, removing fibers with ids of 35 and 21:
 ```js
 [
   2, // remove operation
-  1, // fiber id
+  1, // number of removed fibers
+  35, // first removed id
+  21, // second removed id
 ]
 ```
 
