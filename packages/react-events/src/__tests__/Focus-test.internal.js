@@ -40,6 +40,29 @@ describe('Focus event responder', () => {
     container = null;
   });
 
+  describe('disabled', () => {
+    let onBlur, onFocus, ref;
+
+    beforeEach(() => {
+      onBlur = jest.fn();
+      onFocus = jest.fn();
+      ref = React.createRef();
+      const element = (
+        <Focus disabled={true} onBlur={onBlur} onFocus={onFocus}>
+          <div ref={ref} />
+        </Focus>
+      );
+      ReactDOM.render(element, container);
+    });
+
+    it('prevents custom events being dispatched', () => {
+      ref.current.dispatchEvent(createFocusEvent('focus'));
+      ref.current.dispatchEvent(createFocusEvent('blur'));
+      expect(onFocus).not.toBeCalled();
+      expect(onBlur).not.toBeCalled();
+    });
+  });
+
   describe('onBlur', () => {
     let onBlur, ref;
 

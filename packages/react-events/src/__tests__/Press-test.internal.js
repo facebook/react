@@ -55,6 +55,35 @@ describe('Event responder: Press', () => {
     container = null;
   });
 
+  describe('disabled', () => {
+    let onPressStart, onPress, onPressEnd, ref;
+
+    beforeEach(() => {
+      onPressStart = jest.fn();
+      onPress = jest.fn();
+      onPressEnd = jest.fn();
+      ref = React.createRef();
+      const element = (
+        <Press
+          disabled={true}
+          onPressStart={onPressStart}
+          onPress={onPress}
+          onPressEnd={onPressEnd}>
+          <div ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+    });
+
+    it('prevents custom events being dispatched', () => {
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      ref.current.dispatchEvent(createPointerEvent('pointerup'));
+      expect(onPressStart).not.toBeCalled();
+      expect(onPress).not.toBeCalled();
+      expect(onPressEnd).not.toBeCalled();
+    });
+  });
+
   describe('onPressStart', () => {
     let onPressStart, ref;
 
