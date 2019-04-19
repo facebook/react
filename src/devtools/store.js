@@ -747,7 +747,7 @@ export default class Store extends EventEmitter {
             let parentElement = null;
             if (parentID === 0) {
               if (__DEBUG__) {
-                debug('Remove', `fiber ${id} root`);
+                debug('Remove', `node ${id} root`);
               }
 
               this._roots = this._roots.filter(rootID => rootID !== id);
@@ -757,7 +757,7 @@ export default class Store extends EventEmitter {
               haveRootsChanged = true;
             } else {
               if (__DEBUG__) {
-                debug('Remove', `fiber ${id} from parent ${parentID}`);
+                debug('Remove', `node ${id} from parent ${parentID}`);
               }
               parentElement = ((this._idToElement.get(parentID): any): Element);
               if (parentElement === undefined) {
