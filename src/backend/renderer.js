@@ -937,8 +937,8 @@ export function attach(
     }
 
     const numChildren = nextChildren.length;
-    if (numChildren === 1) {
-      // No need to reorder a single child.
+    if (numChildren < 2) {
+      // No need to reorder.
       return;
     }
     beginNextOperation(3 + numChildren);
