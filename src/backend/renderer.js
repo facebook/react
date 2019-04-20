@@ -594,24 +594,16 @@ export function attach(
   // children when Suspense flips to fallback. These Fibers won't have IDs.
   let fibersUnmountedInThisCommitPhase: WeakSet<Fiber> = new WeakSet();
 
-  // TODO: we could make this layer DEV-only and write directly to pendingOperations.
-  let nextOperation: Array<number> = [];
-  function beginNextOperation(size: number): void {
-    nextOperation.length = size;
-  }
-  function endNextOperation(): void {
+  function pushOperation(op: number): void {
     if (__DEV__) {
-      for (let i = 0; i < nextOperation.length; i++) {
-        if (!Number.isInteger(nextOperation[i])) {
-          console.error(
-            'endNextOperation() was called but some values are not integers.',
-            nextOperation
-          );
-        }
+      if (!Number.isInteger(op)) {
+        console.error(
+          'pushOperation() was called but the value is not an integer.',
+          op
+        );
       }
     }
-    pendingOperations.push.apply(pendingOperations, nextOperation);
-    nextOperation.length = 0;
+    pendingOperations.push(op);
   }
 
   function flushPendingEvents(root: Object): void {
@@ -699,13 +691,11 @@ export function attach(
     const hasOwnerMetadata = fiber.hasOwnProperty('_debugOwner');
 
     if (isRoot) {
-      beginNextOperation(5);
-      nextOperation[0] = TREE_OPERATION_ADD;
-      nextOperation[1] = id;
-      nextOperation[2] = ElementTypeRoot;
-      nextOperation[3] = isProfilingSupported ? 1 : 0;
-      nextOperation[4] = hasOwnerMetadata ? 1 : 0;
-      endNextOperation();
+      pushOperation(TREE_OPERATION_ADD);
+      pushOperation(id);
+      pushOperation(ElementTypeRoot);
+      pushOperation(isProfilingSupported ? 1 : 0);
+      pushOperation(hasOwnerMetadata ? 1 : 0);
     } else {
       const { displayName, key, type } = getDataForFiber(fiber);
       const { _debugOwner } = fiber;
@@ -732,25 +722,23 @@ export function attach(
         displayName === null ? 0 : encodedDisplayName.length;
       const encodedKeySize = key === null ? 0 : encodedKey.length;
 
-      beginNextOperation(7 + encodedDisplayNameSize + encodedKeySize);
-      nextOperation[0] = TREE_OPERATION_ADD;
-      nextOperation[1] = id;
-      nextOperation[2] = type;
-      nextOperation[3] = parentID;
-      nextOperation[4] = ownerID;
-      nextOperation[5] = encodedDisplayNameSize;
+      pushOperation(TREE_OPERATION_ADD);
+      pushOperation(id);
+      pushOperation(type);
+      pushOperation(parentID);
+      pushOperation(ownerID);
+      pushOperation(encodedDisplayNameSize);
       if (displayName !== null) {
         for (let i = 0; i < encodedDisplayName.length; i++) {
-          nextOperation[6 + i] = encodedDisplayName[i];
+          pushOperation(encodedDisplayName[i]);
         }
       }
-      nextOperation[6 + encodedDisplayNameSize] = encodedKeySize;
+      pushOperation(encodedKeySize);
       if (key !== null) {
         for (let i = 0; i < encodedKey.length; i++) {
-          nextOperation[6 + encodedDisplayNameSize + 1 + i] = encodedKey[i];
+          pushOperation(encodedKey[i]);
         }
       }
-      endNextOperation();
     }
 
     if (isProfiling) {
@@ -758,11 +746,9 @@ export function attach(
       // So we have to convert them from milliseconds to microseconds so we can send them as ints.
       const treeBaseDuration = Math.floor(fiber.treeBaseDuration * 1000);
 
-      beginNextOperation(3);
-      nextOperation[0] = TREE_OPERATION_UPDATE_TREE_BASE_DURATION;
-      nextOperation[1] = id;
-      nextOperation[2] = treeBaseDuration;
-      endNextOperation();
+      pushOperation(TREE_OPERATION_UPDATE_TREE_BASE_DURATION);
+      pushOperation(id);
+      pushOperation(treeBaseDuration);
 
       const { actualDuration } = fiber;
       if (actualDuration > 0) {
@@ -794,11 +780,9 @@ export function attach(
     if (isRoot) {
       // Removing a root needs to happen at the end
       // so we don't batch it with other unmounts.
-      beginNextOperation(3);
-      nextOperation[0] = TREE_OPERATION_REMOVE;
-      nextOperation[1] = 1; // Remove one item
-      nextOperation[2] = id;
-      endNextOperation();
+      pushOperation(TREE_OPERATION_REMOVE);
+      pushOperation(1); // Remove one item
+      pushOperation(id);
     } else if (!shouldFilterFiber(fiber)) {
       // To maintain child-first ordering,
       // we'll push it into one of these queues,
@@ -911,12 +895,9 @@ export function attach(
         // Tree base duration updates are included in the operations typed array.
         // So we have to convert them from milliseconds to microseconds so we can send them as ints.
         const treeBaseDuration = Math.floor(fiber.treeBaseDuration * 1000);
-
-        beginNextOperation(3);
-        nextOperation[0] = TREE_OPERATION_UPDATE_TREE_BASE_DURATION;
-        nextOperation[1] = getFiberID(getPrimaryFiber(fiber));
-        nextOperation[2] = treeBaseDuration;
-        endNextOperation();
+        pushOperation(TREE_OPERATION_UPDATE_TREE_BASE_DURATION);
+        pushOperation(getFiberID(getPrimaryFiber(fiber)));
+        pushOperation(treeBaseDuration);
       }
 
       if (haveProfilerTimesChanged(fiber.alternate, fiber)) {
@@ -952,14 +933,12 @@ export function attach(
       // No need to reorder.
       return;
     }
-    beginNextOperation(3 + numChildren);
-    nextOperation[0] = TREE_OPERATION_REORDER_CHILDREN;
-    nextOperation[1] = getFiberID(getPrimaryFiber(fiber));
-    nextOperation[2] = numChildren;
+    pushOperation(TREE_OPERATION_REORDER_CHILDREN);
+    pushOperation(getFiberID(getPrimaryFiber(fiber)));
+    pushOperation(numChildren);
     for (let i = 0; i < nextChildren.length; i++) {
-      nextOperation[3 + i] = nextChildren[i];
+      pushOperation(nextChildren[i]);
     }
-    endNextOperation();
   }
 
   function findReorderedChildrenRecursively(
