@@ -329,7 +329,7 @@ describe('DOMEventResponderSystem', () => {
     ]);
   });
 
-  it('nested event responders and their event listeners should fire in the correct order without stopLocalPropagation', () => {
+  it('nested event responders should fire in the correct order without stopLocalPropagation', () => {
     let eventLog = [];
     const buttonRef = React.createRef();
 
@@ -370,7 +370,7 @@ describe('DOMEventResponderSystem', () => {
     ]);
   });
 
-  it('nested event responders and their event listeners should fire in the correct order with stopLocalPropagation', () => {
+  it('nested event responders should fire in the correct order with stopLocalPropagation', () => {
     let eventLog = [];
     const buttonRef = React.createRef();
 
