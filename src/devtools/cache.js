@@ -157,7 +157,13 @@ export function createResource<Input, Key: string | number, Value>(
 
     write(key: Key, value: Value): void {
       const entriesForResource = ((entries.get(resource): any): Map<any, any>);
-      entriesForResource.set(key, value);
+
+      const resolvedResult: ResolvedResult<Value> = {
+        status: Resolved,
+        value,
+      };
+
+      entriesForResource.set(key, resolvedResult);
     },
   };
 

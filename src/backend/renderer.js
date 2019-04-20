@@ -959,6 +959,20 @@ export function attach(
       debug('updateFiberRecursively()', nextFiber, parentFiber);
     }
     const shouldIncludeInTree = !shouldFilterFiber(nextFiber);
+
+    // If this is the most recently inspected Fiber, take note of whether it was part of the new commit.
+    // If not, we can avoid re-serializing its props and state if asked again.
+    // Note that we avoid even comparing IDs for fibers not in the tree,
+    // so that we don't inadvertantly add them to the ID Map.
+    if (
+      shouldIncludeInTree &&
+      inspectedElementID !== null &&
+      inspectedElementID === getFiberID(getPrimaryFiber(nextFiber)) &&
+      nextFiber.actualDuration > 0
+    ) {
+      hasInspectedElementChanged = true;
+    }
+
     const isSuspense = nextFiber.tag === SuspenseComponent;
     let shouldResetChildren = false;
     // The behavior of timed-out Suspense trees is unique.
@@ -1632,16 +1646,29 @@ export function attach(
     };
   }
 
+  let inspectedElementID: number | null = null;
+  let hasInspectedElementChanged: boolean = false;
+
   function inspectElement(id: number): InspectedElement | null {
+    if (inspectedElementID === id && !hasInspectedElementChanged) {
+      // Optimization: Don't resend (and reserialize) unchanged props.
+      return null;
+    }
+
+    inspectedElementID = id;
+    hasInspectedElementChanged = false;
+
     let result = inspectElementRaw(id);
     if (result === null) {
       return null;
     }
+
     // TODO Review sanitization approach for the below inspectable values.
     result.context = cleanForBridge(result.context);
     result.hooks = cleanForBridge(result.hooks);
     result.props = cleanForBridge(result.props);
     result.state = cleanForBridge(result.state);
+
     return result;
   }
 

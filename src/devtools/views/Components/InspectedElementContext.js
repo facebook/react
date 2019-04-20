@@ -2,7 +2,6 @@
 
 import React, {
   createContext,
-  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -11,6 +10,8 @@ import React, {
 import { createResource } from '../../cache';
 import { BridgeContext, StoreContext } from '../context';
 import { hydrate } from 'src/hydration';
+import { unstable_next as next } from 'scheduler';
+import { TreeContext } from './TreeContext';
 
 import type {
   DehydratedData,
@@ -18,20 +19,10 @@ import type {
 } from 'src/devtools/views/Components/types';
 import type { Resource } from '../../cache';
 
-// TODO Something needs to poll for (unprompted) updates.
-
-// TODO The curretn approach caches resources permanently.
-// We won't even ask for an update if an element is reselected.
-// I think we need to separate the polling for an update from the suspense cache.
-// This way we can always resened (and poll on an interval) for the selected id,
-// and the cache here can just invalidate itself as responses stream in.
-
-type Params = {|
-  id: number,
-  rendererID: number,
-|};
+// TODO This isn't using the "two setState" pattern and updates sometimes feel janky.
 
 type Context = {|
+  inspectedElementID: number | null,
   read(id: number): InspectedElement | null,
 |};
 
@@ -52,17 +43,57 @@ function InspectedElementContextController({ children }: Props) {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
-  const [count, setCount] = useState(0);
+  const { selectedElementID } = useContext(TreeContext);
+  const [inspectedElement, setInspectedElement] = useState<{
+    id: number | null,
+    inspectedElement: InspectedElement | null,
+  }>({
+    id: selectedElementID,
+    inspectedElement: null,
+  });
+  if (inspectedElement.id !== selectedElementID) {
+    if (selectedElementID === null) {
+      setInspectedElement({
+        id: selectedElementID,
+        inspectedElement: null,
+      });
+    } else {
+      next(() =>
+        setInspectedElement({
+          id: selectedElementID,
+          inspectedElement: null,
+        })
+      );
+    }
+  }
+
+  useEffect(() => {
+    if (inspectedElement.id === null) {
+      return () => {};
+    }
+
+    const rendererID = store.getRendererIDForElement(inspectedElement.id);
+
+    const requestUpdate = () => {
+      bridge.send('inspectElement', { id: inspectedElement.id, rendererID });
+    };
+
+    requestUpdate();
+
+    const intervalID = setInterval(requestUpdate, 1000);
+
+    return () => clearInterval(intervalID);
+  }, [bridge, inspectedElement.id, store]);
 
   const inProgressRequests = useMemo<Map<number, InProgressRequest>>(
     () => new Map(),
     []
   );
 
-  const resource = useMemo<Resource<Params, number, InspectedElement>>(
+  const resource = useMemo<Resource<number, number, InspectedElement>>(
     () =>
       createResource(
-        ({ id, rendererID }: Params) => {
+        (id: number) => {
           let request = inProgressRequests.get(id);
           if (request != null) {
             return request.promise;
@@ -71,28 +102,31 @@ function InspectedElementContextController({ children }: Props) {
           let resolveFn = ((null: any): ResolveFn);
           const promise = new Promise(resolve => {
             resolveFn = resolve;
-
-            bridge.send('inspectElement', { id, rendererID });
           });
 
           inProgressRequests.set(id, { promise, resolveFn });
 
           return promise;
         },
-        ({ id, rendererID }: Params) => id
+        (id: number) => id
       ),
-    [bridge, inProgressRequests]
+    [inProgressRequests]
   );
 
   useEffect(() => {
-    const onInspectedElement = (inspectedElement: InspectedElement | null) => {
-      if (inspectedElement != null) {
-        const id = inspectedElement.id;
+    const onInspectedElement = (
+      inspectedElementRaw: InspectedElement | null
+    ) => {
+      if (inspectedElementRaw != null) {
+        const id = inspectedElementRaw.id;
 
-        inspectedElement.context = hydrateHelper(inspectedElement.context);
-        inspectedElement.hooks = hydrateHelper(inspectedElement.hooks);
-        inspectedElement.props = hydrateHelper(inspectedElement.props);
-        inspectedElement.state = hydrateHelper(inspectedElement.state);
+        const inspectedElement = (({
+          ...inspectedElementRaw,
+          context: hydrateHelper(inspectedElementRaw.context),
+          hooks: hydrateHelper(inspectedElementRaw.hooks),
+          props: hydrateHelper(inspectedElementRaw.props),
+          state: hydrateHelper(inspectedElementRaw.state),
+        }: any): InspectedElement);
 
         const request = inProgressRequests.get(id);
         if (request != null) {
@@ -101,8 +135,10 @@ function InspectedElementContextController({ children }: Props) {
         } else {
           resource.write(id, inspectedElement);
 
-          // Schedule update with React.
-          setCount(count => count + 1);
+          // Schedule update with React if necessary.
+          setInspectedElement(prevState =>
+            prevState.id === id ? { id, inspectedElement } : prevState
+          );
         }
       }
     };
@@ -111,21 +147,15 @@ function InspectedElementContextController({ children }: Props) {
     return () => bridge.removeListener('inspectElement', onInspectedElement);
   }, [bridge, inProgressRequests, resource]);
 
-  const read = useCallback(
-    (id: number) => {
-      const rendererID = store.getRendererIDForElement(id);
-      if (rendererID != null) {
-        return resource.read({ id, rendererID });
-      } else {
-        return null;
-      }
-    },
-    [resource, store]
+  // We intentionally use the broader inspectedElement object, rather than the id,
+  // to enable updates to be scheduled with React after the cache has been invalidated.
+  const value = useMemo(
+    () => ({
+      inspectedElementID: inspectedElement.id,
+      read: resource.read,
+    }),
+    [inspectedElement, resource.read]
   );
-
-  // "count" is intentionally passed so that it recreates the memoized object.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const value = useMemo(() => ({ read }), [count, read]);
 
   return (
     <InspectedElementContext.Provider value={value}>

@@ -22,51 +22,53 @@ import type { Element, InspectedElement } from './types';
 export type Props = {||};
 
 export default function SelectedElement(_: Props) {
-  const { selectedElementID, viewElementSource } = useContext(TreeContext);
+  const { viewElementSource } = useContext(TreeContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
-  const { read } = useContext(InspectedElementContext);
+  const { inspectedElementID, read } = useContext(InspectedElementContext);
 
   const element =
-    selectedElementID !== null ? store.getElementByID(selectedElementID) : null;
+    inspectedElementID !== null
+      ? store.getElementByID(inspectedElementID)
+      : null;
 
   const inspectedElement =
-    selectedElementID != null ? read(selectedElementID) : null;
+    inspectedElementID != null ? read(inspectedElementID) : null;
 
   const highlightElement = useCallback(() => {
-    if (element !== null && selectedElementID !== null) {
-      const rendererID = store.getRendererIDForElement(selectedElementID);
+    if (element !== null && inspectedElementID !== null) {
+      const rendererID = store.getRendererIDForElement(inspectedElementID);
       if (rendererID !== null) {
         bridge.send('highlightElementInDOM', {
           displayName: element.displayName,
           hideAfterTimeout: true,
-          id: selectedElementID,
+          id: inspectedElementID,
           openNativeElementsPanel: true,
           rendererID,
           scrollIntoView: true,
         });
       }
     }
-  }, [bridge, element, selectedElementID, store]);
+  }, [bridge, element, inspectedElementID, store]);
 
   const logElement = useCallback(() => {
-    if (selectedElementID !== null) {
-      const rendererID = store.getRendererIDForElement(selectedElementID);
+    if (inspectedElementID !== null) {
+      const rendererID = store.getRendererIDForElement(inspectedElementID);
       if (rendererID !== null) {
         bridge.send('logElementToConsole', {
-          id: selectedElementID,
+          id: inspectedElementID,
           rendererID,
         });
       }
     }
-  }, [bridge, selectedElementID, store]);
+  }, [bridge, inspectedElementID, store]);
 
   const viewSource = useCallback(() => {
-    if (viewElementSource != null && selectedElementID !== null) {
-      viewElementSource(selectedElementID);
+    if (viewElementSource != null && inspectedElementID !== null) {
+      viewElementSource(inspectedElementID);
     }
-  }, [selectedElementID, viewElementSource]);
+  }, [inspectedElementID, viewElementSource]);
 
   if (element === null) {
     return (
