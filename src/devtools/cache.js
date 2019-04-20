@@ -1,6 +1,7 @@
 // @flow
 
 import React, { createContext } from 'react';
+import LRU from 'lru-cache';
 
 // Cache implementation was forked from the React repo:
 // https://github.com/facebook/react/blob/master/packages/react-cache/src/ReactCache.js
@@ -63,10 +64,6 @@ function readContext(Context, observedBits) {
   return dispatcher.readContext(Context, observedBits);
 }
 
-function identityHashFn(input) {
-  return input;
-}
-
 const CacheContext = createContext(null);
 
 const entries: Map<Resource<any, any, any>, Map<any, any>> = new Map();
@@ -77,12 +74,8 @@ function accessResult<Input, Key, Value>(
   input: Input,
   key: Key
 ): Result<Value> {
-  let entriesForResource = entries.get(resource);
-  if (entriesForResource === undefined) {
-    entriesForResource = new Map();
-    entries.set(resource, entriesForResource);
-  }
-  let entry = entriesForResource.get(key);
+  const entriesForResource = ((entries.get(resource): any): Map<any, any>);
+  const entry = entriesForResource.get(key);
   if (entry === undefined) {
     const thenable = fetch(input);
     thenable.then(
@@ -114,16 +107,16 @@ function accessResult<Input, Key, Value>(
 
 export function createResource<Input, Key: string | number, Value>(
   fetch: Input => Thenable<Value>,
-  maybeHashInput?: Input => Key
+  hashInput: Input => Key,
+  useLRU?: boolean = false
 ): Resource<Input, Key, Value> {
-  const hashInput: Input => Key =
-    maybeHashInput !== undefined ? maybeHashInput : (identityHashFn: any);
-
   const resource = {
     invalidate(key: Key): void {
-      const entriesForResource = entries.get(resource);
-      if (entriesForResource !== undefined) {
+      const entriesForResource = ((entries.get(resource): any): Map<any, any>);
+      if (entriesForResource instanceof Map) {
         entriesForResource.delete(key);
+      } else {
+        entriesForResource.set(key, undefined);
       }
     },
 
@@ -163,14 +156,13 @@ export function createResource<Input, Key: string | number, Value>(
     },
 
     write(key: Key, value: Value): void {
-      let entriesForResource = entries.get(resource);
-      if (entriesForResource === undefined) {
-        entriesForResource = new Map();
-        entries.set(resource, entriesForResource);
-      }
+      const entriesForResource = ((entries.get(resource): any): Map<any, any>);
       entriesForResource.set(key, value);
     },
   };
+
+  entries.set(resource, useLRU ? new LRU({ max: 10 }) : new Map());
+
   return resource;
 }
 

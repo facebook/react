@@ -7,6 +7,7 @@ import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import HooksTree from './HooksTree';
 import InspectedElementTree from './InspectedElementTree';
+import { InspectedElementContext } from './InspectedElementContext';
 import styles from './SelectedElement.css';
 import {
   ElementTypeClass,
@@ -25,13 +26,13 @@ export default function SelectedElement(_: Props) {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
+  const { read } = useContext(InspectedElementContext);
+
   const element =
     selectedElementID !== null ? store.getElementByID(selectedElementID) : null;
 
   const inspectedElement =
-    selectedElementID != null
-      ? store.inspectedElementCache.read(selectedElementID)
-      : null;
+    selectedElementID != null ? read(selectedElementID) : null;
 
   const highlightElement = useCallback(() => {
     if (element !== null && selectedElementID !== null) {
