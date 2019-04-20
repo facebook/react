@@ -247,6 +247,8 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-search-match', documentElements);
   updateStyleHelper(theme, 'color-search-match-current', documentElements);
   updateStyleHelper(theme, 'color-text-color', documentElements);
+  updateStyleHelper(theme, 'color-tooltip-background', documentElements);
+  updateStyleHelper(theme, 'color-tooltip-text', documentElements);
 
   // Font smoothing varies based on the theme.
   updateStyleHelper(theme, 'font-smoothing', documentElements);

@@ -7,6 +7,7 @@ import React, {
   useState,
 } from 'react';
 import { Menu, MenuList, MenuButton, MenuItem } from '@reach/menu-button';
+import Tooltip from '@reach/tooltip';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import { TreeContext } from './TreeContext';
@@ -93,9 +94,11 @@ function ElementsDropdown({
 
   return (
     <Menu>
-      <MenuButton className={styles.MenuButton} title="Open elements dropdown">
-        <ButtonIcon type="more" />
-      </MenuButton>
+      <Tooltip label="Open elements dropdown">
+        <MenuButton className={styles.MenuButton}>
+          <ButtonIcon type="more" />
+        </MenuButton>
+      </Tooltip>
       <MenuList className={styles.Modal}>
         {ownerStack.map((id, index) => (
           <MenuItem

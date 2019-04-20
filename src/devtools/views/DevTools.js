@@ -1,5 +1,10 @@
 // @flow
 
+// Reach styles need to come before any component styles.
+// This makes overridding the styles simpler.
+import '@reach/menu-button/styles.css';
+import '@reach/tooltip/styles.css';
+
 import React, { useEffect, useState } from 'react';
 import Store from '../store';
 import { BridgeContext, StoreContext } from './context';
@@ -14,7 +19,6 @@ import ReactLogo from './ReactLogo';
 
 import styles from './DevTools.css';
 
-import '@reach/menu-button/styles.css';
 import './root.css';
 
 import type { Bridge } from '../../types';
