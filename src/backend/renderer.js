@@ -589,11 +589,6 @@ export function attach(
   let pendingSimulatedUnmountedIDs: Array<number> = [];
   let pendingOperationsQueue: Array<Uint32Array> | null = [];
 
-  // We keep track of which Fibers have been reported as unmounted by React
-  // during this commit phase so that we don't try to "hide" them or their
-  // children when Suspense flips to fallback. These Fibers won't have IDs.
-  let fibersUnmountedInThisCommitPhase: WeakSet<Fiber> = new WeakSet();
-
   function pushOperation(op: number): void {
     if (__DEV__) {
       if (!Number.isInteger(op)) {
@@ -675,7 +670,6 @@ export function attach(
     pendingOperations.length = 0;
     pendingRealUnmountedIDs.length = 0;
     pendingSimulatedUnmountedIDs.length = 0;
-    fibersUnmountedInThisCommitPhase = new WeakSet();
   }
 
   function recordMount(fiber: Fiber, parentFiber: Fiber | null) {
@@ -874,9 +868,8 @@ export function attach(
 
     while (child !== null) {
       // Record simulated unmounts children-first.
-      // We might find real committed unmounts along the way--skip them.
-      // Otherwise we would send duplicated messages for the same IDs.
-      if (!fibersUnmountedInThisCommitPhase.has(child)) {
+      // We skip nodes without return because those are real unmounts.
+      if (child.return !== null) {
         unmountFiberChildrenRecursively(child);
         recordUnmount(child, true);
       }
@@ -1146,9 +1139,6 @@ export function attach(
   }
 
   function handleCommitFiberUnmount(fiber) {
-    // Remeber this is a real deletion so we don't
-    // go down this tree when hiding Suspense nodes.
-    fibersUnmountedInThisCommitPhase.add(fiber);
     // This is not recursive.
     // We can't traverse fibers after unmounting so instead
     // we rely on React telling us about each unmount.
