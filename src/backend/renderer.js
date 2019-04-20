@@ -89,6 +89,7 @@ function getInternalReactConstants(version) {
       ContextProvider: 10,
       CoroutineComponent: -1, // Removed
       CoroutineHandlerPhase: -1, // Removed
+      DehydratedSuspenseComponent: 18, // Behind a flag
       EventComponent: 19, // Added in 16.9
       EventTarget: 20, // Added in 16.9
       ForwardRef: 11,
@@ -115,6 +116,7 @@ function getInternalReactConstants(version) {
       ContextProvider: 12,
       CoroutineComponent: -1, // Removed
       CoroutineHandlerPhase: -1, // Removed
+      DehydratedSuspenseComponent: -1, // Doesn't exist yet
       EventComponent: -1, // Doesn't exist yet
       EventTarget: -1, // Doesn't exist yet
       ForwardRef: 13,
@@ -141,6 +143,7 @@ function getInternalReactConstants(version) {
       ContextProvider: 13,
       CoroutineComponent: 7,
       CoroutineHandlerPhase: 8,
+      DehydratedSuspenseComponent: -1, // Doesn't exist yet
       EventComponent: -1, // Doesn't exist yet
       EventTarget: -1, // Doesn't exist yet
       ForwardRef: 14,
@@ -188,6 +191,7 @@ export function attach(
     FunctionComponent,
     ClassComponent,
     ContextConsumer,
+    DehydratedSuspenseComponent,
     EventComponent,
     EventTarget,
     Fragment,
@@ -267,6 +271,13 @@ export function attach(
       case MemoComponent:
       case SimpleMemoComponent:
         return false;
+      case DehydratedSuspenseComponent:
+        // TODO: ideally we would show dehydrated Suspense immediately.
+        // However, it has some special behavior (like disconnecting
+        // an alternate and turning into real Suspense) which breaks DevTools.
+        // For now, ignore it, and only show it once it gets hydrated.
+        // https://github.com/bvaughn/react-devtools-experimental/issues/197
+        return true;
       case EventComponent:
       case HostPortal:
       case HostComponent:
