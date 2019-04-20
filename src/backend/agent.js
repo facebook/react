@@ -402,6 +402,8 @@ export default class Agent extends EventEmitter {
   };
 
   shutdown = () => {
+    // Clean up the overlay if visible, and associated events.
+    this.stopInspectingDOM();
     this.emit('shutdown');
   };
 
