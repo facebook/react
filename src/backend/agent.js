@@ -525,6 +525,9 @@ export default class Agent extends EventEmitter {
         this._bridge.send('selectFiber', id);
       }
     }),
-    200
+    200,
+    // Don't change the selection in the very first 200ms
+    // because those are usually unintentional as you lift the cursor.
+    { leading: false }
   );
 }
