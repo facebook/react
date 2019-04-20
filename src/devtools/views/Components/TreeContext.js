@@ -596,6 +596,20 @@ function TreeContextController({ children, viewElementSource }: Props) {
           state = reduceTreeState(store, state, action);
           state = reduceSearchState(store, state, action);
           state = reduceOwnersState(store, state, action);
+
+          // If the selected ID is in a collapsed subtree, reset the selected index to null.
+          // We'll know the correct index after the layout effect will toggle the tree,
+          // and the store tree is mutated to account for that.
+          if (
+            state.selectedElementID !== null &&
+            store.isInsideCollapsedSubTree(state.selectedElementID)
+          ) {
+            return {
+              ...state,
+              selectedElementIndex: null,
+            };
+          }
+
           return state;
         default:
           throw new Error(`Unrecognized action "${type}"`);

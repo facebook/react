@@ -429,6 +429,21 @@ export default class Store extends EventEmitter {
     return null;
   }
 
+  isInsideCollapsedSubTree(id: number): boolean {
+    let current = this._idToElement.get(id);
+    while (current != null) {
+      if (current.parentID === 0) {
+        return false;
+      } else {
+        current = this._idToElement.get(current.parentID);
+        if (current != null && current.isCollapsed) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   startProfiling(): void {
     this._bridge.send('startProfiling');
 
