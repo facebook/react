@@ -13,8 +13,6 @@ import type {
 } from 'shared/ReactTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
-const CAPTURE_PHASE = 2;
-
 type FocusProps = {
   disabled: boolean,
   onBlur: (e: FocusEvent) => void,
@@ -106,20 +104,14 @@ const FocusResponder = {
       focusTarget: null,
     };
   },
-  onEvent(
+  onBubbledTargetEvent(
     event: ReactResponderEvent,
     context: ReactResponderContext,
     props: Object,
     state: FocusState,
-  ): boolean {
-    const {type, phase, target} = event;
-    const shouldStopPropagation =
-      props.stopPropagation === undefined ? true : props.stopPropagation;
+  ): void {
+    const {type, target} = event;
 
-    // Focus doesn't handle capture target events at this point
-    if (phase === CAPTURE_PHASE) {
-      return false;
-    }
     switch (type) {
       case 'focus': {
         if (!state.isFocused) {
@@ -147,7 +139,6 @@ const FocusResponder = {
         break;
       }
     }
-    return shouldStopPropagation;
   },
   onUnmount(
     context: ReactResponderContext,
