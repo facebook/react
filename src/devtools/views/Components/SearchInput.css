@@ -18,6 +18,7 @@
 .InputIcon {
   pointer-events: none;
   z-index: 2;
+  color: var(--color-dim);
 }
 
 .IndexLabel {

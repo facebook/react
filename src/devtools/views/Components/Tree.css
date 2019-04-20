@@ -29,3 +29,10 @@
   font-size: var(--font-size-monospace-normal);
   line-height: var(--line-height-data);
 }
+
+.VRule {
+  height: 20px;
+  width: 1px;
+  margin: 0 0.5rem;
+  background-color: var(--color-border);
+}

@@ -50,14 +50,6 @@ export default function OwnerStack() {
 
   return (
     <div className={styles.OwnerStack}>
-      <Button
-        className={styles.IconButton}
-        onClick={resetOwnerStack}
-        title="Back to tree view"
-      >
-        <ButtonIcon type="close" />
-      </Button>
-      <div className={styles.VRule} />
       <div className={styles.Bar} ref={elementsBarRef}>
         {isOverflowing && (
           <ElementsDropdown
@@ -76,6 +68,14 @@ export default function OwnerStack() {
           ))
         )}
       </div>
+      <div className={styles.VRule} />
+      <Button
+        className={styles.IconButton}
+        onClick={resetOwnerStack}
+        title="Back to tree view"
+      >
+        <ButtonIcon type="close" />
+      </Button>
     </div>
   );
 }

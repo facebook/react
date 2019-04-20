@@ -290,8 +290,9 @@ export default function Tree(props: Props) {
   return (
     <div className={styles.Tree} ref={treeRef}>
       <div className={styles.SearchInput}>
-        {ownerStack.length > 0 ? <OwnersStack /> : <SearchInput />}
         <InspectHostNodesToggle />
+        <div className={styles.VRule} />
+        {ownerStack.length > 0 ? <OwnersStack /> : <SearchInput />}
       </div>
       <div
         className={styles.AutoSizerWrapper}

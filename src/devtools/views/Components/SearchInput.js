@@ -127,7 +127,6 @@ export default function SearchInput(props: Props) {
       >
         <ButtonIcon type="close" />
       </Button>
-      <div className={styles.RightVRule} />
     </div>
   );
 }
