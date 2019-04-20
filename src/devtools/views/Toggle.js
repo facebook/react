@@ -32,24 +32,21 @@ export default function Toggle({
     defaultClassName = styles.ToggleOff;
   }
 
-  const handleChange = useCallback(
-    ({ target }) => {
-      onChange(target.checked);
-    },
-    [onChange]
-  );
+  const handleClick = useCallback(() => onChange(!isChecked), [
+    isChecked,
+    onChange,
+  ]);
 
   let toggle = (
-    <label className={`${defaultClassName} ${className}`}>
-      <input
-        type="checkbox"
-        className={styles.Input}
-        checked={isChecked}
-        disabled={isDisabled}
-        onChange={handleChange}
-      />
-      {children}
-    </label>
+    <button
+      className={`${defaultClassName} ${className}`}
+      disabled={isDisabled}
+      onClick={handleClick}
+    >
+      <span className={styles.ToggleContent} tabIndex={-1}>
+        {children}
+      </span>
+    </button>
   );
 
   if (title) {

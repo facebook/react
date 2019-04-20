@@ -1,11 +1,17 @@
 .ToggleDisabled,
 .ToggleOn,
 .ToggleOff {
+  border: none;
   border-radius: 0.25rem;
+  padding: 0;
+  flex: 0 0 auto;
+}
+
+.ToggleContent {
   display: inline-flex;
   align-items: center;
+  border-radius: 0.25rem;
   padding: 0.25rem;
-  flex: 0 0 auto;
 }
 
 .ToggleOff {
@@ -20,15 +26,20 @@
 
 .ToggleOn,
 .ToggleOn:active {
-  background: var(--color-button-background-focus);
-  color: var(--color-button-focus);
+  background: var(--color-button-background-active);
+  color: var(--color-button-active);
   outline: none;
 }
 
-.ToggleOn:focus-within,
-.ToggleOff:focus-within {
-  box-shadow: 0 0 0 2px var(--color-button-background-focus) inset;
+.ToggleOn:focus,
+.ToggleOff:focus,
+.ToggleContent:focus {
   outline: none;
+}
+
+.ToggleOn:focus > .ToggleContent,
+.ToggleOff:focus > .ToggleContent {
+  box-shadow: 0 0 0 2px var(--color-button-background-focus) inset;
 }
 
 .ToggleDisabled {

@@ -7,13 +7,18 @@ import styles from './Button.css';
 import tooltipStyles from './Tooltip.css';
 
 type Props = {
+  children: React$Node,
   className?: string,
   title: string,
 };
 
-export default function Button({ className, title, ...rest }: Props) {
+export default function Button({ children, className, title, ...rest }: Props) {
   let button = (
-    <button className={`${styles.Button} ${className || ''}`} {...rest} />
+    <button className={`${styles.Button} ${className || ''}`} {...rest}>
+      <span className={styles.ButtonContent} tabIndex={-1}>
+        {children}
+      </span>
+    </button>
   );
 
   if (title) {

@@ -205,9 +205,11 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-background', documentElements);
   updateStyleHelper(theme, 'color-border', documentElements);
   updateStyleHelper(theme, 'color-button-background', documentElements);
+  updateStyleHelper(theme, 'color-button-background-active', documentElements);
   updateStyleHelper(theme, 'color-button-background-focus', documentElements);
   updateStyleHelper(theme, 'color-button-background-hover', documentElements);
   updateStyleHelper(theme, 'color-button', documentElements);
+  updateStyleHelper(theme, 'color-button-active', documentElements);
   updateStyleHelper(theme, 'color-button-disabled', documentElements);
   updateStyleHelper(theme, 'color-button-focus', documentElements);
   updateStyleHelper(theme, 'color-button-hover', documentElements);

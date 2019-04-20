@@ -2,12 +2,17 @@
   border: none;
   background: var(--color-button-background);
   color: var(--color-button);
+  padding: 0;
   border-radius: 0.25rem;
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem;
   flex: 0 0 auto;
 }
+.ButtonContent {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 0.25rem;
+  padding: 0.25rem;
+}
+
 .Button:hover {
   background: var(--color-button-background-hover);
   color: var(--color-button-hover);
@@ -17,10 +22,15 @@
   color: var(--color-button-focus);
   outline: none;
 }
-.Button:focus {
+.Button:focus,
+.ButtonContent:focus {
   outline: none;
+}
+
+.Button:focus > .ButtonContent {
   box-shadow: 0 0 0 2px var(--color-button-background-focus) inset;
 }
+
 .Button:disabled,
 .Button:disabled:active {
   background: var(--color-button-background);
