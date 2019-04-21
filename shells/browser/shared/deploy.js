@@ -11,7 +11,10 @@ const main = async buildId => {
 
   execSync(`node ${join(root, './build')}`, {
     cwd: __dirname,
-    env: process.env,
+    env: {
+      ...process.env,
+      NODE_ENV: 'production',
+    },
     stdio: 'inherit',
   });
 
