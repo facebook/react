@@ -449,6 +449,8 @@ export default class Store extends EventEmitter {
 
   // TODO Maybe split this into two methods: expand() and collapse()
   toggleIsCollapsed(id: number, isCollapsed: boolean): void {
+    let didMutate = false;
+
     const element = this.getElementByID(id);
     if (element !== null) {
       if (isCollapsed) {
@@ -456,24 +458,21 @@ export default class Store extends EventEmitter {
           throw Error('Root nodes cannot be collapsed');
         }
 
-        if (element.isCollapsed) {
-          // There's nothing to change in this case.
-          // We can exit early (without even emiting a "mutated" event).
-          return;
-        }
+        if (!element.isCollapsed) {
+          didMutate = true;
+          element.isCollapsed = true;
 
-        element.isCollapsed = true;
+          const weightDelta = 1 - element.weight;
 
-        const weightDelta = 1 - element.weight;
-
-        let parentElement = ((this._idToElement.get(
-          element.parentID
-        ): any): Element);
-        while (parentElement != null) {
-          // We don't need to break on a collapsed parent in the same way as the expand case below.
-          // That's because collapsing a node doesn't "bubble" and affect its parents.
-          parentElement.weight += weightDelta;
-          parentElement = this._idToElement.get(parentElement.parentID);
+          let parentElement = ((this._idToElement.get(
+            element.parentID
+          ): any): Element);
+          while (parentElement != null) {
+            // We don't need to break on a collapsed parent in the same way as the expand case below.
+            // That's because collapsing a node doesn't "bubble" and affect its parents.
+            parentElement.weight += weightDelta;
+            parentElement = this._idToElement.get(parentElement.parentID);
+          }
         }
       } else {
         let currentElement = element;
@@ -481,24 +480,29 @@ export default class Store extends EventEmitter {
           const oldWeight = currentElement.isCollapsed
             ? 1
             : currentElement.weight;
-          currentElement.isCollapsed = false;
-          const newWeight = currentElement.isCollapsed
-            ? 1
-            : currentElement.weight;
-          const weightDelta = newWeight - oldWeight;
 
-          let parentElement = ((this._idToElement.get(
-            currentElement.parentID
-          ): any): Element);
-          while (parentElement != null) {
-            parentElement.weight += weightDelta;
-            if (parentElement.isCollapsed) {
-              // It's important to break on a collapsed parent when expanding nodes.
-              // That's because expanding a node "bubbles" up and expands all parents as well.
-              // Breaking in this case prevents us from over-incrementing the expanded weights.
-              break;
+          if (currentElement.isCollapsed) {
+            didMutate = true;
+            currentElement.isCollapsed = false;
+
+            const newWeight = currentElement.isCollapsed
+              ? 1
+              : currentElement.weight;
+            const weightDelta = newWeight - oldWeight;
+
+            let parentElement = ((this._idToElement.get(
+              currentElement.parentID
+            ): any): Element);
+            while (parentElement != null) {
+              parentElement.weight += weightDelta;
+              if (parentElement.isCollapsed) {
+                // It's important to break on a collapsed parent when expanding nodes.
+                // That's because expanding a node "bubbles" up and expands all parents as well.
+                // Breaking in this case prevents us from over-incrementing the expanded weights.
+                break;
+              }
+              parentElement = this._idToElement.get(parentElement.parentID);
             }
-            parentElement = this._idToElement.get(parentElement.parentID);
           }
 
           currentElement =
@@ -508,17 +512,20 @@ export default class Store extends EventEmitter {
         }
       }
 
-      let weightAcrossRoots = 0;
-      this._roots.forEach(rootID => {
-        const { weight } = ((this.getElementByID(rootID): any): Element);
-        weightAcrossRoots += weight;
-      });
-      this._weightAcrossRoots = weightAcrossRoots;
+      // Only re-calculate weights and emit an "update" event if the store was mutated.
+      if (didMutate) {
+        let weightAcrossRoots = 0;
+        this._roots.forEach(rootID => {
+          const { weight } = ((this.getElementByID(rootID): any): Element);
+          weightAcrossRoots += weight;
+        });
+        this._weightAcrossRoots = weightAcrossRoots;
 
-      // The Tree context's search reducer expects an explicit list of ids for nodes that were added or removed.
-      // In this  case, we can pass it empty arrays since nodes in a collapsed tree are still there (just hidden).
-      // Updating the selected search index later may require auto-expanding a collapsed subtree though.
-      this.emit('mutated', [[], []]);
+        // The Tree context's search reducer expects an explicit list of ids for nodes that were added or removed.
+        // In this  case, we can pass it empty arrays since nodes in a collapsed tree are still there (just hidden).
+        // Updating the selected search index later may require auto-expanding a collapsed subtree though.
+        this.emit('mutated', [[], []]);
+      }
     }
   }
 
