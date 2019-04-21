@@ -97,7 +97,9 @@ function ElementsDropdown({
     <Menu>
       {/* TODO (tooltips) <Tooltip label="Open elements dropdown"> */}
       <MenuButton className={styles.MenuButton}>
-        <ButtonIcon type="more" />
+        <span className={styles.MenuButtonContent} tabIndex={-1}>
+          <ButtonIcon type="more" />
+        </span>
       </MenuButton>
       {/* TODO (tooltips) </Tooltip> */}
       <MenuList className={styles.Modal}>

@@ -42,12 +42,18 @@
   border-radius: 0.25rem;
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem;
+  padding: 0;
   flex: 0 0 auto;
   border: none;
   background: var(--color-button-background);
   color: var(--color-button);
   margin-right: 0.5rem;
+}
+.MenuButtonContent {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 0.25rem;
+  padding: 0.25rem;
 }
 .MenuButton:hover {
   color: var(--color-button-hover);
@@ -57,9 +63,13 @@
   color: var(--color-button-active);
   outline: none;
 }
-.MenuButton:focus-within {
-  background: var(--color-button-background-focus);
+
+.MenuButton:focus,
+.MenuButtonContent:focus {
   outline: none;
+}
+.MenuButton:focus > .MenuButtonContent {
+  background: var(--color-button-background-focus);
 }
 
 .Modal[data-reach-menu-list] {
