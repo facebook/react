@@ -45,7 +45,7 @@
 .IconSizeLarge,
 .IconSizeSmall {
   margin-right: 0.5rem;
-  color: var(--color-button);
+  color: var(--color-button-active);
 }
 
 .IconDisabled {

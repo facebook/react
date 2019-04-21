@@ -1,6 +1,7 @@
 .ToggleDisabled,
 .ToggleOn,
 .ToggleOff {
+  background: var(--color-button-background);
   border: none;
   border-radius: 0.25rem;
   padding: 0;
@@ -20,13 +21,11 @@
   color: var(--color-button);
 }
 .ToggleOff:hover {
-  background: var(--color-button-background-hover);
   color: var(--color-button-hover);
 }
 
 .ToggleOn,
 .ToggleOn:active {
-  background: var(--color-button-background-active);
   color: var(--color-button-active);
   outline: none;
 }
@@ -39,7 +38,7 @@
 
 .ToggleOn:focus > .ToggleContent,
 .ToggleOff:focus > .ToggleContent {
-  box-shadow: 0 0 0 2px var(--color-button-background-focus) inset;
+  background: var(--color-button-background-focus);
 }
 
 .ToggleDisabled {

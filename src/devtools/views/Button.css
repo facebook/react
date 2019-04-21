@@ -14,11 +14,9 @@
 }
 
 .Button:hover {
-  background: var(--color-button-background-hover);
   color: var(--color-button-hover);
 }
 .Button:active {
-  background: var(--color-button-background-focus);
   color: var(--color-button-focus);
   outline: none;
 }
@@ -28,7 +26,7 @@
 }
 
 .Button:focus > .ButtonContent {
-  box-shadow: 0 0 0 2px var(--color-button-background-focus) inset;
+  background: var(--color-button-background-focus);
 }
 
 .Button:disabled,
