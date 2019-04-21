@@ -1258,24 +1258,58 @@ export function attach(
     currentRootID = -1;
   }
 
+  function findAllCurrentHostFibers(parent: Fiber): $ReadOnlyArray<Fiber> {
+    const fibers = [];
+    const currentParent = findCurrentFiberUsingSlowPath(parent);
+    if (!currentParent) {
+      return fibers;
+    }
+
+    // Next we'll drill down this component to find all HostComponent/Text.
+    let node: Fiber = currentParent;
+    while (true) {
+      if (node.tag === HostComponent || node.tag === HostText) {
+        fibers.push(node);
+      } else if (node.child) {
+        node.child.return = node;
+        node = node.child;
+        continue;
+      }
+      if (node === currentParent) {
+        return fibers;
+      }
+      while (!node.sibling) {
+        if (!node.return || node.return === currentParent) {
+          return fibers;
+        }
+        node = node.return;
+      }
+      node.sibling.return = node.return;
+      node = node.sibling;
+    }
+    // Flow needs the return here, but ESLint complains about it.
+    // eslint-disable-next-line no-unreachable
+    return fibers;
+  }
+
   function findNativeByFiberID(id: number) {
     try {
-      const fiber = findCurrentFiberUsingSlowPath(idToFiberMap.get(id));
+      let fiber = findCurrentFiberUsingSlowPath(idToFiberMap.get(id));
       if (fiber === null) {
         return null;
       }
+      // Special case for a timed-out Suspense.
       const isTimedOutSuspense =
         fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
-      if (!isTimedOutSuspense) {
-        // Normal case.
-        return renderer.findHostInstanceByFiber(fiber);
-      } else {
+      if (isTimedOutSuspense) {
         // A timed-out Suspense's findDOMNode is useless.
         // Try our best to find the fallback directly.
         const maybeFallbackFiber =
           (fiber.child && fiber.child.sibling) || fiber;
-        return renderer.findHostInstanceByFiber(maybeFallbackFiber);
+        fiber = maybeFallbackFiber;
       }
+      const hostFibers = findAllCurrentHostFibers(fiber);
+      return hostFibers.map(hostFiber => hostFiber.stateNode).filter(Boolean);
     } catch (err) {
       // The fiber might have unmounted by now.
       return null;
@@ -1715,9 +1749,9 @@ export function attach(
     if (result.hooks !== null) {
       console.log('Hooks:', result.hooks);
     }
-    const nativeNode = findNativeByFiberID(id);
-    if (nativeNode !== null) {
-      console.log('Node:', nativeNode);
+    const nativeNodes = findNativeByFiberID(id);
+    if (nativeNodes !== null) {
+      console.log('Nodes:', nativeNodes);
     }
     if (window.chrome || /firefox/i.test(navigator.userAgent)) {
       console.log(

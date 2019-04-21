@@ -25,7 +25,6 @@ export type RendererID = number;
 type Dispatcher = any;
 
 export type ReactRenderer = {
-  findHostInstanceByFiber: (fiber: Object) => ?NativeType,
   findFiberByHostInstance: (hostInstance: NativeType) => ?Fiber,
   version: string,
   bundleType: BundleType,
@@ -103,7 +102,7 @@ export type PathMatch = {|
 
 export type RendererInterface = {
   cleanup: () => void,
-  findNativeByFiberID: (id: number) => ?NativeType,
+  findNativeByFiberID: (id: number) => ?Array<NativeType>,
   flushInitialOperations: () => void,
   getBestMatchForTrackedPath: () => PathMatch | null,
   getCommitDetails: (rootID: number, commitIndex: number) => CommitDetails,
