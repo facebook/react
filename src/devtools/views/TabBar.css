@@ -9,7 +9,7 @@
   border-bottom: 3px solid transparent;
   cursor: pointer;
   user-select: none;
-  color: var(--color-text-color);
+  color: var(--color-text);
 }
 .Tab:hover,
 .TabCurrent:hover {

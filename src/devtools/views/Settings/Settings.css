@@ -9,7 +9,7 @@
   font-family: var(--font-family-sans);
   font-size: var(--font-size-sans-normal);
   background-color: var(--color-background);
-  color: var(--color-text-color);
+  color: var(--color-text);
 }
 
 .Section {

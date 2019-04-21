@@ -246,7 +246,7 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-selected-foreground', documentElements);
   updateStyleHelper(theme, 'color-search-match', documentElements);
   updateStyleHelper(theme, 'color-search-match-current', documentElements);
-  updateStyleHelper(theme, 'color-text-color', documentElements);
+  updateStyleHelper(theme, 'color-text', documentElements);
   updateStyleHelper(theme, 'color-tooltip-background', documentElements);
   updateStyleHelper(theme, 'color-tooltip-text', documentElements);
 

@@ -47,7 +47,7 @@
   --light-color-selected-background: #0088fa;
   --light-color-selected-border: #0088fa;
   --light-color-selected-foreground: #ffffff;
-  --light-color-text-color: #000000;
+  --light-color-text: #000000;
   --light-color-tooltip-background: rgba(0, 0, 0, 0.9);
   --light-color-tooltip-text: #ffffff;
 
@@ -95,7 +95,7 @@
   --dark-color-selected-background: #178fb9;
   --dark-color-selected-border: #178fb9;
   --dark-color-selected-foreground: #ffffff;
-  --dark-color-text-color: #ffffff;
+  --dark-color-text: #ffffff;
   --dark-color-tooltip-background: rgba(255, 255, 255, 0.9);
   --dark-color-tooltip-text: #000000;
 
