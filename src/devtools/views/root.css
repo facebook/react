@@ -8,6 +8,9 @@
   --light-color-attribute-value: #1a1aa6;
   --light-color-attribute-editable-value: #1a1aa6;
   --light-color-background: #ffffff;
+  --light-color-background-hover: #ebf1fb;
+  --light-color-background-inactive: #e5e5e5;
+  --light-color-background-selected: #0088fa;
   --light-color-button-background: #ffffff;
   --light-color-button-background-focus: #ededed;
   --light-color-button: #5f6673;
@@ -34,8 +37,6 @@
   --light-color-dimmer: #cfd1d5;
   --light-color-dimmest: #eff0f1;
   --light-color-expand-collapse-toggle: #777d88;
-  --light-color-hover-background: #ebf1fb;
-  --light-color-inactive-background: #e5e5e5;
   --light-color-jsx-arrow-brackets: #333333;
   --light-color-jsx-arrow-brackets-inverted: rgba(255, 255, 255, 0.7);
   --light-color-modal-background: rgba(255, 255, 255, 0.75);
@@ -44,10 +45,9 @@
   --light-color-record-inactive: #0088fa;
   --light-color-search-match: yellow;
   --light-color-search-match-current: #f7923b;
-  --light-color-selected-background: #0088fa;
-  --light-color-selected-border: #0088fa;
-  --light-color-selected-foreground: #ffffff;
+  --light-color-tab-selected-border: #0088fa;
   --light-color-text: #000000;
+  --light-color-text-selected: #ffffff;
   --light-color-tooltip-background: rgba(0, 0, 0, 0.9);
   --light-color-tooltip-text: #ffffff;
 
@@ -56,6 +56,9 @@
   --dark-color-attribute-value: #cedae0;
   --dark-color-attribute-editable-value: yellow;
   --dark-color-background: #282c34;
+  --dark-color-background-hover: #3d424a;
+  --dark-color-background-inactive: #3d424a;
+  --dark-color-background-selected: #178fb9;
   --dark-color-button-background: #282c34;
   --dark-color-button-background-focus: #3d424a;
   --dark-color-button: #afb3b9;
@@ -82,8 +85,6 @@
   --dark-color-dimmer: #777d88;
   --dark-color-dimmest: #4f5766;
   --dark-color-expand-collapse-toggle: #8f949d;
-  --dark-color-hover-background: #3d424a;
-  --dark-color-inactive-background: #3d424a;
   --dark-color-jsx-arrow-brackets: #777d88;
   --dark-color-jsx-arrow-brackets-inverted: rgba(255, 255, 255, 0.7);
   --dark-color-modal-background: rgba(0, 0, 0, 0.75);
@@ -92,10 +93,9 @@
   --dark-color-record-inactive: #61dafb;
   --dark-color-search-match: yellow;
   --dark-color-search-match-current: #f7923b;
-  --dark-color-selected-background: #178fb9;
-  --dark-color-selected-border: #178fb9;
-  --dark-color-selected-foreground: #ffffff;
+  --dark-color-tab-selected-border: #178fb9;
   --dark-color-text: #ffffff;
+  --dark-color-text-selected: #ffffff;
   --dark-color-tooltip-background: rgba(255, 255, 255, 0.9);
   --dark-color-tooltip-text: #000000;
 

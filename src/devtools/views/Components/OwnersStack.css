@@ -17,8 +17,8 @@
 
 .Component[data-reach-menu-item][data-selected],
 .Component[data-reach-menu-item][data-selected]:hover {
-  color: var(--color-selected-foreground);
-  background: var(--color-selected-background);
+  color: var(--color-text-selected);
+  background: var(--color-background-selected);
 }
 .Component[data-reach-menu-item][data-selected]:focus {
   outline: none;

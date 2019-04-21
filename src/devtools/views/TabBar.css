@@ -13,15 +13,15 @@
 }
 .Tab:hover,
 .TabCurrent:hover {
-  background-color: var(--color-hover-background);
+  background-color: var(--color-background-hover);
 }
 .Tab:focus-within,
 .TabCurrent:focus-within {
-  background-color: var(--color-hover-background);
+  background-color: var(--color-background-hover);
 }
 
 .TabCurrent {
-  border-bottom: 3px solid var(--color-selected-border);
+  border-bottom: 3px solid var(--color-tab-selected-border);
 }
 
 .TabDisabled {

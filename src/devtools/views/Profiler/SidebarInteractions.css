@@ -44,7 +44,7 @@
   padding: 0.25rem 0.5rem;
 }
 .ListItem:hover {
-  background-color: var(--color-hover-background);
+  background-color: var(--color-background-hover);
 }
 
 .CommitBox {
