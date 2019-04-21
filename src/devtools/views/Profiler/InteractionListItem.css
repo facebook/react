@@ -7,11 +7,11 @@
 }
 
 .Interaction:hover {
-  background-color: var(--color-hover-background);
+  background-color: var(--color-background-hover);
 }
 
 .SelectedInteraction {
-  background-color: var(--color-hover-background);
+  background-color: var(--color-background-hover);
 }
 
 .Name {

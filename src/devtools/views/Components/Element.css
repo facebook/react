@@ -11,10 +11,10 @@
   user-select: none;
 }
 .HoveredElement {
-  background-color: var(--color-hover-background);
+  background-color: var(--color-background-hover);
 }
 .InactiveSelectedElement {
-  background-color: var(--color-inactive-background);
+  background-color: var(--color-background-inactive);
 }
 
 .ScrollAnchor {
@@ -23,13 +23,13 @@
 }
 
 .SelectedElement {
-  background-color: var(--color-selected-background);
-  color: var(--color-selected-foreground);
+  background-color: var(--color-background-selected);
+  color: var(--color-text-selected);
 
   /* Invert colors */
   --color-component-name: var(--color-component-name-inverted);
   --color-jsx-arrow-brackets: var(--color-jsx-arrow-brackets-inverted);
-  --color-attribute-name: var(--color-hover-background);
+  --color-attribute-name: var(--color-background-hover);
   --color-attribute-value: var(--color-component-name-inverted);
   --color-expand-collapse-toggle: var(--color-component-name-inverted);
 }

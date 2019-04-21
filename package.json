@@ -66,9 +66,6 @@
     ],
     "**/*.js": "eslint --max-warnings 0"
   },
-  "resolutions": {
-    "@reach/portal": "file:./vendor/@reach/portal"
-  },
   "dependencies": {
     "@babel/core": "^7.1.6",
     "@babel/plugin-proposal-class-properties": "^7.1.0",
@@ -76,7 +73,8 @@
     "@babel/preset-env": "^7.1.6",
     "@babel/preset-flow": "^7.0.0",
     "@babel/preset-react": "^7.0.0",
-    "@reach/menu-button": "^0.1.9",
+    "@reach/menu-button": "^0.1.12",
+    "@reach/tooltip": "^0.1.1",
     "adm-zip": "^0.4.7",
     "babel-core": "^7.0.0-bridge",
     "babel-eslint": "^9.0.0",

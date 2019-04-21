@@ -8,41 +8,19 @@
 }
 
 .Component,
-.Component[data-reach-menu-item],
-.SelectedComponent {
-  padding: 0.25rem;
-  margin-right: 0.5rem;
-  color: var(--color-component-name);
+.Component[data-reach-menu-item] {
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-monospace-normal);
-  border-radius: 0.125rem;
-  border: none;
-  background: none;
-  cursor: pointer;
-  text-align: left;
   user-select: none;
   white-space: nowrap;
 }
 
-.Component:hover,
-.Component[data-reach-menu-item]:hover {
-  background-color: var(--color-hover-background);
-}
-.Component:focus,
-.Component[data-reach-menu-item]:focus {
-  outline: none;
-  background-color: var(--color-hover-background);
-}
-
 .Component[data-reach-menu-item][data-selected],
-.Component[data-reach-menu-item][data-selected]:hover,
-.SelectedComponent,
-.SelectedComponent:hover {
-  background-color: var(--color-selected-background);
-  color: var(--color-selected-foreground);
+.Component[data-reach-menu-item][data-selected]:hover {
+  color: var(--color-text-selected);
+  background: var(--color-background-selected);
 }
-.Component[data-reach-menu-item][data-selected]:focus,
-.SelectedComponent:focus {
+.Component[data-reach-menu-item][data-selected]:focus {
   outline: none;
 }
 
@@ -64,40 +42,51 @@
   border-radius: 0.25rem;
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem;
-  cursor: pointer;
+  padding: 0;
   flex: 0 0 auto;
   border: none;
   background: var(--color-button-background);
   color: var(--color-button);
   margin-right: 0.5rem;
 }
+.MenuButtonContent {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 0.25rem;
+  padding: 0.25rem;
+}
 .MenuButton:hover {
-  background: var(--color-button-background-hover);
   color: var(--color-button-hover);
 }
 .MenuButton[aria-expanded='true'],
 .MenuButton[aria-expanded='true']:active {
-  background: var(--color-button-background-focus);
-  color: var(--color-button-focus);
+  color: var(--color-button-active);
   outline: none;
 }
-.MenuButton:focus-within {
-  box-shadow: 0 0 0 2px var(--color-button-background-focus) inset;
+
+.MenuButton:focus,
+.MenuButtonContent:focus {
   outline: none;
+}
+.MenuButton:focus > .MenuButtonContent {
+  background: var(--color-button-background-focus);
 }
 
 .Modal[data-reach-menu-list] {
   display: inline-flex;
   flex-direction: column;
   background-color: var(--color-background);
-  color: var(--color-text-color);
-  padding: 0.5rem;
+  color: var(--color-button);
+  padding: 0.25rem 0;
   padding-right: 0;
   border: 1px solid var(--color-border);
   border-radius: 0.25rem;
   max-height: 10rem;
   overflow: auto;
+
+  /* Make sure this is above the DevTools, which are above the Overlay */
+  z-index: 10000002;
+  position: relative;
 
   /* Reach UI tries to set its own :( */
   font-family: var(--font-family-monospace);

@@ -9,7 +9,7 @@
   font-family: var(--font-family-sans);
   font-size: var(--font-size-sans-normal);
   background-color: var(--color-background);
-  color: var(--color-text-color);
+  color: var(--color-text);
 }
 
 .Section {
@@ -39,7 +39,7 @@
 }
 
 .Option:hover {
-  background-color: var(--color-hover-background);
+  background-color: var(--color-background-hover);
 }
 
 .Option:first-of-type {
@@ -54,7 +54,7 @@
 }
 
 .ScreenshotThrottling {
-  background-color: var(--color-hover-background);
+  background-color: var(--color-background-hover);
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
 }

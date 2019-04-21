@@ -15,7 +15,7 @@
 .EditableName:after,
 .Name:after {
   content: ': ';
-  color: var(--color-text-color);
+  color: var(--color-text);
   margin-right: 0.5rem;
 }
 

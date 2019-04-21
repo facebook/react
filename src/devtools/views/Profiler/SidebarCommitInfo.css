@@ -41,7 +41,7 @@
 .Interaction:focus,
 .Interaction:hover {
   outline: none;
-  background-color: var(--color-hover-background);
+  background-color: var(--color-background-hover);
 }
 
 .Label {

@@ -6,9 +6,11 @@ import React, {
   useRef,
   useState,
 } from 'react';
+// TODO (tooltips) import Tooltip from '@reach/tooltip';
 import { Menu, MenuList, MenuButton, MenuItem } from '@reach/menu-button';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
+import Toggle from '../Toggle';
 import { TreeContext } from './TreeContext';
 import { StoreContext } from '../context';
 import { useIsOverflowing } from '../hooks';
@@ -93,9 +95,13 @@ function ElementsDropdown({
 
   return (
     <Menu>
-      <MenuButton className={styles.MenuButton} title="Open elements dropdown">
-        <ButtonIcon type="more" />
+      {/* TODO (tooltips) <Tooltip label="Open elements dropdown"> */}
+      <MenuButton className={styles.MenuButton}>
+        <span className={styles.MenuButtonContent} tabIndex={-1}>
+          <ButtonIcon type="more" />
+        </span>
       </MenuButton>
+      {/* TODO (tooltips) </Tooltip> */}
       <MenuList className={styles.Modal}>
         {ownerStack.map((id, index) => (
           <MenuItem
@@ -121,20 +127,21 @@ function ElementView({ id, index }: ElementViewProps) {
 
   const { displayName } = ((store.getElementByID(id): any): Element);
 
-  const isSelected = ownerStackIndex === index;
+  const isChecked = ownerStackIndex === index;
 
-  const handleClick = useCallback(() => {
-    if (!isSelected) {
+  const handleChange = useCallback(() => {
+    if (!isChecked) {
       selectOwner(id);
     }
-  }, [id, isSelected, selectOwner]);
+  }, [id, isChecked, selectOwner]);
 
   return (
-    <button
-      className={isSelected ? styles.SelectedComponent : styles.Component}
-      onClick={handleClick}
+    <Toggle
+      className={styles.Component}
+      isChecked={isChecked}
+      onChange={handleChange}
     >
       {displayName}
-    </button>
+    </Toggle>
   );
 }
