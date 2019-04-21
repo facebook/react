@@ -22,11 +22,11 @@ import type { Element, InspectedElement } from './types';
 export type Props = {||};
 
 export default function SelectedElement(_: Props) {
-  const { viewElementSource } = useContext(TreeContext);
+  const { inspectedElementID, viewElementSource } = useContext(TreeContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
-  const { inspectedElementID, read } = useContext(InspectedElementContext);
+  const { read } = useContext(InspectedElementContext);
 
   const element =
     inspectedElementID !== null

@@ -10,7 +10,6 @@ import React, {
 import { createResource } from '../../cache';
 import { BridgeContext, StoreContext } from '../context';
 import { hydrate } from 'src/hydration';
-import { unstable_next as next } from 'scheduler';
 import { TreeContext } from './TreeContext';
 
 import type {
@@ -19,10 +18,7 @@ import type {
 } from 'src/devtools/views/Components/types';
 import type { Resource } from '../../cache';
 
-// TODO This isn't using the "two setState" pattern and updates sometimes feel janky.
-
 type Context = {|
-  inspectedElementID: number | null,
   read(id: number): InspectedElement | null,
 |};
 
@@ -42,40 +38,19 @@ type Props = {|
 function InspectedElementContextController({ children }: Props) {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
+  const { inspectedElementID } = useContext(TreeContext);
 
-  const { selectedElementID } = useContext(TreeContext);
-  const [inspectedElement, setInspectedElement] = useState<{
-    id: number | null,
-    inspectedElement: InspectedElement | null,
-  }>({
-    id: selectedElementID,
-    inspectedElement: null,
-  });
-  if (inspectedElement.id !== selectedElementID) {
-    if (selectedElementID === null) {
-      setInspectedElement({
-        id: selectedElementID,
-        inspectedElement: null,
-      });
-    } else {
-      next(() =>
-        setInspectedElement({
-          id: selectedElementID,
-          inspectedElement: null,
-        })
-      );
-    }
-  }
+  const [count, setCount] = useState<number>(0);
 
   useEffect(() => {
-    if (inspectedElement.id === null) {
+    if (inspectedElementID === null) {
       return () => {};
     }
 
-    const rendererID = store.getRendererIDForElement(inspectedElement.id);
+    const rendererID = store.getRendererIDForElement(inspectedElementID);
 
     const requestUpdate = () => {
-      bridge.send('inspectElement', { id: inspectedElement.id, rendererID });
+      bridge.send('inspectElement', { id: inspectedElementID, rendererID });
     };
 
     requestUpdate();
@@ -83,7 +58,7 @@ function InspectedElementContextController({ children }: Props) {
     const intervalID = setInterval(requestUpdate, 1000);
 
     return () => clearInterval(intervalID);
-  }, [bridge, inspectedElement.id, store]);
+  }, [bridge, inspectedElementID, store]);
 
   const inProgressRequests = useMemo<Map<number, InProgressRequest>>(
     () => new Map(),
@@ -136,9 +111,7 @@ function InspectedElementContextController({ children }: Props) {
           resource.write(id, inspectedElement);
 
           // Schedule update with React if necessary.
-          setInspectedElement(prevState =>
-            prevState.id === id ? { id, inspectedElement } : prevState
-          );
+          setCount(count => count + 1);
         }
       }
     };
@@ -147,14 +120,13 @@ function InspectedElementContextController({ children }: Props) {
     return () => bridge.removeListener('inspectElement', onInspectedElement);
   }, [bridge, inProgressRequests, resource]);
 
-  // We intentionally use the broader inspectedElement object, rather than the id,
-  // to enable updates to be scheduled with React after the cache has been invalidated.
   const value = useMemo(
     () => ({
-      inspectedElementID: inspectedElement.id,
       read: resource.read,
     }),
-    [inspectedElement, resource.read]
+    // Count is used to invalidate the cache and schedule an update with React.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [count, resource.read]
   );
 
   return (

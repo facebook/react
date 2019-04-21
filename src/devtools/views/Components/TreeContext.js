@@ -27,15 +27,12 @@ import React, {
   useReducer,
   useRef,
 } from 'react';
+import { unstable_next as next } from 'scheduler';
 import { createRegExp } from '../utils';
 import { BridgeContext, StoreContext } from '../context';
 import Store from '../../store';
 
 import type { Element } from './types';
-
-// TODO Use two setState pattern for selecting Fibers:
-// The first update should be default priority and should select a new element in the Tree.
-// The second update should be deferred priority and should trigger suspense.
 
 type Context = {|
   // Tree
@@ -67,6 +64,10 @@ type Context = {|
 
   // Injected by parent HTML/JavaScript
   viewElementSource: Function | null,
+
+  // Inspection element panel
+  // Updated separately so we can avoid suspending when selection changes
+  inspectedElementID: number | null,
 |};
 
 const TreeContext = createContext<Context>(((null: any): Context));
@@ -88,6 +89,9 @@ type State = {|
   ownerStack: Array<number>,
   ownerStackIndex: number | null,
   _ownerFlatTree: Array<number> | null,
+
+  // Inspection element panel
+  inspectedElementID: number | null,
 |};
 
 type Action = {|
@@ -103,7 +107,8 @@ type Action = {|
     | 'SELECT_PARENT_ELEMENT_IN_TREE'
     | 'SELECT_PREVIOUS_ELEMENT_IN_TREE'
     | 'SELECT_OWNER'
-    | 'SET_SEARCH_TEXT',
+    | 'SET_SEARCH_TEXT'
+    | 'UPDATE_INSPECTED_ELEMENT_ID',
   payload?: any,
 |};
 
@@ -566,6 +571,24 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
   };
 }
 
+function reduceSuspenseState(
+  store: Store,
+  state: State,
+  action: Action
+): State {
+  const { type } = action;
+  switch (type) {
+    case 'UPDATE_INSPECTED_ELEMENT_ID':
+      return {
+        ...state,
+        inspectedElementID: state.selectedElementID,
+      };
+    default:
+      // React can bailout of no-op updates.
+      return state;
+  }
+}
+
 type Props = {|
   children: React$Node,
   viewElementSource: Function | null,
@@ -596,10 +619,12 @@ function TreeContextController({ children, viewElementSource }: Props) {
         case 'SELECT_PARENT_ELEMENT_IN_TREE':
         case 'SELECT_PREVIOUS_ELEMENT_IN_TREE':
         case 'SELECT_OWNER':
+        case 'UPDATE_INSPECTED_ELEMENT_ID':
         case 'SET_SEARCH_TEXT':
           state = reduceTreeState(store, state, action);
           state = reduceSearchState(store, state, action);
           state = reduceOwnersState(store, state, action);
+          state = reduceSuspenseState(store, state, action);
 
           // If the selected ID is in a collapsed subtree, reset the selected index to null.
           // We'll know the correct index after the layout effect will toggle the tree,
@@ -638,7 +663,18 @@ function TreeContextController({ children, viewElementSource }: Props) {
     ownerStack: [],
     ownerStackIndex: null,
     _ownerFlatTree: null,
+
+    // Inspection element panel
+    inspectedElementID: null,
   });
+
+  const dispatchWrapper = useCallback(
+    params => {
+      dispatch(params);
+      next(() => dispatch({ type: 'UPDATE_INSPECTED_ELEMENT_ID' }));
+    },
+    [dispatch]
+  );
 
   const getElementAtIndex = useCallback(
     (index: number) => {
@@ -650,49 +686,50 @@ function TreeContextController({ children, viewElementSource }: Props) {
   );
   const selectElementAtIndex = useCallback(
     (index: number) =>
-      dispatch({ type: 'SELECT_ELEMENT_AT_INDEX', payload: index }),
-    [dispatch]
+      dispatchWrapper({ type: 'SELECT_ELEMENT_AT_INDEX', payload: index }),
+    [dispatchWrapper]
   );
   const selectElementByID = useCallback(
     (id: number | null) =>
-      dispatch({ type: 'SELECT_ELEMENT_BY_ID', payload: id }),
-    [dispatch]
+      dispatchWrapper({ type: 'SELECT_ELEMENT_BY_ID', payload: id }),
+    [dispatchWrapper]
   );
   const setSearchText = useCallback(
-    (text: string) => dispatch({ type: 'SET_SEARCH_TEXT', payload: text }),
-    [dispatch]
+    (text: string) =>
+      dispatchWrapper({ type: 'SET_SEARCH_TEXT', payload: text }),
+    [dispatchWrapper]
   );
   const goToNextSearchResult = useCallback(
-    () => dispatch({ type: 'GO_TO_NEXT_SEARCH_RESULT' }),
-    [dispatch]
+    () => dispatchWrapper({ type: 'GO_TO_NEXT_SEARCH_RESULT' }),
+    [dispatchWrapper]
   );
   const goToPreviousSearchResult = useCallback(
-    () => dispatch({ type: 'GO_TO_PREVIOUS_SEARCH_RESULT' }),
-    [dispatch]
+    () => dispatchWrapper({ type: 'GO_TO_PREVIOUS_SEARCH_RESULT' }),
+    [dispatchWrapper]
   );
   const resetOwnerStack = useCallback(
-    () => dispatch({ type: 'RESET_OWNER_STACK' }),
-    [dispatch]
+    () => dispatchWrapper({ type: 'RESET_OWNER_STACK' }),
+    [dispatchWrapper]
   );
   const selectChildElementInTree = useCallback(
-    () => dispatch({ type: 'SELECT_CHILD_ELEMENT_IN_TREE' }),
-    [dispatch]
+    () => dispatchWrapper({ type: 'SELECT_CHILD_ELEMENT_IN_TREE' }),
+    [dispatchWrapper]
   );
   const selectNextElementInTree = useCallback(
-    () => dispatch({ type: 'SELECT_NEXT_ELEMENT_IN_TREE' }),
-    [dispatch]
+    () => dispatchWrapper({ type: 'SELECT_NEXT_ELEMENT_IN_TREE' }),
+    [dispatchWrapper]
   );
   const selectParentElementInTree = useCallback(
-    () => dispatch({ type: 'SELECT_PARENT_ELEMENT_IN_TREE' }),
-    [dispatch]
+    () => dispatchWrapper({ type: 'SELECT_PARENT_ELEMENT_IN_TREE' }),
+    [dispatchWrapper]
   );
   const selectPreviousElementInTree = useCallback(
-    () => dispatch({ type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE' }),
-    [dispatch]
+    () => dispatchWrapper({ type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE' }),
+    [dispatchWrapper]
   );
   const selectOwner = useCallback(
-    (id: number) => dispatch({ type: 'SELECT_OWNER', payload: id }),
-    [dispatch]
+    (id: number) => dispatchWrapper({ type: 'SELECT_OWNER', payload: id }),
+    [dispatchWrapper]
   );
 
   const value = useMemo(
@@ -724,6 +761,9 @@ function TreeContextController({ children, viewElementSource }: Props) {
       resetOwnerStack,
       selectOwner,
 
+      // Inspection element panel
+      inspectedElementID: state.inspectedElementID,
+
       // Injected by parent HTML/JavaScript
       viewElementSource,
     }),
@@ -748,10 +788,10 @@ function TreeContextController({ children, viewElementSource }: Props) {
   // Listen for host element selections.
   useEffect(() => {
     const handleSelectFiber = (id: number) =>
-      dispatch({ type: 'SELECT_ELEMENT_BY_ID', payload: id });
+      dispatchWrapper({ type: 'SELECT_ELEMENT_BY_ID', payload: id });
     bridge.addListener('selectFiber', handleSelectFiber);
     return () => bridge.removeListener('selectFiber', handleSelectFiber);
-  }, [bridge, dispatch]);
+  }, [bridge, dispatchWrapper]);
 
   // If a newly-selected search result or inspection selection is inside of a collapsed subtree, auto expand it.
   // This needs to be a layout effect to avoid temporarily flashing an incorrect selection.
@@ -775,7 +815,7 @@ function TreeContextController({ children, viewElementSource }: Props) {
       addedElementIDs,
       removedElementIDs,
     ]: Array<Uint32Array>) => {
-      dispatch({
+      dispatchWrapper({
         type: 'HANDLE_STORE_MUTATION',
         payload: [addedElementIDs, removedElementIDs],
       });
@@ -786,7 +826,7 @@ function TreeContextController({ children, viewElementSource }: Props) {
       // At the moment, we can treat this as a mutation.
       // We don't know which Elements were newly added/removed, but that should be okay in this case.
       // It would only impact the search state, which is unlikely to exist yet at this point.
-      dispatch({
+      dispatchWrapper({
         type: 'HANDLE_STORE_MUTATION',
         payload: [new Uint32Array(0), new Uint32Array(0)],
       });
@@ -795,7 +835,7 @@ function TreeContextController({ children, viewElementSource }: Props) {
     store.addListener('mutated', handleStoreMutated);
 
     return () => store.removeListener('mutated', handleStoreMutated);
-  }, [dispatch, initialRevision, store]);
+  }, [dispatchWrapper, initialRevision, store]);
 
   return <TreeContext.Provider value={value}>{children}</TreeContext.Provider>;
 }
