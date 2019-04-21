@@ -21,6 +21,7 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import {
   findCurrentHostFiber,
   findCurrentHostFiberWithNoPortals,
+  findAllCurrentHostFibers,
 } from 'react-reconciler/reflection';
 import {get as getInstance} from 'shared/ReactInstanceMap';
 import {HostComponent, ClassComponent} from 'shared/ReactWorkTags';
@@ -445,6 +446,10 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
         return null;
       }
       return hostFiber.stateNode;
+    },
+    findHostInstancesByFiber(fiber: Fiber): Array<Instance | TextInstance> {
+      const hostFibers = findAllCurrentHostFibers(fiber);
+      return hostFibers.map(hostFiber => hostFiber.stateNode).filter(Boolean);
     },
     findFiberByHostInstance(instance: Instance | TextInstance): Fiber | null {
       if (!findFiberByHostInstance) {

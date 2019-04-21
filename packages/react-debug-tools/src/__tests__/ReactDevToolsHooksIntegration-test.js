@@ -19,6 +19,8 @@ describe('React hooks DevTools integration', () => {
   let overrideHookState;
   let scheduleUpdate;
   let setSuspenseHandler;
+  let findHostInstanceByFiber;
+  let findHostInstancesByFiber;
 
   beforeEach(() => {
     global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
@@ -26,6 +28,8 @@ describe('React hooks DevTools integration', () => {
         overrideHookState = injected.overrideHookState;
         scheduleUpdate = injected.scheduleUpdate;
         setSuspenseHandler = injected.setSuspenseHandler;
+        findHostInstanceByFiber = injected.findHostInstanceByFiber;
+        findHostInstancesByFiber = injected.findHostInstancesByFiber;
       },
       supportsFiber: true,
       onCommitFiberRoot: () => {},
@@ -40,6 +44,258 @@ describe('React hooks DevTools integration', () => {
     Scheduler = require('scheduler');
 
     act = ReactTestRenderer.act;
+  });
+
+  it('should return first host instance of a Fragment via findHostInstanceByFiber (singular)', () => {
+    function NestedComponent() {
+      return (
+        <React.Fragment>
+          <div>nested test 1</div>
+          <span>nested test 2</span>
+          <p>nested test 3</p>
+        </React.Fragment>
+      );
+    }
+
+    function MyComponent() {
+      return (
+        <React.Fragment>
+          <NestedComponent />
+          <div>test 1</div>
+          <span>test 2</span>
+          <p>test 3</p>
+        </React.Fragment>
+      );
+    }
+
+    const renderer = ReactTestRenderer.create(<MyComponent />);
+    expect(renderer.toJSON()).toEqual([
+      {type: 'div', props: {}, children: ['nested test 1']},
+      {type: 'span', props: {}, children: ['nested test 2']},
+      {type: 'p', props: {}, children: ['nested test 3']},
+      {type: 'div', props: {}, children: ['test 1']},
+      {type: 'span', props: {}, children: ['test 2']},
+      {type: 'p', props: {}, children: ['test 3']},
+    ]);
+
+    const fiber = renderer.root.findByType(MyComponent)._currentFiber();
+    const fiberNested = renderer.root
+      .findByType(NestedComponent)
+      ._currentFiber();
+
+    if (__DEV__) {
+      // Not testing the host instance data structure, so excluded
+      // the large `rootContainerInstance` via `expect.any(Object)`.
+
+      const hostInstance = findHostInstanceByFiber(fiber);
+      expect(hostInstance).toMatchObject({
+        children: [{isHidden: false, tag: 'TEXT', text: 'nested test 1'}],
+        isHidden: false,
+        props: {children: 'nested test 1'},
+        rootContainerInstance: expect.any(Object),
+        tag: 'INSTANCE',
+        type: 'div',
+      });
+
+      const hostInstanceNested = findHostInstanceByFiber(fiberNested);
+      expect(hostInstanceNested).toMatchObject({
+        children: [{isHidden: false, tag: 'TEXT', text: 'nested test 1'}],
+        isHidden: false,
+        props: {children: 'nested test 1'},
+        rootContainerInstance: expect.any(Object),
+        tag: 'INSTANCE',
+        type: 'div',
+      });
+    }
+  });
+
+  it('should return all host instances of a flat Fragment via findHostInstancesByFiber (plural)', () => {
+    function MyComponent() {
+      return (
+        <React.Fragment>
+          <div>test 1</div>
+          <span>test 2</span>
+          <p>test 3</p>
+        </React.Fragment>
+      );
+    }
+
+    const renderer = ReactTestRenderer.create(<MyComponent />);
+    expect(renderer.toJSON()).toEqual([
+      {type: 'div', props: {}, children: ['test 1']},
+      {type: 'span', props: {}, children: ['test 2']},
+      {type: 'p', props: {}, children: ['test 3']},
+    ]);
+
+    const fiber = renderer.root.findByType(MyComponent)._currentFiber();
+
+    if (__DEV__) {
+      // Not testing the host instance data structure, so excluded
+      // the large `rootContainerInstance` via `expect.any(Object)`.
+
+      const hostInstances = findHostInstancesByFiber(fiber);
+      expect(hostInstances).toMatchObject([
+        {
+          children: [{isHidden: false, tag: 'TEXT', text: 'test 1'}],
+          isHidden: false,
+          props: {children: 'test 1'},
+          rootContainerInstance: expect.any(Object),
+          tag: 'INSTANCE',
+          type: 'div',
+        },
+        {
+          children: [{isHidden: false, tag: 'TEXT', text: 'test 2'}],
+          isHidden: false,
+          props: {children: 'test 2'},
+          rootContainerInstance: expect.any(Object),
+          tag: 'INSTANCE',
+          type: 'span',
+        },
+        {
+          children: [{isHidden: false, tag: 'TEXT', text: 'test 3'}],
+          isHidden: false,
+          props: {children: 'test 3'},
+          rootContainerInstance: expect.any(Object),
+          tag: 'INSTANCE',
+          type: 'p',
+        },
+      ]);
+    }
+  });
+
+  it('should return all host instances of nested Fragments via findHostInstancesByFiber (plural)', () => {
+    function NestedComponent() {
+      return (
+        <React.Fragment>
+          <div>nested test 1</div>
+          <span>nested test 2</span>
+          <p>nested test 3</p>
+        </React.Fragment>
+      );
+    }
+
+    function MyComponent() {
+      return (
+        <React.Fragment>
+          <NestedComponent />
+          <div>test 1</div>
+          <span>test 2</span>
+          <p>test 3</p>
+        </React.Fragment>
+      );
+    }
+
+    const renderer = ReactTestRenderer.create(<MyComponent />);
+    expect(renderer.toJSON()).toEqual([
+      {type: 'div', props: {}, children: ['nested test 1']},
+      {type: 'span', props: {}, children: ['nested test 2']},
+      {type: 'p', props: {}, children: ['nested test 3']},
+      {type: 'div', props: {}, children: ['test 1']},
+      {type: 'span', props: {}, children: ['test 2']},
+      {type: 'p', props: {}, children: ['test 3']},
+    ]);
+
+    const fiber = renderer.root.findByType(MyComponent)._currentFiber();
+    const fiberNested = renderer.root
+      .findByType(NestedComponent)
+      ._currentFiber();
+
+    if (__DEV__) {
+      // Not testing the host instance data structure, so excluded
+      // the large `rootContainerInstance` via `expect.any(Object)`.
+
+      const hostInstances = findHostInstancesByFiber(fiber);
+      expect(
+        hostInstances.map(x => {
+          const y = {...x};
+          y.rootContainerInstance = {};
+          return y;
+        }),
+      ).toMatchObject([
+        {
+          children: [{isHidden: false, tag: 'TEXT', text: 'nested test 1'}],
+          isHidden: false,
+          props: {children: 'nested test 1'},
+          rootContainerInstance: expect.any(Object),
+          tag: 'INSTANCE',
+          type: 'div',
+        },
+        {
+          children: [{isHidden: false, tag: 'TEXT', text: 'nested test 2'}],
+          isHidden: false,
+          props: {children: 'nested test 2'},
+          rootContainerInstance: expect.any(Object),
+          tag: 'INSTANCE',
+          type: 'span',
+        },
+        {
+          children: [{isHidden: false, tag: 'TEXT', text: 'nested test 3'}],
+          isHidden: false,
+          props: {children: 'nested test 3'},
+          rootContainerInstance: expect.any(Object),
+          tag: 'INSTANCE',
+          type: 'p',
+        },
+        {
+          children: [{isHidden: false, tag: 'TEXT', text: 'test 1'}],
+          isHidden: false,
+          props: {children: 'test 1'},
+          rootContainerInstance: expect.any(Object),
+          tag: 'INSTANCE',
+          type: 'div',
+        },
+        {
+          children: [{isHidden: false, tag: 'TEXT', text: 'test 2'}],
+          isHidden: false,
+          props: {children: 'test 2'},
+          rootContainerInstance: expect.any(Object),
+          tag: 'INSTANCE',
+          type: 'span',
+        },
+        {
+          children: [{isHidden: false, tag: 'TEXT', text: 'test 3'}],
+          isHidden: false,
+          props: {children: 'test 3'},
+          rootContainerInstance: expect.any(Object),
+          tag: 'INSTANCE',
+          type: 'p',
+        },
+      ]);
+
+      const hostInstancesNested = findHostInstancesByFiber(fiberNested);
+      expect(
+        hostInstancesNested.map(x => {
+          const y = {...x};
+          y.rootContainerInstance = {};
+          return y;
+        }),
+      ).toMatchObject([
+        {
+          children: [{isHidden: false, tag: 'TEXT', text: 'nested test 1'}],
+          isHidden: false,
+          props: {children: 'nested test 1'},
+          rootContainerInstance: expect.any(Object),
+          tag: 'INSTANCE',
+          type: 'div',
+        },
+        {
+          children: [{isHidden: false, tag: 'TEXT', text: 'nested test 2'}],
+          isHidden: false,
+          props: {children: 'nested test 2'},
+          rootContainerInstance: expect.any(Object),
+          tag: 'INSTANCE',
+          type: 'span',
+        },
+        {
+          children: [{isHidden: false, tag: 'TEXT', text: 'nested test 3'}],
+          isHidden: false,
+          props: {children: 'nested test 3'},
+          rootContainerInstance: expect.any(Object),
+          tag: 'INSTANCE',
+          type: 'p',
+        },
+      ]);
+    }
   });
 
   it('should support editing useState hooks', () => {

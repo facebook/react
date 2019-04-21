@@ -300,3 +300,37 @@ export function findCurrentHostFiberWithNoPortals(parent: Fiber): Fiber | null {
   // eslint-disable-next-line no-unreachable
   return null;
 }
+
+export function findAllCurrentHostFibers(parent: Fiber): Array<Fiber> {
+  const fibers = [];
+  const currentParent = findCurrentFiberUsingSlowPath(parent);
+  if (!currentParent) {
+    return fibers;
+  }
+
+  // Next we'll drill down this component to find all HostComponent/Text.
+  let node: Fiber = currentParent;
+  while (true) {
+    if (node.tag === HostComponent || node.tag === HostText) {
+      fibers.push(node);
+    } else if (node.child) {
+      node.child.return = node;
+      node = node.child;
+      continue;
+    }
+    if (node === currentParent) {
+      return fibers;
+    }
+    while (!node.sibling) {
+      if (!node.return || node.return === currentParent) {
+        return fibers;
+      }
+      node = node.return;
+    }
+    node.sibling.return = node.return;
+    node = node.sibling;
+  }
+  // Flow needs the return here, but ESLint complains about it.
+  // eslint-disable-next-line no-unreachable
+  return fibers;
+}
