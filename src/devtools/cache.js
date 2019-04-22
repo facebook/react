@@ -39,6 +39,7 @@ type RejectedResult = {|
 type Result<Value> = PendingResult | ResolvedResult<Value> | RejectedResult;
 
 export type Resource<Input, Key, Value> = {
+  clear(): void,
   invalidate(Key): void,
   read(Input): Value,
   preload(Input): void,
@@ -66,7 +67,23 @@ function readContext(Context, observedBits) {
 
 const CacheContext = createContext(null);
 
+type Config = {
+  useLRU?: boolean,
+};
+
 const entries: Map<Resource<any, any, any>, Map<any, any>> = new Map();
+const resourceConfigs: Map<Resource<any, any, any>, Config> = new Map();
+
+function getEntriesForResource(resource: any): Map<any, any> {
+  let entriesForResource = ((entries.get(resource): any): Map<any, any>);
+  if (entriesForResource === undefined) {
+    const config = resourceConfigs.get(resource);
+    entriesForResource =
+      config !== undefined && config.useLRU ? new LRU({ max: 10 }) : new Map();
+    entries.set(resource, entriesForResource);
+  }
+  return entriesForResource;
+}
 
 function accessResult<Input, Key, Value>(
   resource: any,
@@ -74,7 +91,7 @@ function accessResult<Input, Key, Value>(
   input: Input,
   key: Key
 ): Result<Value> {
-  const entriesForResource = ((entries.get(resource): any): Map<any, any>);
+  const entriesForResource = getEntriesForResource(resource);
   const entry = entriesForResource.get(key);
   if (entry === undefined) {
     const thenable = fetch(input);
@@ -108,11 +125,15 @@ function accessResult<Input, Key, Value>(
 export function createResource<Input, Key: string | number, Value>(
   fetch: Input => Thenable<Value>,
   hashInput: Input => Key,
-  useLRU?: boolean = false
+  config?: Config = {}
 ): Resource<Input, Key, Value> {
   const resource = {
+    clear(): void {
+      entries.delete(resource);
+    },
+
     invalidate(key: Key): void {
-      const entriesForResource = ((entries.get(resource): any): Map<any, any>);
+      const entriesForResource = getEntriesForResource(resource);
       if (entriesForResource instanceof Map) {
         entriesForResource.delete(key);
       } else {
@@ -156,7 +177,7 @@ export function createResource<Input, Key: string | number, Value>(
     },
 
     write(key: Key, value: Value): void {
-      const entriesForResource = ((entries.get(resource): any): Map<any, any>);
+      const entriesForResource = getEntriesForResource(resource);
 
       const resolvedResult: ResolvedResult<Value> = {
         status: Resolved,
@@ -167,7 +188,7 @@ export function createResource<Input, Key: string | number, Value>(
     },
   };
 
-  entries.set(resource, useLRU ? new LRU({ max: 10 }) : new Map());
+  resourceConfigs.set(resource, config);
 
   return resource;
 }

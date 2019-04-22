@@ -1,6 +1,6 @@
 // @flow
 
-import { createResource, invalidateResources } from './cache';
+import { createResource } from './cache';
 import Store from './store';
 import {
   getCommitTree,
@@ -297,8 +297,11 @@ export default class ProfilingCache {
     });
 
   invalidate() {
-    // Invalidate Susepnse caches.
-    invalidateResources();
+    // Invalidate Suspense caches.
+    this.CommitDetails.clear();
+    this.FiberCommits.clear();
+    this.Interactions.clear();
+    this.ProfilingSummary.clear();
 
     // Invalidate non-Suspense caches too.
     invalidateCommitTrees();

@@ -31,6 +31,27 @@ type InProgressRequest = {|
   resolveFn: ResolveFn,
 |};
 
+const inProgressRequests: Map<number, InProgressRequest> = new Map();
+const resource: Resource<number, number, InspectedElement> = createResource(
+  (id: number) => {
+    let request = inProgressRequests.get(id);
+    if (request != null) {
+      return request.promise;
+    }
+
+    let resolveFn = ((null: any): ResolveFn);
+    const promise = new Promise(resolve => {
+      resolveFn = resolve;
+    });
+
+    inProgressRequests.set(id, { promise, resolveFn });
+
+    return promise;
+  },
+  (id: number) => id,
+  { useLRU: true }
+);
+
 type Props = {|
   children: React$Node,
 |};
@@ -41,34 +62,6 @@ function InspectedElementContextController({ children }: Props) {
   const { inspectedElementID } = useContext(TreeStateContext);
 
   const [count, setCount] = useState<number>(0);
-
-  const inProgressRequests = useMemo<Map<number, InProgressRequest>>(
-    () => new Map(),
-    []
-  );
-
-  const resource = useMemo<Resource<number, number, InspectedElement>>(
-    () =>
-      createResource(
-        (id: number) => {
-          let request = inProgressRequests.get(id);
-          if (request != null) {
-            return request.promise;
-          }
-
-          let resolveFn = ((null: any): ResolveFn);
-          const promise = new Promise(resolve => {
-            resolveFn = resolve;
-          });
-
-          inProgressRequests.set(id, { promise, resolveFn });
-
-          return promise;
-        },
-        (id: number) => id
-      ),
-    [inProgressRequests]
-  );
 
   // This effect handler invalidates the suspense cache and schedules rendering updates with React.
   useEffect(() => {
@@ -103,7 +96,7 @@ function InspectedElementContextController({ children }: Props) {
 
     bridge.addListener('inspectedElement', onInspectedElement);
     return () => bridge.removeListener('inspectedElement', onInspectedElement);
-  }, [bridge, inProgressRequests, inspectedElementID, resource]);
+  }, [bridge, inspectedElementID]);
 
   // This effect handler polls for updates on the currently selected element.
   useEffect(() => {
