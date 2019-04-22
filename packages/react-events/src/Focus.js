@@ -12,6 +12,7 @@ import type {
   ReactResponderContext,
 } from 'shared/ReactTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
+import {getEventCurrentTarget} from './utils.js';
 
 type FocusProps = {
   disabled: boolean,
@@ -104,7 +105,7 @@ const FocusResponder = {
       focusTarget: null,
     };
   },
-  onBubbledTargetEvent(
+  onEvent(
     event: ReactResponderEvent,
     context: ReactResponderContext,
     props: Object,
@@ -112,21 +113,25 @@ const FocusResponder = {
   ): void {
     const {type, target} = event;
 
+    if (props.disabled) {
+      if (state.isFocused) {
+        dispatchFocusOutEvents(context, props, state);
+        state.isFocused = false;
+        state.focusTarget = null;
+      }
+      return;
+    }
+
     switch (type) {
       case 'focus': {
         if (!state.isFocused) {
           // Limit focus events to the direct child of the event component.
           // Browser focus is not expected to bubble.
-          let currentTarget = (target: any);
-          if (
-            currentTarget.parentNode &&
-            context.isTargetWithinEventComponent(currentTarget.parentNode)
-          ) {
-            break;
+          state.focusTarget = getEventCurrentTarget(event, context);
+          if (state.focusTarget === target) {
+            dispatchFocusInEvents(context, props, state);
+            state.isFocused = true;
           }
-          state.focusTarget = currentTarget;
-          dispatchFocusInEvents(context, props, state);
-          state.isFocused = true;
         }
         break;
       }

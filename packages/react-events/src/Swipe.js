@@ -96,7 +96,7 @@ const SwipeResponder = {
     };
   },
   stopLocalPropagation: true,
-  onBubbledTargetEvent(
+  onEvent(
     event: ReactResponderEvent,
     context: ReactResponderContext,
     props: Object,

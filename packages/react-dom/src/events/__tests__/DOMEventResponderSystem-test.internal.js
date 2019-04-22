@@ -17,8 +17,8 @@ let ReactSymbols;
 function createReactEventComponent(
   targetEventTypes,
   createInitialState,
-  onBubbledTargetEvent,
-  onCapturedTargetEvent,
+  onEvent,
+  onEventCapture,
   onRootEvent,
   onUnmount,
   onOwnershipChange,
@@ -27,8 +27,8 @@ function createReactEventComponent(
   const testEventResponder = {
     targetEventTypes,
     createInitialState,
-    onBubbledTargetEvent,
-    onCapturedTargetEvent,
+    onEvent,
+    onEventCapture,
     onRootEvent,
     onUnmount,
     onOwnershipChange,

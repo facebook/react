@@ -89,13 +89,13 @@ export type ReactEventResponder = {
   targetEventTypes: Array<ReactEventResponderEventType>,
   createInitialState?: (props: null | Object) => Object,
   stopLocalPropagation: boolean,
-  onBubbledTargetEvent?: (
+  onEvent?: (
     event: ReactResponderEvent,
     context: ReactResponderContext,
     props: null | Object,
     state: null | Object,
   ) => void,
-  onCapturedTargetEvent?: (
+  onEventCapture?: (
     event: ReactResponderEvent,
     context: ReactResponderContext,
     props: null | Object,

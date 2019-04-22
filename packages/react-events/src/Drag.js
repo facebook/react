@@ -92,7 +92,7 @@ const DragResponder = {
     };
   },
   stopLocalPropagation: true,
-  onBubbledTargetEvent(
+  onEvent(
     event: ReactResponderEvent,
     context: ReactResponderContext,
     props: Object,

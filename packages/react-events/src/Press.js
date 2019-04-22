@@ -411,13 +411,20 @@ const PressResponder = {
     };
   },
   stopLocalPropagation: true,
-  onBubbledTargetEvent(
+  onEvent(
     event: ReactResponderEvent,
     context: ReactResponderContext,
     props: PressProps,
     state: PressState,
   ): void {
     const {target, type} = event;
+
+    if (props.disabled) {
+      dispatchPressEndEvents(context, props, state);
+      context.removeRootEventTypes(rootEventTypes);
+      state.ignoreEmulatedMouseEvents = false;
+      return;
+    }
     const nativeEvent: any = event.nativeEvent;
     const pointerType = getEventPointerType(event);
 

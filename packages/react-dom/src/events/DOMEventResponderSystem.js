@@ -545,7 +545,7 @@ function traverseAndHandleEventResponderInstances(
         }
         propagatedEventResponders.add(responder);
       }
-      const eventListener = responder.onCapturedTargetEvent;
+      const eventListener = responder.onEventCapture;
       if (eventListener !== undefined) {
         currentInstance = targetEventResponderInstance;
         eventListener(responderEvent, eventResponderContext, props, state);
@@ -563,7 +563,7 @@ function traverseAndHandleEventResponderInstances(
         }
         propagatedEventResponders.add(responder);
       }
-      const eventListener = responder.onBubbledTargetEvent;
+      const eventListener = responder.onEvent;
       if (eventListener !== undefined) {
         currentInstance = targetEventResponderInstance;
         eventListener(responderEvent, eventResponderContext, props, state);

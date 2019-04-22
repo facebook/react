@@ -242,7 +242,7 @@ const HoverResponder = {
     };
   },
   stopLocalPropagation: true,
-  onBubbledTargetEvent(
+  onEvent(
     event: ReactResponderEvent,
     context: ReactResponderContext,
     props: HoverProps,
@@ -250,6 +250,16 @@ const HoverResponder = {
   ): void {
     const {type} = event;
 
+    if (props.disabled) {
+      if (state.isHovered) {
+        dispatchHoverEndEvents(event, context, props, state);
+        state.ignoreEmulatedMouseEvents = false;
+      }
+      if (state.isTouched) {
+        state.isTouched = false;
+      }
+      return;
+    }
     const pointerType = getEventPointerType(event);
 
     switch (type) {
