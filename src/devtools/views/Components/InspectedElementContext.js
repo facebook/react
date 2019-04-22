@@ -59,7 +59,11 @@ type Props = {|
 function InspectedElementContextController({ children }: Props) {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
-  const { inspectedElementID } = useContext(TreeStateContext);
+
+  // It's very important that this context consumes selectedElementID and not inspectedElementID.
+  // Otherwise the effect that sends the "inspect" message across the bridge-
+  // would itself be blocked by the same render that suspends (waiting for the data).
+  const { selectedElementID } = useContext(TreeStateContext);
 
   const [count, setCount] = useState<number>(0);
 
@@ -87,7 +91,7 @@ function InspectedElementContextController({ children }: Props) {
           resource.write(id, inspectedElement);
 
           // Schedule update with React if the curently-selected element has been invalidated.
-          if (id === inspectedElementID) {
+          if (id === selectedElementID) {
             setCount(count => count + 1);
           }
         }
@@ -96,22 +100,22 @@ function InspectedElementContextController({ children }: Props) {
 
     bridge.addListener('inspectedElement', onInspectedElement);
     return () => bridge.removeListener('inspectedElement', onInspectedElement);
-  }, [bridge, inspectedElementID]);
+  }, [bridge, selectedElementID]);
 
   // This effect handler polls for updates on the currently selected element.
   useEffect(() => {
-    if (inspectedElementID === null) {
+    if (selectedElementID === null) {
       return () => {};
     }
 
-    const rendererID = store.getRendererIDForElement(inspectedElementID);
+    const rendererID = store.getRendererIDForElement(selectedElementID);
 
     let timeoutID: TimeoutID | null = null;
 
     const sendRequest = () => {
       timeoutID = null;
 
-      bridge.send('inspectElement', { id: inspectedElementID, rendererID });
+      bridge.send('inspectElement', { id: selectedElementID, rendererID });
     };
 
     // Send the initial inspection request.
@@ -121,7 +125,7 @@ function InspectedElementContextController({ children }: Props) {
     const onInspectedElement = (inspectedElement: InspectedElement | null) => {
       if (
         inspectedElement !== null &&
-        inspectedElement.id === inspectedElementID
+        inspectedElement.id === selectedElementID
       ) {
         // If this is the element we requested, wait a little bit and then ask for an update.
         timeoutID = setTimeout(sendRequest, 1000);
@@ -137,7 +141,7 @@ function InspectedElementContextController({ children }: Props) {
         clearTimeout(timeoutID);
       }
     };
-  }, [bridge, inspectedElementID, store]);
+  }, [bridge, selectedElementID, store]);
 
   const value = useMemo(
     () => ({
@@ -145,7 +149,7 @@ function InspectedElementContextController({ children }: Props) {
     }),
     // Count is used to invalidate the cache and schedule an update with React.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [count, resource.read]
+    [count]
   );
 
   return (
