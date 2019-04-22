@@ -42,6 +42,7 @@ function InspectedElementContextController({ children }: Props) {
 
   const [count, setCount] = useState<number>(0);
 
+  // This effect handler polls for updates on the currently selected element.
   useEffect(() => {
     if (inspectedElementID === null) {
       return () => {};
@@ -49,15 +50,37 @@ function InspectedElementContextController({ children }: Props) {
 
     const rendererID = store.getRendererIDForElement(inspectedElementID);
 
-    const requestUpdate = () => {
+    let timeoutID: TimeoutID | null = null;
+
+    const sendRequest = () => {
+      timeoutID = null;
+
       bridge.send('inspectElement', { id: inspectedElementID, rendererID });
     };
 
-    requestUpdate();
+    // Send the initial inspection request.
+    // We'll poll for an update in the response handler below.
+    sendRequest();
 
-    const intervalID = setInterval(requestUpdate, 1000);
+    const onInspectedElement = (inspectedElement: InspectedElement | null) => {
+      if (
+        inspectedElement !== null &&
+        inspectedElement.id === inspectedElementID
+      ) {
+        // If this is the element we requested, wait a little bit and then ask for an update.
+        timeoutID = setTimeout(sendRequest, 1000);
+      }
+    };
 
-    return () => clearInterval(intervalID);
+    bridge.addListener('inspectedElement', onInspectedElement);
+
+    return () => {
+      bridge.removeListener('inspectedElement', onInspectedElement);
+
+      if (timeoutID !== null) {
+        clearTimeout(timeoutID);
+      }
+    };
   }, [bridge, inspectedElementID, store]);
 
   const inProgressRequests = useMemo<Map<number, InProgressRequest>>(
@@ -88,6 +111,7 @@ function InspectedElementContextController({ children }: Props) {
     [inProgressRequests]
   );
 
+  // This effect handler invalidates the suspense cache and schedules rendering updates with React.
   useEffect(() => {
     const onInspectedElement = (
       inspectedElementRaw: InspectedElement | null
@@ -117,7 +141,7 @@ function InspectedElementContextController({ children }: Props) {
     };
 
     bridge.addListener('inspectedElement', onInspectedElement);
-    return () => bridge.removeListener('inspectElement', onInspectedElement);
+    return () => bridge.removeListener('inspectedElement', onInspectedElement);
   }, [bridge, inProgressRequests, resource]);
 
   const value = useMemo(
