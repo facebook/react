@@ -40,7 +40,10 @@ import type {
   ReactRenderer,
   RendererInterface,
 } from './types';
-import type { InspectedElement } from 'src/devtools/views/Components/types';
+import type {
+  InspectedElement,
+  InspectedElementResponse,
+} from 'src/devtools/views/Components/types';
 
 function getInternalReactConstants(version) {
   const ReactSymbols = {
@@ -1649,27 +1652,30 @@ export function attach(
   let inspectedElementID: number | null = null;
   let hasInspectedElementChanged: boolean = false;
 
-  function inspectElement(id: number): InspectedElement | null {
+  function inspectElement(id: number): InspectedElementResponse | null {
     if (inspectedElementID === id && !hasInspectedElementChanged) {
       // Optimization: Don't resend (and reserialize) unchanged props.
-      return null;
+      return {
+        id,
+        inspectedElement: null,
+      };
     }
 
     inspectedElementID = id;
     hasInspectedElementChanged = false;
 
-    let result = inspectElementRaw(id);
-    if (result === null) {
+    let inspectedElement = inspectElementRaw(id);
+    if (inspectedElement === null) {
       return null;
     }
 
     // TODO Review sanitization approach for the below inspectable values.
-    result.context = cleanForBridge(result.context);
-    result.hooks = cleanForBridge(result.hooks);
-    result.props = cleanForBridge(result.props);
-    result.state = cleanForBridge(result.state);
+    inspectedElement.context = cleanForBridge(inspectedElement.context);
+    inspectedElement.hooks = cleanForBridge(inspectedElement.hooks);
+    inspectedElement.props = cleanForBridge(inspectedElement.props);
+    inspectedElement.state = cleanForBridge(inspectedElement.state);
 
-    return result;
+    return { id, inspectedElement };
   }
 
   function logElementToConsole(id) {

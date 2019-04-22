@@ -15,6 +15,7 @@ import { TreeStateContext } from './TreeContext';
 import type {
   DehydratedData,
   InspectedElement,
+  InspectedElementResponse,
 } from 'src/devtools/views/Components/types';
 import type { Resource } from '../../cache';
 
@@ -70,29 +71,32 @@ function InspectedElementContextController({ children }: Props) {
   // This effect handler invalidates the suspense cache and schedules rendering updates with React.
   useEffect(() => {
     const onInspectedElement = (
-      inspectedElementRaw: InspectedElement | null
+      inspectedElementResponse: InspectedElementResponse | null
     ) => {
-      if (inspectedElementRaw != null) {
-        const id = inspectedElementRaw.id;
+      if (inspectedElementResponse != null) {
+        let { inspectedElement } = inspectedElementResponse;
+        if (inspectedElement !== null) {
+          const id = inspectedElement.id;
 
-        const inspectedElement = (({
-          ...inspectedElementRaw,
-          context: hydrateHelper(inspectedElementRaw.context),
-          hooks: hydrateHelper(inspectedElementRaw.hooks),
-          props: hydrateHelper(inspectedElementRaw.props),
-          state: hydrateHelper(inspectedElementRaw.state),
-        }: any): InspectedElement);
+          inspectedElement = (({
+            ...inspectedElement,
+            context: hydrateHelper(inspectedElement.context),
+            hooks: hydrateHelper(inspectedElement.hooks),
+            props: hydrateHelper(inspectedElement.props),
+            state: hydrateHelper(inspectedElement.state),
+          }: any): InspectedElement);
 
-        const request = inProgressRequests.get(id);
-        if (request != null) {
-          inProgressRequests.delete(id);
-          request.resolveFn(inspectedElement);
-        } else {
-          resource.write(id, inspectedElement);
+          const request = inProgressRequests.get(id);
+          if (request != null) {
+            inProgressRequests.delete(id);
+            request.resolveFn(inspectedElement);
+          } else {
+            resource.write(id, inspectedElement);
 
-          // Schedule update with React if the curently-selected element has been invalidated.
-          if (id === selectedElementID) {
-            setCount(count => count + 1);
+            // Schedule update with React if the curently-selected element has been invalidated.
+            if (id === selectedElementID) {
+              setCount(count => count + 1);
+            }
           }
         }
       }
@@ -122,10 +126,12 @@ function InspectedElementContextController({ children }: Props) {
     // We'll poll for an update in the response handler below.
     sendRequest();
 
-    const onInspectedElement = (inspectedElement: InspectedElement | null) => {
+    const onInspectedElement = (
+      inspectedElementResponse: InspectedElementResponse | null
+    ) => {
       if (
-        inspectedElement !== null &&
-        inspectedElement.id === selectedElementID
+        inspectedElementResponse !== null &&
+        inspectedElementResponse.id === selectedElementID
       ) {
         // If this is the element we requested, wait a little bit and then ask for an update.
         timeoutID = setTimeout(sendRequest, 1000);
