@@ -42,47 +42,6 @@ function InspectedElementContextController({ children }: Props) {
 
   const [count, setCount] = useState<number>(0);
 
-  // This effect handler polls for updates on the currently selected element.
-  useEffect(() => {
-    if (inspectedElementID === null) {
-      return () => {};
-    }
-
-    const rendererID = store.getRendererIDForElement(inspectedElementID);
-
-    let timeoutID: TimeoutID | null = null;
-
-    const sendRequest = () => {
-      timeoutID = null;
-
-      bridge.send('inspectElement', { id: inspectedElementID, rendererID });
-    };
-
-    // Send the initial inspection request.
-    // We'll poll for an update in the response handler below.
-    sendRequest();
-
-    const onInspectedElement = (inspectedElement: InspectedElement | null) => {
-      if (
-        inspectedElement !== null &&
-        inspectedElement.id === inspectedElementID
-      ) {
-        // If this is the element we requested, wait a little bit and then ask for an update.
-        timeoutID = setTimeout(sendRequest, 1000);
-      }
-    };
-
-    bridge.addListener('inspectedElement', onInspectedElement);
-
-    return () => {
-      bridge.removeListener('inspectedElement', onInspectedElement);
-
-      if (timeoutID !== null) {
-        clearTimeout(timeoutID);
-      }
-    };
-  }, [bridge, inspectedElementID, store]);
-
   const inProgressRequests = useMemo<Map<number, InProgressRequest>>(
     () => new Map(),
     []
@@ -134,15 +93,58 @@ function InspectedElementContextController({ children }: Props) {
         } else {
           resource.write(id, inspectedElement);
 
-          // Schedule update with React if necessary.
-          setCount(count => count + 1);
+          // Schedule update with React if the curently-selected element has been invalidated.
+          if (id === inspectedElementID) {
+            setCount(count => count + 1);
+          }
         }
       }
     };
 
     bridge.addListener('inspectedElement', onInspectedElement);
     return () => bridge.removeListener('inspectedElement', onInspectedElement);
-  }, [bridge, inProgressRequests, resource]);
+  }, [bridge, inProgressRequests, inspectedElementID, resource]);
+
+  // This effect handler polls for updates on the currently selected element.
+  useEffect(() => {
+    if (inspectedElementID === null) {
+      return () => {};
+    }
+
+    const rendererID = store.getRendererIDForElement(inspectedElementID);
+
+    let timeoutID: TimeoutID | null = null;
+
+    const sendRequest = () => {
+      timeoutID = null;
+
+      bridge.send('inspectElement', { id: inspectedElementID, rendererID });
+    };
+
+    // Send the initial inspection request.
+    // We'll poll for an update in the response handler below.
+    sendRequest();
+
+    const onInspectedElement = (inspectedElement: InspectedElement | null) => {
+      if (
+        inspectedElement !== null &&
+        inspectedElement.id === inspectedElementID
+      ) {
+        // If this is the element we requested, wait a little bit and then ask for an update.
+        timeoutID = setTimeout(sendRequest, 1000);
+      }
+    };
+
+    bridge.addListener('inspectedElement', onInspectedElement);
+
+    return () => {
+      bridge.removeListener('inspectedElement', onInspectedElement);
+
+      if (timeoutID !== null) {
+        clearTimeout(timeoutID);
+      }
+    };
+  }, [bridge, inspectedElementID, store]);
 
   const value = useMemo(
     () => ({
