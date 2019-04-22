@@ -46,8 +46,8 @@
 
   "permissions": [
     "<all_urls>",
-    "background",
     "downloads",
+    "activeTab",
     "tabs",
     "file:///*",
     "http://*/*",
