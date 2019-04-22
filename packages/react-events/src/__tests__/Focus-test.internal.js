@@ -62,14 +62,17 @@ describe('Focus event responder', () => {
   });
 
   describe('onFocus', () => {
-    let onFocus, ref;
+    let onFocus, ref, innerRef;
 
     beforeEach(() => {
       onFocus = jest.fn();
       ref = React.createRef();
+      innerRef = React.createRef();
       const element = (
         <Focus onFocus={onFocus}>
-          <div ref={ref} />
+          <div ref={ref}>
+            <a ref={innerRef} />
+          </div>
         </Focus>
       );
       ReactDOM.render(element, container);
@@ -78,6 +81,12 @@ describe('Focus event responder', () => {
     it('is called after "focus" event', () => {
       ref.current.dispatchEvent(createFocusEvent('focus'));
       expect(onFocus).toHaveBeenCalledTimes(1);
+    });
+
+    it('is not called if descendants of target receive focus', () => {
+      const target = innerRef.current;
+      target.dispatchEvent(createFocusEvent('focus'));
+      expect(onFocus).not.toBeCalled();
     });
   });
 

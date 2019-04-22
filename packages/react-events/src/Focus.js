@@ -12,6 +12,7 @@ import type {
   ReactResponderContext,
 } from 'shared/ReactTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
+import {getEventCurrentTarget} from './utils.js';
 
 const CAPTURE_PHASE = 2;
 
@@ -120,21 +121,17 @@ const FocusResponder = {
     if (phase === CAPTURE_PHASE) {
       return false;
     }
+
     switch (type) {
       case 'focus': {
         if (!state.isFocused) {
           // Limit focus events to the direct child of the event component.
           // Browser focus is not expected to bubble.
-          let currentTarget = (target: any);
-          if (
-            currentTarget.parentNode &&
-            context.isTargetWithinEventComponent(currentTarget.parentNode)
-          ) {
-            break;
+          state.focusTarget = getEventCurrentTarget(event, context);
+          if (state.focusTarget === target) {
+            dispatchFocusInEvents(context, props, state);
+            state.isFocused = true;
           }
-          state.focusTarget = currentTarget;
-          dispatchFocusInEvents(context, props, state);
-          state.isFocused = true;
         }
         break;
       }
