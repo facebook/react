@@ -45,6 +45,32 @@ describe('Hover event responder', () => {
     container = null;
   });
 
+  describe('disabled', () => {
+    let onHoverStart, onHoverEnd, ref;
+
+    beforeEach(() => {
+      onHoverStart = jest.fn();
+      onHoverEnd = jest.fn();
+      ref = React.createRef();
+      const element = (
+        <Hover
+          disabled={true}
+          onHoverStart={onHoverStart}
+          onHoverEnd={onHoverEnd}>
+          <div ref={ref} />
+        </Hover>
+      );
+      ReactDOM.render(element, container);
+    });
+
+    it('prevents custom events being dispatched', () => {
+      ref.current.dispatchEvent(createPointerEvent('pointerover'));
+      ref.current.dispatchEvent(createPointerEvent('pointerout'));
+      expect(onHoverStart).not.toBeCalled();
+      expect(onHoverEnd).not.toBeCalled();
+    });
+  });
+
   describe('onHoverStart', () => {
     let onHoverStart, ref;
 

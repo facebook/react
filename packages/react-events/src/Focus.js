@@ -117,6 +117,15 @@ const FocusResponder = {
     const shouldStopPropagation =
       props.stopPropagation === undefined ? true : props.stopPropagation;
 
+    if (props.disabled) {
+      if (state.isFocused) {
+        dispatchFocusOutEvents(context, props, state);
+        state.isFocused = false;
+        state.focusTarget = null;
+      }
+      return false;
+    }
+
     // Focus doesn't handle capture target events at this point
     if (phase === CAPTURE_PHASE) {
       return false;

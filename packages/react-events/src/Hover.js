@@ -253,6 +253,17 @@ const HoverResponder = {
   ): boolean {
     const {type} = event;
 
+    if (props.disabled) {
+      if (state.isHovered) {
+        dispatchHoverEndEvents(event, context, props, state);
+        state.ignoreEmulatedMouseEvents = false;
+      }
+      if (state.isTouched) {
+        state.isTouched = false;
+      }
+      return false;
+    }
+
     // Hover doesn't handle capture target events at this point
     if (event.phase === CAPTURE_PHASE) {
       return false;

@@ -408,6 +408,13 @@ const PressResponder = {
   ): boolean {
     const {phase, target, type} = event;
 
+    if (props.disabled) {
+      dispatchPressEndEvents(context, props, state);
+      context.removeRootEventTypes(rootEventTypes);
+      state.ignoreEmulatedMouseEvents = false;
+      return false;
+    }
+
     // Press doesn't handle capture target events at this point
     if (phase === CAPTURE_PHASE) {
       return false;
