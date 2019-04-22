@@ -14,6 +14,7 @@ import Settings from './Settings/Settings';
 import TabBar from './TabBar';
 import { SettingsContextController } from './Settings/SettingsContext';
 import { TreeContextController } from './Components/TreeContext';
+import ViewElementSourceContext from './Components/ViewElementSourceContext';
 import { ProfilerContextController } from './Profiler/ProfilerContext';
 import ReactLogo from './ReactLogo';
 
@@ -121,47 +122,55 @@ export default function DevTools({
           profilerPortalContainer={profilerPortalContainer}
           settingsPortalContainer={settingsPortalContainer}
         >
-          <TreeContextController viewElementSource={viewElementSource}>
-            <ProfilerContextController>
-              <div className={styles.DevTools}>
-                {showTabBar && (
-                  <div className={styles.TabBar}>
-                    <ReactLogo />
-                    <span className={styles.DevToolsVersion}>
-                      {process.env.DEVTOOLS_VERSION}
-                    </span>
-                    <div className={styles.Spacer} />
-                    <TabBar
-                      currentTab={tab}
-                      id="DevTools"
-                      selectTab={setTab}
-                      size="large"
-                      tabs={
-                        supportsProfiling
-                          ? tabsWithProfiler
-                          : tabsWithoutProfiler
-                      }
+          <ViewElementSourceContext.Provider value={viewElementSource}>
+            <TreeContextController>
+              <ProfilerContextController>
+                <div className={styles.DevTools}>
+                  {showTabBar && (
+                    <div className={styles.TabBar}>
+                      <ReactLogo />
+                      <span className={styles.DevToolsVersion}>
+                        {process.env.DEVTOOLS_VERSION}
+                      </span>
+                      <div className={styles.Spacer} />
+                      <TabBar
+                        currentTab={tab}
+                        id="DevTools"
+                        selectTab={setTab}
+                        size="large"
+                        tabs={
+                          supportsProfiling
+                            ? tabsWithProfiler
+                            : tabsWithoutProfiler
+                        }
+                      />
+                    </div>
+                  )}
+                  <div
+                    className={styles.TabContent}
+                    hidden={tab !== 'components'}
+                  >
+                    <Components portalContainer={componentsPortalContainer} />
+                  </div>
+                  <div
+                    className={styles.TabContent}
+                    hidden={tab !== 'profiler'}
+                  >
+                    <Profiler
+                      portalContainer={profilerPortalContainer}
+                      supportsProfiling={supportsProfiling}
                     />
                   </div>
-                )}
-                <div
-                  className={styles.TabContent}
-                  hidden={tab !== 'components'}
-                >
-                  <Components portalContainer={componentsPortalContainer} />
+                  <div
+                    className={styles.TabContent}
+                    hidden={tab !== 'settings'}
+                  >
+                    <Settings portalContainer={settingsPortalContainer} />
+                  </div>
                 </div>
-                <div className={styles.TabContent} hidden={tab !== 'profiler'}>
-                  <Profiler
-                    portalContainer={profilerPortalContainer}
-                    supportsProfiling={supportsProfiling}
-                  />
-                </div>
-                <div className={styles.TabContent} hidden={tab !== 'settings'}>
-                  <Settings portalContainer={settingsPortalContainer} />
-                </div>
-              </div>
-            </ProfilerContextController>
-          </TreeContextController>
+              </ProfilerContextController>
+            </TreeContextController>
+          </ViewElementSourceContext.Provider>
         </SettingsContextController>
       </StoreContext.Provider>
     </BridgeContext.Provider>

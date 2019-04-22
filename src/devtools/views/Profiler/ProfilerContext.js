@@ -9,7 +9,10 @@ import React, {
 } from 'react';
 import { unstable_batchedUpdates as batchedUpdates } from 'react-dom';
 import { useLocalStorage, useSubscription } from '../hooks';
-import { TreeContext } from '../Components/TreeContext';
+import {
+  TreeDispatcherContext,
+  TreeStateContext,
+} from '../Components/TreeContext';
 import { StoreContext } from '../context';
 import Store from '../../store';
 
@@ -79,7 +82,8 @@ type Props = {|
 
 function ProfilerContextController({ children }: Props) {
   const store = useContext(StoreContext);
-  const { selectElementByID, selectedElementID } = useContext(TreeContext);
+  const { selectedElementID } = useContext(TreeStateContext);
+  const dispatch = useContext(TreeDispatcherContext);
 
   const subscription = useMemo(
     () => ({
@@ -155,11 +159,14 @@ function ProfilerContextController({ children }: Props) {
         // If this element is still in the store, then select it in the Components tab as well.
         const element = store.getElementByID(id);
         if (element !== null) {
-          selectElementByID(id);
+          dispatch({
+            type: 'SELECT_ELEMENT_BY_ID',
+            payload: id,
+          });
         }
       }
     },
-    [selectElementByID, selectFiberID, selectFiberName, store]
+    [dispatch, selectFiberID, selectFiberName, store]
   );
 
   if (isProfiling) {
