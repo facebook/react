@@ -11,7 +11,7 @@ import { Menu, MenuList, MenuButton, MenuItem } from '@reach/menu-button';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Toggle from '../Toggle';
-import { TreeContext } from './TreeContext';
+import { TreeDispatcherContext, TreeStateContext } from './TreeContext';
 import { StoreContext } from '../context';
 import { useIsOverflowing } from '../hooks';
 
@@ -20,9 +20,8 @@ import type { Element } from './types';
 import styles from './OwnersStack.css';
 
 export default function OwnerStack() {
-  const { ownerStack, ownerStackIndex, resetOwnerStack } = useContext(
-    TreeContext
-  );
+  const { ownerStack, ownerStackIndex } = useContext(TreeStateContext);
+  const dispatch = useContext(TreeDispatcherContext);
 
   const [elementsTotalWidth, setElementsTotalWidth] = useState(0);
   const elementsBarRef = useRef<HTMLDivElement | null>(null);
@@ -73,7 +72,7 @@ export default function OwnerStack() {
       <div className={styles.VRule} />
       <Button
         className={styles.IconButton}
-        onClick={resetOwnerStack}
+        onClick={() => dispatch({ type: 'RESET_OWNER_STACK' })}
         title="Back to tree view"
       >
         <ButtonIcon type="close" />
@@ -91,7 +90,7 @@ function ElementsDropdown({
   ownerStackIndex,
 }: ElementsDropdownProps) {
   const store = useContext(StoreContext);
-  const { selectOwner } = useContext(TreeContext);
+  const dispatch = useContext(TreeDispatcherContext);
 
   return (
     <Menu>
@@ -107,7 +106,7 @@ function ElementsDropdown({
           <MenuItem
             key={id}
             className={styles.Component}
-            onSelect={() => selectOwner(id)}
+            onSelect={() => dispatch({ type: 'SELECT_OWNER', payload: id })}
           >
             {((store.getElementByID(id): any): Element).displayName}
           </MenuItem>
@@ -123,7 +122,8 @@ type ElementViewProps = {
 };
 function ElementView({ id, index }: ElementViewProps) {
   const store = useContext(StoreContext);
-  const { ownerStackIndex, selectOwner } = useContext(TreeContext);
+  const { ownerStackIndex } = useContext(TreeStateContext);
+  const dispatch = useContext(TreeDispatcherContext);
 
   const { displayName } = ((store.getElementByID(id): any): Element);
 
@@ -131,9 +131,9 @@ function ElementView({ id, index }: ElementViewProps) {
 
   const handleChange = useCallback(() => {
     if (!isChecked) {
-      selectOwner(id);
+      dispatch({ type: 'SELECT_OWNER', payload: id });
     }
-  }, [id, isChecked, selectOwner]);
+  }, [dispatch, id, isChecked]);
 
   return (
     <Toggle

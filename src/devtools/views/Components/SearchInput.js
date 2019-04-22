@@ -1,7 +1,7 @@
 // @flow
 
 import React, { useCallback, useContext, useEffect, useRef } from 'react';
-import { TreeContext } from './TreeContext';
+import { TreeDispatcherContext, TreeStateContext } from './TreeContext';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Icon from '../Icon';
@@ -11,51 +11,49 @@ import styles from './SearchInput.css';
 type Props = {||};
 
 export default function SearchInput(props: Props) {
-  const {
-    goToNextSearchResult,
-    goToPreviousSearchResult,
-    searchIndex,
-    searchResults,
-    searchText,
-    selectNextElementInTree,
-    selectPreviousElementInTree,
-    setSearchText,
-  } = useContext(TreeContext);
+  const { searchIndex, searchResults, searchText } = useContext(
+    TreeStateContext
+  );
+  const dispatch = useContext(TreeDispatcherContext);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const handleTextChange = useCallback(
-    ({ currentTarget }) => setSearchText(currentTarget.value),
-    [setSearchText]
+    ({ currentTarget }) =>
+      dispatch({ type: 'SET_SEARCH_TEXT', payload: currentTarget.value }),
+    [dispatch]
   );
-  const resetSearch = useCallback(() => setSearchText(''), [setSearchText]);
+  const resetSearch = useCallback(
+    () => dispatch({ type: 'SET_SEARCH_TEXT', payload: '' }),
+    [dispatch]
+  );
 
   const handleKeyDown = useCallback(
     event => {
       // For convenience, let up/down arrow keys change Tree selection.
       switch (event.key) {
         case 'ArrowDown':
-          selectNextElementInTree();
+          dispatch({ type: 'SELECT_NEXT_ELEMENT_IN_TREE' });
           event.preventDefault();
           break;
         case 'ArrowUp':
-          selectPreviousElementInTree();
+          dispatch({ type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE' });
           event.preventDefault();
           break;
         default:
           break;
       }
     },
-    [selectNextElementInTree, selectPreviousElementInTree]
+    [dispatch]
   );
 
   const handleInputKeyPress = useCallback(
     ({ key }) => {
       if (key === 'Enter') {
-        goToNextSearchResult();
+        dispatch({ type: 'GO_TO_NEXT_SEARCH_RESULT' });
       }
     },
-    [goToNextSearchResult]
+    [dispatch]
   );
 
   // Auto-focus search input
@@ -106,7 +104,7 @@ export default function SearchInput(props: Props) {
       <Button
         className={styles.IconButton}
         disabled={!searchText}
-        onClick={goToPreviousSearchResult}
+        onClick={() => dispatch({ type: 'GO_TO_PREVIOUS_SEARCH_RESULT' })}
         title="Scroll to previous search result"
       >
         <ButtonIcon type="up" />
@@ -114,7 +112,7 @@ export default function SearchInput(props: Props) {
       <Button
         className={styles.IconButton}
         disabled={!searchText}
-        onClick={goToNextSearchResult}
+        onClick={() => dispatch({ type: 'GO_TO_NEXT_SEARCH_RESULT' })}
         title="Scroll to next search result"
       >
         <ButtonIcon type="down" />

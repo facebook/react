@@ -10,7 +10,7 @@ import React, {
 import { createResource } from '../../cache';
 import { BridgeContext, StoreContext } from '../context';
 import { hydrate } from 'src/hydration';
-import { TreeContext } from './TreeContext';
+import { TreeStateContext } from './TreeContext';
 
 import type {
   DehydratedData,
@@ -38,7 +38,7 @@ type Props = {|
 function InspectedElementContextController({ children }: Props) {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
-  const { inspectedElementID } = useContext(TreeContext);
+  const { inspectedElementID } = useContext(TreeStateContext);
 
   const [count, setCount] = useState<number>(0);
 

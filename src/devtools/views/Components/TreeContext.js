@@ -34,44 +34,98 @@ import Store from '../../store';
 
 import type { Element } from './types';
 
-type Context = {|
+type StateContext = {|
   // Tree
   baseDepth: number,
   numElements: number,
   selectedElementID: number | null,
   selectedElementIndex: number | null,
-  getElementAtIndex(index: number): Element | null,
-  selectChildElementInTree(): void,
-  selectElementAtIndex(index: number): void,
-  selectElementByID(id: number | null): void,
-  selectNextElementInTree(): void,
-  selectParentElementInTree(): void,
-  selectPreviousElementInTree(): void,
 
   // Search
   searchIndex: number | null,
   searchResults: Array<number>,
   searchText: string,
-  setSearchText(text: string): void,
-  goToNextSearchResult(): void,
-  goToPreviousSearchResult(): void,
 
   // Owners
+  ownerFlatTree: Array<number> | null,
   ownerStack: Array<number>,
   ownerStackIndex: number | null,
-  resetOwnerStack(): void,
-  selectOwner(id: number): void,
-
-  // Injected by parent HTML/JavaScript
-  viewElementSource: Function | null,
 
   // Inspection element panel
-  // Updated separately so we can avoid suspending when selection changes
   inspectedElementID: number | null,
 |};
 
-const TreeContext = createContext<Context>(((null: any): Context));
-TreeContext.displayName = 'TreeContext';
+type ACTION_GO_TO_NEXT_SEARCH_RESULT = {|
+  type: 'GO_TO_NEXT_SEARCH_RESULT',
+|};
+type ACTION_GO_TO_PREVIOUS_SEARCH_RESULT = {|
+  type: 'GO_TO_PREVIOUS_SEARCH_RESULT',
+|};
+type ACTION_HANDLE_STORE_MUTATION = {|
+  type: 'HANDLE_STORE_MUTATION',
+  payload: [Uint32Array, Uint32Array],
+|};
+type ACTION_RESET_OWNER_STACK = {|
+  type: 'RESET_OWNER_STACK',
+|};
+type ACTION_SELECT_CHILD_ELEMENT_IN_TREE = {|
+  type: 'SELECT_CHILD_ELEMENT_IN_TREE',
+|};
+type ACTION_SELECT_ELEMENT_AT_INDEX = {|
+  type: 'SELECT_ELEMENT_AT_INDEX',
+  payload: number | null,
+|};
+type ACTION_SELECT_ELEMENT_BY_ID = {|
+  type: 'SELECT_ELEMENT_BY_ID',
+  payload: number | null,
+|};
+type ACTION_SELECT_NEXT_ELEMENT_IN_TREE = {|
+  type: 'SELECT_NEXT_ELEMENT_IN_TREE',
+|};
+type ACTION_SELECT_PARENT_ELEMENT_IN_TREE = {|
+  type: 'SELECT_PARENT_ELEMENT_IN_TREE',
+|};
+type ACTION_SELECT_PREVIOUS_ELEMENT_IN_TREE = {|
+  type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE',
+|};
+type ACTION_SELECT_OWNER = {|
+  type: 'SELECT_OWNER',
+  payload: number,
+|};
+type ACTION_SET_SEARCH_TEXT = {|
+  type: 'SET_SEARCH_TEXT',
+  payload: string,
+|};
+type ACTION_UPDATE_INSPECTED_ELEMENT_ID = {|
+  type: 'UPDATE_INSPECTED_ELEMENT_ID',
+|};
+
+type Action =
+  | ACTION_GO_TO_NEXT_SEARCH_RESULT
+  | ACTION_GO_TO_PREVIOUS_SEARCH_RESULT
+  | ACTION_HANDLE_STORE_MUTATION
+  | ACTION_RESET_OWNER_STACK
+  | ACTION_SELECT_CHILD_ELEMENT_IN_TREE
+  | ACTION_SELECT_ELEMENT_AT_INDEX
+  | ACTION_SELECT_ELEMENT_BY_ID
+  | ACTION_SELECT_NEXT_ELEMENT_IN_TREE
+  | ACTION_SELECT_PARENT_ELEMENT_IN_TREE
+  | ACTION_SELECT_PREVIOUS_ELEMENT_IN_TREE
+  | ACTION_SELECT_OWNER
+  | ACTION_SET_SEARCH_TEXT
+  | ACTION_UPDATE_INSPECTED_ELEMENT_ID;
+
+type DispatcherContext = (action: Action) => void;
+
+const TreeStateContext = createContext<StateContext>(
+  ((null: any): StateContext)
+);
+TreeStateContext.displayName = 'TreeStateContext';
+
+const TreeDispatcherContext = createContext<DispatcherContext>(
+  ((null: any): DispatcherContext)
+);
+TreeDispatcherContext.displayName = 'TreeDispatcherContext';
 
 type State = {|
   // Tree
@@ -88,33 +142,13 @@ type State = {|
   // Owners
   ownerStack: Array<number>,
   ownerStackIndex: number | null,
-  _ownerFlatTree: Array<number> | null,
+  ownerFlatTree: Array<number> | null,
 
   // Inspection element panel
   inspectedElementID: number | null,
 |};
 
-type Action = {|
-  type:
-    | 'GO_TO_NEXT_SEARCH_RESULT'
-    | 'GO_TO_PREVIOUS_SEARCH_RESULT'
-    | 'HANDLE_STORE_MUTATION'
-    | 'RESET_OWNER_STACK'
-    | 'SELECT_CHILD_ELEMENT_IN_TREE'
-    | 'SELECT_ELEMENT_AT_INDEX'
-    | 'SELECT_ELEMENT_BY_ID'
-    | 'SELECT_NEXT_ELEMENT_IN_TREE'
-    | 'SELECT_PARENT_ELEMENT_IN_TREE'
-    | 'SELECT_PREVIOUS_ELEMENT_IN_TREE'
-    | 'SELECT_OWNER'
-    | 'SET_SEARCH_TEXT'
-    | 'UPDATE_INSPECTED_ELEMENT_ID',
-  payload?: any,
-|};
-
 function reduceTreeState(store: Store, state: State, action: Action): State {
-  const { type, payload } = action;
-
   let {
     numElements,
     ownerStack,
@@ -126,7 +160,7 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
 
   // Base tree should ignore selected element changes when the owner's tree is active.
   if (ownerStack.length === 0) {
-    switch (type) {
+    switch (action.type) {
       case 'HANDLE_STORE_MUTATION':
         numElements = store.numElements;
 
@@ -157,18 +191,18 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
         }
         break;
       case 'SELECT_ELEMENT_AT_INDEX':
-        selectedElementIndex = ((payload: any): number | null);
+        selectedElementIndex = (action: ACTION_SELECT_ELEMENT_AT_INDEX).payload;
         break;
       case 'SELECT_ELEMENT_BY_ID':
         // Skip lookup in this case; it would be redundant.
         // It might also cause problems if the specified element was inside of a (not yet expanded) subtree.
         lookupIDForIndex = false;
 
-        selectedElementID = payload;
+        selectedElementID = (action: ACTION_SELECT_ELEMENT_BY_ID).payload;
         selectedElementIndex =
-          payload === null
+          selectedElementID === null
             ? null
-            : store.getIndexOfElementID(((payload: any): number));
+            : store.getIndexOfElementID(selectedElementID);
         break;
       case 'SELECT_NEXT_ELEMENT_IN_TREE':
         if (
@@ -229,8 +263,6 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
 }
 
 function reduceSearchState(store: Store, state: State, action: Action): State {
-  const { type, payload } = action;
-
   let {
     ownerStack,
     searchIndex,
@@ -252,7 +284,7 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
 
   // Search isn't supported when the owner's tree is active.
   if (ownerStack.length === 0) {
-    switch (type) {
+    switch (action.type) {
       case 'GO_TO_NEXT_SEARCH_RESULT':
         if (numPrevSearchResults > 0) {
           didRequestSearch = true;
@@ -274,7 +306,7 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
           const [
             addedElementIDs,
             removedElementIDs,
-          ] = ((payload: any): Array<Uint32Array>);
+          ] = (action: ACTION_HANDLE_STORE_MUTATION).payload;
 
           removedElementIDs.forEach(id => {
             // Prune this item from the search results.
@@ -336,7 +368,7 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
       case 'SET_SEARCH_TEXT':
         searchIndex = null;
         searchResults = [];
-        searchText = ((payload: any): string);
+        searchText = (action: ACTION_SET_SEARCH_TEXT).payload;
 
         if (searchText !== '') {
           const regExp = createRegExp(searchText);
@@ -394,24 +426,22 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
 }
 
 function reduceOwnersState(store: Store, state: State, action: Action): State {
-  const { payload, type } = action;
-
   let {
     baseDepth,
     numElements,
     selectedElementID,
     selectedElementIndex,
+    ownerFlatTree,
     ownerStack,
     ownerStackIndex,
     searchIndex,
     searchResults,
     searchText,
-    _ownerFlatTree,
   } = state;
 
   let prevSelectedElementIndex = selectedElementIndex;
 
-  switch (type) {
+  switch (action.type) {
     case 'HANDLE_STORE_MUTATION':
       if (ownerStack.length > 0) {
         let indexOfRemovedItem = -1;
@@ -425,15 +455,15 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
         if (indexOfRemovedItem >= 0) {
           ownerStack = ownerStack.slice(0, indexOfRemovedItem);
           if (ownerStack.length === 0) {
-            _ownerFlatTree = null;
+            ownerFlatTree = null;
             ownerStackIndex = null;
           } else {
             ownerStackIndex = ownerStack.length - 1;
           }
         }
-        if (selectedElementID !== null && _ownerFlatTree !== null) {
+        if (selectedElementID !== null && ownerFlatTree !== null) {
           // Mutation might have caused the index of this ID to shift.
-          selectedElementIndex = _ownerFlatTree.indexOf(selectedElementID);
+          selectedElementIndex = ownerFlatTree.indexOf(selectedElementID);
         }
       } else {
         if (selectedElementID !== null) {
@@ -454,30 +484,31 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
         selectedElementID !== null
           ? store.getIndexOfElementID(selectedElementID)
           : null;
-      _ownerFlatTree = null;
+      ownerFlatTree = null;
       break;
     case 'SELECT_ELEMENT_AT_INDEX':
-      if (_ownerFlatTree !== null) {
-        selectedElementIndex = ((payload: any): number | null);
+      if (ownerFlatTree !== null) {
+        selectedElementIndex = (action: ACTION_SELECT_ELEMENT_AT_INDEX).payload;
       }
       break;
     case 'SELECT_ELEMENT_BY_ID':
-      if (_ownerFlatTree !== null) {
+      if (ownerFlatTree !== null) {
+        const payload = (action: ACTION_SELECT_ELEMENT_BY_ID).payload;
         selectedElementIndex =
-          payload === null ? null : _ownerFlatTree.indexOf(payload);
+          payload === null ? null : ownerFlatTree.indexOf(payload);
       }
       break;
     case 'SELECT_NEXT_ELEMENT_IN_TREE':
-      if (_ownerFlatTree !== null && _ownerFlatTree.length > 0) {
+      if (ownerFlatTree !== null && ownerFlatTree.length > 0) {
         if (selectedElementIndex === null) {
           selectedElementIndex = 0;
-        } else if (selectedElementIndex + 1 < _ownerFlatTree.length) {
+        } else if (selectedElementIndex + 1 < ownerFlatTree.length) {
           selectedElementIndex++;
         }
       }
       break;
     case 'SELECT_PREVIOUS_ELEMENT_IN_TREE':
-      if (_ownerFlatTree !== null && _ownerFlatTree.length > 0) {
+      if (ownerFlatTree !== null && ownerFlatTree.length > 0) {
         if (selectedElementIndex !== null && selectedElementIndex > 0) {
           selectedElementIndex--;
         }
@@ -487,7 +518,8 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
       // If the Store doesn't have any owners metadata, don't drill into an empty stack.
       // This is a confusing user experience.
       if (store.hasOwnerMetadata) {
-        ownerStackIndex = ownerStack.indexOf(payload);
+        const id = (action: ACTION_SELECT_OWNER).payload;
+        ownerStackIndex = ownerStack.indexOf(id);
 
         // Always force reset selection to be the top of the new owner tree.
         selectedElementIndex = 0;
@@ -498,7 +530,7 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
         if (ownerStackIndex < 0) {
           // Add this new owner, and fill in the owners above it as well.
           ownerStack = [];
-          let currentOwnerID = ((payload: any): number);
+          let currentOwnerID = id;
           while (currentOwnerID !== 0) {
             ownerStack.unshift(currentOwnerID);
             currentOwnerID = ((store.getElementByID(
@@ -524,23 +556,23 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
   if (
     ownerStackIndex !== state.ownerStackIndex ||
     ownerStack !== state.ownerStack ||
-    type === 'HANDLE_STORE_MUTATION'
+    action.type === 'HANDLE_STORE_MUTATION'
   ) {
     if (ownerStackIndex === null) {
-      _ownerFlatTree = null;
+      ownerFlatTree = null;
       baseDepth = 0;
       numElements = store.numElements;
     } else {
-      _ownerFlatTree = calculateCurrentOwnerList(
+      ownerFlatTree = calculateCurrentOwnerList(
         store,
         ownerStack[ownerStackIndex],
         ownerStack[ownerStackIndex],
         []
       );
 
-      baseDepth = ((store.getElementByID(_ownerFlatTree[0]): any): Element)
+      baseDepth = ((store.getElementByID(ownerFlatTree[0]): any): Element)
         .depth;
-      numElements = _ownerFlatTree.length;
+      numElements = ownerFlatTree.length;
     }
   }
 
@@ -548,8 +580,8 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
   if (selectedElementIndex !== prevSelectedElementIndex) {
     if (selectedElementIndex === null) {
       selectedElementID = null;
-    } else if (_ownerFlatTree !== null) {
-      selectedElementID = _ownerFlatTree[((selectedElementIndex: any): number)];
+    } else if (ownerFlatTree !== null) {
+      selectedElementID = ownerFlatTree[((selectedElementIndex: any): number)];
     }
   }
 
@@ -567,7 +599,7 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
 
     ownerStack,
     ownerStackIndex,
-    _ownerFlatTree,
+    ownerFlatTree,
   };
 }
 
@@ -589,13 +621,10 @@ function reduceSuspenseState(
   }
 }
 
-type Props = {|
-  children: React$Node,
-  viewElementSource: Function | null,
-|};
+type Props = {| children: React$Node |};
 
 // TODO Remove TreeContextController wrapper element once global ConsearchText.write API exists.
-function TreeContextController({ children, viewElementSource }: Props) {
+function TreeContextController({ children }: Props) {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
@@ -662,127 +691,18 @@ function TreeContextController({ children, viewElementSource }: Props) {
     // Owners
     ownerStack: [],
     ownerStackIndex: null,
-    _ownerFlatTree: null,
+    ownerFlatTree: null,
 
     // Inspection element panel
     inspectedElementID: null,
   });
 
   const dispatchWrapper = useCallback(
-    params => {
-      dispatch(params);
+    (action: Action) => {
+      dispatch(action);
       next(() => dispatch({ type: 'UPDATE_INSPECTED_ELEMENT_ID' }));
     },
     [dispatch]
-  );
-
-  const getElementAtIndex = useCallback(
-    (index: number) => {
-      return state._ownerFlatTree === null
-        ? store.getElementAtIndex(index)
-        : store.getElementByID(state._ownerFlatTree[index]);
-    },
-    [state, store]
-  );
-  const selectElementAtIndex = useCallback(
-    (index: number) =>
-      dispatchWrapper({ type: 'SELECT_ELEMENT_AT_INDEX', payload: index }),
-    [dispatchWrapper]
-  );
-  const selectElementByID = useCallback(
-    (id: number | null) =>
-      dispatchWrapper({ type: 'SELECT_ELEMENT_BY_ID', payload: id }),
-    [dispatchWrapper]
-  );
-  const setSearchText = useCallback(
-    (text: string) =>
-      dispatchWrapper({ type: 'SET_SEARCH_TEXT', payload: text }),
-    [dispatchWrapper]
-  );
-  const goToNextSearchResult = useCallback(
-    () => dispatchWrapper({ type: 'GO_TO_NEXT_SEARCH_RESULT' }),
-    [dispatchWrapper]
-  );
-  const goToPreviousSearchResult = useCallback(
-    () => dispatchWrapper({ type: 'GO_TO_PREVIOUS_SEARCH_RESULT' }),
-    [dispatchWrapper]
-  );
-  const resetOwnerStack = useCallback(
-    () => dispatchWrapper({ type: 'RESET_OWNER_STACK' }),
-    [dispatchWrapper]
-  );
-  const selectChildElementInTree = useCallback(
-    () => dispatchWrapper({ type: 'SELECT_CHILD_ELEMENT_IN_TREE' }),
-    [dispatchWrapper]
-  );
-  const selectNextElementInTree = useCallback(
-    () => dispatchWrapper({ type: 'SELECT_NEXT_ELEMENT_IN_TREE' }),
-    [dispatchWrapper]
-  );
-  const selectParentElementInTree = useCallback(
-    () => dispatchWrapper({ type: 'SELECT_PARENT_ELEMENT_IN_TREE' }),
-    [dispatchWrapper]
-  );
-  const selectPreviousElementInTree = useCallback(
-    () => dispatchWrapper({ type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE' }),
-    [dispatchWrapper]
-  );
-  const selectOwner = useCallback(
-    (id: number) => dispatchWrapper({ type: 'SELECT_OWNER', payload: id }),
-    [dispatchWrapper]
-  );
-
-  const value = useMemo(
-    () => ({
-      // Tree (derived from Store or owners state)
-      baseDepth: state.baseDepth,
-      numElements: state.numElements,
-      selectedElementID: state.selectedElementID,
-      selectedElementIndex: state.selectedElementIndex,
-      getElementAtIndex,
-      selectChildElementInTree,
-      selectElementByID,
-      selectElementAtIndex,
-      selectNextElementInTree,
-      selectParentElementInTree,
-      selectPreviousElementInTree,
-
-      // Search
-      searchIndex: state.searchIndex,
-      searchResults: state.searchResults,
-      searchText: state.searchText,
-      setSearchText,
-      goToNextSearchResult,
-      goToPreviousSearchResult,
-
-      // Owners
-      ownerStack: state.ownerStack,
-      ownerStackIndex: state.ownerStackIndex,
-      resetOwnerStack,
-      selectOwner,
-
-      // Inspection element panel
-      inspectedElementID: state.inspectedElementID,
-
-      // Injected by parent HTML/JavaScript
-      viewElementSource,
-    }),
-    [
-      getElementAtIndex,
-      goToNextSearchResult,
-      goToPreviousSearchResult,
-      resetOwnerStack,
-      selectChildElementInTree,
-      selectElementAtIndex,
-      selectElementByID,
-      selectNextElementInTree,
-      selectParentElementInTree,
-      selectOwner,
-      selectPreviousElementInTree,
-      setSearchText,
-      state,
-      viewElementSource,
-    ]
   );
 
   // Listen for host element selections.
@@ -837,7 +757,13 @@ function TreeContextController({ children, viewElementSource }: Props) {
     return () => store.removeListener('mutated', handleStoreMutated);
   }, [dispatchWrapper, initialRevision, store]);
 
-  return <TreeContext.Provider value={value}>{children}</TreeContext.Provider>;
+  return (
+    <TreeStateContext.Provider value={state}>
+      <TreeDispatcherContext.Provider value={dispatchWrapper}>
+        {children}
+      </TreeDispatcherContext.Provider>
+    </TreeStateContext.Provider>
+  );
 }
 
 function calculateCurrentOwnerList(
@@ -886,4 +812,4 @@ function recursivelySearchTree(
   );
 }
 
-export { TreeContext, TreeContextController };
+export { TreeDispatcherContext, TreeStateContext, TreeContextController };

@@ -1,13 +1,14 @@
 // @flow
 
 import React, { useCallback, useContext } from 'react';
-import { TreeContext } from './TreeContext';
+import { TreeDispatcherContext, TreeStateContext } from './TreeContext';
 import { BridgeContext, StoreContext } from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import HooksTree from './HooksTree';
 import InspectedElementTree from './InspectedElementTree';
 import { InspectedElementContext } from './InspectedElementContext';
+import ViewElementSourceContext from './ViewElementSourceContext';
 import styles from './SelectedElement.css';
 import {
   ElementTypeClass,
@@ -22,7 +23,8 @@ import type { Element, InspectedElement } from './types';
 export type Props = {||};
 
 export default function SelectedElement(_: Props) {
-  const { inspectedElementID, viewElementSource } = useContext(TreeContext);
+  const { inspectedElementID } = useContext(TreeStateContext);
+  const viewElementSource = useContext(ViewElementSourceContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
@@ -153,7 +155,7 @@ function InspectedElementView({
     state,
   } = inspectedElement;
 
-  const { ownerStack } = useContext(TreeContext);
+  const { ownerStack } = useContext(TreeStateContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
@@ -241,12 +243,16 @@ function InspectedElementView({
 }
 
 function OwnerView({ displayName, id }: { displayName: string, id: number }) {
-  const { selectElementByID } = useContext(TreeContext);
+  const dispatch = useContext(TreeDispatcherContext);
 
-  const handleClick = useCallback(() => selectElementByID(id), [
-    id,
-    selectElementByID,
-  ]);
+  const handleClick = useCallback(
+    () =>
+      dispatch({
+        type: 'SELECT_ELEMENT_BY_ID',
+        payload: id,
+      }),
+    [dispatch, id]
+  );
 
   return (
     <button

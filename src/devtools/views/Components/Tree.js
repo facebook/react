@@ -11,7 +11,7 @@ import React, {
 } from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList } from 'react-window';
-import { TreeContext } from './TreeContext';
+import { TreeDispatcherContext, TreeStateContext } from './TreeContext';
 import { SettingsContext } from '../Settings/SettingsContext';
 import { BridgeContext, StoreContext } from '../context';
 import ElementView from './Element';
@@ -21,12 +21,9 @@ import SearchInput from './SearchInput';
 
 import styles from './Tree.css';
 
-import type { Element } from './types';
-
 export type ItemData = {|
   baseDepth: number,
   numElements: number,
-  getElementAtIndex: (index: number) => Element | null,
   isNavigatingWithKeyboard: boolean,
   lastScrolledIDRef: { current: number | null },
   onElementMouseEnter: (id: number) => void,
@@ -36,22 +33,16 @@ export type ItemData = {|
 type Props = {||};
 
 export default function Tree(props: Props) {
+  const dispatch = useContext(TreeDispatcherContext);
   const {
     baseDepth,
-    getElementAtIndex,
     numElements,
     ownerStack,
     searchIndex,
     searchResults,
     selectedElementID,
     selectedElementIndex,
-    selectChildElementInTree,
-    selectElementAtIndex,
-    selectNextElementInTree,
-    selectOwner,
-    selectParentElementInTree,
-    selectPreviousElementInTree,
-  } = useContext(TreeContext);
+  } = useContext(TreeStateContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
   const [isNavigatingWithKeyboard, setIsNavigatingWithKeyboard] = useState(
@@ -111,7 +102,7 @@ export default function Tree(props: Props) {
       switch (event.key) {
         case 'ArrowDown':
           event.preventDefault();
-          selectNextElementInTree();
+          dispatch({ type: 'SELECT_NEXT_ELEMENT_IN_TREE' });
           break;
         case 'ArrowLeft':
           event.preventDefault();
@@ -123,7 +114,7 @@ export default function Tree(props: Props) {
             if (element.children.length > 0 && !element.isCollapsed) {
               store.toggleIsCollapsed(element.id, true);
             } else {
-              selectParentElementInTree();
+              dispatch({ type: 'SELECT_PARENT_ELEMENT_IN_TREE' });
             }
           }
           break;
@@ -137,13 +128,13 @@ export default function Tree(props: Props) {
             if (element.children.length > 0 && element.isCollapsed) {
               store.toggleIsCollapsed(element.id, false);
             } else {
-              selectChildElementInTree();
+              dispatch({ type: 'SELECT_CHILD_ELEMENT_IN_TREE' });
             }
           }
           break;
         case 'ArrowUp':
           event.preventDefault();
-          selectPreviousElementInTree();
+          dispatch({ type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE' });
           break;
         default:
           return;
@@ -160,14 +151,7 @@ export default function Tree(props: Props) {
     return () => {
       ownerDocument.removeEventListener('keydown', handleKeyDown);
     };
-  }, [
-    selectedElementID,
-    selectChildElementInTree,
-    selectNextElementInTree,
-    selectParentElementInTree,
-    selectPreviousElementInTree,
-    store,
-  ]);
+  }, [dispatch, selectedElementID, store]);
 
   // Focus management.
   const handleBlur = useCallback(() => setTreeFocused(false), []);
@@ -175,9 +159,12 @@ export default function Tree(props: Props) {
     setTreeFocused(true);
 
     if (selectedElementIndex === null && numElements > 0) {
-      selectElementAtIndex(0);
+      dispatch({
+        type: 'SELECT_ELEMENT_AT_INDEX',
+        payload: 0,
+      });
     }
-  }, [numElements, selectedElementIndex, selectElementAtIndex]);
+  }, [dispatch, numElements, selectedElementIndex]);
 
   const handleKeyPress = useCallback(
     event => {
@@ -185,14 +172,14 @@ export default function Tree(props: Props) {
         case 'Enter':
         case ' ':
           if (selectedElementID !== null) {
-            selectOwner(selectedElementID);
+            dispatch({ type: 'SELECT_OWNER', payload: selectedElementID });
           }
           break;
         default:
           break;
       }
     },
-    [selectedElementID, selectOwner]
+    [dispatch, selectedElementID]
   );
 
   const highlightElementInDOM = useCallback(
@@ -270,7 +257,6 @@ export default function Tree(props: Props) {
     () => ({
       baseDepth,
       numElements,
-      getElementAtIndex,
       isNavigatingWithKeyboard,
       onElementMouseEnter: handleElementMouseEnter,
       lastScrolledIDRef,
@@ -279,7 +265,6 @@ export default function Tree(props: Props) {
     [
       baseDepth,
       numElements,
-      getElementAtIndex,
       isNavigatingWithKeyboard,
       handleElementMouseEnter,
       lastScrolledIDRef,
@@ -328,7 +313,7 @@ export default function Tree(props: Props) {
 }
 
 function InnerElementType({ style, ...rest }) {
-  const { ownerStack } = useContext(TreeContext);
+  const { ownerStack } = useContext(TreeStateContext);
 
   // The list may need to scroll horizontally due to deeply nested elements.
   // We don't know the maximum scroll width up front, because we're windowing.

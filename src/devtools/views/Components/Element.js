@@ -13,7 +13,7 @@ import { ElementTypeClass, ElementTypeFunction } from 'src/devtools/types';
 import Store from 'src/devtools/store';
 import ButtonIcon from '../ButtonIcon';
 import { createRegExp } from '../utils';
-import { TreeContext } from './TreeContext';
+import { TreeDispatcherContext, TreeStateContext } from './TreeContext';
 import { StoreContext } from '../context';
 
 import type { ItemData } from './Tree';
@@ -28,18 +28,21 @@ type Props = {
 };
 
 export default function ElementView({ data, index, style }: Props) {
-  const [isHovered, setIsHovered] = useState(false);
+  const store = useContext(StoreContext);
   const {
     baseDepth,
-    getElementAtIndex,
+    ownerFlatTree,
     ownerStack,
-    selectOwner,
     selectedElementID,
-    selectElementByID,
-  } = useContext(TreeContext);
-  const store = useContext(StoreContext);
+  } = useContext(TreeStateContext);
+  const dispatch = useContext(TreeDispatcherContext);
 
-  const element = getElementAtIndex(index);
+  const element =
+    ownerFlatTree !== null
+      ? store.getElementByID(ownerFlatTree[index])
+      : store.getElementAtIndex(index);
+
+  const [isHovered, setIsHovered] = useState(false);
 
   const {
     lastScrolledIDRef,
@@ -52,9 +55,9 @@ export default function ElementView({ data, index, style }: Props) {
 
   const handleDoubleClick = useCallback(() => {
     if (id !== null) {
-      selectOwner(id);
+      dispatch({ type: 'SELECT_OWNER', payload: id });
     }
-  }, [id, selectOwner]);
+  }, [dispatch, id]);
 
   const scrollAnchorStartRef = useRef<HTMLSpanElement | null>(null);
   const scrollAnchorEndRef = useRef<HTMLSpanElement | null>(null);
@@ -102,10 +105,13 @@ export default function ElementView({ data, index, style }: Props) {
   const handleMouseDown = useCallback(
     ({ metaKey }) => {
       if (id !== null) {
-        selectElementByID(metaKey ? null : id);
+        dispatch({
+          type: 'SELECT_ELEMENT_BY_ID',
+          payload: metaKey ? null : id,
+        });
       }
     },
-    [id, selectElementByID]
+    [dispatch, id]
   );
 
   const handleMouseEnter = useCallback(() => {
@@ -234,7 +240,9 @@ type DisplayNameProps = {|
 |};
 
 function DisplayName({ displayName, id }: DisplayNameProps) {
-  const { searchIndex, searchResults, searchText } = useContext(TreeContext);
+  const { searchIndex, searchResults, searchText } = useContext(
+    TreeStateContext
+  );
   const isSearchResult = useMemo(() => {
     return searchResults.includes(id);
   }, [id, searchResults]);
