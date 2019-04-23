@@ -5,11 +5,11 @@ import TestRenderer from 'react-test-renderer';
 
 let spy;
 beforeEach(() => {
-  spy = jest.spyOn(global.console, 'error');
+  spy = jest.spyOn(console, 'error').mockImplementation(() => {});
 });
 
 function confirmWarning() {
-  expect(spy).toHaveBeenCalledWith(
+  expect(console.error).toHaveBeenCalledWith(
     expect.stringContaining(
       "It looks like you're using the wrong act() around your test interactions."
     ),
@@ -35,6 +35,14 @@ it("doesn't warn when you use the right act + renderer: test", () => {
   expect(spy).not.toHaveBeenCalled();
 });
 
+it('works with createRoot().render combo', () => {
+  const root = ReactDOM.unstable_createRoot(document.createElement('div'));
+  TestRenderer.act(() => {
+    root.render(<App />);
+  });
+  confirmWarning();
+});
+
 it('warns when using the wrong act version - test + dom: render', () => {
   TestRenderer.act(() => {
     TestUtils.renderIntoDocument(<App />);
@@ -56,9 +64,21 @@ it('warns when using the wrong act version - test + dom: updates', () => {
   confirmWarning();
 });
 
-it('warns when using the wrong act version - dom + test: render', () => {
+it('warns when using the wrong act version - dom + test: .create()', () => {
   TestUtils.act(() => {
     TestRenderer.create(<App />);
+  });
+  confirmWarning();
+});
+
+it('warns when using the wrong act version - dom + test: .update()', () => {
+  let root;
+  // use the right one here so we don't get the first warning
+  TestRenderer.act(() => {
+    root = TestRenderer.create(<App key="one" />);
+  });
+  TestUtils.act(() => {
+    root.update(<App key="two" />);
   });
   confirmWarning();
 });

@@ -277,16 +277,7 @@ export function createContainer(
   isConcurrent: boolean,
   hydrate: boolean,
 ): OpaqueRoot {
-  const fiberRoot = createFiberRoot(containerInfo, isConcurrent, hydrate);
-  if (__DEV__) {
-    // jest isn't a 'global', it's just exposed to tests via a wrapped function
-    // further, this isn't a test file, so flow doesn't recognize the symbol. So...
-    // $FlowExpectedError - because requirements don't give a damn about your type sigs.
-    if ('undefined' !== typeof jest) {
-      warnIfNotScopedWithMatchingAct(fiberRoot.current);
-    }
-  }
-  return fiberRoot;
+  return createFiberRoot(containerInfo, isConcurrent, hydrate);
 }
 
 export function updateContainer(
@@ -298,6 +289,14 @@ export function updateContainer(
   const current = container.current;
   const currentTime = requestCurrentTime();
   const expirationTime = computeExpirationForFiber(currentTime, current);
+  if (__DEV__) {
+    // jest isn't a 'global', it's just exposed to tests via a wrapped function
+    // further, this isn't a test file, so flow doesn't recognize the symbol. So...
+    // $FlowExpectedError - because requirements don't give a damn about your type sigs.
+    if ('undefined' !== typeof jest) {
+      warnIfNotScopedWithMatchingAct(current);
+    }
+  }
   return updateContainerAtExpirationTime(
     element,
     container,
