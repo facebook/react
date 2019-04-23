@@ -212,13 +212,13 @@ const eventResponderContext: ReactResponderContext = {
         rootEventTypesSet = componentInstance.rootEventTypes = new Set();
       }
       invariant(
-        !rootEventTypesSet.has(rootEventType),
+        !rootEventTypesSet.has(topLevelEventType),
         'addRootEventTypes() found a duplicate root event ' +
           'type of "%s". This might be because the event type exists in the event responder "rootEventTypes" ' +
           'array or because of a previous addRootEventTypes() using this root event type.',
         rootEventType,
       );
-      rootEventTypesSet.add(rootEventType);
+      rootEventTypesSet.add(topLevelEventType);
       rootEventComponentInstances.add(componentInstance);
     }
   },
@@ -236,7 +236,7 @@ const eventResponderContext: ReactResponderContext = {
       let rootEventTypesSet = ((currentInstance: any): ReactEventComponentInstance)
         .rootEventTypes;
       if (rootEventTypesSet !== null) {
-        rootEventTypesSet.delete(rootEventType);
+        rootEventTypesSet.delete(topLevelEventType);
       }
       if (rootEventComponents !== undefined) {
         rootEventComponents.delete(
