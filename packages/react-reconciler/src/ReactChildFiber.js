@@ -831,7 +831,7 @@ function ChildReconciler(shouldTrackSideEffects) {
           newChildren[newIdx],
           expirationTime,
         );
-        if (!newFiber) {
+        if (newFiber === null) {
           continue;
         }
         lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
@@ -858,7 +858,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         newChildren[newIdx],
         expirationTime,
       );
-      if (newFiber) {
+      if (newFiber !== null) {
         if (shouldTrackSideEffects) {
           if (newFiber.alternate !== null) {
             // The new fiber is a work in progress, but if there exists a
@@ -982,7 +982,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         // unfortunate because it triggers the slow path all the time. We need
         // a better way to communicate whether this was a miss or null,
         // boolean, undefined, etc.
-        if (!oldFiber) {
+        if (oldFiber === null) {
           oldFiber = nextOldFiber;
         }
         break;
