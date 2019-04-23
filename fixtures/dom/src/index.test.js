@@ -9,7 +9,7 @@ beforeEach(() => {
 });
 
 function confirmWarning() {
-  expect(console.error).toHaveBeenCalledWith(
+  expect(spy).toHaveBeenCalledWith(
     expect.stringContaining(
       "It looks like you're using the wrong act() around your test interactions."
     ),
