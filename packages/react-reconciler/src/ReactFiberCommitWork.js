@@ -98,6 +98,7 @@ import {
   unhideTextInstance,
   unmountEventComponent,
   commitEventTarget,
+  mountEventComponent,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -595,6 +596,7 @@ function commitLifeCycles(
     case SuspenseComponent:
     case IncompleteClassComponent:
     case EventTarget:
+    case EventComponent:
       break;
     default: {
       invariant(
@@ -835,7 +837,8 @@ function commitContainer(finishedWork: Fiber) {
     case ClassComponent:
     case HostComponent:
     case HostText:
-    case EventTarget: {
+    case EventTarget:
+    case EventComponent: {
       return;
     }
     case HostRoot:
@@ -1253,6 +1256,10 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       return;
     }
     case IncompleteClassComponent: {
+      return;
+    }
+    case EventComponent: {
+      mountEventComponent(finishedWork.stateNode);
       return;
     }
     default: {

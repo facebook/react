@@ -18,6 +18,7 @@ function createReactEventComponent(
   targetEventTypes,
   createInitialState,
   onEvent,
+  onMount,
   onUnmount,
   onOwnershipChange,
 ) {
@@ -25,6 +26,7 @@ function createReactEventComponent(
     targetEventTypes,
     createInitialState,
     onEvent,
+    onMount,
     onUnmount,
     onOwnershipChange,
   };
@@ -559,11 +561,34 @@ describe('DOMEventResponderSystem', () => {
     ]);
   });
 
+  it('the event responder onMount() function should fire', () => {
+    let onMountFired = 0;
+
+    const EventComponent = createReactEventComponent(
+      [],
+      undefined,
+      undefined,
+      () => {
+        onMountFired++;
+      },
+    );
+
+    const Test = () => (
+      <EventComponent>
+        <button />
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+    expect(onMountFired).toEqual(1);
+  });
+
   it('the event responder onUnmount() function should fire', () => {
     let onUnmountFired = 0;
 
     const EventComponent = createReactEventComponent(
       [],
+      undefined,
       undefined,
       (event, context, props, state) => {},
       () => {
@@ -590,7 +615,8 @@ describe('DOMEventResponderSystem', () => {
       () => ({
         incrementAmount: 5,
       }),
-      (event, context, props, state) => {},
+      undefined,
+      undefined,
       (context, props, state) => {
         counter += state.incrementAmount;
       },
@@ -620,6 +646,7 @@ describe('DOMEventResponderSystem', () => {
           ownershipGained = context.requestOwnership();
         }
       },
+      undefined,
       undefined,
       () => {
         onOwnershipChangeFired++;

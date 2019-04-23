@@ -94,6 +94,11 @@ export type ReactEventResponder = {
     props: null | Object,
     state: null | Object,
   ) => boolean,
+  onMount: (
+    context: ReactResponderContext,
+    props: null | Object,
+    state: null | Object,
+  ) => void,
   onUnmount: (
     context: ReactResponderContext,
     props: null | Object,
@@ -107,7 +112,6 @@ export type ReactEventResponder = {
 };
 
 export type ReactEventComponentInstance = {|
-  context: null | Object,
   props: null | Object,
   responder: ReactEventResponder,
   rootInstance: mixed,

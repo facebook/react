@@ -626,6 +626,19 @@ export function mountEventResponder(
   if (responder.onOwnershipChange !== undefined) {
     ownershipChangeListeners.add(eventComponentInstance);
   }
+  const onMount = responder.onMount;
+  if (onMount !== undefined) {
+    let {props, state} = eventComponentInstance;
+    currentEventQueue = createEventQueue();
+    currentInstance = eventComponentInstance;
+    try {
+      onMount(eventResponderContext, props, state);
+    } finally {
+      currentEventQueue = null;
+      currentInstance = null;
+      currentTimers = null;
+    }
+  }
 }
 
 export function unmountEventResponder(
