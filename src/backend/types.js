@@ -90,10 +90,22 @@ export type ProfilingSummary = {|
   rootID: number,
 |};
 
+export type PathFrame = {|
+  key: string | null,
+  index: number,
+  displayName: string | null,
+|};
+
+export type PathMatch = {|
+  id: number,
+  isFullMatch: boolean,
+|};
+
 export type RendererInterface = {
   cleanup: () => void,
   findNativeByFiberID: (id: number) => ?NativeType,
   flushInitialOperations: () => void,
+  getBestMatchForTrackedPath: () => PathMatch | null,
   getCommitDetails: (rootID: number, commitIndex: number) => CommitDetails,
   getFiberIDFromNative: (
     component: NativeType,
@@ -103,6 +115,7 @@ export type RendererInterface = {
   getInteractions: (rootID: number) => Interactions,
   getProfilingDataForDownload: (rootID: number) => Object,
   getProfilingSummary: (rootID: number) => ProfilingSummary,
+  getPathForElement: (id: number) => Array<PathFrame>,
   handleCommitFiberRoot: (fiber: Object) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,
   inspectElement: (id: number) => InspectedElement | null,
@@ -120,6 +133,7 @@ export type RendererInterface = {
   ) => void,
   setInProps: (id: number, path: Array<string | number>, value: any) => void,
   setInState: (id: number, path: Array<string | number>, value: any) => void,
+  setTrackedPath: (path: Array<PathFrame> | null) => void,
   startProfiling: () => void,
   stopProfiling: () => void,
 };

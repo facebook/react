@@ -36,6 +36,8 @@ import type {
   Interaction,
   Interactions,
   InteractionWithCommits,
+  PathFrame,
+  PathMatch,
   ProfilingSummary,
   ReactRenderer,
   RendererInterface,
@@ -664,7 +666,10 @@ export function attach(
       pendingOperationsQueue.push(ops);
     } else {
       // If we've already connected to the frontend, just pass the operations through.
-      hook.emit('operations', ops);
+      hook.emit('operations', {
+        operations: ops,
+        rendererID,
+      });
     }
 
     pendingOperations.length = 0;
@@ -1108,7 +1113,10 @@ export function attach(
       // We may have already queued up some operations before the frontend connected
       // If so, let the frontend know about them.
       localPendingOperationsQueue.forEach(ops => {
-        hook.emit('operations', ops);
+        hook.emit('operations', {
+          operations: ops,
+          rendererID,
+        });
       });
     } else {
       // If we have not been profiling, then we can just walk the tree and build up its current state as-is.
@@ -1979,14 +1987,45 @@ export function attach(
     scheduleUpdate(fiber);
   }
 
+  let trackedPath: Array<PathFrame> | null = null;
+
+  function setTrackedPath(path: Array<PathFrame> | null) {
+    trackedPath = path;
+  }
+
+  function getPathForElement(id: number): Array<PathFrame> {
+    // TODO: this is not a real path.
+    return [
+      {
+        index: id,
+        key: null,
+        displayName: null,
+      },
+    ];
+  }
+
+  function getBestMatchForTrackedPath(): PathMatch | null {
+    // TODO: this is not a real lookup.
+    if (trackedPath !== null) {
+      const id = trackedPath[0].index;
+      const fiber = idToFiberMap.get(id);
+      if (fiber !== null) {
+        return { id, isFullMatch: true };
+      }
+    }
+    return null;
+  }
+
   return {
     cleanup,
     flushInitialOperations,
+    getBestMatchForTrackedPath,
     getCommitDetails,
     getFiberIDFromNative,
     getFiberCommits,
     getInteractions,
     findNativeByFiberID,
+    getPathForElement,
     getProfilingDataForDownload,
     getProfilingSummary,
     handleCommitFiberRoot,
@@ -2001,6 +2040,7 @@ export function attach(
     setInHook,
     setInProps,
     setInState,
+    setTrackedPath,
     startProfiling,
     stopProfiling,
   };

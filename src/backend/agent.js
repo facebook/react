@@ -3,10 +3,19 @@
 import EventEmitter from 'events';
 import memoize from 'memoize-one';
 import throttle from 'lodash.throttle';
-import { LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY, __DEBUG__ } from '../constants';
+import {
+  LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY,
+  SESSION_STORAGE_LAST_SELECTION_KEY,
+  __DEBUG__,
+} from '../constants';
 import { hideOverlay, showOverlay } from './views/Highlighter';
 
-import type { RendererID, RendererInterface } from './types';
+import type {
+  PathFrame,
+  PathMatch,
+  RendererID,
+  RendererInterface,
+} from './types';
 import type { Bridge } from '../types';
 
 const debug = (methodName, ...args) => {
@@ -19,6 +28,11 @@ const debug = (methodName, ...args) => {
     );
   }
 };
+
+type OperationsParams = {|
+  operations: Uint32Array,
+  rendererID: number,
+|};
 
 type InspectSelectParams = {|
   id: number,
@@ -46,10 +60,17 @@ type OverrideSuspenseParams = {|
   forceFallback: boolean,
 |};
 
+type PersistedSelection = {|
+  rendererID: number,
+  path: Array<PathFrame>,
+|};
+
 export default class Agent extends EventEmitter {
   _bridge: Bridge = ((null: any): Bridge);
   _isProfiling: boolean = false;
   _rendererInterfaces: { [key: RendererID]: RendererInterface } = {};
+  _persistedSelection: PersistedSelection | null = null;
+  _persistedSelectionMatch: PathMatch | null = null;
 
   constructor() {
     super();
@@ -58,6 +79,13 @@ export default class Agent extends EventEmitter {
       this._isProfiling = true;
 
       localStorage.removeItem(LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY);
+    }
+
+    const persistedSelectionString = sessionStorage.getItem(
+      SESSION_STORAGE_LAST_SELECTION_KEY
+    );
+    if (persistedSelectionString != null) {
+      this._persistedSelection = JSON.parse(persistedSelectionString);
     }
   }
 
@@ -316,6 +344,19 @@ export default class Agent extends EventEmitter {
     } else {
       renderer.selectElement(id);
       this._bridge.send('selectElement');
+
+      // When user selects an element, stop trying to restore the selection,
+      // and instead remember the current selection for the next reload.
+      if (
+        this._persistedSelectionMatch === null ||
+        this._persistedSelectionMatch.id !== id
+      ) {
+        this._persistedSelection = null;
+        this._persistedSelectionMatch = null;
+        renderer.setTrackedPath(null);
+        this._throttledPersistSelection(rendererID, id);
+      }
+
       // TODO: If there was a way to change the selected DOM element
       // in native Elements tab without forcing a switch to it, we'd do it here.
       // For now, it doesn't seem like there is a way to do that:
@@ -388,6 +429,14 @@ export default class Agent extends EventEmitter {
     if (this._isProfiling) {
       rendererInterface.startProfiling();
     }
+
+    // When the renderer is attached, we need to tell it whether
+    // we remember the previous selection that we'd like to restore.
+    // It'll start tracking mounts for matches to the last selection path.
+    const selection = this._persistedSelection;
+    if (selection !== null && selection.rendererID === rendererID) {
+      rendererInterface.setTrackedPath(selection.path);
+    }
   }
 
   syncSelectionFromNativeElementsPanel = () => {
@@ -454,7 +503,7 @@ export default class Agent extends EventEmitter {
     }
   };
 
-  onHookOperations = (operations: Uint32Array) => {
+  onHookOperations = ({ operations, rendererID }: OperationsParams) => {
     if (__DEBUG__) {
       debug('onHookOperations', operations);
     }
@@ -480,6 +529,31 @@ export default class Agent extends EventEmitter {
     //
     // this._bridge.send('operations', operations, [operations.buffer]);
     this._bridge.send('operations', operations);
+
+    if (this._persistedSelection !== null) {
+      if (this._persistedSelection.rendererID === rendererID) {
+        // Check if we can select a deeper match for the persisted selection.
+        const renderer = this._rendererInterfaces[rendererID];
+        const prevMatch = this._persistedSelectionMatch;
+        const nextMatch = renderer.getBestMatchForTrackedPath();
+        this._persistedSelectionMatch = nextMatch;
+        const prevMatchID = prevMatch !== null ? prevMatch.id : null;
+        const nextMatchID = nextMatch !== null ? nextMatch.id : null;
+        if (prevMatchID !== nextMatchID) {
+          if (nextMatchID !== null) {
+            // We moved forward, unlocking a deeper node.
+            this._bridge.send('selectFiber', nextMatchID);
+          }
+        }
+        if (nextMatch !== null && nextMatch.isFullMatch) {
+          // We've just unlocked the innermost selected node.
+          // There's no point tracking it further.
+          this._persistedSelection = null;
+          this._persistedSelectionMatch = null;
+          renderer.setTrackedPath(null);
+        }
+      }
+    }
   };
 
   _onClick = (event: MouseEvent) => {
@@ -530,4 +604,22 @@ export default class Agent extends EventEmitter {
     // because those are usually unintentional as you lift the cursor.
     { leading: false }
   );
+
+  _throttledPersistSelection = throttle((rendererID: number, id: number) => {
+    // This is throttled, so both renderer and selected ID
+    // might not be available by the time we read them.
+    // This is why we need the defensive checks here.
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      return;
+    }
+    const path = renderer.getPathForElement(id);
+    if (path === null) {
+      return;
+    }
+    sessionStorage.setItem(
+      SESSION_STORAGE_LAST_SELECTION_KEY,
+      JSON.stringify(({ rendererID, path }: PersistedSelection))
+    );
+  }, 1000);
 }
