@@ -18,8 +18,6 @@ import {
   isEventPositionWithinTouchHitTarget,
 } from './utils';
 
-const CAPTURE_PHASE = 2;
-
 type HoverProps = {
   disabled: boolean,
   delayHoverEnd: number,
@@ -141,7 +139,6 @@ function dispatchHoverStartEvents(
       state.hoverStartTimeout = context.setTimeout(() => {
         state.hoverStartTimeout = null;
         activate();
-        return false;
       }, delayHoverStart);
     } else {
       activate();
@@ -201,7 +198,6 @@ function dispatchHoverEndEvents(
     if (delayHoverEnd > 0) {
       state.hoverEndTimeout = context.setTimeout(() => {
         deactivate();
-        return false;
       }, delayHoverEnd);
     } else {
       deactivate();
@@ -245,12 +241,13 @@ const HoverResponder = {
       ignoreEmulatedMouseEvents: false,
     };
   },
+  stopLocalPropagation: true,
   onEvent(
     event: ReactResponderEvent,
     context: ReactResponderContext,
     props: HoverProps,
     state: HoverState,
-  ): boolean {
+  ): void {
     const {type} = event;
 
     if (props.disabled) {
@@ -261,14 +258,8 @@ const HoverResponder = {
       if (state.isTouched) {
         state.isTouched = false;
       }
-      return false;
+      return;
     }
-
-    // Hover doesn't handle capture target events at this point
-    if (event.phase === CAPTURE_PHASE) {
-      return false;
-    }
-
     const pointerType = getEventPointerType(event);
 
     switch (type) {
@@ -280,23 +271,23 @@ const HoverResponder = {
           // Prevent hover events for touch
           if (state.isTouched || pointerType === 'touch') {
             state.isTouched = true;
-            return false;
+            return;
           }
 
           // Prevent hover events for emulated events
           if (isEmulatedMouseEvent(event, state)) {
-            return false;
+            return;
           }
 
           if (isEventPositionWithinTouchHitTarget(event, context)) {
             state.isOverTouchHitTarget = true;
-            return false;
+            return;
           }
           state.hoverTarget = getEventCurrentTarget(event, context);
           state.ignoreEmulatedMouseEvents = true;
           dispatchHoverStartEvents(event, context, props, state);
         }
-        return false;
+        return;
       }
 
       // MOVE
@@ -331,7 +322,7 @@ const HoverResponder = {
             }
           }
         }
-        return false;
+        return;
       }
 
       // END
@@ -347,10 +338,9 @@ const HoverResponder = {
         if (state.isTouched) {
           state.isTouched = false;
         }
-        return false;
+        return;
       }
     }
-    return false;
   },
   onUnmount(
     context: ReactResponderContext,

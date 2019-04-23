@@ -18,6 +18,7 @@ import {
   HostComponent,
 } from 'shared/ReactWorkTags';
 import type {
+  ReactEventResponder,
   ReactEventResponderEventType,
   ReactEventComponentInstance,
   ReactResponderContext,
@@ -61,13 +62,10 @@ type ResponderTimeout = {|
 
 type ResponderTimer = {|
   instance: ReactEventComponentInstance,
-  func: () => boolean,
+  func: () => void,
   id: Symbol,
 |};
 
-const ROOT_PHASE = 0;
-const BUBBLE_PHASE = 1;
-const CAPTURE_PHASE = 2;
 const activeTimeouts: Map<Symbol, ResponderTimeout> = new Map();
 const rootEventTypesToEventComponentInstances: Map<
   DOMTopLevelEventType | string,
@@ -253,7 +251,7 @@ const eventResponderContext: ReactResponderContext = {
     triggerOwnershipListeners();
     return false;
   },
-  setTimeout(func: () => boolean, delay): Symbol {
+  setTimeout(func: () => void, delay): Symbol {
     validateResponderContext();
     if (currentTimers === null) {
       currentTimers = new Map();
@@ -349,16 +347,13 @@ const eventResponderContext: ReactResponderContext = {
 
 function processTimers(timers: Map<Symbol, ResponderTimer>): void {
   const timersArr = Array.from(timers.values());
-  let shouldStopPropagation = false;
   currentEventQueue = createEventQueue();
   try {
     for (let i = 0; i < timersArr.length; i++) {
       const {instance, func, id} = timersArr[i];
       currentInstance = instance;
       try {
-        if (!shouldStopPropagation) {
-          shouldStopPropagation = func();
-        }
+        func();
       } finally {
         activeTimeouts.delete(id);
       }
@@ -390,7 +385,6 @@ function createResponderEvent(
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: Element | Document,
   eventSystemFlags: EventSystemFlags,
-  phase: 0 | 1 | 2,
 ): ReactResponderEvent {
   const responderEvent = {
     nativeEvent: nativeEvent,
@@ -398,7 +392,6 @@ function createResponderEvent(
     type: topLevelType,
     passive: (eventSystemFlags & IS_PASSIVE) !== 0,
     passiveSupported: (eventSystemFlags & PASSIVE_NOT_SUPPORTED) === 0,
-    phase,
   };
   if (__DEV__) {
     Object.freeze(responderEvent);
@@ -510,16 +503,7 @@ function getRootEventResponderInstances(
   return eventResponderInstances;
 }
 
-function triggerEventResponderEventListener(
-  responderEvent: ReactResponderEvent,
-  eventComponentInstance: ReactEventComponentInstance,
-): boolean {
-  const {responder, props, state} = eventComponentInstance;
-  currentInstance = eventComponentInstance;
-  return responder.onEvent(responderEvent, eventResponderContext, props, state);
-}
-
-function traverseAndTriggerEventResponderInstances(
+function traverseAndHandleEventResponderInstances(
   topLevelType: DOMTopLevelEventType,
   targetFiber: null | Fiber,
   nativeEvent: AnyNativeEvent,
@@ -535,46 +519,54 @@ function traverseAndTriggerEventResponderInstances(
     topLevelType,
     targetFiber,
   );
+  const responderEvent = createResponderEvent(
+    ((topLevelType: any): string),
+    nativeEvent,
+    ((nativeEventTarget: any): Element | Document),
+    eventSystemFlags,
+  );
+  const propagatedEventResponders: Set<ReactEventResponder> = new Set();
   let length = targetEventResponderInstances.length;
   let i;
-  let shouldStopPropagation = false;
-  let responderEvent;
 
+  // Captured and bubbled event phases have the notion of local propagation.
+  // This means that the propgation chain can be stopped part of the the way
+  // through processing event component instances. The major difference to other
+  // events systems is that the stopping of propgation is localized to a single
+  // phase, rather than both phases.
   if (length > 0) {
     // Capture target phase
-    responderEvent = createResponderEvent(
-      ((topLevelType: any): string),
-      nativeEvent,
-      ((nativeEventTarget: any): Element | Document),
-      eventSystemFlags,
-      CAPTURE_PHASE,
-    );
     for (i = length; i-- > 0; ) {
       const targetEventResponderInstance = targetEventResponderInstances[i];
-      shouldStopPropagation = triggerEventResponderEventListener(
-        responderEvent,
-        targetEventResponderInstance,
-      );
-      if (shouldStopPropagation) {
-        return;
+      const {responder, props, state} = targetEventResponderInstance;
+      if (responder.stopLocalPropagation) {
+        if (propagatedEventResponders.has(responder)) {
+          continue;
+        }
+        propagatedEventResponders.add(responder);
+      }
+      const eventListener = responder.onEventCapture;
+      if (eventListener !== undefined) {
+        currentInstance = targetEventResponderInstance;
+        eventListener(responderEvent, eventResponderContext, props, state);
       }
     }
+    // We clean propagated event responders between phases.
+    propagatedEventResponders.clear();
     // Bubble target phase
-    responderEvent = createResponderEvent(
-      ((topLevelType: any): string),
-      nativeEvent,
-      ((nativeEventTarget: any): Element | Document),
-      eventSystemFlags,
-      BUBBLE_PHASE,
-    );
     for (i = 0; i < length; i++) {
       const targetEventResponderInstance = targetEventResponderInstances[i];
-      shouldStopPropagation = triggerEventResponderEventListener(
-        responderEvent,
-        targetEventResponderInstance,
-      );
-      if (shouldStopPropagation) {
-        return;
+      const {responder, props, state} = targetEventResponderInstance;
+      if (responder.stopLocalPropagation) {
+        if (propagatedEventResponders.has(responder)) {
+          continue;
+        }
+        propagatedEventResponders.add(responder);
+      }
+      const eventListener = responder.onEvent;
+      if (eventListener !== undefined) {
+        currentInstance = targetEventResponderInstance;
+        eventListener(responderEvent, eventResponderContext, props, state);
       }
     }
   }
@@ -584,21 +576,13 @@ function traverseAndTriggerEventResponderInstances(
   );
   length = rootEventResponderInstances.length;
   if (length > 0) {
-    responderEvent = createResponderEvent(
-      ((topLevelType: any): string),
-      nativeEvent,
-      ((nativeEventTarget: any): Element | Document),
-      eventSystemFlags,
-      ROOT_PHASE,
-    );
     for (i = 0; i < length; i++) {
-      const targetEventResponderInstance = rootEventResponderInstances[i];
-      shouldStopPropagation = triggerEventResponderEventListener(
-        responderEvent,
-        targetEventResponderInstance,
-      );
-      if (shouldStopPropagation) {
-        return;
+      const rootEventResponderInstance = rootEventResponderInstances[i];
+      const {responder, props, state} = rootEventResponderInstance;
+      const eventListener = responder.onRootEvent;
+      if (eventListener !== undefined) {
+        currentInstance = rootEventResponderInstance;
+        eventListener(responderEvent, eventResponderContext, props, state);
       }
     }
   }
@@ -672,7 +656,7 @@ export function dispatchEventForResponderEventSystem(
   if (enableEventAPI) {
     currentEventQueue = createEventQueue();
     try {
-      traverseAndTriggerEventResponderInstances(
+      traverseAndHandleEventResponderInstances(
         topLevelType,
         targetFiber,
         nativeEvent,

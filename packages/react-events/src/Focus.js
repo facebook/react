@@ -14,8 +14,6 @@ import type {
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 import {getEventCurrentTarget} from './utils.js';
 
-const CAPTURE_PHASE = 2;
-
 type FocusProps = {
   disabled: boolean,
   onBlur: (e: FocusEvent) => void,
@@ -112,10 +110,8 @@ const FocusResponder = {
     context: ReactResponderContext,
     props: Object,
     state: FocusState,
-  ): boolean {
-    const {type, phase, target} = event;
-    const shouldStopPropagation =
-      props.stopPropagation === undefined ? true : props.stopPropagation;
+  ): void {
+    const {type, target} = event;
 
     if (props.disabled) {
       if (state.isFocused) {
@@ -123,12 +119,7 @@ const FocusResponder = {
         state.isFocused = false;
         state.focusTarget = null;
       }
-      return false;
-    }
-
-    // Focus doesn't handle capture target events at this point
-    if (phase === CAPTURE_PHASE) {
-      return false;
+      return;
     }
 
     switch (type) {
@@ -153,7 +144,6 @@ const FocusResponder = {
         break;
       }
     }
-    return shouldStopPropagation;
   },
   onUnmount(
     context: ReactResponderContext,

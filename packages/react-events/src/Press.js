@@ -19,8 +19,6 @@ import {
   isEventPositionWithinTouchHitTarget,
 } from './utils';
 
-const CAPTURE_PHASE = 2;
-
 type PressProps = {
   disabled: boolean,
   delayLongPress: number,
@@ -103,10 +101,11 @@ const rootEventTypes = ['keyup', 'pointerup', 'pointermove', 'scroll'];
 
 // If PointerEvents is not supported (e.g., Safari), also listen to touch and mouse events.
 if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
-  targetEventTypes.push('touchstart', 'touchend', 'touchcancel', 'mousedown');
+  targetEventTypes.push('touchstart', 'touchcancel', 'mousedown');
   rootEventTypes.push(
     {name: 'mouseup', passive: false},
     'touchmove',
+    'touchend',
     'mousemove',
   );
 }
@@ -199,8 +198,6 @@ function dispatchPressStartEvents(
   props: PressProps,
   state: PressState,
 ): void {
-  const shouldStopPropagation =
-    props.stopPropagation === undefined ? true : props.stopPropagation;
   state.isPressed = true;
 
   if (state.pressEndTimeout !== null) {
@@ -230,7 +227,6 @@ function dispatchPressStartEvents(
         if (props.onLongPressChange) {
           dispatchLongPressChangeEvent(context, props, state);
         }
-        return shouldStopPropagation;
       }, delayLongPress);
     }
   };
@@ -245,7 +241,6 @@ function dispatchPressStartEvents(
       state.pressStartTimeout = context.setTimeout(() => {
         state.pressStartTimeout = null;
         dispatch();
-        return shouldStopPropagation;
       }, delayPressStart);
     } else {
       dispatch();
@@ -258,8 +253,6 @@ function dispatchPressEndEvents(
   props: PressProps,
   state: PressState,
 ): void {
-  const shouldStopPropagation =
-    props.stopPropagation === undefined ? true : props.stopPropagation;
   const wasActivePressStart = state.isActivePressStart;
   let activationWasForced = false;
 
@@ -295,7 +288,6 @@ function dispatchPressEndEvents(
       state.pressEndTimeout = context.setTimeout(() => {
         state.pressEndTimeout = null;
         deactivate(context, props, state);
-        return shouldStopPropagation;
       }, delayPressEnd);
     } else {
       deactivate(context, props, state);
@@ -381,6 +373,24 @@ function unmountResponder(
   }
 }
 
+function dispatchCancel(
+  type: string,
+  nativeEvent: $PropertyType<ReactResponderEvent, 'nativeEvent'>,
+  context: ReactResponderContext,
+  props: PressProps,
+  state: PressState,
+): void {
+  if (state.isPressed) {
+    if (type === 'contextmenu' && props.preventDefault !== false) {
+      (nativeEvent: any).preventDefault();
+    } else {
+      state.ignoreEmulatedMouseEvents = false;
+      dispatchPressEndEvents(context, props, state);
+      context.removeRootEventTypes(rootEventTypes);
+    }
+  }
+}
+
 const PressResponder = {
   targetEventTypes,
   createInitialState(): PressState {
@@ -400,30 +410,23 @@ const PressResponder = {
       ignoreEmulatedMouseEvents: false,
     };
   },
+  stopLocalPropagation: true,
   onEvent(
     event: ReactResponderEvent,
     context: ReactResponderContext,
     props: PressProps,
     state: PressState,
-  ): boolean {
-    const {phase, target, type} = event;
+  ): void {
+    const {target, type} = event;
 
     if (props.disabled) {
       dispatchPressEndEvents(context, props, state);
       context.removeRootEventTypes(rootEventTypes);
       state.ignoreEmulatedMouseEvents = false;
-      return false;
+      return;
     }
-
-    // Press doesn't handle capture target events at this point
-    if (phase === CAPTURE_PHASE) {
-      return false;
-    }
-
     const nativeEvent: any = event.nativeEvent;
     const pointerType = getEventPointerType(event);
-    const shouldStopPropagation =
-      props.stopPropagation === undefined ? true : props.stopPropagation;
 
     switch (type) {
       // START
@@ -440,7 +443,7 @@ const PressResponder = {
           // Ignore unrelated key events
           if (pointerType === 'keyboard') {
             if (!isValidKeyPress(nativeEvent.key)) {
-              return shouldStopPropagation;
+              return;
             }
           }
 
@@ -451,13 +454,13 @@ const PressResponder = {
               state.ignoreEmulatedMouseEvents ||
               isEventPositionWithinTouchHitTarget(event, context)
             ) {
-              return shouldStopPropagation;
+              return;
             }
           }
 
           // Ignore any device buttons except left-mouse and touch/pen contact
           if (nativeEvent.button > 0) {
-            return shouldStopPropagation;
+            return;
           }
 
           state.pointerType = pointerType;
@@ -465,17 +468,46 @@ const PressResponder = {
           state.isPressWithinResponderRegion = true;
           dispatchPressStartEvents(context, props, state);
           context.addRootEventTypes(target.ownerDocument, rootEventTypes);
-          return shouldStopPropagation;
         } else {
           // Prevent spacebar press from scrolling the window
           if (isValidKeyPress(nativeEvent.key) && nativeEvent.key === ' ') {
             nativeEvent.preventDefault();
-            return shouldStopPropagation;
           }
         }
-        return shouldStopPropagation;
+        break;
       }
 
+      // CANCEL
+      case 'contextmenu': {
+        dispatchCancel(type, nativeEvent, context, props, state);
+        break;
+      }
+
+      case 'click': {
+        if (isAnchorTagElement(target)) {
+          const {ctrlKey, metaKey, shiftKey} = (nativeEvent: MouseEvent);
+          // Check "open in new window/tab" and "open context menu" key modifiers
+          const preventDefault = props.preventDefault;
+          if (preventDefault !== false && !shiftKey && !metaKey && !ctrlKey) {
+            nativeEvent.preventDefault();
+          }
+        }
+        break;
+      }
+    }
+  },
+  onRootEvent(
+    event: ReactResponderEvent,
+    context: ReactResponderContext,
+    props: PressProps,
+    state: PressState,
+  ): void {
+    const {target, type} = event;
+
+    const nativeEvent: any = event.nativeEvent;
+    const pointerType = getEventPointerType(event);
+
+    switch (type) {
       // MOVE
       case 'pointermove':
       case 'mousemove':
@@ -484,7 +516,7 @@ const PressResponder = {
           // Ignore emulated events (pointermove will dispatch touch and mouse events)
           // Ignore pointermove events during a keyboard press
           if (state.pointerType !== pointerType) {
-            return shouldStopPropagation;
+            return;
           }
 
           if (state.responderRegion == null) {
@@ -504,9 +536,8 @@ const PressResponder = {
             state.isPressWithinResponderRegion = false;
             dispatchPressEndEvents(context, props, state);
           }
-          return shouldStopPropagation;
         }
-        return false;
+        break;
       }
 
       // END
@@ -518,7 +549,7 @@ const PressResponder = {
           // Ignore unrelated keyboard events
           if (pointerType === 'keyboard') {
             if (!isValidKeyPress(nativeEvent.key)) {
-              return false;
+              return;
             }
           }
 
@@ -539,45 +570,19 @@ const PressResponder = {
             }
           }
           context.removeRootEventTypes(rootEventTypes);
-          return shouldStopPropagation;
         } else if (type === 'mouseup' && state.ignoreEmulatedMouseEvents) {
           state.ignoreEmulatedMouseEvents = false;
         }
-        return false;
+        break;
       }
 
       // CANCEL
-      case 'contextmenu':
       case 'pointercancel':
       case 'scroll':
       case 'touchcancel': {
-        if (state.isPressed) {
-          if (type === 'contextmenu' && props.preventDefault !== false) {
-            nativeEvent.preventDefault();
-          } else {
-            state.ignoreEmulatedMouseEvents = false;
-            dispatchPressEndEvents(context, props, state);
-            context.removeRootEventTypes(rootEventTypes);
-          }
-          return shouldStopPropagation;
-        }
-        return false;
-      }
-
-      case 'click': {
-        if (isAnchorTagElement(target)) {
-          const {ctrlKey, metaKey, shiftKey} = (nativeEvent: MouseEvent);
-          // Check "open in new window/tab" and "open context menu" key modifiers
-          const preventDefault = props.preventDefault;
-          if (preventDefault !== false && !shiftKey && !metaKey && !ctrlKey) {
-            nativeEvent.preventDefault();
-          }
-          return shouldStopPropagation;
-        }
-        return false;
+        dispatchCancel(type, nativeEvent, context, props, state);
       }
     }
-    return false;
   },
   onUnmount(
     context: ReactResponderContext,
