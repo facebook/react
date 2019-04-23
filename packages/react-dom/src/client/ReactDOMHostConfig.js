@@ -939,7 +939,7 @@ export function getEventTargetChildElement(
           style: {
             position: 'absolute',
             zIndex: -1,
-            pointerEvents: 'auto',
+            pointerEvents: null,
             bottom: bottom ? `-${bottom}px` : '0px',
             left: left ? `-${left}px` : '0px',
             right: right ? `-${right}px` : '0px',

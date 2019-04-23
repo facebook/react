@@ -330,7 +330,7 @@ describe('TouchHitTarget', () => {
       ReactDOM.render(<Test />, container);
       expect(Scheduler).toFlushWithoutYielding();
       expect(container.innerHTML).toBe(
-        '<div><div style="position: absolute; z-index: -1; pointer-events: auto; bottom: -10px; ' +
+        '<div><div style="position: absolute; z-index: -1; bottom: -10px; ' +
           'left: -10px; right: -10px; top: -10px;"></div></div>',
       );
 
@@ -362,7 +362,7 @@ describe('TouchHitTarget', () => {
       ReactDOM.render(<Test />, container);
       expect(Scheduler).toFlushWithoutYielding();
       expect(container.innerHTML).toBe(
-        '<div><div style="position: absolute; z-index: -1; pointer-events: auto; bottom: -10px; ' +
+        '<div><div style="position: absolute; z-index: -1; bottom: -10px; ' +
           'left: -10px; right: -10px; top: -10px;"></div></div>',
       );
     });
@@ -386,7 +386,7 @@ describe('TouchHitTarget', () => {
       ReactDOM.render(<Test />, container);
       expect(Scheduler).toFlushWithoutYielding();
       expect(container.innerHTML).toBe(
-        '<div><div style="position: absolute; z-index: -1; pointer-events: auto; bottom: -10px; ' +
+        '<div><div style="position: absolute; z-index: -1; bottom: -10px; ' +
           'left: -10px; right: -10px; top: -10px;"></div></div>',
       );
 
@@ -424,7 +424,7 @@ describe('TouchHitTarget', () => {
       ReactDOM.render(<Test />, container);
       expect(Scheduler).toFlushWithoutYielding();
       expect(container.innerHTML).toBe(
-        '<div><span>Random span 1</span><div style="position: absolute; z-index: -1; pointer-events: auto; ' +
+        '<div><span>Random span 1</span><div style="position: absolute; z-index: -1; ' +
           'bottom: -10px; left: -10px; right: -10px; top: -10px;"></div><span>Random span 2</span></div>',
       );
     });
@@ -455,7 +455,7 @@ describe('TouchHitTarget', () => {
       ReactDOM.render(<Test />, container);
       expect(Scheduler).toFlushWithoutYielding();
       expect(container.innerHTML).toBe(
-        '<div><span>Random span 1</span><div style="position: absolute; z-index: -1; pointer-events: auto; ' +
+        '<div><span>Random span 1</span><div style="position: absolute; z-index: -1; ' +
           'bottom: 0px; left: -20px; right: 0px; top: 0px;"></div><span>Random span 2</span></div>',
       );
 
@@ -463,7 +463,7 @@ describe('TouchHitTarget', () => {
       ReactDOM.render(<Test />, container);
       expect(Scheduler).toFlushWithoutYielding();
       expect(container.innerHTML).toBe(
-        '<div><span>Random span 1</span><div style="position: absolute; z-index: -1; pointer-events: auto; ' +
+        '<div><span>Random span 1</span><div style="position: absolute; z-index: -1; ' +
           'bottom: 0px; left: -20px; right: 0px; top: 0px;"></div><span>Random span 2</span></div>',
       );
     });
@@ -494,8 +494,7 @@ describe('TouchHitTarget', () => {
       ReactDOM.render(<Test />, container);
       expect(Scheduler).toFlushWithoutYielding();
       expect(container.innerHTML).toBe(
-        '<div><span>Random span 1</span><div style="position: absolute; z-index: -1; ' +
-          'pointer-events: auto; bottom: -10px; ' +
+        '<div><span>Random span 1</span><div style="position: absolute; z-index: -1; bottom: -10px; ' +
           'left: 0px; right: -10px; top: -10px;"></div><span>Random span 2</span></div>',
       );
 
@@ -504,7 +503,7 @@ describe('TouchHitTarget', () => {
       expect(Scheduler).toFlushWithoutYielding();
       expect(container.innerHTML).toBe(
         '<div><span>Random span 1</span><div style="position: absolute; z-index: -1; ' +
-          'pointer-events: auto; bottom: -10px; left: 0px; right: -10px; top: -10px;">' +
+          'bottom: -10px; left: 0px; right: -10px; top: -10px;">' +
           '</div><span>Random span 2</span></div>',
       );
     });
@@ -539,7 +538,7 @@ describe('TouchHitTarget', () => {
       ReactDOM.hydrate(<Test2 />, container2);
       expect(Scheduler).toFlushWithoutYielding();
       expect(container2.innerHTML).toBe(
-        '<div><div style="position: absolute; pointer-events: auto; z-index: -1; ' +
+        '<div><div style="position: absolute; z-index: -1; ' +
           'bottom: -10px; left: -10px; right: -10px; top: -10px;"></div></div>',
       );
     });
@@ -564,7 +563,7 @@ describe('TouchHitTarget', () => {
       );
       expect(Scheduler).toFlushWithoutYielding();
       expect(container.innerHTML).toBe(
-        '<div><div style="position: absolute; z-index: -1; pointer-events: auto; bottom: -10px; ' +
+        '<div><div style="position: absolute; z-index: -1; bottom: -10px; ' +
           'left: -10px; right: -10px; top: -10px;"></div></div>',
       );
     });
