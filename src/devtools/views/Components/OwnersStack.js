@@ -6,7 +6,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-// TODO (tooltips) import Tooltip from '@reach/tooltip';
+import Tooltip from '@reach/tooltip';
 import { Menu, MenuList, MenuButton, MenuItem } from '@reach/menu-button';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
@@ -94,13 +94,13 @@ function ElementsDropdown({
 
   return (
     <Menu>
-      {/* TODO (tooltips) <Tooltip label="Open elements dropdown"> */}
       <MenuButton className={styles.MenuButton}>
-        <span className={styles.MenuButtonContent} tabIndex={-1}>
-          <ButtonIcon type="more" />
-        </span>
+        <Tooltip label="Open elements dropdown">
+          <span className={styles.MenuButtonContent} tabIndex={-1}>
+            <ButtonIcon type="more" />
+          </span>
+        </Tooltip>
       </MenuButton>
-      {/* TODO (tooltips) </Tooltip> */}
       <MenuList className={styles.Modal}>
         {ownerStack.map((id, index) => (
           <MenuItem

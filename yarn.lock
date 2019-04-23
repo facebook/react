@@ -1052,10 +1052,8 @@
     react-lifecycles-compat "^3.0.4"
     warning "^3.0.0"
 
-"@reach/tooltip@^0.1.1":
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/@reach/tooltip/-/tooltip-0.1.1.tgz#7f0385624eaffabcd4f075a098ef0fe4b472ce5d"
-  integrity sha512-EawPeRdeajl5HwtM8Q1rz0aNzOgRKnbs4GNW4tUa/6+F8yN93nZGxfYyefYGQgjzVOd0HdgeatUVqDQMgcldYA==
+"@reach/tooltip@file:./vendor/@reach/tooltip":
+  version "0.1.2"
   dependencies:
     "@reach/auto-id" "0.2.0"
     "@reach/portal" "^0.2.0"

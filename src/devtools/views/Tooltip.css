@@ -8,5 +8,4 @@
 
   /* Make sure this is above the DevTools, which are above the Overlay */
   z-index: 10000002;
-  position: relative;
 }
