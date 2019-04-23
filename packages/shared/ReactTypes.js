@@ -88,7 +88,20 @@ export type ReactEventResponderEventType =
 export type ReactEventResponder = {
   targetEventTypes: Array<ReactEventResponderEventType>,
   createInitialState?: (props: null | Object) => Object,
-  onEvent: (
+  stopLocalPropagation: boolean,
+  onEvent?: (
+    event: ReactResponderEvent,
+    context: ReactResponderContext,
+    props: null | Object,
+    state: null | Object,
+  ) => void,
+  onEventCapture?: (
+    event: ReactResponderEvent,
+    context: ReactResponderContext,
+    props: null | Object,
+    state: null | Object,
+  ) => void,
+  onRootEvent?: (
     event: ReactResponderEvent,
     context: ReactResponderContext,
     props: null | Object,
@@ -138,14 +151,13 @@ export type ReactResponderEvent = {
 };
 
 export type ReactResponderDispatchEventOptions = {
-  capture?: boolean,
   discrete?: boolean,
-  stopPropagation?: boolean,
 };
 
 export type ReactResponderContext = {
   dispatchEvent: (
     eventObject: Object,
+    listener: (Object) => void,
     otpions: ReactResponderDispatchEventOptions,
   ) => void,
   isTargetWithinElement: (
@@ -168,7 +180,8 @@ export type ReactResponderContext = {
   hasOwnership: () => boolean,
   requestOwnership: () => boolean,
   releaseOwnership: () => boolean,
-  setTimeout: (func: () => void, timeout: number) => TimeoutID,
+  setTimeout: (func: () => void, timeout: number) => Symbol,
+  clearTimeout: (timerId: Symbol) => void,
   getEventTargetsFromTarget: (
     target: Element | Document,
     queryType?: Symbol | number,

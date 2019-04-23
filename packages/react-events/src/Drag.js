@@ -13,8 +13,12 @@ import type {
 } from 'shared/ReactTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
-const targetEventTypes = ['pointerdown', 'pointercancel'];
-const rootEventTypes = ['pointerup', {name: 'pointermove', passive: false}];
+const targetEventTypes = ['pointerdown'];
+const rootEventTypes = [
+  'pointerup',
+  'pointercancel',
+  {name: 'pointermove', passive: false},
+];
 
 type DragState = {
   dragTarget: null | Element | Document,
@@ -29,8 +33,8 @@ type DragState = {
 // In the case we don't have PointerEvents (Safari), we listen to touch events
 // too
 if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
-  targetEventTypes.push('touchstart', 'touchend', 'mousedown', 'touchcancel');
-  rootEventTypes.push('mouseup', 'mousemove', {
+  targetEventTypes.push('touchstart', 'mousedown');
+  rootEventTypes.push('mouseup', 'mousemove', 'touchend', 'touchcancel', {
     name: 'touchmove',
     passive: false,
   });
@@ -43,7 +47,6 @@ type EventData = {
 type DragEventType = 'dragstart' | 'dragend' | 'dragchange' | 'dragmove';
 
 type DragEvent = {|
-  listener: DragEvent => void,
   target: Element | Document,
   type: DragEventType,
   diffX?: number,
@@ -53,11 +56,9 @@ type DragEvent = {|
 function createDragEvent(
   type: DragEventType,
   target: Element | Document,
-  listener: DragEvent => void,
   eventData?: EventData,
 ): DragEvent {
   return {
-    listener,
     target,
     type,
     ...eventData,
@@ -73,8 +74,8 @@ function dispatchDragEvent(
   eventData?: EventData,
 ): void {
   const target = ((state.dragTarget: any): Element | Document);
-  const syntheticEvent = createDragEvent(name, target, listener, eventData);
-  context.dispatchEvent(syntheticEvent, {discrete});
+  const syntheticEvent = createDragEvent(name, target, eventData);
+  context.dispatchEvent(syntheticEvent, listener, {discrete});
 }
 
 const DragResponder = {
@@ -90,6 +91,7 @@ const DragResponder = {
       y: 0,
     };
   },
+  stopLocalPropagation: true,
   onEvent(
     event: ReactResponderEvent,
     context: ReactResponderContext,
@@ -131,6 +133,17 @@ const DragResponder = {
         }
         break;
       }
+    }
+  },
+  onRootEvent(
+    event: ReactResponderEvent,
+    context: ReactResponderContext,
+    props: Object,
+    state: DragState,
+  ): void {
+    const {type, nativeEvent} = event;
+
+    switch (type) {
       case 'touchmove':
       case 'mousemove':
       case 'pointermove': {

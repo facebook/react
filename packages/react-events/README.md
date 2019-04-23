@@ -28,7 +28,10 @@ const TextField = (props) => (
 
 ```js
 // Types
-type FocusEvent = {}
+type FocusEvent = {
+  target: Element,
+  type: 'blur' | 'focus' | 'focuschange'
+}
 ```
 
 ### disabled: boolean
@@ -76,7 +79,11 @@ const Link = (props) => (
 
 ```js
 // Types
-type HoverEvent = {}
+type HoverEvent = {
+  pointerType: 'mouse',
+  target: Element,
+  type: 'hoverstart' | 'hoverend' | 'hovermove' | 'hoverchange'
+}
 ```
 
 ### delayHoverEnd: number
@@ -103,11 +110,20 @@ Called when the element changes hover state (i.e., after `onHoverStart` and
 Called once the element is no longer hovered. It will be cancelled if the
 pointer leaves the element before the `delayHoverStart` threshold is exceeded.
 
+### onHoverMove: (e: HoverEvent) => void
+
+Called when the pointer moves within the hit bounds of the element. `onHoverMove` is
+called immediately and doesn't wait for delayed `onHoverStart`.
+
 ### onHoverStart: (e: HoverEvent) => void
 
 Called once the element is hovered. It will not be called if the pointer leaves
 the element before the `delayHoverStart` threshold is exceeded. And it will not
 be called more than once before `onHoverEnd` is called.
+
+### preventDefault: boolean = true
+
+Whether to `preventDefault()` native events.
 
 
 ## Press
@@ -145,7 +161,11 @@ const Button = (props) => (
 
 ```js
 // Types
-type PressEvent = {}
+type PressEvent = {
+  pointerType: 'mouse' | 'touch' | 'pen' | 'keyboard',
+  target: Element,
+  type: 'press' | 'pressstart' | 'pressend' | 'presschange' | 'pressmove' | 'longpress' | 'longpresschange'
+}
 
 type PressOffset = {
   top: number,
@@ -210,8 +230,9 @@ called during a press.
 
 ### onPressMove: (e: PressEvent) => void
 
-Called when an active press moves within the hit bounds of the element. Never
-called for keyboard-initiated press events.
+Called when a press moves within the hit bounds of the element. `onPressMove` is
+called immediately and doesn't wait for delayed `onPressStart`. Never called for
+keyboard-initiated press events.  
 
 ### onPressStart: (e: PressEvent) => void
 
@@ -225,3 +246,12 @@ Defines how far the pointer (while held down) may move outside the bounds of the
 element before it is deactivated. Once deactivated, the pointer (still held
 down) can be moved back within the bounds of the element to reactivate it.
 Ensure you pass in a constant to reduce memory allocations.
+
+### preventDefault: boolean = true
+
+Whether to `preventDefault()` native events. Native behavior is prevented by
+default. If an anchor is the child of `Press`, internal and external navigation
+should be performed in `onPress`/`onLongPress`. To rely on native behavior
+instead, set `preventDefault` to `false`, but be aware that native behavior will
+take place immediately after interaction without respect for delays or long
+press.
