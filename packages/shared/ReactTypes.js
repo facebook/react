@@ -86,25 +86,39 @@ export type ReactEventResponderEventType =
   | {name: string, passive?: boolean, capture?: boolean};
 
 export type ReactEventResponder = {
-  targetEventTypes: Array<ReactEventResponderEventType>,
+  targetEventTypes?: Array<ReactEventResponderEventType>,
+  rootEventTypes?: Array<ReactEventResponderEventType>,
   createInitialState?: (props: null | Object) => Object,
-  onEvent: (
+  stopLocalPropagation: boolean,
+  onEvent?: (
     event: ReactResponderEvent,
     context: ReactResponderContext,
     props: null | Object,
     state: null | Object,
-  ) => boolean,
-  onMount: (
+  ) => void,
+  onEventCapture?: (
+    event: ReactResponderEvent,
     context: ReactResponderContext,
     props: null | Object,
     state: null | Object,
   ) => void,
-  onUnmount: (
+  onRootEvent?: (
+    event: ReactResponderEvent,
     context: ReactResponderContext,
     props: null | Object,
     state: null | Object,
   ) => void,
-  onOwnershipChange: (
+  onMount?: (
+    context: ReactResponderContext,
+    props: null | Object,
+    state: null | Object,
+  ) => void,
+  onUnmount?: (
+    context: ReactResponderContext,
+    props: null | Object,
+    state: null | Object,
+  ) => void,
+  onOwnershipChange?: (
     context: ReactResponderContext,
     props: null | Object,
     state: null | Object,
@@ -114,6 +128,7 @@ export type ReactEventResponder = {
 export type ReactEventComponentInstance = {|
   props: null | Object,
   responder: ReactEventResponder,
+  rootEventTypes: null | Set<string>,
   rootInstance: mixed,
   state: null | Object,
 |};
@@ -139,7 +154,6 @@ export type ReactResponderEvent = {
   type: string,
   passive: boolean,
   passiveSupported: boolean,
-  phase: 0 | 1 | 2,
 };
 
 export type ReactResponderDispatchEventOptions = {
@@ -172,7 +186,7 @@ export type ReactResponderContext = {
   hasOwnership: () => boolean,
   requestOwnership: () => boolean,
   releaseOwnership: () => boolean,
-  setTimeout: (func: () => boolean, timeout: number) => Symbol,
+  setTimeout: (func: () => void, timeout: number) => Symbol,
   clearTimeout: (timerId: Symbol) => void,
   getEventTargetsFromTarget: (
     target: Element | Document,

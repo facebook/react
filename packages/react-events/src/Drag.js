@@ -13,9 +13,12 @@ import type {
 } from 'shared/ReactTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
-const CAPTURE_PHASE = 2;
-const targetEventTypes = ['pointerdown', 'pointercancel'];
-const rootEventTypes = ['pointerup', {name: 'pointermove', passive: false}];
+const targetEventTypes = ['pointerdown'];
+const rootEventTypes = [
+  'pointerup',
+  'pointercancel',
+  {name: 'pointermove', passive: false},
+];
 
 type DragState = {
   dragTarget: null | Element | Document,
@@ -30,8 +33,8 @@ type DragState = {
 // In the case we don't have PointerEvents (Safari), we listen to touch events
 // too
 if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
-  targetEventTypes.push('touchstart', 'touchend', 'mousedown', 'touchcancel');
-  rootEventTypes.push('mouseup', 'mousemove', {
+  targetEventTypes.push('touchstart', 'mousedown');
+  rootEventTypes.push('mouseup', 'mousemove', 'touchend', 'touchcancel', {
     name: 'touchmove',
     passive: false,
   });
@@ -88,18 +91,15 @@ const DragResponder = {
       y: 0,
     };
   },
+  stopLocalPropagation: true,
   onEvent(
     event: ReactResponderEvent,
     context: ReactResponderContext,
     props: Object,
     state: DragState,
-  ): boolean {
-    const {target, phase, type, nativeEvent} = event;
+  ): void {
+    const {target, type, nativeEvent} = event;
 
-    // Drag doesn't handle capture target events at this point
-    if (phase === CAPTURE_PHASE) {
-      return false;
-    }
     switch (type) {
       case 'touchstart':
       case 'mousedown':
@@ -133,11 +133,22 @@ const DragResponder = {
         }
         break;
       }
+    }
+  },
+  onRootEvent(
+    event: ReactResponderEvent,
+    context: ReactResponderContext,
+    props: Object,
+    state: DragState,
+  ): void {
+    const {type, nativeEvent} = event;
+
+    switch (type) {
       case 'touchmove':
       case 'mousemove':
       case 'pointermove': {
         if (event.passive) {
-          return false;
+          return;
         }
         if (state.isPointerDown) {
           const obj =
@@ -230,7 +241,6 @@ const DragResponder = {
         break;
       }
     }
-    return false;
   },
 };
 

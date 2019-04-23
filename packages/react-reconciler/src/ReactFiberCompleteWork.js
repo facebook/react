@@ -814,6 +814,7 @@ function completeWork(
           eventComponentInstance = workInProgress.stateNode = {
             props: newProps,
             responder,
+            rootEventTypes: null,
             rootInstance: rootContainerInstance,
             state: responderState,
           };

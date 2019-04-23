@@ -1302,7 +1302,7 @@ export function listenToEventResponderEventTypes(
         if (__DEV__) {
           warning(
             typeof targetEventType === 'object' && targetEventType !== null,
-            'Event Responder: invalid entry in targetEventTypes array. ' +
+            'Event Responder: invalid entry in event types array. ' +
               'Entry must be string or an object. Instead, got %s.',
             targetEventType,
           );
