@@ -23,6 +23,7 @@ import {
   HostRoot,
   SuspenseComponent,
   DehydratedSuspenseComponent,
+  HostPortal,
 } from 'shared/ReactWorkTags';
 import {Deletion, Placement} from 'shared/ReactSideEffectTags';
 import invariant from 'shared/invariant';
@@ -233,6 +234,13 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   let nextInstance = nextHydratableInstance;
   if (!nextInstance) {
     // Nothing to hydrate. Make it an insertion.
+    if (fiber.return && fiber.return.tag === HostPortal) {
+      invariant(
+        false,
+        'invariant violation: Portal is not support on SSR. ' +
+          'For more detail, please refer https://github.com/facebook/react/issues/13097',
+      );
+    }
     insertNonHydratedInstance((hydrationParentFiber: any), fiber);
     isHydrating = false;
     hydrationParentFiber = fiber;
