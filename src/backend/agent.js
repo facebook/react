@@ -81,11 +81,13 @@ export default class Agent extends EventEmitter {
       localStorage.removeItem(LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY);
     }
 
-    const persistedSelectionString = sessionStorage.getItem(
-      SESSION_STORAGE_LAST_SELECTION_KEY
-    );
-    if (persistedSelectionString != null) {
-      this._persistedSelection = JSON.parse(persistedSelectionString);
+    if (typeof sessionStorage !== 'undefined') {
+      const persistedSelectionString = sessionStorage.getItem(
+        SESSION_STORAGE_LAST_SELECTION_KEY
+      );
+      if (persistedSelectionString != null) {
+        this._persistedSelection = JSON.parse(persistedSelectionString);
+      }
     }
   }
 
@@ -617,9 +619,11 @@ export default class Agent extends EventEmitter {
     if (path === null) {
       return;
     }
-    sessionStorage.setItem(
-      SESSION_STORAGE_LAST_SELECTION_KEY,
-      JSON.stringify(({ rendererID, path }: PersistedSelection))
-    );
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem(
+        SESSION_STORAGE_LAST_SELECTION_KEY,
+        JSON.stringify(({ rendererID, path }: PersistedSelection))
+      );
+    }
   }, 1000);
 }
