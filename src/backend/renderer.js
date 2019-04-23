@@ -324,7 +324,7 @@ export function attach(
   // TODO: we might want to change the data structure once we no longer suppport Stack versions of `getData`.
   // TODO: Keep in sync with getElementType()
   function getDataForFiber(fiber: Fiber): FiberData {
-    const { elementType, type, key, tag } = fiber;
+    const { elementType, type, key, index, tag } = fiber;
 
     // This is to support lazy components with a Promise as the type.
     // see https://github.com/facebook/react/pull/13397
@@ -345,6 +345,7 @@ export function attach(
         fiberData = {
           displayName: getDisplayName(resolvedType),
           key,
+          index,
           type: ElementTypeClass,
         };
         break;
@@ -353,6 +354,7 @@ export function attach(
         fiberData = {
           displayName: getDisplayName(resolvedType),
           key,
+          index,
           type: ElementTypeFunction,
         };
         break;
@@ -360,6 +362,7 @@ export function attach(
         fiberData = {
           displayName: null,
           key,
+          index,
           type: ElementTypeEventComponent,
         };
         break;
@@ -376,6 +379,7 @@ export function attach(
         fiberData = {
           displayName,
           key,
+          index,
           type: ElementTypeEventTarget,
         };
         break;
@@ -388,6 +392,7 @@ export function attach(
         fiberData = {
           displayName,
           key,
+          index,
           type: ElementTypeForwardRef,
         };
         break;
@@ -395,6 +400,7 @@ export function attach(
         return {
           displayName: null,
           key: null,
+          index: 0,
           type: ElementTypeRoot,
         };
       case HostPortal:
@@ -404,6 +410,7 @@ export function attach(
         return {
           displayName: null,
           key,
+          index,
           type: ElementTypeOtherOrUnknown,
         };
       case MemoComponent:
@@ -417,6 +424,7 @@ export function attach(
         fiberData = {
           displayName,
           key,
+          index,
           type: ElementTypeMemo,
         };
         break;
@@ -430,6 +438,7 @@ export function attach(
             return {
               displayName: null,
               key: null,
+              index,
               type: ElementTypeOtherOrUnknown,
             };
           case CONTEXT_PROVIDER_NUMBER:
@@ -444,6 +453,7 @@ export function attach(
             fiberData = {
               displayName,
               key,
+              index,
               type: ElementTypeContext,
             };
             break;
@@ -462,6 +472,7 @@ export function attach(
             fiberData = {
               displayName,
               key,
+              index,
               type: ElementTypeContext,
             };
             break;
@@ -470,6 +481,7 @@ export function attach(
             fiberData = {
               displayName: null,
               key,
+              index,
               type: ElementTypeOtherOrUnknown,
             };
             break;
@@ -479,6 +491,7 @@ export function attach(
             fiberData = {
               displayName: 'Suspense',
               key,
+              index,
               type: ElementTypeSuspense,
             };
             break;
@@ -487,6 +500,7 @@ export function attach(
             fiberData = {
               displayName: `Profiler(${fiber.memoizedProps.id})`,
               key,
+              index,
               type: ElementTypeProfiler,
             };
             break;
@@ -496,6 +510,7 @@ export function attach(
             fiberData = {
               displayName: null,
               key,
+              index,
               type: ElementTypeOtherOrUnknown,
             };
             break;
@@ -2000,26 +2015,48 @@ export function attach(
     trackedPath = path;
   }
 
-  function getPathForElement(id: number): Array<PathFrame> {
-    // TODO: this is not a real path.
-    return [
-      {
-        index: id,
-        key: null,
-        displayName: null,
-      },
-    ];
+  function getPathFrame(fiber: Fiber): PathFrame {
+    let { displayName, key, index } = getDataForFiber(fiber);
+    if (fiber.tag === HostRoot) {
+      // Roots don't have a real index.
+      // Instead, we'll use the order in which it mounted.
+      const id = getFiberID(getPrimaryFiber(fiber));
+      const order = rootInsertionOrder.get(id);
+      if (typeof order !== 'number') {
+        throw new Error('Expected mounted root to have known insertion order.');
+      }
+      index = order;
+    }
+    return {
+      displayName,
+      key,
+      index,
+    };
+  }
+
+  // Produces a serializable representation that does a best effort
+  // of identifying a particular Fiber between page reloads.
+  // The return path will contain Fibers that are "invisible" to the store
+  // because their keys and indexes are important to restoring the selection.
+  function getPathForElement(id: number): Array<PathFrame> | null {
+    let fiber = idToFiberMap.get(id);
+    if (fiber == null) {
+      return null;
+    }
+    const keyPath = [];
+    while (fiber !== null) {
+      keyPath.push(getPathFrame(fiber));
+      fiber = fiber.return;
+    }
+    keyPath.reverse();
+    return keyPath;
   }
 
   function getBestMatchForTrackedPath(): PathMatch | null {
-    // TODO: this is not a real lookup.
     if (trackedPath !== null) {
-      const id = trackedPath[0].index;
-      const fiber = idToFiberMap.get(id);
-      if (fiber !== null) {
-        return { id, isFullMatch: true };
-      }
+      console.log('Looking for match for path: ', trackedPath);
     }
+    // TODO: implement this.
     return null;
   }
 
