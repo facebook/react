@@ -13,7 +13,7 @@ import LRU from 'lru-cache';
 //    The size of this cache is bounded by how many renders were profiled,
 //    and it will be fully reset between profiling sessions.
 
-type Thenable<T> = {
+export type Thenable<T> = {
   then(resolve: (T) => mixed, reject: (mixed) => mixed): mixed,
 };
 

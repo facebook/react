@@ -17,7 +17,7 @@ import type {
   InspectedElement,
   InspectedElementResponse,
 } from 'src/devtools/views/Components/types';
-import type { Resource } from '../../cache';
+import type { Resource, Thenable } from '../../cache';
 
 type Context = {|
   read(id: number): InspectedElement | null,
@@ -28,7 +28,7 @@ InspectedElementContext.displayName = 'InspectedElementContext';
 
 type ResolveFn = (inspectedElement: InspectedElement) => void;
 type InProgressRequest = {|
-  promise: Promise<InspectedElement>,
+  promise: Thenable<InspectedElement>,
   resolveFn: ResolveFn,
 |};
 
