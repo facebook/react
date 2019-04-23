@@ -5126,10 +5126,10 @@ flatstr@^1.0.9:
   resolved "https://registry.yarnpkg.com/flatstr/-/flatstr-1.0.9.tgz#0950d56fec02de1030c1311847ecd58c25690eb9"
   integrity sha512-qFlJnOBWDfIaunF54/lBqNKmXOI0HqNhu+mHkLmbaBXlS71PUd9OjFOdyevHt/aHoHB1+eW7eKHgRKOG5aHSpw==
 
-flow-bin@^0.96.0:
-  version "0.96.0"
-  resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.96.0.tgz#3b0379d97304dc1879ae6db627cd2d6819998661"
-  integrity sha512-OSxERs0EdhVxEVCst/HmlT/RcnXsQQIRqcfK9J9wC8/93JQj+xQz4RtlsmYe1PSRYaozuDLyPS5pIA81Zwzaww==
+flow-bin@^0.97.0:
+  version "0.97.0"
+  resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.97.0.tgz#036ffcfc27503367a9d906ec9d843a0aa6f6bb83"
+  integrity sha512-jXjD05gkatLuC4+e28frH1hZoRwr1iASP6oJr61Q64+kR4kmzaS+AdFBhYgoYS5kpoe4UzwDebWK8ETQFNh00w==
 
 fluent-syntax@0.10.0:
   version "0.10.0"
@@ -9245,7 +9245,7 @@ react-window@^1.8.0:
     "@babel/runtime" "^7.0.0"
     memoize-one ">=3.1.1 <6"
 
-react0.0.0-4221565e1:
+react@0.0.0-4221565e1:
   version "0.0.0-4221565e1"
   resolved "https://registry.yarnpkg.com/react/-/react-0.0.0-4221565e1.tgz#bc7f3e67f2c2c53693cda2e89e6fa71bfc89ebcd"
   integrity sha512-iVAljelOxza6S9QcFMkxJCcj2Y+QDiv6XwGz9A8c5jtKejGOEKK/Xumg7uTDmGwy8vjGVDI7qGDW8Rta80xH9g==

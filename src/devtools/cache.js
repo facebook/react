@@ -71,10 +71,10 @@ type Config = {
   useLRU?: boolean,
 };
 
-const entries: Map<Resource<any, any, any>, Map<any, any>> = new Map();
+const entries: Map<Resource<any, any, any>, Map<any, any> | LRU> = new Map();
 const resourceConfigs: Map<Resource<any, any, any>, Config> = new Map();
 
-function getEntriesForResource(resource: any): Map<any, any> {
+function getEntriesForResource(resource: any): Map<any, any> | LRU {
   let entriesForResource = ((entries.get(resource): any): Map<any, any>);
   if (entriesForResource === undefined) {
     const config = resourceConfigs.get(resource);
