@@ -539,6 +539,11 @@ export function attach(
   // When a mount or update is in progress, this value tracks the root that is being operated on.
   let currentRootID: number = -1;
 
+  // Track the order in which roots were added.
+  // We will use it to disambiguate roots when restoring selection between reloads.
+  let nextRootIndex = 0;
+  const rootInsertionOrder: Map<number, number> = new Map();
+
   function getFiberID(primaryFiber: Fiber): number {
     if (!fiberToIDMap.has(primaryFiber)) {
       const id = getUID();
@@ -690,6 +695,7 @@ export function attach(
     const hasOwnerMetadata = fiber.hasOwnProperty('_debugOwner');
 
     if (isRoot) {
+      rootInsertionOrder.set(id, nextRootIndex++);
       pushOperation(TREE_OPERATION_ADD);
       pushOperation(id);
       pushOperation(ElementTypeRoot);
@@ -777,6 +783,7 @@ export function attach(
     }
     const id = getFiberID(primaryFiber);
     if (isRoot) {
+      rootInsertionOrder.delete(id);
       // Removing a root needs to happen at the end
       // so we don't batch it with other unmounts.
       pushOperation(TREE_OPERATION_REMOVE);
