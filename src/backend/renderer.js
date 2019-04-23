@@ -710,7 +710,6 @@ export function attach(
     const hasOwnerMetadata = fiber.hasOwnProperty('_debugOwner');
 
     if (isRoot) {
-      rootInsertionOrder.set(id, nextRootIndex++);
       pushOperation(TREE_OPERATION_ADD);
       pushOperation(id);
       pushOperation(ElementTypeRoot);
@@ -784,6 +783,18 @@ export function attach(
   }
 
   function recordUnmount(fiber: Fiber, isSimulated: boolean) {
+    if (trackedPathMatchFiber !== null) {
+      // We're in the process of trying to restore previous selection.
+      // If this fiber matched but is being unmounted, there's no use trying.
+      // Reset the state so we don't keep holding onto it.
+      if (
+        fiber === trackedPathMatchFiber ||
+        fiber === trackedPathMatchFiber.alternate
+      ) {
+        setTrackedPath(null);
+      }
+    }
+
     const isRoot = fiber.tag === HostRoot;
     const primaryFiber = getPrimaryFiber(fiber);
     if (!fiberToIDMap.has(primaryFiber)) {
@@ -798,7 +809,6 @@ export function attach(
     }
     const id = getFiberID(primaryFiber);
     if (isRoot) {
-      rootInsertionOrder.delete(id);
       // Removing a root needs to happen at the end
       // so we don't batch it with other unmounts.
       pushOperation(TREE_OPERATION_REMOVE);
@@ -834,6 +844,12 @@ export function attach(
       debug('mountFiberRecursively()', fiber, parentFiber);
     }
 
+    // If we have the tree selection from previous reload, try to match this Fiber.
+    // Also remember whether to do the same for siblings.
+    const mightSiblingsBeOnTrackedPath = updateTrackedPathStateBeforeMount(
+      fiber
+    );
+
     const shouldIncludeInTree = !shouldFilterFiber(fiber);
     if (shouldIncludeInTree) {
       recordMount(fiber, parentFiber);
@@ -866,6 +882,10 @@ export function attach(
         );
       }
     }
+
+    // We're exiting this Fiber now, and entering its siblings.
+    // If we have selection to restore, we might need to re-activate tracking.
+    updateTrackedPathStateAfterMount(mightSiblingsBeOnTrackedPath);
 
     if (traverseSiblings && fiber.sibling !== null) {
       mountFiberRecursively(fiber.sibling, parentFiber, true);
@@ -1141,9 +1161,15 @@ export function attach(
         });
       });
     } else {
+      // Before the traversals, remember to start tracking
+      // our path in case we have selection to restore.
+      if (trackedPath !== null) {
+        mightBeOnTrackedPath = true;
+      }
       // If we have not been profiling, then we can just walk the tree and build up its current state as-is.
       hook.getFiberRoots(rendererID).forEach(root => {
         currentRootID = getFiberID(getPrimaryFiber(root.current));
+        rootInsertionOrder.set(currentRootID, nextRootIndex++);
 
         if (isProfiling) {
           // If profiling is active, store commit time and duration, and the current interactions.
@@ -1181,6 +1207,12 @@ export function attach(
 
     currentRootID = getFiberID(getPrimaryFiber(current));
 
+    // Before the traversals, remember to start tracking
+    // our path in case we have selection to restore.
+    if (trackedPath !== null) {
+      mightBeOnTrackedPath = true;
+    }
+
     if (isProfiling) {
       // If profiling is active, store commit time and duration, and the current interactions.
       // The frontend may request this information after profiling has stopped.
@@ -1206,16 +1238,19 @@ export function attach(
         current.memoizedState != null && current.memoizedState.element != null;
       if (!wasMounted && isMounted) {
         // Mount a new root.
+        rootInsertionOrder.set(currentRootID, nextRootIndex++);
         mountFiberRecursively(current, null);
       } else if (wasMounted && isMounted) {
         // Update an existing root.
         updateFiberRecursively(current, alternate, null);
       } else if (wasMounted && !isMounted) {
         // Unmount an existing root.
+        rootInsertionOrder.delete(currentRootID);
         recordUnmount(current, false);
       }
     } else {
       // Mount a new root.
+      rootInsertionOrder.set(currentRootID, nextRootIndex++);
       mountFiberRecursively(current, null);
     }
 
@@ -2009,10 +2044,80 @@ export function attach(
     scheduleUpdate(fiber);
   }
 
+  // Remember if we're trying to restore the selection after reload.
+  // In that case, we'll do some extra checks for matching mounts.
   let trackedPath: Array<PathFrame> | null = null;
+  let trackedPathMatchFiber: Fiber | null = null;
+  let trackedPathMatchDepth = -1;
+  let mightBeOnTrackedPath = false;
 
   function setTrackedPath(path: Array<PathFrame> | null) {
+    if (path === null) {
+      trackedPathMatchFiber = null;
+      trackedPathMatchDepth = -1;
+      mightBeOnTrackedPath = false;
+    } else if (trackedPath !== null) {
+      throw new Error('Tracked path can only be set once.');
+    }
     trackedPath = path;
+  }
+
+  // We call this before traversing a new mount.
+  // It remembers whether this Fiber is the next best match for tracked path.
+  // The return value signals whether we should keep matching siblings or not.
+  function updateTrackedPathStateBeforeMount(fiber: Fiber): boolean {
+    if (trackedPath === null || !mightBeOnTrackedPath) {
+      // Fast path: there's nothing to track so do nothing and ignore siblings.
+      return false;
+    }
+    const returnFiber = fiber.return;
+    const returnAlternate = returnFiber !== null ? returnFiber.alternate : null;
+    // By now we know there's some selection to restore, and this is a new Fiber.
+    // Is this newly mounted Fiber a direct child of the current best match?
+    // (This will also be true for new roots if we haven't matched anything yet.)
+    if (
+      trackedPathMatchFiber === returnFiber ||
+      (trackedPathMatchFiber === returnAlternate && returnAlternate !== null)
+    ) {
+      // Is this the next Fiber we should select? Let's compare the frames.
+      const actualFrame = getPathFrame(fiber);
+      const expectedFrame = trackedPath[trackedPathMatchDepth + 1];
+      if (expectedFrame === undefined) {
+        throw new Error('Expected to see a frame at the next depth.');
+      }
+      if (
+        actualFrame.index === expectedFrame.index &&
+        actualFrame.key === expectedFrame.key &&
+        actualFrame.displayName === expectedFrame.displayName
+      ) {
+        // We have our next match.
+        trackedPathMatchFiber = fiber;
+        trackedPathMatchDepth++;
+        // Are we out of frames to match?
+        if (trackedPathMatchDepth === trackedPath.length - 1) {
+          // There's nothing that can possibly match afterwards.
+          // Don't check the children.
+          mightBeOnTrackedPath = false;
+        } else {
+          // Check the children, as they might reveal the next match.
+          mightBeOnTrackedPath = true;
+        }
+        // In either case, since we have a match, we don't need
+        // to check the siblings. They'll never match.
+        return false;
+      }
+    }
+    // This Fiber's parent is on the path, but this Fiber itself isn't.
+    // There's no need to check its children--they won't be on the path either.
+    mightBeOnTrackedPath = false;
+    // However, one of its siblings may be on the path so keep searching.
+    return true;
+  }
+
+  function updateTrackedPathStateAfterMount(mightSiblingsBeOnTrackedPath) {
+    // updateTrackedPathStateBeforeMount() told us whether to match siblings.
+    // Now that we're entering siblings, let's use that information.
+    mightBeOnTrackedPath = mightSiblingsBeOnTrackedPath;
   }
 
   function getPathFrame(fiber: Fiber): PathFrame {
@@ -2053,11 +2158,26 @@ export function attach(
   }
 
   function getBestMatchForTrackedPath(): PathMatch | null {
-    if (trackedPath !== null) {
-      console.log('Looking for match for path: ', trackedPath);
+    if (trackedPath === null) {
+      // Nothing to match.
+      return null;
     }
-    // TODO: implement this.
-    return null;
+    if (trackedPathMatchFiber === null) {
+      // We didn't find anything.
+      return null;
+    }
+    // Find the closest Fiber store is aware of.
+    let fiber = trackedPathMatchFiber;
+    while (fiber !== null && shouldFilterFiber(fiber)) {
+      fiber = fiber.return;
+    }
+    if (fiber === null) {
+      return null;
+    }
+    return {
+      id: getFiberID(getPrimaryFiber(fiber)),
+      isFullMatch: trackedPathMatchDepth === trackedPath.length - 1,
+    };
   }
 
   return {
