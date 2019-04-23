@@ -126,6 +126,9 @@ function InspectedElementContextController({ children }: Props) {
     // We'll poll for an update in the response handler below.
     sendRequest();
 
+    // Update the $r variable.
+    bridge.send('selectElement', { id: selectedElementID, rendererID });
+
     const onInspectedElement = (
       inspectedElementResponse: InspectedElementResponse | null
     ) => {
