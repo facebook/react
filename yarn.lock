@@ -9204,7 +9204,7 @@ react-color@^2.11.7:
     reactcss "^1.2.0"
     tinycolor2 "^1.4.1"
 
-react-dom@^0.0.0-4221565e1:
+react-dom@0.0.0-4221565e1:
   version "0.0.0-4221565e1"
   resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-0.0.0-4221565e1.tgz#d9044312a3294a8828867624a9fea7fd9aa76570"
   integrity sha512-uoBFBMDt5OOAZQNWl72hqCuvVxE1YpAILqIHSwv2ktiLcHPmyByftiuFdqrjXVCJe3LR9sAQWrB8xWgC2bCi+w==
@@ -9247,7 +9247,7 @@ react-window@^1.8.0:
     "@babel/runtime" "^7.0.0"
     memoize-one ">=3.1.1 <6"
 
-react@^0.0.0-4221565e1:
+react0.0.0-4221565e1:
   version "0.0.0-4221565e1"
   resolved "https://registry.yarnpkg.com/react/-/react-0.0.0-4221565e1.tgz#bc7f3e67f2c2c53693cda2e89e6fa71bfc89ebcd"
   integrity sha512-iVAljelOxza6S9QcFMkxJCcj2Y+QDiv6XwGz9A8c5jtKejGOEKK/Xumg7uTDmGwy8vjGVDI7qGDW8Rta80xH9g==
@@ -9906,7 +9906,7 @@ sax@>=0.6.0, sax@^1.2.4:
   resolved "https://registry.yarnpkg.com/sax/-/sax-1.2.4.tgz#2816234e2378bddc4e5354fab5caa895df7100d9"
   integrity sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw==
 
-scheduler@0.0.0-4221565e1, scheduler@^0.0.0-4221565e1:
+scheduler@0.0.0-4221565e1:
   version "0.0.0-4221565e1"
   resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.0.0-4221565e1.tgz#70c99271bd7bc4fbf4e7c69f31c003c4c61cd285"
   integrity sha512-RhQ6QhkRJDXAcs6woR6p9UYDyjRguRsYXpWDFbCft45lWs4sSfszxPRr5TJVVLjIwPu0Wy0Mkd75smQ8TMponA==
