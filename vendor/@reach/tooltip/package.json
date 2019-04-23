@@ -1,0 +1,36 @@
+{
+  "name": "@reach/tooltip",
+  "version": "0.1.2",
+  "description": "Accessible tooltips",
+  "main": "index.js",
+  "module": "es/index.js",
+  "scripts": {
+    "test": "echo \"Write some tests you bum!\"",
+    "build": "node ../../shared/build-package",
+    "lint": "eslint . --max-warnings=0"
+  },
+  "dependencies": {
+    "@reach/auto-id": "0.2.0",
+    "@reach/portal": "^0.2.0",
+    "@reach/rect": "^0.2.1",
+    "@reach/utils": "0.2.0",
+    "@reach/visually-hidden": "^0.1.3",
+    "prop-types": "^15.7.2"
+  },
+  "peerDependencies": {
+    "react": "^16.8.0",
+    "react-dom": "^16.8.0"
+  },
+  "devDependencies": {
+    "react-spring": "^8.0.19"
+  },
+  "author": "Ryan Florence",
+  "license": "MIT",
+  "files": [
+    "es",
+    "src",
+    "lib",
+    "index.js",
+    "styles.css"
+  ]
+}

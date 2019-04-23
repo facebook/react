@@ -1,10 +1,10 @@
 // @flow
 
 import React, { useCallback } from 'react';
-// TODO (tooltips) import Tooltip from '@reach/tooltip';
+import Tooltip from '@reach/tooltip';
 
 import styles from './Toggle.css';
-// TODO (tooltips) import tooltipStyles from './Tooltip.css';
+import tooltipStyles from './Tooltip.css';
 
 type Props = {
   children: React$Node,
@@ -42,7 +42,6 @@ export default function Toggle({
       className={`${defaultClassName} ${className}`}
       disabled={isDisabled}
       onClick={handleClick}
-      title={title}
     >
       <span className={styles.ToggleContent} tabIndex={-1}>
         {children}
@@ -50,7 +49,6 @@ export default function Toggle({
     </button>
   );
 
-  /* TODO (tooltips)
   if (title) {
     toggle = (
       <Tooltip className={tooltipStyles.Tooltip} label={title}>
@@ -58,7 +56,6 @@ export default function Toggle({
       </Tooltip>
     );
   }
-  */
 
   return toggle;
 }

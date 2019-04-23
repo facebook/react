@@ -3,7 +3,7 @@
 // Reach styles need to come before any component styles.
 // This makes overridding the styles simpler.
 import '@reach/menu-button/styles.css';
-// TODO (tooltips) import '@reach/tooltip/styles.css';
+import '@reach/tooltip/styles.css';
 
 import React, { useEffect, useState } from 'react';
 import Store from '../store';
