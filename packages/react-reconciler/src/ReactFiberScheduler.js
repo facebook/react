@@ -234,13 +234,12 @@ let interruptedBy: Fiber | null = null;
 // In other words, because expiration times determine how updates are batched,
 // we want all updates of like priority that occur within the same event to
 // receive the same expiration time. Otherwise we get tearing.
-let initialTimeMs: number = now();
 let currentEventTime: ExpirationTime = NoWork;
 
 export function requestCurrentTime() {
   if (workPhase === RenderPhase || workPhase === CommitPhase) {
     // We're inside React, so it's fine to read the actual time.
-    return msToExpirationTime(now() - initialTimeMs);
+    return msToExpirationTime(now());
   }
   // We're not inside React, so we may be in the middle of a browser event.
   if (currentEventTime !== NoWork) {
@@ -248,7 +247,7 @@ export function requestCurrentTime() {
     return currentEventTime;
   }
   // This is the first update since React yielded. Compute a new start time.
-  currentEventTime = msToExpirationTime(now() - initialTimeMs);
+  currentEventTime = msToExpirationTime(now());
   return currentEventTime;
 }
 
@@ -453,10 +452,18 @@ function scheduleCallbackForRoot(
       cancelCallback(existingCallbackNode);
     }
     root.callbackExpirationTime = expirationTime;
-    const options =
-      expirationTime === Sync
-        ? null
-        : {timeout: expirationTimeToMs(expirationTime)};
+
+    let options = null;
+    if (expirationTime !== Sync && expirationTime !== Never) {
+      let timeout = expirationTimeToMs(expirationTime) - now();
+      if (timeout > 5000) {
+        // Sanity check. Should never take longer than 5 seconds.
+        // TODO: Add internal warning?
+        timeout = 5000;
+      }
+      options = {timeout};
+    }
+
     root.callbackNode = scheduleCallback(
       priorityLevel,
       runRootCallback.bind(
@@ -949,7 +956,7 @@ function inferTimeFromExpirationTime(expirationTime: ExpirationTime): number {
   // We don't know exactly when the update was scheduled, but we can infer an
   // approximate start time from the expiration time.
   const earliestExpirationTimeMs = expirationTimeToMs(expirationTime);
-  return earliestExpirationTimeMs - LOW_PRIORITY_EXPIRATION + initialTimeMs;
+  return earliestExpirationTimeMs - LOW_PRIORITY_EXPIRATION;
 }
 
 function workLoopSync() {
@@ -1860,7 +1867,7 @@ function computeMsUntilTimeout(
 
   // Compute the time until this render pass would expire.
   const timeUntilExpirationMs =
-    expirationTimeToMs(committedExpirationTime) + initialTimeMs - currentTimeMs;
+    expirationTimeToMs(committedExpirationTime) - currentTimeMs;
 
   // Clamp the timeout to the expiration time.
   // TODO: Once the event time is exact instead of inferred from expiration time
