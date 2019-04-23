@@ -40,10 +40,7 @@ import type {
   ReactRenderer,
   RendererInterface,
 } from './types';
-import type {
-  InspectedElement,
-  InspectedElementResponse,
-} from 'src/devtools/views/Components/types';
+import type { InspectedElement } from 'src/devtools/views/Components/types';
 
 function getInternalReactConstants(version) {
   const ReactSymbols = {
@@ -962,20 +959,6 @@ export function attach(
       debug('updateFiberRecursively()', nextFiber, parentFiber);
     }
     const shouldIncludeInTree = !shouldFilterFiber(nextFiber);
-
-    // If this is the most recently inspected Fiber, take note of whether it was part of the new commit.
-    // If not, we can avoid re-serializing its props and state if asked again.
-    // Note that we avoid even comparing IDs for fibers not in the tree,
-    // so that we don't inadvertantly add them to the ID Map.
-    if (
-      shouldIncludeInTree &&
-      inspectedElementID !== null &&
-      inspectedElementID === getFiberID(getPrimaryFiber(nextFiber)) &&
-      nextFiber.actualDuration > 0
-    ) {
-      hasInspectedElementChanged = true;
-    }
-
     const isSuspense = nextFiber.tag === SuspenseComponent;
     let shouldResetChildren = false;
     // The behavior of timed-out Suspense trees is unique.
@@ -1509,7 +1492,6 @@ export function attach(
     }
   }
 
-  // TODO Send a no-op message if the specified Fiber hasn't been committed since it was last inspected.
   function inspectElementRaw(id: number): InspectedElement | null {
     let fiber = idToFiberMap.get(id);
 
@@ -1649,33 +1631,17 @@ export function attach(
     };
   }
 
-  let inspectedElementID: number | null = null;
-  let hasInspectedElementChanged: boolean = false;
-
-  function inspectElement(id: number): InspectedElementResponse | null {
-    if (inspectedElementID === id && !hasInspectedElementChanged) {
-      // Optimization: Don't resend (and reserialize) unchanged props.
-      return {
-        id,
-        inspectedElement: null,
-      };
-    }
-
-    inspectedElementID = id;
-    hasInspectedElementChanged = false;
-
-    let inspectedElement = inspectElementRaw(id);
-    if (inspectedElement === null) {
+  function inspectElement(id: number): InspectedElement | null {
+    let result = inspectElementRaw(id);
+    if (result === null) {
       return null;
     }
-
     // TODO Review sanitization approach for the below inspectable values.
-    inspectedElement.context = cleanForBridge(inspectedElement.context);
-    inspectedElement.hooks = cleanForBridge(inspectedElement.hooks);
-    inspectedElement.props = cleanForBridge(inspectedElement.props);
-    inspectedElement.state = cleanForBridge(inspectedElement.state);
-
-    return { id, inspectedElement };
+    result.context = cleanForBridge(result.context);
+    result.hooks = cleanForBridge(result.hooks);
+    result.props = cleanForBridge(result.props);
+    result.state = cleanForBridge(result.state);
+    return result;
   }
 
   function logElementToConsole(id) {

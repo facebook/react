@@ -65,11 +65,6 @@ export type InspectedElement = {|
   source: Object | null,
 |};
 
-export type InspectedElementResponse = {|
-  id: number,
-  inspectedElement: InspectedElement | null,
-|};
-
 // TODO: Add profiling type
 
 export type DehydratedData = {|

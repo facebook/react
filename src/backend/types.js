@@ -1,7 +1,7 @@
 // @flow
 
 import type { ElementType } from 'src/devtools/types';
-import type { InspectedElementResponse } from 'src/devtools/views/Components/types';
+import type { InspectedElement } from 'src/devtools/views/Components/types';
 
 type BundleType =
   | 0 // PROD
@@ -105,7 +105,7 @@ export type RendererInterface = {
   getProfilingSummary: (rootID: number) => ProfilingSummary,
   handleCommitFiberRoot: (fiber: Object) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,
-  inspectElement: (id: number) => InspectedElementResponse | null,
+  inspectElement: (id: number) => InspectedElement | null,
   logElementToConsole: (id: number) => void,
   overrideSuspense: (id: number, forceFallback: boolean) => void,
   prepareViewElementSource: (id: number) => void,
