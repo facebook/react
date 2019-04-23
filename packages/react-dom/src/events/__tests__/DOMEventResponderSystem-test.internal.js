@@ -16,6 +16,7 @@ let ReactSymbols;
 
 function createReactEventComponent(
   targetEventTypes,
+  rootEventTypes,
   createInitialState,
   onEvent,
   onEventCapture,
@@ -26,6 +27,7 @@ function createReactEventComponent(
 ) {
   const testEventResponder = {
     targetEventTypes,
+    rootEventTypes,
     createInitialState,
     onEvent,
     onEventCapture,
@@ -89,6 +91,7 @@ describe('DOMEventResponderSystem', () => {
 
     const ClickEventComponent = createReactEventComponent(
       ['click'],
+      undefined,
       undefined,
       (event, context, props) => {
         eventResponderFiredCount++;
@@ -163,6 +166,7 @@ describe('DOMEventResponderSystem', () => {
     const ClickEventComponent = createReactEventComponent(
       ['click'],
       undefined,
+      undefined,
       (event, context, props) => {
         eventLog.push({
           name: event.type,
@@ -216,6 +220,7 @@ describe('DOMEventResponderSystem', () => {
 
     const ClickEventComponent = createReactEventComponent(
       ['click'],
+      undefined,
       undefined,
       (event, context, props) => {
         eventResponderFiredCount++;
@@ -288,6 +293,7 @@ describe('DOMEventResponderSystem', () => {
     const ClickEventComponentA = createReactEventComponent(
       ['click'],
       undefined,
+      undefined,
       (event, context, props) => {
         eventLog.push(`A [bubble]`);
       },
@@ -298,6 +304,7 @@ describe('DOMEventResponderSystem', () => {
 
     const ClickEventComponentB = createReactEventComponent(
       ['click'],
+      undefined,
       undefined,
       (event, context, props) => {
         eventLog.push(`B [bubble]`);
@@ -335,6 +342,7 @@ describe('DOMEventResponderSystem', () => {
 
     const ClickEventComponent = createReactEventComponent(
       ['click'],
+      undefined,
       undefined,
       (event, context, props) => {
         eventLog.push(`${props.name} [bubble]`);
@@ -377,6 +385,7 @@ describe('DOMEventResponderSystem', () => {
     const ClickEventComponent = createReactEventComponent(
       ['click'],
       undefined,
+      undefined,
       (event, context, props) => {
         eventLog.push(`${props.name} [bubble]`);
       },
@@ -412,6 +421,7 @@ describe('DOMEventResponderSystem', () => {
 
     const ClickEventComponent = createReactEventComponent(
       ['click'],
+      undefined,
       undefined,
       (event, context, props) => {
         if (props.onMagicClick) {
@@ -505,6 +515,7 @@ describe('DOMEventResponderSystem', () => {
     const LongPressEventComponent = createReactEventComponent(
       ['click'],
       undefined,
+      undefined,
       (event, context, props) => {
         handleEvent(event, context, props, 'bubble');
       },
@@ -551,6 +562,7 @@ describe('DOMEventResponderSystem', () => {
       undefined,
       undefined,
       undefined,
+      undefined,
       (event, context, props, state) => {},
       () => {
         onUnmountFired++;
@@ -573,6 +585,7 @@ describe('DOMEventResponderSystem', () => {
 
     const EventComponent = createReactEventComponent(
       [],
+      undefined,
       () => ({
         incrementAmount: 5,
       }),
@@ -602,6 +615,7 @@ describe('DOMEventResponderSystem', () => {
 
     const EventComponent = createReactEventComponent(
       ['click'],
+      undefined,
       undefined,
       (event, context, props, state) => {
         ownershipGained = context.requestOwnership();
@@ -640,6 +654,7 @@ describe('DOMEventResponderSystem', () => {
 
     const EventComponent = createReactEventComponent(
       ['click'],
+      undefined,
       undefined,
       (event, context, props, state) => {
         queryResult = Array.from(
@@ -696,6 +711,7 @@ describe('DOMEventResponderSystem', () => {
     const EventComponent = createReactEventComponent(
       ['click'],
       undefined,
+      undefined,
       (event, context, props, state) => {
         queryResult = context.getEventTargetsFromTarget(
           event.target,
@@ -742,6 +758,7 @@ describe('DOMEventResponderSystem', () => {
 
     const EventComponent = createReactEventComponent(
       ['click'],
+      undefined,
       undefined,
       (event, context, props, state) => {
         queryResult = context.getEventTargetsFromTarget(
@@ -794,6 +811,7 @@ describe('DOMEventResponderSystem', () => {
 
     const EventComponent = createReactEventComponent(
       ['click'],
+      undefined,
       undefined,
       (event, context, props, state) => {
         queryResult = context.getEventTargetsFromTarget(
@@ -854,5 +872,49 @@ describe('DOMEventResponderSystem', () => {
       },
     ]);
     expect(queryResult3).toEqual([]);
+  });
+
+  it('the event responder root listeners should fire on a root click event', () => {
+    let eventResponderFiredCount = 0;
+    let eventLog = [];
+
+    const ClickEventComponent = createReactEventComponent(
+      undefined,
+      ['click'],
+      undefined,
+      undefined,
+      undefined,
+      event => {
+        eventResponderFiredCount++;
+        eventLog.push({
+          name: event.type,
+          passive: event.passive,
+          passiveSupported: event.passiveSupported,
+          phase: 'root',
+        });
+      },
+    );
+
+    const Test = () => (
+      <ClickEventComponent>
+        <button>Click me!</button>
+      </ClickEventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+    expect(container.innerHTML).toBe('<button>Click me!</button>');
+
+    // Clicking the button should trigger the event responder onEvent() twice
+    dispatchClickEvent(document.body);
+    expect(eventResponderFiredCount).toBe(1);
+    expect(eventLog.length).toBe(1);
+    expect(eventLog).toEqual([
+      {
+        name: 'click',
+        passive: false,
+        passiveSupported: false,
+        phase: 'root',
+      },
+    ]);
   });
 });

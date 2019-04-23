@@ -206,9 +206,20 @@ const eventResponderContext: ReactResponderContext = {
           rootEventComponentInstances,
         );
       }
-      rootEventComponentInstances.add(
-        ((currentInstance: any): ReactEventComponentInstance),
+      const componentInstance = ((currentInstance: any): ReactEventComponentInstance);
+      let rootEventTypesSet = componentInstance.rootEventTypes;
+      if (rootEventTypesSet === null) {
+        rootEventTypesSet = componentInstance.rootEventTypes = new Set();
+      }
+      invariant(
+        !rootEventTypesSet.has(topLevelEventType),
+        'addRootEventTypes() found a duplicate root event ' +
+          'type of "%s". This might be because the event type exists in the event responder "rootEventTypes" ' +
+          'array or because of a previous addRootEventTypes() using this root event type.',
+        rootEventType,
       );
+      rootEventTypesSet.add(topLevelEventType);
+      rootEventComponentInstances.add(componentInstance);
     }
   },
   removeRootEventTypes(
@@ -222,6 +233,11 @@ const eventResponderContext: ReactResponderContext = {
       let rootEventComponents = rootEventTypesToEventComponentInstances.get(
         topLevelEventType,
       );
+      let rootEventTypesSet = ((currentInstance: any): ReactEventComponentInstance)
+        .rootEventTypes;
+      if (rootEventTypesSet !== null) {
+        rootEventTypesSet.delete(topLevelEventType);
+      }
       if (rootEventComponents !== undefined) {
         rootEventComponents.delete(
           ((currentInstance: any): ReactEventComponentInstance),
@@ -636,6 +652,20 @@ export function unmountEventResponder(
   if (responder.onOwnershipChange !== undefined) {
     ownershipChangeListeners.delete(eventComponentInstance);
   }
+  const rootEventTypesSet = eventComponentInstance.rootEventTypes;
+  if (rootEventTypesSet !== null) {
+    const rootEventTypes = Array.from(rootEventTypesSet);
+
+    for (let i = 0; i < rootEventTypes.length; i++) {
+      const topLevelEventType = rootEventTypes[i];
+      let rootEventComponentInstances = rootEventTypesToEventComponentInstances.get(
+        topLevelEventType,
+      );
+      if (rootEventComponentInstances !== undefined) {
+        rootEventComponentInstances.delete(eventComponentInstance);
+      }
+    }
+  }
 }
 
 function validateResponderContext(): void {
@@ -669,5 +699,34 @@ export function dispatchEventForResponderEventSystem(
       currentInstance = null;
       currentEventQueue = null;
     }
+  }
+}
+
+export function addRootEventTypesForComponentInstance(
+  eventComponentInstance: ReactEventComponentInstance,
+  rootEventTypes: Array<ReactEventResponderEventType>,
+): void {
+  for (let i = 0; i < rootEventTypes.length; i++) {
+    const rootEventType = rootEventTypes[i];
+    const topLevelEventType =
+      typeof rootEventType === 'string' ? rootEventType : rootEventType.name;
+    let rootEventComponentInstances = rootEventTypesToEventComponentInstances.get(
+      topLevelEventType,
+    );
+    if (rootEventComponentInstances === undefined) {
+      rootEventComponentInstances = new Set();
+      rootEventTypesToEventComponentInstances.set(
+        topLevelEventType,
+        rootEventComponentInstances,
+      );
+    }
+    let rootEventTypesSet = eventComponentInstance.rootEventTypes;
+    if (rootEventTypesSet === null) {
+      rootEventTypesSet = eventComponentInstance.rootEventTypes = new Set();
+    }
+    rootEventTypesSet.add(topLevelEventType);
+    rootEventComponentInstances.add(
+      ((eventComponentInstance: any): ReactEventComponentInstance),
+    );
   }
 }
