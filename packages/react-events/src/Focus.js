@@ -12,14 +12,14 @@ import type {
   ReactResponderContext,
 } from 'shared/ReactTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
-
-const CAPTURE_PHASE = 2;
+import {getEventCurrentTarget} from './utils.js';
 
 type FocusProps = {
   disabled: boolean,
   onBlur: (e: FocusEvent) => void,
   onFocus: (e: FocusEvent) => void,
   onFocusChange: boolean => void,
+  stopPropagation: boolean,
 };
 
 type FocusState = {
@@ -110,30 +110,28 @@ const FocusResponder = {
     context: ReactResponderContext,
     props: Object,
     state: FocusState,
-  ): boolean {
-    const {type, phase, target} = event;
-    const shouldStopPropagation =
-      props.stopPropagation === undefined ? true : props.stopPropagation;
+  ): void {
+    const {type, target} = event;
 
-    // Focus doesn't handle capture target events at this point
-    if (phase === CAPTURE_PHASE) {
-      return false;
+    if (props.disabled) {
+      if (state.isFocused) {
+        dispatchFocusOutEvents(context, props, state);
+        state.isFocused = false;
+        state.focusTarget = null;
+      }
+      return;
     }
+
     switch (type) {
       case 'focus': {
         if (!state.isFocused) {
           // Limit focus events to the direct child of the event component.
           // Browser focus is not expected to bubble.
-          let currentTarget = (target: any);
-          if (
-            currentTarget.parentNode &&
-            context.isTargetWithinEventComponent(currentTarget.parentNode)
-          ) {
-            break;
+          state.focusTarget = getEventCurrentTarget(event, context);
+          if (state.focusTarget === target) {
+            dispatchFocusInEvents(context, props, state);
+            state.isFocused = true;
           }
-          state.focusTarget = currentTarget;
-          dispatchFocusInEvents(context, props, state);
-          state.isFocused = true;
         }
         break;
       }
@@ -146,7 +144,6 @@ const FocusResponder = {
         break;
       }
     }
-    return shouldStopPropagation;
   },
   onUnmount(
     context: ReactResponderContext,

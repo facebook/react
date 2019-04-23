@@ -29,6 +29,7 @@ const TextField = (props) => (
 ```js
 // Types
 type FocusEvent = {
+  target: Element,
   type: 'blur' | 'focus' | 'focuschange'
 }
 ```
@@ -80,6 +81,7 @@ const Link = (props) => (
 // Types
 type HoverEvent = {
   pointerType: 'mouse',
+  target: Element,
   type: 'hoverstart' | 'hoverend' | 'hovermove' | 'hoverchange'
 }
 ```
@@ -123,10 +125,6 @@ be called more than once before `onHoverEnd` is called.
 
 Whether to `preventDefault()` native events.
 
-### stopPropagation: boolean = true
-
-Whether to `stopPropagation()` native events.
-
 
 ## Press
 
@@ -165,6 +163,7 @@ const Button = (props) => (
 // Types
 type PressEvent = {
   pointerType: 'mouse' | 'touch' | 'pen' | 'keyboard',
+  target: Element,
   type: 'press' | 'pressstart' | 'pressend' | 'presschange' | 'pressmove' | 'longpress' | 'longpresschange'
 }
 
@@ -250,8 +249,9 @@ Ensure you pass in a constant to reduce memory allocations.
 
 ### preventDefault: boolean = true
 
-Whether to `preventDefault()` native events.
-
-### stopPropagation: boolean = true
-
-Whether to `stopPropagation()` native events.
+Whether to `preventDefault()` native events. Native behavior is prevented by
+default. If an anchor is the child of `Press`, internal and external navigation
+should be performed in `onPress`/`onLongPress`. To rely on native behavior
+instead, set `preventDefault` to `false`, but be aware that native behavior will
+take place immediately after interaction without respect for delays or long
+press.
