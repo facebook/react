@@ -272,4 +272,25 @@ describe('ReactExpiration', () => {
     expect(Scheduler).toFlushExpired([]);
     expect(ReactNoop).toMatchRenderedOutput('Hi');
   });
+
+  it('should measure callback timeout relative to current time, not start-up time', () => {
+    // Corresponds to a bugfix: https://github.com/facebook/react/pull/15479
+    // The bug wasn't caught by other tests because we use virtual times that
+    // default to 0, and most tests don't advance time.
+
+    // Before scheduling an update, advance the current time.
+    Scheduler.advanceTime(10000);
+
+    ReactNoop.render('Hi');
+    expect(Scheduler).toFlushExpired([]);
+    expect(ReactNoop).toMatchRenderedOutput(null);
+
+    // Advancing by ~5 seconds should be sufficient to expire the update. (I
+    // used a slightly larger number to allow for possible rounding.)
+    Scheduler.advanceTime(6000);
+
+    ReactNoop.render('Hi');
+    expect(Scheduler).toFlushExpired([]);
+    expect(ReactNoop).toMatchRenderedOutput('Hi');
+  });
 });
