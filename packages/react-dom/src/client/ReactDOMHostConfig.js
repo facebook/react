@@ -34,6 +34,7 @@ import {
   setEnabled as ReactBrowserEventEmitterSetEnabled,
 } from '../events/ReactBrowserEventEmitter';
 import {Namespaces, getChildNamespace} from '../shared/DOMNamespaces';
+import {addRootEventTypesForComponentInstance} from '../events/DOMEventResponderSystem';
 import {
   ELEMENT_NODE,
   TEXT_NODE,
@@ -906,10 +907,18 @@ export function updateEventComponent(
   if (enableEventAPI) {
     const rootContainerInstance = ((eventComponentInstance.rootInstance: any): Container);
     const rootElement = rootContainerInstance.ownerDocument;
-    listenToEventResponderEventTypes(
-      eventComponentInstance.responder.targetEventTypes,
-      rootElement,
-    );
+    const responder = eventComponentInstance.responder;
+    const {rootEventTypes, targetEventTypes} = responder;
+    if (targetEventTypes !== undefined) {
+      listenToEventResponderEventTypes(targetEventTypes, rootElement);
+    }
+    if (rootEventTypes !== undefined) {
+      addRootEventTypesForComponentInstance(
+        eventComponentInstance,
+        rootEventTypes,
+      );
+      listenToEventResponderEventTypes(rootEventTypes, rootElement);
+    }
   }
 }
 

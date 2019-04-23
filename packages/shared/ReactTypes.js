@@ -86,7 +86,8 @@ export type ReactEventResponderEventType =
   | {name: string, passive?: boolean, capture?: boolean};
 
 export type ReactEventResponder = {
-  targetEventTypes: Array<ReactEventResponderEventType>,
+  targetEventTypes?: Array<ReactEventResponderEventType>,
+  rootEventTypes?: Array<ReactEventResponderEventType>,
   createInitialState?: (props: null | Object) => Object,
   stopLocalPropagation: boolean,
   onEvent?: (
@@ -123,6 +124,7 @@ export type ReactEventComponentInstance = {|
   context: null | Object,
   props: null | Object,
   responder: ReactEventResponder,
+  rootEventTypes: null | Set<string>,
   rootInstance: mixed,
   state: null | Object,
 |};

@@ -816,6 +816,7 @@ function completeWork(
             context: null,
             props: newProps,
             responder,
+            rootEventTypes: null,
             rootInstance: rootContainerInstance,
             state: responderState,
           };
