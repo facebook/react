@@ -703,8 +703,7 @@ function renderRoot(
 
   if (enableUserTimingAPI && expirationTime !== Sync) {
     const didExpire = isSync;
-    const timeoutMs = expirationTimeToMs(expirationTime);
-    stopRequestCallbackTimer(didExpire, timeoutMs);
+    stopRequestCallbackTimer(didExpire);
   }
 
   if (root.firstPendingTime < expirationTime) {
