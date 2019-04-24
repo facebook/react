@@ -94,7 +94,9 @@ const targetEventTypes = [
   {name: 'keydown', passive: false},
   {name: 'keypress', passive: false},
   {name: 'contextmenu', passive: false},
-  'pointerdown',
+  // We need to preventDefault on pointerdown for mouse/pen events
+  // that are in hit target area but not the element area.
+  {name: 'pointerdown', passive: false},
   'pointercancel',
 ];
 const rootEventTypes = ['keyup', 'pointerup', 'pointermove', 'scroll'];
@@ -447,15 +449,18 @@ const PressResponder = {
             }
           }
 
-          // Ignore emulated mouse events and mouse pressing on touch hit target
-          // area
-          if (type === 'mousedown') {
-            if (
-              state.ignoreEmulatedMouseEvents ||
-              isEventPositionWithinTouchHitTarget(event, context)
-            ) {
-              return;
-            }
+          // Ignore emulated mouse events
+          if (type === 'mousedown' && state.ignoreEmulatedMouseEvents) {
+            return;
+          }
+          // Ignore mouse/pen pressing on touch hit target area
+          if (
+            (pointerType === 'mouse' || pointerType === 'pen') &&
+            isEventPositionWithinTouchHitTarget(event, context)
+          ) {
+            // We need to prevent the native event to block the focus
+            nativeEvent.preventDefault();
+            return;
           }
 
           // Ignore any device buttons except left-mouse and touch/pen contact

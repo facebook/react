@@ -595,9 +595,41 @@ function commitLifeCycles(
     }
     case SuspenseComponent:
     case IncompleteClassComponent:
-    case EventTarget:
-    case EventComponent:
-      break;
+      return;
+    case EventTarget: {
+      if (enableEventAPI) {
+        const type = finishedWork.type.type;
+        const props = finishedWork.memoizedProps;
+        const instance = finishedWork.stateNode;
+        let parentInstance = null;
+
+        let node = finishedWork.return;
+        // Traverse up the fiber tree until we find the parent host node.
+        while (node !== null) {
+          if (node.tag === HostComponent) {
+            parentInstance = node.stateNode;
+            break;
+          } else if (node.tag === HostRoot) {
+            parentInstance = node.stateNode.containerInfo;
+            break;
+          }
+          node = node.return;
+        }
+        invariant(
+          parentInstance !== null,
+          'This should have a parent host component initialized. This error is likely ' +
+            'caused by a bug in React. Please file an issue.',
+        );
+        commitEventTarget(type, props, instance, parentInstance);
+      }
+      return;
+    }
+    case EventComponent: {
+      if (enableEventAPI) {
+        mountEventComponent(finishedWork.stateNode);
+      }
+      return;
+    }
     default: {
       invariant(
         false,
@@ -1218,31 +1250,6 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       return;
     }
     case EventTarget: {
-      if (enableEventAPI) {
-        const type = finishedWork.type.type;
-        const props = finishedWork.memoizedProps;
-        const instance = finishedWork.stateNode;
-        let parentInstance = null;
-
-        let node = finishedWork.return;
-        // Traverse up the fiber tree until we find the parent host node.
-        while (node !== null) {
-          if (node.tag === HostComponent) {
-            parentInstance = node.stateNode;
-            break;
-          } else if (node.tag === HostRoot) {
-            parentInstance = node.stateNode.containerInfo;
-            break;
-          }
-          node = node.return;
-        }
-        invariant(
-          parentInstance !== null,
-          'This should have a parent host component initialized. This error is likely ' +
-            'caused by a bug in React. Please file an issue.',
-        );
-        commitEventTarget(type, props, instance, parentInstance);
-      }
       return;
     }
     case HostRoot: {
@@ -1259,7 +1266,6 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       return;
     }
     case EventComponent: {
-      mountEventComponent(finishedWork.stateNode);
       return;
     }
     default: {

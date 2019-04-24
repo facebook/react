@@ -108,7 +108,7 @@ const FocusResponder = {
   onEvent(
     event: ReactResponderEvent,
     context: ReactResponderContext,
-    props: Object,
+    props: FocusProps,
     state: FocusState,
   ): void {
     const {type, target} = event;
