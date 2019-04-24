@@ -540,7 +540,7 @@ export default class Store extends EventEmitter {
         // The Tree context's search reducer expects an explicit list of ids for nodes that were added or removed.
         // In this  case, we can pass it empty arrays since nodes in a collapsed tree are still there (just hidden).
         // Updating the selected search index later may require auto-expanding a collapsed subtree though.
-        this.emit('mutated', [[], []]);
+        this.emit('mutated', [[], new Map()]);
       }
     }
   }
@@ -625,7 +625,9 @@ export default class Store extends EventEmitter {
     }
 
     const addedElementIDs: Array<number> = [];
-    const removedElementIDs: Array<number> = [];
+    // This is a mapping of removed ID -> parent ID:
+    const removedElementIDs: Map<number, number> = new Map();
+    // We'll use the parent ID to adjust selection if it gets deleted.
 
     let i = 2;
     while (i < operations.length) {
@@ -789,7 +791,7 @@ export default class Store extends EventEmitter {
             }
 
             this._adjustParentTreeWeight(parentElement, -element.weight);
-            removedElementIDs.push(id);
+            removedElementIDs.set(id, parentID);
           }
           break;
         }
@@ -871,10 +873,7 @@ export default class Store extends EventEmitter {
       console.groupEnd();
     }
 
-    this.emit('mutated', [
-      new Uint32Array(addedElementIDs),
-      new Uint32Array(removedElementIDs),
-    ]);
+    this.emit('mutated', [addedElementIDs, removedElementIDs]);
   };
 
   onProfilingStatus = (isProfiling: boolean) => {
