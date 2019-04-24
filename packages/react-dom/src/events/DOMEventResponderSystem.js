@@ -24,7 +24,6 @@ import type {
   ReactResponderContext,
   ReactResponderEvent,
   ReactResponderDispatchEventOptions,
-  ReactEventTargetObject,
 } from 'shared/ReactTypes';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 import {batchedUpdates, interactiveUpdates} from 'events/ReactGenericBatching';
@@ -325,132 +324,17 @@ const eventResponderContext: ReactResponderContext = {
       }
     }
   },
-  isTargetDirectlyWithinEventTarget(target: Element | Document): boolean {
-    validateResponderContext();
-    const eventTargetFiber = getChildEventTargetFiberFromTarget(target);
-    return eventTargetFiber !== null;
-  },
-  getEventTargetsWithinEventComponent(
-    queryType?: Symbol | number,
-    queryKey?: string,
-  ): Array<ReactEventTargetObject> {
-    validateResponderContext();
-    const eventTargetObjects = [];
-    const eventTargetFibers = getEventTargetFibersWithinCurrentEventComponent(
-      queryType,
-      queryKey,
-    );
-    for (let i = 0; i < eventTargetFibers.length; i++) {
-      const eventTargetFiber = eventTargetFibers[i];
-      const eventTargetObject = getEventTargetObject(eventTargetFiber);
-      if (eventTargetObject !== null) {
-        eventTargetObjects.push(eventTargetObject);
-      }
-    }
-    return eventTargetObjects;
-  },
-  isTargetFirstEventTargetOfScope(target: Element | Document): boolean {
-    validateResponderContext();
-    const eventTargetFiber = getChildEventTargetFiberFromTarget(target);
-    invariant(
-      eventTargetFiber !== null,
-      'isTargetFirstEventTargetOfScope: was called with a target that was not a direct event target.',
-    );
-    const eventTargetFibers = getEventTargetFibersWithinCurrentEventComponent();
-    return eventTargetFibers.indexOf(eventTargetFiber) === 0;
-  },
-  isTargetLastEventTargetOfScope(target: Element | Document): boolean {
-    validateResponderContext();
-    const eventTargetFiber = getChildEventTargetFiberFromTarget(target);
-    invariant(
-      eventTargetFiber !== null,
-      'isTargetLastEventTargetOfScope: was called with a target that was not a direct event target.',
-    );
-    const eventTargetFibers = getEventTargetFibersWithinCurrentEventComponent();
-    return (
-      eventTargetFibers.indexOf(eventTargetFiber) ===
-      eventTargetFibers.length - 1
-    );
-  },
-  getPreviousEventTargetFromTarget(
-    target: Element | Document,
-    queryType?: Symbol | number,
-    queryKey?: string,
-  ): null | ReactEventTargetObject {
-    validateResponderContext();
-    const eventTargetFiber = getChildEventTargetFiberFromTarget(target);
-    invariant(
-      eventTargetFiber !== null,
-      'getNextEventTargetFromTarget: was called with a target that was not a direct event target.',
-    );
-    const nodeToEndOn = eventTargetFiber.return;
+  getFocusableElementsInScope(): Array<HTMLElement> {
+    const focusableElements = [];
     const eventComponentInstance = ((currentInstance: any): ReactEventComponentInstance);
     let node = ((eventComponentInstance.currentFiber: any): Fiber).child;
-    let lastFoundEventTargetFiber = null;
-
-    // We start from the event component fiber and traverse down all fibers till
-    // we hit the node to end on (the current node). Given we're trying to find
-    // the previous sibling event target fiber, it will be the last recorded
-    // fiber (lastFoundEventTargetFiber).
-    while (node !== null) {
-      if (node === nodeToEndOn && lastFoundEventTargetFiber !== null) {
-        return getEventTargetObject(lastFoundEventTargetFiber);
-      }
-      if (
-        node ===
-        ((currentInstance: any): ReactEventComponentInstance).currentFiber
-      ) {
-        return null;
-      }
-      if (
-        node.tag === EventTargetWorkTag &&
-        queryEventTarget(node, queryType, queryKey)
-      ) {
-        lastFoundEventTargetFiber = node;
-      } else {
-        const child = node.child;
-
-        if (child !== null) {
-          node = child;
-          continue;
-        }
-      }
-      const sibling = node.sibling;
-
-      if (sibling !== null) {
-        node = sibling;
-        continue;
-      }
-      const parent = node.return;
-      if (parent === null) {
-        break;
-      }
-      node = parent.sibling;
-    }
-    return null;
-  },
-  getNextEventTargetFromTarget(
-    target: Element | Document,
-    queryType?: Symbol | number,
-    queryKey?: string,
-  ): null | ReactEventTargetObject {
-    validateResponderContext();
-    const eventTargetFiber = getChildEventTargetFiberFromTarget(target);
-    invariant(
-      eventTargetFiber !== null,
-      'getNextEventTargetFromTarget: was called with a target that was not a direct event target.',
-    );
-    let node = ((eventTargetFiber.return: any): Fiber).sibling;
 
     while (node !== null) {
       if (node.stateNode === currentInstance) {
-        return null;
-      }
-      if (
-        node.tag === EventTargetWorkTag &&
-        queryEventTarget(node, queryType, queryKey)
-      ) {
         break;
+      }
+      if (isFiberHostComponentFocusable(node)) {
+        focusableElements.push(node.stateNode);
       } else {
         const child = node.child;
 
@@ -471,87 +355,32 @@ const eventResponderContext: ReactResponderContext = {
       }
       node = parent.sibling;
     }
-    if (node === null) {
-      return null;
-    }
-    return getEventTargetObject(node);
+
+    return focusableElements;
   },
 };
 
-function getChildEventTargetFiberFromTarget(
-  target: Element | Document,
-): null | Fiber {
-  const fiber = getClosestInstanceFromNode(target);
-  if (fiber === null) {
-    return null;
+function isFiberHostComponentFocusable(fiber: Fiber): boolean {
+  if (fiber.tag !== HostComponent) {
+    return false;
   }
-  let child = fiber.child;
-  while (child !== null) {
-    if (child.tag === EventTargetWorkTag) {
-      return child;
-    }
-    child = child.sibling;
+  const {type, memoizedProps} = fiber;
+  if (memoizedProps.tabIndex === -1 || memoizedProps.disabled) {
+    return false;
   }
-  return null;
-}
-
-function getEventTargetFibersWithinCurrentEventComponent(
-  queryType?: Symbol | number,
-  queryKey?: string,
-): Array<Fiber> {
-  const eventTargetFibers = [];
-  const eventComponentInstance = ((currentInstance: any): ReactEventComponentInstance);
-  let node = ((eventComponentInstance.currentFiber: any): Fiber).child;
-
-  while (node !== null) {
-    if (node.stateNode === currentInstance) {
-      break;
-    }
-    if (
-      node.tag === EventTargetWorkTag &&
-      queryEventTarget(node, queryType, queryKey)
-    ) {
-      eventTargetFibers.push(node);
-    } else {
-      const child = node.child;
-
-      if (child !== null) {
-        node = child;
-        continue;
-      }
-    }
-    const sibling = node.sibling;
-
-    if (sibling !== null) {
-      node = sibling;
-      continue;
-    }
-    const parent = node.return;
-    if (parent === null) {
-      break;
-    }
-    node = parent.sibling;
+  if (memoizedProps.tabIndex === 0) {
+    return true;
   }
-  return eventTargetFibers;
-}
-
-function getEventTargetObject(node: Fiber): null | ReactEventTargetObject {
-  const props = node.stateNode.props;
-  let parent = node.return;
-
-  while (parent !== null) {
-    if (parent.stateNode === currentInstance) {
-      return null;
-    }
-    if (parent.tag === HostComponent) {
-      return {
-        node: parent.stateNode,
-        props,
-      };
-    }
-    parent = parent.return;
+  if (type === 'a' || type === 'area') {
+    return !!memoizedProps.href;
   }
-  return null;
+  return (
+    type === 'button' ||
+    type === 'textarea' ||
+    type === 'input' ||
+    type === 'object' ||
+    type === 'select'
+  );
 }
 
 function processTimers(timers: Map<Symbol, ResponderTimer>): void {
@@ -573,20 +402,6 @@ function processTimers(timers: Map<Symbol, ResponderTimer>): void {
     currentInstance = null;
     currentEventQueue = null;
   }
-}
-
-function queryEventTarget(
-  child: Fiber,
-  queryType: void | Symbol | number,
-  queryKey: void | string,
-): boolean {
-  if (queryType !== undefined && child.type.type !== queryType) {
-    return false;
-  }
-  if (queryKey !== undefined && child.key !== queryKey) {
-    return false;
-  }
-  return true;
 }
 
 function createResponderEvent(

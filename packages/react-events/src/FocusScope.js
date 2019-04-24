@@ -11,10 +11,7 @@ import type {
   ReactResponderEvent,
   ReactResponderContext,
 } from 'shared/ReactTypes';
-import {
-  REACT_EVENT_COMPONENT_TYPE,
-  REACT_EVENT_FOCUS_SCOPE_TARGET,
-} from 'shared/ReactSymbols';
+import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
 type FocusScopeProps = {
   autoFocus: Boolean,
@@ -36,12 +33,11 @@ function focusFirstChildEventTarget(
   context: ReactResponderContext,
   state: FocusScopeState,
 ): void {
-  const eventTargets = context.getEventTargetsWithinEventComponent();
-  if (eventTargets.length > 0) {
-    const firstEventTarget = eventTargets[0];
-    const elem = ((firstEventTarget.node: any): HTMLElement);
-    elem.focus();
-    state.currentFocusedNode = elem;
+  const elements = context.getFocusableElementsInScope();
+  if (elements.length > 0) {
+    const firstElement = elements[0];
+    firstElement.focus();
+    state.currentFocusedNode = firstElement;
   }
 }
 
@@ -49,13 +45,12 @@ function focusLastChildEventTarget(
   context: ReactResponderContext,
   state: FocusScopeState,
 ): void {
-  const eventTargets = context.getEventTargetsWithinEventComponent();
-  const length = eventTargets.length;
-  if (length > 0) {
-    const lastEventTarget = eventTargets[length - 1];
-    const elem = ((lastEventTarget.node: any): HTMLElement);
-    elem.focus();
-    state.currentFocusedNode = elem;
+  const elements = context.getFocusableElementsInScope();
+  const length = elements.length;
+  if (elements.length > 0) {
+    const lastElement = elements[length - 1];
+    lastElement.focus();
+    state.currentFocusedNode = lastElement;
   }
 }
 
@@ -77,52 +72,28 @@ const FocusScopeResponder = {
 
     if (props.trap) {
       if (type === 'focus') {
-        if (context.isTargetWithinEventComponent(target)) {
-          if (context.isTargetDirectlyWithinEventTarget(target)) {
-            state.currentFocusedNode = ((target: any): HTMLElement);
+        if (!context.isTargetWithinEventComponent(target)) {
+          if (state.currentFocusedNode !== null) {
+            state.currentFocusedNode.focus();
           } else {
-            if (state.currentFocusedNode !== null) {
-              state.currentFocusedNode.focus();
-            } else {
-              focusFirstChildEventTarget(context, state);
-            }
+            focusFirstChildEventTarget(context, state);
           }
         }
       } else if (type === 'keydown' && nativeEvent.key === 'Tab') {
         const currentFocusedNode = state.currentFocusedNode;
         if (currentFocusedNode !== null) {
+          const elements = context.getFocusableElementsInScope();
           if (nativeEvent.shiftKey) {
-            if (context.isTargetFirstEventTargetOfScope(currentFocusedNode)) {
+            if (elements.indexOf(currentFocusedNode) === 0) {
               focusLastChildEventTarget(context, state);
-            } else {
-              const previousTarget = context.getPreviousEventTargetFromTarget(
-                currentFocusedNode,
-                REACT_EVENT_FOCUS_SCOPE_TARGET,
-              );
-
-              if (previousTarget !== null) {
-                const elem = ((previousTarget.node: any): HTMLElement);
-                elem.focus();
-                state.currentFocusedNode = elem;
-              }
+              ((nativeEvent: any): KeyboardEvent).preventDefault();
             }
-          } else if (
-            context.isTargetLastEventTargetOfScope(currentFocusedNode)
-          ) {
-            focusFirstChildEventTarget(context, state);
           } else {
-            const nextTarget = context.getNextEventTargetFromTarget(
-              currentFocusedNode,
-              REACT_EVENT_FOCUS_SCOPE_TARGET,
-            );
-
-            if (nextTarget !== null) {
-              const elem = ((nextTarget.node: any): HTMLElement);
-              elem.focus();
-              state.currentFocusedNode = elem;
+            if (elements.indexOf(currentFocusedNode) === elements.length - 1) {
+              focusFirstChildEventTarget(context, state);
+              ((nativeEvent: any): KeyboardEvent).preventDefault();
             }
           }
-          ((nativeEvent: any): KeyboardEvent).preventDefault();
         }
       }
     }

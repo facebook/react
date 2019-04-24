@@ -25,7 +25,6 @@ import {
   REACT_EVENT_COMPONENT_TYPE,
   REACT_EVENT_TARGET_TYPE,
   REACT_EVENT_TARGET_TOUCH_HIT,
-  REACT_EVENT_FOCUS_SCOPE_TARGET,
 } from 'shared/ReactSymbols';
 import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
 import type {ReactEventComponent, ReactEventTarget} from 'shared/ReactTypes';
@@ -111,8 +110,6 @@ function getComponentName(type: mixed): string | null {
           const eventTarget = ((type: any): ReactEventTarget);
           if (eventTarget.type === REACT_EVENT_TARGET_TOUCH_HIT) {
             return 'TouchHitTarget';
-          } else if (eventTarget.type === REACT_EVENT_FOCUS_SCOPE_TARGET) {
-            return 'FocusScopeTarget';
           }
           const displayName = eventTarget.displayName;
           if (displayName !== undefined) {

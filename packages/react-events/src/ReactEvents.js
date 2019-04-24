@@ -10,16 +10,10 @@
 import {
   REACT_EVENT_TARGET_TYPE,
   REACT_EVENT_TARGET_TOUCH_HIT,
-  REACT_EVENT_FOCUS_SCOPE_TARGET,
 } from 'shared/ReactSymbols';
 import type {ReactEventTarget} from 'shared/ReactTypes';
 
 export const TouchHitTarget: ReactEventTarget = {
   $$typeof: REACT_EVENT_TARGET_TYPE,
   type: REACT_EVENT_TARGET_TOUCH_HIT,
-};
-
-export const FocusScopeTarget: ReactEventTarget = {
-  $$typeof: REACT_EVENT_TARGET_TYPE,
-  type: REACT_EVENT_FOCUS_SCOPE_TARGET,
 };

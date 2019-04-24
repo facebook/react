@@ -161,11 +161,6 @@ export type ReactResponderDispatchEventOptions = {
   discrete?: boolean,
 };
 
-export type ReactEventTargetObject = {
-  node: Element,
-  props: null | Object,
-};
-
 export type ReactResponderContext = {
   dispatchEvent: (
     eventObject: Object,
@@ -195,21 +190,5 @@ export type ReactResponderContext = {
   releaseOwnership: () => boolean,
   setTimeout: (func: () => void, timeout: number) => Symbol,
   clearTimeout: (timerId: Symbol) => void,
-  getEventTargetsWithinEventComponent: (
-    queryType?: Symbol | number,
-    queryKey?: string,
-  ) => Array<ReactEventTargetObject>,
-  isTargetDirectlyWithinEventTarget: (Element | Document) => boolean,
-  isTargetFirstEventTargetOfScope: (Element | Document) => boolean,
-  isTargetLastEventTargetOfScope: (Element | Document) => boolean,
-  getPreviousEventTargetFromTarget(
-    target: Element | Document,
-    queryType?: Symbol | number,
-    queryKey?: string,
-  ): null | ReactEventTargetObject,
-  getNextEventTargetFromTarget(
-    target: Element | Document,
-    queryType?: Symbol | number,
-    queryKey?: string,
-  ): null | ReactEventTargetObject,
+  getFocusableElementsInScope(): Array<HTMLElement>,
 };

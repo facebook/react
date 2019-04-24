@@ -50,10 +50,7 @@ import {
   mountEventResponder,
   unmountEventResponder,
 } from '../events/DOMEventResponderSystem';
-import {
-  REACT_EVENT_TARGET_TOUCH_HIT,
-  REACT_EVENT_FOCUS_SCOPE_TARGET,
-} from 'shared/ReactSymbols';
+import {REACT_EVENT_TARGET_TOUCH_HIT} from 'shared/ReactSymbols';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 
 export type Type = string;
@@ -975,8 +972,6 @@ export function handleEventTarget(
     (props.left || props.right || props.top || props.bottom)
   ) {
     return true;
-  } else if (type === REACT_EVENT_FOCUS_SCOPE_TARGET) {
-    return true;
   }
   return false;
 }
@@ -1011,8 +1006,6 @@ export function commitEventTarget(
             ' Try using a "z-index" value of "0" or greater.',
         );
       }
-    } else if (type === REACT_EVENT_FOCUS_SCOPE_TARGET) {
-      ((parentInstance: any): HTMLElement).tabIndex = 0;
     }
   }
 }
