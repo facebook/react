@@ -19,7 +19,6 @@ import type {
 import React from 'react';
 // Modules provided by RN:
 import TextInputState from 'TextInputState';
-import * as FabricUIManager from 'FabricUIManager';
 import UIManager from 'UIManager';
 
 import {create} from './ReactNativeAttributePayload';
@@ -101,7 +100,8 @@ export default function(
       }
 
       if (maybeInstance.canonical) {
-        FabricUIManager.measure(
+        // Must be inlined to avoid loading this before Fabric is set up
+        require('FabricUIManager').measure(
           maybeInstance.node,
           mountSafeCallback_NOT_REALLY_SAFE(this, callback),
         );
@@ -144,7 +144,8 @@ export default function(
       }
 
       if (maybeInstance.canonical) {
-        FabricUIManager.measureInWindow(
+        // Must be inlined to avoid loading this before Fabric is set up
+        require('FabricUIManager').measureInWindow(
           maybeInstance.node,
           mountSafeCallback_NOT_REALLY_SAFE(this, callback),
         );
