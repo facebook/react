@@ -69,7 +69,6 @@ describe('DOMEventResponderSystem', () => {
     ReactDOM = require('react-dom');
     container = document.createElement('div');
     document.body.appendChild(container);
-    ReactSymbols = require('shared/ReactSymbols');
   });
 
   afterEach(() => {
