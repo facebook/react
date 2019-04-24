@@ -73,7 +73,7 @@ const FocusScopeResponder = {
     if (props.trap) {
       if (type === 'focus') {
         if (context.isTargetWithinEventComponent(target)) {
-          state.currentFocusedNode = target;
+          state.currentFocusedNode = ((target: any): HTMLElement);
         } else {
           if (state.currentFocusedNode !== null) {
             state.currentFocusedNode.focus();
