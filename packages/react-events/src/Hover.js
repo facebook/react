@@ -99,7 +99,7 @@ function dispatchHoverStartEvents(
   if (event !== null) {
     const {nativeEvent} = event;
     if (
-      context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)
+      context.isTargetDirectlyWithinEventComponent((nativeEvent: any).relatedTarget)
     ) {
       return;
     }
@@ -156,7 +156,7 @@ function dispatchHoverEndEvents(
   if (event !== null) {
     const {nativeEvent} = event;
     if (
-      context.isTargetWithinEventComponent((nativeEvent: any).relatedTarget)
+      context.isTargetDirectlyWithinEventComponent((nativeEvent: any).relatedTarget)
     ) {
       return;
     }

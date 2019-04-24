@@ -443,18 +443,17 @@ describe('Hover event responder', () => {
         createPointerEvent('pointerover', {relatedTarget: innerRef.current}),
       );
       outerRef.current.dispatchEvent(createPointerEvent('pointerout'));
-      // TODO: correct result should include commented events
       expect(events).toEqual([
         'outer: onHoverStart',
         'outer: onHoverChange',
-        // 'outer: onHoverEnd',
-        // 'outer: onHoverChange',
+        'outer: onHoverEnd',
+        'outer: onHoverChange',
         'inner: onHoverStart',
         'inner: onHoverChange',
         'inner: onHoverEnd',
         'inner: onHoverChange',
-        // 'outer: onHoverStart',
-        // 'outer: onHoverChange',
+        'outer: onHoverStart',
+        'outer: onHoverChange',
         'outer: onHoverEnd',
         'outer: onHoverChange',
       ]);
