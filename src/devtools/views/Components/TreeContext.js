@@ -40,7 +40,6 @@ import type { Element } from './types';
 
 type StateContext = {|
   // Tree
-  baseDepth: number,
   numElements: number,
   selectedElementID: number | null,
   selectedElementIndex: number | null,
@@ -51,7 +50,7 @@ type StateContext = {|
   searchText: string,
 
   // Owners
-  ownerFlatTree: Array<number> | null,
+  ownerFlatTree: Array<Element> | null,
   ownerStack: Array<number>,
   ownerStackIndex: number | null,
 
@@ -133,7 +132,6 @@ TreeDispatcherContext.displayName = 'TreeDispatcherContext';
 
 type State = {|
   // Tree
-  baseDepth: number,
   numElements: number,
   selectedElementID: number | null,
   selectedElementIndex: number | null,
@@ -146,7 +144,7 @@ type State = {|
   // Owners
   ownerStack: Array<number>,
   ownerStackIndex: number | null,
-  ownerFlatTree: Array<number> | null,
+  ownerFlatTree: Array<Element> | null,
 
   // Inspection element panel
   inspectedElementID: number | null,
@@ -441,7 +439,6 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
 
 function reduceOwnersState(store: Store, state: State, action: Action): State {
   let {
-    baseDepth,
     numElements,
     selectedElementID,
     selectedElementIndex,
@@ -477,7 +474,9 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
         }
         if (selectedElementID !== null && ownerFlatTree !== null) {
           // Mutation might have caused the index of this ID to shift.
-          selectedElementIndex = ownerFlatTree.indexOf(selectedElementID);
+          selectedElementIndex = ownerFlatTree.findIndex(
+            element => element.id === selectedElementID
+          );
         }
       } else {
         if (selectedElementID !== null) {
@@ -509,7 +508,9 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
       if (ownerFlatTree !== null) {
         const payload = (action: ACTION_SELECT_ELEMENT_BY_ID).payload;
         selectedElementIndex =
-          payload === null ? null : ownerFlatTree.indexOf(payload);
+          payload === null
+            ? null
+            : ownerFlatTree.findIndex(element => element.id === payload);
       }
       break;
     case 'SELECT_NEXT_ELEMENT_IN_TREE':
@@ -574,18 +575,11 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
   ) {
     if (ownerStackIndex === null) {
       ownerFlatTree = null;
-      baseDepth = 0;
       numElements = store.numElements;
     } else {
-      ownerFlatTree = calculateCurrentOwnerList(
-        store,
-        ownerStack[ownerStackIndex],
-        ownerStack[ownerStackIndex],
-        []
+      ownerFlatTree = store.getOwnersListForElement(
+        ownerStack[ownerStackIndex]
       );
-
-      baseDepth = ((store.getElementByID(ownerFlatTree[0]): any): Element)
-        .depth;
       numElements = ownerFlatTree.length;
     }
   }
@@ -595,14 +589,14 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
     if (selectedElementIndex === null) {
       selectedElementID = null;
     } else if (ownerFlatTree !== null) {
-      selectedElementID = ownerFlatTree[((selectedElementIndex: any): number)];
+      selectedElementID =
+        ownerFlatTree[((selectedElementIndex: any): number)].id;
     }
   }
 
   return {
     ...state,
 
-    baseDepth,
     numElements,
     selectedElementID,
     selectedElementIndex,
@@ -692,7 +686,6 @@ function TreeContextController({ children }: Props) {
 
   const [state, dispatch] = useReducer(reducer, {
     // Tree
-    baseDepth: 0,
     numElements: store.numElements,
     selectedElementIndex: null,
     selectedElementID: null,
@@ -781,33 +774,6 @@ function TreeContextController({ children }: Props) {
       </TreeDispatcherContext.Provider>
     </TreeStateContext.Provider>
   );
-}
-
-function calculateCurrentOwnerList(
-  store: Store,
-  rootOwnerID: number,
-  elementID: number,
-  ownerList: Array<number>
-): Array<number> {
-  if (elementID === rootOwnerID) {
-    ownerList.push(elementID);
-    const { children } = ((store.getElementByID(elementID): any): Element);
-    children.forEach(childID =>
-      calculateCurrentOwnerList(store, rootOwnerID, childID, ownerList)
-    );
-  } else {
-    const { children, ownerID } = ((store.getElementByID(
-      elementID
-    ): any): Element);
-    if (ownerID === rootOwnerID) {
-      ownerList.push(elementID);
-      children.forEach(childID =>
-        calculateCurrentOwnerList(store, rootOwnerID, childID, ownerList)
-      );
-    }
-  }
-
-  return ownerList;
 }
 
 function recursivelySearchTree(

@@ -13,6 +13,7 @@ import { ElementTypeRoot } from './types';
 import { utfDecodeString } from '../utils';
 import { __DEBUG__ } from '../constants';
 import ProfilingCache from './ProfilingCache';
+import { printStore } from 'src/__tests__/storeSerializer';
 
 import type { ElementType } from './types';
 import type { Element } from './views/Components/types';
@@ -405,6 +406,14 @@ export default class Store extends EventEmitter {
     return index;
   }
 
+  getOwnersListForElement(id: number): Array<Element> {
+    const list = [];
+
+    this._populateOwnersList(id, id, 0, list);
+
+    return list;
+  }
+
   getRendererIDForElement(id: number): number | null {
     let current = this._idToElement.get(id);
     while (current != null) {
@@ -551,6 +560,32 @@ export default class Store extends EventEmitter {
     }),
     THROTTLE_CAPTURE_SCREENSHOT_DURATION
   );
+
+  _populateOwnersList(
+    id: number,
+    ownerID: number,
+    depth: number,
+    list: Array<Element>
+  ) {
+    const element = this._idToElement.get(id);
+    if (element != null) {
+      const isInList = id === ownerID || element.ownerID === ownerID;
+      if (isInList) {
+        list.push({
+          ...element,
+          depth: depth,
+        });
+      }
+      element.children.forEach(childID =>
+        this._populateOwnersList(
+          childID,
+          ownerID,
+          isInList ? depth + 1 : depth,
+          list
+        )
+      );
+    }
+  }
 
   _takeProfilingSnapshotRecursive = (id: number) => {
     const element = this.getElementByID(id);
@@ -870,7 +905,7 @@ export default class Store extends EventEmitter {
     }
 
     if (__DEBUG__) {
-      console.log(this.__toSnapshot(true));
+      console.log(printStore(this, true));
       console.groupEnd();
     }
 
@@ -916,60 +951,5 @@ export default class Store extends EventEmitter {
     this._bridge.removeListener('operations', this.onBridgeOperations);
     this._bridge.removeListener('profilingStatus', this.onProfilingStatus);
     this._bridge.removeListener('shutdown', this.onBridgeShutdown);
-  };
-
-  // Used for Jest snapshot testing.
-  // May also be useful for visually debugging the tree, so it lives on the Store.
-  __toSnapshot = (includeWeight: boolean = false) => {
-    const snapshotLines = [];
-
-    let rootWeight = 0;
-
-    this._roots.forEach(rootID => {
-      const { weight } = ((this.getElementByID(rootID): any): Element);
-
-      snapshotLines.push('[root]' + (includeWeight ? ` (${weight})` : ''));
-
-      for (let i = rootWeight; i < rootWeight + weight; i++) {
-        const element = ((this.getElementAtIndex(i): any): Element);
-
-        if (element == null) {
-          throw Error(`Could not find element at index ${i}`);
-        }
-
-        let prefix = ' ';
-        if (element.children.length > 0) {
-          prefix = element.isCollapsed ? '▸' : '▾';
-        }
-
-        let key = '';
-        if (element.key !== null) {
-          key = ` key="${element.key}"`;
-        }
-
-        let suffix = '';
-        if (includeWeight) {
-          suffix = ` (${element.isCollapsed ? 1 : element.weight})`;
-        }
-
-        snapshotLines.push(
-          `${'  '.repeat(element.depth + 1)}${prefix} <${element.displayName ||
-            'null'}${key}>${suffix}`
-        );
-      }
-
-      rootWeight += weight;
-    });
-
-    // Make sure the pretty-printed test align with the Store's reported number of total rows.
-    if (rootWeight !== this._weightAcrossRoots) {
-      throw Error(
-        `Inconsistent Store state. Individual root weights (${rootWeight}) do not match total weight (${
-          this._weightAcrossRoots
-        })`
-      );
-    }
-
-    return snapshotLines.join('\n');
   };
 }

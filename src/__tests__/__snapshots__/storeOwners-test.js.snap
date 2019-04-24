@@ -1,0 +1,20 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Store owners list should drill through intermediate components: 1: mount 1`] = `
+[root]
+  ▾ <Root>
+    ▾ <Intermediate>
+      ▾ <Wrapper>
+          <Leaf key="children">
+`;
+
+exports[`Store owners list should drill through intermediate components: 2: components owned by <Root> 1`] = `
+"  ▾ <Root>
+    ▾ <Intermediate>
+        <Leaf key=\\"children\\">"
+`;
+
+exports[`Store owners list should drill through intermediate components: 3: components owned by <Intermediate> 1`] = `
+"  ▾ <Intermediate>
+    ▾ <Wrapper>"
+`;
