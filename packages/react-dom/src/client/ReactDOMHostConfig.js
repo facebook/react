@@ -966,6 +966,13 @@ export function handleEventTarget(
   rootContainerInstance: Container,
   internalInstanceHandle: Object,
 ): boolean {
+  if (
+    __DEV__ &&
+    type === REACT_EVENT_TARGET_TOUCH_HIT &&
+    (props.left || props.right || props.top || props.bottom)
+  ) {
+    return true;
+  }
   return false;
 }
 
@@ -992,9 +999,9 @@ export function commitEventTarget(
             'value of "relative".',
         );
         warning(
-          computedStyles.getPropertyValue('zIndex') !== '',
+          computedStyles.getPropertyValue('z-index') !== '',
           '<TouchHitTarget> inserts an empty <div> with "z-index" of "-1". ' +
-            'This requires its parent DOM node to have a "z-index" great than "-1",' +
+            'This requires its parent DOM node to have a "z-index" greater than "-1",' +
             'but the parent DOM node was found to no "z-index" value set.' +
             ' Try using a "z-index" value of "0" or greater.',
         );
