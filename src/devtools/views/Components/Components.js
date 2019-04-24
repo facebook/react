@@ -1,10 +1,12 @@
 // @flow
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import Tree from './Tree';
 import SelectedElement from './SelectedElement';
-import styles from './Components.css';
+import { InspectedElementContextController } from './InspectedElementContext';
 import portaledContent from '../portaledContent';
+
+import styles from './Components.css';
 
 function Components(_: {||}) {
   // TODO Flex wrappers below should be user resizable.
@@ -14,10 +16,18 @@ function Components(_: {||}) {
         <Tree />
       </div>
       <div className={styles.SelectedElementWrapper}>
-        <SelectedElement />
+        <InspectedElementContextController>
+          <Suspense fallback={<Loading />}>
+            <SelectedElement />
+          </Suspense>
+        </InspectedElementContextController>
       </div>
     </div>
   );
+}
+
+function Loading() {
+  return <div className={styles.Loading}>Loading...</div>;
 }
 
 export default portaledContent(Components);

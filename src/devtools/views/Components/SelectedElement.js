@@ -1,19 +1,13 @@
 // @flow
 
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useContext } from 'react';
 import { TreeDispatcherContext, TreeStateContext } from './TreeContext';
 import { BridgeContext, StoreContext } from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import HooksTree from './HooksTree';
 import InspectedElementTree from './InspectedElementTree';
-import { hydrate } from 'src/hydration';
+import { InspectedElementContext } from './InspectedElementContext';
 import ViewElementSourceContext from './ViewElementSourceContext';
 import styles from './SelectedElement.css';
 import {
@@ -24,55 +18,59 @@ import {
   ElementTypeSuspense,
 } from '../../types';
 
-import type { InspectedElement } from './types';
-import type { DehydratedData, Element } from './types';
+import type { Element, InspectedElement } from './types';
 
 export type Props = {||};
 
 export default function SelectedElement(_: Props) {
-  const { selectedElementID } = useContext(TreeStateContext);
+  const { inspectedElementID } = useContext(TreeStateContext);
   const viewElementSource = useContext(ViewElementSourceContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
-  const element =
-    selectedElementID !== null ? store.getElementByID(selectedElementID) : null;
+  const { read } = useContext(InspectedElementContext);
 
-  const inspectedElement = useInspectedElement(selectedElementID);
+  const element =
+    inspectedElementID !== null
+      ? store.getElementByID(inspectedElementID)
+      : null;
+
+  const inspectedElement =
+    inspectedElementID != null ? read(inspectedElementID) : null;
 
   const highlightElement = useCallback(() => {
-    if (element !== null && selectedElementID !== null) {
-      const rendererID = store.getRendererIDForElement(selectedElementID);
+    if (element !== null && inspectedElementID !== null) {
+      const rendererID = store.getRendererIDForElement(inspectedElementID);
       if (rendererID !== null) {
         bridge.send('highlightElementInDOM', {
           displayName: element.displayName,
           hideAfterTimeout: true,
-          id: selectedElementID,
+          id: inspectedElementID,
           openNativeElementsPanel: true,
           rendererID,
           scrollIntoView: true,
         });
       }
     }
-  }, [bridge, element, selectedElementID, store]);
+  }, [bridge, element, inspectedElementID, store]);
 
   const logElement = useCallback(() => {
-    if (selectedElementID !== null) {
-      const rendererID = store.getRendererIDForElement(selectedElementID);
+    if (inspectedElementID !== null) {
+      const rendererID = store.getRendererIDForElement(inspectedElementID);
       if (rendererID !== null) {
         bridge.send('logElementToConsole', {
-          id: selectedElementID,
+          id: inspectedElementID,
           rendererID,
         });
       }
     }
-  }, [bridge, selectedElementID, store]);
+  }, [bridge, inspectedElementID, store]);
 
   const viewSource = useCallback(() => {
-    if (viewElementSource != null && selectedElementID !== null) {
-      viewElementSource(selectedElementID);
+    if (viewElementSource != null && inspectedElementID !== null) {
+      viewElementSource(inspectedElementID);
     }
-  }, [selectedElementID, viewElementSource]);
+  }, [inspectedElementID, viewElementSource]);
 
   if (element === null) {
     return (
@@ -266,81 +264,4 @@ function OwnerView({ displayName, id }: { displayName: string, id: number }) {
       {displayName}
     </button>
   );
-}
-
-function hydrateHelper(dehydratedData: DehydratedData | null): Object | null {
-  if (dehydratedData !== null) {
-    return hydrate(dehydratedData.data, dehydratedData.cleaned);
-  } else {
-    return null;
-  }
-}
-
-function useInspectedElement(id: number | null): InspectedElement | null {
-  const idRef = useRef(id);
-  const bridge = useContext(BridgeContext);
-  const store = useContext(StoreContext);
-
-  const [inspectedElement, setInspectedElement] = useState(null);
-
-  useEffect(() => {
-    // Track the current selected element ID.
-    // We ignore any backend updates about previously selected elements.
-    idRef.current = id;
-
-    // Hide previous/stale insepected element to avoid temporarily showing the wrong values.
-    setInspectedElement(null);
-
-    // A null id indicates that there's nothing currently selected in the tree.
-    if (id === null) {
-      return () => {};
-    }
-
-    const rendererID = store.getRendererIDForElement(id);
-
-    // Update the $r variable.
-    bridge.send('selectElement', { id, rendererID });
-
-    // Update props, state, and context in the side panel.
-    const sendBridgeRequest = () => {
-      bridge.send('inspectElement', { id, rendererID });
-    };
-
-    let timeoutID = null;
-
-    const onInspectedElement = (inspectedElement: InspectedElement) => {
-      if (!inspectedElement || inspectedElement.id !== idRef.current) {
-        // Ignore bridge updates about previously selected elements.
-        return;
-      }
-
-      if (inspectedElement !== null) {
-        inspectedElement.context = hydrateHelper(inspectedElement.context);
-        inspectedElement.hooks = hydrateHelper(inspectedElement.hooks);
-        inspectedElement.props = hydrateHelper(inspectedElement.props);
-        inspectedElement.state = hydrateHelper(inspectedElement.state);
-      }
-
-      setInspectedElement(inspectedElement);
-
-      // Ask for an update in a second.
-      // Make sure we only ask once though.
-      clearTimeout(((timeoutID: any): TimeoutID));
-      timeoutID = setTimeout(sendBridgeRequest, 1000);
-    };
-
-    bridge.addListener('inspectedElement', onInspectedElement);
-
-    sendBridgeRequest();
-
-    return () => {
-      bridge.removeListener('inspectedElement', onInspectedElement);
-
-      if (timeoutID !== null) {
-        clearTimeout(timeoutID);
-      }
-    };
-  }, [bridge, id, idRef, store]);
-
-  return inspectedElement;
 }

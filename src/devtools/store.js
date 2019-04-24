@@ -68,8 +68,9 @@ export default class Store extends EventEmitter {
   // At least one of the injected renderers contains (DEV only) owner metadata.
   _hasOwnerMetadata: boolean = false;
 
-  // Map of ID to Element.
-  // Elements are mutable (for now) to avoid excessive cloning during tree updates.
+  // Map of ID to (mutable) Element.
+  // Elements are mutated to avoid excessive cloning during tree updates.
+  // The InspectedElementContext also relies on this mutability for its WeakMap usage.
   _idToElement: Map<number, Element> = new Map();
 
   // The user has imported a previously exported profiling session.
@@ -79,7 +80,7 @@ export default class Store extends EventEmitter {
   // When profiling is in progress, operations are stored so that we can later reconstruct past commit trees.
   _isProfiling: boolean = false;
 
-  // Suspense cache for reading profilign data.
+  // Suspense cache for reading profiling data.
   _profilingCache: ProfilingCache;
 
   // Map of root (id) to a list of tree mutation that occur during profiling.

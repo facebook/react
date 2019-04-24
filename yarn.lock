@@ -5126,10 +5126,10 @@ flatstr@^1.0.9:
   resolved "https://registry.yarnpkg.com/flatstr/-/flatstr-1.0.9.tgz#0950d56fec02de1030c1311847ecd58c25690eb9"
   integrity sha512-qFlJnOBWDfIaunF54/lBqNKmXOI0HqNhu+mHkLmbaBXlS71PUd9OjFOdyevHt/aHoHB1+eW7eKHgRKOG5aHSpw==
 
-flow-bin@^0.96.0:
-  version "0.96.0"
-  resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.96.0.tgz#3b0379d97304dc1879ae6db627cd2d6819998661"
-  integrity sha512-OSxERs0EdhVxEVCst/HmlT/RcnXsQQIRqcfK9J9wC8/93JQj+xQz4RtlsmYe1PSRYaozuDLyPS5pIA81Zwzaww==
+flow-bin@^0.97.0:
+  version "0.97.0"
+  resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.97.0.tgz#036ffcfc27503367a9d906ec9d843a0aa6f6bb83"
+  integrity sha512-jXjD05gkatLuC4+e28frH1hZoRwr1iASP6oJr61Q64+kR4kmzaS+AdFBhYgoYS5kpoe4UzwDebWK8ETQFNh00w==
 
 fluent-syntax@0.10.0:
   version "0.10.0"
@@ -9908,14 +9908,6 @@ scheduler@0.0.0-4221565e1:
   version "0.0.0-4221565e1"
   resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.0.0-4221565e1.tgz#70c99271bd7bc4fbf4e7c69f31c003c4c61cd285"
   integrity sha512-RhQ6QhkRJDXAcs6woR6p9UYDyjRguRsYXpWDFbCft45lWs4sSfszxPRr5TJVVLjIwPu0Wy0Mkd75smQ8TMponA==
-  dependencies:
-    loose-envify "^1.1.0"
-    object-assign "^4.1.1"
-
-scheduler@^0.14.0-alpha.0:
-  version "0.14.0-alpha.0"
-  resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.14.0-alpha.0.tgz#6d301d8fd10373487e0e47e837ad24e863ce807d"
-  integrity sha512-qlVVnhIJqLu9E09ZYYJHG4nYwrS4TG2zfODfS/Mk3oSGjeJlrBZTFSU3yfMdu5lIrYzWmHHWFgERPsKbildS6Q==
   dependencies:
     loose-envify "^1.1.0"
     object-assign "^4.1.1"

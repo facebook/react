@@ -1,6 +1,6 @@
 // @flow
 
-import { createResource, invalidateResources } from './cache';
+import { createResource } from './cache';
 import Store from './store';
 import {
   getCommitTree,
@@ -92,6 +92,7 @@ export default class ProfilingCache {
 
   CommitDetails: Resource<
     CommitDetailsParams,
+    string,
     CommitDetailsFrontend
   > = createResource(
     ({ commitIndex, rendererID, rootID }: CommitDetailsParams) => {
@@ -136,6 +137,7 @@ export default class ProfilingCache {
 
   FiberCommits: Resource<
     FiberCommitsParams,
+    string,
     FiberCommitsFrontend
   > = createResource(
     ({ fiberID, rendererID, rootID }: FiberCommitsParams) => {
@@ -168,6 +170,7 @@ export default class ProfilingCache {
 
   Interactions: Resource<
     InteractionsParams,
+    number,
     InteractionsFrontend
   > = createResource(
     ({ rendererID, rootID }: InteractionsParams) => {
@@ -198,6 +201,7 @@ export default class ProfilingCache {
 
   ProfilingSummary: Resource<
     ProfilingSummaryParams,
+    number,
     ProfilingSummaryFrontend
   > = createResource(
     ({ rendererID, rootID }: ProfilingSummaryParams) => {
@@ -293,8 +297,11 @@ export default class ProfilingCache {
     });
 
   invalidate() {
-    // Invalidate Susepnse caches.
-    invalidateResources();
+    // Invalidate Suspense caches.
+    this.CommitDetails.clear();
+    this.FiberCommits.clear();
+    this.Interactions.clear();
+    this.ProfilingSummary.clear();
 
     // Invalidate non-Suspense caches too.
     invalidateCommitTrees();
