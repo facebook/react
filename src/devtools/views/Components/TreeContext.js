@@ -67,7 +67,7 @@ type ACTION_GO_TO_PREVIOUS_SEARCH_RESULT = {|
 |};
 type ACTION_HANDLE_STORE_MUTATION = {|
   type: 'HANDLE_STORE_MUTATION',
-  payload: [Uint32Array, Uint32Array],
+  payload: [Array<number>, Map<number, number>],
 |};
 type ACTION_RESET_OWNER_STACK = {|
   type: 'RESET_OWNER_STACK',
@@ -169,10 +169,20 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
         numElements = store.numElements;
 
         // If the currently-selected Element has been removed from the tree, update selection state.
-        if (
+        const removedIDs = action.payload[1];
+        // Find the closest parent that wasn't removed during this batch.
+        // We deduce the parent-child mapping from removedIDs (id -> parentID)
+        // because by now it's too late to read them from the store.
+        while (
           selectedElementID !== null &&
-          store.getElementByID(selectedElementID) === null
+          removedIDs.has(selectedElementID)
         ) {
+          selectedElementID = ((removedIDs.get(
+            selectedElementID
+          ): any): number);
+        }
+        if (selectedElementID === 0) {
+          // The whole root was removed.
           selectedElementIndex = null;
         }
         break;
@@ -312,7 +322,7 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
             removedElementIDs,
           ] = (action: ACTION_HANDLE_STORE_MUTATION).payload;
 
-          removedElementIDs.forEach(id => {
+          removedElementIDs.forEach((parentID, id) => {
             // Prune this item from the search results.
             const index = searchResults.indexOf(id);
             if (index >= 0) {
@@ -738,10 +748,10 @@ function TreeContextController({ children }: Props) {
 
   // Mutations to the underlying tree may impact this context (e.g. search results, selection state).
   useEffect(() => {
-    const handleStoreMutated = ([
-      addedElementIDs,
-      removedElementIDs,
-    ]: Array<Uint32Array>) => {
+    const handleStoreMutated = ([addedElementIDs, removedElementIDs]: [
+      Array<number>,
+      Map<number, number>,
+    ]) => {
       dispatchWrapper({
         type: 'HANDLE_STORE_MUTATION',
         payload: [addedElementIDs, removedElementIDs],
@@ -755,7 +765,7 @@ function TreeContextController({ children }: Props) {
       // It would only impact the search state, which is unlikely to exist yet at this point.
       dispatchWrapper({
         type: 'HANDLE_STORE_MUTATION',
-        payload: [new Uint32Array(0), new Uint32Array(0)],
+        payload: [[], new Map()],
       });
     }
 
