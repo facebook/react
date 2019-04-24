@@ -948,4 +948,52 @@ describe('DOMEventResponderSystem', () => {
       },
     ]);
   });
+
+  it('isTargetDirectlyWithinEventComponent works', () => {
+    const buttonRef = React.createRef();
+    const divRef = React.createRef();
+    const log = [];
+
+    const EventComponent = createReactEventComponent(
+      ['pointerout'],
+      undefined,
+      undefined,
+      (event, context) => {
+        const isWithin = context.isTargetDirectlyWithinEventComponent(
+          event.nativeEvent.relatedTarget,
+        );
+        log.push(isWithin);
+      },
+    );
+
+    const Test = () => (
+      <EventComponent>
+        <div ref={divRef} />
+        <EventComponent>
+          <button ref={buttonRef}>Click me!</button>
+        </EventComponent>
+      </EventComponent>
+    );
+    ReactDOM.render(<Test />, container);
+
+    const createEvent = (type, data) => {
+      const event = document.createEvent('CustomEvent');
+      event.initCustomEvent(type, true, true);
+      if (data != null) {
+        Object.entries(data).forEach(([key, value]) => {
+          event[key] = value;
+        });
+      }
+      return event;
+    };
+
+    buttonRef.current.dispatchEvent(
+      createEvent('pointerout', {relatedTarget: divRef.current}),
+    );
+    divRef.current.dispatchEvent(
+      createEvent('pointerout', {relatedTarget: buttonRef.current}),
+    );
+
+    expect(log).toEqual([false, true, false]);
+  });
 });

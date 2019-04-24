@@ -171,6 +171,7 @@ export type ReactResponderContext = {
     parentTarget: Element | Document,
   ) => boolean,
   isTargetWithinEventComponent: (Element | Document) => boolean,
+  isTargetDirectlyWithinEventComponent: (Element | Document) => boolean,
   isPositionWithinTouchHitTarget: (
     doc: Document,
     x: number,

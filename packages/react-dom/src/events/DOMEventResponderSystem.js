@@ -170,6 +170,22 @@ const eventResponderContext: ReactResponderContext = {
     }
     return false;
   },
+  isTargetDirectlyWithinEventComponent(target: Element | Document): boolean {
+    validateResponderContext();
+    if (target != null) {
+      let fiber = getClosestInstanceFromNode(target);
+      while (fiber !== null) {
+        if (fiber.stateNode === currentInstance) {
+          return true;
+        }
+        if (fiber.tag === EventComponent) {
+          return false;
+        }
+        fiber = fiber.return;
+      }
+    }
+    return false;
+  },
   isTargetWithinElement(
     childTarget: Element | Document,
     parentTarget: Element | Document,
