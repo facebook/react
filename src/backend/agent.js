@@ -608,18 +608,16 @@ export default class Agent extends EventEmitter {
     // might not be available by the time we read them.
     // This is why we need the defensive checks here.
     const renderer = this._rendererInterfaces[rendererID];
-    if (renderer == null) {
-      return;
-    }
-    const path = renderer.getPathForElement(id);
-    if (path === null) {
-      return;
-    }
+    const path = renderer != null ? renderer.getPathForElement(id) : null;
     if (typeof sessionStorage !== 'undefined') {
-      sessionStorage.setItem(
-        SESSION_STORAGE_LAST_SELECTION_KEY,
-        JSON.stringify(({ rendererID, path }: PersistedSelection))
-      );
+      if (path !== null) {
+        sessionStorage.setItem(
+          SESSION_STORAGE_LAST_SELECTION_KEY,
+          JSON.stringify(({ rendererID, path }: PersistedSelection))
+        );
+      } else {
+        sessionStorage.removeItem(SESSION_STORAGE_LAST_SELECTION_KEY);
+      }
     }
   }, 1000);
 }
