@@ -686,10 +686,7 @@ export function attach(
       pendingOperationsQueue.push(ops);
     } else {
       // If we've already connected to the frontend, just pass the operations through.
-      hook.emit('operations', {
-        operations: ops,
-        rendererID,
-      });
+      hook.emit('operations', ops);
     }
 
     pendingOperations.length = 0;
@@ -1155,10 +1152,7 @@ export function attach(
       // We may have already queued up some operations before the frontend connected
       // If so, let the frontend know about them.
       localPendingOperationsQueue.forEach(ops => {
-        hook.emit('operations', {
-          operations: ops,
-          rendererID,
-        });
+        hook.emit('operations', ops);
       });
     } else {
       // Before the traversals, remember to start tracking

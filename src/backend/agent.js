@@ -29,11 +29,6 @@ const debug = (methodName, ...args) => {
   }
 };
 
-type OperationsParams = {|
-  operations: Uint32Array,
-  rendererID: number,
-|};
-
 type InspectSelectParams = {|
   id: number,
   rendererID: number,
@@ -505,7 +500,7 @@ export default class Agent extends EventEmitter {
     }
   };
 
-  onHookOperations = ({ operations, rendererID }: OperationsParams) => {
+  onHookOperations = (operations: Uint32Array) => {
     if (__DEBUG__) {
       debug('onHookOperations', operations);
     }
@@ -533,6 +528,7 @@ export default class Agent extends EventEmitter {
     this._bridge.send('operations', operations);
 
     if (this._persistedSelection !== null) {
+      const rendererID = operations[0];
       if (this._persistedSelection.rendererID === rendererID) {
         // Check if we can select a deeper match for the persisted selection.
         const renderer = this._rendererInterfaces[rendererID];
