@@ -612,7 +612,10 @@ function triggerOwnershipListeners(): void {
       const instance = listeningInstances[i];
       const {props, responder, state} = instance;
       currentInstance = instance;
-      responder.onOwnershipChange(eventResponderContext, props, state);
+      const onOwnershipChange = responder.onOwnershipChange;
+      if (onOwnershipChange !== undefined) {
+        onOwnershipChange(eventResponderContext, props, state);
+      }
     }
   } finally {
     currentInstance = previousInstance;
@@ -625,6 +628,19 @@ export function mountEventResponder(
   const responder = eventComponentInstance.responder;
   if (responder.onOwnershipChange !== undefined) {
     ownershipChangeListeners.add(eventComponentInstance);
+  }
+  const onMount = responder.onMount;
+  if (onMount !== undefined) {
+    let {props, state} = eventComponentInstance;
+    currentEventQueue = createEventQueue();
+    currentInstance = eventComponentInstance;
+    try {
+      onMount(eventResponderContext, props, state);
+    } finally {
+      currentEventQueue = null;
+      currentInstance = null;
+      currentTimers = null;
+    }
   }
 }
 

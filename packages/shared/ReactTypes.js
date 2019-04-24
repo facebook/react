@@ -108,12 +108,17 @@ export type ReactEventResponder = {
     props: null | Object,
     state: null | Object,
   ) => void,
-  onUnmount: (
+  onMount?: (
     context: ReactResponderContext,
     props: null | Object,
     state: null | Object,
   ) => void,
-  onOwnershipChange: (
+  onUnmount?: (
+    context: ReactResponderContext,
+    props: null | Object,
+    state: null | Object,
+  ) => void,
+  onOwnershipChange?: (
     context: ReactResponderContext,
     props: null | Object,
     state: null | Object,
@@ -121,7 +126,6 @@ export type ReactEventResponder = {
 };
 
 export type ReactEventComponentInstance = {|
-  context: null | Object,
   props: null | Object,
   responder: ReactEventResponder,
   rootEventTypes: null | Set<string>,

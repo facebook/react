@@ -21,6 +21,7 @@ function createReactEventComponent(
   onEvent,
   onEventCapture,
   onRootEvent,
+  onMount,
   onUnmount,
   onOwnershipChange,
   stopLocalPropagation,
@@ -32,6 +33,7 @@ function createReactEventComponent(
     onEvent,
     onEventCapture,
     onRootEvent,
+    onMount,
     onUnmount,
     onOwnershipChange,
     stopLocalPropagation: stopLocalPropagation || false,
@@ -395,6 +397,7 @@ describe('DOMEventResponderSystem', () => {
       undefined,
       undefined,
       undefined,
+      undefined,
       true,
     );
 
@@ -554,6 +557,31 @@ describe('DOMEventResponderSystem', () => {
     ]);
   });
 
+  it('the event responder onMount() function should fire', () => {
+    let onMountFired = 0;
+
+    const EventComponent = createReactEventComponent(
+      [],
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      () => {
+        onMountFired++;
+      },
+    );
+
+    const Test = () => (
+      <EventComponent>
+        <button />
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+    expect(onMountFired).toEqual(1);
+  });
+
   it('the event responder onUnmount() function should fire', () => {
     let onUnmountFired = 0;
 
@@ -563,7 +591,8 @@ describe('DOMEventResponderSystem', () => {
       undefined,
       undefined,
       undefined,
-      (event, context, props, state) => {},
+      undefined,
+      undefined,
       () => {
         onUnmountFired++;
       },
@@ -589,6 +618,7 @@ describe('DOMEventResponderSystem', () => {
       () => ({
         incrementAmount: 5,
       }),
+      undefined,
       undefined,
       undefined,
       undefined,
@@ -620,6 +650,7 @@ describe('DOMEventResponderSystem', () => {
       (event, context, props, state) => {
         ownershipGained = context.requestOwnership();
       },
+      undefined,
       undefined,
       undefined,
       undefined,
