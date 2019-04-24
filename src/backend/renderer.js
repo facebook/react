@@ -324,7 +324,7 @@ export function attach(
   // TODO: we might want to change the data structure once we no longer suppport Stack versions of `getData`.
   // TODO: Keep in sync with getElementType()
   function getDataForFiber(fiber: Fiber): FiberData {
-    const { elementType, type, key, index, tag } = fiber;
+    const { elementType, type, key, tag } = fiber;
 
     // This is to support lazy components with a Promise as the type.
     // see https://github.com/facebook/react/pull/13397
@@ -345,7 +345,6 @@ export function attach(
         fiberData = {
           displayName: getDisplayName(resolvedType),
           key,
-          index,
           type: ElementTypeClass,
         };
         break;
@@ -354,7 +353,6 @@ export function attach(
         fiberData = {
           displayName: getDisplayName(resolvedType),
           key,
-          index,
           type: ElementTypeFunction,
         };
         break;
@@ -362,7 +360,6 @@ export function attach(
         fiberData = {
           displayName: null,
           key,
-          index,
           type: ElementTypeEventComponent,
         };
         break;
@@ -379,7 +376,6 @@ export function attach(
         fiberData = {
           displayName,
           key,
-          index,
           type: ElementTypeEventTarget,
         };
         break;
@@ -392,7 +388,6 @@ export function attach(
         fiberData = {
           displayName,
           key,
-          index,
           type: ElementTypeForwardRef,
         };
         break;
@@ -400,7 +395,6 @@ export function attach(
         return {
           displayName: null,
           key: null,
-          index: 0,
           type: ElementTypeRoot,
         };
       case HostPortal:
@@ -410,7 +404,6 @@ export function attach(
         return {
           displayName: null,
           key,
-          index,
           type: ElementTypeOtherOrUnknown,
         };
       case MemoComponent:
@@ -424,7 +417,6 @@ export function attach(
         fiberData = {
           displayName,
           key,
-          index,
           type: ElementTypeMemo,
         };
         break;
@@ -438,7 +430,6 @@ export function attach(
             return {
               displayName: null,
               key: null,
-              index,
               type: ElementTypeOtherOrUnknown,
             };
           case CONTEXT_PROVIDER_NUMBER:
@@ -453,7 +444,6 @@ export function attach(
             fiberData = {
               displayName,
               key,
-              index,
               type: ElementTypeContext,
             };
             break;
@@ -472,7 +462,6 @@ export function attach(
             fiberData = {
               displayName,
               key,
-              index,
               type: ElementTypeContext,
             };
             break;
@@ -481,7 +470,6 @@ export function attach(
             fiberData = {
               displayName: null,
               key,
-              index,
               type: ElementTypeOtherOrUnknown,
             };
             break;
@@ -491,7 +479,6 @@ export function attach(
             fiberData = {
               displayName: 'Suspense',
               key,
-              index,
               type: ElementTypeSuspense,
             };
             break;
@@ -500,7 +487,6 @@ export function attach(
             fiberData = {
               displayName: `Profiler(${fiber.memoizedProps.id})`,
               key,
-              index,
               type: ElementTypeProfiler,
             };
             break;
@@ -510,7 +496,6 @@ export function attach(
             fiberData = {
               displayName: null,
               key,
-              index,
               type: ElementTypeOtherOrUnknown,
             };
             break;
@@ -2115,7 +2100,8 @@ export function attach(
   }
 
   function getPathFrame(fiber: Fiber): PathFrame {
-    let { displayName, key, index } = getDataForFiber(fiber);
+    const { displayName, key } = getDataForFiber(fiber);
+    let index = fiber.index;
     if (fiber.tag === HostRoot) {
       // Roots don't have a real index.
       // Instead, we'll use the order in which it mounted.

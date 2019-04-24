@@ -15,7 +15,6 @@ export type Fiber = Object;
 // to keep the number of attributes small.
 export type FiberData = {|
   key: string | null,
-  index: number,
   displayName: string | null,
   type: ElementType,
 |};
