@@ -85,17 +85,25 @@ const FocusScopeResponder = {
         const currentFocusedNode = state.currentFocusedNode;
         if (currentFocusedNode !== null) {
           const elements = context.getFocusableElementsInScope();
+          const position = elements.indexOf(currentFocusedNode);
           if (nativeEvent.shiftKey) {
-            if (elements.indexOf(currentFocusedNode) === 0) {
+            if (position === 0) {
               focusLastChildEventTarget(context, state);
-              ((nativeEvent: any): KeyboardEvent).preventDefault();
+            } else {
+              const previousElement = elements[position - 1];
+              previousElement.focus();
+              state.currentFocusedNode = previousElement;
             }
           } else {
-            if (elements.indexOf(currentFocusedNode) === elements.length - 1) {
+            if (position === elements.length - 1) {
               focusFirstChildEventTarget(context, state);
-              ((nativeEvent: any): KeyboardEvent).preventDefault();
+            } else {
+              const nextElement = elements[position + 1];
+              nextElement.focus();
+              state.currentFocusedNode = nextElement;
             }
           }
+          ((nativeEvent: any): KeyboardEvent).preventDefault();
         }
       }
     }
