@@ -52,10 +52,16 @@ type PressState = {
   isPressWithinResponderRegion: boolean,
   longPressTimeout: null | Symbol,
   pointerType: PointerType,
-  pressTarget: null | Element | Document,
+  pressTarget: null | Element,
   pressEndTimeout: null | Symbol,
   pressStartTimeout: null | Symbol,
-  responderRegion: null | $ReadOnly<{|
+  responderRegionOnActivation: null | $ReadOnly<{|
+    bottom: number,
+    left: number,
+    right: number,
+    top: number,
+  |}>,
+  responderRegionOnDeactivation: null | $ReadOnly<{|
     bottom: number,
     left: number,
     right: number,
@@ -312,7 +318,7 @@ function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
 }
 
 // TODO: account for touch hit slop
-function calculateResponderRegion(target, props) {
+function calculateResponderRegion(target: Element, props: PressProps) {
   const pressRetentionOffset = {
     ...DEFAULT_PRESS_RETENTION_OFFSET,
     ...props.pressRetentionOffset,
@@ -352,15 +358,33 @@ function isPressWithinResponderRegion(
   nativeEvent: $PropertyType<ReactResponderEvent, 'nativeEvent'>,
   state: PressState,
 ): boolean {
-  const {responderRegion} = state;
+  const {responderRegionOnActivation, responderRegionOnDeactivation} = state;
   const event = (nativeEvent: any);
+  let left, top, right, bottom;
+
+  if (responderRegionOnActivation != null) {
+    left = responderRegionOnActivation.left;
+    top = responderRegionOnActivation.top;
+    right = responderRegionOnActivation.right;
+    bottom = responderRegionOnActivation.bottom;
+
+    if (responderRegionOnDeactivation != null) {
+      left = Math.min(left, responderRegionOnDeactivation.left);
+      top = Math.min(top, responderRegionOnDeactivation.top);
+      right = Math.max(right, responderRegionOnDeactivation.right);
+      bottom = Math.max(bottom, responderRegionOnDeactivation.bottom);
+    }
+  }
 
   return (
-    responderRegion != null &&
-    (event.pageX >= responderRegion.left &&
-      event.pageX <= responderRegion.right &&
-      event.pageY >= responderRegion.top &&
-      event.pageY <= responderRegion.bottom)
+    left != null &&
+    right != null &&
+    top != null &&
+    bottom != null &&
+    (event.pageX >= left &&
+      event.pageX <= right &&
+      event.pageY >= top &&
+      event.pageY <= bottom)
   );
 }
 
@@ -408,7 +432,8 @@ const PressResponder = {
       pressEndTimeout: null,
       pressStartTimeout: null,
       pressTarget: null,
-      responderRegion: null,
+      responderRegionOnActivation: null,
+      responderRegionOnDeactivation: null,
       ignoreEmulatedMouseEvents: false,
     };
   },
@@ -469,7 +494,11 @@ const PressResponder = {
           }
 
           state.pointerType = pointerType;
-          state.pressTarget = target;
+          state.pressTarget = getEventCurrentTarget(event, context);
+          state.responderRegionOnActivation = calculateResponderRegion(
+            state.pressTarget,
+            props,
+          );
           state.isPressWithinResponderRegion = true;
           dispatchPressStartEvents(context, props, state);
           context.addRootEventTypes(rootEventTypes);
@@ -519,26 +548,34 @@ const PressResponder = {
       case 'touchmove': {
         if (state.isPressed) {
           // Ignore emulated events (pointermove will dispatch touch and mouse events)
-          // Ignore pointermove events during a keyboard press
+          // Ignore pointermove events during a keyboard press.
           if (state.pointerType !== pointerType) {
             return;
           }
 
-          if (state.responderRegion == null) {
-            state.responderRegion = calculateResponderRegion(
-              getEventCurrentTarget(event, context),
+          // Calculate the responder region we use for deactivation, as the
+          // element dimensions may have changed since activation.
+          if (
+            state.pressTarget !== null &&
+            state.responderRegionOnDeactivation == null
+          ) {
+            state.responderRegionOnDeactivation = calculateResponderRegion(
+              state.pressTarget,
               props,
             );
           }
-          if (isPressWithinResponderRegion(nativeEvent, state)) {
-            state.isPressWithinResponderRegion = true;
+          state.isPressWithinResponderRegion = isPressWithinResponderRegion(
+            nativeEvent,
+            state,
+          );
+
+          if (state.isPressWithinResponderRegion) {
             if (props.onPressMove) {
               dispatchEvent(context, state, 'pressmove', props.onPressMove, {
                 discrete: false,
               });
             }
           } else {
-            state.isPressWithinResponderRegion = false;
             dispatchPressEndEvents(context, props, state);
           }
         }
@@ -551,18 +588,38 @@ const PressResponder = {
       case 'mouseup':
       case 'touchend': {
         if (state.isPressed) {
-          // Ignore unrelated keyboard events
+          // Ignore unrelated keyboard events and verify press is within
+          // responder region for non-keyboard events.
           if (pointerType === 'keyboard') {
             if (!isValidKeyPress(nativeEvent.key)) {
               return;
             }
+            // If the event target isn't within the press target, check if we're still
+            // within the responder region. The region may have changed if the
+            // element's layout was modified after activation.
+          } else if (
+            state.pressTarget != null &&
+            !context.isTargetWithinElement(target, state.pressTarget)
+          ) {
+            // Calculate the responder region we use for deactivation if not
+            // already done during move event.
+            if (state.responderRegionOnDeactivation == null) {
+              state.responderRegionOnDeactivation = calculateResponderRegion(
+                state.pressTarget,
+                props,
+              );
+            }
+            state.isPressWithinResponderRegion = isPressWithinResponderRegion(
+              nativeEvent,
+              state,
+            );
           }
 
           const wasLongPressed = state.isLongPressed;
           dispatchPressEndEvents(context, props, state);
 
           if (state.pressTarget !== null && props.onPress) {
-            if (context.isTargetWithinElement(target, state.pressTarget)) {
+            if (state.isPressWithinResponderRegion) {
               if (
                 !(
                   wasLongPressed &&
