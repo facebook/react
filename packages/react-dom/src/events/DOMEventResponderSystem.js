@@ -24,6 +24,7 @@ import type {
   ReactResponderContext,
   ReactResponderEvent,
   ReactResponderDispatchEventOptions,
+  ReactEventTargetObject,
 } from 'shared/ReactTypes';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 import {batchedUpdates, interactiveUpdates} from 'events/ReactGenericBatching';
@@ -83,6 +84,8 @@ const eventListeners:
       $Shape<PartialEventObject>,
       ($Shape<PartialEventObject>) => void,
     > = new PossiblyWeakMap();
+
+let alreadyDispatching = false;
 
 let currentTimers = new Map();
 let currentOwner = null;
@@ -322,60 +325,234 @@ const eventResponderContext: ReactResponderContext = {
       }
     }
   },
-  getEventTargetsFromTarget(
+  isTargetDirectlyWithinEventTarget(target: Element | Document): boolean {
+    validateResponderContext();
+    const eventTargetFiber = getChildEventTargetFiberFromTarget(target);
+    return eventTargetFiber !== null;
+  },
+  getEventTargetsWithinEventComponent(
+    queryType?: Symbol | number,
+    queryKey?: string,
+  ): Array<ReactEventTargetObject> {
+    validateResponderContext();
+    const eventTargetObjects = [];
+    const eventTargetFibers = getEventTargetFibersWithinCurrentEventComponent(
+      queryType,
+      queryKey,
+    );
+    for (let i = 0; i < eventTargetFibers.length; i++) {
+      const eventTargetFiber = eventTargetFibers[i];
+      const eventTargetObject = getEventTargetObject(eventTargetFiber);
+      if (eventTargetObject !== null) {
+        eventTargetObjects.push(eventTargetObject);
+      }
+    }
+    return eventTargetObjects;
+  },
+  isTargetFirstEventTargetOfScope(target: Element | Document): boolean {
+    validateResponderContext();
+    const eventTargetFiber = getChildEventTargetFiberFromTarget(target);
+    invariant(
+      eventTargetFiber !== null,
+      'isTargetFirstEventTargetOfScope: was called with a target that was not a direct event target.',
+    );
+    const eventTargetFibers = getEventTargetFibersWithinCurrentEventComponent();
+    return eventTargetFibers.indexOf(eventTargetFiber) === 0;
+  },
+  isTargetLastEventTargetOfScope(target: Element | Document): boolean {
+    validateResponderContext();
+    const eventTargetFiber = getChildEventTargetFiberFromTarget(target);
+    invariant(
+      eventTargetFiber !== null,
+      'isTargetLastEventTargetOfScope: was called with a target that was not a direct event target.',
+    );
+    const eventTargetFibers = getEventTargetFibersWithinCurrentEventComponent();
+    return (
+      eventTargetFibers.indexOf(eventTargetFiber) ===
+      eventTargetFibers.length - 1
+    );
+  },
+  getPreviousEventTargetFromTarget(
     target: Element | Document,
     queryType?: Symbol | number,
     queryKey?: string,
-  ): Array<{
-    node: Element,
-    props: null | Object,
-  }> {
+  ): null | ReactEventTargetObject {
     validateResponderContext();
-    const eventTargetHostComponents = [];
-    let node = getClosestInstanceFromNode(target);
-    // We traverse up the fiber tree from the target fiber, to the
-    // current event component fiber. Along the way, we check if
-    // the fiber has any children that are event targets. If there
-    // are, we query them (optionally) to ensure they match the
-    // specified type and key. We then push the event target props
-    // along with the associated parent host component of that event
-    // target.
+    const eventTargetFiber = getChildEventTargetFiberFromTarget(target);
+    invariant(
+      eventTargetFiber !== null,
+      'getNextEventTargetFromTarget: was called with a target that was not a direct event target.',
+    );
+    const nodeToEndOn = eventTargetFiber.return;
+    const eventComponentInstance = ((currentInstance: any): ReactEventComponentInstance);
+    let node = ((eventComponentInstance.currentFiber: any): Fiber).child;
+    let lastFoundEventTargetFiber = null;
+
+    // We start from the event component fiber and traverse down all fibers till
+    // we hit the node to end on (the current node). Given we're trying to find
+    // the previous sibling event target fiber, it will be the last recorded
+    // fiber (lastFoundEventTargetFiber).
     while (node !== null) {
-      if (node.stateNode === currentInstance) {
+      if (node === nodeToEndOn && lastFoundEventTargetFiber !== null) {
+        return getEventTargetObject(lastFoundEventTargetFiber);
+      }
+      if (
+        node ===
+        ((currentInstance: any): ReactEventComponentInstance).currentFiber
+      ) {
+        return null;
+      }
+      if (
+        node.tag === EventTargetWorkTag &&
+        queryEventTarget(node, queryType, queryKey)
+      ) {
+        lastFoundEventTargetFiber = node;
+      } else {
+        const child = node.child;
+
+        if (child !== null) {
+          node = child;
+          continue;
+        }
+      }
+      const sibling = node.sibling;
+
+      if (sibling !== null) {
+        node = sibling;
+        continue;
+      }
+      const parent = node.return;
+      if (parent === null) {
         break;
       }
-      let child = node.child;
-
-      while (child !== null) {
-        if (
-          child.tag === EventTargetWorkTag &&
-          queryEventTarget(child, queryType, queryKey)
-        ) {
-          const props = child.stateNode.props;
-          let parent = child.return;
-
-          if (parent !== null) {
-            if (parent.stateNode === currentInstance) {
-              break;
-            }
-            if (parent.tag === HostComponent) {
-              eventTargetHostComponents.push({
-                node: parent.stateNode,
-                props,
-              });
-              break;
-            }
-            parent = parent.return;
-          }
-          break;
-        }
-        child = child.sibling;
-      }
-      node = node.return;
+      node = parent.sibling;
     }
-    return eventTargetHostComponents;
+    return null;
+  },
+  getNextEventTargetFromTarget(
+    target: Element | Document,
+    queryType?: Symbol | number,
+    queryKey?: string,
+  ): null | ReactEventTargetObject {
+    validateResponderContext();
+    const eventTargetFiber = getChildEventTargetFiberFromTarget(target);
+    invariant(
+      eventTargetFiber !== null,
+      'getNextEventTargetFromTarget: was called with a target that was not a direct event target.',
+    );
+    let node = ((eventTargetFiber.return: any): Fiber).sibling;
+
+    while (node !== null) {
+      if (node.stateNode === currentInstance) {
+        return null;
+      }
+      if (
+        node.tag === EventTargetWorkTag &&
+        queryEventTarget(node, queryType, queryKey)
+      ) {
+        break;
+      } else {
+        const child = node.child;
+
+        if (child !== null) {
+          node = child;
+          continue;
+        }
+      }
+      const sibling = node.sibling;
+
+      if (sibling !== null) {
+        node = sibling;
+        continue;
+      }
+      const parent = node.return;
+      if (parent === null) {
+        break;
+      }
+      node = parent.sibling;
+    }
+    if (node === null) {
+      return null;
+    }
+    return getEventTargetObject(node);
   },
 };
+
+function getChildEventTargetFiberFromTarget(
+  target: Element | Document,
+): null | Fiber {
+  const fiber = getClosestInstanceFromNode(target);
+  if (fiber === null) {
+    return null;
+  }
+  let child = fiber.child;
+  while (child !== null) {
+    if (child.tag === EventTargetWorkTag) {
+      return child;
+    }
+    child = child.sibling;
+  }
+  return null;
+}
+
+function getEventTargetFibersWithinCurrentEventComponent(
+  queryType?: Symbol | number,
+  queryKey?: string,
+): Array<Fiber> {
+  const eventTargetFibers = [];
+  const eventComponentInstance = ((currentInstance: any): ReactEventComponentInstance);
+  let node = ((eventComponentInstance.currentFiber: any): Fiber).child;
+
+  while (node !== null) {
+    if (node.stateNode === currentInstance) {
+      break;
+    }
+    if (
+      node.tag === EventTargetWorkTag &&
+      queryEventTarget(node, queryType, queryKey)
+    ) {
+      eventTargetFibers.push(node);
+    } else {
+      const child = node.child;
+
+      if (child !== null) {
+        node = child;
+        continue;
+      }
+    }
+    const sibling = node.sibling;
+
+    if (sibling !== null) {
+      node = sibling;
+      continue;
+    }
+    const parent = node.return;
+    if (parent === null) {
+      break;
+    }
+    node = parent.sibling;
+  }
+  return eventTargetFibers;
+}
+
+function getEventTargetObject(node: Fiber): null | ReactEventTargetObject {
+  const props = node.stateNode.props;
+  let parent = node.return;
+
+  while (parent !== null) {
+    if (parent.stateNode === currentInstance) {
+      return null;
+    }
+    if (parent.tag === HostComponent) {
+      return {
+        node: parent.stateNode,
+        props,
+      };
+    }
+    parent = parent.return;
+  }
+  return null;
+}
 
 function processTimers(timers: Map<Symbol, ResponderTimer>): void {
   const timersArr = Array.from(timers.values());
@@ -467,7 +644,7 @@ export function processEventQueue(): void {
   }
 }
 
-function getTargetEventTypes(
+function getTargetEventTypesSet(
   eventTypes: Array<ReactEventResponderEventType>,
 ): Set<DOMTopLevelEventType> {
   let cachedSet = targetEventTypeCached.get(eventTypes);
@@ -497,12 +674,13 @@ function getTargetEventResponderInstances(
       const eventComponentInstance = node.stateNode;
       if (currentOwner === null || currentOwner === eventComponentInstance) {
         const responder = eventComponentInstance.responder;
+        const targetEventTypes = responder.targetEventTypes;
         // Validate the target event type exists on the responder
-        const targetEventTypes = getTargetEventTypes(
-          responder.targetEventTypes,
-        );
-        if (targetEventTypes.has(topLevelType)) {
-          eventResponderInstances.push(eventComponentInstance);
+        if (targetEventTypes !== undefined) {
+          const targetEventTypesSet = getTargetEventTypesSet(targetEventTypes);
+          if (targetEventTypesSet.has(topLevelType)) {
+            eventResponderInstances.push(eventComponentInstance);
+          }
         }
       }
     }
@@ -716,6 +894,10 @@ export function dispatchEventForResponderEventSystem(
   eventSystemFlags: EventSystemFlags,
 ): void {
   if (enableEventAPI) {
+    if (alreadyDispatching) {
+      return;
+    }
+    alreadyDispatching = true;
     currentEventQueue = createEventQueue();
     try {
       traverseAndHandleEventResponderInstances(
@@ -730,6 +912,7 @@ export function dispatchEventForResponderEventSystem(
       currentTimers = null;
       currentInstance = null;
       currentEventQueue = null;
+      alreadyDispatching = false;
     }
   }
 }

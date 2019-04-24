@@ -688,9 +688,7 @@ describe('DOMEventResponderSystem', () => {
       undefined,
       undefined,
       (event, context, props, state) => {
-        queryResult = Array.from(
-          context.getEventTargetsFromTarget(event.target),
-        );
+        queryResult = Array.from(context.getEventTargetsWithinEventComponent());
       },
     );
 
@@ -715,15 +713,15 @@ describe('DOMEventResponderSystem', () => {
 
     expect(queryResult).toEqual([
       {
-        node: buttonElement,
-        props: {
-          foo: 2,
-        },
-      },
-      {
         node: divElement,
         props: {
           foo: 1,
+        },
+      },
+      {
+        node: buttonElement,
+        props: {
+          foo: 2,
         },
       },
     ]);
@@ -744,8 +742,7 @@ describe('DOMEventResponderSystem', () => {
       undefined,
       undefined,
       (event, context, props, state) => {
-        queryResult = context.getEventTargetsFromTarget(
-          event.target,
+        queryResult = context.getEventTargetsWithinEventComponent(
           eventTargetType2,
         );
       },
@@ -792,8 +789,7 @@ describe('DOMEventResponderSystem', () => {
       undefined,
       undefined,
       (event, context, props, state) => {
-        queryResult = context.getEventTargetsFromTarget(
-          event.target,
+        queryResult = context.getEventTargetsWithinEventComponent(
           undefined,
           'a',
         );
@@ -845,21 +841,18 @@ describe('DOMEventResponderSystem', () => {
       undefined,
       undefined,
       (event, context, props, state) => {
-        queryResult = context.getEventTargetsFromTarget(
-          event.target,
+        queryResult = context.getEventTargetsWithinEventComponent(
           eventTargetType2,
           'a',
         );
 
-        queryResult2 = context.getEventTargetsFromTarget(
-          event.target,
+        queryResult2 = context.getEventTargetsWithinEventComponent(
           eventTargetType,
           'c',
         );
 
         // Should return an empty array as this doesn't exist
-        queryResult3 = context.getEventTargetsFromTarget(
-          event.target,
+        queryResult3 = context.getEventTargetsWithinEventComponent(
           eventTargetType,
           'd',
         );

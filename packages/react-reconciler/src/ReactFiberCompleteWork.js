@@ -812,6 +812,7 @@ function completeWork(
             responderState = responder.createInitialState(newProps);
           }
           eventComponentInstance = workInProgress.stateNode = {
+            currentFiber: workInProgress,
             props: newProps,
             responder,
             rootEventTypes: null,
@@ -824,6 +825,8 @@ function completeWork(
           eventComponentInstance.props = newProps;
           // Update the root container, so we can properly unmount events at some point
           eventComponentInstance.rootInstance = rootContainerInstance;
+          // Update the current fiber
+          eventComponentInstance.currentFiber = workInProgress;
           updateEventComponent(eventComponentInstance);
         }
       }
