@@ -68,8 +68,9 @@ export default class Store extends EventEmitter {
   // At least one of the injected renderers contains (DEV only) owner metadata.
   _hasOwnerMetadata: boolean = false;
 
-  // Map of ID to Element.
-  // Elements are mutable (for now) to avoid excessive cloning during tree updates.
+  // Map of ID to (mutable) Element.
+  // Elements are mutated to avoid excessive cloning during tree updates.
+  // The InspectedElementContext also relies on this mutability for its WeakMap usage.
   _idToElement: Map<number, Element> = new Map();
 
   // The user has imported a previously exported profiling session.

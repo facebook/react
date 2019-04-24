@@ -2,6 +2,7 @@
 
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -14,6 +15,7 @@ import { TreeStateContext } from './TreeContext';
 
 import type {
   DehydratedData,
+  Element,
   InspectedElement,
 } from 'src/devtools/views/Components/types';
 import type { Resource, Thenable } from '../../cache';
@@ -31,10 +33,10 @@ type InProgressRequest = {|
   resolveFn: ResolveFn,
 |};
 
-const inProgressRequests: Map<number, InProgressRequest> = new Map();
-const resource: Resource<number, number, InspectedElement> = createResource(
-  (id: number) => {
-    let request = inProgressRequests.get(id);
+const inProgressRequests: WeakMap<Element, InProgressRequest> = new WeakMap();
+const resource: Resource<Element, Element, InspectedElement> = createResource(
+  (element: Element) => {
+    let request = inProgressRequests.get(element);
     if (request != null) {
       return request.promise;
     }
@@ -44,12 +46,12 @@ const resource: Resource<number, number, InspectedElement> = createResource(
       resolveFn = resolve;
     });
 
-    inProgressRequests.set(id, { promise, resolveFn });
+    inProgressRequests.set(element, { promise, resolveFn });
 
     return promise;
   },
-  (id: number) => id,
-  { useLRU: true }
+  (element: Element) => element,
+  { useWeakMap: true }
 );
 
 type Props = {|
@@ -59,6 +61,18 @@ type Props = {|
 function InspectedElementContextController({ children }: Props) {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
+
+  const read = useCallback(
+    (id: number) => {
+      const element = store.getElementByID(id);
+      if (element !== null) {
+        return resource.read(element);
+      } else {
+        return null;
+      }
+    },
+    [store]
+  );
 
   // It's very important that this context consumes selectedElementID and not inspectedElementID.
   // Otherwise the effect that sends the "inspect" message across the bridge-
@@ -81,16 +95,19 @@ function InspectedElementContextController({ children }: Props) {
           state: hydrateHelper(inspectedElement.state),
         }: any): InspectedElement);
 
-        const request = inProgressRequests.get(id);
-        if (request != null) {
-          inProgressRequests.delete(id);
-          request.resolveFn(inspectedElement);
-        } else {
-          resource.write(id, inspectedElement);
+        const element = store.getElementByID(id);
+        if (element !== null) {
+          const request = inProgressRequests.get(element);
+          if (request != null) {
+            inProgressRequests.delete(element);
+            request.resolveFn(inspectedElement);
+          } else {
+            resource.write(element, inspectedElement);
 
-          // Schedule update with React if the curently-selected element has been invalidated.
-          if (id === selectedElementID) {
-            setCount(count => count + 1);
+            // Schedule update with React if the curently-selected element has been invalidated.
+            if (id === selectedElementID) {
+              setCount(count => count + 1);
+            }
           }
         }
       }
@@ -98,7 +115,7 @@ function InspectedElementContextController({ children }: Props) {
 
     bridge.addListener('inspectedElement', onInspectedElement);
     return () => bridge.removeListener('inspectedElement', onInspectedElement);
-  }, [bridge, selectedElementID]);
+  }, [bridge, selectedElementID, store]);
 
   // This effect handler polls for updates on the currently selected element.
   useEffect(() => {
@@ -145,12 +162,10 @@ function InspectedElementContextController({ children }: Props) {
   }, [bridge, selectedElementID, store]);
 
   const value = useMemo(
-    () => ({
-      read: resource.read,
-    }),
+    () => ({ read }),
     // Count is used to invalidate the cache and schedule an update with React.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [count]
+    [count, read]
   );
 
   return (

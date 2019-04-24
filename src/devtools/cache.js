@@ -1,7 +1,6 @@
 // @flow
 
 import React, { createContext } from 'react';
-import LRU from 'lru-cache';
 
 // Cache implementation was forked from the React repo:
 // https://github.com/facebook/react/blob/master/packages/react-cache/src/ReactCache.js
@@ -68,18 +67,23 @@ function readContext(Context, observedBits) {
 const CacheContext = createContext(null);
 
 type Config = {
-  useLRU?: boolean,
+  useWeakMap?: boolean,
 };
 
-const entries: Map<Resource<any, any, any>, Map<any, any> | LRU> = new Map();
+const entries: Map<
+  Resource<any, any, any>,
+  Map<any, any> | WeakMap<any, any>
+> = new Map();
 const resourceConfigs: Map<Resource<any, any, any>, Config> = new Map();
 
-function getEntriesForResource(resource: any): Map<any, any> | LRU {
+function getEntriesForResource(
+  resource: any
+): Map<any, any> | WeakMap<any, any> {
   let entriesForResource = ((entries.get(resource): any): Map<any, any>);
   if (entriesForResource === undefined) {
     const config = resourceConfigs.get(resource);
     entriesForResource =
-      config !== undefined && config.useLRU ? new LRU({ max: 10 }) : new Map();
+      config !== undefined && config.useWeakMap ? new WeakMap() : new Map();
     entries.set(resource, entriesForResource);
   }
   return entriesForResource;
@@ -122,7 +126,7 @@ function accessResult<Input, Key, Value>(
   }
 }
 
-export function createResource<Input, Key: string | number, Value>(
+export function createResource<Input, Key, Value>(
   fetch: Input => Thenable<Value>,
   hashInput: Input => Key,
   config?: Config = {}
@@ -134,11 +138,7 @@ export function createResource<Input, Key: string | number, Value>(
 
     invalidate(key: Key): void {
       const entriesForResource = getEntriesForResource(resource);
-      if (entriesForResource instanceof Map) {
-        entriesForResource.delete(key);
-      } else {
-        entriesForResource.set(key, undefined);
-      }
+      entriesForResource.delete(key);
     },
 
     read(input: Input): Value {
