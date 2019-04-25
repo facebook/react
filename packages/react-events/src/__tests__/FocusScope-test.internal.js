@@ -49,11 +49,12 @@ describe('FocusScope event responder', () => {
   });
 
   afterEach(() => {
+    ReactDOM.render(null, container);
     document.body.removeChild(container);
     container = null;
   });
 
-  it('when using a simple focus scope with autofocus', () => {
+  it('should work as expected with autofocus', () => {
     const inputRef = React.createRef();
     const input2Ref = React.createRef();
     const buttonRef = React.createRef();
@@ -74,17 +75,17 @@ describe('FocusScope event responder', () => {
 
     ReactDOM.render(<SimpleFocusScope />, container);
     expect(document.activeElement).toBe(inputRef.current);
-    document.dispatchEvent(createTabForward());
+    document.activeElement.dispatchEvent(createTabForward());
     expect(document.activeElement).toBe(buttonRef.current);
-    document.dispatchEvent(createTabForward());
+    document.activeElement.dispatchEvent(createTabForward());
     expect(document.activeElement).toBe(divRef.current);
-    document.dispatchEvent(createTabForward());
+    document.activeElement.dispatchEvent(createTabForward());
     expect(document.activeElement).toBe(butto2nRef.current);
-    document.dispatchEvent(createTabBackward());
+    document.activeElement.dispatchEvent(createTabBackward());
     expect(document.activeElement).toBe(divRef.current);
   });
 
-  it('when using a simple focus scope with autofocus and trapping', () => {
+  it('should work as expected with autofocus and trapping', () => {
     const inputRef = React.createRef();
     const input2Ref = React.createRef();
     const buttonRef = React.createRef();
@@ -103,15 +104,91 @@ describe('FocusScope event responder', () => {
 
     ReactDOM.render(<SimpleFocusScope />, container);
     expect(document.activeElement).toBe(buttonRef.current);
-    document.dispatchEvent(createTabForward());
+    document.activeElement.dispatchEvent(createTabForward());
     expect(document.activeElement).toBe(button2Ref.current);
-    document.dispatchEvent(createTabForward());
+    document.activeElement.dispatchEvent(createTabForward());
     expect(document.activeElement).toBe(buttonRef.current);
-    document.dispatchEvent(createTabForward());
+    document.activeElement.dispatchEvent(createTabForward());
     expect(document.activeElement).toBe(button2Ref.current);
-    document.dispatchEvent(createTabBackward());
+    document.activeElement.dispatchEvent(createTabBackward());
     expect(document.activeElement).toBe(buttonRef.current);
-    document.dispatchEvent(createTabBackward());
+    document.activeElement.dispatchEvent(createTabBackward());
+    expect(document.activeElement).toBe(button2Ref.current);
+  });
+
+  it('should work as expected when nested', () => {
+    const inputRef = React.createRef();
+    const input2Ref = React.createRef();
+    const buttonRef = React.createRef();
+    const button2Ref = React.createRef();
+    const button3Ref = React.createRef();
+    const button4Ref = React.createRef();
+
+    const SimpleFocusScope = () => (
+      <div>
+        <FocusScope>
+          <input ref={inputRef} tabIndex={-1} />
+          <button ref={buttonRef} id={1} />
+          <FocusScope>
+            <button ref={button2Ref} id={2} />
+            <button ref={button3Ref} id={3} />
+          </FocusScope>
+          <input ref={input2Ref} tabIndex={-1} />
+          <button ref={button4Ref} id={4} />
+        </FocusScope>
+      </div>
+    );
+
+    ReactDOM.render(<SimpleFocusScope />, container);
+    buttonRef.current.focus();
+    expect(document.activeElement).toBe(buttonRef.current);
+    document.activeElement.dispatchEvent(createTabForward());
+    expect(document.activeElement).toBe(button2Ref.current);
+    document.activeElement.dispatchEvent(createTabForward());
+    expect(document.activeElement).toBe(button3Ref.current);
+    document.activeElement.dispatchEvent(createTabForward());
+    expect(document.activeElement).toBe(button4Ref.current);
+    document.activeElement.dispatchEvent(createTabBackward());
+    expect(document.activeElement).toBe(button3Ref.current);
+    document.activeElement.dispatchEvent(createTabBackward());
+    expect(document.activeElement).toBe(button2Ref.current);
+  });
+
+  it('should work as expected when nested with scope that is trapped', () => {
+    const inputRef = React.createRef();
+    const input2Ref = React.createRef();
+    const buttonRef = React.createRef();
+    const button2Ref = React.createRef();
+    const button3Ref = React.createRef();
+    const button4Ref = React.createRef();
+
+    const SimpleFocusScope = () => (
+      <div>
+        <FocusScope>
+          <input ref={inputRef} tabIndex={-1} />
+          <button ref={buttonRef} id={1} />
+          <FocusScope trap={true}>
+            <button ref={button2Ref} id={2} />
+            <button ref={button3Ref} id={3} />
+          </FocusScope>
+          <input ref={input2Ref} tabIndex={-1} />
+          <button ref={button4Ref} id={4} />
+        </FocusScope>
+      </div>
+    );
+
+    ReactDOM.render(<SimpleFocusScope />, container);
+    buttonRef.current.focus();
+    expect(document.activeElement).toBe(buttonRef.current);
+    document.activeElement.dispatchEvent(createTabForward());
+    expect(document.activeElement).toBe(button2Ref.current);
+    document.activeElement.dispatchEvent(createTabForward());
+    expect(document.activeElement).toBe(button3Ref.current);
+    document.activeElement.dispatchEvent(createTabForward());
+    expect(document.activeElement).toBe(button2Ref.current);
+    document.activeElement.dispatchEvent(createTabBackward());
+    expect(document.activeElement).toBe(button3Ref.current);
+    document.activeElement.dispatchEvent(createTabBackward());
     expect(document.activeElement).toBe(button2Ref.current);
   });
 });

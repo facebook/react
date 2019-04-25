@@ -120,7 +120,7 @@ const SwipeResponder = {
           let shouldEnableSwiping = true;
 
           if (props.onShouldClaimOwnership && props.onShouldClaimOwnership()) {
-            shouldEnableSwiping = context.requestOwnership();
+            shouldEnableSwiping = context.requestGlobalOwnership();
           }
           if (shouldEnableSwiping) {
             state.isSwiping = true;

@@ -166,7 +166,7 @@ const DragResponder = {
               props.onShouldClaimOwnership &&
               props.onShouldClaimOwnership()
             ) {
-              shouldEnableDragging = context.requestOwnership();
+              shouldEnableDragging = context.requestGlobalOwnership();
             }
             if (shouldEnableDragging) {
               state.isDragging = true;

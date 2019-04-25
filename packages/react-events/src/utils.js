@@ -51,5 +51,9 @@ export function isEventPositionWithinTouchHitTarget(
   context: ReactResponderContext,
 ) {
   const nativeEvent: any = event.nativeEvent;
-  return context.isPositionWithinTouchHitTarget(nativeEvent.x, nativeEvent.y);
+  return context.isPositionWithinTouchHitTarget(
+    // x and y can be doubles, so ensure they are integers
+    parseInt(nativeEvent.x, 10),
+    parseInt(nativeEvent.y, 10),
+  );
 }

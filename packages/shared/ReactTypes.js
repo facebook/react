@@ -173,6 +173,7 @@ export type ReactResponderContext = {
   ) => boolean,
   isTargetWithinEventComponent: (Element | Document) => boolean,
   isTargetDirectlyWithinEventComponent: (Element | Document) => boolean,
+  isTargetWithinEventResponderScope: (Element | Document) => boolean,
   isPositionWithinTouchHitTarget: (x: number, y: number) => boolean,
   addRootEventTypes: (
     rootEventTypes: Array<ReactEventResponderEventType>,
@@ -181,7 +182,8 @@ export type ReactResponderContext = {
     rootEventTypes: Array<ReactEventResponderEventType>,
   ) => void,
   hasOwnership: () => boolean,
-  requestOwnership: () => boolean,
+  requestLocalOwnership: () => boolean,
+  requestGlobalOwnership: () => boolean,
   releaseOwnership: () => boolean,
   setTimeout: (func: () => void, timeout: number) => Symbol,
   clearTimeout: (timerId: Symbol) => void,

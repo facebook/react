@@ -71,6 +71,7 @@ const rootEventTypesToEventComponentInstances: Map<
   DOMTopLevelEventType | string,
   Set<ReactEventComponentInstance>,
 > = new Map();
+global.foo = rootEventTypesToEventComponentInstances;
 const targetEventTypeCached: Map<
   Array<ReactEventResponderEventType>,
   Set<DOMTopLevelEventType>,
@@ -84,9 +85,8 @@ const eventListeners:
       ($Shape<PartialEventObject>) => void,
     > = new PossiblyWeakMap();
 
-let alreadyDispatching = false;
-
 let currentTimers = new Map();
+let currentLocalOwners = new Map();
 let currentOwner = null;
 let currentInstance: null | ReactEventComponentInstance = null;
 let currentEventQueue: null | EventQueue = null;
@@ -189,6 +189,27 @@ const eventResponderContext: ReactResponderContext = {
     }
     return false;
   },
+  isTargetWithinEventResponderScope(target: Element | Document): boolean {
+    validateResponderContext();
+    const responder = ((currentInstance: any): ReactEventComponentInstance)
+      .responder;
+    if (target != null) {
+      let fiber = getClosestInstanceFromNode(target);
+      while (fiber !== null) {
+        if (fiber.stateNode === currentInstance) {
+          return true;
+        }
+        if (
+          fiber.tag === EventComponent &&
+          fiber.stateNode.responder === responder
+        ) {
+          return false;
+        }
+        fiber = fiber.return;
+      }
+    }
+    return false;
+  },
   isTargetWithinElement(
     childTarget: Element | Document,
     parentTarget: Element | Document,
@@ -264,25 +285,38 @@ const eventResponderContext: ReactResponderContext = {
   },
   hasOwnership(): boolean {
     validateResponderContext();
-    return currentOwner === currentInstance;
+    const responder = ((currentInstance: any): ReactEventComponentInstance)
+      .responder;
+    return (
+      currentOwner === currentInstance ||
+      currentLocalOwners.get(responder) === currentInstance
+    );
   },
-  requestOwnership(): boolean {
+  requestGlobalOwnership(): boolean {
     validateResponderContext();
     if (currentOwner !== null) {
       return false;
     }
     currentOwner = currentInstance;
-    triggerOwnershipListeners();
+    triggerOwnershipListeners(null);
+    return true;
+  },
+  requestLocalOwnership(): boolean {
+    validateResponderContext();
+    const responder = ((currentInstance: any): ReactEventComponentInstance)
+      .responder;
+    if (currentLocalOwners.has(responder)) {
+      return false;
+    }
+    currentLocalOwners.set(responder, currentInstance);
+    triggerOwnershipListeners(responder);
     return true;
   },
   releaseOwnership(): boolean {
     validateResponderContext();
-    if (currentOwner !== currentInstance) {
-      return false;
-    }
-    currentOwner = null;
-    triggerOwnershipListeners();
-    return false;
+    return releaseOwnershipForEventComponentInstance(
+      ((currentInstance: any): ReactEventComponentInstance),
+    );
   },
   setTimeout(func: () => void, delay): Symbol {
     validateResponderContext();
@@ -329,9 +363,6 @@ const eventResponderContext: ReactResponderContext = {
     let node = ((eventComponentInstance.currentFiber: any): Fiber).child;
 
     while (node !== null) {
-      if (node.stateNode === currentInstance) {
-        break;
-      }
       if (isFiberHostComponentFocusable(node)) {
         focusableElements.push(node.stateNode);
       } else {
@@ -352,6 +383,9 @@ const eventResponderContext: ReactResponderContext = {
       if (parent === null) {
         break;
       }
+      if (parent.stateNode === currentInstance) {
+        break;
+      }
       node = parent.sibling;
     }
 
@@ -364,6 +398,27 @@ function getActiveDocument(): Document {
   const eventComponentInstance = ((currentInstance: any): ReactEventComponentInstance);
   const rootElement = ((eventComponentInstance.rootInstance: any): Element);
   return rootElement.ownerDocument;
+}
+
+function releaseOwnershipForEventComponentInstance(
+  eventComponentInstance: ReactEventComponentInstance,
+): boolean {
+  const responder = eventComponentInstance.responder;
+  let triggerOwnershipListenersWith;
+  if (currentLocalOwners.get(responder) === eventComponentInstance) {
+    currentLocalOwners.delete(responder);
+    triggerOwnershipListenersWith = responder;
+  }
+  if (currentOwner === eventComponentInstance) {
+    currentOwner = null;
+    triggerOwnershipListenersWith = null;
+  }
+  if (triggerOwnershipListenersWith !== undefined) {
+    triggerOwnershipListeners(triggerOwnershipListenersWith);
+    return true;
+  } else {
+    return false;
+  }
 }
 
 function isFiberHostComponentFocusable(fiber: Fiber): boolean {
@@ -497,15 +552,13 @@ function getTargetEventResponderInstances(
     // Traverse up the fiber tree till we find event component fibers.
     if (node.tag === EventComponent) {
       const eventComponentInstance = node.stateNode;
-      if (currentOwner === null || currentOwner === eventComponentInstance) {
-        const responder = eventComponentInstance.responder;
-        const targetEventTypes = responder.targetEventTypes;
-        // Validate the target event type exists on the responder
-        if (targetEventTypes !== undefined) {
-          const targetEventTypesSet = getTargetEventTypesSet(targetEventTypes);
-          if (targetEventTypesSet.has(topLevelType)) {
-            eventResponderInstances.push(eventComponentInstance);
-          }
+      const responder = eventComponentInstance.responder;
+      const targetEventTypes = responder.targetEventTypes;
+      // Validate the target event type exists on the responder
+      if (targetEventTypes !== undefined) {
+        const targetEventTypesSet = getTargetEventTypesSet(targetEventTypes);
+        if (targetEventTypesSet.has(topLevelType)) {
+          eventResponderInstances.push(eventComponentInstance);
         }
       }
     }
@@ -526,16 +579,33 @@ function getRootEventResponderInstances(
 
     for (let i = 0; i < rootEventComponentInstances.length; i++) {
       const rootEventComponentInstance = rootEventComponentInstances[i];
-
-      if (
-        currentOwner === null ||
-        currentOwner === rootEventComponentInstance
-      ) {
-        eventResponderInstances.push(rootEventComponentInstance);
-      }
+      eventResponderInstances.push(rootEventComponentInstance);
     }
   }
   return eventResponderInstances;
+}
+
+function shouldSkipEventComponent(
+  eventResponderInstance: ReactEventComponentInstance,
+  propagatedEventResponders: null | Set<ReactEventResponder>,
+): boolean {
+  const responder = eventResponderInstance.responder;
+  if (propagatedEventResponders !== null && responder.stopLocalPropagation) {
+    if (propagatedEventResponders.has(responder)) {
+      return true;
+    }
+    propagatedEventResponders.add(responder);
+  }
+  if (currentOwner && currentOwner !== eventResponderInstance) {
+    return true;
+  }
+  if (
+    currentLocalOwners.has(responder) &&
+    currentLocalOwners.get(responder) !== eventResponderInstance
+  ) {
+    return true;
+  }
+  return false;
 }
 
 function traverseAndHandleEventResponderInstances(
@@ -574,14 +644,16 @@ function traverseAndHandleEventResponderInstances(
     for (i = length; i-- > 0; ) {
       const targetEventResponderInstance = targetEventResponderInstances[i];
       const {responder, props, state} = targetEventResponderInstance;
-      if (responder.stopLocalPropagation) {
-        if (propagatedEventResponders.has(responder)) {
-          continue;
-        }
-        propagatedEventResponders.add(responder);
-      }
       const eventListener = responder.onEventCapture;
       if (eventListener !== undefined) {
+        if (
+          shouldSkipEventComponent(
+            targetEventResponderInstance,
+            propagatedEventResponders,
+          )
+        ) {
+          continue;
+        }
         currentInstance = targetEventResponderInstance;
         eventListener(responderEvent, eventResponderContext, props, state);
       }
@@ -592,14 +664,16 @@ function traverseAndHandleEventResponderInstances(
     for (i = 0; i < length; i++) {
       const targetEventResponderInstance = targetEventResponderInstances[i];
       const {responder, props, state} = targetEventResponderInstance;
-      if (responder.stopLocalPropagation) {
-        if (propagatedEventResponders.has(responder)) {
-          continue;
-        }
-        propagatedEventResponders.add(responder);
-      }
       const eventListener = responder.onEvent;
       if (eventListener !== undefined) {
+        if (
+          shouldSkipEventComponent(
+            targetEventResponderInstance,
+            propagatedEventResponders,
+          )
+        ) {
+          continue;
+        }
         currentInstance = targetEventResponderInstance;
         eventListener(responderEvent, eventResponderContext, props, state);
       }
@@ -616,6 +690,9 @@ function traverseAndHandleEventResponderInstances(
       const {responder, props, state} = rootEventResponderInstance;
       const eventListener = responder.onRootEvent;
       if (eventListener !== undefined) {
+        if (shouldSkipEventComponent(rootEventResponderInstance, null)) {
+          continue;
+        }
         currentInstance = rootEventResponderInstance;
         eventListener(responderEvent, eventResponderContext, props, state);
       }
@@ -623,13 +700,18 @@ function traverseAndHandleEventResponderInstances(
   }
 }
 
-function triggerOwnershipListeners(): void {
+function triggerOwnershipListeners(
+  limitByResponder: null | ReactEventResponder,
+): void {
   const listeningInstances = Array.from(ownershipChangeListeners);
   const previousInstance = currentInstance;
   try {
     for (let i = 0; i < listeningInstances.length; i++) {
       const instance = listeningInstances[i];
       const {props, responder, state} = instance;
+      if (limitByResponder !== null && limitByResponder !== responder) {
+        continue;
+      }
       currentInstance = instance;
       const onOwnershipChange = responder.onOwnershipChange;
       if (onOwnershipChange !== undefined) {
@@ -680,9 +762,12 @@ export function unmountEventResponder(
       currentTimers = null;
     }
   }
-  if (currentOwner === eventComponentInstance) {
-    currentOwner = null;
-    triggerOwnershipListeners();
+  try {
+    currentEventQueue = createEventQueue();
+    releaseOwnershipForEventComponentInstance(eventComponentInstance);
+    processEventQueue();
+  } finally {
+    currentEventQueue = null;
   }
   if (responder.onOwnershipChange !== undefined) {
     ownershipChangeListeners.delete(eventComponentInstance);
@@ -719,10 +804,10 @@ export function dispatchEventForResponderEventSystem(
   eventSystemFlags: EventSystemFlags,
 ): void {
   if (enableEventAPI) {
-    if (alreadyDispatching) {
-      return;
-    }
-    alreadyDispatching = true;
+    const previousEventQueue = currentEventQueue;
+    const previousInstance = currentInstance;
+    const previousTimers = currentTimers;
+    currentTimers = null;
     currentEventQueue = createEventQueue();
     try {
       traverseAndHandleEventResponderInstances(
@@ -734,10 +819,9 @@ export function dispatchEventForResponderEventSystem(
       );
       processEventQueue();
     } finally {
-      currentTimers = null;
-      currentInstance = null;
-      currentEventQueue = null;
-      alreadyDispatching = false;
+      currentTimers = previousTimers;
+      currentInstance = previousInstance;
+      currentEventQueue = previousEventQueue;
     }
   }
 }
