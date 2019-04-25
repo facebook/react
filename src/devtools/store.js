@@ -81,6 +81,10 @@ export default class Store extends EventEmitter {
   // When profiling is in progress, operations are stored so that we can later reconstruct past commit trees.
   _isProfiling: boolean = false;
 
+  // Map of element (id) to the set of elements (ids) it owns.
+  // This map enables getOwnersListForElement() to avoid traversing the entire tree.
+  _ownersMap: Map<number, Set<number>> = new Map();
+
   // Suspense cache for reading profiling data.
   _profilingCache: ProfilingCache;
 
@@ -406,10 +410,65 @@ export default class Store extends EventEmitter {
     return index;
   }
 
-  getOwnersListForElement(id: number): Array<Element> {
+  getOwnersListForElement(ownerID: number): Array<Element> {
     const list = [];
+    let element = this._idToElement.get(ownerID);
+    if (element != null) {
+      list.push({
+        ...element,
+        depth: 0,
+      });
 
-    this._populateOwnersList(id, id, 0, list);
+      const unsortedIDs = this._ownersMap.get(ownerID);
+      if (unsortedIDs !== undefined) {
+        const depthMap: Map<number, number> = new Map([[ownerID, 0]]);
+
+        // Items in a set are ordered based on insertion.
+        // This does not correlate with their order in the tree.
+        // So first we need to order them.
+        // I wish we could avoid this sorting operation; we could sort at insertion time,
+        // but then we'd have to pay sorting costs even if the owners list was never used.
+        // Seems better to defer the cost, since the set of ids is probably pretty small.
+        const sortedIDs = Array.from(unsortedIDs).sort(
+          (idA, idB) =>
+            ((this.getIndexOfElementID(idA): any): number) -
+            ((this.getIndexOfElementID(idB): any): number)
+        );
+
+        // Next we need to determine the appropriate depth for each element in the list.
+        // The depth in the list may not correspond to the depth in the tree,
+        // because the list has been filtered to remove intermediate components.
+        // Perhaps the easiest way to do this is to walk up the tree until we reach either:
+        // (1) another node that's already in the tree, or (2) the root (owner)
+        // at which point, our depth is just the depth of that node plus one.
+        sortedIDs.forEach(id => {
+          const element = this._idToElement.get(id);
+          if (element != null) {
+            let parentID = element.parentID;
+
+            let depth = 0;
+            while (parentID > 0) {
+              if (parentID === ownerID || unsortedIDs.has(parentID)) {
+                depth = depthMap.get(parentID) + 1;
+                depthMap.set(id, depth);
+                break;
+              }
+              const parent = this._idToElement.get(parentID);
+              if (parent == null) {
+                break;
+              }
+              parentID = parent.parentID;
+            }
+
+            if (depth === 0) {
+              throw Error('Invalid owners list');
+            }
+
+            list.push({ ...element, depth });
+          }
+        });
+      }
+    }
 
     return list;
   }
@@ -560,32 +619,6 @@ export default class Store extends EventEmitter {
     }),
     THROTTLE_CAPTURE_SCREENSHOT_DURATION
   );
-
-  _populateOwnersList(
-    id: number,
-    ownerID: number,
-    depth: number,
-    list: Array<Element>
-  ) {
-    const element = this._idToElement.get(id);
-    if (element != null) {
-      const isInList = id === ownerID || element.ownerID === ownerID;
-      if (isInList) {
-        list.push({
-          ...element,
-          depth: depth,
-        });
-      }
-      element.children.forEach(childID =>
-        this._populateOwnersList(
-          childID,
-          ownerID,
-          isInList ? depth + 1 : depth,
-          list
-        )
-      );
-    }
-  }
 
   _takeProfilingSnapshotRecursive = (id: number) => {
     const element = this.getElementByID(id);
@@ -779,6 +812,15 @@ export default class Store extends EventEmitter {
             this._idToElement.set(id, element);
             addedElementIDs.push(id);
             this._adjustParentTreeWeight(parentElement, 1);
+
+            if (ownerID > 0) {
+              let set = this._ownersMap.get(ownerID);
+              if (set === undefined) {
+                set = new Set();
+                this._ownersMap.set(ownerID, set);
+              }
+              set.add(id);
+            }
           }
           break;
         }
@@ -798,13 +840,13 @@ export default class Store extends EventEmitter {
             i = i + 1;
 
             const element = ((this._idToElement.get(id): any): Element);
-            if (element.children.length > 0) {
+            const { children, ownerID, parentID, weight } = element;
+            if (children.length > 0) {
               throw new Error(`Node ${id} was removed before its children.`);
             }
 
             this._idToElement.delete(id);
 
-            const parentID = element.parentID;
             let parentElement = null;
             if (parentID === 0) {
               if (__DEBUG__) {
@@ -830,8 +872,16 @@ export default class Store extends EventEmitter {
               parentElement.children.splice(index, 1);
             }
 
-            this._adjustParentTreeWeight(parentElement, -element.weight);
+            this._adjustParentTreeWeight(parentElement, -weight);
             removedElementIDs.set(id, parentID);
+
+            this._ownersMap.delete(id);
+            if (ownerID > 0) {
+              const set = this._ownersMap.get(ownerID);
+              if (set !== undefined) {
+                set.delete(id);
+              }
+            }
           }
           break;
         }
