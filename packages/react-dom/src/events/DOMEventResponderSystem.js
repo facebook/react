@@ -871,7 +871,7 @@ export function addRootEventTypesForComponentInstance(
 }
 
 function registerRootEventType(
-  rootEventType: DOMTopLevelEventType | string,
+  rootEventType: ReactEventResponderEventType,
   eventComponentInstance: ReactEventComponentInstance,
 ): void {
   let name = rootEventType;
