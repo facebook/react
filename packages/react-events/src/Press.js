@@ -39,7 +39,6 @@ type PressProps = {
     left: number,
   },
   preventDefault: boolean,
-  stopPropagation: boolean,
 };
 
 type PointerType = '' | 'mouse' | 'keyboard' | 'pen' | 'touch';
