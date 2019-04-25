@@ -54,6 +54,8 @@ function focusLastChildEventTarget(
   }
 }
 
+const sharedFocusScopeState = {};
+
 const FocusScopeResponder = {
   rootEventTypes,
   createInitialState(): FocusScopeState {
@@ -70,41 +72,52 @@ const FocusScopeResponder = {
   ) {
     const {type, target, nativeEvent} = event;
 
-    if (props.trap) {
-      if (type === 'focus') {
-        if (context.isTargetWithinEventComponent(target)) {
-          state.currentFocusedNode = ((target: any): HTMLElement);
+    if (type === 'focus') {
+      if (context.isTargetWithinEventComponent(target)) {
+        state.currentFocusedNode = ((target: any): HTMLElement);
+      } else if (props.trap) {
+        if (state.currentFocusedNode !== null) {
+          state.currentFocusedNode.focus();
         } else {
-          if (state.currentFocusedNode !== null) {
-            state.currentFocusedNode.focus();
-          } else {
-            focusFirstChildEventTarget(context, state);
-          }
+          focusFirstChildEventTarget(context, state);
         }
-      } else if (type === 'keydown' && nativeEvent.key === 'Tab') {
-        const currentFocusedNode = state.currentFocusedNode;
-        if (currentFocusedNode !== null) {
-          const elements = context.getFocusableElementsInScope();
-          const position = elements.indexOf(currentFocusedNode);
-          if (nativeEvent.shiftKey) {
-            if (position === 0) {
+      }
+    } else if (type === 'keydown' && nativeEvent.key === 'Tab') {
+      const currentFocusedNode = state.currentFocusedNode;
+      if (currentFocusedNode !== null) {
+        const {altkey, ctrlKey, metaKey, shiftKey} = (nativeEvent: any);
+        // Skip if any of these keys are being pressed
+        if (altkey || ctrlKey || metaKey) {
+          return;
+        }
+        const elements = context.getFocusableElementsInScope();
+        const position = elements.indexOf(currentFocusedNode);
+        if (shiftKey) {
+          if (position === 0) {
+            if (props.trap) {
               focusLastChildEventTarget(context, state);
             } else {
-              const previousElement = elements[position - 1];
-              previousElement.focus();
-              state.currentFocusedNode = previousElement;
+              return;
             }
           } else {
-            if (position === elements.length - 1) {
+            const previousElement = elements[position - 1];
+            previousElement.focus();
+            state.currentFocusedNode = previousElement;
+          }
+        } else {
+          if (position === elements.length - 1) {
+            if (props.trap) {
               focusFirstChildEventTarget(context, state);
             } else {
-              const nextElement = elements[position + 1];
-              nextElement.focus();
-              state.currentFocusedNode = nextElement;
+              return;
             }
+          } else {
+            const nextElement = elements[position + 1];
+            nextElement.focus();
+            state.currentFocusedNode = nextElement;
           }
-          ((nativeEvent: any): KeyboardEvent).preventDefault();
         }
+        ((nativeEvent: any): KeyboardEvent).preventDefault();
       }
     }
   },
