@@ -869,7 +869,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   });
 
-  describe('sync mode', () => {
+  describe('legacy mode mode', () => {
     it('times out immediately', async () => {
       function App() {
         return (
@@ -977,7 +977,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     it(
       'continues rendering asynchronously even if a promise is captured by ' +
-        'a sync boundary (default mode)',
+        'a sync boundary (legacy mode)',
       async () => {
         class UpdatingText extends React.Component {
           state = {text: this.props.initialText};
@@ -1109,7 +1109,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     it(
       'continues rendering asynchronously even if a promise is captured by ' +
-        'a sync boundary (strict, non-concurrent)',
+        'a sync boundary (strict, legacy)',
       async () => {
         class UpdatingText extends React.Component {
           state = {text: this.props.initialText};

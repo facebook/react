@@ -175,8 +175,8 @@ describe('ReactSuspenseFuzz', () => {
       resetCache();
       ReactNoop.renderLegacySyncRoot(children);
       resolveAllTasks();
-      const syncOutput = ReactNoop.getChildrenAsJSX();
-      expect(syncOutput).toEqual(expectedOutput);
+      const legacyOutput = ReactNoop.getChildrenAsJSX();
+      expect(legacyOutput).toEqual(expectedOutput);
       ReactNoop.renderLegacySyncRoot(null);
 
       resetCache();
