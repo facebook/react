@@ -27,7 +27,6 @@ type HoverProps = {
   onHoverMove: (e: HoverEvent) => void,
   onHoverStart: (e: HoverEvent) => void,
   preventDefault: boolean,
-  stopPropagation: boolean,
 };
 
 type HoverState = {
