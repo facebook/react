@@ -1724,11 +1724,3 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
   });
 });
-
-// TODO:
-// An update suspends, timeout is scheduled. Update again with different timeout.
-// An update suspends, a higher priority update also suspends, each has different timeouts.
-// Can update siblings of a timed out placeholder without suspending
-// Pinging during the render phase
-// Synchronous thenable
-// Start time is computed using earliest suspended time

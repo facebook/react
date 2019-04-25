@@ -14,9 +14,14 @@ let ReactFeatureFlags;
 let ReactDOM;
 let Hover;
 
-const createPointerEvent = type => {
-  const event = document.createEvent('Event');
-  event.initEvent(type, true, true);
+const createPointerEvent = (type, data) => {
+  const event = document.createEvent('CustomEvent');
+  event.initCustomEvent(type, true, true);
+  if (data != null) {
+    Object.entries(data).forEach(([key, value]) => {
+      event[key] = value;
+    });
+  }
   return event;
 };
 
@@ -36,8 +41,35 @@ describe('Hover event responder', () => {
   });
 
   afterEach(() => {
+    ReactDOM.render(null, container);
     document.body.removeChild(container);
     container = null;
+  });
+
+  describe('disabled', () => {
+    let onHoverStart, onHoverEnd, ref;
+
+    beforeEach(() => {
+      onHoverStart = jest.fn();
+      onHoverEnd = jest.fn();
+      ref = React.createRef();
+      const element = (
+        <Hover
+          disabled={true}
+          onHoverStart={onHoverStart}
+          onHoverEnd={onHoverEnd}>
+          <div ref={ref} />
+        </Hover>
+      );
+      ReactDOM.render(element, container);
+    });
+
+    it('prevents custom events being dispatched', () => {
+      ref.current.dispatchEvent(createPointerEvent('pointerover'));
+      ref.current.dispatchEvent(createPointerEvent('pointerout'));
+      expect(onHoverStart).not.toBeCalled();
+      expect(onHoverEnd).not.toBeCalled();
+    });
   });
 
   describe('onHoverStart', () => {
@@ -60,10 +92,22 @@ describe('Hover event responder', () => {
     });
 
     it('is not called if "pointerover" pointerType is touch', () => {
-      const event = createPointerEvent('pointerover');
-      event.pointerType = 'touch';
+      const event = createPointerEvent('pointerover', {pointerType: 'touch'});
       ref.current.dispatchEvent(event);
       expect(onHoverStart).not.toBeCalled();
+    });
+
+    it('is called if valid "pointerover" follows touch', () => {
+      ref.current.dispatchEvent(
+        createPointerEvent('pointerover', {pointerType: 'touch'}),
+      );
+      ref.current.dispatchEvent(
+        createPointerEvent('pointerout', {pointerType: 'touch'}),
+      );
+      ref.current.dispatchEvent(
+        createPointerEvent('pointerover', {pointerType: 'mouse'}),
+      );
+      expect(onHoverStart).toHaveBeenCalledTimes(1);
     });
 
     it('ignores browser emulated "mouseover" event', () => {
@@ -358,6 +402,62 @@ describe('Hover event responder', () => {
       expect(onHoverMove).toHaveBeenCalledWith(
         expect.objectContaining({type: 'hovermove'}),
       );
+    });
+  });
+
+  describe('nested Hover components', () => {
+    it('do not propagate events by default', () => {
+      const events = [];
+      const innerRef = React.createRef();
+      const outerRef = React.createRef();
+      const createEventHandler = msg => () => {
+        events.push(msg);
+      };
+
+      const element = (
+        <Hover
+          onHoverStart={createEventHandler('outer: onHoverStart')}
+          onHoverEnd={createEventHandler('outer: onHoverEnd')}
+          onHoverChange={createEventHandler('outer: onHoverChange')}>
+          <div ref={outerRef}>
+            <Hover
+              onHoverStart={createEventHandler('inner: onHoverStart')}
+              onHoverEnd={createEventHandler('inner: onHoverEnd')}
+              onHoverChange={createEventHandler('inner: onHoverChange')}>
+              <div ref={innerRef} />
+            </Hover>
+          </div>
+        </Hover>
+      );
+
+      ReactDOM.render(element, container);
+
+      outerRef.current.dispatchEvent(createPointerEvent('pointerover'));
+      outerRef.current.dispatchEvent(
+        createPointerEvent('pointerout', {relatedTarget: innerRef.current}),
+      );
+      innerRef.current.dispatchEvent(createPointerEvent('pointerover'));
+      innerRef.current.dispatchEvent(
+        createPointerEvent('pointerout', {relatedTarget: outerRef.current}),
+      );
+      outerRef.current.dispatchEvent(
+        createPointerEvent('pointerover', {relatedTarget: innerRef.current}),
+      );
+      outerRef.current.dispatchEvent(createPointerEvent('pointerout'));
+      expect(events).toEqual([
+        'outer: onHoverStart',
+        'outer: onHoverChange',
+        'outer: onHoverEnd',
+        'outer: onHoverChange',
+        'inner: onHoverStart',
+        'inner: onHoverChange',
+        'inner: onHoverEnd',
+        'inner: onHoverChange',
+        'outer: onHoverStart',
+        'outer: onHoverChange',
+        'outer: onHoverEnd',
+        'outer: onHoverChange',
+      ]);
     });
   });
 

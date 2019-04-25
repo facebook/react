@@ -150,6 +150,22 @@ describe('ReactSchedulerIntegration', () => {
     ]);
   });
 
+  it('after completing a level of work, infers priority of the next batch based on its expiration time', () => {
+    function App({label}) {
+      Scheduler.yieldValue(`${label} [${getCurrentPriorityAsString()}]`);
+      return label;
+    }
+
+    // Schedule two separate updates at different priorities
+    runWithPriority(UserBlockingPriority, () => {
+      ReactNoop.render(<App label="A" />);
+    });
+    ReactNoop.render(<App label="B" />);
+
+    // The second update should run at normal priority
+    expect(Scheduler).toFlushAndYield(['A [UserBlocking]', 'B [Normal]']);
+  });
+
   // TODO
   it.skip('passive effects have render priority even if they are flushed early', () => {});
 });
