@@ -129,7 +129,7 @@ const DragResponder = {
             );
           }
 
-          context.addRootEventTypes(target.ownerDocument, rootEventTypes);
+          context.addRootEventTypes(rootEventTypes);
         }
         break;
       }

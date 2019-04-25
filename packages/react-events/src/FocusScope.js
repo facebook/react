@@ -125,7 +125,7 @@ const FocusScopeResponder = {
     state: FocusScopeState,
   ) {
     if (props.restoreFocus) {
-      state.nodeToRestore = document.activeElement;
+      state.nodeToRestore = context.getActiveDocument().activeElement;
     }
     if (props.autoFocus) {
       focusFirstChildEventTarget(context, state);

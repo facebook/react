@@ -131,8 +131,9 @@ const eventResponderContext: ReactResponderContext = {
     eventListeners.set(eventObject, listener);
     eventQueue.events.push(eventObject);
   },
-  isPositionWithinTouchHitTarget(doc: Document, x: number, y: number): boolean {
+  isPositionWithinTouchHitTarget(x: number, y: number): boolean {
     validateResponderContext();
+    const doc = getActiveDocument();
     // This isn't available in some environments (JSDOM)
     if (typeof doc.elementFromPoint !== 'function') {
       return false;
@@ -204,12 +205,10 @@ const eventResponderContext: ReactResponderContext = {
     }
     return false;
   },
-  addRootEventTypes(
-    doc: Document,
-    rootEventTypes: Array<ReactEventResponderEventType>,
-  ): void {
+  addRootEventTypes(rootEventTypes: Array<ReactEventResponderEventType>): void {
     validateResponderContext();
-    listenToResponderEventTypesImpl(rootEventTypes, doc);
+    const activeDocument = getActiveDocument();
+    listenToResponderEventTypesImpl(rootEventTypes, activeDocument);
     for (let i = 0; i < rootEventTypes.length; i++) {
       const rootEventType = rootEventTypes[i];
       const topLevelEventType =
@@ -358,7 +357,14 @@ const eventResponderContext: ReactResponderContext = {
 
     return focusableElements;
   },
+  getActiveDocument,
 };
+
+function getActiveDocument(): Document {
+  const eventComponentInstance = ((currentInstance: any): ReactEventComponentInstance);
+  const rootElement = ((eventComponentInstance.rootInstance: any): Element);
+  return rootElement.ownerDocument;
+}
 
 function isFiberHostComponentFocusable(fiber: Fiber): boolean {
   if (fiber.tag !== HostComponent) {
@@ -368,7 +374,7 @@ function isFiberHostComponentFocusable(fiber: Fiber): boolean {
   if (memoizedProps.tabIndex === -1 || memoizedProps.disabled) {
     return false;
   }
-  if (memoizedProps.tabIndex === 0) {
+  if (memoizedProps.tabIndex === 0 || memoizedProps.contentEditable === true) {
     return true;
   }
   if (type === 'a' || type === 'area') {
@@ -379,7 +385,9 @@ function isFiberHostComponentFocusable(fiber: Fiber): boolean {
     type === 'textarea' ||
     type === 'input' ||
     type === 'object' ||
-    type === 'select'
+    type === 'select' ||
+    type === 'iframe' ||
+    type === 'embed'
   );
 }
 

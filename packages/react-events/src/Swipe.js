@@ -129,7 +129,7 @@ const SwipeResponder = {
             state.x = x;
             state.y = y;
             state.swipeTarget = target;
-            context.addRootEventTypes(target.ownerDocument, rootEventTypes);
+            context.addRootEventTypes(rootEventTypes);
           } else {
             state.touchId = null;
           }
