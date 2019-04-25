@@ -7,8 +7,8 @@
  * @flow
  */
 
-export const canUseDOM: boolean = !!(
-  typeof window !== 'undefined' &&
-  typeof window.document !== 'undefined' &&
-  typeof window.document.createElement !== 'undefined'
-);
+'use strict';
+
+const FocusScope = require('./src/FocusScope');
+
+module.exports = FocusScope.default || FocusScope;
