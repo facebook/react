@@ -121,9 +121,7 @@ const eventResponderContext: ReactResponderContext = {
         );
       };
     }
-    const eventObject = ((possibleEventObject: any): $Shape<
-      PartialEventObject,
-    >);
+    const eventObject = ((possibleEventObject: any): $Shape<PartialEventObject>);
     const eventQueue = ((currentEventQueue: any): EventQueue);
     if (discrete) {
       eventQueue.discrete = true;

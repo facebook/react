@@ -45,8 +45,8 @@ function phaseToString(phase) {
   return phase === ROOT_PHASE
     ? 'root'
     : phase === BUBBLE_PHASE
-      ? 'bubble'
-      : 'capture';
+    ? 'bubble'
+    : 'capture';
 }
 
 function dispatchClickEvent(element) {

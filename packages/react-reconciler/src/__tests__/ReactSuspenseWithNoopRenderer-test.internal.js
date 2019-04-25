@@ -29,19 +29,22 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     StrictMode = React.StrictMode;
     ConcurrentMode = React.unstable_ConcurrentMode;
 
-    TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
-      return new Promise((resolve, reject) =>
-        setTimeout(() => {
-          if (textResourceShouldFail) {
-            Scheduler.yieldValue(`Promise rejected [${text}]`);
-            reject(new Error('Failed to load: ' + text));
-          } else {
-            Scheduler.yieldValue(`Promise resolved [${text}]`);
-            resolve(text);
-          }
-        }, ms),
-      );
-    }, ([text, ms]) => text);
+    TextResource = ReactCache.unstable_createResource(
+      ([text, ms = 0]) => {
+        return new Promise((resolve, reject) =>
+          setTimeout(() => {
+            if (textResourceShouldFail) {
+              Scheduler.yieldValue(`Promise rejected [${text}]`);
+              reject(new Error('Failed to load: ' + text));
+            } else {
+              Scheduler.yieldValue(`Promise resolved [${text}]`);
+              resolve(text);
+            }
+          }, ms),
+        );
+      },
+      ([text, ms]) => text,
+    );
     textResourceShouldFail = false;
   });
 

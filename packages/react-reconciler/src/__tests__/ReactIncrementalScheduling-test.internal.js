@@ -90,12 +90,9 @@ describe('ReactIncrementalScheduling', () => {
   it('works on deferred roots in the order they were scheduled', () => {
     const {useEffect} = React;
     function Text({text}) {
-      useEffect(
-        () => {
-          Scheduler.yieldValue(text);
-        },
-        [text],
-      );
+      useEffect(() => {
+        Scheduler.yieldValue(text);
+      }, [text]);
       return text;
     }
 

@@ -319,13 +319,10 @@ describe('ReactDOMServerHooks', () => {
     itRenders('basic render', async render => {
       function CapitalizedText(props) {
         const text = props.text;
-        const capitalizedText = useMemo(
-          () => {
-            yieldValue(`Capitalize '${text}'`);
-            return text.toUpperCase();
-          },
-          [text],
-        );
+        const capitalizedText = useMemo(() => {
+          yieldValue(`Capitalize '${text}'`);
+          return text.toUpperCase();
+        }, [text]);
         return <Text text={capitalizedText} />;
       }
 
@@ -357,13 +354,10 @@ describe('ReactDOMServerHooks', () => {
       async render => {
         function CapitalizedText(props) {
           const [text, setText] = useState(props.text);
-          const capitalizedText = useMemo(
-            () => {
-              yieldValue(`Capitalize '${text}'`);
-              return text.toUpperCase();
-            },
-            [text],
-          );
+          const capitalizedText = useMemo(() => {
+            yieldValue(`Capitalize '${text}'`);
+            return text.toUpperCase();
+          }, [text]);
 
           if (text === 'hello') {
             setText('hello, world.');
@@ -388,13 +382,10 @@ describe('ReactDOMServerHooks', () => {
         function CapitalizedText(props) {
           const [text, setText] = useState(props.text);
           const [count, setCount] = useState(0);
-          const capitalizedText = useMemo(
-            () => {
-              yieldValue(`Capitalize '${text}'`);
-              return text.toUpperCase();
-            },
-            [text],
-          );
+          const capitalizedText = useMemo(() => {
+            yieldValue(`Capitalize '${text}'`);
+            return text.toUpperCase();
+          }, [text]);
 
           yieldValue(count);
 

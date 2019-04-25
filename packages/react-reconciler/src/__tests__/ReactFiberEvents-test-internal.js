@@ -128,7 +128,8 @@ describe('ReactFiberEvents', () => {
       const Test = () => (
         <EventComponent>
           <div>
-            Hello world<EventTarget />
+            Hello world
+            <EventTarget />
           </div>
         </EventComponent>
       );
@@ -477,7 +478,8 @@ describe('ReactFiberEvents', () => {
       const Test = () => (
         <EventComponent>
           <div>
-            Hello world<EventTarget />
+            Hello world
+            <EventTarget />
           </div>
         </EventComponent>
       );
@@ -844,7 +846,8 @@ describe('ReactFiberEvents', () => {
       const Test = () => (
         <EventComponent>
           <div>
-            Hello world<EventTarget />
+            Hello world
+            <EventTarget />
           </div>
         </EventComponent>
       );
@@ -1155,7 +1158,8 @@ describe('ReactFiberEvents', () => {
       const Test = () => (
         <EventComponent>
           <div>
-            Hello world<EventTarget />
+            Hello world
+            <EventTarget />
           </div>
         </EventComponent>
       );

@@ -66,15 +66,18 @@ function loadModules({
 
   resourcePromise = null;
 
-  TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
-    resourcePromise = new Promise((resolve, reject) =>
-      setTimeout(() => {
-        Scheduler.yieldValue(`Promise resolved [${text}]`);
-        resolve(text);
-      }, ms),
-    );
-    return resourcePromise;
-  }, ([text, ms]) => text);
+  TextResource = ReactCache.unstable_createResource(
+    ([text, ms = 0]) => {
+      resourcePromise = new Promise((resolve, reject) =>
+        setTimeout(() => {
+          Scheduler.yieldValue(`Promise resolved [${text}]`);
+          resolve(text);
+        }, ms),
+      );
+      return resourcePromise;
+    },
+    ([text, ms]) => text,
+  );
 
   AsyncText = ({ms, text}) => {
     try {

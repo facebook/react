@@ -54,19 +54,22 @@ describe('ProfilerDOM', () => {
 
     resourcePromise = null;
 
-    TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
-      resourcePromise = new Promise(
-        SchedulerTracing.unstable_wrap((resolve, reject) => {
-          setTimeout(
-            SchedulerTracing.unstable_wrap(() => {
-              resolve(text);
-            }),
-            ms,
-          );
-        }),
-      );
-      return resourcePromise;
-    }, ([text, ms]) => text);
+    TextResource = ReactCache.unstable_createResource(
+      ([text, ms = 0]) => {
+        resourcePromise = new Promise(
+          SchedulerTracing.unstable_wrap((resolve, reject) => {
+            setTimeout(
+              SchedulerTracing.unstable_wrap(() => {
+                resolve(text);
+              }),
+              ms,
+            );
+          }),
+        );
+        return resourcePromise;
+      },
+      ([text, ms]) => text,
+    );
   });
 
   const AsyncText = ({ms, text}) => {

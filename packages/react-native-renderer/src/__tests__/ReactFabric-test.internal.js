@@ -515,7 +515,11 @@ describe('ReactFabric', () => {
       render() {
         const chars = this.props.chars.split('');
         return (
-          <View>{chars.map(text => <View key={text} title={text} />)}</View>
+          <View>
+            {chars.map(text => (
+              <View key={text} title={text} />
+            ))}
+          </View>
         );
       }
     }
@@ -547,7 +551,11 @@ describe('ReactFabric', () => {
       render() {
         const chars = this.state.chars.split('');
         return (
-          <View>{chars.map(text => <View key={text} title={text} />)}</View>
+          <View>
+            {chars.map(text => (
+              <View key={text} title={text} />
+            ))}
+          </View>
         );
       }
     }

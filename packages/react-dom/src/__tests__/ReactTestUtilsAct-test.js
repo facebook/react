@@ -200,12 +200,9 @@ describe('ReactTestUtils.act()', () => {
             await null;
             setState(x => x + 1);
           }
-          React.useEffect(
-            () => {
-              ticker();
-            },
-            [Math.min(state, 4)],
-          );
+          React.useEffect(() => {
+            ticker();
+          }, [Math.min(state, 4)]);
           return state;
         }
         const el = document.createElement('div');
@@ -407,12 +404,9 @@ describe('ReactTestUtils.act()', () => {
           await null;
           setState(x => x + 1);
         }
-        React.useEffect(
-          () => {
-            ticker();
-          },
-          [Math.min(state, 4)],
-        );
+        React.useEffect(() => {
+          ticker();
+        }, [Math.min(state, 4)]);
         return state;
       }
       const el = document.createElement('div');
