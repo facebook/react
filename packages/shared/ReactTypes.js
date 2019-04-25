@@ -165,7 +165,7 @@ export type ReactResponderContext = {
   dispatchEvent: (
     eventObject: Object,
     listener: (Object) => void,
-    otpions: ReactResponderDispatchEventOptions,
+    options: ReactResponderDispatchEventOptions,
   ) => void,
   isTargetWithinElement: (
     childTarget: Element | Document,
