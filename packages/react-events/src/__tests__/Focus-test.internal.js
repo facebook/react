@@ -36,6 +36,7 @@ describe('Focus event responder', () => {
   });
 
   afterEach(() => {
+    ReactDOM.render(null, container);
     document.body.removeChild(container);
     container = null;
   });

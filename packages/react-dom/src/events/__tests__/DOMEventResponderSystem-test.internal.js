@@ -638,7 +638,7 @@ describe('DOMEventResponderSystem', () => {
       undefined,
       undefined,
       (event, context, props, state) => {
-        ownershipGained = context.requestOwnership();
+        ownershipGained = context.requestGlobalOwnership();
       },
       undefined,
       undefined,
