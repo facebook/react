@@ -27,7 +27,7 @@ It consists of:
 1. the total length of next items that belong to string table
 2. for each string in a table:
   1. encoded size
-  2. a list of its codepoints
+  2. a list of its UTF encoded codepoints
 
 For example, for `Foo` and `Bar` we would see:
 
