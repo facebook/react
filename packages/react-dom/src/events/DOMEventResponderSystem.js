@@ -378,12 +378,14 @@ function isFiberHostComponentFocusable(fiber: Fiber): boolean {
     return true;
   }
   if (type === 'a' || type === 'area') {
-    return !!memoizedProps.href;
+    return !!memoizedProps.href && memoizedProps.rel !== 'ignore';
+  }
+  if (type === 'input') {
+    return memoizedProps.type !== 'hidden' && memoizedProps.type !== 'file';
   }
   return (
     type === 'button' ||
     type === 'textarea' ||
-    type === 'input' ||
     type === 'object' ||
     type === 'select' ||
     type === 'iframe' ||
