@@ -590,6 +590,9 @@ export function attach(
   let pendingRealUnmountedIDs: Array<number> = [];
   let pendingSimulatedUnmountedIDs: Array<number> = [];
   let pendingOperationsQueue: Array<Uint32Array> | null = [];
+  let pendingStringTable: Map<string, number> = new Map();
+  let pendingStringTableLength = 0;
+  let pendingStringTableCounter = 0;
 
   function pushOperation(op: number): void {
     if (__DEV__) {
@@ -620,6 +623,10 @@ export function attach(
     const ops = new Uint32Array(
       // Identify which renderer this update is coming from.
       2 + // [rendererID, rootFiberID]
+      // How big is the string table?
+      1 + // [stringTableLength]
+      // Then goes the actual string table.
+      pendingStringTableLength +
       // All unmounts are batched in a single message.
       2 + // [TREE_OPERATION_REMOVE, removedIDLength]
         pendingRealUnmountedIDs.length +
@@ -634,6 +641,15 @@ export function attach(
     let i = 0;
     ops[i++] = rendererID;
     ops[i++] = getFiberID(getPrimaryFiber(root.current));
+
+    // Now fill in the string table.
+    // [stringTableLength, str1Length, ...str1, str2Length, ...str2, ...]
+    ops[i++] = pendingStringTableLength;
+    pendingStringTable.forEach((value, key) => {
+      ops[i++] = key.length;
+      ops.set(utfEncodeString(key), i);
+      i += key.length;
+    });
 
     // All unmounts except roots are batched in a single message.
     ops[i++] = TREE_OPERATION_REMOVE;
@@ -672,6 +688,26 @@ export function attach(
     pendingOperations.length = 0;
     pendingRealUnmountedIDs.length = 0;
     pendingSimulatedUnmountedIDs.length = 0;
+    pendingStringTable.clear();
+    pendingStringTableLength = 0;
+    pendingStringTableCounter = 0;
+  }
+
+  function getStringID(str: string | null): number {
+    if (str === null) {
+      return 0;
+    }
+    const existingID = pendingStringTable.get(str);
+    if (existingID !== undefined) {
+      return existingID;
+    }
+    let id = ++pendingStringTableCounter;
+    pendingStringTable.set(str, id);
+    // The string table total length needs to account
+    // both for the string length, and for the array item
+    // that contains the length itself. Hence + 1.
+    pendingStringTableLength += str.length + 1;
+    return id;
   }
 
   function recordMount(fiber: Fiber, parentFiber: Fiber | null) {
@@ -700,41 +736,15 @@ export function attach(
         _debugOwner != null ? getFiberID(getPrimaryFiber(_debugOwner)) : 0;
       const parentID = getFiberID(getPrimaryFiber(parentFiber));
 
-      let encodedDisplayName = ((null: any): Uint8Array);
-      let encodedKey = ((null: any): Uint8Array);
-
-      if (displayName !== null) {
-        encodedDisplayName = utfEncodeString(displayName);
-      }
-
-      if (key !== null) {
-        // React$Key supports string and number types as inputs,
-        // But React converts numeric keys to strings, so we only have to handle that type here.
-        // https://github.com/facebook/react/blob/0e67969cb1ad8c27a72294662e68fa5d7c2c9783/packages/react/src/ReactElement.js#L187
-        encodedKey = utfEncodeString(((key: any): string));
-      }
-
-      const encodedDisplayNameSize =
-        displayName === null ? 0 : encodedDisplayName.length;
-      const encodedKeySize = key === null ? 0 : encodedKey.length;
-
+      let displayNameStringID = getStringID(displayName);
+      let keyStringID = getStringID(key);
       pushOperation(TREE_OPERATION_ADD);
       pushOperation(id);
       pushOperation(type);
       pushOperation(parentID);
       pushOperation(ownerID);
-      pushOperation(encodedDisplayNameSize);
-      if (displayName !== null) {
-        for (let i = 0; i < encodedDisplayName.length; i++) {
-          pushOperation(encodedDisplayName[i]);
-        }
-      }
-      pushOperation(encodedKeySize);
-      if (key !== null) {
-        for (let i = 0; i < encodedKey.length; i++) {
-          pushOperation(encodedKey[i]);
-        }
-      }
+      pushOperation(displayNameStringID);
+      pushOperation(keyStringID);
     }
 
     if (isProfiling) {

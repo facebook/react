@@ -14,9 +14,38 @@ The old DevTools also rendered the entire application tree in the form of a larg
 
 Every React commit that changes the tree in a way DevTools cares about results in an "_operations_" message being sent across the bridge. These messages are lightweight patches that describe the changes that were made. (We don't resend the full tree structure like in legacy DevTools.)
 
-The payload for each message is a typed array. The first two entries are numbers that identify which renderer and root the update belongs to (for multi-root support). The rest of the array depends on the operations being made to the tree.
+The payload for each message is a typed array. The first two entries are numbers that identify which renderer and root the update belongs to (for multi-root support). Then the strings are encoded in a string table. The rest of the array depends on the operations being made to the tree.
 
 No updates are required for many commits because we only send the following bits of information: element type, id, parent id, owner id, name, and key. Additional information (e.g. props, state) requires a separate "_inspectElement_" message.
+
+#### String table
+
+The string table is encoded right after the first two numbers.
+
+It consists of:
+
+1. the total length of next items that belong to string table
+2. for each string in a table:
+  1. encoded size
+  2. a list of its codepoints
+
+For example, for `Foo` and `Bar` we would see:
+
+```
+[
+  8,   // string table length
+  3,   // encoded display name size
+  70,  // "F"
+  111, // "o"
+  111, // "o"
+  3,   // encoded display name size
+  66,  // "B"
+  97,  // "a"
+  114, // "r"
+]
+```
+
+Later operations will reference strings by a one-based index. For example, `1` would mean `"Foo"`, and `2` would mean `"Bar"`. The `0` string id always represents `null` and isn't explicitly encoded in the table.
 
 #### Adding a root node
 
@@ -46,10 +75,8 @@ Adding a leaf node takes a variable number of numbers since we need to decode th
 1. element type constant (e.g. `1 === ElementTypeClass`)
 1. parent fiber id
 1. owner fiber id
-1. UTF encoded display name size
-   * (followed by this number of encoded values)
-1. UTF encoded key size
-   * (followed by this number of encoded values)
+1. string table id for `displayName`
+1. string table id for `key`
 
 For example, adding a function component `<Foo>` with an id 2:
 ```js
@@ -60,10 +87,8 @@ For example, adding a function component `<Foo>` with an id 2:
   1,   // parent id
   0,   // owner id
   3,   // encoded display name size
-  70,  // "F"
-  111, // "o"
-  111, // "o"
-  0,   // encoded key (null)
+  1,   // id of "Foo" displayName in the string table
+  0,   // id of null key in the string table (always zero for null)
 ]
 ```
 
