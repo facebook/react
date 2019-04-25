@@ -165,7 +165,7 @@ export type ReactResponderContext = {
   dispatchEvent: (
     eventObject: Object,
     listener: (Object) => void,
-    otpions: ReactResponderDispatchEventOptions,
+    options: ReactResponderDispatchEventOptions,
   ) => void,
   isTargetWithinElement: (
     childTarget: Element | Document,
@@ -173,22 +173,20 @@ export type ReactResponderContext = {
   ) => boolean,
   isTargetWithinEventComponent: (Element | Document) => boolean,
   isTargetDirectlyWithinEventComponent: (Element | Document) => boolean,
-  isPositionWithinTouchHitTarget: (
-    doc: Document,
-    x: number,
-    y: number,
-  ) => boolean,
+  isTargetWithinEventResponderScope: (Element | Document) => boolean,
+  isPositionWithinTouchHitTarget: (x: number, y: number) => boolean,
   addRootEventTypes: (
-    document: Document,
     rootEventTypes: Array<ReactEventResponderEventType>,
   ) => void,
   removeRootEventTypes: (
     rootEventTypes: Array<ReactEventResponderEventType>,
   ) => void,
   hasOwnership: () => boolean,
-  requestOwnership: () => boolean,
+  requestResponderOwnership: () => boolean,
+  requestGlobalOwnership: () => boolean,
   releaseOwnership: () => boolean,
   setTimeout: (func: () => void, timeout: number) => Symbol,
   clearTimeout: (timerId: Symbol) => void,
   getFocusableElementsInScope(): Array<HTMLElement>,
+  getActiveDocument(): Document,
 };

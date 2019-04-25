@@ -129,7 +129,7 @@ const DragResponder = {
             );
           }
 
-          context.addRootEventTypes(target.ownerDocument, rootEventTypes);
+          context.addRootEventTypes(rootEventTypes);
         }
         break;
       }
@@ -166,7 +166,7 @@ const DragResponder = {
               props.onShouldClaimOwnership &&
               props.onShouldClaimOwnership()
             ) {
-              shouldEnableDragging = context.requestOwnership();
+              shouldEnableDragging = context.requestGlobalOwnership();
             }
             if (shouldEnableDragging) {
               state.isDragging = true;

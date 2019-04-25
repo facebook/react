@@ -472,7 +472,7 @@ const PressResponder = {
           state.pressTarget = target;
           state.isPressWithinResponderRegion = true;
           dispatchPressStartEvents(context, props, state);
-          context.addRootEventTypes(target.ownerDocument, rootEventTypes);
+          context.addRootEventTypes(rootEventTypes);
         } else {
           // Prevent spacebar press from scrolling the window
           if (isValidKeyPress(nativeEvent.key) && nativeEvent.key === ' ') {

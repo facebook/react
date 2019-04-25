@@ -120,7 +120,7 @@ const SwipeResponder = {
           let shouldEnableSwiping = true;
 
           if (props.onShouldClaimOwnership && props.onShouldClaimOwnership()) {
-            shouldEnableSwiping = context.requestOwnership();
+            shouldEnableSwiping = context.requestGlobalOwnership();
           }
           if (shouldEnableSwiping) {
             state.isSwiping = true;
@@ -129,7 +129,7 @@ const SwipeResponder = {
             state.x = x;
             state.y = y;
             state.swipeTarget = target;
-            context.addRootEventTypes(target.ownerDocument, rootEventTypes);
+            context.addRootEventTypes(rootEventTypes);
           } else {
             state.touchId = null;
           }

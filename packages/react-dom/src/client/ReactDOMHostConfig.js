@@ -896,8 +896,8 @@ export function mountEventComponent(
   eventComponentInstance: ReactEventComponentInstance,
 ): void {
   if (enableEventAPI) {
-    mountEventResponder(eventComponentInstance);
     updateEventComponent(eventComponentInstance);
+    mountEventResponder(eventComponentInstance);
   }
 }
 

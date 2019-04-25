@@ -24,10 +24,8 @@ type FocusScopeState = {
   currentFocusedNode: null | HTMLElement,
 };
 
-const rootEventTypes = [
-  {name: 'focus', passive: true, capture: true},
-  {name: 'keydown', passive: false},
-];
+const targetEventTypes = [{name: 'keydown', passive: false}];
+const rootEventTypes = [{name: 'focus', passive: true, capture: true}];
 
 function focusFirstChildEventTarget(
   context: ReactResponderContext,
@@ -37,24 +35,11 @@ function focusFirstChildEventTarget(
   if (elements.length > 0) {
     const firstElement = elements[0];
     firstElement.focus();
-    state.currentFocusedNode = firstElement;
-  }
-}
-
-function focusLastChildEventTarget(
-  context: ReactResponderContext,
-  state: FocusScopeState,
-): void {
-  const elements = context.getFocusableElementsInScope();
-  const length = elements.length;
-  if (elements.length > 0) {
-    const lastElement = elements[length - 1];
-    lastElement.focus();
-    state.currentFocusedNode = lastElement;
   }
 }
 
 const FocusScopeResponder = {
+  targetEventTypes,
   rootEventTypes,
   createInitialState(): FocusScopeState {
     return {
@@ -62,60 +47,90 @@ const FocusScopeResponder = {
       currentFocusedNode: null,
     };
   },
-  onRootEvent(
+  onEvent(
     event: ReactResponderEvent,
     context: ReactResponderContext,
     props: FocusScopeProps,
     state: FocusScopeState,
   ) {
-    const {type, target, nativeEvent} = event;
+    const {type, nativeEvent} = event;
+    const hasOwnership =
+      context.hasOwnership() || context.requestResponderOwnership();
 
-    if (type === 'focus') {
-      if (context.isTargetWithinEventComponent(target)) {
-        state.currentFocusedNode = ((target: any): HTMLElement);
-      } else if (props.trap) {
-        if (state.currentFocusedNode !== null) {
-          state.currentFocusedNode.focus();
-        } else {
-          focusFirstChildEventTarget(context, state);
-        }
-      }
-    } else if (type === 'keydown' && nativeEvent.key === 'Tab') {
-      const currentFocusedNode = state.currentFocusedNode;
-      if (currentFocusedNode !== null) {
+    if (!hasOwnership) {
+      return;
+    }
+    if (type === 'keydown' && nativeEvent.key === 'Tab') {
+      const focusedElement = context.getActiveDocument().activeElement;
+      if (
+        focusedElement !== null &&
+        context.isTargetWithinEventComponent(focusedElement)
+      ) {
         const {altkey, ctrlKey, metaKey, shiftKey} = (nativeEvent: any);
         // Skip if any of these keys are being pressed
         if (altkey || ctrlKey || metaKey) {
           return;
         }
         const elements = context.getFocusableElementsInScope();
-        const position = elements.indexOf(currentFocusedNode);
+        const position = elements.indexOf(focusedElement);
+        const lastPosition = elements.length - 1;
+        let nextElement = null;
+
         if (shiftKey) {
           if (position === 0) {
             if (props.trap) {
-              focusLastChildEventTarget(context, state);
+              nextElement = elements[lastPosition];
             } else {
+              // Out of bounds
+              context.releaseOwnership();
               return;
             }
           } else {
-            const previousElement = elements[position - 1];
-            previousElement.focus();
-            state.currentFocusedNode = previousElement;
+            nextElement = elements[position - 1];
           }
         } else {
-          if (position === elements.length - 1) {
+          if (position === lastPosition) {
             if (props.trap) {
-              focusFirstChildEventTarget(context, state);
+              nextElement = elements[0];
             } else {
+              // Out of bounds
+              context.releaseOwnership();
               return;
             }
           } else {
-            const nextElement = elements[position + 1];
-            nextElement.focus();
-            state.currentFocusedNode = nextElement;
+            nextElement = elements[position + 1];
           }
         }
-        ((nativeEvent: any): KeyboardEvent).preventDefault();
+        // If this element is possibly inside the scope of another
+        // FocusScope responder or is out of bounds, then we release ownership.
+        if (nextElement !== null) {
+          if (!context.isTargetWithinEventResponderScope(nextElement)) {
+            context.releaseOwnership();
+          }
+          nextElement.focus();
+          state.currentFocusedNode = nextElement;
+          ((nativeEvent: any): KeyboardEvent).preventDefault();
+        }
+      }
+    }
+  },
+  onRootEvent(
+    event: ReactResponderEvent,
+    context: ReactResponderContext,
+    props: FocusScopeProps,
+    state: FocusScopeState,
+  ) {
+    const {target} = event;
+
+    // Handle global trapping
+    if (props.trap) {
+      if (!context.isTargetWithinEventComponent(target)) {
+        const currentFocusedNode = state.currentFocusedNode;
+        if (currentFocusedNode !== null) {
+          currentFocusedNode.focus();
+        } else if (props.autoFocus) {
+          focusFirstChildEventTarget(context, state);
+        }
       }
     }
   },
@@ -123,9 +138,9 @@ const FocusScopeResponder = {
     context: ReactResponderContext,
     props: FocusScopeProps,
     state: FocusScopeState,
-  ) {
+  ): void {
     if (props.restoreFocus) {
-      state.nodeToRestore = document.activeElement;
+      state.nodeToRestore = context.getActiveDocument().activeElement;
     }
     if (props.autoFocus) {
       focusFirstChildEventTarget(context, state);
@@ -135,8 +150,12 @@ const FocusScopeResponder = {
     context: ReactResponderContext,
     props: FocusScopeProps,
     state: FocusScopeState,
-  ) {
-    if (props.restoreFocus && state.nodeToRestore !== null) {
+  ): void {
+    if (
+      props.restoreFocus &&
+      state.nodeToRestore !== null &&
+      context.hasOwnership()
+    ) {
       state.nodeToRestore.focus();
     }
   },
@@ -144,8 +163,10 @@ const FocusScopeResponder = {
     context: ReactResponderContext,
     props: FocusScopeProps,
     state: FocusScopeState,
-  ) {
-    // unmountResponder(context, props, state);
+  ): void {
+    if (!context.hasOwnership()) {
+      state.currentFocusedNode = null;
+    }
   },
 };
 

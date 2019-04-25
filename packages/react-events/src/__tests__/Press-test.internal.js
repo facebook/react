@@ -51,6 +51,7 @@ describe('Event responder: Press', () => {
   });
 
   afterEach(() => {
+    ReactDOM.render(null, container);
     document.body.removeChild(container);
     container = null;
   });
