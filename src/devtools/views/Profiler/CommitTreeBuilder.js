@@ -167,6 +167,22 @@ function updateTree(
   };
 
   let i = 2;
+
+  // Reassemble the string table.
+  const stringTable = [
+    null, // ID = 0 corresponds to the null string.
+  ];
+  const stringTableSize = operations[i++];
+  const stringTableEnd = i + stringTableSize;
+  while (i < stringTableEnd) {
+    const nextLength = operations[i++];
+    const nextString = utfDecodeString(
+      (operations.slice(i, i + nextLength): any)
+    );
+    stringTable.push(nextString);
+    i += nextLength;
+  }
+
   while (i < operations.length) {
     const operation = operations[i];
 
@@ -209,23 +225,13 @@ function updateTree(
 
           i++; // ownerID
 
-          const displayNameLength = operations[i];
+          const displayNameStringID = operations[i];
+          const displayName = stringTable[displayNameStringID];
           i++;
-          const displayName =
-            displayNameLength === 0
-              ? null
-              : utfDecodeString(
-                  (operations.slice(i, i + displayNameLength): any)
-                );
-          i += displayNameLength;
 
-          const keyLength = operations[i];
+          const keyStringID = operations[i];
+          const key = stringTable[keyStringID];
           i++;
-          const key =
-            keyLength === 0
-              ? null
-              : utfDecodeString((operations.slice(i, i + keyLength): any));
-          i += +keyLength;
 
           if (__DEBUG__) {
             debug(
