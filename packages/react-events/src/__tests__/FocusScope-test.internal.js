@@ -53,11 +53,11 @@ describe('FocusScope event responder', () => {
     container = null;
   });
 
-  it('when using simple focus scopes', () => {
+  it('when using a simple focus scope with autofocus', () => {
     const inputRef = React.createRef();
     const input2Ref = React.createRef();
     const buttonRef = React.createRef();
-    const buttonRef2 = React.createRef();
+    const butto2nRef = React.createRef();
     const divRef = React.createRef();
 
     const SimpleFocusScope = () => (
@@ -67,7 +67,7 @@ describe('FocusScope event responder', () => {
           <button ref={buttonRef} />
           <div ref={divRef} tabIndex={0} />
           <input ref={input2Ref} tabIndex={-1} />
-          <button ref={buttonRef2} />
+          <button ref={butto2nRef} />
         </FocusScope>
       </div>
     );
@@ -79,8 +79,39 @@ describe('FocusScope event responder', () => {
     document.dispatchEvent(createTabForward());
     expect(document.activeElement).toBe(divRef.current);
     document.dispatchEvent(createTabForward());
-    expect(document.activeElement).toBe(buttonRef2.current);
+    expect(document.activeElement).toBe(butto2nRef.current);
     document.dispatchEvent(createTabBackward());
     expect(document.activeElement).toBe(divRef.current);
+  });
+
+  it('when using a simple focus scope with autofocus and trapping', () => {
+    const inputRef = React.createRef();
+    const input2Ref = React.createRef();
+    const buttonRef = React.createRef();
+    const button2Ref = React.createRef();
+
+    const SimpleFocusScope = () => (
+      <div>
+        <FocusScope autoFocus={true} trap={true}>
+          <input ref={inputRef} tabIndex={-1} />
+          <button ref={buttonRef} id={1} />
+          <button ref={button2Ref} id={2} />
+          <input ref={input2Ref} tabIndex={-1} />
+        </FocusScope>
+      </div>
+    );
+
+    ReactDOM.render(<SimpleFocusScope />, container);
+    expect(document.activeElement).toBe(buttonRef.current);
+    document.dispatchEvent(createTabForward());
+    expect(document.activeElement).toBe(button2Ref.current);
+    document.dispatchEvent(createTabForward());
+    expect(document.activeElement).toBe(buttonRef.current);
+    document.dispatchEvent(createTabForward());
+    expect(document.activeElement).toBe(button2Ref.current);
+    document.dispatchEvent(createTabBackward());
+    expect(document.activeElement).toBe(buttonRef.current);
+    document.dispatchEvent(createTabBackward());
+    expect(document.activeElement).toBe(button2Ref.current);
   });
 });
