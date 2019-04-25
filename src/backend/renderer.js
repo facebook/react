@@ -592,7 +592,6 @@ export function attach(
   let pendingOperationsQueue: Array<Uint32Array> | null = [];
   let pendingStringTable: Map<string, number> = new Map();
   let pendingStringTableLength = 0;
-  let pendingStringTableCounter = 0;
 
   function pushOperation(op: number): void {
     if (__DEV__) {
@@ -690,7 +689,6 @@ export function attach(
     pendingSimulatedUnmountedIDs.length = 0;
     pendingStringTable.clear();
     pendingStringTableLength = 0;
-    pendingStringTableCounter = 0;
   }
 
   function getStringID(str: string | null): number {
@@ -701,7 +699,7 @@ export function attach(
     if (existingID !== undefined) {
       return existingID;
     }
-    let id = ++pendingStringTableCounter;
+    const id = pendingStringTable.size + 1;
     pendingStringTable.set(str, id);
     // The string table total length needs to account
     // both for the string length, and for the array item
