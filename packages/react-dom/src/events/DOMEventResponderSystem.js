@@ -71,7 +71,6 @@ const rootEventTypesToEventComponentInstances: Map<
   DOMTopLevelEventType | string,
   Set<ReactEventComponentInstance>,
 > = new Map();
-global.foo = rootEventTypesToEventComponentInstances;
 const targetEventTypeCached: Map<
   Array<ReactEventResponderEventType>,
   Set<DOMTopLevelEventType>,
@@ -85,9 +84,13 @@ const eventListeners:
       ($Shape<PartialEventObject>) => void,
     > = new PossiblyWeakMap();
 
+const responderOwners: Map<
+  ReactEventResponder,
+  ReactEventComponentInstance,
+> = new Map();
+let globalOwner = null;
+
 let currentTimers = new Map();
-let currentResponderOwners = new Map();
-let currentOwner = null;
 let currentInstance: null | ReactEventComponentInstance = null;
 let currentEventQueue: null | EventQueue = null;
 
@@ -288,27 +291,27 @@ const eventResponderContext: ReactResponderContext = {
     const responder = ((currentInstance: any): ReactEventComponentInstance)
       .responder;
     return (
-      currentOwner === currentInstance ||
-      currentResponderOwners.get(responder) === currentInstance
+      globalOwner === currentInstance ||
+      responderOwners.get(responder) === currentInstance
     );
   },
   requestGlobalOwnership(): boolean {
     validateResponderContext();
-    if (currentOwner !== null) {
+    if (globalOwner !== null) {
       return false;
     }
-    currentOwner = currentInstance;
+    globalOwner = currentInstance;
     triggerOwnershipListeners(null);
     return true;
   },
   requestResponderOwnership(): boolean {
     validateResponderContext();
-    const responder = ((currentInstance: any): ReactEventComponentInstance)
-      .responder;
-    if (currentResponderOwners.has(responder)) {
+    const eventComponentInstance = ((currentInstance: any): ReactEventComponentInstance);
+    const responder = eventComponentInstance.responder;
+    if (responderOwners.has(responder)) {
       return false;
     }
-    currentResponderOwners.set(responder, currentInstance);
+    responderOwners.set(responder, eventComponentInstance);
     triggerOwnershipListeners(responder);
     return true;
   },
@@ -405,12 +408,12 @@ function releaseOwnershipForEventComponentInstance(
 ): boolean {
   const responder = eventComponentInstance.responder;
   let triggerOwnershipListenersWith;
-  if (currentResponderOwners.get(responder) === eventComponentInstance) {
-    currentResponderOwners.delete(responder);
+  if (responderOwners.get(responder) === eventComponentInstance) {
+    responderOwners.delete(responder);
     triggerOwnershipListenersWith = responder;
   }
-  if (currentOwner === eventComponentInstance) {
-    currentOwner = null;
+  if (globalOwner === eventComponentInstance) {
+    globalOwner = null;
     triggerOwnershipListenersWith = null;
   }
   if (triggerOwnershipListenersWith !== undefined) {
@@ -596,12 +599,12 @@ function shouldSkipEventComponent(
     }
     propagatedEventResponders.add(responder);
   }
-  if (currentOwner && currentOwner !== eventResponderInstance) {
+  if (globalOwner && globalOwner !== eventResponderInstance) {
     return true;
   }
   if (
-    currentResponderOwners.has(responder) &&
-    currentResponderOwners.get(responder) !== eventResponderInstance
+    responderOwners.has(responder) &&
+    responderOwners.get(responder) !== eventResponderInstance
   ) {
     return true;
   }
