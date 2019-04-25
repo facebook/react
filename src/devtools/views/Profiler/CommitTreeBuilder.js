@@ -169,14 +169,14 @@ function updateTree(
   let i = 2;
 
   // Reassemble the string table.
-  let stringTable = [
+  const stringTable = [
     null, // ID = 0 corresponds to the null string.
   ];
   const stringTableSize = operations[i++];
   const stringTableEnd = i + stringTableSize;
   while (i < stringTableEnd) {
-    let nextLength = operations[i++];
-    let nextString = utfDecodeString(
+    const nextLength = operations[i++];
+    const nextString = utfDecodeString(
       (operations.slice(i, i + nextLength): any)
     );
     stringTable.push(nextString);
