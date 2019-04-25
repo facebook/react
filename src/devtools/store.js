@@ -720,7 +720,7 @@ export default class Store extends EventEmitter {
             const parentElement = ((this._idToElement.get(
               parentID
             ): any): Element);
-            parentElement.children = parentElement.children.concat(id);
+            parentElement.children.push(id);
 
             const element: Element = {
               children: [],
@@ -785,9 +785,8 @@ export default class Store extends EventEmitter {
                   `Cannot remove node ${id} from parent ${parentID} because no matching node was found in the Store.`
                 );
               }
-              parentElement.children = parentElement.children.filter(
-                childID => childID !== id
-              );
+              const index = parentElement.children.indexOf(id);
+              parentElement.children.splice(index, 1);
             }
 
             this._adjustParentTreeWeight(parentElement, -element.weight);
@@ -798,16 +797,7 @@ export default class Store extends EventEmitter {
         case TREE_OPERATION_REORDER_CHILDREN: {
           const id = ((operations[i + 1]: any): number);
           const numChildren = ((operations[i + 2]: any): number);
-          const nextChildren = ((operations.slice(
-            i + 3,
-            i + 3 + numChildren
-          ): any): Array<number>);
-
-          i = i + 3 + numChildren;
-
-          if (__DEBUG__) {
-            debug('Re-order', `Node ${id} children ${nextChildren.join(',')}`);
-          }
+          i = i + 3;
 
           if (!this._idToElement.has(id)) {
             throw Error(
@@ -816,26 +806,31 @@ export default class Store extends EventEmitter {
           }
 
           const element = ((this._idToElement.get(id): any): Element);
-          const prevChildren = element.children;
-          if (nextChildren.length !== prevChildren.length) {
+          const children = element.children;
+          if (children.length !== numChildren) {
             throw Error(
               `Children cannot be added or removed during a reorder operation.`
             );
           }
-          // This check is more expensive so it's gated
-          if (__DEV__) {
-            if (
-              nextChildren.find(childID => {
-                const childElement = this._idToElement.get(childID);
-                return childElement == null || childElement.parentID !== id;
-              }) != null
-            ) {
-              console.error(
-                `Children cannot be added or removed during a reorder operation.`
-              );
+
+          for (let j = 0; j < numChildren; j++) {
+            const childID = operations[i + j];
+            children[j] = childID;
+            if (__DEV__) {
+              // This check is more expensive so it's gated by __DEV__.
+              const childElement = this._idToElement.get(childID);
+              if (childElement == null || childElement.parentID !== id) {
+                console.error(
+                  `Children cannot be added or removed during a reorder operation.`
+                );
+              }
             }
           }
-          element.children = Array.from(nextChildren);
+          i = i + numChildren;
+
+          if (__DEBUG__) {
+            debug('Re-order', `Node ${id} children ${children.join(',')}`);
+          }
           break;
         }
         case TREE_OPERATION_UPDATE_TREE_BASE_DURATION:
