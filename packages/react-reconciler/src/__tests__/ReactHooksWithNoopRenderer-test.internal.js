@@ -1986,6 +1986,35 @@ describe('ReactHooksWithNoopRenderer', () => {
       //     'accidental early return statement.',
       // );
     });
+
+    fit('mount additional state: part 2', () => {
+      function App(props) {     
+
+        Scheduler.yieldValue('A');   
+        if (props.showMore) {
+          Scheduler.yieldValue('B');   
+          useState(0)
+        }
+        return null;
+      }
+      ReactNoop.render(<App/>);
+      expect(Scheduler).toFlushAndYield(['A'])
+      ReactNoop.render(<App showMore={true} />);
+      expect(() => {
+        expect(() => {
+          expect(Scheduler).toFlushAndYield(['A', 'B']);
+        }).toThrow('Rendered more hooks than during the previous render');
+      }).toWarnDev([
+        'Warning: React has detected a change in the order of Hooks called by App. ' +
+          'This will lead to bugs and errors if not fixed. For more information, ' +
+          'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+          '   Previous render            Next render\n' +
+          '   ------------------------------------------------------\n' +
+          '1. undefined                  useState\n' +
+          '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n',
+      ]);
+
+    })    
   });
 
   it('eager bailout optimization should always compare to latest rendered reducer', () => {
