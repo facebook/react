@@ -84,6 +84,8 @@ const eventListeners:
       ($Shape<PartialEventObject>) => void,
     > = new PossiblyWeakMap();
 
+let alreadyDispatching = false;
+
 let currentTimers = new Map();
 let currentOwner = null;
 let currentInstance: null | ReactEventComponentInstance = null;
@@ -322,60 +324,64 @@ const eventResponderContext: ReactResponderContext = {
       }
     }
   },
-  getEventTargetsFromTarget(
-    target: Element | Document,
-    queryType?: Symbol | number,
-    queryKey?: string,
-  ): Array<{
-    node: Element,
-    props: null | Object,
-  }> {
-    validateResponderContext();
-    const eventTargetHostComponents = [];
-    let node = getClosestInstanceFromNode(target);
-    // We traverse up the fiber tree from the target fiber, to the
-    // current event component fiber. Along the way, we check if
-    // the fiber has any children that are event targets. If there
-    // are, we query them (optionally) to ensure they match the
-    // specified type and key. We then push the event target props
-    // along with the associated parent host component of that event
-    // target.
+  getFocusableElementsInScope(): Array<HTMLElement> {
+    const focusableElements = [];
+    const eventComponentInstance = ((currentInstance: any): ReactEventComponentInstance);
+    let node = ((eventComponentInstance.currentFiber: any): Fiber).child;
+
     while (node !== null) {
       if (node.stateNode === currentInstance) {
         break;
       }
-      let child = node.child;
+      if (isFiberHostComponentFocusable(node)) {
+        focusableElements.push(node.stateNode);
+      } else {
+        const child = node.child;
 
-      while (child !== null) {
-        if (
-          child.tag === EventTargetWorkTag &&
-          queryEventTarget(child, queryType, queryKey)
-        ) {
-          const props = child.stateNode.props;
-          let parent = child.return;
-
-          if (parent !== null) {
-            if (parent.stateNode === currentInstance) {
-              break;
-            }
-            if (parent.tag === HostComponent) {
-              eventTargetHostComponents.push({
-                node: parent.stateNode,
-                props,
-              });
-              break;
-            }
-            parent = parent.return;
-          }
-          break;
+        if (child !== null) {
+          node = child;
+          continue;
         }
-        child = child.sibling;
       }
-      node = node.return;
+      const sibling = node.sibling;
+
+      if (sibling !== null) {
+        node = sibling;
+        continue;
+      }
+      const parent = node.return;
+      if (parent === null) {
+        break;
+      }
+      node = parent.sibling;
     }
-    return eventTargetHostComponents;
+
+    return focusableElements;
   },
 };
+
+function isFiberHostComponentFocusable(fiber: Fiber): boolean {
+  if (fiber.tag !== HostComponent) {
+    return false;
+  }
+  const {type, memoizedProps} = fiber;
+  if (memoizedProps.tabIndex === -1 || memoizedProps.disabled) {
+    return false;
+  }
+  if (memoizedProps.tabIndex === 0) {
+    return true;
+  }
+  if (type === 'a' || type === 'area') {
+    return !!memoizedProps.href;
+  }
+  return (
+    type === 'button' ||
+    type === 'textarea' ||
+    type === 'input' ||
+    type === 'object' ||
+    type === 'select'
+  );
+}
 
 function processTimers(timers: Map<Symbol, ResponderTimer>): void {
   const timersArr = Array.from(timers.values());
@@ -396,20 +402,6 @@ function processTimers(timers: Map<Symbol, ResponderTimer>): void {
     currentInstance = null;
     currentEventQueue = null;
   }
-}
-
-function queryEventTarget(
-  child: Fiber,
-  queryType: void | Symbol | number,
-  queryKey: void | string,
-): boolean {
-  if (queryType !== undefined && child.type.type !== queryType) {
-    return false;
-  }
-  if (queryKey !== undefined && child.key !== queryKey) {
-    return false;
-  }
-  return true;
 }
 
 function createResponderEvent(
@@ -467,7 +459,7 @@ export function processEventQueue(): void {
   }
 }
 
-function getTargetEventTypes(
+function getTargetEventTypesSet(
   eventTypes: Array<ReactEventResponderEventType>,
 ): Set<DOMTopLevelEventType> {
   let cachedSet = targetEventTypeCached.get(eventTypes);
@@ -497,12 +489,13 @@ function getTargetEventResponderInstances(
       const eventComponentInstance = node.stateNode;
       if (currentOwner === null || currentOwner === eventComponentInstance) {
         const responder = eventComponentInstance.responder;
+        const targetEventTypes = responder.targetEventTypes;
         // Validate the target event type exists on the responder
-        const targetEventTypes = getTargetEventTypes(
-          responder.targetEventTypes,
-        );
-        if (targetEventTypes.has(topLevelType)) {
-          eventResponderInstances.push(eventComponentInstance);
+        if (targetEventTypes !== undefined) {
+          const targetEventTypesSet = getTargetEventTypesSet(targetEventTypes);
+          if (targetEventTypesSet.has(topLevelType)) {
+            eventResponderInstances.push(eventComponentInstance);
+          }
         }
       }
     }
@@ -716,6 +709,10 @@ export function dispatchEventForResponderEventSystem(
   eventSystemFlags: EventSystemFlags,
 ): void {
   if (enableEventAPI) {
+    if (alreadyDispatching) {
+      return;
+    }
+    alreadyDispatching = true;
     currentEventQueue = createEventQueue();
     try {
       traverseAndHandleEventResponderInstances(
@@ -730,6 +727,7 @@ export function dispatchEventForResponderEventSystem(
       currentTimers = null;
       currentInstance = null;
       currentEventQueue = null;
+      alreadyDispatching = false;
     }
   }
 }

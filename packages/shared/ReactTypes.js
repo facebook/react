@@ -126,6 +126,7 @@ export type ReactEventResponder = {
 };
 
 export type ReactEventComponentInstance = {|
+  currentFiber: mixed,
   props: null | Object,
   responder: ReactEventResponder,
   rootEventTypes: null | Set<string>,
@@ -189,12 +190,5 @@ export type ReactResponderContext = {
   releaseOwnership: () => boolean,
   setTimeout: (func: () => void, timeout: number) => Symbol,
   clearTimeout: (timerId: Symbol) => void,
-  getEventTargetsFromTarget: (
-    target: Element | Document,
-    queryType?: Symbol | number,
-    queryKey?: string,
-  ) => Array<{
-    node: Element,
-    props: null | Object,
-  }>,
+  getFocusableElementsInScope(): Array<HTMLElement>,
 };
