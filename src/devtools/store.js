@@ -13,6 +13,7 @@ import { ElementTypeRoot } from './types';
 import { utfDecodeString } from '../utils';
 import { __DEBUG__ } from '../constants';
 import ProfilingCache from './ProfilingCache';
+import { printStore } from 'src/__tests__/storeSerializer';
 
 import type { ElementType } from './types';
 import type { Element } from './views/Components/types';
@@ -79,6 +80,10 @@ export default class Store extends EventEmitter {
   // The backend is currently profiling.
   // When profiling is in progress, operations are stored so that we can later reconstruct past commit trees.
   _isProfiling: boolean = false;
+
+  // Map of element (id) to the set of elements (ids) it owns.
+  // This map enables getOwnersListForElement() to avoid traversing the entire tree.
+  _ownersMap: Map<number, Set<number>> = new Map();
 
   // Suspense cache for reading profiling data.
   _profilingCache: ProfilingCache;
@@ -403,6 +408,69 @@ export default class Store extends EventEmitter {
     }
 
     return index;
+  }
+
+  getOwnersListForElement(ownerID: number): Array<Element> {
+    const list = [];
+    let element = this._idToElement.get(ownerID);
+    if (element != null) {
+      list.push({
+        ...element,
+        depth: 0,
+      });
+
+      const unsortedIDs = this._ownersMap.get(ownerID);
+      if (unsortedIDs !== undefined) {
+        const depthMap: Map<number, number> = new Map([[ownerID, 0]]);
+
+        // Items in a set are ordered based on insertion.
+        // This does not correlate with their order in the tree.
+        // So first we need to order them.
+        // I wish we could avoid this sorting operation; we could sort at insertion time,
+        // but then we'd have to pay sorting costs even if the owners list was never used.
+        // Seems better to defer the cost, since the set of ids is probably pretty small.
+        const sortedIDs = Array.from(unsortedIDs).sort(
+          (idA, idB) =>
+            ((this.getIndexOfElementID(idA): any): number) -
+            ((this.getIndexOfElementID(idB): any): number)
+        );
+
+        // Next we need to determine the appropriate depth for each element in the list.
+        // The depth in the list may not correspond to the depth in the tree,
+        // because the list has been filtered to remove intermediate components.
+        // Perhaps the easiest way to do this is to walk up the tree until we reach either:
+        // (1) another node that's already in the tree, or (2) the root (owner)
+        // at which point, our depth is just the depth of that node plus one.
+        sortedIDs.forEach(id => {
+          const element = this._idToElement.get(id);
+          if (element != null) {
+            let parentID = element.parentID;
+
+            let depth = 0;
+            while (parentID > 0) {
+              if (parentID === ownerID || unsortedIDs.has(parentID)) {
+                depth = depthMap.get(parentID) + 1;
+                depthMap.set(id, depth);
+                break;
+              }
+              const parent = this._idToElement.get(parentID);
+              if (parent == null) {
+                break;
+              }
+              parentID = parent.parentID;
+            }
+
+            if (depth === 0) {
+              throw Error('Invalid owners list');
+            }
+
+            list.push({ ...element, depth });
+          }
+        });
+      }
+    }
+
+    return list;
   }
 
   getRendererIDForElement(id: number): number | null {
@@ -744,6 +812,15 @@ export default class Store extends EventEmitter {
             this._idToElement.set(id, element);
             addedElementIDs.push(id);
             this._adjustParentTreeWeight(parentElement, 1);
+
+            if (ownerID > 0) {
+              let set = this._ownersMap.get(ownerID);
+              if (set === undefined) {
+                set = new Set();
+                this._ownersMap.set(ownerID, set);
+              }
+              set.add(id);
+            }
           }
           break;
         }
@@ -763,13 +840,13 @@ export default class Store extends EventEmitter {
             i = i + 1;
 
             const element = ((this._idToElement.get(id): any): Element);
-            if (element.children.length > 0) {
+            const { children, ownerID, parentID, weight } = element;
+            if (children.length > 0) {
               throw new Error(`Node ${id} was removed before its children.`);
             }
 
             this._idToElement.delete(id);
 
-            const parentID = element.parentID;
             let parentElement = null;
             if (parentID === 0) {
               if (__DEBUG__) {
@@ -795,8 +872,16 @@ export default class Store extends EventEmitter {
               parentElement.children.splice(index, 1);
             }
 
-            this._adjustParentTreeWeight(parentElement, -element.weight);
+            this._adjustParentTreeWeight(parentElement, -weight);
             removedElementIDs.set(id, parentID);
+
+            this._ownersMap.delete(id);
+            if (ownerID > 0) {
+              const set = this._ownersMap.get(ownerID);
+              if (set !== undefined) {
+                set.delete(id);
+              }
+            }
           }
           break;
         }
@@ -870,7 +955,7 @@ export default class Store extends EventEmitter {
     }
 
     if (__DEBUG__) {
-      console.log(this.__toSnapshot(true));
+      console.log(printStore(this, true));
       console.groupEnd();
     }
 
@@ -916,60 +1001,5 @@ export default class Store extends EventEmitter {
     this._bridge.removeListener('operations', this.onBridgeOperations);
     this._bridge.removeListener('profilingStatus', this.onProfilingStatus);
     this._bridge.removeListener('shutdown', this.onBridgeShutdown);
-  };
-
-  // Used for Jest snapshot testing.
-  // May also be useful for visually debugging the tree, so it lives on the Store.
-  __toSnapshot = (includeWeight: boolean = false) => {
-    const snapshotLines = [];
-
-    let rootWeight = 0;
-
-    this._roots.forEach(rootID => {
-      const { weight } = ((this.getElementByID(rootID): any): Element);
-
-      snapshotLines.push('[root]' + (includeWeight ? ` (${weight})` : ''));
-
-      for (let i = rootWeight; i < rootWeight + weight; i++) {
-        const element = ((this.getElementAtIndex(i): any): Element);
-
-        if (element == null) {
-          throw Error(`Could not find element at index ${i}`);
-        }
-
-        let prefix = ' ';
-        if (element.children.length > 0) {
-          prefix = element.isCollapsed ? '▸' : '▾';
-        }
-
-        let key = '';
-        if (element.key !== null) {
-          key = ` key="${element.key}"`;
-        }
-
-        let suffix = '';
-        if (includeWeight) {
-          suffix = ` (${element.isCollapsed ? 1 : element.weight})`;
-        }
-
-        snapshotLines.push(
-          `${'  '.repeat(element.depth + 1)}${prefix} <${element.displayName ||
-            'null'}${key}>${suffix}`
-        );
-      }
-
-      rootWeight += weight;
-    });
-
-    // Make sure the pretty-printed test align with the Store's reported number of total rows.
-    if (rootWeight !== this._weightAcrossRoots) {
-      throw Error(
-        `Inconsistent Store state. Individual root weights (${rootWeight}) do not match total weight (${
-          this._weightAcrossRoots
-        })`
-      );
-    }
-
-    return snapshotLines.join('\n');
   };
 }

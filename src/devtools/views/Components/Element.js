@@ -29,17 +29,14 @@ type Props = {
 
 export default function ElementView({ data, index, style }: Props) {
   const store = useContext(StoreContext);
-  const {
-    baseDepth,
-    ownerFlatTree,
-    ownerStack,
-    selectedElementID,
-  } = useContext(TreeStateContext);
+  const { ownerFlatTree, ownerStack, selectedElementID } = useContext(
+    TreeStateContext
+  );
   const dispatch = useContext(TreeDispatcherContext);
 
   const element =
     ownerFlatTree !== null
-      ? store.getElementByID(ownerFlatTree[index])
+      ? ownerFlatTree[index]
       : store.getElementAtIndex(index);
 
   const [isHovered, setIsHovered] = useState(false);
@@ -158,7 +155,7 @@ export default function ElementView({ data, index, style }: Props) {
         ...style, // "style" comes from react-window
 
         // Left padding presents the appearance of a nested tree structure.
-        paddingLeft: `${(depth - baseDepth) * 0.75 + 0.25}rem`,
+        paddingLeft: `${depth * 0.75 + 0.25}rem`,
 
         // These style overrides enable the background color to fill the full visible width,
         // when combined with the CSS tweaks in Tree.

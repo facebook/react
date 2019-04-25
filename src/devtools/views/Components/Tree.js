@@ -22,7 +22,6 @@ import SearchInput from './SearchInput';
 import styles from './Tree.css';
 
 export type ItemData = {|
-  baseDepth: number,
   numElements: number,
   isNavigatingWithKeyboard: boolean,
   lastScrolledIDRef: { current: number | null },
@@ -35,7 +34,6 @@ type Props = {||};
 export default function Tree(props: Props) {
   const dispatch = useContext(TreeDispatcherContext);
   const {
-    baseDepth,
     numElements,
     ownerStack,
     searchIndex,
@@ -255,7 +253,6 @@ export default function Tree(props: Props) {
   // This includes the owner context, since it controls a filtered view of the tree.
   const itemData = useMemo<ItemData>(
     () => ({
-      baseDepth,
       numElements,
       isNavigatingWithKeyboard,
       onElementMouseEnter: handleElementMouseEnter,
@@ -263,7 +260,6 @@ export default function Tree(props: Props) {
       treeFocused,
     }),
     [
-      baseDepth,
       numElements,
       isNavigatingWithKeyboard,
       handleElementMouseEnter,
