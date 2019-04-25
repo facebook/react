@@ -7,251 +7,165 @@ Event components do not render a host node. They listen to native browser events
 dispatched on the host node of their child and transform those events into
 high-level events for applications.
 
+The core API is documented below. Documentation for individual Event Components
+can be found [here](./docs).
 
-## Focus
+## EventComponent
 
-The `Focus` module responds to focus and blur events on the element it wraps.
-Focus events are dispatched for `mouse`, `pen`, `touch`, and `keyboard`
-pointer types.
+An Event Component is defined by a module that exports an object of the
+following type:
 
 ```js
-// Example
-const TextField = (props) => (
-  <Focus
-    onBlur={props.onBlur}
-    onFocus={props.onFocus}
-  >
-    <textarea></textarea>
-  </Focus>
-);
+type EventComponent = {|
+  $$typeof: REACT_EVENT_COMPONENT_TYPE,
+  displayName?: string,
+  props: null | Object,
+  responder: EventResponder,
+|};
 ```
 
+## EventResponder
+
+An Event Responder is defined using an object. Each responder can define DOM
+events to listen to, handle the synthetic responder events, dispatch custom
+events, and implement a state machine.
+
 ```js
-// Types
-type FocusEvent = {
+// types
+type ResponderEventType =
+  | string
+  | {name: string, passive?: boolean, capture?: boolean};
+
+type ResponderEvent = {|
+  nativeEvent: any,
+  target: Element | Document,
+  type: string,
+  passive: boolean,
+  passiveSupported: boolean,
+|};
+
+type CustomEvent = {
+  type: string,
   target: Element,
-  type: 'blur' | 'focus' | 'focuschange'
+  ...
 }
 ```
 
-### disabled: boolean
+### createInitialState?: (props: null | Object) => Object
 
-Disables all `Focus` events.
+The initial state of that the Event Component is created with.
 
-### onBlur: (e: FocusEvent) => void
+### onEvent?: (event: ResponderEvent, context: ResponderContext, props, state)
 
-Called when the element loses focus.
+Called during the bubble phase of the `targetEventTypes` dispatched on DOM
+elements within the Event Component.
 
-### onFocus: (e: FocusEvent) => void
+### onEventCapture?: (event: ResponderEvent, context: ResponderContext, props, state)
 
-Called when the element gains focus.
+Called during the capture phase of the `targetEventTypes` dispatched on DOM
+elements within the Event Component.
 
-### onFocusChange: boolean => void
+### onMount?: (context: ResponderContext, props, state)
 
-Called when the element changes hover state (i.e., after `onBlur` and
-`onFocus`).
+Called after an Event Component in mounted.
 
+### onOwnershipChange?: (context: ResponderContext, props, state)
 
-## Hover
+Called when responder ownership is granted or terminated for an Event Component instance.
 
-The `Hover` module responds to hover events on the element it wraps. Hover
-events are only dispatched for `mouse` pointer types. Hover begins when the
-pointer enters the element's bounds and ends when the pointer leaves.
+### onRootEvent?: (event: ResponderEvent, context: ResponderContext, props, state)
 
-```js
-// Example
-const Link = (props) => (
-  const [ hovered, setHovered ] = useState(false);
-  return (
-    <Hover onHoverChange={setHovered}>
-      <a
-        {...props}
-        href={props.href}
-        style={{
-          ...props.style,
-          textDecoration: hovered ? 'underline': 'none'
-        }}
-      />
-    </Hover>
-  );
-);
-```
+Called when any of the `rootEventTypes` are dispatched on the root of the app.
 
-```js
-// Types
-type HoverEvent = {
-  pointerType: 'mouse',
-  target: Element,
-  type: 'hoverstart' | 'hoverend' | 'hovermove' | 'hoverchange'
-}
-```
+### onUnmount?: (context: ResponderContext, props, state)
 
-### delayHoverEnd: number
+Called before an Event Component in unmounted.
 
-The duration of the delay between when hover ends and when `onHoverEnd` is
-called.
+### rootEventTypes?: Array<ResponderEventType>
 
-### delayHoverStart: number
+Defines the DOM events to listen to on the root of the app.
 
-The duration of the delay between when hover starts and when `onHoverStart` is
-called.
+### stopLocalPropagation: boolean
 
-### disabled: boolean
+Defines whether or not synthetic events propagate to other Event Components *of
+the same type*. This has no effect on propagation of the source DOM events or
+the synthetic events dispatched to Event Components of different types.
 
-Disables all `Hover` events.
+### targetEventTypes?: Array<ResponderEventType>
 
-### onHoverChange: boolean => void
-
-Called when the element changes hover state (i.e., after `onHoverStart` and
-`onHoverEnd`).
-
-### onHoverEnd: (e: HoverEvent) => void
-
-Called once the element is no longer hovered. It will be cancelled if the
-pointer leaves the element before the `delayHoverStart` threshold is exceeded.
-
-### onHoverMove: (e: HoverEvent) => void
-
-Called when the pointer moves within the hit bounds of the element. `onHoverMove` is
-called immediately and doesn't wait for delayed `onHoverStart`.
-
-### onHoverStart: (e: HoverEvent) => void
-
-Called once the element is hovered. It will not be called if the pointer leaves
-the element before the `delayHoverStart` threshold is exceeded. And it will not
-be called more than once before `onHoverEnd` is called.
-
-### preventDefault: boolean = true
-
-Whether to `preventDefault()` native events.
+Defines the DOM events to listen to within the Event Component subtree.
 
 
-## Press
+## ResponderContext
 
-The `Press` module responds to press events on the element it wraps. Press
-events are dispatched for `mouse`, `pen`, `touch`, and `keyboard` pointer types.
-Press events are only dispatched for keyboards when pressing the Enter or
-Spacebar keys. If neither `onPress` nor `onLongPress` are called, this signifies
-that the press ended outside of the element hit bounds (i.e., the user aborted
-the press).
+The Event Responder Context is exposed via the `context` argument for certain methods
+on the `EventResponder` object.
+
+### addRootEventTypes(eventTypes: Array<ResponderEventType>)
+
+This can be used to dynamically listen to events on the root of the app only
+when it is necessary to do so.
+
+### clearTimeout(id: Symbol): void
+
+Clear a timeout defined using `context.setTimeout`.
+
+### dispatchEvent(event: CustomEvent, listener, { discrete: boolean })
+
+Dispatches a custom synthetic event. The `type` and `target` are required
+fields, but any other fields can be defined on the `event` that will be passed
+to the `listener`. For example:
 
 ```js
-// Example
-const Button = (props) => (
-  const [ pressed, setPressed ] = useState(false);
-  return (
-    <Press
-      onPress={props.onPress}
-      onPressChange={setPressed}
-      onLongPress={props.onLongPress}
-    >
-      <div
-        {...props}
-        role="button"
-        tabIndex={0}
-        style={
-          ...buttonStyles,
-          ...(pressed && pressedStyles)
-        }}
-      />
-    </Press>
-  );
-);
+const event = { type: 'press', target, pointerType, x, y };
+context.dispatchEvent(event, props.onPress, { discrete: true });
 ```
 
-```js
-// Types
-type PressEvent = {
-  pointerType: 'mouse' | 'touch' | 'pen' | 'keyboard',
-  target: Element,
-  type: 'press' | 'pressstart' | 'pressend' | 'presschange' | 'pressmove' | 'longpress' | 'longpresschange'
-}
+### getFocusableElementsInScope(): Array<Element>
 
-type PressOffset = {
-  top: number,
-  right: number,
-  bottom: number,
-  right: number
-};
-```
+Returns every DOM element that can be focused within the scope of the Event
+Component instance.
 
-### delayLongPress: number = 500ms
+### hasOwnership(): boolean
 
-The duration of a press before `onLongPress` and `onLongPressChange` are called.
+Returns `true` if the instance has taken ownership of the responder.
 
-### delayPressEnd: number
+### isPositionWithinTouchHitTarget(x: number, y: number): boolean
 
-The duration of the delay between when the press ends and when `onPressEnd` is
-called.
+Returns `true` if the global coordinates lie within the TouchHitTarget.
 
-### delayPressStart: number
+### isTargetDirectlyWithinEventComponent(target: Element): boolean
 
-The duration of a delay between when the press starts and when `onPressStart` is
-called. This delay is cut short (and `onPressStart` is called) if the press is
-released before the threshold is exceeded.
+Returns `true` is the target element is within the direct subtree of the Event Component instance, i.e., the target is not nested within an Event Component instance that is a descendant of the current instance.
 
-### disabled: boolean
+### isTargetWithinElement(target: Element, element: Element): boolean
 
-Disables all `Press` events.
+Returns `true` if `target` is a child of `element`.
 
-### onLongPress: (e: PressEvent) => void
+### isTargetWithinEventComponent(target: Element): boolean
 
-Called once the element has been pressed for the length of `delayLongPress`. If
-the press point moves more than 10px `onLongPress` is cancelled.
+Returns `true` is the target element is within the subtree of the Event Component instance.
 
-### onLongPressChange: boolean => void
+### isTargetWithinEventResponderScope(target: Element): boolean
 
-Called when the element changes long-press state.
+Returns `true` is the target element is within the current responder.
 
-### onLongPressShouldCancelPress: () => boolean
+### releaseOwnership(): boolean
 
-Determines whether calling `onPress` should be cancelled if `onLongPress` or
-`onLongPressChange` have already been called. Default is `false`.
+Returns `true` if the instance released ownership of the responder.
 
-### onPress: (e: PressEvent) => void
+### removeRootEventTypes(eventTypes: Array<ResponderEventType>)
 
-Called immediately after a press is released, unless either 1) the press is
-released outside the hit bounds of the element (accounting for
-`pressRetentionOffset` and `TouchHitTarget`), or 2) the press was a long press,
-and `onLongPress` or `onLongPressChange` props are provided, and
-`onLongPressCancelsPress()` is `true`.
+Remove the root event types added with `addRootEventTypes`.
 
-### onPressChange: boolean => void
+### requestGlobalOwnership(): boolean
 
-Called when the element changes press state (i.e., after `onPressStart` and
-`onPressEnd`).
+Request ownership of the global responder.
 
-### onPressEnd: (e: PressEvent) => void
+### requestResponderOwnership(): boolean
 
-Called once the element is no longer pressed (because it was released, or moved
-beyond the hit bounds). If the press starts again before the `delayPressEnd`
-threshold is exceeded then the delay is reset to prevent `onPressEnd` being
-called during a press.
+Request ownership of the responder.
 
-### onPressMove: (e: PressEvent) => void
+### setTimeout(func: () => void, delay: number): Symbol
 
-Called when a press moves within the hit bounds of the element. `onPressMove` is
-called immediately and doesn't wait for delayed `onPressStart`. Never called for
-keyboard-initiated press events.  
-
-### onPressStart: (e: PressEvent) => void
-
-Called once the element is pressed down. If the press is released before the
-`delayPressStart` threshold is exceeded then the delay is cut short and
-`onPressStart` is called immediately.
-
-### pressRetentionOffset: PressOffset
-
-Defines how far the pointer (while held down) may move outside the bounds of the
-element before it is deactivated. Once deactivated, the pointer (still held
-down) can be moved back within the bounds of the element to reactivate it.
-Ensure you pass in a constant to reduce memory allocations.
-
-### preventDefault: boolean = true
-
-Whether to `preventDefault()` native events. Native behavior is prevented by
-default. If an anchor is the child of `Press`, internal and external navigation
-should be performed in `onPress`/`onLongPress`. To rely on native behavior
-instead, set `preventDefault` to `false`, but be aware that native behavior will
-take place immediately after interaction without respect for delays or long
-press.
+This can be used to dispatch async events, e.g., those that fire after a delay.
