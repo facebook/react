@@ -1,5 +1,6 @@
 // @flow
 import React, {
+  Fragment,
   useCallback,
   useContext,
   useLayoutEffect,
@@ -53,21 +54,25 @@ export default function OwnerStack() {
     <div className={styles.OwnerStack}>
       <div className={styles.Bar} ref={elementsBarRef}>
         {isOverflowing && (
-          <ElementsDropdown
-            ownerStack={ownerStack}
-            ownerStackIndex={ownerStackIndex}
-          />
+          <Fragment>
+            <ElementsDropdown
+              ownerStack={ownerStack}
+              ownerStackIndex={ownerStackIndex}
+            />
+            <BackToOwnerButton
+              ownerStack={ownerStack}
+              ownerStackIndex={ownerStackIndex}
+            />
+            <ElementView
+              id={ownerStack[((ownerStackIndex: any): number)]}
+              index={ownerStackIndex}
+            />
+          </Fragment>
         )}
-        {isOverflowing ? (
-          <ElementView
-            id={ownerStack[((ownerStackIndex: any): number)]}
-            index={ownerStackIndex}
-          />
-        ) : (
+        {!isOverflowing &&
           ownerStack.map((id, index) => (
             <ElementView key={id} id={id} index={index} />
-          ))
-        )}
+          ))}
       </div>
       <div className={styles.VRule} />
       <Button
@@ -147,5 +152,38 @@ function ElementView({ id, index }: ElementViewProps) {
     >
       {displayName}
     </Toggle>
+  );
+}
+
+type BackToOwnerButtonProps = {|
+  ownerStack: Array<number>,
+  ownerStackIndex: number | null,
+|};
+function BackToOwnerButton({
+  ownerStack,
+  ownerStackIndex,
+}: BackToOwnerButtonProps) {
+  const store = useContext(StoreContext);
+  const dispatch = useContext(TreeDispatcherContext);
+
+  if (ownerStackIndex === null || ownerStackIndex === 0) {
+    return null;
+  }
+
+  const ownerID = ownerStack[ownerStackIndex - 1];
+  const owner = store.getElementByID(ownerID);
+
+  return (
+    <Button
+      onClick={() =>
+        dispatch({
+          type: 'SELECT_OWNER',
+          payload: ownerID,
+        })
+      }
+      title={`Back to ${(owner !== null && owner.displayName) || 'owner'}`}
+    >
+      <ButtonIcon type="previous" />
+    </Button>
   );
 }

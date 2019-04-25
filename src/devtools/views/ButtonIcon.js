@@ -4,7 +4,6 @@ import React from 'react';
 import styles from './ButtonIcon.css';
 
 export type IconType =
-  | 'back'
   | 'cancel'
   | 'close'
   | 'collapsed'
@@ -33,9 +32,6 @@ type Props = {|
 export default function ButtonIcon({ type }: Props) {
   let pathData = null;
   switch (type) {
-    case 'back':
-      pathData = PATH_BACK;
-      break;
     case 'cancel':
       pathData = PATH_CANCEL;
       break;
@@ -114,12 +110,6 @@ export default function ButtonIcon({ type }: Props) {
     </svg>
   );
 }
-
-const PATH_BACK = `
-  M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9
-  2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41
-  10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z
-`;
 
 const PATH_CANCEL = `
   M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.69L5.69

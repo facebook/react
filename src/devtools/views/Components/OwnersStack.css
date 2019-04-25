@@ -47,7 +47,6 @@
   border: none;
   background: var(--color-button-background);
   color: var(--color-button);
-  margin-right: 0.5rem;
 }
 .MenuButtonContent {
   display: inline-flex;
