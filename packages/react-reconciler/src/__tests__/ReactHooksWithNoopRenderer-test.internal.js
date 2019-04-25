@@ -1987,7 +1987,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       // );
     });
 
-    fit('mount additional state: part 2', () => {
+    it('mount additional state: part 2', () => {
       function App(props) {     
 
         Scheduler.yieldValue('A');   
