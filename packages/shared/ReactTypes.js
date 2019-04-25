@@ -182,7 +182,7 @@ export type ReactResponderContext = {
     rootEventTypes: Array<ReactEventResponderEventType>,
   ) => void,
   hasOwnership: () => boolean,
-  requestLocalOwnership: () => boolean,
+  requestResponderOwnership: () => boolean,
   requestGlobalOwnership: () => boolean,
   releaseOwnership: () => boolean,
   setTimeout: (func: () => void, timeout: number) => Symbol,

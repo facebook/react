@@ -55,7 +55,7 @@ const FocusScopeResponder = {
   ) {
     const {type, nativeEvent} = event;
     const hasOwnership =
-      context.hasOwnership() || context.requestLocalOwnership();
+      context.hasOwnership() || context.requestResponderOwnership();
 
     if (!hasOwnership) {
       return;

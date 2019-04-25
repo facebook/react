@@ -86,7 +86,7 @@ const eventListeners:
     > = new PossiblyWeakMap();
 
 let currentTimers = new Map();
-let currentLocalOwners = new Map();
+let currentResponderOwners = new Map();
 let currentOwner = null;
 let currentInstance: null | ReactEventComponentInstance = null;
 let currentEventQueue: null | EventQueue = null;
@@ -289,7 +289,7 @@ const eventResponderContext: ReactResponderContext = {
       .responder;
     return (
       currentOwner === currentInstance ||
-      currentLocalOwners.get(responder) === currentInstance
+      currentResponderOwners.get(responder) === currentInstance
     );
   },
   requestGlobalOwnership(): boolean {
@@ -301,14 +301,14 @@ const eventResponderContext: ReactResponderContext = {
     triggerOwnershipListeners(null);
     return true;
   },
-  requestLocalOwnership(): boolean {
+  requestResponderOwnership(): boolean {
     validateResponderContext();
     const responder = ((currentInstance: any): ReactEventComponentInstance)
       .responder;
-    if (currentLocalOwners.has(responder)) {
+    if (currentResponderOwners.has(responder)) {
       return false;
     }
-    currentLocalOwners.set(responder, currentInstance);
+    currentResponderOwners.set(responder, currentInstance);
     triggerOwnershipListeners(responder);
     return true;
   },
@@ -405,8 +405,8 @@ function releaseOwnershipForEventComponentInstance(
 ): boolean {
   const responder = eventComponentInstance.responder;
   let triggerOwnershipListenersWith;
-  if (currentLocalOwners.get(responder) === eventComponentInstance) {
-    currentLocalOwners.delete(responder);
+  if (currentResponderOwners.get(responder) === eventComponentInstance) {
+    currentResponderOwners.delete(responder);
     triggerOwnershipListenersWith = responder;
   }
   if (currentOwner === eventComponentInstance) {
@@ -600,8 +600,8 @@ function shouldSkipEventComponent(
     return true;
   }
   if (
-    currentLocalOwners.has(responder) &&
-    currentLocalOwners.get(responder) !== eventResponderInstance
+    currentResponderOwners.has(responder) &&
+    currentResponderOwners.get(responder) !== eventResponderInstance
   ) {
     return true;
   }
