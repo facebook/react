@@ -2035,8 +2035,6 @@ export function attach(
       trackedPathMatchFiber = null;
       trackedPathMatchDepth = -1;
       mightBeOnTrackedPath = false;
-    } else if (trackedPath !== null) {
-      throw new Error('Tracked path can only be set once.');
     }
     trackedPath = path;
   }
