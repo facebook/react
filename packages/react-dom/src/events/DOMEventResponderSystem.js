@@ -246,15 +246,37 @@ const eventResponderContext: ReactResponderContext = {
     validateResponderContext();
     for (let i = 0; i < rootEventTypes.length; i++) {
       const rootEventType = rootEventTypes[i];
-      const topLevelEventType =
-        typeof rootEventType === 'string' ? rootEventType : rootEventType.name;
+      let name = rootEventType;
+      let capture = false;
+      let passive = true;
+
+      if (typeof rootEventType !== 'string') {
+        const targetEventConfigObject = ((rootEventType: any): {
+          name: string,
+          passive?: boolean,
+          capture?: boolean,
+        });
+        name = targetEventConfigObject.name;
+        if (targetEventConfigObject.passive !== undefined) {
+          passive = targetEventConfigObject.passive;
+        }
+        if (targetEventConfigObject.capture !== undefined) {
+          capture = targetEventConfigObject.capture;
+        }
+      }
+
+      const listeningName = generateListeningKey(
+        ((name: any): string),
+        passive,
+        capture,
+      );
       let rootEventComponents = rootEventTypesToEventComponentInstances.get(
-        topLevelEventType,
+        listeningName,
       );
       let rootEventTypesSet = ((currentInstance: any): ReactEventComponentInstance)
         .rootEventTypes;
       if (rootEventTypesSet !== null) {
-        rootEventTypesSet.delete(topLevelEventType);
+        rootEventTypesSet.delete(listeningName);
       }
       if (rootEventComponents !== undefined) {
         rootEventComponents.delete(
