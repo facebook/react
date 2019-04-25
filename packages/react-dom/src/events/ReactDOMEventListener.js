@@ -22,6 +22,7 @@ import {
   RESPONDER_EVENT_SYSTEM,
   IS_PASSIVE,
   IS_ACTIVE,
+  IS_CAPTURE,
   PASSIVE_NOT_SUPPORTED,
 } from 'events/EventSystemFlags';
 
@@ -188,6 +189,9 @@ export function trapEventForResponderEventSystem(
       }
     } else {
       eventFlags |= IS_ACTIVE;
+    }
+    if (capture) {
+      eventFlags |= IS_CAPTURE;
     }
     // Check if interactive and wrap in interactiveUpdates
     const listener = dispatchEvent.bind(null, topLevelType, eventFlags);

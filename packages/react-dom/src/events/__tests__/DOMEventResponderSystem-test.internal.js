@@ -757,4 +757,134 @@ describe('DOMEventResponderSystem', () => {
 
     expect(log).toEqual([false, true, false]);
   });
+
+  it('the event responder target listeners should correctly fire for only their events', () => {
+    let clickEventComponent1Fired = 0;
+    let clickEventComponent2Fired = 0;
+    let eventLog = [];
+    const buttonRef = React.createRef();
+
+    const ClickEventComponent1 = createReactEventComponent(
+      [{name: 'click', passive: false, capture: false}],
+      undefined,
+      undefined,
+      event => {
+        clickEventComponent1Fired++;
+        eventLog.push({
+          name: event.type,
+          passive: event.passive,
+          passiveSupported: event.passiveSupported,
+        });
+      },
+    );
+
+    const ClickEventComponent2 = createReactEventComponent(
+      [{name: 'click', passive: true, capture: false}],
+      undefined,
+      undefined,
+      event => {
+        clickEventComponent2Fired++;
+        eventLog.push({
+          name: event.type,
+          passive: event.passive,
+          passiveSupported: event.passiveSupported,
+        });
+      },
+    );
+
+    const Test = () => (
+      <ClickEventComponent1>
+        <ClickEventComponent2>
+          <button ref={buttonRef}>Click me!</button>
+        </ClickEventComponent2>
+      </ClickEventComponent1>
+    );
+
+    ReactDOM.render(<Test />, container);
+
+    let buttonElement = buttonRef.current;
+    dispatchClickEvent(buttonElement);
+
+    expect(clickEventComponent1Fired).toBe(1);
+    expect(clickEventComponent2Fired).toBe(1);
+    expect(eventLog.length).toBe(2);
+    expect(eventLog).toEqual([
+      {
+        name: 'click',
+        passive: false,
+        passiveSupported: false,
+      },
+      {
+        name: 'click',
+        passive: false,
+        passiveSupported: true,
+      },
+    ]);
+  });
+
+  it('the event responder root listeners should correctly fire for only their events', () => {
+    let clickEventComponent1Fired = 0;
+    let clickEventComponent2Fired = 0;
+    let eventLog = [];
+
+    const ClickEventComponent1 = createReactEventComponent(
+      undefined,
+      [{name: 'click', passive: false, capture: false}],
+      undefined,
+      undefined,
+      undefined,
+      event => {
+        clickEventComponent1Fired++;
+        eventLog.push({
+          name: event.type,
+          passive: event.passive,
+          passiveSupported: event.passiveSupported,
+        });
+      },
+    );
+
+    const ClickEventComponent2 = createReactEventComponent(
+      undefined,
+      [{name: 'click', passive: true, capture: false}],
+      undefined,
+      undefined,
+      undefined,
+      event => {
+        clickEventComponent2Fired++;
+        eventLog.push({
+          name: event.type,
+          passive: event.passive,
+          passiveSupported: event.passiveSupported,
+        });
+      },
+    );
+
+    const Test = () => (
+      <ClickEventComponent1>
+        <ClickEventComponent2>
+          <button>Click me!</button>
+        </ClickEventComponent2>
+      </ClickEventComponent1>
+    );
+
+    ReactDOM.render(<Test />, container);
+
+    dispatchClickEvent(document.body);
+
+    expect(clickEventComponent1Fired).toBe(1);
+    expect(clickEventComponent2Fired).toBe(1);
+    expect(eventLog.length).toBe(2);
+    expect(eventLog).toEqual([
+      {
+        name: 'click',
+        passive: false,
+        passiveSupported: false,
+      },
+      {
+        name: 'click',
+        passive: false,
+        passiveSupported: true,
+      },
+    ]);
+  });
 });
