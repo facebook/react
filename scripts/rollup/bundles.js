@@ -110,22 +110,6 @@ const bundles = [
     externals: ['react'],
   },
 
-  /******* React DOM (new scheduler) *******/
-  {
-    bundleTypes: [
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-      FB_WWW_PROFILING,
-      NODE_DEV,
-      NODE_PROD,
-      NODE_PROFILING,
-    ],
-    moduleType: RENDERER,
-    entry: 'react-dom/unstable-new-scheduler',
-    global: 'ReactDOMNewScheduler',
-    externals: ['react'],
-  },
-
   /******* Test Utils *******/
   {
     moduleType: RENDERER_UTILS,
@@ -506,7 +490,7 @@ const bundles = [
       FB_WWW_PROD,
     ],
     moduleType: NON_FIBER_RENDERER,
-    entry: 'react-events/press',
+    entry: 'react-events/Press',
     global: 'ReactEventsPress',
     externals: [],
   },
@@ -521,7 +505,7 @@ const bundles = [
       FB_WWW_PROD,
     ],
     moduleType: NON_FIBER_RENDERER,
-    entry: 'react-events/hover',
+    entry: 'react-events/Hover',
     global: 'ReactEventsHover',
     externals: [],
   },
@@ -536,7 +520,7 @@ const bundles = [
       FB_WWW_PROD,
     ],
     moduleType: NON_FIBER_RENDERER,
-    entry: 'react-events/focus',
+    entry: 'react-events/Focus',
     global: 'ReactEventsFocus',
     externals: [],
   },
@@ -551,7 +535,22 @@ const bundles = [
       FB_WWW_PROD,
     ],
     moduleType: NON_FIBER_RENDERER,
-    entry: 'react-events/swipe',
+    entry: 'react-events/FocusScope',
+    global: 'ReactEventsFocusScope',
+    externals: [],
+  },
+
+  {
+    bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+    ],
+    moduleType: NON_FIBER_RENDERER,
+    entry: 'react-events/Swipe',
     global: 'ReactEventsSwipe',
     externals: [],
   },
@@ -566,7 +565,7 @@ const bundles = [
       FB_WWW_PROD,
     ],
     moduleType: NON_FIBER_RENDERER,
-    entry: 'react-events/drag',
+    entry: 'react-events/Drag',
     global: 'ReactEventsDrag',
     externals: [],
   },

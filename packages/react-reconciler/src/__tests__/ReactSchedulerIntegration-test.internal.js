@@ -26,7 +26,6 @@ describe('ReactSchedulerIntegration', () => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
-    ReactFeatureFlags.enableNewScheduler = true;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
@@ -149,6 +148,22 @@ describe('ReactSchedulerIntegration', () => {
       'Render priority: UserBlocking',
       'Passive priority: UserBlocking',
     ]);
+  });
+
+  it('after completing a level of work, infers priority of the next batch based on its expiration time', () => {
+    function App({label}) {
+      Scheduler.yieldValue(`${label} [${getCurrentPriorityAsString()}]`);
+      return label;
+    }
+
+    // Schedule two separate updates at different priorities
+    runWithPriority(UserBlockingPriority, () => {
+      ReactNoop.render(<App label="A" />);
+    });
+    ReactNoop.render(<App label="B" />);
+
+    // The second update should run at normal priority
+    expect(Scheduler).toFlushAndYield(['A [UserBlocking]', 'B [Normal]']);
   });
 
   // TODO

@@ -68,7 +68,6 @@ import {
   createContainerChildSet,
   appendChildToContainerChildSet,
   finalizeContainerChildren,
-  mountEventComponent,
   updateEventComponent,
   handleEventTarget,
 } from './ReactFiberHostConfig';
@@ -813,18 +812,21 @@ function completeWork(
             responderState = responder.createInitialState(newProps);
           }
           eventComponentInstance = workInProgress.stateNode = {
-            context: null,
+            currentFiber: workInProgress,
             props: newProps,
             responder,
+            rootEventTypes: null,
             rootInstance: rootContainerInstance,
             state: responderState,
           };
-          mountEventComponent(eventComponentInstance);
+          markUpdate(workInProgress);
         } else {
           // Update the props on the event component state node
           eventComponentInstance.props = newProps;
           // Update the root container, so we can properly unmount events at some point
           eventComponentInstance.rootInstance = rootContainerInstance;
+          // Update the current fiber
+          eventComponentInstance.currentFiber = workInProgress;
           updateEventComponent(eventComponentInstance);
         }
       }

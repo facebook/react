@@ -13,14 +13,18 @@ import type {
 } from 'shared/ReactTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
-const targetEventTypes = ['pointerdown', 'pointercancel'];
-const rootEventTypes = ['pointerup', {name: 'pointermove', passive: false}];
+const targetEventTypes = ['pointerdown'];
+const rootEventTypes = [
+  'pointerup',
+  'pointercancel',
+  {name: 'pointermove', passive: false},
+];
 
 // In the case we don't have PointerEvents (Safari), we listen to touch events
 // too
 if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
-  targetEventTypes.push('touchstart', 'touchend', 'mousedown', 'touchcancel');
-  rootEventTypes.push('mouseup', 'mousemove', {
+  targetEventTypes.push('touchstart', 'mousedown');
+  rootEventTypes.push('mouseup', 'mousemove', 'touchend', 'touchcancel', {
     name: 'touchmove',
     passive: false,
   });
@@ -33,7 +37,6 @@ type EventData = {
 type SwipeEventType = 'swipeleft' | 'swiperight' | 'swipeend' | 'swipemove';
 
 type SwipeEvent = {|
-  listener: SwipeEvent => void,
   target: Element | Document,
   type: SwipeEventType,
   diffX?: number,
@@ -43,11 +46,9 @@ type SwipeEvent = {|
 function createSwipeEvent(
   type: SwipeEventType,
   target: Element | Document,
-  listener: SwipeEvent => void,
   eventData?: EventData,
 ): SwipeEvent {
   return {
-    listener,
     target,
     type,
     ...eventData,
@@ -63,8 +64,8 @@ function dispatchSwipeEvent(
   eventData?: EventData,
 ) {
   const target = ((state.swipeTarget: any): Element | Document);
-  const syntheticEvent = createSwipeEvent(name, target, listener, eventData);
-  context.dispatchEvent(syntheticEvent, {discrete});
+  const syntheticEvent = createSwipeEvent(name, target, eventData);
+  context.dispatchEvent(syntheticEvent, listener, {discrete});
 }
 
 type SwipeState = {
@@ -94,6 +95,7 @@ const SwipeResponder = {
       y: 0,
     };
   },
+  stopLocalPropagation: true,
   onEvent(
     event: ReactResponderEvent,
     context: ReactResponderContext,
@@ -106,7 +108,7 @@ const SwipeResponder = {
       case 'touchstart':
       case 'mousedown':
       case 'pointerdown': {
-        if (!state.isSwiping && !context.hasOwnership()) {
+        if (!state.isSwiping) {
           let obj = nativeEvent;
           if (type === 'touchstart') {
             obj = (nativeEvent: any).targetTouches[0];
@@ -134,6 +136,17 @@ const SwipeResponder = {
         }
         break;
       }
+    }
+  },
+  onRootEvent(
+    event: ReactResponderEvent,
+    context: ReactResponderContext,
+    props: Object,
+    state: SwipeState,
+  ): void {
+    const {type, nativeEvent} = event;
+
+    switch (type) {
       case 'touchmove':
       case 'mousemove':
       case 'pointermove': {

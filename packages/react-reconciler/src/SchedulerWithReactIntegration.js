@@ -10,8 +10,11 @@
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.
 import * as Scheduler from 'scheduler';
-
-import {disableYielding} from 'shared/ReactFeatureFlags';
+import {__interactionsRef} from 'scheduler/tracing';
+import {
+  disableYielding,
+  enableSchedulerTracing,
+} from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 
 const {
@@ -27,6 +30,20 @@ const {
   unstable_LowPriority: Scheduler_LowPriority,
   unstable_IdlePriority: Scheduler_IdlePriority,
 } = Scheduler;
+
+if (enableSchedulerTracing) {
+  // Provide explicit error message when production+profiling bundle of e.g.
+  // react-dom is used with production (non-profiling) bundle of
+  // scheduler/tracing
+  invariant(
+    __interactionsRef != null && __interactionsRef.current != null,
+    'It is not supported to run the profiling version of a renderer (for ' +
+      'example, `react-dom/profiling`) without also replacing the ' +
+      '`scheduler/tracing` module with `scheduler/tracing-profiling`. Your ' +
+      'bundler might have a setting for aliasing both modules. Learn more at ' +
+      'http://fb.me/react-profiling',
+  );
+}
 
 export opaque type ReactPriorityLevel = 99 | 98 | 97 | 96 | 95 | 90;
 export type SchedulerCallback = (isSync: boolean) => SchedulerCallback | null;
@@ -48,7 +65,6 @@ export const IdlePriority: ReactPriorityLevel = 95;
 // NoPriority is the absence of priority. Also React-only.
 export const NoPriority: ReactPriorityLevel = 90;
 
-export const now = Scheduler_now;
 export const shouldYield = disableYielding
   ? () => false // Never yield when `disableYielding` is on
   : Scheduler_shouldYield;
@@ -56,6 +72,17 @@ export const shouldYield = disableYielding
 let immediateQueue: Array<SchedulerCallback> | null = null;
 let immediateQueueCallbackNode: mixed | null = null;
 let isFlushingImmediate: boolean = false;
+let initialTimeMs: number = Scheduler_now();
+
+// If the initial timestamp is reasonably small, use Scheduler's `now` directly.
+// This will be the case for modern browsers that support `performance.now`. In
+// older browsers, Scheduler falls back to `Date.now`, which returns a Unix
+// timestamp. In that case, subtract the module initialization time to simulate
+// the behavior of performance.now and keep our times small enough to fit
+// within 32 bits.
+// TODO: Consider lifting this into Scheduler.
+export const now =
+  initialTimeMs < 10000 ? Scheduler_now : () => Scheduler_now() - initialTimeMs;
 
 export function getCurrentPriorityLevel(): ReactPriorityLevel {
   switch (Scheduler_getCurrentPriorityLevel()) {

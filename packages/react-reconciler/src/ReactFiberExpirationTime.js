@@ -111,14 +111,14 @@ export function inferPriorityFromExpirationTime(
     return IdlePriority;
   }
   const msUntil =
-    msToExpirationTime(expirationTime) - msToExpirationTime(currentTime);
+    expirationTimeToMs(expirationTime) - expirationTimeToMs(currentTime);
   if (msUntil <= 0) {
     return ImmediatePriority;
   }
-  if (msUntil <= HIGH_PRIORITY_EXPIRATION) {
+  if (msUntil <= HIGH_PRIORITY_EXPIRATION + HIGH_PRIORITY_BATCH_SIZE) {
     return UserBlockingPriority;
   }
-  if (msUntil <= LOW_PRIORITY_EXPIRATION) {
+  if (msUntil <= LOW_PRIORITY_EXPIRATION + LOW_PRIORITY_BATCH_SIZE) {
     return NormalPriority;
   }
 
