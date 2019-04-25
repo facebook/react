@@ -54,8 +54,6 @@ function focusLastChildEventTarget(
   }
 }
 
-const sharedFocusScopeState = {};
-
 const FocusScopeResponder = {
   rootEventTypes,
   createInitialState(): FocusScopeState {
