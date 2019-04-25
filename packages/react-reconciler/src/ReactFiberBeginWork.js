@@ -84,7 +84,7 @@ import {
 } from './ReactFiberExpirationTime';
 import {
   ConcurrentMode,
-  NoContext,
+  NoMode,
   ProfileMode,
   StrictMode,
 } from './ReactTypeOfMode';
@@ -1493,7 +1493,7 @@ function updateSuspenseComponent(
         null,
       );
 
-      if ((workInProgress.mode & ConcurrentMode) === NoContext) {
+      if ((workInProgress.mode & ConcurrentMode) === NoMode) {
         // Outside of concurrent mode, we commit the effects from the
         // partially completed, timed-out tree, too.
         const progressedState: SuspenseState = workInProgress.memoizedState;
@@ -1546,7 +1546,7 @@ function updateSuspenseComponent(
           NoWork,
         );
 
-        if ((workInProgress.mode & ConcurrentMode) === NoContext) {
+        if ((workInProgress.mode & ConcurrentMode) === NoMode) {
           // Outside of concurrent mode, we commit the effects from the
           // partially completed, timed-out tree, too.
           const progressedState: SuspenseState = workInProgress.memoizedState;
@@ -1629,7 +1629,7 @@ function updateSuspenseComponent(
         // schedule a placement.
         // primaryChildFragment.effectTag |= Placement;
 
-        if ((workInProgress.mode & ConcurrentMode) === NoContext) {
+        if ((workInProgress.mode & ConcurrentMode) === NoMode) {
           // Outside of concurrent mode, we commit the effects from the
           // partially completed, timed-out tree, too.
           const progressedState: SuspenseState = workInProgress.memoizedState;

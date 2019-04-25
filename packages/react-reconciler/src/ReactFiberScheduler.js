@@ -55,7 +55,12 @@ import {
 } from './ReactFiberHostConfig';
 
 import {createWorkInProgress, assignFiberPropertiesInDEV} from './ReactFiber';
-import {NoContext, ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
+import {
+  NoMode,
+  ProfileMode,
+  BatchedMode,
+  ConcurrentMode,
+} from './ReactTypeOfMode';
 import {
   HostRoot,
   ClassComponent,
@@ -91,6 +96,7 @@ import {
   computeAsyncExpiration,
   inferPriorityFromExpirationTime,
   LOW_PRIORITY_EXPIRATION,
+  Batched,
 } from './ReactFiberExpirationTime';
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork';
 import {completeWork} from './ReactFiberCompleteWork';
@@ -255,8 +261,14 @@ export function computeExpirationForFiber(
   currentTime: ExpirationTime,
   fiber: Fiber,
 ): ExpirationTime {
-  if ((fiber.mode & ConcurrentMode) === NoContext) {
+  const mode = fiber.mode;
+  if ((mode & BatchedMode) === NoMode) {
     return Sync;
+  }
+
+  const priorityLevel = getCurrentPriorityLevel();
+  if ((mode & ConcurrentMode) === NoMode) {
+    return priorityLevel === ImmediatePriority ? Sync : Batched;
   }
 
   if (workPhase === RenderPhase) {
@@ -266,7 +278,6 @@ export function computeExpirationForFiber(
 
   // Compute an expiration time based on the Scheduler priority.
   let expirationTime;
-  const priorityLevel = getCurrentPriorityLevel();
   switch (priorityLevel) {
     case ImmediatePriority:
       expirationTime = Sync;
@@ -983,7 +994,7 @@ function performUnitOfWork(unitOfWork: Fiber): Fiber | null {
   setCurrentDebugFiberInDEV(unitOfWork);
 
   let next;
-  if (enableProfilerTimer && (unitOfWork.mode & ProfileMode) !== NoContext) {
+  if (enableProfilerTimer && (unitOfWork.mode & ProfileMode) !== NoMode) {
     startProfilerTimer(unitOfWork);
     next = beginWork(current, unitOfWork, renderExpirationTime);
     stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, true);
@@ -1019,7 +1030,7 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
       let next;
       if (
         !enableProfilerTimer ||
-        (workInProgress.mode & ProfileMode) === NoContext
+        (workInProgress.mode & ProfileMode) === NoMode
       ) {
         next = completeWork(current, workInProgress, renderExpirationTime);
       } else {
@@ -1085,7 +1096,7 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
 
       if (
         enableProfilerTimer &&
-        (workInProgress.mode & ProfileMode) !== NoContext
+        (workInProgress.mode & ProfileMode) !== NoMode
       ) {
         // Record the render duration for the fiber that errored.
         stopProfilerTimerIfRunningAndRecordDelta(workInProgress, false);
@@ -1149,7 +1160,7 @@ function resetChildExpirationTime(completedWork: Fiber) {
   let newChildExpirationTime = NoWork;
 
   // Bubble up the earliest expiration time.
-  if (enableProfilerTimer && (completedWork.mode & ProfileMode) !== NoContext) {
+  if (enableProfilerTimer && (completedWork.mode & ProfileMode) !== NoMode) {
     // In profiling mode, resetChildExpirationTime is also used to reset
     // profiler durations.
     let actualDuration = completedWork.actualDuration;

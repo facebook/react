@@ -366,7 +366,8 @@ function ReactRoot(
   isConcurrent: boolean,
   hydrate: boolean,
 ) {
-  const root = createContainer(container, isConcurrent, hydrate);
+  const isBatched = false;
+  const root = createContainer(container, isBatched, isConcurrent, hydrate);
   this._internalRoot = root;
 }
 ReactRoot.prototype.render = function(

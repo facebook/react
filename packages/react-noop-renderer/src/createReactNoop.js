@@ -832,77 +832,160 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     return textInstance.text;
   }
 
+  function getChildren(root) {
+    if (root) {
+      return root.children;
+    } else {
+      return null;
+    }
+  }
+
+  function getPendingChildren(root) {
+    if (root) {
+      return root.pendingChildren;
+    } else {
+      return null;
+    }
+  }
+
+  function getChildrenAsJSX(root) {
+    const children = childToJSX(getChildren(root), null);
+    if (children === null) {
+      return null;
+    }
+    if (Array.isArray(children)) {
+      return {
+        $$typeof: REACT_ELEMENT_TYPE,
+        type: REACT_FRAGMENT_TYPE,
+        key: null,
+        ref: null,
+        props: {children},
+        _owner: null,
+        _store: __DEV__ ? {} : undefined,
+      };
+    }
+    return children;
+  }
+
+  function getPendingChildrenAsJSX(root) {
+    const children = childToJSX(getChildren(root), null);
+    if (children === null) {
+      return null;
+    }
+    if (Array.isArray(children)) {
+      return {
+        $$typeof: REACT_ELEMENT_TYPE,
+        type: REACT_FRAGMENT_TYPE,
+        key: null,
+        ref: null,
+        props: {children},
+        _owner: null,
+        _store: __DEV__ ? {} : undefined,
+      };
+    }
+    return children;
+  }
+
+  let idCounter = 0;
+
   const ReactNoop = {
     _Scheduler: Scheduler,
 
     getChildren(rootID: string = DEFAULT_ROOT_ID) {
       const container = rootContainers.get(rootID);
-      if (container) {
-        return container.children;
-      } else {
-        return null;
-      }
+      return getChildren(container);
     },
 
     getPendingChildren(rootID: string = DEFAULT_ROOT_ID) {
       const container = rootContainers.get(rootID);
-      if (container) {
-        return container.pendingChildren;
-      } else {
-        return null;
-      }
+      return getPendingChildren(container);
     },
 
     getOrCreateRootContainer(
       rootID: string = DEFAULT_ROOT_ID,
-      isConcurrent: boolean = false,
+      isBatched: boolean,
+      isConcurrent: boolean,
     ) {
       let root = roots.get(rootID);
       if (!root) {
         const container = {rootID: rootID, pendingChildren: [], children: []};
         rootContainers.set(rootID, container);
-        root = NoopRenderer.createContainer(container, isConcurrent, false);
+        root = NoopRenderer.createContainer(
+          container,
+          isBatched,
+          isConcurrent,
+          false,
+        );
         roots.set(rootID, root);
       }
       return root.current.stateNode.containerInfo;
     },
 
+    // TODO: Replace ReactNoop.render with createRoot + root.render
+    createRoot() {
+      const isBatched = true;
+      const isConcurrent = true;
+      const container = {
+        rootID: '' + idCounter++,
+        pendingChildren: [],
+        children: [],
+      };
+      const fiberRoot = NoopRenderer.createContainer(
+        container,
+        isBatched,
+        isConcurrent,
+        false,
+      );
+      return {
+        _Scheduler: Scheduler,
+        render(children: ReactNodeList) {
+          NoopRenderer.updateContainer(children, fiberRoot, null, null);
+        },
+        getChildren() {
+          return getChildren(fiberRoot);
+        },
+        getChildrenAsJSX() {
+          return getChildrenAsJSX(fiberRoot);
+        },
+      };
+    },
+
+    createSyncRoot() {
+      const isBatched = true;
+      const isConcurrent = false;
+      const container = {
+        rootID: '' + idCounter++,
+        pendingChildren: [],
+        children: [],
+      };
+      const fiberRoot = NoopRenderer.createContainer(
+        container,
+        isBatched,
+        isConcurrent,
+        false,
+      );
+      return {
+        _Scheduler: Scheduler,
+        render(children: ReactNodeList) {
+          NoopRenderer.updateContainer(children, fiberRoot, null, null);
+        },
+        getChildren() {
+          return getChildren(container);
+        },
+        getChildrenAsJSX() {
+          return getChildrenAsJSX(container);
+        },
+      };
+    },
+
     getChildrenAsJSX(rootID: string = DEFAULT_ROOT_ID) {
-      const children = childToJSX(ReactNoop.getChildren(rootID), null);
-      if (children === null) {
-        return null;
-      }
-      if (Array.isArray(children)) {
-        return {
-          $$typeof: REACT_ELEMENT_TYPE,
-          type: REACT_FRAGMENT_TYPE,
-          key: null,
-          ref: null,
-          props: {children},
-          _owner: null,
-          _store: __DEV__ ? {} : undefined,
-        };
-      }
-      return children;
+      const container = rootContainers.get(rootID);
+      return getChildrenAsJSX(container);
     },
 
     getPendingChildrenAsJSX(rootID: string = DEFAULT_ROOT_ID) {
-      const children = childToJSX(ReactNoop.getPendingChildren(rootID), null);
-      if (children === null) {
-        return null;
-      }
-      if (Array.isArray(children)) {
-        return {
-          $$typeof: REACT_ELEMENT_TYPE,
-          type: REACT_FRAGMENT_TYPE,
-          key: null,
-          ref: null,
-          props: {children},
-          _owner: null,
-          _store: __DEV__ ? {} : undefined,
-        };
-      }
-      return children;
+      const container = rootContainers.get(rootID);
+      return getPendingChildrenAsJSX(container);
     },
 
     createPortal(
@@ -920,9 +1003,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     renderLegacySyncRoot(element: React$Element<any>, callback: ?Function) {
       const rootID = DEFAULT_ROOT_ID;
+      const isBatched = false;
       const isConcurrent = false;
       const container = ReactNoop.getOrCreateRootContainer(
         rootID,
+        isBatched,
         isConcurrent,
       );
       const root = roots.get(container.rootID);
@@ -934,9 +1019,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       rootID: string,
       callback: ?Function,
     ) {
+      const isBatched = true;
       const isConcurrent = true;
       const container = ReactNoop.getOrCreateRootContainer(
         rootID,
+        isBatched,
         isConcurrent,
       );
       const root = roots.get(container.rootID);

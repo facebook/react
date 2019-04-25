@@ -437,8 +437,10 @@ const ReactTestRendererFiber = {
       createNodeMock,
       tag: 'CONTAINER',
     };
+    const isBatched = false;
     let root: FiberRoot | null = createContainer(
       container,
+      isBatched,
       isConcurrent,
       false,
     );

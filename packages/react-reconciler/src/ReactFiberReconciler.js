@@ -273,10 +273,11 @@ function findHostInstanceWithWarning(
 
 export function createContainer(
   containerInfo: Container,
+  isBatched: boolean,
   isConcurrent: boolean,
   hydrate: boolean,
 ): OpaqueRoot {
-  return createFiberRoot(containerInfo, isConcurrent, hydrate);
+  return createFiberRoot(containerInfo, isBatched, isConcurrent, hydrate);
 }
 
 export function updateContainer(

@@ -116,6 +116,7 @@ function FiberRootNode(containerInfo, hydrate) {
 
 export function createFiberRoot(
   containerInfo: any,
+  isBatched: boolean,
   isConcurrent: boolean,
   hydrate: boolean,
 ): FiberRoot {
@@ -123,7 +124,7 @@ export function createFiberRoot(
 
   // Cyclic construction. This cheats the type system right now because
   // stateNode is any.
-  const uninitializedFiber = createHostRootFiber(isConcurrent);
+  const uninitializedFiber = createHostRootFiber(isBatched, isConcurrent);
   root.current = uninitializedFiber;
   uninitializedFiber.stateNode = root;
 

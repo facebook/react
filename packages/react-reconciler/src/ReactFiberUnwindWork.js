@@ -41,7 +41,7 @@ import {
   enableSuspenseServerRenderer,
   enableEventAPI,
 } from 'shared/ReactFeatureFlags';
-import {ConcurrentMode, NoContext} from './ReactTypeOfMode';
+import {ConcurrentMode, NoMode} from './ReactTypeOfMode';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent';
 
 import {createCapturedValue} from './ReactCapturedValue';
@@ -231,7 +231,7 @@ function throwException(
         // Note: It doesn't matter whether the component that suspended was
         // inside a concurrent mode tree. If the Suspense is outside of it, we
         // should *not* suspend the commit.
-        if ((workInProgress.mode & ConcurrentMode) === NoContext) {
+        if ((workInProgress.mode & ConcurrentMode) === NoMode) {
           workInProgress.effectTag |= DidCapture;
 
           // We're going to commit this fiber even though it didn't complete.

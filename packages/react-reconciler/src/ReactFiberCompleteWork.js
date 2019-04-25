@@ -43,7 +43,7 @@ import {
   EventComponent,
   EventTarget,
 } from 'shared/ReactWorkTags';
-import {ConcurrentMode, NoContext} from './ReactTypeOfMode';
+import {ConcurrentMode, NoMode} from './ReactTypeOfMode';
 import {
   Placement,
   Ref,
@@ -721,7 +721,7 @@ function completeWork(
         // TODO: This will still suspend a synchronous tree if anything
         // in the concurrent tree already suspended during this render.
         // This is a known bug.
-        if ((workInProgress.mode & ConcurrentMode) !== NoContext) {
+        if ((workInProgress.mode & ConcurrentMode) !== NoMode) {
           renderDidSuspend();
         }
       }
