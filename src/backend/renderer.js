@@ -539,11 +539,6 @@ export function attach(
   // When a mount or update is in progress, this value tracks the root that is being operated on.
   let currentRootID: number = -1;
 
-  // Track the order in which roots were added.
-  // We will use it to disambiguate roots when restoring selection between reloads.
-  let nextRootIndex = 0;
-  const rootInsertionOrder: Map<number, number> = new Map();
-
   function getFiberID(primaryFiber: Fiber): number {
     if (!fiberToIDMap.has(primaryFiber)) {
       const id = getUID();
@@ -1148,7 +1143,7 @@ export function attach(
       // If we have not been profiling, then we can just walk the tree and build up its current state as-is.
       hook.getFiberRoots(rendererID).forEach(root => {
         currentRootID = getFiberID(getPrimaryFiber(root.current));
-        rootInsertionOrder.set(currentRootID, nextRootIndex++);
+        setRootPseudoKey(currentRootID, root.current);
 
         if (isProfiling) {
           // If profiling is active, store commit time and duration, and the current interactions.
@@ -1217,19 +1212,19 @@ export function attach(
         current.memoizedState != null && current.memoizedState.element != null;
       if (!wasMounted && isMounted) {
         // Mount a new root.
-        rootInsertionOrder.set(currentRootID, nextRootIndex++);
+        setRootPseudoKey(currentRootID, current);
         mountFiberRecursively(current, null);
       } else if (wasMounted && isMounted) {
         // Update an existing root.
         updateFiberRecursively(current, alternate, null);
       } else if (wasMounted && !isMounted) {
         // Unmount an existing root.
-        rootInsertionOrder.delete(currentRootID);
+        removeRootPseudoKey(currentRootID);
         recordUnmount(current, false);
       }
     } else {
       // Mount a new root.
-      rootInsertionOrder.set(currentRootID, nextRootIndex++);
+      setRootPseudoKey(currentRootID, current);
       mountFiberRecursively(current, null);
     }
 
@@ -2097,18 +2092,84 @@ export function attach(
     mightBeOnTrackedPath = mightSiblingsBeOnTrackedPath;
   }
 
-  function getPathFrame(fiber: Fiber): PathFrame {
-    const { displayName, key } = getDataForFiber(fiber);
-    let index = fiber.index;
-    if (fiber.tag === HostRoot) {
-      // Roots don't have a real index.
-      // Instead, we'll use the order in which it mounted.
-      const id = getFiberID(getPrimaryFiber(fiber));
-      const order = rootInsertionOrder.get(id);
-      if (typeof order !== 'number') {
-        throw new Error('Expected mounted root to have known insertion order.');
+  // Roots don't have a real persistent identity.
+  // A root's "pseudo key" is "childDisplayName:indexWithThatName".
+  // For example, "App:0" or, in case of similar roots, "Story:0", "Story:1", etc.
+  // We will use this to try to disambiguate roots when restoring selection between reloads.
+  const rootPseudoKeys: Map<number, string> = new Map();
+  const rootDisplayNameCounter: Map<string, number> = new Map();
+
+  function setRootPseudoKey(id: number, fiber: Fiber) {
+    let preferredDisplayName = null;
+    let fallbackDisplayName = null;
+    let child = fiber.child;
+    // Go at most three levels deep into direct children
+    // while searching for a child that has a displayName.
+    for (let i = 0; i < 3; i++) {
+      if (child === null) {
+        break;
       }
-      index = order;
+      const displayName = getDataForFiber(child).displayName;
+      if (displayName !== null) {
+        // Prefer display names that we get from user-defined components.
+        // We want to avoid using e.g. 'Suspense' unless we find nothing else.
+        if (typeof child.type === 'function') {
+          // There's a few user-defined tags, but we'll prefer the ones
+          // that are usually explicitly named (function or class components).
+          preferredDisplayName = displayName;
+        } else if (fallbackDisplayName === null) {
+          fallbackDisplayName = displayName;
+        }
+      }
+      if (preferredDisplayName !== null) {
+        break;
+      }
+      child = child.child;
+    }
+    const name = preferredDisplayName || fallbackDisplayName || 'Unknown';
+    const counter = rootDisplayNameCounter.get(name) || 0;
+    rootDisplayNameCounter.set(name, counter + 1);
+    const pseudoKey = `${name}:${counter}`;
+    rootPseudoKeys.set(id, pseudoKey);
+  }
+
+  function removeRootPseudoKey(id: number) {
+    const pseudoKey = rootPseudoKeys.get(id);
+    if (pseudoKey === undefined) {
+      throw new Error('Expected root pseudo key to be known.');
+    }
+    const name = pseudoKey.substring(0, pseudoKey.lastIndexOf(':'));
+    const counter = rootDisplayNameCounter.get(name);
+    if (counter === undefined) {
+      throw new Error('Expected counter to be known.');
+    }
+    if (counter > 1) {
+      rootDisplayNameCounter.set(name, counter - 1);
+    } else {
+      rootDisplayNameCounter.delete(name);
+    }
+    rootPseudoKeys.delete(id);
+  }
+
+  function getPathFrame(fiber: Fiber): PathFrame {
+    let { displayName, key } = getDataForFiber(fiber);
+    const index = fiber.index;
+    switch (fiber.tag) {
+      case HostRoot:
+        // Roots don't have a real displayName, index, or key.
+        // Instead, we'll use the pseudo key (childDisplayName:indexWithThatName).
+        const id = getFiberID(getPrimaryFiber(fiber));
+        const pseudoKey = rootPseudoKeys.get(id);
+        if (pseudoKey === undefined) {
+          throw new Error('Expected mounted root to have known pseudo key.');
+        }
+        displayName = pseudoKey;
+        break;
+      case HostComponent:
+        displayName = fiber.type;
+        break;
+      default:
+        break;
     }
     return {
       displayName,
