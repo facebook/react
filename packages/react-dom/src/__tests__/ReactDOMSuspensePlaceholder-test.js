@@ -33,13 +33,16 @@ describe('ReactDOMSuspensePlaceholder', () => {
     container = document.createElement('div');
     document.body.appendChild(container);
 
-    TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
-      return new Promise((resolve, reject) =>
-        setTimeout(() => {
-          resolve(text);
-        }, ms),
-      );
-    }, ([text, ms]) => text);
+    TextResource = ReactCache.unstable_createResource(
+      ([text, ms = 0]) => {
+        return new Promise((resolve, reject) =>
+          setTimeout(() => {
+            resolve(text);
+          }, ms),
+        );
+      },
+      ([text, ms]) => text,
+    );
   });
 
   afterEach(() => {

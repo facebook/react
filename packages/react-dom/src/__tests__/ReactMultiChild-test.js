@@ -374,7 +374,13 @@ describe('ReactMultiChild', () => {
     class Letters extends React.Component {
       render() {
         const letters = this.props.letters.split('');
-        return <div>{letters.map(c => <Letter key={c} char={c} />)}</div>;
+        return (
+          <div>
+            {letters.map(c => (
+              <Letter key={c} char={c} />
+            ))}
+          </div>
+        );
       }
     }
 

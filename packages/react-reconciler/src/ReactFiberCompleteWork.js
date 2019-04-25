@@ -377,8 +377,7 @@ if (supportsMutation) {
     const portalOrRoot: {
       containerInfo: Container,
       pendingChildren: ChildSet,
-    } =
-      workInProgress.stateNode;
+    } = workInProgress.stateNode;
     const childrenUnchanged = workInProgress.firstEffect === null;
     if (childrenUnchanged) {
       // No changes, just reuse the existing instance.

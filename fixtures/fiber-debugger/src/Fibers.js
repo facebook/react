@@ -330,83 +330,76 @@ export default function Fibers({fibers, show, graphSettings, ...rest}) {
               ]}
             </div>
           </Vertex>,
-          fiber.child &&
-            show.child && (
-              <Edge
-                source={fiber.id}
-                target={fiber.child}
-                kind="child"
-                weight={1000}
-                key={`${fiber.id}-${fiber.child}-child`}>
-                child
-              </Edge>
-            ),
-          fiber.sibling &&
-            show.sibling && (
-              <Edge
-                source={fiber.id}
-                target={fiber.sibling}
-                kind="sibling"
-                weight={2000}
-                key={`${fiber.id}-${fiber.sibling}-sibling`}>
-                sibling
-              </Edge>
-            ),
-          fiber.return &&
-            show.return && (
-              <Edge
-                source={fiber.id}
-                target={fiber.return}
-                kind="return"
-                weight={1000}
-                key={`${fiber.id}-${fiber.return}-return`}>
-                return
-              </Edge>
-            ),
-          fiber.nextEffect &&
-            show.fx && (
-              <Edge
-                source={fiber.id}
-                target={fiber.nextEffect}
-                kind="fx"
-                weight={100}
-                key={`${fiber.id}-${fiber.nextEffect}-nextEffect`}>
-                nextFx
-              </Edge>
-            ),
-          fiber.firstEffect &&
-            show.fx && (
-              <Edge
-                source={fiber.id}
-                target={fiber.firstEffect}
-                kind="fx"
-                weight={100}
-                key={`${fiber.id}-${fiber.firstEffect}-firstEffect`}>
-                firstFx
-              </Edge>
-            ),
-          fiber.lastEffect &&
-            show.fx && (
-              <Edge
-                source={fiber.id}
-                target={fiber.lastEffect}
-                kind="fx"
-                weight={100}
-                key={`${fiber.id}-${fiber.lastEffect}-lastEffect`}>
-                lastFx
-              </Edge>
-            ),
-          fiber.alternate &&
-            show.alt && (
-              <Edge
-                source={fiber.id}
-                target={fiber.alternate}
-                kind="alt"
-                weight={10}
-                key={`${fiber.id}-${fiber.alternate}-alt`}>
-                alt
-              </Edge>
-            ),
+          fiber.child && show.child && (
+            <Edge
+              source={fiber.id}
+              target={fiber.child}
+              kind="child"
+              weight={1000}
+              key={`${fiber.id}-${fiber.child}-child`}>
+              child
+            </Edge>
+          ),
+          fiber.sibling && show.sibling && (
+            <Edge
+              source={fiber.id}
+              target={fiber.sibling}
+              kind="sibling"
+              weight={2000}
+              key={`${fiber.id}-${fiber.sibling}-sibling`}>
+              sibling
+            </Edge>
+          ),
+          fiber.return && show.return && (
+            <Edge
+              source={fiber.id}
+              target={fiber.return}
+              kind="return"
+              weight={1000}
+              key={`${fiber.id}-${fiber.return}-return`}>
+              return
+            </Edge>
+          ),
+          fiber.nextEffect && show.fx && (
+            <Edge
+              source={fiber.id}
+              target={fiber.nextEffect}
+              kind="fx"
+              weight={100}
+              key={`${fiber.id}-${fiber.nextEffect}-nextEffect`}>
+              nextFx
+            </Edge>
+          ),
+          fiber.firstEffect && show.fx && (
+            <Edge
+              source={fiber.id}
+              target={fiber.firstEffect}
+              kind="fx"
+              weight={100}
+              key={`${fiber.id}-${fiber.firstEffect}-firstEffect`}>
+              firstFx
+            </Edge>
+          ),
+          fiber.lastEffect && show.fx && (
+            <Edge
+              source={fiber.id}
+              target={fiber.lastEffect}
+              kind="fx"
+              weight={100}
+              key={`${fiber.id}-${fiber.lastEffect}-lastEffect`}>
+              lastFx
+            </Edge>
+          ),
+          fiber.alternate && show.alt && (
+            <Edge
+              source={fiber.id}
+              target={fiber.alternate}
+              kind="alt"
+              weight={10}
+              key={`${fiber.id}-${fiber.alternate}-alt`}>
+              alt
+            </Edge>
+          ),
         ])}
       </Graph>
     </div>

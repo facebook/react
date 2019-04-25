@@ -616,10 +616,13 @@ describe('ReactHooks', () => {
   it('warns if switching from dependencies to no dependencies', () => {
     const {useMemo} = React;
     function App({text, hasDeps}) {
-      const resolvedText = useMemo(() => {
-        Scheduler.yieldValue('Compute');
-        return text.toUpperCase();
-      }, hasDeps ? null : [text]);
+      const resolvedText = useMemo(
+        () => {
+          Scheduler.yieldValue('Compute');
+          return text.toUpperCase();
+        },
+        hasDeps ? null : [text],
+      );
       return resolvedText;
     }
 

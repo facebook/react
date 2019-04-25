@@ -59,7 +59,7 @@ describe('ReactNewContext', () => {
         }).toWarnDev(
           observedBits !== undefined
             ? 'useContext() second argument is reserved for future use in React. ' +
-              `Passing it is not supported. You passed: ${observedBits}.`
+                `Passing it is not supported. You passed: ${observedBits}.`
             : [],
         );
         const render = props.children;
@@ -75,7 +75,7 @@ describe('ReactNewContext', () => {
       }).toWarnDev(
         observedBits !== undefined
           ? 'useContext() second argument is reserved for future use in React. ' +
-            `Passing it is not supported. You passed: ${observedBits}.`
+              `Passing it is not supported. You passed: ${observedBits}.`
           : [],
       );
       const render = props.children;
@@ -91,7 +91,7 @@ describe('ReactNewContext', () => {
       }).toWarnDev(
         observedBits !== undefined
           ? 'useContext() second argument is reserved for future use in React. ' +
-            `Passing it is not supported. You passed: ${observedBits}.`
+              `Passing it is not supported. You passed: ${observedBits}.`
           : [],
       );
       const render = props.children;

@@ -793,13 +793,10 @@ describe('ReactHooksWithNoopRenderer', () => {
     it('updates have async priority', () => {
       function Counter(props) {
         const [count, updateCount] = useState('(empty)');
-        useEffect(
-          () => {
-            Scheduler.yieldValue(`Schedule update [${props.count}]`);
-            updateCount(props.count);
-          },
-          [props.count],
-        );
+        useEffect(() => {
+          Scheduler.yieldValue(`Schedule update [${props.count}]`);
+          updateCount(props.count);
+        }, [props.count]);
         return <Text text={'Count: ' + count} />;
       }
       ReactNoop.render(<Counter count={0} />, () =>
@@ -827,13 +824,10 @@ describe('ReactHooksWithNoopRenderer', () => {
     it('updates have async priority even if effects are flushed early', () => {
       function Counter(props) {
         const [count, updateCount] = useState('(empty)');
-        useEffect(
-          () => {
-            Scheduler.yieldValue(`Schedule update [${props.count}]`);
-            updateCount(props.count);
-          },
-          [props.count],
-        );
+        useEffect(() => {
+          Scheduler.yieldValue(`Schedule update [${props.count}]`);
+          updateCount(props.count);
+        }, [props.count]);
         return <Text text={'Count: ' + count} />;
       }
       ReactNoop.render(<Counter count={0} />, () =>
@@ -946,19 +940,16 @@ describe('ReactHooksWithNoopRenderer', () => {
       () => {
         function Counter(props) {
           const [count, updateCount] = useState('(empty)');
-          useEffect(
-            () => {
-              // Update multiple times. These should all be batched together in
-              // a single render.
-              updateCount(props.count);
-              updateCount(props.count);
-              updateCount(props.count);
-              updateCount(props.count);
-              updateCount(props.count);
-              updateCount(props.count);
-            },
-            [props.count],
-          );
+          useEffect(() => {
+            // Update multiple times. These should all be batched together in
+            // a single render.
+            updateCount(props.count);
+            updateCount(props.count);
+            updateCount(props.count);
+            updateCount(props.count);
+            updateCount(props.count);
+            updateCount(props.count);
+          }, [props.count]);
           return <Text text={'Count: ' + count} />;
         }
         ReactNoop.renderLegacySyncRoot(<Counter count={0} />);
@@ -977,15 +968,12 @@ describe('ReactHooksWithNoopRenderer', () => {
     it('flushSync is not allowed', () => {
       function Counter(props) {
         const [count, updateCount] = useState('(empty)');
-        useEffect(
-          () => {
-            Scheduler.yieldValue(`Schedule update [${props.count}]`);
-            ReactNoop.flushSync(() => {
-              updateCount(props.count);
-            });
-          },
-          [props.count],
-        );
+        useEffect(() => {
+          Scheduler.yieldValue(`Schedule update [${props.count}]`);
+          ReactNoop.flushSync(() => {
+            updateCount(props.count);
+          });
+        }, [props.count]);
         return <Text text={'Count: ' + count} />;
       }
       ReactNoop.render(<Counter count={0} />, () =>
@@ -1118,15 +1106,12 @@ describe('ReactHooksWithNoopRenderer', () => {
     it('skips effect if inputs have not changed', () => {
       function Counter(props) {
         const text = `${props.label}: ${props.count}`;
-        useEffect(
-          () => {
-            Scheduler.yieldValue(`Did create [${text}]`);
-            return () => {
-              Scheduler.yieldValue(`Did destroy [${text}]`);
-            };
-          },
-          [props.label, props.count],
-        );
+        useEffect(() => {
+          Scheduler.yieldValue(`Did create [${text}]`);
+          return () => {
+            Scheduler.yieldValue(`Did destroy [${text}]`);
+          };
+        }, [props.label, props.count]);
         return <Text text={text} />;
       }
       ReactNoop.render(<Counter label="Count" count={0} />, () =>
@@ -1557,13 +1542,10 @@ describe('ReactHooksWithNoopRenderer', () => {
     it('memoizes value by comparing to previous inputs', () => {
       function CapitalizedText(props) {
         const text = props.text;
-        const capitalizedText = useMemo(
-          () => {
-            Scheduler.yieldValue(`Capitalize '${text}'`);
-            return text.toUpperCase();
-          },
-          [text],
-        );
+        const capitalizedText = useMemo(() => {
+          Scheduler.yieldValue(`Capitalize '${text}'`);
+          return text.toUpperCase();
+        }, [text]);
         return <Text text={capitalizedText} />;
       }
 
@@ -2005,13 +1987,10 @@ describe('ReactHooksWithNoopRenderer', () => {
         Scheduler.yieldValue('Reducer: ' + count);
         return count;
       }, -1);
-      useEffect(
-        () => {
-          Scheduler.yieldValue('Effect: ' + count);
-          dispatch();
-        },
-        [count],
-      );
+      useEffect(() => {
+        Scheduler.yieldValue('Effect: ' + count);
+        dispatch();
+      }, [count]);
       Scheduler.yieldValue('Render: ' + state);
       return count;
     }
