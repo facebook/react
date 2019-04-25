@@ -92,6 +92,20 @@ function ElementsDropdown({
   const store = useContext(StoreContext);
   const dispatch = useContext(TreeDispatcherContext);
 
+  const menuItems = [];
+  for (let index = ownerStack.length - 1; index >= 0; index--) {
+    const id = ownerStack[index];
+    menuItems.push(
+      <MenuItem
+        key={id}
+        className={styles.Component}
+        onSelect={() => dispatch({ type: 'SELECT_OWNER', payload: id })}
+      >
+        {((store.getElementByID(id): any): Element).displayName}
+      </MenuItem>
+    );
+  }
+
   return (
     <Menu>
       <MenuButton className={styles.MenuButton}>
@@ -101,17 +115,7 @@ function ElementsDropdown({
           </span>
         </Tooltip>
       </MenuButton>
-      <MenuList className={styles.Modal}>
-        {ownerStack.map((id, index) => (
-          <MenuItem
-            key={id}
-            className={styles.Component}
-            onSelect={() => dispatch({ type: 'SELECT_OWNER', payload: id })}
-          >
-            {((store.getElementByID(id): any): Element).displayName}
-          </MenuItem>
-        ))}
-      </MenuList>
+      <MenuList className={styles.Modal}>{menuItems}</MenuList>
     </Menu>
   );
 }
