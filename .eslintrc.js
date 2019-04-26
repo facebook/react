@@ -125,6 +125,12 @@ module.exports = {
         // https://github.com/jest-community/eslint-plugin-jest
         'jest/no-focused-tests': ERROR,
       }
+    },
+    {
+      files: ['packages/react-native-renderer/**/*.js'],
+      globals: {
+        nativeFabricUIManager: true,
+      }
     }
   ],
 
