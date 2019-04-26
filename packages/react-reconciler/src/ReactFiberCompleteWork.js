@@ -818,7 +818,6 @@ function completeWork(
             rootEventTypes: null,
             rootInstance: rootContainerInstance,
             state: responderState,
-            staticRootEventTypes: null,
           };
           markUpdate(workInProgress);
         } else {

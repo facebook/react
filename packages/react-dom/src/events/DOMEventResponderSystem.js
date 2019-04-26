@@ -864,16 +864,9 @@ export function addRootEventTypesForComponentInstance(
   eventComponentInstance: ReactEventComponentInstance,
   rootEventTypes: Array<ReactEventResponderEventType>,
 ): void {
-  let staticRootEventTypesSet = eventComponentInstance.staticRootEventTypes;
-  if (staticRootEventTypesSet === null) {
-    staticRootEventTypesSet = eventComponentInstance.staticRootEventTypes = new Set();
-  }
   for (let i = 0; i < rootEventTypes.length; i++) {
     const rootEventType = rootEventTypes[i];
-    if (!staticRootEventTypesSet.has(rootEventType)) {
-      staticRootEventTypesSet.add(rootEventType);
-      registerRootEventType(rootEventType, eventComponentInstance);
-    }
+    registerRootEventType(rootEventType, eventComponentInstance);
   }
 }
 
