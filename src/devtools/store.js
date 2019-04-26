@@ -179,6 +179,31 @@ export default class Store extends EventEmitter {
     this._profilingCache = new ProfilingCache(bridge, this);
   }
 
+  assertEmptyMaps() {
+    // This is only used in tests to avoid memory leaks.
+    if (this._idToElement.size !== 0) {
+      throw new Error('Expected _idToElement to be empty.');
+    }
+    if (this._ownersMap.size !== 0) {
+      throw new Error('Expected _ownersMap to be empty.');
+    }
+    if (this._profilingOperations.size !== 0) {
+      throw new Error('Expected _profilingOperations to be empty.');
+    }
+    if (this._profilingScreenshots.size !== 0) {
+      throw new Error('Expected _profilingScreenshots to be empty.');
+    }
+    if (this._profilingSnapshot.size !== 0) {
+      throw new Error('Expected _profilingSnapshot to be empty.');
+    }
+    if (this._rootIDToCapabilities.size !== 0) {
+      throw new Error('Expected _rootIDToCapabilities to be empty.');
+    }
+    if (this._rootIDToRendererID.size !== 0) {
+      throw new Error('Expected _rootIDToRendererID to be empty.');
+    }
+  }
+
   get captureScreenshots(): boolean {
     return this._captureScreenshots;
   }
