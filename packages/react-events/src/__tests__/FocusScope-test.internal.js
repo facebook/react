@@ -85,7 +85,7 @@ describe('FocusScope event responder', () => {
     expect(document.activeElement).toBe(divRef.current);
   });
 
-  it('should work as expected with autofocus and trapping', () => {
+  it('should work as expected with autoFocus and contain', () => {
     const inputRef = React.createRef();
     const input2Ref = React.createRef();
     const buttonRef = React.createRef();
@@ -93,7 +93,7 @@ describe('FocusScope event responder', () => {
 
     const SimpleFocusScope = () => (
       <div>
-        <FocusScope autoFocus={true} trap={true}>
+        <FocusScope autoFocus={true} contain={true}>
           <input ref={inputRef} tabIndex={-1} />
           <button ref={buttonRef} id={1} />
           <button ref={button2Ref} id={2} />
@@ -154,7 +154,7 @@ describe('FocusScope event responder', () => {
     expect(document.activeElement).toBe(button2Ref.current);
   });
 
-  it('should work as expected when nested with scope that is trapped', () => {
+  it('should work as expected when nested with scope that is contained', () => {
     const inputRef = React.createRef();
     const input2Ref = React.createRef();
     const buttonRef = React.createRef();
@@ -167,7 +167,7 @@ describe('FocusScope event responder', () => {
         <FocusScope>
           <input ref={inputRef} tabIndex={-1} />
           <button ref={buttonRef} id={1} />
-          <FocusScope trap={true}>
+          <FocusScope contain={true}>
             <button ref={button2Ref} id={2} />
             <button ref={button3Ref} id={3} />
           </FocusScope>
