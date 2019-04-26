@@ -886,5 +886,7 @@ describe('DOMEventResponderSystem', () => {
         passiveSupported: true,
       },
     ]);
+
+    ReactDOM.render(<Test />, container);
   });
 });

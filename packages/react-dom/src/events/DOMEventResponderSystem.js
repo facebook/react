@@ -237,7 +237,7 @@ const eventResponderContext: ReactResponderContext = {
     for (let i = 0; i < rootEventTypes.length; i++) {
       const rootEventType = rootEventTypes[i];
       const eventComponentInstance = ((currentInstance: any): ReactEventComponentInstance);
-      registerRootEventType(rootEventType, eventComponentInstance);
+      registerRootEventType(rootEventType, eventComponentInstance, false);
     }
   },
   removeRootEventTypes(
@@ -866,13 +866,14 @@ export function addRootEventTypesForComponentInstance(
 ): void {
   for (let i = 0; i < rootEventTypes.length; i++) {
     const rootEventType = rootEventTypes[i];
-    registerRootEventType(rootEventType, eventComponentInstance);
+    registerRootEventType(rootEventType, eventComponentInstance, true);
   }
 }
 
 function registerRootEventType(
   rootEventType: ReactEventResponderEventType,
   eventComponentInstance: ReactEventComponentInstance,
+  isStaticRootEventType: boolean,
 ): void {
   let name = rootEventType;
   let capture = false;
@@ -913,7 +914,7 @@ function registerRootEventType(
     rootEventTypesSet = eventComponentInstance.rootEventTypes = new Set();
   }
   invariant(
-    !rootEventTypesSet.has(listeningName),
+    isStaticRootEventType || !rootEventTypesSet.has(listeningName),
     'addRootEventTypes() found a duplicate root event ' +
       'type of "%s". This might be because the event type exists in the event responder "rootEventTypes" ' +
       'array or because of a previous addRootEventTypes() using this root event type.',
