@@ -100,8 +100,10 @@ export default function(
       }
 
       if (maybeInstance.canonical) {
-        // Must be inlined to avoid loading this before Fabric is set up
-        require('FabricUIManager').measure(
+        // We can't call FabricUIManager here because it won't be loaded in paper
+        // at initialization time. See https://github.com/facebook/react/pull/15490
+        // for more info.
+        global.nativeFabricUIManager.measure(
           maybeInstance.node,
           mountSafeCallback_NOT_REALLY_SAFE(this, callback),
         );
@@ -144,8 +146,10 @@ export default function(
       }
 
       if (maybeInstance.canonical) {
-        // Must be inlined to avoid loading this before Fabric is set up
-        require('FabricUIManager').measureInWindow(
+        // We can't call FabricUIManager here because it won't be loaded in paper
+        // at initialization time. See https://github.com/facebook/react/pull/15490
+        // for more info.
+        global.nativeFabricUIManager.measureInWindow(
           maybeInstance.node,
           mountSafeCallback_NOT_REALLY_SAFE(this, callback),
         );
