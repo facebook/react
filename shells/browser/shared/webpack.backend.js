@@ -1,4 +1,3 @@
-const { readFileSync } = require('fs');
 const { resolve } = require('path');
 const { DefinePlugin } = require('webpack');
 const { getGitHubURL, getVersionString } = require('../../utils');
@@ -41,9 +40,9 @@ module.exports = {
       {
         test: /\.js$/,
         loader: 'babel-loader',
-        options: JSON.parse(
-          readFileSync(resolve(__dirname, '../../../.babelrc'))
-        ),
+        options: {
+          configFile: resolve(__dirname, '../../../babel.config.js'),
+        },
       },
     ],
   },
