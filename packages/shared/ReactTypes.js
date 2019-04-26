@@ -132,6 +132,7 @@ export type ReactEventComponentInstance = {|
   rootEventTypes: null | Set<string>,
   rootInstance: mixed,
   state: null | Object,
+  staticRootEventTypes: null | Set<ReactEventResponderEventType>,
 |};
 
 export type ReactEventComponent = {|

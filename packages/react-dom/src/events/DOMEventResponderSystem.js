@@ -237,7 +237,7 @@ const eventResponderContext: ReactResponderContext = {
     for (let i = 0; i < rootEventTypes.length; i++) {
       const rootEventType = rootEventTypes[i];
       const eventComponentInstance = ((currentInstance: any): ReactEventComponentInstance);
-      registerRootEventType(rootEventType, eventComponentInstance, false);
+      registerRootEventType(rootEventType, eventComponentInstance);
     }
   },
   removeRootEventTypes(
@@ -864,16 +864,22 @@ export function addRootEventTypesForComponentInstance(
   eventComponentInstance: ReactEventComponentInstance,
   rootEventTypes: Array<ReactEventResponderEventType>,
 ): void {
+  let staticRootEventTypesSet = eventComponentInstance.staticRootEventTypes;
+  if (staticRootEventTypesSet === null) {
+    staticRootEventTypesSet = eventComponentInstance.staticRootEventTypes = new Set();
+  }
   for (let i = 0; i < rootEventTypes.length; i++) {
     const rootEventType = rootEventTypes[i];
-    registerRootEventType(rootEventType, eventComponentInstance, true);
+    if (!staticRootEventTypesSet.has(rootEventType)) {
+      staticRootEventTypesSet.add(rootEventType);
+      registerRootEventType(rootEventType, eventComponentInstance);
+    }
   }
 }
 
 function registerRootEventType(
   rootEventType: ReactEventResponderEventType,
   eventComponentInstance: ReactEventComponentInstance,
-  isStaticRootEventType: boolean,
 ): void {
   let name = rootEventType;
   let capture = false;
@@ -914,7 +920,7 @@ function registerRootEventType(
     rootEventTypesSet = eventComponentInstance.rootEventTypes = new Set();
   }
   invariant(
-    isStaticRootEventType || !rootEventTypesSet.has(listeningName),
+    !rootEventTypesSet.has(listeningName),
     'addRootEventTypes() found a duplicate root event ' +
       'type of "%s". This might be because the event type exists in the event responder "rootEventTypes" ' +
       'array or because of a previous addRootEventTypes() using this root event type.',
