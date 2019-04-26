@@ -1428,4 +1428,21 @@ describe('Event responder: Press', () => {
   it('expect displayName to show up for event component', () => {
     expect(Press.displayName).toBe('Press');
   });
+
+  it('should not trigger an invariant in addRootEventTypes()', () => {
+    const ref = React.createRef();
+    const element = (
+      <Press>
+        <button ref={ref} />
+      </Press>
+    );
+    ReactDOM.render(element, container);
+
+    ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+    jest.advanceTimersByTime(DEFAULT_LONG_PRESS_DELAY);
+    ref.current.dispatchEvent(createPointerEvent('pointermove'));
+    ref.current.dispatchEvent(createPointerEvent('pointerup'));
+    ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+    ReactDOM.render(element, container);
+  });
 });

@@ -44,6 +44,7 @@ type PressProps = {
 type PointerType = '' | 'mouse' | 'keyboard' | 'pen' | 'touch';
 
 type PressState = {
+  addedRootEvents: boolean,
   isActivePressed: boolean,
   isActivePressStart: boolean,
   isLongPressed: boolean,
@@ -300,6 +301,7 @@ function dispatchPressEndEvents(
       deactivate(context, props, state);
     }
   }
+  removeRootEventTypes(context, state);
 }
 
 function isAnchorTagElement(eventTarget: EventTarget): boolean {
@@ -394,7 +396,6 @@ function unmountResponder(
 ): void {
   if (state.isPressed) {
     dispatchPressEndEvents(context, props, state);
-    context.removeRootEventTypes(rootEventTypes);
   }
 }
 
@@ -411,8 +412,27 @@ function dispatchCancel(
     } else {
       state.ignoreEmulatedMouseEvents = false;
       dispatchPressEndEvents(context, props, state);
-      context.removeRootEventTypes(rootEventTypes);
     }
+  }
+}
+
+function addRootEventTypes(
+  context: ReactResponderContext,
+  state: PressState,
+): void {
+  if (!state.addedRootEvents) {
+    state.addedRootEvents = true;
+    context.addRootEventTypes(rootEventTypes);
+  }
+}
+
+function removeRootEventTypes(
+  context: ReactResponderContext,
+  state: PressState,
+): void {
+  if (state.addedRootEvents) {
+    state.addedRootEvents = false;
+    context.removeRootEventTypes(rootEventTypes);
   }
 }
 
@@ -420,6 +440,7 @@ const PressResponder = {
   targetEventTypes,
   createInitialState(): PressState {
     return {
+      addedRootEvents: false,
       didDispatchEvent: false,
       isActivePressed: false,
       isActivePressStart: false,
@@ -447,7 +468,6 @@ const PressResponder = {
 
     if (props.disabled) {
       dispatchPressEndEvents(context, props, state);
-      context.removeRootEventTypes(rootEventTypes);
       state.ignoreEmulatedMouseEvents = false;
       return;
     }
@@ -500,7 +520,7 @@ const PressResponder = {
           );
           state.isPressWithinResponderRegion = true;
           dispatchPressStartEvents(context, props, state);
-          context.addRootEventTypes(rootEventTypes);
+          addRootEventTypes(context, state);
         } else {
           // Prevent spacebar press from scrolling the window
           if (isValidKeyPress(nativeEvent.key) && nativeEvent.key === ' ') {
@@ -630,7 +650,6 @@ const PressResponder = {
               }
             }
           }
-          context.removeRootEventTypes(rootEventTypes);
         } else if (type === 'mouseup' && state.ignoreEmulatedMouseEvents) {
           state.ignoreEmulatedMouseEvents = false;
         }
