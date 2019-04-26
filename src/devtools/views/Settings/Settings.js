@@ -73,9 +73,10 @@ function Settings(_: {||}) {
   return (
     <div className={styles.Settings}>
       <div className={styles.Section}>
-        <div className={styles.Header}>Theme</div>
+        <div className={styles.Header}>Display preferences</div>
         <div className={styles.OptionGroup}>
-          <label className={styles.Option}>
+          <div className={styles.OptionLabel}>Theme</div>
+          <label className={styles.RadioOption}>
             <input
               type="radio"
               name="Settings-theme"
@@ -85,7 +86,7 @@ function Settings(_: {||}) {
             />{' '}
             Auto
           </label>
-          <label className={styles.Option}>
+          <label className={styles.RadioOption}>
             <input
               type="radio"
               name="Settings-theme"
@@ -95,7 +96,7 @@ function Settings(_: {||}) {
             />{' '}
             Light
           </label>
-          <label className={styles.Option}>
+          <label className={styles.RadioOption}>
             <input
               type="radio"
               name="Settings-theme"
@@ -106,22 +107,9 @@ function Settings(_: {||}) {
             Dark
           </label>
         </div>
-      </div>
-      <div className={styles.Section}>
-        <div className={styles.Header}>Components tree</div>
-        <label>
-          <input
-            type="checkbox"
-            checked={collapseNodesByDefault}
-            onChange={updateCollapseNodesByDefault}
-          />{' '}
-          Collapse tree by default
-        </label>
-      </div>
-      <div className={styles.Section}>
-        <div className={styles.Header}>Display density</div>
         <div className={styles.OptionGroup}>
-          <label className={styles.Option}>
+          <div className={styles.OptionLabel}>Display density</div>
+          <label className={styles.RadioOption}>
             <input
               type="radio"
               name="Settings-displayDensity"
@@ -131,7 +119,7 @@ function Settings(_: {||}) {
             />{' '}
             Compact
           </label>
-          <label className={styles.Option}>
+          <label className={styles.RadioOption}>
             <input
               type="radio"
               name="Settings-displayDensity"
@@ -143,19 +131,30 @@ function Settings(_: {||}) {
           </label>
         </div>
       </div>
+
+      <div className={styles.Section}>
+        <div className={styles.Header}>Components tree</div>
+        <label className={styles.CheckboxOption}>
+          <input
+            type="checkbox"
+            checked={collapseNodesByDefault}
+            onChange={updateCollapseNodesByDefault}
+          />{' '}
+          Collapse newly added components by default
+        </label>
+      </div>
+
       {store.supportsCaptureScreenshots && (
-        <div>
-          <div className={styles.Section}>
-            <div className={styles.Header}>Profiler</div>
-            <label>
-              <input
-                type="checkbox"
-                checked={captureScreenshots}
-                onChange={updateCaptureScreenshotsWhileProfiling}
-              />{' '}
-              Capture screenshots while profiling
-            </label>
-          </div>
+        <div className={styles.Section}>
+          <div className={styles.Header}>Profiler</div>
+          <label className={styles.CheckboxOption}>
+            <input
+              type="checkbox"
+              checked={captureScreenshots}
+              onChange={updateCaptureScreenshotsWhileProfiling}
+            />{' '}
+            Capture screenshots while profiling
+          </label>
           {captureScreenshots && (
             <div className={styles.ScreenshotThrottling}>
               Screenshots will be throttled in order to reduce the negative
