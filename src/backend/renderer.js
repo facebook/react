@@ -3,19 +3,27 @@
 import { gte } from 'semver';
 import {
   ElementTypeClass,
-  ElementTypeFunction,
   ElementTypeContext,
   ElementTypeEventComponent,
   ElementTypeEventTarget,
+  ElementTypeFunction,
   ElementTypeForwardRef,
-  ElementTypeHost,
+  ElementTypeHostComponent,
   ElementTypeMemo,
   ElementTypeOtherOrUnknown,
   ElementTypeProfiler,
   ElementTypeRoot,
   ElementTypeSuspense,
+  FilterByElementType,
+  FilterByName,
+  FilterByPath,
 } from 'src/types';
-import { getDisplayName, utfEncodeString } from '../utils';
+import {
+  getDisplayName,
+  getSavedFilters,
+  getUID,
+  utfEncodeString,
+} from 'src/utils';
 import { cleanForBridge, copyWithSet, setInObject } from './utils';
 import {
   __DEBUG__,
@@ -25,7 +33,6 @@ import {
   TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
-import { getUID } from '../utils';
 import { inspectHooksOfFiber } from './ReactDebugHooks';
 
 import type {
@@ -43,6 +50,7 @@ import type {
   ReactRenderer,
   RendererInterface,
 } from './types';
+import type { ElementType, Filter } from 'src/types';
 import type { InspectedElement } from 'src/devtools/views/Components/types';
 
 function getInternalReactConstants(version) {
@@ -260,22 +268,62 @@ export function attach(
     }
   };
 
+  const filterByElementTypeMap: Map<ElementType, boolean> = new Map();
+  const filterByNames: Set<RegExp> = new Set();
+  const filterByPaths: Set<RegExp> = new Set();
+
+  function updateFilters(filters: Array<Filter>): void {
+    filterByElementTypeMap.clear();
+    filterByNames.clear();
+    filterByPaths.clear();
+
+    filters.forEach(({ type, value }) => {
+      switch (type) {
+        case FilterByElementType:
+          filterByElementTypeMap.set(((value: any): ElementType), true);
+          break;
+        case FilterByName:
+          filterByNames.add(((value: any): RegExp));
+          break;
+        case FilterByPath:
+          filterByPaths.add(((value: any): RegExp));
+          break;
+        default:
+          console.error(`Unsupported filter type "${type}"`);
+          break;
+      }
+    });
+  }
+
+  // Initialize to the persisted values
+  updateFilters(getSavedFilters());
+
   // NOTICE Keep in sync with getDataForFiber()
   function shouldFilterFiber(fiber: Fiber): boolean {
     const { tag } = fiber;
 
+    // TODO (filter) This does not yet support display name or path based filtering.
+
     switch (tag) {
       case ClassComponent:
-      case FunctionComponent:
-      case HostComponent:
       case IncompleteClassComponent:
+        return filterByElementTypeMap.get(ElementTypeClass) === true;
+      case FunctionComponent:
+        return filterByElementTypeMap.get(ElementTypeFunction) === true;
       case IndeterminateComponent:
+        return (
+          filterByElementTypeMap.get(ElementTypeClass) === true ||
+          filterByElementTypeMap.get(ElementTypeFunction) === true
+        );
       case ForwardRef:
-      case HostRoot:
+        return filterByElementTypeMap.get(ElementTypeForwardRef) === true;
       case MemoComponent:
       case SimpleMemoComponent:
-        // TODO (filtering) Check custom filters
-        return false;
+        return filterByElementTypeMap.get(ElementTypeMemo) === true;
+      case HostComponent:
+        return filterByElementTypeMap.get(ElementTypeHostComponent) === true;
+      case HostRoot:
+        return false; // We never support filtering roots
       case DehydratedSuspenseComponent:
         // TODO: ideally we would show dehydrated Suspense immediately.
         // However, it has some special behavior (like disconnecting
@@ -302,13 +350,14 @@ export function attach(
           case CONTEXT_PROVIDER_SYMBOL_STRING:
           case CONTEXT_CONSUMER_NUMBER:
           case CONTEXT_CONSUMER_SYMBOL_STRING:
+            return filterByElementTypeMap.get(ElementTypeContext) === true;
           case SUSPENSE_NUMBER:
           case SUSPENSE_SYMBOL_STRING:
           case DEPRECATED_PLACEHOLDER_SYMBOL_STRING:
+            return filterByElementTypeMap.get(ElementTypeSuspense) === true;
           case PROFILER_NUMBER:
           case PROFILER_SYMBOL_STRING:
-            // TODO (filtering) Check custom filters
-            return false;
+            return filterByElementTypeMap.get(ElementTypeProfiler) === true;
           default:
             return false;
         }
@@ -403,7 +452,7 @@ export function attach(
         return {
           displayName: type,
           key,
-          type: ElementTypeHost,
+          type: ElementTypeHostComponent,
         };
       case HostPortal:
       case HostText:
