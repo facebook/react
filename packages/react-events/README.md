@@ -71,7 +71,7 @@ Called after an Event Component in mounted.
 
 ### onOwnershipChange?: (context: ResponderContext, props, state)
 
-Called when responder ownership is granted or terminated for an Event Component instance.
+Called when ownership is granted or terminated (either globally or for the responder) for an Event Component instance.
 
 ### onRootEvent?: (event: ResponderEvent, context: ResponderContext, props, state)
 
@@ -148,11 +148,12 @@ Returns `true` is the target element is within the subtree of the Event Componen
 
 ### isTargetWithinEventResponderScope(target: Element): boolean
 
-Returns `true` is the target element is within the current responder.
+Returns `true` is the target element is within the current Event Component instance's responder. If the target element
+is within the scope of the same responder, but owned by another Event Component instance, this will return `false`.
 
 ### releaseOwnership(): boolean
 
-Returns `true` if the instance released ownership of the responder.
+Returns `true` if the instance released ownership of the Event Component instance.
 
 ### removeRootEventTypes(eventTypes: Array<ResponderEventType>)
 
@@ -160,11 +161,18 @@ Remove the root event types added with `addRootEventTypes`.
 
 ### requestGlobalOwnership(): boolean
 
-Request ownership of the global responder.
+The current Event Component instance can request global ownership of the event system. When an Event Component instance
+has global ownership, only that instance and its responder are active. To release ownership to other event responders,
+either `releaseOwnership()` must be called or the Event Component instance that had global ownership must be
+unmounted. Calling `requestGlobalOwnership` also returns `true`/`false` if the request was successful.
 
 ### requestResponderOwnership(): boolean
 
-Request ownership of the responder.
+The current Event Component instance can request responder ownership within the event system. When an Event Component
+instance has responder ownership, all other Event Component instances that have the same responder as the Event Component
+instance will no longer be active. To release ownership to other event responders, either `releaseOwnership()` must be
+called or the Event Component instance that had global ownership must be unmounted. Calling `requestResponderOwnership`
+also returns `true`/`false` if the request was successful.
 
 ### setTimeout(func: () => void, delay: number): Symbol
 
