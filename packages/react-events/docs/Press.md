@@ -1,4 +1,4 @@
-## Press
+# Press
 
 The `Press` module responds to press events on the element it wraps. Press
 events are dispatched for `mouse`, `pen`, `touch`, and `keyboard` pointer types.
@@ -33,8 +33,9 @@ const Button = (props) => (
 );
 ```
 
+## Types
+
 ```js
-// Types
 type PressEvent = {
   pointerType: 'mouse' | 'touch' | 'pen' | 'keyboard',
   target: Element,
@@ -42,12 +43,14 @@ type PressEvent = {
 }
 
 type PressOffset = {
-  top: number,
-  right: number,
-  bottom: number,
-  right: number
+  top?: number,
+  right?: number,
+  bottom?: number,
+  right?: number
 };
 ```
+
+## Props
 
 ### delayLongPress: number = 500ms
 
@@ -64,7 +67,7 @@ The duration of a delay between when the press starts and when `onPressStart` is
 called. This delay is cut short (and `onPressStart` is called) if the press is
 released before the threshold is exceeded.
 
-### disabled: boolean
+### disabled: boolean = false
 
 Disables all `Press` events.
 
@@ -118,7 +121,7 @@ Called once the element is pressed down. If the press is released before the
 
 Defines how far the pointer (while held down) may move outside the bounds of the
 element before it is deactivated. Ensure you pass in a constant to reduce memory
-allocations.
+allocations. Default is `20` for each offset.
 
 ### preventDefault: boolean = true
 
