@@ -1,4 +1,4 @@
-## Focus
+# Focus
 
 The `Focus` module responds to focus and blur events on its child. Focus events
 are dispatched for `mouse`, `pen`, `touch`, and `keyboard`
@@ -18,15 +18,18 @@ const TextField = (props) => (
 );
 ```
 
+## Types
+
 ```js
-// Types
 type FocusEvent = {
   target: Element,
   type: 'blur' | 'focus' | 'focuschange'
 }
 ```
 
-### disabled: boolean
+## Props
+
+### disabled: boolean = false
 
 Disables all `Focus` events.
 

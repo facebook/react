@@ -1,8 +1,8 @@
-## Hover
+# Hover
 
 The `Hover` module responds to hover events on the element it wraps. Hover
-events are only dispatched for `mouse` pointer types. Hover begins when the
-pointer enters the element's bounds and ends when the pointer leaves.
+events are only dispatched for `mouse` and `pen` pointer types. Hover begins
+when the pointer enters the element's bounds and ends when the pointer leaves.
 
 Hover events do not propagate between `Hover` event responders.
 
@@ -25,14 +25,17 @@ const Link = (props) => (
 );
 ```
 
+## Types
+
 ```js
-// Types
 type HoverEvent = {
   pointerType: 'mouse' | 'pen',
   target: Element,
   type: 'hoverstart' | 'hoverend' | 'hovermove' | 'hoverchange'
 }
 ```
+
+## Props
 
 ### delayHoverEnd: number
 
