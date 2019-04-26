@@ -88,7 +88,7 @@ export default function(
         // We can't call FabricUIManager here because it won't be loaded in paper
         // at initialization time. See https://github.com/facebook/react/pull/15490
         // for more info.
-        global.nativeFabricUIManager.measure(
+        nativeFabricUIManager.measure(
           maybeInstance.node,
           mountSafeCallback_NOT_REALLY_SAFE(this, callback),
         );
@@ -136,7 +136,7 @@ export default function(
         // We can't call FabricUIManager here because it won't be loaded in paper
         // at initialization time. See https://github.com/facebook/react/pull/15490
         // for more info.
-        global.nativeFabricUIManager.measureInWindow(
+        nativeFabricUIManager.measureInWindow(
           maybeInstance.node,
           mountSafeCallback_NOT_REALLY_SAFE(this, callback),
         );
