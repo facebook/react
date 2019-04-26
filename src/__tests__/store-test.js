@@ -163,6 +163,182 @@ describe('Store', () => {
       expect(store).toMatchSnapshot('2: resolved');
     });
 
+    it('should support nested Suspense nodes', () => {
+      const Component = () => null;
+      const Loading = () => <div>Loading...</div>;
+      const Never = () => {
+        throw new Promise(() => {});
+      };
+
+      const Wrapper = ({
+        suspendFirst = false,
+        suspendSecond = false,
+        suspendParent = false,
+      }) => (
+        <React.Fragment>
+          <Component key="Outside" />
+          <React.Suspense fallback={<Loading key="Parent Fallback" />}>
+            <Component key="Unrelated at Start" />
+            <React.Suspense fallback={<Loading key="Suspense 1 Fallback" />}>
+              {suspendFirst ? (
+                <Never />
+              ) : (
+                <Component key="Suspense 1 Content" />
+              )}
+            </React.Suspense>
+            <React.Suspense fallback={<Loading key="Suspense 2 Fallback" />}>
+              {suspendSecond ? (
+                <Never />
+              ) : (
+                <Component key="Suspense 2 Content" />
+              )}
+            </React.Suspense>
+            <React.Suspense fallback={<Loading key="Suspense 3 Fallback" />}>
+              <Never />
+            </React.Suspense>
+            {suspendParent && <Never />}
+            <Component key="Unrelated at End" />
+          </React.Suspense>
+        </React.Fragment>
+      );
+
+      const container = document.createElement('div');
+      act(() =>
+        ReactDOM.render(
+          <Wrapper
+            suspendParent={false}
+            suspendFirst={false}
+            suspendSecond={false}
+          />,
+          container
+        )
+      );
+      expect(store).toMatchSnapshot('1: third child is suspended');
+      act(() =>
+        ReactDOM.render(
+          <Wrapper
+            suspendParent={false}
+            suspendFirst={true}
+            suspendSecond={false}
+          />,
+          container
+        )
+      );
+      expect(store).toMatchSnapshot('2: first and third child are suspended');
+      act(() =>
+        ReactDOM.render(
+          <Wrapper
+            suspendParent={false}
+            suspendFirst={false}
+            suspendSecond={true}
+          />,
+          container
+        )
+      );
+      expect(store).toMatchSnapshot('3: second and third child are suspended');
+      act(() =>
+        ReactDOM.render(
+          <Wrapper
+            suspendParent={false}
+            suspendFirst={true}
+            suspendSecond={false}
+          />,
+          container
+        )
+      );
+      expect(store).toMatchSnapshot('4: first and third child are suspended');
+      act(() =>
+        ReactDOM.render(
+          <Wrapper
+            suspendParent={true}
+            suspendFirst={true}
+            suspendSecond={false}
+          />,
+          container
+        )
+      );
+      expect(store).toMatchSnapshot('5: parent is suspended');
+      act(() =>
+        ReactDOM.render(
+          <Wrapper
+            suspendParent={false}
+            suspendFirst={true}
+            suspendSecond={true}
+          />,
+          container
+        )
+      );
+      expect(store).toMatchSnapshot('6: all children are suspended');
+      act(() =>
+        ReactDOM.render(
+          <Wrapper
+            suspendParent={false}
+            suspendFirst={false}
+            suspendSecond={false}
+          />,
+          container
+        )
+      );
+      expect(store).toMatchSnapshot('7: only third child is suspended');
+
+      // HACK There's only one renderer for this test
+      const rendererID = Object.keys(agent._rendererInterfaces)[0];
+      act(() =>
+        agent.overrideSuspense({
+          id: store.getElementIDAtIndex(4),
+          rendererID,
+          forceFallback: true,
+        })
+      );
+      expect(store).toMatchSnapshot('8: first and third child are suspended');
+      act(() =>
+        agent.overrideSuspense({
+          id: store.getElementIDAtIndex(2),
+          rendererID,
+          forceFallback: true,
+        })
+      );
+      expect(store).toMatchSnapshot('9: parent is suspended');
+      act(() =>
+        ReactDOM.render(
+          <Wrapper
+            suspendParent={false}
+            suspendFirst={true}
+            suspendSecond={true}
+          />,
+          container
+        )
+      );
+      expect(store).toMatchSnapshot('10: parent is suspended');
+      act(() =>
+        agent.overrideSuspense({
+          id: store.getElementIDAtIndex(2),
+          rendererID,
+          forceFallback: false,
+        })
+      );
+      expect(store).toMatchSnapshot('11: all children are suspended');
+      act(() =>
+        agent.overrideSuspense({
+          id: store.getElementIDAtIndex(4),
+          rendererID,
+          forceFallback: false,
+        })
+      );
+      expect(store).toMatchSnapshot('12: all children are suspended');
+      act(() =>
+        ReactDOM.render(
+          <Wrapper
+            suspendParent={false}
+            suspendFirst={false}
+            suspendSecond={false}
+          />,
+          container
+        )
+      );
+      expect(store).toMatchSnapshot('13: third child is suspended');
+    });
+
     it('should support collapsing parts of the tree', () => {
       const Grandparent = ({ count }) => (
         <React.Fragment>

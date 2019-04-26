@@ -138,6 +138,180 @@ exports[`Store collapseNodesByDefault:false should support mount and update oper
 
 exports[`Store collapseNodesByDefault:false should support mount and update operations: 3: unmount 1`] = ``;
 
+exports[`Store collapseNodesByDefault:false should support nested Suspense nodes: 1: third child is suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Component key="Unrelated at Start">
+      ▾ <Suspense>
+          <Component key="Suspense 1 Content">
+      ▾ <Suspense>
+          <Component key="Suspense 2 Content">
+      ▾ <Suspense>
+          <Loading key="Suspense 3 Fallback">
+        <Component key="Unrelated at End">
+`;
+
+exports[`Store collapseNodesByDefault:false should support nested Suspense nodes: 2: first and third child are suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Component key="Unrelated at Start">
+      ▾ <Suspense>
+          <Loading key="Suspense 1 Fallback">
+      ▾ <Suspense>
+          <Component key="Suspense 2 Content">
+      ▾ <Suspense>
+          <Loading key="Suspense 3 Fallback">
+        <Component key="Unrelated at End">
+`;
+
+exports[`Store collapseNodesByDefault:false should support nested Suspense nodes: 3: second and third child are suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Component key="Unrelated at Start">
+      ▾ <Suspense>
+          <Component key="Suspense 1 Content">
+      ▾ <Suspense>
+          <Loading key="Suspense 2 Fallback">
+      ▾ <Suspense>
+          <Loading key="Suspense 3 Fallback">
+        <Component key="Unrelated at End">
+`;
+
+exports[`Store collapseNodesByDefault:false should support nested Suspense nodes: 4: first and third child are suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Component key="Unrelated at Start">
+      ▾ <Suspense>
+          <Loading key="Suspense 1 Fallback">
+      ▾ <Suspense>
+          <Component key="Suspense 2 Content">
+      ▾ <Suspense>
+          <Loading key="Suspense 3 Fallback">
+        <Component key="Unrelated at End">
+`;
+
+exports[`Store collapseNodesByDefault:false should support nested Suspense nodes: 5: parent is suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Loading key="Parent Fallback">
+`;
+
+exports[`Store collapseNodesByDefault:false should support nested Suspense nodes: 6: all children are suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Component key="Unrelated at Start">
+      ▾ <Suspense>
+          <Loading key="Suspense 1 Fallback">
+      ▾ <Suspense>
+          <Loading key="Suspense 2 Fallback">
+      ▾ <Suspense>
+          <Loading key="Suspense 3 Fallback">
+        <Component key="Unrelated at End">
+`;
+
+exports[`Store collapseNodesByDefault:false should support nested Suspense nodes: 7: only third child is suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Component key="Unrelated at Start">
+      ▾ <Suspense>
+          <Component key="Suspense 1 Content">
+      ▾ <Suspense>
+          <Component key="Suspense 2 Content">
+      ▾ <Suspense>
+          <Loading key="Suspense 3 Fallback">
+        <Component key="Unrelated at End">
+`;
+
+exports[`Store collapseNodesByDefault:false should support nested Suspense nodes: 8: first and third child are suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Component key="Unrelated at Start">
+      ▾ <Suspense>
+          <Loading key="Suspense 1 Fallback">
+      ▾ <Suspense>
+          <Component key="Suspense 2 Content">
+      ▾ <Suspense>
+          <Loading key="Suspense 3 Fallback">
+        <Component key="Unrelated at End">
+`;
+
+exports[`Store collapseNodesByDefault:false should support nested Suspense nodes: 9: parent is suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Loading key="Parent Fallback">
+`;
+
+exports[`Store collapseNodesByDefault:false should support nested Suspense nodes: 10: parent is suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Loading key="Parent Fallback">
+`;
+
+exports[`Store collapseNodesByDefault:false should support nested Suspense nodes: 11: all children are suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Component key="Unrelated at Start">
+      ▾ <Suspense>
+          <Loading key="Suspense 1 Fallback">
+      ▾ <Suspense>
+          <Loading key="Suspense 2 Fallback">
+      ▾ <Suspense>
+          <Loading key="Suspense 3 Fallback">
+        <Component key="Unrelated at End">
+`;
+
+exports[`Store collapseNodesByDefault:false should support nested Suspense nodes: 12: all children are suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Component key="Unrelated at Start">
+      ▾ <Suspense>
+          <Loading key="Suspense 1 Fallback">
+      ▾ <Suspense>
+          <Loading key="Suspense 2 Fallback">
+      ▾ <Suspense>
+          <Loading key="Suspense 3 Fallback">
+        <Component key="Unrelated at End">
+`;
+
+exports[`Store collapseNodesByDefault:false should support nested Suspense nodes: 13: third child is suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component key="Outside">
+    ▾ <Suspense>
+        <Component key="Unrelated at Start">
+      ▾ <Suspense>
+          <Component key="Suspense 1 Content">
+      ▾ <Suspense>
+          <Component key="Suspense 2 Content">
+      ▾ <Suspense>
+          <Loading key="Suspense 3 Fallback">
+        <Component key="Unrelated at End">
+`;
+
 exports[`Store collapseNodesByDefault:false should support reordering of children: 1: mount 1`] = `
 [root]
   ▾ <Root>
