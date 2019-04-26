@@ -181,7 +181,7 @@ function BackToOwnerButton({
           payload: ownerID,
         })
       }
-      title={`Back to ${(owner !== null && owner.displayName) || 'owner'}`}
+      title={`Up to ${(owner !== null && owner.displayName) || 'owner'}`}
     >
       <ButtonIcon type="previous" />
     </Button>
