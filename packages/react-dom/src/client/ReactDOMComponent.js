@@ -15,7 +15,10 @@ import {canUseDOM} from 'shared/ExecutionEnvironment';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import type {ReactEventResponderEventType} from 'shared/ReactTypes';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
-import {setListenToResponderEventTypes} from '../events/DOMEventResponderSystem';
+import {
+  setListenToResponderEventTypes,
+  generateListeningKey,
+} from '../events/DOMEventResponderSystem';
 
 import {
   getValueForAttribute,
@@ -1320,12 +1323,11 @@ export function listenToEventResponderEventTypes(
           capture = targetEventConfigObject.capture;
         }
       }
-      // Create a unique name for this event, plus its properties. We'll
-      // use this to ensure we don't listen to the same event with the same
-      // properties again.
-      const passiveKey = passive ? '_passive' : '_active';
-      const captureKey = capture ? '_capture' : '';
-      const listeningName = `${topLevelType}${passiveKey}${captureKey}`;
+      const listeningName = generateListeningKey(
+        topLevelType,
+        passive,
+        capture,
+      );
       if (!listeningSet.has(listeningName)) {
         trapEventForResponderEventSystem(
           element,
