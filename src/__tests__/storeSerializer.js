@@ -70,5 +70,9 @@ export function printStore(store, includeWeight = false) {
     );
   }
 
+  if (store.roots.length === 0) {
+    store.assertEmptyMaps();
+  }
+
   return snapshotLines.join('\n');
 }
