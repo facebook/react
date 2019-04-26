@@ -896,18 +896,12 @@ export function mountEventComponent(
   eventComponentInstance: ReactEventComponentInstance,
 ): void {
   if (enableEventAPI) {
-    updateEventComponent(eventComponentInstance);
-    mountEventResponder(eventComponentInstance);
-  }
-}
-
-export function updateEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
-): void {
-  if (enableEventAPI) {
     const rootContainerInstance = ((eventComponentInstance.rootInstance: any): Container);
     const rootElement = rootContainerInstance.ownerDocument;
     const responder = eventComponentInstance.responder;
+    if (__DEV__) {
+      Object.freeze(responder);
+    }
     const {rootEventTypes, targetEventTypes} = responder;
     if (targetEventTypes !== undefined) {
       listenToEventResponderEventTypes(targetEventTypes, rootElement);
@@ -919,7 +913,14 @@ export function updateEventComponent(
       );
       listenToEventResponderEventTypes(rootEventTypes, rootElement);
     }
+    mountEventResponder(eventComponentInstance);
   }
+}
+
+export function updateEventComponent(
+  eventComponentInstance: ReactEventComponentInstance,
+): void {
+  // NO-OP, why might use this in the future
 }
 
 export function unmountEventComponent(
