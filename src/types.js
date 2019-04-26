@@ -7,6 +7,7 @@ export type Bridge = {
 };
 
 export type Wall = {|
-  listen: (fn: Function) => void,
+  // `listen` returns the "unlisten" function.
+  listen: (fn: Function) => Function,
   send: (event: string, payload: any, transferable?: Array<any>) => void,
 |};

@@ -14,19 +14,25 @@ type Message = {|
 export default class Bridge extends EventEmitter {
   _messageQueue: Array<any> = [];
   _timeoutID: TimeoutID | null = null;
+  _destroyed: boolean = false;
   _wall: Wall;
+  _wallUnlisten: Function | null = null;
 
   constructor(wall: Wall) {
     super();
 
     this._wall = wall;
 
-    wall.listen((message: Message) => {
+    this._wallUnlisten = wall.listen((message: Message) => {
       this.emit(message.event, message.payload);
     });
   }
 
   send(event: string, payload: any, transferable?: Array<any>) {
+    if (this._destroyed) {
+      return;
+    }
+
     // When we receive a message:
     // - we add it to our queue of messages to be sent
     // - if there hasn't been a message recently, we set a timer for 0 ms in
@@ -41,7 +47,47 @@ export default class Bridge extends EventEmitter {
     }
   }
 
+  shutdown() {
+    if (this._destroyed) {
+      return;
+    }
+
+    // Mark this bridge as destroyed, i.e. disable its public API.
+    this._destroyed = true;
+
+    // Disable the API inherited from EventEmitter that can add more listeners and send more messages.
+    this.addListener = function() {};
+    this.emit = function() {};
+    // NOTE: There's also EventEmitter API like `on` and `prependListener` that we didn't add to our Flow type of EventEmitter.
+
+    // Unsubscribe this bridge incoming message listeners to be sure, and so they don't have to do that.
+    this.removeAllListeners();
+
+    // Stop accepting and emitting incoming messages from the wall.
+    const wallUnlisten = this._wallUnlisten;
+    if (wallUnlisten) {
+      wallUnlisten();
+    }
+
+    // Queue the shutdown outgoing message for subscribers.
+    this.send('shutdown');
+
+    // Synchronously flush all queued outgoing messages.
+    // At this step the subscribers' code may run in this call stack.
+    do {
+      this._flush();
+    } while (this._messageQueue.length);
+
+    // Make sure once again that there is no dangling timer.
+    clearTimeout(this._timeoutID);
+    this._timeoutID = null;
+  }
+
   _flush = () => {
+    // This method is used after the bridge is marked as destroyed in shutdown sequence,
+    // so we do not bail out if the bridge marked as destroyed.
+    // It is a private method that the bridge ensures is only called at the right times.
+
     clearTimeout(this._timeoutID);
     this._timeoutID = null;
 

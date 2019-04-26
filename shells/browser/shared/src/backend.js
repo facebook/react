@@ -24,8 +24,6 @@ function setup(hook) {
   const Bridge = require('src/bridge').default;
   const { initBackend } = require('src/backend');
 
-  const listeners = [];
-
   const bridge = new Bridge({
     listen(fn) {
       const listener = event => {
@@ -39,8 +37,10 @@ function setup(hook) {
         }
         fn(event.data.payload);
       };
-      listeners.push(listener);
       window.addEventListener('message', listener);
+      return () => {
+        window.removeEventListener('message', listener);
+      };
     },
     send(event: string, payload: any, transferable?: Array<any>) {
       window.postMessage(
@@ -57,11 +57,9 @@ function setup(hook) {
   const agent = new Agent();
   agent.addBridge(bridge);
   agent.addListener('shutdown', () => {
+    // If we received 'shutdown' from `agent`, we assume the `bridge` is already shutting down,
+    // and that caused the 'shutdown' event on the `agent`, so we don't need to call `bridge.shutdown()` here.
     hook.emit('shutdown');
-    listeners.forEach(fn => {
-      window.removeEventListener('message', fn);
-    });
-    listeners.splice(0);
   });
 
   initBackend(hook, agent, window);

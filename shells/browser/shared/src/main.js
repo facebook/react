@@ -46,22 +46,24 @@ function createPanelIfReactLoaded() {
       let root = null;
 
       function initBridgeAndStore() {
-        let hasPortBeenDisconnected = false;
         const port = chrome.runtime.connect({
           name: '' + chrome.devtools.inspectedWindow.tabId,
         });
-        port.onDisconnect.addListener(() => {
-          hasPortBeenDisconnected = true;
-        });
+        // Looks like `port.onDisconnect` does not trigger on in-tab navigation like new URL or back/forward navigation,
+        // so it makes no sense to handle it here.
 
         bridge = new Bridge({
           listen(fn) {
-            port.onMessage.addListener(message => fn(message));
+            const listener = message => fn(message);
+            // Store the reference so that we unsubscribe from the same object.
+            const portOnMessage = port.onMessage;
+            portOnMessage.addListener(listener);
+            return () => {
+              portOnMessage.removeListener(listener);
+            };
           },
           send(event: string, payload: any, transferable?: Array<any>) {
-            if (!hasPortBeenDisconnected) {
-              port.postMessage({ event, payload }, transferable);
-            }
+            port.postMessage({ event, payload }, transferable);
           },
         });
         bridge.addListener('reloadAppForProfiling', () => {
@@ -270,7 +272,8 @@ function createPanelIfReactLoaded() {
 
       // Shutdown bridge and re-initialize DevTools panel when a new page is loaded.
       chrome.devtools.network.onNavigated.addListener(function onNavigated() {
-        bridge.send('shutdown');
+        // `bridge.shutdown()` will remove all listeners we added, so we don't have to.
+        bridge.shutdown();
 
         // It's easiest to recreate the DevTools panel (to clean up potential stale state).
         // We can revisit this in the future as a small optimization.

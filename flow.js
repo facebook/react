@@ -5,6 +5,7 @@ declare module 'events' {
     addListener: (type: string, fn: Function) => void;
     emit: (type: string, data: any) => void;
     removeListener: (type: string, fn: Function) => void;
+    removeAllListeners: (type?: string) => void;
   }
 
   declare export default typeof EventEmitter;

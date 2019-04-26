@@ -28,10 +28,15 @@ env.beforeEach(() => {
   installHook(global);
 
   const bridgeListeners = [];
-
   const bridge = new Bridge({
     listen(callback) {
       bridgeListeners.push(callback);
+      return () => {
+        const index = bridgeListeners.indexOf(callback);
+        if (index >= 0) {
+          bridgeListeners.splice(index, 1);
+        }
+      };
     },
     send(event: string, payload: any, transferable?: Array<any>) {
       bridgeListeners.forEach(callback => callback({ event, payload }));

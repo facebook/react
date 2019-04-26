@@ -7,9 +7,13 @@ import { initBackend } from 'src/backend';
 
 const bridge = new Bridge({
   listen(fn) {
-    window.addEventListener('message', event => {
+    const listener = event => {
       fn(event.data);
-    });
+    };
+    window.addEventListener('message', listener);
+    return () => {
+      window.removeEventListener('message', listener);
+    };
   },
   send(event: string, payload: any, transferable?: Array<any>) {
     window.parent.postMessage({ event, payload }, '*', transferable);
