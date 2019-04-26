@@ -8,12 +8,13 @@ import {
   ElementTypeEventComponent,
   ElementTypeEventTarget,
   ElementTypeForwardRef,
+  ElementTypeHost,
   ElementTypeMemo,
   ElementTypeOtherOrUnknown,
   ElementTypeProfiler,
   ElementTypeRoot,
   ElementTypeSuspense,
-} from 'src/devtools/types';
+} from 'src/types';
 import { getDisplayName, utfEncodeString } from '../utils';
 import { cleanForBridge, copyWithSet, setInObject } from './utils';
 import {
@@ -259,19 +260,21 @@ export function attach(
     }
   };
 
-  // Keep this function in sync with getDataForFiber()
+  // NOTICE Keep in sync with getDataForFiber()
   function shouldFilterFiber(fiber: Fiber): boolean {
     const { tag } = fiber;
 
     switch (tag) {
       case ClassComponent:
       case FunctionComponent:
+      case HostComponent:
       case IncompleteClassComponent:
       case IndeterminateComponent:
       case ForwardRef:
       case HostRoot:
       case MemoComponent:
       case SimpleMemoComponent:
+        // TODO (filtering) Check custom filters
         return false;
       case DehydratedSuspenseComponent:
         // TODO: ideally we would show dehydrated Suspense immediately.
@@ -282,7 +285,6 @@ export function attach(
         return true;
       case EventComponent:
       case HostPortal:
-      case HostComponent:
       case HostText:
       case Fragment:
         return true;
@@ -305,6 +307,7 @@ export function attach(
           case DEPRECATED_PLACEHOLDER_SYMBOL_STRING:
           case PROFILER_NUMBER:
           case PROFILER_SYMBOL_STRING:
+            // TODO (filtering) Check custom filters
             return false;
           default:
             return false;
@@ -321,8 +324,7 @@ export function attach(
       : symbolOrNumber;
   }
 
-  // TODO: we might want to change the data structure once we no longer suppport Stack versions of `getData`.
-  // TODO: Keep in sync with getElementType()
+  // NOTICE Keep in sync with shouldFilterFiber()
   function getDataForFiber(fiber: Fiber): FiberData {
     const { elementType, type, key, tag } = fiber;
 
@@ -397,8 +399,13 @@ export function attach(
           key: null,
           type: ElementTypeRoot,
         };
-      case HostPortal:
       case HostComponent:
+        return {
+          displayName: type,
+          key,
+          type: ElementTypeHost,
+        };
+      case HostPortal:
       case HostText:
       case Fragment:
         return {

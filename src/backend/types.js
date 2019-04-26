@@ -1,6 +1,6 @@
 // @flow
 
-import type { ElementType } from 'src/devtools/types';
+import type { ElementType } from 'src/types';
 import type { InspectedElement } from 'src/devtools/views/Components/types';
 
 type BundleType =

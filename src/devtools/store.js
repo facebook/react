@@ -9,19 +9,18 @@ import {
   TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
-import { ElementTypeRoot } from './types';
+import { ElementTypeRoot } from '../types';
 import { utfDecodeString } from '../utils';
 import { __DEBUG__ } from '../constants';
 import ProfilingCache from './ProfilingCache';
 import { printStore } from 'src/__tests__/storeSerializer';
 
-import type { ElementType } from './types';
 import type { Element } from './views/Components/types';
 import type {
   ImportedProfilingData,
   ProfilingSnapshotNode,
 } from './views/Profiler/types';
-import type { Bridge } from '../types';
+import type { ElementType, Bridge } from '../types';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {

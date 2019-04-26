@@ -1,6 +1,6 @@
 // @flow
 
-import type { ElementType } from '../../types';
+import type { ElementType } from 'src/types';
 
 // Each element on the frontend corresponds to a Fiber on the backend.
 // Some of its information (e.g. id, type, displayName) come from the backend.

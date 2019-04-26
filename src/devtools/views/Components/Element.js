@@ -9,7 +9,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { ElementTypeClass, ElementTypeFunction } from 'src/devtools/types';
+import { ElementTypeClass, ElementTypeFunction } from 'src/types';
 import Store from 'src/devtools/store';
 import ButtonIcon from '../ButtonIcon';
 import { createRegExp } from '../utils';
