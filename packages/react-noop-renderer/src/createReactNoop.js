@@ -670,16 +670,15 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   }
 
   function act(callback: () => Thenable) {
-    let previousActingUpdatesScopeDepth;
+    let previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
+    actingUpdatesScopeDepth++;
     if (__DEV__) {
-      previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
-      actingUpdatesScopeDepth++;
       ReactShouldWarnActingUpdates.current = true;
     }
 
     function onDone() {
+      actingUpdatesScopeDepth--;
       if (__DEV__) {
-        actingUpdatesScopeDepth--;
         if (actingUpdatesScopeDepth === 0) {
           ReactShouldWarnActingUpdates.current = false;
         }
