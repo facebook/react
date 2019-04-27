@@ -650,6 +650,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   // this act() implementation should be exactly the same in
   // ReactTestUtilsAct.js, ReactTestRendererAct.js, createReactNoop.js
 
+  // we track the 'depth' of the act() calls with this counter,
+  // so we can tell if any async act() calls try to run in parallel.
   let actingUpdatesScopeDepth = 0;
 
   function flushEffectsAndMicroTasks(onDone: (err: ?Error) => void) {
@@ -727,14 +729,21 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           called = true;
           result.then(
             () => {
-              flushEffectsAndMicroTasks((err: ?Error) => {
+              if (actingUpdatesScopeDepth === 1) {
+                // we're about to exit the act() scope,
+                // now's the time to flush tasks/effects
+                flushEffectsAndMicroTasks((err: ?Error) => {
+                  onDone();
+                  if (err) {
+                    reject(err);
+                  } else {
+                    resolve();
+                  }
+                });
+              } else {
                 onDone();
-                if (err) {
-                  reject(err);
-                } else {
-                  resolve();
-                }
-              });
+                resolve();
+              }
             },
             err => {
               onDone();
@@ -753,9 +762,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         );
       }
 
-      // flush effects until none remain, and cleanup
       try {
-        while (flushPassiveEffects()) {}
+        if (actingUpdatesScopeDepth === 1) {
+          // we're about to exit the act() scope,
+          // now's the time to flush effects
+          while (flushPassiveEffects()) {}
+        }
         onDone();
       } catch (err) {
         onDone();

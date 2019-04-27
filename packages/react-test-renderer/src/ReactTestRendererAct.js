@@ -100,14 +100,21 @@ function act(callback: () => Thenable) {
         called = true;
         result.then(
           () => {
-            flushEffectsAndMicroTasks((err: ?Error) => {
+            if (actingUpdatesScopeDepth === 1) {
+              // we're about to exit the act() scope,
+              // now's the time to flush tasks/effects
+              flushEffectsAndMicroTasks((err: ?Error) => {
+                onDone();
+                if (err) {
+                  reject(err);
+                } else {
+                  resolve();
+                }
+              });
+            } else {
               onDone();
-              if (err) {
-                reject(err);
-              } else {
-                resolve();
-              }
-            });
+              resolve();
+            }
           },
           err => {
             onDone();
@@ -126,9 +133,12 @@ function act(callback: () => Thenable) {
       );
     }
 
-    // flush effects until none remain, and cleanup
     try {
-      while (flushPassiveEffects()) {}
+      if (actingUpdatesScopeDepth === 1) {
+        // we're about to exit the act() scope,
+        // now's the time to flush effects
+        while (flushPassiveEffects()) {}
+      }
       onDone();
     } catch (err) {
       onDone();

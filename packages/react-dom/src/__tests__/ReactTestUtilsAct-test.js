@@ -285,14 +285,13 @@ describe('ReactTestUtils.act()', () => {
         return ctr;
       }
       const el = document.createElement('div');
-      await act(async () => {
-        act(() => {
-          ReactDOM.render(<App />, el);
-        });
-
-        await sleep(100);
-        expect(el.innerHTML).toBe('1');
+      act(() => {
+        ReactDOM.render(<App />, el);
       });
+      await act(async () => {
+        await sleep(100);
+      });
+      expect(el.innerHTML).toBe('1');
     });
 
     it('can handle async/await', async () => {
@@ -371,18 +370,23 @@ describe('ReactTestUtils.act()', () => {
       let ctr = 0;
       const div = document.createElement('div');
 
-      await act(async () => {
-        act(() => {
-          ReactDOM.render(<App callback={() => ctr++} />, div);
-        });
-        expect(div.innerHTML).toBe('0');
-        expect(ctr).toBe(1);
+      act(() => {
+        ReactDOM.render(<App callback={() => ctr++} />, div);
       });
-      // this may seem odd, but it matches user behaviour -
-      // a flash of "0" followed by "1"
+      expect(div.innerHTML).toBe('0');
+      expect(ctr).toBe(1);
+
+      await act(async () => {}); // #just-react-things
 
       expect(div.innerHTML).toBe('1');
       expect(ctr).toBe(2);
+
+      // this may seem odd, but it matches browser behaviour -
+      // a flash of "0" followed by "1"
+
+      // now you probably wouldn't write a test like this for your app
+      // you'd await act(async () => { ReactDOM.render(<App/> })
+      // and assert on final render
     });
 
     it('propagates errors', async () => {
