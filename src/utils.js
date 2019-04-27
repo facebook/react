@@ -1,10 +1,10 @@
 // @flow
 
 import LRU from 'lru-cache';
-import { LOCAL_STORAGE_FILTERS_KEY } from './constants';
+import { LOCAL_STORAGE_FILTER_PREFERENCES_KEY } from './constants';
 import { ElementTypeHostComponent } from './types';
 
-import type { Filter } from './types';
+import type { FilterPreferences } from './types';
 
 const FB_MODULE_RE = /^(.*) \[from (.*)\]$/;
 const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
@@ -81,11 +81,43 @@ function toCodePoint(string: string) {
   return string.codePointAt(0);
 }
 
-export function getSavedFilters(): Array<Filter> {
-  const filters = localStorage.getItem(LOCAL_STORAGE_FILTERS_KEY);
-  if (filters != null) {
-    return ((JSON.parse(filters): any): Array<Filter>);
+export function getDefaultFilterPreferences(): FilterPreferences {
+  return {
+    hideElementsWithTypes: new Set([ElementTypeHostComponent]),
+    hideElementsWithDisplayNames: new Set(),
+    hideElementsWithPaths: new Set(),
+  };
+}
+
+export function getSavedFilterPreferences(): FilterPreferences {
+  const raw = localStorage.getItem(LOCAL_STORAGE_FILTER_PREFERENCES_KEY);
+  if (raw != null) {
+    const json = JSON.parse(raw);
+    return {
+      hideElementsWithTypes: new Set(json.hideElementsWithTypes),
+      hideElementsWithDisplayNames: new Set(json.hideElementsWithDisplayNames),
+      hideElementsWithPaths: new Set(json.hideElementsWithPaths),
+    };
   } else {
-    return [{ type: 1, value: ElementTypeHostComponent }];
+    return getDefaultFilterPreferences();
   }
+}
+
+export function saveFilterPreferences(
+  filterPreferences: FilterPreferences
+): void {
+  localStorage.setItem(
+    LOCAL_STORAGE_FILTER_PREFERENCES_KEY,
+    JSON.stringify({
+      hideElementsWithTypes: Array.from(
+        filterPreferences.hideElementsWithTypes
+      ),
+      hideElementsWithDisplayNames: Array.from(
+        filterPreferences.hideElementsWithDisplayNames
+      ),
+      hideElementsWithPaths: Array.from(
+        filterPreferences.hideElementsWithPaths
+      ),
+    })
+  );
 }

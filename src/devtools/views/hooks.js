@@ -38,14 +38,20 @@ export function useIsOverflowing(
 // Forked from https://usehooks.com/useLocalStorage/
 export function useLocalStorage<T>(
   key: string,
-  initialValue: T
+  initialValue: T | (() => T)
 ): [T, (value: T | (() => T)) => void] {
   const getValueFromLocalStorage = useCallback(() => {
     try {
       const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
+      if (item != null) {
+        return JSON.parse(item);
+      }
     } catch (error) {
       console.log(error);
+    }
+    if (typeof initialValue === 'function') {
+      return (initialValue: any)();
+    } else {
       return initialValue;
     }
   }, [initialValue, key]);

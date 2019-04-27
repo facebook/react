@@ -4,10 +4,12 @@ import React from 'react';
 import styles from './ButtonIcon.css';
 
 export type IconType =
+  | 'add'
   | 'cancel'
   | 'close'
   | 'collapsed'
   | 'copy'
+  | 'delete'
   | 'down'
   | 'expanded'
   | 'export'
@@ -26,12 +28,16 @@ export type IconType =
   | 'view-source';
 
 type Props = {|
+  className?: string,
   type: IconType,
 |};
 
-export default function ButtonIcon({ type }: Props) {
+export default function ButtonIcon({ className = '', type }: Props) {
   let pathData = null;
   switch (type) {
+    case 'add':
+      pathData = PATH_ADD;
+      break;
     case 'cancel':
       pathData = PATH_CANCEL;
       break;
@@ -43,6 +49,9 @@ export default function ButtonIcon({ type }: Props) {
       break;
     case 'copy':
       pathData = PATH_COPY;
+      break;
+    case 'delete':
+      pathData = PATH_DELETE;
       break;
     case 'down':
       pathData = PATH_DOWN;
@@ -100,7 +109,7 @@ export default function ButtonIcon({ type }: Props) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      className={styles.ButtonIcon}
+      className={`${styles.ButtonIcon} ${className}`}
       width="24"
       height="24"
       viewBox="0 0 24 24"
@@ -110,6 +119,8 @@ export default function ButtonIcon({ type }: Props) {
     </svg>
   );
 }
+
+const PATH_ADD = 'M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z';
 
 const PATH_CANCEL = `
   M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.69L5.69
@@ -124,6 +135,11 @@ const PATH_COLLAPSED = 'M10 17l5-5-5-5v10z';
 const PATH_COPY = `
   M3 13h2v-2H3v2zm0 4h2v-2H3v2zm2 4v-2H3a2 2 0 0 0 2 2zM3 9h2V7H3v2zm12 12h2v-2h-2v2zm4-18H9a2 2 0 0 0-2
   2v10a2 2 0 0 0 2 2h10c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 12H9V5h10v10zm-8 6h2v-2h-2v2zm-4 0h2v-2H7v2z
+`;
+
+const PATH_DELETE = `
+  M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm2.46-7.12l1.41-1.41L12 12.59l2.12-2.12 1.41 1.41L13.41 14l2.12
+  2.12-1.41 1.41L12 15.41l-2.12 2.12-1.41-1.41L10.59 14l-2.13-2.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4z
 `;
 
 const PATH_DOWN = 'M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z';

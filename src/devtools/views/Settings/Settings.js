@@ -5,6 +5,7 @@ import { useSubscription } from '../hooks';
 import { StoreContext } from '../context';
 import { SettingsContext } from './SettingsContext';
 import Store from 'src/devtools/store';
+import FilterList from './FilterList';
 import portaledContent from '../portaledContent';
 
 import styles from './Settings.css';
@@ -134,6 +135,7 @@ function Settings(_: {||}) {
 
       <div className={styles.Section}>
         <div className={styles.Header}>Components tree</div>
+
         <label className={styles.CheckboxOption}>
           <input
             type="checkbox"
@@ -142,6 +144,8 @@ function Settings(_: {||}) {
           />{' '}
           Collapse newly added components by default
         </label>
+
+        <FilterList />
       </div>
 
       {store.supportsCaptureScreenshots && (

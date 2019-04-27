@@ -14,13 +14,10 @@ import {
   ElementTypeProfiler,
   ElementTypeRoot,
   ElementTypeSuspense,
-  FilterByElementType,
-  FilterByName,
-  FilterByPath,
 } from 'src/types';
 import {
   getDisplayName,
-  getSavedFilters,
+  getSavedFilterPreferences,
   getUID,
   utfEncodeString,
 } from 'src/utils';
@@ -50,7 +47,6 @@ import type {
   ReactRenderer,
   RendererInterface,
 } from './types';
-import type { ElementType, Filter } from 'src/types';
 import type { InspectedElement } from 'src/devtools/views/Components/types';
 
 function getInternalReactConstants(version) {
@@ -268,35 +264,11 @@ export function attach(
     }
   };
 
-  const filterByElementTypeMap: Map<ElementType, boolean> = new Map();
-  const filterByNames: Set<RegExp> = new Set();
-  const filterByPaths: Set<RegExp> = new Set();
-
-  function updateFilters(filters: Array<Filter>): void {
-    filterByElementTypeMap.clear();
-    filterByNames.clear();
-    filterByPaths.clear();
-
-    filters.forEach(({ type, value }) => {
-      switch (type) {
-        case FilterByElementType:
-          filterByElementTypeMap.set(((value: any): ElementType), true);
-          break;
-        case FilterByName:
-          filterByNames.add(((value: any): RegExp));
-          break;
-        case FilterByPath:
-          filterByPaths.add(((value: any): RegExp));
-          break;
-        default:
-          console.error(`Unsupported filter type "${type}"`);
-          break;
-      }
-    });
-  }
-
-  // Initialize to the persisted values
-  updateFilters(getSavedFilters());
+  const {
+    hideElementsWithTypes,
+    // TOOD (filter) hideElementsWithDisplayNames,
+    // TOOD (filter) hideElementsWithPaths,
+  } = getSavedFilterPreferences();
 
   // NOTICE Keep in sync with getDataForFiber()
   function shouldFilterFiber(fiber: Fiber): boolean {
@@ -307,21 +279,21 @@ export function attach(
     switch (tag) {
       case ClassComponent:
       case IncompleteClassComponent:
-        return filterByElementTypeMap.get(ElementTypeClass) === true;
+        return hideElementsWithTypes.has(ElementTypeClass);
       case FunctionComponent:
-        return filterByElementTypeMap.get(ElementTypeFunction) === true;
+        return hideElementsWithTypes.has(ElementTypeFunction);
       case IndeterminateComponent:
         return (
-          filterByElementTypeMap.get(ElementTypeClass) === true ||
-          filterByElementTypeMap.get(ElementTypeFunction) === true
+          hideElementsWithTypes.has(ElementTypeClass) ||
+          hideElementsWithTypes.has(ElementTypeFunction)
         );
       case ForwardRef:
-        return filterByElementTypeMap.get(ElementTypeForwardRef) === true;
+        return hideElementsWithTypes.has(ElementTypeForwardRef);
       case MemoComponent:
       case SimpleMemoComponent:
-        return filterByElementTypeMap.get(ElementTypeMemo) === true;
+        return hideElementsWithTypes.has(ElementTypeMemo);
       case HostComponent:
-        return filterByElementTypeMap.get(ElementTypeHostComponent) === true;
+        return hideElementsWithTypes.has(ElementTypeHostComponent);
       case HostRoot:
         return false; // We never support filtering roots
       case DehydratedSuspenseComponent:
@@ -350,14 +322,14 @@ export function attach(
           case CONTEXT_PROVIDER_SYMBOL_STRING:
           case CONTEXT_CONSUMER_NUMBER:
           case CONTEXT_CONSUMER_SYMBOL_STRING:
-            return filterByElementTypeMap.get(ElementTypeContext) === true;
+            return hideElementsWithTypes.has(ElementTypeContext);
           case SUSPENSE_NUMBER:
           case SUSPENSE_SYMBOL_STRING:
           case DEPRECATED_PLACEHOLDER_SYMBOL_STRING:
-            return filterByElementTypeMap.get(ElementTypeSuspense) === true;
+            return hideElementsWithTypes.has(ElementTypeSuspense);
           case PROFILER_NUMBER:
           case PROFILER_SYMBOL_STRING:
-            return filterByElementTypeMap.get(ElementTypeProfiler) === true;
+            return hideElementsWithTypes.has(ElementTypeProfiler);
           default:
             return false;
         }
