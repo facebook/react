@@ -728,21 +728,21 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           called = true;
           result.then(
             () => {
-              if (actingUpdatesScopeDepth === 1) {
-                // we're about to exit the act() scope,
-                // now's the time to flush tasks/effects
-                flushEffectsAndMicroTasks((err: ?Error) => {
-                  onDone();
-                  if (err) {
-                    reject(err);
-                  } else {
-                    resolve();
-                  }
-                });
-              } else {
+              if (actingUpdatesScopeDepth !== 1) {
                 onDone();
                 resolve();
+                return;
               }
+              // we're about to exit the act() scope,
+              // now's the time to flush tasks/effects
+              flushEffectsAndMicroTasks((err: ?Error) => {
+                onDone();
+                if (err) {
+                  reject(err);
+                } else {
+                  resolve();
+                }
+              });
             },
             err => {
               onDone();
