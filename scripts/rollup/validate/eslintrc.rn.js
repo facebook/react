@@ -18,6 +18,9 @@ module.exports = {
     __REACT_DEVTOOLS_GLOBAL_HOOK__: true,
     // FB
     __DEV__: true,
+    // Fabric. See https://github.com/facebook/react/pull/15490
+    // for more information
+    nativeFabricUIManager: true,
   },
   parserOptions: {
     ecmaVersion: 5,
