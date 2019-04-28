@@ -67,7 +67,7 @@ export function getCommitTree({
     const nodes = new Map();
 
     // Construct the initial tree.
-    recursivelyIniitliazeTree(
+    recursivelyInitializeTree(
       rootID,
       0,
       nodes,
@@ -117,7 +117,7 @@ export function getCommitTree({
   );
 }
 
-function recursivelyIniitliazeTree(
+function recursivelyInitializeTree(
   id: number,
   parentID: number,
   nodes: Map<number, Node>,
@@ -141,7 +141,7 @@ function recursivelyIniitliazeTree(
     });
 
     node.children.forEach(childID =>
-      recursivelyIniitliazeTree(
+      recursivelyInitializeTree(
         childID,
         id,
         nodes,
