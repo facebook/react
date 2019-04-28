@@ -38,8 +38,7 @@ env.beforeEach(() => {
     },
   });
 
-  const agent = new Agent();
-  agent.addBridge(bridge);
+  const agent = new Agent(bridge);
 
   const hook = global.__REACT_DEVTOOLS_GLOBAL_HOOK__;
 

@@ -61,13 +61,13 @@ type PersistedSelection = {|
 |};
 
 export default class Agent extends EventEmitter {
-  _bridge: Bridge = ((null: any): Bridge);
+  _bridge: Bridge;
   _isProfiling: boolean = false;
   _rendererInterfaces: { [key: RendererID]: RendererInterface } = {};
   _persistedSelection: PersistedSelection | null = null;
   _persistedSelectionMatch: PathMatch | null = null;
 
-  constructor() {
+  constructor(bridge: Bridge) {
     super();
 
     if (localStorage.getItem(LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
@@ -84,9 +84,7 @@ export default class Agent extends EventEmitter {
         this._persistedSelection = JSON.parse(persistedSelectionString);
       }
     }
-  }
 
-  addBridge(bridge: Bridge) {
     this._bridge = bridge;
 
     bridge.addListener('captureScreenshot', this.captureScreenshot);
@@ -123,7 +121,7 @@ export default class Agent extends EventEmitter {
     bridge.addListener('viewElementSource', this.viewElementSource);
 
     if (this._isProfiling) {
-      this._bridge.send('profilingStatus', true);
+      bridge.send('profilingStatus', true);
     }
   }
 
