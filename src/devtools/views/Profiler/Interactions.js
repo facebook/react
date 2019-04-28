@@ -13,13 +13,16 @@ import styles from './Interactions.css';
 
 import type { ChartData } from './InteractionsChartBuilder';
 import type { TabID } from './ProfilerContext';
-import type { InteractionWithCommits, ProfilingSummary } from './types';
+import type {
+  InteractionWithCommitsFrontend,
+  ProfilingSummaryFrontend,
+} from './types';
 
 export type ItemData = {|
   chartData: ChartData,
-  interactions: Array<InteractionWithCommits>,
+  interactions: Array<InteractionWithCommitsFrontend>,
   labelWidth: number,
-  profilingSummary: ProfilingSummary,
+  profilingSummary: ProfilingSummaryFrontend,
   scaleX: (value: number, fallbackValue: number) => number,
   selectedInteractionID: number | null,
   selectCommitIndex: (id: number | null) => void,

@@ -53,36 +53,36 @@ export type ReactRenderer = {
   currentDispatcherRef?: {| current: null | Dispatcher |},
 };
 
-export type Interaction = {|
+export type InteractionBackend = {|
   id: number,
   name: string,
   timestamp: number,
 |};
 
-export type CommitDetails = {|
+export type CommitDetailsBackend = {|
   actualDurations: Array<number>,
   commitIndex: number,
-  interactions: Array<Interaction>,
+  interactions: Array<InteractionBackend>,
   rootID: number,
 |};
 
-export type FiberCommits = {|
+export type FiberCommitsBackend = {|
   commitDurations: Array<number>,
   fiberID: number,
   rootID: number,
 |};
 
-export type InteractionWithCommits = {|
-  ...Interaction,
+export type InteractionWithCommitsBackend = {|
+  ...InteractionBackend,
   commits: Array<number>,
 |};
 
-export type Interactions = {|
-  interactions: Array<InteractionWithCommits>,
+export type InteractionsBackend = {|
+  interactions: Array<InteractionWithCommitsBackend>,
   rootID: number,
 |};
 
-export type ProfilingSummary = {|
+export type ProfilingSummaryBackend = {|
   commitDurations: Array<number>,
   commitTimes: Array<number>,
   initialTreeBaseDurations: Array<number>,
@@ -106,15 +106,18 @@ export type RendererInterface = {
   findNativeByFiberID: (id: number) => ?NativeType,
   flushInitialOperations: () => void,
   getBestMatchForTrackedPath: () => PathMatch | null,
-  getCommitDetails: (rootID: number, commitIndex: number) => CommitDetails,
+  getCommitDetails: (
+    rootID: number,
+    commitIndex: number
+  ) => CommitDetailsBackend,
   getFiberIDFromNative: (
     component: NativeType,
     findNearestUnfilteredAncestor?: boolean
   ) => number | null,
-  getFiberCommits: (rootID: number, fiberID: number) => FiberCommits,
-  getInteractions: (rootID: number) => Interactions,
+  getFiberCommits: (rootID: number, fiberID: number) => FiberCommitsBackend,
+  getInteractions: (rootID: number) => InteractionsBackend,
   getProfilingDataForDownload: (rootID: number) => Object,
-  getProfilingSummary: (rootID: number) => ProfilingSummary,
+  getProfilingSummary: (rootID: number) => ProfilingSummaryBackend,
   getPathForElement: (id: number) => Array<PathFrame> | null,
   handleCommitFiberRoot: (fiber: Object) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,

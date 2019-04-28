@@ -1,6 +1,9 @@
 // @flow
 
-import type { InteractionWithCommits, ProfilingSummary } from './types';
+import type {
+  InteractionWithCommitsFrontend,
+  ProfilingSummaryFrontend,
+} from './types';
 
 export type ChartData = {|
   lastInteractionTime: number,
@@ -13,8 +16,8 @@ export function getChartData({
   interactions,
   profilingSummary,
 }: {|
-  interactions: Array<InteractionWithCommits>,
-  profilingSummary: ProfilingSummary,
+  interactions: Array<InteractionWithCommitsFrontend>,
+  profilingSummary: ProfilingSummaryFrontend,
 |}): ChartData {
   const { rootID } = profilingSummary;
 

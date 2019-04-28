@@ -13,9 +13,9 @@ import Store from 'src/devtools/store';
 
 import type { ElementType } from 'src/devtools/types';
 import type {
-  CommitTree,
-  Node,
-  ProfilingSummary as ProfilingSummaryFrontend,
+  CommitTreeFrontend,
+  CommitTreeNodeFrontend,
+  ProfilingSummaryFrontend,
 } from 'src/devtools/views/Profiler/types';
 
 const debug = (methodName, ...args) => {
@@ -29,7 +29,7 @@ const debug = (methodName, ...args) => {
   }
 };
 
-const rootToCommitTreeMap: Map<number, Array<CommitTree>> = new Map();
+const rootToCommitTreeMap: Map<number, Array<CommitTreeFrontend>> = new Map();
 
 export function getCommitTree({
   commitIndex,
@@ -39,7 +39,7 @@ export function getCommitTree({
   commitIndex: number,
   profilingSummary: ProfilingSummaryFrontend,
   store: Store,
-|}): CommitTree {
+|}): CommitTreeFrontend {
   const { rootID } = profilingSummary;
 
   if (!rootToCommitTreeMap.has(rootID)) {
@@ -48,7 +48,7 @@ export function getCommitTree({
 
   const commitTrees = ((rootToCommitTreeMap.get(
     rootID
-  ): any): Array<CommitTree>);
+  ): any): Array<CommitTreeFrontend>);
 
   if (commitIndex < commitTrees.length) {
     return commitTrees[commitIndex];
@@ -120,7 +120,7 @@ export function getCommitTree({
 function recursivelyIniitliazeTree(
   id: number,
   parentID: number,
-  nodes: Map<number, Node>,
+  nodes: Map<number, CommitTreeNodeFrontend>,
   initialTreeBaseDurations: Map<number, number>,
   store: Store
 ): void {
@@ -153,15 +153,18 @@ function recursivelyIniitliazeTree(
 }
 
 function updateTree(
-  commitTree: CommitTree,
+  commitTree: CommitTreeFrontend,
   operations: Uint32Array
-): CommitTree {
+): CommitTreeFrontend {
   // Clone the original tree so edits don't affect it.
   const nodes = new Map(commitTree.nodes);
 
   // Clone nodes before mutating them so edits don't affect them.
-  const getClonedNode = (id: number): Node => {
-    const clonedNode = ((Object.assign({}, nodes.get(id)): any): Node);
+  const getClonedNode = (id: number): CommitTreeNodeFrontend => {
+    const clonedNode = ((Object.assign(
+      {},
+      nodes.get(id)
+    ): any): CommitTreeNodeFrontend);
     nodes.set(id, clonedNode);
     return clonedNode;
   };
@@ -209,7 +212,7 @@ function updateTree(
             debug('Add', `new root fiber ${id}`);
           }
 
-          const node: Node = {
+          const node: CommitTreeNodeFrontend = {
             children: [],
             displayName: null,
             id,
@@ -243,7 +246,7 @@ function updateTree(
           const parentNode = getClonedNode(parentID);
           parentNode.children = parentNode.children.concat(id);
 
-          const node: Node = {
+          const node: CommitTreeNodeFrontend = {
             children: [],
             displayName,
             id,
@@ -343,7 +346,7 @@ export function invalidateCommitTrees(): void {
 }
 
 // DEBUG
-const __printTree = (commitTree: CommitTree) => {
+const __printTree = (commitTree: CommitTreeFrontend) => {
   if (__DEBUG__) {
     const { nodes, rootID } = commitTree;
     console.group('__printTree()');
@@ -352,7 +355,10 @@ const __printTree = (commitTree: CommitTree) => {
       const id = queue.shift();
       const depth = queue.shift();
 
-      const node = ((nodes.get(id): any): Node);
+      const node = nodes.get(id);
+      if (node == null) {
+        throw Error(`Could not find node with id "${id}" in commit tree`);
+      }
 
       console.log(
         `${'•'.repeat(depth)}${node.id}:${node.displayName || ''} ${
