@@ -7,7 +7,7 @@ import { useModalDismissSignal } from '../hooks';
 import styles from './FilterModal.css';
 
 type Props = {|
-  dismissModal: Function,
+  dismissModal: () => void,
 |};
 
 export default function FilterModal({ dismissModal }: Props) {
@@ -19,8 +19,8 @@ export default function FilterModal({ dismissModal }: Props) {
   } = useContext(ProfilerContext);
 
   const handleNumberChange = useCallback(
-    ({ currentTarget }) => {
-      const newValue = parseFloat(currentTarget.value);
+    (event: SyntheticEvent<HTMLInputElement>) => {
+      const newValue = parseFloat(event.currentTarget.value);
       setMinCommitDuration(
         Number.isNaN(newValue) || newValue <= 0 ? 0 : newValue
       );
@@ -29,9 +29,10 @@ export default function FilterModal({ dismissModal }: Props) {
   );
 
   const handleEnabledChange = useCallback(
-    ({ currentTarget }) => {
-      setIsCommitFilterEnabled(currentTarget.checked);
-      if (currentTarget.checked) {
+    (event: SyntheticEvent<HTMLInputElement>) => {
+      const checked = event.currentTarget.checked;
+      setIsCommitFilterEnabled(checked);
+      if (checked) {
         if (inputRef.current !== null) {
           inputRef.current.focus();
         }

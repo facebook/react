@@ -26,7 +26,7 @@ function CommitFlamegraphListItem({ data, index, style }: Props) {
   const { maxSelfDuration, rows } = chartData;
 
   const handleClick = useCallback(
-    (event: MouseEvent, id: number, name: string) => {
+    (event: SyntheticMouseEvent<*>, id: number, name: string) => {
       event.stopPropagation();
       selectFiber(id, name);
     },

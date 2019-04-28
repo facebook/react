@@ -27,15 +27,16 @@ export const calculateSelfDuration = (
     return 0;
   }
 
-  let selfDuration = ((actualDurations.get(id): any): number);
   const node = nodes.get(id);
   if (node == null) {
     throw Error(`Could not find node with id "${id}" in commit tree`);
   }
 
+  let selfDuration = actualDurations.get(id) || 0;
+
   node.children.forEach(childID => {
     if (actualDurations.has(childID)) {
-      selfDuration -= ((actualDurations.get(childID): any): number);
+      selfDuration -= actualDurations.get(childID) || 0;
     }
   });
 
