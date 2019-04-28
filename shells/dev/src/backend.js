@@ -25,7 +25,6 @@ bridge.addListener('captureScreenshot', ({ commitIndex }) => {
   });
 });
 
-const agent = new Agent();
-agent.addBridge(bridge);
+const agent = new Agent(bridge);
 
 initBackend(window.__REACT_DEVTOOLS_GLOBAL_HOOK__, agent, window.parent);

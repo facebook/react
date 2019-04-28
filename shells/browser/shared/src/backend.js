@@ -54,8 +54,7 @@ function setup(hook) {
     },
   });
 
-  const agent = new Agent();
-  agent.addBridge(bridge);
+  const agent = new Agent(bridge);
   agent.addListener('shutdown', () => {
     hook.emit('shutdown');
     listeners.forEach(fn => {
