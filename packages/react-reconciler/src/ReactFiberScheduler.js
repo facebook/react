@@ -113,7 +113,7 @@ import {
   commitResetTextContent,
 } from './ReactFiberCommitWork';
 import {enqueueUpdate} from './ReactUpdateQueue';
-// TODO: Ahaha Andrew is bad at spellling
+// TODO: Ahaha Andrew is bad at spelling
 import {resetContextDependences as resetContextDependencies} from './ReactFiberNewContext';
 import {resetHooks, ContextOnlyDispatcher} from './ReactFiberHooks';
 import {createCapturedValue} from './ReactCapturedValue';
