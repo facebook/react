@@ -10,7 +10,11 @@ import {
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
 import { ElementTypeRoot } from '../types';
-import { utfDecodeString } from '../utils';
+import {
+  getSavedFilterPreferences,
+  saveFilterPreferences,
+  utfDecodeString,
+} from '../utils';
 import { __DEBUG__ } from '../constants';
 import ProfilingCache from './ProfilingCache';
 import { printStore } from 'src/__tests__/storeSerializer';
@@ -20,7 +24,7 @@ import type {
   ImportedProfilingData,
   ProfilingSnapshotNode,
 } from './views/Profiler/types';
-import type { ElementType, Bridge } from '../types';
+import type { Bridge, ElementType, FilterPreferences } from '../types';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {
@@ -64,6 +68,8 @@ export default class Store extends EventEmitter {
 
   // Should new nodes be collapsed by default when added to the tree?
   _collapseNodesByDefault: boolean = true;
+
+  _filterPreferences: FilterPreferences;
 
   // At least one of the injected renderers contains (DEV only) owner metadata.
   _hasOwnerMetadata: boolean = false;
@@ -136,6 +142,8 @@ export default class Store extends EventEmitter {
     this._collapseNodesByDefault =
       localStorage.getItem(LOCAL_STORAGE_COLLAPSE_ROOTS_BY_DEFAULT_KEY) !==
       'false';
+
+    this._filterPreferences = getSavedFilterPreferences();
 
     if (config != null) {
       const {
@@ -229,6 +237,20 @@ export default class Store extends EventEmitter {
     );
 
     this.emit('collapseNodesByDefault');
+  }
+
+  get filterPreferences(): FilterPreferences {
+    return this._filterPreferences;
+  }
+  set filterPreferences(value: FilterPreferences): void {
+    this._filterPreferences = value;
+
+    saveFilterPreferences(value);
+
+    // TODO (filter) Dump all nodes, update renderer preferences,  and re-initialize tree.
+    // TODO (filter) Invariant check that  we aren't profiling.
+
+    this.emit('filterPreferences');
   }
 
   get hasOwnerMetadata(): boolean {

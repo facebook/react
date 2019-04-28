@@ -1,37 +1,58 @@
 // @flow
 
-import React, { Fragment, useCallback, useState } from 'react';
-import { getSavedFilterPreferences, saveFilterPreferences } from 'src/utils';
+import React, { Fragment, useCallback, useContext, useMemo } from 'react';
 import { ElementTypeHostComponent } from 'src/types';
+import Store from 'src/devtools/store';
+import { StoreContext } from '../context';
+import { useSubscription } from '../hooks';
 
 import styles from './FilterList.css';
 
-export default function FilterList(_: {||}) {
-  const [filterPreferences, setFilterPreferences] = useState(
-    getSavedFilterPreferences
-  );
-  const updateFilterPreferences = useCallback(() => {
-    const clonedFilterPreferences = { ...filterPreferences };
-    setFilterPreferences(clonedFilterPreferences);
-    saveFilterPreferences(clonedFilterPreferences);
-  }, [filterPreferences]);
+import type { FilterPreferences } from 'src/types';
 
-  const { hideElementsWithTypes } = filterPreferences;
+export default function FilterList(_: {||}) {
+  const store = useContext(StoreContext);
+
+  const filterPreferencesSubscription = useMemo(
+    () => ({
+      getCurrentValue: () => store.filterPreferences,
+      subscribe: (callback: Function) => {
+        store.addListener('filterPreferences', callback);
+        return () => store.removeListener('filterPreferences', callback);
+      },
+    }),
+    [store]
+  );
+  const filterPreferences = useSubscription<FilterPreferences, Store>(
+    filterPreferencesSubscription
+  );
+
+  const updateFilterPreferences = useCallback(
+    ({ currentTarget }) => {
+      const filterPreferences = store.filterPreferences;
+      if (currentTarget.checked) {
+        filterPreferences.hideElementsWithTypes.add(ElementTypeHostComponent);
+      } else {
+        filterPreferences.hideElementsWithTypes.delete(
+          ElementTypeHostComponent
+        );
+      }
+      store.filterPreferences = { ...filterPreferences };
+    },
+    [store]
+  );
+
+  // TODO (filter) Disable toggles if isProfiling
 
   return (
     <Fragment>
       <label className={styles.Filter}>
         <input
           type="checkbox"
-          checked={hideElementsWithTypes.has(ElementTypeHostComponent)}
-          onChange={() => {
-            if (hideElementsWithTypes.has(ElementTypeHostComponent)) {
-              hideElementsWithTypes.delete(ElementTypeHostComponent);
-            } else {
-              hideElementsWithTypes.add(ElementTypeHostComponent);
-            }
-            updateFilterPreferences();
-          }}
+          checked={filterPreferences.hideElementsWithTypes.has(
+            ElementTypeHostComponent
+          )}
+          onChange={updateFilterPreferences}
         />{' '}
         Hide host components (e.g. <code>&lt;div&gt;</code>)
       </label>
