@@ -8,7 +8,6 @@ type BundleType =
   | 1; // DEV
 
 export type WorkTag = number;
-export type TypeOfMode = number;
 export type SideEffectTag = number;
 export type ExpirationTime = number;
 export type RefObject = {|
@@ -30,7 +29,9 @@ export type HookType =
   | 'useImperativeHandle'
   | 'useDebugValue';
 
-// Copied modified from https://github.com/facebook/react/blob/v16.9.0-alpha.0/packages/react-reconciler/src/ReactFiber.js
+// The Fiber type is copied from React and should be kept in sync:
+// https://github.com/facebook/react/blob/master/packages/react-reconciler/src/ReactFiber.js
+// The properties we don't use in DevTools are omitted.
 export type Fiber = {|
   tag: WorkTag,
 
@@ -53,24 +54,9 @@ export type Fiber = {|
   pendingProps: any, // This type will be more specific once we overload the tag.
   memoizedProps: any, // The props used to create the output.
 
-  // updateQueue: UpdateQueue<any> | null,
-
   memoizedState: any,
 
-  // contextDependencies: ContextDependencyList | null,
-
-  mode: TypeOfMode,
-
   effectTag: SideEffectTag,
-
-  nextEffect: Fiber | null,
-
-  firstEffect: Fiber | null,
-  lastEffect: Fiber | null,
-
-  expirationTime: ExpirationTime,
-
-  childExpirationTime: ExpirationTime,
 
   alternate: Fiber | null,
 
@@ -78,16 +64,10 @@ export type Fiber = {|
 
   actualStartTime?: number,
 
-  selfBaseDuration?: number,
-
   treeBaseDuration?: number,
 
-  _debugID?: number,
   _debugSource?: Source | null,
   _debugOwner?: Fiber | null,
-  _debugIsCurrentlyTiming?: boolean,
-
-  _debugHookTypes?: Array<HookType> | null,
 |};
 
 // TODO: If it's useful for the frontend to know which types of data an Element has
