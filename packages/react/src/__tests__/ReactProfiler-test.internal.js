@@ -2607,7 +2607,11 @@ describe('Profiler', () => {
         ]);
         onRender.mockClear();
 
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+        expect(
+          onInteractionScheduledWorkCompleted.mock.calls[0][0],
+        ).toMatchInteraction(highPriUpdateInteraction);
+        onInteractionScheduledWorkCompleted.mockClear();
 
         Scheduler.advanceTime(100);
         jest.advanceTimersByTime(100);
