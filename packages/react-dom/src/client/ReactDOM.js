@@ -549,22 +549,27 @@ function legacyRenderSubtreeIntoContainer(
 
   // TODO: Without `any` type, Flow says "Property cannot be accessed on any
   // member of intersection type." Whyyyyyy.
+  let instance = null;
   let root: Root = (container._reactRootContainer: any);
+  let exec = function(cb){
+    cb()
+  }
   if (!root) {
     // Initial mount
     root = container._reactRootContainer = legacyCreateRootFromDOMContainer(
       container,
       forceHydrate,
     );
-    if (typeof callback === 'function') {
-      const originalCallback = callback;
-      callback = function() {
-        const instance = getPublicRootInstance(root._internalRoot);
-        originalCallback.call(instance);
-      };
-    }
-    // Initial mount should not be batched.
-    unbatchedUpdates(() => {
+    exec = unbatchedUpdates;
+  } 
+  if (typeof callback === 'function') {
+    const originalCallback = callback;
+    callback = function() {
+      instance = getPublicRootInstance(root._internalRoot);
+      originalCallback.call(instance);
+    };
+  }
+   exec(() => {
       if (parentComponent != null) {
         root.legacy_renderSubtreeIntoContainer(
           parentComponent,
@@ -575,26 +580,7 @@ function legacyRenderSubtreeIntoContainer(
         root.render(children, callback);
       }
     });
-  } else {
-    if (typeof callback === 'function') {
-      const originalCallback = callback;
-      callback = function() {
-        const instance = getPublicRootInstance(root._internalRoot);
-        originalCallback.call(instance);
-      };
-    }
-    // Update
-    if (parentComponent != null) {
-      root.legacy_renderSubtreeIntoContainer(
-        parentComponent,
-        children,
-        callback,
-      );
-    } else {
-      root.render(children, callback);
-    }
-  }
-  return getPublicRootInstance(root._internalRoot);
+    return instance;
 }
 
 function createPortal(
