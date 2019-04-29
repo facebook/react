@@ -247,8 +247,10 @@ export default class Store extends EventEmitter {
 
     saveFilterPreferences(value);
 
-    // TODO (filter) Dump all nodes, update renderer preferences,  and re-initialize tree.
+    // TODO (filter) Dump all nodes, update renderer preferences, and re-initialize tree.
     // TODO (filter) Invariant check that  we aren't profiling.
+    // TODO (filter) Flushing every time a filter setting is changed is too expensive. We probably need an explitit configm
+    this._bridge.send('updateFilterPreferences', value);
 
     this.emit('filterPreferences');
   }

@@ -48,6 +48,7 @@ import type {
   RendererInterface,
 } from './types';
 import type { InspectedElement } from 'src/devtools/views/Components/types';
+import type { FilterPreferences } from 'src/types';
 
 function getInternalReactConstants(version) {
   const ReactSymbols = {
@@ -264,11 +265,35 @@ export function attach(
     }
   };
 
-  const {
+  let {
     hideElementsWithTypes,
-    // TOOD (filter) hideElementsWithDisplayNames,
-    // TOOD (filter) hideElementsWithPaths,
+    hideElementsWithDisplayNames,
+    hideElementsWithPaths,
   } = getSavedFilterPreferences();
+
+  // TODO (filter) We could make this more efficient.
+  function updateFilterPreferences(filterPreferences: FilterPreferences) {
+    // Recursively unmount and then re-mount all roots.
+    hook.getFiberRoots(rendererID).forEach(root => {
+      currentRootID = getFiberID(getPrimaryFiber(root.current));
+      unmountFiberChildrenRecursively(root.current);
+      recordUnmount(root.current, false);
+      currentRootID = -1;
+    });
+
+    hideElementsWithTypes = filterPreferences.hideElementsWithTypes;
+    hideElementsWithDisplayNames =
+      filterPreferences.hideElementsWithDisplayNames;
+    hideElementsWithPaths = filterPreferences.hideElementsWithPaths;
+
+    // Recursively re-mount all roots with new filter criteria applied.
+    hook.getFiberRoots(rendererID).forEach(root => {
+      currentRootID = getFiberID(getPrimaryFiber(root.current));
+      mountFiberRecursively(root.current, null);
+      flushPendingEvents(root);
+      currentRootID = -1;
+    });
+  }
 
   // NOTICE Keep in sync with getDataForFiber()
   function shouldFilterFiber(fiber: Fiber): boolean {
@@ -2288,5 +2313,6 @@ export function attach(
     setTrackedPath,
     startProfiling,
     stopProfiling,
+    updateFilterPreferences,
   };
 }

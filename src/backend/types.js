@@ -1,6 +1,6 @@
 // @flow
 
-import type { ElementType } from 'src/types';
+import type { ElementType, FilterPreferences } from 'src/types';
 import type { InspectedElement } from 'src/devtools/views/Components/types';
 
 type BundleType =
@@ -139,6 +139,7 @@ export type RendererInterface = {
   setTrackedPath: (path: Array<PathFrame> | null) => void,
   startProfiling: () => void,
   stopProfiling: () => void,
+  updateFilterPreferences: (filterPreferences: FilterPreferences) => void,
 };
 
 export type Handler = (data: any) => void;
