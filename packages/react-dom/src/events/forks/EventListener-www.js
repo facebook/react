@@ -34,7 +34,7 @@ export function addEventCaptureListenerWithPassiveFlag(
   listener: Function,
   passive: boolean,
 ): void {
-  EventListenerWWW.listenWithPassiveFlag(element, eventType, listener, passive);
+  EventListenerWWW.captureWithPassiveFlag(element, eventType, listener, passive);
 }
 
 // Flow magic to verify the exports of this file match the original version.
