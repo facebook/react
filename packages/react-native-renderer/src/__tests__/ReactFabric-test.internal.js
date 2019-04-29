@@ -48,6 +48,11 @@ describe('ReactFabric', () => {
     NativeMethodsMixin =
       ReactFabric.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
         .NativeMethodsMixin;
+
+    global.nativeFabricUIManager = {
+      measure: FabricUIManager.measure,
+      measureInWindow: FabricUIManager.measureInWindow,
+    };
   });
 
   it('should be able to create and render a native component', () => {
