@@ -152,7 +152,7 @@ if (
   // We use the postMessage trick to defer idle work until after the repaint.
   const channel = new MessageChannel();
   const port = channel.port2;
-  channel.port1.onmessage = function(event) {
+  channel.port1.onmessage = function() {
     isMessageEventScheduled = false;
 
     const prevScheduledCallback = scheduledHostCallback;
@@ -172,11 +172,6 @@ if (
         didTimeout = true;
       } else {
         // No timeout.
-        if (!isAnimationFrameScheduled) {
-          // Schedule another animation callback so we retry later.
-          isAnimationFrameScheduled = true;
-          requestAnimationFrameWithTimeout(animationTick);
-        }
         // Exit without invoking the callback.
         scheduledHostCallback = prevScheduledCallback;
         timeoutTime = prevTimeoutTime;
