@@ -195,10 +195,16 @@ export function trapEventForResponderEventSystem(
     }
     // Check if interactive and wrap in interactiveUpdates
     const listener = dispatchEvent.bind(null, topLevelType, eventFlags);
-    addEventListener(element, rawEventName, listener, {
-      capture,
-      passive,
-    });
+    if (passiveBrowserEventsSupported) {
+      addEventListener(element, rawEventName, listener, {
+        capture,
+        passive,
+      });
+    } else if (capture) {
+      addEventCaptureListener(element, rawEventName, listener);
+    } else {
+      addEventBubbleListener(element, rawEventName, listener);
+    }
   }
 }
 
