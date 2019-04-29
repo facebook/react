@@ -15,6 +15,7 @@ import type {
   ReactEventComponent,
   ReactEventTarget,
 } from 'shared/ReactTypes';
+import type {RootTag} from 'shared/ReactRootTags';
 import type {WorkTag} from 'shared/ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {SideEffectTag} from 'shared/ReactSideEffectTags';
@@ -27,6 +28,7 @@ import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {enableProfilerTimer, enableEventAPI} from 'shared/ReactFeatureFlags';
 import {NoEffect} from 'shared/ReactSideEffectTags';
+import {ConcurrentRoot, BatchedRoot} from 'shared/ReactRootTags';
 import {
   IndeterminateComponent,
   ClassComponent,
@@ -435,14 +437,11 @@ export function createWorkInProgress(
   return workInProgress;
 }
 
-export function createHostRootFiber(
-  isBatched: boolean,
-  isConcurrent: boolean,
-): Fiber {
+export function createHostRootFiber(tag: RootTag): Fiber {
   let mode;
-  if (isConcurrent) {
+  if (tag === ConcurrentRoot) {
     mode = ConcurrentMode | BatchedMode | StrictMode;
-  } else if (isBatched) {
+  } else if (tag === BatchedRoot) {
     mode = BatchedMode | StrictMode;
   } else {
     mode = NoMode;

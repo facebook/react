@@ -18,6 +18,7 @@ import type {Thenable} from 'react-reconciler/src/ReactFiberScheduler';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {RootTag} from 'shared/ReactRootTags';
 
 import * as Scheduler from 'scheduler/unstable_mock';
 import {createPortal} from 'shared/ReactPortal';
@@ -32,6 +33,7 @@ import enqueueTask from 'shared/enqueueTask';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
+import {ConcurrentRoot, BatchedRoot, LegacyRoot} from 'shared/ReactRootTags';
 
 type EventTargetChildElement = {
   type: string,
@@ -901,21 +903,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return getPendingChildren(container);
     },
 
-    getOrCreateRootContainer(
-      rootID: string = DEFAULT_ROOT_ID,
-      isBatched: boolean,
-      isConcurrent: boolean,
-    ) {
+    getOrCreateRootContainer(rootID: string = DEFAULT_ROOT_ID, tag: RootTag) {
       let root = roots.get(rootID);
       if (!root) {
         const container = {rootID: rootID, pendingChildren: [], children: []};
         rootContainers.set(rootID, container);
-        root = NoopRenderer.createContainer(
-          container,
-          isBatched,
-          isConcurrent,
-          false,
-        );
+        root = NoopRenderer.createContainer(container, tag, false);
         roots.set(rootID, root);
       }
       return root.current.stateNode.containerInfo;
@@ -923,8 +916,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     // TODO: Replace ReactNoop.render with createRoot + root.render
     createRoot() {
-      const isBatched = true;
-      const isConcurrent = true;
       const container = {
         rootID: '' + idCounter++,
         pendingChildren: [],
@@ -932,8 +923,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       };
       const fiberRoot = NoopRenderer.createContainer(
         container,
-        isBatched,
-        isConcurrent,
+        ConcurrentRoot,
         false,
       );
       return {
@@ -951,8 +941,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     createSyncRoot() {
-      const isBatched = true;
-      const isConcurrent = false;
       const container = {
         rootID: '' + idCounter++,
         pendingChildren: [],
@@ -960,8 +948,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       };
       const fiberRoot = NoopRenderer.createContainer(
         container,
-        isBatched,
-        isConcurrent,
+        BatchedRoot,
         false,
       );
       return {
@@ -1003,13 +990,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     renderLegacySyncRoot(element: React$Element<any>, callback: ?Function) {
       const rootID = DEFAULT_ROOT_ID;
-      const isBatched = false;
-      const isConcurrent = false;
-      const container = ReactNoop.getOrCreateRootContainer(
-        rootID,
-        isBatched,
-        isConcurrent,
-      );
+      const container = ReactNoop.getOrCreateRootContainer(rootID, LegacyRoot);
       const root = roots.get(container.rootID);
       NoopRenderer.updateContainer(element, root, null, callback);
     },
@@ -1019,12 +1000,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       rootID: string,
       callback: ?Function,
     ) {
-      const isBatched = true;
-      const isConcurrent = true;
       const container = ReactNoop.getOrCreateRootContainer(
         rootID,
-        isBatched,
-        isConcurrent,
+        ConcurrentRoot,
       );
       const root = roots.get(container.rootID);
       NoopRenderer.updateContainer(element, root, null, callback);

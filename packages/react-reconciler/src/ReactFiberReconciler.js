@@ -9,6 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
+import type {RootTag} from 'shared/ReactRootTags';
 import type {
   Instance,
   TextInstance,
@@ -273,11 +274,10 @@ function findHostInstanceWithWarning(
 
 export function createContainer(
   containerInfo: Container,
-  isBatched: boolean,
-  isConcurrent: boolean,
+  tag: RootTag,
   hydrate: boolean,
 ): OpaqueRoot {
-  return createFiberRoot(containerInfo, isBatched, isConcurrent, hydrate);
+  return createFiberRoot(containerInfo, tag, hydrate);
 }
 
 export function updateContainer(
