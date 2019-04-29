@@ -41,7 +41,8 @@ import {
   NormalPriority,
   LowPriority,
   IdlePriority,
-  flushImmediateQueue,
+  flushSyncCallbackQueue,
+  scheduleSyncCallback,
 } from './SchedulerWithReactIntegration';
 
 import {__interactionsRef, __subscriberRef} from 'scheduler/tracing';
@@ -357,7 +358,7 @@ export function scheduleUpdateOnFiber(
         // scheduleCallbackForFiber to preserve the ability to schedule a callback
         // without immediately flushing it. We only do this for user-initated
         // updates, to preserve historical behavior of sync mode.
-        flushImmediateQueue();
+        flushSyncCallbackQueue();
       }
     }
   } else {
@@ -464,36 +465,47 @@ function scheduleCallbackForRoot(
     }
     root.callbackExpirationTime = expirationTime;
 
-    let options = null;
-    if (expirationTime !== Sync && expirationTime !== Never) {
-      let timeout = expirationTimeToMs(expirationTime) - now();
-      if (timeout > 5000) {
-        // Sanity check. Should never take longer than 5 seconds.
-        // TODO: Add internal warning?
-        timeout = 5000;
+    if (expirationTime === Sync) {
+      // Sync React callbacks are scheduled on a special internal queue
+      root.callbackNode = scheduleSyncCallback(
+        runRootCallback.bind(
+          null,
+          root,
+          renderRoot.bind(null, root, expirationTime),
+        ),
+      );
+    } else {
+      let options = null;
+      if (expirationTime !== Sync && expirationTime !== Never) {
+        let timeout = expirationTimeToMs(expirationTime) - now();
+        if (timeout > 5000) {
+          // Sanity check. Should never take longer than 5 seconds.
+          // TODO: Add internal warning?
+          timeout = 5000;
+        }
+        options = {timeout};
       }
-      options = {timeout};
-    }
 
-    root.callbackNode = scheduleCallback(
-      priorityLevel,
-      runRootCallback.bind(
-        null,
-        root,
-        renderRoot.bind(null, root, expirationTime),
-      ),
-      options,
-    );
-    if (
-      enableUserTimingAPI &&
-      expirationTime !== Sync &&
-      workPhase !== RenderPhase &&
-      workPhase !== CommitPhase
-    ) {
-      // Scheduled an async callback, and we're not already working. Add an
-      // entry to the flamegraph that shows we're waiting for a callback
-      // to fire.
-      startRequestCallbackTimer();
+      root.callbackNode = scheduleCallback(
+        priorityLevel,
+        runRootCallback.bind(
+          null,
+          root,
+          renderRoot.bind(null, root, expirationTime),
+        ),
+        options,
+      );
+      if (
+        enableUserTimingAPI &&
+        expirationTime !== Sync &&
+        workPhase !== RenderPhase &&
+        workPhase !== CommitPhase
+      ) {
+        // Scheduled an async callback, and we're not already working. Add an
+        // entry to the flamegraph that shows we're waiting for a callback
+        // to fire.
+        startRequestCallbackTimer();
+      }
     }
   }
 
@@ -532,11 +544,8 @@ export function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
         'means you attempted to commit from inside a lifecycle method.',
     );
   }
-  scheduleCallback(
-    ImmediatePriority,
-    renderRoot.bind(null, root, expirationTime),
-  );
-  flushImmediateQueue();
+  scheduleSyncCallback(renderRoot.bind(null, root, expirationTime));
+  flushSyncCallbackQueue();
 }
 
 export function flushInteractiveUpdates() {
@@ -604,13 +613,10 @@ function flushPendingDiscreteUpdates() {
     const roots = rootsWithPendingDiscreteUpdates;
     rootsWithPendingDiscreteUpdates = null;
     roots.forEach((expirationTime, root) => {
-      scheduleCallback(
-        ImmediatePriority,
-        renderRoot.bind(null, root, expirationTime),
-      );
+      scheduleSyncCallback(renderRoot.bind(null, root, expirationTime));
     });
     // Now flush the immediate queue.
-    flushImmediateQueue();
+    flushSyncCallbackQueue();
   }
 }
 
@@ -625,7 +631,7 @@ export function batchedUpdates<A, R>(fn: A => R, a: A): R {
   } finally {
     workPhase = NotWorking;
     // Flush the immediate callbacks that were scheduled during this batch
-    flushImmediateQueue();
+    flushSyncCallbackQueue();
   }
 }
 
@@ -661,7 +667,7 @@ export function flushSync<A, R>(fn: A => R, a: A): R {
     // Flush the immediate callbacks that were scheduled during this batch.
     // Note that this will happen even if batchedUpdates is higher up
     // the stack.
-    flushImmediateQueue();
+    flushSyncCallbackQueue();
   }
 }
 
@@ -674,7 +680,7 @@ export function flushControlled(fn: () => mixed): void {
     workPhase = prevWorkPhase;
     if (workPhase === NotWorking) {
       // Flush the immediate callbacks that were scheduled during this batch
-      flushImmediateQueue();
+      flushSyncCallbackQueue();
     }
   }
 }
@@ -890,10 +896,7 @@ function renderRoot(
         // caused by tearing due to a mutation during an event. Try rendering
         // one more time without yiedling to events.
         prepareFreshStack(root, expirationTime);
-        scheduleCallback(
-          ImmediatePriority,
-          renderRoot.bind(null, root, expirationTime),
-        );
+        scheduleSyncCallback(renderRoot.bind(null, root, expirationTime));
         return null;
       }
       // If we're already rendering synchronously, commit the root in its
@@ -1490,7 +1493,7 @@ function commitRootImpl(root, expirationTime) {
   }
 
   // If layout work was scheduled, flush it now.
-  flushImmediateQueue();
+  flushSyncCallbackQueue();
   return null;
 }
 
@@ -1661,7 +1664,7 @@ export function flushPassiveEffects() {
   }
 
   workPhase = prevWorkPhase;
-  flushImmediateQueue();
+  flushSyncCallbackQueue();
 
   // If additional passive effects were scheduled, increment a counter. If this
   // exceeds the limit, we'll fire a warning.

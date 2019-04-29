@@ -1,6 +1,7 @@
 let React;
 let ReactFeatureFlags;
 let ReactNoop;
+let act;
 let Scheduler;
 let ReactCache;
 let Suspense;
@@ -14,6 +15,7 @@ describe('ReactBatchedMode', () => {
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
+    act = ReactNoop.act;
     Scheduler = require('scheduler');
     ReactCache = require('react-cache');
     Suspense = React.Suspense;
@@ -118,5 +120,47 @@ describe('ReactBatchedMode', () => {
         <span>C</span>
       </React.Fragment>,
     );
+  });
+
+  it('flushSync does not flush batched work', () => {
+    const {useState, forwardRef, useImperativeHandle} = React;
+    const root = ReactNoop.createSyncRoot();
+
+    const Foo = forwardRef(({label}, ref) => {
+      const [step, setStep] = useState(0);
+      useImperativeHandle(ref, () => ({setStep}));
+      return <Text text={label + step} />;
+    });
+
+    const foo1 = React.createRef(null);
+    const foo2 = React.createRef(null);
+    root.render(
+      <React.Fragment>
+        <Foo label="A" ref={foo1} />
+        <Foo label="B" ref={foo2} />
+      </React.Fragment>,
+    );
+
+    // Mount
+    expect(Scheduler).toFlushExpired(['A0', 'B0']);
+    expect(root).toMatchRenderedOutput('A0B0');
+
+    // Schedule a batched update to the first sibling
+    act(() => foo1.current.setStep(1));
+
+    // Before it flushes, update the second sibling inside flushSync
+    act(() =>
+      ReactNoop.flushSync(() => {
+        foo2.current.setStep(1);
+      }),
+    );
+
+    // Only the second update should have flushed synchronously
+    expect(Scheduler).toHaveYielded(['B1']);
+    expect(root).toMatchRenderedOutput('A0B1');
+
+    // Now flush the first update
+    expect(Scheduler).toFlushExpired(['A1']);
+    expect(root).toMatchRenderedOutput('A1B1');
   });
 });
