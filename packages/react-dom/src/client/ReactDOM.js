@@ -562,22 +562,22 @@ function legacyRenderSubtreeIntoContainer(
     );
     exec = unbatchedUpdates;
   } 
-  if (typeof callback === 'function') {
-    const originalCallback = callback;
-    callback = function() {
+  function getInstance(){
       instance = getPublicRootInstance(root._internalRoot);
-      originalCallback.call(instance);
-    };
+      if (typeof callback === 'function') {
+         callback.call(instance);
+      }
   }
+
    exec(() => {
       if (parentComponent != null) {
         root.legacy_renderSubtreeIntoContainer(
           parentComponent,
           children,
-          callback,
+          getInstance,
         );
       } else {
-        root.render(children, callback);
+        root.render(children, getInstance);
       }
     });
     return instance;
