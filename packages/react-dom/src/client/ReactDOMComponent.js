@@ -1294,7 +1294,6 @@ export function listenToEventResponderEventTypes(
     for (let i = 0, length = eventTypes.length; i < length; ++i) {
       const targetEventType = eventTypes[i];
       let topLevelType;
-      let capture = false;
       let passive = true;
 
       // If no event config object is provided (i.e. - only a string),
@@ -1313,26 +1312,17 @@ export function listenToEventResponderEventTypes(
         const targetEventConfigObject = ((targetEventType: any): {
           name: string,
           passive?: boolean,
-          capture?: boolean,
         });
         topLevelType = targetEventConfigObject.name;
         if (targetEventConfigObject.passive !== undefined) {
           passive = targetEventConfigObject.passive;
         }
-        if (targetEventConfigObject.capture !== undefined) {
-          capture = targetEventConfigObject.capture;
-        }
       }
-      const listeningName = generateListeningKey(
-        topLevelType,
-        passive,
-        capture,
-      );
+      const listeningName = generateListeningKey(topLevelType, passive);
       if (!listeningSet.has(listeningName)) {
         trapEventForResponderEventSystem(
           element,
           ((topLevelType: any): DOMTopLevelEventType),
-          capture,
           passive,
         );
         listeningSet.add(listeningName);

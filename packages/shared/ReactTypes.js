@@ -83,7 +83,7 @@ export type RefObject = {|
 
 export type ReactEventResponderEventType =
   | string
-  | {name: string, passive?: boolean, capture?: boolean};
+  | {name: string, passive?: boolean};
 
 export type ReactEventResponder = {
   targetEventTypes?: Array<ReactEventResponderEventType>,

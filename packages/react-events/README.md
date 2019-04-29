@@ -34,7 +34,7 @@ events, and implement a state machine.
 // types
 type ResponderEventType =
   | string
-  | {name: string, passive?: boolean, capture?: boolean};
+  | {name: string, passive?: boolean};
 
 type ResponderEvent = {|
   nativeEvent: any,

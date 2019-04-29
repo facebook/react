@@ -9,7 +9,6 @@
 import {
   type EventSystemFlags,
   IS_PASSIVE,
-  IS_CAPTURE,
   PASSIVE_NOT_SUPPORTED,
 } from 'events/EventSystemFlags';
 import type {AnyNativeEvent} from 'events/PluginModuleType';
@@ -247,28 +246,22 @@ const eventResponderContext: ReactResponderContext = {
     for (let i = 0; i < rootEventTypes.length; i++) {
       const rootEventType = rootEventTypes[i];
       let name = rootEventType;
-      let capture = false;
       let passive = true;
 
       if (typeof rootEventType !== 'string') {
         const targetEventConfigObject = ((rootEventType: any): {
           name: string,
           passive?: boolean,
-          capture?: boolean,
         });
         name = targetEventConfigObject.name;
         if (targetEventConfigObject.passive !== undefined) {
           passive = targetEventConfigObject.passive;
-        }
-        if (targetEventConfigObject.capture !== undefined) {
-          capture = targetEventConfigObject.capture;
         }
       }
 
       const listeningName = generateListeningKey(
         ((name: any): string),
         passive,
-        capture,
       );
       let rootEventComponents = rootEventTypesToEventComponentInstances.get(
         listeningName,
@@ -537,27 +530,21 @@ function getTargetEventTypesSet(
     for (let i = 0; i < eventTypes.length; i++) {
       const eventType = eventTypes[i];
       let name = eventType;
-      let capture = false;
       let passive = true;
 
       if (typeof eventType !== 'string') {
         const targetEventConfigObject = ((eventType: any): {
           name: string,
           passive?: boolean,
-          capture?: boolean,
         });
         name = targetEventConfigObject.name;
         if (targetEventConfigObject.passive !== undefined) {
           passive = targetEventConfigObject.passive;
         }
-        if (targetEventConfigObject.capture !== undefined) {
-          capture = targetEventConfigObject.capture;
-        }
       }
       const listeningName = generateListeningKey(
         ((name: any): string),
         passive,
-        capture,
       );
       cachedSet.add(listeningName);
     }
@@ -640,12 +627,10 @@ function traverseAndHandleEventResponderInstances(
   eventSystemFlags: EventSystemFlags,
 ): void {
   const isPassiveEvent = (eventSystemFlags & IS_PASSIVE) !== 0;
-  const isCaptureEvent = (eventSystemFlags & IS_CAPTURE) !== 0;
   const isPassiveSupported = (eventSystemFlags & PASSIVE_NOT_SUPPORTED) === 0;
   const listeningName = generateListeningKey(
     ((topLevelType: any): string),
     isPassiveEvent || !isPassiveSupported,
-    isCaptureEvent,
   );
 
   // Trigger event responders in this order:
@@ -875,29 +860,20 @@ function registerRootEventType(
   eventComponentInstance: ReactEventComponentInstance,
 ): void {
   let name = rootEventType;
-  let capture = false;
   let passive = true;
 
   if (typeof rootEventType !== 'string') {
     const targetEventConfigObject = ((rootEventType: any): {
       name: string,
       passive?: boolean,
-      capture?: boolean,
     });
     name = targetEventConfigObject.name;
     if (targetEventConfigObject.passive !== undefined) {
       passive = targetEventConfigObject.passive;
     }
-    if (targetEventConfigObject.capture !== undefined) {
-      capture = targetEventConfigObject.capture;
-    }
   }
 
-  const listeningName = generateListeningKey(
-    ((name: any): string),
-    passive,
-    capture,
-  );
+  const listeningName = generateListeningKey(((name: any): string), passive);
   let rootEventComponentInstances = rootEventTypesToEventComponentInstances.get(
     listeningName,
   );
@@ -928,12 +904,10 @@ function registerRootEventType(
 export function generateListeningKey(
   topLevelType: string,
   passive: boolean,
-  capture: boolean,
 ): string {
   // Create a unique name for this event, plus its properties. We'll
   // use this to ensure we don't listen to the same event with the same
   // properties again.
   const passiveKey = passive ? '_passive' : '_active';
-  const captureKey = capture ? '_capture' : '';
-  return `${topLevelType}${passiveKey}${captureKey}`;
+  return `${topLevelType}${passiveKey}`;
 }
