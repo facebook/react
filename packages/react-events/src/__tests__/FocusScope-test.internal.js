@@ -42,7 +42,7 @@ describe('FocusScope event responder', () => {
     ReactFeatureFlags.enableEventAPI = true;
     React = require('react');
     ReactDOM = require('react-dom');
-    FocusScope = require('react-events/FocusScope');
+    FocusScope = require('react-events/focus-scope');
 
     container = document.createElement('div');
     document.body.appendChild(container);
