@@ -1,21 +1,31 @@
 # Focus
 
 The `Focus` module responds to focus and blur events on its child. Focus events
-are dispatched for `mouse`, `pen`, `touch`, and `keyboard`
-pointer types.
+are dispatched for all input types, with the exception of `onFocusVisibleChange`
+which is only dispatched when focusing with a keyboard.
 
 Focus events do not propagate between `Focus` event responders.
 
 ```js
 // Example
-const TextField = (props) => (
-  <Focus
-    onBlur={props.onBlur}
-    onFocus={props.onFocus}
-  >
-    <textarea></textarea>
-  </Focus>
-);
+const Button = (props) => {
+  const [ focusVisible, setFocusVisible ] = useState(false);
+
+  return (
+    <Focus
+      onBlur={props.onBlur}
+      onFocus={props.onFocus}
+      onFocusVisibleChange={setFocusVisible}
+    >
+      <button
+        children={props.children}
+        style={{
+          ...(focusVisible && focusVisibleStyles)
+        }}
+      >
+    </Focus>
+  );
+};
 ```
 
 ## Types
@@ -23,7 +33,7 @@ const TextField = (props) => (
 ```js
 type FocusEvent = {
   target: Element,
-  type: 'blur' | 'focus' | 'focuschange'
+  type: 'blur' | 'focus' | 'focuschange' | 'focusvisiblechange'
 }
 ```
 
@@ -43,5 +53,10 @@ Called when the element gains focus.
 
 ### onFocusChange: boolean => void
 
-Called when the element changes hover state (i.e., after `onBlur` and
+Called when the element changes focus state (i.e., after `onBlur` and
 `onFocus`).
+
+### onFocusVisibleChange: boolean => void
+
+Called when the element receives or loses focus following keyboard navigation.
+This can be used to display focus styles only for keyboard interactions.

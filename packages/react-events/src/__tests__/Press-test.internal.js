@@ -1090,10 +1090,10 @@ describe('Event responder: Press', () => {
         ref.current.dispatchEvent(
           createPointerEvent('pointermove', coordinatesInside),
         );
-        ref.current.dispatchEvent(
+        container.dispatchEvent(
           createPointerEvent('pointermove', coordinatesOutside),
         );
-        ref.current.dispatchEvent(
+        container.dispatchEvent(
           createPointerEvent('pointerup', coordinatesOutside),
         );
         jest.runAllTimers();
@@ -1135,13 +1135,13 @@ describe('Event responder: Press', () => {
         ref.current.dispatchEvent(
           createPointerEvent('pointermove', coordinatesInside),
         );
-        ref.current.dispatchEvent(
+        container.dispatchEvent(
           createPointerEvent('pointermove', coordinatesOutside),
         );
         jest.runAllTimers();
         expect(events).toEqual(['onPressMove']);
         events = [];
-        ref.current.dispatchEvent(
+        container.dispatchEvent(
           createPointerEvent('pointerup', coordinatesOutside),
         );
         jest.runAllTimers();
