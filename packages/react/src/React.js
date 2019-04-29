@@ -7,7 +7,6 @@
 
 import ReactVersion from 'shared/ReactVersion';
 import {
-  REACT_CONCURRENT_MODE_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_PROFILER_TYPE,
   REACT_STRICT_MODE_TYPE,
@@ -51,12 +50,7 @@ import {
 } from './ReactElementValidator';
 import ReactSharedInternals from './ReactSharedInternals';
 import {error, warn} from './withComponentStack';
-import {
-  enableEventAPI,
-  enableStableConcurrentModeAPIs,
-  enableJSXTransformAPI,
-} from 'shared/ReactFeatureFlags';
-
+import {enableEventAPI, enableJSXTransformAPI} from 'shared/ReactFeatureFlags';
 const React = {
   Children: {
     map,
@@ -101,8 +95,6 @@ const React = {
 
   version: ReactVersion,
 
-  unstable_ConcurrentMode: REACT_CONCURRENT_MODE_TYPE,
-
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactSharedInternals,
 };
 
@@ -113,11 +105,6 @@ const React = {
 
 if (enableEventAPI) {
   React.unstable_createEventComponent = createEventComponent;
-}
-
-if (enableStableConcurrentModeAPIs) {
-  React.ConcurrentMode = REACT_CONCURRENT_MODE_TYPE;
-  React.unstable_ConcurrentMode = undefined;
 }
 
 if (enableJSXTransformAPI) {
