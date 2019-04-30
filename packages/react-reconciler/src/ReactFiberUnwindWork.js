@@ -55,6 +55,7 @@ import {
 import {logError} from './ReactFiberCommitWork';
 import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
 import {popHostContainer, popHostContext} from './ReactFiberHostContext';
+import {popSuspenseContext} from './ReactFiberSuspenseContext';
 import {
   isContextProvider as isLegacyContextProvider,
   popContext as popLegacyContext,
@@ -205,6 +206,9 @@ function throwException(
     const thenable: Thenable = (value: any);
 
     checkForWrongSuspensePriorityInDEV(sourceFiber);
+
+    // TODO: If we're not in an invisible subtree, then we need to mark this render
+    // as needing to suspend for longer to avoid showing this fallback state.
 
     // Schedule the nearest Suspense to re-render the timed out view.
     let workInProgress = returnFiber;
@@ -408,6 +412,7 @@ function unwindWork(
       return null;
     }
     case SuspenseComponent: {
+      popSuspenseContext(workInProgress);
       const effectTag = workInProgress.effectTag;
       if (effectTag & ShouldCapture) {
         workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
@@ -419,6 +424,7 @@ function unwindWork(
     case DehydratedSuspenseComponent: {
       if (enableSuspenseServerRenderer) {
         // TODO: popHydrationState
+        popSuspenseContext(workInProgress);
         const effectTag = workInProgress.effectTag;
         if (effectTag & ShouldCapture) {
           workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
@@ -465,6 +471,15 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
     }
     case HostPortal:
       popHostContainer(interruptedWork);
+      break;
+    case SuspenseComponent:
+      popSuspenseContext(interruptedWork);
+      break;
+    case DehydratedSuspenseComponent:
+      if (enableSuspenseServerRenderer) {
+        // TODO: popHydrationState
+        popSuspenseContext(interruptedWork);
+      }
       break;
     case ContextProvider:
       popProvider(interruptedWork);

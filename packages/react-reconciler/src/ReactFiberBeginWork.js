@@ -12,6 +12,7 @@ import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
+import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
 import checkPropTypes from 'prop-types/checkPropTypes';
 
@@ -104,6 +105,17 @@ import {
   pushHostContextForEventComponent,
   pushHostContextForEventTarget,
 } from './ReactFiberHostContext';
+import {
+  suspenseStackCursor,
+  pushSuspenseContext,
+  popSuspenseContext,
+  DefaultShallowSuspenseContext,
+  InvisibleParentSuspenseContext,
+  ForceSuspenseFallback,
+  hasSuspenseContext,
+  setShallowSuspenseContext,
+  addSubtreeSuspenseContext,
+} from './ReactFiberSuspenseContext';
 import {
   pushProvider,
   propagateContextChange,
@@ -1394,31 +1406,64 @@ function updateSuspenseComponent(
   const mode = workInProgress.mode;
   const nextProps = workInProgress.pendingProps;
 
+  // This is used by DevTools to force a boundary to suspend.
   if (__DEV__) {
     if (shouldSuspend(workInProgress)) {
       workInProgress.effectTag |= DidCapture;
     }
   }
 
-  // We should attempt to render the primary children unless this boundary
-  // already suspended during this render (`alreadyCaptured` is true).
-  let nextState: SuspenseState | null = workInProgress.memoizedState;
+  let suspenseContext: SuspenseContext = suspenseStackCursor.current;
 
-  let nextDidTimeout;
-  if ((workInProgress.effectTag & DidCapture) === NoEffect) {
-    // This is the first attempt.
-    nextState = null;
-    nextDidTimeout = false;
-  } else {
+  let nextState = null;
+  let nextDidTimeout = false;
+
+  if (
+    (workInProgress.effectTag & DidCapture) !== NoEffect ||
+    hasSuspenseContext(
+      suspenseContext,
+      (ForceSuspenseFallback: SuspenseContext),
+    )
+  ) {
+    // This either already captured or is a new mount that was forced into its fallback
+    // state by a parernt.
+    const attemptedState: SuspenseState | null = workInProgress.memoizedState;
     // Something in this boundary's subtree already suspended. Switch to
     // rendering the fallback children.
     nextState = {
       fallbackExpirationTime:
-        nextState !== null ? nextState.fallbackExpirationTime : NoWork,
+        attemptedState !== null
+          ? attemptedState.fallbackExpirationTime
+          : NoWork,
     };
     nextDidTimeout = true;
     workInProgress.effectTag &= ~DidCapture;
+  } else {
+    // Attempting the main content the main content
+    if (current === null || current.memoizedState !== null) {
+      // This is a new mount or this boundary is already showing a fallback state.
+      // Mark this subtree context as having at least one invisible parent that could
+      // handle the fallback state.
+      // Boundaries without fallbacks or should be avoided are not considered since
+      // they cannot handle preferred fallback states.
+      if (
+        nextProps.fallback !== undefined &&
+        nextProps.unstable_avoidThisFallback !== true
+      ) {
+        suspenseContext = addSubtreeSuspenseContext(
+          suspenseContext,
+          InvisibleParentSuspenseContext,
+        );
+      }
+    }
   }
+
+  suspenseContext = setShallowSuspenseContext(
+    suspenseContext,
+    DefaultShallowSuspenseContext,
+  );
+
+  pushSuspenseContext(workInProgress, suspenseContext);
 
   if (__DEV__) {
     if ('maxDuration' in nextProps) {
@@ -1472,6 +1517,7 @@ function updateSuspenseComponent(
         tryToClaimNextHydratableInstance(workInProgress);
         // This could've changed the tag if this was a dehydrated suspense component.
         if (workInProgress.tag === DehydratedSuspenseComponent) {
+          popSuspenseContext(workInProgress);
           return updateDehydratedSuspenseComponent(
             null,
             workInProgress,
@@ -1713,6 +1759,8 @@ function retrySuspenseComponentWithoutHydrating(
   current.nextEffect = null;
   current.effectTag = Deletion;
 
+  popSuspenseContext(workInProgress);
+
   // Upgrade this work in progress to a real Suspense component.
   workInProgress.tag = SuspenseComponent;
   workInProgress.stateNode = null;
@@ -1728,6 +1776,13 @@ function updateDehydratedSuspenseComponent(
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ) {
+  pushSuspenseContext(
+    workInProgress,
+    setShallowSuspenseContext(
+      suspenseStackCursor.current,
+      DefaultShallowSuspenseContext,
+    ),
+  );
   const suspenseInstance = (workInProgress.stateNode: SuspenseInstance);
   if (current === null) {
     // During the first pass, we'll bail out and not drill into the children.
@@ -2131,6 +2186,13 @@ function beginWork(
                 renderExpirationTime,
               );
             } else {
+              pushSuspenseContext(
+                workInProgress,
+                setShallowSuspenseContext(
+                  suspenseStackCursor.current,
+                  DefaultShallowSuspenseContext,
+                ),
+              );
               // The primary children do not have pending work with sufficient
               // priority. Bailout.
               const child = bailoutOnAlreadyFinishedWork(
@@ -2146,11 +2208,26 @@ function beginWork(
                 return null;
               }
             }
+          } else {
+            pushSuspenseContext(
+              workInProgress,
+              setShallowSuspenseContext(
+                suspenseStackCursor.current,
+                DefaultShallowSuspenseContext,
+              ),
+            );
           }
           break;
         }
         case DehydratedSuspenseComponent: {
           if (enableSuspenseServerRenderer) {
+            pushSuspenseContext(
+              workInProgress,
+              setShallowSuspenseContext(
+                suspenseStackCursor.current,
+                DefaultShallowSuspenseContext,
+              ),
+            );
             // We know that this component will suspend again because if it has
             // been unsuspended it has committed as a regular Suspense component.
             // If it needs to be retried, it should have work scheduled on it.

@@ -56,6 +56,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     return {type: 'span', children: [], prop, hidden: false};
   }
 
+  function hiddenSpan(prop) {
+    return {type: 'span', children: [], prop, hidden: true};
+  }
+
   function advanceTimers(ms) {
     // Note: This advances Jest's virtual time but not React's. Use
     // ReactNoop.expire for that.
@@ -1771,5 +1775,70 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       'The following components suspended during a user-blocking update: A, C',
       {withoutStack: true},
     );
+  });
+
+  it('shows the parent boundary if the inner boundary should be avoided', async () => {
+    function Foo({showC}) {
+      Scheduler.yieldValue('Foo');
+      return (
+        <Suspense fallback={<Text text="Initial load..." />}>
+          <Suspense
+            unstable_avoidThisFallback={true}
+            fallback={<Text text="Updating..." />}>
+            <AsyncText text="A" ms={5000} />
+            {showC ? <AsyncText text="C" ms={5000} /> : null}
+          </Suspense>
+          <Text text="B" />
+        </Suspense>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    expect(Scheduler).toFlushAndYield([
+      'Foo',
+      'Suspend! [A]',
+      'B',
+      'Initial load...',
+    ]);
+    // We're still suspended.
+    expect(ReactNoop.getChildren()).toEqual([]);
+    // Flush to skip suspended time.
+    Scheduler.advanceTime(600);
+    await advanceTimers(600);
+    expect(ReactNoop.getChildren()).toEqual([span('Initial load...')]);
+
+    // Eventually we resolve and show the data.
+    Scheduler.advanceTime(5000);
+    await advanceTimers(5000);
+    expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
+    expect(Scheduler).toFlushAndYield(['A', 'B']);
+    expect(ReactNoop.getChildren()).toEqual([span('A'), span('B')]);
+
+    // Update to show C
+    ReactNoop.render(<Foo showC={true} />);
+    expect(Scheduler).toFlushAndYield([
+      'Foo',
+      'A',
+      'Suspend! [C]',
+      'Updating...',
+      'B',
+    ]);
+    // Flush to skip suspended time.
+    Scheduler.advanceTime(600);
+    await advanceTimers(600);
+    // Since the optional suspense boundary is already showing its content,
+    // we have to use the inner fallback instead.
+    expect(ReactNoop.getChildren()).toEqual([
+      hiddenSpan('A'),
+      span('Updating...'),
+      span('B'),
+    ]);
+
+    // Later we load the data.
+    Scheduler.advanceTime(5000);
+    await advanceTimers(5000);
+    expect(Scheduler).toHaveYielded(['Promise resolved [C]']);
+    expect(Scheduler).toFlushAndYield(['A', 'C']);
+    expect(ReactNoop.getChildren()).toEqual([span('A'), span('C'), span('B')]);
   });
 });
