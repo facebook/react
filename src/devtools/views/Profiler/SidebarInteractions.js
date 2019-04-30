@@ -8,8 +8,6 @@ import { getGradientColor } from './utils';
 
 import styles from './SidebarInteractions.css';
 
-import type { InteractionWithCommits } from './types';
-
 export type Props = {||};
 
 export default function SidebarInteractions(_: Props) {
@@ -31,6 +29,14 @@ export default function SidebarInteractions(_: Props) {
     rendererID: ((rendererID: any): number),
     rootID: ((rootID: any): number),
   });
+  const interaction = interactions.find(
+    interaction => interaction.id === selectedInteractionID
+  );
+  if (interaction == null) {
+    throw Error(
+      `Could not find interaction by selected interaction id "${selectedInteractionID}"`
+    );
+  }
 
   const profilingSummary = profilingCache.ProfilingSummary.read({
     rendererID: ((rendererID: any): number),
@@ -43,10 +49,6 @@ export default function SidebarInteractions(_: Props) {
   });
 
   const { commitDurations, commitTimes } = profilingSummary;
-
-  const interaction = ((interactions.find(
-    interaction => interaction.id === selectedInteractionID
-  ): any): InteractionWithCommits);
 
   const viewCommit = (commitIndex: number) => {
     selectTab('flame-chart');

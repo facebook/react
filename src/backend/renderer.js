@@ -28,17 +28,17 @@ import { getUID } from '../utils';
 import { inspectHooksOfFiber } from './ReactDebugHooks';
 
 import type {
-  CommitDetails,
+  CommitDetailsBackend,
   DevToolsHook,
   Fiber,
-  FiberCommits,
+  FiberCommitsBackend,
   FiberData,
-  Interaction,
-  Interactions,
-  InteractionWithCommits,
+  InteractionBackend,
+  InteractionsBackend,
+  InteractionWithCommitsBackend,
   PathFrame,
   PathMatch,
-  ProfilingSummary,
+  ProfilingSummaryBackend,
   ReactRenderer,
   RendererInterface,
 } from './types';
@@ -1160,7 +1160,7 @@ export function attach(
             actualDurations: [],
             commitTime: performance.now() - profilingStartTime,
             interactions: Array.from(root.memoizedInteractions).map(
-              (interaction: Interaction) => ({
+              (interaction: InteractionBackend) => ({
                 ...interaction,
                 timestamp: interaction.timestamp - profilingStartTime,
               })
@@ -1202,7 +1202,7 @@ export function attach(
         actualDurations: [],
         commitTime: performance.now() - profilingStartTime,
         interactions: Array.from(root.memoizedInteractions).map(
-          (interaction: Interaction) => ({
+          (interaction: InteractionBackend) => ({
             ...interaction,
             timestamp: interaction.timestamp - profilingStartTime,
           })
@@ -1789,7 +1789,7 @@ export function attach(
   type CommitProfilingData = {|
     actualDurations: Array<number>,
     commitTime: number,
-    interactions: Array<Interaction>,
+    interactions: Array<InteractionBackend>,
     maxActualDuration: number,
   |};
 
@@ -1805,7 +1805,7 @@ export function attach(
   function getCommitDetails(
     rootID: number,
     commitIndex: number
-  ): CommitDetails {
+  ): CommitDetailsBackend {
     const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
       rootID
     );
@@ -1833,7 +1833,10 @@ export function attach(
     };
   }
 
-  function getFiberCommits(rootID: number, fiberID: number): FiberCommits {
+  function getFiberCommits(
+    rootID: number,
+    fiberID: number
+  ): FiberCommitsBackend {
     const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
       rootID
     );
@@ -1866,12 +1869,15 @@ export function attach(
     };
   }
 
-  function getInteractions(rootID: number): Interactions {
+  function getInteractions(rootID: number): InteractionsBackend {
     const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
       rootID
     );
     if (commitProfilingMetadata != null) {
-      const interactionsMap: Map<number, InteractionWithCommits> = new Map();
+      const interactionsMap: Map<
+        number,
+        InteractionWithCommitsBackend
+      > = new Map();
 
       commitProfilingMetadata.forEach((commitProfilingData, commitIndex) => {
         commitProfilingData.interactions.forEach(interaction => {
@@ -1921,7 +1927,7 @@ export function attach(
     };
   }
 
-  function getProfilingSummary(rootID: number): ProfilingSummary {
+  function getProfilingSummary(rootID: number): ProfilingSummaryBackend {
     const interactions = new Set();
     const commitDurations = [];
     const commitTimes = [];

@@ -13,7 +13,7 @@ import { StoreContext } from '../context';
 import styles from './CommitRanked.css';
 
 import type { ChartData } from './RankedChartBuilder';
-import type { CommitDetails, CommitTree } from './types';
+import type { CommitDetailsFrontend, CommitTreeFrontend } from './types';
 
 export type ItemData = {|
   chartData: ChartData,
@@ -43,8 +43,8 @@ export default function CommitRankedAutoSizer(_: {||}) {
     rootID: ((rootID: any): number),
   });
 
-  let commitDetails: CommitDetails | null = null;
-  let commitTree: CommitTree | null = null;
+  let commitDetails: CommitDetailsFrontend | null = null;
+  let commitTree: CommitTreeFrontend | null = null;
   let chartData: ChartData | null = null;
   if (selectedCommitIndex !== null) {
     commitDetails = profilingCache.CommitDetails.read({
@@ -77,8 +77,8 @@ export default function CommitRankedAutoSizer(_: {||}) {
           {({ height, width }) => (
             <CommitRanked
               chartData={((chartData: any): ChartData)}
-              commitDetails={((commitDetails: any): CommitDetails)}
-              commitTree={((commitTree: any): CommitTree)}
+              commitDetails={((commitDetails: any): CommitDetailsFrontend)}
+              commitTree={((commitTree: any): CommitTreeFrontend)}
               height={height}
               width={width}
             />
@@ -93,8 +93,8 @@ export default function CommitRankedAutoSizer(_: {||}) {
 
 type Props = {|
   chartData: ChartData,
-  commitDetails: CommitDetails,
-  commitTree: CommitTree,
+  commitDetails: CommitDetailsFrontend,
+  commitTree: CommitTreeFrontend,
   height: number,
   width: number,
 |};

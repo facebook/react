@@ -2,7 +2,7 @@
 
 import { calculateSelfDuration } from './utils';
 
-import type { CommitDetails, CommitTree, Node } from './types';
+import type { CommitDetailsFrontend, CommitTreeFrontend } from './types';
 
 export type ChartNode = {|
   actualDuration: number,
@@ -29,9 +29,9 @@ export function getChartData({
   commitIndex,
   commitTree,
 }: {|
-  commitDetails: CommitDetails,
+  commitDetails: CommitDetailsFrontend,
   commitIndex: number,
-  commitTree: CommitTree,
+  commitTree: CommitTreeFrontend,
 |}): ChartData {
   const { actualDurations, rootID } = commitDetails;
   const { nodes } = commitTree;
@@ -55,8 +55,7 @@ export function getChartData({
   ) => {
     idToDepthMap.set(id, currentDepth);
 
-    const node = ((nodes.get(id): any): Node);
-
+    const node = nodes.get(id);
     if (node == null) {
       throw Error(`Could not find node with id "${id}" in commit tree`);
     }
@@ -104,7 +103,12 @@ export function getChartData({
   };
 
   // Skip over the root; we don't want to show it in the flamegraph.
-  const root = ((nodes.get(rootID): any): Node);
+  const root = nodes.get(rootID);
+  if (root == null) {
+    throw Error(`Could not find root node with id "${rootID}" in commit tree`);
+  }
+
+  // TODO: Looks like there's an assumption here that a root has only one child. Is that so with a fragment in the root?
   walkTree(root.children[0]);
 
   const chartData = {

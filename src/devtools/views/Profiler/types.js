@@ -1,6 +1,6 @@
 // @flow
 
-export type Node = {|
+export type CommitTreeNodeFrontend = {|
   id: number,
   children: Array<number>,
   displayName: string | null,
@@ -9,38 +9,38 @@ export type Node = {|
   treeBaseDuration: number,
 |};
 
-export type CommitTree = {|
-  nodes: Map<number, Node>,
+export type CommitTreeFrontend = {|
+  nodes: Map<number, CommitTreeNodeFrontend>,
   rootID: number,
 |};
 
-export type Interaction = {|
+export type InteractionFrontend = {|
   id: number,
   name: string,
   timestamp: number,
 |};
 
-export type InteractionWithCommits = {|
-  ...Interaction,
+export type InteractionWithCommitsFrontend = {|
+  ...InteractionFrontend,
   commits: Array<number>,
 |};
 
-export type Interactions = Array<InteractionWithCommits>;
+export type InteractionsFrontend = Array<InteractionWithCommitsFrontend>;
 
-export type CommitDetails = {|
+export type CommitDetailsFrontend = {|
   rootID: number,
   commitIndex: number,
   actualDurations: Map<number, number>,
-  interactions: Array<Interaction>,
+  interactions: Array<InteractionFrontend>,
 |};
 
-export type FiberCommits = {|
+export type FiberCommitsFrontend = {|
   commitDurations: Array<number>,
   fiberID: number,
   rootID: number,
 |};
 
-export type ProfilingSummary = {|
+export type ProfilingSummaryFrontend = {|
   rootID: number,
 
   // Commit durations
@@ -66,7 +66,7 @@ export type ImportedProfilingData = {|
   version: number,
   profilingOperations: Map<number, Array<Uint32Array>>,
   profilingSnapshot: Map<number, ProfilingSnapshotNode>,
-  commitDetails: CommitDetails,
-  interactions: Interactions,
-  profilingSummary: ProfilingSummary,
+  commitDetails: CommitDetailsFrontend,
+  interactions: InteractionsFrontend,
+  profilingSummary: ProfilingSummaryFrontend,
 |};

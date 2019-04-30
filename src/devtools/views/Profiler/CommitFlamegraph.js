@@ -13,7 +13,7 @@ import { StoreContext } from '../context';
 import styles from './CommitFlamegraph.css';
 
 import type { ChartData, ChartNode } from './FlamegraphChartBuilder';
-import type { CommitDetails, CommitTree } from './types';
+import type { CommitDetailsFrontend, CommitTreeFrontend } from './types';
 
 export type ItemData = {|
   chartData: ChartData,
@@ -43,8 +43,8 @@ export default function CommitFlamegraphAutoSizer(_: {||}) {
     rootID: ((rootID: any): number),
   });
 
-  let commitDetails: CommitDetails | null = null;
-  let commitTree: CommitTree | null = null;
+  let commitDetails: CommitDetailsFrontend | null = null;
+  let commitTree: CommitTreeFrontend | null = null;
   let chartData: ChartData | null = null;
   if (selectedCommitIndex !== null) {
     commitDetails = profilingCache.CommitDetails.read({
@@ -75,10 +75,12 @@ export default function CommitFlamegraphAutoSizer(_: {||}) {
       <div className={styles.Container} onClick={deselectCurrentFiber}>
         <AutoSizer>
           {({ height, width }) => (
+            // Force Flow types to avoid checking for `null` here because there's no static proof that
+            // by the time this render prop function is called, the values of the `let` variables have not changed.
             <CommitFlamegraph
               chartData={((chartData: any): ChartData)}
-              commitDetails={((commitDetails: any): CommitDetails)}
-              commitTree={((commitTree: any): CommitTree)}
+              commitDetails={((commitDetails: any): CommitDetailsFrontend)}
+              commitTree={((commitTree: any): CommitTreeFrontend)}
               height={height}
               width={width}
             />
@@ -93,8 +95,8 @@ export default function CommitFlamegraphAutoSizer(_: {||}) {
 
 type Props = {|
   chartData: ChartData,
-  commitDetails: CommitDetails,
-  commitTree: CommitTree,
+  commitDetails: CommitDetailsFrontend,
+  commitTree: CommitTreeFrontend,
   height: number,
   width: number,
 |};

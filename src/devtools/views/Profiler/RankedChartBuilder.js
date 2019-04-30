@@ -2,7 +2,7 @@
 
 import { calculateSelfDuration } from './utils';
 
-import type { CommitDetails, CommitTree, Node } from './types';
+import type { CommitDetailsFrontend, CommitTreeFrontend } from './types';
 
 export type ChartNode = {|
   id: number,
@@ -23,9 +23,9 @@ export function getChartData({
   commitIndex,
   commitTree,
 }: {|
-  commitDetails: CommitDetails,
+  commitDetails: CommitDetailsFrontend,
   commitIndex: number,
-  commitTree: CommitTree,
+  commitTree: CommitTreeFrontend,
 |}): ChartData {
   const { actualDurations, rootID } = commitDetails;
   const { nodes } = commitTree;
@@ -39,7 +39,7 @@ export function getChartData({
 
   const chartNodes: Array<ChartNode> = [];
   actualDurations.forEach((actualDuration, id) => {
-    const node = ((nodes.get(id): any): Node);
+    const node = nodes.get(id);
 
     if (node == null) {
       throw Error(`Could not find node with id "${id}" in commit tree`);

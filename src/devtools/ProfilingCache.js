@@ -22,18 +22,18 @@ import {
 import type { Resource } from './cache';
 import type { Bridge } from '../types';
 import type {
-  CommitDetails as CommitDetailsBackend,
-  FiberCommits as FiberCommitsBackend,
-  Interactions as InteractionsBackend,
-  ProfilingSummary as ProfilingSummaryBackend,
+  CommitDetailsBackend,
+  FiberCommitsBackend,
+  InteractionsBackend,
+  ProfilingSummaryBackend,
 } from 'src/backend/types';
 import type {
-  CommitDetails as CommitDetailsFrontend,
-  FiberCommits as FiberCommitsFrontend,
-  Interactions as InteractionsFrontend,
-  InteractionWithCommits,
-  CommitTree as CommitTreeFrontend,
-  ProfilingSummary as ProfilingSummaryFrontend,
+  CommitDetailsFrontend,
+  FiberCommitsFrontend,
+  InteractionsFrontend,
+  InteractionWithCommitsFrontend,
+  CommitTreeFrontend,
+  ProfilingSummaryFrontend,
 } from 'src/devtools/views/Profiler/types';
 import type { ChartData as FlamegraphChartData } from 'src/devtools/views/Profiler/FlamegraphChartBuilder';
 import type { ChartData as InteractionsChartData } from 'src/devtools/views/Profiler/InteractionsChartBuilder';
@@ -273,7 +273,7 @@ export default class ProfilingCache {
     profilingSummary,
     rootID,
   }: {|
-    interactions: Array<InteractionWithCommits>,
+    interactions: Array<InteractionWithCommitsFrontend>,
     profilingSummary: ProfilingSummaryFrontend,
   |}): InteractionsChartData =>
     getInteractionsChartData({
