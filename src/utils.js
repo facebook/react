@@ -89,18 +89,37 @@ export function getDefaultFilterPreferences(): FilterPreferences {
   };
 }
 
+function getSavedFilterPreferencesFilter(key, value) {
+  if (typeof value === 'string' && value.indexOf('__REGEXP__') === 0) {
+    const match = value.substr(9).match(/\/(.*)\/(.*)?/);
+    return new RegExp(match[1], match[2] || '');
+  }
+  return value;
+}
+
 export function getSavedFilterPreferences(): FilterPreferences {
   const raw = localStorage.getItem(LOCAL_STORAGE_FILTER_PREFERENCES_KEY);
   if (raw != null) {
-    const json = JSON.parse(raw);
+    const json = JSON.parse(raw, getSavedFilterPreferencesFilter);
     return {
       hideElementsWithTypes: new Set(json.hideElementsWithTypes),
-      hideElementsWithDisplayNames: new Set(json.hideElementsWithDisplayNames),
-      hideElementsWithPaths: new Set(json.hideElementsWithPaths),
+      hideElementsWithDisplayNames: new Set(
+        json.hideElementsWithDisplayNames.map(source => new RegExp(source))
+      ),
+      hideElementsWithPaths: new Set(
+        json.hideElementsWithPaths.map(source => new RegExp(source))
+      ),
     };
   } else {
     return getDefaultFilterPreferences();
   }
+}
+
+function saveFilterPreferencesFilter(key, value) {
+  if (value instanceof RegExp) {
+    return '__REGEXP__' + value.toString();
+  }
+  return value;
 }
 
 export function saveFilterPreferences(
@@ -108,16 +127,19 @@ export function saveFilterPreferences(
 ): void {
   localStorage.setItem(
     LOCAL_STORAGE_FILTER_PREFERENCES_KEY,
-    JSON.stringify({
-      hideElementsWithTypes: Array.from(
-        filterPreferences.hideElementsWithTypes
-      ),
-      hideElementsWithDisplayNames: Array.from(
-        filterPreferences.hideElementsWithDisplayNames
-      ),
-      hideElementsWithPaths: Array.from(
-        filterPreferences.hideElementsWithPaths
-      ),
-    })
+    JSON.stringify(
+      {
+        hideElementsWithTypes: Array.from(
+          filterPreferences.hideElementsWithTypes
+        ),
+        hideElementsWithDisplayNames: Array.from(
+          filterPreferences.hideElementsWithDisplayNames
+        ),
+        hideElementsWithPaths: Array.from(
+          filterPreferences.hideElementsWithPaths
+        ),
+      },
+      saveFilterPreferencesFilter
+    )
   );
 }

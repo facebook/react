@@ -251,10 +251,11 @@ export default class Store extends EventEmitter {
 
     this._filterPreferences = value;
 
+    // Update persisted filter preferences stored in localStorage.
     saveFilterPreferences(value);
 
-    // TODO (filter) Dump all nodes, update renderer preferences, and re-initialize tree.
-    // TODO (filter) Flushing every time a filter setting is changed is too expensive. We probably need an explitit configm
+    // Notify the renderer that filter prefernces have changed.
+    // This is an expensive opreation; it unmounts and remounts the entire tree.
     this._bridge.send('updateFilterPreferences', value);
 
     this.emit('filterPreferences');
