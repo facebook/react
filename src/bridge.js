@@ -12,9 +12,9 @@ type Message = {|
 |};
 
 export default class Bridge extends EventEmitter {
+  _isShutdown: boolean = false;
   _messageQueue: Array<any> = [];
   _timeoutID: TimeoutID | null = null;
-  _destroyed: boolean = false;
   _wall: Wall;
   _wallUnlisten: Function | null = null;
 
@@ -23,13 +23,17 @@ export default class Bridge extends EventEmitter {
 
     this._wall = wall;
 
-    this._wallUnlisten = wall.listen((message: Message) => {
-      this.emit(message.event, message.payload);
-    });
+    this._wallUnlisten =
+      wall.listen((message: Message) => {
+        this.emit(message.event, message.payload);
+      }) || null;
   }
 
   send(event: string, payload: any, transferable?: Array<any>) {
-    if (this._destroyed) {
+    if (this._isShutdown) {
+      console.warn(
+        `Cannot send message "${event}" through a Bridge that has been shutdown.`
+      );
       return;
     }
 
@@ -48,12 +52,13 @@ export default class Bridge extends EventEmitter {
   }
 
   shutdown() {
-    if (this._destroyed) {
+    if (this._isShutdown) {
+      console.warn('Bridge was already shutdown.');
       return;
     }
 
     // Mark this bridge as destroyed, i.e. disable its public API.
-    this._destroyed = true;
+    this._isShutdown = true;
 
     // Disable the API inherited from EventEmitter that can add more listeners and send more messages.
     this.addListener = function() {};
