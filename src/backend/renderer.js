@@ -295,6 +295,7 @@ export function attach(
     // Recursively re-mount all roots with new filter criteria applied.
     hook.getFiberRoots(rendererID).forEach(root => {
       currentRootID = getFiberID(getPrimaryFiber(root.current));
+      setRootPseudoKey(currentRootID, root.current);
       mountFiberRecursively(root.current, null);
       flushPendingEvents(root);
       currentRootID = -1;
@@ -2224,7 +2225,6 @@ export function attach(
     rootPseudoKeys.delete(id);
   }
 
-  // TODO (profiling) This breaks after filter preferences have been updated.
   function getPathFrame(fiber: Fiber): PathFrame {
     let { displayName, key } = getDataForFiber(fiber);
     const index = fiber.index;
