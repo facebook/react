@@ -43,9 +43,15 @@ inject('./build/app.js', () => {
     connect(cb) {
       const bridge = new Bridge({
         listen(fn) {
-          contentWindow.parent.addEventListener('message', ({ data }) => {
+          const listener = ({ data }) => {
             fn(data);
-          });
+          };
+          // Preserve the reference to the window we subscribe to, so we can unsubscribe from it when required.
+          const contentWindowParent = contentWindow.parent;
+          contentWindowParent.addEventListener('message', listener);
+          return () => {
+            contentWindowParent.removeEventListener('message', listener);
+          };
         },
         send(event: string, payload: any, transferable?: Array<any>) {
           contentWindow.postMessage({ event, payload }, '*', transferable);
