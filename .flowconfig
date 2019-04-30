@@ -25,6 +25,7 @@ shells/dev/build/*
 [lints]
 
 [options]
+server.max_workers=4
 esproposal.class_instance_fields=enable
 suppress_comment=\\(.\\|\n\\)*\\$FlowFixMe
 suppress_comment=\\(.\\|\n\\)*\\$FlowIssue
