@@ -22,14 +22,13 @@ import {
   RESPONDER_EVENT_SYSTEM,
   IS_PASSIVE,
   IS_ACTIVE,
-  IS_CAPTURE,
   PASSIVE_NOT_SUPPORTED,
 } from 'events/EventSystemFlags';
 
 import {
   addEventBubbleListener,
   addEventCaptureListener,
-  addEventListener,
+  addEventCaptureListenerWithPassiveFlag,
 } from './EventListener';
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
@@ -168,7 +167,6 @@ export function trapCapturedEvent(
 export function trapEventForResponderEventSystem(
   element: Document | Element | Node,
   topLevelType: DOMTopLevelEventType,
-  capture: boolean,
   passive: boolean,
 ): void {
   if (enableEventAPI) {
@@ -190,15 +188,18 @@ export function trapEventForResponderEventSystem(
     } else {
       eventFlags |= IS_ACTIVE;
     }
-    if (capture) {
-      eventFlags |= IS_CAPTURE;
-    }
     // Check if interactive and wrap in interactiveUpdates
     const listener = dispatchEvent.bind(null, topLevelType, eventFlags);
-    addEventListener(element, rawEventName, listener, {
-      capture,
-      passive,
-    });
+    if (passiveBrowserEventsSupported) {
+      addEventCaptureListenerWithPassiveFlag(
+        element,
+        rawEventName,
+        listener,
+        passive,
+      );
+    } else {
+      addEventCaptureListener(element, rawEventName, listener);
+    }
   }
 }
 

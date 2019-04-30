@@ -25,7 +25,7 @@ type FocusScopeState = {
 };
 
 const targetEventTypes = [{name: 'keydown', passive: false}];
-const rootEventTypes = [{name: 'focus', passive: true, capture: true}];
+const rootEventTypes = [{name: 'focus', passive: true}];
 
 function focusElement(element: ?HTMLElement) {
   if (element != null) {

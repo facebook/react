@@ -36,8 +36,8 @@ type FocusEvent = {|
 |};
 
 const targetEventTypes = [
-  {name: 'focus', passive: true, capture: true},
-  {name: 'blur', passive: true, capture: true},
+  {name: 'focus', passive: true},
+  {name: 'blur', passive: true},
 ];
 
 const rootEventTypes = [

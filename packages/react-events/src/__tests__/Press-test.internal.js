@@ -1269,13 +1269,13 @@ describe('Event responder: Press', () => {
         createPointerEvent('pointerup', {pageX: 10, pageY: 10}),
       );
       expect(events).toEqual([
-        'pointerdown',
         'inner: onPressStart',
         'inner: onPressChange',
-        'pointerup',
+        'pointerdown',
         'inner: onPressEnd',
         'inner: onPressChange',
         'inner: onPress',
+        'pointerup',
       ]);
     });
 
