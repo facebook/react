@@ -273,6 +273,12 @@ export function attach(
 
   // TODO (filter) We could make this more efficient.
   function updateFilterPreferences(filterPreferences: FilterPreferences) {
+    if (this._isProfiling) {
+      // Re-mounting a tree while profiling is in progress might break a lot of assumptions.
+      // If necessary, we could support this- but it doesn't seem like a necessary use case.
+      throw Error('Cannot modify filter preferences while profiling');
+    }
+
     // Recursively unmount and then re-mount all roots.
     hook.getFiberRoots(rendererID).forEach(root => {
       currentRootID = getFiberID(getPrimaryFiber(root.current));
@@ -2218,6 +2224,7 @@ export function attach(
     rootPseudoKeys.delete(id);
   }
 
+  // TODO (profiling) This breaks after filter preferences have been updated.
   function getPathFrame(fiber: Fiber): PathFrame {
     let { displayName, key } = getDataForFiber(fiber);
     const index = fiber.index;

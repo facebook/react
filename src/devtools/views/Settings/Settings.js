@@ -46,6 +46,20 @@ function Settings(_: {||}) {
     collapseNodesByDefaultSubscription
   );
 
+  // Re-mounting a tree while profiling is in progress might break a lot of assumptions.
+  // If necessary, we could support this- but it doesn't seem like a necessary use case.
+  const isProfilingSubscription = useMemo(
+    () => ({
+      getCurrentValue: () => store.isProfiling,
+      subscribe: (callback: Function) => {
+        store.addListener('isProfiling', callback);
+        return () => store.removeListener('isProfiling', callback);
+      },
+    }),
+    [store]
+  );
+  const isProfiling = useSubscription<boolean, Store>(isProfilingSubscription);
+
   const filterPreferencesSubscription = useMemo(
     () => ({
       getCurrentValue: () => store.filterPreferences,
@@ -182,6 +196,7 @@ function Settings(_: {||}) {
             checked={filterPreferences.hideElementsWithTypes.has(
               ElementTypeHostComponent
             )}
+            disabled={isProfiling}
             onChange={updateFilterPreferences}
           />{' '}
           Hide host components (e.g. <code>&lt;div&gt;</code>)

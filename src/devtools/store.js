@@ -243,12 +243,17 @@ export default class Store extends EventEmitter {
     return this._filterPreferences;
   }
   set filterPreferences(value: FilterPreferences): void {
+    if (this._isProfiling) {
+      // Re-mounting a tree while profiling is in progress might break a lot of assumptions.
+      // If necessary, we could support this- but it doesn't seem like a necessary use case.
+      throw Error('Cannot modify filter preferences while profiling');
+    }
+
     this._filterPreferences = value;
 
     saveFilterPreferences(value);
 
     // TODO (filter) Dump all nodes, update renderer preferences, and re-initialize tree.
-    // TODO (filter) Invariant check that  we aren't profiling.
     // TODO (filter) Flushing every time a filter setting is changed is too expensive. We probably need an explitit configm
     this._bridge.send('updateFilterPreferences', value);
 
