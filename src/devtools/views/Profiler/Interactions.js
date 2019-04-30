@@ -51,7 +51,7 @@ function Interactions({ height, width }: {| height: number, width: number |}) {
   } = useContext(ProfilerContext);
   const { profilingCache } = useContext(StoreContext);
 
-  const interactions = profilingCache.Interactions.read({
+  const { interactions } = profilingCache.Interactions.read({
     rendererID: ((rendererID: any): number),
     rootID: ((rootID: any): number),
   });

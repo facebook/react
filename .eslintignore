@@ -6,6 +6,7 @@ shells/browser/firefox/build
 shells/browser/shared/build
 shells/dev/dist
 vendor
+*.js.snap
 
 package-lock.json
 yarn.lock

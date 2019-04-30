@@ -715,13 +715,14 @@ export default class Store extends EventEmitter {
   ) => {
     const element = this.getElementByID(elementID);
     if (element !== null) {
-      profilingSnapshots.set(elementID, {
+      const snapshotNode: ProfilingSnapshotNode = {
         id: elementID,
         children: element.children.slice(0),
         displayName: element.displayName,
         key: element.key,
         type: element.type,
-      });
+      };
+      profilingSnapshots.set(elementID, snapshotNode);
 
       element.children.forEach(childID =>
         this._takeProfilingSnapshotRecursive(childID, profilingSnapshots)

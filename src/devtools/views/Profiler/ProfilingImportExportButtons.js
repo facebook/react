@@ -6,11 +6,12 @@ import { ModalDialogContext } from '../ModalDialog';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import { BridgeContext, StoreContext } from '../context';
-import { prepareProfilingExport, prepareProfilingImport } from './utils';
+import {
+  prepareExportedProfilingSummary,
+  prepareImportedProfilingData,
+} from './utils';
 
 import styles from './ProfilingImportExportButtons.css';
-
-import type { ImportedProfilingData } from './types';
 
 export default function ProfilingImportExportButtons() {
   const bridge = useContext(BridgeContext);
@@ -28,15 +29,13 @@ export default function ProfilingImportExportButtons() {
       return;
     }
 
-    bridge.send(
-      'exportProfilingSummary',
-      prepareProfilingExport(
-        store.profilingOperations,
-        store.profilingSnapshots,
-        rootID,
-        rendererID
-      )
+    const exportedProfilingSummary = prepareExportedProfilingSummary(
+      store.profilingOperations,
+      store.profilingSnapshots,
+      rootID,
+      rendererID
     );
+    bridge.send('exportProfilingSummary', exportedProfilingSummary);
   }, [
     bridge,
     rendererID,
@@ -58,9 +57,7 @@ export default function ProfilingImportExportButtons() {
       fileReader.addEventListener('load', () => {
         try {
           const raw = ((fileReader.result: any): string);
-          const data = prepareProfilingImport(raw);
-
-          store.importedProfilingData = ((data: any): ImportedProfilingData);
+          store.importedProfilingData = prepareImportedProfilingData(raw);
         } catch (error) {
           modalDialogDispatch({
             type: 'SHOW',
@@ -76,6 +73,7 @@ export default function ProfilingImportExportButtons() {
           });
         }
       });
+      // TODO (profiling) Handle fileReader errors.
       fileReader.readAsText(input.files[0]);
     }
   }, [modalDialogDispatch, store]);

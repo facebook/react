@@ -31,31 +31,43 @@ env.beforeEach(() => {
 
   installHook(global);
 
-  const bridgeListeners = [];
-  const bridge = new Bridge({
-    listen(callback) {
-      bridgeListeners.push(callback);
-      return () => {
-        const index = bridgeListeners.indexOf(callback);
-        if (index >= 0) {
-          bridgeListeners.splice(index, 1);
-        }
-      };
-    },
-    send(event: string, payload: any, transferable?: Array<any>) {
-      bridgeListeners.forEach(callback => callback({ event, payload }));
-    },
-  });
+  function init() {
+    const bridgeListeners = [];
+    const bridge = new Bridge({
+      listen(callback) {
+        bridgeListeners.push(callback);
+        return () => {
+          const index = bridgeListeners.indexOf(callback);
+          if (index >= 0) {
+            bridgeListeners.splice(index, 1);
+          }
+        };
+      },
+      send(event: string, payload: any, transferable?: Array<any>) {
+        bridgeListeners.forEach(callback => callback({ event, payload }));
+      },
+    });
 
-  const agent = new Agent(bridge);
+    const agent = new Agent(bridge);
 
-  const hook = global.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+    const hook = global.__REACT_DEVTOOLS_GLOBAL_HOOK__;
 
-  initBackend(hook, agent, global);
+    const destroyBackend = initBackend(hook, agent, global);
 
-  global.agent = agent;
-  global.bridge = bridge;
-  global.store = new Store(bridge);
+    const store = new Store(bridge);
+
+    global.agent = agent;
+    global.bridge = bridge;
+    global.store = store;
+
+    // Reinit may be used to reset the store and the bridge during a test.
+    global.reinit = () => {
+      destroyBackend();
+      init();
+    };
+  }
+
+  init();
 });
 env.afterEach(() => {
   delete global.__REACT_DEVTOOLS_GLOBAL_HOOK__;

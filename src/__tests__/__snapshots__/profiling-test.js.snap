@@ -78,81 +78,74 @@ Object {
 }
 `;
 
-exports[`profiling CommitDetails should be collected for each commit: exported data 1`] = `
+exports[`profiling CommitDetails should be collected for each commit: imported data 1`] = `
 Object {
   "commitDetails": Array [
     Object {
+      "actualDurations": Map {
+        1 => 12,
+        2 => 12,
+        3 => 0,
+        4 => 1,
+        5 => 1,
+      },
       "commitIndex": 0,
-      "durations": Array [
-        1,
-        12,
-        0,
-        2,
-        12,
-        10,
-        3,
-        0,
-        0,
-        4,
-        1,
-        1,
-        5,
-        1,
-        1,
-      ],
       "interactions": Array [],
       "rootID": 1,
+      "selfDurations": Map {
+        1 => 0,
+        2 => 10,
+        3 => 0,
+        4 => 1,
+        5 => 1,
+      },
     },
     Object {
+      "actualDurations": Map {
+        3 => 0,
+        4 => 1,
+        6 => 2,
+        2 => 13,
+        1 => 13,
+      },
       "commitIndex": 1,
-      "durations": Array [
-        3,
-        0,
-        0,
-        4,
-        1,
-        1,
-        6,
-        2,
-        2,
-        2,
-        13,
-        10,
-        1,
-        13,
-        0,
-      ],
       "interactions": Array [],
       "rootID": 1,
+      "selfDurations": Map {
+        3 => 0,
+        4 => 1,
+        6 => 2,
+        2 => 10,
+        1 => 0,
+      },
     },
     Object {
+      "actualDurations": Map {
+        3 => 0,
+        2 => 10,
+        1 => 10,
+      },
       "commitIndex": 2,
-      "durations": Array [
-        3,
-        0,
-        0,
-        2,
-        10,
-        10,
-        1,
-        10,
-        0,
-      ],
       "interactions": Array [],
       "rootID": 1,
+      "selfDurations": Map {
+        3 => 0,
+        2 => 10,
+        1 => 0,
+      },
     },
     Object {
+      "actualDurations": Map {
+        2 => 10,
+        1 => 10,
+      },
       "commitIndex": 3,
-      "durations": Array [
-        2,
-        10,
-        10,
-        1,
-        10,
-        0,
-      ],
       "interactions": Array [],
       "rootID": 1,
+      "selfDurations": Map {
+        2 => 10,
+        1 => 0,
+      },
     },
   ],
   "interactions": Object {
@@ -161,7 +154,7 @@ Object {
   },
   "profilingOperations": Map {
     1 => Array [
-      Array [
+      Uint32Array [
         1,
         1,
         17,
@@ -231,7 +224,7 @@ Object {
         5,
         1000,
       ],
-      Array [
+      Uint32Array [
         1,
         1,
         8,
@@ -267,7 +260,7 @@ Object {
         1,
         14000,
       ],
-      Array [
+      Uint32Array [
         1,
         1,
         0,
@@ -287,7 +280,7 @@ Object {
         1,
         11000,
       ],
-      Array [
+      Uint32Array [
         1,
         1,
         0,
@@ -313,7 +306,7 @@ Object {
       35,
       45,
     ],
-    "initialTreeBaseDurations": Array [],
+    "initialTreeBaseDurations": Map {},
     "interactionCount": 0,
     "rootID": 1,
   },
@@ -442,68 +435,61 @@ Object {
 }
 `;
 
-exports[`profiling FiberCommits should be collected for each rendered fiber: exported data 1`] = `
+exports[`profiling FiberCommits should be collected for each rendered fiber: imported data 1`] = `
 Object {
   "commitDetails": Array [
     Object {
+      "actualDurations": Map {
+        1 => 11,
+        2 => 11,
+        3 => 0,
+        4 => 1,
+      },
       "commitIndex": 0,
-      "durations": Array [
-        1,
-        11,
-        0,
-        2,
-        11,
-        10,
-        3,
-        0,
-        0,
-        4,
-        1,
-        1,
-      ],
       "interactions": Array [],
       "rootID": 1,
+      "selfDurations": Map {
+        1 => 0,
+        2 => 10,
+        3 => 0,
+        4 => 1,
+      },
     },
     Object {
+      "actualDurations": Map {
+        3 => 0,
+        5 => 1,
+        2 => 11,
+        1 => 11,
+      },
       "commitIndex": 1,
-      "durations": Array [
-        3,
-        0,
-        0,
-        5,
-        1,
-        1,
-        2,
-        11,
-        10,
-        1,
-        11,
-        0,
-      ],
       "interactions": Array [],
       "rootID": 1,
+      "selfDurations": Map {
+        3 => 0,
+        5 => 1,
+        2 => 10,
+        1 => 0,
+      },
     },
     Object {
+      "actualDurations": Map {
+        3 => 0,
+        5 => 1,
+        6 => 2,
+        2 => 13,
+        1 => 13,
+      },
       "commitIndex": 2,
-      "durations": Array [
-        3,
-        0,
-        0,
-        5,
-        1,
-        1,
-        6,
-        2,
-        2,
-        2,
-        13,
-        10,
-        1,
-        13,
-        0,
-      ],
       "interactions": Array [],
       "rootID": 1,
+      "selfDurations": Map {
+        3 => 0,
+        5 => 1,
+        6 => 2,
+        2 => 10,
+        1 => 0,
+      },
     },
   ],
   "interactions": Object {
@@ -512,7 +498,7 @@ Object {
   },
   "profilingOperations": Map {
     1 => Array [
-      Array [
+      Uint32Array [
         1,
         1,
         15,
@@ -570,7 +556,7 @@ Object {
         4,
         1000,
       ],
-      Array [
+      Uint32Array [
         1,
         1,
         8,
@@ -605,7 +591,7 @@ Object {
         1,
         12000,
       ],
-      Array [
+      Uint32Array [
         1,
         1,
         8,
@@ -657,7 +643,7 @@ Object {
       22,
       35,
     ],
-    "initialTreeBaseDurations": Array [],
+    "initialTreeBaseDurations": Map {},
     "interactionCount": 0,
     "rootID": 1,
   },
@@ -666,47 +652,42 @@ Object {
 `;
 
 exports[`profiling Interactions should be collected for every traced interaction: Interactions 1`] = `
-Array [
-  Object {
-    "__count": 1,
-    "commits": Array [
-      0,
-    ],
-    "id": 0,
-    "name": "mount: one child",
-    "timestamp": 0,
-  },
-  Object {
-    "__count": 0,
-    "commits": Array [
-      1,
-    ],
-    "id": 1,
-    "name": "update: two children",
-    "timestamp": 11,
-  },
-]
+Object {
+  "interactions": Array [
+    Object {
+      "__count": 1,
+      "commits": Array [
+        0,
+      ],
+      "id": 0,
+      "name": "mount: one child",
+      "timestamp": 0,
+    },
+    Object {
+      "__count": 0,
+      "commits": Array [
+        1,
+      ],
+      "id": 1,
+      "name": "update: two children",
+      "timestamp": 11,
+    },
+  ],
+  "rootID": 1,
+}
 `;
 
-exports[`profiling Interactions should be collected for every traced interaction: exported data 1`] = `
+exports[`profiling Interactions should be collected for every traced interaction: imported data 1`] = `
 Object {
   "commitDetails": Array [
     Object {
+      "actualDurations": Map {
+        1 => 11,
+        2 => 11,
+        3 => 0,
+        4 => 1,
+      },
       "commitIndex": 0,
-      "durations": Array [
-        1,
-        11,
-        0,
-        2,
-        11,
-        10,
-        3,
-        0,
-        0,
-        4,
-        1,
-        1,
-      ],
       "interactions": Array [
         Object {
           "__count": 1,
@@ -716,23 +697,21 @@ Object {
         },
       ],
       "rootID": 1,
+      "selfDurations": Map {
+        1 => 0,
+        2 => 10,
+        3 => 0,
+        4 => 1,
+      },
     },
     Object {
+      "actualDurations": Map {
+        3 => 0,
+        5 => 1,
+        2 => 11,
+        1 => 11,
+      },
       "commitIndex": 1,
-      "durations": Array [
-        3,
-        0,
-        0,
-        5,
-        1,
-        1,
-        2,
-        11,
-        10,
-        1,
-        11,
-        0,
-      ],
       "interactions": Array [
         Object {
           "__count": 0,
@@ -742,6 +721,12 @@ Object {
         },
       ],
       "rootID": 1,
+      "selfDurations": Map {
+        3 => 0,
+        5 => 1,
+        2 => 10,
+        1 => 0,
+      },
     },
   ],
   "interactions": Object {
@@ -769,7 +754,7 @@ Object {
   },
   "profilingOperations": Map {
     1 => Array [
-      Array [
+      Uint32Array [
         1,
         1,
         15,
@@ -827,7 +812,7 @@ Object {
         4,
         1000,
       ],
-      Array [
+      Uint32Array [
         1,
         1,
         8,
@@ -876,7 +861,7 @@ Object {
       11,
       22,
     ],
-    "initialTreeBaseDurations": Array [],
+    "initialTreeBaseDurations": Map {},
     "interactionCount": 2,
     "rootID": 1,
   },
@@ -908,59 +893,55 @@ Object {
 }
 `;
 
-exports[`profiling ProfilingSummary should be collected for each commit: exported data 1`] = `
+exports[`profiling ProfilingSummary should be collected for each commit: imported data 1`] = `
 Object {
   "commitDetails": Array [
     Object {
+      "actualDurations": Map {
+        3 => 0,
+        4 => 1,
+        6 => 2,
+        2 => 13,
+        1 => 13,
+      },
       "commitIndex": 0,
-      "durations": Array [
-        3,
-        0,
-        0,
-        4,
-        1,
-        1,
-        6,
-        2,
-        2,
-        2,
-        13,
-        10,
-        1,
-        13,
-        0,
-      ],
       "interactions": Array [],
       "rootID": 1,
+      "selfDurations": Map {
+        3 => 0,
+        4 => 1,
+        6 => 2,
+        2 => 10,
+        1 => 0,
+      },
     },
     Object {
+      "actualDurations": Map {
+        3 => 0,
+        2 => 10,
+        1 => 10,
+      },
       "commitIndex": 1,
-      "durations": Array [
-        3,
-        0,
-        0,
-        2,
-        10,
-        10,
-        1,
-        10,
-        0,
-      ],
       "interactions": Array [],
       "rootID": 1,
+      "selfDurations": Map {
+        3 => 0,
+        2 => 10,
+        1 => 0,
+      },
     },
     Object {
+      "actualDurations": Map {
+        2 => 10,
+        1 => 10,
+      },
       "commitIndex": 2,
-      "durations": Array [
-        2,
-        10,
-        10,
-        1,
-        10,
-        0,
-      ],
       "interactions": Array [],
       "rootID": 1,
+      "selfDurations": Map {
+        2 => 10,
+        1 => 0,
+      },
     },
   ],
   "interactions": Object {
@@ -969,7 +950,7 @@ Object {
   },
   "profilingOperations": Map {
     1 => Array [
-      Array [
+      Uint32Array [
         1,
         1,
         8,
@@ -1005,7 +986,7 @@ Object {
         1,
         14000,
       ],
-      Array [
+      Uint32Array [
         1,
         1,
         0,
@@ -1025,7 +1006,7 @@ Object {
         1,
         11000,
       ],
-      Array [
+      Uint32Array [
         1,
         1,
         0,
@@ -1091,18 +1072,13 @@ Object {
       23,
       33,
     ],
-    "initialTreeBaseDurations": Array [
-      1,
-      12,
-      2,
-      12,
-      3,
-      0,
-      4,
-      1,
-      5,
-      1,
-    ],
+    "initialTreeBaseDurations": Map {
+      1 => 12,
+      2 => 12,
+      3 => 0,
+      4 => 1,
+      5 => 1,
+    },
     "interactionCount": 0,
     "rootID": 1,
   },

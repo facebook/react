@@ -253,7 +253,7 @@ describe('profiling charts', () => {
           rendererID,
           rootID,
         });
-        const interactions = store.profilingCache.Interactions.read({
+        const { interactions } = store.profilingCache.Interactions.read({
           rendererID,
           rootID,
         });

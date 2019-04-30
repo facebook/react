@@ -14,46 +14,6 @@ describe('profiling', () => {
   let store: Store;
   let utils;
 
-  const exportImportHelper = (rendererID: number, rootID: number) => {
-    const {
-      prepareProfilingExport,
-      prepareProfilingImport,
-    } = require('src/devtools/views/Profiler/utils');
-
-    let exportedProfilingSummary;
-    bridge.addListener('exportFile', ({ contents }) => {
-      exportedProfilingSummary = contents;
-    });
-
-    utils.act(() => {
-      const exportProfilingSummary = prepareProfilingExport(
-        store.profilingOperations,
-        store.profilingSnapshots,
-        rootID,
-        rendererID
-      );
-      bridge.send('exportProfilingSummary', exportProfilingSummary);
-    });
-
-    expect(exportedProfilingSummary).toBeDefined();
-
-    const importedProfilingSummary = prepareProfilingImport(
-      ((exportedProfilingSummary: any): string)
-    );
-
-    // Sanity check that profiling snapshots are serialized correctly.
-    expect(store.profilingSnapshots.get(rootID)).toEqual(
-      importedProfilingSummary.profilingSnapshots.get(rootID)
-    );
-
-    // Snapshot the JSON-parsed object, rather than the raw string, because Jest formats the diff nicer.
-    expect(importedProfilingSummary).toMatchSnapshot('exported data');
-
-    utils.act(() => {
-      store.importedProfilingData = importedProfilingSummary;
-    });
-  };
-
   beforeEach(() => {
     utils = require('./utils');
     utils.beforeEachProfiling();
@@ -71,10 +31,10 @@ describe('profiling', () => {
 
   it('should throw if importing older/unsupported data', () => {
     const {
-      prepareProfilingImport,
+      prepareImportedProfilingData,
     } = require('src/devtools/views/Profiler/utils');
     expect(() =>
-      prepareProfilingImport(
+      prepareImportedProfilingData(
         JSON.stringify({
           version: 0,
         })
@@ -143,7 +103,7 @@ describe('profiling', () => {
 
       expect(profilingSummary).not.toBeNull();
 
-      exportImportHelper(rendererID, rootID);
+      utils.exportImportHelper(bridge, store, rendererID, rootID);
 
       await utils.actAsync(() =>
         TestRenderer.create(
@@ -234,7 +194,7 @@ describe('profiling', () => {
 
       expect(allCommitDetails).toHaveLength(4);
 
-      exportImportHelper(rendererID, rootID);
+      utils.exportImportHelper(bridge, store, rendererID, rootID);
 
       for (let commitIndex = 0; commitIndex < 4; commitIndex++) {
         await utils.actAsync(() => {
@@ -466,7 +426,7 @@ describe('profiling', () => {
 
       expect(allFiberCommits).toHaveLength(store.numElements);
 
-      exportImportHelper(rendererID, rootID);
+      utils.exportImportHelper(bridge, store, rendererID, rootID);
 
       for (let index = 0; index < store.numElements; index++) {
         await utils.actAsync(() => {
@@ -562,7 +522,7 @@ describe('profiling', () => {
 
       expect(interactions).not.toBeNull();
 
-      exportImportHelper(rendererID, rootID);
+      utils.exportImportHelper(bridge, store, rendererID, rootID);
 
       await utils.actAsync(() =>
         TestRenderer.create(

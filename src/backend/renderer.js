@@ -39,6 +39,7 @@ import { inspectHooksOfFiber } from './ReactDebugHooks';
 import type {
   CommitDetailsBackend,
   DevToolsHook,
+  ExportedProfilingDataFromRenderer,
   Fiber,
   FiberCommitsBackend,
   InteractionBackend,
@@ -772,25 +773,25 @@ export function attach(
     if (existingID !== undefined) {
       return existingID;
     }
-    const id = pendingStringTable.size + 1;
-    pendingStringTable.set(str, id);
+    const stringID = pendingStringTable.size + 1;
+    pendingStringTable.set(str, stringID);
     // The string table total length needs to account
     // both for the string length, and for the array item
     // that contains the length itself. Hence + 1.
     pendingStringTableLength += str.length + 1;
-    return id;
+    return stringID;
   }
 
   function recordMount(fiber: Fiber, parentFiber: Fiber | null) {
     const isRoot = fiber.tag === HostRoot;
-    const id = getFiberID(getPrimaryFiber(fiber));
+    const fiberID = getFiberID(getPrimaryFiber(fiber));
 
     const hasOwnerMetadata = fiber.hasOwnProperty('_debugOwner');
     const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
 
     if (isRoot) {
       pushOperation(TREE_OPERATION_ADD);
-      pushOperation(id);
+      pushOperation(fiberID);
       pushOperation(ElementTypeRoot);
       pushOperation(isProfilingSupported ? 1 : 0);
       pushOperation(hasOwnerMetadata ? 1 : 0);
@@ -809,7 +810,7 @@ export function attach(
       let displayNameStringID = getStringID(displayName);
       let keyStringID = getStringID(key);
       pushOperation(TREE_OPERATION_ADD);
-      pushOperation(id);
+      pushOperation(fiberID);
       pushOperation(elementType);
       pushOperation(parentID);
       pushOperation(ownerID);
@@ -818,7 +819,7 @@ export function attach(
     }
 
     if (isProfilingSupported) {
-      idToRootMap.set(id, currentRootID);
+      idToRootMap.set(fiberID, currentRootID);
 
       recordProfilingDurations(fiber);
     }
@@ -971,10 +972,10 @@ export function attach(
   }
 
   function recordProfilingDurations(fiber: Fiber) {
-    const id = getFiberID(getPrimaryFiber(fiber));
+    const fiberID = getFiberID(getPrimaryFiber(fiber));
     const { actualDuration, treeBaseDuration } = fiber;
 
-    idToTreeBaseDurationMap.set(id, fiber.treeBaseDuration || 0);
+    idToTreeBaseDurationMap.set(fiberID, fiber.treeBaseDuration || 0);
 
     if (isProfiling) {
       const { alternate } = fiber;
@@ -989,7 +990,7 @@ export function attach(
           (fiber.treeBaseDuration || 0) * 1000
         );
         pushOperation(TREE_OPERATION_UPDATE_TREE_BASE_DURATION);
-        pushOperation(id);
+        pushOperation(fiberID);
         pushOperation(treeBaseDuration);
       }
 
@@ -1013,7 +1014,7 @@ export function attach(
           // In some cases actualDuration might be 0 for fibers we worked on (particularly if we're using Date.now)
           // In other cases (e.g. Memo) actualDuration might be greater than 0 even if we "bailed out".
           const metadata = ((currentCommitProfilingMetadata: any): CommitProfilingData);
-          metadata.durations.push(id, actualDuration, selfDuration);
+          metadata.durations.push(fiberID, actualDuration, selfDuration);
           metadata.maxActualDuration = Math.max(
             metadata.maxActualDuration,
             actualDuration
@@ -1990,8 +1991,8 @@ export function attach(
 
     return {
       commitIndex,
-      interactions: [],
       durations: [],
+      interactions: [],
       rootID,
     };
   }
@@ -2072,20 +2073,28 @@ export function attach(
     };
   }
 
-  function getProfilingDataForDownload(rootID: number): Object {
-    const commitDetails = [];
+  function getCommitDetailsForEachCommit(
+    rootID: number
+  ): Array<CommitDetailsBackend> {
+    const commitDetailsForEachCommit = [];
     const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
       rootID
     );
     if (commitProfilingMetadata != null) {
       for (let index = 0; index < commitProfilingMetadata.length; index++) {
-        commitDetails.push(getCommitDetails(rootID, index));
+        commitDetailsForEachCommit.push(getCommitDetails(rootID, index));
       }
     }
+    return commitDetailsForEachCommit;
+  }
+
+  function getExportedProfilingData(
+    rootID: number
+  ): ExportedProfilingDataFromRenderer {
     return {
       version: PROFILER_EXPORT_VERSION,
       profilingSummary: getProfilingSummary(rootID),
-      commitDetails,
+      commitDetails: getCommitDetailsForEachCommit(rootID),
       interactions: getInteractions(rootID),
     };
   }
@@ -2110,14 +2119,14 @@ export function attach(
 
     const initialTreeBaseDurations = [];
     if (initialTreeBaseDurationsMap != null) {
-      initialTreeBaseDurationsMap.forEach((treeBaseDuration, id) => {
+      initialTreeBaseDurationsMap.forEach((treeBaseDuration, fiberID) => {
         if (
           initialIDToRootMap != null &&
-          initialIDToRootMap.get(id) === rootID
+          initialIDToRootMap.get(fiberID) === rootID
         ) {
           // We don't need to convert milliseconds to microseconds in this case,
           // because the profiling summary is JSON serialized.
-          initialTreeBaseDurations.push(id, treeBaseDuration);
+          initialTreeBaseDurations.push(fiberID, treeBaseDuration);
         }
       });
     }
@@ -2166,11 +2175,11 @@ export function attach(
 
   let forceFallbackForSuspenseIDs = new Set();
   function shouldSuspendFiberAccordingToSet(fiber) {
-    const id = getFiberID(getPrimaryFiber(((fiber: any): Fiber)));
-    return forceFallbackForSuspenseIDs.has(id);
+    const fiberID = getFiberID(getPrimaryFiber(((fiber: any): Fiber)));
+    return forceFallbackForSuspenseIDs.has(fiberID);
   }
 
-  function overrideSuspense(id, forceFallback) {
+  function overrideSuspense(fiberID, forceFallback) {
     if (
       typeof setSuspenseHandler !== 'function' ||
       typeof scheduleUpdate !== 'function'
@@ -2180,19 +2189,19 @@ export function attach(
       );
     }
     if (forceFallback) {
-      forceFallbackForSuspenseIDs.add(id);
+      forceFallbackForSuspenseIDs.add(fiberID);
       if (forceFallbackForSuspenseIDs.size === 1) {
         // First override is added. Switch React to slower path.
         setSuspenseHandler(shouldSuspendFiberAccordingToSet);
       }
     } else {
-      forceFallbackForSuspenseIDs.delete(id);
+      forceFallbackForSuspenseIDs.delete(fiberID);
       if (forceFallbackForSuspenseIDs.size === 0) {
         // Last override is gone. Switch React back to fast path.
         setSuspenseHandler(shouldSuspendFiberAlwaysFalse);
       }
     }
-    const fiber = idToFiberMap.get(id);
+    const fiber = idToFiberMap.get(fiberID);
     scheduleUpdate(fiber);
   }
 
@@ -2409,7 +2418,7 @@ export function attach(
     findNativeByFiberID,
     getOwnersList,
     getPathForElement,
-    getProfilingDataForDownload,
+    getExportedProfilingData,
     getProfilingSummary,
     handleCommitFiberRoot,
     handleCommitFiberUnmount,

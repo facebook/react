@@ -4,6 +4,9 @@ import typeof ReactTestRenderer from 'react-test-renderer';
 
 import type { ElementType } from 'src/types';
 
+import type Bridge from 'src/bridge';
+import type Store from 'src/devtools/store';
+
 export function act(callback: Function): void {
   const TestUtils = require('react-dom/test-utils');
   TestUtils.act(() => {
@@ -128,4 +131,59 @@ export function requireTestRenderer(): ReactTestRenderer {
   } finally {
     global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = hook;
   }
+}
+
+export function exportImportHelper(
+  bridge: Bridge,
+  store: Store,
+  rendererID: number,
+  rootID: number
+): void {
+  const utils = require('./utils');
+  const {
+    prepareExportedProfilingSummary,
+    prepareImportedProfilingData,
+  } = require('src/devtools/views/Profiler/utils');
+
+  let exportedProfilingDataJsonString = '';
+  const onExportFile = ({ contents }) => {
+    if (typeof contents === 'string') {
+      exportedProfilingDataJsonString = (contents: string);
+    }
+  };
+  bridge.addListener('exportFile', onExportFile);
+
+  utils.act(() => {
+    const exportProfilingSummary = prepareExportedProfilingSummary(
+      store.profilingOperations,
+      store.profilingSnapshots,
+      rendererID,
+      rootID
+    );
+    bridge.send('exportProfilingSummary', exportProfilingSummary);
+  });
+
+  // Cleanup to be able to call this again on the same bridge without memory leaks.
+  bridge.removeListener('exportFile', onExportFile);
+
+  expect(typeof exportedProfilingDataJsonString).toBe('string');
+  expect(exportedProfilingDataJsonString).not.toBe('');
+
+  const importedProfilingData = prepareImportedProfilingData(
+    exportedProfilingDataJsonString
+  );
+  // Sanity check that profiling snapshots are serialized correctly.
+  expect(store.profilingSnapshots.get(rootID)).toEqual(
+    importedProfilingData.profilingSnapshots.get(rootID)
+  );
+  expect(store.profilingOperations.get(rootID)).toEqual(
+    importedProfilingData.profilingOperations.get(rootID)
+  );
+
+  // Snapshot the JSON-parsed object, rather than the raw string, because Jest formats the diff nicer.
+  expect(importedProfilingData).toMatchSnapshot('imported data');
+
+  utils.act(() => {
+    store.importedProfilingData = importedProfilingData;
+  });
 }

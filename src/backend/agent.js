@@ -10,6 +10,7 @@ import {
 } from '../constants';
 import { hideOverlay, showOverlay } from './views/Highlighter';
 
+import type { ExportedProfilingSummaryFromFrontend } from 'src/devtools/views/Profiler/types';
 import type {
   PathFrame,
   PathMatch,
@@ -18,6 +19,8 @@ import type {
 } from './types';
 import type { OwnersList } from 'src/devtools/views/Components/types';
 import type { Bridge, ComponentFilter } from '../types';
+
+import { prepareExportedProfilingData } from 'src/devtools/views/Profiler/utils';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {
@@ -151,34 +154,29 @@ export default class Agent extends EventEmitter {
     return null;
   }
 
-  exportProfilingSummary = ({
-    profilingOperations,
-    profilingSnapshots,
-    rendererID,
-    rootID,
-  }: {
-    profilingOperations: Array<any>,
-    profilingSnapshots: Array<any>,
-    rendererID: number,
-    rootID: number,
-  }) => {
+  exportProfilingSummary = (
+    exportedProfilingSummary: ExportedProfilingSummaryFromFrontend
+  ): void => {
+    const { rendererID, rootID } = exportedProfilingSummary;
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}"`);
-    } else {
-      const rendererData = renderer.getProfilingDataForDownload(rootID);
+      return;
+    }
+    try {
+      const exportedProfilingDataFromRenderer = renderer.getExportedProfilingData(
+        rootID
+      );
+      const exportedProfilingData = prepareExportedProfilingData(
+        exportedProfilingDataFromRenderer,
+        exportedProfilingSummary
+      );
       this._bridge.send('exportFile', {
-        contents: JSON.stringify(
-          {
-            ...rendererData,
-            profilingOperations,
-            profilingSnapshots,
-          },
-          null,
-          2
-        ),
+        contents: JSON.stringify(exportedProfilingData, null, 2),
         filename: 'profile-data.json',
       });
+    } catch (ex) {
+      console.warn(`Unable to export file: ${ex.stack}`);
     }
   };
 
