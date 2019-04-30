@@ -710,7 +710,7 @@ describe('DOMEventResponderSystem', () => {
     ]);
   });
 
-  it('isTargetDirectlyWithinEventComponent works', () => {
+  it('isTargetWithinEventResponderScope works', () => {
     const buttonRef = React.createRef();
     const divRef = React.createRef();
     const log = [];
@@ -720,7 +720,7 @@ describe('DOMEventResponderSystem', () => {
       undefined,
       undefined,
       (event, context) => {
-        const isWithin = context.isTargetDirectlyWithinEventComponent(
+        const isWithin = context.isTargetWithinEventResponderScope(
           event.nativeEvent.relatedTarget,
         );
         log.push(isWithin);

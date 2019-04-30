@@ -134,10 +134,6 @@ Returns `true` if the instance has taken ownership of the responder.
 
 Returns `true` if the global coordinates lie within the TouchHitTarget.
 
-### isTargetDirectlyWithinEventComponent(target: Element): boolean
-
-Returns `true` is the target element is within the direct subtree of the Event Component instance, i.e., the target is not nested within an Event Component instance that is a descendant of the current instance.
-
 ### isTargetWithinElement(target: Element, element: Element): boolean
 
 Returns `true` if `target` is a child of `element`.
