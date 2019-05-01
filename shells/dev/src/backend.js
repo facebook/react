@@ -20,11 +20,12 @@ const bridge = new Bridge({
   },
 });
 
-bridge.addListener('captureScreenshot', ({ commitIndex }) => {
+bridge.addListener('captureScreenshot', ({ commitIndex, rootID }) => {
   html2canvas(document.body, { logging: false }).then(canvas => {
     bridge.send('screenshotCaptured', {
       commitIndex,
       dataURL: canvas.toDataURL(),
+      rootID,
     });
   });
 });

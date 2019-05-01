@@ -77,11 +77,12 @@ function createPanelIfReactLoaded() {
             filename,
           });
         });
-        bridge.addListener('captureScreenshot', ({ commitIndex }) => {
+        bridge.addListener('captureScreenshot', ({ commitIndex, rootID }) => {
           chrome.runtime.sendMessage(
             {
               captureScreenshot: true,
               commitIndex,
+              rootID,
             },
             response => bridge.send('screenshotCaptured', response)
           );
