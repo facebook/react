@@ -40,7 +40,7 @@ export type ElementType = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 // If new filter types are added, use new numbers rather than re-ordering existing ones.
 export const ComponentFilterElementType = 1;
 export const ComponentFilterDisplayName = 2;
-export const ComponentFilterPath = 3;
+export const ComponentFilterLocation = 3;
 
 export type FilterType = 1 | 2 | 3;
 

@@ -29,6 +29,7 @@ module.exports = api => {
     plugins: [
       ['@babel/plugin-transform-flow-strip-types'],
       ['@babel/plugin-proposal-class-properties', { loose: false }],
+      ['@babel/plugin-transform-react-jsx-source'],
     ],
     presets: [
       ['@babel/preset-env', { targets }],

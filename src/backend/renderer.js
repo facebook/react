@@ -4,7 +4,7 @@ import { gte } from 'semver';
 import {
   ComponentFilterDisplayName,
   ComponentFilterElementType,
-  ComponentFilterPath,
+  ComponentFilterLocation,
   ElementTypeClass,
   ElementTypeContext,
   ElementTypeEventComponent,
@@ -290,7 +290,7 @@ export function attach(
         case ComponentFilterElementType:
           hideElementsWithTypes.add(componentFilter.value);
           break;
-        case ComponentFilterPath:
+        case ComponentFilterLocation:
           if (componentFilter.isValid && componentFilter.value !== '') {
             hideElementsWithPaths.add(new RegExp(componentFilter.value, 'i'));
           }
@@ -354,6 +354,9 @@ export function attach(
       case HostText:
       case Fragment:
         return true;
+      case HostRoot:
+        // It is never valid to filter the root element.
+        return false;
       default:
         const typeSymbol = getTypeSymbol(type);
 
@@ -383,7 +386,7 @@ export function attach(
       }
     }
 
-    if (_debugSource !== null && hideElementsWithPaths.size > 0) {
+    if (_debugSource != null && hideElementsWithPaths.size > 0) {
       const { fileName } = _debugSource;
       for (let pathRegExp of hideElementsWithPaths) {
         if (pathRegExp.test(fileName)) {

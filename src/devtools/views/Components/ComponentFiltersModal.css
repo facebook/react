@@ -66,7 +66,7 @@
 }
 
 .Input {
-  border: none;
+  border: 1px solid var(--color-border);
   border-radius: 0.125rem;
   padding: 0.125rem;
 }

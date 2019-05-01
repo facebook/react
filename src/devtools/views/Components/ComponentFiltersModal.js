@@ -17,7 +17,7 @@ import Store from 'src/devtools/store';
 import {
   ComponentFilterElementType,
   ComponentFilterDisplayName,
-  ComponentFilterPath,
+  ComponentFilterLocation,
   ElementTypeClass,
   ElementTypeContext,
   ElementTypeEventTarget,
@@ -164,9 +164,9 @@ function ComponentFiltersModal({ store, setIsModalShowing }: Props) {
                       )
                     }
                   >
-                    <option value={ComponentFilterElementType}>type</option>
+                    <option value={ComponentFilterLocation}>location</option>
                     <option value={ComponentFilterDisplayName}>name</option>
-                    <option value={ComponentFilterPath}>path</option>
+                    <option value={ComponentFilterElementType}>type</option>
                   </select>
                 </td>
                 <td className={styles.TableCell}>
@@ -295,7 +295,7 @@ function useComponentFilters() {
             }: ElementTypeComponentFilter);
           } else if (
             type === ComponentFilterDisplayName ||
-            type === ComponentFilterPath
+            type === ComponentFilterLocation
           ) {
             // $FlowFixMe TODO (filters)
             cloned[index] = ({
