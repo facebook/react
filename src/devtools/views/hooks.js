@@ -50,7 +50,7 @@ export function useLocalStorage<T>(
       console.log(error);
     }
     if (typeof initialValue === 'function') {
-      return (initialValue: any)();
+      return ((initialValue: any): () => T)();
     } else {
       return initialValue;
     }

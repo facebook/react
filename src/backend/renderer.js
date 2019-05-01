@@ -306,7 +306,7 @@ export function attach(
 
   applyComponentFilters(getSavedComponentFilters());
 
-  // TODO (filter) Should we make this operation more efficient?
+  // If necessary, we can revisit optimizing this operation.
   // For example, we could add a new recursive unmount tree operation.
   // The unmount operations are already significantly smaller than mount opreations though.
   // This is something to keep in mind for later.
@@ -317,7 +317,7 @@ export function attach(
       throw Error('Cannot modify filter preferences while profiling');
     }
 
-    // Recursively unmount and then re-mount all roots.
+    // Recursively unmount all roots.
     hook.getFiberRoots(rendererID).forEach(root => {
       currentRootID = getFiberID(getPrimaryFiber(root.current));
       unmountFiberChildrenRecursively(root.current);
@@ -372,16 +372,18 @@ export function attach(
         }
     }
 
-    const elementType = getTypeForFiber(fiber);
+    const elementType = getElementTypeForFiber(fiber);
     if (hideElementsWithTypes.has(elementType)) {
       return true;
     }
 
     if (hideElementsWithDisplayNames.size > 0) {
-      const displayName = getDisplayNameForFiber(fiber) || '';
-      for (let displayNameRegExp of hideElementsWithDisplayNames) {
-        if (displayNameRegExp.test(displayName)) {
-          return true;
+      const displayName = getDisplayNameForFiber(fiber);
+      if (displayName != null) {
+        for (let displayNameRegExp of hideElementsWithDisplayNames) {
+          if (displayNameRegExp.test(displayName)) {
+            return true;
+          }
         }
       }
     }
@@ -473,14 +475,14 @@ export function attach(
           case CONTEXT_PROVIDER_SYMBOL_STRING:
             // 16.3.0 exposed the context object as "context"
             // PR #12501 changed it to "_context" for 16.3.1+
-            // NOTE Keep in sync with inspectElement()
+            // NOTE Keep in sync with inspectElementRaw()
             resolvedContext = fiber.type._context || fiber.type.context;
             return `${resolvedContext.displayName || 'Context'}.Provider`;
           case CONTEXT_CONSUMER_NUMBER:
           case CONTEXT_CONSUMER_SYMBOL_STRING:
             // 16.3-16.5 read from "type" because the Consumer is the actual context object.
             // 16.6+ should read from "type._context" because Consumer can be different (in DEV).
-            // NOTE Keep in sync with inspectElement()
+            // NOTE Keep in sync with inspectElementRaw()
             resolvedContext = fiber.type._context || fiber.type;
 
             // NOTE: TraceUpdatesBackendManager depends on the name ending in '.Consumer'
@@ -505,7 +507,7 @@ export function attach(
   }
 
   // NOTICE Keep in sync with shouldFilterFiber() and other get*ForFiber methods
-  function getTypeForFiber(fiber: Fiber): ElementType {
+  function getElementTypeForFiber(fiber: Fiber): ElementType {
     const { type, tag } = fiber;
 
     switch (tag) {
@@ -785,7 +787,7 @@ export function attach(
     } else {
       const { key } = fiber;
       const displayName = getDisplayNameForFiber(fiber);
-      const type = getTypeForFiber(fiber);
+      const elementType = getElementTypeForFiber(fiber);
       const { _debugOwner } = fiber;
 
       const ownerID =
@@ -796,7 +798,7 @@ export function attach(
       let keyStringID = getStringID(key);
       pushOperation(TREE_OPERATION_ADD);
       pushOperation(id);
-      pushOperation(type);
+      pushOperation(elementType);
       pushOperation(parentID);
       pushOperation(ownerID);
       pushOperation(displayNameStringID);
@@ -1645,7 +1647,7 @@ export function attach(
     ) {
       // 16.3-16.5 read from "type" because the Consumer is the actual context object.
       // 16.6+ should read from "type._context" because Consumer can be different (in DEV).
-      // NOTE Keep in sync with get*ForFiber methods
+      // NOTE Keep in sync with getDisplayNameForFiber()
       const consumerResolvedContext = type._context || type;
 
       // Global context value.
@@ -1662,7 +1664,7 @@ export function attach(
         ) {
           // 16.3.0 exposed the context object as "context"
           // PR #12501 changed it to "_context" for 16.3.1+
-          // NOTE Keep in sync with get*ForFiber methods
+          // NOTE Keep in sync with getDisplayNameForFiber()
           const providerResolvedContext =
             currentType._context || currentType.context;
           if (providerResolvedContext === consumerResolvedContext) {

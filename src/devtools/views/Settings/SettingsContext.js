@@ -251,7 +251,6 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-toggle-background-on', documentElements);
   updateStyleHelper(theme, 'color-toggle-background-off', documentElements);
   updateStyleHelper(theme, 'color-toggle-text', documentElements);
-  updateStyleHelper(theme, 'color-toggle-text', documentElements);
   updateStyleHelper(theme, 'color-tooltip-background', documentElements);
   updateStyleHelper(theme, 'color-tooltip-text', documentElements);
 

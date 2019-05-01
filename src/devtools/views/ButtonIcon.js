@@ -25,8 +25,6 @@ export type IconType =
   | 'save'
   | 'search'
   | 'settings'
-  | 'toggle_off'
-  | 'toggle_on'
   | 'undo'
   | 'up'
   | 'view-dom'
@@ -102,12 +100,6 @@ export default function ButtonIcon({ className = '', type }: Props) {
       break;
     case 'settings':
       pathData = PATH_SETTINGS;
-      break;
-    case 'toggle_off':
-      pathData = PATH_TOGGLE_OFF;
-      break;
-    case 'toggle_on':
-      pathData = PATH_TOGGLE_ON;
       break;
     case 'undo':
       pathData = PATH_UNDO;
@@ -219,12 +211,6 @@ const PATH_SETTINGS = `
   1.35.78l.3 2.12c.04.2.2.34.4.34h3.2c.2 0 .37-.14.39-.34l.3-2.12c.49-.2.94-.47 1.35-.78l1.99.8c.18.07.39 0
   .49-.18l1.6-2.77c.1-.18.06-.39-.1-.51l-1.67-1.32zM10 13c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3z
 `;
-
-const PATH_TOGGLE_OFF =
-  'M17 7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h10c2.76 0 5-2.24 5-5s-2.24-5-5-5zM7 15c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z';
-
-const PATH_TOGGLE_ON =
-  'M17 7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h10c2.76 0 5-2.24 5-5s-2.24-5-5-5zm0 8c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z';
 
 const PATH_UNDO = `
   M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88
