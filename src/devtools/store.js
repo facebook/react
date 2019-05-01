@@ -185,27 +185,31 @@ export default class Store extends EventEmitter {
 
   assertEmptyMaps() {
     // This is only used in tests to avoid memory leaks.
-    if (this._idToElement.size !== 0) {
-      throw new Error('Expected _idToElement to be empty.');
-    }
-    if (this._ownersMap.size !== 0) {
-      throw new Error('Expected _ownersMap to be empty.');
-    }
-    if (this._profilingOperationsByRootID.size !== 0) {
-      throw new Error('Expected _profilingOperationsByRootID to be empty.');
-    }
-    if (this._profilingScreenshotsByRootID.size !== 0) {
-      throw new Error('Expected _profilingScreenshotsByRootID to be empty.');
-    }
-    if (this._profilingSnapshotsByElementID.size !== 0) {
-      throw new Error('Expected _profilingSnapshotsByElementID to be empty.');
-    }
-    if (this._rootIDToCapabilities.size !== 0) {
-      throw new Error('Expected _rootIDToCapabilities to be empty.');
-    }
-    if (this._rootIDToRendererID.size !== 0) {
-      throw new Error('Expected _rootIDToRendererID to be empty.');
-    }
+    const assertOneMap = (mapName, map) => {
+      if (map.size !== 0) {
+        throw new Error(
+          `Expected ${mapName} to be empty, got ${
+            map.size
+          }: ${require('util').inspect(this, { depth: 20 })}`
+        );
+      }
+    };
+    assertOneMap('_idToElement', this._idToElement);
+    assertOneMap('_ownersMap', this._ownersMap);
+    assertOneMap(
+      '_profilingOperationsByRootID',
+      this._profilingOperationsByRootID
+    );
+    assertOneMap(
+      '_profilingScreenshotsByRootID',
+      this._profilingScreenshotsByRootID
+    );
+    assertOneMap(
+      '_profilingSnapshotsByElementID',
+      this._profilingSnapshotsByElementID
+    );
+    assertOneMap('_rootIDToCapabilities', this._rootIDToCapabilities);
+    assertOneMap('_rootIDToRendererID', this._rootIDToRendererID);
   }
 
   get captureScreenshots(): boolean {
@@ -665,6 +669,15 @@ export default class Store extends EventEmitter {
     }
   };
 
+  _clearProfilingSnapshotRecursive = (elementID: number) => {
+    const element = this.getElementByID(elementID);
+    if (element !== null) {
+      this._profilingSnapshotsByElementID.delete(elementID);
+
+      element.children.forEach(this._clearProfilingSnapshotRecursive);
+    }
+  };
+
   _adjustParentTreeWeight = (
     parentElement: Element | null,
     weightDelta: number
@@ -876,6 +889,11 @@ export default class Store extends EventEmitter {
               throw new Error(`Node ${id} was removed before its children.`);
             }
 
+            // The following call depends on `getElementByID`
+            // which depends on the element being in `_idToElement`,
+            // so we have to do it before removing the element from `_idToElement`.
+            this._clearProfilingSnapshotRecursive(id);
+
             this._idToElement.delete(id);
 
             let parentElement = null;
@@ -887,6 +905,9 @@ export default class Store extends EventEmitter {
               this._roots = this._roots.filter(rootID => rootID !== id);
               this._rootIDToRendererID.delete(id);
               this._rootIDToCapabilities.delete(id);
+
+              this._profilingOperationsByRootID.delete(id);
+              this._profilingScreenshotsByRootID.delete(id);
 
               haveRootsChanged = true;
             } else {
