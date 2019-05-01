@@ -47,8 +47,8 @@
     "precommit": "lint-staged",
     "prettier": "prettier --write '**/*.{js,json,css}'",
     "prettier:ci": "prettier --check '**/*.{js,json,css}'",
-    "start": "cd ./shells/dev && opener ./index.html && cross-env NODE_ENV=development webpack --config webpack.config.js --watch",
-    "start:prod": "cd ./shells/dev && opener ./index.html && cross-env NODE_ENV=production webpack --config webpack.config.js --watch",
+    "start": "cd ./shells/dev && cross-env NODE_ENV=development webpack-dev-server --open",
+    "start:prod": "cd ./shells/dev && cross-env NODE_ENV=production webpack-dev-server --open",
     "test": "jest",
     "test-debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "test:chrome": "node ./shells/browser/chrome/test",
@@ -141,6 +141,7 @@
     "web-ext": "^3.0.0",
     "webpack": "^4.26.0",
     "webpack-cli": "^3.1.2",
+    "webpack-dev-server": "^3.3.1",
     "xml-js": "^1.6.11"
   }
 }

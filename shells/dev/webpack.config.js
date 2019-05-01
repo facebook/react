@@ -16,14 +16,16 @@ const DEVTOOLS_VERSION = getVersionString();
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
   devtool: false,
+  devServer: {
+    hot: true,
+    port: 8080,
+    clientLogLevel: 'warning',
+    stats: 'errors-only',
+  },
   entry: {
     app: './app/index.js',
     backend: './src/backend.js',
     devtools: './src/devtools.js',
-  },
-  output: {
-    path: __dirname + '/build',
-    filename: '[name].js',
   },
   resolve: {
     alias: {
