@@ -97,6 +97,7 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
       ({useHook() { useState(); }});
       const {useHook = () => { useState(); }} = {};
       ({useHook = () => { useState(); }} = {});
+      namespace.use = () => { useState(); };
     `,
     `
       // Valid because hooks can call hooks.

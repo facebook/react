@@ -14,8 +14,12 @@
  * character to exclude identifiers like "user".
  */
 
-function isHookName(s) {
-  return /^use[A-Z0-9].*$/.test(s);
+function isHookName(s, isNamespaced) {
+  if (isNamespaced) {
+    return /^(use|use[A-Z0-9].*)$/.test(s);
+  } else {
+    return /^use[A-Z0-9].*$/.test(s);
+  }
 }
 
 /**
@@ -23,18 +27,11 @@ function isHookName(s) {
  * containing a hook name.
  */
 
-function isHook(node) {
+function isHook(node, isNamespaced = false) {
   if (node.type === 'Identifier') {
-    return isHookName(node.name);
-  } else if (
-    node.type === 'MemberExpression' &&
-    !node.computed &&
-    isHook(node.property)
-  ) {
-    // Only consider React.useFoo() to be namespace hooks for now to avoid false positives.
-    // We can expand this check later.
-    const obj = node.object;
-    return obj.type === 'Identifier' && obj.name === 'React';
+    return isHookName(node.name, isNamespaced);
+  } else if (node.type === 'MemberExpression' && !node.computed) {
+    return isHook(node.property, true);
   } else {
     return false;
   }
