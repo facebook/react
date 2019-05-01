@@ -42,7 +42,7 @@ export const ComponentFilterElementType = 1;
 export const ComponentFilterDisplayName = 2;
 export const ComponentFilterLocation = 3;
 
-export type FilterType = 1 | 2 | 3;
+export type ComponentFilterType = 1 | 2 | 3;
 
 // Hide all elements of types in this Set.
 // We hide host components only by default.

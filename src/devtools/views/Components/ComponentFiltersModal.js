@@ -33,9 +33,9 @@ import styles from './ComponentFiltersModal.css';
 
 import type {
   ComponentFilter,
+  ComponentFilterType,
   ElementType,
   ElementTypeComponentFilter,
-  FilterType,
   RegExpComponentFilter,
 } from 'src/types';
 
@@ -159,7 +159,10 @@ function ComponentFiltersModal({ store, setIsModalShowing }: Props) {
                     onChange={({ currentTarget }) =>
                       changeFilterType(
                         componentFilter,
-                        ((parseInt(currentTarget.value, 10): any): FilterType)
+                        ((parseInt(
+                          currentTarget.value,
+                          10
+                        ): any): ComponentFilterType)
                       )
                     }
                   >
@@ -282,7 +285,7 @@ function useComponentFilters() {
   }, []);
 
   const changeFilterType = useCallback(
-    (componentFilter: ComponentFilter, type: FilterType) => {
+    (componentFilter: ComponentFilter, type: ComponentFilterType) => {
       setComponentFilters(componentFilters => {
         const cloned: Array<ComponentFilter> = [...componentFilters];
         const index = componentFilters.indexOf(componentFilter);
