@@ -13,7 +13,7 @@ export type Wall = {|
 |};
 
 // WARNING
-// The values below are referenced by FilterPreferences (which is saved via localStorage).
+// The values below are referenced by ComponentFilters (which are saved via localStorage).
 // Do not change them or it will break previously saved user customizations.
 // If new element types are added, use new numbers rather than re-ordering existing ones.
 export const ElementTypeClass = 1;
@@ -34,15 +34,33 @@ export const ElementTypeSuspense = 12;
 // or to enable/disable certain functionality.
 export type ElementType = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 
-export type FilterPreferences = {|
-  // Hide all elements of types in this Set.
-  // We hide host components only by default.
-  hideElementsWithTypes: Set<ElementType>,
+// WARNING
+// The values below are referenced by ComponentFilters (which are saved via localStorage).
+// Do not change them or it will break previously saved user customizations.
+// If new filter types are added, use new numbers rather than re-ordering existing ones.
+export const ComponentFilterElementType = 1;
+export const ComponentFilterDisplayName = 2;
+export const ComponentFilterPath = 3;
 
-  // Hide all elements with displayNames matching one or more of the RegExps in this Set.
-  hideElementsWithDisplayNames: Set<RegExp>,
+export type FilterType = 1 | 2 | 3;
 
-  // Hide all elements within paths matching one or more of the RegExps in this Set.
-  // This filter is only used for elements that include debug source location.
-  hideElementsWithPaths: Set<RegExp>,
+// Hide all elements of types in this Set.
+// We hide host components only by default.
+export type ElementTypeComponentFilter = {|
+  isEnabled: boolean,
+  type: 1,
+  value: ElementType,
 |};
+
+// Hide all elements with displayNames or paths matching one or more of the RegExps in this Set.
+// Path filters are only used when elements include debug source location.
+export type RegExpComponentFilter = {|
+  isEnabled: boolean,
+  isValid: boolean,
+  type: 2 | 3,
+  value: string,
+|};
+
+export type ComponentFilter =
+  | ElementTypeComponentFilter
+  | RegExpComponentFilter;

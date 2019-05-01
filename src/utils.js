@@ -2,9 +2,9 @@
 
 import LRU from 'lru-cache';
 import { LOCAL_STORAGE_FILTER_PREFERENCES_KEY } from './constants';
-import { ElementTypeHostComponent } from './types';
+import { ComponentFilterElementType, ElementTypeHostComponent } from './types';
 
-import type { FilterPreferences } from './types';
+import type { ComponentFilter } from './types';
 
 const FB_MODULE_RE = /^(.*) \[from (.*)\]$/;
 const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
@@ -81,65 +81,34 @@ function toCodePoint(string: string) {
   return string.codePointAt(0);
 }
 
-export function getDefaultFilterPreferences(): FilterPreferences {
-  return {
-    hideElementsWithTypes: new Set([ElementTypeHostComponent]),
-    hideElementsWithDisplayNames: new Set(),
-    hideElementsWithPaths: new Set(),
-  };
+// TODO (filters) Save the filters as the frontend needs them (an array, with type and "enabled" status)
+// Convert the fitlers to Sets for the renderer to consume.
+
+export function getDefaultComponentFilters(): Array<ComponentFilter> {
+  return [
+    {
+      type: ComponentFilterElementType,
+      value: ElementTypeHostComponent,
+      isEnabled: true,
+    },
+  ];
 }
 
-function getSavedFilterPreferencesFilter(key, value) {
-  if (typeof value === 'string' && value.indexOf('__REGEXP__') === 0) {
-    const match = value.substr(9).match(/\/(.*)\/(.*)?/);
-    return new RegExp(match[1], match[2] || '');
-  }
-  return value;
+export function getSavedComponentFilters(): Array<ComponentFilter> {
+  try {
+    const raw = localStorage.getItem(LOCAL_STORAGE_FILTER_PREFERENCES_KEY);
+    if (raw != null) {
+      return JSON.parse(raw);
+    }
+  } catch (error) {}
+  return getDefaultComponentFilters();
 }
 
-export function getSavedFilterPreferences(): FilterPreferences {
-  const raw = localStorage.getItem(LOCAL_STORAGE_FILTER_PREFERENCES_KEY);
-  if (raw != null) {
-    const json = JSON.parse(raw, getSavedFilterPreferencesFilter);
-    return {
-      hideElementsWithTypes: new Set(json.hideElementsWithTypes),
-      hideElementsWithDisplayNames: new Set(
-        json.hideElementsWithDisplayNames.map(source => new RegExp(source))
-      ),
-      hideElementsWithPaths: new Set(
-        json.hideElementsWithPaths.map(source => new RegExp(source))
-      ),
-    };
-  } else {
-    return getDefaultFilterPreferences();
-  }
-}
-
-function saveFilterPreferencesFilter(key, value) {
-  if (value instanceof RegExp) {
-    return '__REGEXP__' + value.toString();
-  }
-  return value;
-}
-
-export function saveFilterPreferences(
-  filterPreferences: FilterPreferences
+export function saveComponentFilters(
+  componentFilters: Array<ComponentFilter>
 ): void {
   localStorage.setItem(
     LOCAL_STORAGE_FILTER_PREFERENCES_KEY,
-    JSON.stringify(
-      {
-        hideElementsWithTypes: Array.from(
-          filterPreferences.hideElementsWithTypes
-        ),
-        hideElementsWithDisplayNames: Array.from(
-          filterPreferences.hideElementsWithDisplayNames
-        ),
-        hideElementsWithPaths: Array.from(
-          filterPreferences.hideElementsWithPaths
-        ),
-      },
-      saveFilterPreferencesFilter
-    )
+    JSON.stringify(componentFilters)
   );
 }

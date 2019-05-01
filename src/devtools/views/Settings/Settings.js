@@ -1,7 +1,6 @@
 // @flow
 
 import React, { useCallback, useContext, useMemo } from 'react';
-import { ElementTypeHostComponent } from 'src/types';
 import { useSubscription } from '../hooks';
 import { StoreContext } from '../context';
 import { SettingsContext } from './SettingsContext';
@@ -9,8 +8,6 @@ import Store from 'src/devtools/store';
 import portaledContent from '../portaledContent';
 
 import styles from './Settings.css';
-
-import type { FilterPreferences } from 'src/types';
 
 function Settings(_: {||}) {
   const store = useContext(StoreContext);
@@ -44,49 +41,6 @@ function Settings(_: {||}) {
   );
   const collapseNodesByDefault = useSubscription<boolean, Store>(
     collapseNodesByDefaultSubscription
-  );
-
-  // Re-mounting a tree while profiling is in progress might break a lot of assumptions.
-  // If necessary, we could support this- but it doesn't seem like a necessary use case.
-  const isProfilingSubscription = useMemo(
-    () => ({
-      getCurrentValue: () => store.isProfiling,
-      subscribe: (callback: Function) => {
-        store.addListener('isProfiling', callback);
-        return () => store.removeListener('isProfiling', callback);
-      },
-    }),
-    [store]
-  );
-  const isProfiling = useSubscription<boolean, Store>(isProfilingSubscription);
-
-  const filterPreferencesSubscription = useMemo(
-    () => ({
-      getCurrentValue: () => store.filterPreferences,
-      subscribe: (callback: Function) => {
-        store.addListener('filterPreferences', callback);
-        return () => store.removeListener('filterPreferences', callback);
-      },
-    }),
-    [store]
-  );
-  const filterPreferences = useSubscription<FilterPreferences, Store>(
-    filterPreferencesSubscription
-  );
-
-  const updateFilterPreferences = useCallback(
-    ({ currentTarget }) => {
-      const filterPreferences = store.filterPreferences;
-      if (currentTarget.checked) {
-        filterPreferences.hideElementsWithTypes.add(ElementTypeHostComponent);
-      } else {
-        filterPreferences.hideElementsWithTypes.delete(
-          ElementTypeHostComponent
-        );
-      }
-      store.filterPreferences = { ...filterPreferences };
-    },
-    [store]
   );
 
   const updateDisplayDensity = useCallback(
@@ -188,18 +142,6 @@ function Settings(_: {||}) {
             onChange={updateCollapseNodesByDefault}
           />{' '}
           Collapse newly added components by default
-        </label>
-
-        <label className={styles.CheckboxOption}>
-          <input
-            type="checkbox"
-            checked={filterPreferences.hideElementsWithTypes.has(
-              ElementTypeHostComponent
-            )}
-            disabled={isProfiling}
-            onChange={updateFilterPreferences}
-          />{' '}
-          Hide host components (e.g. <code>&lt;div&gt;</code>)
         </label>
       </div>
 

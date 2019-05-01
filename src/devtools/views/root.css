@@ -48,6 +48,10 @@
   --light-color-tab-selected-border: #0088fa;
   --light-color-text: #000000;
   --light-color-text-selected: #ffffff;
+  --light-color-toggle-background-invalid: #fc3a4b;
+  --light-color-toggle-background-on: #0088fa;
+  --light-color-toggle-background-off: #cfd1d5;
+  --light-color-toggle-text: #ffffff;
   --light-color-tooltip-background: rgba(0, 0, 0, 0.9);
   --light-color-tooltip-text: #ffffff;
 
@@ -96,6 +100,10 @@
   --dark-color-tab-selected-border: #178fb9;
   --dark-color-text: #ffffff;
   --dark-color-text-selected: #ffffff;
+  --dark-color-toggle-background-invalid: #fc3a4b;
+  --dark-color-toggle-background-on: #178fb9;
+  --dark-color-toggle-background-off: #777d88;
+  --dark-color-toggle-text: #ffffff;
   --dark-color-tooltip-background: rgba(255, 255, 255, 0.9);
   --dark-color-tooltip-text: #000000;
 

@@ -2,6 +2,9 @@
 
 import { gte } from 'semver';
 import {
+  ComponentFilterDisplayName,
+  ComponentFilterElementType,
+  ComponentFilterPath,
   ElementTypeClass,
   ElementTypeContext,
   ElementTypeEventComponent,
@@ -17,7 +20,7 @@ import {
 } from 'src/types';
 import {
   getDisplayName,
-  getSavedFilterPreferences,
+  getSavedComponentFilters,
   getUID,
   utfEncodeString,
 } from 'src/utils';
@@ -47,7 +50,7 @@ import type {
   RendererInterface,
 } from './types';
 import type { InspectedElement } from 'src/devtools/views/Components/types';
-import type { ElementType, FilterPreferences } from 'src/types';
+import type { ComponentFilter, ElementType } from 'src/types';
 
 function getInternalReactConstants(version) {
   const ReactSymbols = {
@@ -261,17 +264,53 @@ export function attach(
     }
   };
 
-  let {
-    hideElementsWithTypes,
-    hideElementsWithDisplayNames,
-    hideElementsWithPaths,
-  } = getSavedFilterPreferences();
+  // Configurable Components tree filters.
+  const hideElementsWithDisplayNames: Set<RegExp> = new Set();
+  const hideElementsWithPaths: Set<RegExp> = new Set();
+  const hideElementsWithTypes: Set<ElementType> = new Set();
+
+  function applyComponentFilters(componentFilters: Array<ComponentFilter>) {
+    hideElementsWithTypes.clear();
+    hideElementsWithDisplayNames.clear();
+    hideElementsWithPaths.clear();
+
+    componentFilters.forEach(componentFilter => {
+      if (!componentFilter.isEnabled) {
+        return;
+      }
+
+      switch (componentFilter.type) {
+        case ComponentFilterDisplayName:
+          if (componentFilter.isValid && componentFilter.value !== '') {
+            hideElementsWithDisplayNames.add(
+              new RegExp(componentFilter.value, 'i')
+            );
+          }
+          break;
+        case ComponentFilterElementType:
+          hideElementsWithTypes.add(componentFilter.value);
+          break;
+        case ComponentFilterPath:
+          if (componentFilter.isValid && componentFilter.value !== '') {
+            hideElementsWithPaths.add(new RegExp(componentFilter.value, 'i'));
+          }
+          break;
+        default:
+          console.warn(
+            `Invalid component filter type "${componentFilter.type}"`
+          );
+          break;
+      }
+    });
+  }
+
+  applyComponentFilters(getSavedComponentFilters());
 
   // TODO (filter) Should we make this operation more efficient?
   // For example, we could add a new recursive unmount tree operation.
   // The unmount operations are already significantly smaller than mount opreations though.
   // This is something to keep in mind for later.
-  function updateFilterPreferences(filterPreferences: FilterPreferences) {
+  function updateComponentFilters(componentFilters: Array<ComponentFilter>) {
     if (this._isProfiling) {
       // Re-mounting a tree while profiling is in progress might break a lot of assumptions.
       // If necessary, we could support this- but it doesn't seem like a necessary use case.
@@ -286,10 +325,7 @@ export function attach(
       currentRootID = -1;
     });
 
-    hideElementsWithTypes = filterPreferences.hideElementsWithTypes;
-    hideElementsWithDisplayNames =
-      filterPreferences.hideElementsWithDisplayNames;
-    hideElementsWithPaths = filterPreferences.hideElementsWithPaths;
+    applyComponentFilters(componentFilters);
 
     // Recursively re-mount all roots with new filter criteria applied.
     hook.getFiberRoots(rendererID).forEach(root => {
@@ -2280,6 +2316,6 @@ export function attach(
     setTrackedPath,
     startProfiling,
     stopProfiling,
-    updateFilterPreferences,
+    updateComponentFilters,
   };
 }

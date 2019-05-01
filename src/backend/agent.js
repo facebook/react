@@ -16,7 +16,7 @@ import type {
   RendererID,
   RendererInterface,
 } from './types';
-import type { Bridge, FilterPreferences } from '../types';
+import type { Bridge, ComponentFilter } from '../types';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {
@@ -118,7 +118,7 @@ export default class Agent extends EventEmitter {
       this.syncSelectionFromNativeElementsPanel
     );
     bridge.addListener('shutdown', this.shutdown);
-    bridge.addListener('updateFilterPreferences', this.updateFilterPreferences);
+    bridge.addListener('updateComponentFilters', this.updateComponentFilters);
     bridge.addListener('viewElementSource', this.viewElementSource);
 
     if (this._isProfiling) {
@@ -490,12 +490,12 @@ export default class Agent extends EventEmitter {
     this._bridge.send('profilingStatus', this._isProfiling);
   };
 
-  updateFilterPreferences = (filterPreferences: FilterPreferences) => {
+  updateComponentFilters = (componentFilters: Array<ComponentFilter>) => {
     for (let rendererID in this._rendererInterfaces) {
       const renderer = ((this._rendererInterfaces[
         (rendererID: any)
       ]: any): RendererInterface);
-      renderer.updateFilterPreferences(filterPreferences);
+      renderer.updateComponentFilters(componentFilters);
     }
   };
 

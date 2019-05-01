@@ -11,8 +11,8 @@ import {
 } from '../constants';
 import { ElementTypeRoot } from '../types';
 import {
-  getSavedFilterPreferences,
-  saveFilterPreferences,
+  getSavedComponentFilters,
+  saveComponentFilters,
   utfDecodeString,
 } from '../utils';
 import { __DEBUG__ } from '../constants';
@@ -24,7 +24,7 @@ import type {
   ImportedProfilingData,
   ProfilingSnapshotNode,
 } from './views/Profiler/types';
-import type { Bridge, ElementType, FilterPreferences } from '../types';
+import type { Bridge, ComponentFilter, ElementType } from '../types';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {
@@ -69,7 +69,7 @@ export default class Store extends EventEmitter {
   // Should new nodes be collapsed by default when added to the tree?
   _collapseNodesByDefault: boolean = true;
 
-  _filterPreferences: FilterPreferences;
+  _componentFilters: Array<ComponentFilter>;
 
   // At least one of the injected renderers contains (DEV only) owner metadata.
   _hasOwnerMetadata: boolean = false;
@@ -143,7 +143,7 @@ export default class Store extends EventEmitter {
       localStorage.getItem(LOCAL_STORAGE_COLLAPSE_ROOTS_BY_DEFAULT_KEY) !==
       'false';
 
-    this._filterPreferences = getSavedFilterPreferences();
+    this._componentFilters = getSavedComponentFilters();
 
     if (config != null) {
       const {
@@ -239,26 +239,26 @@ export default class Store extends EventEmitter {
     this.emit('collapseNodesByDefault');
   }
 
-  get filterPreferences(): FilterPreferences {
-    return this._filterPreferences;
+  get componentFilters(): Array<ComponentFilter> {
+    return this._componentFilters;
   }
-  set filterPreferences(value: FilterPreferences): void {
+  set componentFilters(value: Array<ComponentFilter>): void {
     if (this._isProfiling) {
       // Re-mounting a tree while profiling is in progress might break a lot of assumptions.
       // If necessary, we could support this- but it doesn't seem like a necessary use case.
       throw Error('Cannot modify filter preferences while profiling');
     }
 
-    this._filterPreferences = value;
+    this._componentFilters = value;
 
     // Update persisted filter preferences stored in localStorage.
-    saveFilterPreferences(value);
+    saveComponentFilters(value);
 
     // Notify the renderer that filter prefernces have changed.
     // This is an expensive opreation; it unmounts and remounts the entire tree.
-    this._bridge.send('updateFilterPreferences', value);
+    this._bridge.send('updateComponentFilters', value);
 
-    this.emit('filterPreferences');
+    this.emit('componentFilters');
   }
 
   get hasOwnerMetadata(): boolean {

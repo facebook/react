@@ -247,6 +247,11 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-tab-selected-border', documentElements);
   updateStyleHelper(theme, 'color-text', documentElements);
   updateStyleHelper(theme, 'color-text-selected', documentElements);
+  updateStyleHelper(theme, 'color-toggle-background-invalid', documentElements);
+  updateStyleHelper(theme, 'color-toggle-background-on', documentElements);
+  updateStyleHelper(theme, 'color-toggle-background-off', documentElements);
+  updateStyleHelper(theme, 'color-toggle-text', documentElements);
+  updateStyleHelper(theme, 'color-toggle-text', documentElements);
   updateStyleHelper(theme, 'color-tooltip-background', documentElements);
   updateStyleHelper(theme, 'color-tooltip-text', documentElements);
 
