@@ -81,9 +81,6 @@ function toCodePoint(string: string) {
   return string.codePointAt(0);
 }
 
-// TODO (filters) Save the filters as the frontend needs them (an array, with type and "enabled" status)
-// Convert the fitlers to Sets for the renderer to consume.
-
 export function getDefaultComponentFilters(): Array<ComponentFilter> {
   return [
     {

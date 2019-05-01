@@ -159,8 +159,7 @@ function ComponentFiltersModal({ store, setIsModalShowing }: Props) {
                     onChange={({ currentTarget }) =>
                       changeFilterType(
                         componentFilter,
-                        // $FlowFixMe TODO (filters)
-                        parseInt(currentTarget.value, 10)
+                        ((parseInt(currentTarget.value, 10): any): FilterType)
                       )
                     }
                   >
@@ -182,8 +181,10 @@ function ComponentFiltersModal({ store, setIsModalShowing }: Props) {
                       onChange={({ currentTarget }) =>
                         updateFilterValueElementType(
                           componentFilter,
-                          // $FlowFixMe TODO (filters)
-                          parseInt(currentTarget.value, 10)
+                          ((parseInt(
+                            currentTarget.value,
+                            10
+                          ): any): ElementType)
                         )
                       }
                     >
@@ -287,23 +288,25 @@ function useComponentFilters() {
         const index = componentFilters.indexOf(componentFilter);
         if (index >= 0) {
           if (type === ComponentFilterElementType) {
-            // $FlowFixMe TODO (filters)
-            cloned[index] = ({
-              type,
+            cloned[index] = {
+              type: ComponentFilterElementType,
               isEnabled: componentFilter.isEnabled,
               value: ElementTypeHostComponent,
-            }: ElementTypeComponentFilter);
-          } else if (
-            type === ComponentFilterDisplayName ||
-            type === ComponentFilterLocation
-          ) {
-            // $FlowFixMe TODO (filters)
-            cloned[index] = ({
-              type,
+            };
+          } else if (type === ComponentFilterDisplayName) {
+            cloned[index] = {
+              type: ComponentFilterDisplayName,
               isEnabled: componentFilter.isEnabled,
               isValid: true,
               value: '',
-            }: RegExpComponentFilter);
+            };
+          } else if (type === ComponentFilterLocation) {
+            cloned[index] = {
+              type: ComponentFilterLocation,
+              isEnabled: componentFilter.isEnabled,
+              isValid: true,
+              value: '',
+            };
           }
         }
         return cloned;
@@ -320,13 +323,14 @@ function useComponentFilters() {
 
       setComponentFilters(componentFilters => {
         const cloned: Array<ComponentFilter> = [...componentFilters];
-        const index = componentFilters.indexOf(componentFilter);
-        if (index >= 0) {
-          // $FlowFixMe TODO (filters)
-          cloned[index] = {
-            ...componentFilter,
-            value,
-          };
+        if (componentFilter.type === ComponentFilterElementType) {
+          const index = componentFilters.indexOf(componentFilter);
+          if (index >= 0) {
+            cloned[index] = {
+              ...componentFilter,
+              value,
+            };
+          }
         }
         return cloned;
       });
@@ -342,20 +346,24 @@ function useComponentFilters() {
 
       setComponentFilters(componentFilters => {
         const cloned: Array<ComponentFilter> = [...componentFilters];
-        const index = componentFilters.indexOf(componentFilter);
-        if (index >= 0) {
-          let isValid = true;
-          try {
-            new RegExp(value);
-          } catch (error) {
-            isValid = false;
+        if (
+          componentFilter.type === ComponentFilterDisplayName ||
+          componentFilter.type === ComponentFilterLocation
+        ) {
+          const index = componentFilters.indexOf(componentFilter);
+          if (index >= 0) {
+            let isValid = true;
+            try {
+              new RegExp(value);
+            } catch (error) {
+              isValid = false;
+            }
+            cloned[index] = {
+              ...componentFilter,
+              isValid,
+              value,
+            };
           }
-          // $FlowFixMe TODO (filters)
-          cloned[index] = {
-            ...componentFilter,
-            isValid,
-            value,
-          };
         }
         return cloned;
       });
@@ -381,11 +389,20 @@ function useComponentFilters() {
         const cloned: Array<ComponentFilter> = [...componentFilters];
         const index = componentFilters.indexOf(componentFilter);
         if (index >= 0) {
-          // $FlowFixMe TODO (filters)
-          cloned[index] = {
-            ...cloned[index],
-            isEnabled,
-          };
+          if (componentFilter.type === ComponentFilterElementType) {
+            cloned[index] = {
+              ...((cloned[index]: any): ElementTypeComponentFilter),
+              isEnabled,
+            };
+          } else if (
+            componentFilter.type === ComponentFilterDisplayName ||
+            componentFilter.type === ComponentFilterLocation
+          ) {
+            cloned[index] = {
+              ...((cloned[index]: any): RegExpComponentFilter),
+              isEnabled,
+            };
+          }
         }
         return cloned;
       });
