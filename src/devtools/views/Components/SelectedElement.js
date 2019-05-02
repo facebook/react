@@ -16,7 +16,7 @@ import {
   ElementTypeFunction,
   ElementTypeMemo,
   ElementTypeSuspense,
-} from '../../types';
+} from 'src/types';
 
 import type { Element, InspectedElement } from './types';
 

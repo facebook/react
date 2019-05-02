@@ -9,13 +9,13 @@ import tooltipStyles from './Tooltip.css';
 type Props = {
   children: React$Node,
   className?: string,
-  title: string,
+  title?: string,
 };
 
 export default function Button({
   children,
   className = '',
-  title,
+  title = '',
   ...rest
 }: Props) {
   let button = (

@@ -8,10 +8,10 @@ import {
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from 'src/constants';
 import { utfDecodeString } from 'src/utils';
-import { ElementTypeRoot } from 'src/devtools/types';
+import { ElementTypeRoot } from 'src/types';
 import Store from 'src/devtools/store';
 
-import type { ElementType } from 'src/devtools/types';
+import type { ElementType } from 'src/types';
 import type {
   CommitTreeFrontend,
   CommitTreeNodeFrontend,

@@ -16,6 +16,7 @@ export type ChartNode = {|
 |};
 
 export type ChartData = {|
+  baseDuration: number,
   depth: number,
   idToDepthMap: Map<number, number>,
   maxSelfDuration: number,
@@ -108,10 +109,16 @@ export function getChartData({
     throw Error(`Could not find root node with id "${rootID}" in commit tree`);
   }
 
-  // TODO: Looks like there's an assumption here that a root has only one child. Is that so with a fragment in the root?
-  walkTree(root.children[0]);
+  // Don't assume a single root.
+  // Component filters or Fragments might lead to multiple "roots" in a flame graph.
+  let baseDuration = 0;
+  root.children.forEach(childID => {
+    const chartNode = walkTree(childID, baseDuration);
+    baseDuration += chartNode.treeBaseDuration;
+  });
 
   const chartData = {
+    baseDuration,
     depth: maxDepth,
     idToDepthMap,
     maxSelfDuration,

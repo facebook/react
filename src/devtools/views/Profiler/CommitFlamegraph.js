@@ -18,7 +18,7 @@ import type { CommitDetailsFrontend, CommitTreeFrontend } from './types';
 export type ItemData = {|
   chartData: ChartData,
   scaleX: (value: number, fallbackValue: number) => number,
-  selectedChartNode: ChartNode,
+  selectedChartNode: ChartNode | null,
   selectedChartNodeIndex: number,
   selectFiber: (id: number | null, name: string | null) => void,
   width: number,
@@ -127,18 +127,20 @@ function CommitFlamegraph({
         chartNode => chartNode.id === selectedFiberID
       ): any): ChartNode);
     }
-    // The selected node might not be in the tree for this commit,
-    // so it's important that we have a fallback plan.
-    if (chartNode == null) {
-      return chartData.rows[0][0];
-    }
     return chartNode;
   }, [chartData, selectedFiberID, selectedChartNodeIndex]);
 
   const itemData = useMemo<ItemData>(
     () => ({
       chartData,
-      scaleX: scale(0, selectedChartNode.treeBaseDuration, 0, width),
+      scaleX: scale(
+        0,
+        selectedChartNode !== null
+          ? selectedChartNode.treeBaseDuration
+          : chartData.baseDuration,
+        0,
+        width
+      ),
       selectedChartNode,
       selectedChartNodeIndex,
       selectFiber,

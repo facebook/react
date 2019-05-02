@@ -1,6 +1,10 @@
 // @flow
 
-const LRU = require('lru-cache');
+import LRU from 'lru-cache';
+import { LOCAL_STORAGE_FILTER_PREFERENCES_KEY } from './constants';
+import { ComponentFilterElementType, ElementTypeHostComponent } from './types';
+
+import type { ComponentFilter } from './types';
 
 const FB_MODULE_RE = /^(.*) \[from (.*)\]$/;
 const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
@@ -75,4 +79,33 @@ export function utfEncodeString(string: string): Uint32Array {
 
 function toCodePoint(string: string) {
   return string.codePointAt(0);
+}
+
+export function getDefaultComponentFilters(): Array<ComponentFilter> {
+  return [
+    {
+      type: ComponentFilterElementType,
+      value: ElementTypeHostComponent,
+      isEnabled: true,
+    },
+  ];
+}
+
+export function getSavedComponentFilters(): Array<ComponentFilter> {
+  try {
+    const raw = localStorage.getItem(LOCAL_STORAGE_FILTER_PREFERENCES_KEY);
+    if (raw != null) {
+      return JSON.parse(raw);
+    }
+  } catch (error) {}
+  return getDefaultComponentFilters();
+}
+
+export function saveComponentFilters(
+  componentFilters: Array<ComponentFilter>
+): void {
+  localStorage.setItem(
+    LOCAL_STORAGE_FILTER_PREFERENCES_KEY,
+    JSON.stringify(componentFilters)
+  );
 }

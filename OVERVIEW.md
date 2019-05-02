@@ -83,7 +83,7 @@ For example, adding a function component `<Foo>` with an id 2:
 [
   1,   // add operation
   2,   // fiber id
-  2,   // ElementTypeFunction
+  1,   // ElementTypeClass
   1,   // parent id
   0,   // owner id
   3,   // encoded display name size

@@ -18,7 +18,7 @@ export default function ClearProfilingDataButton() {
       onClick={clear}
       title="Clear profiling data"
     >
-      <ButtonIcon type="cancel" />
+      <ButtonIcon type="clear" />
     </Button>
   );
 }

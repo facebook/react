@@ -2,19 +2,28 @@
 
 import { gte } from 'semver';
 import {
+  ComponentFilterDisplayName,
+  ComponentFilterElementType,
+  ComponentFilterLocation,
   ElementTypeClass,
-  ElementTypeFunction,
   ElementTypeContext,
   ElementTypeEventComponent,
   ElementTypeEventTarget,
+  ElementTypeFunction,
   ElementTypeForwardRef,
+  ElementTypeHostComponent,
   ElementTypeMemo,
   ElementTypeOtherOrUnknown,
   ElementTypeProfiler,
   ElementTypeRoot,
   ElementTypeSuspense,
-} from 'src/devtools/types';
-import { getDisplayName, utfEncodeString } from '../utils';
+} from 'src/types';
+import {
+  getDisplayName,
+  getSavedComponentFilters,
+  getUID,
+  utfEncodeString,
+} from 'src/utils';
 import { cleanForBridge, copyWithSet, setInObject } from './utils';
 import {
   __DEBUG__,
@@ -24,7 +33,6 @@ import {
   TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
-import { getUID } from '../utils';
 import { inspectHooksOfFiber } from './ReactDebugHooks';
 
 import type {
@@ -32,7 +40,6 @@ import type {
   DevToolsHook,
   Fiber,
   FiberCommitsBackend,
-  FiberData,
   InteractionBackend,
   InteractionsBackend,
   InteractionWithCommitsBackend,
@@ -43,6 +50,7 @@ import type {
   RendererInterface,
 } from './types';
 import type { InspectedElement } from 'src/devtools/views/Components/types';
+import type { ComponentFilter, ElementType } from 'src/types';
 
 function getInternalReactConstants(version) {
   const ReactSymbols = {
@@ -239,18 +247,15 @@ export function attach(
 
   const debug = (name: string, fiber: Fiber, parentFiber: ?Fiber): void => {
     if (__DEBUG__) {
-      const fiberData = getDataForFiber(fiber);
-      const fiberDisplayName = (fiberData && fiberData.displayName) || 'null';
-      const parentFiberData =
-        parentFiber == null ? null : getDataForFiber(parentFiber);
-      const parentFiberDisplayName =
-        (parentFiberData && parentFiberData.displayName) || 'null';
+      const displayName = getDisplayNameForFiber(fiber) || 'null';
+      const parentDisplayName =
+        (parentFiber !== null && getDisplayNameForFiber(parentFiber)) || 'null';
       // NOTE: calling getFiberID or getPrimaryFiber is unsafe here
       // because it will put them in the map. For now, we'll omit them.
       // TODO: better debugging story for this.
       console.log(
-        `[renderer] %c${name} %c${fiberDisplayName} %c${
-          parentFiber ? parentFiberDisplayName : ''
+        `[renderer] %c${name} %c${displayName} %c${
+          parentFiber ? parentDisplayName : ''
         }`,
         'color: red; font-weight: bold;',
         'color: blue;',
@@ -259,20 +264,84 @@ export function attach(
     }
   };
 
-  // Keep this function in sync with getDataForFiber()
+  // Configurable Components tree filters.
+  const hideElementsWithDisplayNames: Set<RegExp> = new Set();
+  const hideElementsWithPaths: Set<RegExp> = new Set();
+  const hideElementsWithTypes: Set<ElementType> = new Set();
+
+  function applyComponentFilters(componentFilters: Array<ComponentFilter>) {
+    hideElementsWithTypes.clear();
+    hideElementsWithDisplayNames.clear();
+    hideElementsWithPaths.clear();
+
+    componentFilters.forEach(componentFilter => {
+      if (!componentFilter.isEnabled) {
+        return;
+      }
+
+      switch (componentFilter.type) {
+        case ComponentFilterDisplayName:
+          if (componentFilter.isValid && componentFilter.value !== '') {
+            hideElementsWithDisplayNames.add(
+              new RegExp(componentFilter.value, 'i')
+            );
+          }
+          break;
+        case ComponentFilterElementType:
+          hideElementsWithTypes.add(componentFilter.value);
+          break;
+        case ComponentFilterLocation:
+          if (componentFilter.isValid && componentFilter.value !== '') {
+            hideElementsWithPaths.add(new RegExp(componentFilter.value, 'i'));
+          }
+          break;
+        default:
+          console.warn(
+            `Invalid component filter type "${componentFilter.type}"`
+          );
+          break;
+      }
+    });
+  }
+
+  applyComponentFilters(getSavedComponentFilters());
+
+  // If necessary, we can revisit optimizing this operation.
+  // For example, we could add a new recursive unmount tree operation.
+  // The unmount operations are already significantly smaller than mount opreations though.
+  // This is something to keep in mind for later.
+  function updateComponentFilters(componentFilters: Array<ComponentFilter>) {
+    if (this._isProfiling) {
+      // Re-mounting a tree while profiling is in progress might break a lot of assumptions.
+      // If necessary, we could support this- but it doesn't seem like a necessary use case.
+      throw Error('Cannot modify filter preferences while profiling');
+    }
+
+    // Recursively unmount all roots.
+    hook.getFiberRoots(rendererID).forEach(root => {
+      currentRootID = getFiberID(getPrimaryFiber(root.current));
+      unmountFiberChildrenRecursively(root.current);
+      recordUnmount(root.current, false);
+      currentRootID = -1;
+    });
+
+    applyComponentFilters(componentFilters);
+
+    // Recursively re-mount all roots with new filter criteria applied.
+    hook.getFiberRoots(rendererID).forEach(root => {
+      currentRootID = getFiberID(getPrimaryFiber(root.current));
+      setRootPseudoKey(currentRootID, root.current);
+      mountFiberRecursively(root.current, null);
+      flushPendingEvents(root);
+      currentRootID = -1;
+    });
+  }
+
+  // NOTICE Keep in sync with get*ForFiber methods
   function shouldFilterFiber(fiber: Fiber): boolean {
-    const { tag } = fiber;
+    const { _debugSource, tag, type } = fiber;
 
     switch (tag) {
-      case ClassComponent:
-      case FunctionComponent:
-      case IncompleteClassComponent:
-      case IndeterminateComponent:
-      case ForwardRef:
-      case HostRoot:
-      case MemoComponent:
-      case SimpleMemoComponent:
-        return false;
       case DehydratedSuspenseComponent:
         // TODO: ideally we would show dehydrated Suspense immediately.
         // However, it has some special behavior (like disconnecting
@@ -282,12 +351,14 @@ export function attach(
         return true;
       case EventComponent:
       case HostPortal:
-      case HostComponent:
       case HostText:
       case Fragment:
         return true;
+      case HostRoot:
+        // It is never valid to filter the root element.
+        return false;
       default:
-        const typeSymbol = getTypeSymbol(fiber.type);
+        const typeSymbol = getTypeSymbol(type);
 
         switch (typeSymbol) {
           case CONCURRENT_MODE_NUMBER:
@@ -296,20 +367,37 @@ export function attach(
           case STRICT_MODE_NUMBER:
           case STRICT_MODE_SYMBOL_STRING:
             return true;
-          case CONTEXT_PROVIDER_NUMBER:
-          case CONTEXT_PROVIDER_SYMBOL_STRING:
-          case CONTEXT_CONSUMER_NUMBER:
-          case CONTEXT_CONSUMER_SYMBOL_STRING:
-          case SUSPENSE_NUMBER:
-          case SUSPENSE_SYMBOL_STRING:
-          case DEPRECATED_PLACEHOLDER_SYMBOL_STRING:
-          case PROFILER_NUMBER:
-          case PROFILER_SYMBOL_STRING:
-            return false;
           default:
-            return false;
+            break;
         }
     }
+
+    const elementType = getElementTypeForFiber(fiber);
+    if (hideElementsWithTypes.has(elementType)) {
+      return true;
+    }
+
+    if (hideElementsWithDisplayNames.size > 0) {
+      const displayName = getDisplayNameForFiber(fiber);
+      if (displayName != null) {
+        for (let displayNameRegExp of hideElementsWithDisplayNames) {
+          if (displayNameRegExp.test(displayName)) {
+            return true;
+          }
+        }
+      }
+    }
+
+    if (_debugSource != null && hideElementsWithPaths.size > 0) {
+      const { fileName } = _debugSource;
+      for (let pathRegExp of hideElementsWithPaths) {
+        if (pathRegExp.test(fileName)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
   function getTypeSymbol(type: any): Symbol | number {
@@ -321,10 +409,9 @@ export function attach(
       : symbolOrNumber;
   }
 
-  // TODO: we might want to change the data structure once we no longer suppport Stack versions of `getData`.
-  // TODO: Keep in sync with getElementType()
-  function getDataForFiber(fiber: Fiber): FiberData {
-    const { elementType, type, key, tag } = fiber;
+  // NOTICE Keep in sync with shouldFilterFiber() and other get*ForFiber methods
+  function getDisplayNameForFiber(fiber: Fiber): string | null {
+    const { elementType, type, tag } = fiber;
 
     // This is to support lazy components with a Promise as the type.
     // see https://github.com/facebook/react/pull/13397
@@ -335,91 +422,47 @@ export function attach(
       }
     }
 
-    let fiberData: FiberData = ((null: any): FiberData);
-    let displayName: string = ((null: any): string);
     let resolvedContext: any = null;
 
     switch (tag) {
       case ClassComponent:
       case IncompleteClassComponent:
-        fiberData = {
-          displayName: getDisplayName(resolvedType),
-          key,
-          type: ElementTypeClass,
-        };
-        break;
+        return getDisplayName(resolvedType);
       case FunctionComponent:
       case IndeterminateComponent:
-        fiberData = {
-          displayName: getDisplayName(resolvedType),
-          key,
-          type: ElementTypeFunction,
-        };
-        break;
+        return getDisplayName(resolvedType);
       case EventComponent:
-        fiberData = {
-          displayName: null,
-          key,
-          type: ElementTypeEventComponent,
-        };
-        break;
+        return null;
       case EventTarget:
         switch (getTypeSymbol(elementType.type)) {
           case EVENT_TARGET_TOUCH_HIT_NUMBER:
           case EVENT_TARGET_TOUCH_HIT_STRING:
-            displayName = 'TouchHitTarget';
-            break;
+            return 'TouchHitTarget';
           default:
-            displayName = 'EventTarget';
-            break;
+            return 'EventTarget';
         }
-        fiberData = {
-          displayName,
-          key,
-          type: ElementTypeEventTarget,
-        };
-        break;
       case ForwardRef:
         const functionName = getDisplayName(resolvedType.render, '');
-        displayName =
+        return (
           resolvedType.displayName ||
-          (functionName !== '' ? `ForwardRef(${functionName})` : 'ForwardRef');
-
-        fiberData = {
-          displayName,
-          key,
-          type: ElementTypeForwardRef,
-        };
-        break;
+          (functionName !== '' ? `ForwardRef(${functionName})` : 'ForwardRef')
+        );
       case HostRoot:
-        return {
-          displayName: null,
-          key: null,
-          type: ElementTypeRoot,
-        };
-      case HostPortal:
+        return null;
       case HostComponent:
+        return type;
+      case HostPortal:
       case HostText:
       case Fragment:
-        return {
-          displayName: null,
-          key,
-          type: ElementTypeOtherOrUnknown,
-        };
+        return null;
       case MemoComponent:
       case SimpleMemoComponent:
         if (elementType.displayName) {
-          displayName = elementType.displayName;
+          return elementType.displayName;
         } else {
-          displayName = type.displayName || type.name;
-          displayName = displayName ? `Memo(${displayName})` : 'Memo';
+          const displayName = type.displayName || type.name;
+          return displayName ? `Memo(${displayName})` : 'Memo';
         }
-        fiberData = {
-          displayName,
-          key,
-          type: ElementTypeMemo,
-        };
-        break;
       default:
         const typeSymbol = getTypeSymbol(type);
 
@@ -427,83 +470,98 @@ export function attach(
           case CONCURRENT_MODE_NUMBER:
           case CONCURRENT_MODE_SYMBOL_STRING:
           case DEPRECATED_ASYNC_MODE_SYMBOL_STRING:
-            return {
-              displayName: null,
-              key: null,
-              type: ElementTypeOtherOrUnknown,
-            };
+            return null;
           case CONTEXT_PROVIDER_NUMBER:
           case CONTEXT_PROVIDER_SYMBOL_STRING:
             // 16.3.0 exposed the context object as "context"
             // PR #12501 changed it to "_context" for 16.3.1+
-            // NOTE Keep in sync with inspectElement()
+            // NOTE Keep in sync with inspectElementRaw()
             resolvedContext = fiber.type._context || fiber.type.context;
-            displayName = `${resolvedContext.displayName ||
-              'Context'}.Provider`;
-
-            fiberData = {
-              displayName,
-              key,
-              type: ElementTypeContext,
-            };
-            break;
+            return `${resolvedContext.displayName || 'Context'}.Provider`;
           case CONTEXT_CONSUMER_NUMBER:
           case CONTEXT_CONSUMER_SYMBOL_STRING:
             // 16.3-16.5 read from "type" because the Consumer is the actual context object.
             // 16.6+ should read from "type._context" because Consumer can be different (in DEV).
-            // NOTE Keep in sync with inspectElement()
+            // NOTE Keep in sync with inspectElementRaw()
             resolvedContext = fiber.type._context || fiber.type;
 
             // NOTE: TraceUpdatesBackendManager depends on the name ending in '.Consumer'
             // If you change the name, figure out a more resilient way to detect it.
-            displayName = `${resolvedContext.displayName ||
-              'Context'}.Consumer`;
-
-            fiberData = {
-              displayName,
-              key,
-              type: ElementTypeContext,
-            };
-            break;
+            return `${resolvedContext.displayName || 'Context'}.Consumer`;
           case STRICT_MODE_NUMBER:
           case STRICT_MODE_SYMBOL_STRING:
-            fiberData = {
-              displayName: null,
-              key,
-              type: ElementTypeOtherOrUnknown,
-            };
-            break;
+            return null;
           case SUSPENSE_NUMBER:
           case SUSPENSE_SYMBOL_STRING:
           case DEPRECATED_PLACEHOLDER_SYMBOL_STRING:
-            fiberData = {
-              displayName: 'Suspense',
-              key,
-              type: ElementTypeSuspense,
-            };
-            break;
+            return 'Suspense';
           case PROFILER_NUMBER:
           case PROFILER_SYMBOL_STRING:
-            fiberData = {
-              displayName: `Profiler(${fiber.memoizedProps.id})`,
-              key,
-              type: ElementTypeProfiler,
-            };
-            break;
+            return `Profiler(${fiber.memoizedProps.id})`;
           default:
             // Unknown element type.
             // This may mean a new element type that has not yet been added to DevTools.
-            fiberData = {
-              displayName: null,
-              key,
-              type: ElementTypeOtherOrUnknown,
-            };
-            break;
+            return null;
         }
-        break;
     }
+  }
 
-    return fiberData;
+  // NOTICE Keep in sync with shouldFilterFiber() and other get*ForFiber methods
+  function getElementTypeForFiber(fiber: Fiber): ElementType {
+    const { type, tag } = fiber;
+
+    switch (tag) {
+      case ClassComponent:
+      case IncompleteClassComponent:
+        return ElementTypeClass;
+      case FunctionComponent:
+      case IndeterminateComponent:
+        return ElementTypeFunction;
+      case EventComponent:
+        return ElementTypeEventComponent;
+      case EventTarget:
+        return ElementTypeEventTarget;
+      case ForwardRef:
+        return ElementTypeForwardRef;
+      case HostRoot:
+        return ElementTypeRoot;
+      case HostComponent:
+        return ElementTypeHostComponent;
+      case HostPortal:
+      case HostText:
+      case Fragment:
+        return ElementTypeOtherOrUnknown;
+      case MemoComponent:
+      case SimpleMemoComponent:
+        return ElementTypeMemo;
+      default:
+        const typeSymbol = getTypeSymbol(type);
+
+        switch (typeSymbol) {
+          case CONCURRENT_MODE_NUMBER:
+          case CONCURRENT_MODE_SYMBOL_STRING:
+          case DEPRECATED_ASYNC_MODE_SYMBOL_STRING:
+            return ElementTypeOtherOrUnknown;
+          case CONTEXT_PROVIDER_NUMBER:
+          case CONTEXT_PROVIDER_SYMBOL_STRING:
+            return ElementTypeContext;
+          case CONTEXT_CONSUMER_NUMBER:
+          case CONTEXT_CONSUMER_SYMBOL_STRING:
+            return ElementTypeContext;
+          case STRICT_MODE_NUMBER:
+          case STRICT_MODE_SYMBOL_STRING:
+            return ElementTypeOtherOrUnknown;
+          case SUSPENSE_NUMBER:
+          case SUSPENSE_SYMBOL_STRING:
+          case DEPRECATED_PLACEHOLDER_SYMBOL_STRING:
+            return ElementTypeSuspense;
+          case PROFILER_NUMBER:
+          case PROFILER_SYMBOL_STRING:
+            return ElementTypeProfiler;
+          default:
+            return ElementTypeOtherOrUnknown;
+        }
+    }
   }
 
   // This is a slightly annoying indirection.
@@ -727,7 +785,9 @@ export function attach(
       pushOperation(isProfilingSupported ? 1 : 0);
       pushOperation(hasOwnerMetadata ? 1 : 0);
     } else {
-      const { displayName, key, type } = getDataForFiber(fiber);
+      const { key } = fiber;
+      const displayName = getDisplayNameForFiber(fiber);
+      const elementType = getElementTypeForFiber(fiber);
       const { _debugOwner } = fiber;
 
       const ownerID =
@@ -738,7 +798,7 @@ export function attach(
       let keyStringID = getStringID(key);
       pushOperation(TREE_OPERATION_ADD);
       pushOperation(id);
-      pushOperation(type);
+      pushOperation(elementType);
       pushOperation(parentID);
       pushOperation(ownerID);
       pushOperation(displayNameStringID);
@@ -1587,7 +1647,7 @@ export function attach(
     ) {
       // 16.3-16.5 read from "type" because the Consumer is the actual context object.
       // 16.6+ should read from "type._context" because Consumer can be different (in DEV).
-      // NOTE Keep in sync with getDataForFiber()
+      // NOTE Keep in sync with getDisplayNameForFiber()
       const consumerResolvedContext = type._context || type;
 
       // Global context value.
@@ -1604,7 +1664,7 @@ export function attach(
         ) {
           // 16.3.0 exposed the context object as "context"
           // PR #12501 changed it to "_context" for 16.3.1+
-          // NOTE Keep in sync with getDataForFiber()
+          // NOTE Keep in sync with getDisplayNameForFiber()
           const providerResolvedContext =
             currentType._context || currentType.context;
           if (providerResolvedContext === consumerResolvedContext) {
@@ -1629,7 +1689,7 @@ export function attach(
       let owner = _debugOwner;
       while (owner !== null) {
         owners.push({
-          displayName: getDataForFiber(owner).displayName || 'Unknown',
+          displayName: getDisplayNameForFiber(owner) || 'Unknown',
           id: getFiberID(getPrimaryFiber(owner)),
         });
         owner = owner._debugOwner;
@@ -1659,7 +1719,7 @@ export function attach(
       // Can view component source location.
       canViewSource,
 
-      displayName: getDataForFiber(fiber).displayName,
+      displayName: getDisplayNameForFiber(fiber),
 
       // Inspectable properties.
       // TODO Review sanitization approach for the below inspectable values.
@@ -2123,7 +2183,7 @@ export function attach(
       if (child === null) {
         break;
       }
-      const displayName = getDataForFiber(child).displayName;
+      const displayName = getDisplayNameForFiber(child);
       if (displayName !== null) {
         // Prefer display names that we get from user-defined components.
         // We want to avoid using e.g. 'Suspense' unless we find nothing else.
@@ -2166,7 +2226,8 @@ export function attach(
   }
 
   function getPathFrame(fiber: Fiber): PathFrame {
-    let { displayName, key } = getDataForFiber(fiber);
+    const { key } = fiber;
+    let displayName = getDisplayNameForFiber(fiber);
     const index = fiber.index;
     switch (fiber.tag) {
       case HostRoot:
@@ -2260,5 +2321,6 @@ export function attach(
     setTrackedPath,
     startProfiling,
     stopProfiling,
+    updateComponentFilters,
   };
 }
