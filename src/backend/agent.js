@@ -275,18 +275,19 @@ export default class Agent extends EventEmitter {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
     }
 
-    let node: HTMLElement | null = null;
+    let nodes: ?Array<HTMLElement> = null;
     if (renderer !== null) {
-      node = ((renderer.findNativeByFiberID(id): any): HTMLElement);
+      nodes = ((renderer.findNativeByFiberID(id): any): ?Array<HTMLElement>);
     }
 
-    if (node != null) {
+    if (nodes != null && nodes[0] != null) {
+      const node = nodes[0];
       if (scrollIntoView && typeof node.scrollIntoView === 'function') {
         // If the node isn't visible show it before highlighting it.
         // We may want to reconsider this; it might be a little disruptive.
         node.scrollIntoView({ block: 'nearest', inline: 'nearest' });
       }
-      showOverlay(((node: any): HTMLElement), displayName, hideAfterTimeout);
+      showOverlay(nodes, displayName, hideAfterTimeout);
       if (openNativeElementsPanel) {
         window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = node;
         this._bridge.send('syncSelectionToNativeElementsPanel');
@@ -593,7 +594,7 @@ export default class Agent extends EventEmitter {
 
     // Don't pass the name explicitly.
     // It will be inferred from DOM tag and Fiber owner.
-    showOverlay(target, null, false);
+    showOverlay([target], null, false);
 
     this._selectFiberForNode(target);
   };

@@ -11,30 +11,17 @@ type Rect = {
   width: number,
 };
 
-// Note that this component is not affected by the active Theme,
-// because it highlights elements in the main Chrome window (outside of devtools).
+// Note that the Overlay components are not affected by the active Theme,
+// because they highlight elements in the main Chrome window (outside of devtools).
 // The colors below were chosen to roughly match those used by Chrome devtools.
-export default class Overlay {
-  window: window;
-  container: HTMLElement;
+
+class OverlayRect {
   node: HTMLElement;
   border: HTMLElement;
   padding: HTMLElement;
   content: HTMLElement;
-  tip: HTMLElement;
-  nameSpan: HTMLElement;
-  dimSpan: HTMLElement;
 
-  constructor() {
-    // Find the root window, because overlays are positioned relative to it.
-    let currentWindow = window;
-    while (currentWindow !== currentWindow.parent) {
-      currentWindow = currentWindow.parent;
-    }
-
-    const doc = currentWindow.document;
-    this.window = currentWindow;
-    this.container = doc.createElement('div');
+  constructor(doc, container) {
     this.node = doc.createElement('div');
     this.border = doc.createElement('div');
     this.padding = doc.createElement('div');
@@ -50,59 +37,21 @@ export default class Overlay {
       position: 'fixed',
     });
 
-    this.tip = doc.createElement('div');
-    assign(this.tip.style, {
-      backgroundColor: '#333740',
-      borderRadius: '2px',
-      fontFamily:
-        '"SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace',
-      fontWeight: 'bold',
-      padding: '3px 5px',
-      pointerEvents: 'none',
-      position: 'fixed',
-      fontSize: '12px',
-    });
-
-    this.nameSpan = doc.createElement('span');
-    this.tip.appendChild(this.nameSpan);
-    assign(this.nameSpan.style, {
-      color: '#ee78e6',
-      borderRight: '1px solid #aaaaaa',
-      paddingRight: '0.5rem',
-      marginRight: '0.5rem',
-    });
-    this.dimSpan = doc.createElement('span');
-    this.tip.appendChild(this.dimSpan);
-    assign(this.dimSpan.style, {
-      color: '#d7d7d7',
-    });
-
-    this.container.style.zIndex = '10000000';
     this.node.style.zIndex = '10000000';
-    this.tip.style.zIndex = '10000000';
-    this.container.appendChild(this.node);
-    this.container.appendChild(this.tip);
+
     this.node.appendChild(this.border);
     this.border.appendChild(this.padding);
     this.padding.appendChild(this.content);
-    doc.body.appendChild(this.container);
+    container.appendChild(this.node);
   }
 
   remove() {
-    if (this.container.parentNode) {
-      this.container.parentNode.removeChild(this.container);
+    if (this.node.parentNode) {
+      this.node.parentNode.removeChild(this.node);
     }
   }
 
-  inspect(node: HTMLElement, name?: ?string) {
-    // We can't get the size of text nodes or comment nodes. React as of v15
-    // heavily uses comment nodes to delimit text.
-    if (node.nodeType !== Node.ELEMENT_NODE) {
-      return;
-    }
-    const box = getNestedBoundingClientRect(node, this.window);
-    const dims = getElementDimensions(node);
-
+  update(box, dims) {
     boxWrap(dims, 'margin', this.node);
     boxWrap(dims, 'border', this.border);
     boxWrap(dims, 'padding', this.padding);
@@ -128,29 +77,190 @@ export default class Overlay {
       top: box.top - dims.marginTop + 'px',
       left: box.left - dims.marginLeft + 'px',
     });
+  }
+}
+
+class OverlayTip {
+  tip: HTMLElement;
+  nameSpan: HTMLElement;
+  dimSpan: HTMLElement;
+
+  constructor(doc, container) {
+    this.tip = doc.createElement('div');
+    assign(this.tip.style, {
+      display: 'flex',
+      flexFlow: 'row nowrap',
+      backgroundColor: '#333740',
+      borderRadius: '2px',
+      fontFamily:
+        '"SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace',
+      fontWeight: 'bold',
+      padding: '3px 5px',
+      pointerEvents: 'none',
+      position: 'fixed',
+      fontSize: '12px',
+      whiteSpace: 'nowrap',
+    });
+
+    this.nameSpan = doc.createElement('span');
+    this.tip.appendChild(this.nameSpan);
+    assign(this.nameSpan.style, {
+      color: '#ee78e6',
+      borderRight: '1px solid #aaaaaa',
+      paddingRight: '0.5rem',
+      marginRight: '0.5rem',
+    });
+    this.dimSpan = doc.createElement('span');
+    this.tip.appendChild(this.dimSpan);
+    assign(this.dimSpan.style, {
+      color: '#d7d7d7',
+    });
+
+    this.tip.style.zIndex = '10000000';
+    container.appendChild(this.tip);
+  }
+
+  remove() {
+    if (this.tip.parentNode) {
+      this.tip.parentNode.removeChild(this.tip);
+    }
+  }
+
+  updateText(name, width, height) {
+    this.nameSpan.textContent = name;
+    this.dimSpan.textContent =
+      Math.round(width) + 'px × ' + Math.round(height) + 'px';
+  }
+
+  updatePosition(dims, bounds) {
+    const tipRect = this.tip.getBoundingClientRect();
+    const tipPos = findTipPos(dims, bounds, {
+      width: tipRect.width,
+      height: tipRect.height,
+    });
+    assign(this.tip.style, tipPos.style);
+  }
+}
+
+export default class Overlay {
+  window: window;
+  tipBoundsWindow: window;
+  container: HTMLElement;
+  tip: OverlayTip;
+  rects: Array<OverlayRect>;
+
+  constructor() {
+    // Find the root window, because overlays are positioned relative to it.
+    let currentWindow = window;
+    while (currentWindow !== currentWindow.parent) {
+      currentWindow = currentWindow.parent;
+    }
+    this.window = currentWindow;
+
+    // When opened in shells/dev, the tooltip should be bound by the app iframe, not by the topmost window.
+    let tipBoundsWindow = window;
+    while (
+      tipBoundsWindow !== tipBoundsWindow.parent &&
+      !tipBoundsWindow.hasOwnProperty('__REACT_DEVTOOLS_GLOBAL_HOOK__')
+    ) {
+      tipBoundsWindow = tipBoundsWindow.parent;
+    }
+    this.tipBoundsWindow = tipBoundsWindow;
+
+    const doc = currentWindow.document;
+    this.container = doc.createElement('div');
+    this.container.style.zIndex = '10000000';
+
+    this.tip = new OverlayTip(doc, this.container);
+    this.rects = [];
+
+    doc.body.appendChild(this.container);
+  }
+
+  remove() {
+    this.tip.remove();
+    this.rects.forEach(rect => {
+      rect.remove();
+    });
+    this.rects.length = 0;
+    if (this.container.parentNode) {
+      this.container.parentNode.removeChild(this.container);
+    }
+  }
+
+  inspect(nodes: Array<HTMLElement>, name?: ?string) {
+    // We can't get the size of text nodes or comment nodes. React as of v15
+    // heavily uses comment nodes to delimit text.
+    const elements = nodes.filter(node => node.nodeType === Node.ELEMENT_NODE);
+
+    while (this.rects.length > elements.length) {
+      const rect = this.rects.pop();
+      rect.remove();
+    }
+    if (elements.length === 0) {
+      return;
+    }
+
+    while (this.rects.length < elements.length) {
+      this.rects.push(new OverlayRect(this.window.document, this.container));
+    }
+
+    const outerBox = {
+      top: Number.POSITIVE_INFINITY,
+      right: Number.NEGATIVE_INFINITY,
+      bottom: Number.NEGATIVE_INFINITY,
+      left: Number.POSITIVE_INFINITY,
+    };
+    elements.forEach((element, index) => {
+      const box = getNestedBoundingClientRect(element, this.window);
+      const dims = getElementDimensions(element);
+
+      outerBox.top = Math.min(outerBox.top, box.top - dims.marginTop);
+      outerBox.right = Math.max(
+        outerBox.right,
+        box.left + box.width + dims.marginRight
+      );
+      outerBox.bottom = Math.max(
+        outerBox.bottom,
+        box.top + box.height + dims.marginBottom
+      );
+      outerBox.left = Math.min(outerBox.left, box.left - dims.marginLeft);
+
+      const rect = this.rects[index];
+      rect.update(box, dims);
+    });
 
     if (!name) {
-      name = node.nodeName.toLowerCase();
-      const ownerName = getOwnerDisplayName(node);
+      name = elements[0].nodeName.toLowerCase();
+      const ownerName = getOwnerDisplayName(elements[0]);
       if (ownerName) {
         name += ' (in ' + ownerName + ')';
       }
     }
 
-    this.nameSpan.textContent = name;
-    this.dimSpan.textContent =
-      Math.round(box.width) + 'px × ' + Math.round(box.height) + 'px';
-
-    const tipPos = findTipPos(
-      {
-        top: box.top - dims.marginTop,
-        left: box.left - dims.marginLeft,
-        height: box.height + dims.marginTop + dims.marginBottom,
-        width: box.width + dims.marginLeft + dims.marginRight,
-      },
+    this.tip.updateText(
+      name,
+      outerBox.right - outerBox.left,
+      outerBox.bottom - outerBox.top
+    );
+    const tipBounds = getNestedBoundingClientRect(
+      this.tipBoundsWindow.document.documentElement,
       this.window
     );
-    assign(this.tip.style, tipPos);
+    this.tip.updatePosition(
+      {
+        top: outerBox.top,
+        left: outerBox.left,
+        height: outerBox.bottom - outerBox.top,
+        width: outerBox.right - outerBox.left,
+      },
+      {
+        top: tipBounds.top + this.tipBoundsWindow.scrollY,
+        left: tipBounds.left + this.tipBoundsWindow.scrollX,
+        height: this.tipBoundsWindow.innerHeight,
+        width: this.tipBoundsWindow.innerWidth,
+      }
+    );
   }
 }
 
@@ -185,35 +295,41 @@ function getFiber(node) {
   return null;
 }
 
-function findTipPos(dims, win) {
-  const tipHeight = 20;
+function findTipPos(dims, bounds, tipSize) {
+  const tipHeight = Math.max(tipSize.height, 20);
+  const tipWidth = Math.max(tipSize.width, 60);
   const margin = 5;
+
   let top;
-  if (dims.top + dims.height + tipHeight <= win.innerHeight) {
-    if (dims.top + dims.height < 0) {
-      top = margin;
+  if (dims.top + dims.height + tipHeight <= bounds.top + bounds.height) {
+    if (dims.top + dims.height < bounds.top + 0) {
+      top = bounds.top + margin;
     } else {
       top = dims.top + dims.height + margin;
     }
-  } else if (dims.top - tipHeight <= win.innerHeight) {
-    if (dims.top - tipHeight - margin < margin) {
-      top = margin;
+  } else if (dims.top - tipHeight <= bounds.top + bounds.height) {
+    if (dims.top - tipHeight - margin < bounds.top + margin) {
+      top = bounds.top + margin;
     } else {
       top = dims.top - tipHeight - margin;
     }
   } else {
-    top = win.innerHeight - tipHeight - margin;
+    top = bounds.top + bounds.height - tipHeight - margin;
+  }
+
+  let left = dims.left + margin;
+  if (dims.left < bounds.left) {
+    left = bounds.left + margin;
+  }
+  if (dims.left + tipWidth > bounds.left + bounds.width) {
+    left = bounds.left + bounds.width - tipWidth - margin;
   }
 
   top += 'px';
-
-  if (dims.left < 0) {
-    return { top, left: margin };
-  }
-  if (dims.left + 200 > win.innerWidth) {
-    return { top, right: margin };
-  }
-  return { top, left: dims.left + margin + 'px' };
+  left += 'px';
+  return {
+    style: { top, left },
+  };
 }
 
 export function getElementDimensions(domElement: Element) {
