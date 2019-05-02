@@ -41,7 +41,10 @@ function CommitFlamegraphListItem({ data, index, style }: Props) {
 
   const row = rows[index];
 
-  let selectedNodeOffset = scaleX(selectedChartNode.offset, width);
+  let selectedNodeOffset = scaleX(
+    selectedChartNode !== null ? selectedChartNode.offset : 0,
+    width
+  );
 
   return (
     <Fragment>
