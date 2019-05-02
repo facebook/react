@@ -537,7 +537,15 @@ describe('ReactIncrementalUpdates', () => {
 
     // All the updates should render and commit in a single batch.
     Scheduler.advanceTime(10000);
-    expect(Scheduler).toHaveYielded(['Render: goodbye']);
+    expect(Scheduler).toHaveYielded([
+      'Render: ',
+      'Commit: ',
+      'Render: go',
+      'Commit: go',
+      'Render: good',
+      'Commit: good',
+      'Render: goodbye',
+    ]);
     // Passive effect
     expect(Scheduler).toFlushAndYield(['Commit: goodbye']);
   });
@@ -640,6 +648,18 @@ describe('ReactIncrementalUpdates', () => {
     // All the updates should render and commit in a single batch.
     Scheduler.advanceTime(10000);
     expect(Scheduler).toHaveYielded([
+      'Render: ',
+      'Commit: ',
+      'Render: ',
+      'Commit: ',
+      'Render: go',
+      'Commit: go',
+      'Render: go',
+      'Commit: go',
+      'Render: good',
+      'Commit: good',
+      'Render: good',
+      'Commit: good',
       'Render: goodbye',
       'Commit: goodbye',
       'Render: goodbye',
