@@ -1,0 +1,8 @@
+.Wrapper {
+  display: flex;
+}
+
+.Label {
+  font-size: var(--font-size-sans-small);
+  font-family: var(--font-family-sans);
+}

@@ -8,6 +8,10 @@ import Toggle from '../Toggle';
 import ButtonIcon from '../ButtonIcon';
 import Store from 'src/devtools/store';
 
+import styles from './ToggleCommitFilterModalButton.css';
+
+import type { ComponentFilter } from 'src/types';
+
 export default function ToggleCommitFilterModalButton() {
   const store = useContext(StoreContext);
 
@@ -29,14 +33,47 @@ export default function ToggleCommitFilterModalButton() {
   );
   const isProfiling = useSubscription<boolean, Store>(isProfilingSubscription);
 
+  const componentFiltersSubscription = useMemo(
+    () => ({
+      getCurrentValue: () => store.componentFilters,
+      subscribe: (callback: Function) => {
+        store.addListener('componentFilters', callback);
+        return () => store.removeListener('componentFilters', callback);
+      },
+    }),
+    [store]
+  );
+  const componentFilters = useSubscription<Array<ComponentFilter>, Store>(
+    componentFiltersSubscription
+  );
+
+  const enabledCount = useMemo(
+    () =>
+      componentFilters.reduce(
+        (count, componentFilter) =>
+          componentFilter.isEnabled ? count + 1 : count,
+        0
+      ),
+    [componentFilters]
+  );
+
   return (
     <Toggle
       isChecked={isModalShowing}
       isDisabled={isProfiling}
       onChange={setIsModalShowing}
-      title="Filter preferences"
+      title={
+        enabledCount > 0
+          ? `Filter preferences (${enabledCount} enabled)`
+          : 'Filter preferences'
+      }
     >
-      <ButtonIcon type="filter" />
+      <div className={styles.Wrapper}>
+        <ButtonIcon type="filter" />
+        {enabledCount > 0 && (
+          <span className={styles.Label}>{enabledCount}</span>
+        )}
+      </div>
     </Toggle>
   );
 }
