@@ -696,4 +696,91 @@ describe('Store', () => {
       expect(store).toMatchSnapshot('4: toggle fallback on');
     });
   });
+
+  describe('getIndexOfElementID', () => {
+    beforeEach(() => {
+      store.collapseNodesByDefault = false;
+    });
+
+    it('should support a single root with a single child', () => {
+      const Grandparent = () => (
+        <React.Fragment>
+          <Parent />
+          <Parent />
+        </React.Fragment>
+      );
+      const Parent = () => <Child />;
+      const Child = () => null;
+
+      act(() =>
+        ReactDOM.render(<Grandparent />, document.createElement('div'))
+      );
+
+      for (let i = 0; i < store.numElements; i++) {
+        expect(store.getIndexOfElementID(store.getElementIDAtIndex(i))).toBe(i);
+      }
+    });
+
+    it('should support multiple roots with one children each', () => {
+      const Grandparent = () => <Parent />;
+      const Parent = () => <Child />;
+      const Child = () => null;
+
+      act(() => {
+        ReactDOM.render(<Grandparent />, document.createElement('div'));
+        ReactDOM.render(<Grandparent />, document.createElement('div'));
+      });
+
+      for (let i = 0; i < store.numElements; i++) {
+        expect(store.getIndexOfElementID(store.getElementIDAtIndex(i))).toBe(i);
+      }
+    });
+
+    it('should support a single root with multiple top level children', () => {
+      const Grandparent = () => <Parent />;
+      const Parent = () => <Child />;
+      const Child = () => null;
+
+      act(() =>
+        ReactDOM.render(
+          <React.Fragment>
+            <Grandparent />
+            <Grandparent />
+          </React.Fragment>,
+          document.createElement('div')
+        )
+      );
+
+      for (let i = 0; i < store.numElements; i++) {
+        expect(store.getIndexOfElementID(store.getElementIDAtIndex(i))).toBe(i);
+      }
+    });
+
+    it('should support multiple roots with multiple top level children', () => {
+      const Grandparent = () => <Parent />;
+      const Parent = () => <Child />;
+      const Child = () => null;
+
+      act(() => {
+        ReactDOM.render(
+          <React.Fragment>
+            <Grandparent />
+            <Grandparent />
+          </React.Fragment>,
+          document.createElement('div')
+        );
+        ReactDOM.render(
+          <React.Fragment>
+            <Grandparent />
+            <Grandparent />
+          </React.Fragment>,
+          document.createElement('div')
+        );
+      });
+
+      for (let i = 0; i < store.numElements; i++) {
+        expect(store.getIndexOfElementID(store.getElementIDAtIndex(i))).toBe(i);
+      }
+    });
+  });
 });

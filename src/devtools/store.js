@@ -429,12 +429,6 @@ export default class Store extends EventEmitter {
     let index = 0;
     while (true) {
       const current = ((this._idToElement.get(currentID): any): Element);
-      if (current.parentID === 0) {
-        // We found the root; stop crawling.
-        break;
-      }
-
-      index++;
 
       const { children } = current;
       for (let i = 0; i < children.length; i++) {
@@ -445,6 +439,13 @@ export default class Store extends EventEmitter {
         const child = ((this._idToElement.get(childID): any): Element);
         index += child.isCollapsed ? 1 : child.weight;
       }
+
+      if (current.parentID === 0) {
+        // We found the root; stop crawling.
+        break;
+      }
+
+      index++;
 
       previousID = current.id;
       currentID = current.parentID;
