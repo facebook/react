@@ -327,6 +327,9 @@ export function attach(
 
     applyComponentFilters(componentFilters);
 
+    // Reset psuedo counters so that new path selections will be persisted.
+    rootDisplayNameCounter.clear();
+
     // Recursively re-mount all roots with new filter criteria applied.
     hook.getFiberRoots(rendererID).forEach(root => {
       currentRootID = getFiberID(getPrimaryFiber(root.current));
