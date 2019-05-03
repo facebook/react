@@ -1351,15 +1351,15 @@ export function attach(
     currentRootID = -1;
   }
 
-  function findAllCurrentHostFibers(parent: Fiber): $ReadOnlyArray<Fiber> {
+  function findAllCurrentHostFibers(id: number): $ReadOnlyArray<Fiber> {
     const fibers = [];
-    const currentParent = findCurrentFiberUsingSlowPath(parent);
-    if (!currentParent) {
+    const fiber = findCurrentFiberUsingSlowPathById(id);
+    if (!fiber) {
       return fibers;
     }
 
     // Next we'll drill down this component to find all HostComponent/Text.
-    let node: Fiber = currentParent;
+    let node: Fiber = fiber;
     while (true) {
       if (node.tag === HostComponent || node.tag === HostText) {
         fibers.push(node);
@@ -1368,11 +1368,11 @@ export function attach(
         node = node.child;
         continue;
       }
-      if (node === currentParent) {
+      if (node === fiber) {
         return fibers;
       }
       while (!node.sibling) {
-        if (!node.return || node.return === currentParent) {
+        if (!node.return || node.return === fiber) {
           return fibers;
         }
         node = node.return;
@@ -1402,7 +1402,7 @@ export function attach(
           fiber = maybeFallbackFiber;
         }
       }
-      const hostFibers = findAllCurrentHostFibers(fiber);
+      const hostFibers = findAllCurrentHostFibers(id);
       return hostFibers.map(hostFiber => hostFiber.stateNode).filter(Boolean);
     } catch (err) {
       // The fiber might have unmounted by now.
@@ -1465,7 +1465,13 @@ export function attach(
   // https://github.com/facebook/react/blob/master/packages/react-reconciler/src/ReactFiberTreeReflection.js
   // It would be nice if we updated React to inject this function directly (vs just indirectly via findDOMNode).
   // BEGIN copied code
-  function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
+  function findCurrentFiberUsingSlowPathById(id: number): Fiber | null {
+    const fiber = idToFiberMap.get(id);
+    if (fiber == null) {
+      console.warn(`Could not find Fiber with id "${id}"`);
+      return null;
+    }
+
     let alternate = fiber.alternate;
     if (!alternate) {
       // If there is no alternate, then we only need to check if it is mounted.
@@ -1611,7 +1617,6 @@ export function attach(
 
   function selectElement(id: number): void {
     let fiber = idToFiberMap.get(id);
-
     if (fiber == null) {
       console.warn(`Could not find Fiber with id "${id}"`);
       return;
@@ -1645,7 +1650,6 @@ export function attach(
 
   function prepareViewElementSource(id: number): void {
     let fiber = idToFiberMap.get(id);
-
     if (fiber == null) {
       console.warn(`Could not find Fiber with id "${id}"`);
       return;
@@ -1668,18 +1672,8 @@ export function attach(
   }
 
   function inspectElementRaw(id: number): InspectedElement | null {
-    let fiber = idToFiberMap.get(id);
-
+    let fiber = findCurrentFiberUsingSlowPathById(id);
     if (fiber == null) {
-      console.warn(`Could not find Fiber with id "${id}"`);
-      return null;
-    }
-
-    // Find the currently mounted version of this fiber (so we don't show the wrong props and state).
-    fiber = findCurrentFiberUsingSlowPath(fiber);
-
-    if (fiber == null) {
-      console.warn(`Could not find Fiber with id "${id}"`);
       return null;
     }
 
@@ -1860,14 +1854,6 @@ export function attach(
     if (supportsGroup) {
       console.groupEnd();
     }
-  }
-
-  function findCurrentFiberUsingSlowPathById(id: number): Fiber | null {
-    const fiber = idToFiberMap.get(id);
-    if (fiber) {
-      return findCurrentFiberUsingSlowPath(fiber);
-    }
-    return null;
   }
 
   function setInHook(
