@@ -8,20 +8,20 @@ if (!NODE_ENV) {
   process.exit(1);
 }
 
+const TARGET = process.env.TARGET;
+if (!TARGET) {
+  console.error('TARGET not set');
+  process.exit(1);
+}
+
 const __DEV__ = NODE_ENV === 'development';
 
 const GITHUB_URL = getGitHubURL();
 const DEVTOOLS_VERSION = getVersionString();
 
-module.exports = {
+const config = {
   mode: __DEV__ ? 'development' : 'production',
   devtool: false,
-  devServer: {
-    hot: true,
-    port: 8080,
-    clientLogLevel: 'warning',
-    stats: 'errors-only',
-  },
   entry: {
     app: './app/index.js',
     backend: './src/backend.js',
@@ -67,3 +67,20 @@ module.exports = {
     ],
   },
 };
+
+if (TARGET === 'local') {
+  config.devServer = {
+    hot: true,
+    port: 8080,
+    clientLogLevel: 'warning',
+    publicPath: '/dist/',
+    stats: 'errors-only',
+  };
+} else {
+  config.output = {
+    path: resolve(__dirname, 'dist'),
+    filename: '[name].js',
+  };
+}
+
+module.exports = config;

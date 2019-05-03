@@ -38,7 +38,7 @@ mountButton.addEventListener('click', function() {
   }
 });
 
-inject('./app.js', () => {
+inject('dist/app.js', () => {
   initDevTools({
     connect(cb) {
       const bridge = new Bridge({
@@ -78,9 +78,11 @@ inject('./app.js', () => {
 
         // Initialize the backend only once the DevTools frontend Store has been initialized.
         // Otherwise the Store may miss important initial tree op codes.
-        inject('./backend.js', () => {
-          // Clear noisy webpack "WDS: ..." output.
-          console.clear();
+        inject('dist/backend.js', () => {
+          if (__DEV__) {
+            // Clear noisy webpack "WDS: ..." output.
+            console.clear();
+          }
         });
       });
     },

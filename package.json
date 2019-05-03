@@ -30,6 +30,7 @@
     ]
   },
   "scripts": {
+    "build:demo": "cd ./shells/dev && cross-env NODE_ENV=development cross-env TARGET=remote webpack --config webpack.config.js",
     "build:extension": "cross-env NODE_ENV=production yarn run build:extension:chrome && yarn run build:extension:firefox",
     "build:extension:dev": "cross-env NODE_ENV=development yarn run build:extension:chrome && yarn run build:extension:firefox",
     "build:extension:chrome": "cross-env NODE_ENV=production node ./shells/browser/chrome/build",
@@ -38,7 +39,7 @@
     "build:extension:firefox:dev": "cross-env NODE_ENV=development node ./shells/browser/firefox/build",
     "build:standalone": "cd packages/react-devtools-core && yarn run build",
     "deploy": "yarn run deploy:demo && yarn run deploy:chrome && yarn run deploy:firefox",
-    "deploy:demo": "cd shells/dev/ && now deploy && now alias react-devtools-experimental",
+    "deploy:demo": "yarn run build:demo && cd shells/dev/ && now deploy && now alias react-devtools-experimental",
     "deploy:chrome": "node ./shells/browser/chrome/deploy",
     "deploy:firefox": "node ./shells/browser/firefox/deploy",
     "linc": "lint-staged",
@@ -47,8 +48,8 @@
     "precommit": "lint-staged",
     "prettier": "prettier --write '**/*.{js,json,css}'",
     "prettier:ci": "prettier --check '**/*.{js,json,css}'",
-    "start": "cd ./shells/dev && cross-env NODE_ENV=development webpack-dev-server --open",
-    "start:prod": "cd ./shells/dev && cross-env NODE_ENV=production webpack-dev-server --open",
+    "start": "cd ./shells/dev && cross-env NODE_ENV=development cross-env TARGET=local webpack-dev-server --open",
+    "start:prod": "cd ./shells/dev && cross-env NODE_ENV=production cross-env TARGET=local webpack-dev-server --open",
     "test": "jest",
     "test-debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "test:chrome": "node ./shells/browser/chrome/test",
