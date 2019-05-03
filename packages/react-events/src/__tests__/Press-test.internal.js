@@ -611,6 +611,23 @@ describe('Event responder: Press', () => {
       expect(onLongPress).not.toBeCalled();
     });
 
+    it('is not called when a large enough move occurs before delay', () => {
+      ref.current.getBoundingClientRect = () => ({
+        top: 0,
+        left: 0,
+        bottom: 100,
+        right: 100,
+      });
+      ref.current.dispatchEvent(
+        createPointerEvent('pointerdown', {pageX: 10, pageY: 10}),
+      );
+      ref.current.dispatchEvent(
+        createPointerEvent('pointermove', {pageX: 50, pageY: 50}),
+      );
+      jest.runAllTimers();
+      expect(onLongPress).not.toBeCalled();
+    });
+
     describe('delayLongPress', () => {
       it('can be configured', () => {
         const element = (

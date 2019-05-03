@@ -44,6 +44,10 @@ type PressProps = {
 type PointerType = '' | 'mouse' | 'keyboard' | 'pen' | 'touch';
 
 type PressState = {
+  activationPosition: null | $ReadOnly<{|
+    pageX: number,
+    pageY: number,
+  |}>,
   addedRootEvents: boolean,
   isActivePressed: boolean,
   isActivePressStart: boolean,
@@ -174,9 +178,18 @@ function dispatchLongPressChangeEvent(
   dispatchEvent(context, state, 'longpresschange', listener);
 }
 
-function activate(context, props, state) {
+function activate(event, context, props, state) {
+  const nativeEvent: any = event.nativeEvent;
+  const pageX = nativeEvent.pageX;
+  const pageY = nativeEvent.pageY;
   const wasActivePressed = state.isActivePressed;
   state.isActivePressed = true;
+  if (pageX != null && pageY != null) {
+    state.activationPosition = {
+      pageX: nativeEvent.pageX,
+      pageY: nativeEvent.pageY,
+    };
+  }
 
   if (props.onPressStart) {
     dispatchEvent(context, state, 'pressstart', props.onPressStart);
@@ -203,6 +216,7 @@ function deactivate(context, props, state) {
 }
 
 function dispatchPressStartEvents(
+  event: ReactResponderEvent,
   context: ReactResponderContext,
   props: PressProps,
   state: PressState,
@@ -216,7 +230,7 @@ function dispatchPressStartEvents(
 
   const dispatch = () => {
     state.isActivePressStart = true;
-    activate(context, props, state);
+    activate(event, context, props, state);
 
     if (
       (props.onLongPress || props.onLongPressChange) &&
@@ -258,6 +272,7 @@ function dispatchPressStartEvents(
 }
 
 function dispatchPressEndEvents(
+  event: ?ReactResponderEvent,
   context: ReactResponderContext,
   props: PressProps,
   state: PressState,
@@ -277,9 +292,9 @@ function dispatchPressEndEvents(
     context.clearTimeout(state.pressStartTimeout);
     state.pressStartTimeout = null;
     // don't activate if a press has moved beyond the responder region
-    if (state.isPressWithinResponderRegion) {
+    if (state.isPressWithinResponderRegion && event != null) {
       // if we haven't yet activated (due to delays), activate now
-      activate(context, props, state);
+      activate(event, context, props, state);
       activationWasForced = true;
     }
   }
@@ -396,24 +411,26 @@ function unmountResponder(
 ): void {
   if (state.isPressed) {
     removeRootEventTypes(context, state);
-    dispatchPressEndEvents(context, props, state);
+    dispatchPressEndEvents(null, context, props, state);
   }
 }
 
 function dispatchCancel(
-  type: string,
-  nativeEvent: $PropertyType<ReactResponderEvent, 'nativeEvent'>,
+  event: ReactResponderEvent,
   context: ReactResponderContext,
   props: PressProps,
   state: PressState,
 ): void {
+  const nativeEvent: any = event.nativeEvent;
+  const type = event.type;
+
   if (state.isPressed) {
     if (type === 'contextmenu' && props.preventDefault !== false) {
-      (nativeEvent: any).preventDefault();
+      nativeEvent.preventDefault();
     } else {
       state.ignoreEmulatedMouseEvents = false;
       removeRootEventTypes(context, state);
-      dispatchPressEndEvents(context, props, state);
+      dispatchPressEndEvents(event, context, props, state);
     }
   } else if (state.allowPressReentry) {
     removeRootEventTypes(context, state);
@@ -445,6 +462,7 @@ const PressResponder = {
   targetEventTypes,
   createInitialState(): PressState {
     return {
+      activationPosition: null,
       addedRootEvents: false,
       didDispatchEvent: false,
       isActivePressed: false,
@@ -474,7 +492,7 @@ const PressResponder = {
 
     if (props.disabled) {
       removeRootEventTypes(context, state);
-      dispatchPressEndEvents(context, props, state);
+      dispatchPressEndEvents(event, context, props, state);
       state.ignoreEmulatedMouseEvents = false;
       return;
     }
@@ -527,7 +545,7 @@ const PressResponder = {
             props,
           );
           state.isPressWithinResponderRegion = true;
-          dispatchPressStartEvents(context, props, state);
+          dispatchPressStartEvents(event, context, props, state);
           addRootEventTypes(context, state);
         } else {
           // Prevent spacebar press from scrolling the window
@@ -540,7 +558,7 @@ const PressResponder = {
 
       // CANCEL
       case 'contextmenu': {
-        dispatchCancel(type, nativeEvent, context, props, state);
+        dispatchCancel(event, context, props, state);
         break;
       }
 
@@ -603,18 +621,34 @@ const PressResponder = {
                   discrete: false,
                 });
               }
+              if (
+                state.activationPosition != null &&
+                state.longPressTimeout != null
+              ) {
+                const deltaX =
+                  state.activationPosition.pageX - nativeEvent.pageX;
+                const deltaY =
+                  state.activationPosition.pageY - nativeEvent.pageY;
+                if (
+                  Math.hypot(deltaX, deltaY) > 10 &&
+                  state.longPressTimeout != null
+                ) {
+                  context.clearTimeout(state.longPressTimeout);
+                }
+              }
             } else {
-              dispatchPressStartEvents(context, props, state);
+              dispatchPressStartEvents(event, context, props, state);
             }
           } else {
             if (!state.allowPressReentry) {
               removeRootEventTypes(context, state);
             }
-            dispatchPressEndEvents(context, props, state);
+            dispatchPressEndEvents(event, context, props, state);
           }
         }
         break;
       }
+
       // END
       case 'pointerup':
       case 'keyup':
@@ -650,7 +684,7 @@ const PressResponder = {
 
           const wasLongPressed = state.isLongPressed;
           removeRootEventTypes(context, state);
-          dispatchPressEndEvents(context, props, state);
+          dispatchPressEndEvents(event, context, props, state);
 
           if (state.pressTarget !== null && props.onPress) {
             if (state.isPressWithinResponderRegion) {
@@ -677,7 +711,7 @@ const PressResponder = {
       case 'pointercancel':
       case 'scroll':
       case 'touchcancel': {
-        dispatchCancel(type, nativeEvent, context, props, state);
+        dispatchCancel(event, context, props, state);
       }
     }
   },
