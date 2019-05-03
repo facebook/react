@@ -651,7 +651,8 @@ export function attach(
   let pendingSimulatedUnmountedIDs: Array<number> = [];
   let pendingOperationsQueue: Array<Uint32Array> | null = [];
   let pendingStringTable: Map<string, number> = new Map();
-  let pendingStringTableLength = 0;
+  let pendingStringTableLength: number = 0;
+  let pendingUnmountedRootID: number | null = null;
 
   function pushOperation(op: number): void {
     if (__DEV__) {
@@ -669,7 +670,8 @@ export function attach(
     if (
       pendingOperations.length === 0 &&
       pendingRealUnmountedIDs.length === 0 &&
-      pendingSimulatedUnmountedIDs.length === 0
+      pendingSimulatedUnmountedIDs.length === 0 &&
+      pendingUnmountedRootID === null
     ) {
       // If we're currently profiling, send an "operations" method even if there are no mutations to the tree.
       // The frontend needs this no-op info to know how to reconstruct the tree for each commit,
@@ -679,17 +681,21 @@ export function attach(
       }
     }
 
+    const numUnmountIDs =
+      pendingRealUnmountedIDs.length +
+      pendingSimulatedUnmountedIDs.length +
+      (pendingUnmountedRootID === null ? 0 : 1);
+
     const ops = new Uint32Array(
       // Identify which renderer this update is coming from.
       2 + // [rendererID, rootFiberID]
       // How big is the string table?
       1 + // [stringTableLength]
-      // Then goes the actual string table.
-      pendingStringTableLength +
-      // All unmounts are batched in a single message.
-      2 + // [TREE_OPERATION_REMOVE, removedIDLength]
-        pendingRealUnmountedIDs.length +
-        pendingSimulatedUnmountedIDs.length +
+        // Then goes the actual string table.
+        pendingStringTableLength +
+        // All unmounts are batched in a single message.
+        // [TREE_OPERATION_REMOVE, removedIDLength, ...ids]
+        (numUnmountIDs > 0 ? 2 + numUnmountIDs : 0) +
         // Regular operations
         pendingOperations.length
     );
@@ -699,7 +705,7 @@ export function attach(
     // Which in turn enables fiber props, states, and hooks to be inspected.
     let i = 0;
     ops[i++] = rendererID;
-    ops[i++] = getFiberID(getPrimaryFiber(root.current));
+    ops[i++] = currentRootID; // Use this ID in case the root was unmounted!
 
     // Now fill in the string table.
     // [stringTableLength, str1Length, ...str1, str2Length, ...str2, ...]
@@ -710,24 +716,30 @@ export function attach(
       i += key.length;
     });
 
-    // All unmounts except roots are batched in a single message.
-    ops[i++] = TREE_OPERATION_REMOVE;
-    // The first number is how many unmounted IDs we're gonna send.
-    ops[i++] =
-      pendingRealUnmountedIDs.length + pendingSimulatedUnmountedIDs.length;
-    // Fill in the real unmounts in the reverse order.
-    // They were inserted parents-first by React, but we want children-first.
-    // So we traverse our array backwards.
-    for (let j = pendingRealUnmountedIDs.length - 1; j >= 0; j--) {
-      ops[i++] = pendingRealUnmountedIDs[j];
+    if (numUnmountIDs > 0) {
+      // All unmounts except roots are batched in a single message.
+      ops[i++] = TREE_OPERATION_REMOVE;
+      // The first number is how many unmounted IDs we're gonna send.
+      ops[i++] = numUnmountIDs;
+      // Fill in the real unmounts in the reverse order.
+      // They were inserted parents-first by React, but we want children-first.
+      // So we traverse our array backwards.
+      for (let j = pendingRealUnmountedIDs.length - 1; j >= 0; j--) {
+        ops[i++] = pendingRealUnmountedIDs[j];
+      }
+      // Fill in the simulated unmounts (hidden Suspense subtrees) in their order.
+      // (We want children to go before parents.)
+      // They go *after* the real unmounts because we know for sure they won't be
+      // children of already pushed "real" IDs. If they were, we wouldn't be able
+      // to discover them during the traversal, as they would have been deleted.
+      ops.set(pendingSimulatedUnmountedIDs, i);
+      i += pendingSimulatedUnmountedIDs.length;
+      // The root ID should always be unmounted last.
+      if (pendingUnmountedRootID !== null) {
+        ops[i] = pendingUnmountedRootID;
+        i++;
+      }
     }
-    // Fill in the simulated unmounts (hidden Suspense subtrees) in their order.
-    // (We want children to go before parents.)
-    // They go *after* the real unmounts because we know for sure they won't be
-    // children of already pushed "real" IDs. If they were, we wouldn't be able
-    // to discover them during the traversal, as they would have been deleted.
-    ops.set(pendingSimulatedUnmountedIDs, i);
-    i += pendingSimulatedUnmountedIDs.length;
     // Fill in the rest of the operations.
     ops.set(pendingOperations, i);
 
@@ -747,6 +759,7 @@ export function attach(
     pendingOperations.length = 0;
     pendingRealUnmountedIDs.length = 0;
     pendingSimulatedUnmountedIDs.length = 0;
+    pendingUnmountedRootID = null;
     pendingStringTable.clear();
     pendingStringTableLength = 0;
   }
@@ -858,11 +871,9 @@ export function attach(
     }
     const id = getFiberID(primaryFiber);
     if (isRoot) {
-      // Removing a root needs to happen at the end
-      // so we don't batch it with other unmounts.
-      pushOperation(TREE_OPERATION_REMOVE);
-      pushOperation(1); // Remove one item
-      pushOperation(id);
+      // Roots must be removed only after all children (pending and simultated) have been removed.
+      // So we track it separately.
+      pendingUnmountedRootID = id;
     } else if (!shouldFilterFiber(fiber)) {
       // To maintain child-first ordering,
       // we'll push it into one of these queues,

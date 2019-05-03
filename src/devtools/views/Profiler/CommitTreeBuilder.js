@@ -15,6 +15,7 @@ import type { ElementType } from 'src/types';
 import type {
   CommitTreeFrontend,
   CommitTreeNodeFrontend,
+  ProfilingSnapshotNode,
   ProfilingSummaryFrontend,
 } from 'src/devtools/views/Profiler/types';
 
@@ -66,13 +67,23 @@ export function getCommitTree({
   if (commitIndex === 0) {
     const nodes = new Map();
 
+    const { importedProfilingData } = store;
+    const profilingSnapshot =
+      importedProfilingData != null
+        ? importedProfilingData.profilingSnapshots.get(rootID)
+        : store.profilingSnapshots.get(rootID);
+
+    if (profilingSnapshot == null) {
+      throw Error(`Could not find profiling snapshot for root "${rootID}"`);
+    }
+
     // Construct the initial tree.
     recursivelyInitializeTree(
       rootID,
       0,
       nodes,
       profilingSummary.initialTreeBaseDurations,
-      store
+      profilingSnapshot
     );
 
     // Mutate the tree
@@ -122,13 +133,8 @@ function recursivelyInitializeTree(
   parentID: number,
   nodes: Map<number, CommitTreeNodeFrontend>,
   initialTreeBaseDurations: Map<number, number>,
-  store: Store
+  profilingSnapshot: Map<number, ProfilingSnapshotNode>
 ): void {
-  const { importedProfilingData } = store;
-  const profilingSnapshot =
-    importedProfilingData != null
-      ? importedProfilingData.profilingSnapshot
-      : store.profilingSnapshot;
   const node = profilingSnapshot.get(id);
   if (node != null) {
     nodes.set(id, {
@@ -146,7 +152,7 @@ function recursivelyInitializeTree(
         id,
         nodes,
         initialTreeBaseDurations,
-        store
+        profilingSnapshot
       )
     );
   }

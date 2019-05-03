@@ -3,6 +3,7 @@
 import EventEmitter from 'events';
 import memoize from 'memoize-one';
 import throttle from 'lodash.throttle';
+import { inspect } from 'util';
 import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
@@ -106,9 +107,9 @@ export default class Store extends EventEmitter {
   // Once profiling is finished, this snapshot can be used along with "operations" messages emitted during profiling,
   // to reconstruct the state of each root for each commit.
   // It's okay to use a single root to store this information because node IDs are unique across all roots.
-  _profilingSnapshotsByElementID: Map<
+  _profilingSnapshotsByRootID: Map<
     number,
-    ProfilingSnapshotNode
+    Map<number, ProfilingSnapshotNode>
   > = new Map();
 
   // Incremented each time the store is mutated.
@@ -203,8 +204,8 @@ export default class Store extends EventEmitter {
       '_profilingScreenshotsByRootID'
     );
     this.assertEmptyMap(
-      this._profilingSnapshotsByElementID,
-      '_profilingSnapshotsByElementID'
+      this._profilingSnapshotsByRootID,
+      '_profilingSnapshotsByRootID'
     );
     this.assertEmptyMap(this._rootIDToCapabilities, '_rootIDToCapabilities');
     this.assertEmptyMap(this._rootIDToRendererID, '_rootIDToRendererID');
@@ -214,9 +215,9 @@ export default class Store extends EventEmitter {
   assertEmptyMap(map: Map<any, any>, mapName: string) {
     if (map.size !== 0) {
       throw new Error(
-        `Expected ${mapName} to be empty, got ${
-          map.size
-        }: ${require('util').inspect(this, { depth: 20 })}`
+        `Expected ${mapName} to be empty, got ${map.size}: ${inspect(map, {
+          depth: 20,
+        })}`
       );
     }
   }
@@ -290,7 +291,7 @@ export default class Store extends EventEmitter {
     this._importedProfilingData = value;
     this._profilingOperationsByRootID = new Map();
     this._profilingScreenshotsByRootID = new Map();
-    this._profilingSnapshotsByElementID = new Map();
+    this._profilingSnapshotsByRootID = new Map();
     this._profilingCache.invalidate();
 
     this.emit('importedProfilingData');
@@ -316,8 +317,8 @@ export default class Store extends EventEmitter {
     return this._profilingScreenshotsByRootID;
   }
 
-  get profilingSnapshot(): Map<number, ProfilingSnapshotNode> {
-    return this._profilingSnapshotsByElementID;
+  get profilingSnapshots(): Map<number, Map<number, ProfilingSnapshotNode>> {
+    return this._profilingSnapshotsByRootID;
   }
 
   get revision(): number {
@@ -348,7 +349,7 @@ export default class Store extends EventEmitter {
     this._importedProfilingData = null;
     this._profilingOperationsByRootID = new Map();
     this._profilingScreenshotsByRootID = new Map();
-    this._profilingSnapshotsByElementID = new Map();
+    this._profilingSnapshotsByRootID = new Map();
 
     // Invalidate suspense cache if profiling data is being (re-)recorded.
     // Note that we clear now because any existing data is "stale".
@@ -415,10 +416,8 @@ export default class Store extends EventEmitter {
 
   getElementByID(id: number): Element | null {
     const element = this._idToElement.get(id);
-
     if (element == null) {
       console.warn(`No element found with id "${id}"`);
-
       return null;
     }
 
@@ -687,26 +686,22 @@ export default class Store extends EventEmitter {
     THROTTLE_CAPTURE_SCREENSHOT_DURATION
   );
 
-  _takeProfilingSnapshotRecursive = (elementID: number) => {
+  _takeProfilingSnapshotRecursive = (
+    elementID: number,
+    profilingSnapshot: Map<number, ProfilingSnapshotNode>
+  ) => {
     const element = this.getElementByID(elementID);
     if (element !== null) {
-      this._profilingSnapshotsByElementID.set(elementID, {
+      profilingSnapshot.set(elementID, {
         id: elementID,
         children: element.children.slice(0),
         displayName: element.displayName,
         key: element.key,
       });
 
-      element.children.forEach(this._takeProfilingSnapshotRecursive);
-    }
-  };
-
-  _clearProfilingSnapshotRecursive = (elementID: number) => {
-    const element = this.getElementByID(elementID);
-    if (element !== null) {
-      this._profilingSnapshotsByElementID.delete(elementID);
-
-      element.children.forEach(this._clearProfilingSnapshotRecursive);
+      element.children.forEach(childID =>
+        this._takeProfilingSnapshotRecursive(childID, profilingSnapshot)
+      );
     }
   };
 
@@ -921,6 +916,8 @@ export default class Store extends EventEmitter {
               throw new Error(`Node ${id} was removed before its children.`);
             }
 
+            this._idToElement.delete(id);
+
             let parentElement = null;
             if (parentID === 0) {
               if (__DEBUG__) {
@@ -933,11 +930,7 @@ export default class Store extends EventEmitter {
 
               this._profilingOperationsByRootID.delete(id);
               this._profilingScreenshotsByRootID.delete(id);
-
-              // The following call depends on `getElementByID`
-              // which depends on the element being in `_idToElement`,
-              // so we have to do it before removing the element from `_idToElement`.
-              this._clearProfilingSnapshotRecursive(id);
+              this._profilingSnapshotsByRootID.delete(id);
 
               haveRootsChanged = true;
             } else {
@@ -953,8 +946,6 @@ export default class Store extends EventEmitter {
               const index = parentElement.children.indexOf(id);
               parentElement.children.splice(index, 1);
             }
-
-            this._idToElement.delete(id);
 
             this._adjustParentTreeWeight(parentElement, -weight);
             removedElementIDs.set(id, parentID);
@@ -1051,8 +1042,12 @@ export default class Store extends EventEmitter {
       this._importedProfilingData = null;
       this._profilingOperationsByRootID = new Map();
       this._profilingScreenshotsByRootID = new Map();
-      this._profilingSnapshotsByElementID = new Map();
-      this.roots.forEach(this._takeProfilingSnapshotRecursive);
+      this._profilingSnapshotsByRootID = new Map();
+      this.roots.forEach(rootID => {
+        const profilingSnapshot = new Map();
+        this._profilingSnapshotsByRootID.set(rootID, profilingSnapshot);
+        this._takeProfilingSnapshotRecursive(rootID, profilingSnapshot);
+      });
     }
 
     if (this._isProfiling !== isProfiling) {

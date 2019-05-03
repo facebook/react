@@ -65,7 +65,7 @@ export type ProfilingSnapshotNode = {|
 export type ImportedProfilingData = {|
   version: number,
   profilingOperations: Map<number, Array<Uint32Array>>,
-  profilingSnapshot: Map<number, ProfilingSnapshotNode>,
+  profilingSnapshots: Map<number, Map<number, ProfilingSnapshotNode>>,
   commitDetails: CommitDetailsFrontend,
   interactions: InteractionsFrontend,
   profilingSummary: ProfilingSummaryFrontend,

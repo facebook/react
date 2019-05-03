@@ -37,7 +37,7 @@ export default function ProfilingImportExportButtons() {
     const queue = [rootID];
     while (queue.length) {
       const id = queue.pop();
-      profilingSnapshotForRoot.push([id, store.profilingSnapshot.get(id)]);
+      profilingSnapshotForRoot.push([id, store.profilingSnapshots.get(id)]);
     }
 
     bridge.send('exportProfilingSummary', {
@@ -51,7 +51,7 @@ export default function ProfilingImportExportButtons() {
     rendererID,
     rootID,
     store.profilingOperations,
-    store.profilingSnapshot,
+    store.profilingSnapshots,
   ]);
 
   const uploadData = useCallback(() => {
