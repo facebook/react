@@ -553,6 +553,7 @@ function legacyRenderSubtreeIntoContainer(
   let exec = function(cb){
     cb()
   }
+  let instance = null;
   if (!root) {
     // Initial mount
     root = container._reactRootContainer = legacyCreateRootFromDOMContainer(
@@ -561,15 +562,24 @@ function legacyRenderSubtreeIntoContainer(
     );
     exec = unbatchedUpdates;
   } 
+   function getInstance(){
+      if (__DEV__) {
+        warnOnInvalidCallback(callback, 'render');
+      }
+      instance = getPublicRootInstance(root._internalRoot);
+      if (typeof callback === 'function') {
+         callback.call(instance);
+      }
+   }
 
    exec(() => {
         root.legacy_renderSubtreeIntoContainer(
           parentComponent || null,
           children,
-          callback,
+          getInstance,
         );
     });
-    return getPublicRootInstance(root._internalRoot)
+    return instance
 }
 
 function createPortal(
