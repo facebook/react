@@ -533,7 +533,7 @@ export default class Store extends EventEmitter {
     while (current != null) {
       if (current.parentID === 0) {
         const rendererID = this._rootIDToRendererID.get(current.id);
-        return rendererID == null ? null : ((rendererID: any): number);
+        return rendererID == null ? null : rendererID;
       } else {
         current = this._idToElement.get(current.parentID);
       }

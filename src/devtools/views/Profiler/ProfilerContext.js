@@ -114,19 +114,16 @@ function ProfilerContextController({ children }: Props) {
   let rootHasProfilingData = false;
   if (importedProfilingData !== null) {
     rootHasProfilingData = true;
-  } else if (selectedElementID) {
-    rendererID = store.getRendererIDForElement(
-      ((selectedElementID: any): number)
-    );
-    rootID = store.getRootIDForElement(((selectedElementID: any): number));
-    rootHasProfilingData = store.profilingOperations.has(
-      ((rootID: any): number)
-    );
+  } else if (selectedElementID !== null) {
+    rendererID = store.getRendererIDForElement(selectedElementID);
+    rootID = store.getRootIDForElement(selectedElementID);
+    rootHasProfilingData =
+      rootID === null ? false : store.profilingOperations.has(rootID);
   } else if (store.roots.length > 0) {
     // If no root is selected, assume the first root; many React apps are single root anyway.
     rootID = store.roots[0];
     rootHasProfilingData = store.profilingOperations.has(rootID);
-    rendererID = store.getRendererIDForElement(((rootID: any): number));
+    rendererID = store.getRendererIDForElement(rootID);
   }
 
   const startProfiling = useCallback(() => store.startProfiling(), [store]);
