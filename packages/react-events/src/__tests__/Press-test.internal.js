@@ -1270,7 +1270,7 @@ describe('Event responder: Press', () => {
       ]);
     });
 
-    it('"onPress" is not called on re-entry to hit rect for touch', () => {
+    it('"onPress" is called on re-entry to hit rect for touch', () => {
       let events = [];
       const ref = React.createRef();
       const createEventHandler = msg => () => {
@@ -1328,6 +1328,11 @@ describe('Event responder: Press', () => {
         'onPressMove',
         'onPressEnd',
         'onPressChange',
+        'onPressStart',
+        'onPressChange',
+        'onPressEnd',
+        'onPressChange',
+        'onPress',
       ]);
     });
   });

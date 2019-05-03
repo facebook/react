@@ -504,14 +504,14 @@ const PressResponder = {
           if (type === 'mousedown' && state.ignoreEmulatedMouseEvents) {
             return;
           }
-          if (pointerType === 'mouse' || pointerType === 'pen') {
-            // Ignore mouse/pen pressing on touch hit target area
-            if (isEventPositionWithinTouchHitTarget(event, context)) {
-              // We need to prevent the native event to block the focus
-              nativeEvent.preventDefault();
-              return;
-            }
-            state.allowPressReentry = true;
+          // Ignore mouse/pen pressing on touch hit target area
+          if (
+            (pointerType === 'mouse' || pointerType === 'pen') &&
+            isEventPositionWithinTouchHitTarget(event, context)
+          ) {
+            // We need to prevent the native event to block the focus
+            nativeEvent.preventDefault();
+            return;
           }
 
           // Ignore any device buttons except left-mouse and touch/pen contact
@@ -519,6 +519,7 @@ const PressResponder = {
             return;
           }
 
+          state.allowPressReentry = true;
           state.pointerType = pointerType;
           state.pressTarget = getEventCurrentTarget(event, context);
           state.responderRegionOnActivation = calculateResponderRegion(
