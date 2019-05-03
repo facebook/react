@@ -24,10 +24,13 @@ export default function SidebarCommitInfo(_: Props) {
     profilingScreenshots,
   } = useContext(StoreContext);
 
+  const screenshotsByCommitIndex =
+    rootID !== null ? profilingScreenshots.get(rootID) : null;
   const screenshot =
-    selectedCommitIndex !== null
-      ? profilingScreenshots.get(selectedCommitIndex)
+    screenshotsByCommitIndex != null && selectedCommitIndex !== null
+      ? screenshotsByCommitIndex.get(selectedCommitIndex)
       : null;
+
   const [
     isScreenshotModalVisible,
     setIsScreenshotModalVisible,

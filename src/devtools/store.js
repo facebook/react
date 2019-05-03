@@ -96,16 +96,20 @@ export default class Store extends EventEmitter {
   // Map of root (id) to a list of tree mutation that occur during profiling.
   // Once profiling is finished, these mutations can be used, along with the initial tree snapshots,
   // to reconstruct the state of each root for each commit.
-  _profilingOperations: Map<number, Array<Uint32Array>> = new Map();
+  _profilingOperationsByRootID: Map<number, Array<Uint32Array>> = new Map();
 
+  // Map of root (id) to a Map of screenshots by commit ID.
   // Stores screenshots for each commit (when profiling).
-  _profilingScreenshots: Map<number, string> = new Map();
+  _profilingScreenshotsByRootID: Map<number, Map<number, string>> = new Map();
 
   // Snapshot of the state of the main Store (including all roots) when profiling started.
   // Once profiling is finished, this snapshot can be used along with "operations" messages emitted during profiling,
   // to reconstruct the state of each root for each commit.
   // It's okay to use a single root to store this information because node IDs are unique across all roots.
-  _profilingSnapshot: Map<number, ProfilingSnapshotNode> = new Map();
+  _profilingSnapshotsByElementID: Map<
+    number,
+    ProfilingSnapshotNode
+  > = new Map();
 
   // Incremented each time the store is mutated.
   // This enables a passive effect to detect a mutation between render and commit phase.
@@ -188,27 +192,31 @@ export default class Store extends EventEmitter {
 
   assertEmptyMaps() {
     // This is only used in tests to avoid memory leaks.
-    if (this._idToElement.size !== 0) {
-      throw new Error('Expected _idToElement to be empty.');
-    }
-    if (this._ownersMap.size !== 0) {
-      throw new Error('Expected _ownersMap to be empty.');
-    }
-    if (this._profilingOperations.size !== 0) {
-      throw new Error('Expected _profilingOperations to be empty.');
-    }
-    if (this._profilingScreenshots.size !== 0) {
-      throw new Error('Expected _profilingScreenshots to be empty.');
-    }
-    if (this._profilingSnapshot.size !== 0) {
-      throw new Error('Expected _profilingSnapshot to be empty.');
-    }
-    if (this._rootIDToCapabilities.size !== 0) {
-      throw new Error('Expected _rootIDToCapabilities to be empty.');
-    }
-    if (this._rootIDToRendererID.size !== 0) {
-      throw new Error('Expected _rootIDToRendererID to be empty.');
-    }
+    const assertOneMap = (mapName, map) => {
+      if (map.size !== 0) {
+        throw new Error(
+          `Expected ${mapName} to be empty, got ${
+            map.size
+          }: ${require('util').inspect(this, { depth: 20 })}`
+        );
+      }
+    };
+    assertOneMap('_idToElement', this._idToElement);
+    assertOneMap('_ownersMap', this._ownersMap);
+    assertOneMap(
+      '_profilingOperationsByRootID',
+      this._profilingOperationsByRootID
+    );
+    assertOneMap(
+      '_profilingScreenshotsByRootID',
+      this._profilingScreenshotsByRootID
+    );
+    assertOneMap(
+      '_profilingSnapshotsByElementID',
+      this._profilingSnapshotsByElementID
+    );
+    assertOneMap('_rootIDToCapabilities', this._rootIDToCapabilities);
+    assertOneMap('_rootIDToRendererID', this._rootIDToRendererID);
   }
 
   get captureScreenshots(): boolean {
@@ -268,7 +276,8 @@ export default class Store extends EventEmitter {
   // Profiling data has been recorded for at least one root.
   get hasProfilingData(): boolean {
     return (
-      this._importedProfilingData !== null || this._profilingOperations.size > 0
+      this._importedProfilingData !== null ||
+      this._profilingOperationsByRootID.size > 0
     );
   }
 
@@ -277,8 +286,9 @@ export default class Store extends EventEmitter {
   }
   set importedProfilingData(value: ImportedProfilingData | null): void {
     this._importedProfilingData = value;
-    this._profilingOperations = new Map();
-    this._profilingSnapshot = new Map();
+    this._profilingOperationsByRootID = new Map();
+    this._profilingScreenshotsByRootID = new Map();
+    this._profilingSnapshotsByElementID = new Map();
     this._profilingCache.invalidate();
 
     this.emit('importedProfilingData');
@@ -297,15 +307,15 @@ export default class Store extends EventEmitter {
   }
 
   get profilingOperations(): Map<number, Array<Uint32Array>> {
-    return this._profilingOperations;
+    return this._profilingOperationsByRootID;
   }
 
-  get profilingScreenshots(): Map<number, string> {
-    return this._profilingScreenshots;
+  get profilingScreenshots(): Map<number, Map<number, string>> {
+    return this._profilingScreenshotsByRootID;
   }
 
   get profilingSnapshot(): Map<number, ProfilingSnapshotNode> {
-    return this._profilingSnapshot;
+    return this._profilingSnapshotsByElementID;
   }
 
   get revision(): number {
@@ -334,9 +344,9 @@ export default class Store extends EventEmitter {
 
   clearProfilingData(): void {
     this._importedProfilingData = null;
-    this._profilingOperations = new Map();
-    this._profilingScreenshots = new Map();
-    this._profilingSnapshot = new Map();
+    this._profilingOperationsByRootID = new Map();
+    this._profilingScreenshotsByRootID = new Map();
+    this._profilingSnapshotsByElementID = new Map();
 
     // Invalidate suspense cache if profiling data is being (re-)recorded.
     // Note that we clear now because any existing data is "stale".
@@ -669,23 +679,32 @@ export default class Store extends EventEmitter {
   }
 
   _captureScreenshot = throttle(
-    memoize((commitIndex: number) => {
-      this._bridge.send('captureScreenshot', { commitIndex });
+    memoize((rootID: number, commitIndex: number) => {
+      this._bridge.send('captureScreenshot', { commitIndex, rootID });
     }),
     THROTTLE_CAPTURE_SCREENSHOT_DURATION
   );
 
-  _takeProfilingSnapshotRecursive = (id: number) => {
-    const element = this.getElementByID(id);
+  _takeProfilingSnapshotRecursive = (elementID: number) => {
+    const element = this.getElementByID(elementID);
     if (element !== null) {
-      this._profilingSnapshot.set(id, {
-        id,
+      this._profilingSnapshotsByElementID.set(elementID, {
+        id: elementID,
         children: element.children.slice(0),
         displayName: element.displayName,
         key: element.key,
       });
 
       element.children.forEach(this._takeProfilingSnapshotRecursive);
+    }
+  };
+
+  _clearProfilingSnapshotRecursive = (elementID: number) => {
+    const element = this.getElementByID(elementID);
+    if (element !== null) {
+      this._profilingSnapshotsByElementID.delete(elementID);
+
+      element.children.forEach(this._clearProfilingSnapshotRecursive);
     }
   };
 
@@ -733,17 +752,17 @@ export default class Store extends EventEmitter {
     const rootID = operations[1];
 
     if (this._isProfiling) {
-      let profilingOperations = this._profilingOperations.get(rootID);
+      let profilingOperations = this._profilingOperationsByRootID.get(rootID);
       if (profilingOperations == null) {
         profilingOperations = [operations];
-        this._profilingOperations.set(rootID, profilingOperations);
+        this._profilingOperationsByRootID.set(rootID, profilingOperations);
       } else {
         profilingOperations.push(operations);
       }
 
       if (this._captureScreenshots) {
         const commitIndex = profilingOperations.length - 1;
-        this._captureScreenshot(commitIndex);
+        this._captureScreenshot(rootID, commitIndex);
       }
     }
 
@@ -900,6 +919,11 @@ export default class Store extends EventEmitter {
               throw new Error(`Node ${id} was removed before its children.`);
             }
 
+            // The following call depends on `getElementByID`
+            // which depends on the element being in `_idToElement`,
+            // so we have to do it before removing the element from `_idToElement`.
+            this._clearProfilingSnapshotRecursive(id);
+
             this._idToElement.delete(id);
 
             let parentElement = null;
@@ -911,6 +935,9 @@ export default class Store extends EventEmitter {
               this._roots = this._roots.filter(rootID => rootID !== id);
               this._rootIDToRendererID.delete(id);
               this._rootIDToCapabilities.delete(id);
+
+              this._profilingOperationsByRootID.delete(id);
+              this._profilingScreenshotsByRootID.delete(id);
 
               haveRootsChanged = true;
             } else {
@@ -1020,9 +1047,9 @@ export default class Store extends EventEmitter {
   onProfilingStatus = (isProfiling: boolean) => {
     if (isProfiling) {
       this._importedProfilingData = null;
-      this._profilingOperations = new Map();
-      this._profilingScreenshots = new Map();
-      this._profilingSnapshot = new Map();
+      this._profilingOperationsByRootID = new Map();
+      this._profilingScreenshotsByRootID = new Map();
+      this._profilingSnapshotsByElementID = new Map();
       this.roots.forEach(this._takeProfilingSnapshotRecursive);
     }
 
@@ -1041,11 +1068,23 @@ export default class Store extends EventEmitter {
   onScreenshotCaptured = ({
     commitIndex,
     dataURL,
+    rootID,
   }: {|
     commitIndex: number,
     dataURL: string,
+    rootID: number,
   |}) => {
-    this._profilingScreenshots.set(commitIndex, dataURL);
+    let profilingScreenshotsForRootByCommitIndex = this._profilingScreenshotsByRootID.get(
+      rootID
+    );
+    if (!profilingScreenshotsForRootByCommitIndex) {
+      profilingScreenshotsForRootByCommitIndex = new Map();
+      this._profilingScreenshotsByRootID.set(
+        rootID,
+        profilingScreenshotsForRootByCommitIndex
+      );
+    }
+    profilingScreenshotsForRootByCommitIndex.set(commitIndex, dataURL);
   };
 
   onBridgeShutdown = () => {

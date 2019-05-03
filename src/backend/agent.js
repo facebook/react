@@ -126,8 +126,14 @@ export default class Agent extends EventEmitter {
     }
   }
 
-  captureScreenshot = ({ commitIndex }: { commitIndex: number }) => {
-    this._bridge.send('captureScreenshot', { commitIndex });
+  captureScreenshot = ({
+    commitIndex,
+    rootID,
+  }: {
+    commitIndex: number,
+    rootID: number,
+  }) => {
+    this._bridge.send('captureScreenshot', { commitIndex, rootID });
   };
 
   getIDForNode(node: Object): number | null {
