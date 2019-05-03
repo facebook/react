@@ -68,6 +68,7 @@ type PressState = {
     top: number,
   |}>,
   ignoreEmulatedMouseEvents: boolean,
+  allowPressReentry: boolean,
 };
 
 type PressEventType =
@@ -301,7 +302,6 @@ function dispatchPressEndEvents(
       deactivate(context, props, state);
     }
   }
-  removeRootEventTypes(context, state);
 }
 
 function isAnchorTagElement(eventTarget: EventTarget): boolean {
@@ -395,6 +395,7 @@ function unmountResponder(
   state: PressState,
 ): void {
   if (state.isPressed) {
+    removeRootEventTypes(context, state);
     dispatchPressEndEvents(context, props, state);
   }
 }
@@ -411,8 +412,11 @@ function dispatchCancel(
       (nativeEvent: any).preventDefault();
     } else {
       state.ignoreEmulatedMouseEvents = false;
+      removeRootEventTypes(context, state);
       dispatchPressEndEvents(context, props, state);
     }
+  } else if (state.allowPressReentry) {
+    removeRootEventTypes(context, state);
   }
 }
 
@@ -432,6 +436,7 @@ function removeRootEventTypes(
 ): void {
   if (state.addedRootEvents) {
     state.addedRootEvents = false;
+    state.allowPressReentry = false;
     context.removeRootEventTypes(rootEventTypes);
   }
 }
@@ -455,6 +460,7 @@ const PressResponder = {
       responderRegionOnActivation: null,
       responderRegionOnDeactivation: null,
       ignoreEmulatedMouseEvents: false,
+      allowPressReentry: false,
     };
   },
   stopLocalPropagation: true,
@@ -467,6 +473,7 @@ const PressResponder = {
     const {target, type} = event;
 
     if (props.disabled) {
+      removeRootEventTypes(context, state);
       dispatchPressEndEvents(context, props, state);
       state.ignoreEmulatedMouseEvents = false;
       return;
@@ -512,6 +519,7 @@ const PressResponder = {
             return;
           }
 
+          state.allowPressReentry = true;
           state.pointerType = pointerType;
           state.pressTarget = getEventCurrentTarget(event, context);
           state.responderRegionOnActivation = calculateResponderRegion(
@@ -565,7 +573,7 @@ const PressResponder = {
       case 'pointermove':
       case 'mousemove':
       case 'touchmove': {
-        if (state.isPressed) {
+        if (state.isPressed || state.allowPressReentry) {
           // Ignore emulated events (pointermove will dispatch touch and mouse events)
           // Ignore pointermove events during a keyboard press.
           if (state.pointerType !== pointerType) {
@@ -589,18 +597,24 @@ const PressResponder = {
           );
 
           if (state.isPressWithinResponderRegion) {
-            if (props.onPressMove) {
-              dispatchEvent(context, state, 'pressmove', props.onPressMove, {
-                discrete: false,
-              });
+            if (state.isPressed) {
+              if (props.onPressMove) {
+                dispatchEvent(context, state, 'pressmove', props.onPressMove, {
+                  discrete: false,
+                });
+              }
+            } else {
+              dispatchPressStartEvents(context, props, state);
             }
           } else {
+            if (!state.allowPressReentry) {
+              removeRootEventTypes(context, state);
+            }
             dispatchPressEndEvents(context, props, state);
           }
         }
         break;
       }
-
       // END
       case 'pointerup':
       case 'keyup':
@@ -635,6 +649,7 @@ const PressResponder = {
           }
 
           const wasLongPressed = state.isLongPressed;
+          removeRootEventTypes(context, state);
           dispatchPressEndEvents(context, props, state);
 
           if (state.pressTarget !== null && props.onPress) {
@@ -652,6 +667,8 @@ const PressResponder = {
           }
         } else if (type === 'mouseup' && state.ignoreEmulatedMouseEvents) {
           state.ignoreEmulatedMouseEvents = false;
+        } else if (state.allowPressReentry) {
+          removeRootEventTypes(context, state);
         }
         break;
       }

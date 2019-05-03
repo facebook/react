@@ -1148,6 +1148,193 @@ describe('Event responder: Press', () => {
         expect(events).toEqual([]);
       });
     });
+
+    it('"onPress" is not called on release with mouse', () => {
+      let events = [];
+      const ref = React.createRef();
+      const createEventHandler = msg => () => {
+        events.push(msg);
+      };
+
+      const element = (
+        <Press
+          onPress={createEventHandler('onPress')}
+          onPressChange={createEventHandler('onPressChange')}
+          onPressMove={createEventHandler('onPressMove')}
+          onPressStart={createEventHandler('onPressStart')}
+          onPressEnd={createEventHandler('onPressEnd')}>
+          <div ref={ref} />
+        </Press>
+      );
+
+      ReactDOM.render(element, container);
+
+      ref.current.getBoundingClientRect = getBoundingClientRectMock;
+      ref.current.dispatchEvent(
+        createPointerEvent('pointerdown', {
+          pointerType: 'mouse',
+        }),
+      );
+      ref.current.dispatchEvent(
+        createPointerEvent('pointermove', {
+          ...coordinatesInside,
+          pointerType: 'mouse',
+        }),
+      );
+      container.dispatchEvent(
+        createPointerEvent('pointermove', {
+          ...coordinatesOutside,
+          pointerType: 'mouse',
+        }),
+      );
+      container.dispatchEvent(
+        createPointerEvent('pointerup', {
+          ...coordinatesOutside,
+          pointerType: 'mouse',
+        }),
+      );
+      jest.runAllTimers();
+
+      expect(events).toEqual([
+        'onPressStart',
+        'onPressChange',
+        'onPressMove',
+        'onPressEnd',
+        'onPressChange',
+      ]);
+    });
+
+    it('"onPress" is called on re-entry to hit rect for mouse', () => {
+      let events = [];
+      const ref = React.createRef();
+      const createEventHandler = msg => () => {
+        events.push(msg);
+      };
+
+      const element = (
+        <Press
+          onPress={createEventHandler('onPress')}
+          onPressChange={createEventHandler('onPressChange')}
+          onPressMove={createEventHandler('onPressMove')}
+          onPressStart={createEventHandler('onPressStart')}
+          onPressEnd={createEventHandler('onPressEnd')}>
+          <div ref={ref} />
+        </Press>
+      );
+
+      ReactDOM.render(element, container);
+
+      ref.current.getBoundingClientRect = getBoundingClientRectMock;
+      ref.current.dispatchEvent(
+        createPointerEvent('pointerdown', {
+          pointerType: 'mouse',
+        }),
+      );
+      ref.current.dispatchEvent(
+        createPointerEvent('pointermove', {
+          ...coordinatesInside,
+          pointerType: 'mouse',
+        }),
+      );
+      container.dispatchEvent(
+        createPointerEvent('pointermove', {
+          ...coordinatesOutside,
+          pointerType: 'mouse',
+        }),
+      );
+      container.dispatchEvent(
+        createPointerEvent('pointermove', {
+          ...coordinatesInside,
+          pointerType: 'mouse',
+        }),
+      );
+      container.dispatchEvent(
+        createPointerEvent('pointerup', {
+          ...coordinatesInside,
+          pointerType: 'mouse',
+        }),
+      );
+      jest.runAllTimers();
+
+      expect(events).toEqual([
+        'onPressStart',
+        'onPressChange',
+        'onPressMove',
+        'onPressEnd',
+        'onPressChange',
+        'onPressStart',
+        'onPressChange',
+        'onPressEnd',
+        'onPressChange',
+        'onPress',
+      ]);
+    });
+
+    it('"onPress" is called on re-entry to hit rect for touch', () => {
+      let events = [];
+      const ref = React.createRef();
+      const createEventHandler = msg => () => {
+        events.push(msg);
+      };
+
+      const element = (
+        <Press
+          onPress={createEventHandler('onPress')}
+          onPressChange={createEventHandler('onPressChange')}
+          onPressMove={createEventHandler('onPressMove')}
+          onPressStart={createEventHandler('onPressStart')}
+          onPressEnd={createEventHandler('onPressEnd')}>
+          <div ref={ref} />
+        </Press>
+      );
+
+      ReactDOM.render(element, container);
+
+      ref.current.getBoundingClientRect = getBoundingClientRectMock;
+      ref.current.dispatchEvent(
+        createPointerEvent('pointerdown', {
+          pointerType: 'touch',
+        }),
+      );
+      ref.current.dispatchEvent(
+        createPointerEvent('pointermove', {
+          ...coordinatesInside,
+          pointerType: 'touch',
+        }),
+      );
+      container.dispatchEvent(
+        createPointerEvent('pointermove', {
+          ...coordinatesOutside,
+          pointerType: 'touch',
+        }),
+      );
+      container.dispatchEvent(
+        createPointerEvent('pointermove', {
+          ...coordinatesInside,
+          pointerType: 'touch',
+        }),
+      );
+      container.dispatchEvent(
+        createPointerEvent('pointerup', {
+          ...coordinatesInside,
+          pointerType: 'touch',
+        }),
+      );
+      jest.runAllTimers();
+
+      expect(events).toEqual([
+        'onPressStart',
+        'onPressChange',
+        'onPressMove',
+        'onPressEnd',
+        'onPressChange',
+        'onPressStart',
+        'onPressChange',
+        'onPressEnd',
+        'onPressChange',
+        'onPress',
+      ]);
+    });
   });
 
   describe('delayed and multiple events', () => {
