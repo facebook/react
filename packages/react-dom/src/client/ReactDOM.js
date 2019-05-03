@@ -549,7 +549,6 @@ function legacyRenderSubtreeIntoContainer(
 
   // TODO: Without `any` type, Flow says "Property cannot be accessed on any
   // member of intersection type." Whyyyyyy.
-  let instance = null;
   let root: Root = (container._reactRootContainer: any);
   let exec = function(cb){
     cb()
@@ -562,25 +561,20 @@ function legacyRenderSubtreeIntoContainer(
     );
     exec = unbatchedUpdates;
   } 
-  function getInstance(){
-      instance = getPublicRootInstance(root._internalRoot);
-      if (typeof callback === 'function') {
-         callback.call(instance);
-      }
-  }
+
 
    exec(() => {
       if (parentComponent != null) {
         root.legacy_renderSubtreeIntoContainer(
           parentComponent,
           children,
-          getInstance,
+          callback,
         );
       } else {
-        root.render(children, getInstance);
+        root.render(children, callback);
       }
     });
-    return instance;
+    return getPublicRootInstance(root._internalRoot)
 }
 
 function createPortal(
