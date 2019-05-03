@@ -562,17 +562,12 @@ function legacyRenderSubtreeIntoContainer(
     exec = unbatchedUpdates;
   } 
 
-
    exec(() => {
-      if (parentComponent != null) {
         root.legacy_renderSubtreeIntoContainer(
-          parentComponent,
+          parentComponent || null,
           children,
           callback,
         );
-      } else {
-        root.render(children, callback);
-      }
     });
     return getPublicRootInstance(root._internalRoot)
 }
