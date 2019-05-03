@@ -27,6 +27,7 @@ shells/dev/build/*
 [options]
 server.max_workers=4
 esproposal.class_instance_fields=enable
+esproposal.optional_chaining=enable
 suppress_comment=\\(.\\|\n\\)*\\$FlowFixMe
 suppress_comment=\\(.\\|\n\\)*\\$FlowIssue
 suppress_comment=\\(.\\|\n\\)*\\$FlowIgnore

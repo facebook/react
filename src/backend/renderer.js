@@ -249,7 +249,7 @@ export function attach(
     if (__DEBUG__) {
       const displayName = getDisplayNameForFiber(fiber) || 'null';
       const parentDisplayName =
-        (parentFiber !== null && getDisplayNameForFiber(parentFiber)) || 'null';
+        (parentFiber != null && getDisplayNameForFiber(parentFiber)) || 'null';
       // NOTE: calling getFiberID or getPrimaryFiber is unsafe here
       // because it will put them in the map. For now, we'll omit them.
       // TODO: better debugging story for this.
@@ -634,7 +634,6 @@ export function attach(
     }
   }
 
-  // eslint-disable-next-line no-unused-vars
   function haveProfilerTimesChanged(
     prevFiber: Fiber,
     nextFiber: Fiber
@@ -776,7 +775,7 @@ export function attach(
     const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
     if (isProfilingSupported) {
       idToRootMap.set(id, currentRootID);
-      idToTreeBaseDurationMap.set(id, fiber.treeBaseDuration);
+      idToTreeBaseDurationMap.set(id, fiber.treeBaseDuration || 0);
     }
 
     const hasOwnerMetadata = fiber.hasOwnProperty('_debugOwner');
@@ -795,7 +794,9 @@ export function attach(
 
       const ownerID =
         _debugOwner != null ? getFiberID(getPrimaryFiber(_debugOwner)) : 0;
-      const parentID = getFiberID(getPrimaryFiber(parentFiber));
+      const parentID = parentFiber
+        ? getFiberID(getPrimaryFiber(parentFiber))
+        : 0;
 
       let displayNameStringID = getStringID(displayName);
       let keyStringID = getStringID(key);
@@ -811,14 +812,14 @@ export function attach(
     if (isProfiling) {
       // Tree base duration updates are included in the operations typed array.
       // So we have to convert them from milliseconds to microseconds so we can send them as ints.
-      const treeBaseDuration = Math.floor(fiber.treeBaseDuration * 1000);
+      const treeBaseDuration = Math.floor((fiber.treeBaseDuration || 0) * 1000);
 
       pushOperation(TREE_OPERATION_UPDATE_TREE_BASE_DURATION);
       pushOperation(id);
       pushOperation(treeBaseDuration);
 
       const { actualDuration } = fiber;
-      if (actualDuration > 0) {
+      if (actualDuration != null && actualDuration > 0) {
         // If profiling is active, store durations for elements that were rendered during the commit.
         const metadata = ((currentCommitProfilingMetadata: any): CommitProfilingData);
         metadata.actualDurations.push(id, actualDuration);
@@ -912,8 +913,12 @@ export function attach(
       // get the fallback child from the inner fragment and mount
       // it as if it was our own child. Updates handle this too.
       const primaryChildFragment = fiber.child;
-      const fallbackChildFragment = primaryChildFragment.sibling;
-      const fallbackChild = fallbackChildFragment.child;
+      const fallbackChildFragment = primaryChildFragment
+        ? primaryChildFragment.sibling
+        : null;
+      const fallbackChild = fallbackChildFragment
+        ? fallbackChildFragment.child
+        : null;
       if (fallbackChild !== null) {
         mountFiberRecursively(
           fallbackChild,
@@ -956,9 +961,11 @@ export function attach(
     if (isTimedOutSuspense) {
       // If it's showing fallback tree, let's traverse it instead.
       const primaryChildFragment = fiber.child;
-      const fallbackChildFragment = primaryChildFragment.sibling;
+      const fallbackChildFragment = primaryChildFragment
+        ? primaryChildFragment.sibling
+        : null;
       // Skip over to the real Fiber child.
-      child = fallbackChildFragment.child;
+      child = fallbackChildFragment ? fallbackChildFragment.child : null;
     }
 
     while (child !== null) {
@@ -976,20 +983,27 @@ export function attach(
     const id = getFiberID(getPrimaryFiber(fiber));
     const { actualDuration, treeBaseDuration } = fiber;
 
-    idToTreeBaseDurationMap.set(id, fiber.treeBaseDuration);
+    idToTreeBaseDurationMap.set(id, fiber.treeBaseDuration || 0);
 
     if (isProfiling) {
-      if (treeBaseDuration !== fiber.alternate.treeBaseDuration) {
+      const { alternate } = fiber;
+
+      if (
+        treeBaseDuration !==
+        (alternate ? alternate.treeBaseDuration : undefined)
+      ) {
         // Tree base duration updates are included in the operations typed array.
         // So we have to convert them from milliseconds to microseconds so we can send them as ints.
-        const treeBaseDuration = Math.floor(fiber.treeBaseDuration * 1000);
+        const treeBaseDuration = Math.floor(
+          (fiber.treeBaseDuration || 0) * 1000
+        );
         pushOperation(TREE_OPERATION_UPDATE_TREE_BASE_DURATION);
         pushOperation(getFiberID(getPrimaryFiber(fiber)));
         pushOperation(treeBaseDuration);
       }
 
-      if (haveProfilerTimesChanged(fiber.alternate, fiber)) {
-        if (actualDuration > 0) {
+      if (alternate ? haveProfilerTimesChanged(alternate, fiber) : true) {
+        if (actualDuration != null && actualDuration > 0) {
           // If profiling is active, store durations for elements that were rendered during the commit.
           const metadata = ((currentCommitProfilingMetadata: any): CommitProfilingData);
           metadata.actualDurations.push(id, actualDuration);
@@ -1071,11 +1085,19 @@ export function attach(
     if (prevDidTimeout && nextDidTimeOut) {
       // Fallback -> Fallback:
       // 1. Reconcile fallback set.
-      const nextFallbackChildSet = nextFiber.child.sibling;
+      const nextFiberChild = nextFiber.child;
+      const nextFallbackChildSet = nextFiberChild
+        ? nextFiberChild.sibling
+        : null;
       // Note: We can't use nextFiber.child.sibling.alternate
       // because the set is special and alternate may not exist.
-      const prevFallbackChildSet = prevFiber.child.sibling;
+      const prevFiberChild = prevFiber.child;
+      const prevFallbackChildSet = prevFiberChild
+        ? prevFiberChild.sibling
+        : null;
       if (
+        nextFallbackChildSet != null &&
+        prevFallbackChildSet != null &&
         updateFiberRecursively(
           nextFallbackChildSet,
           prevFallbackChildSet,
@@ -1101,9 +1123,14 @@ export function attach(
       // We need to manually walk the previous tree and record unmounts.
       unmountFiberChildrenRecursively(prevFiber);
       // 2. Mount fallback set
-      const nextFallbackChildSet = nextFiber.child.sibling;
-      mountFiberRecursively(nextFallbackChildSet, nextFiber, true);
-      shouldResetChildren = true;
+      const nextFiberChild = nextFiber.child;
+      const nextFallbackChildSet = nextFiberChild
+        ? nextFiberChild.sibling
+        : null;
+      if (nextFallbackChildSet != null) {
+        mountFiberRecursively(nextFallbackChildSet, nextFiber, true);
+        shouldResetChildren = true;
+      }
     } else {
       // Common case: Primary -> Primary.
       // This is the same codepath as for non-Suspense fibers.
@@ -1172,9 +1199,12 @@ export function attach(
         let nextChildSet = nextFiber.child;
         if (nextDidTimeOut) {
           // Special case: timed-out Suspense renders the fallback set.
-          nextChildSet = nextFiber.child.sibling;
+          const nextFiberChild = nextFiber.child;
+          nextChildSet = nextFiberChild ? nextFiberChild.sibling : null;
         }
-        recordResetChildren(nextFiber, nextChildSet);
+        if (nextChildSet != null) {
+          recordResetChildren(nextFiber, nextChildSet);
+        }
         // We've handled the child order change for this Fiber.
         // Since it's included, there's no need to invalidate parent child order.
         return false;
@@ -1357,7 +1387,7 @@ export function attach(
 
   function findNativeByFiberID(id: number) {
     try {
-      let fiber = findCurrentFiberUsingSlowPath(idToFiberMap.get(id));
+      let fiber = findCurrentFiberUsingSlowPathById(id);
       if (fiber === null) {
         return null;
       }
@@ -1367,9 +1397,10 @@ export function attach(
       if (isTimedOutSuspense) {
         // A timed-out Suspense's findDOMNode is useless.
         // Try our best to find the fallback directly.
-        const maybeFallbackFiber =
-          (fiber.child && fiber.child.sibling) || fiber;
-        fiber = maybeFallbackFiber;
+        const maybeFallbackFiber = fiber.child && fiber.child.sibling;
+        if (maybeFallbackFiber != null) {
+          fiber = maybeFallbackFiber;
+        }
       }
       const hostFibers = findAllCurrentHostFibers(fiber);
       return hostFibers.map(hostFiber => hostFiber.stateNode).filter(Boolean);
@@ -1647,6 +1678,11 @@ export function attach(
     // Find the currently mounted version of this fiber (so we don't show the wrong props and state).
     fiber = findCurrentFiberUsingSlowPath(fiber);
 
+    if (fiber == null) {
+      console.warn(`Could not find Fiber with id "${id}"`);
+      return null;
+    }
+
     const {
       _debugOwner,
       _debugSource,
@@ -1655,7 +1691,7 @@ export function attach(
       memoizedState,
       tag,
       type,
-    } = ((fiber: any): Fiber);
+    } = fiber;
 
     const usesHooks =
       (tag === FunctionComponent ||
@@ -1729,7 +1765,7 @@ export function attach(
           displayName: getDisplayNameForFiber(owner) || 'Unknown',
           id: getFiberID(getPrimaryFiber(owner)),
         });
-        owner = owner._debugOwner;
+        owner = owner._debugOwner || null;
       }
     }
 
@@ -1826,13 +1862,21 @@ export function attach(
     }
   }
 
+  function findCurrentFiberUsingSlowPathById(id: number): Fiber | null {
+    const fiber = idToFiberMap.get(id);
+    if (fiber) {
+      return findCurrentFiberUsingSlowPath(fiber);
+    }
+    return null;
+  }
+
   function setInHook(
     id: number,
     index: number,
     path: Array<string | number>,
     value: any
   ) {
-    const fiber = findCurrentFiberUsingSlowPath(idToFiberMap.get(id));
+    const fiber = findCurrentFiberUsingSlowPathById(id);
     if (fiber !== null) {
       if (typeof overrideHookState === 'function') {
         overrideHookState(fiber, index, path, value);
@@ -1841,7 +1885,7 @@ export function attach(
   }
 
   function setInProps(id: number, path: Array<string | number>, value: any) {
-    const fiber = findCurrentFiberUsingSlowPath(idToFiberMap.get(id));
+    const fiber = findCurrentFiberUsingSlowPathById(id);
     if (fiber !== null) {
       const instance = fiber.stateNode;
       if (instance === null) {
@@ -1856,7 +1900,7 @@ export function attach(
   }
 
   function setInState(id: number, path: Array<string | number>, value: any) {
-    const fiber = findCurrentFiberUsingSlowPath(idToFiberMap.get(id));
+    const fiber = findCurrentFiberUsingSlowPathById(id);
     if (fiber !== null) {
       const instance = fiber.stateNode;
       setInObject(instance.state, path, value);
@@ -1870,7 +1914,7 @@ export function attach(
     // We need to remove the first part of the path (the "value") before continuing.
     path = path.slice(1);
 
-    const fiber = findCurrentFiberUsingSlowPath(idToFiberMap.get(id));
+    const fiber = findCurrentFiberUsingSlowPathById(id);
     if (fiber !== null) {
       const instance = fiber.stateNode;
       if (path.length === 0) {
@@ -2043,17 +2087,18 @@ export function attach(
     }
 
     const initialTreeBaseDurations = [];
-    ((initialTreeBaseDurationsMap: any): Map<number, number>).forEach(
-      (treeBaseDuration, id) => {
+    if (initialTreeBaseDurationsMap != null) {
+      initialTreeBaseDurationsMap.forEach((treeBaseDuration, id) => {
         if (
-          ((initialIDToRootMap: any): Map<number, number>).get(id) === rootID
+          initialIDToRootMap != null &&
+          initialIDToRootMap.get(id) === rootID
         ) {
           // We don't need to convert milliseconds to microseconds in this case,
           // because the profiling summary is JSON serialized.
           initialTreeBaseDurations.push(id, treeBaseDuration);
         }
-      }
-    );
+      });
+    }
 
     return {
       commitDurations,

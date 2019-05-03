@@ -7,8 +7,68 @@ type BundleType =
   | 0 // PROD
   | 1; // DEV
 
-// TODO: Better type for Fiber
-export type Fiber = Object;
+export type WorkTag = number;
+export type SideEffectTag = number;
+export type ExpirationTime = number;
+export type RefObject = {|
+  current: any,
+|};
+export type Source = {
+  fileName: string,
+  lineNumber: number,
+};
+export type HookType =
+  | 'useState'
+  | 'useReducer'
+  | 'useContext'
+  | 'useRef'
+  | 'useEffect'
+  | 'useLayoutEffect'
+  | 'useCallback'
+  | 'useMemo'
+  | 'useImperativeHandle'
+  | 'useDebugValue';
+
+// The Fiber type is copied from React and should be kept in sync:
+// https://github.com/facebook/react/blob/master/packages/react-reconciler/src/ReactFiber.js
+// The properties we don't use in DevTools are omitted.
+export type Fiber = {|
+  tag: WorkTag,
+
+  key: null | string,
+
+  elementType: any,
+
+  type: any,
+
+  stateNode: any,
+
+  return: Fiber | null,
+
+  child: Fiber | null,
+  sibling: Fiber | null,
+  index: number,
+
+  ref: null | (((handle: mixed) => void) & { _stringRef: ?string }) | RefObject,
+
+  pendingProps: any, // This type will be more specific once we overload the tag.
+  memoizedProps: any, // The props used to create the output.
+
+  memoizedState: any,
+
+  effectTag: SideEffectTag,
+
+  alternate: Fiber | null,
+
+  actualDuration?: number,
+
+  actualStartTime?: number,
+
+  treeBaseDuration?: number,
+
+  _debugSource?: Source | null,
+  _debugOwner?: Fiber | null,
+|};
 
 // TODO: If it's useful for the frontend to know which types of data an Element has
 // (e.g. props, state, context, hooks) then we could add a bitmask field for this
