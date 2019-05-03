@@ -190,33 +190,35 @@ export default class Store extends EventEmitter {
     this._profilingCache = new ProfilingCache(bridge, this);
   }
 
+  // This is only used in tests to avoid memory leaks.
   assertEmptyMaps() {
-    // This is only used in tests to avoid memory leaks.
-    const assertOneMap = (mapName, map) => {
-      if (map.size !== 0) {
-        throw new Error(
-          `Expected ${mapName} to be empty, got ${
-            map.size
-          }: ${require('util').inspect(this, { depth: 20 })}`
-        );
-      }
-    };
-    assertOneMap('_idToElement', this._idToElement);
-    assertOneMap('_ownersMap', this._ownersMap);
-    assertOneMap(
-      '_profilingOperationsByRootID',
-      this._profilingOperationsByRootID
+    this.assertEmptyMap(this._idToElement, '_idToElement');
+    this.assertEmptyMap(this._ownersMap, '_ownersMap');
+    this.assertEmptyMap(
+      this._profilingOperationsByRootID,
+      '_profilingOperationsByRootID'
     );
-    assertOneMap(
-      '_profilingScreenshotsByRootID',
-      this._profilingScreenshotsByRootID
+    this.assertEmptyMap(
+      this._profilingScreenshotsByRootID,
+      '_profilingScreenshotsByRootID'
     );
-    assertOneMap(
-      '_profilingSnapshotsByElementID',
-      this._profilingSnapshotsByElementID
+    this.assertEmptyMap(
+      this._profilingSnapshotsByElementID,
+      '_profilingSnapshotsByElementID'
     );
-    assertOneMap('_rootIDToCapabilities', this._rootIDToCapabilities);
-    assertOneMap('_rootIDToRendererID', this._rootIDToRendererID);
+    this.assertEmptyMap(this._rootIDToCapabilities, '_rootIDToCapabilities');
+    this.assertEmptyMap(this._rootIDToRendererID, '_rootIDToRendererID');
+  }
+
+  // This is only used in tests to avoid memory leaks.
+  assertEmptyMap(map: Map<any, any>, mapName: string) {
+    if (map.size !== 0) {
+      throw new Error(
+        `Expected ${mapName} to be empty, got ${
+          map.size
+        }: ${require('util').inspect(this, { depth: 20 })}`
+      );
+    }
   }
 
   get captureScreenshots(): boolean {
