@@ -921,13 +921,6 @@ export default class Store extends EventEmitter {
               throw new Error(`Node ${id} was removed before its children.`);
             }
 
-            // The following call depends on `getElementByID`
-            // which depends on the element being in `_idToElement`,
-            // so we have to do it before removing the element from `_idToElement`.
-            this._clearProfilingSnapshotRecursive(id);
-
-            this._idToElement.delete(id);
-
             let parentElement = null;
             if (parentID === 0) {
               if (__DEBUG__) {
@@ -940,6 +933,11 @@ export default class Store extends EventEmitter {
 
               this._profilingOperationsByRootID.delete(id);
               this._profilingScreenshotsByRootID.delete(id);
+
+              // The following call depends on `getElementByID`
+              // which depends on the element being in `_idToElement`,
+              // so we have to do it before removing the element from `_idToElement`.
+              this._clearProfilingSnapshotRecursive(id);
 
               haveRootsChanged = true;
             } else {
@@ -955,6 +953,8 @@ export default class Store extends EventEmitter {
               const index = parentElement.children.indexOf(id);
               parentElement.children.splice(index, 1);
             }
+
+            this._idToElement.delete(id);
 
             this._adjustParentTreeWeight(parentElement, -weight);
             removedElementIDs.set(id, parentID);
