@@ -108,18 +108,26 @@ const targetEventTypes = [
   // We need to preventDefault on pointerdown for mouse/pen events
   // that are in hit target area but not the element area.
   {name: 'pointerdown', passive: false},
+];
+const rootEventTypes = [
+  'keyup',
+  'pointerup',
+  'pointermove',
+  'scroll',
   'pointercancel',
 ];
-const rootEventTypes = ['keyup', 'pointerup', 'pointermove', 'scroll'];
 
 // If PointerEvents is not supported (e.g., Safari), also listen to touch and mouse events.
 if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
-  targetEventTypes.push('touchstart', 'touchcancel', 'mousedown');
+  targetEventTypes.push('touchstart', 'mousedown');
   rootEventTypes.push(
     {name: 'mouseup', passive: false},
+    'mousemove',
     'touchmove',
     'touchend',
-    'mousemove',
+    'touchcancel',
+    // Used as a 'cancel' signal for mouse interactions
+    'dragstart',
   );
 }
 
@@ -319,6 +327,28 @@ function dispatchPressEndEvents(
   }
 }
 
+function dispatchCancel(
+  event: ReactResponderEvent,
+  context: ReactResponderContext,
+  props: PressProps,
+  state: PressState,
+): void {
+  const nativeEvent: any = event.nativeEvent;
+  const type = event.type;
+
+  if (state.isPressed) {
+    if (type === 'contextmenu' && props.preventDefault !== false) {
+      nativeEvent.preventDefault();
+    } else {
+      state.ignoreEmulatedMouseEvents = false;
+      removeRootEventTypes(context, state);
+      dispatchPressEndEvents(event, context, props, state);
+    }
+  } else if (state.allowPressReentry) {
+    removeRootEventTypes(context, state);
+  }
+}
+
 function isAnchorTagElement(eventTarget: EventTarget): boolean {
   return (eventTarget: any).nodeName === 'A';
 }
@@ -412,28 +442,6 @@ function unmountResponder(
   if (state.isPressed) {
     removeRootEventTypes(context, state);
     dispatchPressEndEvents(null, context, props, state);
-  }
-}
-
-function dispatchCancel(
-  event: ReactResponderEvent,
-  context: ReactResponderContext,
-  props: PressProps,
-  state: PressState,
-): void {
-  const nativeEvent: any = event.nativeEvent;
-  const type = event.type;
-
-  if (state.isPressed) {
-    if (type === 'contextmenu' && props.preventDefault !== false) {
-      nativeEvent.preventDefault();
-    } else {
-      state.ignoreEmulatedMouseEvents = false;
-      removeRootEventTypes(context, state);
-      dispatchPressEndEvents(event, context, props, state);
-    }
-  } else if (state.allowPressReentry) {
-    removeRootEventTypes(context, state);
   }
 }
 
@@ -710,7 +718,8 @@ const PressResponder = {
       // CANCEL
       case 'pointercancel':
       case 'scroll':
-      case 'touchcancel': {
+      case 'touchcancel':
+      case 'dragstart': {
         dispatchCancel(event, context, props, state);
       }
     }

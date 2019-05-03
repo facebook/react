@@ -100,10 +100,10 @@ Called when the element changes press state (i.e., after `onPressStart` and
 
 ### onPressEnd: (e: PressEvent) => void
 
-Called once the element is no longer pressed (because it was released, or moved
-beyond the hit bounds). If the press starts again before the `delayPressEnd`
-threshold is exceeded then the delay is reset to prevent `onPressEnd` being
-called during a press.
+Called once the element is no longer pressed (because the press was released,
+cancelled, or moved beyond the hit bounds). If the press starts again before the
+`delayPressEnd` threshold is exceeded then the delay is reset to prevent
+`onPressEnd` being called during a press.
 
 ### onPressMove: (e: PressEvent) => void
 
@@ -120,8 +120,10 @@ Called once the element is pressed down. If the press is released before the
 ### pressRetentionOffset: PressOffset
 
 Defines how far the pointer (while held down) may move outside the bounds of the
-element before it is deactivated. Ensure you pass in a constant to reduce memory
-allocations. Default is `20` for each offset.
+element before it is deactivated. Once deactivated, the pointer (still held
+down) can be moved back within the bounds of the element to reactivate it.
+Ensure you pass in a constant to reduce memory allocations. Default is `20` for
+each offset.
 
 ### preventDefault: boolean = true
 
