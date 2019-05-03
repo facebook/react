@@ -9837,6 +9837,16 @@ react-lifecycles-compat@^3.0.4:
   resolved "https://registry.yarnpkg.com/react-lifecycles-compat/-/react-lifecycles-compat-3.0.4.tgz#4f1a273afdfc8f3488a8c516bfda78f872352362"
   integrity sha512-fBASbA6LnOU9dOU2eW7aQ8xmYBSXUIWr+UmF9b1efZBazGNO+rcXT/icdKnYm2pTwcRylVUYwW7H1PHfLekVzA==
 
+react-test-renderer@0.0.0-fb28e9048:
+  version "0.0.0-fb28e9048"
+  resolved "https://registry.yarnpkg.com/react-test-renderer/-/react-test-renderer-0.0.0-fb28e9048.tgz#1a94c8d19cbb1ac98ab37c66c0b294e5be280c52"
+  integrity sha512-WK/wQOh0v6+8Gbkurgb3he9hKoOKWueqQY+RFs2vM3u3vn7PMyYhzm/KkU75VvTG/GVciojNQBHBpekuvU5dYw==
+  dependencies:
+    object-assign "^4.1.1"
+    prop-types "^15.6.2"
+    react-is "0.0.0-fb28e9048"
+    scheduler "0.0.0-fb28e9048"
+
 react-virtualized-auto-sizer@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/react-virtualized-auto-sizer/-/react-virtualized-auto-sizer-1.0.2.tgz#a61dd4f756458bbf63bd895a92379f9b70f803bd"

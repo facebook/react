@@ -23,6 +23,7 @@
       "<rootDir>/src/__tests__/setupTests"
     ],
     "snapshotSerializers": [
+      "<rootDir>/src/__tests__/profilingSummarySerializer",
       "<rootDir>/src/__tests__/storeSerializer"
     ],
     "testMatch": [
@@ -134,6 +135,7 @@
     "react-color": "^2.11.7",
     "react-dom": "0.0.0-fb28e9048",
     "react-is": "0.0.0-fb28e9048",
+    "react-test-renderer": "0.0.0-fb28e9048",
     "react-virtualized-auto-sizer": "^1.0.2",
     "react-window": "^1.8.0",
     "request-promise": "^4.2.4",

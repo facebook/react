@@ -1,31 +1,110 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Profiler should start and stop profiling, handle root unmounting: 1: mount 1`] = `
+exports[`Profiler should clean up after a root has been unmounted: 1: mount 1`] = `
 [root]
-  ▸ <Parent key="A">
+  ▾ <Parent key="A">
+      <Child key="0">
+      <Child key="1">
+      <Child key="2">
 [root]
-  ▸ <Parent key="B">
+  ▾ <Parent key="B">
+      <Child key="0">
+      <Child key="1">
 `;
 
-exports[`Profiler should start and stop profiling, handle root unmounting: 2: profiling started 1`] = `
+exports[`Profiler should clean up after a root has been unmounted: 2: profiling started 1`] = `
 [root]
-  ▸ <Parent key="A">
+  ▾ <Parent key="A">
+      <Child key="0">
+      <Child key="1">
+      <Child key="2">
 [root]
-  ▸ <Parent key="B">
+  ▾ <Parent key="B">
+      <Child key="0">
+      <Child key="1">
 `;
 
-exports[`Profiler should start and stop profiling, handle root unmounting: 3: update 1`] = `
+exports[`Profiler should clean up after a root has been unmounted: 3: update 1`] = `
 [root]
-  ▸ <Parent key="A">
+  ▾ <Parent key="A">
+      <Child key="0">
+      <Child key="1">
+      <Child key="2">
+      <Child key="3">
 [root]
-  ▸ <Parent key="B">
+  ▾ <Parent key="B">
+      <Child key="0">
 `;
 
-exports[`Profiler should start and stop profiling, handle root unmounting: 4: unmount B 1`] = `
+exports[`Profiler should clean up after a root has been unmounted: 4: unmount B 1`] = `
 [root]
-  ▸ <Parent key="A">
+  ▾ <Parent key="A">
+      <Child key="0">
+      <Child key="1">
+      <Child key="2">
+      <Child key="3">
 `;
 
-exports[`Profiler should start and stop profiling, handle root unmounting: 5: unmount A 1`] = ``;
+exports[`Profiler should clean up after a root has been unmounted: 5: unmount A 1`] = ``;
 
-exports[`Profiler should start and stop profiling, handle root unmounting: 6: profiling stopped 1`] = ``;
+exports[`Profiler should clean up after a root has been unmounted: 6: profiling stopped 1`] = ``;
+
+exports[`Profiler should collect basic profiling metrics: 1: mount 1`] = `
+[root]
+  ▾ <Parent key="A">
+      <Child key="0">
+      <Child key="1">
+`;
+
+exports[`Profiler should collect basic profiling metrics: 2: add child 1`] = `
+[root]
+  ▾ <Parent key="A">
+      <Child key="0">
+      <Child key="1">
+      <Child key="2">
+`;
+
+exports[`Profiler should collect basic profiling metrics: 3: remove children 1`] = `
+[root]
+  ▾ <Parent key="A">
+      <Child key="0">
+`;
+
+exports[`Profiler should collect basic profiling metrics: 4: profiling stopped 1`] = `
+[root]
+  ▾ <Parent key="A">
+      <Child key="0">
+`;
+
+exports[`Profiler should collect basic profiling metrics: ProfilingSummary 1`] = `
+{
+  "rootID": 1,
+  "commitDurations": [
+    0,
+    1
+  ],
+  "commitTimes": [
+    0,
+    1
+  ],
+  "initialTreeBaseDurations": [
+    [
+      1,
+      0
+    ],
+    [
+      2,
+      1
+    ],
+    [
+      3,
+      2
+    ],
+    [
+      4,
+      3
+    ]
+  ],
+  "interactionCount": 0
+}
+`;

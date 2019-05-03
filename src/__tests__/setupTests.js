@@ -8,10 +8,6 @@ import { installHook } from 'src/hook';
 
 const env = jasmine.getEnv();
 env.beforeEach(() => {
-  // It's important to reset modules between test runs;
-  // Without this, ReactDOM won't re-inject itself into the new hook.
-  jest.resetModules();
-
   // Fake timers let us flush Bridge operations between setup and assertions.
   jest.useFakeTimers();
 
@@ -55,4 +51,10 @@ env.beforeEach(() => {
 });
 env.afterEach(() => {
   delete global.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+
+  // It's important to reset modules between test runs;
+  // Without this, ReactDOM won't re-inject itself into the new hook.
+  // It's also important to reset after tests, rather than before,
+  // so that we don't disconnect the ReactCurrentDispatcher ref.
+  jest.resetModules();
 });
