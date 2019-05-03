@@ -49,11 +49,7 @@ export function getChartData({
   let maxSelfDuration = 0;
 
   // Generate flame graph structure using tree base durations.
-  const walkTree = (
-    id: number,
-    parentOffset: number = 0,
-    currentDepth: number = 1
-  ) => {
+  const walkTree = (id: number, rightOffset: number, currentDepth: number) => {
     idToDepthMap.set(id, currentDepth);
 
     const node = nodes.get(id);
@@ -61,12 +57,14 @@ export function getChartData({
       throw Error(`Could not find node with id "${id}" in commit tree`);
     }
 
+    const { children, displayName, key, treeBaseDuration } = node;
+
     const actualDuration = actualDurations.get(id) || 0;
     const selfDuration = calculateSelfDuration(id, commitTree, commitDetails);
     const didRender = actualDurations.has(id);
 
-    const name = node.displayName || 'Unknown';
-    const maybeKey = node.key !== null ? ` key="${node.key}"` : '';
+    const name = displayName || 'Unknown';
+    const maybeKey = key !== null ? ` key="${key}"` : '';
 
     let label = `${name}${maybeKey}`;
     if (didRender) {
@@ -84,9 +82,9 @@ export function getChartData({
       id,
       label,
       name,
-      offset: parentOffset,
+      offset: rightOffset - treeBaseDuration,
       selfDuration,
-      treeBaseDuration: node.treeBaseDuration,
+      treeBaseDuration,
     };
 
     if (currentDepth > rows.length) {
@@ -95,10 +93,11 @@ export function getChartData({
       rows[currentDepth - 1].push(chartNode);
     }
 
-    node.children.forEach(childID => {
-      const childChartNode = walkTree(childID, parentOffset, currentDepth + 1);
-      parentOffset += childChartNode.treeBaseDuration;
-    });
+    for (let i = children.length - 1; i >= 0; i--) {
+      const childID = children[i];
+      const childChartNode = walkTree(childID, rightOffset, currentDepth + 1);
+      rightOffset -= childChartNode.treeBaseDuration;
+    }
 
     return chartNode;
   };
@@ -112,10 +111,15 @@ export function getChartData({
   // Don't assume a single root.
   // Component filters or Fragments might lead to multiple "roots" in a flame graph.
   let baseDuration = 0;
-  root.children.forEach(childID => {
-    const chartNode = walkTree(childID, baseDuration);
-    baseDuration += chartNode.treeBaseDuration;
-  });
+  for (let i = root.children.length - 1; i >= 0; i--) {
+    const id = root.children[i];
+    const node = nodes.get(id);
+    if (node == null) {
+      throw Error(`Could not find node with id "${id}" in commit tree`);
+    }
+    baseDuration += node.treeBaseDuration;
+    walkTree(id, baseDuration, 1);
+  }
 
   const chartData = {
     baseDuration,
