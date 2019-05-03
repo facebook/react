@@ -551,7 +551,7 @@ function legacyRenderSubtreeIntoContainer(
   // member of intersection type." Whyyyyyy.
   let root: Root = (container._reactRootContainer: any);
   let exec = function(cb){
-    cb()
+    cb();
   }
   let instance = null;
   if (!root) {
@@ -562,7 +562,7 @@ function legacyRenderSubtreeIntoContainer(
     );
     exec = unbatchedUpdates;
   } 
-   function getInstance(){
+  function getInstance(){
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'render');
       }
@@ -579,7 +579,7 @@ function legacyRenderSubtreeIntoContainer(
           getInstance,
         );
     });
-    return instance
+    return instance;
 }
 
 function createPortal(
