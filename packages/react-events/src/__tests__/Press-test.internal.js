@@ -1629,6 +1629,56 @@ describe('Event responder: Press', () => {
     });
   });
 
+  describe('responder cancellation', () => {
+    it('ends on "pointercancel", "touchcancel", "scroll", and "dragstart"', () => {
+      const onLongPress = jest.fn();
+      const onPressEnd = jest.fn();
+      const ref = React.createRef();
+      const element = (
+        <Press onLongPress={onLongPress} onPressEnd={onPressEnd}>
+          <a href="#" ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      ref.current.dispatchEvent(createPointerEvent('scroll'));
+      expect(onPressEnd).toHaveBeenCalledTimes(1);
+      jest.runAllTimers();
+      expect(onLongPress).not.toBeCalled();
+
+      onLongPress.mockReset();
+      onPressEnd.mockReset();
+
+      // When pointer events are supported
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      ref.current.dispatchEvent(createPointerEvent('pointercancel'));
+      expect(onPressEnd).toHaveBeenCalledTimes(1);
+      jest.runAllTimers();
+      expect(onLongPress).not.toBeCalled();
+
+      onLongPress.mockReset();
+      onPressEnd.mockReset();
+
+      // Touch fallback
+      ref.current.dispatchEvent(createPointerEvent('touchstart'));
+      ref.current.dispatchEvent(createPointerEvent('touchcancel'));
+      expect(onPressEnd).toHaveBeenCalledTimes(1);
+      jest.runAllTimers();
+      expect(onLongPress).not.toBeCalled();
+
+      onLongPress.mockReset();
+      onPressEnd.mockReset();
+
+      // Mouse fallback
+      ref.current.dispatchEvent(createPointerEvent('mousedown'));
+      ref.current.dispatchEvent(createPointerEvent('dragstart'));
+      expect(onPressEnd).toHaveBeenCalledTimes(1);
+      jest.runAllTimers();
+      expect(onLongPress).not.toBeCalled();
+    });
+  });
+
   it('expect displayName to show up for event component', () => {
     expect(Press.displayName).toBe('Press');
   });
