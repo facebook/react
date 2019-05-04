@@ -1814,4 +1814,23 @@ describe('ReactHooks', () => {
     Scheduler.flushAll();
     expect(root).toMatchRenderedOutput('hello');
   });
+          
+  it('useStateObject: builds a state object', () => {
+    const {useStateObject, useEffect} = React;
+
+    function Counter() {
+      const state = useStateObject({ count1: 0, count2: 0});
+      useEffect( () => {
+        state.count1 ++;
+        state.count2 += 2;
+      });
+      return state.count1 + state.count2;
+    }
+
+    const root = ReactTestRenderer.create(null);
+    ReactTestRenderer.act(() => {
+      root.update(<Counter />);
+    });
+    expect(root).toMatchRenderedOutput('3');
+  });
 });
