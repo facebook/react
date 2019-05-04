@@ -1,4 +1,5 @@
 import React from 'react';
+React.Suspense = ({ children }) =>  children;
 import {renderToString} from 'react-dom/server';
 
 import App from '../src/components/App';
