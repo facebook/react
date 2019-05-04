@@ -1,0 +1,61 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`profiling profilingSummary should be collected for each commit: 1: mount 1`] = `
+[root]
+  ▾ <Parent key="A">
+      <Child key="0">
+      <Child key="1">
+`;
+
+exports[`profiling profilingSummary should be collected for each commit: 2: add child 1`] = `
+[root]
+  ▾ <Parent key="A">
+      <Child key="0">
+      <Child key="1">
+      <Child key="2">
+`;
+
+exports[`profiling profilingSummary should be collected for each commit: 3: remove children 1`] = `
+[root]
+  ▾ <Parent key="A">
+      <Child key="0">
+`;
+
+exports[`profiling profilingSummary should be collected for each commit: 4: profiling stopped 1`] = `
+[root]
+  ▾ <Parent key="A">
+      <Child key="0">
+`;
+
+exports[`profiling profilingSummary should be collected for each commit: ProfilingSummary 1`] = `
+{
+  "rootID": 1,
+  "commitDurations": [
+    16,
+    12
+  ],
+  "commitTimes": [
+    16,
+    28
+  ],
+  "initialTreeBaseDurations": [
+    [
+      1,
+      14
+    ],
+    [
+      2,
+      14
+    ],
+    [
+      3,
+      2
+    ],
+    [
+      4,
+      2
+    ]
+  ],
+  "interactionCount": 0
+}
+`;

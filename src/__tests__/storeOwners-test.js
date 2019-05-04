@@ -5,15 +5,8 @@ const { printOwnersList } = require('./storeSerializer');
 describe('Store owners list', () => {
   let React;
   let ReactDOM;
-  let TestUtils;
+  let act;
   let store;
-
-  const act = (callback: Function) => {
-    TestUtils.act(() => {
-      callback();
-    });
-    jest.runAllTimers(); // Flush Bridge operations
-  };
 
   beforeEach(() => {
     store = global.store;
@@ -21,7 +14,7 @@ describe('Store owners list', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
-    TestUtils = require('react-dom/test-utils');
+    act = require('./utils').act;
   });
 
   it('should drill through intermediate components', () => {

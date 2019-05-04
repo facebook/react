@@ -70,9 +70,9 @@ export function printStore(store, includeWeight = false) {
     );
   }
 
-  if (store.roots.length === 0) {
-    store.assertEmptyMaps();
-  }
+  // If roots have been unmounted, verify that they've been removed from maps.
+  // This helps ensure the Store doesn't leak memory.
+  store.assertExpectedRootMapSizes();
 
   return snapshotLines.join('\n');
 }

@@ -17,11 +17,7 @@ export function print(profilingSummary, serialize, indent) {
   return JSON.stringify(
     {
       ...profilingSummary,
-      commitDurations: profilingSummary.commitDurations.map((_, i) => i),
-      commitTimes: profilingSummary.commitTimes.map((_, i) => i),
-      initialTreeBaseDurations: [
-        ...profilingSummary.initialTreeBaseDurations,
-      ].map(([id, _], index) => [id, index]),
+      initialTreeBaseDurations: [...profilingSummary.initialTreeBaseDurations],
     },
     null,
     2

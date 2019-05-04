@@ -3,18 +3,10 @@
 describe('StoreStressConcurrent', () => {
   let React;
   let ReactDOM;
-  let TestUtils;
+  let act;
   let bridge;
   let store;
   let print;
-
-  const act = (callback: Function) => {
-    TestUtils.act(() => {
-      callback();
-    });
-    jest.advanceTimersByTime(1000); // Flush rendering and Suspense
-    jest.runAllTimers(); // Flush Bridge operations
-  };
 
   beforeEach(() => {
     bridge = global.bridge;
@@ -23,7 +15,7 @@ describe('StoreStressConcurrent', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
-    TestUtils = require('react-dom/test-utils');
+    act = require('./utils').act;
 
     print = require('./storeSerializer').print;
   });
