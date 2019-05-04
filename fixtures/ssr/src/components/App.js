@@ -5,6 +5,10 @@ import Page from './Page';
 import Page2 from './Page2';
 import Theme from './Theme';
 
+import Input from './fixtures/input';
+import Select from './fixtures/select';
+import Textarea from './fixtures/textarea';
+
 function LoadingIndicator() {
   let theme = useContext(Theme);
   return <div className={theme + '-loading'}>Loading...</div>;
@@ -27,6 +31,10 @@ export default function App({assets}) {
           <CurrentPage />
         </Suspense>
       </div>
+      
+      <Input />
+      <Select />
+      <Textarea />
     </Chrome>
   );
 }
