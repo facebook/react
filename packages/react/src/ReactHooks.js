@@ -74,6 +74,15 @@ export function useState<S>(initialState: (() => S) | S) {
   return dispatcher.useState(initialState);
 }
 
+export function useStateObject<S>(initialState: (() => S) | S) {
+  const dispatcher = resolveDispatcher();
+  const initState = typeof initialState === 'function' ? initialState() : initialState;
+  return Object.keys(initState).reduce((a,c) => {
+    const [value, setValue] = dispatcher.useState(initState[c]);
+    return Object.defineProperty(a, c, { get: () => value, set: setValue });
+  }, {});
+}
+
 export function useReducer<S, I, A>(
   reducer: (S, A) => S,
   initialArg: I,
