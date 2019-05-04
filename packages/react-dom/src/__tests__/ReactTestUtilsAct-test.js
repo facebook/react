@@ -10,6 +10,7 @@
 let React;
 let ReactDOM;
 let ReactTestUtils;
+let SchedulerTracing;
 let act;
 let container;
 
@@ -29,6 +30,7 @@ describe('ReactTestUtils.act()', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
+    SchedulerTracing = require('scheduler/tracing');
     act = ReactTestUtils.act;
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -421,6 +423,44 @@ describe('ReactTestUtils.act()', () => {
       });
       // all 5 ticks present and accounted for
       expect(el.innerHTML).toBe('5');
+    });
+  });
+
+  describe('interaction tracing', () => {
+    it('should correctly trace interactions for sync roots', () => {
+      let expectedInteraction;
+
+      const Component = jest.fn(() => {
+        expect(expectedInteraction).toBeDefined();
+
+        const interactions = SchedulerTracing.unstable_getCurrent();
+        expect(interactions.size).toBe(1);
+        expect(interactions).toContain(expectedInteraction);
+
+        return null;
+      });
+
+      act(() => {
+        SchedulerTracing.unstable_trace('mount', performance.now(), () => {
+          const interactions = SchedulerTracing.unstable_getCurrent();
+          expect(interactions.size).toBe(1);
+          expectedInteraction = Array.from(interactions)[0];
+
+          ReactDOM.render(<Component />, container);
+        });
+      });
+
+      act(() => {
+        SchedulerTracing.unstable_trace('update', performance.now(), () => {
+          const interactions = SchedulerTracing.unstable_getCurrent();
+          expect(interactions.size).toBe(1);
+          expectedInteraction = Array.from(interactions)[0];
+
+          ReactDOM.render(<Component />, container);
+        });
+      });
+
+      expect(Component).toHaveBeenCalledTimes(2);
     });
   });
 });
