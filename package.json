@@ -23,7 +23,6 @@
       "<rootDir>/src/__tests__/setupTests"
     ],
     "snapshotSerializers": [
-      "<rootDir>/src/__tests__/profilingSummarySerializer",
       "<rootDir>/src/__tests__/storeSerializer"
     ],
     "testMatch": [

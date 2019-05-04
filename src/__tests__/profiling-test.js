@@ -76,6 +76,93 @@ describe('profiling', () => {
     });
   });
 
+  describe('commitDetails', () => {
+    it('should be collected for each commit', async done => {
+      const Parent = ({ count }) => {
+        Scheduler.advanceTime(10);
+        return new Array(count)
+          .fill(true)
+          .map((_, index) => <Child key={index} />);
+      };
+      const Child = () => {
+        Scheduler.advanceTime(2);
+        return null;
+      };
+
+      const container = document.createElement('div');
+
+      utils.act(() => store.startProfiling());
+
+      utils.act(() => ReactDOM.render(<Parent key="A" count={2} />, container));
+      expect(store).toMatchSnapshot('1: mount');
+
+      utils.act(() => ReactDOM.render(<Parent key="A" count={3} />, container));
+      expect(store).toMatchSnapshot('2: add child');
+
+      utils.act(() => ReactDOM.render(<Parent key="A" count={1} />, container));
+      expect(store).toMatchSnapshot('3: remove children');
+
+      utils.act(() => store.stopProfiling());
+      expect(store).toMatchSnapshot('4: profiling stopped');
+
+      let commitDetails;
+      function Suspender({ commitIndex, rendererID, rootID }) {
+        commitDetails = store.profilingCache.CommitDetails.read({
+          commitIndex,
+          rendererID,
+          rootID,
+        });
+        return null;
+      }
+
+      const rendererID = utils.getRendererID();
+      const rootID = store.roots[0];
+
+      await utils.actSuspense(() =>
+        TestRenderer.create(
+          <React.Suspense fallback={null}>
+            <Suspender
+              commitIndex={0}
+              rendererID={rendererID}
+              rootID={rootID}
+            />
+          </React.Suspense>
+        )
+      );
+      expect(commitDetails).toMatchSnapshot('5: CommitDetails: mount');
+
+      await utils.actSuspense(() =>
+        TestRenderer.create(
+          <React.Suspense fallback={null}>
+            <Suspender
+              commitIndex={1}
+              rendererID={rendererID}
+              rootID={rootID}
+            />
+          </React.Suspense>
+        )
+      );
+      expect(commitDetails).toMatchSnapshot('6: CommitDetails: add child');
+
+      await utils.actSuspense(() =>
+        TestRenderer.create(
+          <React.Suspense fallback={null}>
+            <Suspender
+              commitIndex={2}
+              rendererID={rendererID}
+              rootID={rootID}
+            />
+          </React.Suspense>
+        )
+      );
+      expect(commitDetails).toMatchSnapshot(
+        '7: CommitDetails: remove children'
+      );
+
+      done();
+    });
+  });
+
   it('should remove profiling data when roots are unmounted', async () => {
     const Parent = ({ count }) =>
       new Array(count).fill(true).map((_, index) => <Child key={index} />);

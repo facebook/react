@@ -1,5 +1,74 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`profiling commitDetails should be collected for each commit: 1: mount 1`] = `
+[root]
+  ▾ <Parent key="A">
+      <Child key="0">
+      <Child key="1">
+`;
+
+exports[`profiling commitDetails should be collected for each commit: 2: add child 1`] = `
+[root]
+  ▾ <Parent key="A">
+      <Child key="0">
+      <Child key="1">
+      <Child key="2">
+`;
+
+exports[`profiling commitDetails should be collected for each commit: 3: remove children 1`] = `
+[root]
+  ▾ <Parent key="A">
+      <Child key="0">
+`;
+
+exports[`profiling commitDetails should be collected for each commit: 4: profiling stopped 1`] = `
+[root]
+  ▾ <Parent key="A">
+      <Child key="0">
+`;
+
+exports[`profiling commitDetails should be collected for each commit: 5: CommitDetails: mount 1`] = `
+Object {
+  "actualDurations": Map {
+    1 => 14,
+    2 => 14,
+    3 => 2,
+    4 => 2,
+  },
+  "commitIndex": 0,
+  "interactions": Array [],
+  "rootID": 1,
+}
+`;
+
+exports[`profiling commitDetails should be collected for each commit: 6: CommitDetails: add child 1`] = `
+Object {
+  "actualDurations": Map {
+    3 => 2,
+    4 => 2,
+    5 => 2,
+    2 => 16,
+    1 => 16,
+  },
+  "commitIndex": 1,
+  "interactions": Array [],
+  "rootID": 1,
+}
+`;
+
+exports[`profiling commitDetails should be collected for each commit: 7: CommitDetails: remove children 1`] = `
+Object {
+  "actualDurations": Map {
+    3 => 2,
+    2 => 12,
+    1 => 12,
+  },
+  "commitIndex": 2,
+  "interactions": Array [],
+  "rootID": 1,
+}
+`;
+
 exports[`profiling profilingSummary should be collected for each commit: 1: mount 1`] = `
 [root]
   ▾ <Parent key="A">
@@ -28,34 +97,22 @@ exports[`profiling profilingSummary should be collected for each commit: 4: prof
 `;
 
 exports[`profiling profilingSummary should be collected for each commit: ProfilingSummary 1`] = `
-{
+Object {
+  "commitDurations": Array [
+    16,
+    12,
+  ],
+  "commitTimes": Array [
+    16,
+    28,
+  ],
+  "initialTreeBaseDurations": Map {
+    1 => 14,
+    2 => 14,
+    3 => 2,
+    4 => 2,
+  },
+  "interactionCount": 0,
   "rootID": 1,
-  "commitDurations": [
-    16,
-    12
-  ],
-  "commitTimes": [
-    16,
-    28
-  ],
-  "initialTreeBaseDurations": [
-    [
-      1,
-      14
-    ],
-    [
-      2,
-      14
-    ],
-    [
-      3,
-      2
-    ],
-    [
-      4,
-      2
-    ]
-  ],
-  "interactionCount": 0
 }
 `;

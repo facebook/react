@@ -1,13 +1,17 @@
 // @flow
 
-import Agent from 'src/backend/agent';
-import { initBackend } from 'src/backend';
-import Bridge from 'src/bridge';
-import Store from 'src/devtools/store';
-import { installHook } from 'src/hook';
-
 const env = jasmine.getEnv();
 env.beforeEach(() => {
+  // These files should be required (and re-reuired) before each test,
+  // rather than imported at the head of the module.
+  // That's because we reset modules between tests,
+  // which disconnects the DevTool's cache from the current dispatcher ref.
+  const Agent = require('src/backend/agent').default;
+  const { initBackend } = require('src/backend');
+  const Bridge = require('src/bridge').default;
+  const Store = require('src/devtools/store').default;
+  const { installHook } = require('src/hook');
+
   // Fake timers let us flush Bridge operations between setup and assertions.
   jest.useFakeTimers();
 
