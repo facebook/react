@@ -49,8 +49,6 @@ const Pending = 0;
 const Resolved = 1;
 const Rejected = 2;
 
-// TODO This file isn't being re-imported between tests it seems, so it's getting disconnected
-
 const ReactCurrentDispatcher = (React: any)
   .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentDispatcher;
 
