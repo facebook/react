@@ -427,40 +427,80 @@ describe('ReactTestUtils.act()', () => {
   });
 
   describe('interaction tracing', () => {
-    it('should correctly trace interactions for sync roots', () => {
-      let expectedInteraction;
+    if (__DEV__) {
+      it('should correctly trace interactions for sync roots', () => {
+        let expectedInteraction;
 
-      const Component = jest.fn(() => {
-        expect(expectedInteraction).toBeDefined();
+        const Component = jest.fn(() => {
+          expect(expectedInteraction).toBeDefined();
 
-        const interactions = SchedulerTracing.unstable_getCurrent();
-        expect(interactions.size).toBe(1);
-        expect(interactions).toContain(expectedInteraction);
-
-        return null;
-      });
-
-      act(() => {
-        SchedulerTracing.unstable_trace('mount', performance.now(), () => {
           const interactions = SchedulerTracing.unstable_getCurrent();
           expect(interactions.size).toBe(1);
-          expectedInteraction = Array.from(interactions)[0];
+          expect(interactions).toContain(expectedInteraction);
 
-          ReactDOM.render(<Component />, container);
+          return null;
         });
-      });
 
-      act(() => {
-        SchedulerTracing.unstable_trace('update', performance.now(), () => {
-          const interactions = SchedulerTracing.unstable_getCurrent();
-          expect(interactions.size).toBe(1);
-          expectedInteraction = Array.from(interactions)[0];
+        act(() => {
+          SchedulerTracing.unstable_trace(
+            'mount traced inside act',
+            performance.now(),
+            () => {
+              const interactions = SchedulerTracing.unstable_getCurrent();
+              expect(interactions.size).toBe(1);
+              expectedInteraction = Array.from(interactions)[0];
 
-          ReactDOM.render(<Component />, container);
+              ReactDOM.render(<Component />, container);
+            },
+          );
         });
-      });
 
-      expect(Component).toHaveBeenCalledTimes(2);
-    });
+        act(() => {
+          SchedulerTracing.unstable_trace(
+            'update traced inside act',
+            performance.now(),
+            () => {
+              const interactions = SchedulerTracing.unstable_getCurrent();
+              expect(interactions.size).toBe(1);
+              expectedInteraction = Array.from(interactions)[0];
+
+              ReactDOM.render(<Component />, container);
+            },
+          );
+        });
+
+        const secondContainer = document.createElement('div');
+
+        SchedulerTracing.unstable_trace(
+          'mount traced outside act',
+          performance.now(),
+          () => {
+            act(() => {
+              const interactions = SchedulerTracing.unstable_getCurrent();
+              expect(interactions.size).toBe(1);
+              expectedInteraction = Array.from(interactions)[0];
+
+              ReactDOM.render(<Component />, secondContainer);
+            });
+          },
+        );
+
+        SchedulerTracing.unstable_trace(
+          'update traced outside act',
+          performance.now(),
+          () => {
+            act(() => {
+              const interactions = SchedulerTracing.unstable_getCurrent();
+              expect(interactions.size).toBe(1);
+              expectedInteraction = Array.from(interactions)[0];
+
+              ReactDOM.render(<Component />, secondContainer);
+            });
+          },
+        );
+
+        expect(Component).toHaveBeenCalledTimes(4);
+      });
+    }
   });
 });
