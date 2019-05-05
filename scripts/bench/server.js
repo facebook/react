@@ -15,14 +15,9 @@ function sendFile(filename, response) {
   fileStream.on('finish', response.end);
 }
 
-function createHTTP2Server(benchmark) {
+function createHTTP2Server(serverRootPath) {
   const server = http2Server.createServer({}, (request, response) => {
-    const filename = join(
-      __dirname,
-      'benchmarks',
-      benchmark,
-      request.url
-    ).replace(/\?.*/g, '');
+    const filename = join(serverRootPath, request.url).replace(/\?.*/g, '');
 
     if (existsSync(filename) && statSync(filename).isFile()) {
       sendFile(filename, response);
@@ -38,12 +33,13 @@ function createHTTP2Server(benchmark) {
     }
   });
   server.listen(8080);
+
   return server;
 }
 
-function createHTTPServer() {
+function createHTTPServer(serverRootPath) {
   const server = httpServer.createServer({
-    root: join(__dirname, 'benchmarks'),
+    root: serverRootPath,
     robots: true,
     cache: 'no-store',
     headers: {
@@ -55,12 +51,24 @@ function createHTTPServer() {
   return server;
 }
 
-function serveBenchmark(benchmark, http2) {
+function serveBenchmark(serverRootPath, http2) {
+  let server;
   if (http2) {
-    return createHTTP2Server(benchmark);
+    server = createHTTP2Server(serverRootPath);
   } else {
-    return createHTTPServer();
+    server = createHTTPServer(serverRootPath);
   }
+
+  // wrap native function to use it with await
+  server.closeAsync = function() {
+    return new Promise(_resolve => {
+      // not really a graceful shutdown
+      server.close();
+      setTimeout(_resolve, 500);
+    });
+  };
+
+  return server;
 }
 
 // if run directly via CLI
@@ -68,7 +76,7 @@ if (require.main === module) {
   const benchmarkInput = argv._[0];
 
   if (benchmarkInput) {
-    serveBenchmark(benchmarkInput);
+    serveBenchmark(join(__dirname, 'benchmarks', benchmarkInput));
   } else {
     console.error('Please specify a benchmark directory to serve!');
     process.exit(1);

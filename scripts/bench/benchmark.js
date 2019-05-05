@@ -7,17 +7,13 @@ const stats = require('stats-analysis');
 const config = require('lighthouse/lighthouse-core/config/perf-config');
 const spawn = require('child_process').spawn;
 const os = require('os');
+const chalk = require('chalk');
+const {wait, progressLog} = require('./utils');
 
-const timesToRun = 10;
-
-function wait(val) {
-  return new Promise(resolve => setTimeout(resolve, val));
-}
-
-async function runScenario(benchmark, chrome) {
+async function runScenario(source, benchmarkName, chrome) {
   const port = chrome.port;
   const results = await Lighthouse(
-    `http://localhost:8080/${benchmark}/`,
+    `http://localhost:8080/${source}/${benchmarkName}/`,
     {
       output: 'json',
       port,
@@ -25,19 +21,29 @@ async function runScenario(benchmark, chrome) {
     config
   );
 
-  const perfMarkings = results.lhr.audits['user-timings'].details.items;
-  const entries = perfMarkings
-    .filter(({timingType}) => timingType !== 'Mark')
-    .map(({duration, name}) => ({
-      entry: name,
-      time: duration,
-    }));
-  entries.push({
-    entry: 'First Meaningful Paint',
-    time: results.lhr.audits['first-meaningful-paint'].rawValue,
-  });
+  if (
+    !results.lhr.audits['user-timings'].details &&
+    results.lhr.audits['user-timings'].errorMessage
+  ) {
+    console.error(results.lhr.audits['user-timings'].errorMessage);
+  } else {
+    const perfMarkings = results.lhr.audits['user-timings'].details.items;
 
-  return entries;
+    const entries = perfMarkings
+      .filter(({timingType}) => timingType !== 'Mark')
+      .map(({duration, name}) => ({
+        entry: name,
+        time: duration,
+      }));
+    entries.push({
+      entry: 'First Meaningful Paint',
+      time: results.lhr.audits['first-meaningful-paint'].rawValue,
+    });
+
+    return entries;
+  }
+
+  return [];
 }
 
 function bootstrap(data) {
@@ -104,27 +110,69 @@ async function launchChrome(headless) {
   });
 }
 
-async function runBenchmark(benchmark, headless) {
-  const results = {
-    runs: [],
-    averages: [],
-  };
+async function runBenchmarkQueue(benchmarkQueue, headless) {
+  progressLog.init('Running benchmarks...');
+
+  const results = {};
+
+  const totalRuns = benchmarkQueue.length;
 
   await initChrome();
 
-  for (let i = 0; i < timesToRun; i++) {
+  for (let i = 0; i < totalRuns; i++) {
+    const currentRun = benchmarkQueue[i];
+
+    progressLog.update(
+      chalk.gray('Running benchmarks: ') +
+        chalk.white(`${i + 1} of ${totalRuns}`) +
+        chalk.grey(` (${currentRun.source} ${currentRun.benchmarkName})`)
+    );
+
     let chrome = await launchChrome(headless);
 
-    results.runs.push(await runScenario(benchmark, chrome));
+    if (!results[currentRun.source]) {
+      results[currentRun.source] = {};
+    }
+
+    if (!results[currentRun.source][currentRun.benchmarkName]) {
+      results[currentRun.source][currentRun.benchmarkName] = {
+        runs: [],
+      };
+    }
+
+    results[currentRun.source][currentRun.benchmarkName].runs.push(
+      await runScenario(currentRun.source, currentRun.benchmarkName, chrome)
+    );
+
     // add a delay or sometimes it confuses lighthouse and it hangs
     await wait(500);
+
     try {
       await chrome.kill();
     } catch (e) {}
+
+    await wait(500);
   }
 
-  results.averages = calculateAverages(results.runs);
+  progressLog.stop('Running benchmarks: done');
+
+  if (results.local) {
+    Object.keys(results.local).forEach(benchmarkName => {
+      results.local[benchmarkName].averages = calculateAverages(
+        results.local[benchmarkName].runs
+      );
+    });
+  }
+
+  if (results.remote) {
+    Object.keys(results.remote).forEach(benchmarkName => {
+      results.remote[benchmarkName].averages = calculateAverages(
+        results.remote[benchmarkName].runs
+      );
+    });
+  }
+
   return results;
 }
 
-module.exports = runBenchmark;
+module.exports = runBenchmarkQueue;

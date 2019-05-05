@@ -1,17 +1,12 @@
 'use strict';
 
 const Git = require('nodegit');
-const rimraf = require('rimraf');
-const ncp = require('ncp').ncp;
 const {existsSync} = require('fs');
 const exec = require('child_process').exec;
 const {join} = require('path');
+const {cleanDir, asyncCopyTo} = require('./utils.js');
 
 const reactUrl = 'https://github.com/facebook/react.git';
-
-function cleanDir() {
-  return new Promise(_resolve => rimraf('remote-repo', _resolve));
-}
 
 function executeCommand(command) {
   return new Promise(_resolve =>
@@ -26,30 +21,6 @@ function executeCommand(command) {
   );
 }
 
-function asyncCopyTo(from, to) {
-  return new Promise(_resolve => {
-    ncp(from, to, error => {
-      if (error) {
-        console.error(error);
-        process.exit(1);
-      }
-      _resolve();
-    });
-  });
-}
-
-function getDefaultReactPath() {
-  return join(__dirname, 'remote-repo');
-}
-
-async function buildBenchmark(reactPath = getDefaultReactPath(), benchmark) {
-  // get the build.js from the benchmark directory and execute it
-  await require(join(__dirname, 'benchmarks', benchmark, 'build.js'))(
-    reactPath,
-    asyncCopyTo
-  );
-}
-
 async function getMergeBaseFromLocalGitRepo(localRepo) {
   const repo = await Git.Repository.open(localRepo);
   return await Git.Merge.base(
@@ -59,28 +30,28 @@ async function getMergeBaseFromLocalGitRepo(localRepo) {
   );
 }
 
-async function buildBenchmarkBundlesFromGitRepo(
+async function buildReactBundlesFromGitRepo(
+  remoteReactPath,
   commitId,
   skipBuild,
   url = reactUrl,
   clean
 ) {
   let repo;
-  const remoteRepoDir = getDefaultReactPath();
 
   if (!skipBuild) {
     if (clean) {
       //clear remote-repo folder
-      await cleanDir(remoteRepoDir);
+      await cleanDir(remoteReactPath);
     }
     // check if remote-repo directory already exists
-    if (existsSync(join(__dirname, 'remote-repo'))) {
-      repo = await Git.Repository.open(remoteRepoDir);
+    if (existsSync(remoteReactPath)) {
+      repo = await Git.Repository.open(remoteReactPath);
       // fetch all the latest remote changes
       await repo.fetchAll();
     } else {
       // if not, clone the repo to remote-repo folder
-      repo = await Git.Clone(url, remoteRepoDir);
+      repo = await Git.Clone(url, remoteReactPath);
     }
     let commit = await repo.getBranchCommit('master');
     // reset hard to this remote head
@@ -97,11 +68,11 @@ async function buildBenchmarkBundlesFromGitRepo(
       // then we checkout the merge base
       await Git.Checkout.tree(repo, commit);
     }
-    await buildReactBundles();
+    await buildReactBundles(remoteReactPath);
   }
 }
 
-async function buildReactBundles(reactPath = getDefaultReactPath(), skipBuild) {
+async function buildReactBundles(reactPath, skipBuild) {
   if (!skipBuild) {
     await executeCommand(
       `cd ${reactPath} && yarn && yarn build react/index,react-dom/index --type=UMD_PROD`
@@ -109,14 +80,22 @@ async function buildReactBundles(reactPath = getDefaultReactPath(), skipBuild) {
   }
 }
 
+async function buildBenchmark(reactPath, benchmarksPath, benchmark) {
+  // get the build.js from the benchmark directory and execute it
+  await require(join(benchmarksPath, benchmark, 'build.js'))(
+    reactPath,
+    asyncCopyTo
+  );
+}
+
 // if run directly via CLI
 if (require.main === module) {
-  buildBenchmarkBundlesFromGitRepo();
+  buildReactBundlesFromGitRepo(join(__dirname, 'remote-repo'));
 }
 
 module.exports = {
   buildReactBundles,
-  buildBenchmark,
-  buildBenchmarkBundlesFromGitRepo,
+  buildReactBundlesFromGitRepo,
   getMergeBaseFromLocalGitRepo,
+  buildBenchmark,
 };
