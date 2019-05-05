@@ -111,22 +111,22 @@ Object {
 exports[`profiling Interactions should be collected for every traced interaction: Interactions 1`] = `
 Array [
   Object {
-    "__count": 0,
+    "__count": 1,
     "commits": Array [
-      1,
+      0,
     ],
     "id": 0,
-    "name": "one child",
-    "timestamp": 10,
+    "name": "mount: one child",
+    "timestamp": 0,
   },
   Object {
     "__count": 0,
     "commits": Array [
-      2,
+      1,
     ],
     "id": 1,
-    "name": "two children",
-    "timestamp": 22,
+    "name": "update: two children",
+    "timestamp": 12,
   },
 ]
 `;

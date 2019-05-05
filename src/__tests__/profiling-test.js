@@ -194,23 +194,20 @@ describe('profiling', () => {
       const container = document.createElement('div');
 
       utils.act(() => store.startProfiling());
-      console.log('[test] render one');
       utils.act(() =>
         SchedulerTracing.unstable_trace(
-          'one child',
+          'mount: one child',
           Scheduler.unstable_now(),
           () => ReactDOM.render(<Parent count={1} />, container)
         )
       );
-      console.log('[test] render two');
       utils.act(() =>
         SchedulerTracing.unstable_trace(
-          'two children',
+          'update: two children',
           Scheduler.unstable_now(),
           () => ReactDOM.render(<Parent count={2} />, container)
         )
       );
-      console.log('[test] done');
       utils.act(() => store.stopProfiling());
 
       function Suspender({ rendererID, rootID }) {
