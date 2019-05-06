@@ -1,0 +1,162 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`commit tree should be able to rebuild the store tree for each commit: 0: CommitTree 1`] = `
+Object {
+  "nodes": Map {
+    1 => Object {
+      "children": Array [
+        2,
+      ],
+      "displayName": null,
+      "id": 1,
+      "key": null,
+      "parentID": 0,
+      "treeBaseDuration": 12,
+    },
+    2 => Object {
+      "children": Array [
+        3,
+      ],
+      "displayName": "Parent",
+      "id": 2,
+      "key": null,
+      "parentID": 1,
+      "treeBaseDuration": 12,
+    },
+    3 => Object {
+      "children": Array [],
+      "displayName": "Memo(Child)",
+      "id": 3,
+      "key": "0",
+      "parentID": 2,
+      "treeBaseDuration": 2,
+    },
+  },
+  "rootID": 1,
+}
+`;
+
+exports[`commit tree should be able to rebuild the store tree for each commit: 1: CommitTree 1`] = `
+Object {
+  "nodes": Map {
+    1 => Object {
+      "children": Array [
+        2,
+      ],
+      "displayName": null,
+      "id": 1,
+      "key": null,
+      "parentID": 0,
+      "treeBaseDuration": 16,
+    },
+    2 => Object {
+      "children": Array [
+        3,
+        4,
+        5,
+      ],
+      "displayName": "Parent",
+      "id": 2,
+      "key": null,
+      "parentID": 1,
+      "treeBaseDuration": 16,
+    },
+    3 => Object {
+      "children": Array [],
+      "displayName": "Memo(Child)",
+      "id": 3,
+      "key": "0",
+      "parentID": 2,
+      "treeBaseDuration": 2,
+    },
+    4 => Object {
+      "children": Array [],
+      "displayName": "Memo(Child)",
+      "id": 4,
+      "key": "1",
+      "parentID": 2,
+      "treeBaseDuration": 2,
+    },
+    5 => Object {
+      "children": Array [],
+      "displayName": "Memo(Child)",
+      "id": 5,
+      "key": "2",
+      "parentID": 2,
+      "treeBaseDuration": 2,
+    },
+  },
+  "rootID": 1,
+}
+`;
+
+exports[`commit tree should be able to rebuild the store tree for each commit: 2: CommitTree 1`] = `
+Object {
+  "nodes": Map {
+    1 => Object {
+      "children": Array [
+        2,
+      ],
+      "displayName": null,
+      "id": 1,
+      "key": null,
+      "parentID": 0,
+      "treeBaseDuration": 14,
+    },
+    2 => Object {
+      "children": Array [
+        3,
+        4,
+      ],
+      "displayName": "Parent",
+      "id": 2,
+      "key": null,
+      "parentID": 1,
+      "treeBaseDuration": 14,
+    },
+    3 => Object {
+      "children": Array [],
+      "displayName": "Memo(Child)",
+      "id": 3,
+      "key": "0",
+      "parentID": 2,
+      "treeBaseDuration": 2,
+    },
+    4 => Object {
+      "children": Array [],
+      "displayName": "Memo(Child)",
+      "id": 4,
+      "key": "1",
+      "parentID": 2,
+      "treeBaseDuration": 2,
+    },
+  },
+  "rootID": 1,
+}
+`;
+
+exports[`commit tree should be able to rebuild the store tree for each commit: 3: CommitTree 1`] = `
+Object {
+  "nodes": Map {
+    1 => Object {
+      "children": Array [
+        2,
+      ],
+      "displayName": null,
+      "id": 1,
+      "key": null,
+      "parentID": 0,
+      "treeBaseDuration": 10,
+    },
+    2 => Object {
+      "children": Array [],
+      "displayName": "Parent",
+      "id": 2,
+      "key": null,
+      "parentID": 1,
+      "treeBaseDuration": 10,
+    },
+  },
+  "rootID": 1,
+}
+`;
