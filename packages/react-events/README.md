@@ -12,16 +12,18 @@ can be found [here](./docs).
 
 ## EventComponent
 
-An Event Component is defined by a module that exports an object of the
-following type:
+An Event Component is defined using `React.unstable_createEventComponent`:
 
 ```js
-type EventComponent = {|
-  $$typeof: REACT_EVENT_COMPONENT_TYPE,
-  displayName?: string,
+type EventComponentConfig = {
+  displayName: string,
   props: null | Object,
-  responder: EventResponder,
-|};
+  responder: EventResponder
+}
+
+const EventComponent = React.unstable_createEventComponent(
+  config: EventComponentConfig
+);
 ```
 
 ## EventResponder

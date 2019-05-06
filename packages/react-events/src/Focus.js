@@ -11,7 +11,8 @@ import type {
   ReactResponderEvent,
   ReactResponderContext,
 } from 'shared/ReactTypes';
-import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
+
+import React from 'react';
 import {getEventCurrentTarget} from './utils.js';
 
 type FocusProps = {
@@ -260,9 +261,7 @@ const FocusResponder = {
   },
 };
 
-export default {
-  $$typeof: REACT_EVENT_COMPONENT_TYPE,
+export default React.unstable_createEventComponent({
   displayName: 'Focus',
-  props: null,
   responder: FocusResponder,
-};
+});

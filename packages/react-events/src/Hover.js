@@ -11,7 +11,8 @@ import type {
   ReactResponderEvent,
   ReactResponderContext,
 } from 'shared/ReactTypes';
-import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
+
+import React from 'react';
 import {
   getEventPointerType,
   getEventCurrentTarget,
@@ -361,9 +362,7 @@ const HoverResponder = {
   },
 };
 
-export default {
-  $$typeof: REACT_EVENT_COMPONENT_TYPE,
+export default React.unstable_createEventComponent({
   displayName: 'Hover',
-  props: null,
   responder: HoverResponder,
-};
+});
