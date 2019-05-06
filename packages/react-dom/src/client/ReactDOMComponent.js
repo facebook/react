@@ -97,6 +97,7 @@ let didWarnShadyDOM = false;
 const DANGEROUSLY_SET_INNER_HTML = 'dangerouslySetInnerHTML';
 const SUPPRESS_CONTENT_EDITABLE_WARNING = 'suppressContentEditableWarning';
 const SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
+const HYDRATE_TOUCH_HIT_TARGET = 'hydrateTouchHitTarget';
 const AUTOFOCUS = 'autoFocus';
 const CHILDREN = 'children';
 const STYLE = 'style';
@@ -1031,6 +1032,8 @@ export function diffHydratedProperties(
         }
         ensureListeningTo(rootContainerElement, propKey);
       }
+    } else if (enableEventAPI && propKey === HYDRATE_TOUCH_HIT_TARGET) {
+      updatePayload = [STYLE, rawProps.style];
     } else if (
       __DEV__ &&
       // Convince Flow we've calculated it (it's DEV-only in this method.)
