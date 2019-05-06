@@ -1,0 +1,155 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`profiling CommitDetails should be collected for each commit: CommitDetails commitIndex: 0 1`] = `
+Object {
+  "actualDurations": Map {
+    1 => 14,
+    2 => 14,
+    3 => 2,
+    4 => 2,
+  },
+  "commitIndex": 0,
+  "interactions": Array [],
+  "rootID": 1,
+}
+`;
+
+exports[`profiling CommitDetails should be collected for each commit: CommitDetails commitIndex: 1 1`] = `
+Object {
+  "actualDurations": Map {
+    3 => 2,
+    4 => 2,
+    5 => 2,
+    2 => 16,
+    1 => 16,
+  },
+  "commitIndex": 1,
+  "interactions": Array [],
+  "rootID": 1,
+}
+`;
+
+exports[`profiling CommitDetails should be collected for each commit: CommitDetails commitIndex: 2 1`] = `
+Object {
+  "actualDurations": Map {
+    3 => 2,
+    2 => 12,
+    1 => 12,
+  },
+  "commitIndex": 2,
+  "interactions": Array [],
+  "rootID": 1,
+}
+`;
+
+exports[`profiling CommitDetails should be collected for each commit: CommitDetails commitIndex: 3 1`] = `
+Object {
+  "actualDurations": Map {
+    2 => 10,
+    1 => 10,
+  },
+  "commitIndex": 3,
+  "interactions": Array [],
+  "rootID": 1,
+}
+`;
+
+exports[`profiling FiberCommits should be collected for each rendered fiber: FiberCommits: element 2 1`] = `
+Object {
+  "commitDurations": Array [
+    0,
+    12,
+    1,
+    14,
+    2,
+    16,
+  ],
+  "fiberID": 2,
+  "rootID": 1,
+}
+`;
+
+exports[`profiling FiberCommits should be collected for each rendered fiber: FiberCommits: element 3 1`] = `
+Object {
+  "commitDurations": Array [
+    0,
+    2,
+    1,
+    2,
+    2,
+    2,
+  ],
+  "fiberID": 3,
+  "rootID": 1,
+}
+`;
+
+exports[`profiling FiberCommits should be collected for each rendered fiber: FiberCommits: element 4 1`] = `
+Object {
+  "commitDurations": Array [
+    1,
+    2,
+    2,
+    2,
+  ],
+  "fiberID": 4,
+  "rootID": 1,
+}
+`;
+
+exports[`profiling FiberCommits should be collected for each rendered fiber: FiberCommits: element 5 1`] = `
+Object {
+  "commitDurations": Array [
+    2,
+    2,
+  ],
+  "fiberID": 5,
+  "rootID": 1,
+}
+`;
+
+exports[`profiling Interactions should be collected for every traced interaction: Interactions 1`] = `
+Array [
+  Object {
+    "__count": 1,
+    "commits": Array [
+      0,
+    ],
+    "id": 0,
+    "name": "mount: one child",
+    "timestamp": 0,
+  },
+  Object {
+    "__count": 0,
+    "commits": Array [
+      1,
+    ],
+    "id": 1,
+    "name": "update: two children",
+    "timestamp": 12,
+  },
+]
+`;
+
+exports[`profiling ProfilingSummary should be collected for each commit: ProfilingSummary 1`] = `
+Object {
+  "commitDurations": Array [
+    16,
+    12,
+    10,
+  ],
+  "commitTimes": Array [
+    16,
+    28,
+    38,
+  ],
+  "initialTreeBaseDurations": Map {
+    1 => 14,
+    2 => 14,
+    3 => 2,
+    4 => 2,
+  },
+  "interactionCount": 0,
+  "rootID": 1,
+}
+`;

@@ -1,16 +1,16 @@
 // @flow
 
-import Agent from 'src/backend/agent';
-import { initBackend } from 'src/backend';
-import Bridge from 'src/bridge';
-import Store from 'src/devtools/store';
-import { installHook } from 'src/hook';
-
 const env = jasmine.getEnv();
 env.beforeEach(() => {
-  // It's important to reset modules between test runs;
-  // Without this, ReactDOM won't re-inject itself into the new hook.
-  jest.resetModules();
+  // These files should be required (and re-reuired) before each test,
+  // rather than imported at the head of the module.
+  // That's because we reset modules between tests,
+  // which disconnects the DevTool's cache from the current dispatcher ref.
+  const Agent = require('src/backend/agent').default;
+  const { initBackend } = require('src/backend');
+  const Bridge = require('src/bridge').default;
+  const Store = require('src/devtools/store').default;
+  const { installHook } = require('src/hook');
 
   // Fake timers let us flush Bridge operations between setup and assertions.
   jest.useFakeTimers();
@@ -55,4 +55,10 @@ env.beforeEach(() => {
 });
 env.afterEach(() => {
   delete global.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+
+  // It's important to reset modules between test runs;
+  // Without this, ReactDOM won't re-inject itself into the new hook.
+  // It's also important to reset after tests, rather than before,
+  // so that we don't disconnect the ReactCurrentDispatcher ref.
+  jest.resetModules();
 });

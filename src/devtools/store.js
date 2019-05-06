@@ -192,30 +192,49 @@ export default class Store extends EventEmitter {
   }
 
   // This is only used in tests to avoid memory leaks.
-  assertEmptyMaps() {
-    this.assertEmptyMap(this._idToElement, '_idToElement');
-    this.assertEmptyMap(this._ownersMap, '_ownersMap');
-    this.assertEmptyMap(
-      this._profilingOperationsByRootID,
-      '_profilingOperationsByRootID'
+  assertExpectedRootMapSizes() {
+    if (this.roots.length === 0) {
+      // The only safe time to assert these maps are empty is when the store is empty.
+      this.assertMapSizeMatchesRootCount(this._idToElement, '_idToElement');
+      this.assertMapSizeMatchesRootCount(this._ownersMap, '_ownersMap');
+
+      // These maps will be empty unless profiling mode has been started.
+      // After this, their size should always match the number of roots,
+      // but unless we want to track additional metadata about profiling history,
+      // the only safe time to assert this is when the store is empty.
+      this.assertMapSizeMatchesRootCount(
+        this._profilingOperationsByRootID,
+        '_profilingOperationsByRootID'
+      );
+      this.assertMapSizeMatchesRootCount(
+        this._profilingScreenshotsByRootID,
+        '_profilingScreenshotsByRootID'
+      );
+      this.assertMapSizeMatchesRootCount(
+        this._profilingSnapshotsByRootID,
+        '_profilingSnapshotsByRootID'
+      );
+    }
+
+    // These maps should always be the same size as the number of roots
+    this.assertMapSizeMatchesRootCount(
+      this._rootIDToCapabilities,
+      '_rootIDToCapabilities'
     );
-    this.assertEmptyMap(
-      this._profilingScreenshotsByRootID,
-      '_profilingScreenshotsByRootID'
+    this.assertMapSizeMatchesRootCount(
+      this._rootIDToRendererID,
+      '_rootIDToRendererID'
     );
-    this.assertEmptyMap(
-      this._profilingSnapshotsByRootID,
-      '_profilingSnapshotsByRootID'
-    );
-    this.assertEmptyMap(this._rootIDToCapabilities, '_rootIDToCapabilities');
-    this.assertEmptyMap(this._rootIDToRendererID, '_rootIDToRendererID');
   }
 
   // This is only used in tests to avoid memory leaks.
-  assertEmptyMap(map: Map<any, any>, mapName: string) {
-    if (map.size !== 0) {
+  assertMapSizeMatchesRootCount(map: Map<any, any>, mapName: string) {
+    const expectedSize = this.roots.length;
+    if (map.size !== expectedSize) {
       throw new Error(
-        `Expected ${mapName} to be empty, got ${map.size}: ${inspect(map, {
+        `Expected ${mapName} to contain ${expectedSize} items, but it contains ${
+          map.size
+        } items\n\n${inspect(map, {
           depth: 20,
         })}`
       );
@@ -832,6 +851,10 @@ export default class Store extends EventEmitter {
               type,
               weight: 0,
             });
+
+            if (this._isProfiling) {
+              this._profilingSnapshotsByRootID.set(id, new Map());
+            }
 
             haveRootsChanged = true;
           } else {

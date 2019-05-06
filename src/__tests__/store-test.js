@@ -3,16 +3,10 @@
 describe('Store', () => {
   let React;
   let ReactDOM;
-  let TestUtils;
   let agent;
+  let act;
+  let getRendererID;
   let store;
-
-  const act = (callback: Function) => {
-    TestUtils.act(() => {
-      callback();
-    });
-    jest.runAllTimers(); // Flush Bridge operations
-  };
 
   beforeEach(() => {
     agent = global.agent;
@@ -20,7 +14,10 @@ describe('Store', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
-    TestUtils = require('react-dom/test-utils');
+
+    const utils = require('./utils');
+    act = utils.act;
+    getRendererID = utils.getRendererID;
   });
 
   it('should not allow a root node to be collapsed', () => {
@@ -281,8 +278,7 @@ describe('Store', () => {
       );
       expect(store).toMatchSnapshot('7: only third child is suspended');
 
-      // HACK There's only one renderer for this test
-      const rendererID = Object.keys(agent._rendererInterfaces)[0];
+      const rendererID = getRendererID();
       act(() =>
         agent.overrideSuspense({
           id: store.getElementIDAtIndex(4),
@@ -673,8 +669,7 @@ describe('Store', () => {
       act(() => store.toggleIsCollapsed(store.getElementIDAtIndex(1), false));
       expect(store).toMatchSnapshot('2: expand tree');
 
-      // HACK There's only one renderer for this test
-      const rendererID = Object.keys(agent._rendererInterfaces)[0];
+      const rendererID = getRendererID();
       const suspenseID = store.getElementIDAtIndex(1);
 
       act(() =>

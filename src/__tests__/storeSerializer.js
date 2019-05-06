@@ -1,8 +1,9 @@
-import Store from 'src/devtools/store';
-
 // test() is part of Jest's serializer API
 export function test(maybeStore) {
-  return maybeStore instanceof Store;
+  // It's important to lazy-require the Store rather than imported at the head of the module.
+  // Because we reset modules between tests, different Store implementations will be used for each test.
+  // Unfortunately Jest does not reset its own serializer modules.
+  return maybeStore instanceof require('src/devtools/store').default;
 }
 
 // print() is part of Jest's serializer API
@@ -70,9 +71,9 @@ export function printStore(store, includeWeight = false) {
     );
   }
 
-  if (store.roots.length === 0) {
-    store.assertEmptyMaps();
-  }
+  // If roots have been unmounted, verify that they've been removed from maps.
+  // This helps ensure the Store doesn't leak memory.
+  store.assertExpectedRootMapSizes();
 
   return snapshotLines.join('\n');
 }
