@@ -7,7 +7,6 @@ describe('commit tree', () => {
   let React;
   let ReactDOM;
   let Scheduler;
-  let SchedulerTracing;
   let TestRenderer: TestRendererType;
   let store: Store;
   let utils;
@@ -22,7 +21,6 @@ describe('commit tree', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     Scheduler = require('scheduler');
-    SchedulerTracing = require('scheduler/tracing');
     TestRenderer = utils.requireTestRenderer();
   });
 
