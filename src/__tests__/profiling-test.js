@@ -1,13 +1,11 @@
 // @flow
 
-import type React from 'react';
-import type ReactDOM from 'react-dom';
 import typeof ReactTestRenderer from 'react-test-renderer';
 import type Store from 'src/devtools/store';
 
 describe('profiling', () => {
-  let React: React;
-  let ReactDOM: ReactDOM;
+  let React;
+  let ReactDOM;
   let Scheduler;
   let SchedulerTracing;
   let TestRenderer: ReactTestRenderer;

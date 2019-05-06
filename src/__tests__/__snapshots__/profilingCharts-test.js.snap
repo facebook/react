@@ -1,0 +1,333 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`profiling charts flamegraph chart should contain valid data: 0: CommitTree 1`] = `
+Object {
+  "nodes": Map {
+    1 => Object {
+      "children": Array [
+        2,
+      ],
+      "displayName": null,
+      "id": 1,
+      "key": null,
+      "parentID": 0,
+      "treeBaseDuration": 14,
+    },
+    2 => Object {
+      "children": Array [
+        3,
+        4,
+      ],
+      "displayName": "Parent",
+      "id": 2,
+      "key": null,
+      "parentID": 1,
+      "treeBaseDuration": 14,
+    },
+    3 => Object {
+      "children": Array [],
+      "displayName": "Memo(Child)",
+      "id": 3,
+      "key": "first",
+      "parentID": 2,
+      "treeBaseDuration": 2,
+    },
+    4 => Object {
+      "children": Array [],
+      "displayName": "Memo(Child)",
+      "id": 4,
+      "key": "second",
+      "parentID": 2,
+      "treeBaseDuration": 2,
+    },
+  },
+  "rootID": 1,
+}
+`;
+
+exports[`profiling charts flamegraph chart should contain valid data: 0: FlamegraphChartData 1`] = `
+Object {
+  "baseDuration": 14,
+  "depth": 2,
+  "idToDepthMap": Map {
+    2 => 1,
+    4 => 2,
+    3 => 2,
+  },
+  "maxSelfDuration": 10,
+  "rows": Array [
+    Array [
+      Object {
+        "actualDuration": 14,
+        "didRender": true,
+        "id": 2,
+        "label": "Parent (10.0ms of 14.0ms)",
+        "name": "Parent",
+        "offset": 0,
+        "selfDuration": 10,
+        "treeBaseDuration": 14,
+      },
+    ],
+    Array [
+      Object {
+        "actualDuration": 2,
+        "didRender": true,
+        "id": 4,
+        "label": "Memo(Child) key=\\"second\\" (2.0ms of 2.0ms)",
+        "name": "Memo(Child)",
+        "offset": 12,
+        "selfDuration": 2,
+        "treeBaseDuration": 2,
+      },
+      Object {
+        "actualDuration": 2,
+        "didRender": true,
+        "id": 3,
+        "label": "Memo(Child) key=\\"first\\" (2.0ms of 2.0ms)",
+        "name": "Memo(Child)",
+        "offset": 10,
+        "selfDuration": 2,
+        "treeBaseDuration": 2,
+      },
+    ],
+  ],
+}
+`;
+
+exports[`profiling charts flamegraph chart should contain valid data: 1: CommitTree 1`] = `
+Object {
+  "nodes": Map {
+    1 => Object {
+      "children": Array [
+        2,
+      ],
+      "displayName": null,
+      "id": 1,
+      "key": null,
+      "parentID": 0,
+      "treeBaseDuration": 14,
+    },
+    2 => Object {
+      "children": Array [
+        3,
+        4,
+      ],
+      "displayName": "Parent",
+      "id": 2,
+      "key": null,
+      "parentID": 1,
+      "treeBaseDuration": 14,
+    },
+    3 => Object {
+      "children": Array [],
+      "displayName": "Memo(Child)",
+      "id": 3,
+      "key": "first",
+      "parentID": 2,
+      "treeBaseDuration": 2,
+    },
+    4 => Object {
+      "children": Array [],
+      "displayName": "Memo(Child)",
+      "id": 4,
+      "key": "second",
+      "parentID": 2,
+      "treeBaseDuration": 2,
+    },
+  },
+  "rootID": 1,
+}
+`;
+
+exports[`profiling charts flamegraph chart should contain valid data: 1: FlamegraphChartData 1`] = `
+Object {
+  "baseDuration": 14,
+  "depth": 2,
+  "idToDepthMap": Map {
+    2 => 1,
+    4 => 2,
+    3 => 2,
+  },
+  "maxSelfDuration": 10,
+  "rows": Array [
+    Array [
+      Object {
+        "actualDuration": 10,
+        "didRender": true,
+        "id": 2,
+        "label": "Parent (10.0ms of 10.0ms)",
+        "name": "Parent",
+        "offset": 0,
+        "selfDuration": 10,
+        "treeBaseDuration": 14,
+      },
+    ],
+    Array [
+      Object {
+        "actualDuration": 0,
+        "didRender": false,
+        "id": 4,
+        "label": "Memo(Child) key=\\"second\\"",
+        "name": "Memo(Child)",
+        "offset": 12,
+        "selfDuration": 0,
+        "treeBaseDuration": 2,
+      },
+      Object {
+        "actualDuration": 0,
+        "didRender": false,
+        "id": 3,
+        "label": "Memo(Child) key=\\"first\\"",
+        "name": "Memo(Child)",
+        "offset": 10,
+        "selfDuration": 0,
+        "treeBaseDuration": 2,
+      },
+    ],
+  ],
+}
+`;
+
+exports[`profiling charts interactions should contain valid data: Interactions 1`] = `
+Object {
+  "lastInteractionTime": 24,
+  "maxCommitDuration": 14,
+}
+`;
+
+exports[`profiling charts interactions should contain valid data: Interactions 2`] = `
+Object {
+  "lastInteractionTime": 24,
+  "maxCommitDuration": 14,
+}
+`;
+
+exports[`profiling charts ranked chart should contain valid data: 0: CommitTree 1`] = `
+Object {
+  "nodes": Map {
+    1 => Object {
+      "children": Array [
+        2,
+      ],
+      "displayName": null,
+      "id": 1,
+      "key": null,
+      "parentID": 0,
+      "treeBaseDuration": 14,
+    },
+    2 => Object {
+      "children": Array [
+        3,
+        4,
+      ],
+      "displayName": "Parent",
+      "id": 2,
+      "key": null,
+      "parentID": 1,
+      "treeBaseDuration": 14,
+    },
+    3 => Object {
+      "children": Array [],
+      "displayName": "Memo(Child)",
+      "id": 3,
+      "key": "first",
+      "parentID": 2,
+      "treeBaseDuration": 2,
+    },
+    4 => Object {
+      "children": Array [],
+      "displayName": "Memo(Child)",
+      "id": 4,
+      "key": "second",
+      "parentID": 2,
+      "treeBaseDuration": 2,
+    },
+  },
+  "rootID": 1,
+}
+`;
+
+exports[`profiling charts ranked chart should contain valid data: 0: RankedChartData 1`] = `
+Object {
+  "maxValue": 10,
+  "nodes": Array [
+    Object {
+      "id": 2,
+      "label": "Parent (10.0ms)",
+      "name": "Parent",
+      "value": 10,
+    },
+    Object {
+      "id": 3,
+      "label": "Memo(Child) key=\\"first\\" (2.0ms)",
+      "name": "Memo(Child)",
+      "value": 2,
+    },
+    Object {
+      "id": 4,
+      "label": "Memo(Child) key=\\"second\\" (2.0ms)",
+      "name": "Memo(Child)",
+      "value": 2,
+    },
+  ],
+}
+`;
+
+exports[`profiling charts ranked chart should contain valid data: 1: CommitTree 1`] = `
+Object {
+  "nodes": Map {
+    1 => Object {
+      "children": Array [
+        2,
+      ],
+      "displayName": null,
+      "id": 1,
+      "key": null,
+      "parentID": 0,
+      "treeBaseDuration": 14,
+    },
+    2 => Object {
+      "children": Array [
+        3,
+        4,
+      ],
+      "displayName": "Parent",
+      "id": 2,
+      "key": null,
+      "parentID": 1,
+      "treeBaseDuration": 14,
+    },
+    3 => Object {
+      "children": Array [],
+      "displayName": "Memo(Child)",
+      "id": 3,
+      "key": "first",
+      "parentID": 2,
+      "treeBaseDuration": 2,
+    },
+    4 => Object {
+      "children": Array [],
+      "displayName": "Memo(Child)",
+      "id": 4,
+      "key": "second",
+      "parentID": 2,
+      "treeBaseDuration": 2,
+    },
+  },
+  "rootID": 1,
+}
+`;
+
+exports[`profiling charts ranked chart should contain valid data: 1: RankedChartData 1`] = `
+Object {
+  "maxValue": 10,
+  "nodes": Array [
+    Object {
+      "id": 2,
+      "label": "Parent (10.0ms)",
+      "name": "Parent",
+      "value": 10,
+    },
+  ],
+}
+`;
