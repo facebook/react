@@ -11,7 +11,8 @@ import type {
   ReactResponderEvent,
   ReactResponderContext,
 } from 'shared/ReactTypes';
-import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
+
+import React from 'react';
 
 type FocusScopeProps = {
   autoFocus: Boolean,
@@ -179,9 +180,7 @@ const FocusScopeResponder = {
   },
 };
 
-export default {
-  $$typeof: REACT_EVENT_COMPONENT_TYPE,
-  displayName: 'FocusScope',
-  props: null,
-  responder: FocusScopeResponder,
-};
+export default React.unstable_createEventComponent(
+  FocusScopeResponder,
+  'FocusScope',
+);

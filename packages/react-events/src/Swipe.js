@@ -11,7 +11,8 @@ import type {
   ReactResponderEvent,
   ReactResponderContext,
 } from 'shared/ReactTypes';
-import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
+
+import React from 'react';
 
 const targetEventTypes = ['pointerdown'];
 const rootEventTypes = [
@@ -254,9 +255,4 @@ const SwipeResponder = {
   },
 };
 
-export default {
-  $$typeof: REACT_EVENT_COMPONENT_TYPE,
-  displayName: 'Swipe',
-  props: null,
-  responder: SwipeResponder,
-};
+export default React.unstable_createEventComponent(SwipeResponder, 'Swipe');

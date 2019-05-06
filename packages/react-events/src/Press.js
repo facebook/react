@@ -12,7 +12,9 @@ import type {
   ReactResponderContext,
   ReactResponderDispatchEventOptions,
 } from 'shared/ReactTypes';
-import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
+
+import React from 'react';
+
 import {
   getEventPointerType,
   getEventCurrentTarget,
@@ -740,9 +742,4 @@ const PressResponder = {
   },
 };
 
-export default {
-  $$typeof: REACT_EVENT_COMPONENT_TYPE,
-  displayName: 'Press',
-  props: null,
-  responder: PressResponder,
-};
+export default React.unstable_createEventComponent(PressResponder, 'Press');
