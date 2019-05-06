@@ -50,11 +50,14 @@ describe('profiling', () => {
       utils.act(() => ReactDOM.render(<Parent count={0} />, container));
       utils.act(() => store.stopProfiling());
 
+      let suspenseResolved = false;
+
       function Suspender({ rendererID, rootID }) {
         const profilingSummary = store.profilingCache.ProfilingSummary.read({
           rendererID,
           rootID,
         });
+        suspenseResolved = true;
         expect(profilingSummary).toMatchSnapshot('ProfilingSummary');
         return null;
       }
@@ -69,6 +72,8 @@ describe('profiling', () => {
           </React.Suspense>
         )
       );
+
+      expect(suspenseResolved).toBe(true);
 
       done();
     });
@@ -96,12 +101,15 @@ describe('profiling', () => {
       utils.act(() => ReactDOM.render(<Parent count={0} />, container));
       utils.act(() => store.stopProfiling());
 
+      let suspenseResolved = false;
+
       function Suspender({ commitIndex, rendererID, rootID }) {
         const commitDetails = store.profilingCache.CommitDetails.read({
           commitIndex,
           rendererID,
           rootID,
         });
+        suspenseResolved = true;
         expect(commitDetails).toMatchSnapshot(
           `CommitDetails commitIndex: ${commitIndex}`
         );
@@ -112,7 +120,8 @@ describe('profiling', () => {
       const rootID = store.roots[0];
 
       for (let commitIndex = 0; commitIndex <= 3; commitIndex++) {
-        await utils.actSuspense(() =>
+        suspenseResolved = false;
+        await utils.actSuspense(() => {
           TestRenderer.create(
             <React.Suspense fallback={null}>
               <Suspender
@@ -121,8 +130,9 @@ describe('profiling', () => {
                 rootID={rootID}
               />
             </React.Suspense>
-          )
-        );
+          );
+        });
+        expect(suspenseResolved).toBe(true);
       }
 
       done();
@@ -150,12 +160,15 @@ describe('profiling', () => {
       utils.act(() => ReactDOM.render(<Parent count={3} />, container));
       utils.act(() => store.stopProfiling());
 
+      let suspenseResolved = false;
+
       function Suspender({ fiberID, rendererID, rootID }) {
         const fiberCommits = store.profilingCache.FiberCommits.read({
           fiberID,
           rendererID,
           rootID,
         });
+        suspenseResolved = true;
         expect(fiberCommits).toMatchSnapshot(
           `FiberCommits: element ${fiberID}`
         );
@@ -166,6 +179,7 @@ describe('profiling', () => {
       const rootID = store.roots[0];
 
       for (let index = 0; index < store.numElements; index++) {
+        suspenseResolved = false;
         await utils.actSuspense(() => {
           const fiberID = store.getElementIDAtIndex(index);
           if (fiberID == null) {
@@ -181,6 +195,7 @@ describe('profiling', () => {
             </React.Suspense>
           );
         });
+        expect(suspenseResolved).toBe(true);
       }
 
       done();
@@ -219,11 +234,14 @@ describe('profiling', () => {
       );
       utils.act(() => store.stopProfiling());
 
+      let suspenseResolved = false;
+
       function Suspender({ rendererID, rootID }) {
         const interactions = store.profilingCache.Interactions.read({
           rendererID,
           rootID,
         });
+        suspenseResolved = true;
         expect(interactions).toMatchSnapshot('Interactions');
         return null;
       }
@@ -238,6 +256,8 @@ describe('profiling', () => {
           </React.Suspense>
         )
       );
+
+      expect(suspenseResolved).toBe(true);
 
       done();
     });

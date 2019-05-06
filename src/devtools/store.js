@@ -852,6 +852,10 @@ export default class Store extends EventEmitter {
               weight: 0,
             });
 
+            if (this._isProfiling) {
+              this._profilingSnapshotsByRootID.set(id, new Map());
+            }
+
             haveRootsChanged = true;
           } else {
             parentID = ((operations[i]: any): number);
