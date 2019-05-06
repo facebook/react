@@ -331,6 +331,9 @@ export function scheduleUpdateOnFiber(
 
   if (expirationTime === Sync) {
     if (workPhase === LegacyUnbatchedPhase) {
+      // Register pending interactions on the root to avoid losing traced interaction data.
+      schedulePendingInteraction(root, expirationTime);
+
       // This is a legacy edge case. The initial mount of a ReactDOM.render-ed
       // root inside of batchedUpdates should be synchronous, but layout updates
       // should be deferred until the end of the batch.
