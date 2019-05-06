@@ -1,5 +1,7 @@
 // @flow
 
+import typeof ReactTestRenderer from 'react-test-renderer';
+
 export function act(callback: Function): void {
   const TestUtils = require('react-dom/test-utils');
   TestUtils.act(() => {
@@ -10,7 +12,7 @@ export function act(callback: Function): void {
   jest.runAllTimers();
 }
 
-export async function actSuspense(callback: Function) {
+export async function actSuspense(callback: Function): Promise<void> {
   const TestUtils = require('react-dom/test-utils');
   const Scheduler = require('scheduler');
 
@@ -26,7 +28,7 @@ export async function actSuspense(callback: Function) {
   Scheduler.flushAll();
 }
 
-export function beforeEachProfiling() {
+export function beforeEachProfiling(): void {
   // Mock React's timing information so that test runs are predictable.
   jest.mock('scheduler', () =>
     // $FlowFixMe Flow does not konw about requireActual
@@ -41,7 +43,7 @@ export function beforeEachProfiling() {
   );
 }
 
-export function getRendererID() {
+export function getRendererID(): number {
   if (global.agent == null) {
     throw Error('Agent unavailable.');
   }
@@ -49,10 +51,10 @@ export function getRendererID() {
   if (ids.length !== 1) {
     throw Error('Multiple renderers attached.');
   }
-  return ids[0];
+  return parseInt(ids[0], 10);
 }
 
-export function requireTestRenderer() {
+export function requireTestRenderer(): ReactTestRenderer {
   let hook;
   try {
     // Hide the hook before requiring TestRenderer, so we don't end up with a loop.

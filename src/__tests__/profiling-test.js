@@ -1,12 +1,17 @@
 // @flow
 
+import type React from 'react';
+import type ReactDOM from 'react-dom';
+import typeof ReactTestRenderer from 'react-test-renderer';
+import type Store from 'src/devtools/store';
+
 describe('profiling', () => {
-  let React;
-  let ReactDOM;
+  let React: React;
+  let ReactDOM: ReactDOM;
   let Scheduler;
   let SchedulerTracing;
-  let TestRenderer;
-  let store;
+  let TestRenderer: ReactTestRenderer;
+  let store: Store;
   let utils;
 
   beforeEach(() => {
@@ -161,17 +166,21 @@ describe('profiling', () => {
       const rootID = store.roots[0];
 
       for (let index = 0; index < store.numElements; index++) {
-        await utils.actSuspense(() =>
+        await utils.actSuspense(() => {
+          const fiberID = store.getElementIDAtIndex(index);
+          if (fiberID == null) {
+            throw Error(`Unexpected null ID for element at index ${index}`);
+          }
           TestRenderer.create(
             <React.Suspense fallback={null}>
               <Suspender
-                fiberID={store.getElementIDAtIndex(index)}
+                fiberID={fiberID}
                 rendererID={rendererID}
                 rootID={rootID}
               />
             </React.Suspense>
-          )
-        );
+          );
+        });
       }
 
       done();
