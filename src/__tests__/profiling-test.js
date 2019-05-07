@@ -69,6 +69,19 @@ describe('profiling', () => {
     TestRenderer = utils.requireTestRenderer();
   });
 
+  it('should throw if importing older/unsupported data', () => {
+    const {
+      prepareProfilingImport,
+    } = require('src/devtools/views/Profiler/utils');
+    expect(() =>
+      prepareProfilingImport(
+        JSON.stringify({
+          version: 0,
+        })
+      )
+    ).toThrow('Unsupported profiler export version "0"');
+  });
+
   describe('ProfilingSummary', () => {
     it('should be collected for each commit', async done => {
       const Parent = ({ count }) => {

@@ -3,8 +3,8 @@
 import React, { createContext, useMemo, useState } from 'react';
 
 type Context = {|
-  isFilterModalShowing: boolean,
-  setIsFilterModalShowing: (value: boolean) => void,
+  isModalShowing: boolean,
+  setIsModalShowing: (value: boolean) => void,
 |};
 
 const CommitFilterModalContext = createContext<Context>(((null: any): Context));
@@ -15,14 +15,14 @@ type Props = {|
 |};
 
 function CommitFilterModalContextController({ children }: Props) {
-  const [isFilterModalShowing, setIsFilterModalShowing] = useState(false);
+  const [isModalShowing, setIsModalShowing] = useState(false);
 
   const value = useMemo(
     () => ({
-      isFilterModalShowing,
-      setIsFilterModalShowing,
+      isModalShowing,
+      setIsModalShowing,
     }),
-    [isFilterModalShowing]
+    [isModalShowing]
   );
 
   return (

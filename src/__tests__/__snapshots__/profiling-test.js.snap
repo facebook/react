@@ -266,7 +266,7 @@ Object {
     "interactionCount": 0,
     "rootID": 1,
   },
-  "version": 1,
+  "version": 2,
 }
 `;
 
@@ -516,7 +516,7 @@ Object {
     "interactionCount": 0,
     "rootID": 1,
   },
-  "version": 1,
+  "version": 2,
 }
 `;
 
@@ -714,7 +714,7 @@ Object {
     "interactionCount": 2,
     "rootID": 1,
   },
-  "version": 1,
+  "version": 2,
 }
 `;
 
@@ -915,6 +915,6 @@ Object {
     "interactionCount": 0,
     "rootID": 1,
   },
-  "version": 1,
+  "version": 2,
 }
 `;

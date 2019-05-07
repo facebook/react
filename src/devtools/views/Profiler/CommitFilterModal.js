@@ -1,22 +1,24 @@
 // @flow
 
 import React, { useCallback, useContext, useEffect, useRef } from 'react';
+import { CommitFilterModalContext } from './CommitFilterModalContext';
 import { ProfilerContext } from './ProfilerContext';
 import { useModalDismissSignal } from '../hooks';
 
-import styles from './FilterModal.css';
+import styles from './CommitFilterModal.css';
 
-type Props = {|
-  dismissModal: () => void,
-|};
-
-export default function FilterModal({ dismissModal }: Props) {
+export default function FilterModal(_: {||}) {
   const {
     isCommitFilterEnabled,
     minCommitDuration,
     setIsCommitFilterEnabled,
     setMinCommitDuration,
   } = useContext(ProfilerContext);
+
+  const { setIsModalShowing } = useContext(CommitFilterModalContext);
+  const dismissModal = useCallback(() => setIsModalShowing(false), [
+    setIsModalShowing,
+  ]);
 
   const handleNumberChange = useCallback(
     (event: SyntheticEvent<HTMLInputElement>) => {

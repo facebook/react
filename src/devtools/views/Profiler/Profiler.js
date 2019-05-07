@@ -1,16 +1,21 @@
 // @flow
 
-import React, { Suspense, useCallback, useContext } from 'react';
+import React, { Suspense, useContext } from 'react';
 import {
   CommitFilterModalContext,
   CommitFilterModalContextController,
 } from './CommitFilterModalContext';
+import {
+  ImportFailedModalContext,
+  ImportFailedModalContextController,
+} from './ImportFailedModalContext';
 import { ProfilerContext } from './ProfilerContext';
 import TabBar from '../TabBar';
 import ClearProfilingDataButton from './ClearProfilingDataButton';
 import CommitFlamegraph from './CommitFlamegraph';
 import CommitRanked from './CommitRanked';
-import FilterModal from './FilterModal';
+import CommitFilterModal from './CommitFilterModal';
+import ImportFailedModal from './ImportFailedModal';
 import Interactions from './Interactions';
 import RecordToggle from './RecordToggle';
 import ReloadAndProfileButton from './ReloadAndProfileButton';
@@ -35,16 +40,20 @@ function Profiler({ supportsProfiling }: Props) {
 
   if (isProfiling || !rootHasProfilingData) {
     return (
-      <NonSuspendingProfiler
-        hasProfilingData={hasProfilingData}
-        isProfiling={isProfiling}
-        supportsProfiling={supportsProfiling}
-      />
+      <ImportFailedModalContextController>
+        <NonSuspendingProfiler
+          hasProfilingData={hasProfilingData}
+          isProfiling={isProfiling}
+          supportsProfiling={supportsProfiling}
+        />
+      </ImportFailedModalContextController>
     );
   } else {
     return (
       <CommitFilterModalContextController>
-        <SuspendingProfiler />
+        <ImportFailedModalContextController>
+          <SuspendingProfiler />
+        </ImportFailedModalContextController>
       </CommitFilterModalContextController>
     );
   }
@@ -74,6 +83,10 @@ function NonSuspendingProfiler({
     view = <NoProfilingDataForRoot />;
   }
 
+  const { isModalShowing: isImportFailedModalShowing } = useContext(
+    ImportFailedModalContext
+  );
+
   return (
     <div className={styles.Profiler}>
       <div className={styles.LeftColumn}>
@@ -92,7 +105,10 @@ function NonSuspendingProfiler({
             tabs={tabs}
           />
         </div>
-        <div className={styles.Content}>{view}</div>
+        <div className={styles.Content}>
+          {view}
+          {isImportFailedModalShowing && <ImportFailedModal />}
+        </div>
       </div>
     </div>
   );
@@ -113,13 +129,13 @@ function SuspendingProfiler() {
   const { selectedFiberID, selectedTabID, selectTab } = useContext(
     ProfilerContext
   );
-  const { isFilterModalShowing, setIsFilterModalShowing } = useContext(
+
+  const { isModalShowing: isFilterModalShowing } = useContext(
     CommitFilterModalContext
   );
-
-  const dismissFilterModal = useCallback(() => setIsFilterModalShowing(false), [
-    setIsFilterModalShowing,
-  ]);
+  const { isModalShowing: isImportFailedModalShowing } = useContext(
+    ImportFailedModalContext
+  );
 
   let view = null;
   switch (selectedTabID) {
@@ -178,9 +194,8 @@ function SuspendingProfiler() {
         </div>
         <div className={styles.Content}>
           <Suspense fallback={<ContentFallback />}>{view}</Suspense>
-          {isFilterModalShowing && (
-            <FilterModal dismissModal={dismissFilterModal} />
-          )}
+          {isFilterModalShowing && <CommitFilterModal />}
+          {isImportFailedModalShowing && <ImportFailedModal />}
         </div>
       </div>
       <div className={styles.RightColumn}>

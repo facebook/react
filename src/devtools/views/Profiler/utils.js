@@ -1,5 +1,7 @@
 // @flow
 
+import { PROFILER_EXPORT_VERSION } from 'src/constants';
+
 import type {
   CommitDetailsFrontend,
   CommitTreeFrontend,
@@ -82,7 +84,9 @@ export const prepareProfilingExport = (
 export const prepareProfilingImport = (raw: string) => {
   const parsed = JSON.parse(raw);
 
-  // TODO (profiling) Version check; throw if older version.
+  if (parsed.version !== PROFILER_EXPORT_VERSION) {
+    throw Error(`Unsupported profiler export version "${parsed.version}".`);
+  }
 
   const entries = [];
   Object.values(parsed.profilingSnapshots).forEach(snapshot => {

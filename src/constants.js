@@ -15,3 +15,5 @@ export const SESSION_STORAGE_LAST_SELECTION_KEY =
   'React::DevTools::lastSelection';
 
 export const __DEBUG__ = false;
+
+export const PROFILER_EXPORT_VERSION = 2;

@@ -1,0 +1,39 @@
+.Background {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 1rem;
+  background-color: var(--color-modal-background);
+  overflow: auto;
+}
+
+.Dialog {
+  position: relative;
+  z-index: 3;
+  min-width: 20rem;
+  max-width: 100%;
+  display: inline-block;
+  background-color: var(--color-background);
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.25rem;
+}
+
+.Header {
+  font-size: var(--font-size-sans-large);
+  margin-bottom: 0.5rem;
+}
+
+.Buttons {
+  text-align: right;
+}
+
+.ErrorMessage {
+  margin: 0.5rem 0;
+  color: var(--color-dim);
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-normal);
+}

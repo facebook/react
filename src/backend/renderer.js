@@ -18,6 +18,7 @@ import {
   ElementTypeRoot,
   ElementTypeSuspense,
 } from 'src/types';
+import { PROFILER_EXPORT_VERSION } from 'src/constants';
 import {
   getDisplayName,
   getSavedComponentFilters,
@@ -2058,7 +2059,7 @@ export function attach(
       }
     }
     return {
-      version: 1,
+      version: PROFILER_EXPORT_VERSION,
       profilingSummary: getProfilingSummary(rootID),
       commitDetails,
       interactions: getInteractions(rootID),

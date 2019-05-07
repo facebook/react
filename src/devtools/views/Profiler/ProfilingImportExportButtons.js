@@ -2,6 +2,7 @@
 
 import React, { Fragment, useContext, useCallback, useRef } from 'react';
 import { ProfilerContext } from './ProfilerContext';
+import { ImportFailedModalContext } from './ImportFailedModalContext';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import { BridgeContext, StoreContext } from '../context';
@@ -19,6 +20,8 @@ export default function ProfilingImportExportButtons() {
   const store = useContext(StoreContext);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const { setImportError } = useContext(ImportFailedModalContext);
 
   const downloadData = useCallback(() => {
     if (rendererID === null || rootID === null) {
@@ -53,16 +56,18 @@ export default function ProfilingImportExportButtons() {
     if (input !== null && input.files.length > 0) {
       const fileReader = new FileReader();
       fileReader.addEventListener('load', () => {
-        const raw = ((fileReader.result: any): string);
-        const data = prepareProfilingImport(raw);
+        try {
+          const raw = ((fileReader.result: any): string);
+          const data = prepareProfilingImport(raw);
 
-        // TODO (profiling) Catch possible version check error and show dialog.
-
-        store.importedProfilingData = ((data: any): ImportedProfilingData);
+          store.importedProfilingData = ((data: any): ImportedProfilingData);
+        } catch (error) {
+          setImportError(error);
+        }
       });
       fileReader.readAsText(input.files[0]);
     }
-  }, [store]);
+  }, [store, setImportError]);
 
   return (
     <Fragment>
