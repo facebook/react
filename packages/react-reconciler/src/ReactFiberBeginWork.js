@@ -109,11 +109,10 @@ import {
   suspenseStackCursor,
   pushSuspenseContext,
   popSuspenseContext,
-  DefaultShallowSuspenseContext,
   InvisibleParentSuspenseContext,
   ForceSuspenseFallback,
   hasSuspenseContext,
-  setShallowSuspenseContext,
+  setDefaultShallowSuspenseContext,
   addSubtreeSuspenseContext,
 } from './ReactFiberSuspenseContext';
 import {
@@ -1458,10 +1457,7 @@ function updateSuspenseComponent(
     }
   }
 
-  suspenseContext = setShallowSuspenseContext(
-    suspenseContext,
-    DefaultShallowSuspenseContext,
-  );
+  suspenseContext = setDefaultShallowSuspenseContext(suspenseContext);
 
   pushSuspenseContext(workInProgress, suspenseContext);
 
@@ -1778,10 +1774,7 @@ function updateDehydratedSuspenseComponent(
 ) {
   pushSuspenseContext(
     workInProgress,
-    setShallowSuspenseContext(
-      suspenseStackCursor.current,
-      DefaultShallowSuspenseContext,
-    ),
+    setDefaultShallowSuspenseContext(suspenseStackCursor.current),
   );
   const suspenseInstance = (workInProgress.stateNode: SuspenseInstance);
   if (current === null) {
@@ -2188,10 +2181,7 @@ function beginWork(
             } else {
               pushSuspenseContext(
                 workInProgress,
-                setShallowSuspenseContext(
-                  suspenseStackCursor.current,
-                  DefaultShallowSuspenseContext,
-                ),
+                setDefaultShallowSuspenseContext(suspenseStackCursor.current),
               );
               // The primary children do not have pending work with sufficient
               // priority. Bailout.
@@ -2211,10 +2201,7 @@ function beginWork(
           } else {
             pushSuspenseContext(
               workInProgress,
-              setShallowSuspenseContext(
-                suspenseStackCursor.current,
-                DefaultShallowSuspenseContext,
-              ),
+              setDefaultShallowSuspenseContext(suspenseStackCursor.current),
             );
           }
           break;
@@ -2223,10 +2210,7 @@ function beginWork(
           if (enableSuspenseServerRenderer) {
             pushSuspenseContext(
               workInProgress,
-              setShallowSuspenseContext(
-                suspenseStackCursor.current,
-                DefaultShallowSuspenseContext,
-              ),
+              setDefaultShallowSuspenseContext(suspenseStackCursor.current),
             );
             // We know that this component will suspend again because if it has
             // been unsuspended it has committed as a regular Suspense component.

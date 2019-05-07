@@ -36,8 +36,6 @@ export const InvisibleParentSuspenseContext: SubtreeSuspenseContext = 0b01;
 
 // Shallow Flags:
 
-export const DefaultShallowSuspenseContext: ShallowSuspenseContext = 0b00;
-
 // ForceSuspenseFallback can be used by SuspenseList to force newly added
 // items into their fallback state during one of the render passes.
 export const ForceSuspenseFallback: ShallowSuspenseContext = 0b10;
@@ -51,6 +49,12 @@ export function hasSuspenseContext(
   flag: SuspenseContext,
 ): boolean {
   return (parentContext & flag) !== 0;
+}
+
+export function setDefaultShallowSuspenseContext(
+  parentContext: SuspenseContext,
+): SuspenseContext {
+  return parentContext & SubtreeSuspenseContextMask;
 }
 
 export function setShallowSuspenseContext(
