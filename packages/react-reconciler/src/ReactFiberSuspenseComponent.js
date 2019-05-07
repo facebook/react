@@ -10,18 +10,14 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-import type {SuspenseContext} from './ReactFiberSuspenseContext';
-import {
-  suspenseStackCursor,
-  InvisibleParentSuspenseContext,
-  hasSuspenseContext,
-} from './ReactFiberSuspenseContext';
-
 export type SuspenseState = {|
   fallbackExpirationTime: ExpirationTime,
 |};
 
-export function shouldCaptureSuspense(workInProgress: Fiber): boolean {
+export function shouldCaptureSuspense(
+  workInProgress: Fiber,
+  hasInvisibleParent: boolean,
+): boolean {
   // If it was the primary children that just suspended, capture and render the
   // fallback. Otherwise, don't capture and bubble to the next boundary.
   const nextState: SuspenseState | null = workInProgress.memoizedState;
@@ -39,12 +35,7 @@ export function shouldCaptureSuspense(workInProgress: Fiber): boolean {
   }
   // If it's a boundary we should avoid, then we prefer to bubble up to the
   // parent boundary if it is currently invisible.
-  if (
-    hasSuspenseContext(
-      suspenseStackCursor.current,
-      (InvisibleParentSuspenseContext: SuspenseContext),
-    )
-  ) {
+  if (hasInvisibleParent) {
     return false;
   }
   // If the parent is not able to handle it, we must handle it.
