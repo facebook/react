@@ -707,11 +707,11 @@ export default class Store extends EventEmitter {
 
   _takeProfilingSnapshotRecursive = (
     elementID: number,
-    profilingSnapshot: Map<number, ProfilingSnapshotNode>
+    profilingSnapshots: Map<number, ProfilingSnapshotNode>
   ) => {
     const element = this.getElementByID(elementID);
     if (element !== null) {
-      profilingSnapshot.set(elementID, {
+      profilingSnapshots.set(elementID, {
         id: elementID,
         children: element.children.slice(0),
         displayName: element.displayName,
@@ -719,7 +719,7 @@ export default class Store extends EventEmitter {
       });
 
       element.children.forEach(childID =>
-        this._takeProfilingSnapshotRecursive(childID, profilingSnapshot)
+        this._takeProfilingSnapshotRecursive(childID, profilingSnapshots)
       );
     }
   };
@@ -1067,9 +1067,9 @@ export default class Store extends EventEmitter {
       this._profilingScreenshotsByRootID = new Map();
       this._profilingSnapshotsByRootID = new Map();
       this.roots.forEach(rootID => {
-        const profilingSnapshot = new Map();
-        this._profilingSnapshotsByRootID.set(rootID, profilingSnapshot);
-        this._takeProfilingSnapshotRecursive(rootID, profilingSnapshot);
+        const profilingSnapshots = new Map();
+        this._profilingSnapshotsByRootID.set(rootID, profilingSnapshots);
+        this._takeProfilingSnapshotRecursive(rootID, profilingSnapshots);
       });
     }
 

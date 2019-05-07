@@ -14,7 +14,8 @@
       "<rootDir>"
     ],
     "moduleNameMapper": {
-      "^src/(.*)$": "<rootDir>/src/$1"
+      "^src/(.*)$": "<rootDir>/src/$1",
+      "\\.css$": "<rootDir>/src/__tests__/__mocks__/cssMock.js"
     },
     "setupFiles": [
       "<rootDir>/src/__tests__/setupEnv"

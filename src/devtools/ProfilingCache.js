@@ -144,8 +144,25 @@ export default class ProfilingCache {
       return new Promise(resolve => {
         const importedProfilingData = this._store.importedProfilingData;
         if (importedProfilingData !== null) {
-          // TODO (profiling) commit details
-          // Copy from renderer getFiberCommits()
+          const { commitDetails } = (importedProfilingData: any);
+          if (commitDetails != null) {
+            const commitDurations = [];
+            commitDetails.forEach(({ actualDurations }, commitIndex) => {
+              for (let i = 0; i < actualDurations.length; i += 2) {
+                if (actualDurations[i] === fiberID) {
+                  commitDurations.push(commitIndex, actualDurations[i + 1]);
+                  break;
+                }
+              }
+            });
+            this._pendingFiberCommitsMap.set(`${rootID}-${fiberID}`, resolve);
+            this.onFiberCommits({
+              commitDurations,
+              fiberID,
+              rootID,
+            });
+            return;
+          }
         } else if (this._store.profilingOperations.has(rootID)) {
           this._pendingFiberCommitsMap.set(`${rootID}-${fiberID}`, resolve);
           this._bridge.send('getFiberCommits', {

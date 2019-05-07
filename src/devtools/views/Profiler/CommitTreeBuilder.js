@@ -68,12 +68,12 @@ export function getCommitTree({
     const nodes = new Map();
 
     const { importedProfilingData } = store;
-    const profilingSnapshot =
+    const profilingSnapshots =
       importedProfilingData != null
         ? importedProfilingData.profilingSnapshots.get(rootID)
         : store.profilingSnapshots.get(rootID);
 
-    if (profilingSnapshot == null) {
+    if (profilingSnapshots == null) {
       throw Error(`Could not find profiling snapshot for root "${rootID}"`);
     }
 
@@ -83,7 +83,7 @@ export function getCommitTree({
       0,
       nodes,
       profilingSummary.initialTreeBaseDurations,
-      profilingSnapshot
+      profilingSnapshots
     );
 
     // Mutate the tree
@@ -133,9 +133,9 @@ function recursivelyInitializeTree(
   parentID: number,
   nodes: Map<number, CommitTreeNodeFrontend>,
   initialTreeBaseDurations: Map<number, number>,
-  profilingSnapshot: Map<number, ProfilingSnapshotNode>
+  profilingSnapshots: Map<number, ProfilingSnapshotNode>
 ): void {
-  const node = profilingSnapshot.get(id);
+  const node = profilingSnapshots.get(id);
   if (node != null) {
     nodes.set(id, {
       id,
@@ -152,7 +152,7 @@ function recursivelyInitializeTree(
         id,
         nodes,
         initialTreeBaseDurations,
-        profilingSnapshot
+        profilingSnapshots
       )
     );
   }

@@ -5,6 +5,7 @@ import { ProfilerContext } from './ProfilerContext';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import { BridgeContext, StoreContext } from '../context';
+import { prepareProfilingExport, prepareProfilingImport } from './utils';
 
 import styles from './ProfilingImportExportButtons.css';
 
@@ -20,32 +21,19 @@ export default function ProfilingImportExportButtons() {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const downloadData = useCallback(() => {
-    if (rootID === null) {
+    if (rendererID === null || rootID === null) {
       return;
     }
 
-    const profilingOperationsForRoot = [];
-    const operations = store.profilingOperations.get(rootID);
-    if (operations != null) {
-      operations.forEach(operations => {
-        // Convert typed Array before JSON serialization, or it will be converted to an Object.
-        profilingOperationsForRoot.push(Array.from(operations));
-      });
-    }
-
-    const profilingSnapshotForRoot = [];
-    const queue = [rootID];
-    while (queue.length) {
-      const id = queue.pop();
-      profilingSnapshotForRoot.push([id, store.profilingSnapshots.get(id)]);
-    }
-
-    bridge.send('exportProfilingSummary', {
-      profilingOperations: [[rootID, profilingOperationsForRoot]],
-      profilingSnapshot: profilingSnapshotForRoot,
-      rendererID,
-      rootID,
-    });
+    bridge.send(
+      'exportProfilingSummary',
+      prepareProfilingExport(
+        store.profilingOperations,
+        store.profilingSnapshots,
+        rootID,
+        rendererID
+      )
+    );
   }, [
     bridge,
     rendererID,
@@ -65,11 +53,10 @@ export default function ProfilingImportExportButtons() {
     if (input !== null && input.files.length > 0) {
       const fileReader = new FileReader();
       fileReader.addEventListener('load', () => {
-        const data = JSON.parse((fileReader.result: any));
-        data.profilingOperations = new Map(data.profilingOperations);
-        data.profilingSnapshot = new Map(data.profilingSnapshot);
+        const raw = ((fileReader.result: any): string);
+        const data = prepareProfilingImport(raw);
 
-        // TODO (profiling) Version check; warn if older version.
+        // TODO (profiling) Catch possible version check error and show dialog.
 
         store.importedProfilingData = ((data: any): ImportedProfilingData);
       });

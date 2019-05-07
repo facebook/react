@@ -1,6 +1,10 @@
 // @flow
 
-import type { CommitDetailsFrontend, CommitTreeFrontend } from './types';
+import type {
+  CommitDetailsFrontend,
+  CommitTreeFrontend,
+  ProfilingSnapshotNode,
+} from './types';
 
 const commitGradient = [
   'var(--color-commit-gradient-0)',
@@ -41,6 +45,54 @@ export const calculateSelfDuration = (
   });
 
   return selfDuration;
+};
+
+export const prepareProfilingExport = (
+  profilingOperations: Map<number, Array<Uint32Array>>,
+  profilingSnapshots: Map<number, Map<number, ProfilingSnapshotNode>>,
+  rendererID: number,
+  rootID: number
+) => {
+  const profilingOperationsForRoot = [];
+  const operations = profilingOperations.get(rootID);
+  if (operations != null) {
+    operations.forEach(operations => {
+      // Convert typed Array before JSON serialization, or it will be converted to an Object.
+      profilingOperationsForRoot.push(Array.from<number>(operations));
+    });
+  }
+
+  // Convert Map to Object or JSON.stringify will clobber the contents.
+  const profilingSnapshotsForRoot = {};
+  const profilingSnapshotsMap = profilingSnapshots.get(rootID);
+  if (profilingSnapshotsMap != null) {
+    for (let [id, snapshot] of profilingSnapshotsMap.entries()) {
+      profilingSnapshotsForRoot[id] = snapshot;
+    }
+  }
+
+  return {
+    profilingOperations: profilingOperationsForRoot,
+    profilingSnapshots: profilingSnapshotsForRoot,
+    rendererID,
+    rootID,
+  };
+};
+
+export const prepareProfilingImport = (raw: string) => {
+  const parsed = JSON.parse(raw);
+
+  // TODO (profiling) Version check; throw if older version.
+
+  const entries = [];
+  Object.values(parsed.profilingSnapshots).forEach(snapshot => {
+    entries.push([(snapshot: any).id, snapshot]);
+  });
+
+  const rootID = parsed.profilingSummary.rootID;
+  parsed.profilingOperations = new Map([[rootID, parsed.profilingOperations]]);
+  parsed.profilingSnapshots = new Map([[rootID, new Map(entries)]]);
+  return parsed;
 };
 
 export const getGradientColor = (value: number) => {

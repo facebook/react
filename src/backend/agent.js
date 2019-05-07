@@ -151,12 +151,12 @@ export default class Agent extends EventEmitter {
 
   exportProfilingSummary = ({
     profilingOperations,
-    profilingSnapshot,
+    profilingSnapshots,
     rendererID,
     rootID,
   }: {
     profilingOperations: Array<any>,
-    profilingSnapshot: Array<any>,
+    profilingSnapshots: Array<any>,
     rendererID: number,
     rootID: number,
   }) => {
@@ -170,7 +170,7 @@ export default class Agent extends EventEmitter {
           {
             ...rendererData,
             profilingOperations,
-            profilingSnapshot,
+            profilingSnapshots,
           },
           null,
           2
