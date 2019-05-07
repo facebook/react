@@ -489,7 +489,7 @@ const bundles = [
     moduleType: NON_FIBER_RENDERER,
     entry: 'react-events/press',
     global: 'ReactEventsPress',
-    externals: [],
+    externals: ['react'],
   },
 
   {
@@ -504,7 +504,7 @@ const bundles = [
     moduleType: NON_FIBER_RENDERER,
     entry: 'react-events/hover',
     global: 'ReactEventsHover',
-    externals: [],
+    externals: ['react'],
   },
 
   {
@@ -519,7 +519,7 @@ const bundles = [
     moduleType: NON_FIBER_RENDERER,
     entry: 'react-events/focus',
     global: 'ReactEventsFocus',
-    externals: [],
+    externals: ['react'],
   },
 
   {
@@ -534,7 +534,7 @@ const bundles = [
     moduleType: NON_FIBER_RENDERER,
     entry: 'react-events/focus-scope',
     global: 'ReactEventsFocusScope',
-    externals: [],
+    externals: ['react'],
   },
 
   {
@@ -549,7 +549,7 @@ const bundles = [
     moduleType: NON_FIBER_RENDERER,
     entry: 'react-events/swipe',
     global: 'ReactEventsSwipe',
-    externals: [],
+    externals: ['react'],
   },
 
   {
@@ -564,7 +564,7 @@ const bundles = [
     moduleType: NON_FIBER_RENDERER,
     entry: 'react-events/drag',
     global: 'ReactEventsDrag',
-    externals: [],
+    externals: ['react'],
   },
 ];
 

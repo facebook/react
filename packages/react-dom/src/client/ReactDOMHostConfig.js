@@ -899,9 +899,6 @@ export function mountEventComponent(
     const rootContainerInstance = ((eventComponentInstance.rootInstance: any): Container);
     const rootElement = rootContainerInstance.ownerDocument;
     const responder = eventComponentInstance.responder;
-    if (__DEV__) {
-      Object.freeze(responder);
-    }
     const {rootEventTypes, targetEventTypes} = responder;
     if (targetEventTypes !== undefined) {
       listenToEventResponderEventTypes(targetEventTypes, rootElement);
