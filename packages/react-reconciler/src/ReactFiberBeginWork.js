@@ -1425,7 +1425,7 @@ function updateSuspenseComponent(
     )
   ) {
     // This either already captured or is a new mount that was forced into its fallback
-    // state by a parernt.
+    // state by a parent.
     const attemptedState: SuspenseState | null = workInProgress.memoizedState;
     // Something in this boundary's subtree already suspended. Switch to
     // rendering the fallback children.
@@ -1438,7 +1438,7 @@ function updateSuspenseComponent(
     nextDidTimeout = true;
     workInProgress.effectTag &= ~DidCapture;
   } else {
-    // Attempting the main content the main content
+    // Attempting the main content
     if (current === null || current.memoizedState !== null) {
       // This is a new mount or this boundary is already showing a fallback state.
       // Mark this subtree context as having at least one invisible parent that could
