@@ -698,6 +698,7 @@ function prepareFreshStack(root, expirationTime) {
 
   if (__DEV__) {
     ReactStrictModeWarnings.discardPendingWarnings();
+    componentsWithSuspendedDiscreteUpdates = null;
   }
 }
 
@@ -1225,6 +1226,7 @@ function commitRoot(root, expirationTime) {
 function commitRootImpl(root, expirationTime) {
   flushPassiveEffects();
   flushRenderPhaseStrictModeWarningsInDEV();
+  flushSuspensePriorityWarningInDEV();
 
   invariant(
     workPhase !== RenderPhase && workPhase !== CommitPhase,
@@ -2113,6 +2115,76 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
 }
 
 export const warnIfNotCurrentlyActingUpdatesInDev = warnIfNotCurrentlyActingUpdatesInDEV;
+
+let componentsWithSuspendedDiscreteUpdates = null;
+export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
+  if (__DEV__) {
+    if (
+      (sourceFiber.mode & ConcurrentMode) !== NoEffect &&
+      // Check if we're currently rendering a discrete update. Ideally, all we
+      // would need to do is check the current priority level. But we currently
+      // have no rigorous way to distinguish work that was scheduled at user-
+      // blocking priority from work that expired a bit and was "upgraded" to
+      // a higher priority. That's because we don't schedule separate callbacks
+      // for every level, only the highest priority level per root. The priority
+      // of subsequent levels is inferred from the expiration time, but this is
+      // an imprecise heuristic.
+      //
+      // However, we do store the last discrete pending update per root. So we
+      // can reliably compare to that one. (If we broaden this warning to include
+      // high pri updates that aren't discrete, then this won't be sufficient.)
+      //
+      // My rationale is that it's better for this warning to have false
+      // negatives than false positives.
+      rootsWithPendingDiscreteUpdates !== null &&
+      workInProgressRoot !== null &&
+      renderExpirationTime ===
+        rootsWithPendingDiscreteUpdates.get(workInProgressRoot)
+    ) {
+      // Add the component name to a set.
+      const componentName = getComponentName(sourceFiber.type);
+      if (componentsWithSuspendedDiscreteUpdates === null) {
+        componentsWithSuspendedDiscreteUpdates = new Set([componentName]);
+      } else {
+        componentsWithSuspendedDiscreteUpdates.add(componentName);
+      }
+    }
+  }
+}
+
+function flushSuspensePriorityWarningInDEV() {
+  if (__DEV__) {
+    if (componentsWithSuspendedDiscreteUpdates !== null) {
+      const componentNames = [];
+      componentsWithSuspendedDiscreteUpdates.forEach(name => {
+        componentNames.push(name);
+      });
+      componentsWithSuspendedDiscreteUpdates = null;
+
+      // TODO: A more helpful version of this message could include the names of
+      // the component that were updated, not the ones that suspended. To do
+      // that we'd need to track all the components that updated during this
+      // render, perhaps using the same mechanism as `markRenderEventTime`.
+      warningWithoutStack(
+        false,
+        'The following components suspended during a user-blocking update: %s' +
+          '\n\n' +
+          'Updates triggered by user interactions (e.g. click events) are ' +
+          'considered user-blocking by default. They should not suspend. ' +
+          'Updates that can afford to take a bit longer should be wrapped ' +
+          'with `Scheduler.next` (or an equivalent abstraction). This ' +
+          'typically includes any update that shows new content, like ' +
+          'a navigation.' +
+          '\n\n' +
+          'Generally, you should split user interactions into at least two ' +
+          'seprate updates: a user-blocking update to provide immediate ' +
+          'feedback, and another update to perform the actual change.',
+        // TODO: Add link to React docs with more information, once it exists
+        componentNames.sort().join(', '),
+      );
+    }
+  }
+}
 
 function computeThreadID(root, expirationTime) {
   // Interaction threads are unique per root and expiration time.

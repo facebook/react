@@ -68,6 +68,7 @@ import {
   isAlreadyFailedLegacyErrorBoundary,
   pingSuspendedRoot,
   resolveRetryThenable,
+  checkForWrongSuspensePriorityInDEV,
 } from './ReactFiberScheduler';
 
 import invariant from 'shared/invariant';
@@ -202,6 +203,8 @@ function throwException(
   ) {
     // This is a thenable.
     const thenable: Thenable = (value: any);
+
+    checkForWrongSuspensePriorityInDEV(sourceFiber);
 
     // Schedule the nearest Suspense to re-render the timed out view.
     let workInProgress = returnFiber;

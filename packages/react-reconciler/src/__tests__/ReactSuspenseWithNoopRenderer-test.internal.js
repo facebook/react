@@ -1715,12 +1715,61 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     // Flush some of the time
     Scheduler.advanceTime(500);
-    await advanceTimers(500);
+    expect(() => {
+      jest.advanceTimersByTime(500);
+    }).toWarnDev(
+      'The following components suspended during a user-blocking ' +
+        'update: AsyncText',
+      {withoutStack: true},
+    );
+
     // We should have already shown the fallback.
     // When we wrote this test, we inferred the start time of high priority
     // updates as way earlier in the past. This test ensures that we don't
     // use this assumption to add a very long JND.
     expect(Scheduler).toFlushWithoutYielding();
     expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
+  });
+
+  it('warns when suspending inside discrete update', async () => {
+    function A() {
+      TextResource.read(['A', 1000]);
+      return 'A';
+    }
+
+    function B() {
+      return 'B';
+    }
+
+    function C() {
+      TextResource.read(['C', 1000]);
+      return 'C';
+    }
+
+    function App() {
+      return (
+        <Suspense fallback="Loading...">
+          <A />
+          <B />
+          <C />
+          <C />
+          <C />
+          <C />
+        </Suspense>
+      );
+    }
+
+    ReactNoop.interactiveUpdates(() => ReactNoop.render(<App />));
+    Scheduler.flushAll();
+
+    // Warning is not flushed until the commit phase
+
+    // Timeout and commit the fallback
+    expect(() => {
+      jest.advanceTimersByTime(1000);
+    }).toWarnDev(
+      'The following components suspended during a user-blocking update: A, C',
+      {withoutStack: true},
+    );
   });
 });
