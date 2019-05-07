@@ -12,25 +12,25 @@ export default function NoCommitData(_: {||}) {
   if (rootHasProfilingData) {
     return (
       <div className={styles.NoCommitData}>
-        <p className={styles.Header}>
+        <div className={styles.Header}>
           There is no data matching the current filter criteria.
-        </p>
-        <p className={styles.FilterMessage}>
+        </div>
+        <div className={styles.FilterMessage}>
           Try adjusting the commit filter <ToggleCommitFilterModalButton />
-        </p>
+        </div>
       </div>
     );
   } else {
     return (
       <div className={styles.NoCommitData}>
-        <p className={styles.Header}>
+        <div className={styles.Header}>
           There is no timing data to display for the currently selected commit.
-        </p>
-        <p>
+        </div>
+        <div>
           This can indicate that a render occurred too quickly for the timing
           API to measure. Try selecting another commit in the upper, right-hand
           corner.
-        </p>
+        </div>
       </div>
     );
   }
