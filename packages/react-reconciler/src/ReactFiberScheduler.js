@@ -818,14 +818,6 @@ function renderRoot(
         }
 
         const returnFiber = sourceFiber.return;
-
-        checkForWrongSuspensePriorityInDEV(
-          thrownValue,
-          root,
-          sourceFiber,
-          expirationTime,
-        );
-
         throwException(
           root,
           returnFiber,
@@ -2125,17 +2117,9 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
 export const warnIfNotCurrentlyActingUpdatesInDev = warnIfNotCurrentlyActingUpdatesInDEV;
 
 let componentsWithSuspendedDiscreteUpdates = null;
-function checkForWrongSuspensePriorityInDEV(
-  thrownValue,
-  root,
-  sourceFiber,
-  expirationTime,
-) {
+export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
   if (__DEV__) {
     if (
-      // Check if the thrown value is a thenable
-      typeof thrownValue === 'object' &&
-      typeof thrownValue.then === 'function' &&
       (sourceFiber.mode & ConcurrentMode) !== NoEffect &&
       // Check if we're currently rendering a discrete update. Ideally, all we
       // would need to do is check the current priority level. But we currently
@@ -2153,7 +2137,9 @@ function checkForWrongSuspensePriorityInDEV(
       // My rationale is that it's better for this warning to have false
       // negatives than false positives.
       rootsWithPendingDiscreteUpdates !== null &&
-      expirationTime === rootsWithPendingDiscreteUpdates.get(root)
+      workInProgressRoot !== null &&
+      renderExpirationTime ===
+        rootsWithPendingDiscreteUpdates.get(workInProgressRoot)
     ) {
       // Add the component name to a set.
       const componentName = getComponentName(sourceFiber.type);
