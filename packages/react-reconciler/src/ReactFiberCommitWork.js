@@ -1317,10 +1317,10 @@ function commitSuspenseComponent(finishedWork: Fiber) {
     thenables.forEach(thenable => {
       // Memoize using the boundary fiber to prevent redundant listeners.
       let retry = resolveRetryThenable.bind(null, finishedWork, thenable);
-      if (enableSchedulerTracing) {
-        retry = Schedule_tracing_wrap(retry);
-      }
       if (!retryCache.has(thenable)) {
+        if (enableSchedulerTracing) {
+          retry = Schedule_tracing_wrap(retry);
+        }
         retryCache.add(thenable);
         thenable.then(retry, retry);
       }

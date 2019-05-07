@@ -14,6 +14,7 @@ import {
   cancelHostCallback,
   shouldYieldToHost,
   getCurrentTime,
+  forceFrameRate,
 } from './SchedulerHostConfig';
 
 // TODO: Use symbols?
@@ -448,4 +449,5 @@ export {
   unstable_pauseExecution,
   unstable_getFirstCallbackNode,
   getCurrentTime as unstable_now,
+  forceFrameRate as unstable_forceFrameRate,
 };

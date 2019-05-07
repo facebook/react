@@ -20,6 +20,25 @@ const createFocusEvent = type => {
   return event;
 };
 
+const createKeyboardEvent = (type, data) => {
+  return new KeyboardEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    ...data,
+  });
+};
+
+const createPointerEvent = (type, data) => {
+  const event = document.createEvent('CustomEvent');
+  event.initCustomEvent(type, true, true);
+  if (data != null) {
+    Object.entries(data).forEach(([key, value]) => {
+      event[key] = value;
+    });
+  }
+  return event;
+};
+
 describe('Focus event responder', () => {
   let container;
 
@@ -135,6 +154,55 @@ describe('Focus event responder', () => {
       ref.current.dispatchEvent(createFocusEvent('blur'));
       expect(onFocusChange).toHaveBeenCalledTimes(2);
       expect(onFocusChange).toHaveBeenCalledWith(false);
+    });
+  });
+
+  describe('onFocusVisibleChange', () => {
+    let onFocusVisibleChange, ref;
+
+    beforeEach(() => {
+      onFocusVisibleChange = jest.fn();
+      ref = React.createRef();
+      const element = (
+        <Focus onFocusVisibleChange={onFocusVisibleChange}>
+          <div ref={ref} />
+        </Focus>
+      );
+      ReactDOM.render(element, container);
+    });
+
+    it('is called after "focus" and "blur" if keyboard navigation is active', () => {
+      // use keyboard first
+      container.dispatchEvent(createKeyboardEvent('keydown', {key: 'Tab'}));
+      ref.current.dispatchEvent(createFocusEvent('focus'));
+      expect(onFocusVisibleChange).toHaveBeenCalledTimes(1);
+      expect(onFocusVisibleChange).toHaveBeenCalledWith(true);
+      ref.current.dispatchEvent(createFocusEvent('blur'));
+      expect(onFocusVisibleChange).toHaveBeenCalledTimes(2);
+      expect(onFocusVisibleChange).toHaveBeenCalledWith(false);
+    });
+
+    it('is called if non-keyboard event is dispatched on target previously focused with keyboard', () => {
+      // use keyboard first
+      container.dispatchEvent(createKeyboardEvent('keydown', {key: 'Tab'}));
+      ref.current.dispatchEvent(createFocusEvent('focus'));
+      expect(onFocusVisibleChange).toHaveBeenCalledTimes(1);
+      expect(onFocusVisibleChange).toHaveBeenCalledWith(true);
+      // then use pointer on the target, focus should no longer be visible
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      expect(onFocusVisibleChange).toHaveBeenCalledTimes(2);
+      expect(onFocusVisibleChange).toHaveBeenCalledWith(false);
+      // onFocusVisibleChange should not be called again
+      ref.current.dispatchEvent(createFocusEvent('blur'));
+      expect(onFocusVisibleChange).toHaveBeenCalledTimes(2);
+    });
+
+    it('is not called after "focus" and "blur" events without keyboard', () => {
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      ref.current.dispatchEvent(createFocusEvent('focus'));
+      container.dispatchEvent(createPointerEvent('pointerdown'));
+      ref.current.dispatchEvent(createFocusEvent('blur'));
+      expect(onFocusVisibleChange).toHaveBeenCalledTimes(0);
     });
   });
 

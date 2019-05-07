@@ -1173,15 +1173,24 @@ class ReactDOMServerRenderer {
                 elementType.$$typeof === REACT_EVENT_TARGET_TYPE &&
                 elementType.type === REACT_EVENT_TARGET_TOUCH_HIT
               ) {
-                // We do not render a hit slop element anymore. Instead we rely
-                // on hydration adding in the hit slop element. The previous
-                // logic had a bug where rendering a hit slop at SSR meant that
-                // mouse events incorrectly registered events on the hit slop
-                // even though it designed to be used for touch events only.
-                // The logic that filters out mouse events from the hit slop
-                // is handled in event responder modules, which only get
-                // initialized upon hydration.
-                return '';
+                const props = nextElement.props;
+                const bottom = props.bottom || 0;
+                const left = props.left || 0;
+                const right = props.right || 0;
+                const top = props.top || 0;
+
+                if (bottom === 0 && left === 0 && right === 0 && top === 0) {
+                  return '';
+                }
+                let topString = top ? `-${top}px` : '0px';
+                let leftString = left ? `-${left}px` : '0px';
+                let rightString = right ? `-${right}px` : '0x';
+                let bottomString = bottom ? `-${bottom}px` : '0px';
+
+                return (
+                  `<div style="position:absolute;pointer-events:none;z-index:-1;bottom:` +
+                  `${bottomString};left:${leftString};right:${rightString};top:${topString}"></div>`
+                );
               }
               const nextChildren = toArray(
                 ((nextChild: any): ReactElement).props.children,

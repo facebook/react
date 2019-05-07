@@ -15,7 +15,7 @@ import type {
 export function getEventCurrentTarget(
   event: ReactResponderEvent,
   context: ReactResponderContext,
-) {
+): Element {
   const target: any = event.target;
   let currentTarget = target;
   while (

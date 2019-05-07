@@ -2,6 +2,7 @@ let React;
 let ReactTestRenderer;
 let ReactFeatureFlags;
 let Scheduler;
+let SchedulerTracing;
 let ReactCache;
 let Suspense;
 let act;
@@ -17,10 +18,12 @@ describe('ReactSuspense', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
+    ReactFeatureFlags.enableSchedulerTracing = true;
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     act = ReactTestRenderer.act;
     Scheduler = require('scheduler');
+    SchedulerTracing = require('scheduler/tracing');
     ReactCache = require('react-cache');
 
     Suspense = React.Suspense;
@@ -912,6 +915,78 @@ describe('ReactSuspense', () => {
         // re-render once.
         'C',
       ]);
+    });
+
+    it('should call onInteractionScheduledWorkCompleted after suspending', done => {
+      const subscriber = {
+        onInteractionScheduledWorkCompleted: jest.fn(),
+        onInteractionTraced: jest.fn(),
+        onWorkCanceled: jest.fn(),
+        onWorkScheduled: jest.fn(),
+        onWorkStarted: jest.fn(),
+        onWorkStopped: jest.fn(),
+      };
+      SchedulerTracing.unstable_subscribe(subscriber);
+      SchedulerTracing.unstable_trace('test', performance.now(), () => {
+        function App() {
+          return (
+            <React.Suspense fallback={<Text text="Loading..." />}>
+              <AsyncText text="A" ms={1000} />
+              <AsyncText text="B" ms={2000} />
+              <AsyncText text="C" ms={3000} />
+            </React.Suspense>
+          );
+        }
+
+        const root = ReactTestRenderer.create(null);
+        root.update(<App />);
+
+        expect(Scheduler).toHaveYielded([
+          'Suspend! [A]',
+          'Suspend! [B]',
+          'Suspend! [C]',
+          'Loading...',
+        ]);
+
+        // Resolve A
+        jest.advanceTimersByTime(1000);
+
+        expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
+        expect(Scheduler).toFlushExpired([
+          'A',
+          // The promises for B and C have now been thrown twice
+          'Suspend! [B]',
+          'Suspend! [C]',
+        ]);
+
+        // Resolve B
+        jest.advanceTimersByTime(1000);
+
+        expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
+        expect(Scheduler).toFlushExpired([
+          // Even though the promise for B was thrown twice, we should only
+          // re-render once.
+          'B',
+          // The promise for C has now been thrown three times
+          'Suspend! [C]',
+        ]);
+
+        // Resolve C
+        jest.advanceTimersByTime(1000);
+
+        expect(Scheduler).toHaveYielded(['Promise resolved [C]']);
+        expect(Scheduler).toFlushExpired([
+          // Even though the promise for C was thrown three times, we should only
+          // re-render once.
+          'C',
+        ]);
+
+        done();
+      });
+
+      expect(
+        subscriber.onInteractionScheduledWorkCompleted,
+      ).toHaveBeenCalledTimes(1);
     });
 
     it('#14162', () => {

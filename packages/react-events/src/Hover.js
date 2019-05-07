@@ -27,7 +27,6 @@ type HoverProps = {
   onHoverMove: (e: HoverEvent) => void,
   onHoverStart: (e: HoverEvent) => void,
   preventDefault: boolean,
-  stopPropagation: boolean,
 };
 
 type HoverState = {
@@ -99,7 +98,7 @@ function dispatchHoverStartEvents(
   if (event !== null) {
     const {nativeEvent} = event;
     if (
-      context.isTargetDirectlyWithinEventComponent(
+      context.isTargetWithinEventResponderScope(
         (nativeEvent: any).relatedTarget,
       )
     ) {
@@ -158,7 +157,7 @@ function dispatchHoverEndEvents(
   if (event !== null) {
     const {nativeEvent} = event;
     if (
-      context.isTargetDirectlyWithinEventComponent(
+      context.isTargetWithinEventResponderScope(
         (nativeEvent: any).relatedTarget,
       )
     ) {

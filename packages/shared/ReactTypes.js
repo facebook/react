@@ -83,7 +83,7 @@ export type RefObject = {|
 
 export type ReactEventResponderEventType =
   | string
-  | {name: string, passive?: boolean, capture?: boolean};
+  | {name: string, passive?: boolean};
 
 export type ReactEventResponder = {
   targetEventTypes?: Array<ReactEventResponderEventType>,
@@ -172,7 +172,6 @@ export type ReactResponderContext = {
     parentTarget: Element | Document,
   ) => boolean,
   isTargetWithinEventComponent: (Element | Document) => boolean,
-  isTargetDirectlyWithinEventComponent: (Element | Document) => boolean,
   isTargetWithinEventResponderScope: (Element | Document) => boolean,
   isPositionWithinTouchHitTarget: (x: number, y: number) => boolean,
   addRootEventTypes: (

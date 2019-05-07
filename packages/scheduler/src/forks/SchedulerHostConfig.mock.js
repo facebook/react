@@ -47,6 +47,10 @@ export function getCurrentTime(): number {
   return currentTime;
 }
 
+export function forceFrameRate() {
+  // No-op
+}
+
 export function reset() {
   if (isFlushing) {
     throw new Error('Cannot reset while already flushing work.');

@@ -18,7 +18,6 @@ import type {
 import invariant from 'shared/invariant';
 // Modules provided by RN:
 import TextInputState from 'TextInputState';
-import * as FabricUIManager from 'FabricUIManager';
 import UIManager from 'UIManager';
 
 import {create} from './ReactNativeAttributePayload';
@@ -86,7 +85,10 @@ export default function(
       }
 
       if (maybeInstance.canonical) {
-        FabricUIManager.measure(
+        // We can't call FabricUIManager here because it won't be loaded in paper
+        // at initialization time. See https://github.com/facebook/react/pull/15490
+        // for more info.
+        nativeFabricUIManager.measure(
           maybeInstance.node,
           mountSafeCallback_NOT_REALLY_SAFE(this, callback),
         );
@@ -131,7 +133,10 @@ export default function(
       }
 
       if (maybeInstance.canonical) {
-        FabricUIManager.measureInWindow(
+        // We can't call FabricUIManager here because it won't be loaded in paper
+        // at initialization time. See https://github.com/facebook/react/pull/15490
+        // for more info.
+        nativeFabricUIManager.measureInWindow(
           maybeInstance.node,
           mountSafeCallback_NOT_REALLY_SAFE(this, callback),
         );
