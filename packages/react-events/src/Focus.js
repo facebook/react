@@ -12,8 +12,6 @@ import type {
   ReactResponderContext,
 } from 'shared/ReactTypes';
 
-import {getEventCurrentTarget} from './utils';
-
 import React from 'react';
 
 type FocusProps = {
