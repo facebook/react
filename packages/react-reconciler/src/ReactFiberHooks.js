@@ -44,7 +44,7 @@ import is from 'shared/objectIs';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
 import {revertPassiveEffectsChange} from 'shared/ReactFeatureFlags';
 
-const {ReactCurrentDispatcher} = ReactSharedInternals;
+const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
 export type Dispatcher = {
   readContext<T>(
@@ -1087,6 +1087,7 @@ function dispatchAction<S, A>(
     // queue -> linked list of updates. After this render pass, we'll restart
     // and apply the stashed updates on top of the work-in-progress hook.
     didScheduleRenderPhaseUpdate = true;
+    console.log(ReactCurrentBatchConfig.suspense);
     const update: Update<S, A> = {
       expirationTime: renderExpirationTime,
       action,
