@@ -86,6 +86,7 @@
 
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 
 import {NoWork} from './ReactFiberExpirationTime';
 import {
@@ -108,6 +109,7 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 
 export type Update<State> = {
   expirationTime: ExpirationTime,
+  suspenseConfig: null | SuspenseConfig,
 
   tag: 0 | 1 | 2 | 3,
   payload: any,
@@ -191,9 +193,13 @@ function cloneUpdateQueue<State>(
   return queue;
 }
 
-export function createUpdate(expirationTime: ExpirationTime): Update<*> {
+export function createUpdate(
+  expirationTime: ExpirationTime,
+  suspenseConfig: null | SuspenseConfig,
+): Update<*> {
   return {
-    expirationTime: expirationTime,
+    expirationTime,
+    suspenseConfig,
 
     tag: UpdateState,
     payload: null,

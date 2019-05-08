@@ -7,8 +7,16 @@
  * @flow
  */
 
+import ReactSharedInternals from 'shared/ReactSharedInternals';
+
+const {ReactCurrentBatchConfig} = ReactSharedInternals;
+
 export type SuspenseConfig = {|
   timeoutMs: number,
   loadingDelayMs?: number,
   minLoadingDurationMs?: number,
 |};
+
+export function requestCurrentSuspenseConfig(): null | SuspenseConfig {
+  return ReactCurrentBatchConfig.suspense;
+}

@@ -15,6 +15,7 @@ import type {
   SchedulerCallback,
 } from './SchedulerWithReactIntegration';
 import type {Interaction} from 'scheduler/src/Tracing';
+import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 
 import {
   warnAboutDeprecatedLifecycles,
@@ -262,6 +263,7 @@ export function requestCurrentTime() {
 export function computeExpirationForFiber(
   currentTime: ExpirationTime,
   fiber: Fiber,
+  suspenseConfig: null | SuspenseConfig,
 ): ExpirationTime {
   const mode = fiber.mode;
   if ((mode & BatchedMode) === NoMode) {
@@ -1834,7 +1836,12 @@ export function retryTimedOutBoundary(boundaryFiber: Fiber) {
   // resolved, which means at least part of the tree was likely unblocked. Try
   // rendering again, at a new expiration time.
   const currentTime = requestCurrentTime();
-  const retryTime = computeExpirationForFiber(currentTime, boundaryFiber);
+  const suspenseConfig = null; // Retries don't carry over the already committed update.
+  const retryTime = computeExpirationForFiber(
+    currentTime,
+    boundaryFiber,
+    suspenseConfig,
+  );
   // TODO: Special case idle priority?
   const priorityLevel = inferPriorityFromExpirationTime(currentTime, retryTime);
   const root = markUpdateTimeFromFiberToRoot(boundaryFiber, retryTime);
