@@ -1,9 +1,23 @@
-This is an **experimental rewrite** of the React DevTools extension (see [github.com/facebook/react-devtools](https://github.com/facebook/react-devtools)). This project is **not supported** and has only been posted as a way of sharing ideas with others who may be interested.
+This repo is a work-in-progress rewrite of the [React DevTools extension](https://github.com/facebook/react-devtools). A demo of the beta extension can be found online at [react-devtools-experimental.now.sh](https://react-devtools-experimental.now.sh/).
 
-To get started...
-```
+# Installation
+
+Installation instructions are available online as well:
+* [Chrome](https://react-devtools-experimental-chrome.now.sh/)
+* [Firefox](https://react-devtools-experimental-firefox.now.sh/).
+
+Or you can build and install from source:
+```sh
+git clone git@github.com:bvaughn/react-devtools-experimental.git
+
+cd react-devtools-experimental
+
 yarn install
-yarn start
+
+yarn build:extension:chrome # builds at "shells/browser/chrome/build"
+yarn build:extension:firefox # builds at "shells/browser/firefox/build"
 ```
 
-A preview build of this rewrite is available at [react-devtools-experimental.now.sh](https://react-devtools-experimental.now.sh/).
+# Support
+
+As this extension is in a beta period, it is not officially supported. However if you find a bug, we'd appreciate you reporting it as a [GitHub issue](https://github.com/bvaughn/react-devtools-experimental/issues/new) with repro instructions.
