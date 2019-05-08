@@ -1,6 +1,6 @@
 // @flow
 
-import { calculateSelfDuration } from './utils';
+import { calculateSelfDuration, fineTune } from './utils';
 
 import type { CommitDetailsFrontend, CommitTreeFrontend } from './types';
 
@@ -49,13 +49,12 @@ export function getChartData({
     if (node.parentID === 0) {
       return;
     }
-
     const selfDuration = calculateSelfDuration(id, commitTree, commitDetails);
     maxSelfDuration = Math.max(maxSelfDuration, selfDuration);
 
     const name = node.displayName || 'Unknown';
     const maybeKey = node.key !== null ? ` key="${node.key}"` : '';
-    const label = `${name}${maybeKey} (${selfDuration.toFixed(1)}ms)`;
+    const label = `${name}${maybeKey} (${fineTune(selfDuration.toFixed(1))}ms)`;
     chartNodes.push({
       id,
       label,

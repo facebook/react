@@ -72,3 +72,10 @@ export const scale = (
   maxValue - minValue === 0
     ? fallbackValue
     : ((value - minValue) / (maxValue - minValue)) * (maxRange - minRange);
+
+export const fineTune = (duration: number | string): string => {
+  if (Number(duration) === 0) {
+    return '<0.1';
+  }
+  return `${duration}`;
+};
