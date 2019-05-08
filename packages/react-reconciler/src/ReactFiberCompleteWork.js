@@ -77,6 +77,7 @@ import {
   getHostContext,
   popHostContainer,
 } from './ReactFiberHostContext';
+import {popSuspenseContext} from './ReactFiberSuspenseContext';
 import {
   isContextProvider as isLegacyContextProvider,
   popContext as popLegacyContext,
@@ -667,6 +668,7 @@ function completeWork(
     case ForwardRef:
       break;
     case SuspenseComponent: {
+      popSuspenseContext(workInProgress);
       const nextState: null | SuspenseState = workInProgress.memoizedState;
       if ((workInProgress.effectTag & DidCapture) !== NoEffect) {
         // Something suspended. Re-render with the fallback children.
@@ -777,6 +779,7 @@ function completeWork(
     }
     case DehydratedSuspenseComponent: {
       if (enableSuspenseServerRenderer) {
+        popSuspenseContext(workInProgress);
         if (current === null) {
           let wasHydrated = popHydrationState(workInProgress);
           invariant(

@@ -13,6 +13,7 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue} from './ReactCapturedValue';
 import type {Update} from './ReactUpdateQueue';
 import type {Thenable} from './ReactFiberScheduler';
+import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import getComponentName from 'shared/getComponentName';
@@ -55,6 +56,12 @@ import {
 import {logError} from './ReactFiberCommitWork';
 import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
 import {popHostContainer, popHostContext} from './ReactFiberHostContext';
+import {
+  suspenseStackCursor,
+  InvisibleParentSuspenseContext,
+  hasSuspenseContext,
+  popSuspenseContext,
+} from './ReactFiberSuspenseContext';
 import {
   isContextProvider as isLegacyContextProvider,
   popContext as popLegacyContext,
@@ -206,12 +213,17 @@ function throwException(
 
     checkForWrongSuspensePriorityInDEV(sourceFiber);
 
+    let hasInvisibleParentBoundary = hasSuspenseContext(
+      suspenseStackCursor.current,
+      (InvisibleParentSuspenseContext: SuspenseContext),
+    );
+
     // Schedule the nearest Suspense to re-render the timed out view.
     let workInProgress = returnFiber;
     do {
       if (
         workInProgress.tag === SuspenseComponent &&
-        shouldCaptureSuspense(workInProgress)
+        shouldCaptureSuspense(workInProgress, hasInvisibleParentBoundary)
       ) {
         // Found the nearest boundary.
 
@@ -274,6 +286,13 @@ function throwException(
 
         workInProgress.effectTag |= ShouldCapture;
         workInProgress.expirationTime = renderExpirationTime;
+
+        if (!hasInvisibleParentBoundary) {
+          // TODO: If we're not in an invisible subtree, then we need to mark this render
+          // pass as needing to suspend for longer to avoid showing this fallback state.
+          // We could do it here or when we render the fallback.
+        }
+
         return;
       } else if (
         enableSuspenseServerRenderer &&
@@ -408,6 +427,7 @@ function unwindWork(
       return null;
     }
     case SuspenseComponent: {
+      popSuspenseContext(workInProgress);
       const effectTag = workInProgress.effectTag;
       if (effectTag & ShouldCapture) {
         workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
@@ -419,6 +439,7 @@ function unwindWork(
     case DehydratedSuspenseComponent: {
       if (enableSuspenseServerRenderer) {
         // TODO: popHydrationState
+        popSuspenseContext(workInProgress);
         const effectTag = workInProgress.effectTag;
         if (effectTag & ShouldCapture) {
           workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
@@ -465,6 +486,15 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
     }
     case HostPortal:
       popHostContainer(interruptedWork);
+      break;
+    case SuspenseComponent:
+      popSuspenseContext(interruptedWork);
+      break;
+    case DehydratedSuspenseComponent:
+      if (enableSuspenseServerRenderer) {
+        // TODO: popHydrationState
+        popSuspenseContext(interruptedWork);
+      }
       break;
     case ContextProvider:
       popProvider(interruptedWork);
