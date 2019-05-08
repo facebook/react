@@ -2053,6 +2053,159 @@ describe('Event responder: Press', () => {
     ref.current.dispatchEvent(createEvent('pointermove'));
     ref.current.dispatchEvent(createEvent('pointerup'));
     ref.current.dispatchEvent(createEvent('pointerdown'));
+  });
+
+  it('should correctly pass through event properties', () => {
+    const timeStamps = [];
+    const ref = React.createRef();
+    const eventLog = [];
+    const logEvent = event => {
+      const propertiesWeCareAbout = {
+        pageX: event.pageX,
+        pageY: event.pageY,
+        screenX: event.screenX,
+        screenY: event.screenY,
+        clientX: event.clientX,
+        clientY: event.clientY,
+        pointerType: event.pointerType,
+        target: event.target,
+        timeStamp: event.timeStamp,
+        type: event.type,
+      };
+      timeStamps.push(event.timeStamp);
+      eventLog.push(propertiesWeCareAbout);
+    };
+    const element = (
+      <Press
+        onPressStart={logEvent}
+        onPressEnd={logEvent}
+        onPressMove={logEvent}
+        onLongPress={logEvent}
+        onPress={logEvent}>
+        <button ref={ref} />
+      </Press>
+    );
     ReactDOM.render(element, container);
+
+    ref.current.dispatchEvent(
+      createEvent('pointerdown', {
+        pointerType: 'mouse',
+        pageX: 15,
+        pageY: 16,
+        screenX: 20,
+        screenY: 21,
+        clientX: 30,
+        clientY: 31,
+      }),
+    );
+    jest.advanceTimersByTime(DEFAULT_LONG_PRESS_DELAY);
+    ref.current.dispatchEvent(
+      createEvent('pointermove', {
+        pointerType: 'mouse',
+        pageX: 16,
+        pageY: 17,
+        screenX: 21,
+        screenY: 22,
+        clientX: 31,
+        clientY: 32,
+      }),
+    );
+    ref.current.dispatchEvent(
+      createEvent('pointerup', {
+        pointerType: 'mouse',
+        pageX: 17,
+        pageY: 18,
+        screenX: 22,
+        screenY: 23,
+        clientX: 32,
+        clientY: 33,
+      }),
+    );
+    ref.current.dispatchEvent(
+      createEvent('pointerdown', {
+        pointerType: 'mouse',
+        pageX: 18,
+        pageY: 19,
+        screenX: 23,
+        screenY: 24,
+        clientX: 33,
+        clientY: 34,
+      }),
+    );
+    expect(typeof timeStamps[0] === 'number').toBe(true);
+    expect(eventLog).toEqual([
+      {
+        pointerType: 'mouse',
+        pageX: 15,
+        pageY: 16,
+        screenX: 20,
+        screenY: 21,
+        clientX: 30,
+        clientY: 31,
+        target: ref.current,
+        timeStamp: timeStamps[0],
+        type: 'pressstart',
+      },
+      {
+        pointerType: 'mouse',
+        pageX: 15,
+        pageY: 16,
+        screenX: 20,
+        screenY: 21,
+        clientX: 30,
+        clientY: 31,
+        target: ref.current,
+        timeStamp: timeStamps[0] + DEFAULT_LONG_PRESS_DELAY,
+        type: 'longpress',
+      },
+      {
+        pointerType: 'mouse',
+        pageX: 16,
+        pageY: 17,
+        screenX: 21,
+        screenY: 22,
+        clientX: 31,
+        clientY: 32,
+        target: ref.current,
+        timeStamp: timeStamps[2],
+        type: 'pressmove',
+      },
+      {
+        pointerType: 'mouse',
+        pageX: 17,
+        pageY: 18,
+        screenX: 22,
+        screenY: 23,
+        clientX: 32,
+        clientY: 33,
+        target: ref.current,
+        timeStamp: timeStamps[3],
+        type: 'pressend',
+      },
+      {
+        pointerType: 'mouse',
+        pageX: 17,
+        pageY: 18,
+        screenX: 22,
+        screenY: 23,
+        clientX: 32,
+        clientY: 33,
+        target: ref.current,
+        timeStamp: timeStamps[3],
+        type: 'press',
+      },
+      {
+        pointerType: 'mouse',
+        pageX: 18,
+        pageY: 19,
+        screenX: 23,
+        screenY: 24,
+        clientX: 33,
+        clientY: 34,
+        target: ref.current,
+        timeStamp: timeStamps[5],
+        type: 'pressstart',
+      },
+    ]);
   });
 });
