@@ -81,9 +81,9 @@ Object {
     Array [
       Object {
         "actualDuration": 0,
-        "didRender": false,
+        "didRender": true,
         "id": 5,
-        "label": "Memo(Child) key=\\"third\\"",
+        "label": "Memo(Child) key=\\"third\\" (<0.1ms of <0.1ms)",
         "name": "Memo(Child)",
         "offset": 15,
         "selfDuration": 0,
@@ -317,6 +317,12 @@ Object {
       "label": "Memo(Child) key=\\"second\\" (2ms)",
       "name": "Memo(Child)",
       "value": 2,
+    },
+    Object {
+      "id": 5,
+      "label": "Memo(Child) key=\\"third\\" (<0.1ms)",
+      "name": "Memo(Child)",
+      "value": 0,
     },
   ],
 }

@@ -86,14 +86,21 @@ describe('profiling', () => {
     it('should be collected for each commit', async done => {
       const Parent = ({ count }) => {
         Scheduler.advanceTime(10);
-        return new Array(count)
+        const children = new Array(count)
           .fill(true)
-          .map((_, index) => <Child key={index} />);
+          .map((_, index) => <Child key={index} duration={index} />);
+        return (
+          <React.Fragment>
+            {children}
+            <MemoizedChild duration={1} />
+          </React.Fragment>
+        );
       };
-      const Child = () => {
-        Scheduler.advanceTime(2);
+      const Child = ({ duration }) => {
+        Scheduler.advanceTime(duration);
         return null;
       };
+      const MemoizedChild = React.memo(Child);
 
       const container = document.createElement('div');
 
@@ -158,14 +165,21 @@ describe('profiling', () => {
     it('should be collected for each commit', async done => {
       const Parent = ({ count }) => {
         Scheduler.advanceTime(10);
-        return new Array(count)
+        const children = new Array(count)
           .fill(true)
-          .map((_, index) => <Child key={index} />);
+          .map((_, index) => <Child key={index} duration={index} />);
+        return (
+          <React.Fragment>
+            {children}
+            <MemoizedChild duration={1} />
+          </React.Fragment>
+        );
       };
-      const Child = () => {
-        Scheduler.advanceTime(2);
+      const Child = ({ duration }) => {
+        Scheduler.advanceTime(duration);
         return null;
       };
+      const MemoizedChild = React.memo(Child);
 
       const container = document.createElement('div');
 
@@ -245,14 +259,21 @@ describe('profiling', () => {
     it('should be collected for each rendered fiber', async done => {
       const Parent = ({ count }) => {
         Scheduler.advanceTime(10);
-        return new Array(count)
+        const children = new Array(count)
           .fill(true)
-          .map((_, index) => <Child key={index} />);
+          .map((_, index) => <Child key={index} duration={index} />);
+        return (
+          <React.Fragment>
+            {children}
+            <MemoizedChild duration={1} />
+          </React.Fragment>
+        );
       };
-      const Child = () => {
-        Scheduler.advanceTime(2);
+      const Child = ({ duration }) => {
+        Scheduler.advanceTime(duration);
         return null;
       };
+      const MemoizedChild = React.memo(Child);
 
       const container = document.createElement('div');
 
@@ -339,14 +360,21 @@ describe('profiling', () => {
     it('should be collected for every traced interaction', async done => {
       const Parent = ({ count }) => {
         Scheduler.advanceTime(10);
-        return new Array(count)
+        const children = new Array(count)
           .fill(true)
-          .map((_, index) => <Child key={index} />);
+          .map((_, index) => <Child key={index} duration={index} />);
+        return (
+          <React.Fragment>
+            {children}
+            <MemoizedChild duration={1} />
+          </React.Fragment>
+        );
       };
-      const Child = () => {
-        Scheduler.advanceTime(2);
+      const Child = ({ duration }) => {
+        Scheduler.advanceTime(duration);
         return null;
       };
+      const MemoizedChild = React.memo(Child);
 
       const container = document.createElement('div');
 
@@ -419,7 +447,9 @@ describe('profiling', () => {
 
   it('should remove profiling data when roots are unmounted', async () => {
     const Parent = ({ count }) =>
-      new Array(count).fill(true).map((_, index) => <Child key={index} />);
+      new Array(count)
+        .fill(true)
+        .map((_, index) => <Child key={index} duration={index} />);
     const Child = () => <div>Hi!</div>;
 
     const containerA = document.createElement('div');

@@ -645,18 +645,6 @@ export function attach(
     }
   }
 
-  function haveProfilerTimesChanged(
-    prevFiber: Fiber,
-    nextFiber: Fiber
-  ): boolean {
-    return (
-      prevFiber.actualDuration !== undefined && // Short-circuit check for non-profiling builds
-      (prevFiber.actualDuration !== nextFiber.actualDuration ||
-        prevFiber.actualStartTime !== nextFiber.actualStartTime ||
-        prevFiber.treeBaseDuration !== nextFiber.treeBaseDuration)
-    );
-  }
-
   let pendingOperations: Array<number> = [];
   let pendingRealUnmountedIDs: Array<number> = [];
   let pendingSimulatedUnmountedIDs: Array<number> = [];
@@ -843,8 +831,9 @@ export function attach(
       pushOperation(treeBaseDuration);
 
       const { actualDuration } = fiber;
-      if (actualDuration != null && actualDuration > 0) {
+      if (actualDuration != null) {
         // If profiling is active, store durations for elements that were rendered during the commit.
+        // We should do this for all fibers on mount, regardless of their actual durations.
         const metadata = ((currentCommitProfilingMetadata: any): CommitProfilingData);
         metadata.actualDurations.push(id, actualDuration);
         metadata.maxActualDuration = Math.max(
@@ -1024,9 +1013,12 @@ export function attach(
         pushOperation(treeBaseDuration);
       }
 
-      if (alternate ? haveProfilerTimesChanged(alternate, fiber) : true) {
-        if (actualDuration != null && actualDuration > 0) {
+      if (alternate ? hasDataChanged(alternate, fiber) : true) {
+        if (actualDuration != null) {
           // If profiling is active, store durations for elements that were rendered during the commit.
+          // Note that we should do this for any fiber we performed work on, regardless of its actualDuration value.
+          // In some cases actualDuration might be 0 for fibers we worked on (particularly if we're using Date.now)
+          // In other cases (e.g. Memo) actualDuration might be greater than 0 even if we "bailed out".
           const metadata = ((currentCommitProfilingMetadata: any): CommitProfilingData);
           metadata.actualDurations.push(id, actualDuration);
           metadata.maxActualDuration = Math.max(
