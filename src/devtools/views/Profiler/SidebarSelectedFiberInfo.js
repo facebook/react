@@ -2,7 +2,7 @@
 
 import React, { Fragment, useContext } from 'react';
 import { ProfilerContext } from './ProfilerContext';
-import { formatDuration, formatTime, fineTune } from './utils';
+import { formatDuration, formatTime } from './utils';
 import { StoreContext } from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
@@ -50,7 +50,7 @@ export default function SidebarSelectedFiberInfo(_: Props) {
         }
         onClick={() => selectCommitIndex(commitIndex)}
       >
-        {fineTune(formatTime(time))}s for {fineTune(formatDuration(duration))}ms
+        {formatTime(time)}s for {formatDuration(duration)}ms
       </button>
     );
   }
