@@ -10,16 +10,11 @@
 import type {
   ReactResponderEvent,
   ReactResponderContext,
-  ReactResponderDispatchEventOptions,
 } from 'shared/ReactTypes';
 
 import React from 'react';
 
-import {
-  getEventPointerType,
-  getEventCurrentTarget,
-  isEventPositionWithinTouchHitTarget,
-} from './utils';
+import {isEventPositionWithinTouchHitTarget} from './utils';
 
 type PressProps = {
   disabled: boolean,
@@ -90,6 +85,13 @@ type PressEvent = {|
   target: Element | Document,
   type: PressEventType,
   pointerType: PointerType,
+  timeStamp: null | number,
+  clientX: null | number,
+  clientY: null | number,
+  pageX: null | number,
+  pageY: null | number,
+  screenX: null | number,
+  screenY: null | number,
 |};
 
 const DEFAULT_PRESS_END_DELAY_MS = 0;
@@ -137,34 +139,67 @@ function createPressEvent(
   type: PressEventType,
   target: Element | Document,
   pointerType: PointerType,
+  event: ?ReactResponderEvent,
+  timeStampToUse?: number,
 ): PressEvent {
+  let clientX = null;
+  let clientY = null;
+  let pageX = null;
+  let pageY = null;
+  let screenX = null;
+  let screenY = null;
+  let timeStamp = timeStampToUse || null;
+
+  if (event) {
+    const nativeEvent = (event.nativeEvent: any);
+    if (!timeStamp) {
+      timeStamp = nativeEvent.timeStamp;
+    }
+    // Only check for one property, checking for all of them is costly. We can assume
+    // if clientX exists, so do the rest.
+    if (nativeEvent.clientX !== undefined) {
+      ({clientX, clientY, pageX, pageY, screenX, screenY} = (nativeEvent: any));
+    }
+  }
   return {
     target,
     type,
     pointerType,
+    timeStamp,
+    clientX,
+    clientY,
+    pageX,
+    pageY,
+    screenX,
+    screenY,
   };
 }
 
 function dispatchEvent(
+  event: ?ReactResponderEvent,
   context: ReactResponderContext,
   state: PressState,
   name: PressEventType,
   listener: (e: Object) => void,
-  options?: ReactResponderDispatchEventOptions,
+  discrete: boolean,
+  timeStamp?: number,
 ): void {
   const target = ((state.pressTarget: any): Element | Document);
   const pointerType = state.pointerType;
-  const syntheticEvent = createPressEvent(name, target, pointerType);
-  context.dispatchEvent(
-    syntheticEvent,
-    listener,
-    options || {
-      discrete: true,
-    },
+  const syntheticEvent = createPressEvent(
+    name,
+    target,
+    pointerType,
+    event,
+    timeStamp,
   );
+  context.dispatchEvent(syntheticEvent, listener, {
+    discrete,
+  });
 }
 
 function dispatchPressChangeEvent(
+  event: ?ReactResponderEvent,
   context: ReactResponderContext,
   props: PressProps,
   state: PressState,
@@ -173,22 +208,32 @@ function dispatchPressChangeEvent(
   const listener = () => {
     props.onPressChange(bool);
   };
-  dispatchEvent(context, state, 'presschange', listener);
+  dispatchEvent(event, context, state, 'presschange', listener, true);
 }
 
 function dispatchLongPressChangeEvent(
+  event: ?ReactResponderEvent,
   context: ReactResponderContext,
   props: PressProps,
   state: PressState,
+  timeStamp?: number,
 ): void {
   const bool = state.isLongPressed;
   const listener = () => {
     props.onLongPressChange(bool);
   };
-  dispatchEvent(context, state, 'longpresschange', listener);
+  dispatchEvent(
+    event,
+    context,
+    state,
+    'longpresschange',
+    listener,
+    true,
+    timeStamp,
+  );
 }
 
-function activate(event, context, props, state) {
+function activate(event: ReactResponderEvent, context, props, state) {
   const nativeEvent: any = event.nativeEvent;
   const pageX = nativeEvent.pageX;
   const pageY = nativeEvent.pageY;
@@ -202,26 +247,33 @@ function activate(event, context, props, state) {
   }
 
   if (props.onPressStart) {
-    dispatchEvent(context, state, 'pressstart', props.onPressStart);
+    dispatchEvent(
+      event,
+      context,
+      state,
+      'pressstart',
+      props.onPressStart,
+      true,
+    );
   }
   if (!wasActivePressed && props.onPressChange) {
-    dispatchPressChangeEvent(context, props, state);
+    dispatchPressChangeEvent(event, context, props, state);
   }
 }
 
-function deactivate(context, props, state) {
+function deactivate(event: ?ReactResponderEvent, context, props, state) {
   const wasLongPressed = state.isLongPressed;
   state.isActivePressed = false;
   state.isLongPressed = false;
 
   if (props.onPressEnd) {
-    dispatchEvent(context, state, 'pressend', props.onPressEnd);
+    dispatchEvent(event, context, state, 'pressend', props.onPressEnd, true);
   }
   if (props.onPressChange) {
-    dispatchPressChangeEvent(context, props, state);
+    dispatchPressChangeEvent(event, context, props, state);
   }
   if (wasLongPressed && props.onLongPressChange) {
-    dispatchLongPressChangeEvent(context, props, state);
+    dispatchLongPressChangeEvent(event, context, props, state);
   }
 }
 
@@ -254,11 +306,21 @@ function dispatchPressStartEvents(
       state.longPressTimeout = context.setTimeout(() => {
         state.isLongPressed = true;
         state.longPressTimeout = null;
+        const nativeEvent = (event.nativeEvent: any);
+        const timeStamp = nativeEvent.timeStamp + delayLongPress;
         if (props.onLongPress) {
-          dispatchEvent(context, state, 'longpress', props.onLongPress);
+          dispatchEvent(
+            event,
+            context,
+            state,
+            'longpress',
+            props.onLongPress,
+            true,
+            timeStamp,
+          );
         }
         if (props.onLongPressChange) {
-          dispatchLongPressChangeEvent(context, props, state);
+          dispatchLongPressChangeEvent(event, context, props, state, timeStamp);
         }
       }, delayLongPress);
     }
@@ -321,10 +383,10 @@ function dispatchPressEndEvents(
     if (delayPressEnd > 0) {
       state.pressEndTimeout = context.setTimeout(() => {
         state.pressEndTimeout = null;
-        deactivate(context, props, state);
+        deactivate(event, context, props, state);
       }, delayPressEnd);
     } else {
-      deactivate(context, props, state);
+      deactivate(event, context, props, state);
     }
   }
 }
@@ -366,11 +428,16 @@ function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
 }
 
 // TODO: account for touch hit slop
-function calculateResponderRegion(target: Element, props: PressProps) {
-  const pressRetentionOffset = {
-    ...DEFAULT_PRESS_RETENTION_OFFSET,
-    ...props.pressRetentionOffset,
-  };
+function calculateResponderRegion(
+  context: ReactResponderContext,
+  target: Element,
+  props: PressProps,
+) {
+  const pressRetentionOffset = context.objectAssign(
+    {},
+    DEFAULT_PRESS_RETENTION_OFFSET,
+    props.pressRetentionOffset,
+  );
 
   const clientRect = target.getBoundingClientRect();
 
@@ -507,7 +574,7 @@ const PressResponder = {
       return;
     }
     const nativeEvent: any = event.nativeEvent;
-    const pointerType = getEventPointerType(event);
+    const pointerType = context.getEventPointerType(event);
 
     switch (type) {
       // START
@@ -549,8 +616,9 @@ const PressResponder = {
 
           state.allowPressReentry = true;
           state.pointerType = pointerType;
-          state.pressTarget = getEventCurrentTarget(event, context);
+          state.pressTarget = context.getEventCurrentTarget(event);
           state.responderRegionOnActivation = calculateResponderRegion(
+            context,
             state.pressTarget,
             props,
           );
@@ -594,7 +662,7 @@ const PressResponder = {
     const {target, type} = event;
 
     const nativeEvent: any = event.nativeEvent;
-    const pointerType = getEventPointerType(event);
+    const pointerType = context.getEventPointerType(event);
 
     switch (type) {
       // MOVE
@@ -615,6 +683,7 @@ const PressResponder = {
             state.responderRegionOnDeactivation == null
           ) {
             state.responderRegionOnDeactivation = calculateResponderRegion(
+              context,
               state.pressTarget,
               props,
             );
@@ -627,9 +696,14 @@ const PressResponder = {
           if (state.isPressWithinResponderRegion) {
             if (state.isPressed) {
               if (props.onPressMove) {
-                dispatchEvent(context, state, 'pressmove', props.onPressMove, {
-                  discrete: false,
-                });
+                dispatchEvent(
+                  event,
+                  context,
+                  state,
+                  'pressmove',
+                  props.onPressMove,
+                  false,
+                );
               }
               if (
                 state.activationPosition != null &&
@@ -682,6 +756,7 @@ const PressResponder = {
             // already done during move event.
             if (state.responderRegionOnDeactivation == null) {
               state.responderRegionOnDeactivation = calculateResponderRegion(
+                context,
                 state.pressTarget,
                 props,
               );
@@ -705,7 +780,14 @@ const PressResponder = {
                   props.onLongPressShouldCancelPress()
                 )
               ) {
-                dispatchEvent(context, state, 'press', props.onPress);
+                dispatchEvent(
+                  event,
+                  context,
+                  state,
+                  'press',
+                  props.onPress,
+                  true,
+                );
               }
             }
           }

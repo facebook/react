@@ -13,11 +13,7 @@ import type {
 } from 'shared/ReactTypes';
 
 import React from 'react';
-import {
-  getEventPointerType,
-  getEventCurrentTarget,
-  isEventPositionWithinTouchHitTarget,
-} from './utils';
+import {isEventPositionWithinTouchHitTarget} from './utils';
 
 type HoverProps = {
   disabled: boolean,
@@ -264,7 +260,7 @@ const HoverResponder = {
       }
       return;
     }
-    const pointerType = getEventPointerType(event);
+    const pointerType = context.getEventPointerType(event);
 
     switch (type) {
       // START
@@ -287,7 +283,7 @@ const HoverResponder = {
             state.isOverTouchHitTarget = true;
             return;
           }
-          state.hoverTarget = getEventCurrentTarget(event, context);
+          state.hoverTarget = context.getEventCurrentTarget(event);
           state.ignoreEmulatedMouseEvents = true;
           dispatchHoverStartEvents(event, context, props, state);
         }

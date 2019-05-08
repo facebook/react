@@ -28,24 +28,6 @@ export function getEventCurrentTarget(
   return currentTarget;
 }
 
-export function getEventPointerType(event: ReactResponderEvent) {
-  const nativeEvent: any = event.nativeEvent;
-  const {type, pointerType} = nativeEvent;
-  if (pointerType != null) {
-    return pointerType;
-  }
-  if (type.indexOf('mouse') === 0) {
-    return 'mouse';
-  }
-  if (type.indexOf('touch') === 0) {
-    return 'touch';
-  }
-  if (type.indexOf('key') === 0) {
-    return 'keyboard';
-  }
-  return '';
-}
-
 export function isEventPositionWithinTouchHitTarget(
   event: ReactResponderEvent,
   context: ReactResponderContext,
