@@ -15,11 +15,7 @@ import type {
 
 import React from 'react';
 
-import {
-  getEventPointerType,
-  getEventCurrentTarget,
-  isEventPositionWithinTouchHitTarget,
-} from './utils';
+import {isEventPositionWithinTouchHitTarget} from './utils';
 
 type PressProps = {
   disabled: boolean,
@@ -365,11 +361,16 @@ function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
 }
 
 // TODO: account for touch hit slop
-function calculateResponderRegion(target: Element, props: PressProps) {
-  const pressRetentionOffset = {
+function calculateResponderRegion(
+  context: ReactResponderContext,
+  target: Element,
+  props: PressProps,
+) {
+  const pressRetentionOffset = context.objectAssign(
+    {},
     ...DEFAULT_PRESS_RETENTION_OFFSET,
     ...props.pressRetentionOffset,
-  };
+  );
 
   const clientRect = target.getBoundingClientRect();
 
@@ -533,7 +534,7 @@ const PressResponder = {
       return;
     }
     const nativeEvent: any = event.nativeEvent;
-    const pointerType = getEventPointerType(event);
+    const pointerType = context.getEventPointerType(event);
 
     switch (type) {
       // START
@@ -575,8 +576,9 @@ const PressResponder = {
 
           state.allowPressReentry = true;
           state.pointerType = pointerType;
-          state.pressTarget = getEventCurrentTarget(event, context);
+          state.pressTarget = context.getEventCurrentTarget(event);
           state.responderRegionOnActivation = calculateResponderRegion(
+            context,
             state.pressTarget,
             props,
           );
@@ -620,7 +622,7 @@ const PressResponder = {
     const {target, type} = event;
 
     const nativeEvent: any = event.nativeEvent;
-    const pointerType = getEventPointerType(event);
+    const pointerType = context.getEventPointerType(event);
 
     switch (type) {
       // MOVE
@@ -641,6 +643,7 @@ const PressResponder = {
             state.responderRegionOnDeactivation == null
           ) {
             state.responderRegionOnDeactivation = calculateResponderRegion(
+              context,
               state.pressTarget,
               props,
             );
@@ -708,6 +711,7 @@ const PressResponder = {
             // already done during move event.
             if (state.responderRegionOnDeactivation == null) {
               state.responderRegionOnDeactivation = calculateResponderRegion(
+                context,
                 state.pressTarget,
                 props,
               );

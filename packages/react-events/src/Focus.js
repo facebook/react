@@ -13,7 +13,6 @@ import type {
 } from 'shared/ReactTypes';
 
 import React from 'react';
-import {getEventCurrentTarget} from './utils.js';
 
 type FocusProps = {
   disabled: boolean,
@@ -173,7 +172,7 @@ const FocusResponder = {
         if (!state.isFocused) {
           // Limit focus events to the direct child of the event component.
           // Browser focus is not expected to bubble.
-          state.focusTarget = getEventCurrentTarget(event, context);
+          state.focusTarget = context.getEventCurrentTarget(event);
           if (state.focusTarget === target) {
             state.isFocused = true;
             state.isLocalFocusVisible = isGlobalFocusVisible;
@@ -221,7 +220,7 @@ const FocusResponder = {
         // Focus should stop being visible if a pointer is used on the element
         // after it was focused using a keyboard.
         if (
-          state.focusTarget === getEventCurrentTarget(event, context) &&
+          state.focusTarget === context.getEventCurrentTarget(event) &&
           (type === 'mousedown' ||
             type === 'touchstart' ||
             type === 'pointerdown')
