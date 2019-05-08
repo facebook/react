@@ -560,6 +560,9 @@ export function flushInteractiveUpdates() {
     return;
   }
   flushPendingDiscreteUpdates();
+  // If the discrete updates scheduled passive effects, flush them now so that
+  // they fire before the next serial event.
+  flushPassiveEffects();
 }
 
 function resolveLocksOnRoot(root: FiberRoot, expirationTime: ExpirationTime) {
@@ -595,6 +598,8 @@ export function interactiveUpdates<A, B, C, R>(
     // should explicitly call flushInteractiveUpdates.
     flushPendingDiscreteUpdates();
   }
+  // TODO: Remove this call for the same reason as above.
+  flushPassiveEffects();
   return runWithPriority(UserBlockingPriority, fn.bind(null, a, b, c));
 }
 

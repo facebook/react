@@ -1719,6 +1719,7 @@ describe('ReactHooks', () => {
     ).toThrow('Hello');
   });
 
+  // Regression test for https://github.com/facebook/react/issues/15057
   it('does not fire a false positive warning when previous effect unmounts the component', () => {
     let {useState, useEffect} = React;
     let globalListener;
