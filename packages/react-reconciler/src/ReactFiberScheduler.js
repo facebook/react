@@ -97,6 +97,7 @@ import {
   expirationTimeToMs,
   computeInteractiveExpiration,
   computeAsyncExpiration,
+  computeSuspenseExpiration,
   inferPriorityFromExpirationTime,
   LOW_PRIORITY_EXPIRATION,
   Batched,
@@ -280,26 +281,34 @@ export function computeExpirationForFiber(
     return renderExpirationTime;
   }
 
-  // Compute an expiration time based on the Scheduler priority.
   let expirationTime;
-  switch (priorityLevel) {
-    case ImmediatePriority:
-      expirationTime = Sync;
-      break;
-    case UserBlockingPriority:
-      // TODO: Rename this to computeUserBlockingExpiration
-      expirationTime = computeInteractiveExpiration(currentTime);
-      break;
-    case NormalPriority:
-    case LowPriority: // TODO: Handle LowPriority
-      // TODO: Rename this to... something better.
-      expirationTime = computeAsyncExpiration(currentTime);
-      break;
-    case IdlePriority:
-      expirationTime = Never;
-      break;
-    default:
-      invariant(false, 'Expected a valid priority level');
+  if (suspenseConfig !== null) {
+    // Compute an expiration time based on the Suspense timeout.
+    expirationTime = computeSuspenseExpiration(
+      currentTime,
+      suspenseConfig.timeoutMs,
+    );
+  } else {
+    // Compute an expiration time based on the Scheduler priority.
+    switch (priorityLevel) {
+      case ImmediatePriority:
+        expirationTime = Sync;
+        break;
+      case UserBlockingPriority:
+        // TODO: Rename this to computeUserBlockingExpiration
+        expirationTime = computeInteractiveExpiration(currentTime);
+        break;
+      case NormalPriority:
+      case LowPriority: // TODO: Handle LowPriority
+        // TODO: Rename this to... something better.
+        expirationTime = computeAsyncExpiration(currentTime);
+        break;
+      case IdlePriority:
+        expirationTime = Never;
+        break;
+      default:
+        invariant(false, 'Expected a valid priority level');
+    }
   }
 
   // If we're in the middle of rendering a tree, do not update at the same

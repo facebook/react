@@ -71,6 +71,18 @@ export function computeAsyncExpiration(
   );
 }
 
+export function computeSuspenseExpiration(
+  currentTime: ExpirationTime,
+  timeoutMs: number,
+): ExpirationTime {
+  // TODO: Should we warn if timeoutMs is lower than the normal pri expiration time?
+  return computeExpirationBucket(
+    currentTime,
+    timeoutMs,
+    LOW_PRIORITY_BATCH_SIZE,
+  );
+}
+
 // Same as computeAsyncExpiration but without the bucketing logic. This is
 // used to compute timestamps instead of actual expiration times.
 export function computeAsyncExpirationNoBucket(
