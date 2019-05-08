@@ -61,7 +61,7 @@ export const formatDuration = (duration: number) =>
 export const formatPercentage = (percentage: number) =>
   Math.round(percentage * 100);
 export const formatTime = (timestamp: number) =>
-  Math.round(Math.round(timestamp) / 100) / 10 || '<0.1';
+  Math.round(Math.round(timestamp) / 100) / 10;
 
 export const scale = (
   minValue: number,
