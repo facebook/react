@@ -406,12 +406,12 @@ function isTouchEvent(nativeEvent: Event): boolean {
 }
 
 function getTouchFromPressEvent(nativeEvent: TouchEvent): Touch {
-  const {changedTouches, touches} = event.nativeEvent;
+  const {changedTouches, touches} = nativeEvent;
   return changedTouches.length > 0
     ? changedTouches[0]
     : touches.length > 0
       ? touches[0]
-      : event.nativeEvent;
+      : (nativeEvent: any);
 }
 
 function getEventPageCoords(
