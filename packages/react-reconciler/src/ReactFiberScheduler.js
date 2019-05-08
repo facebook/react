@@ -1604,7 +1604,7 @@ function commitLayoutEffects(
 
 export function flushPassiveEffects() {
   if (rootWithPendingPassiveEffects === null) {
-    return false;
+    return;
   }
   const root = rootWithPendingPassiveEffects;
   const expirationTime = pendingPassiveEffectsExpirationTime;
@@ -1661,8 +1661,6 @@ export function flushPassiveEffects() {
   // exceeds the limit, we'll fire a warning.
   nestedPassiveUpdateCount =
     rootWithPendingPassiveEffects === null ? 0 : nestedPassiveUpdateCount + 1;
-
-  return true;
 }
 
 export function hasPendingEffects() {
