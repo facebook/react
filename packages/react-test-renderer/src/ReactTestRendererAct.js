@@ -8,13 +8,11 @@
  */
 import type {Thenable} from 'react-reconciler/src/ReactFiberScheduler';
 
-import {
-  batchedUpdates,
-  flushPassiveEffects,
-} from 'react-reconciler/inline.test';
+import {batchedUpdates, hasPendingEffects} from 'react-reconciler/inline.test';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import enqueueTask from 'shared/enqueueTask';
+import * as Scheduler from 'scheduler';
 
 const {ReactShouldWarnActingUpdates} = ReactSharedInternals;
 
@@ -27,9 +25,9 @@ let actingUpdatesScopeDepth = 0;
 
 function flushEffectsAndMicroTasks(onDone: (err: ?Error) => void) {
   try {
-    flushPassiveEffects();
+    Scheduler.unstable_flushWithoutYielding();
     enqueueTask(() => {
-      if (flushPassiveEffects()) {
+      if (hasPendingEffects()) {
         flushEffectsAndMicroTasks(onDone);
       } else {
         onDone();
@@ -128,7 +126,7 @@ function act(callback: () => Thenable) {
 
     // flush effects until none remain, and cleanup
     try {
-      while (flushPassiveEffects()) {}
+      Scheduler.unstable_flushWithoutYielding();
       onDone();
     } catch (err) {
       onDone();

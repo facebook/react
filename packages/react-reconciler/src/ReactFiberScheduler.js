@@ -1665,6 +1665,10 @@ export function flushPassiveEffects() {
   return true;
 }
 
+export function hasPendingEffects() {
+  return rootWithPendingPassiveEffects !== null;
+}
+
 export function isAlreadyFailedLegacyErrorBoundary(instance: mixed): boolean {
   return (
     legacyErrorBoundariesThatAlreadyFailed !== null &&

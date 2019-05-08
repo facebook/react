@@ -645,18 +645,20 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   const roots = new Map();
   const DEFAULT_ROOT_ID = '<default>';
 
-  const {flushPassiveEffects, batchedUpdates} = NoopRenderer;
+  const {hasPendingEffects, batchedUpdates} = NoopRenderer;
 
   // this act() implementation should be exactly the same in
   // ReactTestUtilsAct.js, ReactTestRendererAct.js, createReactNoop.js
 
+  // we track the 'depth' of the act() calls with this counter,
+  // so we can tell if any async act() calls try to run in parallel.
   let actingUpdatesScopeDepth = 0;
 
   function flushEffectsAndMicroTasks(onDone: (err: ?Error) => void) {
     try {
-      flushPassiveEffects();
+      Scheduler.unstable_flushWithoutYielding();
       enqueueTask(() => {
-        if (flushPassiveEffects()) {
+        if (hasPendingEffects()) {
           flushEffectsAndMicroTasks(onDone);
         } else {
           onDone();
@@ -755,7 +757,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
       // flush effects until none remain, and cleanup
       try {
-        while (flushPassiveEffects()) {}
+        Scheduler.unstable_flushWithoutYielding();
         onDone();
       } catch (err) {
         onDone();

@@ -13,6 +13,7 @@ let ReactTestUtils;
 let SchedulerTracing;
 let act;
 let container;
+let Scheduler;
 
 jest.useRealTimers();
 
@@ -31,6 +32,7 @@ describe('ReactTestUtils.act()', () => {
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
     SchedulerTracing = require('scheduler/tracing');
+    Scheduler = require('scheduler');
     act = ReactTestUtils.act;
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -502,5 +504,25 @@ describe('ReactTestUtils.act()', () => {
         expect(Component).toHaveBeenCalledTimes(4);
       });
     }
+  });
+  describe('concurrent mode', () => {
+    it('flushes renders', () => {
+      function App() {
+        let [state, setState] = React.useState(0);
+        React.useEffect(
+          () => {
+            setState(x => x + 1);
+          },
+          [Math.min(state, 4)],
+        );
+        return state;
+      }
+      const el = document.createElement('div');
+      act(() => {
+        ReactDOM.unstable_createRoot(el).render(<App />);
+      });
+      // Scheduler.flushAll();
+      expect(el.innerHTML).toBe('5');
+    });
   });
 });

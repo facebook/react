@@ -13,6 +13,7 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 import ReactDOM from 'react-dom';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import enqueueTask from 'shared/enqueueTask';
+import * as Scheduler from 'scheduler';
 
 // Keep in sync with ReactDOMUnstableNativeDependencies.js
 // ReactDOM.js, and ReactTestUtils.js:
@@ -30,7 +31,7 @@ const [
   dispatchEvent,
   runEventsInBatch,
   /* eslint-enable no-unused-vars */
-  flushPassiveEffects,
+  hasPendingEffects,
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
 
 const batchedUpdates = ReactDOM.unstable_batchedUpdates;
@@ -46,9 +47,9 @@ let actingUpdatesScopeDepth = 0;
 
 function flushEffectsAndMicroTasks(onDone: (err: ?Error) => void) {
   try {
-    flushPassiveEffects();
+    Scheduler.unstable_flushWithoutYielding();
     enqueueTask(() => {
-      if (flushPassiveEffects()) {
+      if (hasPendingEffects()) {
         flushEffectsAndMicroTasks(onDone);
       } else {
         onDone();
@@ -147,7 +148,7 @@ function act(callback: () => Thenable) {
 
     // flush effects until none remain, and cleanup
     try {
-      while (flushPassiveEffects()) {}
+      Scheduler.unstable_flushWithoutYielding();
       onDone();
     } catch (err) {
       onDone();
