@@ -113,7 +113,7 @@ export const getGradientColor = (value: number) => {
 };
 
 export const formatDuration = (duration: number) =>
-  Math.round(duration * 10) / 10;
+  Math.round(duration * 10) / 10 || '<0.1';
 export const formatPercentage = (percentage: number) =>
   Math.round(percentage * 100);
 export const formatTime = (timestamp: number) =>
