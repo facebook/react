@@ -11,18 +11,19 @@ Object {
       "id": 1,
       "key": null,
       "parentID": 0,
-      "treeBaseDuration": 14,
+      "treeBaseDuration": 15,
     },
     2 => Object {
       "children": Array [
         3,
         4,
+        5,
       ],
       "displayName": "Parent",
       "id": 2,
       "key": null,
       "parentID": 1,
-      "treeBaseDuration": 14,
+      "treeBaseDuration": 15,
     },
     3 => Object {
       "children": Array [],
@@ -30,7 +31,7 @@ Object {
       "id": 3,
       "key": "first",
       "parentID": 2,
-      "treeBaseDuration": 2,
+      "treeBaseDuration": 3,
     },
     4 => Object {
       "children": Array [],
@@ -40,6 +41,14 @@ Object {
       "parentID": 2,
       "treeBaseDuration": 2,
     },
+    5 => Object {
+      "children": Array [],
+      "displayName": "Memo(Child)",
+      "id": 5,
+      "key": "third",
+      "parentID": 2,
+      "treeBaseDuration": 0,
+    },
   },
   "rootID": 1,
 }
@@ -47,10 +56,11 @@ Object {
 
 exports[`profiling charts flamegraph chart should contain valid data: 0: FlamegraphChartData 1`] = `
 Object {
-  "baseDuration": 14,
+  "baseDuration": 15,
   "depth": 2,
   "idToDepthMap": Map {
     2 => 1,
+    5 => 2,
     4 => 2,
     3 => 2,
   },
@@ -58,36 +68,46 @@ Object {
   "rows": Array [
     Array [
       Object {
-        "actualDuration": 14,
+        "actualDuration": 15,
         "didRender": true,
         "id": 2,
-        "label": "Parent (10ms of 14ms)",
+        "label": "Parent (10ms of 15ms)",
         "name": "Parent",
         "offset": 0,
         "selfDuration": 10,
-        "treeBaseDuration": 14,
+        "treeBaseDuration": 15,
       },
     ],
     Array [
+      Object {
+        "actualDuration": 0,
+        "didRender": false,
+        "id": 5,
+        "label": "Memo(Child) key=\\"third\\"",
+        "name": "Memo(Child)",
+        "offset": 15,
+        "selfDuration": 0,
+        "treeBaseDuration": 0,
+      },
       Object {
         "actualDuration": 2,
         "didRender": true,
         "id": 4,
         "label": "Memo(Child) key=\\"second\\" (2ms of 2ms)",
         "name": "Memo(Child)",
-        "offset": 12,
+        "offset": 13,
         "selfDuration": 2,
         "treeBaseDuration": 2,
       },
       Object {
-        "actualDuration": 2,
+        "actualDuration": 3,
         "didRender": true,
         "id": 3,
-        "label": "Memo(Child) key=\\"first\\" (2ms of 2ms)",
+        "label": "Memo(Child) key=\\"first\\" (3ms of 3ms)",
         "name": "Memo(Child)",
         "offset": 10,
-        "selfDuration": 2,
-        "treeBaseDuration": 2,
+        "selfDuration": 3,
+        "treeBaseDuration": 3,
       },
     ],
   ],
@@ -105,18 +125,19 @@ Object {
       "id": 1,
       "key": null,
       "parentID": 0,
-      "treeBaseDuration": 14,
+      "treeBaseDuration": 15,
     },
     2 => Object {
       "children": Array [
         3,
         4,
+        5,
       ],
       "displayName": "Parent",
       "id": 2,
       "key": null,
       "parentID": 1,
-      "treeBaseDuration": 14,
+      "treeBaseDuration": 15,
     },
     3 => Object {
       "children": Array [],
@@ -124,7 +145,7 @@ Object {
       "id": 3,
       "key": "first",
       "parentID": 2,
-      "treeBaseDuration": 2,
+      "treeBaseDuration": 3,
     },
     4 => Object {
       "children": Array [],
@@ -134,6 +155,14 @@ Object {
       "parentID": 2,
       "treeBaseDuration": 2,
     },
+    5 => Object {
+      "children": Array [],
+      "displayName": "Memo(Child)",
+      "id": 5,
+      "key": "third",
+      "parentID": 2,
+      "treeBaseDuration": 0,
+    },
   },
   "rootID": 1,
 }
@@ -141,10 +170,11 @@ Object {
 
 exports[`profiling charts flamegraph chart should contain valid data: 1: FlamegraphChartData 1`] = `
 Object {
-  "baseDuration": 14,
+  "baseDuration": 15,
   "depth": 2,
   "idToDepthMap": Map {
     2 => 1,
+    5 => 2,
     4 => 2,
     3 => 2,
   },
@@ -159,17 +189,27 @@ Object {
         "name": "Parent",
         "offset": 0,
         "selfDuration": 10,
-        "treeBaseDuration": 14,
+        "treeBaseDuration": 15,
       },
     ],
     Array [
       Object {
         "actualDuration": 0,
         "didRender": false,
+        "id": 5,
+        "label": "Memo(Child) key=\\"third\\"",
+        "name": "Memo(Child)",
+        "offset": 15,
+        "selfDuration": 0,
+        "treeBaseDuration": 0,
+      },
+      Object {
+        "actualDuration": 0,
+        "didRender": false,
         "id": 4,
         "label": "Memo(Child) key=\\"second\\"",
         "name": "Memo(Child)",
-        "offset": 12,
+        "offset": 13,
         "selfDuration": 0,
         "treeBaseDuration": 2,
       },
@@ -181,7 +221,7 @@ Object {
         "name": "Memo(Child)",
         "offset": 10,
         "selfDuration": 0,
-        "treeBaseDuration": 2,
+        "treeBaseDuration": 3,
       },
     ],
   ],
@@ -190,15 +230,15 @@ Object {
 
 exports[`profiling charts interactions should contain valid data: Interactions 1`] = `
 Object {
-  "lastInteractionTime": 24,
-  "maxCommitDuration": 14,
+  "lastInteractionTime": 25,
+  "maxCommitDuration": 15,
 }
 `;
 
 exports[`profiling charts interactions should contain valid data: Interactions 2`] = `
 Object {
-  "lastInteractionTime": 24,
-  "maxCommitDuration": 14,
+  "lastInteractionTime": 25,
+  "maxCommitDuration": 15,
 }
 `;
 
@@ -213,18 +253,19 @@ Object {
       "id": 1,
       "key": null,
       "parentID": 0,
-      "treeBaseDuration": 14,
+      "treeBaseDuration": 15,
     },
     2 => Object {
       "children": Array [
         3,
         4,
+        5,
       ],
       "displayName": "Parent",
       "id": 2,
       "key": null,
       "parentID": 1,
-      "treeBaseDuration": 14,
+      "treeBaseDuration": 15,
     },
     3 => Object {
       "children": Array [],
@@ -232,7 +273,7 @@ Object {
       "id": 3,
       "key": "first",
       "parentID": 2,
-      "treeBaseDuration": 2,
+      "treeBaseDuration": 3,
     },
     4 => Object {
       "children": Array [],
@@ -241,6 +282,14 @@ Object {
       "key": "second",
       "parentID": 2,
       "treeBaseDuration": 2,
+    },
+    5 => Object {
+      "children": Array [],
+      "displayName": "Memo(Child)",
+      "id": 5,
+      "key": "third",
+      "parentID": 2,
+      "treeBaseDuration": 0,
     },
   },
   "rootID": 1,
@@ -259,9 +308,9 @@ Object {
     },
     Object {
       "id": 3,
-      "label": "Memo(Child) key=\\"first\\" (2ms)",
+      "label": "Memo(Child) key=\\"first\\" (3ms)",
       "name": "Memo(Child)",
-      "value": 2,
+      "value": 3,
     },
     Object {
       "id": 4,
@@ -284,18 +333,19 @@ Object {
       "id": 1,
       "key": null,
       "parentID": 0,
-      "treeBaseDuration": 14,
+      "treeBaseDuration": 15,
     },
     2 => Object {
       "children": Array [
         3,
         4,
+        5,
       ],
       "displayName": "Parent",
       "id": 2,
       "key": null,
       "parentID": 1,
-      "treeBaseDuration": 14,
+      "treeBaseDuration": 15,
     },
     3 => Object {
       "children": Array [],
@@ -303,7 +353,7 @@ Object {
       "id": 3,
       "key": "first",
       "parentID": 2,
-      "treeBaseDuration": 2,
+      "treeBaseDuration": 3,
     },
     4 => Object {
       "children": Array [],
@@ -312,6 +362,14 @@ Object {
       "key": "second",
       "parentID": 2,
       "treeBaseDuration": 2,
+    },
+    5 => Object {
+      "children": Array [],
+      "displayName": "Memo(Child)",
+      "id": 5,
+      "key": "third",
+      "parentID": 2,
+      "treeBaseDuration": 0,
     },
   },
   "rootID": 1,

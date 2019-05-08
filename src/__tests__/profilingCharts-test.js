@@ -32,15 +32,16 @@ describe('profiling charts', () => {
         Scheduler.advanceTime(10);
         return (
           <React.Fragment>
-            <Child key="first" />
-            <Child key="second" />
+            <Child key="first" duration={3} />
+            <Child key="second" duration={2} />
+            <Child key="third" duration={0} />
           </React.Fragment>
         );
       };
 
       // Memoize children to verify that chart doesn't include in the update.
-      const Child = React.memo(function Child() {
-        Scheduler.advanceTime(2);
+      const Child = React.memo(function Child({ duration }) {
+        Scheduler.advanceTime(duration);
         return null;
       });
 
@@ -125,15 +126,16 @@ describe('profiling charts', () => {
         Scheduler.advanceTime(10);
         return (
           <React.Fragment>
-            <Child key="first" />
-            <Child key="second" />
+            <Child key="first" duration={3} />
+            <Child key="second" duration={2} />
+            <Child key="third" duration={0} />
           </React.Fragment>
         );
       };
 
       // Memoize children to verify that chart doesn't include in the update.
-      const Child = React.memo(function Child() {
-        Scheduler.advanceTime(2);
+      const Child = React.memo(function Child({ duration }) {
+        Scheduler.advanceTime(duration);
         return null;
       });
 
@@ -214,15 +216,16 @@ describe('profiling charts', () => {
         Scheduler.advanceTime(10);
         return (
           <React.Fragment>
-            <Child key="first" />
-            <Child key="second" />
+            <Child key="first" duration={3} />
+            <Child key="second" duration={2} />
+            <Child key="third" duration={0} />
           </React.Fragment>
         );
       };
 
       // Memoize children to verify that chart doesn't include in the update.
-      const Child = React.memo(function Child() {
-        Scheduler.advanceTime(2);
+      const Child = React.memo(function Child({ duration }) {
+        Scheduler.advanceTime(duration);
         return null;
       });
 
