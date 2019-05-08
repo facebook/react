@@ -102,7 +102,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 
 import {StrictMode} from './ReactTypeOfMode';
-import {markRenderEventTime} from './ReactFiberScheduler';
+import {markRenderEventTimeAndConfig} from './ReactFiberScheduler';
 
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
@@ -469,7 +469,7 @@ export function processUpdateQueue<State>(
       // TODO: We should skip this update if it was already committed but currently
       // we have no way of detecting the difference between a committed and suspended
       // update here.
-      markRenderEventTime(updateExpirationTime);
+      markRenderEventTimeAndConfig(updateExpirationTime, update.suspenseConfig);
 
       // Process it and compute a new result.
       resultState = getStateFromUpdate(

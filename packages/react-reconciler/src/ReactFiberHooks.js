@@ -35,7 +35,7 @@ import {
   flushPassiveEffects,
   requestCurrentTime,
   warnIfNotCurrentlyActingUpdatesInDev,
-  markRenderEventTime,
+  markRenderEventTimeAndConfig,
 } from './ReactFiberScheduler';
 
 import invariant from 'shared/invariant';
@@ -731,7 +731,10 @@ function updateReducer<S, I, A>(
         // TODO: We should skip this update if it was already committed but currently
         // we have no way of detecting the difference between a committed and suspended
         // update here.
-        markRenderEventTime(updateExpirationTime);
+        markRenderEventTimeAndConfig(
+          updateExpirationTime,
+          update.suspenseConfig,
+        );
 
         // Process this update.
         if (update.eagerReducer === reducer) {

@@ -210,7 +210,8 @@ let workInProgressRootExitStatus: RootExitStatus = RootIncomplete;
 // This is conceptually a time stamp but expressed in terms of an ExpirationTime
 // because we deal mostly with expiration times in the hot path, so this avoids
 // the conversion happening in the hot path.
-let workInProgressRootMostRecentEventTime: ExpirationTime = Sync;
+let workInProgressRootLatestProcessedExpirationTime: ExpirationTime = Sync;
+let workInProgressRootCanSuspendUsingConfig: null | SuspenseConfig = null;
 
 let nextEffect: Fiber | null = null;
 let hasUncaughtError = false;
@@ -731,7 +732,8 @@ function prepareFreshStack(root, expirationTime) {
   workInProgress = createWorkInProgress(root.current, null, expirationTime);
   renderExpirationTime = expirationTime;
   workInProgressRootExitStatus = RootIncomplete;
-  workInProgressRootMostRecentEventTime = Sync;
+  workInProgressRootLatestProcessedExpirationTime = Sync;
+  workInProgressRootCanSuspendUsingConfig = null;
 
   if (__DEV__) {
     ReactStrictModeWarnings.discardPendingWarnings();
@@ -937,12 +939,15 @@ function renderRoot(
           // at that level.
           return renderRoot.bind(null, root, lastPendingTime);
         }
-        // If workInProgressRootMostRecentEventTime is Sync, that means we didn't
+        // If workInProgressRootLatestProcessedExpirationTime is Sync, that means we didn't
         // track any event times. That can happen if we retried but nothing switched
         // from fallback to content. There's no reason to delay doing no work.
-        if (workInProgressRootMostRecentEventTime !== Sync) {
+        if (workInProgressRootLatestProcessedExpirationTime !== Sync) {
+          if (workInProgressRootCanSuspendUsingConfig !== null) {
+            // TODO: If needed, suspend here up until workInProgressRootLatestProcessedExpirationTime.
+          }
           let msUntilTimeout = computeMsUntilTimeout(
-            workInProgressRootMostRecentEventTime,
+            workInProgressRootLatestProcessedExpirationTime,
             expirationTime,
           );
           // Don't bother with a very short suspense time.
@@ -971,12 +976,20 @@ function renderRoot(
   }
 }
 
-export function markRenderEventTime(expirationTime: ExpirationTime): void {
+export function markRenderEventTimeAndConfig(
+  expirationTime: ExpirationTime,
+  suspenseConfig: null | SuspenseConfig,
+): void {
   if (
-    expirationTime < workInProgressRootMostRecentEventTime &&
+    expirationTime < workInProgressRootLatestProcessedExpirationTime &&
     expirationTime > Never
   ) {
-    workInProgressRootMostRecentEventTime = expirationTime;
+    workInProgressRootLatestProcessedExpirationTime = expirationTime;
+  }
+  if (suspenseConfig !== null) {
+    // For simplicity we pick any config for the minDuration.
+    // Most of the time we only have one config and getting wrong is not bad.
+    workInProgressRootCanSuspendUsingConfig = suspenseConfig;
   }
 }
 

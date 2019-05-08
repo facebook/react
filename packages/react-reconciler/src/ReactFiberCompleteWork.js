@@ -94,7 +94,10 @@ import {
   enableSuspenseServerRenderer,
   enableEventAPI,
 } from 'shared/ReactFeatureFlags';
-import {markRenderEventTime, renderDidSuspend} from './ReactFiberScheduler';
+import {
+  markRenderEventTimeAndConfig,
+  renderDidSuspend,
+} from './ReactFiberScheduler';
 import {getEventComponentHostChildrenCount} from './ReactFiberEvents';
 import getComponentName from 'shared/getComponentName';
 import warning from 'shared/warning';
@@ -698,7 +701,7 @@ function completeWork(
           // was given a normal pri expiration time at the time it was shown.
           const fallbackExpirationTime: ExpirationTime =
             prevState.fallbackExpirationTime;
-          markRenderEventTime(fallbackExpirationTime);
+          markRenderEventTimeAndConfig(fallbackExpirationTime, null);
 
           // Delete the fallback.
           // TODO: Would it be better to store the fallback fragment on
