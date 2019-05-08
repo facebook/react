@@ -190,14 +190,13 @@ function dispatchLongPressChangeEvent(
 
 function activate(event, context, props, state) {
   const nativeEvent: any = event.nativeEvent;
-  const pageX = nativeEvent.pageX;
-  const pageY = nativeEvent.pageY;
+  const {x, y} = getEventPageCoords(nativeEvent);
   const wasActivePressed = state.isActivePressed;
   state.isActivePressed = true;
-  if (pageX != null && pageY != null) {
+  if (x !== null && y !== null) {
     state.activationPosition = {
-      pageX: nativeEvent.pageX,
-      pageY: nativeEvent.pageY,
+      pageX: x,
+      pageY: y,
     };
   }
 
@@ -402,12 +401,39 @@ function calculateResponderRegion(target: Element, props: PressProps) {
   };
 }
 
+function isTouchEvent(nativeEvent: Event): boolean {
+  return Array.isArray((nativeEvent: any).changedTouches);
+}
+
+function getTouchFromPressEvent(nativeEvent: TouchEvent): Touch {
+  const {changedTouches, touches} = nativeEvent;
+  return changedTouches.length > 0
+    ? changedTouches[0]
+    : touches.length > 0
+      ? touches[0]
+      : (nativeEvent: any);
+}
+
+function getEventPageCoords(
+  nativeEvent: Event,
+): {x: null | number, y: null | number} {
+  let eventObject = (nativeEvent: any);
+  if (isTouchEvent(eventObject)) {
+    eventObject = getTouchFromPressEvent(eventObject);
+  }
+  const pageX = eventObject.pageX;
+  const pageY = eventObject.pageY;
+  return {
+    x: pageX != null ? pageX : null,
+    y: pageY != null ? pageY : null,
+  };
+}
+
 function isPressWithinResponderRegion(
   nativeEvent: $PropertyType<ReactResponderEvent, 'nativeEvent'>,
   state: PressState,
 ): boolean {
   const {responderRegionOnActivation, responderRegionOnDeactivation} = state;
-  const event = (nativeEvent: any);
   let left, top, right, bottom;
 
   if (responderRegionOnActivation != null) {
@@ -423,16 +449,16 @@ function isPressWithinResponderRegion(
       bottom = Math.max(bottom, responderRegionOnDeactivation.bottom);
     }
   }
+  const {x, y} = getEventPageCoords(((nativeEvent: any): Event));
 
   return (
     left != null &&
     right != null &&
     top != null &&
     bottom != null &&
-    (event.pageX >= left &&
-      event.pageX <= right &&
-      event.pageY >= top &&
-      event.pageY <= bottom)
+    x !== null &&
+    y !== null &&
+    (x >= left && x <= right && y >= top && y <= bottom)
   );
 }
 
