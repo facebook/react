@@ -13,12 +13,7 @@ import type {
 } from 'shared/ReactTypes';
 
 import React from 'react';
-
-import {
-  getEventCurrentTarget,
-  getEventPointerType,
-  isEventPositionWithinTouchHitTarget,
-} from './utils';
+import {isEventPositionWithinTouchHitTarget} from './utils';
 
 type PressProps = {
   disabled: boolean,
@@ -466,7 +461,7 @@ function calculateResponderRegion(
   target: Element,
   props: PressProps,
 ) {
-  const pressRetentionOffset = Object.assign(
+  const pressRetentionOffset = context.objectAssign(
     {},
     DEFAULT_PRESS_RETENTION_OFFSET,
     props.pressRetentionOffset,
@@ -634,7 +629,7 @@ const PressResponder = {
       return;
     }
     const nativeEvent: any = event.nativeEvent;
-    const pointerType = getEventPointerType(event);
+    const pointerType = context.getEventPointerType(event);
 
     switch (type) {
       // START
@@ -676,7 +671,7 @@ const PressResponder = {
 
           state.allowPressReentry = true;
           state.pointerType = pointerType;
-          state.pressTarget = getEventCurrentTarget(event, context);
+          state.pressTarget = context.getEventCurrentTarget(event);
           state.responderRegionOnActivation = calculateResponderRegion(
             context,
             state.pressTarget,
@@ -722,7 +717,7 @@ const PressResponder = {
     const {target, type} = event;
 
     const nativeEvent: any = event.nativeEvent;
-    const pointerType = getEventPointerType(event);
+    const pointerType = context.getEventPointerType(event);
 
     switch (type) {
       // MOVE

@@ -188,4 +188,9 @@ export type ReactResponderContext = {
   clearTimeout: (timerId: Symbol) => void,
   getFocusableElementsInScope(): Array<HTMLElement>,
   getActiveDocument(): Document,
+  objectAssign: Function,
+  getEventPointerType(
+    event: ReactResponderEvent,
+  ): '' | 'mouse' | 'keyboard' | 'pen' | 'touch',
+  getEventCurrentTarget(event: ReactResponderEvent): Element,
 };
