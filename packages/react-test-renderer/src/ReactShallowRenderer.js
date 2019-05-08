@@ -173,11 +173,12 @@ function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S {
 }
 
 class ReactShallowRenderer {
-  static createRenderer = function() {
-    return new ReactShallowRenderer();
+  static createRenderer = function(useLifecycleMethods) {
+    return new ReactShallowRenderer(useLifecycleMethods);
   };
 
-  constructor() {
+  constructor(useLifecycleMethods = false) {
+    this._useLifecycleMethods = useLifecycleMethods;
     this._reset();
   }
 
@@ -366,6 +367,13 @@ class ReactShallowRenderer {
       return fn;
     };
 
+    const useEffect = (fn: Function, deps: Array<mixed> | void | null): Function => {
+      this._validateCurrentlyRenderingComponent();
+      this._createWorkInProgressHook();
+
+      //fill in impl
+    };
+
     return {
       readContext,
       useCallback: (identity: any),
@@ -374,9 +382,9 @@ class ReactShallowRenderer {
         return readContext(context);
       },
       useDebugValue: noOp,
-      useEffect: noOp,
+      useEffect: this._useLifecycleMethods ? useEffect : noOp,
       useImperativeHandle: noOp,
-      useLayoutEffect: noOp,
+      useLayoutEffect: this._useLifecycleMethods ? useEffect : noOp,
       useMemo,
       useReducer,
       useRef,
@@ -674,8 +682,13 @@ class ReactShallowRenderer {
     }
 
     this._rendered = this._instance.render();
-    // Intentionally do not call componentDidMount()
+    // Force user to opt in to calling componentDidMount()
     // because DOM refs are not available.
+    if(this._useLifecycleMethods) {
+      if (typeof this._instance.componentDidMount === 'function') {
+        this._instance.componentDidMount();
+      }
+    }
   }
 
   _updateClassComponent(
@@ -760,9 +773,21 @@ class ReactShallowRenderer {
 
     if (shouldUpdate) {
       this._rendered = this._instance.render();
+
+      // Force user to opt in to calling componentDidUpdate() and 
+      // getSnapshotBeforeUpdate because DOM refs are not available.
+      if(this._useLifecycleMethods) {
+        let snapshot = null;
+
+        if (typeof this._instance.getSnapshotBeforeUpdate === 'function') {
+          snapshot = this._instance.getSnapshotBeforeUpdate(oldProps, oldState);
+        }
+
+        if (typeof this._instance.componentDidUpdate === 'function') {
+          this._instance.componentDidUpdate(oldProps, oldState, snapshot);
+        }
+      }
     }
-    // Intentionally do not call componentDidUpdate()
-    // because DOM refs are not available.
   }
 }
 
