@@ -21,7 +21,7 @@ import {
 import { PROFILER_EXPORT_VERSION } from 'src/constants';
 import {
   getDisplayName,
-  getSavedComponentFilters,
+  getDefaultComponentFilters,
   getUID,
   utfEncodeString,
 } from 'src/utils';
@@ -305,7 +305,17 @@ export function attach(
     });
   }
 
-  applyComponentFilters(getSavedComponentFilters());
+  // The renderer interface can't read saved component filters directly,
+  // because they are stored in localStorage within the context of the extension.
+  // Instead it relies on the extension to pass filters through.
+  if (window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ != null) {
+    applyComponentFilters(window.__REACT_DEVTOOLS_COMPONENT_FILTERS__);
+  } else {
+    console.warn('⚛️ DevTools: Invalid component filters');
+
+    // Fallback to assuming the default filters in this case.
+    applyComponentFilters(getDefaultComponentFilters());
+  }
 
   // If necessary, we can revisit optimizing this operation.
   // For example, we could add a new recursive unmount tree operation.

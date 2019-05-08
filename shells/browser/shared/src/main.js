@@ -10,12 +10,27 @@ import {
   getBrowserName,
   getBrowserTheme,
 } from './utils';
+import { getSavedComponentFilters } from 'src/utils';
 import DevTools from 'src/devtools/views/DevTools';
 
 const LOCAL_STORAGE_SUPPORTS_PROFILING_KEY =
   'React::DevTools::supportsProfiling';
 
 let panelCreated = false;
+
+// The renderer interface can't read saved component filters directly,
+// because they are stored in localStorage within the context of the extension.
+// Instead it relies on the extension to pass filters through.
+function initializeSavedComponentFilters() {
+  const componentFilters = getSavedComponentFilters();
+  chrome.devtools.inspectedWindow.eval(
+    `window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = ${JSON.stringify(
+      componentFilters
+    )};`
+  );
+}
+
+initializeSavedComponentFilters();
 
 function createPanelIfReactLoaded() {
   if (panelCreated) {
@@ -273,6 +288,10 @@ function createPanelIfReactLoaded() {
 
       // Shutdown bridge and re-initialize DevTools panel when a new page is loaded.
       chrome.devtools.network.onNavigated.addListener(function onNavigated() {
+        // Re-initialize saved filters on navigation,
+        // since global values stored on window get reset in this case.
+        initializeSavedComponentFilters();
+
         // `bridge.shutdown()` will remove all listeners we added, so we don't have to.
         bridge.shutdown();
 
@@ -286,6 +305,7 @@ function createPanelIfReactLoaded() {
 
 // Load (or reload) the DevTools extension when the user navigates to a new page.
 function checkPageForReact() {
+  initializeSavedComponentFilters();
   createPanelIfReactLoaded();
 }
 
