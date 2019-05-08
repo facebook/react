@@ -2,7 +2,7 @@
 
 import React, { Fragment, useContext, useCallback, useRef } from 'react';
 import { ProfilerContext } from './ProfilerContext';
-import { ImportFailedModalContext } from './ImportFailedModalContext';
+import { ModalDialogContext } from '../ModalDialog';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import { BridgeContext, StoreContext } from '../context';
@@ -21,7 +21,7 @@ export default function ProfilingImportExportButtons() {
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const { setImportError } = useContext(ImportFailedModalContext);
+  const { dispatch: modalDialogDispatch } = useContext(ModalDialogContext);
 
   const downloadData = useCallback(() => {
     if (rendererID === null || rootID === null) {
@@ -62,12 +62,23 @@ export default function ProfilingImportExportButtons() {
 
           store.importedProfilingData = ((data: any): ImportedProfilingData);
         } catch (error) {
-          setImportError(error);
+          modalDialogDispatch({
+            type: 'SHOW',
+            title: 'Import failed',
+            content: (
+              <Fragment>
+                <div>The profiling data you selected cannot be imported.</div>
+                {error !== null && (
+                  <div className={styles.ErrorMessage}>{error.message}</div>
+                )}
+              </Fragment>
+            ),
+          });
         }
       });
       fileReader.readAsText(input.files[0]);
     }
-  }, [store, setImportError]);
+  }, [modalDialogDispatch, store]);
 
   return (
     <Fragment>

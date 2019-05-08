@@ -6,11 +6,13 @@ import { BridgeContext, StoreContext } from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import HooksTree from './HooksTree';
+import { ModalDialogContext } from '../ModalDialog';
 import InspectedElementTree from './InspectedElementTree';
 import { InspectedElementContext } from './InspectedElementContext';
 import ViewElementSourceContext from './ViewElementSourceContext';
-import styles from './SelectedElement.css';
+import Toggle from '../Toggle';
 import {
+  ComponentFilterElementType,
   ElementTypeClass,
   ElementTypeForwardRef,
   ElementTypeFunction,
@@ -18,15 +20,19 @@ import {
   ElementTypeSuspense,
 } from 'src/types';
 
+import styles from './SelectedElement.css';
+
 import type { Element, InspectedElement } from './types';
 
 export type Props = {||};
 
 export default function SelectedElement(_: Props) {
   const { inspectedElementID } = useContext(TreeStateContext);
+  const dispatch = useContext(TreeDispatcherContext);
   const viewElementSource = useContext(ViewElementSourceContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
+  const { dispatch: modalDialogDispatch } = useContext(ModalDialogContext);
 
   const { read } = useContext(InspectedElementContext);
 
@@ -72,6 +78,63 @@ export default function SelectedElement(_: Props) {
     }
   }, [inspectedElementID, viewElementSource]);
 
+  const canViewSource =
+    inspectedElement &&
+    inspectedElement.canViewSource &&
+    viewElementSource !== null;
+
+  const isSuspended =
+    element !== null &&
+    element.type === ElementTypeSuspense &&
+    inspectedElement != null &&
+    inspectedElement.state != null;
+
+  const canToggleSuspense =
+    inspectedElement != null && inspectedElement.canToggleSuspense;
+
+  // TODO (suspense toggle) Would be nice to eventually use a two setState pattern here as well.
+  const toggleSuspended = useCallback(() => {
+    let nearestSuspenseElement = null;
+    let currentElement = element;
+    while (currentElement !== null) {
+      if (currentElement.type === ElementTypeSuspense) {
+        nearestSuspenseElement = currentElement;
+        break;
+      } else if (currentElement.parentID > 0) {
+        currentElement = store.getElementByID(currentElement.parentID);
+      } else {
+        currentElement = null;
+      }
+    }
+
+    // If we didn't find a Suspense ancestor, we can't suspend.
+    // Instead we can show a warning to the user.
+    if (nearestSuspenseElement === null) {
+      modalDialogDispatch({
+        type: 'SHOW',
+        content: <CannotSuspendWarningMessage />,
+      });
+    } else {
+      const nearestSuspenseElementID = nearestSuspenseElement.id;
+
+      // If we're suspending from an arbitary (non-Suspense) component, select the nearest Suspense element in the Tree.
+      // This way when the fallback UI is shown and the current element is hidden, something meaningful is selected.
+      if (nearestSuspenseElement !== element) {
+        dispatch({
+          type: 'SELECT_ELEMENT_BY_ID',
+          payload: nearestSuspenseElementID,
+        });
+      }
+
+      // Toggle suspended
+      bridge.send('overrideSuspense', {
+        id: nearestSuspenseElementID,
+        rendererID: store.getRendererIDForElement(nearestSuspenseElementID),
+        forceFallback: !isSuspended,
+      });
+    }
+  }, [bridge, dispatch, element, isSuspended, modalDialogDispatch, store]);
+
   if (element === null) {
     return (
       <div className={styles.SelectedElement}>
@@ -79,11 +142,6 @@ export default function SelectedElement(_: Props) {
       </div>
     );
   }
-
-  const canViewSource =
-    inspectedElement &&
-    inspectedElement.canViewSource &&
-    viewElementSource !== null;
 
   return (
     <div className={styles.SelectedElement}>
@@ -94,6 +152,20 @@ export default function SelectedElement(_: Props) {
           </div>
         </div>
 
+        {canToggleSuspense && (
+          <Toggle
+            className={styles.IconButton}
+            isChecked={isSuspended}
+            onChange={toggleSuspended}
+            title={
+              isSuspended
+                ? 'Unsuspend the selected component'
+                : 'Suspend the selected component'
+            }
+          >
+            <ButtonIcon type="suspend" />
+          </Toggle>
+        )}
         <Button
           className={styles.IconButton}
           onClick={highlightElement}
@@ -264,4 +336,32 @@ function OwnerView({ displayName, id }: { displayName: string, id: number }) {
       {displayName}
     </button>
   );
+}
+
+function CannotSuspendWarningMessage() {
+  const store = useContext(StoreContext);
+  const areSuspenseElementsHidden = !!store.componentFilters.find(
+    filter =>
+      filter.type === ComponentFilterElementType &&
+      filter.value === ElementTypeSuspense &&
+      filter.isEnabled
+  );
+
+  // Has the user filted out Suspense nodes from the tree?
+  // If so, the selected element might actually be in a Suspense tree after all.
+  if (areSuspenseElementsHidden) {
+    return (
+      <div className={styles.CannotSuspendWarningMessage}>
+        Suspended state cannot be toggled while Suspense components are hidden.
+        Disable the filter and try agan.
+      </div>
+    );
+  } else {
+    return (
+      <div className={styles.CannotSuspendWarningMessage}>
+        The selected element is not within a Suspense container. Suspending it
+        would cause an error.
+      </div>
+    );
+  }
 }

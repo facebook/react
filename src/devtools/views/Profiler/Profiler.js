@@ -5,17 +5,13 @@ import {
   CommitFilterModalContext,
   CommitFilterModalContextController,
 } from './CommitFilterModalContext';
-import {
-  ImportFailedModalContext,
-  ImportFailedModalContextController,
-} from './ImportFailedModalContext';
+import { ModalDialog } from '../ModalDialog';
 import { ProfilerContext } from './ProfilerContext';
 import TabBar from '../TabBar';
 import ClearProfilingDataButton from './ClearProfilingDataButton';
 import CommitFlamegraph from './CommitFlamegraph';
 import CommitRanked from './CommitRanked';
 import CommitFilterModal from './CommitFilterModal';
-import ImportFailedModal from './ImportFailedModal';
 import Interactions from './Interactions';
 import RecordToggle from './RecordToggle';
 import ReloadAndProfileButton from './ReloadAndProfileButton';
@@ -40,20 +36,16 @@ function Profiler({ supportsProfiling }: Props) {
 
   if (isProfiling || !rootHasProfilingData) {
     return (
-      <ImportFailedModalContextController>
-        <NonSuspendingProfiler
-          hasProfilingData={hasProfilingData}
-          isProfiling={isProfiling}
-          supportsProfiling={supportsProfiling}
-        />
-      </ImportFailedModalContextController>
+      <NonSuspendingProfiler
+        hasProfilingData={hasProfilingData}
+        isProfiling={isProfiling}
+        supportsProfiling={supportsProfiling}
+      />
     );
   } else {
     return (
       <CommitFilterModalContextController>
-        <ImportFailedModalContextController>
-          <SuspendingProfiler />
-        </ImportFailedModalContextController>
+        <SuspendingProfiler />
       </CommitFilterModalContextController>
     );
   }
@@ -83,10 +75,6 @@ function NonSuspendingProfiler({
     view = <NoProfilingDataForRoot />;
   }
 
-  const { isModalShowing: isImportFailedModalShowing } = useContext(
-    ImportFailedModalContext
-  );
-
   return (
     <div className={styles.Profiler}>
       <div className={styles.LeftColumn}>
@@ -107,7 +95,7 @@ function NonSuspendingProfiler({
         </div>
         <div className={styles.Content}>
           {view}
-          {isImportFailedModalShowing && <ImportFailedModal />}
+          <ModalDialog />
         </div>
       </div>
     </div>
@@ -132,9 +120,6 @@ function SuspendingProfiler() {
 
   const { isModalShowing: isFilterModalShowing } = useContext(
     CommitFilterModalContext
-  );
-  const { isModalShowing: isImportFailedModalShowing } = useContext(
-    ImportFailedModalContext
   );
 
   let view = null;
@@ -195,7 +180,7 @@ function SuspendingProfiler() {
         <div className={styles.Content}>
           <Suspense fallback={<ContentFallback />}>{view}</Suspense>
           {isFilterModalShowing && <CommitFilterModal />}
-          {isImportFailedModalShowing && <ImportFailedModal />}
+          <ModalDialog />
         </div>
       </div>
       <div className={styles.RightColumn}>

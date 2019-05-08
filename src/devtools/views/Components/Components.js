@@ -5,6 +5,7 @@ import Tree from './Tree';
 import SelectedElement from './SelectedElement';
 import { InspectedElementContextController } from './InspectedElementContext';
 import portaledContent from '../portaledContent';
+import { ModalDialog } from '../ModalDialog';
 
 import styles from './Components.css';
 
@@ -22,6 +23,7 @@ function Components(_: {||}) {
           </Suspense>
         </InspectedElementContextController>
       </div>
+      <ModalDialog />
     </div>
   );
 }

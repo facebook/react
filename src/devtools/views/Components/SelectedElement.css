@@ -83,3 +83,7 @@
   color: var(--color-dimmer);
   font-style: italic;
 }
+
+.CannotSuspendWarningMessage {
+  font-size: var(--font-size-sans-large);
+}

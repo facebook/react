@@ -25,6 +25,7 @@ export type IconType =
   | 'save'
   | 'search'
   | 'settings'
+  | 'suspend'
   | 'undo'
   | 'up'
   | 'view-dom'
@@ -100,6 +101,9 @@ export default function ButtonIcon({ className = '', type }: Props) {
       break;
     case 'settings':
       pathData = PATH_SETTINGS;
+      break;
+    case 'suspend':
+      pathData = PATH_SUSPEND;
       break;
     case 'undo':
       pathData = PATH_UNDO;
@@ -210,6 +214,11 @@ const PATH_SETTINGS = `
   1.32c-.04.25-.07.52-.07.78s.02.53.06.78L2.37 12.1c-.15.12-.19.34-.1.51l1.6 2.77c.1.18.31.24.49.18l1.99-.8c.42.32.86.58
   1.35.78l.3 2.12c.04.2.2.34.4.34h3.2c.2 0 .37-.14.39-.34l.3-2.12c.49-.2.94-.47 1.35-.78l1.99.8c.18.07.39 0
   .49-.18l1.6-2.77c.1-.18.06-.39-.1-.51l-1.67-1.32zM10 13c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3z
+`;
+
+const PATH_SUSPEND = `
+  M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97
+  0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z
 `;
 
 const PATH_UNDO = `

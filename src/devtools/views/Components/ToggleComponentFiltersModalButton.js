@@ -8,11 +8,11 @@ import Toggle from '../Toggle';
 import ButtonIcon from '../ButtonIcon';
 import Store from 'src/devtools/store';
 
-import styles from './ToggleCommitFilterModalButton.css';
+import styles from './ToggleComponentFiltersModalButton.css';
 
 import type { ComponentFilter } from 'src/types';
 
-export default function ToggleCommitFilterModalButton() {
+export default function ToggleComponentFiltersModalButton() {
   const store = useContext(StoreContext);
 
   const { isModalShowing, setIsModalShowing } = useContext(

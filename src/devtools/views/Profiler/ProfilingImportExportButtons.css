@@ -16,3 +16,10 @@
   overflow: hidden;
   clip: rect(1px, 1px, 1px, 1px);
 }
+
+.ErrorMessage {
+  margin: 0.5rem 0;
+  color: var(--color-dim);
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-normal);
+}
