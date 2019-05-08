@@ -13,7 +13,6 @@ let ReactTestUtils;
 let SchedulerTracing;
 let act;
 let container;
-let Scheduler;
 
 jest.useRealTimers();
 
@@ -32,7 +31,6 @@ describe('ReactTestUtils.act()', () => {
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
     SchedulerTracing = require('scheduler/tracing');
-    Scheduler = require('scheduler');
     act = ReactTestUtils.act;
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -521,7 +519,6 @@ describe('ReactTestUtils.act()', () => {
       act(() => {
         ReactDOM.unstable_createRoot(el).render(<App />);
       });
-      // Scheduler.flushAll();
       expect(el.innerHTML).toBe('5');
     });
   });
