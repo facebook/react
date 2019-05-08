@@ -159,7 +159,7 @@ function createPressEvent(
     if (nativeEvent.clientX !== undefined) {
       eventObject = (nativeEvent: any);
     } else if (isTouchEvent(nativeEvent)) {
-      eventObject = getTouchEventChangedTouch(nativeEvent);
+      eventObject = getTouchFromPressEvent(nativeEvent);
     }
     if (eventObject) {
       ({clientX, clientY, pageX, pageY, screenX, screenY} = eventObject);
@@ -502,14 +502,13 @@ function isTouchEvent(nativeEvent: Event): boolean {
   return Array.isArray((nativeEvent: any).changedTouches);
 }
 
-function getTouchEventChangedTouch(nativeEvent: TouchEvent): Touch {
-  const touchEvents = nativeEvent.changedTouches;
-  if (touchEvents.length === 0) {
-    throw new Error('TouchEvent does not have any changed touches');
-  }
-  // TODO: we need to support multi-touch in the future, this is a temp
-  // fix for iOS events.
-  return touchEvents[0];
+function getTouchFromPressEvent(nativeEvent: TouchEvent): Touch {
+  const {changedTouches, touches} = event.nativeEvent;
+  return changedTouches.length > 0
+    ? changedTouches[0]
+    : touches.length > 0
+      ? touches[0]
+      : event.nativeEvent;
 }
 
 function getEventPageCoords(
@@ -517,7 +516,7 @@ function getEventPageCoords(
 ): {x: null | number, y: null | number} {
   let eventObject = (nativeEvent: any);
   if (isTouchEvent(eventObject)) {
-    eventObject = getTouchEventChangedTouch(eventObject);
+    eventObject = getTouchFromPressEvent(eventObject);
   }
   const pageX = eventObject.pageX;
   const pageY = eventObject.pageY;
