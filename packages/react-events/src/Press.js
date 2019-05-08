@@ -414,6 +414,8 @@ function getEventPageCoords(
     if (touchEvents.length === 0) {
       throw new Error('TouchEvent does not have any changed touches');
     }
+    // TODO: we need to support multi-touch in the future, this is a temp
+    // fix for iOS events.
     eventObject = touchEvents[0];
   }
   const pageX = eventObject.pageX;
