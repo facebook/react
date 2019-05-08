@@ -155,8 +155,14 @@ function createPressEvent(
     timeStamp = nativeEvent.timeStamp + delay;
     // Only check for one property, checking for all of them is costly. We can assume
     // if clientX exists, so do the rest.
+    let eventObject;
     if (nativeEvent.clientX !== undefined) {
-      ({clientX, clientY, pageX, pageY, screenX, screenY} = (nativeEvent: any));
+      eventObject = (nativeEvent: any);
+    } else if (isTouchEvent(nativeEvent)) {
+      eventObject = getTouchEventChangedTouch(nativeEvent);
+    }
+    if (eventObject) {
+      ({clientX, clientY, pageX, pageY, screenX, screenY} = eventObject);
     }
   }
   return {
@@ -240,14 +246,13 @@ function activate(
   delay: number,
 ) {
   const nativeEvent: any = event.nativeEvent;
-  const pageX = nativeEvent.pageX;
-  const pageY = nativeEvent.pageY;
+  const {x, y} = getEventPageCoords(nativeEvent);
   const wasActivePressed = state.isActivePressed;
   state.isActivePressed = true;
-  if (pageX != null && pageY != null) {
+  if (x !== null && y !== null) {
     state.activationPosition = {
-      pageX: nativeEvent.pageX,
-      pageY: nativeEvent.pageY,
+      pageX: x,
+      pageY: y,
     };
   }
 
@@ -493,12 +498,40 @@ function calculateResponderRegion(
   };
 }
 
+function isTouchEvent(nativeEvent: Event): boolean {
+  return Array.isArray((nativeEvent: any).changedTouches);
+}
+
+function getTouchEventChangedTouch(nativeEvent: TouchEvent): Touch {
+  const touchEvents = nativeEvent.changedTouches;
+  if (touchEvents.length === 0) {
+    throw new Error('TouchEvent does not have any changed touches');
+  }
+  // TODO: we need to support multi-touch in the future, this is a temp
+  // fix for iOS events.
+  return touchEvents[0];
+}
+
+function getEventPageCoords(
+  nativeEvent: Event,
+): {x: null | number, y: null | number} {
+  let eventObject = (nativeEvent: any);
+  if (isTouchEvent(eventObject)) {
+    eventObject = getTouchEventChangedTouch(eventObject);
+  }
+  const pageX = eventObject.pageX;
+  const pageY = eventObject.pageY;
+  return {
+    x: pageX != null ? pageX : null,
+    y: pageY != null ? pageY : null,
+  };
+}
+
 function isPressWithinResponderRegion(
   nativeEvent: $PropertyType<ReactResponderEvent, 'nativeEvent'>,
   state: PressState,
 ): boolean {
   const {responderRegionOnActivation, responderRegionOnDeactivation} = state;
-  const event = (nativeEvent: any);
   let left, top, right, bottom;
 
   if (responderRegionOnActivation != null) {
@@ -514,16 +547,16 @@ function isPressWithinResponderRegion(
       bottom = Math.max(bottom, responderRegionOnDeactivation.bottom);
     }
   }
+  const {x, y} = getEventPageCoords(((nativeEvent: any): Event));
 
   return (
     left != null &&
     right != null &&
     top != null &&
     bottom != null &&
-    (event.pageX >= left &&
-      event.pageX <= right &&
-      event.pageY >= top &&
-      event.pageY <= bottom)
+    x !== null &&
+    y !== null &&
+    (x >= left && x <= right && y >= top && y <= bottom)
   );
 }
 
