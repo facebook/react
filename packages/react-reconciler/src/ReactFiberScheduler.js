@@ -288,7 +288,7 @@ export function computeExpirationForFiber(
     // Compute an expiration time based on the Suspense timeout.
     expirationTime = computeSuspenseExpiration(
       currentTime,
-      suspenseConfig.timeoutMs,
+      suspenseConfig.timeoutMs | 0,
     );
   } else {
     // Compute an expiration time based on the Scheduler priority.
@@ -945,12 +945,13 @@ function renderRoot(
         // track any event times. That can happen if we retried but nothing switched
         // from fallback to content. There's no reason to delay doing no work.
         if (workInProgressRootLatestProcessedExpirationTime !== Sync) {
-          if (workInProgressRootCanSuspendUsingConfig !== null) {
-            // TODO: If needed, suspend here up until workInProgressRootLatestProcessedExpirationTime.
-          }
+          let shouldDelay =
+            workInProgressRootExitStatus === RootSuspendedWithDelay;
           let msUntilTimeout = computeMsUntilTimeout(
             workInProgressRootLatestProcessedExpirationTime,
             expirationTime,
+            workInProgressRootCanSuspendUsingConfig,
+            shouldDelay,
           );
           // Don't bother with a very short suspense time.
           if (msUntilTimeout > 10) {
@@ -989,9 +990,17 @@ export function markRenderEventTimeAndConfig(
     workInProgressRootLatestProcessedExpirationTime = expirationTime;
   }
   if (suspenseConfig !== null) {
-    // For simplicity we pick any config for the minDuration.
     // Most of the time we only have one config and getting wrong is not bad.
-    workInProgressRootCanSuspendUsingConfig = suspenseConfig;
+    // We pick the config with the lowest timeout because we'll use it to
+    // reverse engineer the event time if we end up using JND and we want to
+    // error on the side of suspending less time.
+    if (
+      workInProgressRootCanSuspendUsingConfig === null ||
+      workInProgressRootCanSuspendUsingConfig.timeoutMs <
+        suspenseConfig.timeoutMs
+    ) {
+      workInProgressRootCanSuspendUsingConfig = suspenseConfig;
+    }
   }
 }
 
@@ -1016,11 +1025,19 @@ export function renderDidError() {
   }
 }
 
-function inferTimeFromExpirationTime(expirationTime: ExpirationTime): number {
+function inferTimeFromExpirationTime(
+  expirationTime: ExpirationTime,
+  suspenseConfig: null | SuspenseConfig,
+): number {
   // We don't know exactly when the update was scheduled, but we can infer an
   // approximate start time from the expiration time.
   const earliestExpirationTimeMs = expirationTimeToMs(expirationTime);
-  return earliestExpirationTimeMs - LOW_PRIORITY_EXPIRATION;
+  return (
+    earliestExpirationTimeMs -
+    (suspenseConfig !== null
+      ? suspenseConfig.timeoutMs | 0
+      : LOW_PRIORITY_EXPIRATION)
+  );
 }
 
 function workLoopSync() {
@@ -1938,25 +1955,34 @@ function jnd(timeElapsed: number) {
 function computeMsUntilTimeout(
   mostRecentEventTime: ExpirationTime,
   committedExpirationTime: ExpirationTime,
+  suspenseConfig: null | SuspenseConfig,
+  shouldDelay: boolean,
 ) {
   if (disableYielding) {
     // Timeout immediately when yielding is disabled.
     return 0;
   }
 
-  const eventTimeMs: number = inferTimeFromExpirationTime(mostRecentEventTime);
+  // Compute the time until this render pass would expire.
   const currentTimeMs: number = now();
-  let timeElapsed = currentTimeMs - eventTimeMs;
+  const timeUntilExpirationMs =
+    expirationTimeToMs(committedExpirationTime) - currentTimeMs;
+
+  if (suspenseConfig !== null && shouldDelay) {
+    return timeUntilExpirationMs;
+  }
+
+  const eventTimeMs: number = inferTimeFromExpirationTime(
+    mostRecentEventTime,
+    suspenseConfig,
+  );
+  const timeElapsed = currentTimeMs - eventTimeMs;
   if (timeElapsed < 0) {
     // We get this wrong some time since we estimate the time.
     timeElapsed = 0;
   }
 
   let msUntilTimeout = jnd(timeElapsed) - timeElapsed;
-
-  // Compute the time until this render pass would expire.
-  const timeUntilExpirationMs =
-    expirationTimeToMs(committedExpirationTime) - currentTimeMs;
 
   // Clamp the timeout to the expiration time.
   // TODO: Once the event time is exact instead of inferred from expiration time
