@@ -359,38 +359,6 @@ const eventResponderContext: ReactResponderContext = {
     return focusableElements;
   },
   getActiveDocument,
-  objectAssign: Object.assign,
-  getEventPointerType(
-    event: ReactResponderEvent,
-  ): '' | 'mouse' | 'keyboard' | 'pen' | 'touch' {
-    const nativeEvent: any = event.nativeEvent;
-    const {type, pointerType} = nativeEvent;
-    if (pointerType != null) {
-      return pointerType;
-    }
-    if (type.indexOf('mouse') === 0) {
-      return 'mouse';
-    }
-    if (type.indexOf('touch') === 0) {
-      return 'touch';
-    }
-    if (type.indexOf('key') === 0) {
-      return 'keyboard';
-    }
-    return '';
-  },
-  getEventCurrentTarget(event: ReactResponderEvent): Element {
-    const target: any = event.target;
-    let currentTarget = target;
-    while (
-      currentTarget.parentNode &&
-      currentTarget.parentNode.nodeType === Node.ELEMENT_NODE &&
-      isTargetWithinEventComponent(currentTarget.parentNode)
-    ) {
-      currentTarget = currentTarget.parentNode;
-    }
-    return currentTarget;
-  },
 };
 
 function isTargetWithinEventComponent(target: Element | Document): boolean {
