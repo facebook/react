@@ -4,7 +4,7 @@ flow-typed
 shells/browser/chrome/build
 shells/browser/firefox/build
 shells/browser/shared/build
-shells/dev/build
+shells/dev/dist
 vendor
 
 package-lock.json
