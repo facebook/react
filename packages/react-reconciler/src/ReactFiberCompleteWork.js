@@ -19,6 +19,7 @@ import type {
 } from './ReactFiberHostConfig';
 import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
+import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
 import {
   IndeterminateComponent,
@@ -77,7 +78,12 @@ import {
   getHostContext,
   popHostContainer,
 } from './ReactFiberHostContext';
-import {popSuspenseContext} from './ReactFiberSuspenseContext';
+import {
+  suspenseStackCursor,
+  InvisibleParentSuspenseContext,
+  hasSuspenseContext,
+  popSuspenseContext,
+} from './ReactFiberSuspenseContext';
 import {
   isContextProvider as isLegacyContextProvider,
   popContext as popLegacyContext,
@@ -97,6 +103,7 @@ import {
 import {
   markRenderEventTimeAndConfig,
   renderDidSuspend,
+  renderDidSuspendDelayIfPossible,
 } from './ReactFiberScheduler';
 import {getEventComponentHostChildrenCount} from './ReactFiberEvents';
 import getComponentName from 'shared/getComponentName';
@@ -730,7 +737,21 @@ function completeWork(
         // in the concurrent tree already suspended during this render.
         // This is a known bug.
         if ((workInProgress.mode & BatchedMode) !== NoMode) {
-          renderDidSuspend();
+          if (
+            current === null ||
+            hasSuspenseContext(
+              suspenseStackCursor.current,
+              (InvisibleParentSuspenseContext: SuspenseContext),
+            )
+          ) {
+            // If this was in an invisible tree or a new render, then showing
+            // this boundary is ok.
+            renderDidSuspend();
+          } else {
+            // Otherwise, we're going to have to hide content so we should
+            // suspend for longer if possible.
+            renderDidSuspendDelayIfPossible();
+          }
         }
       }
 

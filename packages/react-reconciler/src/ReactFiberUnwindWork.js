@@ -287,12 +287,6 @@ function throwException(
         workInProgress.effectTag |= ShouldCapture;
         workInProgress.expirationTime = renderExpirationTime;
 
-        if (!hasInvisibleParentBoundary) {
-          // TODO: If we're not in an invisible subtree, then we need to mark this render
-          // pass as needing to suspend for longer to avoid showing this fallback state.
-          // We could do it here or when we render the fallback.
-        }
-
         return;
       } else if (
         enableSuspenseServerRenderer &&

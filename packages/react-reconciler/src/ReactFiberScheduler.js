@@ -186,11 +186,12 @@ const FlushSyncPhase = 3;
 const RenderPhase = 4;
 const CommitPhase = 5;
 
-type RootExitStatus = 0 | 1 | 2 | 3;
+type RootExitStatus = 0 | 1 | 2 | 3 | 4;
 const RootIncomplete = 0;
 const RootErrored = 1;
 const RootSuspended = 2;
-const RootCompleted = 3;
+const RootSuspendedWithDelay = 3;
+const RootCompleted = 4;
 
 export type Thenable = {
   then(resolve: () => mixed, reject?: () => mixed): Thenable | void,
@@ -931,7 +932,8 @@ function renderRoot(
       // errored state.
       return commitRoot.bind(null, root);
     }
-    case RootSuspended: {
+    case RootSuspended:
+    case RootSuspendedWithDelay: {
       if (!isSync) {
         const lastPendingTime = root.lastPendingTime;
         if (root.lastPendingTime < expirationTime) {
@@ -999,11 +1001,17 @@ export function renderDidSuspend(): void {
   }
 }
 
-export function renderDidError() {
+export function renderDidSuspendDelayIfPossible(): void {
   if (
     workInProgressRootExitStatus === RootIncomplete ||
     workInProgressRootExitStatus === RootSuspended
   ) {
+    workInProgressRootExitStatus = RootSuspendedWithDelay;
+  }
+}
+
+export function renderDidError() {
+  if (workInProgressRootExitStatus !== RootCompleted) {
     workInProgressRootExitStatus = RootErrored;
   }
 }
