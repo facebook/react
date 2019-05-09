@@ -53,7 +53,6 @@ import {
   interactiveUpdates,
   flushInteractiveUpdates,
   flushPassiveEffects,
-  hasPendingEffects,
 } from './ReactFiberScheduler';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
@@ -310,7 +309,6 @@ export {
   flushControlled,
   flushSync,
   flushPassiveEffects,
-  hasPendingEffects,
 };
 
 export function getPublicRootInstance(

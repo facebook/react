@@ -31,7 +31,7 @@ const [
   dispatchEvent,
   runEventsInBatch,
   /* eslint-enable no-unused-vars */
-  hasPendingEffects,
+  flushPassiveEffects,
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
 
 const batchedUpdates = ReactDOM.unstable_batchedUpdates;
@@ -41,16 +41,32 @@ const {ReactShouldWarnActingUpdates} = ReactSharedInternals;
 // this implementation should be exactly the same in
 // ReactTestUtilsAct.js, ReactTestRendererAct.js, createReactNoop.js
 
-// we track the 'depth' of the act() calls with this counter,
-// so we can tell if any async act() calls try to run in parallel.
-let actingUpdatesScopeDepth = 0;
+let hasWarnedAboutMissingMockScheduler = false;
+const flushWork =
+  Scheduler.unstable_flushWithoutYielding ||
+  function() {
+    if (!hasWarnedAboutMissingMockScheduler) {
+      warningWithoutStack(
+        null,
+        'Starting from React v17, the "scheduler" module will need to be mocked ' +
+          'to guarantee consistent behaviour across tests and browsers. To fix this, add the following ' +
+          "to the top of your tests, or in your framework's global config file -\n\n" +
+          'As an example, for jest - \n' +
+          "jest.mock('scheduler', () => require.requireActual('scheduler/unstable_mock'));\n\n" +
+          'For more info, visit https://fb.me/react-mock-scheduler',
+      );
+      hasWarnedAboutMissingMockScheduler = true;
+    }
 
-function flushEffectsAndMicroTasks(onDone: (err: ?Error) => void) {
+    while (flushPassiveEffects()) {}
+  };
+
+function flushWorkAndMicroTasks(onDone: (err: ?Error) => void) {
   try {
-    Scheduler.unstable_flushWithoutYielding();
+    flushWork();
     enqueueTask(() => {
-      if (hasPendingEffects()) {
-        flushEffectsAndMicroTasks(onDone);
+      if (flushWork()) {
+        flushWorkAndMicroTasks(onDone);
       } else {
         onDone();
       }
@@ -59,6 +75,11 @@ function flushEffectsAndMicroTasks(onDone: (err: ?Error) => void) {
     onDone(err);
   }
 }
+
+// we track the 'depth' of the act() calls with this counter,
+// so we can tell if any async act() calls try to run in parallel.
+
+let actingUpdatesScopeDepth = 0;
 
 function act(callback: () => Thenable) {
   let previousActingUpdatesScopeDepth;
@@ -120,7 +141,7 @@ function act(callback: () => Thenable) {
         called = true;
         result.then(
           () => {
-            flushEffectsAndMicroTasks((err: ?Error) => {
+            flushWorkAndMicroTasks((err: ?Error) => {
               onDone();
               if (err) {
                 reject(err);
@@ -148,7 +169,7 @@ function act(callback: () => Thenable) {
 
     // flush effects until none remain, and cleanup
     try {
-      Scheduler.unstable_flushWithoutYielding();
+      flushWork();
       onDone();
     } catch (err) {
       onDone();
