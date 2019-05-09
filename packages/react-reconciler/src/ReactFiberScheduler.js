@@ -971,6 +971,27 @@ function renderRoot(
     }
     case RootCompleted: {
       // The work completed. Ready to commit.
+      if (
+        !isSync &&
+        workInProgressRootLatestProcessedExpirationTime !== Sync &&
+        workInProgressRootCanSuspendUsingConfig !== null
+      ) {
+        // If we have exceeded the minimum loading delay, which probably
+        // means we have shown a spinner already, we might have to suspend
+        // a bit longer to ensure that the spinner is shown for enough time.
+        const msUntilTimeout = computeMsUntilSuspenseLoadingDelay(
+          workInProgressRootLatestProcessedExpirationTime,
+          expirationTime,
+          workInProgressRootCanSuspendUsingConfig,
+        );
+        if (msUntilTimeout > 10) {
+          root.timeoutHandle = scheduleTimeout(
+            commitRoot.bind(null, root),
+            msUntilTimeout,
+          );
+          return null;
+        }
+      }
       return commitRoot.bind(null, root);
     }
     default: {
@@ -1952,6 +1973,39 @@ function jnd(timeElapsed: number) {
               : ceil(timeElapsed / 1960) * 1960;
 }
 
+function computeMsUntilSuspenseLoadingDelay(
+  mostRecentEventTime: ExpirationTime,
+  committedExpirationTime: ExpirationTime,
+  suspenseConfig: SuspenseConfig,
+) {
+  if (disableYielding) {
+    // Timeout immediately when yielding is disabled.
+    return 0;
+  }
+
+  const minLoadingDurationMs = (suspenseConfig.minLoadingDurationMs: any) | 0;
+  if (minLoadingDurationMs <= 0) {
+    return 0;
+  }
+  const loadingDelayMs = (suspenseConfig.loadingDelayMs: any) | 0;
+
+  // Compute the time until this render pass would expire.
+  const currentTimeMs: number = now();
+  const eventTimeMs: number = inferTimeFromExpirationTime(
+    mostRecentEventTime,
+    suspenseConfig,
+  );
+  const timeElapsed = currentTimeMs - eventTimeMs;
+  if (timeElapsed <= loadingDelayMs) {
+    // If we haven't yet waited longer than the initial delay, we don't
+    // have to wait any additional time.
+    return 0;
+  }
+  const msUntilTimeout = timeElapsed - loadingDelayMs - minLoadingDurationMs;
+  // This is the value that is passed to `setTimeout`.
+  return msUntilTimeout;
+}
+
 function computeMsUntilTimeout(
   mostRecentEventTime: ExpirationTime,
   committedExpirationTime: ExpirationTime,
@@ -1976,7 +2030,7 @@ function computeMsUntilTimeout(
     mostRecentEventTime,
     suspenseConfig,
   );
-  const timeElapsed = currentTimeMs - eventTimeMs;
+  let timeElapsed = currentTimeMs - eventTimeMs;
   if (timeElapsed < 0) {
     // We get this wrong some time since we estimate the time.
     timeElapsed = 0;
