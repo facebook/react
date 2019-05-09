@@ -288,7 +288,7 @@ export function computeExpirationForFiber(
     // Compute an expiration time based on the Suspense timeout.
     expirationTime = computeSuspenseExpiration(
       currentTime,
-      suspenseConfig.timeoutMs | 0,
+      suspenseConfig.timeoutMs | 0 || LOW_PRIORITY_EXPIRATION,
     );
   } else {
     // Compute an expiration time based on the Scheduler priority.
@@ -1056,7 +1056,7 @@ function inferTimeFromExpirationTime(
   return (
     earliestExpirationTimeMs -
     (suspenseConfig !== null
-      ? suspenseConfig.timeoutMs | 0
+      ? suspenseConfig.timeoutMs | 0 || LOW_PRIORITY_EXPIRATION
       : LOW_PRIORITY_EXPIRATION)
   );
 }
