@@ -64,6 +64,7 @@ type ResponderTimer = {|
   instance: ReactEventComponentInstance,
   func: () => void,
   id: Symbol,
+  timeStamp: number,
 |};
 
 const activeTimeouts: Map<Symbol, ResponderTimeout> = new Map();
@@ -90,6 +91,7 @@ const responderOwners: Map<
 > = new Map();
 let globalOwner = null;
 
+let currentTimeStamp = 0;
 let currentTimers = new Map();
 let currentInstance: null | ReactEventComponentInstance = null;
 let currentEventQueue: null | EventQueue = null;
@@ -101,11 +103,11 @@ const eventResponderContext: ReactResponderContext = {
     {discrete}: ReactResponderDispatchEventOptions,
   ): void {
     validateResponderContext();
-    const {target, type} = possibleEventObject;
+    const {target, type, timeStamp} = possibleEventObject;
 
-    if (target == null || type == null) {
+    if (target == null || type == null || timeStamp == null) {
       throw new Error(
-        'context.dispatchEvent: "target" and "type" fields on event object are required.',
+        'context.dispatchEvent: "target", "timeStamp", and "type" fields on event object are required.',
       );
     }
     if (__DEV__) {
@@ -296,7 +298,7 @@ const eventResponderContext: ReactResponderContext = {
     if (timeout === undefined) {
       const timers = new Map();
       const id = setTimeout(() => {
-        processTimers(timers);
+        processTimers(timers, delay);
       }, delay);
       timeout = {
         id,
@@ -308,6 +310,7 @@ const eventResponderContext: ReactResponderContext = {
       instance: ((currentInstance: any): ReactEventComponentInstance),
       func,
       id: timerId,
+      timeStamp: currentTimeStamp,
     });
     activeTimeouts.set(timerId, timeout);
     return timerId;
@@ -391,6 +394,9 @@ const eventResponderContext: ReactResponderContext = {
     }
     return currentTarget;
   },
+  getTimeStamp(): number {
+    return currentTimeStamp;
+  },
 };
 
 function isTargetWithinEventComponent(target: Element | Document): boolean {
@@ -461,13 +467,17 @@ function isFiberHostComponentFocusable(fiber: Fiber): boolean {
   );
 }
 
-function processTimers(timers: Map<Symbol, ResponderTimer>): void {
+function processTimers(
+  timers: Map<Symbol, ResponderTimer>,
+  delay: number,
+): void {
   const timersArr = Array.from(timers.values());
   currentEventQueue = createEventQueue();
   try {
     for (let i = 0; i < timersArr.length; i++) {
-      const {instance, func, id} = timersArr[i];
+      const {instance, func, id, timeStamp} = timersArr[i];
       currentInstance = instance;
+      currentTimeStamp = timeStamp + delay;
       try {
         func();
       } finally {
@@ -479,6 +489,7 @@ function processTimers(timers: Map<Symbol, ResponderTimer>): void {
     currentTimers = null;
     currentInstance = null;
     currentEventQueue = null;
+    currentTimeStamp = 0;
   }
 }
 
@@ -844,8 +855,11 @@ export function dispatchEventForResponderEventSystem(
     const previousEventQueue = currentEventQueue;
     const previousInstance = currentInstance;
     const previousTimers = currentTimers;
+    const previousTimeStamp = currentTimeStamp;
     currentTimers = null;
     currentEventQueue = createEventQueue();
+    // We might want to control timeStamp another way here
+    currentTimeStamp = (nativeEvent: any).timeStamp;
     try {
       traverseAndHandleEventResponderInstances(
         topLevelType,
@@ -859,6 +873,7 @@ export function dispatchEventForResponderEventSystem(
       currentTimers = previousTimers;
       currentInstance = previousInstance;
       currentEventQueue = previousEventQueue;
+      currentTimeStamp = previousTimeStamp;
     }
   }
 }

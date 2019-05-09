@@ -193,4 +193,5 @@ export type ReactResponderContext = {
     event: ReactResponderEvent,
   ): '' | 'mouse' | 'keyboard' | 'pen' | 'touch',
   getEventCurrentTarget(event: ReactResponderEvent): Element,
+  getTimeStamp: () => number,
 };

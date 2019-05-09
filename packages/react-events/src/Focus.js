@@ -33,6 +33,7 @@ type FocusEventType = 'focus' | 'blur' | 'focuschange' | 'focusvisiblechange';
 type FocusEvent = {|
   target: Element | Document,
   type: FocusEventType,
+  timeStamp: number,
 |};
 
 const targetEventTypes = [
@@ -56,12 +57,14 @@ const rootEventTypes = [
 ];
 
 function createFocusEvent(
+  context: ReactResponderContext,
   type: FocusEventType,
   target: Element | Document,
 ): FocusEvent {
   return {
     target,
     type,
+    timeStamp: context.getTimeStamp(),
   };
 }
 
@@ -72,21 +75,25 @@ function dispatchFocusInEvents(
 ) {
   const target = ((state.focusTarget: any): Element | Document);
   if (props.onFocus) {
-    const syntheticEvent = createFocusEvent('focus', target);
+    const syntheticEvent = createFocusEvent(context, 'focus', target);
     context.dispatchEvent(syntheticEvent, props.onFocus, {discrete: true});
   }
   if (props.onFocusChange) {
     const listener = () => {
       props.onFocusChange(true);
     };
-    const syntheticEvent = createFocusEvent('focuschange', target);
+    const syntheticEvent = createFocusEvent(context, 'focuschange', target);
     context.dispatchEvent(syntheticEvent, listener, {discrete: true});
   }
   if (props.onFocusVisibleChange && state.isLocalFocusVisible) {
     const listener = () => {
       props.onFocusVisibleChange(true);
     };
-    const syntheticEvent = createFocusEvent('focusvisiblechange', target);
+    const syntheticEvent = createFocusEvent(
+      context,
+      'focusvisiblechange',
+      target,
+    );
     context.dispatchEvent(syntheticEvent, listener, {discrete: true});
   }
 }
@@ -98,14 +105,14 @@ function dispatchFocusOutEvents(
 ) {
   const target = ((state.focusTarget: any): Element | Document);
   if (props.onBlur) {
-    const syntheticEvent = createFocusEvent('blur', target);
+    const syntheticEvent = createFocusEvent(context, 'blur', target);
     context.dispatchEvent(syntheticEvent, props.onBlur, {discrete: true});
   }
   if (props.onFocusChange) {
     const listener = () => {
       props.onFocusChange(false);
     };
-    const syntheticEvent = createFocusEvent('focuschange', target);
+    const syntheticEvent = createFocusEvent(context, 'focuschange', target);
     context.dispatchEvent(syntheticEvent, listener, {discrete: true});
   }
   dispatchFocusVisibleOutEvent(context, props, state);
@@ -121,7 +128,11 @@ function dispatchFocusVisibleOutEvent(
     const listener = () => {
       props.onFocusVisibleChange(false);
     };
-    const syntheticEvent = createFocusEvent('focusvisiblechange', target);
+    const syntheticEvent = createFocusEvent(
+      context,
+      'focusvisiblechange',
+      target,
+    );
     context.dispatchEvent(syntheticEvent, listener, {discrete: true});
     state.isLocalFocusVisible = false;
   }

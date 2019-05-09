@@ -40,11 +40,13 @@ type SwipeEventType = 'swipeleft' | 'swiperight' | 'swipeend' | 'swipemove';
 type SwipeEvent = {|
   target: Element | Document,
   type: SwipeEventType,
+  timeStamp: number,
   diffX?: number,
   diffY?: number,
 |};
 
 function createSwipeEvent(
+  context: ReactResponderContext,
   type: SwipeEventType,
   target: Element | Document,
   eventData?: EventData,
@@ -52,6 +54,7 @@ function createSwipeEvent(
   return {
     target,
     type,
+    timeStamp: context.getTimeStamp(),
     ...eventData,
   };
 }
@@ -65,7 +68,7 @@ function dispatchSwipeEvent(
   eventData?: EventData,
 ) {
   const target = ((state.swipeTarget: any): Element | Document);
-  const syntheticEvent = createSwipeEvent(name, target, eventData);
+  const syntheticEvent = createSwipeEvent(context, name, target, eventData);
   context.dispatchEvent(syntheticEvent, listener, {discrete});
 }
 
