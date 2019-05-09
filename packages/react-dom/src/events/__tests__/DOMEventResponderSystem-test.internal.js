@@ -906,6 +906,7 @@ describe('DOMEventResponderSystem', () => {
         const syntheticEvent = {
           target: event.target,
           type: 'click',
+          timeStamp: context.getTimeStamp(),
         };
         context.dispatchEvent(syntheticEvent, props.onClick, {
           discrete: true,
