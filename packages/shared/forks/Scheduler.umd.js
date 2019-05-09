@@ -28,6 +28,9 @@ const {
   unstable_LowPriority,
   unstable_IdlePriority,
   unstable_forceFrameRate,
+
+  // this doesn't actually exist on the scheduler, but it *does*
+  // on scheduler/unstable_mock, which we'll need inside act().
   unstable_flushWithoutYielding,
 } = ReactInternals.Scheduler;
 
