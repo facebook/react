@@ -38,7 +38,7 @@ import Store from '../../store';
 
 import type { Element } from './types';
 
-type StateContext = {|
+export type StateContext = {|
   // Tree
   numElements: number,
   selectedElementID: number | null,
@@ -117,7 +117,7 @@ type Action =
   | ACTION_SET_SEARCH_TEXT
   | ACTION_UPDATE_INSPECTED_ELEMENT_ID;
 
-type DispatcherContext = (action: Action) => void;
+export type DispatcherContext = (action: Action) => void;
 
 const TreeStateContext = createContext<StateContext>(
   ((null: any): StateContext)

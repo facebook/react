@@ -53,15 +53,15 @@ describe('OwnersListContext', () => {
 
   it('should fetch the owners list for the selected element', async done => {
     const Grandparent = () => <Parent />;
-    const Parent = ({ count }) => {
+    const Parent = () => {
       return (
         <React.Fragment>
-          <Child duration={1} />
-          <Child duration={2} />
+          <Child />
+          <Child />
         </React.Fragment>
       );
     };
-    const Child = ({ duration }) => null;
+    const Child = () => null;
 
     utils.act(() =>
       ReactDOM.render(<Grandparent />, document.createElement('div'))
@@ -118,15 +118,15 @@ describe('OwnersListContext', () => {
     store.componentFilters = [utils.createDisplayNameFilter('^Parent$')];
 
     const Grandparent = () => <Parent />;
-    const Parent = ({ count }) => {
+    const Parent = () => {
       return (
         <React.Fragment>
-          <Child duration={1} />
-          <Child duration={2} />
+          <Child />
+          <Child />
         </React.Fragment>
       );
     };
-    const Child = ({ duration }) => null;
+    const Child = () => null;
 
     utils.act(() =>
       ReactDOM.render(<Grandparent />, document.createElement('div'))
