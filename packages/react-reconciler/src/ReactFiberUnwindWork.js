@@ -499,6 +499,12 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
     case ContextProvider:
       popProvider(interruptedWork);
       break;
+    case EventComponent:
+    case EventTarget:
+      if (enableEventAPI) {
+        popHostContext(interruptedWork);
+      }
+      break;
     default:
       break;
   }
