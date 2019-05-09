@@ -128,11 +128,13 @@ const eventResponderContext: ReactResponderContext = {
       possibleEventObject.isPropagationStopped = () => {
         showWarning('isPropagationStopped()');
       };
+      // $FlowFixMe: we don't need value, Flow thinks we do
       Object.defineProperty(possibleEventObject, 'nativeEvent', {
         get() {
           showWarning('nativeEvent');
         },
       });
+      // $FlowFixMe: we don't need value, Flow thinks we do
       Object.defineProperty(possibleEventObject, 'defaultPrevented', {
         get() {
           showWarning('defaultPrevented');
