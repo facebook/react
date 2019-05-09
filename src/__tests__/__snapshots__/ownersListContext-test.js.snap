@@ -1,0 +1,51 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`profiling should fetch the owners list for the selected element that includes filtered components: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+      <Child>
+      <Child>
+`;
+
+exports[`profiling should fetch the owners list for the selected element that includes filtered components: owners for "Child" 1`] = `
+Array [
+  Object {
+    "displayName": "Parent",
+    "id": 9,
+  },
+  Object {
+    "displayName": "Grandparent",
+    "id": 7,
+  },
+]
+`;
+
+exports[`profiling should fetch the owners list for the selected element: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child>
+        <Child>
+`;
+
+exports[`profiling should fetch the owners list for the selected element: owners for "Child" 1`] = `
+Array [
+  Object {
+    "displayName": "Parent",
+    "id": 3,
+  },
+  Object {
+    "displayName": "Grandparent",
+    "id": 2,
+  },
+]
+`;
+
+exports[`profiling should fetch the owners list for the selected element: owners for "Parent" 1`] = `
+Array [
+  Object {
+    "displayName": "Grandparent",
+    "id": 2,
+  },
+]
+`;

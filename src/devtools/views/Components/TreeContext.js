@@ -583,10 +583,15 @@ function reduceSuspenseState(
   return state;
 }
 
-type Props = {| children: React$Node |};
+type Props = {|
+  children: React$Node,
+
+  // Used for automated testing
+  defaultOwnerID?: ?number,
+|};
 
 // TODO Remove TreeContextController wrapper element once global ConsearchText.write API exists.
-function TreeContextController({ children }: Props) {
+function TreeContextController({ children, defaultOwnerID }: Props) {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
@@ -650,7 +655,7 @@ function TreeContextController({ children }: Props) {
     searchText: '',
 
     // Owners
-    ownerID: null,
+    ownerID: defaultOwnerID == null ? null : defaultOwnerID,
     ownerFlatTree: null,
 
     // Inspection element panel
