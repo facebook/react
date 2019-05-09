@@ -422,6 +422,7 @@ describe('DOMEventResponderSystem', () => {
             target: event.target,
             type: 'magicclick',
             phase: 'bubble',
+            timeStamp: context.getTimeStamp(),
           };
           context.dispatchEvent(syntheticEvent, props.onMagicClick, {
             discrete: true,
@@ -434,6 +435,7 @@ describe('DOMEventResponderSystem', () => {
             target: event.target,
             type: 'magicclick',
             phase: 'capture',
+            timeStamp: context.getTimeStamp(),
           };
           context.dispatchEvent(syntheticEvent, props.onMagicClick, {
             discrete: true,
@@ -477,6 +479,7 @@ describe('DOMEventResponderSystem', () => {
         target: event.target,
         type: 'press',
         phase,
+        timeStamp: context.getTimeStamp(),
       };
       context.dispatchEvent(pressEvent, props.onPress, {discrete: true});
 
@@ -486,6 +489,7 @@ describe('DOMEventResponderSystem', () => {
             target: event.target,
             type: 'longpress',
             phase,
+            timeStamp: context.getTimeStamp(),
           };
           context.dispatchEvent(longPressEvent, props.onLongPress, {
             discrete: true,
@@ -497,6 +501,7 @@ describe('DOMEventResponderSystem', () => {
             target: event.target,
             type: 'longpresschange',
             phase,
+            timeStamp: context.getTimeStamp(),
           };
           context.dispatchEvent(longPressChangeEvent, props.onLongPressChange, {
             discrete: true,
@@ -901,6 +906,7 @@ describe('DOMEventResponderSystem', () => {
         const syntheticEvent = {
           target: event.target,
           type: 'click',
+          timeStamp: context.getTimeStamp(),
         };
         context.dispatchEvent(syntheticEvent, props.onClick, {
           discrete: true,
