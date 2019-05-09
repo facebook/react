@@ -4,7 +4,7 @@ This repo is a work-in-progress rewrite of the [React DevTools extension](https:
 
 Installation instructions are available online as well:
 * [Chrome](https://react-devtools-experimental-chrome.now.sh/)
-* [Firefox](https://react-devtools-experimental-firefox.now.sh/).
+* [Firefox](https://react-devtools-experimental-firefox.now.sh/)
 
 Or you can build and install from source:
 ```sh
