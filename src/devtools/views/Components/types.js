@@ -35,6 +35,11 @@ export type Owner = {|
   id: number,
 |};
 
+export type OwnersList = {|
+  id: number,
+  owners: Array<Owner> | null,
+|};
+
 export type InspectedElement = {|
   id: number,
 

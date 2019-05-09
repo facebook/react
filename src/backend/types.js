@@ -1,7 +1,10 @@
 // @flow
 
 import type { ComponentFilter, ElementType } from 'src/types';
-import type { InspectedElement } from 'src/devtools/views/Components/types';
+import type {
+  InspectedElement,
+  Owner,
+} from 'src/devtools/views/Components/types';
 
 type BundleType =
   | 0 // PROD
@@ -175,6 +178,7 @@ export type RendererInterface = {
   ) => number | null,
   getFiberCommits: (rootID: number, fiberID: number) => FiberCommitsBackend,
   getInteractions: (rootID: number) => InteractionsBackend,
+  getOwnersList: (id: number) => Array<Owner> | null,
   getProfilingDataForDownload: (rootID: number) => Object,
   getProfilingSummary: (rootID: number) => ProfilingSummaryBackend,
   getPathForElement: (id: number) => Array<PathFrame> | null,

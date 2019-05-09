@@ -91,3 +91,8 @@
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-monospace-normal);
 }
+
+.NotInStore,
+.NotInStore:hover {
+  color: var(--color-dimmest);
+}

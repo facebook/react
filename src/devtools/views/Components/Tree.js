@@ -1,6 +1,7 @@
 // @flow
 
 import React, {
+  Suspense,
   useState,
   useCallback,
   useContext,
@@ -38,7 +39,7 @@ export default function Tree(props: Props) {
   const dispatch = useContext(TreeDispatcherContext);
   const {
     numElements,
-    ownerStack,
+    ownerID,
     searchIndex,
     searchResults,
     selectedElementID,
@@ -277,7 +278,9 @@ export default function Tree(props: Props) {
         <div className={styles.SearchInput}>
           <InspectHostNodesToggle />
           <div className={styles.VRule} />
-          {ownerStack.length > 0 ? <OwnersStack /> : <SearchInput />}
+          <Suspense fallback={<Loading />}>
+            {ownerID !== null ? <OwnersStack /> : <SearchInput />}
+          </Suspense>
           <div className={styles.VRule} />
           <ToggleComponentFiltersModalButton />
         </div>
@@ -317,7 +320,7 @@ export default function Tree(props: Props) {
 }
 
 function InnerElementType({ style, ...rest }) {
-  const { ownerStack } = useContext(TreeStateContext);
+  const { ownerID } = useContext(TreeStateContext);
 
   // The list may need to scroll horizontally due to deeply nested elements.
   // We don't know the maximum scroll width up front, because we're windowing.
@@ -346,10 +349,9 @@ function InnerElementType({ style, ...rest }) {
 
   // We shouldn't retain this width across different conceptual trees though,
   // so when the user opens the "owners tree" view, we should discard the previous width.
-  const hasOwnerStack = ownerStack.length > 0;
-  const [prevHasOwnerStack, setPrevHasOwnerStack] = useState(hasOwnerStack);
-  if (hasOwnerStack !== prevHasOwnerStack) {
-    setPrevHasOwnerStack(hasOwnerStack);
+  const [prevOwnerID, setPrevOwnerID] = useState(ownerID);
+  if (ownerID !== prevOwnerID) {
+    setPrevOwnerID(ownerID);
     setMinWidth(null);
   }
 
@@ -370,4 +372,8 @@ function InnerElementType({ style, ...rest }) {
       {...rest}
     />
   );
+}
+
+function Loading() {
+  return <div className={styles.Loading}>Loading...</div>;
 }
