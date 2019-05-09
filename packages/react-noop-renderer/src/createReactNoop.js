@@ -649,11 +649,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   // this act() implementation should be exactly the same in
   // ReactTestUtilsAct.js, ReactTestRendererAct.js, createReactNoop.js
+
   let hasWarnedAboutMissingMockScheduler = false;
   const flushWork =
     Scheduler.unstable_flushWithoutYielding ||
     function() {
-      if (!hasWarnedAboutMissingMockScheduler) {
+      if (hasWarnedAboutMissingMockScheduler === false) {
         warningWithoutStack(
           null,
           'Starting from React v17, the "scheduler" module will need to be mocked ' +

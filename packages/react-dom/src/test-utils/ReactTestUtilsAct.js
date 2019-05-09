@@ -45,7 +45,7 @@ let hasWarnedAboutMissingMockScheduler = false;
 const flushWork =
   Scheduler.unstable_flushWithoutYielding ||
   function() {
-    if (!hasWarnedAboutMissingMockScheduler) {
+    if (hasWarnedAboutMissingMockScheduler === false) {
       warningWithoutStack(
         null,
         'Starting from React v17, the "scheduler" module will need to be mocked ' +
