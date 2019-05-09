@@ -889,4 +889,98 @@ describe('DOMEventResponderSystem', () => {
 
     ReactDOM.render(<Test />, container);
   });
+
+  it('the event responder system should warn on accessing invalid properties', () => {
+    const ClickEventComponent = createReactEventComponent(
+      undefined,
+      ['click'],
+      undefined,
+      undefined,
+      undefined,
+      (event, context, props) => {
+        const syntheticEvent = {
+          target: event.target,
+          type: 'click',
+        };
+        context.dispatchEvent(syntheticEvent, props.onClick, {
+          discrete: true,
+        });
+      },
+    );
+
+    let handler;
+    const Test = () => (
+      <ClickEventComponent onClick={handler}>
+        <button>Click me!</button>
+      </ClickEventComponent>
+    );
+    expect(() => {
+      handler = event => {
+        event.preventDefault();
+      };
+      ReactDOM.render(<Test />, container);
+      dispatchClickEvent(document.body);
+    }).toWarnDev(
+      'Warning: preventDefault() is not available on event objects created ' +
+        'from event responder modules (React Flare).',
+      {withoutStack: true},
+    );
+    expect(() => {
+      handler = event => {
+        event.stopPropagation();
+      };
+      ReactDOM.render(<Test />, container);
+      dispatchClickEvent(document.body);
+    }).toWarnDev(
+      'Warning: stopPropagation() is not available on event objects created ' +
+        'from event responder modules (React Flare).',
+      {withoutStack: true},
+    );
+    expect(() => {
+      handler = event => {
+        event.isDefaultPrevented();
+      };
+      ReactDOM.render(<Test />, container);
+      dispatchClickEvent(document.body);
+    }).toWarnDev(
+      'Warning: isDefaultPrevented() is not available on event objects created ' +
+        'from event responder modules (React Flare).',
+      {withoutStack: true},
+    );
+    expect(() => {
+      handler = event => {
+        event.isPropagationStopped();
+      };
+      ReactDOM.render(<Test />, container);
+      dispatchClickEvent(document.body);
+    }).toWarnDev(
+      'Warning: isPropagationStopped() is not available on event objects created ' +
+        'from event responder modules (React Flare).',
+      {withoutStack: true},
+    );
+    expect(() => {
+      handler = event => {
+        return event.nativeEvent;
+      };
+      ReactDOM.render(<Test />, container);
+      dispatchClickEvent(document.body);
+    }).toWarnDev(
+      'Warning: nativeEvent is not available on event objects created ' +
+        'from event responder modules (React Flare).',
+      {withoutStack: true},
+    );
+    expect(() => {
+      handler = event => {
+        return event.defaultPrevented;
+      };
+      ReactDOM.render(<Test />, container);
+      dispatchClickEvent(document.body);
+    }).toWarnDev(
+      'Warning: defaultPrevented is not available on event objects created ' +
+        'from event responder modules (React Flare).',
+      {withoutStack: true},
+    );
+
+    expect(container.innerHTML).toBe('<button>Click me!</button>');
+  });
 });
