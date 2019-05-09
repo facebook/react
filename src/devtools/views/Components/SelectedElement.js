@@ -306,6 +306,7 @@ function InspectedElementView({
               key={owner.id}
               displayName={owner.displayName}
               id={owner.id}
+              isInStore={store.containsElement(owner.id)}
             />
           ))}
         </div>
@@ -314,7 +315,9 @@ function InspectedElementView({
   );
 }
 
-function OwnerView({ displayName, id }: { displayName: string, id: number }) {
+type OwnerViewProps = {| displayName: string, id: number, isInStore: boolean |};
+
+function OwnerView({ displayName, id, isInStore }: OwnerViewProps) {
   const dispatch = useContext(TreeDispatcherContext);
 
   const handleClick = useCallback(
@@ -329,7 +332,8 @@ function OwnerView({ displayName, id }: { displayName: string, id: number }) {
   return (
     <button
       key={id}
-      className={styles.Owner}
+      className={`${styles.Owner} ${isInStore ? '' : styles.NotInStore}`}
+      disabled={!isInStore}
       onClick={handleClick}
       title={displayName}
     >

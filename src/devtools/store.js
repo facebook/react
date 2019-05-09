@@ -377,6 +377,10 @@ export default class Store extends EventEmitter {
     this.emit('isProfiling');
   }
 
+  containsElement(id: number): boolean {
+    return this._idToElement.get(id) != null;
+  }
+
   getElementAtIndex(index: number): Element | null {
     if (index < 0 || index >= this.numElements) {
       console.warn(

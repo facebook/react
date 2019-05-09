@@ -87,3 +87,8 @@
 .CannotSuspendWarningMessage {
   font-size: var(--font-size-sans-large);
 }
+
+.NotInStore {
+  color: var(--color-dim);
+  cursor: default;
+}
