@@ -726,13 +726,12 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Async')]);
   });
 
-  // TODO: This cannot be tested until we have a way to long-suspend navigations.
-  it.skip('starts working on an update even if its priority falls between two suspended levels', async () => {
+  it('starts working on an update even if its priority falls between two suspended levels', async () => {
     function App(props) {
       return (
         <Suspense fallback={<Text text="Loading..." />}>
-          {props.text === 'C' ? (
-            <Text text="C" />
+          {props.text === 'C' || props.text === 'S' ? (
+            <Text text={props.text} />
           ) : (
             <AsyncText text={props.text} ms={10000} />
           )}
@@ -740,30 +739,36 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       );
     }
 
-    // Schedule an update
-    ReactNoop.render(<App text="A" />);
+    // First mount without suspending. This ensures we already have content
+    // showing so that subsequent updates will suspend.
+    ReactNoop.render(<App text="S" />);
+    expect(Scheduler).toFlushAndYield(['S']);
+
+    // Schedule an update, and suspend for up to 5 seconds.
+    React.unstable_suspendIfNeeded(() => ReactNoop.render(<App text="A" />), {
+      timeoutMs: 5000,
+    });
     // The update should suspend.
     expect(Scheduler).toFlushAndYield(['Suspend! [A]', 'Loading...']);
-    expect(ReactNoop.getChildren()).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([span('S')]);
 
-    // Advance time until right before it expires. This number may need to
-    // change if the default expiration for low priority updates is adjusted.
+    // Advance time until right before it expires.
     await advanceTimers(4999);
     ReactNoop.expire(4999);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(ReactNoop.getChildren()).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([span('S')]);
 
     // Schedule another low priority update.
-    ReactNoop.render(<App text="B" />);
+    React.unstable_suspendIfNeeded(() => ReactNoop.render(<App text="B" />), {
+      timeoutMs: 10000,
+    });
     // This update should also suspend.
     expect(Scheduler).toFlushAndYield(['Suspend! [B]', 'Loading...']);
-    expect(ReactNoop.getChildren()).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([span('S')]);
 
-    // Schedule a high priority update. Its expiration time will fall between
+    // Schedule a regular update. Its expiration time will fall between
     // the expiration times of the previous two updates.
-    ReactNoop.interactiveUpdates(() => {
-      ReactNoop.render(<App text="C" />);
-    });
+    ReactNoop.render(<App text="C" />);
     expect(Scheduler).toFlushAndYield(['C']);
     expect(ReactNoop.getChildren()).toEqual([span('C')]);
 
