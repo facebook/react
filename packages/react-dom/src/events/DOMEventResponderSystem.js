@@ -109,20 +109,37 @@ const eventResponderContext: ReactResponderContext = {
       );
     }
     if (__DEV__) {
-      possibleEventObject.preventDefault = () => {
-        // Update this warning when we have a story around dealing with preventDefault
+      const showWarning = name => {
         warning(
           false,
-          'preventDefault() is no longer available on event objects created from event responder modules.',
+          '%s is not available on event objects created from event responder modules (React Flare).',
+          name,
         );
+      };
+      possibleEventObject.preventDefault = () => {
+        showWarning('preventDefault()');
       };
       possibleEventObject.stopPropagation = () => {
-        // Update this warning when we have a story around dealing with stopPropgation
-        warning(
-          false,
-          'stopPropagation() is no longer available on event objects created from event responder modules.',
-        );
+        showWarning('stopPropagation()');
       };
+      possibleEventObject.isDefaultPrevented = () => {
+        showWarning('isDefaultPrevented()');
+      };
+      possibleEventObject.isPropagationStopped = () => {
+        showWarning('isPropagationStopped()');
+      };
+      // $FlowFixMe: we don't need value, Flow thinks we do
+      Object.defineProperty(possibleEventObject, 'nativeEvent', {
+        get() {
+          showWarning('nativeEvent');
+        },
+      });
+      // $FlowFixMe: we don't need value, Flow thinks we do
+      Object.defineProperty(possibleEventObject, 'defaultPrevented', {
+        get() {
+          showWarning('defaultPrevented');
+        },
+      });
     }
     const eventObject = ((possibleEventObject: any): $Shape<
       PartialEventObject,
