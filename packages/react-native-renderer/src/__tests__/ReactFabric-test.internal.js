@@ -36,15 +36,17 @@ describe('ReactFabric', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.warnAboutDeprecatedSetNativeProps = true;
     ReactFabric = require('react-native-renderer/fabric');
-    FabricUIManager = require('FabricUIManager');
-    UIManager = require('UIManager');
+    FabricUIManager = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
+      .FabricUIManager;
+    UIManager = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
+      .UIManager;
     createReactClass = require('create-react-class/factory')(
       React.Component,
       React.isValidElement,
       new React.Component().updater,
     );
-    createReactNativeComponentClass = require('ReactNativeViewConfigRegistry')
-      .register;
+    createReactNativeComponentClass = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
+      .ReactNativeViewConfigRegistry.register;
     NativeMethodsMixin =
       ReactFabric.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
         .NativeMethodsMixin;

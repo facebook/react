@@ -14,7 +14,7 @@
  * TODO: require this in packager, not in React #10932517
  */
 // Module provided by RN:
-import 'InitializeCore';
+import 'react-native/Libraries/ReactPrivate/ReactNativePrivateInitializeCore';
 
 import {injection as EventPluginHubInjection} from 'events/EventPluginHub';
 import ResponderEventPlugin from 'events/ResponderEventPlugin';

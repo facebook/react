@@ -33,7 +33,7 @@ import {
 } from 'events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';
 // Module provided by RN:
-import UIManager from 'UIManager';
+import {UIManager} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 import NativeMethodsMixin from './NativeMethodsMixin';
 import ReactNativeComponent from './ReactNativeComponent';

@@ -20,16 +20,17 @@ describe('ReactFabric', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactNative = require('react-native-renderer');
-    UIManager = require('UIManager');
     jest.resetModules();
+    UIManager = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
+      .UIManager;
     jest.mock('shared/ReactFeatureFlags', () =>
       require('shared/forks/ReactFeatureFlags.native-oss'),
     );
 
     React = require('react');
     ReactFabric = require('react-native-renderer/fabric');
-    createReactNativeComponentClass = require('ReactNativeViewConfigRegistry')
-      .register;
+    createReactNativeComponentClass = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
+      .ReactNativeViewConfigRegistry.register;
   });
 
   it('find Fabric nodes with the RN renderer', () => {

@@ -17,8 +17,10 @@ import type {
 
 import invariant from 'shared/invariant';
 // Modules provided by RN:
-import TextInputState from 'TextInputState';
-import UIManager from 'UIManager';
+import {
+  TextInputState,
+  UIManager,
+} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 import {create} from './ReactNativeAttributePayload';
 import {

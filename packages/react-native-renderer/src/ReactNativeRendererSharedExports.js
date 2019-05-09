@@ -13,7 +13,7 @@ import {warnForStyleProps} from './NativeMethodsMixinUtils';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
 // Module provided by RN:
-import UIManager from 'UIManager';
+import {UIManager} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 export function setNativeProps(handle: any, nativeProps: Object): void {
   if (handle._nativeTag == null) {

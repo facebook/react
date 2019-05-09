@@ -25,8 +25,8 @@ describe('ReactNativeError', () => {
 
     React = require('react');
     ReactNative = require('react-native-renderer');
-    createReactNativeComponentClass = require('ReactNativeViewConfigRegistry')
-      .register;
+    createReactNativeComponentClass = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
+      .ReactNativeViewConfigRegistry.register;
     computeComponentStackForErrorReporting =
       ReactNative.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
         .computeComponentStackForErrorReporting;
