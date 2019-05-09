@@ -1,13 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`profiling should fetch the owners list for the selected element that includes filtered components: mount 1`] = `
+exports[`OwnersListContext should fetch the owners list for the selected element that includes filtered components: mount 1`] = `
 [root]
   ▾ <Grandparent>
       <Child>
       <Child>
 `;
 
-exports[`profiling should fetch the owners list for the selected element that includes filtered components: owners for "Child" 1`] = `
+exports[`OwnersListContext should fetch the owners list for the selected element that includes filtered components: owners for "Child" 1`] = `
 Array [
   Object {
     "displayName": "Parent",
@@ -20,7 +20,7 @@ Array [
 ]
 `;
 
-exports[`profiling should fetch the owners list for the selected element: mount 1`] = `
+exports[`OwnersListContext should fetch the owners list for the selected element: mount 1`] = `
 [root]
   ▾ <Grandparent>
     ▾ <Parent>
@@ -28,7 +28,7 @@ exports[`profiling should fetch the owners list for the selected element: mount 
         <Child>
 `;
 
-exports[`profiling should fetch the owners list for the selected element: owners for "Child" 1`] = `
+exports[`OwnersListContext should fetch the owners list for the selected element: owners for "Child" 1`] = `
 Array [
   Object {
     "displayName": "Parent",
@@ -41,7 +41,7 @@ Array [
 ]
 `;
 
-exports[`profiling should fetch the owners list for the selected element: owners for "Parent" 1`] = `
+exports[`OwnersListContext should fetch the owners list for the selected element: owners for "Parent" 1`] = `
 Array [
   Object {
     "displayName": "Grandparent",

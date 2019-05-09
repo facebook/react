@@ -5,7 +5,7 @@ import type { Element } from 'src/devtools/views/Components/types';
 import type Bridge from 'src/bridge';
 import type Store from 'src/devtools/store';
 
-describe('profiling', () => {
+describe('OwnersListContext', () => {
   let React;
   let ReactDOM;
   let TestRenderer: ReactTestRenderer;
