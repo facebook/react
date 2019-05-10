@@ -91,6 +91,12 @@ type PressEvent = {|
   pageY: null | number,
   screenX: null | number,
   screenY: null | number,
+  x: null | number,
+  y: null | number,
+  altKey: boolean,
+  ctrlKey: boolean,
+  metaKey: boolean,
+  shiftKey: boolean,
 |};
 
 const DEFAULT_PRESS_END_DELAY_MS = 0;
@@ -148,9 +154,14 @@ function createPressEvent(
   let pageY = null;
   let screenX = null;
   let screenY = null;
+  let altKey = false;
+  let ctrlKey = false;
+  let metaKey = false;
+  let shiftKey = false;
 
   if (event) {
     const nativeEvent = (event.nativeEvent: any);
+    ({altKey, ctrlKey, metaKey, shiftKey} = nativeEvent);
     // Only check for one property, checking for all of them is costly. We can assume
     // if clientX exists, so do the rest.
     let eventObject;
@@ -174,6 +185,12 @@ function createPressEvent(
     pageY,
     screenX,
     screenY,
+    x: clientX,
+    y: clientY,
+    altKey,
+    ctrlKey,
+    metaKey,
+    shiftKey,
   };
 }
 
@@ -657,10 +674,21 @@ const PressResponder = {
 
       case 'click': {
         if (isAnchorTagElement(target)) {
-          const {ctrlKey, metaKey, shiftKey} = (nativeEvent: MouseEvent);
+          const {
+            altKey,
+            ctrlKey,
+            metaKey,
+            shiftKey,
+          } = (nativeEvent: MouseEvent);
           // Check "open in new window/tab" and "open context menu" key modifiers
           const preventDefault = props.preventDefault;
-          if (preventDefault !== false && !shiftKey && !metaKey && !ctrlKey) {
+          if (
+            preventDefault !== false &&
+            !shiftKey &&
+            !metaKey &&
+            !ctrlKey &&
+            !altKey
+          ) {
             nativeEvent.preventDefault();
           }
         }

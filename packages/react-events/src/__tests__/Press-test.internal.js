@@ -307,6 +307,29 @@ describe('Event responder: Press', () => {
       expect(onPressEnd).not.toBeCalled();
     });
 
+    it('is called with keyboard modifiers', () => {
+      ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: 'Enter'}));
+      ref.current.dispatchEvent(
+        createKeyboardEvent('keyup', {
+          key: 'Enter',
+          metaKey: true,
+          ctrlKey: true,
+          altKey: true,
+          shiftKey: true,
+        }),
+      );
+      expect(onPressEnd).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pointerType: 'keyboard',
+          type: 'pressend',
+          metaKey: true,
+          ctrlKey: true,
+          altKey: true,
+          shiftKey: true,
+        }),
+      );
+    });
+
     // No PointerEvent fallbacks
     it('is called after "mouseup" event', () => {
       ref.current.dispatchEvent(createEvent('mousedown'));
