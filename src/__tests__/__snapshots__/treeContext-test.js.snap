@@ -1,5 +1,251 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`TreeListContext owners state should exit the owners list if the current owner is unmounted: 0: mount 1`] = `
+[root]
+  ▾ <Parent>
+      <Child>
+`;
+
+exports[`TreeListContext owners state should exit the owners list if the current owner is unmounted: 1: initial state 1`] = `
+Object {
+  "inspectedElementID": null,
+  "numElements": 2,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": null,
+  "selectedElementIndex": null,
+}
+`;
+
+exports[`TreeListContext owners state should exit the owners list if the current owner is unmounted: 2: child owners tree 1`] = `
+Object {
+  "inspectedElementID": 3,
+  "numElements": 1,
+  "ownerFlatTree": Array [
+    Object {
+      "children": Array [],
+      "depth": 0,
+      "displayName": "Child",
+      "id": 3,
+      "isCollapsed": false,
+      "key": null,
+      "ownerID": 0,
+      "parentID": 2,
+      "type": 5,
+      "weight": 1,
+    },
+  ],
+  "ownerID": 3,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 3,
+  "selectedElementIndex": 0,
+}
+`;
+
+exports[`TreeListContext owners state should exit the owners list if the current owner is unmounted: 3: remove child 1`] = `
+Object {
+  "inspectedElementID": null,
+  "numElements": 1,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": null,
+  "selectedElementIndex": 0,
+}
+`;
+
+exports[`TreeListContext owners state should exit the owners list if the current owner is unmounted: 4: parent owners tree 1`] = `
+Object {
+  "inspectedElementID": 2,
+  "numElements": 1,
+  "ownerFlatTree": Array [
+    Object {
+      "children": Array [],
+      "depth": 0,
+      "displayName": "Parent",
+      "id": 2,
+      "isCollapsed": false,
+      "key": null,
+      "ownerID": 0,
+      "parentID": 1,
+      "type": 5,
+      "weight": 1,
+    },
+  ],
+  "ownerID": 2,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 2,
+  "selectedElementIndex": 0,
+}
+`;
+
+exports[`TreeListContext owners state should exit the owners list if the current owner is unmounted: 5: unmount root 1`] = `
+Object {
+  "inspectedElementID": null,
+  "numElements": 0,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": null,
+  "selectedElementIndex": 0,
+}
+`;
+
+exports[`TreeListContext owners state should remove an element from the owners list if it is unmounted: 0: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+`;
+
+exports[`TreeListContext owners state should remove an element from the owners list if it is unmounted: 1: initial state 1`] = `
+Object {
+  "inspectedElementID": null,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": null,
+  "selectedElementIndex": null,
+}
+`;
+
+exports[`TreeListContext owners state should remove an element from the owners list if it is unmounted: 2: parent owners tree 1`] = `
+Object {
+  "inspectedElementID": 3,
+  "numElements": 3,
+  "ownerFlatTree": Array [
+    Object {
+      "children": Array [
+        4,
+        5,
+      ],
+      "depth": 0,
+      "displayName": "Parent",
+      "id": 3,
+      "isCollapsed": false,
+      "key": null,
+      "ownerID": 2,
+      "parentID": 2,
+      "type": 5,
+      "weight": 3,
+    },
+    Object {
+      "children": Array [],
+      "depth": 1,
+      "displayName": "Child",
+      "id": 4,
+      "isCollapsed": false,
+      "key": "0",
+      "ownerID": 3,
+      "parentID": 3,
+      "type": 5,
+      "weight": 1,
+    },
+    Object {
+      "children": Array [],
+      "depth": 1,
+      "displayName": "Child",
+      "id": 5,
+      "isCollapsed": false,
+      "key": "1",
+      "ownerID": 3,
+      "parentID": 3,
+      "type": 5,
+      "weight": 1,
+    },
+  ],
+  "ownerID": 3,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 3,
+  "selectedElementIndex": 0,
+}
+`;
+
+exports[`TreeListContext owners state should remove an element from the owners list if it is unmounted: 3: remove second child 1`] = `
+Object {
+  "inspectedElementID": 3,
+  "numElements": 2,
+  "ownerFlatTree": Array [
+    Object {
+      "children": Array [
+        4,
+      ],
+      "depth": 0,
+      "displayName": "Parent",
+      "id": 3,
+      "isCollapsed": false,
+      "key": null,
+      "ownerID": 2,
+      "parentID": 2,
+      "type": 5,
+      "weight": 2,
+    },
+    Object {
+      "children": Array [],
+      "depth": 1,
+      "displayName": "Child",
+      "id": 4,
+      "isCollapsed": false,
+      "key": "0",
+      "ownerID": 3,
+      "parentID": 3,
+      "type": 5,
+      "weight": 1,
+    },
+  ],
+  "ownerID": 3,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 3,
+  "selectedElementIndex": 0,
+}
+`;
+
+exports[`TreeListContext owners state should remove an element from the owners list if it is unmounted: 4: remove first child 1`] = `
+Object {
+  "inspectedElementID": 3,
+  "numElements": 1,
+  "ownerFlatTree": Array [
+    Object {
+      "children": Array [],
+      "depth": 0,
+      "displayName": "Parent",
+      "id": 3,
+      "isCollapsed": false,
+      "key": null,
+      "ownerID": 2,
+      "parentID": 2,
+      "type": 5,
+      "weight": 1,
+    },
+  ],
+  "ownerID": 3,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 3,
+  "selectedElementIndex": 0,
+}
+`;
+
 exports[`TreeListContext owners state should support entering and existing the owners tree view: 0: mount 1`] = `
 [root]
   ▾ <Grandparent>
@@ -427,6 +673,70 @@ Object {
   "searchText": "ba",
   "selectedElementID": 3,
   "selectedElementIndex": 1,
+}
+`;
+
+exports[`TreeListContext tree state should clear selection if the selected element is unmounted: 0: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child>
+        <Child>
+`;
+
+exports[`TreeListContext tree state should clear selection if the selected element is unmounted: 1: initial state 1`] = `
+Object {
+  "inspectedElementID": null,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": null,
+  "selectedElementIndex": null,
+}
+`;
+
+exports[`TreeListContext tree state should clear selection if the selected element is unmounted: 2: select second child 1`] = `
+Object {
+  "inspectedElementID": 5,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 5,
+  "selectedElementIndex": 3,
+}
+`;
+
+exports[`TreeListContext tree state should clear selection if the selected element is unmounted: 3: remove children (parent should now be selected) 1`] = `
+Object {
+  "inspectedElementID": 3,
+  "numElements": 2,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 3,
+  "selectedElementIndex": 1,
+}
+`;
+
+exports[`TreeListContext tree state should clear selection if the selected element is unmounted: 4: unmount root (nothing should be selected) 1`] = `
+Object {
+  "inspectedElementID": null,
+  "numElements": 0,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": null,
+  "selectedElementIndex": null,
 }
 `;
 

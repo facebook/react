@@ -213,6 +213,56 @@ describe('TreeListContext', () => {
       utils.act(() => renderer.update(<Contexts />));
       expect(state).toEqual(previousState);
     });
+
+    it('should clear selection if the selected element is unmounted', async done => {
+      const Grandparent = props => props.children || null;
+      const Parent = props => props.children || null;
+      const Child = () => null;
+
+      const container = document.createElement('div');
+      utils.act(() =>
+        ReactDOM.render(
+          <Grandparent>
+            <Parent>
+              <Child />
+              <Child />
+            </Parent>
+          </Grandparent>,
+          container
+        )
+      );
+
+      expect(store).toMatchSnapshot('0: mount');
+
+      let renderer;
+      utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
+      expect(state).toMatchSnapshot('1: initial state');
+
+      utils.act(() =>
+        dispatch({ type: 'SELECT_ELEMENT_AT_INDEX', payload: 3 })
+      );
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state).toMatchSnapshot('2: select second child');
+
+      await utils.actSuspense(() =>
+        ReactDOM.render(
+          <Grandparent>
+            <Parent />
+          </Grandparent>,
+          container
+        )
+      );
+      expect(state).toMatchSnapshot(
+        '3: remove children (parent should now be selected)'
+      );
+
+      await utils.actSuspense(() => ReactDOM.unmountComponentAtNode(container));
+      expect(state).toMatchSnapshot(
+        '4: unmount root (nothing should be selected)'
+      );
+
+      done();
+    });
   });
 
   describe('search state', () => {
@@ -423,6 +473,78 @@ describe('TreeListContext', () => {
       utils.act(() => dispatch({ type: 'RESET_OWNER_STACK' }));
       utils.act(() => renderer.update(<Contexts />));
       expect(state).toMatchSnapshot('3: final state');
+    });
+
+    it('should remove an element from the owners list if it is unmounted', async done => {
+      const Grandparent = ({ count }) => <Parent count={count} />;
+      const Parent = ({ count }) =>
+        new Array(count).fill(true).map((_, index) => <Child key={index} />);
+      const Child = () => null;
+
+      const container = document.createElement('div');
+      utils.act(() => ReactDOM.render(<Grandparent count={2} />, container));
+
+      expect(store).toMatchSnapshot('0: mount');
+
+      let renderer;
+      utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
+      expect(state).toMatchSnapshot('1: initial state');
+
+      let parentID = ((store.getElementIDAtIndex(1): any): number);
+      utils.act(() => dispatch({ type: 'SELECT_OWNER', payload: parentID }));
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state).toMatchSnapshot('2: parent owners tree');
+
+      await utils.actSuspense(() =>
+        ReactDOM.render(<Grandparent count={1} />, container)
+      );
+      expect(state).toMatchSnapshot('3: remove second child');
+
+      await utils.actSuspense(() =>
+        ReactDOM.render(<Grandparent count={0} />, container)
+      );
+      expect(state).toMatchSnapshot('4: remove first child');
+
+      done();
+    });
+
+    it('should exit the owners list if the current owner is unmounted', async done => {
+      const Parent = props => props.children || null;
+      const Child = () => null;
+
+      const container = document.createElement('div');
+      utils.act(() =>
+        ReactDOM.render(
+          <Parent>
+            <Child />
+          </Parent>,
+          container
+        )
+      );
+
+      expect(store).toMatchSnapshot('0: mount');
+
+      let renderer;
+      utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
+      expect(state).toMatchSnapshot('1: initial state');
+
+      let childID = ((store.getElementIDAtIndex(1): any): number);
+      utils.act(() => dispatch({ type: 'SELECT_OWNER', payload: childID }));
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state).toMatchSnapshot('2: child owners tree');
+
+      await utils.actSuspense(() => ReactDOM.render(<Parent />, container));
+      expect(state).toMatchSnapshot('3: remove child');
+
+      let parentID = ((store.getElementIDAtIndex(0): any): number);
+      utils.act(() => dispatch({ type: 'SELECT_OWNER', payload: parentID }));
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state).toMatchSnapshot('4: parent owners tree');
+
+      await utils.actSuspense(() => ReactDOM.unmountComponentAtNode(container));
+      expect(state).toMatchSnapshot('5: unmount root');
+
+      done();
     });
   });
 });

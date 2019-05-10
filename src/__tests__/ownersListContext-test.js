@@ -205,6 +205,4 @@ describe('OwnersListContext', () => {
 
     done();
   });
-
-  // TODO (owners) Verify that if an Element in the list is unmounted the stack is updated.
 });

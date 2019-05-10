@@ -447,12 +447,18 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
   switch (action.type) {
     case 'HANDLE_STORE_MUTATION':
       if (ownerID !== null) {
-        ownerFlatTree = store.getOwnersListForElement(ownerID);
-        if (selectedElementID !== null) {
-          // Mutation might have caused the index of this ID to shift.
-          selectedElementIndex = ownerFlatTree.findIndex(
-            element => element.id === selectedElementID
-          );
+        if (!store.containsElement(ownerID)) {
+          ownerID = null;
+          ownerFlatTree = null;
+          selectedElementID = null;
+        } else {
+          ownerFlatTree = store.getOwnersListForElement(ownerID);
+          if (selectedElementID !== null) {
+            // Mutation might have caused the index of this ID to shift.
+            selectedElementIndex = ownerFlatTree.findIndex(
+              element => element.id === selectedElementID
+            );
+          }
         }
       } else {
         if (selectedElementID !== null) {
