@@ -163,4 +163,48 @@ describe('OwnersListContext', () => {
 
     done();
   });
+
+  it('should include the current element even if there are no other owners', async done => {
+    store.componentFilters = [utils.createDisplayNameFilter('^Parent$')];
+
+    const Grandparent = () => <Parent />;
+    const Parent = () => null;
+
+    utils.act(() =>
+      ReactDOM.render(<Grandparent />, document.createElement('div'))
+    );
+
+    expect(store).toMatchSnapshot('mount');
+
+    const grandparent = ((store.getElementAtIndex(0): any): Element);
+
+    let didFinish = false;
+
+    function Suspender({ owner }) {
+      const read = React.useContext(OwnersListContext);
+      const owners = read(owner.id);
+      expect(owners).toMatchSnapshot(
+        `owners for "${(owner && owner.displayName) || ''}"`
+      );
+      didFinish = true;
+      return null;
+    }
+
+    await utils.actSuspense(
+      () =>
+        TestRenderer.create(
+          <Contexts defaultOwnerID={grandparent.id}>
+            <React.Suspense fallback={null}>
+              <Suspender owner={grandparent} />
+            </React.Suspense>
+          </Contexts>
+        ),
+      3
+    );
+    expect(didFinish).toBe(true);
+
+    done();
+  });
+
+  // TODO (owners) Verify that if an Element in the list is unmounted the stack is updated.
 });

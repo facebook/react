@@ -10,12 +10,16 @@ exports[`OwnersListContext should fetch the owners list for the selected element
 exports[`OwnersListContext should fetch the owners list for the selected element that includes filtered components: owners for "Child" 1`] = `
 Array [
   Object {
+    "displayName": "Grandparent",
+    "id": 7,
+  },
+  Object {
     "displayName": "Parent",
     "id": 9,
   },
   Object {
-    "displayName": "Grandparent",
-    "id": 7,
+    "displayName": "Child",
+    "id": 8,
   },
 ]
 `;
@@ -31,12 +35,16 @@ exports[`OwnersListContext should fetch the owners list for the selected element
 exports[`OwnersListContext should fetch the owners list for the selected element: owners for "Child" 1`] = `
 Array [
   Object {
+    "displayName": "Grandparent",
+    "id": 2,
+  },
+  Object {
     "displayName": "Parent",
     "id": 3,
   },
   Object {
-    "displayName": "Grandparent",
-    "id": 2,
+    "displayName": "Child",
+    "id": 4,
   },
 ]
 `;
@@ -46,6 +54,24 @@ Array [
   Object {
     "displayName": "Grandparent",
     "id": 2,
+  },
+  Object {
+    "displayName": "Parent",
+    "id": 3,
+  },
+]
+`;
+
+exports[`OwnersListContext should include the current element even if there are no other owners: mount 1`] = `
+[root]
+    <Grandparent>
+`;
+
+exports[`OwnersListContext should include the current element even if there are no other owners: owners for "Grandparent" 1`] = `
+Array [
+  Object {
+    "displayName": "Grandparent",
+    "id": 5,
   },
 ]
 `;

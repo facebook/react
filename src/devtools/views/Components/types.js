@@ -31,7 +31,7 @@ export type Element = {|
 |};
 
 export type Owner = {|
-  displayName: string,
+  displayName: string | null,
   id: number,
 |};
 

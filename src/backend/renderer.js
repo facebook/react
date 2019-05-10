@@ -1696,12 +1696,17 @@ export function attach(
 
     const { _debugOwner } = fiber;
 
-    let owners = null;
+    const owners = [
+      {
+        displayName: getDisplayNameForFiber(fiber) || 'Unknown',
+        id,
+      },
+    ];
+
     if (_debugOwner) {
-      owners = [];
       let owner = _debugOwner;
       while (owner !== null) {
-        owners.push({
+        owners.unshift({
           displayName: getDisplayNameForFiber(owner) || 'Unknown',
           id: getFiberID(getPrimaryFiber(owner)),
         });
@@ -1719,6 +1724,7 @@ export function attach(
     }
 
     const {
+      _debugOwner,
       _debugSource,
       stateNode,
       memoizedProps,
@@ -1790,6 +1796,19 @@ export function attach(
       context = { value: context };
     }
 
+    let owners = null;
+    if (_debugOwner) {
+      owners = [];
+      let owner = _debugOwner;
+      while (owner !== null) {
+        owners.push({
+          displayName: getDisplayNameForFiber(owner) || 'Unknown',
+          id: getFiberID(getPrimaryFiber(owner)),
+        });
+        owner = owner._debugOwner || null;
+      }
+    }
+
     const isTimedOutSuspense =
       tag === SuspenseComponent && memoizedState !== null;
 
@@ -1825,7 +1844,7 @@ export function attach(
       state: usesHooks ? null : memoizedState,
 
       // List of owners
-      owners: getOwnersList(id),
+      owners,
 
       // Location of component in source coude.
       source: _debugSource,

@@ -45,7 +45,7 @@ type State = {|
 function dialogReducer(state, action) {
   switch (action.type) {
     case 'UPDATE_OWNER_ID':
-      const selectedIndex = state.owners.findIndex(
+      const selectedIndex = action.owners.findIndex(
         owner => owner.id === action.ownerID
       );
       return {
@@ -71,10 +71,11 @@ export default function OwnerStack() {
   const [state, dispatch] = useReducer<State, Action>(dialogReducer, {
     ownerID: null,
     owners: [],
-    selectedIndex: -1,
+    selectedIndex: 0,
   });
 
-  // TODO (owners) Explain this and use reducer with ownerID too to avoid inf. loop
+  // When an owner is selected, we either need to update the selected index, or we need to fetch a new list of owners.
+  // We use a reducer here so that we can avoid fetching a new list unless the owner ID has actually changed.
   if (ownerID === null) {
     dispatch({
       type: 'UPDATE_OWNER_ID',
@@ -82,11 +83,12 @@ export default function OwnerStack() {
       owners: [],
     });
   } else if (ownerID !== state.ownerID) {
-    const isInList = state.owners.findIndex(owner => owner.id === ownerID) >= 0;
+    const isInStore =
+      state.owners.findIndex(owner => owner.id === ownerID) >= 0;
     dispatch({
       type: 'UPDATE_OWNER_ID',
       ownerID,
-      owners: isInList ? state.owners : read(ownerID) || [],
+      owners: isInStore ? state.owners : read(ownerID) || [],
     });
   }
 
