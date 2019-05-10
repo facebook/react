@@ -67,7 +67,7 @@ describe('commit tree', () => {
     for (let commitIndex = 0; commitIndex < 4; commitIndex++) {
       suspenseResolved = false;
 
-      await utils.actAsync(() =>
+      await utils.actSuspense(() =>
         TestRenderer.create(
           <React.Suspense fallback={null}>
             <Suspender

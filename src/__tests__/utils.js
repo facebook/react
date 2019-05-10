@@ -14,7 +14,7 @@ export function act(callback: Function): void {
   });
 }
 
-export async function actAsync(cb: () => *): Promise<void> {
+export async function actSuspense(cb: () => *): Promise<void> {
   const TestUtils = require('react-dom/test-utils');
 
   // $FlowFixMe Flow doens't know about "await act()" yet

@@ -129,7 +129,7 @@ describe('profiling', () => {
       const rendererID = utils.getRendererID();
       const rootID = store.roots[0];
 
-      await utils.actAsync(() =>
+      await utils.actSuspense(() =>
         TestRenderer.create(
           <React.Suspense fallback={null}>
             <Suspender
@@ -145,7 +145,7 @@ describe('profiling', () => {
 
       exportImportHelper(rendererID, rootID);
 
-      await utils.actAsync(() =>
+      await utils.actSuspense(() =>
         TestRenderer.create(
           <React.Suspense fallback={null}>
             <Suspender
@@ -218,7 +218,7 @@ describe('profiling', () => {
       const rootID = store.roots[0];
 
       for (let commitIndex = 0; commitIndex < 4; commitIndex++) {
-        await utils.actAsync(() => {
+        await utils.actSuspense(() => {
           TestRenderer.create(
             <React.Suspense fallback={null}>
               <Suspender
@@ -237,7 +237,7 @@ describe('profiling', () => {
       exportImportHelper(rendererID, rootID);
 
       for (let commitIndex = 0; commitIndex < 4; commitIndex++) {
-        await utils.actAsync(() => {
+        await utils.actSuspense(() => {
           TestRenderer.create(
             <React.Suspense fallback={null}>
               <Suspender
@@ -311,7 +311,7 @@ describe('profiling', () => {
       const rootID = store.roots[0];
 
       for (let index = 0; index < store.numElements; index++) {
-        await utils.actAsync(() => {
+        await utils.actSuspense(() => {
           const fiberID = store.getElementIDAtIndex(index);
           if (fiberID == null) {
             throw Error(`Unexpected null ID for element at index ${index}`);
@@ -334,7 +334,7 @@ describe('profiling', () => {
       exportImportHelper(rendererID, rootID);
 
       for (let index = 0; index < store.numElements; index++) {
-        await utils.actAsync(() => {
+        await utils.actSuspense(() => {
           const fiberID = store.getElementIDAtIndex(index);
           if (fiberID == null) {
             throw Error(`Unexpected null ID for element at index ${index}`);
@@ -413,7 +413,7 @@ describe('profiling', () => {
       const rendererID = utils.getRendererID();
       const rootID = store.roots[0];
 
-      await utils.actAsync(() =>
+      await utils.actSuspense(() =>
         TestRenderer.create(
           <React.Suspense fallback={null}>
             <Suspender
@@ -429,7 +429,7 @@ describe('profiling', () => {
 
       exportImportHelper(rendererID, rootID);
 
-      await utils.actAsync(() =>
+      await utils.actSuspense(() =>
         TestRenderer.create(
           <React.Suspense fallback={null}>
             <Suspender
