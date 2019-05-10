@@ -24,6 +24,7 @@
       "<rootDir>/src/__tests__/setupTests"
     ],
     "snapshotSerializers": [
+      "<rootDir>/src/__tests__/inspectedElementSerializer",
       "<rootDir>/src/__tests__/storeSerializer"
     ],
     "testMatch": [

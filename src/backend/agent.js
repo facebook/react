@@ -358,7 +358,6 @@ export default class Agent extends EventEmitter {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
     } else {
       renderer.selectElement(id);
-      this._bridge.send('selectElement');
 
       // When user selects an element, stop trying to restore the selection,
       // and instead remember the current selection for the next reload.

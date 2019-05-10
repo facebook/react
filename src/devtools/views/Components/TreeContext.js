@@ -594,10 +594,17 @@ type Props = {|
 
   // Used for automated testing
   defaultOwnerID?: ?number,
+  defaultSelectedElementID?: ?number,
+  defaultSelectedElementIndex?: ?number,
 |};
 
 // TODO Remove TreeContextController wrapper element once global ConsearchText.write API exists.
-function TreeContextController({ children, defaultOwnerID }: Props) {
+function TreeContextController({
+  children,
+  defaultOwnerID,
+  defaultSelectedElementID,
+  defaultSelectedElementIndex,
+}: Props) {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
@@ -652,8 +659,10 @@ function TreeContextController({ children, defaultOwnerID }: Props) {
   const [state, dispatch] = useReducer(reducer, {
     // Tree
     numElements: store.numElements,
-    selectedElementIndex: null,
-    selectedElementID: null,
+    selectedElementID:
+      defaultSelectedElementID == null ? null : defaultSelectedElementID,
+    selectedElementIndex:
+      defaultSelectedElementIndex == null ? null : defaultSelectedElementIndex,
 
     // Search
     searchIndex: null,

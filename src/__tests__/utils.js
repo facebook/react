@@ -26,7 +26,7 @@ export async function actAsync(
     callback();
 
     // Resolve pending suspense promises
-    jest.runAllTimers();
+    jest.runOnlyPendingTimers();
   });
 
   // Run cascading microtasks and flush scheduled React work.
@@ -35,7 +35,7 @@ export async function actAsync(
   while (--numTimesToFlush >= 0) {
     // $FlowFixMe Flow doens't know about "await act()" yet
     await TestUtils.act(async () => {
-      jest.runAllTimers();
+      jest.runOnlyPendingTimers();
       Scheduler.flushAll();
     });
   }
