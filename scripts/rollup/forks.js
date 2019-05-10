@@ -230,6 +230,17 @@ const forks = Object.freeze({
     }
   },
 
+  'react/src/ReactSharedInternals.js': (bundleType, entry) => {
+    switch (bundleType) {
+      case UMD_DEV:
+      case UMD_PROD:
+      case UMD_PROFILING:
+        return 'react/src/forks/ReactSharedInternals.umd.js';
+      default:
+        return null;
+    }
+  },
+
   // Different wrapping/reporting for caught errors.
   'shared/invokeGuardedCallbackImpl': (bundleType, entry) => {
     switch (bundleType) {

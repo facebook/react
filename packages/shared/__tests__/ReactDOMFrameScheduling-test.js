@@ -35,7 +35,7 @@ describe('ReactDOMFrameScheduling', () => {
       };
       spyOnDevAndProd(console, 'error');
       require('react-dom');
-      expect(console.error.calls.count()).toEqual(2);
+      expect(console.error.calls.count()).toEqual(1);
       expect(console.error.calls.argsFor(0)[0]).toMatch(
         "This browser doesn't support requestAnimationFrame.",
       );
