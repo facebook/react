@@ -38,7 +38,7 @@ import Store from '../../store';
 
 import type { Element } from './types';
 
-type StateContext = {|
+export type StateContext = {|
   // Tree
   numElements: number,
   selectedElementID: number | null,
@@ -50,9 +50,8 @@ type StateContext = {|
   searchText: string,
 
   // Owners
+  ownerID: number | null,
   ownerFlatTree: Array<Element> | null,
-  ownerStack: Array<number>,
-  ownerStackIndex: number | null,
 
   // Inspection element panel
   inspectedElementID: number | null,
@@ -118,7 +117,7 @@ type Action =
   | ACTION_SET_SEARCH_TEXT
   | ACTION_UPDATE_INSPECTED_ELEMENT_ID;
 
-type DispatcherContext = (action: Action) => void;
+export type DispatcherContext = (action: Action) => void;
 
 const TreeStateContext = createContext<StateContext>(
   ((null: any): StateContext)
@@ -142,8 +141,7 @@ type State = {|
   searchText: string,
 
   // Owners
-  ownerStack: Array<number>,
-  ownerStackIndex: number | null,
+  ownerID: number | null,
   ownerFlatTree: Array<Element> | null,
 
   // Inspection element panel
@@ -151,17 +149,12 @@ type State = {|
 |};
 
 function reduceTreeState(store: Store, state: State, action: Action): State {
-  let {
-    numElements,
-    ownerStack,
-    selectedElementIndex,
-    selectedElementID,
-  } = state;
+  let { numElements, ownerID, selectedElementIndex, selectedElementID } = state;
 
   let lookupIDForIndex = true;
 
   // Base tree should ignore selected element changes when the owner's tree is active.
-  if (ownerStack.length === 0) {
+  if (ownerID === null) {
     switch (action.type) {
       case 'HANDLE_STORE_MUTATION':
         numElements = store.numElements;
@@ -276,7 +269,7 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
 
 function reduceSearchState(store: Store, state: State, action: Action): State {
   let {
-    ownerStack,
+    ownerID,
     searchIndex,
     searchResults,
     searchText,
@@ -295,7 +288,7 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
   let didRequestSearch = false;
 
   // Search isn't supported when the owner's tree is active.
-  if (ownerStack.length === 0) {
+  if (ownerID === null) {
     switch (action.type) {
       case 'GO_TO_NEXT_SEARCH_RESULT':
         if (numPrevSearchResults > 0) {
@@ -442,9 +435,8 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
     numElements,
     selectedElementID,
     selectedElementIndex,
+    ownerID,
     ownerFlatTree,
-    ownerStack,
-    ownerStackIndex,
     searchIndex,
     searchResults,
     searchText,
@@ -454,29 +446,19 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
 
   switch (action.type) {
     case 'HANDLE_STORE_MUTATION':
-      if (ownerStack.length > 0) {
-        let indexOfRemovedItem = -1;
-        for (let i = 0; i < ownerStack.length; i++) {
-          if (store.getElementByID(ownerStack[i]) === null) {
-            indexOfRemovedItem = i;
-            break;
+      if (ownerID !== null) {
+        if (!store.containsElement(ownerID)) {
+          ownerID = null;
+          ownerFlatTree = null;
+          selectedElementID = null;
+        } else {
+          ownerFlatTree = store.getOwnersListForElement(ownerID);
+          if (selectedElementID !== null) {
+            // Mutation might have caused the index of this ID to shift.
+            selectedElementIndex = ownerFlatTree.findIndex(
+              element => element.id === selectedElementID
+            );
           }
-        }
-
-        if (indexOfRemovedItem >= 0) {
-          ownerStack = ownerStack.slice(0, indexOfRemovedItem);
-          if (ownerStack.length === 0) {
-            ownerFlatTree = null;
-            ownerStackIndex = null;
-          } else {
-            ownerStackIndex = ownerStack.length - 1;
-          }
-        }
-        if (selectedElementID !== null && ownerFlatTree !== null) {
-          // Mutation might have caused the index of this ID to shift.
-          selectedElementIndex = ownerFlatTree.findIndex(
-            element => element.id === selectedElementID
-          );
         }
       } else {
         if (selectedElementID !== null) {
@@ -491,13 +473,12 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
       }
       break;
     case 'RESET_OWNER_STACK':
-      ownerStack = [];
-      ownerStackIndex = null;
+      ownerID = null;
+      ownerFlatTree = null;
       selectedElementIndex =
         selectedElementID !== null
           ? store.getIndexOfElementID(selectedElementID)
           : null;
-      ownerFlatTree = null;
       break;
     case 'SELECT_ELEMENT_AT_INDEX':
       if (ownerFlatTree !== null) {
@@ -533,33 +514,12 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
       // If the Store doesn't have any owners metadata, don't drill into an empty stack.
       // This is a confusing user experience.
       if (store.hasOwnerMetadata) {
-        const id = (action: ACTION_SELECT_OWNER).payload;
-        ownerStackIndex = ownerStack.indexOf(id);
+        ownerID = (action: ACTION_SELECT_OWNER).payload;
+        ownerFlatTree = store.getOwnersListForElement(ownerID);
 
         // Always force reset selection to be the top of the new owner tree.
         selectedElementIndex = 0;
         prevSelectedElementIndex = null;
-
-        // If this owner is already in the current stack, just select it.
-        // Otherwise, create a new stack.
-        if (ownerStackIndex < 0) {
-          // Add this new owner, and fill in the owners above it as well.
-          ownerStack = [];
-          let currentOwnerID = id;
-          while (currentOwnerID !== 0) {
-            ownerStack.unshift(currentOwnerID);
-            currentOwnerID = ((store.getElementByID(
-              currentOwnerID
-            ): any): Element).ownerID;
-          }
-          ownerStackIndex = ownerStack.length - 1;
-
-          if (searchText !== '') {
-            searchIndex = null;
-            searchResults = [];
-            searchText = '';
-          }
-        }
       }
       break;
     default:
@@ -569,17 +529,12 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
 
   // Changes in the selected owner require re-calculating the owners tree.
   if (
-    ownerStackIndex !== state.ownerStackIndex ||
-    ownerStack !== state.ownerStack ||
+    ownerFlatTree !== state.ownerFlatTree ||
     action.type === 'HANDLE_STORE_MUTATION'
   ) {
-    if (ownerStackIndex === null) {
-      ownerFlatTree = null;
+    if (ownerFlatTree === null) {
       numElements = store.numElements;
     } else {
-      ownerFlatTree = store.getOwnersListForElement(
-        ownerStack[ownerStackIndex]
-      );
       numElements = ownerFlatTree.length;
     }
   }
@@ -588,9 +543,10 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
   if (selectedElementIndex !== prevSelectedElementIndex) {
     if (selectedElementIndex === null) {
       selectedElementID = null;
-    } else if (ownerFlatTree !== null) {
-      selectedElementID =
-        ownerFlatTree[((selectedElementIndex: any): number)].id;
+    } else {
+      if (ownerFlatTree !== null) {
+        selectedElementID = ownerFlatTree[selectedElementIndex].id;
+      }
     }
   }
 
@@ -605,8 +561,7 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
     searchResults,
     searchText,
 
-    ownerStack,
-    ownerStackIndex,
+    ownerID,
     ownerFlatTree,
   };
 }
@@ -619,20 +574,30 @@ function reduceSuspenseState(
   const { type } = action;
   switch (type) {
     case 'UPDATE_INSPECTED_ELEMENT_ID':
-      return {
-        ...state,
-        inspectedElementID: state.selectedElementID,
-      };
+      if (state.inspectedElementID !== state.selectedElementID) {
+        return {
+          ...state,
+          inspectedElementID: state.selectedElementID,
+        };
+      }
+      break;
     default:
-      // React can bailout of no-op updates.
-      return state;
+      break;
   }
+
+  // React can bailout of no-op updates.
+  return state;
 }
 
-type Props = {| children: React$Node |};
+type Props = {|
+  children: React$Node,
+
+  // Used for automated testing
+  defaultOwnerID?: ?number,
+|};
 
 // TODO Remove TreeContextController wrapper element once global ConsearchText.write API exists.
-function TreeContextController({ children }: Props) {
+function TreeContextController({ children, defaultOwnerID }: Props) {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
@@ -696,8 +661,7 @@ function TreeContextController({ children }: Props) {
     searchText: '',
 
     // Owners
-    ownerStack: [],
-    ownerStackIndex: null,
+    ownerID: defaultOwnerID == null ? null : defaultOwnerID,
     ownerFlatTree: null,
 
     // Inspection element panel

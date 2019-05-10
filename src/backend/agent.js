@@ -16,6 +16,7 @@ import type {
   RendererID,
   RendererInterface,
 } from './types';
+import type { OwnersList } from 'src/devtools/views/Components/types';
 import type { Bridge, ComponentFilter } from '../types';
 
 const debug = (methodName, ...args) => {
@@ -29,7 +30,7 @@ const debug = (methodName, ...args) => {
   }
 };
 
-type InspectSelectParams = {|
+type ElementAndRendererID = {|
   id: number,
   rendererID: number,
 |};
@@ -99,6 +100,7 @@ export default class Agent extends EventEmitter {
     bridge.addListener('getProfilingStatus', this.getProfilingStatus);
     bridge.addListener('getProfilingSummary', this.getProfilingSummary);
     bridge.addListener('highlightElementInDOM', this.highlightElementInDOM);
+    bridge.addListener('getOwnersList', this.getOwnersList);
     bridge.addListener('inspectElement', this.inspectElement);
     bridge.addListener('logElementToConsole', this.logElementToConsole);
     bridge.addListener('overrideContext', this.overrideContext);
@@ -303,7 +305,17 @@ export default class Agent extends EventEmitter {
     }
   };
 
-  inspectElement = ({ id, rendererID }: InspectSelectParams) => {
+  getOwnersList = ({ id, rendererID }: ElementAndRendererID) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+    } else {
+      const owners = renderer.getOwnersList(id);
+      this._bridge.send('ownersList', ({ id, owners }: OwnersList));
+    }
+  };
+
+  inspectElement = ({ id, rendererID }: ElementAndRendererID) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -312,7 +324,7 @@ export default class Agent extends EventEmitter {
     }
   };
 
-  logElementToConsole = ({ id, rendererID }: InspectSelectParams) => {
+  logElementToConsole = ({ id, rendererID }: ElementAndRendererID) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -340,7 +352,7 @@ export default class Agent extends EventEmitter {
     this._bridge.send('screenshotCaptured', { commitIndex, dataURL });
   };
 
-  selectElement = ({ id, rendererID }: InspectSelectParams) => {
+  selectElement = ({ id, rendererID }: ElementAndRendererID) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -506,7 +518,7 @@ export default class Agent extends EventEmitter {
     }
   };
 
-  viewElementSource = ({ id, rendererID }: InspectSelectParams) => {
+  viewElementSource = ({ id, rendererID }: ElementAndRendererID) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);

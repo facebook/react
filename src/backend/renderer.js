@@ -50,7 +50,10 @@ import type {
   ReactRenderer,
   RendererInterface,
 } from './types';
-import type { InspectedElement } from 'src/devtools/views/Components/types';
+import type {
+  InspectedElement,
+  Owner,
+} from 'src/devtools/views/Components/types';
 import type { ComponentFilter, ElementType } from 'src/types';
 
 function getInternalReactConstants(version) {
@@ -1685,6 +1688,35 @@ export function attach(
     }
   }
 
+  function getOwnersList(id: number): Array<Owner> | null {
+    let fiber = findCurrentFiberUsingSlowPathById(id);
+    if (fiber == null) {
+      return null;
+    }
+
+    const { _debugOwner } = fiber;
+
+    const owners = [
+      {
+        displayName: getDisplayNameForFiber(fiber) || 'Unknown',
+        id,
+      },
+    ];
+
+    if (_debugOwner) {
+      let owner = _debugOwner;
+      while (owner !== null) {
+        owners.unshift({
+          displayName: getDisplayNameForFiber(owner) || 'Unknown',
+          id: getFiberID(getPrimaryFiber(owner)),
+        });
+        owner = owner._debugOwner || null;
+      }
+    }
+
+    return owners;
+  }
+
   function inspectElementRaw(id: number): InspectedElement | null {
     let fiber = findCurrentFiberUsingSlowPathById(id);
     if (fiber == null) {
@@ -2385,6 +2417,7 @@ export function attach(
     getFiberCommits,
     getInteractions,
     findNativeByFiberID,
+    getOwnersList,
     getPathForElement,
     getProfilingDataForDownload,
     getProfilingSummary,

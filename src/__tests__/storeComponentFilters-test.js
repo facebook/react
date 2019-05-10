@@ -6,42 +6,7 @@ describe('Store component filters', () => {
   let TestUtils;
   let Types;
   let store;
-
-  const createElementTypeFilter = (elementType, isEnabled = true) => ({
-    type: Types.ComponentFilterElementType,
-    isEnabled,
-    value: elementType,
-  });
-
-  const createDisplayNameFilter = (source, isEnabled = true) => {
-    let isValid = true;
-    try {
-      new RegExp(source);
-    } catch (error) {
-      isValid = false;
-    }
-    return {
-      type: Types.ComponentFilterDisplayName,
-      isEnabled,
-      isValid,
-      value: source,
-    };
-  };
-
-  const createLocationFilter = (source, isEnabled = true) => {
-    let isValid = true;
-    try {
-      new RegExp(source);
-    } catch (error) {
-      isValid = false;
-    }
-    return {
-      type: Types.ComponentFilterLocation,
-      isEnabled,
-      isValid,
-      value: source,
-    };
-  };
+  let utils;
 
   const act = (callback: Function) => {
     TestUtils.act(() => {
@@ -59,6 +24,7 @@ describe('Store component filters', () => {
     ReactDOM = require('react-dom');
     TestUtils = require('react-dom/test-utils');
     Types = require('src/types');
+    utils = require('./utils');
   });
 
   it('should throw if filters are updated while profiling', () => {
@@ -89,7 +55,7 @@ describe('Store component filters', () => {
     act(
       () =>
         (store.componentFilters = [
-          createElementTypeFilter(Types.ElementTypeHostComponent),
+          utils.createElementTypeFilter(Types.ElementTypeHostComponent),
         ])
     );
 
@@ -98,7 +64,7 @@ describe('Store component filters', () => {
     act(
       () =>
         (store.componentFilters = [
-          createElementTypeFilter(Types.ElementTypeClass),
+          utils.createElementTypeFilter(Types.ElementTypeClass),
         ])
     );
 
@@ -107,8 +73,8 @@ describe('Store component filters', () => {
     act(
       () =>
         (store.componentFilters = [
-          createElementTypeFilter(Types.ElementTypeClass),
-          createElementTypeFilter(Types.ElementTypeFunction),
+          utils.createElementTypeFilter(Types.ElementTypeClass),
+          utils.createElementTypeFilter(Types.ElementTypeFunction),
         ])
     );
 
@@ -117,8 +83,8 @@ describe('Store component filters', () => {
     act(
       () =>
         (store.componentFilters = [
-          createElementTypeFilter(Types.ElementTypeClass, false),
-          createElementTypeFilter(Types.ElementTypeFunction, false),
+          utils.createElementTypeFilter(Types.ElementTypeClass, false),
+          utils.createElementTypeFilter(Types.ElementTypeFunction, false),
         ])
     );
 
@@ -134,7 +100,7 @@ describe('Store component filters', () => {
     act(
       () =>
         (store.componentFilters = [
-          createElementTypeFilter(Types.ElementTypeRoot),
+          utils.createElementTypeFilter(Types.ElementTypeRoot),
         ])
     );
 
@@ -159,13 +125,17 @@ describe('Store component filters', () => {
     );
     expect(store).toMatchSnapshot('1: mount');
 
-    act(() => (store.componentFilters = [createDisplayNameFilter('Foo')]));
+    act(
+      () => (store.componentFilters = [utils.createDisplayNameFilter('Foo')])
+    );
     expect(store).toMatchSnapshot('2: filter "Foo"');
 
-    act(() => (store.componentFilters = [createDisplayNameFilter('Ba')]));
+    act(() => (store.componentFilters = [utils.createDisplayNameFilter('Ba')]));
     expect(store).toMatchSnapshot('3: filter "Ba"');
 
-    act(() => (store.componentFilters = [createDisplayNameFilter('B.z')]));
+    act(
+      () => (store.componentFilters = [utils.createDisplayNameFilter('B.z')])
+    );
     expect(store).toMatchSnapshot('4: filter "B.z"');
   });
 
@@ -178,7 +148,7 @@ describe('Store component filters', () => {
     act(
       () =>
         (store.componentFilters = [
-          createLocationFilter(__filename.replace(__dirname, '')),
+          utils.createLocationFilter(__filename.replace(__dirname, '')),
         ])
     );
 
@@ -189,7 +159,7 @@ describe('Store component filters', () => {
     act(
       () =>
         (store.componentFilters = [
-          createLocationFilter('this:is:a:made:up:path'),
+          utils.createLocationFilter('this:is:a:made:up:path'),
         ])
     );
 

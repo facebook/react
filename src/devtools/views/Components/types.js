@@ -31,8 +31,13 @@ export type Element = {|
 |};
 
 export type Owner = {|
-  displayName: string,
+  displayName: string | null,
   id: number,
+|};
+
+export type OwnersList = {|
+  id: number,
+  owners: Array<Owner> | null,
 |};
 
 export type InspectedElement = {|

@@ -227,7 +227,7 @@ function InspectedElementView({
     state,
   } = inspectedElement;
 
-  const { ownerStack } = useContext(TreeStateContext);
+  const { ownerID } = useContext(TreeStateContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
@@ -298,13 +298,13 @@ function InspectedElementView({
         overrideValueFn={overrideContextFn}
       />
 
-      {ownerStack.length === 0 && owners !== null && owners.length > 0 && (
+      {ownerID === null && owners !== null && owners.length > 0 && (
         <div className={styles.Owners}>
           <div className={styles.OwnersHeader}>rendered by</div>
           {owners.map(owner => (
             <OwnerView
               key={owner.id}
-              displayName={owner.displayName}
+              displayName={owner.displayName || 'Unknown'}
               id={owner.id}
               isInStore={store.containsElement(owner.id)}
             />

@@ -29,7 +29,7 @@ type Props = {
 
 export default function ElementView({ data, index, style }: Props) {
   const store = useContext(StoreContext);
-  const { ownerFlatTree, ownerStack, selectedElementID } = useContext(
+  const { ownerFlatTree, ownerID, selectedElementID } = useContext(
     TreeStateContext
   );
   const dispatch = useContext(TreeDispatcherContext);
@@ -168,7 +168,7 @@ export default function ElementView({ data, index, style }: Props) {
       }}
     >
       <span className={styles.ScrollAnchor} ref={scrollAnchorStartRef} />
-      {ownerStack.length === 0 ? (
+      {ownerID === null ? (
         <ExpandCollapseToggle element={element} store={store} />
       ) : null}
       <span className={styles.Component}>
