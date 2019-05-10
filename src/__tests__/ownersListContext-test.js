@@ -84,7 +84,7 @@ describe('OwnersListContext', () => {
       return null;
     }
 
-    await utils.actSuspense(
+    await utils.actAsync(
       () =>
         TestRenderer.create(
           <Contexts defaultOwnerID={parent.id}>
@@ -98,7 +98,7 @@ describe('OwnersListContext', () => {
     expect(didFinish).toBe(true);
 
     didFinish = false;
-    await utils.actSuspense(
+    await utils.actAsync(
       () =>
         TestRenderer.create(
           <Contexts defaultOwnerID={firstChild.id}>
@@ -148,7 +148,7 @@ describe('OwnersListContext', () => {
       return null;
     }
 
-    await utils.actSuspense(
+    await utils.actAsync(
       () =>
         TestRenderer.create(
           <Contexts defaultOwnerID={firstChild.id}>
@@ -190,7 +190,7 @@ describe('OwnersListContext', () => {
       return null;
     }
 
-    await utils.actSuspense(
+    await utils.actAsync(
       () =>
         TestRenderer.create(
           <Contexts defaultOwnerID={grandparent.id}>

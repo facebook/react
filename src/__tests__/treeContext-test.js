@@ -244,7 +244,7 @@ describe('TreeListContext', () => {
       utils.act(() => renderer.update(<Contexts />));
       expect(state).toMatchSnapshot('2: select second child');
 
-      await utils.actSuspense(() =>
+      await utils.actAsync(() =>
         ReactDOM.render(
           <Grandparent>
             <Parent />
@@ -256,7 +256,7 @@ describe('TreeListContext', () => {
         '3: remove children (parent should now be selected)'
       );
 
-      await utils.actSuspense(() => ReactDOM.unmountComponentAtNode(container));
+      await utils.actAsync(() => ReactDOM.unmountComponentAtNode(container));
       expect(state).toMatchSnapshot(
         '4: unmount root (nothing should be selected)'
       );
@@ -380,7 +380,7 @@ describe('TreeListContext', () => {
       utils.act(() => renderer.update(<Contexts />));
       expect(state).toMatchSnapshot('2: search for "ba"');
 
-      await utils.actSuspense(() =>
+      await utils.actAsync(() =>
         ReactDOM.render(
           <React.Fragment>
             <Foo />
@@ -428,7 +428,7 @@ describe('TreeListContext', () => {
       utils.act(() => renderer.update(<Contexts />));
       expect(state).toMatchSnapshot('3: go to second result');
 
-      await utils.actSuspense(() =>
+      await utils.actAsync(() =>
         ReactDOM.render(
           <React.Fragment>
             <Foo />
@@ -495,12 +495,12 @@ describe('TreeListContext', () => {
       utils.act(() => renderer.update(<Contexts />));
       expect(state).toMatchSnapshot('2: parent owners tree');
 
-      await utils.actSuspense(() =>
+      await utils.actAsync(() =>
         ReactDOM.render(<Grandparent count={1} />, container)
       );
       expect(state).toMatchSnapshot('3: remove second child');
 
-      await utils.actSuspense(() =>
+      await utils.actAsync(() =>
         ReactDOM.render(<Grandparent count={0} />, container)
       );
       expect(state).toMatchSnapshot('4: remove first child');
@@ -533,7 +533,7 @@ describe('TreeListContext', () => {
       utils.act(() => renderer.update(<Contexts />));
       expect(state).toMatchSnapshot('2: child owners tree');
 
-      await utils.actSuspense(() => ReactDOM.render(<Parent />, container));
+      await utils.actAsync(() => ReactDOM.render(<Parent />, container));
       expect(state).toMatchSnapshot('3: remove child');
 
       let parentID = ((store.getElementIDAtIndex(0): any): number);
@@ -541,7 +541,7 @@ describe('TreeListContext', () => {
       utils.act(() => renderer.update(<Contexts />));
       expect(state).toMatchSnapshot('4: parent owners tree');
 
-      await utils.actSuspense(() => ReactDOM.unmountComponentAtNode(container));
+      await utils.actAsync(() => ReactDOM.unmountComponentAtNode(container));
       expect(state).toMatchSnapshot('5: unmount root');
 
       done();

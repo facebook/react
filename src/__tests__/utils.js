@@ -14,7 +14,7 @@ export function act(callback: Function): void {
   jest.runAllTimers();
 }
 
-export async function actSuspense(
+export async function actAsync(
   callback: Function,
   numTimesToFlush: number = 1
 ): Promise<void> {

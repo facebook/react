@@ -97,7 +97,7 @@ describe('profiling charts', () => {
       for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
         suspenseResolved = false;
 
-        await utils.actSuspense(
+        await utils.actAsync(
           () =>
             TestRenderer.create(
               <React.Suspense fallback={null}>
@@ -189,7 +189,7 @@ describe('profiling charts', () => {
       for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
         suspenseResolved = false;
 
-        await utils.actSuspense(
+        await utils.actAsync(
           () =>
             TestRenderer.create(
               <React.Suspense fallback={null}>
@@ -272,7 +272,7 @@ describe('profiling charts', () => {
       for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
         suspenseResolved = false;
 
-        await utils.actSuspense(
+        await utils.actAsync(
           () =>
             TestRenderer.create(
               <React.Suspense fallback={null}>
