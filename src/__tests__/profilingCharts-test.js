@@ -97,18 +97,16 @@ describe('profiling charts', () => {
       for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
         suspenseResolved = false;
 
-        await utils.actSuspense(
-          () =>
-            TestRenderer.create(
-              <React.Suspense fallback={null}>
-                <Suspender
-                  commitIndex={commitIndex}
-                  rendererID={rendererID}
-                  rootID={rootID}
-                />
-              </React.Suspense>
-            ),
-          3
+        await utils.actAsync(() =>
+          TestRenderer.create(
+            <React.Suspense fallback={null}>
+              <Suspender
+                commitIndex={commitIndex}
+                rendererID={rendererID}
+                rootID={rootID}
+              />
+            </React.Suspense>
+          )
         );
 
         expect(suspenseResolved).toBe(true);
@@ -189,18 +187,16 @@ describe('profiling charts', () => {
       for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
         suspenseResolved = false;
 
-        await utils.actSuspense(
-          () =>
-            TestRenderer.create(
-              <React.Suspense fallback={null}>
-                <Suspender
-                  commitIndex={commitIndex}
-                  rendererID={rendererID}
-                  rootID={rootID}
-                />
-              </React.Suspense>
-            ),
-          3
+        await utils.actAsync(() =>
+          TestRenderer.create(
+            <React.Suspense fallback={null}>
+              <Suspender
+                commitIndex={commitIndex}
+                rendererID={rendererID}
+                rootID={rootID}
+              />
+            </React.Suspense>
+          )
         );
 
         expect(suspenseResolved).toBe(true);
@@ -272,18 +268,16 @@ describe('profiling charts', () => {
       for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
         suspenseResolved = false;
 
-        await utils.actSuspense(
-          () =>
-            TestRenderer.create(
-              <React.Suspense fallback={null}>
-                <Suspender
-                  commitIndex={commitIndex}
-                  rendererID={rendererID}
-                  rootID={rootID}
-                />
-              </React.Suspense>
-            ),
-          3
+        await utils.actAsync(() =>
+          TestRenderer.create(
+            <React.Suspense fallback={null}>
+              <Suspender
+                commitIndex={commitIndex}
+                rendererID={rendererID}
+                rootID={rootID}
+              />
+            </React.Suspense>
+          )
         );
 
         expect(suspenseResolved).toBe(true);
