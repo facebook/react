@@ -1841,4 +1841,49 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(Scheduler).toFlushAndYield(['A', 'C']);
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('C'), span('B')]);
   });
+
+  it('commits a suspended idle pri render within a reasonable time', async () => {
+    function Foo({something}) {
+      return (
+        <Fragment>
+          <Suspense fallback={<Text text="Loading A..." />}>
+            <AsyncText text="A" ms={10000} />
+          </Suspense>
+        </Fragment>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+
+    // Took a long time to render. This is to ensure we get a long suspense time.
+    // Could also use something like suspendIfNeeded to simulate this.
+    Scheduler.advanceTime(1500);
+    await advanceTimers(1500);
+
+    expect(Scheduler).toFlushAndYield(['Suspend! [A]', 'Loading A...']);
+    // We're still suspended.
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    // Schedule an update at idle pri.
+    Scheduler.unstable_runWithPriority(Scheduler.unstable_IdlePriority, () =>
+      ReactNoop.render(<Foo something={true} />),
+    );
+    expect(Scheduler).toFlushAndYield(['Suspend! [A]', 'Loading A...']);
+
+    // We're still suspended.
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    // Advance time a little bit.
+    Scheduler.advanceTime(150);
+    await advanceTimers(150);
+
+    // We should not have committed yet because we had a long suspense time.
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    // Flush to skip suspended time.
+    Scheduler.advanceTime(600);
+    await advanceTimers(600);
+
+    expect(ReactNoop.getChildren()).toEqual([span('Loading A...')]);
+  });
 });

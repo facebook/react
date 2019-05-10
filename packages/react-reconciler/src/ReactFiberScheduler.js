@@ -936,7 +936,10 @@ function renderRoot(
 }
 
 export function markRenderEventTime(expirationTime: ExpirationTime): void {
-  if (expirationTime < workInProgressRootMostRecentEventTime) {
+  if (
+    expirationTime < workInProgressRootMostRecentEventTime &&
+    expirationTime > Never
+  ) {
     workInProgressRootMostRecentEventTime = expirationTime;
   }
 }
@@ -1866,7 +1869,11 @@ function computeMsUntilTimeout(
 
   const eventTimeMs: number = inferTimeFromExpirationTime(mostRecentEventTime);
   const currentTimeMs: number = now();
-  const timeElapsed = currentTimeMs - eventTimeMs;
+  let timeElapsed = currentTimeMs - eventTimeMs;
+  if (timeElapsed < 0) {
+    // We get this wrong some time since we estimate the time.
+    timeElapsed = 0;
+  }
 
   let msUntilTimeout = jnd(timeElapsed) - timeElapsed;
 
