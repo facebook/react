@@ -522,6 +522,7 @@ export function setInitialProperties(
   switch (tag) {
     case 'iframe':
     case 'object':
+    case 'embed':
       trapBubbledEvent(TOP_LOAD, domElement);
       props = rawProps;
       break;
@@ -916,6 +917,7 @@ export function diffHydratedProperties(
   switch (tag) {
     case 'iframe':
     case 'object':
+    case 'embed':
       trapBubbledEvent(TOP_LOAD, domElement);
       break;
     case 'video':
