@@ -63,7 +63,7 @@ describe('ReactTestUtils.act()', () => {
     document.body.removeChild(container);
   });
 
-  for (let concurrent of [false, true]) {
+  [false, true].forEach(concurrent => {
     isConcurrentMode = concurrent;
     describe(isConcurrentMode ? 'concurrent mode' : 'heritage mode', () => {
       describe('sync', () => {
@@ -529,5 +529,5 @@ describe('ReactTestUtils.act()', () => {
         }
       });
     });
-  }
+  });
 });
